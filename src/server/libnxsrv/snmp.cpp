@@ -85,7 +85,8 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
       nameLength = SNMPParseOID(szOidStr, pdwVarName, MAX_OID_LEN);
       if (nameLength == 0)
       {
-         nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "ssa", szOidStr, _T("SnmpGet"), pTransport->getPeerIpAddress());
+         InetAddress a = pTransport->getPeerIpAddress();
+         nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "ssA", szOidStr, _T("SnmpGet"), &a);
          dwResult = SNMP_ERR_BAD_OID;
       }
    }
@@ -143,7 +144,7 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                      case ASN_COUNTER32:
                      case ASN_GAUGE32:
                      case ASN_TIMETICKS:
-                        *((LONG *)pValue) = pVar->getValueAsInt();
+                        *((INT32 *)pValue) = pVar->getValueAsInt();
                         break;
                      case ASN_IP_ADDR:
                         *((UINT32 *)pValue) = ntohl(pVar->getValueAsUInt());
@@ -204,7 +205,8 @@ UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport
    size_t dwRootLen = SNMPParseOID(szRootOid, pdwRootName, MAX_OID_LEN);
    if (dwRootLen == 0)
    {
-      nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "ssa", szRootOid, _T("SnmpWalk"), pTransport->getPeerIpAddress());
+      InetAddress a = pTransport->getPeerIpAddress();
+      nxlog_write(MSG_OID_PARSE_ERROR, EVENTLOG_ERROR_TYPE, "ssA", szRootOid, _T("SnmpWalk"), &a);
       return SNMP_ERR_BAD_OID;
    }
 

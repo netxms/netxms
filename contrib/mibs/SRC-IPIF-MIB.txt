@@ -1,0 +1,139 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : SRC-IPIF-MIB
+-- FILE NAME: SrcIPIf.mib
+-- DATE     : 2012/03/30
+-- VERSION  : 1.01
+-- PURPOSE  : To construct the MIB structure of source interface module
+--            function for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.01, 2012/03/30, Shawn Chen
+-- Added radius(3) and tacacs(4) in value list of node swSrcIpIfType 
+-- to support RADIUS and TACACS support specified source interface feature.
+-- SNR-20120319-003-Protect Modules For Using The Loopback Interface.doc
+--
+-- Version 1.00, 2009/05/26, Jok Long
+-- This is the first formal version for universal MIB definition.
+-- Notes:Requested by Jok Long for project DGS36xx	
+-- -----------------------------------------------------------------------------
+
+	SRC-IPIF-MIB DEFINITIONS ::= BEGIN
+
+
+	IMPORTS
+	    OBJECT-TYPE,MODULE-IDENTITY,IpAddress
+	        	FROM SNMPv2-SMI
+	    DisplayString, RowStatus
+	                FROM SNMPv2-TC
+		Ipv6Address
+					FROM IPV6-TC
+		dlink-common-mgmt	
+		        FROM DLINK-ID-REC-MIB;
+	
+	
+	swSrcIpIfMIB MODULE-IDENTITY
+	    LAST-UPDATED "201203300000Z"
+	    ORGANIZATION " D-Link Corp."
+	    CONTACT-INFO
+	        " http://support.dlink.com "
+	    DESCRIPTION
+	        "The structure of source interface for the proprietary enterprise."
+	    ::= { dlink-common-mgmt 81}
+	
+	    swSrcIpIfCtrl             OBJECT IDENTIFIER ::= { swSrcIpIfMIB 1 }
+	    swSrcIpIfInfo             OBJECT IDENTIFIER ::= { swSrcIpIfMIB 2 }
+	    swSrcIpIfMgmt             OBJECT IDENTIFIER ::= { swSrcIpIfMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swSrcIpIfMgmt
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swSrcIpIfTable
+-- -----------------------------------------------------------------------------
+     swSrcIpIfTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwSrcIpIfEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains source interface information."
+        ::= { swSrcIpIfMgmt 1 }
+
+    swSrcIpIfEntry OBJECT-TYPE
+        SYNTAX  SwSrcIpIfEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information about source interface."
+        INDEX  { swSrcIpIfType }
+        ::= { swSrcIpIfTable 1 }
+
+
+    SwSrcIpIfEntry ::=
+        SEQUENCE {
+            swSrcIpIfType
+                 INTEGER,
+            swSrcIpIfName
+                DisplayString,
+            swSrcIpIfIPAddr
+                IpAddress,
+            swSrcIpIfIPv6Addr
+                 Ipv6Address,
+            swSrcIpIfRowStatus
+                 RowStatus
+                   }
+
+     swSrcIpIfType OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    trap(1),
+                    syslog(2),
+                    radius(3),
+                    tacacs(4)
+                }
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the type of source interface."
+        ::= {  swSrcIpIfEntry 1 }
+
+    swSrcIpIfRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= {  swSrcIpIfEntry 2 }
+
+   swSrcIpIfName OBJECT-TYPE
+        SYNTAX  DisplayString  (SIZE (0..12))
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the interface name of the unique source interface entry."
+        ::= { swSrcIpIfEntry 3}
+
+    swSrcIpIfIPAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the IPv4 address of the source interface."
+        ::= { swSrcIpIfEntry 4 }
+
+    swSrcIpIfIPv6Addr OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "Specifies the IPv6 address of the source interface."
+        ::= {  swSrcIpIfEntry 5 }
+
+
+END

@@ -141,10 +141,14 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 #ifdef WITH_IPV6
    if (!(g_dwFlags & AF_DISABLE_IPV6))
    {
-	   SetSocketExclusiveAddrUse(hSocket6);
-	   SetSocketReuseFlag(hSocket6);
+      SetSocketExclusiveAddrUse(hSocket6);
+      SetSocketReuseFlag(hSocket6);
 #ifndef _WIN32
       fcntl(hSocket6, F_SETFD, fcntl(hSocket6, F_GETFD) | FD_CLOEXEC);
+#endif
+#ifdef IPV6_V6ONLY
+      int on = 1;
+      setsockopt(hSocket6, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
 #endif
    }
 #endif
@@ -172,7 +176,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
       InetAddress bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET);
       if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
       {
-		   servAddr.sin_addr.s_addr = bindAddress.getAddressV4();
+		   servAddr.sin_addr.s_addr = htonl(bindAddress.getAddressV4());
       }
       else
       {
@@ -240,14 +244,28 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    // Set up queue
    if (!(g_dwFlags & AF_DISABLE_IPV4))
    {
-      listen(hSocket, SOMAXCONN);
-	   nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
+      if (listen(hSocket, SOMAXCONN) == 0)
+		{
+	   	nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), g_wListenPort);
+		}
+		else
+		{
+			closesocket(hSocket);
+			hSocket = INVALID_SOCKET;
+		}
    }
 #ifdef WITH_IPV6
    if (!(g_dwFlags & AF_DISABLE_IPV6))
    {
-      listen(hSocket6, SOMAXCONN);
-	   nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, g_wListenPort);
+      if (listen(hSocket6, SOMAXCONN) == 0)
+		{
+	   	nxlog_write(MSG_LISTENING, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, g_wListenPort);
+		}
+		else
+		{
+			closesocket(hSocket6);
+			hSocket6 = INVALID_SOCKET;
+		}
    }
 #endif
 

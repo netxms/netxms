@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,17 +56,17 @@ import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCListener;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.epp.Activator;
 import org.netxms.ui.eclipse.epp.Messages;
+import org.netxms.ui.eclipse.epp.views.helpers.RuleClipboard;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
 import org.netxms.ui.eclipse.epp.widgets.helpers.ImageFactory;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -88,7 +88,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private NXCSession session;
 	private boolean policyLocked = false;
 	private EventProcessingPolicy policy;
-	private NXCListener sessionListener;
+	private SessionListener sessionListener;
 	private Map<Long, ServerAction> actions = new HashMap<Long, ServerAction>();
 	private FilterText filterControl;
 	private String filterText = null;
@@ -100,7 +100,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	private boolean modified = false;
 	private Set<RuleEditor> selection = new HashSet<RuleEditor>();
 	private int lastSelectedRule = -1;
-	private List<EventProcessingPolicyRule> clipboard = new ArrayList<EventProcessingPolicyRule>(0);
+	private RuleClipboard clipboard = new RuleClipboard();
 
 	private Font normalFont;
 	private Font boldFont;
@@ -138,7 +138,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		session = (NXCSession)ConsoleSharedData.getSession();
 
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		filterEnabled = settings.getBoolean("EventProcessingPolicyEditor.filterEnabled");
+		filterEnabled = settings.getBoolean("EventProcessingPolicyEditor.filterEnabled"); //$NON-NLS-1$
 
 		// Initiate loading of required plugins if they was not loaded yet
 		try
@@ -217,7 +217,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       normalFont = JFaceResources.getDefaultFont();
       boldFont = JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT);
 		
-		sessionListener = new NXCListener() {
+		sessionListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
@@ -546,19 +546,19 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		switch(n.getCode())
 		{
-			case NXCNotification.ACTION_CREATED:
+			case SessionNotification.ACTION_CREATED:
 				synchronized(actions)
 				{
 					actions.put(n.getSubCode(), (ServerAction)n.getObject());
 				}
 				break;
-			case NXCNotification.ACTION_MODIFIED:
+			case SessionNotification.ACTION_MODIFIED:
 				synchronized(actions)
 				{
 					actions.put(n.getSubCode(), (ServerAction)n.getObject());
 				}
 				break;
-			case NXCNotification.ACTION_DELETED:
+			case SessionNotification.ACTION_DELETED:
 				synchronized(actions)
 				{
 					actions.remove(n.getSubCode());
@@ -928,7 +928,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		for(RuleEditor e : selection)
 		{
-			policy.deleteRule(e.getRuleNumber() - 1);
+			policy.deleteRule(e.getRule());
 			ruleEditors.remove(e);
 			e.dispose();
 		}
@@ -993,7 +993,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		for(RuleEditor e : selection)
 		{
 			clipboard.add(e.getRule());
-			policy.deleteRule(e.getRuleNumber() - 1);
+			policy.deleteRule(e.getRule());
 			ruleEditors.remove(e);
 			e.dispose();
 		}
@@ -1040,7 +1040,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
             }
       }
 		
-		for(EventProcessingPolicyRule rule : clipboard)
+      for(EventProcessingPolicyRule rule : clipboard.paste())
 		{
 			policy.insertRule(rule, position);
 

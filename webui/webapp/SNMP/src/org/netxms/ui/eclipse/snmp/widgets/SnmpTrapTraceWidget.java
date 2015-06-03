@@ -24,10 +24,9 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewPart;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
@@ -107,7 +106,7 @@ public class SnmpTrapTraceWidget extends AbstractTraceWidget implements SessionL
 	@Override
 	public void notificationHandler(final SessionNotification n)
 	{
-		if (n.getCode() == NXCNotification.NEW_SNMP_TRAP)
+		if (n.getCode() == SessionNotification.NEW_SNMP_TRAP)
 		{
 			runInUIThread(new Runnable() {
 				@Override

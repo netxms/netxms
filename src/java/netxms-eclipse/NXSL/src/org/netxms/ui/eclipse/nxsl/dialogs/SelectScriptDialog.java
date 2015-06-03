@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.nxsl.dialogs;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.Dialog;
@@ -36,8 +37,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.api.client.scripts.Script;
-import org.netxms.api.client.scripts.ScriptLibraryManager;
+import org.netxms.client.NXCSession;
+import org.netxms.client.Script;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.Messages;
@@ -51,7 +52,8 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class SelectScriptDialog extends Dialog
 {
 	private TableViewer viewer;
-	private Script script;
+	private List<Script> selection = new ArrayList<Script>(0);
+	private boolean multiSelection = false;
 	
 	/**
 	 * @param parentShell
@@ -85,7 +87,7 @@ public class SelectScriptDialog extends Dialog
 		
 		new Label(dialogArea, SWT.NONE).setText(Messages.get().SelectScriptDialog_AvailableScripts);
 		
-      viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION);
+      viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.FULL_SELECTION | (multiSelection ? SWT.MULTI : 0));
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new LabelProvider() {
 			@Override
@@ -120,7 +122,7 @@ public class SelectScriptDialog extends Dialog
       gd.widthHint = 400;
       viewer.getControl().setLayoutData(gd);
       
-		final ScriptLibraryManager session = (ScriptLibraryManager)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
       new ConsoleJob(Messages.get().SelectScriptDialog_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
@@ -151,21 +153,48 @@ public class SelectScriptDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		if (selection.size() == 0)
+		IStructuredSelection s = (IStructuredSelection)viewer.getSelection();
+		if (s.isEmpty())
 		{
 			MessageDialogHelper.openWarning(getShell(), Messages.get().SelectScriptDialog_Warning, Messages.get().SelectScriptDialog_WarningEmptySelection);
 			return;
 		}
-		script = (Script)selection.getFirstElement();
+		for(Object o : s.toList())
+		   selection.add((Script)o);
 		super.okPressed();
 	}
 
 	/**
+	 * Get first selected script
+	 * 
 	 * @return selected script
 	 */
 	public Script getScript()
 	{
-		return script;
+		return (selection.size() > 0) ? selection.get(0) : null;
 	}
+
+   /**
+    * @return the multiSelection
+    */
+   public boolean isMultiSelection()
+   {
+      return multiSelection;
+   }
+
+   /**
+    * @param multiSelection the multiSelection to set
+    */
+   public void setMultiSelection(boolean multiSelection)
+   {
+      this.multiSelection = multiSelection;
+   }
+
+   /**
+    * @return the selection
+    */
+   public List<Script> getSelection()
+   {
+      return selection;
+   }
 }

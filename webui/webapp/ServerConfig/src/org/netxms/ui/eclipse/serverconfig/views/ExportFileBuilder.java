@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,10 +18,13 @@
  */
 package org.netxms.ui.eclipse.serverconfig.views;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -29,17 +32,21 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -48,28 +55,40 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.Script;
+import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
+import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.snmp.SnmpTrap;
+import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.epp.dialogs.RuleSelectionDialog;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
-import org.netxms.ui.eclipse.filemanager.widgets.LocalFileSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.nxsl.dialogs.SelectScriptDialog;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
+import org.netxms.ui.eclipse.serverconfig.dialogs.ObjectToolSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.SelectSnmpTrapDialog;
+import org.netxms.ui.eclipse.serverconfig.dialogs.SummaryTableSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.TrapListLabelProvider;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.RuleComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.RuleLabelProvider;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.ScriptComparator;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.ScriptLabelProvider;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.SummaryTablesComparator;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.SummaryTablesLabelProvider;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.ToolComparator;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.ToolLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ObjectLabelComparator;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -83,17 +102,22 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 	private FormToolkit toolkit;
 	private ScrolledForm form;
-	private LocalFileSelector exportFile;
 	private LabeledText description;
 	private TableViewer templateViewer;
 	private TableViewer eventViewer;
 	private TableViewer trapViewer;
 	private TableViewer ruleViewer;
+   private TableViewer scriptViewer;
+   private TableViewer toolsViewer;
+   private TableViewer summaryTableViewer;
 	private Action actionSave;
-	private Set<EventTemplate> events = new HashSet<EventTemplate>();
-	private Set<Template> templates = new HashSet<Template>();
-	private Set<SnmpTrap> traps = new HashSet<SnmpTrap>();
-	private Set<EventProcessingPolicyRule> rules = new HashSet<EventProcessingPolicyRule>();
+	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
+	private Map<Long, Template> templates = new HashMap<Long, Template>();
+	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
+	private Map<UUID, EventProcessingPolicyRule> rules = new HashMap<UUID, EventProcessingPolicyRule>();
+	private Map<Long, Script> scripts = new HashMap<Long, Script>();
+	private Map<Long, ObjectTool> tools = new HashMap<Long, ObjectTool>();
+   private Map<Integer, DciSummaryTableDescriptor> summaryTables = new HashMap<Integer, DciSummaryTableDescriptor>();
 	private boolean modified = false;
 	private List<SnmpTrap> snmpTrapCache = null;
 	private List<EventProcessingPolicyRule> rulesCache = null;
@@ -119,7 +143,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		form.setText(Messages.get().ExportFileBuilder_FormTitle);
 
 		TableWrapLayout layout = new TableWrapLayout();
-		layout.numColumns = 2;
+		layout.numColumns = 3;
 		form.getBody().setLayout(layout);
 		
 		createFileSection();
@@ -127,12 +151,28 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		createEventSection();
 		createTrapSection();
 		createRuleSection();
+		createScriptSection();
+		createToolsSection();
+      createSummaryTablesSection();
 		
 		form.reflow(true);
 		
+		activateContext();
 		createActions();
 		contributeToActionBars();
 	}
+	
+	/**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.serverconfig.context.ExportFileBuilder"); //$NON-NLS-1$
+      }
+   }
 	
 	/**
 	 * Create "File" section
@@ -153,20 +193,15 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		clientArea.setLayout(layout);
 		section.setClient(clientArea);
 		
-		exportFile = new LocalFileSelector(clientArea, SWT.NONE, true, SWT.SAVE);
-		toolkit.adapt(exportFile);
-		exportFile.setLabel(Messages.get().ExportFileBuilder_FileName);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		exportFile.setLayoutData(gd);
-		
-		description = new LabeledText(clientArea, SWT.NONE);
+		description = new LabeledText(clientArea, SWT.NONE, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL);
 		toolkit.adapt(description);
 		description.setLabel(Messages.get().ExportFileBuilder_Description);
-		gd = new GridData();
+		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
+		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
+		gd.grabExcessVerticalSpace = true;
+		gd.heightHint = 200;
 		description.setLayoutData(gd);
 	}
 	
@@ -227,7 +262,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				removeTemplates();
+			   removeObjects(templateViewer, templates);
 			}
 		});
 	}
@@ -289,7 +324,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				removeEvents();
+		      removeObjects(eventViewer, events);
 			}
 		});
 	}
@@ -377,7 +412,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				removeTraps();
+		      removeObjects(trapViewer, traps);
 			}
 		});
 	}
@@ -465,7 +500,193 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				removeRules();
+		      removeObjects(ruleViewer, rules);
+			}
+		});
+	}
+
+   /**
+    * Create "Scripts" section
+    */
+   private void createScriptSection()
+   {
+      Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      section.setText("Scripts");
+      TableWrapData td = new TableWrapData();
+      td.align = TableWrapData.FILL;
+      td.grabHorizontal = true;
+      section.setLayoutData(td);
+      
+      Composite clientArea = toolkit.createComposite(section);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
+      section.setClient(clientArea);
+      
+      scriptViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      toolkit.adapt(ruleViewer.getTable());
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.heightHint = 200;
+      gd.verticalSpan = 2;
+      scriptViewer.getTable().setLayoutData(gd);
+      scriptViewer.setContentProvider(new ArrayContentProvider());
+      scriptViewer.setLabelProvider(new ScriptLabelProvider());
+      scriptViewer.setComparator(new ScriptComparator());
+      scriptViewer.getTable().setSortDirection(SWT.UP);
+
+      final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkAdd.setText(Messages.get().ExportFileBuilder_Add);
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addScripts();
+         }
+      });
+      
+      final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkRemove.setText(Messages.get().ExportFileBuilder_Remove);
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            removeObjects(scriptViewer, scripts);
+         }
+      });
+   }
+
+   /**
+    * Create "Object Tools" section
+    */
+   private void createToolsSection()
+   {
+      Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      section.setText("Object Tools");
+      TableWrapData td = new TableWrapData();
+      td.align = TableWrapData.FILL;
+      td.grabHorizontal = true;
+      section.setLayoutData(td);
+      
+      Composite clientArea = toolkit.createComposite(section);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
+      section.setClient(clientArea);
+      
+      toolsViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      toolkit.adapt(ruleViewer.getTable());
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.heightHint = 200;
+      gd.verticalSpan = 2;
+      toolsViewer.getTable().setLayoutData(gd);
+      toolsViewer.setContentProvider(new ArrayContentProvider());
+      toolsViewer.setLabelProvider(new ToolLabelProvider());
+      toolsViewer.setComparator(new ToolComparator());
+      toolsViewer.getTable().setSortDirection(SWT.UP);
+
+      final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkAdd.setText(Messages.get().ExportFileBuilder_Add);
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addObjectTools();
+         }
+      });
+      
+      final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkRemove.setText(Messages.get().ExportFileBuilder_Remove);
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            removeObjects(toolsViewer, tools);
+         }
+      });
+   }
+
+   /**
+    * Create "Summary Tables" section
+    */
+   private void createSummaryTablesSection()
+   {
+      Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      section.setText("DCI Summary Tables");
+      TableWrapData td = new TableWrapData();
+      td.align = TableWrapData.FILL;
+      td.grabHorizontal = true;
+      section.setLayoutData(td);
+      
+      Composite clientArea = toolkit.createComposite(section);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
+      section.setClient(clientArea);
+      
+      summaryTableViewer = new TableViewer(clientArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+      toolkit.adapt(ruleViewer.getTable());
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.heightHint = 200;
+      gd.verticalSpan = 2;
+      summaryTableViewer.getTable().setLayoutData(gd);
+      summaryTableViewer.setContentProvider(new ArrayContentProvider());
+      summaryTableViewer.setLabelProvider(new SummaryTablesLabelProvider());
+      summaryTableViewer.setComparator(new SummaryTablesComparator());
+      summaryTableViewer.getTable().setSortDirection(SWT.UP);
+
+      final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkAdd.setText(Messages.get().ExportFileBuilder_Add);
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addSummaryTables();
+         }
+      });
+      
+      final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkRemove.setText(Messages.get().ExportFileBuilder_Remove);
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            removeObjects(summaryTableViewer, summaryTables);
 			}
 		});
 	}
@@ -475,14 +696,17 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	 */
 	private void createActions()
 	{
-		actionSave = new Action(Messages.get().ExportFileBuilder_Save) {
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
+		actionSave = new Action(Messages.get().ExportFileBuilder_Save, SharedIcons.SAVE) {
 			@Override
 			public void run()
 			{
 				save();
 			}
 		};
-		actionSave.setImageDescriptor(SharedIcons.SAVE);
+		actionSave.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.save_exported_config"); //$NON-NLS-1$
+      handlerService.activateHandler(actionSave.getActionDefinitionId(), new ActionHandler(actionSave));
 	}
 	
 	/**
@@ -543,56 +767,85 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	 */
 	private void save()
 	{
-		if (exportFile.getFile() == null)
-		{
-			MessageDialogHelper.openWarning(getSite().getShell(), Messages.get().ExportFileBuilder_Warning, Messages.get().ExportFileBuilder_EnterValidFileName);
-			return;
-		}
-		
 		final long[] eventList = new long[events.size()];
 		int i = 0;
-		for(EventTemplate t : events)
+		for(EventTemplate t : events.values())
 			eventList[i++] = t.getCode();
 		
 		final long[] templateList = new long[templates.size()];
 		i = 0;
-		for(Template t : templates)
+		for(Template t : templates.values())
 			templateList[i++] = t.getObjectId();
 		
 		final long[] trapList = new long[traps.size()];
 		i = 0;
-		for(SnmpTrap t : traps)
+		for(SnmpTrap t : traps.values())
 			trapList[i++] = t.getId();
 		
 		final UUID[] ruleList = new UUID[rules.size()];
 		i = 0;
-		for(EventProcessingPolicyRule r : rules)
+		for(EventProcessingPolicyRule r : rules.values())
 			ruleList[i++] = r.getGuid();
 		
+      final long[] scriptList = new long[scripts.size()];
+      i = 0;
+      for(Script s : scripts.values())
+         scriptList[i++] = s.getId();
+      
+      final long[] toolList = new long[tools.size()];
+      i = 0;
+      for(ObjectTool t : tools.values())
+         toolList[i++] = t.getId();
+      
+      final long[] summaryTableList = new long[summaryTables.size()];
+      i = 0;
+      for(DciSummaryTableDescriptor t : summaryTables.values())
+         summaryTableList[i++] = t.getId();
+      
 		final String descriptionText = description.getText();
 		
 		new ConsoleJob(Messages.get().ExportFileBuilder_ExportJobName, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList);
-				OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(exportFile.getFile()), "UTF-8"); //$NON-NLS-1$
-				try
-				{
-					out.write(xml);
-				}
-				finally
-				{
-					out.close();
-				}
+				final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList);
+				final File file = File.createTempFile("export_config_" + ExportFileBuilder.this.hashCode(), "_" + System.currentTimeMillis()); 
+            OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(file), "UTF-8"); //$NON-NLS-1$
+            try
+            {
+               out.write(xml);
+            }
+            finally
+            {
+               out.close();
+            }
 				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
+               @Override
+               public void run()
+               {
 						modified = false;
 						firePropertyChange(PROP_DIRTY);
-					}
-				});
+
+		            DownloadServiceHandler.addDownload(file.getName(), "export.xml", file, "application/xml");
+                  JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+                  if( executor != null ) 
+                  {
+                     StringBuilder js = new StringBuilder();
+                     js.append("var hiddenIFrameID = 'hiddenDownloader',");
+                     js.append("   iframe = document.getElementById(hiddenIFrameID);");
+                     js.append("if (iframe === null) {");
+                     js.append("   iframe = document.createElement('iframe');");
+                     js.append("   iframe.id = hiddenIFrameID;");
+                     js.append("   iframe.style.display = 'none';");
+                     js.append("   document.body.appendChild(iframe);");
+                     js.append("}");
+                     js.append("iframe.src = '");
+                     js.append(DownloadServiceHandler.createDownloadUrl(file.getName()));
+                     js.append("';");
+                     executor.execute(js.toString());
+                  }                 
+               }
+            });
 			}
 			
 			@Override
@@ -603,11 +856,19 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		}.start();
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
+	 */
 	@Override
 	public void doSave(IProgressMonitor monitor)
 	{
-		// TODO Auto-generated method stub
-		
+	   getSite().getShell().getDisplay().syncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            save();
+         }
+      });
 	}
 
 	/* (non-Javadoc)
@@ -646,6 +907,47 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	}
 	
 	/**
+	 * @param o
+	 * @return
+	 */
+	private static Object keyFromObject(Object o)
+	{
+	   if (o instanceof Template)
+	      return ((Template)o).getObjectId();
+	   if (o instanceof EventTemplate)
+	      return ((EventTemplate)o).getCode();
+	   if (o instanceof SnmpTrap)
+	      return ((SnmpTrap)o).getId();
+	   if (o instanceof Script)
+	      return ((Script)o).getId();
+	   if (o instanceof ObjectTool)
+	      return ((ObjectTool)o).getId();
+	   if (o instanceof EventProcessingPolicyRule)
+	      return ((EventProcessingPolicyRule)o).getGuid();
+	   if (o instanceof DciSummaryTableDescriptor)
+	      return ((DciSummaryTableDescriptor)o).getId();
+	   return 0L;
+	}
+	
+	/**
+	 * Remove objects from list
+	 * 
+	 * @param viewer
+	 * @param objects
+	 */
+	private void removeObjects(TableViewer viewer, Map<?, ?> objects)
+	{
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() > 0)
+		{
+         for(Object o : selection.toList())
+            objects.remove(keyFromObject(o));
+         viewer.setInput(objects.values().toArray());
+			setModified();
+		}
+	}
+	
+	/**
 	 * Add events to list
 	 */
 	private void addEvents()
@@ -655,23 +957,8 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		if (dlg.open() == Window.OK)
 		{
 			for(EventTemplate t : dlg.getSelectedEvents())
-				events.add(t);
-			eventViewer.setInput(events.toArray());
-			setModified();
-		}
-	}
-	
-	/**
-	 * Remove events from list
-	 */
-	private void removeEvents()
-	{
-		IStructuredSelection selection = (IStructuredSelection)eventViewer.getSelection();
-		if (selection.size() > 0)
-		{
-			for(Object o : selection.toList())
-				events.remove(o);
-			eventViewer.setInput(events.toArray());
+				events.put(t.getCode(), t);
+			eventViewer.setInput(events.values().toArray());
 			setModified();
 		}
 	}
@@ -688,16 +975,17 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			final Set<Long> idList = new HashSet<Long>();
 			for(AbstractObject o : dlg.getSelectedObjects(Template.class))
 			{
-				templates.add((Template)o);
+				templates.put(((Template)o).getObjectId(), (Template)o);
 				idList.add(o.getObjectId());
 			}
-			templateViewer.setInput(templates.toArray());
+			templateViewer.setInput(templates.values().toArray());
 			setModified();
 			new ConsoleJob(Messages.get().ExportFileBuilder_ResolveJobName, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					final Set<Long> eventCodes = new HashSet<Long>();
+					final Map<Long, Script> scriptList = new HashMap<Long, Script>();
 					for(Long id : idList)
 					{
 						long[] e = session.getDataCollectionEvents(id);
@@ -706,13 +994,22 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 							if (c >= 100000)
 								eventCodes.add(c);
 						}
+						
+						for(Script s : session.getDataCollectionScripts(id))
+						   scriptList.put(s.getId(), s);
 					}
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
 						{
-							events.addAll(session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])));
-							eventViewer.setInput(events.toArray());
+						   for(EventTemplate e : session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])))
+						   {
+						      events.put(e.getCode(), e);
+						   }
+							eventViewer.setInput(events.values().toArray());
+							
+							scripts.putAll(scriptList);
+							scriptViewer.setInput(scripts.values().toArray());
 						}
 					});
 				}
@@ -727,21 +1024,6 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	}
 	
 	/**
-	 * Remove templates from list
-	 */
-	private void removeTemplates()
-	{
-		IStructuredSelection selection = (IStructuredSelection)templateViewer.getSelection();
-		if (selection.size() > 0)
-		{
-			for(Object o : selection.toList())
-				templates.remove(o);
-			templateViewer.setInput(templates.toArray());
-			setModified();
-		}
-	}
-	
-	/**
 	 * Add traps to list
 	 */
 	private void addTraps()
@@ -752,37 +1034,25 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			final Set<Long> eventCodes = new HashSet<Long>();
 			for(SnmpTrap t : dlg.getSelection())
 			{
-				traps.add(t);
+				traps.put(t.getId(), t);
 				if (t.getEventCode() >= 100000)
 				{
 					eventCodes.add((long)t.getEventCode());
 				}
 			}
-			trapViewer.setInput(traps.toArray());
+			trapViewer.setInput(traps.values().toArray());
 			setModified();
 			if (eventCodes.size() > 0)
 			{
-				events.addAll(session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])));
-				eventViewer.setInput(events.toArray());
+				for(EventTemplate e : session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])))
+				{
+				   events.put(e.getCode(), e);
+				}
+				eventViewer.setInput(events.values().toArray());
 			};
 		}
 	}
 	
-	/**
-	 * Remove traps from list
-	 */
-	private void removeTraps()
-	{
-		IStructuredSelection selection = (IStructuredSelection)trapViewer.getSelection();
-		if (selection.size() > 0)
-		{
-			for(Object o : selection.toList())
-				traps.remove(o);
-			trapViewer.setInput(traps.toArray());
-			setModified();
-		}
-	}
-
 	/**
 	 * Add rules to list
 	 */
@@ -794,7 +1064,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			final Set<Long> eventCodes = new HashSet<Long>();
 			for(EventProcessingPolicyRule r : dlg.getSelectedRules())
 			{
-				rules.add(r);
+				rules.put(r.getGuid(), r);
 				for(Long e : r.getEvents())
 				{
 					if (e >= 100000)
@@ -803,28 +1073,62 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 					}
 				}
 			}
-			ruleViewer.setInput(rules.toArray());
+			ruleViewer.setInput(rules.values().toArray());
 			setModified();
 			if (eventCodes.size() > 0)
 			{
-				events.addAll(session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])));
-				eventViewer.setInput(events.toArray());
+				for(EventTemplate e : session.findMultipleEventTemplates(eventCodes.toArray(new Long[eventCodes.size()])))
+				{
+				   events.put(e.getCode(), e);
+				}
+				eventViewer.setInput(events.values().toArray());
 			};
 		}
 	}
 	
 	/**
-	 * Remove rules from list
+    * Add script to list
 	 */
-	private void removeRules()
+   private void addScripts()
 	{
-		IStructuredSelection selection = (IStructuredSelection)ruleViewer.getSelection();
-		if (selection.size() > 0)
+      SelectScriptDialog dlg = new SelectScriptDialog(getSite().getShell());
+      dlg.setMultiSelection(true);
+      if (dlg.open() == Window.OK)
 		{
-			for(Object o : selection.toList())
-				rules.remove(o);
-			ruleViewer.setInput(rules.toArray());
+         for(Script s : dlg.getSelection())
+            scripts.put(s.getId(), s);
+         scriptViewer.setInput(scripts.values().toArray());
 			setModified();
 		}
 	}
+   
+   /**
+    * Add oject tools to list
+    */
+   private void addObjectTools()
+   {
+      ObjectToolSelectionDialog dlg = new ObjectToolSelectionDialog(getSite().getShell());
+      if (dlg.open() == Window.OK)
+      {
+         for(ObjectTool t : dlg.getSelection())
+            tools.put(t.getId(), t);
+         toolsViewer.setInput(tools.values().toArray());
+         setModified();
+      }
+   }
+   
+   /**
+    * Add oject tools to list
+    */
+   private void addSummaryTables()
+   {
+      SummaryTableSelectionDialog dlg = new SummaryTableSelectionDialog(getSite().getShell());
+      if (dlg.open() == Window.OK)
+      {
+         for(DciSummaryTableDescriptor t : dlg.getSelection())
+            summaryTables.put(t.getId(), t);
+         summaryTableViewer.setInput(summaryTables.values().toArray());
+         setModified();
+      }
+   }
 }

@@ -220,6 +220,10 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
 
 	SetSocketExclusiveAddrUse(sock);
 	SetSocketReuseFlag(sock);
+#ifdef IPV6_V6ONLY
+   int on = 1;
+   setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
+#endif
 
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in6));

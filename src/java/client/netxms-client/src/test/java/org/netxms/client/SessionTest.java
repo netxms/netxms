@@ -46,8 +46,9 @@ public class SessionTest extends TestCase
          }
       });
       
-		NXCSession session = new NXCSession(serverAddress, serverPort, loginName, password, useEncryption);
-		session.connect();
+		NXCSession session = new NXCSession(serverAddress, serverPort, useEncryption);
+		session.connect(new int[] { ProtocolVersion.INDEX_FULL });
+		session.login(loginName, password);
 		return session;
 	}
 

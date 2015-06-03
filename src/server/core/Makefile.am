@@ -14,8 +14,9 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			download_job.cpp ef.cpp email.cpp entirenet.cpp \
 			epp.cpp events.cpp evproc.cpp fdb.cpp \
 			filemonitoring.cpp graph.cpp hdlink.cpp hk.cpp id.cpp \
-			import.cpp index.cpp interface.cpp isc.cpp job.cpp \
-			jobmgr.cpp jobqueue.cpp layer2.cpp ldap.cpp lln.cpp lldp.cpp \
+			import.cpp inaddr_index.cpp index.cpp interface.cpp \
+			isc.cpp job.cpp jobmgr.cpp jobqueue.cpp layer2.cpp \
+			ldap.cpp lln.cpp lldp.cpp \
 			locks.cpp logfilter.cpp loghandle.cpp logs.cpp \
 			macdb.cpp main.cpp mdconn.cpp mdsession.cpp \
 			mobile.cpp modules.cpp mt.cpp ndd.cpp ndp.cpp \

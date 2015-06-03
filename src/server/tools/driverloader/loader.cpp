@@ -50,7 +50,7 @@ void PrintAccessPoints(NetworkDeviceDriver *driver, SNMP_Transport *transport)
                info->getState() == AP_ADOPTED ? _T("adopted") : _T("unadopted"),
                info->getModel(),
                info->getSerial());
-         ObjectArray<RadioInterfaceInfo> *interfaces = info->getRadioInterfaces();
+         const ObjectArray<RadioInterfaceInfo> *interfaces = info->getRadioInterfaces();
          _tprintf(_T("\t\tRadio Interfaces:\n"));
          for (int j = 0; j < interfaces->size(); j++)
          {
@@ -157,7 +157,7 @@ static void LoadDriver(const char *driver, const char *host, int snmpVersion, in
    }
    
    SNMP_Transport *transport = new SNMP_UDPTransport;
-   ((SNMP_UDPTransport *)transport)->createUDPTransport(NULL, ResolveHostNameA(host), snmpPort);
+   ((SNMP_UDPTransport *)transport)->createUDPTransport(InetAddress::resolveHostName(host), snmpPort);
    transport->setSnmpVersion(snmpVersion);
    transport->setSecurityContext(new SNMP_SecurityContext(community));
 

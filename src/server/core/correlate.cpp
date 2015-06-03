@@ -91,7 +91,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 	}
 
 	// Check directly connected switch
-	Interface *iface = pNode->findInterface(0, pNode->IpAddr());
+	Interface *iface = pNode->findInterfaceByIP(pNode->getIpAddress());
 	if ((iface != NULL) && (iface->getPeerNodeId() != 0))
 	{
 		if (CheckNodeDown(pNode, pEvent, iface->getPeerNodeId(), _T("upstream switch")))
@@ -140,7 +140,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
       }
       else
       {
-         Interface *pInterface = ((Node *)hop->object)->findInterface(hop->ifIndex, INADDR_ANY);
+         Interface *pInterface = ((Node *)hop->object)->findInterfaceByIndex(hop->ifIndex);
          if ((pInterface != NULL) && ((pInterface->Status() == STATUS_CRITICAL) || (pInterface->Status() == STATUS_DISABLED)))
          {
 				DbgPrintf(5, _T("C_SysNodeDown: upstream interface %s [%d] on node %s [%d] for current node %s [%d] is down"),
@@ -169,7 +169,7 @@ void CorrelateEvent(Event *pEvent)
    {
       case EVENT_INTERFACE_DISABLED:
 			{
-				Interface *pInterface = node->findInterface(pEvent->getParameterAsULong(4), INADDR_ANY);
+            Interface *pInterface = node->findInterfaceByIndex(pEvent->getParameterAsULong(4));
 				if (pInterface != NULL)
 				{
 					pInterface->setLastDownEventId(pEvent->getId());
@@ -178,7 +178,7 @@ void CorrelateEvent(Event *pEvent)
 			break;
       case EVENT_INTERFACE_DOWN:
 			{
-				Interface *pInterface = node->findInterface(pEvent->getParameterAsULong(4), INADDR_ANY);
+				Interface *pInterface = node->findInterfaceByIndex(pEvent->getParameterAsULong(4));
 				if (pInterface != NULL)
 				{
 					pInterface->setLastDownEventId(pEvent->getId());

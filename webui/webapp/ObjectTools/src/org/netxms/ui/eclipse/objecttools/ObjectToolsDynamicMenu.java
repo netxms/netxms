@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,6 +47,7 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.ui.eclipse.objects.ObjectWrapper;
 import org.netxms.ui.eclipse.objecttools.api.NodeInfo;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolExecutor;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolsCache;
@@ -200,6 +201,12 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 				AbstractNode n = (AbstractNode)session.findObjectById(((Alarm)o).getSourceObjectId(), AbstractNode.class);
 				if (n != null)
 					nodes.add(new NodeInfo(n, (Alarm)o));
+			} 
+			else if (o instanceof ObjectWrapper)
+			{
+			   AbstractObject n = ((ObjectWrapper)o).getObject();
+			   if ((n != null) && (n instanceof AbstractNode))
+			      nodes.add(new NodeInfo((AbstractNode)n, null));
 			}
 		}
 		return nodes;

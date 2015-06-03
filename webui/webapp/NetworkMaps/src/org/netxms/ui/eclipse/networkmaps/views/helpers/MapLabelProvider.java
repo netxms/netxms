@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,6 +91,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private Image imgService;
 	private Image imgCluster;
 	private Image imgAccessPoint;
+   private Image imgInterface;
 	private Image imgOther;
 	private Image imgUnknown;
 	private Image imgResCluster;
@@ -139,6 +140,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgService = Activator.getImageDescriptor("icons/objects/service.png").createImage(); //$NON-NLS-1$
 		imgCluster = Activator.getImageDescriptor("icons/objects/cluster.png").createImage(); //$NON-NLS-1$
 		imgAccessPoint = Activator.getImageDescriptor("icons/objects/accesspoint.png").createImage(); //$NON-NLS-1$
+      imgInterface = Activator.getImageDescriptor("icons/objects/interface.png").createImage(); //$NON-NLS-1$
 		imgOther = Activator.getImageDescriptor("icons/objects/other.png").createImage(); //$NON-NLS-1$
 		imgUnknown = Activator.getImageDescriptor("icons/objects/unknown.png").createImage(); //$NON-NLS-1$
 		imgResCluster = Activator.getImageDescriptor("icons/resources/cluster_res.png").createImage(); //$NON-NLS-1$
@@ -227,6 +229,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 						return imgAccessPoint;
 					case AbstractObject.OBJECT_NETWORKMAP:
 						return imgNetMap;
+					case AbstractObject.OBJECT_INTERFACE:
+					   return imgInterface;
 					default:
 						return imgOther;
 				}
@@ -333,6 +337,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		imgService.dispose();
 		imgCluster.dispose();
 		imgAccessPoint.dispose();
+		imgInterface.dispose();
 		imgOther.dispose();
 		imgUnknown.dispose();
 		

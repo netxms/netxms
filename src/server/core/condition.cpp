@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -107,7 +107,7 @@ BOOL Condition::loadFromDatabase(UINT32 dwId)
    m_inactiveStatus = DBGetFieldLong(hResult, 0, 4);
    m_scriptSource = DBGetField(hResult, 0, 5, NULL, 0);
    DecodeSQLString(m_scriptSource);
-   
+
    DBFreeResult(hResult);
 
    // Compile script
@@ -183,7 +183,7 @@ BOOL Condition::saveToDatabase(DB_HANDLE hdb)
    // Form and execute INSERT or UPDATE query
    if (bNewObject)
    {
-      _sntprintf(pszQuery, qlen, 
+      _sntprintf(pszQuery, qlen,
 			                 _T("INSERT INTO conditions (id,activation_event,")
                           _T("deactivation_event,source_object,active_status,")
                           _T("inactive_status,script) VALUES (%d,%d,%d,%d,%d,%d,'%s')"),
@@ -240,11 +240,10 @@ bool Condition::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message from object
  */
-void Condition::fillMessage(NXCPMessage *pMsg)
+void Condition::fillMessageInternal(NXCPMessage *pMsg)
 {
-   UINT32 i, dwId;
+   NetObj::fillMessageInternal(pMsg);
 
-   NetObj::fillMessage(pMsg);
    pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_scriptSource));
    pMsg->setField(VID_ACTIVATION_EVENT, m_activationEventCode);
    pMsg->setField(VID_DEACTIVATION_EVENT, m_deactivationEventCode);
@@ -252,7 +251,7 @@ void Condition::fillMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_ACTIVE_STATUS, (WORD)m_activeStatus);
    pMsg->setField(VID_INACTIVE_STATUS, (WORD)m_inactiveStatus);
    pMsg->setField(VID_NUM_ITEMS, m_dciCount);
-   for(i = 0, dwId = VID_DCI_LIST_BASE; (i < m_dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
+   for(UINT32 i = 0, dwId = VID_DCI_LIST_BASE; (i < m_dciCount) && (dwId < (VID_DCI_LIST_LAST + 1)); i++)
    {
       pMsg->setField(dwId++, m_dciList[i].id);
       pMsg->setField(dwId++, m_dciList[i].nodeId);
@@ -266,13 +265,10 @@ void Condition::fillMessage(NXCPMessage *pMsg)
 /**
  * Modify object from NXCP message
  */
-UINT32 Condition::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Condition::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
    UINT32 i, dwId;
    NetObj *pObject;
-
-   if (!bAlreadyLocked)
-      lockProperties();
 
    // Change script
    if (pRequest->isFieldExist(VID_SCRIPT))
@@ -360,7 +356,7 @@ UINT32 Condition::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
       }
    }
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
 /**

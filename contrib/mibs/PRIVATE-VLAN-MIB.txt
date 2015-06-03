@@ -1,0 +1,234 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Private VLAN Common mib
+-- FILE NAME: PrivateVLAN.mib
+-- DATE     : 2008/08/11
+-- VERSION  : 1.00
+-- PURPOSE  : To construct the MIB structure of Private VLAN
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2008/08/11, Turbo Rao
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------  
+
+PRIVATE-VLAN-MIB DEFINITIONS ::= BEGIN
+
+	IMPORTS
+	    MODULE-IDENTITY, OBJECT-TYPE, Integer32
+	        FROM SNMPv2-SMI
+	    RowStatus, DisplayString
+	        FROM SNMPv2-TC
+	    MODULE-COMPLIANCE, OBJECT-GROUP
+	        FROM SNMPv2-CONF
+	    dlink-common-mgmt	
+	        FROM DLINK-ID-REC-MIB
+	    VlanId, VlanIdOrNone, PortList
+	    	FROM Q-BRIDGE-MIB;
+
+
+	swPrivateVLANMIB MODULE-IDENTITY
+	    LAST-UPDATED "200808110000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+	        "The Private VLAN module MIB for the proprietary enterprise.
+	         Other related VLAN parameters will reference to rfc2674q(rfc4363q).mib."
+	    ::= { dlink-common-mgmt 69}
+	    
+-- -------------------------------------------------------------
+-- Textual Conventions
+-- -------------------------------------------------------------
+
+SecondaryVlanType ::= TEXTUAL-CONVENTION
+    STATUS      current
+    DESCRIPTION
+        "The type of secondary VLAN."
+    SYNTAX      INTEGER { isolated(1), community(2) }
+    
+    
+	swPrivateVlanCtrl 		OBJECT IDENTIFIER ::= { swPrivateVLANMIB 1 }
+        swPrivateVlanInfo 		OBJECT IDENTIFIER ::= { swPrivateVLANMIB 2 }
+        swPrivateVlanMgmt 		OBJECT IDENTIFIER ::= { swPrivateVLANMIB 3 }
+        
+-- -----------------------------------------------------------------------------
+-- swPrivateVlanCtrl
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swPrivateVlanInfo
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swPrivateVlanMgmt
+-- -----------------------------------------------------------------------------
+
+	swPrivateVlanTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF SwPrivateVlanEntry
+	    MAX-ACCESS not-accessible
+            STATUS current
+	    DESCRIPTION
+	        "A table containing current private VLAN information."
+
+	    ::= { swPrivateVlanMgmt 1 }
+
+	swPrivateVlanEntry OBJECT-TYPE
+	    SYNTAX SwPrivateVlanEntry
+	    MAX-ACCESS not-accessible
+	    STATUS current
+	    DESCRIPTION
+	        "The management information of a private VLAN domain."
+	    INDEX { swPrivateVlanId }
+
+	    ::= { swPrivateVlanTable 1 }
+
+	SwPrivateVlanEntry ::=
+	    SEQUENCE {
+	    	swPrivateVlanId
+			VlanId,
+	        swPrivateVlanName
+	                DisplayString,
+	        swPrivateVlanPromiscuousPorts
+	            	PortList,
+	        swPrivateVlanTrunkPorts
+	            	PortList,    				
+		swPrivateVlanRowStatus
+			RowStatus
+	    }
+
+    	swPrivateVlanId OBJECT-TYPE
+        	SYNTAX  VlanId
+        	MAX-ACCESS  read-only
+        	STATUS  current
+        	DESCRIPTION
+            		"The VLAN-ID referring to the private VLAN of the private VLAN domain. 
+            		A private VLAN is the unique and common VLAN identifier of the whole 
+            		private VLAN domain. Every port in a private VLAN is a member of the 
+            		private VLAN. The IP subnet of the private VLAN shall be associated with the 
+            		private VLAN. Only the private VLAN is visible outside of the domain."
+        	::= { swPrivateVlanEntry 1 }
+
+    	swPrivateVlanName OBJECT-TYPE
+        	SYNTAX  DisplayString
+        	MAX-ACCESS  read-create
+        	STATUS  current
+        	DESCRIPTION
+            		"An administratively assigned string which may be used
+			to identify the private VLAN."
+        	::= { swPrivateVlanEntry 2 }
+        	
+        swPrivateVlanPromiscuousPorts OBJECT-TYPE
+	    	SYNTAX      PortList
+	    	MAX-ACCESS  read-write
+	    	STATUS      current
+	    	DESCRIPTION
+	        	"The promiscuous port has the ability to communicate with any 
+	        	port within the private VLAN. A promiscuous port is
+	        	an untagged member of the private VLAN."
+	    	::= { swPrivateVlanEntry 3 }
+	    
+        swPrivateVlanTrunkPorts OBJECT-TYPE
+	    	SYNTAX      PortList
+	    	MAX-ACCESS  read-write
+	    	STATUS      current
+	    	DESCRIPTION
+	        	"The trunk port, also known as the Inter-switch link, has the ability to 
+	        	communicate with any port within the private VLAN. A trunk port is a
+	        	tagged member of the private VLAN."
+	    	::= { swPrivateVlanEntry 4 }	
+
+	swPrivateVlanRowStatus	OBJECT-TYPE
+	    	SYNTAX      RowStatus
+	    	MAX-ACCESS  read-create
+	    	STATUS      current
+	    	DESCRIPTION
+	        	"This object indicates the status of this entry."
+	    	::= { swPrivateVlanEntry 5 }
+
+-- ----------------------------------------------------------------------------
+
+	swSecondaryVlanTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SwSecondaryVlanEntry
+		MAX-ACCESS not-accessible
+		STATUS current
+	    DESCRIPTION
+	        "A table containing current secondary VLAN information."
+
+	    ::= { swPrivateVlanMgmt 2 }
+
+	swSecondaryVlanEntry OBJECT-TYPE
+	    SYNTAX SwSecondaryVlanEntry
+	    MAX-ACCESS not-accessible
+	    STATUS current
+	    DESCRIPTION
+	        "The management information of a secondary VLAN of a private VLAN domain."
+	    INDEX { swPrivateVlanId,
+	    	swSecondaryVlanId }
+
+	    ::= { swSecondaryVlanTable 1 }
+
+	SwSecondaryVlanEntry ::=
+	    SEQUENCE {
+	    	swSecondaryVlanId
+			VlanId,
+		swSecondaryVlanType
+	            	SecondaryVlanType, 	
+	        swSecondaryVlanPorts
+	            	PortList,  	           				
+		swSecondaryVlanRowStatus
+			RowStatus
+	    }
+
+    	swSecondaryVlanId OBJECT-TYPE
+        	SYNTAX  VlanId
+        	MAX-ACCESS  read-only
+        	STATUS  current
+        	DESCRIPTION
+            		"The VLAN-ID referring to this SwSecondaryVLANEntry."
+        	::= { swSecondaryVlanEntry 1 }
+	    
+        swSecondaryVlanType OBJECT-TYPE
+	    	SYNTAX      SecondaryVlanType
+	    	MAX-ACCESS  read-create
+	    	STATUS      current
+	    	DESCRIPTION
+	        	"An isolated VLAN is a secondary VLAN whose distinctive 
+	        	characteristic is that all hosts connected to its ports are isolated at Layer 2. 
+	        	A private VLAN has only one isolated VLAN. If the swPrivateVlanIsolatedVlanIndex 
+	        	has a value of zero, this indicates there are no associated isolated VLANs in the private
+	            	VLAN domain. Otherwise, it is the associated isolated VLAN ID.
+	            	
+	            	A community VLAN is a secondary VLAN that is associated with a 
+	            	group of ports that connects to a certain 'community' of end devices with mutual
+	        	trust relationships. There can be multiple distinct community VLANs in a 
+	        	private VLAN domain."
+	    	::= { swSecondaryVlanEntry 2 }	
+	    		    
+        swSecondaryVlanPorts OBJECT-TYPE
+	    	SYNTAX      PortList
+	    	MAX-ACCESS  read-write
+	    	STATUS      current
+	    	DESCRIPTION
+	        	"If swSecondaryVlanType is isolated, the ports in the isolated VLAN of the private VLAN have complete Layer 2 separation from other ports within the same private 
+	        	VLAN, except for the promiscuous and trunk ports.
+	        	
+	        	If swSecondaryVlanType is community, the ports can communicate with other ports 
+	        	in the same Secondary VLAN and with promiscuous ports."
+	    	::= { swSecondaryVlanEntry 3 }	
+
+	swSecondaryVlanRowStatus	OBJECT-TYPE
+	    	SYNTAX      RowStatus
+	    	MAX-ACCESS  read-create
+	    	STATUS      current
+	    	DESCRIPTION
+	        	"This object indicates the status of this entry."
+	    	::= { swSecondaryVlanEntry 4 }
+	    	    
+END

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -127,12 +127,12 @@ static void SaveActionToDB(NXC_ACTION *pAction)
    // Prepare and execute INSERT or UPDATE query
    TCHAR szQuery[8192];
    if (IsDatabaseRecordExist(hdb, _T("actions"), _T("action_id"), pAction->dwId))
-      _sntprintf(szQuery, 8192, 
+      _sntprintf(szQuery, 8192,
 		           _T("UPDATE actions SET action_name=%s,action_type=%d,is_disabled=%d,")
                  _T("rcpt_addr=%s,email_subject=%s,action_data=%s ")
                  _T("WHERE action_id=%d"),
               (const TCHAR *)DBPrepareString(hdb, pAction->szName, 63), pAction->iType, pAction->bIsDisabled,
-              (const TCHAR *)DBPrepareString(hdb, pAction->szRcptAddr, 255), 
+              (const TCHAR *)DBPrepareString(hdb, pAction->szRcptAddr, 255),
 				  (const TCHAR *)DBPrepareString(hdb, pAction->szEmailSubject, 255),
 				  (const TCHAR *)DBPrepareString(hdb, CHECK_NULL_EX(pAction->pszData)), pAction->dwId);
    else
@@ -140,9 +140,9 @@ static void SaveActionToDB(NXC_ACTION *pAction)
 		           _T("INSERT INTO actions (action_id,action_name,action_type,")
                  _T("is_disabled,rcpt_addr,email_subject,action_data) VALUES")
                  _T(" (%d,%s,%d,%d,%s,%s,%s)"),
-              pAction->dwId, (const TCHAR *)DBPrepareString(hdb, pAction->szName, 63), 
+              pAction->dwId, (const TCHAR *)DBPrepareString(hdb, pAction->szName, 63),
 				  pAction->iType, pAction->bIsDisabled,
-              (const TCHAR *)DBPrepareString(hdb, pAction->szRcptAddr, 255), 
+              (const TCHAR *)DBPrepareString(hdb, pAction->szRcptAddr, 255),
 				  (const TCHAR *)DBPrepareString(hdb, pAction->szEmailSubject, 255),
 				  (const TCHAR *)DBPrepareString(hdb, CHECK_NULL_EX(pAction->pszData)));
 	DBQuery(hdb, szQuery);
@@ -155,7 +155,7 @@ static void SaveActionToDB(NXC_ACTION *pAction)
  */
 static int CompareId(const void *key, const void *elem)
 {
-   return CAST_FROM_POINTER(key, UINT32) < ((NXC_ACTION *)elem)->dwId ? -1 : 
+   return CAST_FROM_POINTER(key, UINT32) < ((NXC_ACTION *)elem)->dwId ? -1 :
             (CAST_FROM_POINTER(key, UINT32) > ((NXC_ACTION *)elem)->dwId ? 1 : 0);
 }
 
@@ -164,7 +164,7 @@ static int CompareId(const void *key, const void *elem)
  */
 static int CompareElements(const void *p1, const void *p2)
 {
-   return ((NXC_ACTION *)p1)->dwId < ((NXC_ACTION *)p2)->dwId ? -1 : 
+   return ((NXC_ACTION *)p1)->dwId < ((NXC_ACTION *)p2)->dwId ? -1 :
             (((NXC_ACTION *)p1)->dwId > ((NXC_ACTION *)p2)->dwId ? 1 : 0);
 }
 
@@ -173,28 +173,27 @@ static int CompareElements(const void *p1, const void *p2)
  */
 static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 {
-   Node *pNode;
    AgentConnection *pConn;
-   UINT32 dwAddr, dwError;
+   UINT32 dwError;
    int i, nLen, nState, nCount = 0;
    TCHAR *pCmd[128], *pTmp;
 
    // Resolve hostname
-   dwAddr = ResolveHostName(pszTarget);
-   if ((dwAddr == INADDR_ANY) || (dwAddr == INADDR_NONE))
+   InetAddress addr = InetAddress::resolveHostName(pszTarget);
+   if (!addr.isValid())
       return FALSE;
 
-   pNode = FindNodeByIP(0, ntohl(dwAddr));	/* TODO: add possibility to specify action target by object id */
-   if (pNode != NULL)
+   Node *node = FindNodeByIP(0, addr.getAddressV4());	/* TODO: add possibility to specify action target by object id */
+   if (node != NULL)
    {
-      pConn = pNode->createAgentConnection();
+      pConn = node->createAgentConnection();
       if (pConn == NULL)
          return FALSE;
    }
    else
    {
       // Target node is not in our database, try default communication settings
-      pConn = new AgentConnection(dwAddr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
+      pConn = new AgentConnection(addr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
       if (!pConn->connect(g_pServerKey))
       {
          delete pConn;
@@ -298,7 +297,10 @@ static BOOL ForwardEvent(const TCHAR *server, Event *event)
 		object = FindObjectById(event->getSourceId());
 		if (object != NULL)
 		{
-			msg.setField(VID_IP_ADDRESS, object->IpAddr());
+         if (object->getObjectClass() == OBJECT_NODE)
+         {
+			   msg.setField(VID_IP_ADDRESS, ((Node *)object)->getIpAddress());
+         }
 			msg.setField(VID_EVENT_CODE, event->getCode());
 			msg.setField(VID_EVENT_NAME, event->getName());
 			if (event->getUserTag() != NULL)
@@ -379,7 +381,7 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const TCHAR *alarmMsg, cons
    BOOL bSuccess = FALSE;
 
    RWLockReadLock(m_rwlockActionListAccess, INFINITE);
-   pAction = (NXC_ACTION *)bsearch(CAST_TO_POINTER(dwActionId, void *), m_pActionList, 
+   pAction = (NXC_ACTION *)bsearch(CAST_TO_POINTER(dwActionId, void *), m_pActionList,
                                    m_dwNumActions, sizeof(NXC_ACTION), CompareId);
    if (pAction != NULL)
    {
@@ -543,7 +545,7 @@ UINT32 CreateNewAction(const TCHAR *pszName, UINT32 *pdwId)
    for(i = 0; i < m_dwNumActions; i++)
       if (!_tcsicmp(m_pActionList[i].szName, pszName))
       {
-         dwResult = RCC_ALREADY_EXIST;
+         dwResult = RCC_OBJECT_ALREADY_EXISTS;
          break;
       }
 

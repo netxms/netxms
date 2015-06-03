@@ -212,7 +212,7 @@ static void DecodeValue(BYTE *pData, int nDataFmt, int nOutputFmt, char *pszValu
 /**
  * Constructor
  */
-BCMXCPInterface::BCMXCPInterface(TCHAR *pszDevice) : SerialInterface(pszDevice)
+BCMXCPInterface::BCMXCPInterface(const TCHAR *device) : SerialInterface(device)
 {
 	if (m_portSpeed == 0)
 		m_portSpeed = 19200;

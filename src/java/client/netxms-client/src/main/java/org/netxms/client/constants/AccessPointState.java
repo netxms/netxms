@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,10 +27,10 @@ import org.netxms.base.Logger;
  */
 public enum AccessPointState
 {
-   UNKNOWN(-1),
    ADOPTED(0),
    UNADOPTED(1),
-   DOWN(2);
+   DOWN(2),
+   UNKNOWN(3);
 
    private int value;
    private static Map<Integer, AccessPointState> lookupTable = new HashMap<Integer, AccessPointState>();

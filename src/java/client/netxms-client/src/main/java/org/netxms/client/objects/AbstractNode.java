@@ -18,6 +18,7 @@
  */
 package org.netxms.client.objects;
 
+import java.net.InetAddress;
 import java.util.Date;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
@@ -85,6 +86,7 @@ public abstract class AbstractNode extends GenericObject
 	public static final int IFXTABLE_ENABLED = 1;
 	public static final int IFXTABLE_DISABLED = 2;
 	
+	protected InetAddress primaryIP;
 	protected String primaryName;
 	protected int flags;
 	protected int runtimeFlags;
@@ -139,6 +141,7 @@ public abstract class AbstractNode extends GenericObject
 	{
 		super(msg, session);
 
+		primaryIP = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
 		primaryName = msg.getFieldAsString(NXCPCodes.VID_PRIMARY_NAME);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		runtimeFlags = msg.getFieldAsInt32(NXCPCodes.VID_RUNTIME_FLAGS);
@@ -537,7 +540,7 @@ public abstract class AbstractNode extends GenericObject
 			if (iface.isLoopback() || (iface.getMacAddress() == null))
 				continue;
 			
-			if (iface.getPrimaryIP().equals(getPrimaryIP()))
+			if (iface.hasAddress(primaryIP))
 			{
 				return iface.getMacAddress();
 			}
@@ -551,5 +554,15 @@ public abstract class AbstractNode extends GenericObject
    public Date getBootTime()
    {
       return bootTime;
+   }
+   
+   /**
+    * Get primary IP address
+    * 
+    * @return
+    */
+   public InetAddress getPrimaryIP()
+   {
+      return primaryIP;
    }
 }

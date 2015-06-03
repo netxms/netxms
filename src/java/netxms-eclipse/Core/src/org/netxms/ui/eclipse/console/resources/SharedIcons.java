@@ -46,6 +46,7 @@ public class SharedIcons
 	public static ImageDescriptor EXECUTE;
 	public static ImageDescriptor EXPAND;
 	public static ImageDescriptor EXPAND_ALL;
+   public static ImageDescriptor FILTER;
 	public static ImageDescriptor FIND;
    public static ImageDescriptor INFORMATION;
 	public static ImageDescriptor IP_ADDRESS;
@@ -82,7 +83,8 @@ public class SharedIcons
 	public static Image IMG_EXECUTE;
 	public static Image IMG_EXPAND;
 	public static Image IMG_EXPAND_ALL;
-	public static Image IMG_FIND;
+	public static Image IMG_FILTER;
+   public static Image IMG_FIND;
    public static Image IMG_INFORMATION;
 	public static Image IMG_IP_ADDRESS;
 	public static Image IMG_NAV_BACKWARD;
@@ -123,7 +125,8 @@ public class SharedIcons
 		EXECUTE = Activator.getImageDescriptor("icons/execute.gif"); //$NON-NLS-1$
 		EXPAND = Activator.getImageDescriptor("icons/expand.png"); //$NON-NLS-1$
 		EXPAND_ALL = Activator.getImageDescriptor("icons/expandall.png"); //$NON-NLS-1$
-		FIND = Activator.getImageDescriptor("icons/find.gif"); //$NON-NLS-1$
+		FILTER = Activator.getImageDescriptor("icons/filter.gif"); //$NON-NLS-1$
+      FIND = Activator.getImageDescriptor("icons/find.gif"); //$NON-NLS-1$
       INFORMATION = Activator.getImageDescriptor("icons/information.png"); //$NON-NLS-1$
 		IP_ADDRESS = Activator.getImageDescriptor("icons/ipaddr.png"); //$NON-NLS-1$
 		NAV_BACKWARD = Activator.getImageDescriptor("icons/nav_backward.gif"); //$NON-NLS-1$
@@ -159,7 +162,8 @@ public class SharedIcons
 		IMG_EXECUTE = EXECUTE.createImage();
 		IMG_EXPAND = EXPAND.createImage();
 		IMG_EXPAND_ALL = EXPAND_ALL.createImage();
-		IMG_FIND = FIND.createImage();
+		IMG_FILTER = FILTER.createImage();
+      IMG_FIND = FIND.createImage();
       IMG_INFORMATION = INFORMATION.createImage();
 		IMG_IP_ADDRESS = IP_ADDRESS.createImage();
 		IMG_NAV_BACKWARD = NAV_BACKWARD.createImage();

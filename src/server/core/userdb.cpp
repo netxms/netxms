@@ -858,7 +858,7 @@ UINT32 NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, UINT32 *pd
 	{
       if (!_tcscmp(m_users[i]->getName(), pszName))
       {
-         dwResult = RCC_ALREADY_EXIST;
+         dwResult = RCC_OBJECT_ALREADY_EXISTS;
          break;
       }
 	}

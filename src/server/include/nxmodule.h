@@ -83,8 +83,8 @@ typedef struct
 	void (* pfPreObjectDelete)(NetObj *object);
 	NetObj *(* pfCreateObject)(int objectClass, const TCHAR *name, NetObj *parent, NXCPMessage *msg);
 	BOOL (* pfIsValidParentClass)(int childClass, int parentClass);
-	BOOL (* pfAcceptNewNode)(UINT32 ipAddr, UINT32 ipNetMask, UINT32 zoneId, BYTE *macAddr);
-	UINT32 (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, UINT32 ipAddr, UINT32 zoneId, NXCPMessage *request);
+	BOOL (* pfAcceptNewNode)(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr);
+	UINT32 (* pfValidateObjectCreation)(int objectClass, const TCHAR *name, const InetAddress& ipAddr, UINT32 zoneId, NXCPMessage *request);
    UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, NXCPMessage *request);
    void (* pfClientSessionClose)(ClientSession *session);
    void (* pfNXSLServerEnvConfig) (NXSL_Environment *env);

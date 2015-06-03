@@ -56,6 +56,11 @@ LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abs
 DWORD (__stdcall *imp_GetIfEntry2)(PMIB_IF_ROW2) = NULL;
 
 /**
+ * Windows XP/Windows Server 2003 flag
+ */
+bool g_isWin5 = false;
+
+/**
  * Import symbols
  */
 static void ImportSymbols()
@@ -241,6 +246,14 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINNT)
 {
 	*ppInfo = &m_info;
 	ImportSymbols();
+
+   OSVERSIONINFO ver;
+   ver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+   if (GetVersionEx(&ver))
+   {
+      if (ver.dwMajorVersion < 6)
+         g_isWin5 = true;
+   }
 	return TRUE;
 }
 

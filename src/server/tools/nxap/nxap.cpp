@@ -1,6 +1,6 @@
 /* 
 ** nxap - command line tool used to manage agent policies
-** Copyright (C) 2010-2014 Victor Kirhenshtein
+** Copyright (C) 2010-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
    int iEncryptionPolicy = ENCRYPTION_DISABLED;
 #endif
    WORD wPort = AGENT_LISTEN_PORT;
-   UINT32 dwAddr, dwTimeout = 5000, dwConnTimeout = 30000, dwError;
+   UINT32 dwTimeout = 5000, dwConnTimeout = 30000, dwError;
    TCHAR szSecret[MAX_SECRET_LENGTH] = _T("");
    TCHAR szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
    RSA *pServerKey = NULL;
@@ -302,14 +302,14 @@ int main(int argc, char *argv[])
          WSAStartup(2, &wsaData);
 #endif
 
-         dwAddr = ResolveHostNameA(argv[optind]);
-         if ((dwAddr == INADDR_ANY) || (dwAddr == INADDR_NONE))
+         InetAddress addr = InetAddress::resolveHostName(argv[optind]);
+         if (!addr.isValid())
          {
             _tprintf(_T("Invalid host name or address specified\n"));
          }
          else
          {
-            AgentConnection conn(dwAddr, wPort, iAuthMethod, szSecret);
+            AgentConnection conn(addr, wPort, iAuthMethod, szSecret);
 
 				conn.setConnectionTimeout(dwConnTimeout);
             conn.setCommandTimeout(dwTimeout);

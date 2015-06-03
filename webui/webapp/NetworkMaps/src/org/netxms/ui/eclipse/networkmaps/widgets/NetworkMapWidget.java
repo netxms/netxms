@@ -20,6 +20,12 @@ package org.netxms.ui.eclipse.networkmaps.widgets;
 
 import java.util.List;
 import org.eclipse.draw2d.ManhattanConnectionRouter;
+import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
+import org.eclipse.gef4.zest.layouts.algorithms.CompositeLayoutAlgorithm;
+import org.eclipse.gef4.zest.layouts.algorithms.GridLayoutAlgorithm;
+import org.eclipse.gef4.zest.layouts.algorithms.RadialLayoutAlgorithm;
+import org.eclipse.gef4.zest.layouts.algorithms.SpringLayoutAlgorithm;
+import org.eclipse.gef4.zest.layouts.algorithms.TreeLayoutAlgorithm;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
@@ -29,17 +35,10 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.gef4.zest.layouts.LayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.CompositeLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.GridLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.RadialLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.SpringLayoutAlgorithm;
-import org.eclipse.gef4.zest.layouts.algorithms.TreeLayoutAlgorithm;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
 import org.netxms.base.NXCommon;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
@@ -103,7 +102,7 @@ public class NetworkMapWidget extends Composite
          @Override
          public void notificationHandler(final SessionNotification n)
          {
-            if (n.getCode() == NXCNotification.OBJECT_CHANGED)
+            if (n.getCode() == SessionNotification.OBJECT_CHANGED)
             {
                getDisplay().asyncExec(new Runnable() {
                   @Override

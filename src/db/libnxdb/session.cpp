@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -27,6 +27,11 @@
  * Check if statement handle is valid
  */
 #define IS_VALID_STATEMENT_HANDLE(s) ((s != NULL) && (s->m_connection != NULL))
+
+/**
+ * Session init callback
+ */
+static void (*s_sessionInitCb)(DB_HANDLE session) = NULL;
 
 /**
  * Invalidate all prepared statements on connection
@@ -95,6 +100,8 @@ DB_HANDLE LIBNXDB_EXPORTABLE DBConnect(DB_DRIVER driver, const TCHAR *server, co
          if (driver->m_fpDrvSetPrefetchLimit != NULL)
             driver->m_fpDrvSetPrefetchLimit(hDrvConn, driver->m_defaultPrefetchLimit);
 		   __DBDbgPrintf(4, _T("New DB connection opened: handle=%p"), hConn);
+         if (s_sessionInitCb != NULL)
+            s_sessionInitCb(hConn);
       }
       else
       {
@@ -168,6 +175,8 @@ static void DBReconnect(DB_HANDLE hConn)
       {
          if (hConn->m_driver->m_fpDrvSetPrefetchLimit != NULL)
             hConn->m_driver->m_fpDrvSetPrefetchLimit(hConn->m_connection, hConn->m_driver->m_defaultPrefetchLimit);
+         if (s_sessionInitCb != NULL)
+            s_sessionInitCb(hConn);
          break;
       }
       if (nCount == 0)
@@ -206,6 +215,14 @@ bool LIBNXDB_EXPORTABLE DBSetPrefetchLimit(DB_HANDLE hConn, int limit)
    if (hConn->m_driver->m_fpDrvSetPrefetchLimit == NULL)
       return false;  // Not supported by driver
    return hConn->m_driver->m_fpDrvSetPrefetchLimit(hConn->m_connection, limit);
+}
+
+/**
+ * Set session initialization callback
+ */
+void LIBNXDB_EXPORTABLE DBSetSessionInitCallback(void (*cb)(DB_HANDLE))
+{
+   s_sessionInitCb = cb;
 }
 
 /**
@@ -536,6 +553,18 @@ char LIBNXDB_EXPORTABLE *DBGetFieldA(DB_RESULT hResult, int iRow, int iColumn, c
 }
 
 /**
+ * Get text field and escape it for XML document. Returned string
+ * always dynamically allocated and must be destroyed by caller.
+ */
+TCHAR LIBNXDB_EXPORTABLE *DBGetFieldForXML(DB_RESULT hResult, int row, int col)
+{
+   TCHAR *value = DBGetField(hResult, row, col, NULL, 0);
+   TCHAR *xmlString = EscapeStringForXML(value, -1);
+   safe_free(value);
+   return xmlString;
+}
+
+/**
  * Get field's value as unsigned long
  */
 UINT32 LIBNXDB_EXPORTABLE DBGetFieldULong(DB_RESULT hResult, int iRow, int iColumn)
@@ -619,14 +648,25 @@ double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_RESULT hResult, int iRow, int iCol
 }
 
 /**
- * Get field's value as IP address
+ * Get field's value as IPv4 address
  */
 UINT32 LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_RESULT hResult, int iRow, int iColumn)
 {
    TCHAR *pszVal, szBuffer[256];
 
    pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   return pszVal == NULL ? INADDR_NONE : ntohl(_t_inet_addr(pszVal));
+   return pszVal == NULL ? 0 : ntohl(_t_inet_addr(pszVal));
+}
+
+/**
+ * Get field's value as IP address
+ */
+InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_RESULT hResult, int iRow, int iColumn)
+{
+   TCHAR *pszVal, szBuffer[256];
+
+   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
+   return pszVal == NULL ? InetAddress() : InetAddress::parse(pszVal);
 }
 
 /**
@@ -971,13 +1011,23 @@ double LIBNXDB_EXPORTABLE DBGetFieldAsyncDouble(DB_ASYNC_RESULT hResult, int iCo
 }
 
 /**
- * Get field's value as IP address from asynchronous SELECT result
+ * Get field's value as IPv4 address from asynchronous SELECT result
  */
 UINT32 LIBNXDB_EXPORTABLE DBGetFieldAsyncIPAddr(DB_ASYNC_RESULT hResult, int iColumn)
 {
    TCHAR szBuffer[64];
    
    return (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL) ? INADDR_NONE : ntohl(_t_inet_addr(szBuffer));
+}
+
+/**
+ * Get field's value as IP address from asynchronous SELECT result
+ */
+InetAddress LIBNXDB_EXPORTABLE DBGetFieldAsyncInetAddr(DB_ASYNC_RESULT hResult, int iColumn)
+{
+   TCHAR szBuffer[64];
+   
+   return (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL) ? InetAddress() : InetAddress::parse(szBuffer);
 }
 
 /**

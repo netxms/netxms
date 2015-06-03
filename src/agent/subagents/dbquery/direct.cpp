@@ -99,21 +99,20 @@ LONG H_DirectQueryConfigurable(const TCHAR *param, const TCHAR *arg, TCHAR *valu
       return SYSINFO_RC_ERROR;
    }
 
-   AgentWriteDebugLog(6, _T("DBQUERY: H_DirectQueryConfigurable: Executing query %s in database: %s"), query, dbid);
+   AgentWriteDebugLog(7, _T("DBQUERY: H_DirectQueryConfigurable: Executing query \"%s\" in database %s"), query, dbid);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
    if (hStmt != NULL)
    {
       int i = 1;
       AgentGetParameterArg(param, i, bindParam, 256);
-      while(_tcscmp(bindParam, _T("")) != 0)
+      while(bindParam[0] != 0)
       {
-         DBBind(hStmt, i, DB_SQLTYPE_VARCHAR, bindParam, 256);
-         AgentWriteDebugLog(6, _T("DBQUERY: H_DirectQueryConfigurable: Parameter bint %s in pleace %d"), bindParam, i);
+         DBBind(hStmt, i, DB_SQLTYPE_VARCHAR, bindParam, DB_BIND_TRANSIENT);
+         AgentWriteDebugLog(7, _T("DBQUERY: H_DirectQueryConfigurable: Parameter bind: \"%s\" at position %d"), bindParam, i);
          i++;
          AgentGetParameterArg(param, i, bindParam, 256);
       }
-
    }
 
    LONG rc = SYSINFO_RC_ERROR;
@@ -181,17 +180,17 @@ LONG H_DirectQueryConfigurableTable(const TCHAR *param, const TCHAR *arg, Table 
       return SYSINFO_RC_ERROR;
    }
 
-   AgentWriteDebugLog(6, _T("DBQUERY: H_DirectQueryConfigurableTable: Executing query %s in database: %s"), query, dbid);
+   AgentWriteDebugLog(6, _T("DBQUERY: H_DirectQueryConfigurableTable: Executing query \"%s\" in database %s"), query, dbid);
 
    DB_STATEMENT hStmt = DBPrepare(hdb, query);
    if (hStmt != NULL)
    {
       int i = 1;
       AgentGetParameterArg(param, i, bindParam, 256);
-      while(_tcscmp(bindParam, _T("")) != 0)
+      while(bindParam[0] != 0)
       {
-         DBBind(hStmt, i, DB_SQLTYPE_VARCHAR, bindParam, 256);
-         AgentWriteDebugLog(6, _T("DBQUERY: H_DirectQueryConfigurableTable: Parameter bint %s in pleace %d"), bindParam, i);
+         DBBind(hStmt, i, DB_SQLTYPE_VARCHAR, bindParam, DB_BIND_TRANSIENT);
+         AgentWriteDebugLog(6, _T("DBQUERY: H_DirectQueryConfigurableTable: Parameter bind: \"%s\" at position %d"), bindParam, i);
          i++;
          AgentGetParameterArg(param, i, bindParam, 256);
       }

@@ -193,7 +193,7 @@ void Array::clear()
 /**
  * Get index of given element
  */
-int Array::indexOf(void *element)
+int Array::indexOf(void *element) const
 {
    if (m_storePointers)
    {
@@ -225,7 +225,7 @@ void Array::sort(int (*cb)(const void *, const void *))
 /**
  * Find element (assuming array is already sorted)
  */
-void *Array::find(const void *key, int (*cb)(const void *, const void *))
+void *Array::find(const void *key, int (*cb)(const void *, const void *)) const
 {
    return bsearch(key, m_data, m_size, m_elementSize, cb);
 }

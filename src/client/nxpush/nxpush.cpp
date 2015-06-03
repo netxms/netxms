@@ -464,7 +464,9 @@ static BOOL Startup()
 #endif
 
       session = new NXCSession();
-      dwResult = session->connect(_HOST, _USER, _PASSWD, optEncrypt ? NXCF_ENCRYPT : 0, _T("nxpush/") NETXMS_VERSION_STRING);
+      static UINT32 protocolVersions[] = { CPV_INDEX_PUSH };
+      dwResult = session->connect(_HOST, _USER, _PASSWD, optEncrypt ? NXCF_ENCRYPT : 0, _T("nxpush/") NETXMS_VERSION_STRING,
+                                  protocolVersions, sizeof(protocolVersions) / sizeof(UINT32));
 
 #ifdef UNICODE
 		free(wHost);

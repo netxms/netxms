@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.perfview.objecttabs.internal.PerfTabGraph;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.widgets.AnimatedImage;
 
 /**
@@ -218,7 +219,13 @@ public class PerformanceTab extends ObjectTab
 		{
 			if (s.getParentDciId() == 0)
 			{
-				PerfTabGraph chart = new PerfTabGraph(chartArea, getObject().getObjectId(), s.getRuntimeDciInfo(), s);
+				PerfTabGraph chart = new PerfTabGraph(chartArea, getObject().getObjectId(), s.getRuntimeDciInfo(), s, getViewPart(), new VisibilityValidator() {
+               @Override
+               public boolean isVisible()
+               {
+                  return isActive();
+               }
+            });
 				charts.put(s.getRuntimeDciInfo().getId(), chart);
 				
 				final GridData gd = new GridData();
@@ -261,4 +268,15 @@ public class PerformanceTab extends ObjectTab
 	{
 		return object instanceof AbstractNode;
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
+    */
+   @Override
+   public void selected()
+   {
+      super.selected();
+      for(PerfTabGraph chart : charts.values())
+         chart.refreshData();
+   }
 }

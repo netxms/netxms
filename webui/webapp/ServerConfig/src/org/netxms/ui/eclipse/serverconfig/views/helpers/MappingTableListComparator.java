@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.serverconfig.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.api.client.mt.MappingTableDescriptor;
+import org.netxms.client.mt.MappingTableDescriptor;
 import org.netxms.ui.eclipse.serverconfig.views.MappingTables;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 

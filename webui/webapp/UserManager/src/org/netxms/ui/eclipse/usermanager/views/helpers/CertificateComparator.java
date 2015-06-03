@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.usermanager.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.api.client.users.AuthCertificate;
+import org.netxms.client.users.AuthCertificate;
 import org.netxms.ui.eclipse.usermanager.views.CertificateView;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 

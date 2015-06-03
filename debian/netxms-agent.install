@@ -1,0 +1,6 @@
+usr/bin/nxagentd
+usr/bin/nxappget
+usr/bin/nxapush
+usr/lib/*/libappagent.so.*
+usr/lib/*/libnxlp.so.*
+usr/lib/*/netxms/*.nsm

@@ -29,7 +29,7 @@
 /**
  *API version
  */
-#define NDDRV_API_VERSION           4
+#define NDDRV_API_VERSION           5
 
 /**
  * Driver header
@@ -97,7 +97,8 @@ enum AccessPointState
 {
    AP_ADOPTED = 0,
    AP_UNADOPTED = 1,
-   AP_DOWN = 2
+   AP_DOWN = 2,
+   AP_UNKNOWN = 3
 };
 
 /**
@@ -131,8 +132,9 @@ struct RadioInterfaceInfo
 class LIBNXSRV_EXPORTABLE AccessPointInfo
 {
 private:
+   UINT32 m_index;
    BYTE m_macAddr[MAC_ADDR_LENGTH];
-   UINT32 m_ipAddr;
+   InetAddress m_ipAddr;
    AccessPointState m_state;
    TCHAR *m_name;
    TCHAR *m_vendor;
@@ -141,19 +143,20 @@ private:
 	ObjectArray<RadioInterfaceInfo> *m_radioInterfaces;
 
 public:
-   AccessPointInfo(BYTE *macAddr, UINT32 ipAddr, AccessPointState state, const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial);
+   AccessPointInfo(UINT32 index, const BYTE *macAddr, const InetAddress& ipAddr, AccessPointState state, const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial);
    ~AccessPointInfo();
 
 	void addRadioInterface(RadioInterfaceInfo *iface);
 
-	BYTE *getMacAddr() { return m_macAddr; }
-   UINT32 getIpAddr() { return m_ipAddr; }
+   UINT32 getIndex() { return m_index; }
+	const BYTE *getMacAddr() { return m_macAddr; }
+   const InetAddress& getIpAddr() { return m_ipAddr; }
 	AccessPointState getState() { return m_state; }
 	const TCHAR *getName() { return m_name; }
 	const TCHAR *getVendor() { return m_vendor; }
 	const TCHAR *getModel() { return m_model; }
 	const TCHAR *getSerial() { return m_serial; }
-	ObjectArray<RadioInterfaceInfo> *getRadioInterfaces() { return m_radioInterfaces; }
+	const ObjectArray<RadioInterfaceInfo> *getRadioInterfaces() { return m_radioInterfaces; }
 };
 
 /**
@@ -212,6 +215,7 @@ public:
    virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
    virtual void analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap *attributes, DriverData **driverData);
    virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
+   virtual void getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
    virtual VlanList *getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual int getModulesOrientation(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual void getModuleLayout(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int module, NDD_MODULE_LAYOUT *layout);
@@ -220,6 +224,8 @@ public:
    virtual bool isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual ObjectArray<AccessPointInfo> *getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
    virtual ObjectArray<WirelessStationInfo> *getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData);
+   virtual AccessPointState getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData,
+                                                UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr);
 };
 
 #endif   /* _nddrv_h_ */

@@ -147,6 +147,7 @@ target
 /src/java/nebula/org.netxms.nebula.widgets.gallery.tests/bin
 /src/java/nebula/org.netxms.nebula.widgets.gallery/.settings
 /src/java/nebula/org.netxms.nebula.widgets.gallery/bin
+/src/java/nxreporting/netxms-reporting-server-*
 /src/java/nxreporting/src/main/resources/nxreporting.xml
 /src/java/nxshell/.classpath
 /src/java/nxshell/.project
@@ -196,6 +197,7 @@ target
 /src/tools/nxdevcfg/flags.cpp
 /src/tools/nxdevcfg/nxdevcfg
 /src/tools/nxencpasswd/nxencpasswd
+/src/tools/nxgenguid/nxgenguid
 /stamp-h1
 /status
 /tests/test-libnetxms/test-libnetxms

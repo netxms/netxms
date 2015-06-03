@@ -6,10 +6,10 @@ package org.netxms.ui.eclipse.serverconfig.views.helpers;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import org.netxms.api.client.servermanager.ServerVariable;
 import org.netxms.client.IpAddressListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.server.ServerVariable;
 import org.netxms.client.snmp.SnmpUsmCredential;
 
 /**

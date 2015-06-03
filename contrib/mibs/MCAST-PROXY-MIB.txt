@@ -1,0 +1,535 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : MCAST-PROXY-MIB
+-- FILE NAME: McastProxy.mib
+-- DATE     : 2009/08/17
+-- VERSION  : 1.01
+-- PURPOSE  : To construct the MIB structure of IGMP&MLD proxying
+--            function for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.01 2009/08/17, Phoenix Xie
+-- [Modification]
+-- 1. Delete swIGMPProxyDownstreamReplaceMAC and swMLDProxyDownstreamReplaceMAC.
+-- 2. Add swIGMPProxyGroupStatus and swMLDProxyGroupStatus for display the group status.
+-- Notes:Requested by Phoenix Xie for project DES3800.
+--
+-- Version 1.00, 2009/04/14, Phoenix Xie
+-- This is the first formal version for universal MIB definition.
+-- Notes:Requested by Phoenix Xie for project DES3700	
+-- -----------------------------------------------------------------------------
+
+MCAST-PROXY-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,Unsigned32,Integer32,
+        IpAddress,Counter32               FROM SNMPv2-SMI
+        DisplayString,RowStatus           FROM SNMPv2-TC
+        Ipv6Address			  FROM IPV6-TC
+        PortList,VlanId		  FROM Q-BRIDGE-MIB
+        dlink-common-mgmt		  FROM DLINK-ID-REC-MIB;
+    	
+    swMcastProxyMIB MODULE-IDENTITY
+          LAST-UPDATED "0904141704Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The structure of IGMP&MLD proxying for
+                    the proprietary enterprise."
+        ::= { dlink-common-mgmt 80 }
+
+-- -----------------------------------------------------------------------------
+-- Textual Conventions
+-- -----------------------------------------------------------------------------
+    swMcastProxyCtrl             OBJECT IDENTIFIER ::= { swMcastProxyMIB 1 }
+    swMcastProxyInfo             OBJECT IDENTIFIER ::= { swMcastProxyMIB 2 }
+    swMcastProxyMgmt             OBJECT IDENTIFIER ::= { swMcastProxyMIB 3 }
+		 		
+-- -----------------------------------------------------------------------------
+-- swMcastProxyCtrl             OBJECT IDENTIFIER ::= { swMcastProxyMIB 1 }
+-- -----------------------------------------------------------------------------
+
+     swIGMPProxyGlobalState  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                  enabled(1),
+                  disabled(2)
+                }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+               "This object indicates the global state of IGMP Proxy."
+        ::={ swMcastProxyCtrl 1 }
+
+      swMLDProxyGlobalState  OBJECT-TYPE
+        SYNTAX  INTEGER
+                {
+                  enabled(1),
+                  disabled(2)
+                }
+        MAX-ACCESS read-write
+        STATUS current
+        DESCRIPTION
+               "This object indicates the global state of MLD Proxy."
+        ::={ swMcastProxyCtrl 2 }
+
+-- -----------------------------------------------------------------------------
+-- swMcastProxyInfo            OBJECT IDENTIFIER ::= { swMcastProxyMIB 2 }
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swIGMPProxyInfo		OBJECT IDENTIFIER ::= { swMcastProxyInfo 1 }
+-- -----------------------------------------------------------------------------
+
+    swIGMPProxyInfo		OBJECT IDENTIFIER ::= { swMcastProxyInfo 1 }
+                                                                                              	
+-- -----------------------------------------------------------------------------
+-- swIGMPProxyGroupTable		OBJECT-TYPE ::= { swIGMPProxyInfo 1 }
+-- -----------------------------------------------------------------------------
+
+  swIGMPProxyGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwIGMPProxyGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This contains information about the IGMP Proxy group information table."
+        ::= { swIGMPProxyInfo 1 }
+
+    swIGMPProxyGroupEntry OBJECT-TYPE
+        SYNTAX  SwIGMPProxyGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swIGMPProxyGroupTable."
+        INDEX  {
+                 swIGMPProxyGroupDesAddr,
+                 swIGMPProxyGroupSrcAddr,
+                 swIGMPProxyDownstreamVlanID}
+        ::= { swIGMPProxyGroupTable 1 }
+
+    SwIGMPProxyGroupEntry ::=
+        SEQUENCE {
+            swIGMPProxyGroupDesAddr
+                IpAddress,
+            swIGMPProxyGroupSrcAddr
+                IpAddress,
+            swIGMPProxyDownstreamVlanID
+                VlanId,
+            swIGMPProxyDownstreamVlanMemberPorts
+                PortList,
+            swIGMPProxyGroupStatus
+                INTEGER
+       		 }
+
+    swIGMPProxyGroupDesAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the destination IP Address of the group entry of
+            IGMP Proxy downstream interface."
+        ::= { swIGMPProxyGroupEntry 1 }	        	
+
+    swIGMPProxyGroupSrcAddr OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the source IP Address of the group entry of
+            IGMP Proxy downstream interface."
+        ::= { swIGMPProxyGroupEntry 2 }
+                	
+     swIGMPProxyDownstreamVlanID OBJECT-TYPE
+        SYNTAX  VlanId
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the VLAN ID of IGMP Proxy downstream VLAN."
+        ::= { swIGMPProxyGroupEntry 3 }	        	
+
+    swIGMPProxyDownstreamVlanMemberPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the member port list of IGMP Proxy downstream VLAN."
+        ::= { swIGMPProxyGroupEntry 4 }
+        
+    swIGMPProxyGroupStatus OBJECT-TYPE
+        SYNTAX  INTEGER{
+                active(1),
+                inactive(2)
+                }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status whether the TGMP group has been inserted into the chip successfully."
+        ::= { swIGMPProxyGroupEntry 5 }
+
+-- -----------------------------------------------------------------------------
+-- swMLDProxyInfo		OBJECT IDENTIFIER ::= { swMcastProxyInfo 2 }
+-- -----------------------------------------------------------------------------
+
+    swMLDProxyInfo		OBJECT IDENTIFIER ::= { swMcastProxyInfo 2 }
+                                                                                              	
+-- -----------------------------------------------------------------------------
+-- swMLDProxyGroupTable		OBJECT-TYPE ::= { swMLDProxyInfo 1 }
+-- -----------------------------------------------------------------------------
+
+  swMLDProxyGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMLDProxyGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This contains information about the MLD Proxy group information table."
+        ::= { swMLDProxyInfo 1 }
+
+    swMLDProxyGroupEntry OBJECT-TYPE
+        SYNTAX  SwMLDProxyGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swMLDProxyGroupTable."
+        INDEX  {
+                 swMLDProxyGroupDesAddr,
+                 swMLDProxyGroupSrcAddr,
+                 swMLDProxyDownstreamVlanID}
+        ::= { swMLDProxyGroupTable 1 }
+
+    SwMLDProxyGroupEntry ::=
+        SEQUENCE {
+            swMLDProxyGroupDesAddr
+                Ipv6Address,
+            swMLDProxyGroupSrcAddr
+                Ipv6Address,
+            swMLDProxyDownstreamVlanID
+                VlanId,
+            swMLDProxyDownstreamVlanMemberPorts
+                PortList,
+            swMLDProxyGroupStatus
+                INTEGER
+       		 }
+
+    swMLDProxyGroupDesAddr OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the destination IPv6 Address of the group entry of
+            MLD Proxy downstream interface."
+        ::= { swMLDProxyGroupEntry 1 }	        	
+
+    swMLDProxyGroupSrcAddr OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the source IPv6 Address of the group entry of
+            MLD Proxy downstream interface."
+        ::= { swMLDProxyGroupEntry 2 }
+                	
+     swMLDProxyDownstreamVlanID OBJECT-TYPE
+        SYNTAX  VlanId
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the VLAN ID of MLD Proxy downstream VLAN."
+        ::= { swMLDProxyGroupEntry 3 }	        	
+
+    swMLDProxyDownstreamVlanMemberPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the member port list of MLD Proxy downstream VLAN."
+        ::= { swMLDProxyGroupEntry 4 }
+        
+    swMLDProxyGroupStatus OBJECT-TYPE
+        SYNTAX  INTEGER{
+                active(1),
+                inactive(2)
+                }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status whether the MLD group has been inserted into the chip successfully."
+        ::= { swMLDProxyGroupEntry 5 }
+        
+-- -----------------------------------------------------------------------------
+-- swMcastProxyMgmt            OBJECT IDENTIFIER ::= { swMcastProxyMIB 3 }
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swIGMPProxyMgmt		OBJECT IDENTIFIER ::= { swMcastProxyMgmt 1 }
+-- -----------------------------------------------------------------------------
+
+   swIGMPProxyMgmt		OBJECT IDENTIFIER ::= { swMcastProxyMgmt 1 }
+ 		
+-- -----------------------------------------------------------------------------
+-- swIGMPProxyUpstreamInterfaceTable	OBJECT-TYPE ::= { swIGMPProxyMgmt 1 }
+-- -----------------------------------------------------------------------------
+
+   swIGMPProxyUpstreamInterfaceTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwIGMPProxyUpstreamInterfaceEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The table controls the IGMP Proxy Upstream Interface."
+        ::= { swIGMPProxyMgmt 1 }
+
+    swIGMPProxyUpstreamInterfaceEntry OBJECT-TYPE
+        SYNTAX  SwIGMPProxyUpstreamInterfaceEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swIGMPProxyUpstreamInterfaceTable."
+        INDEX  { swIGMPProxyUpstreamIndex}
+        ::= { swIGMPProxyUpstreamInterfaceTable 1 }
+
+    SwIGMPProxyUpstreamInterfaceEntry ::=
+        SEQUENCE {
+            swIGMPProxyUpstreamIndex
+                INTEGER,
+            swIGMPProxyUpstreamVlanID
+            	VlanId,	
+            swIGMPProxyUpstreamDynamicRouterPorts
+                PortList,
+            swIGMPProxyUpstreamStaticRouterPorts
+                PortList,
+            swIGMPProxyUpstreamUnsolicitedReportInterval
+                INTEGER,
+	    swIGMPProxyUpstreamSourceIP
+		IpAddress		
+        }
+
+     swIGMPProxyUpstreamIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the index of IGMP Proxy Upstream interface
+             entry. "
+        ::= { swIGMPProxyUpstreamInterfaceEntry 1 }
+        
+    swIGMPProxyUpstreamVlanID OBJECT-TYPE
+        SYNTAX  VlanId
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the VLAN ID of the IGMP Proxy Upstream interface
+             entry."
+        ::= { swIGMPProxyUpstreamInterfaceEntry 2 }	
+        	
+    swIGMPProxyUpstreamDynamicRouterPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the dynamic router port list of the IGMP Proxy
+            Upstream Interface."
+        ::= { swIGMPProxyUpstreamInterfaceEntry 3 }	
+
+    swIGMPProxyUpstreamStaticRouterPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the static router port list of the IGMP Proxy
+            Upstream Interface."
+        ::= { swIGMPProxyUpstreamInterfaceEntry 4 }		
+
+    swIGMPProxyUpstreamUnsolicitedReportInterval OBJECT-TYPE
+        SYNTAX  INTEGER (0..25)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the time between repetitions of the host's initial
+            report of membership in a group."
+        DEFVAL {10}
+        ::= { swIGMPProxyUpstreamInterfaceEntry 5 }	
+
+    swIGMPProxyUpstreamSourceIP OBJECT-TYPE
+        SYNTAX  IpAddress
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the source IP of the upstream interface's IGMP packets."
+        ::= { swIGMPProxyUpstreamInterfaceEntry 6 }	
+
+
+-- -----------------------------------------------------------------------------
+-- swIGMPProxyDownstreamInterfaceTable	OBJECT-TYPE ::= { swIGMPProxyMgmt 2 }
+-- -----------------------------------------------------------------------------
+
+   swIGMPProxyDownstreamInterfaceTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwIGMPProxyDownstreamInterfaceEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates IGMP Proxy downstream interface packet."
+        ::= { swIGMPProxyMgmt 2 }
+
+    swIGMPProxyDownstreamInterfaceEntry OBJECT-TYPE
+        SYNTAX  SwIGMPProxyDownstreamInterfaceEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swIGMPProxyDownstreamInterfaceTable."
+        INDEX  { swIGMPProxyDownstreamVlanID}
+        ::= { swIGMPProxyDownstreamInterfaceTable 1 }
+
+    SwIGMPProxyDownstreamInterfaceEntry::=
+        SEQUENCE {
+            swIGMPProxyDownstreamRowStatus
+                RowStatus
+                 }
+    
+    swIGMPProxyDownstreamRowStatus OBJECT-TYPE
+       SYNTAX  RowStatus
+       MAX-ACCESS read-create
+       STATUS  current
+       DESCRIPTION
+           "This object indicates the status of this entry."
+       ::= {swIGMPProxyDownstreamInterfaceEntry 1 }
+       
+-- -----------------------------------------------------------------------------
+-- swMLDProxyMgmt		OBJECT IDENTIFIER ::= { swMcastProxyMgmt 2 }
+-- -----------------------------------------------------------------------------
+
+   swMLDProxyMgmt		OBJECT IDENTIFIER ::= { swMcastProxyMgmt 2 }
+ 		
+-- -----------------------------------------------------------------------------
+-- swMLDProxyUpstreamInterfaceTable	OBJECT-TYPE ::= { swMLDProxyMgmt 1 }
+-- -----------------------------------------------------------------------------
+
+   swMLDProxyUpstreamInterfaceTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMLDProxyUpstreamInterfaceEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The table controls the MLD Proxy Upstream Interface."
+        ::= { swMLDProxyMgmt 1 }
+
+    swMLDProxyUpstreamInterfaceEntry OBJECT-TYPE
+        SYNTAX  SwMLDProxyUpstreamInterfaceEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swMLDProxyUpstreamInterfaceTable."
+        INDEX  { swMLDProxyUpstreamIndex}
+        ::= { swMLDProxyUpstreamInterfaceTable 1 }
+
+    SwMLDProxyUpstreamInterfaceEntry ::=
+        SEQUENCE {
+            swMLDProxyUpstreamIndex
+                INTEGER,
+            swMLDProxyUpstreamVlanID
+            	VlanId,	
+            swMLDProxyUpstreamDynamicRouterPorts
+                PortList,
+            swMLDProxyUpstreamStaticRouterPorts
+                PortList,
+            swMLDProxyUpstreamUnsolicitedReportInterval
+                INTEGER,
+	    swMLDProxyUpstreamSourceIP
+		Ipv6Address		
+        }
+
+     swMLDProxyUpstreamIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the index of MLD Proxy Upstream interface
+             entry. "
+        ::= { swMLDProxyUpstreamInterfaceEntry 1 }
+        
+    swMLDProxyUpstreamVlanID OBJECT-TYPE
+        SYNTAX  VlanId
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the VLAN ID of the MLD Proxy Upstream interface
+             entry."
+        ::= { swMLDProxyUpstreamInterfaceEntry 2 }	
+        	
+    swMLDProxyUpstreamDynamicRouterPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the dynamic router port list of the MLD Proxy
+            Upstream Interface."
+        ::= { swMLDProxyUpstreamInterfaceEntry 3 }	
+
+    swMLDProxyUpstreamStaticRouterPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the static router port list of the MLD Proxy
+            Upstream Interface."
+        ::= { swMLDProxyUpstreamInterfaceEntry 4 }		
+
+    swMLDProxyUpstreamUnsolicitedReportInterval OBJECT-TYPE
+        SYNTAX  INTEGER (0..25)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the time between repetitions of the host's initial
+            report of membership in a group."
+	DEFVAL{10}           
+        ::= { swMLDProxyUpstreamInterfaceEntry 5 }	
+
+    swMLDProxyUpstreamSourceIP OBJECT-TYPE
+        SYNTAX  Ipv6Address
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the source IP of the upstream interface's MLD packets."
+        ::= { swMLDProxyUpstreamInterfaceEntry 6 }	
+
+
+-- -----------------------------------------------------------------------------
+-- swMLDProxyDownstreamInterfaceTable	OBJECT-TYPE ::= { swMLDProxyMgmt 2 }
+-- -----------------------------------------------------------------------------
+
+   swMLDProxyDownstreamInterfaceTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMLDProxyDownstreamInterfaceEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates MLD Proxy downstream interface packet."
+        ::= { swMLDProxyMgmt 2 }
+
+    swMLDProxyDownstreamInterfaceEntry OBJECT-TYPE
+        SYNTAX  SwMLDProxyDownstreamInterfaceEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swMLDProxyDownstreamInterfaceTable."
+        INDEX  { swMLDProxyDownstreamVlanID}
+        ::= { swMLDProxyDownstreamInterfaceTable 1 }
+
+    SwMLDProxyDownstreamInterfaceEntry::=
+        SEQUENCE {
+            swMLDProxyDownstreamRowStatus
+                RowStatus
+                 }
+                 
+   swMLDProxyDownstreamRowStatus OBJECT-TYPE
+       SYNTAX  RowStatus
+       MAX-ACCESS read-create
+       STATUS  current
+       DESCRIPTION
+           "This object indicates the status of this entry."
+       ::= {swMLDProxyDownstreamInterfaceEntry 1 }
+       
+END

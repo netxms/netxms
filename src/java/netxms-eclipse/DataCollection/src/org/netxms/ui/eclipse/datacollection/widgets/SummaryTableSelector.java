@@ -22,7 +22,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.ui.eclipse.datacollection.Messages;
-import org.netxms.ui.eclipse.datacollection.SummaryTablesCache;
+import org.netxms.ui.eclipse.datacollection.api.SummaryTablesCache;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectSummaryTableDialog;
 import org.netxms.ui.eclipse.widgets.AbstractSelector;
 

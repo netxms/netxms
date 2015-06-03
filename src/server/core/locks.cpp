@@ -61,12 +61,12 @@ static LOCK_INFO m_locks[NUMBER_OF_LOCKS] =
  * Lock entire database and clear all other locks
  * Will return FALSE if someone already locked database
  */
-BOOL InitLocks(UINT32 *pdwIpAddr, TCHAR *pszInfo)
+BOOL InitLocks(InetAddress *ipAddr, TCHAR *pszInfo)
 {
    BOOL bSuccess = FALSE;
    TCHAR szBuffer[256];
 
-   *pdwIpAddr = UNLOCKED;
+   *ipAddr = InetAddress();
    pszInfo[0] = 0;
 
    // Check current database lock status
@@ -74,7 +74,7 @@ BOOL InitLocks(UINT32 *pdwIpAddr, TCHAR *pszInfo)
 	DbgPrintf(6, _T("DBLockStatus=\"%s\""), szBuffer);
    if (!_tcscmp(szBuffer, _T("UNLOCKED")))
    {
-      IpToStr(GetLocalIpAddr(), szBuffer);
+      GetLocalIpAddr().toString(szBuffer);
       ConfigWriteStr(_T("DBLockStatus"), szBuffer, FALSE);
       GetSysInfoStr(szBuffer, sizeof(szBuffer));
       ConfigWriteStr(_T("DBLockInfo"), szBuffer, TRUE);
@@ -86,7 +86,7 @@ BOOL InitLocks(UINT32 *pdwIpAddr, TCHAR *pszInfo)
    {
       if (_tcscmp(szBuffer, _T("ERROR")))
       {
-         *pdwIpAddr = ntohl(_t_inet_addr(szBuffer));
+         *ipAddr = InetAddress::parse(szBuffer);
          ConfigReadStr(_T("DBLockInfo"), pszInfo, 256, _T("<error>"));
       }
    }

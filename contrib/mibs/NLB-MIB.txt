@@ -1,0 +1,177 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Network Load Balancing Common mib
+-- FILE NAME: NLB.mib
+-- DATE     : 2009/02/11
+-- VERSION  : 2.00
+-- PURPOSE  : To construct the MIB structure of network load balancing
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.00, 2009/02/11, Eli
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+NLB-MIB DEFINITIONS ::= BEGIN
+
+	IMPORTS
+
+	          MODULE-IDENTITY, OBJECT-TYPE
+        			FROM SNMPv2-SMI
+	          MacAddress, RowStatus
+	                FROM SNMPv2-TC
+	          PortList, VlanIndex
+	                FROM Q-BRIDGE-MIB
+	          dlink-common-mgmt
+	          		FROM DLINK-ID-REC-MIB;
+
+	swNlbMIB MODULE-IDENTITY
+	    LAST-UPDATED "0902110000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+		    "The MIB module for managing network load balancing."
+        ::= { dlink-common-mgmt 77 }
+
+    swNlbMgmt			OBJECT IDENTIFIER ::= { swNlbMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swNlbUnicastFdbTable
+-- -----------------------------------------------------------------------------
+
+    swNlbUnicastFdbTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwNlbUnicastFdbEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A table containing filtering information for unicast MAC
+            addresses for forwarding specific ports."
+        ::= { swNlbMgmt 1 }
+
+    swNlbUnicastFdbEntry OBJECT-TYPE
+        SYNTAX  SwNlbUnicastFdbEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of filtering information for unicast MAC addresses
+            for forwarding specific ports."
+        INDEX  { swNlbUnicastFdbMacAddress }
+        ::= { swNlbUnicastFdbTable 1 }
+
+    SwNlbUnicastFdbEntry ::=
+        SEQUENCE {
+            swNlbUnicastFdbMacAddress
+                MacAddress,
+            swNlbUnicastFdbEgressPorts
+                PortList,
+            swNlbUnicastFdbRowStatus
+                RowStatus
+        }
+
+    swNlbUnicastFdbMacAddress OBJECT-TYPE
+        SYNTAX  MacAddress
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The destination MAC address in a frame to which this entry's
+            filtering information applies."
+        ::= { swNlbUnicastFdbEntry 1 }
+
+    swNlbUnicastFdbEgressPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "The set of ports for a specific MAC address must be forwarded."
+        ::= { swNlbUnicastFdbEntry 2 }
+
+	swNlbUnicastFdbRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "The status of this conceptual row. To create a row in this
+            table, a manager must set this object to createAndGo (4).
+            To delete a row in this table, a manager must set this object
+            to destroy (6)."
+        ::= { swNlbUnicastFdbEntry 3 }
+
+-- -----------------------------------------------------------------------------
+-- swNlbMulticastFdbTable
+-- -----------------------------------------------------------------------------
+
+    swNlbMulticastFdbTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwNlbMulticastFdbEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A table containing filtering information for multicast MAC
+            addresses for forwarding specific ports."
+        ::= { swNlbMgmt 2 }
+
+    swNlbMulticastFdbEntry OBJECT-TYPE
+        SYNTAX      SwNlbMulticastFdbEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "A list of filtering information for multicast MAC addresses
+            for forwarding specific ports."
+        INDEX  { swNlbMulticastFdbVlanIndex, swNlbMulticastFdbMacAddress }
+        ::= { swNlbMulticastFdbTable 1 }
+
+    SwNlbMulticastFdbEntry ::=
+        SEQUENCE {
+            swNlbMulticastFdbVlanIndex
+                VlanIndex,
+            swNlbMulticastFdbMacAddress
+                MacAddress,
+            swNlbMulticastFdbEgressPorts
+                PortList,
+            swNlbMulticastFdbRowStatus
+                RowStatus
+        }
+
+    swNlbMulticastFdbVlanIndex OBJECT-TYPE
+        SYNTAX  VlanIndex
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The VLAN-ID or other identifier referring to this VLAN."
+        ::= { swNlbMulticastFdbEntry 1 }
+
+    swNlbMulticastFdbMacAddress OBJECT-TYPE
+        SYNTAX  MacAddress
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The destination MAC address in a frame to which this entry's
+            filtering information applies."
+        ::= { swNlbMulticastFdbEntry 2 }
+
+    swNlbMulticastFdbEgressPorts OBJECT-TYPE
+        SYNTAX  PortList
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "The set of ports for a specific MAC address must be forwarded."
+        ::= { swNlbMulticastFdbEntry 3 }
+
+	swNlbMulticastFdbRowStatus OBJECT-TYPE
+        SYNTAX  RowStatus
+        MAX-ACCESS  read-create
+        STATUS  current
+        DESCRIPTION
+            "The status of this conceptual row. To create a row in this
+            table, a manager must set this object to createAndGo (4).
+            To delete a row in this table, a manager must set this object
+            to destroy (6)."
+        ::= { swNlbMulticastFdbEntry 4 }
+
+END

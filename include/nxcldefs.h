@@ -81,10 +81,12 @@
 /**
  * Forced poll types
  */
-#define POLL_STATUS           1
-#define POLL_CONFIGURATION    2
-#define POLL_INTERFACE_NAMES  3
-#define POLL_TOPOLOGY         4
+#define POLL_STATUS                 1
+#define POLL_CONFIGURATION_FULL     2
+#define POLL_INTERFACE_NAMES        3
+#define POLL_TOPOLOGY               4
+#define POLL_CONFIGURATION_NORMAL   5
+#define POLL_INSTANCE_DISCOVERY     6
 
 /**
  * Object types
@@ -240,18 +242,24 @@
 /**
  * Interface administrative states
  */
-#define IF_ADMIN_STATE_UNKNOWN   0
-#define IF_ADMIN_STATE_UP        1
-#define IF_ADMIN_STATE_DOWN      2
-#define IF_ADMIN_STATE_TESTING   3
+enum InterfaceAdminState
+{
+   IF_ADMIN_STATE_UNKNOWN = 0,
+   IF_ADMIN_STATE_UP      = 1,
+   IF_ADMIN_STATE_DOWN    = 2,
+   IF_ADMIN_STATE_TESTING = 3
+};
 
 /**
  * Interface operational states
  */
-#define IF_OPER_STATE_UNKNOWN    0
-#define IF_OPER_STATE_UP         1
-#define IF_OPER_STATE_DOWN       2
-#define IF_OPER_STATE_TESTING    3
+enum InterfaceOperState
+{
+   IF_OPER_STATE_UNKNOWN = 0,
+   IF_OPER_STATE_UP      = 1,
+   IF_OPER_STATE_DOWN    = 2,
+   IF_OPER_STATE_TESTING = 3
+};
 
 /**
  * Node ifXTable usage mode
@@ -352,7 +360,7 @@ enum SessionState
  * Notification codes
  */
 #define NX_NOTIFY_SHUTDOWN                   1
-#define NX_NOTIFY_EVENTDB_CHANGED            2
+#define NX_NOTIFY_RELOAD_EVENT_DB            2
 #define NX_NOTIFY_ALARM_DELETED              3
 #define NX_NOTIFY_NEW_ALARM                  4
 #define NX_NOTIFY_ALARM_CHANGED              5
@@ -945,6 +953,8 @@ enum AggregationFunction
 
 #define TRAP_VARBIND_FORCE_TEXT     0x0001
 
+#ifdef __cplusplus
+
 /**
  * IP network
  */
@@ -1051,8 +1061,10 @@ typedef struct
 {
 	UINT32 dwId;
 	TCHAR szName[MAX_DB_STRING];
-	UINT32 dwIpAddr;
+	InetAddress ipAddr;
 	UINT32 dwCurrOwner;
 } CLUSTER_RESOURCE;
+
+#endif	/* __cplusplus */
 
 #endif   /* _nxcldefs_h_ */

@@ -44,10 +44,10 @@ struct LLDP_LOCAL_PORT_INFO
  */
 struct HOP_INFO
 {
-   UINT32 nextHop;     // Next hop address
-   NetObj *object;    // Current hop object
-   UINT32 ifIndex;     // Interface index or VPN connector object ID
-   bool isVpn;        // TRUE if next hop is behind VPN tunnel
+   InetAddress nextHop;  // Next hop address
+   NetObj *object;       // Current hop object
+   UINT32 ifIndex;       // Interface index or VPN connector object ID
+   bool isVpn;           // TRUE if next hop is behind VPN tunnel
    TCHAR name[MAX_OBJECT_NAME];
 };
 
@@ -57,20 +57,20 @@ struct HOP_INFO
 class NetworkPath
 {
 private:
-   UINT32 m_sourceAddress;
+   InetAddress m_sourceAddress;
 	int m_hopCount;
 	int m_allocated;
 	HOP_INFO *m_path;
 	bool m_complete;
 
 public:
-	NetworkPath(UINT32 srcAddr);
+	NetworkPath(const InetAddress& srcAddr);
 	~NetworkPath();
 
-	void addHop(UINT32 nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn, const TCHAR *name);
+	void addHop(const InetAddress& nextHop, NetObj *currentObject, UINT32 ifIndex, bool isVpn, const TCHAR *name);
 	void setComplete() { m_complete = true; }
 
-   UINT32 getSourceAddress() { return m_sourceAddress; }
+   const InetAddress& getSourceAddress() { return m_sourceAddress; }
 	bool isComplete() { return m_complete; }
 	int getHopCount() { return m_hopCount; }
 	HOP_INFO *getHopInfo(int index) { return ((index >= 0) && (index < m_hopCount)) ? &m_path[index] : NULL; }
@@ -134,7 +134,7 @@ public:
    void setCurrentVlanId(UINT16 vlanId) { m_currentVlanId = vlanId; }
    UINT16 getCurrentVlanId() { return m_currentVlanId; }
 
-	UINT32 findMacAddress(const BYTE *macAddr);
+	UINT32 findMacAddress(const BYTE *macAddr, bool *isStatic);
 	bool isSingleMacOnPort(UINT32 ifIndex, BYTE *macAddr = NULL);
 	int getMacCountOnPort(UINT32 ifIndex);
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,7 +73,6 @@ public class CreateInterface implements IObjectActionDelegate
 				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_INTERFACE, dlg.getName(), parentId);
 				cd.setMacAddress(dlg.getMacAddress());
 				cd.setIpAddress(dlg.getIpAddress());
-				cd.setIpNetMask(dlg.getIpNetMask());
 				cd.setPhysicalPort(dlg.isPhysicalPort());
 				cd.setSlot(dlg.getSlot());
 				cd.setPort(dlg.getPort());

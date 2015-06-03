@@ -54,10 +54,9 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.activities.WorkbenchActivityHelper;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
@@ -182,7 +181,7 @@ public class TabbedObjectView extends ViewPart
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
-				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) && (objectId == n.getSubCode()))
+				if ((n.getCode() == SessionNotification.OBJECT_CHANGED) && (objectId == n.getSubCode()))
 				{
 					final AbstractObject object = (AbstractObject)n.getObject();
 					getSite().getShell().getDisplay().asyncExec(new Runnable() {

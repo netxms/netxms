@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.objecttools.views;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -52,11 +51,10 @@ import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
 import org.netxms.client.AccessListElement;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -558,10 +556,10 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	{
 		switch(n.getCode())
 		{
-			case NXCNotification.OBJECT_TOOLS_CHANGED:
+			case SessionNotification.OBJECT_TOOLS_CHANGED:
 				refreshToolList();
 				break;
-			case NXCNotification.OBJECT_TOOL_DELETED:
+			case SessionNotification.OBJECT_TOOL_DELETED:
 				new UIJob(getSite().getShell().getDisplay(), "Delete object tool from list") { //$NON-NLS-1$
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor)

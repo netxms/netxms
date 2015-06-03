@@ -2,14 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Topology Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.topology;singleton:=true
-Bundle-Version: 1.2.17
+Bundle-Version: 2.0.3
 Bundle-Activator: org.netxms.ui.eclipse.topology.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
  org.eclipse.core.runtime;bundle-version="3.8.0",
- org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.0",
- org.netxms.ui.eclipse.console;bundle-version="2.0.0",
- org.netxms.ui.eclipse.objectview;bundle-version="1.2.17",
+ org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.3",
+ org.netxms.ui.eclipse.console;bundle-version="2.0.1",
+ org.netxms.ui.eclipse.objectview;bundle-version="2.0.1",
  org.netxms.ui.eclipse.objectbrowser;bundle-version="2.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

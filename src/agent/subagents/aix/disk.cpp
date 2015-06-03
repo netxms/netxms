@@ -66,6 +66,9 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 			case DISK_FREE_PERC:
 				ret_double(pValue, (freeBlocks * 100.0) / totalBlocks);
 				break;
+         case DISK_FSTYPE:
+            ret_mbstring(pValue, s.f_basetype);
+            break;
 			default:
 				nRet = SYSINFO_RC_ERROR;
 				break;

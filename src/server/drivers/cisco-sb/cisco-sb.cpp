@@ -98,7 +98,7 @@ InterfaceList *CiscoSbDriver::getInterfaces(SNMP_Transport *snmp, StringMap *att
 	// Find physical ports
 	for(int i = 0; i < ifList->size(); i++)
 	{
-		NX_INTERFACE_INFO *iface = ifList->get(i);
+		InterfaceInfo *iface = ifList->get(i);
 		if (iface->index < 1000)
 		{
 			iface->isPhysicalPort = true;

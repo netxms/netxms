@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2014 Victor Kirhenshtein
+** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,36 @@
  * Externals
  */
 BOOL MigrateMaps();
+
+/**
+ * Generate GUIDs
+ */
+static bool GenerateGUID(const TCHAR *table, const TCHAR *idColumn, const TCHAR *guidColumn)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT %s FROM %s"), idColumn, table);
+	DB_RESULT hResult = SQLSelect(query);
+	if (hResult == NULL)
+      return false;
+
+	int count = DBGetNumRows(hResult);
+	for(int i = 0; i < count; i++)
+	{
+		uuid_t guid;
+		TCHAR buffer[64];
+
+		uuid_generate(guid);
+		_sntprintf(query, 256, _T("UPDATE %s SET %s='%s' WHERE %s=%d"),
+		           table, guidColumn, uuid_to_string(guid, buffer), idColumn, DBGetFieldULong(hResult, i, 0));
+		if (!SQLQuery(query))
+      {
+      	DBFreeResult(hResult);
+         return false;
+      }
+	}
+	DBFreeResult(hResult);
+   return true;
+}
 
 /**
  * Create table
@@ -269,7 +299,7 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column)
 /**
  * Resize varchar column
  */
-static BOOL ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize)
+static BOOL ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize, bool nullable)
 {
 	TCHAR query[1024];
 
@@ -279,7 +309,7 @@ static BOOL ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize)
 			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET DATA TYPE varchar(%d)"), table, column, newSize);
 			break;
 		case DB_SYNTAX_MSSQL:
-			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s varchar(%d)"), table, column, newSize);
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s varchar(%d) %s NULL"), table, column, newSize, nullable ? _T("") : _T("NOT"));
 			break;
 		case DB_SYNTAX_PGSQL:
 			_sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s TYPE varchar(%d)"), table, column, newSize);
@@ -389,11 +419,286 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
 }
 
 /**
+ * Convert network masks from dotted decimal format to number of bits
+ */
+static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR *idColumn, const TCHAR *idColumn2 = NULL, const TCHAR *condition = NULL)
+{
+   TCHAR query[256];
+
+   if (idColumn2 != NULL)
+      _sntprintf(query, 256, _T("SELECT %s,%s,%s FROM %s"), idColumn, column, idColumn2, table);
+   else
+      _sntprintf(query, 256, _T("SELECT %s,%s FROM %s"), idColumn, column, table);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == NULL)
+      return FALSE;
+
+   BOOL success = SQLDropColumn(table, column);
+
+   if (success)
+   {
+      _sntprintf(query, 256, _T("ALTER TABLE %s ADD %s integer"), table, column);
+      success = SQLQuery(query);
+   }
+
+   if (success)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; (i < count) && success; i++)
+      {
+         if (idColumn2 != NULL)
+         {
+            TCHAR id2[256];
+            _sntprintf(query, 256, _T("UPDATE %s SET %s=%d WHERE %s=%d AND %s='%s'"),
+               table, column, BitsInMask(DBGetFieldIPAddr(hResult, i, 1)), idColumn, DBGetFieldLong(hResult, i, 0),
+               idColumn2, DBGetField(hResult, i, 2, id2, 256));
+         }
+         else
+         {
+            _sntprintf(query, 256, _T("UPDATE %s SET %s=%d WHERE %s=%d"),
+               table, column, BitsInMask(DBGetFieldIPAddr(hResult, i, 1)), idColumn, DBGetFieldLong(hResult, i, 0));
+         }
+         success = SQLQuery(query);
+      }
+   }
+
+   DBFreeResult(hResult);
+   return success;
+}
+
+/**
+ * Upgrade from V352 to V353
+ */
+static BOOL H_UpgradeFromV352(int currVersion, int newVersion)
+{
+	CHK_EXEC(SQLQuery(_T("ALTER TABLE dci_summary_tables ADD guid varchar(36)")));
+   CHK_EXEC(GenerateGUID(_T("dci_summary_tables"), _T("id"), _T("guid")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='353' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V351 to V352
+ */
+static BOOL H_UpgradeFromV351(int currVersion, int newVersion)
+{
+	CHK_EXEC(SQLQuery(_T("ALTER TABLE object_tools ADD guid varchar(36)")));
+   CHK_EXEC(GenerateGUID(_T("object_tools"), _T("tool_id"), _T("guid")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='352' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V350 to V351
+ */
+static BOOL H_UpgradeFromV350(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE access_points ADD ap_index integer\n")
+      _T("UPDATE access_points SET ap_index=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='351' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V349 to V350
+ */
+static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
+{
+   switch(g_dbSyntax)
+	{
+      case DB_SYNTAX_ORACLE:
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments || chr(13) || chr(10) || (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL)")));
+			break;
+		case DB_SYNTAX_DB2:
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments || chr(13) || chr(10) || (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND description <> '')")));
+         break;
+      case DB_SYNTAX_MSSQL:
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = CAST(comments AS varchar(4000)) + char(13) + char(10) + CAST((SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) AS varchar(4000)) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND datalength(description) <> 0)")));
+			break;
+		case DB_SYNTAX_PGSQL:
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments || '\\015\\012' || (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND description <> '')")));
+			break;
+		case DB_SYNTAX_SQLITE:
+         CHK_EXEC(SQLQuery(_T("UPDATE object_properties SET comments = comments || char(13,10) || (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id) WHERE EXISTS (SELECT description FROM ap_common WHERE ap_common.id = object_properties.object_id AND description IS NOT NULL AND description <> '')")));
+			break;
+		case DB_SYNTAX_MYSQL:
+			CHK_EXEC(SQLQuery(_T("UPDATE object_properties, ap_common SET object_properties.comments=CONCAT(object_properties.comments, '\\r\\n', ap_common.description) WHERE object_properties.object_id=ap_common.id AND (ap_common.description!='' AND ap_common.description IS NOT NULL)")));
+			break;
+		default:
+         break;
+	}
+
+   CHK_EXEC(SQLDropColumn(_T("ap_common"), _T("description")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='350' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V348 to V349
+ */
+static BOOL H_UpgradeFromV348(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='HouseKeepingInterval'")));
+   CHK_EXEC(CreateConfigParam(_T("HousekeeperStartTime"), _T("02:00"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='349' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V347 to V348
+ */
+static BOOL H_UpgradeFromV347(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_IPADDR_ADDED, _T("SYS_IF_IPADDR_ADDED"), SEVERITY_NORMAL, EF_LOG,
+         _T("IP address %3/%4 added to interface \"%2\""),
+         _T("Generated when IP address added to interface.\r\n")
+         _T("Parameters:\r\n")
+         _T("    1) Interface object ID\r\n")
+         _T("    2) Interface name\r\n")
+         _T("    3) IP address\r\n")
+         _T("    4) Network mask\r\n")
+         _T("    5) Interface index")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_IPADDR_DELETED, _T("SYS_IF_IPADDR_DELETED"), SEVERITY_NORMAL, EF_LOG,
+         _T("IP address %3/%4 deleted from interface \"%2\""),
+         _T("Generated when IP address deleted from interface.\r\n")
+         _T("Parameters:\r\n")
+         _T("    1) Interface object ID\r\n")
+         _T("    2) Interface name\r\n")
+         _T("    3) IP address\r\n")
+         _T("    4) Network mask\r\n")
+         _T("    5) Interface index")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='348' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V346 to V347
+ */
+static BOOL H_UpgradeFromV346(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE interface_address_list (")
+      _T("   iface_id integer not null,")
+      _T("	 ip_addr varchar(48) not null,")
+      _T("	 ip_netmask integer not null,")
+      _T("   PRIMARY KEY(iface_id,ip_addr))")));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,ip_addr,ip_netmask FROM interfaces WHERE ip_addr<>'0.0.0.0'"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         TCHAR query[256], addr[64];
+         _sntprintf(query, 256, _T("INSERT INTO interface_address_list (iface_id,ip_addr,ip_netmask) VALUES (%d,'%s',%d)"),
+            DBGetFieldLong(hResult, i, 0), DBGetField(hResult, i, 1, addr, 64), DBGetFieldLong(hResult, i, 2));
+         CHK_EXEC(SQLQuery(query));
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+
+   static TCHAR batch[] =
+      _T("ALTER TABLE interfaces DROP COLUMN ip_addr\n")
+      _T("ALTER TABLE interfaces DROP COLUMN ip_netmask\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='347' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V345 to V346
+ */
+static BOOL H_UpgradeFromV345(int currVersion, int newVersion)
+{
+   if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(DropPrimaryKey(_T("cluster_sync_subnets")));
+      CHK_EXEC(DropPrimaryKey(_T("address_lists")));
+      CHK_EXEC(DropPrimaryKey(_T("vpn_connector_networks")));
+   }
+
+   CHK_EXEC(ResizeColumn(_T("cluster_sync_subnets"), _T("subnet_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("cluster_resources"), _T("ip_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("subnets"), _T("ip_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("interfaces"), _T("ip_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("network_services"), _T("ip_bind_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("vpn_connector_networks"), _T("ip_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("snmp_trap_log"), _T("ip_addr"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("address_lists"), _T("addr1"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("address_lists"), _T("addr2"), 48, false));
+   CHK_EXEC(ResizeColumn(_T("nodes"), _T("primary_ip"), 48, false));
+
+   CHK_EXEC(ConvertNetMasks(_T("cluster_sync_subnets"), _T("subnet_mask"), _T("cluster_id")));
+   CHK_EXEC(ConvertNetMasks(_T("subnets"), _T("ip_netmask"), _T("id")));
+   CHK_EXEC(ConvertNetMasks(_T("interfaces"), _T("ip_netmask"), _T("id")));
+   CHK_EXEC(ConvertNetMasks(_T("vpn_connector_networks"), _T("ip_netmask"), _T("vpn_id"), _T("ip_addr")));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT community_id,addr_type,addr1,addr2 FROM address_lists WHERE list_type=0"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      if (count > 0)
+      {
+         CHK_EXEC(SQLQuery(_T("DELETE FROM address_lists WHERE list_type=0")));
+
+         for(int i = 0; i < count; i++)
+         {
+            TCHAR query[256], addr[64];
+            _sntprintf(query, 256, _T("INSERT INTO address_lists (list_type,community_id,addr_type,addr1,addr2) VALUES (0,%d,%d,'%s','%d')"),
+               DBGetFieldLong(hResult, i, 0), DBGetFieldLong(hResult, i, 1), DBGetField(hResult, i, 2, addr, 64),
+               BitsInMask(DBGetFieldIPAddr(hResult, i, 3)));
+            CHK_EXEC(SQLQuery(query));
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+
+   if (g_dbSyntax == DB_SYNTAX_MSSQL)
+   {
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE cluster_sync_subnets ADD CONSTRAINT pk_cluster_sync_subnets PRIMARY KEY (cluster_id,subnet_addr)")));
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE address_lists ADD CONSTRAINT pk_address_lists PRIMARY KEY (list_type,community_id,addr_type,addr1,addr2)")));
+      CHK_EXEC(SQLQuery(_T("ALTER TABLE vpn_connector_networks ADD CONSTRAINT pk_vpn_connector_networks PRIMARY KEY (vpn_id,ip_addr)")));
+   }
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='346' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V344 to V345
+ */
+static BOOL H_UpgradeFromV344(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("NumberOfInstancePollers"), _T("10"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("InstancePollingInterval"), _T("600"), 1, 1));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='345' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V343 to V344
  */
 static BOOL H_UpgradeFromV343(int currVersion, int newVersion)
 {
-    static TCHAR batch[] =
+   static TCHAR batch[] =
       _T("ALTER TABLE interfaces ADD mtu integer\n")
       _T("ALTER TABLE interfaces ADD alias varchar(255)\n")
       _T("UPDATE interfaces SET mtu=0\n")
@@ -461,10 +766,7 @@ static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
          }
       }
    }
-   static TCHAR batch[] =
-      _T("ALTER TABLE object_tools DROP COLUMN matching_oid\n")
-      _T("<END>");
-   CHK_EXEC(SQLBatch(batch));//delete old column
+   CHK_EXEC(SQLDropColumn(_T("object_tools"), _T("matching_oid"))); //delete old column
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='342' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -535,8 +837,8 @@ static BOOL H_UpgradeFromV336(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV335(int currVersion, int newVersion)
 {
-   CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name1"), 255));
-   CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name2"), 255));
+   CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name1"), 255, true));
+   CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name2"), 255, true));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='336' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -1421,25 +1723,7 @@ static BOOL H_UpgradeFromV292(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV291(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy ADD rule_guid varchar(36)")));
-
-	// Generate GUIDs for all objects
-	DB_RESULT hResult = SQLSelect(_T("SELECT rule_id FROM event_policy"));
-	if (hResult != NULL)
-	{
-		int count = DBGetNumRows(hResult);
-		for(int i = 0; i < count; i++)
-		{
-			uuid_t guid;
-			TCHAR query[256], buffer[64];
-
-			uuid_generate(guid);
-			_sntprintf(query, 256, _T("UPDATE event_policy SET rule_guid='%s' WHERE rule_id=%d"),
-			           uuid_to_string(guid, buffer), DBGetFieldULong(hResult, i, 0));
-			CHK_EXEC(SQLQuery(query));
-		}
-		DBFreeResult(hResult);
-	}
-
+   CHK_EXEC(GenerateGUID(_T("event_policy"), _T("rule_id"), _T("rule_guid")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='292' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -1862,13 +2146,13 @@ static BOOL H_UpgradeFromV269(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
 {
-	CHK_EXEC(ResizeColumn(_T("alarms"), _T("message"), 2000));
-	CHK_EXEC(ResizeColumn(_T("alarm_events"), _T("message"), 2000));
-	CHK_EXEC(ResizeColumn(_T("event_log"), _T("event_message"), 2000));
-	CHK_EXEC(ResizeColumn(_T("event_cfg"), _T("message"), 2000));
-	CHK_EXEC(ResizeColumn(_T("event_policy"), _T("alarm_message"), 2000));
-	CHK_EXEC(ResizeColumn(_T("items"), _T("name"), 1024));
-	CHK_EXEC(ResizeColumn(_T("dc_tables"), _T("name"), 1024));
+	CHK_EXEC(ResizeColumn(_T("alarms"), _T("message"), 2000, true));
+	CHK_EXEC(ResizeColumn(_T("alarm_events"), _T("message"), 2000, true));
+	CHK_EXEC(ResizeColumn(_T("event_log"), _T("event_message"), 2000, true));
+	CHK_EXEC(ResizeColumn(_T("event_cfg"), _T("message"), 2000, true));
+	CHK_EXEC(ResizeColumn(_T("event_policy"), _T("alarm_message"), 2000, true));
+	CHK_EXEC(ResizeColumn(_T("items"), _T("name"), 1024, true));
+	CHK_EXEC(ResizeColumn(_T("dc_tables"), _T("name"), 1024, true));
 
 	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("alarm_key")));
 	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("alarm_message")));
@@ -3625,7 +3909,7 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 			DWORD nodeId = DBGetFieldULong(hResult, i, 0);
 			DWORD dciId = DBGetFieldULong(hResult, i, 1);
 
-			if (IsNodeExist(nodeId))
+			if (IsDatabaseRecordExist(_T("nodes"), _T("id"), nodeId))
 			{
 				_sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=%d AND idata_value LIKE '%%#%%'"), nodeId, dciId);
 				DB_RESULT hData = SQLSelect(query);
@@ -8282,6 +8566,15 @@ static struct
    { 341, 342, H_UpgradeFromV341 },
    { 342, 343, H_UpgradeFromV342 },
    { 343, 344, H_UpgradeFromV343 },
+   { 344, 345, H_UpgradeFromV344 },
+   { 345, 346, H_UpgradeFromV345 },
+   { 346, 347, H_UpgradeFromV346 },
+   { 347, 348, H_UpgradeFromV347 },
+   { 348, 349, H_UpgradeFromV348 },
+   { 349, 350, H_UpgradeFromV349 },
+   { 350, 351, H_UpgradeFromV350 },
+   { 351, 352, H_UpgradeFromV351 },
+   { 352, 353, H_UpgradeFromV352 },
    { 0, 0, NULL }
 };
 

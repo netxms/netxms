@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,23 +18,20 @@
  */
 package org.netxms.client.objects;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-
+import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 
 /**
- * @author victor
- *
+ * Cluster object
  */
 public class Cluster extends GenericObject
 {
 	private int clusterType;
-	private List<ClusterSyncNetwork> syncNetworks = new ArrayList<ClusterSyncNetwork>(1);
+	private List<InetAddressEx> syncNetworks = new ArrayList<InetAddressEx>(1);
 	private List<ClusterResource> resources = new ArrayList<ClusterResource>();
 	private long zoneId;
 	
@@ -50,50 +47,18 @@ public class Cluster extends GenericObject
 		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_SYNC_SUBNETS);
-		if (count > 0)
+      long fieldId = NXCPCodes.VID_SYNC_SUBNETS_BASE;
+		for(int i = 0; i < count; i++)
 		{
-			long[] sn = msg.getFieldAsUInt32Array(NXCPCodes.VID_SYNC_SUBNETS);
-			for(int i = 0; i < sn.length;)
-			{
-				InetAddress addr = inetAddressFromInt32(sn[i++]);
-				InetAddress mask = inetAddressFromInt32(sn[i++]);
-				syncNetworks.add(new ClusterSyncNetwork(addr, mask));
-			}
+		   syncNetworks.add(msg.getFieldAsInetAddressEx(fieldId++));
 		}
 		
 		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_RESOURCES);
-		long baseId = NXCPCodes.VID_RESOURCE_LIST_BASE;
-		for(int i = 0; i < count; i++, baseId += 10)
+		fieldId = NXCPCodes.VID_RESOURCE_LIST_BASE;
+		for(int i = 0; i < count; i++, fieldId += 10)
 		{
-			resources.add(new ClusterResource(msg, baseId));
+			resources.add(new ClusterResource(msg, fieldId));
 		}
-	}
-	
-	/**
-	 * Create InetAddress object from 32bit integer
-	 * 
-	 * @param intVal
-	 * @return
-	 */
-	private InetAddress inetAddressFromInt32(long intVal)
-	{
-		final byte[] addr = new byte[4];
-		InetAddress inetAddr;
-		
-		addr[0] =  (byte)((intVal & 0xFF000000) >> 24);
-		addr[1] =  (byte)((intVal & 0x00FF0000) >> 16);
-		addr[2] =  (byte)((intVal & 0x0000FF00) >> 8);
-		addr[3] =  (byte)(intVal & 0x000000FF);
-		
-		try
-		{
-			inetAddr = InetAddress.getByAddress(addr);
-		}
-		catch(UnknownHostException e)
-		{
-			inetAddr = null;
-		}
-		return inetAddr;
 	}
 
 	/* (non-Javadoc)
@@ -125,7 +90,7 @@ public class Cluster extends GenericObject
 	/**
 	 * @return the syncNetworks
 	 */
-	public List<ClusterSyncNetwork> getSyncNetworks()
+	public List<InetAddressEx> getSyncNetworks()
 	{
 		return syncNetworks;
 	}

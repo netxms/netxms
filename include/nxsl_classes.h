@@ -170,18 +170,19 @@ private:
 
 public:
 	NXSL_Array();
-	NXSL_Array(NXSL_Array *src);
+	NXSL_Array(const NXSL_Array *src);
+   NXSL_Array(const StringList *values);
 	~NXSL_Array();
 
 	void incRefCount() { m_refCount++; }
 	void decRefCount() { m_refCount--; }
-	BOOL isUnused() { return m_refCount < 1; }
+	BOOL isUnused() const { return m_refCount < 1; }
 
 	void set(int index, NXSL_Value *value);
-	NXSL_Value *get(int index);
-	NXSL_Value *getByPosition(int position);
+	NXSL_Value *get(int index) const;
+	NXSL_Value *getByPosition(int position) const;
 
-	int size() { return m_size; }
+	int size() const { return m_size; }
 };
 
 /**
@@ -269,23 +270,23 @@ public:
    void set(INT32 nValue);
 
 	void setName(const TCHAR *name) { safe_free(m_name); m_name = _tcsdup(name); }
-	const TCHAR *getName() { return m_name; }
+	const TCHAR *getName() const { return m_name; }
 
    bool convert(int nDataType);
-   int getDataType() { return m_nDataType; }
+   int getDataType() const { return m_nDataType; }
 
-   bool isNull() { return (m_nDataType == NXSL_DT_NULL); }
-   bool isObject() { return (m_nDataType == NXSL_DT_OBJECT); }
-	bool isObject(const TCHAR *className);
-   bool isArray() { return (m_nDataType == NXSL_DT_ARRAY); }
-   bool isIterator() { return (m_nDataType == NXSL_DT_ITERATOR); }
-   bool isString() { return (m_nDataType >= NXSL_DT_STRING); }
-   bool isNumeric() { return (m_nDataType > NXSL_DT_STRING); }
-   bool isReal() { return (m_nDataType == NXSL_DT_REAL); }
-   bool isInteger() { return (m_nDataType > NXSL_DT_REAL); }
-   bool isUnsigned() { return (m_nDataType >= NXSL_DT_UINT32); }
-   bool isZero();
-   bool isNonZero();
+   bool isNull() const { return (m_nDataType == NXSL_DT_NULL); }
+   bool isObject() const { return (m_nDataType == NXSL_DT_OBJECT); }
+	bool isObject(const TCHAR *className) const;
+   bool isArray() const { return (m_nDataType == NXSL_DT_ARRAY); }
+   bool isIterator() const { return (m_nDataType == NXSL_DT_ITERATOR); }
+   bool isString() const { return (m_nDataType >= NXSL_DT_STRING); }
+   bool isNumeric() const { return (m_nDataType > NXSL_DT_STRING); }
+   bool isReal() const { return (m_nDataType == NXSL_DT_REAL); }
+   bool isInteger() const { return (m_nDataType > NXSL_DT_REAL); }
+   bool isUnsigned() const { return (m_nDataType >= NXSL_DT_UINT32); }
+   bool isZero() const;
+   bool isNonZero() const;
 
    const TCHAR *getValueAsString(UINT32 *pdwLen);
    const TCHAR *getValueAsCString();
@@ -326,6 +327,11 @@ public:
    BOOL LE(NXSL_Value *pVal);
    BOOL GT(NXSL_Value *pVal);
    BOOL GE(NXSL_Value *pVal);
+
+   bool equals(const NXSL_Value *v) const;
+   void serialize(ByteStream& s) const;
+
+   static NXSL_Value *load(ByteStream& s);
 };
 
 /**
@@ -339,6 +345,7 @@ public:
 
    NXSL_Function() { m_name[0] = 0; m_dwAddr = INVALID_ADDRESS; }
    NXSL_Function(NXSL_Function *src) { nx_strncpy(m_name, src->m_name, MAX_FUNCTION_NAME); m_dwAddr = src->m_dwAddr; }
+   NXSL_Function(const TCHAR *name, UINT32 addr) { nx_strncpy(m_name, name, MAX_FUNCTION_NAME); m_dwAddr = addr; }
 };
 
 /**
@@ -424,6 +431,17 @@ public:
 };
 
 /**
+ * Instruction's operand type
+ */
+enum OperandType
+{
+   OP_TYPE_NONE = 0,
+   OP_TYPE_ADDR = 1,
+   OP_TYPE_STRING = 2,
+   OP_TYPE_CONST = 3
+};
+
+/**
  * Single execution instruction
  */
 class LIBNXSL_EXPORTABLE NXSL_Instruction
@@ -432,25 +450,27 @@ class LIBNXSL_EXPORTABLE NXSL_Instruction
    friend class NXSL_VM;
 
 protected:
-   int m_nOpCode;
+   INT16 m_nOpCode;
+   INT16 m_nStackItems;
    union
    {
       NXSL_Value *m_pConstant;
       TCHAR *m_pszString;
       UINT32 m_dwAddr;
    } m_operand;
-   int m_nStackItems;
-   int m_nSourceLine;
+   INT32 m_nSourceLine;
 
 public:
-   NXSL_Instruction(int nLine, int nOpCode);
-   NXSL_Instruction(int nLine, int nOpCode, NXSL_Value *pValue);
-   NXSL_Instruction(int nLine, int nOpCode, char *pszString);
-   NXSL_Instruction(int nLine, int nOpCode, char *pszString, int nStackItems);
-   NXSL_Instruction(int nLine, int nOpCode, UINT32 dwAddr);
-   NXSL_Instruction(int nLine, int nOpCode, int nStackItems);
+   NXSL_Instruction(int nLine, short nOpCode);
+   NXSL_Instruction(int nLine, short nOpCode, NXSL_Value *pValue);
+   NXSL_Instruction(int nLine, short nOpCode, char *pszString);
+   NXSL_Instruction(int nLine, short nOpCode, char *pszString, short nStackItems);
+   NXSL_Instruction(int nLine, short nOpCode, UINT32 dwAddr);
+   NXSL_Instruction(int nLine, short nOpCode, short nStackItems);
    NXSL_Instruction(NXSL_Instruction *pSrc);
    ~NXSL_Instruction();
+
+   OperandType getOperandType();
 };
 
 /**
@@ -497,6 +517,9 @@ public:
    UINT32 getCodeSize() { return m_instructionSet->size(); }
 
    void dump(FILE *pFile);
+   void serialize(ByteStream& s);
+
+   static NXSL_Program *load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize);
 };
 
 /**

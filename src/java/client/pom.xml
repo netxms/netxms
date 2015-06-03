@@ -3,7 +3,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.netxms</groupId>
-  <version>2.0-SNAPSHOT</version>
+  <version>2.0-M4</version>
   <artifactId>netxms</artifactId>
   <packaging>pom</packaging>
   <name>NetXMS Meta-package</name>
@@ -15,7 +15,6 @@
 
   <modules>
     <module>netxms-base</module>
-    <module>netxms-client-api</module>
     <module>netxms-client</module>
     <module>mobile-agent</module>
   </modules>

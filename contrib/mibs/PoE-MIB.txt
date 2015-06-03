@@ -1,0 +1,652 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : POE Common mib
+-- FILE NAME: PoE.mib
+-- DATE     : 2010/12/24
+-- VERSION  : 2.06
+-- PURPOSE  : To construct the MIB structure of POE management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.06, 2010/12/24 by Valo Lee
+-- [Modification]
+-- 1.Delete the value range of swPoESystemPowerLimit, swPoESystemStackingCtrlPowerLimit
+--   swPoESystemInfoPowerConsumption, swPoESystemInfoPowerRemained and swPoESystemInfoPowerLimit.
+--   To support different power supply.
+-- Requested by Valo Lee for project DGS-3120-48PC & DGS-3620-52PC.
+--
+-- Version 2.05, 2010/07/02 by Jerry Qin
+-- [New Object]
+-- 1.Add object swPoESystemStackingCtrlLegacyPD in swPoESystemStackingCtrlTable.
+--   To support legacy PD detection.
+-- Requested by Jerry Qin for project DES35xx.
+--
+-- Version 2.04, 2009/06/05 by Jerry Qin
+-- [New Object]
+-- 1.Add object swPoESystemCtrlLegacyPD in swPoESystemCtrl.
+--   For support legacy PD detection.
+-- 2.Add object swPoESystemInfoLegacyPD in swPoESystemInfo. 
+--   For show legacy PD detection status.
+-- [Modification]
+-- 1. Remove swPoEPortCtrlLegacyPD from swPoEPortCtrlTable.
+-- Requested by Jerry Qin for project DES35xx.
+--
+-- Version 2.03, 2009/05/08 by Jerry Qin
+-- [New Object]
+-- 1.Add object swPoEPortCtrlLegacyPD in swPoEPortCtrlTable.
+--   For support legacy PD detection.
+-- Requested by Jerry Qin for project DES35xx.
+--
+-- Version 2.02, 2008/11/12 by Jerry Qin
+-- [New Object]
+-- 1.Add objects swPoEPortCtrlTimeRangeName in swPoEPortCtrlTable.
+-- [Modification]
+-- 1. modify the value list of swPoEPortCtrlUserDefined from 1000..16800 to 1000..35000
+-- Requested by Jerry Qin for project DES3528R2.
+--
+-- Version 2.01
+-- 2007/5/10
+-- Request by Jenny Zeng/Chengdu,
+--         item 1 is for project DES3028(P)/DES3052(P)
+--         item 2 is for project DES3400
+-- [New Object]
+-- 1. add swPoESystemLedMode
+-- 2. add swPoESystemStackingCtrlTable for seperating stand-alone and stacking mode settings
+-- [Modification]
+-- 1. modify swPoESystemInfoBoxId to swPoESystemInfoUnitId
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+PoE-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE     FROM SNMPv2-SMI
+    	SnmpAdminString					FROM SNMP-FRAMEWORK-MIB
+        dlink-common-mgmt				FROM DLINK-ID-REC-MIB
+        DisplayString                   FROM RFC1213-MIB;
+
+    swPoEMIB MODULE-IDENTITY
+	    LAST-UPDATED "201012240000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+		    "The Structure of PoE management for the
+		    proprietary enterprise."
+        ::= { dlink-common-mgmt 24 }
+
+
+	swPoESystemCtrl             OBJECT IDENTIFIER ::= { swPoEMIB 1 }
+	swPoESystemInfo             OBJECT IDENTIFIER ::= { swPoEMIB 2 }
+	swPoEPortCtrl               OBJECT IDENTIFIER ::= { swPoEMIB 3 }
+	swPoEPortInfo               OBJECT IDENTIFIER ::= { swPoEMIB 4 }
+
+-- -----------------------------------------------------------------------------
+-- swPoESystemCtrl             OBJECT IDENTIFIER ::= { PoEMIB 1 }
+-- -----------------------------------------------------------------------------
+	swPoESystemPowerLimit OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The power budget (in watts) of the PoE sytem."
+        ::= { swPoESystemCtrl 1 }
+
+	swPoESystemPowerDisconnectMethod OBJECT-TYPE
+		SYNTAX		INTEGER{
+						denyNextPort(1),
+						denyLowPriorityPort(2)
+						}
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The power management disconnection method. When the total consumed
+            power exceeds the power budget, the PoE controller initiates port disconnection,
+            to prevent overloading the power supply. The controller uses one of the
+            following two ways to implement the disconnection.
+            deny_next_port:
+            after the power budget has been exceeded, the next port
+            attempting to power up is denied, regardless of its priority.
+            deny_low_priority_port:
+            after the power budget has been exceeded, the next
+            port attempting to power up causes the port with the lowest priority
+            to shut down to allow high-priority ports to power up.
+            The default setting is deny_next_port."
+        ::= { swPoESystemCtrl 2 }
+
+        swPoESystemManagementMode OBJECT-TYPE
+		SYNTAX		INTEGER{
+						power-limit(1),
+						auto(2)
+						}
+        	MAX-ACCESS  read-write
+        	STATUS  current
+        	DESCRIPTION
+            "This mode can be either power_limit mode or auto mode.
+	     power_limit: If power supplied to the port exceeds the power limit
+		specified for it, this port will be shut down.
+	     auto: The system will automatically determine the PD class of the
+		device connected to the port in the first stage. Normally, the PD
+		can be classified as class 1, 2, or 3. If the PD cannot be classified,
+		it will be classified as class 0. For class 0, it will assume that the PD
+		may consume the max power allowed. During the power feeding stage, if the power
+		supplied to the port exceeds the upper limit of the detected PD class, this
+		port will be shut down. For the upper limit for each class, it is 4W for
+		class 1 PD class, 7W for class 2, and 15.4W for class 3 PD and class 0 PD."
+        ::= { swPoESystemCtrl 3 }
+
+        swPoESystemLedMode OBJECT-TYPE
+	SYNTAX INTEGER{
+	 		normal(1),
+	 		poe(2)
+	 		}
+	MAX-ACCESS read-write
+	STATUS current
+	DESCRIPTION
+	 	"Specifies if the system mode will be POE or NORMAL."
+	::= { swPoESystemCtrl 4 }
+
+	swPoESystemStackingCtrlTable OBJECT-TYPE
+		SYNTAX		SEQUENCE OF SwPoESystemStackingCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A table that is used to configure PoE system information based on Unit ID.
+		      The Unit ID is used for stacking."
+		::= { swPoESystemCtrl 11 }
+
+	swPoESystemStackingCtrlEntry OBJECT-TYPE
+		SYNTAX		SwPoESystemStackingCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A list of PoE system information based on Unit ID."
+		INDEX { swPoESystemStackingCtrlUnitId }
+		::= { swPoESystemStackingCtrlTable 1 }
+
+	SwPoESystemStackingCtrlEntry ::=
+        SEQUENCE {
+    		swPoESystemStackingCtrlUnitId
+        		INTEGER,
+		swPoESystemStackingCtrlPowerLimit
+			INTEGER,
+		swPoESystemStackingCtrlPowerDisconnectMethod
+			INTEGER,
+		swPoESystemStackingCtrlManagementMode
+			INTEGER,
+		swPoESystemStackingCtrlLedMode
+			INTEGER,
+		swPoESystemStackingCtrlLegacyPD
+			INTEGER
+       }
+
+       	swPoESystemStackingCtrlUnitId OBJECT-TYPE
+		SYNTAX		INTEGER(0..65535)
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"This object indicates the device's Unit ID.
+			A unit ID of zero denotes a stand-alone device."
+		::= { swPoESystemStackingCtrlEntry 1 }
+
+	swPoESystemStackingCtrlPowerLimit OBJECT-TYPE
+        	SYNTAX  INTEGER
+        	MAX-ACCESS  read-write
+        	STATUS  current
+        	DESCRIPTION
+            		"The power budget (in watts) of the PoE sytem."
+		::= { swPoESystemStackingCtrlEntry 2 }
+
+    	swPoESystemStackingCtrlPowerDisconnectMethod OBJECT-TYPE
+		SYNTAX	INTEGER{
+			denyNextPort(1),
+			denyLowPriorityPort(2)
+			}
+        	MAX-ACCESS  read-write
+        	STATUS  current
+        	DESCRIPTION
+            		"The power management disconnection method. When the total consumed power
+            		exceeds the power budget, the PoE controller initiates port disconnection
+            		to prevent overloading the power supply. The controller uses one of the
+            		following two ways to implement the disconnection.
+            		deny_next_port:
+            		after the power budget has been exceeded, the next port
+            		attempting to power up is denied, regardless of its priority.
+            		deny_low_priority_port:
+            		after the power budget has been exceeded, the next
+            		port attempting to power up causes the port with the lowest priority to
+            		shut down to allow high-priority ports to power up.
+            		The default setting is deny_next_port."
+        	::= { swPoESystemStackingCtrlEntry 3 }
+
+    	swPoESystemStackingCtrlManagementMode OBJECT-TYPE
+		SYNTAX	INTEGER{
+				power-limit(1),
+				auto(2)
+				}
+        	MAX-ACCESS  read-write
+        	STATUS  current
+        	DESCRIPTION
+            		"This mode can be either power_limit mode or auto mode.
+	     		power_limit: If power supplied to the port exceeds the power limit
+			specified for it, this port will be shut down.
+	     		auto: The system will automatically determine the PD class of the
+			device connected to the port in the first stage. Normally, the PD
+			can be classified as class 1, 2, or 3. If the PD can not be classified,
+			it will be classified as class 0. For class 0, it will assume that the PD
+			may consume the max power allowed. At the power feeding stage, if the power
+			supplied to the port exceeds the upper limit of the detected PD class, this
+			port will be shut down. For the upper limit for each class, it is 4W for
+			class 1 PD class, 7W for class 2, and 15.4W for class 3 PD and class 0 PD."
+        	::= { swPoESystemStackingCtrlEntry 4 }
+
+	swPoESystemStackingCtrlLedMode OBJECT-TYPE
+		SYNTAX INTEGER{
+	 		normal(1),
+	 		poe(2)
+	 		}
+		MAX-ACCESS read-write
+		STATUS current
+		DESCRIPTION
+		 	"Specifies the system mode to be POE or NORMAL."
+		::= { swPoESystemStackingCtrlEntry 5 }
+		
+	swPoESystemStackingCtrlLegacyPD OBJECT-TYPE
+		SYNTAX		INTEGER{
+       			        enabled(1),
+           			disabled(2)
+               }
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"The legacy PD detection state. Enables or disables legacy PD detection on PoE unit."
+		DEFVAL	{disabled}
+		::= { swPoESystemStackingCtrlEntry 6 }
+
+    	swPoESystemCtrlLegacyPD OBJECT-TYPE
+		SYNTAX		INTEGER{
+       			        enabled(1),
+           			disabled(2)
+               }
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"The legacy PD detection state. Enables or disables legacy PD detection on all PoE port."
+		DEFVAL	{disabled}
+		::= { swPoESystemCtrl 6 }
+
+-- -----------------------------------------------------------------------------
+-- swPoESystemInfo             OBJECT IDENTIFIER ::= { PoEMIB 2 }
+-- -----------------------------------------------------------------------------
+	swPoESystemInfoTable OBJECT-TYPE
+		SYNTAX		SEQUENCE OF SwPoESystemInfoEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A table that contains PoE system information based on Unit ID.
+		      The Unit ID is used for stacking."
+		::= { swPoESystemInfo 1 }
+
+	swPoESystemInfoEntry OBJECT-TYPE
+		SYNTAX		SwPoESystemInfoEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A list of PoE system information based on Unit ID."
+		INDEX { swPoESystemInfoUnitId }
+		::= { swPoESystemInfoTable 1 }
+
+	SwPoESystemInfoEntry ::=
+        SEQUENCE {
+    		swPoESystemInfoUnitId
+        		INTEGER,
+			swPoESystemInfoPowerConsumption
+				INTEGER,
+			swPoESystemInfoPowerRemained
+			    INTEGER,
+			swPoESystemInfoPowerLimit
+				INTEGER,
+			swPoESystemInfoPowerDisconnectMethod
+				INTEGER,
+			swPoESystemInfoManagementMode
+				INTEGER,
+			swPoESystemInfoLegacyPD
+				INTEGER
+       }
+
+       	swPoESystemInfoUnitId OBJECT-TYPE
+		SYNTAX		INTEGER(0..65535)
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"This object indicates the device's Unit ID.
+			A unit ID of zero denotes a stand-alone device."
+		::= { swPoESystemInfoEntry 1 }
+
+	swPoESystemInfoPowerConsumption OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The actual momentary power consumption (in watts) in the PoE system."
+        ::= { swPoESystemInfoEntry 2 }
+
+	swPoESystemInfoPowerRemained OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The actual momentary remaining power (in watts) in the PoE system."
+        ::= { swPoESystemInfoEntry 3 }
+
+	swPoESystemInfoPowerLimit OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The power budget (in watts) of the PoE sytem."
+        ::= { swPoESystemInfoEntry 4 }
+
+    swPoESystemInfoPowerDisconnectMethod OBJECT-TYPE
+		SYNTAX		INTEGER{
+						denyNextPort(1),
+						denyLowPriorityPort(2)
+						}
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The power management disconnection method. When the total consumed power
+            exceeds the power budget, the PoE controller initiates port disconnection
+            to prevent overloading the power supply. The controller uses one of the
+            following two ways to implement the disconnection.
+            deny_next_port:
+            after the power budget has been exceeded, the next port
+            attempting to power up is denied, regardless of its priority.
+            deny_low_priority_port:
+            after the power budget has been exceeded, the next
+            port attempting to power up causes the port with the lowest priority to
+            shut down to allow high-priority ports to power up.
+            The default setting is deny_next_port."
+        ::= { swPoESystemInfoEntry 5 }
+
+    swPoESystemInfoManagementMode OBJECT-TYPE
+		SYNTAX		INTEGER{
+						power-limit(1),
+						auto(2)
+						}
+        	MAX-ACCESS  read-only
+        	STATUS  current
+        	DESCRIPTION
+            "This mode can be either power_limit mode or auto mode.
+	     power_limit: If power supplied to the port exceeds the power limit
+		specified for it, this port will be shut down.
+	     auto: The system will automatically determine the PD class of the
+		device connected to the port in the first stage. Normally, the PD
+		can be classified as class 1, 2, or 3. If the PD can not be classified,
+		it will be classified as class 0. For class 0, it will assume that the PD
+		may consume the max power allowed. At the power feeding stage, if the power
+		supplied to the port exceeds the upper limit of the detected PD class, this
+		port will be shut down. For the upper limit for each class, it is 4W for
+		class 1 PD class, 7W for class 2, and 15.4W for class 3 PD and class 0 PD."
+        ::= { swPoESystemInfoEntry 6 }
+        
+    swPoESystemInfoLegacyPD OBJECT-TYPE
+	SYNTAX		INTEGER{
+      			        enabled(1),
+           			disabled(2)
+				}
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The current status of legacy PD detection."
+        ::= { swPoESystemInfoEntry 7 }
+
+-- -----------------------------------------------------------------------------
+-- swPoEPortCtrl             OBJECT IDENTIFIER ::= { PoEMIB 3 }
+-- -----------------------------------------------------------------------------
+	swPoEPortCtrlTable OBJECT-TYPE
+		SYNTAX		SEQUENCE OF SwPoEPortCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A table that contains PoE configuration about every port in this stack.
+		      If a device has N ports, then the 1 -- N ports describe the port number of BoxId 1 device;
+		      N+1 -- 2N describe the port number of BoxId 2 device;
+		      2N+1 -- 3N describe the port number of BoxId 2 device;
+		      ......"
+		::= { swPoEPortCtrl 1 }
+
+	swPoEPortCtrlEntry OBJECT-TYPE
+		SYNTAX		SwPoEPortCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A list of PoE configurations for each port of the device in this stack."
+		INDEX { swPoEPortCtrlPortIndex }
+		::= { swPoEPortCtrlTable 1 }
+
+	SwPoEPortCtrlEntry ::=
+        SEQUENCE {
+            swPoEPortCtrlPortIndex
+                INTEGER,
+			swPoEPortCtrlState
+				INTEGER,
+			swPoEPortCtrlPriority
+			    INTEGER,
+			swPoEPortCtrlPowerLimit
+			    INTEGER,
+			swPoEPortCtrlUserDefined
+			    INTEGER,
+			swPoEPortCtrlTimeRangeName
+			    SnmpAdminString
+       }
+
+	swPoEPortCtrlPortIndex OBJECT-TYPE
+		SYNTAX		INTEGER(0..65535)
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"This object indicates the devices' port number in this stack.
+		      If a device has N ports, then the 1 -- N ports describe the port number of BoxId 1 device;
+		      N+1 -- 2N describe the port number of BoxId 2 device;
+		      2N+1 -- 3N describe the port number of BoxId 2 device;
+		      ......"
+
+		::= { swPoEPortCtrlEntry 1 }
+
+	swPoEPortCtrlState OBJECT-TYPE
+		SYNTAX		INTEGER{
+						other(1),
+						enable(2),
+						disable(3)
+						}
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"The PoE port state. Enables or disables the PoE function on the specific port.
+			The default setting is enable."
+		::= { swPoEPortCtrlEntry 2 }
+
+	swPoEPortCtrlPriority OBJECT-TYPE
+		SYNTAX		INTEGER{
+						critical(1),
+						high(2),
+						low(3)
+						}
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"The PoE port priority. Port priority affects power-up order (after a
+			rest, the ports are powered up according to their priority) and shutdown
+			order (when exceeding the power budget, the ports are shut down according
+			to their priority if power_disconnect_method is set to deny_low_priority_port)
+            Default setting is low."
+		::= { swPoEPortCtrlEntry 3 }
+
+	swPoEPortCtrlPowerLimit OBJECT-TYPE
+		SYNTAX		INTEGER{
+					 class0(1),
+					 class1(2),
+					 class2(3),
+					 class3(4),
+					 user-defined(5)}
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"There are 4 pre-defined values for users' convenience to set the upper
+			 power limit for class 0, class 1, class 2, and class 3.
+			 class_0: 15400mW (The maximum power provided by PSE (switch) is 12.95 W + power loss on cable)
+			 class_1: 4000mW (The maximum power provided by PSE is 3.84 W + power loss on cable)
+			 class_2: 7000mW (The maximum power provided by PSE is 6.49 W + power loss on cable)
+			 class_3: 15400mW (The maximum power provided by PSE is 12.95 W + power loss on cable)
+			 user-defined: User can select this setting and configure the range in swPoEPortCtrlUserDefined."
+
+		::= { swPoEPortCtrlEntry 4 }
+
+	swPoEPortCtrlUserDefined OBJECT-TYPE
+		SYNTAX		INTEGER(1000..35000)
+		MAX-ACCESS	read-write
+		STATUS		current
+		DESCRIPTION
+			"User defined per-port power limit (in milliwatts). If a port exceeds 10% of its power
+			limit, the PoE system will shut down that port. The default setting is 15400 mW.
+			Note: This object is valid only while the swPoEPortCtrlPowerLimit object is configured as
+			user-defined."
+		::= { swPoEPortCtrlEntry 5 }    
+		
+    swPoEPortCtrlTimeRangeName OBJECT-TYPE
+    		SYNTAX      SnmpAdminString (SIZE (0..32))
+    		MAX-ACCESS  read-write
+    		STATUS      current
+    		DESCRIPTION
+        	"Specifies the time_range that applies to the port of the POE.If time range is configured,
+        	 power can only be supplied during the period specified by the time range."    
+    	::= { swPoEPortCtrlEntry 6 }  
+    	   
+
+-- -----------------------------------------------------------------------------
+--  swPoEPortInfo             OBJECT IDENTIFIER ::= { PoEMIB 4 }
+-- -----------------------------------------------------------------------------
+	swPoEPortInfoTable OBJECT-TYPE
+		SYNTAX		SEQUENCE OF SwPoEPortInfoEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A table that contains PoE information about every port in this stack.
+		      If a device has N ports, then the 1 -- N ports describe the port number of BoxID 1 device;
+		      N+1 -- 2N describe the port number of BoxID 2 device;
+		      2N+1 -- 3N describe the port number of BoxID 2 device;
+		      ......"
+
+		::= { swPoEPortInfo 1 }
+
+	swPoEPortInfoEntry OBJECT-TYPE
+		SYNTAX		SwPoEPortInfoEntry
+		MAX-ACCESS  not-accessible
+		STATUS		current
+		DESCRIPTION
+		      "A list of PoE information for each port of the device in this stack."
+		INDEX { swPoEPortInfoPortIndex }
+		::= { swPoEPortInfoTable 1 }
+
+	SwPoEPortInfoEntry ::=
+        SEQUENCE {
+            swPoEPortInfoPortIndex
+                INTEGER,
+			swPoEPortInfoClass
+				INTEGER,
+			swPoEPortInfoPower
+			    INTEGER,
+			swPoEPortInfoVoltage
+			    INTEGER,
+			swPoEPortInfoCurrent
+			    INTEGER,
+			swPoEPortInfoStatus
+				DisplayString,
+		    swpoEPortInfoLedStatus
+		        INTEGER
+       }
+	swPoEPortInfoPortIndex OBJECT-TYPE
+		SYNTAX		INTEGER(0..65535)
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"This object indicates the devices' port number in this stack.
+		      If a device has N ports, then the 1 -- N ports describe the port number of BoxId 1 device;
+		      N+1 -- 2N describe the port number of BoxID 2 device;
+		      2N+1 -- 3N describe the port number of BoxID 2 device;
+		      ......"
+
+		::= { swPoEPortInfoEntry 1 }
+
+	swPoEPortInfoClass OBJECT-TYPE
+		SYNTAX		INTEGER (0..4)
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The power class of the PD according to 802.3af definitions:
+			class 0: PD power consumption is within 0.44-12.95 watts,
+			class 1: PD power consumption is within 0.44-3.84 watts,
+			class 2: PD power consumption is within 3.84-6.49 watts,
+			class 3: PD power consumption is within 6.49-12.95 watts,
+			class 4: is reserved for future use."
+		::= { swPoEPortInfoEntry 2 }
+
+	swPoEPortInfoPower OBJECT-TYPE
+		SYNTAX		INTEGER
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The port power consumption (in milliwatts)."
+		::= { swPoEPortInfoEntry 3 }
+
+	swPoEPortInfoVoltage OBJECT-TYPE
+		SYNTAX		INTEGER
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The port input line voltage (in decivolts)."
+		::= { swPoEPortInfoEntry 4 }
+
+	swPoEPortInfoCurrent OBJECT-TYPE
+		SYNTAX		INTEGER
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The port current (calculated in milliamps)."
+		::= { swPoEPortInfoEntry 5 }
+
+	swPoEPortInfoStatus OBJECT-TYPE
+		SYNTAX		DisplayString (SIZE (0..76))
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The string describes the PoE port current status."
+		::= { swPoEPortInfoEntry 6 }
+
+    swpoEPortInfoLedStatus  OBJECT-TYPE
+        SYNTAX      INTEGER{
+						on(1),
+						off(2),
+						error(3)
+						}
+		MAX-ACCESS	read-only
+		STATUS		current
+		DESCRIPTION
+			"The LED display for PoE port status.
+			on (1): power is provided to the port on which a 802.3af-compliant
+			          or legacy PD is connected,
+			off(2): no power is provided to the port where there aren't any errors,
+			error(3): some error happens on the port, like overload, underload,
+			          short,...or power budget exceeded conditions."
+		::= { swPoEPortInfoEntry 7 }
+
+END

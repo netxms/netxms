@@ -175,6 +175,7 @@ typedef void * HSNMPSESSION;
 /**
  * Client session flags
  */
+#define CSF_TERMINATED           ((UINT32)0x00000001)
 #define CSF_EPP_LOCKED           ((UINT32)0x00000002)
 #define CSF_PACKAGE_DB_LOCKED    ((UINT32)0x00000004)
 #define CSF_USER_DB_LOCKED       ((UINT32)0x00000008)
@@ -240,8 +241,7 @@ typedef void * HSNMPSESSION;
  */
 typedef struct
 {
-   UINT32 dwIpAddr;
-   UINT32 dwNetMask;
+   InetAddress ipAddr;
 	UINT32 zoneId;
 	BOOL ignoreFilter;
 	BYTE bMacAddr[MAC_ADDR_LENGTH];
@@ -264,9 +264,7 @@ typedef struct
  */
 typedef struct
 {
-   UINT32 dwIpAddr;
-   UINT32 dwNetMask;
-   UINT32 dwSubnetAddr;
+   InetAddress ipAddr;
    UINT32 dwFlags;
    int nSNMPVersion;
    TCHAR szObjectId[MAX_OID_LEN * 4];    // SNMP OID
@@ -299,7 +297,7 @@ protected:
 	virtual void onSnmpTrap(NXCPMessage *pMsg);
 
 public:
-   AgentConnectionEx(UINT32 nodeId, UINT32 ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
+   AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
             AgentConnection(ipAddr, port, authMethod, secret) { m_nodeId = nodeId; }
    virtual ~AgentConnectionEx();
 
@@ -378,7 +376,7 @@ public:
 /**
  * Client (user) session
  */
-#define DECLARE_THREAD_STARTER(func) static THREAD_RESULT THREAD_CALL ThreadStarter_##func(void *);
+#define DECLARE_THREAD_STARTER(func) static void ThreadStarter_##func(void *);
 
 class NXCORE_EXPORTABLE ClientSession
 {
@@ -441,11 +439,12 @@ private:
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL processingThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL updateThreadStarter(void *);
-   static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *);
+   static void pollerThreadStarter(void *);
 
 	DECLARE_THREAD_STARTER(getCollectedData)
 	DECLARE_THREAD_STARTER(getTableCollectedData)
 	DECLARE_THREAD_STARTER(clearDCIData)
+	DECLARE_THREAD_STARTER(forceDCIPoll)
 	DECLARE_THREAD_STARTER(queryParameter)
 	DECLARE_THREAD_STARTER(queryAgentTable)
 	DECLARE_THREAD_STARTER(queryL2Topology)
@@ -514,6 +513,7 @@ private:
    void getTableCollectedData(NXCPMessage *pRequest);
 	bool getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *object, int dciType);
 	void clearDCIData(NXCPMessage *pRequest);
+	void forceDCIPoll(NXCPMessage *pRequest);
    void changeDCIStatus(NXCPMessage *pRequest);
    void getLastValues(NXCPMessage *pRequest);
    void getLastValuesByDciId(NXCPMessage *pRequest);
@@ -602,7 +602,8 @@ private:
    void getAddrList(NXCPMessage *pRequest);
    void setAddrList(NXCPMessage *pRequest);
    void resetComponent(NXCPMessage *pRequest);
-   void sendDCIEventList(NXCPMessage *request);
+   void getDCIEventList(NXCPMessage *request);
+   void getDCIScriptList(NXCPMessage *request);
 	void SendDCIInfo(NXCPMessage *pRequest);
    void sendPerfTabDCIList(NXCPMessage *pRequest);
    void exportConfiguration(NXCPMessage *pRequest);
@@ -713,6 +714,7 @@ public:
 	UINT64 getSystemRights() { return m_dwSystemAccess; }
    UINT32 getFlags() { return m_dwFlags; }
    bool isAuthenticated() { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
+   bool isTerminated() { return (m_dwFlags & CSF_TERMINATED) ? true : false; }
    bool isConsoleOpen() { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }
    bool isSubscribed(UINT32 dwChannel) { return (m_dwActiveChannels & dwChannel) ? true : false; }
    WORD getCurrentCmd() { return m_wCurrentCmd; }
@@ -870,7 +872,6 @@ ARP_CACHE *GetLocalArpCache();
 ARP_CACHE *SnmpGetArpCache(UINT32 dwVersion, SNMP_Transport *pTransport);
 
 InterfaceList *GetLocalInterfaceList();
-void SnmpGetInterfaceStatus(UINT32 dwVersion, SNMP_Transport *pTransport, UINT32 dwIfIndex, int *adminState, int *operState);
 
 ROUTING_TABLE *SnmpGetRoutingTable(UINT32 dwVersion, SNMP_Transport *pTransport);
 
@@ -885,7 +886,7 @@ void WatchdogNotify(UINT32 dwId);
 void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 
 void CheckForMgmtNode();
-Node NXCORE_EXPORTABLE *PollNewNode(UINT32 dwIpAddr, UINT32 dwNetMask, UINT32 dwCreationFlags, WORD agentPort,
+Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreationFlags, WORD agentPort,
                                     WORD snmpPort, const TCHAR *pszName, UINT32 dwProxyNode, UINT32 dwSNMPProxy, Cluster *pCluster,
 						                  UINT32 zoneId, bool doConfPoll, bool discoveredNode);
 
@@ -897,7 +898,7 @@ bool IsLoggedIn(UINT32 dwUserId);
 bool NXCORE_EXPORTABLE KillClientSession(int id);
 
 void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
-UINT32 GetLocalIpAddr();
+InetAddress GetLocalIpAddr();
 TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize);
 
 BOOL ExecCommand(TCHAR *pszCommand);
@@ -923,7 +924,7 @@ UINT32 CreateNewTrap(UINT32 *pdwTrapId);
 UINT32 CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap);
 UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg);
 UINT32 DeleteTrap(UINT32 dwId);
-void CreateNXMPTrapRecord(String &str, UINT32 dwId);
+void CreateTrapExportRecord(String &xml, UINT32 id);
 
 BOOL IsTableTool(UINT32 dwToolId);
 BOOL CheckObjectToolAccess(UINT32 dwToolId, UINT32 dwUserId);
@@ -931,10 +932,14 @@ UINT32 ExecuteTableTool(UINT32 dwToolId, Node *pNode, UINT32 dwRqId, ClientSessi
 UINT32 DeleteObjectToolFromDB(UINT32 dwToolId);
 UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled);
 UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg);
+void CreateObjectToolExportRecord(String &xml, UINT32 id);
+bool ImportObjectTool(ConfigEntry *config);
 
 UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId);
 UINT32 DeleteSummaryTable(LONG tableId);
 Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 baseObjectId, UINT32 userId, UINT32 *rcc);
+bool CreateSummaryTableExportRecord(INT32 id, String &xml);
+bool ImportSummaryTable(ConfigEntry *config);
 
 void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();
@@ -961,14 +966,15 @@ void ReloadCertificates();
 THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
 #endif   /* not _WIN32 */
 
-void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX pCtx);
-void DumpClientSessions(CONSOLE_CTX pCtx);
-void DumpMobileDeviceSessions(CONSOLE_CTX pCtx);
-void ShowPollerState(CONSOLE_CTX pCtx);
+void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX console);
+void DumpClientSessions(CONSOLE_CTX console);
+void DumpMobileDeviceSessions(CONSOLE_CTX console);
+void ShowPollerState(CONSOLE_CTX console);
 void SetPollerInfo(int nIdx, const TCHAR *pszMsg);
-void ShowServerStats(CONSOLE_CTX pCtx);
-void ShowQueueStats(CONSOLE_CTX pCtx, Queue *pQueue, const TCHAR *pszName);
-void DumpProcess(CONSOLE_CTX pCtx);
+void ShowServerStats(CONSOLE_CTX console);
+void ShowQueueStats(CONSOLE_CTX console, Queue *pQueue, const TCHAR *pszName);
+void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p);
+void DumpProcess(CONSOLE_CTX console);
 
 GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize);
 BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT32 graphUserId, UINT32 graphDesiredAccess);
@@ -1054,5 +1060,7 @@ extern Queue *g_dciRawDataWriterQueue;
 
 extern int NXCORE_EXPORTABLE g_dbSyntax;
 extern FileMonitoringList g_monitoringList;
+
+extern ThreadPool *g_mainThreadPool;
 
 #endif   /* _nms_core_h_ */

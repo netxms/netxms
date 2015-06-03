@@ -16,6 +16,7 @@ import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.widget.TextView;
 import org.netxms.client.TextOutputListener;
+import org.netxms.client.constants.NodePollType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
 
@@ -25,10 +26,10 @@ import org.netxms.ui.android.R;
 public class NodePollerActivity extends AbstractClientActivity
 {
 	private static final String TAG = "nxclient/NodePoller";
-	private static final String[] POLL_NAME = { "", "Status", "Configuration", "Interface", "Topology" };
+	private static final String[] POLL_NAME = { "", "Status", "Configuration (full)", "Interface", "Topology", "Configuration", "Instance" };
 	
 	private long nodeId;
-	private int pollType;
+	private NodePollType pollType;
 	private boolean pollInProgress = false;
 	private TextView textView;
 	
@@ -39,7 +40,7 @@ public class NodePollerActivity extends AbstractClientActivity
 	protected void onCreateStep2(Bundle savedInstanceState)
 	{
 		nodeId = getIntent().getIntExtra("nodeId", 0);
-		pollType = getIntent().getIntExtra("pollType", 0);
+		pollType = (NodePollType)getIntent().getSerializableExtra("pollType");
 		
 		setContentView(R.layout.node_poller);
 		
@@ -58,7 +59,7 @@ public class NodePollerActivity extends AbstractClientActivity
 		super.onServiceConnected(name, binder);
 		AbstractObject object = service.findObjectById(nodeId);
 		TextView title = (TextView)findViewById(R.id.ScreenTitlePrimary);
-		title.setText(POLL_NAME[pollType] + " poll: " + ((object != null) ? object.getObjectName() : ("[" + Long.toString(nodeId) + "]")));
+		title.setText(POLL_NAME[pollType.getValue()] + " poll: " + ((object != null) ? object.getObjectName() : ("[" + Long.toString(nodeId) + "]")));
 		restart();
 	}
 

@@ -29,10 +29,9 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Display;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCListener;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -89,16 +88,16 @@ public class ObjectToolsCache
 
 	   reload();
 	   
-      session.addListener(new NXCListener() {
+      session.addListener(new SessionListener() {
          @Override
          public void notificationHandler(SessionNotification n)
          {
             switch(n.getCode())
             {
-               case NXCNotification.OBJECT_TOOLS_CHANGED:
+               case SessionNotification.OBJECT_TOOLS_CHANGED:
                   onObjectToolChange(n.getSubCode());
                   break;
-               case NXCNotification.OBJECT_TOOL_DELETED:
+               case SessionNotification.OBJECT_TOOL_DELETED:
                   onObjectToolDelete(n.getSubCode());
                   break;
             }

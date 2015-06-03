@@ -79,6 +79,18 @@ public:
 };
 
 /**
+ * NXSL "Alarm" class
+ */
+class NXSL_AlarmClass : public NXSL_Class
+{
+public:
+   NXSL_AlarmClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+	virtual void onObjectDelete(NXSL_Object *object);
+};
+
+/**
  * NXSL "DCI" class
  */
 class NXSL_DciClass : public NXSL_Class
@@ -150,8 +162,11 @@ public:
  * Functions
  */
 void LoadScripts();
-void ReloadScript(UINT32 dwScriptId);
-BOOL IsValidScriptId(UINT32 dwId);
+void ReloadScript(UINT32 scriptId);
+bool IsValidScriptId(UINT32 id);
+UINT32 ResolveScriptName(const TCHAR *name);
+void CreateScriptExportRecord(String &xml, UINT32 id);
+void ImportScript(ConfigEntry *config);
 NXSL_VM *FindHookScript(const TCHAR *hookName);
 
 /**
@@ -159,6 +174,7 @@ NXSL_VM *FindHookScript(const TCHAR *hookName);
  */
 extern NXSL_Library *g_pScriptLibrary;
 
+extern NXSL_AlarmClass g_nxslAlarmClass;
 extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_InterfaceClass g_nxslInterfaceClass;

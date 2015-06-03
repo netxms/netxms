@@ -1,0 +1,413 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : WRED Common mib
+-- FILE NAME: wred.mib
+-- DATE     : 2011/09/30
+-- VERSION  : 2.01
+-- PURPOSE  : To construct the MIB structure of WRED management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.01, 2011/09/30, StarWen
+-- [Modification]
+-- Add the swWredProfileTable,swWredProfileCfgTable, swWredPortProfileTable for wred new feature.
+-- Notes: Requested by Star for project DGS3120R2.5.
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+WRED-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE     FROM SNMPv2-SMI
+        dlink-common-mgmt               FROM DLINK-ID-REC-MIB
+        RowStatus, DisplayString			FROM SNMPv2-TC;
+
+     swWredMIB MODULE-IDENTITY
+          LAST-UPDATED "1109300000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+            "http://support.dlink.com"
+          DESCRIPTION
+            "."
+          ::= { dlink-common-mgmt 31 }
+
+
+
+   swWredCtrl            OBJECT IDENTIFIER ::= { swWredMIB 1 }
+   swWredInfo		       OBJECT IDENTIFIER ::= { swWredMIB 2 }
+   swWredMgmt            OBJECT IDENTIFIER ::= { swWredMIB 3}
+
+
+
+  swWredGlobalState OBJECT-TYPE
+    SYNTAX  INTEGER {
+                    other(1),
+                    disabled(2),
+                    enabled(3)
+                    }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+          "This object enable\disable the WRED state of the device."
+    ::= { swWredCtrl 1 }
+
+-- -----------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
+  swWredAverageTimeTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwWredAverageTimeEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains WRED average time for each port."
+		::= { swWredMgmt 1 }
+
+	swWredAverageTimeEntry OBJECT-TYPE
+		SYNTAX  SwWredAverageTimeEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list that contains WRED average time per port."
+		INDEX   { swWredPortIndex }
+		::= { swWredAverageTimeTable 1 }
+
+	SwWredAverageTimeEntry ::=
+		SEQUENCE {
+		  swWredPortIndex
+		      INTEGER,
+		  swWredAverageTime
+		      INTEGER
+		}
+
+  swWredPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER (1..65535)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the port number."
+		::= { swWredAverageTimeEntry 1 }
+
+  swWredAverageTime OBJECT-TYPE
+		SYNTAX  INTEGER (1..32768)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the time in microseconds used in
+		       average queue depth calculation (1-32768)."
+		::= { swWredAverageTimeEntry 2 }
+
+-- -----------------------------------------------------------------------------
+
+  swWredCtrlTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwWredCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains WRED drop setting for each port."
+		::= { swWredMgmt 2 }
+
+  swWredCtrlEntry OBJECT-TYPE
+		SYNTAX  SwWredCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list that contains WRED drop setting per port."
+		INDEX   { swWredCtrlPortIndex,swWredCtrlClassIndex }
+		::= { swWredCtrlTable 1 }
+
+	SwWredCtrlEntry ::=
+		SEQUENCE {
+                swWredCtrlPortIndex
+                    INTEGER,
+                swWredCtrlClassIndex
+                    INTEGER,
+                swWredCtrlDropStart
+                    INTEGER,
+                swWredCtrlDropSlope
+                    INTEGER
+		}
+
+
+  swWredCtrlPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER (1..65535)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the port number."
+		::= { swWredCtrlEntry 1 }
+
+  swWredCtrlClassIndex OBJECT-TYPE
+		SYNTAX  INTEGER (0..7)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the cos queue number (0-7)."
+		::= { swWredCtrlEntry 2 }
+
+  swWredCtrlDropStart OBJECT-TYPE
+		SYNTAX  INTEGER (0..100)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the percentage of queue size
+		       to start dropping (0-100)."
+		::= { swWredCtrlEntry 3 }
+
+  swWredCtrlDropSlope OBJECT-TYPE
+		SYNTAX  INTEGER (0..90)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the Degrees (0..90) describing
+		       the drop probability slope (0-90). When set the slope
+		        zero, it like disable the wred of the cos queue."
+		::= { swWredCtrlEntry 4 }
+
+-- -----------------------------------------------------------------------------
+
+  swWredProfileTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwWredProfileEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains WRED Profile Entrys."
+		::= { swWredMgmt 4 }
+		
+  swWredProfileEntry  OBJECT-TYPE
+		SYNTAX  SwWredProfileEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list that contains WRED profile entrys."
+		INDEX   { swWredProfileIndex }
+		::= { swWredProfileTable 1 }
+		
+	SwWredProfileEntry ::=
+		SEQUENCE {
+		swWredProfileIndex
+		    INTEGER,
+		swWredProfileName
+		    DisplayString,
+		swWredProfileRowStatus
+		    RowStatus
+		}
+		
+  swWredProfileIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the profile number,the minimum
+		       value should be 2 and the maximum value is depended on project."
+		::= { swWredProfileEntry 1 }
+
+  swWredProfileName OBJECT-TYPE
+		SYNTAX  DisplayString
+		MAX-ACCESS  read-create
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the profile name,The profile name can not be same."
+		::= { swWredProfileEntry 2 }   
+
+  swWredProfileRowStatus	OBJECT-TYPE
+	    SYNTAX      RowStatus
+	    MAX-ACCESS  read-create
+	    STATUS      current
+	    DESCRIPTION
+	        "This object indicates the status of this entry."
+
+	    ::= { swWredProfileEntry 3 }
+	    
+-- -----------------------------------------------------------------------------
+
+  swWredProfileCfgTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwWredProfileCfgEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains WRED profile every parameter."
+		::= { swWredMgmt 5 }
+		
+		
+  swWredProfileCfgEntry  OBJECT-TYPE
+		  SYNTAX  SwWredProfileCfgEntry
+		  MAX-ACCESS  not-accessible
+		  STATUS  current
+		  DESCRIPTION
+		        "A list that contains WRED profile parameter for each profile."
+		  INDEX   { swWredProfileCfgIndex,swWredProfileCfgPacketType,swWredProfileCfgPacketColor }
+		  ::= { swWredProfileCfgTable 1 }
+		  
+		  
+	SwWredProfileCfgEntry ::=
+		SEQUENCE {
+		swWredProfileCfgIndex
+		    INTEGER,
+		swWredProfileCfgPacketType
+		    INTEGER,
+		swWredProfileCfgPacketColor
+		    INTEGER, 
+		swWredProfileCfgMinThreshold
+		    INTEGER,
+		swWredProfileCfgMaxThreshold
+		    INTEGER,
+		swWredProfileCfgMaxDropRate
+		    INTEGER
+		}         
+		
+		
+  swWredProfileCfgIndex OBJECT-TYPE
+		SYNTAX  INTEGER (1..128)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the profile number."
+		::= { swWredProfileCfgEntry 1 }
+		
+
+  swWredProfileCfgPacketType OBJECT-TYPE
+		SYNTAX  INTEGER {
+				tcp(1),
+				nonTcp(2)
+				}
+		MAX-ACCESS  read-only
+    		STATUS  current
+    		DESCRIPTION
+    		      "This object indicates the profile packet type."
+    		::= { swWredProfileCfgEntry 2 }
+
+
+  swWredProfileCfgPacketColor OBJECT-TYPE
+		SYNTAX  INTEGER {
+				green(1),
+				yellow(2),
+				red(3)
+				}
+		MAX-ACCESS  read-only
+    		STATUS  current
+    		DESCRIPTION
+    		      "This object indicates the profile packet color."
+    		::= { swWredProfileCfgEntry 3 }
+
+
+		
+  swWredProfileCfgMinThreshold OBJECT-TYPE
+		SYNTAX  INTEGER (0..100)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the percentage of queue size
+		       to start dropping (0-100)."
+		::= { swWredProfileCfgEntry 4 }
+		
+		
+  swWredProfileCfgMaxThreshold OBJECT-TYPE
+		SYNTAX  INTEGER (0..100)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the percentage of queue size
+		       over which WRED will drop all packets (0-100)."
+		::= { swWredProfileCfgEntry 5 }
+		  
+		  
+  swWredProfileCfgMaxDropRate OBJECT-TYPE
+		SYNTAX  INTEGER (0..100)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the drop probability that the 
+		       percentage of queue size reaches max threshold."
+		::= { swWredProfileCfgEntry 6 }
+		
+
+-- -----------------------------------------------------------------------------
+
+  swWredPortProfileTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwWredPortProfileEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains ports WRED profile binded."
+		::= { swWredMgmt 6 }
+		
+
+  swWredPortProfileEntry  OBJECT-TYPE
+		SYNTAX  SwWredPortProfileEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list that contains port and WRED profile id."
+		INDEX   { swWredPortProfilePortIndex,swWredPortProfileClassIndex }
+		::= { swWredPortProfileTable 1 }
+		
+
+	SwWredPortProfileEntry ::=
+		SEQUENCE {
+		swWredPortProfilePortIndex
+		    INTEGER,
+		swWredPortProfileClassIndex
+		    INTEGER,
+		swWredPortProfileId
+		    INTEGER,
+		swWredPortWeightNum
+		    INTEGER
+		}
+		
+		
+  swWredPortProfilePortIndex  OBJECT-TYPE
+		SYNTAX  INTEGER (1..65535)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the port number."
+		::= { swWredPortProfileEntry 1 }
+		
+		
+  swWredPortProfileClassIndex 	OBJECT-TYPE
+		SYNTAX  INTEGER (0..7)
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the hardware priority queue number (0-7)."
+		::= { swWredPortProfileEntry 2 }
+		
+		
+  swWredPortProfileId  OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates profile ID that port and queue binded,
+		      the minimum value should be 1 and the maximum is depended on project."
+		::= { swWredPortProfileEntry 3 }	  	
+
+  swWredPortWeightNum  OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates weight number that port and queue set,
+		      the minimum value should be 1 and the maximum is depended on project."
+		::= { swWredPortProfileEntry 4 }
+
+-- -----------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
+  swWredAllPortAverageTime OBJECT-TYPE
+        SYNTAX  INTEGER (0..32768)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+              "This object configure the time in microseconds used in
+               average queue depth calculation (1-32768) to all port.
+               This return value while read request will be always 0."
+        ::= { swWredMgmt 3 }
+
+END

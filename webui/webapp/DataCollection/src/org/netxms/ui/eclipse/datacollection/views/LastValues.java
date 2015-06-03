@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -57,7 +58,6 @@ public class LastValues extends ViewPart
 	private LastValuesWidget dataView;
 	private Action actionRefresh;
 	private Action actionAutoUpdate;
-	private Action actionUseMultipliers;
 	private Action actionShowFilter;
 	
 	/* (non-Javadoc)
@@ -83,7 +83,7 @@ public class LastValues extends ViewPart
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
-		dataView = new LastValuesWidget(this, parent, SWT.NONE, dcTarget, "LastValuesWidget"); //$NON-NLS-1$
+		dataView = new LastValuesWidget(this, parent, SWT.NONE, dcTarget, "LastValuesWidget", null); //$NON-NLS-1$
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);
@@ -139,20 +139,11 @@ public class LastValues extends ViewPart
 			@Override
 			public void run()
 			{
-				dataView.setAutoRefreshEnabled(!dataView.isAutoRefreshEnabled());
+				dataView.setAutoRefreshEnabled(actionAutoUpdate.isChecked());
 			}
 		};
 		actionAutoUpdate.setChecked(dataView.isAutoRefreshEnabled());
 		
-		actionUseMultipliers = new Action(Messages.get().LastValues_UseMultipliers, Action.AS_CHECK_BOX) {
-			@Override
-			public void run()
-			{
-				dataView.setUseMultipliers(!dataView.areMultipliersUsed());
-			}
-		};
-		actionUseMultipliers.setChecked(dataView.areMultipliersUsed());
-
 		actionShowFilter = new Action(Messages.get().LastValues_ShowFilter, Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
@@ -161,6 +152,7 @@ public class LastValues extends ViewPart
 				actionShowFilter.setChecked(dataView.isFilterEnabled());
 			}
       };
+      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
       actionShowFilter.setChecked(dataView.isFilterEnabled());
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
 		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
@@ -187,7 +179,7 @@ public class LastValues extends ViewPart
 	{
 		manager.add(actionShowFilter);
 		manager.add(actionAutoUpdate);
-		manager.add(actionUseMultipliers);
+		manager.add(dataView.getActionUseMultipliers());
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -200,6 +192,8 @@ public class LastValues extends ViewPart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+      manager.add(actionShowFilter);
+      manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 }

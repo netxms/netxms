@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,6 +66,8 @@ import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesFilter;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.LastValuesLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -94,8 +96,8 @@ public class LastValuesWidget extends Composite
 	private LastValuesComparator comparator;
 	private LastValuesFilter filter;
 	private boolean autoRefreshEnabled = false;
-	private int autoRefreshInterval = 30000;	// in milliseconds
-	private Runnable refreshTimer;
+	private int autoRefreshInterval = 30;	// in seconds
+	private ViewRefreshController refreshController;
 	private Action actionUseMultipliers;
 	private Action actionShowErrors;
 	private Action actionShowDisabled;
@@ -111,8 +113,9 @@ public class LastValuesWidget extends Composite
 	 * @param style style
 	 * @param _node node to display data for
 	 * @param configPrefix configuration prefix for saving/restoring viewer settings
+	 * @param validator additional visibility validator (used to suppress unneded refresh calls, may be null)
 	 */
-	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, AbstractObject dcTarget, final String configPrefix)
+	public LastValuesWidget(ViewPart viewPart, Composite parent, int style, AbstractObject dcTarget, final String configPrefix, VisibilityValidator validator)
 	{
 		super(parent, style);
 		session = (NXCSession)ConsoleSharedData.getSession();
@@ -123,7 +126,7 @@ public class LastValuesWidget extends Composite
 		
 		final IDialogSettings ds = Activator.getDefault().getDialogSettings();
 		
-		refreshTimer = new Runnable() {
+		refreshController = new ViewRefreshController(viewPart, -1, new Runnable() {
 			@Override
 			public void run()
 			{
@@ -131,9 +134,15 @@ public class LastValuesWidget extends Composite
 					return;
 				
 				getDataFromServer();
-				getDisplay().timerExec(autoRefreshInterval, this);
 			}
-		};
+		}, validator);
+		addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            refreshController.dispose();
+         }
+      });
 		
 		setLayout(new FormLayout());
 		
@@ -210,7 +219,12 @@ public class LastValuesWidget extends Composite
 		
 		try
 		{
-			ds.getInt(configPrefix + ".autoRefreshInterval"); //$NON-NLS-1$
+			autoRefreshInterval = ds.getInt(configPrefix + ".autoRefreshInterval"); //$NON-NLS-1$
+			if (autoRefreshInterval >= 1000)
+			{
+			   // assume it was saved by old version in milliseconds
+			   autoRefreshInterval /= 1000;
+			}
 		}
 		catch(NumberFormatException e)
 		{
@@ -236,7 +250,8 @@ public class LastValuesWidget extends Composite
 		createActions();
 		createPopupMenu();
 
-		getDataFromServer();
+		if ((validator == null) || validator.isVisible())
+		   getDataFromServer();
 		
 		// Set initial focus to filter input line
 		if (filterEnabled)
@@ -320,6 +335,7 @@ public class LastValuesWidget extends Composite
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+      manager.add(new Separator());
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_SECONDARY));
@@ -401,9 +417,7 @@ public class LastValuesWidget extends Composite
 	public void setAutoRefreshEnabled(boolean autoRefreshEnabled)
 	{
 		this.autoRefreshEnabled = autoRefreshEnabled;
-		getDisplay().timerExec(-1, refreshTimer);
-		if (autoRefreshEnabled)
-			getDisplay().timerExec(autoRefreshInterval, refreshTimer);
+		refreshController.setInterval(autoRefreshEnabled ? autoRefreshInterval : -1);
 	}
 
 	/**
@@ -565,6 +579,14 @@ public class LastValuesWidget extends Composite
 	}
 
 	/**
+    * @return the actionUseMultipliers
+    */
+   public Action getActionUseMultipliers()
+   {
+      return actionUseMultipliers;
+   }
+
+   /**
 	 * Register object open handlers
 	 */
 	private void registerOpenHandlers()

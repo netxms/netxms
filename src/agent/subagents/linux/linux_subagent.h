@@ -23,6 +23,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <nms_util.h>
 
 #include <locale.h>
 #include <sys/utsname.h>
@@ -79,16 +80,15 @@ typedef struct t_ProcEnt
 /**
  * Interface info
  */
-typedef struct t_IfInfo
+struct LinuxInterfaceInfo
 {
-   t_IfInfo* next;
-   UINT32 index;
-   char addr[40];
-   BYTE mask;
-   UINT32 type;
-   char mac[16];
+   int index;
+   int type;
+   int mtu;
+   BYTE macAddr[8];
    char name[16];
-} IFINFO;
+   ObjectArray<InetAddress> addrList;
+};
 
 /**
  * Netlink
@@ -208,6 +208,7 @@ enum
 
 LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_FileSystemType(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 
 LONG H_IoStats(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

@@ -31,6 +31,9 @@ extern NXSL_ExtFunction g_nxslSituationFunctions[];
 void RegisterDCIFunctions(NXSL_Environment *pEnv);
 int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 
+int F_FindAlarmById(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+
 /**
  * Get node's custom attribute
  * First argument is a node object, and second is an attribute name
@@ -147,7 +150,7 @@ static int F_GetInterfaceName(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 		return NXSL_ERR_BAD_CLASS;
 
 	Node *node = (Node *)object->getData();
-	Interface *ifc = node->findInterface(argv[1]->getValueAsUInt32(), INADDR_ANY);
+	Interface *ifc = node->findInterfaceByIndex(argv[1]->getValueAsUInt32());
 	if (ifc != NULL)
 	{
 		*ppResult = new NXSL_Value(ifc->getName());
@@ -177,7 +180,7 @@ static int F_GetInterfaceObject(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 		return NXSL_ERR_BAD_CLASS;
 
 	Node *node = (Node *)object->getData();
-	Interface *ifc = node->findInterface(argv[1]->getValueAsUInt32(), INADDR_ANY);
+	Interface *ifc = node->findInterfaceByIndex(argv[1]->getValueAsUInt32());
 	if (ifc != NULL)
 	{
 		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, ifc));
@@ -580,7 +583,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	const TCHAR *pname = argv[2]->getValueAsCString();
 	if (*pname == 0)
 		pname = argv[1]->getValueAsCString();
-	Node *node = PollNewNode(ntohl(ResolveHostName(pname)), 0, 0, 0, 0, argv[1]->getValueAsCString(), 0, 0, NULL, 0, true, false);
+   Node *node = PollNewNode(InetAddress::resolveHostName(pname), 0, 0, 0, argv[1]->getValueAsCString(), 0, 0, NULL, 0, true, false);
 	if (node != NULL)
 	{
 		node->setPrimaryName(pname);
@@ -1260,6 +1263,38 @@ static int F_AgentReadTable(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 }
 
 /**
+ * Read list from agent
+ * Syntax:
+ *    AgentReadList(object, name)
+ * where:
+ *     object - NetXMS node object
+ *     name   - name of the list
+ * Return value:
+ *     list values (as an array) on success and null on failure
+ */
+static int F_AgentReadList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	if (!argv[1]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	StringList *list;
+   UINT32 rcc = ((Node *)object->getData())->getListFromAgent(argv[1]->getValueAsCString(), &list);
+	if (rcc == DCE_SUCCESS)
+      *ppResult = new NXSL_Value(new NXSL_Array(list));
+	else
+		*ppResult = new NXSL_Value;
+   delete list;
+	return 0;
+}
+
+/**
  * Get server's configuration variable
  * First argument is a variable name
  * Optional second argumet is default value
@@ -1292,6 +1327,7 @@ static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
 	{ _T("map"), F_map, -1 },
+	{ _T("AgentReadList"), F_AgentReadList, 2 },
 	{ _T("AgentReadParameter"), F_AgentReadParameter, 2 },
 	{ _T("AgentReadTable"), F_AgentReadTable, 2 },
 	{ _T("CreateSNMPTransport"), F_CreateSNMPTransport, 1 },
@@ -1306,6 +1342,8 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("GetNodeTemplates"), F_GetNodeTemplates, 1 },
    { _T("GetObjectChildren"), F_GetObjectChildren, 1 },
    { _T("GetObjectParents"), F_GetObjectParents, 1 },
+	{ _T("FindAlarmById"), F_FindAlarmById, 1 },
+	{ _T("FindAlarmByKey"), F_FindAlarmByKey, 1 },
 	{ _T("FindNodeObject"), F_FindNodeObject, 2 },
 	{ _T("FindObject"), F_FindObject, -1 },
    { _T("ManageObject"), F_ManageObject, 1 },

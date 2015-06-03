@@ -15,3 +15,4 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 SUBDIRS = dbquery filemgr winnt winperf wmi portCheck ping sms ups ecs logwatch devemu ${SUBAGENT_DIRS} 
+EXTRA_DIST = subagent.sym

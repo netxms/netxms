@@ -45,10 +45,9 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -288,15 +287,15 @@ public class SnmpTrapEditor extends ViewPart implements SessionListener
 	{
 		switch(n.getCode())
 		{
-			case NXCNotification.TRAP_CONFIGURATION_CREATED:
-			case NXCNotification.TRAP_CONFIGURATION_MODIFIED:
+			case SessionNotification.TRAP_CONFIGURATION_CREATED:
+			case SessionNotification.TRAP_CONFIGURATION_MODIFIED:
 				synchronized(traps)
 				{
 					traps.put(n.getSubCode(), (SnmpTrap)n.getObject());
 				}
 				updateTrapList();
 				break;
-			case NXCNotification.TRAP_CONFIGURATION_DELETED:
+			case SessionNotification.TRAP_CONFIGURATION_DELETED:
 				synchronized(traps)
 				{
 					traps.remove(n.getSubCode());

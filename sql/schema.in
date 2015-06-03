@@ -220,6 +220,7 @@ CREATE TABLE access_points
 	model varchar(128) null,
 	serial_number varchar(64) null,
    ap_state integer not null,
+   ap_index integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -308,8 +309,8 @@ CREATE TABLE cluster_members
 CREATE TABLE cluster_sync_subnets
 (
 	cluster_id integer not null,
-	subnet_addr varchar(15) not null,
-	subnet_mask varchar(15) not null,
+	subnet_addr varchar(48) not null,
+	subnet_mask integer not null,
 	PRIMARY KEY(cluster_id,subnet_addr)
 ) TABLE_TYPE;
 
@@ -323,38 +324,32 @@ CREATE TABLE cluster_resources
 	cluster_id integer not null,
 	resource_id integer not null,
 	resource_name varchar(255),
-	ip_addr varchar(15) not null,
+	ip_addr varchar(48) not null,
 	current_owner integer not null,
 	PRIMARY KEY(cluster_id,resource_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Subnets
 */
-
 CREATE TABLE subnets
 (
 	id integer not null,
-	ip_addr varchar(15) not null,
-	ip_netmask varchar(15) not null,
+	ip_addr varchar(48) not null,
+	ip_netmask integer not null,
 	zone_guid integer not null,
 	synthetic_mask integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
 /*
 ** Nodes' interfaces
 */
-
 CREATE TABLE interfaces
 (
 	id integer not null,
 	node_id integer not null,
 	flags integer not null,
-	ip_addr varchar(15) not null,
-	ip_netmask varchar(15) not null,
 	if_type integer not null,
 	if_index integer not null,
    mtu integer not null,
@@ -375,6 +370,16 @@ CREATE TABLE interfaces
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+/*
+** Interface IP addresses
+*/
+CREATE TABLE interface_address_list
+(
+   iface_id integer not null,
+	ip_addr varchar(48) not null,
+	ip_netmask integer not null,
+   PRIMARY KEY(iface_id,ip_addr)
+) TABLE_TYPE;
 
 /*
 ** Network services
@@ -385,7 +390,7 @@ CREATE TABLE network_services
 	id integer not null,
 	node_id integer not null,
 	service_type integer not null,
-	ip_bind_addr varchar(15) not null,
+	ip_bind_addr varchar(48) not null,
 	ip_proto integer not null,
 	ip_port integer not null,
 	check_request SQL_TEXT null,
@@ -413,8 +418,8 @@ CREATE TABLE vpn_connector_networks
 (
 	vpn_id integer not null,
 	network_type integer not null,	// 0 == local, 1 == remote
-	ip_addr varchar(15) not null,
-	ip_netmask varchar(15) not null,
+	ip_addr varchar(48) not null,
+	ip_netmask integer not null,
 	PRIMARY KEY(vpn_id,ip_addr)
 ) TABLE_TYPE;
 
@@ -986,11 +991,9 @@ CREATE TABLE snmp_trap_pmap
 	PRIMARY KEY(trap_id,parameter)
 ) TABLE_TYPE;
 
-
 /*
 ** Agent packages
 */
-
 CREATE TABLE agent_pkg
 (
 	pkg_id integer not null,
@@ -1008,6 +1011,7 @@ CREATE TABLE agent_pkg
 CREATE TABLE object_tools
 (
 	tool_id integer not null,
+   guid varchar(36) not null,
 	tool_name varchar(255) null,
 	tool_type integer not null,
 	tool_data SQL_TEXT null,
@@ -1085,7 +1089,7 @@ CREATE TABLE snmp_trap_log
 (
 	trap_id SQL_INT64 not null,
 	trap_timestamp integer not null,
-	ip_addr varchar(15) not null,
+	ip_addr varchar(48) not null,
 	object_id integer not null,
 	trap_oid varchar(255) not null,
 	trap_varlist SQL_TEXT null,
@@ -1094,11 +1098,9 @@ CREATE TABLE snmp_trap_log
 
 CREATE INDEX idx_snmp_trap_log_tt ON snmp_trap_log(trap_timestamp);
 
-
 /*
 ** Agent configurations
 */
-
 CREATE TABLE agent_configs
 (
 	config_id integer not null,
@@ -1109,28 +1111,24 @@ CREATE TABLE agent_configs
 	PRIMARY KEY(config_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Address lists
 */
-
 CREATE TABLE address_lists
 (
 	list_type integer not null, // discovery filter, etc.
 	community_id integer not null, // community id for snmp community addr list, otherwise 0
 	addr_type integer not null, // 0 - addr/mask, 1 - address range
-	addr1 varchar(15) not null,
-	addr2 varchar(15) not null,
+	addr1 varchar(48) not null,
+	addr2 varchar(48) not null,
 	PRIMARY KEY(list_type,community_id,addr_type,addr1,addr2)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_address_lists_list_type ON address_lists(list_type);
 
-
 /*
 ** Graphs
 */
-
 CREATE TABLE graphs
 (
 	graph_id integer not null,
@@ -1140,11 +1138,9 @@ CREATE TABLE graphs
 	PRIMARY KEY(graph_id)
 ) TABLE_TYPE;
 
-
 /*
 ** Graph access lists
 */
-
 CREATE TABLE graph_acl
 (
 	graph_id integer not null,
@@ -1218,7 +1214,6 @@ CREATE TABLE ap_common
 	id integer not null,
 	policy_type integer not null,
 	version integer not null,
-	description SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1512,14 +1507,13 @@ CREATE TABLE mapping_data
 	PRIMARY KEY(table_id,md_key)
 ) TABLE_TYPE;
 
-
 /*
 ** DCI summary tables
 */
-
 CREATE TABLE dci_summary_tables
 (
 	id integer not null,
+   guid varchar(36) not null,
 	menu_path varchar(255) not null,
 	title varchar(127) null,
 	node_filter SQL_TEXT null,

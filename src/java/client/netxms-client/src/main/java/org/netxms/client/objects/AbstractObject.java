@@ -18,8 +18,6 @@
  */
 package org.netxms.client.objects;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,7 +25,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.netxms.api.client.services.ServiceManager;
 import org.netxms.base.CompatTools;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.NXCPCodes;
@@ -38,6 +35,7 @@ import org.netxms.client.AccessListElement;
 import org.netxms.client.ModuleDataProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.services.ServiceManager;
 
 /**
  * Abstract base class for all NetXMS objects (both built-in and provided by extensions)
@@ -117,7 +115,6 @@ public abstract class AbstractObject
 	protected int objectClass;
 	protected ObjectStatus status = ObjectStatus.UNKNOWN;
 	protected boolean isDeleted = false;
-	protected InetAddress primaryIP;
 	protected String comments;
 	protected GeoLocation geolocation;
 	protected PostalAddress postalAddress;
@@ -154,13 +151,6 @@ public abstract class AbstractObject
 		guid = UUID.randomUUID();
 		objectName = "unknown";
 		objectClass = OBJECT_GENERIC;
-		try
-		{
-			primaryIP = InetAddress.getByName("0.0.0.0");
-		}
-		catch(UnknownHostException e)
-		{
-		}
 		comments = "";
 		geolocation = new GeoLocation(false);
 		postalAddress = new PostalAddress();
@@ -199,7 +189,6 @@ public abstract class AbstractObject
 		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
 		objectName = msg.getFieldAsString(NXCPCodes.VID_OBJECT_NAME);
 		objectClass = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_CLASS);
-		primaryIP = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
 		isDeleted = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED);
 		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
@@ -355,14 +344,6 @@ public abstract class AbstractObject
 	public String getObjectName()
 	{
 		return objectName;
-	}
-
-	/**
-	 * @return the primaryIP
-	 */
-	public InetAddress getPrimaryIP()
-	{
-		return primaryIP;
 	}
 
 	/**

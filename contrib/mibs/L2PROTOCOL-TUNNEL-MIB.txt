@@ -1,0 +1,188 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : L2Protocol-Tunnel-MIB
+-- FILE NAME: L2ProtocolTunnel.mib
+-- DATE     : 2010/04/09
+-- VERSION  : 1.01
+-- PURPOSE  : To construct the MIB structure of Layer 2 protocol tunneling function for
+--            proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.01, 2010/04/09, Wang Yu
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+L2PROTOCOL-TUNNEL-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE	FROM SNMPv2-SMI
+        dlink-common-mgmt		FROM DLINK-ID-REC-MIB;
+ 	
+    swL2ProtocolTunnelMIB MODULE-IDENTITY
+          LAST-UPDATED "1004120000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The structure of Layer 2 protocol tunneling for the proprietary enterprise."
+        ::= { dlink-common-mgmt 93 }
+
+ 
+    swL2PTMIBObjects	OBJECT IDENTIFIER ::= { swL2ProtocolTunnelMIB 1 }
+
+-- -----------------------------------------------------------------------------
+-- swL2PTState
+-- -----------------------------------------------------------------------------
+   swL2PTState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the global state of Layer 2 protocol tunneling."
+    	::= { swL2PTMIBObjects 1 }
+
+-- -----------------------------------------------------------------------------
+-- swL2PTPortTable
+-- -----------------------------------------------------------------------------
+    swL2PTPortTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwL2PTPortEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A table that contains the Layer 2 protocol tunneling information of each port."
+        ::= { swL2PTMIBObjects 2 }
+
+    swL2PTPortEntry OBJECT-TYPE
+        SYNTAX  SwL2PTPortEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list with the Layer 2 protocol tunneling information of each port."
+        INDEX   { swL2PTPortIndex }
+        ::= { swL2PTPortTable 1 }
+
+    SwL2PTPortEntry ::=
+        SEQUENCE {
+            swL2PTPortIndex
+                INTEGER,
+            swL2PTPortType
+                INTEGER,
+            swL2PTProtocol
+                BITS
+        }
+
+    swL2PTPortIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+        	"This object indicates the port number."
+    	::= { swL2PTPortEntry 1 }
+
+    swL2PTPortType OBJECT-TYPE
+        SYNTAX INTEGER {
+               none(1),
+               uni(2),
+               nni(3)
+               }
+        MAX-ACCESS  read-write
+        STATUS current
+        DESCRIPTION
+            "This object indicates the Layer 2 protocol tunneling port type.
+
+		    The 'none' value indicates that the port is normal. Layer 2 protocol tunneling
+		    is disabled on this port.
+	
+		    The 'uni' value indicates that the port is connected to the customer site. A Layer 2 PDU received on a UNI port
+		    can be tunneled to a remote customer site across the provider network.
+	
+		    The 'nni' value indicates that the port is connected to the provider network. A Tunneled Layer 2 PDU received on an NNI port
+		    will be restored to its original format."
+	    DEFVAL { none }
+    	::= { swL2PTPortEntry 2 }
+
+    swL2PTProtocol  OBJECT-TYPE
+		SYNTAX BITS {
+				stp(0),
+				gvrp(1),
+		    	mac-01-00-0C-CC-CC-CC(2),
+		    	mac-01-00-0C-CC-CC-CD(3)
+		     }
+		MAX-ACCESS read-write
+		STATUS     current
+		DESCRIPTION  
+		    "This object indicates the tunneled protocols on this port.
+		    This object can only be applied on a UNI port. 
+		    
+		    If the 'stp' BIT is set, the STP BPDU will be tunneled.
+	
+		    If the 'gvrp' BIT is set, the GVRP PDU will be tunneled.
+		    	    
+		    If the 'mac-01-00-0C-CC-CC-CC' BIT is set, the PDU with the	            destination MAC address 01-00-0C-CC-CC-CC will be tunneled .
+	
+		    If the 'mac-01-00-0C-CC-CC-CD' BIT is set, then the PDU with the
+	            destination MAC address 01-00-0C-CC-CC-CD will be tunneled."
+		::= { swL2PTPortEntry 3 }
+    		
+-- -----------------------------------------------------------------------------
+-- swL2PTThresholdTable
+-- -----------------------------------------------------------------------------
+    swL2PTThresholdTable OBJECT-TYPE
+    	SYNTAX     SEQUENCE OF SwL2PTThresholdEntry
+    	MAX-ACCESS not-accessible
+    	STATUS     current
+    	DESCRIPTION 
+    	    "This table contains the protocol tunneling threshold of a UNI port."
+    	::= { swL2PTMIBObjects 3}
+
+    swL2PTThresholdEntry OBJECT-TYPE
+        SYNTAX  SwL2PTThresholdEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list with the Layer2 Protocol tunneling threshold."
+        INDEX   { swL2PTPortIndex, swL2PTProtocolIndex }
+        ::= { swL2PTThresholdTable 1 }
+        
+     SwL2PTThresholdEntry ::=
+        SEQUENCE {
+            swL2PTProtocolIndex
+            	INTEGER,
+            swL2PTDropThreshold       
+            	INTEGER
+        } 
+        
+    swL2PTProtocolIndex  OBJECT-TYPE
+		SYNTAX     INTEGER {
+					stp(1),
+					gvrp(2),
+			    	mac-01-00-0C-CC-CC-CC(3),
+			    	mac-01-00-0C-CC-CC-CD(4)	
+			    }		
+		MAX-ACCESS  not-accessible
+		STATUS     current
+		DESCRIPTION  
+		    "This object indicates the tunneled protocol of the port."
+		::= { swL2PTThresholdEntry 1 }
+        
+    swL2PTDropThreshold  OBJECT-TYPE
+		SYNTAX     INTEGER (0..65535)
+		MAX-ACCESS read-write
+		STATUS     current
+		DESCRIPTION  
+		    "This object indicates the drop threshold for a given protocol on a UNI port.
+	            If the arrival rate of a tunneled protocol has reached its threshold, the received
+	            PDUs of this protocol will be dropped. 
+	            The value 0 indicates there is no threshold for the protocol."
+		DEFVAL { 0 }
+		::= { swL2PTThresholdEntry 2 }
+END

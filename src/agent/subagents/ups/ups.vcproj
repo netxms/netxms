@@ -354,6 +354,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\megatec.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\metasys.cpp"
 				>
 			</File>

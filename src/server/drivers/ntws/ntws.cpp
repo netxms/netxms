@@ -109,7 +109,7 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
    TCHAR model[128];
-   AccessPointInfo *info = new AccessPointInfo((BYTE *)"\x00\x00\x00\x00\x00\x00", 0, AP_UNADOPTED, NULL, NULL, var->getValueAsString(model, 128), NULL);
+   AccessPointInfo *info = new AccessPointInfo(0, (const BYTE *)"\x00\x00\x00\x00\x00\x00", InetAddress::INVALID, AP_UNADOPTED, NULL, NULL, var->getValueAsString(model, 128), NULL);
    apList->add(info);
 
    return SNMP_ERR_SUCCESS;
@@ -151,15 +151,19 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
    oid[15] = 13; // ntwsApStatApStatusManufacturerId
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
+   oid[15] = 19; // ntwsApStatApStatusApNum
+   request->bindVariable(new SNMP_Variable(oid, nameLen));
+
    SNMP_PDU *response;
    if (transport->doRequest(request, &response, g_snmpTimeout, 3) == SNMP_ERR_SUCCESS)
    {
-      if (response->getNumVariables() >= 4)
+      if (response->getNumVariables() >= 5)
       {
          TCHAR model[256], name[256], vendor[256], ipAddr[32];
          AccessPointInfo *ap = 
             new AccessPointInfo(
-               (BYTE *)var->getValue(), 
+               response->getVariable(4)->getValueAsUInt(),
+               var->getValue(),
                ntohl(_t_inet_addr(response->getVariable(2)->getValueAsString(ipAddr, 32))), 
                AP_ADOPTED, 
                response->getVariable(1)->getValueAsString(name, 256),

@@ -177,9 +177,10 @@ bool MobileDevice::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void MobileDevice::fillMessage(NXCPMessage *msg)
+void MobileDevice::fillMessageInternal(NXCPMessage *msg)
 {
-   DataCollectionTarget::fillMessage(msg);
+   DataCollectionTarget::fillMessageInternal(msg);
+
 	msg->setField(VID_DEVICE_ID, CHECK_NULL_EX(m_deviceId));
 	msg->setField(VID_VENDOR, CHECK_NULL_EX(m_vendor));
 	msg->setField(VID_MODEL, CHECK_NULL_EX(m_model));
@@ -194,12 +195,9 @@ void MobileDevice::fillMessage(NXCPMessage *msg)
 /**
  * Modify object from message
  */
-UINT32 MobileDevice::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 MobileDevice::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
-   return DataCollectionTarget::modifyFromMessage(pRequest, TRUE);
+   return DataCollectionTarget::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -257,11 +255,11 @@ void MobileDevice::updateStatus(NXCPMessage *msg)
    }
 
 	if (msg->isFieldExist(VID_IP_ADDRESS))
-		m_dwIpAddr = msg->getFieldAsUInt32(VID_IP_ADDRESS);
+		m_ipAddress = msg->getFieldAsInetAddress(VID_IP_ADDRESS);
 
-	TCHAR temp[32];
+	TCHAR temp[64];
 	DbgPrintf(5, _T("Mobile device %s [%d] updated from agent (battery=%d addr=%s loc=[%s %s])"),
-	          m_name, (int)m_id, m_batteryLevel, IpToStr(m_dwIpAddr, temp),
+	          m_name, (int)m_id, m_batteryLevel, m_ipAddress.toString(temp),
 				 m_geoLocation.getLatitudeAsString(), m_geoLocation.getLongitudeAsString());
 
 	setModified();

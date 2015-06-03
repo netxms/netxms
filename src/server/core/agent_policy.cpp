@@ -46,7 +46,6 @@ AgentPolicy::AgentPolicy(int type)
 {
 	m_version = 0x00010000;
 	m_policyType = type;
-	m_description = NULL;
 }
 
 
@@ -60,17 +59,6 @@ AgentPolicy::AgentPolicy(const TCHAR *name, int type)
 	nx_strncpy(m_name, name, MAX_OBJECT_NAME);
 	m_version = 0x00010000;
 	m_policyType = type;
-	m_description = NULL;
-}
-
-
-//
-// Destructor
-//
-
-AgentPolicy::~AgentPolicy()
-{
-	safe_free(m_description);
 }
 
 
@@ -96,12 +84,12 @@ BOOL AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
    }
    if (isNewObject)
       _sntprintf(query, 8192,
-                 _T("INSERT INTO ap_common (id,policy_type,version,description) VALUES (%d,%d,%d,%s)"),
-                 m_id, m_policyType, m_version, (const TCHAR *)DBPrepareString(hdb, m_description));
+                 _T("INSERT INTO ap_common (id,policy_type,version) VALUES (%d,%d,%d)"),
+                 m_id, m_policyType, m_version);
    else
       _sntprintf(query, 8192,
-                 _T("UPDATE ap_common SET policy_type=%d,version=%d,description=%s WHERE id=%d"),
-                 m_policyType, m_version, (const TCHAR *)DBPrepareString(hdb, m_description), m_id);
+                 _T("UPDATE ap_common SET policy_type=%d,version=%d WHERE id=%d"),
+                 m_policyType, m_version, m_id);
    BOOL success = DBQuery(hdb, query);
 
    // Save access list
@@ -173,13 +161,12 @@ BOOL AgentPolicy::loadFromDatabase(UINT32 dwId)
 
 	   loadACLFromDB();
 
-		_sntprintf(query, 256, _T("SELECT version,description FROM ap_common WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT version FROM ap_common WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 		if (hResult == NULL)
 			return FALSE;
 
 		m_version = DBGetFieldULong(hResult, 0, 0);
-		m_description = DBGetField(hResult, 0, 1, NULL, 0);
 		DBFreeResult(hResult);
 
 	   // Load related nodes list
@@ -216,44 +203,30 @@ BOOL AgentPolicy::loadFromDatabase(UINT32 dwId)
 	return TRUE;
 }
 
-
-//
-// Create NXCP message with policy data
-//
-
-void AgentPolicy::fillMessage(NXCPMessage *msg)
+/**
+ * Create NXCP message with policy data
+ */
+void AgentPolicy::fillMessageInternal(NXCPMessage *msg)
 {
-	NetObj::fillMessage(msg);
+	NetObj::fillMessageInternal(msg);
 	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
 	msg->setField(VID_VERSION, m_version);
-	msg->setField(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
 }
 
 /**
  * Modify policy from message
  */
-UINT32 AgentPolicy::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 AgentPolicy::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
 	if (pRequest->isFieldExist(VID_VERSION))
 		m_version = pRequest->getFieldAsUInt32(VID_VERSION);
 
-	if (pRequest->isFieldExist(VID_DESCRIPTION))
-	{
-		safe_free(m_description);
-		m_description = pRequest->getFieldAsString(VID_DESCRIPTION);
-	}
-
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
-
-//
-// Create deployment message
-//
-
+/**
+ * Create deployment message
+ */
 bool AgentPolicy::createDeploymentMessage(NXCPMessage *msg)
 {
 	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);

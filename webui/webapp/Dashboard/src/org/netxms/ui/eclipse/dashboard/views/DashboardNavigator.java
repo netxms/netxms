@@ -34,12 +34,11 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.DashboardRoot;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.DashboardRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
@@ -81,7 +80,7 @@ public class DashboardNavigator extends ViewPart
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
-				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) && (n.getObject() instanceof DashboardRoot))
+				if ((n.getCode() == SessionNotification.OBJECT_CHANGED) && (n.getObject() instanceof DashboardRoot))
 				{
 					objectTree.getDisplay().asyncExec(new Runnable() {
 						@Override

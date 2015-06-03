@@ -33,6 +33,8 @@ int F_classof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_exit(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_exp(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_floor(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_format(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -46,6 +48,7 @@ int F_log10(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_lower(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_md5(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -54,6 +57,7 @@ int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -81,6 +85,8 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("classof"), F_classof, 1 },
 	{ _T("d2x"), F_d2x, -1 },
    { _T("exp"), F_exp, 1 },
+   { _T("gethostbyaddr"), F_gethostbyaddr, 1 },
+   { _T("gethostbyname"), F_gethostbyname, -1 },
    { _T("floor"), F_floor, 1 },
    { _T("format"), F_format, -1 },
    { _T("gmtime"), F_gmtime, -1 },
@@ -94,6 +100,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("lower"), F_lower, 1 },
 	{ _T("ltrim"), F_ltrim, 1 },
    { _T("max"), F_max, -1 },
+   { _T("md5"), F_md5, 1 },
    { _T("min"), F_min, -1 },
    { _T("ord"), F_ord, 1 },
    { _T("pow"), F_pow, 2 },
@@ -102,6 +109,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("rindex"), F_rindex, -1 },
    { _T("round"), F_round, -1 },
 	{ _T("rtrim"), F_rtrim, 1 },
+	{ _T("sha1"), F_sha1, 1 },
 	{ _T("sleep"), F_sleep, 1 },
 	{ _T("strftime"), F_strftime, -1 },
 	{ _T("substr"), F_substr, -1 },

@@ -25,6 +25,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -224,4 +225,13 @@ public class InterfacesTab extends ObjectTab
 	{
 		return (object instanceof AbstractNode);
 	}
+
+	/* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#getSelectionProvider()
+    */
+   @Override
+   public ISelectionProvider getSelectionProvider()
+   {
+      return viewer;
+   }
 }

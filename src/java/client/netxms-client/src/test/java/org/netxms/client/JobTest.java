@@ -18,6 +18,8 @@
  */
 package org.netxms.client;
 
+import org.netxms.client.server.ServerJob;
+
 /**
  * @author Victor
  *

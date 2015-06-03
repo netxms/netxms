@@ -9,12 +9,10 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
 import org.netxms.base.Logger;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.events.Alarm;
@@ -32,7 +30,6 @@ import org.netxms.ui.android.receivers.AlarmIntentReceiver;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
 import org.netxms.ui.android.service.tasks.ExecActionTask;
-
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -963,19 +960,19 @@ public class ClientConnectorService extends Service implements SessionListener
 			case SessionNotification.SERVER_SHUTDOWN:
 				onDisconnect();
 				break;
-			case NXCNotification.NEW_ALARM:
-			case NXCNotification.ALARM_CHANGED:
+			case SessionNotification.NEW_ALARM:
+			case SessionNotification.ALARM_CHANGED:
 				processAlarmChange((Alarm)n.getObject());
 				break;
-			case NXCNotification.ALARM_DELETED:
-			case NXCNotification.ALARM_TERMINATED:
+			case SessionNotification.ALARM_DELETED:
+			case SessionNotification.ALARM_TERMINATED:
 				processAlarmDelete(((Alarm)n.getObject()).getId());
 				break;
-			case NXCNotification.OBJECT_CHANGED:
-			case NXCNotification.OBJECT_SYNC_COMPLETED:
+			case SessionNotification.OBJECT_CHANGED:
+			case SessionNotification.OBJECT_SYNC_COMPLETED:
 				processObjectUpdate((AbstractObject)n.getObject());
 				break;
-			case NXCNotification.PREDEFINED_GRAPHS_CHANGED:
+			case SessionNotification.PREDEFINED_GRAPHS_CHANGED:
 				processGraphUpdate();
 				break;
 			default:

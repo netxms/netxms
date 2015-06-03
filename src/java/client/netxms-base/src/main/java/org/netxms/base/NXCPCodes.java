@@ -326,7 +326,10 @@ public class NXCPCodes
    public static final int CMD_EXECUTE_SCRIPT_UPDATE = 0x0130;
    public static final int CMD_FILEMGR_CREATE_FOLDER = 0x0131;
    public static final int CMD_QUERY_ADHOC_SUMMARY_TABLE = 0x0132;
-   public static final int CMD_GRAPH_UPDATE_OBJEC = 0x0133;
+   public static final int CMD_GRAPH_UPDATE = 0x0133;
+   public static final int CMD_ENABLE_IPV6 = 0x0134;
+   public static final int CMD_FORCE_DCI_POLL = 0x0135;
+   public static final int CMD_GET_DCI_SCRIPT_LIST = 0x0136;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -491,8 +494,7 @@ public class NXCPCodes
 	public static final long VID_ZONE_ID = 147;
 	public static final long VID_ZONING_ENABLED = 148;
 	public static final long VID_ICMP_PROXY = 149;
-	public static final long VID_ADDR_LIST_SIZE = 150;
-	public static final long VID_IP_ADDR_LIST = 151;
+	public static final long VID_IP_ADDRESS_COUNT = 150;
 	public static final long VID_REMOVE_DCI = 152;
 	public static final long VID_TEMPLATE_ID = 153;
 	public static final long VID_PUBLIC_KEY = 154;
@@ -836,6 +838,12 @@ public class NXCPCodes
    public static final long VID_QSIZE_DCI_CACHE_LOADER = 492;
    public static final long VID_MTU = 493;
    public static final long VID_ALIAS = 494;
+   public static final long VID_AP_INDEX = 495;
+   public static final long VID_PROTOCOL_VERSION_EX = 496;
+   public static final long VID_SCRIPT_LIST = 497;
+   public static final long VID_TOOL_LIST = 498;
+   public static final long VID_NUM_SUMMARY_TABLES = 499;
+   public static final long VID_SUMMARY_TABLE_LIST = 500;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -864,6 +872,8 @@ public class NXCPCodes
 	public static final long VID_CUSTOM_ATTRIBUTES_BASE = 0x70000000L;
    public static final long VID_MODULE_DATA_BASE = 0x71000000L;
 	public static final long VID_RESOURCE_LIST_BASE = 0x20000000L;
+	public static final long VID_IP_ADDRESS_LIST_BASE = 0x7F000000L;
+   public static final long VID_SYNC_SUBNETS_BASE = 0x28000000L;
 	public static final long VID_ENUM_VALUE_BASE = 0x10000000L;
 	public static final long VID_ACTION_ARG_BASE = 0x10000000L;
 	public static final long VID_PARAM_LIST_BASE = 0x10000000L;

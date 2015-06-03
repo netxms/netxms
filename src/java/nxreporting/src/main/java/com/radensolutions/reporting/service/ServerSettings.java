@@ -30,6 +30,17 @@ public class ServerSettings {
 
         loadServerConfig();
         loadDataSources();
+
+        if (dataSources.size() > 0 && !dataSources.containsKey(DC_ID_SYSTEM)) {
+            dataSources.put(DC_ID_SCHEDULER, dataSources.values().iterator().next());
+        }
+        DataSourceConfig systemConfig = dataSources.get(DC_ID_SYSTEM);
+        if (!dataSources.containsKey(DC_ID_SCHEDULER)) {
+            dataSources.put(DC_ID_SCHEDULER, systemConfig);
+        }
+        if (!dataSources.containsKey(DC_ID_REPORTING)) {
+            dataSources.put(DC_ID_REPORTING, systemConfig);
+        }
     }
 
     private void loadServerConfig() {
@@ -43,7 +54,7 @@ public class ServerSettings {
         }
 
         String driver = netxmsConfig.getString("DBDriver");
-        String server = netxmsConfig.getString("DBServer");
+        String server = netxmsConfig.getString("DBServer", "");
         String name = netxmsConfig.getString("DBName");
         String login = netxmsConfig.getString("DBLogin");
         String password = netxmsConfig.getString("DBPassword");
@@ -82,7 +93,7 @@ public class ServerSettings {
             String type = dataSource.getString("type");
 
             DatabaseType databaseType = lookupType(type);
-            if (type != null) {
+            if (databaseType != null) {
                 String dialect = dataSource.getString("dialect", databaseType.getDialect());
                 String driver = dataSource.getString("driverClassName", databaseType.getDriver());
                 String url = dataSource.getString("url");
@@ -259,6 +270,18 @@ public class ServerSettings {
 
         public String getQuartzDriverDelegate() {
             return quartzDriverDelegate;
+        }
+
+        @Override
+        public String toString() {
+            return "DataSourceConfig{" +
+                    "dialect='" + dialect + '\'' +
+                    ", driver='" + driver + '\'' +
+                    ", url='" + url + '\'' +
+                    ", username='" + username + '\'' +
+                    ", password='" + password + '\'' +
+                    ", quartzDriverDelegate='" + quartzDriverDelegate + '\'' +
+                    '}';
         }
     }
 }

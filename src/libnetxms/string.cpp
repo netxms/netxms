@@ -230,6 +230,46 @@ void String::append(const TCHAR *str, size_t len)
 }
 
 /**
+ * Append integer
+ */
+void String::append(INT32 n)
+{
+   TCHAR buffer[64];
+   append(_itot(n, buffer, 10));
+}
+
+/**
+ * Append integer
+ */
+void String::append(UINT32 n)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, _T("%u"), n);
+   append(buffer);
+}
+
+/**
+ * Append integer
+ */
+void String::append(INT64 n)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, INT64_FMT, n);
+   append(buffer);
+}
+
+/**
+ * Append integer
+ */
+void String::append(UINT64 n)
+{
+   TCHAR buffer[64];
+   _sntprintf(buffer, 64, UINT64_FMT, n);
+   append(buffer);
+}
+
+
+/**
  * Append multibyte string to the end of buffer
  */
 void String::appendMBString(const char *str, size_t len, int nCodePage)
@@ -280,7 +320,7 @@ void String::escapeCharacter(int ch, int esc)
 
    if (m_length + nCount >= m_allocated)
    {
-      m_allocated += max(m_allocationStep, nCount);
+      m_allocated += max(m_allocationStep, (size_t)nCount);
    	m_buffer = (TCHAR *)realloc(m_buffer, m_allocated * sizeof(TCHAR));
    }
 
@@ -425,7 +465,7 @@ void String::shrink(int chars)
 {
 	if (m_length > 0)
 	{
-		m_length -= min(m_length, chars);
+		m_length -= min(m_length, (size_t)chars);
 		if (m_buffer != NULL)
 			m_buffer[m_length] = 0;
 	}

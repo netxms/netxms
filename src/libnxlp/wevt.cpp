@@ -125,6 +125,8 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 		switch(values[2].ByteVal)
 		{
 			case WINEVENT_LEVEL_CRITICAL:
+            level = 0x0100;
+            break;
 			case WINEVENT_LEVEL_ERROR:
 				level = EVENTLOG_ERROR_TYPE;
 				break;

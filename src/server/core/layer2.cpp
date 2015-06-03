@@ -45,8 +45,8 @@ void BuildL2Topology(nxmap_ObjList &topology, Node *root, int nDepth, bool inclu
 			if ((node != NULL) && (nDepth > 0) && (node->isBridge() || includeEndNodes))
 			{
 				BuildL2Topology(topology, node, nDepth - 1, includeEndNodes);
-				Interface *ifLocal = root->findInterface(info->ifLocal, INADDR_ANY);
-				Interface *ifRemote = node->findInterface(info->ifRemote, INADDR_ANY);
+				Interface *ifLocal = root->findInterfaceByIndex(info->ifLocal);
+				Interface *ifRemote = node->findInterfaceByIndex(info->ifRemote);
 				DbgPrintf(5, _T("BuildL2Topology: root=%s [%d], node=%s [%d], ifLocal=%d %p, ifRemote=%d %p"),
 				          root->getName(), root->getId(), node->getName(), node->getId(), info->ifLocal, ifLocal, info->ifRemote, ifRemote);
 				topology.linkObjectsEx(root->getId(), node->getId(),
@@ -85,27 +85,40 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
 		{
 			DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): FDB obtained for node %s [%d]"),
 			          macAddrText, node->getName(), (int)node->getId());
-			UINT32 ifIndex = fdb->findMacAddress(macAddr);
+         bool isStatic;
+			UINT32 ifIndex = fdb->findMacAddress(macAddr, &isStatic);
 			if (ifIndex != 0)
 			{
+			   DbgPrintf(6, _T("FindInterfaceConnectionPoint(%s): MAC address found on interface %d (%s)"),
+                      macAddrText, ifIndex, isStatic ? _T("static") : _T("dynamic"));
 				int count = fdb->getMacCountOnPort(ifIndex);
 				if (count == 1)
 				{
-					Interface *iface = node->findInterface(ifIndex, INADDR_ANY);
-					if (iface != NULL)
-					{
-						DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%d] on node %s [%d]"), macAddrText,
-									 iface->getName(), (int)iface->getId(), iface->getParentNode()->getName(), (int)iface->getParentNode()->getId());
-                  cp = iface;
-                  *type = CP_TYPE_DIRECT;
-					}
-					else
-					{
-						DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): cannot find interface object for node %s [%d] ifIndex %d"),
-									 macAddrText, node->getName(), node->getId(), ifIndex);
-					}
+               if (isStatic)
+               {
+                  // keep it as best match and continue search for dynamic connection
+   					bestMatchCount = count;
+					   bestMatchNode = node;
+					   bestMatchIfIndex = ifIndex;
+               }
+               else
+               {
+					   Interface *iface = node->findInterfaceByIndex(ifIndex);
+					   if (iface != NULL)
+					   {
+						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found interface %s [%d] on node %s [%d]"), macAddrText,
+									    iface->getName(), (int)iface->getId(), iface->getParentNode()->getName(), (int)iface->getParentNode()->getId());
+                     cp = iface;
+                     *type = CP_TYPE_DIRECT;
+					   }
+					   else
+					   {
+						   DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): cannot find interface object for node %s [%d] ifIndex %d"),
+									    macAddrText, node->getName(), node->getId(), ifIndex);
+					   }
+               }
 				}
-				else if (count < bestMatchCount)
+            else if (count < bestMatchCount)
 				{
 					bestMatchCount = count;
 					bestMatchNode = node;
@@ -142,7 +155,7 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
                   }
                   else
                   {
-                     Interface *iface = node->findInterface(ws->rfIndex, INADDR_ANY);
+                     Interface *iface = node->findInterfaceByIndex(ws->rfIndex);
                      if (iface != NULL)
                      {
 						      DbgPrintf(4, _T("FindInterfaceConnectionPoint(%s): found matching wireless station on node %s [%d] interface %s"),
@@ -175,7 +188,12 @@ NetObj *FindInterfaceConnectionPoint(const BYTE *macAddr, int *type)
 
 	if ((cp == NULL) && (bestMatchNode != NULL))
 	{
-		cp = bestMatchNode->findInterface(bestMatchIfIndex, INADDR_ANY);
+		cp = bestMatchNode->findInterfaceByIndex(bestMatchIfIndex);
+      if (bestMatchCount == 1)
+      {
+         // static best match
+         *type = CP_TYPE_DIRECT;
+      }
 	}
 	return cp;
 }

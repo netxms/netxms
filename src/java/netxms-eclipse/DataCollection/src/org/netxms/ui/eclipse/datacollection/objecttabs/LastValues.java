@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 
 /**
  * Last values tab
@@ -46,7 +47,13 @@ public class LastValues extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
-		dataView = new LastValuesWidget(getViewPart(), parent, SWT.NONE, getObject(), "LastValuesTab"); //$NON-NLS-1$
+		dataView = new LastValuesWidget(getViewPart(), parent, SWT.NONE, getObject(), "LastValuesTab", new VisibilityValidator() {  //$NON-NLS-1$
+         @Override
+         public boolean isVisible()
+         {
+            return isActive();
+         }
+      });
 		dataView.setAutoRefreshEnabled(true);
 		dataView.setFilterCloseAction(new Action() {
 			@Override
@@ -69,7 +76,8 @@ public class LastValues extends ObjectTab
 	public void objectChanged(AbstractObject object)
 	{
 		dataView.setDataCollectionTarget(object);
-		dataView.refresh();
+		if (getViewPart().getSite().getPage().isPartVisible(getViewPart()) && isActive())
+		   dataView.refresh();
 	}
 
 	/* (non-Javadoc)
@@ -110,5 +118,6 @@ public class LastValues extends ObjectTab
 		{
 			contextService.activateContext("org.netxms.ui.eclipse.datacollection.context.LastValues"); //$NON-NLS-1$
 		}
+		refresh();
 	}
 }

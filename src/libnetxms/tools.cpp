@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -148,6 +148,11 @@ TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer)
 				curr++;
 			}
 			while((*curr == 0) && (i < 8));
+         if (i == 8)
+         {
+   			*out++ = _T(':');
+            break;
+         }
 			i--;
 			hasNulls = true;
 		}
@@ -391,17 +396,23 @@ void LIBNETXMS_EXPORTABLE StrStripW(WCHAR *str)
 }
 
 /**
- * Strip whitespaces and tabs off the string
+ * Strip whitespaces and tabs off the string.
+ *
+ * @param str string to trim
+ * @return str for convenience
  */
-void LIBNETXMS_EXPORTABLE Trim(TCHAR *str)
+TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str)
 {
-   int i;
+   if (str == NULL)
+      return NULL;
 
+   int i;
    for(i = 0; (str[i] != 0) && _istspace(str[i]); i++);
    if (i > 0)
       memmove(str, &str[i], (_tcslen(&str[i]) + 1) * sizeof(TCHAR));
    for(i = (int)_tcslen(str) - 1; (i >= 0) && _istspace(str[i]); i--);
    str[i + 1] = 0;
+   return str;
 }
 
 /**
@@ -628,14 +639,12 @@ TCHAR LIBNETXMS_EXPORTABLE *GetSystemErrorText(UINT32 dwError, TCHAR *pszBuffer,
 
 #endif
 
+#if (!HAVE_DAEMON || !HAVE_DECL_DAEMON) && !defined(_NETWARE) && !defined(_WIN32)
 
-//
-// daemon() implementation for systems which doesn't have one
-//
-
-#if !(HAVE_DAEMON) && !defined(_NETWARE) && !defined(_WIN32)
-
-int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose)
+/**
+ * daemon() implementation for systems which doesn't have one
+ */
+int LIBNETXMS_EXPORTABLE __daemon(int nochdir, int noclose)
 {
    int pid;
 
@@ -1259,13 +1268,11 @@ void LIBNETXMS_EXPORTABLE GetOSVersionString(TCHAR *pszBuffer, int nBufSize)
 #endif
 }
 
-
-//
-// Get more specific Windows version string
-//
-
 #ifdef _WIN32
 
+/**
+ * Get more specific Windows version string
+ */
 BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strSize)
 {
 	OSVERSIONINFOEX ver;
@@ -1302,6 +1309,12 @@ BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strS
 					break;
 				case 1:
 					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("7") : _T("Server 2008 R2"));
+					break;
+				case 2:
+					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("8") : _T("Server 2012"));
+					break;
+				case 3:
+					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("8.1") : _T("Server 2012 R2"));
 					break;
 				default:
 					_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
@@ -2175,3 +2188,86 @@ WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str)
 }
 
 #endif
+
+#if !HAVE__ITOA && !defined(_WIN32)
+
+/**
+ * _itoa() implementation
+ */
+char LIBNETXMS_EXPORTABLE *_itoa(int value, char *str, int base)
+{
+   char *p = str;
+   if (value < 0)
+   {
+      *p++ = '-';
+      value = -value;
+   }
+   
+   char buffer[64];
+   char *t = buffer;
+   do
+   {
+      int rem = value % base;
+      *t++ = (rem < 10) ? (rem + '0') : (rem - 10 + 'a');
+      value = value / base;
+   } while(value > 0);
+
+   t--;
+   while(t >= buffer)
+      *p++ = *t--;
+   *p = 0;
+   return str;
+}
+
+#endif
+
+#if !HAVE__ITOA && !defined(_WIN32)
+
+/**
+ * _itow() implementation
+ */
+WCHAR LIBNETXMS_EXPORTABLE *_itow(int value, WCHAR *str, int base)
+{
+   WCHAR *p = str;
+   if (value < 0)
+   {
+      *p++ = '-';
+      value = -value;
+   }
+   
+   WCHAR buffer[64];
+   WCHAR *t = buffer;
+   do
+   {
+      int rem = value % base;
+      *t++ = (rem < 10) ? (rem + '0') : (rem - 10 + 'a');
+      value = value / base;
+   } while(value > 0);
+
+   t--;
+   while(t >= buffer)
+      *p++ = *t--;
+   *p = 0;
+   return str;
+}
+
+#endif
+
+/**
+ * Get sleep time until specific time
+ */
+int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second)
+{
+   time_t now = time(NULL);
+
+   struct tm localTime;
+#if HAVE_LOCALTIME_R
+   localtime_r(&now, &localTime);
+#else
+   memcpy(&localTime, localtime(&now), sizeof(struct tm));
+#endif
+
+   int target = hour * 3600 + minute * 60 + second;
+   int curr = localTime.tm_hour * 3600 + localTime.tm_min * 60 + localTime.tm_sec;
+   return (target >= curr) ? target - curr : 86400 - (curr - target);
+}

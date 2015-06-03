@@ -141,6 +141,10 @@ static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 								{
 									nProto = UPS_PROTOCOL_BCMXCP;
 								}
+								else if (!_tcsicmp(pszCurrField, _T("MEGATEC")))
+								{
+									nProto = UPS_PROTOCOL_MEGATEC;
+								}
 								else if (!_tcsicmp(pszCurrField, _T("METASYS")))
 								{
 									nProto = UPS_PROTOCOL_METASYS;
@@ -223,6 +227,9 @@ static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 				break;
 			case UPS_PROTOCOL_BCMXCP:
 				m_deviceInfo[nDev] = new BCMXCPInterface(szPort);
+				break;
+         case UPS_PROTOCOL_MEGATEC:
+				m_deviceInfo[nDev] = new MegatecInterface(szPort);
 				break;
          case UPS_PROTOCOL_METASYS:
 				m_deviceInfo[nDev] = new MetaSysInterface(szPort);

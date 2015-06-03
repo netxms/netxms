@@ -44,7 +44,7 @@
             name="%propertyPage.name.General">
          <enabledWhen>
             <instanceof
-                  value="org.netxms.api.client.reporting.ReportingJob">
+                  value="org.netxms.client.reporting.ReportingJob">
             </instanceof>
          </enabledWhen>
       </page>
@@ -54,7 +54,7 @@
             name="%propertyPage.name.Notifications">
          <enabledWhen>
             <instanceof
-                  value="org.netxms.api.client.reporting.ReportingJob">
+                  value="org.netxms.client.reporting.ReportingJob">
             </instanceof>
          </enabledWhen>
       </page>

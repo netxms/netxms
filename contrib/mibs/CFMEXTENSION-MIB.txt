@@ -1,0 +1,289 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : CFM Extension Common mib 
+-- FILE NAME: CFMExtension.mib
+-- DATE     : 2011/03/01
+-- VERSION  : 1.01
+-- PURPOSE  : To construct the MIB structure of ITU Y.1731 for proprietary 
+-- 			  enterprise.
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.01, 2011/03/01, Fanny He
+--  [New Object]
+-- Add swCFMExtAISNotifyState and swCFMExtLockNotifyState to support CFM AIS 
+-- and lock trap state control.
+-- Request by Fanny He for project DGS-3120
+--
+-- Version 1.00, 2009/09/26, Rechird Zhu
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------   
+CFMEXTENSION-MIB DEFINITIONS ::= BEGIN
+
+	IMPORTS
+		MODULE-IDENTITY, OBJECT-TYPE,
+		NOTIFICATION-TYPE				FROM SNMPv2-SMI
+		dlink-common-mgmt	      		FROM DLINK-ID-REC-MIB
+		dot1agCfmMdIndex,dot1agCfmMaIndex,dot1agCfmMepIdentifier,
+        Dot1agCfmMepId,dot1agCfmMaMepListIdentifier,Dot1agCfmMDLevel	FROM IEEE8021-CFM-MIB;
+
+	swCFMExtensionMIB MODULE-IDENTITY
+	    LAST-UPDATED "201103010000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+		    "The structure of CFM extension for ITU Y1731."
+        ::= { dlink-common-mgmt 86 }
+
+    swCFMExtFaultMgmt   OBJECT IDENTIFIER ::= { swCFMExtensionMIB 1 }
+    swCFMExtNotify		OBJECT IDENTIFIER ::= { swCFMExtensionMIB 100 }
+
+-- -----------------------------------------------------------------------------
+-- swCFMExtFaultMgmt
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swCFMExtMgmtTable
+-- -----------------------------------------------------------------------------
+	swCFMExtMgmtTable OBJECT-TYPE
+		SYNTAX      SEQUENCE OF SwCFMExtMgmtEntry
+	  	MAX-ACCESS  not-accessible
+	  	STATUS      current
+	  	DESCRIPTION
+	    	"A table that contains CFM extension fault management
+ 				configuration information."
+		::= { swCFMExtFaultMgmt 1 }
+		
+	swCFMExtMgmtEntry OBJECT-TYPE
+		SYNTAX      SwCFMExtMgmtEntry
+	  	MAX-ACCESS  not-accessible
+	  	STATUS      current
+		DESCRIPTION
+			"A list of CFM extension fault management configuration information."
+		INDEX    {	dot1agCfmMdIndex, 
+					dot1agCfmMaIndex,
+					dot1agCfmMepIdentifier}
+		::= { swCFMExtMgmtTable 1 }		
+
+	SwCFMExtMgmtEntry ::= SEQUENCE {
+		swCFMExtMgmtAISState
+				INTEGER,
+	 	swCFMExtMgmtAISPeriod
+				INTEGER,
+		swCFMExtMgmtAISLevel
+				Dot1agCfmMDLevel,	     
+		swCFMExtMgmtAISStatus
+				INTEGER,  
+		swCFMExtMgmtLockState
+				INTEGER,
+  		swCFMExtMgmtLockPeriod
+                INTEGER,   
+		swCFMExtMgmtLockLevel
+				Dot1agCfmMDLevel, 
+		swCFMExtMgmtLockStatus				
+		        INTEGER
+		}
+      
+	swCFMExtMgmtAISState OBJECT-TYPE
+	    SYNTAX      INTEGER {
+                  enabled(1),
+                  disabled(2)
+                   }
+	    MAX-ACCESS  read-write
+	    STATUS      current
+	    DESCRIPTION
+	    	"This object indicates the AIS function State."
+		::= { swCFMExtMgmtEntry 1 }
+
+	swCFMExtMgmtAISPeriod OBJECT-TYPE
+        SYNTAX  INTEGER {
+                  one-second(1),
+                  one-minute(2)
+                   }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the transmitting interval of AIS PDU."
+		DEFVAL{one-second}
+        ::= { swCFMExtMgmtEntry 2 }
+		
+	swCFMExtMgmtAISLevel OBJECT-TYPE
+        SYNTAX  Dot1agCfmMDLevel
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the client level to which AIS PDU is sent."
+        ::= { swCFMExtMgmtEntry 3 }
+        
+    swCFMExtMgmtAISStatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+                  detected(1),
+                  cleared(2)
+                   }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of AIS function."
+        ::= { swCFMExtMgmtEntry 4 }    
+		
+	swCFMExtMgmtLockState OBJECT-TYPE
+	    SYNTAX      INTEGER {
+                  enabled(1),
+                  disabled(2)
+                   }
+	    MAX-ACCESS  read-write
+	    STATUS      current
+	    DESCRIPTION
+	    	"This object indicates the lock function state."
+		::= { swCFMExtMgmtEntry 5 }
+	
+	swCFMExtMgmtLockPeriod OBJECT-TYPE
+        SYNTAX  INTEGER {
+                  one-second(1),
+                  one-minute(2)
+                   }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the period of sending lock PDU."
+        ::= { swCFMExtMgmtEntry 6 }
+	
+	swCFMExtMgmtLockLevel OBJECT-TYPE
+        SYNTAX  Dot1agCfmMDLevel
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the client level to which lock PDU is sent."
+        ::= { swCFMExtMgmtEntry 7 }
+     
+     swCFMExtMgmtLockStatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+                  detected(1),
+                  cleared(2)
+                   }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of lock function."
+        ::= { swCFMExtMgmtEntry 8 }
+ 
+-- -----------------------------------------------------------------------------
+-- swCFMExtMgmtLockTable
+-- -----------------------------------------------------------------------------
+	swCFMExtMgmtLockCtrlTable OBJECT-TYPE
+		SYNTAX      SEQUENCE OF SwCFMExtMgmtLockCtrlEntry
+	  	MAX-ACCESS  not-accessible
+	  	STATUS      current
+	  	DESCRIPTION
+	    	"A table that contains CFM extension lock control information."
+		::= { swCFMExtFaultMgmt 2 }
+		
+	swCFMExtMgmtLockCtrlEntry OBJECT-TYPE
+		SYNTAX      SwCFMExtMgmtLockCtrlEntry
+	  	MAX-ACCESS  not-accessible
+	  	STATUS      current
+		DESCRIPTION
+			"A list of CFM extension lock control information."
+		INDEX    {  dot1agCfmMdIndex, 
+					dot1agCfmMaIndex,
+					dot1agCfmMepIdentifier,
+					dot1agCfmMaMepListIdentifier}
+		::= { swCFMExtMgmtLockCtrlTable 1 }		
+
+	SwCFMExtMgmtLockCtrlEntry ::= SEQUENCE {
+	 	swCFMExtMgmtLockCtrlAction
+				INTEGER
+		}   
+	swCFMExtMgmtLockCtrlAction OBJECT-TYPE
+	    SYNTAX      INTEGER {
+                  start(1),
+                  stop(2)
+                   }
+	    MAX-ACCESS  read-write
+	    STATUS      current
+	    DESCRIPTION
+	    	"This object indicates the action of the lock control function."
+		::= { swCFMExtMgmtLockCtrlEntry 1 }
+                 
+
+	 
+-- -----------------------------------------------------------------------------
+-- swCFMExtNotify 
+-- -----------------------------------------------------------------------------	
+
+	swCFMExtNotifyPrefix		OBJECT IDENTIFIER ::= { swCFMExtNotify 0 }
+
+	swCFMExtAISOccurred	NOTIFICATION-TYPE
+        OBJECTS	  {
+					dot1agCfmMdIndex,
+					dot1agCfmMaIndex,
+					dot1agCfmMepIdentifier	}
+        STATUS  	current
+        DESCRIPTION
+            "A notification is generated when local MEP enters AIS status."
+        ::= { swCFMExtNotifyPrefix 1 }
+        
+    swCFMExtAISCleared	NOTIFICATION-TYPE
+        OBJECTS	  {
+					dot1agCfmMdIndex,
+					dot1agCfmMaIndex,
+					dot1agCfmMepIdentifier	}
+        STATUS  	current
+        DESCRIPTION
+            "A notification is generated when local MEP exits AIS status."
+        ::= { swCFMExtNotifyPrefix 2 }
+        
+	 swCFMExtLockOccurred	NOTIFICATION-TYPE
+        OBJECTS	  {
+					dot1agCfmMdIndex,
+					dot1agCfmMaIndex,
+					dot1agCfmMepIdentifier	}
+        STATUS  	current
+        DESCRIPTION
+            "A notification is generated when local MEP enters lock status."
+        ::= { swCFMExtNotifyPrefix 3 }
+        
+     swCFMExtLockCleared	NOTIFICATION-TYPE
+        OBJECTS	  {
+					dot1agCfmMdIndex,
+					dot1agCfmMaIndex,
+					dot1agCfmMepIdentifier	}
+        STATUS  	current
+        DESCRIPTION
+            "A notification is generated when local MEP exits lock status."
+        ::= { swCFMExtNotifyPrefix 4 }    
+
+-- -----------------------------------------------------------------------------
+-- 	Notify management
+-- -----------------------------------------------------------------------------
+	swCFMExtNotifyMgmt		OBJECT IDENTIFIER ::= { swCFMExtNotify 1 }
+                 
+	swCFMExtAISNotifyState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                  enabled(1),
+                  disabled(2)
+                   }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the CFM AIS notification state."
+		::= { swCFMExtNotifyMgmt 1 } 
+
+	swCFMExtLockNotifyState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                  enabled(1),
+                  disabled(2)
+                   }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the CFM lock notification state."
+		::= { swCFMExtNotifyMgmt 2 } 		
+              	  
+END	    

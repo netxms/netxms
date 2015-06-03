@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ struct __poller_state
  */
 Queue g_statusPollQueue;
 Queue g_configPollQueue;
+Queue g_instancePollQueue;
 Queue g_topologyPollQueue;
 Queue g_routePollQueue;
 Queue g_discoveryPollQueue;
@@ -54,14 +55,14 @@ static int m_iNumPollers = 0;
 /**
  * Create management node object
  */
-static void CreateManagementNode(UINT32 ipAddr, UINT32 netMask)
+static void CreateManagementNode(const InetAddress& addr)
 {
 	TCHAR buffer[256];
 
-	Node *pNode = new Node(ipAddr, NF_IS_LOCAL_MGMT, 0, 0, 0);
+	Node *pNode = new Node(addr, NF_IS_LOCAL_MGMT, 0, 0, 0);
    NetObjInsert(pNode, TRUE);
 	pNode->setName(GetLocalHostName(buffer, 256));
-   pNode->configurationPoll(NULL, 0, -1, netMask);
+   pNode->configurationPoll(NULL, 0, -1, addr.getMaskBits());
    pNode->unhide();
    g_dwMgmtNode = pNode->getId();   // Set local management node ID
    PostEvent(EVENT_NODE_ADDED, pNode->getId(), NULL);
@@ -154,10 +155,10 @@ void CheckForMgmtNode()
    {
       for(i = 0; i < pIfList->size(); i++)
       {
-         NX_INTERFACE_INFO *iface = pIfList->get(i);
-         if ((iface->type == IFTYPE_SOFTWARE_LOOPBACK) || ((iface->ipAddr & 0xFF000000) == 0x7F000000) || (iface->ipAddr == 0))
+         InterfaceInfo *iface = pIfList->get(i);
+         if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
             continue;
-         if ((pNode = FindNodeByIP(0, iface->ipAddr)) != NULL)
+         if ((pNode = FindNodeByIP(0, &iface->ipAddrList)) != NULL)
          {
             // Check management node flag
             if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
@@ -174,11 +175,19 @@ void CheckForMgmtNode()
          // Find interface with IP address
          for(i = 0; i < pIfList->size(); i++)
          {
-            NX_INTERFACE_INFO *iface = pIfList->get(i);
-            if ((iface->type != IFTYPE_SOFTWARE_LOOPBACK) && ((iface->ipAddr & 0xFF000000) != 0x7F000000) && (iface->ipAddr != 0))
+            InterfaceInfo *iface = pIfList->get(i);
+            if ((iface->type == IFTYPE_SOFTWARE_LOOPBACK) || (iface->ipAddrList.size() == 0))
+               continue;
+
+            for(int j = 0; j < iface->ipAddrList.size(); j++)
             {
-   				CreateManagementNode(iface->ipAddr, iface->ipNetMask);
-               break;
+               const InetAddress& addr = iface->ipAddrList.get(j);
+               if (addr.isValidUnicast())
+               {
+   				   CreateManagementNode(addr);
+                  i = pIfList->size();    // stop walking interface list
+                  break;
+               }
             }
          }
       }
@@ -204,7 +213,7 @@ void CheckForMgmtNode()
 		}
 		else
 		{
-			CreateManagementNode(0, 0);
+			CreateManagementNode(InetAddress());
 		}
 	}
 }
@@ -342,6 +351,40 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
 }
 
 /**
+ * Instance discovery poller
+ */
+static THREAD_RESULT THREAD_CALL InstanceDiscoveryPoller(void *arg)
+{
+   Node *pNode;
+   TCHAR szBuffer[MAX_OBJECT_NAME + 64];
+
+   // Initialize state info
+   m_pPollerState[(long)arg].iType = 'I';
+   SetPollerState((long)arg, _T("init"));
+
+   // Wait two minutes to give status and configuration pollers chance to run first
+   ThreadSleep(120);
+
+   // Main loop
+   while(!IsShutdownInProgress())
+   {
+      SetPollerState((long)arg, _T("wait"));
+      pNode = (Node *)g_instancePollQueue.GetOrBlock();
+      if (pNode == INVALID_POINTER_VALUE)
+         break;   // Shutdown indicator
+
+      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->getName(), pNode->getId());
+      SetPollerState((long)arg, szBuffer);
+      ObjectTransactionStart();
+      pNode->instanceDiscoveryPoll(NULL, 0, (long)arg);
+      ObjectTransactionEnd();
+      pNode->decRefCount();
+   }
+   SetPollerState((long)arg, _T("finished"));
+   return THREAD_OK;
+}
+
+/**
  * Routing table poller
  */
 static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
@@ -378,50 +421,56 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
  */
 static bool PollerQueueElementComparator(void *key, void *element)
 {
-	return CAST_FROM_POINTER(key, UINT32) == ((NEW_NODE *)element)->dwIpAddr;
+   return ((InetAddress *)key)->equals(((NEW_NODE *)element)->ipAddr);
 }
 
 /**
  * Check potential new node from ARP cache or routing table
  */
-static void CheckPotentialNode(Node *node, UINT32 ipAddr, UINT32 ifIndex, BYTE *macAddr = NULL)
+static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifIndex, BYTE *macAddr = NULL)
 {
-	TCHAR buffer[32];
+	TCHAR buffer[64];
 
-	DbgPrintf(6, _T("DiscoveryPoller(): checking potential node %s at %d"), IpToStr(ipAddr, buffer), ifIndex);
-	if ((ipAddr != 0) && (ipAddr != 0xFFFFFFFF) && ((ipAddr & 0xFF000000) != 0x7F000000) &&
+	DbgPrintf(6, _T("DiscoveryPoller(): checking potential node %s at %d"), ipAddr.toString(buffer), ifIndex);
+   if (ipAddr.isValid() && !ipAddr.isBroadcast() && !ipAddr.isLoopback() && !ipAddr.isMulticast() &&
 	    (FindNodeByIP(node->getZoneId(), ipAddr) == NULL) && !IsClusterIP(node->getZoneId(), ipAddr) && 
-		 (g_nodePollerQueue.find(CAST_TO_POINTER(ipAddr, void *), PollerQueueElementComparator) == NULL))
+		 (g_nodePollerQueue.find((void *)&ipAddr, PollerQueueElementComparator) == NULL))
    {
-      Interface *pInterface = node->findInterface(ifIndex, ipAddr);
+      Interface *pInterface = node->findInterfaceByIndex(ifIndex);
       if (pInterface != NULL)
 		{
-			DbgPrintf(6, _T("DiscoveryPoller(): interface found: %s [%d] addr=%s mask=%s ifIndex=%d"),
-			          pInterface->getName(), pInterface->getId(), IpToStr(pInterface->IpAddr(), buffer),
-			          IpToStr(pInterface->getIpNetMask(), &buffer[16]), pInterface->getIfIndex());
-         if ((ipAddr < 0xE0000000) && !IsBroadcastAddress(ipAddr, pInterface->getIpNetMask()))
+         const InetAddress& interfaceAddress = pInterface->getIpAddressList()->findSameSubnetAddress(ipAddr);
+         if (interfaceAddress.isValidUnicast())
          {
-            NEW_NODE *pInfo;
-				TCHAR buf1[16], buf2[16];
+			   DbgPrintf(6, _T("DiscoveryPoller(): interface found: %s [%d] addr=%s/%d ifIndex=%d"),
+               pInterface->getName(), pInterface->getId(), interfaceAddress.toString(buffer), interfaceAddress.getMaskBits(), pInterface->getIfIndex());
+            if (!ipAddr.isSubnetBroadcast(interfaceAddress.getMaskBits()))
+            {
+               NEW_NODE *pInfo;
+				   TCHAR buffer[64];
 
-            pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-            pInfo->dwIpAddr = ipAddr;
-            pInfo->dwNetMask = pInterface->getIpNetMask();
-				pInfo->zoneId = node->getZoneId();
-				pInfo->ignoreFilter = FALSE;
-				if (macAddr == NULL)
-					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-				else
-					memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
-				DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%s"),
-				          IpToStr(pInfo->dwIpAddr, buf1), 
-				          IpToStr(pInfo->dwNetMask, buf2));
-            g_nodePollerQueue.Put(pInfo);
+               pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
+               pInfo->ipAddr = ipAddr;
+               pInfo->ipAddr.setMaskBits(interfaceAddress.getMaskBits());
+				   pInfo->zoneId = node->getZoneId();
+				   pInfo->ignoreFilter = FALSE;
+				   if (macAddr == NULL)
+					   memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
+				   else
+					   memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
+				   DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%d"),
+				             pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
+               g_nodePollerQueue.Put(pInfo);
+            }
+			   else
+			   {
+               DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected - broadcast/multicast address"), ipAddr.toString(buffer));
+			   }
          }
-			else
-			{
-				DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected - broadcast/multicast address"), IpToStr(ipAddr, buffer));
-			}
+         else
+         {
+   			DbgPrintf(6, _T("DiscoveryPoller(): interface object found but IP address not found"));
+         }
 		}
 		else
 		{
@@ -430,7 +479,7 @@ static void CheckPotentialNode(Node *node, UINT32 ipAddr, UINT32 ifIndex, BYTE *
    }
 	else
 	{
-		DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected"), IpToStr(ipAddr, buffer));
+		DbgPrintf(6, _T("DiscoveryPoller(): potential node %s rejected"), ipAddr.toString(buffer));
 	}
 }
 
@@ -444,8 +493,8 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 	Interface *iface;
 
 	DbgPrintf(6, _T("DiscoveryPoller(): checking host route %s at %d"), IpToStr(route->dwDestAddr, buffer), route->dwIfIndex);
-	iface = node->findInterface(route->dwIfIndex, route->dwDestAddr);
-	if (iface != NULL)
+	iface = node->findInterfaceByIndex(route->dwIfIndex);
+	if ((iface != NULL) && iface->getIpAddressList()->findSameSubnetAddress(route->dwDestAddr).isValidUnicast())
 	{
 		CheckPotentialNode(node, route->dwDestAddr, route->dwIfIndex);
 	}
@@ -461,7 +510,7 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 {
    Node *pNode;
-   TCHAR szBuffer[MAX_OBJECT_NAME + 64], szIpAddr[16];
+   TCHAR szBuffer[MAX_OBJECT_NAME + 64], szIpAddr[64];
    ARP_CACHE *pArpCache;
 	ROUTING_TABLE *rt;
 	UINT32 i;
@@ -492,7 +541,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       SetPollerState((long)arg, szBuffer);
 
       DbgPrintf(4, _T("Starting discovery poll for node %s (%s) in zone %d"),
-		          pNode->getName(), IpToStr(pNode->IpAddr(), szIpAddr), (int)pNode->getZoneId());
+		          pNode->getName(), pNode->getIpAddress().toString(szIpAddr), (int)pNode->getZoneId());
 
       // Retrieve and analize node's ARP cache
       pArpCache = pNode->getArpCache();
@@ -500,13 +549,13 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       {
          for(i = 0; i < pArpCache->dwNumEntries; i++)
 				if (memcmp(pArpCache->pEntries[i].bMacAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6))	// Ignore broadcast addresses
-					CheckPotentialNode(pNode, pArpCache->pEntries[i].dwIpAddr, pArpCache->pEntries[i].dwIndex, pArpCache->pEntries[i].bMacAddr);
+					CheckPotentialNode(pNode, pArpCache->pEntries[i].ipAddr, pArpCache->pEntries[i].dwIndex, pArpCache->pEntries[i].bMacAddr);
          DestroyArpCache(pArpCache);
       }
 
 		// Retrieve and analize node's routing table
       DbgPrintf(5, _T("Discovery poll for node %s (%s) - reading routing table"),
-                pNode->getName(), IpToStr(pNode->IpAddr(), szIpAddr));
+                pNode->getName(), pNode->getIpAddress().toString(szIpAddr));
 		rt = pNode->getRoutingTable();
 		if (rt != NULL)
 		{
@@ -520,7 +569,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
 		}
 
       DbgPrintf(4, _T("Finished discovery poll for node %s (%s)"),
-                pNode->getName(), IpToStr(pNode->IpAddr(), szIpAddr));
+                pNode->getName(), pNode->getIpAddress().toString(szIpAddr));
       pNode->setDiscoveryPollTimeStamp();
       pNode->decRefCount();
    }
@@ -655,14 +704,14 @@ static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
             pSubnet = FindSubnetForNode(0, dwAddr);
             if (pSubnet != NULL)
             {
-               if ((pSubnet->IpAddr() != dwAddr) && 
-                   !IsBroadcastAddress(dwAddr, pSubnet->getIpNetMask()))
+               if (!pSubnet->getIpAddress().equals(dwAddr) && 
+                   !InetAddress(dwAddr).isSubnetBroadcast(pSubnet->getIpAddress().getMaskBits()))
                {
                   NEW_NODE *pInfo;
 
                   pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-                  pInfo->dwIpAddr = dwAddr;
-                  pInfo->dwNetMask = pSubnet->getIpNetMask();
+                  pInfo->ipAddr = dwAddr;
+                  pInfo->ipAddr.setMaskBits(pSubnet->getIpAddress().getMaskBits());
 						pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 						pInfo->ignoreFilter = FALSE;
 						memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
@@ -674,8 +723,7 @@ static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
                NEW_NODE *pInfo;
 
                pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-               pInfo->dwIpAddr = dwAddr;
-               pInfo->dwNetMask = 0;
+               pInfo->ipAddr = dwAddr;
 					pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 					pInfo->ignoreFilter = FALSE;
 					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
@@ -747,6 +795,13 @@ static void QueueForPolling(NetObj *object, void *data)
 					node->lockForConfigurationPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for configuration poll"), (int)node->getId(), node->getName());
 					g_configPollQueue.Put(node);
+				}
+				if (node->isReadyForInstancePoll())
+				{
+					node->incRefCount();
+					node->lockForInstancePoll();
+					DbgPrintf(6, _T("Node %d \"%s\" queued for instance discovery poll"), (int)node->getId(), node->getName());
+					g_instancePollQueue.Put(node);
 				}
 				if (node->isReadyForStatusPoll())
 				{
@@ -824,7 +879,7 @@ static void QueueForPolling(NetObj *object, void *data)
 THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 {
    UINT32 dwWatchdogId;
-   int i, iCounter, iNumStatusPollers, iNumConfigPollers;
+   int i, iCounter, iNumStatusPollers, iNumConfigPollers, numInstancePollers;
    int nIndex, iNumDiscoveryPollers, iNumRoutePollers;
    int iNumConditionPollers, iNumTopologyPollers, iNumBusinessServicePollers;
 
@@ -832,11 +887,12 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    iNumConditionPollers = ConfigReadInt(_T("NumberOfConditionPollers"), 10);
    iNumStatusPollers = ConfigReadInt(_T("NumberOfStatusPollers"), 25);
    iNumConfigPollers = ConfigReadInt(_T("NumberOfConfigurationPollers"), 10);
+   numInstancePollers = ConfigReadInt(_T("NumberOfInstancePollers"), 10);
    iNumRoutePollers = ConfigReadInt(_T("NumberOfRoutingTablePollers"), 10);
    iNumDiscoveryPollers = ConfigReadInt(_T("NumberOfDiscoveryPollers"), 1);
    iNumTopologyPollers = ConfigReadInt(_T("NumberOfTopologyPollers"), 10);
    iNumBusinessServicePollers = ConfigReadInt(_T("NumberOfBusinessServicePollers"), 10);
-   m_iNumPollers = iNumStatusPollers + iNumConfigPollers + 
+   m_iNumPollers = iNumStatusPollers + iNumConfigPollers + numInstancePollers +
                    iNumDiscoveryPollers + iNumRoutePollers + iNumConditionPollers + 
 						 iNumTopologyPollers + iNumBusinessServicePollers + 1;
    DbgPrintf(2, _T("PollManager: %d pollers to start"), m_iNumPollers);
@@ -851,6 +907,10 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    // Start configuration pollers
    for(i = 0; i < iNumConfigPollers; i++, nIndex++)
       ThreadCreate(ConfigurationPoller, 0, CAST_TO_POINTER(nIndex, void *));
+
+   // Start instance discovery pollers
+   for(i = 0; i < numInstancePollers; i++, nIndex++)
+      ThreadCreate(InstanceDiscoveryPoller, 0, CAST_TO_POINTER(nIndex, void *));
 
    // Start routing table pollers
    for(i = 0; i < iNumRoutePollers; i++, nIndex++)
@@ -899,26 +959,28 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 
    // Send stop signal to all pollers
    g_statusPollQueue.Clear();
+   g_statusPollQueue.SetShutdownMode();
+
    g_configPollQueue.Clear();
+   g_configPollQueue.SetShutdownMode();
+
+   g_instancePollQueue.Clear();
+   g_instancePollQueue.SetShutdownMode();
+
    g_discoveryPollQueue.Clear();
+   g_discoveryPollQueue.SetShutdownMode();
+
    g_routePollQueue.Clear();
+   g_routePollQueue.SetShutdownMode();
+
    g_conditionPollerQueue.Clear();
-	g_topologyPollQueue.Clear();
-	g_businessServicePollerQueue.Clear();
-   for(i = 0; i < iNumStatusPollers; i++)
-      g_statusPollQueue.Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < iNumConfigPollers; i++)
-      g_configPollQueue.Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < iNumRoutePollers; i++)
-      g_routePollQueue.Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < iNumDiscoveryPollers; i++)
-      g_discoveryPollQueue.Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < iNumConditionPollers; i++)
-      g_conditionPollerQueue.Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < iNumTopologyPollers; i++)
-      g_topologyPollQueue.Put(INVALID_POINTER_VALUE);
-   for(i = 0; i < iNumBusinessServicePollers; i++)
-      g_businessServicePollerQueue.Put(INVALID_POINTER_VALUE);
+   g_conditionPollerQueue.SetShutdownMode();
+
+   g_topologyPollQueue.Clear();
+   g_topologyPollQueue.SetShutdownMode();
+
+   g_businessServicePollerQueue.Clear();
+   g_businessServicePollerQueue.SetShutdownMode();
 
    DbgPrintf(1, _T("PollManager: main thread terminated"));
    return THREAD_OK;

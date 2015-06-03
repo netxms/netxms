@@ -3,7 +3,7 @@ SUBAGENT           = db2
 pkglib_LTLIBRARIES = db2.la
 db2_la_SOURCES     = db2_subagent.cpp db2dci.cpp
 db2_la_CPPFLAGS    = -I@top_srcdir@/include
-db2_la_LDFLAGS     = -module -avoid-version
+db2_la_LDFLAGS     = -module -avoid-version -export-symbols ../subagent.sym
 db2_la_LIBADD      = ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 
 EXTRA_DIST         = db2_subagent.h db2dci.h db2.vcproj

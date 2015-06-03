@@ -49,9 +49,8 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.scripts.Script;
-import org.netxms.api.client.scripts.ScriptLibraryManager;
 import org.netxms.client.NXCSession;
+import org.netxms.client.Script;
 import org.netxms.client.TextOutputListener;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -75,7 +74,6 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptExecutor"; //$NON-NLS-1$
 
    private NXCSession session;
-   private ScriptLibraryManager scriptLibraryManager;
    private boolean modified = false;
    private long objectId;
 
@@ -105,7 +103,6 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
 
       session = (NXCSession)ConsoleSharedData.getSession();
       objectId = Long.parseLong(site.getSecondaryId());
-      scriptLibraryManager = (ScriptLibraryManager)ConsoleSharedData.getSession();
 
       setPartName(String.format(Messages.get().ScriptExecutor_PartName, session.getObjectName(objectId)));
    }
@@ -379,7 +376,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               scriptLibraryManager.modifyScript(0, dlg.getName(), scriptEditor.getText()); //$NON-NLS-1$
+               session.modifyScript(0, dlg.getName(), scriptEditor.getText()); //$NON-NLS-1$
                
                runInUIThread(new Runnable()
                {
@@ -499,7 +496,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            library = scriptLibraryManager.getScriptLibrary();
+            library = session.getScriptLibrary();
 
             runInUIThread(new Runnable() {
                @Override
@@ -543,7 +540,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            scriptLibraryManager.modifyScript(s.getId(), s.getName(), scriptEditor.getText());
+            session.modifyScript(s.getId(), s.getName(), scriptEditor.getText());
 
             runInUIThread(new Runnable() {
                @Override
@@ -627,7 +624,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       try
       {
          Script s = library.get(scriptCombo.getSelectionIndex());
-         scriptLibraryManager.modifyScript(s.getId(), s.getName(), scriptEditor.getText());
+         session.modifyScript(s.getId(), s.getName(), scriptEditor.getText());
       }
       catch(Exception e)
       {

@@ -23,8 +23,8 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.api.client.users.User;
+import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.User;
 import org.netxms.ui.eclipse.usermanager.Messages;
 import org.netxms.ui.eclipse.usermanager.views.UserManagementView;
 

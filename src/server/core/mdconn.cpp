@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -182,8 +182,12 @@ THREAD_RESULT THREAD_CALL MobileDeviceListenerIPv6(void *arg)
       return THREAD_OK;
    }
 
-	SetSocketExclusiveAddrUse(sock);
-	SetSocketReuseFlag(sock);
+   SetSocketExclusiveAddrUse(sock);
+   SetSocketReuseFlag(sock);
+#ifdef IPV6_V6ONLY
+   int on = 1;
+   setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
+#endif
 
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in6));

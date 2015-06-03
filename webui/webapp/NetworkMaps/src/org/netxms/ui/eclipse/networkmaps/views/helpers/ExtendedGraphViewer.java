@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ import org.eclipse.gef4.zest.core.widgets.GraphConnection;
 import org.eclipse.gef4.zest.core.widgets.custom.CGraphNode;
 import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -53,6 +54,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
@@ -507,6 +509,19 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 	
 	/**
+    * Zoom to fit available screen area
+    */
+   public void zoomFit()
+   {
+      getZoomManager().setZoom(1.0);
+      Rectangle visibleArea = getGraphControl().getClientArea();
+      org.eclipse.draw2d.geometry.Rectangle mapArea = getGraphControl().getRootLayer().getBounds();
+      double dx = (double)visibleArea.width / (double)mapArea.width;
+      double dy = (double)visibleArea.height / (double)mapArea.height;
+      getZoomManager().setZoom(Math.min(dx, dy));
+   }
+   
+	/**
 	 * Zoom to specific level
 	 * 
 	 * @param zoomLevel
@@ -517,10 +532,20 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 	
 	/**
+	 * Get current zoom level
+	 * 
+	 * @return
+	 */
+	public double getZoom()
+	{
+	   return getZoomManager().getZoom();
+	}
+	
+	/**
 	 * Create zoom actions
 	 * @return
 	 */
-	public Action[] createZoomActions()
+	public Action[] createZoomActions(IHandlerService handlerService)
 	{
 		final ZoomManager zoomManager = getZoomManager();
 		final Action[] actions = new Action[zoomLevels.length];
@@ -528,7 +553,12 @@ public class ExtendedGraphViewer extends GraphViewer
 		{
 			actions[i] = new ZoomAction(zoomLevels[i], zoomManager);
 			if (zoomLevels[i] == 1.00)
+			{
 				actions[i].setChecked(true);
+				actions[i].setId("org.netxms.ui.eclipse.networkmaps.localActions.AbstractMap.Zoom100Pct"); //$NON-NLS-1$
+				actions[i].setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.Zoom100Pct");
+            handlerService.activateHandler(actions[i].getActionDefinitionId(), new ActionHandler(actions[i]));
+			}
 		}
 		return actions;
 	}

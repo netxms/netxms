@@ -55,10 +55,9 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCListener;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
 import org.netxms.ui.eclipse.objectbrowser.api.SubtreeType;
@@ -88,7 +87,7 @@ public class ObjectTree extends Composite
 	private FilterText filterText;
 	private ObjectFilter filter;
 	private Set<Long> checkedObjects = new HashSet<Long>(0);
-	private NXCListener sessionListener = null;
+	private SessionListener sessionListener = null;
 	private NXCSession session = null;
 	private RefreshTimer refreshTimer;
 	private ObjectStatusIndicator statusIndicator = null;
@@ -250,11 +249,11 @@ public class ObjectTree extends Composite
 		filterText.setLayoutData(fd);
 		
 		// Add client library listener
-		sessionListener = new NXCListener() {
+		sessionListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
-				if ((n.getCode() == NXCNotification.OBJECT_CHANGED) || (n.getCode() == NXCNotification.OBJECT_DELETED))
+				if ((n.getCode() == SessionNotification.OBJECT_CHANGED) || (n.getCode() == SessionNotification.OBJECT_DELETED))
 				{
 				   refreshTimer.execute();
 				}

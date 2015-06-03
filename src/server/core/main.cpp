@@ -68,6 +68,7 @@ extern const TCHAR *g_szMessages[];
  */
 extern Queue g_statusPollQueue;
 extern Queue g_configPollQueue;
+extern Queue g_instancePollQueue;
 extern Queue g_topologyPollQueue;
 extern Queue g_routePollQueue;
 extern Queue g_discoveryPollQueue;
@@ -137,6 +138,7 @@ UINT32 g_dwConfigurationPollingInterval;
 UINT32 g_dwRoutingTableUpdateInterval;
 UINT32 g_dwTopologyPollingInterval;
 UINT32 g_dwConditionPollingInterval;
+UINT32 g_instancePollingInterval;
 UINT32 g_icmpPingSize;
 UINT32 g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 UINT32 g_auditFlags;
@@ -153,6 +155,7 @@ UINT32 g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
 UINT32 g_thresholdRepeatInterval = 0;	// Disabled by default
 int g_requiredPolls = 1;
 DB_DRIVER g_dbDriver = NULL;
+ThreadPool *g_mainThreadPool = NULL;
 
 /**
  * Static data
@@ -303,6 +306,7 @@ static void LoadGlobalConfig()
 	g_dwDiscoveryPollingInterval = ConfigReadInt(_T("DiscoveryPollingInterval"), 900);
 	g_dwStatusPollingInterval = ConfigReadInt(_T("StatusPollingInterval"), 60);
 	g_dwConfigurationPollingInterval = ConfigReadInt(_T("ConfigurationPollingInterval"), 3600);
+	g_instancePollingInterval = ConfigReadInt(_T("InstancePollingInterval"), 600);
 	g_dwRoutingTableUpdateInterval = ConfigReadInt(_T("RoutingTableUpdateInterval"), 300);
 	g_dwTopologyPollingInterval = ConfigReadInt(_T("TopologyPollingInterval"), 1800);
 	g_dwConditionPollingInterval = ConfigReadInt(_T("ConditionPollingInterval"), 60);
@@ -550,12 +554,19 @@ static void LogConsoleWriter(const TCHAR *format, ...)
 }
 
 /**
+ * Oracle session init callback
+ */
+static void OracleSessionInitCallback(DB_HANDLE hdb)
+{
+   DBQuery(hdb, _T("ALTER SESSION SET DDL_LOCK_TIMEOUT = 60"));
+}
+
+/**
  * Server initialization
  */
 BOOL NXCORE_EXPORTABLE Initialize()
 {
 	int i, iDBVersion;
-	UINT32 dwAddr;
 	TCHAR szInfo[256];
 
 	g_serverStartTime = time(NULL);
@@ -696,6 +707,13 @@ BOOL NXCORE_EXPORTABLE Initialize()
 		return FALSE;
 	}
 
+	// Read database syntax
+	g_dbSyntax = DBGetSyntax(g_hCoreDB);
+   if (g_dbSyntax == DB_SYNTAX_ORACLE)
+   {
+      DBSetSessionInitCallback(OracleSessionInitCallback);
+   }
+
 	int baseSize = ConfigReadInt(_T("ConnectionPoolBaseSize"), 5);
 	int maxSize = ConfigReadInt(_T("ConnectionPoolMaxSize"), 20);
 	int cooldownTime = ConfigReadInt(_T("ConnectionPoolCooldownTime"), 300);
@@ -705,9 +723,6 @@ BOOL NXCORE_EXPORTABLE Initialize()
    UINT32 lrt = ConfigReadULong(_T("LongRunningQueryThreshold"), 0);
    if (lrt != 0)
       DBSetLongRunningThreshold(lrt);
-
-	// Read database syntax
-	g_dbSyntax = DBGetSyntax(g_hCoreDB);
 
 	// Read server ID
 	ConfigReadStr(_T("ServerID"), szInfo, 256, _T(""));
@@ -726,16 +741,17 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	// Initialize locks
 retry_db_lock:
-	if (!InitLocks(&dwAddr, szInfo))
+   InetAddress addr;
+	if (!InitLocks(&addr, szInfo))
 	{
-		if (dwAddr == UNLOCKED)    // Some SQL problems
+      if (!addr.isValid())    // Some SQL problems
 		{
 			nxlog_write(MSG_INIT_LOCKS_FAILED, EVENTLOG_ERROR_TYPE, NULL);
 		}
 		else     // Database already locked by another server instance
 		{
 			// Check for lock from crashed/terminated local process
-			if (dwAddr == GetLocalIpAddr())
+			if (GetLocalIpAddr().equals(addr))
 			{
 				UINT32 dwPID;
 
@@ -747,7 +763,7 @@ retry_db_lock:
 					goto retry_db_lock;
 				}
 			}
-			nxlog_write(MSG_DB_LOCKED, EVENTLOG_ERROR_TYPE, "as", dwAddr, szInfo);
+			nxlog_write(MSG_DB_LOCKED, EVENTLOG_ERROR_TYPE, "As", &addr, szInfo);
 		}
 		return FALSE;
 	}
@@ -774,6 +790,11 @@ retry_db_lock:
 
 	// Create synchronization stuff
 	m_condShutdown = ConditionCreate(TRUE);
+
+   // Create thread pools
+   DbgPrintf(2, _T("Creating thread pools"));
+   ThreadPoolSetDebugCallback(DbgPrintf2);
+   g_mainThreadPool = ThreadPoolCreate(8, 256, _T("MAIN"));
 
 	// Setup unique identifiers table
 	if (!InitIdTable())
@@ -1012,6 +1033,8 @@ void NXCORE_EXPORTABLE Shutdown()
    ShutdownAlarmManager();
 	DbgPrintf(1, _T("Event processing stopped"));
 
+   ThreadPoolDestroy(g_mainThreadPool);
+
 	delete g_pScriptLibrary;
 
 	nxlog_close();
@@ -1072,36 +1095,36 @@ static bool IsCommand(const TCHAR *cmdTemplate, TCHAR *pszString, int iMinChars)
 }
 
 /**
- * Dump index
+ * Dump index callback (by IP address)
  */
-struct __dump_index_data
+static void DumpIndexCallbackByInetAddr(const InetAddress& addr, NetObj *object, void *data)
 {
-	CONSOLE_CTX console;
-	bool indexByIP;
-};
-
-static void DumpIndexCallback(NetObj *object, void *data)
-{
-	struct __dump_index_data *d = (struct __dump_index_data *)data;
-	if (d->indexByIP)
-	{
-		TCHAR buffer[16];
-		ConsolePrintf(d->console, _T("%08X [%-15s] %p %s\n"), object->IpAddr(),
-				IpToStr(object->IpAddr(), buffer),
-				object, object->getName());
-	}
-	else
-	{
-		ConsolePrintf(d->console, _T("%08X %p %s\n"), object->getId(), object, object->getName());
-	}
+	TCHAR buffer[64];
+	ConsolePrintf((CONSOLE_CTX)data, _T("%-40s %p %s [%d]\n"), addr.toString(buffer), object, object->getName(), (int)object->getId());
 }
 
-static void DumpIndex(CONSOLE_CTX pCtx, ObjectIndex *index, bool indexByIp)
+/**
+ * Dump index (by IP address)
+ */
+static void DumpIndex(CONSOLE_CTX pCtx, InetAddressIndex *index)
 {
-	struct __dump_index_data data;
-	data.console = pCtx;
-	data.indexByIP = indexByIp;
-	index->forEach(DumpIndexCallback, &data);
+	index->forEach(DumpIndexCallbackByInetAddr, pCtx);
+}
+
+/**
+ * Dump index callback (by ID)
+ */
+static void DumpIndexCallbackById(NetObj *object, void *data)
+{
+	ConsolePrintf((CONSOLE_CTX)data, _T("%08X %p %s\n"), object->getId(), object, object->getName());
+}
+
+/**
+ * Dump index (by ID)
+ */
+static void DumpIndex(CONSOLE_CTX pCtx, ObjectIndex *index)
+{
+	index->forEach(DumpIndexCallbackById, pCtx);
 }
 
 /**
@@ -1226,6 +1249,48 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			ConsolePrintf(pCtx, _T("Session ID missing\n"));
 		}
+   }
+	else if (IsCommand(_T("PING"), szBuffer, 4))
+	{
+		pArg = ExtractWord(pArg, szBuffer);
+		if (szBuffer[0] != 0)
+		{
+         InetAddress addr = InetAddress::parse(szBuffer);
+         if (addr.isValid())
+         {
+            UINT32 rtt;
+            UINT32 rc = IcmpPing(addr, 1, 2000, &rtt, 128);
+            switch(rc)
+            {
+               case ICMP_SUCCESS:
+                  ConsolePrintf(pCtx, _T("Success, RTT = %d ms\n"), (int)rtt);
+                  break;
+               case ICMP_UNREACHEABLE:
+                  ConsolePrintf(pCtx, _T("Destination unreachable\n"));
+                  break;
+               case ICMP_TIMEOUT:
+                  ConsolePrintf(pCtx, _T("Request timeout\n"));
+                  break;
+               case ICMP_RAW_SOCK_FAILED:
+                  ConsolePrintf(pCtx, _T("Cannot create raw socket\n"));
+                  break;
+               case ICMP_API_ERROR:
+                  ConsolePrintf(pCtx, _T("API error\n"));
+                  break;
+               default:
+                  ConsolePrintf(pCtx, _T("ERROR %d\n"), (int)rc);
+                  break;
+            }
+         }
+         else
+         {
+            ConsolePrintf(pCtx, _T("Invalid IP address\n"));
+         }
+      }
+      else
+      {
+         ConsolePrintf(pCtx, _T("Usage: PING <address>\n"));
+      }
    }
 	else if (IsCommand(_T("POLL"), szBuffer, 2))
 	{
@@ -1451,31 +1516,31 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
 			if (IsCommand(_T("CONDITION"), szBuffer, 1))
 			{
-				DumpIndex(pCtx, &g_idxConditionById, false);
+				DumpIndex(pCtx, &g_idxConditionById);
 			}
 			else if (IsCommand(_T("ID"), szBuffer, 2))
 			{
-				DumpIndex(pCtx, &g_idxObjectById, false);
+				DumpIndex(pCtx, &g_idxObjectById);
 			}
 			else if (IsCommand(_T("INTERFACE"), szBuffer, 2))
 			{
-				DumpIndex(pCtx, &g_idxInterfaceByAddr, true);
+				DumpIndex(pCtx, &g_idxInterfaceByAddr);
 			}
 			else if (IsCommand(_T("NODEADDR"), szBuffer, 5))
 			{
-				DumpIndex(pCtx, &g_idxNodeByAddr, true);
+				DumpIndex(pCtx, &g_idxNodeByAddr);
 			}
 			else if (IsCommand(_T("NODEID"), szBuffer, 5))
 			{
-				DumpIndex(pCtx, &g_idxNodeById, false);
+				DumpIndex(pCtx, &g_idxNodeById);
 			}
 			else if (IsCommand(_T("SUBNET"), szBuffer, 1))
 			{
-				DumpIndex(pCtx, &g_idxSubnetByAddr, true);
+				DumpIndex(pCtx, &g_idxSubnetByAddr);
 			}
 			else if (IsCommand(_T("ZONE"), szBuffer, 1))
 			{
-				DumpIndex(pCtx, &g_idxZoneByGUID, true);
+				DumpIndex(pCtx, &g_idxZoneByGUID);
 			}
 			else
 			{
@@ -1494,9 +1559,21 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, _T("ERROR: Server was compiled without memory debugger\n\n"));
 #endif
 		}
+		else if (IsCommand(_T("MODULES"), szBuffer, 3))
+		{
+         ConsolePrintf(pCtx, _T("Loaded server modules:\n"));
+         for(UINT32 i = 0; i < g_dwNumModules; i++)
+         {
+            ConsolePrintf(pCtx, _T("   %s\n"), g_pModuleList[i].szName);
+         }
+         ConsolePrintf(pCtx, _T("%d modules loaded\n"), g_dwNumModules);
+		}
 		else if (IsCommand(_T("OBJECTS"), szBuffer, 1))
 		{
-			DumpObjects(pCtx);
+			// Get filter
+			pArg = ExtractWord(pArg, szBuffer);
+         StrStrip(szBuffer);
+         DumpObjects(pCtx, (szBuffer[0] != 0) ? szBuffer : NULL);
 		}
 		else if (IsCommand(_T("POLLERS"), szBuffer, 1))
 		{
@@ -1506,6 +1583,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			ShowQueueStats(pCtx, &g_conditionPollerQueue, _T("Condition poller"));
 			ShowQueueStats(pCtx, &g_configPollQueue, _T("Configuration poller"));
+			ShowQueueStats(pCtx, &g_instancePollQueue, _T("Instance discovery poller"));
 			ShowQueueStats(pCtx, &g_topologyPollQueue, _T("Topology poller"));
 			ShowQueueStats(pCtx, &g_dataCollectionQueue, _T("Data collector"));
 			ShowQueueStats(pCtx, &g_dciCacheLoaderQueue, _T("DCI cache loader"));
@@ -1583,6 +1661,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		else if (IsCommand(_T("STATS"), szBuffer, 2))
 		{
 			ShowServerStats(pCtx);
+		}
+		else if (IsCommand(_T("THREADS"), szBuffer, 2))
+		{
+			ShowThreadPool(pCtx, g_mainThreadPool);
 		}
 		else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
 		{
@@ -1826,14 +1908,14 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 							ConsolePrintf(pCtx, _T("Trace from %s to %s (%d hops, %s, source IP %s):\n"),
 									pObject1->getName(), pObject2->getName(), pTrace->getHopCount(),
 									pTrace->isComplete() ? _T("complete") : _T("incomplete"),
-                           IpToStr(pTrace->getSourceAddress(), sourceIp));
+                           pTrace->getSourceAddress().toString(sourceIp));
  							for(i = 0; i < pTrace->getHopCount(); i++)
 							{
 								HOP_INFO *hop = pTrace->getHopInfo(i);
 								ConsolePrintf(pCtx, _T("[%d] %s %s %s %d\n"),
 										hop->object->getId(),
 										hop->object->getName(),
-										IpToStr(hop->nextHop, szNextHop),
+										hop->nextHop.toString(szNextHop),
 										hop->isVpn ? _T("VPN Connector ID:") : _T("Interface Index: "),
 										hop->ifIndex);
 							}
@@ -1873,6 +1955,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   get <variable>            - Get value of server configuration variable\n")
 				_T("   help                      - Display this help\n")
 				_T("   ldapsync                  - Synchronize ldap users with local user database\n")
+            _T("   ping <address>            - Send ICMP echo request to given IP address\n")
             _T("   poll <type> <node>        - Initiate node poll\n")
 				_T("   raise <exception>         - Raise exception\n")
 				_T("   set <variable> <value>    - Set value of server configuration variable\n")
@@ -1881,7 +1964,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   show fdb <node>           - Show forwarding database for node\n")
 				_T("   show flags                - Show internal server flags\n")
 				_T("   show index <index>        - Show internal index\n")
-				_T("   show objects              - Dump network objects to screen\n")
+				_T("   show modules              - Show loaded server modules\n")
+				_T("   show objects [<filter>]   - Dump network objects to screen\n")
 				_T("   show pollers              - Show poller threads state information\n")
 				_T("   show queues               - Show internal queues statistics\n")
 				_T("   show routing-table <node> - Show cached routing table for node\n")

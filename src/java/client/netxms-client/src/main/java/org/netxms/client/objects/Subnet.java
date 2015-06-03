@@ -19,7 +19,9 @@
 package org.netxms.client.objects;
 
 import java.net.InetAddress;
-import org.netxms.base.*;
+import org.netxms.base.InetAddressEx;
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
 
 /**
@@ -27,8 +29,8 @@ import org.netxms.client.NXCSession;
  */
 public class Subnet extends GenericObject
 {
-	private InetAddress subnetMask;
 	private long zoneId;
+	private InetAddressEx networkAddress;
 
 	/**
 	 * @param msg
@@ -37,47 +39,36 @@ public class Subnet extends GenericObject
 	{
 		super(msg, session);
 		
-		subnetMask = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_NETMASK);
 		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
+      networkAddress = msg.getFieldAsInetAddressEx(NXCPCodes.VID_IP_ADDRESS);
 	}
 	
 	/**
+    * @return the networkAddress
+    */
+   public InetAddressEx getNetworkAddress()
+   {
+      return networkAddress;
+   }
+
+   /**
+    * @return the networkAddress
+    */
+   public InetAddress getSubnetAddress()
+   {
+      return networkAddress.address;
+   }
+
+   /**
 	 * Get number of bits in subnet mask
 	 * 
 	 * @return
 	 */
-	public int getMaskBits()
+	public int getSubnetMask()
 	{
-	   byte[] addr = subnetMask.getAddress();
-	   int bits = 0;
-	   for(int i = 0; i < addr.length; i++)
-	   {
-	      if (addr[i] == (byte)0xFF)
-	      {
-	         bits += 8;
-	      }
-	      else
-	      {
-	         for(int j = 0x80; j > 0; j >>= 1)
-	         {
-	            if ((addr[i] & j) == 0)
-	               break;
-	            bits++;
-	         }
-	         break;
-	      }
-	   }
-	   return bits;
+	   return networkAddress.mask;
 	}
 	
-	/**
-	 * @return Subnet mask
-	 */
-	public InetAddress getSubnetMask()
-	{
-		return subnetMask;
-	}
-
 	/* (non-Javadoc)
 	 * @see org.netxms.client.NXCObject#getObjectClassName()
 	 */

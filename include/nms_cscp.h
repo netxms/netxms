@@ -528,7 +528,10 @@ typedef struct
 #define CMD_EXECUTE_SCRIPT_UPDATE      0x0130
 #define CMD_FILEMGR_CREATE_FOLDER      0x0131
 #define CMD_QUERY_ADHOC_SUMMARY_TABLE  0x0132
-#define CMD_GRAPH_UPDATE_OBJEC         0x0133
+#define CMD_GRAPH_UPDATE               0x0133
+#define CMD_ENABLE_IPV6                0x0134
+#define CMD_FORCE_DCI_POLL             0x0135
+#define CMD_GET_DCI_SCRIPT_LIST        0x0136
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -693,8 +696,8 @@ typedef struct
 #define VID_ZONE_ID                 ((UINT32)147)
 #define VID_ZONING_ENABLED          ((UINT32)148)
 #define VID_ICMP_PROXY              ((UINT32)149)
-#define VID_ADDR_LIST_SIZE          ((UINT32)150)
-#define VID_IP_ADDR_LIST            ((UINT32)151)
+#define VID_IP_ADDRESS_COUNT        ((UINT32)150)
+#define VID_ENABLED                 ((UINT32)151)
 #define VID_REMOVE_DCI              ((UINT32)152)
 #define VID_TEMPLATE_ID             ((UINT32)153)
 #define VID_PUBLIC_KEY              ((UINT32)154)
@@ -1038,6 +1041,12 @@ typedef struct
 #define VID_QSIZE_DCI_CACHE_LOADER  ((UINT32)492)
 #define VID_MTU                     ((UINT32)493)
 #define VID_ALIAS                   ((UINT32)494)
+#define VID_AP_INDEX                ((UINT32)495)
+#define VID_PROTOCOL_VERSION_EX     ((UINT32)496)
+#define VID_SCRIPT_LIST             ((UINT32)497)
+#define VID_TOOL_LIST               ((UINT32)498)
+#define VID_NUM_SUMMARY_TABLES      ((UINT32)499)
+#define VID_SUMMARY_TABLE_LIST      ((UINT32)500)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1089,8 +1098,14 @@ typedef struct
 #define VID_CUSTOM_ATTRIBUTES_BASE  ((UINT32)0x70000000)
 #define VID_MODULE_DATA_BASE        ((UINT32)0x71000000)
 
+// IP address list base
+#define VID_IP_ADDRESS_LIST_BASE    ((UINT32)0x7F000000)
+
 // Base value for cluster resource list
 #define VID_RESOURCE_LIST_BASE      ((UINT32)0x20000000)
+
+// Base value for cluster sync network list
+#define VID_SYNC_SUBNETS_BASE       ((UINT32)0x28000000)
 
 // Base value for agent's enum values
 #define VID_ENUM_VALUE_BASE         ((UINT32)0x10000000)

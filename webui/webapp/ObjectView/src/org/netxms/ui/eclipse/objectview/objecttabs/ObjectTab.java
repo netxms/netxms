@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ public abstract class ObjectTab implements IPluginContribution
 {
 	protected String pluginId;
 	protected String id;
+	
 	private ViewPart viewPart;
 	private CTabFolder tabFolder;
 	private CTabItem tabItem;
@@ -236,6 +237,16 @@ public abstract class ObjectTab implements IPluginContribution
 	public final boolean isVisible()
 	{
 		return tabItem != null;
+	}
+	
+	/**
+	 * Check if this tab is currently active
+	 * 
+	 * @return
+	 */
+	public final boolean isActive()
+	{
+	   return tabFolder.getSelection() == tabItem;
 	}
 
 	/**

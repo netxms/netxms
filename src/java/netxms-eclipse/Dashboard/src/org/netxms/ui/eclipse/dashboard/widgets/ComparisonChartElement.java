@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
@@ -37,6 +38,7 @@ import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
  * Base class for data comparison charts - like bar chart, pie chart, etc.
@@ -45,9 +47,9 @@ public abstract class ComparisonChartElement extends ElementWidget
 {
 	protected DataComparisonChart chart;
 	protected NXCSession session;
-	protected int refreshInterval = 30000;
+	protected int refreshInterval = 30;
 	
-	private Runnable refreshTimer;
+	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
 
 	/**
@@ -59,7 +61,16 @@ public abstract class ComparisonChartElement extends ElementWidget
 		super(parent, element, viewPart);
 		session = (NXCSession)ConsoleSharedData.getSession();
 
-		setLayout(new FillLayout());	
+		setLayout(new FillLayout());
+		
+		addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (refreshController != null)
+               refreshController.dispose();
+         }
+      });
 	}
 	
 	/**
@@ -67,8 +78,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 	 */
 	protected void startRefreshTimer()
 	{
-		final Display display = getDisplay();
-		refreshTimer = new Runnable() {
+		refreshController = new ViewRefreshController(viewPart, refreshInterval, new Runnable() {
 			@Override
 			public void run()
 			{
@@ -76,10 +86,8 @@ public abstract class ComparisonChartElement extends ElementWidget
 					return;
 				
 				refreshData(getDciList());
-				display.timerExec(refreshInterval, this);
 			}
-		};
-		display.timerExec(refreshInterval, refreshTimer);
+		});
 		refreshData(getDciList());
 	}
 

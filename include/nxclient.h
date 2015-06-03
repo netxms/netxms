@@ -269,6 +269,7 @@ protected:
    // server information
    BYTE m_serverId[8];
    TCHAR m_serverVersion[64];
+   IntegerArray<UINT32> *m_protocolVersions;
    TCHAR m_serverTimeZone[MAX_TZ_LEN];
    UINT32 m_userId;
    UINT64 m_systemRights;
@@ -286,7 +287,9 @@ public:
    NXCSession();
    virtual ~NXCSession();
 
-   UINT32 connect(const TCHAR *host, const TCHAR *login, const TCHAR *password, UINT32 flags = NXCF_DEFAULT, const TCHAR *clientInfo = NULL);
+   UINT32 connect(const TCHAR *host, const TCHAR *login, const TCHAR *password, 
+      UINT32 flags = NXCF_DEFAULT, const TCHAR *clientInfo = NULL, 
+      const UINT32 *cpvIndexList = NULL, size_t cpvIndexListSize = 0);
    void disconnect();
 
    UINT32 createMessageId() { return InterlockedIncrement(&m_msgId); }
@@ -299,6 +302,7 @@ public:
 
    const TCHAR *getServerVersion() { return m_serverVersion; }
    const TCHAR *getServerTimeZone() { return m_serverTimeZone; }
+   UINT32 getProtocolVersion(int index) { return m_protocolVersions->get(index); }
    UINT32 getUserId() { return m_userId; }
    UINT64 getSystemRights() { return m_systemRights; }
    bool isPasswordChangeNeeded() { return m_passwordChangeNeeded; }

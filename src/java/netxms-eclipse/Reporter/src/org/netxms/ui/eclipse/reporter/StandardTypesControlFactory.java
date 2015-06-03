@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.reporter;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
-import org.netxms.api.client.reporting.ReportParameter;
+import org.netxms.client.reporting.ReportParameter;
 import org.netxms.ui.eclipse.reporter.api.CustomControlFactory;
 import org.netxms.ui.eclipse.reporter.widgets.AlarmStateFieldEditor;
 import org.netxms.ui.eclipse.reporter.widgets.BooleanFieldEditor;

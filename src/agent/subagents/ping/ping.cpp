@@ -1,6 +1,6 @@
 /*
 ** NetXMS PING subagent
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,8 +30,7 @@ static CONDITION m_hCondShutdown = INVALID_CONDITION_HANDLE;
 static CONDITION m_hCondTerminate = INVALID_CONDITION_HANDLE;
 #endif
 static BOOL m_bShutdown = FALSE;
-static UINT32 m_dwNumTargets = 0;
-static PING_TARGET *m_pTargetList = NULL;
+static ObjectArray<PING_TARGET> s_targets(16, 16, true);
 static UINT32 m_dwTimeout = 3000;    // Default timeout is 3 seconds
 static UINT32 m_dwDefPacketSize = 46;
 static UINT32 m_dwPollsPerMinute = 4;
@@ -52,12 +51,12 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
 retry:
 		if (IcmpPing(target->ipAddr, 1, m_dwTimeout, &target->lastRTT, target->packetSize) != ICMP_SUCCESS)
 		{
-			UINT32 ip = ResolveHostName(target->dnsName);
-			if (ip != target->ipAddr)
+         InetAddress ip = InetAddress::resolveHostName(target->dnsName);
+         if (!ip.equals(target->ipAddr))
 			{
-				TCHAR ip1[16], ip2[16];
+				TCHAR ip1[64], ip2[64];
 				AgentWriteDebugLog(6, _T("PING: IP address for target %s changed from %s to %s"), target->name,
-				                   IpToStr(ntohl(target->ipAddr), ip1), IpToStr(ntohl(ip), ip2));
+                               target->ipAddr.toString(ip1), ip.toString(ip2));
 				target->ipAddr = ip;
 				goto retry;
 			}
@@ -74,12 +73,12 @@ retry:
 			target->ipAddrAge++;
 			if (target->ipAddrAge >= 1)
 			{
-				UINT32 ip = ResolveHostName(target->dnsName);
-				if (ip != target->ipAddr)
+            InetAddress ip = InetAddress::resolveHostName(target->dnsName);
+            if (!ip.equals(target->ipAddr))
 				{
-					TCHAR ip1[16], ip2[16];
+					TCHAR ip1[64], ip2[64];
 					AgentWriteDebugLog(6, _T("PING: IP address for target %s changed from %s to %s"), target->name,
-											 IpToStr(ntohl(target->ipAddr), ip1), IpToStr(ntohl(ip), ip2));
+											 target->ipAddr.toString(ip1), ip.toString(ip2));
 					target->ipAddr = ip;
 				}
 				target->ipAddrAge = 0;
@@ -129,7 +128,7 @@ retry:
 static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	TCHAR szHostName[256], szTimeOut[32], szPacketSize[32];
-	UINT32 dwAddr, dwTimeOut = m_dwTimeout, dwRTT, dwPacketSize = m_dwDefPacketSize;
+	UINT32 dwTimeOut = m_dwTimeout, dwRTT, dwPacketSize = m_dwDefPacketSize;
 
 	if (!AgentGetParameterArg(pszParam, 1, szHostName, 256))
 		return SYSINFO_RC_UNSUPPORTED;
@@ -141,7 +140,7 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 		return SYSINFO_RC_UNSUPPORTED;
 	StrStrip(szPacketSize);
 
-	dwAddr = ResolveHostName(szHostName);
+   InetAddress addr = InetAddress::resolveHostName(szHostName);
 	if (szTimeOut[0] != 0)
 	{
 		dwTimeOut = _tcstoul(szTimeOut, NULL, 0);
@@ -155,7 +154,7 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 		dwPacketSize = _tcstoul(szPacketSize, NULL, 0);
 	}
 
-	if (IcmpPing(dwAddr, 1, dwTimeOut, &dwRTT, dwPacketSize) != ICMP_SUCCESS)
+	if (IcmpPing(addr, 1, dwTimeOut, &dwRTT, dwPacketSize) != ICMP_SUCCESS)
 		dwRTT = 10000;
 	ret_uint(pValue, dwRTT);
 	return SYSINFO_RC_SUCCESS;
@@ -167,47 +166,49 @@ static LONG H_IcmpPing(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	TCHAR szTarget[MAX_DB_STRING];
-	UINT32 i, dwIpAddr;
 	BOOL bUseName = FALSE;
 
 	if (!AgentGetParameterArg(pszParam, 1, szTarget, MAX_DB_STRING))
 		return SYSINFO_RC_UNSUPPORTED;
 	StrStrip(szTarget);
 
-	dwIpAddr = _t_inet_addr(szTarget);
-	if ((dwIpAddr == INADDR_ANY) || (dwIpAddr == INADDR_NONE))
+   InetAddress ipAddr = InetAddress::parse(szTarget);
+   if (!ipAddr.isValid())
 		bUseName = TRUE;
 
-	for(i = 0; i < m_dwNumTargets; i++)
+   int i;
+   PING_TARGET *t = NULL;
+   for(i = 0; i < s_targets.size(); i++)
 	{
+      t = s_targets.get(i);
 		if (bUseName)
 		{
-			if (!_tcsicmp(m_pTargetList[i].name, szTarget) || !_tcsicmp(m_pTargetList[i].dnsName, szTarget))
+			if (!_tcsicmp(t->name, szTarget) || !_tcsicmp(t->dnsName, szTarget))
 				break;
 		}
 		else
 		{
-			if (m_pTargetList[i].ipAddr == dwIpAddr)
+			if (t->ipAddr.equals(ipAddr))
 				break;
 		}
 	}
 
-	if (i == m_dwNumTargets)
+   if (i == s_targets.size())
 		return SYSINFO_RC_UNSUPPORTED;   // No such target
 
 	switch(*pArg)
 	{
 		case _T('A'):
-			ret_uint(pValue, m_pTargetList[i].avgRTT);
+			ret_uint(pValue, t->avgRTT);
 			break;
 		case _T('L'):
-			ret_uint(pValue, m_pTargetList[i].lastRTT);
+			ret_uint(pValue, t->lastRTT);
 			break;
 		case _T('P'):
-			ret_uint(pValue, m_pTargetList[i].packetLoss);
+			ret_uint(pValue, t->packetLoss);
 			break;
 		case _T('D'):
-			ret_uint(pValue, m_pTargetList[i].stdDevRTT);
+			ret_uint(pValue, t->stdDevRTT);
 			break;
 		default:
 			return SYSINFO_RC_UNSUPPORTED;
@@ -221,14 +222,13 @@ static LONG H_PollResult(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
  */
 static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *value, AbstractCommSession *session)
 {
-	UINT32 i;
-	TCHAR szBuffer[MAX_DB_STRING + 64], szIpAddr[16];
+	TCHAR szBuffer[MAX_DB_STRING + 128], szIpAddr[64];
 
-	for(i = 0; i < m_dwNumTargets; i++)
+	for(int i = 0; i < s_targets.size(); i++)
 	{
-		_sntprintf(szBuffer, MAX_DB_STRING + 64, _T("%s %u %u %u %u %s"), IpToStr(ntohl(m_pTargetList[i].ipAddr), szIpAddr),
-				m_pTargetList[i].lastRTT, m_pTargetList[i].avgRTT, m_pTargetList[i].packetLoss, 
-				m_pTargetList[i].packetSize, m_pTargetList[i].name);
+      PING_TARGET *t = s_targets.get(i);
+      _sntprintf(szBuffer, MAX_DB_STRING + 128, _T("%s %u %u %u %u %s"), t->ipAddr.toString(szIpAddr),
+				     t->lastRTT, t->avgRTT, t->packetLoss, t->packetSize, t->name);
 		value->add(szBuffer);
 	}
 
@@ -240,15 +240,12 @@ static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
  */
 static void SubagentShutdown()
 {
-	UINT32 i;
-
 	m_bShutdown = TRUE;
 	if (m_hCondShutdown != INVALID_CONDITION_HANDLE)
 		ConditionSet(m_hCondShutdown);
 
-	for(i = 0; i < m_dwNumTargets; i++)
-		ThreadJoin(m_pTargetList[i].hThread);
-	safe_free(m_pTargetList);
+   for(int i = 0; i < s_targets.size(); i++)
+      ThreadJoin(s_targets.get(i)->hThread);
 
 #ifdef _NETWARE
 	// Notify main thread that NLM can exit
@@ -264,11 +261,26 @@ static void SubagentShutdown()
 static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 {
 	TCHAR *ptr, *pszLine, *pszName = NULL;
-	UINT32 dwIpAddr, dwPacketSize = m_dwDefPacketSize;
+	UINT32 dwPacketSize = m_dwDefPacketSize;
 	BOOL bResult = FALSE;
 
 	pszLine = _tcsdup(pszCfg);
-	ptr = _tcschr(pszLine, _T(':'));
+   StrStrip(pszLine);
+   TCHAR *addrStart = pszLine;
+   TCHAR *scanStart = pszLine;
+
+   if (pszLine[0] == _T('['))
+   {
+      addrStart++;
+	   ptr = _tcschr(addrStart, _T(']'));
+	   if (ptr != NULL)
+	   {
+         *ptr = 0;
+         scanStart = ptr + 1;
+      }
+   }
+
+	ptr = _tcschr(scanStart, _T(':'));
 	if (ptr != NULL)
 	{
 		*ptr = 0;
@@ -287,21 +299,21 @@ static BOOL AddTargetFromConfig(TCHAR *pszCfg)
 			dwPacketSize = _tcstoul(ptr, NULL, 0);
 		}
 	}
-	StrStrip(pszLine);
+	StrStrip(addrStart);
 
-	dwIpAddr = ResolveHostName(pszLine);
-	if ((dwIpAddr != INADDR_ANY) && (dwIpAddr != INADDR_NONE))
+   InetAddress addr = InetAddress::resolveHostName(addrStart);
+   if (addr.isValid())
 	{
-		m_pTargetList = (PING_TARGET *)realloc(m_pTargetList, sizeof(PING_TARGET) * (m_dwNumTargets + 1));
-		memset(&m_pTargetList[m_dwNumTargets], 0, sizeof(PING_TARGET));
-		m_pTargetList[m_dwNumTargets].ipAddr = dwIpAddr;
-		nx_strncpy(m_pTargetList[m_dwNumTargets].dnsName, pszLine, MAX_DB_STRING);
+      PING_TARGET *t = new PING_TARGET;
+		memset(t, 0, sizeof(PING_TARGET));
+		t->ipAddr = addr;
+		nx_strncpy(t->dnsName, addrStart, MAX_DB_STRING);
 		if (pszName != NULL)
-			nx_strncpy(m_pTargetList[m_dwNumTargets].name, pszName, MAX_DB_STRING);
+			nx_strncpy(t->name, pszName, MAX_DB_STRING);
 		else
-			IpToStr(ntohl(dwIpAddr), m_pTargetList[m_dwNumTargets].name);
-		m_pTargetList[m_dwNumTargets].packetSize = dwPacketSize;
-		m_dwNumTargets++;
+         addr.toString(t->name);
+		t->packetSize = dwPacketSize;
+      s_targets.add(t);
 		bResult = TRUE;
 	}
 
@@ -327,7 +339,6 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
  */
 static BOOL SubagentInit(Config *config)
 {
-	UINT32 i;
 	bool success;
 
 	// Parse configuration
@@ -360,8 +371,11 @@ static BOOL SubagentInit(Config *config)
 
 		// Create shutdown condition and start poller threads
 		m_hCondShutdown = ConditionCreate(TRUE);
-		for(i = 0; i < m_dwNumTargets; i++)
-			m_pTargetList[i].hThread = ThreadCreateEx(PollerThread, 0, &m_pTargetList[i]);
+      for(int i = 0; i < s_targets.size(); i++)
+      {
+         PING_TARGET *t = s_targets.get(i);
+         t->hThread = ThreadCreateEx(PollerThread, 0, t);
+      }
 	}
 	else
 	{

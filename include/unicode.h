@@ -235,6 +235,7 @@
 #define _istalpha iswalpha
 #define _istupper iswupper
 #define _istprint iswprint
+#define _itot     _itow
 #define _tgetenv  wgetenv
 #define _tmkdir   wmkdir
 #define _tchdir   wchdir
@@ -317,6 +318,7 @@
 #define _istalpha isalpha
 #define _istupper isupper
 #define _istprint isprint
+#define _itot     _itoa
 #define _tgetenv  getenv
 #define _tmkdir   mkdir
 #define _tchdir   chdir

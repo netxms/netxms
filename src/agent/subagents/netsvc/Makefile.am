@@ -3,7 +3,7 @@ SUBAGENT = netsvc
 pkglib_LTLIBRARIES = netsvc.la
 netsvc_la_SOURCES = main.cpp
 netsvc_la_CPPFLAGS=-I@top_srcdir@/include
-netsvc_la_LDFLAGS = -module -avoid-version
+netsvc_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 netsvc_la_LIBADD = ../../../libnetxms/libnetxms.la -lcurl
 
 EXTRA_DIST = netsvc.h netsvc.vcproj

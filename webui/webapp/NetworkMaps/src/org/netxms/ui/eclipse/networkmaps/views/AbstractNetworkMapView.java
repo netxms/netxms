@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -63,6 +64,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -73,12 +76,13 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
@@ -143,6 +147,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected int routingAlgorithm = NetworkMapLink.ROUTING_DIRECT;
 	protected boolean allowManualLayout = false; // True if manual layout can be switched on
 	protected boolean automaticLayoutEnabled = true; // Current layout mode - automatic or manual
+	protected boolean alwaysFitLayout = false;
    protected boolean disableGeolocationBackground = false;
 
 	protected Action actionRefresh;
@@ -151,9 +156,11 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionShowStatusFrame;
 	protected Action actionZoomIn;
 	protected Action actionZoomOut;
+	protected Action actionZoomFit;
 	protected Action[] actionZoomTo;
 	protected Action[] actionSetAlgorithm;
 	protected Action[] actionSetRouter;
+	protected Action actionAlwaysFitLayout;
 	protected Action actionEnableAutomaticLayout;
 	protected Action actionSaveLayout;
 	protected Action actionOpenSubmap;
@@ -234,14 +241,32 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		viewer.setLabelProvider(labelProvider);
       viewer.setBackgroundColor(parent.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND).getRGB());
 
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
-			IDialogSettings settings = Activator.getDefault().getDialogSettings();
+			alwaysFitLayout = settings.getBoolean(viewId + ".alwaysFitLayout");
 			labelProvider.setObjectFigureType(ObjectFigureType.values()[settings.getInt(viewId + ".objectFigureType")]); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
 		}
+
+		// Zoom level restore and save
+		try
+		{
+		   viewer.zoomTo(settings.getDouble(viewId + ".zoom"));
+		}
+		catch(NumberFormatException e)
+		{
+		}
+		viewer.getGraphControl().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            IDialogSettings settings = Activator.getDefault().getDialogSettings();
+            settings.put(viewId + ".zoom", viewer.getZoom());
+         }
+      });
 
 		getSite().setSelectionProvider(this);
 
@@ -326,7 +351,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			@Override
 			public void notificationHandler(final SessionNotification n)
 			{
-				if (n.getCode() == NXCNotification.OBJECT_CHANGED)
+				if (n.getCode() == SessionNotification.OBJECT_CHANGED)
 				{
 					viewer.getControl().getDisplay().asyncExec(new Runnable() {
 						@Override
@@ -353,10 +378,23 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			viewer.setLayoutAlgorithm(new ManualLayout());
 		}
 
+		activateContext();
 		registerDoubleClickHandlers();
 		refreshMap();
 	}
 
+	/**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"); //$NON-NLS-1$
+      }
+   }
+	
 	/**
 	 * Register double click handlers
 	 */
@@ -481,9 +519,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				algorithm = new GridLayoutAlgorithm();
 				break;
 		}
-		// viewer.setLayoutAlgorithm(algorithm);
 
-		viewer.setLayoutAlgorithm(new CompositeLayoutAlgorithm(new LayoutAlgorithm[] { algorithm, new ExpansionAlgorithm() }));
+		viewer.setLayoutAlgorithm(alwaysFitLayout ? algorithm : new CompositeLayoutAlgorithm(new LayoutAlgorithm[] { algorithm, new ExpansionAlgorithm() }));
 
 		actionSetAlgorithm[layoutAlgorithm.getValue()].setChecked(false);
 		layoutAlgorithm = alg;
@@ -545,7 +582,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	 */
 	protected void createActions()
 	{
-		actionRefresh = new RefreshAction() {
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{
@@ -595,25 +634,40 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
 		actionShowStatusFrame.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
 
-		actionZoomIn = new Action(Messages.get().AbstractNetworkMapView_ZoomIn) {
+		actionZoomIn = new Action(Messages.get().AbstractNetworkMapView_ZoomIn, SharedIcons.ZOOM_IN) {
 			@Override
 			public void run()
 			{
 				viewer.zoomIn();
 			}
 		};
-		actionZoomIn.setImageDescriptor(SharedIcons.ZOOM_IN);
+		actionZoomIn.setId("org.netxms.ui.eclipse.networkmaps.localActions.AbstractMap.ZoomIn"); //$NON-NLS-1$
+		actionZoomIn.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomIn"); //$NON-NLS-1$
+      handlerService.activateHandler(actionZoomIn.getActionDefinitionId(), new ActionHandler(actionZoomIn));
 
-		actionZoomOut = new Action(Messages.get().AbstractNetworkMapView_ZoomOut) {
+		actionZoomOut = new Action(Messages.get().AbstractNetworkMapView_ZoomOut, SharedIcons.ZOOM_OUT) {
 			@Override
 			public void run()
 			{
 				viewer.zoomOut();
 			}
 		};
-		actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
+		actionZoomOut.setId("org.netxms.ui.eclipse.networkmaps.localActions.AbstractMap.ZoomOut"); //$NON-NLS-1$
+		actionZoomOut.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomOut"); //$NON-NLS-1$
+      handlerService.activateHandler(actionZoomOut.getActionDefinitionId(), new ActionHandler(actionZoomOut));
 
-		actionZoomTo = viewer.createZoomActions();
+      actionZoomFit = new Action(Messages.get().AbstractNetworkMapView_ZoomFit, Activator.getImageDescriptor("icons/fit.png")) {
+         @Override
+         public void run()
+         {
+            viewer.zoomFit();
+         }
+      };
+      actionZoomFit.setId("org.netxms.ui.eclipse.networkmaps.localActions.AbstractMap.ZoomToFit"); //$NON-NLS-1$
+      actionZoomFit.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomToFit"); //$NON-NLS-1$
+      handlerService.activateHandler(actionZoomFit.getActionDefinitionId(), new ActionHandler(actionZoomFit));
+
+		actionZoomTo = viewer.createZoomActions(handlerService);
 
 		actionSetAlgorithm = new Action[layoutAlgorithmNames.length];
 		for(int i = 0; i < layoutAlgorithmNames.length; i++)
@@ -630,6 +684,18 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			actionSetAlgorithm[i].setChecked(layoutAlgorithm.getValue() == i);
 			actionSetAlgorithm[i].setEnabled(automaticLayoutEnabled);
 		}
+
+		actionAlwaysFitLayout = new Action(Messages.get().AbstractNetworkMapView_AlwaysFitLayout, Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            alwaysFitLayout = actionAlwaysFitLayout.isChecked();
+            setLayoutAlgorithm(layoutAlgorithm, true);
+            IDialogSettings settings = Activator.getDefault().getDialogSettings();
+            settings.put(viewId + ".alwaysFitLayout", alwaysFitLayout);
+         }
+      };
+      actionAlwaysFitLayout.setChecked(alwaysFitLayout);
 
 		actionSetRouter = new Action[connectionRouterNames.length];
 		for(int i = 0; i < connectionRouterNames.length; i++)
@@ -751,6 +817,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		};
 		actionShowGrid.setImageDescriptor(Activator.getImageDescriptor("icons/grid.png")); //$NON-NLS-1$
 		actionShowGrid.setChecked(viewer.isGridVisible());
+		actionShowGrid.setId("org.netxms.ui.eclipse.networkmaps.localActions.AbstractMap.ShowGrid"); //$NON-NLS-1$
+		actionShowGrid.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ShowGrid"); //$NON-NLS-1$
+      handlerService.activateHandler(actionShowGrid.getActionDefinitionId(), new ActionHandler(actionShowGrid));
 
 		actionSnapToGrid = new Action(Messages.get().AbstractNetworkMapView_SnapToGrid, Action.AS_CHECK_BOX) {
 			@Override
@@ -770,6 +839,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 				updateObjectPositions();
 			}
 		};
+		actionAlignToGrid.setId("org.netxms.ui.eclipse.networkmaps.localActions.AbstractMap.AlignToGrid"); //$NON-NLS-1$
+		actionAlignToGrid.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.AlignToGrid"); //$NON-NLS-1$
+      handlerService.activateHandler(actionAlignToGrid.getActionDefinitionId(), new ActionHandler(actionAlignToGrid));
 
 		actionShowObjectDetails = new Action(Messages.get().AbstractNetworkMapView_ShowObjDetails) {
 			@Override
@@ -801,8 +873,9 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		if (allowManualLayout)
 		{
 			layout.add(actionEnableAutomaticLayout);
-			layout.add(new Separator());
 		}
+      layout.add(actionAlwaysFitLayout);
+			layout.add(new Separator());
 		for(int i = 0; i < actionSetAlgorithm.length; i++)
 			layout.add(actionSetAlgorithm[i]);
 		if (allowManualLayout)
@@ -859,8 +932,12 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
 		manager.add(createRoutingSubmenu());
+      manager.add(figureType);
+      manager.add(new Separator());
+      manager.add(actionZoomIn);
+      manager.add(actionZoomOut);
+      manager.add(actionZoomFit);
 		manager.add(zoom);
-		manager.add(figureType);
 		manager.add(new Separator());
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);
@@ -880,6 +957,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 		manager.add(actionZoomIn);
 		manager.add(actionZoomOut);
+      manager.add(actionZoomFit);
 		manager.add(new Separator());
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);
@@ -1005,8 +1083,12 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(new Separator());
 		manager.add(createLayoutSubmenu());
 		manager.add(createRoutingSubmenu());
+      manager.add(figureType);
+      manager.add(new Separator());
+		manager.add(actionZoomIn);
+      manager.add(actionZoomOut);
+      manager.add(actionZoomFit);
 		manager.add(zoom);
-		manager.add(figureType);
 		manager.add(new Separator());
 		manager.add(actionAlignToGrid);
 		manager.add(actionSnapToGrid);

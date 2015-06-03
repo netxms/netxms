@@ -226,6 +226,12 @@
                label="%action.label.OpenMap"
                menubarPath="additions">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.networkmaps.actions.CloneNetworkMap"
+               id="org.netxms.ui.eclipse.networkmaps.popupActions.Clone"
+               label="Clone..."
+               menubarPath="additions">
+         </action>
       </objectContribution>
    </extension>
    <extension
@@ -333,18 +339,69 @@
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddObject"
+            contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="Ctrl+A">
+            sequence="M1+A">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects"
+            contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="Ctrl+L">
+            sequence="M1+L">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove"
+            contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="Ctrl+R">
+            sequence="M1+R">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomIn"
+            contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+=">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomIn"
+            contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="NUMPAD_ADD">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomOut"
+            contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+-">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomOut"
+            contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="NUMPAD_SUBTRACT">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.Zoom100Pct"
+            contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+0">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomToFit"
+            contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.AlignToGrid"
+            contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+M3+G">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ShowGrid"
+            contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+G">
       </key>
    </extension>
    <extension
@@ -374,6 +431,30 @@
             id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIImage"
             name="Add DCI Image">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomIn"
+            name="Zoom in">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomOut"
+            name="Zoom out">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.Zoom100Pct"
+            name="Zoom 100%">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomToFit"
+            name="Zoom to fit">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.AlignToGrid"
+            name="Align to grid">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ShowGrid"
+            name="Show grid">
+      </command>
    </extension>
    <extension
          point="org.netxms.ui.eclipse.objectbrowser.objectOpenHandlers">
@@ -388,6 +469,14 @@
       <initializer
             class="org.netxms.ui.eclipse.networkmaps.PreferenceInitializer">
       </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
+            name="Network Maps"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
 
 </plugin>

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,8 +110,8 @@ public class VPNSubnets extends PropertyPage
       //networks lists
       localNetworksElements = new ArrayList<IpAddressListElement>(connector.getLocalSubnets());
       remoteNetworksElements = new ArrayList<IpAddressListElement>(connector.getRemoteSubnets());
-      networksLisr(clientArea, localNetworksList, localNetworksElements);
-      networksLisr(clientArea, remoteNetworksList, remoteNetworksElements);
+      createNetworkList(clientArea, Messages.get().VPNSubnets_LocalNetworks, localNetworksList, localNetworksElements);
+      createNetworkList(clientArea, Messages.get().VPNSubnets_RemoteNetworks, remoteNetworksList, remoteNetworksElements);
       
       return dialogArea;
    }
@@ -123,10 +123,10 @@ public class VPNSubnets extends PropertyPage
     * @param viewList viewer to be created and added to view
     * @param data elements that should be added as a content of this viewer
     */
-   private void networksLisr(Composite dialogArea, TableViewer viewList, final List<IpAddressListElement> data) 
+   private void createNetworkList(Composite dialogArea, String title, TableViewer viewList, final List<IpAddressListElement> data) 
    {
       Group clientArea = new Group(dialogArea, SWT.NONE);
-      clientArea.setText(Messages.get().VPNSubnets_RemoteNetworks);      
+      clientArea.setText(title);      
       GridLayout layout = new GridLayout();
       layout.numColumns = 2;
       GridData gd = new GridData();

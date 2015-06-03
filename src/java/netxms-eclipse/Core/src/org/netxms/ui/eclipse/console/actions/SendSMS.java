@@ -69,7 +69,7 @@ public class SendSMS implements IWorkbenchWindowActionDelegate
 		if (dlg.open() != Window.OK)
 			return;
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
 		new ConsoleJob(Messages.get().SendSMS_JobTitle + dlg.getPhoneNumber(), window.getActivePage().getActivePart(), Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception

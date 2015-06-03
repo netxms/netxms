@@ -35,7 +35,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-import org.netxms.api.client.Session;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
@@ -185,7 +184,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		switch(format)
 		{
 			case RegionalSettings.DATETIME_FORMAT_SERVER:
-				Session session = ConsoleSharedData.getSession();
+				NXCSession session = ConsoleSharedData.getSession();
 				df = new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat()); //$NON-NLS-1$
 				break;
 			case RegionalSettings.DATETIME_FORMAT_CUSTOM:

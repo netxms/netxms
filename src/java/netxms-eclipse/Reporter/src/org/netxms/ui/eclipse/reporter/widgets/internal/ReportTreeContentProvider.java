@@ -3,7 +3,7 @@ package org.netxms.ui.eclipse.reporter.widgets.internal;
 import java.util.List;
 import org.eclipse.jface.viewers.TreeNodeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
-import org.netxms.api.client.reporting.ReportDefinition;
+import org.netxms.client.reporting.ReportDefinition;
 
 /**
  * Report tree content provider

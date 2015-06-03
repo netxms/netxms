@@ -2,6 +2,4 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     <item android:id="@+id/connection_point_delete_one" android:title="@string/connection_point_delete_one" android:enabled="true" android:visible="true"></item>
     <item android:id="@+id/connection_point_delete_all" android:title="@string/connection_point_delete_all" android:enabled="true" android:visible="true" android:checkable="false" android:checked="false"></item>
-    
-
 </menu>

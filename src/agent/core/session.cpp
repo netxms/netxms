@@ -102,6 +102,7 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_controlServer = controlServer;
    m_proxyConnection = false;
    m_acceptTraps = false;
+   m_ipv6Aware = false;
    m_hCurrFile = -1;
    m_pCtx = NULL;
    m_ts = time(NULL);
@@ -543,6 +544,10 @@ void CommSession::processingThread()
                   msg.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
+            case CMD_ENABLE_IPV6:
+               m_ipv6Aware = pMsg->getFieldAsBoolean(VID_ENABLED);
+               msg.setField(VID_RCC, ERR_SUCCESS);
+               break;
             default:
                // Attempt to process unknown command by subagents
                if (!ProcessCmdBySubAgent(dwCommand, pMsg, &msg, this))

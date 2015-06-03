@@ -472,9 +472,9 @@ BOOL NetworkMap::loadFromDatabase(UINT32 dwId)
 /**
  * Fill NXCP message with object's data
  */
-void NetworkMap::fillMessage(NXCPMessage *msg)
+void NetworkMap::fillMessageInternal(NXCPMessage *msg)
 {
-	NetObj::fillMessage(msg);
+	NetObj::fillMessageInternal(msg);
 
 	msg->setField(VID_MAP_TYPE, (WORD)m_mapType);
 	msg->setField(VID_LAYOUT, (WORD)m_layout);
@@ -510,11 +510,8 @@ void NetworkMap::fillMessage(NXCPMessage *msg)
 /**
  * Update network map object from NXCP message
  */
-UINT32 NetworkMap::modifyFromMessage(NXCPMessage *request, BOOL bAlreadyLocked)
+UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 {
-	if (!bAlreadyLocked)
-		lockProperties();
-
 	if (request->isFieldExist(VID_MAP_TYPE))
 		m_mapType = (int)request->getFieldAsUInt16(VID_MAP_TYPE);
 
@@ -607,7 +604,7 @@ UINT32 NetworkMap::modifyFromMessage(NXCPMessage *request, BOOL bAlreadyLocked)
 		}
 	}
 
-	return NetObj::modifyFromMessage(request, TRUE);
+	return NetObj::modifyFromMessageInternal(request);
 }
 
 /**
@@ -664,6 +661,7 @@ void NetworkMap::updateContent()
 		default:
 			break;
 	}
+	DbgPrintf(6, _T("NetworkMap::updateContent(%s [%d]): completed"), m_name, m_id);
 }
 
 /**

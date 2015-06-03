@@ -38,7 +38,7 @@
  */
 struct PING_TARGET
 {
-   UINT32 ipAddr;
+   InetAddress ipAddr;
    TCHAR dnsName[MAX_DB_STRING];
    TCHAR name[MAX_DB_STRING];
    UINT32 packetSize;

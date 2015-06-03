@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -100,11 +100,11 @@ BOOL NetworkService::saveToDatabase(DB_HANDLE hdb)
    }
 	if (hStmt != NULL)
 	{
-	   TCHAR szIpAddr[32];
+	   TCHAR szIpAddr[64];
 
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_hostNode->getId());
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_serviceType);
-		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, IpToStr(m_dwIpAddr, szIpAddr), DB_BIND_STATIC);
+		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_ipAddress.toString(szIpAddr), DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_proto);
 		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_port);
 		DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_request, DB_BIND_STATIC);
@@ -117,7 +117,7 @@ BOOL NetworkService::saveToDatabase(DB_HANDLE hdb)
 
 		DBFreeStatement(hStmt);
 	}
-                 
+
    // Save access list
    saveACLToDB(hdb);
 
@@ -154,7 +154,7 @@ BOOL NetworkService::loadFromDatabase(UINT32 dwId)
    {
       dwHostNodeId = DBGetFieldULong(hResult, 0, 0);
       m_serviceType = DBGetFieldLong(hResult, 0, 1);
-      m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 2);
+      m_ipAddress = DBGetFieldInetAddr(hResult, 0, 2);
       m_proto = (WORD)DBGetFieldULong(hResult, 0, 3);
       m_port = (WORD)DBGetFieldULong(hResult, 0, 4);
       m_request = DBGetField(hResult, 0, 5, NULL, 0);
@@ -228,9 +228,9 @@ bool NetworkService::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void NetworkService::fillMessage(NXCPMessage *pMsg)
+void NetworkService::fillMessageInternal(NXCPMessage *pMsg)
 {
-   NetObj::fillMessage(pMsg);
+   NetObj::fillMessageInternal(pMsg);
    pMsg->setField(VID_SERVICE_TYPE, (WORD)m_serviceType);
    pMsg->setField(VID_IP_PROTO, m_proto);
    pMsg->setField(VID_IP_PORT, m_port);
@@ -244,11 +244,8 @@ void NetworkService::fillMessage(NXCPMessage *pMsg)
 /**
  * Modify object from message
  */
-UINT32 NetworkService::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NetworkService::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
    // Polling node
    if (pRequest->isFieldExist(VID_POLLER_NODE_ID))
    {
@@ -286,7 +283,7 @@ UINT32 NetworkService::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLoc
 
    // Listen IP address
    if (pRequest->isFieldExist(VID_IP_ADDRESS))
-      m_dwIpAddr = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
+      m_ipAddress = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
 
    // Service type
    if (pRequest->isFieldExist(VID_SERVICE_TYPE))
@@ -318,7 +315,7 @@ UINT32 NetworkService::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLoc
       m_response = pRequest->getFieldAsString(VID_SERVICE_RESPONSE);
    }
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -354,14 +351,14 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 
    if (pNode != NULL)
    {
-      TCHAR szBuffer[16];
+      TCHAR szBuffer[64];
       UINT32 dwStatus;
 
       sendPollerMsg(rqId, _T("      Polling service from node %s [%s]\r\n"),
-                    pNode->getName(), IpToStr(pNode->IpAddr(), szBuffer));
-      if (pNode->checkNetworkService(&dwStatus, 
-                                     (m_dwIpAddr == 0) ? m_hostNode->IpAddr() : m_dwIpAddr,
-                                     m_serviceType, m_port, m_proto, 
+                    pNode->getName(), pNode->getIpAddress().toString(szBuffer));
+      if (pNode->checkNetworkService(&dwStatus,
+                                     m_ipAddress.isValid() ? m_ipAddress : m_hostNode->getIpAddress(),
+                                     m_serviceType, m_port, m_proto,
                                      m_request, m_response, &m_responseTime) == ERR_SUCCESS)
       {
          newStatus = (dwStatus == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
@@ -388,7 +385,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 		newStatus = STATUS_UNKNOWN;
 		DbgPrintf(6, _T("StatusPoll(%s): Status for network service %s reset to UNKNOWN"), pNode->getName(), m_name);
 	}
-   
+
    if (newStatus != oldStatus)
    {
 		if (newStatus == m_pendingStatus)
@@ -406,7 +403,7 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 			m_iStatus = newStatus;
 			m_pendingStatus = -1;	// Invalidate pending status
 			sendPollerMsg(rqId, _T("      Service status changed to %s\r\n"), GetStatusAsText(m_iStatus, true));
-			PostEventEx(eventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP : 
+			PostEventEx(eventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP :
 							(m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
 							m_hostNode->getId(), "sdd", m_name, m_id, m_serviceType);
 			lockProperties();

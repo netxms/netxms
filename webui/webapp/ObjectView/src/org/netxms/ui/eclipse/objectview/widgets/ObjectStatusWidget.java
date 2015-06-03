@@ -71,7 +71,7 @@ public class ObjectStatusWidget extends Canvas implements PaintListener
 		e.gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
 		
 		final String text = (object instanceof AbstractNode) ?
-		      (object.getObjectName() + "\n" + object.getPrimaryIP().getHostAddress()) : //$NON-NLS-1$
+		      (object.getObjectName() + "\n" + ((AbstractNode)object).getPrimaryIP().getHostAddress()) : //$NON-NLS-1$
 		      object.getObjectName();
 		
 		rect.x += 4;

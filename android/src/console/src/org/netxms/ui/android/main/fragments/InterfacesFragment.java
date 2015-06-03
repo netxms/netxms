@@ -162,6 +162,8 @@ public class InterfacesFragment extends ExpandableListFragment implements Loader
 	@Override
 	public boolean onContextItemSelected(MenuItem item)
 	{
+		if (!getUserVisibleHint())
+			return false;
 		if (handleItemSelection(item))
 			return true;
 		return super.onContextItemSelected(item);

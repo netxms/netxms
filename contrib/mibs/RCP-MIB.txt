@@ -1,0 +1,445 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : RCP-MIB
+-- FILE NAME: RCP.mib
+-- DATE     : 2009/4/21
+-- VERSION  : 1.00
+-- PURPOSE  : To construct the MIB structure of RCP (Remote Copy Protocol) client module
+--            function for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2009/4/21, Jok Long
+-- This is the first formal version for universal MIB definition.
+-- Notes:This mib is integrate the RCP.mib.	
+-- -----------------------------------------------------------------------------
+
+RCP-MIB DEFINITIONS ::= BEGIN
+
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE
+        	FROM SNMPv2-SMI    
+    InetAddressType, InetAddress      
+    		FROM INET-ADDRESS-MIB
+    TruthValue,DisplayString
+            FROM SNMPv2-TC
+    MODULE-COMPLIANCE, OBJECT-GROUP
+        	FROM SNMPv2-CONF
+
+	dlink-common-mgmt	
+			FROM DLINK-ID-REC-MIB;
+
+
+swRCPMIB MODULE-IDENTITY
+    LAST-UPDATED "200904210000Z"
+    ORGANIZATION " D-Link Crop."
+    CONTACT-INFO
+        " http://support.dlink.com "
+    DESCRIPTION
+        "The RCP(Remote Copy Protocol)client module MIB."
+    ::= { dlink-common-mgmt 82}
+
+UnitList                ::= OCTET STRING(SIZE (0..3))
+
+swRCPMgmt OBJECT IDENTIFIER ::= { swRCPMIB 1 }
+
+
+ ----------------------------------------------------------------------------------------------------------
+--swRCPFileTable
+----------------------------------------------------------------------------------------------------------
+    swRCPFileTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwRCPFileEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of MIB Basic Config entry supported files uplaod or download through RCP."
+        ::= { swRCPMgmt 1 }
+
+    swRCPFileEntry OBJECT-TYPE
+        SYNTAX  SwRCPFileEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A basic configuration entry containing objects describing a particular MIB
+             supported by this table."
+        INDEX   { swRCPFileIndex }
+        ::= { swRCPFileTable 1 }
+
+    SwRCPFileEntry::=
+        SEQUENCE {
+                swRCPFileIndex
+                        INTEGER,
+                swRCPFileLoadType
+              		INTEGER,
+                swRCPFileType
+                        DisplayString,
+                swRCPFileServerUserName
+                        DisplayString, 
+                swRCPFileServerAddrType
+                        InetAddressType,
+                swRCPFileServerAddr
+                        InetAddress,
+                swRCPFileServerPathFileName
+                        DisplayString,
+                swRCPFileUnitID
+              		UnitList,
+                swRCPFileCtrlID
+                		 INTEGER,
+                swRCPFileBootUpImage
+                		TruthValue,
+                swRCPFileForceAgree
+                		TruthValue,
+                swRCPFileCtrl
+                       INTEGER 
+                }
+
+    swRCPFileIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS      not-accessible
+        STATUS  current
+        DESCRIPTION
+                "The table index for the file entry"
+        ::= { swRCPFileEntry 1 }
+               
+    swRCPFileLoadType OBJECT-TYPE 
+    	 SYNTAX  INTEGER {
+                    other(1),
+                    upload(2),
+                    download(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        	"This object provides the user with a choice of uploading or downloading the selected file."
+        ::= { swRCPFileEntry 2 }
+
+    swRCPFileType OBJECT-TYPE
+        SYNTAX  DisplayString  (SIZE (0..64))
+        MAX-ACCESS   read-only
+        STATUS  current
+        DESCRIPTION
+            "The description the file type in this entry."
+        ::= { swRCPFileEntry 3 }
+
+    swRCPFileServerUserName OBJECT-TYPE
+        SYNTAX  DisplayString  (SIZE (0..15))
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The remote RCP server user name. "
+        ::= { swRCPFileEntry 4 }
+    
+    swRCPFileServerAddrType OBJECT-TYPE
+    	SYNTAX  InetAddressType
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This is the type of RCP server address'."
+        ::= { swRCPFileEntry 5 }  
+     
+    swRCPFileServerAddr OBJECT-TYPE 
+    	SYNTAX  InetAddress
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This is the RCP server address"
+        ::= { swRCPFileEntry 6 } 
+              
+    swRCPFileServerPathFileName OBJECT-TYPE 
+    	 SYNTAX  DisplayString  (SIZE (0..128))
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The path file name of the file to be downloaded from the RCP server, or to be uploaded
+            to."
+        ::= { swRCPFileEntry 7 }
+
+    swRCPFileUnitID OBJECT-TYPE
+       SYNTAX   UnitList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Specifies to which unit of the switch stack the firmware image will be downloaded.
+             One or more units can be set to this list. Each bit from left to right represents the
+             switch from unit ID 1 to unit ID 12.
+             A NULL entry in this field denotes all switches in the switch stack."
+        ::= { swRCPFileEntry 8 }
+        
+    swRCPFileCtrlID OBJECT-TYPE
+    	SYNTAX  INTEGER
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The section ID of firmware image or configuration file.
+             A value of 0 indicates the bootup firmware image or configuration file."
+        ::= { swRCPFileEntry 9 }
+
+    swRCPFileBootUpImage OBJECT-TYPE
+        SYNTAX     TruthValue
+        MAX-ACCESS read-write
+       STATUS current
+        DESCRIPTION
+            "
+             True : boot_up option is specified.
+             False : boot_up option is not specified.. "
+        ::= { swRCPFileEntry 10 }
+     swRCPFileForceAgree OBJECT-TYPE
+         SYNTAX     TruthValue
+         MAX-ACCESS read-write
+        STATUS current
+         DESCRIPTION
+            "When the force_agree option is specified, the reboot command will be executed
+             immediately without further confirmation by the user.
+
+             True : force_agree option is specified.
+             False : force_agree option is not specified.. "
+        ::= { swRCPFileEntry 11 }
+       
+     swRCPFileCtrl OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    start(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "When specify to start, the download or upload start work imedialely, specify to other not work"
+        ::= { swRCPFileEntry 12 }
+        
+        
+----------------------------------------------------------------------------------------------------------
+--swRCPFileSystemTable
+----------------------------------------------------------------------------------------------------------
+    swRCPFileSystemTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwRCPFileSystemEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of MIB Basic Config entry supported files uplaod or download through RCP."
+        ::= { swRCPMgmt 2 }
+
+    swRCPFileSystemEntry OBJECT-TYPE
+        SYNTAX  SwRCPFileSystemEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A basic configuration entry containing objects describing a particular MIB
+             supported by this table."
+        INDEX   { swRCPFileSystemIndex }
+        ::= { swRCPFileSystemTable 1 }
+
+    SwRCPFileSystemEntry::=
+        SEQUENCE {
+                swRCPFileSystemIndex
+                        INTEGER,
+                swRCPFileSystemLoadType
+              		INTEGER,
+                swRCPFileSystemFileType
+                        DisplayString,
+                swRCPFileSystemServerUserName
+                        DisplayString, 
+                swRCPFileSystemServerAddrType
+                        InetAddressType,
+                swRCPFileSystemServerAddr
+                        InetAddress,
+                swRCPFileSystemServerPathFileName
+                        DisplayString, 
+                swRCPFileSystemDevicePathFileName
+                        DisplayString,
+                swRCPFileSystemUnitID
+              		UnitList,
+                swRCPFileSystemBootUpImage
+                		TruthValue,
+                swRCPFileSystemForceAgree
+                		TruthValue,
+                swRCPFileSystemCtrl
+                       INTEGER 
+                }
+
+    swRCPFileSystemIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS      not-accessible
+        STATUS  current
+        DESCRIPTION
+                "The table index for the file entry"
+        ::= { swRCPFileSystemEntry 1 }
+               
+    swRCPFileSystemLoadType OBJECT-TYPE 
+    	 SYNTAX  INTEGER {
+                    other(1),
+                    upload(2),
+                    download(3)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+        	"This object provides the user with a choice of uploading or downloading the selected file."
+        ::= { swRCPFileSystemEntry 2 }
+
+    swRCPFileSystemFileType OBJECT-TYPE
+        SYNTAX  DisplayString  (SIZE (0..64))
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The description the file type in this entry."
+        ::= { swRCPFileSystemEntry 3 }
+
+    swRCPFileSystemServerUserName OBJECT-TYPE
+        SYNTAX  DisplayString  (SIZE (0..15))
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The remote RCP server user name. "
+        ::= { swRCPFileSystemEntry 4 }
+    
+    swRCPFileSystemServerAddrType OBJECT-TYPE
+    	SYNTAX  InetAddressType
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This is the type of RCP server address'."
+        ::= { swRCPFileSystemEntry 5 }  
+     
+    swRCPFileSystemServerAddr OBJECT-TYPE 
+    	SYNTAX  InetAddress
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This is the RCP server address"
+        ::= { swRCPFileSystemEntry 6 } 
+              
+    swRCPFileSystemServerPathFileName OBJECT-TYPE 
+    	 SYNTAX  DisplayString  (SIZE (0..128))
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The path file name of the file to be downloaded from the RCP server, or to be uploaded
+            to."
+        ::= { swRCPFileSystemEntry 7 }
+        
+   swRCPFileSystemDevicePathFileName OBJECT-TYPE 
+    	 SYNTAX  DisplayString  (SIZE (0..128))
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The path file name of the file to be downloaded to device, or to be uploaded
+            from."
+        ::= { swRCPFileSystemEntry 8 }
+
+
+    swRCPFileSystemUnitID OBJECT-TYPE
+       SYNTAX   UnitList
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "Specifies to which unit of the switch stack the firmware image will be downloaded.
+             One or more units can be set to this list. Each bit from left to right represents the
+             switch from unit ID 1 to unit ID 12.
+             A NULL entry in this field denotes all switches in the switch stack."
+        ::= { swRCPFileSystemEntry 9 }
+  
+    swRCPFileSystemBootUpImage OBJECT-TYPE
+        SYNTAX     TruthValue
+        MAX-ACCESS read-write
+       STATUS current
+        DESCRIPTION
+            "
+             True : boot_up option is specified.
+             False : boot_up option is not specified.. "
+        ::= { swRCPFileSystemEntry 10 }
+     swRCPFileSystemForceAgree OBJECT-TYPE
+         SYNTAX     TruthValue
+         MAX-ACCESS read-write
+        STATUS current
+         DESCRIPTION
+            "When the force_agree option is specified, the reboot command will be executed
+             immediately without further confirmation by the user.
+
+             True : force_agree option is specified.
+             False : force_agree option is not specified.. "
+        ::= { swRCPFileSystemEntry 11 }
+       
+     swRCPFileSystemCtrl OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    other(1),
+                    start(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "When specify to start, the download or upload start work imedialely, specify to other not work"
+        ::= { swRCPFileSystemEntry 12 }
+  
+  
+ ----------------------------------------------------------------------------------------------------------
+--swRCPServerConfigTable
+----------------------------------------------------------------------------------------------------------
+    swRCPServerConfigTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwRCPServerConfigEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of MIB Basic Config entry supported config RCP server Ip address and user name."
+        ::= { swRCPMgmt 3 }
+
+    swRCPServerConfigEntry OBJECT-TYPE
+        SYNTAX  SwRCPServerConfigEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A basic configuration entry containing objects describing a particular MIB
+             supported by this table."
+        INDEX   { swRCPServerConfigIndex }
+        ::= { swRCPServerConfigTable 1 }
+
+    SwRCPServerConfigEntry::=
+        SEQUENCE {
+                swRCPServerConfigIndex
+                        INTEGER, 
+                swRCPServerConfigAddrType
+                        InetAddressType,
+                swRCPServerConfigAddr
+                        InetAddress,
+                swRCPServerConfigUserName
+                        DisplayString  
+                }
+                
+    swRCPServerConfigIndex OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS      not-accessible
+        STATUS  current
+        DESCRIPTION
+                "The table index for the file entry"
+        ::= { swRCPServerConfigEntry 1 }               
+    
+    swRCPServerConfigAddrType OBJECT-TYPE
+    	SYNTAX  InetAddressType
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This is the type of RCP server address'."
+        ::= { swRCPServerConfigEntry 2 }  
+     
+    swRCPServerConfigAddr OBJECT-TYPE
+    	SYNTAX  InetAddress
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This is the RCP server address"
+        ::= { swRCPServerConfigEntry 3 } 
+        
+    swRCPServerConfigUserName OBJECT-TYPE
+        SYNTAX  DisplayString  (SIZE (0..15))
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "The remote RCP server user name. "
+        ::= { swRCPServerConfigEntry 4 }
+              
+ END

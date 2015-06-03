@@ -156,11 +156,6 @@ THREAD_RESULT THREAD_CALL SensorPollingThread(void *)
 
 BOOL StartSensorCollector()
 {
-	if (!bcm2835_init()) 
-	{
-		AgentWriteLog(NXLOG_ERROR, _T("RPI: call to bcm2835_init failed"));
-		return FALSE;
-	}
 	m_collector = ThreadCreateEx(SensorPollingThread, 0, NULL);
 	return TRUE;
 }

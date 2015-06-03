@@ -21,7 +21,7 @@ package org.netxms.ui.eclipse.nxsl.views.helpers;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
-import org.netxms.api.client.scripts.Script;
+import org.netxms.client.Script;
 import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.views.ScriptLibrary;
 

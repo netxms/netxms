@@ -1,0 +1,80 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Secure File Transfer Protocol Server Common mib
+-- FILE NAME: SFTPServer.mib
+-- DATE     : 2012/04/23
+-- VERSION  : 1.00
+-- PURPOSE  : To construct the MIB structure of Secure File Transfer Protocol
+--            Server management for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--    
+-- Version 1.00, 2012/04/23, Jessy Ji
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+SFTPServer-MIB DEFINITIONS ::= BEGIN
+
+
+IMPORTS	   
+    MODULE-IDENTITY, OBJECT-TYPE     FROM SNMPv2-SMI
+    RowStatus,DisplayString          FROM SNMPv2-TC
+    MODULE-COMPLIANCE, OBJECT-GROUP  FROM SNMPv2-CONF
+    SnmpAdminString                  FROM SNMP-FRAMEWORK-MIB
+    dlink-common-mgmt                FROM DLINK-ID-REC-MIB;
+
+    swSFTPServerMIB MODULE-IDENTITY
+        LAST-UPDATED "201204230000Z"
+        ORGANIZATION "D-Link Corp."
+        CONTACT-INFO
+            "http://support.dlink.com"
+        DESCRIPTION
+            "Secure File Transfer Protocol Server module MIB."
+        ::= { dlink-common-mgmt 104}
+
+    swSFTPServerMgmt OBJECT IDENTIFIER ::= { swSFTPServerMIB 1 }
+
+-- -----------------------------------------------------------------------------
+-- Textual Conventions
+-- -----------------------------------------------------------------------------
+    swSFTPServerVersion OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the SFTP server version supported in the system."
+        ::= { swSFTPServerMgmt 1}
+
+    swSFTPServerState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                    enabled(1),
+                    disabled(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates if the SFTP server is enabled or disabled.
+			 
+			 NOTE: To make SFTP server run, SSH should be enabled.
+			"
+        ::= { swSFTPServerMgmt 2}
+
+
+    swSFTPServerConnectionTimeout OBJECT-TYPE
+        SYNTAX  INTEGER(30..600)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object specifies the idle timer for SFTP server. 
+			If SFTP server detects no operation after duration of 
+			idle timer for a specific SFTP session, it will close 
+			this SFTP session actively. 
+			Its default value is 120 seconds."
+        ::= { swSFTPServerMgmt 3}
+
+END

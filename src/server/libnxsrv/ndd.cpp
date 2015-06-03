@@ -25,8 +25,9 @@
 /**
  * Access point info constructor
  */
-AccessPointInfo::AccessPointInfo(BYTE *macAddr, UINT32 ipAddr, AccessPointState state, const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial)
+AccessPointInfo::AccessPointInfo(UINT32 index, const BYTE *macAddr, const InetAddress& ipAddr, AccessPointState state, const TCHAR *name, const TCHAR *vendor, const TCHAR *model, const TCHAR *serial)
 {
+   m_index = index;
 	memcpy(m_macAddr, macAddr, MAC_ADDR_LENGTH);
    m_ipAddr = ipAddr;
 	m_state = state;
@@ -157,10 +158,7 @@ void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, 
  */
 static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-	NX_INTERFACE_INFO info;
-	memset(&info, 0, sizeof(NX_INTERFACE_INFO));
-	info.index = pVar->getValueAsUInt();
-	((InterfaceList *)pArg)->add(&info);
+	((InterfaceList *)pArg)->add(new InterfaceInfo(pVar->getValueAsUInt()));
    return SNMP_ERR_SUCCESS;
 }
 
@@ -173,10 +171,7 @@ static UINT32 HandlerIndexIfXTable(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_T
    UINT32 index = name->getValue()[name->getLength() - 1];
    if (((InterfaceList *)pArg)->findByIfIndex(index) == NULL)
    {
-	   NX_INTERFACE_INFO info;
-	   memset(&info, 0, sizeof(NX_INTERFACE_INFO));
-      info.index = index;
-	   ((InterfaceList *)pArg)->add(&info);
+	   ((InterfaceList *)pArg)->add(new InterfaceInfo(index));
    }
    return SNMP_ERR_SUCCESS;
 }
@@ -209,24 +204,10 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
    if (dwResult == SNMP_ERR_SUCCESS)
    {
 		InterfaceList *ifList = (InterfaceList *)pArg;
-      NX_INTERFACE_INFO *iface = ifList->findByIfIndex(index);
+      InterfaceInfo *iface = ifList->findByIfIndex(index);
       if (iface != NULL)
       {
-         if (iface->ipAddr != 0)
-         {
-            // This interface entry already filled, so we have additional IP addresses
-            // on a single interface
-				NX_INTERFACE_INFO extIface;
-				memcpy(&extIface, iface, sizeof(NX_INTERFACE_INFO));
-				extIface.ipAddr = ntohl(pVar->getValueAsUInt());
-				extIface.ipNetMask = dwNetMask;
-				ifList->add(&extIface);
-         }
-			else
-			{
-				iface->ipAddr = ntohl(pVar->getValueAsUInt());
-				iface->ipNetMask = dwNetMask;
-			}
+         iface->ipAddrList.add(InetAddress(ntohl(pVar->getValueAsUInt()), dwNetMask));
 		}
    }
 	else
@@ -250,21 +231,30 @@ static UINT32 HandlerIpAddressTable(UINT32 version, SNMP_Variable *var, SNMP_Tra
    size_t oidLen = var->getName()->getLength();
    memcpy(oid, var->getName()->getValue(), oidLen * sizeof(UINT32));
 
-   // Check address family (1 = ipv4)
-   if (oid[10] != 1)
+   // Check address family (1 = ipv4, 2 = ipv6)
+   if ((oid[10] != 1) && (oid[10] != 2))
       return SNMP_ERR_SUCCESS;
 
    UINT32 ifIndex = var->getValueAsUInt();
-   NX_INTERFACE_INFO *iface = ifList->findByIfIndex(ifIndex);
+   InterfaceInfo *iface = ifList->findByIfIndex(ifIndex);
    if (iface == NULL)
       return SNMP_ERR_SUCCESS;
 
    // Build IP address from OID
-   UINT32 ipAddr = (oid[12] << 24) | (oid[13] << 16) | (oid[14] << 8) | oid[15];
-   if (iface->ipAddr == ipAddr)
+   InetAddress addr;
+   if (oid[10] == 1)
+   {
+      addr = InetAddress((UINT32)((oid[12] << 24) | (oid[13] << 16) | (oid[14] << 8) | oid[15]));
+   }
+   else
+   {
+      BYTE bytes[16];
+      for(int i = 12, j = 0; j < 16; i++, j++)
+         bytes[j] = (BYTE)oid[i];
+      addr = InetAddress(bytes);
+   }
+   if (iface->hasAddress(addr))
       return SNMP_ERR_SUCCESS;   // This IP already set from ipAddrTable
-
-   UINT32 netMask = 0;
 
    // Get address type and prefix
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -282,34 +272,17 @@ static UINT32 HandlerIpAddressTable(UINT32 version, SNMP_Variable *var, SNMP_Tra
          if ((prefix != NULL) && !prefix->isZeroDotZero())
          {
             // Last element in ipAddressPrefixTable index is prefix length
-            UINT32 len = prefix->getValue()[prefix->getLength() - 1];
-            netMask = ((len > 0) && (len <= 32)) ? (0xFFFFFFFF << (32 - len)) : 0;
+            addr.setMaskBits((int)prefix->getValue()[prefix->getLength() - 1]);
          }
          else
          {
             ifList->setPrefixWalkNeeded();
          }
          delete prefix;
-
-         if (iface->ipAddr != 0)
-         {
-            // This interface entry already filled, so we have additional IP addresses
-            // on a single interface
-				NX_INTERFACE_INFO extIface;
-				memcpy(&extIface, iface, sizeof(NX_INTERFACE_INFO));
-				extIface.ipAddr = ipAddr;
-				extIface.ipNetMask = netMask;
-				ifList->add(&extIface);
-         }
-			else
-			{
-				iface->ipAddr = ipAddr;
-				iface->ipNetMask = netMask;
-			}
+         iface->ipAddrList.add(addr);
       }
       delete response;
    }
-
    return SNMP_ERR_SUCCESS;
 }
 
@@ -321,28 +294,39 @@ static UINT32 HandlerIpAddressPrefixTable(UINT32 version, SNMP_Variable *var, SN
    InterfaceList *ifList = (InterfaceList *)arg;
    const UINT32 *oid = var->getName()->getValue();
    
-   // Check address family (1 = ipv4)
-   if (oid[10] != 1)
+   // Check address family (1 = ipv4, 2 = ipv6)
+   if ((oid[10] != 1) && (oid[10] != 2))
       return SNMP_ERR_SUCCESS;
 
    // Build IP address from OID
-   UINT32 prefix = (oid[13] << 24) | (oid[14] << 16) | (oid[15] << 8) | oid[16];
-   UINT32 mask = ((oid[17] > 0) && (oid[17] <= 32)) ? (0xFFFFFFFF << (32 - oid[17])) : 0;
-
-   // Find matching IP and set mask
-   for(int i = 0; i < ifList->size(); i++)
+   InetAddress prefix;
+   if (oid[10] == 1)
    {
-      NX_INTERFACE_INFO *iface = ifList->get(i);
-      if (iface->index != oid[12])
-         continue;
-
-      if ((iface->ipAddr & mask) == prefix)
-      {
-         iface->ipNetMask = mask;
-         break;
-      }
+      prefix = InetAddress((UINT32)((oid[13] << 24) | (oid[14] << 16) | (oid[15] << 8) | oid[16]));
+      prefix.setMaskBits((int)oid[17]);
+   }
+   else
+   {
+      BYTE bytes[16];
+      for(int i = 13, j = 0; j < 16; i++, j++)
+         bytes[j] = (BYTE)oid[i];
+      prefix = InetAddress(bytes);
+      prefix.setMaskBits((int)oid[29]);
    }
 
+   // Find matching IP and set mask
+   InterfaceInfo *iface = ifList->findByIfIndex(oid[12]);
+   if (iface != NULL)
+   {
+      for(int i = 0; i < iface->ipAddrList.size(); i++)
+      {
+         InetAddress *addr = iface->ipAddrList.getList()->get(i);
+         if ((addr != NULL) && prefix.contain(*addr))
+         {
+            addr->setMaskBits(prefix.getMaskBits());
+         }
+      }
+   }
    return SNMP_ERR_SUCCESS;
 }
 
@@ -389,7 +373,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       // Enumerate interfaces
 		for(i = 0; i < pIfList->size(); i++)
       {
-			NX_INTERFACE_INFO *iface = pIfList->get(i);
+			InterfaceInfo *iface = pIfList->get(i);
 
 			// Get interface description
 	      _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.2.%d"), iface->index);
@@ -480,7 +464,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
          _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.4.%d"), iface->index);
          if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &iface->mtu, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
 			{
-				iface->type = IFTYPE_OTHER;
+				iface->mtu = 0;
 			}
 
          // MAC address
@@ -527,6 +511,60 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 
 	DbgPrintf(6, _T("NetworkDeviceDriver::getInterfaces(%p): completed, ifList=%p"), snmp, pIfList);
    return pIfList;
+}
+
+/**
+ * Get interface status. Both states must be set to UNKNOWN if cannot be read from device.
+ * 
+ * @param snmp SNMP transport
+ * @param attributes node's custom attributes
+ * @param driverData driver's data
+ * @param ifIndex interface index
+ * @param adminState OUT: interface administrative state
+ * @param operState OUT: interface operational state
+ */
+void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex, InterfaceAdminState *adminState, InterfaceOperState *operState)
+{
+   UINT32 state = 0;
+   TCHAR oid[256];
+   _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7.%d"), (int)ifIndex); // Interface administrative state
+   SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(UINT32), 0);
+
+   switch(state)
+   {
+		case 2:
+			*adminState = IF_ADMIN_STATE_DOWN;
+			*operState = IF_OPER_STATE_DOWN;
+         break;
+      case 1:
+		case 3:
+			*adminState = (InterfaceAdminState)state;
+         // Get interface operational state
+         state = 0;
+         _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%d"), (int)ifIndex);
+         SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(UINT32), 0);
+         switch(state)
+         {
+            case 3:
+					*operState = IF_OPER_STATE_TESTING;
+               break;
+            case 2:  // down: interface is down
+				case 7:	// lowerLayerDown: down due to state of lower-layer interface(s)
+					*operState = IF_OPER_STATE_DOWN;
+               break;
+            case 1:
+					*operState = IF_OPER_STATE_UP;
+               break;
+            default:
+					*operState = IF_OPER_STATE_UNKNOWN;
+               break;
+         }
+         break;
+      default:
+			*adminState = IF_ADMIN_STATE_UNKNOWN;
+			*operState = IF_OPER_STATE_UNKNOWN;
+         break;
+   }
 }
 
 /**
@@ -726,4 +764,21 @@ ObjectArray<AccessPointInfo> *NetworkDeviceDriver::getAccessPoints(SNMP_Transpor
 ObjectArray<WirelessStationInfo> *NetworkDeviceDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    return NULL;
+}
+
+/**
+ * Get access point state
+ *
+ * @param snmp SNMP transport
+ * @param attributes Node's custom attributes
+ * @param driverData driver-specific data previously created in analyzeDevice
+ * @param apIndex access point index
+ * @param macAdddr access point MAC address
+ * @param ipAddr access point IP address
+ * @return state of access point or AP_UNKNOWN if it cannot be determined
+ */
+AccessPointState NetworkDeviceDriver::getAccessPointState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, 
+                                                          UINT32 apIndex, const BYTE *macAddr, const InetAddress& ipAddr)
+{
+   return AP_UNKNOWN;
 }

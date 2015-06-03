@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2012 Raden Solutions
 **
@@ -124,7 +124,7 @@ BOOL NodeLink::saveToDatabase(DB_HANDLE hdb)
 
 	hStmt = DBPrepare(g_hCoreDB, bNewObject ? _T("INSERT INTO node_links (node_id,nodelink_id) VALUES (?,?)") :
 											  _T("UPDATE node_links SET node_id=? WHERE nodelink_id=?"));
-	if (hStmt == NULL)	
+	if (hStmt == NULL)
 	{
 		unlockProperties();
 		return FALSE;
@@ -161,26 +161,23 @@ bool NodeLink::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void NodeLink::fillMessage(NXCPMessage *pMsg)
+void NodeLink::fillMessageInternal(NXCPMessage *pMsg)
 {
-	ServiceContainer::fillMessage(pMsg);
+	ServiceContainer::fillMessageInternal(pMsg);
 	pMsg->setField(VID_NODE_ID, m_nodeId);
 }
 
 /**
  * Modify object from message
  */
-UINT32 NodeLink::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NodeLink::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-	if (!bAlreadyLocked)
-		lockProperties();
-
 	if (pRequest->isFieldExist(VID_NODE_ID))
 	{
 		m_nodeId = pRequest->getFieldAsUInt32(VID_NODE_ID);
 	}
 
-	return ServiceContainer::modifyFromMessage(pRequest, TRUE);
+	return ServiceContainer::modifyFromMessageInternal(pRequest);
 }
 
 /**

@@ -30,7 +30,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
 import org.eclipse.ui.progress.IWorkbenchSiteProgressService;
-import org.netxms.api.client.NetXMSClientException;
+import org.netxms.client.NXCException;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
 
@@ -182,7 +182,7 @@ public abstract class ConsoleJob extends Job
 		display.syncExec(ch);
 		
 		return new Status(Status.ERROR, pluginId, 
-            (e instanceof NetXMSClientException) ? ((NetXMSClientException)e).getErrorCode() : 0,
+            (e instanceof NXCException) ? ((NXCException)e).getErrorCode() : 0,
             ch.message + ": " + e.getLocalizedMessage(), passException ? e : null); //$NON-NLS-1$
 	}
 

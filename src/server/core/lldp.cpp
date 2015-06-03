@@ -108,7 +108,7 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
 				ifName[len] = 0;
 			}
 #endif
-			ifc = node->findInterface(ifName);	/* TODO: find by cached ifName value */
+			ifc = node->findInterfaceByName(ifName);	/* TODO: find by cached ifName value */
 			if ((ifc == NULL) && !_tcsncmp(node->getObjectId(), _T(".1.3.6.1.4.1.1916.2"), 19))
 			{
 				// Hack for Extreme Networks switches
@@ -116,7 +116,7 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
 				memmove(&ifName[2], ifName, (_tcslen(ifName) + 1) * sizeof(TCHAR));
 				ifName[0] = _T('1');
 				ifName[1] = _T(':');
-				ifc = node->findInterface(ifName);
+				ifc = node->findInterfaceByName(ifName);
 			}
 			return ifc;
 		case 7:	// local identifier
@@ -125,9 +125,9 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
             if (node->isBridge())
                ifc = node->findBridgePort(port.portNumber);
             else
-               ifc = node->findInterface(port.portNumber, INADDR_ANY);
+               ifc = node->findInterfaceByIndex(port.portNumber);
             if (ifc == NULL)  // unable to find interface by bridge port number or interface index, try description
-               ifc = node->findInterface(port.ifDescr);	/* TODO: find by cached ifName value */
+               ifc = node->findInterfaceByName(port.ifDescr);	/* TODO: find by cached ifName value */
 			}
 			else
 			{
@@ -186,7 +186,7 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
             // Try to find remote interface by description
             TCHAR *ifDescr = pRespPDU->getVariable(3)->getValueAsString((TCHAR *)remoteIfId, 1024 / sizeof(TCHAR));
             if (ifDescr != NULL)
-               ifRemote = remoteNode->findInterface(ifDescr);
+               ifRemote = remoteNode->findInterfaceByName(ifDescr);
          }
 
 			LL_NEIGHBOR_INFO info;

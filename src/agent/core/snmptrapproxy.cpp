@@ -80,7 +80,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       InetAddress bindAddress = InetAddress::resolveHostName(g_szSNMPTrapListenAddress, AF_INET);
       if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
       {
-		   addr.sin_addr.s_addr = bindAddress.getAddressV4();
+		   addr.sin_addr.s_addr = htonl(bindAddress.getAddressV4());
       }
       else
       {

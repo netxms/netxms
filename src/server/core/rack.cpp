@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -115,22 +115,19 @@ bool Rack::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Rack::fillMessage(NXCPMessage *pMsg)
+void Rack::fillMessageInternal(NXCPMessage *pMsg)
 {
-   Container::fillMessage(pMsg);
+   Container::fillMessageInternal(pMsg);
    pMsg->setField(VID_HEIGHT, (WORD)m_height);
 }
 
 /**
  * Modify object from message
  */
-UINT32 Rack::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Rack::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
 	if (pRequest->isFieldExist(VID_HEIGHT))
 		m_height = (int)pRequest->getFieldAsUInt16(VID_HEIGHT);
 
-   return Container::modifyFromMessage(pRequest, TRUE);
+   return Container::modifyFromMessageInternal(pRequest);
 }

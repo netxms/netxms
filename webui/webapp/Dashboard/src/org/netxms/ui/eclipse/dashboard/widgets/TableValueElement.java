@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,15 +20,17 @@ package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableValueConfig;
 import org.netxms.ui.eclipse.perfview.widgets.TableValue;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
  * "Table value" element for dashboard
@@ -81,8 +83,7 @@ public class TableValueElement extends ElementWidget
 		viewer.setObject(config.getObjectId(), config.getDciId());	
 		viewer.refresh(null);
 		
-		final Display display = getDisplay();
-		final Runnable refreshTimer = new Runnable() {
+		final ViewRefreshController refreshController = new ViewRefreshController(viewPart, config.getRefreshRate(), new Runnable() {
 			@Override
 			public void run()
 			{
@@ -90,9 +91,15 @@ public class TableValueElement extends ElementWidget
 					return;
 				
 				viewer.refresh(null);
-				display.timerExec(config.getRefreshRate() * 1000, this);
 			}
-		};
-		display.timerExec(config.getRefreshRate() * 1000, refreshTimer);
+		});
+		
+		addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            refreshController.dispose();
+         }
+      });
 	}
 }

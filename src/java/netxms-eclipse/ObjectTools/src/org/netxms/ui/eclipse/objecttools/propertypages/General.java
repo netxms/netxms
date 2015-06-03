@@ -140,7 +140,7 @@ public class General extends PropertyPage
 				createOutputGroup(dialogArea);
 				break;
 			case ObjectTool.TYPE_ACTION:
-				textData.setLabel(Messages.get().General_AgentAction);
+				textData.setLabel(Messages.get().General_AgentCommand);
 				createOutputGroup(dialogArea);
 				break;
 			case ObjectTool.TYPE_URL:
@@ -192,7 +192,7 @@ public class General extends PropertyPage
 				textData.setLabel(Messages.get().General_Title);
 				
 				Group snmpOptGroup = new Group(dialogArea, SWT.NONE);
-				snmpOptGroup.setText(Messages.get().General_SNMPTableOptions);
+				snmpOptGroup.setText(Messages.get().General_SNMPListOptions);
 				gd = new GridData();
 				gd.horizontalAlignment = SWT.FILL;
 				gd.grabExcessHorizontalSpace = true;

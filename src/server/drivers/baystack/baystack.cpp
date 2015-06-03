@@ -134,7 +134,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 	// TODO: does it really needed?
    for(int i = 0; i < ifList->size(); i++)
    {
-		NX_INTERFACE_INFO *iface = ifList->get(i);
+		InterfaceInfo *iface = ifList->get(i);
 
 		const TCHAR *ptr;
       if ((ptr = _tcsstr(iface->name, _T("- Port"))) != NULL)
@@ -192,26 +192,24 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 
 			// Add management virtual interface if management IP is missing in interface list
 			for(i = 0; i < ifList->size(); i++)
-				if (ifList->get(i)->ipAddr == mgmtIpAddr)
+         {
+            if (ifList->get(i)->hasAddress(mgmtIpAddr))
 					break;
+         }
 			if (i == ifList->size())
 			{
-				NX_INTERFACE_INFO iface;
-
-				memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
-				iface.ipAddr = mgmtIpAddr;
-				iface.ipNetMask = mgmtNetMask;
-            iface.type = IFTYPE_OTHER;
-				_tcscpy(iface.name, _T("MGMT"));
-				memcpy(iface.macAddr, baseMacAddr, MAC_ADDR_LENGTH);
-				ifList->add(&iface);
+            InterfaceInfo *iface = new InterfaceInfo(0);
+            iface->ipAddrList.add(InetAddress(mgmtIpAddr, mgmtNetMask));
+				_tcscpy(iface->name, _T("MGMT"));
+				memcpy(iface->macAddr, baseMacAddr, MAC_ADDR_LENGTH);
+				ifList->add(iface);
 			}
 		}
 
 		// Update wrongly reported MAC addresses
 		for(int i = 0; i < ifList->size(); i++)
 		{
-			NX_INTERFACE_INFO *curr = ifList->get(i);
+			InterfaceInfo *curr = ifList->get(i);
 			if ((curr->slot != 0) &&
 				 (!memcmp(curr->macAddr, "\x00\x00\x00\x00\x00\x00", MAC_ADDR_LENGTH) ||
 			     !memcmp(curr->macAddr, baseMacAddr, MAC_ADDR_LENGTH)))

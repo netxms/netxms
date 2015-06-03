@@ -207,7 +207,13 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 	         _tprintf(help_text);
 	         return FALSE;
 			case 'v':
-				_tprintf(_T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING IS_UNICODE_BUILD_STRING _T("\n"));
+            {
+				   _tprintf(_T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING IS_UNICODE_BUILD_STRING _T("\n"));
+               String ciphers = NXCPGetSupportedCiphersAsText();
+               _tprintf(_T("NXCP: %d.%d.%d.%d (%s)\n"), 
+                  NXCP_VERSION, CLIENT_PROTOCOL_VERSION_BASE, CLIENT_PROTOCOL_VERSION_MOBILE, CLIENT_PROTOCOL_VERSION_FULL,
+                  ciphers.isEmpty() ? _T("NO ENCRYPTION") : ciphers.getBuffer());
+            }
 				return FALSE;
 			case 'c':
 #ifdef UNICODE

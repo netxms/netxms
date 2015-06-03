@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
+import org.netxms.client.constants.NodePollType;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
@@ -58,7 +59,16 @@ public class NodePollerView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.objectmanager.views.NodePollerView"; //$NON-NLS-1$
 	
-	private static final String[] POLL_NAME = { "", Messages.get().NodePollerView_StatusPoll, Messages.get().NodePollerView_ConfigPoll, Messages.get().NodePollerView_InterfacePoll, Messages.get().NodePollerView_TopologyPoll }; //$NON-NLS-1$
+	private static final String[] POLL_NAME = 
+	   { 
+	      "", //$NON-NLS-1$ 
+	      Messages.get().NodePollerView_StatusPoll, 
+	      "Configuration Poll (Full)", 
+	      Messages.get().NodePollerView_InterfacePoll, 
+	      Messages.get().NodePollerView_TopologyPoll,
+         Messages.get().NodePollerView_ConfigPoll,
+         "Instance Discovery"
+	   };
 	private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
 	private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);
 	private static final Color COLOR_INFO = new Color(Display.getCurrent(), 0, 128, 0);
@@ -66,7 +76,7 @@ public class NodePollerView extends ViewPart
 	
 	private NXCSession session;
 	private AbstractNode node;
-	private int pollType;
+	private NodePollType pollType;
 	private StyledText textArea;
 	private boolean pollActive = false;
 	private Action actionRestart;
@@ -91,9 +101,9 @@ public class NodePollerView extends ViewPart
 		node = ((obj != null) && (obj instanceof AbstractNode)) ? (AbstractNode)obj : null;
 		if (node == null)
 			throw new PartInitException(Messages.get().NodePollerView_InvalidObjectID);
-		pollType = Integer.parseInt(parts[1]);
+		pollType = NodePollType.valueOf(parts[1]);
 		
-		setPartName(POLL_NAME[pollType] + " - " + node.getObjectName()); //$NON-NLS-1$
+		setPartName(POLL_NAME[pollType.getValue()] + " - " + node.getObjectName()); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)

@@ -212,6 +212,20 @@ public class NXCPMessageField
       realValue = (double)0;
 	}
 
+   /**
+    * @param varId
+    * @param value
+    */
+   public NXCPMessageField(final long varId, final InetAddressEx value)
+   {
+      id = varId;
+      type = TYPE_INETADDR;
+      inetAddressValue = value;
+      stringValue = inetAddressValue.toString();
+      integerValue = (long)0;
+      realValue = (double)0;
+   }
+
 	/**
 	 * @param varId
 	 * @param value

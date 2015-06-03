@@ -157,9 +157,14 @@ Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, c
                _sntprintf(buffer, 16, _T("0x%08X"), va_arg(args, UINT32));
 					m_parameters.add(buffer);
                break;
-            case 'a':
+            case 'a':   // IPv4 address
                buffer = (TCHAR *)malloc(16 * sizeof(TCHAR));
                IpToStr(va_arg(args, UINT32), buffer);
+					m_parameters.add(buffer);
+               break;
+            case 'A':   // InetAddress object
+               buffer = (TCHAR *)malloc(64 * sizeof(TCHAR));
+               va_arg(args, InetAddress *)->toString(buffer);
 					m_parameters.add(buffer);
                break;
             case 'h':
@@ -266,9 +271,9 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                   dwPos += (UINT32)_tcslen(pObject->getName());
                   break;
                case 'a':   // IP address of event source
-                  dwSize += 16;
+                  dwSize += 64;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  IpToStr(pObject->IpAddr(), &pText[dwPos]);
+                  GetObjectIpAddress(pObject).toString(&pText[dwPos]);
                   dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'g':   // Source object's GUID
@@ -846,7 +851,8 @@ static EVENT_TEMPLATE *FindEventTemplate(UINT32 eventCode)
  *        d - Decimal integer
  *        D - 64-bit decimal integer
  *        x - Hex integer
- *        a - IP address
+ *        a - IPv4 address
+ *        A - InetAddress object
  *        h - MAC (hardware) address
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
@@ -878,6 +884,11 @@ static BOOL RealPostEvent(Queue *queue, UINT32 eventCode, UINT32 sourceId,
    }
 
    RWLockUnlock(m_rwlockTemplateAccess);
+
+   if (pEventTemplate == NULL)
+   {
+      DbgPrintf(3, _T("RealPostEvent: event with code %d not defined"), eventCode);
+   }
    return bResult;
 }
 
@@ -894,7 +905,8 @@ static BOOL RealPostEvent(Queue *queue, UINT32 eventCode, UINT32 sourceId,
  *        d - Decimal integer
  *        D - 64-bit decimal integer
  *        x - Hex integer
- *        a - IP address
+ *        a - IPv4 address
+ *        A - InetAddress object
  *        h - MAC (hardware) address
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
@@ -923,7 +935,8 @@ BOOL NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *
  *        d - Decimal integer
  *        D - 64-bit decimal integer
  *        x - Hex integer
- *        a - IP address
+ *        a - IPv4 address
+ *        A - InetAddress object
  *        h - MAC (hardware) address
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
@@ -952,7 +965,8 @@ BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, con
  *        d - Decimal integer
  *        D - 64-bit decimal integer
  *        x - Hex integer
- *        a - IP address
+ *        a - IPv4 address
+ *        A - InetAddress object
  *        h - MAC (hardware) address
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
@@ -1013,7 +1027,8 @@ BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, Str
  *        d - Decimal integer
  *        D - 64-bit decimal integer
  *        x - Hex integer
- *        a - IP address
+ *        a - IPv4 address
+ *        A - InetAddress object
  *        h - MAC (hardware) address
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
@@ -1044,7 +1059,8 @@ BOOL NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const
  *        d - Decimal integer
  *        D - 64-bit decimal integer
  *        x - Hex integer
- *        a - IP address
+ *        a - IPv4 address
+ *        A - InetAddress object
  *        h - MAC (hardware) address
  *        i - Object ID
  */

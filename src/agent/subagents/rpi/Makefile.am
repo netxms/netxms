@@ -3,7 +3,7 @@ SUBAGENT = rpi
 pkglib_LTLIBRARIES = rpi.la
 rpi_la_SOURCES = htsensor.cpp rpi.cpp
 rpi_la_CPPFLAGS=-I@top_srcdir@/include
-rpi_la_LDFLAGS = -module -avoid-version
+rpi_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 rpi_la_LIBADD = ../../../libnetxms/libnetxms.la -lbcm2835
 
 if !STATIC_BUILD

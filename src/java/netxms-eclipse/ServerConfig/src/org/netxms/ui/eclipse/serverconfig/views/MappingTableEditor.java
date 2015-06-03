@@ -45,9 +45,9 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.Session;
-import org.netxms.api.client.mt.MappingTable;
-import org.netxms.api.client.mt.MappingTableEntry;
+import org.netxms.client.NXCSession;
+import org.netxms.client.mt.MappingTable;
+import org.netxms.client.mt.MappingTableEntry;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -72,7 +72,7 @@ public class MappingTableEditor extends ViewPart implements ISaveablePart2
 	
 	private int mappingTableId;
 	private MappingTable mappingTable;
-	private Session session;
+	private NXCSession session;
 	private SortableTableViewer viewer;
 	private boolean modified = false;
 	private Action actionNewRow;

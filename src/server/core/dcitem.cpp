@@ -1758,21 +1758,24 @@ static bool FilterCallback(const TCHAR *key, const void *value, void *data)
    NXSL_VM *instanceFilter = ((FilterCallbackData *)data)->instanceFilter;
    DCItem *dci = ((FilterCallbackData *)data)->dci;
 
-   NXSL_Value *pValue = new NXSL_Value(key);
    instanceFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, dci->getNode())));
    instanceFilter->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci)));
 
-   if (instanceFilter->run(1, &pValue))
+   NXSL_Value *argv[2];
+   argv[0] = new NXSL_Value(key);
+   argv[1] = new NXSL_Value((const TCHAR *)value);
+
+   if (instanceFilter->run(2, argv))
    {
       bool accepted;
       const TCHAR *instance = key;
       const TCHAR *name = (const TCHAR *)value;
-      pValue = instanceFilter->getResult();
-      if (pValue != NULL)
+      NXSL_Value *result = instanceFilter->getResult();
+      if (result != NULL)
       {
-         if (pValue->isArray())
+         if (result->isArray())
          {
-            NXSL_Array *array = pValue->getValueAsArray();
+            NXSL_Array *array = result->getValueAsArray();
             if (array->size() > 0)
             {
                accepted = array->get(0)->getValueAsInt32() ? true : false;
@@ -1807,7 +1810,7 @@ static bool FilterCallback(const TCHAR *key, const void *value, void *data)
          }
          else
          {
-            accepted = pValue->getValueAsInt32() ? true : false;
+            accepted = result->getValueAsInt32() ? true : false;
          }
       }
       else

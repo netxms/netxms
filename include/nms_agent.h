@@ -124,6 +124,7 @@
 #define DCIDESC_FS_FREE                           _T("Free space on file system {instance}")
 #define DCIDESC_FS_FREEPERC                       _T("Percentage of free space on file system {instance}")
 #define DCIDESC_FS_TOTAL                          _T("Total space on file system {instance}")
+#define DCIDESC_FS_TYPE                           _T("Type of file system {instance}")
 #define DCIDESC_FS_USED                           _T("Used space on file system {instance}")
 #define DCIDESC_FS_USEDPERC                       _T("Percentage of used space on file system {instance}")
 #define DCIDESC_NET_INTERFACE_64BITCOUNTERS       _T("Is 64bit interface counters supported")
@@ -141,6 +142,8 @@
 #define DCIDESC_NET_INTERFACE_SPEED               _T("Speed of interface {instance}")
 #define DCIDESC_NET_IP_FORWARDING                 _T("IP forwarding status")
 #define DCIDESC_NET_IP6_FORWARDING                _T("IPv6 forwarding status")
+#define DCIDESC_NET_RESOLVER_ADDRBYNAME           _T("Resolver: address for name {instance}")
+#define DCIDESC_NET_RESOLVER_NAMEBYADDR           _T("Resolver: name for address {instance}")
 #define DCIDESC_PHYSICALDISK_FIRMWARE             _T("Firmware version of hard disk {instance}")
 #define DCIDESC_PHYSICALDISK_MODEL                _T("Model of hard disk {instance}")
 #define DCIDESC_PHYSICALDISK_SERIALNUMBER         _T("Serial number of hard disk {instance}")
@@ -364,6 +367,8 @@ public:
    virtual bool isMasterServer() = 0;
    virtual bool isControlServer() = 0;
    virtual const InetAddress& getServerAddress() = 0;
+
+   virtual bool isIPv6Aware() = 0;
 
    virtual void sendMessage(NXCPMessage *pMsg) = 0;
    virtual void sendRawMessage(NXCP_MESSAGE *pMsg) = 0;

@@ -47,6 +47,7 @@ extern UINT32 g_dwConfigurationPollingInterval;
 extern UINT32 g_dwRoutingTableUpdateInterval;
 extern UINT32 g_dwTopologyPollingInterval;
 extern UINT32 g_dwConditionPollingInterval;
+extern UINT32 g_instancePollingInterval;
 
 /**
  * Utility functions used by inline methods
@@ -83,22 +84,23 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 /**
  * Node runtime (dynamic) flags
  */
-#define NDF_QUEUED_FOR_STATUS_POLL     0x0001
-#define NDF_QUEUED_FOR_CONFIG_POLL     0x0002
-#define NDF_UNREACHABLE                0x0004
-#define NDF_AGENT_UNREACHABLE          0x0008
-#define NDF_SNMP_UNREACHABLE           0x0010
-#define NDF_QUEUED_FOR_DISCOVERY_POLL  0x0020
-#define NDF_FORCE_STATUS_POLL          0x0040
-#define NDF_FORCE_CONFIGURATION_POLL   0x0080
-#define NDF_QUEUED_FOR_ROUTE_POLL      0x0100
-#define NDF_CPSNMP_UNREACHABLE         0x0200
-#define NDF_RECHECK_CAPABILITIES       0x0400
-#define NDF_POLLING_DISABLED           0x0800
-#define NDF_CONFIGURATION_POLL_PASSED  0x1000
-#define NDF_QUEUED_FOR_TOPOLOGY_POLL   0x2000
-#define NDF_DELETE_IN_PROGRESS         0x4000
-#define NDF_NETWORK_PATH_PROBLEM       0x8000
+#define NDF_QUEUED_FOR_STATUS_POLL     0x000001
+#define NDF_QUEUED_FOR_CONFIG_POLL     0x000002
+#define NDF_UNREACHABLE                0x000004
+#define NDF_AGENT_UNREACHABLE          0x000008
+#define NDF_SNMP_UNREACHABLE           0x000010
+#define NDF_QUEUED_FOR_DISCOVERY_POLL  0x000020
+#define NDF_FORCE_STATUS_POLL          0x000040
+#define NDF_FORCE_CONFIGURATION_POLL   0x000080
+#define NDF_QUEUED_FOR_ROUTE_POLL      0x000100
+#define NDF_CPSNMP_UNREACHABLE         0x000200
+#define NDF_RECHECK_CAPABILITIES       0x000400
+#define NDF_POLLING_DISABLED           0x000800
+#define NDF_CONFIGURATION_POLL_PASSED  0x001000
+#define NDF_QUEUED_FOR_TOPOLOGY_POLL   0x002000
+#define NDF_DELETE_IN_PROGRESS         0x004000
+#define NDF_NETWORK_PATH_PROBLEM       0x008000
+#define NDF_QUEUED_FOR_INSTANCE_POLL   0x010000
 
 #define NDF_PERSISTENT (NDF_UNREACHABLE | NDF_NETWORK_PATH_PROBLEM | NDF_AGENT_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_CPSNMP_UNREACHABLE)
 
@@ -178,6 +180,34 @@ public:
 	ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *userData = NULL);
 
 	void forEach(void (*callback)(NetObj *, void *), void *data);
+};
+
+struct InetAddressIndexEntry;
+
+/**
+ * Object index by IP address
+ */
+class NXCORE_EXPORTABLE InetAddressIndex
+{
+private:
+   InetAddressIndexEntry *m_root;
+	RWLOCK m_lock;
+
+public:
+   InetAddressIndex();
+   ~InetAddressIndex();
+
+	bool put(const InetAddress& addr, NetObj *object);
+	bool put(const InetAddressList *addrList, NetObj *object);
+	void remove(const InetAddress& addr);
+	void remove(const InetAddressList *addrList);
+	NetObj *get(const InetAddress& addr);
+	NetObj *find(bool (*comparator)(NetObj *, void *), void *data);
+
+	int size();
+	ObjectArray<NetObj> *getObjects(bool updateRefCount, bool (*filter)(NetObj *, void *) = NULL, void *userData = NULL);
+
+	void forEach(void (*callback)(const InetAddress&, NetObj *, void *), void *data);
 };
 
 /**
@@ -274,6 +304,8 @@ public:
 
    SummaryTableColumn(NXCPMessage *msg, UINT32 baseId);
    SummaryTableColumn(TCHAR *configStr);
+
+   void createExportRecord(String &xml, int id);
 };
 
 /**
@@ -282,18 +314,22 @@ public:
 class NXCORE_EXPORTABLE SummaryTable
 {
 private:
+   INT32 m_id;
+   uuid_t m_guid;
    TCHAR m_title[MAX_DB_STRING];
    UINT32 m_flags;
    ObjectArray<SummaryTableColumn> *m_columns;
+   TCHAR *m_filterSource;
    NXSL_VM *m_filter;
    AggregationFunction m_aggregationFunction;
    time_t m_periodStart;
    time_t m_periodEnd;
+   TCHAR m_menuPath[MAX_DB_STRING];
 
-   SummaryTable(DB_RESULT hResult);
+   SummaryTable(INT32 id, DB_RESULT hResult);
 
 public:
-   static SummaryTable *loadFromDB(LONG id, UINT32 *rcc);
+   static SummaryTable *loadFromDB(INT32 id, UINT32 *rcc);
 
    SummaryTable(NXCPMessage *msg);
    ~SummaryTable();
@@ -307,6 +343,8 @@ public:
    time_t getPeriodStart() { return m_periodStart; }
    time_t getPeriodEnd() { return m_periodEnd; }
    bool isMultiInstance() { return (m_flags & SUMMARY_TABLE_MULTI_INSTANCE) ? true : false; }
+
+   void createExportRecord(String &xml);
 };
 
 /**
@@ -343,7 +381,6 @@ protected:
    MUTEX m_mutexRefCount;     // Reference counter access mutex
    RWLOCK m_rwlockParentList; // Lock for parent list
    RWLOCK m_rwlockChildList;  // Lock for child list
-   UINT32 m_dwIpAddr;
 	GeoLocation m_geoLocation;
    PostalAddress *m_postalAddress;
    ClientSession *m_pollRequestor;
@@ -396,10 +433,12 @@ protected:
 	bool saveTrustedNodes(DB_HANDLE hdb);
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_id, query); }
 
-   void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);
-
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
+   
+   virtual void fillMessageInternal(NXCPMessage *msg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *msg);
+
    void addLocationToHistory();
    bool isLocationTableExists();
    bool createLocationHistoryTable(DB_HANDLE hdb);
@@ -410,7 +449,6 @@ public:
 
    virtual int getObjectClass() { return OBJECT_GENERIC; }
 
-   UINT32 IpAddr() { return m_dwIpAddr; }
    UINT32 getId() { return m_id; }
    const TCHAR *getName() { return m_name; }
    int Status() { return m_iStatus; }
@@ -459,14 +497,15 @@ public:
    void resetStatus() { m_iStatus = STATUS_UNKNOWN; setModified(); }
    void setComments(TCHAR *text);	/* text must be dynamically allocated */
 
-   virtual void setMgmtStatus(BOOL bIsManaged);
-   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   void fillMessage(NXCPMessage *msg);
+   UINT32 modifyFromMessage(NXCPMessage *msg);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 	virtual void postModify();
 
    void commentsToMessage(NXCPMessage *pMsg);
+
+   virtual void setMgmtStatus(BOOL bIsManaged);
+   virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    UINT32 getUserRights(UINT32 dwUserId);
    BOOL checkAccessRights(UINT32 dwUserId, UINT32 dwRequiredRights);
@@ -487,6 +526,8 @@ public:
 	ObjectArray<NetObj> *getChildList(int typeFilter);
 	ObjectArray<NetObj> *getFullChildList(bool eventSourceOnly, bool updateRefCount);
 
+   NetObj *findChildObject(const TCHAR *name, int typeFilter);
+
    int getChildCount() { return (int)m_dwChildCount; }
    int getParentCount() { return (int)m_dwParentCount; }
 
@@ -498,6 +539,8 @@ public:
 
    void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
+
+   void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...);
 
    // Debug methods
    const TCHAR *dbgGetParentList(TCHAR *szBuffer);
@@ -556,6 +599,9 @@ protected:
 
    virtual void prepareForDeletion();
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
    void loadItemsFromDB();
    void destroyItems();
    void updateInstanceDiscoveryItems(DCItem *dci);
@@ -577,9 +623,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
@@ -604,6 +647,7 @@ public:
    void sendItemsToClient(ClientSession *pSession, UINT32 dwRqId);
    BOOL isLockedBySession(int sessionId) { return m_dciLockStatus == sessionId; }
    UINT32 *getDCIEventsList(UINT32 *pdwCount);
+   StringSet *getDCIScriptList();
 
    BOOL applyToTarget(DataCollectionTarget *pNode);
 	bool isApplicable(Node *node);
@@ -621,20 +665,22 @@ public:
    UINT32 getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool includeNoValueObjects);
 };
 
+class Cluster;
+
 /**
  * Interface class
  */
 class NXCORE_EXPORTABLE Interface : public NetObj
 {
 protected:
+   UINT32 m_index;
+   BYTE m_macAddr[MAC_ADDR_LENGTH];
+   InetAddressList m_ipAddressList;
 	UINT32 m_flags;
 	TCHAR m_description[MAX_DB_STRING];	// Interface description - value of ifDescr for SNMP, equals to name for NetXMS agent
 	TCHAR m_alias[MAX_DB_STRING];	// Interface alias - value of ifAlias for SNMP, empty for NetXMS agent
-   UINT32 m_index;
    UINT32 m_type;
    UINT32 m_mtu;
-   UINT32 m_ipNetMask;
-   BYTE m_macAddr[MAC_ADDR_LENGTH];
 	UINT32 m_bridgePortNumber;		// 802.1D port number
 	UINT32 m_slotNumber;				// Vendor/device specific slot number
 	UINT32 m_portNumber;				// Vendor/device specific port number
@@ -653,15 +699,19 @@ protected:
    UINT32 m_pingTime;
    time_t m_pingLastTimeStamp;
 
-	void paeStatusPoll(ClientSession *pSession, UINT32 dwRqId, SNMP_Transport *pTransport, Node *node);
+   void icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
+	void paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *node);
 
 protected:
    virtual void onObjectDelete(UINT32 dwObjectId);
 
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    Interface();
-   Interface(UINT32 dwAddr, UINT32 dwNetMask, UINT32 zoneId, bool bSyntheticMask);
-   Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, UINT32 ipAddr, UINT32 ipNetMask, UINT32 ifType, UINT32 zoneId);
+   Interface(const InetAddressList& addrList, UINT32 zoneId, bool bSyntheticMask);
+   Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, UINT32 zoneId);
    virtual ~Interface();
 
    virtual int getObjectClass() { return OBJECT_INTERFACE; }
@@ -672,8 +722,9 @@ public:
    Node *getParentNode();
    UINT32 getParentNodeId();
 
+   const InetAddressList *getIpAddressList() { return &m_ipAddressList; }
+   const InetAddress& getFirstIpAddress();
    UINT32 getZoneId() { return m_zoneId; }
-   UINT32 getIpNetMask() { return m_ipNetMask; }
    UINT32 getIfIndex() { return m_index; }
    UINT32 getIfType() { return m_type; }
    UINT32 getMTU() { return m_mtu; }
@@ -706,8 +757,7 @@ public:
    void setLastDownEventId(QWORD id) { m_lastDownEventId = id; }
 
    void setMacAddr(const BYTE *pbNewMac);
-   void setIpAddr(UINT32 dwNewAddr);
-   void setIpNetMask(UINT32 dwNewMask);
+   void setIpAddress(const InetAddress& addr);
    void setBridgePortNumber(UINT32 bpn) { m_bridgePortNumber = bpn; setModified(); }
    void setSlotNumber(UINT32 slot) { m_slotNumber = slot; setModified(); }
    void setPortNumber(UINT32 port) { m_portNumber = port; setModified(); }
@@ -717,13 +767,14 @@ public:
    void clearPeer() { lockProperties(); m_peerNodeId = 0; m_peerInterfaceId = 0; m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN; setModified(); unlockProperties(); }
    void setDescription(const TCHAR *descr) { lockProperties(); nx_strncpy(m_description, descr, MAX_DB_STRING); setModified(); unlockProperties(); }
    void setAlias(const TCHAR *alias) { lockProperties(); nx_strncpy(m_alias, alias, MAX_DB_STRING); setModified(); unlockProperties(); }
+   void addIpAddress(const InetAddress& addr);
+   void deleteIpAddress(InetAddress addr);
+   void setNetMask(const InetAddress& addr);
+	void setMTU(int mtu) { m_mtu = mtu; setModified(); }
 
 	void updateZoneId();
 
-   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, bool clusterSync, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy);
-
-	virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy);
 
    UINT32 wakeUp();
 	void setExpectedState(int state);
@@ -742,6 +793,7 @@ protected:
                          // If 0, m_pHostNode->m_dwPollerNode will be used
    UINT16 m_proto;        // Protocol (TCP, UDP, etc.)
    UINT16 m_port;         // TCP or UDP port number
+   InetAddress m_ipAddress;
    TCHAR *m_request;  // Service-specific request
    TCHAR *m_response; // Service-specific expected response
 	int m_pendingStatus;
@@ -750,6 +802,9 @@ protected:
    UINT32 m_responseTime;  // Response time from last poll
 
    virtual void onObjectDelete(UINT32 dwObjectId);
+
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
    NetworkService();
@@ -766,9 +821,6 @@ public:
 
    void statusPoll(ClientSession *session, UINT32 rqId, Node *pollerNode, Queue *eventQueue);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
    UINT32 getResponseTime() { return m_responseTime; }
 };
 
@@ -779,10 +831,11 @@ class NXCORE_EXPORTABLE VPNConnector : public NetObj
 {
 protected:
    UINT32 m_dwPeerGateway;        // Object ID of peer gateway
-   UINT32 m_dwNumLocalNets;
-   IP_NETWORK *m_pLocalNetList;
-   UINT32 m_dwNumRemoteNets;
-   IP_NETWORK *m_pRemoteNetList;
+   ObjectArray<InetAddress> *m_localNetworks;
+   ObjectArray<InetAddress> *m_remoteNetworks;
+
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
    Node *getParentNode();
 
@@ -797,13 +850,10 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
-   BOOL isLocalAddr(UINT32 dwIpAddr);
-   BOOL isRemoteAddr(UINT32 dwIpAddr);
+   bool isLocalAddr(const InetAddress& addr);
+   bool isRemoteAddr(const InetAddress& addr);
    UINT32 getPeerGatewayId() { return m_dwPeerGateway; }
-   UINT32 getPeerGatewayAddr();
+   InetAddress getPeerGatewayAddr();
 };
 
 /**
@@ -814,6 +864,9 @@ class NXCORE_EXPORTABLE DataCollectionTarget : public Template
 protected:
    UINT32 m_pingTime;
    time_t m_pingLastTimeStamp;
+
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 	virtual bool isDataCollectionDisabled();
    virtual void updatePingData();
@@ -827,9 +880,6 @@ public:
 
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
@@ -841,7 +891,7 @@ public:
    void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
 
    void updateDciCache();
-   void cleanDCIData();
+   void cleanDCIData(DB_HANDLE hdb);
    void queueItemsForPolling(Queue *pPollerQueue);
 	bool processNewDCValue(DCObject *dco, time_t currTime, const void *value);
 
@@ -871,6 +921,10 @@ protected:
 	TCHAR *m_osVersion;
 	TCHAR *m_userId;
 	LONG m_batteryLevel;
+   InetAddress m_ipAddress;
+
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
    MobileDevice();
@@ -882,9 +936,6 @@ public:
    virtual BOOL loadFromDatabase(UINT32 dwId);
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-
-	virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
@@ -902,6 +953,8 @@ public:
 class NXCORE_EXPORTABLE AccessPoint : public DataCollectionTarget
 {
 protected:
+   UINT32 m_index;
+   InetAddress m_ipAddress;
 	UINT32 m_nodeId;
 	BYTE m_macAddr[MAC_ADDR_LENGTH];
 	TCHAR *m_vendor;
@@ -911,11 +964,14 @@ protected:
    AccessPointState m_state;
    AccessPointState m_prevState;
 
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
    virtual void updatePingData();
 
 public:
    AccessPoint();
-   AccessPoint(const TCHAR *name, BYTE *macAddr);
+   AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr);
    virtual ~AccessPoint();
 
    virtual int getObjectClass() { return OBJECT_ACCESSPOINT; }
@@ -924,22 +980,20 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
-	virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
+   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller, SNMP_Transport *snmpTransport);
 
-   void statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Node *controller);
-
-	BYTE *getMacAddr() { return m_macAddr; }
+   UINT32 getIndex() { return m_index; }
+	const BYTE *getMacAddr() { return m_macAddr; }
+   const InetAddress& getIpAddress() { return m_ipAddress; }
 	bool isMyRadio(int rfIndex);
 	bool isMyRadio(const BYTE *macAddr);
 	void getRadioName(int rfIndex, TCHAR *buffer, size_t bufSize);
    AccessPointState getState() { return m_state; }
    Node *getParentNode();
 
-   void setIpAddr(UINT32 ipAddr) { lockProperties(); m_dwIpAddr = ipAddr; setModified(); unlockProperties(); }
-
 	void attachToNode(UINT32 nodeId);
-	void updateRadioInterfaces(ObjectArray<RadioInterfaceInfo> *ri);
+   void setIpAddress(const InetAddress& addr) { lockProperties(); m_ipAddress = addr; setModified(); unlockProperties(); }
+	void updateRadioInterfaces(const ObjectArray<RadioInterfaceInfo> *ri);
 	void updateInfo(const TCHAR *vendor, const TCHAR *model, const TCHAR *serialNumber);
    void updateState(AccessPointState state);
 };
@@ -951,13 +1005,15 @@ class NXCORE_EXPORTABLE Cluster : public DataCollectionTarget
 {
 protected:
 	UINT32 m_dwClusterType;
-   UINT32 m_dwNumSyncNets;
-   IP_NETWORK *m_pSyncNetList;
+   ObjectArray<InetAddress> *m_syncNetworks;
 	UINT32 m_dwNumResources;
 	CLUSTER_RESOURCE *m_pResourceList;
 	UINT32 m_dwFlags;
 	time_t m_tmLastPoll;
 	UINT32 m_zoneId;
+
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
 	Cluster();
@@ -969,13 +1025,10 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
-	bool isSyncAddr(UINT32 dwAddr);
-	bool isVirtualAddr(UINT32 dwAddr);
+	bool isSyncAddr(const InetAddress& addr);
+	bool isVirtualAddr(const InetAddress& addr);
 	bool isResourceOnNode(UINT32 dwResource, UINT32 dwNode);
    UINT32 getZoneId() { return m_zoneId; }
 
@@ -1003,6 +1056,7 @@ class NXCORE_EXPORTABLE Node : public DataCollectionTarget
 	friend class Subnet;
 
 protected:
+   InetAddress m_ipAddress;
 	TCHAR m_primaryName[MAX_DNS_NAME];
    UINT32 m_dwFlags;
    UINT32 m_dwDynamicFlags;       // Flags used at runtime by server
@@ -1032,6 +1086,7 @@ protected:
    time_t m_lastDiscoveryPoll;
    time_t m_lastStatusPoll;
    time_t m_lastConfigurationPoll;
+	time_t m_lastInstancePoll;
 	time_t m_lastTopologyPoll;
    time_t m_lastRTUpdate;
    time_t m_failTimeSNMP;
@@ -1087,12 +1142,12 @@ protected:
 	void addVrrpInterfaces(InterfaceList *ifList);
 	BOOL resolveName(BOOL useOnlyDNS);
    void setAgentProxy(AgentConnection *pConn);
-	void setPrimaryIPAddress(UINT32 addr);
+	void setPrimaryIPAddress(const InetAddress& addr);
 
    UINT32 getInterfaceCount(Interface **ppInterface);
 
    void checkInterfaceNames(InterfaceList *pIfList);
-   Subnet *createSubnet(DWORD ipAddr, DWORD netMask, bool syntheticMask);
+   Subnet *createSubnet(const InetAddress& baseAddr, bool syntheticMask);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 	void updatePrimaryIpAddr();
 	bool confPollAgent(UINT32 dwRqId);
@@ -1104,12 +1159,13 @@ protected:
 	bool checkNetworkPathElement(UINT32 nodeId, const TCHAR *nodeType, bool isProxy, UINT32 dwRqId);
 
 	void applyUserTemplates();
-	void doInstanceDiscovery();
+	void doInstanceDiscovery(UINT32 requestId);
 	StringMap *getInstanceList(DCItem *dci);
-	void updateInstances(DCItem *root, StringMap *instances);
+	void updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
 
 	void updateContainerMembership();
-	BOOL updateInterfaceConfiguration(UINT32 dwRqId, UINT32 dwNetMask);
+	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
+   bool deleteDuplicateInterfaces(UINT32 rqid); 
 
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 
@@ -1118,11 +1174,14 @@ protected:
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
    virtual void updatePingData();
 
 public:
    Node();
-   Node(UINT32 dwAddr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone);
+   Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone);
    virtual ~Node();
 
    virtual int getObjectClass() { return OBJECT_NODE; }
@@ -1136,6 +1195,7 @@ public:
 
 	Cluster *getMyCluster();
 
+   const InetAddress& getIpAddress() { return m_ipAddress; }
    UINT32 getZoneId() { return m_zoneId; }
    UINT32 getFlags() { return m_dwFlags; }
    UINT32 getRuntimeFlags() { return m_dwDynamicFlags; }
@@ -1171,58 +1231,62 @@ public:
 	time_t getDownTime() const { return m_downSince; }
 
    void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
-   Interface *createNewInterface(NX_INTERFACE_INFO *ifInfo, bool manuallyCreated);
-   Interface *createNewInterface(UINT32 ipAddr, UINT32 ipNetMask, BYTE *macAddr);
-   void deleteInterface(Interface *pInterface);
+   Interface *createNewInterface(InterfaceInfo *ifInfo, bool manuallyCreated);
+   Interface *createNewInterface(const InetAddress& ipAddr, BYTE *macAddr);
+   void deleteInterface(Interface *iface);
 
 	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }
 	void setAgentPort(WORD port) { m_agentPort = port; }
 	void setSnmpPort(WORD port) { m_wSNMPPort = port; }
-   void changeIPAddress(UINT32 dwIpAddr);
+   void changeIPAddress(const InetAddress& ipAddr);
 	void changeZone(UINT32 newZone);
 
    ARP_CACHE *getArpCache();
    InterfaceList *getInterfaceList();
-   Interface *findInterface(UINT32 dwIndex, UINT32 dwHostAddr);
-   Interface *findInterface(const TCHAR *name);
+   Interface *findInterfaceByIndex(UINT32 ifIndex);
+   Interface *findInterfaceByName(const TCHAR *name);
 	Interface *findInterfaceByMAC(const BYTE *macAddr);
-	Interface *findInterfaceByIP(UINT32 ipAddr);
+	Interface *findInterfaceByIP(const InetAddress& addr);
 	Interface *findInterfaceBySlotAndPort(UINT32 slot, UINT32 port);
 	Interface *findBridgePort(UINT32 bridgePortNumber);
    AccessPoint *findAccessPointByMAC(const BYTE *macAddr);
    AccessPoint *findAccessPointByBSSID(const BYTE *bssid);
    AccessPoint *findAccessPointByRadioId(int rfIndex);
    ObjectArray<WirelessStationInfo> *getWirelessStations();
-	BOOL isMyIP(UINT32 dwIpAddr);
-   void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, int *adminState, int *operState);
-   void getInterfaceStatusFromAgent(UINT32 dwIndex, int *adminState, int *operState);
+	bool isMyIP(const InetAddress& addr);
+   void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
+   void getInterfaceStatusFromAgent(UINT32 dwIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
    ROUTING_TABLE *getRoutingTable();
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }
 	LinkLayerNeighbors *getLinkLayerNeighbors();
 	VlanList *getVlans();
-   bool getNextHop(UINT32 srcAddr, UINT32 destAddr, UINT32 *nextHop, UINT32 *ifIndex, bool *isVpn, TCHAR *name);
-   bool getOutwardInterface(UINT32 destAddr, UINT32 *srcAddr, UINT32 *srcIfIndex);
+   bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, UINT32 *ifIndex, bool *isVpn, TCHAR *name);
+   bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, UINT32 *srcIfIndex);
 	ComponentTree *getComponents();
    bool getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
 
 	void setRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
    void setDiscoveryPollTimeStamp();
    void statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller);
-   void configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller, UINT32 dwNetMask);
+   void configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller, int maskBits);
+	void instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, int pollerId);
 	void topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller);
 	void resolveVlanPorts(VlanList *vlanList);
 	void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
    void updateRoutingTable();
-	void checkSubnetBinding(InterfaceList *pIfList);
+	void checkSubnetBinding();
+   AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport);
 
    bool isReadyForStatusPoll();
    bool isReadyForConfigurationPoll();
+   bool isReadyForInstancePoll();
    bool isReadyForDiscoveryPoll();
    bool isReadyForRoutePoll();
    bool isReadyForTopologyPoll();
 
    void lockForStatusPoll();
    void lockForConfigurationPoll();
+   void lockForInstancePoll();
    void lockForDiscoveryPoll();
    void lockForRoutePoll();
    void lockForTopologyPoll();
@@ -1242,7 +1306,7 @@ public:
    UINT32 getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHAR *buffer, int interpretRawValue);
 	UINT32 getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableColumn> *columns, Table **table);
    UINT32 getListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
-   UINT32 getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringList **list);
+   UINT32 getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringMap **values);
    UINT32 getItemFromCheckPointSNMP(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
    UINT32 getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szBuffer);
 	UINT32 getTableFromAgent(const TCHAR *name, Table **table);
@@ -1265,8 +1329,6 @@ public:
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext();
 
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
    void writeParamListToMessage(NXCPMessage *pMsg, WORD flags);
 	void writeWinPerfObjectsToMessage(NXCPMessage *msg);
 	void writePackageListToMessage(NXCPMessage *msg);
@@ -1275,7 +1337,7 @@ public:
    UINT32 wakeUp();
 
    void addService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
-   UINT32 checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType, WORD wPort = 0,
+   UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
 
    QWORD getLastEventId(int nIndex) { return ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) ? m_qwLastEvents[nIndex] : 0; }
@@ -1325,7 +1387,7 @@ inline bool Node::isReadyForStatusPoll()
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_STATUS_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
 			 (getMyCluster() == NULL) &&
-          ((UINT32)time(NULL) - (UINT32)m_lastStatusPoll > g_dwStatusPollingInterval);
+          ((UINT32)(time(NULL) - m_lastStatusPoll) > g_dwStatusPollingInterval);
 }
 
 inline bool Node::isReadyForConfigurationPoll()
@@ -1341,7 +1403,7 @@ inline bool Node::isReadyForConfigurationPoll()
 	       (!(m_dwFlags & NF_DISABLE_CONF_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_CONFIG_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
-          ((UINT32)time(NULL) - (UINT32)m_lastConfigurationPoll > g_dwConfigurationPollingInterval);
+          ((UINT32)(time(NULL) - m_lastConfigurationPoll) > g_dwConfigurationPollingInterval);
 }
 
 inline bool Node::isReadyForDiscoveryPoll()
@@ -1354,7 +1416,7 @@ inline bool Node::isReadyForDiscoveryPoll()
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)time(NULL) - (UINT32)m_lastDiscoveryPoll > g_dwDiscoveryPollingInterval);
+          ((UINT32)(time(NULL) - m_lastDiscoveryPoll) > g_dwDiscoveryPollingInterval);
 }
 
 inline bool Node::isReadyForRoutePoll()
@@ -1366,7 +1428,7 @@ inline bool Node::isReadyForRoutePoll()
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)time(NULL) - (UINT32)m_lastRTUpdate > g_dwRoutingTableUpdateInterval);
+          ((UINT32)(time(NULL) - m_lastRTUpdate) > g_dwRoutingTableUpdateInterval);
 }
 
 inline bool Node::isReadyForTopologyPoll()
@@ -1378,7 +1440,19 @@ inline bool Node::isReadyForTopologyPoll()
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_TOPOLOGY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
-          ((UINT32)time(NULL) - (UINT32)m_lastTopologyPoll > g_dwTopologyPollingInterval);
+          ((UINT32)(time(NULL) - m_lastTopologyPoll) > g_dwTopologyPollingInterval);
+}
+
+inline bool Node::isReadyForInstancePoll()
+{
+	if (m_isDeleted)
+		return false;
+   return (m_iStatus != STATUS_UNMANAGED) &&
+	       (!(m_dwFlags & NF_DISABLE_CONF_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_QUEUED_FOR_INSTANCE_POLL)) &&
+          (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
+          (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
+          ((UINT32)(time(NULL) - m_lastInstancePoll) > g_instancePollingInterval);
 }
 
 inline void Node::lockForStatusPoll()
@@ -1392,6 +1466,13 @@ inline void Node::lockForConfigurationPoll()
 {
    lockProperties();
    m_dwDynamicFlags |= NDF_QUEUED_FOR_CONFIG_POLL;
+   unlockProperties();
+}
+
+inline void Node::lockForInstancePoll()
+{
+   lockProperties();
+   m_dwDynamicFlags |= NDF_QUEUED_FOR_INSTANCE_POLL;
    unlockProperties();
 }
 
@@ -1424,17 +1505,19 @@ class NXCORE_EXPORTABLE Subnet : public NetObj
 	friend void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedSubnet, bool vpnLink, bool includeEndNodes);
 
 protected:
-   UINT32 m_dwIpNetMask;
+   InetAddress m_ipAddress;
    UINT32 m_zoneId;
 	bool m_bSyntheticMask;
 
    virtual void prepareForDeletion();
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+
    void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes);
 
 public:
    Subnet();
-   Subnet(UINT32 dwAddr, UINT32 dwNetMask, UINT32 dwZone, bool bSyntheticMask);
+   Subnet(const InetAddress& addr, UINT32 dwZone, bool bSyntheticMask);
    virtual ~Subnet();
 
    virtual int getObjectClass() { return OBJECT_SUBNET; }
@@ -1443,18 +1526,17 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   void AddNode(Node *pNode) { AddChild(pNode); pNode->AddParent(this); }
-   virtual void fillMessage(NXCPMessage *pMsg);
+   void addNode(Node *node) { AddChild(node); node->AddParent(this); calculateCompoundStatus(TRUE); }
 
 	virtual bool showThresholdSummary();
 
-   UINT32 getIpNetMask() { return m_dwIpNetMask; }
+   const InetAddress& getIpAddress() { return m_ipAddress; }
    UINT32 getZoneId() { return m_zoneId; }
 	bool isSyntheticMask() { return m_bSyntheticMask; }
 
-	void setCorrectMask(UINT32 dwAddr, UINT32 dwMask);
+	void setCorrectMask(const InetAddress& addr);
 
-	bool findMacAddress(UINT32 ipAddr, BYTE *macAddr);
+	bool findMacAddress(const InetAddress& ipAddr, BYTE *macAddr);
 
    UINT32 *buildAddressMap(int *length);
 };
@@ -1517,6 +1599,9 @@ protected:
 	NXSL_VM *m_bindFilter;
 	TCHAR *m_bindFilterSource;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    Container();
    Container(const TCHAR *pszName, UINT32 dwCategory);
@@ -1527,9 +1612,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
 
@@ -1554,7 +1636,7 @@ class NXCORE_EXPORTABLE TemplateGroup : public Container
 {
 public:
    TemplateGroup() : Container() { }
-   TemplateGroup(const TCHAR *pszName) : Container(pszName, 0) { }
+   TemplateGroup(const TCHAR *pszName) : Container(pszName, 0) { m_iStatus = STATUS_NORMAL; }
    virtual ~TemplateGroup() { }
 
    virtual int getObjectClass() { return OBJECT_TEMPLATEGROUP; }
@@ -1571,6 +1653,9 @@ class NXCORE_EXPORTABLE Rack : public Container
 protected:
 	int m_height;	// Rack height in units
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    Rack();
    Rack(const TCHAR *name, int height);
@@ -1581,9 +1666,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 };
 
 /**
@@ -1596,9 +1678,12 @@ protected:
    UINT32 m_agentProxy;
    UINT32 m_snmpProxy;
 	UINT32 m_icmpProxy;
-	ObjectIndex *m_idxNodeByAddr;
-	ObjectIndex *m_idxInterfaceByAddr;
-	ObjectIndex *m_idxSubnetByAddr;
+	InetAddressIndex *m_idxNodeByAddr;
+	InetAddressIndex *m_idxInterfaceByAddr;
+	InetAddressIndex *m_idxSubnetByAddr;
+
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
    Zone();
@@ -1611,9 +1696,6 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
 	virtual bool showThresholdSummary();
 
    UINT32 getZoneId() { return m_zoneId; }
@@ -1623,20 +1705,20 @@ public:
 
    void addSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
 
-	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->IpAddr(), subnet); }
-	void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->IpAddr(), iface); }
-	void addToIndex(Node *node) { m_idxNodeByAddr->put(node->IpAddr(), node); }
-	void removeFromIndex(Subnet *subnet) { m_idxSubnetByAddr->remove(subnet->IpAddr()); }
-	void removeFromIndex(Interface *iface) { m_idxInterfaceByAddr->remove(iface->IpAddr()); }
-	void removeFromIndex(Node *node) { m_idxNodeByAddr->remove(node->IpAddr()); }
-	void updateInterfaceIndex(UINT32 oldIp, UINT32 newIp, Interface *iface);
-	Subnet *getSubnetByAddr(UINT32 ipAddr) { return (Subnet *)m_idxSubnetByAddr->get(ipAddr); }
-	Interface *getInterfaceByAddr(UINT32 ipAddr) { return (Interface *)m_idxInterfaceByAddr->get(ipAddr); }
-	Node *getNodeByAddr(UINT32 ipAddr) { return (Node *)m_idxNodeByAddr->get(ipAddr); }
+	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->getIpAddress(), subnet); }
+   void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->getIpAddressList(), iface); }
+	void addToIndex(Node *node) { m_idxNodeByAddr->put(node->getIpAddress(), node); }
+	void removeFromIndex(Subnet *subnet) { m_idxSubnetByAddr->remove(subnet->getIpAddress()); }
+	void removeFromIndex(Interface *iface);
+	void removeFromIndex(Node *node) { m_idxNodeByAddr->remove(node->getIpAddress()); }
+	void updateInterfaceIndex(const InetAddress& oldIp, const InetAddress& newIp, Interface *iface);
+	Subnet *getSubnetByAddr(const InetAddress& ipAddr) { return (Subnet *)m_idxSubnetByAddr->get(ipAddr); }
+	Interface *getInterfaceByAddr(const InetAddress& ipAddr) { return (Interface *)m_idxInterfaceByAddr->get(ipAddr); }
+	Node *getNodeByAddr(const InetAddress& ipAddr) { return (Node *)m_idxNodeByAddr->get(ipAddr); }
 	Subnet *findSubnet(bool (*comparator)(NetObj *, void *), void *data) { return (Subnet *)m_idxSubnetByAddr->find(comparator, data); }
 	Interface *findInterface(bool (*comparator)(NetObj *, void *), void *data) { return (Interface *)m_idxInterfaceByAddr->find(comparator, data); }
 	Node *findNode(bool (*comparator)(NetObj *, void *), void *data) { return (Node *)m_idxNodeByAddr->find(comparator, data); }
-   void forEachSubnet(void (*callback)(NetObj *, void *), void *data) { m_idxSubnetByAddr->forEach(callback, data); }
+   void forEachSubnet(void (*callback)(const InetAddress& addr, NetObj *, void *), void *data) { m_idxSubnetByAddr->forEach(callback, data); }
 };
 
 /**
@@ -1677,6 +1759,9 @@ protected:
    time_t m_lastPoll;
    bool m_queuedForPolling;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    Condition();
    Condition(bool hidden);
@@ -1687,9 +1772,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    void check();
 
@@ -1714,23 +1796,21 @@ class NXCORE_EXPORTABLE AgentPolicy : public NetObj
 protected:
 	UINT32 m_version;
 	int m_policyType;
-	TCHAR *m_description;
 
 	BOOL savePolicyCommonProperties(DB_HANDLE hdb);
+
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
 public:
    AgentPolicy(int type);
    AgentPolicy(const TCHAR *name, int type);
-   virtual ~AgentPolicy();
 
    virtual int getObjectClass() { return OBJECT_AGENTPOLICY; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
@@ -1747,6 +1827,9 @@ class NXCORE_EXPORTABLE AgentPolicyConfig : public AgentPolicy
 protected:
 	TCHAR *m_fileContent;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    AgentPolicyConfig();
    AgentPolicyConfig(const TCHAR *name);
@@ -1757,9 +1840,6 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
@@ -1847,6 +1927,9 @@ protected:
 	TCHAR *m_filterSource;
 	NXSL_VM *m_filter;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 	void updateObjects(nxmap_ObjList *objects);
 	UINT32 objectIdFromElementId(UINT32 eid);
 	UINT32 elementIdFromObjectId(UINT32 eid);
@@ -1864,9 +1947,6 @@ public:
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
@@ -1915,6 +1995,9 @@ protected:
 	UINT32 m_options;
 	ObjectArray<DashboardElement> *m_elements;
 
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
    Dashboard();
    Dashboard(const TCHAR *name);
@@ -1926,9 +2009,6 @@ public:
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
-
-   virtual void fillMessage(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual bool showThresholdSummary();
 };
@@ -1952,7 +2032,10 @@ protected:
 
    virtual void onObjectDelete(UINT32 objectId);
 
-	void setScript(const TCHAR *script);
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
+   void setScript(const TCHAR *script);
 	UINT32 getOwnerId();
 	NXSL_Value *getNodeObjectForNXSL();
 	bool insertTicket();
@@ -1974,8 +2057,6 @@ public:
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 	virtual BOOL loadFromDatabase(UINT32 dwId);
 
-	virtual void fillMessage(NXCPMessage *pMsg);
-	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 	virtual void postModify();
 
 	void execute();
@@ -2011,6 +2092,9 @@ protected:
 	static INT32 getSecondsInPeriod(Period period) { return period == MONTH ? getSecondsInMonth() : (period == WEEK ? (3600 * 24 * 7) : (3600 * 24)); }
 	static INT32 getSecondsSinceBeginningOf(Period period, time_t *beginTime = NULL);
 
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 	void initServiceContainer();
 	BOOL addHistoryRecord();
 	double getUptimeFromDBFor(Period period, INT32 *downtime);
@@ -2022,9 +2106,6 @@ public:
 	virtual BOOL loadFromDatabase(UINT32 dwId);
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
-
-	virtual void fillMessage(NXCPMessage *pMsg);
-	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 	virtual void setStatus(int newStatus);
@@ -2066,6 +2147,9 @@ protected:
 
    virtual void prepareForDeletion();
 
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 public:
 	BusinessService();
 	BusinessService(const TCHAR *name);
@@ -2076,9 +2160,6 @@ public:
 	virtual BOOL loadFromDatabase(UINT32 dwId);
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
-
-	virtual void fillMessage(NXCPMessage *pMsg);
-	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
 
 	bool isReadyForPolling();
 	void lockForPolling();
@@ -2097,6 +2178,9 @@ protected:
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
+	virtual void fillMessageInternal(NXCPMessage *pMsg);
+	virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+
 	void applyTemplate(SlmCheck *tmpl);
 
 public:
@@ -2110,15 +2194,25 @@ public:
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 	virtual BOOL loadFromDatabase(UINT32 dwId);
 
-	virtual void fillMessage(NXCPMessage *pMsg);
-	virtual UINT32 modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked = FALSE);
-
 	void execute();
 	void applyTemplates();
 
 	UINT32 getNodeId() { return m_nodeId; }
 };
 
+/**
+ * Get IP address for object
+ */
+inline const InetAddress& GetObjectIpAddress(NetObj *object)
+{
+   if (object->getObjectClass() == OBJECT_NODE)
+      return ((Node *)object)->getIpAddress();
+   if (object->getObjectClass() == OBJECT_SUBNET)
+      return ((Subnet *)object)->getIpAddress();
+   if (object->getObjectClass() == OBJECT_ACCESSPOINT)
+      return ((AccessPoint *)object)->getIpAddress();
+   return InetAddress::INVALID;
+}
 
 //
 // Container category information
@@ -2143,7 +2237,7 @@ void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, BOOL bNewObject);
 void NetObjDeleteFromIndexes(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
 
-void UpdateInterfaceIndex(UINT32 dwOldIpAddr, UINT32 dwNewIpAddr, Interface *pObject);
+void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, Interface *iface);
 ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp);
 
 void NXCORE_EXPORTABLE MacDbAddAccessPoint(AccessPoint *ap);
@@ -2157,25 +2251,26 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
 NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass);
 const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
-Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, UINT32 ipAddr);
+Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddress& ipAddr);
+Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddressList *ipAddrList);
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
 Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId);
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
-Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, UINT32 ipAddr);
+Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, const InetAddress& ipAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description);
-Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, UINT32 ipAddr);
-Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, UINT32 dwNodeAddr);
+Subnet NXCORE_EXPORTABLE *FindSubnetByIP(UINT32 zoneId, const InetAddress& ipAddr);
+Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, const InetAddress& nodeAddr);
 MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId);
 AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr);
 UINT32 NXCORE_EXPORTABLE FindLocalMgmtNode();
 CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(UINT32 dwId);
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(UINT32 dwZoneGUID);
-Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 zone, UINT32 ipAddr);
-bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zone, UINT32 ipAddr);
+Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 zone, const InetAddress& ipAddr);
+bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zone, const InetAddress& ipAddr);
 
 BOOL LoadObjects();
-void DumpObjects(CONSOLE_CTX pCtx);
+void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);
 
 void DeleteUserFromAllObjects(UINT32 dwUserId);
 
@@ -2205,9 +2300,9 @@ extern BOOL g_bModificationsLocked;
 extern Queue *g_pTemplateUpdateQueue;
 
 extern ObjectIndex NXCORE_EXPORTABLE g_idxObjectById;
-extern ObjectIndex NXCORE_EXPORTABLE g_idxSubnetByAddr;
-extern ObjectIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
-extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
+extern InetAddressIndex NXCORE_EXPORTABLE g_idxSubnetByAddr;
+extern InetAddressIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
+extern InetAddressIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByGUID;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxClusterById;

@@ -25,11 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.swt.graphics.Point;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
 import org.netxms.base.GeoLocation;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.QuadTree;
@@ -58,9 +57,9 @@ public class GeoLocationCache implements SessionListener
 	@Override
 	public void notificationHandler(SessionNotification n)
 	{
-		if (n.getCode() == NXCNotification.OBJECT_CHANGED)
+		if (n.getCode() == SessionNotification.OBJECT_CHANGED)
 			onObjectChange((AbstractObject)n.getObject());
-		else if (n.getCode() == NXCNotification.OBJECT_SYNC_COMPLETED)
+		else if (n.getCode() == SessionNotification.OBJECT_SYNC_COMPLETED)
 			internalInitialize();
 	}
 	

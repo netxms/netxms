@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -26,7 +26,7 @@
 /**
  * Create instruction without operand
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
@@ -36,7 +36,7 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode)
 /**
  * Create instruction with constant operand
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, NXSL_Value *pValue)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, NXSL_Value *pValue)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
@@ -48,7 +48,7 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, NXSL_Value *pValue)
  * Create instruction with string operand.
  * String must be dynamically allocated.
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, char *pszString)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
@@ -65,7 +65,7 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString)
  * Create instruction with string operand and non-zero stack item count.
  * String must be dynamically allocated.
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString, int nStackItems)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, char *pszString, short nStackItems)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
@@ -81,7 +81,7 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, char *pszString, int 
 /**
  * Create instruction with address operand
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, UINT32 dwAddr)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, UINT32 dwAddr)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
@@ -91,7 +91,7 @@ NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, UINT32 dwAddr)
 /**
  * Create instruction without operand and non-zero stack item count
  */
-NXSL_Instruction::NXSL_Instruction(int nLine, int nOpCode, int nStackItems)
+NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, short nStackItems)
 {
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
@@ -106,29 +106,12 @@ NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
    m_nOpCode = pSrc->m_nOpCode;
    m_nSourceLine = pSrc->m_nSourceLine;
    m_nStackItems = pSrc->m_nStackItems;
-   switch(m_nOpCode)
+   switch(getOperandType())
    {
-		case OPCODE_CASE:
-      case OPCODE_PUSH_CONSTANT:
+		case OP_TYPE_CONST:
          m_operand.m_pConstant = new NXSL_Value(pSrc->m_operand.m_pConstant);
          break;
-      case OPCODE_ARRAY:
-      case OPCODE_BIND:
-      case OPCODE_CALL_EXTERNAL:
-      case OPCODE_CALL_METHOD:
-      case OPCODE_CASE_CONST:
-      case OPCODE_DEC:
-      case OPCODE_DECP:
-      case OPCODE_GET_ATTRIBUTE:
-      case OPCODE_GLOBAL:
-      case OPCODE_GLOBAL_ARRAY:
-      case OPCODE_INC:
-      case OPCODE_INCP:
-		case OPCODE_NAME:
-      case OPCODE_PUSH_VARIABLE:
-      case OPCODE_SAFE_GET_ATTR:
-      case OPCODE_SET:
-      case OPCODE_SET_ATTRIBUTE:
+      case OP_TYPE_STRING:
          m_operand.m_pszString = _tcsdup(pSrc->m_operand.m_pszString);
          break;
       default:
@@ -142,6 +125,24 @@ NXSL_Instruction::NXSL_Instruction(NXSL_Instruction *pSrc)
  */
 NXSL_Instruction::~NXSL_Instruction()
 {
+   switch(getOperandType())
+   {
+      case OP_TYPE_STRING:
+         safe_free(m_operand.m_pszString);
+         break;
+      case OP_TYPE_CONST:
+         delete m_operand.m_pConstant;
+         break;
+      default:
+         break;
+   }
+}
+
+/**
+ * Get operand type for instruction
+ */
+OperandType NXSL_Instruction::getOperandType()
+{
    switch(m_nOpCode)
    {
       case OPCODE_ARRAY:
@@ -150,24 +151,34 @@ NXSL_Instruction::~NXSL_Instruction()
       case OPCODE_CALL_METHOD:
       case OPCODE_CASE_CONST:
       case OPCODE_DEC:
+      case OPCODE_DEC_ELEMENT:
       case OPCODE_DECP:
+      case OPCODE_DECP_ELEMENT:
       case OPCODE_GET_ATTRIBUTE:
       case OPCODE_GLOBAL:
       case OPCODE_GLOBAL_ARRAY:
       case OPCODE_INC:
+      case OPCODE_INC_ELEMENT:
       case OPCODE_INCP:
+      case OPCODE_INCP_ELEMENT:
 		case OPCODE_NAME:
       case OPCODE_PUSH_VARIABLE:
       case OPCODE_SAFE_GET_ATTR:
       case OPCODE_SET:
       case OPCODE_SET_ATTRIBUTE:
-         safe_free(m_operand.m_pszString);
-         break;
+         return OP_TYPE_STRING;
 		case OPCODE_CASE:
       case OPCODE_PUSH_CONSTANT:
-         delete m_operand.m_pConstant;
-         break;
+         return OP_TYPE_CONST;
+      case OPCODE_JMP:
+      case OPCODE_CALL:
+      case OPCODE_JZ:
+      case OPCODE_JNZ:
+      case OPCODE_JZ_PEEK:
+      case OPCODE_JNZ_PEEK:
+      case OPCODE_CATCH:
+         return OP_TYPE_ADDR;
       default:
-         break;
+         return OP_TYPE_NONE;
    }
 }

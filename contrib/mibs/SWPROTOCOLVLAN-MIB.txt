@@ -1,0 +1,261 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Protocol(Policy-based) VLAN Common mib
+-- FILE NAME: ProtocolVLAN.mib
+-- DATE     : 2007/10/26
+-- VERSION  : 2.02
+-- PURPOSE  : To construct the MIB structure of Protocol VLAN management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.02, 2007/10/26, Yan Zhang
+-- Description:
+--  [New Object]
+--    1. add table swdot1vProtocolPortTable.
+--  [Modification]
+--    1. Change the status of swProtocolVLANTable from current to obsolete.
+-- Notes: Requested by Yan Zhang for DES3500.
+--
+-- Version 2.01, 2007/4/6, yedda
+-- Description:
+--  [Modification]
+--    to delete the objects, swProtocolVLANTagType and swProtocolVLANPortList,
+--    from SwProtocolVLANEntry entry. This is because it already removed from
+--    earlier version.
+-- Notes: reported from Yan Zhang
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+SWPROTOCOLVLAN-MIB DEFINITIONS ::= BEGIN
+
+	IMPORTS
+		IpAddress
+	 		FROM RFC1155-SMI
+	    MODULE-IDENTITY, OBJECT-TYPE, Integer32
+	        FROM SNMPv2-SMI
+	    RowStatus,DisplayString
+	        FROM SNMPv2-TC
+	    MODULE-COMPLIANCE, OBJECT-GROUP
+	        FROM SNMPv2-CONF
+	    dlink-common-mgmt	
+	        FROM DLINK-ID-REC-MIB
+	    dot1vProtocolPortEntry	
+	        FROM Q-BRIDGE-MIB;
+
+
+	swProtocolVLANMIB MODULE-IDENTITY
+	    LAST-UPDATED "0710260000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+	        "The Protocol (Policy-based) VLAN module MIB for the proprietary enterprise.
+	         Other related VLAN parameters will reference to rfc2674q.mib."
+	    ::= { dlink-common-mgmt 16}
+
+	PortList                ::= OCTET STRING(SIZE (0..127))
+
+	swProtocolVLANCtrl 		OBJECT IDENTIFIER ::= { swProtocolVLANMIB 1 }
+
+-- -----------------------------------------------------------------------------
+--	swProtocolVLANTable 		OBJECT IDENTIFIER ::= { swProtocolVLANCtrl 1 }
+-- -----------------------------------------------------------------------------
+	swProtocolVLANTable OBJECT-TYPE
+		SYNTAX SEQUENCE OF SwProtocolVLANEntry
+		MAX-ACCESS not-accessible
+		STATUS obsolete
+	    DESCRIPTION
+	        "A table that contains information about protocol (policy-based) VLAN method
+	        lists."
+
+	    ::= { swProtocolVLANCtrl 1 }
+
+	swProtocolVLANEntry OBJECT-TYPE
+	    SYNTAX SwProtocolVLANEntry
+	    MAX-ACCESS not-accessible
+	    STATUS obsolete
+	    DESCRIPTION
+	        "A list of the protocol (policy-based) VLAN methods."
+	    INDEX { swProtocolVLANIndex }
+
+	    ::= { swProtocolVLANTable 1 }
+
+	SwProtocolVLANEntry ::=
+	    SEQUENCE {
+	    	swProtocolVLANIndex
+				INTEGER,
+	        swProtocolVLANName
+	            DisplayString,
+	        swProtocolVLANProtocolType
+	        	INTEGER,
+			swProtocolVLANAdvertisement
+				INTEGER,
+	        swProtocolVLANUserDefinedProtocol
+	        	INTEGER,
+	        swProtocolVLANencap
+	        	INTEGER,
+			swProtocolVLANRowStatus
+				RowStatus
+	    }
+
+    swProtocolVLANIndex OBJECT-TYPE
+        SYNTAX  INTEGER (1..4094)
+        MAX-ACCESS  read-create
+        STATUS  obsolete
+        DESCRIPTION
+            "A value that identifies this SwProtocolVLANEntry."
+        ::= { swProtocolVLANEntry 1 }
+
+	swProtocolVLANName OBJECT-TYPE
+	    SYNTAX DisplayString(SIZE(1..15))
+	    MAX-ACCESS read-create
+	    STATUS obsolete
+	    DESCRIPTION
+	        "Specifies the name of the VLAN"
+
+	    ::= { swProtocolVLANEntry 2 }
+
+	swProtocolVLANProtocolType OBJECT-TYPE
+	    SYNTAX INTEGER {
+	                dot1q-vlan(1),
+	                protocol-ip(2),
+	                protocol-ipx803dot3(3),
+	                protocol-ipx802dot2(4),
+	                protocol-ipxSnap(5),
+	                protocol-ipxEthernet2(6),
+	                protocol-appleTalk(7),
+	                protocol-decLat(8),
+	                protocol-dexOther(9),
+	                protocol-sna802dot2(10),
+	                protocol-snaEthernet2(11),
+	                protocol-netBios(12),
+	                protocol-xns(13),
+	                protocol-vines(14),
+	                protocol-ipV6(15),
+	                protocol-userDefined(16),
+	                protocol-rarp(17)
+	            }
+	    MAX-ACCESS read-create
+	    STATUS obsolete
+	    DESCRIPTION
+	        "The protocol type of protocol (policy-based) VLAN list. The group protocol types include
+	         dot1q-vlan(1), protocol-ip(2), protocol-ipx803dot3(3), protocol-ipx802dot2(4),
+	         protocol-ipxSnap(5), protocol-ipxEthernet2(6), protocol-appleTalk(7), protocol-decLat(8),
+	         protocol-dexOther(9), protocol-sna802dot2(10), protocol-snaEthernet2(11),
+	         protocol-netBios(12), protocol-xns(13), protocol-vines(14), protocol-ipV6(15),
+	         protocol-userDefined(16) and protocol-rarp(17)"
+
+	    ::= { swProtocolVLANEntry 3 }
+
+    swProtocolVLANAdvertisement OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-create
+        STATUS  obsolete
+        DESCRIPTION
+            "This object indicates whether advertisement is active or not."
+
+        ::= { swProtocolVLANEntry 4 }
+
+    swProtocolVLANUserDefinedProtocol OBJECT-TYPE
+        SYNTAX  INTEGER (0..65535)
+        MAX-ACCESS  read-create
+        STATUS  obsolete
+        DESCRIPTION
+           "If the protocol type is protocol-userDefined(16), this value will fill with the user defined
+        	protocol type. This value will be ignored for other protocol types.
+        	The user cannot fill the pre-defined protocol type in this value.
+
+        	These pre-defined protocol types are:
+	        0x0800 PROTO_VLAN_IPETHER2
+    	    0x8035 PROTO_VLAN_RARPETHER2
+        	0xFFFF PROTO_VLAN_IPX802_3
+	        0xE0E0 PROTO_VLAN_IPX802_2
+    	    0x8137 PROTO_VLAN_IPXSNAP
+        	0x8137 PROTO_VLAN_IPXETHER2
+	        0x809B PROTO_VLAN_APLTKETHER2SNAP
+    	    0x6000 PROTO_VLAN_DECETHER2
+        	0x6009 PROTO_VLAN_DECOTHERETHER2
+	        0x0404 PROTO_VLAN_SNA802_2
+    	    0x80D5 PROTO_VLAN_SNAETHER2
+        	0xF0F0 PROTO_VLAN_NETBIOS
+        	0x0600 PROTO_VLAN_XNSETHER2
+	        0x0BAD PROTO_VLAN_VINESETHER2
+    	    0x86DD PROTO_VLAN_IPV6ETHER2 "
+
+        ::= { swProtocolVLANEntry 5 }
+
+	swProtocolVLANencap OBJECT-TYPE
+	    SYNTAX INTEGER {
+	                ethernet(1),
+	                llc(2),
+	                snap(3),
+	                all(4)
+	            }
+	    MAX-ACCESS read-create
+	    STATUS obsolete
+	    DESCRIPTION
+	        "If the protocol type is protocol-userDefined(16), this value will fill with the encap type.
+	        For other protocol types, this value will be ignored. The group encap type includes
+	        ethernet(1), llc(2), snap(3),and all(4)."
+
+	    ::= { swProtocolVLANEntry 6 }
+
+	swProtocolVLANRowStatus	OBJECT-TYPE
+	    SYNTAX      RowStatus
+	    MAX-ACCESS  read-create
+	    STATUS      obsolete
+	    DESCRIPTION
+	        "This object indicates the status of this entry."
+
+	    ::= { swProtocolVLANEntry 7 }
+
+-- -----------------------------------------------------------------------------
+--   swdot1vProtocolPortTable OBJECT IDENTIFIER ::= { swProtocolVLANCtrl 2 }
+-- -----------------------------------------------------------------------------
+swdot1vProtocolPortTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF Swdot1vProtocolPortEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A table that contains VID sets used for
+         Port-and-Protocol-based VLAN Classification."
+    REFERENCE
+        "IEEE 802.1v clause 8.4.4"
+    ::= { swProtocolVLANCtrl 2 }
+
+swdot1vProtocolPortEntry OBJECT-TYPE
+    SYNTAX      Swdot1vProtocolPortEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "A VID set for a port."
+    AUGMENTS { dot1vProtocolPortEntry }
+    ::= { swdot1vProtocolPortTable 1 }
+
+Swdot1vProtocolPortEntry ::=
+    SEQUENCE {
+        swdot1vProtocolPortGroupPriority
+            Integer32
+    }
+
+swdot1vProtocolPortGroupPriority OBJECT-TYPE
+    SYNTAX      Integer32 (0..7)
+    MAX-ACCESS  read-create
+    STATUS      current
+    DESCRIPTION
+        "The Priority associated with a group of protocols for
+         each port."
+    ::= { swdot1vProtocolPortEntry 1 }
+    
+END

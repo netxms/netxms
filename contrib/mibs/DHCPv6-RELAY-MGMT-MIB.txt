@@ -1,0 +1,353 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : DHCPv6-RELAY-MGMT-MIB
+-- FILE NAME: DHCPv6Relay.mib
+-- DATE     : 2012/9/27
+-- VERSION  : 1.01
+-- PURPOSE  : To construct the MIB structure of DHCPv6 Relay function for
+--            proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.02, 2013/08/13, Mandy Fang
+-- [New Object]
+-- [1]Added swDHCPv6RelayOption18 to support DHCPv6 Relay Interface-ID Option.
+-- [2]Added swDHCPv6RelayOption37RemoteIDType value vendor1.
+-- [3]Added swDHCPv6LocalRelayMIBObjects to support DHCPv6 Local Relay.
+-- Notes: requested by Mandy Fang for DGS3120.
+-- 
+-- Version 1.01, 2012/09/27, Mandy Fang
+-- [New Object]
+-- [1]Added swDHCPv6RelayOption37 to support DHCPv6 Relay Remote-ID Option.
+-- Notes: requested by Mandy Fang for DGS3120&DGS3120-BX.
+--
+-- Version 1.00, 2009/9/17, Sammy Xiao
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+
+DHCPv6-RELAY-MGMT-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+		MODULE-IDENTITY,OBJECT-TYPE	FROM SNMPv2-SMI
+		RowStatus           FROM SNMPv2-TC
+		DisplayString		FROM RFC1213-MIB
+		dlink-common-mgmt	FROM DLINK-ID-REC-MIB
+		VlanId        		FROM Q-BRIDGE-MIB
+		InetAddressType,InetAddress	FROM INET-ADDRESS-MIB;
+        
+    swDHCPv6RelayMIB MODULE-IDENTITY
+          LAST-UPDATED "0909170000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The Structure of DHCPv6 relay management for the proprietary enterprise."
+        ::= { dlink-common-mgmt 84 }
+
+	swDHCPv6RelayMIBObjects	OBJECT IDENTIFIER ::= { swDHCPv6RelayMIB 1 }
+	swDHCPv6LocalRelayMIBObjects OBJECT IDENTIFIER ::= { swDHCPv6RelayMIB 2 }
+
+-- -----------------------------------------------------------------------------
+    swDHCPv6RelayHopCount  OBJECT-TYPE
+        SYNTAX  INTEGER (1..32)
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the maximum number of router hops that
+             the DHCPv6 packets can cross."
+        ::= { swDHCPv6RelayMIBObjects 1 }
+        
+    swDHCPv6RelayGlobalState  OBJECT-TYPE
+        SYNTAX  INTEGER {
+	               enabled(1),   
+	               disabled(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the global state of DHCPv6 Relay function."
+        ::= { swDHCPv6RelayMIBObjects 2 }
+
+    swDHCPv6RelayCtrlTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwDHCPv6RelayCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+             "This table displays the current DHCPv6 relay static table."
+        ::= { swDHCPv6RelayMIBObjects 3 }
+
+    swDHCPv6RelayCtrlEntry OBJECT-TYPE
+        SYNTAX  SwDHCPv6RelayCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information display the current DHCPv6 relay static 
+            table."
+        INDEX  { swDHCPv6RelayIfName }
+        ::= { swDHCPv6RelayCtrlTable 1 }
+
+    SwDHCPv6RelayCtrlEntry ::=
+        SEQUENCE {
+            swDHCPv6RelayIfName
+                DisplayString,
+            swDHCPv6RelayCtrlState
+                INTEGER
+        }
+
+    swDHCPv6RelayIfName OBJECT-TYPE
+        SYNTAX  DisplayString (SIZE(0..12))
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the name of the relay interface."
+        ::= { swDHCPv6RelayCtrlEntry 1 }
+
+    swDHCPv6RelayCtrlState OBJECT-TYPE
+        SYNTAX  INTEGER {
+	               enabled(1),   
+	               disabled(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the DHCPv6 Relay state of the interface."
+        ::= { swDHCPv6RelayCtrlEntry 2 }
+            
+     swDHCPv6RelayServerTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwDHCPv6RelayServerEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table indicates the IPv6 address as a destination to forward
+             (relay) DHCPv6 packets to."
+        ::= { swDHCPv6RelayMIBObjects 4 }
+                          
+     swDHCPv6RelayServerEntry OBJECT-TYPE
+        SYNTAX  SwDHCPv6RelayServerEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A list of information indicates the IPv6 address as a destination
+             to forward (relay) DHCPv6 packets to."                   
+        INDEX {
+	            swDHCPv6RelayIfName,
+	            swDHCPv6RelayServerAddrType,
+	            swDHCPv6RelayServerAddr
+            }
+        ::= { swDHCPv6RelayServerTable 1 }
+
+     SwDHCPv6RelayServerEntry ::= 
+        SEQUENCE {    
+            swDHCPv6RelayServerAddrType
+                InetAddressType, 
+            swDHCPv6RelayServerAddr
+                InetAddress,
+            swDHCPv6RelayServerRowStatus
+                RowStatus
+        }     
+        
+     swDHCPv6RelayServerAddrType OBJECT-TYPE
+        SYNTAX InetAddressType
+        MAX-ACCESS  not-accessible
+        STATUS current
+        DESCRIPTION
+            "This object indicates the type of the DHCPv6 server IPv6 address or 
+            next DHCPv6 relay IPv6 address."
+        ::= { swDHCPv6RelayServerEntry 1 }
+           
+    swDHCPv6RelayServerAddr OBJECT-TYPE
+        SYNTAX InetAddress
+        MAX-ACCESS  not-accessible
+        STATUS current
+        DESCRIPTION
+            "This object indicates the DHCPv6 server IPv6 address or 
+            next DHCPv6 relay IPv6 address."
+        ::= { swDHCPv6RelayServerEntry 2 }
+                        
+     swDHCPv6RelayServerRowStatus OBJECT-TYPE
+        SYNTAX RowStatus
+        MAX-ACCESS  read-create
+        STATUS current
+        DESCRIPTION
+            "This object indicates the status of this entry."
+        ::= { swDHCPv6RelayServerEntry 3 }
+
+-- -----------------------------------------------------------------------------
+--  swDHCPv6RelayOption37
+-- -----------------------------------------------------------------------------
+     swDHCPv6RelayOption37 OBJECT IDENTIFIER ::= { swDHCPv6RelayMIBObjects 5 }
+
+     swDHCPv6RelayOption37State OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates whether the DHCPv6 relay
+            option 37 function is enabled or disabled."
+        ::= { swDHCPv6RelayOption37 1 }
+
+     swDHCPv6RelayOption37CheckState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates whether the DHCPv6 relay
+            option 37 check function is enabled or disabled.
+            "
+        ::= { swDHCPv6RelayOption37 2 }
+
+
+	swDHCPv6RelayOption37RemoteIDType OBJECT-TYPE
+        SYNTAX  INTEGER {
+               default(1),
+               cid-with-user-defined(2),
+               user-defined(3),
+               vendor1(4)
+              }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the type of remote ID.
+            If the type is default ,the remote ID will be
+            VLAN ID + Module + Port +System MAC address
+            of the device;
+            If the type is cid-with-user-defined,the
+            remote ID will be VLAN ID + Module + Port +
+            user defined string;
+            If the type is user-defined, the remote ID will
+            be user defined strin;
+            If the type is vendor1, the remote ID will be System
+            MAC address of the device."
+        ::= { swDHCPv6RelayOption37 3 }
+
+	swDHCPv6RelayOption37UserDefined OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object displays the current user defined
+            string of the device."
+        ::= { swDHCPv6RelayOption37 4 }
+-- -----------------------------------------------------------------------------
+--  swDHCPv6RelayOption18
+-- -----------------------------------------------------------------------------
+     swDHCPv6RelayOption18 OBJECT IDENTIFIER ::= { swDHCPv6RelayMIBObjects 6 }
+
+     swDHCPv6RelayOption18State OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates whether the DHCPv6 relay
+            option 18 function is enabled or disabled."
+        ::= { swDHCPv6RelayOption18 1 }
+
+     swDHCPv6RelayOption18CheckState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates whether the DHCPv6 relay
+            option 18 check function is enabled or disabled.
+            "
+        ::= { swDHCPv6RelayOption18 2 }
+
+
+	swDHCPv6RelayOption18InterfaceIDType OBJECT-TYPE
+        SYNTAX  INTEGER {
+               default(1),
+               cid(2),
+               vendor1(3)
+              }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the type of interface ID.
+            If the type is default ,the interface ID will be
+            VLAN ID;
+            If the type is cid,the interface ID will be VLAN ID + Module + Port;
+            If the type is vendor1, the interface ID will ethernet+chassis ID+
+            /0/+Port+:+VLAN ID+.0+space+System name+/0/0/+chassis ID+/0/+Port."
+        ::= { swDHCPv6RelayOption18 3 }
+
+-- -----------------------------------------------------------------------------
+-- swDHCPv6LocalRelayMIBObjects     OBJECT IDENTIFIER ::= { swDHCPv6RelayMIB 2 }
+-- -----------------------------------------------------------------------------
+    swDHCPv6LocalRelayGlobalState  OBJECT-TYPE
+        SYNTAX  INTEGER {
+	               enabled(1),
+	               disabled(2)
+                }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the global state of DHCPv6 Local Relay
+            function."
+        ::= { swDHCPv6LocalRelayMIBObjects 1 }
+
+    swDHCPv6LocalRelayVlanTable OBJECT-TYPE
+     	SYNTAX SEQUENCE OF SwDHCPv6LocalRelayVlanEntry
+	    MAX-ACCESS not-accessible
+	    STATUS current
+	    DESCRIPTION
+                 "This table is used to manage the DHCPv6 local relay status
+                  for each VLAN."
+	    ::={ swDHCPv6LocalRelayMIBObjects 2}
+	
+  swDHCPv6LocalRelayVlanEntry OBJECT-TYPE
+	    SYNTAX SwDHCPv6LocalRelayVlanEntry
+	    MAX-ACCESS not-accessible
+	    STATUS current
+	    DESCRIPTION
+	    	"This object lists the current VLANs in the switch and their
+	    	corresponding DHCPv6 local relay status."
+		INDEX { swDHCPv6LocalRelayVlanID }
+	    ::={ swDHCPv6LocalRelayVlanTable 1 }
+
+  SwDHCPv6LocalRelayVlanEntry ::=
+     SEQUENCE{
+		swDHCPv6LocalRelayVlanID
+     	    VlanId,
+     	swDHCPv6LocalRelayState
+     	    INTEGER		
+     }
+
+  swDHCPv6LocalRelayVlanID OBJECT-TYPE
+      SYNTAX  VlanId
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+          "This object indicates the VLAN ID."
+      ::= { swDHCPv6LocalRelayVlanEntry 1 }
+
+  swDHCPv6LocalRelayState OBJECT-TYPE
+      SYNTAX  INTEGER {
+             enabled(1),
+             disabled(2)
+             }
+      MAX-ACCESS  read-write
+      STATUS  current
+      DESCRIPTION
+          "This object indicates the state of the DHCPv6 local relay function
+          of the specified VLAN."
+      ::= { swDHCPv6LocalRelayVlanEntry 2 }
+
+END

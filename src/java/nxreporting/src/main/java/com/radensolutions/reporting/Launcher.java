@@ -34,6 +34,9 @@ public class Launcher {
         }
     }
 
+    public Launcher() {
+    }
+
     private static void start() throws IOException {
         log.info("Starting up");
 
@@ -50,7 +53,8 @@ public class Launcher {
         log.info("Connector started");
 
         DefaultJasperReportsContext jrContext = DefaultJasperReportsContext.getInstance();
-        jrContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "com.radensolutions.reporting.custom.NXCLQueryExecutorFactory");
+//        jrContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "com.radensolutions.reporting.custom.NXCLQueryExecutorFactory");
+        jrContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "com.radensolutions.reporting.custom.NXCLQueryExecutorFactoryDummy");
 
         ReportManager reportManager = context.getBean(ReportManager.class);
         reportManager.deploy();

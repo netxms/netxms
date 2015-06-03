@@ -25,10 +25,15 @@ import java.util.Set;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.base.Glob;
+import org.netxms.base.InetAddressEx;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.ServiceCheck;
+import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -82,7 +87,28 @@ public class ObjectFilter extends ViewerFilter
 			case NAME:
 				return usePatternMatching ? Glob.matchIgnoreCase(filterString, object.getObjectName()) : object.getObjectName().toLowerCase().contains(filterString);
 			case IP_ADDRESS:
-				return object.getPrimaryIP().getHostAddress().startsWith(filterString);
+			   if (object instanceof AbstractNode)
+			   {
+			      return ((AbstractNode)object).getPrimaryIP().getHostAddress().startsWith(filterString);
+			   }
+			   else if (object instanceof Subnet)
+            {
+               return ((Subnet)object).getSubnetAddress().getHostAddress().startsWith(filterString);
+            }
+            else if (object instanceof Interface)
+            {
+               for(InetAddressEx a : ((Interface)object).getIpAddressList())
+               {
+                  if (a.address.getHostAddress().startsWith(filterString))
+                     return true;
+               }
+               return false;
+            }
+            else if (object instanceof AccessPoint)
+            {
+               return ((AccessPoint)object).getIpAddress().getHostAddress().startsWith(filterString);
+            }
+			   return false;
 			case COMMENTS:
 				return object.getComments().toLowerCase().contains(filterString);
 		}

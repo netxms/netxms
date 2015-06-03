@@ -1,0 +1,435 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Simple RED(SRED) Common mib
+-- FILE NAME: sred.mib
+-- DATE     : 2009/2/16
+-- VERSION  : 2.02
+-- PURPOSE  : To construct the MIB structure of Simple RED management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+-- -----------------------------------------------------------------------------
+-- Version 2.02, 2009/2/16, Green Zhu
+-- [Modification]
+-- 1. Obsolete sw8021pColorMapCtrlTable, swDscpTrustPortCtrlTable and swDscpMapCtrlTable 
+--    based on "D-Link Switch Series CLI QoS Commands Rev 0.51".
+-- Requested by Green Zhu for project DES3500.
+-- ----------------------------------------------------------------------------
+-- Version 2.01, 2008/11/20, Ronald Hsu
+--  [Modification]
+--    [1]To modify the object "swSredCtrlDropRateLow".
+--    [2]To modify the object "swSredCtrlDropRateHigh".
+-- Notes: Requested by D-Link, DES3500
+-- -----------------------------------------------------------------------------
+-- Version 2.00, 2007/10/16, Jenny
+-- This is the first formal version for universal MIB definition.
+-- Requested by Jenny for project DES3500.
+-- -----------------------------------------------------------------------------
+
+SRED-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,
+        Counter32			FROM SNMPv2-SMI
+        dlink-common-mgmt               FROM DLINK-ID-REC-MIB;
+
+     swSredMIB MODULE-IDENTITY
+          LAST-UPDATED "0902160000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+            "http://support.dlink.com"
+          DESCRIPTION
+            "The structure of Simple RED Information for the
+	     proprietary enterprise."
+          ::= { dlink-common-mgmt 51 }
+
+
+
+   swSredCtrl            OBJECT IDENTIFIER ::= { swSredMIB 1 }
+   swSredInfo            OBJECT IDENTIFIER ::= { swSredMIB 2 }
+   swSredMgmt            OBJECT IDENTIFIER ::= { swSredMIB 3 }
+
+
+
+  swSredGlobalState OBJECT-TYPE
+    SYNTAX  INTEGER {
+                    enabled(1),
+                    disabled(2)
+                    }
+    MAX-ACCESS  read-write
+    STATUS  current
+    DESCRIPTION
+          "This object enables\disables the Simple RED state of the device."
+    DEFVAL { disabled }      
+    ::= { swSredCtrl 1 }
+
+-- -----------------------------------------------------------------------------
+swSredDropCounterTable OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwSredDropCounterEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains SRED drop packet counter information for each port."
+		::= { swSredInfo 1 }
+
+	swSredDropCounterEntry OBJECT-TYPE
+		SYNTAX  SwSredDropCounterEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list that contains SRED drop packet counter information per port."
+		INDEX   { swSredPortIndex }
+		::= { swSredDropCounterTable 1 }
+
+	SwSredDropCounterEntry ::=
+		SEQUENCE {
+		  swSredPortIndex
+		      INTEGER,
+		  swSredLowDropCounter
+		      Counter32,
+		  swSredHighDropCounter
+		      Counter32
+		}
+
+  swSredPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the port number."
+		::= { swSredDropCounterEntry 1 }
+
+  swSredLowDropCounter OBJECT-TYPE
+		SYNTAX  Counter32
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the drop count at low threshold."
+		::= { swSredDropCounterEntry 2 }
+		
+  swSredHighDropCounter OBJECT-TYPE
+		SYNTAX  Counter32
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the drop count at high threshold."
+		::= { swSredDropCounterEntry 3 }
+				
+-- -----------------------------------------------------------------------------
+  swSredCtrlTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwSredCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A table that contains the SRED setting for each port."
+		::= { swSredMgmt 1 }
+
+  swSredCtrlEntry OBJECT-TYPE
+		SYNTAX  SwSredCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  current
+		DESCRIPTION
+		      "A list that contains SRED setting per port."
+		INDEX   { swSredCtrlPortIndex,swSredCtrlClassIndex }
+		::= { swSredCtrlTable 1 }
+
+	SwSredCtrlEntry ::=
+		SEQUENCE {
+                swSredCtrlPortIndex
+                    INTEGER,
+                swSredCtrlClassIndex
+                    INTEGER,
+                swSredCtrlThresholdLow
+                    INTEGER,
+                swSredCtrlThresholdHigh
+                    INTEGER,
+                swSredCtrlDropRateLow
+                    INTEGER,
+                swSredCtrlDropRateHigh
+                    INTEGER,
+                swSredCtrlDropGreenState
+                    INTEGER
+		}
+
+
+  swSredCtrlPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the port number."
+		::= { swSredCtrlEntry 1 }
+
+  swSredCtrlClassIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the hardware CoS queues the 
+		      config sred command will apply to."
+		::= { swSredCtrlEntry 2 }
+
+  swSredCtrlThresholdLow OBJECT-TYPE
+		SYNTAX  INTEGER (0..100)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the low threshold that specifies
+		      the percentage of space utilized."
+		DEFVAL { 30 }      
+		::= { swSredCtrlEntry 3 }
+
+  swSredCtrlThresholdHigh OBJECT-TYPE
+		SYNTAX  INTEGER (0..100)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the high threshold that specifies
+		      the percentage of queue space utilized."
+		DEFVAL { 50 }      
+		::= { swSredCtrlEntry 4 }
+
+  swSredCtrlDropRateLow OBJECT-TYPE
+		SYNTAX  INTEGER (0..15)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the probabilistic drop rate if above the low threshold."
+		DEFVAL { 1 } 
+		::= { swSredCtrlEntry 5 }
+
+  swSredCtrlDropRateHigh OBJECT-TYPE
+		SYNTAX  INTEGER (0..15)
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the probabilistic drop rate if above the high threshold."
+		DEFVAL { 1 } 
+		::= { swSredCtrlEntry 6 }
+		
+  swSredCtrlDropGreenState OBJECT-TYPE
+		SYNTAX  INTEGER {
+			enabled(1),
+			disabled(2)
+		}
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+		      "This object indicates the drop green state.
+		      
+		      Setting this state to be disabled means probabilistic 
+		      drop red colored packets if the queue depth is above 
+		      the low threshold, and probabilistic drop yellow 
+		      colored packets if the queue depth is above the high 
+		      threshold.
+		      
+		      Setting this state to be enabled means probabilistic drop 
+		      yellow and red colored packets if the queue depth is 
+		      above the low threshold, and probabilistic drop green 
+		      colored packets if the queue depth is above the high 
+		      threshold."
+		DEFVAL { disabled } 
+		::= { swSredCtrlEntry 7 }
+-- ----------------------------------------------------------------------------
+  sw8021pColorMapCtrlTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF Sw8021pColorMapCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  obsolete
+		DESCRIPTION
+		      "A table that contains information about priority map
+		      to packet color on each port."
+		::= { swSredMgmt 2 }
+
+  sw8021pColorMapCtrlEntry OBJECT-TYPE
+		SYNTAX  Sw8021pColorMapCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  obsolete
+		DESCRIPTION
+		      "A list that contains priority map to packet color on per port."
+		INDEX   { sw8021pColorMapCtrlPortIndex,sw8021pColorMapCtrlPriorityIndex }
+		::= { sw8021pColorMapCtrlTable 1 }
+
+  Sw8021pColorMapCtrlEntry ::=
+		SEQUENCE {
+                sw8021pColorMapCtrlPortIndex
+                    INTEGER,
+                sw8021pColorMapCtrlPriorityIndex
+                    INTEGER,
+                sw8021pColorMapCtrlColor
+                    INTEGER
+		}
+		
+  sw8021pColorMapCtrlPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  obsolete
+		DESCRIPTION
+		      "This object indicates the port number."
+		::= { sw8021pColorMapCtrlEntry 1 }
+		
+  sw8021pColorMapCtrlPriorityIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  obsolete
+		DESCRIPTION
+		      "This object indicates the source priority of
+		      incoming packets."
+		::= { sw8021pColorMapCtrlEntry 2 }
+			
+  sw8021pColorMapCtrlColor OBJECT-TYPE
+		SYNTAX  INTEGER {
+			green(1),
+			red(2),
+			yellow(3)
+		}
+		MAX-ACCESS  read-write
+		STATUS  obsolete
+		DESCRIPTION
+		      "This object indicates the source priority of
+		      incoming packets."
+		::= { sw8021pColorMapCtrlEntry 3 }	
+
+-- ----------------------------------------------------------------------------
+  swDscpTrustPortCtrlTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwDscpTrustPortCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  obsolete
+		DESCRIPTION
+		      "A table that contains information about the
+		      DSCP trust portlist."
+		::= { swSredMgmt 3 }
+
+  swDscpTrustPortCtrlEntry OBJECT-TYPE
+		SYNTAX  SwDscpTrustPortCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  obsolete
+		DESCRIPTION
+		      "A list that contains the DSCP trusted state per port."
+		INDEX   { swDscpTrustPortCtrlPortIndex }
+		::= { swDscpTrustPortCtrlTable 1 }
+
+  SwDscpTrustPortCtrlEntry ::=
+		SEQUENCE {
+                swDscpTrustPortCtrlPortIndex
+                    INTEGER,
+                swDscpTrustPortCtrlState
+                    INTEGER
+		}
+		
+  swDscpTrustPortCtrlPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  obsolete
+		DESCRIPTION
+		      "This object indicates the port number."
+		::= { swDscpTrustPortCtrlEntry 1 }
+			
+  swDscpTrustPortCtrlState OBJECT-TYPE
+		SYNTAX  INTEGER {
+			enabled(1),
+			disabled(2)
+		}
+		MAX-ACCESS  read-write
+		STATUS  obsolete
+		DESCRIPTION
+		      "This object is used to enable/disable the DSCP
+		      trusted state on a selected port."
+		DEFVAL { disabled }
+		::= { swDscpTrustPortCtrlEntry 2 }
+						
+-- ----------------------------------------------------------------------------
+  swDscpMapCtrlTable  OBJECT-TYPE
+		SYNTAX  SEQUENCE OF SwDscpMapCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  obsolete
+		DESCRIPTION
+		      "A table that contains information about
+		      DSCP map to priority and packet color on
+		      each port."
+		::= { swSredMgmt 4 }
+
+  swDscpMapCtrlEntry OBJECT-TYPE
+		SYNTAX  SwDscpMapCtrlEntry
+		MAX-ACCESS  not-accessible
+		STATUS  obsolete
+		DESCRIPTION
+		      "A list that contains DSCP map information
+		      for each port."
+		INDEX   { swDscpMapCtrlPortIndex, swDscpMapCtrlDscpIndex }
+		::= { swDscpMapCtrlTable 1 }
+
+  SwDscpMapCtrlEntry ::=
+		SEQUENCE {
+                swDscpMapCtrlPortIndex
+                    INTEGER,
+                swDscpMapCtrlDscpIndex
+                    INTEGER,
+                swDscpMapCtrl8021pPriority
+                    INTEGER,
+                swDscpMapCtrlNewDscp
+                    INTEGER,
+                swDscpMapCtrlColor
+                    INTEGER
+		}
+		
+  swDscpMapCtrlPortIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  obsolete
+		DESCRIPTION
+		      "This object indicates the port number."
+		::= { swDscpMapCtrlEntry 1 }
+			
+  swDscpMapCtrlDscpIndex OBJECT-TYPE
+		SYNTAX  INTEGER
+		MAX-ACCESS  read-only
+		STATUS  obsolete
+		DESCRIPTION
+		      "This object indicates the source DSCP incoming packet."
+		::= { swDscpMapCtrlEntry 2 }
+				
+  swDscpMapCtrl8021pPriority OBJECT-TYPE
+		SYNTAX  INTEGER(0..7)
+		MAX-ACCESS  read-write
+		STATUS  obsolete
+		DESCRIPTION
+		      "This object indicates the 802.1p priority on each port.
+		      Default value is:
+		      DSCP	Priority
+		      0-7	0
+		      8-15	1
+		      16-23	2
+		      24-31	3
+		      32-39	4
+		      40-47	5
+		      48-55	6
+		      56-63	7
+		      "
+		::= { swDscpMapCtrlEntry 3 }
+		
+  swDscpMapCtrlNewDscp OBJECT-TYPE
+		SYNTAX  INTEGER(0..63)
+		MAX-ACCESS  read-write
+		STATUS  obsolete
+		DESCRIPTION
+		      "This object indicates the new DSCP map on each port."
+		::= { swDscpMapCtrlEntry 4 }
+	
+  swDscpMapCtrlColor OBJECT-TYPE
+		SYNTAX  INTEGER {
+			green(1),
+			red(2),
+			yellow(3)
+		}
+		MAX-ACCESS  read-write
+		STATUS  obsolete
+		DESCRIPTION
+		      "This object maps the color for packets on each port."
+		::= { swDscpMapCtrlEntry 5 }
+										
+END

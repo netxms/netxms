@@ -244,18 +244,17 @@ static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
 /**
  * Process trap
  */
-void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq)
+void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq)
 {
-   UINT32 dwOriginAddr, dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
+   UINT32 dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
    TCHAR *pszTrapArgs, szBuffer[4096];
    SNMP_Variable *pVar;
    Node *pNode;
 	BOOL processed = FALSE;
    int iResult;
 
-   dwOriginAddr = ntohl(pOrigin->sin_addr.s_addr);
    DbgPrintf(4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
-             pdu->getTrapId()->getValueAsText(), IpToStr(dwOriginAddr, szBuffer));
+             pdu->getTrapId()->getValueAsText(), srcAddr.toString(szBuffer));
 	if (isInformRq)
 	{
 		SNMP_PDU *response = new SNMP_PDU(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
@@ -270,7 +269,7 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
 	}
 
    // Match IP address to object
-   pNode = FindNodeByIP(0, dwOriginAddr);
+   pNode = FindNodeByIP(0, srcAddr);
 
    // Write trap to log if required
    if (m_bLogAllTraps || (pNode != NULL))
@@ -297,7 +296,7 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
       _sntprintf(szQuery, 8192, _T("INSERT INTO snmp_trap_log (trap_id,trap_timestamp,")
                                 _T("ip_addr,object_id,trap_oid,trap_varlist) VALUES ")
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,'%s',%s)"),
-                 m_qnTrapId, dwTimeStamp, IpToStr(dwOriginAddr, szBuffer),
+                 m_qnTrapId, dwTimeStamp, srcAddr.toString(szBuffer),
                  (pNode != NULL) ? pNode->getId() : (UINT32)0, pdu->getTrapId()->getValueAsText(),
                  (const TCHAR *)DBPrepareString(g_hCoreDB, pszTrapArgs));
       QueueSQLRequest(szQuery);
@@ -308,7 +307,7 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
       msg.setField(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
       msg.setField(VID_TRAP_LOG_MSG_BASE, (QWORD)m_qnTrapId);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 1, dwTimeStamp);
-      msg.setField(VID_TRAP_LOG_MSG_BASE + 2, dwOriginAddr);
+      msg.setField(VID_TRAP_LOG_MSG_BASE + 2, srcAddr);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 3, (pNode != NULL) ? pNode->getId() : (UINT32)0);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 4, (TCHAR *)pdu->getTrapId()->getValueAsText());
       msg.setField(VID_TRAP_LOG_MSG_BASE + 5, pszTrapArgs);
@@ -370,7 +369,7 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
 
          if (dwMatchLen > 0)
          {
-            GenerateTrapEvent(pNode->getId(), dwMatchIdx, pdu, (int)ntohs(pOrigin->sin_port));
+            GenerateTrapEvent(pNode->getId(), dwMatchIdx, pdu, srcPort);
          }
          else     // Process unmatched traps
          {
@@ -394,7 +393,7 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
                // Generate default event for unmatched traps
                const TCHAR *names[3] = { _T("oid"), NULL, _T("sourcePort") };
                PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, pNode->getId(), "ssd", names,
-                  pdu->getTrapId()->getValueAsText(), pszTrapArgs, (int)ntohs(pOrigin->sin_port));
+                  pdu->getTrapId()->getValueAsText(), pszTrapArgs, srcPort);
                free(pszTrapArgs);
             }
          }
@@ -407,17 +406,17 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
    }
    else if (g_flags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled
    {
-      DbgPrintf(4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), IpToStr(dwOriginAddr, szBuffer));
-      Subnet *subnet = FindSubnetForNode(0, dwOriginAddr);
+      DbgPrintf(4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), srcAddr.toString(szBuffer));
+      Subnet *subnet = FindSubnetForNode(0, srcAddr);
       if (subnet != NULL)
       {
-         if ((subnet->IpAddr() != dwOriginAddr) && !IsBroadcastAddress(dwOriginAddr, subnet->getIpNetMask()))
+         if (!subnet->getIpAddress().equals(srcAddr) && !srcAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
          {
             NEW_NODE *pInfo;
 
             pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-            pInfo->dwIpAddr = dwOriginAddr;
-            pInfo->dwNetMask = subnet->getIpNetMask();
+            pInfo->ipAddr = srcAddr;
+            pInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
 				pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 				pInfo->ignoreFilter = FALSE;
 				memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
@@ -429,8 +428,7 @@ void ProcessTrap(SNMP_PDU *pdu, struct sockaddr_in *pOrigin, SNMP_Transport *pTr
          NEW_NODE *pInfo;
 
          pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-         pInfo->dwIpAddr = dwOriginAddr;
-         pInfo->dwNetMask = 0;
+         pInfo->ipAddr = srcAddr;
 			pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 			pInfo->ignoreFilter = FALSE;
 			memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
@@ -461,17 +459,13 @@ static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addr
  */
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 {
-   SOCKET hSocket;
-   struct sockaddr_in addr;
-   int iBytes;
-   socklen_t nAddrLen;
    SNMP_UDPTransport *pTransport;
    SNMP_PDU *pdu;
 
 	static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
 	SNMP_Engine localEngine(engineId, 12);
 
-   hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+   SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
    if (hSocket == INVALID_SOCKET)
    {
       nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "SNMPTrapReceiver");
@@ -482,19 +476,20 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 	SetSocketReuseFlag(hSocket);
 
    // Fill in local address structure
-   memset(&addr, 0, sizeof(struct sockaddr_in));
-   addr.sin_family = AF_INET;
-   addr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
-   addr.sin_port = htons(m_wTrapPort);
+   struct sockaddr_in servAddr;
+   memset(&servAddr, 0, sizeof(struct sockaddr_in));
+   servAddr.sin_family = AF_INET;
+   servAddr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
+   servAddr.sin_port = htons(m_wTrapPort);
 
    // Bind socket
-   if (bind(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
+   if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", m_wTrapPort, _T("SNMPTrapReceiver"), WSAGetLastError());
       closesocket(hSocket);
       return THREAD_OK;
    }
-	nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), m_wTrapPort);
+	nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), m_wTrapPort);
 
    pTransport = new SNMP_UDPTransport(hSocket);
 	pTransport->enableEngineIdAutoupdate(true);
@@ -504,9 +499,10 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    // Wait for packets
    while(!IsShutdownInProgress())
    {
-      nAddrLen = sizeof(struct sockaddr_in);
-      iBytes = pTransport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &nAddrLen, ContextFinder);
-      if ((iBytes > 0) && (pdu != NULL))
+      struct sockaddr_in addr;
+      socklen_t addrLen = sizeof(struct sockaddr_in);
+      int bytes = pTransport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &addrLen, ContextFinder);
+      if ((bytes > 0) && (pdu != NULL))
       {
 			DbgPrintf(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
 			if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
@@ -516,7 +512,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 					SNMP_SecurityContext *context = pTransport->getSecurityContext();
 					context->setAuthoritativeEngine(localEngine);
 				}
-            ProcessTrap(pdu, &addr, pTransport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
+            ProcessTrap(pdu, InetAddress::createFromSockaddr((struct sockaddr *)&addr), ntohs(addr.sin_port), pTransport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
 			}
 			else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
 			{
@@ -616,17 +612,17 @@ void SendTrapsToClient(ClientSession *pSession, UINT32 dwRqId)
  */
 void CreateTrapCfgMessage(NXCPMessage &msg)
 {
-   UINT32 i, dwId;
+   UINT32 i, id;
 
    MutexLock(m_mutexTrapCfgAccess);
 	msg.setField(VID_NUM_TRAPS, m_dwNumTraps);
-   for(i = 0, dwId = VID_TRAP_INFO_BASE; i < m_dwNumTraps; i++, dwId += 5)
+   for(i = 0, id = VID_TRAP_INFO_BASE; i < m_dwNumTraps; i++, id += 5)
    {
-      msg.setField(dwId++, m_pTrapCfg[i].dwId);
-      msg.setField(dwId++, m_pTrapCfg[i].dwOidLen);
-      msg.setFieldFromInt32Array(dwId++, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
-      msg.setField(dwId++, m_pTrapCfg[i].dwEventCode);
-      msg.setField(dwId++, m_pTrapCfg[i].szDescription);
+      msg.setField(id++, m_pTrapCfg[i].dwId);
+      msg.setField(id++, m_pTrapCfg[i].dwOidLen);
+      msg.setFieldFromInt32Array(id++, m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId);
+      msg.setField(id++, m_pTrapCfg[i].dwEventCode);
+      msg.setField(id++, m_pTrapCfg[i].szDescription);
    }
    MutexUnlock(m_mutexTrapCfgAccess);
 }
@@ -663,7 +659,7 @@ static void NotifyOnTrapCfgDelete(UINT32 id)
 /**
  * Delete trap configuration record
  */
-UINT32 DeleteTrap(UINT32 dwId)
+UINT32 DeleteTrap(UINT32 id)
 {
    UINT32 i, j, dwResult = RCC_INVALID_TRAP_ID;
    TCHAR szQuery[256];
@@ -672,7 +668,7 @@ UINT32 DeleteTrap(UINT32 dwId)
 
    for(i = 0; i < m_dwNumTraps; i++)
    {
-      if (m_pTrapCfg[i].dwId == dwId)
+      if (m_pTrapCfg[i].dwId == id)
       {
          // Free allocated resources
          for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
@@ -685,13 +681,13 @@ UINT32 DeleteTrap(UINT32 dwId)
          memmove(&m_pTrapCfg[i], &m_pTrapCfg[i + 1], sizeof(NXC_TRAP_CFG_ENTRY) * (m_dwNumTraps - i));
 
          // Remove trap entry from database
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_cfg WHERE trap_id=%d"), dwId);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_cfg WHERE trap_id=%d"), id);
          QueueSQLRequest(szQuery);
-         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), dwId);
+         _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_pmap WHERE trap_id=%d"), id);
          QueueSQLRequest(szQuery);
          dwResult = RCC_SUCCESS;
 
-			NotifyOnTrapCfgDelete(dwId);
+			NotifyOnTrapCfgDelete(id);
          break;
       }
    }
@@ -929,7 +925,7 @@ UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg)
 /**
  * Create trap record in NXMP file
  */
-void CreateNXMPTrapRecord(String &str, UINT32 dwId)
+void CreateTrapExportRecord(String &xml, UINT32 id)
 {
 	UINT32 i, j;
 	TCHAR szBuffer[1024];
@@ -937,12 +933,12 @@ void CreateNXMPTrapRecord(String &str, UINT32 dwId)
    MutexLock(m_mutexTrapCfgAccess);
    for(i = 0; i < m_dwNumTraps; i++)
    {
-      if (m_pTrapCfg[i].dwId == dwId)
+      if (m_pTrapCfg[i].dwId == id)
       {
-			str.appendFormattedString(_T("\t\t<trap id=\"%d\">\n")
+			xml.appendFormattedString(_T("\t\t<trap id=\"%d\">\n")
 			                       _T("\t\t\t<oid>%s</oid>\n")
 			                       _T("\t\t\t<description>%s</description>\n")
-			                       _T("\t\t\t<userTag>%s</userTag>\n"), dwId,
+			                       _T("\t\t\t<userTag>%s</userTag>\n"), id,
 			                       SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen,
 			                                            m_pTrapCfg[i].pdwObjectId,
 																	  szBuffer, 1024),
@@ -950,34 +946,34 @@ void CreateNXMPTrapRecord(String &str, UINT32 dwId)
 										  (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].szUserTag));
 
 		   EventNameFromCode(m_pTrapCfg[i].dwEventCode, szBuffer);
-			str.appendFormattedString(_T("\t\t\t<event>%s</event>\n"), (const TCHAR *)EscapeStringForXML2(szBuffer));
+			xml.appendFormattedString(_T("\t\t\t<event>%s</event>\n"), (const TCHAR *)EscapeStringForXML2(szBuffer));
 			if (m_pTrapCfg[i].dwNumMaps > 0)
 			{
-				str += _T("\t\t\t<parameters>\n");
+            xml.append(_T("\t\t\t<parameters>\n"));
 				for(j = 0; j < m_pTrapCfg[i].dwNumMaps; j++)
 				{
-					str.appendFormattedString(_T("\t\t\t\t<parameter id=\"%d\">\n")
+					xml.appendFormattedString(_T("\t\t\t\t<parameter id=\"%d\">\n")
 			                             _T("\t\t\t\t\t<flags>%d</flags>\n")
 					                       _T("\t\t\t\t\t<description>%s</description>\n"),
 												  j + 1, m_pTrapCfg[i].pMaps[j].dwFlags,
 												  (const TCHAR *)EscapeStringForXML2(m_pTrapCfg[i].pMaps[j].szDescription));
                if ((m_pTrapCfg[i].pMaps[j].dwOidLen & 0x80000000) == 0)
 					{
-						str.appendFormattedString(_T("\t\t\t\t\t<oid>%s</oid>\n"),
+						xml.appendFormattedString(_T("\t\t\t\t\t<oid>%s</oid>\n"),
 						                       SNMPConvertOIDToText(m_pTrapCfg[i].pMaps[j].dwOidLen,
 													                       m_pTrapCfg[i].pMaps[j].pdwObjectId,
 																				  szBuffer, 1024));
 					}
 					else
 					{
-						str.appendFormattedString(_T("\t\t\t\t\t<position>%d</position>\n"),
+						xml.appendFormattedString(_T("\t\t\t\t\t<position>%d</position>\n"),
 						                       m_pTrapCfg[i].pMaps[j].dwOidLen & 0x7FFFFFFF);
 					}
-					str += _T("\t\t\t\t</parameter>\n");
+               xml.append(_T("\t\t\t\t</parameter>\n"));
 				}
-				str += _T("\t\t\t</parameters>\n");
+            xml.append(_T("\t\t\t</parameters>\n"));
 			}
-			str += _T("\t\t</trap>\n");
+         xml.append(_T("\t\t</trap>\n"));
 			break;
 		}
 	}

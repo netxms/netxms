@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,7 +115,7 @@ static void CleanAlarmHistory(DB_HANDLE hdb)
  */
 static void CleanDciData(NetObj *object, void *data)
 {
-	((DataCollectionTarget *)object)->cleanDCIData();
+	((DataCollectionTarget *)object)->cleanDCIData((DB_HANDLE)data);
 }
 
 /**
@@ -123,31 +123,56 @@ static void CleanDciData(NetObj *object, void *data)
  */
 THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 {
-   time_t currTime;
-   TCHAR szQuery[256];
-   UINT32 dwRetentionTime, dwInterval;
+   // Read housekeeping configuration
+   int hour;
+   int minute;
 
-   // Load configuration
-   dwInterval = ConfigReadULong(_T("HouseKeepingInterval"), 3600);
-
-   // Housekeeping loop
-   while(!IsShutdownInProgress())
+   TCHAR buffer[64];
+   ConfigReadStr(_T("HousekeeperStartTime"), buffer, 64, _T("02:00"));
+   TCHAR *p = _tcschr(buffer, _T(':'));
+   if (p != NULL)
    {
-      currTime = time(NULL);
-      if (SleepAndCheckForShutdown(dwInterval - (UINT32)(currTime % dwInterval)))
-         break;      // Shutdown has arrived
+      *p = 0;
+      p++;
+      minute = _tcstol(p, NULL, 10);
+      if ((minute < 0) || (minute > 59))
+      {
+         DbgPrintf(2, _T("Housekeeper: invalid minute value %s"), p);
+         minute = 0;
+      }
+   }
+   else
+   {
+      minute = 0;
+   }
+   hour = _tcstol(buffer, NULL, 10);
+   if ((hour < 0) || (hour > 23))
+   {
+      DbgPrintf(2, _T("Housekeeper: invalid hour value %s"), buffer);
+      hour = 0;
+   }
+   DbgPrintf(2, _T("Housekeeper: wakeup time is %02d:%02d"), hour, minute);
 
+   int sleepTime = GetSleepTime(hour, minute, 0);
+   DbgPrintf(4, _T("Housekeeper: sleeping for %d seconds"), sleepTime);
+
+   while(!SleepAndCheckForShutdown(sleepTime))
+   {
+      DbgPrintf(4, _T("Housekeeper: wakeup"));
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
 		CleanAlarmHistory(hdb);
 
+      time_t currTime = time(NULL);
+
 		// Remove outdated event log records
-		dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
+		UINT32 dwRetentionTime = ConfigReadULong(_T("EventLogRetentionTime"), 90);
 		if (dwRetentionTime > 0)
 		{
 			dwRetentionTime *= 86400;	// Convert days to seconds
-			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), (long)(currTime - dwRetentionTime));
-			DBQuery(hdb, szQuery);
+         TCHAR query[256];
+			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM event_log WHERE event_timestamp<%ld"), (long)(currTime - dwRetentionTime));
+			DBQuery(hdb, query);
 		}
 
 		// Remove outdated syslog records
@@ -155,8 +180,9 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		if (dwRetentionTime > 0)
 		{
 			dwRetentionTime *= 86400;	// Convert days to seconds
-			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), (long)(currTime - dwRetentionTime));
-			DBQuery(hdb, szQuery);
+         TCHAR query[256];
+			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM syslog WHERE msg_timestamp<%ld"), (long)(currTime - dwRetentionTime));
+			DBQuery(hdb, query);
 		}
 
 		// Remove outdated audit log records
@@ -164,8 +190,9 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		if (dwRetentionTime > 0)
 		{
 			dwRetentionTime *= 86400;	// Convert days to seconds
-			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), (long)(currTime - dwRetentionTime));
-			DBQuery(hdb, szQuery);
+         TCHAR query[256];
+			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM audit_log WHERE timestamp<%ld"), (long)(currTime - dwRetentionTime));
+			DBQuery(hdb, query);
 		}
 
 		// Remove outdated SNMP trap log records
@@ -173,8 +200,9 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		if (dwRetentionTime > 0)
 		{
 			dwRetentionTime *= 86400;	// Convert days to seconds
-			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_log WHERE trap_timestamp<%ld"), (long)(currTime - dwRetentionTime));
-			DBQuery(hdb, szQuery);
+         TCHAR query[256];
+			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM snmp_trap_log WHERE trap_timestamp<%ld"), (long)(currTime - dwRetentionTime));
+			DBQuery(hdb, query);
 		}
 
 		// Delete empty subnets if needed
@@ -182,13 +210,17 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 			DeleteEmptySubnets();
 
 		// Remove expired DCI data
-		g_idxNodeById.forEach(CleanDciData, NULL);
-		g_idxClusterById.forEach(CleanDciData, NULL);
-		g_idxMobileDeviceById.forEach(CleanDciData, NULL);
+		g_idxNodeById.forEach(CleanDciData, hdb);
+		g_idxClusterById.forEach(CleanDciData, hdb);
+		g_idxMobileDeviceById.forEach(CleanDciData, hdb);
 
 		DBConnectionPoolReleaseConnection(hdb);
 
 		SaveCurrentFreeId();
+
+      ThreadSleep(1);   // to prevent multiple executions if processing took less then 1 second
+      sleepTime = GetSleepTime(hour, minute, 0);
+      DbgPrintf(4, _T("Housekeeper: sleeping for %d seconds"), sleepTime);
    }
 
    DbgPrintf(1, _T("Housekeeper thread terminated"));

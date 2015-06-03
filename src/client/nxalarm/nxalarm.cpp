@@ -244,7 +244,9 @@ int main(int argc, char *argv[])
 #endif
 
    NXCSession *session = new NXCSession();
-   rcc = session->connect(_HOST, login, password, isEncrypt ? NXCF_ENCRYPT : 0, _T("nxalarm/") NETXMS_VERSION_STRING);
+   static UINT32 protocolVersions[] = { CPV_INDEX_ALARMS };
+   rcc = session->connect(_HOST, login, password, isEncrypt ? NXCF_ENCRYPT : 0, _T("nxalarm/") NETXMS_VERSION_STRING, 
+                          protocolVersions, sizeof(protocolVersions) / sizeof(UINT32));
 	if (rcc != RCC_SUCCESS)
 	{
 		_tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(rcc));

@@ -20,6 +20,7 @@ package org.netxms.client;
 
 import java.net.InetAddress;
 import java.util.Set;
+import org.netxms.base.InetAddressEx;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
@@ -111,7 +112,7 @@ public class ObjectTest extends SessionTest
 		
 		NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, "TestNode", 2);
 		cd.setCreationFlags(NXCObjectCreationData.CF_CREATE_UNMANAGED);
-		cd.setIpAddress(InetAddress.getByName("192.168.10.1"));
+		cd.setIpAddress(new InetAddressEx(InetAddress.getByName("192.168.10.1"), 0));
 		long id = session.createObject(cd);
 		assertFalse(id == 0);
 
@@ -184,7 +185,7 @@ public class ObjectTest extends SessionTest
       Set<AbstractObject> subnets = object.getAllChilds(AbstractObject.OBJECT_SUBNET);
       for(AbstractObject s : subnets)
       {
-         System.out.println(s.getObjectName() + ": " + ((Subnet)s).getSubnetMask().getHostAddress() + "/" + ((Subnet)s).getMaskBits());
+         System.out.println(s.getObjectName() + ": " + ((Subnet)s).getNetworkAddress().toString());
       }
       
       session.disconnect();

@@ -368,6 +368,7 @@ public class Messages extends NLS
    public static String Unmanage_JobError;
    public static String VPNSubnets_JobError;
    public static String VPNSubnets_JobName;
+   public static String VPNSubnets_LocalNetworks;
    public static String VPNSubnets_PeerGateway;
    public static String VPNSubnets_RemoteNetworks;
    public static String ZoneCommunications_DefaultAgentProxy;

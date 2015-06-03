@@ -6,6 +6,7 @@ package org.netxms.ui.android.service.tasks;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.service.ClientConnectorService;
+
 import android.os.AsyncTask;
 
 /**
@@ -14,7 +15,7 @@ import android.os.AsyncTask;
 public class ExecActionTask extends AsyncTask<Object, Void, Exception>
 {
 	private ClientConnectorService service;
-	
+
 	/* (non-Javadoc)
 	 * @see android.os.AsyncTask#doInBackground(Params[])
 	 */
@@ -24,9 +25,12 @@ public class ExecActionTask extends AsyncTask<Object, Void, Exception>
 		service = (ClientConnectorService)params[3];
 		try
 		{
-			((NXCSession)params[0]).executeAction((Long)params[1], (String)params[2]);
+			if (((String)params[2]).equals("wakeup"))
+				((NXCSession)params[0]).wakeupNode((Long)params[1]);
+			else
+				((NXCSession)params[0]).executeAction((Long)params[1], (String)params[2]);
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			return e;
 		}

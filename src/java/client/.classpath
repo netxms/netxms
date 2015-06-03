@@ -5,7 +5,6 @@
 	<classpathentry kind="src" path="netxms-base/src/main/java"/>
 	<classpathentry kind="src" path="netxms-client/src/main/resources"/>
 	<classpathentry kind="src" path="netxms-client/src/main/java"/>
-	<classpathentry kind="src" path="netxms-client-api/src/main/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

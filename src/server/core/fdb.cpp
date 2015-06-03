@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -107,11 +107,13 @@ static int EntryComparator(const void *p1, const void *p2)
  * Find MAC address
  * Returns interface index or 0 if MAC address not found
  */
-UINT32 ForwardingDatabase::findMacAddress(const BYTE *macAddr)
+UINT32 ForwardingDatabase::findMacAddress(const BYTE *macAddr, bool *isStatic)
 {
 	FDB_ENTRY key;
 	memcpy(key.macAddr, macAddr, MAC_ADDR_LENGTH);
 	FDB_ENTRY *entry = (FDB_ENTRY *)bsearch(&key, m_fdb, m_fdbSize, sizeof(FDB_ENTRY), EntryComparator);
+   if ((entry != NULL) && (isStatic != NULL))
+      *isStatic = (entry->type == 5);
 	return (entry != NULL) ? entry->ifIndex : 0;
 }
 
@@ -158,15 +160,16 @@ void ForwardingDatabase::print(CONSOLE_CTX ctx, Node *owner)
 {
    TCHAR macAddrStr[24];
 
-   ConsolePrintf(ctx, _T("\x1b[1mMAC address\x1b[0m       | \x1b[1mIfIndex\x1b[0m | \x1b[1mInterface\x1b[0m            | \x1b[1mPort\x1b[0m | \x1b[1mNode\x1b[0m  | \x1b[1mNode name\x1b[0m\n"));
+   ConsolePrintf(ctx, _T("\x1b[1mMAC address\x1b[0m       | \x1b[1mIfIndex\x1b[0m | \x1b[1mInterface\x1b[0m            | \x1b[1mPort\x1b[0m | \x1b[1mType\x1b[0m    | \x1b[1mNode\x1b[0m  | \x1b[1mNode name\x1b[0m\n"));
    ConsolePrintf(ctx, _T("------------------+---------+----------------------+------+-------+-----------------------------\n"));
 	for(int i = 0; i < m_fdbSize; i++)
    {
       Node *node = (Node *)FindObjectById(m_fdb[i].nodeObject, OBJECT_NODE);
-      Interface *iface = owner->findInterface(m_fdb[i].ifIndex, INADDR_ANY);
-      ConsolePrintf(ctx, _T("%s | %7d | %-20s | %4d | %5d | %s\n"), MACToStr(m_fdb[i].macAddr, macAddrStr),
+      Interface *iface = owner->findInterfaceByIndex(m_fdb[i].ifIndex);
+      ConsolePrintf(ctx, _T("%s | %7d | %-20s | %4d | %-7s | %5d | %s\n"), MACToStr(m_fdb[i].macAddr, macAddrStr),
          m_fdb[i].ifIndex, (iface != NULL) ? iface->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"), 
-         m_fdb[i].port, m_fdb[i].nodeObject, (node != NULL) ? node->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"));
+         m_fdb[i].port, (m_fdb[i].type == 3) ? _T("dynamic") : ((m_fdb[i].type == 5) ? _T("static") : _T("unknown")),
+         m_fdb[i].nodeObject, (node != NULL) ? node->getName() : _T("\x1b[31;1mUNKNOWN\x1b[0m"));
    }
    ConsolePrintf(ctx, _T("\n%d entries\n\n"), m_fdbSize);
 }
@@ -187,7 +190,7 @@ void ForwardingDatabase::fillMessage(NXCPMessage *msg)
       msg->setField(fieldId++, m_fdb[i].nodeObject);
       msg->setField(fieldId++, m_fdb[i].vlanId);
       msg->setField(fieldId++, m_fdb[i].type);
-      Interface *iface = (node != NULL) ? node->findInterface(m_fdb[i].ifIndex, INADDR_ANY) : NULL;
+      Interface *iface = (node != NULL) ? node->findInterfaceByIndex(m_fdb[i].ifIndex) : NULL;
       if (iface != NULL)
       {
          msg->setField(fieldId++, iface->getName());
@@ -241,7 +244,7 @@ static UINT32 FDBHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
       {
          int port = varPort->getValueAsInt();
          int status = varStatus->getValueAsInt();
-         if ((port > 0) && (status == 3))  // status: 3 == learned
+         if ((port > 0) && ((status == 3) || (status == 5)))  // status: 3 == learned, 5 == static
          {
             FDB_ENTRY entry;
 
@@ -288,7 +291,7 @@ static UINT32 Dot1qTpFdbHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Tran
 	if (rcc == SNMP_ERR_SUCCESS)
    {
 		int status = pRespPDU->getVariable(0)->getValueAsInt();
-		if (status == 3) // status: 3 == learned
+		if ((status == 3) || (status == 5)) // status: 3 == learned, 5 == static
 		{
 			FDB_ENTRY entry;
 

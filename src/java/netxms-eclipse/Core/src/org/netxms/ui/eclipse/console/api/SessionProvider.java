@@ -30,10 +30,8 @@ public interface SessionProvider
 	 * 
 	 * @param connAddress
 	 * @param connPort
-	 * @param connLoginName
-	 * @param connPassword
 	 * @param connUseEncryption
 	 * @return
 	 */
-	public NXCSession createSession(String connAddress, int connPort, String connLoginName, String connPassword, boolean connUseEncryption);
+	public NXCSession createSession(String connAddress, int connPort, boolean connUseEncryption);
 }

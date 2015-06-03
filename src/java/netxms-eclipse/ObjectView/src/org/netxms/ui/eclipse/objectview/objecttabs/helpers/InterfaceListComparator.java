@@ -93,9 +93,7 @@ public class InterfaceListComparator extends ViewerComparator
 				result = iface1.getMacAddress().compareTo(iface2.getMacAddress());
 				break;
 			case InterfacesTab.COLUMN_IP_ADDRESS:
-				result = ComparatorHelper.compareInetAddresses(iface1.getPrimaryIP(), iface2.getPrimaryIP());
-				if(result == 0)
-				   result = ComparatorHelper.compareInetAddresses(iface1.getSubnetMask(), iface2.getSubnetMask());
+				result = ComparatorHelper.compareInetAddresses(iface1.getFirstUnicastAddress(), iface2.getFirstUnicastAddress());
 				break;
 			default:
 				result = 0;

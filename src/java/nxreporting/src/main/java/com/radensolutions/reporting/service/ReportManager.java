@@ -2,7 +2,7 @@ package com.radensolutions.reporting.service;
 
 import com.radensolutions.reporting.model.ReportDefinition;
 import com.radensolutions.reporting.model.ReportResult;
-import org.netxms.api.client.reporting.ReportRenderFormat;
+import org.netxms.client.reporting.ReportRenderFormat;
 
 import java.io.File;
 import java.util.List;

@@ -33,11 +33,10 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.NetXMSClientException;
-import org.netxms.api.client.ProgressListener;
-import org.netxms.api.client.images.LibraryImage;
+import org.netxms.client.LibraryImage;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ProgressListener;
 import org.netxms.nebula.widgets.gallery.DefaultGalleryGroupRenderer;
 import org.netxms.nebula.widgets.gallery.DefaultGalleryItemRenderer;
 import org.netxms.nebula.widgets.gallery.Gallery;
@@ -513,7 +512,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 	 * @throws NetXMSClientException
 	 * @throws IOException
 	 */
-	private void refreshImages() throws NetXMSClientException, IOException
+	private void refreshImages() throws NXCException, IOException
 	{
 		new ConsoleJob(Messages.get(display).ImageLibrary_ReloadJob, this, Activator.PLUGIN_ID, null, display) {
 			@Override
@@ -614,7 +613,7 @@ public class ImageLibrary extends ViewPart implements ImageUpdateListener
 		{
 			refreshImages();
 		}
-		catch(NetXMSClientException e)
+		catch(NXCException e)
 		{
 			Activator.logError("Exception in ImageLibrary.imageUpdated()", e); //$NON-NLS-1$
 		}

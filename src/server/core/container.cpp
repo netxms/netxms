@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -191,7 +191,7 @@ BOOL Container::saveToDatabase(DB_HANDLE hdb)
 			DBQuery(hdb, query);
 		}
 		UnlockChildList();
-	
+
 		// Save access list
 		saveACLToDB(hdb);
 
@@ -247,7 +247,7 @@ void Container::linkChildObjects()
 /**
  * Calculate status for compound object based on childs' status
  */
-void Container::calculateCompoundStatus(BOOL bForcedRecalc) 
+void Container::calculateCompoundStatus(BOOL bForcedRecalc)
 {
 	NetObj::calculateCompoundStatus(bForcedRecalc);
 
@@ -263,9 +263,10 @@ void Container::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXCP message with object's data
  */
-void Container::fillMessage(NXCPMessage *pMsg)
+void Container::fillMessageInternal(NXCPMessage *pMsg)
 {
-   NetObj::fillMessage(pMsg);
+   NetObj::fillMessageInternal(pMsg);
+
    pMsg->setField(VID_CATEGORY, m_dwCategory);
 	pMsg->setField(VID_FLAGS, m_flags);
 	pMsg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_bindFilterSource));
@@ -274,11 +275,8 @@ void Container::fillMessage(NXCPMessage *pMsg)
 /**
  * Modify object from message
  */
-UINT32 Container::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Container::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
    // Change flags
    if (pRequest->isFieldExist(VID_FLAGS))
 		m_flags = pRequest->getFieldAsUInt32(VID_FLAGS);
@@ -291,7 +289,7 @@ UINT32 Container::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 		safe_free(script);
 	}
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
 /**

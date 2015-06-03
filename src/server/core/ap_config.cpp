@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2010 Victor Kirhenshtein
 **
@@ -135,39 +135,32 @@ BOOL AgentPolicyConfig::loadFromDatabase(UINT32 dwId)
 	return success;
 }
 
-
-//
-// Create NXCP message with policy data
-//
-
-void AgentPolicyConfig::fillMessage(NXCPMessage *msg)
+/**
+ * Create NXCP message with policy data
+ */
+void AgentPolicyConfig::fillMessageInternal(NXCPMessage *msg)
 {
-	AgentPolicy::fillMessage(msg);
+   AgentPolicy::fillMessageInternal(msg);
 	msg->setField(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
 }
 
 /**
  * Modify policy from message
  */
-UINT32 AgentPolicyConfig::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 AgentPolicyConfig::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
 	if (pRequest->isFieldExist(VID_CONFIG_FILE_DATA))
 	{
 		safe_free(m_fileContent);
 		m_fileContent = pRequest->getFieldAsString(VID_CONFIG_FILE_DATA);
 	}
 
-	return AgentPolicy::modifyFromMessage(pRequest, TRUE);
+   return AgentPolicy::modifyFromMessageInternal(pRequest);
 }
 
-
-//
-// Create deployment message
-//
-
+/**
+ * Create deployment message
+ */
 bool AgentPolicyConfig::createDeploymentMessage(NXCPMessage *msg)
 {
 	if (!AgentPolicy::createDeploymentMessage(msg))

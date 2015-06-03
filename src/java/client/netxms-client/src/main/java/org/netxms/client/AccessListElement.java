@@ -18,8 +18,8 @@
  */
 package org.netxms.client;
 
-import org.netxms.api.client.constants.UserAccessRights;
-import org.netxms.api.client.users.AbstractAccessListElement;
+import org.netxms.client.constants.UserAccessRights;
+import org.netxms.client.users.AbstractAccessListElement;
 
 /**
  * Access list element for NetXMS objects

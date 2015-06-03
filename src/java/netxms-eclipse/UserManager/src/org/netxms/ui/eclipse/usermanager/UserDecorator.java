@@ -22,7 +22,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.BaseLabelProvider;
 import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
-import org.netxms.api.client.users.AbstractUserObject;
+import org.netxms.client.users.AbstractUserObject;
 
 /**
  * Label decorator for NetXMS objects

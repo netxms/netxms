@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -68,9 +68,9 @@ THREAD_RESULT THREAD_CALL AgentConnection::receiverThreadStarter(void *pArg)
 /**
  * Constructor for AgentConnection
  */
-AgentConnection::AgentConnection(UINT32 ipAddr, WORD port, int authMethod, const TCHAR *secret)
+AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, const TCHAR *secret)
 {
-   m_dwAddr = ipAddr;
+   m_addr = addr;
    m_wPort = port;
    m_iAuthMethod = authMethod;
    if (secret != NULL)
@@ -174,7 +174,7 @@ void AgentConnection::receiverThread()
    NXCP_BUFFER *pMsgBuffer;
    BYTE *pDecryptionBuffer = NULL;
    int error;
-   TCHAR szBuffer[128], szIpAddr[16];
+   TCHAR szBuffer[128];
 	SOCKET nSocket;
 
    // Initialize raw message receiving function
@@ -251,7 +251,7 @@ void AgentConnection::receiverThread()
          pRawMsg->code = ntohs(pRawMsg->code);
          pRawMsg->numFields = ntohl(pRawMsg->numFields);
          DbgPrintf(6, _T("Received raw message %s from agent at %s"),
-			          NXCPMessageCodeName(pRawMsg->code, szBuffer), IpToStr(getIpAddr(), szIpAddr));
+            NXCPMessageCodeName(pRawMsg->code, szBuffer), (const TCHAR *)m_addr.toString());
 
 			if ((pRawMsg->code == CMD_FILE_DATA) && (pRawMsg->id == m_dwDownloadRequestId))
 			{
@@ -393,7 +393,6 @@ void AgentConnection::receiverThread()
  */
 BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, UINT32 *pdwSocketError)
 {
-   struct sockaddr_in sa;
    TCHAR szBuffer[256];
    BOOL bSuccess = FALSE, bForceEncryption = FALSE, bSecondPass = FALSE;
    UINT32 dwError = 0;
@@ -416,8 +415,10 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, 
    if (m_hSocket != -1)
       closesocket(m_hSocket);
 
+   struct sockaddr *sa;
+
    // Create socket
-   m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
+   m_hSocket = socket(m_bUseProxy ? m_proxyAddr.getFamily() : m_addr.getFamily(), SOCK_STREAM, 0);
    if (m_hSocket == INVALID_SOCKET)
    {
       printMsg(_T("Call to socket() failed"));
@@ -425,25 +426,16 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, 
    }
 
    // Fill in address structure
-   memset(&sa, 0, sizeof(sa));
-   sa.sin_family = AF_INET;
-   if (m_bUseProxy)
-   {
-      sa.sin_addr.s_addr = m_dwProxyAddr;
-      sa.sin_port = htons(m_wProxyPort);
-   }
-   else
-   {
-      sa.sin_addr.s_addr = m_dwAddr;
-      sa.sin_port = htons(m_wPort);
-   }
+   SockAddrBuffer sb;
+   sa = m_bUseProxy ? m_proxyAddr.fillSockAddr(&sb, m_wProxyPort) : m_addr.fillSockAddr(&sb, m_wPort);
 
    // Connect to server
-	if (ConnectEx(m_hSocket, (struct sockaddr *)&sa, sizeof(sa), m_connectionTimeout) == -1)
+	if ((sa == NULL) || (ConnectEx(m_hSocket, sa, SA_LEN(sa), m_connectionTimeout) == -1))
    {
       if (bVerbose)
-         printMsg(_T("Cannot establish connection with agent %s"),
-                  IpToStr(ntohl(m_bUseProxy ? m_dwProxyAddr : m_dwAddr), szBuffer));
+         printMsg(_T("Cannot establish connection with agent at %s:%d"),
+            m_bUseProxy ? m_proxyAddr.toString(szBuffer) : m_addr.toString(szBuffer),
+            (int)(m_bUseProxy ? m_wProxyPort : m_wPort));
       dwError = ERR_CONNECT_FAILED;
       goto connect_cleanup;
    }
@@ -489,13 +481,13 @@ setup_encryption:
          bForceEncryption = TRUE;
          goto setup_encryption;
       }
-      printMsg(_T("Authentication to agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
+      printMsg(_T("Authentication to agent %s failed (%s)"), m_addr.toString(szBuffer),
                AgentErrorCodeToText(dwError));
       goto connect_cleanup;
    }
 
-   // Test connectivity
-   if ((dwError = nop()) != ERR_SUCCESS)
+   // Test connectivity and enable IPv6 support
+   if ((dwError = enableIPv6()) != ERR_SUCCESS)
    {
       if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
           (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
@@ -503,9 +495,11 @@ setup_encryption:
          bForceEncryption = TRUE;
          goto setup_encryption;
       }
-      printMsg(_T("Communication with agent %s failed (%s)"), IpToStr(ntohl(m_dwAddr), szBuffer),
-               AgentErrorCodeToText(dwError));
-      goto connect_cleanup;
+      if (dwError != ERR_UNKNOWN_COMMAND) // Older agents may not support enable IPv6 command
+      {
+         printMsg(_T("Communication with agent %s failed (%s)"), m_addr.toString(szBuffer), AgentErrorCodeToText(dwError));
+         goto connect_cleanup;
+      }
    }
 
    if (m_bUseProxy && !bSecondPass)
@@ -622,8 +616,6 @@ void AgentConnection::destroyResultData()
 InterfaceList *AgentConnection::getInterfaceList()
 {
    InterfaceList *pIfList = NULL;
-	NX_INTERFACE_INFO iface;
-   UINT32 i, dwBits;
    TCHAR *pChar, *pBuf;
 
    if (getList(_T("Net.InterfaceList")) == ERR_SUCCESS)
@@ -632,18 +624,26 @@ InterfaceList *AgentConnection::getInterfaceList()
 
       // Parse result set. Each line should have the following format:
       // index ip_address/mask_bits iftype mac_address name
-      for(i = 0; i < m_dwNumDataLines; i++)
+      for(UINT32 i = 0; i < m_dwNumDataLines; i++)
       {
          pBuf = m_ppDataLines[i];
-			memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
+         UINT32 ifIndex = 0;
 
          // Index
          pChar = _tcschr(pBuf, ' ');
          if (pChar != NULL)
          {
             *pChar = 0;
-            iface.index = _tcstoul(pBuf, NULL, 10);
+            ifIndex = _tcstoul(pBuf, NULL, 10);
             pBuf = pChar + 1;
+         }
+
+         bool newInterface = false;
+         InterfaceInfo *iface = pIfList->findByIfIndex(ifIndex);
+         if (iface == NULL)
+         {
+            iface = new InterfaceInfo(ifIndex);
+            newInterface = true;
          }
 
          // Address and mask
@@ -664,35 +664,53 @@ InterfaceList *AgentConnection::getInterfaceList()
             {
                pSlash = defaultMask;
             }
-            iface.ipAddr = ntohl(_t_inet_addr(pBuf));
-            dwBits = _tcstoul(pSlash, NULL, 10);
-            iface.ipNetMask = (dwBits == 32) ? 0xFFFFFFFF : (~(0xFFFFFFFF >> dwBits));
+            InetAddress addr = InetAddress::parse(pBuf);
+            addr.setMaskBits(_tcstol(pSlash, NULL, 10));
+            iface->ipAddrList.add(addr);
             pBuf = pChar + 1;
          }
 
-         // Interface type
-         pChar = _tcschr(pBuf, ' ');
-         if (pChar != NULL)
+         if (newInterface)
          {
-            *pChar = 0;
-            iface.type = _tcstoul(pBuf, NULL, 10);
-            pBuf = pChar + 1;
+            // Interface type
+            pChar = _tcschr(pBuf, ' ');
+            if (pChar != NULL)
+            {
+               *pChar = 0;
+
+               TCHAR *eptr;
+               iface->type = _tcstoul(pBuf, &eptr, 10);
+            
+               // newer agents can return if_type(mtu)
+               if (*eptr == _T('('))
+               {
+                  pBuf = eptr + 1;
+                  eptr = _tcschr(pBuf, _T(')'));
+                  if (eptr != NULL)
+                  {
+                     *eptr = 0;
+                     iface->mtu = _tcstol(pBuf, NULL, 10);
+                  }
+               }
+
+               pBuf = pChar + 1;
+            }
+
+            // MAC address
+            pChar = _tcschr(pBuf, ' ');
+            if (pChar != NULL)
+            {
+               *pChar = 0;
+               StrToBin(pBuf, iface->macAddr, MAC_ADDR_LENGTH);
+               pBuf = pChar + 1;
+            }
+
+            // Name (set description to name)
+            nx_strncpy(iface->name, pBuf, MAX_DB_STRING);
+			   nx_strncpy(iface->description, pBuf, MAX_DB_STRING);
+
+			   pIfList->add(iface);
          }
-
-         // MAC address
-         pChar = _tcschr(pBuf, ' ');
-         if (pChar != NULL)
-         {
-            *pChar = 0;
-            StrToBin(pBuf, iface.macAddr, MAC_ADDR_LENGTH);
-            pBuf = pChar + 1;
-         }
-
-         // Name (set description to name)
-         nx_strncpy(iface.name, pBuf, MAX_DB_STRING);
-			nx_strncpy(iface.description, pBuf, MAX_DB_STRING);
-
-			pIfList->add(&iface);
       }
 
       lock();
@@ -746,7 +764,6 @@ UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TC
    return dwRetCode;
 }
 
-
 /**
  * Get ARP cache
  */
@@ -791,7 +808,7 @@ ARP_CACHE *AgentConnection::getArpCache()
          pChar = _tcschr(pBuf, _T(' '));
          if (pChar != NULL)
             *pChar = 0;
-         pArpCache->pEntries[i].dwIpAddr = ntohl(_t_inet_addr(pBuf));
+         pArpCache->pEntries[i].ipAddr = ntohl(_t_inet_addr(pBuf));
 
          // Interface index
          if (pChar != NULL)
@@ -805,11 +822,9 @@ ARP_CACHE *AgentConnection::getArpCache()
    return pArpCache;
 }
 
-
 /**
  * Send dummy command to agent (can be used for keepalive)
  */
-
 UINT32 AgentConnection::nop()
 {
    NXCPMessage msg(m_nProtocolVersion);
@@ -824,6 +839,23 @@ UINT32 AgentConnection::nop()
       return ERR_CONNECTION_BROKEN;
 }
 
+/**
+ * Notify agent that server is IPv6 aware
+ */
+UINT32 AgentConnection::enableIPv6()
+{
+   NXCPMessage msg(m_nProtocolVersion);
+   UINT32 dwRqId;
+
+   dwRqId = m_dwRequestId++;
+   msg.setCode(CMD_ENABLE_IPV6);
+   msg.setField(VID_ENABLED, (INT16)1);
+   msg.setId(dwRqId);
+   if (sendMessage(&msg))
+      return waitForRCC(dwRqId, m_dwCommandTimeout);
+   else
+      return ERR_CONNECTION_BROKEN;
+}
 
 /**
  * Wait for request completion code
@@ -1245,7 +1277,7 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
 /**
  * Check status of network service via agent
  */
-UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType,
+UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType,
                                             WORD wPort, WORD wProto, const TCHAR *pszRequest, 
                                             const TCHAR *pszResponse, UINT32 *responseTime)
 {
@@ -1260,7 +1292,7 @@ UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, 
 
    msg.setCode(CMD_CHECK_NETWORK_SERVICE);
    msg.setId(dwRqId);
-   msg.setField(VID_IP_ADDRESS, dwIpAddr);
+   msg.setField(VID_IP_ADDRESS, addr);
    msg.setField(VID_SERVICE_TYPE, (WORD)iServiceType);
    msg.setField(VID_IP_PORT,
       (wPort != 0) ? wPort :
@@ -1601,9 +1633,9 @@ ROUTING_TABLE *AgentConnection::getRoutingTable()
 /**
  * Set proxy information
  */
-void AgentConnection::setProxy(UINT32 dwAddr, WORD wPort, int iAuthMethod, const TCHAR *pszSecret)
+void AgentConnection::setProxy(InetAddress addr, WORD wPort, int iAuthMethod, const TCHAR *pszSecret)
 {
-   m_dwProxyAddr = dwAddr;
+   m_proxyAddr = addr;
    m_wProxyPort = wPort;
    m_iProxyAuth = iAuthMethod;
    if (pszSecret != NULL)
@@ -1633,7 +1665,7 @@ UINT32 AgentConnection::setupProxyConnection()
    dwRqId = m_dwRequestId++;
    msg.setCode(CMD_SETUP_PROXY_CONNECTION);
    msg.setId(dwRqId);
-   msg.setField(VID_IP_ADDRESS, (UINT32)ntohl(m_dwAddr));
+   msg.setField(VID_IP_ADDRESS, m_addr.getAddressV4());  // FIXME: V6 support in proxy
    msg.setField(VID_AGENT_PORT, m_wPort);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, 60000);   // Wait 60 seconds for remote connect

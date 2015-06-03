@@ -7,8 +7,8 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TreeColumn;
-import org.netxms.client.ServerFile;
-import org.netxms.ui.eclipse.filemanager.views.ViewServerFile;
+import org.netxms.client.server.ServerFile;
+import org.netxms.ui.eclipse.filemanager.views.ServerFileManager;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
@@ -30,7 +30,7 @@ public class AgentFileComparator extends ViewerComparator
 		int rc;
 		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
-		   case ViewServerFile.COLUMN_NAME:
+		   case ServerFileManager.COLUMN_NAME:
             if(((ServerFile)e1).isDirectory() == ((ServerFile)e2).isDirectory())
             {
                rc = ((ServerFile)e1).getName().compareToIgnoreCase(((ServerFile)e2).getName());
@@ -40,7 +40,7 @@ public class AgentFileComparator extends ViewerComparator
                rc = ((ServerFile)e1).isDirectory() ? -1 : 1;
             }           
             break;
-         case ViewServerFile.COLUMN_TYPE:
+         case ServerFileManager.COLUMN_TYPE:
             if(((ServerFile)e1).isDirectory() == ((ServerFile)e2).isDirectory())
             {
                rc = ((ServerFile)e1).getExtension().compareToIgnoreCase(((ServerFile)e2).getExtension());
@@ -50,7 +50,7 @@ public class AgentFileComparator extends ViewerComparator
                rc = ((ServerFile)e1).isDirectory() ? -1 : 1;
             }  
             break;
-         case ViewServerFile.COLUMN_SIZE:
+         case ServerFileManager.COLUMN_SIZE:
             if((((ServerFile)e1).isDirectory() == ((ServerFile)e2).isDirectory()))
             {
                rc = Long.signum(((ServerFile)e1).getSize() - ((ServerFile)e2).getSize());
@@ -60,7 +60,7 @@ public class AgentFileComparator extends ViewerComparator
                rc = ((ServerFile)e1).isDirectory() ? -1 : 1;
             }
             break;
-         case ViewServerFile.COLUMN_MODIFYED:
+         case ServerFileManager.COLUMN_MODIFYED:
             if((((ServerFile)e1).isDirectory() == ((ServerFile)e2).isDirectory()))
             {
                rc = ((ServerFile)e1).getModifyicationTime().compareTo(((ServerFile)e2).getModifyicationTime());

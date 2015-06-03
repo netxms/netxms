@@ -165,6 +165,8 @@ public class DeviceInfoHelper
 				return "ANDROID (KITKAT_WATCH)";
 			case Build.VERSION_CODES.LOLLIPOP:
 				return "ANDROID (LOLLIPOP)";
+			case Build.VERSION_CODES.LOLLIPOP_MR1:
+				return "ANDROID (LOLLIPOP_MR1)";
 		}
 		return "ANDROID (UNKNOWN)";
 	}

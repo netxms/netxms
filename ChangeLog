@@ -1,4 +1,67 @@
 *
+* 2.0-M4
+*
+
+- Script export/import
+- Object tools export/import
+- DCI summary tables export/import
+- Template hierarchy preserved during export/import
+- NXSL functions and classes to work with alarms
+- MEGATEC protocol support in UPS subagent
+- Fixed broken WoL functionality
+- Fixed broken PING subagent
+- Fixed database upgrade issues on MS SQL
+- IPv6 support in PING subagent
+- Network device driver can be manually selected for node by setting snmp.driver custom attribute
+- Added default melodies for alarms
+- Added option to play sound on alarm sound preference page
+- Interface objects can be used on network maps
+- Android Agent:
+	- Added support for Lollipop MR1 (v5.1)
+	- Updated support library
+- Android Console:
+	- Changed order of overview items to match Java console (node browser)
+	- Added MTU field in interface details (node browser)
+	- Updated support library
+- Fixed issues: #655, #657, #696, #701, #724, #799, #800, #803, #804, #805, #811, #812, #813
+
+
+*
+* 2.0-M3
+*
+
+- IPv6 support: communications, address information, topology
+- New NXSL functions: gethostbyaddr, gethostbyname, md5, sha1, AgentReadList
+- Added posibility to wakeup unmanaged node
+- Instance discovery separated from configuration polls
+- Instance discovery type "SNMP Walk - OIDs" sets instance name to OID value by default
+- GPIO.PinState parameter in Raspberry Pi subagent
+- Server housekeeping process runs once per day at fixed configurable time
+- Server housekeeping process performance optimization
+- Added driver for Qtech OLT switches
+- New agent parameter FileSystem.Type(*)
+- New agent parameters Net.Resolver.AddressByName(*) and Net.Resolver.NameByAddress(*)
+- Fixed broken SNMP proxy functionality in agent
+- Management console:
+	- Fixed broken popup menu actions on "Interfaces" tab
+	- Macro %USERNAME% can be used in object tools
+	- VLAN highlight on port selection in VLAN view
+	- "Use multipliers" option in DCI summary tables
+	- "Zoom to fit" action in network maps
+	- "Always fit layout to screen" option in network maps
+	- Last selected zoom level preserved on network map close
+	- Invisible dashboards and charts do not refresh itself automatically
+	- "Current" column in extended line chart legend
+	- Option to clone network maps
+- Android console:
+    - Implemented feature #776 (WoL)
+- Fixed issues: #690, #693, #702, #722, #725, #745, #750, #752, #755, #756, 
+                #757, #758, #759, #760, #763, #764, #765, #766, #767, #768,
+                #769, #770, #771, #776, #778, #779, #782, #785, #787, #788,
+                #789, #790, #792, #793
+
+
+*
 * 2.0-M2
 *
 
@@ -7,6 +70,7 @@
 - Fixed LDAP sync problems on Windows
 - Russian translation improved
 - New MIB added: SYMBOL-CC-WS2000-MIB
+- Subagent for reading DS18T20 and DS18S20 temperature sensors on Linux
 - Fixed issues: #675, #699, #716, #721, #735, #736, #737, #742, #744
 
 

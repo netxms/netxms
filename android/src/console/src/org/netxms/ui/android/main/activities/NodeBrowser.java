@@ -10,7 +10,7 @@ import java.util.Stack;
 
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
-import org.netxms.client.constants.NodePoller;
+import org.netxms.client.constants.NodePollType;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.GenericObject;
 import org.netxms.client.objects.Node;
@@ -37,6 +37,7 @@ import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
@@ -188,15 +189,20 @@ public class NodeBrowser extends AbstractClientActivity
 			List<ObjectTool> tools = service.getTools();
 			if (tools != null)
 			{
+				SubMenu subMenu = menu.addSubMenu(Menu.NONE, 0, 0, getString(R.string.menu_tools));
 				Iterator<ObjectTool> tl = tools.iterator();
 				ObjectTool tool;
 				while (tl.hasNext())
 				{
 					tool = tl.next();
-					if ((tool.getType() == ObjectTool.TYPE_ACTION || tool.getType() == ObjectTool.TYPE_SERVER_COMMAND) &&
-							tool.isApplicableForNode((Node)selectedObject))
+					switch (tool.getType())
 					{
-						menu.add(Menu.NONE, (int)tool.getId(), 0, tool.getDisplayName());
+						case ObjectTool.TYPE_INTERNAL:
+						case ObjectTool.TYPE_ACTION:
+						case ObjectTool.TYPE_SERVER_COMMAND:
+							if (tool.isApplicableForNode((Node)selectedObject))
+								subMenu.add(Menu.NONE, (int)tool.getId(), 0, tool.getDisplayName());
+							break;
 					}
 				}
 			}
@@ -207,7 +213,6 @@ public class NodeBrowser extends AbstractClientActivity
 			hideMenuItem(menu, R.id.poll);
 		}
 	}
-
 	/**
 	 * @param menu
 	 * @param id
@@ -250,25 +255,25 @@ public class NodeBrowser extends AbstractClientActivity
 			case R.id.poll_status:
 				Intent psIntent = new Intent(this, NodePollerActivity.class);
 				psIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-				psIntent.putExtra("pollType", NodePoller.STATUS_POLL);
+				psIntent.putExtra("pollType", NodePollType.STATUS);
 				startActivity(psIntent);
 				break;
 			case R.id.poll_configuration:
 				Intent pcIntent = new Intent(this, NodePollerActivity.class);
 				pcIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-				pcIntent.putExtra("pollType", NodePoller.CONFIGURATION_POLL);
+				pcIntent.putExtra("pollType", NodePollType.CONFIGURATION_NORMAL);
 				startActivity(pcIntent);
 				break;
 			case R.id.poll_topology:
 				Intent ptIntent = new Intent(this, NodePollerActivity.class);
 				ptIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-				ptIntent.putExtra("pollType", NodePoller.TOPOLOGY_POLL);
+				ptIntent.putExtra("pollType", NodePollType.TOPOLOGY);
 				startActivity(ptIntent);
 				break;
 			case R.id.poll_interfaces:
 				Intent piIntent = new Intent(this, NodePollerActivity.class);
 				piIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-				piIntent.putExtra("pollType", NodePoller.INTERFACE_POLL);
+				piIntent.putExtra("pollType", NodePollType.INTERFACES);
 				startActivity(piIntent);
 				break;
 			case R.id.navigate_to:
@@ -298,7 +303,7 @@ public class NodeBrowser extends AbstractClientActivity
 							{
 								String message = tool.getConfirmationText()
 										.replaceAll("%OBJECT_NAME%", selectedObject.getObjectName())
-										.replaceAll("%OBJECT_IP_ADDR%", selectedObject.getPrimaryIP().getHostAddress());
+										.replaceAll("%OBJECT_IP_ADDR%", ((Node)selectedObject).getPrimaryIP().getHostAddress());
 								new AlertDialog.Builder(this)
 										.setIcon(android.R.drawable.ic_dialog_alert)
 										.setTitle(R.string.confirm_tool_execution)

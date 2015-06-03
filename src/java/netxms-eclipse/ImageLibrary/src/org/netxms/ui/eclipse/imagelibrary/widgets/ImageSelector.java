@@ -19,13 +19,12 @@
 package org.netxms.ui.eclipse.imagelibrary.widgets;
 
 import java.util.UUID;
-
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
-import org.netxms.api.client.images.LibraryImage;
 import org.netxms.base.NXCommon;
+import org.netxms.client.LibraryImage;
 import org.netxms.ui.eclipse.imagelibrary.Messages;
 import org.netxms.ui.eclipse.imagelibrary.dialogs.ImageSelectionDialog;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;

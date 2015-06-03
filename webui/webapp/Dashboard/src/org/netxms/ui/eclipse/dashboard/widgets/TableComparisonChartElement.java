@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,9 +22,10 @@ import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
@@ -38,6 +39,7 @@ import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableComparisonChartConfig;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
  * Base class for data comparison charts based on table DCI - like bar chart, pie chart, etc.
@@ -46,10 +48,9 @@ public abstract class TableComparisonChartElement extends ElementWidget
 {
 	protected DataComparisonChart chart;
 	protected NXCSession session;
-	protected int refreshInterval = 30000;
 	protected TableComparisonChartConfig config;
 	
-	private Runnable refreshTimer;
+	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
 	private Map<String, Integer> instanceMap = new HashMap<String, Integer>(DataChart.MAX_CHART_ITEMS);
 	private boolean chartInitialized = false;
@@ -64,6 +65,15 @@ public abstract class TableComparisonChartElement extends ElementWidget
 		session = (NXCSession)ConsoleSharedData.getSession();
 
 		setLayout(new FillLayout());	
+		
+		addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (refreshController != null)
+               refreshController.dispose();
+         }
+      });
 	}
 	
 	/**
@@ -74,8 +84,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 		if ((config == null) || (config.getDataColumn() == null))
 			return;	// Invalid configuration
 		
-		final Display display = getDisplay();
-		refreshTimer = new Runnable() {
+		refreshController = new ViewRefreshController(viewPart, config.getRefreshRate(), new Runnable() {
 			@Override
 			public void run()
 			{
@@ -83,10 +92,8 @@ public abstract class TableComparisonChartElement extends ElementWidget
 					return;
 				
 				refreshData();
-				display.timerExec(refreshInterval, this);
 			}
-		};
-		display.timerExec(refreshInterval, refreshTimer);
+		});
 		refreshData();
 	}
 

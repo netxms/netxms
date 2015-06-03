@@ -3,7 +3,7 @@ SUBAGENT = oracle
 pkglib_LTLIBRARIES = oracle.la
 oracle_la_SOURCES = db.cpp main.cpp
 oracle_la_CPPFLAGS=-I@top_srcdir@/include
-oracle_la_LDFLAGS = -module -avoid-version
+oracle_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 oracle_la_LIBADD = ../../../libnetxms/libnetxms.la ../../../db/libnxdb/libnxdb.la
 if USE_INTERNAL_LIBTRE
 oracle_la_LIBADD += ../../../libtre/libnxtre.la

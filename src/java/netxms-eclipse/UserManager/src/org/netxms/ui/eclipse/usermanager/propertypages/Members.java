@@ -37,10 +37,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.api.client.users.User;
-import org.netxms.api.client.users.UserGroup;
-import org.netxms.api.client.users.UserManager;
+import org.netxms.client.NXCSession;
+import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.User;
+import org.netxms.client.users.UserGroup;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -56,7 +56,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class Members extends PropertyPage
 {
 	private SortableTableViewer userList;
-	private UserManager userManager;
+	private NXCSession session;
 	private UserGroup object;
 	private HashMap<Long, AbstractUserObject> members = new HashMap<Long, AbstractUserObject>(0);
 
@@ -66,7 +66,7 @@ public class Members extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		userManager = (UserManager)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		object = (UserGroup)getElement().getAdapter(UserGroup.class);
@@ -159,7 +159,7 @@ public class Members extends PropertyPage
       // Initial data
 		for(long userId : object.getMembers())
 		{
-			final AbstractUserObject user = userManager.findUserDBObjectById(userId);
+			final AbstractUserObject user = session.findUserDBObjectById(userId);
 			if (user != null)
 			{
 				members.put(user.getId(), user);
@@ -190,7 +190,7 @@ public class Members extends PropertyPage
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				userManager.modifyUserDBObject(object, UserManager.USER_MODIFY_MEMBERS);
+				session.modifyUserDBObject(object, AbstractUserObject.MODIFY_MEMBERS);
 			}
 
 			@Override

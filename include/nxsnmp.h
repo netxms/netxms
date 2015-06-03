@@ -629,13 +629,12 @@ public:
 	{
 		return -1;
 	}
-   virtual UINT32 getPeerIpAddress()
+   virtual InetAddress getPeerIpAddress()
    {
-      return 0;
+      return InetAddress();
    }
 
-   UINT32 doRequest(SNMP_PDU *request, SNMP_PDU **response,
-                   UINT32 timeout = INFINITE, int numRetries = 1);
+   UINT32 doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 timeout = INFINITE, int numRetries = 1);
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
 	SNMP_SecurityContext *getSecurityContext() { return m_securityContext; }
@@ -659,7 +658,7 @@ class LIBNXSNMP_EXPORTABLE SNMP_UDPTransport : public SNMP_Transport
 {
 protected:
    SOCKET m_hSocket;
-   struct sockaddr_in m_peerAddr;
+   SockAddrBuffer m_peerAddr;
 	bool m_connected;
    size_t m_dwBufferSize;
    size_t m_dwBytesInBuffer;
@@ -679,9 +678,10 @@ public:
                            struct sockaddr *sender = NULL, socklen_t *addrSize = NULL,
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pPDU);
-   virtual UINT32 getPeerIpAddress();
+   virtual InetAddress getPeerIpAddress();
 
-   UINT32 createUDPTransport(const TCHAR *pszHostName, UINT32 dwHostAddr = 0, WORD wPort = SNMP_DEFAULT_PORT);
+   UINT32 createUDPTransport(const TCHAR *hostName, WORD port = SNMP_DEFAULT_PORT);
+   UINT32 createUDPTransport(const InetAddress& hostAddr, WORD port = SNMP_DEFAULT_PORT);
 	bool isConnected() { return m_connected; }
 };
 

@@ -1,0 +1,470 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : HISTORICAL-COUNTER-MIB
+-- FILE NAME: HistoryCnt.mib
+-- DATE     : 2009/2/17
+-- VERSION  : 1.01
+-- PURPOSE  : To construct the MIB structure of historical counter function for
+--            proprietary enterprise.
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Revision 1.01 2009/2/17 by Linda Yang
+-- [New Object]
+-- [1]Add swHistoryCntStartTime and swHistoryCntEndTime in swHistoryCntPktTable.
+-- [2]Add swHistoryCntErrStartTime and swHistoryCntErrEndTime in swHistoryCntErrTable.
+-- [3]Add swHistoryUtilStartTime and swHistoryUtilEndTime in swHistoryUtilTable.
+--    For display the time of the slot counters, slot error counters, slot CPU or memory utilization.
+-- Request by Linda Yang for DGS3700
+--
+-- Version 1.00, 2008/7/7, Kelvin Tao
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+
+HISTORICAL-COUNTER-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,Counter64,Integer32
+                                          FROM SNMPv2-SMI
+        DateAndTime         FROM SNMPv2-TC
+        dlink-common-mgmt		  FROM DLINK-ID-REC-MIB;
+        
+    swHistoryCntMIB MODULE-IDENTITY
+          LAST-UPDATED "0902170000Z"
+          ORGANIZATION "D-Link Corp."
+          CONTACT-INFO
+                       "http://support.dlink.com"
+          DESCRIPTION
+		    "The structure of historical counters for the proprietary
+                    enterprise."
+        ::= { dlink-common-mgmt 66 }
+     	
+    swHistoryCntCtrl             OBJECT IDENTIFIER ::= { swHistoryCntMIB 1 }
+    swHistoryCntInfo             OBJECT IDENTIFIER ::= { swHistoryCntMIB 2 }
+    swHistoryCntMgmt             OBJECT IDENTIFIER ::= { swHistoryCntMIB 3 }
+
+-- -----------------------------------------------------------------------------
+-- swHistoryCntCtrl
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
+-- swHistoryCntInfo
+-- -----------------------------------------------------------------------------
+    	     	
+    swHistoricalCounter        OBJECT IDENTIFIER ::= { swHistoryCntInfo 1 }
+
+    swHistoryCntPktTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwHistoryCntPktEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains statistics about the valid packets
+            sent and received by the switch."
+        ::= { swHistoricalCounter 1 }
+
+    swHistoryCntPktEntry OBJECT-TYPE
+        SYNTAX  SwHistoryCntPktEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swHistoryCntPktTable."
+        INDEX  { swHistoryCntPort,swHistoryCntTime,swHistoryCntType }
+        ::= { swHistoryCntPktTable 1 }
+
+    SwHistoryCntPktEntry ::=
+        SEQUENCE {
+            swHistoryCntPort
+                INTEGER,
+            swHistoryCntTime
+                INTEGER,
+            swHistoryCntType
+                INTEGER,
+            swHistoryCntPktsTx
+                Counter64,
+            swHistoryCntBytesTx
+            	Counter64,
+            swHistoryCntPktsRx
+       	        Counter64,            	
+            swHistoryCntBytesRx
+            	Counter64,
+       	    swHistoryCnt64Rx
+       	        Counter64,
+            swHistoryCnt65to127Rx
+            	Counter64,
+            swHistoryCnt128to255Rx
+                Counter64,
+            swHistoryCnt256to511Rx
+                Counter64,
+            swHistoryCnt512to1023Rx
+                Counter64,
+            swHistoryCnt1024to1518Rx
+                Counter64,
+            swHistoryCntUnicastRx
+                Counter64,
+            swHistoryCntMulticastRx
+                Counter64,
+            swHistoryCntBroadcastRx
+                Counter64,
+            swHistoryCntStartTime
+            		DateAndTime,
+            swHistoryCntEndTime
+            		DateAndTime
+        }
+
+    swHistoryCntPort OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the port number."
+        ::= { swHistoryCntPktEntry 1 }
+
+    swHistoryCntTime OBJECT-TYPE
+        SYNTAX  INTEGER{
+                fifteen-minute(1),
+                one-day(2)
+                }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the time slot for counters."
+        ::= { swHistoryCntPktEntry 2 }
+
+    swHistoryCntType OBJECT-TYPE
+        SYNTAX  INTEGER{
+                slot1(1),
+                slot2(2),
+                slot3(3),
+                slot4(4),
+                slot5(5)
+                }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the type of time slot for counters.
+
+            Note: When the swHistoryCntTime value is one-day (2), this object only
+            has two values: slot1 (1) and slot2 (2)."
+        ::= { swHistoryCntPktEntry 3 }
+        
+    swHistoryCntPktsTx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Tx packets."
+        ::= { swHistoryCntPktEntry 4 }
+
+    swHistoryCntBytesTx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Tx bytes."
+        ::= { swHistoryCntPktEntry 5 }
+
+    swHistoryCntPktsRx   OBJECT-TYPE
+        SYNTAX Counter64
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "This object indicates the Rx packets."
+        ::={ swHistoryCntPktEntry 6}
+    		
+    swHistoryCntBytesRx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx bytes."
+        ::= { swHistoryCntPktEntry 7 }
+
+    swHistoryCnt64Rx OBJECT-TYPE
+    	SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx 64 octet packets."
+        ::= { swHistoryCntPktEntry 8 }
+
+    swHistoryCnt65to127Rx OBJECT-TYPE
+    	SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx 65-127 octet packets."
+        ::= { swHistoryCntPktEntry 9 }
+            	
+    swHistoryCnt128to255Rx   OBJECT-TYPE
+        SYNTAX Counter64
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "This object indicates the Rx 128-255 octet packets."
+        ::={ swHistoryCntPktEntry 10}
+
+    swHistoryCnt256to511Rx  OBJECT-TYPE
+        SYNTAX Counter64
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "This object indicates the Rx 256-511 octet packets."
+        ::={ swHistoryCntPktEntry 11}
+
+    swHistoryCnt512to1023Rx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx 512-1023 octet packets."
+        ::= { swHistoryCntPktEntry 12 }
+
+    swHistoryCnt1024to1518Rx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx 1024-1518 octet packets."
+        ::= { swHistoryCntPktEntry 13 }
+
+    swHistoryCntUnicastRx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx unicast packets."
+        ::= { swHistoryCntPktEntry 14 }
+
+    swHistoryCntMulticastRx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx multicast packets."
+        ::= { swHistoryCntPktEntry 15 }
+
+    swHistoryCntBroadcastRx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx broadcast packets."
+        ::= { swHistoryCntPktEntry 16 }
+        
+     swHistoryCntStartTime OBJECT-TYPE
+        SYNTAX  DateAndTime
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the start time of the slot counters."
+        ::= { swHistoryCntPktEntry 17 }
+        
+        
+      swHistoryCntEndTime OBJECT-TYPE
+        SYNTAX  DateAndTime
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the end time of the slot counters."
+        ::= { swHistoryCntPktEntry 18 }
+
+    swHistoryCntErrTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwHistoryCntErrEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains statistics about the error packets
+            sent and received by the switch."
+        ::= { swHistoricalCounter 2 }
+
+    swHistoryCntErrEntry OBJECT-TYPE
+        SYNTAX  SwHistoryCntErrEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swHistoryCntErrTable."
+        INDEX  { swHistoryCntPort,swHistoryCntTime,swHistoryCntType }
+        ::= { swHistoryCntErrTable 1 }
+
+    SwHistoryCntErrEntry ::=
+        SEQUENCE {
+            swHistoryCntFragmentRx
+                Counter64,
+            swHistoryCntJabberPktsRx
+            	Counter64,
+            swHistoryCntOversizePktsRx
+       	        Counter64,            	
+            swHistoryCntUndersizePktsRx
+            	Counter64,
+       	    swHistoryCntAlignmentErrorsRx
+       	        Counter64,
+            swHistoryCntUnknownCtrlPktsRx
+            	Counter64,
+   	        swHistoryCntCollisionTx
+   	          Counter64,
+            swHistoryCntDropedPkts
+              Counter64,
+            swHistoryCntErrStartTime
+      		    DateAndTime,
+            swHistoryCntErrEndTime
+      		    DateAndTime
+        }
+        
+    swHistoryCntFragmentRx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx fragments."
+        ::= { swHistoryCntErrEntry 1 }
+
+    swHistoryCntJabberPktsRx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx jabber packets."
+        ::= { swHistoryCntErrEntry 2 }
+
+    swHistoryCntOversizePktsRx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx oversize packets."
+        ::= { swHistoryCntErrEntry 3 }
+
+    swHistoryCntUndersizePktsRx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx undersize packets."
+        ::= { swHistoryCntErrEntry 4 }
+
+    swHistoryCntAlignmentErrorsRx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx alignment errors."
+        ::= { swHistoryCntErrEntry 5 }
+
+    swHistoryCntUnknownCtrlPktsRx   OBJECT-TYPE
+        SYNTAX Counter64
+        MAX-ACCESS read-only
+        STATUS current
+        DESCRIPTION
+            "This object indicates the Rx unknown-control packets."
+        ::={ swHistoryCntErrEntry 6}
+    		
+    swHistoryCntCollisionTx OBJECT-TYPE
+        SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx collisions."
+        ::= { swHistoryCntErrEntry 7 }
+
+    swHistoryCntDropedPkts OBJECT-TYPE
+    	SYNTAX  Counter64
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the Rx dropped packets."
+        ::= { swHistoryCntErrEntry 8 }
+        
+       swHistoryCntErrStartTime OBJECT-TYPE
+        SYNTAX  DateAndTime
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the start time of the slot error counters."
+        ::= { swHistoryCntErrEntry 9 }
+
+      swHistoryCntErrEndTime OBJECT-TYPE
+        SYNTAX  DateAndTime
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the end time of the slot error counters."
+        ::= { swHistoryCntErrEntry 10 }
+
+-- -----------------------------------------------------------------------------
+
+    swHistoricalUtilization         OBJECT IDENTIFIER ::= { swHistoryCntInfo 2 }
+
+    swHistoryUtilTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwHistoryUtilEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This table contains the CPU and memory utilization."
+        ::= { swHistoricalUtilization 1 }
+
+    swHistoryUtilEntry OBJECT-TYPE
+        SYNTAX  SwHistoryUtilEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "This is an entry of the swHistoryUtilTable."
+        INDEX  { swHistoryCntTime,swHistoryCntType }
+        ::= { swHistoryUtilTable 1 }
+
+    SwHistoryUtilEntry ::=
+        SEQUENCE {
+            swHistoryUtilCPU
+                INTEGER,
+            swHistoryUtilMemory
+            	INTEGER,
+           	swHistoryUtilStartTime
+            		DateAndTime,
+            swHistoryUtilEndTime
+            		DateAndTime
+        }
+    swHistoryUtilCPU OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the CPU utilization.
+            The value will be between 0% and 100%."
+        ::= { swHistoryUtilEntry 1 }
+
+    swHistoryUtilMemory OBJECT-TYPE
+        SYNTAX  INTEGER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the memory utilization.
+            The value will be between 0% and 100%."
+        ::= { swHistoryUtilEntry 2 }
+        
+   swHistoryUtilStartTime OBJECT-TYPE
+        SYNTAX  DateAndTime
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the start time of the slot CPU or memory utilization ."
+        ::= { swHistoryUtilEntry 3 }
+
+
+  swHistoryUtilEndTime OBJECT-TYPE
+        SYNTAX  DateAndTime
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the end time of the slot CPU or memory utilization."
+        ::= { swHistoryUtilEntry 4 }
+
+-- -----------------------------------------------------------------------------
+-- swHistoryCntMgmt
+-- -----------------------------------------------------------------------------
+
+END

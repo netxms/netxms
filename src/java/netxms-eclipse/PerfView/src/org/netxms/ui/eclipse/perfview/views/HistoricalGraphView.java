@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,6 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IActionBars;
@@ -73,6 +72,7 @@ import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.dialogs.SaveGraphDlg;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
  * History graph view
@@ -95,7 +95,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private NXCSession session;
    private HistoricalDataChart chart = null;
    private boolean updateInProgress = false;
-   private Runnable refreshTimer;
+   private ViewRefreshController refreshController;
    private Composite chartParent = null;
 
    private GraphSettings settings = new GraphSettings();
@@ -132,8 +132,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    {
       super.init(site);
 
-      final Display display = site.getShell().getDisplay();
-      refreshTimer = new Runnable() {
+      refreshController = new ViewRefreshController(this, -1, new Runnable() {
          @Override
          public void run()
          {
@@ -141,9 +140,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                return;
 
             updateChart();
-            display.timerExec(config.getRefreshRate() * 1000, this);
          }
-      };
+      });
 
       session = (NXCSession)ConsoleSharedData.getSession();
 
@@ -348,8 +346,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
 
       // Automatic refresh
       actionAutoRefresh.setChecked(config.isAutoRefresh());
-      getSite().getShell().getDisplay().timerExec(config.isAutoRefresh() ? config.getRefreshRate() * 1000 : -1, refreshTimer);
-      refreshMenueSelection();
+      refreshMenuSelection();
+      refreshController.setInterval(config.isAutoRefresh() ? config.getRefreshRate() : -1);
    }
 
    /*
@@ -506,7 +504,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             {
                dlg.open();
                configureGraphFromSettings();
-               refreshMenueSelection();
+               refreshMenuSelection();
             }
          }
       };
@@ -517,8 +515,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          {
             config.setAutoRefresh(!config.isAutoRefresh());
             setChecked(config.isAutoRefresh());
-            HistoricalGraphView.this.getSite().getShell().getDisplay()
-                  .timerExec(config.isAutoRefresh() ? config.getRefreshRate() * 1000 : -1, refreshTimer);
+            refreshController.setInterval(config.isAutoRefresh() ? config.getRefreshRate() : -1);
          }
       };
       actionAutoRefresh.setChecked(config.isAutoRefresh());
@@ -707,7 +704,10 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
        };
    }
 
-   protected void refreshMenueSelection()
+   /**
+    * 
+    */
+   protected void refreshMenuSelection()
    {
       actionAutoRefresh.setChecked(config.isAutoRefresh());
       actionLogScale.setChecked(config.isLogScale());
@@ -867,7 +867,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    @Override
    public void dispose()
    {
-      getSite().getShell().getDisplay().timerExec(-1, refreshTimer);
+      refreshController.dispose();
       super.dispose();
    }
 

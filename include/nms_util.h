@@ -45,11 +45,48 @@
 
 #include <base64.h>
 
+/*** Byte swapping ***/
+#if WORDS_BIGENDIAN
+#define htonq(x) (x)
+#define ntohq(x) (x)
+#define htond(x) (x)
+#define ntohd(x) (x)
+#define SwapWideString(x)
+#else
+#ifdef HAVE_HTONLL
+#define htonq(x) htonll(x)
+#else
+#define htonq(x) __bswap_64(x)
+#endif
+#ifdef HAVE_NTOHLL
+#define ntohq(x) ntohll(x)
+#else
+#define ntohq(x) __bswap_64(x)
+#endif
+#define htond(x) __bswap_double(x)
+#define ntohd(x) __bswap_double(x)
+#define SwapWideString(x)  __bswap_wstr(x)
+#endif
 
-//
-// Serial communications
-//
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+#if defined(_WIN32) || !(HAVE_DECL___BSWAP_32)
+UINT32 LIBNETXMS_EXPORTABLE __bswap_32(UINT32 dwVal);
+#endif
+#if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
+UINT64 LIBNETXMS_EXPORTABLE __bswap_64(UINT64 qwVal);
+#endif
+double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
+void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr);
+
+#ifdef __cplusplus
+}
+#endif
+
+
+/*** Serial communications ***/
 #ifdef _WIN32
 
 #define FLOW_NONE       0
@@ -253,7 +290,7 @@ protected:
    TCHAR *m_buffer;
    size_t m_length;
    size_t m_allocated;
-   int m_allocationStep;
+   size_t m_allocationStep;
 
 public:
 	static const int npos;
@@ -266,8 +303,8 @@ public:
 	TCHAR *getBuffer() { return m_buffer; }
    void setBuffer(TCHAR *buffer);
 
-   int getAllocationStep() { return m_allocationStep; }
-   void setAllocationStep(int step) { m_allocationStep = step; }
+   size_t getAllocationStep() { return m_allocationStep; }
+   void setAllocationStep(size_t step) { m_allocationStep = step; }
 
    const String& operator =(const TCHAR *str);
 	const String& operator =(const String &src);
@@ -279,6 +316,11 @@ public:
 
    void append(const TCHAR *str) { if (str != NULL) append(str, _tcslen(str)); }
 	void append(const TCHAR *str, size_t len);
+   void append(const TCHAR c) { append(&c, 1); }
+   void append(INT32 n);
+   void append(UINT32 n);
+   void append(INT64 n);
+   void append(UINT64 n);
 
 	void appendPreallocated(TCHAR *str) { if (str != NULL) { append(str); free(str); } }
 
@@ -323,15 +365,15 @@ protected:
 	void (*m_objectDestructor)(void *);
 
    Array(void *data, int initial, int grow, size_t elementSize);
-   void *__getBuffer() { return m_data; }
+   void *__getBuffer() const { return m_data; }
 
 public:
 	Array(int initial = 0, int grow = 16, bool owner = false);
 	virtual ~Array();
 
 	int add(void *element);
-   void *get(int index) { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
-   int indexOf(void *element);
+   void *get(int index) const { return ((index >= 0) && (index < m_size)) ? (m_storePointers ? m_data[index] : (void *)((char *)m_data + index * m_elementSize)): NULL; }
+   int indexOf(void *element) const;
 	void set(int index, void *element);
 	void replace(int index, void *element);
 	void remove(int index) { internalRemove(index, true); }
@@ -340,12 +382,12 @@ public:
 	void unlink(void *element) { internalRemove(indexOf(element), false); }
 	void clear();
    void sort(int (*cb)(const void *, const void *));
-   void *find(const void *key, int (*cb)(const void *, const void *));
+   void *find(const void *key, int (*cb)(const void *, const void *)) const;
 
-	int size() { return m_size; }
+	int size() const { return m_size; }
 
 	void setOwner(bool owner) { m_objectOwner = owner; }
-	bool isOwner() { return m_objectOwner; }
+	bool isOwner() const { return m_objectOwner; }
 };
 
 /**
@@ -361,8 +403,9 @@ public:
 	virtual ~ObjectArray() { }
 
 	int add(T *object) { return Array::add((void *)object); }
-	T *get(int index) { return (T*)Array::get(index); }
-   int indexOf(T *object) { return Array::indexOf((void *)object); }
+	T *get(int index) const { return (T*)Array::get(index); }
+   int indexOf(T *object) const { return Array::indexOf((void *)object); }
+   bool contains(T *object) const { return indexOf(object) >= 0; }
 	void set(int index, T *object) { Array::set(index, (void *)object); }
 	void replace(int index, T *object) { Array::replace(index, (void *)object); }
 	void remove(int index) { Array::remove(index); }
@@ -384,12 +427,13 @@ public:
 	virtual ~IntegerArray() { }
 
    int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
-   T get(int index) { return m_storePointers ? CAST_FROM_POINTER(Array::get(index), T) : *((T*)Array::get(index)); }
-   int indexOf(T value) { return Array::indexOf(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   T get(int index) const { if (m_storePointers) return CAST_FROM_POINTER(Array::get(index), T); T *p = (T*)Array::get(index); return (p != NULL) ? *p : 0; }
+   int indexOf(T value) const { return Array::indexOf(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
+   bool contains(T value) const { return indexOf(value) >= 0; }
    void set(int index, T value) { Array::set(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
    void replace(int index, T value) { Array::replace(index, m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
 
-   T *getBuffer() { return (T*)__getBuffer(); }
+   T *getBuffer() const { return (T*)__getBuffer(); }
 };
 
 /**
@@ -406,8 +450,9 @@ public:
 	virtual ~StructArray() { }
 
 	int add(T *element) { return Array::add((void *)element); }
-	T *get(int index) { return (T*)Array::get(index); }
-   int indexOf(T *element) { return Array::indexOf((void *)element); }
+	T *get(int index) const { return (T*)Array::get(index); }
+   int indexOf(T *element) const { return Array::indexOf((void *)element); }
+   bool contains(T *element) const { return indexOf(element) >= 0; }
 	void set(int index, T *element) { Array::set(index, (void *)element); }
 	void replace(int index, T *element) { Array::replace(index, (void *)element); }
 	void remove(int index) { Array::remove(index); }
@@ -415,7 +460,7 @@ public:
 	void unlink(int index) { Array::unlink(index); }
    void unlink(T *element) { Array::unlink((void *)element); }
 
-   T *getBuffer() { return (T*)__getBuffer(); }
+   T *getBuffer() const { return (T*)__getBuffer(); }
 };
 
 /**
@@ -524,7 +569,7 @@ private:
 
 public:
 	StringList();
-	StringList(StringList *src);
+	StringList(const StringList *src);
 	StringList(const TCHAR *src, const TCHAR *separator);
 	~StringList();
 
@@ -536,11 +581,13 @@ public:
 	void add(UINT64 value);
 	void add(double value);
 	void replace(int index, const TCHAR *value);
+	void addOrReplace(int index, const TCHAR *value);
+	void addOrReplacePreallocated(int index, TCHAR *value);
 	void clear();
-	int size() { return m_count; }
-	const TCHAR *get(int index) { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
-	int indexOf(const TCHAR *value);
-	int indexOfIgnoreCase(const TCHAR *value);
+	int size() const { return m_count; }
+	const TCHAR *get(int index) const { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
+	int indexOf(const TCHAR *value) const;
+	int indexOfIgnoreCase(const TCHAR *value) const;
 	void remove(int index);
    void addAll(const StringList *src);
    void merge(const StringList *src, bool matchCase);
@@ -588,6 +635,58 @@ public:
    void addAllFromMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
 
    String getAll(const TCHAR *separator);
+};
+
+/**
+ * Byte stream
+ */
+class LIBNETXMS_EXPORTABLE ByteStream
+{
+private:
+   BYTE *m_data;
+   size_t m_size;
+   size_t m_allocated;
+   size_t m_pos;
+
+public:
+   ByteStream(size_t initial = 8192);
+   ByteStream(const void *data, size_t size);
+   virtual ~ByteStream();
+
+   static ByteStream *load(const TCHAR *file);
+
+   void seek(size_t pos) { if (pos <= m_size) m_pos = pos; }
+   size_t pos() { return m_pos; }
+   size_t size() { return m_size; }
+   bool eos() { return m_pos == m_size; }
+
+   BYTE *buffer(size_t *size) { *size = m_size; return m_data; }
+
+   void write(const void *data, size_t size);
+   void write(char c) { write(&c, 1); }
+   void write(BYTE b) { write(&b, 1); }
+   void write(INT16 n) { UINT16 x = htons((UINT16)n); write(&x, 2); }
+   void write(UINT16 n) { UINT16 x = htons(n); write(&x, 2); }
+   void write(INT32 n) { UINT32 x = htonl((UINT32)n); write(&x, 4); }
+   void write(UINT32 n) { UINT32 x = htonl(n); write(&x, 4); }
+   void write(INT64 n) { UINT64 x = htonq((UINT64)n); write(&x, 8); }
+   void write(UINT64 n) { UINT64 x = htonq(n); write(&x, 8); }
+   void write(double n) { double x = htond(n); write(&x, 8); }
+   void writeString(const TCHAR *s);
+
+   size_t read(void *buffer, size_t count);
+   char readChar() { return !eos() ? (char)m_data[m_pos++] : 0; }
+   BYTE readByte() { return !eos() ? m_data[m_pos++] : 0; }
+   INT16 readInt16();
+   UINT16 readUInt16();
+   INT32 readInt32();
+   UINT32 readUInt32();
+   INT64 readInt64();
+   UINT64 readUInt64();
+   double readDouble();
+   TCHAR *readString();
+
+   bool save(int f);
 };
 
 /**
@@ -798,6 +897,42 @@ public:
 };
 
 /**
+ * sockaddr buffer
+ */
+union SockAddrBuffer
+{
+   struct sockaddr_in sa4;
+#ifdef WITH_IPV6
+   struct sockaddr_in6 sa6;
+#endif
+};
+
+/**
+ * sockaddr length calculation
+ */
+#ifdef WITH_IPV6
+#define SA_LEN(sa) (((sa)->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
+#else
+#define SA_LEN(sa) sizeof(struct sockaddr_in)
+#endif
+
+/**
+ * Compare addresses in sockaddr
+ */
+inline bool SocketAddressEquals(struct sockaddr *a1, struct sockaddr *a2)
+{
+   if (a1->sa_family != a2->sa_family)
+      return false;
+   if (a1->sa_family == AF_INET)
+      return ((struct sockaddr_in *)a1)->sin_addr.s_addr == ((struct sockaddr_in *)a2)->sin_addr.s_addr;
+#ifdef WITH_IPV6
+   if (a1->sa_family == AF_INET6)
+      return !memcmp(((struct sockaddr_in6 *)a1)->sin6_addr.s6_addr, ((struct sockaddr_in6 *)a2)->sin6_addr.s6_addr, 16);
+#endif
+   return false;
+}
+
+/**
  * IP address
  */
 class LIBNETXMS_EXPORTABLE InetAddress
@@ -814,31 +949,85 @@ private:
 public:
    InetAddress();
    InetAddress(UINT32 addr);
-   InetAddress(BYTE *addr);
+   InetAddress(UINT32 addr, UINT32 mask);
+   InetAddress(const BYTE *addr, int maskBits = 128);
 
    bool isAnyLocal() const;
    bool isLoopback() const;
    bool isMulticast() const;
    bool isBroadcast() const;
+   bool isLinkLocal() const;
    bool isValid() const { return m_family != AF_UNSPEC; }
+   bool isValidUnicast() const { return isValid() && !isAnyLocal() && !isLoopback() && !isMulticast() && !isBroadcast() && !isLinkLocal(); }
 
    int getFamily() const { return m_family; }
    UINT32 getAddressV4() const { return (m_family == AF_INET) ? m_addr.v4 : 0; }
    const BYTE *getAddressV6() const { return (m_family == AF_INET6) ? m_addr.v6 : (const BYTE *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"; }
 
    bool contain(const InetAddress &a) const;
+   bool sameSubnet(const InetAddress &a) const;
    bool equals(const InetAddress &a) const;
    int compareTo(const InetAddress &a) const;
 
    void setMaskBits(int m) { m_maskBits = m; }
    int getMaskBits() const { return m_maskBits; }
+   int getHostBits() const { return (m_family == AF_INET) ? (32 - m_maskBits) : (128 - m_maskBits); }
+
+   InetAddress getSubnetAddress() const;
+   bool isSubnetBroadcast(int maskBits) const;
 
    String toString() const;
    TCHAR *toString(TCHAR *buffer) const;
 
+   BYTE *buildHashKey(BYTE *key) const;
+
+   TCHAR *getHostByAddr(TCHAR *buffer, size_t buflen) const;
+
+   struct sockaddr *fillSockAddr(SockAddrBuffer *buffer, UINT16 port = 0) const;
+
    static InetAddress resolveHostName(const WCHAR *hostname, int af = AF_INET);
    static InetAddress resolveHostName(const char *hostname, int af = AF_INET);
+   static InetAddress parse(const WCHAR *str);
+   static InetAddress parse(const char *str);
    static InetAddress createFromSockaddr(struct sockaddr *s);
+
+   static const InetAddress INVALID;
+   static const InetAddress LOOPBACK;
+};
+
+/**
+ * IP address list
+ */
+class LIBNETXMS_EXPORTABLE InetAddressList
+{
+private:
+   ObjectArray<InetAddress> *m_list;
+
+   int indexOf(const InetAddress& addr) const;
+
+public:
+   InetAddressList();
+   ~InetAddressList();
+
+   void add(const InetAddress& addr);
+   void add(const InetAddressList& addrList);
+   void replace(const InetAddress& addr);
+   void remove(const InetAddress& addr);
+   void clear() { m_list->clear(); }
+   const InetAddress& get(int index) const { const InetAddress *a = m_list->get(index); return (a != NULL) ? *a : InetAddress::INVALID; }
+
+   int size() const { return m_list->size(); }
+   bool hasAddress(const InetAddress& addr) const { return indexOf(addr) != -1; }
+   const InetAddress& findAddress(const InetAddress& addr) const { int idx = indexOf(addr); return (idx != -1) ? *m_list->get(idx) : InetAddress::INVALID; }
+   const InetAddress& findSameSubnetAddress(const InetAddress& addr) const;
+   const InetAddress& getFirstUnicastAddress() const;
+   const InetAddress& getFirstUnicastAddressV4() const;
+   bool hasValidUnicastAddress() const { return getFirstUnicastAddress().isValid(); }
+   bool isLoopbackOnly() const;
+
+   const ObjectArray<InetAddress> *getList() const { return m_list; }
+
+   void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
 };
 
 /**
@@ -934,7 +1123,7 @@ typedef struct
 /**
  * Code translation structure
  */
-typedef struct  __CODE_TO_TEXT
+typedef struct __CODE_TO_TEXT
 {
    int code;
    const TCHAR *text;
@@ -1038,28 +1227,6 @@ typedef struct _dir_struc_w
 // Functions
 //
 
-#if WORDS_BIGENDIAN
-#define htonq(x) (x)
-#define ntohq(x) (x)
-#define htond(x) (x)
-#define ntohd(x) (x)
-#define SwapWideString(x)
-#else
-#ifdef HAVE_HTONLL
-#define htonq(x) htonll(x)
-#else
-#define htonq(x) __bswap_64(x)
-#endif
-#ifdef HAVE_NTOHLL
-#define ntohq(x) ntohll(x)
-#else
-#define ntohq(x) __bswap_64(x)
-#endif
-#define htond(x) __bswap_double(x)
-#define ntohd(x) __bswap_double(x)
-#define SwapWideString(x)  __bswap_wstr(x)
-#endif
-
 #ifdef UNDER_CE
 #define close(x)        CloseHandle((HANDLE)(x))
 #endif
@@ -1100,15 +1267,6 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flag
 extern "C"
 {
 #endif
-
-#if defined(_WIN32) || !(HAVE_DECL___BSWAP_32)
-UINT32 LIBNETXMS_EXPORTABLE __bswap_32(UINT32 dwVal);
-#endif
-#if defined(_WIN32) || !(HAVE_DECL___BSWAP_64)
-UINT64 LIBNETXMS_EXPORTABLE __bswap_64(UINT64 qwVal);
-#endif
-double LIBNETXMS_EXPORTABLE __bswap_double(double dVal);
-void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr);
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
@@ -1212,7 +1370,7 @@ BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
 #endif
 
 const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommand);
-void LIBNETXMS_EXPORTABLE Trim(TCHAR *str);
+TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str);
 bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase);
 TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
 
@@ -1243,8 +1401,6 @@ void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, c
 void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
 
 BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd);
-
-UINT32 LIBNETXMS_EXPORTABLE IcmpPing(UINT32 dwAddr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize);
 
 int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText);
 
@@ -1282,8 +1438,9 @@ BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strS
 INT64 LIBNETXMS_EXPORTABLE GetProcessRSS();
 #endif
 
-#if !(HAVE_DAEMON)
-int LIBNETXMS_EXPORTABLE daemon(int nochdir, int noclose);
+#if !HAVE_DAEMON || !HAVE_DECL_DAEMON
+int LIBNETXMS_EXPORTABLE __daemon(int nochdir, int noclose);
+#define daemon __daemon
 #endif
 
 UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr);
@@ -1339,6 +1496,11 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *
 UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUCS4String(const WCHAR *pwszString);
 WCHAR LIBNETXMS_EXPORTABLE *UCS4StringFromUCS2String(const UCS2CHAR *pszString);
 #endif
+
+size_t LIBNETXMS_EXPORTABLE utf8_to_mb(const char *src, int srcLen, char *dst, int dstLen);
+size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, int dstLen);
+char LIBNETXMS_EXPORTABLE *MBStringFromUTF8String(const char *s);
+char LIBNETXMS_EXPORTABLE *UTF8StringFromMBString(const char *s);
 
 #if !defined(_WIN32) && !HAVE_WSTAT
 int wstat(const WCHAR *_path, struct stat *_sbuf);
@@ -1436,6 +1598,28 @@ int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2);
 int LIBNETXMS_EXPORTABLE wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
 #endif
 
+#ifndef _WIN32
+
+#if HAVE_ITOA && !HAVE__ITOA
+#define _itoa itoa
+#undef HAVE__ITOA
+#define HAVE__ITOA 1
+#endif
+#if !HAVE__ITOA && !defined(_WIN32)
+char LIBNETXMS_EXPORTABLE *_itoa(int value, char *str, int base);
+#endif
+
+#if HAVE_ITOW && !HAVE__ITOW
+#define _itow itow
+#undef HAVE__ITOW
+#define HAVE__ITOW 1
+#endif
+#if !HAVE__ITOW && !defined(_WIN32)
+WCHAR LIBNETXMS_EXPORTABLE *_itow(int value, WCHAR *str, int base);
+#endif
+
+#endif /* _WIN32 */
+
 #ifdef _WIN32
 #ifdef UNICODE
 DIRW LIBNETXMS_EXPORTABLE *wopendir(const WCHAR *filename);
@@ -1523,16 +1707,20 @@ int LIBNETXMS_EXPORTABLE nx_inet_pton(int af, const char *src, void *dst);
 #define inet_pton nx_inet_pton
 #endif
 
+int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second);
+
 #ifdef __cplusplus
 }
 #endif
 
 
 //
-// C++ only finctions
+// C++ only functions
 //
 
 #ifdef __cplusplus
+
+UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress& addr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize);
 
 TCHAR LIBNETXMS_EXPORTABLE *EscapeStringForXML(const TCHAR *str, int length);
 String LIBNETXMS_EXPORTABLE EscapeStringForXML2(const TCHAR *str, int length = -1);

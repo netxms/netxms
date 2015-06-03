@@ -1,0 +1,1039 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : Multicast Filter Common mib
+-- FILE NAME: McastFilter.mib
+-- DATE     : 2011/03/25
+-- VERSION  : 2.06
+-- PURPOSE  : To construct the MIB structure of Multicast Filter management
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.06, 2011/03/25, Bruce Ge
+-- Description:
+-- [Modification]
+-- Remove swMcastFilterCtrl from MIB file.
+-- Notes: Requested by yedda.
+--
+-- Version 2.05, 2011/02/22, Tony Zhou
+-- Description:
+-- [New Object]
+-- Add swMcastFilterCtrl to delete all limited multicast profiles.
+-- Notes: Requested by Tony Zhou for Codebase.
+--
+-- Version 2.04, 2009/10/27, Phoenix Xie
+-- Description:
+-- [Modification]
+-- Deleted the value range and modified the description of swMcastFilterPortMaxGroup,
+-- swMcastFilterVLANMaxGroup, swMcastFilterIpv6PortMaxGroup, swMcastFilterIpv6VLANMaxGroup.
+-- Notes: Requested by Phoenix Xie for DES-3810.
+--
+-- Version 2.03, 2008/11/13, Lina Liu
+-- Description:
+-- [New Object]
+-- [1]add object swMcastFilterPortMaxGroupAction in swMcastFilterPortMaxGroupTable
+-- [2]add object swMcastFilterVLANMaxGroupAction in swMcastFilterVLANMaxGroupTable
+-- [3]add object swMcastFilterIpv6PortMaxGroupAction  in swMcastFilterIpv6PortMaxGroupTable
+-- [4]add object swMcastFilterIpv6VLANMaxGroupAction  in swMcastFilterIpv6VLANMaxGroupTable
+--    for config the action for the group number is up to the max group.
+-- Notes: Requested by Lina for DES3528R2
+--
+-- Version 2.02, 2008/10/28, Kelvin Tao
+-- Description:
+-- [New Object]
+-- add swMcastFilterIpv6ProfileInfoTable, swMcastFilterIpv6ProfileCtrlTable
+--     swMcastFilterIpv6PortGroupTable, swMcastFilterIpv6PortAccessTable
+--     swMcastFilterIpv6PortMaxGroupTable, swMcastFilterIpv6VLANGroupTable
+--     swMcastFilterIpv6VLANAccessTable, swMcastFilterIpv6VLANMaxGroupTable.
+-- Notes: Requested by Kelvin for DGS3700
+--
+-- Version 2.01, 2008/10/27, Marco
+-- added swMcastFilterVLANGroupTable
+-- added swMcastFilterVLANAccessTable
+-- added swMcastFilterVLANMaxGroupTable
+-- modified range of swMcastFilterPortMaxGroup
+-- -----------------------------------------------------------------------------
+-- Version 2.00, 2007/04/19, Yedda
+-- Notes: Requested and design by Elvis, SD6
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+
+MCAST-FILTER-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        MODULE-IDENTITY,OBJECT-TYPE,IpAddress
+                                        FROM SNMPv2-SMI
+        RowStatus                       FROM SNMPv2-TC
+        DisplayString                   FROM RFC1213-MIB
+        dlink-common-mgmt               FROM DLINK-ID-REC-MIB;
+
+    swMcastFilterMgmt MODULE-IDENTITY
+        LAST-UPDATED "201103250000Z"
+        ORGANIZATION "D-Link Corp."
+        CONTACT-INFO
+            "http://support.dlink.com"
+        DESCRIPTION
+            "The Structure of multicast filter management for the
+            proprietary enterprise."
+        ::= { dlink-common-mgmt 53 }
+
+-- -----------------------------------------------------------------------------
+-- Textual Conventions
+-- -----------------------------------------------------------------------------
+    Ipv6Address ::= TEXTUAL-CONVENTION
+    	DISPLAY-HINT "2x:"
+    	STATUS       current
+    	DESCRIPTION
+    		"This data type is used to model IPv6 addresses.
+    		This is a binary string of 16 octets in network
+    		byte-order."
+    	SYNTAX       OCTET STRING (SIZE (16))
+
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterProfileInfoTable    OBJECT-TYPE ::= { swMcastFilterMgmt 1 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterProfileInfoTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF SwMcastFilterProfileInfoEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+              "The description of the multicast filter profile table."
+        ::= { swMcastFilterMgmt 1 }
+
+    swMcastFilterProfileInfoEntry OBJECT-TYPE
+        SYNTAX      SwMcastFilterProfileInfoEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterProfileInfoTable."
+        INDEX   { swMcastFilterProfileInfoIndex }
+        ::= { swMcastFilterProfileInfoTable 1 }
+
+    SwMcastFilterProfileInfoEntry ::=
+        SEQUENCE {
+          swMcastFilterProfileInfoIndex
+              INTEGER,
+          swMcastFilterProfileInfoDescription
+              DisplayString,
+          swMcastFilterProfileInfoRowStatus
+              RowStatus
+        }
+
+    swMcastFilterProfileInfoIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the profile ID for this entry."
+        ::= { swMcastFilterProfileInfoEntry 1 }
+
+    swMcastFilterProfileInfoDescription OBJECT-TYPE
+        SYNTAX      DisplayString (SIZE (0..32))
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+              "This object specifies the description for this entry."
+        ::= { swMcastFilterProfileInfoEntry 2 }
+
+    swMcastFilterProfileInfoRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the status of this entry."
+        ::= { swMcastFilterProfileInfoEntry 3 }
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterProfileCtrlTable    OBJECT-TYPE ::= { swMcastFilterMgmt 2 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterProfileCtrlTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF SwMcastFilterProfileCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+              "The information of the multicast filter profile table."
+        ::= { swMcastFilterMgmt 2 }
+
+    swMcastFilterProfileCtrlEntry OBJECT-TYPE
+        SYNTAX      SwMcastFilterProfileCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+              "A list of information contained in swMcastFilterProfileCtrlTable."
+        INDEX   { swMcastFilterProfileCtrlProfileIndex,
+                  swMcastFilterProfileCtrlStartAddress,
+                  swMcastFilterProfileCtrlEndAddress }
+        ::= { swMcastFilterProfileCtrlTable 1 }
+
+    SwMcastFilterProfileCtrlEntry ::=
+        SEQUENCE {
+          swMcastFilterProfileCtrlProfileIndex
+              INTEGER,
+          swMcastFilterProfileCtrlStartAddress
+              IpAddress,
+          swMcastFilterProfileCtrlEndAddress
+              IpAddress,
+          swMcastFilterProfileCtrlRowStatus
+              RowStatus
+        }
+
+    swMcastFilterProfileCtrlProfileIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the profile ID for this entry."
+        ::= { swMcastFilterProfileCtrlEntry 1 }
+
+    swMcastFilterProfileCtrlStartAddress OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object specifies begin IP address for this range."
+        ::= { swMcastFilterProfileCtrlEntry 2 }
+
+    swMcastFilterProfileCtrlEndAddress OBJECT-TYPE
+        SYNTAX      IpAddress
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object specifies end IP address for this range."
+        ::= { swMcastFilterProfileCtrlEntry 3 }
+
+    swMcastFilterProfileCtrlRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the status of this entry."
+        ::= { swMcastFilterProfileCtrlEntry 4 }
+
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterPortGroupTable      OBJECT-TYPE ::= { swMcastFilterMgmt 3 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterPortGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMcastFilterPortGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "The information of the router port group table."
+        ::= { swMcastFilterMgmt 3 }
+
+    swMcastFilterPortGroupEntry OBJECT-TYPE
+        SYNTAX  SwMcastFilterPortGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterPortGroupTable."
+        INDEX   { swMcastFilterPortGroupPortIndex,
+                  swMcastFilterPortGroupProfileId }
+        ::= { swMcastFilterPortGroupTable 1 }
+
+    SwMcastFilterPortGroupEntry ::=
+        SEQUENCE {
+          swMcastFilterPortGroupPortIndex
+              INTEGER,
+          swMcastFilterPortGroupProfileId
+              INTEGER,
+          swMcastFilterPortGroupRowStatus
+              RowStatus
+        }
+
+    swMcastFilterPortGroupPortIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the port number for this entry."
+        ::= { swMcastFilterPortGroupEntry 1 }
+
+    swMcastFilterPortGroupProfileId OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the profile ID for this entry."
+        ::= { swMcastFilterPortGroupEntry 2 }
+
+    swMcastFilterPortGroupRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the status of this entry."
+        ::= { swMcastFilterPortGroupEntry 3 }
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterPortAccessTable     OBJECT-TYPE ::= { swMcastFilterMgmt 4 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterPortAccessTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMcastFilterPortAccessEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "The access state information of the port table."
+        ::= { swMcastFilterMgmt 4 }
+
+    swMcastFilterPortAccessEntry OBJECT-TYPE
+        SYNTAX  SwMcastFilterPortAccessEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterPortAccessTable."
+        INDEX   { swMcastFilterPortAccessPortIndex }
+        ::= { swMcastFilterPortAccessTable 1 }
+
+    SwMcastFilterPortAccessEntry ::=
+        SEQUENCE {
+          swMcastFilterPortAccessPortIndex
+              INTEGER,
+          swMcastFilterPortAccessState
+              INTEGER
+        }
+
+    swMcastFilterPortAccessPortIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the port number for this entry."
+        ::= { swMcastFilterPortAccessEntry 1 }
+
+    swMcastFilterPortAccessState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        permit(1),
+                        deny(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the access state for this entry."
+        ::= { swMcastFilterPortAccessEntry 2 }
+
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterPortMaxGroupTable   OBJECT-TYPE ::= { swMcastFilterMgmt 5 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterPortMaxGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMcastFilterPortMaxGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "The maximum registered group information of the port table."
+        ::= { swMcastFilterMgmt 5 }
+
+    swMcastFilterPortMaxGroupEntry OBJECT-TYPE
+        SYNTAX  SwMcastFilterPortMaxGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterPortMaxGroupTable."
+        INDEX   { swMcastFilterPortMaxGroupPortIndex }
+        ::= { swMcastFilterPortMaxGroupTable 1 }
+
+    SwMcastFilterPortMaxGroupEntry ::=
+        SEQUENCE {
+          swMcastFilterPortMaxGroupPortIndex
+              INTEGER,
+          swMcastFilterPortMaxGroup
+              INTEGER,
+          swMcastFilterPortCurrentCount
+              INTEGER,
+		  swMcastFilterPortMaxGroupAction
+     	      INTEGER
+        }
+
+    swMcastFilterPortMaxGroupPortIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the port number for this entry."
+        ::= { swMcastFilterPortMaxGroupEntry 1 }
+
+    swMcastFilterPortMaxGroup OBJECT-TYPE
+        SYNTAX      INTEGER 
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the maximum number of groups that
+               can be registered on this port.
+	       The value range is (0..N), N is project dependent, a value
+	       of 0 means infinite."
+        ::= { swMcastFilterPortMaxGroupEntry 2 }
+
+    swMcastFilterPortCurrentCount OBJECT-TYPE
+        SYNTAX      INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the counter of registered groups
+               on this port."
+        ::= { swMcastFilterPortMaxGroupEntry 3 }
+swMcastFilterPortMaxGroupAction  OBJECT-TYPE
+		SYNTAX	INTEGER {
+               drop(1),
+               replace(2)
+               }
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+	      "The action for the group number is up to the max group."
+		::= { swMcastFilterPortMaxGroupEntry 4 }
+        
+-- -----------------------------------------------------------------------------
+-- swMcastFilterVLANGroupTable      OBJECT-TYPE ::= { swMcastFilterMgmt 6 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterVLANGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMcastFilterVLANGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "This object displays router VLAN group table information."
+        ::= { swMcastFilterMgmt 6 }
+
+    swMcastFilterVLANGroupEntry OBJECT-TYPE
+        SYNTAX  SwMcastFilterVLANGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterVLANGroupTable."
+        INDEX   { swMcastFilterVLANGroupVLANIndex,
+                  swMcastFilterVLANGroupProfileId }
+        ::= { swMcastFilterVLANGroupTable 1 }
+
+    SwMcastFilterVLANGroupEntry ::=
+        SEQUENCE {
+          swMcastFilterVLANGroupVLANIndex
+              INTEGER,
+          swMcastFilterVLANGroupProfileId
+              INTEGER,
+          swMcastFilterVLANGroupRowStatus
+              RowStatus
+        }
+
+    swMcastFilterVLANGroupVLANIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the VLAN number for this entry."
+        ::= { swMcastFilterVLANGroupEntry 1 }
+
+    swMcastFilterVLANGroupProfileId OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the profile ID for this entry."
+        ::= { swMcastFilterVLANGroupEntry 2 }
+
+    swMcastFilterVLANGroupRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the status of this entry."
+        ::= { swMcastFilterVLANGroupEntry 3 }
+
+	
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterVLANAccessTable     OBJECT-TYPE ::= { swMcastFilterMgmt 7 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterVLANAccessTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMcastFilterVLANAccessEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "The access state information of the VLAN table."
+        ::= { swMcastFilterMgmt 7 }
+
+    swMcastFilterVLANAccessEntry OBJECT-TYPE
+        SYNTAX  SwMcastFilterVLANAccessEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "A list of information contained in swMcastFilterVLANAccessTable."
+        INDEX   { swMcastFilterVLANAccessVLANIndex }
+        ::= { swMcastFilterVLANAccessTable 1 }
+
+    SwMcastFilterVLANAccessEntry ::=
+        SEQUENCE {
+          swMcastFilterVLANAccessVLANIndex
+              INTEGER,
+          swMcastFilterVLANAccessState
+              INTEGER
+        }
+
+    swMcastFilterVLANAccessVLANIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the VLAN number for this entry."
+        ::= { swMcastFilterVLANAccessEntry 1 }
+
+    swMcastFilterVLANAccessState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        permit(1),
+                        deny(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the access state for this entry."
+        ::= { swMcastFilterVLANAccessEntry 2 }
+
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterVLANMaxGroupTable   OBJECT-TYPE ::= { swMcastFilterMgmt 8 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterVLANMaxGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMcastFilterVLANMaxGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "The maximum registerd group information of the VLAN table."
+        ::= { swMcastFilterMgmt 8 }
+
+    swMcastFilterVLANMaxGroupEntry OBJECT-TYPE
+        SYNTAX  SwMcastFilterVLANMaxGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "A list of information contained in swMcastFilterVLANMaxGroupTable."
+        INDEX   { swMcastFilterVLANMaxGroupVLANIndex }
+        ::= { swMcastFilterVLANMaxGroupTable 1 }
+
+    SwMcastFilterVLANMaxGroupEntry ::=
+        SEQUENCE {
+          swMcastFilterVLANMaxGroupVLANIndex
+              INTEGER,
+          swMcastFilterVLANMaxGroup
+              INTEGER,
+          swMcastFilterVLANCurrentCount
+              INTEGER,
+          swMcastFilterVLANMaxGroupAction
+              INTEGER 
+        }
+
+    swMcastFilterVLANMaxGroupVLANIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the VLAN number for this entry."
+        ::= { swMcastFilterVLANMaxGroupEntry 1 }
+
+    swMcastFilterVLANMaxGroup OBJECT-TYPE
+        SYNTAX      INTEGER 
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the maximum number of groups
+               that can be registered within this VLAN.
+	       The value range is (0..N), N is project dependent, a value
+	       of 0 means infinite."
+        ::= { swMcastFilterVLANMaxGroupEntry 2 }
+
+    swMcastFilterVLANCurrentCount OBJECT-TYPE
+        SYNTAX      INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the counter of registered groups
+               within this VLAN."
+        ::= { swMcastFilterVLANMaxGroupEntry 3 }        
+
+	swMcastFilterVLANMaxGroupAction  OBJECT-TYPE
+		SYNTAX	INTEGER {
+               drop(1),
+               replace(2)
+               }
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+	      "The action for the group number is up to the max group."
+		::= { swMcastFilterVLANMaxGroupEntry 4 }
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterIpv6ProfileInfoTable    OBJECT-TYPE ::= { swMcastFilterMgmt 20 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterIpv6ProfileInfoTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF SwMcastFilterIpv6ProfileInfoEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+              "The description of the multicast filter IPv6 profile table."
+        ::= { swMcastFilterMgmt 20 }
+
+    swMcastFilterIpv6ProfileInfoEntry OBJECT-TYPE
+        SYNTAX      SwMcastFilterIpv6ProfileInfoEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterIpv6ProfileInfoTable."
+        INDEX   { swMcastFilterIpv6ProfileInfoIndex }
+        ::= { swMcastFilterIpv6ProfileInfoTable 1 }
+
+    SwMcastFilterIpv6ProfileInfoEntry ::=
+        SEQUENCE {
+          swMcastFilterIpv6ProfileInfoIndex
+              INTEGER,
+          swMcastFilterIpv6ProfileInfoDescription
+              DisplayString,
+          swMcastFilterIpv6ProfileInfoRowStatus
+              RowStatus
+        }
+
+    swMcastFilterIpv6ProfileInfoIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the profile ID for this entry."
+        ::= { swMcastFilterIpv6ProfileInfoEntry 1 }
+
+    swMcastFilterIpv6ProfileInfoDescription OBJECT-TYPE
+        SYNTAX      DisplayString (SIZE (0..32))
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+              "This object specifies the description for this entry."
+        ::= { swMcastFilterIpv6ProfileInfoEntry 2 }
+
+    swMcastFilterIpv6ProfileInfoRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the status of this entry."
+        ::= { swMcastFilterIpv6ProfileInfoEntry 3 }
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterIpv6ProfileCtrlTable    OBJECT-TYPE ::= { swMcastFilterMgmt 21 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterIpv6ProfileCtrlTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF SwMcastFilterIpv6ProfileCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+              "The information of the multicast filter IPv6 profile table."
+        ::= { swMcastFilterMgmt 21 }
+
+    swMcastFilterIpv6ProfileCtrlEntry OBJECT-TYPE
+        SYNTAX      SwMcastFilterIpv6ProfileCtrlEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterIpv6ProfileCtrlTable."
+        INDEX   { swMcastFilterIpv6ProfileCtrlProfileIndex,
+                  swMcastFilterIpv6ProfileCtrlStartAddress,
+                  swMcastFilterIpv6ProfileCtrlEndAddress }
+        ::= { swMcastFilterIpv6ProfileCtrlTable 1 }
+
+    SwMcastFilterIpv6ProfileCtrlEntry ::=
+        SEQUENCE {
+          swMcastFilterIpv6ProfileCtrlProfileIndex
+              INTEGER,
+          swMcastFilterIpv6ProfileCtrlStartAddress
+              Ipv6Address,
+          swMcastFilterIpv6ProfileCtrlEndAddress
+              Ipv6Address,
+          swMcastFilterIpv6ProfileCtrlRowStatus
+              RowStatus
+        }
+
+    swMcastFilterIpv6ProfileCtrlProfileIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the profile ID for this entry."
+        ::= { swMcastFilterIpv6ProfileCtrlEntry 1 }
+
+    swMcastFilterIpv6ProfileCtrlStartAddress OBJECT-TYPE
+        SYNTAX      Ipv6Address
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object specifies begin IPv6 address for this range."
+        ::= { swMcastFilterIpv6ProfileCtrlEntry 2 }
+
+    swMcastFilterIpv6ProfileCtrlEndAddress OBJECT-TYPE
+        SYNTAX      Ipv6Address
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object specifies end IPv6 address for this range."
+        ::= { swMcastFilterIpv6ProfileCtrlEntry 3 }
+
+    swMcastFilterIpv6ProfileCtrlRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the status of this entry."
+        ::= { swMcastFilterIpv6ProfileCtrlEntry 4 }
+
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterIpv6PortGroupTable      OBJECT-TYPE ::= { swMcastFilterMgmt 22 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterIpv6PortGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMcastFilterIpv6PortGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "The information of the IPv6 router port group table."
+        ::= { swMcastFilterMgmt 22 }
+
+    swMcastFilterIpv6PortGroupEntry OBJECT-TYPE
+        SYNTAX  SwMcastFilterIpv6PortGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterIpv6PortGroupTable."
+        INDEX   { swMcastFilterIpv6PortGroupPortIndex,
+                  swMcastFilterIpv6PortGroupProfileId }
+        ::= { swMcastFilterIpv6PortGroupTable 1 }
+
+    SwMcastFilterIpv6PortGroupEntry ::=
+        SEQUENCE {
+          swMcastFilterIpv6PortGroupPortIndex
+              INTEGER,
+          swMcastFilterIpv6PortGroupProfileId
+              INTEGER,
+          swMcastFilterIpv6PortGroupRowStatus
+              RowStatus
+        }
+
+    swMcastFilterIpv6PortGroupPortIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the port number for this entry."
+        ::= { swMcastFilterIpv6PortGroupEntry 1 }
+
+    swMcastFilterIpv6PortGroupProfileId OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the profile ID for this entry."
+        ::= { swMcastFilterIpv6PortGroupEntry 2 }
+
+    swMcastFilterIpv6PortGroupRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the status of this entry."
+        ::= { swMcastFilterIpv6PortGroupEntry 3 }
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterIpv6PortAccessTable     OBJECT-TYPE ::= { swMcastFilterMgmt 23 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterIpv6PortAccessTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMcastFilterIpv6PortAccessEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "The access state information of the IPv6 port table."
+        ::= { swMcastFilterMgmt 23 }
+
+    swMcastFilterIpv6PortAccessEntry OBJECT-TYPE
+        SYNTAX  SwMcastFilterIpv6PortAccessEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterIpv6PortAccessTable."
+        INDEX   { swMcastFilterIpv6PortAccessPortIndex }
+        ::= { swMcastFilterIpv6PortAccessTable 1 }
+
+    SwMcastFilterIpv6PortAccessEntry ::=
+        SEQUENCE {
+          swMcastFilterIpv6PortAccessPortIndex
+              INTEGER,
+          swMcastFilterIpv6PortAccessState
+              INTEGER
+        }
+
+    swMcastFilterIpv6PortAccessPortIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the port number for this entry."
+        ::= { swMcastFilterIpv6PortAccessEntry 1 }
+
+    swMcastFilterIpv6PortAccessState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        permit(1),
+                        deny(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the access state for this entry."
+        ::= { swMcastFilterIpv6PortAccessEntry 2 }
+
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterIpv6PortMaxGroupTable   OBJECT-TYPE ::= { swMcastFilterMgmt 24 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterIpv6PortMaxGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMcastFilterIpv6PortMaxGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "The maximum registered group information of the port table."
+        ::= { swMcastFilterMgmt 24 }
+
+    swMcastFilterIpv6PortMaxGroupEntry OBJECT-TYPE
+        SYNTAX  SwMcastFilterIpv6PortMaxGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterIpv6PortMaxGroupTable."
+        INDEX   { swMcastFilterIpv6PortMaxGroupPortIndex }
+        ::= { swMcastFilterIpv6PortMaxGroupTable 1 }
+
+    SwMcastFilterIpv6PortMaxGroupEntry ::=
+        SEQUENCE {
+          swMcastFilterIpv6PortMaxGroupPortIndex
+              INTEGER,
+          swMcastFilterIpv6PortMaxGroup
+              INTEGER,
+          swMcastFilterIpv6PortCurrentCount
+              INTEGER,
+		  swMcastFilterIpv6PortMaxGroupAction  
+			  INTEGER
+        }
+
+    swMcastFilterIpv6PortMaxGroupPortIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the port number for this entry."
+        ::= { swMcastFilterIpv6PortMaxGroupEntry 1 }
+
+    swMcastFilterIpv6PortMaxGroup OBJECT-TYPE
+        SYNTAX      INTEGER 
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the maximum number of groups that
+               can be registered for this port.
+               The value range is (0..N), N is project dependent, a value
+	       of 0 means infinite."
+        ::= { swMcastFilterIpv6PortMaxGroupEntry 2 }
+
+    swMcastFilterIpv6PortCurrentCount OBJECT-TYPE
+        SYNTAX      INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the counter of registered groups
+               for this port."
+        ::= { swMcastFilterIpv6PortMaxGroupEntry 3 }
+ 
+swMcastFilterIpv6PortMaxGroupAction  OBJECT-TYPE
+		SYNTAX	INTEGER {
+               drop(1),
+               replace(2)
+               }
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+	      "The action for the group number is up to the max group."
+		::= { swMcastFilterIpv6PortMaxGroupEntry 4 }
+
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterIpv6VLANGroupTable      OBJECT-TYPE ::= { swMcastFilterMgmt 25 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterIpv6VLANGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMcastFilterIpv6VLANGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "The information of the IPv6 router VLAN group table."
+        ::= { swMcastFilterMgmt 25 }
+
+    swMcastFilterIpv6VLANGroupEntry OBJECT-TYPE
+        SYNTAX  SwMcastFilterIpv6VLANGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterIpv6VLANGroupTable."
+        INDEX   { swMcastFilterIpv6VLANGroupVLANIndex,
+                  swMcastFilterIpv6VLANGroupProfileId }
+        ::= { swMcastFilterIpv6VLANGroupTable 1 }
+
+    SwMcastFilterIpv6VLANGroupEntry ::=
+        SEQUENCE {
+          swMcastFilterIpv6VLANGroupVLANIndex
+              INTEGER,
+          swMcastFilterIpv6VLANGroupProfileId
+              INTEGER,
+          swMcastFilterIpv6VLANGroupRowStatus
+              RowStatus
+        }
+
+    swMcastFilterIpv6VLANGroupVLANIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the VLAN number for this entry."
+        ::= { swMcastFilterIpv6VLANGroupEntry 1 }
+
+    swMcastFilterIpv6VLANGroupProfileId OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the profile ID for this entry."
+        ::= { swMcastFilterIpv6VLANGroupEntry 2 }
+
+    swMcastFilterIpv6VLANGroupRowStatus OBJECT-TYPE
+        SYNTAX      RowStatus
+        MAX-ACCESS  read-create
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the status of this entry."
+        ::= { swMcastFilterIpv6VLANGroupEntry 3 }
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterIpv6VLANAccessTable     OBJECT-TYPE ::= { swMcastFilterMgmt 26 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterIpv6VLANAccessTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMcastFilterIpv6VLANAccessEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "The access state information of the IPv6 VLAN table."
+        ::= { swMcastFilterMgmt 26 }
+
+    swMcastFilterIpv6VLANAccessEntry OBJECT-TYPE
+        SYNTAX  SwMcastFilterIpv6VLANAccessEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterIpv6VLANAccessTable."
+        INDEX   { swMcastFilterIpv6VLANAccessVLANIndex }
+        ::= { swMcastFilterIpv6VLANAccessTable 1 }
+
+    SwMcastFilterIpv6VLANAccessEntry ::=
+        SEQUENCE {
+          swMcastFilterIpv6VLANAccessVLANIndex
+              INTEGER,
+          swMcastFilterIpv6VLANAccessState
+              INTEGER
+        }
+
+    swMcastFilterIpv6VLANAccessVLANIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the VLAN number for this entry."
+        ::= { swMcastFilterIpv6VLANAccessEntry 1 }
+
+    swMcastFilterIpv6VLANAccessState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                        permit(1),
+                        deny(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the access state for this entry."
+        ::= { swMcastFilterIpv6VLANAccessEntry 2 }
+
+
+-- -----------------------------------------------------------------------------
+-- swMcastFilterIpv6VLANMaxGroupTable   OBJECT-TYPE ::= { swMcastFilterMgmt 27 }
+-- -----------------------------------------------------------------------------
+    swMcastFilterIpv6VLANMaxGroupTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF SwMcastFilterIpv6VLANMaxGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "The maximum registered group information of the IPv6 VLAN table."
+        ::= { swMcastFilterMgmt 27 }
+
+    swMcastFilterIpv6VLANMaxGroupEntry OBJECT-TYPE
+        SYNTAX  SwMcastFilterIpv6VLANMaxGroupEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+              "A list of information contained in the swMcastFilterIpv6VLANMaxGroupTable."
+        INDEX   { swMcastFilterIpv6VLANMaxGroupVLANIndex }
+        ::= { swMcastFilterIpv6VLANMaxGroupTable 1 }
+
+    SwMcastFilterIpv6VLANMaxGroupEntry ::=
+        SEQUENCE {
+          swMcastFilterIpv6VLANMaxGroupVLANIndex
+              INTEGER,
+          swMcastFilterIpv6VLANMaxGroup
+              INTEGER,
+          swMcastFilterIpv6VLANCurrentCount
+              INTEGER,
+swMcastFilterIpv6VLANMaxGroupAction  
+INTEGER
+        }
+
+    swMcastFilterIpv6VLANMaxGroupVLANIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the VLAN number for this entry."
+        ::= { swMcastFilterIpv6VLANMaxGroupEntry 1 }
+
+    swMcastFilterIpv6VLANMaxGroup OBJECT-TYPE
+        SYNTAX      INTEGER 
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the maximum number of groups that
+               can be registered on this VLAN.
+               The value range is (0..N), N is project dependent, a value
+	       of 0 means infinite."
+        ::= { swMcastFilterIpv6VLANMaxGroupEntry 2 }
+
+    swMcastFilterIpv6VLANCurrentCount OBJECT-TYPE
+        SYNTAX      INTEGER (0..65535)
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+              "This object indicates the counter of registered groups
+               on this VLAN."
+        ::= { swMcastFilterIpv6VLANMaxGroupEntry 3 }
+
+swMcastFilterIpv6VLANMaxGroupAction  OBJECT-TYPE
+		SYNTAX	INTEGER {
+               drop(1),
+               replace(2)
+               }
+		MAX-ACCESS  read-write
+		STATUS  current
+		DESCRIPTION
+	      "The action for the group number is up to the max group."
+		::= { swMcastFilterIpv6VLANMaxGroupEntry 4 }
+
+
+END

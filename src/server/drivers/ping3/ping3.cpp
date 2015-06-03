@@ -106,22 +106,18 @@ InterfaceList *Ping3Driver::getInterfaces(SNMP_Transport *snmp, StringMap *attri
       {
          ifList = new InterfaceList(1);
 
-         NX_INTERFACE_INFO iface;
-         memset(&iface, 0, sizeof(NX_INTERFACE_INFO));
+         InterfaceInfo *iface = new InterfaceInfo(1);
+         _tcscpy(iface->name, _T("eth0"));
+         iface->type = IFTYPE_ETHERNET_CSMACD;
+         iface->isPhysicalPort = true;
 
-         _tcscpy(iface.name, _T("eth0"));
-         iface.index = 1;
-         iface.type = IFTYPE_ETHERNET_CSMACD;
-         iface.isPhysicalPort = true;
+         UINT32 ipAddr, ipNetMask;
+         response->getVariable(0)->getRawValue((BYTE *)&ipAddr, sizeof(UINT32));
+         response->getVariable(1)->getRawValue((BYTE *)&ipNetMask, sizeof(UINT32));
+         response->getVariable(0)->getRawValue(iface->macAddr, MAC_ADDR_LENGTH);
 
-         response->getVariable(0)->getRawValue((BYTE *)&iface.ipAddr, sizeof(UINT32));
-         response->getVariable(1)->getRawValue((BYTE *)&iface.ipNetMask, sizeof(UINT32));
-         response->getVariable(0)->getRawValue(iface.macAddr, MAC_ADDR_LENGTH);
-
-         iface.ipAddr = ntohl(iface.ipAddr);
-         iface.ipNetMask = ntohl(iface.ipNetMask);
-
-         ifList->add(&iface);
+         iface->ipAddrList.add(InetAddress(ntohl(ipAddr), ntohl(ipNetMask)));
+         ifList->add(iface);
       }
       delete response;
    }

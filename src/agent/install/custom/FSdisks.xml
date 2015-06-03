@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<parser>
+  <file>*System</file>
+  <rules>
+    <rule>
+      <source>Disk</source>
+      <id>52</id>
+      <match>(.*)</match>
+      <event params="1">100079</event>
+    </rule>
+    <rule>
+      <source>Disk</source>
+      <id>51</id>
+      <match>(.*)</match>
+      <event params="1">100079</event>
+    </rule>
+    <rule>
+      <source>Disk</source>
+      <id>11</id>
+      <match>(.*)</match>
+      <event params="1">100075</event>
+    </rule>
+    <rule>
+      <source>Disk</source>
+      <id>7</id>
+      <match>(.*)</match>
+      <event params="1">100075</event>
+    </rule>
+  </rules>
+</parser>

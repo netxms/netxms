@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,7 +42,6 @@ NetObj::NetObj()
    m_isDeleted = false;
    m_isHidden = false;
 	m_isSystem = false;
-   m_dwIpAddr = 0;
    m_dwChildCount = 0;
    m_pChildList = NULL;
    m_dwParentCount = 0;
@@ -185,7 +184,7 @@ bool NetObj::loadCommonProperties()
 			{
 				DBGetField(hResult, 0, 0, m_name, MAX_OBJECT_NAME);
 				m_iStatus = DBGetFieldLong(hResult, 0, 1);
-				m_isDeleted = DBGetFieldLong(hResult, 0, 2) ? TRUE : FALSE;
+				m_isDeleted = DBGetFieldLong(hResult, 0, 2) ? true : false;
 				m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 3) ? TRUE : FALSE;
 				m_dwTimeStamp = DBGetFieldULong(hResult, 0, 4);
 				m_iStatusCalcAlg = DBGetFieldLong(hResult, 0, 5);
@@ -678,9 +677,9 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       return;
 
    int mostCriticalAlarm = GetMostCriticalStatusForObject(m_id);
-   int mostCriticalDCI = 
+   int mostCriticalDCI =
       (getObjectClass() == OBJECT_NODE || getObjectClass() == OBJECT_MOBILEDEVICE || getObjectClass() == OBJECT_CLUSTER || getObjectClass() == OBJECT_ACCESSPOINT) ?
-         ((DataCollectionTarget *)this)->getMostCriticalDCIStatus() : STATUS_UNKNOWN; 
+         ((DataCollectionTarget *)this)->getMostCriticalDCIStatus() : STATUS_UNKNOWN;
 
    UINT32 i;
    int oldStatus = m_iStatus;
@@ -909,32 +908,17 @@ static bool SendModuleDataCallback(const TCHAR *key, const void *value, void *da
 }
 
 /**
- * Create NXCP message with object's data
+ * Fill NXCP message with object's data
  */
-void NetObj::fillMessage(NXCPMessage *pMsg)
+void NetObj::fillMessageInternal(NXCPMessage *pMsg)
 {
-   UINT32 i, dwId;
-
    pMsg->setField(VID_OBJECT_CLASS, (WORD)getObjectClass());
    pMsg->setField(VID_OBJECT_ID, m_id);
 	pMsg->setField(VID_GUID, m_guid, UUID_LENGTH);
    pMsg->setField(VID_OBJECT_NAME, m_name);
    pMsg->setField(VID_OBJECT_STATUS, (WORD)m_iStatus);
-   pMsg->setField(VID_IP_ADDRESS, m_dwIpAddr);
    pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
    pMsg->setField(VID_IS_SYSTEM, (WORD)(m_isSystem ? 1 : 0));
-
-   LockParentList(FALSE);
-   pMsg->setField(VID_PARENT_CNT, m_dwParentCount);
-   for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_dwParentCount; i++, dwId++)
-      pMsg->setField(dwId, m_pParentList[i]->getId());
-   UnlockParentList();
-
-   LockChildList(FALSE);
-   pMsg->setField(VID_CHILD_CNT, m_dwChildCount);
-   for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
-      pMsg->setField(dwId, m_pChildList[i]->getId());
-   UnlockChildList();
 
    pMsg->setField(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
    pMsg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_iStatusCalcAlg);
@@ -982,6 +966,30 @@ void NetObj::fillMessage(NXCPMessage *pMsg)
 }
 
 /**
+ * Fill NXCP message with object's data
+ */
+void NetObj::fillMessage(NXCPMessage *msg)
+{ 
+   lockProperties(); 
+   fillMessageInternal(msg); 
+   unlockProperties(); 
+
+   UINT32 i, dwId;
+
+   LockParentList(FALSE);
+   msg->setField(VID_PARENT_CNT, m_dwParentCount);
+   for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_dwParentCount; i++, dwId++)
+      msg->setField(dwId, m_pParentList[i]->getId());
+   UnlockParentList();
+
+   LockChildList(FALSE);
+   msg->setField(VID_CHILD_CNT, m_dwChildCount);
+   for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
+      msg->setField(dwId, m_pChildList[i]->getId());
+   UnlockChildList();
+}
+
+/**
  * Handler for EnumerateSessions()
  */
 static void BroadcastObjectChange(ClientSession *pSession, void *pArg)
@@ -1008,13 +1016,22 @@ void NetObj::setModified()
 }
 
 /**
+ * Modify object from NXCP message - common wrapper
+ */
+UINT32 NetObj::modifyFromMessage(NXCPMessage *msg)
+{ 
+   lockProperties(); 
+   UINT32 rcc = modifyFromMessageInternal(msg);
+   setModified();
+   unlockProperties();
+   return rcc; 
+}
+
+/**
  * Modify object from NXCP message
  */
-UINT32 NetObj::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
    // Change object's name
    if (pRequest->isFieldExist(VID_OBJECT_NAME))
       pRequest->getFieldAsString(VID_OBJECT_NAME, m_name, MAX_OBJECT_NAME);
@@ -1120,9 +1137,6 @@ UINT32 NetObj::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
       pRequest->getFieldAsString(VID_POSTCODE, buffer, 32);
       m_postalAddress->setPostCode(buffer);
    }
-
-   setModified();
-   unlockProperties();
 
    return RCC_SUCCESS;
 }
@@ -1695,6 +1709,25 @@ ObjectArray<NetObj> *NetObj::getParentList(int typeFilter)
     }
     UnlockParentList();
     return list;
+}
+
+/**
+ * FInd child object by name (with optional class filter)
+ */
+NetObj *NetObj::findChildObject(const TCHAR *name, int typeFilter)
+{
+   NetObj *object = NULL;
+	LockChildList(FALSE);
+	for(UINT32 i = 0; i < m_dwChildCount; i++)
+	{
+      if (((typeFilter == -1) || (typeFilter == m_pChildList[i]->getObjectClass())) && !_tcsicmp(name, m_pChildList[i]->getName()))
+      {
+         object = m_pChildList[i];
+         break;
+      }
+	}
+	UnlockChildList();
+	return object;
 }
 
 /**

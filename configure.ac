@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0-M2], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0-M4], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -93,6 +93,9 @@ XMPP_SUPPORT="yes"
 LDAP_SUPPORT="yes"
 DISABLE_READLINE="no"
 TUXEDO_LIBS=""
+MONGODB_LIBS=""
+DISABLE_IPV6="no"
+IPV6_SUPPORT="no"
 
 
 #--------------------------------------------------------------------
@@ -249,6 +252,15 @@ AC_ARG_WITH(tuxedo,
 		TUXEDO_BASE="$withval"
 	fi
 	COMPONENTS="$COMPONENTS tuxedo"
+fi ])
+
+AC_ARG_WITH(mongodb,
+[AS_HELP_STRING(--with-mongodb,build MongoDB-dependent components)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		MONGODB_BASE="$withval"
+	fi
+	COMPONENTS="$COMPONENTS mongodb"
 fi ])
 
 AC_ARG_WITH(sqlite,
@@ -418,6 +430,12 @@ AC_ARG_ENABLE(iconv,
 	DISABLE_ICONV="yes"
 ])
 
+AC_ARG_ENABLE(ipv6,
+[AS_HELP_STRING(--disable-ipv6,disable IPv6 support)],
+[
+	DISABLE_IPV6="yes"
+])
+
 AC_ARG_ENABLE(iconv-cache,
 [AS_HELP_STRING([--enable-iconv-cache=@<:@yes/no/auto@:>@],
 [cache iconv descriptors [default=auto]])],,
@@ -484,14 +502,14 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2 tuxedo"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2 tuxedo mongodb"
 	SMSDRV_DIRS="kannel websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
-	CONTRIB_MODULES="mibs backgrounds"
+	CONTRIB_MODULES="mibs backgrounds music"
 	CLIENT_COMPONENTS="nxalarm nxevent nxpush nxsms"
 	SERVER_TOOLS="nxconfig"
 )
@@ -579,9 +597,9 @@ if test $? = 0; then
 
 	case "$PLATFORM" in
 		Linux)
-			SUBAGENT_DIRS="linux"
-			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/linux/linux.la"
-			STATIC_SUBAGENT_LIST="linux $STATIC_SUBAGENT_LIST"
+			SUBAGENT_DIRS="linux ds18x20"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/linux/linux.la ../subagents/ds18x20/ds18x20.la"
+			STATIC_SUBAGENT_LIST="linux ds18x20 $STATIC_SUBAGENT_LIST"
 			;;
 		FreeBSD)
 			SUBAGENT_DIRS="freebsd"
@@ -649,7 +667,7 @@ if test $? = 0; then
 	BUILD_SERVER="yes"
 	MODULES="$MODULES libnxmap libnxsl libnxlp db server nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
-	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds"
+	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music"
 	if test "x$XMPP_SUPPORT" = "xyes"; then
 		MODULES="libstrophe $MODULES"
 		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
@@ -676,7 +694,7 @@ if test $? = 0; then
 
 	case "$PLATFORM" in
 		Linux)
-			SUBAGENT_DIRS="linux"
+			SUBAGENT_DIRS="linux ds18x20"
 			;;
 		FreeBSD)
 			SUBAGENT_DIRS="freebsd"
@@ -759,6 +777,11 @@ if test $? = 0; then
 	SUBAGENT_DIRS="$SUBAGENT_DIRS tuxedo"
 fi
 
+check_substr "$COMPONENTS" "mongodb"
+if test $? = 0; then
+	SUBAGENT_DIRS="$SUBAGENT_DIRS mongodb"
+fi
+
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
 	MODULES="$MODULES libnxmap client libnxsl libnxlp db nxscript"
@@ -823,7 +846,7 @@ case "$PLATFORM" in
       if test "x$CXX" = "xaCC"; then
          CPPFLAGS="$CPPFLAGS -D_HP_ATOMIC_INLINE"
 	 CFLAGS="$CFLAGS -AC99"
-         CXXFLAGS="-mt $CXXFLAGS +W749 +W829"
+         CXXFLAGS="-mt $CXXFLAGS +W749 +W829 +W4232"
          LDFLAGS="$LDFLAGS -mt"
       fi
       if test `uname -m` != 'ia64'; then
@@ -892,6 +915,21 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	fi
 
 	AC_LANG_POP([C++])
+
+	MACHINE=`uname -m`
+	if test "x$MACHINE" = "xi686" -o "x$MACHINE" = "xi586"; then
+			AC_MSG_CHECKING(whether C compiler accepts -march=$MACHINE)
+			OLD_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="$CPPFLAGS -march=$MACHINE"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ 
+					AC_MSG_RESULT(yes) 
+				], 
+				[ 
+					CPPFLAGS="$OLD_CPPFLAGS"
+					AC_MSG_RESULT(no)
+				])
+	fi
 
 	if test "x$PLATFORM" = "xHP-UX"; then
 		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
@@ -1189,6 +1227,42 @@ if test "x$CXX" != "xaCC"; then
 	fi
 fi
 
+
+#--------------------------------------------------------------------
+# Check for additional system libraries
+#--------------------------------------------------------------------
+
+AC_CHECK_LIB(xnet, accept)
+AC_CHECK_LIB(socket, if_nameindex)
+AC_CHECK_LIB(dl, dlopen)
+AC_CHECK_LIB(kstat, kstat_open)
+
+# sockets/resolver
+if test "$BUILD_SERVER-$XMPP_SUPPORT" = "yes-yes"; then
+	AC_CHECK_HEADERS([arpa/nameser_compat.h])
+	AC_CHECK_FUNC(res_query, , [AC_CHECK_LIB(resolv, res_query, [], [AC_CHECK_LIB(resolv, __res_query)])])
+fi
+AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
+AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(resolv, gethostbyname)])
+AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(nsl, gethostbyname)])
+
+if test "x$ac_cv_lib_nsl_gethostbyname" != "xyes" && test "x$ac_cv_func_gethostbyname" != "xyes" ; then
+	AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(socket, gethostbyname)])
+fi
+
+if test "$ac_cv_lib_nsl_gethostbyname" = "$ac_cv_func_gethostbyname" ; then
+	AC_MSG_CHECKING([if we can include libnsl + libsocket])
+	LIBS="-lnsl -lsocket $LIBS"
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[(void) gethostbyname]])],[my_ac_link_result=yes],[my_ac_link_result=no ])
+	if test "$my_ac_link_result" = "no" ; then
+		AC_MSG_RESULT([failure])
+		AC_MSG_ERROR([unable to use gethostbyname()])
+	else
+		AC_MSG_RESULT([success])
+	fi
+fi
+
+
 #--------------------------------------------------------------------
 # Check for threads library - either POSIX or GNU
 #--------------------------------------------------------------------
@@ -1342,13 +1416,30 @@ AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 
 
 #--------------------------------------------------------------------
-# Checks for other libs.
+# Checks for IPv6 support
 #--------------------------------------------------------------------
 
-AC_CHECK_LIB(xnet, accept)
-AC_CHECK_LIB(socket, if_nameindex)
-AC_CHECK_LIB(dl, dlopen)
-AC_CHECK_LIB(kstat, kstat_open)
+if test "x$DISABLE_IPV6" != "xyes"; then
+	AC_CHECK_DECL(AF_INET6,,,[
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+	])
+	if test "x$ac_cv_have_decl_AF_INET6" = "xyes"; then
+		AC_CHECK_TYPE(struct sockaddr_in6, [ 
+			AC_DEFINE(WITH_IPV6, 1, Define to have IPv6 support) 
+			IPV6_SUPPORT="yes"
+		],,[
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+		])
+	fi
+fi
+
+#--------------------------------------------------------------------
+# Checks for other libs.
+#--------------------------------------------------------------------
 
 if test "x$BUILD_SERVER" = "xyes" ; then
    AC_CHECK_LIB(termcap, tgetstr, [SERVER_LIBS="$SERVER_LIBS -ltermcap"], [AC_CHECK_LIB(ncurses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lncurses"], AC_CHECK_LIB(curses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lcurses"]))])
@@ -1570,9 +1661,10 @@ AC_CHECK_FUNCS([gettimeofday memmove memset bcopy strchr strcspn strdup strerror
 AC_CHECK_FUNCS([strrchr strlwr strtol strtoul strtoll strtoull setlocale])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
-AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r])
+AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo])
+AC_CHECK_FUNCS([itoa _itoa isatty])
 
-AC_CHECK_DECLS([nanosleep])
+AC_CHECK_DECLS([nanosleep, daemon])
 
 # Do not use inet_pton on Solaris as it has binary compatibility problems
 if test "$PLATFORM" != "SunOS"; then
@@ -1628,31 +1720,6 @@ AC_MSG_RESULT(no)
 
 AC_CHECK_FUNCS([sysctlbyname sysctlnametomib])
 AC_CHECK_FUNCS([tcgetattr tcsetattr cfsetospeed cfsetispeed])
-
-# sockets/resolver
-if test "$BUILD_SERVER-$XMPP_SUPPORT" = "yes-yes"; then
-	AC_CHECK_HEADERS([arpa/nameser_compat.h])
-	AC_CHECK_FUNC(res_query, , [AC_CHECK_LIB(resolv, res_query, [], [AC_CHECK_LIB(resolv, __res_query)])])
-fi
-AC_CHECK_FUNC(connect, , [AC_CHECK_LIB(socket, connect)])
-AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(resolv, gethostbyname)])
-AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(nsl, gethostbyname)])
-
-if test "x$ac_cv_lib_nsl_gethostbyname" != "xyes" && test "x$ac_cv_func_gethostbyname" != "xyes" ; then
-	AC_CHECK_FUNC(gethostbyname, , [AC_CHECK_LIB(socket, gethostbyname)])
-fi
-
-if test "$ac_cv_lib_nsl_gethostbyname" = "$ac_cv_func_gethostbyname" ; then
-	AC_MSG_CHECKING([if we can include libnsl + libsocket])
-	LIBS="-lnsl -lsocket $LIBS"
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[(void) gethostbyname]])],[my_ac_link_result=yes],[my_ac_link_result=no ])
-	if test "$my_ac_link_result" = "no" ; then
-		AC_MSG_RESULT([failure])
-		AC_MSG_ERROR([unable to use gethostbyname()])
-	else
-		AC_MSG_RESULT([success])
-	fi
-fi
 
 # asprintf, scprintf, etc.
 AC_CHECK_FUNCS([asprintf aswprintf vasprintf vaswprintf])
@@ -1897,7 +1964,7 @@ fi
 # Check for UNICODE stuff
 #--------------------------------------------------------------------
 
-AC_CHECK_HEADERS([wchar.h wctype.h iconv.h])
+AC_CHECK_HEADERS([wchar.h wctype.h iconv.h widec.h])
 AC_CHECK_TYPES([wchar_t, wint_t],,,[
 #if HAVE_WCHAR_H
 #include <wchar.h>
@@ -1913,6 +1980,7 @@ AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws])
 AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
 AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
+AC_CHECK_FUNCS([itow _itow])
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,
@@ -2298,7 +2366,7 @@ if test $? = 0; then
 		LD_RUN_PATH="${MYSQL_LD_RUN_PATH}${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 	fi
 
-	AC_CHECK_HEADER(mysql.h,,AC_MSG_ERROR([Cannot find mysql.h - check your PostgreSQL client installation]))
+	AC_CHECK_HEADER(mysql.h,,AC_MSG_ERROR([Cannot find mysql.h - check your MySQL client installation]))
 
 	AC_CHECK_LIB(mysqlclient, mysql_init, [MYSQL_LIBS="-lmysqlclient"],
 		[AC_MSG_ERROR(libmysqlclient is requred for MySQL support)])
@@ -2454,7 +2522,7 @@ fi
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
 	AC_CHECK_HEADER(jni.h,,AC_MSG_ERROR([*** Cannot find jni.h - check your JDK installation ***]))
-	AC_CHECK_LIB(jvm, SQLAllocHandle, [JAVA_LIBS="-ljvm"],
+	AC_CHECK_LIB(jvm, JNI_CreateJavaVM, [JAVA_LIBS="-ljvm"],
 		[AC_MSG_ERROR(libjvm is required for Java support)])
 fi
 
@@ -2496,6 +2564,38 @@ if test $? = 0; then
 	LIBS="$OLD_LIBS"
 fi
 
+#--------------------------------------------------------------------
+# MongoDB
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "mongodb"
+if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	if test "x$MONGODB_BASE" != "x"; then
+		MONGODB_CPPFLAGS="-I$MONGODB_BASE/include/libmongoc-1.0/ -I$MONGODB_BASE/include/libbson-1.0/"
+		MONGODB_LDFLAGS="-L$MONGODB_BASE/lib"
+		CPPFLAGS="$CPPFLAGS $MONGODB_CPPFLAGS"
+		LDFLAGS="$LDFLAGS $MONGODB_LDFLAGS"
+	else
+        MONGODB_CPPFLAGS="-I/usr/local/include/libmongoc-1.0/ -I/usr/local/include/libbson-1.0/"
+		MONGODB_LDFLAGS="-L/usr/local/lib"
+		CPPFLAGS="$CPPFLAGS $MONGODB_CPPFLAGS"
+		LDFLAGS="$LDFLAGS $MONGODB_LDFLAGS"
+    fi
+	
+	AC_CHECK_HEADER(mongoc.h,,AC_MSG_ERROR([*** Cannot find mongoc.h - check your MongoDB installation ***]))
+	AC_CHECK_LIB(mongoc-1.0, nanosleep, [ MONGODB_LIBS="$MONGODB_LIBS -lmongoc-1.0" ])
+	AC_CHECK_LIB(bson-1.0, nanosleep, [ MONGODB_LIBS="$MONGODB_LIBS -lbson-1.0" ])
+
+	LIBS="$LIBS $MONGODB_LIBS"
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
 
 #--------------------------------------------------------------------
 # Other settings
@@ -2590,6 +2690,9 @@ AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(TUXEDO_CPPFLAGS)
 AC_SUBST(TUXEDO_LDFLAGS)
 AC_SUBST(TUXEDO_LIBS)
+AC_SUBST(MONGODB_CPPFLAGS)
+AC_SUBST(MONGODB_LDFLAGS)
+AC_SUBST(MONGODB_LIBS)
 
 #--------------------------------------------------------------------
 # Shared libs versions
@@ -2635,6 +2738,7 @@ AC_CONFIG_FILES([
 	contrib/integration/HP_EVA/Makefile
 	contrib/integration/HP_P2000/Makefile
 	contrib/mibs/Makefile
+	contrib/music/Makefile
 	contrib/startup/Makefile
 	contrib/startup/debian/Makefile
 	contrib/startup/gentoo/Makefile
@@ -2643,6 +2747,9 @@ AC_CONFIG_FILES([
 	contrib/startup/suse/Makefile
 	contrib/startup/ubuntu/Makefile
 	contrib/startup/solaris/Makefile
+	debian/Makefile
+	debian/patches/Makefile
+	debian/source/Makefile
 	doc/Makefile
 	doc/internal/Makefile
 	doc/manuals/Makefile
@@ -2662,6 +2769,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/db2/Makefile
 	src/agent/subagents/dbquery/Makefile
 	src/agent/subagents/devemu/Makefile
+	src/agent/subagents/ds18x20/Makefile
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/filemgr/Makefile
 	src/agent/subagents/freebsd/Makefile
@@ -2690,6 +2798,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/sms/Makefile
 	src/agent/subagents/sunos/Makefile
 	src/agent/subagents/tuxedo/Makefile
+	src/agent/subagents/mongodb/Makefile
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
@@ -2753,6 +2862,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/ntws/Makefile
 	src/server/drivers/ping3/Makefile
 	src/server/drivers/procurve/Makefile
+	src/server/drivers/qtech-olt/Makefile
 	src/server/drivers/symbol-ws/Makefile
 	src/server/drivers/ubnt/Makefile
 	src/server/hdlink/Makefile
@@ -2788,6 +2898,7 @@ AC_CONFIG_FILES([
 	src/tools/Makefile
 	src/tools/nxdevcfg/Makefile
 	src/tools/nxencpasswd/Makefile
+	src/tools/nxgenguid/Makefile
 	src/zlib/Makefile
 	sql/Makefile
 	tests/Makefile
@@ -2831,6 +2942,11 @@ echo
 	echo "Prefix                  : ${prefix}"
 	echo "Platform                : ${PLATFORM}"
 	echo "Shared library suffix   : ${SHLIB_SUFFIX}"
+if test "x$IPV6_SUPPORT" = "xyes"; then
+	echo "IPv6 support            : YES"
+else
+	echo "IPv6 support            : NO"
+fi
 if test "x${BUILD_SERVER}" = "xyes"; then
 	echo "Build Server            : YES"
 	echo "Server libs             : ${SERVER_LIBS}"
@@ -2980,6 +3096,13 @@ if test "x${TUXEDO_CPPFLAGS}" != "x"; then
 fi
 if test "x${TUXEDO_LDFLAGS}" != "x"; then
 	echo "Tuxedo LDFLAGS          : ${TUXEDO_LDFLAGS}"
+fi
+
+if test "x${MONGODB_CPPFLAGS}" != "x"; then
+	echo "MongoDB CPPFLAGS         : ${MONGODB_CPPFLAGS}"
+fi
+if test "x${MONGODB_LDFLAGS}" != "x"; then
+	echo "MongoDB LDFLAGS          : ${MONGODB_LDFLAGS}"
 fi
 
 FLAGS_CPP="src/tools/nxdevcfg/flags.cpp"

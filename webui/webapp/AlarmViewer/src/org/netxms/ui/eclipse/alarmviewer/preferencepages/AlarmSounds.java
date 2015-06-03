@@ -28,26 +28,37 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.Line;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.ServerFile;
+import org.netxms.client.server.ServerFile;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.AlarmNotifier;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
+import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -67,6 +78,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
    private Set<String> oldMelodyList = new HashSet<String>();
    private List<String> newMelodyList = new ArrayList<String>();
    private List<Combo> comboList = new ArrayList<Combo>();
+   private List<Button> buttonList = new ArrayList<Button>();
    
    /*
     * (non-Javadoc)
@@ -94,11 +106,11 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
       GridLayout layout = new GridLayout();
       layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
-      layout.numColumns = 1;
-      layout.makeColumnsEqualWidth = true;
+      layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
       Combo newCombo = null;
+      Button button = null;
 
       for(int i = 0; i < 5; i++)
       {
@@ -106,6 +118,44 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
                StatusDisplayInfo.getStatusText(i), WidgetHelper.DEFAULT_LAYOUT_DATA);
          newCombo.setEnabled(false);
          comboList.add(i, newCombo);
+         button = new Button(dialogArea, SWT.PUSH);
+         GridData gridData = new GridData();
+         gridData.verticalAlignment = GridData.END;
+         button.setLayoutData(gridData);
+         button.setImage(Activator.getImageDescriptor("icons/sound.png").createImage());
+         final int index = i; 
+         button.addMouseListener(new MouseListener() {
+            
+            @Override
+            public void mouseUp(MouseEvent e)
+            {
+               String fileName = comboList.get(index).getText();
+               getMelodyAndDownloadIfRequired(fileName);
+               JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+               File localFile = new File(workspaceUrl.getPath(), fileName);
+               String id = "audio-" + fileName;
+               DownloadServiceHandler.addDownload(id, fileName, localFile, "audio/wav"); //$NON-NLS-1$
+               StringBuilder js = new StringBuilder();
+               js.append("var audio = new Audio('");//$NON-NLS-1$
+               js.append(DownloadServiceHandler.createDownloadUrl(id));
+               js.append("');");//$NON-NLS-1$
+               js.append("audio.play();");//$NON-NLS-1$  
+               executor.execute(js.toString());
+            }
+            
+            @Override
+            public void mouseDown(MouseEvent e)
+            {
+               //do noting
+            }
+            
+            @Override
+            public void mouseDoubleClick(MouseEvent e)
+            {
+               //do noting
+            }
+         });
+         buttonList.add(i, button);
       }
 
       new UIJob(Messages.get().AlarmMelody_JobGetMelodyList) {
@@ -156,6 +206,80 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
          }
       }.schedule();
       return dialogArea;
+   }
+   
+   /**
+    * @param severity
+    * @return
+    */
+   private void getMelodyAndDownloadIfRequired(String melodyName)
+   {
+      URL workspaceUrl = Platform.getInstanceLocation().getURL();
+      if (!isMelodyExists(melodyName, workspaceUrl))
+      {
+         try
+         {
+            File fileContent = session.downloadFileFromServer(melodyName);
+            if (fileContent != null)
+            {
+               FileInputStream src = null;
+               FileOutputStream dest = null;
+               try
+               {
+                  src = new FileInputStream(fileContent);
+                  File f = new File(workspaceUrl.getPath(), melodyName);
+                  f.createNewFile();
+                  dest = new FileOutputStream(f);
+                  FileChannel fcSrc = src.getChannel();
+                  dest.getChannel().transferFrom(fcSrc, 0, fcSrc.size());
+               }
+               catch(IOException e)
+               {
+                  Activator.logError("Cannot copy sound file", e); //$NON-NLS-1$
+               }
+               finally
+               {
+                  if (src != null)
+                     src.close();
+                  if (dest != null)
+                     dest.close();
+               }
+            }
+         }
+         catch(final Exception e)
+         {
+            Display.getDefault().asyncExec(new Runnable() {
+               @Override
+               public void run()
+               {
+                  MessageDialogHelper
+                  .openError(
+                        Display.getDefault().getActiveShell(),
+                        Messages.get().AlarmNotifier_ErrorMelodynotExists,
+                        Messages.get().AlarmNotifier_ErrorMelodyNotExistsDescription
+                              + e.getLocalizedMessage());
+               }
+            });
+         }
+      }
+   }
+
+   /**
+    * @param melodyName
+    * @param workspaceUrl
+    * @return
+    */
+   private static boolean isMelodyExists(String melodyName, URL workspaceUrl)
+   {
+      if (!melodyName.isEmpty() && (workspaceUrl != null))
+      {
+         File f = new File(workspaceUrl.getPath(), melodyName);
+         return f.isFile();
+      }
+      else
+      {
+         return true;
+      }
    }
 
    /**

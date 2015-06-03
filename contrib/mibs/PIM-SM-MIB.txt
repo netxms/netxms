@@ -1,0 +1,922 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : PIM SM Common mib
+-- FILE NAME: PIM-SM.mib
+-- DATE     : 2012/06/06
+-- VERSION  : 2.04
+-- PURPOSE  : To construct the MIB structure of PIM SM for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 2.04, 2012/06/06, Bruce Ge
+--  [New Objects]
+--  1. Add swPimInfoPassiveMode to support passive mode.
+--  2. Add objects swPimRPSetHoldTime, swPimRPSetUpTime and swPimRPSetExpiryTime
+--     to the table swPimRPSetTable.
+--  Notes: Requested by Bruce Ge for DGS3600 R3.
+--
+-- Version 2.03, 2010/12/21, Bruce Ge
+--  [Modification]
+--  1. Add value list " dynamic(3)" in swPimRPSetType.
+--  [New Objects]
+--  1. Add swPimSSmMgmt to support PIM-SSM function.
+--  Notes: Requested by Bruce Ge for DGS3620 1.00.
+-- 
+-- Version 2.02, 2008/10/16, Kevin Liao
+--  [New Object]
+--  1. Add swPimInfoState in swPimInfoEntry.
+-- Notes: Requested by Kevin Liao for DGS3600 R2.50.
+--
+-- Version 2.01, 2007/11/27, Jeffers
+--  [Modification]
+-- 1.Add 'sparseDense(3)' in the value list of object swPimInfoMode.
+-- Notes: Requested by Jeffers Yang for DGS3600R2.4
+--
+-- Version 2.00, 2007/03/27, Yedda
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------
+PIM-SM-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        Counter32,MODULE-IDENTITY,OBJECT-TYPE,IpAddress,
+        NOTIFICATION-TYPE, Integer32,Unsigned32,TimeTicks
+                                                FROM SNMPv2-SMI
+        PhysAddress,TruthValue,DisplayString,RowStatus,MacAddress
+                                                FROM SNMPv2-TC
+        dlink-common-mgmt                       FROM DLINK-ID-REC-MIB
+        InterfaceIndex                          FROM IF-MIB;
+
+    swPimSmMIB MODULE-IDENTITY
+        LAST-UPDATED "201206060000Z"
+        ORGANIZATION "D-Link Corp."
+        CONTACT-INFO
+            "http://support.dlink.com"
+        DESCRIPTION
+            "The Structure of PIM SM Information for the
+            proprietary enterprise."
+        ::= { dlink-common-mgmt 52 }
+
+    swPimSmCtrl           OBJECT IDENTIFIER ::= { swPimSmMIB 1 }
+    swPimSmInfo           OBJECT IDENTIFIER ::= { swPimSmMIB 2 }
+    swPimSmMgmt           OBJECT IDENTIFIER ::= { swPimSmMIB 3 }
+    swPimSSmMgmt          OBJECT IDENTIFIER ::= { swPimSmMIB 4 }
+
+
+-- -----------------------------------------------------------------------------
+swPimSmGlobalState OBJECT-TYPE
+        SYNTAX     INTEGER{
+                    other(0),
+                    disabled(1),
+                    enabled(2)
+                    }
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                " Used to control PIM-SM state."
+        ::= { swPimSmCtrl 1 }
+
+-- -----------------------------------------------------------------------------
+    swPimRegisterProbeTime OBJECT-TYPE
+        SYNTAX     Integer32 (1..127)
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "Used to set a time to send a probe message from the Designated Router (DR)
+                to the Rendezvous Point (RP) before the Register Suppression time expires.
+                If a Register Stop message is received by the DR, the Register Suppression
+                Time will be restarted. If no Register Stop message is received within the
+                probe time, Register Packets will be resent to the RP. The default value is
+                5 seconds."
+        ::= { swPimSmInfo 1 }
+
+    swPimRegisterSuppressionTime OBJECT-TYPE
+        SYNTAX     Integer32 (3..255)
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "The time interval between receiving a Register-Stop message and restarting
+                the process of sending registered messages again. A lower value represents
+                an increase in registered messages being sent to the RP, while a higher value
+                represents a longer latency period for new receivers wishing to join the
+                group."
+       ::= { swPimSmInfo 2 }
+
+    swPimInfoTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF SwPimInfoEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The PIM Information Table contains PIM related information, such as DR
+                priority."
+        ::= { swPimSmInfo 3 }
+
+    swPimInfoEntry OBJECT-TYPE
+        SYNTAX     SwPimInfoEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "An entry in the PIM Information Table."
+        INDEX      { swPimInfoInterface }
+        ::= { swPimInfoTable 1 }
+
+    SwPimInfoEntry ::= SEQUENCE {
+        swPimInfoInterface          InterfaceIndex,
+        swPimInfoAddress            IpAddress,
+        swPimInfoNetMask            IpAddress,
+        swPimInfoDesignatedRouter   IpAddress,
+        swPimInfoHelloInterval      Integer32,
+        swPimInfoJoinPruneInterval  Integer32,
+        swPimInfoDRPriority         Unsigned32,
+        swPimInfoMode               INTEGER,
+        swPimInfoState              INTEGER,
+        swPimInfoPassiveMode        INTEGER
+    }
+
+    swPimInfoInterface    OBJECT-TYPE
+        SYNTAX     InterfaceIndex
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The ifIndex value of this PIM interface."
+        ::= { swPimInfoEntry 1 }
+
+    swPimInfoAddress OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The IP address of the PIM interface."
+        ::= { swPimInfoEntry 2 }
+
+    swPimInfoNetMask OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The network mask for the IP address of the PIM interface."
+        ::= { swPimInfoEntry 3 }
+
+    swPimInfoDesignatedRouter OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The Designated Router on this PIM interface.  
+                For point-to-point interfaces, this object has the value 0.0.0.0."
+        ::= { swPimInfoEntry 4 }
+
+    swPimInfoHelloInterval OBJECT-TYPE
+        SYNTAX     Integer32(1..18724)
+        UNITS      "seconds"
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "The frequency at which PIM Hello messages are transmitted
+                on this interface."
+        DEFVAL     { 30 }
+        ::= { swPimInfoEntry 5 }
+
+    swPimInfoJoinPruneInterval OBJECT-TYPE
+        SYNTAX     Integer32(1..18724)
+        UNITS      "seconds"
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "The frequency at which PIM Join/Prune messages are
+                transmitted on this PIM interface.  The default value of
+                this object is the pimJoinPruneInterval."
+        ::= { swPimInfoEntry 6 }
+
+    swPimInfoDRPriority OBJECT-TYPE
+        SYNTAX     Unsigned32 (0..4294967294)
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "The DR Priority sets the priority of an IP interface to become
+                the Designated router for the multiple access network. A numerically
+                larger priority is always preferred, yet a lower number represents a
+                higher priority. A router's knowledge of the current DR on an interface
+                can change when a PIM Hello message is received, when a neighbor times
+                out, or when a router's own DR priority changes."
+        ::= { swPimInfoEntry 7 }
+
+    swPimInfoMode OBJECT-TYPE
+        SYNTAX     INTEGER { dense(1), sparse(2), sparseDense(3) }
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "The configured mode of this PIM interface.  A value of
+                sparseDense is only valid for PIMv1."
+        DEFVAL     { dense }
+        ::= { swPimInfoEntry 8 }
+
+    swPimInfoState OBJECT-TYPE
+        SYNTAX     INTEGER { enabled(1), disabled(2) }
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "The configured state of this PIM interface."
+        ::= { swPimInfoEntry 9 }
+
+    swPimInfoPassiveMode OBJECT-TYPE
+        SYNTAX     INTEGER { enabled(1), disabled(2) }
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "Specifies the interface is operates in PIM passive mode 
+                or not. When enabling the passive mode, the interface will 
+                neither send PIM messages nor accept PIM messages from 
+                other routers across this interface.
+                
+                To communicate with other PIM routers using this interface,
+                this object must set to disabled.
+                
+                More than one multicast routers on LANs, this object must
+                set to disabled, to prevent duplicate traffic."
+        DEFVAL     { disabled }
+        ::= { swPimInfoEntry 10 }
+
+-- -----------------------------------------------------------------------------
+    swPimCbsrInfoMgmt    OBJECT IDENTIFIER ::= { swPimSmMgmt 1 }
+    swpimCbsrBootStrapPeriod OBJECT-TYPE
+        SYNTAX     Integer32 (1..255)
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "The time interval, in seconds, for Boot Strap Messages originating
+                from the elected BSR."
+        ::= { swPimCbsrInfoMgmt 1 }
+
+    swPimCbsrHashMaskLen OBJECT-TYPE
+        SYNTAX     Integer32 (0..32)
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "The length (in bits) of the mask to use for the hash function (This hash
+                algorithm will be used to determine which candidate RP will be the RP for
+                the PIM-SM network.).For IPv4 we recommend a value of 30. For IPv6 we
+                recommend a value of 126."
+        ::= { swPimCbsrInfoMgmt 2 }
+
+    swPimCbsrTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF SwPimCbsrEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The PIM CBSR Table contains information related to the candidate bootstrap 
+                router, such as interface name, IP address and priority."
+        ::= { swPimCbsrInfoMgmt 3 }
+
+    swPimCbsrEntry OBJECT-TYPE
+        SYNTAX     SwPimCbsrEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "An entry in the PIM CBSR Table."
+        INDEX      { swPimCbsrInterface }
+        ::= { swPimCbsrTable 1 }
+
+    SwPimCbsrEntry ::= SEQUENCE {
+        swPimCbsrInterface    InterfaceIndex,
+        swPimCbsrIpAddress  IpAddress,
+        swPimCbsrSubnetMask IpAddress,
+        swPimCbsrPriority    Integer32
+    }
+
+    swPimCbsrInterface    OBJECT-TYPE
+        SYNTAX     InterfaceIndex
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The ifIndex value of this PIM interface."
+        ::= { swPimCbsrEntry 1 }
+
+    swPimCbsrIpAddress    OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The IP address of this PIM interface."
+        ::= { swPimCbsrEntry 2 }
+
+    swPimCbsrSubnetMask OBJECT-TYPE
+            SYNTAX  IpAddress
+            MAX-ACCESS  read-only
+            STATUS  current
+            DESCRIPTION
+                "The IP netmask for this PIM interface."
+            ::= { swPimCbsrEntry 3 }
+
+    swPimCbsrPriority OBJECT-TYPE
+        SYNTAX     Integer32 (-1..255)
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "The preference value for the local candidate interface to become a bootstrap
+                router. A value of -1 is used to indicate that the local candidate interface
+                cannot become the BSR."
+        DEFVAL     { -1 }
+        ::= { swPimCbsrEntry 4 }
+
+-- -----------------------------------------------------------------------------
+    swPimCandidateRPMgmt OBJECT IDENTIFIER ::= { swPimSmMgmt 2 }
+
+    swPimCandidateRPHoldtime OBJECT-TYPE
+        SYNTAX     Integer32 (0..255)
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "Used to set the time CRP advertisements remain valid on the PIM-SM enabled
+                network. If the advertisements, set here, aren't received by the BSR within
+                this time period, the CRP will be removed from the list of candidates.
+                0 states to the BSR that this CRP should immediately be removed. Default: 150
+                seconds."
+        ::= { swPimCandidateRPMgmt 1 }
+
+    swPimCandidateRPPriority OBJECT-TYPE
+        SYNTAX     Integer32 (0..255)
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "This value determines the priority required for a CRP to become the RP for the
+                distribution tree. A lower value denotes a higher priority. If the priority value is tied
+                , the device with the highest IP address will become the RP. This
+                information is stored in the BSR, along with the RP address and corresponding
+                encoded group address."
+        ::= { swPimCandidateRPMgmt 2 }
+
+    swPimCandidateRPWildcardPrefixCnt OBJECT-TYPE
+        SYNTAX     Integer32 (0..1)
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "The number of encoded group addresses included in the message; indicating
+                the group prefixes for which the C-RP is advertising. A Prefix-Cnt of '0'
+                implies a prefix of 224.0.0.0 with a mask length of 4; i.e. all multicast
+                groups. If the C-RP is not configured with Group-prefix information, the
+                C-RP puts a default value of '0' in this field."
+        ::= { swPimCandidateRPMgmt 3 }
+
+-- -----------------------------------------------------------------------------
+-- The PIM Candidate-RP Table
+-- -----------------------------------------------------------------------------
+    swPimCandidateRPTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF SwPimCandidateRPEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The (conceptual) table listing the IP multicast groups
+                that the local router will use to advertise itself as a
+                Candidate-RP when the pimComponentCRPHoldTime has a
+                non-zero value.  If this table is empty, then the local router
+
+                will advertise itself as a Candidate-RP for all groups
+                (providing the pimComponentCRPHoldTime has a non-
+                zero value)."
+        ::= { swPimCandidateRPMgmt 4 }
+
+    swPimCandidateRPEntry OBJECT-TYPE
+        SYNTAX     SwPimCandidateRPEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "An entry (conceptual row) in the pimCandidateRPTable."
+        INDEX      { swPimCandidateRPGroupAddress,
+                     swPimCandidateRPGroupMask }
+        ::= { swPimCandidateRPTable 1 }
+
+    SwPimCandidateRPEntry ::= SEQUENCE {
+        swPimCandidateRPGroupAddress    IpAddress,
+        swPimCandidateRPGroupMask       IpAddress,
+        swPimCandidateRPInterface       DisplayString,
+        swPimCandidateRPRowStatus       RowStatus
+    }
+
+    swPimCandidateRPGroupAddress OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The IP multicast group address which, when combined with
+                pimCandidateRPGroupMask, identifies a group prefix that
+                the local router will use to advertise itself as a Candidate-RP."
+        ::= { swPimCandidateRPEntry 1 }
+
+    swPimCandidateRPGroupMask OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The multicast group address mask which, when combined with
+                pimCandidateRPGroupMask, identifies a group prefix that
+                the local router will use to advertise itself as a Candidate-RP."
+        ::= { swPimCandidateRPEntry 2 }
+
+    swPimCandidateRPInterface OBJECT-TYPE
+        SYNTAX     DisplayString(SIZE(1..12))
+        MAX-ACCESS read-create
+        STATUS     current
+        DESCRIPTION
+                "The name of the interface which will be
+                advertised as a Candidate-RP."
+        ::= { swPimCandidateRPEntry 3 }
+
+    swPimCandidateRPRowStatus OBJECT-TYPE
+        SYNTAX     RowStatus
+        MAX-ACCESS read-create
+        STATUS     current
+        DESCRIPTION
+                "The status of this row,displaying the new entries that have been
+                created, or the old entries that have been deleted from this table."
+        ::= { swPimCandidateRPEntry 4 }
+
+-- -----------------------------------------------------------------------------
+-- The PIM Neighbor Table
+-- -----------------------------------------------------------------------------
+    swPimNeighborTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF SwPimNeighborEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The (conceptual) table listing the router's PIM neighbors."
+        ::= { swPimSmMgmt 3 }
+
+    swPimNeighborEntry OBJECT-TYPE
+        SYNTAX     SwPimNeighborEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "An entry (conceptual row) in the swPimNeighborTable."
+        INDEX      { swPimNeighborAddress }
+        ::= { swPimNeighborTable 1 }
+
+    SwPimNeighborEntry ::= SEQUENCE {
+        swPimNeighborAddress      IpAddress,
+        swPimNeighborIfIndex      InterfaceIndex,
+        swPimNeighborExpiryTime   TimeTicks
+    }
+    swPimNeighborAddress OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The IP address of the PIM neighbor that is used to find PIM neighbor information."
+        ::= { swPimNeighborEntry 1 }
+
+    swPimNeighborIfIndex OBJECT-TYPE
+        SYNTAX     InterfaceIndex
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The value of the ifIndex for the interface used to find PIM neighbor information."
+        ::= { swPimNeighborEntry 2 }
+
+    swPimNeighborExpiryTime OBJECT-TYPE
+        SYNTAX     TimeTicks
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The minimum time remaining before this PIM neighbor ages out."
+        ::= { swPimNeighborEntry 3 }
+
+-- -----------------------------------------------------------------------------
+    swPimSptMgmt OBJECT IDENTIFIER ::= { swPimSmMgmt 4 }
+    swPimLastHopSptThreshold OBJECT-TYPE
+        SYNTAX     INTEGER(0..65536)
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "Specifies a last hop router threshold.65536 means 'infinity'."
+        ::= { swPimSptMgmt 1 }
+
+    swPimRPSptThreshold OBJECT-TYPE
+        SYNTAX     INTEGER(0..65536)
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "Specifies an RP threshold.65536 means 'infinity'."
+        ::= { swPimSptMgmt 2 }
+
+       swPimLastHopSptSwitchover OBJECT-TYPE
+            SYNTAX     INTEGER{
+                      never(1),
+                      immediately(2)
+                    }
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "Used by the last hop router to decide whether to receive the multicast
+                data from the shared tree or switch over to the shortest path tree.
+                When the switchover mode is set to never, the last hop router will always
+                receive the multicast data from the shared tree. When the mode is set to
+                immediately, the last hop router will always receive the multicast data from
+                the shortest path tree."
+        ::= { swPimSptMgmt 3 }
+
+-- -----------------------------------------------------------------------------
+    swPimRegChksumIncDataTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF SwPimRegChksumIncDataEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The PIM Register Checksum Including Data Table contains the PIM
+                register checksum including data information, such as the RP address and
+                state."
+        ::= { swPimSmMgmt 5 }
+
+    swPimRegChksumIncDataEntry OBJECT-TYPE
+        SYNTAX     SwPimRegChksumIncDataEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "An entry in the PIM Register Checksum Including Data Table."
+        INDEX      { swL3SwPimRegChksumIncDataRpAddr }
+        ::= { swPimRegChksumIncDataTable 1 }
+
+    SwPimRegChksumIncDataEntry ::= SEQUENCE {
+        swL3SwPimRegChksumIncDataRpAddr    IpAddress,
+        swL3SwPimRegChksumIncDataState    RowStatus
+    }
+
+    swL3SwPimRegChksumIncDataRpAddr    OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "Specifies the RP address."
+        ::= { swPimRegChksumIncDataEntry 1 }
+
+    swL3SwPimRegChksumIncDataState OBJECT-TYPE
+        SYNTAX     RowStatus
+        MAX-ACCESS read-create
+        STATUS     current
+        DESCRIPTION
+                "The state of the register checksum, including data for RPs."
+        ::= { swPimRegChksumIncDataEntry 2 }
+
+-- -----------------------------------------------------------------------------
+-- The PIM Static-RP Table
+-- -----------------------------------------------------------------------------
+    swPimStaticRPTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF SwPimStaticRPEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The PIM Static RP Table contains the PIM static RP related information,
+                such as the group address, the group mask, the RP address and the RP row status."
+        ::= { swPimSmMgmt 6 }
+
+    swPimStaticRPEntry OBJECT-TYPE
+        SYNTAX     SwPimStaticRPEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "An entry in the PIM Static RP Table."
+        INDEX      { swPimStaticRPGroupAddress,
+                     swPimStaticRPGroupMask,
+                     swPimStaticRPAddress }
+        ::= { swPimStaticRPTable 1 }
+
+    SwPimStaticRPEntry ::= SEQUENCE {
+        swPimStaticRPGroupAddress    IpAddress,
+        swPimStaticRPGroupMask       IpAddress,
+        swPimStaticRPAddress         IpAddress,
+        swPimStaticRPRowStatus       RowStatus
+    }
+
+    swPimStaticRPGroupAddress OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The IP multicast group address which, when combined with
+                swPimStaticRPGroupMask, identifies a group prefix that
+                the local router will use to advertise itself as a static RP."
+        ::= { swPimStaticRPEntry 1 }
+
+    swPimStaticRPGroupMask OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The multicast group address mask which, when combined with
+                swPimStaticRPGroupAddress, identifies a group prefix that 
+                the local router will use to advertise itself as a static RP."
+        ::= { swPimStaticRPEntry 2 }
+
+    swPimStaticRPAddress OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The (unicast) address of the interface which will be
+                advertised as a static RP."
+        ::= { swPimStaticRPEntry 3 }
+
+    swPimStaticRPRowStatus OBJECT-TYPE
+        SYNTAX     RowStatus
+        MAX-ACCESS read-create
+        STATUS     current
+        DESCRIPTION
+                "The status of this row, indicating which new entries will be
+                created, or which old entries will be deleted from this row table."
+        ::= { swPimStaticRPEntry 4 }
+
+-- -----------------------------------------------------------------------------
+-- The PIM IP Multicast Route Table
+--- -----------------------------------------------------------------------------
+    swPimIpMRouteTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF SwPimIpMRouteEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The (conceptual) table listing PIM-specific information on
+                a subset of the rows of the ipMRouteTable defined in the IP
+                Multicast MIB."
+        ::= { swPimSmMgmt 7 }
+
+    swPimIpMRouteEntry OBJECT-TYPE
+        SYNTAX     SwPimIpMRouteEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "An entry (conceptual row) in the pimIpMRouteTable.  There
+                is one entry, for each entry in the ipMRouteTable, whose incoming
+                interface is running PIM."
+        INDEX      { swPimIpMRouteGroup, swPimIpMRouteSource, swPimIpMRouteSourceMask }
+        ::= { swPimIpMRouteTable 1 }
+
+    SwPimIpMRouteEntry ::= SEQUENCE {
+        swPimIpMRouteGroup                 IpAddress,
+        swPimIpMRouteSource                IpAddress,
+        swPimIpMRouteSourceMask            IpAddress,
+        swPimIpMRouteUpstreamAssertTimer   TimeTicks,
+        swPimIpMRouteAssertMetric          Integer32,
+        swPimIpMRouteAssertMetricPref      Integer32,
+        swPimIpMRouteAssertRPTBit          TruthValue,
+        swPimIpMRouteFlags                 BITS,
+        swPimIpMRouteType                  DisplayString
+    }
+    swPimIpMRouteGroup OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The IP multicast group address for an entry
+                containing multicast routing information."
+        ::= { swPimIpMRouteEntry 1 }
+
+    swPimIpMRouteSource OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The network address which, when combined with the corresponding value of
+                ipMRouteSourceMask, identifies the source of an entry that contains multicast
+                routing information."
+        ::= { swPimIpMRouteEntry 2 }
+
+    swPimIpMRouteSourceMask OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The network mask which, when combined with the corresponding value of ipMRouteSource,
+                identifies the source of an entry that contains multicast routing information."
+        ::= { swPimIpMRouteEntry 3 }
+
+    swPimIpMRouteUpstreamAssertTimer OBJECT-TYPE
+        SYNTAX     TimeTicks
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The time remaining before the router changes its upstream
+                neighbor back to its RPF neighbor.  This timer is called the
+                Assert timer in the PIM Sparse and Dense mode specification.
+
+                A value of 0 indicates that no Assert timer has changed the
+                upstream neighbor to an RPF neighbor."
+        ::= { swPimIpMRouteEntry 4 }
+
+    swPimIpMRouteAssertMetric OBJECT-TYPE
+        SYNTAX     Integer32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The metric advertised by the assert winner on the upstream
+                interface, or 0 if no such assert is received."
+        ::= { swPimIpMRouteEntry 5 }
+
+    swPimIpMRouteAssertMetricPref OBJECT-TYPE
+        SYNTAX     Integer32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The preference advertised by the assert winner on the
+                upstream interface, or 0 if no such assert is in effect."
+        ::= { swPimIpMRouteEntry 6 }
+
+    swPimIpMRouteAssertRPTBit OBJECT-TYPE
+        SYNTAX     TruthValue
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The value of the RPT-bit advertised by the assert winner on
+                the upstream interface, or false if no such assert is in
+                effect."
+        ::= { swPimIpMRouteEntry 7 }
+
+    swPimIpMRouteFlags OBJECT-TYPE
+        SYNTAX     BITS {
+                      rpt(0),
+                      spt(1)
+                   }
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "This object describes PIM-specific flags related to a
+                multicast state entry.  See the PIM Sparse Mode
+                specification for the meaning of the RPT and SPT bits."
+        ::= { swPimIpMRouteEntry 8 }
+
+    swPimIpMRouteType OBJECT-TYPE
+        SYNTAX     DisplayString
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "This object describes the PIM-specific type as related to a
+                multicast state entry."
+        ::= { swPimIpMRouteEntry 9 }
+
+-- -----------------------------------------------------------------------------
+    swPimRPSetMgmt OBJECT IDENTIFIER ::= { swPimSmMgmt 8 }
+
+         swPimRPSetBootstrapRouter OBJECT-TYPE
+            SYNTAX     IpAddress
+            MAX-ACCESS read-only
+            STATUS     current
+            DESCRIPTION
+                    "Specifies a Bootstrap Router."
+            ::= { swPimRPSetMgmt 1 }
+
+-- -----------------------------------------------------------------------------
+-- The PIM RP-Set Table
+-- -----------------------------------------------------------------------------
+    swPimRPSetTable OBJECT-TYPE
+        SYNTAX     SEQUENCE OF SwPimRPSetEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The (conceptual) table lists PIM information for the
+                candidate Rendezvous Points (CRPs) for IP multicast groups.
+                When the local router is the BSR, this information is
+                obtained from received Candidate-RP-Advertisements.  When
+                the local router is not the BSR, this information is
+                obtained from the received RP-Set messages."
+        ::= { swPimRPSetMgmt 2 }
+
+    swPimRPSetEntry OBJECT-TYPE
+        SYNTAX     SwPimRPSetEntry
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "An entry (conceptual row) in the pimRPSetTable."
+        INDEX      { swPimRPSetComponent, swPimRPSetGroupAddress,
+                     swPimRPSetGroupMask, swPimRPSetAddress }
+        ::= { swPimRPSetTable 1 }
+
+    SwPimRPSetEntry ::= SEQUENCE {
+        swPimRPSetComponent       Integer32,
+        swPimRPSetGroupAddress    IpAddress,
+        swPimRPSetGroupMask       IpAddress,
+        swPimRPSetAddress         IpAddress,
+        swPimRPSetType            INTEGER,
+        swPimRPSetHoldTime        Integer32,
+        swPimRPSetUpTime          TimeTicks,
+        swPimRPSetExpiryTime      TimeTicks
+    }
+
+    swPimRPSetComponent OBJECT-TYPE
+        SYNTAX     Integer32 (1..255)
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                " A number uniquely identifying the component.  Each
+                protocol instance connected to a separate domain should have
+                a different index value." 
+        ::= { swPimRPSetEntry 1 }
+
+    swPimRPSetGroupAddress OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The IP multicast group address which, when combined with 
+                pimRPSetGroupMask, gives the group a prefix. This prefix 
+                will determine for which entry CRP information is to be
+                displayed, and which entry contains information about the 
+                Candidate-RP."
+        ::= { swPimRPSetEntry 2 }
+
+    swPimRPSetGroupMask OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The multicast group address mask which, when combined with
+                pimRPSetGroupAddress, gives the group a prefix to determine 
+                which entry contains the CRP information to be displayed for 
+                the entry containing information about the Candidate-RP."
+        ::= { swPimRPSetEntry 3 }
+
+    swPimRPSetAddress OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS not-accessible
+        STATUS     current
+        DESCRIPTION
+                "The IP address of the Candidate-RP."
+        ::= { swPimRPSetEntry 4 }
+
+    swPimRPSetType OBJECT-TYPE
+        SYNTAX     INTEGER{
+                none(1),
+                static(2),
+                dynamic(3)
+                }
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The type of Candidate-RP.
+                
+                The value of 'dynamic' indicates the RP address is 
+                created as a result of running the PIM Bootstrap 
+                Router (BSR) mechanism."
+        ::= { swPimRPSetEntry 5 }
+
+    swPimRPSetHoldTime OBJECT-TYPE
+        SYNTAX     Integer32
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The amount of time (in seconds) the RP is valid."
+        ::= { swPimRPSetEntry 6 }
+
+    swPimRPSetUpTime OBJECT-TYPE
+        SYNTAX     TimeTicks
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The time since the RP became active."
+        ::= { swPimRPSetEntry 7 }
+
+    swPimRPSetExpiryTime OBJECT-TYPE
+        SYNTAX     TimeTicks
+        MAX-ACCESS read-only
+        STATUS     current
+        DESCRIPTION
+                "The time remaining before the RP expires.
+                If the object swPimRPSetType value is 'static',
+                the value of this object is zero."
+        ::= { swPimRPSetEntry 8 }
+
+-- ----------------------------------------------------------------------------
+    swPimSSmGlobalState OBJECT-TYPE
+        SYNTAX     INTEGER{
+                      enabled(1),
+                      disabled(2)
+                      }
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "The object indicates the state of PIM-SSM. 
+                
+                The PIM-SSM function will take active only when SSM 
+                service model and PIM-SM state both enabled."
+        ::= { swPimSSmMgmt 1 }
+
+    swPimSSmGroupAddress OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "This is the SSM multicast group range, by default
+                the SSM group range is 232.0.0.0/8.  To modify the
+                group range, assign group IP address on this object
+                and net-mask on object swPimSSmGroupMask."
+        ::= { swPimSSmMgmt 2 }
+
+    swPimSSmGroupMask OBJECT-TYPE
+        SYNTAX     IpAddress
+        MAX-ACCESS read-write
+        STATUS     current
+        DESCRIPTION
+                "This is the SSM multicast group IP net mask, by default
+                the SSM group IP net mask is 255.0.0.0."
+        ::= { swPimSSmMgmt 3 }
+
+END

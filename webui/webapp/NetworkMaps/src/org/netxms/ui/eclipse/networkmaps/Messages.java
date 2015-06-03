@@ -9,6 +9,7 @@ public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.networkmaps.messages"; //$NON-NLS-1$
 	public String AbstractNetworkMapView_AlignToGrid;
+	public String AbstractNetworkMapView_AlwaysFitLayout;
    public String AbstractNetworkMapView_CopyToClipboard;
    public String AbstractNetworkMapView_DisplayObjectAs;
    public String AbstractNetworkMapView_EnableAutoLayout;
@@ -39,6 +40,7 @@ public class Messages extends NLS
    public String AbstractNetworkMapView_SnapToGrid;
    public String AbstractNetworkMapView_StatusIcons;
    public String AbstractNetworkMapView_Zoom;
+   public String AbstractNetworkMapView_ZoomFit;
    public String AbstractNetworkMapView_ZoomIn;
    public String AbstractNetworkMapView_ZoomOut;
    public String AddGroupBoxDialog_Color;

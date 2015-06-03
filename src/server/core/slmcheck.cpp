@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Raden Solutions
 **
@@ -224,7 +224,7 @@ BOOL SlmCheck::saveToDatabase(DB_HANDLE hdb)
 	lockProperties();
 
 	saveCommonProperties(hdb);
-   
+
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM slm_checks WHERE id=?"));
 	if (hStmt == NULL)
 		goto finish;
@@ -237,10 +237,10 @@ BOOL SlmCheck::saveToDatabase(DB_HANDLE hdb)
 	}
 	DBFreeStatement(hStmt);
 
-	hStmt = DBPrepare(g_hCoreDB, bNewObject ? 
+	hStmt = DBPrepare(g_hCoreDB, bNewObject ?
 		_T("INSERT INTO slm_checks (id,type,content,threshold_id,reason,is_template,template_id,current_ticket) VALUES (?,?,?,?,?,?,?,?)") :
 		_T("UPDATE slm_checks SET id=?,type=?,content=?,threshold_id=?,reason=?,is_template=?,template_id=?,current_ticket=? WHERE id=?"));
-	if (hStmt == NULL)	
+	if (hStmt == NULL)
 		goto finish;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, UINT32(m_type));
@@ -252,7 +252,7 @@ BOOL SlmCheck::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_currentTicketId);
 	if (!bNewObject)
 		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
-	
+
 	if (!DBExecute(hStmt))
 	{
 		DBFreeStatement(hStmt);
@@ -285,9 +285,9 @@ bool SlmCheck::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void SlmCheck::fillMessage(NXCPMessage *pMsg)
+void SlmCheck::fillMessageInternal(NXCPMessage *pMsg)
 {
-	NetObj::fillMessage(pMsg);
+	NetObj::fillMessageInternal(pMsg);
 	pMsg->setField(VID_SLMCHECK_TYPE, UINT32(m_type));
 	pMsg->setField(VID_SCRIPT, CHECK_NULL_EX(m_script));
 	pMsg->setField(VID_REASON, m_reason);
@@ -300,11 +300,8 @@ void SlmCheck::fillMessage(NXCPMessage *pMsg)
 /**
  * Modify object from message
  */
-UINT32 SlmCheck::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 SlmCheck::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-	if (!bAlreadyLocked)
-		lockProperties();
-
 	if (pRequest->isFieldExist(VID_SLMCHECK_TYPE))
 		m_type = CheckType(pRequest->getFieldAsUInt32(VID_SLMCHECK_TYPE));
 
@@ -322,14 +319,12 @@ UINT32 SlmCheck::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 		m_threshold->updateFromMessage(pRequest, VID_THRESHOLD_BASE);
 	}
 
-	return NetObj::modifyFromMessage(pRequest, TRUE);
+	return NetObj::modifyFromMessageInternal(pRequest);
 }
 
-
-//
-// Post-modify hook
-//
-
+/**
+ * Callback for post-modify hook
+ */
 static void UpdateFromTemplateCallback(NetObj *object, void *data)
 {
 	SlmCheck *check = (SlmCheck *)object;
@@ -339,6 +334,9 @@ static void UpdateFromTemplateCallback(NetObj *object, void *data)
 		check->updateFromTemplate(tmpl);
 }
 
+/**
+ * Post-modify hook
+ */
 void SlmCheck::postModify()
 {
 	if (m_isTemplate)

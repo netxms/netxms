@@ -201,36 +201,52 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
 {
    LONG result = SYSINFO_RC_SUCCESS;
 
+   const ULONG flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
    ULONG size = 0;
-   if (GetAdaptersInfo(NULL, &size) != ERROR_BUFFER_OVERFLOW)
+   if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
       return SYSINFO_RC_ERROR;
 
-   IP_ADAPTER_INFO *buffer = (IP_ADAPTER_INFO *)malloc(size);
-   if (GetAdaptersInfo(buffer, &size) == ERROR_SUCCESS)
+   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)malloc(size);
+   if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, buffer, &size) == ERROR_SUCCESS)
    {
-      for(IP_ADAPTER_INFO *iface = buffer; iface != NULL; iface = iface->Next)
+      for(IP_ADAPTER_ADDRESSES *iface = buffer; iface != NULL; iface = iface->Next)
       {
-         TCHAR macAddr[32], adapterName[MAX_ADAPTER_NAME_LENGTH + 4], adapterInfo[MAX_ADAPTER_NAME_LENGTH + 64];
+         TCHAR macAddr[32], adapterInfo[MAX_ADAPTER_NAME_LENGTH + 128];
 
-         BinToStr(iface->Address, iface->AddressLength, macAddr);
-         if (!AdapterIndexToName(iface->Index, adapterName))
-         {
-#ifdef UNICODE
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, iface->AdapterName, -1, adapterName, MAX_ADAPTER_NAME_LENGTH + 4);
-#else
-            nx_strncpy(adapterName, iface->AdapterName, MAX_ADAPTER_NAME_LENGTH + 4);
-#endif
-         }
+         if (iface->PhysicalAddressLength > 0)
+            BinToStr(iface->PhysicalAddress, iface->PhysicalAddressLength, macAddr);
+         else
+            _tcscpy(macAddr, _T("000000000000"));
 
-         // Compose result string for each ip address
-         for(IP_ADDR_STRING *pAddr = &iface->IpAddressList; pAddr != NULL; pAddr = pAddr->Next)
+         // Compose result string for each IP address
+         for(IP_ADAPTER_UNICAST_ADDRESS *pAddr = iface->FirstUnicastAddress; pAddr != NULL; pAddr = pAddr->Next)
          {
-            TCHAR ipAddr[16];
-            _sntprintf(adapterInfo, MAX_ADAPTER_NAME_LENGTH + 64, _T("%d %s/%d %d %s %s"), iface->Index, 
-                       IpToStr(ntohl(inet_addr(pAddr->IpAddress.String)), ipAddr), 
-                       BitsInMask(ntohl(inet_addr(pAddr->IpMask.String))),
-                       iface->Type, macAddr, adapterName);
-            value->add(adapterInfo);
+            TCHAR ipAddr[64];
+            if ((pAddr->Address.lpSockaddr->sa_family == AF_INET) || session->isIPv6Aware())
+            {
+               InetAddress addr = InetAddress::createFromSockaddr(pAddr->Address.lpSockaddr);
+               if (g_isWin5)
+               {
+                  for(IP_ADAPTER_PREFIX *p = iface->FirstPrefix; p != NULL; p = p->Next)
+                  {
+                     InetAddress prefix = InetAddress::createFromSockaddr(p->Address.lpSockaddr);
+                     prefix.setMaskBits(p->Length);
+                     if (prefix.contain(addr))
+                     {
+                        addr.setMaskBits(prefix.getMaskBits());
+                        break;
+                     }
+                  }
+               }
+               else
+               {
+                  addr.setMaskBits(pAddr->OnLinkPrefixLength);
+               }
+               _sntprintf(adapterInfo, MAX_ADAPTER_NAME_LENGTH + 128, _T("%d %s/%d %d(%u) %s %s"), iface->IfIndex, 
+                          addr.toString(ipAddr), addr.getMaskBits(), iface->IfType, 
+                          iface->Mtu & 0x7FFFFFFF, macAddr, iface->FriendlyName);
+               value->add(adapterInfo);
+            }
          }
       }
    }

@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.usermanager.views;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -47,11 +46,10 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.api.client.users.AuthCertificate;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
+import org.netxms.client.users.AuthCertificate;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -71,7 +69,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class CertificateView extends ViewPart implements SessionListener
 {
-   public static final String ID = "org.netxms.ui.eclipse.usermanager.view.user_certificate"; //$NON-NLS-1$
+   public static final String ID = "org.netxms.ui.eclipse.usermanager.views.CertificateView"; //$NON-NLS-1$
    
    private static final String TABLE_CONFIG_PREFIX = "CertificatesEditor"; //$NON-NLS-1$
 
@@ -277,7 +275,7 @@ public class CertificateView extends ViewPart implements SessionListener
 	private void refreshCertificateList()
 	{
 	   final Display display = viewer.getControl().getDisplay();
-		new ConsoleJob(Messages.get(display).CertificateView_RefreshCertif, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID, display) {
+		new ConsoleJob(Messages.get(display).CertificateView_RefreshCertif, this, Activator.PLUGIN_ID, null, display) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -411,7 +409,7 @@ public class CertificateView extends ViewPart implements SessionListener
 	@Override
 	public void notificationHandler(final SessionNotification n)
 	{
-	   if(n.getCode() == NXCNotification.DCI_CERTIFICATE_CHANGED)
+	   if(n.getCode() == SessionNotification.DCI_CERTIFICATE_CHANGED)
 	   {
 	      refreshCertificateList();
 	   }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,12 +61,14 @@ import org.netxms.ui.eclipse.topology.Activator;
 import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.helpers.VlanLabelProvider;
 import org.netxms.ui.eclipse.topology.widgets.DeviceView;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortInfo;
+import org.netxms.ui.eclipse.topology.widgets.helpers.PortSelectionListener;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
  * Display VLAN configuration on a node
  */
-public class VlanView extends ViewPart implements ISelectionChangedListener
+public class VlanView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.topology.views.VlanView"; //$NON-NLS-1$
 	
@@ -126,7 +128,8 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		final int[] widths = { 80, 180, 400 };
 		vlanList = new SortableTableViewer(parent, names, widths, 0, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		vlanList.setContentProvider(new ArrayContentProvider());
-		vlanList.setLabelProvider(new VlanLabelProvider());
+		final VlanLabelProvider labelProvider = new VlanLabelProvider();
+		vlanList.setLabelProvider(labelProvider);
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -134,7 +137,30 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		gd.grabExcessVerticalSpace = true;
 		vlanList.getTable().setLayoutData(gd);
 		vlanList.setInput(vlans.toArray());
-		vlanList.addSelectionChangedListener(this);
+		vlanList.addSelectionChangedListener(new ISelectionChangedListener() {
+		   @Override
+		   public void selectionChanged(SelectionChangedEvent event)
+		   {
+		      IStructuredSelection selection = (IStructuredSelection)vlanList.getSelection();
+		      
+		      VlanInfo vlan = (VlanInfo)selection.getFirstElement();
+		      if (vlan != null)
+		      {
+		         deviceView.setHighlight(vlan.getPorts());
+		         actionShowVlanMap.setEnabled(true);
+		      }
+		      else
+		      {
+		         deviceView.clearHighlight(true);
+		         actionShowVlanMap.setEnabled(false);
+		      }
+            
+		      if (labelProvider.setSelectedPort(null))
+            {
+               vlanList.refresh();
+            }
+		   }
+		});
 		
 		Composite deviceViewArea = new Composite(parent, SWT.NONE);
 		deviceViewArea.setLayout(new FillLayout());
@@ -151,6 +177,15 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		deviceView.setLayoutData(gd);
 		deviceView.setPortStatusVisible(false);
 		deviceView.setNodeId(nodeId);
+		deviceView.addSelectionListener(new PortSelectionListener() {
+         @Override
+         public void portSelected(PortInfo port)
+         {
+            vlanList.setSelection(null);
+            labelProvider.setSelectedPort(port);
+            vlanList.refresh();
+         }
+      });
 
 		scroller.setContent(deviceView);
 		scroller.setBackground(deviceView.getBackground());
@@ -283,26 +318,6 @@ public class VlanView extends ViewPart implements ISelectionChangedListener
 		vlanList.setInput(vlans.toArray());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.viewers.ISelectionChangedListener#selectionChanged(org.eclipse.jface.viewers.SelectionChangedEvent)
-	 */
-	@Override
-	public void selectionChanged(SelectionChangedEvent event)
-	{
-		IStructuredSelection selection = (IStructuredSelection)vlanList.getSelection();
-		VlanInfo vlan = (VlanInfo)selection.getFirstElement();
-		if (vlan != null)
-		{
-			deviceView.setHighlight(vlan.getPorts());
-			actionShowVlanMap.setEnabled(true);
-		}
-		else
-		{
-			deviceView.clearHighlight(true);
-			actionShowVlanMap.setEnabled(false);
-		}
-	}
-	
 	/**
 	 * Show map for currently selected VLAN
 	 */

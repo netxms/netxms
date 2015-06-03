@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -205,7 +205,7 @@ public class CreateNodeDialog extends Dialog
 		hostName = hostNameField.getText().trim();
 		if (hostName.isEmpty())
 			hostName = objectNameField.getText().trim();
-		if (!hostName.matches("^([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+$")) //$NON-NLS-1$
+		if (!hostName.matches("^(([A-Za-z0-9\\-]+\\.)*[A-Za-z0-9\\-]+|[A-Fa-f0-9:]+)$")) //$NON-NLS-1$
 		{
 			MessageDialogHelper.openWarning(getShell(), Messages.get().CreateNodeDialog_Warning, 
 			      String.format(Messages.get().CreateNodeDialog_WarningInvalidHostname, hostName));

@@ -59,11 +59,10 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.browser.IWebBrowser;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.api.client.constants.UserAccessRights;
-import org.netxms.client.NXCListener;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
@@ -110,7 +109,7 @@ public class AlarmList extends CompositeWithMessageBar
 	
 	private final IViewPart viewPart;
 	private NXCSession session = null;
-	private NXCListener clientListener = null;
+	private SessionListener clientListener = null;
 	private RefreshTimer refreshTimer;
 	private SortableTableViewer alarmViewer;
 	private AlarmListFilter alarmFilter;
@@ -239,14 +238,14 @@ public class AlarmList extends CompositeWithMessageBar
       });
 
 		// Add client library listener
-		clientListener = new NXCListener() {
+		clientListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
 			{
 				switch(n.getCode())
 				{
-					case NXCNotification.NEW_ALARM:
-					case NXCNotification.ALARM_CHANGED:
+					case SessionNotification.NEW_ALARM:
+					case SessionNotification.ALARM_CHANGED:
 						synchronized(alarmList)
 						{
 							alarmList.put(((Alarm)n.getObject()).getId(), (Alarm)n.getObject());
@@ -254,8 +253,8 @@ public class AlarmList extends CompositeWithMessageBar
 						}
 						refreshTimer.execute();
 						break;
-					case NXCNotification.ALARM_TERMINATED:
-					case NXCNotification.ALARM_DELETED:
+					case SessionNotification.ALARM_TERMINATED:
+					case SessionNotification.ALARM_DELETED:
 						synchronized(alarmList)
 						{
 							alarmList.remove(((Alarm)n.getObject()).getId());

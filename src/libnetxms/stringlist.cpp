@@ -39,7 +39,7 @@ StringList::StringList()
 /**
  * Constructor: create copy of existing string list
  */
-StringList::StringList(StringList *src)
+StringList::StringList(const StringList *src)
 {
 	m_count = 0;
    m_allocated = src->m_allocated;
@@ -91,7 +91,7 @@ void StringList::addPreallocated(TCHAR *value)
 		m_allocated += ALLOCATION_STEP;
 		m_values = (TCHAR **)realloc(m_values, sizeof(TCHAR *) * m_allocated);
 	}
-	m_values[m_count++] = (value != NULL) ? value : _tcsdup(_T(""));
+	m_values[m_count++] = value;
 }
 
 /**
@@ -99,7 +99,7 @@ void StringList::addPreallocated(TCHAR *value)
  */
 void StringList::add(const TCHAR *value)
 {
-	addPreallocated(_tcsdup(value));
+   addPreallocated(_tcsdup_ex(value));
 }
 
 /**
@@ -166,7 +166,49 @@ void StringList::replace(int index, const TCHAR *value)
 		return;
 
 	safe_free(m_values[index]);
-	m_values[index] = _tcsdup(value);
+	m_values[index] = _tcsdup_ex(value);
+}
+
+/**
+ * Add or replace string at given position
+ */
+void StringList::addOrReplace(int index, const TCHAR *value)
+{
+   if (index < 0)
+      return;
+
+   if (index < m_count)
+   {
+	   safe_free(m_values[index]);
+      m_values[index] = _tcsdup_ex(value);
+   }
+   else
+   {
+      for(int i = m_count; i < index; i++)
+         addPreallocated(NULL);
+      add(value);
+   }
+}
+
+/**
+ * Add or replace string at given position
+ */
+void StringList::addOrReplacePreallocated(int index, TCHAR *value)
+{
+   if (index < 0)
+      return;
+
+   if (index < m_count)
+   {
+	   safe_free(m_values[index]);
+      m_values[index] = value;
+   }
+   else
+   {
+      for(int i = m_count; i < index; i++)
+         addPreallocated(NULL);
+      addPreallocated(value);
+   }
 }
 
 /**
@@ -174,7 +216,7 @@ void StringList::replace(int index, const TCHAR *value)
  * if given value not found in the list. If list contains duplicate values,
  * index of first occurence will be returned.
  */
-int StringList::indexOf(const TCHAR *value)
+int StringList::indexOf(const TCHAR *value) const
 {
 	for(int i = 0; i < m_count; i++)
 		if ((m_values[i] != NULL) && !_tcscmp(m_values[i], value))
@@ -187,7 +229,7 @@ int StringList::indexOf(const TCHAR *value)
  * if given value not found in the list. If list contains duplicate values,
  * index of first occurence will be returned.
  */
-int StringList::indexOfIgnoreCase(const TCHAR *value)
+int StringList::indexOfIgnoreCase(const TCHAR *value) const
 {
 	for(int i = 0; i < m_count; i++)
 		if ((m_values[i] != NULL) && !_tcsicmp(m_values[i], value))
@@ -249,7 +291,7 @@ TCHAR *StringList::join(const TCHAR *separator)
    for(i = 1; i < m_count; i++)
    {
       _tcscat(result, separator);
-      _tcscat(result, m_values[i]);
+      _tcscat(result, CHECK_NULL_EX(m_values[i]));
    }
    return result;
 }

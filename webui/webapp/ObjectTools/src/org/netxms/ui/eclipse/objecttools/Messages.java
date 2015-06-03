@@ -52,7 +52,7 @@ public class Messages extends NLS
    public String Filter_AgentNeeded;
    public String Filter_OIDShouldMatch;
    public String Filter_SNMPNeeded;
-   public String General_AgentAction;
+   public String General_AgentCommand;
    public String General_AllFiles;
    public String General_CannotLoadImage;
    public String General_Clear;
@@ -83,7 +83,7 @@ public class Messages extends NLS
    public String General_Select;
    public String General_ShowInCommands;
    public String General_ShowInCommandsTooltip;
-   public String General_SNMPTableOptions;
+   public String General_SNMPListOptions;
    public String General_Title;
    public String General_URL;
    public String General_UseAsIndex;
@@ -139,13 +139,13 @@ public class Messages extends NLS
    public String ObjectToolsEditor_JobSave;
    public String ObjectToolsEditor_JobSaveError;
    public String ObjectToolsEditor_New;
-   public String ObjectToolsLabelProvider_TypeAction;
+   public String ObjectToolsLabelProvider_TypeAgentCmd;
    public String ObjectToolsLabelProvider_TypeAgentTable;
    public String ObjectToolsLabelProvider_TypeDownloadFile;
    public String ObjectToolsLabelProvider_TypeInternal;
    public String ObjectToolsLabelProvider_TypeLocalCmd;
    public String ObjectToolsLabelProvider_TypeServerCmd;
-   public String ObjectToolsLabelProvider_TypeSNMPTable;
+   public String ObjectToolsLabelProvider_TypeSNMPList;
    public String ObjectToolsLabelProvider_TypeURL;
    public String OpenObjectToolsEditor_Error;
    public String OpenObjectToolsEditor_ErrorOpenView;

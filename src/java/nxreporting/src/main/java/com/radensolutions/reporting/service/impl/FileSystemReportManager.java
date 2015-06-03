@@ -1,5 +1,6 @@
 package com.radensolutions.reporting.service.impl;
 
+import com.radensolutions.reporting.ThreadLocalReportInfo;
 import com.radensolutions.reporting.model.Notification;
 import com.radensolutions.reporting.model.ReportDefinition;
 import com.radensolutions.reporting.model.ReportParameter;
@@ -9,9 +10,10 @@ import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.engine.export.JRXlsExporter;
 import net.sf.jasperreports.engine.export.JRXlsExporterParameter;
+import net.sf.jasperreports.engine.query.QueryExecuterFactory;
 import net.sf.jasperreports.engine.util.JRLoader;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.api.client.reporting.ReportRenderFormat;
+import org.netxms.client.SessionNotification;
+import org.netxms.client.reporting.ReportRenderFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -176,56 +178,53 @@ public class FileSystemReportManager implements ReportManager
 
     private UUID unpackJar(File destination, File archive) throws IOException {
         JarFile jarFile = new JarFile(archive);
-        try
-        {
-           Manifest manifest = jarFile.getManifest();
-           Enumeration<JarEntry> entries = jarFile.entries();
-           while (entries.hasMoreElements()) {
-               JarEntry jarEntry = entries.nextElement();
-               if (jarEntry.isDirectory()) {
-                   File destDir = new File(destination, jarEntry.getName());
-                   if (!destDir.mkdirs()) {
-                       log.error("Can't create directory " + destDir.getAbsolutePath());
-                   }
-               }
-           }
-   
-           entries = jarFile.entries();
-           while (entries.hasMoreElements()) {
-               JarEntry jarEntry = entries.nextElement();
-               File destinationFile = new File(destination, jarEntry.getName());
-   
-               InputStream inputStream = null;
-               FileOutputStream outputStream = null;
-               if (jarEntry.isDirectory()) {
-                   continue;
-               }
-               try {
-                   inputStream = jarFile.getInputStream(jarEntry);
-                   outputStream = new FileOutputStream(destinationFile);
-   
-                   byte[] buffer = new byte[1024];
-                   int len;
-                   assert inputStream != null;
-                   while ((len = inputStream.read(buffer)) > 0) {
-                       outputStream.write(buffer, 0, len);
-                   }
-               } finally {
-                   if (inputStream != null) {
-                       inputStream.close();
-                   }
-                   if (outputStream != null) {
-                       outputStream.close();
-                   }
-               }
-           }
-   
-           // TODO: handle possible exception
-           return UUID.fromString(manifest.getMainAttributes().getValue("Build-Id"));
-        }
-        finally
-        {
-           jarFile.close();
+        try {
+            Manifest manifest = jarFile.getManifest();
+            Enumeration<JarEntry> entries = jarFile.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry jarEntry = entries.nextElement();
+                if (jarEntry.isDirectory()) {
+                    File destDir = new File(destination, jarEntry.getName());
+                    if (!destDir.mkdirs()) {
+                        log.error("Can't create directory " + destDir.getAbsolutePath());
+                    }
+                }
+            }
+
+            entries = jarFile.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry jarEntry = entries.nextElement();
+                File destinationFile = new File(destination, jarEntry.getName());
+
+                InputStream inputStream = null;
+                FileOutputStream outputStream = null;
+                if (jarEntry.isDirectory()) {
+                    continue;
+                }
+                try {
+                    inputStream = jarFile.getInputStream(jarEntry);
+                    outputStream = new FileOutputStream(destinationFile);
+
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    assert inputStream != null;
+                    while ((len = inputStream.read(buffer)) > 0) {
+                        outputStream.write(buffer, 0, len);
+                    }
+                } finally {
+                    if (inputStream != null) {
+                        inputStream.close();
+                    }
+                    if (outputStream != null) {
+                        outputStream.close();
+                    }
+                }
+            }
+
+            // TODO: handle possible exception
+            return UUID.fromString(manifest.getMainAttributes().getValue("Build-Id"));
+        } finally {
+            jarFile.close();
         }
     }
 
@@ -320,15 +319,22 @@ public class FileSystemReportManager implements ReportManager
             final HashMap<String, Object> localParameters = new HashMap<String, Object>(parameters);
             localParameters.put(JRParameter.REPORT_LOCALE, locale);
             localParameters.put(JRParameter.REPORT_RESOURCE_BUNDLE, translations);
-            localParameters.put(SUBREPORT_DIR_KEY, reportDirectory.getPath() + File.separatorChar);
+            String subrepoDirectory = reportDirectory.getPath() + File.separatorChar;
+            localParameters.put(SUBREPORT_DIR_KEY, subrepoDirectory);
+
+            localParameters.put(JRParameter.REPORT_CLASS_LOADER, new URLClassLoader(new URL[]{}, getClass().getClassLoader()));
 
             prepareParameters(parameters, report, localParameters);
+
+            ThreadLocalReportInfo.setReportLocation(subrepoDirectory);
 
             final File outputDirectory = getOutputDirectory(reportId);
             final String outputFile = new File(outputDirectory, jobId.toString() + ".jrprint").getPath();
             try {
-                JasperFillManager.fillReportToFile(report, outputFile, localParameters, connection);
-                JasperFillManager.fillReport(report, localParameters, connection);
+                DefaultJasperReportsContext reportsContext = DefaultJasperReportsContext.getInstance();
+                reportsContext.setProperty(QueryExecuterFactory.QUERY_EXECUTER_FACTORY_PREFIX + "nxcl", "com.radensolutions.reporting.custom.NXCLQueryExecutorFactory");
+                JasperFillManager manager = JasperFillManager.getInstance(reportsContext);
+                manager.fillToFile(report, outputFile, localParameters, connection);
                 reportResultService.save(new ReportResult(new Date(), reportId, jobId, userId));
 
                 ret = true;
@@ -502,7 +508,7 @@ public class FileSystemReportManager implements ReportManager
                 exporter.setParameter(JRXlsExporterParameter.IS_IGNORE_GRAPHICS, false);
                 break;
             default:
-               break;
+                break;
         }
 
         exporter.setParameter(JRExporterParameter.INPUT_FILE, dataFile);

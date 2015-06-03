@@ -18,6 +18,7 @@
  */
 package org.netxms.client.datacollection;
 
+import java.util.UUID;
 import org.netxms.base.NXCPMessage;
 
 /**
@@ -26,6 +27,7 @@ import org.netxms.base.NXCPMessage;
 public class DciSummaryTableDescriptor
 {
 	private int id;
+   private UUID guid;
 	private String menuPath;
 	private String title;
 	private int flags;
@@ -42,6 +44,7 @@ public class DciSummaryTableDescriptor
 		menuPath = msg.getFieldAsString(baseId + 1);
 		title = msg.getFieldAsString(baseId + 2);
 		flags = msg.getFieldAsInt32(baseId + 3);
+		guid = msg.getFieldAsUUID(baseId + 4);
 	}
 
 	/**
@@ -55,6 +58,7 @@ public class DciSummaryTableDescriptor
 		menuPath = table.getMenuPath();
 		title = table.getTitle();
 		flags = table.getFlags();
+		guid = table.getGuid();
 	}
 	
 	/**
@@ -100,4 +104,12 @@ public class DciSummaryTableDescriptor
 	{
 		return flags;
 	}
+
+   /**
+    * @return the guid
+    */
+   public UUID getGuid()
+   {
+      return guid;
+   }
 }

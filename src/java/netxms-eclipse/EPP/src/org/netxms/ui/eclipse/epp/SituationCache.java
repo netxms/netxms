@@ -27,11 +27,10 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.UIJob;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
 import org.netxms.client.NXCException;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.constants.RCC;
 import org.netxms.client.situations.Situation;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -81,14 +80,14 @@ public class SituationCache
 			{
 				switch(n.getCode())
 				{
-					case NXCNotification.SITUATION_CREATED:
-					case NXCNotification.SITUATION_UPDATED:
+					case SessionNotification.SITUATION_CREATED:
+					case SessionNotification.SITUATION_UPDATED:
 						synchronized(situations)
 						{
 							situations.put(n.getSubCode(), (Situation)n.getObject());
 						}
 						break;
-					case NXCNotification.SITUATION_DELETED:
+					case SessionNotification.SITUATION_DELETED:
 						synchronized(situations)
 						{
 							situations.remove(n.getSubCode());

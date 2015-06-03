@@ -1,6 +1,6 @@
-/* 
+/*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,9 +33,9 @@ Zone::Zone() : NetObj()
    m_agentProxy = 0;
    m_snmpProxy = 0;
 	m_icmpProxy = 0;
-	m_idxNodeByAddr = new ObjectIndex;
-	m_idxInterfaceByAddr = new ObjectIndex;
-	m_idxSubnetByAddr = new ObjectIndex;
+	m_idxNodeByAddr = new InetAddressIndex;
+	m_idxInterfaceByAddr = new InetAddressIndex;
+	m_idxSubnetByAddr = new InetAddressIndex;
 }
 
 /**
@@ -49,9 +49,9 @@ Zone::Zone(UINT32 zoneId, const TCHAR *name) : NetObj()
    m_agentProxy = 0;
    m_snmpProxy = 0;
 	m_icmpProxy = 0;
-	m_idxNodeByAddr = new ObjectIndex;
-	m_idxInterfaceByAddr = new ObjectIndex;
-	m_idxSubnetByAddr = new ObjectIndex;
+	m_idxNodeByAddr = new InetAddressIndex;
+	m_idxInterfaceByAddr = new InetAddressIndex;
+	m_idxSubnetByAddr = new InetAddressIndex;
 }
 
 /**
@@ -122,7 +122,7 @@ BOOL Zone::saveToDatabase(DB_HANDLE hdb)
    lockProperties();
 
    saveCommonProperties(hdb);
-   
+
    // Check for object's existence in database
    _sntprintf(szQuery, 8192, _T("SELECT id FROM zones WHERE id=%d"), m_id);
    hResult = DBSelect(hdb, szQuery);
@@ -166,9 +166,9 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Zone::fillMessage(NXCPMessage *pMsg)
+void Zone::fillMessageInternal(NXCPMessage *pMsg)
 {
-   NetObj::fillMessage(pMsg);
+   NetObj::fillMessageInternal(pMsg);
    pMsg->setField(VID_ZONE_ID, m_zoneId);
    pMsg->setField(VID_AGENT_PROXY, m_agentProxy);
    pMsg->setField(VID_SNMP_PROXY, m_snmpProxy);
@@ -178,11 +178,8 @@ void Zone::fillMessage(NXCPMessage *pMsg)
 /**
  * Modify object from message
  */
-UINT32 Zone::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Zone::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
 	if (pRequest->isFieldExist(VID_AGENT_PROXY))
 		m_agentProxy = pRequest->getFieldAsUInt32(VID_AGENT_PROXY);
 
@@ -192,13 +189,13 @@ UINT32 Zone::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 	if (pRequest->isFieldExist(VID_ICMP_PROXY))
 		m_icmpProxy = pRequest->getFieldAsUInt32(VID_ICMP_PROXY);
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
 /**
  * Update interface index
  */
-void Zone::updateInterfaceIndex(UINT32 oldIp, UINT32 newIp, Interface *iface)
+void Zone::updateInterfaceIndex(const InetAddress& oldIp, const InetAddress& newIp, Interface *iface)
 {
 	m_idxInterfaceByAddr->remove(oldIp);
 	m_idxInterfaceByAddr->put(newIp, iface);
@@ -210,4 +207,24 @@ void Zone::updateInterfaceIndex(UINT32 oldIp, UINT32 newIp, Interface *iface)
 bool Zone::showThresholdSummary()
 {
 	return true;
+}
+
+/**
+ * Remove interface from index
+ */
+void Zone::removeFromIndex(Interface *iface)
+{
+   const ObjectArray<InetAddress> *list = iface->getIpAddressList()->getList();
+   for(int i = 0; i < list->size(); i++)
+   {
+      InetAddress *addr = list->get(i);
+      if (addr->isValidUnicast())
+      {
+	      NetObj *o = m_idxInterfaceByAddr->get(*addr);
+	      if ((o != NULL) && (o->getId() == iface->getId()))
+	      {
+		      m_idxInterfaceByAddr->remove(*addr);
+	      }
+      }
+   }
 }

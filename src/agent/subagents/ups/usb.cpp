@@ -68,7 +68,7 @@ static BYTE FindReport(HIDP_VALUE_CAPS *pCaps, DWORD dwCapSize, USAGE uPage, USA
 /**
  * Constructor
  */
-USBInterface::USBInterface(TCHAR *pszDevice) : UPSInterface(pszDevice)
+USBInterface::USBInterface(const TCHAR *device) : UPSInterface(device)
 {
    m_hDev = INVALID_HANDLE_VALUE;
    m_pPreparsedData = NULL;
@@ -162,8 +162,8 @@ BOOL USBInterface::open()
             // Check if device is a UPS and that serial number matched
             if ((m_deviceCaps.UsagePage == 0x84) &&
                 (m_deviceCaps.Usage == 0x04) &&
-                ((!_tcsicmp(m_pszDevice, szSerial)) ||
-                 (!_tcsicmp(m_pszDevice, _T("ANY")))))
+                ((!_tcsicmp(m_device, szSerial)) ||
+                 (!_tcsicmp(m_device, _T("ANY")))))
             {
                // Get value capabilities
                wSize = m_deviceCaps.NumberFeatureValueCaps;

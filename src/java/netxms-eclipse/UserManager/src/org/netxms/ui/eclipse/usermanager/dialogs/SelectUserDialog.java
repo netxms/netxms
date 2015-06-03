@@ -35,9 +35,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
-import org.netxms.api.client.Session;
-import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.api.client.users.UserManager;
+import org.netxms.client.NXCSession;
+import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -52,8 +51,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class SelectUserDialog extends Dialog
 {
 	private TableViewer userList;
-	private Session session;
-	Class<? extends AbstractUserObject> classFilter;
+	private NXCSession session;
+	private Class<? extends AbstractUserObject> classFilter;
 	private boolean multiSelection = true;
 	private AbstractUserObject[] selection;
 	
@@ -121,7 +120,7 @@ public class SelectUserDialog extends Dialog
 				return classFilter.isInstance(element);
 			}
       });
-      userList.setInput(((UserManager)session).getUserDatabaseObjects());
+      userList.setInput(session.getUserDatabaseObjects());
       
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;

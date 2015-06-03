@@ -21,9 +21,9 @@ package org.netxms.ui.eclipse.usermanager.views.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
-import org.netxms.api.client.users.AbstractUserObject;
-import org.netxms.api.client.users.User;
-import org.netxms.api.client.users.UserGroup;
+import org.netxms.client.users.AbstractUserObject;
+import org.netxms.client.users.User;
+import org.netxms.client.users.UserGroup;
 import org.netxms.ui.eclipse.usermanager.views.UserManagementView;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 

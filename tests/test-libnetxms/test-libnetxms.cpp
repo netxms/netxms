@@ -264,14 +264,102 @@ static void TestString()
 }
 
 /**
+ * Test InetAddress class
+ */
+static void TestInetAddress()
+{
+   InetAddress a, b, c;
+
+   StartTest(_T("InetAddress - isSubnetBroadcast() - IPv4"));
+   a = InetAddress::parse("192.168.0.255");
+   AssertTrue(a.isSubnetBroadcast(24));
+   AssertFalse(a.isSubnetBroadcast(23));
+   EndTest();
+
+   StartTest(_T("InetAddress - isSubnetBroadcast() - IPv6"));
+   a = InetAddress::parse("fe80::ffff:ffff:ffff:ffff");
+   AssertFalse(a.isSubnetBroadcast(64));
+   AssertFalse(a.isSubnetBroadcast(63));
+   EndTest();
+
+   StartTest(_T("InetAddress - isLinkLocal() - IPv4"));
+   a = InetAddress::parse("169.254.17.198");
+   AssertTrue(a.isLinkLocal());
+   a = InetAddress::parse("192.168.1.1");
+   AssertFalse(a.isLinkLocal());
+   EndTest();
+
+   StartTest(_T("InetAddress - isLinkLocal() - IPv6"));
+   a = InetAddress::parse("fe80::1");
+   AssertTrue(a.isLinkLocal());
+   a = InetAddress::parse("2000:1234::1");
+   AssertFalse(a.isLinkLocal());
+   EndTest();
+
+   StartTest(_T("InetAddress - sameSubnet() - IPv4"));
+   a = InetAddress::parse("192.168.1.43");
+   a.setMaskBits(23);
+   b = InetAddress::parse("192.168.0.180");
+   b.setMaskBits(23);
+   c = InetAddress::parse("192.168.2.22");
+   c.setMaskBits(23);
+   AssertTrue(a.sameSubnet(b));
+   AssertFalse(a.sameSubnet(c));
+   EndTest();
+
+   StartTest(_T("InetAddress - sameSubnet() - IPv6"));
+   a = InetAddress::parse("2000:1234:1000:1000::1");
+   a.setMaskBits(62);
+   b = InetAddress::parse("2000:1234:1000:1001::cdef:1");
+   b.setMaskBits(62);
+   c = InetAddress::parse("2000:1234:1000:1007::1");
+   c.setMaskBits(62);
+   AssertTrue(a.sameSubnet(b));
+   AssertFalse(a.sameSubnet(c));
+   EndTest();
+}
+
+/**
+ * Test itoa/itow
+ */
+static void TestItoa()
+{
+   char buffer[64];
+   WCHAR wbuffer[64];
+
+   StartTest(_T("itoa"));
+   AssertTrue(!strcmp(_itoa(127, buffer, 10), "127"));
+   AssertTrue(!strcmp(_itoa(0, buffer, 10), "0"));
+   AssertTrue(!strcmp(_itoa(-3, buffer, 10), "-3"));
+   AssertTrue(!strcmp(_itoa(0555, buffer, 8), "555"));
+   AssertTrue(!strcmp(_itoa(0xFA48, buffer, 16), "fa48"));
+   EndTest();
+
+   StartTest(_T("itow"));
+   AssertTrue(!wcscmp(_itow(127, wbuffer, 10), L"127"));
+   AssertTrue(!wcscmp(_itow(0, wbuffer, 10), L"0"));
+   AssertTrue(!wcscmp(_itow(-3, wbuffer, 10), L"-3"));
+   AssertTrue(!wcscmp(_itow(0555, wbuffer, 8), L"555"));
+   AssertTrue(!wcscmp(_itow(0xFA48, wbuffer, 16), L"fa48"));
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
 {
+#ifdef _WIN32
+   WSADATA wsaData;
+	WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
+
    TestString();
    TestStringConversion();
    TestStringMap();
    TestStringSet();
    TestMsgWaitQueue();
+   TestInetAddress();
+   TestItoa();
    return 0;
 }

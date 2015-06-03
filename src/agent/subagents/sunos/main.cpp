@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004-2011 Victor Kirhenshtein
+** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,37 +67,34 @@ static THREAD s_cpuStatThread = INVALID_THREAD_HANDLE;
 static THREAD s_ioStatThread = INVALID_THREAD_HANDLE;
 static MUTEX s_kstatLock = INVALID_MUTEX_HANDLE;
 
-
-//
-// Lock access to kstat API
-//
-
+/**
+ * Lock access to kstat API
+ */
 void kstat_lock()
 {
    MutexLock(s_kstatLock);
 }
 
+/**
+ * Unlock access to kstat API
+ */
 void kstat_unlock()
 {
    MutexUnlock(s_kstatLock);
 }
 
-
-//
-// Detect support for source packages
-//
-
+/**
+ * Detect support for source packages
+ */
 static LONG H_SourcePkg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    ret_int(pValue, 1);
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Configuration file template
-//
-
+/**
+ * Configuration file template
+ */
 static NX_CFG_TEMPLATE s_cfgTemplate[] =
 {
    { _T("InterfacesFromAllZones"), CT_BOOLEAN, 0, 0, SF_IF_ALL_ZONES, 0, &g_flags },
@@ -162,6 +159,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("FileSystem.Free(*)"), H_DiskInfo, (TCHAR *)DISK_FREE, DCI_DT_UINT64, DCIDESC_FS_FREE },
    { _T("FileSystem.FreePerc(*)"), H_DiskInfo, (TCHAR *)DISK_FREE_PERC, DCI_DT_FLOAT, DCIDESC_FS_FREEPERC },
    { _T("FileSystem.Total(*)"), H_DiskInfo, (TCHAR *)DISK_TOTAL, DCI_DT_UINT64, DCIDESC_FS_TOTAL },
+   { _T("FileSystem.Type(*)"), H_DiskInfo, (TCHAR *)DISK_FSTYPE, DCI_DT_STRING, DCIDESC_FS_TYPE },
    { _T("FileSystem.Used(*)"), H_DiskInfo, (TCHAR *)DISK_USED, DCI_DT_UINT64, DCIDESC_FS_USED },
    { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
 
@@ -301,9 +299,17 @@ DECLARE_SUBAGENT_ENTRY_POINT(SUNOS)
 }
 
 /**
- * Entry points for server
+ * Entry point for server: interface list
  */
 extern "C" BOOL __NxSubAgentGetIfList(StringList *pValue)
 {
    return H_NetIfList(_T("Net.InterfaceList"), NULL, pValue, NULL) == SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Entry point for server: arp cache
+ */
+extern "C" BOOL __NxSubAgentGetArpCache(StringList *pValue)
+{
+   return SYSINFO_RC_ERROR;
 }

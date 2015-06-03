@@ -73,10 +73,14 @@
 
 #include <netxms-version.h>
 
+#if HAVE_WIDEC_H
+#include <widec.h>
+#endif // HAVE_WIDEC
+
 /**
  * Define __64BIT__ if compiling for 64bit platform with Visual C++
  */
-#if defined(_M_X64) || defined(_M_IA64)
+#if defined(_M_X64) || defined(_M_IA64) || defined(__LP64__) || defined(__PPC64__) || defined(__x86_64__)
 #ifndef __64BIT__
 #define __64BIT__
 #endif
@@ -178,6 +182,8 @@ typedef int bool;
 #define HAVE_SCWPRINTF          1
 #define HAVE_VSCWPRINTF         1
 #endif
+
+#define HAVE_GETADDRINFO        1
 
 #ifndef va_copy
 #define va_copy(x,y)            (x = y)
@@ -1116,11 +1122,6 @@ typedef struct tagICMPHDR
 #ifndef INADDR_NONE
 #define INADDR_NONE	(0xFFFFFFFF)
 #endif
-
-/**
- * Check if IP address is a broadcast
- */
-#define IsBroadcastAddress(addr, mask) (((addr) & (~(mask))) == (~(mask)))
 
 /**
  * Check if given string is NULL and always return valid pointer

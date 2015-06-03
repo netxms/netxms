@@ -1,19 +1,21 @@
 package com.radensolutions.reporting.custom;
 
+import java.io.IOException;
+import java.util.Map;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRDataset;
 import net.sf.jasperreports.engine.JRValueParameter;
-import org.netxms.api.client.NetXMSClientException;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ProtocolVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Map;
 
 public abstract class NXCLDataSource implements JRDataSource {
 
     private static final Logger log = LoggerFactory.getLogger(NXCLDataSource.class);
+    
+    private static final int[] PROTOCOL_COMPONENTS = { ProtocolVersion.INDEX_FULL };
 
     protected JRDataset dataset;
     protected Map<String, ? extends JRValueParameter> parameters;
@@ -25,9 +27,10 @@ public abstract class NXCLDataSource implements JRDataSource {
 
     public void connect(String server, String login, String password) {
         log.debug("Connecting to NetXMS server at " + server + " as " + login);
-        NXCSession session = new NXCSession(server, login, password);
+        NXCSession session = new NXCSession(server);
         try {
-            session.connect();
+            session.connect(PROTOCOL_COMPONENTS);
+            session.login(login, password);
             session.syncEventTemplates();
             session.syncObjects();
             loadData(session);
@@ -40,6 +43,7 @@ public abstract class NXCLDataSource implements JRDataSource {
         return parameters == null ? null : parameters.get(name).getValue();
     }
 
-    public abstract void loadData(NXCSession session) throws IOException, NetXMSClientException;
+    public abstract void loadData(NXCSession session) throws IOException, NXCException;
 
+    public abstract void setQuery(String query);
 }

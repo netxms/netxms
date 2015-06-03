@@ -1,6 +1,6 @@
 /*
 ** NetXMS UPS management subagent
-** Copyright (C) 2006 Victor Kirhenshtein
+** Copyright (C) 2006-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,7 +79,7 @@ static void CheckNA(UPS_PARAMETER *p, int nType)
 /**
  * Constructor
  */
-APCInterface::APCInterface(TCHAR *pszDevice) : SerialInterface(pszDevice)
+APCInterface::APCInterface(const TCHAR *device) : SerialInterface(device)
 {
 	if (m_portSpeed == 0)
 		m_portSpeed = 2400;
@@ -264,41 +264,33 @@ void APCInterface::queryOutputVoltage()
    queryParameter("O", &m_paramList[UPS_PARAM_OUTPUT_VOLTAGE], TYPE_DOUBLE, -1);
 }
 
-
-//
-// Get line frequency (Hz)
-//
-
+/**
+ * Get line frequency (Hz)
+ */
 void APCInterface::queryLineFrequency()
 {
    queryParameter("F", &m_paramList[UPS_PARAM_LINE_FREQ], TYPE_LONG, '.');
 }
 
-
-//
-// Get UPS power load (in percents)
-//
-
+/**
+ * Get UPS power load (in percents)
+ */
 void APCInterface::queryPowerLoad()
 {
    queryParameter("P", &m_paramList[UPS_PARAM_LOAD], TYPE_LONG, '.');
 }
 
-
-//
-// Get estimated on-battery runtime
-//
-
+/**
+ * Get estimated on-battery runtime
+ */
 void APCInterface::queryEstimatedRuntime()
 {
    queryParameter("j", &m_paramList[UPS_PARAM_EST_RUNTIME], TYPE_LONG, ':');
 }
 
-
-//
-// Check if UPS is online or on battery power
-//
-
+/**
+ * Check if UPS is online or on battery power
+ */
 void APCInterface::queryOnlineStatus()
 {
    char *eptr, szLine[MAX_RESULT_LENGTH];

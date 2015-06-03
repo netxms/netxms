@@ -1147,3 +1147,112 @@ int F_inList(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
    *ppResult = new NXSL_Value(result ? 1 : 0);
 	return 0;
 }
+
+/**
+ * md5() function implementation
+ */
+int F_md5(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+   BYTE hash[MD5_DIGEST_SIZE];
+#ifdef UNICODE
+   char *utf8Str = UTF8StringFromWideString(argv[0]->getValueAsCString());
+   CalculateMD5Hash((BYTE *)utf8Str, strlen(utf8Str), hash);
+#else
+   const char *str = argv[0]->getValueAsCString();
+   CalculateMD5Hash((BYTE *)str, strlen(str), hash);
+#endif
+
+   TCHAR text[MD5_DIGEST_SIZE * 2 + 1];
+   BinToStr(hash, MD5_DIGEST_SIZE, text);
+   *ppResult = new NXSL_Value(text);
+
+	return 0;
+}
+
+/**
+ * sha1() function implementation
+ */
+int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+   BYTE hash[SHA1_DIGEST_SIZE];
+#ifdef UNICODE
+   char *utf8Str = UTF8StringFromWideString(argv[0]->getValueAsCString());
+   CalculateSHA1Hash((BYTE *)utf8Str, strlen(utf8Str), hash);
+#else
+   const char *str = argv[0]->getValueAsCString();
+   CalculateSHA1Hash((BYTE *)str, strlen(str), hash);
+#endif
+
+   TCHAR text[SHA1_DIGEST_SIZE * 2 + 1];
+   BinToStr(hash, SHA1_DIGEST_SIZE, text);
+   *ppResult = new NXSL_Value(text);
+
+	return 0;
+}
+
+/**
+ * Resolve IP address to host name
+ */
+int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+   InetAddress addr = InetAddress::parse(argv[0]->getValueAsCString());
+   if (addr.isValid())
+   {
+      TCHAR buffer[256];
+      if (addr.getHostByAddr(buffer, 256) != NULL)
+      {
+         *ppResult = new NXSL_Value(buffer);
+      }
+      else
+      {
+         *ppResult = new NXSL_Value;
+      }
+   }
+   else
+   {
+      *ppResult = new NXSL_Value;
+   }
+
+   return 0;
+}
+
+/**
+ * Resolve hostname to IP address
+ */
+int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+   if ((argc < 1) || (argc > 2))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+	if (!argv[0]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+   int af = AF_INET;
+   if (argc > 1)
+   {
+      if (!argv[1]->isInteger())
+   		return NXSL_ERR_NOT_INTEGER;
+      
+      af = (argv[1]->getValueAsInt32() == 6) ? AF_INET6 : AF_INET;
+   }
+
+   InetAddress addr = InetAddress::resolveHostName(argv[0]->getValueAsCString(), af);
+   if (addr.isValid())
+   {
+      *ppResult = new NXSL_Value((const TCHAR *)addr.toString());
+   }
+   else
+   {
+      *ppResult = new NXSL_Value;
+   }
+   return 0;
+}

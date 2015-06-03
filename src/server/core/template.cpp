@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -821,9 +821,9 @@ void Template::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create NXCP message with object's data
  */
-void Template::fillMessage(NXCPMessage *pMsg)
+void Template::fillMessageInternal(NXCPMessage *pMsg)
 {
-   NetObj::fillMessage(pMsg);
+   NetObj::fillMessageInternal(pMsg);
    pMsg->setField(VID_TEMPLATE_VERSION, m_dwVersion);
 	pMsg->setField(VID_FLAGS, m_flags);
 	pMsg->setField(VID_AUTOBIND_FILTER, CHECK_NULL_EX(m_applyFilterSource));
@@ -832,11 +832,8 @@ void Template::fillMessage(NXCPMessage *pMsg)
 /**
  * Modify object from NXCP message
  */
-UINT32 Template::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
    // Change template version
    if (pRequest->isFieldExist(VID_TEMPLATE_VERSION))
       m_dwVersion = pRequest->getFieldAsUInt32(VID_TEMPLATE_VERSION);
@@ -865,7 +862,7 @@ UINT32 Template::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
 		}
 	}
 
-   return NetObj::modifyFromMessage(pRequest, TRUE);
+   return NetObj::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -985,28 +982,84 @@ UINT32 *Template::getDCIEventsList(UINT32 *pdwCount)
 }
 
 /**
+ * Get list of scripts used by DCIs
+ */
+StringSet *Template::getDCIScriptList()
+{
+   StringSet *list = new StringSet;
+
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *o = m_dcObjects->get(i);
+      if (o->getDataSource() == DS_SCRIPT)
+      {
+         const TCHAR *name = o->getName();
+         const TCHAR *p = _tcschr(name, _T('('));
+         if (p != NULL)
+         {
+            TCHAR buffer[256];
+            nx_strncpy(buffer, name, p - name + 1);
+            list->add(buffer);
+         }
+         else
+         {
+            list->add(name);
+         }
+      }
+   }
+   unlockDciAccess();
+   return list;
+}
+
+/**
  * Create management pack record
  */
 void Template::createNXMPRecord(String &str)
 {
-   str.appendFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n\t\t\t<dataCollection>\n"),
-	                       m_id, (const TCHAR *)EscapeStringForXML2(m_name), m_flags);
+   TCHAR guid[48];
+   str.appendFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<guid>%s</guid>\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n"),
+	                       m_id, uuid_to_string(m_guid, guid), (const TCHAR *)EscapeStringForXML2(m_name), m_flags);
+
+   // Path in groups
+   StringList path;
+   ObjectArray<NetObj> *list = getParentList(OBJECT_TEMPLATEGROUP);
+   TemplateGroup *parent = NULL;
+   while(list->size() > 0)
+   {
+      parent = (TemplateGroup *)list->get(0);
+      path.add(parent->getName());
+      delete list;
+      list = parent->getParentList(OBJECT_TEMPLATEGROUP);
+   }
+   delete list;
+
+   str.append(_T("\t\t\t<path>\n"));
+   for(int j = path.size() - 1, id = 1; j >= 0; j--, id++)
+   {
+      str.append(_T("\t\t\t\t<element id=\""));
+      str.append(id);
+      str.append(_T("\">"));
+      str.append(path.get(j));
+      str.append(_T("</element>\n"));
+   }
+   str.append(_T("\t\t\t</path>\n\t\t\t<dataCollection>\n"));
 
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
       m_dcObjects->get(i)->createNXMPRecord(str);
    unlockDciAccess();
 
-   str += _T("\t\t\t</dataCollection>\n");
+   str.append(_T("\t\t\t</dataCollection>\n"));
 	lockProperties();
 	if (m_applyFilterSource != NULL)
 	{
-		str += _T("\t\t\t<filter>");
+      str.append(_T("\t\t\t<filter>"));
 		str.appendPreallocated(EscapeStringForXML(m_applyFilterSource, -1));
-		str += _T("</filter>\n");
+      str.append(_T("</filter>\n"));
 	}
 	unlockProperties();
-	str += _T("\t\t</template>\n");
+   str.append(_T("\t\t</template>\n"));
 }
 
 /**

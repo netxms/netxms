@@ -101,25 +101,32 @@ TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize)
 /**
  * Get IP address for local machine
  */
-UINT32 GetLocalIpAddr()
+InetAddress GetLocalIpAddr()
 {
-   InterfaceList *pIfList;
-   UINT32 dwAddr = 0;
-   int i;
-
-   pIfList = GetLocalInterfaceList();
+   InetAddress addr;
+   InterfaceList *pIfList = GetLocalInterfaceList();
    if (pIfList != NULL)
    {
       // Find first interface with IP address
-      for(i = 0; i < pIfList->size(); i++)
-			if ((pIfList->get(i)->ipAddr != 0) && ((pIfList->get(i)->ipAddr & 0xFF000000) != 0x7F000000))
+      for(int i = 0; i < pIfList->size(); i++)
+      {
+         InterfaceInfo *iface = pIfList->get(i);
+         if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
+            continue;
+         for(int j = 0; j < iface->ipAddrList.size(); j++)
          {
-            dwAddr = pIfList->get(i)->ipAddr;
-            break;
+            const InetAddress& a = iface->ipAddrList.get(j);
+            if (a.isValidUnicast())
+            {
+               addr = a;
+               goto stop;
+            }
          }
+      }
+stop:
       delete pIfList;
    }
-   return dwAddr;
+   return addr;
 }
 
 /**

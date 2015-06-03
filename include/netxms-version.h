@@ -30,8 +30,8 @@
  */
 #define NETXMS_VERSION_MAJOR        2
 #define NETXMS_VERSION_MINOR        0
-#define NETXMS_VERSION_STRING       _T("2.0-M2")
-#define NETXMS_VERSION_STRING_A     "2.0-M2"
+#define NETXMS_VERSION_STRING       _T("2.0-M4")
+#define NETXMS_VERSION_STRING_A     "2.0-M4"
 
 #ifdef UNICODE
 #define IS_UNICODE_BUILD_STRING     _T(" (UNICODE)")
@@ -40,9 +40,24 @@
 #endif
 
 /**
- * Current client-server protocol version
+ * Current client-server protocol versions
  */
-#define CLIENT_PROTOCOL_VERSION           45
+#define CLIENT_PROTOCOL_VERSION_BASE      47    /* Base protocol version - must match for all clients */
+#define CLIENT_PROTOCOL_VERSION_ALARMS    1     /* Alarm management API */
+#define CLIENT_PROTOCOL_VERSION_PUSH      1     /* Data push API */
+#define CLIENT_PROTOCOL_VERSION_TRAP      1     /* Event (trap) sending API */
+#define CLIENT_PROTOCOL_VERSION_MOBILE    1     /* All functionality relevant for mobile client */
+#define CLIENT_PROTOCOL_VERSION_FULL      1     /* All functionality */
+
+/**
+ * Protocol version positions
+ */
+#define CPV_INDEX_BASE     0
+#define CPV_INDEX_ALARMS   1
+#define CPV_INDEX_PUSH     2
+#define CPV_INDEX_TRAP     3
+#define CPV_INDEX_MOBILE   4
+#define CPV_INDEX_FULL     5
 
 /**
  * Current mobile device protocol version

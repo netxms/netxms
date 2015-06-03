@@ -59,34 +59,37 @@ void SaveObjects(DB_HANDLE hdb)
       RWLockWriteLock(s_objectTxnLock, INFINITE);
 
 	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(false);
+   DbgPrintf(5, _T("Syncer: %d objects to process"), objects->size());
 	for(int i = 0; i < objects->size(); i++)
    {
    	NetObj *object = objects->get(i);
       if (object->isDeleted())
       {
+         DbgPrintf(5, _T("Syncer: object %s [%d] marked for deletion"), object->getName(), object->getId());
          if (object->getRefCount() == 0)
          {
    		   DBBegin(hdb);
             if (object->deleteFromDatabase(hdb))
             {
-               DbgPrintf(4, _T("Object %d \"%s\" deleted from database"), object->getId(), object->getName());
+               DbgPrintf(4, _T("Syncer: Object %d \"%s\" deleted from database"), object->getId(), object->getName());
                DBCommit(hdb);
                NetObjDelete(object);
             }
             else
             {
                DBRollback(hdb);
-               DbgPrintf(4, _T("Call to deleteFromDatabase() failed for object %s [%d], transaction rollback"), object->getName(), object->getId());
+               DbgPrintf(4, _T("Syncer: Call to deleteFromDatabase() failed for object %s [%d], transaction rollback"), object->getName(), object->getId());
             }
          }
          else
          {
-            DbgPrintf(3, _T("* Syncer * Unable to delete object with id %d because it is being referenced %d time(s)"),
+            DbgPrintf(3, _T("Syncer: Unable to delete object with id %d because it is being referenced %d time(s)"),
                       object->getId(), object->getRefCount());
          }
       }
 		else if (object->isModified())
 		{
+         DbgPrintf(5, _T("Syncer: object %s [%d] modified"), object->getName(), object->getId());
 		   DBBegin(hdb);
 			if (object->saveToDatabase(hdb))
 			{
@@ -102,6 +105,7 @@ void SaveObjects(DB_HANDLE hdb)
    if (g_flags & AF_ENABLE_OBJECT_TRANSACTIONS)
       RWLockUnlock(s_objectTxnLock);
 	delete objects;
+   DbgPrintf(5, _T("Syncer: save objects completed"));
 }
 
 /**

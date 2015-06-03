@@ -24,7 +24,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
 import org.netxms.ui.eclipse.filemanager.Messages;
-import org.netxms.ui.eclipse.filemanager.views.ViewServerFile;
+import org.netxms.ui.eclipse.filemanager.views.ServerFileManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 public class GetServerFileList implements IWorkbenchWindowActionDelegate
@@ -60,7 +60,7 @@ public class GetServerFileList implements IWorkbenchWindowActionDelegate
 		{	
 			try 
 			{
-				window.getActivePage().showView(ViewServerFile.ID);
+				window.getActivePage().showView(ServerFileManager.ID);
 			} 
 			catch (PartInitException e) 
 			{

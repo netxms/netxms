@@ -42,6 +42,9 @@
 #include <sys/sysctl.h>
 #endif
 
+#ifdef _WITH_ENCRYPTION
+#include <openssl/ssl.h>
+#endif
 
 /**
  * Externals
@@ -257,7 +260,7 @@ static TCHAR m_szHelpText[] =
    _T("Usage: nxagentd [options]\n")
    _T("Where valid options are:\n")
    _T("   -c <file>  : Use configuration file <file> (default ") AGENT_DEFAULT_CONFIG _T(")\n")
-   _T("   -C         : Check configuration file and exit\n")
+   _T("   -C         : Load configuration file, dump resulting configuration, and exit\n")
    _T("   -d         : Run as daemon/service\n")
 	_T("   -D <level> : Set debug level (0..9)\n")
 #ifdef _WIN32
@@ -775,6 +778,14 @@ BOOL Initialize()
       nxlog_write(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       return FALSE;
    }
+
+   // Initialize libssl - it is not used by core agent
+   // but may be needed by some subagents. Allowing first load of libssl by
+   // subagent via dlopen() may lead to undesired side effects
+#ifdef _WITH_ENCRYPTION
+   SSL_library_init();
+   SSL_load_error_strings();
+#endif
 
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
@@ -1566,7 +1577,16 @@ int main(int argc, char *argv[])
                if (realpath(argv[0], __buffer) == NULL)
                {
                   // fallback
-                  nx_strncpy(s_executableName, PREFIX _T("/bin/nxagentd"), sizeof(s_executableName) / sizeof(s_executableName[0]));
+                  TCHAR *path = _tgetenv(_T("NETXMS_HOME"));
+                  if (path != NULL)
+                  {
+                     nx_strncpy(s_executableName, path, sizeof(s_executableName) / sizeof(s_executableName[0]));
+                  }
+                  else
+                  {
+                     nx_strncpy(s_executableName, PREFIX, sizeof(s_executableName) / sizeof(s_executableName[0]));
+                  }
+                  _tcsncat(s_executableName, _T("/bin/nxagentd"), sizeof(s_executableName) / sizeof(s_executableName[0]));
                }
                else
                {
@@ -1670,12 +1690,16 @@ int main(int argc, char *argv[])
                if (dir != NULL)
                {
                   validConfig = g_config->loadConfigDirectory(dir, _T("agent"), false);
-                  ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), dir);
+                  if (!validConfig)
+                  {
+                     ConsolePrintf(_T("Error reading additional configuration files from \"%s\"\n"), dir);
+                  }
                }
             }
 
             if (validConfig)
             {
+               g_config->print(stdout);
                validConfig = g_config->parseTemplate(_T("agent"), m_cfgTemplate);
             }
 

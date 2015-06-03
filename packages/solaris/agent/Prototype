@@ -17,6 +17,7 @@ f none /opt/netxms/lib/libnetxms.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxdb.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxexpat.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxlp.so.1.0.0 0755 root root
+f none /opt/netxms/lib/libnxsnmp.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxsqlite.so.1.0.0 0755 root root
 f none /opt/netxms/lib/libnxtre.so.5.0.0 0755 root root
 f none /opt/netxms/lib/netxms/ecs.nsm 0755 root root
@@ -57,6 +58,8 @@ s none /opt/netxms/lib/libnxexpat.so.1=libnxexpat.so.1.0.0
 s none /opt/netxms/lib/libnxexpat.so=libnxexpat.so.1.0.0
 s none /opt/netxms/lib/libnxlp.so.1=libnxlp.so.1.0.0
 s none /opt/netxms/lib/libnxlp.so=libnxlp.so.1.0.0
+s none /opt/netxms/lib/libnxsnmp.so.1=libnxsnmp.so.1.0.0
+s none /opt/netxms/lib/libnxsnmp.so=libnxsnmp.so.1.0.0
 s none /opt/netxms/lib/libnxsqlite.so.1=libnxsqlite.so.1.0.0
 s none /opt/netxms/lib/libnxsqlite.so=libnxsqlite.so.1.0.0
 s none /opt/netxms/lib/libnxtre.so.5=libnxtre.so.5.0.0

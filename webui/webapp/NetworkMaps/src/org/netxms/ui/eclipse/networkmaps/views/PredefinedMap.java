@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -275,8 +275,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		};
 		actionAddObject.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.AddObject"); //$NON-NLS-1$
 		actionAddObject.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddObject"); //$NON-NLS-1$
-		final ActionHandler addObjectHandler = new ActionHandler(actionAddObject);
-		handlerService.activateHandler(actionAddObject.getActionDefinitionId(), addObjectHandler);
+		handlerService.activateHandler(actionAddObject.getActionDefinitionId(), new ActionHandler(actionAddObject));
 
 		actionAddDCIContainer = new Action(Messages.get().PredefinedMap_AddDciContainer) {
          @Override
@@ -287,8 +286,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       };
       actionAddDCIContainer.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.AddDCIContainer"); //$NON-NLS-1$
       actionAddDCIContainer.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIContainer"); //$NON-NLS-1$
-      final ActionHandler addDCIContainerHandler = new ActionHandler(actionAddDCIContainer);
-      handlerService.activateHandler(actionAddDCIContainer.getActionDefinitionId(), addDCIContainerHandler);
+      handlerService.activateHandler(actionAddDCIContainer.getActionDefinitionId(), new ActionHandler(actionAddDCIContainer));
       
       actionAddDCIImage = new Action(Messages.get().PredefinedMap_AddDciImage) {
          @Override
@@ -299,8 +297,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
       };
       actionAddDCIImage.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.AddDCIImage"); //$NON-NLS-1$
       actionAddDCIImage.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIImage"); //$NON-NLS-1$
-      final ActionHandler addDCIImageHandler = new ActionHandler(actionAddDCIImage);
-      handlerService.activateHandler(actionAddDCIImage.getActionDefinitionId(), addDCIImageHandler);
+      handlerService.activateHandler(actionAddDCIImage.getActionDefinitionId(), new ActionHandler(actionAddDCIImage));
 		
 		actionAddGroupBox = new Action(Messages.get().PredefinedMap_GroupBox) {
 			@Override
@@ -327,8 +324,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		};
 		actionLinkObjects.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.LinkObjects"); //$NON-NLS-1$
 		actionLinkObjects.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects"); //$NON-NLS-1$
-		final ActionHandler linkObjectHandler = new ActionHandler(actionLinkObjects);
-		handlerService.activateHandler(actionLinkObjects.getActionDefinitionId(), linkObjectHandler);
+		handlerService.activateHandler(actionLinkObjects.getActionDefinitionId(), new ActionHandler(actionLinkObjects));
 
 		actionRemove = new Action(Messages.get().PredefinedMap_RemoveFromMap, SharedIcons.DELETE_OBJECT) {
 			@Override
@@ -339,8 +335,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		};
 		actionRemove.setId("org.netxms.ui.eclipse.networkmaps.localActions.PredefinedMap.Remove"); //$NON-NLS-1$
 		actionRemove.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.Remove"); //$NON-NLS-1$
-		final ActionHandler removeHandler = new ActionHandler(actionRemove);
-		handlerService.activateHandler(actionRemove.getActionDefinitionId(), removeHandler);
+		handlerService.activateHandler(actionRemove.getActionDefinitionId(), new ActionHandler(actionRemove));
 		
 		actionDCIContainerProperties = new Action(Messages.get().PredefinedMap_Properties) {
          @Override
@@ -573,6 +568,8 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 				final NetworkMapObject mapObject = new NetworkMapObject(mapPage.createElementId(), object.getObjectId());
 				if (location != null)
 					mapObject.setLocation(location.x, location.y);
+				else
+				   mapObject.setLocation(40, 40);
 				mapPage.addElement(mapObject);
 				added++;
 			}

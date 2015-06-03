@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.dashboard.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
@@ -26,6 +28,7 @@ import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
 
 /**
  * Embedded dashboard element
@@ -69,6 +72,23 @@ public class EmbeddedDashboardElement extends ElementWidget
 		if (objects.length > 1)
 		{
 			nextDashboard();
+			
+			final ViewRefreshController refreshControler = new ViewRefreshController(viewPart, config.getDisplayInterval(), new Runnable() {
+            @Override
+            public void run()
+            {
+               if (!isDisposed())
+                  nextDashboard();
+            }
+         });
+			
+			addDisposeListener(new DisposeListener() {
+            @Override
+            public void widgetDisposed(DisposeEvent e)
+            {
+               refreshControler.dispose();
+            }
+         });
 		}
 		else
 		{
@@ -92,15 +112,5 @@ public class EmbeddedDashboardElement extends ElementWidget
 		else
 			control = null;
 		getParent().layout(true, true);
-		
-		getDisplay().timerExec(config.getDisplayInterval() * 1000, new Runnable() {
-			@Override
-			public void run()
-			{
-				if (EmbeddedDashboardElement.this.isDisposed())
-					return;
-				nextDashboard();
-			}
-		});
 	}
 }

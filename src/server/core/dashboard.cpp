@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2011 Victor Kirhenshtein
 **
@@ -183,9 +183,10 @@ bool Dashboard::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Dashboard::fillMessage(NXCPMessage *msg)
+void Dashboard::fillMessageInternal(NXCPMessage *msg)
 {
-	Container::fillMessage(msg);
+	Container::fillMessageInternal(msg);
+
 	msg->setField(VID_NUM_COLUMNS, (WORD)m_numColumns);
 	msg->setField(VID_FLAGS, m_options);
 	msg->setField(VID_NUM_ELEMENTS, (UINT32)m_elements->size());
@@ -204,11 +205,8 @@ void Dashboard::fillMessage(NXCPMessage *msg)
 /**
  * Modify object from NXCP message
  */
-UINT32 Dashboard::modifyFromMessage(NXCPMessage *request, BOOL alreadyLocked)
+UINT32 Dashboard::modifyFromMessageInternal(NXCPMessage *request)
 {
-	if (!alreadyLocked)
-		lockProperties();
-
 	if (request->isFieldExist(VID_NUM_COLUMNS))
 		m_numColumns = (int)request->getFieldAsUInt16(VID_NUM_COLUMNS);
 
@@ -232,7 +230,7 @@ UINT32 Dashboard::modifyFromMessage(NXCPMessage *request, BOOL alreadyLocked)
 		}
 	}
 
-	return Container::modifyFromMessage(request, TRUE);
+	return Container::modifyFromMessageInternal(request);
 }
 
 /**

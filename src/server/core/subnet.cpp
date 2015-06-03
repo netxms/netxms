@@ -26,7 +26,6 @@
  */
 Subnet::Subnet() : NetObj()
 {
-   m_dwIpNetMask = 0;
    m_zoneId = 0;
 	m_bSyntheticMask = false;
 }
@@ -34,13 +33,11 @@ Subnet::Subnet() : NetObj()
 /**
  * Subnet class constructor
  */
-Subnet::Subnet(UINT32 dwAddr, UINT32 dwNetMask, UINT32 dwZone, bool bSyntheticMask) : NetObj()
+Subnet::Subnet(const InetAddress& addr, UINT32 dwZone, bool bSyntheticMask) : NetObj()
 {
-   TCHAR szBuffer[32];
-
-   m_dwIpAddr = dwAddr;
-   m_dwIpNetMask = dwNetMask;
-   _sntprintf(m_name, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwNetMask));
+   TCHAR szBuffer[64];
+   _sntprintf(m_name, MAX_OBJECT_NAME, _T("%s/%d"), addr.toString(szBuffer), addr.getMaskBits());
+   m_ipAddress = addr;
    m_zoneId = dwZone;
 	m_bSyntheticMask = bSyntheticMask;
 }
@@ -76,8 +73,8 @@ BOOL Subnet::loadFromDatabase(UINT32 dwId)
       return FALSE;
    }
 
-   m_dwIpAddr = DBGetFieldIPAddr(hResult, 0, 0);
-   m_dwIpNetMask = DBGetFieldIPAddr(hResult, 0, 1);
+   m_ipAddress = DBGetFieldInetAddr(hResult, 0, 0);
+   m_ipAddress.setMaskBits(DBGetFieldLong(hResult, 0, 1));
    m_zoneId = DBGetFieldULong(hResult, 0, 2);
 	m_bSyntheticMask = DBGetFieldLong(hResult, 0, 3) ? true : false;
 
@@ -94,37 +91,23 @@ BOOL Subnet::loadFromDatabase(UINT32 dwId)
  */
 BOOL Subnet::saveToDatabase(DB_HANDLE hdb)
 {
-   TCHAR szQuery[1024], szIpAddr[16], szNetMask[16];
-   DB_RESULT hResult;
+   TCHAR szQuery[1024], szIpAddr[64];
    UINT32 i;
-   BOOL bNewObject = TRUE;
 
    // Lock object's access
    lockProperties();
 
    saveCommonProperties(hdb);
 
-   // Check for object's existence in database
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM subnets WHERE id=%d"), m_id);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         bNewObject = FALSE;
-      DBFreeResult(hResult);
-   }
-
    // Form and execute INSERT or UPDATE query
-   if (bNewObject)
+   if (IsDatabaseRecordExist(hdb, _T("subnets"), _T("id"), m_id))
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
-		           _T("INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid,synthetic_mask) VALUES (%d,'%s','%s',%d,%d)"),
-                 m_id, IpToStr(m_dwIpAddr, szIpAddr),
-					  IpToStr(m_dwIpNetMask, szNetMask), m_zoneId, m_bSyntheticMask ? 1 : 0);
+		           _T("UPDATE subnets SET ip_addr='%s',ip_netmask=%d,zone_guid=%d,synthetic_mask=%d WHERE id=%d"),
+                 m_ipAddress.toString(szIpAddr), m_ipAddress.getMaskBits(), m_zoneId, m_bSyntheticMask ? 1 : 0, m_id);
    else
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR),
-		           _T("UPDATE subnets SET ip_addr='%s',ip_netmask='%s',zone_guid=%d,synthetic_mask=%d WHERE id=%d"),
-                 IpToStr(m_dwIpAddr, szIpAddr),
-					  IpToStr(m_dwIpNetMask, szNetMask), m_zoneId, m_bSyntheticMask ? 1 : 0, m_id);
+		           _T("INSERT INTO subnets (id,ip_addr,ip_netmask,zone_guid,synthetic_mask) VALUES (%d,'%s',%d,%d,%d)"),
+                 m_id, m_ipAddress.toString(szIpAddr), m_ipAddress.getMaskBits(), m_zoneId, m_bSyntheticMask ? 1 : 0);
    DBQuery(hdb, szQuery);
 
    // Update node to subnet mapping
@@ -164,10 +147,10 @@ bool Subnet::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create CSCP message with object's data
  */
-void Subnet::fillMessage(NXCPMessage *pMsg)
+void Subnet::fillMessageInternal(NXCPMessage *pMsg)
 {
-   NetObj::fillMessage(pMsg);
-   pMsg->setField(VID_IP_NETMASK, m_dwIpNetMask);
+   NetObj::fillMessageInternal(pMsg);
+   pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
    pMsg->setField(VID_ZONE_ID, m_zoneId);
 	pMsg->setField(VID_SYNTHETIC_MASK, (WORD)(m_bSyntheticMask ? 1 : 0));
 }
@@ -175,34 +158,32 @@ void Subnet::fillMessage(NXCPMessage *pMsg)
 /**
  * Set correct netmask for subnet
  */
-void Subnet::setCorrectMask(UINT32 dwAddr, UINT32 dwMask)
+void Subnet::setCorrectMask(const InetAddress& addr)
 {
-	TCHAR szName[MAX_OBJECT_NAME], szBuffer[32];
+	TCHAR szName[MAX_OBJECT_NAME], szBuffer[64];
 
 	lockProperties();
 
 	// Check if name is default
-	_sntprintf(szName, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(m_dwIpAddr, szBuffer), BitsInMask(m_dwIpNetMask));
+	_sntprintf(szName, MAX_OBJECT_NAME, _T("%s/%d"), m_ipAddress.toString(szBuffer), m_ipAddress.getMaskBits());
 	if (!_tcsicmp(szName, m_name))
 	{
 		// Change name
-		_sntprintf(m_name, MAX_OBJECT_NAME, _T("%s/%d"), IpToStr(dwAddr, szBuffer), BitsInMask(dwMask));
+      _sntprintf(m_name, MAX_OBJECT_NAME, _T("%s/%d"), addr.toString(szBuffer), addr.getMaskBits());
 	}
 
-	bool shouldReaddNode = m_dwIpAddr != dwAddr;
-
-   if(shouldReaddNode)
+	bool reAdd = !m_ipAddress.equals(addr);
+   if (reAdd)
    {
-      g_idxSubnetByAddr.remove(m_dwIpAddr);
+      g_idxSubnetByAddr.remove(m_ipAddress);
    }
 
-	m_dwIpAddr = dwAddr;
-	m_dwIpNetMask = dwMask;
+	m_ipAddress = addr;
 	m_bSyntheticMask = false;
 
-	if(shouldReaddNode)
+	if (reAdd)
    {
-      g_idxSubnetByAddr.put(m_dwIpAddr, this);
+      g_idxSubnetByAddr.put(m_ipAddress, this);
    }
 	setModified();
 	unlockProperties();
@@ -216,7 +197,7 @@ void Subnet::setCorrectMask(UINT32 dwAddr, UINT32 dwMask)
  * @param macAddr buffer for found MAC address
  * @return true if MAC address found
  */
-bool Subnet::findMacAddress(UINT32 ipAddr, BYTE *macAddr)
+bool Subnet::findMacAddress(const InetAddress& ipAddr, BYTE *macAddr)
 {
 	bool success = false;
 
@@ -235,7 +216,7 @@ bool Subnet::findMacAddress(UINT32 ipAddr, BYTE *macAddr)
 
 		for(UINT32 j = 0; j < arpCache->dwNumEntries; j++)
 		{
-			if (arpCache->pEntries[j].dwIpAddr == ipAddr)
+			if (arpCache->pEntries[j].ipAddr.equals(ipAddr))
 			{
 				memcpy(macAddr, arpCache->pEntries[j].bMacAddr, MAC_ADDR_LENGTH);
 				success = true;
@@ -290,14 +271,14 @@ bool Subnet::showThresholdSummary()
  */
 UINT32 *Subnet::buildAddressMap(int *length)
 {
-   *length = 1 << (32 - BitsInMask(m_dwIpNetMask));
+   *length = 1 << (32 - m_ipAddress.getMaskBits());
    if ((*length < 2) || (*length > 65536))
       return NULL;
    UINT32 *map = (UINT32 *)malloc(*length * sizeof(UINT32));
 
    map[0] = 0xFFFFFFFF; // subnet
    map[*length - 1] = 0xFFFFFFFF;   // broadcast
-   UINT32 addr = m_dwIpAddr + 1;
+   UINT32 addr = m_ipAddress.getAddressV4() + 1;
    for(int i = 1; i < *length - 1; i++, addr++)
    {
       Node *node = FindNodeByIP(m_zoneId, addr);
@@ -312,6 +293,6 @@ UINT32 *Subnet::buildAddressMap(int *length)
  */
 void Subnet::prepareForDeletion()
 {
-   PostEvent(EVENT_SUBNET_DELETED, g_dwMgmtNode, "isaa", m_id, m_name, m_dwIpAddr, m_dwIpNetMask);
+   PostEvent(EVENT_SUBNET_DELETED, g_dwMgmtNode, "isAd", m_id, m_name, &m_ipAddress, m_ipAddress.getMaskBits());
    NetObj::prepareForDeletion();
 }

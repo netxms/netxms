@@ -45,11 +45,10 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
 import org.netxms.client.AgentFile;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -302,7 +301,7 @@ public class FileViewer extends ViewPart
             {
                switch(n.getCode())
                {
-                  case NXCNotification.FILE_MONITORING_FAILED:    
+                  case SessionNotification.FILE_MONITORING_FAILED:    
                      //Check that this is applicable on current file
                      if(nodeId == n.getSubCode())
                         onFileMonitoringFail();

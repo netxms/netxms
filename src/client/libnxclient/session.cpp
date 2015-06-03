@@ -63,6 +63,7 @@ NXCSession::NXCSession()
    m_userId = 0;
    m_systemRights = 0;
    m_commandTimeout = 60000;  // 60 seconds
+   m_protocolVersions = new IntegerArray<UINT32>(8, 8);
 }
 
 /**
@@ -74,6 +75,7 @@ NXCSession::~NXCSession()
    delete m_controllers;
    MutexDestroy(m_dataLock);
    MutexDestroy(m_msgSendLock);
+   delete m_protocolVersions;
 }
 
 /**
@@ -131,7 +133,8 @@ void NXCSession::disconnect()
 /**
  * Connect to server
  */
-UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *password, UINT32 flags, const TCHAR *clientInfo)
+UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *password, UINT32 flags, 
+                           const TCHAR *clientInfo, const UINT32 *cpvIndexList, size_t cpvIndexListSize)
 {
    if (m_connected || m_disconnected)
       return RCC_OUT_OF_STATE_REQUEST;
@@ -224,16 +227,41 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
             response->getFieldAsString(VID_SERVER_VERSION, m_serverVersion, 64);
 				response->getFieldAsString(VID_TIMEZONE, m_serverTimeZone, MAX_TZ_LEN);
 
-            if (flags & NXCF_EXACT_VERSION_MATCH)
+				if (!(flags & NXCF_IGNORE_PROTOCOL_VERSION))
+				{
+					if (response->getFieldAsUInt32(VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION_BASE)
+						rcc = RCC_BAD_PROTOCOL;
+				}
+            if ((rcc == RCC_SUCCESS) && (flags & NXCF_EXACT_VERSION_MATCH))
             {
                if (_tcsncmp(m_serverVersion, NETXMS_VERSION_STRING, 64))
                   rcc = RCC_VERSION_MISMATCH;
             }
-				if (!(flags & NXCF_IGNORE_PROTOCOL_VERSION))
-				{
-					if (response->getFieldAsUInt32(VID_PROTOCOL_VERSION) != CLIENT_PROTOCOL_VERSION)
-						rcc = RCC_BAD_PROTOCOL;
-				}
+            if (rcc == RCC_SUCCESS)
+            {
+               response->getFieldAsInt32Array(VID_PROTOCOL_VERSION_EX, m_protocolVersions);
+               if (cpvIndexList != NULL)
+               {
+                  static UINT32 currentProtocolVersions[] = {
+                     CLIENT_PROTOCOL_VERSION_BASE,
+                     CLIENT_PROTOCOL_VERSION_ALARMS,
+                     CLIENT_PROTOCOL_VERSION_PUSH,
+                     CLIENT_PROTOCOL_VERSION_TRAP,
+                     CLIENT_PROTOCOL_VERSION_MOBILE,
+                     CLIENT_PROTOCOL_VERSION_FULL
+                  };
+
+                  for(int i = 0; i < (int)cpvIndexListSize; i++)
+                  {
+                     int idx = cpvIndexList[i];
+                     if ((idx >= sizeof(currentProtocolVersions) / sizeof(UINT32)) || (m_protocolVersions->get(idx) != currentProtocolVersions[idx]))
+                     {
+      						rcc = RCC_BAD_PROTOCOL;
+                        break;
+                     }
+                  }
+               }
+            }
          }
          delete response;
       }

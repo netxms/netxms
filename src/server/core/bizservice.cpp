@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2011 NetXMS Team
 **
@@ -157,20 +157,17 @@ bool BusinessService::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void BusinessService::fillMessage(NXCPMessage *pMsg)
+void BusinessService::fillMessageInternal(NXCPMessage *pMsg)
 {
-   ServiceContainer::fillMessage(pMsg);
+   ServiceContainer::fillMessageInternal(pMsg);
 }
 
 /**
  * Modify object from message
  */
-UINT32 BusinessService::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 BusinessService::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
-   return ServiceContainer::modifyFromMessage(pRequest, TRUE);
+   return ServiceContainer::modifyFromMessageInternal(pRequest);
 }
 
 /**

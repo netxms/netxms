@@ -203,6 +203,8 @@
 	<string name="if_ignore">IGNORE</string>
 	<string name="if_id">ID</string>
 	<string name="if_name">Name</string>
+	<string name="if_alias">Alias</string>
+	<string name="if_mtu">MTU</string>
 	<string name="if_type">ifType</string>
 	<string name="if_index">ifIndex</string>
 	<string name="if_slot">Slot</string>
@@ -267,4 +269,6 @@
 	<string name="menu_poll_topology">Topology</string>
 	<string name="menu_poll_interfaces">Interface names</string>
 	<string name="navigate_to">Navigate to</string>
+	
+	<string name="menu_tools">Tools</string>
 </resources>

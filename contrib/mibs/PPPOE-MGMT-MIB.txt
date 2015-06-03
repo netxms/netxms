@@ -1,0 +1,129 @@
+-- ***************************************************************************
+-- MIB NAME : PPPoE Common mib
+-- FILE NAME: PPPoEmgmt.mib
+-- DATE     : 2009/04/02
+-- VERSION  : 1.00
+-- PURPOSE  : To construct the MIB structure for PPPoE feature
+--            for proprietary enterprise
+-- ***************************************************************************
+-- MODIFICATION HISTORY:
+-- ***************************************************************************
+-- Version, Date, Author
+-- Description:
+--  [New Object]
+--  [Modification]
+-- Notes: (Requested by who and which project)
+--
+-- Version 1.00, 2009/04/02, Ronald
+-- This is the first formal version for universal MIB definition.
+-- ***************************************************************************
+
+PPPOE-MGMT-MIB DEFINITIONS ::= BEGIN
+  IMPORTS
+	MODULE-IDENTITY,OBJECT-TYPE			FROM SNMPv2-SMI
+	dlink-common-mgmt					FROM DLINK-ID-REC-MIB
+	DisplayString             FROM RFC1213-MIB;
+		
+	swPPPoEMIB MODULE-IDENTITY
+		LAST-UPDATED "0904020000Z"
+	  	ORGANIZATION "D-Link Corp"
+	  	CONTACT-INFO
+	   		"http://support.dlink.com"
+	  	DESCRIPTION
+	    		"The structure of PPPoE management for the proprietary enterprise."
+	  	::= {dlink-common-mgmt 79}
+	  	
+	swPPPoEMgmtCtrl      OBJECT IDENTIFIER ::= { swPPPoEMIB 1 }	  	
+	  		
+-- ********************************************************************
+--  swPPPoEMgmtCtrl               OBJECT IDENTIFIER ::= { swPPPoEMgmt 1 }
+-- ********************************************************************
+    swPPPoECirIDInsertState OBJECT-TYPE
+        SYNTAX  INTEGER {
+               enabled(1),  
+               disabled(2)
+               }
+        MAX-ACCESS  read-write
+        STATUS  current
+        DESCRIPTION
+            "This object indicates the status of the PPPoE circuit ID 
+            insertion state of the switch."
+        ::= { swPPPoEMgmtCtrl 1 }
+
+-- ***************************************************************************
+    swPPPoECirIDInsertPortMgmt       OBJECT IDENTIFIER ::= { swPPPoEMgmtCtrl 2 }
+
+    swPPPoECirIDInsertPortTable OBJECT-TYPE
+        SYNTAX      SEQUENCE OF SwPPPoECirIDInsertPortEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "The table specifies the PPPoE circuit ID insertion function 
+             specified by the port."
+        ::= { swPPPoECirIDInsertPortMgmt 1 }
+
+    swPPPoECirIDInsertPortEntry OBJECT-TYPE
+        SYNTAX      SwPPPoECirIDInsertPortEntry
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "A list of information contained in swPPPoECirIDInsertPortTable."
+        INDEX  { swPPPoECirIDInsertPortIndex }
+        ::= { swPPPoECirIDInsertPortTable 1 }
+
+    SwPPPoECirIDInsertPortEntry ::=
+        SEQUENCE {
+            swPPPoECirIDInsertPortIndex
+                INTEGER,
+            swPPPoECirIDInsertPortState
+                INTEGER,
+            swPPPoECirIDInsertPortCirID
+                INTEGER,
+            swPPPoECirIDInsertPortUDFString
+                DisplayString
+        }
+
+    swPPPoECirIDInsertPortIndex OBJECT-TYPE
+        SYNTAX      INTEGER (1..65535)
+        MAX-ACCESS  not-accessible
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the module's port number. The range is from 1 to
+             the maximum port number specified in the module"
+        ::= { swPPPoECirIDInsertPortEntry 1 }
+
+    swPPPoECirIDInsertPortState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       enabled(1),
+                       disabled(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the PPPoE circuit ID insertion function state 
+             on the port."
+        ::= { swPPPoECirIDInsertPortEntry 2 }
+
+    swPPPoECirIDInsertPortCirID OBJECT-TYPE
+        SYNTAX      INTEGER {
+                       switch-ip(1),
+                       switch-mac(2),
+                       udf-string(3)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the port circuit ID."
+        ::= { swPPPoECirIDInsertPortEntry 3 }
+
+    swPPPoECirIDInsertPortUDFString OBJECT-TYPE
+        SYNTAX      DisplayString
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION
+            "This object indicates the user define string when the circuit ID is 
+             UDF string."
+        ::= { swPPPoECirIDInsertPortEntry 4 }
+       
+END
+

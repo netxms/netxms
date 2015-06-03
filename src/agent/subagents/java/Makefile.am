@@ -5,7 +5,7 @@ java_la_SOURCES = Action.cpp ConfigHelper.cpp ListParameter.cpp main.cpp \
                   Parameter.cpp ParameterType.cpp PushParameter.cpp \
                   SubAgent.cpp TableColumn.cpp TableParameter.cpp
 java_la_CPPFLAGS=-I@top_srcdir@/include
-java_la_LDFLAGS = -module -avoid-version
+java_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 java_la_LIBADD = ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \

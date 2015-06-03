@@ -57,24 +57,29 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
    bool success = Template::deleteFromDatabase(hdb);
    if (success)
    {
+      const TCHAR *cascade = _T("");
+      switch(g_dbSyntax)
+      {
+         case DB_SYNTAX_ORACLE:
+            cascade = _T("CASCADE CONSTRAINTS PURGE");
+            break;
+         case DB_SYNTAX_PGSQL:
+            cascade = _T("CASCADE");
+            break;
+      }
+
       TCHAR query[256];
       _sntprintf(query, 256, _T("DROP TABLE idata_%d"), (int)m_id);
-      success = DBQuery(hdb, query) ? true : false;
-      if (success)
-      {
-         _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%d"), (int)m_id);
-         success = DBQuery(hdb, query) ? true : false;
-      }
-      if (success)
-      {
-         _sntprintf(query, 256, _T("DROP TABLE tdata_records_%d"), (int)m_id);
-         success = DBQuery(hdb, query) ? true : false;
-      }
-      if (success)
-      {
-         _sntprintf(query, 256, _T("DROP TABLE tdata_%d"), (int)m_id);
-         success = DBQuery(hdb, query) ? true : false;
-      }
+      QueueSQLRequest(query);
+
+      _sntprintf(query, 256, _T("DROP TABLE tdata_rows_%d %s"), (int)m_id, cascade);
+      QueueSQLRequest(query);
+
+      _sntprintf(query, 256, _T("DROP TABLE tdata_records_%d %s"), (int)m_id, cascade);
+      QueueSQLRequest(query);
+
+      _sntprintf(query, 256, _T("DROP TABLE tdata_%d %s"), (int)m_id, cascade);
+      QueueSQLRequest(query);
    }
    return success;
 }
@@ -82,20 +87,17 @@ bool DataCollectionTarget::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void DataCollectionTarget::fillMessage(NXCPMessage *msg)
+void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg)
 {
-   Template::fillMessage(msg);
+   Template::fillMessageInternal(msg);
 }
 
 /**
  * Modify object from message
  */
-UINT32 DataCollectionTarget::modifyFromMessage(NXCPMessage *pRequest, BOOL bAlreadyLocked)
+UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-   if (!bAlreadyLocked)
-      lockProperties();
-
-   return Template::modifyFromMessage(pRequest, TRUE);
+   return Template::modifyFromMessageInternal(pRequest);
 }
 
 /**
@@ -117,12 +119,60 @@ void DataCollectionTarget::updateDciCache()
 /**
  * Clean expired DCI data
  */
-void DataCollectionTarget::cleanDCIData()
+void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
 {
+   String queryItems = _T("DELETE FROM idata_");
+   queryItems.append(m_id);
+   queryItems.append(_T(" WHERE "));
+
+   String queryTables = _T("DELETE FROM tdata_");
+   queryTables.append(m_id);
+   queryTables.append(_T(" WHERE "));
+
+   int itemCount = 0;
+   int tableCount = 0;
+   time_t now = time(NULL);
+
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
-      m_dcObjects->get(i)->deleteExpiredData();
+   {
+      DCObject *o = m_dcObjects->get(i);
+      if (o->getType() == DCO_TYPE_ITEM)
+      {
+         if (itemCount > 0)
+            queryItems.append(_T(" OR "));
+         queryItems.append(_T("(item_id="));
+         queryItems.append(o->getId());
+         queryItems.append(_T(" AND idata_timestamp<"));
+         queryItems.append((INT64)(now - o->getRetentionTime() * 86400));
+         queryItems.append(_T(')'));
+         itemCount++;
+      }
+      else if (o->getType() == DCO_TYPE_TABLE)
+      {
+         if (tableCount > 0)
+            queryTables.append(_T(" OR "));
+         queryTables.append(_T("(item_id="));
+         queryTables.append(o->getId());
+         queryTables.append(_T(" AND tdata_timestamp<"));
+         queryTables.append((INT64)(now - o->getRetentionTime() * 86400));
+         queryTables.append(_T(')'));
+         tableCount++;
+      }
+   }
    unlockDciAccess();
+
+   if (itemCount > 0)
+   {
+      DbgPrintf(6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryItems);
+      DBQuery(hdb, queryItems);
+   }
+
+   if (tableCount > 0)
+   {
+      DbgPrintf(6, _T("DataCollectionTarget::cleanDCIData(%s [%d]): running query \"%s\""), m_name, m_id, (const TCHAR *)queryTables);
+      DBQuery(hdb, queryTables);
+   }
 }
 
 /**
@@ -521,59 +571,6 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
          dwError = DCE_NOT_SUPPORTED;
       }
    }
-   else if (MatchString(_T("PingTime(*)"), param, FALSE))
-   {
-      NetObj *object = objectFromParameter(param);
-      if ((object != NULL) && (object->getObjectClass() == OBJECT_INTERFACE))
-      {
-         UINT32 value = ((Interface *)object)->getPingTime();
-         if (value == 10000)
-            dwError = DCE_COMM_ERROR;
-         else
-            _sntprintf(buffer, bufSize, _T("%d"), value);
-      }
-      else
-      {
-         dwError = DCE_NOT_SUPPORTED;
-      }
-   }
-   else if (!_tcsicmp(_T("PingTime"), param))
-   {
-      if (m_dwIpAddr != 0)
-      {
-         Interface *iface = NULL;
-
-         // Find interface for primary IP
-         LockChildList(FALSE);
-         for(int i = 0; i < (int)m_dwChildCount; i++)
-         {
-            if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) && (m_pChildList[i]->IpAddr() == m_dwIpAddr))
-            {
-               iface = (Interface *)m_pChildList[i];
-               break;
-            }
-         }
-         UnlockChildList();
-
-         UINT32 value = 10000;
-         if (iface != NULL)
-         {
-            value = iface->getPingTime();
-         }
-         else
-         {
-            value = getPingTime();
-         }
-         if (value == 10000)
-            dwError = DCE_COMM_ERROR;
-         else
-            _sntprintf(buffer, bufSize, _T("%d"), value);
-      }
-      else
-      {
-         dwError = DCE_NOT_SUPPORTED;
-      }
-   }
    else
    {
       dwError = DCE_NOT_SUPPORTED;
@@ -834,10 +831,10 @@ void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Ta
             }
             else
             {
-               tableData->setAt(row, i + offset, 
+               tableData->setAt(row, i + offset,
                   ((DCItem *)object)->getAggregateValue(
-                     tableDefinition->getAggregationFunction(), 
-                     tableDefinition->getPeriodStart(), 
+                     tableDefinition->getAggregationFunction(),
+                     tableDefinition->getPeriodStart(),
                      tableDefinition->getPeriodEnd()));
             }
 

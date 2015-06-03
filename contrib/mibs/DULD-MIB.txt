@@ -1,0 +1,161 @@
+-- -----------------------------------------------------------------------------
+-- MIB NAME : DULD Common mib
+-- FILE NAME: DULD.mib
+-- DATE     : 2009/11/25
+-- VERSION  : 1.02
+-- PURPOSE  : To construct the MIB structure of Unidirectional Link Detection 
+--            for proprietary enterprise
+-- -----------------------------------------------------------------------------
+-- MODIFICTION HISTORY:
+-- -----------------------------------------------------------------------------
+-- Version, Date, Author
+-- Description:
+-- [New Object]
+-- [Modification]
+-- Notes: (Requested by who and which project)
+-- 
+-- Version 1.03, 2009/12/5, Tony Tang
+-- [Modification]
+-- Modified the module name to DULD.
+-- Requested by Tony Tang for project DGS34XX.
+
+-- Version 1.02, 2009/11/25, Tony Tang
+-- [Modification]
+-- Modified the value list of swDULDOperStatus.
+-- Requested by Tony Tang for project DGS34XX.
+-- 
+-- Version 1.01, 2009/11/23, Tony Tang
+-- [Modification]
+-- Added swDULDMode.
+-- Requested by Tony Tang for project DGS34XX.
+-- 
+-- Version 1.00, 2009/09/27, Tony Tang
+-- This is the first formal version for universal MIB definition.
+-- -----------------------------------------------------------------------------  
+
+DULD-MIB DEFINITIONS ::= BEGIN
+
+	IMPORTS
+	    MODULE-IDENTITY,OBJECT-TYPE     FROM SNMPv2-SMI
+	    dlink-common-mgmt 		        FROM DLINK-ID-REC-MIB;
+
+	swDULDMIB MODULE-IDENTITY
+	    LAST-UPDATED "0911250000Z"
+	    ORGANIZATION "D-Link Corp."
+	    CONTACT-INFO
+	        "http://support.dlink.com"
+	    DESCRIPTION
+	        "The unidirectioanl link detection module MIB for the proprietary enterprise."
+	    ::= { dlink-common-mgmt 87}
+	    
+
+-- -----------------------------------------------------------------------------
+-- swDULDMgmt
+-- -----------------------------------------------------------------------------
+		swDULDMgmt OBJECT IDENTIFIER ::= {swDULDMIB 1}
+
+		swDULDTable OBJECT-TYPE
+		    SYNTAX  SEQUENCE OF SwDULDEntry
+		    MAX-ACCESS not-accessible
+		    STATUS current
+		    DESCRIPTION
+		        "The management information of the unidirectional link detection." 	        
+		    ::= { swDULDMgmt 1 }
+	
+		swDULDEntry OBJECT-TYPE
+		    SYNTAX SwDULDEntry
+		    MAX-ACCESS not-accessible
+		    STATUS current
+		    DESCRIPTION
+		        "A list of information contained in swDULDTable."
+		    INDEX { swDULDPort}
+		    ::= { swDULDTable 1 }
+	
+		SwDULDEntry ::=
+		    SEQUENCE {
+				swDULDPort
+					INTEGER,
+				swDULDAdminState
+					INTEGER,
+				swDULDOperStatus
+					INTEGER,  
+		       		swDULDMode 
+					INTEGER, 
+		       		swDULDDiscoveryTime 
+					INTEGER, 
+		       		swDULDLinkStatus  
+					INTEGER			
+		    }
+		    
+		swDULDPort OBJECT-TYPE
+				SYNTAX      INTEGER
+				MAX-ACCESS  not-accessible
+				STATUS      current
+				DESCRIPTION
+						"This object indicates the port index."
+				::= { swDULDEntry 1 }	
+		    	
+		swDULDAdminState OBJECT-TYPE
+		    	SYNTAX     INTEGER
+		    	{
+	                 	enabled(1),
+	                	disabled(2)
+	            } 
+		    	MAX-ACCESS  read-write
+		    	STATUS      current
+		    	DESCRIPTION
+		        	"This object indicates the unidirectional link detection configuration status."
+		    	::= { swDULDEntry 2 }
+
+		swDULDOperStatus OBJECT-TYPE
+		    	SYNTAX     INTEGER
+		    	{
+	                 	enabled(1),
+	                	disabled(2)
+	            } 
+		    	MAX-ACCESS  read-only
+		    	STATUS      current
+		    	DESCRIPTION
+		        	"This object is determined by local and remote port supporting OAM and unidirectional detection. 
+		        	If both local and remote port support OAM and unidirectional detection, it is enabled(1),else it 
+		        	is disabled(2)."
+		    	::= { swDULDEntry 3 }
+
+		swDULDMode OBJECT-TYPE
+	        	SYNTAX      INTEGER
+	        	{
+	        		shutdown(1),
+	        		normal(2)
+	        	}
+	        	MAX-ACCESS   read-write
+	        	STATUS      current
+	        	DESCRIPTION
+            		 "This object indicates the mode for unidirectional link detection.
+            		  shutdown: if any unidirectional link is detected, disable the port and log an event.
+                          normal: only log an event when a unidirectional link is detected."
+        		::= { swDULDEntry 4 }		    	
+    
+		swDULDDiscoveryTime OBJECT-TYPE
+	        	SYNTAX      INTEGER(5..65535)
+	        	MAX-ACCESS   read-write
+	        	STATUS      current
+	        	DESCRIPTION
+            		 "This object indicates the neighbor discovery time for unidirectional link detection(unit:second)."
+				DEFVAL      { 5 }
+        		::= { swDULDEntry 5 }
+        	
+		swDULDLinkStatus OBJECT-TYPE
+		    	SYNTAX      INTEGER
+					{
+	                 	unknown(1),
+	                	bidirectional(2),
+	                	tx-fault(3),
+	                	rx-fault(4),
+	                	link-down(5)
+	                } 
+		    	MAX-ACCESS  read-only
+		    	STATUS      current
+		    	DESCRIPTION
+		        	"This object indicates the link status, which is a result of unidirectional link detection."
+		    	::= {swDULDEntry 6 } 		    		
+END

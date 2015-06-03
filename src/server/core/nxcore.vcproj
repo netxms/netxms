@@ -593,6 +593,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\inaddr_index.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\index.cpp"
 				>
 			</File>
@@ -983,7 +987,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\include\nxclapi.h"
+				RelativePath="..\..\..\include\nxcldefs.h"
 				>
 			</File>
 			<File

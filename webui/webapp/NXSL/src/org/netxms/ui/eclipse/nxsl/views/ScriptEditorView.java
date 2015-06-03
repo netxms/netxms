@@ -33,8 +33,8 @@ import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.scripts.Script;
-import org.netxms.api.client.scripts.ScriptLibraryManager;
+import org.netxms.client.NXCSession;
+import org.netxms.client.Script;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -52,7 +52,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptEditorView"; //$NON-NLS-1$
 	
-	private ScriptLibraryManager scriptLibraryManager;
+	private NXCSession session;
 	private ScriptEditor editor;
 	private long scriptId;
 	private String scriptName;
@@ -68,7 +68,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
 		super.init(site);
 		
-		scriptLibraryManager = (ScriptLibraryManager)ConsoleSharedData.getSession();
+		session = ConsoleSharedData.getSession();
 		scriptId = Long.parseLong(site.getSecondaryId());
 	}
 
@@ -183,7 +183,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final Script script = scriptLibraryManager.getScript(scriptId);
+				final Script script = session.getScript(scriptId);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
@@ -229,7 +229,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	 */
 	private void doScriptSave(String source, IProgressMonitor monitor) throws Exception
 	{
-		scriptLibraryManager.modifyScript(scriptId, scriptName, source);
+		session.modifyScript(scriptId, scriptName, source);
 		editor.getDisplay().asyncExec(new Runnable() {
          @Override
          public void run()

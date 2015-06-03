@@ -17,10 +17,9 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.SessionListener;
-import org.netxms.api.client.SessionNotification;
-import org.netxms.client.NXCNotification;
 import org.netxms.client.NXCSession;
+import org.netxms.client.SessionListener;
+import org.netxms.client.SessionNotification;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
@@ -103,7 +102,7 @@ public class ServiceAvailability extends ViewPart
 			@Override
 			public void notificationHandler(final SessionNotification n)
 			{
-				if (!clientArea.isDisposed() && (n.getCode() == NXCNotification.OBJECT_CHANGED) && (n.getSubCode() == object.getObjectId()))
+				if (!clientArea.isDisposed() && (n.getCode() == SessionNotification.OBJECT_CHANGED) && (n.getSubCode() == object.getObjectId()))
 				{
 					clientArea.getDisplay().asyncExec(new Runnable() {
 						@Override

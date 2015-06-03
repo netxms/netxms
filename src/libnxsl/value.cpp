@@ -802,7 +802,7 @@ void NXSL_Value::bitNot()
 /**
  * Check if value is zero
  */
-bool NXSL_Value::isZero()
+bool NXSL_Value::isZero() const
 {
    bool bVal = false;
 
@@ -832,7 +832,7 @@ bool NXSL_Value::isZero()
 /**
  * Check if value is not a zero
  */
-bool NXSL_Value::isNonZero()
+bool NXSL_Value::isNonZero() const
 {
    bool bVal = false;
 
@@ -1243,15 +1243,151 @@ void NXSL_Value::rshift(int nBits)
    invalidateString();
 }
 
-
-//
-// Check if vaue is an object of given class
-//
-
-bool NXSL_Value::isObject(const TCHAR *className)
+/**
+ * Check if vaue is an object of given class
+ */
+bool NXSL_Value::isObject(const TCHAR *className) const
 {
 	if (m_nDataType != NXSL_DT_OBJECT)
 		return false;
 
 	return !_tcscmp(m_value.pObject->getClass()->getName(), className) ? true : false;
+}
+
+/**
+ * Check if two values are strictly equals
+ */
+bool NXSL_Value::equals(const NXSL_Value *v) const
+{
+   if (v == this)
+      return true;
+   if (v->m_nDataType != m_nDataType)
+      return false;
+   switch(m_nDataType)
+   {
+      case NXSL_DT_ARRAY:
+         if (v->m_value.pArray == m_value.pArray)
+            return true;
+         if (v->m_value.pArray->size() != m_value.pArray->size())
+            return false;
+         for(int i = 0; i < m_value.pArray->size(); i++)
+         {
+            if (!m_value.pArray->get(i)->equals(v->m_value.pArray->get(i)))
+               return false;
+         }
+         return true;
+      case NXSL_DT_INT32:
+         return v->m_value.nInt32 == m_value.nInt32;
+      case NXSL_DT_INT64:
+         return v->m_value.nInt64 == m_value.nInt64;
+      case NXSL_DT_ITERATOR:
+         return false;
+      case NXSL_DT_NULL:
+         return true;
+      case NXSL_DT_OBJECT:
+         return (v->m_value.pObject->getData() == m_value.pObject->getData()) && 
+            !_tcscmp(v->m_value.pObject->getClass()->getName(), m_value.pObject->getClass()->getName());
+         break;
+      case NXSL_DT_REAL:
+         return v->m_value.dReal == m_value.dReal;
+      case NXSL_DT_STRING:
+         return !_tcscmp(v->m_pszValStr, m_pszValStr) ? true : false;
+      case NXSL_DT_UINT32:
+         return v->m_value.uInt32 == m_value.uInt32;
+      case NXSL_DT_UINT64:
+         return v->m_value.uInt64 == m_value.uInt64;
+   }
+   return false;
+}
+
+/**
+ * Serialize
+ */
+void NXSL_Value::serialize(ByteStream &s) const
+{
+   s.write(m_nDataType);
+   switch(m_nDataType)
+   {
+      case NXSL_DT_ARRAY:
+         s.write((UINT16)m_value.pArray->size());
+         for(int i = 0; i < m_value.pArray->size(); i++)
+         {
+            m_value.pArray->get(i)->serialize(s);
+         }
+         break;
+      case NXSL_DT_INT32:
+         s.write(m_value.nInt32);
+         break;
+      case NXSL_DT_INT64:
+         s.write(m_value.nInt64);
+         break;
+      case NXSL_DT_ITERATOR:
+         break;
+      case NXSL_DT_NULL:
+         break;
+      case NXSL_DT_OBJECT:
+         break;
+      case NXSL_DT_REAL:
+         s.write(m_value.dReal);
+         break;
+      case NXSL_DT_STRING:
+         s.writeString(m_pszValStr);
+         break;
+      case NXSL_DT_UINT32:
+         s.write(m_value.uInt32);
+         break;
+      case NXSL_DT_UINT64:
+         s.write(m_value.uInt64);
+         break;
+   }
+}
+
+/**
+ * Load value from byte stream
+ */
+NXSL_Value *NXSL_Value::load(ByteStream &s)
+{
+   NXSL_Value *v = new NXSL_Value();
+   v->m_nDataType = s.readByte();
+   switch(v->m_nDataType)
+   {
+      case NXSL_DT_ARRAY:
+         {
+            v->m_value.pArray = new NXSL_Array();
+            int size = (int)s.readUInt16();
+            for(int i = 0; i < size; i++)
+            {
+               v->m_value.pArray->set(i, load(s));
+            }
+         }
+         break;
+      case NXSL_DT_INT32:
+         v->m_value.nInt32 = s.readInt32();
+         break;
+      case NXSL_DT_INT64:
+         v->m_value.nInt64 = s.readInt64();
+         break;
+      case NXSL_DT_ITERATOR:
+         break;
+      case NXSL_DT_NULL:
+         break;
+      case NXSL_DT_OBJECT:
+         break;
+      case NXSL_DT_REAL:
+         v->m_value.dReal = s.readDouble();
+         break;
+      case NXSL_DT_STRING:
+         v->m_pszValStr = s.readString();
+         v->m_dwStrLen = (UINT32)_tcslen(v->m_pszValStr);
+         v->m_bStringIsValid = TRUE;
+         v->updateNumber();
+         break;
+      case NXSL_DT_UINT32:
+         v->m_value.uInt32 = s.readUInt32();
+         break;
+      case NXSL_DT_UINT64:
+         v->m_value.uInt64 = s.readUInt64();
+         break;
+   }
+   return v;
 }

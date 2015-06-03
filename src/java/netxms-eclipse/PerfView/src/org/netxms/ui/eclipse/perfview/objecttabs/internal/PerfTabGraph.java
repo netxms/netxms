@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,15 +22,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Widget;
+import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.GraphItem;
@@ -43,6 +44,8 @@ import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
 import org.netxms.ui.eclipse.perfview.PerfTabGraphSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ViewRefreshController;
+import org.netxms.ui.eclipse.tools.VisibilityValidator;
 import org.netxms.ui.eclipse.widgets.DashboardComposite;
 
 /**
@@ -54,19 +57,23 @@ public class PerfTabGraph extends DashboardComposite
 	private long nodeId;
 	private List<PerfTabDci> items = new ArrayList<PerfTabDci>(4);
 	private HistoricalDataChart chart;
-	private Runnable refreshTimer;
+	private ViewRefreshController refreshController = null;
 	private boolean updateInProgress = false;
 	private NXCSession session;
 	private long timeInterval;
+	private IViewPart viewPart;
+	private VisibilityValidator validator;
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public PerfTabGraph(Composite parent, long nodeId, PerfTabDci dci, PerfTabGraphSettings settings)
+	public PerfTabGraph(Composite parent, long nodeId, PerfTabDci dci, PerfTabGraphSettings settings, IViewPart viewPart, VisibilityValidator validator)
 	{
 		super(parent, SWT.BORDER);
 		this.nodeId = nodeId;
+		this.viewPart = viewPart;
+		this.validator = validator;
 		items.add(dci);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		
@@ -91,6 +98,15 @@ public class PerfTabGraph extends DashboardComposite
 		   chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
       }
 		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getRuntimeName())); //$NON-NLS-1$
+		
+		addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            if (refreshController != null)
+               refreshController.dispose();
+         }
+      });
 	}
 	
 	/**
@@ -121,8 +137,7 @@ public class PerfTabGraph extends DashboardComposite
 	 */
 	public void start()
 	{
-		final Display display = getDisplay();
-		refreshTimer = new Runnable() {
+		refreshController = new ViewRefreshController(viewPart, 30, new Runnable() {
 			@Override
 			public void run()
 			{
@@ -130,17 +145,16 @@ public class PerfTabGraph extends DashboardComposite
 					return;
 				
 				refreshData();
-				display.timerExec(30000, this);
 			}
-		};
-		display.timerExec(30000, refreshTimer);
-		refreshData();
+		}, validator);
+		if (validator.isVisible())
+		   refreshData();
 	}
 
 	/**
 	 * Refresh graph's data
 	 */
-	private void refreshData()
+	public void refreshData()
 	{
 		if (updateInProgress)
 			return;

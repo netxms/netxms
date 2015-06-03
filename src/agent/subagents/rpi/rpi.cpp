@@ -20,6 +20,7 @@
 
 #include <nms_common.h>
 #include <nms_agent.h>
+#include <bcm2835.h>
 
 /**
  * 
@@ -34,11 +35,29 @@ extern float g_sensorData[];
 extern time_t g_sensorUpdateTime;
 
 /**
+ * Configuration file template
+ */
+static bool m_disableDHT22 = false;
+static TCHAR *m_inputPins = NULL;
+static TCHAR *m_outputPins = NULL;
+static NX_CFG_TEMPLATE m_cfgTemplate[] =
+{
+   { _T("DisableDHT22"), CT_BOOLEAN, 0, 0, 1, 0, &m_disableDHT22 },
+   { _T("InputPins"), CT_STRING_LIST, _T(','), 0, 0, 0, &m_inputPins },
+   { _T("OutputPins"), CT_STRING_LIST, _T(','), 0, 0, 0, &m_outputPins },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+};
+
+/**
  * Sensor reading
  */
 static LONG H_Sensors(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG ret;
+
+   if (m_disableDHT22)
+      return SYSINFO_RC_UNSUPPORTED;
+
 	if (time(NULL) - g_sensorUpdateTime <= 60)
 	{
 		ret_int(value, (int)g_sensorData[(int)arg]);
@@ -53,11 +72,95 @@ static LONG H_Sensors(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
 }
 
 /**
+ * GPIO pin state
+ */
+static LONG H_PinState(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+	TCHAR tmp[128];
+	if (!AgentGetParameterArg(param, 1, tmp, 128))
+   {
+		return SYSINFO_RC_UNSUPPORTED;
+   }
+	StrStrip(tmp);
+   long pin = _tcstol(tmp, NULL, 10);
+
+   uint8_t level = bcm2835_gpio_lev((uint8_t)pin);
+   ret_int(value, level == HIGH ? 1 : 0);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Set GPIO pin state
+ */
+static LONG H_SetPinState(const TCHAR *action, StringList *arguments, const TCHAR *data, AbstractCommSession *session)
+{
+   const TCHAR *pinStr = arguments->get(0);
+   const TCHAR *stateStr = arguments->get(1);
+   if (pinStr == NULL || stateStr == NULL) 
+   {
+      return ERR_INTERNAL_ERROR;
+   }
+   uint8_t pin = (uint8_t)_tcstol(pinStr, NULL, 10);
+   uint8_t state = (uint8_t)_tcstol(stateStr, NULL, 10);
+
+   bcm2835_gpio_write(pin, state == 1 ? HIGH : LOW);
+
+   return ERR_SUCCESS;
+}
+
+
+/**
+ * Parse coma separated lines from configuration
+ * and FREE input.
+ * NULL safe.
+ */
+static void ConfigureGPIO(TCHAR *str, uint8_t mode)
+{
+   if (str != NULL)
+   {
+      TCHAR *item, *end;
+      for(item = str; *item != 0; item = end + 1)
+      {
+         end = _tcschr(item, _T(','));
+         if (end != NULL)
+         {
+            *end = 0;
+         }
+         StrStrip(item);
+         uint8_t pin = (uint8_t)_tcstol(item, NULL, 10);
+         AgentWriteDebugLog(1, _T("RPI: configuring gpio%u as %s"), pin,
+               mode == BCM2835_GPIO_FSEL_INPT ? _T("INPUT") : _T("OUTPUT"));
+         bcm2835_gpio_fsel(pin, mode);
+      }
+      free(str);
+   }
+}
+
+/**
  * Startup handler
  */
 static BOOL SubagentInit(Config *config)
 {
-	return StartSensorCollector();
+   if (bcm2835_init() != 1)
+   {    
+      AgentWriteLog(NXLOG_ERROR, _T("RPI: call to bcm2835_init failed"));
+      return FALSE;
+   }
+
+	// Parse configuration
+	bool success = config->parseTemplate(_T("RPI"), m_cfgTemplate);
+	if (success)
+	{
+      ConfigureGPIO(m_inputPins, BCM2835_GPIO_FSEL_INPT);
+      ConfigureGPIO(m_outputPins, BCM2835_GPIO_FSEL_OUTP);
+   }
+
+	BOOL ret = TRUE;
+   if (!m_disableDHT22)
+   {
+      ret = StartSensorCollector();
+   }
+   return ret;
 }
 
 /**
@@ -65,7 +168,8 @@ static BOOL SubagentInit(Config *config)
  */
 static void SubagentShutdown()
 {
-	StopSensorCollector();
+   if (!m_disableDHT22)
+      StopSensorCollector();
 }
 
 /**
@@ -73,8 +177,17 @@ static void SubagentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+	{ _T("GPIO.PinState(*)"), H_PinState, NULL, DCI_DT_INT, _T("Pin {instance} state") },
 	{ _T("Sensors.Humidity"), H_Sensors, (TCHAR *)0, DCI_DT_INT, _T("Humidity") },
 	{ _T("Sensors.Temperature"), H_Sensors, (TCHAR *)1, DCI_DT_INT, _T("Temperature") }
+};
+
+/**
+ * Subagent's actions
+ */
+static NETXMS_SUBAGENT_ACTION m_actions[] =
+{
+	{ _T("GPIO.SetPinState"), H_SetPinState, NULL, _T("Set GPIO pin ($1) state to high/low ($2 - 1/0)") }
 };
 
 /**
@@ -91,7 +204,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 	m_parameters,
 	0, NULL,		// lists
 	0, NULL,		// tables
-	0, NULL,		// actions
+	sizeof(m_actions) / sizeof(NETXMS_SUBAGENT_ACTION),
+	m_actions,
 	0, NULL		// push parameters
 };
 

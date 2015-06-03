@@ -69,7 +69,7 @@ void ShowQuery(const TCHAR *pszQuery);
 BOOL ExecSQLBatch(const char *pszFile);
 BOOL ValidateDatabase();
 
-BOOL IsNodeExist(DWORD dwId);
+bool IsDatabaseRecordExist(const TCHAR *table, const TCHAR *idColumn, UINT32 id);
 
 BOOL MetaDataReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
 int MetaDataReadInt(const TCHAR *pszVar, int iDefault);

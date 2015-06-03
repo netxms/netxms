@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -193,7 +193,7 @@ enum ActionCallbackEvent
 typedef struct
 {
    UINT32 dwIndex;       // Interface index
-   UINT32 dwIpAddr;
+   InetAddress ipAddr;
    BYTE bMacAddr[MAC_ADDR_LENGTH];
 } ARP_ENTRY;
 
@@ -209,24 +209,41 @@ typedef struct
 /**
  * Interface information structure used by discovery functions and AgentConnection class
  */
-typedef struct
+class InterfaceInfo
 {
+public:
+   UINT32 index;
    TCHAR name[MAX_DB_STRING];			// Interface display name
 	TCHAR description[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
 	TCHAR alias[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
-   UINT32 index;
    UINT32 type;
    UINT32 mtu;
 	UINT32 bridgePort;
 	UINT32 slot;
 	UINT32 port;
-   UINT32 ipAddr;
-   UINT32 ipNetMask;
+   InetAddressList ipAddrList;
    BYTE macAddr[MAC_ADDR_LENGTH];
-   int numSecondary;      // Number of secondary IP's on this interface
 	bool isPhysicalPort;
    bool isSystem;
-} NX_INTERFACE_INFO;
+
+   InterfaceInfo(UINT32 ifIndex)
+   { 
+      index = ifIndex;
+      name[0] = 0;
+      description[0] = 0;
+      alias[0] = 0;
+      type = IFTYPE_OTHER;
+      mtu = 0;
+      bridgePort = 0;
+      slot = 0;
+      port = 0;
+      memset(macAddr, 0, sizeof(macAddr));
+      isPhysicalPort = false;
+      isSystem = false;
+   }
+
+   bool hasAddress(const InetAddress& addr) { return ipAddrList.hasAddress(addr); }
+};
 
 /**
  * Interface list used by discovery functions and AgentConnection class
@@ -234,22 +251,20 @@ typedef struct
 class LIBNXSRV_EXPORTABLE InterfaceList
 {
 private:
-   int m_size;       				 // Number of valid entries
-	int m_allocated;               // Number of allocated entries
+   ObjectArray<InterfaceInfo> *m_interfaces;
    void *m_data;                  // Can be used by custom enumeration handlers
-   NX_INTERFACE_INFO *m_interfaces;  // Interface entries
    bool m_needPrefixWalk;
 
 public:
 	InterfaceList(int initialAlloc = 8);
 	~InterfaceList();
 
-	void add(NX_INTERFACE_INFO *iface);
-	void remove(int index);
+   void add(InterfaceInfo *iface) { m_interfaces->add(iface); }
+   void remove(int index) { m_interfaces->remove(index); }
 
-	int size() { return m_size; }
-	NX_INTERFACE_INFO *get(int index) { return ((index >= 0) && (index < m_size)) ? &m_interfaces[index] : NULL; }
-	NX_INTERFACE_INFO *findByIfIndex(UINT32 ifIndex);
+	int size() { return m_interfaces->size(); }
+	InterfaceInfo *get(int index) { return m_interfaces->get(index); }
+	InterfaceInfo *findByIfIndex(UINT32 ifIndex);
 
 	void setData(void *data) { m_data = data; }
 	void *getData() { return m_data; }
@@ -433,7 +448,7 @@ public:
 class LIBNXSRV_EXPORTABLE AgentConnection
 {
 private:
-   UINT32 m_dwAddr;
+   InetAddress m_addr;
    int m_nProtocolVersion;
    int m_iAuthMethod;
    char m_szSecret[MAX_SECRET_LENGTH];
@@ -453,7 +468,7 @@ private:
    NXCPEncryptionContext *m_pCtx;
    int m_iEncryptionPolicy;
    BOOL m_bUseProxy;
-   UINT32 m_dwProxyAddr;
+   InetAddress m_proxyAddr;
    WORD m_wPort;
    WORD m_wProxyPort;
    int m_iProxyAuth;
@@ -478,7 +493,7 @@ protected:
    UINT32 setupEncryption(RSA *pServerKey);
    UINT32 authenticate(BOOL bProxyData);
    UINT32 setupProxyConnection();
-   UINT32 getIpAddr() { return ntohl(m_dwAddr); }
+   const InetAddress& getIpAddr() { return m_addr; }
 	UINT32 prepareFileDownload(const TCHAR *fileName, UINT32 rqId, bool append, void (*downloadProgressCallback)(size_t, void *), void (*fileResendCallback)(NXCP_MESSAGE*, void *), void *cbArg);
 
    virtual void printMsg(const TCHAR *format, ...);
@@ -496,7 +511,7 @@ protected:
 public:
    BOOL sendMessage(NXCPMessage *pMsg);
    NXCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
-   AgentConnection(UINT32 ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
+   AgentConnection(InetAddress addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
    virtual ~AgentConnection();
 
    BOOL connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL);
@@ -513,10 +528,11 @@ public:
    UINT32 getList(const TCHAR *pszParam);
    UINT32 getTable(const TCHAR *pszParam, Table **table);
    UINT32 nop();
+   UINT32 enableIPv6();
    UINT32 execAction(const TCHAR *pszAction, int argc, TCHAR **argv, bool withOutput = false, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
-   UINT32 checkNetworkService(UINT32 *pdwStatus, UINT32 dwIpAddr, int iServiceType, WORD wPort = 0,
+   UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
    UINT32 getSupportedParameters(ObjectArray<AgentParameterDefinition> **paramList, ObjectArray<AgentTableDefinition> **tableList);
    UINT32 getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize);
@@ -539,7 +555,7 @@ public:
 	UINT32 getCommandTimeout() { return m_dwCommandTimeout; }
    void setRecvTimeout(UINT32 dwTimeout) { m_dwRecvTimeout = max(dwTimeout, 10000); }
    void setEncryptionPolicy(int iPolicy) { m_iEncryptionPolicy = iPolicy; }
-   void setProxy(UINT32 dwAddr, WORD wPort = AGENT_LISTEN_PORT,
+   void setProxy(InetAddress addr, WORD wPort = AGENT_LISTEN_PORT,
                  int iAuthMethod = AUTH_NONE, const TCHAR *pszSecret = NULL);
    void setPort(WORD wPort) { m_wPort = wPort; }
    void setAuthData(int method, const TCHAR *secret);
@@ -553,21 +569,21 @@ public:
 class LIBNXSRV_EXPORTABLE SNMP_ProxyTransport : public SNMP_Transport
 {
 protected:
-	AgentConnection *m_pAgentConnection;
-	NXCPMessage *m_pResponse;
-	UINT32 m_dwIpAddr;
-	WORD m_wPort;
+	AgentConnection *m_agentConnection;
+	NXCPMessage *m_response;
+	InetAddress m_ipAddr;
+	WORD m_port;
 	bool m_waitForResponse;
 
 public:
-	SNMP_ProxyTransport(AgentConnection *pConn, UINT32 dwIpAddr, WORD wPort);
+	SNMP_ProxyTransport(AgentConnection *conn, const InetAddress& ipAddr, WORD port);
 	virtual ~SNMP_ProxyTransport();
 
    virtual int readMessage(SNMP_PDU **ppData, UINT32 dwTimeout = INFINITE,
                            struct sockaddr *pSender = NULL, socklen_t *piAddrSize = NULL,
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pdu);
-   virtual UINT32 getPeerIpAddress();
+   virtual InetAddress getPeerIpAddress();
 
    void setWaitForResponse(bool wait) { m_waitForResponse = wait; }
 };

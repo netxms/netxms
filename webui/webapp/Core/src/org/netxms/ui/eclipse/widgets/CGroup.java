@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,21 +23,28 @@ import java.util.List;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 
 /**
@@ -46,13 +53,13 @@ import org.netxms.ui.eclipse.widgets.helpers.DashboardElementButton;
 public abstract class CGroup extends Canvas
 {
 	private static final int BORDER_WIDTH = 3;
-	private static final int HEADER_HEIGHT = 22;
 	
 	private String text;
-	private Composite headerArea;
 	private Control clientArea;
+	private Font titleFont;
 	private Color borderColor;
 	private Color titleColor;
+	private Point headerSize;
 	private Action doubleClickAction = null;
 	private List<DashboardElementButton> buttons = new ArrayList<DashboardElementButton>(0);
 	
@@ -65,19 +72,35 @@ public abstract class CGroup extends Canvas
 		super(parent, SWT.NONE);
 		this.text = text;
 		
+		setBackground(getParent().getBackground());
+		
 		borderColor = SharedColors.getColor(SharedColors.CGROUP_BORDER, getDisplay());
 		titleColor = SharedColors.getColor(SharedColors.CGROUP_TITLE, getDisplay());
 		
-		headerArea = new Composite(this, SWT.NONE);
-		headerArea.setBackground(borderColor);
-		RowLayout headerLayout = new RowLayout(SWT.HORIZONTAL);
-		headerLayout.marginBottom = 0;
-		headerLayout.marginTop = 0;
-		headerArea.setLayout(headerLayout);
+		FontData fd = JFaceResources.getDialogFont().getFontData()[0];
+		fd.setStyle(SWT.BOLD);
+		titleFont = new Font(getDisplay(), fd);
+		setFont(titleFont);
+		
+		headerSize = WidgetHelper.getTextExtent(this, text);
+		
+		addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            titleFont.dispose();
+         }
+      });
+		
+      GridLayout layout = new GridLayout();
+      layout.marginWidth = BORDER_WIDTH;
+      layout.marginHeight = BORDER_WIDTH;
+      layout.verticalSpacing = 3;
+      layout.marginTop = headerSize.y + 2;
+      layout.marginBottom = 2;
+      setLayout(layout);
 		
 		clientArea = createClientAreaInternal();
-		
-		setFont(JFaceResources.getBannerFont());
 		
 		addPaintListener(new PaintListener() {
 			@Override
@@ -106,18 +129,18 @@ public abstract class CGroup extends Canvas
 			}
 		});
 		
-		GridLayout layout = new GridLayout();
-		layout.marginWidth = BORDER_WIDTH;
-		layout.marginHeight = BORDER_WIDTH;
-		layout.verticalSpacing = 3;
-		//layout.marginTop = HEADER_HEIGHT;
-		setLayout(layout);
+		addControlListener(new ControlListener() {
+         @Override
+         public void controlResized(ControlEvent e)
+         {
+            layoutButtons();
+         }
 		
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.RIGHT;
-		gd.verticalAlignment = SWT.FILL;
-		gd.heightHint = HEADER_HEIGHT - layout.verticalSpacing;
-		headerArea.setLayoutData(gd);
+         @Override
+         public void controlMoved(ControlEvent e)
+         {
+         }
+      });
 	}
 	
 	/**
@@ -143,21 +166,20 @@ public abstract class CGroup extends Canvas
 	 */
 	private void doPaint(GC gc)
 	{
+	   gc.setAntialias(SWT.ON);
 		gc.setForeground(borderColor);
 		gc.setLineWidth(BORDER_WIDTH);
 		Rectangle rect = getClientArea();
 		rect.x += BORDER_WIDTH / 2;
-		rect.y += BORDER_WIDTH / 2;
+		rect.y += BORDER_WIDTH / 2 + headerSize.y / 2;
 		rect.width -= BORDER_WIDTH;
-		rect.height -= BORDER_WIDTH;
-		gc.drawRectangle(rect);
+		rect.height -= BORDER_WIDTH + headerSize.y / 2;
+		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
 		
-		rect.height = BORDER_WIDTH / 2 + HEADER_HEIGHT;
-		gc.setBackground(borderColor);
-		gc.fillRectangle(rect);
-		
+		Point size = gc.textExtent(text);
+		gc.fillRectangle(8, 0, size.x + 4, size.y + 2);
 		gc.setForeground(titleColor);
-		gc.drawText(text, 5, 5);
+		gc.drawText(text, 10, 1);
 	}
 
 	/**
@@ -207,7 +229,6 @@ public abstract class CGroup extends Canvas
 	protected void setBorderColor(Color borderColor)
 	{
 		this.borderColor = borderColor;
-		headerArea.setBackground(borderColor);
 		for(DashboardElementButton b : buttons)
 			b.getControl().setBackground(borderColor);
 	}
@@ -235,7 +256,7 @@ public abstract class CGroup extends Canvas
 	 */
 	public void addButton(final DashboardElementButton button)
 	{
-		final Label l = new Label(headerArea, SWT.NONE);
+		final Label l = new Label(this, SWT.NONE);
 		l.setBackground(getBorderColor());
 		l.setImage(button.getImage());
 		l.setToolTipText(button.getName());
@@ -257,8 +278,14 @@ public abstract class CGroup extends Canvas
 				button.getAction().run();
 			}
 		});
+		
+		GridData gd = new GridData();
+		gd.exclude = true;
+		l.setLayoutData(gd);
+		
 		button.setControl(l);
 		buttons.add(button);
+		layoutButtons();
 	}
 
 	/**
@@ -286,5 +313,21 @@ public abstract class CGroup extends Canvas
 			clientArea.dispose();
 		clientArea = createClientAreaInternal();
 		layout();
+	}
+	
+	/**
+	 * Layout buttons
+	 */
+	private void layoutButtons()
+	{
+	   int pos = getSize().x - 12;
+	   for(int i = buttons.size() - 1; i >= 0; i--)
+	   {
+	      Control c = buttons.get(i).getControl();
+	      c.setSize(c.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+	      Point cs = c.getSize();
+	      c.setLocation(pos - cs.x, headerSize.y / 2 + BORDER_WIDTH - cs.y / 2 - 1);
+	      pos -= cs.x + 4;
+	   }
 	}
 }

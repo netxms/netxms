@@ -28,6 +28,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -39,13 +40,19 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.api.client.servermanager.ServerManager;
-import org.netxms.api.client.servermanager.ServerVariable;
+import org.netxms.client.NXCSession;
+import org.netxms.client.server.ServerVariable;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -54,10 +61,12 @@ import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.VariableEditDialog;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ServerVariableComparator;
+import org.netxms.ui.eclipse.serverconfig.views.helpers.ServerVariablesFilter;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ServerVariablesLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -69,8 +78,12 @@ public class ServerConfigurationEditor extends ViewPart
 	public static final String JOB_FAMILY = "ServerConfigJob"; //$NON-NLS-1$
 		
 	private SortableTableViewer viewer;
-	private ServerManager session;
+	private NXCSession session;
 	private Map<String, ServerVariable> varList;
+	private boolean filterEnabled = false;
+   private Composite content;
+   private FilterText filterText;
+   private ServerVariablesFilter filter;
 	
 	private Action actionAdd;
 	private Action actionEdit;
@@ -78,6 +91,7 @@ public class ServerConfigurationEditor extends ViewPart
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
 	private Action actionRefresh;
+	private Action actionShowFilter;
 	
 	// Columns
 	public static final int COLUMN_NAME = 0;
@@ -89,12 +103,27 @@ public class ServerConfigurationEditor extends ViewPart
 	 */
 	public void createPartControl(Composite parent)
 	{
+	   content = new Composite(parent, SWT.NONE);
+      content.setLayout(new FormLayout());
+	   
+	   // Create filter area
+      filterText = new FilterText(content, SWT.NONE);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+	   
 		final String[] names = { Messages.get().ServerConfigurationEditor_ColName, Messages.get().ServerConfigurationEditor_ColValue, Messages.get().ServerConfigurationEditor_ColRestart };
 		final int[] widths = { 200, 150, 80 };
-		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+		viewer = new SortableTableViewer(content, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ServerVariablesLabelProvider());
 		viewer.setComparator(new ServerVariableComparator());
+		filter = new ServerVariablesFilter();
+      viewer.addFilter(filter);
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
 			public void doubleClick(DoubleClickEvent event)
@@ -112,6 +141,22 @@ public class ServerConfigurationEditor extends ViewPart
 			}
 		});
 		
+		// Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterText);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      viewer.getTable().setLayoutData(fd);
+      
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
+      
+      filterText.setCloseAction(actionShowFilter);
+		
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		WidgetHelper.restoreTableViewerSettings(viewer, settings, "ServerConfigurationEditor"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -128,7 +173,13 @@ public class ServerConfigurationEditor extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		session = (ServerManager)ConsoleSharedData.getSession();
+		// Set initial focus to filter input line
+      if (filterEnabled)
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
+		
+		session = ConsoleSharedData.getSession();
 		refresh();
 	}
 	
@@ -179,6 +230,7 @@ public class ServerConfigurationEditor extends ViewPart
 	{
 		manager.add(actionAdd);
 		manager.add(actionExportAllToCsv);
+      manager.add(actionShowFilter);		
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -190,6 +242,7 @@ public class ServerConfigurationEditor extends ViewPart
 	{
 		manager.add(actionAdd);
 		manager.add(actionExportAllToCsv);
+      manager.add(actionShowFilter);      
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -199,6 +252,8 @@ public class ServerConfigurationEditor extends ViewPart
 	 */
 	private void createActions()
 	{
+	   final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+	   
 		actionRefresh = new RefreshAction() {
 			@Override
 			public void run()
@@ -224,18 +279,65 @@ public class ServerConfigurationEditor extends ViewPart
 		};
 		actionEdit.setEnabled(false);
 		
-		actionDelete = new Action(Messages.get().ServerConfigurationEditor_ActionDelete, SharedIcons.DELETE_OBJECT) {
+      actionDelete = new Action(Messages.get().ServerConfigurationEditor_ActionDelete, SharedIcons.DELETE_OBJECT) {
+      @Override
+         public void run()
+         {
+            deleteVariables();
+         }
+      };
+      actionDelete.setEnabled(false);
+		
+		actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
 			@Override
 			public void run()
 			{
-				deleteVariables();
+            enableFilter(!filterEnabled);
+            actionShowFilter.setChecked(filterEnabled);
 			}
 		};
-		actionDelete.setEnabled(false);
+      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
+      actionShowFilter.setChecked(filterEnabled);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
+      final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
+      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
 		
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
 	}
+	
+	  /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   private void enableFilter(boolean enable)
+   {
+      filterEnabled = enable;
+      filterText.setVisible(filterEnabled);
+      FormData fd = (FormData)viewer.getTable().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      content.layout();
+      if (enable)
+      {
+         filterText.setFocus();
+      }
+      else
+      {
+         filterText.setText(""); //$NON-NLS-1$
+         onFilterModify();
+      }
+   }
+   
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+   }
 
 	/**
 	 * Create pop-up menu for variable list
