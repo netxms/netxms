@@ -57,6 +57,7 @@ public class LineChartElement extends ElementWidget
 	private ViewRefreshController refreshController;
 	private boolean updateInProgress = false;
 	private NXCSession session;
+	private List<DataCacheElement> dataCache = new ArrayList<DataCacheElement>(16);
 
 	/**
 	 * @param parent
@@ -162,9 +163,13 @@ public class LineChartElement extends ElementWidget
 					{
 						if (!((Widget)chart).isDisposed())
 						{
+                     dataCache.clear();
 							chart.setTimeRange(from, to);
 							for(int i = 0; i < data.length; i++)
+							{
 								chart.updateParameter(i, data[i], false);
+								dataCache.add(new DataCacheElement(dciList[i], data[i]));
+							}
 							chart.refresh();
 							chart.clearErrors();
 						}
@@ -213,5 +218,30 @@ public class LineChartElement extends ElementWidget
 		if ((hHint == SWT.DEFAULT) && (size.y < 210))
 			size.y = 210;
 		return size;
+	}
+	
+	/**
+	 * Get data cache for this chart. Must be called on UI thread.
+	 * 
+	 * @return
+	 */
+	public List<DataCacheElement> getDataCache()
+	{
+	   return new ArrayList<DataCacheElement>(dataCache);
+	}
+	
+	/**
+	 * Data cache element
+	 */
+	public class DataCacheElement
+	{
+	   public DciData data;
+	   public String name;
+	   
+	   public DataCacheElement(ChartDciConfig config, DciData data)
+	   {
+	      this.name = config.getName();
+	      this.data = data;
+	   }
 	}
 }

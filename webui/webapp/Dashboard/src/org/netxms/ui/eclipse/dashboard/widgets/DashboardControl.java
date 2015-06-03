@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -603,6 +603,16 @@ public class DashboardControl extends Composite
 	public List<DashboardElement> getElements()
 	{
 		return elements;
+	}
+	
+	/**
+	 * Get dashboard's element widgets
+	 * 
+	 * @return
+	 */
+	public List<ElementWidget> getElementWidgets()
+	{
+	   return new ArrayList<ElementWidget>(elementWidgets.values());
 	}
 
    /**

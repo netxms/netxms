@@ -37,6 +37,7 @@ import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 
 /**
@@ -59,7 +60,7 @@ public class ExportToCsvAction extends Action
 	 */
 	private ExportToCsvAction(IViewPart viewPart, ColumnViewer viewer, ViewerProvider viewerProvider, boolean selectionOnly)
 	{
-		super(selectionOnly ? Messages.get().ExportToCsvAction_ExportToCsv : Messages.get().ExportToCsvAction_ExportAllToCsv, Activator.getImageDescriptor("icons/csv.png")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		super(selectionOnly ? Messages.get().ExportToCsvAction_ExportToCsv : Messages.get().ExportToCsvAction_ExportAllToCsv, SharedIcons.CSV);
 		
 		setId(selectionOnly ? "org.netxms.ui.eclipse.popupActions.ExportToCSV" : "org.netxms.ui.eclipse.actions.ExportToCSV");
 		

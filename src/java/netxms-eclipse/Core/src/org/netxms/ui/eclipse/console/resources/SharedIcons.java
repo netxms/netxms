@@ -38,7 +38,8 @@ public class SharedIcons
 	public static ImageDescriptor COLLAPSE;
 	public static ImageDescriptor COLLAPSE_ALL;
 	public static ImageDescriptor COPY;
-	public static ImageDescriptor CUT;
+	public static ImageDescriptor CSV;
+   public static ImageDescriptor CUT;
 	public static ImageDescriptor DELETE_OBJECT;
 	public static ImageDescriptor DOWN;
 	public static ImageDescriptor EDIT;
@@ -75,7 +76,8 @@ public class SharedIcons
 	public static Image IMG_COLLAPSE;
 	public static Image IMG_COLLAPSE_ALL;
 	public static Image IMG_COPY;
-	public static Image IMG_CUT;
+	public static Image IMG_CSV;
+   public static Image IMG_CUT;
 	public static Image IMG_DELETE_OBJECT;
 	public static Image IMG_DOWN;
 	public static Image IMG_EDIT;
@@ -117,7 +119,8 @@ public class SharedIcons
 		COLLAPSE = Activator.getImageDescriptor("icons/collapse.png"); //$NON-NLS-1$
 		COLLAPSE_ALL = Activator.getImageDescriptor("icons/collapseall.png"); //$NON-NLS-1$
 		COPY = Activator.getImageDescriptor("icons/copy.gif"); //$NON-NLS-1$
-		CUT = Activator.getImageDescriptor("icons/cut.gif"); //$NON-NLS-1$
+		CSV = Activator.getImageDescriptor("icons/csv.png"); //$NON-NLS-1$
+      CUT = Activator.getImageDescriptor("icons/cut.gif"); //$NON-NLS-1$
 		DELETE_OBJECT = Activator.getImageDescriptor("icons/delete_obj.gif"); //$NON-NLS-1$
 		DOWN = Activator.getImageDescriptor("icons/down.png"); //$NON-NLS-1$
 		EDIT = Activator.getImageDescriptor("icons/edit.png"); //$NON-NLS-1$
@@ -154,7 +157,8 @@ public class SharedIcons
 		IMG_COLLAPSE = COLLAPSE.createImage();
 		IMG_COLLAPSE_ALL = COLLAPSE_ALL.createImage();
 		IMG_COPY = COPY.createImage();
-		IMG_CUT = CUT.createImage();
+		IMG_CSV = CSV.createImage();
+      IMG_CUT = CUT.createImage();
 		IMG_DELETE_OBJECT = DELETE_OBJECT.createImage();
 		IMG_DOWN = DOWN.createImage();
 		IMG_EDIT = EDIT.createImage();

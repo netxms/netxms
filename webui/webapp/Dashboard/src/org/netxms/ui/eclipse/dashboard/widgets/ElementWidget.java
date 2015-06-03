@@ -31,7 +31,7 @@ import org.netxms.ui.eclipse.widgets.DashboardComposite;
 /**
  * Base class for all dashboard elements
  */
-class ElementWidget extends DashboardComposite implements ControlListener
+public class ElementWidget extends DashboardComposite implements ControlListener
 {
 	protected DashboardElement element;
 	protected IViewPart viewPart;

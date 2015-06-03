@@ -22,7 +22,6 @@ import java.util.ArrayList;
 
 /**
  * Class to hold series of collected DCI data
- * 
  */
 public class DciData
 {

@@ -18,26 +18,46 @@
  */
 package org.netxms.ui.eclipse.dashboard.views;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.UserAccessRights;
+import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.DownloadServiceHandler;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
+import org.netxms.ui.eclipse.dashboard.widgets.ElementWidget;
+import org.netxms.ui.eclipse.dashboard.widgets.LineChartElement;
+import org.netxms.ui.eclipse.dashboard.widgets.LineChartElement.DataCacheElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -58,9 +78,10 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private DashboardControl dbc;
 	private Composite parentComposite;
 	private DashboardModifyListener dbcModifyListener;
-	private RefreshAction actionRefresh;
+	private Action actionRefresh;
 	private Action actionEditMode;
 	private Action actionSave;
+	private Action actionExportValues;
 	private Action actionAddAlarmBrowser;
 	private Action actionAddLabel;
 	private Action actionAddBarChart;
@@ -139,16 +160,32 @@ public class DashboardView extends ViewPart implements ISaveablePart
    		};
    		dbc.setModifyListener(dbcModifyListener);
 		}
+		
+		activateContext();
 		createActions();
 		contributeToActionBars();
 	}
+
+	/**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.dashboard.context.DashboardView"); //$NON-NLS-1$
+      }
+   }
 
 	/**
 	 * Create actions
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{
@@ -162,15 +199,24 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 		
-		actionSave = new Action(Messages.get().DashboardView_Save) {
+		actionSave = new Action(Messages.get().DashboardView_Save, SharedIcons.SAVE) {
 			@Override
 			public void run()
 			{
 				dbc.saveDashboard(DashboardView.this);
 			}
 		};
-		actionSave.setImageDescriptor(SharedIcons.SAVE);
 		actionSave.setEnabled(false);
+		
+		actionExportValues = new Action("E&xport line chart values", SharedIcons.CSV) {
+         @Override
+         public void run()
+         {
+            exportLineChartValues();
+         }
+		};
+		actionExportValues.setActionDefinitionId("org.netxms.ui.eclipse.dashboard.commands.export_line_chart_values"); //$NON-NLS-1$
+      handlerService.activateHandler(actionExportValues.getActionDefinitionId(), new ActionHandler(actionExportValues));
 		
 		actionEditMode = new Action(Messages.get().DashboardView_EditMode, Action.AS_CHECK_BOX) {
 			@Override
@@ -292,6 +338,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
    		manager.add(actionAddDashboard);
    		manager.add(new Separator());
 	   }
+      manager.add(actionExportValues);
+      manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -307,7 +355,10 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	   {
    		manager.add(actionEditMode);
    		manager.add(actionSave);
+   		manager.add(new Separator());
 	   }
+	   manager.add(actionExportValues);
+      manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 	
@@ -409,5 +460,114 @@ public class DashboardView extends ViewPart implements ISaveablePart
 
 		actionSave.setEnabled((dbc != null) ? dbc.isModified() : false);
 		firePropertyChange(PROP_DIRTY);
+	}
+	
+	/**
+	 * Export all line chart values as CSV
+	 */
+	private void exportLineChartValues()
+	{
+	   final Map<Long, DataCacheElement> data = new HashMap<Long, DataCacheElement>();
+	   for(ElementWidget w : dbc.getElementWidgets())
+	   {
+	      if (!(w instanceof LineChartElement))
+	         continue;
+	      
+	      for(DataCacheElement d : ((LineChartElement)w).getDataCache())
+	      {
+	         data.put(d.data.getDciId(), d);
+	      }
+	   }
+	   
+      final DateFormat df = RegionalSettings.getDateTimeFormat();
+	   new ConsoleJob("Export line chart data", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            Map<Date, String[]> table = new TreeMap<Date, String[]>();
+            final Date header = new Date(0L);
+            int index = 0;
+            for(DataCacheElement d : data.values())
+            {
+               String[] row = table.get(header);
+               if (row == null)
+               {
+                  row = new String[data.size()];
+                  table.put(header, row);
+               }
+               row[index] = d.name;
+               
+               for(DciDataRow r : d.data.getValues())
+               {
+                  if (r.getTimestamp().getTime() == 0)
+                     continue;   // invalid timestamp
+                  
+                  row = table.get(r.getTimestamp());
+                  if (row == null)
+                  {
+                     row = new String[data.size()];
+                     table.put(r.getTimestamp(), row);
+                  }
+                  row[index] = r.getValueAsString();
+               }
+               index++;
+            }
+            
+            final File tmpFile = File.createTempFile("ExportDashboardCSV_" + DashboardView.this.hashCode(), "_" + System.currentTimeMillis());
+            BufferedWriter writer = new BufferedWriter(new FileWriter(tmpFile));
+            try
+            {
+               for(Entry<Date, String[]> e : table.entrySet())
+               {
+                  if (e.getKey().getTime() == 0)
+                     writer.write("TIME");
+                  else
+                     writer.write(df.format(e.getKey()));
+                  for(String s : e.getValue())
+                  {
+                     writer.write(',');
+                     if (s != null)
+                        writer.write(s);
+                  }
+                  writer.newLine();
+               }
+            }
+            finally
+            {
+               writer.close();
+            }
+            
+            DownloadServiceHandler.addDownload(tmpFile.getName(), dashboard.getObjectName() + ".csv", tmpFile, "text/csv");
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+                  if( executor != null ) 
+                  {
+                     StringBuilder js = new StringBuilder();
+                     js.append("var hiddenIFrameID = 'hiddenDownloader',");
+                     js.append("   iframe = document.getElementById(hiddenIFrameID);");
+                     js.append("if (iframe === null) {");
+                     js.append("   iframe = document.createElement('iframe');");
+                     js.append("   iframe.id = hiddenIFrameID;");
+                     js.append("   iframe.style.display = 'none';");
+                     js.append("   document.body.appendChild(iframe);");
+                     js.append("}");
+                     js.append("iframe.src = '");
+                     js.append(DownloadServiceHandler.createDownloadUrl(tmpFile.getName()));
+                     js.append("';");
+                     executor.execute(js.toString());
+                  }                 
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot export line chart data";
+         }
+      }.start();
 	}
 }

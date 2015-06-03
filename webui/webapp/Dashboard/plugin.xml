@@ -324,5 +324,29 @@
             priority="10">
       </handler>
    </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.dashboard.context.DashboardView"
+            name="Dashboard"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            id="org.netxms.ui.eclipse.dashboard.commands.export_line_chart_values"
+            name="Export line chart values">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.dashboard.commands.export_line_chart_values"
+            contextId="org.netxms.ui.eclipse.dashboard.context.DashboardView"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F3">
+      </key>
+   </extension>
 
 </plugin>
