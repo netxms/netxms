@@ -140,7 +140,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 	else if (!strcmp(name, "columns"))
 	{
-      ps->state = (ps->state = XML_STATE_TABLE) ? XML_STATE_COLUMNS : XML_STATE_ERROR;
+      ps->state = (ps->state == XML_STATE_TABLE) ? XML_STATE_COLUMNS : XML_STATE_ERROR;
 	}
 	else if (!strcmp(name, "column"))
 	{
@@ -168,7 +168,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 	else if (!strcmp(name, "data"))
 	{
-      ps->state = (ps->state = XML_STATE_TABLE) ? XML_STATE_DATA : XML_STATE_ERROR;
+      ps->state = (ps->state == XML_STATE_TABLE) ? XML_STATE_DATA : XML_STATE_ERROR;
 	}
 	else if (!strcmp(name, "tr"))
 	{
@@ -186,7 +186,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 	else if (!strcmp(name, "td"))
 	{
-      if (ps->state == XML_STATE_DATA)
+      if (ps->state == XML_STATE_ROW)
       {
          ps->table->setStatus(ps->column, XMLGetAttrInt(attrs, "status", 0));
          ps->state = XML_STATE_CELL;
@@ -200,6 +200,9 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
 		ps->state = XML_STATE_ERROR;
 	}
+#if 0
+	_tprintf(_T("\n!!!!!Table::parseXML: parsing tag %s and state %d!!!\n"), WideStringFromUTF8String(name), ps->state);
+#endif
 }
 
 /**
@@ -316,7 +319,7 @@ TCHAR *Table::createXML()
       xml.append(_T("</tr>\r\n"));
    }
    xml.append(_T("</data>\r\n"));
-   xml.append(_T("</table>\r\n"));
+   xml.append(_T("</table>"));
    return _tcsdup(xml);
 }
 
