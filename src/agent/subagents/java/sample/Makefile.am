@@ -1,1 +1,2 @@
-EXTRA_DIST = TestPlugin.java
+SUBDIRS = src
+EXTRA_DIST = pom.xml
