@@ -1342,6 +1342,7 @@ public:
    AgentConnectionEx *createAgentConnection();
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext();
+   UINT32 getEffectiveSnmpProxy();
 
    void writeParamListToMessage(NXCPMessage *pMsg, WORD flags);
 	void writeWinPerfObjectsToMessage(NXCPMessage *msg);

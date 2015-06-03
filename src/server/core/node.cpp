@@ -5180,13 +5180,11 @@ Cluster *Node::getMyCluster()
 }
 
 /**
- * Create SNMP transport
+ * Get effective SNMP proxy for this node
  */
-SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
+UINT32 Node::getEffectiveSnmpProxy()
 {
-	SNMP_Transport *pTransport = NULL;
 	UINT32 snmpProxy = m_snmpProxy;
-
 	if (IsZoningEnabled() && (snmpProxy == 0) && (m_zoneId != 0))
 	{
 		// Use zone default proxy if set
@@ -5196,7 +5194,16 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 			snmpProxy = zone->getSnmpProxy();
 		}
 	}
+   return snmpProxy;
+}
 
+/**
+ * Create SNMP transport
+ */
+SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
+{
+	SNMP_Transport *pTransport = NULL;
+	UINT32 snmpProxy = getEffectiveSnmpProxy();
 	if (snmpProxy == 0)
 	{
 		pTransport = new SNMP_UDPTransport;
@@ -6726,6 +6733,9 @@ struct SnmpProxyInfo
  */
 void Node::collectSnmpProxyInfo(SnmpProxyInfo *info)
 {
+   if (getEffectiveSnmpProxy() != info->proxyId)
+      return;
+
    bool isTarget = false;
 
    lockDciAccess(false);
@@ -6733,7 +6743,7 @@ void Node::collectSnmpProxyInfo(SnmpProxyInfo *info)
    {
       DCObject *dco = m_dcObjects->get(i);
       if ((dco->getDataSource() == DS_SNMP_AGENT) &&
-          (dco->getProxyNode() == info->proxyId) &&
+          (dco->getProxyNode() == 0) &&
           (dco->getAgentCacheMode() == AGENT_CACHE_ON))
       {
          info->msg->setField(info->fieldId++, dco->getId());
@@ -6794,7 +6804,8 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *dco = m_dcObjects->get(i);
-      if (dco->getAgentCacheMode() == AGENT_CACHE_ON)
+      if ((dco->getAgentCacheMode() == AGENT_CACHE_ON) &&
+          (dco->getProxyNode() == 0))
       {
          msg.setField(fieldId++, dco->getId());
          msg.setField(fieldId++, (INT16)dco->getType());
