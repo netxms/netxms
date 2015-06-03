@@ -429,6 +429,7 @@ bool DataElement::sendToServer(bool reconcillation)
          m_value.list->fillMessage(&msg, VID_ENUM_VALUE_BASE, VID_NUM_STRINGS);
          break;
       case DCO_TYPE_TABLE:
+         m_value.table->setSource(m_origin);
          m_value.table->fillMessage(msg, 0, -1);
          break;
    }
