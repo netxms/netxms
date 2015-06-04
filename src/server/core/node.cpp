@@ -2768,13 +2768,13 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                            PostEvent(EVENT_IF_MASK_CHANGED, m_id, "dsAddd", pInterface->getId(), pInterface->getName(),
                                      &addr, addr.getMaskBits(), pInterface->getIfIndex(), ifAddr.getMaskBits());
                            pInterface->setNetMask(addr);
-                           sendPollerMsg(rqid, POLLER_INFO _T("   IP network mask changed to /%d on interface \"%s\" address %s\r\n"), 
+                           sendPollerMsg(rqid, POLLER_INFO _T("   IP network mask changed to /%d on interface \"%s\" address %s\r\n"),
                               addr.getMaskBits(), pInterface->getName(), (const TCHAR *)ifAddr.toString());
                         }
                      }
                      else
                      {
-                        sendPollerMsg(rqid, POLLER_WARNING _T("   IP address %s removed from interface \"%s\"\r\n"), 
+                        sendPollerMsg(rqid, POLLER_WARNING _T("   IP address %s removed from interface \"%s\"\r\n"),
                            (const TCHAR *)ifAddr.toString(), pInterface->getName());
                         PostEvent(EVENT_IF_IPADDR_DELETED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
                                   &ifAddr, ifAddr.getMaskBits(), pInterface->getIfIndex());
@@ -2791,7 +2791,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                         pInterface->addIpAddress(addr);
                         PostEvent(EVENT_IF_IPADDR_ADDED, m_id, "dsAdd", pInterface->getId(), pInterface->getName(),
                                   &addr, addr.getMaskBits(), pInterface->getIfIndex());
-                        sendPollerMsg(rqid, POLLER_INFO _T("   IP address %s added to interface \"%s\"\r\n"), 
+                        sendPollerMsg(rqid, POLLER_INFO _T("   IP address %s added to interface \"%s\"\r\n"),
                            (const TCHAR *)addr.toString(), pInterface->getName());
                      }
                   }
@@ -4359,7 +4359,18 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 
    // Change SNMP proxy node
    if (pRequest->isFieldExist(VID_SNMP_PROXY))
+   {
+      UINT32 oldProxy = m_snmpProxy;
       m_snmpProxy = pRequest->getFieldAsUInt32(VID_SNMP_PROXY);
+      //Add ofline collected DCI to new node
+      Node *node = (Node *)FindObjectById(m_snmpProxy, OBJECT_NODE);
+      if(node != NULL)
+         node->syncDataCollectionWithAgent(node->m_pAgentConnection);
+      //Remove ofline collected DCI from old node
+      node = (Node *)FindObjectById(oldProxy, OBJECT_NODE);
+      if(node != NULL)
+         node->syncDataCollectionWithAgent(node->m_pAgentConnection);
+   }
 
    // Change ICMP proxy node
    if (pRequest->isFieldExist(VID_ICMP_PROXY))
