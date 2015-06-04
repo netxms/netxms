@@ -14,6 +14,7 @@
 - New methods in NXSL class "Event": setMessage, setSeverity, setUserTag
 - Command line options for nxagentd to change effective user and group after start
 - Fixed occasional NXSL compiler crash on scripts with syntax errors
+- Errors in auto bind/apply scripts interpreted as "ignore" instead of "false" result
 - Management console:
 	- Fixed broken VPN connectors configuration
 	- "Inverted values" option on line charts

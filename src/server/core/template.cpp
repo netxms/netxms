@@ -1127,10 +1127,12 @@ void Template::prepareForDeletion()
 
 /**
  * Check if template should be automatically applied to node
+ * Returns AutoBindDecision_Bind if applicable, AutoBindDecision_Unbind if not, 
+ * AutoBindDecision_Ignore if no change required (script error or no auto apply)
  */
-bool Template::isApplicable(Node *node)
+AutoBindDecision Template::isApplicable(Node *node)
 {
-	bool result = false;
+	AutoBindDecision result = AutoBindDecision_Ignore;
 
 	lockProperties();
 	if ((m_flags & TF_AUTO_APPLY) && (m_applyFilter != NULL))
@@ -1139,7 +1141,7 @@ bool Template::isApplicable(Node *node)
 		if (m_applyFilter->run())
 		{
 	      NXSL_Value *value = m_applyFilter->getResult();
-			result = ((value != NULL) && (value->getValueAsInt32() != 0));
+         result = ((value != NULL) && (value->getValueAsInt32() != 0)) ? AutoBindDecision_Bind : AutoBindDecision_Unbind;
 		}
 		else
 		{

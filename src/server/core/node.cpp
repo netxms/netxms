@@ -2930,7 +2930,8 @@ static void ApplyTemplate(NetObj *object, void *node)
    if ((object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted())
    {
       Template *pTemplate = (Template *)object;
-		if (pTemplate->isApplicable((Node *)node))
+      AutoBindDecision decision = pTemplate->isApplicable((Node *)node);
+		if (decision == AutoBindDecision_Bind)
 		{
 			if (!pTemplate->isChild(((Node *)node)->getId()))
 			{
@@ -2940,7 +2941,7 @@ static void ApplyTemplate(NetObj *object, void *node)
 				PostEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", ((Node *)node)->getId(), ((Node *)node)->getName(), pTemplate->getId(), pTemplate->getName());
 			}
 		}
-		else
+		else if (decision == AutoBindDecision_Unbind)
 		{
 			if (pTemplate->isAutoRemoveEnabled() && pTemplate->isChild(((Node *)node)->getId()))
 			{
@@ -2980,7 +2981,8 @@ void Node::updateContainerMembership()
    for(int i = 0; i < containers->size(); i++)
    {
       Container *pContainer = (Container *)containers->get(i);
-		if (pContainer->isSuitableForNode(this))
+      AutoBindDecision decision = pContainer->isSuitableForNode(this);
+      if (decision == AutoBindDecision_Bind)
 		{
 			if (!pContainer->isChild(m_id))
 			{
@@ -2992,7 +2994,7 @@ void Node::updateContainerMembership()
             pContainer->calculateCompoundStatus();
 			}
 		}
-		else
+		else if (decision == AutoBindDecision_Unbind)
 		{
 			if (pContainer->isAutoUnbindEnabled() && pContainer->isChild(m_id))
 			{

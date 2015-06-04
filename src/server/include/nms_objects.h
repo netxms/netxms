@@ -124,6 +124,16 @@ enum StatusPollType
 };
 
 /**
+ * Auto bind/apply decisions
+ */
+enum AutoBindDecision
+{
+   AutoBindDecision_Ignore = -1,
+   AutoBindDecision_Unbind = 0,
+   AutoBindDecision_Bind = 1
+};
+
+/**
  * Zone types
  */
 #define ZONE_TYPE_PASSIVE     0
@@ -654,7 +664,7 @@ public:
    StringSet *getDCIScriptList();
 
    BOOL applyToTarget(DataCollectionTarget *pNode);
-	bool isApplicable(Node *node);
+	AutoBindDecision isApplicable(Node *node);
 	bool isAutoApplyEnabled() { return (m_flags & TF_AUTO_APPLY) ? true : false; }
 	bool isAutoRemoveEnabled() { return ((m_flags & (TF_AUTO_APPLY | TF_AUTO_REMOVE)) == (TF_AUTO_APPLY | TF_AUTO_REMOVE)) ? true : false; }
 	void setAutoApplyFilter(const TCHAR *filter);
@@ -1637,7 +1647,7 @@ public:
    void linkChildObjects();
    void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
 
-	bool isSuitableForNode(Node *node);
+   AutoBindDecision isSuitableForNode(Node *node);
 	bool isAutoBindEnabled() { return (m_flags & CF_AUTO_BIND) ? true : false; }
 	bool isAutoUnbindEnabled() { return ((m_flags & (CF_AUTO_BIND | CF_AUTO_UNBIND)) == (CF_AUTO_BIND | CF_AUTO_UNBIND)) ? true : false; }
 

@@ -326,9 +326,9 @@ void Container::setAutoBindFilter(const TCHAR *script)
 /**
  * Check if node should be placed into container
  */
-bool Container::isSuitableForNode(Node *node)
+AutoBindDecision Container::isSuitableForNode(Node *node)
 {
-	bool result = false;
+   AutoBindDecision result = AutoBindDecision_Ignore;
 
 	lockProperties();
 	if ((m_flags & CF_AUTO_BIND) && (m_bindFilter != NULL))
@@ -337,7 +337,7 @@ bool Container::isSuitableForNode(Node *node)
 		if (m_bindFilter->run())
 		{
       	NXSL_Value *value = m_bindFilter->getResult();
-			result = ((value != NULL) && (value->getValueAsInt32() != 0));
+         result = ((value != NULL) && (value->getValueAsInt32() != 0)) ? AutoBindDecision_Bind : AutoBindDecision_Unbind;
 		}
 		else
 		{
