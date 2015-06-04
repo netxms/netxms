@@ -162,6 +162,7 @@ OperandType NXSL_Instruction::getOperandType()
       case OPCODE_INCP:
       case OPCODE_INCP_ELEMENT:
 		case OPCODE_NAME:
+      case OPCODE_PUSH_CONSTREF:
       case OPCODE_PUSH_VARIABLE:
       case OPCODE_SAFE_GET_ATTR:
       case OPCODE_SET:

@@ -200,6 +200,8 @@ bool NXSL_VM::load(NXSL_Program *program)
    // Set constants
    m_constants->clear();
    program->m_constants->forEach(createConstantsCallback, this);
+   m_constants->create(_T("NXSL::build"), new NXSL_Value(NETXMS_VERSION_BUILD_STRING));
+   m_constants->create(_T("NXSL::version"), new NXSL_Value(NETXMS_VERSION_STRING));
 
    // Load modules
    m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
@@ -464,6 +466,10 @@ void NXSL_VM::execute()
       case OPCODE_PUSH_VARIABLE:
          pVar = findOrCreateVariable(cp->m_operand.m_pszString);
          m_dataStack->push(new NXSL_Value(pVar->getValue()));
+         break;
+      case OPCODE_PUSH_CONSTREF:
+         pVar = m_constants->find(cp->m_operand.m_pszString);
+         m_dataStack->push((pVar != NULL) ? new NXSL_Value(pVar->getValue()) : new NXSL_Value());
          break;
       case OPCODE_SET:
          pVar = findOrCreateVariable(cp->m_operand.m_pszString);
@@ -1714,6 +1720,7 @@ void NXSL_VM::dump(FILE *pFile)
          case OPCODE_JNZ_PEEK:
             fprintf(pFile, "%04X\n", instr->m_operand.m_dwAddr);
             break;
+         case OPCODE_PUSH_CONSTREF:
          case OPCODE_PUSH_VARIABLE:
          case OPCODE_SET:
          case OPCODE_BIND:

@@ -552,6 +552,11 @@ Operand:
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, $1));
 	$1 = NULL;
 }
+|	T_COMPOUND_IDENTIFIER
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTREF, $1));
+	$1 = NULL;
+}
 |	Constant
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, $1));

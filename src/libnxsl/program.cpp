@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -49,7 +49,7 @@ const char *g_nxslCommandMnemonic[] =
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
 	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR",
 	"AGETS", "CALL", "CASE", "EINC", "EDEC",
-   "EINCP", "EDECP", "ABORT", "CATCH"
+   "EINCP", "EDECP", "ABORT", "CATCH", "PUSH"
 };
 
 /**
@@ -229,6 +229,7 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_JNZ_PEEK:
             fprintf(pFile, "%04X\n", instr->m_operand.m_dwAddr);
             break;
+         case OPCODE_PUSH_CONSTREF:
          case OPCODE_PUSH_VARIABLE:
          case OPCODE_SET:
          case OPCODE_BIND:
