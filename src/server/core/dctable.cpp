@@ -331,6 +331,8 @@ bool DCTable::processNewValue(time_t nTimeStamp, const void *value, bool *update
 	m_lastValue = (Table *)value;
 	m_lastValue->setTitle(m_szDescription);
    m_lastValue->setSource(m_source);
+   if(m_tLastPoll < nTimeStamp)
+      m_tLastPoll = nTimeStamp;
 
 	// Copy required fields into local variables
 	UINT32 tableId = m_id;
