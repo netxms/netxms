@@ -110,8 +110,9 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_name = DBGetField(hResult, row, 4, NULL, 0);
    m_pollingInterval = DBGetFieldULong(hResult, row, 5);
    m_lastPollTime = (time_t)DBGetFieldULong(hResult, row, 6);
-   DBGetFieldGUID(hResult, row, 7, m_snmpTargetGuid);
-   m_snmpPort = DBGetFieldULong(hResult, row, 8);
+   memset(m_snmpTargetGuid, 0, UUID_LENGTH);
+   m_snmpPort = DBGetFieldULong(hResult, row, 7);
+   DBGetFieldGUID(hResult, row, 8, m_snmpTargetGuid);
    m_snmpRawValueType = (BYTE)DBGetFieldULong(hResult, row, 9);
 }
 
