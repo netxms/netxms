@@ -301,7 +301,7 @@ bool DCTable::deleteAllData()
  *
  * @return true on success
  */
-bool DCTable::processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus)
+bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateStatus)
 {
    *updateStatus = false;
    lock();
@@ -331,8 +331,6 @@ bool DCTable::processNewValue(time_t nTimeStamp, const void *value, bool *update
 	m_lastValue = (Table *)value;
 	m_lastValue->setTitle(m_szDescription);
    m_lastValue->setSource(m_source);
-   if(m_tLastPoll < nTimeStamp)
-      m_tLastPoll = nTimeStamp;
 
 	// Copy required fields into local variables
 	UINT32 tableId = m_id;
@@ -352,7 +350,7 @@ bool DCTable::processNewValue(time_t nTimeStamp, const void *value, bool *update
          return true;
       }
 
-      INT64 recordId = ((INT64)time(NULL) << 30) | (((INT64)tableId & 0xFFFF) << 14);
+      INT64 recordId = ((INT64)timestamp << 30) | (((INT64)tableId & 0xFFFF) << 14);
       BOOL success = FALSE;
 	   Table *data = (Table *)value;
 
@@ -362,7 +360,7 @@ bool DCTable::processNewValue(time_t nTimeStamp, const void *value, bool *update
 	   if (hStmt != NULL)
 	   {
 		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
-		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)nTimeStamp);
+		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)timestamp);
 		   DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, recordId);
 	      success = DBExecute(hStmt);
 		   DBFreeStatement(hStmt);
@@ -435,7 +433,7 @@ bool DCTable::processNewValue(time_t nTimeStamp, const void *value, bool *update
    checkThresholds((Table *)value);
 
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
-      PerfDataStorageRequest(this, nTimeStamp, (Table *)value);
+      PerfDataStorageRequest(this, timestamp, (Table *)value);
 
    return true;
 }

@@ -527,7 +527,10 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
          return ERR_INTERNAL_ERROR;
    }
 
-   bool success = node->processNewDCValue(dcObject, msg->getFieldAsTime(VID_TIMESTAMP), value);
+   time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
+   bool success = node->processNewDCValue(dcObject, t, value);
+   if (t > dcObject->getLastPollTime())
+      dcObject->setLastPollTime(t);
 
    switch(type)
    {
