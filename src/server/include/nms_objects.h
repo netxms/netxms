@@ -1071,6 +1071,9 @@ class NXCORE_EXPORTABLE Node : public DataCollectionTarget
 {
 	friend class Subnet;
 
+private:
+   void onSnmpProxyChange(UINT32 oldProxy);
+
 protected:
    InetAddress m_ipAddress;
 	TCHAR m_primaryName[MAX_DNS_NAME];
