@@ -4975,12 +4975,11 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
 /**
  * Worker thread for object deletion
  */
-static THREAD_RESULT THREAD_CALL DeleteObjectWorker(void *arg)
+static void DeleteObjectWorker(void *arg)
 {
    ObjectTransactionStart();
 	((NetObj *)arg)->deleteObject();
    ObjectTransactionEnd();
-	return THREAD_OK;
 }
 
 /**
@@ -5007,7 +5006,7 @@ void ClientSession::deleteObject(NXCPMessage *pRequest)
          {
 				if ((object->getObjectClass() != OBJECT_ZONE) || object->isEmpty())
 				{
-					ThreadCreate(DeleteObjectWorker, 0, object);
+               ThreadPoolExecute(g_mainThreadPool, DeleteObjectWorker, object);
 					msg.setField(VID_RCC, RCC_SUCCESS);
                WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Object %s deleted"), object->getName());
 				}
