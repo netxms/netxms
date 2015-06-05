@@ -149,6 +149,7 @@ bool OpenLocalDatabase()
    {
       DBDisconnect(s_db);
       s_db = NULL;
+      return false;
    }
 
    DBQuery(s_db, _T("VACUUM"));
