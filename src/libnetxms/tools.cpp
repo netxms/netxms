@@ -529,7 +529,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
             len = (int)min(_tcslen(result), bufSize - outpos - 1);
             memcpy(&buffer[outpos], result, len * sizeof(TCHAR));
          }
-         else 
+         else
          {
             len = 0;
          }
@@ -545,29 +545,6 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 
 	buffer[outpos] = 0;
 	return buffer;
-}
-
-/**
- * Formats file name usign given time
- */
-const TCHAR LIBNETXMS_EXPORTABLE *ExpandFromTimestamp(const TCHAR *name, TCHAR *buffer, size_t bufSize, time_t time)
-{
-   TCHAR tmp[8192];
-#if HAVE_GMTIME_R
-   struct tm tmbuff;
-   struct tm *ltm = gmtime_r(&time, &tmbuff);
-#else
-   struct tm *ltm = gmtime(&time);
-#endif
-
-   if (_tcsftime(tmp, MAX_PATH, name, ltm) <= 0)
-   {
-      _tcsncpy(buffer, _T(""), bufSize);
-      return NULL;
-   }
-
-   _tcsncpy(buffer, tmp, bufSize);
-   return buffer;
 }
 
 /**
@@ -2293,7 +2270,7 @@ char LIBNETXMS_EXPORTABLE *_itoa(int value, char *str, int base)
       *p++ = '-';
       value = -value;
    }
-   
+
    char buffer[64];
    char *t = buffer;
    do
@@ -2325,7 +2302,7 @@ WCHAR LIBNETXMS_EXPORTABLE *_itow(int value, WCHAR *str, int base)
       *p++ = '-';
       value = -value;
    }
-   
+
    WCHAR buffer[64];
    WCHAR *t = buffer;
    do
@@ -2381,7 +2358,7 @@ time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue
 
 	memset(&t, 0, sizeof(struct tm));
 	t.tm_isdst = -1;
-	
+
 	t.tm_sec = strtol(curr, NULL, 10);
 	*curr = 0;
 	curr -= 2;
