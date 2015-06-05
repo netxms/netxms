@@ -161,15 +161,15 @@ void HashMapBase::_remove(const void *key)
  * Enumerate entries
  * Returns true if whole map was enumerated and false if enumeration was aborted by callback.
  */
-bool HashMapBase::forEach(bool (*cb)(const void *, const void *, void *), void *userData)
+EnumerationCallbackResult HashMapBase::forEach(EnumerationCallbackResult (*cb)(const void *, const void *, void *), void *userData)
 {
-   bool result = true;
+   EnumerationCallbackResult result = _CONTINUE;
    HashMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if (!cb(GET_KEY(entry), entry->value, userData))
+      if (cb(GET_KEY(entry), entry->value, userData) == _STOP)
       {
-         result = false;
+         result = _STOP;
          break;
       }
    }

@@ -115,9 +115,9 @@ struct ModuleDataDatabaseCallbackParams
 /**
  * Callback for deleting module data from database
  */
-static bool DeleteModuleDataCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult DeleteModuleDataCallback(const TCHAR *key, const void *value, void *data)
 {
-   return ((ModuleData *)value)->deleteFromDatabase(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id);
+   return ((ModuleData *)value)->deleteFromDatabase(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id) ? _CONTINUE : _STOP;
 }
 
 /**
@@ -150,7 +150,7 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       ModuleDataDatabaseCallbackParams data;
       data.id = m_id;
       data.hdb = hdb;
-      success = m_moduleData->forEach(DeleteModuleDataCallback, &data);
+      success = (m_moduleData->forEach(DeleteModuleDataCallback, &data) == _CONTINUE);
    }
 
    return success;
@@ -283,20 +283,20 @@ bool NetObj::loadCommonProperties()
 /**
  * Callback for saving custom attribute in database
  */
-static bool SaveAttributeCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveAttributeCallback(const TCHAR *key, const void *value, void *data)
 {
    DB_STATEMENT hStmt = (DB_STATEMENT)data;
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (const TCHAR *)value, DB_BIND_STATIC);
-   return DBExecute(hStmt) ? true : false;
+   return DBExecute(hStmt) ? _CONTINUE : _STOP;
 }
 
 /**
  * Callback for saving module data in database
  */
-static bool SaveModuleDataCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveModuleDataCallback(const TCHAR *key, const void *value, void *data)
 {
-   return ((ModuleData *)value)->saveToDatabase(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id);
+   return ((ModuleData *)value)->saveToDatabase(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id) ? _CONTINUE : _STOP;
 }
 
 /**
@@ -384,7 +384,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 			if (hStmt != NULL)
 			{
 				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            success = m_customAttributes.forEach(SaveAttributeCallback, hStmt);
+            success = (m_customAttributes.forEach(SaveAttributeCallback, hStmt) == _CONTINUE);
 				DBFreeStatement(hStmt);
 			}
 			else
@@ -400,7 +400,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
       ModuleDataDatabaseCallbackParams data;
       data.id = m_id;
       data.hdb = hdb;
-      success = m_moduleData->forEach(SaveModuleDataCallback, &data);
+      success = (m_moduleData->forEach(SaveModuleDataCallback, &data) == _CONTINUE);
    }
 
 	if (success)
@@ -899,12 +899,12 @@ struct SendModuleDataCallbackData
 /**
  * Callback for sending module data in NXCP message
  */
-static bool SendModuleDataCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SendModuleDataCallback(const TCHAR *key, const void *value, void *data)
 {
    ((SendModuleDataCallbackData *)data)->msg->setField(((SendModuleDataCallbackData *)data)->id, key);
    ((ModuleData *)value)->fillMessage(((SendModuleDataCallbackData *)data)->msg, ((SendModuleDataCallbackData *)data)->id + 1);
    ((SendModuleDataCallbackData *)data)->id += 0x100000;
-   return true;
+   return _CONTINUE;
 }
 
 /**

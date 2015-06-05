@@ -506,7 +506,7 @@ public:
 	int size();
    bool contains(const TCHAR *key) { return find(key) != NULL; }
 
-   bool forEach(bool (*cb)(const TCHAR *, const void *, void *), void *userData);
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData);
    const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData);
 
    StructArray<KeyValuePair> *toArray();
@@ -676,7 +676,7 @@ public:
 
 	int size();
 
-   bool forEach(bool (*cb)(const void *, const void *, void *), void *userData);
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void *, const void *, void *), void *userData);
    const void *findElement(bool (*comparator)(const void *, const void *, void *), void *userData);
 };
 

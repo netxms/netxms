@@ -113,11 +113,11 @@ void NXSL_VariableSystem::merge(NXSL_VariableSystem *src)
 /**
  * Callback for adding variables
  */
-static bool AddVariableCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult AddVariableCallback(const TCHAR *key, const void *value, void *data)
 {
    if (((NXSL_VariableSystem *)data)->find(key) == NULL)
       ((NXSL_VariableSystem *)data)->create(key, new NXSL_Value((NXSL_Value *)value));
-   return true;
+   return _CONTINUE;
 }
 
 /**

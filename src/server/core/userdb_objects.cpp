@@ -226,12 +226,12 @@ bool UserDatabaseObject::loadCustomAttributes(DB_HANDLE hdb)
 /**
  * Callback for saving custom attribute in database
  */
-static bool SaveAttributeCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveAttributeCallback(const TCHAR *key, const void *value, void *data)
 {
    DB_STATEMENT hStmt = (DB_STATEMENT)data;
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (const TCHAR *)value, DB_BIND_STATIC);
-   return DBExecute(hStmt) ? true : false;
+   return DBExecute(hStmt) ? _CONTINUE : _STOP;
 }
 
 /**
@@ -249,7 +249,7 @@ bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         success = m_attributes.forEach(SaveAttributeCallback, hStmt);
+         success = (m_attributes.forEach(SaveAttributeCallback, hStmt) == _CONTINUE);
          DBFreeStatement(hStmt);
       }
 	}

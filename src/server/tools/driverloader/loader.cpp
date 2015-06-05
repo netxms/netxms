@@ -93,10 +93,10 @@ void PrintMobileUnits(NetworkDeviceDriver *driver, SNMP_Transport *transport)
 /**
  * Print attribute
  */
-static bool PrintAttributeCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult PrintAttributeCallback(const TCHAR *key, const void *value, void *data)
 {
    _tprintf(_T("   %s = %s\n"), key, (const TCHAR *)value);
-   return true;
+   return _CONTINUE;
 }
 
 /**

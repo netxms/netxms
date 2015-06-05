@@ -3164,9 +3164,9 @@ StringMap *Node::getInstanceList(DCItem *dci)
 /**
  * Callback for finding instance
  */
-static bool FindInstanceCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult FindInstanceCallback(const TCHAR *key, const void *value, void *data)
 {
-   return _tcscmp((const TCHAR *)data, key) != 0;  // return false if instance found - it will stop enumeration
+   return !_tcscmp((const TCHAR *)data, key) ? _STOP : _CONTINUE;
 }
 
 /**
@@ -3182,7 +3182,7 @@ struct CreateInstanceDCIData
 /**
  * Callback for creating instance DCIs
  */
-static bool CreateInstanceDCI(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const void *value, void *data)
 {
    Node *object = ((CreateInstanceDCIData *)data)->object;
    DCItem *root = ((CreateInstanceDCIData *)data)->root;
@@ -3200,7 +3200,7 @@ static bool CreateInstanceDCI(const TCHAR *key, const void *value, void *data)
    dci->expandInstance();
 	dci->changeBinding(CreateUniqueId(IDG_ITEM), object, FALSE);
 	object->addDCObject(dci, true);
-   return true;
+   return _CONTINUE;
 }
 
 /**
@@ -3221,7 +3221,7 @@ void Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
 			continue;
 
       const TCHAR *dciInstance = ((DCItem *)object)->getInstanceDiscoveryData();
-      if (!instances->forEach(FindInstanceCallback, (void *)dciInstance))
+      if (instances->forEach(FindInstanceCallback, (void *)dciInstance) == _STOP)
 		{
 			// found, remove value from instances
 			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),

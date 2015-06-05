@@ -157,13 +157,13 @@ struct ParameterListCallbackData
 /**
  * Parameter list callback
  */
-static bool ParameterListCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult ParameterListCallback(const TCHAR *key, const void *value, void *data)
 {
 	((ParameterListCallbackData *)data)->msg->setField(((ParameterListCallbackData *)data)->id++, key);
 	((ParameterListCallbackData *)data)->msg->setField(((ParameterListCallbackData *)data)->id++, _T(""));
 	((ParameterListCallbackData *)data)->msg->setField(((ParameterListCallbackData *)data)->id++, (WORD)DCI_DT_STRING);
 	((ParameterListCallbackData *)data)->count++;
-   return true;
+   return _CONTINUE;
 }
 
 /**
@@ -187,10 +187,10 @@ void ParamProvider::listParameters(NXCPMessage *msg, UINT32 *baseId, UINT32 *cou
 /**
  * Parameter list callback
  */
-static bool ParameterListCallback2(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult ParameterListCallback2(const TCHAR *key, const void *value, void *data)
 {
    ((StringList *)data)->add(key);
-   return true;
+   return _CONTINUE;
 }
 
 /**

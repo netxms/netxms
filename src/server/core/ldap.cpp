@@ -604,10 +604,10 @@ TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, UINT32
 /**
  * Update user callback
  */
-static bool UpdateUserCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult UpdateUserCallback(const TCHAR *key, const void *value, void *data)
 {
    UpdateLDAPUser(key, (Entry *)value);
-   return true;
+   return _CONTINUE;
 }
 
 /**
@@ -622,10 +622,10 @@ void LDAPConnection::compareUserLists(StringObjectMap<Entry> *userEntryList)
 /**
  * Update group callback
  */
-static bool UpdateGroupCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult UpdateGroupCallback(const TCHAR *key, const void *value, void *data)
 {
    UpdateLDAPGroup(key, (Entry *)value);
-   return true;
+   return _CONTINUE;
 }
 
 /**

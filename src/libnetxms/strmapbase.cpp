@@ -174,17 +174,17 @@ void StringMapBase::remove(const TCHAR *key)
 
 /**
  * Enumerate entries
- * Returns true if whole map was enumerated and false if enumeration was aborted by callback.
+ * Returns _CONTINUE if whole map was enumerated and _STOP if enumeration was aborted by callback.
  */
-bool StringMapBase::forEach(bool (*cb)(const TCHAR *, const void *, void *), void *userData)
+EnumerationCallbackResult StringMapBase::forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData)
 {
-   bool result = true;
+   EnumerationCallbackResult result = _CONTINUE;
    StringMapEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
    {
-      if (!cb(m_ignoreCase ? entry->originalKey : entry->key, entry->value, userData))
+      if (cb(m_ignoreCase ? entry->originalKey : entry->key, entry->value, userData) == _STOP)
       {
-         result = false;
+         result = _STOP;
          break;
       }
    }

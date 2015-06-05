@@ -1780,7 +1780,7 @@ struct FilterCallbackData
 /**
  * Callback for filtering instances
  */
-static bool FilterCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *value, void *data)
 {
    NXSL_VM *instanceFilter = ((FilterCallbackData *)data)->instanceFilter;
    DCItem *dci = ((FilterCallbackData *)data)->dci;
@@ -1863,7 +1863,7 @@ static bool FilterCallback(const TCHAR *key, const void *value, void *data)
       PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, instanceFilter->getErrorText(), dci->getId());
       ((FilterCallbackData *)data)->filteredInstances->set(key, (const TCHAR *)value);
    }
-   return true;
+   return _CONTINUE;
 }
 
 /**

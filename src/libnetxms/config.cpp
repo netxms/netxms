@@ -612,11 +612,11 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix)
 /**
  * Add attribute
  */
-static bool AddAttribute(const TCHAR *key, const void *value, void *userData)
+static EnumerationCallbackResult AddAttribute(const TCHAR *key, const void *value, void *userData)
 {
    if (_tcscmp(key, _T("id")))
       ((String *)userData)->appendFormattedString(_T(" %s=\"%s\""), key, (const TCHAR *)value);
-   return true;
+   return _CONTINUE;
 }
 
 /**

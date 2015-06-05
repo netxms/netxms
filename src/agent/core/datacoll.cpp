@@ -462,6 +462,17 @@ static HashMap<UINT64, ServerSyncStatus> s_serverSyncStatus(true);
 static MUTEX s_serverSyncStatusLock = INVALID_MUTEX_HANDLE;
 
 /**
+ * Callback to check if reconcillation is needed for session
+ */
+static EnumerationCallbackResult ReconcillationQueryCallback(AbstractCommSession *session, void *arg)
+{
+   if (session->getServerId() == 0)
+      return _CONTINUE;
+   ServerSyncStatus *s = s_serverSyncStatus.get(session->getServerId());
+   return ((s != NULL) && (s->queueSize > 0)) ? _STOP : _CONTINUE;
+}
+
+/**
  * Data reconcillation thread
  */
 static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
@@ -472,9 +483,22 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
 
    while(!AgentSleepAndCheckForShutdown(sleepTime))
    {
+      // Check if there is something to sync
+      MutexLock(s_serverSyncStatusLock);
+      bool run = EnumerateSessions(ReconcillationQueryCallback, NULL);
+      MutexUnlock(s_serverSyncStatusLock);
+      if (!run)
+      {
+         sleepTime = 30000;
+         continue;
+      }
+
       DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue ORDER BY timestamp LIMIT 100"));
       if (hResult == NULL)
+      {
+         sleepTime = 30000;
          continue;
+      }
 
       int count = DBGetNumRows(hResult);
       if (count > 0)

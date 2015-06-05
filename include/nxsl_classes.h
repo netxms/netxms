@@ -568,7 +568,7 @@ struct NXSL_CatchPoint
 class LIBNXSL_EXPORTABLE NXSL_VM
 {
 private:
-   static bool createConstantsCallback(const TCHAR *key, const void *value, void *data);
+   static EnumerationCallbackResult createConstantsCallback(const TCHAR *key, const void *value, void *data);
 
 protected:
    NXSL_Environment *m_env;

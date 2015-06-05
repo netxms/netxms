@@ -458,14 +458,14 @@ struct SituationUpdateCallbackData
 /**
  * Situation update callback
  */
-static bool SituationUpdateCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SituationUpdateCallback(const TCHAR *key, const void *value, void *data)
 {
 	TCHAR *attrName = ((SituationUpdateCallbackData *)data)->evt->expandText(key);
 	TCHAR *attrValue = ((SituationUpdateCallbackData *)data)->evt->expandText((const TCHAR *)value);
 	((SituationUpdateCallbackData *)data)->s->UpdateSituation(((SituationUpdateCallbackData *)data)->text, attrName, attrValue);
 	free(attrName);
 	free(attrValue);
-   return true;
+   return _CONTINUE;
 }
 
 /**
@@ -630,13 +630,13 @@ bool EPRule::loadFromDB()
 /**
  * Callback for saving situation attributes
  */
-static bool SaveSituationAttribute(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveSituationAttribute(const TCHAR *key, const void *value, void *data)
 {
    DB_STATEMENT hStmt = (DB_STATEMENT)data;
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
    DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, (const TCHAR *)value, DB_BIND_STATIC);
    DBExecute(hStmt);
-   return true;
+   return _CONTINUE;
 }
 
 /**

@@ -168,10 +168,10 @@ NXSL_VM::~NXSL_VM()
 /**
  * Constant creation callback
  */
-bool NXSL_VM::createConstantsCallback(const TCHAR *key, const void *value, void *data)
+EnumerationCallbackResult NXSL_VM::createConstantsCallback(const TCHAR *key, const void *value, void *data)
 {
    ((NXSL_VM *)data)->m_constants->create(key, new NXSL_Value((NXSL_Value *)value));
-   return true;
+   return _CONTINUE;
 }
 
 /**
