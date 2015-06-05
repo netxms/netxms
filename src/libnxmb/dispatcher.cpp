@@ -55,9 +55,9 @@ NXMBDispatcher::~NXMBDispatcher()
 	NXMBMessage *msg;
 	int i;
 
-	while((msg = (NXMBMessage *)m_queue->Get()) != NULL)
+	while((msg = (NXMBMessage *)m_queue->get()) != NULL)
 		delete msg;
-	m_queue->Put(INVALID_POINTER_VALUE);
+	m_queue->put(INVALID_POINTER_VALUE);
 	ThreadJoin(m_workerThreadHandle);
 
 	delete m_queue;
@@ -88,7 +88,7 @@ void NXMBDispatcher::workerThread()
 
 	while(true)
 	{
-		msg = (NXMBMessage *)m_queue->GetOrBlock();
+		msg = (NXMBMessage *)m_queue->getOrBlock();
 		if (msg == INVALID_POINTER_VALUE)
 			break;
 
@@ -110,7 +110,7 @@ void NXMBDispatcher::workerThread()
  */
 void NXMBDispatcher::postMessage(NXMBMessage *msg)
 {
-	m_queue->Put(msg);
+	m_queue->put(msg);
 }
 
 /**

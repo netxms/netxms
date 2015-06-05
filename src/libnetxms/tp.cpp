@@ -83,7 +83,7 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
    Queue *q = ((ThreadPool *)arg)->queue;
    while(true)
    {
-      WorkRequest *rq = (WorkRequest *)q->GetOrBlock();
+      WorkRequest *rq = (WorkRequest *)q->getOrBlock();
       if (rq->func == NULL)
          break;   // stop indicator
       rq->func(rq->arg);
@@ -125,7 +125,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
    WorkRequest rq;
    rq.func = NULL;
    for(int i = 0; i < p->curThreads; i++)
-      p->queue->Put(&rq);
+      p->queue->put(&rq);
 
    for(int i = 0; i < p->curThreads; i++)
       ThreadJoin(p->threads[i]);
@@ -159,7 +159,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunct
    WorkRequest *rq = (WorkRequest *)malloc(sizeof(WorkRequest));
    rq->func = f;
    rq->arg = arg;
-   p->queue->Put(rq);
+   p->queue->put(rq);
 }
 
 /**

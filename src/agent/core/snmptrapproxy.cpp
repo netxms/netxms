@@ -43,7 +43,7 @@ static Queue s_snmpTrapQueue;
  */
 void ShutdownSNMPTrapSender()
 {
-	s_snmpTrapQueue.SetShutdownMode();
+	s_snmpTrapQueue.setShutdownMode();
 }
 
 /**
@@ -135,7 +135,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
          message->lenght = iBytes;
          message->rawMessage = rawMessage;
          DebugPrintf(INVALID_INDEX, 6, _T("SNMPTrapReceiver: packet received from %s"), IpToStr(message->ipAddr, ipAddrStr));
-         s_snmpTrapQueue.Put(message);
+         s_snmpTrapQueue.put(message);
       }
       else
       {
@@ -158,7 +158,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
    while(1)
    {
       DebugPrintf(INVALID_INDEX, 8, _T("SNMPTrapSender: waiting for message"));
-      UdpMessage *pdu = (UdpMessage *)s_snmpTrapQueue.GetOrBlock();
+      UdpMessage *pdu = (UdpMessage *)s_snmpTrapQueue.getOrBlock();
       if (pdu == INVALID_POINTER_VALUE)
          break;
 
@@ -198,7 +198,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       if (!sent)
       {
          DebugPrintf(INVALID_INDEX, 6, _T("Cannot forward trap to server"));
-         s_snmpTrapQueue.Put(pdu);
+         s_snmpTrapQueue.put(pdu);
 			ThreadSleep(1);
       }
       else

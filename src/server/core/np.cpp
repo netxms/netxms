@@ -700,7 +700,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 
    while(!IsShutdownInProgress())
    {
-      pInfo = (NEW_NODE *)g_nodePollerQueue.GetOrBlock();
+      pInfo = (NEW_NODE *)g_nodePollerQueue.getOrBlock();
       if (pInfo == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator received
 

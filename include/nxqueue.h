@@ -38,30 +38,33 @@ class LIBNETXMS_EXPORTABLE Queue
 private:
    MUTEX m_mutexQueueAccess;
    CONDITION m_condWakeup;
-   void **m_pElements;
-   UINT32 m_dwNumElements;
-   UINT32 m_dwBufferSize;
-   UINT32 m_dwFirst;
-   UINT32 m_dwLast;
-   UINT32 m_dwBufferIncrement;
-	BOOL m_bShutdownFlag;
+   void **m_elements;
+   UINT32 m_numElements;
+   UINT32 m_bufferSize;
+   UINT32 m_initialSize;
+   UINT32 m_first;
+   UINT32 m_last;
+   UINT32 m_bufferIncrement;
+	bool m_shutdownFlag;
 
 	void commonInit();
    void lock() { MutexLock(m_mutexQueueAccess); }
    void unlock() { MutexUnlock(m_mutexQueueAccess); }
+   void shrink();
 
 public:
    Queue();
-   Queue(UINT32 dwInitialSize, UINT32 dwBufferIncrement = 32);
+   Queue(UINT32 initialSize, UINT32 bufferIncrement = 32);
    ~Queue();
 
-   void Put(void *pObject);
-	void Insert(void *pObject);
-	void SetShutdownMode();
-   void *Get();
-   void *GetOrBlock();
-   UINT32 Size() { return m_dwNumElements; }
-   void Clear();
+   void put(void *object);
+	void insert(void *object);
+	void setShutdownMode();
+   void *get();
+   void *getOrBlock();
+   int size() { return (int)m_numElements; }
+   int allocated() { return (int)m_bufferSize; }
+   void clear();
 	void *find(void *key, QUEUE_COMPARATOR comparator);
 	bool remove(void *key, QUEUE_COMPARATOR comparator);
 };

@@ -139,7 +139,7 @@ void NXSL_Compiler::addBreakAddr(UINT32 dwAddr)
 	pQueue = (Queue *)m_pBreakStack->peek();
 	if (pQueue != NULL)
 	{
-		pQueue->Put(CAST_TO_POINTER(dwAddr, void *));
+		pQueue->put(CAST_TO_POINTER(dwAddr, void *));
 	}
 }
 
@@ -155,7 +155,7 @@ void NXSL_Compiler::closeBreakLevel(NXSL_Program *pScript)
 	pQueue = (Queue *)m_pBreakStack->pop();
 	if (pQueue != NULL)
 	{
-		while((pAddr = pQueue->Get()) != NULL)
+		while((pAddr = pQueue->get()) != NULL)
 		{
 			dwAddr = CAST_FROM_POINTER(pAddr, UINT32);
 			pScript->createJumpAt(dwAddr, pScript->getCodeSize());

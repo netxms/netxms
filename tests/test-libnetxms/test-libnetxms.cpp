@@ -1,5 +1,6 @@
 #include <nms_common.h>
 #include <nms_util.h>
+#include <nxqueue.h>
 #include <testtools.h>
 
 void TestMsgWaitQueue();
@@ -345,6 +346,42 @@ static void TestItoa()
 }
 
 /**
+ * Test queue
+ */
+static void TestQueue()
+{
+   Queue *q = new Queue(16, 16);
+
+   StartTest(_T("Queue: put/get"));
+   for(int i = 0; i < 40; i++)
+      q->put(CAST_TO_POINTER(i + 1, void *));
+   AssertEquals(q->size(), 40);
+   AssertEquals(q->allocated(), 48);
+   for(int i = 0; i < 40; i++)
+   {
+      void *p = q->get();
+      AssertNotNull(p);
+      AssertEquals(CAST_FROM_POINTER(p, int), i + 1);
+   }
+   EndTest();
+
+   StartTest(_T("Queue: shrink"));
+   for(int i = 0; i < 60; i++)
+      q->put(CAST_TO_POINTER(i + 1, void *));
+   AssertEquals(q->size(), 60);
+   AssertEquals(q->allocated(), 64);
+   for(int i = 0; i < 55; i++)
+   {
+      void *p = q->get();
+      AssertNotNull(p);
+      AssertEquals(CAST_FROM_POINTER(p, int), i + 1);
+   }
+   AssertEquals(q->size(), 5);
+   AssertEquals(q->allocated(), 16);
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -361,5 +398,6 @@ int main(int argc, char *argv[])
    TestMsgWaitQueue();
    TestInetAddress();
    TestItoa();
+   TestQueue();
    return 0;
 }

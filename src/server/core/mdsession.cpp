@@ -207,20 +207,20 @@ void MobileDeviceSession::readThread()
 		}
 		else
       {
-         m_pMessageQueue->Put(msg);
+         m_pMessageQueue->put(msg);
       }
    }
 
    // Notify other threads to exit
    NXCP_MESSAGE *rawMsg;
-	while((rawMsg = (NXCP_MESSAGE *)m_pSendQueue->Get()) != NULL)
+	while((rawMsg = (NXCP_MESSAGE *)m_pSendQueue->get()) != NULL)
 		free(rawMsg);
-   m_pSendQueue->Put(INVALID_POINTER_VALUE);
+   m_pSendQueue->put(INVALID_POINTER_VALUE);
 
    NXCPMessage *msg;
-	while((msg = (NXCPMessage *)m_pMessageQueue->Get()) != NULL)
+	while((msg = (NXCPMessage *)m_pMessageQueue->get()) != NULL)
 		delete msg;
-   m_pMessageQueue->Put(INVALID_POINTER_VALUE);
+   m_pMessageQueue->put(INVALID_POINTER_VALUE);
 
    // Wait for other threads to finish
    ThreadJoin(m_hWriteThread);
@@ -252,7 +252,7 @@ void MobileDeviceSession::writeThread()
 
    while(1)
    {
-      pRawMsg = (NXCP_MESSAGE *)m_pSendQueue->GetOrBlock();
+      pRawMsg = (NXCP_MESSAGE *)m_pSendQueue->getOrBlock();
       if (pRawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
@@ -299,7 +299,7 @@ void MobileDeviceSession::processingThread()
 
    while(1)
    {
-      msg = (NXCPMessage *)m_pMessageQueue->GetOrBlock();
+      msg = (NXCPMessage *)m_pMessageQueue->getOrBlock();
       if (msg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 

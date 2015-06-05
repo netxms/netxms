@@ -59,7 +59,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
 	rq->query = (TCHAR *)&rq->bindings[0];
 	_tcscpy(rq->query, query);
 	rq->bindCount = 0;
-   g_dbWriterQueue->Put(rq);
+   g_dbWriterQueue->put(rq);
 	DbgPrintf(8, _T("SQL request queued: %s"), query);
 }
 
@@ -97,7 +97,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 			pos += align - pos % align;
 	}
 
-   g_dbWriterQueue->Put(rq);
+   g_dbWriterQueue->put(rq);
 	DbgPrintf(8, _T("SQL request queued: %s"), query);
 }
 
@@ -111,7 +111,7 @@ void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR
 	rq->nodeId = nodeId;
 	rq->dciId = dciId;
 	nx_strncpy(rq->value, value, MAX_RESULT_LENGTH);
-	g_dciDataWriterQueue->Put(rq);
+	g_dciDataWriterQueue->put(rq);
 }
 
 /**
@@ -124,7 +124,7 @@ void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue
 	rq->dciId = dciId;
 	nx_strncpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
 	nx_strncpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
-	g_dciRawDataWriterQueue->Put(rq);
+	g_dciRawDataWriterQueue->put(rq);
 }
 
 /**
@@ -151,7 +151,7 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 
    while(1)
    {
-      DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)g_dbWriterQueue->GetOrBlock();
+      DELAYED_SQL_REQUEST *rq = (DELAYED_SQL_REQUEST *)g_dbWriterQueue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
@@ -206,7 +206,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 
    while(1)
    {
-		DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)g_dciDataWriterQueue->GetOrBlock();
+		DELAYED_IDATA_INSERT *rq = (DELAYED_IDATA_INSERT *)g_dciDataWriterQueue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
@@ -238,7 +238,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 				if (!success || (count > 1000))
 					break;
 
-				rq = (DELAYED_IDATA_INSERT *)g_dciDataWriterQueue->Get();
+				rq = (DELAYED_IDATA_INSERT *)g_dciDataWriterQueue->get();
 				if (rq == NULL)
 					break;
 				if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
@@ -284,7 +284,7 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
 
    while(1)
    {
-		DELAYED_RAW_DATA_UPDATE *rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->GetOrBlock();
+		DELAYED_RAW_DATA_UPDATE *rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->getOrBlock();
       if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
          break;
 
@@ -314,7 +314,7 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
 				if (!success || (count > 1000))
 					break;
 
-				rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->Get();
+				rq = (DELAYED_RAW_DATA_UPDATE *)g_dciRawDataWriterQueue->get();
 				if (rq == NULL)
 					break;
 				if (rq == INVALID_POINTER_VALUE)   // End-of-job indicator
@@ -367,12 +367,12 @@ void StopDBWriter()
    int i;
 
    for(i = 0; i < m_numWriters; i++)
-      g_dbWriterQueue->Put(INVALID_POINTER_VALUE);
+      g_dbWriterQueue->put(INVALID_POINTER_VALUE);
    for(i = 0; i < m_numWriters; i++)
       ThreadJoin(m_hWriteThreadList[i]);
 
-	g_dciDataWriterQueue->Put(INVALID_POINTER_VALUE);
-	g_dciRawDataWriterQueue->Put(INVALID_POINTER_VALUE);
+	g_dciDataWriterQueue->put(INVALID_POINTER_VALUE);
+	g_dciRawDataWriterQueue->put(INVALID_POINTER_VALUE);
 	ThreadJoin(m_hIDataWriterThread);
 	ThreadJoin(m_hRawDataWriterThread);
 }

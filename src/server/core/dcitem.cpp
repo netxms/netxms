@@ -1041,7 +1041,7 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
          m_pNode->incRefCount();
          m_requiredCacheSize = dwRequiredSize;
          m_bCacheLoaded = false;
-         g_dciCacheLoaderQueue.Put(this);
+         g_dciCacheLoaderQueue.put(this);
       }
       else
       {

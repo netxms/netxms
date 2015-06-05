@@ -577,7 +577,7 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
    DebugPrintf(INVALID_INDEX, 1, _T("Data sender thread started"));
    while(true)
    {
-      DataElement *e = (DataElement *)s_dataSenderQueue.GetOrBlock();
+      DataElement *e = (DataElement *)s_dataSenderQueue.getOrBlock();
       if (e == INVALID_POINTER_VALUE)
          break;
 
@@ -721,7 +721,7 @@ static UINT32 DataCollectionRun()
 
          if (e != NULL)
          {
-            s_dataSenderQueue.Put(e);
+            s_dataSenderQueue.put(e);
          }
          else
          {
@@ -968,7 +968,7 @@ void ShutdownLocalDataCollector()
    ThreadJoin(s_dataCollectorThread);
 
    DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data sender thread termination"));
-   s_dataSenderQueue.Put(INVALID_POINTER_VALUE);
+   s_dataSenderQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_dataSenderThread);
 
    DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data reconcillation thread termination"));

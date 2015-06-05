@@ -311,7 +311,7 @@ void CommSession::readThread()
             }
             else
             {
-               m_processingQueue->Put(pMsg);
+               m_processingQueue->put(pMsg);
             }
          }
       }
@@ -324,8 +324,8 @@ void CommSession::readThread()
 #endif
 
    // Notify other threads to exit
-   m_sendQueue->Put(INVALID_POINTER_VALUE);
-   m_processingQueue->Put(INVALID_POINTER_VALUE);
+   m_sendQueue->put(INVALID_POINTER_VALUE);
+   m_processingQueue->put(INVALID_POINTER_VALUE);
    if (m_hProxySocket != -1)
       shutdown(m_hProxySocket, SHUT_RDWR);
 
@@ -381,14 +381,14 @@ void CommSession::writeThread()
 
    while(1)
    {
-      pMsg = (NXCP_MESSAGE *)m_sendQueue->GetOrBlock();
+      pMsg = (NXCP_MESSAGE *)m_sendQueue->getOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
       if (!sendRawMessage(pMsg, m_pCtx))
          break;
    }
-   m_sendQueue->Clear();
+   m_sendQueue->clear();
 }
 
 /**
@@ -403,7 +403,7 @@ void CommSession::processingThread()
 
    while(1)
    {
-      pMsg = (NXCPMessage *)m_processingQueue->GetOrBlock();
+      pMsg = (NXCPMessage *)m_processingQueue->getOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
       dwCommand = pMsg->getCode();
@@ -950,10 +950,10 @@ UINT32 CommSession::setupProxyConnection(NXCPMessage *pRequest)
             NXCP_MESSAGE *pRawMsg;
 
             // Stop writing thread
-            m_sendQueue->Put(INVALID_POINTER_VALUE);
+            m_sendQueue->put(INVALID_POINTER_VALUE);
 
             // Wait while all queued messages will be sent
-            while(m_sendQueue->Size() > 0)
+            while(m_sendQueue->size() > 0)
                ThreadSleepMs(100);
 
             // Finish proxy connection setup

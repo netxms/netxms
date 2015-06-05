@@ -385,7 +385,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 	DbgPrintf(1, _T("SMTP mailer thread started"));
    while(1)
    {
-      MAIL_ENVELOPE *pEnvelope = (MAIL_ENVELOPE *)m_pMailerQueue->GetOrBlock();
+      MAIL_ENVELOPE *pEnvelope = (MAIL_ENVELOPE *)m_pMailerQueue->getOrBlock();
       if (pEnvelope == INVALID_POINTER_VALUE)
          break;
 
@@ -404,7 +404,7 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 			if (pEnvelope->nRetryCount > 0)
 			{
 				// Try posting again
-				m_pMailerQueue->Put(pEnvelope);
+				m_pMailerQueue->put(pEnvelope);
 			}
 			else
 			{
@@ -438,8 +438,8 @@ void InitMailer()
  */
 void ShutdownMailer()
 {
-   m_pMailerQueue->Clear();
-   m_pMailerQueue->Put(INVALID_POINTER_VALUE);
+   m_pMailerQueue->clear();
+   m_pMailerQueue->put(INVALID_POINTER_VALUE);
    if (m_hThread != INVALID_THREAD_HANDLE)
       ThreadJoin(m_hThread);
    delete m_pMailerQueue;
@@ -465,5 +465,5 @@ void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, c
    pEnvelope->pszText = _tcsdup(pszText);
 #endif
 	pEnvelope->nRetryCount = ConfigReadInt(_T("SMTPRetryCount"), 1);
-   m_pMailerQueue->Put(pEnvelope);
+   m_pMailerQueue->put(pEnvelope);
 }

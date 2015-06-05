@@ -86,7 +86,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 	DbgPrintf(1, _T("Apply template thread started"));
    while(1)
    {
-      TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)g_pTemplateUpdateQueue->GetOrBlock();
+      TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)g_pTemplateUpdateQueue->getOrBlock();
       if (pInfo == INVALID_POINTER_VALUE)
          break;
 
@@ -139,7 +139,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
       else
       {
 			DbgPrintf(8, _T("ApplyTemplateThread: failed"));
-         g_pTemplateUpdateQueue->Put(pInfo);    // Requeue
+         g_pTemplateUpdateQueue->put(pInfo);    // Requeue
          ThreadSleepMs(500);
       }
    }

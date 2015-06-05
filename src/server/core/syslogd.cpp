@@ -325,7 +325,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
    DbgPrintf(1, _T("Syslog writer thread started"));
    while(true)
    {
-      NX_SYSLOG_RECORD *r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.GetOrBlock();
+      NX_SYSLOG_RECORD *r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.getOrBlock();
       if (r == INVALID_POINTER_VALUE)
          break;
 
@@ -366,7 +366,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
          count++;
          if (count == 1000)
             break;
-         r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.Get();
+         r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.get();
          if ((r == NULL) || (r == INVALID_POINTER_VALUE))
             break;
       }
@@ -393,7 +393,7 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
       record.qwMsgId = s_msgId++;
       Node *node = BindMsgToNode(&record, dwSourceIP);
 
-      g_syslogWriteQueue.Put(nx_memdup(&record, sizeof(NX_SYSLOG_RECORD)));
+      g_syslogWriteQueue.put(nx_memdup(&record, sizeof(NX_SYSLOG_RECORD)));
 
       // Send message to all connected clients
       EnumerateClientSessions(BroadcastSyslogMessage, &record);
@@ -433,7 +433,7 @@ static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
 
    while(1)
    {
-      pMsg = (QUEUED_SYSLOG_MESSAGE *)g_syslogProcessingQueue.GetOrBlock();
+      pMsg = (QUEUED_SYSLOG_MESSAGE *)g_syslogProcessingQueue.getOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
@@ -455,7 +455,7 @@ static void QueueSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
    pMsg->dwSourceIP = dwSourceIP;
    pMsg->nBytes = nMsgLen;
    pMsg->psMsg = (char *)nx_memdup(psMsg, nMsgLen + 1);
-   g_syslogProcessingQueue.Put(pMsg);
+   g_syslogProcessingQueue.put(pMsg);
 }
 
 /**
@@ -645,11 +645,11 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    }
 
    // Stop processing thread
-   g_syslogProcessingQueue.Put(INVALID_POINTER_VALUE);
+   g_syslogProcessingQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(hProcessingThread);
 
    // Stop writer thread - it must be done after processing thread already finished
-   g_syslogWriteQueue.Put(INVALID_POINTER_VALUE);
+   g_syslogWriteQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(hWriterThread);
 
 	delete s_parser;

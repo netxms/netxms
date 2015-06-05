@@ -420,7 +420,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 				pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 				pInfo->ignoreFilter = FALSE;
 				memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-            g_nodePollerQueue.Put(pInfo);
+            g_nodePollerQueue.put(pInfo);
          }
       }
       else
@@ -432,7 +432,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 			pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 			pInfo->ignoreFilter = FALSE;
 			memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-         g_nodePollerQueue.Put(pInfo);
+         g_nodePollerQueue.put(pInfo);
       }
    }
    else  // unknown node, discovery disabled

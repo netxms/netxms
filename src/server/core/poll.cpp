@@ -290,7 +290,7 @@ static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
    while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
-      pObject = (NetObj *)g_statusPollQueue.GetOrBlock();
+      pObject = (NetObj *)g_statusPollQueue.getOrBlock();
       if (pObject == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -335,7 +335,7 @@ static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
    while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
-      pNode = (Node *)g_configPollQueue.GetOrBlock();
+      pNode = (Node *)g_configPollQueue.getOrBlock();
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -369,7 +369,7 @@ static THREAD_RESULT THREAD_CALL InstanceDiscoveryPoller(void *arg)
    while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
-      pNode = (Node *)g_instancePollQueue.GetOrBlock();
+      pNode = (Node *)g_instancePollQueue.getOrBlock();
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -403,7 +403,7 @@ static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
    while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
-      pNode = (Node *)g_routePollQueue.GetOrBlock();
+      pNode = (Node *)g_routePollQueue.getOrBlock();
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -460,7 +460,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
 					   memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
 				   DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%d"),
 				             pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
-               g_nodePollerQueue.Put(pInfo);
+               g_nodePollerQueue.put(pInfo);
             }
 			   else
 			   {
@@ -526,7 +526,7 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
    while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
-      pNode = (Node *)g_discoveryPollQueue.GetOrBlock();
+      pNode = (Node *)g_discoveryPollQueue.getOrBlock();
       if (pNode == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -573,8 +573,8 @@ static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
       pNode->setDiscoveryPollTimeStamp();
       pNode->decRefCount();
    }
-   g_nodePollerQueue.Clear();
-   g_nodePollerQueue.Put(INVALID_POINTER_VALUE);
+   g_nodePollerQueue.clear();
+   g_nodePollerQueue.put(INVALID_POINTER_VALUE);
    SetPollerState((long)arg, _T("finished"));
    return THREAD_OK;
 }
@@ -595,7 +595,7 @@ static THREAD_RESULT THREAD_CALL ConditionPoller(void *arg)
    while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
-      pCond = (Condition *)g_conditionPollerQueue.GetOrBlock();
+      pCond = (Condition *)g_conditionPollerQueue.getOrBlock();
       if (pCond == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -626,7 +626,7 @@ static THREAD_RESULT THREAD_CALL TopologyPoller(void *arg)
    while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
-      Node *node = (Node *)g_topologyPollQueue.GetOrBlock();
+      Node *node = (Node *)g_topologyPollQueue.getOrBlock();
       if (node == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -657,7 +657,7 @@ static THREAD_RESULT THREAD_CALL BusinessServicePoller(void *arg)
    while(!IsShutdownInProgress())
    {
       SetPollerState((long)arg, _T("wait"));
-		BusinessService *service = (BusinessService *)g_businessServicePollerQueue.GetOrBlock();
+		BusinessService *service = (BusinessService *)g_businessServicePollerQueue.getOrBlock();
       if (service == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -715,7 +715,7 @@ static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
 						pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 						pInfo->ignoreFilter = FALSE;
 						memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-                  g_nodePollerQueue.Put(pInfo);
+                  g_nodePollerQueue.put(pInfo);
                }
             }
             else
@@ -727,7 +727,7 @@ static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
 					pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 					pInfo->ignoreFilter = FALSE;
 					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-               g_nodePollerQueue.Put(pInfo);
+               g_nodePollerQueue.put(pInfo);
             }
          }
       }
@@ -794,42 +794,42 @@ static void QueueForPolling(NetObj *object, void *data)
 					node->incRefCount();
 					node->lockForConfigurationPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for configuration poll"), (int)node->getId(), node->getName());
-					g_configPollQueue.Put(node);
+					g_configPollQueue.put(node);
 				}
 				if (node->isReadyForInstancePoll())
 				{
 					node->incRefCount();
 					node->lockForInstancePoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for instance discovery poll"), (int)node->getId(), node->getName());
-					g_instancePollQueue.Put(node);
+					g_instancePollQueue.put(node);
 				}
 				if (node->isReadyForStatusPoll())
 				{
 					node->incRefCount();
 					node->lockForStatusPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for status poll"), (int)node->getId(), node->getName());
-					g_statusPollQueue.Put(node);
+					g_statusPollQueue.put(node);
 				}
 				if (node->isReadyForRoutePoll())
 				{
 					node->incRefCount();
 					node->lockForRoutePoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for routing table poll"), (int)node->getId(), node->getName());
-					g_routePollQueue.Put(node);
+					g_routePollQueue.put(node);
 				}
 				if (node->isReadyForDiscoveryPoll())
 				{
 					node->incRefCount();
 					node->lockForDiscoveryPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for discovery poll"), (int)node->getId(), node->getName());
-					g_discoveryPollQueue.Put(node);
+					g_discoveryPollQueue.put(node);
 				}
 				if (node->isReadyForTopologyPoll())
 				{
 					node->incRefCount();
 					node->lockForTopologyPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for topology poll"), (int)node->getId(), node->getName());
-					g_topologyPollQueue.Put(node);
+					g_topologyPollQueue.put(node);
 				}
 			}
 			break;
@@ -840,7 +840,7 @@ static void QueueForPolling(NetObj *object, void *data)
 				{
 					cond->lockForPoll();
 					DbgPrintf(6, _T("Condition %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
-					g_conditionPollerQueue.Put(cond);
+					g_conditionPollerQueue.put(cond);
 				}
 			}
 			break;
@@ -852,7 +852,7 @@ static void QueueForPolling(NetObj *object, void *data)
 					cluster->incRefCount();
 					cluster->lockForStatusPoll();
 					DbgPrintf(6, _T("Cluster %d \"%s\" queued for status poll"), (int)cluster->getId(), cluster->getName());
-					g_statusPollQueue.Put(cluster);
+					g_statusPollQueue.put(cluster);
 				}
 			}
 			break;
@@ -864,7 +864,7 @@ static void QueueForPolling(NetObj *object, void *data)
 					service->incRefCount();
 					service->lockForPolling();
 					DbgPrintf(6, _T("Business service %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
-					g_businessServicePollerQueue.Put(service);
+					g_businessServicePollerQueue.put(service);
 				}
 			}
 			break;
@@ -958,29 +958,29 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
    }
 
    // Send stop signal to all pollers
-   g_statusPollQueue.Clear();
-   g_statusPollQueue.SetShutdownMode();
+   g_statusPollQueue.clear();
+   g_statusPollQueue.setShutdownMode();
 
-   g_configPollQueue.Clear();
-   g_configPollQueue.SetShutdownMode();
+   g_configPollQueue.clear();
+   g_configPollQueue.setShutdownMode();
 
-   g_instancePollQueue.Clear();
-   g_instancePollQueue.SetShutdownMode();
+   g_instancePollQueue.clear();
+   g_instancePollQueue.setShutdownMode();
 
-   g_discoveryPollQueue.Clear();
-   g_discoveryPollQueue.SetShutdownMode();
+   g_discoveryPollQueue.clear();
+   g_discoveryPollQueue.setShutdownMode();
 
-   g_routePollQueue.Clear();
-   g_routePollQueue.SetShutdownMode();
+   g_routePollQueue.clear();
+   g_routePollQueue.setShutdownMode();
 
-   g_conditionPollerQueue.Clear();
-   g_conditionPollerQueue.SetShutdownMode();
+   g_conditionPollerQueue.clear();
+   g_conditionPollerQueue.setShutdownMode();
 
-   g_topologyPollQueue.Clear();
-   g_topologyPollQueue.SetShutdownMode();
+   g_topologyPollQueue.clear();
+   g_topologyPollQueue.setShutdownMode();
 
-   g_businessServicePollerQueue.Clear();
-   g_businessServicePollerQueue.SetShutdownMode();
+   g_businessServicePollerQueue.clear();
+   g_businessServicePollerQueue.setShutdownMode();
 
    DbgPrintf(1, _T("PollManager: main thread terminated"));
    return THREAD_OK;
@@ -995,7 +995,7 @@ void ResetDiscoveryPoller()
    NEW_NODE *pInfo;
 
    // Clear queues
-   while((pNode = (Node *)g_discoveryPollQueue.Get()) != NULL)
+   while((pNode = (Node *)g_discoveryPollQueue.get()) != NULL)
    {
       if (pNode != INVALID_POINTER_VALUE)
       {
@@ -1003,7 +1003,7 @@ void ResetDiscoveryPoller()
          pNode->decRefCount();
       }
    }
-   while((pInfo = (NEW_NODE *)g_nodePollerQueue.Get()) != NULL)
+   while((pInfo = (NEW_NODE *)g_nodePollerQueue.get()) != NULL)
    {
       if (pInfo != INVALID_POINTER_VALUE)
          free(pInfo);

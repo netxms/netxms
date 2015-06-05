@@ -877,7 +877,7 @@ static BOOL RealPostEvent(Queue *queue, UINT32 eventCode, UINT32 sourceId,
          pEvent = new Event(pEventTemplate, sourceId, userTag, format, names, args);
 
          // Add new event to queue
-         queue->Put(pEvent);
+         queue->put(pEvent);
 
          bResult = TRUE;
       }
@@ -1082,10 +1082,10 @@ void NXCORE_EXPORTABLE ResendEvents(Queue *queue)
 {
    while(1)
    {
-      void *pEvent = queue->Get();
+      void *pEvent = queue->get();
       if (pEvent == NULL)
          break;
-      g_pEventQueue->Put(pEvent);
+      g_pEventQueue->put(pEvent);
    }
 }
 

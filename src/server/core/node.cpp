@@ -1380,7 +1380,7 @@ restart_agent_check:
 					// Clear delayed event queue
 					while(1)
 					{
-						Event *pEvent = (Event *)pQueue->Get();
+						Event *pEvent = (Event *)pQueue->get();
 						if (pEvent == NULL)
 							break;
 						delete pEvent;

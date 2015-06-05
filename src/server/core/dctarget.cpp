@@ -495,7 +495,7 @@ void DataCollectionTarget::queueItemsForPolling(Queue *pPollerQueue)
       {
          object->setBusyFlag(TRUE);
          incRefCount();   // Increment reference count for each queued DCI
-         pPollerQueue->Put(object);
+         pPollerQueue->put(object);
 			DbgPrintf(8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_name, object->getId(), object->getName());
       }
    }

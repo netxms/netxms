@@ -189,7 +189,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    TCHAR *pBuffer = (TCHAR *)malloc(MAX_LINE_SIZE * sizeof(TCHAR));
    while(!IsShutdownInProgress())
    {
-      DCObject *pItem = (DCObject *)g_dataCollectionQueue.GetOrBlock();
+      DCObject *pItem = (DCObject *)g_dataCollectionQueue.getOrBlock();
 		DataCollectionTarget *target = (DataCollectionTarget *)pItem->getTarget();
 
 		if (pItem->isScheduledForDeletion())
@@ -388,15 +388,15 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
          break;      // Shutdown has arrived
 
       // Get current values
-      pollerQS[currPos] = g_dataCollectionQueue.Size();
-      dbWriterQS[currPos] = g_dbWriterQueue->Size();
-      iDataWriterQS[currPos] = g_dciDataWriterQueue->Size();
-      rawDataWriterQS[currPos] = g_dciRawDataWriterQueue->Size();
-      dbAndIDataWriterQS[currPos] = g_dbWriterQueue->Size() + g_dciDataWriterQueue->Size() + g_dciRawDataWriterQueue->Size();
-      statusPollerQS[currPos] = g_statusPollQueue.Size();
-      configPollerQS[currPos] = g_configPollQueue.Size();
-      syslogProcessingQS[currPos] = g_syslogProcessingQueue.Size();
-      syslogWriterQS[currPos] = g_syslogWriteQueue.Size();
+      pollerQS[currPos] = g_dataCollectionQueue.size();
+      dbWriterQS[currPos] = g_dbWriterQueue->size();
+      iDataWriterQS[currPos] = g_dciDataWriterQueue->size();
+      rawDataWriterQS[currPos] = g_dciRawDataWriterQueue->size();
+      dbAndIDataWriterQS[currPos] = g_dbWriterQueue->size() + g_dciDataWriterQueue->size() + g_dciRawDataWriterQueue->size();
+      statusPollerQS[currPos] = g_statusPollQueue.size();
+      configPollerQS[currPos] = g_configPollQueue.size();
+      syslogProcessingQS[currPos] = g_syslogProcessingQueue.size();
+      syslogWriterQS[currPos] = g_syslogWriteQueue.size();
       currPos++;
       if (currPos == 12)
          currPos = 0;
@@ -435,7 +435,7 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
    DbgPrintf(2, _T("DCI cache loader thread started"));
    while(true)
    {
-      DCItem *dci = (DCItem *)g_dciCacheLoaderQueue.GetOrBlock();
+      DCItem *dci = (DCItem *)g_dciCacheLoaderQueue.getOrBlock();
       if (dci == INVALID_POINTER_VALUE)
          break;
 

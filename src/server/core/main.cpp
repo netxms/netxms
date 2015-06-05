@@ -934,7 +934,7 @@ void NXCORE_EXPORTABLE Shutdown()
 	ConditionSet(m_condShutdown);
 
    // Stop DCI cache loading thread
-   g_dciCacheLoaderQueue.SetShutdownMode();
+   g_dciCacheLoaderQueue.setShutdownMode();
 
 #if XMPP_SUPPORTED
    StopXMPPConnector();
@@ -948,8 +948,8 @@ void NXCORE_EXPORTABLE Shutdown()
 #endif
 
 	// Stop event processor
-	g_pEventQueue->Clear();
-	g_pEventQueue->Put(INVALID_POINTER_VALUE);
+	g_pEventQueue->clear();
+	g_pEventQueue->put(INVALID_POINTER_VALUE);
 
 	ShutdownMailer();
 	ShutdownSMSSender();

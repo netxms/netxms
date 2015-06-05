@@ -359,8 +359,8 @@ public:
    void run();
    void disconnect();
 
-   virtual void sendMessage(NXCPMessage *msg) { m_sendQueue->Put(msg->createMessage()); }
-   virtual void sendRawMessage(NXCP_MESSAGE *msg) { m_sendQueue->Put(nx_memdup(msg, ntohl(msg->size))); }
+   virtual void sendMessage(NXCPMessage *msg) { m_sendQueue->put(msg->createMessage()); }
+   virtual void sendRawMessage(NXCP_MESSAGE *msg) { m_sendQueue->put(nx_memdup(msg, ntohl(msg->size))); }
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout);
    virtual UINT32 generateRequestId();

@@ -161,7 +161,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
    while(1)
    {
       // Get node object for upgrade
-      pNode = (Node *)pStartup->pQueue->Get();
+      pNode = (Node *)pStartup->pQueue->get();
       if (pNode == NULL)
          break;   // Queue is empty, exit
 
@@ -342,7 +342,7 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
    msg.setId(pStartup->dwRqId);
    for(i = 0; i < pStartup->nodeList->size(); i++)
    {
-      pQueue->Put(pStartup->nodeList->get(i));
+      pQueue->put(pStartup->nodeList->get(i));
       msg.setField(VID_OBJECT_ID, pStartup->nodeList->get(i)->getId());
       msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_PENDING);
       pStartup->pSession->sendMessage(&msg);

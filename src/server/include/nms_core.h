@@ -360,7 +360,7 @@ public:
 
    void run();
 
-   void postMessage(NXCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
+   void postMessage(NXCPMessage *pMsg) { m_pSendQueue->put(pMsg->createMessage()); }
    void sendMessage(NXCPMessage *pMsg);
 
 	int getId() { return m_id; }
@@ -699,7 +699,7 @@ public:
 
    void run();
 
-   void postMessage(NXCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
+   void postMessage(NXCPMessage *pMsg) { m_pSendQueue->put(pMsg->createMessage()); }
    void sendMessage(NXCPMessage *pMsg);
    void sendRawMessage(NXCP_MESSAGE *pMsg);
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
@@ -741,7 +741,7 @@ public:
    void kill();
    void notify(UINT32 dwCode, UINT32 dwData = 0);
 
-	void queueUpdate(UPDATE_INFO *pUpdate) { m_pUpdateQueue->Put(pUpdate); }
+	void queueUpdate(UPDATE_INFO *pUpdate) { m_pUpdateQueue->put(pUpdate); }
    void onNewEvent(Event *pEvent);
    void onSyslogMessage(NX_SYSLOG_RECORD *pRec);
    void onNewSNMPTrap(NXCPMessage *pMsg);

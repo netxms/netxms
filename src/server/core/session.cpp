@@ -528,7 +528,7 @@ void ClientSession::readThread()
 			}
 			else
          {
-            m_pMessageQueue->Put(msg);
+            m_pMessageQueue->put(msg);
          }
       }
    }
@@ -537,19 +537,19 @@ void ClientSession::readThread()
    m_dwFlags |= CSF_TERMINATED;
 
 	// Finish update thread first
-   m_pUpdateQueue->Put(INVALID_POINTER_VALUE);
+   m_pUpdateQueue->put(INVALID_POINTER_VALUE);
    ThreadJoin(m_hUpdateThread);
 
    // Notify other threads to exit
    NXCP_MESSAGE *rawMsg;
-   while((rawMsg = (NXCP_MESSAGE *)m_pSendQueue->Get()) != NULL)
+   while((rawMsg = (NXCP_MESSAGE *)m_pSendQueue->get()) != NULL)
       free(rawMsg);
-   m_pSendQueue->Put(INVALID_POINTER_VALUE);
+   m_pSendQueue->put(INVALID_POINTER_VALUE);
 
    NXCPMessage *msg;
-	while((msg = (NXCPMessage *)m_pMessageQueue->Get()) != NULL)
+	while((msg = (NXCPMessage *)m_pMessageQueue->get()) != NULL)
 		delete msg;
-   m_pMessageQueue->Put(INVALID_POINTER_VALUE);
+   m_pMessageQueue->put(INVALID_POINTER_VALUE);
 
    // Wait for other threads to finish
    ThreadJoin(m_hWriteThread);
@@ -603,7 +603,7 @@ void ClientSession::writeThread()
 {
    while(true)
    {
-      NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)m_pSendQueue->GetOrBlock();
+      NXCP_MESSAGE *rawMsg = (NXCP_MESSAGE *)m_pSendQueue->getOrBlock();
       if (rawMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
@@ -622,7 +622,7 @@ void ClientSession::updateThread()
 
    while(1)
    {
-      pUpdate = (UPDATE_INFO *)m_pUpdateQueue->GetOrBlock();
+      pUpdate = (UPDATE_INFO *)m_pUpdateQueue->getOrBlock();
       if (pUpdate == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
@@ -740,7 +740,7 @@ void ClientSession::processingThread()
 
    while(1)
    {
-      pMsg = (NXCPMessage *)m_pMessageQueue->GetOrBlock();
+      pMsg = (NXCPMessage *)m_pMessageQueue->getOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
@@ -2597,7 +2597,7 @@ void ClientSession::onNewEvent(Event *pEvent)
          msg->setCode(CMD_EVENTLOG_RECORDS);
          pEvent->prepareMessage(msg);
          pUpdate->pData = msg;
-         m_pUpdateQueue->Put(pUpdate);
+         m_pUpdateQueue->put(pUpdate);
       }
    }
 }
@@ -2616,7 +2616,7 @@ void ClientSession::onObjectChange(NetObj *object)
          pUpdate->dwCategory = INFO_CAT_OBJECT_CHANGE;
          pUpdate->pData = object;
          object->incRefCount();
-         m_pUpdateQueue->Put(pUpdate);
+         m_pUpdateQueue->put(pUpdate);
       }
 }
 
@@ -5054,7 +5054,7 @@ void ClientSession::onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm)
             pUpdate->dwCategory = INFO_CAT_ALARM;
             pUpdate->dwCode = dwCode;
             pUpdate->pData = nx_memdup(pAlarm, sizeof(NXC_ALARM));
-            m_pUpdateQueue->Put(pUpdate);
+            m_pUpdateQueue->put(pUpdate);
          }
    }
 }
@@ -5700,7 +5700,7 @@ void ClientSession::onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction)
          pUpdate->dwCategory = INFO_CAT_ACTION;
          pUpdate->dwCode = dwCode;
          pUpdate->pData = nx_memdup(pAction, sizeof(NXC_ACTION));
-         m_pUpdateQueue->Put(pUpdate);
+         m_pUpdateQueue->put(pUpdate);
       }
    }
 }
@@ -7975,16 +7975,16 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 #endif
 
 	// Queues
-	msg.setField(VID_QSIZE_CONDITION_POLLER, g_conditionPollerQueue.Size());
-	msg.setField(VID_QSIZE_CONF_POLLER, g_configPollQueue.Size());
-	msg.setField(VID_QSIZE_DCI_POLLER, g_dataCollectionQueue.Size());
-	msg.setField(VID_QSIZE_DCI_CACHE_LOADER, g_dciCacheLoaderQueue.Size());
-	msg.setField(VID_QSIZE_DBWRITER, g_dbWriterQueue->Size());
-	msg.setField(VID_QSIZE_EVENT, g_pEventQueue->Size());
-	msg.setField(VID_QSIZE_DISCOVERY, g_discoveryPollQueue.Size());
-	msg.setField(VID_QSIZE_NODE_POLLER, g_nodePollerQueue.Size());
-	msg.setField(VID_QSIZE_ROUTE_POLLER, g_routePollQueue.Size());
-	msg.setField(VID_QSIZE_STATUS_POLLER, g_statusPollQueue.Size());
+	msg.setField(VID_QSIZE_CONDITION_POLLER, g_conditionPollerQueue.size());
+	msg.setField(VID_QSIZE_CONF_POLLER, g_configPollQueue.size());
+	msg.setField(VID_QSIZE_DCI_POLLER, g_dataCollectionQueue.size());
+	msg.setField(VID_QSIZE_DCI_CACHE_LOADER, g_dciCacheLoaderQueue.size());
+	msg.setField(VID_QSIZE_DBWRITER, g_dbWriterQueue->size());
+	msg.setField(VID_QSIZE_EVENT, g_pEventQueue->size());
+	msg.setField(VID_QSIZE_DISCOVERY, g_discoveryPollQueue.size());
+	msg.setField(VID_QSIZE_NODE_POLLER, g_nodePollerQueue.size());
+	msg.setField(VID_QSIZE_ROUTE_POLLER, g_routePollQueue.size());
+	msg.setField(VID_QSIZE_STATUS_POLLER, g_statusPollQueue.size());
 
    // Send response
    sendMessage(&msg);
@@ -8318,7 +8318,7 @@ void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
          pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
          pUpdate->dwCategory = INFO_CAT_SYSLOG_MSG;
          pUpdate->pData = nx_memdup(pRec, sizeof(NX_SYSLOG_RECORD));
-         m_pUpdateQueue->Put(pUpdate);
+         m_pUpdateQueue->put(pUpdate);
       }
    }
 }
@@ -8451,7 +8451,7 @@ void ClientSession::onNewSNMPTrap(NXCPMessage *pMsg)
          pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
          pUpdate->dwCategory = INFO_CAT_SNMP_TRAP;
          pUpdate->pData = new NXCPMessage(pMsg);
-         m_pUpdateQueue->Put(pUpdate);
+         m_pUpdateQueue->put(pUpdate);
       }
    }
 }
@@ -9784,7 +9784,7 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
 			// Close document
 			str += _T("</configuration>\n");
 
-         // Put result into message
+         // put result into message
          msg.setField(VID_RCC, RCC_SUCCESS);
          msg.setField(VID_NXMP_CONTENT, (const TCHAR *)str);
       }
@@ -10875,7 +10875,7 @@ void ClientSession::onSituationChange(NXCPMessage *msg)
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_SITUATION;
       pUpdate->pData = new NXCPMessage(msg);
-      m_pUpdateQueue->Put(pUpdate);
+      m_pUpdateQueue->put(pUpdate);
    }
 }
 
@@ -10909,7 +10909,7 @@ void ClientSession::registerAgent(NXCPMessage *pRequest)
             info->ipAddr = InetAddress::createFromSockaddr(m_clientAddr);
 				info->zoneId = 0;	// Add to default zone
 				info->ignoreFilter = TRUE;		// Ignore discovery filters and add node anyway
-				g_nodePollerQueue.Put(info);
+				g_nodePollerQueue.put(info);
 			}
 			msg.setField(VID_RCC, RCC_SUCCESS);
 		}
@@ -11288,7 +11288,7 @@ void ClientSession::cancelJob(NXCPMessage *request)
 }
 
 /**
- * Put server job on hold
+ * put server job on hold
  */
 void ClientSession::holdJob(NXCPMessage *request)
 {
@@ -11985,7 +11985,7 @@ void ClientSession::onLibraryImageChange(uuid_t *guid, bool removed)
     info->guid = (uuid_t *)(nx_memdup(guid, UUID_LENGTH));
     info->removed = removed;
     pUpdate->pData = info;
-    m_pUpdateQueue->Put(pUpdate);
+    m_pUpdateQueue->put(pUpdate);
   }
 }
 

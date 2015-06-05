@@ -48,7 +48,7 @@ static THREAD_RESULT THREAD_CALL SenderThread(void *pArg)
 
    while(1)
    {
-      pMsg = (SMS *)m_pMsgQueue->GetOrBlock();
+      pMsg = (SMS *)m_pMsgQueue->getOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
@@ -129,8 +129,8 @@ void ShutdownSMSSender()
 {
    if (m_pMsgQueue != NULL)
    {
-      m_pMsgQueue->Clear();
-      m_pMsgQueue->Put(INVALID_POINTER_VALUE);
+      m_pMsgQueue->clear();
+      m_pMsgQueue->put(INVALID_POINTER_VALUE);
       if (m_hThread != INVALID_THREAD_HANDLE)
          ThreadJoin(m_hThread);
       delete m_pMsgQueue;
@@ -148,5 +148,5 @@ void NXCORE_EXPORTABLE PostSMS(const TCHAR *pszRcpt, const TCHAR *pszText)
 	SMS *pMsg = (SMS *)malloc(sizeof(SMS));
 	nx_strncpy(pMsg->szRcpt, pszRcpt, MAX_RCPT_ADDR_LEN);
 	nx_strncpy(pMsg->szText, pszText, 160);
-	m_pMsgQueue->Put(pMsg);
+	m_pMsgQueue->put(pMsg);
 }
