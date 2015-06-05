@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -25,7 +23,6 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.swtchart.Chart;
-import org.swtchart.Constants;
 import org.swtchart.IBarSeries;
 import org.swtchart.ILegend;
 import org.swtchart.ILineSeries;
@@ -55,14 +52,8 @@ public class Legend extends Canvas implements ILegend, PaintListener
    /** the default foreground */
    private static final Color DEFAULT_FOREGROUND = Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
 
-   /** the default font */
-   private Font defaultFont;
-
-   /** the default font size */
-   private static final int DEFAULT_FONT_SIZE = Constants.SMALL_FONT_SIZE;
-
    /** the default position */
-   private static final int DEFAULT_POSITION = SWT.RIGHT;
+   private static final int DEFAULT_POSITION = SWT.BOTTOM;
 
    /** the map between series id and cell bounds */
    private Map<String, Rectangle> cellBounds;
@@ -87,18 +78,9 @@ public class Legend extends Canvas implements ILegend, PaintListener
       visible = true;
       position = DEFAULT_POSITION;
       cellBounds = new HashMap<String, Rectangle>();
-      defaultFont = new Font(Display.getDefault(), "Tahoma", DEFAULT_FONT_SIZE, SWT.NORMAL);
-      setFont(defaultFont);
       setForeground(DEFAULT_FOREGROUND);
       setBackground(chart.getBackground());
       addPaintListener(this);
-      addDisposeListener(new DisposeListener() {
-         @Override
-         public void widgetDisposed(DisposeEvent e)
-         {
-            defaultFont.dispose();
-         }
-      });
    }
 
    /*
@@ -149,14 +131,7 @@ public class Legend extends Canvas implements ILegend, PaintListener
    @Override
    public void setFont(Font font)
    {
-      if (font == null)
-      {
-         super.setFont(defaultFont);
-      }
-      else
-      {
-         super.setFont(font);
-      }
+      super.setFont(font);
       chart.updateLayout();
    }
 

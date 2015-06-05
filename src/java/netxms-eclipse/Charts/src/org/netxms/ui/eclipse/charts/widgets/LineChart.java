@@ -132,6 +132,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		ILegend legend = getLegend();
 		legend.setPosition(swtPositionFromInternal(legendPosition));
 		legend.setFont(Activator.getDefault().getChartFont());
+		legend.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
 		
 		// Default time range
 		timeTo = System.currentTimeMillis();
