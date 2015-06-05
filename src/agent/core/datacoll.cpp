@@ -481,6 +481,7 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
    UINT32 sleepTime = 30000;
    DebugPrintf(INVALID_INDEX, 1, _T("Data reconcillation thread started"));
 
+   bool vacuumNeeded = false;
    while(!AgentSleepAndCheckForShutdown(sleepTime))
    {
       // Check if there is something to sync
@@ -489,6 +490,12 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
       MutexUnlock(s_serverSyncStatusLock);
       if (!run)
       {
+         if (vacuumNeeded)
+         {
+            DebugPrintf(INVALID_INDEX, 4, _T("ReconcillationThread: vacuum local database"));
+            DBQuery(hdb, _T("VACUUM"));
+            vacuumNeeded = false;
+         }
          sleepTime = 30000;
          continue;
       }
@@ -544,6 +551,8 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
                DBQuery(hdb, query);
             }
             DBCommit(hdb);
+            DebugPrintf(INVALID_INDEX, 4, _T("ReconcillationThread: %d records sent"), deleteList.size());
+            vacuumNeeded = true;
          }
       }
       DBFreeResult(hResult);

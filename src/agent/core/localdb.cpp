@@ -94,7 +94,7 @@ bool WriteMetadata(const TCHAR *name, INT32 value)
 /**
  * Check database structure
  */
-static void CheckDatabaseStructure()
+static bool CheckDatabaseStructure()
 {
    int version;
    if (!DBIsTableExist(s_db, _T("metadata")))
@@ -115,8 +115,9 @@ static void CheckDatabaseStructure()
    if ((version <= 0) || (version > DB_SCHEMA_VERSION))
    {
       nxlog_write(MSG_LOCAL_DB_CORRUPTED, NXLOG_ERROR, NULL);
-      return;
+      return false;
    }
+   return true;
 }
 
 /**
@@ -144,7 +145,14 @@ bool OpenLocalDatabase()
       return false;
    }
 
-   CheckDatabaseStructure();
+   if (!CheckDatabaseStructure())
+   {
+      DBDisconnect(s_db);
+      s_db = NULL;
+   }
+
+   DBQuery(s_db, _T("VACUUM"));
+   DebugPrintf(INVALID_INDEX, 1, _T("Local database opened sucecssfully"));
    return true;
 }
 
