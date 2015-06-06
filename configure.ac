@@ -1744,7 +1744,6 @@ AC_RUN_IFELSE(
 )
 
 
-
 #--------------------------------------------------------------------
 # Checks for macros and definitions
 #--------------------------------------------------------------------
@@ -1817,6 +1816,15 @@ if test "x$PLATFORM" = "xLinux"; then
 #include <sys/reboot.h>
 #endif
 	])
+
+	AC_CHECK_HEADERS([jemalloc/jemalloc.h],
+		[
+			AC_CHECK_LIB(jemalloc, malloc,
+				[ 
+					WITH_JEMALLOC="yes"
+					AC_DEFINE(WITH_JEMALLOC,1,Define to 1 if libjemalloc is used)
+				])
+		])
 fi
 
 
@@ -2652,6 +2660,10 @@ AC_DEFINE_UNQUOTED([SHLIB_SUFFIX], _T("$SHLIB_SUFFIX"), [Define to platform's sh
 
 if test "x$ENABLE_DEBUG" = "xno"; then
 	CPPFLAGS="$CPPFLAGS -DNDEBUG"
+fi
+
+if test "x$WITH_JEMALLOC" = "xyes"; then
+	LIBS="$LIBS -ljemalloc"
 fi
 
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])

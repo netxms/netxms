@@ -61,6 +61,10 @@
 
 #endif	/* __SYMBIAN32__ */
 
+#if HAVE_JEMALLOC_JEMALLOC_H
+#include <jemalloc/jemalloc.h>
+#endif
+
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
 #endif

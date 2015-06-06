@@ -2374,18 +2374,34 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
 #endif
 }
 
+#if WITH_JEMALLOC
+
+/**
+ * Callback for jemalloc's malloc_stats_print
+ */
+static void jemalloc_stats_cb(void *arg, const char *text)
+{
+   fwrite(text, 1, strlen(text), (FILE *)arg);
+}
+
+#endif
+
 /**
  * Get heap information using system-specific functions (if available)
  */
 TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo()
 {
-#if HAVE_MALLOC_INFO
+#if WITH_JEMALLOC || HAVE_MALLOC_INFO
    char *buffer = NULL;
    size_t size = 0;
    FILE *f = open_memstream(&buffer, &size);
    if (f == NULL)
       return NULL;
+#if WITH_JEMALLOC
+   malloc_stats_print(jemalloc_stats_cb, f, NULL);
+#else
    malloc_info(0, f);
+#endif
    fclose(f);
 #ifdef UNICODE
    WCHAR *wtext = WideStringFromMBString(buffer);
