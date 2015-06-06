@@ -1476,6 +1476,19 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
 			ConsolePrintf(pCtx, _T("\n"));
 		}
+		else if (IsCommand(_T("HEAP"), szBuffer, 1))
+		{
+         TCHAR *text = GetHeapInfo();
+         if (text != NULL)
+         {
+            ConsolePrintf(pCtx, _T("%s\n"), text);
+            free(text);
+         }
+         else
+         {
+            ConsolePrintf(pCtx, _T("Error reading heap information\n"));
+         }
+      }
 		else if (IsCommand(_T("INDEX"), szBuffer, 1))
 		{
 			// Get argument
@@ -1930,6 +1943,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show dbcp                 - Show active sessions in database connection pool\n")
 				_T("   show fdb <node>           - Show forwarding database for node\n")
 				_T("   show flags                - Show internal server flags\n")
+            _T("   show heap                 - Show heap information\n")
 				_T("   show index <index>        - Show internal index\n")
 				_T("   show modules              - Show loaded server modules\n")
 				_T("   show objects [<filter>]   - Dump network objects to screen\n")

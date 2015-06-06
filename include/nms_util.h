@@ -1816,6 +1816,8 @@ enum nxDirectoryType
    nxDirLib = 3
 };
 
+TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo();
+
 void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir);
 
 UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress& addr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize);

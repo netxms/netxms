@@ -27,7 +27,6 @@
 #include <netxms-regex.h>
 #include <nxstat.h>
 
-
 #ifdef _WIN32
 #include <psapi.h>
 #define read	_read
@@ -45,6 +44,10 @@
 
 #if HAVE_POLL_H
 #include <poll.h>
+#endif
+
+#if HAVE_MALLOC_H
+#include <malloc.h>
 #endif
 
 #ifdef _WIN32
@@ -2551,5 +2554,30 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
          _tcscpy(dir, _T("/usr"));
          break;
    }
+#endif
+}
+
+/**
+ * Get heap information using system-specific functions (if available)
+ */
+TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo()
+{
+#if HAVE_MALLOC_INFO
+   char *buffer = NULL;
+   size_t size = 0;
+   FILE *f = open_memstream(&buffer, &size);
+   if (f == NULL)
+      return NULL;
+   malloc_info(0, f);
+   fclose(f);
+#ifdef UNICODE
+   WCHAR *wtext = WideStringFromMBString(buffer);
+   free(buffer);
+   return wtext;
+#else
+   return buffer;
+#endif
+#else
+   return _tcsdup(_T("No heap information API available"));
 #endif
 }
