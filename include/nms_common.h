@@ -318,7 +318,7 @@ typedef unsigned __int64 uint64_t;
 #define malloc(n)       HeapAlloc(GetProcessHeap(), 0, n)
 #define realloc(p, n)   (((p) == NULL) ? HeapAlloc(GetProcessHeap(), 0, n) : HeapReAlloc(GetProcessHeap(), 0, p, n))
 #define free(p)         HeapFree(GetProcessHeap(), 0, p)
-#define _tcsdup(s)       nx__tcsdup(s)
+#define _tcsdup(s)      nx__tcsdup(s)
 #define wcsdup(s)       nx_wcsdup(s)
 
 #undef _tcsdup
@@ -1234,31 +1234,5 @@ enum EnumerationCallbackResult
 };
 
 #endif
-
-/**
- * Memory debug
- */
-#ifdef NETXMS_MEMORY_DEBUG
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void *nx_malloc(size_t, char *, int);
-void *nx_realloc(void *, size_t, char *, int);
-void nx_free(void *, char *, int);
-
-void InitMemoryDebugger(void);
-void PrintMemoryBlocks(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-#define malloc(x) nx_malloc(x, __FILE__, __LINE__)
-#define realloc(p, x) nx_realloc(p, x, __FILE__,  __LINE__)
-#define free(p) nx_free(p, __FILE__, __LINE__)
-
-#endif	/* NETXMS_MEMORY_DEBUG */
 
 #endif   /* _nms_common_h_ */

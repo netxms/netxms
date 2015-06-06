@@ -1209,24 +1209,6 @@ typedef struct __CODE_TO_TEXT
 #include <netxms_getopt.h>
 #endif
 
-
-//
-// Win32 API functions missing under WinCE
-//
-
-#if defined(UNDER_CE) && defined(__cplusplus)
-
-inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
-{
-	SYSTEMTIME sysTime;
-
-	GetSystemTime(&sysTime);
-	SystemTimeToFileTime(&sysTime, pFt);
-}
-
-#endif // UNDER_CE
-
-
 //
 // Structures for opendir() / readdir() / closedir()
 //
@@ -1299,10 +1281,6 @@ typedef struct _dir_struc_w
 //
 // Functions
 //
-
-#ifdef UNDER_CE
-#define close(x)        CloseHandle((HANDLE)(x))
-#endif
 
 #ifdef __cplusplus
 
@@ -1735,12 +1713,6 @@ int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent 
 #endif
 
 TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f);
-
-#ifdef UNDER_CE
-int LIBNETXMS_EXPORTABLE _topen(TCHAR *pszName, int nFlags, ...);
-int LIBNETXMS_EXPORTABLE read(int hFile, void *pBuffer, size_t nBytes);
-int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes);
-#endif
 
 BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags, const TCHAR *msgModule,
                                      unsigned int msgCount, const TCHAR **messages);

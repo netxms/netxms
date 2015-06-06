@@ -1531,14 +1531,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 					ConsolePrintf(pCtx, _T("ERROR: Invalid index name\n\n"));
 			}
 		}
-		else if (IsCommand(_T("MEMORY"), szBuffer, 2))
-		{
-#ifdef NETXMS_MEMORY_DEBUG
-			PrintMemoryBlocks();
-#else
-			ConsolePrintf(pCtx, _T("ERROR: Server was compiled without memory debugger\n\n"));
-#endif
-		}
 		else if (IsCommand(_T("MODULES"), szBuffer, 3))
 		{
          ConsolePrintf(pCtx, _T("Loaded server modules:\n"));
