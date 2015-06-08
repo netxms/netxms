@@ -68,24 +68,24 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
    int ret = SYSINFO_RC_ERROR;
    int retCode = PC_ERR_BAD_PARAMS;
 
-   char url[2048] = {0};
-   char pattern[4096] = {0};
+   char url[2048] = "";
+   TCHAR pattern[4096] = _T("");
    regex_t compiledPattern;
 
    AgentGetParameterArgA(parameters, 1, url, 2048);
-   AgentGetParameterArgA(parameters, 2, pattern, 256);
+   AgentGetParameterArg(parameters, 2, pattern, 256);
    StrStripA(url);
-   StrStripA(pattern);
+   StrStrip(pattern);
    if (url[0] != 0)
    {
       if (pattern[0] == 0)
       {
-         strcpy(pattern, "^HTTP/1.[01] 200 .*");
+         _tcscpy(pattern, _T("^HTTP/1.[01] 200 .*"));
       }
 
-      AgentWriteDebugLog(5, _T("Check service: url=%hs, pattern=%hs"), url, pattern);
+      AgentWriteDebugLog(5, _T("Check service: url=%hs, pattern=%s"), url, pattern);
 
-      if (tre_regcomp(&compiledPattern, pattern, REG_EXTENDED | REG_ICASE | REG_NOSUB) == 0)
+      if (_tregcomp(&compiledPattern, pattern, REG_EXTENDED | REG_ICASE | REG_NOSUB) == 0)
       {
          CURL *curl = curl_easy_init();
          if (curl != NULL)
@@ -121,7 +121,12 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                   {
                      data.write('\0');
                      size_t size;
+#ifdef UNICODE
+                     WCHAR *wtext = WideStringFromUTF8String((char *)data.buffer(&size));
+                     if (tre_regwexec(&compiledPattern, wtext, 0, NULL, 0) == 0)
+#else
                      if (tre_regexec(&compiledPattern, (char *)data.buffer(&size), 0, NULL, 0) == 0)
+#endif
                      {
                         AgentWriteDebugLog(5, _T("Check service: matched"));
                         retCode = PC_ERR_NONE;
@@ -131,6 +136,9 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                         AgentWriteDebugLog(5, _T("Check service: not matched"));
                         retCode = PC_ERR_NOMATCH;
                      }
+#ifdef UNICODE
+                     free(wtext);
+#endif
                   }
                   else
                   {
