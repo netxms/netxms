@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Local administration tool
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,28 +23,21 @@
 
 #include "nxadm.h"
 
+/**
+ * Max message size
+ */
+#define MAX_MSG_SIZE    4194304
 
-//
-// Constants
-//
-
-#define MAX_MSG_SIZE    32768
-
-
-//
-// Global data
-//
-
+/**
+ * Global data
+ */
 SOCKET g_hSocket = -1;
 DWORD g_dwRqId = 1;
 
-
-//
-// Static data
-//
-
-static NXCP_MESSAGE *m_pRawMsg;
-static NXCP_BUFFER *m_pRecvBuffer;
+/**
+ * Message receiver
+ */
+static SocketMessageReceiver *s_receiver = NULL;
 
 /**
  * Connect to server
@@ -77,10 +70,7 @@ BOOL Connect()
    }
 
    // Initialize receiver
-   m_pRawMsg = (NXCP_MESSAGE *)malloc(MAX_MSG_SIZE);
-   m_pRecvBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
-   RecvNXCPMessage(0, NULL, m_pRecvBuffer, 0, NULL, NULL, 0);
-
+   s_receiver = new SocketMessageReceiver(g_hSocket, 4096, MAX_MSG_SIZE);
    return TRUE;
 }
 
@@ -89,6 +79,7 @@ BOOL Connect()
  */
 void Disconnect()
 {
+   delete_and_null(s_receiver);
    if (g_hSocket != -1)
    {
       shutdown(g_hSocket, 2);
@@ -114,15 +105,6 @@ void SendMsg(NXCPMessage *pMsg)
  */
 NXCPMessage *RecvMsg()
 {
-   int iError;
-	static NXCPEncryptionContext *pDummyCtx = NULL;
-
-   do
-   {
-      iError = RecvNXCPMessage(g_hSocket, m_pRawMsg, m_pRecvBuffer, MAX_MSG_SIZE, &pDummyCtx, NULL, INFINITE);
-      if (iError <= 0)
-         return NULL;   // Communication error or closed connection
-   } while(iError == 1);
-
-   return new NXCPMessage(m_pRawMsg);
+   MessageReceiverResult result;
+   return s_receiver->readMessage(INFINITE, &result);
 }

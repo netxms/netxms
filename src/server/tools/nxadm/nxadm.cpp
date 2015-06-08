@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Local administration tool
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,11 +29,9 @@
 #define USE_READLINE 1
 #endif
 
-
-//
-// Display help
-//
-
+/**
+ * Display help
+ */
 static void Help()
 {
    printf("NetXMS Administartor Tool  Version " NETXMS_VERSION_STRING_A "\n"
@@ -47,11 +45,9 @@ static void Help()
           "   -h  Dispaly help and exit\n\n");
 }
 
-
-//
-// Execute command
-//
-
+/**
+ * Execute command
+ */
 static BOOL ExecCommand(char *pszCmd)
 {
    NXCPMessage msg, *pResponse;
@@ -168,11 +164,9 @@ static void Shell()
 #endif
 }
 
-
-//
-// Entry point
-//
-
+/**
+ * Entry point
+ */
 int main(int argc, char *argv[])
 {
    int iError, ch;
