@@ -701,24 +701,33 @@ public class AgentFileManager extends ViewPart
             @Override
             protected void runInternal(final IProgressMonitor monitor) throws Exception
             {
-               session.uploadLocalFileToAgent(dlg.getLocalFile(), upladFolder.getFullName()+"/"+dlg.getRemoteFileName(), objectId, new ProgressListener() { //$NON-NLS-1$
-                  private long prevWorkDone = 0;
-
-                  @Override
-                  public void setTotalWorkAmount(long workTotal)
-                  {
-                     monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + dlg.getLocalFile().getAbsolutePath(),
-                           (int)workTotal);
-                  }
-
-                  @Override
-                  public void markProgress(long workDone)
-                  {
-                     monitor.worked((int)(workDone - prevWorkDone));
-                     prevWorkDone = workDone;
-                  }
-               });
-               monitor.done(); 
+               List<File> fileList = dlg.getLocalFiles();
+               for(int i = 0; i < fileList.size(); i++)
+               {
+                  final File localFile = fileList.get(i);
+                  String remoteFile = fileList.get(i).getName();
+                  if(fileList.size() == 1)
+                     remoteFile = dlg.getRemoteFileName();
+                  
+                  session.uploadLocalFileToAgent(localFile, upladFolder.getFullName()+"/"+remoteFile, objectId, new ProgressListener() { //$NON-NLS-1$
+                     private long prevWorkDone = 0;
+   
+                     @Override
+                     public void setTotalWorkAmount(long workTotal)
+                     {
+                        monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
+                              (int)workTotal);
+                     }
+   
+                     @Override
+                     public void markProgress(long workDone)
+                     {
+                        monitor.worked((int)(workDone - prevWorkDone));
+                        prevWorkDone = workDone;
+                     }
+                  });
+                  monitor.done(); 
+               }
                
                upladFolder.setChildren(session.listAgentFiles(upladFolder, upladFolder.getFullName(), objectId));
                runInUIThread(new Runnable() {
