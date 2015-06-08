@@ -88,12 +88,61 @@ void ConsolePrintf(CONSOLE_CTX console, const TCHAR *pszFormat, ...)
       }
 
       MutexLock(console->socketMutex);
-      *console->output += szBuffer;
+      (*console->output).append(szBuffer);
       MutexUnlock(console->socketMutex);
    }
    else
    {
       console->pMsg->setField(VID_MESSAGE, szBuffer);
+		if (console->session != NULL)
+		{
+			console->session->postMessage(console->pMsg);
+		}
+		else
+		{
+			NXCP_MESSAGE *pRawMsg = console->pMsg->createMessage();
+			SendEx(console->hSocket, pRawMsg, ntohl(pRawMsg->size), 0, console->socketMutex);
+			free(pRawMsg);
+		}
+   }
+}
+
+/**
+ * Print message to console, either local or remote
+ */
+void ConsoleWrite(CONSOLE_CTX console, const TCHAR *text)
+{
+	if ((console->hSocket == -1) && (console->session == NULL) && (console->output == NULL))
+   {
+		WriteToTerminal(text);
+   }
+   else if (console->output != NULL)
+   {
+      // remove possible escape sequences
+      TCHAR *temp = _tcsdup(text);
+      for(int i = 0; temp[i] != 0; i++)
+      {
+         if (temp[i] == 27)
+         {
+            int start = i++;
+            if (temp[i] == '[')
+            {
+               for(i++; (temp[i] != 0) && (temp[i] != 'm'); i++);
+               if (temp[i] == 'm')
+                  i++;
+            }
+            memmove(&temp[start], &temp[i], (_tcslen(&temp[i]) + 1) * sizeof(TCHAR));
+            i = start - 1;
+         }
+      }
+
+      MutexLock(console->socketMutex);
+      (*console->output).appendPreallocated(temp);
+      MutexUnlock(console->socketMutex);
+   }
+   else
+   {
+      console->pMsg->setField(VID_MESSAGE, text);
 		if (console->session != NULL)
 		{
 			console->session->postMessage(console->pMsg);

@@ -1120,19 +1120,19 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		else if (IsCommand(_T("OFF"), szBuffer, 2))
 		{
 			g_debugLevel = 0;
-			ConsolePrintf(pCtx, _T("Debug mode turned off\n"));
+			ConsoleWrite(pCtx, _T("Debug mode turned off\n"));
 		}
 		else
 		{
 			if (szBuffer[0] == 0)
-				ConsolePrintf(pCtx, _T("ERROR: Missing argument\n\n"));
+				ConsoleWrite(pCtx, _T("ERROR: Missing argument\n\n"));
 			else
-				ConsolePrintf(pCtx, _T("ERROR: Invalid debug level\n\n"));
+				ConsoleWrite(pCtx, _T("ERROR: Invalid debug level\n\n"));
 		}
 	}
 	else if (IsCommand(_T("DOWN"), szBuffer, 4))
 	{
-		ConsolePrintf(pCtx, _T("Proceeding with server shutdown...\n"));
+		ConsoleWrite(pCtx, _T("Proceeding with server shutdown...\n"));
 		nExitCode = CMD_EXIT_SHUTDOWN;
 	}
 	else if (IsCommand(_T("DUMP"), szBuffer, 4))
@@ -1150,7 +1150,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		}
 		else
 		{
-			ConsolePrintf(pCtx, _T("Variable name missing\n"));
+			ConsoleWrite(pCtx, _T("Variable name missing\n"));
 		}
 	}
 	else if (IsCommand(_T("RAISE"), szBuffer, 5))
@@ -1160,34 +1160,34 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 
 		if (IsCommand(_T("ACCESS"), szBuffer, 6))
 		{
-			ConsolePrintf(pCtx, _T("Raising exception...\n"));
+			ConsoleWrite(pCtx, _T("Raising exception...\n"));
 			char *p = NULL;
 			*p = 0;
 		}
 		else if (IsCommand(_T("BREAKPOINT"), szBuffer, 5))
 		{
 #ifdef _WIN32
-			ConsolePrintf(pCtx, _T("Raising exception...\n"));
+			ConsoleWrite(pCtx, _T("Raising exception...\n"));
 			RaiseException(EXCEPTION_BREAKPOINT, 0, 0, NULL);
 #else
-			ConsolePrintf(pCtx, _T("ERROR: Not supported on current platform\n"));
+			ConsoleWrite(pCtx, _T("ERROR: Not supported on current platform\n"));
 #endif
 		}
 		else
 		{
-			ConsolePrintf(pCtx, _T("Invalid exception name; possible names are:\nACCESS BREAKPOINT\n"));
+			ConsoleWrite(pCtx, _T("Invalid exception name; possible names are:\nACCESS BREAKPOINT\n"));
 		}
 	}
 	else if (IsCommand(_T("EXIT"), szBuffer, 4))
 	{
 		if ((pCtx->hSocket != -1) || (pCtx->session != NULL))
 		{
-			ConsolePrintf(pCtx, _T("Closing session...\n"));
+			ConsoleWrite(pCtx, _T("Closing session...\n"));
 			nExitCode = CMD_EXIT_CLOSE_SESSION;
 		}
 		else
 		{
-			ConsolePrintf(pCtx, _T("Cannot exit from local server console\n"));
+			ConsoleWrite(pCtx, _T("Cannot exit from local server console\n"));
 		}
 	}
 	else if (IsCommand(_T("KILL"), szBuffer, 4))
@@ -1200,21 +1200,21 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          {
             if (KillClientSession(id))
             {
-      			ConsolePrintf(pCtx, _T("Session killed\n"));
+      			ConsoleWrite(pCtx, _T("Session killed\n"));
             }
             else
             {
-      			ConsolePrintf(pCtx, _T("Invalid session ID\n"));
+      			ConsoleWrite(pCtx, _T("Invalid session ID\n"));
             }
          }
          else
          {
-   			ConsolePrintf(pCtx, _T("Invalid session ID\n"));
+   			ConsoleWrite(pCtx, _T("Invalid session ID\n"));
          }
 		}
 		else
 		{
-			ConsolePrintf(pCtx, _T("Session ID missing\n"));
+			ConsoleWrite(pCtx, _T("Session ID missing\n"));
 		}
    }
 	else if (IsCommand(_T("PING"), szBuffer, 4))
@@ -1251,12 +1251,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          }
          else
          {
-            ConsolePrintf(pCtx, _T("Invalid IP address\n"));
+            ConsoleWrite(pCtx, _T("Invalid IP address\n"));
          }
       }
       else
       {
-         ConsolePrintf(pCtx, _T("Usage: PING <address>\n"));
+         ConsoleWrite(pCtx, _T("Usage: PING <address>\n"));
       }
    }
 	else if (IsCommand(_T("POLL"), szBuffer, 2))
@@ -1311,17 +1311,17 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			   }
 			   else
 			   {
-				   ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+				   ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
 			   }
          }
          else
          {
-   			ConsolePrintf(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY] <node>\n"));
+   			ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY] <node>\n"));
          }
 		}
 		else
 		{
-			ConsolePrintf(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY] <node>\n"));
+			ConsoleWrite(pCtx, _T("Usage POLL [CONFIGURATION|STATUS|TOPOLOGY] <node>\n"));
 		}
 	}
 	else if (IsCommand(_T("SET"), szBuffer, 3))
@@ -1370,12 +1370,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 						}
 						else
 						{
-							ConsolePrintf(pCtx, _T("ERROR: Node does not have physical component information\n\n"));
+							ConsoleWrite(pCtx, _T("ERROR: Node does not have physical component information\n\n"));
 						}
 					}
 					else
 					{
-						ConsolePrintf(pCtx, _T("ERROR: Object is not a node\n\n"));
+						ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
 					}
 				}
 				else
@@ -1385,7 +1385,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			}
 			else
 			{
-				ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+				ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
 			}
 		}
 		else if (IsCommand(_T("DBCP"), szBuffer, 4))
@@ -1422,12 +1422,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 						}
 						else
 						{
-							ConsolePrintf(pCtx, _T("ERROR: Node does not have forwarding database information\n\n"));
+							ConsoleWrite(pCtx, _T("ERROR: Node does not have forwarding database information\n\n"));
 						}
 					}
 					else
 					{
-						ConsolePrintf(pCtx, _T("ERROR: Object is not a node\n\n"));
+						ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
 					}
 				}
 				else
@@ -1437,7 +1437,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			}
 			else
 			{
-				ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+				ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
 			}
 		}
 		else if (IsCommand(_T("FLAGS"), szBuffer, 1))
@@ -1481,12 +1481,13 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          TCHAR *text = GetHeapInfo();
          if (text != NULL)
          {
-            ConsolePrintf(pCtx, _T("%s\n"), text);
+            ConsoleWrite(pCtx, text);
+            ConsoleWrite(pCtx, _T("\n"));
             free(text);
          }
          else
          {
-            ConsolePrintf(pCtx, _T("Error reading heap information\n"));
+            ConsoleWrite(pCtx, _T("Error reading heap information\n"));
          }
       }
 		else if (IsCommand(_T("INDEX"), szBuffer, 1))
@@ -1525,15 +1526,15 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			else
 			{
 				if (szBuffer[0] == 0)
-					ConsolePrintf(pCtx, _T("ERROR: Missing index name\n")
-							_T("Valid names are: CONDITION, ID, INTERFACE, NODEADDR, NODEID, SUBNET, ZONE\n\n"));
+					ConsoleWrite(pCtx, _T("ERROR: Missing index name\n")
+							             _T("Valid names are: CONDITION, ID, INTERFACE, NODEADDR, NODEID, SUBNET, ZONE\n\n"));
 				else
-					ConsolePrintf(pCtx, _T("ERROR: Invalid index name\n\n"));
+					ConsoleWrite(pCtx, _T("ERROR: Invalid index name\n\n"));
 			}
 		}
 		else if (IsCommand(_T("MODULES"), szBuffer, 3))
 		{
-         ConsolePrintf(pCtx, _T("Loaded server modules:\n"));
+         ConsoleWrite(pCtx, _T("Loaded server modules:\n"));
          for(UINT32 i = 0; i < g_dwNumModules; i++)
          {
             ConsolePrintf(pCtx, _T("   %s\n"), g_pModuleList[i].szName);
@@ -1601,16 +1602,16 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 										        IpToStr(pRT->pRoutes[i].dwNextHop, szIpAddr),
 										        pRT->pRoutes[i].dwIfIndex, pRT->pRoutes[i].dwRouteType);
 							}
-							ConsolePrintf(pCtx, _T("\n"));
+							ConsoleWrite(pCtx, _T("\n"));
 						}
 						else
 						{
-							ConsolePrintf(pCtx, _T("Node doesn't have cached routing table\n\n"));
+							ConsoleWrite(pCtx, _T("Node doesn't have cached routing table\n\n"));
 						}
 					}
 					else
 					{
-						ConsolePrintf(pCtx, _T("ERROR: Object is not a node\n\n"));
+						ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
 					}
 				}
 				else
@@ -1620,14 +1621,14 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			}
 			else
 			{
-				ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+				ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
 			}
 		}
 		else if (IsCommand(_T("SESSIONS"), szBuffer, 2))
 		{
-			ConsolePrintf(pCtx, _T("\x1b[1mCLIENT SESSIONS\x1b[0m\n============================================================\n"));
+			ConsoleWrite(pCtx, _T("\x1b[1mCLIENT SESSIONS\x1b[0m\n============================================================\n"));
 			DumpClientSessions(pCtx);
-			ConsolePrintf(pCtx, _T("\n\x1b[1mMOBILE DEVICE SESSIONS\x1b[0m\n============================================================\n"));
+			ConsoleWrite(pCtx, _T("\n\x1b[1mMOBILE DEVICE SESSIONS\x1b[0m\n============================================================\n"));
 			DumpMobileDeviceSessions(pCtx);
 		}
 		else if (IsCommand(_T("STATS"), szBuffer, 2))
@@ -1675,7 +1676,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                }
                else
                {
-   					ConsolePrintf(pCtx, _T("ERROR: call to BuildLinkLayerNeighborList failed\n\n"));
+   					ConsoleWrite(pCtx, _T("ERROR: call to BuildLinkLayerNeighborList failed\n\n"));
                }
 				}
 				else
@@ -1685,7 +1686,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			}
 			else
 			{
-				ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+				ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
 			}
 		}
 		else if (IsCommand(_T("USERS"), szBuffer, 1))
@@ -1709,8 +1710,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 						VlanList *vlans = ((Node *)pObject)->getVlans();
 						if (vlans != NULL)
 						{
-							ConsolePrintf(pCtx, _T("\x1b[1mVLAN\x1b[0m | \x1b[1mName\x1b[0m             | \x1b[1mPorts\x1b[0m\n")
-								                 _T("-----+------------------+-----------------------------------------------------------------\n"));
+							ConsoleWrite(pCtx, _T("\x1b[1mVLAN\x1b[0m | \x1b[1mName\x1b[0m             | \x1b[1mPorts\x1b[0m\n")
+								                _T("-----+------------------+-----------------------------------------------------------------\n"));
 							for(int i = 0; i < vlans->size(); i++)
 							{
 								VlanInfo *vlan = vlans->get(i);
@@ -1724,12 +1725,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 						}
 						else
 						{
-							ConsolePrintf(pCtx, _T("\x1b[31mNode doesn't have VLAN information\x1b[0m\n\n"));
+							ConsoleWrite(pCtx, _T("\x1b[31mNode doesn't have VLAN information\x1b[0m\n\n"));
 						}
 					}
 					else
 					{
-						ConsolePrintf(pCtx, _T("\x1b[31mERROR: Object is not a node\x1b[0m\n\n"));
+						ConsoleWrite(pCtx, _T("\x1b[31mERROR: Object is not a node\x1b[0m\n\n"));
 					}
 				}
 				else
@@ -1739,20 +1740,20 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			}
 			else
 			{
-				ConsolePrintf(pCtx, _T("\x1b[31mERROR: Invalid or missing node ID\x1b[0m\n\n"));
+				ConsoleWrite(pCtx, _T("\x1b[31mERROR: Invalid or missing node ID\x1b[0m\n\n"));
 			}
 		}
 		else if (IsCommand(_T("WATCHDOG"), szBuffer, 1))
 		{
 			WatchdogPrintStatus(pCtx);
-			ConsolePrintf(pCtx, _T("\n"));
+			ConsoleWrite(pCtx, _T("\n"));
 		}
 		else
 		{
 			if (szBuffer[0] == 0)
-				ConsolePrintf(pCtx, _T("ERROR: Missing subcommand\n\n"));
+				ConsoleWrite(pCtx, _T("ERROR: Missing subcommand\n\n"));
 			else
-				ConsolePrintf(pCtx, _T("ERROR: Invalid SHOW subcommand\n\n"));
+				ConsoleWrite(pCtx, _T("ERROR: Invalid SHOW subcommand\n\n"));
 		}
 	}
 	else if (IsCommand(_T("EXEC"), szBuffer, 3))
@@ -1896,19 +1897,19 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 						}
 						else
 						{
-							ConsolePrintf(pCtx, _T("ERROR: Call to TraceRoute() failed\n\n"));
+							ConsoleWrite(pCtx, _T("ERROR: Call to TraceRoute() failed\n\n"));
 						}
 					}
 					else
 					{
-						ConsolePrintf(pCtx, _T("ERROR: Object is not a node\n\n"));
+						ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
 					}
 				}
 			}
 		}
 		else
 		{
-			ConsolePrintf(pCtx, _T("ERROR: Invalid or missing node id(s)\n\n"));
+			ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node id(s)\n\n"));
 		}
 	}
    else if (IsCommand(_T("LDAPSYNC"), szBuffer, 4))
@@ -1918,7 +1919,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    }
 	else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))
 	{
-		ConsolePrintf(pCtx, _T("Valid commands are:\n")
+		ConsoleWrite(pCtx, 
+            _T("Valid commands are:\n")
 				_T("   debug [<level>|off]       - Set debug level (valid range is 0..9)\n")
 				_T("   down                      - Shutdown NetXMS server\n")
 				_T("   exec <script> [<params>]  - Executes NXSL script from script library\n")
@@ -1954,7 +1956,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 	}
    else
 	{
-		ConsolePrintf(pCtx, _T("UNKNOWN COMMAND\n\n"));
+		ConsoleWrite(pCtx, _T("UNKNOWN COMMAND\n\n"));
 	}
 
 	return nExitCode;

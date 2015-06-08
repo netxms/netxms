@@ -846,6 +846,7 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
    __attribute__ ((format(printf, 2, 3)))
 #endif
 ;
+void ConsoleWrite(CONSOLE_CTX pCtx, const TCHAR *text);
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb);
