@@ -76,6 +76,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
       va_start(args, format);
       _vsntprintf(szBuffer, 4096, format, args);
       va_end(args);
+      szBuffer[4095] = 0;
       s_fpWriteLog(logLevel, 0, szBuffer);
    }
 }
@@ -90,6 +91,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_
    if (s_fpWriteLog != NULL)
    {
       _vsntprintf(szBuffer, 4096, format, args);
+      szBuffer[4095] = 0;
       s_fpWriteLog(logLevel, 0, szBuffer);
    }
 }
@@ -107,6 +109,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ..
       va_start(args, format);
       _vsntprintf(szBuffer, 4096, format, args);
       va_end(args);
+      szBuffer[4095] = 0;
       s_fpWriteLog(EVENTLOG_DEBUG_TYPE, level, szBuffer);
    }
 }
@@ -121,6 +124,7 @@ void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, v
    if (s_fpWriteLog != NULL)
    {
       _vsntprintf(szBuffer, 4096, format, args);
+      szBuffer[4095] = 0;
       s_fpWriteLog(EVENTLOG_DEBUG_TYPE, level, szBuffer);
    }
 }

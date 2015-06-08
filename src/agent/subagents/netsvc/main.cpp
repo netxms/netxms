@@ -52,22 +52,10 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
  */
 static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
-   RequestData *data = (RequestData *)userdata;
-   if ((data->allocated - data->size) < (size * nmemb))
-   {
-      char *newData = (char *)realloc(data->data, data->allocated + CURL_MAX_HTTP_HEADER);
-      if (newData == NULL)
-      {
-         return 0;
-      }
-      data->data = newData;
-      data->allocated += CURL_MAX_HTTP_HEADER;
-   }
-
-   memcpy(data->data + data->size, ptr, size * nmemb);
-   data->size += size * nmemb;
-
-   return size * nmemb;
+   ByteStream *data = (ByteStream *)userdata;
+   size_t bytes = size * nmemb;
+   data->write(ptr, bytes);
+   return bytes;
 }
 
 /**
@@ -111,7 +99,7 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
             // curl_easy_setopt(curl, CURLOPT_VERBOSE, (long)1);
             curl_easy_setopt(curl, CURLOPT_HEADER, (long)1); // include header in data
             curl_easy_setopt(curl, CURLOPT_TIMEOUT, g_timeout);
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);
 
             // SSL-related stuff
             curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, g_flags & NETSVC_AF_VERIFYPEER);
@@ -120,20 +108,19 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                curl_easy_setopt(curl, CURLOPT_CAINFO, g_certBundle);
             }
 
-            RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-            memset(data, 0, sizeof(RequestData));
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
+            ByteStream data(CURL_MAX_HTTP_HEADER * 20);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
             if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
             {
                AgentWriteDebugLog(5, _T("Check service: all prepared"));
                if (curl_easy_perform(curl) == 0)
                {
-                  AgentWriteDebugLog(6, _T("Check service: got reply: %lu bytes"), data->size);
-                  if (data->allocated > 0)
+                  AgentWriteDebugLog(6, _T("Check service: got reply: %lu bytes"), (unsigned long)data.size());
+                  if (data.size() > 0)
                   {
-                     data->data[data->size] = 0;
-                     AgentWriteDebugLog(9, _T("Check service: data=%hs"), data->data);
-                     if (tre_regexec(&compiledPattern, data->data, 0, NULL, 0) == 0)
+                     data.write('\0');
+                     size_t size;
+                     if (tre_regexec(&compiledPattern, (char *)data.buffer(&size), 0, NULL, 0) == 0)
                      {
                         AgentWriteDebugLog(5, _T("Check service: matched"));
                         retCode = PC_ERR_NONE;
@@ -143,7 +130,6 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                         AgentWriteDebugLog(5, _T("Check service: not matched"));
                         retCode = PC_ERR_NOMATCH;
                      }
-                     // do matching
                   }
                   else
                   {
@@ -156,8 +142,6 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                   retCode = PC_ERR_CONNECT;
                }
             }
-            safe_free(data->data);
-            free(data);
             curl_easy_cleanup(curl);
          }
          else
