@@ -100,6 +100,7 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
             curl_easy_setopt(curl, CURLOPT_HEADER, (long)1); // include header in data
             curl_easy_setopt(curl, CURLOPT_TIMEOUT, g_timeout);
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);
+            curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
 
             // SSL-related stuff
             curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, g_flags & NETSVC_AF_VERIFYPEER);
