@@ -96,6 +96,7 @@ TUXEDO_LIBS=""
 MONGODB_LIBS=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
+INSTALL_LIBPATH=""
 
 
 #--------------------------------------------------------------------
@@ -420,6 +421,19 @@ AC_ARG_WITH(openssl,
 			LD_RUN_PATH="/usr/local/lib:/opt/openssl/lib:/usr/local/ssl/lib:${LD_RUN_PATH:+:}${LD_RUN_PATH}"
 			LDFLAGS="$LDFLAGS -L/usr/local/lib -L/opt/openssl/lib"
 			CPPFLAGS="$CPPFLAGS -I/opt/openssl/include"
+		fi
+	fi
+])
+
+AC_ARG_WITH(jemalloc,
+[AS_HELP_STRING(--with-jemalloc,specify libjemalloc location)],
+[
+	if test "x$withval" != "xno" ; then
+		if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LDFLAGS="$LDFLAGS -L${withval}/lib"
+			CPPFLAGS="$CPPFLAGS -I${withval}/include"
+			INSTALL_LIBPATH="${withval}/lib${INSTALL_LIBPATH:+:}${INSTALL_LIBPATH}"
 		fi
 	fi
 ])
@@ -2724,6 +2738,7 @@ AC_SUBST(TUXEDO_LIBS)
 AC_SUBST(MONGODB_CPPFLAGS)
 AC_SUBST(MONGODB_LDFLAGS)
 AC_SUBST(MONGODB_LIBS)
+AC_SUBST(INSTALL_LIBPATH)
 
 #--------------------------------------------------------------------
 # Shared libs versions
