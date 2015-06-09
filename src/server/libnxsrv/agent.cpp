@@ -332,6 +332,10 @@ void AgentConnection::receiverThread()
 			pMsg = new NXCPMessage(pRawMsg, m_nProtocolVersion);
 			switch(pMsg->getCode())
 			{
+				case CMD_REQUEST_COMPLETED:
+            case CMD_SESSION_KEY:
+					m_pMsgWaitQueue->put(pMsg);
+					break;
 				case CMD_TRAP:
 					onTrap(pMsg);
 					delete pMsg;
@@ -350,9 +354,6 @@ void AgentConnection::receiverThread()
                   sendMessage(&response);
                }
 					delete pMsg;
-					break;
-				case CMD_REQUEST_COMPLETED:
-					m_pMsgWaitQueue->put(pMsg);
 					break;
             case CMD_FILE_MONITORING:
                onFileMonitoringData(pMsg);
