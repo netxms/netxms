@@ -109,8 +109,11 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                curl_easy_setopt(curl, CURLOPT_CAINFO, g_certBundle);
             }
 
-            ByteStream data(CURL_MAX_HTTP_HEADER * 20);
+            // Receiving buffer
+            ByteStream data(32768);
+            data.setAllocationStep(32768);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+
             if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
             {
                AgentWriteDebugLog(5, _T("Check service: all prepared"));

@@ -707,6 +707,7 @@ private:
    size_t m_size;
    size_t m_allocated;
    size_t m_pos;
+   size_t m_allocationStep;
 
 public:
    ByteStream(size_t initial = 8192);
@@ -720,7 +721,9 @@ public:
    size_t size() { return m_size; }
    bool eos() { return m_pos == m_size; }
 
-   BYTE *buffer(size_t *size) { *size = m_size; return m_data; }
+   void setAllocationStep(size_t s) { m_allocationStep = s; }
+
+   const BYTE *buffer(size_t *size) { *size = m_size; return m_data; }
 
    void write(const void *data, size_t size);
    void write(char c) { write(&c, 1); }
