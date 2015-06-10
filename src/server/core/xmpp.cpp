@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -70,7 +70,7 @@ static int VersionHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza
    xmpp_stanza_t *query = xmpp_stanza_new(ctx);
    xmpp_stanza_set_name(query, "query");
    char *ns = xmpp_stanza_get_ns(xmpp_stanza_get_children(stanza));
-   if (ns != NULL) 
+   if (ns != NULL)
    {
       xmpp_stanza_set_ns(query, ns);
    }
@@ -106,7 +106,7 @@ static int PresenceHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanz
 	xmpp_ctx_t *ctx = (xmpp_ctx_t *)userdata;
 
    char *type = xmpp_stanza_get_attribute(stanza, "type");
-	if ((type == NULL) || strcmp(type, "subscribe")) 
+	if ((type == NULL) || strcmp(type, "subscribe"))
       return 1;
 
    char *requestor = xmpp_stanza_get_attribute(stanza, "from");
@@ -135,17 +135,17 @@ static int PresenceHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanz
 static int MessageHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza, void * const userdata)
 {
 	xmpp_ctx_t *ctx = (xmpp_ctx_t *)userdata;
-	
-	if (!xmpp_stanza_get_child_by_name(stanza, "body")) 
+
+	if (!xmpp_stanza_get_child_by_name(stanza, "body"))
       return 1;
    char *type = xmpp_stanza_get_attribute(stanza, "type");
-	if ((type != NULL) && !strcmp(type, "error")) 
+	if ((type != NULL) && !strcmp(type, "error"))
       return 1;
 
    char *requestor = xmpp_stanza_get_attribute(stanza, "from");
 	char *intext = xmpp_stanza_get_text(xmpp_stanza_get_child_by_name(stanza, "body"));
    DbgPrintf(6, _T("XMPP: Incoming message from %hs: %hs"), requestor, intext);
-	
+
    if (AuthenticateUserForXMPPCommands(requestor))
    {
 #ifdef UNICODE
@@ -173,17 +173,17 @@ static int MessageHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza
 	      xmpp_stanza_set_name(reply, "message");
 	      xmpp_stanza_set_type(reply, (xmpp_stanza_get_type(stanza) != NULL) ? xmpp_stanza_get_type(stanza) : "chat");
 	      xmpp_stanza_set_attribute(reply, "to", requestor);
-      	
+
 	      xmpp_stanza_t *body = xmpp_stanza_new(ctx);
 	      xmpp_stanza_set_name(body, "body");
-      	
+
 	      xmpp_stanza_t *text = xmpp_stanza_new(ctx);
          char *response = console.output->getUTF8String();
 	      xmpp_stanza_set_text(text, response);
          free(response);
 	      xmpp_stanza_add_child_ex(body, text, FALSE);
 	      xmpp_stanza_add_child_ex(reply, body, FALSE);
-      	
+
 	      xmpp_send(conn, reply);
 	      xmpp_stanza_release(reply);
       }
@@ -210,7 +210,7 @@ static void ConnectionHandler(xmpp_conn_t * const conn, const xmpp_conn_event_t 
 {
    xmpp_ctx_t *ctx = (xmpp_ctx_t *)userdata;
 
-   if (status == XMPP_CONN_CONNECT) 
+   if (status == XMPP_CONN_CONNECT)
    {
       DbgPrintf(3, _T("XMPP: connected"));
 
@@ -226,7 +226,7 @@ static void ConnectionHandler(xmpp_conn_t * const conn, const xmpp_conn_event_t 
 
       s_xmppConnected = true;
    }
-   else 
+   else
    {
       s_xmppConnected = false;
       DbgPrintf(3, _T("XMPP: disconnected"));
@@ -249,30 +249,36 @@ THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
    xmpp_initialize();
 
    s_xmppContext = xmpp_ctx_new(NULL, &s_logger);
-   s_xmppConnection = xmpp_conn_new(s_xmppContext);
 
    char login[64], password[64];
    ConfigReadStrA(_T("XMPPLogin"), login, 64, "netxms@localhost");
    ConfigReadStrA(_T("XMPPPassword"), password, 64, "netxms");
-   xmpp_conn_set_jid(s_xmppConnection, login);
-   xmpp_conn_set_pass(s_xmppConnection, password);
-   xmpp_connect_client(s_xmppConnection, NULL, 0, ConnectionHandler, s_xmppContext);
 
    DbgPrintf(1, _T("XMPP connection manager started"));
 
    // outer loop - try to reconnect after disconnect
    do
    {
+      MutexLock(s_xmppMutex);
+      s_xmppConnection = xmpp_conn_new(s_xmppContext);
+      xmpp_conn_set_jid(s_xmppConnection, login);
+      xmpp_conn_set_pass(s_xmppConnection, password);
+      xmpp_connect_client(s_xmppConnection, NULL, 0, ConnectionHandler, s_xmppContext);
+      MutexUnlock(s_xmppMutex);
+
       xmpp_set_loop_status(s_xmppContext, XMPP_LOOP_RUNNING);
-      while(xmpp_get_loop_status(s_xmppContext) == XMPP_LOOP_RUNNING) 
+      while(xmpp_get_loop_status(s_xmppContext) == XMPP_LOOP_RUNNING)
       {
          MutexLock(s_xmppMutex);
          xmpp_run_once(s_xmppContext, 100);
          MutexUnlock(s_xmppMutex);
       }
+      MutexLock(s_xmppMutex);
+      xmpp_conn_release(s_xmppConnection);
+      s_xmppConnection = NULL;
+      MutexUnlock(s_xmppMutex);
    } while(!SleepAndCheckForShutdown(30));
 
-   xmpp_conn_release(s_xmppConnection);
    xmpp_ctx_free(s_xmppContext);
    s_xmppContext = NULL;
 
@@ -302,8 +308,12 @@ void StopXMPPConnector()
  */
 bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message)
 {
+   MutexLock(s_xmppMutex);
    if ((s_xmppContext == NULL) || (s_xmppConnection == NULL) || !s_xmppConnected)
+   {
+      MutexUnlock(s_xmppMutex);
       return false;
+   }
 
 #ifdef UNICODE
    char *_rcpt = UTF8StringFromWideString(rcpt);
@@ -313,21 +323,19 @@ bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message)
    const char *_message = message;
 #endif
 
-   MutexLock(s_xmppMutex);
-
 	xmpp_stanza_t *msg = xmpp_stanza_new(s_xmppContext);
 	xmpp_stanza_set_name(msg, "message");
 	xmpp_stanza_set_type(msg, "chat");
 	xmpp_stanza_set_attribute(msg, "to", _rcpt);
-	
+
 	xmpp_stanza_t *body = xmpp_stanza_new(s_xmppContext);
 	xmpp_stanza_set_name(body, "body");
-	
+
 	xmpp_stanza_t *text = xmpp_stanza_new(s_xmppContext);
 	xmpp_stanza_set_text(text, _message);
 	xmpp_stanza_add_child_ex(body, text, FALSE);
 	xmpp_stanza_add_child_ex(msg, body, FALSE);
-	
+
 	xmpp_send(s_xmppConnection, msg);
 	xmpp_stanza_release(msg);
 
