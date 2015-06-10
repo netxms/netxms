@@ -4269,13 +4269,24 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 		pRequest->getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
 
       InetAddress ipAddr = InetAddress::resolveHostName(primaryName);
-      if(ipAddr.isValid())
+      if (ipAddr.isValid())
       {
-          //Check that there is no node with same IP as we try to change
-         if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) ||
-          (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
+         // Check if received IP address is one of node's interface addresses
+         LockChildList(FALSE);
+         UINT32 i;
+         for(i = 0; i < m_dwChildCount; i++)
+            if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
+                ((Interface *)m_pChildList[i])->getIpAddressList()->hasAddress(ipAddr))
+               break;
+         UnlockChildList();
+         if (i == m_dwChildCount)
          {
-            return RCC_ALREADY_EXIST;
+            // Check that there is no node with same IP as we try to change
+            if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) ||
+                (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
+            {
+               return RCC_ALREADY_EXIST;
+            }
          }
       }
 
