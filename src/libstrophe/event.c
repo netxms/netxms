@@ -39,6 +39,10 @@
 #define ETIMEDOUT WSAETIMEDOUT
 #define ECONNRESET WSAECONNRESET
 #define ECONNABORTED WSAECONNABORTED
+#define _sleep(x) Sleep(x)
+#else
+#include <unistd.h>
+#define _sleep(x) usleep(x*1000)
 #endif
 
 #include <strophe.h>
@@ -215,13 +219,20 @@ void xmpp_run_once(xmpp_ctx_t *ctx, const unsigned long timeout)
 	    tls_read_bytes += tls_pending(conn->tls);
 	}
 	
-	if (conn->sock > max) max = conn->sock;
+	if (conn->state != XMPP_STATE_DISCONNECTED && conn->sock > max)
+	    max = conn->sock;
 
 	connitem = connitem->next;
     }
 
     /* check for events */
-    ret = select(SELECT_NFDS(max + 1), &rfds,  &wfds, NULL, &tv);
+    if (max > 0)
+        ret = select(max + 1, &rfds,  &wfds, NULL, &tv);
+    else {
+        if (timeout > 0)
+            _sleep(timeout);
+        return;      
+    }
 
     /* select errored */
     if (ret < 0) 
