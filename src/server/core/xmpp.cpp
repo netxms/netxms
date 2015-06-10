@@ -193,6 +193,7 @@ static int MessageHandler(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza
    {
       DbgPrintf(6, _T("XMPP: %hs is not authorized for XMPP commands"), requestor);
    }
+   xmpp_free(ctx, intext);
 	return 1;
 }
 

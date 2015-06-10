@@ -380,7 +380,6 @@ bool EPRule::matchSeverity(UINT32 dwSeverity)
  */
 bool EPRule::matchScript(Event *pEvent)
 {
-   NXSL_ServerEnv *pEnv;
    NXSL_Value **ppValueList, *pValue;
    NXSL_VariableSystem *pLocals, *pGlobals = NULL;
    bool bRet = true;
@@ -389,8 +388,6 @@ bool EPRule::matchScript(Event *pEvent)
 
    if (m_pScript == NULL)
       return true;
-
-   pEnv = new NXSL_ServerEnv;
 
    // Pass event's parameters as arguments and
    // other information as variables
