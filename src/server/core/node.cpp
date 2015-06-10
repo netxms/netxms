@@ -4393,6 +4393,7 @@ void Node::onSnmpProxyChange(UINT32 oldProxy)
    if (node != NULL)
    {
       DbgPrintf(4, _T("Node::onSnmpProxyChange(%s [%d]): data collection sync needed for %s [%d]"), m_name, m_id, node->m_name, node->m_id);
+      node->agentLock();
       bool newConnection;
       if (node->connectToAgent(NULL, NULL, &newConnection))
       {
@@ -4402,6 +4403,7 @@ void Node::onSnmpProxyChange(UINT32 oldProxy)
             node->syncDataCollectionWithAgent(node->m_pAgentConnection);
          }
       }
+      node->agentUnlock();
    }
 
    // resync data collection configuration with old proxy
@@ -4409,6 +4411,7 @@ void Node::onSnmpProxyChange(UINT32 oldProxy)
    if (node != NULL)
    {
       DbgPrintf(4, _T("Node::onSnmpProxyChange(%s [%d]): data collection sync needed for %s [%d]"), m_name, m_id, node->m_name, node->m_id);
+      node->agentLock();
       bool newConnection;
       if (node->connectToAgent(NULL, NULL, &newConnection))
       {
@@ -4418,6 +4421,7 @@ void Node::onSnmpProxyChange(UINT32 oldProxy)
             node->syncDataCollectionWithAgent(node->m_pAgentConnection);
          }
       }
+      node->agentUnlock();
    }
 }
 
@@ -6892,16 +6896,30 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
 }
 
 /**
+ * Callback for async handling of data collection change notification
+ */
+void Node::onDataCollectionChangeAsyncCallback(void *arg)
+{
+   Node *node = (Node *)arg;
+   node->agentLock();
+   bool newConnection;
+   if (node->connectToAgent(NULL, NULL, &newConnection))
+   {
+      if (!newConnection)
+         node->syncDataCollectionWithAgent(node->m_pAgentConnection);
+   }
+   node->agentUnlock();
+}
+
+/**
  * Called when data collection configuration changed
  */
 void Node::onDataCollectionChange()
 {
    DataCollectionTarget::onDataCollectionChange();
-
-   bool newConnection;
-   if (connectToAgent(NULL, NULL, &newConnection))
+   if (m_dwFlags & NF_IS_NATIVE_AGENT)
    {
-      if (!newConnection)
-         syncDataCollectionWithAgent(m_pAgentConnection);
+      DbgPrintf(5, _T("Node::onDataCollectionChange: executing data collection sync for node %s [%d]"), m_name, m_id);
+      ThreadPoolExecute(g_mainThreadPool, Node::onDataCollectionChangeAsyncCallback, this);
    }
 }

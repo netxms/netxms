@@ -1074,6 +1074,8 @@ class NXCORE_EXPORTABLE Node : public DataCollectionTarget
 private:
    void onSnmpProxyChange(UINT32 oldProxy);
 
+   static void onDataCollectionChangeAsyncCallback(void *);
+
 protected:
    InetAddress m_ipAddress;
 	TCHAR m_primaryName[MAX_DNS_NAME];
