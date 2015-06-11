@@ -1740,6 +1740,7 @@ AC_CHECK_FUNCS([tcgetattr tcsetattr cfsetospeed cfsetispeed])
 # asprintf, scprintf, etc.
 AC_CHECK_FUNCS([asprintf aswprintf vasprintf vaswprintf])
 AC_CHECK_FUNCS([scprintf scwprintf vscprintf vscwprintf])
+AC_CHECK_FUNCS([snprintf vsnprintf])
 
 AC_MSG_CHECKING(whether snprintf returns required buffer size)
 AC_RUN_IFELSE(

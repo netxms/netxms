@@ -188,6 +188,9 @@ typedef int bool;
 #define HAVE_VSCWPRINTF         1
 #endif
 
+#define HAVE_SNPRINTF           1
+#define HAVE_VSNPRINTF          1
+
 #define HAVE_GETADDRINFO        1
 
 #ifndef va_copy

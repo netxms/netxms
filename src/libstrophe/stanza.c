@@ -268,7 +268,7 @@ static char *_escape_xml(xmpp_ctx_t * const ctx, char *text)
 }
 
 /* small helper function */
-static inline void _render_update(int *written, const int length,
+static inline void _render_update(int *written, const size_t length,
 			   const int lastwrite,
 			   size_t *left, char **ptr)
 {

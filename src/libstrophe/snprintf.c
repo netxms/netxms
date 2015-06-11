@@ -59,6 +59,8 @@
  *  A snprintf implementation.
  */
 
+#include <nms_common.h>
+
 /* JAM: we don't need this - #include "config.h" */
 
 /* JAM: changed declarations to xmpp_snprintf and xmpp_vsnprintf to
@@ -447,7 +449,6 @@ static int fmtstr (char *buffer, size_t *currlen, size_t maxlen,
 }
 
 /* Have to handle DP_F_NUM (ie 0x and 0 alternates) */
-
 static int fmtint (char *buffer, size_t *currlen, size_t maxlen,
 		   long value, int base, int min, int max, int flags)
 {
