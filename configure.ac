@@ -1042,6 +1042,24 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 		fi
 	fi
 
+	
+	if test "x$PLATFORM" = "xLinux"; then
+		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
+			AC_MSG_CHECKING(whether C compiler accepts -m32)
+			OLD_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="$CPPFLAGS -m32"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ 
+					LDFLAGS="-m32 $LDFLAGS"
+					AC_MSG_RESULT(yes) 
+				], 
+				[ 
+					CPPFLAGS="$OLD_CPPFLAGS"
+					AC_MSG_RESULT(no)
+				])
+		fi
+	fi
+
 	if test "x$ENABLE_DEBUG" = "xyes"; then
 		CPPFLAGS="$CPPFLAGS -ggdb3"
 	fi
