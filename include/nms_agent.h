@@ -206,6 +206,7 @@
 #define DCIDESC_AGENT_UPTIME                      _T("Agent's uptime")
 #define DCIDESC_AGENT_VERSION                     _T("Agent's version")
 #define DCIDESC_FILE_COUNT                        _T("Number of files {instance}")
+#define DCIDESC_FILE_FOLDERCOUNT                  _T("Number of folders {instance}")
 #define DCIDESC_FILE_HASH_CRC32                   _T("CRC32 checksum of {instance}")
 #define DCIDESC_FILE_HASH_MD5                     _T("MD5 hash of {instance}")
 #define DCIDESC_FILE_HASH_SHA1                    _T("SHA1 hash of {instance}")

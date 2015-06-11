@@ -161,7 +161,7 @@
  */
 #define DIRINFO_FILE_COUNT       1
 #define DIRINFO_FILE_SIZE        2
-
+#define DIRINFO_FOLDER_COUNT     3
 
 /**
  * Request types for H_FileTime
@@ -169,7 +169,6 @@
 #define FILETIME_ATIME           1
 #define FILETIME_MTIME           2
 #define FILETIME_CTIME           3
-
 
 /**
  * Action types

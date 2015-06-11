@@ -48,7 +48,7 @@ LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
 /**
  * File filter for GetDirInfo
  */
-static bool MatchFileFilter(const TCHAR *fileName, NX_STAT_STRUCT &fileInfo, const TCHAR *pattern, int ageFilter, INT64 sizeFilter)
+static bool MatchFileFilter(const TCHAR *fileName, const NX_STAT_STRUCT &fileInfo, const TCHAR *pattern, int ageFilter, INT64 sizeFilter)
 {
 	if (!MatchString(pattern, fileName, FALSE))
 		return false;
@@ -85,14 +85,11 @@ static bool MatchFileFilter(const TCHAR *fileName, NX_STAT_STRUCT &fileInfo, con
 	return true;
 }
 
-
-//
-// Helper function for H_DirInfo
-//
-
-static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive,
-                       unsigned int &uFileCount, QWORD &llFileSize,
-                       int ageFilter, INT64 sizeFilter)
+/**
+ * Helper function for H_DirInfo
+ */
+static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive, unsigned int &uFileCount, 
+                       UINT64 &llFileSize, int ageFilter, INT64 sizeFilter, bool countFiles, bool countFolders)
 {
    _TDIR *pDir = NULL;
    struct _tdirent *pFile;
@@ -107,7 +104,7 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive,
 	// Filters ignored in this case
    if (!S_ISDIR(fileInfo.st_mode))
    {
-		llFileSize += (QWORD)fileInfo.st_size;
+		llFileSize += (UINT64)fileInfo.st_size;
 		uFileCount++;
 		return nRet;
    }
@@ -145,15 +142,16 @@ static LONG GetDirInfo(TCHAR *szPath, TCHAR *szPattern, bool bRecursive,
 
          if (S_ISDIR(fileInfo.st_mode) && bRecursive)
          {
-            nRet = GetDirInfo(szFileName, szPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter);
+            nRet = GetDirInfo(szFileName, szPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, countFiles, countFolders);
 
             if (nRet != SYSINFO_RC_SUCCESS)
                 break;
          }
 
-         if (!S_ISDIR(fileInfo.st_mode) && MatchFileFilter(pFile->d_name, fileInfo, szPattern, ageFilter, sizeFilter))
+         if (((countFiles && !S_ISDIR(fileInfo.st_mode)) || (countFolders && S_ISDIR(fileInfo.st_mode))) && 
+             MatchFileFilter(pFile->d_name, fileInfo, szPattern, ageFilter, sizeFilter))
          {
-             llFileSize += (QWORD)fileInfo.st_size;
+             llFileSize += (UINT64)fileInfo.st_size;
              uFileCount++;
          }
       }
@@ -212,15 +210,18 @@ LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
 	    (ExpandFileName(szPattern, szRealPattern, MAX_PATH, session == NULL ? false : session->isMasterServer()) == NULL))
 		return SYSINFO_RC_UNSUPPORTED;
 
-   DebugPrintf(INVALID_INDEX, 6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s"), szRealPath, szRealPattern, bRecursive ? _T("true") : _T("false"));
-   nRet = GetDirInfo(szRealPath, szRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter);
+   int mode = CAST_FROM_POINTER(arg, int);
+   DebugPrintf(INVALID_INDEX, 6, _T("H_DirInfo: path=\"%s\" pattern=\"%s\" recursive=%s mode=%d"), szRealPath, szRealPattern, bRecursive ? _T("true") : _T("false"), mode);
 
-   switch(CAST_FROM_POINTER(arg, int))
+   nRet = GetDirInfo(szRealPath, szRealPattern, bRecursive, uFileCount, llFileSize, ageFilter, sizeFilter, mode != DIRINFO_FOLDER_COUNT, mode == DIRINFO_FOLDER_COUNT);
+
+   switch(mode)
    {
    	case DIRINFO_FILE_SIZE:
            ret_uint64(value, llFileSize);
            break;
    	case DIRINFO_FILE_COUNT:
+   	case DIRINFO_FOLDER_COUNT:
            ret_uint(value, uFileCount);
            break;
    	default:

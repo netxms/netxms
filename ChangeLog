@@ -15,6 +15,7 @@
 - Command line options for nxagentd to change effective user and group after start
 - Fixed occasional NXSL compiler crash on scripts with syntax errors
 - Errors in auto bind/apply scripts interpreted as "ignore" instead of "false" result
+- New core agent parameter File.FolderCount
 - Management console:
 	- Fixed broken VPN connectors configuration
 	- "Inverted values" option on line charts
@@ -23,7 +24,7 @@
 	- "Stacked" option added to line charts on dashboards
 	- In-place file rename in file manager
 	- Option to export data from line charts on dashboard to CSV file
-- Fixed issues: #50, #630, #780, #781, #797, #816, #817, #824, #832, #833
+- Fixed issues: #50, #630, #780, #781, #797, #815, #816, #817, #824, #832, #833
 
 
 *
