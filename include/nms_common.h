@@ -193,6 +193,8 @@ typedef int bool;
 
 #define HAVE_GETADDRINFO        1
 
+#define HAVE_STDARG_H           1
+
 #ifndef va_copy
 #define va_copy(x,y)            (x = y)
 #endif
