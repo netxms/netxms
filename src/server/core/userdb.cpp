@@ -1228,7 +1228,12 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
 			 !_tcsicmp(_xmppId, ((User *)m_users[i])->getXmppId()))
       {
          DbgPrintf(4, _T("User %s authenticated for XMPP subscription"), m_users[i]->getName());
-         WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP subscription"));
+
+         TCHAR workstation[256];
+         _tcscpy(workstation, _T("XMPP:"));
+         nx_strncpy(&workstation[5], _xmppId, 251);
+         WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP subscription"));
+         
          success = true;
          break;
       }
@@ -1275,16 +1280,20 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
 					 (((Group *)m_users[j])->isMember(m_users[i]->getId())))
 					systemRights |= ((Group *)m_users[j])->getSystemRights();
 
+         TCHAR workstation[256];
+         _tcscpy(workstation, _T("XMPP:"));
+         nx_strncpy(&workstation[5], _xmppId, 251);
+
          if (systemRights & SYSTEM_ACCESS_XMPP_COMMANDS)
          {
             DbgPrintf(4, _T("User %s authenticated for XMPP commands"), m_users[i]->getName());
-            WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP commands"));
+            WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP commands"));
             success = true;
          }
          else
          {
             DbgPrintf(4, _T("Access to XMPP commands denied for user %s"), m_users[i]->getName());
-            WriteAuditLog(AUDIT_SECURITY, FALSE, m_users[i]->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("Access to XMPP commands denied"));
+            WriteAuditLog(AUDIT_SECURITY, FALSE, m_users[i]->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("Access to XMPP commands denied"));
          }
          break;
       }

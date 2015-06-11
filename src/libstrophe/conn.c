@@ -626,20 +626,26 @@ void xmpp_send_raw(xmpp_conn_t * const conn,
  *
  *  @ingroup Connections
  */
-void xmpp_send(xmpp_conn_t * const conn,
-	       xmpp_stanza_t * const stanza)
+void xmpp_send(xmpp_conn_t * const conn, xmpp_stanza_t * const stanza)
 {
-    char *buf;
-    size_t len;
-    int ret;
+   char *buf;
+   size_t len;
+   int ret;
 
-    if (conn->state == XMPP_STATE_CONNECTED) {
-	if ((ret = xmpp_stanza_to_text(stanza, &buf, &len)) == 0) {
-	    xmpp_send_raw(conn, buf, len);
-	    xmpp_debug(conn->ctx, "conn", "SENT: %s", buf);
-	    xmpp_free(conn->ctx, buf);
-	}
-    }
+   if (conn->state == XMPP_STATE_CONNECTED)
+   {
+      ret = xmpp_stanza_to_text(stanza, &buf, &len);
+      if (ret == 0)
+      {
+         xmpp_send_raw(conn, buf, len);
+         xmpp_debug(conn->ctx, "conn", "SENT: %s", buf);
+         xmpp_free(conn->ctx, buf);
+      }
+      else
+      {
+         xmpp_debug(conn->ctx, "conn", "xmpp_stanza_to_text() failed: %d", ret);
+      }
+   }
 }
 
 /** Send the opening &lt;stream:stream&gt; tag to the server.

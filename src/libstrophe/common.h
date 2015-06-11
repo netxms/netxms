@@ -264,12 +264,7 @@ void disconnect_mem_error(xmpp_conn_t * const conn);
 void auth_handle_open(xmpp_conn_t * const conn);
 
 /* replacement snprintf and vsnprintf */
-#if !defined(HAVE_SNPRINTF) || !defined(HAVE_VSNPRINTF)
 int xmpp_snprintf(char *str, size_t count, const char *fmt, ...);
 int xmpp_vsnprintf(char *str, size_t count, const char *fmt, va_list arg);
-#else
-#define xmpp_snprintf snprintf
-#define xmpp_vsnprintf vsnprintf
-#endif
 
 #endif /* __LIBSTROPHE_COMMON_H__ */
