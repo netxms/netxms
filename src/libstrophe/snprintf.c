@@ -72,10 +72,6 @@
 
 /* Define this as a fall through, HAVE_STDARG_H is probably already set */
 
-#define HAVE_VARARGS_H
-#define HAVE_STDARG_H /* JAM: set always */
-
-
 /* varargs declarations: */
 
 #if defined(HAVE_STDARG_H)

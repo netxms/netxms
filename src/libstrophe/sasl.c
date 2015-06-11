@@ -22,6 +22,18 @@
 #include "sasl.h"
 #include "md5.h"
 
+
+static int base64_encoded_len(xmpp_ctx_t *ctx, const unsigned len);
+
+static char *base64_encode(xmpp_ctx_t *ctx,
+                    const unsigned char * const buffer, const unsigned len);
+
+static int base64_decoded_len(xmpp_ctx_t *ctx,
+                       const char * const buffer, const unsigned len);
+
+static unsigned char *base64_decode(xmpp_ctx_t *ctx,
+                             const char * const buffer, const unsigned  len);
+
 /* make sure the stdint.h types are available */
 #if defined(_MSC_VER) /* Microsoft Visual C++ */
   typedef signed char             int8_t;
