@@ -46,7 +46,7 @@
 #include <poll.h>
 #endif
 
-#if HAVE_MALLOC_H
+#if HAVE_MALLOC_H && !WITH_JEMALLOC
 #include <malloc.h>
 #endif
 
