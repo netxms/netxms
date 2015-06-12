@@ -74,10 +74,15 @@ public class CurrentValueWidget extends GaugeWidget
 	protected void renderElement(GC gc, DataComparisonElement dci, int x, int y, int w, int h)
 	{
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
+		gc.setAntialias(SWT.ON);
 		
 		if (elementBordersVisible)
 		{
 		   gc.drawRectangle(rect);
+		   rect.x += INNER_MARGIN_WIDTH;
+		   rect.y += INNER_MARGIN_HEIGHT;
+		   rect.width -= INNER_MARGIN_WIDTH / 2;
+         rect.height -= INNER_MARGIN_HEIGHT / 2;
 		}
 		
 		if (legendVisible)
