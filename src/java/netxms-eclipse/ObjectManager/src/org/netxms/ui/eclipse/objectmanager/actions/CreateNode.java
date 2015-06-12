@@ -63,32 +63,37 @@ public class CreateNode implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
-		final CreateNodeDialog dlg = new CreateNodeDialog(window.getShell());
-		if (dlg.open() != Window.OK)
-			return;
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.get().CreateNode_JobTitle, part, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), parentId);
-				cd.setCreationFlags(dlg.getCreationFlags());
-				cd.setPrimaryName(dlg.getHostName());
-				cd.setAgentPort(dlg.getAgentPort());
-				cd.setSnmpPort(dlg.getSnmpPort());
-				cd.setAgentProxyId(dlg.getAgentProxy());
-				cd.setSnmpProxyId(dlg.getSnmpProxy());
-				cd.setZoneId(dlg.getZoneId());
-				session.createObject(cd);
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return String.format(Messages.get().CreateNode_JobError, dlg.getObjectName());
-			}
-		}.start();
+	   CreateNodeDialog dlg = null;
+	   do
+	   {
+   		dlg = new CreateNodeDialog(window.getShell(), dlg);
+   		if (dlg.open() != Window.OK)
+   			return;
+   		
+         final NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_NODE, dlg.getObjectName(), parentId);
+         cd.setCreationFlags(dlg.getCreationFlags());
+         cd.setPrimaryName(dlg.getHostName());
+         cd.setAgentPort(dlg.getAgentPort());
+         cd.setSnmpPort(dlg.getSnmpPort());
+         cd.setAgentProxyId(dlg.getAgentProxy());
+         cd.setSnmpProxyId(dlg.getSnmpProxy());
+         cd.setZoneId(dlg.getZoneId());   		
+   		
+   		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+   		new ConsoleJob(Messages.get().CreateNode_JobTitle, part, Activator.PLUGIN_ID, null) {
+   			@Override
+   			protected void runInternal(IProgressMonitor monitor) throws Exception
+   			{
+   				session.createObject(cd);
+   			}
+   
+   			@Override
+   			protected String getErrorMessage()
+   			{
+   				return String.format(Messages.get().CreateNode_JobError, cd.getName());
+   			}
+   		}.start();
+	   } while(dlg.isShowAgain());
 	}
 
 	/* (non-Javadoc)

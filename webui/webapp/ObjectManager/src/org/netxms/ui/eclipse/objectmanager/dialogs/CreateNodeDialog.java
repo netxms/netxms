@@ -56,27 +56,38 @@ public class CreateNodeDialog extends Dialog
 	private Button checkDisableAgent;
 	private Button checkDisableSNMP;
 	private Button checkDisablePing;
+	private Button checkCreateAnother;
 	private ObjectSelector agentProxySelector;
 	private ObjectSelector snmpProxySelector;
 	private ObjectSelector zoneSelector;
 	
 	private String objectName;
 	private String hostName;
-	private int creationFlags;
-	private long agentProxy;
-	private long snmpProxy;
-	private long zoneId;
-	private int agentPort;
-	private int snmpPort;
+	private int creationFlags = 0;
+	private long agentProxy = 0;
+	private long snmpProxy = 0;
+	private long zoneId = 0;
+	private int agentPort = 4700;
+	private int snmpPort = 161;
+	private boolean showAgain = false;
 	
 	/**
 	 * @param parentShell
 	 */
-	public CreateNodeDialog(Shell parentShell)
+	public CreateNodeDialog(Shell parentShell, CreateNodeDialog prev)
 	{
 		super(parentShell);
 		session = (NXCSession)ConsoleSharedData.getSession();
-		zoneId = 0;
+		if (prev != null)
+		{
+         creationFlags = prev.creationFlags;
+         agentProxy = prev.agentProxy;
+         snmpProxy = prev.snmpProxy;
+		   zoneId = prev.zoneId;
+		   agentPort = prev.agentPort;
+		   snmpPort = prev.snmpPort;
+		   showAgain = prev.showAgain;
+		}
 	}
 
 	/* (non-Javadoc)
@@ -136,10 +147,10 @@ public class CreateNodeDialog extends Dialog
 		hostNameField.setLayoutData(gd);
 		
 		agentPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().CreateNodeDialog_AgentPort, 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		agentPortField.setSelection(4700);
+		agentPortField.setSelection(agentPort);
 		
 		snmpPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().CreateNodeDialog_SNMPPort, 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
-		snmpPortField.setSelection(161);
+		snmpPortField.setSelection(snmpPort);
 		
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
 		optionsGroup.setText(Messages.get().CreateNodeDialog_Options);
@@ -152,19 +163,24 @@ public class CreateNodeDialog extends Dialog
 		
 		checkUnmanaged = new Button(optionsGroup, SWT.CHECK);
 		checkUnmanaged.setText(Messages.get().CreateNodeDialog_CreateUnmanaged);
+		checkUnmanaged.setSelection((creationFlags & NXCObjectCreationData.CF_CREATE_UNMANAGED) != 0);
 
 		checkDisableAgent = new Button(optionsGroup, SWT.CHECK);
 		checkDisableAgent.setText(Messages.get().CreateNodeDialog_DisableAgent);
+		checkDisableAgent.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_NXCP) != 0);
 		
 		checkDisableSNMP = new Button(optionsGroup, SWT.CHECK);
 		checkDisableSNMP.setText(Messages.get().CreateNodeDialog_DisableSNMP);
+		checkDisableSNMP.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_SNMP) != 0);
 		
 		checkDisablePing = new Button(optionsGroup, SWT.CHECK);
 		checkDisablePing.setText(Messages.get().CreateNodeDialog_DisableICMP);
+		checkDisablePing.setSelection((creationFlags & NXCObjectCreationData.CF_DISABLE_ICMP) != 0);
 		
 		agentProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
 		agentProxySelector.setLabel(Messages.get().CreateNodeDialog_AgentProxy);
 		agentProxySelector.setObjectClass(Node.class);
+		agentProxySelector.setObjectId(agentProxy);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -174,6 +190,7 @@ public class CreateNodeDialog extends Dialog
 		snmpProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
 		snmpProxySelector.setLabel(Messages.get().CreateNodeDialog_SNMPProxy);
 		snmpProxySelector.setObjectClass(Node.class);
+		snmpProxySelector.setObjectId(snmpProxy);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -185,12 +202,18 @@ public class CreateNodeDialog extends Dialog
 			zoneSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
 			zoneSelector.setLabel(Messages.get().CreateNodeDialog_Zone);
 			zoneSelector.setObjectClass(Zone.class);
+			Zone zone = ConsoleSharedData.getSession().findZone(zoneId);
+			zoneSelector.setObjectId((zone != null) ? zone.getObjectId() : 0);
 			gd = new GridData();
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
 			gd.horizontalSpan = 2;
 			zoneSelector.setLayoutData(gd);
 		}
+		
+		checkCreateAnother = new Button(dialogArea, SWT.CHECK);
+		checkCreateAnother.setText("Show this dialog again to &create another node");
+		checkCreateAnother.setSelection(showAgain);
 		
 		return dialogArea;
 	}
@@ -241,6 +264,7 @@ public class CreateNodeDialog extends Dialog
 			}
 		}
 		
+		showAgain = checkCreateAnother.getSelection();
 		super.okPressed();
 	}
 
@@ -307,4 +331,12 @@ public class CreateNodeDialog extends Dialog
 	{
 		return snmpPort;
 	}
+
+   /**
+    * @return the showAgain
+    */
+   public boolean isShowAgain()
+   {
+      return showAgain;
+   }
 }

@@ -24,7 +24,7 @@
 	- "Stacked" option added to line charts on dashboards
 	- In-place file rename in file manager
 	- Option to export data from line charts on dashboard to CSV file
-- Fixed issues: #50, #630, #780, #781, #791, #797, #806, #815, #816, #817, #824, #832, #833
+- Fixed issues: #50, #630, #780, #781, #791, #794, #797, #806, #815, #816, #817, #824, #832, #833
 
 
 *

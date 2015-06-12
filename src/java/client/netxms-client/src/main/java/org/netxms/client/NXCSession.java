@@ -2318,7 +2318,10 @@ public class NXCSession
          }
       }
 
-      if (count > 0) syncObjectSet(syncList, syncComments, options);
+      if (count > 0)
+      {
+         syncObjectSet(syncList, syncComments, options);
+      }
    }
 
    /**
@@ -2372,8 +2375,7 @@ public class NXCSession
     * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
     * @return list of found objects
     */
-   public List<AbstractObject> findMultipleObjects(
-      final long[] idList, Class<? extends AbstractObject> classFilter, boolean returnUnknown)
+   public List<AbstractObject> findMultipleObjects(final long[] idList, Class<? extends AbstractObject> classFilter, boolean returnUnknown)
    {
       List<AbstractObject> result = new ArrayList<AbstractObject>(idList.length);
 
@@ -2416,8 +2418,7 @@ public class NXCSession
     * @param returnUnknown if true, this method will return UnknownObject placeholders for unknown object identifiers
     * @return array of found objects
     */
-   public List<AbstractObject> findMultipleObjects(
-      final Long[] idList, Class<? extends AbstractObject> classFilter, boolean returnUnknown)
+   public List<AbstractObject> findMultipleObjects(final Long[] idList, Class<? extends AbstractObject> classFilter, boolean returnUnknown)
    {
       List<AbstractObject> result = new ArrayList<AbstractObject>(idList.length);
 
@@ -2440,6 +2441,33 @@ public class NXCSession
       return result;
    }
 
+   /**
+    * Find zone object by zone ID.
+    *
+    * @param zoneId zone ID to find
+    * @return zone object or null
+    */
+   public Zone findZone(long zoneId)
+   {
+      Zone result = null;
+      synchronized(objectList)
+      {
+         AbstractObject entireNetwork = objectList.get(1L);
+         Collection<AbstractObject> objects = (entireNetwork != null) ? 
+               entireNetwork.getAllChilds(AbstractObject.OBJECT_ZONE) : objectList.values();
+         for(AbstractObject object : objects)
+         {
+            if ((object instanceof Zone) && ((Zone)object).getZoneId() == zoneId)
+            {
+               result = (Zone)object;
+               break;
+            }
+         }
+      }
+      return result;
+   }
+
+   
    /**
     * Find object by name. If multiple objects with same name exist,
     * it is not determined what object will be returned. Name comparison
