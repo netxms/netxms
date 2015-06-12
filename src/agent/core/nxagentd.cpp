@@ -792,12 +792,12 @@ BOOL Initialize()
 			return FALSE;
 
 		// Parse server lists
-		if (m_pszServerList != NULL)
-			ParseServerList(m_pszServerList, FALSE, FALSE);
-		if (m_pszControlServerList != NULL)
-			ParseServerList(m_pszControlServerList, TRUE, FALSE);
 		if (m_pszMasterServerList != NULL)
-			ParseServerList(m_pszMasterServerList, TRUE, TRUE);
+			ParseServerList(m_pszMasterServerList, true, true);
+		if (m_pszControlServerList != NULL)
+			ParseServerList(m_pszControlServerList, true, false);
+		if (m_pszServerList != NULL)
+			ParseServerList(m_pszServerList, false, false);
 
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
