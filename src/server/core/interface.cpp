@@ -747,7 +747,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 				      {
 					      DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy response: \"%s\""), m_id, m_name, buffer);
 					      TCHAR *eptr;
-					      long value = _tcstol(buffer, &eptr, 10);
+					      value = _tcstol(buffer, &eptr, 10);
                      if (*eptr != 0)
                      {
                         value = -1;

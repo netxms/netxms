@@ -1306,8 +1306,7 @@ restart_agent_check:
             break;
          case OBJECT_NETWORKSERVICE:
 			   DbgPrintf(7, _T("StatusPoll(%s): polling network service %d [%s]"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName());
-            ((NetworkService *)ppPollList[i])->statusPoll(pSession, dwRqId,
-                                                          (Node *)pPollerNode, pQueue);
+            ((NetworkService *)ppPollList[i])->statusPoll(pSession, dwRqId, (Node *)pPollerNode, pQueue);
             break;
          case OBJECT_ACCESSPOINT:
 			   DbgPrintf(7, _T("StatusPoll(%s): polling access point %d [%s]"), m_name, ppPollList[i]->getId(), ppPollList[i]->getName());
