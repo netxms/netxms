@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,11 +21,9 @@ package org.netxms.ui.eclipse.dashboard.views;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -465,11 +463,12 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private void exportLineChartValues()
 	{
 	   FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
+	   fd.setFileName(dashboard.getObjectName() + ".csv");
 	   final String fileName = fd.open();
 	   if (fileName == null)
 	      return;
 	   
-	   final Map<Long, DataCacheElement> data = new HashMap<Long, DataCacheElement>();
+	   final List<DataCacheElement> data = new ArrayList<DataCacheElement>();
 	   for(ElementWidget w : dbc.getElementWidgets())
 	   {
 	      if (!(w instanceof LineChartElement))
@@ -477,7 +476,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	      
 	      for(DataCacheElement d : ((LineChartElement)w).getDataCache())
 	      {
-	         data.put(d.data.getDciId(), d);
+	         data.add(d);
 	      }
 	   }
 	   
@@ -485,51 +484,86 @@ public class DashboardView extends ViewPart implements ISaveablePart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            Map<Date, String[]> table = new TreeMap<Date, String[]>();
-            final Date header = new Date(0L);
-            int index = 0;
-            for(DataCacheElement d : data.values())
+            // Build combined time series
+            // Time stamps in series are reversed - latest value first
+            List<Date> combinedTimeSeries = new ArrayList<Date>();
+            for(DataCacheElement d : data)
             {
-               String[] row = table.get(header);
-               if (row == null)
-               {
-                  row = new String[data.size()];
-                  table.put(header, row);
-               }
-               row[index] = d.name;
-               
                for(DciDataRow r : d.data.getValues())
                {
-                  if (r.getTimestamp().getTime() == 0)
-                     continue;   // invalid timestamp
-                  
-                  row = table.get(r.getTimestamp());
-                  if (row == null)
+                  int i;
+                  for(i = 0; i < combinedTimeSeries.size(); i++)
                   {
-                     row = new String[data.size()];
-                     table.put(r.getTimestamp(), row);
+                     if (combinedTimeSeries.get(i).getTime() == r.getTimestamp().getTime())
+                        break;                 
+                     if (combinedTimeSeries.get(i).getTime() < r.getTimestamp().getTime())
+                     {
+                        combinedTimeSeries.add(i, r.getTimestamp());
+                        break;
+                     }
                   }
-                  row[index] = r.getValueAsString();
+                  if (i == combinedTimeSeries.size())
+                     combinedTimeSeries.add(r.getTimestamp());
                }
-               index++;
             }
+            
+            List<Double[]> combinedData = new ArrayList<Double[]>(data.size());
+            
+            // insert missing values
+            for(DataCacheElement d : data)
+            {
+               Double[] ySeries = new Double[combinedTimeSeries.size()];
+               int combinedIndex = 0;
+               double lastValue = 0;
+               long lastTimestamp = 0;
+               DciDataRow[] values = d.data.getValues();
+               for(int i = 0; i < values.length; i++)
+               {
+                  Date currentTimestamp = values[i].getTimestamp();
+                  double currentValue = values[i].getValueAsDouble();
+                  long currentCombinedTimestamp = combinedTimeSeries.get(combinedIndex).getTime();
+                  while(currentCombinedTimestamp > currentTimestamp.getTime())
+                  {
+                     if (lastTimestamp != 0)
+                     {
+                        // do linear interpolation for missed value
+                        ySeries[combinedIndex] = lastValue + (currentValue - lastValue) * ((double)(lastTimestamp - currentCombinedTimestamp) / (double)(lastTimestamp - currentTimestamp.getTime()));
+                     }
+                     else
+                     {
+                        ySeries[combinedIndex] = null;
+                     }
+                     combinedIndex++;
+                     currentCombinedTimestamp = combinedTimeSeries.get(combinedIndex).getTime();
+                  }
+                  ySeries[combinedIndex++] = currentValue;
+                  lastTimestamp = currentTimestamp.getTime();
+                  lastValue = currentValue;
+               }
+               combinedData.add(ySeries);
+            }            
             
             BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
             try
             {
-               DateFormat df = RegionalSettings.getDateTimeFormat();
-               for(Entry<Date, String[]> e : table.entrySet())
+               writer.write("TIME");
+               for(DataCacheElement d : data)
                {
-                  if (e.getKey().getTime() == 0)
-                     writer.write("TIME");
-                  else
-                     writer.write(df.format(e.getKey()));
-                  for(String s : e.getValue())
+                  writer.write(',');
+                  writer.write(d.name);
+               }
+               writer.newLine();
+               
+               DateFormat df = RegionalSettings.getDateTimeFormat();
+               for(int i = combinedTimeSeries.size() - 1; i >= 0; i--)
+               {
+                  writer.write(df.format(combinedTimeSeries.get(i)));
+                  for(Double[] values : combinedData)
                   {
                      writer.write(',');
-                     if (s != null)
-                        writer.write(s);
-                  }
+                     if (values[i] != null)
+                        writer.write(Double.toString(values[i]));
+                  }  
                   writer.newLine();
                }
             }
