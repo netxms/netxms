@@ -106,4 +106,13 @@ public class DciData
 	   for(DciDataRow r : values)
 	      r.invert();
 	}
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "DciData [nodeId=" + nodeId + ", dciId=" + dciId + ", dataType=" + dataType + ", valuesSize=" + values.size() + "]";
+   }
 }

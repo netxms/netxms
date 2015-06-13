@@ -99,4 +99,13 @@ public class DciDataRow
       else if (value instanceof Double)
          value = -((Double)value);
    }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "DciDataRow [timestamp=" + timestamp + ", value=" + value + "]";
+   }
 }

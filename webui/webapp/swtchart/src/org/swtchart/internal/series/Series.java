@@ -276,7 +276,6 @@ abstract public class Series implements ISeries
 	 */
 	public void setYSeries(double[] series)
 	{
-
 		if (series == null)
 		{
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);

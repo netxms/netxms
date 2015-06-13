@@ -25,7 +25,6 @@ import org.swtchart.internal.compress.CompressScatterSeries;
  */
 public class LineSeries extends Series implements ILineSeries
 {
-
 	/** the symbol size in pixel */
 	private int symbolSize;
 
@@ -352,7 +351,6 @@ public class LineSeries extends Series implements ILineSeries
 	@Override
 	public Range getAdjustedRange(Axis axis, int length)
 	{
-
 		Range range;
 		if (axis.getDirection() == Direction.X)
 		{

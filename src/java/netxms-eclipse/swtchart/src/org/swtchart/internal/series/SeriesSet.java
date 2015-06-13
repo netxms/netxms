@@ -481,7 +481,7 @@ public class SeriesSet implements ISeriesSet
                   }
                   else
                   {
-                     ySeries[combinedIndex] = 0;
+                     ySeries[combinedIndex] = currentValue;
                   }
                   combinedIndex++;
                   currentCombinedTimestamp = combinedTimeSeries.get(combinedIndex).getTime();
@@ -490,6 +490,8 @@ public class SeriesSet implements ISeriesSet
                lastTimestamp = currentTimestamp.getTime();
                lastValue = currentValue;
             }
+            while(combinedIndex < ySeries.length)
+               ySeries[combinedIndex++] = lastValue;
             
             series.setXDateSeries(combinedTimeSeries.toArray(new Date[combinedTimeSeries.size()]));
             series.setYSeries(ySeries);
