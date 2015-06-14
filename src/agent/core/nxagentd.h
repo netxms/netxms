@@ -319,7 +319,8 @@ private:
    bool m_acceptTraps;
    bool m_ipv6Aware;
    int m_hCurrFile;
-   UINT32 m_dwFileRqId;
+   UINT32 m_fileRqId;
+   StreamCompressor *m_compressor;
 	NXCPEncryptionContext *m_pCtx;
    time_t m_ts;               // Last activity timestamp
    SOCKET m_hProxySocket;     // Socket for proxy connection

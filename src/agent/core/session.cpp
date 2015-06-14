@@ -105,6 +105,8 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_acceptTraps = false;
    m_ipv6Aware = false;
    m_hCurrFile = -1;
+   m_fileRqId = 0;
+   m_compressor = NULL;
    m_pCtx = NULL;
    m_ts = time(NULL);
 	m_socketWriteMutex = MutexCreate();
@@ -126,6 +128,7 @@ CommSession::~CommSession()
    safe_free(m_pMsgBuffer);
    if (m_hCurrFile != -1)
       close(m_hCurrFile);
+   delete m_compressor;
 	if ((m_pCtx != NULL) && (m_pCtx != PROXY_ENCRYPTION_CTX))
 		m_pCtx->decRefCount();
 	MutexDestroy(m_socketWriteMutex);
@@ -235,9 +238,42 @@ void CommSession::readThread()
 
             if (pRawMsg->code == CMD_FILE_DATA)
             {
-               if ((m_hCurrFile != -1) && (m_dwFileRqId == pRawMsg->id))
+               if ((m_hCurrFile != -1) && (m_fileRqId == pRawMsg->id))
                {
-                  if (write(m_hCurrFile, pRawMsg->fields, pRawMsg->numFields) == (int)pRawMsg->numFields)
+                  const BYTE *data;
+                  int dataSize;
+                  if (flags & MF_COMPRESSED)
+                  {
+                     BYTE *in = (BYTE *)pRawMsg->fields;
+                     if (m_compressor == NULL)
+                     {
+                        NXCPCompressionMethod method = (NXCPCompressionMethod)(*in);
+                        m_compressor = StreamCompressor::create(method, false, FILE_BUFFER_SIZE);
+                        if (m_compressor == NULL)
+                        {
+                           DebugPrintf(m_dwIndex, 5, _T("Unable to create stream compressor for method %d"), (int)method);
+                           data = NULL;
+                           dataSize = -1;
+                        }
+                     }
+
+                     if (m_compressor != NULL)
+                     {
+                        dataSize = (int)m_compressor->decompress(in + 4, (size_t)pRawMsg->numFields - 4, &data);
+                        if (dataSize != (int)ntohs(*((UINT16 *)(in + 2))))
+                        {
+                           // decompressed block size validation failed
+                           dataSize = -1;
+                        }
+                     }
+                  }
+                  else
+                  {
+                     data = (const BYTE *)pRawMsg->fields;
+                     dataSize = (int)pRawMsg->numFields;
+                  }
+
+                  if ((dataSize >= 0) && (write(m_hCurrFile, data, dataSize) == dataSize))
                   {
                      if (flags & MF_END_OF_FILE)
                      {
@@ -245,6 +281,7 @@ void CommSession::readThread()
 
                         close(m_hCurrFile);
                         m_hCurrFile = -1;
+                        delete_and_null(m_compressor);
 
                         msg.setCode(CMD_REQUEST_COMPLETED);
                         msg.setId(pRawMsg->id);
@@ -259,6 +296,7 @@ void CommSession::readThread()
 
                      close(m_hCurrFile);
                      m_hCurrFile = -1;
+                     delete_and_null(m_compressor);
 
                      msg.setCode(CMD_REQUEST_COMPLETED);
                      msg.setId(pRawMsg->id);
@@ -805,13 +843,15 @@ UINT32 CommSession::openFile(TCHAR *szFullPath, UINT32 requestId)
       }
       else
       {
-         m_dwFileRqId = requestId;
+         m_fileRqId = requestId;
          return ERR_SUCCESS;
       }
    }
 }
 
-
+/**
+ * Progress callback for file sending
+ */
 static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
 {
 	((CommSession *)cbArg)->updateTimeStamp();

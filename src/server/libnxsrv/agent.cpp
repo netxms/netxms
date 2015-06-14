@@ -1216,7 +1216,7 @@ UINT32 AgentConnection::execAction(const TCHAR *pszAction, int argc, TCHAR **arg
 /**
  * Upload file to agent
  */
-UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, void (* progressCallback)(INT64, void *), void *cbArg)
+UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, void (* progressCallback)(INT64, void *), void *cbArg, NXCPCompressionMethod compMethod)
 {
    UINT32 dwRqId, dwResult;
    NXCPMessage msg(m_nProtocolVersion);
@@ -1255,7 +1255,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    {
 		m_fileUploadInProgress = true;
 		NXCPEncryptionContext *ctx = acquireEncryptionContext();
-      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite))
+      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
          dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;

@@ -100,11 +100,9 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
    return bConnected ? 0 : 1;
 }
 
-
-//
-// Upload progress callback
-//
-
+/**
+ * Upload progress callback
+ */
 static void ProgressCallback(INT64 bytesTransferred, void *cbArg)
 {
 #ifdef _WIN32
@@ -114,11 +112,9 @@ static void ProgressCallback(INT64 bytesTransferred, void *cbArg)
 #endif
 }
 
-
-//
-// Startup
-//
-
+/**
+ * Startup
+ */
 int main(int argc, char *argv[])
 {
    char *eptr;
@@ -137,10 +133,11 @@ int main(int argc, char *argv[])
    TCHAR szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
    TCHAR szDestinationFile[MAX_PATH] = {0};
    RSA *pServerKey = NULL;
+   NXCPCompressionMethod compression = NXCP_COMPRESSION_NONE;
 
    // Parse command line
    opterr = 1;
-	while((ch = getopt(argc, argv, "a:d:e:hK:p:qs:uvw:W:")) != -1)
+	while((ch = getopt(argc, argv, "a:d:e:hK:p:qs:uvw:W:z")) != -1)
    {
       switch(ch)
       {
@@ -170,6 +167,7 @@ int main(int argc, char *argv[])
                      _T("   -v           : Display version and exit.\n")
                      _T("   -w <seconds> : Set command timeout (default is 5 seconds)\n")
                      _T("   -W <seconds> : Set connection timeout (default is 30 seconds)\n")
+                     _T("   -z           : Compress data stream.\n")
                      _T("\n"), wPort);
             bStart = FALSE;
             break;
@@ -276,6 +274,9 @@ int main(int argc, char *argv[])
             nx_strncpy(szDestinationFile, optarg, MAX_PATH);
 #endif
             break;
+         case 'z':
+            compression = NXCP_COMPRESSION_LZ4;
+            break;
          case '?':
             bStart = FALSE;
             break;
@@ -361,9 +362,7 @@ int main(int argc, char *argv[])
                nElapsedTime = GetCurrentTimeMs();
 					if (bVerbose)
 						_tprintf(_T("Upload:                 "));
-					dwError = conn.uploadFile(
-						fname, szDestinationFile[0] != 0 ? szDestinationFile : NULL,
-						bVerbose ? ProgressCallback : NULL, NULL);
+					dwError = conn.uploadFile(fname, szDestinationFile[0] != 0 ? szDestinationFile : NULL, bVerbose ? ProgressCallback : NULL, NULL, compression);
 					if (bVerbose)
 						_tprintf(_T("\r                        \r"));
                nElapsedTime = GetCurrentTimeMs() - nElapsedTime;

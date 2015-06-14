@@ -332,6 +332,68 @@ public:
    virtual ~PipeMessageReceiver();
 };
 
+/**
+ * NXCP compression methods
+ */
+enum NXCPCompressionMethod
+{
+   NXCP_COMPRESSION_NONE = 0,
+   NXCP_COMPRESSION_LZ4 = 1
+};
+
+/**
+ * Abstract stream compressor
+ */
+class LIBNETXMS_EXPORTABLE StreamCompressor
+{
+public:
+   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize) = 0;
+   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out) = 0;
+   virtual size_t compressBufferSize(size_t dataSize) = 0;
+
+   static StreamCompressor *create(NXCPCompressionMethod method, bool compress, size_t maxBlockSize);
+};
+
+/**
+ * Dummy stream compressor
+ */
+class LIBNETXMS_EXPORTABLE DummyStreamCompressor : public StreamCompressor
+{
+public:
+   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize);
+   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out);
+   virtual size_t compressBufferSize(size_t dataSize);
+};
+
+struct __LZ4_stream_t;
+struct __LZ4_streamDecode_t;
+
+/**
+ * LZ4 stream compressor
+ */
+class LIBNETXMS_EXPORTABLE LZ4StreamCompressor : public StreamCompressor
+{
+private:
+   union
+   {
+      __LZ4_stream_t *encoder;
+      __LZ4_streamDecode_t *decoder;
+   } m_stream;
+   char *m_buffer;
+   size_t m_maxBlockSize;
+   size_t m_bufferSize;
+   size_t m_bufferPos;
+   bool m_compress;
+
+public:
+   LZ4StreamCompressor(bool compress, size_t maxBlockSize);
+   virtual ~LZ4StreamCompressor();
+
+   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize);
+   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out);
+   virtual size_t compressBufferSize(size_t dataSize);
+};
+
 #else    /* __cplusplus */
 
 typedef void NXCPMessage;
@@ -362,7 +424,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *buffer);
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
-														 MUTEX mutex);
+														 MUTEX mutex, NXCPCompressionMethod compressionMethod = NXCP_COMPRESSION_NONE);
 BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex);
 
 bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args));

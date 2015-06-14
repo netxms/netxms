@@ -224,6 +224,7 @@ typedef struct
 #define MF_END_OF_SEQUENCE 0x0008
 #define MF_REVERSE_ORDER   0x0010
 #define MF_CONTROL         0x0020
+#define MF_COMPRESSED      0x0040
 
 /**
  * Message (command) codes
