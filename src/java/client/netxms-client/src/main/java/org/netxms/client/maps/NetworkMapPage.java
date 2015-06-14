@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 
@@ -191,6 +190,38 @@ public class NetworkMapPage
 		return links;
 	}
 	
+	/**
+	 * Get IDs of all objects on map
+	 * 
+	 * @return
+	 */
+	public List<Long> getObjectIds()
+	{
+	   List<Long> objects = new ArrayList<Long>();
+	   for(NetworkMapElement e : elements.values())
+	   {
+	      if (e.getType() == NetworkMapElement.MAP_ELEMENT_OBJECT)
+	         objects.add(((NetworkMapObject)e).getObjectId());
+	   }
+	   return objects;
+	}
+	
+   /**
+    * Get all object elements
+    * 
+    * @return
+    */
+   public List<NetworkMapElement> getObjectElements()
+   {
+      List<NetworkMapElement> objects = new ArrayList<NetworkMapElement>();
+      for(NetworkMapElement e : elements.values())
+      {
+         if (e.getType() == NetworkMapElement.MAP_ELEMENT_OBJECT)
+            objects.add(e);
+      }
+      return objects;
+   }
+   
 	/**
 	 * Create new unique element ID
 	 * @return

@@ -173,6 +173,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionSnapToGrid;
 	protected Action actionShowObjectDetails;
    protected Action actionHideLinkLabels;
+   protected Action actionSelectAllObjects;
 
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
@@ -860,6 +861,17 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
          }
       };
       actionHideLinkLabels.setImageDescriptor(Activator.getImageDescriptor("icons/hide_link.png")); //$NON-NLS-1$
+      
+      actionSelectAllObjects = new Action("Select &all objects") {
+         @Override
+         public void run()
+         {
+            viewer.setSelection(new StructuredSelection(mapPage.getObjectElements()));
+         }
+      };
+      actionSelectAllObjects.setId("org.netxms.ui.eclipse.networkmaps.localActions.AbstractMap.SelectAllObjects"); //$NON-NLS-1$
+      actionSelectAllObjects.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.SelectAllObjects"); //$NON-NLS-1$
+      handlerService.activateHandler(actionSelectAllObjects.getActionDefinitionId(), new ActionHandler(actionSelectAllObjects));
 	}
 
 	/**
@@ -945,6 +957,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       manager.add(new Separator()); 
       manager.add(actionHideLinkLabels);    
 		manager.add(new Separator());
+      manager.add(actionSelectAllObjects);
+      manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -1099,6 +1113,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       manager.add(actionHideLinkLabels);  
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+      manager.add(new Separator()); 
+      manager.add(actionSelectAllObjects);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
