@@ -249,6 +249,7 @@ static BOOL Startup()
          s_session->setCommandTimeout(5 * 1000);
 			ret = TRUE;
 		}
+      NXCShutdown();
 	}
 
 	return ret;

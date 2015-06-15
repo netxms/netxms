@@ -404,5 +404,6 @@ int main(int argc, char *argv[])
       }
    }
 
+   MsgWaitQueue::shutdown();
    return iExitCode;
 }

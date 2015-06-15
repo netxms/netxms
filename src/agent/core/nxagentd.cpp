@@ -1075,6 +1075,8 @@ void Shutdown()
       ThreadJoin(s_snmpTrapSenderThread);
 	}
 
+   MsgWaitQueue::shutdown();
+
    UnloadAllSubAgents();
    CloseLocalDatabase();
    nxlog_write(MSG_AGENT_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);

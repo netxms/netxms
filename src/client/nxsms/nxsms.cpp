@@ -153,6 +153,7 @@ int main(int argc, char *argv[])
 	{
 		_tprintf(_T("Unable to connect to server: %s\n"), NXCGetErrorText(rcc));
       delete session;
+      NXCShutdown();
 		return 2;
 	}
 
@@ -173,5 +174,6 @@ int main(int argc, char *argv[])
 	}
 
    delete session;
+   NXCShutdown();
 	return (rcc == RCC_SUCCESS) ? 0 : 5;
 }

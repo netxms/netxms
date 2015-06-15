@@ -71,6 +71,7 @@ bool LIBNXCLIENT_EXPORTABLE NXCInitialize()
  */
 void LIBNXCLIENT_EXPORTABLE NXCShutdown()
 {
+   MsgWaitQueue::shutdown();
 }
 
 /**

@@ -169,15 +169,12 @@ private:
    pthread_mutex_t m_mutex;
    pthread_cond_t m_wakeupCondition;
 #endif
-   CONDITION m_stopCondition;
    UINT32 m_holdTime;
    int m_size;
    int m_allocated;
    WAIT_QUEUE_ELEMENT *m_elements;
    UINT64 m_sequence;
-   THREAD m_hHkThread;
 
-   void housekeeperThread();
    void *waitForMessageInternal(UINT16 isBinary, UINT16 code, UINT32 id, UINT32 timeout);
 
    void lock()
@@ -198,7 +195,15 @@ private:
 #endif
    }
 
-   static THREAD_RESULT THREAD_CALL mwqThreadStarter(void *);
+   void housekeeperRun();
+
+   static MUTEX m_housekeeperLock;
+   static HashMap<UINT64, MsgWaitQueue> *m_activeQueues;
+   static CONDITION m_shutdownCondition;
+   static THREAD m_housekeeperThread;
+   static EnumerationCallbackResult houseKeeperCallback(const void *key, const void *object, void *arg);
+   static THREAD_RESULT THREAD_CALL housekeeperThread(void *);
+   static EnumerationCallbackResult diagInfoCallback(const void *key, const void *object, void *arg);
 
 public:
    MsgWaitQueue();
@@ -217,6 +222,9 @@ public:
 
    void clear();
    void setHoldTime(UINT32 holdTime) { m_holdTime = holdTime; }
+
+   static void shutdown();
+   static String getDiagInfo();
 };
 
 /**

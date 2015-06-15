@@ -1001,6 +1001,7 @@ void NXCORE_EXPORTABLE Shutdown()
 	DbgPrintf(1, _T("Event processing stopped"));
 
    ThreadPoolDestroy(g_mainThreadPool);
+   MsgWaitQueue::shutdown();
 
 	delete g_pScriptLibrary;
 
@@ -1541,6 +1542,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          }
          ConsolePrintf(pCtx, _T("%d modules loaded\n"), g_dwNumModules);
 		}
+		else if (IsCommand(_T("MSGWQ"), szBuffer, 2))
+		{
+         String text = MsgWaitQueue::getDiagInfo();
+         ConsoleWrite(pCtx, text);
+         ConsoleWrite(pCtx, _T("\n"));
+      }
 		else if (IsCommand(_T("OBJECTS"), szBuffer, 1))
 		{
 			// Get filter
@@ -1940,6 +1947,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   show heap                 - Show heap information\n")
 				_T("   show index <index>        - Show internal index\n")
 				_T("   show modules              - Show loaded server modules\n")
+            _T("   show msgwq                - Show message wait queues information\n")
 				_T("   show objects [<filter>]   - Dump network objects to screen\n")
 				_T("   show pollers              - Show poller threads state information\n")
 				_T("   show queues               - Show internal queues statistics\n")
