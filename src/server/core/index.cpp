@@ -22,7 +22,6 @@
 
 #include "nxcore.h"
 
-
 /**
  * Constructor for object index
  */
