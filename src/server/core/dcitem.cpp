@@ -423,9 +423,18 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    {
       if (DBGetNumRows(hResult) == 0)
       {
-         _sntprintf(query, 256, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (%d,%s,%ld)"),
-                 m_id, (const TCHAR *)DBPrepareString(hdb, m_prevRawValue.getString()), (long)m_tPrevValueTimeStamp);
-         DBQuery(hdb, query);
+         hStmt = DBPrepare(hdb, _T("INSERT INTO raw_dci_values (item_id,raw_value,last_poll_time) VALUES (?,?,?)"));
+         if (hStmt == NULL)
+         {
+            DBFreeResult(hResult);
+            unlock();
+            return FALSE;
+         }
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)m_tPrevValueTimeStamp);
+         BOOL bResult = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
       }
       DBFreeResult(hResult);
    }
@@ -1093,12 +1102,12 @@ void DCItem::reloadCache()
                  m_pNode->getId(), m_id);
          break;
    }
-	
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    DB_ASYNC_RESULT hResult = DBAsyncSelect(hdb, szBuffer);
-   
+
    lock();
-   
+
 	UINT32 i;
    for(i = 0; i < m_cacheSize; i++)
       delete m_ppValueCache[i];
@@ -1138,11 +1147,11 @@ void DCItem::reloadCache()
       for(i = 0; i < m_requiredCacheSize; i++)
          m_ppValueCache[i] = new ItemValue(_T(""), 1);
    }
-   
+
    m_cacheSize = m_requiredCacheSize;
    m_bCacheLoaded = true;
    unlock();
-	
+
    DBConnectionPoolReleaseConnection(hdb);
 }
 
@@ -1300,31 +1309,31 @@ TCHAR *DCItem::getAggregateValue(AggregationFunction func, time_t periodStart, t
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	TCHAR query[1024];
    TCHAR *result = NULL;
-   
+
    static const TCHAR *functions[] = { _T(""), _T("min"), _T("max"), _T("avg"), _T("sum") };
 
 	if (g_dbSyntax == DB_SYNTAX_ORACLE)
 	{
 		_sntprintf(query, 1024, _T("SELECT %s(coalesce(to_number(idata_value),0)) FROM idata_%u ")
-			_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"), 
+			_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
 			functions[func], m_pNode->getId());
 	}
 	else if (g_dbSyntax == DB_SYNTAX_MSSQL)
 	{
 		_sntprintf(query, 1024, _T("SELECT %s(coalesce(cast(idata_value as float),0)) FROM idata_%u ")
-			_T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"), 
+			_T("WHERE item_id=? AND (idata_timestamp BETWEEN ? AND ?) AND isnumeric(idata_value)=1"),
 			functions[func], m_pNode->getId());
 	}
 	else if (g_dbSyntax == DB_SYNTAX_PGSQL)
 	{
 		_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value::double precision,0)) FROM idata_%u ")
-			_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"), 
+			_T("WHERE item_id=? AND idata_timestamp BETWEEN ? AND ?"),
 			functions[func], m_pNode->getId());
 	}
 	else
 	{
 		_sntprintf(query, 1024, _T("SELECT %s(coalesce(idata_value,0)) FROM idata_%u ")
-			_T("WHERE item_id=? and idata_timestamp between ? and ?"), 
+			_T("WHERE item_id=? and idata_timestamp between ? and ?"),
 			functions[func], m_pNode->getId());
 	}
 
