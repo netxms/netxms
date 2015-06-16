@@ -24,6 +24,7 @@
 #define _nxmodule_h_
 
 #include <nxdbapi.h>
+
 /**
  * Forward declaration of server classes
  */
@@ -32,6 +33,7 @@ class MobileDeviceSession;
 class Node;
 class Event;
 class NetObj;
+class PollerInfo;
 class NXSL_Environment;
 struct NXCORE_LOG;
 
@@ -72,9 +74,9 @@ typedef struct
    BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
    BOOL (* pfEventHandler)(Event *event);
    void (* pfAlarmChangeHook)(UINT32 changeCode, NXC_ALARM *alarm);
-	void (* pfStatusPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
-	bool (* pfConfPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
-	void (* pfTopologyPollHook)(Node *node, ClientSession *session, UINT32 rqId, int pollerId);
+	void (* pfStatusPollHook)(Node *node, ClientSession *session, UINT32 rqId, PollerInfo *poller);
+	bool (* pfConfPollHook)(Node *node, ClientSession *session, UINT32 rqId, PollerInfo *poller);
+	void (* pfTopologyPollHook)(Node *node, ClientSession *session, UINT32 rqId, PollerInfo *poller);
 	int (* pfCalculateObjectStatus)(NetObj *object);
 	BOOL (* pfNetObjInsert)(NetObj *object);
 	BOOL (* pfNetObjDelete)(NetObj *object);

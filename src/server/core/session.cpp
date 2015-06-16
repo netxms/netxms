@@ -62,12 +62,7 @@
 /**
  * Externals
  */
-extern Queue g_statusPollQueue;
-extern Queue g_configPollQueue;
-extern Queue g_routePollQueue;
-extern Queue g_discoveryPollQueue;
 extern Queue g_nodePollerQueue;
-extern Queue g_conditionPollerQueue;
 extern Queue g_dataCollectionQueue;
 extern Queue g_dciCacheLoaderQueue;
 
@@ -5867,22 +5862,31 @@ void ClientSession::pollerThread(Node *pNode, int iPollType, UINT32 dwRqId)
    MutexLock(m_mutexPollerInit);
    MutexUnlock(m_mutexPollerInit);
 
+   PollerInfo *poller = NULL;
    switch(iPollType)
    {
       case POLL_STATUS:
-         pNode->statusPoll(this, dwRqId, -1);
+         poller = RegisterPoller(POLLER_TYPE_STATUS, pNode);
+         poller->startExecution();
+         pNode->statusPoll(this, dwRqId, poller);
          break;
       case POLL_CONFIGURATION_FULL:
 			pNode->setRecheckCapsFlag();
          // intentionally no break here
       case POLL_CONFIGURATION_NORMAL:
-         pNode->configurationPoll(this, dwRqId, -1, 0);
+         poller = RegisterPoller(POLLER_TYPE_CONFIGURATION, pNode);
+         poller->startExecution();
+         pNode->configurationPoll(this, dwRqId, poller, 0);
          break;
       case POLL_INSTANCE_DISCOVERY:
-         pNode->instanceDiscoveryPoll(this, dwRqId, -1);
+         poller = RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, pNode);
+         poller->startExecution();
+         pNode->instanceDiscoveryPoll(this, dwRqId, poller);
          break;
       case POLL_TOPOLOGY:
-         pNode->topologyPoll(this, dwRqId, -1);
+         poller = RegisterPoller(POLLER_TYPE_TOPOLOGY, pNode);
+         poller->startExecution();
+         pNode->topologyPoll(this, dwRqId, poller);
          break;
       case POLL_INTERFACE_NAMES:
          pNode->updateInterfaceNames(this, dwRqId);
@@ -5892,6 +5896,7 @@ void ClientSession::pollerThread(Node *pNode, int iPollType, UINT32 dwRqId)
          break;
    }
    pNode->decRefCount();
+   delete poller;
 
    msg.setCode(CMD_POLLING_INFO);
    msg.setId(dwRqId);
@@ -7975,16 +7980,11 @@ void ClientSession::sendServerStats(UINT32 dwRqId)
 #endif
 
 	// Queues
-	msg.setField(VID_QSIZE_CONDITION_POLLER, g_conditionPollerQueue.size());
-	msg.setField(VID_QSIZE_CONF_POLLER, g_configPollQueue.size());
 	msg.setField(VID_QSIZE_DCI_POLLER, g_dataCollectionQueue.size());
 	msg.setField(VID_QSIZE_DCI_CACHE_LOADER, g_dciCacheLoaderQueue.size());
 	msg.setField(VID_QSIZE_DBWRITER, g_dbWriterQueue->size());
 	msg.setField(VID_QSIZE_EVENT, g_pEventQueue->size());
-	msg.setField(VID_QSIZE_DISCOVERY, g_discoveryPollQueue.size());
 	msg.setField(VID_QSIZE_NODE_POLLER, g_nodePollerQueue.size());
-	msg.setField(VID_QSIZE_ROUTE_POLLER, g_routePollQueue.size());
-	msg.setField(VID_QSIZE_STATUS_POLLER, g_statusPollQueue.size());
 
    // Send response
    sendMessage(&msg);

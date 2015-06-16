@@ -402,6 +402,40 @@ public:
    virtual size_t compressBufferSize(size_t dataSize);
 };
 
+#if 0
+/**
+ * NXCP message consumer interface
+ */
+class LIBNETXMS_EXPORTABLE MessageConsumer
+{
+public:
+   virtual SOCKET getSocket() = 0;
+   virtual void processMessage(NXCPMessage *msg) = 0;
+};
+
+/**
+ * Socket receiver - manages receiving NXCP messages from multiple sockets
+ */
+class LIBNETXMS_EXPORTABLE SocketReceiver
+{
+private:
+   THREAD m_thread;
+   HashMap<SOCKET, MessageConsumer> *m_consumers;
+
+   static int m_maxSocketsPerThread;
+   static ObjectArray<SocketReceiver> *m_receivers;
+
+public:
+   static void start();
+   static void shutdown();
+
+   static void addConsumer(MessageConsumer *mc);
+   static void removeConsumer(MessageConsumer *mc);
+
+   static String getDiagInfo();
+};
+#endif
+
 #else    /* __cplusplus */
 
 typedef void NXCPMessage;

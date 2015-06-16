@@ -66,18 +66,12 @@ extern const TCHAR *g_szMessages[];
 /**
  * Externals
  */
-extern Queue g_statusPollQueue;
-extern Queue g_configPollQueue;
-extern Queue g_instancePollQueue;
-extern Queue g_topologyPollQueue;
-extern Queue g_routePollQueue;
-extern Queue g_discoveryPollQueue;
 extern Queue g_nodePollerQueue;
-extern Queue g_conditionPollerQueue;
 extern Queue g_dataCollectionQueue;
 extern Queue g_dciCacheLoaderQueue;
 extern Queue g_syslogProcessingQueue;
 extern Queue g_syslogWriteQueue;
+extern ThreadPool *g_pollerThreadPool;
 
 void InitClientListeners();
 void InitMobileDeviceListeners();
@@ -1295,13 +1289,16 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                   switch(pollType)
                   {
                      case 1:
-                        node->configurationPoll(NULL, 0, -1, 0);
+				            node->lockForConfigurationPoll();
+                        ThreadPoolExecute(g_pollerThreadPool, node, &Node::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, node));
                         break;
                      case 2:
-                        node->statusPoll(NULL, 0, -1);
+         					node->lockForStatusPoll();
+                        ThreadPoolExecute(g_pollerThreadPool, node, &Node::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, node));
                         break;
                      case 3:
-                        node->topologyPoll(NULL, 0, -1);
+         					node->lockForTopologyPoll();
+                        ThreadPoolExecute(g_pollerThreadPool, node, &Node::topologyPoll, RegisterPoller(POLLER_TYPE_TOPOLOGY, node));
                         break;
                   }
 				   }
@@ -1557,24 +1554,17 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		}
 		else if (IsCommand(_T("POLLERS"), szBuffer, 1))
 		{
-			ShowPollerState(pCtx);
+			ShowPollers(pCtx);
 		}
 		else if (IsCommand(_T("QUEUES"), szBuffer, 1))
 		{
-			ShowQueueStats(pCtx, &g_conditionPollerQueue, _T("Condition poller"));
-			ShowQueueStats(pCtx, &g_configPollQueue, _T("Configuration poller"));
-			ShowQueueStats(pCtx, &g_instancePollQueue, _T("Instance discovery poller"));
-			ShowQueueStats(pCtx, &g_topologyPollQueue, _T("Topology poller"));
 			ShowQueueStats(pCtx, &g_dataCollectionQueue, _T("Data collector"));
 			ShowQueueStats(pCtx, &g_dciCacheLoaderQueue, _T("DCI cache loader"));
 			ShowQueueStats(pCtx, g_dbWriterQueue, _T("Database writer"));
 			ShowQueueStats(pCtx, g_dciDataWriterQueue, _T("Database writer (IData)"));
 			ShowQueueStats(pCtx, g_dciRawDataWriterQueue, _T("Database writer (raw DCI values)"));
 			ShowQueueStats(pCtx, g_pEventQueue, _T("Event processor"));
-			ShowQueueStats(pCtx, &g_discoveryPollQueue, _T("Network discovery poller"));
 			ShowQueueStats(pCtx, &g_nodePollerQueue, _T("Node poller"));
-			ShowQueueStats(pCtx, &g_routePollQueue, _T("Routing table poller"));
-			ShowQueueStats(pCtx, &g_statusPollQueue, _T("Status poller"));
 			ShowQueueStats(pCtx, &g_syslogProcessingQueue, _T("Syslog processing"));
 			ShowQueueStats(pCtx, &g_syslogWriteQueue, _T("Syslog writer"));
 			ConsolePrintf(pCtx, _T("\n"));

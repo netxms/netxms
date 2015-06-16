@@ -111,7 +111,44 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
  * Cluster runtime flags
  */
 #define CLF_QUEUED_FOR_STATUS_POLL     0x0001
-#define CLF_DOWN								0x0002
+#define CLF_DOWN                       0x0002
+
+/**
+ * Poller types
+ */
+enum PollerType
+{
+   POLLER_TYPE_STATUS = 0,
+   POLLER_TYPE_CONFIGURATION = 1,
+   POLLER_TYPE_INSTANCE_DISCOVERY = 2,
+   POLLER_TYPE_ROUTING_TABLE = 3,
+   POLLER_TYPE_DISCOVERY = 4,
+   POLLER_TYPE_BUSINESS_SERVICE = 5,
+   POLLER_TYPE_CONDITION = 6,
+   POLLER_TYPE_TOPOLOGY = 7
+};
+
+/**
+ * Poller information
+ */
+class PollerInfo
+{
+private:
+   PollerType m_type;
+   NetObj *m_object;
+   TCHAR m_status[128];
+
+public:
+   PollerInfo(PollerType type, NetObj *object) { m_type = type; m_object = object; _tcscpy(m_status, _T("awaiting execution")); }
+   ~PollerInfo();
+
+   const PollerType getType() const { return m_type; }
+   NetObj *getObject() const { return m_object; }
+   const TCHAR *getStatus() const { return m_status; }
+
+   void startExecution() { _tcscpy(m_status, _T("started")); }
+   void setStatus(const TCHAR *status) { nx_strncpy(m_status, status, 128); }
+};
 
 /**
  * Status poll types
@@ -1047,7 +1084,8 @@ public:
 	bool isResourceOnNode(UINT32 dwResource, UINT32 dwNode);
    UINT32 getZoneId() { return m_zoneId; }
 
-   void statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller);
+   void statusPoll(PollerInfo *poller);
+   void statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
    void lockForStatusPoll() { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
    bool isReadyForStatusPoll()
    {
@@ -1296,12 +1334,17 @@ public:
 
 	void setRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
    void setDiscoveryPollTimeStamp();
-   void statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller);
-   void configurationPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller, int maskBits);
-	void instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, int pollerId);
-	void topologyPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller);
+   void statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
+   void statusPoll(PollerInfo *poller);
+   void configurationPoll(PollerInfo *poller);
+   void configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller, int maskBits);
+	void instanceDiscoveryPoll(PollerInfo *poller);
+	void instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, PollerInfo *poller);
+	void topologyPoll(PollerInfo *poller);
+	void topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
 	void resolveVlanPorts(VlanList *vlanList);
 	void updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId);
+	void routingTablePoll(PollerInfo *poller);
    void updateRoutingTable();
 	void checkSubnetBinding();
    AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport);
@@ -1405,8 +1448,6 @@ inline bool Node::isReadyForStatusPoll()
 {
 	if (m_isDeleted)
 		return false;
-	//if (GetMyCluster() != NULL)
-	//	return FALSE;	// Cluster nodes should be polled from cluster status poll
    if (m_dwDynamicFlags & NDF_FORCE_STATUS_POLL)
    {
       m_dwDynamicFlags &= ~NDF_FORCE_STATUS_POLL;
@@ -1805,10 +1846,9 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-   void check();
-
    void lockForPoll();
-   void endPoll();
+   void doPoll(PollerInfo *poller);
+   void check();
 
    bool isReadyForPoll()
    {
@@ -2195,7 +2235,8 @@ public:
 
 	bool isReadyForPolling();
 	void lockForPolling();
-	void poll(ClientSession *pSession, UINT32 dwRqId, int nPoller);
+	void poll(PollerInfo *poller);
+	void poll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
 
 	void getApplicableTemplates(ServiceContainer *target, ObjectArray<SlmCheck> *templates);
 };
@@ -2312,6 +2353,9 @@ bool IsEventSource(int objectClass);
 
 int DefaultPropagatedStatus(int iObjectStatus);
 int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds);
+
+PollerInfo *RegisterPoller(PollerType type, NetObj *object);
+void ShowPollers(CONSOLE_CTX console);
 
 /**
  * Global variables

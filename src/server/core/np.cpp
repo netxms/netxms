@@ -202,7 +202,12 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreation
 		ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), pNode));
 
 	if (doConfPoll)
-		pNode->configurationPoll(NULL, 0, -1, ipAddr.getMaskBits());
+   {
+      PollerInfo *p = RegisterPoller(POLLER_TYPE_CONFIGURATION, pNode);
+      p->startExecution();
+		pNode->configurationPoll(NULL, 0, p, ipAddr.getMaskBits());
+      delete p;
+   }
 
    pNode->unhide();
    PostEvent(EVENT_NODE_ADDED, pNode->getId(), "d", (int)(discoveredNode ? 1 : 0));

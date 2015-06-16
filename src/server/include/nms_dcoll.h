@@ -606,8 +606,6 @@ extern double g_dAvgDBWriterQueueSize;
 extern double g_dAvgIDataWriterQueueSize;
 extern double g_dAvgRawDataWriterQueueSize;
 extern double g_dAvgDBAndIDataWriterQueueSize;
-extern double g_dAvgStatusPollerQueueSize;
-extern double g_dAvgConfigPollerQueueSize;
 extern double g_dAvgSyslogProcessingQueueSize;
 extern double g_dAvgSyslogWriterQueueSize;
 extern UINT32 g_dwAvgDCIQueuingTime;
