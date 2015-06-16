@@ -131,7 +131,7 @@ enum PollerType
 /**
  * Poller information
  */
-class PollerInfo
+class NXCORE_EXPORTABLE PollerInfo
 {
 private:
    PollerType m_type;
