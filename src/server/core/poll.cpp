@@ -67,7 +67,7 @@ PollerInfo *RegisterPoller(PollerType type, NetObj *object)
  */
 static EnumerationCallbackResult ShowPollerInfo(const void *key, const void *object, void *arg)
 {
-   static TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("BSVC"), _T("COND"), _T("TOPO") };
+   static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("BSVC"), _T("COND"), _T("TOPO") };
 
    PollerInfo *p = (PollerInfo *)object;
    NetObj *o = p->getObject();
