@@ -1635,6 +1635,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		else if (IsCommand(_T("THREADS"), szBuffer, 2))
 		{
 			ShowThreadPool(pCtx, g_mainThreadPool);
+			ShowThreadPool(pCtx, g_pollerThreadPool);
 		}
 		else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
 		{
