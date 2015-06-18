@@ -441,7 +441,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(JAVA)
          String classpath = _T("-Djava.class.path=");
          classpath.append(libdir);
          classpath.append(FS_PATH_SEPARATOR_CHAR);
-         classpath.append(_T("netxms-agent-") NETXMS_VERSION_STRING _T(".jar"));
+         classpath.append(_T("netxms-agent.jar"));
          if (s_userClasspath[0] != 0)
          {
 #ifdef _WIN32
