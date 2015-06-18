@@ -147,13 +147,11 @@ void *Queue::get()
 }
 
 /**
- * Get object from queue or block if queue if empty
+ * Get object from queue or block with timeout if queue if empty
  */
-void *Queue::getOrBlock()
+void *Queue::getOrBlock(UINT32 timeout)
 {
-   void *pElement;
-
-   pElement = get();
+   void *pElement = get();
    if (pElement != NULL)
    {
       return pElement;
@@ -161,7 +159,8 @@ void *Queue::getOrBlock()
 
    do
    {
-      ConditionWait(m_condWakeup, INFINITE);
+      if (!ConditionWait(m_condWakeup, timeout))
+         break;
       pElement = get();
    } while(pElement == NULL);
    return pElement;

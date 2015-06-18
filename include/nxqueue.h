@@ -61,7 +61,7 @@ public:
 	void insert(void *object);
 	void setShutdownMode();
    void *get();
-   void *getOrBlock();
+   void *getOrBlock(UINT32 timeout = INFINITE);
    int size() { return (int)m_numElements; }
    int allocated() { return (int)m_bufferSize; }
    void clear();

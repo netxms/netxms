@@ -191,11 +191,14 @@ void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p)
    ThreadPoolInfo info;
    ThreadPoolGetInfo(p, &info);
    ConsolePrintf(console, _T("\x1b[1m%s\x1b[0m\n")
-                          _T("   Threads:  %d (%d/%d)\n")
-                          _T("   Load:     %d%%\n")
-                          _T("   Usage:    %d%%\n")
-                          _T("   Requests: %d\n\n"),
-                 info.name, info.curThreads, info.minThreads, info.maxThreads, info.load, info.usage, info.activeRequests);
+                          _T("   Threads:      %d (%d/%d)\n")
+                          _T("   Load average: %0.2f %0.2f %0.2f\n")
+                          _T("   Current load: %d%%\n")
+                          _T("   Usage:        %d%%\n")
+                          _T("   Requests:     %d\n\n"),
+                 info.name, info.curThreads, info.minThreads, info.maxThreads, 
+                 info.loadAvg[0], info.loadAvg[1], info.loadAvg[2],
+                 info.load, info.usage, info.activeRequests);
 }
 
 /**
