@@ -407,44 +407,43 @@ static void DiscoveryPoller(void *arg)
 /**
  * Check given address range with ICMP ping for new nodes
  */
-static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
+static void CheckRange(int nType, UINT32 addr1, UINT32 addr2)
 {
-   UINT32 dwAddr, dwFrom, dwTo;
-   TCHAR szIpAddr1[16], szIpAddr2[16];
-
+   UINT32 from, to;
    if (nType == 0)
    {
-      dwFrom = (dwAddr1 & dwAddr2) + 1;
-      dwTo = dwFrom | ~dwAddr2 - 1;
+      from = (addr1 & addr2) + 1;
+      to = from | ~addr2 - 1;
    }
    else
    {
-      dwFrom = dwAddr1;
-      dwTo = dwAddr2;
+      from = addr1;
+      to = addr2;
    }
-   DbgPrintf(4, _T("Starting active discovery check on range %s - %s"),
-             IpToStr(dwFrom, szIpAddr1), IpToStr(dwTo, szIpAddr2));
 
-   for(dwAddr = dwFrom; dwAddr <= dwTo; dwAddr++)
+   TCHAR ipAddr1[16], ipAddr2[16];
+   DbgPrintf(4, _T("Starting active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+
+   for(UINT32 curr = from; curr <= to; curr++)
    {
-      if (IcmpPing(htonl(dwAddr), 3, g_icmpPingTimeout, NULL, g_icmpPingSize) == ICMP_SUCCESS)
+      InetAddress addr = InetAddress(curr);
+      if (IcmpPing(addr, 3, g_icmpPingTimeout, NULL, g_icmpPingSize) == ICMP_SUCCESS)
       {
-         DbgPrintf(5, _T("Active discovery - node %s responds to ICMP ping"),
-                   IpToStr(dwAddr, szIpAddr1));
-         if (FindNodeByIP(0, dwAddr) == NULL)
+         DbgPrintf(5, _T("Active discovery - node %s responds to ICMP ping"), addr.toString(ipAddr1));
+         if (FindNodeByIP(0, addr) == NULL)
          {
             Subnet *pSubnet;
 
-            pSubnet = FindSubnetForNode(0, dwAddr);
+            pSubnet = FindSubnetForNode(0, addr);
             if (pSubnet != NULL)
             {
-               if (!pSubnet->getIpAddress().equals(dwAddr) && 
-                   !InetAddress(dwAddr).isSubnetBroadcast(pSubnet->getIpAddress().getMaskBits()))
+               if (!pSubnet->getIpAddress().equals(addr) && 
+                   !addr.isSubnetBroadcast(pSubnet->getIpAddress().getMaskBits()))
                {
                   NEW_NODE *pInfo;
 
                   pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-                  pInfo->ipAddr = dwAddr;
+                  pInfo->ipAddr = addr;
                   pInfo->ipAddr.setMaskBits(pSubnet->getIpAddress().getMaskBits());
 						pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 						pInfo->ignoreFilter = FALSE;
@@ -457,7 +456,7 @@ static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
                NEW_NODE *pInfo;
 
                pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-               pInfo->ipAddr = dwAddr;
+               pInfo->ipAddr = addr;
 					pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 					pInfo->ignoreFilter = FALSE;
 					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
@@ -467,8 +466,7 @@ static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
       }
    }
 
-   DbgPrintf(4, _T("Finished active discovery check on range %s - %s"),
-             IpToStr(dwFrom, szIpAddr1), IpToStr(dwTo, szIpAddr2));
+   DbgPrintf(4, _T("Finished active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
 }
 
 /**

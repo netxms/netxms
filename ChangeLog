@@ -16,6 +16,7 @@
 - Fixed occasional NXSL compiler crash on scripts with syntax errors
 - Errors in auto bind/apply scripts interpreted as "ignore" instead of "false" result
 - New core agent parameter File.FolderCount
+- Fixed broken active discovery
 - Management console:
 	- Fixed broken VPN connectors configuration
 	- "Inverted values" option on line charts
