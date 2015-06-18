@@ -71,7 +71,7 @@ public class DemoPlugin extends Plugin
    @Override
    public void init(Config config)
    {
-      SubAgent.writeDebugLog(1, "DEMO: initialize");
+      SubAgent.writeDebugLog(1, "DEMO: initialize: " + config.getValue("/DEMO/EchoValue", "ERROR"));
    }
 
    /* (non-Javadoc)
