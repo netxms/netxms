@@ -26,6 +26,8 @@
 #include <dbghelp.h>
 #endif
 
+extern ThreadPool *g_pollerThreadPool;
+
 /**
  * Test read/write lock state and print to stdout
  */
@@ -199,6 +201,61 @@ void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p)
                  info.name, info.curThreads, info.minThreads, info.maxThreads, 
                  info.loadAvg[0], info.loadAvg[1], info.loadAvg[2],
                  info.load, info.usage, info.activeRequests);
+}
+
+/**
+ * Get thread pool stat (for internal DCI)
+ */
+LONG GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value)
+{
+   TCHAR poolName[64];
+   if (!AgentGetParameterArg(param, 1, poolName, 64))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   ThreadPool *p = NULL;
+   if (!_tcsicmp(poolName, _T("MAIN")))
+      p = g_mainThreadPool;
+   else if (!_tcsicmp(poolName, _T("POLLERS")))
+      p = g_pollerThreadPool;
+
+   if (p == NULL)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   ThreadPoolInfo info;
+   ThreadPoolGetInfo(p, &info);
+   switch(stat)
+   {
+      case THREAD_POOL_CURR_SIZE:
+         ret_int(value, info.curThreads);
+         break;
+      case THREAD_POOL_LOAD:
+         ret_int(value, info.load);
+         break;
+      case THREAD_POOL_LOADAVG_1:
+         ret_double(value, info.loadAvg[0]);
+         break;
+      case THREAD_POOL_LOADAVG_5:
+         ret_double(value, info.loadAvg[1]);
+         break;
+      case THREAD_POOL_LOADAVG_15:
+         ret_double(value, info.loadAvg[2]);
+         break;
+      case THREAD_POOL_MAX_SIZE:
+         ret_int(value, info.maxThreads);
+         break;
+      case THREAD_POOL_MIN_SIZE:
+         ret_int(value, info.minThreads);
+         break;
+      case THREAD_POOL_REQUESTS:
+         ret_int(value, info.activeRequests);
+         break;
+      case THREAD_POOL_USAGE:
+         ret_int(value, info.usage);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**

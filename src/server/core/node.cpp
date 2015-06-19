@@ -4076,6 +4076,42 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
       {
          _sntprintf(buffer, bufSize, _T("%f"), g_dAvgSyslogWriterQueueSize);
       }
+      else if (MatchString(_T("Server.ThreadPool.ActiveRequests(*)"), param, FALSE))
+      {
+         rc = GetThreadPoolStat(THREAD_POOL_REQUESTS, param, buffer);
+      }
+      else if (MatchString(_T("Server.ThreadPool.CurrSize(*)"), param, FALSE))
+      {
+         rc = GetThreadPoolStat(THREAD_POOL_CURR_SIZE, param, buffer);
+      }
+      else if (MatchString(_T("Server.ThreadPool.Load(*)"), param, FALSE))
+      {
+         rc = GetThreadPoolStat(THREAD_POOL_LOAD, param, buffer);
+      }
+      else if (MatchString(_T("Server.ThreadPool.LoadAverage(*)"), param, FALSE))
+      {
+         rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_1, param, buffer);
+      }
+      else if (MatchString(_T("Server.ThreadPool.LoadAverage5(*)"), param, FALSE))
+      {
+         rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_5, param, buffer);
+      }
+      else if (MatchString(_T("Server.ThreadPool.LoadAverage15(*)"), param, FALSE))
+      {
+         rc = GetThreadPoolStat(THREAD_POOL_LOADAVG_15, param, buffer);
+      }
+      else if (MatchString(_T("Server.ThreadPool.MaxSize(*)"), param, FALSE))
+      {
+         rc = GetThreadPoolStat(THREAD_POOL_MAX_SIZE, param, buffer);
+      }
+      else if (MatchString(_T("Server.ThreadPool.MinSize(*)"), param, FALSE))
+      {
+         rc = GetThreadPoolStat(THREAD_POOL_MIN_SIZE, param, buffer);
+      }
+      else if (MatchString(_T("Server.ThreadPool.Usage(*)"), param, FALSE))
+      {
+         rc = GetThreadPoolStat(THREAD_POOL_USAGE, param, buffer);
+      }
       else if (!_tcsicmp(param, _T("Server.TotalEventsProcessed")))
       {
          _sntprintf(buffer, bufSize, INT64_FMT, g_totalEventsProcessed);

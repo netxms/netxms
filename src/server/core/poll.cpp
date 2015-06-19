@@ -92,76 +92,119 @@ void ShowPollers(CONSOLE_CTX console)
 }
 
 /**
+ * Helper for AddThreadPoolMonitoringParameters
+ */
+inline TCHAR *BuildParamName(const TCHAR *format, const TCHAR *pool, TCHAR *buffer)
+{
+   _sntprintf(buffer, 256, format, pool);
+   return buffer;
+}
+
+/**
+ * Add thread pool monitoring parameters
+ */
+static void AddThreadPoolMonitoringParameters(Node *node, const TCHAR *poolName, int pollingInterval, int retentionTime)
+{
+#define BUILD_PARAM_NAME(x) BuildParamName(x, poolName, name)
+#define BUILD_PARAM_DESCR(x) BuildParamName(x, poolName, description)
+
+   TCHAR name[256], description[256];
+
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                BUILD_PARAM_NAME(_T("Server.ThreadPool.CurrSize(%s)")),
+                                DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, node,
+                                BUILD_PARAM_DESCR(_T("Thread pool %s: current size"))));
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                BUILD_PARAM_NAME(_T("Server.ThreadPool.Usage(%s)")), 
+                                DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, node,
+                                BUILD_PARAM_DESCR(_T("Thread pool %s: usage"))));
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM),
+                                BUILD_PARAM_NAME(_T("Server.ThreadPool.Load(%s)")), 
+                                DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, node,
+                                BUILD_PARAM_DESCR(_T("Thread pool %s: current load"))));
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM),
+                                BUILD_PARAM_NAME(_T("Server.ThreadPool.LoadAverage(%s)")), 
+                                DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
+                                BUILD_PARAM_DESCR(_T("Thread pool %s: load average (1 minute)"))));
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM),
+                                BUILD_PARAM_NAME(_T("Server.ThreadPool.LoadAverage5(%s)")), 
+                                DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
+                                BUILD_PARAM_DESCR(_T("Thread pool %s: load average (5 minutes)"))));
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM),
+                                BUILD_PARAM_NAME(_T("Server.ThreadPool.LoadAverage15(%s)")), 
+                                DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
+                                BUILD_PARAM_DESCR(_T("Thread pool %s: load average (15 minutes)"))));
+#undef BUILD_PARAM_NAME
+#undef BUILD_PARAM_DESCR
+}
+
+/**
  * Create management node object
  */
 static void CreateManagementNode(const InetAddress& addr)
 {
 	TCHAR buffer[256];
 
-	Node *pNode = new Node(addr, NF_IS_LOCAL_MGMT, 0, 0, 0);
-   NetObjInsert(pNode, TRUE);
-	pNode->setName(GetLocalHostName(buffer, 256));
+	Node *node = new Node(addr, NF_IS_LOCAL_MGMT, 0, 0, 0);
+   NetObjInsert(node, TRUE);
+	node->setName(GetLocalHostName(buffer, 256));
 
-   PollerInfo *p = RegisterPoller(POLLER_TYPE_CONFIGURATION, pNode);
+   PollerInfo *p = RegisterPoller(POLLER_TYPE_CONFIGURATION, node);
    p->startExecution();
-   pNode->configurationPoll(NULL, 0, p, addr.getMaskBits());
+   node->configurationPoll(NULL, 0, p, addr.getMaskBits());
    delete p;
 
-   pNode->unhide();
-   g_dwMgmtNode = pNode->getId();   // Set local management node ID
-   PostEvent(EVENT_NODE_ADDED, pNode->getId(), NULL);
+   node->unhide();
+   g_dwMgmtNode = node->getId();   // Set local management node ID
+   PostEvent(EVENT_NODE_ADDED, node->getId(), NULL);
 
 	// Bind to the root of service tree
-	g_pServiceRoot->AddChild(pNode);
-	pNode->AddParent(g_pServiceRoot);
+	g_pServiceRoot->AddChild(node);
+	node->AddParent(g_pServiceRoot);
    
    // Add default data collection items
 	int pollingInterval = ConfigReadInt(_T("DefaultDCIPollingInterval"), 60);
 	int retentionTime = ConfigReadInt(_T("DefaultDCIRetentionTime"), 30);
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), 
-                                 DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, pNode));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), 
+                                 DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, node));
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageDCPollerQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
                                  _T("Data collection poller's request queue for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageDBWriterQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
                                  _T("Database writer's request queue for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageDBWriterQueueSize.IData"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
                                  _T("Database writer's request queue (DCI data) for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageDBWriterQueueSize.Other"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
                                  _T("Database writer's request queue (other queries) for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageDCIQueuingTime"), 
-                                 DS_INTERNAL, DCI_DT_UINT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_UINT, pollingInterval, retentionTime, node,
                                  _T("Average time to queue DCI for polling for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                 _T("Server.AverageStatusPollerQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
-                                 _T("Status poller queue for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                 _T("Server.AverageConfigurationPollerQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
-                                 _T("Configuration poller queue for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageSyslogProcessingQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
                                  _T("Syslog processing queue for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageSyslogWriterQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
                                  _T("Syslog writer queue for last minute")));
+
    DCItem *pEventsPerMinuteDCI = new DCItem(CreateUniqueId(IDG_ITEM),
                                  _T("Server.TotalEventsProcessed"),
-                                 DS_INTERNAL, DCI_DT_UINT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_UINT, pollingInterval, retentionTime, node,
                                  _T("Events processed for last minute"));
    pEventsPerMinuteDCI->setDeltaCalcMethod(DCM_AVERAGE_PER_MINUTE);
-   pNode->addDCObject(pEventsPerMinuteDCI);
+   node->addDCObject(pEventsPerMinuteDCI);
+
+   AddThreadPoolMonitoringParameters(node, _T("MAIN"), pollingInterval, retentionTime);
+   AddThreadPoolMonitoringParameters(node, _T("POLLERS"), pollingInterval, retentionTime);
 }
 
 /**
@@ -191,7 +234,7 @@ static bool LocalMgmtNodeComparator(NetObj *object, void *data)
 void CheckForMgmtNode()
 {
    InterfaceList *pIfList;
-   Node *pNode;
+   Node *node;
    int i;
 
    pIfList = GetLocalInterfaceList();
@@ -202,15 +245,15 @@ void CheckForMgmtNode()
          InterfaceInfo *iface = pIfList->get(i);
          if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
             continue;
-         if ((pNode = FindNodeByIP(0, &iface->ipAddrList)) != NULL)
+         if ((node = FindNodeByIP(0, &iface->ipAddrList)) != NULL)
          {
             // Check management node flag
-            if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
+            if (!(node->getFlags() & NF_IS_LOCAL_MGMT))
             {
-               pNode->setLocalMgmtFlag();
-               DbgPrintf(1, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"), pNode->getName(), pNode->getId());
+               node->setLocalMgmtFlag();
+               DbgPrintf(1, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"), node->getName(), node->getId());
             }
-            g_dwMgmtNode = pNode->getId();   // Set local management node ID
+            g_dwMgmtNode = node->getId();   // Set local management node ID
             break;
          }
       }
@@ -355,52 +398,48 @@ static void CheckHostRoute(Node *node, ROUTE *route)
  */
 static void DiscoveryPoller(void *arg)
 {
-//   TCHAR szBuffer[MAX_OBJECT_NAME + 64], szIpAddr[64];
-//   ARP_CACHE *pArpCache;
-//	ROUTING_TABLE *rt;
-
    PollerInfo *poller = (PollerInfo *)arg;
    poller->startExecution();
 
-   Node *pNode = (Node *)poller->getObject();
-	if (pNode->getRuntimeFlags() & NDF_DELETE_IN_PROGRESS)
+   Node *node = (Node *)poller->getObject();
+	if (node->getRuntimeFlags() & NDF_DELETE_IN_PROGRESS)
 	{
-      pNode->setDiscoveryPollTimeStamp();
+      node->setDiscoveryPollTimeStamp();
       delete poller;
       return;
 	}
 
    DbgPrintf(4, _T("Starting discovery poll for node %s (%s) in zone %d"),
-	          pNode->getName(), (const TCHAR *)pNode->getIpAddress().toString(), (int)pNode->getZoneId());
+	          node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneId());
 
    // Retrieve and analize node's ARP cache
-   ARP_CACHE *pArpCache = pNode->getArpCache();
+   ARP_CACHE *pArpCache = node->getArpCache();
    if (pArpCache != NULL)
    {
       for(UINT32 i = 0; i < pArpCache->dwNumEntries; i++)
 			if (memcmp(pArpCache->pEntries[i].bMacAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6))	// Ignore broadcast addresses
-				CheckPotentialNode(pNode, pArpCache->pEntries[i].ipAddr, pArpCache->pEntries[i].dwIndex, pArpCache->pEntries[i].bMacAddr);
+				CheckPotentialNode(node, pArpCache->pEntries[i].ipAddr, pArpCache->pEntries[i].dwIndex, pArpCache->pEntries[i].bMacAddr);
       DestroyArpCache(pArpCache);
    }
 
 	// Retrieve and analize node's routing table
    DbgPrintf(5, _T("Discovery poll for node %s (%s) - reading routing table"),
-             pNode->getName(), (const TCHAR *)pNode->getIpAddress().toString());
-	ROUTING_TABLE *rt = pNode->getRoutingTable();
+             node->getName(), (const TCHAR *)node->getIpAddress().toString());
+	ROUTING_TABLE *rt = node->getRoutingTable();
 	if (rt != NULL)
 	{
 		for(int i = 0; i < rt->iNumEntries; i++)
 		{
-			CheckPotentialNode(pNode, rt->pRoutes[i].dwNextHop, rt->pRoutes[i].dwIfIndex);
+			CheckPotentialNode(node, rt->pRoutes[i].dwNextHop, rt->pRoutes[i].dwIfIndex);
 			if ((rt->pRoutes[i].dwDestMask == 0xFFFFFFFF) && (rt->pRoutes[i].dwDestAddr != 0))
-				CheckHostRoute(pNode, &rt->pRoutes[i]);
+				CheckHostRoute(node, &rt->pRoutes[i]);
 		}
 		DestroyRoutingTable(rt);
 	}
 
    DbgPrintf(4, _T("Finished discovery poll for node %s (%s)"),
-             pNode->getName(), (const TCHAR *)pNode->getIpAddress().toString());
-   pNode->setDiscoveryPollTimeStamp();
+             node->getName(), (const TCHAR *)node->getIpAddress().toString());
+   node->setDiscoveryPollTimeStamp();
    delete poller;
 }
 

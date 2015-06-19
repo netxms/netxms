@@ -806,6 +806,22 @@ struct GRAPH_ACL_AND_ID
 };
 
 /**
+ * Thread pool stats
+ */
+enum ThreadPoolStat
+{
+   THREAD_POOL_CURR_SIZE,
+   THREAD_POOL_MIN_SIZE,
+   THREAD_POOL_MAX_SIZE,
+   THREAD_POOL_REQUESTS,
+   THREAD_POOL_LOAD,
+   THREAD_POOL_USAGE,
+   THREAD_POOL_LOADAVG_1,
+   THREAD_POOL_LOADAVG_5,
+   THREAD_POOL_LOADAVG_15
+};
+
+/**
  * Functions
  */
 bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
@@ -974,6 +990,7 @@ void DumpMobileDeviceSessions(CONSOLE_CTX console);
 void ShowServerStats(CONSOLE_CTX console);
 void ShowQueueStats(CONSOLE_CTX console, Queue *pQueue, const TCHAR *pszName);
 void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p);
+LONG GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value);
 void DumpProcess(CONSOLE_CTX console);
 
 GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize);
