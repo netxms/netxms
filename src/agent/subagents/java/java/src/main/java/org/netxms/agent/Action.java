@@ -22,10 +22,11 @@
 
 package org.netxms.agent;
 
-public interface Action {
+public interface Action
+{
+   String getName();
 
-	String getName();
-	String getDescription();
-	
-	void execute(final String action, final String[] args);  
+   String getDescription();
+
+   void execute(final String action, final String[] args) throws Exception;
 }

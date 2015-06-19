@@ -36,5 +36,5 @@ public interface ListParameter
     * @param param
     * @return
     */
-   public String[] getValue(final String param);
+   public String[] getValue(final String param) throws Exception;
 }

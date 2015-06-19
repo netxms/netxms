@@ -146,9 +146,17 @@ static LONG ParameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *value, 
    try
    {
       TCHAR *resultString = s_subAgent->parameterHandler(param, id);
-      nx_strncpy(value, resultString, MAX_RESULT_LENGTH);
-      free(resultString);
-      result = SYSINFO_RC_SUCCESS;
+      if (resultString != NULL)
+      {
+         nx_strncpy(value, resultString, MAX_RESULT_LENGTH);
+         free(resultString);
+         result = SYSINFO_RC_SUCCESS;
+      }
+      else
+      {
+         AgentWriteDebugLog(3, _T("JAVA: error in ParameterHandler(%s)"), param);
+         result = SYSINFO_RC_ERROR;
+      }
    }
    catch (JNIException const& e)
    {
@@ -170,11 +178,20 @@ static LONG ListParameterHandler(const TCHAR *cmd, const TCHAR *id, StringList *
       // route the call to SubAgent
       int len = 0;
       TCHAR **res = s_subAgent->listParameterHandler(cmd, id, &len);
-      for (int i=0; i<len; i++)
+      if (res != NULL)
       {
-         value->addPreallocated(res[i]);
+         for (int i=0; i<len; i++)
+         {
+            value->addPreallocated(res[i]);
+         }
+         free(res);
+         result = SYSINFO_RC_SUCCESS;
       }
-      result = SYSINFO_RC_SUCCESS;
+      else
+      {
+         AgentWriteDebugLog(3, _T("JAVA: error in ListParameterHandler(%s)"), cmd);
+         result = SYSINFO_RC_ERROR;
+      }
    }
    catch (JNIException const& e)
    {
@@ -206,16 +223,24 @@ static LONG TableParameterHandler(const TCHAR *cmd, const TCHAR *id, Table *tabl
       int numColumns = 0;
       int numRows = 0;
       TCHAR ***res = s_subAgent->tableParameterHandler(cmd, id, &numRows, &numColumns);
-      // TODO assert that numTableColumns == numColumns
-      for (int i=0; i<numRows; i++)
+      if (res != NULL)
       {
-         table->addRow();
-         for (int j=0; j<numColumns; j++)
+         // TODO assert that numTableColumns == numColumns
+         for (int i=0; i<numRows; i++)
          {
-            table->setPreallocatedAt(i, j, res[i][j]);
+            table->addRow();
+            for (int j=0; j<numColumns; j++)
+            {
+               table->setPreallocatedAt(i, j, res[i][j]);
+            }
          }
+         result = SYSINFO_RC_SUCCESS;
       }
-      result = SYSINFO_RC_SUCCESS;
+      else
+      {
+         AgentWriteDebugLog(3, _T("JAVA: error in TableParameterHandler(%s)"), cmd);
+         result = SYSINFO_RC_ERROR;
+      }
    }
    catch (JNIException const& e)
    {

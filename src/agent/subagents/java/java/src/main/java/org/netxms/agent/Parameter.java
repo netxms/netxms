@@ -52,5 +52,5 @@ public interface Parameter
     * @param param
     * @return
     */
-   String getValue(final String param);
+   String getValue(final String param) throws Exception;
 }

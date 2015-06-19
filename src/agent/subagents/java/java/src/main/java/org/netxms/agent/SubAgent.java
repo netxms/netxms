@@ -130,11 +130,6 @@ public class SubAgent
 
    protected static native boolean pushParameterData(String name, String value);
 
-   public static boolean pushParameterData(PushParameter pushParameter)
-   {
-      return pushParameterData(pushParameter.getName(), pushParameter.getValue());
-   }
-
    protected static native void writeLog(int level, String message);
 
    public static void AgentWriteLog(LogLevel level, String message)
@@ -309,13 +304,20 @@ public class SubAgent
     */
    public String parameterHandler(final String param, final String id)
    {
-      // retrieve appropriate Parameter from cache
-      Parameter parameter = getParameter(id);
-      if (parameter != null)
+      try
       {
-         return parameter.getValue(param);
+         Parameter parameter = getParameter(id);
+         if (parameter != null)
+         {
+            return parameter.getValue(param);
+         }
+         return null;
       }
-      return null;
+      catch(Throwable e)
+      {
+         writeDebugLog(6, "JAVA: Exception in parameter handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         return null;
+      }
    }
 
    /**
@@ -327,13 +329,20 @@ public class SubAgent
     */
    public String[] listParameterHandler(final String param, final String id)
    {
-      // retrieve appropriate ListParameter from cache
-      ListParameter listParameter = getListParameter(id);
-      if (listParameter != null)
+      try
       {
-         return listParameter.getValue(param);
+         ListParameter listParameter = getListParameter(id);
+         if (listParameter != null)
+         {
+            return listParameter.getValue(param);
+         }
+         return null;
       }
-      return null;
+      catch(Throwable e)
+      {
+         writeDebugLog(6, "JAVA: Exception in list handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         return null;
+      }
    }
 
    /**
@@ -345,15 +354,21 @@ public class SubAgent
     */
    public String[][] tableParameterHandler(final String param, final String id)
    {
-      // retrieve appropriate TableParameter from cache
-      writeDebugLog(7, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ")");
-      TableParameter tableParameter = getTableParameter(id);
-      if (tableParameter != null)
+      try
       {
-         writeDebugLog(7, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ") returning " + tableParameter.getValue(param));
-         return tableParameter.getValue(param);
+         TableParameter tableParameter = getTableParameter(id);
+         if (tableParameter != null)
+         {
+            writeDebugLog(7, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ") returning " + tableParameter.getValue(param));
+            return tableParameter.getValue(param);
+         }
+         return null;
       }
-      return null;
+      catch(Throwable e)
+      {
+         writeDebugLog(6, "JAVA: Exception in table handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         return null;
+      }
    }
 
    /**
@@ -365,11 +380,17 @@ public class SubAgent
     */
    public void actionHandler(final String param, final String[] args, final String id)
    {
-      // retrieve appropriate Action from cache
-      Action action = getAction(id);
-      if (action != null)
+      try
       {
-         action.execute(param, args);
+         Action action = getAction(id);
+         if (action != null)
+         {
+            action.execute(param, args);
+         }
+      }
+      catch(Throwable e)
+      {
+         writeDebugLog(6, "JAVA: Exception in action handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
       }
    }
 

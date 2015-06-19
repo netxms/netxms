@@ -29,5 +29,5 @@ public interface TableParameter
 
    TableColumn[] getColumns();
 
-   String[][] getValue(final String param);
+   String[][] getValue(final String param) throws Exception;
 }
