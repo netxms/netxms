@@ -80,7 +80,7 @@ public class GeneralTable extends PropertyPage
 	private Combo origin;
 	private Button checkUseCustomSnmpPort;
 	private Spinner customSnmpPort;
-	private ObjectSelector proxyNode;
+	private ObjectSelector sourceNode;
    private Combo agentCacheMode;
 	private Combo schedulingMode;
 	private LabeledSpinner pollingInterval;
@@ -256,11 +256,11 @@ public class GeneralTable extends PropertyPage
       fd.top = new FormAttachment(checkUseCustomSnmpPort, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       customSnmpPort.setLayoutData(fd);
       
-      proxyNode = new ObjectSelector(groupData, SWT.NONE, true);
-      proxyNode.setLabel(Messages.get().GeneralTable_ProxyNode);
-      proxyNode.setObjectClass(Node.class);
-      proxyNode.setObjectId(dci.getProxyNode());
-      proxyNode.setEnabled(dci.getOrigin() != DataCollectionObject.PUSH);
+      sourceNode = new ObjectSelector(groupData, SWT.NONE, true);
+      sourceNode.setLabel(Messages.get().GeneralTable_ProxyNode);
+      sourceNode.setObjectClass(Node.class);
+      sourceNode.setObjectId(dci.getSourceNode());
+      sourceNode.setEnabled(dci.getOrigin() != DataCollectionObject.PUSH);
       
       fd = new FormData();
       fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
@@ -276,7 +276,7 @@ public class GeneralTable extends PropertyPage
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(agentCacheMode.getParent(), -WidgetHelper.OUTER_SPACING, SWT.LEFT);
-      proxyNode.setLayoutData(fd);
+      sourceNode.setLayoutData(fd);
       
       /** polling area **/
       Group groupPolling = new Group(dialogArea, SWT.NONE);
@@ -421,7 +421,7 @@ public class GeneralTable extends PropertyPage
 	private void onOriginChange()
 	{
 		int index = origin.getSelectionIndex();
-		proxyNode.setEnabled(index != DataCollectionObject.PUSH);
+		sourceNode.setEnabled(index != DataCollectionObject.PUSH);
 		schedulingMode.setEnabled(index != DataCollectionObject.PUSH);
 		pollingInterval.setEnabled((index != DataCollectionObject.PUSH) && (schedulingMode.getSelectionIndex() == 0));
 		checkUseCustomSnmpPort.setEnabled(index == DataCollectionObject.SNMP);
@@ -477,7 +477,7 @@ public class GeneralTable extends PropertyPage
 		dci.setDescription(description.getText().trim());
 		dci.setName(parameter.getText().trim());
 		dci.setOrigin(origin.getSelectionIndex());
-		dci.setProxyNode(proxyNode.getObjectId());
+		dci.setSourceNode(sourceNode.getObjectId());
       dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
 		dci.setUseAdvancedSchedule(schedulingMode.getSelectionIndex() == 1);
 		dci.setPollingInterval(pollingInterval.getSelection());

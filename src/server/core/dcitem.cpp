@@ -131,7 +131,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
    m_bCacheLoaded = false;
    m_flags = (WORD)DBGetFieldLong(hResult, iRow, 13);
 	m_dwResourceId = DBGetFieldULong(hResult, iRow, 14);
-	m_dwProxyNode = DBGetFieldULong(hResult, iRow, 15);
+	m_sourceNode = DBGetFieldULong(hResult, iRow, 15);
 	m_nBaseUnits = DBGetFieldLong(hResult, iRow, 16);
 	m_nMultiplier = DBGetFieldLong(hResult, iRow, 17);
 	m_customUnitName = DBGetField(hResult, iRow, 18, NULL, 0);
@@ -368,7 +368,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwTemplateItemId);
 	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (UINT32)m_flags);
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dwResourceId);
-	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_dwProxyNode);
+	DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_sourceNode);
 	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (INT32)m_nBaseUnits);
 	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (INT32)m_nMultiplier);
 	DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_customUnitName, DB_BIND_STATIC);

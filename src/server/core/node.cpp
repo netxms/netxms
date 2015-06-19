@@ -3148,12 +3148,12 @@ StringMap *Node::getInstanceList(DCItem *dci)
 		return NULL;
 
    Node *node;
-   if (dci->getProxyNode() != 0)
+   if (dci->getSourceNode() != 0)
    {
-      node = (Node *)FindObjectById(dci->getProxyNode(), OBJECT_NODE);
+      node = (Node *)FindObjectById(dci->getSourceNode(), OBJECT_NODE);
       if (node == NULL)
       {
-         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): proxy node [%d] not found"), dci->getName(), dci->getId(), dci->getProxyNode());
+         DbgPrintf(6, _T("Node::getInstanceList(%s [%d]): proxy node [%d] not found"), dci->getName(), dci->getId(), dci->getSourceNode());
          return NULL;
       }
       if (!node->isTrustedNode(m_id))
@@ -6812,7 +6812,7 @@ void Node::collectSnmpProxyInfo(SnmpProxyInfo *info)
    {
       DCObject *dco = m_dcObjects->get(i);
       if ((dco->getDataSource() == DS_SNMP_AGENT) &&
-          (dco->getProxyNode() == 0) &&
+          (dco->getSourceNode() == 0) &&
           (dco->getAgentCacheMode() == AGENT_CACHE_ON))
       {
          info->msg->setField(info->fieldId++, dco->getId());
@@ -6874,7 +6874,7 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
    {
       DCObject *dco = m_dcObjects->get(i);
       if ((dco->getAgentCacheMode() == AGENT_CACHE_ON) &&
-          (dco->getProxyNode() == 0))
+          (dco->getSourceNode() == 0))
       {
          msg.setField(fieldId++, dco->getId());
          msg.setField(fieldId++, (INT16)dco->getType());

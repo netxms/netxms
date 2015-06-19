@@ -27,7 +27,8 @@
 	- In-place file rename in file manager
 	- Option to export data from line charts on dashboard to CSV file
 	- "Select all objects" option in network maps
-- Fixed issues: #50, #630, #780, #781, #791, #794, #797, #798, #806, #815, #816, #817, #824, #832, #833
+	- "Proxy node" option in DCI properties renamed to "Source node" to avoid confusion
+- Fixed issues: #50, #630, #780, #781, #791, #794, #797, #798, #806, #815, #816, #817, #824, #832, #833, #837
 
 
 *

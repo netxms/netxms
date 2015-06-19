@@ -48,7 +48,7 @@ DCObject::DCObject()
 	m_flags = 0;
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
-	m_dwProxyNode = 0;
+	m_sourceNode = 0;
 	m_pszPerfTabSettings = NULL;
 	m_snmpPort = 0;	// use default
    m_transformationScriptSource = NULL;
@@ -82,7 +82,7 @@ DCObject::DCObject(const DCObject *pSrc)
    m_dwErrorCount = 0;
 	m_flags = pSrc->m_flags;
 	m_dwResourceId = pSrc->m_dwResourceId;
-	m_dwProxyNode = pSrc->m_dwProxyNode;
+	m_sourceNode = pSrc->m_sourceNode;
 	m_pszPerfTabSettings = (pSrc->m_pszPerfTabSettings != NULL) ? _tcsdup(pSrc->m_pszPerfTabSettings) : NULL;
 	m_snmpPort = pSrc->m_snmpPort;
 	m_comments = (pSrc->m_comments != NULL) ? _tcsdup(pSrc->m_comments) : NULL;
@@ -138,7 +138,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
-	m_dwProxyNode = 0;
+	m_sourceNode = 0;
 	m_pszPerfTabSettings = NULL;
 	m_snmpPort = 0;	// use default
    m_transformationScriptSource = NULL;
@@ -170,7 +170,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
-	m_dwProxyNode = 0;
+	m_sourceNode = 0;
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    m_pszPerfTabSettings = (perfTabSettings != NULL) ? _tcsdup(perfTabSettings) : NULL;
 	m_snmpPort = (WORD)config->getSubEntryValueAsInt(_T("snmpPort"));
@@ -741,7 +741,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_DCI_SOURCE_TYPE, (WORD)m_source);
    pMsg->setField(VID_DCI_STATUS, (WORD)m_status);
 	pMsg->setField(VID_RESOURCE_ID, m_dwResourceId);
-	pMsg->setField(VID_AGENT_PROXY, m_dwProxyNode);
+	pMsg->setField(VID_AGENT_PROXY, m_sourceNode);
 	pMsg->setField(VID_SNMP_PORT, m_snmpPort);
 	if (m_comments != NULL)
 		pMsg->setField(VID_COMMENTS, m_comments);
@@ -769,7 +769,7 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
    m_iRetentionTime = pMsg->getFieldAsUInt32(VID_RETENTION_TIME);
    setStatus(pMsg->getFieldAsUInt16(VID_DCI_STATUS), true);
 	m_dwResourceId = pMsg->getFieldAsUInt32(VID_RESOURCE_ID);
-	m_dwProxyNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
+	m_sourceNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
 	safe_free(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = pMsg->getFieldAsString(VID_PERFTAB_SETTINGS);
 	m_snmpPort = pMsg->getFieldAsUInt16(VID_SNMP_PORT);
@@ -884,7 +884,7 @@ void DCObject::updateFromTemplate(DCObject *src)
    m_source = src->m_source;
    setStatus(src->m_status, true);
 	m_flags = src->m_flags;
-	m_dwProxyNode = src->m_dwProxyNode;
+	m_sourceNode = src->m_sourceNode;
 	m_dwResourceId = src->m_dwResourceId;
 	m_snmpPort = src->m_snmpPort;
 

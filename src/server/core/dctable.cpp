@@ -177,7 +177,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
    m_status = (BYTE)DBGetFieldLong(hResult, iRow, 10);
 	DBGetField(hResult, iRow, 11, m_systemTag, MAX_DB_STRING);
 	m_dwResourceId = DBGetFieldULong(hResult, iRow, 12);
-	m_dwProxyNode = DBGetFieldULong(hResult, iRow, 13);
+	m_sourceNode = DBGetFieldULong(hResult, iRow, 13);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 14, NULL, 0);
    TCHAR *pszTmp = DBGetField(hResult, iRow, 15, NULL, 0);
    m_comments = DBGetField(hResult, iRow, 16, NULL, 0);
@@ -559,7 +559,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_status);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwResourceId);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_dwProxyNode);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_sourceNode);
 	DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
    DBBind(hStmt, 16, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
    DBBind(hStmt, 17, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);

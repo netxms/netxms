@@ -196,7 +196,7 @@ protected:
    time_t m_tLastCheck;          // Last schedule checking time
    UINT32 m_dwErrorCount;         // Consequtive collection error count
 	UINT32 m_dwResourceId;	   	// Associated cluster resource ID
-	UINT32 m_dwProxyNode;          // Proxy node ID or 0 to disable
+	UINT32 m_sourceNode;          // Source node ID or 0 to disable
 	WORD m_snmpPort;					// Custom SNMP port or 0 for node default
 	TCHAR *m_pszPerfTabSettings;
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
@@ -248,7 +248,7 @@ public:
    UINT32 getTemplateId() { return m_dwTemplateId; }
    UINT32 getTemplateItemId() { return m_dwTemplateItemId; }
 	UINT32 getResourceId() { return m_dwResourceId; }
-	UINT32 getProxyNode() { return m_dwProxyNode; }
+	UINT32 getSourceNode() { return m_sourceNode; }
 	time_t getLastPollTime() { return m_tLastPoll; }
 	UINT32 getErrorCount() { return m_dwErrorCount; }
 	WORD getSnmpPort() { return m_snmpPort; }

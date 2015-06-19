@@ -69,7 +69,7 @@ public abstract class DataCollectionObject
 	protected long id;
 	protected long templateId;
 	protected long resourceId;
-	protected long proxyNode;
+	protected long sourceNode;
 	protected int pollingInterval;
 	protected int retentionTime;
 	protected int origin;
@@ -97,7 +97,7 @@ public abstract class DataCollectionObject
 		id = msg.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
 		templateId = msg.getFieldAsInt64(NXCPCodes.VID_TEMPLATE_ID);
 		resourceId = msg.getFieldAsInt64(NXCPCodes.VID_RESOURCE_ID);
-		proxyNode = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
+		sourceNode = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
 		pollingInterval = msg.getFieldAsInt32(NXCPCodes.VID_POLLING_INTERVAL);
 		retentionTime = msg.getFieldAsInt32(NXCPCodes.VID_RETENTION_TIME);
 		origin = msg.getFieldAsInt32(NXCPCodes.VID_DCI_SOURCE_TYPE);
@@ -132,7 +132,7 @@ public abstract class DataCollectionObject
 		this.id = id;
 		templateId = 0;
 		resourceId = 0;
-		proxyNode = 0;
+		sourceNode = 0;
 		pollingInterval = owner.getSession().getDefaultDciPollingInterval();
 		retentionTime = owner.getSession().getDefaultDciRetentionTime();
 		origin = AGENT;
@@ -166,7 +166,7 @@ public abstract class DataCollectionObject
 		msg.setFieldInt16(NXCPCodes.VID_FLAGS, flags);
 		msg.setField(NXCPCodes.VID_TRANSFORMATION_SCRIPT, transformationScript);
 		msg.setFieldInt32(NXCPCodes.VID_RESOURCE_ID, (int)resourceId);
-		msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)proxyNode);
+		msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)sourceNode);
 		if (perfTabSettings != null)
 			msg.setField(NXCPCodes.VID_PERFTAB_SETTINGS, perfTabSettings);
 		msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, snmpPort);
@@ -213,19 +213,23 @@ public abstract class DataCollectionObject
 	}
 
 	/**
-	 * @return the proxyNode
+	 * Get source node (node where actual data collection took place) ID
+	 * 
+	 * @return source node ID (0 if not set)
 	 */
-	public long getProxyNode()
+	public long getSourceNode()
 	{
-		return proxyNode;
+		return sourceNode;
 	}
 
 	/**
-	 * @param proxyNode the proxyNode to set
+	 * Set source node (node where actual data collection took place) ID. Set to 0 to use DCI's owning node.
+	 * 
+	 * @param sourceNode source node ID
 	 */
-	public void setProxyNode(long proxyNode)
+	public void setSourceNode(long sourceNode)
 	{
-		this.proxyNode = proxyNode;
+		this.sourceNode = sourceNode;
 	}
 
 	/**

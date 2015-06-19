@@ -229,14 +229,14 @@ namespace org_netxms_agent
       return (res == JNI_TRUE);
    }
 
-   TCHAR* SubAgent::parameterHandler (TCHAR const* param, TCHAR const* id)
+   TCHAR *SubAgent::parameterHandler(TCHAR const* param, TCHAR const* id)
    {
       JNIEnv * curEnv = getCurrentEnv();
 
       /* Use the cache */
       if (jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID == NULL)
       {
-         jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "parameterHandler", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;" ) ;
+         jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "parameterHandler", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
          if (jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID == NULL)
          {
             AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method parameterHandler"));

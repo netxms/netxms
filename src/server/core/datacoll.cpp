@@ -197,11 +197,11 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 			continue;
 		}
 
-      DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d proxy=%d"),
-		          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1, pItem->getProxyNode());
-		if (pItem->getProxyNode() != 0)
+      DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d sourceNode=%d"),
+		          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1, pItem->getSourceNode());
+		if (pItem->getSourceNode() != 0)
 		{
-			NetObj *object = FindObjectById(pItem->getProxyNode(), OBJECT_NODE);
+			NetObj *object = FindObjectById(pItem->getSourceNode(), OBJECT_NODE);
 			if (object != NULL)
 			{
 				if (object->isTrustedNode((target != NULL) ? target->getId() : 0))
@@ -275,7 +275,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
          // Decrement node's usage counter
          target->decRefCount();
-			if ((pItem->getProxyNode() != 0) && (pItem->getTarget() != NULL))
+			if ((pItem->getSourceNode() != 0) && (pItem->getTarget() != NULL))
 			{
 				pItem->getTarget()->decRefCount();
 			}
@@ -283,8 +283,8 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
       else     /* target == NULL */
       {
 			Template *n = pItem->getTarget();
-         DbgPrintf(3, _T("*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" target=%d proxy=%d)"),
-			          pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, pItem->getProxyNode());
+         DbgPrintf(3, _T("*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" target=%d sourceNode=%d)"),
+			          pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, pItem->getSourceNode());
       }
 
 		// Update item's last poll time and clear busy flag so item can be polled again

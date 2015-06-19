@@ -88,7 +88,7 @@ public class General extends PropertyPage
 	private Combo snmpRawType;
 	private Button checkUseCustomSnmpPort;
 	private Spinner customSnmpPort;
-	private ObjectSelector proxyNode;
+	private ObjectSelector sourceNode;
 	private Combo agentCacheMode;
 	private Combo schedulingMode;
 	private Button checkNoStorage;
@@ -305,11 +305,11 @@ public class General extends PropertyPage
       fd.right = new FormAttachment(100, 0);
       sampleCount.setLayoutData(fd);
       
-      proxyNode = new ObjectSelector(groupData, SWT.NONE, true);
-      proxyNode.setLabel(Messages.get().General_ProxyNode);
-      proxyNode.setObjectClass(Node.class);
-      proxyNode.setObjectId(dci.getProxyNode());
-      proxyNode.setEnabled(dci.getOrigin() != DataCollectionItem.PUSH);
+      sourceNode = new ObjectSelector(groupData, SWT.NONE, true);
+      sourceNode.setLabel(Messages.get().General_ProxyNode);
+      sourceNode.setObjectClass(Node.class);
+      sourceNode.setObjectId(dci.getSourceNode());
+      sourceNode.setEnabled(dci.getOrigin() != DataCollectionItem.PUSH);
       
       fd = new FormData();
       fd.top = new FormAttachment(sampleCount, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
@@ -325,7 +325,7 @@ public class General extends PropertyPage
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(sampleCount, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(agentCacheMode.getParent(), -WidgetHelper.OUTER_SPACING, SWT.LEFT);
-      proxyNode.setLayoutData(fd);
+      sourceNode.setLayoutData(fd);
       
       /** polling area **/
       Group groupPolling = new Group(dialogArea, SWT.NONE);
@@ -439,7 +439,7 @@ public class General extends PropertyPage
 	private void onOriginChange()
 	{
 		int index = origin.getSelectionIndex();
-		proxyNode.setEnabled(index != DataCollectionItem.PUSH);
+		sourceNode.setEnabled(index != DataCollectionItem.PUSH);
 		schedulingMode.setEnabled(index != DataCollectionItem.PUSH);
 		pollingInterval.setEnabled((index != DataCollectionItem.PUSH) && (schedulingMode.getSelectionIndex() == 0));
 		checkInterpretRawSnmpValue.setEnabled(index == DataCollectionItem.SNMP);
@@ -510,7 +510,7 @@ public class General extends PropertyPage
 		dci.setOrigin(origin.getSelectionIndex());
 		dci.setDataType(dataType.getSelectionIndex());
 		dci.setSampleCount(sampleCount.getSelection());
-		dci.setProxyNode(proxyNode.getObjectId());
+		dci.setSourceNode(sourceNode.getObjectId());
 		dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
 		dci.setUseAdvancedSchedule(schedulingMode.getSelectionIndex() == 1);
 		dci.setPollingInterval(pollingInterval.getSelection());
