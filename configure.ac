@@ -2711,6 +2711,18 @@ AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
 
 
 #--------------------------------------------------------------------
+# Cleanup variables
+#--------------------------------------------------------------------
+
+AS_IF([test "x$with_dist" = "xyes"],
+[
+  SUBAGENT_DIRS=`echo $SUBAGENT_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+  MODULES=`echo $MODULES|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+  SMSDRV_DIRS=`echo $SMSDRV_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+  HDLINK_DIRS=`echo $HDLINK_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+])
+
+#--------------------------------------------------------------------
 # Substitute variables
 #--------------------------------------------------------------------
 
