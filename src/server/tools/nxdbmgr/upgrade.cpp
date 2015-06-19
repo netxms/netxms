@@ -467,6 +467,30 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
 }
 
 /**
+ * Upgrade from V355 to V356
+ */
+static BOOL H_UpgradeFromV355(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("DELETE FROM config WHERE var_name='NumberOfBusinessServicePollers'\n")
+      _T("DELETE FROM config WHERE var_name='NumberOfConditionPollers'\n")
+      _T("DELETE FROM config WHERE var_name='NumberOfConfigurationPollers'\n")
+      _T("DELETE FROM config WHERE var_name='NumberOfDiscoveryPollers'\n")
+      _T("DELETE FROM config WHERE var_name='NumberOfInstancePollers'\n")
+      _T("DELETE FROM config WHERE var_name='NumberOfRoutingTablePollers'\n")
+      _T("DELETE FROM config WHERE var_name='NumberOfStatusPollers'\n")
+      _T("DELETE FROM config WHERE var_name='NumberOfTopologyTablePollers'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(CreateConfigParam(_T("PollerThreadPoolBaseSize"), _T("10"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("PollerThreadPoolMaxSize"), _T("250"), 1, 1));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='356' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V354 to V355
  */
 static BOOL H_UpgradeFromV354(int currVersion, int newVersion)
@@ -8605,6 +8629,7 @@ static struct
    { 352, 353, H_UpgradeFromV352 },
    { 353, 354, H_UpgradeFromV353 },
    { 354, 355, H_UpgradeFromV354 },
+   { 355, 356, H_UpgradeFromV355 },
    { 0, 0, NULL }
 };
 
