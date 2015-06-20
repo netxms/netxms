@@ -170,7 +170,7 @@ void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
  */
 void DataCollectionItem::saveToDatabase(bool newObject)
 {
-   DebugPrintf(INVALID_INDEX, 6, _T("DataCollectionItem::saveToDatabase: %s object(serverId=%ld,dciId=%d) saved to database"),
+   DebugPrintf(INVALID_INDEX, 6, _T("DataCollectionItem::saveToDatabase: %s object(serverId=") UINT64X_FMT(_T("016")) _T(",dciId=%d) saved to database"),
                newObject ? _T("new") : _T("existing"), m_serverId, m_id);
    DB_HANDLE db = GetLocalDatabaseHandle();
    DB_STATEMENT hStmt;
