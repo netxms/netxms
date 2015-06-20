@@ -7,7 +7,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="lib" path="libs/android-support-v4.jar"/>
-	<classpathentry kind="lib" path="libs/netxms-base-2.0-M4.jar"/>
-	<classpathentry kind="lib" path="libs/netxms-mobile-agent-2.0-M4.jar"/>
+	<classpathentry kind="lib" path="libs/netxms-base-2.0-M5.jar"/>
+	<classpathentry kind="lib" path="libs/netxms-mobile-agent-2.0-M5.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
