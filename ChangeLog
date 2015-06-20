@@ -2,8 +2,6 @@
 * 2.0-M5
 *
 
-- Android Console:
-	- Added "capabilities" in node overview (changed to expandable list view)
 - Fixed bug in handling floating point Windows performance counters
 - Added "comments" attribute to NXSL "DCI" class
 - New NXSL function sha256
@@ -28,6 +26,8 @@
 	- Option to export data from line charts on dashboard to CSV file
 	- "Select all objects" option in network maps
 	- "Proxy node" option in DCI properties renamed to "Source node" to avoid confusion
+- Android Console:
+	- Added "capabilities" in node overview (changed to expandable list view)
 - Fixed issues: #50, #630, #780, #781, #791, #794, #797, #798, #806, #815, #816, #817, #824, #832, #833, #837
 
 
