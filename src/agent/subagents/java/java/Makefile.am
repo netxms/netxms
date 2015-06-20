@@ -8,4 +8,4 @@ netxms-agent.jar: pom.xml
 
 SUBDIRS = src
 
-EXTRA_DIST = pom.xml
+EXTRA_DIST = pom.xml netxms-agent.jar
