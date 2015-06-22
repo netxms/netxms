@@ -502,7 +502,7 @@ static BOOL H_UpgradeFromV354(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(CreateConfigParam(_T("DefaultAgentCacheMode"), _T("0"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("DefaultAgentCacheMode"), _T("2"), 1, 1));
 
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='355' WHERE var_name='SchemaVersion'")));
    return TRUE;

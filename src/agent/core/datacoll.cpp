@@ -34,6 +34,11 @@ bool GetSnmpValue(const uuid_t& target, UINT16 port, const TCHAR *oid, TCHAR *va
 #define DATACOLL_SCHEMA_VERSION     3
 
 /**
+ * Data collector start indicator
+ */
+static bool s_dataCollectorStarted = false;
+
+/**
  * Data collection item
  */
 class DataCollectionItem : public RefCountObject
@@ -762,6 +767,12 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *arg)
  */
 void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
 {
+   if (!s_dataCollectorStarted)
+   {
+      DebugPrintf(INVALID_INDEX, 1, _T("Local data collector was not started, ignoring configuration received from server ") UINT64X_FMT(_T("016")), serverId);
+      return;
+   }
+
    int count = msg->getFieldAsInt32(VID_NUM_NODES);
    UINT32 fieldId = VID_NODE_INFO_LIST_BASE;
    for(int i = 0; i < count; i++)
@@ -957,6 +968,8 @@ void StartLocalDataCollector()
    s_dataCollectorThread = ThreadCreateEx(DataCollector, 0, NULL);
    s_dataSenderThread = ThreadCreateEx(DataSender, 0, NULL);
    s_reconcillationThread = ThreadCreateEx(ReconcillationThread, 0, NULL);
+
+   s_dataCollectorStarted = true;
 }
 
 /**
@@ -964,6 +977,12 @@ void StartLocalDataCollector()
  */
 void ShutdownLocalDataCollector()
 {
+   if (!s_dataCollectorStarted)
+   {
+      DebugPrintf(INVALID_INDEX, 5, _T("Local data collector was not started"));
+      return;
+   }
+
    DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data collector thread termination"));
    ThreadJoin(s_dataCollectorThread);
 
