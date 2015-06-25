@@ -674,6 +674,17 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
  {
    int ldap_error;
 
+// Prevent empty password, bind against ADS will succeed with
+// empty password by default.
+#ifdef _WIN32
+   if(wcslen(m_userPassword) == 0)
+#else
+   if(strlen(m_userPassword) == 0)
+#endif
+   {
+      return RCC_ACCESS_DENIED;
+   }
+
    if (m_ldapConn != NULL)
    {
 #ifdef _WIN32

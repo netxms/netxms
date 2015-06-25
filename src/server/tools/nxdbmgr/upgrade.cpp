@@ -1226,7 +1226,7 @@ static BOOL H_UpgradeFromV319(int currVersion, int newVersion)
    CHK_EXEC(CreateConfigParam(_T("LdapSearchBase"), _T(""), 1, 0));
    CHK_EXEC(CreateConfigParam(_T("LdapSearchFilter"), _T(""), 1, 0));
    CHK_EXEC(CreateConfigParam(_T("LdapUserDeleteAction"), _T("1"), 1, 0));
-   CHK_EXEC(CreateConfigParam(_T("LdapMappingName"), _T("uid"), 1, 0));
+   CHK_EXEC(CreateConfigParam(_T("LdapMappingName"), _T(""), 1, 0));
    CHK_EXEC(CreateConfigParam(_T("LdapMappingFullName"), _T("displayName"), 1, 0));
    CHK_EXEC(CreateConfigParam(_T("LdapMappingDescription"), _T(""), 1, 0));
    CHK_EXEC(CreateConfigParam(_T("LdapGroupClass"), _T(""), 1, 0));

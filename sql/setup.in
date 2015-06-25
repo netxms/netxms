@@ -88,7 +88,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapConnectionString','ldap://localhost:389',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapMappingDescription','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapMappingFullName','displayName',1,0);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapMappingName','displayName',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapMappingName','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapPageSize','1000',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapSearchBase','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapSearchFilter','',1,0);

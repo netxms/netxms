@@ -159,6 +159,7 @@ public class Authentication extends PropertyPage
 			flags |= AbstractUserObject.CHANGE_PASSWORD;
 		if (checkFixedPassword.getSelection())
 			flags |= AbstractUserObject.CANNOT_CHANGE_PASSWORD;
+		flags |= object.getFlags() & AbstractUserObject.LDAP_USER;
 		object.setFlags(flags);
 		
 		// Authentication
