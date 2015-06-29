@@ -561,6 +561,7 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
       TCHAR *scriptName = _tcsdup(pszSchedule + 2);
       if (scriptName != NULL)
       {
+         bool success = false;
          TCHAR *closingBracker = _tcschr(scriptName, _T(']'));
          if (closingBracker != NULL)
          {
@@ -582,6 +583,7 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
                         DbgPrintf(7, _T("DCObject::matchSchedule(%%[%s]) expanded to \"%s\""), scriptName, temp);
                         nx_strncpy(expandedSchedule, temp, 1024);
                         realSchedule = expandedSchedule;
+                        success = true;
                      }
                   }
                }
@@ -593,12 +595,17 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
             }
             g_pScriptLibrary->unlock();
          }
+         else
+         {
+            DbgPrintf(4, _T("DCObject::matchSchedule: invalid script schedule syntax in %d [%s]"), m_id, m_name);
+         }
          free(scriptName);
+         if (!success)
+            return false;
       }
       else
       {
-         // invalid syntax
-         // TODO: add logging
+         DbgPrintf(4, _T("DCObject::matchSchedule: invalid script schedule syntax in %d [%s]"), m_id, m_name);
          return false;
       }
    }
