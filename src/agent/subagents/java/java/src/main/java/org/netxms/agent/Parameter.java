@@ -23,28 +23,14 @@ import org.netxms.agent.ParameterType;
 /**
  * Single-values parameter
  */
-public interface Parameter
+public interface Parameter extends AgentContributionItem
 {
-   /**
-    * Get parameter's name
-    * 
-    * @return
-    */
-   String getName();
-
-   /**
-    * Get parameter's description
-    * 
-    * @return
-    */
-   String getDescription();
-
    /**
     * Get parameter's type
     * 
     * @return
     */
-   ParameterType getType();
+   public ParameterType getType();
 
    /**
     * Get value
@@ -52,5 +38,5 @@ public interface Parameter
     * @param param
     * @return
     */
-   String getValue(final String param) throws Exception;
+   public String getValue(final String param) throws Exception;
 }

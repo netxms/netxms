@@ -495,7 +495,9 @@ void AddParameter(const TCHAR *szName, LONG (* fpHandler)(const TCHAR *, const T
                   int iDataType, const TCHAR *pszDescription);
 void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
 void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg);
-void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *), const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description);
+void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *), 
+              const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description,
+              int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
 BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList);
 UINT32 GetParameterValue(UINT32 sessionId, const TCHAR *param, TCHAR *value, AbstractCommSession *session);
 UINT32 GetListValue(UINT32 sessionId, const TCHAR *param, StringList *value, AbstractCommSession *session);

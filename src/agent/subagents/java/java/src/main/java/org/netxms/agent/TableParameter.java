@@ -21,13 +21,21 @@ package org.netxms.agent;
 /**
  * Table parameter
  */
-public interface TableParameter
+public interface TableParameter extends AgentContributionItem
 {
-   String getName();
-
-   String getDescription();
-
+   /**
+    * Get table columns
+    * 
+    * @return
+    */
    TableColumn[] getColumns();
 
+   /**
+    * Get value
+    * 
+    * @param param
+    * @return
+    * @throws Exception
+    */
    String[][] getValue(final String param) throws Exception;
 }

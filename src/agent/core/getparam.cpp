@@ -420,7 +420,7 @@ void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, S
  * Add table
  */
 void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *), const TCHAR *arg,
-				  const TCHAR *instanceColumns, const TCHAR *description)
+				  const TCHAR *instanceColumns, const TCHAR *description, int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns)
 {
    int i;
 
@@ -435,6 +435,8 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
       m_pTableList[i].arg = arg;
       nx_strncpy(m_pTableList[m_iNumTables].instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
 		nx_strncpy(m_pTableList[m_iNumTables].description, description, MAX_DB_STRING);
+      m_pTableList[i].numColumns = numColumns;
+      m_pTableList[i].columns = columns;
    }
    else
    {
@@ -445,6 +447,8 @@ void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, 
       m_pTableList[m_iNumTables].arg = arg;
       nx_strncpy(m_pTableList[m_iNumTables].instanceColumns, instanceColumns, MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS);
 		nx_strncpy(m_pTableList[m_iNumTables].description, description, MAX_DB_STRING);
+      m_pTableList[m_iNumTables].numColumns = numColumns;
+      m_pTableList[m_iNumTables].columns = columns;
       m_iNumTables++;
    }
 }
@@ -641,6 +645,16 @@ UINT32 GetTableValue(UINT32 sessionId, const TCHAR *param, Table *value, Abstrac
 	{
       if (MatchString(m_pTableList[i].name, param, FALSE))
       {
+         // pre-fill table columns if specified in table definition
+         if (m_pTableList[i].numColumns > 0)
+         {
+            for(int c = 0; c < m_pTableList[i].numColumns; c++)
+            {
+               NETXMS_SUBAGENT_TABLE_COLUMN *col = &m_pTableList[i].columns[c];
+               value->addColumn(col->name, col->dataType, col->displayName, col->isInstance);
+            }
+         }
+
          rc = m_pTableList[i].handler(param, m_pTableList[i].arg, value, session);
          switch(rc)
          {

@@ -18,26 +18,88 @@
  */
 package org.netxms.agent;
 
-public class TableColumn {
-	private String name;
-	private ParameterType type;
-	private boolean instance;
-		
-	public TableColumn(final String name, final ParameterType type, final boolean instance) {
-		this.name = name;
-		this.type = type;
-		this.instance = instance;
-	}
+/**
+ * Table column information
+ */
+public class TableColumn
+{
+   private String name;
+   private String displayName;
+   private ParameterType type;
+   private boolean instance;
 
-	public String getName() {
-		return this.name;
-	}
+   /**
+    * @param name
+    * @param displayName
+    * @param type
+    * @param instance
+    */
+   public TableColumn(final String name, final String displayName, final ParameterType type, final boolean instance)
+   {
+      this.name = name;
+      this.displayName = displayName;
+      this.type = type;
+      this.instance = instance;
+   }
 
-	public ParameterType getType() {
-		return this.type;
-	}
+   /**
+    * @param name
+    * @param displayName
+    * @param type
+    */
+   public TableColumn(final String name, final String displayName, final ParameterType type)
+   {
+      this(name, displayName, type, false);
+   }
+   
+   /**
+    * @param name
+    * @param type
+    */
+   public TableColumn(final String name, final ParameterType type)
+   {
+      this(name, name, type, false);
+   }
+   
+   /**
+    * @param name
+    * @param type
+    * @param instance
+    */
+   public TableColumn(final String name, final ParameterType type, final boolean instance)
+   {
+      this(name, name, type, instance);
+   }
 
-	public boolean isInstance() {
-		return this.instance;
-	}
+   /**
+    * @return
+    */
+   public String getName()
+   {
+      return name;
+   }
+
+   /**
+    * @return the displayName
+    */
+   public String getDisplayName()
+   {
+      return displayName;
+   }
+
+   /**
+    * @return
+    */
+   public ParameterType getType()
+   {
+      return type;
+   }
+
+   /**
+    * @return
+    */
+   public boolean isInstance()
+   {
+      return instance;
+   }
 }

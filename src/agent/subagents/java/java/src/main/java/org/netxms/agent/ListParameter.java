@@ -21,15 +21,8 @@ package org.netxms.agent;
 /**
  * List parameter
  */
-public interface ListParameter
+public interface ListParameter extends AgentContributionItem
 {
-   /**
-    * Get parameter's name
-    * 
-    * @return
-    */
-   String getName();
-
    /**
     * Get value
     * 

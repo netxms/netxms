@@ -423,7 +423,19 @@ typedef struct
    TCHAR name[MAX_PARAM_NAME];
    LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
    const TCHAR *arg;
+   TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_LIST;
+
+/**
+ * Subagent's table column information
+ */
+typedef struct
+{
+   TCHAR name[MAX_COLUMN_NAME];
+   TCHAR displayName[MAX_COLUMN_NAME];
+   int dataType;
+   bool isInstance;
+} NETXMS_SUBAGENT_TABLE_COLUMN;
 
 /**
  * Subagent's table information
@@ -435,6 +447,8 @@ typedef struct
    const TCHAR *arg;
    TCHAR instanceColumns[MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS];
    TCHAR description[MAX_DB_STRING];
+   int numColumns;
+   NETXMS_SUBAGENT_TABLE_COLUMN *columns;
 } NETXMS_SUBAGENT_TABLE;
 
 /**
@@ -448,7 +462,7 @@ typedef struct
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20110301)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20150626)
 
 class NXCPMessage;
 

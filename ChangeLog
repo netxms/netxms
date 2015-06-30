@@ -1,4 +1,11 @@
 *
+* 2.0-RC1
+*
+
+- Fixed LDAP authentication issues with Active Directory
+
+
+*
 * 2.0-M5
 *
 

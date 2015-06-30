@@ -23,11 +23,10 @@ import org.netxms.agent.ParameterType;
 /**
  * Push parameter
  */
-public interface PushParameter
+public interface PushParameter extends AgentContributionItem
 {
-   String getName();
-
-   String getDescription();
-
-   ParameterType getType();
+   /**
+    * @return
+    */
+   public ParameterType getType();
 }

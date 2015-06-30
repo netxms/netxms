@@ -28,6 +28,10 @@ import org.netxms.agent.PushParameter;
 import org.netxms.agent.SubAgent;
 import org.netxms.agent.TableColumn;
 import org.netxms.agent.TableParameter;
+import org.netxms.agent.adapters.ListParameterAdapter;
+import org.netxms.agent.adapters.ParameterAdapter;
+import org.netxms.agent.adapters.PushParameterAdapter;
+import org.netxms.agent.adapters.TableAdapter;
 
 /**
  * Demo plugin
@@ -89,88 +93,76 @@ public class DemoPlugin extends Plugin
    @Override
    public Parameter[] getParameters()
    {
-      return new Parameter[] { new Parameter() {
-         public String getName()
-         {
-            return "Demo.Parameter1";
-         }
-
-         public String getDescription()
-         {
-            return "Parameter1 description";
-         }
-
-         public ParameterType getType()
-         {
-            return ParameterType.INT;
-         }
-
-         public String getValue(String argument)
-         {
-            return "1";
-         }
-
-      }, new Parameter() {
-         public String getName()
-         {
-            return "Demo.Parameter2";
-         }
-
-         public String getDescription()
-         {
-            return "Parameter2 description";
-         }
-
-         public ParameterType getType()
-         {
-            return ParameterType.INT64;
-         }
-
-         public String getValue(String argument)
-         {
-            return "2";
-         }
-      }, new Parameter() {
-         public String getName()
-         {
-            return "Demo.Parameter3";
-         }
-
-         public String getDescription()
-         {
-            return "Parameter3 description";
-         }
-
-         public ParameterType getType()
-         {
-            return ParameterType.STRING;
-         }
-
-         public String getValue(String argument)
-         {
-            return "String";
-         }
-      }, new Parameter() {
-         public String getName()
-         {
-            return "Demo.Config";
-         }
-
-         public String getDescription()
-         {
-            return "Echo config";
-         }
-
-         public ParameterType getType()
-         {
-            return ParameterType.STRING;
-         }
-
-         public String getValue(String argument)
-         {
-            return configValue;
-         }
-      } 
+      return new Parameter[] { 
+         new ParameterAdapter("Demo.Parameter1", "Parameter1 description", ParameterType.INT) {
+            public String getValue(String argument)
+            {
+               return "1";
+            }
+         }, 
+         new Parameter() {
+            public String getName()
+            {
+               return "Demo.Parameter2";
+            }
+   
+            public String getDescription()
+            {
+               return "Parameter2 description";
+            }
+   
+            public ParameterType getType()
+            {
+               return ParameterType.INT64;
+            }
+   
+            public String getValue(String argument)
+            {
+               return "2";
+            }
+         }, 
+         new Parameter() {
+            public String getName()
+            {
+               return "Demo.Parameter3";
+            }
+   
+            public String getDescription()
+            {
+               return "Parameter3 description";
+            }
+   
+            public ParameterType getType()
+            {
+               return ParameterType.STRING;
+            }
+   
+            public String getValue(String argument)
+            {
+               return "String";
+            }
+         }, 
+         new Parameter() {
+            public String getName()
+            {
+               return "Demo.Config";
+            }
+   
+            public String getDescription()
+            {
+               return "Echo config";
+            }
+   
+            public ParameterType getType()
+            {
+               return ParameterType.STRING;
+            }
+   
+            public String getValue(String argument)
+            {
+               return configValue;
+            }
+         } 
       };
    }
 
@@ -180,28 +172,9 @@ public class DemoPlugin extends Plugin
    @Override
    public PushParameter[] getPushParameters()
    {
-      return new PushParameter[] { new PushParameter() {
-
-         public String getName()
-         {
-            return "PushParameter1";
-         }
-
-         public String getDescription()
-         {
-            return "PushParameter1 description";
-         }
-
-         public ParameterType getType()
-         {
-            return ParameterType.INT;
-         }
-
-         public String getValue()
-         {
-            return "1";
-         }
-      } };
+      return new PushParameter[] { 
+         new PushParameterAdapter("PushParameter1", "PushParameter1 description", ParameterType.INT)
+      };
    }
 
    /* (non-Javadoc)
@@ -210,19 +183,15 @@ public class DemoPlugin extends Plugin
    @Override
    public ListParameter[] getListParameters()
    {
-      return new ListParameter[] { new ListParameter() {
-
-         public String getName()
-         {
-            return "ListParameter1";
-         }
-
-         public String[] getValue(String value)
-         {
-            return new String[] { "1", "2" };
-         }
-
-      } };
+      return new ListParameter[] { 
+         new ListParameterAdapter("ListParameter1", "Test list") {
+            @Override
+            public String[] getValue(String value)
+            {
+               return new String[] { "1", "2" };
+            }
+         } 
+      };
    }
 
    /* (non-Javadoc)
@@ -231,29 +200,43 @@ public class DemoPlugin extends Plugin
    @Override
    public TableParameter[] getTableParameters()
    {
-      return new TableParameter[] { new TableParameter() {
-
-         public String getName()
-         {
-            return "TableParameter1";
-         }
-
-         public String getDescription()
-         {
-            return "TableParameter1 description";
-         }
-
-         public TableColumn[] getColumns()
-         {
-            return new TableColumn[] { new TableColumn("Column1", ParameterType.STRING, true),
-                  new TableColumn("Column2", ParameterType.INT, false) };
-         }
-
-         public String[][] getValue(String parameter)
-         {
-            return new String[][] { { "Row1", "1" }, { "Row2", "2" } };
-         }
-      } };
+      return new TableParameter[] { 
+         new TableParameter() {
+            @Override
+            public String getName()
+            {
+               return "TableParameter1";
+            }
+   
+            @Override
+            public String getDescription()
+            {
+               return "TableParameter1 description";
+            }
+   
+            @Override
+            public TableColumn[] getColumns()
+            {
+               return new TableColumn[] { new TableColumn("Column1", ParameterType.STRING, true),
+                     new TableColumn("Column2", ParameterType.INT, false) };
+            }
+   
+            @Override
+            public String[][] getValue(String parameter)
+            {
+               return new String[][] { { "Row1", "1" }, { "Row2", "2" } };
+            }
+         },
+         new TableAdapter("TableParameter2", "TableParameter2 description", 
+               new TableColumn[] { new TableColumn("Column1", ParameterType.STRING, true),
+               new TableColumn("Column2", ParameterType.INT, false) }) {
+            @Override
+            public String[][] getValue(String parameter)
+            {
+               return new String[][] { { "Row1", "1" }, { "Row2", "2" } };
+            }
+         } 
+      };
    }
 
    /* (non-Javadoc)
@@ -263,20 +246,23 @@ public class DemoPlugin extends Plugin
    public Action[] getActions()
    {
       return new Action[] { new Action() {
-
+         @Override
          public String getName()
          {
             return "Action1";
          }
 
+         @Override
          public String getDescription()
          {
             return "Action1 description";
          }
 
-         public void execute(String action, String[] args)
+         @Override
+         public boolean execute(String action, String[] args)
          {
             SubAgent.writeDebugLog(1, "DEMO ACTION EXECUTED");
+            return true;
          }
       } };
    }

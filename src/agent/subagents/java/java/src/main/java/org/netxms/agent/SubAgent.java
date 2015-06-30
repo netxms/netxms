@@ -22,8 +22,11 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -57,9 +60,9 @@ public class SubAgent
    protected Map<String, Plugin> plugins;
    protected Map<String, Action> actions;
    protected Map<String, Parameter> parameters;
-   protected Map<String, ListParameter> listParameters;
+   protected Map<String, ListParameter> lists;
    protected Map<String, PushParameter> pushParameters;
-   protected Map<String, TableParameter> tableParameters;
+   protected Map<String, TableParameter> tables;
 
    private Config config = null;
 
@@ -72,9 +75,9 @@ public class SubAgent
       plugins = new HashMap<String, Plugin>();
       actions = new HashMap<String, Action>();
       parameters = new HashMap<String, Parameter>();
-      listParameters = new HashMap<String, ListParameter>();
+      lists = new HashMap<String, ListParameter>();
       pushParameters = new HashMap<String, PushParameter>();
-      tableParameters = new HashMap<String, TableParameter>();
+      tables = new HashMap<String, TableParameter>();
 
       this.config = config;
       writeDebugLog(1, "Java SubAgent created");
@@ -88,7 +91,7 @@ public class SubAgent
             String entry = configEntry.getValue(i).trim();
             try
             {
-               loadPlugin(entry, config);
+               loadPlugin(entry);
             }
             catch(Throwable e)
             {
@@ -181,10 +184,9 @@ public class SubAgent
     * will be called from subagent native initialization
     * 
     * @param path
-    * @param config
     * @return
     */
-   protected boolean loadPlugin(String path, Config config)
+   protected boolean loadPlugin(String path)
    {
       writeDebugLog(2, "SubAgent.loadPlugin(" + path + ")");
       Plugin plugin = null;
@@ -204,33 +206,33 @@ public class SubAgent
       // register actions
       Action[] _actions = plugin.getActions();
       for(int i = 0; i < _actions.length; i++)
-         actions.put(getActionHash(plugin, _actions[i]), _actions[i]);
+         actions.put(createContributionItemId(plugin, _actions[i]), _actions[i]);
    
       // register paramaters
       Parameter[] _parameters = plugin.getParameters();
       for(int i = 0; i < _parameters.length; i++)
-         parameters.put(getParameterHash(plugin, _parameters[i]), _parameters[i]);
+         parameters.put(createContributionItemId(plugin, _parameters[i]), _parameters[i]);
    
       // register list paramaters
       ListParameter[] _listParameters = plugin.getListParameters();
       for(int i = 0; i < _listParameters.length; i++)
-         listParameters.put(getListParameterHash(plugin, _listParameters[i]), _listParameters[i]);
+         lists.put(createContributionItemId(plugin, _listParameters[i]), _listParameters[i]);
    
       // register push paramaters
       PushParameter[] _pushParameters = plugin.getPushParameters();
       for(int i = 0; i < _pushParameters.length; i++)
-         pushParameters.put(getPushParameterHash(plugin, _pushParameters[i]), _pushParameters[i]);
+         pushParameters.put(createContributionItemId(plugin, _pushParameters[i]), _pushParameters[i]);
    
       // register table paramaters
       TableParameter[] _tableParameters = plugin.getTableParameters();
       for(int i = 0; i < _tableParameters.length; i++)
-         tableParameters.put(getTableParameterHash(plugin, _tableParameters[i]), _tableParameters[i]);
+         tables.put(createContributionItemId(plugin, _tableParameters[i]), _tableParameters[i]);
    
       writeDebugLog(6, "SubAgent.loadPlugin actions=" + actions);
       writeDebugLog(6, "SubAgent.loadPlugin parameters=" + parameters);
-      writeDebugLog(6, "SubAgent.loadPlugin listParameters=" + listParameters);
+      writeDebugLog(6, "SubAgent.loadPlugin listParameters=" + lists);
       writeDebugLog(6, "SubAgent.loadPlugin pushParameters=" + pushParameters);
-      writeDebugLog(6, "SubAgent.loadPlugin tableParameters=" + tableParameters);
+      writeDebugLog(6, "SubAgent.loadPlugin tableParameters=" + tables);
       return true;
    }
 
@@ -306,7 +308,7 @@ public class SubAgent
    {
       try
       {
-         Parameter parameter = getParameter(id);
+         Parameter parameter = parameters.get(id);
          if (parameter != null)
          {
             return parameter.getValue(param);
@@ -327,11 +329,11 @@ public class SubAgent
     * @param id
     * @return
     */
-   public String[] listParameterHandler(final String param, final String id)
+   public String[] listHandler(final String param, final String id)
    {
       try
       {
-         ListParameter listParameter = getListParameter(id);
+         ListParameter listParameter = lists.get(id);
          if (listParameter != null)
          {
             return listParameter.getValue(param);
@@ -352,11 +354,11 @@ public class SubAgent
     * @param id
     * @return
     */
-   public String[][] tableParameterHandler(final String param, final String id)
+   public String[][] tableHandler(final String param, final String id)
    {
       try
       {
-         TableParameter tableParameter = getTableParameter(id);
+         TableParameter tableParameter = tables.get(id);
          if (tableParameter != null)
          {
             writeDebugLog(7, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ") returning " + tableParameter.getValue(param));
@@ -378,154 +380,121 @@ public class SubAgent
     * @param args
     * @param id
     */
-   public void actionHandler(final String param, final String[] args, final String id)
+   public boolean actionHandler(final String param, final String[] args, final String id)
    {
       try
       {
-         Action action = getAction(id);
+         Action action = actions.get(id);
          if (action != null)
          {
-            action.execute(param, args);
+            return action.execute(param, args);
          }
       }
       catch(Throwable e)
       {
          writeDebugLog(6, "JAVA: Exception in action handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
       }
+      return false;
    }
 
    /**
     * @return
     */
-   public String[] getActionIds()
+   public String[] getActions()
    {
-      return actions.keySet().toArray(new String[0]);
+      List<String> list = new ArrayList<String>();
+      for(Entry<String, Action> e : actions.entrySet())
+      {
+         list.add(e.getKey());
+         list.add(e.getValue().getName());
+         list.add(e.getValue().getDescription());
+      }
+      return list.toArray(new String[0]);
    }
 
    /**
     * @return
     */
-   public String[] getParameterIds()
+   public String[] getParameters()
    {
-      return parameters.keySet().toArray(new String[0]);
+      List<String> list = new ArrayList<String>();
+      for(Entry<String, Parameter> e : parameters.entrySet())
+      {
+         list.add(e.getKey());
+         list.add(e.getValue().getName());
+         list.add(e.getValue().getDescription());
+         list.add(Integer.toString(e.getValue().getType().getValue()));
+      }
+      return list.toArray(new String[0]);
    }
 
    /**
     * @return
     */
-   public String[] getListParameterIds()
+   public String[] getLists()
    {
-      return listParameters.keySet().toArray(new String[0]);
+      List<String> list = new ArrayList<String>();
+      for(Entry<String, ListParameter> e : lists.entrySet())
+      {
+         list.add(e.getKey());
+         list.add(e.getValue().getName());
+         list.add(e.getValue().getDescription());
+      }
+      return list.toArray(new String[0]);
    }
 
    /**
     * @return
     */
-   public String[] getPushParameterIds()
+   public String[] getPushParameters()
    {
-      return pushParameters.keySet().toArray(new String[0]);
+      List<String> list = new ArrayList<String>();
+      for(Entry<String, PushParameter> e : pushParameters.entrySet())
+      {
+         list.add(e.getKey());
+         list.add(e.getValue().getName());
+         list.add(e.getValue().getDescription());
+         list.add(Integer.toString(e.getValue().getType().getValue()));
+      }
+      return list.toArray(new String[0]);
    }
 
    /**
     * @return
     */
-   public String[] getTableParameterIds()
+   public String[] getTables()
    {
-      return tableParameters.keySet().toArray(new String[0]);
+      List<String> list = new ArrayList<String>();
+      if (tables.size() > 0)
+      {
+         list.add(Integer.toString(tables.size()));
+         for(Entry<String, TableParameter> e : tables.entrySet())
+         {
+            list.add(e.getKey());
+            list.add(e.getValue().getName());
+            list.add(e.getValue().getDescription());
+            
+            TableColumn[] columns = e.getValue().getColumns();
+            list.add(Integer.toString(columns.length));
+            for(TableColumn tc : columns)
+            {
+               list.add(tc.getName());
+               list.add(tc.getDisplayName());
+               list.add(Integer.toString(tc.getType().getValue()));
+               list.add(tc.isInstance() ? "T" : "F");
+            }
+         }
+      }
+      return list.toArray(new String[0]);
    }
-
-   /**
-    * @param plugin
-    * @param action
-    * @return
-    */
-   protected String getActionHash(Plugin plugin, Action action)
-   {
-      return plugin.getName() + " / " + action.getName();
-   }
-
-   /**
-    * @param id
-    * @return
-    */
-   protected Action getAction(String id)
-   {
-      return actions.get(id);
-   }
-
+   
    /**
     * @param plugin
     * @param parameter
     * @return
     */
-   protected String getParameterHash(Plugin plugin, Parameter parameter)
+   private static String createContributionItemId(Plugin plugin, AgentContributionItem ci)
    {
-      return plugin.getName() + " / " + parameter.getName();
-   }
-
-   /**
-    * @param id
-    * @return
-    */
-   protected Parameter getParameter(String id)
-   {
-      return parameters.get(id);
-   }
-
-   /**
-    * @param plugin
-    * @param listParameter
-    * @return
-    */
-   protected String getListParameterHash(Plugin plugin, ListParameter listParameter)
-   {
-      return plugin.getName() + " / " + listParameter.getName();
-   }
-
-   /**
-    * @param id
-    * @return
-    */
-   protected ListParameter getListParameter(String id)
-   {
-      return listParameters.get(id);
-   }
-
-   /**
-    * @param plugin
-    * @param pushParameter
-    * @return
-    */
-   protected String getPushParameterHash(Plugin plugin, PushParameter pushParameter)
-   {
-      return plugin.getName() + " / " + pushParameter.getName();
-   }
-
-   /**
-    * @param id
-    * @return
-    */
-   protected PushParameter getPushParameter(String id)
-   {
-      return pushParameters.get(id);
-   }
-
-   /**
-    * @param plugin
-    * @param tableParameter
-    * @return
-    */
-   protected String getTableParameterHash(Plugin plugin, TableParameter tableParameter)
-   {
-      return plugin.getName() + " / " + tableParameter.getName();
-   }
-
-   /**
-    * @param id
-    * @return
-    */
-   protected TableParameter getTableParameter(String id)
-   {
-      return tableParameters.get(id);
+      return plugin.getName() + "/" + ci.getName();
    }
 }

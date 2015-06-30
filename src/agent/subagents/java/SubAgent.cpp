@@ -1,6 +1,7 @@
 /* 
  ** Java-Bridge NetXMS subagent
- ** Copyright (C) 2013 TEMPEST a.s.
+ ** Copyright (c) 2013 TEMPEST a.s.
+ ** Copyright (c) 2015 Raden Solutions SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -22,831 +23,587 @@
 
 #include "java_subagent.h"
 #include "SubAgent.h"
-#include "JNIException.h"
 
-namespace org_netxms_agent
+/**
+ * SubAgent class name
+ */
+static const char *s_subAgentClassName = "org/netxms/agent/SubAgent";
+
+/**
+ * SubAgent class reference
+ */
+jclass SubAgent::m_class = NULL;
+
+/**
+ * java.lang.String class reference
+ */
+jclass SubAgent::m_stringClass = NULL;
+
+/**
+ * SubAgent method IDs
+ */
+jmethodID SubAgent::m_actionHandler = NULL;
+jmethodID SubAgent::m_constructor = NULL;
+jmethodID SubAgent::m_getActions = NULL;
+jmethodID SubAgent::m_getLists = NULL;
+jmethodID SubAgent::m_getParameters = NULL;
+jmethodID SubAgent::m_getPushParameters = NULL;
+jmethodID SubAgent::m_getTables = NULL;
+jmethodID SubAgent::m_init = NULL;
+jmethodID SubAgent::m_listHandler = NULL;
+jmethodID SubAgent::m_parameterHandler = NULL;
+jmethodID SubAgent::m_shutdown = NULL;
+jmethodID SubAgent::m_tableHandler = NULL;
+
+/**
+ * Initialization marker
+ */
+bool SubAgent::m_initialized = false;
+
+/**
+ * Class:     org_netxms_agent_SubAgent
+ * Method:    AgentGetParameterArg
+ * Signature: (Ljava/lang/String;I)Ljava/lang/String;
+ */
+static jstring JNICALL Java_org_netxms_agent_SubAgent_getParameterArg(JNIEnv *jenv, jclass jcls, jstring jparam, jint jindex)
 {
-
-   // Static declarations (if any)
-
-   // Returns the current env
-
-   JNIEnv * SubAgent::getCurrentEnv()
+   jstring jresult = NULL;
+   if (jparam)
    {
-      JNIEnv * curEnv = NULL;
-      jint res=this->jvm->AttachCurrentThread(reinterpret_cast<void **>(&curEnv), NULL);
-      if (res != JNI_OK)
+      TCHAR *param = CStringFromJavaString(jenv, jparam);
+      TCHAR arg[MAX_PATH];
+      if (AgentGetParameterArg(param, (int)jindex, arg, MAX_PATH))
       {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not retrieve the current JVM."));
-         throw JNIException();
-
+         jresult = JavaStringFromCString(jenv, arg);
       }
-      return curEnv;
+      free(param);
    }
-   // Destructor
+   return jresult;
+}
 
-   SubAgent::~SubAgent()
+/**
+ * Class:     org_netxms_agent_SubAgent
+ * Method:    sendTrap
+ * Signature: (ILjava/lang/String;[Ljava/lang/String;)V
+ */
+static void JNICALL Java_org_netxms_agent_SubAgent_sendTrap(JNIEnv *jenv, jclass jcls, jint event, jstring jname, jobjectArray jargs)
+{
+   if ((jname != NULL) && (jargs != NULL))
    {
-      JNIEnv * curEnv = NULL;
-      this->jvm->AttachCurrentThread(reinterpret_cast<void **>(&curEnv), NULL);
+      TCHAR *name = CStringFromJavaString(jenv, jname);
+      int numArgs = jenv->GetArrayLength(jargs);
 
-      curEnv->DeleteGlobalRef(this->instance);
-      curEnv->DeleteGlobalRef(this->instanceClass);
-      curEnv->DeleteGlobalRef(this->stringArrayClass);
+      TCHAR **arrayOfString = (TCHAR **)malloc(sizeof(TCHAR *) * numArgs);
+      for(jsize i = 0; i < numArgs; i++)
+      {
+         jstring resString = reinterpret_cast<jstring>(jenv->GetObjectArrayElement(jargs, i));
+         arrayOfString[i] = CStringFromJavaString(jenv, resString);
+         jenv->DeleteLocalRef(resString);
+      }
+      AgentSendTrap2((UINT32)event, name, numArgs, arrayOfString);
+      free(name);
+      for(jsize i = 0; i < numArgs; i++)
+         safe_free(arrayOfString[i]);
+      safe_free(arrayOfString);
    }
-   // Constructors
-   SubAgent::SubAgent(JavaVM * jvm_, jobject jconfig)
+}
+
+/**
+ * Class:     org_netxms_agent_SubAgent
+ * Method:    AgentPushParameterData
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Z
+ */
+static jboolean JNICALL Java_org_netxms_agent_SubAgent_pushParameterData(JNIEnv *jenv, jclass jcls, jstring jname, jstring jvalue)
+{
+   jboolean res = false;
+   if ((jname != NULL) && (jvalue != NULL))
    {
-      jmethodID constructObject = NULL ;
-      jobject localInstance ;
-      jclass localClass ;
-
-      const char *construct="<init>";
-      const char *param="(Lorg/netxms/agent/Config;)V";
-      jvm=jvm_;
-
-      JNIEnv * curEnv = getCurrentEnv();
-
-      localClass = curEnv->FindClass( this->className() ) ;
-      if (localClass == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not get the Class %s"), WideStringFromMBString(this->className()));
-
-         throw JNIException();
-      }
-
-      this->instanceClass = static_cast<jclass>(curEnv->NewGlobalRef(localClass));
-
-      /* localClass is not needed anymore */
-      curEnv->DeleteLocalRef(localClass);
-
-      if (this->instanceClass == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not create a Global Ref of %s"), WideStringFromMBString(this->className()));
-
-         throw JNIException();
-      }
-
-      constructObject = curEnv->GetMethodID( this->instanceClass, construct , param ) ;
-      if(constructObject == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not retrieve the constructor of the class %s with the profile : %s%s"), WideStringFromMBString(this->className()), WideStringFromMBString(construct), WideStringFromMBString(param));
-
-         throw JNIException();
-      }
-
-      localInstance = curEnv->NewObject( this->instanceClass, constructObject, jconfig ) ;
-      if(localInstance == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not instantiate the object %s with the constructor : %s%s"), WideStringFromMBString(this->className()), WideStringFromMBString(construct), WideStringFromMBString(param));
-
-         throw JNIException();
-      }
-
-      this->instance = curEnv->NewGlobalRef(localInstance) ;
-      if(this->instance == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not create a new global ref of %s"), WideStringFromMBString(this->className()));
-
-         throw JNIException();
-      }
-      /* localInstance not needed anymore */
-      curEnv->DeleteLocalRef(localInstance);
-
-      /* Methods ID set to NULL */
-      jbooleaninitID=NULL;
-      voidshutdownID=NULL;
-      jbooleanloadPluginjstringjava_lang_StringID=NULL;
-      jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID=NULL;
-      jobjectArray_listParameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID=NULL;
-      jobjectArray__tableParameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID=NULL;
-      voidactionHandlerjstringjava_lang_StringjobjectArray_java_lang_Stringjava_lang_Stringjstringjava_lang_StringID=NULL;
-
-      jclass localStringArrayClass = curEnv->FindClass("java/lang/String");
-      stringArrayClass = static_cast<jclass>(curEnv->NewGlobalRef(localStringArrayClass));
-      curEnv->DeleteLocalRef(localStringArrayClass);
-      jobjectArray_getActionIdsID=NULL;
-      jobjectgetActionjstringjava_lang_StringID=NULL;
-      jobjectArray_getParameterIdsID=NULL;
-      jobjectgetParameterjstringjava_lang_StringID=NULL;
-      jobjectArray_getListParameterIdsID=NULL;
-      jobjectgetListParameterjstringjava_lang_StringID=NULL;
-      jobjectArray_getPushParameterIdsID=NULL;
-      jobjectgetPushParameterjstringjava_lang_StringID=NULL;
-      jobjectArray_getTableParameterIdsID=NULL;
-      jobjectgetTableParameterjstringjava_lang_StringID=NULL;
-
+      TCHAR *name = CStringFromJavaString(jenv, jname);
+      TCHAR *value = CStringFromJavaString(jenv, jvalue);
+      res = (jboolean)AgentPushParameterData(name, value);
+      free(name);
+      free(value);
    }
+   return res;
+}
 
-   // Generic methods
-
-   void SubAgent::synchronize()
+/**
+ * Class:     org_netxms_agent_SubAgent
+ * Method:    AgentWriteLog
+ * Signature: (ILjava/lang/String;)V
+ */
+static void JNICALL Java_org_netxms_agent_SubAgent_writeLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
+{
+   if (jmessage != NULL)
    {
-      if (getCurrentEnv()->MonitorEnter(instance) != JNI_OK)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Fail to enter monitor."));
-         throw JNIException();
-
-      }
+      TCHAR *message = CStringFromJavaString(jenv, jmessage);
+      AgentWriteLog((int)level, message);
+      free(message);
    }
+}
 
-   void SubAgent::endSynchronize()
+/**
+ * Class:     org_netxms_agent_SubAgent
+ * Method:    AgentWriteDebugLog
+ * Signature: (ILjava/lang/String;)V
+ */
+static void JNICALL Java_org_netxms_agent_SubAgent_writeDebugLog(JNIEnv *jenv, jclass jcls, jint level, jstring jmessage)
+{
+   if (jmessage != NULL)
    {
-      if ( getCurrentEnv()->MonitorExit(instance) != JNI_OK)
-      {
-
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Fail to exit monitor."));
-         throw JNIException();
-      }
+      TCHAR *message = CStringFromJavaString(jenv, jmessage);
+      AgentWriteDebugLog((int)level, message);
+      free(message);
    }
-   // Method(s)
+}
 
-   bool SubAgent::init (jobject jconfig)
+/**
+ * Native methods
+ */
+static JNINativeMethod s_jniNativeMethods[] =
+{
+   { "getParameterArg", "(Ljava/lang/String;I)Ljava/lang/String;", (void *)Java_org_netxms_agent_SubAgent_getParameterArg },
+   { "pushParameterData", "(Ljava/lang/String;Ljava/lang/String;)Z", (void *)Java_org_netxms_agent_SubAgent_pushParameterData },
+   { "sendTrap", "(ILjava/lang/String;[Ljava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_sendTrap },
+   { "writeDebugLog", "(ILjava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_writeDebugLog },
+   { "writeLog", "(ILjava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_writeLog }
+};
+
+/**
+ * Get method ID
+ */
+bool SubAgent::getMethodId(JNIEnv *curEnv, const char *name, const char *profile, jmethodID *id)
+{
+   *id = curEnv->GetMethodID(m_class, name, profile);
+   if (*id == NULL)
    {
-
-      JNIEnv * curEnv = getCurrentEnv();
-
-      if (jbooleaninitID==NULL)  /* Use the cache */
-      {
-         jbooleaninitID = curEnv->GetMethodID(this->instanceClass, "init", "(Lorg/netxms/agent/Config;)Z" ) ;
-         if (jbooleaninitID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method init"));
-
-            throw JNIException();
-         }
-      }
-      jboolean res =  static_cast<jboolean>( curEnv->CallBooleanMethod( this->instance, jbooleaninitID, jconfig ));
-
-      return (res == JNI_TRUE);
-
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Could not retrieve metod %hs%hs for class %hs"), name, profile, s_subAgentClassName);
+      return false;
    }
+   return true;
+}
 
-   void SubAgent::shutdown ()
+/**
+ * Initialize SubAgent class wrapper
+ */
+bool SubAgent::initialize(JNIEnv *curEnv)
+{
+   m_class = CreateClassGlobalRef(curEnv, s_subAgentClassName);
+   if (m_class == NULL)
+      return false;
+
+   m_stringClass = CreateClassGlobalRef(curEnv, "java/lang/String");
+   if (m_stringClass == NULL)
+      return false;
+
+   if (!getMethodId(curEnv, "<init>", "(Lorg/netxms/agent/Config;)V", &m_constructor))
+      return false;
+   if (!getMethodId(curEnv, "actionHandler", "(Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Z", &m_actionHandler))
+      return false;
+   if (!getMethodId(curEnv, "getActions", "()[Ljava/lang/String;", &m_getActions))
+      return false;
+   if (!getMethodId(curEnv, "getLists", "()[Ljava/lang/String;", &m_getLists))
+      return false;
+   if (!getMethodId(curEnv, "getParameters", "()[Ljava/lang/String;", &m_getParameters))
+      return false;
+   if (!getMethodId(curEnv, "getPushParameters", "()[Ljava/lang/String;", &m_getPushParameters))
+      return false;
+   if (!getMethodId(curEnv, "getTables", "()[Ljava/lang/String;", &m_getTables))
+      return false;
+   if (!getMethodId(curEnv, "init", "(Lorg/netxms/agent/Config;)Z", &m_init))
+      return false;
+   if (!getMethodId(curEnv, "listHandler", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;", &m_listHandler))
+      return false;
+   if (!getMethodId(curEnv, "parameterHandler", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;", &m_parameterHandler))
+      return false;
+   if (!getMethodId(curEnv, "shutdown", "()V", &m_shutdown))
+      return false;
+   if (!getMethodId(curEnv, "tableHandler", "(Ljava/lang/String;Ljava/lang/String;)[[Ljava/lang/String;", &m_tableHandler))
+      return false;
+
+   if (curEnv->RegisterNatives(m_class, s_jniNativeMethods, (jint)(sizeof(s_jniNativeMethods) / sizeof(JNINativeMethod))) != 0)
    {
-      JNIEnv * curEnv = getCurrentEnv();
-
-      if (voidshutdownID==NULL)  /* Use the cache */
-      {
-         voidshutdownID = curEnv->GetMethodID(this->instanceClass, "shutdown", "()V" ) ;
-         if (voidshutdownID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method shutdown"));
-
-            throw JNIException();
-         }
-      }
-      curEnv->CallVoidMethod( this->instance, voidshutdownID );
-
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: Failed to register native methods for class %hs"), s_subAgentClassName);
+      return false;
    }
 
-   bool SubAgent::loadPlugin (TCHAR const* path)
+   m_initialized = true;
+   return true;
+}
+
+/**
+ * Create SubAgent object instance.
+ * @param jvm the Java VM
+ * @param config Config object
+ */
+SubAgent *SubAgent::createInstance(JavaVM *jvm, JNIEnv *curEnv, jobject config)
+{
+   if (!m_initialized)
    {
-
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (jbooleanloadPluginjstringjava_lang_StringID==NULL)
-      {
-         jbooleanloadPluginjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "loadPlugin", "(Ljava/lang/String;)Z" ) ;
-         if (jbooleanloadPluginjstringjava_lang_StringID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method loadPlugin"));
-
-            throw JNIException();
-         }
-      }
-      jstring path_ = JavaStringFromCString(curEnv, path);
-      if (path != NULL && path_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java string, memory full."));
-         throw JNIException();
-      }
-
-      jboolean res =  static_cast<jboolean>(curEnv->CallBooleanMethod( this->instance, jbooleanloadPluginjstringjava_lang_StringID ,path_));
-      curEnv->DeleteLocalRef(path_);
-
-      return (res == JNI_TRUE);
-   }
-
-   TCHAR *SubAgent::parameterHandler(TCHAR const* param, TCHAR const* id)
-   {
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID == NULL)
-      {
-         jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "parameterHandler", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
-         if (jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method parameterHandler"));
-
-            throw JNIException();
-         }
-      }
-
-      jstring param_ = JavaStringFromCString(curEnv, param);
-      if (param != NULL && param_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java string, memory full."));
-         throw JNIException();
-      }
-
-      jstring id_ = JavaStringFromCString(curEnv, id);
-      if (id != NULL && id_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java string, memory full."));
-         throw JNIException();
-      }
-
-      jstring res = static_cast<jstring>(curEnv->CallObjectMethod(this->instance, jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID ,param_, id_));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe();
-      }
-
-      curEnv->DeleteLocalRef(param_);
-      curEnv->DeleteLocalRef(id_);
-
-      if (res != NULL)
-      {
-         TCHAR *myStringBuffer = CStringFromJavaString(curEnv, res);
-         AgentWriteLog(NXLOG_DEBUG, _T("SubAgent::parameterHandler(param=%s, id=%s) returning %s"), param, id, myStringBuffer);
-         curEnv->DeleteLocalRef(res);
-         return myStringBuffer;
-      }
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent class was not properly initialized"));
       return NULL;
    }
 
-   TCHAR** SubAgent::listParameterHandler (TCHAR const* param, TCHAR const* id, int *lenRow)
+   jobject object = curEnv->NewObject(m_class, m_constructor, config);
+   if (object == NULL)
    {
-
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (jobjectArray_listParameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID==NULL)
-      {
-         jobjectArray_listParameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "listParameterHandler", "(Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/String;" ) ;
-         if (jobjectArray_listParameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method listParameterHandler"));
-
-            throw JNIException();
-         }
-      }
-      jstring param_ = JavaStringFromCString(curEnv, param);
-      if (param != NULL && param_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
-         throw JNIException();
-      }
-
-      jstring id_ = JavaStringFromCString(curEnv, id);
-      if (id != NULL && id_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
-         throw JNIException();
-      }
-
-      jobjectArray res =  static_cast<jobjectArray>( curEnv->CallObjectMethod( this->instance, jobjectArray_listParameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID ,param_, id_));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe() ;
-      }
-
-      curEnv->DeleteLocalRef(param_);
-      curEnv->DeleteLocalRef(id_);
-
-      if (res != NULL)
-      {
-         * lenRow = curEnv->GetArrayLength(res);
-
-         TCHAR **arrayOfString;
-         arrayOfString = new TCHAR *[*lenRow];
-         for (jsize i = 0; i < *lenRow; i++)
-         {
-            jstring resString = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(res, i));
-            arrayOfString[i] = CStringFromJavaString(curEnv, resString);
-            curEnv->DeleteLocalRef(resString);
-         }
-         curEnv->DeleteLocalRef(res);
-         return arrayOfString;
-      }
+      AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not instantiate SubAgent object"));
       return NULL;
    }
 
-   TCHAR*** SubAgent::tableParameterHandler (TCHAR const* param, TCHAR const* id, int *lenRow, int *lenCol)
+   jobject instance = curEnv->NewGlobalRef(object);
+   curEnv->DeleteLocalRef(object);
+   if (instance == NULL)
    {
+      AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not create a new global reference for SubAgent object"));
+      return NULL;
+   }
 
-      JNIEnv * curEnv = getCurrentEnv();
+   return new SubAgent(jvm, instance);
+}
 
-      /* Use the cache */
-      if (jobjectArray__tableParameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID==NULL)
+/**
+ * Internal constructor
+ */
+SubAgent::SubAgent(JavaVM *jvm, jobject instance)
+{
+   m_jvm = jvm;
+   m_instance = instance;
+}
+
+/**
+ * Destructor
+ */
+SubAgent::~SubAgent()
+{
+   JNIEnv *curEnv = NULL;
+   if (m_jvm->AttachCurrentThread(reinterpret_cast<void **>(&curEnv), NULL) == JNI_OK)
+   {
+      curEnv->DeleteGlobalRef(m_instance);
+   }
+}
+
+/**
+ * Get JNI environment
+ */
+JNIEnv *SubAgent::getCurrentEnv()
+{
+   JNIEnv *curEnv = NULL;
+   jint res = m_jvm->AttachCurrentThread(reinterpret_cast<void **>(&curEnv), NULL);
+   if (res != JNI_OK)
+   {
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::getCurrentEnv(): cannot attach current thrad to JVM"));
+      return NULL;
+   }
+   return curEnv;
+}
+
+/**
+ * Call Java method SubAgent.init()
+ */
+bool SubAgent::init(jobject config)
+{
+   if (!m_initialized)
+      return false;
+
+   JNIEnv *curEnv = getCurrentEnv();
+   if (curEnv == NULL)
+      return false;
+
+   jboolean ret = static_cast<jboolean>(curEnv->CallBooleanMethod(m_instance, m_init, config));
+   m_initialized = (ret == JNI_TRUE);
+   return m_initialized;
+}
+
+/**
+ * Call Java method SubAgent.shutdown()
+ */
+void SubAgent::shutdown()
+{
+   if (!m_initialized)
+      return;
+
+   JNIEnv *curEnv = getCurrentEnv();
+   if (curEnv == NULL)
+      return;
+
+   curEnv->CallVoidMethod(m_instance, m_shutdown);
+}
+
+/**
+ * Call Java method SubAgent.parameterHandler()
+ */
+LONG SubAgent::parameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *value)
+{
+   if (!m_initialized)
+      return SYSINFO_RC_ERROR;
+
+   JNIEnv *curEnv = getCurrentEnv();
+   if (curEnv == NULL)
+      return SYSINFO_RC_ERROR;
+
+   LONG rc = SYSINFO_RC_ERROR;
+   jstring jparam = JavaStringFromCString(curEnv, param);
+   jstring jid = JavaStringFromCString(curEnv, id);
+   if ((jparam == NULL) || (jid == NULL))
+   {
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::parameterHandler: Could not convert C string to Java string"));
+      goto cleanup;
+   }
+
+   jstring ret = static_cast<jstring>(curEnv->CallObjectMethod(m_instance, m_parameterHandler, jparam, jid));
+   if (!curEnv->ExceptionCheck())
+   {
+      if (ret != NULL)
       {
-         jobjectArray__tableParameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "tableParameterHandler", "(Ljava/lang/String;Ljava/lang/String;)[[Ljava/lang/String;" ) ;
-         if (jobjectArray__tableParameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method tableParameterHandler"));
+         CStringFromJavaString(curEnv, ret, value, MAX_RESULT_LENGTH);
+         AgentWriteDebugLog(7, _T("JAVA: SubAgent::parameterHandler(\"%s\", \"%s\"): value \"%s\""), param, id, value);
+         curEnv->DeleteLocalRef(ret);
+         rc = SYSINFO_RC_SUCCESS;
+      }
+      else
+      {
+         rc = SYSINFO_RC_UNSUPPORTED;
+      }
+   }
+   else
+   {
+      AgentWriteDebugLog(5, _T("JAVA: SubAgent::parameterHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
+   }
 
-            throw JNIException();
+cleanup:
+   if (jparam != NULL)
+      curEnv->DeleteLocalRef(jparam);
+   if (jid != NULL)
+      curEnv->DeleteLocalRef(jid);
+   return rc;
+}
+
+/**
+ * Call Java method SubAgent.listHandler()
+ */
+LONG SubAgent::listHandler(const TCHAR *param, const TCHAR *id, StringList *value)
+{
+   if (!m_initialized)
+      return SYSINFO_RC_ERROR;
+
+   JNIEnv *curEnv = getCurrentEnv();
+   if (curEnv == NULL)
+      return SYSINFO_RC_ERROR;
+
+   LONG rc = SYSINFO_RC_ERROR;
+   jstring jparam = JavaStringFromCString(curEnv, param);
+   jstring jid = JavaStringFromCString(curEnv, id);
+   if ((jparam == NULL) || (jid == NULL))
+   {
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::listHandler: Could not convert C string to Java string"));
+      goto cleanup;
+   }
+
+   jobjectArray ret = static_cast<jobjectArray>(curEnv->CallObjectMethod(m_instance, m_listHandler, jparam, jid));
+   if (!curEnv->ExceptionCheck())
+   {
+      if (ret != NULL)
+      {
+         jsize count = curEnv->GetArrayLength(ret);
+         for(jsize i = 0; i < count; i++)
+         {
+            jstring v = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(ret, i));
+            value->addPreallocated(CStringFromJavaString(curEnv, v));
+            curEnv->DeleteLocalRef(v);
+            rc = SYSINFO_RC_SUCCESS;
          }
+         curEnv->DeleteLocalRef(ret);
       }
-      jstring param_ = JavaStringFromCString(curEnv, param);
-      if (param != NULL && param_ == NULL)
+      else
       {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
-         throw JNIException();
+         rc = SYSINFO_RC_UNSUPPORTED;
       }
+   }
+   else
+   {
+      AgentWriteDebugLog(5, _T("JAVA: SubAgent::listHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
+   }
 
-      jstring id_ = JavaStringFromCString(curEnv, id);
-      if (id != NULL && id_ == NULL)
+cleanup:
+   if (jparam != NULL)
+      curEnv->DeleteLocalRef(jparam);
+   if (jid != NULL)
+      curEnv->DeleteLocalRef(jid);
+   return rc;
+}
+
+/**
+ * Call Java method SubAgent.tableHandler()
+ */
+LONG SubAgent::tableHandler(const TCHAR *param, const TCHAR *id, Table *value)
+{
+   if (!m_initialized)
+      return SYSINFO_RC_ERROR;
+
+   JNIEnv *curEnv = getCurrentEnv();
+   if (curEnv == NULL)
+      return SYSINFO_RC_ERROR;
+
+   LONG rc = SYSINFO_RC_ERROR;
+   jstring jparam = JavaStringFromCString(curEnv, param);
+   jstring jid = JavaStringFromCString(curEnv, id);
+   if ((jparam == NULL) || (jid == NULL))
+   {
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::tableHandler: Could not convert C string to Java string"));
+      goto cleanup;
+   }
+
+   jobjectArray ret = static_cast<jobjectArray>(curEnv->CallObjectMethod(m_instance, m_tableHandler, jparam, jid));
+   if (!curEnv->ExceptionCheck())
+   {
+      if (ret != NULL)
       {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
-         throw JNIException();
-      }
-
-      jobjectArray res =  static_cast<jobjectArray>( curEnv->CallObjectMethod( this->instance, jobjectArray__tableParameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID ,param_, id_));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe() ;
-      }
-
-      curEnv->DeleteLocalRef(param_);
-      curEnv->DeleteLocalRef(id_);
-
-      if (res != NULL)
-      {
-         * lenRow = curEnv->GetArrayLength(res);
-
-         TCHAR ***arrayOfString;
-         arrayOfString = new TCHAR **[*lenRow];
-         /* Line of the array */
-         for (jsize i = 0; i < *lenRow; i++)
+         jsize count = curEnv->GetArrayLength(ret);
+         for(jsize i = 0; i < count; i++)
          {
-            jobjectArray resStringLine = reinterpret_cast<jobjectArray>(curEnv->GetObjectArrayElement(res, i));
-            *lenCol = curEnv->GetArrayLength(resStringLine);
-            arrayOfString[i]=new TCHAR*[*lenCol];
-            for (jsize j = 0; j < *lenCol; j++)
+            jobjectArray row = reinterpret_cast<jobjectArray>(curEnv->GetObjectArrayElement(ret, i));
+            if (row != NULL)
             {
-               jstring resString = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(resStringLine, j));
-               arrayOfString[i][j] = CStringFromJavaString(curEnv, resString);
-               curEnv->DeleteLocalRef(resString);
+               value->addRow();
+               jsize columns = curEnv->GetArrayLength(row);
+               for(jsize j = 0; j < columns; j++)
+               {
+                  jstring s = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(row, j));
+                  value->setPreallocated(j, CStringFromJavaString(curEnv, s));
+                  curEnv->DeleteLocalRef(s);
+               }
+               curEnv->DeleteLocalRef(row);
             }
-            curEnv->DeleteLocalRef(resStringLine);
          }
-
-         curEnv->DeleteLocalRef(res);
-         return arrayOfString;
-      }
-      return NULL;
-   }
-
-   void SubAgent::actionHandler (TCHAR const* param, TCHAR const* const* args, int argsSize, TCHAR const* id)
-   {
-
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (voidactionHandlerjstringjava_lang_StringjobjectArray_java_lang_Stringjava_lang_Stringjstringjava_lang_StringID==NULL)
-      {
-         voidactionHandlerjstringjava_lang_StringjobjectArray_java_lang_Stringjava_lang_Stringjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "actionHandler", "(Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)V" ) ;
-         if (voidactionHandlerjstringjava_lang_StringjobjectArray_java_lang_Stringjava_lang_Stringjstringjava_lang_StringID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method actionHandler"));
-
-            throw JNIException();
-         }
-      }
-      jstring param_ = JavaStringFromCString(curEnv, param);
-      if (param != NULL && param_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
-         throw JNIException();
-      }
-
-      jclass stringArrayClass = curEnv->FindClass("java/lang/String");
-
-      // create java array of strings.
-      jobjectArray args_ = curEnv->NewObjectArray( argsSize, stringArrayClass, NULL);
-      if (args_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not allocate Java string array, memory full."));
-         throw JNIException();
-      }
-
-      // convert each TCHAR * to java strings and fill the java array.
-      for ( int i = 0; i < argsSize; i++)
-      {
-         jstring TempString = JavaStringFromCString(curEnv, args[i]);
-         if (TempString == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
-            throw JNIException();
-         }
-
-         curEnv->SetObjectArrayElement( args_, i, TempString);
-
-         // avoid keeping reference on to many strings
-         curEnv->DeleteLocalRef(TempString);
-      }
-      jstring id_ = JavaStringFromCString(curEnv, id);
-      if (id != NULL && id_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
-         throw JNIException();
-      }
-
-      curEnv->CallVoidMethod( this->instance, voidactionHandlerjstringjava_lang_StringjobjectArray_java_lang_Stringjava_lang_Stringjstringjava_lang_StringID ,param_, args_, id_);
-      curEnv->DeleteLocalRef(stringArrayClass);
-      curEnv->DeleteLocalRef(param_);
-      curEnv->DeleteLocalRef(args_);
-      curEnv->DeleteLocalRef(id_);
-
-   }
-
-   TCHAR** SubAgent::getActionIds (int *lenRow)
-   {
-
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (jobjectArray_getActionIdsID==NULL)
-      {
-         jobjectArray_getActionIdsID = curEnv->GetMethodID(this->instanceClass, "getActionIds", "()[Ljava/lang/String;" ) ;
-         if (jobjectArray_getActionIdsID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method getActionIds"));
-
-            throw JNIException();
-         }
-      }
-      jobjectArray res =  static_cast<jobjectArray>( curEnv->CallObjectMethod( this->instance, jobjectArray_getActionIdsID ));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe() ;
-      }
-      if (res != NULL)
-      {
-         * lenRow = curEnv->GetArrayLength(res);
-
-         TCHAR **arrayOfString;
-         arrayOfString = new TCHAR *[*lenRow];
-         for (jsize i = 0; i < *lenRow; i++)
-         {
-            jstring resString = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(res, i));
-            arrayOfString[i] = CStringFromJavaString(curEnv, resString);
-            curEnv->DeleteLocalRef(resString);
-         }
-
-         curEnv->DeleteLocalRef(res);
-         return arrayOfString;
-      }
-      return NULL;
-   }
-
-   Action SubAgent::getAction (TCHAR const* id)
-   {
-
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (jobjectgetActionjstringjava_lang_StringID==NULL)
-      {
-         jobjectgetActionjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "getAction", "(Ljava/lang/String;)Lorg/netxms/agent/Action;" ) ;
-         if (jobjectgetActionjstringjava_lang_StringID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method getAction"));
-
-            throw JNIException();
-         }
-      }
-      jstring id_ = JavaStringFromCString(curEnv, id);
-      if (id != NULL && id_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
-         throw JNIException();
-      }
-
-      jobject res =  static_cast<jobject>( curEnv->CallObjectMethod( this->instance, jobjectgetActionjstringjava_lang_StringID ,id_));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe() ;
-      }
-      if (res != NULL)
-      {
-
-         return *(new Action(jvm, res));
+         curEnv->DeleteLocalRef(ret);
+         rc = SYSINFO_RC_SUCCESS;
       }
       else
       {
-         curEnv->DeleteLocalRef(res);
-         return NULL;
+         rc = SYSINFO_RC_UNSUPPORTED;
       }
    }
-
-   TCHAR** SubAgent::getParameterIds (int *lenRow)
+   else
    {
+      AgentWriteDebugLog(5, _T("JAVA: SubAgent::tableHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
+   }
 
-      JNIEnv * curEnv = getCurrentEnv();
+cleanup:
+   if (jparam != NULL)
+      curEnv->DeleteLocalRef(jparam);
+   if (jid != NULL)
+      curEnv->DeleteLocalRef(jid);
+   return rc;
 
-      /* Use the cache */
-      if (jobjectArray_getParameterIdsID==NULL)
+   /*
+   if (res != NULL)
+   {
+      * lenRow = curEnv->GetArrayLength(res);
+
+      TCHAR ***arrayOfString;
+      arrayOfString = new TCHAR **[*lenRow];
+      for (jsize i = 0; i < *lenRow; i++)
       {
-         jobjectArray_getParameterIdsID = curEnv->GetMethodID(this->instanceClass, "getParameterIds", "()[Ljava/lang/String;" ) ;
-         if (jobjectArray_getParameterIdsID == NULL)
+         jobjectArray resStringLine = reinterpret_cast<jobjectArray>(curEnv->GetObjectArrayElement(res, i));
+         *lenCol = curEnv->GetArrayLength(resStringLine);
+         arrayOfString[i]=new TCHAR*[*lenCol];
+         for (jsize j = 0; j < *lenCol; j++)
          {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method getParameterIds"));
-
-            throw JNIException();
-         }
-      }
-      jobjectArray res =  static_cast<jobjectArray>( curEnv->CallObjectMethod( this->instance, jobjectArray_getParameterIdsID ));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe() ;
-      }
-      if (res != NULL)
-      {
-         * lenRow = curEnv->GetArrayLength(res);
-
-         TCHAR **arrayOfString;
-         arrayOfString = new TCHAR *[*lenRow];
-         for (jsize i = 0; i < *lenRow; i++)
-         {
-            jstring resString = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(res, i));
-            arrayOfString[i] = CStringFromJavaString(curEnv, resString);
+            jstring resString = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(resStringLine, j));
+            arrayOfString[i][j] = CStringFromJavaString(curEnv, resString);
             curEnv->DeleteLocalRef(resString);
          }
-
-         curEnv->DeleteLocalRef(res);
-         return arrayOfString;
+         curEnv->DeleteLocalRef(resStringLine);
       }
+
+      curEnv->DeleteLocalRef(res);
+      return arrayOfString;
+   }
+   return NULL;
+   */
+}
+
+/**
+ * Call Java method SubAgent.actionHandler()
+ */
+LONG SubAgent::actionHandler(const TCHAR *action, StringList *args, const TCHAR *id)
+{
+   if (!m_initialized)
+      return SYSINFO_RC_ERROR;
+
+   JNIEnv *curEnv = getCurrentEnv();
+   if (curEnv == NULL)
+      return SYSINFO_RC_ERROR;
+
+   LONG rc = SYSINFO_RC_ERROR;
+   jstring jaction = JavaStringFromCString(curEnv, action);
+   jstring jid = JavaStringFromCString(curEnv, id);
+   jobjectArray jargs = curEnv->NewObjectArray(args->size(), m_stringClass, NULL);
+   if ((jaction == NULL) || (jid == NULL))
+   {
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::actionHandler: Could not convert C string to Java string"));
+      goto cleanup;
+   }
+   if (jargs == NULL)
+   {
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::actionHandler: cannot allocate Java string array"));
+      goto cleanup;
+   }
+
+   // convert arguments to java string array
+   for(int i = 0; i < args->size(); i++)
+   {
+      jstring s = JavaStringFromCString(curEnv, args->get(i));
+      if (s != NULL)
+      {
+         curEnv->SetObjectArrayElement(jargs, i, s);
+         curEnv->DeleteLocalRef(s);
+      }
+   }
+
+   jboolean ret = static_cast<jboolean>(curEnv->CallBooleanMethod(m_instance, m_actionHandler, jaction, jargs, jid));
+   if (!curEnv->ExceptionCheck())
+   {
+      rc = ret ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
+   }
+   else
+   {
+      AgentWriteDebugLog(5, _T("JAVA: SubAgent::actionHandler(\"%s\", \"%s\"): exception in Java code"), action, id);
+   }
+
+cleanup:
+   if (jaction != NULL)
+      curEnv->DeleteLocalRef(jaction);
+   if (jid != NULL)
+      curEnv->DeleteLocalRef(jid);
+   if (jargs != NULL)
+      curEnv->DeleteLocalRef(jargs);
+   return rc;
+}
+
+/**
+ * Generic getter for agent contribution items
+ */
+StringList *SubAgent::getContributionItems(jmethodID method, const TCHAR *methodName)
+{
+   if (!m_initialized)
       return NULL;
-   }
 
-   Parameter *SubAgent::getParameter(TCHAR const* id)
-   {
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (jobjectgetParameterjstringjava_lang_StringID==NULL)
-      {
-         jobjectgetParameterjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "getParameter", "(Ljava/lang/String;)Lorg/netxms/agent/Parameter;" ) ;
-         if (jobjectgetParameterjstringjava_lang_StringID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method getParameter"));
-
-            throw JNIException();
-         }
-      }
-      jstring id_ = JavaStringFromCString(curEnv, id);
-      if (id != NULL && id_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
-         throw JNIException();
-      }
-
-      jobject res =  static_cast<jobject>(curEnv->CallObjectMethod(instance, jobjectgetParameterjstringjava_lang_StringID ,id_));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe();
-      }
-      if (res != NULL)
-      {
-         return new Parameter(jvm, res);
-      }
+   JNIEnv *curEnv = getCurrentEnv();
+   if (curEnv == NULL)
       return NULL;
-   }
 
-   TCHAR **SubAgent::getListParameterIds(int *lenRow)
+   StringList *list = NULL;
+   jobjectArray a = static_cast<jobjectArray>(curEnv->CallObjectMethod(m_instance, method));
+   if (!curEnv->ExceptionCheck())
    {
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (jobjectArray_getListParameterIdsID==NULL)
-      {
-         jobjectArray_getListParameterIdsID = curEnv->GetMethodID(this->instanceClass, "getListParameterIds", "()[Ljava/lang/String;" ) ;
-         if (jobjectArray_getListParameterIdsID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method getListParameterIds"));
-
-            throw JNIException();
-         }
-      }
-      jobjectArray res =  static_cast<jobjectArray>( curEnv->CallObjectMethod( this->instance, jobjectArray_getListParameterIdsID ));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe() ;
-      }
-      if (res != NULL)
-      {
-         * lenRow = curEnv->GetArrayLength(res);
-
-         TCHAR **arrayOfString;
-         arrayOfString = new TCHAR *[*lenRow];
-         for (jsize i = 0; i < *lenRow; i++)
-         {
-            jstring resString = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(res, i));
-            arrayOfString[i] = CStringFromJavaString(curEnv, resString);
-            curEnv->DeleteLocalRef(resString);
-         }
-         curEnv->DeleteLocalRef(res);
-         return arrayOfString;
-      }
-      return NULL;
+      list = StringListFromJavaArray(curEnv, a);
+      curEnv->DeleteLocalRef(a);
    }
-
-   ListParameter SubAgent::getListParameter (TCHAR const* id)
+   else
    {
-
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (jobjectgetListParameterjstringjava_lang_StringID==NULL)
-      {
-         jobjectgetListParameterjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "getListParameter", "(Ljava/lang/String;)Lorg/netxms/agent/ListParameter;" ) ;
-         if (jobjectgetListParameterjstringjava_lang_StringID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method getListParameter"));
-
-            throw JNIException();
-         }
-      }
-      jstring id_ = JavaStringFromCString(curEnv, id);
-      if (id != NULL && id_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
-         throw JNIException();
-      }
-
-      jobject res =  static_cast<jobject>( curEnv->CallObjectMethod( this->instance, jobjectgetListParameterjstringjava_lang_StringID ,id_));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe() ;
-      }
-      if (res != NULL)
-      {
-
-         return *(new ListParameter(jvm, res));
-      }
-      else
-      {
-         curEnv->DeleteLocalRef(res);
-         return NULL;
-      }
+      AgentWriteDebugLog(5, _T("JAVA: SubAgent::%s(): exception in Java code"), methodName);
    }
-
-   TCHAR** SubAgent::getPushParameterIds (int *lenRow)
-   {
-
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (jobjectArray_getPushParameterIdsID==NULL)
-      {
-         jobjectArray_getPushParameterIdsID = curEnv->GetMethodID(this->instanceClass, "getPushParameterIds", "()[Ljava/lang/String;" ) ;
-         if (jobjectArray_getPushParameterIdsID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method getPushParameterIds"));
-
-            throw JNIException();
-         }
-      }
-      jobjectArray res =  static_cast<jobjectArray>( curEnv->CallObjectMethod( this->instance, jobjectArray_getPushParameterIdsID ));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe() ;
-      }
-      if (res != NULL)
-      {
-         * lenRow = curEnv->GetArrayLength(res);
-
-         TCHAR **arrayOfString;
-         arrayOfString = new TCHAR *[*lenRow];
-         for (jsize i = 0; i < *lenRow; i++)
-         {
-            jstring resString = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(res, i));
-            arrayOfString[i] = CStringFromJavaString(curEnv, resString);
-            curEnv->DeleteLocalRef(resString);
-         }
-
-         curEnv->DeleteLocalRef(res);
-         return arrayOfString;
-      }
-      return NULL;
-   }
-
-   PushParameter SubAgent::getPushParameter (TCHAR const* id)
-   {
-
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (jobjectgetPushParameterjstringjava_lang_StringID==NULL)
-      {
-         jobjectgetPushParameterjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "getPushParameter", "(Ljava/lang/String;)Lorg/netxms/agent/PushParameter;" ) ;
-         if (jobjectgetPushParameterjstringjava_lang_StringID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method getPushParameter"));
-
-            throw JNIException();
-         }
-      }
-      jstring id_ = JavaStringFromCString(curEnv, id);
-      if (id != NULL && id_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
-         throw JNIException();
-      }
-
-      jobject res =  static_cast<jobject>( curEnv->CallObjectMethod( this->instance, jobjectgetPushParameterjstringjava_lang_StringID ,id_));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe() ;
-      }
-      if (res != NULL)
-      {
-
-         return *(new PushParameter(jvm, res));
-      }
-      else
-      {
-         curEnv->DeleteLocalRef(res);
-         return NULL;
-      }
-   }
-
-   TCHAR** SubAgent::getTableParameterIds (int *lenRow)
-   {
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (jobjectArray_getTableParameterIdsID==NULL)
-      {
-         jobjectArray_getTableParameterIdsID = curEnv->GetMethodID(this->instanceClass, "getTableParameterIds", "()[Ljava/lang/String;" ) ;
-         if (jobjectArray_getTableParameterIdsID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method getTableParameterIds"));
-
-            throw JNIException();
-         }
-      }
-      jobjectArray res =  static_cast<jobjectArray>( curEnv->CallObjectMethod( this->instance, jobjectArray_getTableParameterIdsID ));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe() ;
-      }
-      if (res != NULL)
-      {
-         * lenRow = curEnv->GetArrayLength(res);
-
-         TCHAR **arrayOfString;
-         arrayOfString = new TCHAR *[*lenRow];
-         for (jsize i = 0; i < *lenRow; i++)
-         {
-            jstring resString = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(res, i));
-            arrayOfString[i] = CStringFromJavaString(curEnv, resString);
-            curEnv->DeleteLocalRef(resString);
-         }
-         curEnv->DeleteLocalRef(res);
-         return arrayOfString;
-      }
-      return NULL;
-   }
-
-   TableParameter SubAgent::getTableParameter(TCHAR const* id)
-   {
-
-      JNIEnv * curEnv = getCurrentEnv();
-
-      /* Use the cache */
-      if (jobjectgetTableParameterjstringjava_lang_StringID==NULL)
-      {
-         jobjectgetTableParameterjstringjava_lang_StringID = curEnv->GetMethodID(this->instanceClass, "getTableParameter", "(Ljava/lang/String;)Lorg/netxms/agent/TableParameter;" ) ;
-         if (jobjectgetTableParameterjstringjava_lang_StringID == NULL)
-         {
-            AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not access to the method getTableParameter"));
-
-            throw JNIException();
-         }
-      }
-      jstring id_ = JavaStringFromCString(curEnv, id);
-      if (id != NULL && id_ == NULL)
-      {
-         AgentWriteLog(NXLOG_ERROR, _T("SubAgent: Could not convert C string to Java  string, memory full."));
-         throw JNIException();
-      }
-
-      jobject res =  static_cast<jobject>( curEnv->CallObjectMethod( this->instance, jobjectgetTableParameterjstringjava_lang_StringID ,id_));
-      if (curEnv->ExceptionCheck())
-      {
-         curEnv->ExceptionDescribe() ;
-      }
-      curEnv->DeleteLocalRef(id_);
-      if (res != NULL)
-      {
-         return *(new TableParameter(jvm, res));
-      }
-      return NULL;
-   }
+   return list;
 }
