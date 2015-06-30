@@ -158,7 +158,7 @@ public class UserManagementView extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-			   session.lockUserDatabase();
+				session.lockUserDatabase();
 				databaseLocked = true;
 				runInUIThread(new Runnable() {
 					@Override
@@ -286,7 +286,7 @@ public class UserManagementView extends ViewPart
 					{
 						try
 						{
-						   session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
+							session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
 						}
 						catch(Exception e)
 						{
@@ -379,7 +379,7 @@ public class UserManagementView extends ViewPart
          mgr.add(actionDetachUserFromLDAP);
       
 		final Object firstElement = selection.getFirstElement();
-		if (firstElement instanceof User)
+		if (firstElement instanceof User && ! containLDAP)
 		{
 			mgr.add(actionChangePassword);
 		}
@@ -414,7 +414,7 @@ public class UserManagementView extends ViewPart
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-				   session.unlockUserDatabase();
+					session.unlockUserDatabase();
 				}
 
 				@Override
@@ -497,7 +497,7 @@ public class UserManagementView extends ViewPart
 			{
 				for(Object object : selection.toList())
 				{
-				   session.deleteUserDBObject(((AbstractUserObject)object).getId());
+					session.deleteUserDBObject(((AbstractUserObject)object).getId());
 				}
 			}
 

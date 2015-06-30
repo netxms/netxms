@@ -379,7 +379,7 @@ public class UserManagementView extends ViewPart
          mgr.add(actionDetachUserFromLDAP);
       
 		final Object firstElement = selection.getFirstElement();
-		if (firstElement instanceof User)
+		if (firstElement instanceof User && ! containLDAP)
 		{
 			mgr.add(actionChangePassword);
 		}

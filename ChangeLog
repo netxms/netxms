@@ -4,6 +4,7 @@
 
 - Fixed LDAP authentication issues with Active Directory
 - Java subagent improved
+- Fixed issues: #843
 
 
 *
