@@ -162,7 +162,13 @@ public class DemoPlugin extends Plugin
             {
                return configValue;
             }
-         } 
+         },
+         new ParameterAdapter("Demo.Error", "Always returns error", ParameterType.INT) {
+            public String getValue(String argument)
+            {
+               return new String[] { "abc" }[1];
+            }
+         }, 
       };
    }
 

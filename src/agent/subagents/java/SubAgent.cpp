@@ -369,6 +369,7 @@ LONG SubAgent::parameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *valu
    else
    {
       AgentWriteDebugLog(5, _T("JAVA: SubAgent::parameterHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
+      curEnv->ExceptionClear();
    }
 
 cleanup:
@@ -423,6 +424,7 @@ LONG SubAgent::listHandler(const TCHAR *param, const TCHAR *id, StringList *valu
    else
    {
       AgentWriteDebugLog(5, _T("JAVA: SubAgent::listHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
+      curEnv->ExceptionClear();
    }
 
 cleanup:
@@ -487,6 +489,7 @@ LONG SubAgent::tableHandler(const TCHAR *param, const TCHAR *id, Table *value)
    else
    {
       AgentWriteDebugLog(5, _T("JAVA: SubAgent::tableHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
+      curEnv->ExceptionClear();
    }
 
 cleanup:
@@ -495,33 +498,6 @@ cleanup:
    if (jid != NULL)
       curEnv->DeleteLocalRef(jid);
    return rc;
-
-   /*
-   if (res != NULL)
-   {
-      * lenRow = curEnv->GetArrayLength(res);
-
-      TCHAR ***arrayOfString;
-      arrayOfString = new TCHAR **[*lenRow];
-      for (jsize i = 0; i < *lenRow; i++)
-      {
-         jobjectArray resStringLine = reinterpret_cast<jobjectArray>(curEnv->GetObjectArrayElement(res, i));
-         *lenCol = curEnv->GetArrayLength(resStringLine);
-         arrayOfString[i]=new TCHAR*[*lenCol];
-         for (jsize j = 0; j < *lenCol; j++)
-         {
-            jstring resString = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(resStringLine, j));
-            arrayOfString[i][j] = CStringFromJavaString(curEnv, resString);
-            curEnv->DeleteLocalRef(resString);
-         }
-         curEnv->DeleteLocalRef(resStringLine);
-      }
-
-      curEnv->DeleteLocalRef(res);
-      return arrayOfString;
-   }
-   return NULL;
-   */
 }
 
 /**
@@ -570,6 +546,7 @@ LONG SubAgent::actionHandler(const TCHAR *action, StringList *args, const TCHAR 
    else
    {
       AgentWriteDebugLog(5, _T("JAVA: SubAgent::actionHandler(\"%s\", \"%s\"): exception in Java code"), action, id);
+      curEnv->ExceptionClear();
    }
 
 cleanup:
@@ -604,6 +581,7 @@ StringList *SubAgent::getContributionItems(jmethodID method, const TCHAR *method
    else
    {
       AgentWriteDebugLog(5, _T("JAVA: SubAgent::%s(): exception in Java code"), methodName);
+      curEnv->ExceptionClear();
    }
    return list;
 }

@@ -95,13 +95,13 @@ public class SubAgent
             }
             catch(Throwable e)
             {
-               AgentWriteLog(LogLevel.ERROR, "JAVA: Exception in loadPlugin: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+               writeLog(LogLevel.ERROR, "JAVA: Exception in loadPlugin: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
             }
          }
       }
       else
       {
-         AgentWriteLog(LogLevel.WARNING, "No plugins defined in Java section");
+         writeLog(LogLevel.WARNING, "No plugins defined in Java section");
       }
    }
 
@@ -135,14 +135,36 @@ public class SubAgent
 
    protected static native void writeLog(int level, String message);
 
-   public static void AgentWriteLog(LogLevel level, String message)
+   public static native void writeDebugLog(int level, String message);
+
+   /*===== end of native methods exposed by agent =====*/
+
+   /**
+    * Wrapper for native writeLog call
+    * 
+    * @param level
+    * @param message
+    */
+   public static void writeLog(LogLevel level, String message)
    {
       writeLog(level.getValue(), message);
    }
 
-   public static native void writeDebugLog(int level, String message);
+   /**
+    * Write exception's stack trace to debug log
+    * 
+    * @param level
+    * @param prefix
+    * @param e
+    */
+   public static void writeDebugLog(int level, String prefix, Throwable e)
+   {
+      for(StackTraceElement s : e.getStackTrace())
+      {
+         writeDebugLog(level, prefix + s.toString());
+      }
+   }
    
-   /*===== end of native methods exposed by agent =====*/
 
    /**
     * Initialize (to be called from native subagent)
@@ -196,7 +218,7 @@ public class SubAgent
       }
       catch(Throwable e)
       {
-         AgentWriteLog(LogLevel.WARNING, "Failed to load plugin " + path + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         writeLog(LogLevel.WARNING, "Failed to load plugin " + path + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
       }
       
       if (plugin == null)
@@ -304,7 +326,7 @@ public class SubAgent
     * @param id
     * @return
     */
-   public String parameterHandler(final String param, final String id)
+   public String parameterHandler(final String param, final String id) throws Throwable
    {
       try
       {
@@ -318,7 +340,8 @@ public class SubAgent
       catch(Throwable e)
       {
          writeDebugLog(6, "JAVA: Exception in parameter handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-         return null;
+         writeDebugLog(6, "JAVA:   ", e);
+         throw e;
       }
    }
 
@@ -329,7 +352,7 @@ public class SubAgent
     * @param id
     * @return
     */
-   public String[] listHandler(final String param, final String id)
+   public String[] listHandler(final String param, final String id) throws Throwable
    {
       try
       {
@@ -343,7 +366,8 @@ public class SubAgent
       catch(Throwable e)
       {
          writeDebugLog(6, "JAVA: Exception in list handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-         return null;
+         writeDebugLog(6, "JAVA:   ", e);
+         throw e;
       }
    }
 
@@ -354,7 +378,7 @@ public class SubAgent
     * @param id
     * @return
     */
-   public String[][] tableHandler(final String param, final String id)
+   public String[][] tableHandler(final String param, final String id) throws Throwable
    {
       try
       {
@@ -369,7 +393,8 @@ public class SubAgent
       catch(Throwable e)
       {
          writeDebugLog(6, "JAVA: Exception in table handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-         return null;
+         writeDebugLog(6, "JAVA:   ", e);
+         throw e;
       }
    }
 
@@ -393,6 +418,7 @@ public class SubAgent
       catch(Throwable e)
       {
          writeDebugLog(6, "JAVA: Exception in action handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         writeDebugLog(6, "JAVA:   ", e);
       }
       return false;
    }
