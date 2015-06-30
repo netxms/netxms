@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0-M5], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0-RC1], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -916,18 +916,15 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 			AC_MSG_RESULT(no)
 		])
 
-	check_substr "$COMPONENTS" "java"
-	if test $? != 0; then
-		AC_MSG_CHECKING(whether C++ compiler accepts -fno-exceptions)
-		OLD_CXXFLAGS="$CXXFLAGS"
-		CXXFLAGS="$CXXFLAGS -fno-exceptions"
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-			[ AC_MSG_RESULT(yes) ], 
-			[ 
-				CXXFLAGS="$OLD_CXXFLAGS"
-				AC_MSG_RESULT(no)
-			])
-	fi
+	AC_MSG_CHECKING(whether C++ compiler accepts -fno-exceptions)
+	OLD_CXXFLAGS="$CXXFLAGS"
+	CXXFLAGS="$CXXFLAGS -fno-exceptions"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS"
+			AC_MSG_RESULT(no)
+		])
 
 	AC_LANG_POP([C++])
 
@@ -2863,6 +2860,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/java/java/src/main/java/org/Makefile
 	src/agent/subagents/java/java/src/main/java/org/netxms/Makefile
 	src/agent/subagents/java/java/src/main/java/org/netxms/agent/Makefile
+	src/agent/subagents/java/java/src/main/java/org/netxms/agent/adapters/Makefile
 	src/agent/subagents/java/sample/Makefile
 	src/agent/subagents/java/sample/src/Makefile
 	src/agent/subagents/java/sample/src/main/Makefile

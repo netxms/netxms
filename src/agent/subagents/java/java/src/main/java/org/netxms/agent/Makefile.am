@@ -1,5 +1,8 @@
+SUBDIRS = adapters
+
 EXTRA_DIST = \
 	Action.java \
+	AgentContributionItem.java \
 	ConfigEntry.java \
 	Config.java \
 	ListParameter.java \

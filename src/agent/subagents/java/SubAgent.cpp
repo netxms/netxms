@@ -345,34 +345,34 @@ LONG SubAgent::parameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *valu
    LONG rc = SYSINFO_RC_ERROR;
    jstring jparam = JavaStringFromCString(curEnv, param);
    jstring jid = JavaStringFromCString(curEnv, id);
-   if ((jparam == NULL) || (jid == NULL))
+   if ((jparam != NULL) && (jid != NULL))
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::parameterHandler: Could not convert C string to Java string"));
-      goto cleanup;
-   }
-
-   jstring ret = static_cast<jstring>(curEnv->CallObjectMethod(m_instance, m_parameterHandler, jparam, jid));
-   if (!curEnv->ExceptionCheck())
-   {
-      if (ret != NULL)
+      jstring ret = static_cast<jstring>(curEnv->CallObjectMethod(m_instance, m_parameterHandler, jparam, jid));
+      if (!curEnv->ExceptionCheck())
       {
-         CStringFromJavaString(curEnv, ret, value, MAX_RESULT_LENGTH);
-         AgentWriteDebugLog(7, _T("JAVA: SubAgent::parameterHandler(\"%s\", \"%s\"): value \"%s\""), param, id, value);
-         curEnv->DeleteLocalRef(ret);
-         rc = SYSINFO_RC_SUCCESS;
+         if (ret != NULL)
+         {
+            CStringFromJavaString(curEnv, ret, value, MAX_RESULT_LENGTH);
+            AgentWriteDebugLog(7, _T("JAVA: SubAgent::parameterHandler(\"%s\", \"%s\"): value \"%s\""), param, id, value);
+            curEnv->DeleteLocalRef(ret);
+            rc = SYSINFO_RC_SUCCESS;
+         }
+         else
+         {
+            rc = SYSINFO_RC_UNSUPPORTED;
+         }
       }
       else
       {
-         rc = SYSINFO_RC_UNSUPPORTED;
+         AgentWriteDebugLog(5, _T("JAVA: SubAgent::parameterHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
+         curEnv->ExceptionClear();
       }
    }
    else
    {
-      AgentWriteDebugLog(5, _T("JAVA: SubAgent::parameterHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
-      curEnv->ExceptionClear();
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::parameterHandler: Could not convert C string to Java string"));
    }
 
-cleanup:
    if (jparam != NULL)
       curEnv->DeleteLocalRef(jparam);
    if (jid != NULL)
@@ -395,39 +395,39 @@ LONG SubAgent::listHandler(const TCHAR *param, const TCHAR *id, StringList *valu
    LONG rc = SYSINFO_RC_ERROR;
    jstring jparam = JavaStringFromCString(curEnv, param);
    jstring jid = JavaStringFromCString(curEnv, id);
-   if ((jparam == NULL) || (jid == NULL))
+   if ((jparam != NULL) && (jid != NULL))
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::listHandler: Could not convert C string to Java string"));
-      goto cleanup;
-   }
-
-   jobjectArray ret = static_cast<jobjectArray>(curEnv->CallObjectMethod(m_instance, m_listHandler, jparam, jid));
-   if (!curEnv->ExceptionCheck())
-   {
-      if (ret != NULL)
+      jobjectArray ret = static_cast<jobjectArray>(curEnv->CallObjectMethod(m_instance, m_listHandler, jparam, jid));
+      if (!curEnv->ExceptionCheck())
       {
-         jsize count = curEnv->GetArrayLength(ret);
-         for(jsize i = 0; i < count; i++)
+         if (ret != NULL)
          {
-            jstring v = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(ret, i));
-            value->addPreallocated(CStringFromJavaString(curEnv, v));
-            curEnv->DeleteLocalRef(v);
-            rc = SYSINFO_RC_SUCCESS;
+            jsize count = curEnv->GetArrayLength(ret);
+            for(jsize i = 0; i < count; i++)
+            {
+               jstring v = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(ret, i));
+               value->addPreallocated(CStringFromJavaString(curEnv, v));
+               curEnv->DeleteLocalRef(v);
+               rc = SYSINFO_RC_SUCCESS;
+            }
+            curEnv->DeleteLocalRef(ret);
          }
-         curEnv->DeleteLocalRef(ret);
+         else
+         {
+            rc = SYSINFO_RC_UNSUPPORTED;
+         }
       }
       else
       {
-         rc = SYSINFO_RC_UNSUPPORTED;
+         AgentWriteDebugLog(5, _T("JAVA: SubAgent::listHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
+         curEnv->ExceptionClear();
       }
    }
    else
    {
-      AgentWriteDebugLog(5, _T("JAVA: SubAgent::listHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
-      curEnv->ExceptionClear();
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::listHandler: Could not convert C string to Java string"));
    }
 
-cleanup:
    if (jparam != NULL)
       curEnv->DeleteLocalRef(jparam);
    if (jid != NULL)
@@ -450,49 +450,49 @@ LONG SubAgent::tableHandler(const TCHAR *param, const TCHAR *id, Table *value)
    LONG rc = SYSINFO_RC_ERROR;
    jstring jparam = JavaStringFromCString(curEnv, param);
    jstring jid = JavaStringFromCString(curEnv, id);
-   if ((jparam == NULL) || (jid == NULL))
+   if ((jparam != NULL) && (jid != NULL))
    {
-      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::tableHandler: Could not convert C string to Java string"));
-      goto cleanup;
-   }
-
-   jobjectArray ret = static_cast<jobjectArray>(curEnv->CallObjectMethod(m_instance, m_tableHandler, jparam, jid));
-   if (!curEnv->ExceptionCheck())
-   {
-      if (ret != NULL)
+      jobjectArray ret = static_cast<jobjectArray>(curEnv->CallObjectMethod(m_instance, m_tableHandler, jparam, jid));
+      if (!curEnv->ExceptionCheck())
       {
-         jsize count = curEnv->GetArrayLength(ret);
-         for(jsize i = 0; i < count; i++)
+         if (ret != NULL)
          {
-            jobjectArray row = reinterpret_cast<jobjectArray>(curEnv->GetObjectArrayElement(ret, i));
-            if (row != NULL)
+            jsize count = curEnv->GetArrayLength(ret);
+            for(jsize i = 0; i < count; i++)
             {
-               value->addRow();
-               jsize columns = curEnv->GetArrayLength(row);
-               for(jsize j = 0; j < columns; j++)
+               jobjectArray row = reinterpret_cast<jobjectArray>(curEnv->GetObjectArrayElement(ret, i));
+               if (row != NULL)
                {
-                  jstring s = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(row, j));
-                  value->setPreallocated(j, CStringFromJavaString(curEnv, s));
-                  curEnv->DeleteLocalRef(s);
+                  value->addRow();
+                  jsize columns = curEnv->GetArrayLength(row);
+                  for(jsize j = 0; j < columns; j++)
+                  {
+                     jstring s = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(row, j));
+                     value->setPreallocated(j, CStringFromJavaString(curEnv, s));
+                     curEnv->DeleteLocalRef(s);
+                  }
+                  curEnv->DeleteLocalRef(row);
                }
-               curEnv->DeleteLocalRef(row);
             }
+            curEnv->DeleteLocalRef(ret);
+            rc = SYSINFO_RC_SUCCESS;
          }
-         curEnv->DeleteLocalRef(ret);
-         rc = SYSINFO_RC_SUCCESS;
+         else
+         {
+            rc = SYSINFO_RC_UNSUPPORTED;
+         }
       }
       else
       {
-         rc = SYSINFO_RC_UNSUPPORTED;
+         AgentWriteDebugLog(5, _T("JAVA: SubAgent::tableHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
+         curEnv->ExceptionClear();
       }
    }
    else
    {
-      AgentWriteDebugLog(5, _T("JAVA: SubAgent::tableHandler(\"%s\", \"%s\"): exception in Java code"), param, id);
-      curEnv->ExceptionClear();
+      AgentWriteLog(NXLOG_ERROR, _T("JAVA: SubAgent::tableHandler: Could not convert C string to Java string"));
    }
 
-cleanup:
    if (jparam != NULL)
       curEnv->DeleteLocalRef(jparam);
    if (jid != NULL)
@@ -513,6 +513,7 @@ LONG SubAgent::actionHandler(const TCHAR *action, StringList *args, const TCHAR 
       return SYSINFO_RC_ERROR;
 
    LONG rc = SYSINFO_RC_ERROR;
+   jboolean ret = JNI_FALSE;
    jstring jaction = JavaStringFromCString(curEnv, action);
    jstring jid = JavaStringFromCString(curEnv, id);
    jobjectArray jargs = curEnv->NewObjectArray(args->size(), m_stringClass, NULL);
@@ -538,7 +539,7 @@ LONG SubAgent::actionHandler(const TCHAR *action, StringList *args, const TCHAR 
       }
    }
 
-   jboolean ret = static_cast<jboolean>(curEnv->CallBooleanMethod(m_instance, m_actionHandler, jaction, jargs, jid));
+   ret = static_cast<jboolean>(curEnv->CallBooleanMethod(m_instance, m_actionHandler, jaction, jargs, jid));
    if (!curEnv->ExceptionCheck())
    {
       rc = ret ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;

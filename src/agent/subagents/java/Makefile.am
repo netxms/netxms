@@ -1,26 +1,15 @@
 SUBAGENT = java
 
 pkglib_LTLIBRARIES = java.la
-java_la_SOURCES = Action.cpp ConfigHelper.cpp ListParameter.cpp main.cpp \
-                  Parameter.cpp ParameterType.cpp PushParameter.cpp \
-                  SubAgent.cpp TableColumn.cpp TableParameter.cpp
-java_la_CPPFLAGS=-I@top_srcdir@/include
+java_la_SOURCES = ConfigHelper.cpp main.cpp SubAgent.cpp
+java_la_CPPFLAGS = -I@top_srcdir@/include
 java_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 java_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = \
 	java.vcproj \
-	Action.h \
-	ConfigHelper.h \
 	java_subagent.h \
-	JNIException.h \
-	ListParameter.h \
-	Parameter.h \
-	ParameterType.h \
-	PushParameter.h \
-	SubAgent.h \
-	TableColumn.h \
-	TableParameter.h
+	SubAgent.h
 
 SUBDIRS = java sample
 

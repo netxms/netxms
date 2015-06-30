@@ -870,8 +870,8 @@ JNIEXPORT jboolean JNICALL Java_org_netxms_agent_ConfigEntry_getSubEntryValueBoo
  */
 static JNINativeMethod s_jniMethodsConfig[] =
 {
-   { "lock", "()V", (void *) Java_org_netxms_agent_Config_lock },
-   { "unlock", "()V", (void *) Java_org_netxms_agent_Config_unlock },
+   { "lock", "()V", (void *)Java_org_netxms_agent_Config_lock },
+   { "unlock", "()V", (void *)Java_org_netxms_agent_Config_unlock },
    { "deleteEntry", "(Ljava/lang/String;)V", (void *) Java_org_netxms_agent_Config_deleteEntry },
    { "getEntry", "(Ljava/lang/String;)Lorg/netxms/agent/ConfigEntry;", (void *) Java_org_netxms_agent_Config_getEntry },
    { "getSubEntries", "(Ljava/lang/String;Ljava/lang/String;)[Lorg/netxms/agent/ConfigEntry;", (void *) Java_org_netxms_agent_Config_getSubEntries },
@@ -891,12 +891,12 @@ static JNINativeMethod s_jniMethodsConfig[] =
  */
 static JNINativeMethod s_jniMethodsConfigEntry[] =
 {
-   { "getNext", "()Lorg/netxms/agent/ConfigEntry;", (void *) Java_org_netxms_agent_ConfigEntry_getNext },
-   { "getParent", "()Lorg/netxms/agent/ConfigEntry;", (void *) Java_org_netxms_agent_ConfigEntry_getParent },
-   { "getName", "()Ljava/lang/String;", (void *) Java_org_netxms_agent_ConfigEntry_getName },
-   { "setName", "(Ljava/lang/String;)V", (void *) Java_org_netxms_agent_ConfigEntry_setName },
-   { "getId", "()I", (void *) Java_org_netxms_agent_ConfigEntry_getId },
-   { "getValueCount", "()I", (void *) Java_org_netxms_agent_ConfigEntry_getValueCount },
+   { "getNext", "()Lorg/netxms/agent/ConfigEntry;", (void *)Java_org_netxms_agent_ConfigEntry_getNext },
+   { "getParent", "()Lorg/netxms/agent/ConfigEntry;", (void *)Java_org_netxms_agent_ConfigEntry_getParent },
+   { "getName", "()Ljava/lang/String;", (void *)Java_org_netxms_agent_ConfigEntry_getName },
+   { "setName", "(Ljava/lang/String;)V", (void *)Java_org_netxms_agent_ConfigEntry_setName },
+   { "getId", "()I", (void *)Java_org_netxms_agent_ConfigEntry_getId },
+   { "getValueCount", "()I", (void *)Java_org_netxms_agent_ConfigEntry_getValueCount },
    { "getLine", "()I", (void *) Java_org_netxms_agent_ConfigEntry_getLine },
    { "addValue", "(Ljava/lang/String;)V", (void *) Java_org_netxms_agent_ConfigEntry_addValue },
    { "setValue", "(Ljava/lang/String;)V", (void *) Java_org_netxms_agent_ConfigEntry_setValue },
