@@ -170,6 +170,14 @@ void APPAGENT_EXPORTABLE AppAgentStart();
 void APPAGENT_EXPORTABLE AppAgentStop();
 void APPAGENT_EXPORTABLE AppAgentPostEvent(int code, const TCHAR *name, const char *format, ...);
 
+bool APPAGENT_EXPORTABLE AppAgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize);
+bool APPAGENT_EXPORTABLE AppAgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize);
+#ifdef UNICODE
+#define AppAgentGetParameterArg AppAgentGetParameterArgW
+#else
+#define AppAgentGetParameterArg AppAgentGetParameterArgA
+#endif
+
 /**
  * Client-side API
  */

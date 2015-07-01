@@ -1,4 +1,4 @@
-SOURCES = appagent.cpp client.cpp message.cpp
+SOURCES = appagent.cpp client.cpp message.cpp tools.cpp
 
 lib_LTLIBRARIES = libappagent.la
 
