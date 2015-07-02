@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -133,7 +133,7 @@ ROUTING_TABLE *SnmpGetRoutingTable(UINT32 dwVersion, SNMP_Transport *pTransport)
    pRT->iNumEntries = 0;
    pRT->pRoutes = NULL;
 
-   if (SnmpWalk(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.21.1.1"), 
+   if (SnmpWalk(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.21.1.1"),
                 HandlerRoute, pRT, FALSE) != SNMP_ERR_SUCCESS)
    {
       DestroyRoutingTable(pRT);
@@ -204,7 +204,7 @@ stop_test:
       DBConnectionPoolReleaseConnection(hdb);
 		DbgPrintf(3, _T("SnmpCheckV3CommSettings: DBSelect() failed"));
 	}
-	
+
 	DbgPrintf(5, _T("SnmpCheckV3CommSettings: failed"));
 	return NULL;
 }
@@ -227,9 +227,6 @@ SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, INT16 *v
 		return securityContext;
 	}
 
-	char defCommunity[MAX_COMMUNITY_LENGTH];
-	ConfigReadStrA(_T("DefaultCommunityString"), defCommunity, MAX_COMMUNITY_LENGTH, "public");
-
 restart_check:
 	// Check current community first
 	if ((originalContext != NULL) && (originalContext->getSecurityModel() != SNMP_SECURITY_MODEL_USM))
@@ -246,23 +243,6 @@ restart_check:
       }
 	}
 
-	// Check default community (only if different from current)
-   if ((originalContext == NULL) || 
-       (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) || 
-       strcmp(defCommunity, originalContext->getCommunity()))
-   {
-   	DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, defCommunity);
-	   pTransport->setSecurityContext(new SNMP_SecurityContext(defCommunity));
-      for(int i = 0; i < testOids->size(); i++)
-      {
-         if (SnmpGet(snmpVer, pTransport, testOids->get(i), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-	      {
-		      *version = snmpVer;
-		      return new SNMP_SecurityContext(defCommunity);
-	      }
-      }
-   }
-
 	// Check community from list
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	DB_RESULT hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
@@ -274,7 +254,7 @@ restart_check:
 		for(i = 0; i < count; i++)
 		{
 			DBGetFieldA(hResult, i, 0, temp, 256);
-         if ((originalContext == NULL) || 
+         if ((originalContext == NULL) ||
              (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) ||
              strcmp(temp, originalContext->getCommunity()))
          {

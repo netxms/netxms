@@ -1,13 +1,13 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.serverconfig.views.helpers;
+package org.netxms.ui.eclipse.snmp.views.helpers;
 
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.snmp.SnmpUsmCredential;
-import org.netxms.ui.eclipse.serverconfig.Messages;
+import org.netxms.ui.eclipse.snmp.Messages;
 
 /**
  * Label provider for SnmpUsmCredentials class

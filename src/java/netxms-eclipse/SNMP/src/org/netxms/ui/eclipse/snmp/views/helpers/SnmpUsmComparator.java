@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.netxms.ui.eclipse.serverconfig.views.helpers;
+package org.netxms.ui.eclipse.snmp.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;

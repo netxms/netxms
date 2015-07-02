@@ -467,6 +467,49 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
 }
 
 /**
+ * Upgrade from V356 to V357
+ */
+static BOOL H_UpgradeFromV356(int currVersion, int newVersion)
+{
+   TCHAR comunityString[256];
+   comunityString[0] = 0;
+   DB_RESULT hResult = SQLSelect(_T("SELECT var_value FROM config WHERE var_name='DefaultCommunityString'"));
+   if (hResult != NULL)
+   {
+      if(DBGetNumRows(hResult) > 0)
+      {
+         DBGetField(hResult, 0, 0, comunityString, 256);
+      }
+      DBFreeResult(hResult);
+   }
+
+   if(comunityString[0] != 0)
+   {
+      DB_RESULT hResult = SQLSelect(_T("SELECT id, community FROM snmp_communities"));
+      if (hResult != NULL)
+      {
+         CHK_EXEC(SQLQuery(_T("DELETE FROM snmp_communities")));
+
+         TCHAR query[1024];
+         _sntprintf(query, 1024, _T("INSERT INTO snmp_communities (id,community) VALUES(%d,'%s')"), 1, comunityString);
+         CHK_EXEC(SQLQuery(query));
+
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
+         {
+            _sntprintf(query, 1024, _T("INSERT INTO snmp_communities (id,community) VALUES(%d,'%s')"), i + 2, DBGetField(hResult, i, 1, comunityString, 256));
+            CHK_EXEC(SQLQuery(query));
+         }
+      }
+   }
+
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='DefaultCommunityString'")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='357' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V355 to V356
  */
 static BOOL H_UpgradeFromV355(int currVersion, int newVersion)
@@ -8630,6 +8673,7 @@ static struct
    { 353, 354, H_UpgradeFromV353 },
    { 354, 355, H_UpgradeFromV354 },
    { 355, 356, H_UpgradeFromV355 },
+   { 356, 357, H_UpgradeFromV356 },
    { 0, 0, NULL }
 };
 

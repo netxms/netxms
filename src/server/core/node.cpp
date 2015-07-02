@@ -39,9 +39,7 @@ Node::Node() : DataCollectionTarget()
    m_iStatusPollType = POLL_ICMP_PING;
    m_snmpVersion = SNMP_VERSION_1;
    m_snmpPort = SNMP_DEFAULT_PORT;
-	char community[MAX_COMMUNITY_LENGTH];
-   ConfigReadStrA(_T("DefaultCommunityString"), community, MAX_COMMUNITY_LENGTH, "public");
-	m_snmpSecurity = new SNMP_SecurityContext(community);
+	m_snmpSecurity = new SNMP_SecurityContext("public");
    m_szObjectId[0] = 0;
    m_lastDiscoveryPoll = 0;
    m_lastStatusPoll = 0;
@@ -119,8 +117,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_snmpVersion = SNMP_VERSION_1;
    m_snmpPort = SNMP_DEFAULT_PORT;
 	char community[MAX_COMMUNITY_LENGTH];
-   ConfigReadStrA(_T("DefaultCommunityString"), community, MAX_COMMUNITY_LENGTH, "public");
-	m_snmpSecurity = new SNMP_SecurityContext(community);
+	m_snmpSecurity = new SNMP_SecurityContext("public");
    addr.toString(m_name);    // Make default name from IP address
    m_szObjectId[0] = 0;
    m_lastDiscoveryPoll = 0;
@@ -1100,7 +1097,7 @@ void Node::statusPoll(PollerInfo *poller)
 
    // Check if the node has to be deleted due to long downtime
 	time_t unreachableDeleteDays = (time_t)ConfigReadInt(_T("DeleteUnreachableNodesPeriod"), 0);
-	if ((unreachableDeleteDays > 0) && (m_downSince > 0) && 
+	if ((unreachableDeleteDays > 0) && (m_downSince > 0) &&
 		 (time(NULL) - m_downSince > unreachableDeleteDays * 24 * 3600))
 	{
 		deleteObject();

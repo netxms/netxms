@@ -8,6 +8,18 @@ import org.eclipse.swt.widgets.Display;
 public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.snmp.messages"; //$NON-NLS-1$
+   public String AddUsmCredDialog_Auth;
+   public String AddUsmCredDialog_AuthPasswd;
+   public String AddUsmCredDialog_AuthTypeMD5;
+   public String AddUsmCredDialog_AuthTypeNone;
+   public String AddUsmCredDialog_AuthTypeSHA1;
+   public String AddUsmCredDialog_EncPasswd;
+   public String AddUsmCredDialog_Encryption;
+   public String AddUsmCredDialog_EncTypeAES;
+   public String AddUsmCredDialog_EncTypeDES;
+   public String AddUsmCredDialog_EncTypeNone;
+   public String AddUsmCredDialog_Title;
+   public String AddUsmCredDialog_UserName;
 	public String LoginListener_JobError;
 	public String LoginListener_JobTitle;
 	public String MibExplorer_CopyName;
@@ -61,6 +73,16 @@ public class Messages extends NLS
 	public String ParamMappingEditDialog_Warning;
 	public String ParamMappingEditDialog_WarningInvalidOID;
 	public String ParamMappingLabelProvider_PositionPrefix;
+   public String SnmpConfigurator_Add;
+   public String SnmpConfigurator_AddCommunity;
+   public String SnmpConfigurator_AddCommunityDescr;   
+   public String SnmpConfigurator_Error;
+   public String SnmpConfigurator_Remove;
+   public String SnmpConfigurator_Save;
+   public String SnmpConfigurator_SectionCommunities;
+   public String SnmpConfigurator_SectionCommunitiesDescr;
+   public String SnmpConfigurator_SectionUSM;
+   public String SnmpConfigurator_SectionUSMDescr;
 	public String SnmpTrapComparator_Unknown;
 	public String SnmpTrapEditor_ColDescription;
 	public String SnmpTrapEditor_ColEvent;
@@ -88,6 +110,12 @@ public class Messages extends NLS
 	public String SnmpTrapMonitor_UnsubscribeJob_Error;
 	public String SnmpTrapMonitor_UnsubscribeJob_Title;
 	public String SnmpTrapMonitorLabelProvider_Unknown;
+   public String SnmpUsmLabelProvider_AuthMD5;
+   public String SnmpUsmLabelProvider_AuthNone;
+   public String SnmpUsmLabelProvider_AuthSHA1;
+   public String SnmpUsmLabelProvider_EncAES;
+   public String SnmpUsmLabelProvider_EncDES;
+   public String SnmpUsmLabelProvider_EncNone;
 	public String TrapConfigurationDialog_Add;
 	public String TrapConfigurationDialog_Delete;
 	public String TrapConfigurationDialog_Description;
