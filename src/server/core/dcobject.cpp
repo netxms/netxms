@@ -984,5 +984,13 @@ INT16 DCObject::getAgentCacheMode()
    INT16 mode = DCF_GET_CACHE_MODE(m_flags);
    if (mode != AGENT_CACHE_DEFAULT)
       return mode;
+   if (m_sourceNode != 0)
+   {
+      Node *source = (Node *)FindObjectById(m_sourceNode, OBJECT_NODE);
+      if (source != NULL)
+      {
+         return source->getAgentCacheMode();
+      }
+   }
    return ((Node *)m_pNode)->getAgentCacheMode();
 }

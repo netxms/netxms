@@ -1100,7 +1100,7 @@ public:
 };
 
 class Subnet;
-struct SnmpProxyInfo;
+struct ProxyInfo;
 
 /**
  * Node
@@ -1224,8 +1224,8 @@ protected:
 	void updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
 
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
-   void collectSnmpProxyInfo(SnmpProxyInfo *info);
-   static void collectSNMPProxyInfoCallback(NetObj *node, void *data);
+   void collectProxyInfo(ProxyInfo *info);
+   static void collectProxyInfoCallback(NetObj *node, void *data);
 
 	void updateContainerMembership();
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);

@@ -116,7 +116,6 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_iStatusPollType = POLL_ICMP_PING;
    m_snmpVersion = SNMP_VERSION_1;
    m_snmpPort = SNMP_DEFAULT_PORT;
-	char community[MAX_COMMUNITY_LENGTH];
 	m_snmpSecurity = new SNMP_SecurityContext("public");
    addr.toString(m_name);    // Make default name from IP address
    m_szObjectId[0] = 0;
@@ -6820,7 +6819,7 @@ AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmp
 /**
  * SNMP proxy information structure
  */
-struct SnmpProxyInfo
+struct ProxyInfo
 {
    UINT32 proxyId;
    NXCPMessage *msg;
@@ -6831,22 +6830,26 @@ struct SnmpProxyInfo
 };
 
 /**
- * Collect info for SNMP proxy
+ * Collect info for SNMP proxy and DCI source (proxy) nodes
  */
-void Node::collectSnmpProxyInfo(SnmpProxyInfo *info)
+void Node::collectProxyInfo(ProxyInfo *info)
 {
-   if (getEffectiveSnmpProxy() != info->proxyId)
-      return;
-
+   bool snmpProxy = (getEffectiveSnmpProxy() == info->proxyId);
    bool isTarget = false;
 
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *dco = m_dcObjects->get(i);
-      if ((dco->getDataSource() == DS_SNMP_AGENT) &&
-          (dco->getSourceNode() == 0) &&
-          (dco->getAgentCacheMode() == AGENT_CACHE_ON))
+      if (dco->getStatus() == ITEM_STATUS_DISABLED)
+         continue;
+
+      if ((snmpProxy &&
+           (dco->getDataSource() == DS_SNMP_AGENT) &&
+           (dco->getSourceNode() == 0) &&
+           (dco->getAgentCacheMode() == AGENT_CACHE_ON)) ||
+          ((dco->getDataSource() == DS_NATIVE_AGENT) && 
+           (dco->getSourceNode() == info->proxyId)))
       {
          info->msg->setField(info->fieldId++, dco->getId());
          info->msg->setField(info->fieldId++, (INT16)dco->getType());
@@ -6862,7 +6865,8 @@ void Node::collectSnmpProxyInfo(SnmpProxyInfo *info)
             info->msg->setField(info->fieldId++, (INT16)0);
          info->fieldId += 1;
          info->count++;
-         isTarget = true;
+         if (dco->getDataSource() == DS_SNMP_AGENT)
+            isTarget = true;
       }
    }
    unlockDciAccess();
@@ -6886,9 +6890,9 @@ void Node::collectSnmpProxyInfo(SnmpProxyInfo *info)
 /**
  * Callback for colecting proxied SNMP DCIs
  */
-void Node::collectSNMPProxyInfoCallback(NetObj *node, void *data)
+void Node::collectProxyInfoCallback(NetObj *node, void *data)
 {
-   ((Node *)node)->collectSnmpProxyInfo((SnmpProxyInfo *)data);
+   ((Node *)node)->collectProxyInfo((ProxyInfo *)data);
 }
 
 /**
@@ -6906,7 +6910,8 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
    for(int i = 0; i < m_dcObjects->size(); i++)
    {
       DCObject *dco = m_dcObjects->get(i);
-      if ((dco->getAgentCacheMode() == AGENT_CACHE_ON) &&
+      if ((dco->getStatus() != ITEM_STATUS_DISABLED) &&
+          (dco->getAgentCacheMode() == AGENT_CACHE_ON) &&
           (dco->getSourceNode() == 0))
       {
          msg.setField(fieldId++, dco->getId());
@@ -6921,14 +6926,14 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
    }
    unlockDciAccess();
 
-   SnmpProxyInfo data;
+   ProxyInfo data;
    data.proxyId = m_id;
    data.count = count;
    data.msg = &msg;
    data.fieldId = fieldId;
    data.nodeInfoCount = 0;
    data.nodeInfoFieldId = VID_NODE_INFO_LIST_BASE;
-   g_idxNodeById.forEach(Node::collectSNMPProxyInfoCallback, &data);
+   g_idxNodeById.forEach(Node::collectProxyInfoCallback, &data);
    msg.setField(VID_NUM_ELEMENTS, data.count);
    msg.setField(VID_NUM_NODES, data.nodeInfoCount);
 
