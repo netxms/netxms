@@ -1,7 +1,7 @@
 ; Installation script for NetXMS Server / Windows x64
 
 #include "setup.iss"
-OutputBaseFilename=netxms-2.0-M5-x64
+OutputBaseFilename=netxms-2.0-M5-8029-x64
 ArchitecturesInstallIn64BitMode=x64
 ArchitecturesAllowed=x64
 
