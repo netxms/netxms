@@ -1474,10 +1474,10 @@ void ClientSession::onFileUpload(BOOL bSuccess)
 /**
  * Send message to client
  */
-void ClientSession::sendMessage(NXCPMessage *msg)
+bool ClientSession::sendMessage(NXCPMessage *msg)
 {
    if (isTerminated())
-      return;
+      return false;
 
 	if (msg->getCode() != CMD_ADM_MESSAGE)
    {
@@ -1517,6 +1517,7 @@ void ClientSession::sendMessage(NXCPMessage *msg)
       closesocket(m_hSocket);
       m_hSocket = -1;
    }
+   return result;
 }
 
 /**

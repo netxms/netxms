@@ -215,6 +215,23 @@ void AgentConnectionEx::printMsg(const TCHAR *format, ...)
    va_end(args);
 }
 
+static void cancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
+{
+   DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled."));
+   AgentConnection *conn = object->createAgentConnection();
+   if(conn != NULL)
+   {
+      NXCPMessage request;
+      request.setId(conn->generateRequestId());
+      request.setCode(CMD_CANCEL_FILE_MONITORING);
+      request.setField(VID_FILE_NAME, remoteFile);
+      request.setField(VID_OBJECT_ID, object->getId());
+      NXCPMessage* response = conn->customRequest(&request);
+      delete response;
+   }
+   delete conn;
+}
+
 /**
  * Recieve file monitoring information and resend to all required user sessions
  */
@@ -229,25 +246,25 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
       pMsg->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
       ObjectArray<ClientSession>* result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->getId());
       DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for remote file %s on node %s [%d]"), result->size(), remoteFile, object->getName(), object->getId());
+      int validSessionCount = result->size();
       for(int i = 0; i < result->size(); i++)
       {
-         result->get(i)->sendMessage(pMsg);
+         if(!result->get(i)->sendMessage(pMsg))
+         {
+            MONITORED_FILE file;
+            _tcsncpy(file.fileName, remoteFile, MAX_PATH);
+            file.nodeID = m_nodeId;
+            file.session = result->get(i);
+            g_monitoringList.removeMonitoringFile(&file);
+            validSessionCount--;
+
+            if(validSessionCount == 0)
+               cancelUnknownFileMonitoring(object, remoteFile);
+         }
       }
       if(result->size() == 0)
       {
-         DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled."));
-         AgentConnection *conn = object->createAgentConnection();
-         if(conn != NULL)
-         {
-            NXCPMessage request;
-            request.setId(conn->generateRequestId());
-            request.setCode(CMD_CANCEL_FILE_MONITORING);
-            request.setField(VID_FILE_NAME, remoteFile);
-            request.setField(VID_OBJECT_ID, object->getId());
-            NXCPMessage* response = conn->customRequest(&request);
-            delete response;
-         }
-         delete conn;
+         cancelUnknownFileMonitoring(object, remoteFile);
       }
       delete result;
 	}

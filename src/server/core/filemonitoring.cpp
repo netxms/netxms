@@ -49,7 +49,7 @@ bool FileMonitoringList::checkDuplicate(MONITORED_FILE *fileForAdd)
    lock();
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
-      m_monitoredFile = m_monitoredFiles.get(i);
+      MONITORED_FILE* m_monitoredFile = m_monitoredFiles.get(i);
       if(_tcscmp(m_monitoredFile->fileName, fileForAdd->fileName) == 0
          && m_monitoredFile->nodeID == fileForAdd->nodeID
          && m_monitoredFile->session->getUserId() == fileForAdd->session->getUserId())
@@ -67,7 +67,8 @@ ObjectArray<ClientSession>* FileMonitoringList::findClientByFNameAndNodeID(const
    ObjectArray<ClientSession> *result = new ObjectArray<ClientSession>;
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
-      m_monitoredFile = m_monitoredFiles.get(i);
+      MONITORED_FILE* m_monitoredFile = m_monitoredFiles.get(i);
+      DbgPrintf(9, _T("FileMonitoringList::findClientByFNameAndNodeID: %s is %s should"), m_monitoredFile->fileName, fileName);
       if(_tcscmp(m_monitoredFile->fileName, fileName) == 0 && m_monitoredFile->nodeID == nodeID)
       {
          result->add(m_monitoredFile->session);
@@ -83,7 +84,7 @@ bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
    bool deleted = false;
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
-      m_monitoredFile = m_monitoredFiles.get(i);
+      MONITORED_FILE* m_monitoredFile = m_monitoredFiles.get(i);
       if(_tcscmp(m_monitoredFile->fileName, fileForRemove->fileName) == 0 &&
          m_monitoredFile->nodeID == fileForRemove->nodeID &&
          m_monitoredFile->session == fileForRemove->session)
@@ -104,7 +105,7 @@ void FileMonitoringList::removeDisconectedNode(UINT32 nodeId)
    bool deleted = false;
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
-      m_monitoredFile = m_monitoredFiles.get(i);
+      MONITORED_FILE* m_monitoredFile = m_monitoredFiles.get(i);
       if(m_monitoredFile->nodeID == nodeId)
       {
          NotifyClientSessions(NX_NOTIFY_FILE_MONITORING_FAILED, nodeId);

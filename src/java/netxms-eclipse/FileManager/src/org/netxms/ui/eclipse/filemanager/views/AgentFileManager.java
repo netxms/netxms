@@ -131,6 +131,7 @@ public class AgentFileManager extends ViewPart
    private Action actionShowFilter;
    private Action actionDownloadFile;
    private Action actionTailFile;
+   private Action actionShowFile;
    private Action actionCreateDirectory;
    private long objectId = 0;
 
@@ -494,11 +495,19 @@ public class AgentFileManager extends ViewPart
       actionDownloadFile.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.download"); //$NON-NLS-1$
       handlerService.activateHandler(actionDownloadFile.getActionDefinitionId(), new ActionHandler(actionDownloadFile));
 
-      actionTailFile = new Action(Messages.get().AgentFileManager_Show) {
+      actionTailFile = new Action("Tail") {
          @Override
          public void run()
          {
-            tailFile();
+            tailFile(true, 500);
+         }
+      };
+      
+      actionShowFile = new Action(Messages.get().AgentFileManager_Show) {
+         @Override
+         public void run()
+         {
+            tailFile(false, 0);
          }
       };
       
@@ -589,6 +598,7 @@ public class AgentFileManager extends ViewPart
          else
          {
             mgr.add(actionTailFile);
+            mgr.add(actionShowFile);
          }
          mgr.add(actionDownloadFile);
          mgr.add(new Separator());
@@ -880,7 +890,7 @@ public class AgentFileManager extends ViewPart
    /**
     * Starts file tail view&messages
     */
-   private void tailFile()
+   private void tailFile(final boolean tail, final int offset)
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.isEmpty())
@@ -903,7 +913,7 @@ public class AgentFileManager extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final AgentFile file = session.downloadFileFromAgent(objectId, sf.getFullName(), 0, true);
+            final AgentFile file = session.downloadFileFromAgent(objectId, sf.getFullName(), offset, tail);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -914,7 +924,7 @@ public class AgentFileManager extends ViewPart
                      String secondaryId = Long.toString(objectId) + "&" + URLEncoder.encode(sf.getName(), "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
                      FileViewer view = (FileViewer)window.getActivePage().showView(FileViewer.ID, secondaryId,
                            IWorkbenchPage.VIEW_ACTIVATE);
-                     view.showFile(file.getFile(), true, file.getId(), 0);
+                     view.showFile(file.getFile(), tail, file.getId(), offset);
                   }
                   catch(Exception e)
                   {

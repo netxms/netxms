@@ -700,7 +700,7 @@ public:
    void run();
 
    void postMessage(NXCPMessage *pMsg) { m_pSendQueue->put(pMsg->createMessage()); }
-   void sendMessage(NXCPMessage *pMsg);
+   bool sendMessage(NXCPMessage *pMsg);
    void sendRawMessage(NXCP_MESSAGE *pMsg);
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
 	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long offset);
@@ -1017,7 +1017,6 @@ class FileMonitoringList
 private:
    MUTEX m_mutex;
    ObjectArray<MONITORED_FILE>  m_monitoredFiles;
-   MONITORED_FILE* m_monitoredFile;
 
 public:
    FileMonitoringList();
