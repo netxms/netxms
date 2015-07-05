@@ -480,10 +480,16 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	      }
 	   }
 	   
+      final DateFormat dfDate = RegionalSettings.getDateFormat();
+      final DateFormat dfTime = RegionalSettings.getTimeFormat();
+      final DateFormat dfDateTime = RegionalSettings.getDateTimeFormat();
+	   
 	   new ConsoleJob("Export line chart data", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
+            boolean doInterpolation = session.getPublicServerVariableAsBoolean("DashboardDataExportEnableInterpolation");
+            
             // Build combined time series
             // Time stamps in series are reversed - latest value first
             List<Date> combinedTimeSeries = new ArrayList<Date>();
@@ -524,7 +530,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
                   long currentCombinedTimestamp = combinedTimeSeries.get(combinedIndex).getTime();
                   while(currentCombinedTimestamp > currentTimestamp.getTime())
                   {
-                     if (lastTimestamp != 0)
+                     if ((lastTimestamp != 0) && doInterpolation)
                      {
                         // do linear interpolation for missed value
                         ySeries[combinedIndex] = lastValue + (currentValue - lastValue) * ((double)(lastTimestamp - currentCombinedTimestamp) / (double)(lastTimestamp - currentTimestamp.getTime()));
@@ -546,7 +552,9 @@ public class DashboardView extends ViewPart implements ISaveablePart
             BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
             try
             {
-               writer.write("TIME");
+               writer.write("# " + dashboard.getObjectName() + " " + dfDateTime.format(new Date()));
+               writer.newLine();
+               writer.write("DATE,TIME");
                for(DataCacheElement d : data)
                {
                   writer.write(',');
@@ -554,15 +562,23 @@ public class DashboardView extends ViewPart implements ISaveablePart
                }
                writer.newLine();
                
-               DateFormat df = RegionalSettings.getDateTimeFormat();
                for(int i = combinedTimeSeries.size() - 1; i >= 0; i--)
                {
-                  writer.write(df.format(combinedTimeSeries.get(i)));
+                  Date d = combinedTimeSeries.get(i);
+                  writer.write(dfDate.format(d));
+                  writer.write(',');
+                  writer.write(dfTime.format(d));
                   for(Double[] values : combinedData)
                   {
                      writer.write(',');
                      if (values[i] != null)
-                        writer.write(Double.toString(values[i]));
+                     {
+                        double v = values[i];
+                        if (Math.abs(v) > 0.001)
+                           writer.write(String.format("%.3f", v));
+                        else
+                           writer.write(Double.toString(v));
+                     }
                   }  
                   writer.newLine();
                }

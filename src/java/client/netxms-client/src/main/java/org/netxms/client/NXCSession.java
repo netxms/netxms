@@ -3033,6 +3033,32 @@ public class NXCSession
    }
 
    /**
+    * Get server public configuration variable as boolen value
+    * 
+    * @param name configuration variable name
+    * @return value of requested configuration variable
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public boolean getPublicServerVariableAsBoolean(String name) throws IOException, NXCException
+   {
+      String value = getPublicServerVariable(name);
+      if ((value.equalsIgnoreCase("true")) || (value.equalsIgnoreCase("yes")))
+         return true;
+      if ((value.equalsIgnoreCase("false")) || (value.equalsIgnoreCase("no")))
+         return false;
+      try
+      {
+         int n = Integer.parseInt(value);
+         return n != 0;
+      }
+      catch(NumberFormatException e)
+      {
+         return false;
+      }
+   }
+   
+   /**
     * Set server configuration variable
     * 
     * @param name
