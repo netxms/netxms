@@ -54,4 +54,15 @@ public class ServerConfigTest extends AbstractSessionTest
 
 		session.disconnect();
 	}
+	
+	public void testGetPublicVariable() throws Exception
+	{
+      final NXCSession session = connect();
+
+      String value = session.getPublicServerVariable("DashboardDataExportEnableInterpolation");
+      assertNotNull(value);
+      System.out.println("value=" + value); 
+      
+      session.disconnect();
+	}
 }

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Raden Solutions
+** Copyright (C) 2003-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -774,13 +774,16 @@ void ClientSession::processingThread()
             CALL_IN_NEW_THREAD(sendEventLog, pMsg);
             break;
          case CMD_GET_CONFIG_VARLIST:
-            sendAllConfigVars(pMsg->getId());
+            getConfigurationVariables(pMsg->getId());
+            break;
+         case CMD_GET_PUBLIC_CONFIG_VAR:
+            getPublicConfigurationVariable(pMsg);
             break;
          case CMD_SET_CONFIG_VARIABLE:
-            setConfigVariable(pMsg);
+            setConfigurationVariable(pMsg);
             break;
          case CMD_DELETE_CONFIG_VARIABLE:
-            deleteConfigVariable(pMsg);
+            deleteConfigurationVariable(pMsg);
             break;
 			case CMD_CONFIG_GET_CLOB:
 				getConfigCLOB(pMsg);
@@ -2372,11 +2375,10 @@ void ClientSession::sendEventLog(NXCPMessage *pRequest)
 /**
  * Send all configuration variables to client
  */
-void ClientSession::sendAllConfigVars(UINT32 dwRqId)
+void ClientSession::getConfigurationVariables(UINT32 dwRqId)
 {
    UINT32 i, dwId, dwNumRecords;
    NXCPMessage msg;
-   DB_RESULT hResult;
    TCHAR szBuffer[MAX_DB_STRING];
 
    // Prepare message
@@ -2387,7 +2389,7 @@ void ClientSession::sendAllConfigVars(UINT32 dwRqId)
    if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
    {
       // Retrieve configuration variables from database
-      hResult = DBSelect(g_hCoreDB, _T("SELECT var_name,var_value,need_server_restart FROM config WHERE is_visible=1"));
+      DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT var_name,var_value,need_server_restart FROM config WHERE is_visible=1"));
       if (hResult != NULL)
       {
          // Send events, one per message
@@ -2415,9 +2417,56 @@ void ClientSession::sendAllConfigVars(UINT32 dwRqId)
 }
 
 /**
+ * Get public configuration variable by name
+ */
+void ClientSession::getPublicConfigurationVariable(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=? AND is_public='Y'"));
+   if (hStmt != NULL)
+   {
+      TCHAR name[64];
+      request->getFieldAsString(VID_NAME, name, 64);
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+
+      DB_RESULT hResult = DBSelectPrepared(hStmt);
+      if (hResult != NULL)
+      {
+         if (DBGetNumRows(hResult) > 0)
+         {
+            TCHAR value[256];
+            msg.setField(VID_VALUE, DBGetField(hResult, 0, 0, value, 256));
+            msg.setField(VID_RCC, RCC_SUCCESS);
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_UNKNOWN_CONFIG_VARIABLE);
+         }
+         DBFreeResult(hResult);
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_DB_FAILURE);
+      }
+      DBFreeStatement(hStmt);
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_DB_FAILURE);
+   }
+   
+   sendMessage(&msg);
+}
+
+/**
  * Set configuration variable's value
  */
-void ClientSession::setConfigVariable(NXCPMessage *pRequest)
+void ClientSession::setConfigurationVariable(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
    TCHAR szName[MAX_OBJECT_NAME], szValue[MAX_DB_STRING];
@@ -2431,7 +2480,7 @@ void ClientSession::setConfigVariable(NXCPMessage *pRequest)
    {
       pRequest->getFieldAsString(VID_NAME, szName, MAX_OBJECT_NAME);
       pRequest->getFieldAsString(VID_VALUE, szValue, MAX_DB_STRING);
-      if (ConfigWriteStr(szName, szValue, TRUE))
+      if (ConfigWriteStr(szName, szValue, true))
 		{
          msg.setField(VID_RCC, RCC_SUCCESS);
 			WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, 0,
@@ -2454,7 +2503,7 @@ void ClientSession::setConfigVariable(NXCPMessage *pRequest)
 /**
  * Delete configuration variable
  */
-void ClientSession::deleteConfigVariable(NXCPMessage *pRequest)
+void ClientSession::deleteConfigurationVariable(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
 

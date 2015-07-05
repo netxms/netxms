@@ -188,14 +188,14 @@ DB_ASYNC_RESULT SQLAsyncSelect(const TCHAR *pszQuery)
 /**
  * Execute prepared statement and print error message on screen if query failed
  */
-BOOL SQLExecute(DB_STATEMENT hStmt)
+bool SQLExecute(DB_STATEMENT hStmt)
 {
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
    if (g_bTrace)
       ShowQuery(DBGetStatementSource(hStmt));
 
-   BOOL result = DBExecuteEx(hStmt, errorText);
+   bool result = DBExecuteEx(hStmt, errorText);
    if (!result)
       WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, DBGetStatementSource(hStmt));
    return result;
@@ -204,13 +204,10 @@ BOOL SQLExecute(DB_STATEMENT hStmt)
 /**
  * Execute SQL query and print error message on screen if query failed
  */
-BOOL SQLQuery(const TCHAR *pszQuery)
+bool SQLQuery(const TCHAR *pszQuery)
 {
-   BOOL bResult;
-	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-
 	if (*pszQuery == 0)
-		return TRUE;
+		return true;
 
 	String query(pszQuery);
 
@@ -221,21 +218,22 @@ BOOL SQLQuery(const TCHAR *pszQuery)
    if (g_bTrace)
       ShowQuery(query);
 
-   bResult = DBQueryEx(g_hCoreDB, (const TCHAR *)query, errorText);
-   if (!bResult)
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   bool success = DBQueryEx(g_hCoreDB, (const TCHAR *)query, errorText);
+   if (!success)
       WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, (const TCHAR *)query);
-   return bResult;
+   return success;
 }
 
 /**
  * Execute SQL batch
  */
-BOOL SQLBatch(const TCHAR *pszBatch)
+bool SQLBatch(const TCHAR *pszBatch)
 {
    String batch(pszBatch);
    TCHAR *pszBuffer, *pszQuery, *ptr;
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   BOOL bRet = TRUE;
+   bool success = true;
 	TCHAR table[128], column[128];
 
    batch.replace(_T("$SQL:TEXT"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
@@ -258,7 +256,7 @@ BOOL SQLBatch(const TCHAR *pszBatch)
 				WriteToTerminalEx(_T("Cannot drop column \x1b[37;1m%s.%s\x1b[0m\n"), table, column);
 				if (!g_bIgnoreErrors)
 				{
-					bRet = FALSE;
+					success = false;
 					break;
 				}
 			}
@@ -273,7 +271,7 @@ BOOL SQLBatch(const TCHAR *pszBatch)
 				WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
 				if (!g_bIgnoreErrors)
 				{
-					bRet = FALSE;
+					success = false;
 					break;
 				}
 			}
@@ -282,17 +280,17 @@ BOOL SQLBatch(const TCHAR *pszBatch)
       ptr++;
       pszQuery = ptr;
    }
-   return bRet;
+   return success;
 }
 
 /**
  * Drop column from the table
  */
-BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column)
+bool SQLDropColumn(const TCHAR *table, const TCHAR *column)
 {
 	TCHAR query[1024];
 	DB_RESULT hResult;
-	BOOL success = FALSE;
+	bool success = false;
 
 	if (g_dbSyntax != DB_SYNTAX_SQLITE)
 	{
@@ -352,7 +350,7 @@ BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column)
 				CHK_EXEC(SQLQuery(buffer));
 				_sntprintf(buffer, blen, _T("ALTER TABLE %s__backup__ RENAME to %s"), table, table);
 				CHK_EXEC(SQLQuery(buffer));
-				success = TRUE;
+				success = true;
 			}
 		}
 	}
@@ -485,7 +483,7 @@ bool IsDatabaseRecordExist(const TCHAR *table, const TCHAR *idColumn, UINT32 id)
 /**
  * Check that database has correct schema version and is not locked
  */
-BOOL ValidateDatabase()
+bool ValidateDatabase()
 {
 	DB_RESULT hResult;
 	LONG nVersion = 0;
@@ -498,14 +496,14 @@ BOOL ValidateDatabase()
    {
       _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\nUse \"upgrade\" command to upgrade your database first.\n"),
                nVersion, DB_FORMAT_VERSION);
-		return FALSE;
+		return false;
    }
    else if (nVersion > DB_FORMAT_VERSION)
    {
 		_tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n")
 		         _T("You need to upgrade your server before using this database.\n"),
 				   nVersion, DB_FORMAT_VERSION);
-		return FALSE;
+		return false;
    }
 
    // Check if database is locked
@@ -536,10 +534,10 @@ BOOL ValidateDatabase()
    if (bLocked)
    {
       _tprintf(_T("Database is locked by server %s [%s]\n"), szLockStatus, szLockInfo);
-		return FALSE;
+		return false;
    }
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -547,7 +545,8 @@ BOOL ValidateDatabase()
  */
 int main(int argc, char *argv[])
 {
-   BOOL bStart = TRUE, bForce = FALSE, bQuiet = FALSE, bReplaceValue = TRUE;
+   BOOL bStart = TRUE, bForce = FALSE, bQuiet = FALSE;
+   bool replaceValue = true;
    int ch;
    TCHAR szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 
@@ -636,7 +635,7 @@ int main(int argc, char *argv[])
 				g_isGuiMode = true;
 				break;
          case 'N':
-            bReplaceValue = FALSE;
+            replaceValue = false;
             break;
          case 'q':
             bQuiet = TRUE;
@@ -853,7 +852,7 @@ stop_search:
 			char *var = argv[optind + 1];
 			char *value = argv[optind + 2];
 #endif
-			CreateConfigParam(var, value, 1, 0, bReplaceValue);
+			CreateConfigParam(var, value, true, false, replaceValue);
 #ifdef UNICODE
 			free(var);
 			free(value);

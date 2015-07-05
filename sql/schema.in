@@ -14,7 +14,7 @@ CREATE TABLE metadata
 	PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(metadata, 'System meta data (DBMS type, schema version etc)')
+COMMENT_TABLE(metadata, 'System meta data (DBMS type, schema version, etc.)')
 COMMENT_COLUMN(metadata.var_name, 'Variable name')
 COMMENT_COLUMN(metadata.var_value, 'Variable value')
 
@@ -28,10 +28,16 @@ CREATE TABLE config
 #ifdef DB_ORACLE
 	is_visible integer default 1 not null,
 	need_server_restart integer default 0 not null,
+   data_type char(1) default 'S' not null,
+   is_public char(1) default 'N' not null,
 #else
 	is_visible integer not null default 1,
 	need_server_restart integer not null default 0,
+   data_type char(1) not null default 'S',
+   is_public char(1) not null default 'N',
 #endif
+   description varchar(255) null,
+   possible_values SQL_TEXT null,
 	PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 

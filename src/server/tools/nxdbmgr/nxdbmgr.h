@@ -51,7 +51,7 @@
 
 void CheckDatabase();
 void InitDatabase(const char *pszInitFile);
-BOOL ClearDatabase();
+bool ClearDatabase();
 void ExportDatabase(const char *file);
 void ImportDatabase(const char *file);
 void MigrateDatabase(const TCHAR *sourceConfig);
@@ -60,14 +60,14 @@ void UnlockDatabase();
 void ReindexIData();
 DB_RESULT SQLSelect(const TCHAR *pszQuery);
 DB_ASYNC_RESULT SQLAsyncSelect(const TCHAR *pszQuery);
-BOOL SQLExecute(DB_STATEMENT hStmt);
-BOOL SQLQuery(const TCHAR *pszQuery);
-BOOL SQLBatch(const TCHAR *pszBatch);
-BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column);
+bool SQLExecute(DB_STATEMENT hStmt);
+bool SQLQuery(const TCHAR *pszQuery);
+bool SQLBatch(const TCHAR *pszBatch);
+bool SQLDropColumn(const TCHAR *table, const TCHAR *column);
 bool GetYesNo(const TCHAR *format, ...);
 void ShowQuery(const TCHAR *pszQuery);
-BOOL ExecSQLBatch(const char *pszFile);
-BOOL ValidateDatabase();
+bool ExecSQLBatch(const char *pszFile);
+bool ValidateDatabase();
 
 bool IsDatabaseRecordExist(const TCHAR *table, const TCHAR *idColumn, UINT32 id);
 
@@ -76,8 +76,8 @@ int MetaDataReadInt(const TCHAR *pszVar, int iDefault);
 BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault);
 int ConfigReadInt(const TCHAR *pszVar, int iDefault);
 DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault);
-BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue,
-                       int iVisible, int iNeedRestart, BOOL bForceUpdate = FALSE);
+bool CreateConfigParam(const TCHAR *name, const TCHAR *value, bool isVisible, bool needRestart, bool forceUpdate = false);
+bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate = false);
 
 BOOL CreateIDataTable(DWORD nodeId);
 BOOL CreateTDataTables(DWORD nodeId);

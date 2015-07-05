@@ -215,9 +215,10 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(UINT32 error)
       _T("Location history not available"),
       _T("Object is in use and cannot be deleted"),
       _T("Script compilation error"),
-      _T("Script execution error")
+      _T("Script execution error"),
+      _T("Unknown configuration variable")
    };
-	return (error <= RCC_NXSL_EXECUTION_ERROR) ? errorText[error] : _T("No text message for this error");
+	return (error <= RCC_UNKNOWN_CONFIG_VARIABLE) ? errorText[error] : _T("No text message for this error");
 }
 
 #if defined(_WIN32) && !defined(UNDER_CE)

@@ -330,6 +330,9 @@ public class NXCPCodes
    public static final int CMD_ENABLE_IPV6 = 0x0134;
    public static final int CMD_FORCE_DCI_POLL = 0x0135;
    public static final int CMD_GET_DCI_SCRIPT_LIST = 0x0136;
+   public static final int CMD_DATA_COLLECTION_CONFIG = 0x0137;
+   public static final int CMD_SET_SERVER_ID = 0x0138;
+   public static final int CMD_GET_PUBLIC_CONFIG_VAR = 0x0139;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

@@ -2992,8 +2992,8 @@ public class NXCSession
     * Get server configuration variables
     * 
     * @return
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public Map<String, ServerVariable> getServerVariables() throws IOException, NXCException
    {
@@ -3014,14 +3014,31 @@ public class NXCSession
 
       return varList;
    }
+   
+   /**
+    * Get server public configuration variable
+    * 
+    * @param name configuration variable name
+    * @return value of requested configuration variable
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public String getPublicServerVariable(String name) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_PUBLIC_CONFIG_VAR);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsString(NXCPCodes.VID_VALUE);
+   }
 
    /**
     * Set server configuration variable
     * 
     * @param name
     * @param value
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void setServerVariable(final String name, final String value) throws IOException, NXCException
    {
@@ -3036,8 +3053,8 @@ public class NXCSession
     * Delete server configuration variable
     * 
     * @param name
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void deleteServerVariable(final String name) throws IOException, NXCException
    {
@@ -3052,8 +3069,8 @@ public class NXCSession
     *
     * @param name
     * @return
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public String getServerConfigClob(final String name) throws IOException, NXCException
    {
@@ -3069,8 +3086,8 @@ public class NXCSession
     *
     * @param name
     * @param value
-    * @throws IOException
-    * @throws NXCException
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void setServerConfigClob(final String name, final String value) throws IOException, NXCException
    {

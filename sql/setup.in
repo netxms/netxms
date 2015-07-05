@@ -29,6 +29,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConnectionPoolBaseSize','5',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConnectionPoolCooldownTime','300',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConnectionPoolMaxSize','20',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,is_public,description) VALUES ('DashboardDataExportEnableInterpolation','0',1,1,'B','Y','Enable/disable data interpolation in dashboard data export');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DBLockInfo','',0,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DBLockPID','0',0,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DBLockStatus','UNLOCKED',0,1);

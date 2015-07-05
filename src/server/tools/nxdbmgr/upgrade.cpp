@@ -61,9 +61,8 @@ static bool GenerateGUID(const TCHAR *table, const TCHAR *idColumn, const TCHAR 
 /**
  * Create table
  */
-static BOOL CreateTable(const TCHAR *pszQuery)
+static bool CreateTable(const TCHAR *pszQuery)
 {
-   BOOL bResult;
 	String query(pszQuery);
 
    query.replace(_T("$SQL:TEXT"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
@@ -71,44 +70,71 @@ static BOOL CreateTable(const TCHAR *pszQuery)
    query.replace(_T("$SQL:INT64"), g_pszSqlType[g_dbSyntax][SQL_TYPE_INT64]);
    if (g_dbSyntax == DB_SYNTAX_MYSQL)
       query += g_pszTableSuffix;
-   bResult = SQLQuery(query);
-   return bResult;
+   return SQLQuery(query);
+}
+
+/**
+ * Check if cnfiguration variable exist
+ */
+static bool IsConfigurationVariableExist(const TCHAR *name)
+{
+   bool found = false;
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT var_value FROM config WHERE var_name='%s'"), name);
+   DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+   if (hResult != 0)
+   {
+      found = (DBGetNumRows(hResult) > 0);
+      DBFreeResult(hResult);
+   }
+   return found;
 }
 
 /**
  * Create configuration parameter if it doesn't exist (unless bForceUpdate set to true)
  */
-BOOL CreateConfigParam(const TCHAR *pszName, const TCHAR *pszValue, int iVisible, int iNeedRestart, BOOL bForceUpdate)
+bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate)
 {
+   bool success = true;
    TCHAR szQuery[1024];
-   DB_RESULT hResult;
-   BOOL bVarExist = FALSE, bResult = TRUE;
-
-   // Check for variable existence
-   _sntprintf(szQuery, 1024, _T("SELECT var_value FROM config WHERE var_name='%s'"), pszName);
-   hResult = DBSelect(g_hCoreDB, szQuery);
-   if (hResult != 0)
+   if (!IsConfigurationVariableExist(name))
    {
-      if (DBGetNumRows(hResult) > 0)
-         bVarExist = TRUE;
-      DBFreeResult(hResult);
+      _sntprintf(szQuery, 1024, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart,is_public,data_type,description) VALUES (%s,%s,%d,%d,'%c','%c',%s)"),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 255), isVisible ? 1 : 0, needRestart ? 1 : 0,
+                 isPublic ? _T('Y') : _T('N'), dataType, (const TCHAR *)DBPrepareString(g_hCoreDB, description, 255));
+      success = SQLQuery(szQuery);
    }
-
-   if (!bVarExist)
-   {
-      _sntprintf(szQuery, 1024, _T("INSERT INTO config (var_name,var_value,is_visible,")
-                                _T("need_server_restart) VALUES (%s,%s,%d,%d)"),
-                 (const TCHAR *)DBPrepareString(g_hCoreDB, pszName, 63),
-					  (const TCHAR *)DBPrepareString(g_hCoreDB, pszValue, 255), iVisible, iNeedRestart);
-      bResult = SQLQuery(szQuery);
-   }
-	else if (bForceUpdate)
+	else if (forceUpdate)
 	{
       _sntprintf(szQuery, 1024, _T("UPDATE config SET var_value=%s WHERE var_name=%s"),
-                 (const TCHAR *)DBPrepareString(g_hCoreDB, pszValue, 255), (const TCHAR *)DBPrepareString(g_hCoreDB, pszName, 63));
-      bResult = SQLQuery(szQuery);
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 255), (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63));
+      success = SQLQuery(szQuery);
 	}
-   return bResult;
+   return success;
+}
+
+/**
+ * Create configuration parameter if it doesn't exist (unless bForceUpdate set to true)
+ */
+bool CreateConfigParam(const TCHAR *name, const TCHAR *value, bool isVisible, bool needRestart, bool forceUpdate)
+{
+   bool success = true;
+   TCHAR szQuery[1024];
+   if (!IsConfigurationVariableExist(name))
+   {
+      _sntprintf(szQuery, 1024, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (%s,%s,%d,%d)"),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 255), isVisible ? 1 : 0, needRestart ? 1 : 0);
+      success = SQLQuery(szQuery);
+   }
+	else if (forceUpdate)
+	{
+      _sntprintf(szQuery, 1024, _T("UPDATE config SET var_value=%s WHERE var_name=%s"),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 255), (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63));
+      success = SQLQuery(szQuery);
+	}
+   return success;
 }
 
 /**
@@ -467,6 +493,31 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
 }
 
 /**
+ * Upgrade from V357 to V358
+ */
+static BOOL H_UpgradeFromV357(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE config ADD data_type char(1) not null default 'S'\n")
+      _T("ALTER TABLE config ADD is_public char(1) not null default 'N'\n")
+      _T("ALTER TABLE config ADD description varchar(255)\n")
+      _T("ALTER TABLE config ADD possible_values $SQL:TEXT\n")
+      _T("<END>");
+   static TCHAR batchOracle[] =
+      _T("ALTER TABLE config ADD data_type char(1) default 'S' not null\n")
+      _T("ALTER TABLE config ADD is_public char(1) default 'N' not null\n")
+      _T("ALTER TABLE config ADD description varchar(255)\n")
+      _T("ALTER TABLE config ADD possible_values $SQL:TEXT\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch((g_dbSyntax == DB_SYNTAX_ORACLE) ? batchOracle : batch));
+
+   CHK_EXEC(CreateConfigParam(_T("DashboardDataExportEnableInterpolation"), _T("1"), _T("Enable/disable data interpolation in dashboard data export"), 'B', true, false, true));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='358' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V356 to V357
  */
 static BOOL H_UpgradeFromV356(int currVersion, int newVersion)
@@ -483,7 +534,7 @@ static BOOL H_UpgradeFromV356(int currVersion, int newVersion)
       DBFreeResult(hResult);
    }
 
-   if(comunityString[0] != 0)
+   if (comunityString[0] != 0)
    {
       DB_RESULT hResult = SQLSelect(_T("SELECT id, community FROM snmp_communities"));
       if (hResult != NULL)
@@ -526,8 +577,8 @@ static BOOL H_UpgradeFromV355(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(CreateConfigParam(_T("PollerThreadPoolBaseSize"), _T("10"), 1, 1));
-   CHK_EXEC(CreateConfigParam(_T("PollerThreadPoolMaxSize"), _T("250"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("PollerThreadPoolBaseSize"), _T("10"), true, true));
+   CHK_EXEC(CreateConfigParam(_T("PollerThreadPoolMaxSize"), _T("250"), true, true));
 
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='356' WHERE var_name='SchemaVersion'")));
    return TRUE;
@@ -545,7 +596,7 @@ static BOOL H_UpgradeFromV354(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(CreateConfigParam(_T("DefaultAgentCacheMode"), _T("2"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("DefaultAgentCacheMode"), _T("2"), true, true));
 
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='355' WHERE var_name='SchemaVersion'")));
    return TRUE;
@@ -638,7 +689,7 @@ static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV348(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='HouseKeepingInterval'")));
-   CHK_EXEC(CreateConfigParam(_T("HousekeeperStartTime"), _T("02:00"), 1, 1));
+   CHK_EXEC(CreateConfigParam(_T("HousekeeperStartTime"), _T("02:00"), true, true));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='349' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -8674,6 +8725,7 @@ static struct
    { 354, 355, H_UpgradeFromV354 },
    { 355, 356, H_UpgradeFromV355 },
    { 356, 357, H_UpgradeFromV356 },
+   { 357, 358, H_UpgradeFromV357 },
    { 0, 0, NULL }
 };
 

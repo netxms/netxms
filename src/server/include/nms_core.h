@@ -490,9 +490,10 @@ private:
    void sendAllObjects(NXCPMessage *pRequest);
    void sendSelectedObjects(NXCPMessage *pRequest);
    void sendEventLog(NXCPMessage *pRequest);
-   void sendAllConfigVars(UINT32 dwRqId);
-   void setConfigVariable(NXCPMessage *pRequest);
-   void deleteConfigVariable(NXCPMessage *pRequest);
+   void getConfigurationVariables(UINT32 dwRqId);
+   void getPublicConfigurationVariable(NXCPMessage *request);
+   void setConfigurationVariable(NXCPMessage *pRequest);
+   void deleteConfigurationVariable(NXCPMessage *pRequest);
    void sendUserDB(UINT32 dwRqId);
    void sendAllAlarms(UINT32 dwRqId);
    void createUser(NXCPMessage *pRequest);

@@ -347,10 +347,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_FORCE_DCI_POLL"),
       _T("CMD_GET_DCI_SCRIPT_LIST"),
       _T("CMD_DATA_COLLECTION_CONFIG"),
-      _T("CMD_SET_SERVER_ID")
+      _T("CMD_SET_SERVER_ID"),
+      _T("CMD_GET_PUBLIC_CONFIG_VAR")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_SET_SERVER_ID))
+   if ((code >= CMD_LOGIN) && (code <= CMD_GET_PUBLIC_CONFIG_VAR))
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), code);
