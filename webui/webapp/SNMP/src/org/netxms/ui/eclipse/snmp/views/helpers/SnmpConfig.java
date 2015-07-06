@@ -27,10 +27,9 @@ public class SnmpConfig
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public static SnmpConfig load() throws NXCException, IOException
+   public static SnmpConfig load(NXCSession session) throws NXCException, IOException
    {
       SnmpConfig config = new SnmpConfig();
-      final NXCSession session = ConsoleSharedData.getSession();
       
       config.communities = session.getSnmpCommunities();
       config.usmCredentials = session.getSnmpUsmCredentials();

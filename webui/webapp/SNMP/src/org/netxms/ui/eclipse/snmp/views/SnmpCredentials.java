@@ -46,9 +46,11 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCSession;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.dialogs.AddUsmCredDialog;
@@ -66,8 +68,8 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpCredentials"; //$NON-NLS-1$
 
 	private boolean modified = false;
-   private FormToolkit toolkit;
-   private ScrolledForm form;
+    private FormToolkit toolkit;
+    private ScrolledForm form;
 	private TableViewer snmpCommunityList;
 	private TableViewer snmpUsmCredList;
 	private Action actionSave;
@@ -80,6 +82,8 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	public void init(IViewSite site, IMemento memento) throws PartInitException
 	{
 		super.init(site, memento);
+
+      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		if (memento != null)
 		{
 			// Restoring, load config
@@ -87,7 +91,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					final SnmpConfig loadedConfig = SnmpConfig.load();
+					final SnmpConfig loadedConfig = SnmpConfig.load(session);
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()

@@ -449,14 +449,6 @@ public class AgentFileManager extends ViewPart
       actionUploadFile.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.uploadFile"); //$NON-NLS-1$
       handlerService.activateHandler(actionUploadFile.getActionDefinitionId(), new ActionHandler(actionUploadFile));
       
-      actionUploadFolder = new Action(Messages.get().AgentFileManager_UploadFolder) {
-         @Override
-         public void run()
-         {
-            uploadFolder();
-         }
-      };
-
       actionDelete = new Action(Messages.get().AgentFileManager_Delete, SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
