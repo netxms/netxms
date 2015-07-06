@@ -216,7 +216,7 @@ public:
    bool isSystem;
 
    InterfaceInfo(UINT32 ifIndex)
-   { 
+   {
       index = ifIndex;
       name[0] = 0;
       description[0] = 0;
@@ -529,6 +529,7 @@ public:
    UINT32 getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize);
    UINT32 updateConfigFile(const TCHAR *pszConfig);
    UINT32 enableTraps();
+   UINT32 enableFileUpdates();
 	UINT32 getPolicyInventory(AgentPolicyInfo **info);
 	UINT32 uninstallPolicy(uuid_t guid);
    UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);

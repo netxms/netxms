@@ -694,7 +694,7 @@ InterfaceList *AgentConnection::getInterfaceList()
 
                TCHAR *eptr;
                iface->type = _tcstoul(pBuf, &eptr, 10);
-            
+
                // newer agents can return if_type(mtu)
                if (*eptr == _T('('))
                {
@@ -1301,7 +1301,7 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
  * Check status of network service via agent
  */
 UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType,
-                                            WORD wPort, WORD wProto, const TCHAR *pszRequest, 
+                                            WORD wPort, WORD wProto, const TCHAR *pszRequest,
                                             const TCHAR *pszResponse, UINT32 *responseTime)
 {
    UINT32 dwRqId, dwResult;
@@ -1709,6 +1709,25 @@ UINT32 AgentConnection::enableTraps()
    msg.setId(dwRqId);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, m_dwCommandTimeout);
+   else
+      return ERR_CONNECTION_BROKEN;
+}
+
+/**
+ * Enable trap receiving on connection
+ */
+UINT32 AgentConnection::enableFileUpdates()
+{
+   NXCPMessage msg(m_nProtocolVersion);
+   UINT32 dwRqId;
+
+   dwRqId = generateRequestId();
+   msg.setCode(CMD_ENABLE_FILE_UPDATES);
+   msg.setId(dwRqId);
+   if (sendMessage(&msg))
+   {
+      return waitForRCC(dwRqId, m_dwCommandTimeout);
+   }
    else
       return ERR_CONNECTION_BROKEN;
 }

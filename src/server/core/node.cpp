@@ -96,6 +96,7 @@ Node::Node() : DataCollectionTarget()
 	m_softwarePackages = NULL;
 	m_winPerfObjects = NULL;
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
+	m_fileUpdateConn = NULL;
 }
 
 /**
@@ -175,6 +176,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
 	m_softwarePackages = NULL;
 	m_winPerfObjects = NULL;
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
+	m_fileUpdateConn = NULL;
 }
 
 /**
@@ -3367,6 +3369,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
          DbgPrintf(5, _T("Node::connectToAgent(%s [%d]): cannot set server ID on agent (%s)"), m_name, m_id, AgentErrorCodeToText(rcc));
       }
       m_pAgentConnection->enableTraps();
+      setFileUpdateConn(NULL);
       CALL_ALL_MODULES(pfOnConnectToAgent, (this, m_pAgentConnection));
 	}
    return success;
@@ -4909,6 +4912,15 @@ void Node::changeZone(UINT32 newZone)
    agentUnlock();
 
    pollerUnlock();
+}
+
+/**
+ * Set connection for file update messages
+ */
+void Node::setFileUpdateConn(AgentConnection *conn)
+{
+   delete m_fileUpdateConn;
+   m_fileUpdateConn = conn;
 }
 
 /**

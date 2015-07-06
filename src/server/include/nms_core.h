@@ -1022,7 +1022,7 @@ private:
 public:
    FileMonitoringList();
    ~FileMonitoringList();
-   void addMonitoringFile(MONITORED_FILE *fileForAdd);
+   void addMonitoringFile(MONITORED_FILE *fileForAdd, Node *obj, AgentConnection *conn);
    bool checkDuplicate(MONITORED_FILE *fileForAdd);
    ObjectArray<ClientSession>* findClientByFNameAndNodeID(const TCHAR *fileName, UINT32 nodeID);
    bool removeMonitoringFile(MONITORED_FILE *fileForRemove);

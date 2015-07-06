@@ -317,6 +317,7 @@ private:
    bool m_controlServer;
    bool m_proxyConnection;
    bool m_acceptTraps;
+   bool m_acceptFileUpdates;
    bool m_ipv6Aware;
    int m_hCurrFile;
    UINT32 m_fileRqId;
@@ -377,6 +378,7 @@ public:
 	void updateTimeStamp() { m_ts = time(NULL); }
 
    bool canAcceptTraps() { return m_acceptTraps; }
+   bool canAcceptFileUpdates() { return m_acceptFileUpdates; }
 
    virtual bool isMasterServer() { return m_masterServer; }
    virtual bool isControlServer() { return m_controlServer; }
@@ -495,7 +497,7 @@ void AddParameter(const TCHAR *szName, LONG (* fpHandler)(const TCHAR *, const T
                   int iDataType, const TCHAR *pszDescription);
 void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
 void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg);
-void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *), 
+void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *),
               const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description,
               int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
 BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList);

@@ -134,7 +134,7 @@ struct SendFileUpdateCallbackData
  */
 static EnumerationCallbackResult SendFileUpdateCallback(AbstractCommSession *session, void *data)
 {
-   if (((SendFileUpdateCallbackData *)data)->ip.equals(session->getServerAddress()))
+   if (((SendFileUpdateCallbackData *)data)->ip.equals(session->getServerAddress()) && session->canAcceptFileUpdates())
    {
       session->sendMessage(((SendFileUpdateCallbackData *)data)->pMsg);
       return _STOP;

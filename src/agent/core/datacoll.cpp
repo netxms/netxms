@@ -629,6 +629,7 @@ public:
    virtual bool isMasterServer() { return false; }
    virtual bool isControlServer() { return false; }
    virtual bool canAcceptTraps() { return true; }
+   virtual bool canAcceptFileUpdates() { return false; }
    virtual UINT64 getServerId() { return m_serverId; };
    virtual const InetAddress& getServerAddress() { return InetAddress::LOOPBACK; }
 

@@ -35,11 +35,16 @@ FileMonitoringList::~FileMonitoringList()
    MutexDestroy(m_mutex);
 };
 
-void FileMonitoringList::addMonitoringFile(MONITORED_FILE *fileForAdd)
+void FileMonitoringList::addMonitoringFile(MONITORED_FILE *fileForAdd, Node *obj, AgentConnection *conn)
 {
    lock();
    fileForAdd->session->incRefCount();
    m_monitoredFiles.add(fileForAdd);
+   if(obj->getFileUpdateConn() == NULL)
+   {
+      conn->enableFileUpdates();
+      obj->setFileUpdateConn(conn);
+   }
    unlock();
 };
 
@@ -82,6 +87,7 @@ bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
 {
    lock();
    bool deleted = false;
+   int nodeConnectionCount = 0;
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
       MONITORED_FILE* m_monitoredFile = m_monitoredFiles.get(i);
@@ -92,8 +98,16 @@ bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
          fileForRemove->session->decRefCount();
          m_monitoredFiles.remove(i);
          deleted = true;
-         break;
       }
+      if(m_monitoredFile->nodeID == fileForRemove->nodeID)
+         nodeConnectionCount++;
+   }
+
+   if(deleted && nodeConnectionCount == 1)
+   {
+      Node *object = (Node *)FindObjectById(fileForRemove->nodeID, OBJECT_NODE);
+      if(object != NULL)
+         object->setFileUpdateConn(NULL);
    }
    unlock();
    return deleted;

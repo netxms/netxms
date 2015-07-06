@@ -483,7 +483,7 @@ protected:
 
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
-   
+
    virtual void fillMessageInternal(NXCPMessage *msg);
    virtual void fillMessageInternalStage2(NXCPMessage *msg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *msg);
@@ -1184,6 +1184,7 @@ protected:
 	ComponentTree *m_components;		// Hardware components
 	ObjectArray<SoftwarePackage> *m_softwarePackages;  // installed software packages
 	ObjectArray<WinPerfObject> *m_winPerfObjects;  // Windows performance objects
+	AgentConnection *m_fileUpdateConn;
 
    void pollerLock() { MutexLock(m_hPollerMutex); }
    void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
@@ -1229,7 +1230,7 @@ protected:
 
 	void updateContainerMembership();
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
-   bool deleteDuplicateInterfaces(UINT32 rqid); 
+   bool deleteDuplicateInterfaces(UINT32 rqid);
 
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 
@@ -1293,6 +1294,7 @@ public:
 	INT16 getAgentAuthMethod() { return m_agentAuthMethod; }
    INT16 getAgentCacheMode() { return (m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode; }
 	const TCHAR *getSharedSecret() { return m_szSharedSecret; }
+	AgentConnection *getFileUpdateConn() { return m_fileUpdateConn; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
@@ -1307,6 +1309,7 @@ public:
 	void setSnmpPort(WORD port) { m_snmpPort = port; }
    void changeIPAddress(const InetAddress& ipAddr);
 	void changeZone(UINT32 newZone);
+	void setFileUpdateConn(AgentConnection *conn);
 
    ARP_CACHE *getArpCache();
    InterfaceList *getInterfaceList();

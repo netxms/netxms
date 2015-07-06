@@ -528,6 +528,17 @@ void CommSession::processingThread()
                   msg.setField(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
+            case CMD_ENABLE_FILE_UPDATES:
+               if (m_masterServer)
+               {
+                  m_acceptFileUpdates = true;
+                  msg.setField(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+               }
+               break;
 				case CMD_SNMP_REQUEST:
 					if (m_masterServer && (g_dwFlags & AF_ENABLE_SNMP_PROXY))
 					{
