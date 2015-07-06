@@ -10,7 +10,6 @@ import org.netxms.client.IpAddressListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerVariable;
-import org.netxms.client.snmp.SnmpUsmCredential;
 
 /**
  * Class which holds all elements of network discovery configuration

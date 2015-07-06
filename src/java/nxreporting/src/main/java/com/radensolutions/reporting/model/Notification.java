@@ -9,7 +9,9 @@ import java.util.UUID;
 @Entity
 @Table(name = "report_notification")
 public class Notification implements Serializable {
-    @Id
+   private static final long serialVersionUID = 1L;
+
+   @Id
     @Column(name = "id")
     @GeneratedValue
     private Integer id;

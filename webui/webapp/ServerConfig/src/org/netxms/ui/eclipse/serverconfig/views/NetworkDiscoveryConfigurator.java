@@ -23,7 +23,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -65,8 +64,6 @@ import org.netxms.ui.eclipse.serverconfig.views.helpers.AddressListElementCompar
 import org.netxms.ui.eclipse.serverconfig.views.helpers.DiscoveryConfig;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
-import org.netxms.ui.eclipse.tools.StringComparator;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Configurator for network discovery

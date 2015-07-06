@@ -21,7 +21,6 @@ package org.netxms.ui.eclipse.filemanager.widgets;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import javax.jws.Oneway;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.netxms.ui.eclipse.filemanager.Messages;

@@ -23,7 +23,6 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.views.SnmpCredentials;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
