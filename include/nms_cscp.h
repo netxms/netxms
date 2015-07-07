@@ -545,6 +545,7 @@ typedef struct
 #define CMD_SET_SERVER_ID              0x0138
 #define CMD_GET_PUBLIC_CONFIG_VAR      0x0139
 #define CMD_ENABLE_FILE_UPDATES        0x013A
+#define CMD_DETACH_LDAP_USER           0x013B
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

@@ -173,6 +173,7 @@ public:
 
 	virtual void fillMessage(NXCPMessage *msg);
 	virtual void modifyFromMessage(NXCPMessage *msg);
+	void detachLdapUser();
 
 	UINT32 getId() { return m_id; }
 	const TCHAR *getName() { return m_name; }
@@ -368,6 +369,7 @@ bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId);
 UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id);
 UINT32 NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, UINT32 *pdwId);
 UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE DetachLdapUser(UINT32 id);
 UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count);
 void NXCORE_EXPORTABLE CloseUserDatabase();
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name);

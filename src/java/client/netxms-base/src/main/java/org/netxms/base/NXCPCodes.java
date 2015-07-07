@@ -333,6 +333,8 @@ public class NXCPCodes
    public static final int CMD_DATA_COLLECTION_CONFIG = 0x0137;
    public static final int CMD_SET_SERVER_ID = 0x0138;
    public static final int CMD_GET_PUBLIC_CONFIG_VAR = 0x0139;
+   public static final int CMD_ENABLE_FILE_UPDATES = 0x013A;
+   public static final int CMD_DETACH_LDAP_USER = 0x013B;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;

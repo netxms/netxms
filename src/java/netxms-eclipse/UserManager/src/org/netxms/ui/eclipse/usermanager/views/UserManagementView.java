@@ -275,25 +275,7 @@ public class UserManagementView extends ViewPart
 			@Override
 			public void run()
 			{
-				final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
-
-				final Object firstElement = selection.getFirstElement();
-				if (firstElement instanceof User)
-				{
-					User user = (User)firstElement;
-					final ChangePasswordDialog dialog = new ChangePasswordDialog(getSite().getShell(), user.getId() == session.getUserId());
-					if (dialog.open() == Window.OK)
-					{
-						try
-						{
-							session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
-						}
-						catch(Exception e)
-						{
-							MessageDialogHelper.openError(getSite().getShell(), Messages.get().UserManagementView_CannotChangePassword, e.getMessage());
-						}
-					}
-				}
+				changePassword();
 			}
 		};
 		actionChangePassword.setEnabled(false);
@@ -562,6 +544,32 @@ public class UserManagementView extends ViewPart
    }
    
    /**
+    * Change password
+    */
+   private void changePassword()
+   {
+      final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+
+      final Object firstElement = selection.getFirstElement();
+      if (firstElement instanceof User)
+      {
+         User user = (User)firstElement;
+         final ChangePasswordDialog dialog = new ChangePasswordDialog(getSite().getShell(), user.getId() == session.getUserId());
+         if (dialog.open() == Window.OK)
+         {
+            try
+            {
+               session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
+            }
+            catch(Exception e)
+            {
+               MessageDialogHelper.openError(getSite().getShell(), Messages.get().UserManagementView_CannotChangePassword, e.getMessage());
+            }
+         }
+      }
+   }
+   
+   /**
     * Set user/group to non LDAP 
     */
    private void detachLDAPUser()
@@ -575,7 +583,7 @@ public class UserManagementView extends ViewPart
             for(Object object : selection.toList())
             {                
                ((AbstractUserObject)object).setFlags(((AbstractUserObject)object).getFlags() & ~AbstractUserObject.LDAP_USER);
-               session.modifyUserDBObject(((AbstractUserObject)object), AbstractUserObject.MODIFY_FLAGS);
+               session.detachUserFromLdap(((AbstractUserObject)object));
             }
             
          }
@@ -586,5 +594,6 @@ public class UserManagementView extends ViewPart
             return Messages.get().UserManagementView_DetachError;
          }
       }.start();
+      changePassword();
    }
 }

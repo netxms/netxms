@@ -926,6 +926,29 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg)
 }
 
 /**
+ * Modify user database object
+ */
+UINT32 NXCORE_EXPORTABLE DetachLdapUser(UINT32 id)
+{
+   UINT32 dwResult = RCC_INVALID_USER_ID;
+
+   MutexLock(m_mutexUserDatabaseAccess);
+
+   // Find object to be modified in list
+   for(int i = 0; i < m_userCount; i++)
+		if (m_users[i]->getId() == id)
+      {
+			m_users[i]->detachLdapUser();
+         SendUserDBUpdate(USER_DB_MODIFY, id, m_users[i]);
+         dwResult = RCC_SUCCESS;
+         break;
+      }
+
+   MutexUnlock(m_mutexUserDatabaseAccess);
+   return dwResult;
+}
+
+/**
  * Send user DB update for given user ID.
  * Access to suer database must be already locked.
  */
@@ -1233,7 +1256,7 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
          _tcscpy(workstation, _T("XMPP:"));
          nx_strncpy(&workstation[5], _xmppId, 251);
          WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP subscription"));
-         
+
          success = true;
          break;
       }

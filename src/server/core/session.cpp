@@ -818,6 +818,9 @@ void ClientSession::processingThread()
          case CMD_UPDATE_USER:
             updateUser(pMsg);
             break;
+         case CMD_DETACH_LDAP_USER:
+            detachLdapUser(pMsg);
+            break;
          case CMD_DELETE_USER:
             deleteUser(pMsg);
             break;
@@ -2459,7 +2462,7 @@ void ClientSession::getPublicConfigurationVariable(NXCPMessage *request)
    {
       msg.setField(VID_RCC, RCC_DB_FAILURE);
    }
-   
+
    sendMessage(&msg);
 }
 
@@ -2901,6 +2904,46 @@ void ClientSession::updateUser(NXCPMessage *pRequest)
       {
          TCHAR name[MAX_DB_STRING];
          UINT32 id = pRequest->getFieldAsUInt32(VID_USER_ID);
+         ResolveUserId(id, name, MAX_DB_STRING);
+         WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, id,
+            _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), name);
+      }
+      msg.setField(VID_RCC, result);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Delete user
+ */
+void ClientSession::detachLdapUser(NXCPMessage *pRequest)
+{
+   NXCPMessage msg;
+
+   // Prepare response message
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(pRequest->getId());
+   UINT32 id = pRequest->getFieldAsUInt32(VID_USER_ID);
+
+   // Check user rights
+   if (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   else if (!(m_dwFlags & CSF_USER_DB_LOCKED))
+   {
+      // User database have to be locked before any
+      // changes to user database can be made
+      msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+   else
+   {
+      UINT32 result = DetachLdapUser(id);
+      if (result == RCC_SUCCESS)
+      {
+         TCHAR name[MAX_DB_STRING];
          ResolveUserId(id, name, MAX_DB_STRING);
          WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, id,
             _T("%s %s modified"), (id & GROUP_FLAG) ? _T("Group") : _T("User"), name);

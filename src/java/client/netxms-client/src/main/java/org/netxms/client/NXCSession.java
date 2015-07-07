@@ -3319,6 +3319,24 @@ public class NXCSession
     * Modify user database object
     * 
     * @param object User data
+    * @param fields bit mask indicating fields to modify
+    * @throws IOException
+    *            if socket I/O error occurs
+    * @throws NXCException
+    *            if NetXMS server returns an error or operation was timed out
+    */
+   public void detachUserFromLdap(final AbstractUserObject object) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DETACH_LDAP_USER);
+      msg.setFieldInt32(NXCPCodes.VID_USER_ID, (int)object.getId());
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Modify user database object
+    * 
+    * @param object User data
     * @throws IOException
     *            if socket I/O error occurs
     * @throws NXCException

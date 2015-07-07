@@ -181,19 +181,23 @@ void UserDatabaseObject::modifyFromMessage(NXCPMessage *msg)
 	if (fields & USER_MODIFY_FLAGS)
 	{
 	   flags = msg->getFieldAsUInt16(VID_USER_FLAGS);
-	   //Null dn if user is detached from LDAP
-      if((m_flags & UF_LDAP_USER) && !(flags & UF_LDAP_USER))
-         setDn(NULL);
 		// Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_LDAP_USER flags from message
 		// Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
-		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_LDAP_USER);
+		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD);
 		if ((m_id == 0) || (m_id == GROUP_EVERYONE))
 			m_flags |= flags & UF_CHANGE_PASSWORD;
 		else
-			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_LDAP_USER);
+			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD);
 
 	}
 
+	m_flags |= UF_MODIFIED;
+}
+
+void UserDatabaseObject::detachLdapUser()
+{
+   m_flags &= ~UF_LDAP_USER;
+   setDn(NULL);
 	m_flags |= UF_MODIFIED;
 }
 
@@ -359,7 +363,7 @@ User::User(DB_RESULT hResult, int row) : UserDatabaseObject(hResult, row)
          m_password.hashType = PWD_HASH_SHA256;
          if (_tcslen(buffer) >= 82)
          {
-            if ((StrToBin(&buffer[2], m_password.salt, PASSWORD_SALT_LENGTH) == PASSWORD_SALT_LENGTH) && 
+            if ((StrToBin(&buffer[2], m_password.salt, PASSWORD_SALT_LENGTH) == PASSWORD_SALT_LENGTH) &&
                 (StrToBin(&buffer[18], m_password.hash, SHA256_DIGEST_SIZE) == SHA256_DIGEST_SIZE))
                validHash = true;
          }

@@ -498,6 +498,7 @@ private:
    void sendAllAlarms(UINT32 dwRqId);
    void createUser(NXCPMessage *pRequest);
    void updateUser(NXCPMessage *pRequest);
+   void detachLdapUser(NXCPMessage *pRequest);
    void deleteUser(NXCPMessage *pRequest);
    void setPassword(NXCPMessage *pRequest);
    void lockUserDB(UINT32 dwRqId, BOOL bLock);
