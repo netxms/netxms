@@ -6954,9 +6954,18 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
    }
 
    if (rcc == ERR_SUCCESS)
+   {
       DbgPrintf(4, _T("SyncDataCollection: node %s [%d] synchronized"), m_name, (int)m_id);
+      m_dwDynamicFlags &= ~NDF_CACHE_MODE_NOT_SUPPORTED;
+   }
    else
+   {
       DbgPrintf(4, _T("SyncDataCollection: node %s [%d] not synchronized (%s)"), m_name, (int)m_id, AgentErrorCodeToText(rcc));
+      if (rcc == ERR_NOT_IMPLEMENTED)
+      {
+         m_dwDynamicFlags |= NDF_CACHE_MODE_NOT_SUPPORTED;
+      }
+   }
 }
 
 /**

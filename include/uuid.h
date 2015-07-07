@@ -48,6 +48,7 @@ public:
    uuid(const uuid_t v) { memcpy(m_value, v, UUID_LENGTH); }
 
    int compare(const uuid& u) const { return uuid_compare(m_value, u.m_value); }
+   bool equals(const uuid& u) const { return uuid_compare(m_value, u.m_value) == 0; }
    const uuid_t& getValue() const { return m_value; }
    bool isNull() const { return uuid_is_null(m_value); }
    TCHAR *toString(TCHAR *buffer) const { return uuid_to_string(m_value, buffer); }

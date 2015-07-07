@@ -102,8 +102,9 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 #define NDF_DELETE_IN_PROGRESS         0x004000
 #define NDF_NETWORK_PATH_PROBLEM       0x008000
 #define NDF_QUEUED_FOR_INSTANCE_POLL   0x010000
+#define NDF_CACHE_MODE_NOT_SUPPORTED   0x020000
 
-#define NDF_PERSISTENT (NDF_UNREACHABLE | NDF_NETWORK_PATH_PROBLEM | NDF_AGENT_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_CPSNMP_UNREACHABLE)
+#define NDF_PERSISTENT (NDF_UNREACHABLE | NDF_NETWORK_PATH_PROBLEM | NDF_AGENT_UNREACHABLE | NDF_SNMP_UNREACHABLE | NDF_CPSNMP_UNREACHABLE | NDF_CACHE_MODE_NOT_SUPPORTED)
 
 #define __NDF_FLAGS_DEFINED
 
@@ -1292,7 +1293,7 @@ public:
 	const TCHAR *getDriverName() { return (m_driver != NULL) ? m_driver->getName() : _T("GENERIC"); }
 	UINT16 getAgentPort() { return m_agentPort; }
 	INT16 getAgentAuthMethod() { return m_agentAuthMethod; }
-   INT16 getAgentCacheMode() { return (m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode; }
+   INT16 getAgentCacheMode() { return (m_dwDynamicFlags & NDF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }
 	const TCHAR *getSharedSecret() { return m_szSharedSecret; }
 	AgentConnection *getFileUpdateConn() { return m_fileUpdateConn; }
 
