@@ -1964,9 +1964,6 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
 			}
 		}
 
-		sendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n"), m_name);
-		sendPollerMsg(dwRqId, _T("Node configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
-
 		// Call hooks in loaded modules
 		for(UINT32 i = 0; i < g_dwNumModules; i++)
 		{
@@ -1978,9 +1975,20 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
 			}
 		}
 
+      // Setup permanent connection to agent if not present (needed for proper configuration re-sync)
+		if (m_dwFlags & NF_IS_NATIVE_AGENT)
+		{
+         agentLock();
+         connectToAgent();
+         agentUnlock();
+      }
+
 		// Execute hook script
 		poller->setStatus(_T("hook"));
 		executeHookScript(_T("ConfigurationPoll"));
+
+		sendPollerMsg(dwRqId, _T("Finished configuration poll for node %s\r\n"), m_name);
+		sendPollerMsg(dwRqId, _T("Node configuration was%schanged after poll\r\n"), hasChanges ? _T(" ") : _T(" not "));
 
 		m_dwDynamicFlags |= NDF_CONFIGURATION_POLL_PASSED;
    }
@@ -3363,6 +3371,10 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       else
       {
          DbgPrintf(5, _T("Node::connectToAgent(%s [%d]): cannot set server ID on agent (%s)"), m_name, m_id, AgentErrorCodeToText(rcc));
+         if (rcc == ERR_UNKNOWN_COMMAND)
+         {
+            m_dwDynamicFlags |= NDF_CACHE_MODE_NOT_SUPPORTED;
+         }
       }
       m_pAgentConnection->enableTraps();
       setFileUpdateConn(NULL);
@@ -6961,7 +6973,7 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
    else
    {
       DbgPrintf(4, _T("SyncDataCollection: node %s [%d] not synchronized (%s)"), m_name, (int)m_id, AgentErrorCodeToText(rcc));
-      if (rcc == ERR_NOT_IMPLEMENTED)
+      if ((rcc == ERR_UNKNOWN_COMMAND) || (rcc == ERR_NOT_IMPLEMENTED))
       {
          m_dwDynamicFlags |= NDF_CACHE_MODE_NOT_SUPPORTED;
       }
