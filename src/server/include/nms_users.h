@@ -151,7 +151,7 @@ class NXCORE_EXPORTABLE UserDatabaseObject
 {
 protected:
 	UINT32 m_id;
-   uuid_t m_guid;
+   uuid m_guid;
 	TCHAR m_name[MAX_USER_NAME];
 	TCHAR m_description[MAX_USER_DESCR];
 	UINT64 m_systemRights;
@@ -179,7 +179,7 @@ public:
 	const TCHAR *getDescription() { return m_description; }
 	UINT64 getSystemRights() { return m_systemRights; }
 	UINT32 getFlags() { return m_flags; }
-	TCHAR *getGuidAsText(TCHAR *buffer) { return uuid_to_string(m_guid, buffer); }
+   TCHAR *getGuidAsText(TCHAR *buffer) { return m_guid.toString(buffer); }
    const TCHAR *getDn() { return m_userDn; }
 
 	bool isDeleted() { return (m_flags & UF_DELETED) ? true : false; }

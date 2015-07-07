@@ -935,17 +935,15 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
  */
 static bool ObjectGuidComparator(NetObj *object, void *data)
 {
-	uuid_t temp;
-	object->getGuid(temp);
-	return !object->isDeleted() && !uuid_compare((BYTE *)data, temp);
+   return !object->isDeleted() && !object->getGuid().compare(*((const uuid *)data));
 }
 
 /**
  * Find object by GUID
  */
-NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass)
+NetObj NXCORE_EXPORTABLE *FindObjectByGUID(const uuid& guid, int objClass)
 {
-	NetObj *object = g_idxObjectById.find(ObjectGuidComparator, guid);
+	NetObj *object = g_idxObjectById.find(ObjectGuidComparator, (void *)&guid);
 	return (object != NULL) ? (((objClass == -1) || (objClass == object->getObjectClass())) ? object : NULL) : NULL;
 }
 

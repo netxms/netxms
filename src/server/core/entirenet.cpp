@@ -28,7 +28,7 @@ Network::Network() : NetObj()
 {
    m_id = BUILTIN_OID_NETWORK;
    _tcscpy(m_name, _T("Entire Network"));
-	uuid_generate(m_guid);
+   m_guid = uuid::generate();
 }
 
 /**

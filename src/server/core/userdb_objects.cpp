@@ -73,7 +73,7 @@ UserDatabaseObject::UserDatabaseObject(DB_RESULT hResult, int row)
 	m_systemRights = DBGetFieldUInt64(hResult, row, 2);
 	m_flags = DBGetFieldULong(hResult, row, 3);
 	DBGetField(hResult, row, 4, m_description, MAX_USER_DESCR);
-	DBGetFieldGUID(hResult, row, 5, m_guid);
+	m_guid = DBGetFieldGUID(hResult, row, 5);
 	m_userDn = DBGetField(hResult, row, 6, NULL, 0);
 }
 
@@ -82,7 +82,13 @@ UserDatabaseObject::UserDatabaseObject(DB_RESULT hResult, int row)
  */
 UserDatabaseObject::UserDatabaseObject()
 {
+   m_id = 0;
+   m_guid = uuid::generate();
+   m_name[0] = 0;
    m_userDn = NULL;
+	m_systemRights = 0;
+	m_description[0] = 0;
+	m_flags = 0;
 }
 
 /**
@@ -91,7 +97,7 @@ UserDatabaseObject::UserDatabaseObject()
 UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 {
 	m_id = id;
-	uuid_generate(m_guid);
+   m_guid = uuid::generate();
 	nx_strncpy(m_name, name, MAX_USER_NAME);
 	m_systemRights = 0;
 	m_description[0] = 0;
@@ -133,7 +139,7 @@ void UserDatabaseObject::fillMessage(NXCPMessage *msg)
    msg->setField(VID_USER_FLAGS, (WORD)m_flags);
    msg->setField(VID_USER_SYS_RIGHTS, m_systemRights);
    msg->setField(VID_USER_DESCRIPTION, m_description);
-   msg->setField(VID_GUID, m_guid, UUID_LENGTH);
+   msg->setField(VID_GUID, m_guid);
    m_attributes.fillMessage(msg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
 }
 
@@ -395,7 +401,7 @@ User::User(DB_RESULT hResult, int row) : UserDatabaseObject(hResult, row)
 /**
  * Constructor for user object - create default superuser
  */
-User::User()
+User::User() : UserDatabaseObject()
 {
 	m_id = 0;
 	_tcscpy(m_name, _T("admin"));
@@ -406,7 +412,6 @@ User::User()
 	CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
 	m_graceLogins = MAX_GRACE_LOGINS;
 	m_authMethod = AUTH_NETXMS_PASSWORD;
-	uuid_generate(m_guid);
 	m_certMappingMethod = USER_MAP_CERT_BY_CN;
 	m_certMappingData = NULL;
 	m_authFailures = 0;
@@ -450,7 +455,7 @@ User::~User()
  */
 bool User::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR password[128], guidText[64];
+	TCHAR password[128];
 
    // Clear modification flag
    m_flags &= ~UF_MODIFIED;
@@ -495,7 +500,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_fullName, DB_BIND_STATIC);
    DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
    DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_graceLogins);
-   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guidText), DB_BIND_STATIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_authMethod);
    DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_certMappingMethod);
    DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_certMappingData, DB_BIND_STATIC);
@@ -736,7 +741,6 @@ Group::Group() : UserDatabaseObject()
 	m_flags = UF_MODIFIED;
 	m_systemRights = 0;
 	_tcscpy(m_description, _T("Built-in everyone group"));
-	uuid_generate(m_guid);
 	m_memberCount = 0;
 	m_members = NULL;
 }
@@ -763,8 +767,6 @@ Group::~Group()
  */
 bool Group::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR guidText[64];
-
    // Clear modification flag
    m_flags &= ~UF_MODIFIED;
 
@@ -784,7 +786,7 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, m_systemRights);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_flags);
    DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guidText), DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
    DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
 

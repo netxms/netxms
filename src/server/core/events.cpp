@@ -279,8 +279,7 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                case 'g':   // Source object's GUID
                   dwSize += 36;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-						pObject->getGuid(guid);
-						uuid_to_string(guid, &pText[dwPos]);
+                  pObject->getGuid().toString(&pText[dwPos]);
                   dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'i':   // Source object identifier in form 0xhhhhhhhh

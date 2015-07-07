@@ -29,26 +29,21 @@
 #include <netdb.h>
 #endif
 
-
-//
-// Get policy list
-//
-
+/**
+ * Get policy list
+ */
 static int GetPolicyInventory(AgentConnection &conn)
 {
 	AgentPolicyInfo *ap;
 	UINT32 rcc = conn.getPolicyInventory(&ap);
 	if (rcc == ERR_SUCCESS)
 	{
-		TCHAR buffer[64];
-		uuid_t guid;
-
 		_tprintf(_T("GUID                                 Type Server\n")
 		         _T("----------------------------------------------------------\n"));
 		for(int i = 0; i < ap->size(); i++)
 		{
-			ap->getGuid(i, guid);
-			_tprintf(_T("%-16s %-4d %s\n"), uuid_to_string(guid, buffer), ap->getType(i), ap->getServer(i));
+		   TCHAR buffer[64];
+			_tprintf(_T("%-16s %-4d %s\n"), ap->getGuid(i).toString(buffer), ap->getType(i), ap->getServer(i));
 		}
 		delete ap;
 	}

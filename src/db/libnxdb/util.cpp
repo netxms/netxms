@@ -51,7 +51,7 @@ bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table,
 /**
  * Check if given record exists in database
  */
-bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const uuid_t id)
+bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const uuid& id)
 {
 	bool exist = false;
 
@@ -61,9 +61,7 @@ bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table,
 	DB_STATEMENT hStmt = DBPrepare(hdb, query);
 	if (hStmt != NULL)
 	{
-      TCHAR guidText[64];
-      uuid_to_string(id, guidText);
-		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guidText, DB_BIND_STATIC);
+		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, id);
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{

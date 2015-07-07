@@ -299,9 +299,9 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
          break;
       case NXCP_DT_BINARY:
          entry = CreateMessageField(12 + size);
-         entry->data.df_string.length = (UINT32)size;
-         if ((entry->data.df_string.length > 0) && (value != NULL))
-            memcpy(entry->data.df_string.value, value, entry->data.df_string.length);
+         entry->data.df_binary.length = (UINT32)size;
+         if ((entry->data.df_binary.length > 0) && (value != NULL))
+            memcpy(entry->data.df_binary.value, value, entry->data.df_binary.length);
          break;
       case NXCP_DT_INETADDR:
          entry = CreateMessageField(32);
@@ -695,6 +695,29 @@ BYTE *NXCPMessage::getBinaryFieldPtr(UINT32 fieldId, size_t *size)
       data = NULL;
    }
    return data;
+}
+
+/**
+ * Get field as GUID
+ * Returns NULL GUID on error
+ */
+uuid NXCPMessage::getFieldAsGUID(UINT32 fieldId)
+{
+   NXCP_MESSAGE_FIELD *f = find(fieldId);
+   if (f == NULL)
+      return uuid::NULL_UUID;
+
+   if ((f->type == NXCP_DT_BINARY) && (f->df_binary.length == UUID_LENGTH))
+   {
+      return uuid(f->df_binary.value);
+   }
+   else if (f->type == NXCP_DT_STRING)
+   {
+      TCHAR buffer[64] = _T("");
+      getFieldAsString(fieldId, buffer, 64);
+      return uuid::parse(buffer);
+   }
+   return uuid::NULL_UUID;
 }
 
 /**

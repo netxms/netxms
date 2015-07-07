@@ -363,7 +363,7 @@ class NXCORE_EXPORTABLE SummaryTable
 {
 private:
    INT32 m_id;
-   uuid_t m_guid;
+   uuid m_guid;
    TCHAR m_title[MAX_DB_STRING];
    UINT32 m_flags;
    ObjectArray<SummaryTableColumn> *m_columns;
@@ -407,7 +407,7 @@ private:
 
 protected:
    UINT32 m_id;
-	uuid_t m_guid;
+	uuid m_guid;
    UINT32 m_dwTimeStamp;       // Last change time stamp
    UINT32 m_dwRefCount;        // Number of references. Object can be destroyed only when this counter is zero
    TCHAR m_name[MAX_OBJECT_NAME];
@@ -424,7 +424,7 @@ protected:
    bool m_isDeleted;
    bool m_isHidden;
 	bool m_isSystem;
-	uuid_t m_image;
+	uuid m_image;
    MUTEX m_mutexProperties;         // Object data access mutex
    MUTEX m_mutexRefCount;     // Reference counter access mutex
    RWLOCK m_rwlockParentList; // Lock for parent list
@@ -496,14 +496,14 @@ public:
    NetObj();
    virtual ~NetObj();
 
-   virtual int getObjectClass() { return OBJECT_GENERIC; }
+   virtual int getObjectClass() const { return OBJECT_GENERIC; }
 
-   UINT32 getId() { return m_id; }
-   const TCHAR *getName() { return m_name; }
-   int Status() { return m_iStatus; }
+   UINT32 getId() const { return m_id; }
+   const TCHAR *getName() const { return m_name; }
+   int Status() const { return m_iStatus; }
    int getPropagatedStatus();
-   UINT32 getTimeStamp() { return m_dwTimeStamp; }
-	void getGuid(uuid_t out) { memcpy(out, m_guid, UUID_LENGTH); }
+   UINT32 getTimeStamp() const { return m_dwTimeStamp; }
+	const uuid& getGuid() const { return m_guid; }
 	const TCHAR *getComments() { return CHECK_NULL_EX(m_pszComments); }
    PostalAddress *getPostalAddress() { return m_postalAddress; }
    void setPostalAddress(PostalAddress * addr) { delete m_postalAddress; m_postalAddress = addr; markAsModified();}
@@ -541,7 +541,7 @@ public:
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
    void setId(UINT32 dwId) { m_id = dwId; setModified(); }
-	void generateGuid() { uuid_generate(m_guid); }
+   void generateGuid() { m_guid = uuid::generate(); }
    void setName(const TCHAR *pszName) { nx_strncpy(m_name, pszName, MAX_OBJECT_NAME); setModified(); }
    void resetStatus() { m_iStatus = STATUS_UNKNOWN; setModified(); }
    void setComments(TCHAR *text);	/* text must be dynamically allocated */
@@ -669,7 +669,7 @@ public:
 	Template(ConfigEntry *config);
    virtual ~Template();
 
-   virtual int getObjectClass() { return OBJECT_TEMPLATE; }
+   virtual int getObjectClass() const { return OBJECT_TEMPLATE; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -765,7 +765,7 @@ public:
    Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const InetAddressList& addrList, UINT32 ifType, UINT32 zoneId);
    virtual ~Interface();
 
-   virtual int getObjectClass() { return OBJECT_INTERFACE; }
+   virtual int getObjectClass() const { return OBJECT_INTERFACE; }
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
@@ -864,7 +864,7 @@ public:
                   Node *pHostNode = NULL, UINT32 dwPollerNode = 0);
    virtual ~NetworkService();
 
-   virtual int getObjectClass() { return OBJECT_NETWORKSERVICE; }
+   virtual int getObjectClass() const { return OBJECT_NETWORKSERVICE; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -895,7 +895,7 @@ public:
    VPNConnector(bool hidden);
    virtual ~VPNConnector();
 
-   virtual int getObjectClass() { return OBJECT_VPNCONNECTOR; }
+   virtual int getObjectClass() const { return OBJECT_VPNCONNECTOR; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -903,7 +903,7 @@ public:
 
    bool isLocalAddr(const InetAddress& addr);
    bool isRemoteAddr(const InetAddress& addr);
-   UINT32 getPeerGatewayId() { return m_dwPeerGateway; }
+   UINT32 getPeerGatewayId() const { return m_dwPeerGateway; }
    InetAddress getPeerGatewayAddr();
 };
 
@@ -983,7 +983,7 @@ public:
    MobileDevice(const TCHAR *name, const TCHAR *deviceId);
    virtual ~MobileDevice();
 
-   virtual int getObjectClass() { return OBJECT_MOBILEDEVICE; }
+   virtual int getObjectClass() const { return OBJECT_MOBILEDEVICE; }
 
    virtual BOOL loadFromDatabase(UINT32 dwId);
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
@@ -1026,7 +1026,7 @@ public:
    AccessPoint(const TCHAR *name, UINT32 index, const BYTE *macAddr);
    virtual ~AccessPoint();
 
-   virtual int getObjectClass() { return OBJECT_ACCESSPOINT; }
+   virtual int getObjectClass() const { return OBJECT_ACCESSPOINT; }
 
    virtual BOOL loadFromDatabase(UINT32 dwId);
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
@@ -1072,7 +1072,7 @@ public:
    Cluster(const TCHAR *pszName, UINT32 zoneId);
 	virtual ~Cluster();
 
-   virtual int getObjectClass() { return OBJECT_CLUSTER; }
+   virtual int getObjectClass() const { return OBJECT_CLUSTER; }
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
@@ -1251,7 +1251,7 @@ public:
    Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone);
    virtual ~Node();
 
-   virtual int getObjectClass() { return OBJECT_NODE; }
+   virtual int getObjectClass() const { return OBJECT_NODE; }
 	UINT32 getIcmpProxy() { return m_icmpProxy; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
@@ -1594,7 +1594,7 @@ public:
    Subnet(const InetAddress& addr, UINT32 dwZone, bool bSyntheticMask);
    virtual ~Subnet();
 
-   virtual int getObjectClass() { return OBJECT_SUBNET; }
+   virtual int getObjectClass() const { return OBJECT_SUBNET; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1640,7 +1640,7 @@ public:
    ServiceRoot();
    virtual ~ServiceRoot();
 
-   virtual int getObjectClass() { return OBJECT_SERVICEROOT; }
+   virtual int getObjectClass() const { return OBJECT_SERVICEROOT; }
 
 	virtual bool showThresholdSummary();
 };
@@ -1654,7 +1654,7 @@ public:
    TemplateRoot();
    virtual ~TemplateRoot();
 
-   virtual int getObjectClass() { return OBJECT_TEMPLATEROOT; }
+   virtual int getObjectClass() const { return OBJECT_TEMPLATEROOT; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
@@ -1681,7 +1681,7 @@ public:
    Container(const TCHAR *pszName, UINT32 dwCategory);
    virtual ~Container();
 
-   virtual int getObjectClass() { return OBJECT_CONTAINER; }
+   virtual int getObjectClass() const { return OBJECT_CONTAINER; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1713,7 +1713,7 @@ public:
    TemplateGroup(const TCHAR *pszName) : Container(pszName, 0) { m_iStatus = STATUS_NORMAL; }
    virtual ~TemplateGroup() { }
 
-   virtual int getObjectClass() { return OBJECT_TEMPLATEGROUP; }
+   virtual int getObjectClass() const { return OBJECT_TEMPLATEGROUP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual bool showThresholdSummary();
@@ -1735,7 +1735,7 @@ public:
    Rack(const TCHAR *name, int height);
    virtual ~Rack();
 
-   virtual int getObjectClass() { return OBJECT_RACK; }
+   virtual int getObjectClass() const { return OBJECT_RACK; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1764,7 +1764,7 @@ public:
    Zone(UINT32 zoneId, const TCHAR *name);
    virtual ~Zone();
 
-   virtual int getObjectClass() { return OBJECT_ZONE; }
+   virtual int getObjectClass() const { return OBJECT_ZONE; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1806,7 +1806,7 @@ public:
    Network();
    virtual ~Network();
 
-   virtual int getObjectClass() { return OBJECT_NETWORK; }
+   virtual int getObjectClass() const { return OBJECT_NETWORK; }
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
 
 	virtual bool showThresholdSummary();
@@ -1843,7 +1843,7 @@ public:
    Condition(bool hidden);
    virtual ~Condition();
 
-   virtual int getObjectClass() { return OBJECT_CONDITION; }
+   virtual int getObjectClass() const { return OBJECT_CONDITION; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1881,7 +1881,7 @@ public:
    AgentPolicy(int type);
    AgentPolicy(const TCHAR *name, int type);
 
-   virtual int getObjectClass() { return OBJECT_AGENTPOLICY; }
+   virtual int getObjectClass() const { return OBJECT_AGENTPOLICY; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1910,7 +1910,7 @@ public:
    AgentPolicyConfig(const TCHAR *name);
    virtual ~AgentPolicyConfig();
 
-   virtual int getObjectClass() { return OBJECT_AGENTPOLICY_CONFIG; }
+   virtual int getObjectClass() const { return OBJECT_AGENTPOLICY_CONFIG; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1930,7 +1930,7 @@ public:
    PolicyGroup(const TCHAR *pszName) : Container(pszName, 0) { }
    virtual ~PolicyGroup() { }
 
-   virtual int getObjectClass() { return OBJECT_POLICYGROUP; }
+   virtual int getObjectClass() const { return OBJECT_POLICYGROUP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual bool showThresholdSummary();
@@ -1945,7 +1945,7 @@ public:
    PolicyRoot();
    virtual ~PolicyRoot();
 
-   virtual int getObjectClass() { return OBJECT_POLICYROOT; }
+   virtual int getObjectClass() const { return OBJECT_POLICYROOT; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
@@ -1958,7 +1958,7 @@ public:
    NetworkMapRoot();
    virtual ~NetworkMapRoot();
 
-   virtual int getObjectClass() { return OBJECT_NETWORKMAPROOT; }
+   virtual int getObjectClass() const { return OBJECT_NETWORKMAPROOT; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
@@ -1972,7 +1972,7 @@ public:
    NetworkMapGroup(const TCHAR *pszName) : Container(pszName, 0) { }
    virtual ~NetworkMapGroup() { }
 
-   virtual int getObjectClass() { return OBJECT_NETWORKMAPGROUP; }
+   virtual int getObjectClass() const { return OBJECT_NETWORKMAPGROUP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual bool showThresholdSummary();
@@ -1992,7 +1992,7 @@ protected:
 	int m_backgroundColor;
 	int m_defaultLinkColor;
 	int m_defaultLinkRouting;
-	uuid_t m_background;
+	uuid m_background;
 	double m_backgroundLatitude;
 	double m_backgroundLongitude;
 	int m_backgroundZoom;
@@ -2016,7 +2016,7 @@ public:
 	NetworkMap(int type, UINT32 seed);
    virtual ~NetworkMap();
 
-   virtual int getObjectClass() { return OBJECT_NETWORKMAP; }
+   virtual int getObjectClass() const { return OBJECT_NETWORKMAP; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
@@ -2042,7 +2042,7 @@ public:
    DashboardRoot();
    virtual ~DashboardRoot();
 
-   virtual int getObjectClass() { return OBJECT_DASHBOARDROOT; }
+   virtual int getObjectClass() const { return OBJECT_DASHBOARDROOT; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 };
 
@@ -2078,7 +2078,7 @@ public:
    Dashboard(const TCHAR *name);
    virtual ~Dashboard();
 
-   virtual int getObjectClass() { return OBJECT_DASHBOARD; }
+   virtual int getObjectClass() const { return OBJECT_DASHBOARD; }
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
@@ -2126,7 +2126,7 @@ public:
 
 	static void init();
 
-	virtual int getObjectClass() { return OBJECT_SLMCHECK; }
+	virtual int getObjectClass() const { return OBJECT_SLMCHECK; }
 
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -2200,7 +2200,7 @@ public:
 	BusinessServiceRoot();
 	virtual ~BusinessServiceRoot();
 
-	virtual int getObjectClass() { return OBJECT_BUSINESSSERVICEROOT; }
+	virtual int getObjectClass() const { return OBJECT_BUSINESSSERVICEROOT; }
 
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
    void LoadFromDB();
@@ -2230,7 +2230,7 @@ public:
 	BusinessService(const TCHAR *name);
 	virtual ~BusinessService();
 
-	virtual int getObjectClass() { return OBJECT_BUSINESSSERVICE; }
+	virtual int getObjectClass() const { return OBJECT_BUSINESSSERVICE; }
 
 	virtual BOOL loadFromDatabase(UINT32 dwId);
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
@@ -2264,7 +2264,7 @@ public:
 	NodeLink(const TCHAR *name, UINT32 nodeId);
 	virtual ~NodeLink();
 
-	virtual int getObjectClass() { return OBJECT_NODELINK; }
+	virtual int getObjectClass() const { return OBJECT_NODELINK; }
 
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -2324,7 +2324,7 @@ NetObj NXCORE_EXPORTABLE *MacDbFind(const BYTE *macAddr);
 
 NetObj NXCORE_EXPORTABLE *FindObjectById(UINT32 dwId, int objClass = -1);
 NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass);
-NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass);
+NetObj NXCORE_EXPORTABLE *FindObjectByGUID(const uuid& guid, int objClass);
 const TCHAR NXCORE_EXPORTABLE *GetObjectName(DWORD id, const TCHAR *defaultName);
 Template NXCORE_EXPORTABLE *FindTemplateByName(const TCHAR *pszName);
 Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddress& ipAddr);

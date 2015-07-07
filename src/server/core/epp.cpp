@@ -28,7 +28,7 @@
 EPRule::EPRule(UINT32 id)
 {
    m_id = id;
-   uuid_generate(m_guid);
+   m_guid = uuid::generate();
    m_dwFlags = 0;
    m_dwNumSources = 0;
    m_pdwSourceList = NULL;
@@ -54,7 +54,7 @@ EPRule::EPRule(UINT32 id)
 EPRule::EPRule(ConfigEntry *config)
 {
    m_id = 0;
-   config->getSubEntryValueAsUUID(_T("guid"), m_guid);
+   m_guid = config->getSubEntryValueAsUUID(_T("guid"));
    m_dwFlags = config->getSubEntryValueAsUInt(_T("flags"));
    m_dwNumSources = 0;
    m_pdwSourceList = NULL;
@@ -117,7 +117,7 @@ EPRule::EPRule(ConfigEntry *config)
 EPRule::EPRule(DB_RESULT hResult, int row)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
-   DBGetFieldGUID(hResult, row, 1, m_guid);
+   m_guid = DBGetFieldGUID(hResult, row, 1);
    m_dwFlags = DBGetFieldULong(hResult, row, 2);
    m_pszComment = DBGetField(hResult, row, 3, NULL, 0);
 	DBGetField(hResult, row, 4, m_szAlarmMessage, MAX_EVENT_MSG_LENGTH);
@@ -159,7 +159,7 @@ EPRule::EPRule(NXCPMessage *msg)
 
    m_dwFlags = msg->getFieldAsUInt32(VID_FLAGS);
    m_id = msg->getFieldAsUInt32(VID_RULE_ID);
-   msg->getFieldAsBinary(VID_GUID, m_guid, UUID_LENGTH);
+   m_guid = msg->getFieldAsGUID(VID_GUID);
    m_pszComment = msg->getFieldAsString(VID_COMMENTS);
 
    m_dwNumActions = msg->getFieldAsUInt32(VID_NUM_ACTIONS);
@@ -254,8 +254,6 @@ void EPRule::createNXMPRecord(String &str)
       NetObj *object = FindObjectById(m_pdwSourceList[i]);
       if (object != NULL)
       {
-         uuid_t guid;
-         object->getGuid(guid);
          TCHAR guidText[128];
          str.appendFormattedString(_T("\t\t\t\t<source id=\"%d\">\n")
                                 _T("\t\t\t\t\t<name>%s</name>\n")
@@ -264,7 +262,7 @@ void EPRule::createNXMPRecord(String &str)
                                 _T("\t\t\t\t</source>\n"),
                                 object->getId(),
                                 (const TCHAR *)EscapeStringForXML2(object->getName()),
-                                uuid_to_string(guid, guidText), object->getObjectClass());
+                                object->getGuid().toString(guidText), object->getObjectClass());
       }
    }
 
@@ -650,7 +648,7 @@ void EPRule::saveToDB(DB_HANDLE hdb)
                        _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
 							  _T("situation_id,situation_instance) ")
                        _T("VALUES (%d,'%s',%d,%s,%s,%d,%s,%s,%d,%d,%d,%s)"),
-              m_id, uuid_to_string(m_guid, guidText),m_dwFlags, (const TCHAR *)DBPrepareString(hdb, m_pszComment),
+              m_id, m_guid.toString(guidText), m_dwFlags, (const TCHAR *)DBPrepareString(hdb, m_pszComment),
 				  (const TCHAR *)DBPrepareString(hdb, m_szAlarmMessage), m_iAlarmSeverity,
 	           (const TCHAR *)DBPrepareString(hdb, m_szAlarmKey),
 	           (const TCHAR *)DBPrepareString(hdb, m_pszScript), m_dwAlarmTimeout, m_dwAlarmTimeoutEvent,
@@ -705,7 +703,7 @@ void EPRule::createMessage(NXCPMessage *msg)
 {
    msg->setField(VID_FLAGS, m_dwFlags);
    msg->setField(VID_RULE_ID, m_id);
-   msg->setField(VID_GUID, m_guid, UUID_LENGTH);
+   msg->setField(VID_GUID, m_guid);
    msg->setField(VID_ALARM_SEVERITY, (WORD)m_iAlarmSeverity);
    msg->setField(VID_ALARM_KEY, m_szAlarmKey);
    msg->setField(VID_ALARM_MESSAGE, m_szAlarmMessage);
@@ -904,12 +902,12 @@ bool EventPolicy::isActionInUse(UINT32 dwActionId)
 /**
  * Export rule
  */
-void EventPolicy::exportRule(String &str, uuid_t guid)
+void EventPolicy::exportRule(String& str, const uuid& guid)
 {
    readLock();
    for(UINT32 i = 0; i < m_dwNumRules; i++)
    {
-      if (!uuid_compare(guid, m_ppRuleList[i]->getGuid()))
+      if (!guid.compare(m_ppRuleList[i]->getGuid()))
       {
          m_ppRuleList[i]->createNXMPRecord(str);
          break;
@@ -929,7 +927,7 @@ void EventPolicy::importRule(EPRule *rule)
    bool newRule = true;
    for(UINT32 i = 0; i < m_dwNumRules; i++)
    {
-      if (!uuid_compare(rule->getGuid(), m_ppRuleList[i]->getGuid()))
+      if (!rule->getGuid().compare(m_ppRuleList[i]->getGuid()))
       {
          delete m_ppRuleList[i];
          m_ppRuleList[i] = rule;

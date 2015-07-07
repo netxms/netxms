@@ -108,6 +108,11 @@ typedef struct
       } string;
       struct
       {
+         UINT32 length;
+         BYTE value[1]; // actual size depends on length value
+      } binary;
+      struct
+      {
          union
          {
             UINT32 v4;
@@ -127,6 +132,7 @@ typedef struct
 #define df_uint64   data.uint64
 #define df_real     data.real
 #define df_string   data.string
+#define df_binary   data.binary
 #define df_inetaddr data.inetaddr
 
 /**

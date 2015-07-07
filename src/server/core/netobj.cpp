@@ -62,7 +62,6 @@ NetObj::NetObj()
       m_iStatusTranslation[i] = i + 1;
       m_iStatusThresholds[i] = 80 - i * 20;
    }
-	uuid_clear(m_image);
 	m_submapId = 0;
    m_moduleData = NULL;
    m_postalAddress = new PostalAddress();
@@ -212,8 +211,8 @@ bool NetObj::loadCommonProperties()
 					m_geoLocation = GeoLocation();
 				}
 
-				DBGetFieldGUID(hResult, 0, 19, m_guid);
-				DBGetFieldGUID(hResult, 0, 20, m_image);
+				m_guid = DBGetFieldGUID(hResult, 0, 19);
+				m_image = DBGetFieldGUID(hResult, 0, 20);
 				m_submapId = DBGetFieldULong(hResult, 0, 21);
 
             TCHAR country[64], city[64], streetAddress[256], postcode[32];
@@ -332,7 +331,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	if (hStmt == NULL)
 		return FALSE;
 
-   TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32], guid[64], image[64];
+   TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32];
    for(int i = 0, j = 0; i < 4; i++, j += 2)
    {
       _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_iStatusTranslation[i]);
@@ -360,8 +359,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
 	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
 	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
-	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guid), DB_BIND_STATIC);
-	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, uuid_to_string(m_image, image), DB_BIND_STATIC);
+	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_guid);
+	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_image);
 	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
 	DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress->getCountry(), DB_BIND_STATIC);
 	DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress->getCity(), DB_BIND_STATIC);
@@ -916,7 +915,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
 {
    pMsg->setField(VID_OBJECT_CLASS, (WORD)getObjectClass());
    pMsg->setField(VID_OBJECT_ID, m_id);
-	pMsg->setField(VID_GUID, m_guid, UUID_LENGTH);
+	pMsg->setField(VID_GUID, m_guid);
    pMsg->setField(VID_OBJECT_NAME, m_name);
    pMsg->setField(VID_OBJECT_STATUS, (WORD)m_iStatus);
    pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
@@ -937,7 +936,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_STATUS_THRESHOLD_3, (WORD)m_iStatusThresholds[2]);
    pMsg->setField(VID_STATUS_THRESHOLD_4, (WORD)m_iStatusThresholds[3]);
    pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
-	pMsg->setField(VID_IMAGE, m_image, UUID_LENGTH);
+	pMsg->setField(VID_IMAGE, m_image);
 	pMsg->setField(VID_SUBMAP_ID, m_submapId);
 	pMsg->setField(VID_NUM_TRUSTED_NODES, m_dwNumTrustedNodes);
 	if (m_dwNumTrustedNodes > 0)
@@ -1069,7 +1068,7 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
 
 	// Change image
 	if (pRequest->isFieldExist(VID_IMAGE))
-		pRequest->getFieldAsBinary(VID_IMAGE, m_image, UUID_LENGTH);
+		m_image = pRequest->getFieldAsGUID(VID_IMAGE);
 
    // Change object's ACL
    if (pRequest->isFieldExist(VID_ACL_SIZE))

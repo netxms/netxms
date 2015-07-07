@@ -120,7 +120,7 @@ class EPRule
 {
 private:
    UINT32 m_id;
-   uuid_t m_guid;
+   uuid m_guid;
    UINT32 m_dwFlags;
    UINT32 m_dwNumSources;
    UINT32 *m_pdwSourceList;
@@ -156,8 +156,8 @@ public:
    EPRule(ConfigEntry *config);
    ~EPRule();
 
-   UINT32 getId() { return m_id; }
-   BYTE *getGuid() { return m_guid; }
+   UINT32 getId() const { return m_id; }
+   const uuid& getGuid() const { return m_guid; }
    void setId(UINT32 dwNewId) { m_id = dwNewId; }
    bool loadFromDB();
 	void saveToDB(DB_HANDLE hdb);
@@ -193,7 +193,7 @@ public:
    void processEvent(Event *pEvent);
    void sendToClient(ClientSession *pSession, UINT32 dwRqId);
    void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);
-   void exportRule(String &str, uuid_t guid);
+   void exportRule(String& str, const uuid& guid);
    void importRule(EPRule *rule);
 
    bool isActionInUse(UINT32 dwActionId);

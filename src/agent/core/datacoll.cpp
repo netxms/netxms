@@ -26,7 +26,7 @@
  * Externals
  */
 void UpdateSnmpTarget(SNMPTarget *target);
-bool GetSnmpValue(const uuid_t& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue);
+bool GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue);
 
 /**
  * Database schema version
@@ -52,7 +52,7 @@ private:
    BYTE m_origin;
    UINT16 m_snmpPort;
    BYTE m_snmpRawValueType;
-	uuid_t m_snmpTargetGuid;
+	uuid m_snmpTargetGuid;
    time_t m_lastPollTime;
 
 public:
@@ -66,7 +66,7 @@ public:
    const TCHAR *getName() const { return m_name; }
    int getType() const { return (int)m_type; }
    int getOrigin() const { return (int)m_origin; }
-   const uuid_t& getSnmpTargetGuid() const { return m_snmpTargetGuid; }
+   const uuid& getSnmpTargetGuid() const { return m_snmpTargetGuid; }
    UINT16 getSnmpPort() const { return m_snmpPort; }
    int getSnmpRawValueType() const { return (int)m_snmpRawValueType; }
    UINT32 getPollingInterval() { return (UINT32)m_pollingInterval; }
@@ -97,8 +97,7 @@ DataCollectionItem::DataCollectionItem(UINT64 serverId, NXCPMessage *msg, UINT32
    m_name = msg->getFieldAsString(baseId + 3);
    m_pollingInterval = msg->getFieldAsInt32(baseId + 4);
    m_lastPollTime = msg->getFieldAsTime(baseId + 5);
-   memset(m_snmpTargetGuid, 0, UUID_LENGTH);
-   msg->getFieldAsBinary(baseId + 6, m_snmpTargetGuid, UUID_LENGTH);
+   m_snmpTargetGuid = msg->getFieldAsGUID(baseId + 6);
    m_snmpPort = msg->getFieldAsUInt16(baseId + 7);
    m_snmpRawValueType = (BYTE)msg->getFieldAsUInt16(baseId + 8);
 }
@@ -115,9 +114,8 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_name = DBGetField(hResult, row, 4, NULL, 0);
    m_pollingInterval = DBGetFieldULong(hResult, row, 5);
    m_lastPollTime = (time_t)DBGetFieldULong(hResult, row, 6);
-   memset(m_snmpTargetGuid, 0, UUID_LENGTH);
    m_snmpPort = DBGetFieldULong(hResult, row, 7);
-   DBGetFieldGUID(hResult, row, 8, m_snmpTargetGuid);
+   m_snmpTargetGuid = DBGetFieldGUID(hResult, row, 8);
    m_snmpRawValueType = (BYTE)DBGetFieldULong(hResult, row, 9);
 }
 
@@ -133,7 +131,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_name = _tcsdup(item->m_name);
    m_pollingInterval = item->m_pollingInterval;
    m_lastPollTime = item->m_lastPollTime;
-   memcpy(m_snmpTargetGuid, item->m_snmpTargetGuid, UUID_LENGTH);
+   m_snmpTargetGuid = item->m_snmpTargetGuid;
    m_snmpPort = item->m_snmpPort;
    m_snmpRawValueType = item->m_snmpRawValueType;
  }
@@ -154,7 +152,7 @@ void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
 {
    //if at leas one of fields changed - set all fields and save to DB
    if ((m_type != item->m_type) || (m_origin != item->m_origin) || _tcscmp(m_name, item->m_name) ||
-       (m_pollingInterval != item->m_pollingInterval) || uuid_compare(m_snmpTargetGuid, item->m_snmpTargetGuid) ||
+       (m_pollingInterval != item->m_pollingInterval) || m_snmpTargetGuid.compare(item->m_snmpTargetGuid) ||
        (m_snmpPort != item->m_snmpPort) || (m_snmpRawValueType != item->m_snmpRawValueType) || (m_lastPollTime < item->m_lastPollTime))
    {
       m_type = item->m_type;
@@ -163,7 +161,7 @@ void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
       m_pollingInterval = item->m_pollingInterval;
       if (m_lastPollTime < item->m_lastPollTime)
          m_lastPollTime = item->m_lastPollTime;
-      memcpy(m_snmpTargetGuid, item->m_snmpTargetGuid, UUID_LENGTH);
+      m_snmpTargetGuid = item->m_snmpTargetGuid;
       m_snmpPort = item->m_snmpPort;
       m_snmpRawValueType = item->m_snmpRawValueType;
       saveToDatabase(false);
@@ -198,14 +196,13 @@ void DataCollectionItem::saveToDatabase(bool newObject)
 	if (hStmt == NULL)
 		return;
 
-   TCHAR buffer[64];
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_type);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_origin);
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_pollingInterval);
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_lastPollTime);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_snmpPort);
-   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, uuid_to_string(m_snmpTargetGuid, buffer), DB_BIND_STATIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_snmpTargetGuid);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_snmpRawValueType);
 	DBBind(hStmt, 9, DB_SQLTYPE_BIGINT, m_serverId);
 	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)m_id);
@@ -255,7 +252,7 @@ private:
    time_t m_timestamp;
    int m_origin;
    int m_type;
-   uuid_t m_snmpNode;
+   uuid m_snmpNode;
    union
    {
       TCHAR *item;
@@ -271,7 +268,7 @@ public:
       m_timestamp = time(NULL);
       m_origin = dci->getOrigin();
       m_type = DCO_TYPE_ITEM;
-      memcpy(m_snmpNode, dci->getSnmpTargetGuid(), UUID_LENGTH);
+      m_snmpNode = dci->getSnmpTargetGuid();
       m_value.item = _tcsdup(value);
    }
 
@@ -282,7 +279,7 @@ public:
       m_timestamp = time(NULL);
       m_origin = dci->getOrigin();
       m_type = DCO_TYPE_LIST;
-      memcpy(m_snmpNode, dci->getSnmpTargetGuid(), UUID_LENGTH);
+      m_snmpNode = dci->getSnmpTargetGuid();
       m_value.list = value;
    }
 
@@ -293,7 +290,7 @@ public:
       m_timestamp = time(NULL);
       m_origin = dci->getOrigin();
       m_type = DCO_TYPE_TABLE;
-      memcpy(m_snmpNode, dci->getSnmpTargetGuid(), UUID_LENGTH);
+      m_snmpNode = dci->getSnmpTargetGuid();
       m_value.table = value;
    }
 
@@ -308,7 +305,7 @@ public:
       m_timestamp = (time_t)DBGetFieldInt64(hResult, row, 5);
       m_origin = DBGetFieldLong(hResult, row, 3);
       m_type = DBGetFieldLong(hResult, row, 2);
-      DBGetFieldGUID(hResult, row, 4, m_snmpNode);
+      m_snmpNode = DBGetFieldGUID(hResult, row, 4);
       switch(m_type)
       {
          case DCO_TYPE_ITEM:
@@ -384,8 +381,7 @@ void DataElement::saveToDatabase()
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_dciId);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_type);
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_origin);
-   TCHAR buffer[64];
-   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, uuid_to_string(m_snmpNode, buffer), DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_snmpNode);
    DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
    switch(m_type)
    {
@@ -423,7 +419,7 @@ bool DataElement::sendToServer(bool reconcillation)
    msg.setField(VID_DCI_ID, m_dciId);
    msg.setField(VID_DCI_SOURCE_TYPE, (INT16)m_origin);
    msg.setField(VID_DCOBJECT_TYPE, (INT16)m_type);
-   msg.setField(VID_NODE_ID, m_snmpNode, UUID_LENGTH);
+   msg.setField(VID_NODE_ID, m_snmpNode);
    msg.setFieldFromTime(VID_TIMESTAMP, m_timestamp);
    msg.setField(VID_RECONCILLATION, (INT16)(reconcillation ? 1 : 0));
    switch(m_type)

@@ -4,6 +4,7 @@
 #include <testtools.h>
 
 void TestMsgWaitQueue();
+void TestMessageClass();
 
 static char mbText[] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 static WCHAR wcText[] = L"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
@@ -395,6 +396,7 @@ int main(int argc, char *argv[])
    TestStringConversion();
    TestStringMap();
    TestStringSet();
+   TestMessageClass();
    TestMsgWaitQueue();
    TestInetAddress();
    TestItoa();

@@ -367,7 +367,7 @@ public:
 	~AgentPolicyInfo();
 
 	int size() { return m_size; }
-	bool getGuid(int index, uuid_t guid);
+	uuid getGuid(int index);
 	int getType(int index) { return ((index >= 0) && (index < m_size)) ? m_typeList[index] : -1; }
 	const TCHAR *getServer(int index) { return ((index >= 0) && (index < m_size)) ? m_serverList[index] : NULL; }
 };

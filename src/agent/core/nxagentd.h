@@ -443,7 +443,7 @@ public:
 class SNMPTarget
 {
 private:
-   uuid_t m_guid;
+   uuid m_guid;
    UINT64 m_serverId;
    InetAddress m_ipAddress;
    UINT16 m_port;
@@ -460,7 +460,7 @@ public:
    SNMPTarget(DB_RESULT hResult, int row);
    ~SNMPTarget();
 
-   const uuid_t& getGuid() const { return m_guid; }
+   const uuid& getGuid() const { return m_guid; }
    SNMP_Transport *getTransport(UINT16 port);
 
    bool saveToDatabase();

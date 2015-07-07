@@ -78,7 +78,7 @@ public:
 	INT64 getSubEntryValueAsInt64(const TCHAR *name, int index = 0, INT64 defaultValue = 0);
 	UINT64 getSubEntryValueAsUInt64(const TCHAR *name, int index = 0, UINT64 defaultValue = 0);
 	bool getSubEntryValueAsBoolean(const TCHAR *name, int index = 0, bool defaultValue = false);
-	bool getSubEntryValueAsUUID(const TCHAR *name, uuid_t uuid, int index = 0);
+	uuid getSubEntryValueAsUUID(const TCHAR *name, int index = 0);
 
    const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.get(name); }
 	INT32 getAttributeAsInt(const TCHAR *name, INT32 defaultValue = 0);

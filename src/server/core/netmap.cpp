@@ -48,7 +48,6 @@ NetworkMap::NetworkMap() : NetObj()
 	m_discoveryRadius = -1;
 	m_flags = MF_SHOW_STATUS_ICON;
 	m_layout = MAP_LAYOUT_MANUAL;
-	uuid_clear(m_background);
 	m_iStatus = STATUS_NORMAL;
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
@@ -73,7 +72,6 @@ NetworkMap::NetworkMap(int type, UINT32 seed) : NetObj()
 	m_discoveryRadius = -1;
 	m_flags = MF_SHOW_STATUS_ICON;
    m_layout = (type == NETMAP_USER_DEFINED) ? MAP_LAYOUT_MANUAL : MAP_LAYOUT_SPRING;
-	uuid_clear(m_background);
 	m_iStatus = STATUS_NORMAL;
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
@@ -235,7 +233,7 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 BOOL NetworkMap::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR query[1024], temp[64];
+	TCHAR query[1024];
 
 	lockProperties();
 
@@ -258,7 +256,7 @@ BOOL NetworkMap::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_layout);
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_seedObject);
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_discoveryRadius);
-	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, uuid_to_string(m_background, temp), DB_BIND_STATIC);
+	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_background);
 	DBBind(hStmt, 6, DB_SQLTYPE_DOUBLE, m_backgroundLatitude);
 	DBBind(hStmt, 7, DB_SQLTYPE_DOUBLE, m_backgroundLongitude);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_backgroundZoom);
@@ -373,7 +371,7 @@ BOOL NetworkMap::loadFromDatabase(UINT32 dwId)
 		m_layout = DBGetFieldLong(hResult, 0, 1);
 		m_seedObject = DBGetFieldULong(hResult, 0, 2);
 		m_discoveryRadius = DBGetFieldLong(hResult, 0, 3);
-		DBGetFieldGUID(hResult, 0, 4, m_background);
+		m_background = DBGetFieldGUID(hResult, 0, 4);
 		m_backgroundLatitude = DBGetFieldDouble(hResult, 0, 5);
 		m_backgroundLongitude = DBGetFieldDouble(hResult, 0, 6);
 		m_backgroundZoom = (int)DBGetFieldLong(hResult, 0, 7);
@@ -481,7 +479,7 @@ void NetworkMap::fillMessageInternal(NXCPMessage *msg)
 	msg->setField(VID_FLAGS, m_flags);
 	msg->setField(VID_SEED_OBJECT, m_seedObject);
 	msg->setField(VID_DISCOVERY_RADIUS, (UINT32)m_discoveryRadius);
-	msg->setField(VID_BACKGROUND, m_background, UUID_LENGTH);
+	msg->setField(VID_BACKGROUND, m_background);
 	msg->setField(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
 	msg->setField(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
 	msg->setField(VID_BACKGROUND_ZOOM, (WORD)m_backgroundZoom);
@@ -538,7 +536,7 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 
 	if (request->isFieldExist(VID_BACKGROUND))
 	{
-		request->getFieldAsBinary(VID_BACKGROUND, m_background, UUID_LENGTH);
+		m_background = request->getFieldAsGUID(VID_BACKGROUND);
 		m_backgroundLatitude = request->getFieldAsDouble(VID_BACKGROUND_LATITUDE);
 		m_backgroundLongitude = request->getFieldAsDouble(VID_BACKGROUND_LONGITUDE);
 		m_backgroundZoom = (int)request->getFieldAsUInt16(VID_BACKGROUND_ZOOM);

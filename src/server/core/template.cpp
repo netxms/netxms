@@ -1031,7 +1031,7 @@ void Template::createNXMPRecord(String &str)
 {
    TCHAR guid[48];
    str.appendFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<guid>%s</guid>\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n"),
-	                       m_id, uuid_to_string(m_guid, guid), (const TCHAR *)EscapeStringForXML2(m_name), m_flags);
+                             m_id, m_guid.toString(guid), (const TCHAR *)EscapeStringForXML2(m_name), m_flags);
 
    // Path in groups
    StringList path;

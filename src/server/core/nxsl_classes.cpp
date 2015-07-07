@@ -141,10 +141,8 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
-		uuid_t guid;
-		object->getGuid(guid);
-		TCHAR buffer[128];
-		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
+		TCHAR buffer[64];
+      pValue = new NXSL_Value(object->getGuid().toString(buffer));
    }
    else if (!_tcscmp(pszAttr, _T("status")))
    {
@@ -227,10 +225,8 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
-		uuid_t guid;
-		zone->getGuid(guid);
-		TCHAR buffer[128];
-		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
+		TCHAR buffer[64];
+      pValue = new NXSL_Value(zone->getGuid().toString(buffer));
    }
    else if (!_tcscmp(pszAttr, _T("icmpProxy")))
    {
@@ -397,10 +393,8 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
-		uuid_t guid;
-		pNode->getGuid(guid);
-		TCHAR buffer[128];
-		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
+		TCHAR buffer[64];
+      pValue = new NXSL_Value(pNode->getGuid().toString(buffer));
    }
    else if (!_tcscmp(pszAttr, _T("id")))
    {
@@ -588,10 +582,8 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
-		uuid_t guid;
-		iface->getGuid(guid);
-		TCHAR buffer[128];
-		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
+		TCHAR buffer[64];
+      pValue = new NXSL_Value(iface->getGuid().toString(buffer));
    }
    else if (!_tcscmp(pszAttr, _T("id")))
    {

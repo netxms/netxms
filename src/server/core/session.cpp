@@ -12275,7 +12275,6 @@ void ClientSession::listLibraryImages(NXCPMessage *request)
 	TCHAR category[MAX_DB_STRING];
 	TCHAR query[MAX_DB_STRING * 2];
 	TCHAR buffer[MAX_DB_STRING];
-	uuid_t guid;
 	UINT32 rcc = RCC_SUCCESS;
 
 	msg.setId(request->getId());
@@ -12307,8 +12306,8 @@ void ClientSession::listLibraryImages(NXCPMessage *request)
 		UINT32 varId = VID_IMAGE_LIST_BASE;
 		for (int i = 0; i < count; i++)
 		{
-			DBGetFieldGUID(result, i, 0, guid);	// guid
-			msg.setField(varId++, guid, UUID_LENGTH);
+			uuid guid = DBGetFieldGUID(result, i, 0);	// guid
+			msg.setField(varId++, guid);
 
 			DBGetField(result, i, 1, buffer, MAX_DB_STRING);	// image name
 			msg.setField(varId++, buffer);
@@ -13178,9 +13177,8 @@ void ClientSession::getSummaryTables(UINT32 rqId)
          msg.setField(varId++, DBGetField(hResult, i, 2, buffer, 256));
          msg.setField(varId++, (UINT32)DBGetFieldLong(hResult, i, 3));
 
-         uuid_t guid;
-         DBGetFieldGUID(hResult, i, 4, guid);
-         msg.setField(varId++, guid, UUID_LENGTH);
+         uuid guid = DBGetFieldGUID(hResult, i, 4);
+         msg.setField(varId++, guid);
 
          varId += 5;
       }
@@ -13237,9 +13235,8 @@ void ClientSession::getSummaryTableDetails(NXCPMessage *request)
                   msg.setField(VID_COLUMNS, tmp);
                   free(tmp);
                }
-               uuid_t guid;
-               DBGetFieldGUID(hResult, 0, 5, guid);
-               msg.setField(VID_GUID, guid, UUID_LENGTH);
+               uuid guid = DBGetFieldGUID(hResult, 0, 5);
+               msg.setField(VID_GUID, guid);
             }
             else
             {

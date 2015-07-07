@@ -725,30 +725,11 @@ bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iC
 /**
  * Get field's value as GUID
  */
-bool LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn, uuid_t guid)
+uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn)
 {
-   TCHAR *pszVal, szBuffer[256];
-   bool bResult;
-
-   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   if (pszVal != NULL)
-   {
-      if (uuid_parse(pszVal, guid) == 0)
-      {
-         bResult = true;
-      }
-      else
-      {
-         uuid_clear(guid);
-         bResult = false;
-      }
-   }
-   else
-   {
-      uuid_clear(guid);
-      bResult = false;
-   }
-   return bResult;
+   TCHAR buffer[256];
+   TCHAR *value = DBGetField(hResult, iRow, iColumn, buffer, 256);
+   return (value == NULL) ? uuid::NULL_UUID : uuid::parse(value);
 }
 
 /**
@@ -1310,6 +1291,15 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, UINT64 
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, double value)
 {
 	DBBind(hStmt, pos, sqlType, DB_CTYPE_DOUBLE, &value, DB_BIND_TRANSIENT);
+}
+
+/**
+ * Bind UUID parameter
+ */
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const uuid& value)
+{
+   TCHAR buffer[64];
+   DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, value.toString(buffer), DB_BIND_TRANSIENT);
 }
 
 /**

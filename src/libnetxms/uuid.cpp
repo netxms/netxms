@@ -53,6 +53,11 @@
 #define rand()   random()
 #endif
 
+/**
+ * NULL GUID
+ */
+const uuid uuid::NULL_UUID = uuid();
+
 /*
  * Offset between 15-Oct-1582 and 1-Jan-70
  */
@@ -166,17 +171,17 @@ int LIBNETXMS_EXPORTABLE uuid_compare(const uuid_t uu1, const uuid_t uu2)
 
 /**
  * isnull.c --- Check whether or not the UUID is null
- * Returns 1 if the uuid is the NULL uuid
+ * Returns true if the uuid is the NULL uuid
  */
-int LIBNETXMS_EXPORTABLE uuid_is_null(const uuid_t uu)
+bool LIBNETXMS_EXPORTABLE uuid_is_null(const uuid_t uu)
 {
 	const unsigned char *cp;
 	int i;
 
 	for (i=0, cp = uu; i < 16; i++)
 		if (*cp++)
-			return 0;
-	return 1;
+			return false;
+	return true;
 }
 
 /**

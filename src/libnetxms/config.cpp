@@ -459,16 +459,16 @@ bool ConfigEntry::getSubEntryValueAsBoolean(const TCHAR *name, int index, bool d
 /**
  * Get sub-entry value as UUID
  */
-bool ConfigEntry::getSubEntryValueAsUUID(const TCHAR *name, uuid_t uuid, int index)
+uuid ConfigEntry::getSubEntryValueAsUUID(const TCHAR *name, int index)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    if (value != NULL)
    {
-      return uuid_parse(value, uuid) == 0;
+      return uuid::parse(value);
    }
    else
    {
-      return false;
+      return uuid::NULL_UUID;
    }
 }
 

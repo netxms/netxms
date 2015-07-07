@@ -500,13 +500,12 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 
    if (origin == DS_SNMP_AGENT)
    {
-      uuid_t nodeId;
-      msg->getFieldAsBinary(VID_NODE_ID, nodeId, UUID_LENGTH);
+      uuid nodeId = msg->getFieldAsGUID(VID_NODE_ID);
       Node *snmpNode = (Node *)FindObjectByGUID(nodeId, OBJECT_NODE);
       if (snmpNode == NULL)
       {
          TCHAR buffer[64];
-         DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find SNMP node with GUID %s"), uuid_to_string(nodeId, buffer));
+         DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find SNMP node with GUID %s"), nodeId.toString(buffer));
          return ERR_INTERNAL_ERROR;
       }
       node = snmpNode;

@@ -1683,8 +1683,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 		// Check for unbound but installed policies
 		for(int i = 0; i < ap->size(); i++)
 		{
-			uuid_t guid;
-			ap->getGuid(i, guid);
+			uuid guid = ap->getGuid(i);
 			NetObj *object = FindObjectByGUID(guid, -1);
 			if ((object != NULL) && (!object->isChild(m_id)))
 			{
@@ -1702,14 +1701,11 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 		{
 			if (IsAgentPolicyObject(m_pParentList[i]))
 			{
-				uuid_t guid1, guid2;
-				int j;
-
-				m_pParentList[i]->getGuid(guid1);
+				const uuid& guid = m_pParentList[i]->getGuid();
+            int j;
 				for(j = 0; j < ap->size(); j++)
 				{
-					ap->getGuid(j, guid2);
-					if (!uuid_compare(guid1, guid2))
+					if (!ap->getGuid(j).compare(guid))
 						break;
 				}
 				if (j == ap->size())
@@ -6869,7 +6865,7 @@ void Node::collectProxyInfo(ProxyInfo *info)
          info->msg->setField(info->fieldId++, dco->getName());
          info->msg->setField(info->fieldId++, (INT32)dco->getPollingInterval());
          info->msg->setFieldFromTime(info->fieldId++, dco->getLastPollTime());
-         info->msg->setField(info->fieldId++, m_guid, UUID_LENGTH);
+         info->msg->setField(info->fieldId++, m_guid);
          info->msg->setField(info->fieldId++, dco->getSnmpPort());
          if (dco->getType() == DCO_TYPE_ITEM)
             info->msg->setField(info->fieldId++, ((DCItem *)dco)->getSnmpRawValueType());
@@ -6885,7 +6881,7 @@ void Node::collectProxyInfo(ProxyInfo *info)
 
    if (isTarget)
    {
-      info->msg->setField(info->nodeInfoFieldId++, m_guid, UUID_LENGTH);
+      info->msg->setField(info->nodeInfoFieldId++, m_guid);
       info->msg->setField(info->nodeInfoFieldId++, m_ipAddress);
       info->msg->setField(info->nodeInfoFieldId++, m_snmpVersion);
       info->msg->setField(info->nodeInfoFieldId++, m_snmpPort);

@@ -33,7 +33,7 @@ static MUTEX s_snmpTargetsLock = MutexCreate();
  */
 SNMPTarget::SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId)
 {
-   msg->getFieldAsBinary(baseId, m_guid, UUID_LENGTH);
+   m_guid = msg->getFieldAsGUID(baseId);
    m_serverId = serverId;
    m_ipAddress = msg->getFieldAsInetAddress(baseId + 1);
    m_snmpVersion = (BYTE)msg->getFieldAsInt16(baseId + 2);
@@ -53,7 +53,7 @@ SNMPTarget::SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId)
  */
 SNMPTarget::SNMPTarget(DB_RESULT hResult, int row)
 {
-   DBGetFieldGUID(hResult, row, 0, m_guid);
+   m_guid = DBGetFieldGUID(hResult, row, 0);
    m_serverId = DBGetFieldUInt64(hResult, row, 1);
    m_ipAddress = DBGetFieldInetAddr(hResult, row, 2);
    m_snmpVersion = (BYTE)DBGetFieldLong(hResult, row, 3);
@@ -107,8 +107,7 @@ bool SNMPTarget::saveToDatabase()
    DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_authPassword, DB_BIND_STATIC);
    DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, m_encPassword, DB_BIND_STATIC);
 #endif
-   TCHAR guidText[64];
-   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guidText), DB_BIND_STATIC);
+   DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, m_guid);
 
    bool success = DBExecute(hStmt);
    DBFreeStatement(hStmt);
@@ -138,7 +137,7 @@ SNMP_Transport *SNMPTarget::getTransport(UINT16 port)
 void UpdateSnmpTarget(SNMPTarget *target)
 {
    MutexLock(s_snmpTargetsLock);
-   s_snmpTargets.set(target->getGuid(), target);
+   s_snmpTargets.set(target->getGuid().getValue(), target);
    target->saveToDatabase();
    MutexUnlock(s_snmpTargetsLock);
 }
@@ -146,12 +145,12 @@ void UpdateSnmpTarget(SNMPTarget *target)
 /**
  * Get value from SNMP node
  */
-bool GetSnmpValue(const uuid_t& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue)
+bool GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue)
 {
    bool success = false;
 
    MutexLock(s_snmpTargetsLock);
-   SNMPTarget *t = s_snmpTargets.get(target);
+   SNMPTarget *t = s_snmpTargets.get(target.getValue());
    if (t != NULL)
    {
       SNMP_Transport *snmp = t->getTransport(port);
@@ -202,7 +201,7 @@ bool GetSnmpValue(const uuid_t& target, UINT16 port, const TCHAR *oid, TCHAR *va
    else
    {
       TCHAR buffer[64];
-      DebugPrintf(INVALID_INDEX, 6, _T("SNMP target with guid %s not found"), uuid_to_string(target, buffer));
+      DebugPrintf(INVALID_INDEX, 6, _T("SNMP target with guid %s not found"), target.toString(buffer));
    }
    MutexUnlock(s_snmpTargetsLock);
    

@@ -26,6 +26,7 @@
 
 #include <nms_util.h>
 #include <nms_threads.h>
+#include <uuid.h>
 
 #ifdef _WIN32
 #include <wincrypt.h>
@@ -99,7 +100,8 @@ public:
    void setField(UINT32 fieldId, const TCHAR *value) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value); }
    void setField(UINT32 fieldId, const TCHAR *value, size_t maxLen) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value, false, maxLen); }
    void setField(UINT32 fieldId, BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, false, size); }
-   void setField(UINT32 fieldId, const InetAddress &value) { set(fieldId, NXCP_DT_INETADDR, (void *)&value); }
+   void setField(UINT32 fieldId, const InetAddress& value) { set(fieldId, NXCP_DT_INETADDR, &value); }
+   void setField(UINT32 fieldId, const uuid& value) { set(fieldId, NXCP_DT_BINARY, value.getValue(), false, UUID_LENGTH); }
 #ifdef UNICODE
    void setFieldFromMBString(UINT32 fieldId, const char *value);
 #else
@@ -127,6 +129,7 @@ public:
 	char *getFieldAsUtf8String(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0);
    UINT32 getFieldAsBinary(UINT32 fieldId, BYTE *buffer, size_t bufferSize);
    InetAddress getFieldAsInetAddress(UINT32 fieldId);
+   uuid getFieldAsGUID(UINT32 fieldId);
 
    void deleteAllFields();
 
