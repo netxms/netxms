@@ -917,14 +917,12 @@ public class AgentFileManager extends ViewPart
             runInUIThread(new Runnable() {
                @Override
                public void run()
-               {
+               {                  
                   final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                   try
                   {
                      String secondaryId = Long.toString(objectId) + "&" + URLEncoder.encode(sf.getName(), "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
-                     FileViewer view = (FileViewer)window.getActivePage().showView(FileViewer.ID, secondaryId,
-                           IWorkbenchPage.VIEW_ACTIVATE);
-                     view.showFile(file.getFile(), tail, file.getId(), offset);
+                     FileViewer.createView(window, getSite().getShell(), file, tail, offset, secondaryId, objectId);
                   }
                   catch(Exception e)
                   {

@@ -329,9 +329,7 @@ public final class ObjectToolExecutor
                   try
                   {
                      String secondaryId = Long.toString(node.object.getObjectId()) + "&" + URLEncoder.encode(fileName, "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
-                     FileViewer view = (FileViewer)window.getActivePage().showView(FileViewer.ID, secondaryId,
-                           IWorkbenchPage.VIEW_ACTIVATE);
-                     view.showFile(file.getFile(), follow, file.getId(), maxFileSize);
+                     FileViewer.createView(window, window.getShell(), file, follow, maxFileSize, secondaryId, node.object.getObjectId());
                   }
                   catch(Exception e)
                   {
