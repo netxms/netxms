@@ -49,7 +49,7 @@ void TestMessageClass()
    uuid guid = uuid::generate();
    msg.setField(1, guid);
    uuid guid2 = msg.getFieldAsGUID(1);
-   AssertTrue(guid.compare(guid2) == 0);
+   AssertTrue(guid.equals(guid2));
 
    msg.setField(1, (UINT16)1234);
    AssertTrue(msg.getFieldAsUInt16(1) == 1234);
@@ -59,6 +59,10 @@ void TestMessageClass()
 
    msg.setField(1, (UINT64)1234);
    AssertTrue(msg.getFieldAsUInt64(1) == 1234);
+
+   msg.setField(1, _T("test text"));
+   TCHAR buffer[64];
+   AssertTrue(!_tcscmp(msg.getFieldAsString(1, buffer, 64), _T("test text")));
 
    EndTest();
 }

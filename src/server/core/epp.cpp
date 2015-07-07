@@ -907,7 +907,7 @@ void EventPolicy::exportRule(String& str, const uuid& guid)
    readLock();
    for(UINT32 i = 0; i < m_dwNumRules; i++)
    {
-      if (!guid.compare(m_ppRuleList[i]->getGuid()))
+      if (guid.equals(m_ppRuleList[i]->getGuid()))
       {
          m_ppRuleList[i]->createNXMPRecord(str);
          break;
@@ -927,7 +927,7 @@ void EventPolicy::importRule(EPRule *rule)
    bool newRule = true;
    for(UINT32 i = 0; i < m_dwNumRules; i++)
    {
-      if (!rule->getGuid().compare(m_ppRuleList[i]->getGuid()))
+      if (rule->getGuid().equals(m_ppRuleList[i]->getGuid()))
       {
          delete m_ppRuleList[i];
          m_ppRuleList[i] = rule;

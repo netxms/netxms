@@ -935,7 +935,7 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
  */
 static bool ObjectGuidComparator(NetObj *object, void *data)
 {
-   return !object->isDeleted() && !object->getGuid().compare(*((const uuid *)data));
+   return !object->isDeleted() && object->getGuid().equals(*((const uuid *)data));
 }
 
 /**

@@ -1705,7 +1705,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
             int j;
 				for(j = 0; j < ap->size(); j++)
 				{
-					if (!ap->getGuid(j).compare(guid))
+					if (ap->getGuid(j).equals(guid))
 						break;
 				}
 				if (j == ap->size())
