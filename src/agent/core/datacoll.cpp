@@ -69,7 +69,7 @@ public:
    const uuid& getSnmpTargetGuid() const { return m_snmpTargetGuid; }
    UINT16 getSnmpPort() const { return m_snmpPort; }
    int getSnmpRawValueType() const { return (int)m_snmpRawValueType; }
-   UINT32 getPollingInterval() { return (UINT32)m_pollingInterval; }
+   UINT32 getPollingInterval() const { return (UINT32)m_pollingInterval; }
 
    bool equals(const DataCollectionItem *item) const { return (m_serverId == item->m_serverId) && (m_id == item->m_id); }
 

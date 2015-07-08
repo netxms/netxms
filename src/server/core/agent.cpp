@@ -498,17 +498,17 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
       return ERR_INTERNAL_ERROR;
    }
 
-   if (origin == DS_SNMP_AGENT)
+   uuid nodeId = msg->getFieldAsGUID(VID_NODE_ID);
+   if (!nodeId.isNull())
    {
-      uuid nodeId = msg->getFieldAsGUID(VID_NODE_ID);
-      Node *snmpNode = (Node *)FindObjectByGUID(nodeId, OBJECT_NODE);
-      if (snmpNode == NULL)
+      Node *targetNode = (Node *)FindObjectByGUID(nodeId, OBJECT_NODE);
+      if (targetNode == NULL)
       {
          TCHAR buffer[64];
-         DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find SNMP node with GUID %s"), nodeId.toString(buffer));
+         DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find target node with GUID %s"), nodeId.toString(buffer));
          return ERR_INTERNAL_ERROR;
       }
-      node = snmpNode;
+      node = targetNode;
    }
 
    UINT32 dciId = msg->getFieldAsUInt32(VID_DCI_ID);
