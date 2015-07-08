@@ -299,6 +299,7 @@ static void LoadGlobalConfig()
    {
       DbgPrintf(1, _T("Invalid value %d of DefaultAgentCacheMode: reset to %d (OFF)"), g_defaultAgentCacheMode, AGENT_CACHE_OFF);
       ConfigWriteInt(_T("DefaultAgentCacheMode"), AGENT_CACHE_OFF, true, true, true);
+      g_defaultAgentCacheMode = AGENT_CACHE_OFF;
    }
 	if (ConfigReadInt(_T("DeleteEmptySubnets"), 1))
 		g_flags |= AF_DELETE_EMPTY_SUBNETS;
