@@ -37,7 +37,7 @@ public class Axis implements IAxis
 	public final static double DEFAULT_MAX = 1d;
 
 	/** the default minimum value of log scale range */
-	public final static double DEFAULT_LOG_SCALE_MIN = 0.1d;
+	public final static double DEFAULT_LOG_SCALE_MIN = 0;
 
 	/** the default maximum value of log scale range */
 	public final static double DEFAULT_LOG_SCALE_MAX = 1d;
@@ -310,13 +310,13 @@ public class Axis implements IAxis
 			{
 				// check if series contain negative value
 				double minSeriesValue = getMinSeriesValue();
-				if (enabled && minSeriesValue <= 0)
+				if (enabled && (minSeriesValue < 0))
 				{
 					throw new IllegalStateException("Series contain negative value.");
 				}
 
 				// adjust the range in order not to have negative value
-				if (min <= 0)
+				if (min < 0)
 				{
 					min = minSeriesValue;
 				}
@@ -737,7 +737,8 @@ public class Axis implements IAxis
 		{
 			if (logScaleEnabled)
 			{
-				pixelCoordinate = (int)((Math.log10(dataCoordinate) - Math.log10(lower)) / (Math.log10(upper) - Math.log10(lower)) * width);
+			   double logLower = Math.log10((lower == 0) ? Math.min(0.1, upper / 10.0) : lower);
+				pixelCoordinate = (dataCoordinate == 0) ? 0 : (int)((Math.log10(dataCoordinate) - logLower) / (Math.log10(upper) - logLower) * width);
 			}
 			else if (categoryAxisEnabled)
 			{
@@ -752,7 +753,8 @@ public class Axis implements IAxis
 		{
 			if (logScaleEnabled)
 			{
-				pixelCoordinate = (int)((Math.log10(upper) - Math.log10(dataCoordinate)) / (Math.log10(upper) - Math.log10(lower)) * height);
+            double logLower = Math.log10((lower == 0) ? Math.min(0.1, upper / 10.0) : lower);
+				pixelCoordinate = (dataCoordinate == 0) ? height : (int)((Math.log10(upper) - Math.log10(dataCoordinate)) / (Math.log10(upper) - logLower) * height);
 			}
 			else if (categoryAxisEnabled)
 			{
@@ -793,8 +795,9 @@ public class Axis implements IAxis
 		{
 			if (logScaleEnabled)
 			{
-				dataCoordinate = Math.pow(10,
-						pixelCoordinate / (double)width * (Math.log10(upper) - Math.log10(lower)) + Math.log10(lower));
+            double logLower = Math.log10((lower == 0) ? Math.min(0.1, upper / 10.0) : lower);
+				dataCoordinate = (pixelCoordinate == 0) ? min : Math.pow(10,
+				      pixelCoordinate / (double)width * (Math.log10(upper) - logLower) + logLower);
 			}
 			else if (categoryAxisEnabled)
 			{
@@ -809,8 +812,9 @@ public class Axis implements IAxis
 		{
 			if (logScaleEnabled)
 			{
-				dataCoordinate = Math.pow(10,
-						Math.log10(upper) - pixelCoordinate / (double)height * (Math.log10(upper) - Math.log10(lower)));
+            double logLower = Math.log10((lower == 0) ? Math.min(0.1, upper / 10.0) : lower);
+				dataCoordinate = (pixelCoordinate == height) ? min : Math.pow(10,
+						Math.log10(upper) - pixelCoordinate / (double)height * (Math.log10(upper) - logLower));
 			}
 			else if (categoryAxisEnabled)
 			{

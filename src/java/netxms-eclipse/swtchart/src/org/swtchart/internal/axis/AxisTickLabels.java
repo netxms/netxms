@@ -333,7 +333,7 @@ public class AxisTickLabels implements PaintListener
 			tickLabelPositions.add(tickLabelPosition);
 		}
 	}
-
+	
 	/**
 	 * Updates tick label for log scale.
 	 * 
@@ -344,10 +344,27 @@ public class AxisTickLabels implements PaintListener
 		double min = axis.getRange().lower;
 		double max = axis.getRange().upper;
 
+      if (min == 0)
+      {
+         min = Math.min(max / 10.0, 0.1);
+         if (axis.isDateEnabled())
+         {
+            Date date = new Date(0L);
+            tickLabels.add(format(date, 0));
+         }
+         else
+         {
+            BigDecimal tickStep = pow(10, (int)Math.ceil(Math.log10(min)) - 1);
+            tickLabels.add(format(0.0, tickStep.doubleValue()));
+         }
+         tickLabelValues.add(0.0);
+         tickLabelPositions.add(0);
+      }
+		
 		int digitMin = (int)Math.ceil(Math.log10(min));
 		int digitMax = (int)Math.ceil(Math.log10(max));
 
-		final BigDecimal MIN = new BigDecimal(new Double(min).toString());
+		final BigDecimal MIN = new BigDecimal(Double.toString(min));
 		BigDecimal tickStep = pow(10, digitMin - 1);
 		BigDecimal firstPosition;
 		
@@ -362,7 +379,7 @@ public class AxisTickLabels implements PaintListener
 		{
 			firstPosition = MIN.subtract(MIN.remainder(tickStep)).add(tickStep);
 		}
-
+		
 		for(int i = digitMin; i <= digitMax; i++)
 		{
 			for(BigDecimal j = firstPosition; j.doubleValue() <= pow(10, i).doubleValue(); j = j.add(tickStep))
@@ -681,19 +698,19 @@ public class AxisTickLabels implements PaintListener
 	 * Calculates the value of the first argument raised to the power of the second argument.
 	 * 
 	 * @param base the base
-	 * @param expornent the exponent
+	 * @param exponent the exponent
 	 * @return the value <tt>a<sup>b</sup></tt> in <tt>BigDecimal</tt>
 	 */
-	private BigDecimal pow(double base, int expornent)
+	private static BigDecimal pow(double base, int exponent)
 	{
 		BigDecimal value;
-		if (expornent > 0)
+		if (exponent > 0)
 		{
-			value = new BigDecimal(new Double(base).toString()).pow(expornent);
+			value = new BigDecimal(new Double(base).toString()).pow(exponent);
 		}
 		else
 		{
-			value = BigDecimal.ONE.divide(new BigDecimal(new Double(base).toString()).pow(-expornent));
+			value = BigDecimal.ONE.divide(new BigDecimal(new Double(base).toString()).pow(-exponent));
 		}
 		return value;
 	}
