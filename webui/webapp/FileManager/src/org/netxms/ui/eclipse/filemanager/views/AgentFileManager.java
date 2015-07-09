@@ -50,8 +50,6 @@ import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.TreeViewerEditor;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.jface.window.Window;
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSourceAdapter;
@@ -71,7 +69,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -954,38 +951,21 @@ public class AgentFileManager extends ViewPart
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {				
-				//create zip from download folder wile download
-				FileOutputStream fos = new FileOutputStream(workspaceDir+File.separator+sf.getName()+".zip");
-				ZipOutputStream zos = new ZipOutputStream(fos);
-				downloadDir(sf, sf.getName(), zos);
-				
-				zos.close();
-				fos.close();
-				
-				//javascript for client to download this zip
-				final File zipArchive = new File(workspaceDir+File.separator+sf.getName()+".zip");
-				DownloadServiceHandler.addDownload(zipArchive.getName(), zipArchive.getName(), zipArchive, "application/octet-stream");
+   				//create zip from download folder wile download
+   				FileOutputStream fos = new FileOutputStream(workspaceDir + File.separator + sf.getName() + ".zip");
+   				ZipOutputStream zos = new ZipOutputStream(fos);
+   				downloadDir(sf, sf.getName(), zos);
+   				
+   				zos.close();
+   				fos.close();
+   				
+   				final File zipArchive = new File(workspaceDir +File.separator + sf.getName() + ".zip");
+   				DownloadServiceHandler.addDownload(zipArchive.getName(), zipArchive.getName(), zipArchive, "application/octet-stream");
 	            runInUIThread(new Runnable() {
 	               @Override
 	               public void run()
 	               {
-	                  JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-	                  if( executor != null ) 
-	                  {
-	                     StringBuilder js = new StringBuilder();
-	                     js.append("var hiddenIFrameID = 'hiddenDownloader',");
-	                     js.append("   iframe = document.getElementById(hiddenIFrameID);");
-	                     js.append("if (iframe === null) {");
-	                     js.append("   iframe = document.createElement('iframe');");
-	                     js.append("   iframe.id = hiddenIFrameID;");
-	                     js.append("   iframe.style.display = 'none';");
-	                     js.append("   document.body.appendChild(iframe);");
-	                     js.append("}");
-	                     js.append("iframe.src = '");
-	                     js.append(DownloadServiceHandler.createDownloadUrl(zipArchive.getName()));
-	                     js.append("';");
-	                     executor.execute(js.toString());
-	                  }                 
+	                  DownloadServiceHandler.startDownload(zipArchive.getName());
 	               }
 	            });
             }
@@ -1001,6 +981,12 @@ public class AgentFileManager extends ViewPart
       }
    }
    
+   /**
+    * @param fileName
+    * @param zos
+    * @throws FileNotFoundException
+    * @throws IOException
+    */
    public static void addToZipFile(String fileName, ZipOutputStream zos) throws FileNotFoundException, IOException 
    {
 		File file = new File(fileName);
@@ -1079,23 +1065,7 @@ public class AgentFileManager extends ViewPart
                @Override
                public void run()
                {
-                  JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-                  if( executor != null ) 
-                  {
-                     StringBuilder js = new StringBuilder();
-                     js.append("var hiddenIFrameID = 'hiddenDownloader',");
-                     js.append("   iframe = document.getElementById(hiddenIFrameID);");
-                     js.append("if (iframe === null) {");
-                     js.append("   iframe = document.createElement('iframe');");
-                     js.append("   iframe.id = hiddenIFrameID;");
-                     js.append("   iframe.style.display = 'none';");
-                     js.append("   document.body.appendChild(iframe);");
-                     js.append("}");
-                     js.append("iframe.src = '");
-                     js.append(DownloadServiceHandler.createDownloadUrl(file.getFile().getName()));
-                     js.append("';");
-                     executor.execute(js.toString());
-                  }                 
+                  DownloadServiceHandler.startDownload(file.getFile().getName());
                }
             });
          }

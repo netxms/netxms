@@ -29,8 +29,6 @@ import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.TreeItem;
@@ -188,23 +186,7 @@ public class ExportToCsvAction extends Action
 					@Override
 					public void run()
 					{
-						JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-						if( executor != null ) 
-						{
-							StringBuilder js = new StringBuilder();
-							js.append("var hiddenIFrameID = 'hiddenDownloader',");
-							js.append("   iframe = document.getElementById(hiddenIFrameID);");
-							js.append("if (iframe === null) {");
-							js.append("   iframe = document.createElement('iframe');");
-							js.append("   iframe.id = hiddenIFrameID;");
-							js.append("   iframe.style.display = 'none';");
-							js.append("   document.body.appendChild(iframe);");
-							js.append("}");
-							js.append("iframe.src = '");
-							js.append(DownloadServiceHandler.createDownloadUrl(tmpFile.getName()));
-							js.append("';");
-							executor.execute(js.toString());
-						}						
+					   DownloadServiceHandler.startDownload(tmpFile.getName());
 					}
 				});
 			}

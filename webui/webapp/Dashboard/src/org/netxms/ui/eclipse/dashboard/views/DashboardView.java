@@ -31,8 +31,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
@@ -591,23 +589,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
                @Override
                public void run()
                {
-                  JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-                  if (executor != null)
-                  {
-                     StringBuilder js = new StringBuilder();
-                     js.append("var hiddenIFrameID = 'hiddenDownloader',");
-                     js.append("   iframe = document.getElementById(hiddenIFrameID);");
-                     js.append("if (iframe === null) {");
-                     js.append("   iframe = document.createElement('iframe');");
-                     js.append("   iframe.id = hiddenIFrameID;");
-                     js.append("   iframe.style.display = 'none';");
-                     js.append("   document.body.appendChild(iframe);");
-                     js.append("}");
-                     js.append("iframe.src = '");
-                     js.append(DownloadServiceHandler.createDownloadUrl(tmpFile.getName()));
-                     js.append("';");
-                     executor.execute(js.toString());
-                  }
+                  DownloadServiceHandler.startDownload(tmpFile.getName());
                }
             });
          }

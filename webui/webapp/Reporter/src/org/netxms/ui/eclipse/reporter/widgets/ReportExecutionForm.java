@@ -43,8 +43,6 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.window.Window;
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -577,23 +575,7 @@ public class ReportExecutionForm extends Composite
                @Override
                public void run()
                {
-                  JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-                  if( executor != null ) 
-                  {
-                     StringBuilder js = new StringBuilder();
-                     js.append("var hiddenIFrameID = 'hiddenDownloader',");
-                     js.append("   iframe = document.getElementById(hiddenIFrameID);");
-                     js.append("if (iframe === null) {");
-                     js.append("   iframe = document.createElement('iframe');");
-                     js.append("   iframe.id = hiddenIFrameID;");
-                     js.append("   iframe.style.display = 'none';");
-                     js.append("   document.body.appendChild(iframe);");
-                     js.append("}");
-                     js.append("iframe.src = '");
-                     js.append(DownloadServiceHandler.createDownloadUrl(reportFile.getName()));
-                     js.append("';");
-                     executor.execute(js.toString());
-                  }                 
+                  DownloadServiceHandler.startDownload(reportFile.getName());
                }
             });
 			}
