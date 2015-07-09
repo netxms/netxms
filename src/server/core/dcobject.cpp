@@ -978,19 +978,24 @@ void DCObject::setTransformationScript(const TCHAR *pszScript)
 INT16 DCObject::getAgentCacheMode()
 {
    if ((m_pNode->getObjectClass() != OBJECT_NODE) ||
-       ((m_source != DS_NATIVE_AGENT) && (m_source != DS_SNMP_AGENT)) ||
-       ((m_source == DS_SNMP_AGENT) && (((Node *)m_pNode)->getEffectiveSnmpProxy() == 0)))
+       ((m_source != DS_NATIVE_AGENT) && (m_source != DS_SNMP_AGENT)))
       return AGENT_CACHE_OFF;
+
+   Node *node = (Node *)m_pNode;
+   if (m_sourceNode != 0)
+   {
+      node = (Node *)FindObjectById(m_sourceNode, OBJECT_NODE);
+      if (node == NULL)
+      {
+         return AGENT_CACHE_OFF;
+      }
+   }
+
+   if ((m_source == DS_SNMP_AGENT) && (node->getEffectiveSnmpProxy() == 0))
+      return AGENT_CACHE_OFF;
+
    INT16 mode = DCF_GET_CACHE_MODE(m_flags);
    if (mode != AGENT_CACHE_DEFAULT)
       return mode;
-   if (m_sourceNode != 0)
-   {
-      Node *source = (Node *)FindObjectById(m_sourceNode, OBJECT_NODE);
-      if (source != NULL)
-      {
-         return source->getAgentCacheMode();
-      }
-   }
-   return ((Node *)m_pNode)->getAgentCacheMode();
+   return node->getAgentCacheMode();
 }
