@@ -489,8 +489,7 @@ public class DataCollectionEditor extends ViewPart
       actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
       actionShowFilter.setChecked(filterEnabled);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
-		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
-		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
+		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 		
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true); 
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
