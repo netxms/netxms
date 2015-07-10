@@ -534,7 +534,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          TCHAR directory[MAX_PATH];
          request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
          response->setId(request->getId());
-         if (directory == NULL)
+         if (directory[0] == 0)
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File name should be set."));
@@ -559,7 +559,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          TCHAR file[MAX_PATH];
          request->getFieldAsString(VID_FILE_NAME, file, MAX_PATH);
          response->setId(request->getId());
-         if(file == NULL)
+         if(file[0] == 0)
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File name should be set."));
@@ -592,7 +592,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          TCHAR newName[MAX_PATH];
          request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
          response->setId(request->getId());
-         if (oldName == NULL && newName == NULL)
+         if (oldName[0] == 0 && newName[0] == 0)
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File names should be set."));
@@ -626,7 +626,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          TCHAR newName[MAX_PATH];
          request->getFieldAsString(VID_NEW_FILE_NAME, newName, MAX_PATH);
          response->setId(request->getId());
-         if ((oldName == NULL) && (newName == NULL))
+         if ((oldName[0] == 0) && (newName[0] == 0))
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File names should be set."));
@@ -658,7 +658,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          TCHAR name[MAX_PATH];
          request->getFieldAsString(VID_FILE_NAME, name, MAX_PATH);
          response->setId(request->getId());
-         if (name == NULL)
+         if (name[0] == 0)
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File name should be set."));
@@ -764,7 +764,7 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          TCHAR directory[MAX_PATH];
          request->getFieldAsString(VID_FILE_NAME, directory, MAX_PATH);
          response->setId(request->getId());
-         if (directory == NULL)
+         if (directory[0] == 0)
          {
             response->setField(VID_RCC, ERR_IO_FAILURE);
             AgentWriteDebugLog(6, _T("FILEMGR: ProcessCommands(): File name should be set."));
