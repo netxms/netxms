@@ -144,7 +144,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	}
 	else if (!strcmp(name, "column"))
 	{
-      if (ps->state = XML_STATE_COLUMNS)
+      if (ps->state == XML_STATE_COLUMNS)
       {
 #ifdef UNICODE
          wchar_t *name = WideStringFromUTF8String(CHECK_NULL_A(XMLGetAttr(attrs, "name")));
