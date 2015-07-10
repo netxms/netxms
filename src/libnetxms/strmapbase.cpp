@@ -227,6 +227,20 @@ StructArray<KeyValuePair> *StringMapBase::toArray()
 }
 
 /**
+ * Get list of all keys
+ */
+StringList *StringMapBase::keys()
+{
+   StringList *list = new StringList();
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      list->add(m_ignoreCase ? entry->originalKey : entry->key);
+   }
+   return list;
+}
+
+/**
  * Get size
  */
 int StringMapBase::size()

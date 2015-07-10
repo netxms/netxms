@@ -260,11 +260,9 @@ LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSes
    return SYSINFO_RC_SUCCESS;
 }
 
-
-//
-// Calculate SHA1 hash for file
-//
-
+/**
+ * Calculate SHA1 hash for file
+ */
 LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR szFileName[MAX_PATH], szRealFileName[MAX_PATH];
@@ -462,5 +460,64 @@ LONG H_ResolverNameByAddr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
 
    if (addr.getHostByAddr(value, MAX_RESULT_LENGTH) == NULL)
       addr.toString(value);   // return address itself if cannot be back resolved
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Get thread pool information
+ */
+LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR poolName[64];
+   if (!AgentGetParameterArg(param, 1, poolName, 64))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   ThreadPoolInfo info;
+   if (!ThreadPoolGetInfo(poolName, &info))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   switch(CAST_FROM_POINTER(arg, ThreadPoolStat))
+   {
+      case THREAD_POOL_CURR_SIZE:
+         ret_int(value, info.curThreads);
+         break;
+      case THREAD_POOL_LOAD:
+         ret_int(value, info.load);
+         break;
+      case THREAD_POOL_LOADAVG_1:
+         ret_double(value, info.loadAvg[0]);
+         break;
+      case THREAD_POOL_LOADAVG_5:
+         ret_double(value, info.loadAvg[1]);
+         break;
+      case THREAD_POOL_LOADAVG_15:
+         ret_double(value, info.loadAvg[2]);
+         break;
+      case THREAD_POOL_MAX_SIZE:
+         ret_int(value, info.maxThreads);
+         break;
+      case THREAD_POOL_MIN_SIZE:
+         ret_int(value, info.minThreads);
+         break;
+      case THREAD_POOL_REQUESTS:
+         ret_int(value, info.activeRequests);
+         break;
+      case THREAD_POOL_USAGE:
+         ret_int(value, info.usage);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Thread pool list
+ */
+LONG H_ThreadPoolList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   StringList *pools = ThreadPoolGetAllPools();
+   value->addAll(pools);
+   delete pools;
    return SYSINFO_RC_SUCCESS;
 }

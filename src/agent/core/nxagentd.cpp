@@ -727,6 +727,8 @@ BOOL Initialize()
 	nxlog_write(MSG_USE_CONFIG_D, NXLOG_INFO, "s", g_szConfigIncludeDir);
 	nxlog_write(MSG_DEBUG_LEVEL, NXLOG_INFO, "d", g_debugLevel);
 
+   ThreadPoolSetDebugCallback(DebugPrintfCallback);
+
 	if (_tcscmp(g_masterAgent, _T("not_set")))
 	{
 		g_dwFlags |= AF_SUBAGENT_LOADER;

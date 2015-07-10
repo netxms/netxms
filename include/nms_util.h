@@ -510,6 +510,7 @@ public:
    const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData);
 
    StructArray<KeyValuePair> *toArray();
+   StringList *keys();
 };
 
 /**

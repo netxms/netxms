@@ -155,6 +155,21 @@
 
 #endif   /* _WIN32 */
 
+/**
+ * Thread pool stats
+ */
+enum ThreadPoolStat
+{
+   THREAD_POOL_CURR_SIZE,
+   THREAD_POOL_MIN_SIZE,
+   THREAD_POOL_MAX_SIZE,
+   THREAD_POOL_REQUESTS,
+   THREAD_POOL_LOAD,
+   THREAD_POOL_USAGE,
+   THREAD_POOL_LOADAVG_1,
+   THREAD_POOL_LOADAVG_5,
+   THREAD_POOL_LOADAVG_15
+};
 
 /**
  * Request types for H_DirInfo

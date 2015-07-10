@@ -26,8 +26,6 @@
 #include <dbghelp.h>
 #endif
 
-extern ThreadPool *g_pollerThreadPool;
-
 /**
  * Test read/write lock state and print to stdout
  */
@@ -212,17 +210,10 @@ LONG GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value)
    if (!AgentGetParameterArg(param, 1, poolName, 64))
       return SYSINFO_RC_UNSUPPORTED;
 
-   ThreadPool *p = NULL;
-   if (!_tcsicmp(poolName, _T("MAIN")))
-      p = g_mainThreadPool;
-   else if (!_tcsicmp(poolName, _T("POLLERS")))
-      p = g_pollerThreadPool;
-
-   if (p == NULL)
+   ThreadPoolInfo info;
+   if (!ThreadPoolGetInfo(poolName, &info))
       return SYSINFO_RC_UNSUPPORTED;
 
-   ThreadPoolInfo info;
-   ThreadPoolGetInfo(p, &info);
    switch(stat)
    {
       case THREAD_POOL_CURR_SIZE:

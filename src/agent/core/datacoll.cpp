@@ -52,6 +52,7 @@ private:
    BYTE m_origin;
    UINT16 m_snmpPort;
    BYTE m_snmpRawValueType;
+   BYTE m_busy;
 	uuid m_snmpTargetGuid;
    time_t m_lastPollTime;
 
@@ -78,8 +79,13 @@ public:
    void deleteFromDatabase();
    void setLastPollTime(time_t time);
 
+   void startDataCollection() { m_busy = 1; incRefCount(); }
+   void finishDataCollection() { m_busy = 0; decRefCount(); }
+
    UINT32 getTimeToNextPoll(time_t now) const
    {
+      if (m_busy) // being polled now - time to next poll should not be less than full polling interval
+         return m_pollingInterval;
       time_t diff = now - m_lastPollTime;
       return (diff >= m_pollingInterval) ? 0 : m_pollingInterval - (UINT32)diff;
    }
@@ -100,6 +106,7 @@ DataCollectionItem::DataCollectionItem(UINT64 serverId, NXCPMessage *msg, UINT32
    m_snmpTargetGuid = msg->getFieldAsGUID(baseId + 6);
    m_snmpPort = msg->getFieldAsUInt16(baseId + 7);
    m_snmpRawValueType = (BYTE)msg->getFieldAsUInt16(baseId + 8);
+   m_busy = 0;
 }
 
 /**
@@ -117,6 +124,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_snmpPort = DBGetFieldULong(hResult, row, 7);
    m_snmpTargetGuid = DBGetFieldGUID(hResult, row, 8);
    m_snmpRawValueType = (BYTE)DBGetFieldULong(hResult, row, 9);
+   m_busy = 0;
 }
 
 /**
@@ -134,6 +142,7 @@ DataCollectionItem::DataCollectionItem(DB_RESULT hResult, int row)
    m_snmpTargetGuid = item->m_snmpTargetGuid;
    m_snmpPort = item->m_snmpPort;
    m_snmpRawValueType = item->m_snmpRawValueType;
+   m_busy = 0;
  }
 
 /**
@@ -685,15 +694,55 @@ static DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
 }
 
 /**
+ * Data collection callback
+ */
+static void DataCollectionCallback(void *arg)
+{
+   DataCollectionItem *dci = (DataCollectionItem *)arg;
+
+   DataElement *e;
+   if (dci->getOrigin() == DS_NATIVE_AGENT)
+   {
+      e = CollectDataFromAgent(dci);
+   }
+   else if (dci->getOrigin() == DS_SNMP_AGENT)
+   {
+      e = CollectDataFromSNMP(dci);
+   }
+   else
+   {
+      DebugPrintf(INVALID_INDEX, 7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
+      e = NULL;
+   }
+
+   if (e != NULL)
+   {
+      s_dataSenderQueue.put(e);
+   }
+   else
+   {
+      DebugPrintf(INVALID_INDEX, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
+   }
+
+   dci->setLastPollTime(time(NULL));
+   dci->finishDataCollection();
+}
+
+/**
  * List of all data collection items
  */
 static ObjectArray<DataCollectionItem> s_items(64, 64, true);
 static MUTEX s_itemLock = INVALID_MUTEX_HANDLE;
 
 /**
- * Single data collection run - collect data if needed and calculate sleep time
+ * Data collectors thread pool
  */
-static UINT32 DataCollectionRun()
+static ThreadPool *s_dataCollectorPool = NULL;
+
+/**
+ * Single data collection scheduler run - schedule data collection if needed and calculate sleep time
+ */
+static UINT32 DataCollectionSchedulerRun()
 {
    UINT32 sleepTime = 60;
 
@@ -706,31 +755,8 @@ static UINT32 DataCollectionRun()
       if (timeToPoll == 0)
       {
          DebugPrintf(INVALID_INDEX, 7, _T("DataCollector: polling DCI %d \"%s\""), dci->getId(), dci->getName());
-         DataElement *e;
-         if (dci->getOrigin() == DS_NATIVE_AGENT)
-         {
-            e = CollectDataFromAgent(dci);
-         }
-         else if (dci->getOrigin() == DS_SNMP_AGENT)
-         {
-            e = CollectDataFromSNMP(dci);
-         }
-         else
-         {
-            DebugPrintf(INVALID_INDEX, 7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
-            e = NULL;
-         }
-
-         if (e != NULL)
-         {
-            s_dataSenderQueue.put(e);
-         }
-         else
-         {
-            DebugPrintf(INVALID_INDEX, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
-         }
-
-         dci->setLastPollTime(now);
+         dci->startDataCollection();
+         ThreadPoolExecute(s_dataCollectorPool, DataCollectionCallback, dci);
          timeToPoll = dci->getPollingInterval();
       }
 
@@ -742,20 +768,22 @@ static UINT32 DataCollectionRun()
 }
 
 /**
- * Data collector thread
+ * Data collection scheduler thread
  */
-static THREAD_RESULT THREAD_CALL DataCollector(void *arg)
+static THREAD_RESULT THREAD_CALL DataCollectionScheduler(void *arg)
 {
-   DebugPrintf(INVALID_INDEX, 1, _T("Data collector thread started"));
+   DebugPrintf(INVALID_INDEX, 1, _T("Data collection scheduler thread started"));
+   s_dataCollectorPool = ThreadPoolCreate(1, 32, _T("DATACOLL"));
 
-   UINT32 sleepTime = DataCollectionRun();
+   UINT32 sleepTime = DataCollectionSchedulerRun();
    while(!AgentSleepAndCheckForShutdown(sleepTime * 1000))
    {
-      sleepTime = DataCollectionRun();
+      sleepTime = DataCollectionSchedulerRun();
       DebugPrintf(INVALID_INDEX, 7, _T("DataCollector: sleeping for %d seconds"), sleepTime);
    }
 
-   DebugPrintf(INVALID_INDEX, 1, _T("Data collector thread stopped"));
+   ThreadPoolDestroy(s_dataCollectorPool);
+   DebugPrintf(INVALID_INDEX, 1, _T("Data collection scheduler thread stopped"));
    return THREAD_OK;
 }
 
@@ -824,7 +852,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       bool exist = false;
       for(int j = 0; j < config.size(); j++)
       {
-         if(item->equals(config.get(j)))
+         if (item->equals(config.get(j)))
          {
             exist = true;
          }
@@ -832,7 +860,8 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       if (!exist)
       {
          item->deleteFromDatabase();
-         s_items.remove(i);
+         s_items.unlink(i);
+         item->decRefCount();
          i--;
       }
    }
@@ -929,7 +958,7 @@ static const TCHAR *s_upgradeQueries[] =
 /**
  * Data collector and sender thread handles
  */
-static THREAD s_dataCollectorThread = INVALID_THREAD_HANDLE;
+static THREAD s_dataCollectionSchedulerThread = INVALID_THREAD_HANDLE;
 static THREAD s_dataSenderThread = INVALID_THREAD_HANDLE;
 static THREAD s_reconcillationThread = INVALID_THREAD_HANDLE;
 
@@ -962,7 +991,7 @@ void StartLocalDataCollector()
 
    LoadState();
 
-   s_dataCollectorThread = ThreadCreateEx(DataCollector, 0, NULL);
+   s_dataCollectionSchedulerThread = ThreadCreateEx(DataCollectionScheduler, 0, NULL);
    s_dataSenderThread = ThreadCreateEx(DataSender, 0, NULL);
    s_reconcillationThread = ThreadCreateEx(ReconcillationThread, 0, NULL);
 
@@ -981,7 +1010,7 @@ void ShutdownLocalDataCollector()
    }
 
    DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data collector thread termination"));
-   ThreadJoin(s_dataCollectorThread);
+   ThreadJoin(s_dataCollectionSchedulerThread);
 
    DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data sender thread termination"));
    s_dataSenderQueue.put(INVALID_POINTER_VALUE);
