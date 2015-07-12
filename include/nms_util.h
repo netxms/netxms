@@ -1621,7 +1621,7 @@ WCHAR *wctime(const time_t *timep);
 #if !HAVE_PUTWS
 int putws(const WCHAR *s);
 #endif
-#if !HAVE_WCSERROR && HAVE_STRERROR
+#if !HAVE_WCSERROR && (HAVE_STRERROR || HAVE_DECL_STRERROR)
 WCHAR *wcserror(int errnum);
 #endif
 #if !HAVE_WCSERROR_R && HAVE_STRERROR_R

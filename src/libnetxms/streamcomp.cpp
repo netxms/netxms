@@ -25,6 +25,13 @@
 #include "lz4.h"
 
 /**
+ * Stream compressor destructor
+ */
+StreamCompressor::~StreamCompressor()
+{
+}
+
+/**
  * Create compressor object for given method
  */
 StreamCompressor *StreamCompressor::create(NXCPCompressionMethod method, bool compress, size_t maxBlockSize)
@@ -37,6 +44,13 @@ StreamCompressor *StreamCompressor::create(NXCPCompressionMethod method, bool co
          return new DummyStreamCompressor();
    }
    return NULL;
+}
+
+/**
+ * Dummy stream compressor destructor
+ */
+DummyStreamCompressor::~DummyStreamCompressor()
+{
 }
 
 /**

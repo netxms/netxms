@@ -1373,7 +1373,7 @@ int putws(const WCHAR *s)
 
 #endif /* !HAVE_PUTWS */
 
-#if !HAVE_WCSERROR && HAVE_STRERROR
+#if !HAVE_WCSERROR && (HAVE_STRERROR || HAVE_DECL_STRERROR)
 
 WCHAR *wcserror(int errnum)
 {

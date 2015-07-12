@@ -30,6 +30,10 @@ escape		\\[bnrt0\"\\]
 
 static void LexerError(const char *pszMsg, yyscan_t scanner);
 
+// prevent flex debug output on stdout
+#undef ECHO
+#define ECHO
+
 %}
 
 %%

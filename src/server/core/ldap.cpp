@@ -300,7 +300,7 @@ void LDAPConnection::getAllSyncParameters()
    ConfigReadStrUTF8(_T("LdapSearchBase"), m_searchBase, MAX_DB_STRING, "");
    ConfigReadStrUTF8(_T("LdapSearchFilter"), m_searchFilter, MAX_DB_STRING, "(objectClass=*)");
    if (m_searchFilter[0] == 0)
-      strcmp(m_searchFilter, "(objectClass=*)");
+      strcpy(m_searchFilter, "(objectClass=*)");
    ConfigReadStrUTF8(_T("LdapSyncUserPassword"), m_userPassword, MAX_DB_STRING, "");
 #endif
    ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_DB_STRING, "");

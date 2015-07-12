@@ -358,6 +358,8 @@ enum NXCPCompressionMethod
 class LIBNETXMS_EXPORTABLE StreamCompressor
 {
 public:
+   virtual ~StreamCompressor();
+
    virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize) = 0;
    virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out) = 0;
    virtual size_t compressBufferSize(size_t dataSize) = 0;
@@ -371,6 +373,8 @@ public:
 class LIBNETXMS_EXPORTABLE DummyStreamCompressor : public StreamCompressor
 {
 public:
+   virtual ~DummyStreamCompressor();
+
    virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize);
    virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out);
    virtual size_t compressBufferSize(size_t dataSize);

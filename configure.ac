@@ -1695,7 +1695,7 @@ AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
 AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo])
 AC_CHECK_FUNCS([itoa _itoa isatty getgrnam getpwnam malloc_info malloc_trim])
 
-AC_CHECK_DECLS([nanosleep, daemon])
+AC_CHECK_DECLS([nanosleep, daemon, strerror])
 
 # Do not use inet_pton on Solaris as it has binary compatibility problems
 if test "$PLATFORM" != "SunOS"; then

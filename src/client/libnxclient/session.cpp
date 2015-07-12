@@ -148,7 +148,7 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
    WORD port = SERVER_LISTEN_PORT_FOR_CLIENTS;
    TCHAR *p = _tcsrchr(hostname, _T(':'));
    if ((p != NULL) && (p != hostname) &&
-       (((hostname[0] != _T('[')) && (NumChars(hostname, _T(':') == 1)) || (*(p - 1) == _T(']')))))
+       ((hostname[0] != _T('[')) || (NumChars(hostname, _T(':') == 1)) || (*(p - 1) == _T(']'))))
    {
       *p = 0;
       p++;

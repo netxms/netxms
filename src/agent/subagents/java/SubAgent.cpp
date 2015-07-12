@@ -162,11 +162,11 @@ static void JNICALL Java_org_netxms_agent_SubAgent_writeDebugLog(JNIEnv *jenv, j
  */
 static JNINativeMethod s_jniNativeMethods[] =
 {
-   { "getParameterArg", "(Ljava/lang/String;I)Ljava/lang/String;", (void *)Java_org_netxms_agent_SubAgent_getParameterArg },
-   { "pushParameterData", "(Ljava/lang/String;Ljava/lang/String;)Z", (void *)Java_org_netxms_agent_SubAgent_pushParameterData },
-   { "sendTrap", "(ILjava/lang/String;[Ljava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_sendTrap },
-   { "writeDebugLog", "(ILjava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_writeDebugLog },
-   { "writeLog", "(ILjava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_writeLog }
+   { (char *)"getParameterArg", (char *)"(Ljava/lang/String;I)Ljava/lang/String;", (void *)Java_org_netxms_agent_SubAgent_getParameterArg },
+   { (char *)"pushParameterData", (char *)"(Ljava/lang/String;Ljava/lang/String;)Z", (void *)Java_org_netxms_agent_SubAgent_pushParameterData },
+   { (char *)"sendTrap", (char *)"(ILjava/lang/String;[Ljava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_sendTrap },
+   { (char *)"writeDebugLog", (char *)"(ILjava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_writeDebugLog },
+   { (char *)"writeLog", (char *)"(ILjava/lang/String;)V", (void *)Java_org_netxms_agent_SubAgent_writeLog }
 };
 
 /**
