@@ -9,5 +9,4 @@ libnxappc_la_LDFLAGS = -static
 EXTRA_DIST = nxappc.h libnxappc.vcproj
 
 install-exec-hook:
-	if test "x@BUILD_SDK@" = "xyes"; then cp nxappc.h $(DESTDIR)$(includedir); fi
-
+	if test "x@BUILD_SDK@" = "xyes"; then mkdir -p $(DESTDIR)$(includedir); cp nxappc.h $(DESTDIR)$(includedir); fi
