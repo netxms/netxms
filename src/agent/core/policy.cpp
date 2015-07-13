@@ -32,12 +32,12 @@
 /**
  * Register policy in persistent storage
  */
-static void RegisterPolicy(CommSession *session, UINT32 type, uuid_t guid)
+static void RegisterPolicy(CommSession *session, UINT32 type, const uuid& guid)
 {
 	TCHAR path[256], buffer[64];
 	int tail;
 
-	_sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s/"), uuid_to_string(guid, buffer));
+   _sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s/"), guid.toString(buffer));
 	tail = (int)_tcslen(path);
 
 	Config *registry = AgentOpenRegistry();
@@ -54,11 +54,11 @@ static void RegisterPolicy(CommSession *session, UINT32 type, uuid_t guid)
 /**
  * Register policy in persistent storage
  */
-static void UnregisterPolicy(uuid_t guid)
+static void UnregisterPolicy(const uuid& guid)
 {
 	TCHAR path[256], buffer[64];
 
-	_sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s"), uuid_to_string(guid, buffer));
+   _sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s"), guid.toString(buffer));
 	Config *registry = AgentOpenRegistry();
 	registry->deleteEntry(path);
 	AgentCloseRegistry(true);
@@ -67,12 +67,12 @@ static void UnregisterPolicy(uuid_t guid)
 /**
  * Get policy type by GUID
  */
-static int GetPolicyType(uuid_t guid)
+static int GetPolicyType(const uuid& guid)
 {
 	TCHAR path[256], buffer[64];
 	int type;
 
-	_sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s/type"), uuid_to_string(guid, buffer));
+   _sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s/type"), guid.toString(buffer));
 	Config *registry = AgentOpenRegistry();
 	type = registry->getValueAsInt(path, -1);
 	AgentCloseRegistry(false);
@@ -82,7 +82,7 @@ static int GetPolicyType(uuid_t guid)
 /**
  * Deploy configuration file
  */
-static UINT32 DeployConfig(UINT32 session, uuid_t guid, NXCPMessage *msg)
+static UINT32 DeployConfig(UINT32 session, const uuid& guid, NXCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
 	int fh;
@@ -91,7 +91,7 @@ static UINT32 DeployConfig(UINT32 session, uuid_t guid, NXCPMessage *msg)
 	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
 	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-				  uuid_to_string(guid, name));
+              guid.toString(name));
 
 	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
 	if (fh != -1)
@@ -130,7 +130,7 @@ static UINT32 DeployConfig(UINT32 session, uuid_t guid, NXCPMessage *msg)
 /**
  * Deploy log parser policy
  */
-static UINT32 DeployLogParser(UINT32 session, uuid_t guid, NXCPMessage *msg)
+static UINT32 DeployLogParser(UINT32 session, const uuid& guid, NXCPMessage *msg)
 {
 	return ERR_NOT_IMPLEMENTED;
 }
@@ -141,10 +141,9 @@ static UINT32 DeployLogParser(UINT32 session, uuid_t guid, NXCPMessage *msg)
 UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 {
 	UINT32 type, rcc;
-	uuid_t guid;
 
 	type = request->getFieldAsUInt16(VID_POLICY_TYPE);
-	request->getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
+	uuid guid = request->getFieldAsGUID(VID_GUID);
 
 	switch(type)
 	{
@@ -169,7 +168,7 @@ UINT32 DeployPolicy(CommSession *session, NXCPMessage *request)
 /**
  * Remove configuration file
  */
-static UINT32 RemoveConfig(UINT32 session, uuid_t guid,  NXCPMessage *msg)
+static UINT32 RemoveConfig(UINT32 session, const uuid& guid, NXCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
 	UINT32 rcc;
@@ -177,7 +176,7 @@ static UINT32 RemoveConfig(UINT32 session, uuid_t guid,  NXCPMessage *msg)
 	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
 	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-				  uuid_to_string(guid, name));
+              guid.toString(name));
 
 	if (_tremove(path) != 0)
 	{
@@ -193,7 +192,7 @@ static UINT32 RemoveConfig(UINT32 session, uuid_t guid,  NXCPMessage *msg)
 /**
  * Remove log parser file
  */
-static UINT32 RemoveLogParser(UINT32 session, uuid_t guid,  NXCPMessage *msg)
+static UINT32 RemoveLogParser(UINT32 session, const uuid& guid,  NXCPMessage *msg)
 {
 	TCHAR path[MAX_PATH], name[64], tail;
 	UINT32 rcc;
@@ -201,7 +200,7 @@ static UINT32 RemoveLogParser(UINT32 session, uuid_t guid,  NXCPMessage *msg)
 	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
 	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-				  uuid_to_string(guid, name));
+              guid.toString(name));
 
 	if (_tremove(path) != 0)
 	{
@@ -221,10 +220,9 @@ UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request)
 {
 	UINT32 rcc;
 	int type;
-	uuid_t guid;
 	TCHAR buffer[64];
 
-	request->getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
+	uuid guid = request->getFieldAsGUID(VID_GUID);
 	type = GetPolicyType(guid);
 
 	switch(type)
@@ -243,7 +241,7 @@ UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request)
 	if (rcc == RCC_SUCCESS)
 		UnregisterPolicy(guid);
 
-	DebugPrintf(session->getIndex(), 3, _T("Policy uninstall: GUID=%s TYPE=%d RCC=%d"), uuid_to_string(guid, buffer), type, rcc);
+   DebugPrintf(session->getIndex(), 3, _T("Policy uninstall: GUID=%s TYPE=%d RCC=%d"), guid.toString(buffer), type, rcc);
 	return rcc;
 }
 
@@ -266,7 +264,7 @@ UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg)
 
 			if (MatchString(_T("policy-*"), e->getName(), TRUE))
 			{
-				uuid_parse(&(e->getName()[7]), guid);
+				_uuid_parse(&(e->getName()[7]), guid);
 				msg->setField(varId++, guid, UUID_LENGTH);
 				msg->setField(varId++, (WORD)e->getSubEntryValueAsInt(_T("type")));
 				msg->setField(varId++, e->getSubEntryValue(_T("server")));

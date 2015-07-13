@@ -232,9 +232,9 @@ int main(int argc, char *argv[])
 				WCHAR wguid[256];
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, wguid, 256);
 				wguid[255] = 0;
-				uuid_parse(wguid, guid);
+				_uuid_parse(wguid, guid);
 #else
-				uuid_parse(optarg, guid);
+				_uuid_parse(optarg, guid);
 #endif
 				break;
          case '?':

@@ -61,11 +61,7 @@ UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId)
 
       if (isNew)
       {
-         uuid_t guid;
-         TCHAR guidText[64];
-         uuid_generate(guid);
-         uuid_to_string(guid, guidText);
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, guidText, DB_BIND_TRANSIENT);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, uuid::generate());
       }
 
       rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
@@ -493,7 +489,7 @@ bool ImportSummaryTable(ConfigEntry *config)
    }
 
    uuid_t temp;
-   if (uuid_parse(guid, temp) == -1)
+   if (_uuid_parse(guid, temp) == -1)
    {
       DbgPrintf(4, _T("ImportSummaryTable: GUID (%s) is invalid"), guid);
       return false;

@@ -225,7 +225,7 @@ static void CheckZones()
 						uuid_t guid;
 						TCHAR guidText[128];
 
-						uuid_generate(guid);
+						_uuid_generate(guid);
                   _sntprintf(szQuery, 1024, 
                              _T("INSERT INTO object_properties (object_id,guid,name,")
                              _T("status,is_deleted,is_system,inherit_access_rights,")
@@ -235,7 +235,7 @@ static void CheckZones()
 									  _T("latitude,longitude,image) VALUES ")
                              _T("(%d,'%s','lost_zone_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
 									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000')"),
-									  (int)dwId, uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
+									  (int)dwId, _uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                }
@@ -285,7 +285,7 @@ static void CheckNodes()
 						uuid_t guid;
 						TCHAR guidText[128];
 
-						uuid_generate(guid);
+						_uuid_generate(guid);
                   _sntprintf(szQuery, 1024, 
                              _T("INSERT INTO object_properties (object_id,guid,name,")
                              _T("status,is_deleted,is_system,inherit_access_rights,")
@@ -295,7 +295,7 @@ static void CheckNodes()
 									  _T("latitude,longitude,location_accuracy,location_timestamp,image,submap_id) VALUES ")
                              _T("(%d,'%s','lost_node_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
 									  _T("'0.000000','0.000000',0,0,'00000000-0000-0000-0000-000000000000',0)"),
-									  (int)dwId, uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
+									  (int)dwId, _uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                }
@@ -375,7 +375,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
 						uuid_t guid;
 						TCHAR guidText[128];
 
-						uuid_generate(guid);
+						_uuid_generate(guid);
                   _sntprintf(szQuery, 1024, 
                              _T("INSERT INTO object_properties (object_id,guid,name,")
                              _T("status,is_deleted,is_system,inherit_access_rights,")
@@ -385,7 +385,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
 									  _T("latitude,longitude,image) VALUES ")
                              _T("(%d,'%s','lost_%s_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
 									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000')"),
-									  (int)dwId, uuid_to_string(guid, guidText), pszDisplayName, (int)dwId, TIME_T_FCAST(time(NULL)));
+									  (int)dwId, _uuid_to_string(guid, guidText), pszDisplayName, (int)dwId, TIME_T_FCAST(time(NULL)));
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                   szName[0] = 0;

@@ -45,9 +45,9 @@ static bool GenerateGUID(const TCHAR *table, const TCHAR *idColumn, const TCHAR 
 		uuid_t guid;
 		TCHAR buffer[64];
 
-		uuid_generate(guid);
+		_uuid_generate(guid);
 		_sntprintf(query, 256, _T("UPDATE %s SET %s='%s' WHERE %s=%d"),
-		           table, guidColumn, uuid_to_string(guid, buffer), idColumn, DBGetFieldULong(hResult, i, 0));
+		           table, guidColumn, _uuid_to_string(guid, buffer), idColumn, DBGetFieldULong(hResult, i, 0));
 		if (!SQLQuery(query))
       {
       	DBFreeResult(hResult);
@@ -3967,9 +3967,9 @@ static BOOL H_UpgradeFromV215(int currVersion, int newVersion)
 			uuid_t guid;
 			TCHAR query[256], buffer[64];
 
-			uuid_generate(guid);
+			_uuid_generate(guid);
 			_sntprintf(query, 256, _T("UPDATE object_properties SET guid='%s' WHERE object_id=%d"),
-			           uuid_to_string(guid, buffer), DBGetFieldULong(hResult, i, 0));
+			           _uuid_to_string(guid, buffer), DBGetFieldULong(hResult, i, 0));
 			CHK_EXEC(SQLQuery(query));
 		}
 		DBFreeResult(hResult);
@@ -6797,9 +6797,9 @@ static BOOL H_UpgradeFromV40(int currVersion, int newVersion)
       for(i = 0; i < nCount; i++)
       {
          dwId = DBGetFieldULong(hResult, i, 0);
-         uuid_generate(guid);
+         _uuid_generate(guid);
          _sntprintf(szQuery, 256, _T("UPDATE users SET guid='%s' WHERE id=%d"),
-                    uuid_to_string(guid, szGUID), dwId);
+                    _uuid_to_string(guid, szGUID), dwId);
          if (!SQLQuery(szQuery))
             if (!g_bIgnoreErrors)
             {
@@ -6817,9 +6817,9 @@ static BOOL H_UpgradeFromV40(int currVersion, int newVersion)
       for(i = 0; i < nCount; i++)
       {
          dwId = DBGetFieldULong(hResult, i, 0);
-         uuid_generate(guid);
+         _uuid_generate(guid);
          _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=%d"),
-                    uuid_to_string(guid, szGUID), dwId);
+                    _uuid_to_string(guid, szGUID), dwId);
          if (!SQLQuery(szQuery))
             if (!g_bIgnoreErrors)
             {

@@ -709,10 +709,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, dwToolId);
    if (newTool)
    {
-      uuid_t guid;
-      uuid_generate(guid);
-      TCHAR guidText[64];
-      DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, uuid_to_string(guid, guidText), DB_BIND_TRANSIENT);
+      DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, uuid::generate());
    }
 
    if (!DBExecute(hStmt))
@@ -820,7 +817,7 @@ bool ImportObjectTool(ConfigEntry *config)
    }
 
    uuid_t temp;
-   if (uuid_parse(guid, temp) == -1)
+   if (_uuid_parse(guid, temp) == -1)
    {
       DbgPrintf(4, _T("ImportObjectTool: GUID (%s) is invalid"), guid);
       return false;

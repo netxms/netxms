@@ -143,7 +143,7 @@ static void uuid_unpack(const uuid_t in, struct __uuid *uu)
 /**
  * Clear a UUID
  */
-void LIBNETXMS_EXPORTABLE uuid_clear(uuid_t uu)
+void LIBNETXMS_EXPORTABLE _uuid_clear(uuid_t uu)
 {
 	memset(uu, 0, 16);
 }
@@ -155,7 +155,7 @@ void LIBNETXMS_EXPORTABLE uuid_clear(uuid_t uu)
  *
  * Returns 1/-1 if the two UUID's are different, and 0 if they are the same.
  */
-int LIBNETXMS_EXPORTABLE uuid_compare(const uuid_t uu1, const uuid_t uu2)
+int LIBNETXMS_EXPORTABLE _uuid_compare(const uuid_t uu1, const uuid_t uu2)
 {
 	struct __uuid	uuid1, uuid2;
 
@@ -173,7 +173,7 @@ int LIBNETXMS_EXPORTABLE uuid_compare(const uuid_t uu1, const uuid_t uu2)
  * isnull.c --- Check whether or not the UUID is null
  * Returns true if the uuid is the NULL uuid
  */
-bool LIBNETXMS_EXPORTABLE uuid_is_null(const uuid_t uu)
+bool LIBNETXMS_EXPORTABLE _uuid_is_null(const uuid_t uu)
 {
 	const unsigned char *cp;
 	int i;
@@ -187,7 +187,7 @@ bool LIBNETXMS_EXPORTABLE uuid_is_null(const uuid_t uu)
 /**
  * Parse UUID
  */
-int LIBNETXMS_EXPORTABLE uuid_parse(const TCHAR *in, uuid_t uu)
+int LIBNETXMS_EXPORTABLE _uuid_parse(const TCHAR *in, uuid_t uu)
 {
 	struct __uuid uuid;
 	int i;
@@ -227,7 +227,7 @@ int LIBNETXMS_EXPORTABLE uuid_parse(const TCHAR *in, uuid_t uu)
 /**
  * Convert packed UUID to string
  */
-TCHAR LIBNETXMS_EXPORTABLE *uuid_to_string(const uuid_t uu, TCHAR *out)
+TCHAR LIBNETXMS_EXPORTABLE *_uuid_to_string(const uuid_t uu, TCHAR *out)
 {
 	struct __uuid uuid;
 
@@ -510,7 +510,7 @@ static void uuid_generate_random(uuid_t out)
  * /dev/urandom is available, since otherwise we won't have
  * high-quality randomness.
  */
-void LIBNETXMS_EXPORTABLE uuid_generate(uuid_t out)
+void LIBNETXMS_EXPORTABLE _uuid_generate(uuid_t out)
 {
 #ifdef _WIN32
 	UUID uuid;

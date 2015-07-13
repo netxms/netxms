@@ -12003,7 +12003,7 @@ void ClientSession::sendLibraryImage(NXCPMessage *request)
 
 	uuid_t guid;
 	request->getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
-	uuid_to_string(guid, guidText);
+	_uuid_to_string(guid, guidText);
 	debugPrintf(5, _T("sendLibraryImage: guid=%s"), guidText);
 
 	if (rcc == RCC_SUCCESS)
@@ -12101,7 +12101,7 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
    }
 
 	uuid_t guid;
-	uuid_clear(guid);
+	_uuid_clear(guid);
 
 	msg.setId(request->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
@@ -12116,13 +12116,13 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
 		request->getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
 	}
 
-	if (uuid_is_null(guid))
+	if (_uuid_is_null(guid))
 	{
-		uuid_generate(guid);
+		_uuid_generate(guid);
 	}
 
 	TCHAR guidText[64];
-	uuid_to_string(guid, guidText);
+	_uuid_to_string(guid, guidText);
 
 	request->getFieldAsString(VID_NAME, name, MAX_OBJECT_NAME);
 	request->getFieldAsString(VID_CATEGORY, category, MAX_OBJECT_NAME);
@@ -12259,7 +12259,7 @@ void ClientSession::deleteLibraryImage(NXCPMessage *request)
    }
 
 	request->getFieldAsBinary(VID_GUID, guid, UUID_LENGTH);
-	uuid_to_string(guid, guidText);
+	_uuid_to_string(guid, guidText);
 	debugPrintf(5, _T("deleteLibraryImage: guid=%s"), guidText);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();

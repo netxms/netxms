@@ -53,12 +53,6 @@ int main(int argc, char *argv[])
       }
    }
 
-   uuid_t guid;
-   uuid_generate(guid);
-
-   TCHAR guidText[64];
-   uuid_to_string(guid, guidText);
-	_putts(guidText);
-
+   _putts(uuid::generate().toString());
 	return 0;
 }

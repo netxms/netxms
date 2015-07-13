@@ -234,7 +234,6 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
    struct tm *lt;
    TCHAR *pText, szBuffer[4], scriptName[256];
 	int i;
-	uuid_t guid;
 
 	DbgPrintf(8, _T("Event::expandText(event=%p sourceObject=%d template='%s' alarmMsg='%s' alarmKey='%s')"),
 	          event, (int)sourceObject, CHECK_NULL(textTemplate), CHECK_NULL(alarmMsg), CHECK_NULL(alarmKey));

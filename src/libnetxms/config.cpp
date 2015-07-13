@@ -341,14 +341,14 @@ bool ConfigEntry::getValueAsBoolean(int index, bool defaultValue)
 /**
  * Get entry value as GUID
  */
-bool ConfigEntry::getValueAsUUID(int index, uuid_t uuid)
+uuid ConfigEntry::getValueAsUUID(int index)
 {
    const TCHAR *value = getValue(index);
    if (value != NULL)
    {
-      return uuid_parse(value, uuid) == 0;
+      return uuid::parse(value);
    }
-   return false;
+   return uuid::NULL_UUID;
 }
 
 /**
@@ -876,16 +876,16 @@ bool Config::getValueAsBoolean(const TCHAR *path, bool defaultValue)
 /**
  * Get value at given path as UUID
  */
-bool Config::getValueAsUUID(const TCHAR *path, uuid_t uuid)
+uuid Config::getValueAsUUID(const TCHAR *path)
 {
    const TCHAR *value = getValue(path);
    if (value != NULL)
    {
-      return uuid_parse(value, uuid) == 0;
+      return uuid::parse(value);
    }
    else
    {
-      return false;
+      return uuid::NULL_UUID;
    }
 }
 
@@ -1074,10 +1074,10 @@ bool Config::setValue(const TCHAR *path, double value)
  * Set value
  * Returns false on error (usually caused by incorrect path)
  */
-bool Config::setValue(const TCHAR *path, uuid_t value)
+bool Config::setValue(const TCHAR *path, const uuid& value)
 {
    TCHAR buffer[64];
-   uuid_to_string(value, buffer);
+   value.toString(buffer);
    return setValue(path, buffer);
 }
 
