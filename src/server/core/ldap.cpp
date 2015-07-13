@@ -594,7 +594,7 @@ TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, UINT32
 #ifdef UNICODE
       result = WideStringFromUTF8String(values[i]->bv_val);
 #else
-      result = strdup(values[i]->bv_val);
+      result = MBStringFromUTF8String(values[i]->bv_val);
 #endif /* UNICODE */
    }
    ldap_value_free_len(values);
@@ -726,7 +726,7 @@ TCHAR *LDAPConnection::getErrorString(int ldap_error)
 #ifdef UNICODE
    return WideStringFromUTF8String(ldap_err2string(ldap_error));
 #else
-   return strdup(ldap_err2string(ldap_error));
+   return MBStringFromUTF8String(ldap_err2string(ldap_error));
 #endif
 #endif
 }
