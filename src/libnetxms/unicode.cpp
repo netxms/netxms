@@ -969,7 +969,7 @@ static size_t mb_to_utf8_simple_copy(const char *src, int srcLen, char *dst, int
    if (size >= dstLen)
       size = dstLen - 1;
    for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (*psrc < 128) ? (char) (*psrc) : '?';
+      *pdst = ((unsigned char)(*psrc) < 128) ? *psrc : '?';
    *pdst = 0;
    return size;
 }
@@ -1041,17 +1041,28 @@ size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, i
  */
 static size_t utf8_to_mb_simple_copy(const char *src, int srcLen, char *dst, int dstLen)
 {
-   const char *psrc;
-   char *pdst;
-   int pos, size;
-
-   size = (srcLen == -1) ? strlen(src) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
-   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (*psrc < 128) ? (char) (*psrc) : '?';
+   const char *psrc = src;
+   char *pdst = dst;
+   int dsize = 0;
+   int ssize = (srcLen == -1) ? strlen(src) : srcLen;
+   for(int pos = 0; (pos < ssize) && (dsize < dstLen - 1); pos++, psrc++)
+   {
+      BYTE b = (BYTE)*psrc;
+      if ((b & 0x80) == 0)  // ASCII-7 character
+      {
+         *pdst = (char)b;
+         pdst++;
+         dsize++;
+      }
+      else if ((b & 0xC0) == 0xC0)  // UTF-8 start byte
+      {
+         *pdst = '?';
+         pdst++;
+         dsize++;
+      }
+   }
    *pdst = 0;
-   return size;
+   return dsize;
 }
 
 #ifndef __DISABLE_ICONV
