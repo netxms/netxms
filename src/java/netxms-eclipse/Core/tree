@@ -1,0 +1,110 @@
+[INFO] Scanning for projects...
+[INFO] Computing target platform for MavenProject: com.netxms.nxmc:org.netxms.ui.eclipse.console:2.0.5 @ /home/zev/work/netxms/src/java/netxms-eclipse/Core/pom.xml
+[INFO] Fetching p2.index from http://download.eclipse.org/tools/gef/updates/milestones/ (0B at 0B/s)
+[INFO] Adding repository http://download.eclipse.org/tools/gef/updates/milestones
+[INFO] Adding repository http://archive.eclipse.org/technology/babel/update-site/R0.12.0/juno
+[INFO] Adding repository http://www.netxms.org/eclipse/zest-rcp
+[INFO] Adding repository http://download.eclipse.org/tm/updates/3.5
+[INFO] Adding repository http://download.eclipse.org/birt/update-site/3.7
+[INFO] Fetching p2.index from http://download.eclipse.org/eclipse/updates/3.8/ (0B at 0B/s)
+[INFO] Adding repository http://download.eclipse.org/eclipse/updates/3.8
+[INFO] Adding repository http://download.eclipse.org/modeling/emf/updates/releases
+[INFO] Resolving dependencies of MavenProject: com.netxms.nxmc:org.netxms.ui.eclipse.console:2.0.5 @ /home/zev/work/netxms/src/java/netxms-eclipse/Core/pom.xml
+[INFO] Fetching R-3.8.2-201301310800&format=xml&countryCode=us&timeZone=2&format=xml from http://www.eclipse.org/downloads/download.php?file=/eclipse/updates/3.8/ (0B at 0B/s)
+[INFO] Fetching org.eclipse.core.runtime_3.8.0.v20120521-2346.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 32.04kB at 0B/s)
+[INFO] Fetching org.eclipse.core.runtime_3.8.0.v20120521-2346.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (30.83kB of 32.04kB at 29.41kB/s)
+[INFO] Fetching org.eclipse.core.commands_3.6.1.v20120912-135020.jar.pack.gz from http://ftp.heanet.ie/pub/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 35.63kB at 0B/s)
+[INFO] Fetching org.eclipse.core.expressions_3.4.400.v20120523-2004.jar.pack.gz from http://mirror.netcologne.de/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 29.08kB at 0B/s)
+[INFO] Fetching org.eclipse.core.jobs_3.5.200.v20120521-2346.jar.pack.gz from http://ftp.heanet.ie/pub/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 37.59kB at 0B/s)
+[INFO] Fetching org.eclipse.swt_3.8.1.v3836b.jar.pack.gz from http://mirror.netcologne.de/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 16.75kB at 0B/s)
+[INFO] Fetching org.eclipse.jface_3.8.0.v20120912-135020.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 321.43kB at 0B/s)
+[INFO] Fetching org.eclipse.jface_3.8.0.v20120912-135020.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (30.82kB of 321.43kB at 29.41kB/s)
+[INFO] Fetching org.eclipse.jface_3.8.0.v20120912-135020.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (59.11kB of 321.43kB at 28.85kB/s)
+[INFO] Fetching org.eclipse.jface_3.8.0.v20120912-135020.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (85.97kB of 321.43kB at 24.42kB/s)
+[INFO] Fetching org.eclipse.jface_3.8.0.v20120912-135020.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (142.29kB of 321.43kB at 31.04kB/s)
+[INFO] Fetching org.eclipse.jface_3.8.0.v20120912-135020.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (163.75kB of 321.43kB at 30.77kB/s)
+[INFO] Fetching org.eclipse.jface_3.8.0.v20120912-135020.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (201.68kB of 321.43kB at 29.7kB/s)
+[INFO] Fetching org.eclipse.jface_3.8.0.v20120912-135020.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (238.69kB of 321.43kB at 29.98kB/s)
+[INFO] Fetching org.eclipse.jface_3.8.0.v20120912-135020.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (295.01kB of 321.43kB at 35.07kB/s)
+[INFO] Fetching org.eclipse.ui.workbench_3.8.2.v20121128-133708.jar.pack.gz from http://ftp.heanet.ie/pub/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 1.14MB at 0B/s)
+[INFO] Fetching org.eclipse.ui.workbench_3.8.2.v20121128-133708.jar.pack.gz from http://ftp.heanet.ie/pub/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (617.7kB of 1.14MB at 579.77kB/s)
+[INFO] Fetching org.eclipse.ui.forms_3.5.200.v20120521-2332.jar.pack.gz from http://mirror.netcologne.de/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 97.12kB at 0B/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_3.8.1.v3836b.jar.pack.gz from http://ftp.heanet.ie/pub/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 1.03MB at 0B/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_3.8.1.v3836b.jar.pack.gz from http://ftp.heanet.ie/pub/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (381.55kB of 1.03MB at 335.13kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_3.8.1.v3836b.jar.pack.gz from http://ftp.heanet.ie/pub/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (879.3kB of 1.03MB at 417.86kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 1.21MB at 0B/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (157.85kB of 1.21MB at 97.28kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (261.31kB of 1.21MB at 96.72kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (364.54kB of 1.21MB at 97.47kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (459.28kB of 1.21MB at 96.08kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (539.88kB of 1.21MB at 94.4kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (585.13kB of 1.21MB at 77.77kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (638.63kB of 1.21MB at 68.44kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (705.09kB of 1.21MB at 63.35kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (805.73kB of 1.21MB at 57.69kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (883.5kB of 1.21MB at 59.39kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (938.65kB of 1.21MB at 65.33kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (1,015.01kB of 1.21MB at 67.59kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (1.08MB of 1.21MB at 70.7kB/s)
+[INFO] Fetching org.eclipse.swt.gtk.linux.x86_64_3.8.1.v3836b.jar.pack.gz from http://download.eclipse.org/eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (1.19MB of 1.21MB at 78.34kB/s)
+[INFO] Fetching org.eclipse.swt.win32.win32.x86_3.8.1.v3836b.jar.pack.gz from http://mirror.netcologne.de/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 1.13MB at 0B/s)
+[INFO] Fetching org.eclipse.swt.win32.win32.x86_3.8.1.v3836b.jar.pack.gz from http://mirror.netcologne.de/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (855.25kB of 1.13MB at 852.43kB/s)
+[INFO] Fetching org.eclipse.swt.win32.win32.x86_64_3.8.1.v3836b.jar.pack.gz from http://ftp.heanet.ie/pub/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 1.12MB at 0B/s)
+[INFO] Fetching org.eclipse.swt.win32.win32.x86_64_3.8.1.v3836b.jar.pack.gz from http://ftp.heanet.ie/pub/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (638.91kB of 1.12MB at 615.12kB/s)
+[INFO] Fetching org.eclipse.swt.cocoa.macosx.x86_64_3.8.1.v3836b.jar.pack.gz from http://mirror.netcologne.de/eclipse//eclipse/updates/3.8/R-3.8.2-201301310800/plugins/ (0B of 896.28kB at 0B/s)
+[WARNING] The following locally built units have been used to resolve project dependencies:
+[WARNING]   org.netxms.ui.eclipse.clientlibrary/2.0.6
+[INFO] Resolving class path of MavenProject: com.netxms.nxmc:org.netxms.ui.eclipse.console:2.0.5 @ /home/zev/work/netxms/src/java/netxms-eclipse/Core/pom.xml
+[INFO] 
+[INFO] Using the builder org.apache.maven.lifecycle.internal.builder.singlethreaded.SingleThreadedBuilder with a thread count of 1
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building org.netxms.ui.eclipse.console 2.0.5
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ org.netxms.ui.eclipse.console ---
+[INFO] com.netxms.nxmc:org.netxms.ui.eclipse.console:eclipse-plugin:2.0.5
+[INFO] +- p2.eclipse-plugin:org.eclipse.osgi:jar:3.8.2.v20130124-134944:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.compare.core:jar:3.5.200.v20120522-1148:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.core.runtime:jar:3.8.0.v20120521-2346:system
+[INFO] +- p2.eclipse-plugin:com.ibm.icu.base:jar:4.4.2.v20110831:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.equinox.common:jar:3.6.100.v20120522-1841:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.core.commands:jar:3.6.1.v20120912-135020:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.core.contenttype:jar:3.4.200.v20120523-2004:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.equinox.preferences:jar:3.5.1.v20121031-182809:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.equinox.registry:jar:3.5.200.v20120522-1841:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.core.databinding.observable:jar:1.4.1.v20120521-2332:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.core.databinding.property:jar:1.4.100.v20120523-1956:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.core.databinding:jar:1.4.1.v20120912-135020:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.core.expressions:jar:3.4.400.v20120523-2004:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.core.filesystem:jar:1.3.200.v20130115-145044:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.core.jobs:jar:3.5.200.v20120521-2346:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.core.resources:jar:3.8.1.v20121114-124432:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.equinox.app:jar:1.3.100.v20120522-1841:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.core.variables:jar:3.2.600.v20120521-2012:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.help:jar:3.6.0.v20120912-134126:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.swt:jar:3.8.1.v3836b:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.jface:jar:3.8.0.v20120912-135020:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.jface.databinding:jar:1.6.0.v20120912-135020:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.text:jar:3.5.200.v20120523-1310:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.jface.text:jar:3.8.2.v20121126-164145:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.tm.terminal:jar:3.2.100.201305201712:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.ui:jar:3.8.2.v20121018-234953:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.ui.workbench:jar:3.8.2.v20121128-133708:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.ui.console:jar:3.5.100.v20120521-2012:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.ui.workbench.texteditor:jar:3.8.0.v20120523-1310:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.ui.forms:jar:3.5.200.v20120521-2332:system
+[INFO] +- p2.eclipse-plugin:org.netxms.ui.eclipse.clientlibrary:jar:lib/simple-xml-2.6.4.jar:2.0.6:system
+[INFO] +- p2.eclipse-plugin:org.netxms.ui.eclipse.clientlibrary:jar:2.0.6:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.swt.gtk.linux.x86:jar:3.8.1.v3836b:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.swt.gtk.linux.x86_64:jar:3.8.1.v3836b:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.swt.win32.win32.x86:jar:3.8.1.v3836b:system
+[INFO] +- p2.eclipse-plugin:org.eclipse.swt.win32.win32.x86_64:jar:3.8.1.v3836b:system
+[INFO] \- p2.eclipse-plugin:org.eclipse.swt.cocoa.macosx.x86_64:jar:3.8.1.v3836b:system
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 01:24 min
+[INFO] Finished at: 2015-07-14T16:58:24+02:00
+[INFO] Final Memory: 190M/550M
+[INFO] ------------------------------------------------------------------------

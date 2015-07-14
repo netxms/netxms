@@ -1,70 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.netxms</groupId>
-  <version>2.0-M5</version>
-  <artifactId>netxms</artifactId>
-  <packaging>pom</packaging>
-  <name>NetXMS Meta-package</name>
-  <url>http://www.netxms.org</url>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-
-  <modules>
-    <module>netxms-base</module>
-    <module>netxms-client</module>
-    <module>mobile-agent</module>
-  </modules>
-
-  <distributionManagement>
-    <repository>
-      <id>releases</id>
-      <name>Releases</name>
-      <url>https://maven.netxms.org/nexus/content/repositories/releases</url>
-    </repository>
-    <snapshotRepository>
-      <id>snapshots</id>
-      <name>Snapshots</name>
-      <url>https://maven.netxms.org/nexus/content/repositories/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <configuration>
-          <failOnError>false</failOnError>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.9.1</version>
-        <configuration>
-          <links>
-            <link>http://docs.oracle.com/javase/7/docs/api</link>
-          </links>
-          <bootclasspath>${sun.boot.class.path}</bootclasspath>
-          <additionalJOption>-J-Xmx1024m</additionalJOption>
-          <detectJavaApiLink>true</detectJavaApiLink>
-          <detectLinks>true</detectLinks>
-          <excludePackageNames>*.testing.*:com.jcraft</excludePackageNames>
-        </configuration>
-        <executions>
-          <execution>
-            <id>aggregate</id>
-            <phase>site</phase>
-            <goals>
-              <goal>aggregate</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
+  <parent>
+    <groupId>com.netxms.nxmc</groupId>
+    <artifactId>netxms-eclipse</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <relativePath>../netxms-eclipse/</relativePath>
+  </parent>
+  <groupId>com.netxms.nxmc</groupId>
+  <artifactId>org.netxms.ui.eclipse.clientlibrary</artifactId>
+  <version>2.0.6</version>
+  <packaging>eclipse-plugin</packaging>
 </project>
