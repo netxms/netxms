@@ -32,6 +32,11 @@ extern "C" void EXPORT DrvDisconnect(DBDRV_CONNECTION pConn);
 static bool UnsafeDrvQuery(PG_CONN *pConn, const char *szQuery, WCHAR *errorText);
 
 /**
+ * Statement ID
+ */
+static VolatileCounter s_statementId = 0;
+
+/**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
  */
 extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
@@ -324,7 +329,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(PG_CONN *pConn, WCHAR *pwszQuery, D
 	char *pszQueryUTF8 = ConvertQuery(pwszQuery);
 	PG_STATEMENT *hStmt = (PG_STATEMENT *)malloc(sizeof(PG_STATEMENT));
 	hStmt->connection = pConn;
-	snprintf(hStmt->name, 64, "netxms_stmt_%p_%d", hStmt, (int)time(NULL));
+   snprintf(hStmt->name, 64, "netxms_stmt_%p_%d", hStmt, (int)InterlockedIncrement(&s_statementId));
 
 	MutexLock(pConn->mutexQueryLock);
 	PGresult	*pResult = PQprepare(pConn->pHandle, hStmt->name, pszQueryUTF8, 0, NULL);
