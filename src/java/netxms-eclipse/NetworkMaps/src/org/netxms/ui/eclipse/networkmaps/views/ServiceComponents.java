@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,17 +19,16 @@
 package org.netxms.ui.eclipse.networkmaps.views;
 
 import java.util.Iterator;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.Condition;
 import org.netxms.client.objects.Container;
-import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Node;
 import org.netxms.ui.eclipse.networkmaps.Messages;
 
@@ -91,12 +90,11 @@ public class ServiceComponents extends AbstractNetworkMapView
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#createPartControl(org.eclipse.swt.widgets.Composite)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.AbstractNetworkMapView#setupMapControl()
 	 */
 	@Override
-	public void createPartControl(Composite parent)
+	public void setupMapControl()
 	{
-		super.createPartControl(parent);
 		setLayoutAlgorithm(MapLayoutAlgorithm.SPARSE_VTREE, true);
 	}
 }

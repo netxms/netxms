@@ -6,7 +6,9 @@
 - Fixed character encoding issues in LDAP user data
 - Java subagent improved
 - Fixed multiple issues with agent side data caching
-- Fixed issues: #829, #836, #843, #845, #846, #848, #850
+- Management console:
+	- Default object display mode can be set in map properties
+- Fixed issues: #829, #830, #836, #843, #845, #846, #848, #850
 
 
 *

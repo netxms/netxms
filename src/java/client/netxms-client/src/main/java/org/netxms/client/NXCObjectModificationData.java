@@ -35,6 +35,7 @@ import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.maps.MapLayoutAlgorithm;
+import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.ClusterResource;
@@ -102,6 +103,7 @@ public class NXCObjectModificationData
    public static final long MODIFY_VPN_NETWORKS       = 0x0040000000000000L;
    public static final long MODIFY_POSTAL_ADDRESS     = 0x0080000000000000L;
    public static final long MODIFY_AGENT_CACHE_MODE   = 0x0100000000000000L;
+   public static final long MODIFY_MAPOBJ_DISP_MODE   = 0x0200000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -179,6 +181,7 @@ public class NXCObjectModificationData
 	private List<InetAddressEx> remoteNetworks;
 	private PostalAddress postalAddress;
 	private AgentCacheMode agentCacheMode;
+	private MapObjectDisplayMode mapObjectDisplayMode;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1449,5 +1452,22 @@ public class NXCObjectModificationData
    {
       this.agentCacheMode = agentCacheMode;
       flags |= MODIFY_AGENT_CACHE_MODE;
+   }
+
+   /**
+    * @return the mapObjectDisplayMode
+    */
+   public MapObjectDisplayMode getMapObjectDisplayMode()
+   {
+      return mapObjectDisplayMode;
+   }
+
+   /**
+    * @param mapObjectDisplayMode the mapObjectDisplayMode to set
+    */
+   public void setMapObjectDisplayMode(MapObjectDisplayMode mapObjectDisplayMode)
+   {
+      this.mapObjectDisplayMode = mapObjectDisplayMode;
+      flags |= MODIFY_MAPOBJ_DISP_MODE;
    }
 }

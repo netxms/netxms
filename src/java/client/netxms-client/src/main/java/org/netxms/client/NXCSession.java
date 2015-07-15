@@ -4487,6 +4487,11 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_AGENT_CACHE_MODE, data.getAgentCacheMode().getValue());
       }
       
+      if ((flags & NXCObjectModificationData.MODIFY_MAPOBJ_DISP_MODE) != 0)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_DISPLAY_MODE, data.getMapObjectDisplayMode().getValue());
+      }
+
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);

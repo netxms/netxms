@@ -19,6 +19,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
+import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.objects.NetworkMap;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.networkmaps.Activator;
@@ -36,6 +37,7 @@ public class MapOptions extends PropertyPage
 	private Button checkShowStatusIcon;
 	private Button checkShowStatusFrame;
    private Button checkShowStatusBkgnd;
+   private Combo objectDisplayMode;
 	private Combo routingAlgorithm;
 	private Button radioColorDefault;
 	private Button radioColorCustom;
@@ -62,26 +64,36 @@ public class MapOptions extends PropertyPage
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		/**** status display ****/
-		Group statusDisplayGroup = new Group(dialogArea, SWT.NONE);
-		statusDisplayGroup.setText(Messages.get().MapOptions_DefaultDispOptions);
+		/**** object display ****/
+		Group objectDisplayGroup = new Group(dialogArea, SWT.NONE);
+		objectDisplayGroup.setText(Messages.get().MapOptions_DefaultDispOptions);
       GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;
-      statusDisplayGroup.setLayoutData(gd);
+      objectDisplayGroup.setLayoutData(gd);
       layout = new GridLayout();
-      statusDisplayGroup.setLayout(layout);
+      objectDisplayGroup.setLayout(layout);
       
-      checkShowStatusIcon = new Button(statusDisplayGroup, SWT.CHECK);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      objectDisplayMode = WidgetHelper.createLabeledCombo(objectDisplayGroup, SWT.READ_ONLY, "Display objects as", gd);
+      objectDisplayMode.add("Icons");
+      objectDisplayMode.add("Small labels");
+      objectDisplayMode.add("Large labels");
+      objectDisplayMode.add("Status icons");
+      objectDisplayMode.select(object.getObjectDisplayMode().getValue());
+      
+      checkShowStatusIcon = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusIcon.setText(Messages.get().MapOptions_ShowStatusIcon);
       checkShowStatusIcon.setSelection((object.getFlags() & NetworkMap.MF_SHOW_STATUS_ICON) != 0);
       
-      checkShowStatusFrame = new Button(statusDisplayGroup, SWT.CHECK);
+      checkShowStatusFrame = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusFrame.setText(Messages.get().MapOptions_ShowStatusFrame);
       checkShowStatusFrame.setSelection((object.getFlags() & NetworkMap.MF_SHOW_STATUS_FRAME) != 0);
       
-      checkShowStatusBkgnd = new Button(statusDisplayGroup, SWT.CHECK);
+      checkShowStatusBkgnd = new Button(objectDisplayGroup, SWT.CHECK);
       checkShowStatusBkgnd.setText(Messages.get().MapOptions_ShowStatusBkgnd);
       checkShowStatusBkgnd.setSelection((object.getFlags() & NetworkMap.MF_SHOW_STATUS_BKGND) != 0);
       
@@ -217,6 +229,7 @@ public class MapOptions extends PropertyPage
 			flags |= NetworkMap.MF_CALCULATE_STATUS;
 		md.setObjectFlags(flags);
 		
+		md.setMapObjectDisplayMode(MapObjectDisplayMode.getByValue(objectDisplayMode.getSelectionIndex()));
 		md.setConnectionRouting(routingAlgorithm.getSelectionIndex() + 1);
 		
 		if (radioColorCustom.getSelection())

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.networkmaps.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -70,12 +69,11 @@ public class IPRouteMap extends AbstractNetworkMapView
 	}
 
 	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.networkmaps.views.NetworkMap#createPartControl(org.eclipse.swt.widgets.Composite)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.AbstractNetworkMapView#setupMapControl()
 	 */
 	@Override
-	public void createPartControl(Composite parent)
+	public void setupMapControl()
 	{
-		super.createPartControl(parent);
 		setLayoutAlgorithm(MapLayoutAlgorithm.HTREE, true);
 	}
 

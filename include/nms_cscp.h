@@ -1066,6 +1066,7 @@ typedef struct
 #define VID_AGENT_CACHE_MODE        ((UINT32)503)
 #define VID_DATE                    ((UINT32)504)
 #define VID_RECONCILLATION          ((UINT32)505)
+#define VID_DISPLAY_MODE            ((UINT32)506)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

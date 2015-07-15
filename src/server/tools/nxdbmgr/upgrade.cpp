@@ -493,6 +493,21 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
 }
 
 /**
+ * Upgrade from V358 to V359
+ */
+static BOOL H_UpgradeFromV358(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE network_maps ADD object_display_mode integer\n")
+      _T("UPDATE network_maps SET object_display_mode=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='359' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V357 to V358
  */
 static BOOL H_UpgradeFromV357(int currVersion, int newVersion)
@@ -8726,6 +8741,7 @@ static struct
    { 355, 356, H_UpgradeFromV355 },
    { 356, 357, H_UpgradeFromV356 },
    { 357, 358, H_UpgradeFromV357 },
+   { 358, 359, H_UpgradeFromV358 },
    { 0, 0, NULL }
 };
 

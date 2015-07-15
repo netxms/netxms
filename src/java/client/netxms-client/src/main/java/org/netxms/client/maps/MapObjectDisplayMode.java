@@ -23,24 +23,27 @@ import java.util.Map;
 import org.netxms.base.Logger;
 
 /**
- * Map layout algorithm
+ * Map object display mode
  */
-public enum MapLayoutAlgorithm
+public enum MapObjectDisplayMode
 {
-	MANUAL(0x7FFF), SPRING(0), RADIAL(1), HTREE(2), VTREE(3), SPARSE_VTREE(4);
+	ICON(0), 
+	SMALL_LABEL(1), 
+	LARGE_LABEL(2), 
+	STATUS(3);
 
 	private int value;
-	private static Map<Integer, MapLayoutAlgorithm> lookupTable = new HashMap<Integer, MapLayoutAlgorithm>();
+	private static Map<Integer, MapObjectDisplayMode> lookupTable = new HashMap<Integer, MapObjectDisplayMode>();
 
 	static
 	{
-		for(MapLayoutAlgorithm element : MapLayoutAlgorithm.values())
+		for(MapObjectDisplayMode element : MapObjectDisplayMode.values())
 		{
 			lookupTable.put(element.value, element);
 		}
 	}
 
-	private MapLayoutAlgorithm(int value)
+	private MapObjectDisplayMode(int value)
 	{
 		this.value = value;
 	}
@@ -50,14 +53,14 @@ public enum MapLayoutAlgorithm
 		return value;
 	}
 
-	public static MapLayoutAlgorithm getByValue(int value)
+	public static MapObjectDisplayMode getByValue(int value)
 	{
-		final MapLayoutAlgorithm layout = lookupTable.get(value);
-		if (layout == null)
+		final MapObjectDisplayMode element = lookupTable.get(value);
+		if (element == null)
 		{
-			Logger.warning("LayoutAlgorithm", "Unknown layout alghoritm: " + value);
-			return SPRING; // fallback
+         Logger.warning(MapObjectDisplayMode.class.getName(), "Unknown element " + value);
+			return ICON; // fallback
 		}
-		return layout;
+		return element;
 	}
 }

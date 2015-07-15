@@ -28,6 +28,7 @@ import org.netxms.client.NXCObjectCreationData;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.maps.MapLayoutAlgorithm;
+import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
@@ -59,6 +60,7 @@ public class NetworkMap extends GenericObject
 	private long seedObjectId;
 	private int defaultLinkColor;
 	private int defaultLinkRouting;
+	private MapObjectDisplayMode objectDisplayMode;
 	private int backgroundColor;
 	private int discoveryRadius;
 	private String filter;
@@ -81,6 +83,7 @@ public class NetworkMap extends GenericObject
 		seedObjectId = msg.getFieldAsInt64(NXCPCodes.VID_SEED_OBJECT);
 		defaultLinkColor = msg.getFieldAsInt32(NXCPCodes.VID_LINK_COLOR);
 		defaultLinkRouting = msg.getFieldAsInt32(NXCPCodes.VID_LINK_ROUTING);
+		objectDisplayMode = MapObjectDisplayMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_DISPLAY_MODE));
 		backgroundColor = msg.getFieldAsInt32(NXCPCodes.VID_BACKGROUND_COLOR);
 		discoveryRadius = msg.getFieldAsInt32(NXCPCodes.VID_DISCOVERY_RADIUS);
 		filter = msg.getFieldAsString(NXCPCodes.VID_FILTER);
@@ -248,4 +251,12 @@ public class NetworkMap extends GenericObject
 	{
 		return filter;
 	}
+
+   /**
+    * @return the objectDisplayMode
+    */
+   public MapObjectDisplayMode getObjectDisplayMode()
+   {
+      return objectDisplayMode;
+   }
 }

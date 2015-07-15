@@ -42,7 +42,6 @@ import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -79,7 +78,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 {
 	public static final String ID = "org.netxms.ui.eclipse.networkmaps.views.PredefinedMap"; //$NON-NLS-1$
 
-	private org.netxms.client.objects.NetworkMap mapObject;
+	private NetworkMap mapObject;
 	private Action actionAddObject;
 	private Action actionAddDCIContainer;
 	private Action actionLinkObjects;
@@ -113,7 +112,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	public void init(IViewSite site) throws PartInitException
 	{
 		super.init(site);
-		mapObject = (org.netxms.client.objects.NetworkMap)rootObject;
+		mapObject = (NetworkMap)rootObject;
 		setPartName(rootObject.getObjectName());
 
 		if (mapObject.getLayout() == MapLayoutAlgorithm.MANUAL)
@@ -127,17 +126,12 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.netxms.ui.eclipse.networkmaps.views.NetworkMap#createPartControl(org
-	 * .eclipse.swt.widgets.Composite)
+	/* (non-Javadoc)
+	 * @see org.netxms.ui.eclipse.networkmaps.views.AbstractNetworkMapView#setupMapControl()
 	 */
 	@Override
-	public void createPartControl(Composite parent)
+	public void setupMapControl()
 	{
-		super.createPartControl(parent);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event)
@@ -172,6 +166,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 			labelProvider.setDefaultLinkColor(defaultLinkColor);
 		}
 		
+      setObjectDisplayMode(mapObject.getObjectDisplayMode(), false);
 		labelProvider.setShowStatusBackground((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_BKGND) > 0);
 		labelProvider.setShowStatusFrame((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_FRAME) > 0);
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
@@ -179,8 +174,6 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 		actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
 		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
 		actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
-		
-		refreshMap();
 	}
 	
 	/**
@@ -246,7 +239,7 @@ public class PredefinedMap extends AbstractNetworkMapView implements ImageUpdate
 	@Override
 	protected void buildMapPage()
 	{
-		mapPage = ((org.netxms.client.objects.NetworkMap)rootObject).createMapPage();
+		mapPage = mapObject.createMapPage();
       addDciToRequestList();
 	}
 
