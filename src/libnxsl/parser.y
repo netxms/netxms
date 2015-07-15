@@ -547,6 +547,7 @@ Operand:
 	FunctionCall
 |	TypeCast
 |	ArrayInitializer
+|	HashMapInitializer
 |	T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, $1));
@@ -594,6 +595,29 @@ ArrayElements:
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_ADD_TO_ARRAY));
 }
 ;
+
+HashMapInitializer:
+	'%' '{' 
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value(new NXSL_HashMap)));
+}
+	HashMapElements '}'
+|	'%' '{' '}'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value(new NXSL_HashMap)));
+}
+;
+
+HashMapElements:
+	HashMapElement ',' HashMapElements
+|	HashMapElement
+;
+
+HashMapElement:
+	Expression ':' Expression
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_HASHMAP_SET));
+}
 
 BuiltinType:
 	T_TYPE_INT32

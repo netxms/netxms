@@ -95,40 +95,40 @@ NXSL_Value::NXSL_Value()
 /**
  * Create copy of given value
  */
-NXSL_Value::NXSL_Value(const NXSL_Value *pValue)
+NXSL_Value::NXSL_Value(const NXSL_Value *value)
 {
-   if (pValue != NULL)
+   if (value != NULL)
    {
-      m_nDataType = pValue->m_nDataType;
+      m_nDataType = value->m_nDataType;
       if (m_nDataType == NXSL_DT_OBJECT)
       {
-         m_value.pObject = new NXSL_Object(pValue->m_value.pObject);
+         m_value.object = new NXSL_Object(value->m_value.object);
       }
       else if (m_nDataType == NXSL_DT_ARRAY)
       {
-         m_value.pArray = pValue->m_value.pArray;
-			m_value.pArray->incRefCount();
+         m_value.array = value->m_value.array;
+			m_value.array->incRefCount();
       }
       else if (m_nDataType == NXSL_DT_ITERATOR)
       {
-         m_value.pIterator = pValue->m_value.pIterator;
-			m_value.pIterator->incRefCount();
+         m_value.iterator = value->m_value.iterator;
+			m_value.iterator->incRefCount();
       }
       else
       {
-         memcpy(&m_value, &pValue->m_value, sizeof(m_value));
+         memcpy(&m_value, &value->m_value, sizeof(m_value));
       }
-      m_bStringIsValid = pValue->m_bStringIsValid;
+      m_bStringIsValid = value->m_bStringIsValid;
       if (m_bStringIsValid)
       {
-         m_dwStrLen = pValue->m_dwStrLen;
-         m_pszValStr = (TCHAR *)nx_memdup(pValue->m_pszValStr, (m_dwStrLen + 1) * sizeof(TCHAR));
+         m_dwStrLen = value->m_dwStrLen;
+         m_pszValStr = (TCHAR *)nx_memdup(value->m_pszValStr, (m_dwStrLen + 1) * sizeof(TCHAR));
       }
       else
       {
          m_pszValStr = NULL;
       }
-		m_name = (pValue->m_name != NULL) ? _tcsdup(pValue->m_name) : NULL;
+		m_name = (value->m_name != NULL) ? _tcsdup(value->m_name) : NULL;
    }
    else
    {
@@ -144,10 +144,10 @@ NXSL_Value::NXSL_Value(const NXSL_Value *pValue)
 /**
  * Create "object" value
  */
-NXSL_Value::NXSL_Value(NXSL_Object *pObject)
+NXSL_Value::NXSL_Value(NXSL_Object *object)
 {
    m_nDataType = NXSL_DT_OBJECT;
-   m_value.pObject = pObject;
+   m_value.object = object;
    m_pszValStr = NULL;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
@@ -159,11 +159,27 @@ NXSL_Value::NXSL_Value(NXSL_Object *pObject)
 /**
  * Create "array" value
  */
-NXSL_Value::NXSL_Value(NXSL_Array *pArray)
+NXSL_Value::NXSL_Value(NXSL_Array *array)
 {
    m_nDataType = NXSL_DT_ARRAY;
-   m_value.pArray = pArray;
-	pArray->incRefCount();
+   m_value.array = array;
+	array->incRefCount();
+   m_pszValStr = NULL;
+#ifdef UNICODE
+	m_valueMBStr = NULL;
+#endif
+   m_bStringIsValid = FALSE;
+	m_name = NULL;
+}
+
+/**
+ * Create "hash map" value
+ */
+NXSL_Value::NXSL_Value(NXSL_HashMap *hashMap)
+{
+   m_nDataType = NXSL_DT_HASHMAP;
+   m_value.hashMap = hashMap;
+	hashMap->incRefCount();
    m_pszValStr = NULL;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
@@ -175,11 +191,11 @@ NXSL_Value::NXSL_Value(NXSL_Array *pArray)
 /**
  * Create "iterator" value
  */
-NXSL_Value::NXSL_Value(NXSL_Iterator *pIterator)
+NXSL_Value::NXSL_Value(NXSL_Iterator *iterator)
 {
    m_nDataType = NXSL_DT_ITERATOR;
-   m_value.pIterator = pIterator;
-	pIterator->incRefCount();
+   m_value.iterator = iterator;
+	iterator->incRefCount();
    m_pszValStr = NULL;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
@@ -351,17 +367,17 @@ NXSL_Value::~NXSL_Value()
    switch(m_nDataType)
 	{
 		case NXSL_DT_OBJECT:
-			delete m_value.pObject;
+			delete m_value.object;
 			break;
 		case NXSL_DT_ARRAY:
-			m_value.pArray->decRefCount();
-			if (m_value.pArray->isUnused())
-				delete m_value.pArray;
+			m_value.array->decRefCount();
+			if (m_value.array->isUnused())
+				delete m_value.array;
 			break;
 		case NXSL_DT_ITERATOR:
-			m_value.pIterator->decRefCount();
-			if (m_value.pIterator->isUnused())
-				delete m_value.pIterator;
+			m_value.iterator->decRefCount();
+			if (m_value.iterator->isUnused())
+				delete m_value.iterator;
 			break;
 	}
 }
@@ -446,13 +462,13 @@ void NXSL_Value::updateString()
          _tcscpy(szBuffer, _T(""));
          break;
       case NXSL_DT_OBJECT:
-         _sntprintf(szBuffer, 64, _T("%s@%p"), m_value.pObject->getClass()->getName(), m_value.pObject);
+         _sntprintf(szBuffer, 64, _T("%s@%p"), m_value.object->getClass()->getName(), m_value.object);
          break;
       case NXSL_DT_ARRAY:
-         _sntprintf(szBuffer, 64, _T("[A@%p]"), m_value.pArray);
+         _sntprintf(szBuffer, 64, _T("[A@%p]"), m_value.array);
          break;
       case NXSL_DT_ITERATOR:
-         _sntprintf(szBuffer, 64, _T("[I@%p]"), m_value.pIterator);
+         _sntprintf(szBuffer, 64, _T("[I@%p]"), m_value.iterator);
          break;
       default:
          szBuffer[0] = 0;
@@ -1251,7 +1267,7 @@ bool NXSL_Value::isObject(const TCHAR *className) const
 	if (m_nDataType != NXSL_DT_OBJECT)
 		return false;
 
-	return !_tcscmp(m_value.pObject->getClass()->getName(), className) ? true : false;
+	return !_tcscmp(m_value.object->getClass()->getName(), className) ? true : false;
 }
 
 /**
@@ -1266,16 +1282,24 @@ bool NXSL_Value::equals(const NXSL_Value *v) const
    switch(m_nDataType)
    {
       case NXSL_DT_ARRAY:
-         if (v->m_value.pArray == m_value.pArray)
+         if (v->m_value.array == m_value.array)
             return true;
-         if (v->m_value.pArray->size() != m_value.pArray->size())
+         if (v->m_value.array->size() != m_value.array->size())
             return false;
-         for(int i = 0; i < m_value.pArray->size(); i++)
+         for(int i = 0; i < m_value.array->size(); i++)
          {
-            if (!m_value.pArray->get(i)->equals(v->m_value.pArray->get(i)))
+            if (!m_value.array->get(i)->equals(v->m_value.array->get(i)))
                return false;
          }
          return true;
+      case NXSL_DT_HASHMAP:
+         if (v->m_value.hashMap == m_value.hashMap)
+            return true;
+         if (v->m_value.hashMap->size() != m_value.hashMap->size())
+            return false;
+         if (m_value.hashMap->size() == 0)
+            return true;
+         return false;
       case NXSL_DT_INT32:
          return v->m_value.nInt32 == m_value.nInt32;
       case NXSL_DT_INT64:
@@ -1285,8 +1309,8 @@ bool NXSL_Value::equals(const NXSL_Value *v) const
       case NXSL_DT_NULL:
          return true;
       case NXSL_DT_OBJECT:
-         return (v->m_value.pObject->getData() == m_value.pObject->getData()) && 
-            !_tcscmp(v->m_value.pObject->getClass()->getName(), m_value.pObject->getClass()->getName());
+         return (v->m_value.object->getData() == m_value.object->getData()) && 
+            !_tcscmp(v->m_value.object->getClass()->getName(), m_value.object->getClass()->getName());
          break;
       case NXSL_DT_REAL:
          return v->m_value.dReal == m_value.dReal;
@@ -1309,10 +1333,17 @@ void NXSL_Value::serialize(ByteStream &s) const
    switch(m_nDataType)
    {
       case NXSL_DT_ARRAY:
-         s.write((UINT16)m_value.pArray->size());
-         for(int i = 0; i < m_value.pArray->size(); i++)
+         s.write((UINT16)m_value.array->size());
+         for(int i = 0; i < m_value.array->size(); i++)
          {
-            m_value.pArray->get(i)->serialize(s);
+            m_value.array->get(i)->serialize(s);
+         }
+         break;
+      case NXSL_DT_HASHMAP:
+         s.write((UINT16)m_value.hashMap->size());
+         if (m_value.hashMap->size() > 0)
+         {
+            // TODO: hashmap serialize
          }
          break;
       case NXSL_DT_INT32:
@@ -1353,11 +1384,11 @@ NXSL_Value *NXSL_Value::load(ByteStream &s)
    {
       case NXSL_DT_ARRAY:
          {
-            v->m_value.pArray = new NXSL_Array();
+            v->m_value.array = new NXSL_Array();
             int size = (int)s.readUInt16();
             for(int i = 0; i < size; i++)
             {
-               v->m_value.pArray->set(i, load(s));
+               v->m_value.array->set(i, load(s));
             }
          }
          break;

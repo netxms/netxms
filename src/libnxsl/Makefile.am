@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libnxsl.la
 libnxsl_la_SOURCES = lex.parser.cpp parser.tab.cpp \
 		     array.cpp class.cpp compiler.cpp env.cpp functions.cpp \
-                     instruction.cpp iterator.cpp lexer.cpp library.cpp \
+                     hashmap.cpp instruction.cpp iterator.cpp lexer.cpp library.cpp \
 		     main.cpp network.cpp program.cpp stack.cpp table.cpp \
 		     value.cpp variable.cpp vm.cpp
 libnxsl_la_CPPFLAGS=-I@top_srcdir@/include

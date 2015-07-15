@@ -49,7 +49,8 @@ const char *g_nxslCommandMnemonic[] =
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
 	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR",
 	"AGETS", "CALL", "CASE", "EINC", "EDEC",
-   "EINCP", "EDECP", "ABORT", "CATCH", "PUSH"
+   "EINCP", "EDECP", "ABORT", "CATCH", "PUSH",
+   "SETHM"
 };
 
 /**
@@ -239,10 +240,6 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_DEC:
          case OPCODE_INCP:
          case OPCODE_DECP:
-         case OPCODE_INC_ELEMENT:
-         case OPCODE_DEC_ELEMENT:
-         case OPCODE_INCP_ELEMENT:
-         case OPCODE_DECP_ELEMENT:
 			case OPCODE_SAFE_GET_ATTR:
          case OPCODE_GET_ATTRIBUTE:
          case OPCODE_SET_ATTRIBUTE:
@@ -256,6 +253,8 @@ void NXSL_Program::dump(FILE *pFile)
                fprintf(pFile, "<null>\n");
             else if (instr->m_operand.m_pConstant->isArray())
                fprintf(pFile, "<array>\n");
+            else if (instr->m_operand.m_pConstant->isHashMap())
+               fprintf(pFile, "<hash map>\n");
             else
                _ftprintf(pFile, _T("\"%s\"\n"), instr->m_operand.m_pConstant->getValueAsCString());
             break;

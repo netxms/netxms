@@ -27,7 +27,7 @@
 /**
  * Constants
  */
-#define MAX_ERROR_NUMBER         32
+#define MAX_ERROR_NUMBER         35
 #define CONTROL_STACK_LIMIT      32768
 
 /**
@@ -71,7 +71,10 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
 	_T("Requested statistical parameter does not exist"),
 	_T("Unknown object's method"),
    _T("Constant not defined"),
-   _T("Execution aborted")
+   _T("Execution aborted"),
+	_T("Attempt to use hash map element access operation on non hash map"),
+   _T("Function or operation argument is not a container"),
+   _T("Hash map key is not a string")
 };
 
 /**
@@ -460,6 +463,8 @@ void NXSL_VM::execute()
       case OPCODE_PUSH_CONSTANT:
          if (cp->m_operand.m_pConstant->isArray())
             m_dataStack->push(new NXSL_Value(new NXSL_Array(cp->m_operand.m_pConstant->getValueAsArray())));
+         else if (cp->m_operand.m_pConstant->isHashMap())
+            m_dataStack->push(new NXSL_Value(new NXSL_HashMap(cp->m_operand.m_pConstant->getValueAsHashMap())));
          else
             m_dataStack->push(new NXSL_Value(cp->m_operand.m_pConstant));
          break;
@@ -481,6 +486,10 @@ void NXSL_VM::execute()
 					if (pValue->isArray())
 					{
 						pVar->setValue(new NXSL_Value(new NXSL_Array(pValue->getValueAsArray())));
+					}
+					else if (pValue->isHashMap())
+					{
+						pVar->setValue(new NXSL_Value(new NXSL_HashMap(pValue->getValueAsHashMap())));
 					}
 					else
 					{
@@ -576,44 +585,40 @@ void NXSL_VM::execute()
 				}
 			}
 			break;
-		case OPCODE_SET_ELEMENT:	// Set array element; stack should contain: array index value (top)
+		case OPCODE_SET_ELEMENT:	// Set array or map element; stack should contain: array index value (top) / hashmap key value (top)
 			pValue = (NXSL_Value *)m_dataStack->pop();
 			if (pValue != NULL)
 			{
-				NXSL_Value *array, *index;
-
-				index = (NXSL_Value *)m_dataStack->pop();
-				array = (NXSL_Value *)m_dataStack->pop();
-				if ((index != NULL) && (array != NULL))
+				NXSL_Value *key = (NXSL_Value *)m_dataStack->pop();
+				NXSL_Value *container = (NXSL_Value *)m_dataStack->pop();
+				if ((key != NULL) && (container != NULL))
 				{
-					if (!index->isInteger())
-					{
-						error(NXSL_ERR_INDEX_NOT_INTEGER);
-					}
-					else if (!array->isArray())
-					{
-						error(NXSL_ERR_NOT_ARRAY);
-					}
-					else
-					{
-						if (pValue->isArray())
-						{
-							array->getValueAsArray()->set(index->getValueAsInt32(), new NXSL_Value(new NXSL_Array(pValue->getValueAsArray())));
-						}
-						else
-						{
-							array->getValueAsArray()->set(index->getValueAsInt32(), new NXSL_Value(pValue));
-						}
-						m_dataStack->push(pValue);
-						pValue = NULL;		// Prevent deletion
-					}
+               bool success;
+               if (container->isArray())
+               {
+                  success = setArrayElement(container, key, pValue);
+               }
+               else if (container->isHashMap())
+               {
+                  success = setHashMapElement(container, key, pValue);
+               }
+               else
+               {
+						error(NXSL_ERR_NOT_CONTAINER);
+                  success = false;
+               }
+               if (success)
+               {
+		            m_dataStack->push(pValue);
+		            pValue = NULL;		// Prevent deletion
+               }
 				}
 				else
 				{
 					error(NXSL_ERR_DATA_STACK_UNDERFLOW);
 				}
-				delete index;
-				delete array;
+				delete key;
+				delete container;
 				delete pValue;
 			}
          else
@@ -621,84 +626,30 @@ void NXSL_VM::execute()
             error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
 			break;
-		case OPCODE_GET_ELEMENT:	// Get array element; stack should contain: array index (top)
-		case OPCODE_INC_ELEMENT:	// Get array element and increment; stack should contain: array index (top)
-		case OPCODE_DEC_ELEMENT:	// Get array element and decrement; stack should contain: array index (top)
-		case OPCODE_INCP_ELEMENT:	// Increment array element and get; stack should contain: array index (top)
-		case OPCODE_DECP_ELEMENT:	// Decrement array element and get; stack should contain: array index (top)
+		case OPCODE_GET_ELEMENT:	// Get array or map element; stack should contain: array index (top) (or hashmap key (top))
+		case OPCODE_INC_ELEMENT:	// Get array or map  element and increment; stack should contain: array index (top)
+		case OPCODE_DEC_ELEMENT:	// Get array or map  element and decrement; stack should contain: array index (top)
+		case OPCODE_INCP_ELEMENT:	// Increment array or map  element and get; stack should contain: array index (top)
+		case OPCODE_DECP_ELEMENT:	// Decrement array or map  element and get; stack should contain: array index (top)
 			pValue = (NXSL_Value *)m_dataStack->pop();
 			if (pValue != NULL)
 			{
-				NXSL_Value *array;
-
-				array = (NXSL_Value *)m_dataStack->pop();
-				if (array != NULL)
+				NXSL_Value *container = (NXSL_Value *)m_dataStack->pop();
+				if (container != NULL)
 				{
-					if (array->isArray())
+					if (container->isArray())
 					{
-						if (pValue->isInteger())
-						{
-                     int index = pValue->getValueAsInt32();
-							NXSL_Value *element = array->getValueAsArray()->get(index);
-
-                     if (cp->m_nOpCode == OPCODE_INCP_ELEMENT)
-                     {
-                        if (element->isNumeric())
-                        {
-                           element->increment();
-                        }
-                        else
-                        {
-                           error(NXSL_ERR_NOT_NUMBER);
-                        }
-                     }
-                     else if (cp->m_nOpCode == OPCODE_DECP_ELEMENT)
-                     {
-                        if (element->isNumeric())
-                        {
-                           element->decrement();
-                        }
-                        else
-                        {
-                           error(NXSL_ERR_NOT_NUMBER);
-                        }
-                     }
-
-                     m_dataStack->push((element != NULL) ? new NXSL_Value(element) : new NXSL_Value);
-
-                     if (cp->m_nOpCode == OPCODE_INC_ELEMENT)
-                     {
-                        if (element->isNumeric())
-                        {
-                           element->increment();
-                        }
-                        else
-                        {
-                           error(NXSL_ERR_NOT_NUMBER);
-                        }
-                     }
-                     else if (cp->m_nOpCode == OPCODE_DEC_ELEMENT)
-                     {
-                        if (element->isNumeric())
-                        {
-                           element->decrement();
-                        }
-                        else
-                        {
-                           error(NXSL_ERR_NOT_NUMBER);
-                        }
-                     }
-						}
-						else
-						{
-							error(NXSL_ERR_INDEX_NOT_INTEGER);
-						}
+                  getOrUpdateArrayElement(cp->m_nOpCode, container, pValue);
 					}
+               else if (container->isHashMap())
+               {
+                  getOrUpdateHashMapElement(cp->m_nOpCode, container, pValue);
+               }
 					else
 					{
-						error(NXSL_ERR_NOT_ARRAY);
+						error(NXSL_ERR_NOT_CONTAINER);
 					}
-					delete array;
+					delete container;
 				}
 				else
 				{
@@ -715,9 +666,7 @@ void NXSL_VM::execute()
          pValue = (NXSL_Value *)m_dataStack->pop();
          if (pValue != NULL)
          {
-            NXSL_Value *array;
-
-            array = (NXSL_Value *)m_dataStack->peek();
+            NXSL_Value *array = (NXSL_Value *)m_dataStack->peek();
             if (array != NULL)
             {
                if (array->isArray())
@@ -730,6 +679,50 @@ void NXSL_VM::execute()
                {
                   error(NXSL_ERR_NOT_ARRAY);
                }
+            }
+            else
+            {
+               error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+            }
+            delete pValue;
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
+		case OPCODE_HASHMAP_SET:  // set hash map entry from elements on stack top; stack should contain: hashmap key value (top)
+         pValue = (NXSL_Value *)m_dataStack->pop();
+         if (pValue != NULL)
+         {
+            NXSL_Value *key = (NXSL_Value *)m_dataStack->pop();
+            if (key != NULL)
+            {
+               NXSL_Value *hashMap = (NXSL_Value *)m_dataStack->peek();
+               if (hashMap != NULL)
+               {
+                  if (hashMap->isHashMap())
+                  {
+                     if (key->isString())
+                     {
+                        hashMap->getValueAsHashMap()->set(key->getValueAsCString(), pValue);
+                        pValue = NULL;    // Prevent deletion
+                     }
+                     else
+                     {
+                        error(NXSL_ERR_KEY_NOT_STRING);
+                     }
+                  }
+                  else
+                  {
+                     error(NXSL_ERR_NOT_HASHMAP);
+                  }
+               }
+               else
+               {
+                  error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+               }
+               delete key;
             }
             else
             {
@@ -1203,6 +1196,192 @@ void NXSL_VM::execute()
 }
 
 /**
+ * Set array element
+ */
+bool NXSL_VM::setArrayElement(NXSL_Value *array, NXSL_Value *index, NXSL_Value *value)
+{
+   bool success;
+	if (index->isInteger())
+	{
+		if (value->isArray())
+		{
+			array->getValueAsArray()->set(index->getValueAsInt32(), new NXSL_Value(new NXSL_Array(value->getValueAsArray())));
+		}
+		else if (value->isHashMap())
+		{
+			array->getValueAsArray()->set(index->getValueAsInt32(), new NXSL_Value(new NXSL_HashMap(value->getValueAsHashMap())));
+		}
+		else
+		{
+			array->getValueAsArray()->set(index->getValueAsInt32(), new NXSL_Value(value));
+		}
+      success = true;
+	}
+   else
+	{
+		error(NXSL_ERR_INDEX_NOT_INTEGER);
+      success = false;
+	}
+   return success;
+}
+
+/**
+ * Get or update array element
+ */
+void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value *index)
+{
+	if (index->isInteger())
+	{
+		NXSL_Value *element = array->getValueAsArray()->get(index->getValueAsInt32());
+
+      if (opcode == OPCODE_INCP_ELEMENT)
+      {
+         if (element->isNumeric())
+         {
+            element->increment();
+         }
+         else
+         {
+            error(NXSL_ERR_NOT_NUMBER);
+         }
+      }
+      else if (opcode == OPCODE_DECP_ELEMENT)
+      {
+         if (element->isNumeric())
+         {
+            element->decrement();
+         }
+         else
+         {
+            error(NXSL_ERR_NOT_NUMBER);
+         }
+      }
+
+      m_dataStack->push((element != NULL) ? new NXSL_Value(element) : new NXSL_Value);
+
+      if (opcode == OPCODE_INC_ELEMENT)
+      {
+         if (element->isNumeric())
+         {
+            element->increment();
+         }
+         else
+         {
+            error(NXSL_ERR_NOT_NUMBER);
+         }
+      }
+      else if (opcode == OPCODE_DEC_ELEMENT)
+      {
+         if (element->isNumeric())
+         {
+            element->decrement();
+         }
+         else
+         {
+            error(NXSL_ERR_NOT_NUMBER);
+         }
+      }
+	}
+	else
+	{
+		error(NXSL_ERR_INDEX_NOT_INTEGER);
+	}
+}
+
+/**
+ * Set hash map element
+ */
+bool NXSL_VM::setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value *value)
+{
+   bool success;
+	if (key->isString())
+	{
+		if (value->isArray())
+		{
+			hashMap->getValueAsHashMap()->set(key->getValueAsCString(), new NXSL_Value(new NXSL_Array(value->getValueAsArray())));
+		}
+		else if (value->isHashMap())
+		{
+			hashMap->getValueAsHashMap()->set(key->getValueAsCString(), new NXSL_Value(new NXSL_HashMap(value->getValueAsHashMap())));
+		}
+		else
+		{
+			hashMap->getValueAsHashMap()->set(key->getValueAsCString(), new NXSL_Value(value));
+		}
+      success = true;
+	}
+   else
+	{
+		error(NXSL_ERR_KEY_NOT_STRING);
+      success = false;
+	}
+   return success;
+}
+
+/**
+ * Get or update hash map element
+ */
+void NXSL_VM::getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Value *key)
+{
+	if (key->isString())
+	{
+		NXSL_Value *element = hashMap->getValueAsHashMap()->get(key->getValueAsCString());
+
+      if (opcode == OPCODE_INCP_ELEMENT)
+      {
+         if (element->isNumeric())
+         {
+            element->increment();
+         }
+         else
+         {
+            error(NXSL_ERR_NOT_NUMBER);
+         }
+      }
+      else if (opcode == OPCODE_DECP_ELEMENT)
+      {
+         if (element->isNumeric())
+         {
+            element->decrement();
+         }
+         else
+         {
+            error(NXSL_ERR_NOT_NUMBER);
+         }
+      }
+
+      m_dataStack->push((element != NULL) ? new NXSL_Value(element) : new NXSL_Value);
+
+      if (opcode == OPCODE_INC_ELEMENT)
+      {
+         if (element->isNumeric())
+         {
+            element->increment();
+         }
+         else
+         {
+            error(NXSL_ERR_NOT_NUMBER);
+         }
+      }
+      else if (opcode == OPCODE_DEC_ELEMENT)
+      {
+         if (element->isNumeric())
+         {
+            element->decrement();
+         }
+         else
+         {
+            error(NXSL_ERR_NOT_NUMBER);
+         }
+      }
+	}
+	else
+	{
+      error(NXSL_ERR_KEY_NOT_STRING);
+	}
+}
+
+/**
  * Perform binary operation on two operands from stack and push result to stack
  */
 void NXSL_VM::doBinaryOperation(int nOpCode)
@@ -1391,8 +1570,7 @@ void NXSL_VM::doBinaryOperation(int nOpCode)
                   }
                   else
                   {
-                     pszText1 = pVal2->getValueAsString(&dwLen1);
-                     pRes = new NXSL_Value(pszText1, dwLen1);
+                     pRes = new NXSL_Value(_T(""));
                   }
                   pszText2 = pVal2->getValueAsString(&dwLen2);
                   pRes->concatenate(pszText2, dwLen2);
@@ -1730,10 +1908,6 @@ void NXSL_VM::dump(FILE *pFile)
          case OPCODE_DEC:
          case OPCODE_INCP:
          case OPCODE_DECP:
-         case OPCODE_INC_ELEMENT:
-         case OPCODE_DEC_ELEMENT:
-         case OPCODE_INCP_ELEMENT:
-         case OPCODE_DECP_ELEMENT:
 			case OPCODE_SAFE_GET_ATTR:
          case OPCODE_GET_ATTRIBUTE:
          case OPCODE_SET_ATTRIBUTE:
@@ -1747,6 +1921,8 @@ void NXSL_VM::dump(FILE *pFile)
                fprintf(pFile, "<null>\n");
             else if (instr->m_operand.m_pConstant->isArray())
                fprintf(pFile, "<array>\n");
+            else if (instr->m_operand.m_pConstant->isHashMap())
+               fprintf(pFile, "<hash map>\n");
             else
                _ftprintf(pFile, _T("\"%s\"\n"), instr->m_operand.m_pConstant->getValueAsCString());
             break;

@@ -6,6 +6,7 @@
 - Fixed character encoding issues in LDAP user data
 - Java subagent improved
 - Fixed multiple issues with agent side data caching
+- Hash maps implemented in NXSL
 - Management console:
 	- Default object display mode can be set in map properties
 	- Map drill-down can be enabled in dashboard map elements

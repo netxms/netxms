@@ -151,16 +151,12 @@ OperandType NXSL_Instruction::getOperandType()
       case OPCODE_CALL_METHOD:
       case OPCODE_CASE_CONST:
       case OPCODE_DEC:
-      case OPCODE_DEC_ELEMENT:
       case OPCODE_DECP:
-      case OPCODE_DECP_ELEMENT:
       case OPCODE_GET_ATTRIBUTE:
       case OPCODE_GLOBAL:
       case OPCODE_GLOBAL_ARRAY:
       case OPCODE_INC:
-      case OPCODE_INC_ELEMENT:
       case OPCODE_INCP:
-      case OPCODE_INCP_ELEMENT:
 		case OPCODE_NAME:
       case OPCODE_PUSH_CONSTREF:
       case OPCODE_PUSH_VARIABLE:

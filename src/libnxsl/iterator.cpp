@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -23,12 +23,10 @@
 
 #include "libnxsl.h"
 
-
-//
-// Helper function - create new iterator on stack
-// On success, returns 0, otherwise error code
-//
-
+/**
+ * Helper function - create new iterator on stack
+ * On success, returns 0, otherwise error code
+ */
 int NXSL_Iterator::createIterator(NXSL_Stack *stack)
 {
 	if (stack->getSize() < 2)
@@ -66,11 +64,9 @@ int NXSL_Iterator::createIterator(NXSL_Stack *stack)
 	return rc;
 }
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 NXSL_Iterator::NXSL_Iterator(const TCHAR *variable, NXSL_Array *array)
 {
 	m_variable = _tcsdup(variable);
@@ -79,11 +75,9 @@ NXSL_Iterator::NXSL_Iterator(const TCHAR *variable, NXSL_Array *array)
 	m_position = -1;
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 NXSL_Iterator::~NXSL_Iterator()
 {
 	m_array->decRefCount();

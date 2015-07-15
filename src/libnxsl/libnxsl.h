@@ -120,6 +120,7 @@ typedef void *yyscan_t;
 #define OPCODE_ABORT          67
 #define OPCODE_CATCH          68
 #define OPCODE_PUSH_CONSTREF  69
+#define OPCODE_HASHMAP_SET    70
 
 class NXSL_Compiler;
 

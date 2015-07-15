@@ -401,6 +401,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\hashmap.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\instruction.cpp"
 				>
 			</File>
