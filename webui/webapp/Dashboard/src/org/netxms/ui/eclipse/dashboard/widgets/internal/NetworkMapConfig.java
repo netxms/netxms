@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +40,9 @@ public class NetworkMapConfig extends DashboardElementConfig
 	
 	@Element(required=false)
 	private int zoomLevel = 100;	// in percents
+
+   @Element(required=false)
+	private boolean objectDoubleClickEnabled = false;
 
 	/**
 	 * Create line chart settings object from XML document
@@ -136,4 +139,20 @@ public class NetworkMapConfig extends DashboardElementConfig
 	{
 		this.zoomLevel = zoomLevel;
 	}
+
+   /**
+    * @return the objectDoubleClickEnabled
+    */
+   public boolean isObjectDoubleClickEnabled()
+   {
+      return objectDoubleClickEnabled;
+   }
+
+   /**
+    * @param objectDoubleClickEnabled the objectDoubleClickEnabled to set
+    */
+   public void setObjectDoubleClickEnabled(boolean objectDoubleClickEnabled)
+   {
+      this.objectDoubleClickEnabled = objectDoubleClickEnabled;
+   }
 }

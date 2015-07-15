@@ -1331,8 +1331,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		Object object = currentSelection.getFirstElement();
 		if (object instanceof AbstractObject)
 		{
-			long submapId = (object instanceof NetworkMap) ? ((AbstractObject)object).getObjectId() : ((AbstractObject)object)
-					.getSubmapId();
+			long submapId = (object instanceof NetworkMap) ? ((AbstractObject)object).getObjectId() : ((AbstractObject)object).getSubmapId();
 			if (submapId != 0)
 			{
 				try
@@ -1408,6 +1407,10 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		}
 	}
 
+	/**
+	 * @param string
+	 * @return
+	 */
 	private static int safeParseInt(String string)
 	{
 		if (string == null)
