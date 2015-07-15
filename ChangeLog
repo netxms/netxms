@@ -10,7 +10,7 @@
 - Management console:
 	- Default object display mode can be set in map properties
 	- Map drill-down can be enabled in dashboard map elements
-- Fixed issues: #829, #830, #836, #843, #845, #846, #848, #850
+- Fixed issues: #829, #830, #836, #843, #845, #846, #848, #850, #855
 
 
 *
