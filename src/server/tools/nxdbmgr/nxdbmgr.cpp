@@ -548,25 +548,69 @@ int main(int argc, char *argv[])
    BOOL bStart = TRUE, bForce = FALSE, bQuiet = FALSE;
    bool replaceValue = true;
    int ch;
-   TCHAR szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 
    InitThreadLibrary();
 
-   // Check for alternate config file location
+   TCHAR configFile[MAX_PATH] = _T("");
+
+   // Try to read config location
 #ifdef _WIN32
    HKEY hKey;
-   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,
-                    KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
    {
       DWORD dwSize = MAX_PATH * sizeof(TCHAR);
-      RegQueryValueEx(hKey, _T("ConfigFile"), NULL, NULL, (BYTE *)szConfigFile, &dwSize);
+      RegQueryValueEx(hKey, _T("ConfigFile"), NULL, NULL, (BYTE *)configFile, &dwSize);
       RegCloseKey(hKey);
    }
 #else
    const TCHAR *env = _tgetenv(_T("NETXMSD_CONFIG"));
    if ((env != NULL) && (*env != 0))
-      nx_strncpy(szConfigFile, env, MAX_PATH);
+      nx_strncpy(configFile, env, MAX_PATH);
 #endif
+
+   // Search for config
+   if (configFile[0] == 0)
+   {
+#ifdef _WIN32
+      TCHAR path[MAX_PATH];
+      GetNetXMSDirectory(nxDirEtc, path);
+      _tcscat(path, _T("\\netxmsd.conf"));
+      if (_taccess(path, 4) == 0)
+      {
+		   _tcscpy(configFile, path);
+      }
+      else
+      {
+         _tcscpy(configFile, _T("C:\\netxmsd.conf"));
+      }
+#else
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if ((homeDir != NULL) && (*homeDir != 0))
+      {
+         TCHAR config[MAX_PATH];
+         _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir);
+		   if (_taccess(config, 4) == 0)
+		   {
+			   _tcscpy(configFile, config);
+            goto stop_search;
+		   }
+      }
+		if (_taccess(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
+		{
+			_tcscpy(configFile, PREFIX _T("/etc/netxmsd.conf"));
+		}
+		else if (_taccess(_T("/usr/etc/netxmsd.conf"), 4) == 0)
+		{
+			_tcscpy(configFile, _T("/usr/etc/netxmsd.conf"));
+		}
+		else
+		{
+			_tcscpy(configFile, _T("/etc/netxmsd.conf"));
+		}
+stop_search:
+      ;
+#endif
+   }
 
    // Parse command line
    opterr = 1;
@@ -591,7 +635,7 @@ int main(int argc, char *argv[])
                      _T("   unlock             : Forced database unlock\n")
                      _T("   upgrade            : Upgrade database to new version\n")
                      _T("Valid options are:\n")
-                     _T("   -c <config> : Use alternate configuration file. Default is ") DEFAULT_CONFIG_FILE _T("\n")
+                     _T("   -c <config> : Use alternate configuration file. Default is %s\n")
                      _T("   -d          : Check collected data (may take very long time).\n")
                      _T("   -D          : Migrate only collected data.\n")
                      _T("   -f          : Force repair - do not ask for confirmation.\n")
@@ -607,7 +651,7 @@ int main(int argc, char *argv[])
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
                      _T("   -v          : Display version and exit.\n")
                      _T("   -X          : Ignore SQL errors when upgrading (USE WITH CAUTION!!!)\n")
-                     _T("\n"));
+                     _T("\n"), configFile);
             bStart = FALSE;
             break;
          case 'v':   // Print version and exit
@@ -616,10 +660,10 @@ int main(int argc, char *argv[])
             break;
          case 'c':
 #ifdef UNICODE
-	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szConfigFile, MAX_PATH);
-				szConfigFile[MAX_PATH - 1] = 0;
+	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, configFile, MAX_PATH);
+				configFile[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(szConfigFile, optarg, MAX_PATH);
+            nx_strncpy(configFile, optarg, MAX_PATH);
 #endif
             break;
 			case 'd':
@@ -700,7 +744,7 @@ int main(int argc, char *argv[])
 
    // Read configuration file
 #if !defined(_WIN32) && !defined(_NETWARE)
-	if (!_tcscmp(szConfigFile, _T("{search}")))
+	if (!_tcscmp(configFile, _T("{search}")))
 	{
       const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
       if ((homeDir != NULL) && (*homeDir != 0))
@@ -709,21 +753,21 @@ int main(int argc, char *argv[])
          _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir);
 		   if (_taccess(config, 4) == 0)
 		   {
-			   _tcscpy(szConfigFile, config);
+			   _tcscpy(configFile, config);
             goto stop_search;
 		   }
       }
 		if (_taccess(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
 		{
-			_tcscpy(szConfigFile, PREFIX _T("/etc/netxmsd.conf"));
+			_tcscpy(configFile, PREFIX _T("/etc/netxmsd.conf"));
 		}
 		else if (_taccess(_T("/usr/etc/netxmsd.conf"), 4) == 0)
 		{
-			_tcscpy(szConfigFile, _T("/usr/etc/netxmsd.conf"));
+			_tcscpy(configFile, _T("/usr/etc/netxmsd.conf"));
 		}
 		else
 		{
-			_tcscpy(szConfigFile, _T("/etc/netxmsd.conf"));
+			_tcscpy(configFile, _T("/etc/netxmsd.conf"));
 		}
 stop_search:
       ;
@@ -731,7 +775,7 @@ stop_search:
 #endif
 
 	Config *config = new Config();
-	if (!config->loadIniConfig(szConfigFile, _T("server")) || !config->parseTemplate(_T("server"), m_cfgTemplate))
+	if (!config->loadIniConfig(configFile, _T("server")) || !config->parseTemplate(_T("server"), m_cfgTemplate))
    {
       _tprintf(_T("Error loading configuration file\n"));
       return 2;

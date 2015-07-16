@@ -59,11 +59,11 @@
  * Default files
  */
 #if defined(_WIN32)
-#define AGENT_DEFAULT_CONFIG     _T("C:\\nxagentd.conf")
-#define AGENT_DEFAULT_CONFIG_D   _T("C:\\nxagentd.conf.d")
+#define AGENT_DEFAULT_CONFIG     _T("{search}")
+#define AGENT_DEFAULT_CONFIG_D   _T("{search}")
 #define AGENT_DEFAULT_LOG        _T("C:\\nxagentd.log")
 #define AGENT_DEFAULT_FILE_STORE _T("C:\\")
-#define AGENT_DEFAULT_DATA_DIR   _T("C:\\")
+#define AGENT_DEFAULT_DATA_DIR   _T("{default}")
 #elif defined(_NETWARE)
 #define AGENT_DEFAULT_CONFIG     "SYS:ETC/nxagentd.conf"
 #define AGENT_DEFAULT_CONFIG_D   "SYS:ETC/nxagentd.conf.d"

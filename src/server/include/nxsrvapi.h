@@ -50,34 +50,27 @@
  */
 #ifdef _WIN32
 
-#define DEFAULT_CONFIG_FILE   _T("C:\\netxmsd.conf")
-
-#define DEFAULT_SHELL         _T("cmd.exe")
 #define DEFAULT_LOG_FILE      _T("C:\\netxmsd.log")
-#define DEFAULT_DATA_DIR      _T("C:\\NetXMS\\var")
-#define DEFAULT_LIBDIR        _T("C:\\NetXMS\\lib")
-#define DEFAULT_DUMP_DIR      _T("C:\\NetXMS\\dump")
+#define DEFAULT_DUMP_DIR      _T("C:\\")
+
+#define DDIR_PACKAGES         _T("\\packages")
+#define DDIR_BACKGROUNDS      _T("\\backgrounds")
+#define DFILE_KEYS            _T("\\server_key")
+#define DFILE_COMPILED_MIB    _T("\\netxms.mib")
+#define DDIR_IMAGES           _T("\\images")
+#define DDIR_FILES            _T("\\files")
 
 #define LDIR_NDD              _T("\\ndd")
 #define LDIR_PDSDRV           _T("\\pdsdrv")
 
-#define DDIR_MIBS             _T("\\mibs")
-#define DDIR_PACKAGES         _T("\\packages")
-#define DDIR_BACKGROUNDS      _T("\\backgrounds")
-#define DDIR_SHARED_FILES     _T("\\shared")
-#define DFILE_KEYS            _T("\\server_key")
-#define DFILE_COMPILED_MIB    _T("\\mibs\\netxms.mib")
-#define DDIR_IMAGES           _T("\\images")
-#define DDIR_FILES            _T("\\files")
-
 #else    /* _WIN32 */
 
-#define DEFAULT_CONFIG_FILE   _T("{search}")
-
-#define DEFAULT_SHELL         _T("/bin/sh")
-
 #ifndef DATADIR
-#define DATADIR              _T("/var/lib/netxms")
+#define DATADIR              _T("/usr/share/netxms")
+#endif
+
+#ifndef STATEDIR
+#define STATEDIR             _T("/var/lib/netxms")
 #endif
 
 #ifndef LIBDIR
@@ -89,19 +82,15 @@
 #endif
 
 #define DEFAULT_LOG_FILE      _T("/var/log/netxmsd.log")
-#define DEFAULT_DATA_DIR      DATADIR
-#define DEFAULT_LIBDIR        PKGLIBDIR
 #define DEFAULT_DUMP_DIR      _T("/var/tmp")
 
 #define LDIR_NDD              _T("/ndd")
 #define LDIR_PDSDRV           _T("/pdsdrv")
 
-#define DDIR_MIBS             _T("/mibs")
 #define DDIR_PACKAGES         _T("/packages")
 #define DDIR_BACKGROUNDS      _T("/backgrounds")
-#define DDIR_SHARED_FILES     _T("/shared")
 #define DFILE_KEYS            _T("/.server_key")
-#define DFILE_COMPILED_MIB    _T("/mibs/netxms.mib")
+#define DFILE_COMPILED_MIB    _T("/netxms.mib")
 #define DDIR_IMAGES           _T("/images")
 #define DDIR_FILES            _T("/files")
 

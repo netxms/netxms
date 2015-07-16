@@ -85,9 +85,21 @@ bool NXCORE_EXPORTABLE LoadConfig()
    bool bSuccess = false;
 	Config *config;
 
-#if !defined(_WIN32) && !defined(_NETWARE)
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
+#ifdef _WIN32
+      TCHAR path[MAX_PATH];
+      GetNetXMSDirectory(nxDirEtc, path);
+      _tcscat(path, _T("\\netxmsd.conf"));
+      if (_taccess(path, 4) == 0)
+      {
+		   _tcscpy(g_szConfigFile, path);
+      }
+      else
+      {
+         _tcscpy(g_szConfigFile, _T("C:\\netxmsd.conf"));
+      }
+#else
       const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
       if ((homeDir != NULL) && (*homeDir != 0))
       {
@@ -113,20 +125,8 @@ bool NXCORE_EXPORTABLE LoadConfig()
 		}
 stop_search:
       ;
+#endif
 	}
-#endif
-
-   // Read default values from enviroment
-   const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-   if ((homeDir != NULL) && (*homeDir != 0))
-   {
-#ifdef _WIN32
-      _sntprintf(g_netxmsdLibDir, MAX_PATH, _T("%s%slib"), homeDir,
-         (homeDir[_tcslen(homeDir) - 1] != FS_PATH_SEPARATOR_CHAR) ? FS_PATH_SEPARATOR : _T(""));
-#else
-      _sntprintf(g_netxmsdLibDir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
-#endif
-   }
 
    if (IsStandalone())
       _tprintf(_T("Using configuration file \"%s\"\n"), g_szConfigFile);

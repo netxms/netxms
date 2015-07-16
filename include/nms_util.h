@@ -1789,7 +1789,8 @@ enum nxDirectoryType
    nxDirBin = 0,
    nxDirData = 1,
    nxDirEtc = 2,
-   nxDirLib = 3
+   nxDirLib = 3,
+   nxDirShare = 4
 };
 
 TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo();

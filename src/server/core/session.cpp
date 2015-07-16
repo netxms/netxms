@@ -4520,12 +4520,11 @@ void ClientSession::processEPPRecord(NXCPMessage *pRequest)
  */
 void ClientSession::sendMib(NXCPMessage *request)
 {
-   TCHAR szBuffer[MAX_PATH];
+   TCHAR mibFile[MAX_PATH];
 
-   // Send compiled MIB file
-   _tcscpy(szBuffer, g_netxmsdDataDir);
-   _tcscat(szBuffer, DFILE_COMPILED_MIB);
-	sendFile(szBuffer, request->getId(), 0);
+   _tcscpy(mibFile, g_netxmsdDataDir);
+   _tcscat(mibFile, DFILE_COMPILED_MIB);
+	sendFile(mibFile, request->getId(), 0);
 }
 
 /**

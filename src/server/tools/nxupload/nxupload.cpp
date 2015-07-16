@@ -130,10 +130,15 @@ int main(int argc, char *argv[])
    UINT32 dwTimeout = 5000, dwConnTimeout = 30000, dwError;
    INT64 nElapsedTime;
    TCHAR szSecret[MAX_SECRET_LENGTH] = _T("");
-   TCHAR szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
+   TCHAR szKeyFile[MAX_PATH];
    TCHAR szDestinationFile[MAX_PATH] = {0};
    RSA *pServerKey = NULL;
    NXCPCompressionMethod compression = NXCP_COMPRESSION_NONE;
+
+   InitThreadLibrary();
+
+   GetNetXMSDirectory(nxDirData, szKeyFile);
+   _tcscat(szKeyFile, DFILE_KEYS);
 
    // Parse command line
    opterr = 1;
@@ -158,7 +163,7 @@ int main(int argc, char *argv[])
                      _T("   -h           : Display help and exit.\n")
 #ifdef _WITH_ENCRYPTION
                      _T("   -K <file>    : Specify server's key file\n")
-                     _T("                  (default is ") DEFAULT_DATA_DIR DFILE_KEYS _T(").\n")
+                     _T("                  (default is %s).\n")
 #endif
                      _T("   -p <port>    : Specify agent's port number. Default is %d.\n")
                      _T("   -q           : Quiet mode.\n")
@@ -168,7 +173,11 @@ int main(int argc, char *argv[])
                      _T("   -w <seconds> : Set command timeout (default is 5 seconds)\n")
                      _T("   -W <seconds> : Set connection timeout (default is 30 seconds)\n")
                      _T("   -z           : Compress data stream.\n")
-                     _T("\n"), wPort);
+                     _T("\n"), 
+#ifdef _WITH_ENCRYPTION
+                     szKeyFile,
+#endif
+                     wPort);
             bStart = FALSE;
             break;
          case 'a':   // Auth method

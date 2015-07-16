@@ -2250,6 +2250,9 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
          case nxDirLib:
             _sntprintf(dir, MAX_PATH, _T("%s\\lib"), homeDir);
             break;
+         case nxDirShare:
+            _sntprintf(dir, MAX_PATH, _T("%s\\share"), homeDir);
+            break;
          default:
             nx_strncpy(dir, homeDir, MAX_PATH);
             break;
@@ -2261,13 +2264,16 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
             _sntprintf(dir, MAX_PATH, _T("%s/bin"), homeDir);
             break;
          case nxDirData:
-            _sntprintf(dir, MAX_PATH, _T("%s/share/netxms"), homeDir);
+            _sntprintf(dir, MAX_PATH, _T("%s/var/lib/netxms"), homeDir);
             break;
          case nxDirEtc:
             _sntprintf(dir, MAX_PATH, _T("%s/etc"), homeDir);
             break;
          case nxDirLib:
             _sntprintf(dir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
+            break;
+         case nxDirShare:
+            _sntprintf(dir, MAX_PATH, _T("%s/share/netxms"), homeDir);
             break;
          default:
             nx_strncpy(dir, homeDir, MAX_PATH);
@@ -2332,6 +2338,9 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
       case nxDirLib:
          _sntprintf(dir, MAX_PATH, _T("%s\\lib"), installPath);
          break;
+      case nxDirShare:
+         _sntprintf(dir, MAX_PATH, _T("%s\\share"), installPath);
+         break;
       default:
          nx_strncpy(dir, installPath, MAX_PATH);
          break;
@@ -2347,8 +2356,8 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
 #endif
          break;
       case nxDirData:
-#ifdef DATADIR
-         _tcscpy(dir, DATADIR);
+#ifdef STATEDIR
+         _tcscpy(dir, STATEDIR);
 #else
          _tcscpy(dir, _T("/var/lib/netxms"));
 #endif
@@ -2365,6 +2374,13 @@ void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
          _tcscpy(dir, PKGLIBDIR);
 #else
          _tcscpy(dir, _T("/usr/lib/netxms"));
+#endif
+         break;
+      case nxDirShare:
+#ifdef DATADIR
+         _tcscpy(dir, DATADIR);
+#else
+         _tcscpy(dir, _T("/usr/share/netxms"));
 #endif
          break;
       default:

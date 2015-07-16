@@ -688,20 +688,10 @@ BOOL Initialize()
    if (g_debugLevel == (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
       g_debugLevel = 0;
 
-#ifndef _WIN32
    if (!_tcscmp(g_szDataDirectory, _T("{default}")))
    {
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if (homeDir != NULL)
-      {
-         _sntprintf(g_szDataDirectory, MAX_PATH, _T("%s/var/netxms"), homeDir);
-      }
-      else
-      {
-         nx_strncpy(g_szDataDirectory, _T("/var/lib/netxms"), MAX_PATH);
-      }
+      GetNetXMSDirectory(nxDirData, g_szDataDirectory);
    }
-#endif
 
    // Open log file
 	if (!(g_dwFlags & AF_USE_SYSLOG))
@@ -1601,6 +1591,35 @@ int main(int argc, char *argv[])
 			_tcscpy(g_szConfigIncludeDir, _T("/etc/nxagentd.conf.d"));
 		}
 	}
+#else
+	if (!_tcscmp(g_szConfigFile, _T("{search}")))
+	{
+      TCHAR path[MAX_PATH];
+      GetNetXMSDirectory(nxDirEtc, path);
+      _tcscat(path, _T("\\nxagentd.conf"));
+      if (_taccess(path, 4) == 0)
+      {
+         _tcscpy(g_szConfigFile, path);
+      }
+      else
+      {
+         _tcscpy(g_szConfigFile, _T("C:\\nxagentd.conf"));
+      }
+   }
+	if (!_tcscmp(g_szConfigIncludeDir, _T("{search}")))
+	{
+      TCHAR path[MAX_PATH];
+      GetNetXMSDirectory(nxDirEtc, path);
+      _tcscat(path, _T("\\nxagentd.conf.d"));
+      if (_taccess(path, 4) == 0)
+      {
+         _tcscpy(g_szConfigIncludeDir, path);
+      }
+      else
+      {
+         _tcscpy(g_szConfigIncludeDir, _T("C:\\nxagentd.conf.d"));
+      }
+   }
 #endif
 
    if (bRestart)

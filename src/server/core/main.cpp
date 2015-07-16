@@ -113,7 +113,7 @@ THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *);
 /**
  * Global variables
  */
-TCHAR NXCORE_EXPORTABLE g_szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
+TCHAR NXCORE_EXPORTABLE g_szConfigFile[MAX_PATH] = _T("{search}");
 TCHAR NXCORE_EXPORTABLE g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
 UINT32 g_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
 UINT32 g_dwMaxLogSize = 16384 * 1024;
@@ -210,16 +210,6 @@ static BOOL CheckDataDir()
 #define MKDIR(name) _tmkdir(name, 0700)
 #endif
 
-	// Create directory for mib files if it doesn't exist
-	_tcscpy(szBuffer, g_netxmsdDataDir);
-	_tcscat(szBuffer, DDIR_MIBS);
-	if (MKDIR(szBuffer) == -1)
-		if (errno != EEXIST)
-		{
-			nxlog_write(MSG_ERROR_CREATING_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", szBuffer);
-			return FALSE;
-		}
-
 	// Create directory for package files if it doesn't exist
 	_tcscpy(szBuffer, g_netxmsdDataDir);
 	_tcscat(szBuffer, DDIR_PACKAGES);
@@ -243,18 +233,6 @@ static BOOL CheckDataDir()
 	// Create directory for image library is if does't exists
 	_tcscpy(szBuffer, g_netxmsdDataDir);
 	_tcscat(szBuffer, DDIR_IMAGES);
-	if (MKDIR(szBuffer) == -1)
-	{
-		if (errno != EEXIST)
-		{
-			nxlog_write(MSG_ERROR_CREATING_DATA_DIR, EVENTLOG_ERROR_TYPE, "s", szBuffer);
-			return FALSE;
-		}
-	}
-
-	// Create directory for shared file store if does't exists
-	_tcscpy(szBuffer, g_netxmsdDataDir);
-	_tcscat(szBuffer, DDIR_SHARED_FILES);
 	if (MKDIR(szBuffer) == -1)
 	{
 		if (errno != EEXIST)
@@ -312,21 +290,7 @@ static void LoadGlobalConfig()
 	if (ConfigReadInt(_T("EnableObjectTransactions"), 0))
 		g_flags |= AF_ENABLE_OBJECT_TRANSACTIONS;
 	if (ConfigReadInt(_T("EnableMultipleDBConnections"), 1))
-	{
-		// SQLite has troubles with multiple connections to the same database
-		// from different threads, and it does not speed up database access
-		// anyway, so we will not enable multiple connections for SQLite
-		//if (g_dbSyntax != DB_SYNTAX_SQLITE)
-		{
-			g_flags |= AF_ENABLE_MULTIPLE_DB_CONN;
-		}
-      /*
-		else
-		{
-			DbgPrintf(1, _T("Configuration parameter EnableMultipleDBConnections ignored because database engine is SQLite"));
-		}
-      */
-	}
+		g_flags |= AF_ENABLE_MULTIPLE_DB_CONN;
 	if (ConfigReadInt(_T("RunNetworkDiscovery"), 0))
 		g_flags |= AF_ENABLE_NETWORK_DISCOVERY;
 	if (ConfigReadInt(_T("ActiveNetworkDiscovery"), 0))
@@ -350,18 +314,8 @@ static void LoadGlobalConfig()
 
    if (g_netxmsdDataDir[0] == 0)
    {
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if (homeDir != NULL)
-      {
-         TCHAR path[MAX_PATH];
-         _sntprintf(path, MAX_PATH, _T("%s/share/netxms"), homeDir);
-         ConfigReadStr(_T("DataDirectory"), g_netxmsdDataDir, MAX_PATH, path);
-      }
-      else
-      {
-         ConfigReadStr(_T("DataDirectory"), g_netxmsdDataDir, MAX_PATH, DEFAULT_DATA_DIR);
-      }
-      DbgPrintf(1, _T("Data directory set to %s from server configuration variable"), g_netxmsdDataDir);
+      GetNetXMSDirectory(nxDirData, g_netxmsdDataDir);
+      DbgPrintf(1, _T("Data directory set to %s"), g_netxmsdDataDir);
    }
    else
    {
