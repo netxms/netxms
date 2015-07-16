@@ -743,37 +743,6 @@ stop_search:
    }
 
    // Read configuration file
-#if !defined(_WIN32) && !defined(_NETWARE)
-	if (!_tcscmp(configFile, _T("{search}")))
-	{
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if ((homeDir != NULL) && (*homeDir != 0))
-      {
-         TCHAR config[MAX_PATH];
-         _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir);
-		   if (_taccess(config, 4) == 0)
-		   {
-			   _tcscpy(configFile, config);
-            goto stop_search;
-		   }
-      }
-		if (_taccess(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
-		{
-			_tcscpy(configFile, PREFIX _T("/etc/netxmsd.conf"));
-		}
-		else if (_taccess(_T("/usr/etc/netxmsd.conf"), 4) == 0)
-		{
-			_tcscpy(configFile, _T("/usr/etc/netxmsd.conf"));
-		}
-		else
-		{
-			_tcscpy(configFile, _T("/etc/netxmsd.conf"));
-		}
-stop_search:
-      ;
-	}
-#endif
-
 	Config *config = new Config();
 	if (!config->loadIniConfig(configFile, _T("server")) || !config->parseTemplate(_T("server"), m_cfgTemplate))
    {
