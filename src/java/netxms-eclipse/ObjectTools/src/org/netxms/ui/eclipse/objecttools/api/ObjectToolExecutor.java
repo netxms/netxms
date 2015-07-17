@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.objecttools.api;
 
@@ -12,6 +27,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.netxms.base.NXCommon;
 import org.netxms.client.AgentFile;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.ObjectTool;
@@ -92,17 +108,11 @@ public final class ObjectToolExecutor
          if (nodes.size() == 1)
          {
             NodeInfo node = nodes.iterator().next();
-            message = message.replace("%OBJECT_IP_ADDR%", node.object.getPrimaryIP().getHostAddress()); //$NON-NLS-1$
-            message = message.replace("%OBJECT_NAME%", node.object.getObjectName()); //$NON-NLS-1$
-            message = message.replace("%OBJECT_ID%", Long.toString(node.object.getObjectId())); //$NON-NLS-1$
-            message = message.replace("%USERNAME%", ConsoleSharedData.getSession().getUserName()); //$NON-NLS-1$
+            message = substituteMacros(message, node);
          }
          else
          {
-            message = message.replace("%OBJECT_IP_ADDR%", Messages.get().ObjectToolsDynamicMenu_MultipleNodes); //$NON-NLS-1$
-            message = message.replace("%OBJECT_NAME%", Messages.get().ObjectToolsDynamicMenu_MultipleNodes); //$NON-NLS-1$
-            message = message.replace("%OBJECT_ID%", Messages.get().ObjectToolsDynamicMenu_MultipleNodes); //$NON-NLS-1$
-            message = message.replace("%USERNAME%", ConsoleSharedData.getSession().getUserName()); //$NON-NLS-1$
+            message = substituteMacros(message, new NodeInfo(null, null));
          }
          if (!MessageDialogHelper.openQuestion(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
                Messages.get().ObjectToolsDynamicMenu_ConfirmExec, message))
@@ -396,63 +406,85 @@ public final class ObjectToolExecutor
       {
          if (src[i] == '%')
          {
-            StringBuilder p = new StringBuilder();
-            for(i++; src[i] != '%' && i < s.length(); i++)
-               p.append(src[i]);
-            if (p.length() == 0)    // %%
+            i++;
+            if (i == s.length())
+               break;   // malformed string
+            
+            switch(src[i])
             {
-               sb.append('%');
-            }
-            else
-            {
-               String name = p.toString();
-               if (name.equals("OBJECT_IP_ADDR")) //$NON-NLS-1$
-               {
-                  sb.append(node.object.getPrimaryIP().getHostAddress());
-               }
-               else if (name.equals("OBJECT_NAME")) //$NON-NLS-1$
-               {
-                  sb.append(node.object.getObjectName());
-               }
-               else if (name.equals("OBJECT_ID")) //$NON-NLS-1$
-               {
-                  sb.append(node.object.getObjectId());
-               }
-               else if (name.equals("ALARM_ID")) //$NON-NLS-1$
-               {
-                  if (node.alarm != null)
-                     sb.append(node.alarm.getId());
-               }
-               else if (name.equals("ALARM_MESSAGE")) //$NON-NLS-1$
-               {
+               case 'a':
+                  sb.append((node.object != null) ? node.object.getPrimaryIP().getHostAddress() : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
+                  break;
+               case 'A':   // alarm message
                   if (node.alarm != null)
                      sb.append(node.alarm.getMessage());
-               }
-               else if (name.equals("ALARM_SEVERITY")) //$NON-NLS-1$
-               {
+                  break;
+               case 'c':
+                  if (node.alarm != null)
+                     sb.append(node.alarm.getSourceEventCode());
+                  break;
+               case 'g':
+                  sb.append((node.object != null) ? node.object.getGuid().toString() : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
+                  break;
+               case 'i':
+                  sb.append((node.object != null) ? String.format("0x%08X", node.object.getObjectId()) : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
+                  break;
+               case 'I':
+                  sb.append((node.object != null) ? Long.toString(node.object.getObjectId()) : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
+                  break;
+               case 'm':   // alarm message
+                  if (node.alarm != null)
+                     sb.append(node.alarm.getMessage());
+                  break;
+               case 'n':
+                  sb.append((node.object != null) ? node.object.getObjectName() : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
+                  break;
+               case 'N':
+                  if (node.alarm != null)
+                     sb.append(ConsoleSharedData.getSession().getEventName(node.alarm.getSourceEventCode()));
+                  break;
+               case 's':
                   if (node.alarm != null)
                      sb.append(node.alarm.getCurrentSeverity());
-               }
-               else if (name.equals("ALARM_SEVERITY_TEXT")) //$NON-NLS-1$
-               {
+                  break;
+               case 'S':
                   if (node.alarm != null)
                      sb.append(StatusDisplayInfo.getStatusText(node.alarm.getCurrentSeverity()));
-               }
-               else if (name.equals("ALARM_STATE")) //$NON-NLS-1$
-               {
+                  break;
+               case 'U':
+                  sb.append(ConsoleSharedData.getSession().getUserName());
+                  break;
+               case 'v':
+                  sb.append(NXCommon.VERSION);
+                  break;
+               case 'y':   // alarm state
                   if (node.alarm != null)
                      sb.append(node.alarm.getState());
-               }
-               else if (name.equals("USERNAME")) //$NON-NLS-1$
-               {
-                  sb.append(ConsoleSharedData.getSession().getUserName());
-               }
-               else
-               {
-                  String custAttr = node.object.getCustomAttributes().get(name);
-                  if (custAttr != null)
-                     sb.append(custAttr);
-               }
+                  break;
+               case 'Y':   // alarm ID
+                  if (node.alarm != null)
+                     sb.append(node.alarm.getId());
+                  break;
+               case '%':
+                  sb.append('%');
+                  break;
+               case '{':   // object's custom attribute
+                  StringBuilder attr = new StringBuilder();
+                  for(i++; i < s.length(); i++)
+                  {
+                     if (src[i] == '}')
+                        break;
+                     attr.append(src[i]);
+                  }
+                  if ((node.object != null) && (attr.length() > 0))
+                  {
+                     String value = node.object.getCustomAttributes().get(attr.toString());
+                     if (value != null)
+                        sb.append(value);
+                  }
+                  break;
+               default:
+                  break;
             }
          }
          else

@@ -5336,6 +5336,21 @@ public class NXCSession
       }
       return result;
    }
+   
+   /**
+    * Get event name from event code
+    * 
+    * @param code event code
+    * @return event name or event code as string if event not found
+    */
+   public String getEventName(long code)
+   {
+      synchronized(eventTemplates)
+      {
+         EventTemplate e = eventTemplates.get(code);
+         return (e != null) ? e.getName() : ("[" + Long.toString(code) + "]");
+      }
+   }
 
    /**
     * Find event template by code in event template database internally
@@ -5348,12 +5363,10 @@ public class NXCSession
     */
    public EventTemplate findEventTemplateByCode(long code)
    {
-      EventTemplate e = null;
       synchronized(eventTemplates)
       {
-         e = eventTemplates.get(code);
+         return eventTemplates.get(code);
       }
-      return e;
    }
 
    /**

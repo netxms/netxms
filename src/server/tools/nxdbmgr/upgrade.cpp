@@ -493,6 +493,129 @@ static BOOL ConvertNetMasks(const TCHAR *table, const TCHAR *column, const TCHAR
 }
 
 /**
+ * Convert object tool macros to new format
+ */
+static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *column)
+{
+   if (_tcschr(text, _T('%')) == NULL)
+      return true; // nothing to convert
+
+   String s;
+   for(const TCHAR *p = text; *p != 0; p++)
+   {
+      if (*p == _T('%'))
+      {
+         TCHAR name[256];
+         int i = 0;
+         for(p++; (*p != _T('%')) && (*p != 0); p++)
+         {
+            if (i < 255)
+               name[i++] = *p;
+         }
+         if (*p == 0)
+            break;  // malformed string
+         name[i] = 0;
+         if (!_tcscmp(name, _T("ALARM_ID")))
+         {
+            s.append(_T("%Y"));
+         }
+         else if (!_tcscmp(name, _T("ALARM_MESSAGE")))
+         {
+            s.append(_T("%A"));
+         }
+         else if (!_tcscmp(name, _T("ALARM_SEVERITY")))
+         {
+            s.append(_T("%s"));
+         }
+         else if (!_tcscmp(name, _T("ALARM_SEVERITY_TEXT")))
+         {
+            s.append(_T("%S"));
+         }
+         else if (!_tcscmp(name, _T("ALARM_STATE")))
+         {
+            s.append(_T("%y"));
+         }
+         else if (!_tcscmp(name, _T("OBJECT_ID")))
+         {
+            s.append(_T("%I"));
+         }
+         else if (!_tcscmp(name, _T("OBJECT_IP_ADDR")))
+         {
+            s.append(_T("%a"));
+         }
+         else if (!_tcscmp(name, _T("OBJECT_NAME")))
+         {
+            s.append(_T("%n"));
+         }
+         else if (!_tcscmp(name, _T("USERNAME")))
+         {
+            s.append(_T("%U"));
+         }
+         else
+         {
+            s.append(_T("%{"));
+            s.append(name);
+            s.append(_T('}'));
+         }
+      }
+      else
+      {
+         s.append(*p);
+      }
+   }
+
+   String query = _T("UPDATE object_tools SET ");
+   query.append(column);
+   query.append(_T('='));
+   query.append(DBPrepareString(g_hCoreDB, s));
+   query.append(_T(" WHERE tool_id="));
+   query.append(id);
+   return SQLQuery(query);
+}
+                                    
+/**
+ * Upgrade from V359 to V360
+ */
+static BOOL H_UpgradeFromV359(int currVersion, int newVersion)
+{
+   DB_RESULT hResult = SQLSelect(_T("SELECT tool_id,tool_type,tool_data,confirmation_text FROM object_tools"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         
+         TCHAR *text = DBGetField(hResult, i, 3, NULL, 0);
+         if (text != NULL)
+         {
+            ConvertObjectToolMacros(id, text, _T("confirmation_text"));
+            free(text);
+         }
+         
+         int type = DBGetFieldLong(hResult, i, 1);
+         if ((type == 1) || (type == 4) || (type == 5))
+         {
+            text = DBGetField(hResult, i, 2, NULL, 0);
+            if (text != NULL)
+            {
+               ConvertObjectToolMacros(id, text, _T("tool_data"));
+               free(text);
+            }
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='360' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V358 to V359
  */
 static BOOL H_UpgradeFromV358(int currVersion, int newVersion)
@@ -8742,6 +8865,7 @@ static struct
    { 356, 357, H_UpgradeFromV356 },
    { 357, 358, H_UpgradeFromV357 },
    { 358, 359, H_UpgradeFromV358 },
+   { 359, 360, H_UpgradeFromV359 },
    { 0, 0, NULL }
 };
 
