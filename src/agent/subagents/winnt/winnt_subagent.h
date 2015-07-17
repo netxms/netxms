@@ -58,6 +58,7 @@
 #define PROCINFO_VMSIZE          12
 #define PROCINFO_WKSET           13
 #define PROCINFO_CPUTIME         14
+#define PROCINFO_HANDLES         15
 
 #define INFOTYPE_MIN             0
 #define INFOTYPE_MAX             1
