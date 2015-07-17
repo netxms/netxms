@@ -120,7 +120,9 @@ static void SubAgentShutdown()
 LONG H_DRBDDeviceList(const TCHAR *pszParam, const TCHAR *pszArg, StringList *pValue, AbstractCommSession *session);
 LONG H_DRBDDeviceInfo(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_DRBDVersion(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_HandleCount(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_OpenFilesTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValue, AbstractCommSession *session);
 
 /**
@@ -215,12 +217,14 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_UINT,	DCIDESC_PROCESS_COUNTEX },
 	{ _T("Process.CPUTime(*)"),           H_ProcessDetails,  CAST_TO_POINTER(PROCINFO_CPUTIME, const TCHAR *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_CPUTIME },
+	{ _T("Process.Handles(*)"),           H_ProcessDetails,  CAST_TO_POINTER(PROCINFO_HANDLES, const TCHAR *),
+		DCI_DT_UINT,	DCIDESC_PROCESS_HANDLES },
 	{ _T("Process.KernelTime(*)"),        H_ProcessDetails,  CAST_TO_POINTER(PROCINFO_KTIME, const TCHAR *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_KERNELTIME },
 	{ _T("Process.PageFaults(*)"),        H_ProcessDetails,  CAST_TO_POINTER(PROCINFO_PAGEFAULTS, const TCHAR *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_PAGEFAULTS },
 	{ _T("Process.Threads(*)"),           H_ProcessDetails,  CAST_TO_POINTER(PROCINFO_THREADS, const TCHAR *),
-		DCI_DT_INT64,	DCIDESC_PROCESS_THREADS },
+		DCI_DT_UINT,	DCIDESC_PROCESS_THREADS },
 	{ _T("Process.UserTime(*)"),          H_ProcessDetails,  CAST_TO_POINTER(PROCINFO_UTIME, const TCHAR *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_USERTIME },
 	{ _T("Process.VMSize(*)"),            H_ProcessDetails,  CAST_TO_POINTER(PROCINFO_VMSIZE, const TCHAR *),
@@ -228,6 +232,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Process.WkSet(*)"),             H_ProcessDetails,  CAST_TO_POINTER(PROCINFO_WKSET, const TCHAR *),
 		DCI_DT_INT64,	DCIDESC_PROCESS_WKSET },
 	
+	{ _T("System.HandleCount"),           H_HandleCount,     NULL,
+		DCI_DT_UINT,	DCIDESC_SYSTEM_HANDLECOUNT },
 	{ _T("System.ProcessCount"),          H_ProcessCount,    _T("T"),
 		DCI_DT_UINT,	DCIDESC_SYSTEM_PROCESSCOUNT },
 	{ _T("System.ThreadCount"),           H_ThreadCount,     NULL,
@@ -483,6 +489,7 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
    { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES },
    { _T("System.InstalledProducts"), H_InstalledProducts, NULL, _T("NAME"), DCTDESC_SYSTEM_INSTALLED_PRODUCTS },
+   { _T("System.OpenFiles"), H_OpenFilesTable, NULL, _T("PID,HANDLE"), DCTDESC_SYSTEM_OPEN_FILES },
    { _T("System.Processes"), H_ProcessTable, NULL, _T("PID"), DCTDESC_SYSTEM_PROCESSES }
 };
 

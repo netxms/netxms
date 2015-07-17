@@ -41,13 +41,13 @@
 /**
  * Attributes for H_ProcInfo
  */
-
 enum
 {
 	PROCINFO_CPUTIME,
 	PROCINFO_KTIME,
 	PROCINFO_PAGEFAULTS,
 	PROCINFO_THREADS,
+   PROCINFO_HANDLES,
 	PROCINFO_UTIME,
 	PROCINFO_VMSIZE,
 	PROCINFO_WKSET
@@ -57,25 +57,6 @@ enum
 #define INFOTYPE_MAX             1
 #define INFOTYPE_AVG             2
 #define INFOTYPE_SUM             3
-
-/**
- * Process entry
- */
-typedef struct t_ProcEnt
-{
-	UINT32 nPid;
-	char szProcName[128];
-	UINT32 parent;					// PID of parent process
-	UINT32 group;					// Group ID
-	char state;					// Process state
-	long threads;				// Number of threads
-	unsigned long ktime;		// Number of ticks spent in kernel mode
-	unsigned long utime;		// Number of ticks spent in user mode
-	unsigned long vmsize;	// Size of process's virtual memory in bytes
-	long rss;					// Process's resident set size in pages
-	unsigned long minflt;	// Number of minor page faults
-	unsigned long majflt;	// Number of major page faults
-} PROC_ENT;
 
 /**
  * Interface info
@@ -116,11 +97,9 @@ enum
 	DISK_USED_PERC
 };
 
-
 /**
  * Network interface stats
  */
-
 #define IF_INFO_ADMIN_STATUS     0
 #define IF_INFO_OPER_STATUS      1
 #define IF_INFO_BYTES_IN         2
@@ -132,11 +111,9 @@ enum
 #define IF_INFO_PACKETS_OUT      8
 #define IF_INFO_SPEED            9
 
-
 /**
  * Memory stats
  */
-
 enum
 {
 	PHYSICAL_FREE,
@@ -160,11 +137,9 @@ enum
 	VIRTUAL_AVAILABLE_PCT,
 };
 
-
 /**
  * Load average intervals
  */
-
 enum
 {
 	INTERVAL_1MIN,
@@ -172,11 +147,9 @@ enum
 	INTERVAL_15MIN,
 };
 
-
 /**
  * CPU stats
  */
-
 enum 
 {
 	CPU_USAGE_OVERAL,
@@ -252,7 +225,5 @@ void ShutdownIoStatCollector();
 
 void InitDrbdCollector();
 void StopDrbdCollector();
-
-int ProcRead(PROC_ENT **pEnt, char *szProcName, char *szCmdLine);
 
 #endif // __LINUX_SUBAGENT_H__
