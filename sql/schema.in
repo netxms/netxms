@@ -1065,6 +1065,19 @@ CREATE TABLE object_tools_table_columns
 	PRIMARY KEY(tool_id,col_number)
 ) TABLE_TYPE;
 
+/**
+ * Input fields for object tools
+ */
+CREATE TABLE object_tools_input_fields
+(
+	tool_id integer not null,
+   name varchar(31) not null,
+   input_type char(1) not null,
+   display_name varchar(127) null,
+   config SQL_TEXT null,
+   PRIMARY KEY(tool_id,name)
+) TABLE_TYPE;
+
 /*
 ** Stored syslog messages
 */

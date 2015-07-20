@@ -6057,7 +6057,7 @@ public class NXCSession
       for(int i = 0; i < count; i++)
       {
          list.add(new ObjectTool(response, varId));
-         varId += 100;
+         varId += 10000;
       }
 
       return list;

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,25 +18,16 @@
  */
 package org.netxms.ui.eclipse.widgets;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.forms.widgets.FormToolkit;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Composite widget - spinner with label
  */
-public class LabeledSpinner extends Composite
+public class LabeledSpinner extends LabeledControl
 {
-	private Label label;
-	private Spinner spinner;
-	private FormToolkit toolkit;
-	
 	/**
 	 * @param parent
 	 * @param style
@@ -44,8 +35,6 @@ public class LabeledSpinner extends Composite
 	public LabeledSpinner(Composite parent, int style)
 	{
 		super(parent, style);
-		toolkit = null;
-		createContent(SWT.BORDER);
 	}
 
 	/**
@@ -55,9 +44,7 @@ public class LabeledSpinner extends Composite
 	 */
 	public LabeledSpinner(Composite parent, int style, int spinnerStyle)
 	{
-		super(parent, style);
-		toolkit = null;
-		createContent(spinnerStyle);
+		super(parent, style, spinnerStyle);
 	}
 	
 	/**
@@ -68,43 +55,43 @@ public class LabeledSpinner extends Composite
 	 */
 	public LabeledSpinner(Composite parent, int style, int spinnerStyle, FormToolkit toolkit)
 	{
-		super(parent, style);
-		this.toolkit = toolkit;
-		toolkit.adapt(this);
-		createContent(spinnerStyle);
+		super(parent, style, spinnerStyle, toolkit);
 	}
 	
-	/**
-	 * Do widget creation.
-	 * 
-	 * @param spinnerStyle
-	 */
-	private void createContent(int spinnerStyle)
-	{
-		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
-		layout.marginTop = 0;
-		layout.marginBottom = 0;
-		layout.marginWidth = 0;
-		layout.marginHeight = 0;
-		setLayout(layout);
-		
-		label = (toolkit != null) ? toolkit.createLabel(this, "") : new Label(this, SWT.NONE); //$NON-NLS-1$
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		label.setLayoutData(gd);
-		
-		spinner = new Spinner(this, spinnerStyle);
-		if (toolkit != null)
-		   toolkit.adapt(spinner);
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.TOP;
-		spinner.setLayoutData(gd);
-	}
+	/* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.widgets.LabeledControl#createControl(int)
+    */
+   @Override
+   protected Control createControl(int controlStyle)
+   {
+      return new Spinner(this, controlStyle);
+   }
 	
-	/**
+	/* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.widgets.LabeledControl#setText(java.lang.String)
+    */
+   @Override
+   public void setText(String newText)
+   {
+      try
+      {
+         ((Spinner)control).setSelection(Integer.parseInt(newText));
+      }
+      catch(NumberFormatException e)
+      {
+      }
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.widgets.LabeledControl#getText()
+    */
+   @Override
+   public String getText()
+   {
+      return ((Spinner)control).getText();
+   }
+
+   /**
 	 * Set spinner range
 	 * 
 	 * @param minValue
@@ -112,28 +99,8 @@ public class LabeledSpinner extends Composite
 	 */
 	public void setRange(int minValue, int maxValue)
 	{
-      spinner.setMinimum(minValue);
-      spinner.setMaximum(maxValue);
-	}
-	
-	/**
-	 * Set label
-	 * 
-	 * @param newLabel New label
-	 */
-	public void setLabel(final String newLabel)
-	{
-		label.setText(newLabel);
-	}
-	
-	/**
-	 * Get label
-	 * 
-	 * @return Current label
-	 */
-	public String getLabel()
-	{
-		return label.getText();
+      ((Spinner)control).setMinimum(minValue);
+      ((Spinner)control).setMaximum(maxValue);
 	}
 	
 	/**
@@ -143,7 +110,7 @@ public class LabeledSpinner extends Composite
 	 */
 	public void setSelection(int value)
 	{
-	   spinner.setSelection(value);
+	   ((Spinner)control).setSelection(value);
 	}
 	
 	/**
@@ -153,7 +120,7 @@ public class LabeledSpinner extends Composite
 	 */
 	public int getSelection()
 	{
-	   return spinner.getSelection();
+	   return ((Spinner)control).getSelection();
 	}
 	
 	/**
@@ -163,36 +130,6 @@ public class LabeledSpinner extends Composite
 	 */
 	public Spinner getSpinnerControl()
 	{
-		return spinner;
+		return (Spinner)control;
 	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
-	 */
-	@Override
-	public void setEnabled(boolean enabled)
-	{
-		super.setEnabled(enabled);
-		spinner.setEnabled(enabled);
-		label.setEnabled(enabled);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#setFocus()
-	 */
-	@Override
-	public boolean setFocus()
-	{
-		return spinner.setFocus();
-	}
-
-   /* (non-Javadoc)
-    * @see org.eclipse.swt.widgets.Control#setBackground(org.eclipse.swt.graphics.Color)
-    */
-   @Override
-   public void setBackground(Color color)
-   {
-      super.setBackground(color);
-      label.setBackground(color);
-   }
 }

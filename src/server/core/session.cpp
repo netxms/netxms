@@ -92,15 +92,6 @@ typedef struct
 } PROCTHREAD_START_DATA;
 
 /**
- * Object tool acl entry
- */
-typedef struct
-{
-   UINT32 dwToolId;
-   UINT32 dwUserId;
-} OBJECT_TOOL_ACL;
-
-/**
  *
  */
 typedef struct
@@ -1049,13 +1040,13 @@ void ClientSession::processingThread()
             CALL_IN_NEW_THREAD(executeAction, pMsg);
             break;
          case CMD_GET_OBJECT_TOOLS:
-            sendObjectTools(pMsg->getId());
+            getObjectTools(pMsg->getId());
             break;
          case CMD_EXEC_TABLE_TOOL:
             execTableTool(pMsg);
             break;
          case CMD_GET_OBJECT_TOOL_DETAILS:
-            sendObjectToolDetails(pMsg);
+            getObjectToolDetails(pMsg);
             break;
          case CMD_UPDATE_OBJECT_TOOL:
             updateObjectTool(pMsg);
@@ -7540,299 +7531,36 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
 /**
  * Send tool list to client
  */
-void ClientSession::sendObjectTools(UINT32 dwRqId)
+void ClientSession::getObjectTools(UINT32 requestId)
 {
    NXCPMessage msg;
-   DB_RESULT hResult;
-   UINT32 i, j, dwAclSize, dwNumTools, dwNumMsgRec, dwToolId, dwId;
-   OBJECT_TOOL_ACL *pAccessList;
-   TCHAR *pszStr, szBuffer[MAX_DB_STRING];
-
-   // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
+   msg.setId(requestId);
 
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   hResult = DBSelect(hdb, _T("SELECT tool_id,user_id FROM object_tools_acl"));
-   if (hResult != NULL)
-   {
-      dwAclSize = DBGetNumRows(hResult);
-      pAccessList = (OBJECT_TOOL_ACL *)malloc(sizeof(OBJECT_TOOL_ACL) * dwAclSize);
-      for(i = 0; i < dwAclSize; i++)
-      {
-         pAccessList[i].dwToolId = DBGetFieldULong(hResult, i, 0);
-         pAccessList[i].dwUserId = DBGetFieldULong(hResult, i, 1);
-      }
-      DBFreeResult(hResult);
+   msg.setField(VID_RCC, GetObjectToolsIntoMessage(&msg, m_dwUserId, checkSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS)));
 
-      hResult = DBSelect(hdb, _T("SELECT tool_id,tool_name,tool_type,tool_data,flags,description,tool_filter,confirmation_text,command_name,command_short_name,icon FROM object_tools"));
-      if (hResult != NULL)
-      {
-         dwNumTools = DBGetNumRows(hResult);
-         for(i = 0, dwId = VID_OBJECT_TOOLS_BASE, dwNumMsgRec = 0; i < dwNumTools; i++)
-         {
-            dwToolId = DBGetFieldULong(hResult, i, 0);
-            if ((m_dwUserId != 0) && (!(m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)))
-            {
-               for(j = 0; j < dwAclSize; j++)
-               {
-                  if (pAccessList[j].dwToolId == dwToolId)
-                  {
-                     if ((pAccessList[j].dwUserId == m_dwUserId) ||
-                         (pAccessList[j].dwUserId == GROUP_EVERYONE))
-                        break;
-                     if (pAccessList[j].dwUserId & GROUP_FLAG)
-                        if (CheckUserMembership(m_dwUserId, pAccessList[j].dwUserId))
-                           break;
-                  }
-               }
-            }
-
-            if ((m_dwUserId == 0) ||
-                (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS) ||
-                (j < dwAclSize))   // User has access to this tool
-            {
-               msg.setField(dwId, dwToolId);
-
-               // name
-               DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING);
-               msg.setField(dwId + 1, szBuffer);
-
-               msg.setField(dwId + 2, (WORD)DBGetFieldLong(hResult, i, 2));
-
-               // data
-               pszStr = DBGetField(hResult, i, 3, NULL, 0);
-               msg.setField(dwId + 3, pszStr);
-               free(pszStr);
-
-               msg.setField(dwId + 4, DBGetFieldULong(hResult, i, 4));
-
-               // description
-               DBGetField(hResult, i, 5, szBuffer, MAX_DB_STRING);
-               msg.setField(dwId + 5, szBuffer);
-
-               // matching OID
-               DBGetField(hResult, i, 6, szBuffer, MAX_DB_STRING);
-               msg.setField(dwId + 6, szBuffer);
-
-               // confirmation text
-               DBGetField(hResult, i, 7, szBuffer, MAX_DB_STRING);
-               msg.setField(dwId + 7, szBuffer);
-
-               // command name
-               DBGetField(hResult, i, 8, szBuffer, MAX_DB_STRING);
-               msg.setField(dwId + 8, szBuffer);
-
-               // command short name
-               DBGetField(hResult, i, 9, szBuffer, MAX_DB_STRING);
-               msg.setField(dwId + 9, szBuffer);
-
-               // icon
-               TCHAR *imageDataHex = DBGetField(hResult, i, 10, NULL, 0);
-               if (imageDataHex != NULL)
-               {
-                  size_t size = _tcslen(imageDataHex) / 2;
-                  BYTE *imageData = (BYTE *)malloc(size);
-                  size_t bytes = StrToBin(imageDataHex, imageData, size);
-                  msg.setField(dwId + 10, imageData, (UINT32)bytes);
-                  free(imageData);
-                  free(imageDataHex);
-               }
-               else
-               {
-                  msg.setField(dwId + 10, (BYTE *)NULL, 0);
-               }
-
-               dwNumMsgRec++;
-               dwId += 100;
-            }
-         }
-         msg.setField(VID_NUM_TOOLS, dwNumMsgRec);
-
-         DBFreeResult(hResult);
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
-      }
-
-      free(pAccessList);
-   }
-   else
-   {
-      msg.setField(VID_RCC, RCC_DB_FAILURE);
-   }
-   DBConnectionPoolReleaseConnection(hdb);
-
-   // Send response
    sendMessage(&msg);
 }
 
 /**
  * Send tool list to client
  */
-void ClientSession::sendObjectToolDetails(NXCPMessage *pRequest)
+void ClientSession::getObjectToolDetails(NXCPMessage *request)
 {
    NXCPMessage msg;
-   DB_RESULT hResult;
-   UINT32 dwToolId, dwId, *pdwAcl;
-   TCHAR *pszStr, szBuffer[MAX_DB_STRING];
-   int i, iNumRows, nType;
-
-   // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   msg.setId(request->getId());
 
-   if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_TOOLS)
+   if (checkSysAccessRights(SYSTEM_ACCESS_MANAGE_TOOLS))
    {
-
-      dwToolId = pRequest->getFieldAsUInt32(VID_TOOL_ID);
-      DB_STATEMENT statment = DBPrepare(hdb, _T("SELECT tool_name,tool_type,tool_data,description,flags,tool_filter,confirmation_text,command_name,command_short_name,icon FROM object_tools WHERE tool_id=?"));
-      if (statment == NULL)
-         goto failure;
-      DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
-
-      hResult = DBSelectPrepared(statment);
-      if (hResult != NULL)
-      {
-         if (DBGetNumRows(hResult) > 0)
-         {
-				msg.setField(VID_TOOL_ID, dwToolId);
-
-            DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING);
-            msg.setField(VID_NAME, szBuffer);
-
-            nType = DBGetFieldLong(hResult, 0, 1);
-            msg.setField(VID_TOOL_TYPE, (WORD)nType);
-
-            pszStr = DBGetField(hResult, 0, 2, NULL, 0);
-            msg.setField(VID_TOOL_DATA, pszStr);
-            free(pszStr);
-
-            DBGetField(hResult, 0, 3, szBuffer, MAX_DB_STRING);
-            msg.setField(VID_DESCRIPTION, szBuffer);
-
-            msg.setField(VID_FLAGS, DBGetFieldULong(hResult, 0, 4));
-
-            DBGetField(hResult, 0, 5, szBuffer, MAX_DB_STRING);
-            msg.setField(VID_TOOL_FILTER, szBuffer);
-
-            DBGetField(hResult, 0, 6, szBuffer, MAX_DB_STRING);
-            msg.setField(VID_CONFIRMATION_TEXT, szBuffer);
-
-            DBGetField(hResult, 0, 7, szBuffer, MAX_DB_STRING);
-            msg.setField(VID_COMMAND_NAME, szBuffer);
-
-            DBGetField(hResult, 0, 8, szBuffer, MAX_DB_STRING);
-            msg.setField(VID_COMMAND_SHORT_NAME, szBuffer);
-
-            // icon
-            TCHAR *imageDataHex = DBGetField(hResult, 0, 9, NULL, 0);
-            if (imageDataHex != NULL)
-            {
-               size_t size = _tcslen(imageDataHex) / 2;
-               BYTE *imageData = (BYTE *)malloc(size);
-               size_t bytes = StrToBin(imageDataHex, imageData, size);
-               msg.setField(VID_IMAGE_DATA, imageData, (UINT32)bytes);
-               free(imageData);
-               free(imageDataHex);
-            }
-            else
-            {
-               msg.setField(VID_IMAGE_DATA, (BYTE *)NULL, 0);
-            }
-
-            DBFreeResult(hResult);
-
-            // Access list
-            DBFreeStatement(statment);
-            statment = DBPrepare(hdb, _T("SELECT user_id FROM object_tools_acl WHERE tool_id=?"));
-            if (statment == NULL)
-               goto failure;
-            DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
-
-            hResult = DBSelectPrepared(statment);
-            if (hResult != NULL)
-            {
-               iNumRows = DBGetNumRows(hResult);
-               msg.setField(VID_ACL_SIZE, (UINT32)iNumRows);
-               if (iNumRows > 0)
-               {
-                  pdwAcl = (UINT32 *)malloc(sizeof(UINT32) * iNumRows);
-                  for(i = 0; i < iNumRows; i++)
-                     pdwAcl[i] = DBGetFieldULong(hResult, i, 0);
-                  msg.setFieldFromInt32Array(VID_ACL, iNumRows, pdwAcl);
-                  free(pdwAcl);
-               }
-               DBFreeResult(hResult);
-
-               // Column information for table tools
-               if ((nType == TOOL_TYPE_TABLE_SNMP) || (nType == TOOL_TYPE_TABLE_AGENT))
-               {
-                  DBFreeStatement(statment);
-                  statment = DBPrepare(hdb, _T("SELECT col_name,col_oid,col_format,col_substr ")
-                                                          _T("FROM object_tools_table_columns WHERE tool_id=? ")
-                                                          _T("ORDER BY col_number"));
-                  if (statment == NULL)
-                     goto failure;
-                  DBBind(statment, 1, DB_SQLTYPE_INTEGER, dwToolId);
-
-                  hResult = DBSelectPrepared(statment);
-                  if (hResult != NULL)
-                  {
-                     iNumRows = DBGetNumRows(hResult);
-                     msg.setField(VID_NUM_COLUMNS, (WORD)iNumRows);
-                     for(i = 0, dwId = VID_COLUMN_INFO_BASE; i < iNumRows; i++)
-                     {
-                        DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING);
-                        msg.setField(dwId++, szBuffer);
-                        msg.setField(dwId++, DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING));
-                        msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, i, 2));
-                        msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, i, 3));
-                     }
-                     DBFreeResult(hResult);
-                     msg.setField(VID_RCC, RCC_SUCCESS);
-                  }
-                  else
-                  {
-                     msg.deleteAllFields();
-                     msg.setField(VID_RCC, RCC_DB_FAILURE);
-                  }
-               }
-            }
-            else
-            {
-               msg.deleteAllFields();
-               msg.setField(VID_RCC, RCC_DB_FAILURE);
-            }
-         }
-         else
-         {
-            DBFreeResult(hResult);
-            msg.setField(VID_RCC, RCC_INVALID_TOOL_ID);
-         }
-      }
-      else
-      {
-         msg.setField(VID_RCC, RCC_DB_FAILURE);
-      }
-      DBFreeStatement(statment);
+      msg.setField(VID_RCC, GetObjectToolDetailsIntoMessage(request->getFieldAsUInt32(VID_TOOL_ID), &msg));
    }
    else
    {
-      // Current user has no rights for object tools management
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      WriteAuditLog(AUDIT_SYSCFG, FALSE, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on reading object tool details"));
    }
 
-   // Send response
-   DBConnectionPoolReleaseConnection(hdb);
-   sendMessage(&msg);
-   return;
-
-failure:
-   DBConnectionPoolReleaseConnection(hdb);
-   msg.setField(VID_RCC, RCC_DB_FAILURE);
    sendMessage(&msg);
    return;
 }

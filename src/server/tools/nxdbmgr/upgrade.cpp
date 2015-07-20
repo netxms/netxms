@@ -574,6 +574,24 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
                                     
 /**
+ * Upgrade from V360 to V361
+ */
+static BOOL H_UpgradeFromV360(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE object_tools_input_fields (")
+      _T("	tool_id integer not null,")
+      _T("   name varchar(31) not null,")
+      _T("   input_type char(1) not null,")
+      _T("   display_name varchar(127) null,")
+      _T("   config $SQL:TEXT null,")
+      _T("   PRIMARY KEY(tool_id,name))")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='361' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V359 to V360
  */
 static BOOL H_UpgradeFromV359(int currVersion, int newVersion)
@@ -8866,6 +8884,7 @@ static struct
    { 357, 358, H_UpgradeFromV357 },
    { 358, 359, H_UpgradeFromV358 },
    { 359, 360, H_UpgradeFromV359 },
+   { 360, 361, H_UpgradeFromV360 },
    { 0, 0, NULL }
 };
 

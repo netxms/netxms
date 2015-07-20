@@ -573,8 +573,8 @@ private:
    void getAgentConfig(NXCPMessage *pRequest);
    void updateAgentConfig(NXCPMessage *pRequest);
    void executeAction(NXCPMessage *pRequest);
-   void sendObjectTools(UINT32 dwRqId);
-   void sendObjectToolDetails(NXCPMessage *pRequest);
+   void getObjectTools(UINT32 requestId);
+   void getObjectToolDetails(NXCPMessage *request);
    void updateObjectTool(NXCPMessage *pRequest);
    void deleteObjectTool(NXCPMessage *pRequest);
    void changeObjectToolStatus(NXCPMessage *pRequest);
@@ -954,6 +954,8 @@ UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled);
 UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg);
 void CreateObjectToolExportRecord(String &xml, UINT32 id);
 bool ImportObjectTool(ConfigEntry *config);
+UINT32 GetObjectToolsIntoMessage(NXCPMessage *msg, UINT32 userId, bool fullAccess);
+UINT32 GetObjectToolDetailsIntoMessage(UINT32 toolId, NXCPMessage *msg);
 
 UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId);
 UINT32 DeleteSummaryTable(LONG tableId);

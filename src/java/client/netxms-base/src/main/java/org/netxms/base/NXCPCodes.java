@@ -855,6 +855,7 @@ public class NXCPCodes
    public static final long VID_DATE = 504;
    public static final long VID_RECONCILLATION = 505;
    public static final long VID_DISPLAY_MODE = 506;
+   public static final long VID_NUM_FIELDS = 507;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -900,6 +901,7 @@ public class NXCPCodes
 	public static final long VID_COLUMN_NAME_BASE = 0x10000000L;
 	public static final long VID_COLUMN_FMT_BASE = 0x20000000L;
 	public static final long VID_ROW_DATA_BASE = 0x30000000L;
+   public static final long VID_FIELD_LIST_BASE = 0x70000000L;
 	public static final long VID_LPP_RULE_BASE = 0x10000000L;
 	public static final long VID_LPP_LIST_BASE = 0x10000000L;
 	public static final long VID_LPPGROUP_LIST_BASE = 0x20000000L;

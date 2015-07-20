@@ -33,7 +33,7 @@ public final class ProtocolVersion
    public static final int PUSH = 1;
    public static final int TRAP = 1;
    public static final int MOBILE = 1;
-   public static final int FULL = 1;
+   public static final int FULL = 2;
    
    // Indexes
    public static final int INDEX_BASE = 0;

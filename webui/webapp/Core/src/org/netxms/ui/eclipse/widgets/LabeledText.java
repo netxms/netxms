@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,33 +19,23 @@
 package org.netxms.ui.eclipse.widgets;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.FormToolkit;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Composite widget - text with label
  */
-public class LabeledText extends Composite
+public class LabeledText extends LabeledControl
 {
-	private Label label;
-	private Text text;
-	private FormToolkit toolkit;
-	
 	/**
 	 * @param parent
 	 * @param style
 	 */
 	public LabeledText(Composite parent, int style)
 	{
-		super(parent, style | SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
-		toolkit = null;
-		createContent(SWT.SINGLE | SWT.BORDER);
+		super(parent, style);
 	}
 
 	/**
@@ -55,9 +45,7 @@ public class LabeledText extends Composite
 	 */
 	public LabeledText(Composite parent, int style, int textStyle)
 	{
-		super(parent, style | SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
-		toolkit = null;
-		createContent(textStyle);
+		super(parent, style, textStyle);
 	}
 	
 	/**
@@ -68,145 +56,81 @@ public class LabeledText extends Composite
 	 */
 	public LabeledText(Composite parent, int style, int textStyle, FormToolkit toolkit)
 	{
-		super(parent, style | SWT.NO_FOCUS);  // SWT.NO_FOCUS is a workaround for Eclipse/RAP bug 321274
-		this.toolkit = toolkit;
-		createContent(textStyle);
-      toolkit.adapt(this);
+		super(parent, style, textStyle, toolkit);
 	}
 	
-	/**
-	 * Do widget creation.
-	 * 
-	 * @param textStyle
-	 */
-	private void createContent(int textStyle)
-	{
-		GridLayout layout = new GridLayout();
-		layout.verticalSpacing = WidgetHelper.INNER_SPACING;
-		layout.marginTop = 0;
-		layout.marginBottom = 0;
-		layout.marginWidth = 0;
-		layout.marginHeight = 0;
-		setLayout(layout);
-		
-		label = (toolkit != null) ? toolkit.createLabel(this, "") : new Label(this, SWT.NONE); //$NON-NLS-1$
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		label.setLayoutData(gd);
-		
-		text = (toolkit != null) ? toolkit.createText(this, "", textStyle) : new Text(this, textStyle); //$NON-NLS-1$
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		if ((textStyle & SWT.MULTI) != 0)
-		{
-			gd.verticalAlignment = SWT.FILL;
-			gd.grabExcessVerticalSpace = true;
-		}
-		else
-		{
-			gd.verticalAlignment = SWT.TOP;
-		}
-		text.setLayoutData(gd);
-	}
-	
-	/**
-	 * Set label
-	 * 
-	 * @param newLabel New label
-	 */
-	public void setLabel(final String newLabel)
-	{
-		label.setText(newLabel);
-	}
-	
-	/**
-	 * Get label
-	 * 
-	 * @return Current label
-	 */
-	public String getLabel()
-	{
-		return label.getText();
-	}
-	
-	/**
-	 * Set text
-	 * 
-	 * @param newText
-	 */
-	public void setText(final String newText)
-	{
-		text.setText((newText != null) ? newText : ""); //$NON-NLS-1$
-	}
-
-	/**
-	 * Get text
-	 * 
-	 * @return Text
-	 */
-	public String getText()
-	{
-		return text.getText();
-	}
-	
-	/**
-	 * Get text control
-	 * 
-	 * @return text control
-	 */
-	public Text getTextControl()
-	{
-		return text;
-	}
-
 	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Control#setEnabled(boolean)
+    * @see org.netxms.ui.eclipse.widgets.LabeledControl#createControl(int)
 	 */
-	@Override
-	public void setEnabled(boolean enabled)
-	{
-		super.setEnabled(enabled);
-		text.setEnabled(enabled);
-		label.setEnabled(enabled);
+   @Override
+   protected Control createControl(int controlStyle)
+		{
+      return (toolkit != null) ? toolkit.createText(this, "", controlStyle) : new Text(this, controlStyle); //$NON-NLS-1$;
 	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.swt.widgets.Composite#setFocus()
+	
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.widgets.LabeledControl#getDefaultControlStyle()
 	 */
-	@Override
-	public boolean setFocus()
+   @Override
+   protected int getDefaultControlStyle()
 	{
-		return text.setFocus();
+      return SWT.BORDER | SWT.SINGLE;
+	}
+	
+	/* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.widgets.LabeledControl#isExtraVerticalSpaceNeeded(int)
+	 */
+   @Override
+   protected boolean isExtraVerticalSpaceNeeded(int controlStyle)
+	{
+      return (controlStyle & SWT.MULTI) != 0;
 	}
 	
 	/**
     * Sets the editable state.
-    * 
+	 * 
     * @param editable the new editable state
-    */
-	public void setEditable(boolean editable)
+	 */
+   public void setEditable(boolean editable)
 	{
-		text.setEditable(editable);
-	}
-   
-   /**
-    * Returns the editable state.
-    * 
-    * @return whether or not the receiver is editable
-    */
-	public boolean getEditable()
-	{
-	   return text.getEditable();
+      ((Text)control).setEditable(editable);
 	}
 
-   /* (non-Javadoc)
-    * @see org.eclipse.swt.widgets.Control#setBackground(org.eclipse.swt.graphics.Color)
+	/**
+    * Returns the editable state.
+	 * 
+    * @return whether or not the receiver is editable
+	 */
+   public boolean getEditable()
+	{
+      return ((Text)control).getEditable();
+	}
+
+	/* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.widgets.LabeledControl#setText(java.lang.String)
+	 */
+	@Override
+	public void setText(final String newText)
+	{
+      ((Text)control).setText((newText != null) ? newText : ""); //$NON-NLS-1$
+	}
+
+	/* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.widgets.LabeledControl#getText()
+	 */
+	@Override
+	public String getText()
+	{
+		return ((Text)control).getText();
+	}
+	
+	/**
+	 * Get text control
+    * 
+	 * @return text control
     */
-   @Override
-   public void setBackground(Color color)
+	public Text getTextControl()
    {
-      super.setBackground(color);
-      label.setBackground(color);
+		return (Text)control;
    }
 }

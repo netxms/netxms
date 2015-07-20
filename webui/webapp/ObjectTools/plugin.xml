@@ -183,6 +183,16 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.objecttools.propertypages.InputFields"
+            id="org.netxms.ui.eclipse.objecttools.propertypages.InputFields#5"
+            name="%page.name.InputFields">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objecttools.ObjectTool">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
