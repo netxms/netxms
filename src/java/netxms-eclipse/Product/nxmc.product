@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="%product.name" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="2.0.0.M5" useFeatures="false" includeLaunchers="true">
+<product name="%product.name" uid="org.netxms.ui.eclipse.console.product" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="2.0.0.M5" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
-      <image path="/Core/icons/launcher/128x128.png"/>
+      <image path="../Core/icons/launcher/128x128.png"/>
       <text>
          NetXMS Management Console
 
@@ -22,16 +22,17 @@ Copyright (c) 2003-2015 Raden Solutions
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
-   <windowImages i16="/Core/icons/launcher/16x16.png" i32="/Core/icons/launcher/32x32.png" i48="/Core/icons/launcher/48x48.png" i64="/Core/icons/launcher/64x64.png" i128="/Core/icons/launcher/128x128.png"/>
+   <windowImages i16="../Core/icons/launcher/16x16.png" i32="../Core/icons/launcher/32x32.png" i48="../Core/icons/launcher/48x48.png" i64="../Core/icons/launcher/64x64.png" i128="../Core/icons/launcher/128x128.png"/>
 
    <splash
+      location="org.netxms.ui.eclipse.console"
       startupMessageRect="7,275,441,18"
       startupForegroundColor="410B73" />
    <launcher name="nxmc">
-      <macosx icon="/Core/icons/launcher/nxmc.icns"/>
+      <macosx icon="../Core/icons/launcher/nxmc.icns"/>
       <solaris/>
       <win useIco="true">
-         <ico path="/Core/icons/launcher/nxmc.ico"/>
+         <ico path="../Core/icons/launcher/nxmc.ico"/>
          <bmp/>
       </win>
    </launcher>
@@ -237,7 +238,6 @@ Copyright (c) 2003-2015 Raden Solutions
       <plugin id="org.eclipse.osgi.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.osgi.nl_zh_TW" fragment="true"/>
       <plugin id="org.eclipse.swt"/>
-      <plugin id="org.eclipse.swt.carbon.macosx" fragment="true"/>
       <plugin id="org.eclipse.swt.cocoa.macosx" fragment="true"/>
       <plugin id="org.eclipse.swt.cocoa.macosx.x86_64" fragment="true"/>
       <plugin id="org.eclipse.swt.gtk.aix.ppc" fragment="true"/>
@@ -273,7 +273,6 @@ Copyright (c) 2003-2015 Raden Solutions
       <plugin id="org.eclipse.text.nl_zh_TW" fragment="true"/>
       <plugin id="org.eclipse.tm.terminal"/>
       <plugin id="org.eclipse.ui"/>
-      <plugin id="org.eclipse.ui.carbon" fragment="true"/>
       <plugin id="org.eclipse.ui.cocoa" fragment="true"/>
       <plugin id="org.eclipse.ui.console"/>
       <plugin id="org.eclipse.ui.console.nl_cs" fragment="true"/>
@@ -356,5 +355,9 @@ Copyright (c) 2003-2015 Raden Solutions
       <plugin id="org.swtchart"/>
    </plugins>
 
+   <configurations>
+      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="4" />
+      <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
+   </configurations>
 
 </product>
