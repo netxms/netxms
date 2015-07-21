@@ -476,7 +476,7 @@ LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
    if (!ThreadPoolGetInfo(poolName, &info))
       return SYSINFO_RC_UNSUPPORTED;
 
-   switch(CAST_FROM_POINTER(arg, ThreadPoolStat))
+   switch(CAST_FROM_POINTER(arg, int))
    {
       case THREAD_POOL_CURR_SIZE:
          ret_int(value, info.curThreads);
