@@ -53,11 +53,10 @@
   <repositories>
         
         <repository>
-          <id>orbit</id>
+          <id>orbit1</id>
           <layout>p2</layout>
-          <url>http://download.eclipse.org/tools/orbit/downloads/drops/R20140525021250/repository/</url>
+          <url>http://download.eclipse.org/tools/orbit/downloads/drops/R20150519210750/repository/</url>
         </repository>
-
         <repository>
             <id>emf</id>
             <url>http://download.eclipse.org/releases/luna</url>
@@ -67,9 +66,9 @@
             <id>Birt</id>
             <url>http://download.eclipse.org/releases/indigo/</url>
             <layout>p2</layout>
-        </repository> <!-- -->
+        </repository>
         <repository>  
-            <id>rap-3.0</id>
+            <id>rap-2.3</id>
             <url>http://download.eclipse.org/rt/rap/2.3</url>
             <layout>p2</layout>
         </repository>
@@ -91,14 +90,14 @@
         
         <repository>
             <id>additionalPackage</id>
-            <url>http://download.eclipse.org/rt/rap/tools/3.0</url>
+            <url>http://download.eclipse.org/rt/rap/tools/2.3</url>
             <layout>p2</layout>
         </repository> 
         <repository>
             <id>warProducts</id>
             <url>http://download.eclipse.org/libra/releases</url>
             <layout>p2</layout>
-        </repository> <!-- -->
+        </repository> 
     </repositories> 
 
 
@@ -112,7 +111,7 @@
         <extensions>true</extensions>
       </plugin>
 
-     <!-- <plugin>
+     <plugin>
         <groupId>${tycho.groupid}</groupId>
         <artifactId>tycho-compiler-plugin</artifactId>
         <version>${tycho.version}</version>
@@ -126,10 +125,9 @@
         <artifactId>target-platform-configuration</artifactId>
         <version>${tycho.version}</version>
         <configuration>
-          <resolver>p2</resolver> -->
-		 <!-- <ignoreTychoRepositories>true</ignoreTychoRepositories> -->
-       <!-- </configuration>
-      </plugin> -->
+          <resolver>p2</resolver> 
+       </configuration>
+      </plugin> 
 
     </plugins>
   </build>
