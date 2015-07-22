@@ -7,6 +7,8 @@
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <modules>
+    <module>../../src/java/client</module>
+   <!-- <module>../../src/java/nebula/org.netxms.nebula.widgets.gallery</module> -->
     <module>ActionManager</module>
     <module>AgentManager</module>
     <module>AlarmViewer</module>
@@ -19,7 +21,6 @@
     <module>FileManager</module>
     <module>ImageLibrary</module>
     <module>LogViewer</module>
-    <module>Mobile</module>
     <module>NXSL</module>
     <module>NetworkMaps</module>
     <module>OSM</module>
@@ -42,14 +43,94 @@
     <module>nebula/org.netxms.nebula.widgets.gallery</module>
     <module>swtchart</module>
   </modules>
+
+    <properties>
+        <tycho.version>0.23.0</tycho.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
+	    <tycho.groupid>org.eclipse.tycho</tycho.groupid>
+    </properties>
+
+  <repositories>
+        
+        <repository>
+          <id>orbit</id>
+          <layout>p2</layout>
+          <url>http://download.eclipse.org/tools/orbit/downloads/drops/R20140525021250/repository/</url>
+        </repository>
+
+        <repository>
+            <id>emf</id>
+            <url>http://download.eclipse.org/releases/luna</url>
+            <layout>p2</layout>
+        </repository>
+        <repository>
+            <id>Birt</id>
+            <url>http://download.eclipse.org/releases/indigo/</url>
+            <layout>p2</layout>
+        </repository> <!-- -->
+        <repository>  
+            <id>rap-3.0</id>
+            <url>http://download.eclipse.org/rt/rap/2.3</url>
+            <layout>p2</layout>
+        </repository>
+        <repository>
+            <id>Rap-ClientScripting-RichText</id>
+            <url>http://download.eclipse.org/rt/rap/incubator/nightly</url>
+            <layout>p2</layout>
+        </repository>
+        <repository>
+            <id>zest</id>
+            <url>http://www.netxms.org/eclipse/zest-rap</url>
+            <layout>p2</layout>
+        </repository>
+        <repository>
+            <id>Babel Language Pack</id>
+            <url>http://archive.eclipse.org/technology/babel/update-site/R0.12.1/luna</url>
+            <layout>p2</layout>
+        </repository>  
+        
+        <repository>
+            <id>additionalPackage</id>
+            <url>http://download.eclipse.org/rt/rap/tools/3.0</url>
+            <layout>p2</layout>
+        </repository> 
+        <repository>
+            <id>warProducts</id>
+            <url>http://download.eclipse.org/libra/releases</url>
+            <layout>p2</layout>
+        </repository> <!-- -->
+    </repositories> 
+
+
   <build>
     <plugins>
+
       <plugin>
-        <groupId>org.eclipse.tycho</groupId>
+        <groupId>${tycho.groupid}</groupId>
         <artifactId>tycho-maven-plugin</artifactId>
-        <version>0.23.0</version>
+        <version>${tycho.version}</version>
         <extensions>true</extensions>
       </plugin>
+
+     <!-- <plugin>
+        <groupId>${tycho.groupid}</groupId>
+        <artifactId>tycho-compiler-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <encoding>${project.build.sourceEncoding}</encoding>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>${tycho.groupid}</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <resolver>p2</resolver> -->
+		 <!-- <ignoreTychoRepositories>true</ignoreTychoRepositories> -->
+       <!-- </configuration>
+      </plugin> -->
+
     </plugins>
   </build>
 </project>
