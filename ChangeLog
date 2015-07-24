@@ -8,11 +8,12 @@
 - Fixed multiple issues with agent side data caching
 - Hash maps implemented in NXSL
 - New OS parameters and tables: System.HandleCount, System.OpenFiles, Process.Handles
+- Unified macros in all types of object tools
 - Management console:
 	- Default object display mode can be set in map properties
 	- Map drill-down can be enabled in dashboard map elements
 	- Input fields in object tools
-- Fixed issues: #829, #830, #836, #843, #844, #845, #846, #848, #850, #855
+- Fixed issues: #829, #830, #836, #840, #843, #844, #845, #846, #848, #850, #855
 
 
 *

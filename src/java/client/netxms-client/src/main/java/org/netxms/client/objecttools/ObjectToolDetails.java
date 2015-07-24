@@ -208,6 +208,7 @@ public class ObjectToolDetails extends ObjectTool
 	public void addInputField(InputField f)
 	{
 	   inputFields.put(f.getName(), f);
+      modified = true;
 	}
 	
 	/**
@@ -220,6 +221,7 @@ public class ObjectToolDetails extends ObjectTool
 	   inputFields.clear();
 	   for(InputField f : fields)
 	      inputFields.put(f.getName(), f);
+      modified = true;
 	}
 
 	/**
