@@ -55,14 +55,14 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="org.netxms.ui.eclipse.console.application"
-            name="%product.name">
+            name="NetXMS Management Console for IST/Switch">
          <property
                name="appName"
-               value="%product.name">
+               value="NetXMS Management Console for IST/Switch">
          </property>
          <property
                name="aboutText"
-               value="NetXMS Management Console&#x0A;&#x0A;Version 2.0-M5&#x0A;Copyright (c) 2003-2015 Raden Solutions">
+               value="NetXMS Management Console for ATM&#x0A;&#x0A;Version 2.0-M1&#x0A;Copyright (c) 2003-2015 Raden Solutions">
          </property>
          <property
                name="startupForegroundColor"
@@ -78,11 +78,15 @@
          </property>
          <property
                name="aboutImage"
-               value="icons/launcher/128x128.png">
+               value="/nxmc-core/icons/launcher/128x128.png">
          </property>
          <property
                name="windowImages"
                value="icons/launcher/16x16.png,icons/launcher/32x32.png,icons/launcher/48x48.png,icons/launcher/64x64.png,icons/launcher/128x128.png">
+         </property>
+         <property
+               name="startupProgressRect"
+               value="500,284,455,10">
          </property>
       </product>
    </extension>

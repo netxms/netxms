@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,13 +65,23 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).isManagementServer()))
 		{
-			list.add(new AgentParameter("Server.AverageConfigurationPollerQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgConfPollerQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
 			list.add(new AgentParameter("Server.AverageDBWriterQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDBWriterQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageDBWriterQueueSize.IData", "Database writer's request queue (DCI data) for last minute", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageDBWriterQueueSize.Other", "Database writer's request queue (other queries) for last minute", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.AverageDBWriterQueueSize.RawData", "Database writer's request queue (raw DCI data) for last minute", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
 			list.add(new AgentParameter("Server.AverageDCIQueuingTime", Messages.get().SelectInternalParamDlg_DCI_AvgDCIQueueTime, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
 			list.add(new AgentParameter("Server.AverageDCPollerQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDCQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
-			list.add(new AgentParameter("Server.AverageStatusPollerQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgStatusPollerQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AverageSyslogProcessingQueueSize", Messages.get().SelectInternalParamDlg_SyslogProcessingQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AverageSyslogWriterQueueSize", Messages.get().SelectInternalParamDlg_SyslogWriterQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.ActiveRequests(*)", "Thread pool {instance}: active requests", DataCollectionItem.DT_INT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.CurrSize(*)", "Thread pool {instance}: current size", DataCollectionItem.DT_INT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.Load(*)", "Thread pool {instance}: current load", DataCollectionItem.DT_INT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.LoadAverage(*)", "Thread pool {instance}: load average (1 minute)", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.LoadAverage5(*)", "Thread pool {instance}: load average (5 minutes)", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.LoadAverage15(*)", "Thread pool {instance}: load average (15 minutes)", DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.MaxSize(*)", "Thread pool {instance}: maximum size", DataCollectionItem.DT_INT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.MinSize(*)", "Thread pool {instance}: minimum size", DataCollectionItem.DT_INT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ThreadPool.Usage(*)", "Thread pool {instance}: usage", DataCollectionItem.DT_INT)); //$NON-NLS-1$
 			list.add(new AgentParameter("Server.TotalEventsProcessed", Messages.get().SelectInternalParamDlg_DCI_TotalEventsProcessed, DataCollectionItem.DT_UINT)); //$NON-NLS-1$
 		}
 

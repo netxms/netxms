@@ -4051,11 +4051,7 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
    }
    else if (m_dwFlags & NF_IS_LOCAL_MGMT)
    {
-      if (!_tcsicmp(param, _T("Server.AverageDCPollerQueueSize")))
-      {
-         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgPollerQueueSize);
-      }
-      else if (!_tcsicmp(param, _T("Server.AverageDBWriterQueueSize")))
+      if (!_tcsicmp(param, _T("Server.AverageDBWriterQueueSize")))
       {
          _sntprintf(buffer, bufSize, _T("%f"), g_dAvgDBAndIDataWriterQueueSize);
       }
@@ -4074,6 +4070,10 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
       else if (!_tcsicmp(param, _T("Server.AverageDCIQueuingTime")))
       {
          _sntprintf(buffer, bufSize, _T("%u"), g_dwAvgDCIQueuingTime);
+      }
+      else if (!_tcsicmp(param, _T("Server.AverageDCPollerQueueSize")))
+      {
+         _sntprintf(buffer, bufSize, _T("%f"), g_dAvgPollerQueueSize);
       }
       else if (!_tcsicmp(param, _T("Server.AverageSyslogProcessingQueueSize")))
       {
