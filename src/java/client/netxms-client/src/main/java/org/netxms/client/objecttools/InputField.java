@@ -13,7 +13,7 @@ public class InputField
    private String name;
    private InputFieldType type;
    private String displayName;
-   private String config;
+   private InputFieldOptions options;
    
    /**
     * Create text input field with default settings
@@ -25,7 +25,7 @@ public class InputField
       this.name = name;
       this.type = InputFieldType.TEXT;
       this.displayName = name;
-      this.config = null;
+      this.options = new InputFieldOptions();
    }
 
    /**
@@ -41,7 +41,7 @@ public class InputField
       this.name = name;
       this.type = type;
       this.displayName = displayName;
-      this.config = config;
+      this.options = InputFieldOptions.createFromXml(config);
    }
    
    /**
@@ -54,7 +54,7 @@ public class InputField
       this.name = src.name;
       this.type = src.type;
       this.displayName = src.displayName;
-      this.config = src.config;
+      this.options = new InputFieldOptions(src.options);
    }
 
    /**
@@ -68,7 +68,7 @@ public class InputField
       name = msg.getFieldAsString(baseId);
       type = InputFieldType.getByValue(msg.getFieldAsInt32(baseId + 1));
       displayName = msg.getFieldAsString(baseId + 2);
-      config = msg.getFieldAsString(baseId + 3);
+      options = InputFieldOptions.createFromXml(msg.getFieldAsString(baseId + 3));
    }
    
    /**
@@ -82,7 +82,7 @@ public class InputField
       msg.setField(baseId, name);
       msg.setFieldInt16(baseId + 1, type.getValue());
       msg.setField(baseId + 2, displayName);
-      msg.setField(baseId + 3, config);
+      msg.setField(baseId + 3, options.createXml());
    }
 
    /**
@@ -118,19 +118,19 @@ public class InputField
    }
 
    /**
-    * @return the config
+    * @return the options
     */
-   public String getConfig()
+   public InputFieldOptions getOptions()
    {
-      return config;
+      return options;
    }
 
    /**
-    * @param config the config to set
+    * @param options the options to set
     */
-   public void setConfig(String config)
+   public void setOptions(InputFieldOptions options)
    {
-      this.config = config;
+      this.options = options;
    }
 
    /**

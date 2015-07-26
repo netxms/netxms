@@ -36,6 +36,7 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.AgentFile;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.InputField;
+import org.netxms.client.objecttools.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -127,8 +128,8 @@ public final class ObjectToolExecutor
             return;
       }
       
-      Map<String, String> inputValues;
-      InputField[] fields = tool.getInputFields();
+      final Map<String, String> inputValues;
+      final InputField[] fields = tool.getInputFields();
       if (fields.length > 0)
       {
          Arrays.sort(fields, new Comparator<InputField>() {
@@ -147,8 +148,65 @@ public final class ObjectToolExecutor
          inputValues = new HashMap<String, String>(0);
       }
       
-      for(NodeInfo n : nodes)
-         executeOnNode(n, tool, inputValues);
+      // Check if password validation needed
+      boolean validationNeeded = false;
+      for(int i = 0; i < fields.length; i++)
+         if (fields[i].getOptions().validatePassword)
+         {
+            validationNeeded = true;
+            break;
+         }
+      
+      if (validationNeeded)
+      {
+         final NXCSession session = ConsoleSharedData.getSession();
+         new ConsoleJob("Validate passwords", null, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               for(int i = 0; i < fields.length; i++)
+               {
+                  if ((fields[i].getType() == InputFieldType.PASSWORD) && (fields[i].getOptions().validatePassword))
+                  {
+                     boolean valid = session.validateUserPassword(inputValues.get(fields[i].getName()));
+                     if (!valid)
+                     {
+                        final String fieldName = fields[i].getDisplayName();
+                        getDisplay().syncExec(new Runnable() {
+                           @Override
+                           public void run()
+                           {
+                              MessageDialogHelper.openError(null, "Password Validation Failed", 
+                                    String.format("Password entered in input field \"%s\" is not valid", fieldName));
+                           }
+                        });
+                        return;
+                     }
+                  }
+               }
+               
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     for(NodeInfo n : nodes)
+                        executeOnNode(n, tool, inputValues);
+                  }
+               });
+            }
+            
+            @Override
+            protected String getErrorMessage()
+            {
+               return "Password validation failed";
+            }
+         }.start();
+      }
+      else
+      {
+         for(NodeInfo n : nodes)
+            executeOnNode(n, tool, inputValues);
+      }
    }
    
    /**

@@ -20,13 +20,17 @@ package org.netxms.ui.eclipse.objecttools.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objecttools.InputField;
+import org.netxms.client.objecttools.InputFieldOptions;
 import org.netxms.client.objecttools.InputFieldType;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -43,6 +47,7 @@ public class EditInputFieldDialog extends Dialog
 	private LabeledText name;
 	private Combo type;
 	private LabeledText displayName;
+	private Button checkValidatePassword;
 	
 	/**
 	 * 
@@ -95,6 +100,19 @@ public class EditInputFieldDialog extends Dialog
 		for(int i = 0; i < typeNames.length; i++)
 			type.add(typeNames[i]);
 		type.select(field.getType().getValue());
+		type.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            checkValidatePassword.setVisible(InputFieldType.getByValue(type.getSelectionIndex()) == InputFieldType.PASSWORD);
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
 		
 		displayName = new LabeledText(dialogArea, SWT.NONE);
 		displayName.setLabel("Display name");
@@ -104,6 +122,11 @@ public class EditInputFieldDialog extends Dialog
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 350;
 		displayName.setLayoutData(gd);
+		
+		checkValidatePassword = new Button(dialogArea, SWT.CHECK);
+		checkValidatePassword.setText("Validate password after entry");
+		checkValidatePassword.setVisible(field.getType() == InputFieldType.PASSWORD);
+		checkValidatePassword.setSelection(field.getOptions().validatePassword);
 		
 		return dialogArea;
 	}
@@ -118,6 +141,14 @@ public class EditInputFieldDialog extends Dialog
 	      field.setName(name.getText());    
       field.setType(InputFieldType.getByValue(type.getSelectionIndex()));
 	   field.setDisplayName(displayName.getText());		
+	   
+	   if (field.getType() == InputFieldType.PASSWORD)
+	   {
+	      InputFieldOptions o = new InputFieldOptions();
+	      o.validatePassword = checkValidatePassword.getSelection();
+	      field.setOptions(o);
+	   }
+	   
 		super.okPressed();
 	}
 }
