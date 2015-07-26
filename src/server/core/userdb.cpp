@@ -308,7 +308,7 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
 					   }
 					   break;
                default:
-                  nxlog_write(MSG_UNKNOWN_AUTH_METHOD, EVENTLOG_WARNING_TYPE, "ds", user->getAuthMethod(), login);
+                  nxlog_write(MSG_UNKNOWN_AUTH_METHOD, NXLOG_WARNING, "ds", user->getAuthMethod(), login);
                   bPasswordValid = FALSE;
                   break;
             }
@@ -1156,6 +1156,73 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
 
    MutexUnlock(m_mutexUserDatabaseAccess);
    return dwResult;
+}
+
+/**
+ * Validate user's password
+ */
+UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login, const TCHAR *password, bool *isValid)
+{
+	if (userId & GROUP_FLAG)
+		return RCC_INVALID_USER_ID;
+
+   UINT32 rcc = RCC_INVALID_USER_ID;
+   MutexLock(m_mutexUserDatabaseAccess);
+
+   // Find user
+   User *user = NULL;
+   for(int i = 0; i < m_userCount; i++)
+		if (m_users[i]->getId() == userId)
+      {
+         user = (User *)m_users[i];
+         rcc = RCC_SUCCESS;
+         break;
+      }
+
+   if (user != NULL)
+   {
+      if (user->isLDAPUser())
+      {
+         if (user->isDisabled() || user->hasSyncException())
+         {
+            rcc = RCC_ACCOUNT_DISABLED;
+         }
+         else
+         {
+            LDAPConnection conn;
+            rcc = conn.ldapUserLogin(user->getDn(), password);
+            if (rcc == RCC_SUCCESS)
+            {
+               *isValid = true;
+            }
+            else if (rcc == RCC_ACCESS_DENIED)
+            {
+               *isValid = false;
+               rcc = RCC_SUCCESS;
+            }
+         }
+      }
+      else
+      {
+         switch(user->getAuthMethod())
+         {
+            case AUTH_NETXMS_PASSWORD:
+            case AUTH_CERT_OR_PASSWD:
+   			   *isValid = user->validatePassword(password);
+               break;
+            case AUTH_RADIUS:
+            case AUTH_CERT_OR_RADIUS:
+               *isValid = RadiusAuth(login, password);
+               break;
+            default:
+               rcc = RCC_UNSUPPORTED_AUTH_METHOD;
+               break;
+         }
+      }
+   }
+
+   MutexUnlock(m_mutexUserDatabaseAccess);
+   return rcc;
 }
 
 /**

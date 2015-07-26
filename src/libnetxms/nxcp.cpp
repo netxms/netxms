@@ -350,10 +350,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_SET_SERVER_ID"),
       _T("CMD_GET_PUBLIC_CONFIG_VAR"),
       _T("CMD_ENABLE_FILE_UPDATES"),
-      _T("CMD_DETACH_LDAP_USER")
+      _T("CMD_DETACH_LDAP_USER"),
+      _T("CMD_VALIDATE_PASSWORD")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_DETACH_LDAP_USER))
+   if ((code >= CMD_LOGIN) && (code <= CMD_VALIDATE_PASSWORD))
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), code);

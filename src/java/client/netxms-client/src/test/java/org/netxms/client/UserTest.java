@@ -26,6 +26,15 @@ import org.netxms.client.constants.RCC;
  */
 public class UserTest extends AbstractSessionTest
 {
+   public void testValidatePassword() throws Exception
+   {
+      final NXCSession session = connect();
+      
+      assertTrue(session.validateUserPassword(password));
+      
+      session.disconnect();
+   }
+   
 	public void testUserAttributes() throws Exception
 	{
 		final NXCSession session = connect();

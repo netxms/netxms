@@ -318,7 +318,7 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
                          NXCPMessageCodeName(m_pSessionList[i]->getCurrentCmd(), szBuffer),
 					        pszCipherName[m_pSessionList[i]->getCipher() + 1],
 							  pszClientType[m_pSessionList[i]->getClientType()],
-                       m_pSessionList[i]->getUserName(), webServer,
+                       m_pSessionList[i]->getSessionName(), webServer,
                        m_pSessionList[i]->getClientInfo());
          iCount++;
       }

@@ -231,7 +231,6 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_hSocket = hSocket;
    m_id = -1;
    m_state = SESSION_STATE_INIT;
-   m_pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    m_pCtx = NULL;
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
@@ -256,8 +255,9 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
 		Ip6ToStr(((struct sockaddr_in6 *)m_clientAddr)->sin6_addr.s6_addr, m_workstation);
 #endif
    m_webServerAddress[0] = 0;
-   _tcscpy(m_szUserName, _T("<not logged in>"));
-	_tcscpy(m_szClientInfo, _T("n/a"));
+   m_loginName[0] = 0;
+   _tcscpy(m_sessionName, _T("<not logged in>"));
+	_tcscpy(m_clientInfo, _T("n/a"));
    m_dwUserId = INVALID_INDEX;
    m_dwOpenDCIListSize = 0;
    m_pOpenDCIList = NULL;
@@ -284,7 +284,6 @@ ClientSession::~ClientSession()
    delete m_pSendQueue;
    delete m_pMessageQueue;
    delete m_pUpdateQueue;
-   safe_free(m_pMsgBuffer);
 	safe_free(m_clientAddr);
 	MutexDestroy(m_mutexSocketWrite);
    MutexDestroy(m_mutexSendEvents);
@@ -577,7 +576,7 @@ void ClientSession::readThread()
    if (m_dwFlags & CSF_AUTHENTICATED)
    {
       CALL_ALL_MODULES(pfClientSessionClose, (this));
-	   WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("User logged out (client: %s)"), m_szClientInfo);
+	   WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0, _T("User logged out (client: %s)"), m_clientInfo);
    }
    debugPrintf(3, _T("Session closed"));
 }
@@ -823,6 +822,9 @@ void ClientSession::processingThread()
             break;
          case CMD_SET_PASSWORD:
             setPassword(pMsg);
+            break;
+         case CMD_VALIDATE_PASSWORD:
+            validatePassword(pMsg);
             break;
          case CMD_GET_NODE_DCI_LIST:
             openNodeDCIList(pMsg);
@@ -1744,8 +1746,7 @@ void ClientSession::login(NXCPMessage *pRequest)
       pRequest->getFieldAsString(VID_CLIENT_INFO, szClientInfo, 32);
       pRequest->getFieldAsString(VID_OS_INFO, szOSInfo, 32);
       pRequest->getFieldAsString(VID_LIBNXCL_VERSION, szLibVersion, 16);
-      _sntprintf(m_szClientInfo, 96, _T("%s (%s; libnxcl %s)"),
-                 szClientInfo, szOSInfo, szLibVersion);
+      _sntprintf(m_clientInfo, 96, _T("%s (%s; libnxcl %s)"), szClientInfo, szOSInfo, szLibVersion);
    }
 
 	m_clientType = pRequest->getFieldAsUInt16(VID_CLIENT_TYPE);
@@ -1845,7 +1846,8 @@ void ClientSession::login(NXCPMessage *pRequest)
       if (dwResult == RCC_SUCCESS)
       {
          m_dwFlags |= CSF_AUTHENTICATED;
-         _sntprintf(m_szUserName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_workstation);
+         nx_strncpy(m_loginName, szLogin, MAX_USER_NAME);
+         _sntprintf(m_sessionName, MAX_SESSION_NAME, _T("%s@%s"), szLogin, m_workstation);
          m_loginTime = time(NULL);
          msg.setField(VID_RCC, RCC_SUCCESS);
          msg.setField(VID_USER_SYS_RIGHTS, m_dwSystemAccess);
@@ -1861,16 +1863,16 @@ void ClientSession::login(NXCPMessage *pRequest)
 			msg.setField(VID_VIEW_REFRESH_INTERVAL, (UINT16)ConfigReadInt(_T("MinViewRefreshInterval"), 200));
 			msg.setField(VID_HELPDESK_LINK_ACTIVE, (UINT16)((g_flags & AF_HELPDESK_LINK_ACTIVE) ? 1 : 0));
 			msg.setField(VID_ALARM_LIST_DISP_LIMIT, ConfigReadULong(_T("AlarmListDisplayLimit"), 4096));
-         debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_szUserName, m_language, m_szClientInfo);
+         debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0,
-            _T("User \"%s\" logged in (language: %s; client info: %s)"), szLogin, m_language, m_szClientInfo);
+            _T("User \"%s\" logged in (language: %s; client info: %s)"), szLogin, m_language, m_clientInfo);
       }
       else
       {
          msg.setField(VID_RCC, dwResult);
 			WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, m_id, 0,
 			              _T("User \"%s\" login failed with error code %d (client info: %s)"),
-							  szLogin, dwResult, m_szClientInfo);
+							  szLogin, dwResult, m_clientInfo);
 			if (intruderLockout)
 			{
 				WriteAuditLog(AUDIT_SECURITY, FALSE, m_dwUserId, m_workstation, m_id, 0,
@@ -3021,7 +3023,7 @@ void ClientSession::lockUserDB(UINT32 dwRqId, BOOL bLock)
    {
       if (bLock)
       {
-         if (!LockComponent(CID_USER_DB, m_id, m_szUserName, NULL, szBuffer))
+         if (!LockComponent(CID_USER_DB, m_id, m_sessionName, NULL, szBuffer))
          {
             msg.setField(VID_RCC, RCC_COMPONENT_LOCKED);
             msg.setField(VID_LOCKED_BY, szBuffer);
@@ -3130,18 +3132,37 @@ void ClientSession::changeObjectMgmtStatus(NXCPMessage *pRequest)
 }
 
 /**
+ * Validate password for currently logged in user
+ */
+void ClientSession::validatePassword(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   TCHAR password[256];
+   request->getFieldAsString(VID_PASSWORD, password, 256);
+
+   bool isValid = false;
+   msg.setField(VID_RCC, ValidateUserPassword(m_dwUserId, m_loginName, password, &isValid));
+   msg.setField(VID_PASSWORD_IS_VALID, (INT16)(isValid ? 1 : 0));
+
+   sendMessage(&msg);
+}
+
+/**
  * Set user's password
  */
-void ClientSession::setPassword(NXCPMessage *pRequest)
+void ClientSession::setPassword(NXCPMessage *request)
 {
    NXCPMessage msg;
    UINT32 dwUserId;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
-   dwUserId = pRequest->getFieldAsUInt32(VID_USER_ID);
+   dwUserId = request->getFieldAsUInt32(VID_USER_ID);
 
    if (((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
         !((dwUserId == 0) && (m_dwUserId != 0))) ||   // Only administrator can change password for UID 0
@@ -3151,13 +3172,13 @@ void ClientSession::setPassword(NXCPMessage *pRequest)
       TCHAR newPassword[1024], oldPassword[1024];
 
 #ifdef UNICODE
-      pRequest->getFieldAsString(VID_PASSWORD, newPassword, 256);
-		if (pRequest->isFieldExist(VID_OLD_PASSWORD))
-			pRequest->getFieldAsString(VID_OLD_PASSWORD, oldPassword, 256);
+      request->getFieldAsString(VID_PASSWORD, newPassword, 256);
+		if (request->isFieldExist(VID_OLD_PASSWORD))
+			request->getFieldAsString(VID_OLD_PASSWORD, oldPassword, 256);
 #else
-      pRequest->getFieldAsUtf8String(VID_PASSWORD, newPassword, 1024);
-		if (pRequest->isFieldExist(VID_OLD_PASSWORD))
-			pRequest->getFieldAsUtf8String(VID_OLD_PASSWORD, oldPassword, 1024);
+      request->getFieldAsUtf8String(VID_PASSWORD, newPassword, 1024);
+		if (request->isFieldExist(VID_OLD_PASSWORD))
+			request->getFieldAsUtf8String(VID_OLD_PASSWORD, oldPassword, 1024);
 #endif
 		else
 			oldPassword[0] = 0;
@@ -3184,7 +3205,7 @@ void ClientSession::setPassword(NXCPMessage *pRequest)
 /**
  * Send node's DCIs to client and lock data collection settings
  */
-void ClientSession::openNodeDCIList(NXCPMessage *pRequest)
+void ClientSession::openNodeDCIList(NXCPMessage *request)
 {
    NXCPMessage msg;
    UINT32 dwObjectId;
@@ -3194,10 +3215,10 @@ void ClientSession::openNodeDCIList(NXCPMessage *pRequest)
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
    // Get node id and check object class and access rights
-   dwObjectId = pRequest->getFieldAsUInt32(VID_OBJECT_ID);
+   dwObjectId = request->getFieldAsUInt32(VID_OBJECT_ID);
    object = FindObjectById(dwObjectId);
    if (object != NULL)
    {
@@ -3209,7 +3230,7 @@ void ClientSession::openNodeDCIList(NXCPMessage *pRequest)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
             // Try to lock DCI list
-            if (((Template *)object)->lockDCIList(m_id, m_szUserName, szLockInfo))
+            if (((Template *)object)->lockDCIList(m_id, m_sessionName, szLockInfo))
             {
                bSuccess = TRUE;
                msg.setField(VID_RCC, RCC_SUCCESS);
@@ -3245,13 +3266,13 @@ void ClientSession::openNodeDCIList(NXCPMessage *pRequest)
 
    // If DCI list was successfully locked, send it to client
    if (bSuccess)
-      ((Template *)object)->sendItemsToClient(this, pRequest->getId());
+      ((Template *)object)->sendItemsToClient(this, request->getId());
 }
 
 /**
  * Unlock node's data collection settings
  */
-void ClientSession::closeNodeDCIList(NXCPMessage *pRequest)
+void ClientSession::closeNodeDCIList(NXCPMessage *request)
 {
    NXCPMessage msg;
    UINT32 dwObjectId;
@@ -3259,10 +3280,10 @@ void ClientSession::closeNodeDCIList(NXCPMessage *pRequest)
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
    // Get node id and check object class and access rights
-   dwObjectId = pRequest->getFieldAsUInt32(VID_OBJECT_ID);
+   dwObjectId = request->getFieldAsUInt32(VID_OBJECT_ID);
    object = FindObjectById(dwObjectId);
    if (object != NULL)
    {
@@ -3319,7 +3340,7 @@ void ClientSession::closeNodeDCIList(NXCPMessage *pRequest)
 /**
  * Create, modify, or delete data collection item for node
  */
-void ClientSession::modifyNodeDCI(NXCPMessage *pRequest)
+void ClientSession::modifyNodeDCI(NXCPMessage *request)
 {
    NXCPMessage msg;
    UINT32 dwObjectId;
@@ -3327,10 +3348,10 @@ void ClientSession::modifyNodeDCI(NXCPMessage *pRequest)
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
    // Get node id and check object class and access rights
-   dwObjectId = pRequest->getFieldAsUInt32(VID_OBJECT_ID);
+   dwObjectId = request->getFieldAsUInt32(VID_OBJECT_ID);
    object = FindObjectById(dwObjectId);
    if (object != NULL)
    {
@@ -3347,8 +3368,8 @@ void ClientSession::modifyNodeDCI(NXCPMessage *pRequest)
                DCObject *dcObject;
                BOOL bSuccess = FALSE;
 
-					int dcObjectType = (int)pRequest->getFieldAsUInt16(VID_DCOBJECT_TYPE);
-               switch(pRequest->getCode())
+					int dcObjectType = (int)request->getFieldAsUInt16(VID_DCOBJECT_TYPE);
+               switch(request->getCode())
                {
                   case CMD_CREATE_NEW_DCI:
                      // Create dummy DCI
@@ -3389,8 +3410,8 @@ void ClientSession::modifyNodeDCI(NXCPMessage *pRequest)
 							}
                      break;
                   case CMD_MODIFY_NODE_DCI:
-                     dwItemId = pRequest->getFieldAsUInt32(VID_DCI_ID);
-							bSuccess = ((Template *)object)->updateDCObject(dwItemId, pRequest, &dwNumMaps, &pdwMapIndex, &pdwMapId);
+                     dwItemId = request->getFieldAsUInt32(VID_DCI_ID);
+							bSuccess = ((Template *)object)->updateDCObject(dwItemId, request, &dwNumMaps, &pdwMapIndex, &pdwMapId);
                      if (bSuccess)
                      {
                         msg.setField(VID_RCC, RCC_SUCCESS);
@@ -3416,7 +3437,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *pRequest)
                      }
                      break;
                   case CMD_DELETE_NODE_DCI:
-                     dwItemId = pRequest->getFieldAsUInt32(VID_DCI_ID);
+                     dwItemId = request->getFieldAsUInt32(VID_DCI_ID);
                      bSuccess = ((Template *)object)->deleteDCObject(dwItemId, true);
                      msg.setField(VID_RCC, bSuccess ? RCC_SUCCESS : RCC_INVALID_DCI_ID);
                      break;
@@ -3451,17 +3472,17 @@ void ClientSession::modifyNodeDCI(NXCPMessage *pRequest)
 /**
  * Change status for one or more DCIs
  */
-void ClientSession::changeDCIStatus(NXCPMessage *pRequest)
+void ClientSession::changeDCIStatus(NXCPMessage *request)
 {
    NXCPMessage msg;
    NetObj *object;
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
    // Get node id and check object class and access rights
-   object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
       if ((object->getObjectClass() == OBJECT_NODE) ||
@@ -3476,10 +3497,10 @@ void ClientSession::changeDCIStatus(NXCPMessage *pRequest)
                UINT32 dwNumItems, *pdwItemList;
                int iStatus;
 
-               iStatus = pRequest->getFieldAsUInt16(VID_DCI_STATUS);
-               dwNumItems = pRequest->getFieldAsUInt32(VID_NUM_ITEMS);
+               iStatus = request->getFieldAsUInt16(VID_DCI_STATUS);
+               dwNumItems = request->getFieldAsUInt32(VID_NUM_ITEMS);
                pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * dwNumItems);
-               pRequest->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
+               request->getFieldAsInt32Array(VID_ITEM_LIST, dwNumItems, pdwItemList);
                if (((Template *)object)->setItemStatus(dwNumItems, pdwItemList, iStatus))
                   msg.setField(VID_RCC, RCC_SUCCESS);
                else
@@ -3513,7 +3534,7 @@ void ClientSession::changeDCIStatus(NXCPMessage *pRequest)
 /**
  * Clear all collected data for DCI
  */
-void ClientSession::clearDCIData(NXCPMessage *pRequest)
+void ClientSession::clearDCIData(NXCPMessage *request)
 {
    NXCPMessage msg;
    NetObj *object;
@@ -3521,17 +3542,17 @@ void ClientSession::clearDCIData(NXCPMessage *pRequest)
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
    // Get node id and check object class and access rights
-   object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
       if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_MOBILEDEVICE) || (object->getObjectClass() == OBJECT_CLUSTER))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
-				dwItemId = pRequest->getFieldAsUInt32(VID_DCI_ID);
+				dwItemId = request->getFieldAsUInt32(VID_DCI_ID);
 				debugPrintf(4, _T("ClearDCIData: request for DCI %d at node %d"), dwItemId, object->getId());
             DCObject *dci = ((Template *)object)->getDCObjectById(dwItemId);
 				if (dci != NULL)
@@ -3567,7 +3588,7 @@ void ClientSession::clearDCIData(NXCPMessage *pRequest)
 /**
  * Force DCI data poll for given DCI
  */
-void ClientSession::forceDCIPoll(NXCPMessage *pRequest)
+void ClientSession::forceDCIPoll(NXCPMessage *request)
 {
    NXCPMessage msg;
    NetObj *object;
@@ -3575,17 +3596,17 @@ void ClientSession::forceDCIPoll(NXCPMessage *pRequest)
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
    // Get node id and check object class and access rights
-   object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
+   object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
       if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_MOBILEDEVICE) || (object->getObjectClass() == OBJECT_CLUSTER))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
-				dwItemId = pRequest->getFieldAsUInt32(VID_DCI_ID);
+				dwItemId = request->getFieldAsUInt32(VID_DCI_ID);
 				debugPrintf(4, _T("ForceDCIPoll: request for DCI %d at node %d"), dwItemId, object->getId());
             DCObject *dci = ((Template *)object)->getDCObjectById(dwItemId);
 				if (dci != NULL)
@@ -3651,7 +3672,7 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
             {
                // Attempt to lock destination's DCI list
                if ((pDestination->getId() == pSource->getId()) ||
-                   (((Template *)pDestination)->lockDCIList(m_id, m_szUserName, szLockInfo)))
+                   (((Template *)pDestination)->lockDCIList(m_id, m_sessionName, szLockInfo)))
                {
                   UINT32 i, *pdwItemList, dwNumItems;
                   const DCObject *pSrcItem;
@@ -4355,7 +4376,7 @@ void ClientSession::openEPP(NXCPMessage *request)
    if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
    {
       TCHAR buffer[256];
-      if (!readOnly && !LockComponent(CID_EPP, m_id, m_szUserName, NULL, buffer))
+      if (!readOnly && !LockComponent(CID_EPP, m_id, m_sessionName, NULL, buffer))
       {
          msg.setField(VID_RCC, RCC_COMPONENT_LOCKED);
          msg.setField(VID_LOCKED_BY, buffer);
@@ -6336,7 +6357,7 @@ void ClientSession::LockPackageDB(UINT32 dwRqId, BOOL bLock)
    {
       if (bLock)
       {
-         if (!LockComponent(CID_PACKAGE_DB, m_id, m_szUserName, NULL, szBuffer))
+         if (!LockComponent(CID_PACKAGE_DB, m_id, m_sessionName, NULL, szBuffer))
          {
             msg.setField(VID_RCC, RCC_COMPONENT_LOCKED);
             msg.setField(VID_LOCKED_BY, szBuffer);
@@ -6792,7 +6813,7 @@ void ClientSession::applyTemplate(NXCPMessage *pRequest)
          // Acquire DCI lock if needed
          if (!((Template *)pSource)->isLockedBySession(m_id))
          {
-            bLockSucceed = ((Template *)pSource)->lockDCIList(m_id, m_szUserName, szLockInfo);
+            bLockSucceed = ((Template *)pSource)->lockDCIList(m_id, m_sessionName, szLockInfo);
          }
          else
          {
@@ -6806,7 +6827,7 @@ void ClientSession::applyTemplate(NXCPMessage *pRequest)
                 (pDestination->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY)))
             {
                // Attempt to lock destination's DCI list
-               if (((DataCollectionTarget *)pDestination)->lockDCIList(m_id, m_szUserName, szLockInfo))
+               if (((DataCollectionTarget *)pDestination)->lockDCIList(m_id, m_sessionName, szLockInfo))
                {
                   BOOL bErrors;
 
@@ -8076,8 +8097,9 @@ static void CopySessionData(ClientSession *pSession, void *pArg)
    dwId = VID_SESSION_DATA_BASE + dwIndex * 100;
    ((NXCPMessage *)pArg)->setField(dwId++, (UINT32)pSession->getId());
    ((NXCPMessage *)pArg)->setField(dwId++, (WORD)pSession->getCipher());
-   ((NXCPMessage *)pArg)->setField(dwId++, (TCHAR *)pSession->getUserName());
+   ((NXCPMessage *)pArg)->setField(dwId++, (TCHAR *)pSession->getSessionName());
    ((NXCPMessage *)pArg)->setField(dwId++, (TCHAR *)pSession->getClientInfo());
+   ((NXCPMessage *)pArg)->setField(dwId++, (TCHAR *)pSession->getLoginName());
 }
 
 /**
@@ -9640,7 +9662,7 @@ void ClientSession::importConfiguration(NXCPMessage *pRequest)
          if (config->loadXmlConfigFromMemory(content, (int)strlen(content), NULL, "configuration"))
          {
             // Lock all required components
-            if (LockComponent(CID_EPP, m_id, m_szUserName, NULL, szLockInfo))
+            if (LockComponent(CID_EPP, m_id, m_sessionName, NULL, szLockInfo))
             {
                m_dwFlags |= CSF_EPP_LOCKED;
 
@@ -13161,7 +13183,7 @@ void ClientSession::forwardToReportingServer(NXCPMessage *request)
       TCHAR buffer[256];
 	   debugPrintf(7, _T("RS: Forwarding message %s"), NXCPMessageCodeName(request->getCode(), buffer));
 
-	   request->setField(VID_USER_NAME, getUserName());
+	   request->setField(VID_USER_NAME, m_loginName);
 	   msg = ForwardMessageToReportingServer(request, this);
 	   if (msg == NULL)
 	   {

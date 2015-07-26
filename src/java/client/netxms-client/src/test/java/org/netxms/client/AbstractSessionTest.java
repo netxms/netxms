@@ -31,10 +31,10 @@ import junit.framework.TestCase;
  */
 public abstract class AbstractSessionTest extends TestCase
 {
-	private static final String serverAddress = "127.0.0.1";
-	private static final int serverPort = NXCSession.DEFAULT_CONN_PORT;
-	private static final String loginName = "admin";
-	private static final String password = "";
+   protected static final String serverAddress = "127.0.0.1";
+	protected static final int serverPort = NXCSession.DEFAULT_CONN_PORT;
+	protected static final String loginName = "admin";
+	protected static final String password = "";
 
 	protected NXCSession connect(boolean useEncryption) throws Exception
 	{

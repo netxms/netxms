@@ -394,7 +394,6 @@ private:
    UINT64 m_dwSystemAccess;    // User's system access rights
    UINT32 m_dwFlags;           // Session flags
 	int m_clientType;				// Client system type - desktop, web, mobile, etc.
-   NXCP_BUFFER *m_pMsgBuffer;
    NXCPEncryptionContext *m_pCtx;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
    THREAD m_hWriteThread;
@@ -413,8 +412,9 @@ private:
 	struct sockaddr *m_clientAddr;
 	TCHAR m_workstation[256];      // IP address or name of connected host in textual form
    TCHAR m_webServerAddress[256]; // IP address or name of web server for web sessions
-   TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
-   TCHAR m_szClientInfo[96];  // Client app info string
+   TCHAR m_loginName[MAX_USER_NAME];
+   TCHAR m_sessionName[MAX_SESSION_NAME];   // String in form login_name@host
+   TCHAR m_clientInfo[96];  // Client app info string
    TCHAR m_language[8];       // Client's desired language
    time_t m_loginTime;
    UINT32 m_dwOpenDCIListSize; // Number of open DCI lists
@@ -500,7 +500,8 @@ private:
    void updateUser(NXCPMessage *pRequest);
    void detachLdapUser(NXCPMessage *pRequest);
    void deleteUser(NXCPMessage *pRequest);
-   void setPassword(NXCPMessage *pRequest);
+   void setPassword(NXCPMessage *request);
+   void validatePassword(NXCPMessage *request);
    void lockUserDB(UINT32 dwRqId, BOOL bLock);
    void sendEventDB(UINT32 dwRqId);
    void modifyEventTemplate(NXCPMessage *pRequest);
@@ -710,8 +711,9 @@ public:
    int getId() { return m_id; }
    void setId(int id) { if (m_id == -1) m_id = id; }
    int getState() { return m_state; }
-   const TCHAR *getUserName() { return m_szUserName; }
-   const TCHAR *getClientInfo() { return m_szClientInfo; }
+   const TCHAR *getLoginName() { return m_loginName; }
+   const TCHAR *getSessionName() { return m_sessionName; }
+   const TCHAR *getClientInfo() { return m_clientInfo; }
 	const TCHAR *getWorkstation() { return m_workstation; }
    const TCHAR *getWebServerAddress() { return m_webServerAddress; }
    UINT32 getUserId() { return m_dwUserId; }

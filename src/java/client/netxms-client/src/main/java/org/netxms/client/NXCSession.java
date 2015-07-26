@@ -3291,9 +3291,27 @@ public class NXCSession
       NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_PASSWORD);
       msg.setFieldInt32(NXCPCodes.VID_USER_ID, (int) id);
       msg.setField(NXCPCodes.VID_PASSWORD, newPassword);
-      if (oldPassword != null) msg.setField(NXCPCodes.VID_OLD_PASSWORD, oldPassword);
+      if (oldPassword != null) 
+         msg.setField(NXCPCodes.VID_OLD_PASSWORD, oldPassword);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Validate password for currently logged in user
+    * 
+    * @param password password to validate
+    * @return true if password is valid
+    * @throws IOException
+    * @throws NXCException
+    */
+   public boolean validateUserPassword(String password) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_VALIDATE_PASSWORD);
+      msg.setField(NXCPCodes.VID_PASSWORD, password);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());
+      return response.getFieldAsBoolean(NXCPCodes.VID_PASSWORD_IS_VALID);
    }
 
    /**

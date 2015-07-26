@@ -511,6 +511,7 @@ enum SessionState
 #define RCC_NXSL_COMPILATION_ERROR   ((UINT32)117)
 #define RCC_NXSL_EXECUTION_ERROR     ((UINT32)118)
 #define RCC_UNKNOWN_CONFIG_VARIABLE  ((UINT32)119)
+#define RCC_UNSUPPORTED_AUTH_METHOD  ((UINT32)120)
 
 /**
  * Mask bits for NXCModifyEventTemplate()
