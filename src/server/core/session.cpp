@@ -3140,8 +3140,13 @@ void ClientSession::validatePassword(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
+#ifdef UNICODE
    TCHAR password[256];
    request->getFieldAsString(VID_PASSWORD, password, 256);
+#else
+   char password[256];
+   request->getFieldAsUtf8String(VID_PASSWORD, password, 256);
+#endif
 
    bool isValid = false;
    msg.setField(VID_RCC, ValidateUserPassword(m_dwUserId, m_loginName, password, &isValid));

@@ -311,6 +311,8 @@ static void LoadGlobalConfig()
       g_flags |= AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE;
    if (ConfigReadInt(_T("ResolveDNSToIPOnStatusPoll"), 0))
       g_flags |= AF_RESOLVE_IP_FOR_EACH_STATUS_POLL;
+   if (ConfigReadInt(_T("CaseInsensitiveLoginNames"), 0))
+      g_flags |= AF_CASE_INSENSITIVE_LOGINS;
 
    if (g_netxmsdDataDir[0] == 0)
    {

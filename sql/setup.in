@@ -22,6 +22,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('BeaconTimeout','1000',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('BlockInactiveUserAccounts','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('CapabilityExpirationTime','604800',1,0);  /* in seconds */
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('CaseInsensitiveLoginNames','0',1,1,'B','Enable/disable case insensitive login names');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('CheckTrustedNodes','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ClientListenerPort','4701',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConditionPollingInterval','60',1,1);

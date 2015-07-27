@@ -572,7 +572,17 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
    query.append(id);
    return SQLQuery(query);
 }
-                                    
+
+/**
+ * Upgrade from V361 to V362
+ */
+static BOOL H_UpgradeFromV361(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("CaseInsensitiveLoginNames"), _T("0"), _T("Enable/disable case insensitive login names"), 'B', true, true, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='362' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
 /**
  * Upgrade from V360 to V361
  */
@@ -8885,6 +8895,7 @@ static struct
    { 358, 359, H_UpgradeFromV358 },
    { 359, 360, H_UpgradeFromV359 },
    { 360, 361, H_UpgradeFromV360 },
+   { 361, 362, H_UpgradeFromV361 },
    { 0, 0, NULL }
 };
 

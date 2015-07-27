@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,6 +50,14 @@ static int m_userCount = 0;
 static UserDatabaseObject **m_users = NULL;
 static MUTEX m_mutexUserDatabaseAccess = INVALID_MUTEX_HANDLE;
 static THREAD m_statusUpdateThread = INVALID_THREAD_HANDLE;
+
+/**
+ * Compare user names
+ */
+inline bool UserNameEquals(const TCHAR *n1, const TCHAR *n2)
+{
+   return (g_flags & AF_CASE_INSENSITIVE_LOGINS) ? (_tcsicmp(n1, n2) == 0) : (_tcscmp(n1, n2) == 0);
+}
 
 /**
  * Upgrade user accounts status in background
@@ -228,7 +236,7 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
    for(i = 0; i < m_userCount; i++)
    {
 		if ((!(m_users[i]->getId() & GROUP_FLAG)) &&
-			 (!_tcscmp(login, m_users[i]->getName())) &&
+			 UserNameEquals(login, m_users[i]->getName()) &&
 			 (!m_users[i]->isDeleted()))
       {
 			User *user = (User *)m_users[i];
@@ -755,7 +763,7 @@ UserDatabaseObject *GetUser(const TCHAR* dn)
 bool UserNameIsUnique(const TCHAR *name, UINT32 id)
 {
    for(int i = 0; i < m_userCount; i++)
-		if (!(m_users[i]->getId() & GROUP_FLAG) && !_tcscmp(m_users[i]->getName(), name) && m_users[i]->getId() != id)
+		if (!(m_users[i]->getId() & GROUP_FLAG) && UserNameEquals(m_users[i]->getName(), name) && m_users[i]->getId() != id)
          return false;
    return true;
 }
@@ -766,7 +774,7 @@ bool UserNameIsUnique(const TCHAR *name, UINT32 id)
 bool GroupNameIsUnique(const TCHAR *name, UINT32 id)
 {
    for(int i = 0; i < m_userCount; i++)
-		if ((m_users[i]->getId() & GROUP_FLAG) && !_tcscmp(m_users[i]->getName(), name) && m_users[i]->getId() != id)
+		if ((m_users[i]->getId() & GROUP_FLAG) && UserNameEquals(m_users[i]->getName(), name) && m_users[i]->getId() != id)
          return false;
    return true;
 }
@@ -855,7 +863,7 @@ UINT32 NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, UINT32 *pd
    // Check for duplicate name
    for(i = 0; i < m_userCount; i++)
 	{
-      if (!_tcscmp(m_users[i]->getName(), pszName))
+      if (UserNameEquals(m_users[i]->getName(), pszName))
       {
          dwResult = RCC_OBJECT_ALREADY_EXISTS;
          break;
