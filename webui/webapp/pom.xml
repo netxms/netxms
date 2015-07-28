@@ -8,7 +8,6 @@
   <packaging>pom</packaging>
   <modules>
     <module>../../src/java/client</module>
-   <!-- <module>../../src/java/nebula/org.netxms.nebula.widgets.gallery</module> -->
     <module>ActionManager</module>
     <module>AgentManager</module>
     <module>AlarmViewer</module>
@@ -31,6 +30,7 @@
     <module>ObjectView</module>
     <module>PerfView</module>
     <module>PolicyManager</module>
+    <module>Product</module> 
     <module>Reporter</module>
     <module>SLM</module>
     <module>SNMP</module>
@@ -48,6 +48,9 @@
         <tycho.version>0.23.0</tycho.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
 	    <tycho.groupid>org.eclipse.tycho</tycho.groupid>
+        <war.filename>nxmc</war.filename>
+        <assembly.version>2.4</assembly.version>
+        <replacer.version>1.4.1</replacer.version>
     </properties>
 
   <repositories>
@@ -57,6 +60,11 @@
           <layout>p2</layout>
           <url>http://download.eclipse.org/tools/orbit/downloads/drops/R20150519210750/repository/</url>
         </repository>
+        <repository>
+            <id>Babel Language Pack</id>
+            <url>http://archive.eclipse.org/technology/babel/update-site/R0.12.1/luna</url>
+            <layout>p2</layout>
+        </repository> 
         <repository>
             <id>emf</id>
             <url>http://download.eclipse.org/releases/luna</url>
@@ -81,12 +89,7 @@
             <id>zest</id>
             <url>http://www.netxms.org/eclipse/zest-rap</url>
             <layout>p2</layout>
-        </repository>
-        <repository>
-            <id>Babel Language Pack</id>
-            <url>http://archive.eclipse.org/technology/babel/update-site/R0.12.1/luna</url>
-            <layout>p2</layout>
-        </repository>  
+        </repository> 
         
         <repository>
             <id>additionalPackage</id>
@@ -103,6 +106,21 @@
 
   <build>
     <plugins>
+
+    <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-versions-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <executions>
+            <execution>
+                <id>versions</id>
+                <phase>validate</phase>
+                <goals>
+                    <goal>update-pom</goal>
+                </goals>
+            </execution>
+        </executions>
+    </plugin>
 
       <plugin>
         <groupId>${tycho.groupid}</groupId>

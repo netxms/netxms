@@ -1,0 +1,22 @@
+<assembly>
+  <id/>
+  <formats>
+    <format>war</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+      <directory>${basedir}/target/products/org.netxms.nxmc/linux/gtk/x86_64</directory>
+      <outputDirectory>/WEB-INF</outputDirectory>
+      <excludes>
+        <exclude>plugins/javax.servlet*.jar</exclude>
+        <exclude>artifacts.xml</exclude>
+        <exclude>p2/**</exclude>
+      </excludes>
+    </fileSet>
+   <fileSet>
+      <directory>${basedir}/target/WEB-INF</directory>
+      <outputDirectory>/WEB-INF</outputDirectory>
+    </fileSet> 
+  </fileSets>
+</assembly>

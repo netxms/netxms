@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.5"?>
+
+<product name="NXMC" uid="org.netxms.nxmc" version="2.0.0.M5" useFeatures="false" includeLaunchers="false">
+   <plugins>
+      <plugin id="com.ibm.icu"/>
+      <plugin id="javax.xml"/>
+      <plugin id="org.apache.commons.codec"/>
+      <plugin id="org.apache.commons.fileupload"/>
+      <plugin id="org.apache.commons.io"/>
+      <plugin id="org.apache.felix.gogo.runtime"/>
+      <plugin id="org.apache.felix.gogo.shell"/>
+      <plugin id="org.eclipse.birt.chart.device.extension"/>
+      <plugin id="org.eclipse.birt.chart.engine"/>
+      <plugin id="org.eclipse.birt.chart.engine.extension"/>
+      <plugin id="org.eclipse.birt.core"/>
+      <plugin id="org.eclipse.core.commands"/>
+      <plugin id="org.eclipse.core.commands.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.core.commands.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.commands.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.core.commands.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.core.commands.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.core.contenttype"/>
+      <plugin id="org.eclipse.core.databinding"/>
+      <plugin id="org.eclipse.core.databinding.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.observable"/>
+      <plugin id="org.eclipse.core.databinding.observable.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.observable.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.observable.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.observable.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.observable.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.property"/>
+      <plugin id="org.eclipse.core.databinding.property.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.property.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.property.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.property.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.core.databinding.property.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.core.expressions"/>
+      <plugin id="org.eclipse.core.jobs"/>
+      <plugin id="org.eclipse.core.runtime"/>
+      <plugin id="org.eclipse.emf.common"/>
+      <plugin id="org.eclipse.emf.ecore"/>
+      <plugin id="org.eclipse.emf.ecore.xmi"/>
+      <plugin id="org.eclipse.equinox.app"/>
+      <plugin id="org.eclipse.equinox.common"/>
+      <plugin id="org.eclipse.equinox.console"/>
+      <plugin id="org.eclipse.equinox.http.registry"/>
+      <plugin id="org.eclipse.equinox.http.servlet"/>
+      <plugin id="org.eclipse.equinox.http.servletbridge"/>
+      <plugin id="org.eclipse.equinox.preferences"/>
+      <plugin id="org.eclipse.equinox.registry"/>
+      <plugin id="org.eclipse.help"/>
+      <plugin id="org.eclipse.help.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.help.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.help.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.help.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.help.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.osgi"/>
+      <plugin id="org.eclipse.osgi.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.osgi.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.osgi.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.osgi.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.osgi.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.osgi.services"/>
+      <plugin id="org.eclipse.osgi.services.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.osgi.services.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.osgi.services.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.osgi.services.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.osgi.services.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.rap.addons.filedialog"/>
+      <plugin id="org.eclipse.rap.addons.fileupload"/>
+      <plugin id="org.eclipse.rap.jface"/>
+      <plugin id="org.eclipse.rap.jface.databinding"/>
+      <plugin id="org.eclipse.rap.jface.databinding.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.rap.jface.databinding.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.rap.jface.databinding.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.rap.jface.databinding.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.rap.jface.databinding.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.rap.jface.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.rap.jface.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.rap.jface.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.rap.jface.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.rap.jface.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.rap.rwt"/>
+      <plugin id="org.eclipse.rap.rwt.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.rap.rwt.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.rap.rwt.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.rap.rwt.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.rap.rwt.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.rap.rwt.osgi"/>
+      <plugin id="org.eclipse.rap.ui"/>
+      <plugin id="org.eclipse.rap.ui.forms"/>
+      <plugin id="org.eclipse.rap.ui.forms.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.forms.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.forms.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.forms.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.forms.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.nl_zh" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.workbench"/>
+      <plugin id="org.eclipse.rap.ui.workbench.nl_cs" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.workbench.nl_de" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.workbench.nl_es" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.workbench.nl_ru" fragment="true"/>
+      <plugin id="org.eclipse.rap.ui.workbench.nl_zh" fragment="true"/>
+      <plugin id="org.mozilla.javascript"/>
+      <plugin id="org.netxms.gef4.zest.core"/>
+      <plugin id="org.netxms.gef4.zest.jface"/>
+      <plugin id="org.netxms.gef4.zest.layouts"/>
+      <plugin id="org.netxms.nebula.widgets.gallery"/>
+      <plugin id="org.netxms.rap.draw2d"/>
+      <plugin id="org.netxms.rap.draw2d.compatibility"/>
+      <plugin id="org.netxms.ui.eclipse.actionmanager"/>
+      <plugin id="org.netxms.ui.eclipse.agentmanager"/>
+      <plugin id="org.netxms.ui.eclipse.alarmviewer"/>
+      <plugin id="org.netxms.ui.eclipse.charts"/>
+      <plugin id="org.netxms.ui.eclipse.clientlibrary"/>
+      <plugin id="org.netxms.ui.eclipse.dashboard"/>
+      <plugin id="org.netxms.ui.eclipse.datacollection"/>
+      <plugin id="org.netxms.ui.eclipse.epp"/>
+      <plugin id="org.netxms.ui.eclipse.eventmanager"/>
+      <plugin id="org.netxms.ui.eclipse.filemanager"/>
+      <plugin id="org.netxms.ui.eclipse.imagelibrary"/>
+      <plugin id="org.netxms.ui.eclipse.logviewer"/>
+      <plugin id="org.netxms.ui.eclipse.networkmaps"/>
+      <plugin id="org.netxms.ui.eclipse.nxsl"/>
+      <plugin id="org.netxms.ui.eclipse.objectbrowser"/>
+      <plugin id="org.netxms.ui.eclipse.objectbrowser.adapterfactory" fragment="true"/>
+      <plugin id="org.netxms.ui.eclipse.objectmanager"/>
+      <plugin id="org.netxms.ui.eclipse.objecttools"/>
+      <plugin id="org.netxms.ui.eclipse.objectview"/>
+      <plugin id="org.netxms.ui.eclipse.osm"/>
+      <plugin id="org.netxms.ui.eclipse.perfview"/>
+      <plugin id="org.netxms.ui.eclipse.policymanager"/>
+      <plugin id="org.netxms.ui.eclipse.reporter"/>
+      <plugin id="org.netxms.ui.eclipse.serverconfig"/>
+      <plugin id="org.netxms.ui.eclipse.serverjobmanager"/>
+      <plugin id="org.netxms.ui.eclipse.serviceview"/>
+      <plugin id="org.netxms.ui.eclipse.slm"/>
+      <plugin id="org.netxms.ui.eclipse.snmp"/>
+      <plugin id="org.netxms.ui.eclipse.switchmanager"/>
+      <plugin id="org.netxms.ui.eclipse.topology"/>
+      <plugin id="org.netxms.ui.eclipse.usermanager"/>
+      <plugin id="org.netxms.webui.core"/>
+      <plugin id="org.swtchart"/>
+   </plugins>
+
+   <configurations>
+      <plugin id="com.ibm.icu" autoStart="true" startLevel="0" />
+      <plugin id="javax.xml" autoStart="true" startLevel="0" />
+      <plugin id="org.apache.commons.codec" autoStart="true" startLevel="0" />
+      <plugin id="org.apache.commons.fileupload" autoStart="true" startLevel="0" />
+      <plugin id="org.apache.commons.io" autoStart="true" startLevel="0" />
+      <plugin id="org.apache.felix.gogo.runtime" autoStart="true" startLevel="0" />
+      <plugin id="org.apache.felix.gogo.shell" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.birt.chart.device.extension" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.birt.chart.engine" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.birt.chart.engine.extension" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.birt.core" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.commands" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.contenttype" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.contenttype.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.contenttype.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.contenttype.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.contenttype.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.contenttype.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.databinding" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.databinding.observable" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.databinding.property" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.expressions" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.expressions.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.expressions.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.expressions.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.expressions.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.expressions.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.jobs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.jobs.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.jobs.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.jobs.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.jobs.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.jobs.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.runtime.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.runtime.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.runtime.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.runtime.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.core.runtime.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.common" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.common.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.common.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.common.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.common.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.common.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.ecore" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.ecore.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.ecore.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.ecore.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.ecore.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.ecore.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.ecore.xmi" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.ecore.xmi.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.ecore.xmi.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.ecore.xmi.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.ecore.xmi.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.emf.ecore.xmi.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.app" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.app.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.app.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.app.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.app.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.app.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.common.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.common.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.common.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.common.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.common.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.console" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.registry" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.registry.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.registry.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.registry.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.registry.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.registry.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.servlet" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.servlet.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.servlet.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.servlet.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.servlet.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.servlet.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.http.servletbridge" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.preferences" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.preferences.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.preferences.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.preferences.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.preferences.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.preferences.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.registry" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.registry.nl_cs" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.registry.nl_de" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.registry.nl_es" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.registry.nl_ru" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.registry.nl_zh" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.help" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.osgi" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.osgi.services" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.addons.filedialog" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.addons.fileupload" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.jface" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.jface.databinding" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.rwt" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.rwt.osgi" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.ui" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.ui.forms" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.ui.workbench" autoStart="true" startLevel="0" />
+      <plugin id="org.mozilla.javascript" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.gef4.zest.core" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.gef4.zest.jface" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.gef4.zest.layouts" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.nebula.widgets.gallery" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.rap.draw2d" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.rap.draw2d.compatibility" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.actionmanager" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.agentmanager" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.alarmviewer" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.charts" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.clientlibrary" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.dashboard" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.datacollection" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.epp" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.eventmanager" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.filemanager" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.imagelibrary" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.logviewer" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.networkmaps" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.nxsl" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.objectbrowser" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.objectmanager" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.objecttools" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.objectview" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.osm" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.perfview" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.policymanager" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.reporter" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.serverconfig" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.serverjobmanager" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.serviceview" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.slm" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.snmp" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.switchmanager" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.topology" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.ui.eclipse.usermanager" autoStart="true" startLevel="0" />
+      <plugin id="org.netxms.webui.core" autoStart="true" startLevel="0" />
+      <plugin id="org.swtchart" autoStart="true" startLevel="0" />
+   </configurations>
+
+   <warConfiguration webXml="../Core/WEB-INF/web.xml" launchIni="../Core/WEB-INF/launch.ini">
+   <libraries>
+      <library path="org.eclipse.equinox.servletbridge_1.3.0.v20140430-1556.jar" fromTarget="true"/>
+   </libraries>
+   </warConfiguration>
+</product>
