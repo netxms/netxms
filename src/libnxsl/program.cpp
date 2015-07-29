@@ -213,8 +213,7 @@ void NXSL_Program::dump(FILE *pFile)
       {
          case OPCODE_CALL_EXTERNAL:
          case OPCODE_GLOBAL:
-            _ftprintf(pFile, _T("%s, %d\n"), instr->m_operand.m_pszString,
-                      instr->m_nStackItems);
+            _ftprintf(pFile, _T("%s, %d\n"), instr->m_operand.m_pszString, instr->m_nStackItems);
             break;
          case OPCODE_CALL:
             _ftprintf(pFile, _T("%04X, %d\n"), instr->m_operand.m_dwAddr, instr->m_nStackItems);

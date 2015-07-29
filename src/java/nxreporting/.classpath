@@ -11,6 +11,7 @@
   <classpathentry kind="var" path="M2_REPO/commons-configuration/commons-configuration/1.9/commons-configuration-1.9.jar"/>
   <classpathentry kind="var" path="M2_REPO/commons-lang/commons-lang/2.6/commons-lang-2.6.jar"/>
   <classpathentry kind="var" path="M2_REPO/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar"/>
+  <classpathentry kind="var" path="M2_REPO/commons-daemon/commons-daemon/1.0.15/commons-daemon-1.0.15.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/springframework/spring-core/4.1.1.RELEASE/spring-core-4.1.1.RELEASE.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/springframework/spring-context/4.1.1.RELEASE/spring-context-4.1.1.RELEASE.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/springframework/spring-aop/4.1.1.RELEASE/spring-aop-4.1.1.RELEASE.jar"/>
@@ -42,8 +43,8 @@
   <classpathentry kind="var" path="M2_REPO/ch/qos/logback/logback-core/1.0.10/logback-core-1.0.10.jar" sourcepath="M2_REPO/ch/qos/logback/logback-core/1.0.10/logback-core-1.0.10-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/quartz-scheduler/quartz/2.2.1/quartz-2.2.1.jar"/>
   <classpathentry kind="var" path="M2_REPO/c3p0/c3p0/0.9.1.1/c3p0-0.9.1.1.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/netxms/netxms-client/2.0-SNAPSHOT/netxms-client-2.0-SNAPSHOT.jar"/>
-  <classpathentry kind="var" path="M2_REPO/org/netxms/netxms-base/2.0-SNAPSHOT/netxms-base-2.0-SNAPSHOT.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/netxms/netxms-client/2.0-M5/netxms-client-2.0-M5.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/netxms/netxms-base/2.0-M5/netxms-base-2.0-M5.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/simpleframework/simple-xml/2.6.4/simple-xml-2.6.4.jar" sourcepath="M2_REPO/org/simpleframework/simple-xml/2.6.4/simple-xml-2.6.4-sources.jar"/>
   <classpathentry kind="var" path="M2_REPO/stax/stax-api/1.0.1/stax-api-1.0.1.jar"/>
   <classpathentry kind="var" path="M2_REPO/stax/stax/1.2.0/stax-1.2.0.jar" sourcepath="M2_REPO/stax/stax/1.2.0/stax-1.2.0-sources.jar"/>
