@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.networkmaps.widgets;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -53,6 +54,11 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.maps.MapLayoutAlgorithm;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
+import org.netxms.client.maps.configs.DCIImageConfiguration;
+import org.netxms.client.maps.configs.SingleDciConfig;
+import org.netxms.client.maps.elements.NetworkMapDCIContainer;
+import org.netxms.client.maps.elements.NetworkMapDCIImage;
+import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.NetworkMap;
@@ -62,6 +68,7 @@ import org.netxms.ui.eclipse.networkmaps.algorithms.ManualLayout;
 import org.netxms.ui.eclipse.networkmaps.algorithms.SparseTree;
 import org.netxms.ui.eclipse.networkmaps.api.ObjectDoubleClickHandler;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
+import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkDciValueProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -83,6 +90,7 @@ public class NetworkMapWidget extends Composite
    private List<DoubleClickHandlerData> doubleClickHandlers = new ArrayList<DoubleClickHandlerData>(0);
    private Stack<Long> history = new Stack<Long>();
    private long currentMapId = 0;
+   private LinkDciValueProvider dciValueProvider;
 
 	/**
 	 * @param parent
@@ -91,6 +99,7 @@ public class NetworkMapWidget extends Composite
 	public NetworkMapWidget(Composite parent, int style)
 	{
 		super(parent, style);
+      dciValueProvider = LinkDciValueProvider.getInstance();
 	
       final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
       disableGeolocationBackground = ps.getBoolean("DISABLE_GEOLOCATION_BACKGROUND"); //$NON-NLS-1$
@@ -237,7 +246,8 @@ public class NetworkMapWidget extends Composite
 	public void setContent(NetworkMapPage page)
 	{
 	   mapPage = page;
-		viewer.setInput(page);
+      addDciToRequestList();
+		viewer.setInput(page);		
 	}
 	
 	/**
@@ -291,6 +301,7 @@ public class NetworkMapWidget extends Composite
 		labelProvider.setShowStatusIcons((mapObject.getFlags() & org.netxms.client.objects.NetworkMap.MF_SHOW_STATUS_ICON) > 0);
 		
 		mapPage = mapObject.createMapPage();
+      addDciToRequestList();	
 		viewer.setInput(mapPage);
 		
 		if (resetHistory)
@@ -452,5 +463,67 @@ public class NetworkMapWidget extends Composite
       ObjectDoubleClickHandler handler;
       int priority;
       Class<?> enabledFor;
+   }
+   
+   /**
+    * Goes thought all links and trys to add to request list required DCIs.
+    */
+   protected void addDciToRequestList()
+   {
+      Collection<NetworkMapLink> linkList = mapPage.getLinks();
+      for (NetworkMapLink item : linkList)
+      {
+         if(item.hasDciData())
+         {
+            for (SingleDciConfig value :item.getDciAsList())
+            {
+               if(value.type == SingleDciConfig.ITEM)
+               {
+                  dciValueProvider.addDci(value.getNodeId(), value.dciId, mapPage);
+               }
+               else
+               {
+                  dciValueProvider.addDci(value.getNodeId(), value.dciId, value.column, value.instance, mapPage);
+               }
+            }
+         }
+      }
+      Collection<NetworkMapElement> mapElements = mapPage.getElements();
+      for (NetworkMapElement element : mapElements)
+      {
+         if(element instanceof NetworkMapDCIContainer)
+         {
+            NetworkMapDCIContainer item = (NetworkMapDCIContainer)element;
+            if(item.hasDciData())
+            {
+               for (SingleDciConfig value : item.getObjectDCIArray())
+               {
+                  if(value.type == SingleDciConfig.ITEM)
+                  {
+                     dciValueProvider.addDci(value.getNodeId(), value.dciId, mapPage);
+                  }
+                  else
+                  {
+                     dciValueProvider.addDci(value.getNodeId(), value.dciId, value.column, value.instance, mapPage);
+                  }
+               }
+            }
+         }
+         
+         if(element instanceof NetworkMapDCIImage)
+         {
+            NetworkMapDCIImage item = (NetworkMapDCIImage)element;
+            DCIImageConfiguration config = item.getImageOptions();
+            SingleDciConfig value = config.getDci();
+            if(value.type == SingleDciConfig.ITEM)
+            {
+               dciValueProvider.addDci(value.getNodeId(), value.dciId, mapPage);
+            }
+            else
+            {
+               dciValueProvider.addDci(value.getNodeId(), value.dciId, value.column, value.instance, mapPage);
+            }
+         }
+      }
    }
 }
