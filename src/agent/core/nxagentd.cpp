@@ -741,6 +741,9 @@ BOOL Initialize()
 		SaveRegistry();
 	}
 
+   //Create FileStore folder
+   CreateFolder(g_szFileStore);
+
 #ifdef _WIN32
    WSADATA wsaData;
 	int wrc = WSAStartup(MAKEWORD(2, 2), &wsaData);
