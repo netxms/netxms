@@ -7,6 +7,7 @@
 - Java subagent improved
 - Fixed multiple issues with agent side data caching
 - Hash maps implemented in NXSL
+- Improved array implementation in NXSL
 - New OS parameters and tables: System.HandleCount, System.OpenFiles, Process.Handles
 - Unified macros in all types of object tools
 - Server can be switched to case-insensitive login names mode

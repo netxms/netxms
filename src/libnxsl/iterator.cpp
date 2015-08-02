@@ -38,7 +38,7 @@ int NXSL_Iterator::createIterator(NXSL_Stack *stack)
 	if (value->isArray())
 	{
 		NXSL_Array *array = value->getValueAsArray();
-		array->incRefCount();
+		array->incHandleCount();
 
 		delete value;
 		value = (NXSL_Value *)stack->pop();
@@ -49,7 +49,7 @@ int NXSL_Iterator::createIterator(NXSL_Stack *stack)
 		}
 		else
 		{
-			array->decRefCount();
+			array->decHandleCount();
 			if (array->isUnused())
 				delete array;
 			rc = NXSL_ERR_NOT_STRING;
@@ -80,17 +80,15 @@ NXSL_Iterator::NXSL_Iterator(const TCHAR *variable, NXSL_Array *array)
  */
 NXSL_Iterator::~NXSL_Iterator()
 {
-	m_array->decRefCount();
+	m_array->decHandleCount();
 	if (m_array->isUnused())
 		delete m_array;
 	safe_free(m_variable);
 }
 
-
-//
-// Get next element
-//
-
+/**
+ * Get next element
+ */
 NXSL_Value *NXSL_Iterator::next()
 {
 	m_position++;

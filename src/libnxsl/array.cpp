@@ -26,9 +26,8 @@
 /**
  * Create empty array
  */
-NXSL_Array::NXSL_Array()
+NXSL_Array::NXSL_Array() : NXSL_HandleCountObject()
 {
-	m_refCount = 0;
 	m_size = 0;
 	m_allocated = 0;
 	m_data = NULL;
@@ -37,9 +36,8 @@ NXSL_Array::NXSL_Array()
 /**
  *  Create copy of given array
  */
-NXSL_Array::NXSL_Array(const NXSL_Array *src)
+NXSL_Array::NXSL_Array(const NXSL_Array *src) : NXSL_HandleCountObject()
 {
-	m_refCount = 0;
 	m_size = src->m_size;
 	m_allocated = src->m_size;
 	if (m_size > 0)
@@ -60,9 +58,8 @@ NXSL_Array::NXSL_Array(const NXSL_Array *src)
 /**
  * Create array populated with values from string list
  */
-NXSL_Array::NXSL_Array(const StringList *values)
+NXSL_Array::NXSL_Array(const StringList *values) : NXSL_HandleCountObject()
 {
-	m_refCount = 0;
 	m_size = values->size();
 	m_allocated = m_size;
 	if (m_size > 0)

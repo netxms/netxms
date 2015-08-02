@@ -150,6 +150,26 @@ public:
 };
 
 /**
+ * Reference counting object
+ */
+class LIBNXSL_EXPORTABLE NXSL_HandleCountObject
+{
+protected:
+   int m_handleCount;
+
+public:
+   NXSL_HandleCountObject()
+   {
+      m_handleCount = 0;
+   }
+
+	void incHandleCount() { m_handleCount++; }
+	void decHandleCount() { m_handleCount--; }
+	bool isUnused() { return m_handleCount < 1; }
+   bool isShared() { return m_handleCount > 1; }
+};
+
+/**
  * Array element
  */
 struct NXSL_ArrayElement
@@ -161,10 +181,9 @@ struct NXSL_ArrayElement
 /**
  * NXSL array
  */
-class LIBNXSL_EXPORTABLE NXSL_Array
+class LIBNXSL_EXPORTABLE NXSL_Array : public NXSL_HandleCountObject
 {
 private:
-	int m_refCount;
 	int m_size;
 	int m_allocated;
 	NXSL_ArrayElement *m_data;
@@ -174,10 +193,6 @@ public:
 	NXSL_Array(const NXSL_Array *src);
    NXSL_Array(const StringList *values);
 	~NXSL_Array();
-
-	void incRefCount() { m_refCount++; }
-	void decRefCount() { m_refCount--; }
-	bool isUnused() const { return m_refCount < 1; }
 
 	void set(int index, NXSL_Value *value);
 	NXSL_Value *get(int index) const;
@@ -189,20 +204,15 @@ public:
 /**
  * NXSL hash map
  */
-class LIBNXSL_EXPORTABLE NXSL_HashMap
+class LIBNXSL_EXPORTABLE NXSL_HashMap : public NXSL_HandleCountObject
 {
 private:
-	int m_refCount;
    StringObjectMap<NXSL_Value> *m_values;
 
 public:
 	NXSL_HashMap();
 	NXSL_HashMap(const NXSL_HashMap *src);
 	~NXSL_HashMap();
-
-	void incRefCount() { m_refCount++; }
-	void decRefCount() { m_refCount--; }
-	bool isUnused() const { return m_refCount < 1; }
 
    void set(const TCHAR *key, NXSL_Value *value) { m_values->set(key, value); }
    NXSL_Value *get(const TCHAR *key) const { return m_values->get(key); }
@@ -229,11 +239,56 @@ public:
 
 	void incRefCount() { m_refCount++; }
 	void decRefCount() { m_refCount--; }
-	BOOL isUnused() { return m_refCount < 1; }
+	bool isUnused() { return m_refCount < 1; }
 
 	NXSL_Value *next();
 
 	static int createIterator(NXSL_Stack *stack);
+};
+
+/**
+ * Object handle
+ */
+template <class T> class NXSL_Handle
+{
+private:
+   T *m_object;
+   int m_refCount;
+
+public:
+   NXSL_Handle(T *o) 
+   { 
+      m_object = o; 
+      o->incHandleCount(); 
+      m_refCount = 0; 
+   }
+   NXSL_Handle(NXSL_Handle<T> *h) 
+   { 
+      m_object = h->m_object; 
+      m_object->incHandleCount(); 
+      m_refCount = 0; 
+   }
+   ~NXSL_Handle() 
+   { 
+      m_object->decHandleCount(); 
+      if (m_object->isUnused()) 
+         delete m_object; 
+   }
+
+	void incRefCount() { m_refCount++; }
+	void decRefCount() { m_refCount--; }
+	bool isUnused() { return m_refCount < 1; }
+   bool isShared() { return m_refCount > 1; }
+
+   T *getObject() { return m_object; }
+   bool isSharedObject() { return m_object->isShared(); }
+
+   void cloneObject()
+   {
+      m_object->decHandleCount();
+      m_object = new T(m_object);
+      m_object->incHandleCount();
+   }
 };
 
 /**
@@ -258,9 +313,9 @@ protected:
       UINT64 uInt64;
       double dReal;
       NXSL_Object *object;
-		NXSL_Array *array;
 		NXSL_Iterator *iterator;
-      NXSL_HashMap *hashMap;
+		NXSL_Handle<NXSL_Array> *arrayHandle;
+      NXSL_Handle<NXSL_HashMap> *hashMapHandle;
    } m_value;
 
    void updateNumber();
@@ -329,8 +384,8 @@ public:
    UINT64 getValueAsUInt64();
    double getValueAsReal();
    NXSL_Object *getValueAsObject() { return (m_nDataType == NXSL_DT_OBJECT) ? m_value.object : NULL; }
-   NXSL_Array *getValueAsArray() { return (m_nDataType == NXSL_DT_ARRAY) ? m_value.array : NULL; }
-   NXSL_HashMap *getValueAsHashMap() { return (m_nDataType == NXSL_DT_HASHMAP) ? m_value.hashMap : NULL; }
+   NXSL_Array *getValueAsArray() { return (m_nDataType == NXSL_DT_ARRAY) ? m_value.arrayHandle->getObject() : NULL; }
+   NXSL_HashMap *getValueAsHashMap() { return (m_nDataType == NXSL_DT_HASHMAP) ? m_value.hashMapHandle->getObject() : NULL; }
    NXSL_Iterator *getValueAsIterator() { return (m_nDataType == NXSL_DT_ITERATOR) ? m_value.iterator : NULL; }
 
    void concatenate(const TCHAR *string, UINT32 len);
@@ -356,6 +411,9 @@ public:
    BOOL LE(NXSL_Value *pVal);
    BOOL GT(NXSL_Value *pVal);
    BOOL GE(NXSL_Value *pVal);
+
+   void copyOnWrite();
+   void onVariableSet();
 
    bool equals(const NXSL_Value *v) const;
    void serialize(ByteStream& s) const;

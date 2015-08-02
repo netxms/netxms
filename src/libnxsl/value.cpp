@@ -106,8 +106,13 @@ NXSL_Value::NXSL_Value(const NXSL_Value *value)
       }
       else if (m_nDataType == NXSL_DT_ARRAY)
       {
-         m_value.array = value->m_value.array;
-			m_value.array->incRefCount();
+         m_value.arrayHandle = value->m_value.arrayHandle;
+			m_value.arrayHandle->incRefCount();
+      }
+      else if (m_nDataType == NXSL_DT_HASHMAP)
+      {
+         m_value.hashMapHandle = value->m_value.hashMapHandle;
+			m_value.hashMapHandle->incRefCount();
       }
       else if (m_nDataType == NXSL_DT_ITERATOR)
       {
@@ -162,8 +167,8 @@ NXSL_Value::NXSL_Value(NXSL_Object *object)
 NXSL_Value::NXSL_Value(NXSL_Array *array)
 {
    m_nDataType = NXSL_DT_ARRAY;
-   m_value.array = array;
-	array->incRefCount();
+   m_value.arrayHandle = new NXSL_Handle<NXSL_Array>(array);
+	m_value.arrayHandle->incRefCount();
    m_pszValStr = NULL;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
@@ -178,8 +183,8 @@ NXSL_Value::NXSL_Value(NXSL_Array *array)
 NXSL_Value::NXSL_Value(NXSL_HashMap *hashMap)
 {
    m_nDataType = NXSL_DT_HASHMAP;
-   m_value.hashMap = hashMap;
-	hashMap->incRefCount();
+   m_value.hashMapHandle = new NXSL_Handle<NXSL_HashMap>(hashMap);
+	m_value.hashMapHandle->incRefCount();
    m_pszValStr = NULL;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
@@ -370,9 +375,14 @@ NXSL_Value::~NXSL_Value()
 			delete m_value.object;
 			break;
 		case NXSL_DT_ARRAY:
-			m_value.array->decRefCount();
-			if (m_value.array->isUnused())
-				delete m_value.array;
+			m_value.arrayHandle->decRefCount();
+			if (m_value.arrayHandle->isUnused())
+				delete m_value.arrayHandle;
+			break;
+		case NXSL_DT_HASHMAP:
+			m_value.hashMapHandle->decRefCount();
+			if (m_value.hashMapHandle->isUnused())
+				delete m_value.hashMapHandle;
 			break;
 		case NXSL_DT_ITERATOR:
 			m_value.iterator->decRefCount();
@@ -465,7 +475,10 @@ void NXSL_Value::updateString()
          _sntprintf(szBuffer, 64, _T("%s@%p"), m_value.object->getClass()->getName(), m_value.object);
          break;
       case NXSL_DT_ARRAY:
-         _sntprintf(szBuffer, 64, _T("[A@%p]"), m_value.array);
+         _sntprintf(szBuffer, 64, _T("[A@%p]"), m_value.arrayHandle->getObject());
+         break;
+      case NXSL_DT_HASHMAP:
+         _sntprintf(szBuffer, 64, _T("[M@%p]"), m_value.hashMapHandle->getObject());
          break;
       case NXSL_DT_ITERATOR:
          _sntprintf(szBuffer, 64, _T("[I@%p]"), m_value.iterator);
@@ -1282,22 +1295,22 @@ bool NXSL_Value::equals(const NXSL_Value *v) const
    switch(m_nDataType)
    {
       case NXSL_DT_ARRAY:
-         if (v->m_value.array == m_value.array)
+         if (v->m_value.arrayHandle->getObject() == m_value.arrayHandle->getObject())
             return true;
-         if (v->m_value.array->size() != m_value.array->size())
+         if (v->m_value.arrayHandle->getObject()->size() != m_value.arrayHandle->getObject()->size())
             return false;
-         for(int i = 0; i < m_value.array->size(); i++)
+         for(int i = 0; i < m_value.arrayHandle->getObject()->size(); i++)
          {
-            if (!m_value.array->get(i)->equals(v->m_value.array->get(i)))
+            if (!m_value.arrayHandle->getObject()->get(i)->equals(v->m_value.arrayHandle->getObject()->get(i)))
                return false;
          }
          return true;
       case NXSL_DT_HASHMAP:
-         if (v->m_value.hashMap == m_value.hashMap)
+         if (v->m_value.hashMapHandle->getObject() == m_value.hashMapHandle->getObject())
             return true;
-         if (v->m_value.hashMap->size() != m_value.hashMap->size())
+         if (v->m_value.hashMapHandle->getObject()->size() != m_value.hashMapHandle->getObject()->size())
             return false;
-         if (m_value.hashMap->size() == 0)
+         if (m_value.hashMapHandle->getObject()->size() == 0)
             return true;
          return false;
       case NXSL_DT_INT32:
@@ -1333,15 +1346,15 @@ void NXSL_Value::serialize(ByteStream &s) const
    switch(m_nDataType)
    {
       case NXSL_DT_ARRAY:
-         s.write((UINT16)m_value.array->size());
-         for(int i = 0; i < m_value.array->size(); i++)
+         s.write((UINT16)m_value.arrayHandle->getObject()->size());
+         for(int i = 0; i < m_value.arrayHandle->getObject()->size(); i++)
          {
-            m_value.array->get(i)->serialize(s);
+            m_value.arrayHandle->getObject()->get(i)->serialize(s);
          }
          break;
       case NXSL_DT_HASHMAP:
-         s.write((UINT16)m_value.hashMap->size());
-         if (m_value.hashMap->size() > 0)
+         s.write((UINT16)m_value.hashMapHandle->getObject()->size());
+         if (m_value.hashMapHandle->getObject()->size() > 0)
          {
             // TODO: hashmap serialize
          }
@@ -1384,11 +1397,21 @@ NXSL_Value *NXSL_Value::load(ByteStream &s)
    {
       case NXSL_DT_ARRAY:
          {
-            v->m_value.array = new NXSL_Array();
+            v->m_value.arrayHandle = new NXSL_Handle<NXSL_Array>(new NXSL_Array());
             int size = (int)s.readUInt16();
             for(int i = 0; i < size; i++)
             {
-               v->m_value.array->set(i, load(s));
+               v->m_value.arrayHandle->getObject()->set(i, load(s));
+            }
+         }
+         break;
+      case NXSL_DT_HASHMAP:
+         {
+            v->m_value.hashMapHandle = new NXSL_Handle<NXSL_HashMap>(new NXSL_HashMap());
+            int size = (int)s.readUInt16();
+            for(int i = 0; i < size; i++)
+            {
+               // TODO: implement hash map load
             }
          }
          break;
@@ -1421,4 +1444,47 @@ NXSL_Value *NXSL_Value::load(ByteStream &s)
          break;
    }
    return v;
+}
+
+/**
+ * Do copy on write if needed
+ */
+void NXSL_Value::copyOnWrite()
+{
+   if ((m_nDataType == NXSL_DT_ARRAY) && m_value.arrayHandle->isSharedObject())
+   {
+      m_value.arrayHandle->cloneObject();
+   }
+   else if ((m_nDataType == NXSL_DT_HASHMAP) && m_value.hashMapHandle->isSharedObject())
+   {
+      m_value.hashMapHandle->cloneObject();
+   }
+}
+
+/**
+ * Called when value set as variable's value
+ */
+void NXSL_Value::onVariableSet()
+{
+   switch(m_nDataType)
+   {
+      case NXSL_DT_ARRAY:
+         if (m_value.arrayHandle->isShared())
+         {
+            m_value.arrayHandle->decRefCount();
+            m_value.arrayHandle = new NXSL_Handle<NXSL_Array>(m_value.arrayHandle);
+            m_value.arrayHandle->incRefCount();
+         }
+         break;
+      case NXSL_DT_HASHMAP:
+         if (m_value.hashMapHandle->isShared())
+         {
+            m_value.hashMapHandle->decRefCount();
+            m_value.hashMapHandle = new NXSL_Handle<NXSL_HashMap>(m_value.hashMapHandle);
+            m_value.hashMapHandle->incRefCount();
+         }
+         break;
+      default:
+         break;
+   }
 }

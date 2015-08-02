@@ -23,29 +23,36 @@
 
 #include "libnxsl.h"
 
-
-//
-// Variable constructors
-//
-
+/**
+ * Create variable with NULL value
+ */
 NXSL_Variable::NXSL_Variable(const TCHAR *pszName)
 {
    m_pszName = _tcsdup(pszName);
    m_pValue = new NXSL_Value;    // Create NULL value
+   m_pValue->onVariableSet();
 	m_isConstant = false;
 }
 
+/**
+ * Create variable with given value
+ */
 NXSL_Variable::NXSL_Variable(const TCHAR *pszName, NXSL_Value *pValue, bool constant)
 {
    m_pszName = _tcsdup(pszName);
    m_pValue = pValue;
+   m_pValue->onVariableSet();
 	m_isConstant = constant;
 }
 
+/**
+ * Create variable as copy of existing variable
+ */
 NXSL_Variable::NXSL_Variable(NXSL_Variable *pSrc)
 {
    m_pszName = _tcsdup(pSrc->m_pszName);
    m_pValue = new NXSL_Value(pSrc->m_pValue);
+   m_pValue->onVariableSet();
 	m_isConstant = pSrc->m_isConstant;
 }
 
@@ -65,6 +72,7 @@ void NXSL_Variable::setValue(NXSL_Value *pValue)
 {
    delete m_pValue;
    m_pValue = pValue;
+   m_pValue->onVariableSet();
 }
 
 /**

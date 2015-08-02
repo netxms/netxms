@@ -457,16 +457,12 @@ void NXSL_VM::execute()
    TCHAR szBuffer[256];
    int i, nRet;
 
+//printf(">>>> %04x\n",m_cp);
    cp = m_instructionSet->get(m_cp);
    switch(cp->m_nOpCode)
    {
       case OPCODE_PUSH_CONSTANT:
-         if (cp->m_operand.m_pConstant->isArray())
-            m_dataStack->push(new NXSL_Value(new NXSL_Array(cp->m_operand.m_pConstant->getValueAsArray())));
-         else if (cp->m_operand.m_pConstant->isHashMap())
-            m_dataStack->push(new NXSL_Value(new NXSL_HashMap(cp->m_operand.m_pConstant->getValueAsHashMap())));
-         else
-            m_dataStack->push(new NXSL_Value(cp->m_operand.m_pConstant));
+         m_dataStack->push(new NXSL_Value(cp->m_operand.m_pConstant));
          break;
       case OPCODE_PUSH_VARIABLE:
          pVar = findOrCreateVariable(cp->m_operand.m_pszString);
@@ -483,18 +479,7 @@ void NXSL_VM::execute()
 				pValue = (NXSL_Value *)m_dataStack->peek();
 				if (pValue != NULL)
 				{
-					if (pValue->isArray())
-					{
-						pVar->setValue(new NXSL_Value(new NXSL_Array(pValue->getValueAsArray())));
-					}
-					else if (pValue->isHashMap())
-					{
-						pVar->setValue(new NXSL_Value(new NXSL_HashMap(pValue->getValueAsHashMap())));
-					}
-					else
-					{
-						pVar->setValue(new NXSL_Value(pValue));
-					}
+					pVar->setValue(new NXSL_Value(pValue));
 				}
 				else
 				{
@@ -1203,18 +1188,9 @@ bool NXSL_VM::setArrayElement(NXSL_Value *array, NXSL_Value *index, NXSL_Value *
    bool success;
 	if (index->isInteger())
 	{
-		if (value->isArray())
-		{
-			array->getValueAsArray()->set(index->getValueAsInt32(), new NXSL_Value(new NXSL_Array(value->getValueAsArray())));
-		}
-		else if (value->isHashMap())
-		{
-			array->getValueAsArray()->set(index->getValueAsInt32(), new NXSL_Value(new NXSL_HashMap(value->getValueAsHashMap())));
-		}
-		else
-		{
-			array->getValueAsArray()->set(index->getValueAsInt32(), new NXSL_Value(value));
-		}
+      // copy on write
+      array->copyOnWrite();
+		array->getValueAsArray()->set(index->getValueAsInt32(), new NXSL_Value(value));
       success = true;
 	}
    else
@@ -1232,6 +1208,8 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
 {
 	if (index->isInteger())
 	{
+      if (opcode != OPCODE_GET_ELEMENT)
+         array->copyOnWrite();
 		NXSL_Value *element = array->getValueAsArray()->get(index->getValueAsInt32());
 
       if (opcode == OPCODE_INCP_ELEMENT)
@@ -1296,18 +1274,8 @@ bool NXSL_VM::setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value
    bool success;
 	if (key->isString())
 	{
-		if (value->isArray())
-		{
-			hashMap->getValueAsHashMap()->set(key->getValueAsCString(), new NXSL_Value(new NXSL_Array(value->getValueAsArray())));
-		}
-		else if (value->isHashMap())
-		{
-			hashMap->getValueAsHashMap()->set(key->getValueAsCString(), new NXSL_Value(new NXSL_HashMap(value->getValueAsHashMap())));
-		}
-		else
-		{
-			hashMap->getValueAsHashMap()->set(key->getValueAsCString(), new NXSL_Value(value));
-		}
+      hashMap->copyOnWrite();
+		hashMap->getValueAsHashMap()->set(key->getValueAsCString(), new NXSL_Value(value));
       success = true;
 	}
    else
@@ -1325,6 +1293,8 @@ void NXSL_VM::getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Va
 {
 	if (key->isString())
 	{
+      if (opcode != OPCODE_GET_ELEMENT)
+         hashMap->copyOnWrite();
 		NXSL_Value *element = hashMap->getValueAsHashMap()->get(key->getValueAsCString());
 
       if (opcode == OPCODE_INCP_ELEMENT)

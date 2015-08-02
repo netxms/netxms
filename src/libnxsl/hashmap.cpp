@@ -26,16 +26,15 @@
 /**
  * Create empty hash map
  */
-NXSL_HashMap::NXSL_HashMap()
+NXSL_HashMap::NXSL_HashMap() : NXSL_HandleCountObject()
 {
    m_values = new StringObjectMap<NXSL_Value>(true);
-   m_refCount = 0;
 }
 
 /**
  * Create copy of existing hash map
  */
-NXSL_HashMap::NXSL_HashMap(const NXSL_HashMap *src)
+NXSL_HashMap::NXSL_HashMap(const NXSL_HashMap *src) : NXSL_HandleCountObject()
 {
    m_values = new StringObjectMap<NXSL_Value>(true);
    StructArray<KeyValuePair> *values = src->m_values->toArray();
@@ -44,7 +43,6 @@ NXSL_HashMap::NXSL_HashMap(const NXSL_HashMap *src)
       KeyValuePair *p = values->get(i);
       m_values->set(p->key, new NXSL_Value((const NXSL_Value *)p->value));
    }
-   m_refCount = 0;
 }
 
 /**
