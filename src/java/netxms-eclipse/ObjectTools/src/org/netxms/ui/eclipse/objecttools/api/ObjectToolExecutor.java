@@ -47,6 +47,7 @@ import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
 import org.netxms.ui.eclipse.objecttools.views.BrowserView;
 import org.netxms.ui.eclipse.objecttools.views.FileViewer;
 import org.netxms.ui.eclipse.objecttools.views.LocalCommandResults;
+import org.netxms.ui.eclipse.objecttools.views.ServerCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -340,26 +341,43 @@ public final class ObjectToolExecutor
    private static void executeServerCommand(final NodeInfo node, final ObjectTool tool, final Map<String, String> inputValues)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      new ConsoleJob(Messages.get().ObjectToolsDynamicMenu_ExecuteServerCmd, null, Activator.PLUGIN_ID, null) {
-         @Override
-         protected void runInternal(IProgressMonitor monitor) throws Exception
+      if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
+      {      
+         new ConsoleJob(Messages.get().ObjectToolsDynamicMenu_ExecuteServerCmd, null, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               session.executeServerCommand(node.object.getObjectId(), tool.getData());
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_Information, Messages.get().ObjectToolsDynamicMenu_ServerCommandExecuted);
+                  }
+               });
+            }
+            
+            @Override
+            protected String getErrorMessage()
+            {
+               return Messages.get().ObjectToolsDynamicMenu_ServerCmdExecError;
+            }
+         }.start();
+      }
+      else
+      {
+         final String secondaryId = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
+         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+         try
          {
-            session.executeServerCommand(node.object.getObjectId(), tool.getData());
-            runInUIThread(new Runnable() {
-               @Override
-               public void run()
-               {
-                  MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_Information, Messages.get().ObjectToolsDynamicMenu_ServerCommandExecuted);
-               }
-            });
+            ServerCommandResults view = (ServerCommandResults)window.getActivePage().showView(ServerCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+            view.executeCommand(tool.getData());
          }
-         
-         @Override
-         protected String getErrorMessage()
+         catch(Exception e)
          {
-            return Messages.get().ObjectToolsDynamicMenu_ServerCmdExecError;
+            MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
          }
-      }.start();
+      }
    }
    
    /**

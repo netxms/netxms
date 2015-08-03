@@ -826,6 +826,27 @@ enum ThreadPoolStat
 };
 
 /**
+ * Server command execution data
+ */
+class ServerCommandExecData
+{
+private:
+   TCHAR *m_command;
+   bool m_sendOutput;
+   UINT32 m_requestId;
+   ClientSession *m_session;
+
+public:
+   ServerCommandExecData(TCHAR *command, bool sendOutput, UINT32 requestId, ClientSession *session);
+   ~ServerCommandExecData();
+
+   bool sendOutput() { return m_sendOutput; }
+   const TCHAR *getCommand() { return m_command; }
+   UINT32 getRequestId() { return m_requestId; }
+   ClientSession *getSession() { return m_session; }
+};
+
+/**
  * Functions
  */
 bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
@@ -958,6 +979,8 @@ void CreateObjectToolExportRecord(String &xml, UINT32 id);
 bool ImportObjectTool(ConfigEntry *config);
 UINT32 GetObjectToolsIntoMessage(NXCPMessage *msg, UINT32 userId, bool fullAccess);
 UINT32 GetObjectToolDetailsIntoMessage(UINT32 toolId, NXCPMessage *msg);
+
+void ExecuteServerCommand(void *arg);
 
 UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId);
 UINT32 DeleteSummaryTable(LONG tableId);

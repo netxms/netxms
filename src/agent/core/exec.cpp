@@ -322,7 +322,7 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 	{
       data->status = SYSINFO_RC_SUCCESS;
 
-      while (true)
+      while(true)
       {
          TCHAR value[MAX_RESULT_LENGTH];
 

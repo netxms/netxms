@@ -656,6 +656,7 @@ void NXSL_VM::execute()
             {
                if (array->isArray())
                {
+                  array->copyOnWrite();
                   int index = array->getValueAsArray()->size();
                   array->getValueAsArray()->set(index, pValue);
                   pValue = NULL;    // Prevent deletion

@@ -12131,17 +12131,6 @@ void ClientSession::listLibraryImages(NXCPMessage *request)
 }
 
 /**
- * Worker thread for server side command execution
- */
-static void RunCommand(void *arg)
-{
-	DbgPrintf(5, _T("Running server-side command: %s"), (TCHAR *)arg);
-	if (_tsystem((TCHAR *)arg) == -1)
-	   DbgPrintf(5, _T("Failed to execute command \"%s\""), (TCHAR *)arg);
-	free(arg);
-}
-
-/**
  * Execute server side command on object
  */
 void ClientSession::executeServerCommand(NXCPMessage *request)
@@ -12163,7 +12152,8 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 				TCHAR *expCmd = ((Node *)object)->expandText(cmd);
 				free(cmd);
 				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, nodeId, _T("Server command executed: %s"), expCmd);
-				ThreadPoolExecute(g_mainThreadPool, RunCommand, expCmd);
+            ThreadPoolExecute(g_mainThreadPool, ExecuteServerCommand, 
+               new ServerCommandExecData(expCmd, request->getFieldAsBoolean(VID_RECEIVE_OUTPUT), request->getId(), this));
 				msg.setField(VID_RCC, RCC_SUCCESS);
 			}
 			else

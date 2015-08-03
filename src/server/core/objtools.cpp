@@ -1488,3 +1488,85 @@ cleanup:
       msg->deleteAllFields();
    return rcc;
 }
+
+/**
+ * Command execution data constructor
+ */
+ServerCommandExecData::ServerCommandExecData(TCHAR *command, bool sendOutput, UINT32 requestId, ClientSession *session)
+{
+   m_command = command;
+   m_sendOutput = sendOutput;
+   if (m_sendOutput)
+   {
+      m_requestId = requestId;
+      m_session = session;
+      m_session->incRefCount();
+   }
+   else
+   {
+      m_requestId = 0;
+      m_session = NULL;
+   }
+}
+
+/**
+ * Command execution data destructor
+ */
+ServerCommandExecData::~ServerCommandExecData()
+{
+   if (m_session != NULL)
+      m_session->decRefCount();
+   free(m_command);
+}
+
+/**
+ * Worker thread for server side command execution
+ */
+void ExecuteServerCommand(void *arg)
+{
+   ServerCommandExecData *data = (ServerCommandExecData *)arg;
+   DbgPrintf(5, _T("Running server-side command: %s"), data->getCommand());
+   if (data->sendOutput())
+   {
+      NXCPMessage msg;
+      msg.setCode(CMD_REQUEST_COMPLETED);
+      msg.setId(data->getRequestId());
+
+      FILE *pipe = _tpopen(data->getCommand(), _T("r"));
+      if (pipe != NULL)
+      {
+         msg.setField(VID_RCC, RCC_SUCCESS);
+         data->getSession()->sendMessage(&msg);
+
+         msg.deleteAllFields();
+         msg.setCode(CMD_COMMAND_OUTPUT);
+         while(true)
+         {
+            TCHAR line[4096];
+
+            TCHAR *ret = safe_fgetts(line, 4096, pipe);
+            if (ret == NULL)
+               break;
+
+            msg.setField(VID_MESSAGE, line);
+            data->getSession()->sendMessage(&msg);
+            msg.deleteAllFields();
+         }
+
+         pclose(pipe);
+         msg.deleteAllFields();
+         msg.setEndOfSequence();
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_EXEC_FAILED);
+      }
+      data->getSession()->sendMessage(&msg);
+   }
+   else
+   {
+	   if (_tsystem(data->getCommand()) == -1)
+         DbgPrintf(5, _T("Failed to execute command \"%s\""), data->getCommand());
+   }
+   delete data;
+}
