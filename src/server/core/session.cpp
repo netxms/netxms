@@ -1387,6 +1387,9 @@ void ClientSession::processingThread()
          case CMD_TAKE_SCREENSHOT:
             getScreenshot(pMsg);
             break;
+         case CMD_COMPILE_SCRIPT:
+            compileScript(pMsg);
+            break;
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
             {
@@ -13754,5 +13757,51 @@ void ClientSession::getScreenshot(NXCPMessage *request)
 	}
    safe_free(sessionName);
    // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Compile script
+ */
+void ClientSession::compileScript(NXCPMessage *request)
+{
+   NXCPMessage msg;
+
+   // Prepare response message
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+	TCHAR *source = request->getFieldAsString(VID_SCRIPT);
+	if (source != NULL)
+	{
+      TCHAR errorMessage[256];
+      NXSL_Program *script = NXSLCompile(source, errorMessage, 256);
+      if (script != NULL)
+      {
+         msg.setField(VID_COMPILATION_STATUS, (INT16)1);
+         if (request->getFieldAsBoolean(VID_SERIALIZE))
+         {
+            ByteStream bs;
+            script->serialize(bs);
+
+            size_t size;
+            const BYTE *code = bs.buffer(&size);
+            msg.setField(VID_SCRIPT_CODE, code, size);
+         }
+         delete script;
+      }
+      else
+      {
+         msg.setField(VID_COMPILATION_STATUS, (INT16)0);
+         msg.setField(VID_ERROR_TEXT, errorMessage);
+      }
+      msg.setField(VID_RCC, RCC_SUCCESS);
+      free(source);
+	}
+	else
+	{
+      msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+	}
+
    sendMessage(&msg);
 }

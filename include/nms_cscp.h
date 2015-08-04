@@ -547,6 +547,7 @@ typedef struct
 #define CMD_ENABLE_FILE_UPDATES        0x013A
 #define CMD_DETACH_LDAP_USER           0x013B
 #define CMD_VALIDATE_PASSWORD          0x013C
+#define CMD_COMPILE_SCRIPT             0x013D
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1070,6 +1071,8 @@ typedef struct
 #define VID_DISPLAY_MODE            ((UINT32)506)
 #define VID_NUM_FIELDS              ((UINT32)507)
 #define VID_PASSWORD_IS_VALID       ((UINT32)508)
+#define VID_SERIALIZE               ((UINT32)509)
+#define VID_COMPILATION_STATUS      ((UINT32)510)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

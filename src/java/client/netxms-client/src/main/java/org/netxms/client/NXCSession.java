@@ -5255,6 +5255,25 @@ public class NXCSession
    }
 
    /**
+    * Compile NXSL script on server. Field *success* in compilation result object will indicate compilation status.
+    * If compilation fails, field *errorMessage* will contain compilation error message.
+    * 
+    * @param source script source
+    * @param serialize flag to indicate if compiled script should be serialized and sent back to client
+    * @return script compilation result object
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public ScriptCompilationResult compileScript(String source, boolean serialize) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_COMPILE_SCRIPT);
+      msg.setField(NXCPCodes.VID_SCRIPT, source);
+      msg.setField(NXCPCodes.VID_SERIALIZE, serialize);
+      sendMessage(msg);
+      return new ScriptCompilationResult(waitForRCC(msg.getMessageId()));
+   }
+
+   /**
     * Open server log by name.
     *
     * @param logName Log name

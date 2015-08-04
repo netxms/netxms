@@ -692,6 +692,7 @@ private:
    void getLocationHistory(NXCPMessage *request);
    void getScreenshot(NXCPMessage *request);
 	void executeScript(NXCPMessage *request);
+   void compileScript(NXCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

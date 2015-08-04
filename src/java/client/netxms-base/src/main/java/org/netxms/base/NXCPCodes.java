@@ -336,6 +336,7 @@ public class NXCPCodes
    public static final int CMD_ENABLE_FILE_UPDATES = 0x013A;
    public static final int CMD_DETACH_LDAP_USER = 0x013B;
    public static final int CMD_VALIDATE_PASSWORD = 0x013C;
+   public static final int CMD_COMPILE_SCRIPT = 0x013D;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -858,6 +859,8 @@ public class NXCPCodes
    public static final long VID_DISPLAY_MODE = 506;
    public static final long VID_NUM_FIELDS = 507;
    public static final long VID_PASSWORD_IS_VALID = 508;
+   public static final long VID_SERIALIZE = 509;
+   public static final long VID_COMPILATION_STATUS = 510;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
