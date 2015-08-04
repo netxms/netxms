@@ -50,9 +50,9 @@
  */
 static char m_host[128] = "localhost";
 static int m_port = 8443;
-static char m_service[MAX_PATH] = "";
+static char m_service[MAX_CONFIG_VALUE] = "";
 static char m_trustedCA[MAX_PATH] = "";
-static char m_validateURL[MAX_PATH] = "/cas/serviceValidate";
+static char m_validateURL[MAX_CONFIG_VALUE] = "/cas/serviceValidate";
 static char *m_proxies[] = { NULL };
 static MUTEX m_lock = MutexCreate();
 
@@ -64,9 +64,9 @@ void CASReadSettings()
    MutexLock(m_lock);
    ConfigReadStrA(_T("CASHost"), m_host, 128, "localhost");
    m_port = ConfigReadInt(_T("CASPort"), 8443);
-   ConfigReadStrA(_T("CASService"), m_service, MAX_PATH, "http://127.0.0.1:10080/nxmc");
+   ConfigReadStrA(_T("CASService"), m_service, MAX_CONFIG_VALUE, "http://127.0.0.1:10080/nxmc");
    ConfigReadStrA(_T("CASTrustedCACert"), m_trustedCA, MAX_PATH, "");
-   ConfigReadStrA(_T("CASValidateURL"), m_validateURL, MAX_PATH, "/cas/serviceValidate");
+   ConfigReadStrA(_T("CASValidateURL"), m_validateURL, MAX_CONFIG_VALUE, "/cas/serviceValidate");
    MutexUnlock(m_lock);
    DbgPrintf(4, _T("CAS config reloaded"));
 }
@@ -111,13 +111,13 @@ static int arrayContains(char *array[], char *element);
 static char *element_body(const char *doc, const char *tagname, int n, char *buf, int buflen);
 
 /** Returns status of certification:  0 for invalid, 1 for valid. */
-static int valid_cert(X509 *cert, const char *hostname) 
+static int valid_cert(X509 *cert, const char *hostname)
 {
    char buf[4096];
    X509_STORE *store = X509_STORE_new();
    X509_STORE_CTX *ctx = X509_STORE_CTX_new();
    X509 *cacert = get_cert_from_file(m_trustedCA);
-   if (cacert != NULL) 
+   if (cacert != NULL)
    {
       X509_STORE_add_cert(store, cacert);
    }
@@ -126,7 +126,7 @@ static int valid_cert(X509 *cert, const char *hostname)
       DbgPrintf(4, _T("CAS: cannot load CA certificate from file %hs"), m_trustedCA);
    }
    X509_STORE_CTX_init(ctx, store, cert, sk_X509_new_null());
-   if (X509_verify_cert(ctx) == 0) 
+   if (X509_verify_cert(ctx) == 0)
    {
       DbgPrintf(4, _T("CAS: X509_verify_cert() failed"));
       return 0;
@@ -134,7 +134,7 @@ static int valid_cert(X509 *cert, const char *hostname)
    X509_NAME_get_text_by_NID(X509_get_subject_name(cert), NID_commonName, buf, sizeof(buf) - 1);
    // anal-retentive:  make sure the hostname isn't as long as the
    // buffer, since we don't want to match only because of truncation
-   if (strlen(hostname) >= sizeof(buf) - 1) 
+   if (strlen(hostname) >= sizeof(buf) - 1)
    {
       return 0;
    }
@@ -147,7 +147,7 @@ static int valid_cert(X509 *cert, const char *hostname)
  *  is valid and buf is large enough and returning 0.  If not, error code is
  *  returned.
  */
-static int cas_validate(const char *ticket, const char *service, char *outbuf, int outbuflen, char *proxies[]) 
+static int cas_validate(const char *ticket, const char *service, char *outbuf, int outbuflen, char *proxies[])
 {
    SOCKET s = INVALID_SOCKET;
    int err, b, ret, total;
@@ -160,11 +160,11 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
    char parsebuf[128];
 
    SSL_CTX *ctx = SSL_CTX_new(SSLv23_client_method());
-   if (!ctx) 
+   if (!ctx)
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
    }
-   if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) 
+   if ((s = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET)
    {
       SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
    }
@@ -173,19 +173,19 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
    sa.sin_family = AF_INET;
    sa.sin_addr.s_addr = ResolveHostNameA(m_host);
    sa.sin_port = htons(m_port);
-   if (connect(s, (struct sockaddr*) &sa, sizeof(sa)) == -1) 
+   if (connect(s, (struct sockaddr*) &sa, sizeof(sa)) == -1)
    {
       SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
    }
-   if (!(ssl = SSL_new(ctx))) 
+   if (!(ssl = SSL_new(ctx)))
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
    }
-   if (!SSL_set_fd(ssl, (int)s)) 
+   if (!SSL_set_fd(ssl, (int)s))
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CTX);
    }
-   if (! (err = SSL_connect(ssl))) 
+   if (! (err = SSL_connect(ssl)))
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_CONN);
    }
@@ -202,7 +202,7 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
    if (snprintf(full_request, 4096, "GET %s?ticket=%s&service=%s HTTP/1.0\n\n", m_validateURL, ticket, service) >= 4096) {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);
    }
-   if (!SSL_write(ssl, full_request, (int)strlen(full_request))) 
+   if (!SSL_write(ssl, full_request, (int)strlen(full_request)))
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);
    }
@@ -220,7 +220,7 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
 
    str = (char *)strstr(buf, "\r\n\r\n");  // find the end of the header
 
-   if (!str) 
+   if (!str)
    {
       SET_RET_AND_GOTO_END(CAS_SSL_ERROR_HTTPS);			  // no header
    }
@@ -232,25 +232,25 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
 
    // make sure that the authentication succeeded
 
-   if (!element_body(str, "cas:authenticationSuccess", 1, parsebuf, sizeof(parsebuf))) 
+   if (!element_body(str, "cas:authenticationSuccess", 1, parsebuf, sizeof(parsebuf)))
    {
       DbgPrintf(4, _T("CAS: authentication failure"));
       SET_RET_AND_GOTO_END(CAS_AUTHENTICATION_FAILURE);
    }
 
    // retrieve the NetID
-   if (!element_body(str, "cas:user", 1, netid, sizeof(netid))) 
+   if (!element_body(str, "cas:user", 1, netid, sizeof(netid)))
    {
       DbgPrintf(4, _T("CAS: unable to determine username"));
       SET_RET_AND_GOTO_END(CAS_PROTOCOL_FAILURE);
    }
 
    // check the first proxy (if present)
-   if (element_body(str, "cas:proxies", 1, parsebuf, sizeof(parsebuf))) 
+   if (element_body(str, "cas:proxies", 1, parsebuf, sizeof(parsebuf)))
    {
-      if (element_body(str, "cas:proxy", 1, parsebuf, sizeof(parsebuf))) 
+      if (element_body(str, "cas:proxy", 1, parsebuf, sizeof(parsebuf)))
       {
-         if (!arrayContains(proxies, parsebuf)) 
+         if (!arrayContains(proxies, parsebuf))
          {
             DbgPrintf(4, _T("CAS: bad proxy (%hs)"), parsebuf);
             SET_RET_AND_GOTO_END(CAS_BAD_PROXY);
@@ -262,7 +262,7 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
     * without enough space, fail entirely, since a partial NetID could
     * be dangerous
     */
-   if (outbuflen < (int)strlen(netid) + 1) 
+   if (outbuflen < (int)strlen(netid) + 1)
    {
       DbgPrintf(4, _T("CAS: output buffer too short"));
       SET_RET_AND_GOTO_END(CAS_PROTOCOL_FAILURE);
@@ -282,7 +282,7 @@ end:
    return ret;
 }
 
-static X509 *get_cert_from_file(const char *filename) 
+static X509 *get_cert_from_file(const char *filename)
 {
    X509 *c;
    FILE *f = fopen(filename, "r");
@@ -295,12 +295,12 @@ static X509 *get_cert_from_file(const char *filename)
 }
 
 // returns 1 if a char* array contains the given element, 0 otherwise
-static int arrayContains(char *array[], char *element) 
+static int arrayContains(char *array[], char *element)
 {
    char *p;
    int i = 0;
 
-   for (p = array[0]; p; p = array[++i]) 
+   for (p = array[0]; p; p = array[++i])
    {
       if (!strcmp(p, element))
          return 1;
@@ -313,7 +313,7 @@ static int arrayContains(char *array[], char *element)
  * those representing other elements) within the nth element in the
  * document with the name provided by tagname.
  */
-static char *element_body(const char *doc, const char *tagname, int n, char *buf, int buflen) 
+static char *element_body(const char *doc, const char *tagname, int n, char *buf, int buflen)
 {
    char *start_tag_pattern = (char *)malloc(strlen(tagname) + strlen("<") + strlen(">") + 1);
    char *end_tag_pattern = (char *)malloc(strlen(tagname) + strlen("<") + strlen("/") + strlen(">") + 1);

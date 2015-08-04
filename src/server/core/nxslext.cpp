@@ -1308,8 +1308,8 @@ static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	TCHAR buffer[MAX_DB_STRING];
-	if (ConfigReadStr(argv[0]->getValueAsCString(), buffer, MAX_DB_STRING, _T("")))
+	TCHAR buffer[MAX_CONFIG_VALUE];
+	if (ConfigReadStr(argv[0]->getValueAsCString(), buffer, MAX_CONFIG_VALUE, _T("")))
 	{
 		*ppResult = new NXSL_Value(buffer);
 	}

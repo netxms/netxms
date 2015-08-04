@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
@@ -153,7 +153,7 @@ static BOOL FindSubnetForNode(DWORD id, const TCHAR *name)
 			InetAddress addr = DBGetFieldInetAddr(hResult, i, 0);
          addr.setMaskBits(DBGetFieldLong(hResult, i, 1));
          InetAddress subnet = addr.getSubnetAddress();
-			
+
          _sntprintf(query, 256, _T("SELECT id FROM subnets WHERE ip_addr='%s'"), subnet.toString(buffer));
 			hResult2 = SQLSelect(query);
 			if (hResult2 != NULL)
@@ -226,7 +226,7 @@ static void CheckZones()
 						TCHAR guidText[128];
 
 						_uuid_generate(guid);
-                  _sntprintf(szQuery, 1024, 
+                  _sntprintf(szQuery, 1024,
                              _T("INSERT INTO object_properties (object_id,guid,name,")
                              _T("status,is_deleted,is_system,inherit_access_rights,")
                              _T("last_modified,status_calc_alg,status_prop_alg,")
@@ -286,7 +286,7 @@ static void CheckNodes()
 						TCHAR guidText[128];
 
 						_uuid_generate(guid);
-                  _sntprintf(szQuery, 1024, 
+                  _sntprintf(szQuery, 1024,
                              _T("INSERT INTO object_properties (object_id,guid,name,")
                              _T("status,is_deleted,is_system,inherit_access_rights,")
                              _T("last_modified,status_calc_alg,status_prop_alg,")
@@ -376,7 +376,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
 						TCHAR guidText[128];
 
 						_uuid_generate(guid);
-                  _sntprintf(szQuery, 1024, 
+                  _sntprintf(szQuery, 1024,
                              _T("INSERT INTO object_properties (object_id,guid,name,")
                              _T("status,is_deleted,is_system,inherit_access_rights,")
                              _T("last_modified,status_calc_alg,status_prop_alg,")
@@ -534,7 +534,7 @@ static void CheckEPP()
    DWORD dwId;
 
    StartStage(_T("Checking event processing policy..."));
-   
+
    // Check source object ID's
    hResult = SQLSelect(_T("SELECT object_id FROM policy_source_list"));
    if (hResult != NULL)
@@ -713,7 +713,7 @@ static void CheckIData()
 	DB_RESULT hResultNodes, hResult;
 
    StartStage(_T("Checking collected data..."));
-   
+
 	now = time(NULL);
    hResultNodes = SQLSelect(_T("SELECT id FROM nodes"));
    if (hResultNodes != NULL)
@@ -966,7 +966,7 @@ void CheckDatabase()
    }
    else
    {
-      TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
+      TCHAR szLockStatus[MAX_CONFIG_VALUE], szLockInfo[MAX_CONFIG_VALUE];
       BOOL bLocked = FALSE;
 
       // Check if database is locked
@@ -975,7 +975,7 @@ void CheckDatabase()
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
+            DBGetField(hResult, 0, 0, szLockStatus, MAX_CONFIG_VALUE);
             DecodeSQLString(szLockStatus);
             bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
          }
@@ -988,7 +988,7 @@ void CheckDatabase()
             {
                if (DBGetNumRows(hResult) > 0)
                {
-                  DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
+                  DBGetField(hResult, 0, 0, szLockInfo, MAX_CONFIG_VALUE);
                   DecodeSQLString(szLockInfo);
                }
                DBFreeResult(hResult);

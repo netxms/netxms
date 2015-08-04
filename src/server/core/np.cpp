@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -197,8 +197,8 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreation
    }
 
    // Add default DCIs
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT, 
-		ConfigReadInt(_T("DefaultDCIPollingInterval"), 60), 
+   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT,
+		ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
 		ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), pNode));
 
 	if (doConfPoll)
@@ -261,7 +261,7 @@ static Interface *GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 dwZoneId
 
 	if (iface == NULL)
 		DbgPrintf(6, _T("GetOldNodeWithNewIP: returning null (FindInterfaceByMAC!)"));
-	
+
 	return iface;
 }
 
@@ -419,7 +419,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
 static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
 {
    DISCOVERY_FILTER_DATA data;
-   TCHAR szFilter[MAX_DB_STRING], szBuffer[256], szIpAddr[64];
+   TCHAR szFilter[MAX_CONFIG_VALUE], szBuffer[256], szIpAddr[64];
    UINT32 dwTemp;
    AgentConnection *pAgentConn;
    BOOL bResult = FALSE;
@@ -498,7 +498,7 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
 	}
 
    // Read configuration
-   ConfigReadStr(_T("DiscoveryFilter"), szFilter, MAX_DB_STRING, _T(""));
+   ConfigReadStr(_T("DiscoveryFilter"), szFilter, MAX_CONFIG_VALUE, _T(""));
    StrStrip(szFilter);
 
    // Check for filter script

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -64,7 +64,7 @@ static THREAD_RESULT THREAD_CALL SenderThread(void *pArg)
 
 		if (tries == 0)
 		{
-			DbgPrintf(3, _T("Failed to send SMS (complete failure)")); 
+			DbgPrintf(3, _T("Failed to send SMS (complete failure)"));
 			PostEvent(EVENT_SMS_FAILURE, g_dwMgmtNode, "s", pMsg->szRcpt);
 		}
 
@@ -78,10 +78,10 @@ static THREAD_RESULT THREAD_CALL SenderThread(void *pArg)
  */
 void InitSMSSender()
 {
-   TCHAR szDriver[MAX_PATH], szDrvConfig[MAX_PATH];
+   TCHAR szDriver[MAX_PATH], szDrvConfig[MAX_CONFIG_VALUE];
 
    ConfigReadStr(_T("SMSDriver"), szDriver, MAX_PATH, _T("<none>"));
-   ConfigReadStr(_T("SMSDrvConfig"), szDrvConfig, MAX_DB_STRING, _T(""));
+   ConfigReadStr(_T("SMSDrvConfig"), szDrvConfig, MAX_CONFIG_VALUE, _T(""));
    if (_tcsicmp(szDriver, _T("<none>")))
    {
       TCHAR szErrorText[256];

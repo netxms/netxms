@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004, 2005, 2006 Victor Kirhenshtein
 **
@@ -37,7 +37,7 @@ void UnlockDatabase()
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
+         DBGetField(hResult, 0, 0, szLockStatus, MAX_CONFIG_VALUE);
          DecodeSQLString(szLockStatus);
          bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
       }
@@ -50,7 +50,7 @@ void UnlockDatabase()
          {
             if (DBGetNumRows(hResult) > 0)
             {
-               DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
+               DBGetField(hResult, 0, 0, szLockInfo, MAX_CONFIG_VALUE);
                DecodeSQLString(szLockInfo);
             }
             DBFreeResult(hResult);

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
@@ -30,16 +30,16 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *arg)
 	UINT32 interval = ConfigReadULong(_T("BeaconPollingInterval"), 1000);
 	UINT32 timeout = ConfigReadULong(_T("BeaconTimeout"), 1000);
 	UINT32 packetSize = ConfigReadULong(_T("IcmpPingSize"), 46);
-	
-	TCHAR hosts[1024];
-	ConfigReadStr(_T("BeaconHosts"), hosts, 1024, _T(""));
+
+	TCHAR hosts[MAX_CONFIG_VALUE];
+	ConfigReadStr(_T("BeaconHosts"), hosts, MAX_CONFIG_VALUE, _T(""));
 	StrStrip(hosts);
 	if (hosts[0] == 0)	// Empty list
 	{
 		DbgPrintf(1, _T("Beacon poller will not start because beacon host list is empty"));
 		return THREAD_OK;
 	}
-	
+
    InetAddressList hostList;
 	for(TCHAR *curr = hosts, *next = NULL; curr != NULL; curr = next)
 	{

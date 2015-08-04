@@ -79,7 +79,7 @@ public class VariableEditDialog extends Dialog
       
       textValue = new LabeledText(dialogArea, SWT.NONE);
       textValue.setLabel(Messages.get().VariableEditDialog_Value);
-      textValue.getTextControl().setTextLimit(255);
+      textValue.getTextControl().setTextLimit(2000);
       if (varValue != null)
       	textValue.setText(varValue);
       gd = new GridData();

@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
@@ -40,7 +40,7 @@ bool g_dataOnlyMigration = false;
 bool g_skipDataMigration = false;
 int g_dbSyntax;
 const TCHAR *g_pszTableSuffix = _T("");
-const TCHAR *g_pszSqlType[6][3] = 
+const TCHAR *g_pszSqlType[6][3] =
 {
    { _T("text"), _T("text"), _T("bigint") },                 // MySQL
    { _T("text"), _T("varchar(4000)"), _T("bigint") },        // PostgreSQL
@@ -307,7 +307,7 @@ bool SQLDropColumn(const TCHAR *table, const TCHAR *column)
 			const int blen = 2048;
 			TCHAR buffer[blen];
 			// Intermediate buffers for SQLs
-			TCHAR columnList[1024], createList[1024]; 
+			TCHAR columnList[1024], createList[1024];
 			// TABLE_INFO() columns
 			TCHAR tabColName[128], tabColType[64], tabColNull[10], tabColDefault[128];
 			columnList[0] = createList[0] = _T('\0');
@@ -343,7 +343,7 @@ bool SQLDropColumn(const TCHAR *table, const TCHAR *column)
 				// TODO: figure out if SQLite transactions will work here
 				_sntprintf(buffer, blen, _T("CREATE TABLE %s__backup__ (%s)"), table, columnList);
 				CHK_EXEC(SQLQuery(buffer));
-				_sntprintf(buffer, blen, _T("INSERT INTO %s__backup__  (%s) SELECT %s FROM %s"), 
+				_sntprintf(buffer, blen, _T("INSERT INTO %s__backup__  (%s) SELECT %s FROM %s"),
 					table, columnList, columnList, table);
 				CHK_EXEC(SQLQuery(buffer));
 				_sntprintf(buffer, blen, _T("DROP TABLE %s"), table);
@@ -407,14 +407,14 @@ int MetaDataReadInt(const TCHAR *pszVar, int iDefault)
 BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault)
 {
    DB_RESULT hResult;
-   TCHAR szQuery[256];
+   TCHAR szQuery[2256];
    BOOL bSuccess = FALSE;
 
    nx_strncpy(pszBuffer, pszDefault, iBufSize);
    if (_tcslen(pszVar) > 127)
       return FALSE;
 
-   _sntprintf(szQuery, 256, _T("SELECT var_value FROM config WHERE var_name='%s'"), pszVar);
+   _sntprintf(szQuery, 2256, _T("SELECT var_value FROM config WHERE var_name='%s'"), pszVar);
    hResult = SQLSelect(szQuery);
    if (hResult == NULL)
       return FALSE;
@@ -512,7 +512,7 @@ bool ValidateDatabase()
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
+         DBGetField(hResult, 0, 0, szLockStatus, MAX_CONFIG_VALUE);
          bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
       }
       DBFreeResult(hResult);
@@ -524,7 +524,7 @@ bool ValidateDatabase()
          {
             if (DBGetNumRows(hResult) > 0)
             {
-               DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
+               DBGetField(hResult, 0, 0, szLockInfo, MAX_CONFIG_VALUE);
             }
             DBFreeResult(hResult);
          }
@@ -719,12 +719,12 @@ stop_search:
       _tprintf(_T("Command missing. Type nxdbmgr -h for command line syntax.\n"));
       return 1;
    }
-   if (strcmp(argv[optind], "batch") && 
-       strcmp(argv[optind], "check") && 
-       strcmp(argv[optind], "check-data-tables") && 
-       strcmp(argv[optind], "export") && 
-       strcmp(argv[optind], "get") && 
-       strcmp(argv[optind], "import") && 
+   if (strcmp(argv[optind], "batch") &&
+       strcmp(argv[optind], "check") &&
+       strcmp(argv[optind], "check-data-tables") &&
+       strcmp(argv[optind], "export") &&
+       strcmp(argv[optind], "get") &&
+       strcmp(argv[optind], "import") &&
        strcmp(argv[optind], "init") &&
        strcmp(argv[optind], "migrate") &&
        strcmp(argv[optind], "resetadmin") &&
@@ -849,8 +849,8 @@ stop_search:
 #else
 			char *var = argv[optind + 1];
 #endif
-			TCHAR buffer[MAX_DB_STRING];
-			ConfigReadStr(var, buffer, MAX_DB_STRING, _T(""));
+			TCHAR buffer[MAX_CONFIG_VALUE];
+			ConfigReadStr(var, buffer, MAX_CONFIG_VALUE, _T(""));
 			_tprintf(_T("%s\n"), buffer);
 #ifdef UNICODE
 			free(var);

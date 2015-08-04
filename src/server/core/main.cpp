@@ -534,8 +534,8 @@ BOOL NXCORE_EXPORTABLE Initialize()
 				_tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
 	}
    if (!nxlog_open((g_flags & AF_USE_SYSLOG) ? NETXMSD_SYSLOG_NAME : g_szLogFile,
-	                ((g_flags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) | 
-	                ((g_flags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) | 
+	                ((g_flags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
+	                ((g_flags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
                    ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
                    _T("LIBNXSRV.DLL"),
 #ifdef _WIN32
@@ -1096,8 +1096,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		pArg = ExtractWord(pArg, szBuffer);
 		if (szBuffer[0] != 0)
 		{
-			TCHAR value[256];
-			ConfigReadStr(szBuffer, value, 256, _T(""));
+			TCHAR value[MAX_CONFIG_VALUE];
+			ConfigReadStr(szBuffer, value, MAX_CONFIG_VALUE, _T(""));
 			ConsolePrintf(pCtx, _T("%s = %s\n"), szBuffer, value);
 		}
 		else
@@ -1624,7 +1624,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
                      {
                         peer[0] = 0;
                      }
-                     ConsolePrintf(pCtx, _T("%-7s | %c   | %7d | %7d | %s\n"), 
+                     ConsolePrintf(pCtx, _T("%-7s | %c   | %7d | %7d | %s\n"),
                         GetLinkLayerProtocolName(ni->protocol), ni->isPtToPt ? _T('Y') : _T('N'), ni->ifLocal, ni->ifRemote, peer);
                   }
                   nbs->decRefCount();
@@ -1874,7 +1874,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    }
 	else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))
 	{
-		ConsoleWrite(pCtx, 
+		ConsoleWrite(pCtx,
             _T("Valid commands are:\n")
 				_T("   debug [<level>|off]       - Set debug level (valid range is 0..9)\n")
 				_T("   down                      - Shutdown NetXMS server\n")

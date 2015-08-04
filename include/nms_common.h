@@ -110,6 +110,7 @@
 #define MAX_SECRET_LENGTH        64
 #define MAX_DB_STRING            256
 #define MAX_PARAM_NAME           256
+#define MAX_CONFIG_VALUE         2000
 #define MAX_COLUMN_NAME          64
 #define MAX_DNS_NAME             256
 #define MAX_HELPDESK_REF_LEN     64

@@ -1588,7 +1588,7 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
       CLIENT_PROTOCOL_VERSION_FULL
    };
    NXCPMessage msg;
-	TCHAR szBuffer[1024];
+	TCHAR szBuffer[MAX_CONFIG_VALUE];
 	String strURL;
 
    // Prepare response message
@@ -1704,16 +1704,16 @@ void ClientSession::sendServerInfo(UINT32 dwRqId)
 	msg.setField(VID_TIMEZONE, szBuffer);
 	debugPrintf(2, _T("Server time zone: %s"), szBuffer);
 
-	ConfigReadStr(_T("TileServerURL"), szBuffer, 1024, _T("http://tile.openstreetmap.org/"));
+	ConfigReadStr(_T("TileServerURL"), szBuffer, MAX_CONFIG_VALUE, _T("http://tile.openstreetmap.org/"));
 	msg.setField(VID_TILE_SERVER_URL, szBuffer);
 
-	ConfigReadStr(_T("DefaultConsoleDateFormat"), szBuffer, 1024, _T("dd.MM.yyyy"));
+	ConfigReadStr(_T("DefaultConsoleDateFormat"), szBuffer, MAX_CONFIG_VALUE, _T("dd.MM.yyyy"));
 	msg.setField(VID_DATE_FORMAT, szBuffer);
 
-	ConfigReadStr(_T("DefaultConsoleTimeFormat"), szBuffer, 1024, _T("HH:mm:ss"));
+	ConfigReadStr(_T("DefaultConsoleTimeFormat"), szBuffer, MAX_CONFIG_VALUE, _T("HH:mm:ss"));
 	msg.setField(VID_TIME_FORMAT, szBuffer);
 
-	ConfigReadStr(_T("DefaultConsoleShortTimeFormat"), szBuffer, 1024, _T("HH:mm"));
+	ConfigReadStr(_T("DefaultConsoleShortTimeFormat"), szBuffer, MAX_CONFIG_VALUE, _T("HH:mm"));
 	msg.setField(VID_SHORT_TIME_FORMAT, szBuffer);
 
    // Send response
@@ -2375,7 +2375,7 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
 {
    UINT32 i, dwId, dwNumRecords;
    NXCPMessage msg;
-   TCHAR szBuffer[MAX_DB_STRING];
+   TCHAR szBuffer[MAX_CONFIG_VALUE];
 
    // Prepare message
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -2394,7 +2394,7 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
          for(i = 0, dwId = VID_VARLIST_BASE; i < dwNumRecords; i++)
          {
             msg.setField(dwId++, DBGetField(hResult, i, 0, szBuffer, MAX_DB_STRING));
-            DBGetField(hResult, i, 1, szBuffer, MAX_DB_STRING);
+            DBGetField(hResult, i, 1, szBuffer, MAX_CONFIG_VALUE);
             DecodeSQLString(szBuffer);
             msg.setField(dwId++, szBuffer);
             msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, i, 2));
@@ -2435,8 +2435,8 @@ void ClientSession::getPublicConfigurationVariable(NXCPMessage *request)
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            TCHAR value[256];
-            msg.setField(VID_VALUE, DBGetField(hResult, 0, 0, value, 256));
+            TCHAR value[MAX_CONFIG_VALUE];
+            msg.setField(VID_VALUE, DBGetField(hResult, 0, 0, value, MAX_CONFIG_VALUE));
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
          else
@@ -2465,7 +2465,7 @@ void ClientSession::getPublicConfigurationVariable(NXCPMessage *request)
 void ClientSession::setConfigurationVariable(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   TCHAR szName[MAX_OBJECT_NAME], szValue[MAX_DB_STRING];
+   TCHAR szName[MAX_OBJECT_NAME], szValue[MAX_CONFIG_VALUE];
 
    // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -2475,7 +2475,7 @@ void ClientSession::setConfigurationVariable(NXCPMessage *pRequest)
    if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
    {
       pRequest->getFieldAsString(VID_NAME, szName, MAX_OBJECT_NAME);
-      pRequest->getFieldAsString(VID_VALUE, szValue, MAX_DB_STRING);
+      pRequest->getFieldAsString(VID_VALUE, szValue, MAX_CONFIG_VALUE);
       if (ConfigWriteStr(szName, szValue, true))
 		{
          msg.setField(VID_RCC, RCC_SUCCESS);

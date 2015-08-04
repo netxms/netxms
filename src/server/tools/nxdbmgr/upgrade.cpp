@@ -96,19 +96,19 @@ static bool IsConfigurationVariableExist(const TCHAR *name)
 bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate)
 {
    bool success = true;
-   TCHAR szQuery[1024];
+   TCHAR szQuery[3024];
    if (!IsConfigurationVariableExist(name))
    {
-      _sntprintf(szQuery, 1024, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart,is_public,data_type,description) VALUES (%s,%s,%d,%d,'%c','%c',%s)"),
+      _sntprintf(szQuery, 3024, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart,is_public,data_type,description) VALUES (%s,%s,%d,%d,'%c','%c',%s)"),
                  (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63),
-                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 255), isVisible ? 1 : 0, needRestart ? 1 : 0,
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000), isVisible ? 1 : 0, needRestart ? 1 : 0,
                  isPublic ? _T('Y') : _T('N'), dataType, (const TCHAR *)DBPrepareString(g_hCoreDB, description, 255));
       success = SQLQuery(szQuery);
    }
 	else if (forceUpdate)
 	{
-      _sntprintf(szQuery, 1024, _T("UPDATE config SET var_value=%s WHERE var_name=%s"),
-                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 255), (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63));
+      _sntprintf(szQuery, 3024, _T("UPDATE config SET var_value=%s WHERE var_name=%s"),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000), (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63));
       success = SQLQuery(szQuery);
 	}
    return success;
@@ -120,18 +120,18 @@ bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *descr
 bool CreateConfigParam(const TCHAR *name, const TCHAR *value, bool isVisible, bool needRestart, bool forceUpdate)
 {
    bool success = true;
-   TCHAR szQuery[1024];
+   TCHAR szQuery[3024];
    if (!IsConfigurationVariableExist(name))
    {
-      _sntprintf(szQuery, 1024, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (%s,%s,%d,%d)"),
+      _sntprintf(szQuery, 3024, _T("INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES (%s,%s,%d,%d)"),
                  (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63),
-                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 255), isVisible ? 1 : 0, needRestart ? 1 : 0);
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000), isVisible ? 1 : 0, needRestart ? 1 : 0);
       success = SQLQuery(szQuery);
    }
 	else if (forceUpdate)
 	{
-      _sntprintf(szQuery, 1024, _T("UPDATE config SET var_value=%s WHERE var_name=%s"),
-                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 255), (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63));
+      _sntprintf(szQuery, 3024, _T("UPDATE config SET var_value=%s WHERE var_name=%s"),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, value, 2000), (const TCHAR *)DBPrepareString(g_hCoreDB, name, 63));
       success = SQLQuery(szQuery);
 	}
    return success;
@@ -574,6 +574,16 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V362 to V363
+ */
+static BOOL H_UpgradeFromV362(int currVersion, int newVersion)
+{
+   ResizeColumn(_T("config"), _T("var_value"), 2000, true);
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='363' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V361 to V362
  */
 static BOOL H_UpgradeFromV361(int currVersion, int newVersion)
@@ -613,14 +623,14 @@ static BOOL H_UpgradeFromV359(int currVersion, int newVersion)
       for(int i = 0; i < count; i++)
       {
          UINT32 id = DBGetFieldULong(hResult, i, 0);
-         
+
          TCHAR *text = DBGetField(hResult, i, 3, NULL, 0);
          if (text != NULL)
          {
             ConvertObjectToolMacros(id, text, _T("confirmation_text"));
             free(text);
          }
-         
+
          int type = DBGetFieldLong(hResult, i, 1);
          if ((type == 1) || (type == 4) || (type == 5))
          {
@@ -8896,6 +8906,7 @@ static struct
    { 359, 360, H_UpgradeFromV359 },
    { 360, 361, H_UpgradeFromV360 },
    { 361, 362, H_UpgradeFromV361 },
+   { 362, 363, H_UpgradeFromV362 },
    { 0, 0, NULL }
 };
 

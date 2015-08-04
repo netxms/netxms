@@ -287,27 +287,27 @@ void LDAPConnection::initLDAP()
 void LDAPConnection::getAllSyncParameters()
 {
 #ifdef _WIN32
-   ConfigReadStr(_T("LdapConnectionString"), m_connList, MAX_DB_STRING, _T(""));
-   ConfigReadStr(_T("LdapSyncUser"), m_userDN, MAX_DB_STRING, _T(""));
-   ConfigReadStr(_T("LdapSearchBase"), m_searchBase, MAX_DB_STRING, _T(""));
-   ConfigReadStr(_T("LdapSearchFilter"), m_searchFilter, MAX_DB_STRING, _T("(objectClass=*)"));
+   ConfigReadStr(_T("LdapConnectionString"), m_connList, MAX_CONFIG_VALUE, _T(""));
+   ConfigReadStr(_T("LdapSyncUser"), m_userDN, MAX_CONFIG_VALUE, _T(""));
+   ConfigReadStr(_T("LdapSearchBase"), m_searchBase, MAX_CONFIG_VALUE, _T(""));
+   ConfigReadStr(_T("LdapSearchFilter"), m_searchFilter, MAX_CONFIG_VALUE, _T("(objectClass=*)"));
    if (m_searchFilter[0] == 0)
       _tcscpy(m_searchFilter, _T("(objectClass=*)"));
-   ConfigReadStr(_T("LdapSyncUserPassword"), m_userPassword, MAX_DB_STRING, _T(""));
+   ConfigReadStr(_T("LdapSyncUserPassword"), m_userPassword, MAX_CONFIG_VALUE, _T(""));
 #else
-   ConfigReadStrUTF8(_T("LdapConnectionString"), m_connList, MAX_DB_STRING, "");
-   ConfigReadStrUTF8(_T("LdapSyncUser"), m_userDN, MAX_DB_STRING, "");
-   ConfigReadStrUTF8(_T("LdapSearchBase"), m_searchBase, MAX_DB_STRING, "");
-   ConfigReadStrUTF8(_T("LdapSearchFilter"), m_searchFilter, MAX_DB_STRING, "(objectClass=*)");
+   ConfigReadStrUTF8(_T("LdapConnectionString"), m_connList, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LdapSyncUser"), m_userDN, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LdapSearchBase"), m_searchBase, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LdapSearchFilter"), m_searchFilter, MAX_CONFIG_VALUE, "(objectClass=*)");
    if (m_searchFilter[0] == 0)
       strcpy(m_searchFilter, "(objectClass=*)");
-   ConfigReadStrUTF8(_T("LdapSyncUserPassword"), m_userPassword, MAX_DB_STRING, "");
+   ConfigReadStrUTF8(_T("LdapSyncUserPassword"), m_userPassword, MAX_CONFIG_VALUE, "");
 #endif
-   ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_DB_STRING, "");
-   ConfigReadStrUTF8(_T("LdapMappingFullName"), m_ldapFullNameAttr, MAX_DB_STRING, "");
-   ConfigReadStrUTF8(_T("LdapMappingDescription"), m_ldapDescriptionAttr, MAX_DB_STRING, "");
-   ConfigReadStr(_T("LdapGroupClass"), m_groupClass, MAX_DB_STRING, _T(""));
-   ConfigReadStr(_T("LdapUserClass"), m_userClass, MAX_DB_STRING, _T(""));
+   ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LdapMappingFullName"), m_ldapFullNameAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LdapMappingDescription"), m_ldapDescriptionAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStr(_T("LdapGroupClass"), m_groupClass, MAX_CONFIG_VALUE, _T(""));
+   ConfigReadStr(_T("LdapUserClass"), m_userClass, MAX_CONFIG_VALUE, _T(""));
    m_action = ConfigReadInt(_T("LdapUserDeleteAction"), 1); //default value - to disable user(value=1)
    m_pageSize = ConfigReadInt(_T("LdapPageSize"), 1000); //default value - 1000
 }
@@ -648,8 +648,8 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
    UINT32 result;
 #ifdef UNICODE
 #ifdef _WIN32
-   nx_strncpy(m_userDN, name, MAX_DB_STRING);
-   nx_strncpy(m_userPassword, password, MAX_DB_STRING);
+   nx_strncpy(m_userDN, name, MAX_CONFIG_VALUE);
+   nx_strncpy(m_userPassword, password, MAX_CONFIG_VALUE);
 #else
    char *utf8Name = UTF8StringFromWideString(name);
    strcpy(m_userDN, utf8Name);
