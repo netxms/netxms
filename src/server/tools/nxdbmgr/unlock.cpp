@@ -37,7 +37,7 @@ void UnlockDatabase()
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         DBGetField(hResult, 0, 0, szLockStatus, MAX_CONFIG_VALUE);
+         DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
          DecodeSQLString(szLockStatus);
          bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
       }
@@ -50,7 +50,7 @@ void UnlockDatabase()
          {
             if (DBGetNumRows(hResult) > 0)
             {
-               DBGetField(hResult, 0, 0, szLockInfo, MAX_CONFIG_VALUE);
+               DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
                DecodeSQLString(szLockInfo);
             }
             DBFreeResult(hResult);
