@@ -80,30 +80,6 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	public void init(IViewSite site, IMemento memento) throws PartInitException
 	{
 		super.init(site, memento);
-		if (memento != null)
-		{
-			// Restoring, load config
-			new ConsoleJob("Load SNMP configuration", this, Activator.PLUGIN_ID, null) {
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					final SnmpConfig loadedConfig = SnmpConfig.load();
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							setConfig(loadedConfig);
-						}
-					});
-				}
-
-				@Override
-				protected String getErrorMessage()
-				{
-					return "Error while loading SNMP configuration";
-				}
-			}.start();
-		}
 	}
 
 	/* (non-Javadoc)
@@ -125,6 +101,29 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		
 		createActions();
 		contributeToActionBars();
+		
+
+      // Restoring, load config
+      new ConsoleJob("Load SNMP configuration", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final SnmpConfig loadedConfig = SnmpConfig.load();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  setConfig(loadedConfig);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Error while loading SNMP configuration";
+         }
+      }.start();
 	}
 	
 	/**

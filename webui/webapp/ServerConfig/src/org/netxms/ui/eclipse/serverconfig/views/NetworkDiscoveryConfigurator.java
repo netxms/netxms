@@ -101,30 +101,6 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    public void init(IViewSite site, IMemento memento) throws PartInitException
    {
       super.init(site, memento);
-      if (memento != null)
-      {
-         // Restoring, load config
-         new ConsoleJob(Messages.get().NetworkDiscoveryConfigurator_LoadJobName, this, Activator.PLUGIN_ID, null) {
-            @Override
-            protected void runInternal(IProgressMonitor monitor) throws Exception
-            {
-               final DiscoveryConfig loadedConfig = DiscoveryConfig.load(session);
-               runInUIThread(new Runnable() {
-                  @Override
-                  public void run()
-                  {
-                     setConfig(loadedConfig);
-                  }
-               });
-            }
-
-            @Override
-            protected String getErrorMessage()
-            {
-               return Messages.get().NetworkDiscoveryConfigurator_LoadJobError;
-            }
-         }.start();
-      }
    }
 
    /*
@@ -150,6 +126,28 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
 
       createActions();
       contributeToActionBars();
+      
+      // Restoring, load config
+      new ConsoleJob(Messages.get().NetworkDiscoveryConfigurator_LoadJobName, this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final DiscoveryConfig loadedConfig = DiscoveryConfig.load(session);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  setConfig(loadedConfig);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().NetworkDiscoveryConfigurator_LoadJobError;
+         }
+      }.start();
    }
 
    /**
