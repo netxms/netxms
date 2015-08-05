@@ -49,11 +49,11 @@ public class Application implements IApplication
 		int timeout;
 		try
 		{
-			timeout = Integer.parseInt(properties.getProperty("sessionTimeout", "120"));			
+			timeout = Integer.parseInt(properties.getProperty("sessionTimeout", "600"));			
 		}
 		catch(NumberFormatException e)
 		{
-			timeout = 120;
+			timeout = 600;
 		}
 		
 		final Display display = PlatformUI.createDisplay();
