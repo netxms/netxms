@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
          return 1;
       }
 
-		pScript = NXSLCompile(pszSource, szError, 1024);
+		pScript = NXSLCompile(pszSource, szError, 1024, NULL);
 		free(pszSource);
    }
 

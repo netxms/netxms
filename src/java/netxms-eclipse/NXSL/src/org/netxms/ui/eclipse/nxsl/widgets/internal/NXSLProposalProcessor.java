@@ -44,7 +44,7 @@ public class NXSLProposalProcessor implements IContentAssistProcessor
 	private static final String[] BUILTIN_FUNCTIONS = { "abs", "ceil", "classof", "d2x", "exit", "exp", "floor",
 		"format", "gmtime", "index", "left", "length", "localtime", "log", "log10", "lower", "ltrim", "map", "max", "min",
 		"pow", "right", "rindex", "round", "rtrim", "sleep", "strftime", "substr", "time", "trace", "trim", "typeof", "upper",
-		"AddrInRange", "AddrInSubnet", "BindObject", "CreateContainer", "CreateSNMPTransport", "FindDCIByDescription",
+		"AddrInRange", "AddrInSubnet", "ArrayToString", "BindObject", "CreateContainer", "CreateSNMPTransport", "FindDCIByDescription",
 		"FindDCIByName", "FindNodeObject", "FindObject", "FindSituation", "GetAvgDCIValue", "GetConfigurationVariable",
 		"GetCustomAttribute", "GetDCIObject", "GetDCIValue", "GetDCIValueByDescription", "GetDCIValueByName", "GetEventParameter",
 		"GetInterfaceName", "GetInterfaceObject", "GetMaxDCIValue", "GetMinDCIValue", "GetNodeInterfaces", "GetNodeParents", "GetNodeTemplates",

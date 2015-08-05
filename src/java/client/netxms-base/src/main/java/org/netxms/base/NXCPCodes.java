@@ -861,6 +861,7 @@ public class NXCPCodes
    public static final long VID_PASSWORD_IS_VALID = 508;
    public static final long VID_SERIALIZE = 509;
    public static final long VID_COMPILATION_STATUS = 510;
+   public static final long VID_ERROR_LINE = 511;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

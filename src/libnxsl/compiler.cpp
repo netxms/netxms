@@ -37,10 +37,11 @@ int yylex_destroy(yyscan_t);
  */
 NXSL_Compiler::NXSL_Compiler()
 {
-   m_pszErrorText = NULL;
-   m_pLexer = NULL;
-   m_pAddrStack = new NXSL_Stack;
-	m_pBreakStack = new NXSL_Stack;
+   m_errorText = NULL;
+   m_errorLineNumber = 0;
+   m_lexer = NULL;
+   m_addrStack = new NXSL_Stack;
+	m_breakStack = new NXSL_Stack;
 }
 
 /**
@@ -48,10 +49,10 @@ NXSL_Compiler::NXSL_Compiler()
  */
 NXSL_Compiler::~NXSL_Compiler()
 {
-   safe_free(m_pszErrorText);
-   delete m_pLexer;
-   delete m_pAddrStack;
-	delete m_pBreakStack;
+   safe_free(m_errorText);
+   delete m_lexer;
+   delete m_addrStack;
+	delete m_breakStack;
 }
 
 /**
@@ -61,13 +62,14 @@ void NXSL_Compiler::error(const char *pszMsg)
 {
    char szText[1024];
 
-   if (m_pszErrorText == NULL)
+   if (m_errorText == NULL)
    {
-      snprintf(szText, 1024, "Error in line %d: %s", m_pLexer->getCurrLine(), pszMsg);
+      m_errorLineNumber = m_lexer->getCurrLine();
+      snprintf(szText, 1024, "Error in line %d: %s", m_errorLineNumber, pszMsg);
 #ifdef UNICODE
-		m_pszErrorText = WideStringFromMBString(szText);
+		m_errorText = WideStringFromMBString(szText);
 #else
-      m_pszErrorText = strdup(szText);
+      m_errorText = strdup(szText);
 #endif
    }
 }
@@ -80,11 +82,11 @@ NXSL_Program *NXSL_Compiler::compile(const TCHAR *pszSourceCode)
    NXSL_Program *pResult;
 	yyscan_t scanner;
 
-   m_pLexer = new NXSL_Lexer(this, pszSourceCode);
+   m_lexer = new NXSL_Lexer(this, pszSourceCode);
    pResult = new NXSL_Program;
 	yylex_init(&scanner);
-	yyset_extra(m_pLexer, scanner);
-   if (yyparse(scanner, m_pLexer, this, pResult) == 0)
+	yyset_extra(m_lexer, scanner);
+   if (yyparse(scanner, m_lexer, this, pResult) == 0)
    {
       pResult->resolveFunctions();
 		pResult->optimize();
@@ -114,7 +116,7 @@ UINT32 NXSL_Compiler::popAddr()
 {
    void *pAddr;
 
-   pAddr = m_pAddrStack->pop();
+   pAddr = m_addrStack->pop();
    return pAddr ? CAST_FROM_POINTER(pAddr, UINT32) : INVALID_ADDRESS;
 }
 
@@ -125,7 +127,7 @@ UINT32 NXSL_Compiler::peekAddr()
 {
    void *pAddr;
 
-   pAddr = m_pAddrStack->peek();
+   pAddr = m_addrStack->peek();
    return pAddr ? CAST_FROM_POINTER(pAddr, UINT32) : INVALID_ADDRESS;
 }
 
@@ -136,7 +138,7 @@ void NXSL_Compiler::addBreakAddr(UINT32 dwAddr)
 {
 	Queue *pQueue;
 
-	pQueue = (Queue *)m_pBreakStack->peek();
+	pQueue = (Queue *)m_breakStack->peek();
 	if (pQueue != NULL)
 	{
 		pQueue->put(CAST_TO_POINTER(dwAddr, void *));
@@ -152,7 +154,7 @@ void NXSL_Compiler::closeBreakLevel(NXSL_Program *pScript)
 	void *pAddr;
 	UINT32 dwAddr;
 
-	pQueue = (Queue *)m_pBreakStack->pop();
+	pQueue = (Queue *)m_breakStack->pop();
 	if (pQueue != NULL)
 	{
 		while((pAddr = pQueue->get()) != NULL)

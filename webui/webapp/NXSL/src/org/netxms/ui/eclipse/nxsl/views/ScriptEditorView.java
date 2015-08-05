@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -32,9 +33,13 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.commands.ActionHandler;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
+import org.netxms.client.ScriptCompilationResult;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -43,22 +48,26 @@ import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 
 /**
  * Script editor view
- *
  */
+@SuppressWarnings("deprecation")
 public class ScriptEditorView extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.nxsl.views.ScriptEditorView"; //$NON-NLS-1$
 	
 	private NXCSession session;
+	private CompositeWithMessageBar editorMessageBar;
 	private ScriptEditor editor;
 	private long scriptId;
 	private String scriptName;
-	private RefreshAction actionRefresh;
+	private Action actionRefresh;
 	private Action actionSave;
+	private Action actionCompile;
 	private boolean modified = false;
+	private boolean showLineNumbers = true;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -70,6 +79,10 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		
 		session = ConsoleSharedData.getSession();
 		scriptId = Long.parseLong(site.getSecondaryId());
+		
+		IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		if (settings.get("ScriptEditor.showLineNumbers") != null)
+		   showLineNumbers = settings.getBoolean("ScriptEditor.showLineNumbers");
 	}
 
 	/* (non-Javadoc)
@@ -80,26 +93,41 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
 		parent.setLayout(new FillLayout());
 		
-		editor = new ScriptEditor(parent, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL);
-		editor.getTextWidget().addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e)
-			{
-				if (!modified)
-				{
-					modified = true;
-					firePropertyChange(PROP_DIRTY);
-					actionSave.setEnabled(true);
-				}
-			}
-		});
+		editorMessageBar = new CompositeWithMessageBar(parent, SWT.NONE);
+		editor = new ScriptEditor(editorMessageBar, SWT.NONE, SWT.H_SCROLL | SWT.V_SCROLL, showLineNumbers);
+		editorMessageBar.setContent(editor);
+      editor.getTextWidget().addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            if (!modified)
+            {
+               modified = true;
+               firePropertyChange(PROP_DIRTY);
+               actionSave.setEnabled(true);
+            }
+         }
+      });
 		
+		activateContext();
 		createActions();
 		contributeToActionBars();
 		//createPopupMenu();
 
 		reloadScript();
 	}
+
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.nxsl.context.ScriptEditor"); //$NON-NLS-1$
+      }
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
@@ -113,9 +141,11 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	/**
 	 * Create actions
 	 */
-	private void createActions()
+   private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{
@@ -130,6 +160,18 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 				saveScript();
 			}
 		};
+      actionSave.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.save"); //$NON-NLS-1$
+      handlerService.activateHandler(actionSave.getActionDefinitionId(), new ActionHandler(actionSave));
+		
+		actionCompile = new Action("&Compile", Activator.getImageDescriptor("icons/compile.gif")) {
+         @Override
+         public void run()
+         {
+            compileScript();
+         }
+      };
+      actionCompile.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.compile"); //$NON-NLS-1$
+      handlerService.activateHandler(actionCompile.getActionDefinitionId(), new ActionHandler(actionCompile));
 	}
 
 	/**
@@ -150,6 +192,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	 */
 	private void fillLocalPullDown(IMenuManager manager)
 	{
+		manager.add(actionCompile);
 		manager.add(actionSave);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -163,6 +206,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	 */
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
+      manager.add(actionCompile);
 		manager.add(actionSave);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -192,12 +236,51 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 						setPartName(String.format(Messages.get().ScriptEditorView_PartName, scriptName));
 						editor.setText(script.getSource());
 						actionSave.setEnabled(false);
+						modified = false;
+		            firePropertyChange(PROP_DIRTY);
 					}
 				});
 			}
 		}.start();
 	}
 	
+	/**
+	 * Compile script
+	 */
+	private void compileScript()
+	{
+      final String source = editor.getText();
+      editor.getTextWidget().setEditable(false);
+      new ConsoleJob("Compile script", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot compile script";
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final ScriptCompilationResult result = session.compileScript(source, false);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (result.success)
+                  {
+                     editorMessageBar.showMessage(CompositeWithMessageBar.INFORMATION, "Script compiled successfully");
+                  }
+                  else
+                  {
+                     editorMessageBar.showMessage(CompositeWithMessageBar.WARNING, result.errorMessage);
+                  }
+                  editor.getTextWidget().setEditable(true);
+               }
+            });
+         }
+      }.start();
+	}
+
 	/**
 	 * Save script
 	 */
@@ -215,7 +298,44 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
+            final ScriptCompilationResult result = session.compileScript(source, false);
+            if (result.success)
+            {
+               getDisplay().syncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     editorMessageBar.hideMessage();
+                  }
+               });
+            }
+            else
+            {
+               getDisplay().syncExec(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     if (MessageDialogHelper.openQuestion(getSite().getShell(), "Compilation Errors", 
+                           String.format("Script compilation failed (%s)\r\nSave changes anyway?", result.errorMessage)))
+                        result.success = true;
+                     editorMessageBar.showMessage(CompositeWithMessageBar.WARNING, result.errorMessage);
+                  }
+               });
+            }
+            if (result.success)
+            {
 				doScriptSave(source, monitor);
+			}
+            else
+            {
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     editor.getTextWidget().setEditable(true);
+                  }
+               });
+            }
 			}
 		}.start();
 	}
@@ -312,4 +432,15 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
 		return modified;
 	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings.put("ScriptEditor.showLineNumbers", showLineNumbers);
+      super.dispose();
+   }
 }

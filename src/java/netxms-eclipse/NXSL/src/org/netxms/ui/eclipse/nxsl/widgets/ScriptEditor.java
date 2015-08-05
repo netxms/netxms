@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,19 +21,18 @@ package org.netxms.ui.eclipse.nxsl.widgets;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.text.IFindReplaceTarget;
 import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.TextViewerUndoManager;
+import org.eclipse.jface.text.source.CompositeRuler;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.text.source.LineNumberRulerColumn;
 import org.eclipse.jface.text.source.SourceViewer;
-import org.eclipse.jface.text.source.VerticalRuler;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.VerifyKeyListener;
 import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
@@ -49,7 +48,7 @@ import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLSourceViewerConfiguration
 public class ScriptEditor extends Composite
 {
 	private SourceViewer editor;
-	private Font editorFont;
+	private CompositeRuler ruler;
 	private Set<String> functions = new HashSet<String>(0);
 	private Set<String> variables = new HashSet<String>(0);
 	private String[] functionsCache = new String[0];
@@ -63,21 +62,18 @@ public class ScriptEditor extends Composite
     */
    public ScriptEditor(Composite parent, int style, int editorStyle)
    {
-      this(parent, style, editorStyle, 20);
+      this(parent, style, editorStyle, true);
    }
    
 	/**
 	 * @param parent
 	 * @param style
 	 * @param editorStyle
-	 * @param rulerWidth
+	 * @param showLineNumbers
 	 */
-	public ScriptEditor(Composite parent, int style, int editorStyle, int rulerWidth)
+	public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers)
 	{
 		super(parent, style);
-		
-		//editorFont = new Font(getShell().getDisplay(), "Courier New", 10, SWT.NORMAL);
-		editorFont = JFaceResources.getTextFont();
 		
 		proposalIcons[0] = Activator.getImageDescriptor("icons/function.gif").createImage(); //$NON-NLS-1$
 		proposalIcons[1] = Activator.getImageDescriptor("icons/var_global.gif").createImage(); //$NON-NLS-1$
@@ -85,8 +81,11 @@ public class ScriptEditor extends Composite
 		proposalIcons[3] = Activator.getImageDescriptor("icons/constant.gif").createImage(); //$NON-NLS-1$
 		
 		setLayout(new FillLayout());
-		editor = new SourceViewer(this, (rulerWidth > 0) ? new VerticalRuler(rulerWidth) : null, editorStyle);
+		ruler = new CompositeRuler();
+		editor = new SourceViewer(this, ruler, editorStyle);
 		editor.configure(new NXSLSourceViewerConfiguration(this));
+		if (showLineNumbers)
+		   ruler.addDecorator(0, new LineNumberRulerColumn());
 
 		final TextViewerUndoManager undoManager = new TextViewerUndoManager(50);
 		editor.setUndoManager(undoManager);
@@ -145,8 +144,10 @@ public class ScriptEditor extends Composite
 		});
 
 		StyledText control = editor.getTextWidget();
-		control.setFont(editorFont);
+		control.setFont(JFaceResources.getTextFont());
 		control.setWordWrap(false);
+		
+		editor.setDocument(new NXSLDocument(""));
 	}
 
 	/* (non-Javadoc)
@@ -157,7 +158,6 @@ public class ScriptEditor extends Composite
 	{
 		for(int i = 0; i < proposalIcons.length; i++)
 			proposalIcons[i].dispose();
-		//editorFont.dispose();
 		super.dispose();
 	}
 	
@@ -280,5 +280,24 @@ public class ScriptEditor extends Composite
 		Point p = editor.getTextWidget().computeSize(wHint, hHint, changed);
 		p.y += 4;
 		return p;
+	}
+	
+	/**
+	 * Show/hide line numbers in editor
+	 * 
+	 * @param show
+	 */
+	public void showLineNumbers(boolean show)
+	{
+	   if (show)
+	   {
+         if (!ruler.getDecoratorIterator().hasNext())
+            ruler.addDecorator(0, new LineNumberRulerColumn());
+	   }
+	   else
+	   {
+   	   if (ruler.getDecoratorIterator().hasNext())
+   	      ruler.removeDecorator(0);
+	   }
 	}
 }

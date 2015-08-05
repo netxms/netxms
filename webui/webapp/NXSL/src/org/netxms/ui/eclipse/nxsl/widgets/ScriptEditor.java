@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,16 +42,16 @@ public class ScriptEditor extends Composite
     */
    public ScriptEditor(Composite parent, int style, int editorStyle)
    {
-      this(parent, style, editorStyle, 20);
+      this(parent, style, editorStyle, true);
    }
    
 	/**
 	 * @param parent
 	 * @param style
 	 * @param editorStyle
-	 * @param rulerWidth
+	 * @param showLineNumbers
 	 */
-	public ScriptEditor(Composite parent, int style, int editorStyle, int rulerWidth)
+	public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers)
 	{
 		super(parent, style);
 		

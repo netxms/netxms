@@ -199,7 +199,7 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const TCHAR *pszName)
       pData = NXSLLoadFile(szBuffer, &dwSize);
       if (pData != NULL)
       {
-         pScript = (NXSL_Program *)NXSLCompile(pData, NULL, 0);
+         pScript = (NXSL_Program *)NXSLCompile(pData, NULL, 0, NULL);
          if (pScript != NULL)
          {
             vm->loadModule(pScript, pszName);

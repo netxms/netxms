@@ -1073,6 +1073,7 @@ typedef struct
 #define VID_PASSWORD_IS_VALID       ((UINT32)508)
 #define VID_SERIALIZE               ((UINT32)509)
 #define VID_COMPILATION_STATUS      ((UINT32)510)
+#define VID_ERROR_LINE              ((UINT32)511)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -200,7 +200,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       gridData.grabExcessVerticalSpace = true;
       section.setLayoutData(gridData);
       
-      filterEditor = new ScriptEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, 0);
+      filterEditor = new ScriptEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, false);
       section.setClient(filterEditor);
       filterEditor.getTextWidget().addModifyListener(new ModifyListener() {
          @Override

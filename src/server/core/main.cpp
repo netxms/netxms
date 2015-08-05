@@ -1733,10 +1733,10 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				TCHAR errorMsg[errorMsgLen];
 #ifdef UNICODE
 				WCHAR *wscript = WideStringFromMBString(script);
-				compiledScript = NXSLCompile(wscript, errorMsg, errorMsgLen);
+				compiledScript = NXSLCompile(wscript, errorMsg, errorMsgLen, NULL);
 				free(wscript);
 #else
-				compiledScript = NXSLCompile(script, errorMsg, errorMsgLen);
+				compiledScript = NXSLCompile(script, errorMsg, errorMsgLen, NULL);
 #endif
 				free(script);
 				if (compiledScript == NULL)

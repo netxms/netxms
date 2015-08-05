@@ -45,7 +45,7 @@ void LoadScripts()
       for(i = 0; i < nRows; i++)
       {
          pszCode = DBGetField(hResult, i, 2, NULL, 0);
-         pScript = (NXSL_Program *)NXSLCompile(pszCode, szError, 1024);
+         pScript = (NXSL_Program *)NXSLCompile(pszCode, szError, 1024, NULL);
          free(pszCode);
          if (pScript != NULL)
          {
@@ -111,7 +111,7 @@ void ReloadScript(UINT32 id)
    }
 
    TCHAR error[1024];
-   NXSL_Program *script = NXSLCompile(code, error, 1024);
+   NXSL_Program *script = NXSLCompile(code, error, 1024, NULL);
    free(code);
 
    g_pScriptLibrary->lock();

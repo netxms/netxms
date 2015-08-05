@@ -39,7 +39,7 @@
 /**
  * Interface to compiler
  */
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszError, int nBufSize)
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszError, int nBufSize, int *errorLine)
 {
    NXSL_Compiler compiler;
    NXSL_Program *pResult = compiler.compile(pszSource);
@@ -47,6 +47,8 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszE
    {
       if (pszError != NULL)
          nx_strncpy(pszError, compiler.getErrorText(), nBufSize);
+      if (errorLine != NULL)
+         *errorLine = compiler.getErrorLineNumber();
    }
    return pResult;
 }
@@ -56,7 +58,7 @@ NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszE
  */
 NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *pszSource, TCHAR *pszError, int nBufSize, NXSL_Environment *env)
 {
-   NXSL_Program *p = NXSLCompile(pszSource, pszError, nBufSize);
+   NXSL_Program *p = NXSLCompile(pszSource, pszError, nBufSize, NULL);
    if (p == NULL)
    {
       delete env;

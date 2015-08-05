@@ -28,6 +28,7 @@ public class ScriptCompilationResult
 {
    public boolean success;
    public String errorMessage;
+   public int errorLine;
    public byte[] code;
    
    /**
@@ -42,11 +43,13 @@ public class ScriptCompilationResult
       {
          code = msg.getFieldAsBinary(NXCPCodes.VID_SCRIPT_CODE);
          errorMessage = null;
+         errorLine = 0;
       }
       else
       {
          code = null;
          errorMessage = msg.getFieldAsString(NXCPCodes.VID_ERROR_TEXT);
+         errorLine = msg.getFieldAsInt32(NXCPCodes.VID_ERROR_LINE);
       }
    }
 }

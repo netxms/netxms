@@ -8972,7 +8972,7 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
          // Compile script
          pszText = DBGetField(hResult, i, 2, NULL, 0);
          DecodeSQLString(pszText);
-         pScript = (NXSL_Program *)NXSLCompile(pszText, szError, 256);
+         pScript = (NXSL_Program *)NXSLCompile(pszText, szError, 256, NULL);
          free(pszText);
 
          if (pScript != NULL)
@@ -13775,7 +13775,8 @@ void ClientSession::compileScript(NXCPMessage *request)
 	if (source != NULL)
 	{
       TCHAR errorMessage[256];
-      NXSL_Program *script = NXSLCompile(source, errorMessage, 256);
+      int errorLine;
+      NXSL_Program *script = NXSLCompile(source, errorMessage, 256, &errorLine);
       if (script != NULL)
       {
          msg.setField(VID_COMPILATION_STATUS, (INT16)1);
@@ -13794,6 +13795,7 @@ void ClientSession::compileScript(NXCPMessage *request)
       {
          msg.setField(VID_COMPILATION_STATUS, (INT16)0);
          msg.setField(VID_ERROR_TEXT, errorMessage);
+         msg.setField(VID_ERROR_LINE, (INT32)errorLine);
       }
       msg.setField(VID_RCC, RCC_SUCCESS);
       free(source);
