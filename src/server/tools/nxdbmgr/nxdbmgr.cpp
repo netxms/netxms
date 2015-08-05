@@ -407,14 +407,14 @@ int MetaDataReadInt(const TCHAR *pszVar, int iDefault)
 BOOL ConfigReadStr(const TCHAR *pszVar, TCHAR *pszBuffer, int iBufSize, const TCHAR *pszDefault)
 {
    DB_RESULT hResult;
-   TCHAR szQuery[2256];
+   TCHAR szQuery[256];
    BOOL bSuccess = FALSE;
 
    nx_strncpy(pszBuffer, pszDefault, iBufSize);
    if (_tcslen(pszVar) > 127)
       return FALSE;
 
-   _sntprintf(szQuery, 2256, _T("SELECT var_value FROM config WHERE var_name='%s'"), pszVar);
+   _sntprintf(szQuery, 256, _T("SELECT var_value FROM config WHERE var_name='%s'"), pszVar);
    hResult = SQLSelect(szQuery);
    if (hResult == NULL)
       return FALSE;
