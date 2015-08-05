@@ -966,7 +966,7 @@ void CheckDatabase()
    }
    else
    {
-      TCHAR szLockStatus[MAX_CONFIG_VALUE], szLockInfo[MAX_CONFIG_VALUE];
+      TCHAR szLockStatus[MAX_DB_STRING], szLockInfo[MAX_DB_STRING];
       BOOL bLocked = FALSE;
 
       // Check if database is locked
@@ -975,7 +975,7 @@ void CheckDatabase()
       {
          if (DBGetNumRows(hResult) > 0)
          {
-            DBGetField(hResult, 0, 0, szLockStatus, MAX_CONFIG_VALUE);
+            DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
             DecodeSQLString(szLockStatus);
             bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
          }
@@ -988,7 +988,7 @@ void CheckDatabase()
             {
                if (DBGetNumRows(hResult) > 0)
                {
-                  DBGetField(hResult, 0, 0, szLockInfo, MAX_CONFIG_VALUE);
+                  DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
                   DecodeSQLString(szLockInfo);
                }
                DBFreeResult(hResult);

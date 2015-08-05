@@ -512,7 +512,7 @@ bool ValidateDatabase()
    {
       if (DBGetNumRows(hResult) > 0)
       {
-         DBGetField(hResult, 0, 0, szLockStatus, MAX_CONFIG_VALUE);
+         DBGetField(hResult, 0, 0, szLockStatus, MAX_DB_STRING);
          bLocked = _tcscmp(szLockStatus, _T("UNLOCKED"));
       }
       DBFreeResult(hResult);
@@ -524,7 +524,7 @@ bool ValidateDatabase()
          {
             if (DBGetNumRows(hResult) > 0)
             {
-               DBGetField(hResult, 0, 0, szLockInfo, MAX_CONFIG_VALUE);
+               DBGetField(hResult, 0, 0, szLockInfo, MAX_DB_STRING);
             }
             DBFreeResult(hResult);
          }
