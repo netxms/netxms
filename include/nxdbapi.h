@@ -200,7 +200,7 @@ void LIBNXDB_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
 bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
 																const TCHAR *login, const TCHAR *password, const TCHAR *schema,
 																int basePoolSize, int maxPoolSize, int cooldownTime,
-																int connTTL, DB_HANDLE fallback);
+																int connTTL);
 void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown();
 DB_HANDLE LIBNXDB_EXPORTABLE __DBConnectionPoolAcquireConnection(const char *srcFile, int srcLine);
 #define DBConnectionPoolAcquireConnection() __DBConnectionPoolAcquireConnection(__FILE__, __LINE__)

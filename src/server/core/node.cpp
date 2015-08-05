@@ -666,11 +666,9 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
 }
 
 /**
- * Find interface by index and/or IP subnet. Interface IP considered matching
- * if it is from same IP subnet as hostAddr or if hostAddr set to INADDR_ANY.
+ * Find interface by index.
  *
- * @param ifIndex interface index to match or INVALID_INDEX to select first matching interface
- * @param hostAddr IP address to match or INADDR_ANY to select first matching interface
+ * @param ifIndex interface index to match
  * @return pointer to interface object or NULL if appropriate interface couldn't be found
  */
 Interface *Node::findInterfaceByIndex(UINT32 ifIndex)

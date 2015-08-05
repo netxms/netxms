@@ -1215,7 +1215,7 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
 
       if (opcode == OPCODE_INCP_ELEMENT)
       {
-         if (element->isNumeric())
+         if ((element != NULL) && element->isNumeric())
          {
             element->increment();
          }
@@ -1226,7 +1226,7 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
       }
       else if (opcode == OPCODE_DECP_ELEMENT)
       {
-         if (element->isNumeric())
+         if ((element != NULL) && element->isNumeric())
          {
             element->decrement();
          }
@@ -1240,7 +1240,7 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
 
       if (opcode == OPCODE_INC_ELEMENT)
       {
-         if (element->isNumeric())
+         if ((element != NULL) && element->isNumeric())
          {
             element->increment();
          }
@@ -1251,7 +1251,7 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
       }
       else if (opcode == OPCODE_DEC_ELEMENT)
       {
-         if (element->isNumeric())
+         if ((element != NULL) && element->isNumeric())
          {
             element->decrement();
          }
