@@ -8779,6 +8779,10 @@ void ClientSession::SaveAgentConfig(NXCPMessage *pRequest)
                }
                msg.setField(VID_SEQUENCE_NUMBER, dwSeqNum);
             }
+            else
+            {
+               dwSeqNum = pRequest->getFieldAsUInt32(VID_SEQUENCE_NUMBER);
+            }
             _sntprintf(pszQuery, qlen, _T("INSERT INTO agent_configs (config_id,config_name,config_filter,config_file,sequence_number) VALUES (%d,'%s','%s','%s',%d)"),
                       dwCfgId, pszEscName, pszEscFilter, pszEscText, dwSeqNum);
          }
@@ -9977,20 +9981,31 @@ void ClientSession::saveGraph(NXCPMessage *pRequest)
 
             int nACLSize;
             GRAPH_ACL_ENTRY *pACL = LoadGraphACL(hdb, 0, &nACLSize);
-            UINT32 *pdwUsers, *pdwRights;
-            pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
-            pdwRights = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
-            // ACL for graph
-            for(int j = 0; j < nACLSize; j++)
+            if ((pACL != NULL) && (nACLSize > 0))
             {
-               pdwUsers[j] = pACL[j].dwUserId;
-               pdwRights[j] = pACL[j].dwAccess;
+               UINT32 *pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
+               UINT32 *pdwRights = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
+               // ACL for graph
+               for(int j = 0; j < nACLSize; j++)
+               {
+                  pdwUsers[j] = pACL[j].dwUserId;
+                  pdwRights[j] = pACL[j].dwAccess;
+               }
+               msg.setField(dwId++, nACLSize);
+               msg.setFieldFromInt32Array(dwId++, nACLSize, pdwUsers);
+               msg.setFieldFromInt32Array(dwId++, nACLSize, pdwRights);
+               
+               free(pdwUsers);
+               free(pdwRights);
             }
-            msg.setField(dwId++, nACLSize);
-            msg.setFieldFromInt32Array(dwId++, nACLSize, pdwUsers);
-            msg.setFieldFromInt32Array(dwId++, nACLSize, pdwRights);
+            else
+            {
+               msg.setField(dwId++, (INT32)0);
+               msg.setFieldFromInt32Array(dwId++, 0, &graphId);
+               msg.setFieldFromInt32Array(dwId++, 0, &graphId);
+            }
             msg.setField(VID_NUM_GRAPHS, 1);
-
+            
             NotifyClientGraphUpdate(&update, graphId);
 			}
 			else

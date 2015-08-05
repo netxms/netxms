@@ -409,35 +409,38 @@ static BOOL Rename(TCHAR* oldName, TCHAR * newName)
 /**
  * Copy file/folder
  */
-static BOOL CopyFile(NX_STAT_STRUCT *st, TCHAR* oldName, TCHAR* newName)
+static BOOL CopyFile(NX_STAT_STRUCT *st, const TCHAR *oldName, const TCHAR *newName)
 {
-   int oldFile, newFile;
-   oldFile = _topen(oldName, O_RDONLY | O_BINARY);
-   newFile = _topen(newName, O_CREAT | O_BINARY | O_WRONLY, st->st_mode); // should be copyed with the same acess rights
-   if (oldFile == -1 || newFile == -1)
+   int oldFile = _topen(oldName, O_RDONLY | O_BINARY);
+   if (oldFile == -1)
+      return FALSE;
+      
+   int newFile = _topen(newName, O_CREAT | O_BINARY | O_WRONLY, st->st_mode); // should be copied with the same acess rights
+   if (newFile == -1)
    {
+      close(oldFile);
       return FALSE;
    }
 
-   BYTE *readBytes;
-   int readSize = 16384, readIn, readOut;
-   readBytes = (BYTE*)malloc(readSize);
+   int size = 16384, in, out;
+   BYTE *bytes = (BYTE *)malloc(size);
 
-   while((readIn = read (oldFile, readBytes, readSize)) > 0)
+   while((in = read(oldFile, bytes, size)) > 0)
    {
-      readOut = write(newFile, readBytes, (ssize_t) readIn);
-      if(readOut != readIn)
+      out = write(newFile, bytes, (ssize_t)in);
+      if (out != in)
       {
          close(oldFile);
          close(newFile);
+         free(bytes);
          return FALSE;
       }
-    }
+   }
 
-    /* Close file descriptors */
-    close(oldFile);
-    close(newFile);
-    return TRUE;
+   close(oldFile);
+   close(newFile);
+   free(bytes);
+   return TRUE;
 }
 
 #endif
@@ -772,10 +775,9 @@ static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *r
          }
          ConvertPathToHost(directory);
 
-         bool rootFolder = request->getFieldAsUInt16(VID_ROOT) ? 1 : 0;
          if (CheckFullPath(directory, false) && session->isMasterServer())
          {
-            if(CreateFolder(directory))
+            if (CreateFolder(directory))
             {
                response->setField(VID_RCC, ERR_SUCCESS);
             }

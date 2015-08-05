@@ -17,7 +17,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** fILE: library.cpp
+** File: library.cpp
 **
 **/
 
@@ -64,7 +64,7 @@ BOOL NXSL_Library::addScript(UINT32 dwId, const TCHAR *pszName, NXSL_Program *pS
 
    m_dwNumScripts++;
    m_ppScriptList = (NXSL_Program **)realloc(m_ppScriptList, sizeof(NXSL_Program *) * m_dwNumScripts);
-   m_ppszNames = (TCHAR **)realloc(m_ppszNames, sizeof(char *) * m_dwNumScripts);
+   m_ppszNames = (TCHAR **)realloc(m_ppszNames, sizeof(TCHAR *) * m_dwNumScripts);
    m_pdwIdList = (UINT32 *)realloc(m_pdwIdList, sizeof(UINT32) * m_dwNumScripts);
    m_ppScriptList[i] = pScript;
    m_ppszNames[i] = _tcsdup(pszName);

@@ -655,7 +655,7 @@ void Interface::updatePingData()
 				   {
                   DbgPrintf(7, _T("Interface::updatePingData: proxy response: \"%s\""), buffer);
 					   TCHAR *eptr;
-					   long value = _tcstol(buffer, &eptr, 10);
+					   value = _tcstol(buffer, &eptr, 10);
                   if (*eptr != 0)
                   {
                      value = -1;

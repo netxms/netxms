@@ -283,34 +283,41 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg,
 			RSA *pServerKey;
 
 			*ppCtx = NXCPEncryptionContext::create(dwCiphers);
-
-         // Encrypt key
-         int size = msg->getFieldAsBinary(VID_PUBLIC_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
-         pBufPos = ucKeyBuffer;
-         pServerKey = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&pBufPos, size);
-         if (pServerKey != NULL)
+         if (*ppCtx != NULL)
          {
-            (*ppResponse)->setField(VID_RCC, RCC_SUCCESS);
-            
-            size = RSA_public_encrypt((*ppCtx)->getKeyLength(), (*ppCtx)->getSessionKey(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
-            (*ppResponse)->setField(VID_SESSION_KEY, ucKeyBuffer, (UINT32)size);
-            (*ppResponse)->setField(VID_KEY_LENGTH, (WORD)(*ppCtx)->getKeyLength());
-            
-            int ivLength = EVP_CIPHER_iv_length(s_ciphers[(*ppCtx)->getCipher()]());
-            if ((ivLength <= 0) || (ivLength > EVP_MAX_IV_LENGTH))
-               ivLength = EVP_MAX_IV_LENGTH;
-            size = RSA_public_encrypt(ivLength, (*ppCtx)->getIV(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
-            (*ppResponse)->setField(VID_SESSION_IV, ucKeyBuffer, (UINT32)size);
-            (*ppResponse)->setField(VID_IV_LENGTH, (WORD)ivLength);
+            // Encrypt key
+            int size = msg->getFieldAsBinary(VID_PUBLIC_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
+            pBufPos = ucKeyBuffer;
+            pServerKey = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&pBufPos, size);
+            if (pServerKey != NULL)
+            {
+               (*ppResponse)->setField(VID_RCC, RCC_SUCCESS);
+               
+               size = RSA_public_encrypt((*ppCtx)->getKeyLength(), (*ppCtx)->getSessionKey(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
+               (*ppResponse)->setField(VID_SESSION_KEY, ucKeyBuffer, (UINT32)size);
+               (*ppResponse)->setField(VID_KEY_LENGTH, (WORD)(*ppCtx)->getKeyLength());
+               
+               int ivLength = EVP_CIPHER_iv_length(s_ciphers[(*ppCtx)->getCipher()]());
+               if ((ivLength <= 0) || (ivLength > EVP_MAX_IV_LENGTH))
+                  ivLength = EVP_MAX_IV_LENGTH;
+               size = RSA_public_encrypt(ivLength, (*ppCtx)->getIV(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
+               (*ppResponse)->setField(VID_SESSION_IV, ucKeyBuffer, (UINT32)size);
+               (*ppResponse)->setField(VID_IV_LENGTH, (WORD)ivLength);
 
-            (*ppResponse)->setField(VID_CIPHER, (WORD)(*ppCtx)->getCipher());
-            RSA_free(pServerKey);
-            dwResult = RCC_SUCCESS;
+               (*ppResponse)->setField(VID_CIPHER, (WORD)(*ppCtx)->getCipher());
+               RSA_free(pServerKey);
+               dwResult = RCC_SUCCESS;
+            }
+            else
+            {
+               (*ppResponse)->setField(VID_RCC, RCC_INVALID_PUBLIC_KEY);
+               dwResult = RCC_INVALID_PUBLIC_KEY;
+            }
          }
          else
          {
-            (*ppResponse)->setField(VID_RCC, RCC_INVALID_PUBLIC_KEY);
-            dwResult = RCC_INVALID_PUBLIC_KEY;
+            (*ppResponse)->setField(VID_RCC, RCC_ENCRYPTION_ERROR);
+            dwResult = RCC_ENCRYPTION_ERROR;
          }
       }
    }

@@ -167,11 +167,13 @@ static void DecodeValue(BYTE *pData, int nDataFmt, int nOutputFmt, char *pszValu
 	else if (nDataFmt == 0xE0)
    {
 		// Date
+      nValue = GetLong(pData);
       nInputFmt = FMT_INTEGER;
 	}
 	else if (nDataFmt == 0xE1)
    {
 		// Time
+      nValue = GetLong(pData);
       nInputFmt = FMT_INTEGER;
 	}
 	else

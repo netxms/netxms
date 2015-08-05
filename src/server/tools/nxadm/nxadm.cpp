@@ -201,6 +201,7 @@ int main(int argc, char *argv[])
                break;
             case '?':
                bStart = FALSE;
+               iError = 1;
                break;
             default:
                break;

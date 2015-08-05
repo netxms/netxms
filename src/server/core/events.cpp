@@ -859,7 +859,7 @@ static EVENT_TEMPLATE *FindEventTemplate(UINT32 eventCode)
 static BOOL RealPostEvent(Queue *queue, UINT32 eventCode, UINT32 sourceId,
                           const TCHAR *userTag, const char *format, const TCHAR **names, va_list args)
 {
-   EVENT_TEMPLATE *pEventTemplate;
+   EVENT_TEMPLATE *pEventTemplate = NULL;
    Event *pEvent;
    BOOL bResult = FALSE;
 

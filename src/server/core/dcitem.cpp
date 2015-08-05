@@ -383,7 +383,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    DBBind(hStmt, 28, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
 	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_id);
 
-   BOOL bResult = DBExecute(hStmt);
+   bool bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 
    // Save thresholds
@@ -433,7 +433,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_prevRawValue.getString(), DB_BIND_STATIC, 255);
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT64)m_tPrevValueTimeStamp);
-         BOOL bResult = DBExecute(hStmt);
+         bResult = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
       DBFreeResult(hResult);
