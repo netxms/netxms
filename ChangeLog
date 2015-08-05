@@ -17,7 +17,7 @@
 	- Default object display mode can be set in map properties
 	- Map drill-down can be enabled in dashboard map elements
 	- Input fields in object tools
-- Fixed issues: #741, #829, #830, #836, #840, #843, #844, #845, #846, #848, #850, #853, #855, #856, #857, #862, #866
+- Fixed issues: #55, #741, #829, #830, #836, #840, #843, #844, #845, #846, #848, #850, #853, #855, #856, #857, #862, #866
 
 
 *
