@@ -103,7 +103,7 @@ typedef struct
 {
    Table *table;
 	int state;
-	String buffer;
+	String *buffer;
 	int column;
 } XML_PARSER_STATE;
 
@@ -190,6 +190,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
       {
          ps->table->setStatus(ps->column, XMLGetAttrInt(attrs, "status", 0));
          ps->state = XML_STATE_CELL;
+         ps->buffer->clear();
       }
       else
       {
@@ -200,9 +201,6 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
 		ps->state = XML_STATE_ERROR;
 	}
-#if 0
-	_tprintf(_T("\n!!!!!Table::parseXML: parsing tag %s and state %d!!!\n"), WideStringFromUTF8String(name), ps->state);
-#endif
 }
 
 /**
@@ -216,7 +214,7 @@ static void EndElement(void *userData, const char *name)
 
    if (!strcmp(name, "td"))
 	{
-      ps->table->set(ps->column, ps->buffer);
+      ps->table->set(ps->column, ps->buffer->getBuffer());
       ps->column++;
 		ps->state = XML_STATE_ROW;
 	}
@@ -244,7 +242,7 @@ static void CharData(void *userData, const XML_Char *s, int len)
 
    if (ps->state == XML_STATE_CELL)
    {
-      ps->buffer.appendMBString(s, len, CP_UTF8);
+      ps->buffer->appendMBString(s, len, CP_UTF8);
    }
 }
 
@@ -263,18 +261,13 @@ bool Table::parseXML(const char *xml)
    state.table = this;
    state.state = XML_STATE_INIT;
    state.column = -1;
+   state.buffer = new String();
 
    bool success = (XML_Parse(parser, xml, (int)strlen(xml), TRUE) != XML_STATUS_ERROR);
    if (success)
       success = (state.state != XML_STATE_ERROR);
-#if 0
-   _tprintf(_T("\n!!!!!Table::parseXML: trying to parse!!!!\n"));
-   if (!success)
-   {
-      _tprintf(_T("!!!!!Table::parseXML: %s at line %d"), WideStringFromUTF8String(XML_ErrorString(XML_GetErrorCode(parser))), (int)XML_GetCurrentLineNumber(parser));
-   }
-#endif
    XML_ParserFree(parser);
+   delete state.buffer;
    return success;
 }
 
