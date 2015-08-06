@@ -12166,9 +12166,29 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
 		{
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
+            StringMap *inputFields;
+            int count = request->getFieldAsInt16(VID_NUM_FIELDS);
+            if (count > 0)
+            {
+               inputFields = new StringMap();
+               UINT32 fieldId = VID_FIELD_LIST_BASE;
+               for(int i = 0; i < count; i++)
+               {
+                  TCHAR *name = request->getFieldAsString(fieldId++);
+                  TCHAR *value = request->getFieldAsString(fieldId++);
+                  inputFields->setPreallocated(name, value);
+               }
+            }
+            else
+            {
+               inputFields = NULL;
+            }
+
 				TCHAR *cmd = request->getFieldAsString(VID_COMMAND);
-				TCHAR *expCmd = ((Node *)object)->expandText(cmd);
+            TCHAR *expCmd = ((Node *)object)->expandText(cmd, inputFields, m_loginName);
 				free(cmd);
+            delete inputFields;
+
 				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, nodeId, _T("Server command executed: %s"), expCmd);
             ThreadPoolExecute(g_mainThreadPool, ExecuteServerCommand, 
                new ServerCommandExecData(expCmd, request->getFieldAsBoolean(VID_RECEIVE_OUTPUT), request->getId(), this));

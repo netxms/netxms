@@ -347,7 +347,7 @@ public final class ObjectToolExecutor
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.executeServerCommand(node.object.getObjectId(), tool.getData());
+               session.executeServerCommand(node.object.getObjectId(), tool.getData(), inputValues);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -371,7 +371,7 @@ public final class ObjectToolExecutor
          try
          {
             ServerCommandResults view = (ServerCommandResults)window.getActivePage().showView(ServerCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeCommand(tool.getData());
+            view.executeCommand(tool.getData(), inputValues);
          }
          catch(Exception e)
          {

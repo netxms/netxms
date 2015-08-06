@@ -1267,7 +1267,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual BOOL loadFromDatabase(UINT32 dwId);
 
-	TCHAR *expandText(const TCHAR *textTemplate);
+	TCHAR *expandText(const TCHAR *textTemplate, StringMap *inputFields, const TCHAR *userName);
 
 	Cluster *getMyCluster();
 

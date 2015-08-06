@@ -6206,12 +6206,13 @@ public class NXCSession
     *
     * @param objectId object ID
     * @param command  command
+    * @param inputFields values for input fields (can be null)
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeServerCommand(long objectId, String command) throws IOException, NXCException
+   public void executeServerCommand(long objectId, String command, Map<String, String> inputFields) throws IOException, NXCException
    {
-      executeServerCommand(objectId, command, false, null, null);
+      executeServerCommand(objectId, command, inputFields, false, null, null);
    }
    
    /**
@@ -6219,18 +6220,29 @@ public class NXCSession
     *
     * @param objectId object ID
     * @param command  command
+    * @param inputFields values for input fields (can be null)
     * @param receiveOutput true if command's output has to be read
     * @param listener listener for command's output or null
     * @param writer writer for command's output or null
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeServerCommand(long objectId, String command, boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
+   public void executeServerCommand(long objectId, String command, Map<String, String> inputFields, boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SERVER_COMMAND);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) objectId);
       msg.setField(NXCPCodes.VID_COMMAND, command);
       msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, receiveOutput);
+      if (inputFields != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_NUM_FIELDS, inputFields.size());
+         long fieldId = NXCPCodes.VID_FIELD_LIST_BASE;
+         for(Entry<String, String> e : inputFields.entrySet())
+         {
+            msg.setField(fieldId++, e.getKey());
+            msg.setField(fieldId++, e.getValue());
+         }
+      }
       
       MessageHandler handler = receiveOutput ? new MessageHandler() {
          @Override

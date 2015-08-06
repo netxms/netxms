@@ -263,16 +263,25 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                case '%':
                   pText[dwPos++] = '%';
                   break;
-               case 'n':   // Name of event source
-                  dwSize += (UINT32)_tcslen(pObject->getName());
-                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _tcscpy(&pText[dwPos], pObject->getName());
-                  dwPos += (UINT32)_tcslen(pObject->getName());
-                  break;
                case 'a':   // IP address of event source
                   dwSize += 64;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                   GetObjectIpAddress(pObject).toString(&pText[dwPos]);
+                  dwPos = (UINT32)_tcslen(pText);
+                  break;
+               case 'A':   // Associated alarm message
+                  if (alarmMsg != NULL)
+                  {
+                     dwSize += (UINT32)_tcslen(alarmMsg);
+	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], alarmMsg);
+                     dwPos += (UINT32)_tcslen(alarmMsg);
+                  }
+                  break;
+               case 'c':   // Event code
+                  dwSize += 16;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+						_sntprintf(&pText[dwPos], 16, _T("%u"), (unsigned int)((event != NULL) ? event->m_dwCode : 0));
                   dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'g':   // Source object's GUID
@@ -293,32 +302,38 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                   _sntprintf(&pText[dwPos], 11, _T("%u"), (unsigned int)sourceId);
                   dwPos = (UINT32)_tcslen(pText);
                   break;
-               case 't':   // Event's timestamp
-                  dwSize += 32;
-                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-						if (event != NULL)
-						{
-							lt = localtime(&event->m_tTimeStamp);
-						}
-						else
-						{
-							time_t t = time(NULL);
-							lt = localtime(&t);
-						}
-                  _tcsftime(&pText[dwPos], 32, _T("%d-%b-%Y %H:%M:%S"), lt);
-                  dwPos = (UINT32)_tcslen(pText);
+               case 'K':   // Associated alarm key
+                  if (alarmKey != NULL)
+                  {
+                     dwSize += (UINT32)_tcslen(alarmKey);
+	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], alarmKey);
+                     dwPos += (UINT32)_tcslen(alarmKey);
+                  }
                   break;
-               case 'T':   // Event's timestamp as number of seconds since epoch
-                  dwSize += 16;
-                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-						_sntprintf(&pText[dwPos], 16, _T("%lu"), (unsigned long)((event != NULL) ? event->m_tTimeStamp : time(NULL)));
-                  dwPos = (UINT32)_tcslen(pText);
+               case 'm':
+                  if ((event != NULL) && (event->m_pszMessageText != NULL))
+                  {
+                     dwSize += (UINT32)_tcslen(event->m_pszMessageText);
+	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], event->m_pszMessageText);
+                     dwPos += (UINT32)_tcslen(event->m_pszMessageText);
+                  }
                   break;
-               case 'c':   // Event code
-                  dwSize += 16;
+               case 'M':	// Custom message (usually set by matching script in EPP)
+                  if ((event != NULL) && (event->m_pszCustomMessage != NULL))
+                  {
+                     dwSize += (UINT32)_tcslen(event->m_pszCustomMessage);
+	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                     _tcscpy(&pText[dwPos], event->m_pszCustomMessage);
+                     dwPos += (UINT32)_tcslen(event->m_pszCustomMessage);
+                  }
+                  break;
+               case 'n':   // Name of event source
+                  dwSize += (UINT32)_tcslen(pObject->getName());
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-						_sntprintf(&pText[dwPos], 16, _T("%u"), (unsigned int)((event != NULL) ? event->m_dwCode : 0));
-                  dwPos = (UINT32)_tcslen(pText);
+                  _tcscpy(&pText[dwPos], pObject->getName());
+                  dwPos += (UINT32)_tcslen(pObject->getName());
                   break;
                case 'N':   // Event name
 						if (event != NULL)
@@ -348,47 +363,26 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 							dwPos += (UINT32)_tcslen(statusText);
 						}
                   break;
-               case 'v':   // NetXMS server version
-                  dwSize += (UINT32)_tcslen(NETXMS_VERSION_STRING);
+               case 't':   // Event's timestamp
+                  dwSize += 32;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _tcscpy(&pText[dwPos], NETXMS_VERSION_STRING);
-                  dwPos += (UINT32)_tcslen(NETXMS_VERSION_STRING);
+						if (event != NULL)
+						{
+							lt = localtime(&event->m_tTimeStamp);
+						}
+						else
+						{
+							time_t t = time(NULL);
+							lt = localtime(&t);
+						}
+                  _tcsftime(&pText[dwPos], 32, _T("%d-%b-%Y %H:%M:%S"), lt);
+                  dwPos = (UINT32)_tcslen(pText);
                   break;
-               case 'm':
-                  if ((event != NULL) && (event->m_pszMessageText != NULL))
-                  {
-                     dwSize += (UINT32)_tcslen(event->m_pszMessageText);
-	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], event->m_pszMessageText);
-                     dwPos += (UINT32)_tcslen(event->m_pszMessageText);
-                  }
-                  break;
-               case 'M':	// Custom message (usually set by matching script in EPP)
-                  if ((event != NULL) && (event->m_pszCustomMessage != NULL))
-                  {
-                     dwSize += (UINT32)_tcslen(event->m_pszCustomMessage);
-	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], event->m_pszCustomMessage);
-                     dwPos += (UINT32)_tcslen(event->m_pszCustomMessage);
-                  }
-                  break;
-               case 'A':   // Associated alarm message
-                  if (alarmMsg != NULL)
-                  {
-                     dwSize += (UINT32)_tcslen(alarmMsg);
-	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], alarmMsg);
-                     dwPos += (UINT32)_tcslen(alarmMsg);
-                  }
-                  break;
-               case 'K':   // Associated alarm key
-                  if (alarmKey != NULL)
-                  {
-                     dwSize += (UINT32)_tcslen(alarmKey);
-	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], alarmKey);
-                     dwPos += (UINT32)_tcslen(alarmKey);
-                  }
+               case 'T':   // Event's timestamp as number of seconds since epoch
+                  dwSize += 16;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+						_sntprintf(&pText[dwPos], 16, _T("%lu"), (unsigned long)((event != NULL) ? event->m_tTimeStamp : time(NULL)));
+                  dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'u':	// User tag
                   if ((event != NULL) && (event->m_pszUserTag != NULL))
@@ -398,6 +392,12 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                      _tcscpy(&pText[dwPos], event->m_pszUserTag);
                      dwPos += (UINT32)_tcslen(event->m_pszUserTag);
                   }
+                  break;
+               case 'v':   // NetXMS server version
+                  dwSize += (UINT32)_tcslen(NETXMS_VERSION_STRING);
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _tcscpy(&pText[dwPos], NETXMS_VERSION_STRING);
+                  dwPos += (UINT32)_tcslen(NETXMS_VERSION_STRING);
                   break;
                case '0':
                case '1':
@@ -521,6 +521,15 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 								_tcscpy(&pText[dwPos], temp);
 								dwPos += (UINT32)_tcslen(temp);
 							}
+						}
+						break;
+					case '(':	// input field - scan for closing ) for compatibility
+						for(i = 0, pCurr++; (*pCurr != ')') && (*pCurr != 0) && (i < 255); pCurr++)
+						{
+						}
+						if (*pCurr == 0)	// no terminating }
+						{
+							pCurr--;
 						}
 						break;
 					case '<':	// Named parameter

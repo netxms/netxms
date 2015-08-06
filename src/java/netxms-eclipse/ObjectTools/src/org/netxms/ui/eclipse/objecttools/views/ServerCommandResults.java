@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objecttools.views;
 
 import java.io.IOException;
+import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -43,6 +44,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
    private IOConsoleOutputStream out;
    private String lastCommand = null;
    private Action actionRestart;
+   private Map<String, String> lastInputValues = null;
    
    /**
     * Create actions
@@ -55,7 +57,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
          @Override
          public void run()
          {
-            executeCommand(lastCommand);
+            executeCommand(lastCommand, lastInputValues);
          }
       };
       actionRestart.setEnabled(false);
@@ -99,13 +101,15 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
    
    /**
     * @param command
+    * @param inputValues 
     */
-   public void executeCommand(final String command)
+   public void executeCommand(final String command, final Map<String, String> inputValues)
    {
       actionRestart.setEnabled(false);
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       out = console.newOutputStream();
       lastCommand = command;
+      lastInputValues = inputValues;
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
@@ -118,7 +122,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
          {
             try
             {
-               session.executeServerCommand(nodeId, command, true, ServerCommandResults.this, null);
+               session.executeServerCommand(nodeId, command, inputValues, true, ServerCommandResults.this, null);
                out.write(Messages.get().LocalCommandResults_Terminated);
             }
             finally

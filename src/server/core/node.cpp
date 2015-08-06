@@ -6418,7 +6418,7 @@ VlanList *Node::getVlans()
 /**
  * Substitute % macros in given text with actual values
  */
-TCHAR *Node::expandText(const TCHAR *textTemplate)
+TCHAR *Node::expandText(const TCHAR *textTemplate, StringMap *inputFields, const TCHAR *userName)
 {
    const TCHAR *pCurr;
    UINT32 dwPos, dwSize;
@@ -6443,16 +6443,16 @@ TCHAR *Node::expandText(const TCHAR *textTemplate)
                case '%':
                   pText[dwPos++] = '%';
                   break;
-               case 'n':   // Name of the node
-                  dwSize += (UINT32)_tcslen(m_name);
-                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                  _tcscpy(&pText[dwPos], m_name);
-                  dwPos += (UINT32)_tcslen(m_name);
-                  break;
                case 'a':   // IP address of the node
                   dwSize += 48;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 						m_ipAddress.toString(&pText[dwPos]);
+                  dwPos = (UINT32)_tcslen(pText);
+                  break;
+               case 'g':   // node's GUID
+                  dwSize += 36;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  m_guid.toString(&pText[dwPos]);
                   dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'i':   // Node identifier
@@ -6460,6 +6460,24 @@ TCHAR *Node::expandText(const TCHAR *textTemplate)
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
                   _sntprintf(&pText[dwPos], 11, _T("0x%08X"), m_id);
                   dwPos = (UINT32)_tcslen(pText);
+                  break;
+               case 'I':   // Node identifier in decimal form
+                  dwSize += 10;
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _sntprintf(&pText[dwPos], 11, _T("%u"), m_id);
+                  dwPos = (UINT32)_tcslen(pText);
+                  break;
+               case 'n':   // Name of the node
+                  dwSize += (UINT32)_tcslen(m_name);
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _tcscpy(&pText[dwPos], m_name);
+                  dwPos += (UINT32)_tcslen(m_name);
+                  break;
+               case 'U':   // User name
+                  dwSize += (UINT32)_tcslen(userName);
+                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+                  _tcscpy(&pText[dwPos], userName);
+                  dwPos += (UINT32)_tcslen(userName);
                   break;
                case 'v':   // NetXMS server version
                   dwSize += (UINT32)_tcslen(NETXMS_VERSION_STRING);
@@ -6538,6 +6556,38 @@ TCHAR *Node::expandText(const TCHAR *textTemplate)
 								_tcscpy(&pText[dwPos], temp);
 								dwPos += (UINT32)_tcslen(temp);
 							}
+						}
+						break;
+					case '(':	// Input field
+						for(i = 0, pCurr++; (*pCurr != ')') && (*pCurr != 0) && (i < 255); pCurr++)
+						{
+							scriptName[i++] = *pCurr;
+						}
+						if (*pCurr == 0)	// no terminating }
+						{
+							pCurr--;
+						}
+						else if (inputFields != NULL)
+						{
+							scriptName[i] = 0;
+							StrStrip(scriptName);
+                     const TCHAR *temp = inputFields->get(scriptName);
+							if (temp != NULL)
+							{
+								dwSize += (UINT32)_tcslen(temp);
+								pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
+								_tcscpy(&pText[dwPos], temp);
+								dwPos += (UINT32)_tcslen(temp);
+							}
+						}
+						break;
+					case '<':	// named attribute - scan until closing > for compatibility
+						for(i = 0, pCurr++; (*pCurr != '>') && (*pCurr != 0) && (i < 255); pCurr++)
+						{
+						}
+						if (*pCurr == 0)	// no terminating }
+						{
+							pCurr--;
 						}
 						break;
                default:    // All other characters are invalid, ignore
