@@ -79,6 +79,7 @@ f none /opt/netxms/lib/netxms/ndd/ntws.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/ping3.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/procurve.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/symbol_ws.ndd 0755 root other
+f none /opt/netxms/lib/netxms/ndd/tb.ndd 0755 root other
 f none /opt/netxms/lib/netxms/ndd/ubnt.ndd 0755 root other
 f none /opt/netxms/lib/netxms/oracle.nsm 0755 root other
 f none /opt/netxms/lib/netxms/ping.nsm 0755 root other

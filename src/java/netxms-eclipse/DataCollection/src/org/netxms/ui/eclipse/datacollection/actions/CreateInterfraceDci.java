@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -218,23 +218,23 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 			{
 				case IFDCI_IN_BYTES:
             case IFDCI_IN_BITS:
-					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.6." : ".1.3.6.1.2.1.2.2.1.10.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
+					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.6" : ".1.3.6.1.2.1.2.2.1.10") + getInterfaceInstance(iface)); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_BYTES:
             case IFDCI_OUT_BITS:
-					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.10." : ".1.3.6.1.2.1.2.2.1.16.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
+					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.10" : ".1.3.6.1.2.1.2.2.1.16") + getInterfaceInstance(iface)); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_IN_PACKETS:
-					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.7." : ".1.3.6.1.2.1.2.2.1.11.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
+					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.7" : ".1.3.6.1.2.1.2.2.1.11") + getInterfaceInstance(iface)); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_OUT_PACKETS:
-					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.11." : ".1.3.6.1.2.1.2.2.1.17.") + iface.getIfIndex()); //$NON-NLS-1$ //$NON-NLS-2$
+					dci.setName((node.isIfXTableSupported() ? ".1.3.6.1.2.1.31.1.1.1.11" : ".1.3.6.1.2.1.2.2.1.17") + getInterfaceInstance(iface)); //$NON-NLS-1$ //$NON-NLS-2$
 					break;
 				case IFDCI_IN_ERRORS:
-					dci.setName(".1.3.6.1.2.1.2.2.1.14." + iface.getIfIndex()); //$NON-NLS-1$
+					dci.setName(".1.3.6.1.2.1.2.2.1.14" + getInterfaceInstance(iface)); //$NON-NLS-1$
 					break;
 				case IFDCI_OUT_ERRORS:
-					dci.setName(".1.3.6.1.2.1.2.2.1.20." + iface.getIfIndex()); //$NON-NLS-1$
+					dci.setName(".1.3.6.1.2.1.2.2.1.20" + getInterfaceInstance(iface)); //$NON-NLS-1$
 					break;
 			}
 		}
@@ -250,6 +250,15 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 		{
 			dcc.close();
 		}
+	}
+	
+	/**
+	 * @param iface
+	 * @return
+	 */
+	private static String getInterfaceInstance(Interface iface)
+	{
+	   return (iface.getIfTableSuffix().getLength() > 0) ? iface.getIfTableSuffix().toString() : "." + iface.getIfIndex();
 	}
 	
 	/**

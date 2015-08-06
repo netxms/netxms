@@ -1010,6 +1010,8 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
 	pInterface->setManualCreationFlag(manuallyCreated);
    pInterface->setSystemFlag(info->isSystem);
    pInterface->setMTU(info->mtu);
+   pInterface->setSpeed(info->speed);
+   pInterface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
 
    // Insert to objects' list and generate event
    NetObjInsert(pInterface, TRUE);

@@ -232,7 +232,7 @@ public:
       init();
    }
 
-   InterfaceInfo(UINT32 ifIndex, int suffixLen, UINT32 *suffix)
+   InterfaceInfo(UINT32 ifIndex, int suffixLen, const UINT32 *suffix)
    {
       index = ifIndex;
       ifTableSuffixLength = ((suffixLen >= 0) && (suffixLen < 16)) ? suffixLen : 0;

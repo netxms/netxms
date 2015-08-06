@@ -2950,6 +2950,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/procurve/Makefile
 	src/server/drivers/qtech-olt/Makefile
 	src/server/drivers/symbol-ws/Makefile
+	src/server/drivers/tb/Makefile
 	src/server/drivers/ubnt/Makefile
 	src/server/hdlink/Makefile
 	src/server/hdlink/jira/Makefile
