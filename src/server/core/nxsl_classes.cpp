@@ -729,6 +729,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    {
       pValue = new NXSL_Value(iface->getSlotNumber());
    }
+   else if (!_tcscmp(pszAttr, _T("speed")))
+   {
+      pValue = new NXSL_Value(iface->getSpeed());
+   }
    else if (!_tcscmp(pszAttr, _T("status")))
    {
       pValue = new NXSL_Value((LONG)iface->Status());

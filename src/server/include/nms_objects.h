@@ -733,6 +733,7 @@ protected:
 	TCHAR m_alias[MAX_DB_STRING];	// Interface alias - value of ifAlias for SNMP, empty for NetXMS agent
    UINT32 m_type;
    UINT32 m_mtu;
+   UINT64 m_speed;
 	UINT32 m_bridgePortNumber;		// 802.1D port number
 	UINT32 m_slotNumber;				// Vendor/device specific slot number
 	UINT32 m_portNumber;				// Vendor/device specific port number
@@ -750,6 +751,8 @@ protected:
    UINT32 m_zoneId;
    UINT32 m_pingTime;
    time_t m_pingLastTimeStamp;
+   int m_ifTableSuffixLen;
+   UINT32 *m_ifTableSuffix;
 
    void icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *cluster, InterfaceAdminState *adminState, InterfaceOperState *operState);
 	void paeStatusPoll(UINT32 rqId, SNMP_Transport *pTransport, Node *node);
@@ -780,6 +783,7 @@ public:
    UINT32 getIfIndex() { return m_index; }
    UINT32 getIfType() { return m_type; }
    UINT32 getMTU() { return m_mtu; }
+   UINT64 getSpeed() { return m_speed; }
 	UINT32 getBridgePortNumber() { return m_bridgePortNumber; }
 	UINT32 getSlotNumber() { return m_slotNumber; }
 	UINT32 getPortNumber() { return m_portNumber; }
@@ -794,6 +798,8 @@ public:
 	const TCHAR *getDescription() { return m_description; }
 	const TCHAR *getAlias() { return m_alias; }
    const BYTE *getMacAddr() { return m_macAddr; }
+   int getIfTableSuffixLen() { return m_ifTableSuffixLen; }
+   const UINT32 *getIfTableSuffix() { return m_ifTableSuffix; }
    UINT32 getPingTime();
 	bool isSyntheticMask() { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
 	bool isPhysicalPort() { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
@@ -823,6 +829,8 @@ public:
    void deleteIpAddress(InetAddress addr);
    void setNetMask(const InetAddress& addr);
 	void setMTU(int mtu) { m_mtu = mtu; setModified(); }
+	void setSpeed(UINT64 speed) { m_speed = speed; setModified(); }
+   void setIfTableSuffix(int len, const UINT32 *suffix) { lockProperties(); safe_free(m_ifTableSuffix); m_ifTableSuffixLen = len; m_ifTableSuffix = (len > 0) ? (UINT32 *)nx_memdup(suffix, len * sizeof(UINT32)) : NULL; setModified(); unlockProperties(); }
 
 	void updateZoneId();
 
@@ -1325,7 +1333,7 @@ public:
    AccessPoint *findAccessPointByRadioId(int rfIndex);
    ObjectArray<WirelessStationInfo> *getWirelessStations();
 	bool isMyIP(const InetAddress& addr);
-   void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
+   void getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 dwIndex, int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
    void getInterfaceStatusFromAgent(UINT32 dwIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
    ROUTING_TABLE *getRoutingTable();
    ROUTING_TABLE *getCachedRoutingTable() { return m_pRoutingTable; }

@@ -59,19 +59,20 @@ public class InterfacesTab extends ObjectTab
 	public static final int COLUMN_SLOT = 5;
 	public static final int COLUMN_PORT = 6;
    public static final int COLUMN_MTU = 7;
-	public static final int COLUMN_DESCRIPTION = 8;
-	public static final int COLUMN_MAC_ADDRESS = 9;
-	public static final int COLUMN_IP_ADDRESS = 10;
-	public static final int COLUMN_PEER_NAME = 11;
-	public static final int COLUMN_PEER_MAC_ADDRESS = 12;
-	public static final int COLUMN_PEER_IP_ADDRESS = 13;
-   public static final int COLUMN_PEER_PROTOCOL = 14;
-	public static final int COLUMN_ADMIN_STATE = 15;
-	public static final int COLUMN_OPER_STATE = 16;
-	public static final int COLUMN_EXPECTED_STATE = 17;
-	public static final int COLUMN_STATUS = 18;
-	public static final int COLUMN_8021X_PAE_STATE = 19;
-	public static final int COLUMN_8021X_BACKEND_STATE = 20;
+   public static final int COLUMN_SPEED = 8;
+	public static final int COLUMN_DESCRIPTION = 9;
+	public static final int COLUMN_MAC_ADDRESS = 10;
+	public static final int COLUMN_IP_ADDRESS = 11;
+	public static final int COLUMN_PEER_NAME = 12;
+	public static final int COLUMN_PEER_MAC_ADDRESS = 13;
+	public static final int COLUMN_PEER_IP_ADDRESS = 14;
+   public static final int COLUMN_PEER_PROTOCOL = 15;
+	public static final int COLUMN_ADMIN_STATE = 16;
+	public static final int COLUMN_OPER_STATE = 17;
+	public static final int COLUMN_EXPECTED_STATE = 18;
+	public static final int COLUMN_STATUS = 19;
+	public static final int COLUMN_8021X_PAE_STATE = 20;
+	public static final int COLUMN_8021X_BACKEND_STATE = 21;
 	
 	private SortableTableViewer viewer;
 	private InterfaceListLabelProvider labelProvider;
@@ -92,6 +93,7 @@ public class InterfacesTab extends ObjectTab
 	      Messages.get().InterfacesTab_ColSlot, 
 	      Messages.get().InterfacesTab_ColPort, 
 	      "MTU",
+         "Speed",
 	      Messages.get().InterfacesTab_ColDescription, 
 	      Messages.get().InterfacesTab_ColMacAddr,
 	      Messages.get().InterfacesTab_ColIpAddr, 
@@ -106,7 +108,7 @@ public class InterfacesTab extends ObjectTab
 	      Messages.get().InterfacesTab_Col8021xPAE, 
 	      Messages.get().InterfacesTab_Col8021xBackend 
 		};
-		final int[] widths = { 60, 150, 150, 90, 70, 70, 70, 70, 150, 100, 90, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
+		final int[] widths = { 60, 150, 150, 150, 70, 70, 70, 70, 90, 150, 100, 90, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		labelProvider = new InterfaceListLabelProvider();
 		viewer.setLabelProvider(labelProvider);
@@ -114,12 +116,12 @@ public class InterfacesTab extends ObjectTab
 		viewer.setComparator(new InterfaceListComparator());
 		viewer.getTable().setHeaderVisible(true);
 		viewer.getTable().setLinesVisible(true);
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable.V2"); //$NON-NLS-1$
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable.V3"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable.V2"); //$NON-NLS-1$
+				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable.V3"); //$NON-NLS-1$
 			}
 		});
 		createActions();

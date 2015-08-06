@@ -83,6 +83,9 @@ public class InterfaceListComparator extends ViewerComparator
 			case InterfacesTab.COLUMN_SLOT:
 				result = iface1.getSlot() - iface2.getSlot();
 				break;
+         case InterfacesTab.COLUMN_SPEED:
+            result = Long.signum(iface1.getSpeed() - iface2.getSpeed());
+            break;
 			case InterfacesTab.COLUMN_STATUS:
 				result = iface1.getStatus().compareTo(iface2.getStatus());
 				break;

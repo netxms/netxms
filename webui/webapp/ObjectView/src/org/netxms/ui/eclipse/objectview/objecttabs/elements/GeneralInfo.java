@@ -36,6 +36,7 @@ import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -72,11 +73,14 @@ public class GeneralInfo extends TableElement
 			case AbstractObject.OBJECT_INTERFACE:
 				Interface iface = (Interface)object;
 				addPair(Messages.get().GeneralInfo_IfIndex, Integer.toString(iface.getIfIndex()));
-				addPair(Messages.get().GeneralInfo_IfType, Integer.toString(iface.getIfType()));
+				String typeName = iface.getIfTypeName();
+				addPair(Messages.get().GeneralInfo_IfType, (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType()));
 				addPair(Messages.get().GeneralInfo_Description, iface.getDescription(), false);
             addPair("Alias", iface.getAlias(), false);
             if (iface.getMtu() > 0)
                addPair("MTU", Integer.toString(iface.getMtu()));
+            if (iface.getSpeed() > 0)
+               addPair("Speed", InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
 				addPair(Messages.get().GeneralInfo_MACAddr, iface.getMacAddress().toString());
 				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
 				{

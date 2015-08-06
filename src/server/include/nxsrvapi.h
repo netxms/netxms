@@ -190,6 +190,23 @@ typedef struct
  */
 class InterfaceInfo
 {
+private:
+   void init()
+   {
+      name[0] = 0;
+      description[0] = 0;
+      alias[0] = 0;
+      type = IFTYPE_OTHER;
+      mtu = 0;
+      speed = 0;
+      bridgePort = 0;
+      slot = 0;
+      port = 0;
+      memset(macAddr, 0, sizeof(macAddr));
+      isPhysicalPort = false;
+      isSystem = false;
+   }
+
 public:
    UINT32 index;
    TCHAR name[MAX_DB_STRING];			// Interface display name
@@ -197,6 +214,7 @@ public:
 	TCHAR alias[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
    UINT32 type;
    UINT32 mtu;
+   UINT64 speed;  // interface speed in bits/sec
 	UINT32 bridgePort;
 	UINT32 slot;
 	UINT32 port;
@@ -204,21 +222,22 @@ public:
    BYTE macAddr[MAC_ADDR_LENGTH];
 	bool isPhysicalPort;
    bool isSystem;
+   UINT32 ifTableSuffix[16];   // actual ifTable suffix
+   int ifTableSuffixLength;
 
    InterfaceInfo(UINT32 ifIndex)
    {
       index = ifIndex;
-      name[0] = 0;
-      description[0] = 0;
-      alias[0] = 0;
-      type = IFTYPE_OTHER;
-      mtu = 0;
-      bridgePort = 0;
-      slot = 0;
-      port = 0;
-      memset(macAddr, 0, sizeof(macAddr));
-      isPhysicalPort = false;
-      isSystem = false;
+      ifTableSuffixLength = 0;
+      init();
+   }
+
+   InterfaceInfo(UINT32 ifIndex, int suffixLen, UINT32 *suffix)
+   {
+      index = ifIndex;
+      ifTableSuffixLength = ((suffixLen >= 0) && (suffixLen < 16)) ? suffixLen : 0;
+      memcpy(ifTableSuffix, suffix, ifTableSuffixLength * sizeof(UINT32));
+      init();
    }
 
    bool hasAddress(const InetAddress& addr) { return ipAddrList.hasAddress(addr); }

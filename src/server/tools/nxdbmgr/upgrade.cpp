@@ -574,6 +574,22 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V363 to V364
+ */
+static BOOL H_UpgradeFromV363(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE interfaces ADD speed $SQL:INT64\n")
+      _T("ALTER TABLE interfaces ADD iftable_suffix varchar(127)\n")
+      _T("UPDATE interfaces SET speed=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='364' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V362 to V363
  */
 static BOOL H_UpgradeFromV362(int currVersion, int newVersion)
@@ -8907,6 +8923,7 @@ static struct
    { 360, 361, H_UpgradeFromV360 },
    { 361, 362, H_UpgradeFromV361 },
    { 362, 363, H_UpgradeFromV362 },
+   { 363, 364, H_UpgradeFromV363 },
    { 0, 0, NULL }
 };
 

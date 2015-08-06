@@ -40,7 +40,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	private static final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore };
 	
 	private AbstractNode node = null;
-	private NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+	private NXCSession session = ConsoleSharedData.getSession();
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -107,7 +107,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 			case InterfacesTab.COLUMN_STATUS:
 				return StatusDisplayInfo.getStatusText(iface.getStatus());
 			case InterfacesTab.COLUMN_TYPE:
-				return Integer.toString(iface.getIfType());
+            String typeName = iface.getIfTypeName();
+				return (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType());
 			case InterfacesTab.COLUMN_MAC_ADDRESS:
 				return iface.getMacAddress().toString();
 			case InterfacesTab.COLUMN_IP_ADDRESS:
@@ -120,6 +121,8 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				return getPeerIpAddress(iface);
          case InterfacesTab.COLUMN_PEER_PROTOCOL:
             return getPeerProtocol(iface);
+         case InterfacesTab.COLUMN_SPEED:
+            return (iface.getSpeed() > 0) ? ifSpeedTotext(iface.getSpeed()) : "";
 		}
 		return null;
 	}
@@ -222,4 +225,49 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 	{
 		return null;
 	}
+   
+   /**
+    * @param speed
+    * @param power
+    * @return
+    */
+   private static String divideSpeed(long speed, int power)
+   {
+      String s = Long.toString(speed);
+      StringBuilder sb = new StringBuilder(s.substring(0, s.length() - power));
+      char[] rem = s.substring(s.length() - power, s.length()).toCharArray();
+      int l = rem.length - 1;
+      while((l >= 0) && (rem[l] == '0'))
+         l--;
+      if (l >= 0)
+      {
+         sb.append('.');
+         for(int i = 0; i <= l; i++)
+            sb.append(rem[i]);
+      }
+      return sb.toString();
+   }
+   
+   /**
+    * Convert interface speed in bps to human readable form
+    * 
+    * @param speed
+    * @return
+    */
+   public static String ifSpeedTotext(long speed)
+   {
+      if (speed < 1000)
+         return Long.toString(speed) + " bps";
+      
+      if (speed < 1000000)
+         return divideSpeed(speed, 3) + " Kbps";
+      
+      if (speed < 1000000000)
+         return divideSpeed(speed, 6) + " Mbps";
+      
+      if (speed < 1000000000000L)
+         return divideSpeed(speed, 9) + " Gbps";
+      
+      return divideSpeed(speed, 12) + " Tbps";
+   }
 }

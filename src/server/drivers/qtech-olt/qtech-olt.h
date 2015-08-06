@@ -45,7 +45,8 @@ public:
 	virtual int isPotentialDevice(const TCHAR *oid);
 	virtual bool isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid);
 	virtual InterfaceList *getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable);
-   virtual void getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex, InterfaceAdminState *adminState, InterfaceOperState *operState);
+   virtual void getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex,
+                                  int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState);
 };
 
 #endif

@@ -2779,6 +2779,16 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                   {
                      pInterface->setMTU(ifInfo->mtu);
                   }
+                  if (ifInfo->speed != pInterface->getSpeed())
+                  {
+                     pInterface->setSpeed(ifInfo->speed);
+                  }
+                  if ((ifInfo->ifTableSuffixLength != pInterface->getIfTableSuffixLen()) ||
+                      memcmp(ifInfo->ifTableSuffix, pInterface->getIfTableSuffix(), 
+                         min(ifInfo->ifTableSuffixLength, pInterface->getIfTableSuffixLen())))
+                  {
+                     pInterface->setIfTableSuffix(ifInfo->ifTableSuffixLength, ifInfo->ifTableSuffix);
+                  }
 
                   // Check for deleted IPs and changed masks
                   const InetAddressList *ifList = pInterface->getIpAddressList();
@@ -4546,11 +4556,11 @@ UINT32 Node::wakeUp()
 /**
  * Get status of interface with given index from SNMP agent
  */
-void Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 index, InterfaceAdminState *adminState, InterfaceOperState *operState)
+void Node::getInterfaceStatusFromSNMP(SNMP_Transport *pTransport, UINT32 index, int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
 	if (m_driver != NULL)
 	{
-      m_driver->getInterfaceState(pTransport, &m_customAttributes, m_driverData, index, adminState, operState);
+      m_driver->getInterfaceState(pTransport, &m_customAttributes, m_driverData, index, ifTableSuffixLen, ifTableSuffix, adminState, operState);
    }
    else
    {

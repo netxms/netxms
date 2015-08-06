@@ -369,6 +369,7 @@ CREATE TABLE interfaces
 	if_type integer not null,
 	if_index integer not null,
    mtu integer not null,
+   speed SQL_INT64 not null,
 	bridge_port integer not null,
 	phy_slot integer not null,
 	phy_port integer not null,
@@ -383,6 +384,7 @@ CREATE TABLE interfaces
 	dot1x_backend_state integer not null,
 	description varchar(255) null,
    alias varchar(255) null,
+   iftable_suffix varchar(127) null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 

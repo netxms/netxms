@@ -467,6 +467,30 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 				iface->mtu = 0;
 			}
 
+         // Interface speed
+         _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.31.1.1.1.15.%d"), iface->index);  // try ifHighSpeed first
+         UINT32 speed;
+         if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &speed, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+			{
+				speed = 0;
+			}
+         if (speed < 2000)  // ifHighSpeed not supported or slow interface
+         {
+            _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.5.%d"), iface->index);  // ifSpeed
+            if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &speed, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
+            {
+               iface->speed = (UINT64)speed;
+            }
+            else
+            {
+               iface->speed = 0;
+            }
+         }
+         else
+         {
+            iface->speed = (UINT64)speed * _ULL(1000000);
+         }
+
          // MAC address
          _sntprintf(szOid, 128, _T(".1.3.6.1.2.1.2.2.1.6.%d"), iface->index);
          memset(szBuffer, 0, MAC_ADDR_LENGTH);
@@ -523,11 +547,15 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
  * @param adminState OUT: interface administrative state
  * @param operState OUT: interface operational state
  */
-void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex, InterfaceAdminState *adminState, InterfaceOperState *operState)
+void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex, 
+                                            int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
    UINT32 state = 0;
-   TCHAR oid[256];
-   _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7.%d"), (int)ifIndex); // Interface administrative state
+   TCHAR oid[256], suffix[128];
+   if (ifTableSuffixLen > 0)
+      _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7%s"), SNMPConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128)); // Interface administrative state
+   else
+      _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.7.%d"), (int)ifIndex); // Interface administrative state
    SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(UINT32), 0);
 
    switch(state)
@@ -541,7 +569,10 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *att
 			*adminState = (InterfaceAdminState)state;
          // Get interface operational state
          state = 0;
-         _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%d"), (int)ifIndex);
+         if (ifTableSuffixLen > 0)
+            _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8%s"), SNMPConvertOIDToText(ifTableSuffixLen, ifTableSuffix, suffix, 128));
+         else
+            _sntprintf(oid, 256, _T(".1.3.6.1.2.1.2.2.1.8.%d"), (int)ifIndex);
          SnmpGet(snmp->getSnmpVersion(), snmp, oid, NULL, 0, &state, sizeof(UINT32), 0);
          switch(state)
          {

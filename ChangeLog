@@ -18,6 +18,8 @@
 	- Map drill-down can be enabled in dashboard map elements
 	- Input fields in object tools
 	- Improved script editor for script library
+	- Interface speed displayed in interface object details and in "Interfaces" tab
+	- Symbolic name of interface type diplayed when known
 - Fixed issues: #38, #55, #741, #829, #830, #836, #840, #843, #844, #845, #846, #848, #850, #853, #855, #856, #857, #862, #866
 
 
