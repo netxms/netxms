@@ -29,7 +29,7 @@ Additional steps required:
         nxdbmgr init /usr/share/netxms/sql/dbinit_pgsql.sql
 
       MySQL:
-        nxdbmgr init /usr/share/netxms/sql/dbinit_pgsql.sql
+        nxdbmgr init /usr/share/netxms/sql/dbinit_mysql.sql
 
       Oracle:
         nxdbmgr init /usr/share/netxms/sql/dbinit_oracle.sql
