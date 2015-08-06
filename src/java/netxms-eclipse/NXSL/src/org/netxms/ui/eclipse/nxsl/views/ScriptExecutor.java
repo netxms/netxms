@@ -496,6 +496,8 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
+            library = session.getScriptLibrary();
+            
             runInUIThread(new Runnable() {
                @Override
                public void run()
