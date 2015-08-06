@@ -26,6 +26,7 @@ import org.eclipse.ui.console.IOConsoleOutputStream;
 import org.eclipse.ui.console.TextConsoleViewer;
 import org.eclipse.ui.internal.console.IOConsoleViewer;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.widgets.ansi.AnsiIOConsoleViewer;
 
 /**
  * Generic text console widget
@@ -45,7 +46,7 @@ public class TextConsole extends Composite
       super(parent, style);
       setLayout(new FillLayout());
       console = new IOConsole("Console", Activator.getImageDescriptor("icons/console.png")); //$NON-NLS-1$ //$NON-NLS-2$
-      viewer = new IOConsoleViewer(this, console);
+      viewer = new AnsiIOConsoleViewer(this, console);
       viewer.setEditable(false);
    }
 
