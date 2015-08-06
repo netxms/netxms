@@ -124,8 +124,6 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
             {
                session.executeServerCommand(nodeId, command, inputValues, true, ServerCommandResults.this, null);
                out.write(Messages.get().LocalCommandResults_Terminated);
-               out.write("Hello \u001b[1;31mred\u001b[0m world!");
-               System.out.println("Hello \u001b[1;31mred\u001b[0m world!");
             }
             finally
             {
