@@ -61,6 +61,8 @@ struct ThreadPool
    CONDITION maintThreadStop;
    HashMap<UINT64, WorkerThreadInfo> *threads;
    Queue *queue;
+   StringObjectMap<Queue> *serializationQueues;
+   MUTEX serializationLock;
    TCHAR *name;
    bool shutdownMode;
    INT32 loadAverage[3];
@@ -204,6 +206,9 @@ ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(int minThreads, int maxThreads
    p->queue = new Queue(64, 64);
    p->mutex = MutexCreate();
    p->maintThreadStop = ConditionCreate(TRUE);
+   p->serializationQueues = new StringObjectMap<Queue>(true);
+   p->serializationQueues->setIgnoreCase(false);
+   p->serializationLock = MutexCreate();
    p->name = (name != NULL) ? _tcsdup(name) : _tcsdup(_T("NONAME"));
    p->shutdownMode = false;
    p->loadAverage[0] = 0;
@@ -266,6 +271,8 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
    p->threads->setOwner(true);
    delete p->threads;
    delete p->queue;
+   delete p->serializationQueues;
+   MutexDestroy(p->serializationLock);
    MutexDestroy(p->mutex);
    free(p->name);
    free(p);
@@ -297,6 +304,66 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunct
    rq->func = f;
    rq->arg = arg;
    p->queue->put(rq);
+}
+
+/**
+ * Request serialization data
+ */
+struct RequestSerializationData
+{
+   TCHAR *key;
+   ThreadPool *pool;
+   Queue *queue;
+};
+
+/**
+ * Worker function to process serialized requests
+ */
+static void ProcessSerializedRequests(void *arg)
+{
+   RequestSerializationData *data = (RequestSerializationData *)arg;
+   while(true)
+   {
+      MutexLock(data->pool->serializationLock);
+      WorkRequest *rq = (WorkRequest *)data->queue->get();
+      if (rq == NULL)
+      {
+         data->pool->serializationQueues->remove(data->key);
+         MutexUnlock(data->pool->serializationLock);
+         break;
+      }
+      MutexUnlock(data->pool->serializationLock);
+   }
+   free(data->key);
+   delete data;
+}
+
+/**
+ * Execute task serialized (not before previous task with same key ends)
+ */
+void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, ThreadPoolWorkerFunction f, void *arg)
+{
+   MutexLock(p->serializationLock);
+   
+   Queue *q = p->serializationQueues->get(key);
+   if (q == NULL)
+   {
+      q = new Queue(8, 8);
+      p->serializationQueues->set(key, q);
+
+      RequestSerializationData *data = new RequestSerializationData;
+      data->key = _tcsdup(key);
+      data->pool = p;
+      data->queue = q;
+      ThreadPoolExecute(p, ProcessSerializedRequests, data);
+   }
+
+   WorkRequest *rq = (WorkRequest *)malloc(sizeof(WorkRequest));
+   rq->func = f;
+   rq->arg = arg;
+   q->put(rq);
+
+   MutexUnlock(p->serializationLock);
 }
 
 /**
