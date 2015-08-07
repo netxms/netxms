@@ -14,6 +14,7 @@
 - Server can be switched to case-insensitive login names mode
 - Implemented support of "command generates output" option for server commands
 - Network device driver for TelcoBridges gateways
+- Fixed memory leak in Qtech OLT driver
 - Management console:
 	- Default object display mode can be set in map properties
 	- Map drill-down can be enabled in dashboard map elements

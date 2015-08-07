@@ -691,7 +691,6 @@ static void CharData(void *userData, const XML_Char *s, int len)
 ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TCHAR *errorText, int errBufSize, bool (*eventResolver)(const TCHAR *, UINT32 *))
 {
 	ObjectArray<LogParser> *parsers = NULL;
-	bool success;
 
 	XML_Parser parser = XML_ParserCreate(NULL);
 	XML_PARSER_STATE state;
@@ -701,7 +700,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 	XML_SetUserData(parser, &state);
 	XML_SetElementHandler(parser, StartElement, EndElement);
 	XML_SetCharacterDataHandler(parser, CharData);
-	success = (XML_Parse(parser, xml, (xmlLen == -1) ? (int)strlen(xml) : xmlLen, TRUE) != XML_STATUS_ERROR);
+	bool success = (XML_Parse(parser, xml, (xmlLen == -1) ? (int)strlen(xml) : xmlLen, TRUE) != XML_STATUS_ERROR);
 	if (!success && (errorText != NULL))
 	{
 		_sntprintf(errorText, errBufSize, _T("%hs at line %d"),
@@ -711,7 +710,6 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 	XML_ParserFree(parser);
 	if (success && (state.state == XML_STATE_ERROR))
 	{
-		success = false;
 		if (errorText != NULL)
 			nx_strncpy(errorText, state.errorText, errBufSize);
 	}

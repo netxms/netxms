@@ -101,14 +101,19 @@ static char *FindEOL(char *start, int length, int encoding)
 	{
 		case LP_FCP_UCS2:
 			eol = FindSequence(start, length, "\n\0", 2);
+			break;
 		case LP_FCP_UCS2_LE:
 			eol = FindSequence(start, length, "\0\n", 2);
+			break;
 		case LP_FCP_UCS4:
 			eol = FindSequence(start, length, "\n\0\0\0", 4);
+			break;
 		case LP_FCP_UCS4_LE:
 			eol = FindSequence(start, length, "\0\0\0\n", 4);
+			break;
 		default:
 			eol = (char *)memchr(start, '\n', length);
+			break;
 	}
 
    if (eol == NULL)
@@ -118,14 +123,19 @@ static char *FindEOL(char *start, int length, int encoding)
 	   {
 		   case LP_FCP_UCS2:
 			   eol = FindSequence(start, length, "\r\0", 2);
+				break;
 		   case LP_FCP_UCS2_LE:
 			   eol = FindSequence(start, length, "\0\r", 2);
+				break;
 		   case LP_FCP_UCS4:
 			   eol = FindSequence(start, length, "\r\0\0\0", 4);
+				break;
 		   case LP_FCP_UCS4_LE:
 			   eol = FindSequence(start, length, "\0\0\0\r", 4);
+				break;
 		   default:
 			   eol = (char *)memchr(start, '\r', length);
+				break;
 	   }
    }
 

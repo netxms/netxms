@@ -117,16 +117,12 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       pTransport->setPeerUpdatedOnRecv(true);
    }
 
-   BYTE *rawMessage = NULL;
-   int iBytes = 0;
-   socklen_t nAddrLen = sizeof(struct sockaddr_in);
-
    // Wait for packets
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
-      rawMessage = NULL;
-      iBytes = 0;
-      iBytes = pTransport->readRawMessage(&rawMessage, 2000, (struct sockaddr *)&addr, &nAddrLen);
+      BYTE *rawMessage = NULL;
+      socklen_t nAddrLen = sizeof(struct sockaddr_in);
+      int iBytes = pTransport->readRawMessage(&rawMessage, 2000, (struct sockaddr *)&addr, &nAddrLen);
       if ((iBytes > 0) && (rawMessage != NULL))
       {
          UdpMessage *message = new UdpMessage();
