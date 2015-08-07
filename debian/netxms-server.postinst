@@ -88,6 +88,10 @@ __END
     abort-upgrade|abort-remove|abort-deconfigure)
     ;;
 
+    upgrade)
+        /usr/bin/nxdbmgr upgrade
+    ;;
+
     *)
         echo "postinst called with unknown argument \`$1'" >&2
         exit 1
