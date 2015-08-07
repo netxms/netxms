@@ -455,7 +455,7 @@ public:
 /**
  * SNMP target
  */
-class SNMPTarget
+class SNMPTarget : public RefCountObject
 {
 private:
    uuid m_guid;

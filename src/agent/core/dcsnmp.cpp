@@ -25,13 +25,13 @@
 /**
  * SNMP targets
  */
-static HashMap<uuid_t, SNMPTarget> s_snmpTargets(true);
+static HashMap<uuid_t, SNMPTarget> s_snmpTargets(false);
 static MUTEX s_snmpTargetsLock = MutexCreate();
 
 /**
  * Create SNMP target from NXCP message
  */
-SNMPTarget::SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId)
+SNMPTarget::SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId) : RefCountObject()
 {
    m_guid = msg->getFieldAsGUID(baseId);
    m_serverId = serverId;
@@ -51,7 +51,7 @@ SNMPTarget::SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId)
  * Expected field order:
  *   guid,server_id,ip_address,snmp_version,port,auth_type,enc_type,auth_name,auth_pass,enc_pass
  */
-SNMPTarget::SNMPTarget(DB_RESULT hResult, int row)
+SNMPTarget::SNMPTarget(DB_RESULT hResult, int row) : RefCountObject()
 {
    m_guid = DBGetFieldGUID(hResult, row, 0);
    m_serverId = DBGetFieldUInt64(hResult, row, 1);
@@ -137,6 +137,12 @@ SNMP_Transport *SNMPTarget::getTransport(UINT16 port)
 void UpdateSnmpTarget(SNMPTarget *target)
 {
    MutexLock(s_snmpTargetsLock);
+   SNMPTarget *oldTarget = s_snmpTargets.get(target->getGuid().getValue());
+   if (oldTarget != NULL)
+   {
+      oldTarget->decRefCount();
+      /* TODO: update existing target if possible */
+   }
    s_snmpTargets.set(target->getGuid().getValue(), target);
    target->saveToDatabase();
    MutexUnlock(s_snmpTargetsLock);
@@ -151,59 +157,62 @@ bool GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *valu
 
    MutexLock(s_snmpTargetsLock);
    SNMPTarget *t = s_snmpTargets.get(target.getValue());
-   if (t != NULL)
+   if (t == NULL)
    {
-      SNMP_Transport *snmp = t->getTransport(port);
-      UINT32 rcc;
+      MutexUnlock(s_snmpTargetsLock);
 
-      if (interpretRawValue == SNMP_RAWTYPE_NONE)
-      {
-         rcc = SnmpGetEx(snmp, oid, NULL, 0, value, MAX_RESULT_LENGTH * sizeof(TCHAR), SG_PSTRING_RESULT, NULL);
-      }
-      else
-      {
-			BYTE rawValue[1024];
-			memset(rawValue, 0, 1024);
-         rcc = SnmpGetEx(snmp, oid, NULL, 0, rawValue, 1024, SG_RAW_RESULT, NULL);
-			if (rcc == SNMP_ERR_SUCCESS)
-			{
-				switch(interpretRawValue)
-				{
-					case SNMP_RAWTYPE_INT32:
-						_sntprintf(value, MAX_RESULT_LENGTH, _T("%d"), ntohl(*((LONG *)rawValue)));
-						break;
-					case SNMP_RAWTYPE_UINT32:
-						_sntprintf(value, MAX_RESULT_LENGTH, _T("%u"), ntohl(*((UINT32 *)rawValue)));
-						break;
-					case SNMP_RAWTYPE_INT64:
-						_sntprintf(value, MAX_RESULT_LENGTH, INT64_FMT, (INT64)ntohq(*((INT64 *)rawValue)));
-						break;
-					case SNMP_RAWTYPE_UINT64:
-						_sntprintf(value, MAX_RESULT_LENGTH, UINT64_FMT, ntohq(*((QWORD *)rawValue)));
-						break;
-					case SNMP_RAWTYPE_DOUBLE:
-						_sntprintf(value, MAX_RESULT_LENGTH, _T("%f"), ntohd(*((double *)rawValue)));
-						break;
-					case SNMP_RAWTYPE_IP_ADDR:
-						IpToStr(ntohl(*((UINT32 *)rawValue)), value);
-						break;
-					case SNMP_RAWTYPE_MAC_ADDR:
-						MACToStr(rawValue, value);
-						break;
-					default:
-						value[0] = 0;
-						break;
-				}
-			}
-      }
-      success = (rcc == SNMP_ERR_SUCCESS);
+      TCHAR buffer[64];
+      DebugPrintf(INVALID_INDEX, 6, _T("SNMP target with guid %s not found"), target.toString(buffer));
+      return false;
+   }
+
+   t->incRefCount();
+   MutexUnlock(s_snmpTargetsLock);
+
+   SNMP_Transport *snmp = t->getTransport(port);
+   UINT32 rcc;
+
+   if (interpretRawValue == SNMP_RAWTYPE_NONE)
+   {
+      rcc = SnmpGetEx(snmp, oid, NULL, 0, value, MAX_RESULT_LENGTH * sizeof(TCHAR), SG_PSTRING_RESULT, NULL);
    }
    else
    {
-      TCHAR buffer[64];
-      DebugPrintf(INVALID_INDEX, 6, _T("SNMP target with guid %s not found"), target.toString(buffer));
+		BYTE rawValue[1024];
+		memset(rawValue, 0, 1024);
+      rcc = SnmpGetEx(snmp, oid, NULL, 0, rawValue, 1024, SG_RAW_RESULT, NULL);
+		if (rcc == SNMP_ERR_SUCCESS)
+		{
+			switch(interpretRawValue)
+			{
+				case SNMP_RAWTYPE_INT32:
+					_sntprintf(value, MAX_RESULT_LENGTH, _T("%d"), ntohl(*((LONG *)rawValue)));
+					break;
+				case SNMP_RAWTYPE_UINT32:
+					_sntprintf(value, MAX_RESULT_LENGTH, _T("%u"), ntohl(*((UINT32 *)rawValue)));
+					break;
+				case SNMP_RAWTYPE_INT64:
+					_sntprintf(value, MAX_RESULT_LENGTH, INT64_FMT, (INT64)ntohq(*((INT64 *)rawValue)));
+					break;
+				case SNMP_RAWTYPE_UINT64:
+					_sntprintf(value, MAX_RESULT_LENGTH, UINT64_FMT, ntohq(*((QWORD *)rawValue)));
+					break;
+				case SNMP_RAWTYPE_DOUBLE:
+					_sntprintf(value, MAX_RESULT_LENGTH, _T("%f"), ntohd(*((double *)rawValue)));
+					break;
+				case SNMP_RAWTYPE_IP_ADDR:
+					IpToStr(ntohl(*((UINT32 *)rawValue)), value);
+					break;
+				case SNMP_RAWTYPE_MAC_ADDR:
+					MACToStr(rawValue, value);
+					break;
+				default:
+					value[0] = 0;
+					break;
+			}
+		}
    }
-   MutexUnlock(s_snmpTargetsLock);
-   
-   return success;
+
+   t->decRefCount();
+   return (rcc == SNMP_ERR_SUCCESS);
 }

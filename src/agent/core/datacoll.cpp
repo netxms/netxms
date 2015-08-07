@@ -686,6 +686,8 @@ static DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
    DataElement *e = NULL;
    if (dci->getType() == DCO_TYPE_ITEM)
    {
+      DebugPrintf(INVALID_INDEX, 8, _T("Read SNMP parameter %s"), dci->getName());
+
       TCHAR value[MAX_RESULT_LENGTH];
       if (GetSnmpValue(dci->getSnmpTargetGuid(), dci->getSnmpPort(), dci->getName(), value, dci->getSnmpRawValueType()))
          e = new DataElement(dci, value);
@@ -694,27 +696,34 @@ static DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
 }
 
 /**
- * Data collection callback
+ * Local data collection callback
  */
-static void DataCollectionCallback(void *arg)
+static void LocalDataCollectionCallback(void *arg)
 {
    DataCollectionItem *dci = (DataCollectionItem *)arg;
 
-   DataElement *e;
-   if (dci->getOrigin() == DS_NATIVE_AGENT)
+   DataElement *e = CollectDataFromAgent(dci);
+   if (e != NULL)
    {
-      e = CollectDataFromAgent(dci);
-   }
-   else if (dci->getOrigin() == DS_SNMP_AGENT)
-   {
-      e = CollectDataFromSNMP(dci);
+      s_dataSenderQueue.put(e);
    }
    else
    {
-      DebugPrintf(INVALID_INDEX, 7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
-      e = NULL;
+      DebugPrintf(INVALID_INDEX, 6, _T("DataCollector: collection error for DCI %d \"%s\""), dci->getId(), dci->getName());
    }
 
+   dci->setLastPollTime(time(NULL));
+   dci->finishDataCollection();
+}
+
+/**
+ * SNMP data collection callback
+ */
+static void SnmpDataCollectionCallback(void *arg)
+{
+   DataCollectionItem *dci = (DataCollectionItem *)arg;
+
+   DataElement *e = CollectDataFromSNMP(dci);
    if (e != NULL)
    {
       s_dataSenderQueue.put(e);
@@ -755,8 +764,23 @@ static UINT32 DataCollectionSchedulerRun()
       if (timeToPoll == 0)
       {
          DebugPrintf(INVALID_INDEX, 7, _T("DataCollector: polling DCI %d \"%s\""), dci->getId(), dci->getName());
-         dci->startDataCollection();
-         ThreadPoolExecute(s_dataCollectorPool, DataCollectionCallback, dci);
+
+         if (dci->getOrigin() == DS_NATIVE_AGENT)
+         {
+            dci->startDataCollection();
+            ThreadPoolExecute(s_dataCollectorPool, LocalDataCollectionCallback, dci);
+         }
+         else if (dci->getOrigin() == DS_SNMP_AGENT)
+         {
+            dci->startDataCollection();
+            TCHAR key[64];
+            ThreadPoolExecuteSerialized(s_dataCollectorPool, dci->getSnmpTargetGuid().toString(key), SnmpDataCollectionCallback, dci);
+         }
+         else
+         {
+            DebugPrintf(INVALID_INDEX, 7, _T("DataCollector: unsupported origin %d"), dci->getOrigin());
+         }
+
          timeToPoll = dci->getPollingInterval();
       }
 

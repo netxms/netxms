@@ -333,6 +333,9 @@ static void ProcessSerializedRequests(void *arg)
          break;
       }
       MutexUnlock(data->pool->serializationLock);
+
+      rq->func(rq->arg);
+      free(rq);
    }
    free(data->key);
    delete data;
