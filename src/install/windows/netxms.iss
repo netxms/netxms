@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #include "setup.iss"
-OutputBaseFilename=netxms-2.0-M5
+OutputBaseFilename=netxms-2.0-RC1
 
 [Components]
 Name: "base"; Description: "Base Files"; Types: full compact custom; Flags: fixed
