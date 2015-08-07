@@ -1,3 +1,20 @@
+netxms (2.0-RC1-1) unstable; urgency=low
+
+  * Fixed LDAP authentication issues with Active Directory
+  * Fixed character encoding issues in LDAP user data
+  * Java subagent improved
+  * Fixed multiple issues with agent side data caching
+  * Hash maps implemented in NXSL
+  * Improved array implementation in NXSL
+  * New NXSL function ArrayToString
+  * New OS parameters and tables: System.HandleCount, System.OpenFiles, Process.Handles
+  * Unified macros in all types of object tools
+  * Server can be switched to case-insensitive login names mode
+  * Implemented support of "command generates output" option for server commands
+  * Network device driver for TelcoBridges gateways
+
+ -- Alex Kirhenshtein <alk@netxms.org>  Fri, 7 Aug 2015 10:38:00 +0300
+
 netxms (2.0-M5-1) unstable; urgency=low
 
   * Fixed bug in handling floating point Windows performance counters
