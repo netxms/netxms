@@ -8,6 +8,7 @@ cd api-build
 
 call mvn -N versions:update-child-modules
 call mvn clean
+call mvn -Dmaven.test.skip=true -N install %*
 call mvn -Dmaven.test.skip=true install %*
 
 for /f "tokens=2 delims=>< " %%a in ('findstr "<version>" pom.xml') do (

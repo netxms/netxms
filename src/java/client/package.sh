@@ -8,6 +8,7 @@ cd api-build
 
 mvn -N versions:update-child-modules
 mvn clean
+mvn -Dmaven.test.skip=true -N install
 mvn -Dmaven.test.skip=true install
 
 version=`grep '<version>' pom.xml | cut -f 2 -d \> | cut -f 1 -d \<|head -n1`
