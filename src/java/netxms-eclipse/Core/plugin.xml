@@ -78,11 +78,11 @@
          </property>
          <property
                name="aboutImage"
-               value="../Core/icons/launcher/128x128.png">
+               value="icons/launcher/128x128.png">
          </property>
          <property
                name="windowImages"
-               value="../Core/icons/launcher/16x16.png,../Core/icons/launcher/32x32.png,../Core/icons/launcher/48x48.png,../Core/icons/launcher/64x64.png,../Core/icons/launcher/128x128.png">
+               value="icons/launcher/16x16.png,icons/launcher/32x32.png,icons/launcher/48x48.png,icons/launcher/64x64.png,icons/launcher/128x128.png">
          </property>
       </product>
    </extension>
