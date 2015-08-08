@@ -516,7 +516,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp db server agent libnxmap client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2 tuxedo mongodb"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
 	SMSDRV_DIRS="kannel websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
@@ -784,7 +784,7 @@ fi
 
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
-	SUBAGENT_DIRS="$SUBAGENT_DIRS java"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS java ubntlw"
 fi
 
 check_substr "$COMPONENTS" "tuxedo"
