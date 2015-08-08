@@ -211,50 +211,47 @@ public class SubAgent
    protected boolean loadPlugin(String path)
    {
       writeDebugLog(2, "SubAgent.loadPlugin(" + path + ")");
-      Plugin plugin = null;
-      try
-      {
-         plugin = path.toLowerCase().endsWith(JAR) ? createPluginWithJar(path, config) : createPluginWithClassname(path, config);
-      }
-      catch(Throwable e)
-      {
-         writeLog(LogLevel.WARNING, "Failed to load plugin " + path + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
-      }
+      Plugin[] loadList = path.toLowerCase().endsWith(JAR) ? createPluginWithJar(path, config) : createPluginWithClassname(path, config);
       
-      if (plugin == null)
+      if ((loadList == null) || (loadList.length == 0))
          return false;
       
-      plugins.put(plugin.getName(), plugin);
-      // register actions
-      Action[] _actions = plugin.getActions();
-      for(int i = 0; i < _actions.length; i++)
-         actions.put(createContributionItemId(plugin, _actions[i]), _actions[i]);
-   
-      // register paramaters
-      Parameter[] _parameters = plugin.getParameters();
-      for(int i = 0; i < _parameters.length; i++)
-         parameters.put(createContributionItemId(plugin, _parameters[i]), _parameters[i]);
-   
-      // register list paramaters
-      ListParameter[] _listParameters = plugin.getListParameters();
-      for(int i = 0; i < _listParameters.length; i++)
-         lists.put(createContributionItemId(plugin, _listParameters[i]), _listParameters[i]);
-   
-      // register push paramaters
-      PushParameter[] _pushParameters = plugin.getPushParameters();
-      for(int i = 0; i < _pushParameters.length; i++)
-         pushParameters.put(createContributionItemId(plugin, _pushParameters[i]), _pushParameters[i]);
-   
-      // register table paramaters
-      TableParameter[] _tableParameters = plugin.getTableParameters();
-      for(int i = 0; i < _tableParameters.length; i++)
-         tables.put(createContributionItemId(plugin, _tableParameters[i]), _tableParameters[i]);
-   
-      writeDebugLog(6, "SubAgent.loadPlugin actions=" + actions);
-      writeDebugLog(6, "SubAgent.loadPlugin parameters=" + parameters);
-      writeDebugLog(6, "SubAgent.loadPlugin listParameters=" + lists);
-      writeDebugLog(6, "SubAgent.loadPlugin pushParameters=" + pushParameters);
-      writeDebugLog(6, "SubAgent.loadPlugin tableParameters=" + tables);
+      for(Plugin p : loadList)
+      {
+         plugins.put(p.getName(), p);
+         writeDebugLog(2, "Java plugin " + p.getName() + " (" + p.getClass().getName() + ") loaded");
+         
+         // register actions
+         Action[] _actions = p.getActions();
+         for(int i = 0; i < _actions.length; i++)
+            actions.put(createContributionItemId(p, _actions[i]), _actions[i]);
+      
+         // register paramaters
+         Parameter[] _parameters = p.getParameters();
+         for(int i = 0; i < _parameters.length; i++)
+            parameters.put(createContributionItemId(p, _parameters[i]), _parameters[i]);
+      
+         // register list paramaters
+         ListParameter[] _listParameters = p.getListParameters();
+         for(int i = 0; i < _listParameters.length; i++)
+            lists.put(createContributionItemId(p, _listParameters[i]), _listParameters[i]);
+      
+         // register push paramaters
+         PushParameter[] _pushParameters = p.getPushParameters();
+         for(int i = 0; i < _pushParameters.length; i++)
+            pushParameters.put(createContributionItemId(p, _pushParameters[i]), _pushParameters[i]);
+      
+         // register table paramaters
+         TableParameter[] _tableParameters = p.getTableParameters();
+         for(int i = 0; i < _tableParameters.length; i++)
+            tables.put(createContributionItemId(p, _tableParameters[i]), _tableParameters[i]);
+      
+         writeDebugLog(6, "SubAgent.loadPlugin actions=" + actions);
+         writeDebugLog(6, "SubAgent.loadPlugin parameters=" + parameters);
+         writeDebugLog(6, "SubAgent.loadPlugin listParameters=" + lists);
+         writeDebugLog(6, "SubAgent.loadPlugin pushParameters=" + pushParameters);
+         writeDebugLog(6, "SubAgent.loadPlugin tableParameters=" + tables);
+      }
       return true;
    }
 
@@ -264,13 +261,21 @@ public class SubAgent
     * @return
     * @throws Exception
     */
-   protected Plugin createPluginWithClassname(String classname, Config config) throws Exception
+   protected Plugin[] createPluginWithClassname(String classname, Config config)
    {
-      Class<?> pluginClass = Class.forName(classname);
-      writeDebugLog(3, "SubAgent.createPluginWithClassname loaded class " + pluginClass);
-      Plugin plugin = instantiatePlugin(pluginClass.asSubclass(Plugin.class), config);
-      writeDebugLog(3, "SubAgent.createPluginWithClassname created instance " + plugin);
-      return plugin;
+      try
+      {
+         Class<?> pluginClass = Class.forName(classname);
+         writeDebugLog(3, "SubAgent.createPluginWithClassname loaded class " + pluginClass);
+         Plugin plugin = instantiatePlugin(pluginClass.asSubclass(Plugin.class), config);
+         writeDebugLog(3, "SubAgent.createPluginWithClassname created instance " + plugin);
+         return new Plugin[] { plugin };
+      }
+      catch(Throwable e)
+      {
+         writeLog(LogLevel.WARNING, "Failed to load plugin " + classname + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         return null;
+      }
    }
 
    /**
@@ -279,21 +284,47 @@ public class SubAgent
     * @return
     * @throws Exception
     */
-   protected Plugin createPluginWithJar(String jarFile, Config config) throws Exception
+   protected Plugin[] createPluginWithJar(String jarFile, Config config)
    {
-      URLClassLoader classLoader = new URLClassLoader(new URL[] { new File(jarFile).toURI().toURL() }, Thread.currentThread().getContextClassLoader() );
-      URL url = classLoader.findResource(MANIFEST_PATH);
-      Manifest manifest = new Manifest(url.openStream());
-      Attributes attributes = manifest.getMainAttributes();
-      String pluginClassName = attributes.getValue(PLUGIN_CLASSNAME_ATTRIBUTE_NAME);
-      if (pluginClassName == null)
+      String classList;
+      URLClassLoader classLoader;
+      try
       {
-         classLoader.close();
-         throw new Exception("Failed to find " + PLUGIN_CLASSNAME_ATTRIBUTE_NAME + " attribute in manifest of " + jarFile);
+         classLoader = new URLClassLoader(new URL[] { new File(jarFile).toURI().toURL() }, Thread.currentThread().getContextClassLoader() );
+         URL url = classLoader.findResource(MANIFEST_PATH);
+         Manifest manifest = new Manifest(url.openStream());
+         Attributes attributes = manifest.getMainAttributes();
+         classList = attributes.getValue(PLUGIN_CLASSNAME_ATTRIBUTE_NAME);
+         if (classList == null)
+         {
+            classLoader.close();
+            writeLog(LogLevel.WARNING, "Failed to find " + PLUGIN_CLASSNAME_ATTRIBUTE_NAME + " attribute in manifest of " + jarFile);
+            return null;
+         }
       }
-      Class<?> pluginClass = Class.forName(pluginClassName, false, classLoader);
-      Plugin plugin = instantiatePlugin(pluginClass.asSubclass(Plugin.class), config);
-      return plugin;
+      catch(Throwable e)
+      {
+         writeLog(LogLevel.WARNING, "Error processing jar file " + jarFile + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         return null;
+      }
+         
+      List<Plugin> pluginList = new ArrayList<Plugin>();
+      String[] classNames = classList.split(";");
+      for(String cn : classNames)
+      {
+         cn = cn.trim();
+         try
+         {
+            Class<?> pluginClass = Class.forName(cn, false, classLoader);
+            Plugin plugin = instantiatePlugin(pluginClass.asSubclass(Plugin.class), config);
+            pluginList.add(plugin);
+         }
+         catch(Throwable e)
+         {
+            writeLog(LogLevel.WARNING, "Failed to load plugin " + cn + " from jar file " + jarFile + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         }
+      }
+      return pluginList.toArray(new Plugin[pluginList.size()]);
    }
 
    /**
