@@ -3,7 +3,7 @@ javalib_DATA = netxms-agent.jar
 
 netxms-agent.jar: pom.xml
 	mvn clean
-	mvn package
+	mvn install
 	mv target/netxms-agent.jar .
 
 SUBDIRS = src
