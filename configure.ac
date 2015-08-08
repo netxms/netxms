@@ -2884,6 +2884,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/sunos/Makefile
 	src/agent/subagents/tuxedo/Makefile
 	src/agent/subagents/mongodb/Makefile
+	src/agent/subagents/ubntlw/Makefile
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
