@@ -20,6 +20,7 @@ EXTRA_DIST=changelog \
            netxms-agent.nxagentd.init \
            netxms-agent.postinst \
            netxms-agent.postrm \
+           netxms-agent-java.install \
            netxms-base.dirs \
            netxms-base.install \
            netxms-base.postrm \
