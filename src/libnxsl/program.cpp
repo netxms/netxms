@@ -50,7 +50,7 @@ const char *g_nxslCommandMnemonic[] =
 	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR",
 	"AGETS", "CALL", "CASE", "EINC", "EDEC",
    "EINCP", "EDECP", "ABORT", "CATCH", "PUSH",
-   "SETHM"
+   "SETHM", "NEWARR", "NEWHM"
 };
 
 /**

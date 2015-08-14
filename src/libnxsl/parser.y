@@ -575,12 +575,12 @@ TypeCast:
 ArrayInitializer:
 	'%' '(' 
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value(new NXSL_Array)));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_NEW_ARRAY));
 }
 	ArrayElements ')'
 |	'%' '(' ')'
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value(new NXSL_Array)));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_NEW_ARRAY));
 }
 ;
 
@@ -599,12 +599,12 @@ ArrayElements:
 HashMapInitializer:
 	'%' '{' 
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value(new NXSL_HashMap)));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_NEW_HASHMAP));
 }
 	HashMapElements '}'
 |	'%' '{' '}'
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value(new NXSL_HashMap)));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_NEW_HASHMAP));
 }
 ;
 

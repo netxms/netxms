@@ -2,6 +2,7 @@
 * 2.0-RC2
 *
 
+- Fixed broken instance discovery filters
 - Fixed agent crash when collecting SNMP data in cached mode
 
 

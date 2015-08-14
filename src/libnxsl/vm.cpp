@@ -457,7 +457,6 @@ void NXSL_VM::execute()
    TCHAR szBuffer[256];
    int i, nRet;
 
-//printf(">>>> %04x\n",m_cp);
    cp = m_instructionSet->get(m_cp);
    switch(cp->m_nOpCode)
    {
@@ -471,6 +470,12 @@ void NXSL_VM::execute()
       case OPCODE_PUSH_CONSTREF:
          pVar = m_constants->find(cp->m_operand.m_pszString);
          m_dataStack->push((pVar != NULL) ? new NXSL_Value(pVar->getValue()) : new NXSL_Value());
+         break;
+      case OPCODE_NEW_ARRAY:
+         m_dataStack->push(new NXSL_Value(new NXSL_Array()));
+         break;
+      case OPCODE_NEW_HASHMAP:
+         m_dataStack->push(new NXSL_Value(new NXSL_HashMap()));
          break;
       case OPCODE_SET:
          pVar = findOrCreateVariable(cp->m_operand.m_pszString);
