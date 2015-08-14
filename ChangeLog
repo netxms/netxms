@@ -1,4 +1,11 @@
 *
+* 2.0-RC2
+*
+
+- Fixed agent crash when collecting SNMP data in cached mode
+
+
+*
 * 2.0-RC1
 *
 
