@@ -52,6 +52,7 @@ Source: "..\..\install\files\windows\x64\ssleay32.dll"; DestDir: "{app}\bin"; Fl
 Source: "..\..\install\files\windows\x64\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\install\files\windows\x64\Microsoft.VC80.CRT\*"; DestDir: "{app}\bin\Microsoft.VC80.CRT"; Flags: ignoreversion
 Source: "..\subagents\java\java\target\netxms-agent.jar"; DestDir: "{app}\lib"; Flags: ignoreversion
+Source: "..\subagents\ubntlw\target\ubntlw.jar"; DestDir: "{app}\lib"; Flags: ignoreversion
 ; Command-line tools
 Source: "..\..\..\x64\release\nxappget.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "..\..\..\x64\release\nxapush.exe"; DestDir: "{app}\bin"; Flags: ignoreversion

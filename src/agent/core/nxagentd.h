@@ -426,7 +426,7 @@ private:
 
 public:
    SessionAgentConnector(UINT32 id, SOCKET s);
-   ~SessionAgentConnector();
+   virtual ~SessionAgentConnector();
 
    void run();
    void disconnect();
@@ -473,7 +473,7 @@ private:
 public:
    SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId);
    SNMPTarget(DB_RESULT hResult, int row);
-   ~SNMPTarget();
+   virtual ~SNMPTarget();
 
    const uuid& getGuid() const { return m_guid; }
    SNMP_Transport *getTransport(UINT16 port);
