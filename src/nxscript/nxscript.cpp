@@ -26,14 +26,14 @@
 #include "nxscript.h"
 
 
-static NXSL_TestClass *m_pTestClass;
+static NXSL_TestClass m_testClass;
 
 
 int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	TCHAR *buffer = (TCHAR *)malloc(1024);
 	_tcscpy(buffer, _T("test value"));
-   *ppResult = new NXSL_Value(new NXSL_Object(m_pTestClass, buffer));
+   *ppResult = new NXSL_Value(new NXSL_Object(&m_testClass, buffer));
    return 0;
 }
 
@@ -57,8 +57,6 @@ int main(int argc, char *argv[])
    func.m_iNumArgs = 0;
    func.m_pfHandler = F_new;
    _tcscpy(func.m_name, _T("new"));
-
-   m_pTestClass = new NXSL_TestClass;
 
    WriteToTerminal(_T("NetXMS Scripting Host  Version \x1b[1m") NETXMS_VERSION_STRING _T("\x1b[0m\n")
                    _T("Copyright (c) 2005-2015 Victor Kirhenshtein\n\n"));

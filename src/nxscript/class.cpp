@@ -37,8 +37,7 @@ NXSL_METHOD_DEFINITION(quote)
    return 0;
 }
 
-NXSL_TestClass::NXSL_TestClass()
-               :NXSL_Class()
+NXSL_TestClass::NXSL_TestClass() : NXSL_Class()
 {
    _tcscpy(m_name, _T("TEST"));
    NXSL_REGISTER_METHOD(debug, 0);
