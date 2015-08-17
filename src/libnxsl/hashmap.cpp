@@ -43,6 +43,7 @@ NXSL_HashMap::NXSL_HashMap(const NXSL_HashMap *src) : NXSL_HandleCountObject()
       KeyValuePair *p = values->get(i);
       m_values->set(p->key, new NXSL_Value((const NXSL_Value *)p->value));
    }
+   delete values;
 }
 
 /**
