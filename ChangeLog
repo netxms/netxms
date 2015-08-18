@@ -4,7 +4,7 @@
 
 - Fixed broken instance discovery filters
 - Fixed agent crash when collecting SNMP data in cached mode
-
+- Fixed issues: #831
 
 *
 * 2.0-RC1

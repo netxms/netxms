@@ -69,6 +69,7 @@ import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -92,6 +93,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	private Action actionRefresh;
 	private Action actionNew;
 	private Action actionEdit;
+   private Action actionClone;
 	private Action actionDelete;
 	private Action actionDisable;
 	private Action actionEnable;
@@ -131,6 +133,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 				if (selection != null)
 				{
 					actionEdit.setEnabled(selection.size() == 1);
+               actionClone.setEnabled(selection.size() == 1);
 					actionDelete.setEnabled(selection.size() > 0);
 					actionDisable.setEnabled(containsEnabled(selection));
 					actionEnable.setEnabled(containsDisabled(selection));
@@ -258,6 +261,14 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
             setSelectedEnabled();
          }
       };
+      
+      actionClone = new Action("Clone") {
+         @Override
+         public void run()
+         {
+            cloneTool();
+         }
+      };
 	}
 
 	/**
@@ -280,6 +291,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	{
 		manager.add(actionNew);
 		manager.add(actionDelete);
+      manager.add(actionClone);
 		manager.add(actionEdit);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -332,6 +344,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	{
 		mgr.add(actionNew);
 		mgr.add(actionDelete);
+      mgr.add(actionClone);  
 		mgr.add(new Separator());
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if(containsEnabled(selection))
@@ -345,7 +358,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		mgr.add(new Separator());
 		mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		mgr.add(new Separator());
-      mgr.add(actionEdit);     
+      mgr.add(actionEdit);   
 	}
 
 	/**
@@ -537,6 +550,39 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	            }
 	         }
 	      }.start();       
+    }
+	 
+	 /**
+	  * Clone object tool 
+	  */
+    private void cloneTool()
+    {
+       final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+       if (selection.isEmpty())
+          return;
+       
+       final CreateObjectDialog dlg = new CreateObjectDialog(getSite().getShell(), "Object tool");
+       if (dlg.open() == Window.OK)
+       {
+          new ConsoleJob("Clone object tool", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+             @Override
+             protected void runInternal(IProgressMonitor monitor) throws Exception
+             {
+                final long toolId = session.generateObjectToolId();
+                ObjectTool objTool = (ObjectTool)selection.toArray()[0];
+                ObjectToolDetails details = session.getObjectToolDetails(objTool.getId());
+                details.setId(toolId);
+                details.setName(dlg.getObjectName());
+                session.modifyObjectTool(details);
+             }
+
+             @Override
+             protected String getErrorMessage()
+             {
+                return "Cannot clone object tool";
+             }
+          }.start();
+       }
     }
 
 	/* (non-Javadoc)
