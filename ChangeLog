@@ -4,7 +4,9 @@
 
 - Fixed broken instance discovery filters
 - Fixed agent crash when collecting SNMP data in cached mode
+- Agent returns correct OS version on Windows 10
 - Fixed issues: #831
+
 
 *
 * 2.0-RC1
