@@ -28,14 +28,14 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public List<Notification> load(UUID jobId) {
-        final Query query = session.getCurrentSession().createQuery("from Notification where jobid = ?").setParameter(0, jobId);
+        final Query query = session.getCurrentSession().createQuery("from Notification where jobId = ?").setParameter(0, jobId);
         return checkedList(query.list(), Notification.class);
     }
 
     @Override
     @Transactional
     public void delete(UUID jobId) {
-        final Query query = session.getCurrentSession().createQuery("from Notification where jobid = ?").setParameter(0, jobId);
+        final Query query = session.getCurrentSession().createQuery("from Notification where jobId = ?").setParameter(0, jobId);
         final List<Notification> list = checkedList(query.list(), Notification.class);
         for (Notification notify : list) {
             session.getCurrentSession().delete(notify);
