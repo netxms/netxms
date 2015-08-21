@@ -23,7 +23,7 @@ import java.io.File;
 /**
  * Information about file received from agent
  */
-public class AgentFile
+public class AgentFileData
 {
    private String id;
    private File file;
@@ -34,7 +34,7 @@ public class AgentFile
     * @param id
     * @param file
     */
-   public AgentFile(String id, File file)
+   public AgentFileData(String id, File file)
    {
       this.id = id;
       this.file = file;

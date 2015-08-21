@@ -62,13 +62,7 @@ public class ServerFileAdapterFactory implements IAdapterFactory
 
 				@Override
 				public ImageDescriptor getImageDescriptor(Object object)
-				{
-               if (((ServerFile)object).isPlaceholder())
-                  return null;
-               
-				   if (((ServerFile)object).isDirectory())
-				      return Activator.getImageDescriptor("icons/folder.gif"); //$NON-NLS-1$
-				   
+				{				   
 					String[] parts = ((ServerFile)object).getName().split("\\."); //$NON-NLS-1$
 					if (parts.length < 2)
 						return Activator.getImageDescriptor("icons/types/unknown.png"); //$NON-NLS-1$

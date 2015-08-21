@@ -30,6 +30,13 @@
                type="org.eclipse.ui.model.IWorkbenchAdapter">
          </adapter>
       </factory>
+      <factory
+            adaptableType="org.netxms.client.server.AgentFile"
+            class="org.netxms.ui.eclipse.filemanager.AgentFileAdapterFactory">
+         <adapter
+               type="org.eclipse.ui.model.IWorkbenchAdapter">
+         </adapter>
+      </factory>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">

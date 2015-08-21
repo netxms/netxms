@@ -30,7 +30,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.AgentFile;
+import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -118,7 +118,7 @@ public class FileViewer extends ViewPart
 	 * In case if file is too large asks if it should be opened partly. 
 	 * @throws PartInitException 
 	 */
-	public static boolean createView(IWorkbenchWindow window, Shell shell, final AgentFile file, boolean tail, int offset, String secondaryId, final long nodeId) throws PartInitException
+	public static boolean createView(IWorkbenchWindow window, Shell shell, final AgentFileData file, boolean tail, int offset, String secondaryId, final long nodeId) throws PartInitException
 	{
 	   boolean exceedSize = file.getFile().length() > TextViewWidget.MAX_FILE_SIZE;
 	   if(exceedSize && !MessageDialogHelper.openConfirm(shell, "File is too large",

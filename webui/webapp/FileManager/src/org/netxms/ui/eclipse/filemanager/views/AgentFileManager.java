@@ -75,11 +75,12 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.AgentFile;
+import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ProgressListener;
-import org.netxms.client.server.ServerFile;
+import org.netxms.client.objects.Node;
+import org.netxms.client.server.AgentFile;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -89,7 +90,7 @@ import org.netxms.ui.eclipse.filemanager.dialogs.CreateFolderDialog;
 import org.netxms.ui.eclipse.filemanager.dialogs.StartClientToServerFileUploadDialog;
 import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileComparator;
 import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileFilter;
-import org.netxms.ui.eclipse.filemanager.views.helpers.ServerFileLabelProvider;
+import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileLabelProvider;
 import org.netxms.ui.eclipse.filemanager.views.helpers.ViewAgentFilesProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.views.FileViewer;
@@ -114,16 +115,20 @@ public class AgentFileManager extends ViewPart
    public static final int COLUMN_TYPE = 1;
    public static final int COLUMN_SIZE = 2;
    public static final int COLUMN_MODIFYED = 3;
+   public static final int COLUMN_OWNER = 4;
+   public static final int COLUMN_GROUP = 5;
+   public static final int COLUMN_ACCESS_RIGHTS = 6;
 
    private boolean filterEnabled = false;
    private Composite content;
-   private ServerFile[] files;
+   private AgentFile[] files;
    private AgentFileFilter filter;
    private FilterText filterText;
    private SortableTreeViewer viewer;
    private NXCSession session;
    private Action actionRefreshAll;
    private Action actionUploadFile;
+   private Action actionUploadFolder;
    private Action actionDelete;
    private Action actionRename;
    private Action actionRefreshDirectory;
@@ -148,7 +153,6 @@ public class AgentFileManager extends ViewPart
       session = (NXCSession)ConsoleSharedData.getSession();
       objectId = Long.parseLong(site.getSecondaryId());
       setPartName(String.format(Messages.get().AgentFileManager_PartTitle, session.getObjectName(objectId)));
-      workspaceDir = Platform.getInstanceLocation().getURL().getPath();
    }
 
    /*
@@ -178,13 +182,25 @@ public class AgentFileManager extends ViewPart
             enableFilter(false);
          }
       });
+      
+      String os = ((Node)session.findObjectById(objectId)).getSystemDescription(); //$NON-NLS-1$
 
-      final String[] columnNames = { Messages.get().AgentFileManager_ColName, Messages.get().AgentFileManager_ColType, Messages.get().AgentFileManager_ColSize, Messages.get().AgentFileManager_ColDate };
-      final int[] columnWidths = { 300, 120, 150, 150 };
-      viewer = new SortableTreeViewer(content, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+      if(os.contains("Windows"))//if OS is windows don't show group and access rights columns
+      {
+         final String[] columnNames = { Messages.get().AgentFileManager_ColName, Messages.get().AgentFileManager_ColType, Messages.get().AgentFileManager_ColSize, Messages.get().AgentFileManager_ColDate, "Owner" };
+         final int[] columnWidths = { 300, 120, 150, 150, 150 };  
+         viewer = new SortableTreeViewer(content, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+      }
+      else
+      {
+         final String[] columnNames = { Messages.get().AgentFileManager_ColName, Messages.get().AgentFileManager_ColType, Messages.get().AgentFileManager_ColSize, Messages.get().AgentFileManager_ColDate, "Owner", "Group", "Access Rights" };
+         final int[] columnWidths = { 300, 120, 150, 150, 150, 150, 200 };         
+         viewer = new SortableTreeViewer(content, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+      }
+      
       WidgetHelper.restoreTreeViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
       viewer.setContentProvider(new ViewAgentFilesProvider());
-      viewer.setLabelProvider(new ServerFileLabelProvider());
+      viewer.setLabelProvider(new AgentFileLabelProvider());
       viewer.setComparator(new AgentFileComparator());
       filter = new AgentFileFilter();
       viewer.addFilter(filter);
@@ -289,9 +305,9 @@ public class AgentFileManager extends ViewPart
             List<?> movableSelection = selection.toList();
             for(int i = 0; i < movableSelection.size(); i++)
             {
-               ServerFile movableObject = (ServerFile)movableSelection.get(i);
+               AgentFile movableObject = (AgentFile)movableSelection.get(i);
 
-               moveFile((ServerFile)getCurrentTarget(), movableObject);
+               moveFile((AgentFile)getCurrentTarget(), movableObject);
 
             }
             return true;
@@ -309,16 +325,16 @@ public class AgentFileManager extends ViewPart
 
             for(final Object object : selection.toList())
             {
-               if (!(object instanceof ServerFile))
+               if (!(object instanceof AgentFile))
                   return false;
             }
-            if (!(target instanceof ServerFile))
+            if (!(target instanceof AgentFile))
             {
                return false;
             }
             else
             {
-               if (!((ServerFile)target).isDirectory())
+               if (!((AgentFile)target).isDirectory())
                {
                   return false;
                }
@@ -351,9 +367,9 @@ public class AgentFileManager extends ViewPart
 
             if (property.equals("name")) //$NON-NLS-1$
             {
-               if (element instanceof ServerFile)
+               if (element instanceof AgentFile)
                {
-                  doRename((ServerFile)element, value.toString());
+                  doRename((AgentFile)element, value.toString());
                }
             }
          }
@@ -363,9 +379,9 @@ public class AgentFileManager extends ViewPart
          {
             if (property.equals("name")) //$NON-NLS-1$
             {
-               if (element instanceof ServerFile)
+               if (element instanceof AgentFile)
                {
-                  return ((ServerFile)element).getName();
+                  return ((AgentFile)element).getName();
                }
             }
             return null;
@@ -382,10 +398,10 @@ public class AgentFileManager extends ViewPart
    /**
     * Do actual rename
     * 
-    * @param serverFile
+    * @param AgentFile
     * @param newName
     */
-   private void doRename(final ServerFile serverFile, final String newName)
+   private void doRename(final AgentFile agentFile, final String newName)
    {
       new ConsoleJob(Messages.get().ViewServerFile_DeletFileFromServerJob, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
          @Override
@@ -397,14 +413,14 @@ public class AgentFileManager extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            session.renameAgentFile(objectId, serverFile.getFullName(), serverFile.getParent().getFullName() + "/" + newName); //$NON-NLS-1$
+            session.renameAgentFile(objectId, agentFile.getFullName(), agentFile.getParent().getFullName() + "/" + newName); //$NON-NLS-1$
 
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  serverFile.setName(newName);
-                  viewer.refresh(serverFile, true);
+                  agentFile.setName(newName);
+                  viewer.refresh(agentFile, true);
                }
             });
          }
@@ -583,7 +599,7 @@ public class AgentFileManager extends ViewPart
       
       if (selection.size() == 1)
       {
-         if (((ServerFile)selection.getFirstElement()).isDirectory())
+         if (((AgentFile)selection.getFirstElement()).isDirectory())
          {
             mgr.add(actionUploadFile);
          }
@@ -598,7 +614,7 @@ public class AgentFileManager extends ViewPart
       
       if (selection.size() == 1)
       {
-         if (((ServerFile)selection.getFirstElement()).isDirectory())
+         if (((AgentFile)selection.getFirstElement()).isDirectory())
          {
             mgr.add(actionCreateDirectory);
          }
@@ -607,7 +623,7 @@ public class AgentFileManager extends ViewPart
       mgr.add(actionDelete);
       mgr.add(new Separator());
       mgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-      if ((selection.size() == 1) && ((ServerFile)selection.getFirstElement()).isDirectory())
+      if ((selection.size() == 1) && ((AgentFile)selection.getFirstElement()).isDirectory())
       {
          mgr.add(new Separator());
          mgr.add(actionRefreshDirectory);
@@ -658,10 +674,10 @@ public class AgentFileManager extends ViewPart
          {
             for(int i = 0; i < objects.length; i++)
             {
-               if (!((ServerFile)objects[i]).isDirectory())
-                  objects[i] = ((ServerFile)objects[i]).getParent();
+               if (!((AgentFile)objects[i]).isDirectory())
+                  objects[i] = ((AgentFile)objects[i]).getParent();
 
-               final ServerFile sf = ((ServerFile)objects[i]);
+               final AgentFile sf = ((AgentFile)objects[i]);
                sf.setChildren(session.listAgentFiles(sf, sf.getFullName(), objectId));
 
                runInUIThread(new Runnable() {
@@ -692,7 +708,7 @@ public class AgentFileManager extends ViewPart
          return;
 
       final Object[] objects = selection.toArray();
-      final ServerFile upladFolder = ((ServerFile)objects[0]).isDirectory() ? ((ServerFile)objects[0]) : ((ServerFile)objects[0])
+      final AgentFile upladFolder = ((AgentFile)objects[0]).isDirectory() ? ((AgentFile)objects[0]) : ((AgentFile)objects[0])
             .getParent();
 
       final StartClientToServerFileUploadDialog dlg = new StartClientToServerFileUploadDialog(getSite().getShell());
@@ -763,7 +779,7 @@ public class AgentFileManager extends ViewPart
          return;
 
       final Object[] objects = selection.toArray();
-      final ServerFile upladFolder = ((ServerFile)objects[0]).isDirectory() ? ((ServerFile)objects[0]) : ((ServerFile)objects[0])
+      final AgentFile upladFolder = ((AgentFile)objects[0]).isDirectory() ? ((AgentFile)objects[0]) : ((AgentFile)objects[0])
             .getParent();
 
       final StartClientToAgentFolderUploadDialog dlg = new StartClientToAgentFolderUploadDialog(getSite().getShell());
@@ -866,7 +882,7 @@ public class AgentFileManager extends ViewPart
          {
             for(int i = 0; i < objects.length; i++)
             {
-               final ServerFile sf = (ServerFile)objects[i];
+               final AgentFile sf = (AgentFile)objects[i];
                session.deleteAgentFile(objectId, sf.getFullName());
 
                runInUIThread(new Runnable() {
@@ -893,10 +909,10 @@ public class AgentFileManager extends ViewPart
 
       final Object[] objects = selection.toArray();
 
-      if (((ServerFile)objects[0]).isDirectory())
+      if (((AgentFile)objects[0]).isDirectory())
          return;
 
-      final ServerFile sf = ((ServerFile)objects[0]);
+      final AgentFile sf = ((AgentFile)objects[0]);
 
       ConsoleJob job = new ConsoleJob(Messages.get().AgentFileManager_DownloadJobTitle, null, Activator.PLUGIN_ID, null) {
          @Override
@@ -908,7 +924,7 @@ public class AgentFileManager extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final AgentFile file = session.downloadFileFromAgent(objectId, sf.getFullName(), offset, tail);
+            final AgentFileData file = session.downloadFileFromAgent(objectId, sf.getFullName(), offset, tail);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -940,7 +956,7 @@ public class AgentFileManager extends ViewPart
       if (selection.size() != 1)
          return;
 
-      final ServerFile sf = (ServerFile)selection.getFirstElement();
+      final AgentFile sf = (AgentFile)selection.getFirstElement();
       
       if (!sf.isDirectory())
          downloadFile(sf.getFullName());
@@ -1013,12 +1029,12 @@ public class AgentFileManager extends ViewPart
     * @throws IOException 
     * @throws NXCException 
     */
-   private void downloadDir(final ServerFile sf, String localFileName, ZipOutputStream zos) throws NXCException, IOException
+   private void downloadDir(final AgentFile sf, String localFileName, ZipOutputStream zos) throws NXCException, IOException
    {
 	   //create directory inside of zip
       zos.putNextEntry(new ZipEntry(localFileName+File.separator));
       zos.closeEntry();
-      ServerFile[] files = sf.getChildren();
+      AgentFile[] files = sf.getChildren();
       if(files == null)
       {
          files = session.listAgentFiles(sf, sf.getFullName(), sf.getNodeId());
@@ -1031,7 +1047,7 @@ public class AgentFileManager extends ViewPart
          }
          else
          {
-            final AgentFile file = session.downloadFileFromAgent(objectId, files[i].getFullName(), 0, false);
+            final AgentFileData file = session.downloadFileFromAgent(objectId, files[i].getFullName(), 0, false);
             
     		FileInputStream fis = new FileInputStream(file.getFile());
     		ZipEntry zipEntry = new ZipEntry(localFileName+"/"+files[i].getName());
@@ -1059,7 +1075,7 @@ public class AgentFileManager extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final AgentFile file = session.downloadFileFromAgent(objectId, remoteName, 0, false);
+            final AgentFileData file = session.downloadFileFromAgent(objectId, remoteName, 0, false);
             DownloadServiceHandler.addDownload(file.getFile().getName(), remoteName, file.getFile(), "application/octet-stream");
             runInUIThread(new Runnable() {
                @Override
@@ -1087,14 +1103,14 @@ public class AgentFileManager extends ViewPart
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.size() != 1)
          return;
-
+      
       viewer.editElement(selection.getFirstElement(), 0);
    }
 
    /**
     * Move selected file
     */
-   private void moveFile(final ServerFile target, final ServerFile object)
+   private void moveFile(final AgentFile target, final AgentFile object)
    {
       new ConsoleJob(Messages.get().AgentFileManager_MoveFile, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
          @Override
@@ -1133,7 +1149,7 @@ public class AgentFileManager extends ViewPart
          return;
 
       final Object[] objects = selection.toArray();
-      final ServerFile parentFolder = ((ServerFile)objects[0]).isDirectory() ? ((ServerFile)objects[0]) : ((ServerFile)objects[0])
+      final AgentFile parentFolder = ((AgentFile)objects[0]).isDirectory() ? ((AgentFile)objects[0]) : ((AgentFile)objects[0])
             .getParent();
 
       final CreateFolderDialog dlg = new CreateFolderDialog(getSite().getShell());

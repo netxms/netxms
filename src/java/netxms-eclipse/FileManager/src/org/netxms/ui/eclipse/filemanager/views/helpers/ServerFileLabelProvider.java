@@ -67,9 +67,9 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
 			case ServerFileManager.COLUMN_TYPE:
 				return ((ServerFile)element).getExtension();
 			case ServerFileManager.COLUMN_SIZE:
-				return (((ServerFile)element).isDirectory() || ((ServerFile)element).isPlaceholder()) ? "" : Long.toString(((ServerFile)element).getSize()); //$NON-NLS-1$
+				return Long.toString(((ServerFile)element).getSize()); //$NON-NLS-1$
 			case ServerFileManager.COLUMN_MODIFYED:
-				return (((ServerFile)element).isPlaceholder() || ((ServerFile)element).getModifyicationTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(((ServerFile)element).getModifyicationTime()); //$NON-NLS-1$
+				return ((ServerFile)element).getModifyicationTime().getTime() == 0 ? "" : RegionalSettings.getDateTimeFormat().format(((ServerFile)element).getModifyicationTime()); //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -107,9 +107,7 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
     */
    @Override
    public Color getForeground(Object element)
-   {
-      if (((ServerFile)element).isPlaceholder())
-         return StatusDisplayInfo.getStatusColor(ObjectStatus.DISABLED);
+   { 
       return null;
    }
 

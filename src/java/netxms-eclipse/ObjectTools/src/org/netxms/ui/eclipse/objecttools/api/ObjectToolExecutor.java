@@ -33,7 +33,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.netxms.base.NXCommon;
-import org.netxms.client.AgentFile;
+import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objecttools.InputField;
 import org.netxms.client.objecttools.InputFieldType;
@@ -453,7 +453,7 @@ public final class ObjectToolExecutor
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final AgentFile file = session.downloadFileFromAgent(node.object.getObjectId(), fileName, maxFileSize, follow);
+            final AgentFileData file = session.downloadFileFromAgent(node.object.getObjectId(), fileName, maxFileSize, follow);
             runInUIThread(new Runnable() {
                @Override
                public void run()

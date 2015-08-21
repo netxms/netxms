@@ -25,20 +25,19 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.constants.ObjectStatus;
-import org.netxms.client.server.ServerFile;
+import org.netxms.client.server.AgentFile;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.filemanager.views.ServerFileManager;
+import org.netxms.ui.eclipse.filemanager.views.AgentFileManager;
 
 /**
- * Label provider for ServerFile objects
- *
+ * Label provider for AgentFile objects
  */
-public class ServerFileLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
+public class AgentFileLabelProvider extends LabelProvider implements ITableLabelProvider, IColorProvider
 {
 	private WorkbenchLabelProvider wbLabelProvider;
 	
-	public ServerFileLabelProvider()
+	public AgentFileLabelProvider()
 	{
 		wbLabelProvider = new WorkbenchLabelProvider();
 	}
@@ -62,14 +61,20 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
 	{
 		switch(columnIndex)
 		{
-			case ServerFileManager.COLUMN_NAME:
+			case AgentFileManager.COLUMN_NAME:
 				return getText(element);
-			case ServerFileManager.COLUMN_TYPE:
-				return ((ServerFile)element).getExtension();
-			case ServerFileManager.COLUMN_SIZE:
-				return Long.toString(((ServerFile)element).getSize()); //$NON-NLS-1$
-			case ServerFileManager.COLUMN_MODIFYED:
-				return ((ServerFile)element).getModifyicationTime().getTime() == 0 ? "" : RegionalSettings.getDateTimeFormat().format(((ServerFile)element).getModifyicationTime()); //$NON-NLS-1$
+			case AgentFileManager.COLUMN_TYPE:
+				return ((AgentFile)element).getExtension();
+			case AgentFileManager.COLUMN_SIZE:
+				return (((AgentFile)element).isDirectory() || ((AgentFile)element).isPlaceholder()) ? "" : Long.toString(((AgentFile)element).getSize()); //$NON-NLS-1$
+			case AgentFileManager.COLUMN_MODIFYED:
+				return (((AgentFile)element).isPlaceholder() || ((AgentFile)element).getModifyicationTime().getTime() == 0) ? "" : RegionalSettings.getDateTimeFormat().format(((AgentFile)element).getModifyicationTime()); //$NON-NLS-1$
+			case AgentFileManager.COLUMN_OWNER:
+			   return ((AgentFile)element).getOwner();
+			case AgentFileManager.COLUMN_GROUP:
+            return ((AgentFile)element).getGroup();
+			case AgentFileManager.COLUMN_ACCESS_RIGHTS:
+            return ((AgentFile)element).getAccessRights();
 		}
 		return null;
 	}
@@ -107,7 +112,9 @@ public class ServerFileLabelProvider extends LabelProvider implements ITableLabe
     */
    @Override
    public Color getForeground(Object element)
-   { 
+   {
+      if (((AgentFile)element).isPlaceholder())
+         return StatusDisplayInfo.getStatusColor(ObjectStatus.DISABLED);
       return null;
    }
 

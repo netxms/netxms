@@ -21,12 +21,12 @@ package org.netxms.ui.eclipse.filemanager;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;
-import org.netxms.client.server.ServerFile;
+import org.netxms.client.server.AgentFile;
 
 /**
- * Adapter factory for ServerFile objects
+ * Adapter factory for AgentFile objects
  */
-public class ServerFileAdapterFactory implements IAdapterFactory
+public class AgentFileAdapterFactory implements IAdapterFactory
 {
 	@SuppressWarnings("rawtypes")
 	private static final Class[] supportedClasses = 
@@ -51,7 +51,7 @@ public class ServerFileAdapterFactory implements IAdapterFactory
 	@Override
 	public Object getAdapter(Object adaptableObject, Class adapterType)
 	{
-		if ((adapterType == IWorkbenchAdapter.class) && (adaptableObject instanceof ServerFile))
+		if ((adapterType == IWorkbenchAdapter.class) && (adaptableObject instanceof AgentFile))
 		{
 			return new IWorkbenchAdapter() {
 				@Override
@@ -62,8 +62,14 @@ public class ServerFileAdapterFactory implements IAdapterFactory
 
 				@Override
 				public ImageDescriptor getImageDescriptor(Object object)
-				{				   
-					String[] parts = ((ServerFile)object).getName().split("\\."); //$NON-NLS-1$
+				{
+               if (((AgentFile)object).isPlaceholder())
+                  return null;
+               
+				   if (((AgentFile)object).isDirectory())
+				      return Activator.getImageDescriptor("icons/folder.gif"); //$NON-NLS-1$
+				   
+					String[] parts = ((AgentFile)object).getName().split("\\."); //$NON-NLS-1$
 					if (parts.length < 2)
 						return Activator.getImageDescriptor("icons/types/unknown.png"); //$NON-NLS-1$
 
@@ -105,7 +111,7 @@ public class ServerFileAdapterFactory implements IAdapterFactory
 				@Override
 				public String getLabel(Object o)
 				{
-					return ((ServerFile)o).getName();
+					return ((AgentFile)o).getName();
 				}
 
 				@Override

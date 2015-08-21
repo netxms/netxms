@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.handlers.IHandlerService;
-import org.netxms.client.AgentFile;
+import org.netxms.client.AgentFileData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
@@ -324,7 +324,7 @@ public class TextViewWidget extends CompositeWithMessageBar
             {
                try
                {
-                  final AgentFile file = session.downloadFileFromAgent(nodeId, remoteFileName, offset, follow);
+                  final AgentFileData file = session.downloadFileFromAgent(nodeId, remoteFileName, offset, follow);
 
                   // When successfully connected - display notification to client.
                   runInUIThread(new Runnable() {

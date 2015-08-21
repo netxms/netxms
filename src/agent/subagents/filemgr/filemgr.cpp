@@ -19,6 +19,8 @@
  **/
 
 #include "filemgr.h"
+#include <pwd.h>
+#include <grp.h>
 
 /**
  * Root folders
@@ -213,13 +215,107 @@ static BOOL CheckFullPath(TCHAR *folder, bool withHomeDir)
 #define DIRECTORY       2
 #define SYMLINC         4
 
+#ifdef _WIN32
+TCHAR *GetFileOwnetWin(TCHAR *file)
+{
+
+   return NULL;
+}
+#endif // _WIN32
+
+static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileName, NXCPMessage *msg, UINT32 varId)
+{
+   NX_STAT_STRUCT st;
+
+   if (_taccess(filePath, 4) != 0)
+      return false;
+
+   if (CALL_STAT(filePath, &st) == 0)
+   {
+      msg->setField(varId++, fileName);
+      msg->setField(varId++, (QWORD)st.st_size);
+      msg->setField(varId++, (QWORD)st.st_mtime);
+      UINT32 type = 0;
+      TCHAR accessRights[11];
+#ifndef _WIN32
+      if(S_ISLNK(st.st_mode))
+      {
+         accessRights[0] = _T('l');
+         type |= SYMLINC;
+         NX_STAT_STRUCT symlincSt;
+         if (CALL_STAT_FOLLOW_SYMLINK(filePath, &symlincSt) == 0)
+         {
+            type |= S_ISDIR(symlincSt.st_mode) ? DIRECTORY : 0;
+         }
+      }
+
+      if(S_ISCHR(st.st_mode)) accessRights[0] = _T('c');
+      if(S_ISBLK(st.st_mode)) accessRights[0] = _T('b');
+      if(S_ISFIFO(st.st_mode)) accessRights[0] = _T('p');
+      if(S_ISSOCK(st.st_mode)) accessRights[0] = _T('s');
+#endif
+      if(S_ISREG(st.st_mode))
+      {
+         type |= REGULAR_FILE;
+         accessRights[0] = _T('-');
+      }
+      if(S_ISDIR(st.st_mode))
+      {
+         type |= DIRECTORY;
+         accessRights[0] = _T('d');
+      }
+
+      msg->setField(varId++, type);
+      TCHAR fullName[MAX_PATH];
+      _tcscpy(fullName, filePath);
+      msg->setField(varId++, fullName);
+
+#ifndef _WIN32
+      struct passwd *pw = getpwuid(st.st_uid);
+      struct group  *gr = getgrgid(st.st_gid);
+#ifdef UNICODE
+      TCHAR *name = WideStringFromMBString(pw->pw_name);
+      msg->setField(varId++, name);
+      free(name);
+      name = WideStringFromMBString(gr->gr_name);
+      msg->setField(varId++, name);
+      free(name);
+#else
+      msg->setField(varId++, pw->pw_name);
+      msg->setField(varId++, gr->gr_name);
+#endif
+      accessRights[1] = (S_IRUSR & st.st_mode) > 0 ? _T('r') : _T('-');
+      accessRights[2] = (S_IWUSR & st.st_mode) > 0 ? _T('w') : _T('-');
+      accessRights[3] = (S_IXUSR & st.st_mode) > 0 ? _T('x') : _T('-');
+      accessRights[4] = (S_IRGRP & st.st_mode) > 0 ? _T('r') : _T('-');
+      accessRights[5] = (S_IWGRP & st.st_mode) > 0 ? _T('w') : _T('-');
+      accessRights[6] = (S_IXGRP & st.st_mode) > 0 ? _T('x') : _T('-');
+      accessRights[7] = (S_IROTH & st.st_mode) > 0 ? _T('r') : _T('-');
+      accessRights[8] = (S_IWOTH & st.st_mode) > 0 ? _T('w') : _T('-');
+      accessRights[9] = (S_IXOTH & st.st_mode) > 0 ? _T('x') : _T('-');
+      accessRights[10] = 0;
+      msg->setField(varId++, accessRights);
+#else
+      TCHAR *owner = GetFileOwnetWin(file);
+      msg->setField(varId++, owner);
+      safe_free(owner);
+      msg->setField(varId++, "");
+      msg->setField(varId++, "");
+#endif // _WIN32
+      return true;
+   }
+   else
+   {
+      AgentWriteDebugLog(3, _T("FILEMGR: GetFolderContent: Not possible to get folder %s"), filePath);
+      return false;
+   }
+}
+
 /**
  * Puts in response list of containing files
  */
 static void GetFolderContent(TCHAR *folder, NXCPMessage *msg, bool rootFolder)
 {
-   NX_STAT_STRUCT st;
-
    msg->setField(VID_RCC, ERR_SUCCESS);
    UINT32 count = 0;
    UINT32 varId = VID_INSTANCE_LIST_BASE;
@@ -228,40 +324,10 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *msg, bool rootFolder)
    {
       for(int i = 0; i < g_rootFileManagerFolders->size(); i++)
       {
-         if (_taccess(g_rootFileManagerFolders->get(i), 4) != 0)
-            continue;
-
-         if (CALL_STAT(g_rootFileManagerFolders->get(i), &st) == 0)
+         if(FillMessageFolderContent(g_rootFileManagerFolders->get(i), g_rootFileManagerFolders->get(i), msg, varId))
          {
-            msg->setField(varId++, g_rootFileManagerFolders->get(i));
-            msg->setField(varId++, (QWORD)st.st_size);
-            msg->setField(varId++, (QWORD)st.st_mtime);
-            UINT32 type = 0;
-#ifndef _WIN32
-            if(S_ISLNK(st.st_mode))
-            {
-               type |= SYMLINC;
-               NX_STAT_STRUCT symlincSt;
-               if (CALL_STAT_FOLLOW_SYMLINK(g_rootFileManagerFolders->get(i), &symlincSt) == 0)
-               {
-                  type |= S_ISDIR(symlincSt.st_mode) ? DIRECTORY : 0;
-
-               }
-            }
-#endif
-            type |= S_ISREG(st.st_mode) ? REGULAR_FILE : 0;
-            type |= S_ISDIR(st.st_mode) ? DIRECTORY : 0;
-            msg->setField(varId++, type);
-            TCHAR fullName[MAX_PATH];
-            _tcscpy(fullName, g_rootFileManagerFolders->get(i));
-            msg->setField(varId++, fullName);
-
-            varId += 5;
             count++;
-         }
-         else
-         {
-            AgentWriteDebugLog(3, _T("FILEMGR: GetFolderContent: Not possible to get folder %s"), g_rootFileManagerFolders->get(i));
+            varId+=10;
          }
       }
       msg->setField(VID_INSTANCE_COUNT, count);
@@ -284,51 +350,10 @@ static void GetFolderContent(TCHAR *folder, NXCPMessage *msg, bool rootFolder)
          _tcscat(fullName, FS_PATH_SEPARATOR);
          _tcscat(fullName, d->d_name);
 
-         if (_taccess(fullName, 4) != 0)
-            continue;
-
-         if (CALL_STAT(fullName, &st) == 0)
+         if(FillMessageFolderContent(fullName, d->d_name, msg, varId))
          {
-            msg->setField(varId++, d->d_name);
-            msg->setField(varId++, (QWORD)st.st_size);
-            msg->setField(varId++, (QWORD)st.st_mtime);
-            UINT32 type = 0;
-#ifndef _WIN32
-            if(S_ISLNK(st.st_mode))
-            {
-               type |= SYMLINC;
-               NX_STAT_STRUCT symlincSt;
-               if (CALL_STAT_FOLLOW_SYMLINK(d->d_name, &symlincSt) == 0)
-               {
-                  type |= S_ISDIR(symlincSt.st_mode) ? DIRECTORY : 0;
-
-               }
-            }
-#endif
-            type |= S_ISREG(st.st_mode) ? REGULAR_FILE : 0;
-            type |= S_ISDIR(st.st_mode) ? DIRECTORY : 0;
-            msg->setField(varId++, type);
-            ConvertPathToNetwork(fullName);
-            msg->setField(varId++, fullName);
-
-            /*
-            S_IFMT     0170000   bit mask for the file type bit fields
-
-            S_IFSOCK   0140000   socket
-            S_IFLNK    0120000   symbolic link
-            S_IFREG    0100000   regular file
-            S_IFBLK    0060000   block device
-            S_IFDIR    0040000   directory
-            S_IFCHR    0020000   character device
-            S_IFIFO    0010000   FIFO
-            */
-
-            varId += 5;
             count++;
-         }
-         else
-         {
-             AgentWriteDebugLog(6, _T("FILEMGR: GetFolderContent: Not possible to get folder %s"), fullName);
+            varId+=10;
          }
       }
       msg->setField(VID_INSTANCE_COUNT, count);
@@ -414,7 +439,7 @@ static BOOL CopyFile(NX_STAT_STRUCT *st, const TCHAR *oldName, const TCHAR *newN
    int oldFile = _topen(oldName, O_RDONLY | O_BINARY);
    if (oldFile == -1)
       return FALSE;
-      
+
    int newFile = _topen(newName, O_CREAT | O_BINARY | O_WRONLY, st->st_mode); // should be copied with the same acess rights
    if (newFile == -1)
    {

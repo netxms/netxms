@@ -149,6 +149,7 @@ import org.netxms.client.reporting.ReportDefinition;
 import org.netxms.client.reporting.ReportRenderFormat;
 import org.netxms.client.reporting.ReportResult;
 import org.netxms.client.reporting.ReportingJob;
+import org.netxms.client.server.AgentFile;
 import org.netxms.client.server.ServerConsoleListener;
 import org.netxms.client.server.ServerFile;
 import org.netxms.client.server.ServerJob;
@@ -7032,7 +7033,7 @@ public class NXCSession
     * @throws IOException if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public ServerFile[] listAgentFiles(ServerFile file, String fullPath, long objectId) throws IOException, NXCException
+   public AgentFile[] listAgentFiles(AgentFile file, String fullPath, long objectId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_FOLDER_CONTENT);
       msg.setField(NXCPCodes.VID_FILE_NAME, fullPath);
@@ -7041,11 +7042,11 @@ public class NXCSession
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_INSTANCE_COUNT);
-      ServerFile[] files = new ServerFile[count];
+      AgentFile[] files = new AgentFile[count];
       long varId = NXCPCodes.VID_INSTANCE_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         files[i] = new ServerFile(response, varId, file, objectId);
+         files[i] = new AgentFile(response, varId, file, objectId);
          varId += 10;
       }
       return files;
@@ -7152,7 +7153,7 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public AgentFile downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException,
+   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException,
          NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
@@ -7165,7 +7166,7 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
       final String id = response.getFieldAsString(NXCPCodes.VID_NAME);
       
-      AgentFile file =  new AgentFile(id, waitForFile(msg.getMessageId(), 36000000));
+      AgentFileData file =  new AgentFileData(id, waitForFile(msg.getMessageId(), 36000000));
       waitForRCC(msg.getMessageId()); // second confirmation - file transfered from agent to console
       return file;
    }
