@@ -216,10 +216,10 @@ static BOOL CheckFullPath(TCHAR *folder, bool withHomeDir)
 #define SYMLINC         4
 
 #ifdef _WIN32
-TCHAR *GetFileOwnetWin(TCHAR *file)
+TCHAR *GetFileOwnerWin(TCHAR *file)
 {
 
-   return NULL;
+   return _tcsdup("");
 }
 #endif // _WIN32
 
@@ -296,7 +296,7 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
       accessRights[10] = 0;
       msg->setField(varId++, accessRights);
 #else
-      TCHAR *owner = GetFileOwnetWin(file);
+      TCHAR *owner = GetFileOwnerWin(file);
       msg->setField(varId++, owner);
       safe_free(owner);
       msg->setField(varId++, "");
