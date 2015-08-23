@@ -667,7 +667,7 @@ if test $? = 0; then
 	DISABLE_ICONV="yes"
 	USE_PTH="yes"
 	MODULES="$MODULES libnxlp db agent"
-	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -D_USE_GNU_PTH -DSQLITE_THREADSAFE=0 -I/usr/local/include"
+	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -DSQLITE_THREADSAFE=0 -I/usr/local/include"
 	LDFLAGS="$LDFLAGS -all-static"
 	STATIC_SUBAGENT_LIST="ecs ipso logwatch ping portcheck ups"
 	SUBAGENT_DIRS="ipso"
@@ -819,6 +819,10 @@ if test "x$PLATFORM" = "xSunOS"; then
 	AC_CHECK_PROG([CC], [cc], [cc])
 	AC_CHECK_PROG([CCC], [CC], [CC])
 fi
+if test "x$PLATFORM" = "xMinix"; then
+	AC_CHECK_PROG([CC], [clang], [clang])
+	AC_CHECK_PROG([CCC], [clang++], [clang++])
+fi
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
@@ -827,6 +831,9 @@ if test "x$CXX" = "xg++"; then
 	if test "x$GPLUSPLUS" = "xno"; then
 		AC_MSG_ERROR([*** FATAL: Cannot find any usable C++ compiler])
 	fi
+fi
+if test "x$CXX" = "xclang++"; then
+	LIBS="$LIBS -lc++"
 fi
 AM_PROG_AS
 AC_PROG_INSTALL
@@ -885,6 +892,11 @@ case "$PLATFORM" in
       ;;
    Darwin)
       CPPFLAGS="$CPPFLAGS -Wno-deprecated-declarations -O2"
+      ;;
+   Minix)
+      CPPFLAGS="$CPPFLAGS -I/usr/pkg/include"
+      LDFLAGS="$LDFLAGS -L/usr/pkg/lib"
+      USE_PTH="yes"
       ;;
    *)
       ;;
@@ -1299,6 +1311,8 @@ fi
 
 if test "x$USE_PTH" = "xyes"; then
 	AC_CHECK_HEADER(pth.h,,AC_MSG_ERROR([*** GNU Pth thread support not installed - please install first ***]))
+	CPPFLAGS="$CPPFLAGS -D_USE_GNU_PTH"
+	LIBS="$LIBS -lpth"
 else
 	AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not installed - please install first ***]))
 
@@ -1997,6 +2011,15 @@ if test "x$PLATFORM" = "xOpenBSD"; then
                 AC_MSG_RESULT(no)
                 AC_DEFINE(KINFO_PROC_HAS_KP_PROC,0,Define to 1 if struct kinfo_proc has member kp_proc)
         ])
+fi
+
+
+#--------------------------------------------------------------------
+# Minix specific checks
+#--------------------------------------------------------------------
+
+if test "x$PLATFORM" = "xMinix"; then
+	AC_CHECK_HEADERS([minix/minlib.h])
 fi
 
 

@@ -548,6 +548,11 @@ typedef int SOCKET;
 #include <builtins.h>
 #endif
 
+#ifdef __minix
+#undef HAVE_ITOA  /* Minix has non-compatible itoa() */
+#undef HAVE_GETHOSTBYNAME2_R
+#endif
+
 #include <sys/socket.h>
 #include <sys/un.h>
 

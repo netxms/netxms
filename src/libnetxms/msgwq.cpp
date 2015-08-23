@@ -51,11 +51,14 @@ MsgWaitQueue::MsgWaitQueue()
    m_allocated = 0;
    m_elements = NULL;
    m_sequence = 1;
-#ifdef _WIN32
+#if defined(_WIN32)
    InitializeCriticalSectionAndSpinCount(&m_mutex, 4000);
    memset(m_wakeupEvents, 0, MAX_MSGQUEUE_WAITERS * sizeof(HANDLE));
    m_wakeupEvents[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
    memset(m_waiters, 0, MAX_MSGQUEUE_WAITERS);
+#elif defined(_USE_GNU_PTH)
+   pth_mutex_init(&m_mutex);
+   pth_cond_init(&m_wakeupCondition);
 #else
    pthread_mutex_init(&m_mutex, NULL);
    pthread_cond_init(&m_wakeupCondition, NULL);
@@ -84,11 +87,13 @@ MsgWaitQueue::~MsgWaitQueue()
    clear();
    safe_free(m_elements);
 
-#ifdef _WIN32
+#if defined(_WIN32)
    DeleteCriticalSection(&m_mutex);
    for(int i = 0; i < MAX_MSGQUEUE_WAITERS; i++)
       if (m_wakeupEvents[i] != NULL)
          CloseHandle(m_wakeupEvents[i]);
+#elif defined(_USE_GNU_PTH)
+   // nothing to do if libpth is used
 #else
    pthread_mutex_destroy(&m_mutex);
    pthread_cond_destroy(&m_wakeupCondition);
@@ -150,10 +155,12 @@ void MsgWaitQueue::put(NXCPMessage *pMsg)
    m_elements[pos].sequence = m_sequence++;
    m_size++;
 
-#ifdef _WIN32
+#if defined(_WIN32)
    for(int i = 0; i < MAX_MSGQUEUE_WAITERS; i++)
       if (m_waiters[i])
          SetEvent(m_wakeupEvents[i]);
+#elif defined(_USE_GNU_PTH)
+   pth_cond_notify(&m_wakeupCondition, TRUE);
 #else
    pthread_cond_broadcast(&m_wakeupCondition);
 #endif
@@ -193,6 +200,8 @@ void MsgWaitQueue::put(NXCP_MESSAGE *pMsg)
    for(int i = 0; i < MAX_MSGQUEUE_WAITERS; i++)
       if (m_waiters[i])
          SetEvent(m_wakeupEvents[i]);
+#elif defined(_USE_GNU_PTH)
+   pth_cond_notify(&m_wakeupCondition, TRUE);
 #else
    pthread_cond_broadcast(&m_wakeupCondition);
 #endif
@@ -247,7 +256,7 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
 
       INT64 startTime = GetCurrentTimeMs();
        
-#ifdef _WIN32
+#if defined(_WIN32)
       // Find free slot if needed
       if (slot == -1)
       {
@@ -272,8 +281,7 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
       else
          Sleep(50);  // Just sleep if there are no waiter slots (highly unlikely during normal operation)
       EnterCriticalSection(&m_mutex);
-#else
-#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP || defined(_NETWARE)
+#elif HAVE_PTHREAD_COND_RELTIMEDWAIT_NP || defined(_NETWARE)
 	   struct timespec ts;
 
 	   ts.tv_sec = dwTimeOut / 1000;
@@ -283,6 +291,10 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
 #else
       pthread_cond_reltimedwait_np(&m_wakeupCondition, &m_mutex, &ts);
 #endif
+#elif defined(_USE_GNU_PTH)
+      pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
+      pth_cond_await(&m_wakeupCondition, &m_mutex, ev);
+      pth_event_free(ev, PTH_FREE_ALL);
 #else
 	   struct timeval now;
 	   struct timespec ts;
@@ -295,7 +307,6 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
 	   ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
 
 	   pthread_cond_timedwait(&m_wakeupCondition, &m_mutex, &ts);
-#endif   /* HAVE_PTHREAD_COND_RELTIMEDWAIT_NP */
 #endif   /* _WIN32 */
 
       UINT32 sleepTime = (UINT32)(GetCurrentTimeMs() - startTime);

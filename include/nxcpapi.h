@@ -164,10 +164,13 @@ typedef struct
 class LIBNETXMS_EXPORTABLE MsgWaitQueue
 {
 private:
-#ifdef _WIN32
+#if defined(_WIN32)
    CRITICAL_SECTION m_mutex;
    HANDLE m_wakeupEvents[MAX_MSGQUEUE_WAITERS];
    BYTE m_waiters[MAX_MSGQUEUE_WAITERS];
+#elif defined(_USE_GNU_PTH)
+   pth_mutex_t m_mutex;
+   pth_cond_t m_wakeupCondition;
 #else
    pthread_mutex_t m_mutex;
    pthread_cond_t m_wakeupCondition;
@@ -184,6 +187,8 @@ private:
    {
 #ifdef _WIN32
       EnterCriticalSection(&m_mutex);
+#elif defined(_USE_GNU_PTH)
+      pth_mutex_acquire(&m_mutex, FALSE, NULL);
 #else
       pthread_mutex_lock(&m_mutex);
 #endif
@@ -193,6 +198,8 @@ private:
    {
 #ifdef _WIN32
       LeaveCriticalSection(&m_mutex);
+#elif defined(_USE_GNU_PTH)
+      pth_mutex_release(&m_mutex);
 #else
       pthread_mutex_unlock(&m_mutex);
 #endif

@@ -391,6 +391,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             }
             else
             {
+               DebugPrintf(INVALID_INDEX, 9, _T("Session registered for %s"), buffer);
                session->run();
             }
          }

@@ -109,7 +109,7 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_compressor = NULL;
    m_pCtx = NULL;
    m_ts = time(NULL);
-	m_socketWriteMutex = MutexCreate();
+   m_socketWriteMutex = MutexCreate();
    m_responseQueue = new MsgWaitQueue();
    m_requestId = 0;
 }
