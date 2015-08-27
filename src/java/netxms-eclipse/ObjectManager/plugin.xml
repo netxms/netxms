@@ -481,6 +481,13 @@
                label="%action.label.CreateIface"
                menubarPath="objectcreation">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Node"
+               label="%action.label.BindTo"
+               menubarPath="objectbinding">
+         </action>
       </objectContribution>
 
 
@@ -509,6 +516,13 @@
                label="%action.label.AddNode"
                menubarPath="objectbinding">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Cluster"
+               label="%action.label.BindTo"
+               menubarPath="objectbinding">
+         </action>
       </objectContribution>
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.EntireNetwork"
@@ -530,6 +544,42 @@
                id="org.netxms.ui.eclipse.objectmanager.popupActions.changeInterfaceExpectedState"
                label="%action.label.ChangeExpState"
                menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.MobileDevice"
+            objectClass="org.netxms.client.objects.MobileDevice">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_MobileDevice"
+               label="%action.label.BindTo"
+               menubarPath="objectbinding">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Rack"
+            objectClass="org.netxms.client.objects.Rack">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Rack"
+               label="%action.label.BindTo"
+               menubarPath="objectbinding">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Subnet"
+            objectClass="org.netxms.client.objects.Subnet">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Subnet"
+               label="%action.label.BindTo"
+               menubarPath="objectbinding">
          </action>
       </objectContribution>
    </extension>
