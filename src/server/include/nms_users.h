@@ -71,23 +71,23 @@ private:
 #if WITH_LDAP
    LDAP *m_ldapConn;
 #ifdef _WIN32
-   TCHAR m_connList[MAX_DB_STRING];
-   TCHAR m_searchBase[MAX_DB_STRING];
-   TCHAR m_searchFilter[MAX_DB_STRING];
-   TCHAR m_userDN[MAX_DB_STRING];
-   TCHAR m_userPassword[MAX_DB_STRING];
+   TCHAR m_connList[MAX_CONFIG_VALUE];
+   TCHAR m_searchBase[MAX_CONFIG_VALUE];
+   TCHAR m_searchFilter[MAX_CONFIG_VALUE];
+   TCHAR m_userDN[MAX_CONFIG_VALUE];
+   TCHAR m_userPassword[MAX_CONFIG_VALUE];
 #else
-   char m_connList[MAX_DB_STRING];
-   char m_searchBase[MAX_DB_STRING];
-   char m_searchFilter[MAX_DB_STRING];
-   char m_userDN[MAX_DB_STRING];
-   char m_userPassword[MAX_DB_STRING];
+   char m_connList[MAX_CONFIG_VALUE];
+   char m_searchBase[MAX_CONFIG_VALUE];
+   char m_searchFilter[MAX_CONFIG_VALUE];
+   char m_userDN[MAX_CONFIG_VALUE];
+   char m_userPassword[MAX_CONFIG_VALUE];
 #endif
-   char m_ldapFullNameAttr[MAX_DB_STRING];
-   char m_ldapLoginNameAttr[MAX_DB_STRING];
-   char m_ldapDescriptionAttr[MAX_DB_STRING];
-   TCHAR m_userClass[MAX_DB_STRING];
-   TCHAR m_groupClass[MAX_DB_STRING];
+   char m_ldapFullNameAttr[MAX_CONFIG_VALUE];
+   char m_ldapLoginNameAttr[MAX_CONFIG_VALUE];
+   char m_ldapDescriptionAttr[MAX_CONFIG_VALUE];
+   TCHAR m_userClass[MAX_CONFIG_VALUE];
+   TCHAR m_groupClass[MAX_CONFIG_VALUE];
    int m_action;
    int m_secure;
    int m_pageSize;
