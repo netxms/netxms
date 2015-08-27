@@ -42,7 +42,7 @@ public class ServerFilesTest extends AbstractSessionTest
    {
       final NXCSession session = connect();
 
-      AgentFile file = session.downloadFileFromAgent(TestConstants.LOCAL_NODE_ID, TestConstants.FILE_NAME, TestConstants.FILE_OFFSET, true);
+      AgentFileData file = session.downloadFileFromAgent(TestConstants.LOCAL_NODE_ID, TestConstants.FILE_NAME, TestConstants.FILE_OFFSET, true);
       // check that server returned file with correct size (offset should be less than size of file)
       //assertEquals(file.length(), TestConstants.FileOfset);
       String content = null;
