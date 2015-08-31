@@ -21,4 +21,3 @@ rm -f \
 
 cp netxms-base/target/netxms-base-$version.jar ../../../android/src/console/libs/
 cp netxms-client/target/netxms-client-$version.jar ../../../android/src/console/libs/
-

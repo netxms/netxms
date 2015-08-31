@@ -1,4 +1,4 @@
-/* 
+/** 
 ** NetXMS - Network Management System
 ** Utility Library
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
