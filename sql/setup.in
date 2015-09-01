@@ -132,6 +132,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SMTPFromAddr','netxms@localhost',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SMTPFromName','NetXMS Server',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SMTPRetryCount','1',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SNMPPorts','162',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SMTPServer','localhost',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SNMPRequestTimeout','2000',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SNMPTrapLogRetentionTime','90',1,0);

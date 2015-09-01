@@ -907,7 +907,7 @@ void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
 
 void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr);
 
-SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, INT16 *version, SNMP_SecurityContext *originalContext, StringList *customTestOids);
+SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, INT16 *version, UINT16 originalPort, SNMP_SecurityContext *originalContext, StringList *customTestOids);
 void StrToMac(const TCHAR *pszStr, BYTE *pBuffer);
 
 void InitLocalNetInfo();

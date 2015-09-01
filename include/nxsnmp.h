@@ -640,6 +640,8 @@ public:
       return InetAddress();
    }
 
+   virtual WORD getPort()=0;
+
    UINT32 doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 timeout = INFINITE, int numRetries = 1);
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
@@ -670,6 +672,7 @@ protected:
    size_t m_dwBytesInBuffer;
    size_t m_dwBufferPos;
    BYTE *m_pBuffer;
+   WORD m_port;
 
    size_t preParsePDU();
    int recvData(UINT32 dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize);
@@ -689,6 +692,7 @@ public:
    UINT32 createUDPTransport(const TCHAR *hostName, WORD port = SNMP_DEFAULT_PORT);
    UINT32 createUDPTransport(const InetAddress& hostAddr, WORD port = SNMP_DEFAULT_PORT);
 	bool isConnected() { return m_connected; }
+   WORD getPort() { return m_port; }
 };
 
 /**

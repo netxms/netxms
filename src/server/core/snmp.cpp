@@ -145,7 +145,7 @@ ROUTING_TABLE *SnmpGetRoutingTable(UINT32 dwVersion, SNMP_Transport *pTransport)
 /**
  * Check SNMP v3 connectivity
  */
-static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *originalContext, StringList *testOids)
+bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *originalContext, StringList *testOids)
 {
 	char buffer[1024];
 
@@ -160,7 +160,7 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
          if (SnmpGet(SNMP_VERSION_3, pTransport, testOids->get(i), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
          {
 			   DbgPrintf(5, _T("SnmpCheckV3CommSettings: success"));
-			   return new SNMP_SecurityContext(originalContext);
+			   return true;
          }
       }
 	}
@@ -173,8 +173,9 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
 		char name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
 		SNMP_SecurityContext *ctx;
 		int i, count = DBGetNumRows(hResult);
+      bool found = false;
 
-		for(i = 0; i < count; i++)
+		for(i = 0; (i < count) && !found; i++)
 		{
 			DBGetFieldA(hResult, i, 0, name, MAX_DB_STRING);
 			DBGetFieldA(hResult, i, 3, authPasswd, MAX_DB_STRING);
@@ -188,16 +189,17 @@ static SNMP_SecurityContext *SnmpCheckV3CommSettings(SNMP_Transport *pTransport,
             if (SnmpGet(SNMP_VERSION_3, pTransport, testOids->get(j), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
             {
 				   DbgPrintf(5, _T("SnmpCheckV3CommSettings: success"));
-				   goto stop_test;
+				   found = true;
+				   break;
             }
 			}
 		}
-stop_test:
+
 		DBFreeResult(hResult);
       DBConnectionPoolReleaseConnection(hdb);
 
 		if (i < count)
-			return new SNMP_SecurityContext(ctx);
+			return true;
 	}
 	else
 	{
@@ -206,7 +208,7 @@ stop_test:
 	}
 
 	DbgPrintf(5, _T("SnmpCheckV3CommSettings: failed"));
-	return NULL;
+	return false;
 }
 
 /**
@@ -214,80 +216,133 @@ stop_test:
  * On success, returns new security context object (dynamically created).
  * On failure, returns NULL
  */
-SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, INT16 *version, SNMP_SecurityContext *originalContext, StringList *testOids)
+SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, INT16 *version, UINT16 originalPort, SNMP_SecurityContext *originalContext, StringList *testOids)
 {
+   DbgPrintf(5, _T("SnmpCheckCommSettings: start."));
 	int i, count, snmpVer = SNMP_VERSION_2C;
 	TCHAR buffer[1024];
+   SNMP_Transport *pTransport;
+   //create transport checking ports
 
-	// Check for V3 USM
-	SNMP_SecurityContext *securityContext = SnmpCheckV3CommSettings(pTransport, originalContext, testOids);
-	if (securityContext != NULL)
-	{
-		*version = SNMP_VERSION_3;
-		return securityContext;
-	}
+   TCHAR tmp[MAX_CONFIG_VALUE];
+	ConfigReadStr(_T("SNMPPorts"), tmp, MAX_CONFIG_VALUE, _T("161"));
+   StringList *ports = new StringList(tmp, _T(","));
+   for(int j = -1;j < ports->size(); j++)
+   {
+      UINT16 port;
+      if(j == -1)
+      {
+         if(originalPort == 0)
+            continue;
+         port = originalPort;
+      }
+      else
+      {
+         port = (UINT16)_tcstoul(ports->get(j), NULL, 0);
+         if(port == originalPort)
+            continue;
+      }
+
+      AgentConnection *pConn = NULL;
+      if (snmpProxy != 0)
+      {
+         Node *proxyNode = (Node *)g_idxNodeById.get(snmpProxy);
+         if (proxyNode == NULL)
+         {
+            DbgPrintf(5, _T("SnmpCheckCommSettings: not possible to find proxy node."));
+            goto fail;
+         }
+         pConn = proxyNode->createAgentConnection();
+         if(pConn == NULL)
+         {
+            DbgPrintf(5, _T("SnmpCheckCommSettings: not possible to create proxy connection."));
+            goto fail;
+         }
+         pTransport = new SNMP_ProxyTransport(pConn, ipAddr, port);
+      }
+      else
+      {
+         pTransport = new SNMP_UDPTransport();
+         ((SNMP_UDPTransport *)pTransport)->createUDPTransport(ipAddr, port);
+      }
+
+
+      // Check for V3 USM
+      if (SnmpCheckV3CommSettings(pTransport, originalContext, testOids))
+      {
+         *version = SNMP_VERSION_3;
+         goto sucess;
+      }
 
 restart_check:
-	// Check current community first
-	if ((originalContext != NULL) && (originalContext->getSecurityModel() != SNMP_SECURITY_MODEL_USM))
-	{
-		DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, originalContext->getCommunity());
-		pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
-      for(int i = 0; i < testOids->size(); i++)
+      // Check current community first
+      if ((originalContext != NULL) && (originalContext->getSecurityModel() != SNMP_SECURITY_MODEL_USM))
       {
-         if (SnmpGet(snmpVer, pTransport, testOids->get(i), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-		   {
-			   *version = snmpVer;
-			   return new SNMP_SecurityContext(originalContext);
-		   }
-      }
-	}
-
-	// Check community from list
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_RESULT hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
-	if (hResult != NULL)
-	{
-		char temp[256];
-
-		count = DBGetNumRows(hResult);
-		for(i = 0; i < count; i++)
-		{
-			DBGetFieldA(hResult, i, 0, temp, 256);
-         if ((originalContext == NULL) ||
-             (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) ||
-             strcmp(temp, originalContext->getCommunity()))
+         DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, originalContext->getCommunity());
+         pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
+         for(int i = 0; i < testOids->size(); i++)
          {
-			   DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, temp);
-			   pTransport->setSecurityContext(new SNMP_SecurityContext(temp));
-            for(int j = 0; j < testOids->size(); j++)
+            if (SnmpGet(snmpVer, pTransport, testOids->get(i), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
             {
-               if (SnmpGet(snmpVer, pTransport, testOids->get(j), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
-	            {
-   				   *version = snmpVer;
-                  goto stop_test;
+               *version = snmpVer;
+               goto sucess;
+            }
+         }
+      }
+
+      // Check community from list
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
+      if (hResult != NULL)
+      {
+         char temp[256];
+
+         count = DBGetNumRows(hResult);
+         for(i = 0; i < count; i++)
+         {
+            DBGetFieldA(hResult, i, 0, temp, 256);
+            if ((originalContext == NULL) ||
+                (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) ||
+                strcmp(temp, originalContext->getCommunity()))
+            {
+               DbgPrintf(5, _T("SnmpCheckCommSettings: trying version %d community '%hs'"), snmpVer, temp);
+               pTransport->setSecurityContext(new SNMP_SecurityContext(temp));
+               for(int j = 0; j < testOids->size(); j++)
+               {
+                  if (SnmpGet(snmpVer, pTransport, testOids->get(j), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
+                  {
+                     *version = snmpVer;
+                     goto stop_test;
+                  }
                }
             }
          }
-		}
 stop_test:
-		DBFreeResult(hResult);
-      DBConnectionPoolReleaseConnection(hdb);
-		if (i < count)
-			return new SNMP_SecurityContext(temp);
-	}
-	else
-	{
-      DBConnectionPoolReleaseConnection(hdb);
-		DbgPrintf(3, _T("SnmpCheckCommSettings: DBSelect() failed"));
-	}
+         DBFreeResult(hResult);
+         DBConnectionPoolReleaseConnection(hdb);
+         if (i < count)
+         {
+            goto sucess;
+         }
+      }
+      else
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+         DbgPrintf(3, _T("SnmpCheckCommSettings: DBSelect() failed"));
+      }
 
-	if (snmpVer == SNMP_VERSION_2C)
-	{
-		snmpVer = SNMP_VERSION_1;
-		goto restart_check;
-	}
-
+      if (snmpVer == SNMP_VERSION_2C)
+      {
+         snmpVer = SNMP_VERSION_1;
+         goto restart_check;
+      }
+      delete pTransport;
+   }
+fail:
+   delete ports;
 	DbgPrintf(5, _T("SnmpCheckCommSettings: failed"));
 	return NULL;
+sucess:
+   delete ports;
+	return pTransport;
 }

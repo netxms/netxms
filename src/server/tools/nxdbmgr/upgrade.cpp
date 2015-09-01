@@ -574,6 +574,17 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V364 to V365
+ */
+static BOOL H_UpgradeFromV364(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("SNMPPorts"), _T("161"), 0, 0));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='365' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V363 to V364
  */
 static BOOL H_UpgradeFromV363(int currVersion, int newVersion)
@@ -8924,6 +8935,7 @@ static struct
    { 361, 362, H_UpgradeFromV361 },
    { 362, 363, H_UpgradeFromV362 },
    { 363, 364, H_UpgradeFromV363 },
+   { 364, 365, H_UpgradeFromV364 },
    { 0, 0, NULL }
 };
 

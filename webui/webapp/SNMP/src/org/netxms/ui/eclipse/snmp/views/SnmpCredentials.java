@@ -68,10 +68,11 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpCredentials"; //$NON-NLS-1$
 
 	private boolean modified = false;
-    private FormToolkit toolkit;
-    private ScrolledForm form;
+	private FormToolkit toolkit;
+	private ScrolledForm form;
 	private TableViewer snmpCommunityList;
 	private TableViewer snmpUsmCredList;
+	private TableViewer snmpPortList;
 	private Action actionSave;
 	private SnmpConfig config;
 
@@ -100,6 +101,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		
 		createSnmpCommunitySection();
 		createSnmpUsmCredSection();
+		createSnmpPortList();
 		
 		createActions();
 		contributeToActionBars();
@@ -298,6 +300,67 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 			}
 		});
 	}
+	
+	  /**
+    * Create "Port List" section
+    */
+   private void createSnmpPortList()
+   {
+      Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
+      section.setText("SNMP Ports");
+      section.setDescription("SNMP ports used in the network");
+      TableWrapData td = new TableWrapData();
+      td.align = TableWrapData.FILL;
+      td.grabHorizontal = true;
+      section.setLayoutData(td);
+      
+      Composite clientArea = toolkit.createComposite(section);
+      GridLayout layout = new GridLayout();
+      layout.numColumns = 2;
+      clientArea.setLayout(layout);
+      section.setClient(clientArea);
+      
+      snmpPortList = new TableViewer(clientArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+      toolkit.adapt(snmpPortList.getTable());
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.FILL;
+      gd.grabExcessVerticalSpace = true;
+      gd.verticalSpan = 2;
+      gd.heightHint = 150;
+      snmpPortList.getTable().setLayoutData(gd);
+      snmpPortList.setContentProvider(new ArrayContentProvider());
+      snmpPortList.setComparator(new StringComparator());
+
+      final ImageHyperlink linkAdd = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkAdd.setText(Messages.get().SnmpConfigurator_Add);
+      linkAdd.setImage(SharedIcons.IMG_ADD_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkAdd.setLayoutData(gd);
+      linkAdd.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            addSnmpPort();
+         }
+      });
+      
+      final ImageHyperlink linkRemove = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+      linkRemove.setText(Messages.get().SnmpConfigurator_Remove);
+      linkRemove.setImage(SharedIcons.IMG_DELETE_OBJECT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      linkRemove.setLayoutData(gd);
+      linkRemove.addHyperlinkListener(new HyperlinkAdapter() {
+         @Override
+         public void linkActivated(HyperlinkEvent e)
+         {
+            removeSnmpPort();
+         }
+      });
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
@@ -317,6 +380,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		
 		snmpCommunityList.setInput(config.getCommunities().toArray());
 		snmpUsmCredList.setInput(config.getUsmCredentials().toArray());
+      snmpPortList.setInput(config.getPorts().toArray());
 
 		modified = false;
 		firePropertyChange(PROP_DIRTY);
@@ -488,4 +552,42 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 			setModified();
 		}
 	}
+	
+	  /**
+    * Add SNMP USM credentials to the list
+    */
+   private void addSnmpPort()
+   {
+      InputDialog dlg = new InputDialog(getSite().getShell(), "Add SNMP Port", 
+            "Please enter SNMP Port", "", null); //$NON-NLS-1$
+      if (dlg.open() == Window.OK)
+      {
+         String value = dlg.getValue();
+         final List<String> list = config.getPorts();
+         if (!list.contains(value))
+         {
+            list.add(value);
+            snmpPortList.setInput(list.toArray());
+            setModified();
+         }
+      }
+   }
+   
+   /**
+    * Remove selected SNMP USM credentials
+    */
+   private void removeSnmpPort()
+   {
+      final List<String> list = config.getPorts();
+      IStructuredSelection selection = (IStructuredSelection)snmpPortList.getSelection();
+      if (selection.size() > 0)
+      {
+         for(Object o : selection.toList())
+         {
+            list.remove(o);
+         }
+         snmpPortList.setInput(list.toArray());
+         setModified();
+      }
+   }
 }

@@ -2218,13 +2218,6 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 
    sendPollerMsg(dwRqId, _T("   Checking SNMP...\r\n"));
    DbgPrintf(5, _T("ConfPoll(%s): calling SnmpCheckCommSettings()"), m_name);
-	SNMP_Transport *pTransport = createSnmpTransport();
-	if (pTransport == NULL)
-	{
-		DbgPrintf(5, _T("ConfPoll(%s): unable to create SNMP transport"), m_name);
-		return false;
-	}
-
    StringList oids;
    const TCHAR *customOid = m_customAttributes.get(_T("snmp.testoid"));
    if (customOid != NULL)
@@ -2232,320 +2225,325 @@ bool Node::confPollSnmp(UINT32 dwRqId)
    oids.add(_T(".1.3.6.1.2.1.1.2.0"));
    oids.add(_T(".1.3.6.1.2.1.1.1.0"));
    AddDriverSpecificOids(&oids);
-   SNMP_SecurityContext *newCtx = SnmpCheckCommSettings(pTransport, &m_snmpVersion, m_snmpSecurity, &oids);
-	if (newCtx != NULL)
+   SNMP_Transport *pTransport = SnmpCheckCommSettings(getEffectiveSnmpProxy(), (getEffectiveSnmpProxy() == m_id) ? InetAddress::LOOPBACK : m_ipAddress, &m_snmpVersion, m_snmpPort, m_snmpSecurity, &oids);
+   if(pTransport == NULL)
+   {
+      DbgPrintf(5, _T("ConfPoll(%s): unable to create SNMP transport"), m_name);
+      return false;
+   }
+
+   lockProperties();
+   m_snmpPort = pTransport->getPort();
+   delete m_snmpSecurity;
+   m_snmpSecurity = new SNMP_SecurityContext(pTransport->getSecurityContext());
+   m_dwFlags |= NF_IS_SNMP;
+   if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
+   {
+      m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
+      PostEvent(EVENT_SNMP_OK, m_id, NULL);
+      sendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
+   }
+   unlockProperties();
+   sendPollerMsg(dwRqId, _T("   SNMP agent is active (version %s)\r\n"),
+      (m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
+
+   TCHAR szBuffer[4096];
+   if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
+   {
+      // Set snmp object ID to .0.0 if it cannot be read
+      _tcscpy(szBuffer, _T(".0.0"));
+   }
+   lockProperties();
+   if (_tcscmp(m_szObjectId, szBuffer))
+   {
+      nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
+      hasChanges = true;
+   }
+   unlockProperties();
+
+   // Get system description
+   if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+   {
+      TranslateStr(szBuffer, _T("\r\n"), _T(" "));
+      TranslateStr(szBuffer, _T("\n"), _T(" "));
+      TranslateStr(szBuffer, _T("\r"), _T(" "));
+      lockProperties();
+      if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, szBuffer))
+      {
+         safe_free(m_sysDescription);
+         m_sysDescription = _tcsdup(szBuffer);
+         hasChanges = true;
+         sendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
+      }
+      unlockProperties();
+   }
+
+   // Select device driver
+   NetworkDeviceDriver *driver = FindDriverForNode(this, pTransport);
+   DbgPrintf(5, _T("ConfPoll(%s): selected device driver %s"), m_name, driver->getName());
+   lockProperties();
+   if (driver != m_driver)
+   {
+      m_driver = driver;
+      sendPollerMsg(dwRqId, _T("   New network device driver selected: %s\r\n"), m_driver->getName());
+   }
+   unlockProperties();
+
+   // Allow driver to gather additional info
+   m_driver->analyzeDevice(pTransport, m_szObjectId, &m_customAttributes, &m_driverData);
+
+   // Get sysName
+   if (SnmpGet(m_snmpVersion, pTransport,
+               _T(".1.3.6.1.2.1.1.5.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
    {
       lockProperties();
-		delete m_snmpSecurity;
-		m_snmpSecurity = newCtx;
-      m_dwFlags |= NF_IS_SNMP;
-      if (m_dwDynamicFlags & NDF_SNMP_UNREACHABLE)
+      if ((m_sysName == NULL) || _tcscmp(m_sysName, szBuffer))
       {
-         m_dwDynamicFlags &= ~NDF_SNMP_UNREACHABLE;
-         PostEvent(EVENT_SNMP_OK, m_id, NULL);
-         sendPollerMsg(dwRqId, POLLER_INFO _T("   Connectivity with SNMP agent restored\r\n"));
+         safe_free(m_sysName);
+         m_sysName = _tcsdup(szBuffer);
+         hasChanges = true;
+         sendPollerMsg(dwRqId, _T("   System name changed to %s\r\n"), m_sysName);
       }
-		unlockProperties();
-      sendPollerMsg(dwRqId, _T("   SNMP agent is active (version %s)\r\n"),
-			(m_snmpVersion == SNMP_VERSION_3) ? _T("3") : ((m_snmpVersion == SNMP_VERSION_2C) ? _T("2c") : _T("1")));
-
-		TCHAR szBuffer[4096];
-		if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.2.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) != SNMP_ERR_SUCCESS)
-		{
-			// Set snmp object ID to .0.0 if it cannot be read
-			_tcscpy(szBuffer, _T(".0.0"));
-		}
-		lockProperties();
-		if (_tcscmp(m_szObjectId, szBuffer))
-		{
-			nx_strncpy(m_szObjectId, szBuffer, MAX_OID_LEN * 4);
-			hasChanges = true;
-		}
-		unlockProperties();
-
-		// Get system description
-		if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.1.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
-		{
-			TranslateStr(szBuffer, _T("\r\n"), _T(" "));
-			TranslateStr(szBuffer, _T("\n"), _T(" "));
-			TranslateStr(szBuffer, _T("\r"), _T(" "));
-			lockProperties();
-         if ((m_sysDescription == NULL) || _tcscmp(m_sysDescription, szBuffer))
-         {
-				safe_free(m_sysDescription);
-            m_sysDescription = _tcsdup(szBuffer);
-            hasChanges = true;
-            sendPollerMsg(dwRqId, _T("   System description changed to %s\r\n"), m_sysDescription);
-         }
-			unlockProperties();
-		}
-
-		// Select device driver
-		NetworkDeviceDriver *driver = FindDriverForNode(this, pTransport);
-		DbgPrintf(5, _T("ConfPoll(%s): selected device driver %s"), m_name, driver->getName());
-		lockProperties();
-		if (driver != m_driver)
-		{
-			m_driver = driver;
-			sendPollerMsg(dwRqId, _T("   New network device driver selected: %s\r\n"), m_driver->getName());
-		}
-		unlockProperties();
-
-		// Allow driver to gather additional info
-		m_driver->analyzeDevice(pTransport, m_szObjectId, &m_customAttributes, &m_driverData);
-
-		// Get sysName
-		if (SnmpGet(m_snmpVersion, pTransport,
-		            _T(".1.3.6.1.2.1.1.5.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
-		{
-			lockProperties();
-			if ((m_sysName == NULL) || _tcscmp(m_sysName, szBuffer))
-         {
-				safe_free(m_sysName);
-            m_sysName = _tcsdup(szBuffer);
-            hasChanges = true;
-            sendPollerMsg(dwRqId, _T("   System name changed to %s\r\n"), m_sysName);
-         }
-			unlockProperties();
-		}
-
-      // Check IP forwarding
-      if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
-      {
-			lockProperties();
-         m_dwFlags |= NF_IS_ROUTER;
-			unlockProperties();
-      }
-      else
-      {
-			lockProperties();
-         m_dwFlags &= ~NF_IS_ROUTER;
-			unlockProperties();
-      }
-
-		checkIfXTable(pTransport);
-		checkBridgeMib(pTransport);
-
-      // Check for ENTITY-MIB support
-      if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.47.1.4.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
-      {
-			lockProperties();
-         m_dwFlags |= NF_HAS_ENTITY_MIB;
-			unlockProperties();
-
-			ComponentTree *components = BuildComponentTree(this, pTransport);
-			lockProperties();
-			if (m_components != NULL)
-				m_components->decRefCount();
-			m_components = components;
-			unlockProperties();
-      }
-      else
-      {
-			lockProperties();
-         m_dwFlags &= ~NF_HAS_ENTITY_MIB;
-			if (m_components != NULL)
-			{
-				m_components->decRefCount();
-				m_components = NULL;
-			}
-			unlockProperties();
-      }
-
-      // Check for printer MIB support
-		int count = 0;
-		SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43.5.1.1.17"), CountingSnmpWalkerCallback, &count, FALSE);
-      if (count > 0)
-      {
-			lockProperties();
-         m_dwFlags |= NF_IS_PRINTER;
-			unlockProperties();
-      }
-      else
-      {
-			lockProperties();
-         m_dwFlags &= ~NF_IS_PRINTER;
-			unlockProperties();
-      }
-
-      // Check for CDP (Cisco Discovery Protocol) support
-      if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), 1))
-      {
-			lockProperties();
-         m_dwFlags |= NF_IS_CDP;
-			unlockProperties();
-      }
-      else
-      {
-			lockProperties();
-         m_dwFlags &= ~NF_IS_CDP;
-			unlockProperties();
-      }
-
-      // Check for NDP (Nortel Discovery Protocol) support
-      if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), 1))
-      {
-			lockProperties();
-         m_dwFlags |= NF_IS_NDP;
-			unlockProperties();
-      }
-      else
-      {
-			lockProperties();
-         m_dwFlags &= ~NF_IS_NDP;
-			unlockProperties();
-      }
-
-      // Check for LLDP (Link Layer Discovery Protocol) support
-		if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
-		{
-			lockProperties();
-			m_dwFlags |= NF_IS_LLDP;
-			unlockProperties();
-
-         INT32 type;
-         BYTE data[256];
-         UINT32 dataLen;
-			if ((SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.1.0"), NULL, 0, &type, sizeof(INT32), 0, NULL) == SNMP_ERR_SUCCESS) &&
-             (SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, data, 256, SG_RAW_RESULT, &dataLen) == SNMP_ERR_SUCCESS))
-			{
-            BuildLldpId(type, data, dataLen, szBuffer, 1024);
-				lockProperties();
-				if ((m_lldpNodeId == NULL) || _tcscmp(m_lldpNodeId, szBuffer))
-				{
-					safe_free(m_lldpNodeId);
-					m_lldpNodeId = _tcsdup(szBuffer);
-					hasChanges = true;
-					sendPollerMsg(dwRqId, _T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
-				}
-				unlockProperties();
-			}
-
-			ObjectArray<LLDP_LOCAL_PORT_INFO> *lldpPorts = GetLLDPLocalPortInfo(pTransport);
-			lockProperties();
-			delete m_lldpLocalPortInfo;
-			m_lldpLocalPortInfo = lldpPorts;
-			unlockProperties();
-		}
-		else
-		{
-			lockProperties();
-			m_dwFlags &= ~NF_IS_LLDP;
-			unlockProperties();
-		}
-
-      // Check for 802.1x support
-      if (checkSNMPIntegerValue(pTransport, _T(".1.0.8802.1.1.1.1.1.1.0"), 1))
-      {
-			lockProperties();
-         m_dwFlags |= NF_IS_8021X;
-			unlockProperties();
-      }
-      else
-      {
-			lockProperties();
-			m_dwFlags &= ~NF_IS_8021X;
-			unlockProperties();
-      }
-
-      checkOSPFSupport(pTransport);
-
-		// Get VRRP information
-		VrrpInfo *vrrpInfo = GetVRRPInfo(this);
-		if (vrrpInfo != NULL)
-		{
-			lockProperties();
-			m_dwFlags |= NF_IS_VRRP;
-			delete m_vrrpInfo;
-			m_vrrpInfo = vrrpInfo;
-			unlockProperties();
-		}
-		else
-		{
-			lockProperties();
-			m_dwFlags &= ~NF_IS_VRRP;
-			unlockProperties();
-		}
-
-		// Get wireless controller data
-		if ((m_driver != NULL) && m_driver->isWirelessController(pTransport, &m_customAttributes, m_driverData))
-		{
-			DbgPrintf(5, _T("ConfPoll(%s): node is wireless controller, reading access point information"), m_name);
-         sendPollerMsg(dwRqId, _T("   Reading wireless access point information\r\n"));
-			lockProperties();
-			m_dwFlags |= NF_IS_WIFI_CONTROLLER;
-			unlockProperties();
-
-         int clusterMode = m_driver->getClusterMode(pTransport, &m_customAttributes, m_driverData);
-
-			ObjectArray<AccessPointInfo> *aps = m_driver->getAccessPoints(pTransport, &m_customAttributes, m_driverData);
-			if (aps != NULL)
-			{
-				sendPollerMsg(dwRqId, POLLER_INFO _T("   %d wireless access points found\r\n"), aps->size());
-				DbgPrintf(5, _T("ConfPoll(%s): got information about %d access points"), m_name, aps->size());
-				int adopted = 0;
-				for(int i = 0; i < aps->size(); i++)
-				{
-					AccessPointInfo *info = aps->get(i);
-					if (info->getState() == AP_ADOPTED)
-   					adopted++;
-
-               bool newAp = false;
-               AccessPoint *ap = (clusterMode == CLUSTER_MODE_STANDALONE) ? findAccessPointByMAC(info->getMacAddr()) : FindAccessPointByMAC(info->getMacAddr());
-					if (ap == NULL)
-					{
-						String name;
-
-                  if (info->getName() != NULL)
-                  {
-                     name = info->getName();
-                  }
-                  else
-                  {
-						   for(int j = 0; j < info->getRadioInterfaces()->size(); j++)
-						   {
-							   if (j > 0)
-								   name += _T("/");
-							   name += info->getRadioInterfaces()->get(j)->name;
-						   }
-                  }
-                  ap = new AccessPoint((const TCHAR *)name, info->getIndex(), info->getMacAddr());
-						NetObjInsert(ap, TRUE);
-						DbgPrintf(5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_name, ap->getName(), ap->getId());
-                  newAp = true;
-					}
-					ap->attachToNode(m_id);
-               ap->setIpAddress(info->getIpAddr());
-					if ((info->getState() == AP_ADOPTED) || newAp)
-               {
-					   ap->updateRadioInterfaces(info->getRadioInterfaces());
-                  ap->updateInfo(info->getVendor(), info->getModel(), info->getSerial());
-               }
-					ap->unhide();
-               ap->updateState(info->getState());
-				}
-
-				lockProperties();
-				m_adoptedApCount = adopted;
-				m_totalApCount = aps->size();
-				unlockProperties();
-
-				delete aps;
-			}
-			else
-			{
-				DbgPrintf(5, _T("ConfPoll(%s): failed to read access point information"), m_name);
-				sendPollerMsg(dwRqId, POLLER_ERROR _T("   Failed to read access point information\r\n"));
-			}
-		}
-		else
-		{
-			lockProperties();
-			m_dwFlags &= ~NF_IS_WIFI_CONTROLLER;
-			unlockProperties();
-		}
+      unlockProperties();
    }
-   else if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
+
+   // Check IP forwarding
+   if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
+   {
+      lockProperties();
+      m_dwFlags |= NF_IS_ROUTER;
+      unlockProperties();
+   }
+   else
+   {
+      lockProperties();
+      m_dwFlags &= ~NF_IS_ROUTER;
+      unlockProperties();
+   }
+
+   checkIfXTable(pTransport);
+   checkBridgeMib(pTransport);
+
+   // Check for ENTITY-MIB support
+   if (SnmpGet(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.47.1.4.1.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+   {
+      lockProperties();
+      m_dwFlags |= NF_HAS_ENTITY_MIB;
+      unlockProperties();
+
+      ComponentTree *components = BuildComponentTree(this, pTransport);
+      lockProperties();
+      if (m_components != NULL)
+         m_components->decRefCount();
+      m_components = components;
+      unlockProperties();
+   }
+   else
+   {
+      lockProperties();
+      m_dwFlags &= ~NF_HAS_ENTITY_MIB;
+      if (m_components != NULL)
+      {
+         m_components->decRefCount();
+         m_components = NULL;
+      }
+      unlockProperties();
+   }
+
+   // Check for printer MIB support
+   int count = 0;
+   SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43.5.1.1.17"), CountingSnmpWalkerCallback, &count, FALSE);
+   if (count > 0)
+   {
+      lockProperties();
+      m_dwFlags |= NF_IS_PRINTER;
+      unlockProperties();
+   }
+   else
+   {
+      lockProperties();
+      m_dwFlags &= ~NF_IS_PRINTER;
+      unlockProperties();
+   }
+
+   // Check for CDP (Cisco Discovery Protocol) support
+   if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.9.9.23.1.3.1.0"), 1))
+   {
+      lockProperties();
+      m_dwFlags |= NF_IS_CDP;
+      unlockProperties();
+   }
+   else
+   {
+      lockProperties();
+      m_dwFlags &= ~NF_IS_CDP;
+      unlockProperties();
+   }
+
+   // Check for NDP (Nortel Discovery Protocol) support
+   if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.4.1.45.1.6.13.1.2.0"), 1))
+   {
+      lockProperties();
+      m_dwFlags |= NF_IS_NDP;
+      unlockProperties();
+   }
+   else
+   {
+      lockProperties();
+      m_dwFlags &= ~NF_IS_NDP;
+      unlockProperties();
+   }
+
+   // Check for LLDP (Link Layer Discovery Protocol) support
+   if (SnmpGet(m_snmpVersion, pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, szBuffer, sizeof(szBuffer), 0) == SNMP_ERR_SUCCESS)
+   {
+      lockProperties();
+      m_dwFlags |= NF_IS_LLDP;
+      unlockProperties();
+
+      INT32 type;
+      BYTE data[256];
+      UINT32 dataLen;
+      if ((SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.1.0"), NULL, 0, &type, sizeof(INT32), 0, NULL) == SNMP_ERR_SUCCESS) &&
+          (SnmpGetEx(pTransport, _T(".1.0.8802.1.1.2.1.3.2.0"), NULL, 0, data, 256, SG_RAW_RESULT, &dataLen) == SNMP_ERR_SUCCESS))
+      {
+         BuildLldpId(type, data, dataLen, szBuffer, 1024);
+         lockProperties();
+         if ((m_lldpNodeId == NULL) || _tcscmp(m_lldpNodeId, szBuffer))
+         {
+            safe_free(m_lldpNodeId);
+            m_lldpNodeId = _tcsdup(szBuffer);
+            hasChanges = true;
+            sendPollerMsg(dwRqId, _T("   LLDP node ID changed to %s\r\n"), m_lldpNodeId);
+         }
+         unlockProperties();
+      }
+
+      ObjectArray<LLDP_LOCAL_PORT_INFO> *lldpPorts = GetLLDPLocalPortInfo(pTransport);
+      lockProperties();
+      delete m_lldpLocalPortInfo;
+      m_lldpLocalPortInfo = lldpPorts;
+      unlockProperties();
+   }
+   else
+   {
+      lockProperties();
+      m_dwFlags &= ~NF_IS_LLDP;
+      unlockProperties();
+   }
+
+   // Check for 802.1x support
+   if (checkSNMPIntegerValue(pTransport, _T(".1.0.8802.1.1.1.1.1.1.0"), 1))
+   {
+      lockProperties();
+      m_dwFlags |= NF_IS_8021X;
+      unlockProperties();
+   }
+   else
+   {
+      lockProperties();
+      m_dwFlags &= ~NF_IS_8021X;
+      unlockProperties();
+   }
+
+   checkOSPFSupport(pTransport);
+
+   // Get VRRP information
+   VrrpInfo *vrrpInfo = GetVRRPInfo(this);
+   if (vrrpInfo != NULL)
+   {
+      lockProperties();
+      m_dwFlags |= NF_IS_VRRP;
+      delete m_vrrpInfo;
+      m_vrrpInfo = vrrpInfo;
+      unlockProperties();
+   }
+   else
+   {
+      lockProperties();
+      m_dwFlags &= ~NF_IS_VRRP;
+      unlockProperties();
+   }
+
+   // Get wireless controller data
+   if ((m_driver != NULL) && m_driver->isWirelessController(pTransport, &m_customAttributes, m_driverData))
+   {
+      DbgPrintf(5, _T("ConfPoll(%s): node is wireless controller, reading access point information"), m_name);
+      sendPollerMsg(dwRqId, _T("   Reading wireless access point information\r\n"));
+      lockProperties();
+      m_dwFlags |= NF_IS_WIFI_CONTROLLER;
+      unlockProperties();
+
+      int clusterMode = m_driver->getClusterMode(pTransport, &m_customAttributes, m_driverData);
+
+      ObjectArray<AccessPointInfo> *aps = m_driver->getAccessPoints(pTransport, &m_customAttributes, m_driverData);
+      if (aps != NULL)
+      {
+         sendPollerMsg(dwRqId, POLLER_INFO _T("   %d wireless access points found\r\n"), aps->size());
+         DbgPrintf(5, _T("ConfPoll(%s): got information about %d access points"), m_name, aps->size());
+         int adopted = 0;
+         for(int i = 0; i < aps->size(); i++)
+         {
+            AccessPointInfo *info = aps->get(i);
+            if (info->getState() == AP_ADOPTED)
+               adopted++;
+
+            bool newAp = false;
+            AccessPoint *ap = (clusterMode == CLUSTER_MODE_STANDALONE) ? findAccessPointByMAC(info->getMacAddr()) : FindAccessPointByMAC(info->getMacAddr());
+            if (ap == NULL)
+            {
+               String name;
+
+               if (info->getName() != NULL)
+               {
+                  name = info->getName();
+               }
+               else
+               {
+                  for(int j = 0; j < info->getRadioInterfaces()->size(); j++)
+                  {
+                     if (j > 0)
+                        name += _T("/");
+                     name += info->getRadioInterfaces()->get(j)->name;
+                  }
+               }
+               ap = new AccessPoint((const TCHAR *)name, info->getIndex(), info->getMacAddr());
+               NetObjInsert(ap, TRUE);
+               DbgPrintf(5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_name, ap->getName(), ap->getId());
+               newAp = true;
+            }
+            ap->attachToNode(m_id);
+            ap->setIpAddress(info->getIpAddr());
+            if ((info->getState() == AP_ADOPTED) || newAp)
+            {
+               ap->updateRadioInterfaces(info->getRadioInterfaces());
+               ap->updateInfo(info->getVendor(), info->getModel(), info->getSerial());
+            }
+            ap->unhide();
+            ap->updateState(info->getState());
+         }
+
+         lockProperties();
+         m_adoptedApCount = adopted;
+         m_totalApCount = aps->size();
+         unlockProperties();
+
+         delete aps;
+      }
+      else
+      {
+         DbgPrintf(5, _T("ConfPoll(%s): failed to read access point information"), m_name);
+         sendPollerMsg(dwRqId, POLLER_ERROR _T("   Failed to read access point information\r\n"));
+      }
+   }
+   else
+   {
+      lockProperties();
+      m_dwFlags &= ~NF_IS_WIFI_CONTROLLER;
+      unlockProperties();
+   }
+
+   if (ConfigReadInt(_T("EnableCheckPointSNMP"), 0))
    {
       // Check for CheckPoint SNMP agent on port 161
       DbgPrintf(5, _T("ConfPoll(%s): checking for CheckPoint SNMP"), m_name);
@@ -2786,7 +2784,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                      pInterface->setSpeed(ifInfo->speed);
                   }
                   if ((ifInfo->ifTableSuffixLength != pInterface->getIfTableSuffixLen()) ||
-                      memcmp(ifInfo->ifTableSuffix, pInterface->getIfTableSuffix(), 
+                      memcmp(ifInfo->ifTableSuffix, pInterface->getIfTableSuffix(),
                          min(ifInfo->ifTableSuffixLength, pInterface->getIfTableSuffixLen())))
                   {
                      pInterface->setIfTableSuffix(ifInfo->ifTableSuffixLength, ifInfo->ifTableSuffix);
@@ -6920,7 +6918,7 @@ void Node::collectProxyInfo(ProxyInfo *info)
            (dco->getDataSource() == DS_SNMP_AGENT) &&
            (dco->getSourceNode() == 0) &&
            (dco->getAgentCacheMode() == AGENT_CACHE_ON)) ||
-          ((dco->getDataSource() == DS_NATIVE_AGENT) && 
+          ((dco->getDataSource() == DS_NATIVE_AGENT) &&
            (dco->getSourceNode() == info->proxyId)))
       {
          info->msg->setField(info->fieldId++, dco->getId());

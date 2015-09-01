@@ -368,45 +368,22 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
 		return true;
 
 	// *** SNMP ***
-	SNMP_Transport *pTransport = NULL;
-	if (snmpProxy != 0)
-	{
-		Node *proxyNode = (Node *)g_idxNodeById.get(snmpProxy);
-		if (proxyNode != NULL)
-		{
-			AgentConnection *pConn;
-
-			pConn = proxyNode->createAgentConnection();
-			if (pConn != NULL)
-			{
-				pTransport = new SNMP_ProxyTransport(pConn, ipAddr, 161);
-			}
-		}
-	}
-	else
-	{
-		pTransport = new SNMP_UDPTransport;
-		((SNMP_UDPTransport *)pTransport)->createUDPTransport(ipAddr, 161);
-	}
+   INT16 version;
+   StringList oids;
+   oids.add(_T(".1.3.6.1.2.1.1.2.0"));
+   oids.add(_T(".1.3.6.1.2.1.1.1.0"));
+   AddDriverSpecificOids(&oids);
+   SNMP_Transport *pTransport = SnmpCheckCommSettings(snmpProxy, ipAddr, &version, 0, NULL, &oids);
+   //pass correct port
    if (pTransport != NULL)
    {
-	   INT16 version;
-      StringList oids;
-      oids.add(_T(".1.3.6.1.2.1.1.2.0"));
-      oids.add(_T(".1.3.6.1.2.1.1.1.0"));
-      AddDriverSpecificOids(&oids);
-      SNMP_SecurityContext *ctx = SnmpCheckCommSettings(pTransport, &version, NULL, &oids);
-	   if (ctx != NULL)
-	   {
-		   delete ctx;
-		   if (transport != NULL)
-		   {
-			   pTransport->setSnmpVersion(version);
-			   *transport = pTransport;
-			   pTransport = NULL;	// prevent deletion
-		   }
-		   reachable = true;
-	   }
+      if (transport != NULL)
+      {
+         pTransport->setSnmpVersion(version);
+         *transport = pTransport;
+         pTransport = NULL;	// prevent deletion
+      }
+      reachable = true;
 	   delete pTransport;
    }
 

@@ -585,6 +585,7 @@ public:
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pdu);
    virtual InetAddress getPeerIpAddress();
+   WORD getPort() { return m_port; }
 
    void setWaitForResponse(bool wait) { m_waitForResponse = wait; }
 };

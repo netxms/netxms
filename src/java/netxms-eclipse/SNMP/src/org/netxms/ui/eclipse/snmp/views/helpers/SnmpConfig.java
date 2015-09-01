@@ -1,9 +1,13 @@
 package org.netxms.ui.eclipse.snmp.views.helpers;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
+import org.netxms.client.server.ServerVariable;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -11,6 +15,7 @@ public class SnmpConfig
 {
    private List<String> communities;
    private List<SnmpUsmCredential> usmCredentials;
+   private List<String> ports;
 
    /**
     * Create empty object
@@ -34,10 +39,37 @@ public class SnmpConfig
       
       config.communities = session.getSnmpCommunities();
       config.usmCredentials = session.getSnmpUsmCredentials();
-      
+      Map<String, ServerVariable> variables = session.getServerVariables();
+      ServerVariable v = variables.get("SNMPPorts");
+      config.ports = parsePorts(v != null ? v.getValue() : "" );
+
       return config;
    }
    
+   /**
+    * 
+    * @param portList
+    */
+   public static List<String> parsePorts(String portList)
+   {
+      String[] arr = portList.split(",");
+      List<String> list = new ArrayList<String>(Arrays.asList(arr));
+      return list;      
+   }
+   
+   public String parsePorts() 
+   {
+      StringBuilder str = new StringBuilder();
+      for(int i = 0; i < ports.size(); i++)
+      {
+         str.append(ports.get(i));
+         if(i != ports.size() - 1)
+         {
+            str.append(",");            
+         }
+      }
+      return str.toString();
+   }
    /**
     * Save SNMP configuration on server. This method calls communication
     * API directly, so it should not be called from UI thread.
@@ -51,6 +83,7 @@ public class SnmpConfig
       
       session.updateSnmpCommunities(communities);
       session.updateSnmpUsmCredentials(usmCredentials);
+      session.setServerVariable("SNMPPorts", parsePorts());
    }
    
    /**
@@ -67,6 +100,22 @@ public class SnmpConfig
    public void setCommunities(List<String> communities)
    {
       this.communities = communities;
+   }
+   
+   /**
+    * @return the ports
+    */
+   public List<String> getPorts()
+   {
+      return ports;
+   }
+   
+   /**
+    * @param communities the communities to set
+    */
+   public void setPorts(List<String> ports)
+   {
+      this.ports = ports;
    }
 
    /**
