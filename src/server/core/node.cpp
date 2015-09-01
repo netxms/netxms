@@ -7056,7 +7056,19 @@ void Node::onDataCollectionChange()
    DataCollectionTarget::onDataCollectionChange();
    if (m_dwFlags & NF_IS_NATIVE_AGENT)
    {
-      DbgPrintf(5, _T("Node::onDataCollectionChange: executing data collection sync for node %s [%d]"), m_name, m_id);
+      DbgPrintf(5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync"), m_name, m_id);
       ThreadPoolExecute(g_mainThreadPool, Node::onDataCollectionChangeAsyncCallback, this);
+   }
+
+   UINT32 snmpProxyId = getEffectiveSnmpProxy();
+   if (snmpProxyId != 0)
+   {
+      Node *snmpProxy = (Node *)FindObjectById(snmpProxyId, OBJECT_NODE);
+      if (snmpProxy != NULL)
+      {
+         DbgPrintf(5, _T("Node::onDataCollectionChange(%s [%d]): executing data collection sync for SNMP proxy %s [%d]"),
+                   m_name, m_id, snmpProxy->getName(), snmpProxy->getId());
+         ThreadPoolExecute(g_mainThreadPool, Node::onDataCollectionChangeAsyncCallback, snmpProxy);
+      }
    }
 }
