@@ -585,7 +585,7 @@ void RemoveDeletedLDAPEntry(StringObjectMap<Entry>* entryList, UINT32 m_action, 
          if (entryList->get(m_users[i]->getDn()) == NULL)
          {
             if (m_action == USER_DELETE)
-               DeleteUserDatabaseObject(m_users[i]->getId());
+               DeleteUserDatabaseObject(m_users[i]->getId(), true);
             if (m_action == USER_DISABLE)
             {
                m_users[i]->disable();
@@ -815,13 +815,14 @@ void DumpUsers(CONSOLE_CTX pCtx)
  * @param id user database object ID
  * @return RCC ready to be sent to client
  */
-UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id)
+UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id, bool alreadyLocked)
 {
    int i, j;
 
    DeleteUserFromAllObjects(id);
 
-   MutexLock(m_mutexUserDatabaseAccess);
+   if(!alreadyLocked)
+      MutexLock(m_mutexUserDatabaseAccess);
 
    for(i = 0; i < m_userCount; i++)
 	{
@@ -843,7 +844,8 @@ UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id)
 		}
 	}
 
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   if(!alreadyLocked)
+      MutexUnlock(m_mutexUserDatabaseAccess);
 
    SendUserDBUpdate(USER_DB_DELETE, id, NULL);
    return RCC_SUCCESS;

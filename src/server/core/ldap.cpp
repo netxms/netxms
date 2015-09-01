@@ -533,15 +533,15 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry>
          {
             newObj->m_fullName = getAttrValue(entry, attribute);
          }
-         else if (!strcmp(attribute, m_ldapLoginNameAttr))
+         if (!strcmp(attribute, m_ldapLoginNameAttr))
          {
             newObj->m_loginName = getAttrValue(entry, attribute);
          }
-         else if (!strcmp(attribute, m_ldapDescriptionAttr))
+         if (!strcmp(attribute, m_ldapDescriptionAttr))
          {
             newObj->m_description = getAttrValue(entry, attribute);
          }
-         else if (!strcmp(attribute, "member"))
+         if (!strcmp(attribute, "member"))
          {
             i = 0;
             TCHAR *value = getAttrValue(entry, attribute, i);
