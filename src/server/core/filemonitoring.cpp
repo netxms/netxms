@@ -28,12 +28,12 @@ FileMonitoringList::FileMonitoringList()
 {
    m_mutex = MutexCreate();
    m_monitoredFiles.setOwner(true);
-};
+}
 
 FileMonitoringList::~FileMonitoringList()
 {
    MutexDestroy(m_mutex);
-};
+}
 
 void FileMonitoringList::addMonitoringFile(MONITORED_FILE *fileForAdd, Node *obj, AgentConnection *conn)
 {
@@ -46,7 +46,7 @@ void FileMonitoringList::addMonitoringFile(MONITORED_FILE *fileForAdd, Node *obj
       obj->setFileUpdateConn(conn);
    }
    unlock();
-};
+}
 
 bool FileMonitoringList::checkDuplicate(MONITORED_FILE *fileForAdd)
 {
@@ -64,7 +64,7 @@ bool FileMonitoringList::checkDuplicate(MONITORED_FILE *fileForAdd)
    }
    unlock();
    return result;
-};
+}
 
 ObjectArray<ClientSession>* FileMonitoringList::findClientByFNameAndNodeID(const TCHAR *fileName, UINT32 nodeID)
 {
@@ -81,7 +81,7 @@ ObjectArray<ClientSession>* FileMonitoringList::findClientByFNameAndNodeID(const
    }
    unlock();
    return result;
-};
+}
 
 bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
 {
@@ -111,7 +111,7 @@ bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
    }
    unlock();
    return deleted;
-};
+}
 
 void FileMonitoringList::removeDisconectedNode(UINT32 nodeId)
 {
@@ -128,14 +128,14 @@ void FileMonitoringList::removeDisconectedNode(UINT32 nodeId)
       }
    }
    unlock();
-};
+}
 
 void FileMonitoringList::lock()
 {
    MutexLock(m_mutex);
-};
+}
 
 void FileMonitoringList::unlock()
 {
    MutexUnlock(m_mutex);
-};
+}
