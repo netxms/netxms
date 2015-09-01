@@ -1406,7 +1406,7 @@ WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
 {
    char *mbbuf;
 #if HAVE_POSIX_STRERROR_R
-   int err;
+   int err = 0;
 #endif /* HAVE_POSIX_STRERROR_R */
 
    mbbuf = (char *)malloc(buflen);
