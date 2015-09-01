@@ -371,6 +371,11 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value((INT64)pNode->getBootTime());
    }
+   else if (!_tcscmp(pszAttr, _T("bridgeBaseAddress")))
+   {
+      TCHAR buffer[64];
+      pValue = new NXSL_Value(BinToStr(pNode->getBridgeId(), MAC_ADDR_LENGTH, buffer));
+   }
    else if (!_tcscmp(pszAttr, _T("city")))
    {
       pValue = new NXSL_Value(pNode->getPostalAddress()->getCity());

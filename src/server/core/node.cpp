@@ -5217,14 +5217,6 @@ void Node::setAgentProxy(AgentConnection *pConn)
 }
 
 /**
- * Callback for removing node from queue
- */
-static bool NodeQueueComparator(void *key, void *element)
-{
-	return key == element;
-}
-
-/**
  * Prepare node object for deletion
  */
 void Node::prepareForDeletion()

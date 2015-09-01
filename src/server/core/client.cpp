@@ -405,7 +405,7 @@ void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)
 /**
  * Get number of active user sessions
  */
-int GetSessionCount(bool withRoot)
+int GetSessionCount(bool includeSystemAccount)
 {
    int i, nCount;
 
@@ -413,7 +413,7 @@ int GetSessionCount(bool withRoot)
    for(i = 0, nCount = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
       if ((m_pSessionList[i] != NULL) &&
-          (withRoot || (m_pSessionList[i]->getUserId() != 0)))
+          (includeSystemAccount || (m_pSessionList[i]->getUserId() != 0)))
       {
          nCount++;
       }

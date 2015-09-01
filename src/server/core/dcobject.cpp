@@ -524,6 +524,7 @@ static bool MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, st
             break;
          case 0:
             bRun = false;
+            /* no break */
          case ',':
             *ptr = 0;
             nCurr = _tcstol(curr, NULL, 10);
