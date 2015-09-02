@@ -8,7 +8,7 @@
 - New NXSL "Node" class attribute: bridgeBaseAddress
 - For LDAP mapping can be used same fields
 - Fied deadlock on LDAP user deletion while LDAP synchronization
-- Fixed issues: #831, #841, #852, #890, #892
+- Fixed issues: #831, #841, #852, #890, #892, #896
 
 
 *
