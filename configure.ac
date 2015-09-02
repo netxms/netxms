@@ -1628,6 +1628,9 @@ if test "x$LDAP_SUPPORT" = "xyes"; then
 	AC_CHECK_HEADER(ldap.h,HAVE_LDAP=yes,HAVE_LDAP=no)
 	if test "x$HAVE_LDAP" = "xyes"; then
 		AC_CHECK_LIB(ldap, ldap_init, [ HAVE_LDAP=yes ], [ HAVE_LDAP=no ])
+		if test "x$HAVE_LDAP" = "xyes"; then
+			AC_CHECK_LIB(lber, ber_init, [ SERVER_LIBS="-llber $SERVER_LIBS" ], [ ])
+		fi
 	fi
 	if test "x$HAVE_LDAP" = "xyes"; then
 		SERVER_LIBS="-lldap $SERVER_LIBS"   
