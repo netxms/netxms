@@ -458,8 +458,11 @@ typedef int SOCKET;
 /*********** UNIX *********************/
 
 #ifndef PREFIX
+#ifdef UNICODE
+#define PREFIX    L"/usr/local"
+#else
 #define PREFIX		"/usr/local"
-#define PREFIXW		L"/usr/local"
+#endif
 #warning Installation prefix not defined, defaulting to /usr/local
 #endif
 

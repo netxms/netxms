@@ -96,6 +96,7 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
+   m_hProxyReadThread = INVALID_THREAD_HANDLE;
    m_serverId = 0;
    m_serverAddr = serverAddr;
    m_authenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? false : true;
@@ -103,6 +104,7 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_controlServer = controlServer;
    m_proxyConnection = false;
    m_acceptTraps = false;
+   m_acceptFileUpdates = false;
    m_ipv6Aware = false;
    m_hCurrFile = -1;
    m_fileRqId = 0;
