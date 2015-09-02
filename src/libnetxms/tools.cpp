@@ -1226,6 +1226,27 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 }
 
 /**
+ * Connect to given host/port
+ *
+ * @return connected socket on success or INVALID_SOCKET on error
+ */
+SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, UINT32 timeout)
+{
+   SOCKET s = socket(addr.getFamily(), SOCK_STREAM, 0);
+   if (s == INVALID_SOCKET)
+      return INVALID_SOCKET;
+
+   SockAddrBuffer saBuffer;
+   struct sockaddr *sa = addr.fillSockAddr(&saBuffer, port);
+   if (ConnectEx(s, sa, SA_LEN(sa), timeout) == -1)
+   {
+      closesocket(s);
+      s = INVALID_SOCKET;
+   }
+   return s;
+}
+
+/**
  * Resolve host name to IP address (UNICODE version)
  *
  * @param name host name or IP address
