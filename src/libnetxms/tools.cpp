@@ -1702,13 +1702,28 @@ TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *nu
 	return strings;
 }
 
-/**
- * Decrypt password encrypted with nxencpassw
- */
-BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd)
+inline BOOL DecryptPasswordFail(const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd, UINT32 bufferLenght)
 {
+   if(decryptedPasswd != encryptedPasswd)
+      _tcsncpy(decryptedPasswd, encryptedPasswd, bufferLenght);
+   return FALSE;
+}
+
+/**
+ * Decrypt password encrypted with nxencpassw.
+ * In case when it was not possible to decrypt password as the decrypted password will be set the original one.
+ * The buffer length for encryptedPasswd and decryptedPasswd should be the same.
+ */
+BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd, UINT32 bufferLenght)
+{
+   //check that lenght is correct
 	if (_tcslen(encryptedPasswd) != 44)
-		return FALSE;
+      return DecryptPasswordFail(encryptedPasswd, decryptedPasswd, bufferLenght);
+
+   //check that password contain only allowed symbols
+   int containSymbols = _tcsspn(encryptedPasswd,_T("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"));
+   if(encryptedPasswd[43] != _T('=') || (containSymbols != 43 && (containSymbols != 42 && encryptedPasswd[42] != _T('='))))
+      return DecryptPasswordFail(encryptedPasswd, decryptedPasswd, bufferLenght);
 
 #ifdef UNICODE
 	char *mbencrypted = MBStringFromWideString(encryptedPasswd);
@@ -1722,7 +1737,7 @@ BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encry
 	size_t encSize = 32;
 	base64_decode(mbencrypted, strlen(mbencrypted), (char *)encrypted, &encSize);
 	if (encSize != 32)
-		return FALSE;
+      return DecryptPasswordFail(encryptedPasswd, decryptedPasswd, bufferLenght);
 
 	CalculateMD5Hash((BYTE *)mblogin, strlen(mblogin), key);
 	ICEDecryptData(encrypted, 32, decrypted, key);

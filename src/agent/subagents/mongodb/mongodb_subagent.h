@@ -42,7 +42,7 @@ struct DatabaseInfo
 	TCHAR id[MAX_STR];				// instance ID
 	TCHAR server[MAX_STR];
 	TCHAR username[MAX_STR];
-	TCHAR password[MAX_STR];
+	TCHAR password[MAX_PASSWORD];
 };
 
 class MongoDBCommand

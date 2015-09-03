@@ -81,7 +81,7 @@ private:
    CONDITION m_stopCondition;
 
    static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *arg);
-   
+
    void pollerThread();
    bool poll();
    int getOracleVersion();

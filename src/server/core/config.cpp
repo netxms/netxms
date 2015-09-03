@@ -37,7 +37,7 @@ TCHAR g_szDbDriver[MAX_PATH] = _T("");
 TCHAR g_szDbDrvParams[MAX_PATH] = _T("");
 TCHAR g_szDbServer[MAX_PATH] = _T("127.0.0.1");
 TCHAR g_szDbLogin[MAX_DB_LOGIN] = _T("netxms");
-TCHAR g_szDbPassword[MAX_DB_PASSWORD] = _T("");
+TCHAR g_szDbPassword[MAX_PASSWORD] = _T("");
 TCHAR g_szDbName[MAX_DB_NAME] = _T("netxms_db");
 TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
 
@@ -54,10 +54,10 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdDataDir, NULL },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver, NULL },
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, NULL },
-   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword, NULL },
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin, NULL },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName, NULL },
-   { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword, NULL },
+   { _T("DBPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, g_szDbPassword, NULL },
+   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, g_szDbPassword, NULL },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbSchema, NULL },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer, NULL },
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel, &g_debugLevel },
@@ -148,10 +148,7 @@ stop_search:
 	delete config;
 
 	// Decrypt password
-	if (s_encryptedDbPassword[0] != 0)
-	{
-		DecryptPassword(g_szDbLogin, s_encryptedDbPassword, g_szDbPassword);
-	}
+   DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
 
    return bSuccess;
 }

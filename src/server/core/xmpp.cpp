@@ -251,10 +251,22 @@ THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
 
    s_xmppContext = xmpp_ctx_new(NULL, &s_logger);
 
-   char login[64], password[64];
-   ConfigReadStrA(_T("XMPPLogin"), login, 64, "netxms@localhost");
-   ConfigReadStrA(_T("XMPPPassword"), password, 64, "netxms");
+   TCHAR tmpLogin[64];
+   TCHAR tmpPassword[MAX_PASSWORD];
 
+   ConfigReadStr(_T("XMPPLogin"), tmpLogin, 64, _T("netxms@localhost"));
+   ConfigReadStr(_T("XMPPPassword"), tmpPassword, MAX_PASSWORD, _T("netxms"));
+   DecryptPassword(tmpLogin, tmpPassword, tmpPassword, MAX_PASSWORD);
+
+   char login[64], password[MAX_PASSWORD];
+#ifdef UNICODE
+   ConfigReadStrA(_T("XMPPLogin"), login, 64, "netxms@localhost");
+   char *_tmpPassword = UTF8StringFromWideString(tmpPassword);
+   strncpy(password, _tmpPassword, MAX_PASSWORD);
+#else
+   strncpy(password, tmpPassword, MAX_PASSWORD);
+   strncpy(login, tmpPassword, 64);
+#endif // UNICODE
    DbgPrintf(1, _T("XMPP connection manager started"));
 
    // outer loop - try to reconnect after disconnect

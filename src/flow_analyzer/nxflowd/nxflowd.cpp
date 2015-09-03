@@ -57,16 +57,15 @@ static TCHAR s_dbServer[MAX_PATH] = _T("localhost");
 static TCHAR s_dbName[MAX_DB_NAME] = _T("netxms_db");
 static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
 static TCHAR s_dbLogin[MAX_DB_LOGIN] = _T("netxms");
-static TCHAR s_dbPassword[MAX_DB_PASSWORD] = _T("");
-static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
+static TCHAR s_dbPassword[MAX_PASSWORD] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDrvParams },
-   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
-   { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
+   { _T("DBPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
+   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_listenAddress },
@@ -104,10 +103,7 @@ static bool LoadConfig()
 	delete config;
 
 	// Decrypt password
-	if (s_encryptedDbPassword[0] != 0)
-	{
-		DecryptPassword(s_dbLogin, s_encryptedDbPassword, s_dbPassword);
-	}
+   DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
 
    return success;
 }
@@ -195,7 +191,7 @@ void Shutdown()
 #ifdef _WIN32
    ConditionSet(m_hCondShutdown);
 #endif
-   
+
    // Remove PID file
 #if !defined(_WIN32) && !defined(_NETWARE)
    remove(s_pidFile);

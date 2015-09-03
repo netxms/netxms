@@ -47,19 +47,16 @@ bool AddMongoDBFromConfig(const TCHAR *config)
    _tcsncpy(info.username, CHECK_NULL_EX(tmp), MAX_STR);
    safe_free(tmp);
 
-   TCHAR *password = ReadAttribute(config, _T("encryptedPassword"));
-   if (password != NULL)
+   TCHAR *password = ReadAttribute(config, _T("password"));
+   if (password == NULL)
    {
-      TCHAR buffer[256];
-      DecryptPassword(CHECK_NULL_EX(info.username), password, buffer);
-      free(password);
-      _tcsncpy(info.password, CHECK_NULL_EX(buffer), MAX_STR);
+      password = ReadAttribute(config, _T("encryptedPassword"));
    }
-   else
+
+   if(password != NULL)
    {
-      tmp = ReadAttribute(config, _T("password"));
-      _tcsncpy(info.password, CHECK_NULL_EX(tmp), MAX_STR);
-      safe_free(tmp);
+      DecryptPassword(CHECK_NULL_EX(info.username), password, info.password, MAX_PASSWORD);
+      safe_free(password);
    }
 
    bool sucess = false;

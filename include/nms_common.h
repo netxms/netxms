@@ -114,6 +114,7 @@
 #define MAX_COLUMN_NAME          64
 #define MAX_DNS_NAME             256
 #define MAX_HELPDESK_REF_LEN     64
+#define MAX_PASSWORD             48
 #define GROUP_FLAG               ((UINT32)0x80000000)
 
 #define NETXMS_MAX_CIPHERS       6

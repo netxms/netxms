@@ -32,7 +32,7 @@
 //
 
 // struct for the databases configured within the subagent
-typedef struct 
+typedef struct
 {
 	TCHAR id[MAX_STR];				// this is how client addresses the database
 	TCHAR dsn[MAX_STR];

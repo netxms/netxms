@@ -286,14 +286,19 @@ void LDAPConnection::initLDAP()
  */
 void LDAPConnection::getAllSyncParameters()
 {
+   TCHAR tmpPwd[MAX_PASSWORD];
+   TCHAR tmpLogin[MAX_CONFIG_VALUE];
+   ConfigReadStr(_T("LdapSyncUserPassword"), tmpPwd, MAX_PASSWORD, _T(""));
+   ConfigReadStr(_T("LdapSyncUser"), tmpLogin, MAX_CONFIG_VALUE, _T(""));
+   DecryptPassword(tmpLogin, tmpPwd, tmpPwd, MAX_PASSWORD);
 #ifdef _WIN32
    ConfigReadStr(_T("LdapConnectionString"), m_connList, MAX_CONFIG_VALUE, _T(""));
-   ConfigReadStr(_T("LdapSyncUser"), m_userDN, MAX_CONFIG_VALUE, _T(""));
+   _tcsncpy(m_userDN, tmpLogin, MAX_CONFIG_VALUE);
    ConfigReadStr(_T("LdapSearchBase"), m_searchBase, MAX_CONFIG_VALUE, _T(""));
    ConfigReadStr(_T("LdapSearchFilter"), m_searchFilter, MAX_CONFIG_VALUE, _T("(objectClass=*)"));
    if (m_searchFilter[0] == 0)
       _tcscpy(m_searchFilter, _T("(objectClass=*)"));
-   ConfigReadStr(_T("LdapSyncUserPassword"), m_userPassword, MAX_CONFIG_VALUE, _T(""));
+   _tcsncpy(m_userPassword, tmpPwd, MAX_PASSWORD);
 #else
    ConfigReadStrUTF8(_T("LdapConnectionString"), m_connList, MAX_CONFIG_VALUE, "");
    ConfigReadStrUTF8(_T("LdapSyncUser"), m_userDN, MAX_CONFIG_VALUE, "");
@@ -301,7 +306,9 @@ void LDAPConnection::getAllSyncParameters()
    ConfigReadStrUTF8(_T("LdapSearchFilter"), m_searchFilter, MAX_CONFIG_VALUE, "(objectClass=*)");
    if (m_searchFilter[0] == 0)
       strcpy(m_searchFilter, "(objectClass=*)");
-   ConfigReadStrUTF8(_T("LdapSyncUserPassword"), m_userPassword, MAX_CONFIG_VALUE, "");
+   char *utf8Password = UTF8StringFromWideString(tmpPwd);
+   strcpy(m_userPassword, utf8Password);
+   safe_free(utf8Password);
 #endif
    ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_CONFIG_VALUE, "");
    ConfigReadStrUTF8(_T("LdapMappingFullName"), m_ldapFullNameAttr, MAX_CONFIG_VALUE, "");

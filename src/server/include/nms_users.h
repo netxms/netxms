@@ -75,13 +75,13 @@ private:
    TCHAR m_searchBase[MAX_CONFIG_VALUE];
    TCHAR m_searchFilter[MAX_CONFIG_VALUE];
    TCHAR m_userDN[MAX_CONFIG_VALUE];
-   TCHAR m_userPassword[MAX_CONFIG_VALUE];
+   TCHAR m_userPassword[MAX_PASSWORD];
 #else
    char m_connList[MAX_CONFIG_VALUE];
    char m_searchBase[MAX_CONFIG_VALUE];
    char m_searchFilter[MAX_CONFIG_VALUE];
    char m_userDN[MAX_CONFIG_VALUE];
-   char m_userPassword[MAX_CONFIG_VALUE];
+   char m_userPassword[MAX_PASSWORD];
 #endif
    char m_ldapFullNameAttr[MAX_CONFIG_VALUE];
    char m_ldapLoginNameAttr[MAX_CONFIG_VALUE];

@@ -136,7 +136,6 @@ extern const TCHAR *g_szMessages[];
  */
 UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD;
 TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
-TCHAR g_szEncryptedSharedSecret[MAX_SECRET_LENGTH] = _T("");
 TCHAR g_szSharedSecret[MAX_SECRET_LENGTH] = _T("admin");
 TCHAR g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
 TCHAR g_szFileStore[MAX_PATH] = AGENT_DEFAULT_FILE_STORE;
@@ -239,7 +238,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableSNMPTrapProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_TRAP_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSubagentAutoload"), CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags, NULL },
    { _T("EnableWatchdog"), CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags, NULL },
-   { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szEncryptedSharedSecret, NULL },
+   { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout, NULL },
 	{ _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, NULL },
    { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList, NULL },
@@ -1673,10 +1672,7 @@ int main(int argc, char *argv[])
 				g_config->loadConfigDirectory(g_szConfigIncludeDir, _T("agent"));
 				if (g_config->parseTemplate(_T("agent"), m_cfgTemplate))
 				{
-               if (g_szEncryptedSharedSecret[0] != 0)
-               {
-                  DecryptPassword(_T("netxms"), g_szEncryptedSharedSecret, g_szSharedSecret);
-               }
+               DecryptPassword(_T("netxms"), g_szSharedSecret, g_szSharedSecret, MAX_SECRET_LENGTH);
 
                // try to guess executable path
 #ifdef _WIN32
