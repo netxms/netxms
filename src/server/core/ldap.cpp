@@ -306,9 +306,15 @@ void LDAPConnection::getAllSyncParameters()
    ConfigReadStrUTF8(_T("LdapSearchFilter"), m_searchFilter, MAX_CONFIG_VALUE, "(objectClass=*)");
    if (m_searchFilter[0] == 0)
       strcpy(m_searchFilter, "(objectClass=*)");
+
+#ifdef UNICODE
    char *utf8Password = UTF8StringFromWideString(tmpPwd);
    strcpy(m_userPassword, utf8Password);
    safe_free(utf8Password);
+#else
+   strcpy(m_userPassword, tmpPwd);
+#endif // UNICODE
+
 #endif
    ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_CONFIG_VALUE, "");
    ConfigReadStrUTF8(_T("LdapMappingFullName"), m_ldapFullNameAttr, MAX_CONFIG_VALUE, "");

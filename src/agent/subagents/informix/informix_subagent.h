@@ -22,7 +22,6 @@
 
 
 #define MAX_USERNAME	(30+1)
-#define MAX_PASSWORD	(30+1)
 
 #define MAX_DATABASES	(5)
 
