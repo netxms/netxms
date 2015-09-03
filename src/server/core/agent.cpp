@@ -25,7 +25,6 @@
 /**
  * Externals
  */
-extern Queue g_nodePollerQueue;
 void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
 
 /**

@@ -23,6 +23,7 @@
 #include "nxcore.h"
 #include <netxms_mt.h>
 #include <nxtools.h>
+#include <nxstat.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -34,10 +35,6 @@
 
 #ifndef min
 #define min(a,b) ((a) < (b) ? (a) : (b))
-#endif
-
-#ifndef S_ISREG
-#define S_ISREG(m)     (((m) & S_IFMT) == S_IFREG)
 #endif
 
 // WARNING! this hack works only for d2i_X509(); be carefull when adding new code
@@ -11804,12 +11801,8 @@ void ClientSession::sendLibraryImage(NXCPMessage *request)
 				_sntprintf(absFileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
 				DbgPrintf(5, _T("sendLibraryImage: guid=%s, absFileName=%s"), guidText, absFileName);
 
-#ifdef _WIN32
-				struct _stat st;
-#else
-				struct stat st;
-#endif
-				if (_tstat(absFileName, &st) == 0 && S_ISREG(st.st_mode))
+				NX_STAT_STRUCT st;
+				if ((CALL_STAT(absFileName, &st) == 0) && S_ISREG(st.st_mode))
 				{
 					rcc = RCC_SUCCESS;
 				}
@@ -12316,7 +12309,7 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
       }
    }
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES || musicFiles)
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES) || musicFiles)
 	{
       _tcscpy(path, g_netxmsdDataDir);
       _tcscat(path, DDIR_FILES);
@@ -12327,11 +12320,7 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
          int pos = (int)_tcslen(path);
 
          struct _tdirent *d;
-   #ifdef _WIN32
-         struct _stat st;
-   #else
-         struct stat st;
-   #endif
+         NX_STAT_STRUCT st;
          UINT32 count = 0, varId = VID_INSTANCE_LIST_BASE;
          while((d = _treaddir(dir)) != NULL)
          {
@@ -12359,7 +12348,7 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
                   }
                }
                nx_strncpy(&path[pos], d->d_name, MAX_PATH - pos);
-               if (_tstat(path, &st) == 0)
+               if (CALL_STAT(path, &st) == 0)
                {
                   if (S_ISREG(st.st_mode))
                   {

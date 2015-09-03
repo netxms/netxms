@@ -207,6 +207,7 @@ target
 /stamp-h1
 /status
 /tests/test-libnetxms/test-libnetxms
+/tests/test-libnxcc/test-libnxcc
 /tests/test-libnxdb/test-libnxdb
 /tools/inst.tar.gz
 /webui/eclipse

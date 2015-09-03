@@ -853,6 +853,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          break;
       case DCM_AVERAGE_PER_MINUTE:
          nElapsedTime /= 60;  // Convert to minutes
+         /* no break */
       case DCM_AVERAGE_PER_SECOND:
          // Check elapsed time to prevent divide-by-zero exception
          if (nElapsedTime == 0)
