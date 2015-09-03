@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0-RC1], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0-RC2], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -515,7 +515,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp db server agent libnxmap client nxscript nxcproxy nxlptest tools"
+	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server agent libnxmap client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
 	SMSDRV_DIRS="kannel websms"
    HDLINK_DIRS="jira"
@@ -716,7 +716,7 @@ if test $? = 0; then
 		AC_MSG_ERROR(You must select at least one database driver when building server.)
 	fi
 	BUILD_SERVER="yes"
-	MODULES="$MODULES libnxmap libnxsl server nxscript"
+	MODULES="$MODULES libnxmap libnxsl libnxcc server nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music"
 	if test "x$XMPP_SUPPORT" = "xyes"; then
@@ -799,7 +799,7 @@ fi
 
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
-	MODULES="$MODULES libnxmap client libnxsl libnxmb libnxlp db nxscript"
+	MODULES="$MODULES libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript"
 fi
 
 
@@ -2942,6 +2942,7 @@ AC_CONFIG_FILES([
 	src/libexpat/Makefile
 	src/libexpat/libexpat/Makefile
 	src/libnetxms/Makefile
+	src/libnxcc/Makefile
 	src/libnxlp/Makefile
 	src/libnxmap/Makefile
 	src/libnxmb/Makefile
@@ -3018,6 +3019,7 @@ AC_CONFIG_FILES([
 	tests/Makefile
 	tests/include/Makefile
 	tests/test-libnetxms/Makefile
+	tests/test-libnxcc/Makefile
 	tests/test-libnxdb/Makefile
 	tools/Makefile
 ])

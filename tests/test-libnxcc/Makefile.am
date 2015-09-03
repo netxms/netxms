@@ -8,4 +8,9 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = include test-libnetxms test-libnxdb test-libnxcc
+bin_PROGRAMS = test-libnxcc
+test_libnxcc_SOURCES = test-libnxcc.cpp
+test_libnxcc_CPPFLAGS = -I@top_srcdir@/include -I../include
+test_libnxcc_LDADD = @top_srcdir@/src/libnxcc/libnxcc.la @top_srcdir@/src/libnetxms/libnetxms.la
+
+EXTRA_DIST = test-libnxcc.vcproj

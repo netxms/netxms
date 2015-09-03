@@ -31,6 +31,7 @@ include_HEADERS = \
 	nms_threads.h \
 	nms_util.h \
 	nxappc_internal.h \
+	nxcc.h \
 	nxcldefs.h \
 	nxclient.h \
 	nxclobj.h \
