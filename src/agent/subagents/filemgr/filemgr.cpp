@@ -19,8 +19,11 @@
  **/
 
 #include "filemgr.h"
+
+#ifndef _WIN32
 #include <pwd.h>
 #include <grp.h>
+#endif
 
 /**
  * Root folders
@@ -216,20 +219,20 @@ static BOOL CheckFullPath(TCHAR *folder, bool withHomeDir)
 #define SYMLINC         4
 
 #ifdef _WIN32
-TCHAR *GetFileOwnerWin(TCHAR *file)
-{
 
-   return _tcsdup("");
+TCHAR *GetFileOwnerWin(const TCHAR *file)
+{
+   return _tcsdup(_T(""));
 }
+
 #endif // _WIN32
 
 static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileName, NXCPMessage *msg, UINT32 varId)
 {
-   NX_STAT_STRUCT st;
-
    if (_taccess(filePath, 4) != 0)
       return false;
 
+   NX_STAT_STRUCT st;
    if (CALL_STAT(filePath, &st) == 0)
    {
       msg->setField(varId++, fileName);
@@ -274,12 +277,8 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
       struct passwd *pw = getpwuid(st.st_uid);
       struct group  *gr = getgrgid(st.st_gid);
 #ifdef UNICODE
-      TCHAR *name = WideStringFromMBString(pw->pw_name);
-      msg->setField(varId++, name);
-      free(name);
-      name = WideStringFromMBString(gr->gr_name);
-      msg->setField(varId++, name);
-      free(name);
+      msg->setFieldFromMBString(varId++, pw->pw_name);
+      msg->setFieldFromMBString(varId++, gr->gr_name);
 #else
       msg->setField(varId++, pw->pw_name);
       msg->setField(varId++, gr->gr_name);
@@ -296,17 +295,17 @@ static bool FillMessageFolderContent(const TCHAR *filePath, const TCHAR *fileNam
       accessRights[10] = 0;
       msg->setField(varId++, accessRights);
 #else
-      TCHAR *owner = GetFileOwnerWin(file);
+      TCHAR *owner = GetFileOwnerWin(filePath);
       msg->setField(varId++, owner);
       safe_free(owner);
-      msg->setField(varId++, "");
-      msg->setField(varId++, "");
+      msg->setField(varId++, _T(""));
+      msg->setField(varId++, _T(""));
 #endif // _WIN32
       return true;
    }
    else
    {
-      AgentWriteDebugLog(3, _T("FILEMGR: GetFolderContent: Not possible to get folder %s"), filePath);
+      AgentWriteDebugLog(3, _T("FILEMGR: GetFolderContent: cannot get folder %s"), filePath);
       return false;
    }
 }
