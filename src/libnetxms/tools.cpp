@@ -1702,11 +1702,14 @@ TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *nu
 	return strings;
 }
 
-inline BOOL DecryptPasswordFail(const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd, UINT32 bufferLenght)
+/**
+ * Failure handler for DecryptPassword
+ */
+inline bool DecryptPasswordFail(const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd, size_t bufferLenght)
 {
-   if(decryptedPasswd != encryptedPasswd)
-      _tcsncpy(decryptedPasswd, encryptedPasswd, bufferLenght);
-   return FALSE;
+   if (decryptedPasswd != encryptedPasswd)
+      nx_strncpy(decryptedPasswd, encryptedPasswd, bufferLenght);
+   return false;
 }
 
 /**
@@ -1714,7 +1717,7 @@ inline BOOL DecryptPasswordFail(const TCHAR *encryptedPasswd, TCHAR *decryptedPa
  * In case when it was not possible to decrypt password as the decrypted password will be set the original one.
  * The buffer length for encryptedPasswd and decryptedPasswd should be the same.
  */
-BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd, UINT32 bufferLenght)
+bool LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd, size_t bufferLenght)
 {
    //check that lenght is correct
 	if (_tcslen(encryptedPasswd) != 44)
@@ -1744,15 +1747,15 @@ BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encry
 	decrypted[31] = 0;
 
 #ifdef UNICODE
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, 32);
-	decryptedPasswd[31] = 0;
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, bufferLenght);
+	decryptedPasswd[bufferLenght - 1] = 0;
 	free(mbencrypted);
 	free(mblogin);
 #else
-	nx_strncpy(decryptedPasswd, (char *)decrypted, 32);
+	nx_strncpy(decryptedPasswd, (char *)decrypted, bufferLenght);
 #endif
 
-	return TRUE;
+	return true;
 }
 
 #ifndef UNDER_CE
