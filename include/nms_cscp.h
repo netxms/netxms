@@ -1076,6 +1076,7 @@ typedef struct
 #define VID_ERROR_LINE              ((UINT32)511)
 #define VID_SPEED                   ((UINT32)512)
 #define VID_IFTABLE_SUFFIX          ((UINT32)513)
+#define VID_SERVERCMD_TIMEOUT       ((UINT32)514)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

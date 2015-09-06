@@ -126,7 +126,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ResolveNodeNames','1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('RoutingTableUpdateInterval','300',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('RunNetworkDiscovery','0',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ServerID','',0,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ServerCommandOutputTimeout','60',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SMSDriver','<none>',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SMSDrvConfig','',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SMTPFromAddr','netxms@localhost',1,0);

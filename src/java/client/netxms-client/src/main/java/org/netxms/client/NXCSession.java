@@ -254,6 +254,7 @@ public class NXCSession
    private int defaultRecvBufferSize = 4194304; // Default is 4MB
    private int maxRecvBufferSize = 33554432;    // Max is 32MB
    private int commandTimeout = 30000; // Default is 30 sec
+   private int serverCommandOutputTimeout = 60000;
 
    // Notification listeners and queue
    private LinkedBlockingQueue<SessionNotification> notificationQueue = new LinkedBlockingQueue<SessionNotification>(8192);
@@ -1888,6 +1889,8 @@ public class NXCSession
 
       strictAlarmStatusFlow = response.getFieldAsBoolean(NXCPCodes.VID_ALARM_STATUS_FLOW_STATE);
       timedAlarmAckEnabled = response.getFieldAsBoolean(NXCPCodes.VID_TIMED_ALARM_ACK_ENABLED);
+      
+      serverCommandOutputTimeout = response.getFieldAsInt32(NXCPCodes.VID_SERVERCMD_TIMEOUT) * 1000;
 
       alarmListDisplayLimit = response.getFieldAsInt32(NXCPCodes.VID_ALARM_LIST_DISP_LIMIT);
       Logger.info("NXCSession.connect", "alarmListDisplayLimit = " + alarmListDisplayLimit);
@@ -6271,7 +6274,10 @@ public class NXCSession
          }
       } : null;
       if (receiveOutput)
+      {
+         handler.setMessageWaitTimeout(serverCommandOutputTimeout);
          addMessageSubscription(NXCPCodes.CMD_COMMAND_OUTPUT, msg.getMessageId(), handler);
+      }
       
       sendMessage(msg);
       waitForRCC(msg.getMessageId());

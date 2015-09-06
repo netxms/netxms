@@ -574,6 +574,17 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V365 to V366
+ */
+static BOOL H_UpgradeFromV365(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("ServerCommandOutputTimeout"), _T("60"), 0, 0));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='366' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V364 to V365
  */
 static BOOL H_UpgradeFromV364(int currVersion, int newVersion)
@@ -8936,6 +8947,7 @@ static struct
    { 362, 363, H_UpgradeFromV362 },
    { 363, 364, H_UpgradeFromV363 },
    { 364, 365, H_UpgradeFromV364 },
+   { 365, 366, H_UpgradeFromV365 },
    { 0, 0, NULL }
 };
 

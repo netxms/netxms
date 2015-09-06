@@ -10,7 +10,7 @@
 - Fied deadlock on LDAP user deletion while LDAP synchronization
 - Add option to use encrypted password in password fileds in configuration files and in the server configuration parameters.
 - Added SMS driver for web service text2reach.com
-- Fixed issues: #831, #841, #852, #890, #892, #896, #905
+- Fixed issues: #831, #841, #852, #890, #892, #896, #897, #905
 
 
 *
