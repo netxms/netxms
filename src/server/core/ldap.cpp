@@ -277,7 +277,7 @@ void LDAPConnection::initLDAP()
    }
    //set all LDAP options
    int version = LDAP_VERSION3;
-   int result = ldap_set_option(m_ldapConn, LDAP_OPT_PROTOCOL_VERSION, &version); //default verion 2, it's recomended to use version 3
+   ldap_set_option(m_ldapConn, LDAP_OPT_PROTOCOL_VERSION, &version); //default verion 2, it's recomended to use version 3
    //reorganize connection list. Set as fist server - just connected server(if is is not so).
 }
 
