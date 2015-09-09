@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.osm.tools;
 
+import org.netxms.base.GeoLocation;
+
 /**
  * Represents rectangular area
  */
@@ -56,6 +58,15 @@ public class Area
 			this.yLow = yHigh;
 			this.yHigh = yLow;
 		}
+	}
+	
+	/**
+	 * @param topLeft
+	 * @param bottomRight
+	 */
+	public Area(GeoLocation topLeft, GeoLocation bottomRight)
+	{
+	   this(topLeft.getLatitude(), topLeft.getLongitude(), bottomRight.getLatitude(), bottomRight.getLongitude());
 	}
 
 	/**

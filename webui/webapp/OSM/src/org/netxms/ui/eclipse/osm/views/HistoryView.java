@@ -198,8 +198,7 @@ public class HistoryView extends ViewPart
          };
       }
       
-      setConfigurableTime = new Action(Messages.get().HistoryView_CustomTimeFrame) 
-      {
+      setConfigurableTime = new Action(Messages.get().HistoryView_CustomTimeFrame) {
          @Override
          public void run()
          {

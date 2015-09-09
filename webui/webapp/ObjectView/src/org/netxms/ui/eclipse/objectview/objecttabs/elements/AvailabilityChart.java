@@ -161,12 +161,12 @@ public class AvailabilityChart extends OverviewPageElement
 		final Color fg = SharedColors.getColor(SharedColors.SERVICE_AVAILABILITY_LEGEND, getDisplay());
 		
 		gc.setBackground(colors.create(127, 154, 72));
-		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg, 0.2f, colors));
+		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg.getRGB(), 0.2f, colors));
 		gc.fillRectangle(5, 10, th, th);
 		gc.drawRectangle(5, 10, th, th);
 
 		gc.setBackground(colors.create(158, 65, 62));
-		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg, 0.2f, colors));
+		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg.getRGB(), 0.2f, colors));
 		gc.fillRectangle(5, 40, th, th);
 		gc.drawRectangle(5, 40, th, th);
 

@@ -191,14 +191,17 @@ public class MapLoader
 		if (image != null)
 		{
 			// save to cache
+         File imageFile = buildCacheFileName(zoom, x, y);
 			synchronized(CACHE_MUTEX)
 			{
-				File imageFile = buildCacheFileName(zoom, x, y);
 				imageFile.getParentFile().mkdirs();
-				ImageLoader imageLoader = new ImageLoader();
-				imageLoader.data = new ImageData[] { image.getImageData() };
-				imageLoader.save(imageFile.getAbsolutePath(), SWT.IMAGE_PNG);
 			}
+         ImageLoader imageLoader = new ImageLoader();
+         imageLoader.data = new ImageData[] { image.getImageData() };
+         synchronized(CACHE_MUTEX)
+         {
+            imageLoader.save(imageFile.getAbsolutePath(), SWT.IMAGE_PNG);
+         }
 		}
 		
 		return image;

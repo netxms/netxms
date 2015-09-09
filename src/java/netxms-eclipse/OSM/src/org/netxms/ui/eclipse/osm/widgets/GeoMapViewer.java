@@ -18,8 +18,11 @@
  */
 package org.netxms.ui.eclipse.osm.widgets;
 
+import java.awt.Polygon;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,6 +44,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
@@ -72,6 +76,8 @@ import org.netxms.ui.eclipse.osm.tools.Tile;
 import org.netxms.ui.eclipse.osm.tools.TileSet;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.ColorCache;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * This widget shows map retrieved via OpenStreetMap Static Map API
@@ -87,13 +93,14 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
    private static final Color INFO_BLOCK_TEXT = new Color(Display.getCurrent(), 255, 255, 255);
 	private static final Color LABEL_BACKGROUND = new Color(Display.getCurrent(), 240, 254, 192);
 	private static final Color LABEL_TEXT = new Color(Display.getCurrent(), 0, 0, 0);
-	private static final Color BORDER_COLOR = new Color(Display.getCurrent(), 128, 128, 128);
+	private static final Color BORDER_COLOR = new Color(Display.getCurrent(), 0, 0, 0);
+   private static final Color ACTIVE_BORDER_COLOR = new Color(Display.getCurrent(), 255, 255, 255);
 	private static final Color SELECTION_COLOR = new Color(Display.getCurrent(), 0, 0, 255);
    private static final Color TRACK_COLOR = new Color(Display.getCurrent(), 163, 73, 164);
 	
 	private static final Font TITLE_FONT = new Font(Display.getCurrent(), "Verdana", 10, SWT.BOLD);  //$NON-NLS-1$
 
-	private static final int LABEL_ARROW_HEIGHT = 20;
+	private static final int LABEL_ARROW_HEIGHT = 5;
 	private static final int LABEL_ARROW_OFFSET = 10;
 	private static final int LABEL_X_MARGIN = 4;
 	private static final int LABEL_Y_MARGIN = 4;
@@ -104,8 +111,9 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	private ILabelProvider labelProvider;
 	private Image currentImage = null;
 	private Image bufferImage = null;
-	private Area coverage = new Area(0,0,0,0);
+	private Area coverage = new Area(0, 0, 0, 0);
 	private List<AbstractObject> objects = new ArrayList<AbstractObject>();
+	private AbstractObject currentObject = null;
 	private MapAccessor accessor;
 	private MapLoader mapLoader;
 	private IViewPart viewPart = null;
@@ -128,6 +136,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
    private TimePeriod timePeriod = new TimePeriod();
    private int highlightobjectID = -1;
    private ToolTip toolTip;
+   private ColorCache colorCache;
+   private List<ObjectIcon> objectIcons = new ArrayList<ObjectIcon>();
 	
 	/**
 	 * @param parent
@@ -141,6 +151,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		{
 		   this.historyObject = historyObject;		   
 		}
+		
+		colorCache = new ColorCache(this);
 		
 		imageZoomIn = Activator.getImageDescriptor("icons/map_zoom_in.png").createImage(); //$NON-NLS-1$
       imageZoomOut = Activator.getImageDescriptor("icons/map_zoom_out.png").createImage(); //$NON-NLS-1$
@@ -203,38 +215,21 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
          {
             highlightobjectID = -1;
             toolTip.setVisible(false);
-            if (!historicalData)
-               return;           
-            
-            Point p = new Point(e.x, e.y);
-            p.x -= 5;
-            p.y -= 5;
-            GeoLocation loc1 = getLocationAtPoint(p);
-            p.x += 10;
-            p.y += 10;
-            GeoLocation loc2 = getLocationAtPoint(p);
-            Area area = new Area(loc1.getLatitude(), loc1.getLongitude(), loc2.getLatitude(), loc2.getLongitude());
-            List<GeoLocation> suitablePoints = locationTree.query(area);
-            if(suitablePoints.size() == 0)
-               return;
-            
-            int i = 0;
-            if(suitablePoints.size() > 1)
+            if (historicalData)
             {
-               double minDistance = 100;
-               for(int j = 0; j < suitablePoints.size(); j++)
-               {
-                  double newDistance =  Math.pow( Math.pow(suitablePoints.get(j).getLatitude() - loc1.getLatitude(), 2) + Math.pow(suitablePoints.get(j).getLongitude() - loc1.getLongitude(), 2), 0.5);  
-                  if(minDistance > newDistance)
-                  {
-                     minDistance = newDistance;
-                     i = j;
-                  }
-               }
+               List<GeoLocation> suitablePoints = getAdjacentLocations(e.x, e.y);
+               if (suitablePoints.isEmpty())
+                  return;
+               
+               highlightobjectID = history.indexOf(suitablePoints.get(0)); 
+               redraw();
             }
-            
-            highlightobjectID = history.indexOf(suitablePoints.get(i)); 
-            redraw();
+            else
+            {
+               AbstractObject object = getObjectAtPoint(new Point(e.x, e.y));
+               if (object != currentObject)
+                  setCurrentObject(object);
+            }
          }
 
          /* (non-Javadoc)
@@ -263,6 +258,51 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
       });
 		
       toolTip = new ToolTip(getShell(), SWT.BALLOON);	
+	}
+	
+   /**
+    * Get geolocations adjacent to given screen coordinates ordered by distance from that point
+    * 
+    * @param p
+    * @return
+    */
+   public List<GeoLocation> getAdjacentLocations(Point p)
+   {
+      return getAdjacentLocations(p.x, p.y);
+   }
+   
+	/**
+	 * Get geolocations adjacent to given screen coordinates ordered by distance from that point
+	 * 
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public List<GeoLocation> getAdjacentLocations(int x, int y)
+	{
+      Point p = new Point(x, y);
+      final GeoLocation center = getLocationAtPoint(p);
+      
+      p.x -= 5;
+      p.y -= 5;
+      GeoLocation topLeft = getLocationAtPoint(p);
+      p.x += 10;
+      p.y += 10;
+      GeoLocation bottomRight = getLocationAtPoint(p);
+      Area area = new Area(topLeft.getLatitude(), topLeft.getLongitude(), bottomRight.getLatitude(), bottomRight.getLongitude());
+
+      List<GeoLocation> locations = locationTree.query(area);
+      Collections.sort(locations, new Comparator<GeoLocation>() {
+         @Override
+         public int compare(GeoLocation l1, GeoLocation l2)
+         {
+            double d1 = Math.pow(Math.pow(l1.getLatitude() - center.getLatitude(), 2) + Math.pow(l1.getLongitude() - center.getLongitude(), 2), 0.5);  
+            double d2 = Math.pow(Math.pow(l2.getLatitude() - center.getLatitude(), 2) + Math.pow(l2.getLongitude() - center.getLongitude(), 2), 0.5);  
+            return (int)Math.signum(d1 - d2);
+         }
+      });
+      
+      return locations;
 	}
 	
 	/**
@@ -475,6 +515,8 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		final GC gc = new GC(bufferImage);
       gc.setAntialias(SWT.ON);
       gc.setTextAntialias(SWT.ON);
+      
+      objectIcons.clear();
 		
 		GeoLocation currentLocation;
 
@@ -498,7 +540,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	      }
 
 			final Point centerXY = GeoLocationCache.coordinateToDisplay(currentLocation, accessor.getZoom());
-         if(!historicalData)
+         if (!historicalData)
          {
    			for(AbstractObject object : objects)
    			{
@@ -664,46 +706,49 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 */
 	private void drawObject(GC gc, int x, int y, AbstractObject object) 
 	{
-		final String text = object.getObjectName();
-		final Point textSize = gc.textExtent(text);
-
+	   boolean selected = (currentObject != null) && (currentObject.getObjectId() == object.getObjectId());
+	   
 		Image image = labelProvider.getImage(object);
 		if (image == null)
 			image = SharedIcons.IMG_UNKNOWN_OBJECT;
 		
-		Rectangle rect = new Rectangle(x - LABEL_ARROW_OFFSET, y - LABEL_ARROW_HEIGHT - textSize.y, textSize.x
-				+ image.getImageData().width + LABEL_X_MARGIN * 2 + LABEL_SPACING, Math.max(image.getImageData().height, textSize.y)
-				+ LABEL_Y_MARGIN * 2);
+		int w = image.getImageData().width + LABEL_X_MARGIN * 2;
+		int h = image.getImageData().height+ LABEL_Y_MARGIN * 2;
+		Rectangle rect = new Rectangle(x - w / 2 - 1, y - LABEL_ARROW_HEIGHT - h, w, h);
 		
-		gc.setBackground(LABEL_BACKGROUND);
+		Color bgColor = ColorConverter.adjustColor(StatusDisplayInfo.getStatusColor(object.getStatus()), new RGB(255, 255, 255),  0.5f, colorCache);
+		
+      gc.setBackground(bgColor);
+      gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
+      if (selected)
+      {
+         gc.setLineWidth(3);
+         gc.setForeground(ACTIVE_BORDER_COLOR);
+         gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
+      }
+      gc.setLineWidth(1);
+      gc.setForeground(BORDER_COLOR);
+		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
+		
+		final int[] arrow = new int[] { x - 4, rect.y + rect.height, x, y, x + 4, rect.y + rect.height };
 
-		gc.setForeground(BORDER_COLOR);
-		gc.setLineWidth(4);
-		gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-		
-		gc.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
-		gc.setLineWidth(2);
-		gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 8, 8);
-		
-		final int[] arrow = new int[] { rect.x + LABEL_ARROW_OFFSET - 4, rect.y + rect.height, x, y, rect.x + LABEL_ARROW_OFFSET + 4,
-				rect.y + rect.height };
-
-		gc.setLineWidth(4);
+      gc.fillPolygon(arrow);
+      gc.setForeground(bgColor);
+      gc.drawPolygon(arrow);
+      if (selected)
+      {
+         gc.drawLine(arrow[0], arrow[1] - 1, arrow[4], arrow[5] - 1);
+         gc.setLineWidth(3);
+         gc.setForeground(ACTIVE_BORDER_COLOR);
+         gc.drawPolyline(arrow);
+      }
+		gc.setLineWidth(1);
 		gc.setForeground(BORDER_COLOR);
 		gc.drawPolyline(arrow);
 
-		gc.fillPolygon(arrow);
-		gc.setForeground(LABEL_BACKGROUND);
-		gc.setLineWidth(2);
-		gc.drawLine(arrow[0], arrow[1], arrow[4], arrow[5]);
-		gc.setForeground(StatusDisplayInfo.getStatusColor(object.getStatus()));
-		gc.drawPolyline(arrow);
-
-		gc.setForeground(LABEL_TEXT);
 		gc.drawImage(image, rect.x + LABEL_X_MARGIN, rect.y + LABEL_Y_MARGIN);
-		gc.drawText(text, rect.x + LABEL_X_MARGIN + image.getImageData().width + LABEL_SPACING, rect.y + LABEL_Y_MARGIN);
+		
+		objectIcons.add(new ObjectIcon(object, rect, x, y));
 	}
 
 	  /**
@@ -784,13 +829,13 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 			@Override
 			public void run()
 			{
-			   if(!historicalData)
+			   if (!historicalData)
 			   {
 			      onCacheChange(object, prevLocation);
 			   }
 			   else
 			   {
-			      if(object.getObjectId() == historyObject.getObjectId())
+			      if (object.getObjectId() == historyObject.getObjectId())
 			         onCacheChange(object, prevLocation);
 			   }
 			}
@@ -904,6 +949,12 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 		}
 
 		currentPoint = new Point(e.x, e.y);
+		if (e.button != 1)
+		{
+   		AbstractObject object = getObjectAtPoint(currentPoint);
+   		if (object != currentObject)
+   		   setCurrentObject(object);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -1006,7 +1057,7 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	 */
 	public Point getCurrentPoint()
 	{
-		return currentPoint;
+		return new Point(currentPoint.x, currentPoint.y);
 	}
 	
 	/**
@@ -1019,6 +1070,23 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
 	{
 		Point cp = GeoLocationCache.coordinateToDisplay(new GeoLocation(coverage.getxHigh(), coverage.getyLow()), accessor.getZoom());
 		return GeoLocationCache.displayToCoordinates(new Point(cp.x + p.x, cp.y + p.y), accessor.getZoom());
+	}
+	
+	/**
+    * Get object at given point within widget
+    * 
+    * @param p widget-related coordinates
+    * @return object at given point or null
+	 */
+	public AbstractObject getObjectAtPoint(Point p)
+	{
+	   for(int i = objectIcons.size() - 1; i >= 0; i--)
+	   {
+	      ObjectIcon icon = objectIcons.get(i);
+	      if (icon.contains(p))
+	         return icon.object;
+	   }
+	   return null;
 	}
 
 	/**
@@ -1103,11 +1171,57 @@ public class GeoMapViewer extends Canvas implements PaintListener, GeoLocationCa
       return timePeriod;
    }
 
+   /**
+    * @param value
+    * @param unit
+    */
    public void changeTimePeriod(int value, int unit)
    {
       timePeriod.setTimeFrameType(GraphSettings.TIME_FRAME_BACK_FROM_NOW);
       timePeriod.setTimeRangeValue(value);
       timePeriod.setTimeUnitValue(unit);
       updateHistory();
+   }
+   
+   /**
+    * Set current object
+    * 
+    * @param object
+    */
+   private void setCurrentObject(AbstractObject object)
+   {
+      currentObject = object;
+      if (currentObject != null)
+      {
+         int idx = objects.indexOf(currentObject);
+         objects.remove(idx);
+         objects.add(currentObject);
+      }
+      redraw();
+   }
+
+   /**
+    * Object icon on map
+    */
+   private class ObjectIcon
+   {
+      public Rectangle rect;
+      public Polygon arrow;
+      public AbstractObject object;
+
+      public ObjectIcon(AbstractObject object, Rectangle rect, int x, int y)
+      {
+         this.rect = rect;
+         this.object = object;
+         arrow = new Polygon();
+         arrow.addPoint(x, y);
+         arrow.addPoint(x - 4, rect.y + rect.height);
+         arrow.addPoint(x + 4, rect.y + rect.height);
+      }
+      
+      public boolean contains(Point p)
+      {
+         return rect.contains(p) || arrow.contains(p.x, p.y); 
+      }
    }
 }

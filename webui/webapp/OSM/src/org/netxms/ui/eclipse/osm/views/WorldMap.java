@@ -121,8 +121,12 @@ public class WorldMap extends AbstractGeolocationView
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		super.fillContextMenu(manager);
-		manager.add(new Separator());
-		manager.add(actionPlaceObject);
+		
+		if (getSelection().isEmpty())
+		{
+   		manager.add(new Separator());
+   		manager.add(actionPlaceObject);
+		}
 	}
 	
 	/**

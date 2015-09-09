@@ -115,10 +115,10 @@ public class ColorConverter
 	 * @param cache color cache where new color should be placed
 	 * @return
 	 */
-	public static Color adjustColor(Color color, Color direction, float amount, ColorCache cache)
+	public static Color adjustColor(Color color, RGB direction, float amount, ColorCache cache)
 	{
 		float sr = color.getRed(), sg = color.getGreen(), sb = color.getBlue();
-		float dr = direction.getRed(), dg = direction.getGreen(), db = direction.getBlue();
+		float dr = direction.red, dg = direction.green, db = direction.blue;
 		return cache.create((int)lerp(sr, dr, amount), (int)lerp(sg, dg, amount), (int)lerp(sb, db, amount));
 	}
 }
