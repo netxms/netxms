@@ -1067,7 +1067,7 @@ typedef struct
 #define VID_OVERVIEW_ONLY           ((UINT32)502)
 #define VID_AGENT_CACHE_MODE        ((UINT32)503)
 #define VID_DATE                    ((UINT32)504)
-#define VID_RECONCILLATION          ((UINT32)505)
+#define VID_RECONCILIATION          ((UINT32)505)
 #define VID_DISPLAY_MODE            ((UINT32)506)
 #define VID_NUM_FIELDS              ((UINT32)507)
 #define VID_PASSWORD_IS_VALID       ((UINT32)508)

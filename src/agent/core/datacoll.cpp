@@ -411,7 +411,7 @@ void DataElement::saveToDatabase()
 /**
  * Send collected data to server
  */
-bool DataElement::sendToServer(bool reconcillation)
+bool DataElement::sendToServer(bool reconciliation)
 {
    // If data in database was invalid table may not be parsed correctly
    // Consider sending a success in that case so data element can be dropped
@@ -430,7 +430,7 @@ bool DataElement::sendToServer(bool reconcillation)
    msg.setField(VID_DCOBJECT_TYPE, (INT16)m_type);
    msg.setField(VID_NODE_ID, m_snmpNode);
    msg.setFieldFromTime(VID_TIMESTAMP, m_timestamp);
-   msg.setField(VID_RECONCILLATION, (INT16)(reconcillation ? 1 : 0));
+   msg.setField(VID_RECONCILIATION, (INT16)(reconciliation ? 1 : 0));
    switch(m_type)
    {
       case DCO_TYPE_ITEM:
@@ -483,13 +483,13 @@ static EnumerationCallbackResult ReconcillationQueryCallback(AbstractCommSession
 }
 
 /**
- * Data reconcillation thread
+ * Data reconciliation thread
  */
-static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
+static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
    UINT32 sleepTime = 30000;
-   DebugPrintf(INVALID_INDEX, 1, _T("Data reconcillation thread started"));
+   DebugPrintf(INVALID_INDEX, 1, _T("Data reconciliation thread started"));
 
    bool vacuumNeeded = false;
    while(!AgentSleepAndCheckForShutdown(sleepTime))
@@ -502,7 +502,7 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
       {
          if (vacuumNeeded)
          {
-            DebugPrintf(INVALID_INDEX, 4, _T("ReconcillationThread: vacuum local database"));
+            DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: vacuum local database"));
             DBQuery(hdb, _T("VACUUM"));
             vacuumNeeded = false;
          }
@@ -561,7 +561,7 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
                DBQuery(hdb, query);
             }
             DBCommit(hdb);
-            DebugPrintf(INVALID_INDEX, 4, _T("ReconcillationThread: %d records sent"), deleteList.size());
+            DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: %d records sent"), deleteList.size());
             vacuumNeeded = true;
          }
       }
@@ -570,7 +570,7 @@ static THREAD_RESULT THREAD_CALL ReconcillationThread(void *arg)
       sleepTime = (count == 100) ? 100 : 30000;
    }
 
-   DebugPrintf(INVALID_INDEX, 1, _T("Data reconcillation thread stopped"));
+   DebugPrintf(INVALID_INDEX, 1, _T("Data reconciliation thread stopped"));
    return THREAD_OK;
 }
 
@@ -984,7 +984,7 @@ static const TCHAR *s_upgradeQueries[] =
  */
 static THREAD s_dataCollectionSchedulerThread = INVALID_THREAD_HANDLE;
 static THREAD s_dataSenderThread = INVALID_THREAD_HANDLE;
-static THREAD s_reconcillationThread = INVALID_THREAD_HANDLE;
+static THREAD s_reconciliationThread = INVALID_THREAD_HANDLE;
 
 /**
  * Initialize and start local data collector
@@ -1017,7 +1017,7 @@ void StartLocalDataCollector()
 
    s_dataCollectionSchedulerThread = ThreadCreateEx(DataCollectionScheduler, 0, NULL);
    s_dataSenderThread = ThreadCreateEx(DataSender, 0, NULL);
-   s_reconcillationThread = ThreadCreateEx(ReconcillationThread, 0, NULL);
+   s_reconciliationThread = ThreadCreateEx(ReconciliationThread, 0, NULL);
 
    s_dataCollectorStarted = true;
 }
@@ -1040,8 +1040,8 @@ void ShutdownLocalDataCollector()
    s_dataSenderQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_dataSenderThread);
 
-   DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data reconcillation thread termination"));
-   ThreadJoin(s_reconcillationThread);
+   DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data reconciliation thread termination"));
+   ThreadJoin(s_reconciliationThread);
 
    MutexDestroy(s_itemLock);
    MutexDestroy(s_serverSyncStatusLock);
