@@ -1,8 +1,8 @@
 CREATE TABLE reporting_results (
     id integer NOT NULL,
     executiontime timestamp without time zone,
-    jobid bytea,
-    reportid bytea,
+    jobid char(36),
+    reportid char(36),
     userid integer
 );
 
@@ -12,7 +12,7 @@ ALTER TABLE ONLY reporting_results
 CREATE TABLE report_notification (
     id integer NOT NULL,
     attach_format_code integer,
-    jobid bytea,
+    jobid char(36),
     mail character varying(255),
     report_name character varying(255)
 );
