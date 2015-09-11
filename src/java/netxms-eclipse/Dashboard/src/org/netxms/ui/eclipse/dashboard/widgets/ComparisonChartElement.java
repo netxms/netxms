@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets;
 
+import java.util.Date;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -122,7 +123,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 							for(int i = 0; i < data.length; i++)
 							{
 								DciDataRow lastValue = data[i].getLastValue();
-								chart.updateParameter(i, lastValue, data[i].getDataType(), false);
+								chart.updateParameter(i, (lastValue != null) ? lastValue : new DciDataRow(new Date(), 0.0), data[i].getDataType(), false);
 							}
 							chart.refresh();
 							chart.clearErrors();
