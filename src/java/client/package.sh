@@ -1,19 +1,13 @@
 #!/bin/sh
 
-export MAVEN_OPTS='-Xmx512m -XX:MaxPermSize=128m'
+export MAVEN_OPTS='-Xmx512m'
 
 set -e
 
-cd api-build
+cd netxms-base && mvn clean install && cd ..
+cd netxms-client && mvn clean install && cd ..
 
-mvn -N versions:update-child-modules
-mvn clean
-mvn -Dmaven.test.skip=true -N install
-mvn -Dmaven.test.skip=true install
-
-version=`grep '<version>' pom.xml | cut -f 2 -d \> | cut -f 1 -d \<|head -n1`
-
-cd ..
+version=`grep '<version>' netxms-base/pom.xml | cut -f 2 -d \> | cut -f 1 -d \<|head -n1`
 
 rm -f \
   ../../../android/src/console/libs/netxms-base*.jar \
