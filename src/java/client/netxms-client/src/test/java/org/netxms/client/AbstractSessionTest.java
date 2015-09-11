@@ -19,6 +19,8 @@
 package org.netxms.client;
 
 import junit.framework.TestCase;
+import org.junit.experimental.categories.Category;
+import org.netxms.IntegrationTest;
 import org.netxms.base.Logger;
 import org.netxms.base.LoggingFacility;
 
@@ -29,6 +31,7 @@ import org.netxms.base.LoggingFacility;
  * on local machine, with user admin and no password.
  * Change appropriate constants if needed.
  */
+@Category(IntegrationTest.class)
 public abstract class AbstractSessionTest extends TestCase
 {
     protected static final String serverAddress = "127.0.0.1";
