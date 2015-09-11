@@ -263,6 +263,7 @@ THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
    ConfigReadStrA(_T("XMPPLogin"), login, 64, "netxms@localhost");
    char *_tmpPassword = UTF8StringFromWideString(tmpPassword);
    strncpy(password, _tmpPassword, MAX_PASSWORD);
+   safe_free(_tmpPassword);
 #else
    strncpy(password, tmpPassword, MAX_PASSWORD);
    strncpy(login, tmpPassword, 64);
