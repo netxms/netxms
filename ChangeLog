@@ -12,7 +12,7 @@
 - Added SMS driver for web service text2reach.com
 - Management console:
 	- Object context menu available on geo map
-- Fixed issues: #831, #841, #852, #890, #892, #896, #897, #905, #919
+- Fixed issues: #786, #831, #841, #852, #890, #892, #896, #897, #905, #919
 
 
 *
