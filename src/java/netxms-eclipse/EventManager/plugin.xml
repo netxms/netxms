@@ -49,6 +49,14 @@
             id="org.netxms.ui.eclipse.eventmanager.commands.open_syslog_monitor"
             name="%command.name.SyslogMonitor">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.eventmanager.commands.show_filter"
+            name="Show filter">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.eventmanager.commands.new_event_template"
+            name="New event template">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -96,6 +104,29 @@
      <initializer
            class="org.netxms.ui.eclipse.eventmanager.PreferenceInitializer">
      </initializer>
+  </extension>
+  <extension
+        point="org.eclipse.ui.contexts">
+     <context
+           id="org.netxms.ui.eclipse.eventmanager.contexts.EventConfigurator"
+           name="Event Configurator"
+           parentId="org.eclipse.ui.contexts.window">
+     </context>
+  </extension>
+  <extension
+        point="org.eclipse.ui.bindings">
+     <key
+           commandId="org.netxms.ui.eclipse.eventmanager.commands.show_filter"
+           contextId="org.netxms.ui.eclipse.eventmanager.contexts.EventConfigurator"
+           schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+           sequence="M1+F2">
+     </key>
+     <key
+           commandId="org.netxms.ui.eclipse.eventmanager.commands.new_event_template"
+           contextId="org.netxms.ui.eclipse.eventmanager.contexts.EventConfigurator"
+           schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+           sequence="M1+N">
+     </key>
   </extension>
 
 </plugin>

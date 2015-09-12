@@ -136,7 +136,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	public void createPartControl(Composite parent)
 	{
 		session = (NXCSession)ConsoleSharedData.getSession();
-
+		
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		filterEnabled = settings.getBoolean("EventProcessingPolicyEditor.filterEnabled"); //$NON-NLS-1$
 
@@ -159,7 +159,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		imageCollapse = SharedIcons.COLLAPSE.createImage();
 		imageExpand = SharedIcons.EXPAND.createImage();
 		imageEdit = SharedIcons.EDIT.createImage();
-
+		
 		parent.setLayout(new FormLayout());
 		
       // Create filter area
@@ -199,7 +199,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 				scroller.setMinSize(dataArea.computeSize(r.width, SWT.DEFAULT));
 			}
 		});
-
+		
       // Setup layout
       FormData fd = new FormData();
       fd.left = new FormAttachment(0, 0);
@@ -228,11 +228,10 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
 		createActions();
 		contributeToActionBars();
-      filterControl.setCloseAction(actionShowFilter);
-
-		openEventProcessingPolicy();
-      activateContext();
       
+      openEventProcessingPolicy();      
+      activateContext();
+
       // Set initial focus to filter input line
       if (filterEnabled)
          filterControl.setFocus();
@@ -250,8 +249,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       {
          contextService.activateContext("org.netxms.ui.eclipse.epp.context.PolicyEditor"); //$NON-NLS-1$
       }
-	}
-
+   }
+	
 	/**
 	 * Create actions
 	 */
@@ -385,8 +384,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          @Override
          public void run()
          {
-            enableFilter(!filterEnabled);
-            actionShowFilter.setChecked(filterEnabled);
+            enableFilter(actionShowFilter.isChecked());
          }
       };
       actionShowFilter.setChecked(filterEnabled);
@@ -419,7 +417,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		manager.add(new Separator());
 		manager.add(actionHorizontal);
 		manager.add(actionVertical);
-		manager.add(new Separator());
+      manager.add(new Separator());
       manager.add(actionShowFilter);
 	}
 
@@ -1122,6 +1120,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          filterControl.setText(""); //$NON-NLS-1$
          onFilterModify();
       }
+      actionShowFilter.setChecked(enable);
    }
 
    /**

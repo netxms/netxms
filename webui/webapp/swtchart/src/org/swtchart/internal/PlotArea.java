@@ -34,7 +34,6 @@ import org.swtchart.internal.series.SeriesSet;
  */
 public class PlotArea extends Canvas implements PaintListener, IPlotArea
 {
-
 	/** the chart */
 	protected Chart chart;
 
