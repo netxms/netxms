@@ -3672,98 +3672,9 @@ static BOOL H_UpgradeFromV233(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V232 to V233
-//
-
-static BOOL H_UpgradeFromV232(int currVersion, int newVersion)
-{
-	CHK_EXEC(CreateTable(_T("CREATE TABLE business_services (")
-	                     _T("service_id integer not null,")
-	                     _T("name varchar(63) not null,")
-	                     _T("parent_id integer not null,")
-	                     _T("status integer not null,")
-	                     _T("PRIMARY KEY(service_id))")));
-
-	CHK_EXEC(CreateTable(_T("CREATE TABLE business_service_templates (")
-	                     _T("service_id integer not null,")
-	                     _T("template_id integer not null,")
-	                     _T("PRIMARY KEY(service_id,template_id))")));
-
-	CHK_EXEC(CreateTable(_T("CREATE TABLE slm_checks (")
-	                     _T("check_id integer not null,")
-	                     _T("name varchar(63) not null,")
-	                     _T("type integer not null,")
-								_T("content $SQL:TEXT,")
-	                     _T("threshold_id integer not null,")
-	                     _T("state integer not null,")
-	                     _T("reason varchar(255) not null,")
-	                     _T("PRIMARY KEY(check_id))")));
-
-	CHK_EXEC(CreateTable(_T("CREATE TABLE slm_check_templates (")
-	                     _T("id integer not null,")
-	                     _T("name varchar(63) not null,")
-	                     _T("type integer not null,")
-								_T("content $SQL:TEXT,")
-	                     _T("threshold_id integer not null,")
-	                     _T("PRIMARY KEY(id))")));
-
-	CHK_EXEC(CreateTable(_T("CREATE TABLE node_links (")
-	                     _T("nodelink_id integer not null,")
-	                     _T("node_id integer not null,")
-	                     _T("PRIMARY KEY(nodelink_id))")));
-
-	CHK_EXEC(CreateTable(_T("CREATE TABLE node_link_checks (")
-	                     _T("nodelink_id integer not null,")
-	                     _T("check_id integer not null,")
-	                     _T("PRIMARY KEY(nodelink_id,check_id))")));
-
-	CHK_EXEC(CreateTable(_T("CREATE TABLE slm_agreements (")
-	                     _T("agreement_id integer not null,")
-	                     _T("service_id integer not null,")
-	                     _T("org_id integer not null,")
-	                     _T("uptime varchar(63) not null,")
-	                     _T("period integer not null,")
-	                     _T("start_date integer not null,")
-	                     _T("notes varchar(255),")
-	                     _T("PRIMARY KEY(agreement_id))")));
-
-	CHK_EXEC(CreateTable(_T("CREATE TABLE slm_tickets (")
-	                     _T("ticket_id integer not null,")
-	                     _T("service_id integer not null,")
-	                     _T("create_timestamp integer not null,")
-	                     _T("close_timestamp integer not null,")
-	                     _T("reason varchar(255) not null,")
-	                     _T("PRIMARY KEY(ticket_id))")));
-
-	CHK_EXEC(CreateTable(_T("CREATE TABLE organizations (")
-	                     _T("id integer not null,")
-	                     _T("parent_id integer not null,")
-	                     _T("org_type integer not null,")
-	                     _T("name varchar(63) not null,")
-	                     _T("description varchar(255),")
-	                     _T("manager integer not null,")
-	                     _T("PRIMARY KEY(id))")));
-
-	CHK_EXEC(CreateTable(_T("CREATE TABLE persons (")
-	                     _T("id integer not null,")
-	                     _T("org_id integer not null,")
-	                     _T("first_name varchar(63),")
-	                     _T("last_name varchar(63),")
-	                     _T("title varchar(255),")
-	                     _T("status integer not null,")
-	                     _T("PRIMARY KEY(id))")));
-
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='233' WHERE var_name='SchemaVersion'")));
-   return TRUE;
-}
-
-
-//
-// Upgrade from V231 to V232
-//
-
+/**
+ * Upgrade from V231 to V232
+ */
 static BOOL H_UpgradeFromV231(int currVersion, int newVersion)
 {
 	static TCHAR batch[] =
@@ -3782,11 +3693,9 @@ static BOOL H_UpgradeFromV231(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V230 to V231
-//
-
+/**
+ * Upgrade from V230 to V231
+ */
 static BOOL H_UpgradeFromV230(int currVersion, int newVersion)
 {
 	static TCHAR batch[] =

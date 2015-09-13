@@ -44,6 +44,7 @@ DCItem::DCItem() : DCObject()
 	m_sampleCount = 0;
    m_instance[0] = 0;
    m_cacheSize = 0;
+   m_requiredCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
@@ -67,6 +68,7 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
 	m_sampleCount = pSrc->m_sampleCount;
 	_tcscpy(m_instance, pSrc->m_instance);
    m_cacheSize = 0;
+   m_requiredCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
@@ -126,6 +128,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
    m_thresholds = NULL;
    m_pNode = pNode;
    m_cacheSize = 0;
+   m_requiredCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
@@ -182,6 +185,7 @@ DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
 	m_sampleCount = 0;
    m_thresholds = NULL;
    m_cacheSize = 0;
+   m_requiredCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
@@ -207,6 +211,7 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
    m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
    m_cacheSize = 0;
+   m_requiredCacheSize = 0;
    m_ppValueCache = NULL;
    m_tPrevValueTimeStamp = 0;
    m_bCacheLoaded = false;
