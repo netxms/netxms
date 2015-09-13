@@ -330,6 +330,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionNew);
+      manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -384,6 +385,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
             enableFilter(actionShowFilter.isChecked());
          }
       };
+      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
       actionShowFilter.setChecked(filterEnabled);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.eventmanager.commands.show_filter"); //$NON-NLS-1$
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
