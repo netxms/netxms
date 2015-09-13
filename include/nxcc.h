@@ -30,7 +30,7 @@ enum ClusterNodeState
 /**
  * Cluster node event handler
  */
-class ClusterEventHandler
+class LIBNXCC_EXPORTABLE ClusterEventHandler
 {
 public:
    ClusterEventHandler();
