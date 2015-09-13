@@ -269,7 +269,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 	}
 
    // Match IP address to object
-   pNode = FindNodeByIP(0, srcAddr);
+   pNode = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, srcAddr);
 
    // Write trap to log if required
    if (m_bLogAllTraps || (pNode != NULL))
@@ -447,7 +447,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addrLen)
 {
    InetAddress ipAddr = InetAddress::createFromSockaddr(addr);
-	Node *node = FindNodeByIP(0, ipAddr);
+	Node *node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, ipAddr);
 	TCHAR buffer[64];
 	DbgPrintf(6, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
       ipAddr.toString(buffer), (node != NULL) ? node->getName() : _T("<unknown>"));

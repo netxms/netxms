@@ -195,9 +195,9 @@ ObjectArray<NetObj> *ObjectIndex::getObjects(bool updateRefCount, bool (*filter)
 }
 
 /**
- * Find object by compating it with given data using external comparator
+ * Find object by comparing it with given data using external comparator
  *
- * @param comparator comparing finction (must return true for object to be found)
+ * @param comparator comparing function (must return true for object to be found)
  * @param data user data passed to comparator
  */
 NetObj *ObjectIndex::find(bool (*comparator)(NetObj *, void *), void *data)

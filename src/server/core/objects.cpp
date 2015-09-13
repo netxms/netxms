@@ -651,6 +651,69 @@ MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId
 	return (MobileDevice *)g_idxMobileDeviceById.find(DeviceIdComparator, (void *)deviceId);
 }
 
+static Node *FindNodeByIPInternal(UINT32 zoneId, const InetAddress& ipAddr)
+{
+   Zone *zone = IsZoningEnabled() ? (Zone *)g_idxZoneByGUID.get(zoneId) : NULL;
+
+   Node *node = NULL;
+   if (IsZoningEnabled())
+   {
+      if (zone != NULL)
+      {
+         node = zone->getNodeByAddr(ipAddr);
+      }
+   }
+   else
+   {
+      node = (Node *)g_idxNodeByAddr.get(ipAddr);
+   }
+   if (node != NULL)
+      return node;
+
+   Interface *iface = NULL;
+   if (IsZoningEnabled())
+   {
+      if (zone != NULL)
+      {
+         iface = zone->getInterfaceByAddr(ipAddr);
+      }
+   }
+   else
+   {
+      iface = (Interface *)g_idxInterfaceByAddr.get(ipAddr);
+   }
+   return (iface != NULL) ? iface->getParentNode() : NULL;
+}
+
+/**
+ * Data for node find callback
+ */
+struct NodeFindCBData
+{
+   const InetAddress *addr;
+   Node *node;
+};
+
+/**
+ * Callback for finding node in all zones
+ */
+static bool NodeFindCB(NetObj *zone, void *data)
+{
+   Node *node = ((Zone *)zone)->getNodeByAddr(*((NodeFindCBData *)data)->addr);
+   if (node == NULL)
+   {
+      Interface *iface = ((Zone *)zone)->getInterfaceByAddr(*((NodeFindCBData *)data)->addr);
+      if (iface != NULL)
+         node = iface->getParentNode();
+   }
+
+   if (node == NULL)
+      return false;
+
+   ((NodeFindCBData *)data)->node = node;
+   return true;
+}
+
 /**
  * Find node by IP address
  */
@@ -659,36 +722,18 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddress& ipAddr)
    if (!ipAddr.isValidUnicast())
       return NULL;
 
-	Zone *zone = IsZoningEnabled() ? (Zone *)g_idxZoneByGUID.get(zoneId) : NULL;
-
-	Node *node = NULL;
-	if (IsZoningEnabled())
-	{
-		if (zone != NULL)
-		{
-			node = zone->getNodeByAddr(ipAddr);
-		}
-	}
-	else
-	{
-		node = (Node *)g_idxNodeByAddr.get(ipAddr);
-	}
-	if (node != NULL)
-		return node;
-
-	Interface *iface = NULL;
-	if (IsZoningEnabled())
-	{
-		if (zone != NULL)
-		{
-			iface = zone->getInterfaceByAddr(ipAddr);
-		}
-	}
-	else
-	{
-		iface = (Interface *)g_idxInterfaceByAddr.get(ipAddr);
-	}
-	return (iface != NULL) ? iface->getParentNode() : NULL;
+   if ((zoneId == ALL_ZONES) && IsZoningEnabled())
+   {
+      NodeFindCBData data;
+      data.addr = &ipAddr;
+      data.node = NULL;
+      g_idxZoneByGUID.find(NodeFindCB, &data);
+      return data.node;
+   }
+   else
+   {
+      return FindNodeByIPInternal(zoneId, ipAddr);
+   }
 }
 
 /**

@@ -313,6 +313,8 @@ static void LoadGlobalConfig()
       g_flags |= AF_RESOLVE_IP_FOR_EACH_STATUS_POLL;
    if (ConfigReadInt(_T("CaseInsensitiveLoginNames"), 0))
       g_flags |= AF_CASE_INSENSITIVE_LOGINS;
+   if (ConfigReadInt(_T("TrapSourcesInAllZones"), 0))
+      g_flags |= AF_TRAP_SOURCES_IN_ALL_ZONES;
 
    if (g_netxmsdDataDir[0] == 0)
    {
@@ -1427,6 +1429,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_RESOLVE_IP_FOR_EACH_STATUS_POLL));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_PERFDATA_STORAGE_DRIVER_LOADED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_BACKGROUND_LOG_WRITER));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CASE_INSENSITIVE_LOGINS));
+         ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_TRAP_SOURCES_IN_ALL_ZONES));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SERVER_INITIALIZED));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_SHUTDOWN));
 			ConsolePrintf(pCtx, _T("\n"));

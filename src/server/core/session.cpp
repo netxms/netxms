@@ -4766,7 +4766,7 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 								   NetObjInsert(object, TRUE);
 								   break;
 							   case OBJECT_ZONE:
-								   if ((zoneId > 0) && (g_idxZoneByGUID.get(zoneId) == NULL))
+								   if ((zoneId > 0) && (zoneId != ALL_ZONES) && (g_idxZoneByGUID.get(zoneId) == NULL))
 								   {
 									   object = new Zone(zoneId, szObjectName);
 									   NetObjInsert(object, TRUE);

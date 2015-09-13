@@ -83,6 +83,11 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
 #define BUILTIN_OID_BUSINESSSERVICEROOT   9
 
 /**
+ * "All zones" pseudo-ID
+ */
+#define ALL_ZONES ((UINT32)0xFFFFFFFF)
+
+/**
  * Node runtime (dynamic) flags
  */
 #define NDF_QUEUED_FOR_STATUS_POLL     0x000001

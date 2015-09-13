@@ -244,7 +244,7 @@ static Node *FindNodeByHostname(const char *hostName)
    UINT32 ipAddr = ntohl(ResolveHostNameA(hostName));
 	if ((ipAddr != INADDR_NONE) && (ipAddr != INADDR_ANY))
    {
-      node = FindNodeByIP(0, ipAddr);
+      node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, ipAddr);
    }
 
    if (node == NULL)
@@ -271,7 +271,7 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
 
    if (s_nodeMatchingPolicy == SOURCE_IP_THEN_HOSTNAME)
    {
-      node = FindNodeByIP(0, dwSourceIP);
+      node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, dwSourceIP);
       if (node == NULL)
       {
          node = FindNodeByHostname(pRec->szHostName);
@@ -282,7 +282,7 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
       node = FindNodeByHostname(pRec->szHostName);
       if (node == NULL)
       {
-         node = FindNodeByIP(0, dwSourceIP);
+         node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, dwSourceIP);
       }
    }
 

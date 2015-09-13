@@ -11,10 +11,11 @@
 - Add option to use encrypted password in password fileds in configuration files and in the server configuration parameters.
 - Added SMS driver for web service text2reach.com
 - SNMP sysContact and sysLocation collected and stored
+- Server can accept traps and syslog messages from nodes in all zones (controlled by TrapSourcesInAllZones configuration option)
 - Management console:
 	- Object context menu available on geo map
 	- Filter in event template configurator
-- Fixed issues: #786, #831, #841, #852, #890, #892, #896, #897, #902, #905, #913, #919
+- Fixed issues: #786, #831, #841, #852, #890, #892, #896, #897, #902, #905, #913, #919, #921
 
 
 *
