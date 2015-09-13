@@ -154,6 +154,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('TileServerURL','http://tile.openstreetmap.org/',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('TopologyDiscoveryRadius','3',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('TopologyExpirationTime','900',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('TrapSourcesInAllZones','0',1,1,'B','Search all zones to match trap/syslog source address to node');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('UseDNSNameForDiscoveredNodes','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('UseFQDNForNodeNames','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('UseIfXTable','1',1,0);

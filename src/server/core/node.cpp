@@ -64,6 +64,8 @@ Node::Node() : DataCollectionTarget()
    m_szPlatformName[0] = 0;
 	m_sysDescription = NULL;
 	m_sysName = NULL;
+	m_sysContact = NULL;
+	m_sysLocation = NULL;
 	m_lldpNodeId = NULL;
 	m_lldpLocalPortInfo = NULL;
    m_paramList = NULL;
@@ -143,6 +145,8 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_szPlatformName[0] = 0;
 	m_sysDescription = NULL;
 	m_sysName = NULL;
+   m_sysContact = NULL;
+   m_sysLocation = NULL;
 	m_lldpNodeId = NULL;
 	m_lldpLocalPortInfo = NULL;
    m_paramList = NULL;
@@ -213,6 +217,8 @@ Node::~Node()
 	delete m_softwarePackages;
 	delete m_winPerfObjects;
 	safe_free(m_sysName);
+	safe_free(m_sysContact);
+	safe_free(m_sysLocation);
 }
 
 /**
@@ -242,7 +248,7 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
 		_T("use_ifxtable,snmp_port,community,usm_auth_password,")
 		_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
       _T("runtime_flags,down_since,boot_time,driver_name,icmp_proxy,")
-      _T("agent_cache_mode FROM nodes WHERE id=?"));
+      _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
 		return FALSE;
 
@@ -316,6 +322,9 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
    m_agentCacheMode = (INT16)DBGetFieldLong(hResult, 0, 30);
    if ((m_agentCacheMode != AGENT_CACHE_ON) && (m_agentCacheMode != AGENT_CACHE_OFF))
       m_agentCacheMode = AGENT_CACHE_DEFAULT;
+
+   m_sysContact = DBGetField(hResult, 0, 31, NULL, 0);
+   m_sysLocation = DBGetField(hResult, 0, 32, NULL, 0);
 
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
@@ -406,7 +415,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 			_T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,icmp_proxy=?,required_polls=?,")
 			_T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
 			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_id=?,boot_time=?,")
-         _T("agent_cache_mode=? WHERE id=?"));
+         _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=? WHERE id=?"));
 	}
    else
 	{
@@ -415,8 +424,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 		  _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
 		  _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
 		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_id,boot_time,")
-        _T("agent_cache_mode,id) ")
-		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+        _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,id) ")
+		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -469,7 +478,9 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, (LONG)0);	// rack ID
 	DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);	// rack ID
    DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC);
-	DBBind(hStmt, 35, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC);
+   DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC);
+	DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1839,6 +1850,8 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
       m_szAgentVersion[0] = 0;
 		safe_free_and_null(m_sysDescription);
 		safe_free_and_null(m_sysName);
+      safe_free_and_null(m_sysContact);
+      safe_free_and_null(m_sysLocation);
 		safe_free_and_null(m_lldpNodeId);
    }
 
@@ -2292,20 +2305,13 @@ bool Node::confPollSnmp(UINT32 dwRqId)
    // Allow driver to gather additional info
    m_driver->analyzeDevice(pTransport, m_szObjectId, &m_customAttributes, &m_driverData);
 
-   // Get sysName
-   if (SnmpGet(m_snmpVersion, pTransport,
-               _T(".1.3.6.1.2.1.1.5.0"), NULL, 0, szBuffer, sizeof(szBuffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
-   {
-      lockProperties();
-      if ((m_sysName == NULL) || _tcscmp(m_sysName, szBuffer))
-      {
-         safe_free(m_sysName);
-         m_sysName = _tcsdup(szBuffer);
-         hasChanges = true;
-         sendPollerMsg(dwRqId, _T("   System name changed to %s\r\n"), m_sysName);
-      }
-      unlockProperties();
-   }
+   // Get sysName, sysContact, sysLocation
+   if (querySnmpSysProperty(pTransport, _T(".1.3.6.1.2.1.1.5.0"), _T("name"), dwRqId, &m_sysName))
+      hasChanges = true;
+   if (querySnmpSysProperty(pTransport, _T(".1.3.6.1.2.1.1.4.0"), _T("contact"), dwRqId, &m_sysContact))
+      hasChanges = true;
+   if (querySnmpSysProperty(pTransport, _T(".1.3.6.1.2.1.1.6.0"), _T("location"), dwRqId, &m_sysLocation))
+      hasChanges = true;
 
    // Check IP forwarding
    if (checkSNMPIntegerValue(pTransport, _T(".1.3.6.1.2.1.4.1.0"), 1))
@@ -2565,6 +2571,29 @@ bool Node::confPollSnmp(UINT32 dwRqId)
    }
 	delete pTransport;
 	return hasChanges;
+}
+
+/**
+ * Query SNMP sys property (sysName, sysLocation, etc.)
+ */
+bool Node::querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value)
+{
+   TCHAR buffer[256];
+   bool hasChanges = false;
+
+   if (SnmpGet(m_snmpVersion, snmp, oid, NULL, 0, buffer, sizeof(buffer), SG_STRING_RESULT) == SNMP_ERR_SUCCESS)
+   {
+      lockProperties();
+      if ((*value == NULL) || _tcscmp(*value, buffer))
+      {
+         safe_free(*value);
+         *value = _tcsdup(buffer);
+         hasChanges = true;
+         sendPollerMsg(pollRqId, _T("   System %s changed to %s\r\n"), propName, *value);
+      }
+      unlockProperties();
+   }
+   return hasChanges;
 }
 
 /**
@@ -4236,6 +4265,8 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
 	pMsg->setField(VID_REQUIRED_POLLS, (WORD)m_iRequiredPollCount);
 	pMsg->setField(VID_SYS_NAME, CHECK_NULL_EX(m_sysName));
 	pMsg->setField(VID_SYS_DESCRIPTION, CHECK_NULL_EX(m_sysDescription));
+   pMsg->setField(VID_SYS_CONTACT, CHECK_NULL_EX(m_sysContact));
+   pMsg->setField(VID_SYS_LOCATION, CHECK_NULL_EX(m_sysLocation));
    pMsg->setField(VID_BOOT_TIME, (UINT32)m_bootTime);
 	pMsg->setField(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress, 6);
 	if (m_lldpNodeId != NULL)

@@ -81,7 +81,7 @@ public class GeneralInfo extends TableElement
                addPair("MTU", Integer.toString(iface.getMtu()));
             if (iface.getSpeed() > 0)
                addPair("Speed", InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
-				addPair(Messages.get().GeneralInfo_MACAddr, iface.getMacAddress().toString());
+            addPair(Messages.get().GeneralInfo_MACAddr, iface.getMacAddress().toString());
 				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
 				{
 					addPair(Messages.get().GeneralInfo_SlotPort, Integer.toString(iface.getSlot()) + "/" + Integer.toString(iface.getPort())); //$NON-NLS-1$
@@ -115,6 +115,8 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_PlatformName, node.getPlatformName(), false);
 				addPair(Messages.get().GeneralInfo_SysName, node.getSnmpSysName(), false);
 				addPair(Messages.get().GeneralInfo_SysOID, node.getSnmpOID(), false);
+            addPair("SNMP sysLocation", node.getSnmpSysLocation(), false);
+            addPair("SNMP sysContact", node.getSnmpSysContact(), false);
 				if ((node.getFlags() & AbstractNode.NF_IS_BRIDGE) != 0)
 					addPair(Messages.get().GeneralInfo_BridgeBaseAddress, node.getBridgeBaseAddress().toString());
 				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);

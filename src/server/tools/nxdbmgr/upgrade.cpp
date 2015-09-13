@@ -574,11 +574,25 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V366 to V367
+ */
+static BOOL H_UpgradeFromV366(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("TrapSourcesInAllZones"), _T("0"), _T("Search all zones to match trap/syslog source address to node"), 'B', false, false, false, false));
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD snmp_sys_contact varchar(127)")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD snmp_sys_location varchar(127)")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='367' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V365 to V366
  */
 static BOOL H_UpgradeFromV365(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("ServerCommandOutputTimeout"), _T("60"), 0, 0));
+   CHK_EXEC(CreateConfigParam(_T("ServerCommandOutputTimeout"), _T("60"), false, false));
 
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='366' WHERE var_name='SchemaVersion'")));
    return TRUE;
@@ -8857,6 +8871,7 @@ static struct
    { 363, 364, H_UpgradeFromV363 },
    { 364, 365, H_UpgradeFromV364 },
    { 365, 366, H_UpgradeFromV365 },
+   { 366, 367, H_UpgradeFromV366 },
    { 0, 0, NULL }
 };
 

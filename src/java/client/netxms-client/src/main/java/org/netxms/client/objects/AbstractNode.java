@@ -112,6 +112,8 @@ public abstract class AbstractNode extends DataCollectionTarget
 	protected int snmpVersion;
 	protected int snmpPort;
 	protected String snmpSysName;
+   protected String snmpSysContact;
+   protected String snmpSysLocation;
 	protected String systemDescription;
 	protected String lldpNodeId;
 	protected int vrrpVersion;
@@ -170,6 +172,8 @@ public abstract class AbstractNode extends DataCollectionTarget
 		snmpVersion = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_VERSION);
 		systemDescription = msg.getFieldAsString(NXCPCodes.VID_SYS_DESCRIPTION);
 		snmpSysName = msg.getFieldAsString(NXCPCodes.VID_SYS_NAME);
+      snmpSysContact = msg.getFieldAsString(NXCPCodes.VID_SYS_CONTACT);
+      snmpSysLocation = msg.getFieldAsString(NXCPCodes.VID_SYS_LOCATION);
 		lldpNodeId = msg.getFieldAsString(NXCPCodes.VID_LLDP_NODE_ID);
 		vrrpVersion = msg.getFieldAsInt32(NXCPCodes.VID_VRRP_VERSION);
 		driverName = msg.getFieldAsString(NXCPCodes.VID_DRIVER_NAME);
@@ -467,6 +471,8 @@ public abstract class AbstractNode extends DataCollectionTarget
 	}
 
 	/**
+    * Get SNMP system name (value of sysName MIB entry)
+    * 
 	 * @return the snmpSysName
 	 */
 	public String getSnmpSysName()
@@ -475,6 +481,26 @@ public abstract class AbstractNode extends DataCollectionTarget
 	}
 
 	/**
+    * Get SNMP system contact (value of sysContact MIB entry)
+    * 
+	 * @return
+	 */
+	public String getSnmpSysContact()
+   {
+      return snmpSysContact;
+   }
+
+   /**
+    * Get SNMP system location (value of sysLocation MIB entry)
+    * 
+    * @return
+    */
+   public String getSnmpSysLocation()
+   {
+      return snmpSysLocation;
+   }
+
+   /**
 	 * @return the lldpNodeId
 	 */
 	public String getLldpNodeId()

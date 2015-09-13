@@ -865,6 +865,8 @@ public class NXCPCodes
    public static final long VID_SPEED = 512;
    public static final long VID_IFTABLE_SUFFIX = 513;
    public static final long VID_SERVERCMD_TIMEOUT = 514;
+   public static final long VID_SYS_CONTACT = 515;
+   public static final long VID_SYS_LOCATION = 516;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

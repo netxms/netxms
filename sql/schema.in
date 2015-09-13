@@ -281,6 +281,8 @@ CREATE TABLE nodes
 	uname varchar(255) null,
 	use_ifxtable integer not null,
 	snmp_sys_name varchar(127) null,
+	snmp_sys_contact varchar(127) null,
+	snmp_sys_location varchar(127) null,
 	bridge_base_addr varchar(15) null,
 	down_since integer not null,
    boot_time integer not null,

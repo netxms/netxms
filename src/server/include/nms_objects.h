@@ -1146,6 +1146,8 @@ protected:
    TCHAR m_szPlatformName[MAX_PLATFORM_NAME_LEN];
 	TCHAR *m_sysDescription;  // Agent's System.Uname or SNMP sysDescr
 	TCHAR *m_sysName;				// SNMP sysName
+	TCHAR *m_sysLocation;      // SNMP sysLocation
+	TCHAR *m_sysContact;       // SNMP sysContact
 	TCHAR *m_lldpNodeId;			// lldpLocChassisId combined with lldpLocChassisIdSubtype, or NULL for non-LLDP nodes
 	ObjectArray<LLDP_LOCAL_PORT_INFO> *m_lldpLocalPortInfo;
 	NetworkDeviceDriver *m_driver;
@@ -1222,6 +1224,7 @@ protected:
 	void updatePrimaryIpAddr();
 	bool confPollAgent(UINT32 dwRqId);
 	bool confPollSnmp(UINT32 dwRqId);
+	bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value);
 	void checkBridgeMib(SNMP_Transport *pTransport);
 	void checkIfXTable(SNMP_Transport *pTransport);
 	void executeHookScript(const TCHAR *hookName);
@@ -1295,6 +1298,8 @@ public:
    const TCHAR *getObjectId() { return m_szObjectId; }
 	const TCHAR *getSysName() { return CHECK_NULL_EX(m_sysName); }
 	const TCHAR *getSysDescription() { return CHECK_NULL_EX(m_sysDescription); }
+   const TCHAR *getSysContact() { return CHECK_NULL_EX(m_sysContact); }
+   const TCHAR *getSysLocation() { return CHECK_NULL_EX(m_sysLocation); }
    time_t getBootTime() { return m_bootTime; }
 	const TCHAR *getLLDPNodeId() { return m_lldpNodeId; }
    const BYTE *getBridgeId() { return m_baseBridgeAddress; }
