@@ -603,7 +603,7 @@ static BOOL H_UpgradeFromV365(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV364(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("SNMPPorts"), _T("161"), true, false));
+   CHK_EXEC(CreateConfigParam(_T("SNMPPorts"), _T("161"), false, false));
 
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='365' WHERE var_name='SchemaVersion'")));
    return TRUE;
