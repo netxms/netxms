@@ -553,8 +553,11 @@ void DCItem::deleteFromDatabase()
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM items WHERE item_id=%d"), m_id);
    QueueSQLRequest(szQuery);
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM idata_%d WHERE item_id=%d"), m_pNode->getId(), m_id);
-   QueueSQLRequest(szQuery);
+   if(m_pNode->getObjectClass() != OBJECT_TEMPLATE)
+   {
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM idata_%d WHERE item_id=%d"), m_pNode->getId(), m_id);
+      QueueSQLRequest(szQuery);
+   }
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM thresholds WHERE item_id=%d"), m_id);
    QueueSQLRequest(szQuery);
 }
