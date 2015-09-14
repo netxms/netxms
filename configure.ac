@@ -515,7 +515,7 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server agent libnxmap client nxscript nxcproxy nxlptest tools"
+	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server agent libnxmap client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
 	SMSDRV_DIRS="kannel text2reach websms"
    HDLINK_DIRS="jira"
@@ -575,7 +575,7 @@ if test $? = 0; then
 	fi
 	STATIC_BUILD="yes"
 	BUILD_STATIC_AGENT="yes"
-	MODULES="$MODULES libnxlp db agent"
+	MODULES="$MODULES appagent libnxlp db agent"
 	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
 	if test "x$PROPOSED_STATIC_SUBAGENTS" = "xdefault"; then
@@ -666,7 +666,7 @@ if test $? = 0; then
 	BUILD_STATIC_AGENT="yes"
 	DISABLE_ICONV="yes"
 	USE_PTH="yes"
-	MODULES="$MODULES libnxlp db agent"
+	MODULES="$MODULES appagent libnxlp db agent"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -DSQLITE_THREADSAFE=0 -I/usr/local/include"
 	LDFLAGS="$LDFLAGS -all-static"
 	STATIC_SUBAGENT_LIST="ecs ipso logwatch ping portcheck ups"
@@ -677,7 +677,7 @@ fi
 check_substr "$COMPONENTS" "agent"
 if test $? = 0; then
 	BUILD_AGENT="yes"
-	MODULES="$MODULES libnxlp db agent"
+	MODULES="$MODULES appagent libnxlp db agent"
 
 	case "$PLATFORM" in
 		Linux)
@@ -799,7 +799,7 @@ fi
 
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
-	MODULES="$MODULES libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript"
+	MODULES="$MODULES appagent libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript"
 fi
 
 
@@ -2859,7 +2859,6 @@ AC_CONFIG_FILES([
 	m4/Makefile
 	src/Makefile
 	src/agent/Makefile
-	src/agent/appagent/Makefile
 	src/agent/core/Makefile
 	src/agent/install/Makefile
 	src/agent/libnxagent/Makefile
@@ -2918,6 +2917,7 @@ AC_CONFIG_FILES([
 	src/agent/tools/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile
+	src/appagent/Makefile
 	src/client/Makefile
 	src/client/install/Makefile
 	src/client/libnxclient/Makefile
