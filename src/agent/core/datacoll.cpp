@@ -472,14 +472,19 @@ static HashMap<UINT64, ServerSyncStatus> s_serverSyncStatus(true);
 static MUTEX s_serverSyncStatusLock = INVALID_MUTEX_HANDLE;
 
 /**
- * Callback to check if reconcillation is needed for session
+ * Callback to check if reconciliation is needed for session
  */
-static EnumerationCallbackResult ReconcillationQueryCallback(AbstractCommSession *session, void *arg)
+static EnumerationCallbackResult ReconciliationQueryCallback(AbstractCommSession *session, void *arg)
 {
    if (session->getServerId() == 0)
       return _CONTINUE;
    ServerSyncStatus *s = s_serverSyncStatus.get(session->getServerId());
-   return ((s != NULL) && (s->queueSize > 0)) ? _STOP : _CONTINUE;
+   if ((s != NULL) && (s->queueSize > 0))
+   {
+      *((UINT64 *)arg) = session->getServerId();
+      return _STOP;
+   }
+   return _CONTINUE;
 }
 
 /**
@@ -494,9 +499,11 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
    bool vacuumNeeded = false;
    while(!AgentSleepAndCheckForShutdown(sleepTime))
    {
+      UINT64 serverId = 0;
+
       // Check if there is something to sync
       MutexLock(s_serverSyncStatusLock);
-      bool run = EnumerateSessions(ReconcillationQueryCallback, NULL);
+      bool run = EnumerateSessions(ReconciliationQueryCallback, &serverId);
       MutexUnlock(s_serverSyncStatusLock);
       if (!run)
       {
@@ -510,7 +517,10 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
          continue;
       }
 
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue ORDER BY timestamp LIMIT 100"));
+      TCHAR query[1024];
+      _sntprintf(query, 1024, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue WHERE server_id=") UINT64_FMT _T(" ORDER BY timestamp LIMIT 100"), serverId);
+
+      DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult == NULL)
       {
          sleepTime = 30000;
@@ -550,8 +560,6 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
 
          if (deleteList.size() > 0)
          {
-            TCHAR query[256];
-
             DBBegin(hdb);
             for(int i = 0; i < deleteList.size(); i++)
             {
@@ -797,7 +805,7 @@ static UINT32 DataCollectionSchedulerRun()
 static THREAD_RESULT THREAD_CALL DataCollectionScheduler(void *arg)
 {
    DebugPrintf(INVALID_INDEX, 1, _T("Data collection scheduler thread started"));
-   s_dataCollectorPool = ThreadPoolCreate(1, 32, _T("DATACOLL"));
+   s_dataCollectorPool = ThreadPoolCreate(1, 64, _T("DATACOLL"));
 
    UINT32 sleepTime = DataCollectionSchedulerRun();
    while(!AgentSleepAndCheckForShutdown(sleepTime * 1000))
