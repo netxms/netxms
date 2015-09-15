@@ -3302,6 +3302,12 @@ void Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
 			// found, remove value from instances
 			DbgPrintf(5, _T("Node::updateInstances(%s [%u], %s [%u]): instance \"%s\" found"),
 			          m_name, m_id, root->getName(), root->getId(), dciInstance);
+			const TCHAR* name = instances->get(dciInstance);
+			if(_tcscmp(name, ((DCItem *)object)->getInstance()))
+			{
+            ((DCItem *)object)->setInstance(name);
+            ((DCItem *)object)->expandInstance();
+         }
 			instances->remove(dciInstance);
 		}
 		else
