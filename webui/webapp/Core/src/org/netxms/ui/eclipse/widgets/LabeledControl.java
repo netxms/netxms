@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.widgets;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -137,6 +139,20 @@ public abstract class LabeledControl extends Composite
 			gd.verticalAlignment = SWT.TOP;
 		}
 		control.setLayoutData(gd);
+		
+		// Fix for RAP focus problem
+		addFocusListener(new FocusListener() {
+         @Override
+         public void focusLost(FocusEvent event)
+         {
+         }
+         
+         @Override
+         public void focusGained(FocusEvent event)
+         {
+            control.setFocus();
+         }
+      });
 	}
 	
 	/**
@@ -211,5 +227,14 @@ public abstract class LabeledControl extends Composite
    {
       super.setBackground(color);
       label.setBackground(color);
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.widgets.Widget#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return getClass().getName() + " [label=" + label.getText() + ", control=" + control + "]";
    }
 }

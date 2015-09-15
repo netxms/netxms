@@ -128,8 +128,6 @@ public class DefaultLoginForm extends Window implements LoginForm
 		content.setLayoutData(gd);
 		content.setBackground(parent.getBackground());
 		content.addPaintListener(new PaintListener() {
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void paintControl(PaintEvent event)
 			{

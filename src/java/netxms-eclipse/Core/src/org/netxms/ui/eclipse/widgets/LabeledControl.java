@@ -212,4 +212,13 @@ public abstract class LabeledControl extends Composite
       super.setBackground(color);
       label.setBackground(color);
    }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.widgets.Widget#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return getClass().getName() + " [label=" + label.getText() + ", control=" + control + "]";
+   }
 }
