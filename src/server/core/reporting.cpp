@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Raden Solutions
+** Copyright (C) 2003-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ protected:
    virtual bool onMessage(NXCPMessage *msg);
 
 public:
-   RSConnector(UINT32 addr, WORD port) : ISC(addr, port)
+   RSConnector(const InetAddress& addr, WORD port) : ISC(addr, port)
    {
    }
 
