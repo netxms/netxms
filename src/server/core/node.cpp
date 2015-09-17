@@ -7123,3 +7123,8 @@ void Node::onDataCollectionChange()
       }
    }
 }
+
+void Node::forceSyncDataCollectionConfid(Node *node)
+{
+   ThreadPoolExecute(g_mainThreadPool, Node::onDataCollectionChangeAsyncCallback, node);
+}

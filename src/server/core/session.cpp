@@ -13906,17 +13906,7 @@ void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
             Node *node = (Node *)object;
-            node->incRefCount();
-            AgentConnectionEx *conn = node->createAgentConnection();
-            if(conn != NULL)
-            {
-               node->syncDataCollectionWithAgent(conn);
-            }
-            else
-            {
-               msg.setField(VID_RCC, RCC_CONNECTION_BROKEN);
-            }
-            node->decRefCount();
+            node->forceSyncDataCollectionConfid(node);
 			}
 			else
 			{

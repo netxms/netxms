@@ -1126,7 +1126,7 @@ class NXCORE_EXPORTABLE Node : public DataCollectionTarget
 private:
    void onSnmpProxyChange(UINT32 oldProxy);
 
-   static void onDataCollectionChangeAsyncCallback(void *);
+   static void onDataCollectionChangeAsyncCallback(void *arg);
 
 protected:
    InetAddress m_ipAddress;
@@ -1240,6 +1240,7 @@ protected:
 	void doInstanceDiscovery(UINT32 requestId);
 	StringMap *getInstanceList(DCItem *dci);
 	void updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
+   void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
    void collectProxyInfo(ProxyInfo *info);
    static void collectProxyInfoCallback(NetObj *node, void *data);
@@ -1328,8 +1329,8 @@ public:
    void changeIPAddress(const InetAddress& ipAddr);
 	void changeZone(UINT32 newZone);
 	void setFileUpdateConn(AgentConnection *conn);
-   void syncDataCollectionWithAgent(AgentConnectionEx *conn);
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
+   void forceSyncDataCollectionConfid(Node *node);
 
    ARP_CACHE *getArpCache();
    InterfaceList *getInterfaceList();
