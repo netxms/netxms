@@ -770,14 +770,18 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 		{
 			UINT32 e1 = elementIdFromObjectId(objects->getLinks()->get(i)->id1);
 			UINT32 e2 = elementIdFromObjectId(objects->getLinks()->get(i)->id2);
-         NetworkMapLink *l = new NetworkMapLink(e1, e2, objects->getLinks()->get(i)->type);
-			l->setConnector1Name(objects->getLinks()->get(i)->port1);
-			l->setConnector2Name(objects->getLinks()->get(i)->port2);
-			l->setConfig(objects->getLinks()->get(i)->config);
-			l->setFlags(1);
-			m_links->add(l);
-			modified = true;
-			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d added"), m_name, l->getElement1(), l->getElement2());
+			// Element ID can be 0 if link points to object removed by filter
+			if ((e1 != 0) && (e2 != 0))
+			{
+            NetworkMapLink *l = new NetworkMapLink(e1, e2, objects->getLinks()->get(i)->type);
+            l->setConnector1Name(objects->getLinks()->get(i)->port1);
+            l->setConnector2Name(objects->getLinks()->get(i)->port2);
+            l->setConfig(objects->getLinks()->get(i)->config);
+            l->setFlags(1);
+            m_links->add(l);
+            modified = true;
+            DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d added"), m_name, l->getElement1(), l->getElement2());
+			}
 		}
 	}
 
