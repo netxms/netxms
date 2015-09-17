@@ -13910,7 +13910,7 @@ void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
             AgentConnectionEx *conn = node->createAgentConnection();
             if(conn != NULL)
             {
-               node->clearDataCollectionConfigFromAgent(conn);
+               node->syncDataCollectionWithAgent(conn);
             }
             else
             {
