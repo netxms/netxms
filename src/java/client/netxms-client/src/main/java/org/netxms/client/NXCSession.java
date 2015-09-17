@@ -5305,7 +5305,7 @@ public class NXCSession
     */
    public void clearOflineDciConfiguration(final long nodeId) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_SERVER_LOG);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAN_AGENT_DCI_CONF);
       msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int) nodeId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -5322,7 +5322,7 @@ public class NXCSession
     */
    public void resyncOflineDciConfiguration(final long nodeId) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_SERVER_LOG);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_RESYNC_AGENT_DCI_CONF);
       msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int) nodeId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
