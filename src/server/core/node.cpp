@@ -7068,6 +7068,22 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
 }
 
 /**
+ * Fully removes all DCI configuration from node
+ */
+void Node::clearDataCollectionConfigFromAgent(AgentConnectionEx *conn)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_CLEAN_AGENT_DCI_CONF);
+   msg.setId(conn->generateRequestId());
+   NXCPMessage *response = conn->customRequest(&msg);
+   if (response != NULL)
+   {
+      DbgPrintf(4, _T("ClearDataCollectionConfigFromAgent: DCI configuration sucessfully removed from node %s [%d]"), m_name, (int)m_id);
+      delete response;
+   }
+}
+
+/**
  * Callback for async handling of data collection change notification
  */
 void Node::onDataCollectionChangeAsyncCallback(void *arg)

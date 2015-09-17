@@ -35,6 +35,7 @@ void ProxySNMPRequest(NXCPMessage *pRequest, NXCPMessage *pResponse);
 UINT32 DeployPolicy(CommSession *session, NXCPMessage *request);
 UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request);
 UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg);
+void ClearDCISyncDatabase();
 
 /**
  * Constants
@@ -623,6 +624,17 @@ void CommSession::processingThread()
                {
                   DebugPrintf(m_dwIndex, 1, _T("Data collection configuration command received but server ID is not set"));
                   msg.setField(VID_RCC, ERR_SERVER_ID_UNSET);
+               }
+               break;
+            case CMD_CLEAN_AGENT_DCI_CONF:
+               if (m_masterServer)
+               {
+                  ClearDCISyncDatabase();
+                  msg.setField(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
             default:

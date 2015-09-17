@@ -693,6 +693,8 @@ private:
    void getScreenshot(NXCPMessage *request);
 	void executeScript(NXCPMessage *request);
    void compileScript(NXCPMessage *request);
+	void resyncAgentDciConfiguration(NXCPMessage *request);
+   void cleanAgentDciConfiguration(NXCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

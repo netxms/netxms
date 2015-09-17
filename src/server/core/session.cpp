@@ -1387,6 +1387,12 @@ void ClientSession::processingThread()
          case CMD_COMPILE_SCRIPT:
             compileScript(pMsg);
             break;
+         case CMD_CLEAN_AGENT_DCI_CONF:
+            cleanAgentDciConfiguration(pMsg);
+            break;
+         case CMD_RESYNC_AGENT_DCI_CONF:
+            resyncAgentDciConfiguration(pMsg);
+            break;
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
             {
@@ -9992,7 +9998,7 @@ void ClientSession::saveGraph(NXCPMessage *pRequest)
                msg.setField(dwId++, nACLSize);
                msg.setFieldFromInt32Array(dwId++, nACLSize, pdwUsers);
                msg.setFieldFromInt32Array(dwId++, nACLSize, pdwRights);
-               
+
                free(pdwUsers);
                free(pdwRights);
             }
@@ -10003,7 +10009,7 @@ void ClientSession::saveGraph(NXCPMessage *pRequest)
                msg.setFieldFromInt32Array(dwId++, 0, &graphId);
             }
             msg.setField(VID_NUM_GRAPHS, 1);
-            
+
             NotifyClientGraphUpdate(&update, graphId);
 			}
 			else
@@ -12184,7 +12190,7 @@ void ClientSession::executeServerCommand(NXCPMessage *request)
             delete inputFields;
 
 				WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, nodeId, _T("Server command executed: %s"), expCmd);
-            ThreadPoolExecute(g_mainThreadPool, ExecuteServerCommand, 
+            ThreadPoolExecute(g_mainThreadPool, ExecuteServerCommand,
                new ServerCommandExecData(expCmd, request->getFieldAsBoolean(VID_RECEIVE_OUTPUT), request->getId(), this));
 				msg.setField(VID_RCC, RCC_SUCCESS);
 			}
@@ -13823,7 +13829,104 @@ void ClientSession::compileScript(NXCPMessage *request)
          msg.setField(VID_ERROR_LINE, (INT32)errorLine);
       }
       msg.setField(VID_RCC, RCC_SUCCESS);
-      free(source);
+	}
+	else
+	{
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+	}
+
+   sendMessage(&msg);
+}
+
+/**
+ * Clean configuration and collected data of DCIs on agent
+ */
+void ClientSession::cleanAgentDciConfiguration(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   UINT32 objectId = request->getFieldAsUInt32(VID_NODE_ID);
+	NetObj *object = FindObjectById(objectId);
+
+	if (object != NULL)
+	{
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		{
+			if (object->getObjectClass() == OBJECT_NODE)
+			{
+            Node *node = (Node *)object;
+            node->incRefCount();
+            AgentConnectionEx *conn = node->createAgentConnection();
+            if(conn != NULL)
+            {
+               node->clearDataCollectionConfigFromAgent(conn);
+            }
+            else
+            {
+               msg.setField(VID_RCC, RCC_CONNECTION_BROKEN);
+            }
+            node->decRefCount();
+			}
+			else
+			{
+				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		}
+	}
+	else
+	{
+      msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+	}
+
+   sendMessage(&msg);
+}
+
+/**
+ * Triggers ofline DCI configuration synchronization with node
+ */
+void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   UINT32 objectId = request->getFieldAsUInt32(VID_NODE_ID);
+	NetObj *object = FindObjectById(objectId);
+
+   if (object != NULL)
+	{
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+		{
+			if (object->getObjectClass() == OBJECT_NODE)
+			{
+            Node *node = (Node *)object;
+            node->incRefCount();
+            AgentConnectionEx *conn = node->createAgentConnection();
+            if(conn != NULL)
+            {
+               node->clearDataCollectionConfigFromAgent(conn);
+            }
+            else
+            {
+               msg.setField(VID_RCC, RCC_CONNECTION_BROKEN);
+            }
+            node->decRefCount();
+			}
+			else
+			{
+				msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+			}
+		}
+		else
+		{
+			msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+		}
 	}
 	else
 	{

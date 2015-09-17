@@ -1241,7 +1241,6 @@ protected:
 	StringMap *getInstanceList(DCItem *dci);
 	void updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
 
-   void syncDataCollectionWithAgent(AgentConnectionEx *conn);
    void collectProxyInfo(ProxyInfo *info);
    static void collectProxyInfoCallback(NetObj *node, void *data);
 
@@ -1329,6 +1328,8 @@ public:
    void changeIPAddress(const InetAddress& ipAddr);
 	void changeZone(UINT32 newZone);
 	void setFileUpdateConn(AgentConnection *conn);
+   void syncDataCollectionWithAgent(AgentConnectionEx *conn);
+   void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
 
    ARP_CACHE *getArpCache();
    InterfaceList *getInterfaceList();

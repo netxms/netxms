@@ -1054,3 +1054,19 @@ void ShutdownLocalDataCollector()
    MutexDestroy(s_itemLock);
    MutexDestroy(s_serverSyncStatusLock);
 }
+
+void ClearDCISyncDatabase()
+{
+   MutexLock(s_itemLock);
+   DB_HANDLE db = GetLocalDatabaseHandle();
+   DBQuery(db, _T("DELETE FROM dc_queue"));
+   DBQuery(db, _T("DELETE FROM dc_config"));
+   DBQuery(db, _T("DELETE FROM dc_snmp_targets"));
+   s_items.clear();
+   MutexUnlock(s_itemLock);
+
+   MutexLock(s_serverSyncStatusLock);
+
+   s_serverSyncStatus.clear();
+   MutexUnlock(s_serverSyncStatusLock);
+}

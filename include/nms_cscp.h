@@ -548,6 +548,8 @@ typedef struct
 #define CMD_DETACH_LDAP_USER           0x013B
 #define CMD_VALIDATE_PASSWORD          0x013C
 #define CMD_COMPILE_SCRIPT             0x013D
+#define CMD_CLEAN_AGENT_DCI_CONF       0x013E
+#define CMD_RESYNC_AGENT_DCI_CONF      0x013F
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101

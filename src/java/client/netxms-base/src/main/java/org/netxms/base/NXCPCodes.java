@@ -337,6 +337,8 @@ public class NXCPCodes
    public static final int CMD_DETACH_LDAP_USER = 0x013B;
    public static final int CMD_VALIDATE_PASSWORD = 0x013C;
    public static final int CMD_COMPILE_SCRIPT = 0x013D;
+   public static final int CMD_CLEAN_AGENT_DCI_CONF = 0x013E;
+   public static final int CMD_RESYNC_AGENT_DCI_CONF = 0x013F;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
