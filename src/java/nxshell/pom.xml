@@ -11,6 +11,35 @@
     <description>Jython-based automation tool</description>
     <url>http://www.netxms.org</url>
 
+    <licenses>
+        <license>
+            <name>GNU General Public License (GPL) v2</name>
+            <url>http://www.gnu.org/licenses/gpl2.txt</url>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git:https://git.netxms.org/public/netxms.git</connection>
+        <developerConnection>scm:git:ssh://git.netxms.org/public/netxms.git</developerConnection>
+        <url>http://git.netxms.org/public/netxms.git/shortlog/refs/heads/develop</url>
+    </scm>
+    <developers>
+        <developer>
+            <id>alex.kirhenshtein</id>
+            <name>Alex Kirhenshtein</name>
+            <email>alk@netxms.org</email>
+            <organization>Raden Solutions</organization>
+            <organizationUrl>http://www.radensolutions.com</organizationUrl>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>Europe/Riga</timezone>
+        </developer>
+    </developers>
+    <issueManagement>
+        <system>Redmine</system>
+        <url>https://dev.raden.solutions/projects/netxms</url>
+    </issueManagement>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
