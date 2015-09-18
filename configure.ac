@@ -517,7 +517,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server agent libnxmap client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
-	SMSDRV_DIRS="kannel text2reach websms slack"
+	SMSDRV_DIRS="kannel slack text2reach websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
@@ -1619,7 +1619,7 @@ fi
 
 if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
-  SMSDRV_DIRS="$SMSDRV_DIRS kannel text2reach websms slack"
+  SMSDRV_DIRS="$SMSDRV_DIRS kannel slack text2reach websms"
   HDLINK_DIRS="$HDLINK_DIRS jira"
   AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
