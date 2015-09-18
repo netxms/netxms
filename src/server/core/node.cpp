@@ -7124,7 +7124,7 @@ void Node::onDataCollectionChange()
    }
 }
 
-void Node::forceSyncDataCollectionConfid(Node *node)
+void Node::forceSyncDataCollectionConfig(Node *node)
 {
    ThreadPoolExecute(g_mainThreadPool, Node::onDataCollectionChangeAsyncCallback, node);
 }

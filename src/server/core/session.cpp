@@ -13906,7 +13906,7 @@ void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
             Node *node = (Node *)object;
-            node->forceSyncDataCollectionConfid(node);
+            node->forceSyncDataCollectionConfig(node);
 			}
 			else
 			{

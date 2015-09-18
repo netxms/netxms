@@ -1330,7 +1330,7 @@ public:
 	void changeZone(UINT32 newZone);
 	void setFileUpdateConn(AgentConnection *conn);
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
-   void forceSyncDataCollectionConfid(Node *node);
+   void forceSyncDataCollectionConfig(Node *node);
 
    ARP_CACHE *getArpCache();
    InterfaceList *getInterfaceList();
