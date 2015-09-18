@@ -319,7 +319,7 @@ stop_test:
          DBConnectionPoolReleaseConnection(hdb);
          if (i < count)
          {
-            goto sucess;
+            goto success;
          }
       }
       else
