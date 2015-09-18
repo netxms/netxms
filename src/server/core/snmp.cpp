@@ -165,23 +165,21 @@ bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *o
       }
 	}
 
-	// Try preconfigured SNMP v3 USM credentials
+	// Try pre-configured SNMP v3 USM credentials
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	DB_RESULT hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials"));
 	if (hResult != NULL)
 	{
-		char name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
-		SNMP_SecurityContext *ctx;
-		int i, count = DBGetNumRows(hResult);
       bool found = false;
-
-		for(i = 0; (i < count) && !found; i++)
+		int count = DBGetNumRows(hResult);
+		for(int i = 0; (i < count) && !found; i++)
 		{
+	      char name[MAX_DB_STRING], authPasswd[MAX_DB_STRING], privPasswd[MAX_DB_STRING];
 			DBGetFieldA(hResult, i, 0, name, MAX_DB_STRING);
 			DBGetFieldA(hResult, i, 3, authPasswd, MAX_DB_STRING);
 			DBGetFieldA(hResult, i, 4, privPasswd, MAX_DB_STRING);
-			ctx = new SNMP_SecurityContext(name, authPasswd, privPasswd,
-			                               DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2));
+			SNMP_SecurityContext *ctx = new SNMP_SecurityContext(name, authPasswd, privPasswd,
+			         DBGetFieldLong(hResult, i, 1), DBGetFieldLong(hResult, i, 2));
 			pTransport->setSecurityContext(ctx);
 			DbgPrintf(5, _T("SnmpCheckV3CommSettings: trying %hs/%d:%d"), ctx->getUser(), ctx->getAuthMethod(), ctx->getPrivMethod());
          for(int j = 0; j < testOids->size(); j++)
@@ -198,7 +196,7 @@ bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *o
 		DBFreeResult(hResult);
       DBConnectionPoolReleaseConnection(hdb);
 
-		if (i < count)
+		if (found)
 			return true;
 	}
 	else
@@ -222,40 +220,39 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
 	int i, count, snmpVer = SNMP_VERSION_2C;
 	TCHAR buffer[1024];
    SNMP_Transport *pTransport;
-   //create transport checking ports
 
    TCHAR tmp[MAX_CONFIG_VALUE];
 	ConfigReadStr(_T("SNMPPorts"), tmp, MAX_CONFIG_VALUE, _T("161"));
    StringList *ports = new StringList(tmp, _T(","));
-   for(int j = -1;j < ports->size(); j++)
+   for(int j = -1; j < ports->size(); j++)
    {
       UINT16 port;
-      if(j == -1)
+      if (j == -1)
       {
-         if(originalPort == 0)
+         if (originalPort == 0)
             continue;
          port = originalPort;
       }
       else
       {
-         port = (UINT16)_tcstoul(ports->get(j), NULL, 0);
-         if(port == originalPort)
+         port = (UINT16)_tcstoul(ports->get(j), NULL, 10);
+         if (port == originalPort)
             continue;
       }
 
       AgentConnection *pConn = NULL;
       if (snmpProxy != 0)
       {
-         Node *proxyNode = (Node *)g_idxNodeById.get(snmpProxy);
+         Node *proxyNode = (Node *)FindObjectById(snmpProxy, OBJECT_NODE);
          if (proxyNode == NULL)
          {
-            DbgPrintf(5, _T("SnmpCheckCommSettings: not possible to find proxy node."));
+            DbgPrintf(5, _T("SnmpCheckCommSettings: invalid proxy node ID %d"), snmpProxy);
             goto fail;
          }
          pConn = proxyNode->createAgentConnection();
-         if(pConn == NULL)
+         if (pConn == NULL)
          {
-            DbgPrintf(5, _T("SnmpCheckCommSettings: not possible to create proxy connection."));
+            DbgPrintf(5, _T("SnmpCheckCommSettings: cannot create proxy connection"));
             goto fail;
          }
          pTransport = new SNMP_ProxyTransport(pConn, ipAddr, port);
@@ -266,12 +263,11 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
          ((SNMP_UDPTransport *)pTransport)->createUDPTransport(ipAddr, port);
       }
 
-
       // Check for V3 USM
       if (SnmpCheckV3CommSettings(pTransport, originalContext, testOids))
       {
          *version = SNMP_VERSION_3;
-         goto sucess;
+         goto success;
       }
 
 restart_check:
@@ -285,7 +281,7 @@ restart_check:
             if (SnmpGet(snmpVer, pTransport, testOids->get(i), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
             {
                *version = snmpVer;
-               goto sucess;
+               goto success;
             }
          }
       }
@@ -317,6 +313,7 @@ restart_check:
                }
             }
          }
+
 stop_test:
          DBFreeResult(hResult);
          DBConnectionPoolReleaseConnection(hdb);
@@ -338,11 +335,13 @@ stop_test:
       }
       delete pTransport;
    }
+
 fail:
    delete ports;
 	DbgPrintf(5, _T("SnmpCheckCommSettings: failed"));
 	return NULL;
-sucess:
+
+success:
    delete ports;
 	return pTransport;
 }
