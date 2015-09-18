@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.console.resources;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
@@ -153,5 +154,49 @@ public class RegionalSettings
          default:
             return DateFormat.getTimeInstance(DateFormat.SHORT);
       }
+   }
+   
+   /**
+    * Format time difference between current and give time as
+    * [n days, ]hh:mm[:ss]
+    * 
+    * @param start period start time
+    * @param showSeconds true to show seconds
+    * @return formatted time difference
+    */
+   public static String formatTimeDifference(Date start, boolean showSeconds)
+   {
+      StringBuilder sb = new StringBuilder();
+      int seconds = (int)((System.currentTimeMillis() - start.getTime()) / 1000);
+      int days = seconds / 86400;
+      if (days > 0)
+      {
+         sb.append(days);
+         sb.append(" days, ");
+         seconds -= days * 86400;
+      }
+      
+      int hours = seconds / 3600;
+      if (hours < 10)
+         sb.append('0');
+      sb.append(hours);
+      seconds -= hours * 3600;
+      
+      sb.append(':');
+      int minutes = seconds / 60;
+      if (minutes < 10)
+         sb.append('0');
+      sb.append(minutes);
+      
+      if (showSeconds)
+      {
+         sb.append(':');
+         seconds = seconds % 60;
+         if (seconds < 10)
+            sb.append('0');
+         sb.append(seconds);
+      }
+      
+      return sb.toString();
    }
 }
