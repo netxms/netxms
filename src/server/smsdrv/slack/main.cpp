@@ -167,8 +167,6 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *channel, const TCHAR *text)
       char request[4096];
       snprintf(request, 4095, "payload=%s", json_body);
 
-      printf(">>>%s<<<\n", request);
-
       curl_easy_setopt(curl, CURLOPT_POSTFIELDS, request);
       json_decref(root);
 
