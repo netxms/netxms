@@ -40,7 +40,6 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
 import org.netxms.client.NXCSession;
 import org.netxms.client.TextOutputListener;
 import org.netxms.client.constants.NodePollType;
@@ -77,6 +76,7 @@ public class NodePollerView extends ViewPart
 	private NXCSession session;
 	private AbstractNode node;
 	private NodePollType pollType;
+	private Display display;
 	private StyledText textArea;
 	private boolean pollActive = false;
 	private Action actionRestart;
@@ -91,6 +91,7 @@ public class NodePollerView extends ViewPart
 		super.init(site);
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
+		display = Display.getCurrent();
 		
 		// Secondary ID must by in form nodeId&pollType
 		String[] parts = site.getSecondaryId().split("&"); //$NON-NLS-1$
@@ -290,15 +291,14 @@ public class NodePollerView extends ViewPart
 			@Override
 			public void messageReceived(final String message)
 			{
-				new UIJob(textArea.getDisplay(), "Update poller window") { //$NON-NLS-1$
-					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor)
-					{
-						if (!textArea.isDisposed())
-							addPollerMessage(message);
-						return Status.OK_STATUS;
-					}
-				}.schedule();
+			   display.asyncExec(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (!textArea.isDisposed())
+                     addPollerMessage(message);
+               }
+            });
 			}
 		};
 		
@@ -330,29 +330,25 @@ public class NodePollerView extends ViewPart
 	 */
 	private void onPollComplete(final boolean success, final String errorMessage)
 	{
-		if (textArea.isDisposed())
-			return;
-		
-		new UIJob(textArea.getDisplay(), "Update poller window") { //$NON-NLS-1$
-			@Override
-			public IStatus runInUIThread(IProgressMonitor monitor)
-			{
-				if (!textArea.isDisposed())
-				{
-					if (success)
-					{
-						addPollerMessage("\u007Fl**** Poll completed successfully ****\r\n\r\n"); //$NON-NLS-1$
-					}
-					else
-					{
-						addPollerMessage("\u007FePOLL ERROR: " + errorMessage); //$NON-NLS-1$
-						addPollerMessage("\u007Fl**** Poll failed ****\r\n\r\n"); //$NON-NLS-1$
-					}
-					pollActive = false;
-					actionRestart.setEnabled(true);
-				}
-				return Status.OK_STATUS;
-			}
-		}.schedule();
+	   display.asyncExec(new Runnable() {
+         @Override
+         public void run()
+         {
+            if (textArea.isDisposed())
+               return;
+
+            if (success)
+            {
+               addPollerMessage("\u007Fl**** Poll completed successfully ****\r\n\r\n"); //$NON-NLS-1$
+            }
+            else
+            {
+               addPollerMessage(String.format("\u007FePOLL ERROR: %s", errorMessage)); //$NON-NLS-1$
+               addPollerMessage("\u007Fl**** Poll failed ****\r\n\r\n"); //$NON-NLS-1$
+            }
+            pollActive = false;
+            actionRestart.setEnabled(true);
+         }
+      });
 	}
 }
