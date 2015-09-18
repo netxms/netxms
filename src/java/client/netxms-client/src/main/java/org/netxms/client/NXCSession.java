@@ -5176,7 +5176,38 @@ public class NXCSession
       cfg.open();
       return cfg;
    }
+   
+   /**
+    * Clear data collection configuration on agent. Will wipe out all configuration and collected data.
+    *
+    * @param nodeId node object ID
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void clearAgentDataCollectionConfiguration(final long nodeId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAN_AGENT_DCI_CONF);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int) nodeId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
 
+   /**
+    * Force re-synchronization of data collection configuration with agent.
+    *
+    * @param nodeId node object ID
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void resyncAgentDataCollectionConfiguration(final long nodeId) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_RESYNC_AGENT_DCI_CONF);
+      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int) nodeId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
    /**
     * Test DCI transformation script.
     *
@@ -5287,7 +5318,7 @@ public class NXCSession
     */
    public Log openServerLog(final String logName) throws IOException, NXCException
    {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAN_AGENT_DCI_CONF);
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_OPEN_SERVER_LOG);
       msg.setField(NXCPCodes.VID_LOG_NAME, logName);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
@@ -5295,39 +5326,6 @@ public class NXCSession
       return log;
    }
 
-   /**
-    * Open server log by name.
-    *
-    * @param logName Log name
-    * @return Log object
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void clearOflineDciConfiguration(final long nodeId) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_CLEAN_AGENT_DCI_CONF);
-      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int) nodeId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-   
-
-   /**
-    * Open server log by name.
-    *
-    * @param logName Log name
-    * @return Log object
-    * @throws IOException  if socket I/O error occurs
-    * @throws NXCException if NetXMS server returns an error or operation was timed out
-    */
-   public void resyncOflineDciConfiguration(final long nodeId) throws IOException, NXCException
-   {
-      NXCPMessage msg = newMessage(NXCPCodes.CMD_RESYNC_AGENT_DCI_CONF);
-      msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int) nodeId);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-   }
-   
    /**
     * Synchronize event templates configuration. After call to this method
     * session object will maintain internal list of configured event templates.

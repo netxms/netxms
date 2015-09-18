@@ -137,6 +137,7 @@ static void ImageLibraryDeleteCallback(ClientSession *pSession, void *pArg)
 #define DEFINE_THREAD_STARTER(func) \
 void ClientSession::ThreadStarter_##func(void *pArg) \
 { \
+   ((PROCTHREAD_START_DATA *)pArg)->pSession->debugPrintf(6, _T("Method ") _T(#func) _T(" called on background thread")); \
    ((PROCTHREAD_START_DATA *)pArg)->pSession->func(((PROCTHREAD_START_DATA *)pArg)->pMsg); \
 	((PROCTHREAD_START_DATA *)pArg)->pSession->m_dwRefCount--; \
 	delete ((PROCTHREAD_START_DATA *)pArg)->pMsg; \
@@ -11319,7 +11320,7 @@ void ClientSession::openServerLog(NXCPMessage *request)
 
 		LogHandle *log = AcquireLogHandleObject(this, handle);
 		log->getColumnInfo(msg);
-		log->unlock();
+		log->release();
 	}
 	else
 	{
@@ -11362,7 +11363,7 @@ void ClientSession::queryServerLog(NXCPMessage *request)
 		INT64 rowCount;
 		msg.setField(VID_RCC, log->query(new LogFilter(request), &rowCount, getUserId()) ? RCC_SUCCESS : RCC_DB_FAILURE);
 		msg.setField(VID_NUM_ROWS, (QWORD)rowCount);
-		log->unlock();
+		log->release();
 	}
 	else
 	{
@@ -11391,7 +11392,7 @@ void ClientSession::getServerLogQueryData(NXCPMessage *request)
 		INT64 numRows = request->getFieldAsUInt64(VID_NUM_ROWS);
 		bool refresh = request->getFieldAsUInt16(VID_FORCE_RELOAD) ? true : false;
 		data = log->getData(startRow, numRows, refresh, getUserId()); // pass user id from session
-		log->unlock();
+		log->release();
 		if (data != NULL)
 		{
 			msg.setField(VID_RCC, RCC_SUCCESS);
