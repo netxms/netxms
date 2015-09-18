@@ -13,6 +13,7 @@
 - SNMP sysContact and sysLocation collected and stored
 - Server can accept traps and syslog messages from nodes in all zones (controlled by TrapSourcesInAllZones configuration option)
 - On instance discovery pool instance name is updated if it has changed
+- New SMS driver - slack.com
 - Management console:
 	- Object context menu available on geo map
 	- Filter in event template configurator
