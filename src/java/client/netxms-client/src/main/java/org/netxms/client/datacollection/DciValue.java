@@ -237,7 +237,7 @@ public abstract class DciValue
 	         else
 	         {
 	            int j;
-	            for(j = i; !Character.isLetter(format[j]) && (j < format.length); j++);
+	            for(j = i;(j < format.length) && !Character.isLetter(format[j]); j++);
 	            
 	            boolean useMultipliers = false;
 	            if (format[i] == '*')
