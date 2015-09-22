@@ -28,6 +28,7 @@ import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.NodeLink;
+import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.client.objects.Subnet;
@@ -122,6 +123,15 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);
             if (node.getBootTime() != null)
                addPair(Messages.get().GeneralInfo_BootTime, RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
+            if (node.getRackId() != 0)
+            {
+               Rack rack = session.findObjectById(node.getRackId(), Rack.class);
+               if (rack != null)
+               {
+                  addPair("Rack", String.format("%s (units %d-%d)", rack.getObjectName(),
+                        node.getRackPosition(), node.getRackPosition() + node.getRackHeight() - 1));
+               }
+            }
 				break;
 			case AbstractObject.OBJECT_MOBILEDEVICE:
 				MobileDevice md = (MobileDevice)object;

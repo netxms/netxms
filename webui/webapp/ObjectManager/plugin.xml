@@ -268,6 +268,16 @@
               </instanceof>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.RackPlacement"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.RackPlacement"
+              name="Rack">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.AbstractNode">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension
