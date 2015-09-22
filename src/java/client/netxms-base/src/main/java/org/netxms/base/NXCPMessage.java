@@ -443,6 +443,18 @@ public class NXCPMessage
 		return (var != null) ? var.getAsReal() : 0;
 	}
 	
+   /**
+    * Get field as 16 bit integer
+    * 
+    * @param fieldId
+    * @return
+    */
+   public short getFieldAsInt16(final long fieldId)
+   {
+      final NXCPMessageField var = findField(fieldId);
+      return (var != null) ? var.getAsInteger().shortValue() : 0;
+   }
+   
 	/**
 	 * Get field as 32 bit integer
 	 * 

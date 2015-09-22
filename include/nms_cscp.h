@@ -1081,6 +1081,10 @@ typedef struct
 #define VID_SERVERCMD_TIMEOUT       ((UINT32)514)
 #define VID_SYS_CONTACT             ((UINT32)515)
 #define VID_SYS_LOCATION            ((UINT32)516)
+#define VID_RACK_ID                 ((UINT32)517)
+#define VID_RACK_IMAGE              ((UINT32)518)
+#define VID_RACK_POSITION           ((UINT32)519)
+#define VID_RACK_HEIGHT             ((UINT32)520)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

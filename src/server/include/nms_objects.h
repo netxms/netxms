@@ -1201,6 +1201,10 @@ protected:
 	ObjectArray<SoftwarePackage> *m_softwarePackages;  // installed software packages
 	ObjectArray<WinPerfObject> *m_winPerfObjects;  // Windows performance objects
 	AgentConnection *m_fileUpdateConn;
+	INT16 m_rackHeight;
+	INT16 m_rackPosition;
+	UINT32 m_rackId;
+	uuid m_rackImage;
 
    void pollerLock() { MutexLock(m_hPollerMutex); }
    void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
@@ -1248,6 +1252,7 @@ protected:
 	void updateContainerMembership();
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
+   void updateRackBinding();
 
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 

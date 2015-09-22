@@ -289,6 +289,7 @@ CREATE TABLE nodes
 	driver_name varchar(32) null,
 	rack_image varchar(36) null,
 	rack_position integer not null,
+   rack_height integer not null,
 	rack_id integer not null,
    agent_cache_mode char(1) not null,
 	PRIMARY KEY(id)

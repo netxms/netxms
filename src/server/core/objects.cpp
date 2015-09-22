@@ -1255,6 +1255,31 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
+   // Load racks
+   DbgPrintf(2, _T("Loading racks..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM racks"));
+   if (hResult != 0)
+   {
+      Rack *rack;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         rack = new Rack;
+         if (rack->loadFromDatabase(dwId))
+         {
+            NetObjInsert(rack, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            nxlog_write(MSG_RACK_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete rack;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
    // Load mobile devices
    DbgPrintf(2, _T("Loading mobile devices..."));
    hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM mobile_devices"));
@@ -1537,31 +1562,6 @@ BOOL LoadObjects()
          {
             delete pContainer;
             nxlog_write(MSG_CONTAINER_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load racks
-   DbgPrintf(2, _T("Loading racks..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM racks"));
-   if (hResult != 0)
-   {
-		Rack *rack;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
-      {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         rack = new Rack;
-         if (rack->loadFromDatabase(dwId))
-         {
-            NetObjInsert(rack, FALSE);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            nxlog_write(MSG_RACK_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
-            delete rack;
          }
       }
       DBFreeResult(hResult);

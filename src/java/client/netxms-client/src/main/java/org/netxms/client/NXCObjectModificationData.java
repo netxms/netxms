@@ -104,6 +104,7 @@ public class NXCObjectModificationData
    public static final long MODIFY_POSTAL_ADDRESS     = 0x0080000000000000L;
    public static final long MODIFY_AGENT_CACHE_MODE   = 0x0100000000000000L;
    public static final long MODIFY_MAPOBJ_DISP_MODE   = 0x0200000000000000L;
+   public static final long MODIFY_RACK_PLACEMENT     = 0x0400000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -182,6 +183,10 @@ public class NXCObjectModificationData
 	private PostalAddress postalAddress;
 	private AgentCacheMode agentCacheMode;
 	private MapObjectDisplayMode mapObjectDisplayMode;
+	private long rackId;
+	private UUID rackImage;
+	private short rackPosition;
+	private short rackHeight;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1469,5 +1474,54 @@ public class NXCObjectModificationData
    {
       this.mapObjectDisplayMode = mapObjectDisplayMode;
       flags |= MODIFY_MAPOBJ_DISP_MODE;
+   }
+
+   /**
+    * @return the rackId
+    */
+   public long getRackId()
+   {
+      return rackId;
+   }
+
+   /**
+    * @return the rackImage
+    */
+   public UUID getRackImage()
+   {
+      return rackImage;
+   }
+
+   /**
+    * @return the rackPosition
+    */
+   public short getRackPosition()
+   {
+      return rackPosition;
+   }
+
+   /**
+    * @return the rackHeight
+    */
+   public short getRackHeight()
+   {
+      return rackHeight;
+   }
+   
+   /**
+    * Set rack placement data
+    * 
+    * @param rackId
+    * @param rackImage
+    * @param rackPosition
+    * @param rackHeight
+    */
+   public void setRackPlacement(long rackId, UUID rackImage, short rackPosition, short rackHeight)
+   {
+      this.rackId = rackId;
+      this.rackImage = rackImage;
+      this.rackPosition = rackPosition;
+      this.rackHeight = rackHeight;
+      flags |= MODIFY_RACK_PLACEMENT;
    }
 }

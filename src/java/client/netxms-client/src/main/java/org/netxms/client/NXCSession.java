@@ -4513,6 +4513,14 @@ public class NXCSession
       {
          msg.setFieldInt16(NXCPCodes.VID_DISPLAY_MODE, data.getMapObjectDisplayMode().getValue());
       }
+      
+      if ((flags & NXCObjectModificationData.MODIFY_RACK_PLACEMENT) != 0)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_RACK_ID, (int)data.getRackId());
+         msg.setField(NXCPCodes.VID_RACK_IMAGE, data.getRackImage());
+         msg.setFieldInt16(NXCPCodes.VID_RACK_POSITION, data.getRackPosition());
+         msg.setFieldInt16(NXCPCodes.VID_RACK_HEIGHT, data.getRackHeight());
+      }
 
       modifyCustomObject(data, userData, msg);
 

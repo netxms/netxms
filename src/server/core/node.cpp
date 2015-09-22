@@ -99,6 +99,9 @@ Node::Node() : DataCollectionTarget()
 	m_winPerfObjects = NULL;
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 	m_fileUpdateConn = NULL;
+	m_rackId = 0;
+	m_rackPosition = 0;
+	m_rackHeight = 1;
 }
 
 /**
@@ -181,6 +184,9 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
 	m_winPerfObjects = NULL;
 	memset(m_baseBridgeAddress, 0, MAC_ADDR_LENGTH);
 	m_fileUpdateConn = NULL;
+   m_rackId = 0;
+   m_rackPosition = 0;
+   m_rackHeight = 1;
 }
 
 /**
@@ -248,7 +254,8 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
 		_T("use_ifxtable,snmp_port,community,usm_auth_password,")
 		_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
       _T("runtime_flags,down_since,boot_time,driver_name,icmp_proxy,")
-      _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location FROM nodes WHERE id=?"));
+      _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,")
+      _T("rack_id,rack_image,rack_position,rack_height FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
 		return FALSE;
 
@@ -326,6 +333,11 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
    m_sysContact = DBGetField(hResult, 0, 31, NULL, 0);
    m_sysLocation = DBGetField(hResult, 0, 32, NULL, 0);
 
+   m_rackId = DBGetFieldULong(hResult, 0, 33);
+   m_rackImage = DBGetFieldGUID(hResult, 0, 34);
+   m_rackPosition = (INT16)DBGetFieldLong(hResult, 0, 35);
+   m_rackHeight = (INT16)DBGetFieldLong(hResult, 0, 36);
+
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
 
@@ -375,12 +387,16 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
       // Walk through all items in the node and load appropriate thresholds
 		bResult = TRUE;
       for(i = 0; i < m_dcObjects->size(); i++)
+      {
          if (!m_dcObjects->get(i)->loadThresholdsFromDB())
          {
             DbgPrintf(3, _T("Cannot load thresholds for DCI %d of node %d (%s)"),
                       m_dcObjects->get(i)->getId(), dwId, m_name);
             bResult = FALSE;
          }
+      }
+
+      updateRackBinding();
    }
    else
    {
@@ -414,7 +430,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
          _T("status_poll_type=?,agent_port=?,auth_method=?,secret=?,snmp_oid=?,uname=?,agent_version=?,")
 			_T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,icmp_proxy=?,required_polls=?,")
 			_T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
-			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_id=?,boot_time=?,")
+			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_height=?,rack_id=?,boot_time=?,")
          _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=? WHERE id=?"));
 	}
    else
@@ -423,9 +439,9 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 		  _T("INSERT INTO nodes (primary_ip,primary_name,snmp_port,node_flags,snmp_version,community,status_poll_type,")
 		  _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
 		  _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
-		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_id,boot_time,")
+		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
         _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,id) ")
-		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -473,14 +489,15 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, m_dwDynamicFlags);
 	DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, (LONG)m_downSince);
 	DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, (m_driver != NULL) ? m_driver->getName() : _T(""), DB_BIND_STATIC);
-	DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, _T("00000000-0000-0000-0000-000000000000"), DB_BIND_STATIC);	// rack image
-	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, (LONG)0);	// rack position
-	DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, (LONG)0);	// rack ID
-	DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);	// rack ID
-   DBBind(hStmt, 34, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC);
-   DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC);
-   DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC);
-	DBBind(hStmt, 37, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 30, DB_SQLTYPE_VARCHAR, m_rackImage);	// rack image
+	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_rackPosition); // rack position
+   DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_rackHeight);   // device height in rack units
+	DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_rackId);	// rack ID
+	DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);	// rack ID
+   DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC);
+   DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC);
+   DBBind(hStmt, 37, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC);
+	DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -4288,6 +4305,10 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
 		pMsg->setField(VID_DRIVER_NAME, m_driver->getName());
 		pMsg->setField(VID_DRIVER_VERSION, m_driver->getVersion());
 	}
+	pMsg->setField(VID_RACK_ID, m_rackId);
+   pMsg->setField(VID_RACK_IMAGE, m_rackImage);
+   pMsg->setField(VID_RACK_POSITION, m_rackPosition);
+   pMsg->setField(VID_RACK_HEIGHT, m_rackHeight);
 }
 
 /**
@@ -4507,6 +4528,19 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Enable/disable usage of ifXTable
    if (pRequest->isFieldExist(VID_USE_IFXTABLE))
       m_nUseIfXTable = (BYTE)pRequest->getFieldAsUInt16(VID_USE_IFXTABLE);
+
+   // Rack settings
+   if (pRequest->isFieldExist(VID_RACK_ID))
+   {
+      m_rackId = pRequest->getFieldAsUInt32(VID_RACK_ID);
+      updateRackBinding();
+   }
+   if (pRequest->isFieldExist(VID_RACK_IMAGE))
+      m_rackImage = pRequest->getFieldAsGUID(VID_RACK_IMAGE);
+   if (pRequest->isFieldExist(VID_RACK_POSITION))
+      m_rackPosition = pRequest->getFieldAsInt16(VID_RACK_POSITION);
+   if (pRequest->isFieldExist(VID_RACK_HEIGHT))
+      m_rackHeight = pRequest->getFieldAsInt16(VID_RACK_HEIGHT);
 
    return DataCollectionTarget::modifyFromMessageInternal(pRequest);
 }
@@ -7124,7 +7158,58 @@ void Node::onDataCollectionChange()
    }
 }
 
+/**
+ * Force data collection configuration synchronization with agent
+ */
 void Node::forceSyncDataCollectionConfig(Node *node)
 {
    ThreadPoolExecute(g_mainThreadPool, Node::onDataCollectionChangeAsyncCallback, node);
+}
+
+/**
+ * Update rack binding
+ */
+void Node::updateRackBinding()
+{
+   bool rackFound = false;
+   ObjectArray<NetObj> deleteList(16, 16, false);
+
+   LockParentList(TRUE);
+   for(UINT32 i = 0; i < m_dwParentCount; i++)
+   {
+      if (m_pParentList[i]->getObjectClass() != OBJECT_RACK)
+         continue;
+      if (m_pParentList[i]->getId() == m_rackId)
+      {
+         rackFound = true;
+         continue;
+      }
+      m_pParentList[i]->incRefCount();
+      deleteList.add(m_pParentList[i]);
+   }
+   UnlockParentList();
+
+   for(int n = 0; n < deleteList.size(); n++)
+   {
+      NetObj *rack = deleteList.get(n);
+      DbgPrintf(5, _T("Node::updateRackBinding(%s [%d]): delete incorrect rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
+      rack->DeleteChild(this);
+      DeleteParent(rack);
+      rack->decRefCount();
+   }
+
+   if (!rackFound && (m_rackId != 0))
+   {
+      Rack *rack = (Rack *)FindObjectById(m_rackId, OBJECT_RACK);
+      if (rack != NULL)
+      {
+         DbgPrintf(5, _T("Node::updateRackBinding(%s [%d]): add rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
+         rack->AddChild(this);
+         AddParent(rack);
+      }
+      else
+      {
+         DbgPrintf(5, _T("Node::updateRackBinding(%s [%d]): rack object [%d] not found"), m_name, m_id, m_rackId);
+      }
+   }
 }

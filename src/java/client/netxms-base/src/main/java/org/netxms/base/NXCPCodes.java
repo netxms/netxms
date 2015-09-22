@@ -869,6 +869,10 @@ public class NXCPCodes
    public static final long VID_SERVERCMD_TIMEOUT = 514;
    public static final long VID_SYS_CONTACT = 515;
    public static final long VID_SYS_LOCATION = 516;
+   public static final long VID_RACK_ID = 517;
+   public static final long VID_RACK_IMAGE = 518;
+   public static final long VID_RACK_POSITION = 519;
+   public static final long VID_RACK_HEIGHT = 520;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

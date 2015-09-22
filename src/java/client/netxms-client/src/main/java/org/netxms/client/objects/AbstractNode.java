@@ -20,6 +20,7 @@ package org.netxms.client.objects;
 
 import java.net.InetAddress;
 import java.util.Date;
+import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.MacAddress;
@@ -123,6 +124,10 @@ public abstract class AbstractNode extends DataCollectionTarget
 	protected MacAddress bridgeBaseAddress;
 	protected int ifXTablePolicy;
 	protected Date bootTime;
+	protected long rackId;
+	protected UUID rackImage;
+	protected short rackPosition;
+	protected short rackHeight;
 	
 	/**
 	 * Create new node object.
@@ -181,6 +186,10 @@ public abstract class AbstractNode extends DataCollectionTarget
 		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
 		bridgeBaseAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_BRIDGE_BASE_ADDRESS));
 		ifXTablePolicy = msg.getFieldAsInt32(NXCPCodes.VID_USE_IFXTABLE);
+		rackId = msg.getFieldAsInt64(NXCPCodes.VID_RACK_ID);
+		rackImage = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE);
+		rackPosition = msg.getFieldAsInt16(NXCPCodes.VID_RACK_POSITION);
+      rackHeight = msg.getFieldAsInt16(NXCPCodes.VID_RACK_HEIGHT);
 		
 		long bootTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_BOOT_TIME);
 		bootTime = (bootTimeSeconds > 0) ? new Date(bootTimeSeconds * 1000) : null;
@@ -601,5 +610,37 @@ public abstract class AbstractNode extends DataCollectionTarget
    public InetAddress getPrimaryIP()
    {
       return primaryIP;
+   }
+
+   /**
+    * @return the rackId
+    */
+   public long getRackId()
+   {
+      return rackId;
+   }
+
+   /**
+    * @return the rackImage
+    */
+   public UUID getRackImage()
+   {
+      return rackImage;
+   }
+
+   /**
+    * @return the rackPosition
+    */
+   public short getRackPosition()
+   {
+      return rackPosition;
+   }
+
+   /**
+    * @return the rackHeight
+    */
+   public short getRackHeight()
+   {
+      return rackHeight;
    }
 }
