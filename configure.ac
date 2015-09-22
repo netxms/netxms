@@ -916,6 +916,16 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	SQLFLAGS="-x c -Wundef"
 	CPPFLAGS="$CPPFLAGS -Wformat"
 
+	AC_MSG_CHECKING(whether C compiler accepts -Wno-unused-result)
+	OLD_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS -Wno-unused-result"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CPPFLAGS="$OLD_CPPFLAGS"
+			AC_MSG_RESULT(no)
+		])
+
 	AC_LANG_PUSH([C++])
 
 	AC_MSG_CHECKING(whether C++ compiler accepts -fno-rtti)
