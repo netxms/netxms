@@ -326,6 +326,8 @@ protected:
 
 	virtual bool isCacheLoaded();
 
+   using DCObject::updateFromMessage;
+
 public:
    DCItem();
    DCItem(const DCItem *pItem);
@@ -374,9 +376,6 @@ public:
    TCHAR *getAggregateValue(AggregationFunction func, time_t periodStart, time_t periodEnd);
 
    virtual void createMessage(NXCPMessage *pMsg);
-#if defined(__SUNPRO_CC) || defined(__HP_aCC)
-   using DCObject::updateFromMessage;
-#endif
    void updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
    void fillMessageWithThresholds(NXCPMessage *msg);
 
