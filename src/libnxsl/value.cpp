@@ -1295,14 +1295,16 @@ bool NXSL_Value::equals(const NXSL_Value *v) const
    switch(m_nDataType)
    {
       case NXSL_DT_ARRAY:
-         if (v->m_value.arrayHandle->getObject() == m_value.arrayHandle->getObject())
-            return true;
-         if (v->m_value.arrayHandle->getObject()->size() != m_value.arrayHandle->getObject()->size())
-            return false;
-         for(int i = 0; i < m_value.arrayHandle->getObject()->size(); i++)
          {
-            if (!m_value.arrayHandle->getObject()->get(i)->equals(v->m_value.arrayHandle->getObject()->get(i)))
+            if (v->m_value.arrayHandle->getObject() == m_value.arrayHandle->getObject())
+               return true;
+            if (v->m_value.arrayHandle->getObject()->size() != m_value.arrayHandle->getObject()->size())
                return false;
+            for(int i = 0; i < m_value.arrayHandle->getObject()->size(); i++)
+            {
+               if (!m_value.arrayHandle->getObject()->get(i)->equals(v->m_value.arrayHandle->getObject()->get(i)))
+                  return false;
+            }
          }
          return true;
       case NXSL_DT_HASHMAP:
@@ -1346,10 +1348,12 @@ void NXSL_Value::serialize(ByteStream &s) const
    switch(m_nDataType)
    {
       case NXSL_DT_ARRAY:
-         s.write((UINT16)m_value.arrayHandle->getObject()->size());
-         for(int i = 0; i < m_value.arrayHandle->getObject()->size(); i++)
          {
-            m_value.arrayHandle->getObject()->get(i)->serialize(s);
+            s.write((UINT16)m_value.arrayHandle->getObject()->size());
+            for(int i = 0; i < m_value.arrayHandle->getObject()->size(); i++)
+            {
+               m_value.arrayHandle->getObject()->get(i)->serialize(s);
+            }
          }
          break;
       case NXSL_DT_HASHMAP:

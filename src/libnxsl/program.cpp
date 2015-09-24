@@ -405,7 +405,8 @@ void NXSL_Program::serialize(ByteStream& s)
 
    // Serialize instructions
    header.codeSectionOffset = htonl((UINT32)s.pos());
-   for(int i = 0; i < m_instructionSet->size(); i++)
+   int i;
+   for(i = 0; i < m_instructionSet->size(); i++)
    {
       NXSL_Instruction *instr = m_instructionSet->get(i);
       s.write(instr->m_nOpCode);
@@ -455,28 +456,28 @@ void NXSL_Program::serialize(ByteStream& s)
 
    // write strings section
    header.stringSectionOffset = htonl((UINT32)s.pos());
-   for(int i = 0; i < strings.size(); i++)
+   for(i = 0; i < strings.size(); i++)
    {
       s.writeString(strings.get(i));
    }
 
    // write constants section
    header.constSectionOffset = htonl((UINT32)s.pos());
-   for(int i = 0; i < constants.size(); i++)
+   for(i = 0; i < constants.size(); i++)
    {
       constants.get(i)->serialize(s);
    }
 
    // write required modules list
    header.moduleSectionOffset = htonl((UINT32)s.pos());
-   for(int i = 0; i < m_requiredModules.size(); i++)
+   for(i = 0; i < m_requiredModules.size(); i++)
    {
       s.writeString(m_requiredModules.get(i));
    }
 
    // write function list
    header.functionSectionOffset = htonl((UINT32)s.pos());
-   for(int i = 0; i < m_functions->size(); i++)
+   for(i = 0; i < m_functions->size(); i++)
    {
       NXSL_Function *f = m_functions->get(i);
       s.writeString(f->m_name);

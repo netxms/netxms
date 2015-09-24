@@ -294,14 +294,15 @@ TCHAR *Table::createXML()
    xml.appendFormattedString(_T("<table extendedFormat=\"%s\" source=\"%d\"  name=\"%s\">\r\n"), m_extendedFormat ? _T("true") : _T("false"), m_source,
                               (const TCHAR *)EscapeStringForXML2(m_title, -1));
    xml.append(_T("<columns>\r\n"));
-   for(int i = 0; i < m_columns->size(); i++)
+   int i;
+   for(i = 0; i < m_columns->size(); i++)
       xml.appendFormattedString(_T("<column name=\"%s\" displayName=\"%s\" isInstance=\"%s\" dataType=\"%d\"/>\r\n"),
                   (const TCHAR *)EscapeStringForXML2(m_columns->get(i)->getName(), -1),
                   (const TCHAR *)EscapeStringForXML2(m_columns->get(i)->getDisplayName(), -1),
                   m_columns->get(i)->isInstanceColumn()? _T("true") : _T("false"), m_columns->get(i)->getDataType());
    xml.append(_T("</columns>\r\n"));
    xml.append(_T("<data>\r\n"));
-   for(int i = 0; i < m_data->size(); i++)
+   for(i = 0; i < m_data->size(); i++)
    {
       xml.appendFormattedString(_T("<tr objectId=\"%d\">\r\n"), m_data->get(i)->getObjectId());
       for(int j = 0; j < m_columns->size(); j++)

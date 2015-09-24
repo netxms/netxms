@@ -138,9 +138,9 @@ static void ResetExpiredConnections()
 
    MutexLock(m_poolAccessMutex);
 
-	int availCount = 0;
+	int i, availCount = 0;
    ObjectArray<PoolConnectionInfo> reconnList(m_connections.size(), 16, false);
-	for(int i = 0; i < m_connections.size(); i++)
+	for(i = 0; i < m_connections.size(); i++)
 	{
 		PoolConnectionInfo *conn = m_connections.get(i);
 		if (!conn->inUse)
@@ -161,12 +161,12 @@ static void ResetExpiredConnections()
          reconnList.remove(count);
    }
 
-   for(int i = 0; i < count; i++)
+   for(i = 0; i < count; i++)
       reconnList.get(i)->inUse = true;
    MutexUnlock(m_poolAccessMutex);
 
    // do reconnects
-   for(int i = 0; i < count; i++)
+   for(i = 0; i < count; i++)
 	{
    	PoolConnectionInfo *conn = reconnList.get(i);
    	bool success = ResetConnection(conn);
