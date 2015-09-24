@@ -125,19 +125,16 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
 {
    BOOL success = FALSE;
 
-	DbgPrintf(4, _T("Text2Reach: phone=\"%s\", text=\"%s\""), phoneNumber, text);
-
+   DbgPrintf(4, _T("Text2Reach: phone=\"%s\", text=\"%s\""), phoneNumber, text);
+	
+   char errorBuffer[CURL_ERROR_SIZE];
    CURL *curl = curl_easy_init();
    if (curl != NULL)
    {
-#if HAVE_DECL_CURLOPT_NOSIGNAL
-      curl_easy_setopt(curl, CURLOPT_NOSIGNAL, (long)1);
-#endif
-
+      curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errorBuffer);
       curl_easy_setopt(curl, CURLOPT_HEADER, (long)0); // do not include header in data
-      curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
       curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, (long)0);
 
       RequestData *data = (RequestData *)malloc(sizeof(RequestData));
       memset(data, 0, sizeof(RequestData));
@@ -156,7 +153,7 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
 #endif
 
       char url[4096];
-      snprintf(url, 4096, "http://www.text2reach.com/api/1.1/sms/bulk/?api_key=%s&phone=%s&from=%s&message=%s", s_apikey, s_from, phone, msg);
+      snprintf(url, 4096, "http://www.text2reach.com/api/1.1/sms/bulk/?api_key=%s&phone=%s&from=%s&message=%s", s_apikey, phone, s_from, msg);
       DbgPrintf(4, _T("Text2Reach: URL set to \"%hs\""), url);
 
       curl_free(phone);
@@ -166,41 +163,26 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
       {
          if (curl_easy_perform(curl) == CURLE_OK)
          {
-            DbgPrintf(4, _T("Text2Reach: %d bytes received"), data->size);
-            if (data->allocated > 0)
-            {
-               data->data[data->size] = 0;
-
-               Config *response = new Config;
-               response->loadXmlConfigFromMemory(data->data, (int)strlen(data->data), _T("WEBSMS"), "XML");
-               ConfigEntry *e = response->getEntry(_T("/httpIn"));
-               if (e != NULL)
-               {
-                  int status = e->getAttributeAsInt(_T("error_num"), -1);
-                  if (status == 0)
-                  {
-                     DbgPrintf(4, _T("Text2Reach: SMS successfully sent"));
-                     success = TRUE;
-                  }
-                  else
-                  {
-                     DbgPrintf(4, _T("Text2Reach: send error %d"), status);
-                  }
-               }
-               else
-               {
-                  DbgPrintf(4, _T("Text2Reach: malformed response\n%hs"), data->data);
-               }
-            }
+            long response = 500;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
+			if (response == 200)
+			{
+				DbgPrintf(4, _T("Text2Reach: SMS successfully sent"));
+				success = TRUE;
+			}
+			else
+			{
+				DbgPrintf(4, _T("Text2Reach: request cannot be fulfilled, HTTP response code %03d"), response);
+			}
          }
          else
          {
-         	DbgPrintf(4, _T("Text2Reach: call to curl_easy_perform() failed"));
+			DbgPrintf(4, _T("Text2Reach: call to curl_easy_perform() failed"));
          }
       }
       else
       {
-      	DbgPrintf(4, _T("Text2Reach: call to curl_easy_setopt(CURLOPT_URL) failed"));
+      	DbgPrintf(4, _T("Text2Reach: call to curl_easy_setopt(CURLOPT_URL) failed: %s"), errorBuffer);
       }
       safe_free(data->data);
       free(data);
