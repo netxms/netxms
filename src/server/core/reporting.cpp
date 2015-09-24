@@ -150,7 +150,7 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
 	DbgPrintf(1, _T("Reporting Server connector started (%s:%d)"), hostname, port);
 
    // Keep connection open
-   m_connector = new RSConnector(ResolveHostName(hostname), port);
+   m_connector = new RSConnector(InetAddress::resolveHostName(hostname), port);
    while(!SleepAndCheckForShutdown(15))
    {
       if (m_connector->nop() != ISC_ERR_SUCCESS)
