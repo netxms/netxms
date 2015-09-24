@@ -34,7 +34,7 @@ Description: NetXMS core libraries
 Package: netxms-agent
 Architecture: any
 Multi-Arch: same
-Depends: netxms-base (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: netxms-base (= ${binary:Version}), netxms-dbdrv-sqlite3 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Description: NetXMS agent
  <insert long description, indented with spaces>
 
@@ -96,7 +96,6 @@ Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: netxms-base (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
-Suggests: mysql-server
 Description: unixODBC driver for netxms-server
  <insert long description, indented with spaces>
 
@@ -104,7 +103,6 @@ Package: netxms-dbdrv-oracle
 Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: netxms-base (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
-Suggests: mysql-server
+Depends: netxms-base (= ${binary:Version}), libaio1, ${shlibs:Depends}, ${misc:Depends}
 Description: Oracle driver for netxms-server
  <insert long description, indented with spaces>
