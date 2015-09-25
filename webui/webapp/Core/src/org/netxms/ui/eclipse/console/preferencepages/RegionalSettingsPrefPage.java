@@ -30,6 +30,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -55,6 +56,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
    private LabeledText shortTimeFormatString;
 	private LabeledText dateTimeExample;
 	private LabeledText shortTimeExample;
+	private Button checkServerTimeZone;
 	private int format;
 	
 	/* (non-Javadoc)
@@ -168,6 +170,15 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       shortTimeExample.setLayoutData(gd);
+      
+      checkServerTimeZone = new Button(dialogArea, SWT.CHECK);
+      checkServerTimeZone.setText("Use server time &zone");
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = layout.numColumns;
+      checkServerTimeZone.setLayoutData(gd);
+      checkServerTimeZone.setSelection(getPreferenceStore().getBoolean("USE_SERVER_TIMEZONE"));
 		
 		updateExample(null);
       updateShortTimeExample(null);
@@ -261,6 +272,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		dateFormatString.setEnabled(format == RegionalSettings.DATETIME_FORMAT_CUSTOM);
 		timeFormatString.setEnabled(format == RegionalSettings.DATETIME_FORMAT_CUSTOM);
       shortTimeFormatString.setEnabled(format == RegionalSettings.DATETIME_FORMAT_CUSTOM);
+      checkServerTimeZone.setSelection(false);
 		updateExample(null);
 	}
 
@@ -276,6 +288,7 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
 		ps.setValue("DATE_FORMAT_STRING", dateFormatString.getText()); //$NON-NLS-1$
 		ps.setValue("TIME_FORMAT_STRING", timeFormatString.getText()); //$NON-NLS-1$
       ps.setValue("SHORT_TIME_FORMAT_STRING", shortTimeFormatString.getText()); //$NON-NLS-1$
+      ps.setValue("USE_SERVER_TIMEZONE", checkServerTimeZone.getSelection()); //$NON-NLS-1$
 		
 		RegionalSettings.updateFromPreferences();
 		

@@ -36,10 +36,33 @@ public class RegionalSettings
 	public static final int DATETIME_FORMAT_JVM = 1;
 	public static final int DATETIME_FORMAT_CUSTOM = 2;
 	
-	private static int dateTimeFormat = DATETIME_FORMAT_SERVER;
-	private static String dateFormatString;
-	private static String timeFormatString;
-	private static String shortTimeFormatString;
+	private int dateTimeFormat = DATETIME_FORMAT_SERVER;
+	private String dateFormatString;
+	private String timeFormatString;
+	private String shortTimeFormatString;
+	
+	/**
+	 * Private constructor
+	 */
+	private RegionalSettings()
+	{
+	}
+	
+	/**
+	 * Get regional settings instance for current session
+	 * 
+	 * @return
+	 */
+	private static RegionalSettings getInstance()
+	{
+	   RegionalSettings instance = (RegionalSettings)ConsoleSharedData.getProperty("RegionalSettings");
+	   if (instance == null)
+	   {
+	      instance = new RegionalSettings();
+	      ConsoleSharedData.setProperty("RegionalSettings", instance);
+	   }
+	   return instance;
+	}
 	
 	/**
 	 * Update from preferences
@@ -47,10 +70,15 @@ public class RegionalSettings
 	public static void updateFromPreferences()
 	{
 		IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		dateTimeFormat = ps.getInt("DATETIME_FORMAT"); //$NON-NLS-1$
-		dateFormatString = ps.getString("DATE_FORMAT_STRING"); //$NON-NLS-1$
-		timeFormatString = ps.getString("TIME_FORMAT_STRING"); //$NON-NLS-1$
-      shortTimeFormatString = ps.getString("SHORT_TIME_FORMAT_STRING"); //$NON-NLS-1$
+		RegionalSettings instance = getInstance();
+		instance.dateTimeFormat = ps.getInt("DATETIME_FORMAT"); //$NON-NLS-1$
+		instance.dateFormatString = ps.getString("DATE_FORMAT_STRING"); //$NON-NLS-1$
+		instance.timeFormatString = ps.getString("TIME_FORMAT_STRING"); //$NON-NLS-1$
+		instance.shortTimeFormatString = ps.getString("SHORT_TIME_FORMAT_STRING"); //$NON-NLS-1$
+      if (ps.getBoolean("USE_SERVER_TIMEZONE"))
+         ConsoleSharedData.setServerTimeZone();
+      else
+         ConsoleSharedData.resetTimeZone();
 	}
 	
 	/**
@@ -60,8 +88,9 @@ public class RegionalSettings
 	 */
 	public static DateFormat getDateTimeFormat()
 	{
+      RegionalSettings instance = getInstance();
 	   DateFormat df;
-		switch(dateTimeFormat)
+		switch(instance.dateTimeFormat)
 		{
 			case DATETIME_FORMAT_SERVER:
 				NXCSession session = ConsoleSharedData.getSession();
@@ -70,7 +99,7 @@ public class RegionalSettings
 			case DATETIME_FORMAT_CUSTOM:
 				try
 				{
-					df = new SimpleDateFormat(dateFormatString + " " + timeFormatString); //$NON-NLS-1$
+					df = new SimpleDateFormat(instance.dateFormatString + " " + instance.timeFormatString); //$NON-NLS-1$
 				}
 				catch(IllegalArgumentException e)
 				{
@@ -94,8 +123,9 @@ public class RegionalSettings
 	 */
 	public static DateFormat getDateFormat()
 	{
+      RegionalSettings instance = getInstance();
       DateFormat df;
-		switch(dateTimeFormat)
+		switch(instance.dateTimeFormat)
 		{
 			case DATETIME_FORMAT_SERVER:
 				NXCSession session = ConsoleSharedData.getSession();
@@ -104,7 +134,7 @@ public class RegionalSettings
 			case DATETIME_FORMAT_CUSTOM:
 				try
 				{
-				   df = new SimpleDateFormat(dateFormatString);
+				   df = new SimpleDateFormat(instance.dateFormatString);
 				}
 				catch(IllegalArgumentException e)
 				{
@@ -128,8 +158,9 @@ public class RegionalSettings
     */
    public static DateFormat getTimeFormat()
    {
+      RegionalSettings instance = getInstance();
       DateFormat df;
-      switch(dateTimeFormat)
+      switch(instance.dateTimeFormat)
       {
          case DATETIME_FORMAT_SERVER:
             NXCSession session = ConsoleSharedData.getSession();
@@ -138,7 +169,7 @@ public class RegionalSettings
          case DATETIME_FORMAT_CUSTOM:
             try
             {
-               df = new SimpleDateFormat(timeFormatString);
+               df = new SimpleDateFormat(instance.timeFormatString);
             }
             catch(IllegalArgumentException e)
             {
@@ -162,8 +193,9 @@ public class RegionalSettings
     */
    public static DateFormat getShortTimeFormat()
    {
+      RegionalSettings instance = getInstance();
       DateFormat df;
-      switch(dateTimeFormat)
+      switch(instance.dateTimeFormat)
       {
          case DATETIME_FORMAT_SERVER:
             NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -172,7 +204,7 @@ public class RegionalSettings
          case DATETIME_FORMAT_CUSTOM:
             try
             {
-               df = new SimpleDateFormat(shortTimeFormatString);
+               df = new SimpleDateFormat(instance.shortTimeFormatString);
             }
             catch(IllegalArgumentException e)
             {

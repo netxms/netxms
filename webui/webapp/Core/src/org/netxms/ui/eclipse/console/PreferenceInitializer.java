@@ -34,21 +34,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 	public void initializeDefaultPreferences()
 	{
 		final IPreferenceStore ps = Activator.getDefault().getPreferenceStore();
-		ps.setDefault("HIDE_WHEN_MINIMIZED", false); //$NON-NLS-1$
-		ps.setDefault("HIDE_WINDOW_MENU", false); //$NON-NLS-1$
 		ps.setDefault("INITIAL_PERSPECTIVE", "org.netxms.ui.eclipse.console.ManagementPerspective"); //$NON-NLS-1$ //$NON-NLS-2$
 		ps.setDefault("SAVE_AND_RESTORE", true); //$NON-NLS-1$
 		ps.setDefault("SHOW_COOLBAR", true); //$NON-NLS-1$
 		ps.setDefault("SHOW_HIDDEN_ATTRIBUTES", false); //$NON-NLS-1$
-		ps.setDefault("SHOW_TRAY_ICON", true); //$NON-NLS-1$
-		
-		ps.setDefault("HTTP_PROXY_ENABLED", false); //$NON-NLS-1$
-		ps.setDefault("HTTP_PROXY_SERVER", ""); //$NON-NLS-1$ //$NON-NLS-2$
-		ps.setDefault("HTTP_PROXY_PORT", "8000"); //$NON-NLS-1$ //$NON-NLS-2$
-		ps.setDefault("HTTP_PROXY_EXCLUSIONS", "localhost|127.0.0.1|10.*|192.168.*"); //$NON-NLS-1$ //$NON-NLS-2$
-		ps.setDefault("HTTP_PROXY_AUTH", false); //$NON-NLS-1$
-		ps.setDefault("HTTP_PROXY_LOGIN", ""); //$NON-NLS-1$ //$NON-NLS-2$
-		ps.setDefault("HTTP_PROXY_PASSWORD", ""); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		ps.setDefault("DATETIME_FORMAT", RegionalSettings.DATETIME_FORMAT_SERVER); //$NON-NLS-1$
 		ps.setDefault("DATE_FORMAT_STRING", Messages.get().PreferenceInitializer_DefaultDateFormat); //$NON-NLS-1$

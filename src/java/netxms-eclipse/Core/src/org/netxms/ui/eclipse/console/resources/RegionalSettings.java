@@ -51,6 +51,10 @@ public class RegionalSettings
 		dateFormatString = ps.getString("DATE_FORMAT_STRING"); //$NON-NLS-1$
 		timeFormatString = ps.getString("TIME_FORMAT_STRING"); //$NON-NLS-1$
       shortTimeFormatString = ps.getString("SHORT_TIME_FORMAT_STRING"); //$NON-NLS-1$
+      if (ps.getBoolean("USE_SERVER_TIMEZONE"))
+         ConsoleSharedData.setServerTimeZone();
+      else
+         ConsoleSharedData.resetTimeZone();
 	}
 	
 	/**

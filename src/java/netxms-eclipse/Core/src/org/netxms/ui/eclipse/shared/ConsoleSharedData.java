@@ -68,9 +68,21 @@ public class ConsoleSharedData
    /**
     * Set server time zone
     */
-   public void setServerTimeZone()
+   public static void setServerTimeZone()
    {
-      
+      if (session != null)
+      {
+         String tz = session.getServerTimeZone();
+         timeZone = TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]+([\\+\\-][0-9]+).*", "GMT$1")); //$NON-NLS-1$ //$NON-NLS-2$
+      }
+   }
+   
+   /**
+    * Reset time zone to default
+    */
+   public static void resetTimeZone()
+   {
+      timeZone = null;
    }
    
 	/**

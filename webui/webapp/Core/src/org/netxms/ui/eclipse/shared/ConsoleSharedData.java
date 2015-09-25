@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.shared;
 
 import java.util.TimeZone;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.ClientInfo;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 
@@ -51,6 +52,35 @@ public class ConsoleSharedData
       return (TimeZone)RWT.getUISession().getAttribute(ATTRIBUTE_TIMEZONE);
 	}
 
+   /**
+    * Set server time zone
+    */
+   public static void setServerTimeZone()
+   {
+      NXCSession session = getSession();
+      if (session != null)
+      {
+         String tz = session.getServerTimeZone();
+         RWT.getUISession().setAttribute(ATTRIBUTE_TIMEZONE, TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]+([\\+\\-][0-9]+).*", "GMT$1"))); //$NON-NLS-1$ //$NON-NLS-2$
+      }
+   }
+   
+   /**
+    * Reset time zone to default
+    */
+   public static void resetTimeZone()
+   {
+      ClientInfo clientInfo = RWT.getClient().getService(ClientInfo.class);
+      if (clientInfo != null)
+      {
+         String[] tzList = TimeZone.getAvailableIDs(-clientInfo.getTimezoneOffset() * 60000);  // convert offset in minutes to milliseconds (in RAP - means ahead of UTC)
+         if (tzList.length > 0)
+         {
+            RWT.getUISession().setAttribute(ATTRIBUTE_TIMEZONE, TimeZone.getTimeZone(tzList[0]));
+         }
+      }
+   }
+	
 	/**
 	 * Get value of console property
 	 * 
