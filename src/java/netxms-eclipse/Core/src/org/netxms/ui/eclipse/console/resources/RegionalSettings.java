@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.console.resources;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.TimeZone;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
@@ -59,23 +60,31 @@ public class RegionalSettings
 	 */
 	public static DateFormat getDateTimeFormat()
 	{
+	   DateFormat df;
 		switch(dateTimeFormat)
 		{
 			case DATETIME_FORMAT_SERVER:
 				NXCSession session = ConsoleSharedData.getSession();
-				return new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat()); //$NON-NLS-1$
+				df = new SimpleDateFormat(session.getDateFormat() + " " + session.getTimeFormat()); //$NON-NLS-1$
+				break;
 			case DATETIME_FORMAT_CUSTOM:
 				try
 				{
-					return new SimpleDateFormat(dateFormatString + " " + timeFormatString); //$NON-NLS-1$
+					df = new SimpleDateFormat(dateFormatString + " " + timeFormatString); //$NON-NLS-1$
 				}
 				catch(IllegalArgumentException e)
 				{
-					return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
+					df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
 				}
+				break;
 			default:
-				return DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
+				df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM);
+				break;
 		}
+		TimeZone tz = ConsoleSharedData.getTimeZone();
+		if (tz != null)
+		   df.setTimeZone(tz);
+		return df;
 	}
 
 	/**
@@ -85,23 +94,31 @@ public class RegionalSettings
 	 */
 	public static DateFormat getDateFormat()
 	{
+      DateFormat df;
 		switch(dateTimeFormat)
 		{
 			case DATETIME_FORMAT_SERVER:
 				NXCSession session = ConsoleSharedData.getSession();
-				return new SimpleDateFormat(session.getDateFormat());
+				df = new SimpleDateFormat(session.getDateFormat());
+				break;
 			case DATETIME_FORMAT_CUSTOM:
 				try
 				{
-					return new SimpleDateFormat(dateFormatString);
+				   df = new SimpleDateFormat(dateFormatString);
 				}
 				catch(IllegalArgumentException e)
 				{
-					return DateFormat.getDateInstance(DateFormat.SHORT);
+				   df = DateFormat.getDateInstance(DateFormat.SHORT);
 				}
+            break;
 			default:
-				return DateFormat.getDateInstance(DateFormat.SHORT);
+			   df = DateFormat.getDateInstance(DateFormat.SHORT);
+            break;
 		}
+      TimeZone tz = ConsoleSharedData.getTimeZone();
+      if (tz != null)
+         df.setTimeZone(tz);
+      return df;
 	}
 
    /**
@@ -111,23 +128,31 @@ public class RegionalSettings
     */
    public static DateFormat getTimeFormat()
    {
+      DateFormat df;
       switch(dateTimeFormat)
       {
          case DATETIME_FORMAT_SERVER:
             NXCSession session = ConsoleSharedData.getSession();
-            return new SimpleDateFormat(session.getTimeFormat());
+            df = new SimpleDateFormat(session.getTimeFormat());
+            break;
          case DATETIME_FORMAT_CUSTOM:
             try
             {
-               return new SimpleDateFormat(timeFormatString);
+               df = new SimpleDateFormat(timeFormatString);
             }
             catch(IllegalArgumentException e)
             {
-               return DateFormat.getTimeInstance(DateFormat.MEDIUM);
+               df = DateFormat.getTimeInstance(DateFormat.MEDIUM);
             }
+            break;
          default:
-            return DateFormat.getTimeInstance(DateFormat.MEDIUM);
+            df = DateFormat.getTimeInstance(DateFormat.MEDIUM);
+            break;
       }
+      TimeZone tz = ConsoleSharedData.getTimeZone();
+      if (tz != null)
+         df.setTimeZone(tz);
+      return df;
    }
 
    /**
@@ -137,23 +162,31 @@ public class RegionalSettings
     */
    public static DateFormat getShortTimeFormat()
    {
+      DateFormat df;
       switch(dateTimeFormat)
       {
          case DATETIME_FORMAT_SERVER:
             NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-            return new SimpleDateFormat(session.getShortTimeFormat());
+            df = new SimpleDateFormat(session.getShortTimeFormat());
+            break;
          case DATETIME_FORMAT_CUSTOM:
             try
             {
-               return new SimpleDateFormat(shortTimeFormatString);
+               df = new SimpleDateFormat(shortTimeFormatString);
             }
             catch(IllegalArgumentException e)
             {
-               return DateFormat.getTimeInstance(DateFormat.SHORT);
+               df = DateFormat.getTimeInstance(DateFormat.SHORT);
             }
+            break;
          default:
-            return DateFormat.getTimeInstance(DateFormat.SHORT);
+            df = DateFormat.getTimeInstance(DateFormat.SHORT);
+            break;
       }
+      TimeZone tz = ConsoleSharedData.getTimeZone();
+      if (tz != null)
+         df.setTimeZone(tz);
+      return df;
    }
    
    /**

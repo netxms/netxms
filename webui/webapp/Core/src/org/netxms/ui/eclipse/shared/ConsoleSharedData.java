@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.shared;
 
+import java.util.TimeZone;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
@@ -28,6 +29,7 @@ import org.netxms.client.NXCSession;
 public class ConsoleSharedData
 {
    public static final String ATTRIBUTE_SESSION = "netxms.session";
+   public static final String ATTRIBUTE_TIMEZONE = "netxms.timezone";
    
 	/**
 	 * Get NetXMS session
@@ -37,6 +39,16 @@ public class ConsoleSharedData
 	public static NXCSession getSession()
 	{
 		return (NXCSession)RWT.getUISession().getAttribute(ATTRIBUTE_SESSION);
+	}
+	
+	/**
+	 * Get client timezone
+	 * 
+	 * @return
+	 */
+	public static TimeZone getTimeZone()
+	{
+      return (TimeZone)RWT.getUISession().getAttribute(ATTRIBUTE_TIMEZONE);
 	}
 
 	/**
