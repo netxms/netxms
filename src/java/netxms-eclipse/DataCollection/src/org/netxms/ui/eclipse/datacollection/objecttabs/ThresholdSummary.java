@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objects.Zone;
@@ -62,7 +63,7 @@ public class ThresholdSummary extends ObjectTab
 	{
 		return (object instanceof EntireNetwork) || (object instanceof Zone) ||
 				(object instanceof Subnet) || (object instanceof ServiceRoot) ||
-				(object instanceof Container);
+				(object instanceof Container) || (object instanceof Rack);
 	}
 
 	/* (non-Javadoc)
