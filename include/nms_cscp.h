@@ -1085,6 +1085,12 @@ typedef struct
 #define VID_RACK_IMAGE              ((UINT32)518)
 #define VID_RACK_POSITION           ((UINT32)519)
 #define VID_RACK_HEIGHT             ((UINT32)520)
+#define VID_SCHEDULE_COUNT          ((UINT32)521)
+#define VID_SCHEDULE_ID             ((UINT32)523)
+#define VID_TASK_ID                 ((UINT32)524)
+#define VID_SCHEDULE                ((UINT32)525)
+#define VID_EXECUTION_TIME          ((UINT32)526)
+#define VID_LAST_EXECUTION_TIME     ((UINT32)527)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1273,6 +1279,8 @@ typedef struct
 #define VID_FILE_LIST_BASE          ((UINT32)0x10000000)
 
 #define VID_LOC_LIST_BASE           ((UINT32)0x10000000)
+
+#define VID_SCHEDULE_LIST_BASE      ((UINT32)0x10000000)
 
 #ifdef __cplusplus
 
