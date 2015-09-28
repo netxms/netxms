@@ -1434,6 +1434,13 @@ BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory);
 TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str);
 bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase);
 TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
+int LIBNETXMS_EXPORTABLE GetLastMonthDay(struct tm *currTime);
+#ifdef __cplusplus
+bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime = 0);
+#else
+bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime);
+#endif
+
 
 #ifdef __cplusplus
 BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars = FALSE);

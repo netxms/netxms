@@ -79,6 +79,8 @@ void InitCertificates();
 void InitUsers();
 void CleanupUsers();
 void LoadPerfDataStorageDrivers();
+void InitializeTaskScheduler();
+void CloseTaskScheduler();
 
 #if XMPP_SUPPORTED
 void StopXMPPConnector();
@@ -840,6 +842,12 @@ retry_db_lock:
    if (ConfigReadInt(_T("LdapSyncInterval"), 0))
 		ThreadCreate(SyncLDAPUsers, 0, NULL);
 
+   //Add schedule callbacks
+   AddSchedulleTaskHandler(_T("Execute.Script"), ExecuteScript);
+
+   //initialize shedule
+   InitializeTaskScheduler();
+
 	// Allow clients to connect
 	InitClientListeners();
 	ThreadCreate(ClientListener, 0, NULL);
@@ -885,6 +893,9 @@ void NXCORE_EXPORTABLE Shutdown()
 	nxlog_write(MSG_SERVER_STOPPED, EVENTLOG_INFORMATION_TYPE, NULL);
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
+
+   //shutdown schedule
+   CloseTaskScheduler();
 
    // Stop DCI cache loading thread
    g_dciCacheLoaderQueue.setShutdownMode();
@@ -1876,10 +1887,33 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       LDAPConnection conn;
       conn.syncUsers();
    }
+   else if (IsCommand(_T("AT"), szBuffer, 2))
+   {
+      pArg = ExtractWord(pArg, szBuffer);
+      TCHAR *params =_tcsdup(szBuffer);
+      ConsoleWrite(pCtx, pArg);
+      ConsoleWrite(pCtx, _T("\n\n"));
+
+      //skip all space and tab characters
+      while(pArg[0] == _T(' ') || pArg[0] == _T('\t') )
+         pArg++;
+
+      if(pArg[0] == _T('+'))
+      {
+         int tm = _tcstoul(pArg+1, NULL, 0);
+         AddOneTimeAction(_T("Execute.Script"), time(NULL) + tm, params);
+      }
+      else
+      {
+         AddSchedule(_T("Execute.Script"), pArg, params);
+      }
+      safe_free(params);
+   }
 	else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))
 	{
 		ConsoleWrite(pCtx,
             _T("Valid commands are:\n")
+				_T("   at <shedule> [+seconds from now|cron shedule]       - Set debug level (valid range is 0..9)\n")
 				_T("   debug [<level>|off]       - Set debug level (valid range is 0..9)\n")
 				_T("   down                      - Shutdown NetXMS server\n")
 				_T("   exec <script> [<params>]  - Executes NXSL script from script library\n")

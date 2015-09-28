@@ -157,6 +157,7 @@ typedef void * HSNMPSESSION;
 #define IDG_DCT_COLUMN        21
 #define IDG_MAPPING_TABLE     22
 #define IDG_DCI_SUMMARY_TABLE 23
+#define IDG_SCHEDULE          24
 
 /**
  * Exit codes for console commands
@@ -1029,6 +1030,11 @@ GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize);
 BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT32 graphUserId, UINT32 graphDesiredAccess);
 UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId);
 GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName);
+
+typedef void (*scheduled_action_executor)(const TCHAR *params);
+void AddSchedulleTaskHandler(const TCHAR *id, scheduled_action_executor exec);
+void AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params);
+void AddOneTimeAction(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params);
 
 #if XMPP_SUPPORTED
 bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message);

@@ -1703,6 +1703,127 @@ TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *nu
 }
 
 /**
+ * Get step size for "%" and "/" crontab cases
+ */
+static int GetStepSize(TCHAR *str)
+{
+  int step = 0;
+  if (str != NULL)
+  {
+    *str = 0;
+    str++;
+    step = *str == _T('\0') ? 1 : _tcstol(str, NULL, 10);
+  }
+
+  if (step <= 0)
+  {
+    step = 1;
+  }
+
+  return step;
+}
+
+/**
+ * Get last day of current month
+ */
+int LIBNETXMS_EXPORTABLE GetLastMonthDay(struct tm *currTime)
+{
+   switch(currTime->tm_mon)
+   {
+      case 1:  // February
+         if (((currTime->tm_year % 4) == 0) && (((currTime->tm_year % 100) != 0) || (((currTime->tm_year + 1900) % 400) == 0)))
+            return 29;
+         return 28;
+      case 0:  // January
+      case 2:  // March
+      case 4:  // May
+      case 6:  // July
+      case 7:  // August
+      case 9:  // October
+      case 11: // December
+         return 31;
+      default:
+         return 30;
+   }
+}
+
+/**
+ * Match schedule element
+ * NOTE: We assume that pattern can be modified during processing
+ */
+bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime)
+{
+   TCHAR *ptr, *curr;
+   int nStep, nCurr, nPrev;
+   bool bRun = true, bRange = false;
+
+   // Check for "last" pattern
+   if (*pszPattern == _T('L'))
+      return nValue == maxValue;
+
+	// Check if time() step was specified (% - special syntax)
+	ptr = _tcschr(pszPattern, _T('%'));
+	if (ptr != NULL)
+		return (currTime % GetStepSize(ptr)) != 0;
+
+   // Check if step was specified
+   ptr = _tcschr(pszPattern, _T('/'));
+   nStep = GetStepSize(ptr);
+
+   if (*pszPattern == _T('*'))
+      goto check_step;
+
+   for(curr = pszPattern; bRun; curr = ptr + 1)
+   {
+      for(ptr = curr; (*ptr != 0) && (*ptr != '-') && (*ptr != ','); ptr++);
+      switch(*ptr)
+      {
+         case '-':
+            if (bRange)
+               return false;  // Form like 1-2-3 is invalid
+            bRange = true;
+            *ptr = 0;
+            nPrev = _tcstol(curr, NULL, 10);
+            break;
+         case 'L':  // special case for last day ow week in a month (like 5L - last Friday)
+            if (bRange || (localTime == NULL))
+               return false;  // Range with L is not supported; nL form supported only for day of week
+            *ptr = 0;
+            nCurr = _tcstol(curr, NULL, 10);
+            if ((nValue == nCurr) && (localTime->tm_mday + 7 > GetLastMonthDay(localTime)))
+               return true;
+            ptr++;
+            if (*ptr != ',')
+               bRun = false;
+            break;
+         case 0:
+            bRun = false;
+            /* no break */
+         case ',':
+            *ptr = 0;
+            nCurr = _tcstol(curr, NULL, 10);
+            if (bRange)
+            {
+               if ((nValue >= nPrev) && (nValue <= nCurr))
+                  goto check_step;
+               bRange = false;
+            }
+            else
+            {
+               if (nValue == nCurr)
+                  return true;
+            }
+            break;
+      }
+   }
+
+   return false;
+
+check_step:
+   return (nValue % nStep) == 0;
+}
+
+/**
  * Failure handler for DecryptPassword
  */
 inline bool DecryptPasswordFail(const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd, size_t bufferLenght)

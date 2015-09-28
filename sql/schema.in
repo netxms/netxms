@@ -1556,3 +1556,18 @@ CREATE TABLE dci_summary_tables
 	columns SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+/*
+** Task schedule
+*/
+CREATE TABLE schedule
+(
+	id integer not null,
+	taskId varchar(255) null,
+   shedule vatchar(127) null,
+	params varchar(1023) null,
+	execution_time integer not null,
+	last_execution_time integer not null,
+	flags integer not null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;

@@ -168,6 +168,8 @@ UINT32 ResolveScriptName(const TCHAR *name);
 void CreateScriptExportRecord(String &xml, UINT32 id);
 void ImportScript(ConfigEntry *config);
 NXSL_VM *FindHookScript(const TCHAR *hookName);
+void ExecuteScript(const TCHAR *param);
+bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args);
 
 /**
  * Global variables

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
 ** Copyright (C) 2003-2013 Victor Kirhenshtein

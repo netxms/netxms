@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -115,7 +115,7 @@ void ReloadScript(UINT32 id)
    free(code);
 
    g_pScriptLibrary->lock();
-   g_pScriptLibrary->deleteScript(id);   
+   g_pScriptLibrary->deleteScript(id);
    if (script != NULL)
    {
       g_pScriptLibrary->addScript(id, name, script);
@@ -236,4 +236,185 @@ void ImportScript(ConfigEntry *config)
    DBConnectionPoolReleaseConnection(hdb);
 
    ReloadScript(id);
+}
+
+void LIBNXSL_EXPORTABLE ExecuteScript(const TCHAR *param)
+{
+   size_t bufSize = 512;
+   TCHAR *buffer[512];
+   TCHAR name[256];
+   nx_strncpy(name, param, 256);
+   Trim(name);
+
+   ObjectArray<NXSL_Value> args(16, 16, false);
+
+   // Can be in form parameter(arg1, arg2, ... argN)
+   TCHAR *p = _tcschr(name, _T('('));
+   if (p != NULL)
+   {
+      if (name[_tcslen(name) - 1] != _T(')'))
+         return;
+      name[_tcslen(name) - 1] = 0;
+
+      if (!ParseValueList(&p, args))
+      {
+         // argument parsing error
+         args.clear();
+         return;
+      }
+   }
+
+   NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
+   if (vm != NULL)
+   {
+      if (vm->run(&args))
+      {
+			DbgPrintf(4, _T("ExecuteScript(%s): Script executed sucesfully."), param, vm->getErrorText());
+      }
+      else
+      {
+			DbgPrintf(4, _T("ExecuteScript(%s): Script execution error: %s"), param, vm->getErrorText());
+      }
+      delete vm;
+   }
+   else
+   {
+      args.setOwner(true);
+   }
+}
+
+/**
+ * Parse value list
+ */
+bool LIBNXSL_EXPORTABLE ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
+{
+   TCHAR *p = *start;
+
+   *p = 0;
+   p++;
+
+   TCHAR *s = p;
+   int state = 1; // normal text
+
+   for(; state > 0; p++)
+   {
+      switch(*p)
+      {
+         case '"':
+            if (state == 1)
+            {
+               state = 2;
+               s = p + 1;
+            }
+            else
+            {
+               state = 3;
+               *p = 0;
+               args.add(new NXSL_Value(s));
+            }
+            break;
+         case ',':
+            if (state == 1)
+            {
+               *p = 0;
+               Trim(s);
+               args.add(new NXSL_Value(s));
+               s = p + 1;
+            }
+            else if (state == 3)
+            {
+               state = 1;
+               s = p + 1;
+            }
+            break;
+         case 0:
+            if (state == 1)
+            {
+               Trim(s);
+               args.add(new NXSL_Value(s));
+               state = 0;
+            }
+            else if (state == 3)
+            {
+               state = 0;
+            }
+            else
+            {
+               state = -1; // error
+            }
+            break;
+         case ' ':
+            break;
+         case ')':
+            if (state == 1)
+            {
+               *p = 0;
+               Trim(s);
+               args.add(new NXSL_Value(s));
+               state = 0;
+            }
+            else if (state == 3)
+            {
+               state = 0;
+            }
+            break;
+         case '\\':
+            if (state == 2)
+            {
+               memmove(p, p + 1, _tcslen(p) * sizeof(TCHAR));
+               switch(*p)
+               {
+                  case 'r':
+                     *p = '\r';
+                     break;
+                  case 'n':
+                     *p = '\n';
+                     break;
+                  case 't':
+                     *p = '\t';
+                     break;
+                  default:
+                     break;
+               }
+            }
+            else if (state == 3)
+            {
+               state = -1;
+            }
+            break;
+         case '%':
+            if ((state == 1) && (*(p + 1) == '('))
+            {
+               p++;
+               ObjectArray<NXSL_Value> elements(16, 16, false);
+               if (ParseValueList(&p, elements))
+               {
+                  NXSL_Array *array = new NXSL_Array();
+                  for(int i = 0; i < elements.size(); i++)
+                  {
+                     array->set(i, elements.get(i));
+                  }
+                  args.add(new NXSL_Value(array));
+                  state = 3;
+               }
+               else
+               {
+                  state = -1;
+                  elements.clear();
+               }
+            }
+            else if (state == 3)
+            {
+               state = -1;
+            }
+            break;
+         default:
+            if (state == 3)
+               state = -1;
+            break;
+      }
+   }
+
+   *start = p - 1;
+   return (state != -1);
 }

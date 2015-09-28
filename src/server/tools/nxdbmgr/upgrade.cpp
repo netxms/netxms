@@ -574,6 +574,25 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V368 to V369
+ */
+static BOOL H_UpgradeFromV368(int currVersion, int newVersion)
+{
+    CHK_EXEC(CreateTable(
+      _T("CREATE TABLE schedule (")
+      _T("	 id integer not null,")
+      _T("   taskId varchar(255) null,")
+      _T("   shedule varchar(127) null,")
+      _T("   params varchar(1023) null,")
+      _T("   execution_time integer not null,")
+      _T("   last_execution_time integer not null,")
+      _T("   flags integer not null,")
+      _T("   PRIMARY KEY(id))")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='369' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V367 to V368
  */
 static BOOL H_UpgradeFromV367(int currVersion, int newVersion)
@@ -583,7 +602,6 @@ static BOOL H_UpgradeFromV367(int currVersion, int newVersion)
       _T("UPDATE nodes SET rack_height=1\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='368' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -8888,6 +8906,7 @@ static struct
    { 365, 366, H_UpgradeFromV365 },
    { 366, 367, H_UpgradeFromV366 },
    { 367, 368, H_UpgradeFromV367 },
+   { 368, 369, H_UpgradeFromV368 },
    { 0, 0, NULL }
 };
 
