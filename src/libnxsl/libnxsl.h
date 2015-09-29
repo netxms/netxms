@@ -123,6 +123,7 @@ typedef void *yyscan_t;
 #define OPCODE_HASHMAP_SET    70
 #define OPCODE_NEW_ARRAY      71
 #define OPCODE_NEW_HASHMAP    72
+#define OPCODE_CPOP           73
 
 class NXSL_Compiler;
 

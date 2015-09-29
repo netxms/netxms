@@ -268,6 +268,7 @@ TryCatchBlock:
 	} 
 	Block T_CATCH 
 	{
+		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CPOP));
 		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
 		pScript->resolveLastJump(OPCODE_CATCH);
 	} 

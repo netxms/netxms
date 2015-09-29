@@ -50,7 +50,7 @@ const char *g_nxslCommandMnemonic[] =
 	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR",
 	"AGETS", "CALL", "CASE", "EINC", "EDEC",
    "EINCP", "EDECP", "ABORT", "CATCH", "PUSH",
-   "SETHM", "NEWARR", "NEWHM"
+   "SETHM", "NEWARR", "NEWHM", "CPOP"
 };
 
 /**
@@ -227,7 +227,7 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_JNZ:
          case OPCODE_JZ_PEEK:
          case OPCODE_JNZ_PEEK:
-            fprintf(pFile, "%04X\n", instr->m_operand.m_dwAddr);
+            _ftprintf(pFile, _T("%04X\n"), instr->m_operand.m_dwAddr);
             break;
          case OPCODE_PUSH_CONSTREF:
          case OPCODE_PUSH_VARIABLE:
@@ -249,22 +249,22 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_PUSH_CONSTANT:
 			case OPCODE_CASE:
             if (instr->m_operand.m_pConstant->isNull())
-               fprintf(pFile, "<null>\n");
+               _ftprintf(pFile, _T("<null>\n"));
             else if (instr->m_operand.m_pConstant->isArray())
-               fprintf(pFile, "<array>\n");
+               _ftprintf(pFile, _T("<array>\n"));
             else if (instr->m_operand.m_pConstant->isHashMap())
-               fprintf(pFile, "<hash map>\n");
+               _ftprintf(pFile, _T("<hash map>\n"));
             else
                _ftprintf(pFile, _T("\"%s\"\n"), instr->m_operand.m_pConstant->getValueAsCString());
             break;
          case OPCODE_POP:
-            fprintf(pFile, "%d\n", instr->m_nStackItems);
+            _ftprintf(pFile, _T("%d\n"), instr->m_nStackItems);
             break;
          case OPCODE_CAST:
             _ftprintf(pFile, _T("[%s]\n"), g_szTypeNames[instr->m_nStackItems]);
             break;
          default:
-            fprintf(pFile, "\n");
+            _ftprintf(pFile, _T("\n"));
             break;
       }
    }
