@@ -122,7 +122,7 @@ static int SelectResultType(int nType1, int nType2, int nOp)
 /**
  * Constructor
  */
-NXSL_VM::NXSL_VM(NXSL_Environment *env)
+NXSL_VM::NXSL_VM(NXSL_Environment *env, NXSL_Storage *storage)
 {
    m_instructionSet = NULL;
    m_cp = INVALID_ADDRESS;
@@ -141,6 +141,17 @@ NXSL_VM::NXSL_VM(NXSL_Environment *env)
    m_env = (env != NULL) ? env : new NXSL_Environment;
    m_pRetValue = NULL;
 	m_userData = NULL;
+	m_nBindPos = 0;
+	if (storage != NULL)
+	{
+      m_localStorage = NULL;
+	   m_storage = storage;
+	}
+	else
+	{
+      m_localStorage = new NXSL_Storage;
+      m_storage = m_localStorage;
+	}
 }
 
 /**
@@ -157,6 +168,8 @@ NXSL_VM::~NXSL_VM()
    delete m_constants;
    delete m_globals;
    delete m_locals;
+
+   delete m_localStorage;
 
    delete m_env;
    delete m_pRetValue;
@@ -1181,6 +1194,55 @@ void NXSL_VM::execute()
          {
             NXSL_CatchPoint *p = (NXSL_CatchPoint *)m_catchStack->pop();
             delete p;
+         }
+         break;
+      case OPCODE_STORAGE_WRITE:   // Write to storage; stack should contain: name value (top)
+         pValue = (NXSL_Value *)m_dataStack->pop();
+         if (pValue != NULL)
+         {
+            NXSL_Value *name = (NXSL_Value *)m_dataStack->pop();
+            if (name != NULL)
+            {
+               if (name->isString())
+               {
+                  m_storage->write(name->getValueAsCString(), new NXSL_Value(pValue));
+                  m_dataStack->push(pValue);
+                  pValue = NULL;    // Prevent deletion
+               }
+               else
+               {
+                  error(NXSL_ERR_NOT_STRING);
+               }
+               delete name;
+            }
+            else
+            {
+               error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+            }
+            delete pValue;
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
+      case OPCODE_STORAGE_READ:   // Read from storage; stack should contain item name on top
+         pValue = (NXSL_Value *)m_dataStack->pop();
+         if (pValue != NULL)
+         {
+            if (pValue->isString())
+            {
+               m_dataStack->push(m_storage->read(pValue->getValueAsCString()));
+            }
+            else
+            {
+               error(NXSL_ERR_NOT_STRING);
+            }
+            delete pValue;
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
       default:

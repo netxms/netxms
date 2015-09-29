@@ -27,7 +27,6 @@
  * Externals
  */
 int yyparse(yyscan_t scanner, NXSL_Lexer *, NXSL_Compiler *, NXSL_Program *);
-extern int yydebug;
 void yyset_extra(NXSL_Lexer *, yyscan_t);
 int yylex_init(yyscan_t *);
 int yylex_destroy(yyscan_t);

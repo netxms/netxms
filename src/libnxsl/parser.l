@@ -148,6 +148,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"["	return '[';
 <INITIAL>"]"	return ']';
 <INITIAL>"@"	return '@';
+<INITIAL>"#"	return '#';
 
 <INITIAL>"/*"	{ yyextra->m_nCommentLevel = 1; BEGIN COMMENT; }
 <INITIAL>\"	{ yyextra->m_nStrSize = 0; BEGIN STR; }

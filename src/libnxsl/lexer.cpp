@@ -38,6 +38,8 @@ NXSL_Lexer::NXSL_Lexer(NXSL_Compiler *pCompiler, const TCHAR *pszCode)
    m_nCurrLine = 1;
    m_nSourcePos = 0;
    m_pCompiler = pCompiler;
+   m_nStrSize = 0;
+   m_nCommentLevel = 0;
 }
 
 /**

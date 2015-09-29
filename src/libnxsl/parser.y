@@ -359,6 +359,14 @@ Expression:
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GET_ELEMENT));
 }
+|	StorageItem '=' Expression
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_STORAGE_WRITE));
+}
+|	StorageItem
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_STORAGE_READ));
+}
 |	Expression T_REF T_IDENTIFIER '=' Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SET_ATTRIBUTE, $3));
@@ -952,6 +960,15 @@ FunctionName:
 	$$ = $1;
 }
 ;
+
+StorageItem:
+	'#' T_IDENTIFIER
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($2)));
+	safe_free_and_null($2);
+}
+|	'#' '(' Expression ')'
+;	
 
 Constant:
 	T_STRING

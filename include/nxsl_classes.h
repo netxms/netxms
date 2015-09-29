@@ -650,6 +650,22 @@ struct NXSL_CatchPoint
 };
 
 /**
+ * NXSL storage class - base class for actual persistent storage
+ */
+class LIBNXSL_EXPORTABLE NXSL_Storage
+{
+protected:
+   StringObjectMap<NXSL_Value> *m_values;
+
+public:
+   NXSL_Storage();
+   virtual ~NXSL_Storage();
+
+   virtual void write(const TCHAR *name, NXSL_Value *value);
+   virtual NXSL_Value *read(const TCHAR *name);
+};
+
+/**
  * NXSL virtual machine
  */
 class LIBNXSL_EXPORTABLE NXSL_VM
@@ -673,6 +689,9 @@ protected:
    NXSL_VariableSystem *m_constants;
    NXSL_VariableSystem *m_globals;
    NXSL_VariableSystem *m_locals;
+
+   NXSL_Storage *m_storage;
+   NXSL_Storage *m_localStorage;
 
    ObjectArray<NXSL_Function> *m_functions;
    ObjectArray<NXSL_Module> *m_modules;
@@ -702,13 +721,22 @@ protected:
    UINT32 getFunctionAddress(const TCHAR *pszName);
 
 public:
-   NXSL_VM(NXSL_Environment *env = NULL);
+   NXSL_VM(NXSL_Environment *env = NULL, NXSL_Storage *storage = NULL);
    ~NXSL_VM();
 
    void loadModule(NXSL_Program *module, const TCHAR *name);
 
 	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
 	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_globals->find(pszName); }
+
+	void storageWrite(const TCHAR *name, NXSL_Value *value) { m_storage->write(name, value); }
+   void storageWrite(const TCHAR *name, const TCHAR *value) { m_storage->write(name, new NXSL_Value(value)); }
+   void storageWrite(const TCHAR *name, INT32 value) { m_storage->write(name, new NXSL_Value(value)); }
+   void storageWrite(const TCHAR *name, UINT32 value) { m_storage->write(name, new NXSL_Value(value)); }
+   void storageWrite(const TCHAR *name, INT64 value) { m_storage->write(name, new NXSL_Value(value)); }
+   void storageWrite(const TCHAR *name, UINT64 value) { m_storage->write(name, new NXSL_Value(value)); }
+   void storageWrite(const TCHAR *name, double value) { m_storage->write(name, new NXSL_Value(value)); }
+	NXSL_Value *storageRead(const TCHAR *name) { return m_storage->read(name); }
 
    bool load(NXSL_Program *program);
    bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem *pUserLocals = NULL,

@@ -1333,3 +1333,29 @@ int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *v
    *result = new NXSL_Value(s);
    return 0;
 }
+
+/**
+ * Read persistent storage
+ */
+int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   *result = vm->storageRead(argv[0]->getValueAsCString());
+   return 0;
+}
+
+/**
+ * Write to persistent storage
+ */
+int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   vm->storageWrite(argv[0]->getValueAsCString(), new NXSL_Value(argv[1]));
+
+   *result = new NXSL_Value();
+   return 0;
+}
