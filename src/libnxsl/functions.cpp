@@ -628,9 +628,23 @@ int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 }
 
 /**
+ * Convert hexadecimal string to decimal value
+ *   x2d(hex value)      -> value
+ */
+int F_x2d(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   UINT64 v = _tcstoull(argv[0]->getValueAsCString(), NULL, 16);
+   *result = (v <= 0x7FFFFFFF) ? new NXSL_Value((UINT32)v) : new NXSL_Value(v);
+   return 0;
+}
+
+/**
  * Convert decimal value to hexadecimal string
  *   d2x(value)          -> hex value
- *   d2x(value, padding) -> hex value padded vith zeros
+ *   d2x(value, padding) -> hex value padded with zeros
  */
 int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
