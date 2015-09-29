@@ -42,6 +42,7 @@ NXSL_Compiler::NXSL_Compiler()
    m_lexer = NULL;
    m_addrStack = new NXSL_Stack;
 	m_breakStack = new NXSL_Stack;
+	m_idOpCode = 0;
 }
 
 /**

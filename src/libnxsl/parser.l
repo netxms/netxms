@@ -34,6 +34,8 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 #undef ECHO
 #define ECHO
 
+#define LEXER_ERROR	255
+
 %}
 
 %%
@@ -162,7 +164,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 			snprintf(szBuffer, 128, "Invalid character '%c' (0x%02X)", *yytext, *yytext);
 #endif
 			LexerError(szBuffer, yyscanner);
-			return -1;
+			return LEXER_ERROR;
 		}
 
 <STR>{escape}	{		
@@ -196,7 +198,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 			else
 			{
 				LexerError("String constant is too long", yyscanner);
-				return -1;
+				return LEXER_ERROR;
 			}
 		}
 <STR>\\x[0-9A-Fa-f][0-9A-Fa-f]? {
@@ -213,13 +215,13 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 				else
 				{
 					LexerError("Character code must be in range 0x00 .. 0xFF", yyscanner);
-					return -1;
+					return LEXER_ERROR;
 				}
 			}
 			else
 			{
 				LexerError("Invalid hex number", yyscanner);
-				return -1;
+				return LEXER_ERROR;
 			}
 		}
 <STR>\"		{
@@ -231,7 +233,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <STR>\r		;
 <STR>\n		{
 			LexerError("Newline in string constant", yyscanner);
-			return -1;
+			return LEXER_ERROR;
 		}
 <STR>.		{
 			if (yyextra->m_nStrSize < MAX_STRING_SIZE)
@@ -241,7 +243,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 			else
 			{
 				LexerError("String constant is too long", yyscanner);
-				return -1;
+				return LEXER_ERROR;
 			}
 		}
 
