@@ -1394,6 +1394,20 @@ void ClientSession::processingThread()
          case CMD_RESYNC_AGENT_DCI_CONF:
             resyncAgentDciConfiguration(pMsg);
             break;
+         case CMD_LIST_SCHEDULE_CALLBACKS:
+            listScheduleCallbacks(pMsg);
+            break;
+         case CMD_LIST_SCHEDULES:
+            listSchedules(pMsg);
+            break;
+         case CMD_ADD_SCHEDULE:
+            addSchedule(pMsg);
+            break;
+         case CMD_UPDATE_SCHEDULE:
+            updateSchedule(pMsg);
+            break;
+         case CMD_REMOVE_SCHEDULE:
+            removeSchedule(pMsg);
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
             {
@@ -13863,6 +13877,7 @@ void ClientSession::cleanAgentDciConfiguration(NXCPMessage *request)
             if(conn != NULL)
             {
                node->clearDataCollectionConfigFromAgent(conn);
+               msg.setField(VID_RCC, RCC_SUCCESS);
             }
             else
             {
@@ -13908,6 +13923,7 @@ void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
 			{
             Node *node = (Node *)object;
             node->forceSyncDataCollectionConfig(node);
+				msg.setField(VID_RCC, RCC_SUCCESS);
 			}
 			else
 			{
@@ -13924,5 +13940,70 @@ void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
       msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
 	}
 
+   sendMessage(&msg);
+}
+
+/**
+ * List all possible Schedule ID's
+ */
+void ClientSession::listScheduleCallbacks(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   GetCallbackIdList(request);
+   msg.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(&msg);
+}
+
+/**
+ * List all existing schedules
+ */
+void ClientSession::listSchedules(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   GetSheduleList(request);
+   msg.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(&msg);
+}
+
+/**
+ * Add new schedule
+ */
+void ClientSession::addSchedule(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   CreateScehduleFromMsg(request);
+   msg.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(&msg);
+}
+
+/**
+ * Update existing schedule
+ */
+void ClientSession::updateSchedule(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   UpdateScheduleFromMsg(request);
+   msg.setField(VID_RCC, RCC_SUCCESS);
+   sendMessage(&msg);
+}
+
+/**
+ * Remove/delete schedule
+ */
+void ClientSession::removeSchedule(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+   RemoveSchedule(request->getFieldAsUInt32(VID_SCHEDULE_ID));
+   msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }

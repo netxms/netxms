@@ -81,8 +81,8 @@ private:
 
 public:
 
-   Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params);
-   Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHAR *params);
+   Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, int flags = 0);
+   Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHAR *params, int flags = 0);
    Schedule(DB_RESULT hResult, int row);
 
    ~Schedule(){ delete m_taskId; delete m_schedule; delete m_params; }
@@ -104,11 +104,13 @@ public:
    void saveToDatabase(bool newObject);
    void run(ScheduleCallback *callback);
    void fillMessage(NXCPMessage *msg);
+   void fillMessage(NXCPMessage *msg, UINT32 base);
 
+   bool checkFlag(int flag) { return (m_flags & flag) > 0 ? true : false; }
    bool isInProgress() { return (m_flags & SCHEDULE_IN_PROGRES) > 0 ? true : false; }
 };
 
-Schedule::Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params)
+Schedule::Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, int flags)
 {
    m_id = id;
    m_taskId = _tcsdup(CHECK_NULL_EX(taskId));
@@ -116,10 +118,10 @@ Schedule::Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCH
    m_params = _tcsdup(CHECK_NULL_EX(params));
    m_executionTime = NEVER;
    m_lastExecution = NEVER;
-   m_flags = 0;
+   m_flags = flags;
 }
 
-Schedule::Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHAR *params)
+Schedule::Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHAR *params, int flags)
 {
    m_id = id;
    m_taskId = _tcsdup(CHECK_NULL_EX(taskId));
@@ -127,7 +129,7 @@ Schedule::Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHA
    m_params = _tcsdup(CHECK_NULL_EX(params));
    m_executionTime = executionTime;
    m_lastExecution = NEVER;
-   m_flags = 0;
+   m_flags = flags;
 }
 
 Schedule::Schedule(DB_RESULT hResult, int row)
@@ -230,6 +232,17 @@ void Schedule::fillMessage(NXCPMessage *msg)
    msg->setField(VID_FLAGS, (UINT32)m_flags);
 }
 
+void Schedule::fillMessage(NXCPMessage *msg, UINT32 base)
+{
+   msg->setField(base, m_id);
+   msg->setField(base+1, m_taskId);
+   msg->setField(base+2, m_schedule);
+   msg->setField(base+3, m_params);
+   msg->setFieldFromTime(base+4, m_executionTime);
+   msg->setFieldFromTime(base+5, m_lastExecution);
+   msg->setField(base+6, (UINT32)m_flags);
+}
+
 /**
  * Callback for sorting reset list
  */
@@ -314,11 +327,11 @@ void AddSchedulleTaskHandler(const TCHAR *id, scheduled_action_executor exec)
 /**
  * Scheduled task creation function
  */
-void AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params)
+void AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, int flags)
 {
    DbgPrintf(7, _T("AddSchedule: Add cron shedule %s, %s, %s"), task, schedule, params);
    MutexLock(s_cronScheduleLock);
-   Schedule *sh = new Schedule(CreateUniqueId(IDG_SCHEDULE), task, schedule, params);
+   Schedule *sh = new Schedule(CreateUniqueId(IDG_SCHEDULE), task, schedule, params, flags);
    sh->saveToDatabase(true);
    s_cronSchedules.add(sh);
    MutexUnlock(s_cronScheduleLock);
@@ -327,11 +340,11 @@ void AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params)
 /**
  * One time action creation function
  */
-void AddOneTimeAction(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params)
+void AddOneTimeAction(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, int flags)
 {
    DbgPrintf(7, _T("AddOneTimeAction: Add one time shedule %s, %d, %s"), task, nextExecutionTime, params);
    MutexLock(s_oneTimeScheduleLock);
-   Schedule *sh = new Schedule(CreateUniqueId(IDG_SCHEDULE), task, nextExecutionTime, params);
+   Schedule *sh = new Schedule(CreateUniqueId(IDG_SCHEDULE), task, nextExecutionTime, params, flags);
    sh->saveToDatabase(true);
    s_oneTimeSchedules.add(sh);
    s_oneTimeSchedules.sort(ScheduleListSortCallback);
@@ -342,7 +355,7 @@ void AddOneTimeAction(const TCHAR *task, time_t nextExecutionTime, const TCHAR *
 /**
  * Scheduled actionUpdate
  */
-void UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params)
+void UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, int flags)
 {
    DbgPrintf(7, _T("UpdateSchedule: update cron shedule %d, %s, %s, %s"), id, task, schedule, params);
    MutexLock(s_cronScheduleLock);
@@ -351,6 +364,7 @@ void UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHA
       if (s_cronSchedules.get(i)->getId() == id)
       {
          s_cronSchedules.get(i)->update(task, schedule, params);
+         s_cronSchedules.get(i)->setFlag(flags);
          s_cronSchedules.get(i)->saveToDatabase(false);
          break;
       }
@@ -362,7 +376,7 @@ void UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHA
 /**
  * One time action update
  */
-void UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params)
+void UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, int flags)
 {
    DbgPrintf(7, _T("UpdateOneTimeAction: update one time shedule %d, %s, %d, %s"), id, task, nextExecutionTime, params);
    bool found = true;
@@ -372,6 +386,7 @@ void UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, co
       if (s_oneTimeSchedules.get(i)->getId() == id)
       {
          s_oneTimeSchedules.get(i)->update(task, nextExecutionTime, params);
+         s_cronSchedules.get(i)->setFlag(flags);
          s_oneTimeSchedules.get(i)->saveToDatabase(false);
          s_oneTimeSchedules.sort(ScheduleListSortCallback);
          found = true;
@@ -436,7 +451,6 @@ void RemoveSchedule(UINT32 id, bool alreadyLocked)
    }
    MutexUnlock(s_oneTimeScheduleLock);
 
-
    if (found)
    {
       ConditionSet(s_cond);
@@ -455,7 +469,7 @@ void GetSheduleList(NXCPMessage *msg)
    MutexLock(s_oneTimeScheduleLock);
    for(int i = 0; i < s_oneTimeSchedules.size(); i++, base+=10)
    {
-      s_oneTimeSchedules.get(i)->fillMessage(msg);
+      s_oneTimeSchedules.get(i)->fillMessage(msg, base);
    }
    sheduleCount += s_oneTimeSchedules.size();
    MutexUnlock(s_oneTimeScheduleLock);
@@ -463,12 +477,76 @@ void GetSheduleList(NXCPMessage *msg)
    MutexLock(s_cronScheduleLock);
    for(int i = 0; i < s_cronSchedules.size(); i++, base+=10)
    {
-      s_cronSchedules.get(i)->fillMessage(msg);
+      s_cronSchedules.get(i)->fillMessage(msg, base);
    }
    sheduleCount += s_cronSchedules.size();
    MutexUnlock(s_cronScheduleLock);
 
    msg->setField(VID_SCHEDULE_COUNT, sheduleCount);
+}
+
+/**
+ * Fills message with callback id list
+ */
+void GetCallbackIdList(NXCPMessage *msg)
+{
+   msg->setField(VID_CALLBACK_COUNT, s_callbacks.size());
+   int base = VID_CALLBACK_BASE;
+
+   StringList *keyList = s_callbacks.keys();
+   for(int i = 0; i < keyList->size(); i++, base++)
+      msg->setField(base, keyList->get(i));
+}
+
+/**
+ * Creates schedule from message
+ */
+void CreateScehduleFromMsg(NXCPMessage *request)
+{
+   TCHAR *taskId = request->getFieldAsString(VID_TASK_ID);
+   TCHAR *schedule = NULL;
+   time_t nextExecutionTime = 0;
+   TCHAR *params = request->getFieldAsString(VID_PARAMETER);
+   int flags = request->getFieldAsInt32(VID_FLAGS);
+   if(request->isFieldExist(VID_SCHEDULE))
+   {
+      schedule = request->getFieldAsString(VID_SCHEDULE);
+      AddSchedule(taskId, schedule, params, flags);
+   }
+   else
+   {
+      nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
+      AddOneTimeAction(taskId, nextExecutionTime, params, flags);
+   }
+   safe_free(taskId);
+   safe_free(schedule);
+   safe_free(params);
+}
+
+/**
+ * Updage schedule from message
+ */
+void UpdateScheduleFromMsg(NXCPMessage *request)
+{
+   UINT32 id = request->getFieldAsInt32(VID_SCHEDULE_ID);
+   TCHAR *taskId = request->getFieldAsString(VID_TASK_ID);
+   TCHAR *schedule = NULL;
+   time_t nextExecutionTime = 0;
+   TCHAR *params = request->getFieldAsString(VID_PARAMETER);
+   int flags = request->getFieldAsInt32(VID_FLAGS);
+   if(request->isFieldExist(VID_SCHEDULE))
+   {
+      schedule = request->getFieldAsString(VID_SCHEDULE);
+      UpdateSchedule(id, taskId, schedule, params, flags);
+   }
+   else
+   {
+      nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
+      UpdateOneTimeAction(id, taskId, nextExecutionTime, params, flags);
+   }
+   safe_free(taskId);
+   safe_free(schedule);
+   safe_free(params);
 }
 
 /**

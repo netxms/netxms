@@ -696,6 +696,11 @@ private:
    void compileScript(NXCPMessage *request);
 	void resyncAgentDciConfiguration(NXCPMessage *request);
    void cleanAgentDciConfiguration(NXCPMessage *request);
+   void listScheduleCallbacks(NXCPMessage *request);
+   void listSchedules(NXCPMessage *request);
+   void addSchedule(NXCPMessage *request);
+   void updateSchedule(NXCPMessage *request);
+   void removeSchedule(NXCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
@@ -1033,8 +1038,15 @@ GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName);
 
 typedef void (*scheduled_action_executor)(const TCHAR *params);
 void AddSchedulleTaskHandler(const TCHAR *id, scheduled_action_executor exec);
-void AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params);
-void AddOneTimeAction(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params);
+void AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, int flags = 0);
+void AddOneTimeAction(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, int flags = 0);
+void UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, int flags);
+void UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, int flags);
+void RemoveSchedule(UINT32 id, bool alreadyLocked = false);
+void GetCallbackIdList(NXCPMessage *msg);
+void GetSheduleList(NXCPMessage *msg);
+void UpdateScheduleFromMsg(NXCPMessage *request);
+void CreateScehduleFromMsg(NXCPMessage *request);
 
 #if XMPP_SUPPORTED
 bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message);

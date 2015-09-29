@@ -550,6 +550,11 @@ typedef struct
 #define CMD_COMPILE_SCRIPT             0x013D
 #define CMD_CLEAN_AGENT_DCI_CONF       0x013E
 #define CMD_RESYNC_AGENT_DCI_CONF      0x013F
+#define CMD_LIST_SCHEDULE_CALLBACKS    0x0140
+#define CMD_LIST_SCHEDULES             0x0141
+#define CMD_ADD_SCHEDULE               0x0142
+#define CMD_UPDATE_SCHEDULE            0x0143
+#define CMD_REMOVE_SCHEDULE            0x0144
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1091,6 +1096,7 @@ typedef struct
 #define VID_SCHEDULE                ((UINT32)525)
 #define VID_EXECUTION_TIME          ((UINT32)526)
 #define VID_LAST_EXECUTION_TIME     ((UINT32)527)
+#define VID_CALLBACK_COUNT          ((UINT32)528)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1281,6 +1287,8 @@ typedef struct
 #define VID_LOC_LIST_BASE           ((UINT32)0x10000000)
 
 #define VID_SCHEDULE_LIST_BASE      ((UINT32)0x10000000)
+
+#define VID_CALLBACK_BASE           ((UINT32)0x10000000)
 
 #ifdef __cplusplus
 
