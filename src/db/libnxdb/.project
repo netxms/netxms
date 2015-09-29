@@ -3,6 +3,7 @@
 	<name>libnxdb</name>
 	<comment></comment>
 	<projects>
+		<project>libnxsnmp</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

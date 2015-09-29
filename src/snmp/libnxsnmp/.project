@@ -3,6 +3,7 @@
 	<name>libnxsnmp</name>
 	<comment></comment>
 	<projects>
+		<project>libnetxms</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

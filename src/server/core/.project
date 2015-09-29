@@ -3,6 +3,11 @@
 	<name>nxcore</name>
 	<comment></comment>
 	<projects>
+		<project>libnetxms</project>
+		<project>libnxdb</project>
+		<project>libnxlp</project>
+		<project>libnxsnmp</project>
+		<project>libnxsrv</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
