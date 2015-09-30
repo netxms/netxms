@@ -72,6 +72,7 @@ extern Queue g_dciCacheLoaderQueue;
 extern Queue g_syslogProcessingQueue;
 extern Queue g_syslogWriteQueue;
 extern ThreadPool *g_pollerThreadPool;
+extern ThreadPool *g_schedulerThreadPool;
 
 void InitClientListeners();
 void InitMobileDeviceListeners();
@@ -842,10 +843,7 @@ retry_db_lock:
    if (ConfigReadInt(_T("LdapSyncInterval"), 0))
 		ThreadCreate(SyncLDAPUsers, 0, NULL);
 
-   //Add schedule callbacks
-   AddSchedulleTaskHandler(_T("Execute.Script"), ExecuteScript);
-
-   //initialize shedule
+   RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScript);
    InitializeTaskScheduler();
 
 	// Allow clients to connect
@@ -1608,6 +1606,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		{
 			ShowThreadPool(pCtx, g_mainThreadPool);
 			ShowThreadPool(pCtx, g_pollerThreadPool);
+			ShowThreadPool(pCtx, g_schedulerThreadPool);
 		}
 		else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
 		{
@@ -1890,30 +1889,22 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    else if (IsCommand(_T("AT"), szBuffer, 2))
    {
       pArg = ExtractWord(pArg, szBuffer);
-      TCHAR *params =_tcsdup(szBuffer);
-      ConsoleWrite(pCtx, pArg);
-      ConsoleWrite(pCtx, _T("\n\n"));
-
-      //skip all space and tab characters
-      while(pArg[0] == _T(' ') || pArg[0] == _T('\t') )
-         pArg++;
-
-      if(pArg[0] == _T('+'))
+      if (szBuffer[0] == _T('+'))
       {
-         int tm = _tcstoul(pArg+1, NULL, 0);
-         AddOneTimeAction(_T("Execute.Script"), time(NULL) + tm, params);
+         int offset = _tcstoul(&szBuffer[1], NULL, 0);
+         AddOneTimeSchedule(_T("Execute.Script"), time(NULL) + offset, pArg);
       }
       else
       {
-         AddSchedule(_T("Execute.Script"), pArg, params);
+         AddSchedule(_T("Execute.Script"), szBuffer, pArg);
       }
-      safe_free(params);
    }
 	else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))
 	{
 		ConsoleWrite(pCtx,
             _T("Valid commands are:\n")
-				_T("   at <shedule> [+seconds from now|cron shedule]       - Set debug level (valid range is 0..9)\n")
+				_T("   at +<seconds>|<schedule> <script> [<parameters>]\n")
+            _T("                             - Schedule script execution task\n")
 				_T("   debug [<level>|off]       - Set debug level (valid range is 0..9)\n")
 				_T("   down                      - Shutdown NetXMS server\n")
 				_T("   exec <script> [<params>]  - Executes NXSL script from script library\n")

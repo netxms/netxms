@@ -489,8 +489,8 @@ void Template::deleteChildDCIs(UINT32 dcObjectId)
 }
 
 /**
- * Delets DCI object deletes or shedules
- * deletion from DB and removes it from index
+ * Delete DCI object.
+ * Deletes or schedules deletion from DB and removes it from index
  * It is assumed that list is already locked
  */
 void Template::destroyItem(DCObject *object, int index)

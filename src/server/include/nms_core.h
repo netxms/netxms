@@ -1037,9 +1037,9 @@ UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId);
 GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName);
 
 typedef void (*scheduled_action_executor)(const TCHAR *params);
-void AddSchedulleTaskHandler(const TCHAR *id, scheduled_action_executor exec);
+void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exec);
 void AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, int flags = 0);
-void AddOneTimeAction(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, int flags = 0);
+void AddOneTimeSchedule(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, int flags = 0);
 void UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, int flags);
 void UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, int flags);
 void RemoveSchedule(UINT32 id, bool alreadyLocked = false);

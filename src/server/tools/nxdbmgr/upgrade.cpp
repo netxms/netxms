@@ -579,14 +579,15 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 static BOOL H_UpgradeFromV368(int currVersion, int newVersion)
 {
     CHK_EXEC(CreateTable(
-      _T("CREATE TABLE schedule (")
+      _T("CREATE TABLE scheduled_tasks (")
       _T("	 id integer not null,")
       _T("   taskId varchar(255) null,")
-      _T("   shedule varchar(127) null,")
+      _T("   schedule varchar(127) null,")
       _T("   params varchar(1023) null,")
       _T("   execution_time integer not null,")
       _T("   last_execution_time integer not null,")
       _T("   flags integer not null,")
+      _T("   owner integer not null,")
       _T("   PRIMARY KEY(id))")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='369' WHERE var_name='SchemaVersion'")));
    return TRUE;

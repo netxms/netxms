@@ -36,7 +36,8 @@ class ScheduleCallback;
 /**
  * Scheduled task execution pool
  */
-static ThreadPool *s_taskSchedullPool = NULL;
+ThreadPool *g_schedulerThreadPool = NULL;
+
 /**
  * Static fields
  */
@@ -56,7 +57,7 @@ static bool IsItTime(struct tm *currTime, const TCHAR *schedule, time_t currTime
 static int ScheduleListSortCallback(const void *e1, const void *e2);
 
 /**
- * Mutex for shedule structures
+ * Mutex for schedule structures
  */
 static MUTEX s_cronScheduleLock = MutexCreate();
 static MUTEX s_oneTimeScheduleLock = MutexCreate();
@@ -170,14 +171,14 @@ void Schedule::saveToDatabase(bool newObject)
    if (newObject)
    {
 		hStmt = DBPrepare(db,
-                    _T("INSERT INTO schedule (taskId,shedule,params,execution_time,")
-                    _T("last_execution_time,flags, id) VALUES (?,?,?,?,?,?,?)"));
+                    _T("INSERT INTO scheduled_tasks (taskId,schedule,params,execution_time,")
+                    _T("last_execution_time,flags,owner,id) VALUES (?,?,?,?,?,?,?,?)"));
    }
    else
    {
       hStmt = DBPrepare(db,
-                    _T("UPDATE schedule SET taskId=?,shedule=?,params=?,")
-                    _T("execution_time=?,last_execution_time=?,flags=? ")
+                    _T("UPDATE scheduled_tasks SET taskId=?,schedule=?,params=?,")
+                    _T("execution_time=?,last_execution_time=?,flags=?,owner=? ")
                     _T("WHERE id=?"));
    }
 
@@ -187,7 +188,8 @@ void Schedule::saveToDatabase(bool newObject)
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (UINT32)m_executionTime);
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_lastExecution);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_flags);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_id);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)0);  // FIXME: add actual owner
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_id);
 
 	if (hStmt == NULL)
 		return;
@@ -199,13 +201,13 @@ void Schedule::saveToDatabase(bool newObject)
 
 void Schedule::run(ScheduleCallback *callback)
 {
-   bool oneTimeShedule = !_tcscmp(m_schedule, _T(""));
+   bool oneTimeSchedule = !_tcscmp(m_schedule, _T(""));
 
    setFlag(SCHEDULE_IN_PROGRES);
    callback->m_func(m_params);
    setLastExecutionTime(time(NULL));
 
-   if(oneTimeShedule)
+   if (oneTimeSchedule)
    {
       MutexLock(s_oneTimeScheduleLock);
       setExecutionTime(NEVER);
@@ -214,7 +216,7 @@ void Schedule::run(ScheduleCallback *callback)
    removeFlag(SCHEDULE_IN_PROGRES);
    setFlag(SCHEDULE_EXECUTED);
    saveToDatabase(false);
-   if(oneTimeShedule)
+   if (oneTimeSchedule)
    {
       s_oneTimeSchedules.sort(ScheduleListSortCallback);
       MutexUnlock(s_oneTimeScheduleLock);
@@ -266,16 +268,15 @@ static int ScheduleListSortCallback(const void *e1, const void *e2)
    }
 }
 
-
 /**
- * Initialize task sheduler - read all shedules form database and start threads for one time and crom shedules
+ * Initialize task scheduler - read all schedules form database and start threads for one time and crom schedules
  */
 void InitializeTaskScheduler()
 {
-   s_taskSchedullPool = ThreadPoolCreate(1, 64, _T("TASKSCHEDULL"));
+   g_schedulerThreadPool = ThreadPoolCreate(1, 64, _T("SCHEDULER"));
    //read from DB configuration
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,taskId,shedule,params,execution_time,last_execution_time,flags FROM schedule"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,taskId,schedule,params,execution_time,last_execution_time,flags,owner FROM scheduled_tasks"));
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
@@ -284,12 +285,12 @@ void InitializeTaskScheduler()
          Schedule *sh = new Schedule(hResult, i);
          if(!_tcscmp(sh->getSchedule(), _T("")))
          {
-            DbgPrintf(7, _T("InitializeTaskScheduler: Add one time shedule %d, %d"), sh->getId(), sh->getExecutionTime());
+            DbgPrintf(7, _T("InitializeTaskScheduler: Add one time schedule %d, %d"), sh->getId(), sh->getExecutionTime());
             s_oneTimeSchedules.add(sh);
          }
          else
          {
-            DbgPrintf(7, _T("InitializeTaskScheduler: Add cron shedule %d, %s"), sh->getId(), sh->getSchedule());
+            DbgPrintf(7, _T("InitializeTaskScheduler: Add cron schedule %d, %s"), sh->getId(), sh->getSchedule());
             s_cronSchedules.add(sh);
          }
       }
@@ -303,14 +304,14 @@ void InitializeTaskScheduler()
 }
 
 /**
- * Stop all sheduler threads and free all memory
+ * Stop all scheduler threads and free all memory
  */
 void CloseTaskScheduler()
 {
    ConditionSet(s_cond);
    s_cond = INVALID_CONDITION_HANDLE;
    ConditionDestroy(s_cond);
-   ThreadPoolDestroy(s_taskSchedullPool);
+   ThreadPoolDestroy(g_schedulerThreadPool);
    MutexDestroy(s_cronScheduleLock);
    MutexDestroy(s_oneTimeScheduleLock);
 }
@@ -318,10 +319,10 @@ void CloseTaskScheduler()
 /**
  * Function that adds to list task handler function
  */
-void AddSchedulleTaskHandler(const TCHAR *id, scheduled_action_executor exec)
+void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exec)
 {
    s_callbacks.set(id, new ScheduleCallback(exec));
-   DbgPrintf(6, _T("AddSchedulleTaskHandler: Add shedule callback %s"), id);
+   DbgPrintf(6, _T("Registered scheduler task %s"), id);
 }
 
 /**
@@ -329,7 +330,7 @@ void AddSchedulleTaskHandler(const TCHAR *id, scheduled_action_executor exec)
  */
 void AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, int flags)
 {
-   DbgPrintf(7, _T("AddSchedule: Add cron shedule %s, %s, %s"), task, schedule, params);
+   DbgPrintf(7, _T("AddSchedule: Add cron schedule %s, %s, %s"), task, schedule, params);
    MutexLock(s_cronScheduleLock);
    Schedule *sh = new Schedule(CreateUniqueId(IDG_SCHEDULE), task, schedule, params, flags);
    sh->saveToDatabase(true);
@@ -338,11 +339,11 @@ void AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, 
 }
 
 /**
- * One time action creation function
+ * One time schedule creation function
  */
-void AddOneTimeAction(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, int flags)
+void AddOneTimeSchedule(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, int flags)
 {
-   DbgPrintf(7, _T("AddOneTimeAction: Add one time shedule %s, %d, %s"), task, nextExecutionTime, params);
+   DbgPrintf(7, _T("AddOneTimeAction: Add one time schedule %s, %d, %s"), task, nextExecutionTime, params);
    MutexLock(s_oneTimeScheduleLock);
    Schedule *sh = new Schedule(CreateUniqueId(IDG_SCHEDULE), task, nextExecutionTime, params, flags);
    sh->saveToDatabase(true);
@@ -357,7 +358,7 @@ void AddOneTimeAction(const TCHAR *task, time_t nextExecutionTime, const TCHAR *
  */
 void UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, int flags)
 {
-   DbgPrintf(7, _T("UpdateSchedule: update cron shedule %d, %s, %s, %s"), id, task, schedule, params);
+   DbgPrintf(7, _T("UpdateSchedule: update cron schedule %d, %s, %s, %s"), id, task, schedule, params);
    MutexLock(s_cronScheduleLock);
    for (int i = 0; i < s_cronSchedules.size(); i++)
    {
@@ -378,7 +379,7 @@ void UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHA
  */
 void UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, int flags)
 {
-   DbgPrintf(7, _T("UpdateOneTimeAction: update one time shedule %d, %s, %d, %s"), id, task, nextExecutionTime, params);
+   DbgPrintf(7, _T("UpdateOneTimeAction: update one time schedule %d, %s, %d, %s"), id, task, nextExecutionTime, params);
    bool found = true;
    MutexLock(s_oneTimeScheduleLock);
    for (int i = 0; i < s_oneTimeSchedules.size(); i++)
@@ -400,24 +401,24 @@ void UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, co
 }
 
 /**
- * Removes shedule form Database by id
+ * Removes scheduled task from database by id
  */
-void DeleteFromDB(UINT32 id)
+static void DeleteScheduledTaskFromDB(UINT32 id)
 {
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
    TCHAR query[256];
-   _sntprintf(query, 256, _T("DELETE FROM schedule WHERE id = %s"), id);
+   _sntprintf(query, 256, _T("DELETE FROM scheduled_tasks WHERE id = %s"), id);
    DBQuery(db, query);
    DB_STATEMENT hStmt;
 	DBConnectionPoolReleaseConnection(db);
 }
 
 /**
- * Removes shedule by id
+ * Removes schedule by id
  */
 void RemoveSchedule(UINT32 id, bool alreadyLocked)
 {
-   DbgPrintf(7, _T("RemoveSchedule: shedule(%d) removed"), id);
+   DbgPrintf(7, _T("RemoveSchedule: schedule(%d) removed"), id);
    bool found = false;
 
    MutexLock(s_cronScheduleLock);
@@ -434,7 +435,7 @@ void RemoveSchedule(UINT32 id, bool alreadyLocked)
 
    if(found)
    {
-      DeleteFromDB(id);
+      DeleteScheduledTaskFromDB(id);
       return;
    }
 
@@ -454,16 +455,16 @@ void RemoveSchedule(UINT32 id, bool alreadyLocked)
    if (found)
    {
       ConditionSet(s_cond);
-      DeleteFromDB(id);
+      DeleteScheduledTaskFromDB(id);
    }
 }
 
 /**
- * Fills message with shedule list
+ * Fills message with schedule list
  */
 void GetSheduleList(NXCPMessage *msg)
 {
-   int sheduleCount = 0;
+   int scheduleCount = 0;
    int base = VID_SCHEDULE_LIST_BASE;
 
    MutexLock(s_oneTimeScheduleLock);
@@ -471,7 +472,7 @@ void GetSheduleList(NXCPMessage *msg)
    {
       s_oneTimeSchedules.get(i)->fillMessage(msg, base);
    }
-   sheduleCount += s_oneTimeSchedules.size();
+   scheduleCount += s_oneTimeSchedules.size();
    MutexUnlock(s_oneTimeScheduleLock);
 
    MutexLock(s_cronScheduleLock);
@@ -479,10 +480,10 @@ void GetSheduleList(NXCPMessage *msg)
    {
       s_cronSchedules.get(i)->fillMessage(msg, base);
    }
-   sheduleCount += s_cronSchedules.size();
+   scheduleCount += s_cronSchedules.size();
    MutexUnlock(s_cronScheduleLock);
 
-   msg->setField(VID_SCHEDULE_COUNT, sheduleCount);
+   msg->setField(VID_SCHEDULE_COUNT, scheduleCount);
 }
 
 /**
@@ -516,7 +517,7 @@ void CreateScehduleFromMsg(NXCPMessage *request)
    else
    {
       nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
-      AddOneTimeAction(taskId, nextExecutionTime, params, flags);
+      AddOneTimeSchedule(taskId, nextExecutionTime, params, flags);
    }
    safe_free(taskId);
    safe_free(schedule);
@@ -550,7 +551,7 @@ void UpdateScheduleFromMsg(NXCPMessage *request)
 }
 
 /**
- * Thread that checks one time shedules and executes them
+ * Thread that checks one time schedules and executes them
  */
 static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
 {
@@ -583,8 +584,8 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
          //execute all timmers that is expected to execute now
          if(sh->getExecutionTime() != 0 && now >= sh->getExecutionTime())
          {
-            DbgPrintf(7, _T("OneTimeEventThread: run shedule id=\'%d\', execution time =\'%d\'"), sh->getId(), sh->getExecutionTime());
-            ThreadPoolExecute(s_taskSchedullPool, sh, &Schedule::run, callback);
+            DbgPrintf(7, _T("OneTimeEventThread: run schedule id=\'%d\', execution time =\'%d\'"), sh->getId(), sh->getExecutionTime());
+            ThreadPoolExecute(g_schedulerThreadPool, sh, &Schedule::run, callback);
          }
          else
          {
@@ -615,7 +616,7 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
 }
 
 /**
- * Wakes up for execution of one time shedule or for recolculation new wake up timestamp
+ * Wakes up for execution of one time schedule or for recolculation new wake up timestamp
  */
 static THREAD_RESULT THREAD_CALL CronCheckThread(void *arg)
 {
@@ -637,8 +638,8 @@ static THREAD_RESULT THREAD_CALL CronCheckThread(void *arg)
          }
          if(IsItTime(&currLocal, sh->getSchedule(), now))
          {
-            DbgPrintf(7, _T("OneTimeEventThread: run shedule id=\'%d\', shedule=\'%s\'"), sh->getId(), sh->getSchedule());
-            ThreadPoolExecute(s_taskSchedullPool, sh, &Schedule::run, callback);
+            DbgPrintf(7, _T("OneTimeEventThread: run schedule id=\'%d\', schedule=\'%s\'"), sh->getId(), sh->getSchedule());
+            ThreadPoolExecute(g_schedulerThreadPool, sh, &Schedule::run, callback);
          }
       }
       MutexUnlock(s_cronScheduleLock);
@@ -647,7 +648,7 @@ static THREAD_RESULT THREAD_CALL CronCheckThread(void *arg)
 }
 
 /**
- * Checks if it is time to execute cron shedule
+ * Checks if it is time to execute cron schedule
  */
 static bool IsItTime(struct tm *currTime, const TCHAR *schedule, time_t currTimestamp)
 {
