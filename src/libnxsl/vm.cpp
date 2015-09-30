@@ -1997,3 +1997,20 @@ void NXSL_VM::error(int nError)
    m_errorText = _tcsdup(szBuffer);
    m_cp = INVALID_ADDRESS;
 }
+
+/**
+ * Set persistent storage. Passing NULL will switch VM to local storage.
+ */
+void NXSL_VM::setStorage(NXSL_Storage *storage)
+{
+   if (storage != NULL)
+   {
+      m_storage = storage;
+   }
+   else
+   {
+      if (m_localStorage == NULL)
+         m_localStorage = new NXSL_Storage();
+      m_storage = m_localStorage;
+   }
+}

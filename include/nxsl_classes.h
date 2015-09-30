@@ -729,6 +729,8 @@ public:
 	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
 	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_globals->find(pszName); }
 
+	void setStorage(NXSL_Storage *storage);
+
 	void storageWrite(const TCHAR *name, NXSL_Value *value) { m_storage->write(name, value); }
    void storageWrite(const TCHAR *name, const TCHAR *value) { m_storage->write(name, new NXSL_Value(value)); }
    void storageWrite(const TCHAR *name, INT32 value) { m_storage->write(name, new NXSL_Value(value)); }
