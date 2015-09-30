@@ -106,7 +106,7 @@ public class SharedColors
 		defaultColors.put(OBJECT_TAB_HEADER, new RGB(255, 255, 255));
 		defaultColors.put(OBJECT_TAB_HEADER_BACKGROUND, new RGB(153, 180, 209));
       defaultColors.put(RACK_BACKGROUND, new RGB(255, 255, 255));
-      defaultColors.put(RACK_BORDER, new RGB(64, 64, 64));
+      defaultColors.put(RACK_BORDER, new RGB(92, 92, 92));
       defaultColors.put(RACK_EMPTY_SPACE, new RGB(224, 224, 224));
       defaultColors.put(RACK_TEXT, new RGB(0, 0, 0));
 		defaultColors.put(RULE_EDITOR_BACKGROUND, new RGB(255, 255, 255));

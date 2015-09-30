@@ -52,6 +52,10 @@ public class SharedColors
 	public static final String OBJECT_TAB_BACKGROUND = "ObjectTab.Background";  //$NON-NLS-1$
 	public static final String OBJECT_TAB_HEADER = "ObjectTab.Header";  //$NON-NLS-1$
 	public static final String OBJECT_TAB_HEADER_BACKGROUND = "ObjectTab.Header.Background"; //$NON-NLS-1$
+   public static final String RACK_BACKGROUND = "Rack.Background"; //$NON-NLS-1$
+   public static final String RACK_BORDER = "Rack.Border"; //$NON-NLS-1$
+   public static final String RACK_EMPTY_SPACE = "Rack.EmptySpace"; //$NON-NLS-1$
+   public static final String RACK_TEXT = "Rack.Text"; //$NON-NLS-1$
 	public static final String RULE_EDITOR_BACKGROUND = "RuleEditor.Background"; //$NON-NLS-1$
 	public static final String RULE_EDITOR_NORMAL_TITLE_BACKGROUND = "RuleEditor.Title.Normal.Background"; //$NON-NLS-1$
 	public static final String RULE_EDITOR_DISABLED_TITLE_BACKGROUND = "RuleEditor.Title.Disabled.Background"; //$NON-NLS-1$
@@ -101,6 +105,10 @@ public class SharedColors
 		defaultColors.put(OBJECT_TAB_BACKGROUND, new RGB(255, 255, 255));
 		defaultColors.put(OBJECT_TAB_HEADER, new RGB(255, 255, 255));
 		defaultColors.put(OBJECT_TAB_HEADER_BACKGROUND, new RGB(153, 180, 209));
+      defaultColors.put(RACK_BACKGROUND, new RGB(255, 255, 255));
+      defaultColors.put(RACK_BORDER, new RGB(92, 92, 92));
+      defaultColors.put(RACK_EMPTY_SPACE, new RGB(224, 224, 224));
+      defaultColors.put(RACK_TEXT, new RGB(0, 0, 0));
 		defaultColors.put(RULE_EDITOR_BACKGROUND, new RGB(255, 255, 255));
 		defaultColors.put(RULE_EDITOR_NORMAL_TITLE_BACKGROUND, new RGB(225, 233, 241));
 		defaultColors.put(RULE_EDITOR_DISABLED_TITLE_BACKGROUND, new RGB(202, 227, 206));
