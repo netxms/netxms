@@ -64,7 +64,7 @@ public class IntegerConditionEditor extends ConditionEditor
 	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected void createContent(Composite parent, ColumnFilter initialFilter)
 	{
 		Composite group = new Composite(this, SWT.NONE);
 		RowLayout layout = new RowLayout();
@@ -90,6 +90,32 @@ public class IntegerConditionEditor extends ConditionEditor
 		rd.width = 90;
 		value2.setLayoutData(rd);
 		value2.setVisible(false);
+
+      if (initialFilter != null)
+      {
+         switch(initialFilter.getOperation())
+         {
+            case ColumnFilter.EQUALS:
+               setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
+               value1.setText(Long.toString(initialFilter.getNumericValue()));
+               break;
+            case ColumnFilter.GREATER:
+               setSelectedOperation(initialFilter.isNegated() ? 3 : 5);
+               value1.setText(Long.toString(initialFilter.getNumericValue()));
+               break;
+            case ColumnFilter.LESS:
+               setSelectedOperation(initialFilter.isNegated() ? 4 : 2);
+               value1.setText(Long.toString(initialFilter.getNumericValue()));
+               break;
+            case ColumnFilter.RANGE:
+               setSelectedOperation(6);
+               andLabel.setVisible(true);
+               value2.setVisible(true);
+               value1.setText(Long.toString(initialFilter.getRangeFrom()));
+               value2.setText(Long.toString(initialFilter.getRangeTo()));
+               break;
+         }
+      }
 	}
 
 	/* (non-Javadoc)

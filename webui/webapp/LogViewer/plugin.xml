@@ -59,6 +59,10 @@
             id="org.netxms.ui.eclipse.logviewer.commands.execute"
             name="%command.name.Query">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.logviewer.commands.eventHistory"
+            name="Event history">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -159,6 +163,41 @@
             name="Log Viewer"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="org.netxms.ui.eclipse.logviewer.actions.ShowObjectEvents"
+            commandId="org.netxms.ui.eclipse.logviewer.commands.eventHistory">
+      </handler>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+         <command
+               commandId="org.netxms.ui.eclipse.logviewer.commands.eventHistory"
+               label="Event history"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate
+                     ifEmpty="false"
+                     operator="and">
+                  <and>
+                     <instanceof
+                           value="org.netxms.client.objects.AbstractObject">
+                     </instanceof>
+                     <test
+                           forcePluginActivation="true"
+                           property="org.netxms.ui.eclipse.objectbrowser.isAlarmsVisible">
+                     </test>
+                  </and>
+               </iterate>
+            </visibleWhen>
+         </command>
+      </menuContribution>
    </extension>
 
 </plugin>

@@ -59,13 +59,19 @@ public class TextConditionEditor extends ConditionEditor
 	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected void createContent(Composite parent, ColumnFilter initialFilter)
 	{
 		value = toolkit.createText(this, "%"); //$NON-NLS-1$
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		value.setLayoutData(gd);
+		
+      if ((initialFilter != null) && (initialFilter.getType() == ColumnFilter.LIKE))
+      {
+         setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
+         value.setText(initialFilter.getLike());
+      }
 	}
 
 	/* (non-Javadoc)

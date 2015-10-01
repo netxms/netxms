@@ -54,6 +54,18 @@ public class OrderingColumn
 	}
 	
 	/**
+	 * @param name
+	 * @param description
+	 * @param descending
+	 */
+	public OrderingColumn(String name, String description, boolean descending)
+   {
+      this.name = name;
+      this.description = description;
+      this.descending = descending;
+   }
+
+   /**
 	 * Copy constructor
 	 * 
 	 * @param src Source object

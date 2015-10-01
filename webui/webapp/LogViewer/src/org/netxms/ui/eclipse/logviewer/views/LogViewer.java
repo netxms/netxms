@@ -84,16 +84,17 @@ public class LogViewer extends ViewPart
 	private String logName;
 	private Log logHandle;
 	private LogFilter filter;
+   private LogFilter delayedQueryFilter = null;
 	private Image titleImage = null;
-	private RefreshAction actionRefresh;
-	private Action actionExecute;
-	private Action actionClearFilter;
-	private Action actionShowFilter;
-	private Action actionGetMoreData;
-	private Action actionExportToCsv;
-	private Action actionExportAllToCsv;
 	private Table resultSet;
 	private boolean noData = false;
+   private Action actionRefresh;
+   private Action actionExecute;
+   private Action actionClearFilter;
+   private Action actionShowFilter;
+   private Action actionGetMoreData;
+   private Action actionExportToCsv;
+   private Action actionExportAllToCsv;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -182,12 +183,19 @@ public class LogViewer extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				logHandle = session.openServerLog(logName);
+				final Log handle = session.openServerLog(logName);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
+					   logHandle = handle;
 						setupLogViewer();
+						if (delayedQueryFilter != null)
+						{
+						   filterBuilder.setFilter(delayedQueryFilter);
+						   delayedQueryFilter = null;
+						   doQuery();
+						}
 					}
 				});
 			}
@@ -258,7 +266,7 @@ public class LogViewer extends ViewPart
 		viewer.setLabelProvider(createLabelProvider(logHandle));
 		filterBuilder.setLogHandle(logHandle);
 	}
-
+	
 	/**
 	 * Create label provider
 	 * 
@@ -409,6 +417,24 @@ public class LogViewer extends ViewPart
 		
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
+	}
+	
+	/**
+	 * Query log with given filter
+	 * 
+	 * @param filter
+	 */
+	public void queryWithFilter(LogFilter filter)
+	{
+	   if (logHandle != null)
+	   {
+	      filterBuilder.setFilter(filter);
+	      doQuery();
+	   }
+	   else
+	   {
+	      delayedQueryFilter = filter;
+	   }
 	}
 	
 	/**

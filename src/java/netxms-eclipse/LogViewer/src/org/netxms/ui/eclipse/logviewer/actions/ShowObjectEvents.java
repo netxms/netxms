@@ -16,8 +16,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.alarmviewer.actions;
+package org.netxms.ui.eclipse.logviewer.actions;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -27,15 +29,18 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.netxms.client.log.ColumnFilter;
+import org.netxms.client.log.LogFilter;
+import org.netxms.client.log.OrderingColumn;
+import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.ui.eclipse.alarmviewer.Messages;
-import org.netxms.ui.eclipse.alarmviewer.views.ObjectAlarmBrowser;
+import org.netxms.ui.eclipse.logviewer.views.LogViewer;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
  * Handler for "show object alarms" command
  */
-public class ShowObjectAlarms extends AbstractHandler
+public class ShowObjectEvents extends AbstractHandler
 {
    /* (non-Javadoc)
     * @see org.eclipse.core.commands.AbstractHandler#execute(org.eclipse.core.commands.ExecutionEvent)
@@ -48,22 +53,30 @@ public class ShowObjectAlarms extends AbstractHandler
       if ((selection == null) || !(selection instanceof IStructuredSelection) || selection.isEmpty())
          return null;
       
-      StringBuilder sb = new StringBuilder();
+      ColumnFilter cf = new ColumnFilter();
+      cf.setOperation(ColumnFilter.OR);
       for(Object o : ((IStructuredSelection)selection).toList())
       {
          if (!(o instanceof AbstractObject))
             continue;
-         if (sb.length() > 0)
-            sb.append('&');
-         sb.append(((AbstractObject)o).getObjectId());
+         cf.addSubFilter(new ColumnFilter((o instanceof AbstractNode) ? ColumnFilter.EQUALS : ColumnFilter.CHILDOF, ((AbstractObject)o).getObjectId()));
       }
+      
       try
       {
-         window.getActivePage().showView(ObjectAlarmBrowser.ID, sb.toString(), IWorkbenchPage.VIEW_ACTIVATE);
+         LogViewer view = (LogViewer)window.getActivePage().showView(LogViewer.ID, "EventLog", IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
+
+         LogFilter filter = new LogFilter();
+         filter.setColumnFilter("event_source", cf);
+         List<OrderingColumn> orderingColumns = new ArrayList<OrderingColumn>(1);
+         orderingColumns.add(new OrderingColumn("event_timestamp", "Time", true));
+         filter.setOrderingColumns(orderingColumns);
+         
+         view.queryWithFilter(filter);
       }
       catch(PartInitException e)
       {
-         MessageDialogHelper.openError(window.getShell(), Messages.get().ShowObjectAlarms_Error, Messages.get().ShowObjectAlarms_ErrorOpeningView + e.getMessage());
+         MessageDialogHelper.openError(window.getShell(), "Error", String.format("Cannot open event log view: %s", e.getMessage()));
       }
       
       return null;

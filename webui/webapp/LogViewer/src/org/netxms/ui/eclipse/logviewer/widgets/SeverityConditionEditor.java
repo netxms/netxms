@@ -61,7 +61,7 @@ public class SeverityConditionEditor extends ConditionEditor
 	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected void createContent(Composite parent, ColumnFilter initialFilter)
 	{
 		severity = new Combo(this, SWT.READ_ONLY | SWT.BORDER);
 		toolkit.adapt(severity);
@@ -72,6 +72,23 @@ public class SeverityConditionEditor extends ConditionEditor
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		severity.setLayoutData(gd);
+		
+		if (initialFilter != null)
+		{
+		   switch(initialFilter.getOperation())
+		   {
+		      case ColumnFilter.EQUALS:
+		         setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
+		         break;
+		      case ColumnFilter.LESS:
+               setSelectedOperation(2);
+               break;
+            case ColumnFilter.GREATER:
+               setSelectedOperation(3);
+               break;
+		   }
+		   severity.select((int)initialFilter.getNumericValue());
+		}
 	}
 
 	/* (non-Javadoc)
