@@ -57,7 +57,6 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.contexts.IContextService;
-import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -89,6 +88,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.Activator;
 import org.netxms.ui.eclipse.objectbrowser.Messages;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectActionValidator;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenHandler;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectOpenListener;
 import org.netxms.ui.eclipse.objectbrowser.api.SubtreeType;
@@ -117,7 +117,6 @@ public class ObjectBrowser extends ViewPart
 	private Action actionMoveMap;
 	private Action actionMovePolicy;
 	private Action actionRefresh;
-	private Action actionProperties;
 	private boolean initHideUnmanaged = false;
 	private boolean initHideTemplateChecks = false;
 	private boolean initShowFilter = true;
@@ -224,7 +223,6 @@ public class ObjectBrowser extends ViewPart
 			{
 				int size = ((IStructuredSelection)objectTree.getTreeViewer().getSelection()).size();
 				actionMoveObject.setEnabled(size == 1);
-				actionProperties.setEnabled(size == 1);
 			}
 		});
 		objectTree.setFilterCloseAction(actionShowFilter);
@@ -447,9 +445,6 @@ public class ObjectBrowser extends ViewPart
       actionShowStatusIndicator.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator"); //$NON-NLS-1$
 		final ActionHandler showStatusIndicatorHandler = new ActionHandler(actionShowStatusIndicator);
 		handlerService.activateHandler(actionShowStatusIndicator.getActionDefinitionId(), showStatusIndicatorHandler);
-
-      actionProperties = new PropertyDialogAction(getSite(), objectTree.getTreeViewer());
-      actionProperties.setId("org.netxms.ui.eclipse.objectbrowser.actions.properties"); //$NON-NLS-1$
 	}
 
 	/**
@@ -506,36 +501,20 @@ public class ObjectBrowser extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_ATM));
-      manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_NXVS));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
-		if (isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
-         manager.add(actionMoveObject);
+	   ObjectContextMenu.fill(manager, getSite(), objectTree.getTreeViewer());
+	
+      if (isValidSelectionForMove(SubtreeType.INFRASTRUCTURE))
+         manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMoveObject);
       if (isValidSelectionForMove(SubtreeType.TEMPLATES))
-         manager.add(actionMoveTemplate);
+         manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMoveTemplate);
       if (isValidSelectionForMove(SubtreeType.BUSINESS_SERVICES))
-         manager.add(actionMoveBusinessService);
+         manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMoveBusinessService);
       if (isValidSelectionForMove(SubtreeType.DASHBOARDS))
-         manager.add(actionMoveDashboard);
+         manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMoveDashboard);
       if (isValidSelectionForMove(SubtreeType.MAPS))
-         manager.add(actionMoveMap);
+         manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMoveMap);
       if (isValidSelectionForMove(SubtreeType.POLICIES))
-         manager.add(actionMovePolicy);
-		manager.add(new Separator());
-		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_TOPOLOGY));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
-		manager.add(actionProperties);
+         manager.insertAfter(GroupMarkers.MB_OBJECT_BINDING, actionMovePolicy);
 	}
 	
    /* (non-Javadoc)

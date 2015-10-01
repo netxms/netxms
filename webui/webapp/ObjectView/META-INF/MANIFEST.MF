@@ -10,7 +10,8 @@ Require-Bundle: org.netxms.ui.eclipse.charts;bundle-version="2.0.4",
  org.netxms.webui.core;bundle-version="2.0.7",
  org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.7",
  org.netxms.ui.eclipse.objecttools;bundle-version="2.0.6",
- org.netxms.ui.eclipse.imagelibrary;bundle-version="2.0.0"
+ org.netxms.ui.eclipse.imagelibrary;bundle-version="2.0.0",
+ org.netxms.ui.eclipse.objectbrowser;bundle-version="2.0.7"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.objectview.api,

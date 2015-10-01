@@ -19,26 +19,22 @@
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
-import org.netxms.ui.eclipse.console.resources.GroupMarkers;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListComparator;
@@ -86,12 +82,12 @@ public class InterfacesTab extends ObjectTab
 	{
 		final String[] names = { 
 	      Messages.get().InterfacesTab_ColId, 
-	      Messages.get().InterfacesTab_ColName, 
+	      Messages.get().InterfacesTab_ColName,
 	      "Alias",
 	      Messages.get().InterfacesTab_ColIfType, 
 	      Messages.get().InterfacesTab_ColIfIndex, 
 	      Messages.get().InterfacesTab_ColSlot, 
-	      Messages.get().InterfacesTab_ColPort, 
+	      Messages.get().InterfacesTab_ColPort,
 	      "MTU",
          "Speed",
 	      Messages.get().InterfacesTab_ColDescription, 
@@ -168,24 +164,7 @@ public class InterfacesTab extends ObjectTab
 	{
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_TOPOLOGY));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
-		
-		if (((IStructuredSelection)viewer.getSelection()).size() == 1)
-		{
-			manager.add(new Separator());
-			manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
-			manager.add(new PropertyDialogAction(getViewPart().getSite(), viewer));
-		}
+		ObjectContextMenu.fill(manager, getViewPart().getSite(), viewer);
 	}
 
 	/* (non-Javadoc)

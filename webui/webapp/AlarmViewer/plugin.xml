@@ -138,7 +138,7 @@
          point="org.eclipse.ui.menus">
       <menuContribution
             allPopups="false"
-            locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+            locationURI="popup:org.eclipse.ui.popup.any?before=eventsAndLogs">
          <command
                commandId="org.netxms.ui.eclipse.alarmviewer.commands.alarms"
                icon="icons/alarm_browser.png"

@@ -76,7 +76,7 @@ public class ShowObjectEvents extends AbstractHandler
       }
       catch(PartInitException e)
       {
-         MessageDialogHelper.openError(window.getShell(), "Error", String.format("Cannot open event log view: %s", e.getMessage()));
+         MessageDialogHelper.openError(window.getShell(), "Error", String.format("Cannot open log viewer: %s", e.getMessage()));
       }
       
       return null;

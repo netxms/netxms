@@ -61,7 +61,15 @@
       </command>
       <command
             id="org.netxms.ui.eclipse.logviewer.commands.eventHistory"
-            name="Event history">
+            name="Event log">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.logviewer.commands.objectSyslog"
+            name="Syslog">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.logviewer.commands.objectTrapLog"
+            name="SNMP trap log">
       </command>
    </extension>
    
@@ -155,6 +163,24 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="F2">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.logviewer.commands.eventHistory"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M3+Shift+E">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.logviewer.commands.objectSyslog"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M3+Shift+Y">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.logviewer.commands.objectTrapLog"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M3+Shift+T">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
@@ -170,15 +196,65 @@
             class="org.netxms.ui.eclipse.logviewer.actions.ShowObjectEvents"
             commandId="org.netxms.ui.eclipse.logviewer.commands.eventHistory">
       </handler>
+      <handler
+            class="org.netxms.ui.eclipse.logviewer.actions.ShowObjectSyslog"
+            commandId="org.netxms.ui.eclipse.logviewer.commands.objectSyslog">
+      </handler>
+      <handler
+            class="org.netxms.ui.eclipse.logviewer.actions.ShowObjectSnmpTrapLog"
+            commandId="org.netxms.ui.eclipse.logviewer.commands.objectTrapLog">
+      </handler>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
       <menuContribution
             allPopups="false"
-            locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+            locationURI="popup:org.eclipse.ui.popup.any?after=eventsAndLogs">
          <command
                commandId="org.netxms.ui.eclipse.logviewer.commands.eventHistory"
-               label="Event history"
+               label="Event log"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate
+                     ifEmpty="false"
+                     operator="and">
+                  <and>
+                     <instanceof
+                           value="org.netxms.client.objects.AbstractObject">
+                     </instanceof>
+                     <test
+                           forcePluginActivation="true"
+                           property="org.netxms.ui.eclipse.objectbrowser.isAlarmsVisible">
+                     </test>
+                  </and>
+               </iterate>
+            </visibleWhen>
+         </command>
+         <command
+               commandId="org.netxms.ui.eclipse.logviewer.commands.objectSyslog"
+               label="Syslog"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate
+                     ifEmpty="false"
+                     operator="and">
+                  <and>
+                     <instanceof
+                           value="org.netxms.client.objects.AbstractObject">
+                     </instanceof>
+                     <test
+                           forcePluginActivation="true"
+                           property="org.netxms.ui.eclipse.objectbrowser.isAlarmsVisible">
+                     </test>
+                  </and>
+               </iterate>
+            </visibleWhen>
+         </command>
+         <command
+               commandId="org.netxms.ui.eclipse.logviewer.commands.objectTrapLog"
+               label="SNMP trap log"
                style="push">
             <visibleWhen
                   checkEnabled="false">

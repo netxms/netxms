@@ -81,7 +81,6 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.contexts.IContextService;
-import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -112,6 +111,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkDciValueProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -1038,28 +1038,10 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 		manager.add(actionOpenSubmap);
 		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_ATM));
-      manager.add(new Separator());
-      manager.add(new GroupMarker(GroupMarkers.MB_NXVS));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_TOPOLOGY));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
-
+		ObjectContextMenu.fill(manager, getSite(), this);
 		if (currentSelection.size() == 1)
 		{
-			manager.add(new Separator());
-			manager.add(actionShowObjectDetails);
-			manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
-			manager.add(new PropertyDialogAction(getSite(), this));
+			manager.insertAfter(GroupMarkers.MB_PROPERTIES, actionShowObjectDetails);
 		}
 	}
 

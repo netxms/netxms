@@ -21,20 +21,16 @@ package org.netxms.ui.eclipse.objectview.objecttabs;
 import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
@@ -43,7 +39,7 @@ import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
-import org.netxms.ui.eclipse.console.resources.GroupMarkers;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.NodeListComparator;
@@ -141,28 +137,7 @@ public class NodesTab extends ObjectTab
 	{
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
-      manager.add(new Separator());
-      manager.add(new GroupMarker(GroupMarkers.MB_ATM));
-      manager.add(new Separator());
-      manager.add(new GroupMarker(GroupMarkers.MB_NXVS));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_TOPOLOGY));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
-		
-		if (((IStructuredSelection)viewer.getSelection()).size() == 1)
-		{
-			manager.add(new Separator());
-			manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
-			manager.add(new PropertyDialogAction(getViewPart().getSite(), viewer));
-		}
+		ObjectContextMenu.fill(manager, getViewPart().getSite(), viewer);
 	}
 
 	/* (non-Javadoc)

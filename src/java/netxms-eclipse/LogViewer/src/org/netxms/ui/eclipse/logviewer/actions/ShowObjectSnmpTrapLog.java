@@ -40,7 +40,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 /**
  * Handler for "show object alarms" command
  */
-public class ShowObjectEvents extends AbstractHandler
+public class ShowObjectSnmpTrapLog extends AbstractHandler
 {
    /* (non-Javadoc)
     * @see org.eclipse.core.commands.AbstractHandler#execute(org.eclipse.core.commands.ExecutionEvent)
@@ -64,12 +64,12 @@ public class ShowObjectEvents extends AbstractHandler
       
       try
       {
-         LogViewer view = (LogViewer)window.getActivePage().showView(LogViewer.ID, "EventLog", IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
+         LogViewer view = (LogViewer)window.getActivePage().showView(LogViewer.ID, "SnmpTrapLog", IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
 
          LogFilter filter = new LogFilter();
-         filter.setColumnFilter("event_source", cf);
+         filter.setColumnFilter("object_id", cf);
          List<OrderingColumn> orderingColumns = new ArrayList<OrderingColumn>(1);
-         orderingColumns.add(new OrderingColumn("event_timestamp", "Time", true));
+         orderingColumns.add(new OrderingColumn("trap_timestamp", "Time", true));
          filter.setOrderingColumns(orderingColumns);
          
          view.queryWithFilter(filter);
