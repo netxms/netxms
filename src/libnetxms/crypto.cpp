@@ -212,6 +212,7 @@ UINT32 LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphers()
 String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText()
 {
    String s;
+#ifdef _WITH_ENCRYPTION
    UINT32 cipherBit = 1;
    for(int i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
    {
@@ -228,6 +229,7 @@ String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText()
          s.append(s_cipherNames[i]);
       }
    }
+#endif
    return s;
 }
 
@@ -343,8 +345,8 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg,
    if (msg->getCode() == CMD_REQUEST_SESSION_KEY)
    {
       *ppResponse = new NXCPMessage(nNXCPVersion);
-      (*ppResponse)->SetCode(CMD_SESSION_KEY);
-      (*ppResponse)->SetId(msg->getId());
+      (*ppResponse)->setCode(CMD_SESSION_KEY);
+      (*ppResponse)->setId(msg->getId());
       (*ppResponse)->disableEncryption();
       (*ppResponse)->setField(VID_RCC, dwResult);
    }
