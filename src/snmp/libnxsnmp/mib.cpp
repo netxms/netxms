@@ -195,74 +195,74 @@ void SNMP_MIBObject::writeToFile(ZFile *pFile, UINT32 dwFlags)
 {
    SNMP_MIBObject *pCurr;
 
-   pFile->fputc(MIB_TAG_OBJECT);
+   pFile->writeByte(MIB_TAG_OBJECT);
 
    // Object name
-   pFile->fputc(MIB_TAG_NAME);
+   pFile->writeByte(MIB_TAG_NAME);
    WriteStringToFile(pFile, CHECK_NULL_EX(m_pszName));
-   pFile->fputc(MIB_TAG_NAME | MIB_END_OF_TAG);
+   pFile->writeByte(MIB_TAG_NAME | MIB_END_OF_TAG);
 
    // Object ID
    if (m_dwOID < 256)
    {
-      pFile->fputc(MIB_TAG_BYTE_OID);
-      pFile->fputc((int)m_dwOID);
-      pFile->fputc(MIB_TAG_BYTE_OID | MIB_END_OF_TAG);
+      pFile->writeByte(MIB_TAG_BYTE_OID);
+      pFile->writeByte((int)m_dwOID);
+      pFile->writeByte(MIB_TAG_BYTE_OID | MIB_END_OF_TAG);
    }
    else if (m_dwOID < 65536)
    {
       WORD wTemp;
 
-      pFile->fputc(MIB_TAG_WORD_OID);
+      pFile->writeByte(MIB_TAG_WORD_OID);
       wTemp = htons((WORD)m_dwOID);
       pFile->write(&wTemp, 2);
-      pFile->fputc(MIB_TAG_WORD_OID | MIB_END_OF_TAG);
+      pFile->writeByte(MIB_TAG_WORD_OID | MIB_END_OF_TAG);
    }
    else
    {
       UINT32 dwTemp;
 
-      pFile->fputc(MIB_TAG_UINT32_OID);
+      pFile->writeByte(MIB_TAG_UINT32_OID);
       dwTemp = htonl(m_dwOID);
       pFile->write(&dwTemp, 4);
-      pFile->fputc(MIB_TAG_UINT32_OID | MIB_END_OF_TAG);
+      pFile->writeByte(MIB_TAG_UINT32_OID | MIB_END_OF_TAG);
    }
 
    // Object status
-   pFile->fputc(MIB_TAG_STATUS);
-   pFile->fputc(m_iStatus);
-   pFile->fputc(MIB_TAG_STATUS | MIB_END_OF_TAG);
+   pFile->writeByte(MIB_TAG_STATUS);
+   pFile->writeByte(m_iStatus);
+   pFile->writeByte(MIB_TAG_STATUS | MIB_END_OF_TAG);
 
    // Object access
-   pFile->fputc(MIB_TAG_ACCESS);
-   pFile->fputc(m_iAccess);
-   pFile->fputc(MIB_TAG_ACCESS | MIB_END_OF_TAG);
+   pFile->writeByte(MIB_TAG_ACCESS);
+   pFile->writeByte(m_iAccess);
+   pFile->writeByte(MIB_TAG_ACCESS | MIB_END_OF_TAG);
 
    // Object type
-   pFile->fputc(MIB_TAG_TYPE);
-   pFile->fputc(m_iType);
-   pFile->fputc(MIB_TAG_TYPE | MIB_END_OF_TAG);
+   pFile->writeByte(MIB_TAG_TYPE);
+   pFile->writeByte(m_iType);
+   pFile->writeByte(MIB_TAG_TYPE | MIB_END_OF_TAG);
 
    // Object description
    if (!(dwFlags & SMT_SKIP_DESCRIPTIONS))
    {
-      pFile->fputc(MIB_TAG_DESCRIPTION);
+      pFile->writeByte(MIB_TAG_DESCRIPTION);
       WriteStringToFile(pFile, CHECK_NULL_EX(m_pszDescription));
-      pFile->fputc(MIB_TAG_DESCRIPTION | MIB_END_OF_TAG);
+      pFile->writeByte(MIB_TAG_DESCRIPTION | MIB_END_OF_TAG);
 
 		if (m_pszTextualConvention != NULL)
 		{
-			pFile->fputc(MIB_TAG_TEXTUAL_CONVENTION);
+			pFile->writeByte(MIB_TAG_TEXTUAL_CONVENTION);
 			WriteStringToFile(pFile, m_pszTextualConvention);
-			pFile->fputc(MIB_TAG_TEXTUAL_CONVENTION | MIB_END_OF_TAG);
+			pFile->writeByte(MIB_TAG_TEXTUAL_CONVENTION | MIB_END_OF_TAG);
 		}
    }
 
-   // Save childs
+   // Save children
    for(pCurr = m_pFirst; pCurr != NULL; pCurr = pCurr->getNext())
       pCurr->writeToFile(pFile, dwFlags);
 
-   pFile->fputc(MIB_TAG_OBJECT | MIB_END_OF_TAG);
+   pFile->writeByte(MIB_TAG_OBJECT | MIB_END_OF_TAG);
 }
 
 /**
@@ -333,7 +333,7 @@ static TCHAR *ReadStringFromFile(ZFile *pFile)
 /**
  * Read object from file
  */
-#define CHECK_NEXT_TAG(x) { ch = pFile->fgetc(); if (ch != (x)) nState--; }
+#define CHECK_NEXT_TAG(x) { ch = pFile->readByte(); if (ch != (x)) nState--; }
 
 BOOL SNMP_MIBObject::readFromFile(ZFile *pFile)
 {
@@ -344,14 +344,14 @@ BOOL SNMP_MIBObject::readFromFile(ZFile *pFile)
 
    while(nState == 0)
    {
-      ch = pFile->fgetc();
+      ch = pFile->readByte();
       switch(ch)
       {
          case (MIB_TAG_OBJECT | MIB_END_OF_TAG):
             nState++;
             break;
          case MIB_TAG_BYTE_OID:
-            m_dwOID = (UINT32)pFile->fgetc();
+            m_dwOID = (UINT32)pFile->readByte();
             CHECK_NEXT_TAG(MIB_TAG_BYTE_OID | MIB_END_OF_TAG);
             break;
          case MIB_TAG_WORD_OID:
@@ -380,15 +380,15 @@ BOOL SNMP_MIBObject::readFromFile(ZFile *pFile)
             CHECK_NEXT_TAG(MIB_TAG_TEXTUAL_CONVENTION | MIB_END_OF_TAG);
             break;
          case MIB_TAG_TYPE:
-            m_iType = pFile->fgetc();
+            m_iType = pFile->readByte();
             CHECK_NEXT_TAG(MIB_TAG_TYPE | MIB_END_OF_TAG);
             break;
          case MIB_TAG_STATUS:
-            m_iStatus = pFile->fgetc();
+            m_iStatus = pFile->readByte();
             CHECK_NEXT_TAG(MIB_TAG_STATUS | MIB_END_OF_TAG);
             break;
          case MIB_TAG_ACCESS:
-            m_iAccess = pFile->fgetc();
+            m_iAccess = pFile->readByte();
             CHECK_NEXT_TAG(MIB_TAG_ACCESS | MIB_END_OF_TAG);
             break;
          case MIB_TAG_OBJECT:
@@ -431,7 +431,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *pszFile, SNMP_MIBObject
             header.flags = ntohs(header.flags);
             fseek(pFile, header.bHeaderSize, SEEK_SET);
             pZFile = new ZFile(pFile, header.flags & SMT_COMPRESS_DATA, FALSE);
-            if (pZFile->fgetc() == MIB_TAG_OBJECT)
+            if (pZFile->readByte() == MIB_TAG_OBJECT)
             {
                *ppRoot = new SNMP_MIBObject;
                if (!(*ppRoot)->readFromFile(pZFile))

@@ -106,10 +106,10 @@ public:
    ~ZFile();
 
    size_t write(const void *pBuf, int nLen) { return m_bCompress ? zwrite(pBuf, nLen) : fwrite(pBuf, 1, nLen, m_pFile); }
-   int fputc(int ch) { return m_bCompress ? zputc(ch) : ::fputc(ch, m_pFile); }
+   int writeByte(int ch) { return m_bCompress ? zputc(ch) : ::fputc(ch, m_pFile); }
 
    size_t read(void *pBuf, int nLen) { return m_bCompress ? zread(pBuf, nLen) : fread(pBuf, 1, nLen, m_pFile); }
-   int fgetc() { return m_bCompress ? zgetc() : ::fgetc(m_pFile); }
+   int readByte() { return m_bCompress ? zgetc() : ::fgetc(m_pFile); }
 
    int close() { return m_bCompress ? zclose() : fclose(m_pFile); }
 
