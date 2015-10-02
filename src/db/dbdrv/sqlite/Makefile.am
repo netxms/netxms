@@ -2,9 +2,16 @@ DRIVER = sqlite
 
 pkglib_LTLIBRARIES = sqlite.la
 sqlite_la_SOURCES = sqlite.cpp
-sqlite_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include -I@top_srcdir@/src/sqlite
+sqlite_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 sqlite_la_LDFLAGS = -module -avoid-version
-sqlite_la_LIBADD = ../../../libnetxms/libnetxms.la ../../../sqlite/libnxsqlite.la
+sqlite_la_LIBADD = ../../../libnetxms/libnetxms.la
+
+if USE_INTERNAL_SQLITE
+sqlite_la_CPPFLAGS += -I@top_srcdir@/src/sqlite
+sqlite_la_LIBADD += ../../../sqlite/libnxsqlite.la
+else
+sqlite_la_LIBADD += -lsqlite3
+endif
 
 EXTRA_DIST = \
 	sqlite.vcproj \

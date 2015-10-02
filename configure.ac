@@ -80,6 +80,7 @@ USE_INTERNAL_LIBTRE="no"
 FORCE_INTERNAL_LIBTRE="no"
 FORCE_INTERNAL_JANSSON="no"
 FORCE_INTERNAL_ZLIB="no"
+FORCE_INTERNAL_SQLITE="no"
 FORCE_32BIT_BUILD="no"
 FORCE_INTERNAL_GETOPT="no"
 LDFLAGS_PREFIX=""
@@ -151,8 +152,9 @@ AC_ARG_WITH(static-agent,
 [
 	COMPONENTS="$COMPONENTS sqlite snmp static-agent sqlite_drv"
 	FORCE_INTERNAL_EXPAT="yes"
-	FORCE_INTERNAL_LIBTRE="yes"
 	FORCE_INTERNAL_JANSSON="yes"
+	FORCE_INTERNAL_LIBTRE="yes"
+	FORCE_INTERNAL_SQLITE="yes"
 	FORCE_INTERNAL_ZLIB="yes"
 ])
 
@@ -215,6 +217,12 @@ AC_ARG_WITH(internal-zlib,
 [AS_HELP_STRING(--with-internal-zlib,force use of bundled zlib)],
 [
 	FORCE_INTERNAL_ZLIB="yes"
+])
+
+AC_ARG_WITH(internal-sqlite,
+[AS_HELP_STRING(--with-internal-sqlite,force use of bundled sqlite)],
+[
+	FORCE_INTERNAL_SQLITE="yes"
 ])
 
 AC_ARG_WITH(internal-getopt,
@@ -556,11 +564,6 @@ fi
 #--------------------------------------------------------------------
 # Validate command line parameters and set various checking options
 #--------------------------------------------------------------------
-
-check_substr "$COMPONENTS" "sqlite"
-if test $? = 0; then
-	MODULES="$MODULES sqlite"
-fi
 
 check_substr "$COMPONENTS" "snmp"
 if test $? = 0; then
@@ -1542,6 +1545,38 @@ if test "x$BUILD_SERVER" = "xyes" ; then
       AC_LANG_POP([C++])
    fi
    LDFLAGS="$SAVED_LDFLAGS"
+fi
+
+check_substr "$COMPONENTS" "sqlite"
+if test $? = 0; then
+	if test "x$FORCE_INTERNAL_SQLITE" = "xyes"; then
+		HAVE_SQLITE=no
+	else
+		OLD_LIBS="$LIBS"
+		HAVE_SQLITE=yes
+		AC_CHECK_HEADER(sqlite3.h,,HAVE_SQLITE=no)
+		if test "x$HAVE_SQLITE" = "xyes"; then
+			AC_CHECK_LIB(sqlite3, sqlite3_initialize, [], [ HAVE_SQLITE=no ])
+		fi
+		if test "x$HAVE_SQLITE" = "xyes"; then
+			AC_MSG_CHECKING(if libsqlite3 is thread-safe)
+			AC_RUN_IFELSE([AC_LANG_PROGRAM([[
+#include <sqlite3.h>
+			]],[[
+				return sqlite3_threadsafe() ? 0 : 1;
+			]])
+			],[
+				AC_MSG_RESULT(yes)
+			],[
+				AC_MSG_RESULT(no)
+				HAVE_SQLITE=no
+			])
+		fi
+		LIBS="$OLD_LIBS"
+	fi
+	if test "x$HAVE_SQLITE" = "xno"; then
+		MODULES="sqlite $MODULES"
+	fi
 fi
 
 if test "x$NEED_ZLIB" = "xyes"; then
@@ -2735,6 +2770,7 @@ fi
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
+AM_CONDITIONAL([USE_INTERNAL_SQLITE], [test "x$HAVE_SQLITE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$NEED_ZLIB/$HAVE_ZLIB" = "yes/no"])
 AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
@@ -3137,6 +3173,14 @@ if test "x${HAVE_JANSSON}" = "xno"; then
 	echo "Use internal libjansson : YES"
 else
 	echo "Use internal libjansson : NO"
+fi
+check_substr "$COMPONENTS" "sqlite"
+if test $? = 0; then
+	if test "x${HAVE_SQLITE}" = "xno"; then
+		echo "Use internal sqlite     : YES"
+	else
+		echo "Use internal sqlite     : NO"
+	fi
 fi
 if test "x${NEED_ZLIB}" = "xyes"; then
 	if test "x${HAVE_ZLIB}" = "xno"; then
