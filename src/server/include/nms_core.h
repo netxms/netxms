@@ -107,6 +107,7 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nxcore_situations.h"
 #include "nxcore_jobs.h"
 #include "nxcore_logs.h"
+#include "nxcore_schedule.h"
 
 /**
  * Common constants and macros
@@ -1036,17 +1037,6 @@ BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT3
 UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId);
 GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName);
 
-typedef void (*scheduled_action_executor)(const TCHAR *params);
-void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exec);
-void AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, int flags = 0);
-void AddOneTimeSchedule(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, int flags = 0);
-void UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, int flags);
-void UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, int flags);
-void RemoveSchedule(UINT32 id, bool alreadyLocked = false);
-void GetCallbackIdList(NXCPMessage *msg);
-void GetSheduleList(NXCPMessage *msg);
-void UpdateScheduleFromMsg(NXCPMessage *request);
-void CreateScehduleFromMsg(NXCPMessage *request);
 
 #if XMPP_SUPPORTED
 bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message);

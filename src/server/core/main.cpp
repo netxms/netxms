@@ -843,7 +843,7 @@ retry_db_lock:
    if (ConfigReadInt(_T("LdapSyncInterval"), 0))
 		ThreadCreate(SyncLDAPUsers, 0, NULL);
 
-   RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScript);
+   RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScript, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
    InitializeTaskScheduler();
 
 	// Allow clients to connect
@@ -1892,11 +1892,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if (szBuffer[0] == _T('+'))
       {
          int offset = _tcstoul(&szBuffer[1], NULL, 0);
-         AddOneTimeSchedule(_T("Execute.Script"), time(NULL) + offset, pArg);
+         AddOneTimeSchedule(_T("Execute.Script"), time(NULL) + offset, pArg, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
       }
       else
       {
-         AddSchedule(_T("Execute.Script"), szBuffer, pArg);
+         AddSchedule(_T("Execute.Script"), szBuffer, pArg, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
       }
    }
 	else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))

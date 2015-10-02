@@ -13951,7 +13951,7 @@ void ClientSession::listScheduleCallbacks(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   GetCallbackIdList(request);
+   GetCallbackIdList(request, m_dwSystemAccess);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
@@ -13964,7 +13964,7 @@ void ClientSession::listSchedules(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   GetSheduleList(request);
+   GetSheduleList(request, m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
@@ -13977,8 +13977,8 @@ void ClientSession::addSchedule(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   CreateScehduleFromMsg(request);
-   msg.setField(VID_RCC, RCC_SUCCESS);
+   UINT32 result = CreateScehduleFromMsg(request, m_dwUserId, m_dwSystemAccess);
+   msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
 
@@ -13990,8 +13990,8 @@ void ClientSession::updateSchedule(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   UpdateScheduleFromMsg(request);
-   msg.setField(VID_RCC, RCC_SUCCESS);
+   UINT32 result = UpdateScheduleFromMsg(request, m_dwUserId, m_dwSystemAccess);
+   msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
 
@@ -14003,7 +14003,7 @@ void ClientSession::removeSchedule(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   RemoveSchedule(request->getFieldAsUInt32(VID_SCHEDULE_ID));
-   msg.setField(VID_RCC, RCC_SUCCESS);
+   UINT32 result = RemoveSchedule(request->getFieldAsUInt32(VID_SCHEDULE_ID), m_dwUserId, m_dwSystemAccess);
+   msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }

@@ -1098,6 +1098,7 @@ typedef struct
 #define VID_LAST_EXECUTION_TIME     ((UINT32)526)
 #define VID_CALLBACK_COUNT          ((UINT32)527)
 #define VID_DASHBOARDS              ((UINT32)528)
+#define VID_OWNER                   ((UINT32)529)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
