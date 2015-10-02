@@ -1559,18 +1559,22 @@ if test $? = 0; then
 			AC_CHECK_LIB(sqlite3, sqlite3_initialize, [], [ HAVE_SQLITE=no ])
 		fi
 		if test "x$HAVE_SQLITE" = "xyes"; then
-			AC_MSG_CHECKING(if libsqlite3 is thread-safe)
-			AC_RUN_IFELSE([AC_LANG_PROGRAM([[
-#include <sqlite3.h>
-			]],[[
-				return sqlite3_threadsafe() ? 0 : 1;
-			]])
-			],[
-				AC_MSG_RESULT(yes)
-			],[
-				AC_MSG_RESULT(no)
-				HAVE_SQLITE=no
-			])
+      if test "x$cross_compiling" = "xyes"; then
+        AC_MSG_WARN([Cross-compiling mode is active, assuming libsqlite3 is thread-safe])
+      else
+        AC_MSG_CHECKING(if libsqlite3 is thread-safe)
+        AC_RUN_IFELSE([AC_LANG_PROGRAM([[
+          #include <sqlite3.h>
+        ]],[[
+          return sqlite3_threadsafe() ? 0 : 1;
+        ]])
+        ],[
+          AC_MSG_RESULT(yes)
+        ],[
+          AC_MSG_RESULT(no)
+          HAVE_SQLITE=no
+        ])
+      fi
 		fi
 		LIBS="$OLD_LIBS"
 	fi
