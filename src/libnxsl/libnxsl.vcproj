@@ -445,6 +445,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\storage.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\table.cpp"
 				>
 			</File>
