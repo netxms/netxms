@@ -343,7 +343,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 					}
 				}
 
-				// Default behaviour
+				// Default behavior
 				actionOpenSubmap.run();
 			}
 		});

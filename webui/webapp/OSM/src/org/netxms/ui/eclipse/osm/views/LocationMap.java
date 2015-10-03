@@ -18,12 +18,15 @@
  */
 package org.netxms.ui.eclipse.osm.views;
 
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.osm.Messages;
+import org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer;
+import org.netxms.ui.eclipse.osm.widgets.ObjectGeoLocationViewer;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -58,6 +61,15 @@ public class LocationMap extends AbstractGeolocationView
 	}
 
 	/* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#createMapViewer(org.eclipse.swt.widgets.Composite, int)
+    */
+   @Override
+   protected AbstractGeoMapViewer createMapViewer(Composite parent, int style)
+   {
+      return new ObjectGeoLocationViewer(parent, style);
+   }
+
+   /* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#getInitialCenterPoint()
 	 */
 	@Override

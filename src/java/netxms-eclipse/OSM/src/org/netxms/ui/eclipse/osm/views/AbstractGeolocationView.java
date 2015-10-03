@@ -44,7 +44,7 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
-import org.netxms.ui.eclipse.osm.widgets.GeoMapViewer;
+import org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -55,7 +55,7 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 {
 	public static final String JOB_FAMILY = "MapViewJob"; //$NON-NLS-1$
 	
-	protected GeoMapViewer map;
+	protected AbstractGeoMapViewer map;
 	
 	private MapAccessor mapAccessor;
 	private int zoomLevel = 15;
@@ -103,7 +103,7 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 	public void createPartControl(Composite parent)
 	{
 		// Map control
-		map = new GeoMapViewer(parent, SWT.BORDER, false, null);
+		map = createMapViewer(parent, SWT.BORDER);
 		map.setViewPart(this);
 		
 		createActions();
@@ -137,6 +137,15 @@ public abstract class AbstractGeolocationView extends ViewPart implements ISelec
 		getSite().setSelectionProvider(this);
 	}
 
+	/**
+	 * Create actual map viewer control
+	 * 
+	 * @param parent
+	 * @param style
+	 * @return
+	 */
+	protected abstract AbstractGeoMapViewer createMapViewer(Composite parent, int style);
+	
 	/**
 	 * Create actions
 	 */

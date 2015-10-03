@@ -41,7 +41,7 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.dialogs.TimeSelectionDialog;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
-import org.netxms.ui.eclipse.osm.widgets.GeoMapViewer;
+import org.netxms.ui.eclipse.osm.widgets.GeoLocationHistoryViewer;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -62,7 +62,7 @@ public class HistoryView extends ViewPart
         Messages.get().HistoryView_Preset2days, Messages.get().HistoryView_Preset5days, Messages.get().HistoryView_Preset1week, Messages.get().HistoryView_Preset1month,Messages.get().HistoryView_Preset1year };
 
 	
-	protected GeoMapViewer map;
+	protected GeoLocationHistoryViewer map;
 	
 	private MapAccessor mapAccessor;
 	private int zoomLevel = 15;
@@ -130,7 +130,7 @@ public class HistoryView extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		// Map control
-		map = new GeoMapViewer(parent, SWT.BORDER, true, object);
+		map = new GeoLocationHistoryViewer(parent, SWT.BORDER, object);
 		map.setViewPart(this);
 		
 		createActions(parent);
