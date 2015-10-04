@@ -151,7 +151,7 @@ public class WorldMap extends AbstractGeolocationView
 		{
 			final NXCObjectModificationData md = new NXCObjectModificationData(dlg.getSelectedObjects().get(0).getObjectId());
 			md.setGeolocation(map.getLocationAtPoint(map.getCurrentPoint()));
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			final NXCSession session = ConsoleSharedData.getSession();
 			new ConsoleJob(Messages.get().WorldMap_JobTitle, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception

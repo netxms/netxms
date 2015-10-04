@@ -89,7 +89,8 @@ public class GeoLocationCache implements SessionListener
 				if ((object.getObjectClass() == AbstractObject.OBJECT_NODE) ||
 					 (object.getObjectClass() == AbstractObject.OBJECT_MOBILEDEVICE) ||
 					 (object.getObjectClass() == AbstractObject.OBJECT_CLUSTER) ||
-					 (object.getObjectClass() == AbstractObject.OBJECT_CONTAINER))
+					 (object.getObjectClass() == AbstractObject.OBJECT_CONTAINER) ||
+					 (object.getObjectClass() == AbstractObject.OBJECT_RACK))
 				{
 					GeoLocation gl = object.getGeolocation();
 					if (gl.getType() != GeoLocation.UNSET)
@@ -112,7 +113,8 @@ public class GeoLocationCache implements SessionListener
 		if ((object.getObjectClass() != AbstractObject.OBJECT_NODE) &&
 			 (object.getObjectClass() != AbstractObject.OBJECT_MOBILEDEVICE) &&
 		    (object.getObjectClass() != AbstractObject.OBJECT_CLUSTER) &&
-		    (object.getObjectClass() != AbstractObject.OBJECT_CONTAINER))
+		    (object.getObjectClass() != AbstractObject.OBJECT_CONTAINER) &&
+          (object.getObjectClass() != AbstractObject.OBJECT_RACK))
 			return;
 		
 		GeoLocation prevLocation = null;

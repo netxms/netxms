@@ -123,6 +123,9 @@
                  <instanceof
                        value="org.netxms.client.objects.Cluster">
                  </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Rack">
+                 </instanceof>
               </or>
            </enabledWhen>
         </page>
