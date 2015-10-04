@@ -38,6 +38,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.MobileDevice;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
@@ -292,6 +294,22 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          width = pt.x;
       height += pt.y;
       
+      String locationDetails;
+      if (currentObject.getGeolocation().getTimestamp().getTime() > 0)
+      {
+         locationDetails = String.format("Obtained at %s from %s", 
+               RegionalSettings.getDateTimeFormat().format(currentObject.getGeolocation().getTimestamp()),
+               (currentObject.getGeolocation().getType() == GeoLocation.GPS) ? "GPS" : "network");
+         pt = gc.textExtent(locationDetails);
+         if (width < pt.x)
+            width = pt.x;
+         height += pt.y;
+      }
+      else
+      {
+         locationDetails = null;
+      }
+      
       final String postalAddress = currentObject.getPostalAddress().getAddressLine();
       if (!postalAddress.isEmpty())
       {
@@ -299,6 +317,37 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          if (width < pt.x)
             width = pt.x;
          height += pt.y + OBJECT_TOOLTIP_SPACING;
+      }
+      
+      String lastReport, batteryLevel;
+      if (currentObject instanceof MobileDevice)
+      {
+         lastReport = String.format("Last report: %s",
+               ((MobileDevice)currentObject).getLastReportTime().getTime() > 0 ?
+                     RegionalSettings.getDateTimeFormat().format(((MobileDevice)currentObject).getLastReportTime()) :
+                     "never");
+         pt = gc.textExtent(lastReport);
+         if (width < pt.x)
+            width = pt.x;
+         height += pt.y + OBJECT_TOOLTIP_SPACING * 2 + 1;
+         
+         if (((MobileDevice)currentObject).getBatteryLevel() >= 0)
+         {
+            batteryLevel = String.format("Battery level: %d%%", ((MobileDevice)currentObject).getBatteryLevel());
+            pt = gc.textExtent(batteryLevel);
+            if (width < pt.x)
+               width = pt.x;
+            height += pt.y;
+         }
+         else
+         {
+            batteryLevel = null;
+         }
+      }
+      else
+      {
+         lastReport = null;
+         batteryLevel = null;
       }
       
       if ((currentObject.getComments() != null) && !currentObject.getComments().isEmpty())
@@ -345,10 +394,30 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       int textLineHeight = gc.textExtent("M").y;
       y = rect.y + OBJECT_TOOLTIP_Y_MARGIN + titleSize.y + OBJECT_TOOLTIP_SPACING + 2;
       gc.drawText(location, rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
+      if (locationDetails != null)
+      {
+         y += textLineHeight;
+         gc.drawText(locationDetails, rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
+      }
       if (!postalAddress.isEmpty())
       {
          y += textLineHeight;
          gc.drawText(postalAddress, rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
+      }
+      
+      if (lastReport != null)
+      {
+         y += textLineHeight + OBJECT_TOOLTIP_SPACING;
+         gc.setForeground(colorCache.create(92, 92, 92));
+         gc.drawLine(rect.x + 1, y, rect.x + rect.width - 1, y);
+         y += OBJECT_TOOLTIP_SPACING;
+         gc.setForeground(colorCache.create(0, 0, 0));
+         gc.drawText(lastReport, rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
+         if (batteryLevel != null)
+         {
+            y += textLineHeight;
+            gc.drawText(batteryLevel, rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
+         }
       }
       
       if ((currentObject.getComments() != null) && !currentObject.getComments().isEmpty())

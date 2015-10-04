@@ -61,7 +61,7 @@ public class GeoLocation
     */
    public GeoLocation(long base, final NXCPMessage msg)
    {
-      type = 0;
+      type = UNSET;
       latitude = msg.getFieldAsDouble(base);
       longitude = msg.getFieldAsDouble(base+1);
       accuracy = msg.getFieldAsInt32(base+2);
