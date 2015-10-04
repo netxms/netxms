@@ -1564,7 +1564,7 @@ CREATE TABLE scheduled_tasks
 (
 	id integer not null,
 	taskId varchar(255) null,
-	schedule vatchar(127) null,
+	schedule varchar(127) null,
 	params varchar(1023) null,
 	execution_time integer not null,
 	last_execution_time integer not null,
