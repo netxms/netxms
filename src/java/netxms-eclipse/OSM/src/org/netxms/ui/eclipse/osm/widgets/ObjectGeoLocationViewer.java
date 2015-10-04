@@ -188,6 +188,11 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          objects.remove(idx);
          objects.add(currentObject);
       }
+      else
+      {
+         objectToolTipLocation = null;
+         objectTooltipRectangle = null;
+      }
       redraw();
    }
 

@@ -152,6 +152,11 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer
          objects.remove(idx);
          objects.add(currentObject);
       }
+      else
+      {
+         objectToolTipLocation = null;
+         objectTooltipRectangle = null;
+      }
       redraw();
    }
 
