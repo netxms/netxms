@@ -347,7 +347,6 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 						{
 							AbstractGeoMapViewer.this.redraw();
 						}
-						tiles.dispose();
 					}
 				});
 			}
@@ -418,26 +417,6 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 		   cp.x += offsetX;
 		   cp.y += offsetY;
 		   currentLocation = GeoLocationCache.displayToCoordinates(cp, accessor.getZoom());
-		   
-	      Point size = getSize();
-		   TileSet tileSet = mapLoader.getAllTiles(size, currentLocation, MapLoader.CENTER, accessor.getZoom(), true);
-	      int x = tileSet.xOffset;
-	      int y = tileSet.yOffset;
-	      final Tile[][] tiles = tileSet.tiles;
-	      for(int i = 0; i < tiles.length; i++)
-	      {
-	         for(int j = 0; j < tiles[i].length; j++)
-	         {
-	            gc.drawImage(tiles[i][j].getImage(), x, y);
-	            x += 256;
-	            if (x >= size.x)
-	            {
-	               x = tileSet.xOffset;
-	               y += 256;
-	            }
-	         }
-	      }
-	      tileSet.dispose();
 		}
 		
 		// Draw selection rectangle
