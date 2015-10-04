@@ -295,7 +295,8 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       height += pt.y;
       
       String locationDetails;
-      if (currentObject.getGeolocation().getTimestamp().getTime() > 0)
+      if ((currentObject.getGeolocation().getTimestamp().getTime() > 0) &&
+          currentObject.getGeolocation().isAutomatic())
       {
          locationDetails = String.format("Obtained at %s from %s", 
                RegionalSettings.getDateTimeFormat().format(currentObject.getGeolocation().getTimestamp()),

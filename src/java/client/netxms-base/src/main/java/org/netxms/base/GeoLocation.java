@@ -110,6 +110,16 @@ public class GeoLocation
 	}
 
 	/**
+	 * Returns true if location was obtained automatically (from GPS or network)
+	 * 
+	 * @return
+	 */
+	public boolean isAutomatic()
+   {
+      return (type == GPS) || (type == NETWORK);
+   }
+
+	/**
 	 * @return the type
 	 */
 	public int getType()
