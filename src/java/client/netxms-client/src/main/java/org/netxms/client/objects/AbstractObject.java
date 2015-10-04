@@ -18,10 +18,12 @@
  */
 package org.netxms.client.objects;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -133,6 +135,7 @@ public abstract class AbstractObject
 	protected int[] statusThresholds;
 	protected HashSet<Long> parents = new HashSet<Long>(0);
 	protected HashSet<Long> children = new HashSet<Long>(0);
+	protected List<Long> dashboards = new ArrayList<Long>(0);
 	protected Map<String, String> customAttributes = new HashMap<String, String>(0);
 	protected Map<String, Object> moduleData = null;
 	
@@ -242,10 +245,11 @@ public abstract class AbstractObject
 			Long[] nodes = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_TRUSTED_NODES);
 			trustedNodes.addAll(Arrays.asList(nodes));
 		}
-		for(i = 0, id = NXCPCodes.VID_CHILD_ID_BASE; i < count; i++, id++)
-		{
-			children.add(msg.getFieldAsInt64(id));
-		}
+		
+		// Dashboards
+		Long[] d = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_DASHBOARDS);
+		if ((d != null) && (d.length > 0))
+		   dashboards.addAll(Arrays.asList(d));
 		
 		// Custom attributes
 		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);

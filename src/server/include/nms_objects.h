@@ -439,6 +439,7 @@ protected:
    PostalAddress *m_postalAddress;
    ClientSession *m_pollRequestor;
 	UINT32 m_submapId;				// Map object which should be open on drill-down request
+	IntegerArray<UINT32> *m_dashboards; // Dashboards associated with this object
 
    UINT32 m_dwChildCount;      // Number of child objects
    NetObj **m_pChildList;     // Array of pointers to child objects

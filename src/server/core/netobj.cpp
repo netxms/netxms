@@ -65,6 +65,7 @@ NetObj::NetObj()
 	m_submapId = 0;
    m_moduleData = NULL;
    m_postalAddress = new PostalAddress();
+   m_dashboards = new IntegerArray<UINT32>();
 }
 
 /**
@@ -84,6 +85,7 @@ NetObj::~NetObj()
    safe_free(m_pszComments);
    delete m_moduleData;
    delete m_postalAddress;
+   delete m_dashboards;
 }
 
 /**
@@ -270,6 +272,35 @@ bool NetObj::loadCommonProperties()
 		}
 	}
 
+   // Load associated dashboards
+   if (success)
+   {
+      hStmt = DBPrepare(g_hCoreDB, _T("SELECT dashboard_id FROM dashboard_associations WHERE object_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
+         {
+            int count = DBGetNumRows(hResult);
+            for(int i = 0; i < count; i++)
+            {
+               m_dashboards->add(DBGetFieldULong(hResult, i, 0));
+            }
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            success = false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
 	if (success)
 		success = loadTrustedNodes();
 
@@ -368,7 +399,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress->getPostCode(), DB_BIND_STATIC);
 	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, m_id);
 
-   bool success = DBExecute(hStmt) ? true : false;
+   bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 
    // Save custom attributes
@@ -376,7 +407,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    {
 		TCHAR szQuery[512];
 		_sntprintf(szQuery, 512, _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), m_id);
-      success = DBQuery(hdb, szQuery) ? true : false;
+      success = DBQuery(hdb, szQuery);
 		if (success)
 		{
 			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
@@ -391,6 +422,32 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 				success = false;
 			}
 		}
+   }
+
+   // Save dashboard associations
+   if (success)
+   {
+      TCHAR szQuery[512];
+      _sntprintf(szQuery, 512, _T("DELETE FROM dashboard_associations WHERE object_id=%d"), m_id);
+      success = DBQuery(hdb, szQuery);
+      if (success && (m_dashboards->size() > 0))
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_associations (object_id,dashboard_id) VALUES (?,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_dashboards->size()) && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dashboards->get(i));
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
    }
 
    // Save module data
@@ -941,6 +998,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
 	pMsg->setField(VID_NUM_TRUSTED_NODES, m_dwNumTrustedNodes);
 	if (m_dwNumTrustedNodes > 0)
 		pMsg->setFieldFromInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
+   pMsg->setFieldFromInt32Array(VID_DASHBOARDS, m_dashboards);
 
    m_customAttributes.fillMessage(pMsg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
 
@@ -1148,6 +1206,12 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
       TCHAR buffer[32];
       pRequest->getFieldAsString(VID_POSTCODE, buffer, 32);
       m_postalAddress->setPostCode(buffer);
+   }
+
+   // Change dashboard list
+   if (pRequest->isFieldExist(VID_DASHBOARDS))
+   {
+      pRequest->getFieldAsInt32Array(VID_DASHBOARDS, m_dashboards);
    }
 
    return RCC_SUCCESS;

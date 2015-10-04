@@ -1308,9 +1308,9 @@ CREATE TABLE network_maps
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** Elements of network maps
-*/
+/**
+ * Elements of network maps
+ */
 CREATE TABLE network_map_elements
 (
 	map_id integer not null,
@@ -1321,9 +1321,9 @@ CREATE TABLE network_map_elements
 	PRIMARY KEY(map_id,element_id)
 ) TABLE_TYPE;
 
-/*
-** Links on network maps
-*/
+/**
+ * Links on network maps
+ */
 CREATE TABLE network_map_links
 (
 	map_id integer not null,
@@ -1339,9 +1339,9 @@ CREATE TABLE network_map_links
 
 CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id);
 
-/*
-** Image Library
-*/
+/**
+ * Image Library
+ */
 CREATE TABLE images
 (
    guid varchar(36) not null,
@@ -1353,9 +1353,9 @@ CREATE TABLE images
    UNIQUE(name, category)
 ) TABLE_TYPE;
 
-/*
-** Dashboards
-*/
+/**
+ * Dashboards
+ */
 CREATE TABLE dashboards
 (
 	id integer not null,
@@ -1364,9 +1364,9 @@ CREATE TABLE dashboards
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** Dashboard elements
-*/
+/**
+ * Dashboard elements
+ */
 CREATE TABLE dashboard_elements
 (
 	dashboard_id integer not null,
@@ -1377,18 +1377,28 @@ CREATE TABLE dashboard_elements
 	PRIMARY KEY(dashboard_id,element_id)
 ) TABLE_TYPE;
 
-/*
-** SLA business services
-*/
+/**
+ * Associations between dashboards and other objects
+ */
+CREATE TABLE dashboard_associations
+(
+   object_id integer not null,
+   dashboard_id integer not null,
+   PRIMARY KEY(object_id,dashboard_id)
+) TABLE_TYPE;
+
+/**
+ * SLA business services
+ */
 CREATE TABLE business_services
 (
      service_id integer not null,
      PRIMARY KEY(service_id)
 ) TABLE_TYPE;
 
-/*
-** SLA service checks
-*/
+/**
+ * SLA service checks
+ */
 CREATE TABLE slm_checks
 (
      id integer not null,

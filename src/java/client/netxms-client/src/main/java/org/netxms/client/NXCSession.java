@@ -4522,6 +4522,11 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_RACK_HEIGHT, data.getRackHeight());
       }
 
+      if ((flags & NXCObjectModificationData.MODIFY_DASHBOARD_LIST) != 0)
+      {
+         msg.setField(NXCPCodes.VID_DASHBOARDS, data.getDashboards());
+      }
+      
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);

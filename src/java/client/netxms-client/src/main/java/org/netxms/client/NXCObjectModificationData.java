@@ -105,6 +105,7 @@ public class NXCObjectModificationData
    public static final long MODIFY_AGENT_CACHE_MODE   = 0x0100000000000000L;
    public static final long MODIFY_MAPOBJ_DISP_MODE   = 0x0200000000000000L;
    public static final long MODIFY_RACK_PLACEMENT     = 0x0400000000000000L;
+   public static final long MODIFY_DASHBOARD_LIST     = 0x0800000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -187,6 +188,7 @@ public class NXCObjectModificationData
 	private UUID rackImage;
 	private short rackPosition;
 	private short rackHeight;
+	private Long[] dashboards;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1523,5 +1525,22 @@ public class NXCObjectModificationData
       this.rackPosition = rackPosition;
       this.rackHeight = rackHeight;
       flags |= MODIFY_RACK_PLACEMENT;
+   }
+
+   /**
+    * @return the dashboards
+    */
+   public Long[] getDashboards()
+   {
+      return dashboards;
+   }
+
+   /**
+    * @param dashboards the dashboards to set
+    */
+   public void setDashboards(Long[] dashboards)
+   {
+      this.dashboards = dashboards;
+      flags |= MODIFY_DASHBOARD_LIST;
    }
 }

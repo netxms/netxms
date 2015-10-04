@@ -873,6 +873,14 @@ public class NXCPCodes
    public static final long VID_RACK_IMAGE = 518;
    public static final long VID_RACK_POSITION = 519;
    public static final long VID_RACK_HEIGHT = 520;
+   public static final long VID_SCHEDULE_COUNT = 521;
+   public static final long VID_SCHEDULE_ID = 522;
+   public static final long VID_TASK_ID = 532;
+   public static final long VID_SCHEDULE = 524;
+   public static final long VID_EXECUTION_TIME = 525;
+   public static final long VID_LAST_EXECUTION_TIME = 526;
+   public static final long VID_CALLBACK_COUNT = 527;
+   public static final long VID_DASHBOARDS = 528;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

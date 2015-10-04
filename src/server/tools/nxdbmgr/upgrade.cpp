@@ -574,6 +574,20 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V369 to V370
+ */
+static BOOL H_UpgradeFromV369(int currVersion, int newVersion)
+{
+    CHK_EXEC(CreateTable(
+      _T("CREATE TABLE dashboard_associations (")
+      _T("   object_id integer not null,")
+      _T("   dashboard_id integer not null,")
+      _T("   PRIMARY KEY(object_id,dashboard_id))")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='370' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V368 to V369
  */
 static BOOL H_UpgradeFromV368(int currVersion, int newVersion)
@@ -8908,6 +8922,7 @@ static struct
    { 366, 367, H_UpgradeFromV366 },
    { 367, 368, H_UpgradeFromV367 },
    { 368, 369, H_UpgradeFromV368 },
+   { 369, 370, H_UpgradeFromV369 },
    { 0, 0, NULL }
 };
 
