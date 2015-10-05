@@ -118,11 +118,11 @@ public:
 void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exec, UINT64 accessRight);
 UINT32 AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT64 systemRights, int flags = 0);
 UINT32 AddOneTimeSchedule(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT64 systemRights, int flags = 0);
-UINT32 UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 systemAccessRights, int flags);
+UINT32 UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT64 systemAccessRights, int flags);
 UINT32 UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT64 systemAccessRights, int flags);
 UINT32 RemoveSchedule(UINT32 id, UINT32 user, UINT64 systemRights);
 void GetCallbackIdList(NXCPMessage *msg, UINT64 accessRights);
-void GetSheduleList(NXCPMessage *msg, UINT32 user, UINT32 systemRights);
+void GetSheduleList(NXCPMessage *msg, UINT32 user, UINT64 systemRights);
 UINT32 UpdateScheduleFromMsg(NXCPMessage *request, UINT32 owner, UINT64 systemAccessRights);
 UINT32 CreateScehduleFromMsg(NXCPMessage *request, UINT32 owner, UINT64 systemAccessRights);
 

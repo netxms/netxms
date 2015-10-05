@@ -272,7 +272,7 @@ void CloseTaskScheduler()
 /**
  * Function that adds to list task handler function
  */
-void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exec, UINT32 accessRight)
+void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exec, UINT64 accessRight)
 {
    s_callbacks.set(id, new ScheduleCallback(exec, accessRight));
    DbgPrintf(6, _T("Registered scheduler task %s"), id);
