@@ -26,6 +26,7 @@ serverinclude_HEADERS = \
 	nms_users.h \
 	nxcore_jobs.h \
 	nxcore_logs.h \
+	nxcore_schedule.h \
 	nxcore_situations.h \
 	nxcore_smclp.h \
 	nxcore_winperf.h \
