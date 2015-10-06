@@ -85,7 +85,7 @@ void FileUploadJob::init()
 {
 	m_sharedDataMutex = MutexCreate();
 	m_maxActiveJobs = ConfigReadInt(_T("MaxActiveUploadJobs"), 10);
-	RegisterSchedulerTaskHandler(_T("Upload.File"), ScheduledUploadFile, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
+	RegisterSchedulerTaskHandler(_T("Upload.File"), ScheduledUploadFile, SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD);
 }
 
 /**
