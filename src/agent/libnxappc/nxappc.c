@@ -262,6 +262,7 @@ int LIBNXAPPC_EXPORTABLE nxappc_reconnect(void)
 	if (connect_ex(s_socket, (struct sockaddr *)&addrLocal, sizeof(addrLocal)) == -1)
    {
       closesocket(s_socket);
+      s_socket = -1;
 		return NXAPPC_FAIL;
    }
 
@@ -280,6 +281,7 @@ int LIBNXAPPC_EXPORTABLE nxappc_reconnect(void)
 	if (connect_ex(s_socket, (struct sockaddr *)&addrLocal, SUN_LEN(&addrLocal)) == -1)
    {
       closesocket(s_socket);
+      s_socket = -1;
 		return NXAPPC_FAIL;
    }
 
@@ -296,11 +298,8 @@ void LIBNXAPPC_EXPORTABLE nxappc_disconnect(void)
    if (s_socket != -1)
    {
       shutdown(s_socket, 2);
-#ifdef _WIN32
       closesocket(s_socket);
-#else
-      close(s_socket);
-#endif
+      s_socket = -1;
    }
 }
 
