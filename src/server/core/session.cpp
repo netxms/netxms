@@ -14003,7 +14003,7 @@ void ClientSession::removeSchedule(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   UINT32 result = RemoveSchedule(request->getFieldAsUInt32(VID_SCHEDULE_ID), m_dwUserId, m_dwSystemAccess);
+   UINT32 result = RemoveSchedule(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }

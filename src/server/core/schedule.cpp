@@ -20,15 +20,14 @@
 **
 **/
 
-#include "nxcore_schedule.h"
-
+#include "nxcore.h"
 
 /**
  * Scheduled task execution pool
  */
 ThreadPool *g_schedulerThreadPool = NULL;
 
-Schedule::Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, int flags)
+Schedule::Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 flags)
 {
    m_id = id;
    m_taskId = _tcsdup(CHECK_NULL_EX(taskId));
@@ -40,7 +39,7 @@ Schedule::Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCH
    m_owner = owner;
 }
 
-Schedule::Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHAR *params, UINT32 owner, int flags)
+Schedule::Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHAR *params, UINT32 owner, UINT32 flags)
 {
    m_id = id;
    m_taskId = _tcsdup(CHECK_NULL_EX(taskId));
@@ -150,8 +149,8 @@ void Schedule::run(ScheduleCallback *callback)
 
 void Schedule::fillMessage(NXCPMessage *msg)
 {
-   msg->setField(VID_SCHEDULE_ID, m_id);
-   msg->setField(VID_TASK_ID, m_taskId);
+   msg->setField(VID_SCHEDULED_TASK_ID, m_id);
+   msg->setField(VID_TASK_HANDLER, m_taskId);
    msg->setField(VID_SCHEDULE, m_schedule);
    msg->setField(VID_PARAMETER, m_params);
    msg->setFieldFromTime(VID_EXECUTION_TIME, m_executionTime);
@@ -163,39 +162,30 @@ void Schedule::fillMessage(NXCPMessage *msg)
 void Schedule::fillMessage(NXCPMessage *msg, UINT32 base)
 {
    msg->setField(base, m_id);
-   msg->setField(base+1, m_taskId);
-   msg->setField(base+2, m_schedule);
-   msg->setField(base+3, m_params);
-   msg->setFieldFromTime(base+4, m_executionTime);
-   msg->setFieldFromTime(base+5, m_lastExecution);
-   msg->setField(base+6, (UINT32)m_flags);
-   msg->setField(base+7, m_owner);
+   msg->setField(base + 1, m_taskId);
+   msg->setField(base + 2, m_schedule);
+   msg->setField(base + 3, m_params);
+   msg->setFieldFromTime(base + 4, m_executionTime);
+   msg->setFieldFromTime(base + 5, m_lastExecution);
+   msg->setField(base + 6, m_flags);
+   msg->setField(base + 7, m_owner);
 }
 
+/**
+ * Check if user can access this scheduled task
+ */
 bool Schedule::canAccess(UINT32 user, UINT64 systemAccess)
 {
-   if(systemAccess & SYSTEM_ACCESS_ALL_SCHEDULE )
-   {
+   if (systemAccess & SYSTEM_ACCESS_ALL_SCHEDULED_TASKS)
       return true;
-   }
 
-   if(systemAccess & SYSTEM_ACCESS_USERS_SCHEDULE)
-   {
-      if(!checkFlag(SCHEDULE_INTERNAL))
-      {
-         return true;
-      }
-      else
-      {
-         return false;
-      }
-   }
+   if(systemAccess & SYSTEM_ACCESS_USERS_SCHEDULED_TASKS)
+      return !checkFlag(SCHEDULE_INTERNAL);
 
-   if(systemAccess & SYSTEM_ACCESS_ONE_USER_SCHEDULE)
-   {
-      if(user == m_owner)
-         return true;
-   }
+   if (systemAccess & SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)
+      return user == m_owner;
+
+   return false;
 }
 
 /**
@@ -283,7 +273,7 @@ void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exe
  */
 UINT32 AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT64 systemRights, int flags)
 {
-   if((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULE | SYSTEM_ACCESS_USERS_SCHEDULE | SYSTEM_ACCESS_ONE_USER_SCHEDULE)) == 0)
+   if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USERS_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
    DbgPrintf(7, _T("AddSchedule: Add cron schedule %s, %s, %s"), task, schedule, params);
    MutexLock(s_cronScheduleLock);
@@ -299,7 +289,7 @@ UINT32 AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params
  */
 UINT32 AddOneTimeSchedule(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT64 systemRights, int flags)
 {
-   if((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULE | SYSTEM_ACCESS_USERS_SCHEDULE | SYSTEM_ACCESS_ONE_USER_SCHEDULE)) == 0)
+   if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USERS_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
    DbgPrintf(7, _T("AddOneTimeAction: Add one time schedule %s, %d, %s"), task, nextExecutionTime, params);
    MutexLock(s_oneTimeScheduleLock);
@@ -493,7 +483,7 @@ void GetCallbackIdList(NXCPMessage *msg, UINT64 accessRights)
  */
 UINT32 CreateScehduleFromMsg(NXCPMessage *request, UINT32 owner, UINT64 systemAccessRights)
 {
-   TCHAR *taskId = request->getFieldAsString(VID_TASK_ID);
+   TCHAR *taskId = request->getFieldAsString(VID_TASK_HANDLER);
    TCHAR *schedule = NULL;
    time_t nextExecutionTime = 0;
    TCHAR *params = request->getFieldAsString(VID_PARAMETER);
@@ -520,8 +510,8 @@ UINT32 CreateScehduleFromMsg(NXCPMessage *request, UINT32 owner, UINT64 systemAc
  */
 UINT32 UpdateScheduleFromMsg(NXCPMessage *request,  UINT32 owner, UINT64 systemAccessRights)
 {
-   UINT32 id = request->getFieldAsInt32(VID_SCHEDULE_ID);
-   TCHAR *taskId = request->getFieldAsString(VID_TASK_ID);
+   UINT32 id = request->getFieldAsInt32(VID_SCHEDULED_TASK_ID);
+   TCHAR *taskId = request->getFieldAsString(VID_TASK_HANDLER);
    TCHAR *schedule = NULL;
    time_t nextExecutionTime = 0;
    TCHAR *params = request->getFieldAsString(VID_PARAMETER);

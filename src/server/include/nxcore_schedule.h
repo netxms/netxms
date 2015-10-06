@@ -24,8 +24,6 @@
 #ifndef _nxcore_schedule_h_
 #define _nxcore_schedule_h_
 
-#include "nms_core.h"
-
 #define NEVER 0
 
 #define SCHEDULE_DISABLED           1
@@ -79,13 +77,13 @@ private:
    TCHAR *m_params;
    time_t m_executionTime;
    time_t m_lastExecution;
-   int m_flags;
+   UINT32 m_flags;
    UINT32 m_owner;
 
 public:
 
-   Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, int flags = 0);
-   Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHAR *params, UINT32 owner, int flags = 0);
+   Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 flags = 0);
+   Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHAR *params, UINT32 owner, UINT32 flags = 0);
    Schedule(DB_RESULT hResult, int row);
 
    ~Schedule(){ delete m_taskId; delete m_schedule; delete m_params; }
@@ -110,7 +108,7 @@ public:
    void fillMessage(NXCPMessage *msg);
    void fillMessage(NXCPMessage *msg, UINT32 base);
 
-   bool checkFlag(int flag) { return (m_flags & flag) > 0 ? true : false; }
+   bool checkFlag(UINT32 flag) { return (m_flags & flag) > 0 ? true : false; }
    bool isInProgress() { return (m_flags & SCHEDULE_IN_PROGRES) > 0 ? true : false; }
    bool canAccess(UINT32 user, UINT64 systemAccess);
 };
