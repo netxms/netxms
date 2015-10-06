@@ -33,8 +33,9 @@
 
 class Schedule;
 class ScheduleCallback;
+class ScheduleParameters;
 
-typedef void (*scheduled_action_executor)(const TCHAR *params);
+typedef void (*scheduled_action_executor)(const ScheduleParameters *params);
 
 /**
  * Static fields
@@ -66,6 +67,16 @@ public:
    scheduled_action_executor m_func;
    UINT64 m_accessRight;
    ScheduleCallback(scheduled_action_executor func, UINT64 accessRight) { m_func = func; m_accessRight = accessRight; }
+};
+
+class ScheduleParameters
+{
+public:
+   TCHAR *m_params;
+   UINT32 m_userId;
+
+   ScheduleParameters(TCHAR *param, UINT32 userId){m_params = _tcsdup(param); m_userId = userId; }
+   ScheduleParameters(){ delete m_params; }
 };
 
 class Schedule

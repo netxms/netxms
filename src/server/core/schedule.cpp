@@ -125,7 +125,8 @@ void Schedule::run(ScheduleCallback *callback)
    bool oneTimeSchedule = !_tcscmp(m_schedule, _T(""));
 
    setFlag(SCHEDULE_IN_PROGRES);
-   callback->m_func(m_params);
+   ScheduleParameters param(m_params, m_owner);
+   callback->m_func(&param);
    setLastExecutionTime(time(NULL));
 
    if (oneTimeSchedule)
@@ -596,6 +597,7 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
       MutexUnlock(s_oneTimeScheduleLock);
    }
    DbgPrintf(3, _T("OneTimeEventThread: stopped"));
+   return THREAD_OK;
 }
 
 /**
@@ -628,6 +630,7 @@ static THREAD_RESULT THREAD_CALL CronCheckThread(void *arg)
       MutexUnlock(s_cronScheduleLock);
    } while(!SleepAndCheckForShutdown(60)); //sleep 1 minute
    DbgPrintf(3, _T("CronCheckThread: stopped"));
+   return THREAD_OK;
 }
 
 /**

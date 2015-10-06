@@ -2601,3 +2601,135 @@ TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo()
    return _tcsdup(_T("No heap information API available"));
 #endif
 }
+
+/**
+ * Get arguments for parameters like name(arg1,...)
+ * Returns FALSE on processing error
+ */
+static bool ParseParameterArgInternal(const TCHAR *param, int index, TCHAR *arg, int maxSize)
+{
+   const TCHAR *ptr1, *ptr2;
+   int state, currIndex, pos;
+   bool success = true;
+
+   arg[0] = 0;    // Default is empty string
+   ptr1 = _tcschr(param, _T('('));
+   if (ptr1 == NULL)
+      return true;  // No arguments at all
+   for(ptr2 = ptr1 + 1, currIndex = 1, state = 0, pos = 0; state != -1; ptr2++)
+   {
+      switch(state)
+      {
+         case 0:  // Normal
+            switch(*ptr2)
+            {
+               case _T(')'):
+                  if (currIndex == index)
+                     arg[pos] = 0;
+                  state = -1;    // Finish processing
+                  break;
+               case _T('"'):
+                  state = 1;     // String
+                  break;
+               case _T('\''):        // String, type 2
+                  state = 2;
+                  break;
+               case _T(','):
+                  if (currIndex == index)
+                  {
+                     arg[pos] = 0;
+                     state = -1;
+                  }
+                  else
+                  {
+                     currIndex++;
+                  }
+                  break;
+               case 0:
+                  state = -1;       // Finish processing
+                  success = false;  // Set error flag
+                  break;
+               default:
+                  if ((currIndex == index) && (pos < maxSize - 1))
+                     arg[pos++] = *ptr2;
+            }
+            break;
+         case 1:  // String in ""
+            switch(*ptr2)
+            {
+               case _T('"'):
+                  state = 0;     // Normal
+                  break;
+               case 0:
+                  state = -1;       // Finish processing
+                  success = false;  // Set error flag
+                  break;
+               default:
+                  if ((currIndex == index) && (pos < maxSize - 1))
+                     arg[pos++] = *ptr2;
+            }
+            break;
+         case 2:  // String in ''
+            switch(*ptr2)
+            {
+               case _T('\''):
+                  state = 0;     // Normal
+                  break;
+               case 0:
+                  state = -1;       // Finish processing
+                  success = false;  // Set error flag
+                  break;
+               default:
+                  if ((currIndex == index) && (pos < maxSize - 1))
+                     arg[pos++] = *ptr2;
+            }
+            break;
+      }
+   }
+
+   if (success)
+      StrStrip(arg);
+   return success;
+}
+
+/**
+ * Get arguments for parameters like name(arg1,...) as multibyte string
+ * Returns FALSE on processing error
+ */
+bool LIBNETXMS_EXPORTABLE ParseParameterArgA(const TCHAR *param, int index, char *arg, int maxSize)
+{
+#ifdef UNICODE
+	WCHAR *temp = (WCHAR *)malloc(maxSize * sizeof(WCHAR));
+	bool success = ParseParameterArgInternal(param, index, temp, maxSize);
+	if (success)
+	{
+		WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, temp, -1, arg, maxSize, NULL, NULL);
+		arg[maxSize - 1] = 0;
+	}
+	free(temp);
+	return success;
+#else
+	return ParseParameterArgInternal(param, index, arg, maxSize);
+#endif
+}
+
+/**
+ * Get arguments for parameters like name(arg1,...) as UNICODE string
+ * Returns FALSE on processing error
+ */
+bool LIBNETXMS_EXPORTABLE ParseParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize)
+{
+#ifdef UNICODE
+	return ParseParameterArgInternal(param, index, arg, maxSize);
+#else
+	char *temp = (char *)malloc(maxSize);
+	bool success = ParseParameterArgInternal(param, index, temp, maxSize);
+	if (success)
+	{
+		MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, temp, -1, arg, maxSize);
+		arg[maxSize - 1] = 0;
+	}
+	free(temp);
+	return success;
+#endif
+}

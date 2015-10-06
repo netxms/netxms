@@ -1429,6 +1429,17 @@ BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
 #define RegexpMatch RegexpMatchA
 #endif
 
+/**
+ * Parse parameters line func(param1, param2,...)
+ */
+bool LIBNETXMS_EXPORTABLE ParseParameterArgA(const TCHAR *param, int index, char *arg, int maxSize);
+bool LIBNETXMS_EXPORTABLE ParseParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize);
+#ifdef UNICODE
+#define ParseParameterArg ParseParameterArgW
+#else
+#define ParseParameterArg ParseParameterArgA
+#endif
+
 const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommand);
 BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory);
 TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str);

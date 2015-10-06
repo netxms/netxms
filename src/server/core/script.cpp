@@ -238,12 +238,12 @@ void ImportScript(ConfigEntry *config)
    ReloadScript(id);
 }
 
-void LIBNXSL_EXPORTABLE ExecuteScript(const TCHAR *param)
+void LIBNXSL_EXPORTABLE ExecuteScript(const ScheduleParameters *param)
 {
    size_t bufSize = 512;
    TCHAR *buffer[512];
    TCHAR name[256];
-   nx_strncpy(name, param, 256);
+   nx_strncpy(name, param->m_params, 256);
    Trim(name);
 
    ObjectArray<NXSL_Value> args(16, 16, false);
