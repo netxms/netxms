@@ -9,7 +9,6 @@ import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerVariable;
 import org.netxms.client.snmp.SnmpUsmCredential;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 public class SnmpConfig
 {
@@ -27,15 +26,15 @@ public class SnmpConfig
    /**
     * Load SNMP configuration from server. This method directly calls
     * communication API, so it should not be called from UI thread.
-    * 
+    *
+    * @param session communication session to use
     * @return SNMP configuration
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public static SnmpConfig load() throws NXCException, IOException
+   public static SnmpConfig load(NXCSession session) throws NXCException, IOException
    {
       SnmpConfig config = new SnmpConfig();
-      final NXCSession session = ConsoleSharedData.getSession();
       
       config.communities = session.getSnmpCommunities();
       config.usmCredentials = session.getSnmpUsmCredentials();
@@ -74,13 +73,12 @@ public class SnmpConfig
     * Save SNMP configuration on server. This method calls communication
     * API directly, so it should not be called from UI thread.
     * 
+    * @params session communication session to use
     * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void save() throws NXCException, IOException
+   public void save(NXCSession session) throws NXCException, IOException
    {
-      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      
       session.updateSnmpCommunities(communities);
       session.updateSnmpUsmCredentials(usmCredentials);
       session.setServerVariable("SNMPPorts", parsePorts());

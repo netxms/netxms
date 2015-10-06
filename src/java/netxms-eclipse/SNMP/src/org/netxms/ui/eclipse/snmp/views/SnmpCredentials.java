@@ -33,7 +33,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IMemento;
 import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -46,9 +45,11 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.client.NXCSession;
 import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.dialogs.AddUsmCredDialog;
@@ -65,6 +66,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 {
 	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpCredentials"; //$NON-NLS-1$
 
+	private NXCSession session;
 	private boolean modified = false;
 	private FormToolkit toolkit;
 	private ScrolledForm form;
@@ -75,15 +77,16 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	private SnmpConfig config;
 
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
-	 */
-	@Override
-	public void init(IViewSite site, IMemento memento) throws PartInitException
-	{
-		super.init(site, memento);
-	}
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
+   @Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
+      session = ConsoleSharedData.getSession();
+   }
 
-	/* (non-Javadoc)
+   /* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -103,14 +106,13 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		
 		createActions();
 		contributeToActionBars();
-		
 
-      // Restoring, load config
-      new ConsoleJob("Load SNMP configuration", this, Activator.PLUGIN_ID, null) {
+      // Load config
+      new ConsoleJob("Loading SNMP configuration", this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final SnmpConfig loadedConfig = SnmpConfig.load();
+            final SnmpConfig loadedConfig = SnmpConfig.load(session);
             runInUIThread(new Runnable() {
                @Override
                public void run()
@@ -403,7 +405,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	{
 		try
 		{
-			config.save();
+			config.save(session);
 		}
 		catch(Exception e)
 		{
@@ -456,7 +458,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				config.save();
+				config.save(session);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
