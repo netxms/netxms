@@ -35,9 +35,9 @@ void ScheduledUploadFile(const ScheduleParameters *params)
    TCHAR nodeId[8];
    TCHAR serverFile[MAX_PATH];
    TCHAR agentFile[MAX_PATH];
-   ParseParameterArg(params->m_params, 1, nodeId, 8);
-   ParseParameterArg(params->m_params, 1, serverFile, MAX_PATH);
-   ParseParameterArg(params->m_params, 1, agentFile, MAX_PATH);
+   AgentGetParameterArg(params->m_params, 1, nodeId, 8);
+   AgentGetParameterArg(params->m_params, 1, serverFile, MAX_PATH);
+   AgentGetParameterArg(params->m_params, 1, agentFile, MAX_PATH);
    if(nodeId == NULL || serverFile == NULL || agentFile == NULL)
    {
       DbgPrintf(4, _T("UploadFile: One of parameters was nodeId=\'%s\', serverFile=\'%s\', agentFile=\'%s\'"),
