@@ -42,6 +42,7 @@
 extern "C" {
 #endif
 
+void LIBNXAPPC_EXPORTABLE nxappc_set_timeout(int t);
 int LIBNXAPPC_EXPORTABLE nxappc_connect(void);
 int LIBNXAPPC_EXPORTABLE nxappc_connect_ex(const char *name);
 int LIBNXAPPC_EXPORTABLE nxappc_reconnect(void);
