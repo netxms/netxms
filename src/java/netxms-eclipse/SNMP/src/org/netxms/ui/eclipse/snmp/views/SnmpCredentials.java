@@ -470,7 +470,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Error while saving SNMP configuration job";
+				return "Error while saving SNMP configuration";
 			}
 		}.start();
 	}
