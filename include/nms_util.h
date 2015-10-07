@@ -1055,6 +1055,11 @@ public:
 
    String toString() const;
    TCHAR *toString(TCHAR *buffer) const;
+#ifdef UNICODE
+   char *toStringA(char *buffer) const;
+#else
+   char *toStringA(char *buffer) const { return toString(buffer); }
+#endif
 
    BYTE *buildHashKey(BYTE *key) const;
 
@@ -1358,6 +1363,11 @@ char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer);
 #define IpToStrA IpToStr
 #endif
 TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer);
+#ifdef UNICODE
+char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer);
+#else
+#define Ip6ToStrA Ip6ToStr
+#endif
 TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
 
 UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *name);

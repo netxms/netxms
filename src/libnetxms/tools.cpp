@@ -166,6 +166,60 @@ TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer)
    return bufPtr;
 }
 
+#ifdef UNICODE
+
+/**
+ * Convert IPv6 address from binary form to string
+ */
+char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer)
+{
+   static char internalBuffer[64];
+   char *bufPtr = (buffer == NULL) ? internalBuffer : buffer;
+
+   if (!memcmp(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16))
+   {
+      strcpy(bufPtr, "::");
+      return bufPtr;
+   }
+
+   char *out = bufPtr;
+   WORD *curr = (WORD *)addr;
+   bool hasNulls = false;
+   for(int i = 0; i < 8; i++)
+   {
+      WORD value = ntohs(*curr);
+      if ((value != 0) || hasNulls)
+      {
+         if (out != bufPtr)
+            *out++ = ':';
+         snprintf(out, 5, "%x", value);
+         out = bufPtr + strlen(bufPtr);
+         curr++;
+      }
+      else
+      {
+         *out++ = ':';
+         do
+         {
+            i++;
+            curr++;
+         }
+         while((*curr == 0) && (i < 8));
+         if (i == 8)
+         {
+            *out++ = ':';
+            break;
+         }
+         i--;
+         hasNulls = true;
+      }
+   }
+   *out = 0;
+   return bufPtr;
+}
+
+#endif
+
 /**
  * Duplicate memory block
  */

@@ -582,7 +582,10 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 
    // Abort if cannot bind to at least one socket
    if (bindFailures == 2)
+   {
+      DbgPrintf(1, _T("SNMP trap receiver aborted - cannot bind at least one socket"));
       return THREAD_OK;
+   }
 
    if (hSocket != INVALID_SOCKET)
 	   nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), m_wTrapPort);

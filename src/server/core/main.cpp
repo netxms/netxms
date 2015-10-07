@@ -88,6 +88,12 @@ void StopXMPPConnector();
 #endif
 
 /**
+ * Syslog server control
+ */
+void StartSyslogServer();
+void StopSyslogServer();
+
+/**
  * Thread functions
  */
 THREAD_RESULT THREAD_CALL HouseKeeper(void *);
@@ -103,7 +109,6 @@ THREAD_RESULT THREAD_CALL MobileDeviceListenerIPv6(void *);
 THREAD_RESULT THREAD_CALL ISCListener(void *);
 THREAD_RESULT THREAD_CALL LocalAdminListener(void *);
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *);
-THREAD_RESULT THREAD_CALL SyslogDaemon(void *);
 THREAD_RESULT THREAD_CALL BeaconPoller(void *);
 THREAD_RESULT THREAD_CALL JobManagerThread(void *);
 THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
@@ -162,7 +167,6 @@ static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
 static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
-static THREAD m_thSyslogDaemon = INVALID_THREAD_HANDLE;
 #if XMPP_SUPPORTED
 static THREAD m_thXMPPConnector = INVALID_THREAD_HANDLE;
 #endif
@@ -819,7 +823,7 @@ retry_db_lock:
 
 	// Start built-in syslog daemon
 	if (ConfigReadInt(_T("EnableSyslogDaemon"), 0))
-		m_thSyslogDaemon = ThreadCreateEx(SyslogDaemon, 0, NULL);
+	   StartSyslogServer();
 
 	// Start database _T("lazy") write thread
 	StartDBWriter();
@@ -919,11 +923,12 @@ void NXCORE_EXPORTABLE Shutdown()
 	ThreadSleep(1);     // Give other threads a chance to terminate in a safe way
 	DbgPrintf(2, _T("All threads was notified, continue with shutdown"));
 
+	StopSyslogServer();
+
 	// Wait for critical threads
 	ThreadJoin(m_thHouseKeeper);
 	ThreadJoin(m_thPollManager);
 	ThreadJoin(m_thSyncer);
-	ThreadJoin(m_thSyslogDaemon);
 #if XMPP_SUPPORTED
    ThreadJoin(m_thXMPPConnector);
 #endif

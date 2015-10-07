@@ -145,6 +145,23 @@ TCHAR *InetAddress::toString(TCHAR *buffer) const
    return (m_family == AF_INET) ? IpToStr(m_addr.v4, buffer) : Ip6ToStr(m_addr.v6, buffer);
 }
 
+#ifdef UNICODE
+
+/**
+ * Convert to string (single byte version)
+ */
+char *InetAddress::toStringA(char *buffer) const
+{
+   if (m_family == AF_UNSPEC)
+   {
+      strcpy(buffer, "UNSPEC");
+      return buffer;
+   }
+   return (m_family == AF_INET) ? IpToStrA(m_addr.v4, buffer) : Ip6ToStrA(m_addr.v6, buffer);
+}
+
+#endif
+
 /**
  * Build hash key. Supplied array must be at least 18 bytes long.
  */
