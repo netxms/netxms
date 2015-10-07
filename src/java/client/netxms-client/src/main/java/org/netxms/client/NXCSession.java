@@ -8555,4 +8555,75 @@ public class NXCSession
       NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsBinary(NXCPCodes.VID_FILE_DATA);
    }
+   
+   public List<String> listScheduleCallbacks() throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SCHEDULE_CALLBACKS);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());    
+      
+      List<String> list = new ArrayList<String>();
+      int size = response.getFieldAsInt32(NXCPCodes.VID_CALLBACK_COUNT);
+      long i, base;
+      for(i = 0, base = NXCPCodes.VID_CALLBACK_BASE; i < size; i++, base++)
+      {
+         list.add(msg.getFieldAsString(base));
+      }
+      return list;
+   }
+   
+   public List<ScheduledTask> listScheduleTasks() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SCHEDULES);
+      sendMessage(msg);
+      NXCPMessage response = waitForRCC(msg.getMessageId());  
+      
+      List<ScheduledTask> list = new ArrayList<ScheduledTask>();
+      int size = response.getFieldAsInt32(NXCPCodes.VID_SCHEDULE_COUNT);
+      long i, base;
+      for(i = 0, base = NXCPCodes.VID_CALLBACK_BASE; i < size; i++, base+=10)
+      {
+         list.add(new ScheduledTask(msg, base));
+      }
+      
+      return list;
+   }
+   
+   public void addSchedule(ScheduledTask task) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_SCHEDULE);
+      msg.setField(NXCPCodes.VID_TASK_HANDLER, task.getScheduledTaskId());
+      msg.setField(NXCPCodes.VID_SCHEDULE, task.getSchedule());
+      msg.setField(NXCPCodes.VID_PARAMETER, task.getParameters());
+      msg.setField(NXCPCodes.VID_EXECUTION_TIME, task.getExecutionTime());
+      msg.setField(NXCPCodes.VID_LAST_EXECUTION_TIME, task.getLastExecutionTime());
+      msg.setFieldInt32(NXCPCodes.VID_FLAGS, task.getFlags());
+      msg.setFieldInt32(NXCPCodes.VID_LAST_EXECUTION_TIME, (int)task.getOwner());
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());      
+   }
+   
+   public void updateSchedule(ScheduledTask task) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SCHEDULE);
+      msg.setFieldInt32(NXCPCodes.VID_SCHEDULED_TASK_ID, (int)task.getId());
+      msg.setField(NXCPCodes.VID_TASK_HANDLER, task.getScheduledTaskId());
+      msg.setField(NXCPCodes.VID_SCHEDULE, task.getSchedule());
+      msg.setField(NXCPCodes.VID_PARAMETER, task.getParameters());
+      msg.setField(NXCPCodes.VID_EXECUTION_TIME, task.getExecutionTime());
+      msg.setField(NXCPCodes.VID_LAST_EXECUTION_TIME, task.getLastExecutionTime());
+      msg.setFieldInt32(NXCPCodes.VID_FLAGS, task.getFlags());
+      msg.setFieldInt32(NXCPCodes.VID_LAST_EXECUTION_TIME, (int)task.getOwner());
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   public void removeSchedule(long scheduleId) throws NXCException, IOException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_REMOVE_SCHEDULE);
+      msg.setFieldInt32(NXCPCodes.VID_SCHEDULED_TASK_ID, (int)scheduleId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
 }

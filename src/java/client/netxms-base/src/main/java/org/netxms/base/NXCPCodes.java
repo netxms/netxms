@@ -339,6 +339,11 @@ public class NXCPCodes
    public static final int CMD_COMPILE_SCRIPT = 0x013D;
    public static final int CMD_CLEAN_AGENT_DCI_CONF = 0x013E;
    public static final int CMD_RESYNC_AGENT_DCI_CONF = 0x013F;
+   public static final int CMD_LIST_SCHEDULE_CALLBACKS = 0x0140;
+   public static final int CMD_LIST_SCHEDULES = 0x0141;
+   public static final int CMD_ADD_SCHEDULE = 0x0142;
+   public static final int CMD_UPDATE_SCHEDULE = 0x0143;
+   public static final int CMD_REMOVE_SCHEDULE = 0x0144;
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -881,6 +886,7 @@ public class NXCPCodes
    public static final long VID_LAST_EXECUTION_TIME = 526;
    public static final long VID_CALLBACK_COUNT = 527;
    public static final long VID_DASHBOARDS = 528;
+   public static final long VID_OWNER = 529;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -972,4 +978,6 @@ public class NXCPCodes
 	public static final long VID_EXTENSION_LIST_BASE = 0x10000000L;
 	public static final long VID_DCI_ID_LIST_BASE = 0x10000000L;
    public static final long VID_LOC_LIST_BASE = 0x10000000L;
+   public static final long VID_SCHEDULE_LIST_BASE = 0x10000000L;
+   public static final long VID_CALLBACK_BASE= 0x10000000L;
 }
