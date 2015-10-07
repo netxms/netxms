@@ -631,18 +631,46 @@ public abstract class AbstractObject
 	 */
 	public AbstractObject[] getTrustedNodes()
 	{
-		final AbstractObject[] list;
 		synchronized(trustedNodes)
 		{
-			list = new AbstractObject[trustedNodes.size()];
+	      final AbstractObject[] list = new AbstractObject[trustedNodes.size()];
 			final Iterator<Long> it = trustedNodes.iterator();
 			for(int i = 0; it.hasNext(); i++)
 			{
-				list[i] = session.findObjectById(it.next());
+			   long id = it.next();
+				AbstractObject o = session.findObjectById(id);
+				if (o != null)
+				   list[i] = o;
+				else
+				   list[i] = new UnknownObject(id, session);
 			}
+	      return list;
 		}
-		return list;
 	}
+
+   /**
+    * Get  list of associated dashboards
+    * 
+    * @return
+    */
+   public AbstractObject[] getDashboards()
+   {
+      synchronized(dashboards)
+      {
+         final AbstractObject[] list = new AbstractObject[dashboards.size()];
+         final Iterator<Long> it = dashboards.iterator();
+         for(int i = 0; it.hasNext(); i++)
+         {
+            long id = it.next();
+            AbstractObject o = session.findObjectById(id);
+            if (o != null)
+               list[i] = o;
+            else
+               list[i] = new UnknownObject(id, session);
+         }
+         return list;
+      }
+   }
 
 	/**
 	 * @return true if object has parents
