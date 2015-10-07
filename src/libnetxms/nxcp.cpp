@@ -354,10 +354,15 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_VALIDATE_PASSWORD"),
       _T("CMD_COMPILE_SCRIPT"),
       _T("CMD_CLEAN_AGENT_DCI_CONF"),
-      _T("CMD_RESYNC_AGENT_DCI_CONF")
+      _T("CMD_RESYNC_AGENT_DCI_CONF"),
+      _T("CMD_LIST_SCHEDULE_CALLBACKS"),
+      _T("CMD_LIST_SCHEDULES"),
+      _T("CMD_ADD_SCHEDULE"),
+      _T("CMD_UPDATE_SCHEDULE"),
+      _T("CMD_REMOVE_SCHEDULE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_RESYNC_AGENT_DCI_CONF))
+   if ((code >= CMD_LOGIN) && (code <= CMD_REMOVE_SCHEDULE))
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), code);
