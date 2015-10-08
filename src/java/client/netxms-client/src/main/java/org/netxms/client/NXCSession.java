@@ -8560,14 +8560,14 @@ public class NXCSession
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SCHEDULE_CALLBACKS);
       sendMessage(msg);
-      NXCPMessage response = waitForRCC(msg.getMessageId());    
+      NXCPMessage response = waitForRCC(msg.getMessageId()); 
       
-      List<String> list = new ArrayList<String>();
       int size = response.getFieldAsInt32(NXCPCodes.VID_CALLBACK_COUNT);
       long i, base;
+      ArrayList<String> list = new ArrayList<String>(size);
       for(i = 0, base = NXCPCodes.VID_CALLBACK_BASE; i < size; i++, base++)
       {
-         list.add(msg.getFieldAsString(base));
+         list.add(response.getFieldAsString(base));
       }
       return list;
    }
@@ -8578,12 +8578,12 @@ public class NXCSession
       sendMessage(msg);
       NXCPMessage response = waitForRCC(msg.getMessageId());  
       
-      List<ScheduledTask> list = new ArrayList<ScheduledTask>();
       int size = response.getFieldAsInt32(NXCPCodes.VID_SCHEDULE_COUNT);
       long i, base;
-      for(i = 0, base = NXCPCodes.VID_CALLBACK_BASE; i < size; i++, base+=10)
+      ArrayList<ScheduledTask> list = new ArrayList<ScheduledTask>(size);
+      for(i = 0, base = NXCPCodes.VID_SCHEDULE_LIST_BASE; i < size; i++, base+=10)
       {
-         list.add(new ScheduledTask(msg, base));
+         list.add(new ScheduledTask(response, base));
       }
       
       return list;
@@ -8592,13 +8592,7 @@ public class NXCSession
    public void addSchedule(ScheduledTask task) throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_SCHEDULE);
-      msg.setField(NXCPCodes.VID_TASK_HANDLER, task.getScheduledTaskId());
-      msg.setField(NXCPCodes.VID_SCHEDULE, task.getSchedule());
-      msg.setField(NXCPCodes.VID_PARAMETER, task.getParameters());
-      msg.setField(NXCPCodes.VID_EXECUTION_TIME, task.getExecutionTime());
-      msg.setField(NXCPCodes.VID_LAST_EXECUTION_TIME, task.getLastExecutionTime());
-      msg.setFieldInt32(NXCPCodes.VID_FLAGS, task.getFlags());
-      msg.setFieldInt32(NXCPCodes.VID_LAST_EXECUTION_TIME, (int)task.getOwner());
+      task.fillMessage(msg);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());      
    }
@@ -8606,14 +8600,7 @@ public class NXCSession
    public void updateSchedule(ScheduledTask task) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_UPDATE_SCHEDULE);
-      msg.setFieldInt32(NXCPCodes.VID_SCHEDULED_TASK_ID, (int)task.getId());
-      msg.setField(NXCPCodes.VID_TASK_HANDLER, task.getScheduledTaskId());
-      msg.setField(NXCPCodes.VID_SCHEDULE, task.getSchedule());
-      msg.setField(NXCPCodes.VID_PARAMETER, task.getParameters());
-      msg.setField(NXCPCodes.VID_EXECUTION_TIME, task.getExecutionTime());
-      msg.setField(NXCPCodes.VID_LAST_EXECUTION_TIME, task.getLastExecutionTime());
-      msg.setFieldInt32(NXCPCodes.VID_FLAGS, task.getFlags());
-      msg.setFieldInt32(NXCPCodes.VID_LAST_EXECUTION_TIME, (int)task.getOwner());
+      task.fillMessage(msg);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }

@@ -1,6 +1,7 @@
 package org.netxms.client;
 
 import java.util.Date;
+import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 
 public class ScheduledTask
@@ -14,7 +15,7 @@ public class ScheduledTask
    private int flags;
    private long owner;
    
-   ScheduledTask(final NXCPMessage msg, long base)
+   public ScheduledTask(final NXCPMessage msg, long base)
    {
       id = msg.getFieldAsInt64(base);
       scheduledTaskId = msg.getFieldAsString(base+1);
@@ -24,6 +25,33 @@ public class ScheduledTask
       lastExecutionTime = msg.getFieldAsDate(base+5);
       flags = msg.getFieldAsInt32(base+6);
       owner = msg.getFieldAsInt64(base+7);
+   }
+   
+   public ScheduledTask(String scheduledTaskId, String schedule, String parameters,
+         Date executionTime, int flags)
+   {
+      id = 0;
+      this.scheduledTaskId = scheduledTaskId;
+      this.schedule = schedule;
+      this.parameters = parameters;
+      this.executionTime = executionTime;
+      lastExecutionTime = new Date(0);
+      this.flags = flags;
+      owner = 0;
+   }
+   
+   public void fillMessage(NXCPMessage msg)
+   {
+      msg.setFieldInt32(NXCPCodes.VID_SCHEDULED_TASK_ID, (int)id);
+      msg.setField(NXCPCodes.VID_TASK_HANDLER, scheduledTaskId);
+      if(schedule.isEmpty())
+         msg.setField(NXCPCodes.VID_EXECUTION_TIME, executionTime);
+      else
+         msg.setField(NXCPCodes.VID_SCHEDULE, schedule);
+      msg.setField(NXCPCodes.VID_PARAMETER, parameters);
+      msg.setField(NXCPCodes.VID_LAST_EXECUTION_TIME, lastExecutionTime);
+      msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
+    
    }
 
    /**

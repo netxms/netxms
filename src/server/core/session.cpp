@@ -13951,7 +13951,7 @@ void ClientSession::listScheduleCallbacks(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   GetCallbackIdList(request, m_dwSystemAccess);
+   GetCallbackIdList(&msg, m_dwSystemAccess);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
@@ -13964,7 +13964,7 @@ void ClientSession::listSchedules(NXCPMessage *request)
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   GetSheduleList(request, m_dwUserId, m_dwSystemAccess);
+   GetSheduleList(&msg, m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }

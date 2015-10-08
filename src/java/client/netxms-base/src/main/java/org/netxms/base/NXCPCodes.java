@@ -880,7 +880,7 @@ public class NXCPCodes
    public static final long VID_RACK_HEIGHT = 520;
    public static final long VID_SCHEDULE_COUNT = 521;
    public static final long VID_SCHEDULED_TASK_ID = 522;
-   public static final long VID_TASK_HANDLER = 532;
+   public static final long VID_TASK_HANDLER = 523;
    public static final long VID_SCHEDULE = 524;
    public static final long VID_EXECUTION_TIME = 525;
    public static final long VID_LAST_EXECUTION_TIME = 526;

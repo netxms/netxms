@@ -443,21 +443,27 @@ void GetSheduleList(NXCPMessage *msg, UINT32 userRights, UINT64 systemRights)
    int base = VID_SCHEDULE_LIST_BASE;
 
    MutexLock(s_oneTimeScheduleLock);
-   for(int i = 0; i < s_oneTimeSchedules.size(); i++, base+=10)
+   for(int i = 0; i < s_oneTimeSchedules.size(); i++)
    {
       if(s_oneTimeSchedules.get(i)->canAccess(userRights, systemRights))
+      {
          s_oneTimeSchedules.get(i)->fillMessage(msg, base);
+         scheduleCount++;
+         base+=10;
+      }
    }
-   scheduleCount += s_oneTimeSchedules.size();
    MutexUnlock(s_oneTimeScheduleLock);
 
    MutexLock(s_cronScheduleLock);
-   for(int i = 0; i < s_cronSchedules.size(); i++, base+=10)
+   for(int i = 0; i < s_cronSchedules.size(); i++)
    {
       if(s_oneTimeSchedules.get(i)->canAccess(userRights, systemRights))
+      {
          s_cronSchedules.get(i)->fillMessage(msg, base);
+         scheduleCount++;
+         base+=10;
+      }
    }
-   scheduleCount += s_cronSchedules.size();
    MutexUnlock(s_cronScheduleLock);
 
    msg->setField(VID_SCHEDULE_COUNT, scheduleCount);
@@ -468,15 +474,21 @@ void GetSheduleList(NXCPMessage *msg, UINT32 userRights, UINT64 systemRights)
  */
 void GetCallbackIdList(NXCPMessage *msg, UINT64 accessRights)
 {
-   msg->setField(VID_CALLBACK_COUNT, s_callbacks.size());
-   int base = VID_CALLBACK_BASE;
+   UINT32 base = VID_CALLBACK_BASE;
+   int count = 0;
 
    StringList *keyList = s_callbacks.keys();
-   for(int i = 0; i < keyList->size(); i++, base++)
+   for(int i = 0; i < keyList->size(); i++)
    {
       if(accessRights & s_callbacks.get(keyList->get(i))->m_accessRight)
+      {
          msg->setField(base, keyList->get(i));
+         count++;
+         base++;
+      }
    }
+   delete keyList;
+   msg->setField(VID_CALLBACK_COUNT, (UINT32)count);
 }
 
 /**
@@ -493,12 +505,12 @@ UINT32 CreateScehduleFromMsg(NXCPMessage *request, UINT32 owner, UINT64 systemAc
    if(request->isFieldExist(VID_SCHEDULE))
    {
       schedule = request->getFieldAsString(VID_SCHEDULE);
-      result = AddSchedule(taskId, schedule, params, flags, owner, systemAccessRights);
+      result = AddSchedule(taskId, schedule, params, owner, systemAccessRights, flags);
    }
    else
    {
       nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
-      result = AddOneTimeSchedule(taskId, nextExecutionTime, params, flags, owner, systemAccessRights);
+      result = AddOneTimeSchedule(taskId, nextExecutionTime, params, owner, systemAccessRights, flags);
    }
    safe_free(taskId);
    safe_free(schedule);
@@ -521,12 +533,12 @@ UINT32 UpdateScheduleFromMsg(NXCPMessage *request,  UINT32 owner, UINT64 systemA
    if(request->isFieldExist(VID_SCHEDULE))
    {
       schedule = request->getFieldAsString(VID_SCHEDULE);
-      rcc = UpdateSchedule(id, taskId, schedule, params, flags, owner, systemAccessRights);
+      rcc = UpdateSchedule(id, taskId, schedule, params, owner, systemAccessRights, flags);
    }
    else
    {
       nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
-      rcc = UpdateOneTimeAction(id, taskId, nextExecutionTime, params, flags, owner, systemAccessRights);
+      rcc = UpdateOneTimeAction(id, taskId, nextExecutionTime, params, owner, systemAccessRights, flags);
    }
    safe_free(taskId);
    safe_free(schedule);

@@ -71,7 +71,7 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
 	_T("Table Columns"),
 	_T("Mapping Tables"),
    _T("DCI Summary Tables"),
-   _T("Schedule")
+   _T("Scheduled Tasks")
 };
 
 /**
@@ -448,7 +448,7 @@ BOOL InitIdTable()
    }
 
    // Get first available schedule id
-   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM schedule"));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM scheduled_tasks"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
