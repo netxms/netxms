@@ -44,7 +44,7 @@
 
 #include "jansson.h"
 
-
+#ifdef _WIN32
 static uint32_t buf_to_uint32(char *data) {
     size_t i;
     uint32_t result = 0;
@@ -54,7 +54,7 @@ static uint32_t buf_to_uint32(char *data) {
 
     return result;
 }
-
+#endif
 
 
 /* /dev/urandom */
