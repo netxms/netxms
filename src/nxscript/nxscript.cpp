@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
          }
          else
          {
-            _tprintf(_T("ERROR: cannot open output file \"%hs\": %s\n"), _tcserror(errno));
+            _tprintf(_T("ERROR: cannot open output file \"%hs\": %s\n"), outFile, _tcserror(errno));
          }
       }
 
