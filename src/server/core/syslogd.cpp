@@ -41,7 +41,7 @@ public:
 
    QueuedSyslogMessage(const InetAddress& addr, char *msg, int msgLen) : sourceAddr(addr)
    {
-      message = (char *)nx_memdup(msg, messageLength + 1);
+      message = (char *)nx_memdup(msg, msgLen + 1);
       messageLength = msgLen;
    }
 
