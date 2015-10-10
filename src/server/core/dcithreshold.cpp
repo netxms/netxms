@@ -145,7 +145,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
    m_scriptSource = NULL;
    m_script = NULL;
    const TCHAR *script = config->getSubEntryValue(_T("script"));
-   setScript((script != NULL) ? _tcsdup(script) : NULL);
+   setScript(_tcsdup_ex(script));
    m_isReached = FALSE;
 	m_currentSeverity = SEVERITY_NORMAL;
 	m_repeatInterval = config->getSubEntryValueAsInt(_T("repeatInterval"), 0, -1);
@@ -783,9 +783,11 @@ void Threshold::createNXMPRecord(String &str, int index)
 								  m_sampleCount, m_repeatInterval);
    if (m_scriptSource != NULL)
    {
-      str += EscapeStringForXML2(m_scriptSource);
+      str.append(_T("\t\t\t\t\t\t\t<script>"));
+      str.append(EscapeStringForXML2(m_scriptSource));
+      str.append(_T("</script>\n"));
    }
-   str += _T("\t\t\t\t\t\t</threshold>\n");
+   str.append(_T("\t\t\t\t\t\t</threshold>\n"));
 }
 
 /**

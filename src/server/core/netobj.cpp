@@ -29,6 +29,7 @@ NetObj::NetObj()
 {
    int i;
 
+   m_id = 0;
    m_dwRefCount = 0;
    m_mutexProperties = MutexCreate();
    m_mutexRefCount = MutexCreate();
