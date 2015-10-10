@@ -40,7 +40,6 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -89,12 +88,8 @@ public class Dashboards extends PropertyPage
       viewer.setLabelProvider(new WorkbenchLabelProvider());
       viewer.setComparator(new ObjectLabelComparator((ILabelProvider)viewer.getLabelProvider()));
       
-      AbstractObject[] d = object.getDashboards();
-      for(int i = 0; i < d.length; i++)
-      {
-      	if (d[i] != null)
-      		dashboards.put(d[i].getObjectId(), d[i]);
-      }
+      for(AbstractObject d : object.getDashboards(false))
+   		dashboards.put(d.getObjectId(), d);
       viewer.setInput(dashboards.values().toArray());
       
       GridData gridData = new GridData();

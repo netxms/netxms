@@ -651,22 +651,21 @@ public abstract class AbstractObject
    /**
     * Get  list of associated dashboards
     * 
+    * @param accessibleOnly if set to true, only accessible dashboards will be returned
     * @return
     */
-   public AbstractObject[] getDashboards()
+   public List<AbstractObject> getDashboards(boolean accessibleOnly)
    {
       synchronized(dashboards)
       {
-         final AbstractObject[] list = new AbstractObject[dashboards.size()];
-         final Iterator<Long> it = dashboards.iterator();
-         for(int i = 0; it.hasNext(); i++)
+         final List<AbstractObject> list = new ArrayList<AbstractObject>();
+         for(Long id : dashboards)
          {
-            long id = it.next();
             AbstractObject o = session.findObjectById(id);
             if (o != null)
-               list[i] = o;
-            else
-               list[i] = new UnknownObject(id, session);
+               list.add(o);
+            else if (!accessibleOnly)
+               list.add(new UnknownObject(id, session));
          }
          return list;
       }

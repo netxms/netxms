@@ -311,6 +311,12 @@
                  <instanceof
                        value="org.netxms.client.objects.MobileDevice">
                  </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Zone">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.EntireNetwork">
+                 </instanceof>
               </or>
            </enabledWhen>
         </page>

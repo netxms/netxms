@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Data Collection Management Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.datacollection;singleton:=true
-Bundle-Version: 2.0.5
+Bundle-Version: 2.0.7
 Bundle-Activator: org.netxms.ui.eclipse.datacollection.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
