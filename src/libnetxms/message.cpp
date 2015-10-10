@@ -899,7 +899,7 @@ UINT32 NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *d
    UINT32 *value = (UINT32 *)get(fieldId, NXCP_DT_BINARY);
    if (value != NULL)
    {
-      UINT32 size = *value;
+      UINT32 size = *value / sizeof(UINT32);
       value++;
       for(UINT32 i = 0; i < size; i++)
       {
