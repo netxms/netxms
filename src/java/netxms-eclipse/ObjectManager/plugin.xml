@@ -105,6 +105,9 @@
                 <instanceof
                       value="org.netxms.client.objects.Condition">
                 </instanceof>
+                <instanceof
+                      value="org.netxms.client.objects.MobileDevice">
+                </instanceof>
              </or>
           </enabledWhen>
         </page>
@@ -279,6 +282,36 @@
               <instanceof
                     value="org.netxms.client.objects.AbstractNode">
               </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.Dashboards"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.Dashboards"
+              name="%page.name.Dashboards">
+           <enabledWhen>
+              <or>
+                 <instanceof
+                       value="org.netxms.client.objects.Node">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Subnet">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Container">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Cluster">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.ServiceRoot">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Condition">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.MobileDevice">
+                 </instanceof>
+              </or>
            </enabledWhen>
         </page>
   </extension>
