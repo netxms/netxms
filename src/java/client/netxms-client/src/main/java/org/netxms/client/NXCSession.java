@@ -2522,6 +2522,51 @@ public class NXCSession
       }
       return result;
    }
+   
+   /**
+    * Generic object find using filter. WIll return first object matching given filter.
+    * 
+    * @param filter
+    * @return first matching object or null
+    */
+   public AbstractObject findObject(ObjectFilter filter)
+   {
+      AbstractObject result = null;
+      synchronized(objectList)
+      {
+         for(AbstractObject object : objectList.values())
+         {
+            if (filter.filter(object))
+            {
+               result = object;
+               break;
+            }
+         }
+      }
+      return result;
+   }
+
+   /**
+    * Find all objects matching given filter.
+    * 
+    * @param filter
+    * @return list of matching objects (empty list if nothing found)
+    */
+   public List<AbstractObject> filterObjects(ObjectFilter filter)
+   {
+      List<AbstractObject> result = new ArrayList<AbstractObject>();
+      synchronized(objectList)
+      {
+         for(AbstractObject object : objectList.values())
+         {
+            if (filter.filter(object))
+            {
+               result.add(object);
+            }
+         }
+      }
+      return result;
+   }
 
    /**
     * Get list of top-level objects matching given class filter. Class filter
