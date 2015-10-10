@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objectview.widgets;
 
 import java.util.List;
+import java.util.UUID;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -35,16 +36,17 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
+import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Rack display widget
- *
  */
-public class RackWidget extends Canvas implements PaintListener, DisposeListener
+public class RackWidget extends Canvas implements PaintListener, DisposeListener, ImageUpdateListener
 {
    private static final double UNIT_WH_RATIO = 10.85;
    private static final int BORDER_WIDTH_RATIO = 15;
@@ -83,6 +85,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       imageDefaultBottom = Activator.getImageDescriptor("icons/rack-default-bottom.png").createImage();
       
       addDisposeListener(this);
+      ImageProvider.getInstance().addUpdateListener(this);
    }
 
    /* (non-Javadoc)
@@ -152,10 +155,14 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          int bottomLine = unitBaselines[n.getRackPosition() - n.getRackHeight()]; // lower border
          int topLine = unitBaselines[n.getRackPosition()];   // upper border
          Rectangle unitRect = new Rectangle(rect.x + (borderWidth + 1) / 2, topLine + 1, rect.width - borderWidth, bottomLine - topLine);
-         
-         //gc.drawLine(unitRect.x, bottomLine, unitRect.x + unitRect.width, bottomLine);
-         //gc.drawLine(unitRect.x, topLine, unitRect.x + unitRect.width, topLine);
 
+         if ((unitRect.width <= 0) || (unitRect.height <= 0))
+            break;
+
+         // draw status indicator
+         gc.setBackground(StatusDisplayInfo.getStatusColor(n.getStatus()));
+         gc.fillRectangle(unitRect.x - borderWidth + borderWidth / 4 + 1, unitRect.y + 1, borderWidth / 2 - 1, Math.min(borderWidth, (int)unitHeight - 2));
+         
          if ((n.getRackImage() != null) && !n.getRackImage().equals(NXCommon.EMPTY_GUID))
          {
             Image image = ImageProvider.getInstance().getImage(n.getRackImage());
@@ -226,5 +233,33 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       imageDefaultTop.dispose();
       imageDefaultMiddle.dispose();
       imageDefaultBottom.dispose();
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener#imageUpdated(java.util.UUID)
+    */
+   @Override
+   public void imageUpdated(UUID guid)
+   {
+      boolean found = false;
+      List<AbstractNode> units = rack.getUnits();
+      for(AbstractNode n : units)
+      {
+         if (guid.equals(n.getRackImage()))
+         {
+            found = true;
+            break;
+         }
+      }
+      if (found)
+      {
+         getDisplay().asyncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               redraw();
+            }
+         });
+      }
    }
 }
