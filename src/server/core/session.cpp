@@ -13776,7 +13776,7 @@ void ClientSession::getScreenshot(NXCPMessage *request)
                }
                else
                {
-                  msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+                  msg.setField(VID_RCC, AgentErrorToRCC(dwError));
                }
                safe_free(data);
                delete conn;
