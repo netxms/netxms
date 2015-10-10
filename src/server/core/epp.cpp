@@ -55,6 +55,8 @@ EPRule::EPRule(ConfigEntry *config)
 {
    m_id = 0;
    m_guid = config->getSubEntryValueAsUUID(_T("guid"));
+   if (m_guid.isNull())
+      m_guid = uuid::generate(); // generate random GUID if rule was imported without GUID
    m_dwFlags = config->getSubEntryValueAsUInt(_T("flags"));
    m_dwNumSources = 0;
    m_pdwSourceList = NULL;
@@ -229,25 +231,31 @@ EPRule::~EPRule()
  */
 void EPRule::createNXMPRecord(String &str)
 {
-   str.appendFormattedString(_T("\t\t<rule id=\"%d\">\n")
-                          _T("\t\t\t<flags>%d</flags>\n")
-                          _T("\t\t\t<alarmMessage>%s</alarmMessage>\n")
-                          _T("\t\t\t<alarmKey>%s</alarmKey>\n")
-                          _T("\t\t\t<alarmSeverity>%d</alarmSeverity>\n")
-                          _T("\t\t\t<alarmTimeout>%d</alarmTimeout>\n")
-                          _T("\t\t\t<alarmTimeoutEvent>%d</alarmTimeoutEvent>\n")
-                          _T("\t\t\t<situation>%d</situation>\n")
-                          _T("\t\t\t<situationInstance>%s</situationInstance>\n")
-                          _T("\t\t\t<script>%s</script>\n")
-                          _T("\t\t\t<comments>%s</comments>\n")
-                          _T("\t\t\t<sources>\n"),
-                          m_id, m_dwFlags,
-                          (const TCHAR *)EscapeStringForXML2(m_szAlarmMessage),
-                          (const TCHAR *)EscapeStringForXML2(m_szAlarmKey),
-                          m_iAlarmSeverity, m_dwAlarmTimeout, m_dwAlarmTimeoutEvent,
-                          m_dwSituationId, (const TCHAR *)EscapeStringForXML2(m_szSituationInstance),
-                          (const TCHAR *)EscapeStringForXML2(m_pszScript),
-                          (const TCHAR *)EscapeStringForXML2(m_pszComment));
+   str.append(_T("\t\t<rule id=\""));
+   str.append(m_id);
+   str.append(_T("\">\n\t\t\t<guid>"));
+   str.append(m_guid.toString());
+   str.append(_T("\"</guid>\n\t\t\t<flags>"));
+   str.append(m_dwFlags);
+   str.append(_T("</flags>\n\t\t\t<alarmMessage>"));
+   str.append(EscapeStringForXML2(m_szAlarmMessage));
+   str.append(_T("</alarmMessage>\n\t\t\t<alarmKey>"));
+   str.append(EscapeStringForXML2(m_szAlarmKey));
+   str.append(_T("</alarmKey>\n\t\t\t<alarmSeverity>"));
+   str.append(m_iAlarmSeverity);
+   str.append(_T("</alarmSeverity>\n\t\t\t<alarmTimeout>"));
+   str.append(m_dwAlarmTimeout);
+   str.append(_T("</alarmTimeout>\n\t\t\t<alarmTimeoutEvent>"));
+   str.append(m_dwAlarmTimeoutEvent);
+   str.append(_T("</alarmTimeoutEvent>\n\t\t\t<situation>"));
+   str.append(m_dwSituationId);
+   str.append(_T("</situation>\n\t\t\t<situationInstance>"));
+   str.append(EscapeStringForXML2(m_szSituationInstance));
+   str.append(_T("</situationInstance>\n\t\t\t<script>"));
+   str.append(EscapeStringForXML2(m_pszScript));
+   str.append(_T("</script>\n\t\t\t<comments>"));
+   str.append(EscapeStringForXML2(m_pszComment));
+   str.append(_T("</comments>\n\t\t\t<sources>\n"));
 
    for(UINT32 i = 0; i < m_dwNumSources; i++)
    {
