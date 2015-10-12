@@ -244,6 +244,7 @@ public:
 	const TCHAR *getSystemTag() { return m_systemTag; }
 	const TCHAR *getPerfTabSettings() { return m_pszPerfTabSettings; }
    int getPollingInterval() { return m_iPollingInterval; }
+   int getEffectivePollingInterval() { return (m_iPollingInterval > 0) ? m_iPollingInterval : m_defaultPollingInterval; }
    Template *getTarget() { return m_pNode; }
    UINT32 getTemplateId() { return m_dwTemplateId; }
    UINT32 getTemplateItemId() { return m_dwTemplateItemId; }
@@ -259,6 +260,7 @@ public:
    int getAggregationFunction() { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
    Template *getNode() { return m_pNode; }
    int getRetentionTime() { return m_iRetentionTime; }
+   int getEffectiveRetentionTime() { return (m_iRetentionTime > 0) ? m_iRetentionTime : m_defaultRetentionTime; }
    const TCHAR *getComments() { return m_comments; }
    INT16 getAgentCacheMode();
 
@@ -292,6 +294,9 @@ public:
    void setTransformationScript(const TCHAR *pszScript);
 
 	bool prepareForDeletion();
+
+	static int m_defaultRetentionTime;
+	static int m_defaultPollingInterval;
 };
 
 /**

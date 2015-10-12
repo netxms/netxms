@@ -574,6 +574,31 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V370 to V371
+ */
+static BOOL H_UpgradeFromV370(int currVersion, int newVersion)
+{
+   int defaultPollingInterval = ConfigReadInt(_T("DefaultDCIPollingInterval"), 60);
+   int defaultRetentionTime = ConfigReadInt(_T("DefaultDCIRetentionTime"), 30);
+
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("UPDATE items SET polling_interval=0 WHERE polling_interval=%d"), defaultPollingInterval);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 256, _T("UPDATE items SET retention_time=0 WHERE retention_time=%d"), defaultRetentionTime);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 256, _T("UPDATE dc_tables SET polling_interval=0 WHERE polling_interval=%d"), defaultPollingInterval);
+   CHK_EXEC(SQLQuery(query));
+
+   _sntprintf(query, 256, _T("UPDATE dc_tables SET retention_time=0 WHERE retention_time=%d"), defaultRetentionTime);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='371' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V369 to V370
  */
 static BOOL H_UpgradeFromV369(int currVersion, int newVersion)
@@ -8923,6 +8948,7 @@ static struct
    { 367, 368, H_UpgradeFromV367 },
    { 368, 369, H_UpgradeFromV368 },
    { 369, 370, H_UpgradeFromV369 },
+   { 370, 371, H_UpgradeFromV370 },
    { 0, 0, NULL }
 };
 

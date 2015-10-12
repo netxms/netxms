@@ -169,7 +169,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
          queryItems.append(_T("(item_id="));
          queryItems.append(o->getId());
          queryItems.append(_T(" AND idata_timestamp<"));
-         queryItems.append((INT64)(now - o->getRetentionTime() * 86400));
+         queryItems.append((INT64)(now - o->getEffectiveRetentionTime() * 86400));
          queryItems.append(_T(')'));
          itemCount++;
       }
@@ -180,7 +180,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
          queryTables.append(_T("(item_id="));
          queryTables.append(o->getId());
          queryTables.append(_T(" AND tdata_timestamp<"));
-         queryTables.append((INT64)(now - o->getRetentionTime() * 86400));
+         queryTables.append((INT64)(now - o->getEffectiveRetentionTime() * 86400));
          queryTables.append(_T(')'));
          tableCount++;
       }

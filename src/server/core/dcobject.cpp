@@ -23,6 +23,16 @@
 #include "nxcore.h"
 
 /**
+ * Default retention time for collected data
+ */
+int DCObject::m_defaultRetentionTime = 30;
+
+/**
+ * Default data collection polling interval
+ */
+int DCObject::m_defaultPollingInterval = 60;
+
+/**
  * Default constructor for DCObject
  */
 DCObject::DCObject()
@@ -570,9 +580,9 @@ bool DCObject::isReadyForPolling(time_t currTime)
       else
       {
 			if (m_status == ITEM_STATUS_NOT_SUPPORTED)
-		      result = (m_tLastPoll + m_iPollingInterval * 10 <= currTime);
+		      result = (m_tLastPoll + getEffectivePollingInterval() * 10 <= currTime);
 			else
-		      result = (m_tLastPoll + m_iPollingInterval <= currTime);
+		      result = (m_tLastPoll + getEffectivePollingInterval() <= currTime);
       }
    }
    else

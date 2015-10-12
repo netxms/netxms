@@ -44,7 +44,6 @@ TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
 /**
  * Config file template
  */
-static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("BackgroundLogWriter"), CT_BOOLEAN64, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_flags, NULL },
@@ -282,6 +281,14 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcsncmp(name, _T("CAS"), 3))
    {
       CASReadSettings();
+   }
+   else if (!_tcscmp(name, _T("DefaultDCIPollingInterval")))
+   {
+      DCObject::m_defaultPollingInterval = _tcstol(value, NULL, 0);
+   }
+   else if (!_tcscmp(name, _T("DefaultDCIRetentionTime")))
+   {
+      DCObject::m_defaultRetentionTime = _tcstol(value, NULL, 0);
    }
    else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
    {
