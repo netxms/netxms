@@ -257,6 +257,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       imageDefaultTop.dispose();
       imageDefaultMiddle.dispose();
       imageDefaultBottom.dispose();
+      
+      ImageProvider.getInstance().removeUpdateListener(this);
    }
 
    /* (non-Javadoc)
