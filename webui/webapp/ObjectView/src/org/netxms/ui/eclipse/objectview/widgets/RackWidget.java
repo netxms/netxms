@@ -18,11 +18,16 @@
  */
 package org.netxms.ui.eclipse.objectview.widgets;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Font;
@@ -34,19 +39,21 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.NXCommon;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.widgets.helpers.RackSelectionListener;
 import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Rack display widget
  */
-public class RackWidget extends Canvas implements PaintListener, DisposeListener, ImageUpdateListener
+public class RackWidget extends Canvas implements PaintListener, DisposeListener, ImageUpdateListener, MouseListener
 {
    private static final double UNIT_WH_RATIO = 10.85;
    private static final int BORDER_WIDTH_RATIO = 15;
@@ -62,6 +69,9 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private Image imageDefaultTop;
    private Image imageDefaultMiddle;
    private Image imageDefaultBottom;
+   private List<ObjectImage> objects = new ArrayList<ObjectImage>();
+   private AbstractObject currentObject = null;
+   private Set<RackSelectionListener> selectionListeners = new HashSet<RackSelectionListener>(0);
    
    /**
     * @param parent
@@ -73,7 +83,6 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       this.rack = rack;
       
       setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, getDisplay()));
-      addPaintListener(this);
       
       final String fontName = FontTools.findFirstAvailableFont(FONT_NAMES);
       labelFonts = new Font[16];
@@ -84,8 +93,18 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       imageDefaultMiddle = Activator.getImageDescriptor("icons/rack-default-middle.png").createImage();
       imageDefaultBottom = Activator.getImageDescriptor("icons/rack-default-bottom.png").createImage();
       
+      addPaintListener(this);
+      addMouseListener(this);
       addDisposeListener(this);
       ImageProvider.getInstance().addUpdateListener(this);
+   }
+
+   /**
+    * @return the currentObject
+    */
+   public AbstractObject getCurrentObject()
+   {
+      return currentObject;
    }
 
    /* (non-Javadoc)
@@ -148,16 +167,19 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       unitBaselines[rack.getHeight()] = (int)dy;
       
       // Draw units
+      objects.clear();
       List<AbstractNode> units = rack.getUnits();
       for(AbstractNode n : units)
       {
          int bottomLine = unitBaselines[n.getRackPosition() - n.getRackHeight()]; // lower border
          int topLine = unitBaselines[n.getRackPosition()];   // upper border
-         Rectangle unitRect = new Rectangle(rect.x + (borderWidth + 1) / 2, topLine + 1, rect.width - borderWidth, bottomLine - topLine);
+         final Rectangle unitRect = new Rectangle(rect.x + (borderWidth + 1) / 2, topLine + 1, rect.width - borderWidth, bottomLine - topLine);
 
          if ((unitRect.width <= 0) || (unitRect.height <= 0))
             break;
          
+         objects.add(new ObjectImage(n, unitRect));
+
          // draw status indicator
          gc.setBackground(StatusDisplayInfo.getStatusColor(n.getStatus()));
          gc.fillRectangle(unitRect.x - borderWidth + borderWidth / 4 + 1, unitRect.y + 1, borderWidth / 2 - 1, Math.min(borderWidth, (int)unitHeight - 2));
@@ -259,6 +281,96 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
                redraw();
             }
          });
+      }
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseDoubleClick(MouseEvent e)
+   {
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.events.MouseListener#mouseDown(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseDown(MouseEvent e)
+   {  
+      AbstractObject o = null;
+      Point p = new Point(e.x, e.y);
+      for(ObjectImage i : objects)
+         if (i.contains(p))
+         {
+            o = i.getObject();
+            break;
+         }
+      setCurrentObject(o);
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.events.MouseListener#mouseUp(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseUp(MouseEvent e)
+   {
+   }
+   
+   /**
+    * Add selection listener
+    * 
+    * @param listener
+    */
+   public void addSelectionListener(RackSelectionListener listener)
+   {
+      selectionListeners.add(listener);
+   }
+   
+   /**
+    * Remove selection listener
+    * 
+    * @param listener
+    */
+   public void removeSelectionListener(RackSelectionListener listener)
+   {
+      selectionListeners.remove(listener);
+   }
+   
+   /**
+    * Set current selection
+    * 
+    * @param o
+    */
+   private void setCurrentObject(AbstractObject o)
+   {
+      currentObject = o;
+      for(RackSelectionListener l : selectionListeners)
+         l.objectSelected(currentObject);
+   }
+   
+   /**
+    * Object image information
+    */
+   private class ObjectImage
+   {
+      private AbstractObject object;
+      private Rectangle rect;
+
+      public ObjectImage(AbstractObject object, Rectangle rect)
+      {
+         this.object = object;
+         this.rect = new Rectangle(rect.x, rect.y, rect.width, rect.height);
+      }
+      
+      public boolean contains(Point p)
+      {
+         return rect.contains(p);
+      }
+      
+      public AbstractObject getObject()
+      {
+         return object;
       }
    }
 }

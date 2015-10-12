@@ -59,7 +59,8 @@ public final class ObjectContextMenu
       manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
       manager.add(new Separator());
       manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
-      if ((shellProvider != null) && (selectionProvider != null))
+      if ((shellProvider != null) && (selectionProvider != null) &&
+          (((IStructuredSelection)selectionProvider.getSelection()).size() == 1))
       {
          PropertyDialogAction action = new PropertyDialogAction(shellProvider, selectionProvider);
          manager.add(action);
