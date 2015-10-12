@@ -5384,6 +5384,9 @@ UINT32 Node::getEffectiveSnmpProxy()
  */
 SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
 {
+   if (m_dwFlags & NF_DISABLE_SNMP)
+      return NULL;
+
 	SNMP_Transport *pTransport = NULL;
 	UINT32 snmpProxy = getEffectiveSnmpProxy();
 	if (snmpProxy == 0)
