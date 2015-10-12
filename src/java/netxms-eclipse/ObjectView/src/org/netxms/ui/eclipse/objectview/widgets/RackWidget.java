@@ -172,6 +172,9 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       List<AbstractNode> units = rack.getUnits();
       for(AbstractNode n : units)
       {
+         if ((n.getRackPosition() > rack.getHeight()) || (n.getRackPosition() - n.getRackHeight() < 0))
+            continue;
+         
          int bottomLine = unitBaselines[n.getRackPosition() - n.getRackHeight()]; // lower border
          int topLine = unitBaselines[n.getRackPosition()];   // upper border
          final Rectangle unitRect = new Rectangle(rect.x + (borderWidth + 1) / 2, topLine + 1, rect.width - borderWidth, bottomLine - topLine);
