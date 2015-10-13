@@ -30,13 +30,22 @@ import org.eclipse.jface.text.source.ISourceViewer;
 import org.eclipse.jface.text.source.LineNumberRulerColumn;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.VerifyKeyListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
+import org.netxms.ui.eclipse.console.resources.SharedColors;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.nxsl.Activator;
 import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLDocument;
 import org.netxms.ui.eclipse.nxsl.widgets.internal.NXSLSourceViewerConfiguration;
@@ -54,7 +63,11 @@ public class ScriptEditor extends Composite
 	private String[] functionsCache = new String[0];
 	private String[] variablesCache = new String[0];
 	private Image[] proposalIcons = new Image[4];
-
+	private String hintText;
+	private Composite hintArea;
+	private Text hintTextControl = null;
+	private Label hintsExpandButton = null;
+	
    /**
     * @param parent
     * @param style
@@ -62,7 +75,18 @@ public class ScriptEditor extends Composite
     */
    public ScriptEditor(Composite parent, int style, int editorStyle)
    {
-      this(parent, style, editorStyle, true);
+      this(parent, style, editorStyle, true, null);
+   }
+
+   /**
+    * @param parent
+    * @param style
+    * @param editorStyle
+    * @param showLineNumbers
+    */
+   public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers)
+   {
+      this(parent, style, editorStyle, showLineNumbers, null);
    }
    
 	/**
@@ -70,19 +94,33 @@ public class ScriptEditor extends Composite
 	 * @param style
 	 * @param editorStyle
 	 * @param showLineNumbers
+	 * @param hints
 	 */
-	public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers)
+	public ScriptEditor(Composite parent, int style, int editorStyle, boolean showLineNumbers, String hints)
 	{
 		super(parent, style);
+		
+		hintText = hints;
+
+		GridLayout layout = new GridLayout();
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		layout.verticalSpacing = 0;
+      setLayout(layout);
+      
+      if (hints != null)
+      {
+         createHintsArea();
+      }
 		
 		proposalIcons[0] = Activator.getImageDescriptor("icons/function.gif").createImage(); //$NON-NLS-1$
 		proposalIcons[1] = Activator.getImageDescriptor("icons/var_global.gif").createImage(); //$NON-NLS-1$
 		proposalIcons[2] = Activator.getImageDescriptor("icons/var_local.gif").createImage(); //$NON-NLS-1$
 		proposalIcons[3] = Activator.getImageDescriptor("icons/constant.gif").createImage(); //$NON-NLS-1$
 		
-		setLayout(new FillLayout());
 		ruler = new CompositeRuler();
 		editor = new SourceViewer(this, ruler, editorStyle);
+		editor.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		editor.configure(new NXSLSourceViewerConfiguration(this));
 		if (showLineNumbers)
 		   ruler.addDecorator(0, new LineNumberRulerColumn());
@@ -148,6 +186,73 @@ public class ScriptEditor extends Composite
 		control.setWordWrap(false);
 		
 		editor.setDocument(new NXSLDocument(""));
+	}
+	
+	/**
+	 * Create hints area
+	 */
+	private void createHintsArea()
+	{
+      hintArea = new Composite(this, SWT.NONE);
+      GridLayout layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.verticalSpacing = 0;
+      layout.numColumns = 2;
+      hintArea.setLayout(layout);
+      hintArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+      hintArea.setBackground(SharedColors.getColor(SharedColors.MESSAGE_BAR_BACKGROUND, getDisplay()));
+      
+      CLabel hintsTitle = new CLabel(hintArea, SWT.NONE);
+      hintsTitle.setBackground(SharedColors.getColor(SharedColors.MESSAGE_BAR_BACKGROUND, getDisplay()));
+      hintsTitle.setForeground(SharedColors.getColor(SharedColors.MESSAGE_BAR_TEXT, getDisplay()));
+      hintsTitle.setImage(SharedIcons.IMG_INFORMATION);
+      hintsTitle.setText("Hints");
+      hintsTitle.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+      hintsTitle.addMouseListener(new MouseAdapter() {
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+            if (e.button == 1)
+               toggleHints();
+         }
+      });
+      
+      hintsExpandButton = new Label(hintArea, SWT.NONE);
+      hintsExpandButton.setBackground(hintArea.getBackground());
+      hintsExpandButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+      hintsExpandButton.setImage(SharedIcons.IMG_EXPAND);
+      hintsExpandButton.setToolTipText("Hide message");
+      GridData gd = new GridData();
+      gd.verticalAlignment = SWT.CENTER;
+      hintsExpandButton.setLayoutData(gd);
+      hintsExpandButton.addMouseListener(new MouseListener() {
+         private boolean doAction = false;
+         
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+            if (e.button == 1)
+               doAction = false;
+         }
+
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+            if (e.button == 1)
+               doAction = true;
+         }
+
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+            if ((e.button == 1) && doAction)
+               toggleHints();
+         }
+      });
+      
+      Label separator = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
+      separator.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 	}
 
 	/* (non-Javadoc)
@@ -299,5 +404,29 @@ public class ScriptEditor extends Composite
    	   if (ruler.getDecoratorIterator().hasNext())
    	      ruler.removeDecorator(0);
 	   }
+	}
+	
+	/**
+	 * Toggle hints area
+	 */
+	private void toggleHints()
+	{
+	   if (hintTextControl != null)
+	   {
+	      hintTextControl.dispose();
+	      hintTextControl = null;
+	      hintsExpandButton.setImage(SharedIcons.IMG_EXPAND);
+	   }
+	   else
+	   {
+         hintTextControl = new Text(hintArea, SWT.MULTI | SWT.WRAP);
+         hintTextControl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1));
+         hintTextControl.setEditable(false);
+         hintTextControl.setText(hintText);
+         hintTextControl.setBackground(SharedColors.getColor(SharedColors.MESSAGE_BAR_BACKGROUND, getDisplay()));
+         hintTextControl.setForeground(SharedColors.getColor(SharedColors.MESSAGE_BAR_TEXT, getDisplay()));
+         hintsExpandButton.setImage(SharedIcons.IMG_COLLAPSE);
+	   }
+	   layout(true, true);
 	}
 }

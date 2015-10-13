@@ -306,7 +306,8 @@ public class EditThresholdDialog extends Dialog
 	 */
 	private void openScriptEditor()
 	{
-      ScriptEditDialog dlg = new ScriptEditDialog(getShell(), script.getText());
+      ScriptEditDialog dlg = new ScriptEditDialog(getShell(), script.getText(), 
+            "Variables:\r\n\t$1\t\t\tcurrent DCI value;\r\n\t$2\t\t\tthreshold value;\r\n\t$dci\t\t\tthis DCI object;\r\n\t$isCluster\ttrue if DCI is on cluster;\r\n\t$node\t\tcurrent node object (null if DCI is not on the node);\r\n\t$object\t\tcurrent object.\r\n\r\nReturn value: true if threshold violated.");
       if (dlg.open() == Window.OK)
       {
          script.setText(dlg.getScript());

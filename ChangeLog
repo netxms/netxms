@@ -25,6 +25,7 @@
 	- Access to event log, SNMP trap log, and syslog from object context menu
 	- Dashboards can be associated with other objects (nodes, containers, etc.) and opened from object's context menu
 	- Forced DCI polls from summary tables
+	- Script hints
 - Fixed issues: #786, #831, #841, #852, #864, #890, #891, #892, #896, #897, #898, #900, #902, #903, #905, #907, #910, #913, #917, #919, #921, #928, #933, #937, #943, #945, #947
 
 
