@@ -73,7 +73,9 @@ public class UserManagementView extends ViewPart
 	public static final int COLUMN_TYPE = 1;
 	public static final int COLUMN_FULLNAME = 2;
 	public static final int COLUMN_DESCRIPTION = 3;
-	public static final int COLUMN_GUID = 4;
+   public static final int COLUMN_SOURCE = 4;
+   public static final int COLUMN_AUTH_METHOD = 5;
+	public static final int COLUMN_GUID = 6;
 
 	private TableViewer viewer;
 	private NXCSession session;
@@ -98,8 +100,16 @@ public class UserManagementView extends ViewPart
 	{
 		session = ConsoleSharedData.getSession();
 
-		final String[] names = { Messages.get().UserManagementView_Name, Messages.get().UserManagementView_Type, Messages.get().UserManagementView_FullName, Messages.get().UserManagementView_Description, Messages.get().UserManagementView_GUID };
-		final int[] widths = { 100, 80, 180, 250, 250 };
+		final String[] names = { 
+		      Messages.get().UserManagementView_Name, 
+		      Messages.get().UserManagementView_Type, 
+		      Messages.get().UserManagementView_FullName, 
+		      Messages.get().UserManagementView_Description, 
+		      "Source", 
+		      "Authentication", 
+		      Messages.get().UserManagementView_GUID 
+		   };
+		final int[] widths = { 100, 80, 180, 250, 80, 170, 250 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new UserLabelProvider());

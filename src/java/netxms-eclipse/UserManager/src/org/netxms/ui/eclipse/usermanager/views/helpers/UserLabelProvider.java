@@ -33,6 +33,14 @@ import org.netxms.ui.eclipse.usermanager.views.UserManagementView;
  */
 public class UserLabelProvider extends DecoratingLabelProvider implements ITableLabelProvider
 {
+   private static final String[] AUTH_METHOD = { 
+      "Password", 
+      "RADIUS", 
+      "Certificate", 
+      "Certificate or password", 
+      "Certificate or RADIUS" 
+   };
+   
    /**
     * Constructor
     */
@@ -58,16 +66,29 @@ public class UserLabelProvider extends DecoratingLabelProvider implements ITable
 	{
 		switch(columnIndex)
 		{
+         case UserManagementView.COLUMN_AUTH_METHOD:
+            if (!(element instanceof User))
+               return "";
+            try
+            {
+               return AUTH_METHOD[((User)element).getAuthMethod()];
+            }
+            catch(ArrayIndexOutOfBoundsException e)
+            {
+               return "Unknown";
+            }
+         case UserManagementView.COLUMN_DESCRIPTION:
+            return ((AbstractUserObject)element).getDescription();
+         case UserManagementView.COLUMN_FULLNAME:
+            return (element instanceof User) ? ((User) element).getFullName() : null;
+         case UserManagementView.COLUMN_GUID:
+            return ((AbstractUserObject)element).getGuid().toString();
 			case UserManagementView.COLUMN_NAME:
 				return ((AbstractUserObject)element).getName();
+         case UserManagementView.COLUMN_SOURCE:
+            return ((((AbstractUserObject)element).getFlags() & AbstractUserObject.LDAP_USER) != 0) ? "LDAP" : "Local";
 			case UserManagementView.COLUMN_TYPE:
 				return (element instanceof User) ? Messages.get().UserLabelProvider_User : Messages.get().UserLabelProvider_Group;
-			case UserManagementView.COLUMN_FULLNAME:
-				return (element instanceof User) ? ((User) element).getFullName() : null;
-			case UserManagementView.COLUMN_DESCRIPTION:
-				return ((AbstractUserObject)element).getDescription();
-			case UserManagementView.COLUMN_GUID:
-				return ((AbstractUserObject)element).getGuid().toString();
 		}
 		return null;
 	}

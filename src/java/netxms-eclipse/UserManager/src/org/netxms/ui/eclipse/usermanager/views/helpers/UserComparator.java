@@ -63,20 +63,30 @@ public class UserComparator extends ViewerComparator
 
 		switch((Integer)((SortableTableViewer) viewer).getTable().getSortColumn().getData("ID")) //$NON-NLS-1$
 		{
+         case UserManagementView.COLUMN_AUTH_METHOD:
+            int m1 = (e1 instanceof User) ? ((User)e1).getAuthMethod() : -1;
+            int m2 = (e2 instanceof User) ? ((User)e2).getAuthMethod() : -1;
+            result = m1 - m2;
+            break;
+         case UserManagementView.COLUMN_DESCRIPTION:
+            result = ((AbstractUserObject)e1).getDescription().compareToIgnoreCase(((AbstractUserObject)e2).getDescription());
+            break;
+         case UserManagementView.COLUMN_FULLNAME:
+            result = getFullName(e1).compareToIgnoreCase(getFullName(e2));
+            break;
+         case UserManagementView.COLUMN_GUID:
+            result = ((AbstractUserObject)e1).getGuid().toString().compareTo(((AbstractUserObject)e2).getGuid().toString());
+            break;
 			case UserManagementView.COLUMN_NAME:
 				result = ((AbstractUserObject)e1).getName().compareToIgnoreCase(((AbstractUserObject) e2).getName());
 				break;
+         case UserManagementView.COLUMN_SOURCE:
+            int s1 = ((((AbstractUserObject)e1).getFlags() & AbstractUserObject.LDAP_USER) != 0) ? 1 : 0;
+            int s2 = ((((AbstractUserObject)e1).getFlags() & AbstractUserObject.LDAP_USER) != 0) ? 1 : 0;
+            result = s1 - s2;
+            break;
 			case UserManagementView.COLUMN_TYPE:
 				result = compareTypes(e1, e2);
-				break;
-			case UserManagementView.COLUMN_FULLNAME:
-				result = getFullName(e1).compareToIgnoreCase(getFullName(e2));
-				break;
-			case UserManagementView.COLUMN_DESCRIPTION:
-				result = ((AbstractUserObject)e1).getDescription().compareToIgnoreCase(((AbstractUserObject)e2).getDescription());
-				break;
-			case UserManagementView.COLUMN_GUID:
-				result = ((AbstractUserObject)e1).getGuid().toString().compareTo(((AbstractUserObject)e2).getGuid().toString());
 				break;
 			default:
 				result = 0;
