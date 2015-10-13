@@ -83,15 +83,17 @@ LogFile=/var/log/netxmsd
 #DBLogin=netxms
 #DBPassword=netxms
 __END
+
+        if [ -z $2 ]; then
+          # install
+        else
+          # upgrade
+          /usr/bin/nxdbmgr upgrade
+        fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
     ;;
-
-    upgrade)
-        /usr/bin/nxdbmgr upgrade
-    ;;
-
     *)
         echo "postinst called with unknown argument \`$1'" >&2
         exit 1
