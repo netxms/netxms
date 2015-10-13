@@ -289,7 +289,9 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    {
       if (m_script != NULL)
       {
-         NXSL_Value *nxslValue = new NXSL_Value(value.getString());
+         NXSL_Value *parameters[2];
+         parameters[0] = new NXSL_Value(value.getString());
+         parameters[1] = new NXSL_Value(m_value.getString());
          m_script->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, target)));
          if (target->getObjectClass() == OBJECT_NODE)
          {
@@ -297,12 +299,12 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          }
          m_script->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci)));
          m_script->setGlobalVariable(_T("$isCluster"), new NXSL_Value((target->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
-         if (m_script->run(1, &nxslValue))
+         if (m_script->run(2, parameters))
          {
-            nxslValue = m_script->getResult();
-            if (nxslValue != NULL)
+            NXSL_Value *result = m_script->getResult();
+            if (result != NULL)
             {
-               bMatch = (nxslValue->getValueAsInt32() != 0);
+               bMatch = (result->getValueAsInt32() != 0);
             }
          }
          else
