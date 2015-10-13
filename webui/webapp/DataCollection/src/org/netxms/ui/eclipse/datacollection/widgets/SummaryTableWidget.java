@@ -18,7 +18,9 @@
  */
 package org.netxms.ui.eclipse.datacollection.widgets;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -27,15 +29,21 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
+import org.netxms.client.TableRow;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -61,8 +69,10 @@ public class SummaryTableWidget extends Composite
    private TableLabelProvider labelProvider;
    private Action actionExportToCsv;
    private Action actionUseMultipliers;
+   private Action actionForcePollAll;
    private ViewRefreshController refreshController;
    private boolean useMultipliers = true;
+   private TableColumn currentColumn = null;
 
    /**
     * Create summary table widget
@@ -89,16 +99,7 @@ public class SummaryTableWidget extends Composite
       labelProvider.setUseMultipliers(useMultipliers);
       viewer.setLabelProvider(labelProvider);
       
-      actionExportToCsv = new ExportToCsvAction(viewPart, viewer, true);
-      actionUseMultipliers = new Action(Messages.get().LastValues_UseMultipliers, Action.AS_CHECK_BOX) {
-         @Override
-         public void run()
-         {
-            setUseMultipliers(!useMultipliers);
-         }
-      };
-      actionUseMultipliers.setChecked(useMultipliers);
-      
+      createActions();
       createPopupMenu();
       
       refreshController = new ViewRefreshController(viewPart, -1, new Runnable() {
@@ -118,6 +119,49 @@ public class SummaryTableWidget extends Composite
             refreshController.dispose();
          }
       });
+      
+      viewer.getTable().addMouseListener(new MouseListener() {
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
+         }
+         
+         @Override
+         public void mouseDown(MouseEvent e)
+         {
+            currentColumn = viewer.getColumnAtPoint(new Point(e.x, e.y));
+         }
+         
+         @Override
+         public void mouseDoubleClick(MouseEvent e)
+         {
+         }
+      });
+   }
+
+   /**
+    * Create actions 
+    */
+   private void createActions()
+   {
+      actionExportToCsv = new ExportToCsvAction(viewPart, viewer, true);
+      
+      actionUseMultipliers = new Action(Messages.get().LastValues_UseMultipliers, Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            setUseMultipliers(!useMultipliers);
+         }
+      };
+      actionUseMultipliers.setChecked(useMultipliers);
+      
+      actionForcePollAll = new Action("Force poll for all columns") {
+         @Override
+         public void run()
+         {
+            forcePoll(true);
+         }
+      };
    }
 
    /**
@@ -154,6 +198,17 @@ public class SummaryTableWidget extends Composite
       manager.add(new Separator());
       manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
       manager.add(new Separator());
+      if ((currentColumn != null) && ((Integer)currentColumn.getData("ID") > 0))
+      {
+         manager.add(new Action(String.format("Force poll for \"%s\"", currentColumn.getText())) {
+            @Override
+            public void run()
+            {
+               forcePoll(false);
+            }
+         });
+      }
+      manager.add(actionForcePollAll);
       manager.add(actionExportToCsv);
    }
 
@@ -265,5 +320,89 @@ public class SummaryTableWidget extends Composite
    public Action getActionUseMultipliers()
    {
       return actionUseMultipliers;
+   }
+   
+   /**
+    * @param pollAll
+    */
+   private void forcePoll(boolean pollAll)
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.isEmpty())
+         return;
+      
+      final List<PollRequest> requests = new ArrayList<PollRequest>();
+      for(Object o : selection.toList())
+      {
+         TableRow r = (TableRow)o;
+         long nodeId = r.getObjectId();
+         if (pollAll)
+         {
+            int count = ((Table)viewer.getInput()).getColumnCount();
+            for(int i = 1; i < count; i++)
+            {
+               long dciId = r.get(i).getObjectId();
+               if (dciId != 0)
+               {
+                  requests.add(new PollRequest(nodeId, dciId));
+               }
+            }
+         }
+         else
+         {
+            int index = ((Table)viewer.getInput()).getColumnIndex(currentColumn.getText());
+            long dciId = r.get(index).getObjectId();
+            if (dciId != 0)
+            {
+               requests.add(new PollRequest(nodeId, dciId));
+            }
+         }
+      }
+      
+      if (requests.isEmpty())
+         return;
+      
+      final NXCSession session = ConsoleSharedData.getSession();
+      new ConsoleJob("Force DCI poll", viewPart, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            monitor.beginTask("DCI poll", requests.size());
+            for(PollRequest r : requests)
+            {
+               session.forceDCIPoll(r.nodeId, r.dciId);
+               monitor.worked(1);
+            }
+            monitor.done();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  refresh();
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Forced DCI poll failed";
+         }
+      }.start();
+   }
+   
+   /**
+    * Forced poll request
+    */
+   private class PollRequest
+   {
+      public long nodeId;
+      public long dciId;
+      
+      public PollRequest(long nodeId, long dciId)
+      {
+         this.nodeId = nodeId;
+         this.dciId = dciId;
+      }
    }
 }

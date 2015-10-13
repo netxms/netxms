@@ -820,16 +820,17 @@ class TableCell
 private:
    TCHAR *m_value;
    int m_status;
+   UINT32 m_objectId;
 
 public:
-   TableCell() { m_value = NULL; m_status = -1; }
-   TableCell(const TCHAR *value) { m_value = _tcsdup_ex(value); m_status = -1; }
-   TableCell(const TCHAR *value, int status) { m_value = _tcsdup_ex(value); m_status = status; }
-   TableCell(TableCell *src) { m_value = _tcsdup_ex(src->m_value); m_status = src->m_status; }
+   TableCell() { m_value = NULL; m_status = -1; m_objectId = 0; }
+   TableCell(const TCHAR *value) { m_value = _tcsdup_ex(value); m_status = -1; m_objectId = 0; }
+   TableCell(const TCHAR *value, int status) { m_value = _tcsdup_ex(value); m_status = status; m_objectId = 0; }
+   TableCell(TableCell *src) { m_value = _tcsdup_ex(src->m_value); m_status = src->m_status; m_objectId = src->m_objectId; }
    ~TableCell() { safe_free(m_value); }
 
-   void set(const TCHAR *value, int status) { safe_free(m_value); m_value = _tcsdup_ex(value); m_status = status; }
-   void setPreallocated(TCHAR *value, int status) { safe_free(m_value); m_value = value; m_status = status; }
+   void set(const TCHAR *value, int status, UINT32 objectId) { safe_free(m_value); m_value = _tcsdup_ex(value); m_status = status; m_objectId = objectId; }
+   void setPreallocated(TCHAR *value, int status, UINT32 objectId) { safe_free(m_value); m_value = value; m_status = status; m_objectId = objectId; }
 
    const TCHAR *getValue() { return m_value; }
    void setValue(const TCHAR *value) { safe_free(m_value); m_value = _tcsdup_ex(value); }
@@ -837,6 +838,9 @@ public:
 
    int getStatus() { return m_status; }
    void setStatus(int status) { m_status = status; }
+
+   int getObjectId() { return m_objectId; }
+   void setObjectId(UINT32 id) { m_objectId = id; }
 };
 
 /**
@@ -856,8 +860,8 @@ public:
    void addColumn() { m_cells->add(new TableCell); }
    void deleteColumn(int index) { m_cells->remove(index); }
 
-   void set(int index, const TCHAR *value, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->set(value, status); }
-   void setPreallocated(int index, TCHAR *value, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocated(value, status); }
+   void set(int index, const TCHAR *value, int status, UINT32 objectId) { TableCell *c = m_cells->get(index); if (c != NULL) c->set(value, status, objectId); }
+   void setPreallocated(int index, TCHAR *value, int status, UINT32 objectId) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocated(value, status, objectId); }
 
    void setValue(int index, const TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setValue(value); }
    void setPreallocatedValue(int index, TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocatedValue(value); }
@@ -869,6 +873,9 @@ public:
 
    UINT32 getObjectId() { return m_objectId; }
    void setObjectId(UINT32 id) { m_objectId = id; }
+
+   UINT32 getCellObjectId(int index) { TableCell *c = m_cells->get(index); return (c != NULL) ? c->getObjectId() : 0; }
+   void setCellObjectId(int index, UINT32 id) { TableCell *c = m_cells->get(index); if (c != NULL) c->setObjectId(id); }
 };
 
 /**
@@ -959,6 +966,10 @@ public:
 
    UINT32 getObjectId(int row) { TableRow *r = m_data->get(row); return (r != NULL) ? r->getObjectId() : 0; }
    void setObjectId(int row, UINT32 id) { TableRow *r = m_data->get(row); if (r != NULL) r->setObjectId(id); }
+
+   void setCellObjectIdAt(int row, int col, UINT32 objectId);
+   void setCellObjectId(int col, UINT32 objectId) { setCellObjectIdAt(getNumRows() - 1, col, objectId); }
+   UINT32 getCellObjectId(int row, int col) { TableRow *r = m_data->get(row); return (r != NULL) ? r->getCellObjectId(col) : 0; }
 
    static Table *createFromXML(const char *xml);
    TCHAR *createXML();

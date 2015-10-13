@@ -94,7 +94,8 @@ public class TableRow
          if (extendedFormat)
          {
             msg.setFieldInt16(varId++, c.getStatus());
-            varId += 8;
+            msg.setFieldInt32(varId++, (int)c.getObjectId());
+            varId += 7;
          }
       }
       return varId;

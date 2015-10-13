@@ -384,12 +384,14 @@ void Table::createFromMessage(NXCPMessage *msg)
          TCHAR *value = msg->getFieldAsString(dwId++);
          if (m_extendedFormat)
          {
-            row->setPreallocated(j, value, msg->getFieldAsInt16(dwId++));
-            dwId += 8;
+            int status = msg->getFieldAsInt16(dwId++);
+            UINT32 objectId = msg->getFieldAsUInt32(dwId++);
+            row->setPreallocated(j, value, status, objectId);
+            dwId += 7;
          }
          else
          {
-            row->setPreallocated(j, value, -1);
+            row->setPreallocated(j, value, -1, 0);
          }
       }
    }
@@ -444,7 +446,8 @@ int Table::fillMessage(NXCPMessage &msg, int offset, int rowLimit)
          if (m_extendedFormat)
          {
             msg.setField(id++, (UINT16)r->getStatus(col));
-            id += 8;
+            msg.setField(id++, r->getCellObjectId(col));
+            id += 7;
          }
 		}
 	}
@@ -660,6 +663,18 @@ int Table::getStatus(int nRow, int nCol)
 }
 
 /**
+ * Set object ID of given cell
+ */
+void Table::setCellObjectIdAt(int row, int col, UINT32 objectId)
+{
+   TableRow *r = m_data->get(row);
+   if (r != NULL)
+   {
+      r->setCellObjectId(col, objectId);
+   }
+}
+
+/**
  * Add all rows from another table.
  * Identical table format assumed.
  *
@@ -674,7 +689,7 @@ void Table::addAll(Table *src)
       TableRow *srcRow = src->m_data->get(i);
       for(int j = 0; j < numColumns; j++)
       {
-         dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j));
+         dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j), srcRow->getCellObjectId(j));
       }
       m_data->add(dstRow);
    }
@@ -694,7 +709,7 @@ void Table::copyRow(Table *src, int row)
 
    for(int j = 0; j < numColumns; j++)
    {
-      dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j));
+      dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j), srcRow->getCellObjectId(j));
    }
 
    m_data->add(dstRow);
