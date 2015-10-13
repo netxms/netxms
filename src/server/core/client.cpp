@@ -129,6 +129,9 @@ THREAD_RESULT THREAD_CALL ClientListener(void *arg)
 
 	SetSocketExclusiveAddrUse(sock);
 	SetSocketReuseFlag(sock);
+#ifndef _WIN32
+   fcntl(sock, F_SETFD, fcntl(sock, F_GETFD) | FD_CLOEXEC);
+#endif
 
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
@@ -223,6 +226,9 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
 #ifdef IPV6_V6ONLY
    int on = 1;
    setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
+#endif
+#ifndef _WIN32
+   fcntl(sock, F_SETFD, fcntl(sock, F_GETFD) | FD_CLOEXEC);
 #endif
 
    // Fill in local address structure
