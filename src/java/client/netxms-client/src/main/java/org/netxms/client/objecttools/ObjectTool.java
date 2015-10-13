@@ -310,6 +310,22 @@ public class ObjectTool
 	{
 		return flags;
 	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isVisibleInCommands()
+	{
+	   return (flags & SHOW_IN_COMMANDS) != 0;
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isEnabled()
+	{
+	   return (flags & DISABLED) == 0;
+	}
 
 	/**
 	 * @return the description
