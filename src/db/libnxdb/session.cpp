@@ -183,7 +183,7 @@ static void DBReconnect(DB_HANDLE hConn)
       {
 			MutexLock(hConn->m_driver->m_mutexReconnect);
          if ((hConn->m_driver->m_reconnect == 0) && (hConn->m_driver->m_fpEventHandler != NULL))
-				hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_LOST, NULL, NULL, hConn->m_driver->m_userArg);
+				hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_LOST, NULL, NULL, true, hConn->m_driver->m_userArg);
          hConn->m_driver->m_reconnect++;
          MutexUnlock(hConn->m_driver->m_mutexReconnect);
       }
@@ -194,7 +194,7 @@ static void DBReconnect(DB_HANDLE hConn)
       MutexLock(hConn->m_driver->m_mutexReconnect);
       hConn->m_driver->m_reconnect--;
       if ((hConn->m_driver->m_reconnect == 0) && (hConn->m_driver->m_fpEventHandler != NULL))
-			hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_RESTORED, NULL, NULL, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_RESTORED, NULL, NULL, false, hConn->m_driver->m_userArg);
       MutexUnlock(hConn->m_driver->m_mutexReconnect);
    }
 }
@@ -271,7 +271,7 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
 		if (hConn->m_driver->m_logSqlErrors)
 			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwResult == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 	}
 
 #ifndef UNICODE
@@ -336,7 +336,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 		if (hConn->m_driver->m_logSqlErrors)
 			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 	}
 
 #ifndef UNICODE
@@ -800,7 +800,7 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
 		if (hConn->m_driver->m_logSqlErrors)
         nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
    }
 
 #ifndef UNICODE
@@ -1069,7 +1069,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 		if (hConn->m_driver->m_logSqlErrors)
         nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 	}
 
    if (hConn->m_driver->m_dumpSql)
@@ -1219,7 +1219,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const T
 }
 
 /**
- * Bind string parameter with length valiadtion
+ * Bind string parameter with length validation
  */
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const TCHAR *value, int allocType, int maxLen)
 {
@@ -1355,10 +1355,10 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 		{
 #ifdef UNICODE
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, dwResult == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 #else
 			WCHAR *query = WideStringFromMBString(hStmt->m_query);
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, dwResult == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 			free(query);
 #endif
 		}
@@ -1434,10 +1434,10 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 		{
 #ifdef UNICODE
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 #else
 			WCHAR *query = WideStringFromMBString(hStmt->m_query);
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 			free(query);
 #endif
 		}

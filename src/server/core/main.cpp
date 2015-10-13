@@ -455,7 +455,7 @@ static BOOL IsNetxmsdProcess(UINT32 dwPID)
 /**
  * Database event handler
  */
-static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *pszArg2, void *userArg)
+static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *pszArg2, bool connLost, void *userArg)
 {
 	if (!(g_flags & AF_SERVER_INITIALIZED))
 		return;     // Don't try to do anything if server is not ready yet
@@ -473,7 +473,7 @@ static void DBEventHandler(DWORD dwEvent, const WCHAR *pszArg1, const WCHAR *psz
 			NotifyClientSessions(NX_NOTIFY_DBCONN_STATUS, TRUE);
 			break;
 		case DBEVENT_QUERY_FAILED:
-			PostEvent(EVENT_DB_QUERY_FAILED, g_dwMgmtNode, "uu", pszArg1, pszArg2);
+			PostEvent(EVENT_DB_QUERY_FAILED, g_dwMgmtNode, "uud", pszArg1, pszArg2, connLost ? 1 : 0);
 			break;
 		default:
 			break;

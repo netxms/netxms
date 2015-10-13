@@ -117,17 +117,15 @@ extern "C" void EXPORT DrvUnload()
 /**
  * Get error text from error handle
  */
-static void GetErrorTextFromHandle(OCIError *handle, WCHAR *errorText)
+static void GetErrorFromHandle(OCIError *handle, sb4 *errorCode, WCHAR *errorText)
 {
-	sb4 nCode;
-
 #if UNICODE_UCS2
-	OCIErrorGet(handle, 1, NULL, &nCode, (text *)errorText, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
+	OCIErrorGet(handle, 1, NULL, errorCode, (text *)errorText, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 #else
 	UCS2CHAR buffer[DBDRV_MAX_ERROR_TEXT];
 
-	OCIErrorGet(handle, 1, NULL, &nCode, (text *)buffer, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
+	OCIErrorGet(handle, 1, NULL, errorCode, (text *)buffer, DBDRV_MAX_ERROR_TEXT, OCI_HTYPE_ERROR);
 	buffer[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 	ucs2_to_ucs4(buffer, ucs2_strlen(buffer) + 1, errorText, DBDRV_MAX_ERROR_TEXT);
 	errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
@@ -138,20 +136,18 @@ static void GetErrorTextFromHandle(OCIError *handle, WCHAR *errorText)
 /**
  * Set last error text
  */
-static void SetLastErrorText(ORACLE_CONN *pConn)
+static void SetLastError(ORACLE_CONN *pConn)
 {
-	GetErrorTextFromHandle(pConn->handleError, pConn->szLastError);
+	GetErrorFromHandle(pConn->handleError, &pConn->lastErrorCode, pConn->lastErrorText);
 }
 
 /**
  * Check if last error was caused by lost connection to server
  */
-static DWORD IsConnectionError(ORACLE_CONN *pConn)
+static DWORD IsConnectionError(ORACLE_CONN *conn)
 {
 	ub4 nStatus = 0;
-
-	OCIAttrGet(pConn->handleServer, OCI_HTYPE_SERVER, &nStatus,
-	           NULL, OCI_ATTR_SERVER_STATUS, pConn->handleError);
+	OCIAttrGet(conn->handleServer, OCI_HTYPE_SERVER, &nStatus, NULL, OCI_ATTR_SERVER_STATUS, conn->handleError);
 	return (nStatus == OCI_SERVER_NOT_CONNECTED) ? DBERR_CONNECTION_LOST : DBERR_OTHER_ERROR;
 }
 
@@ -221,7 +217,8 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 					           OCI_ATTR_SESSION, pConn->handleError);
 					pConn->mutexQueryLock = MutexCreate();
 					pConn->nTransLevel = 0;
-					pConn->szLastError[0] = 0;
+					pConn->lastErrorCode = 0;
+					pConn->lastErrorText[0] = 0;
                pConn->prefetchLimit = 10;
 
 					if ((schema != NULL) && (schema[0] != 0))
@@ -237,7 +234,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 				}
 				else
 				{
-					GetErrorTextFromHandle(pConn->handleError, errorText);
+					GetErrorFromHandle(pConn->handleError, &pConn->lastErrorCode, errorText);
 					OCIHandleFree(pConn->handleEnv, OCI_HTYPE_ENV);
 					free(pConn);
 					pConn = NULL;
@@ -245,7 +242,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 			}
 			else
 			{
-				GetErrorTextFromHandle(pConn->handleError, errorText);
+				GetErrorFromHandle(pConn->handleError, &pConn->lastErrorCode, errorText);
 				OCIHandleFree(pConn->handleEnv, OCI_HTYPE_ENV);
 				free(pConn);
 				pConn = NULL;
@@ -392,13 +389,13 @@ extern "C" ORACLE_STATEMENT EXPORT *DrvPrepare(ORACLE_CONN *pConn, WCHAR *pwszQu
 	}
 	else
 	{
-		SetLastErrorText(pConn);
+		SetLastError(pConn);
 		*pdwError = IsConnectionError(pConn);
 	}
 
 	if (errorText != NULL)
 	{
-		wcsncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+		wcsncpy(errorText, pConn->lastErrorText, DBDRV_MAX_ERROR_TEXT);
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 	}
 	MutexUnlock(pConn->mutexQueryLock);
@@ -787,13 +784,13 @@ extern "C" DWORD EXPORT DrvExecute(ORACLE_CONN *pConn, ORACLE_STATEMENT *stmt, W
 	}
 	else
 	{
-		SetLastErrorText(pConn);
+		SetLastError(pConn);
 		dwResult = IsConnectionError(pConn);
 	}
 
 	if (errorText != NULL)
 	{
-		wcsncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+		wcsncpy(errorText, pConn->lastErrorText, DBDRV_MAX_ERROR_TEXT);
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 	}
 	MutexUnlock(pConn->mutexQueryLock);
@@ -850,19 +847,19 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCH
 		}
 		else
 		{
-			SetLastErrorText(pConn);
+			SetLastError(pConn);
 			dwResult = IsConnectionError(pConn);
 		}
 		OCIStmtRelease(handleStmt, pConn->handleError, NULL, 0, OCI_DEFAULT);
 	}
 	else
 	{
-		SetLastErrorText(pConn);
+		SetLastError(pConn);
 		dwResult = IsConnectionError(pConn);
 	}
 	if (errorText != NULL)
 	{
-		wcsncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+		wcsncpy(errorText, pConn->lastErrorText, DBDRV_MAX_ERROR_TEXT);
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 	}
 	MutexUnlock(pConn->mutexQueryLock);
@@ -939,14 +936,14 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
             }
             if (nStatus != OCI_SUCCESS)
 			   {
-				   SetLastErrorText(pConn);
+				   SetLastError(pConn);
 				   *pdwError = IsConnectionError(pConn);
 			   }
 				OCIDescriptorFree(handleParam, OCI_DTYPE_PARAM);
 			}
 			else
 			{
-				SetLastErrorText(pConn);
+				SetLastError(pConn);
 				*pdwError = IsConnectionError(pConn);
 			}
 		}
@@ -965,7 +962,7 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 				}
 				if ((nStatus != OCI_SUCCESS) && (nStatus != OCI_SUCCESS_WITH_INFO))
 				{
-					SetLastErrorText(pConn);
+					SetLastError(pConn);
 					*pdwError = IsConnectionError(pConn);
 					break;
 				}
@@ -1061,19 +1058,19 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(ORACLE_CONN *pConn, WCHAR *pwszQuery, D
 		}
 		else
 		{
-			SetLastErrorText(pConn);
+			SetLastError(pConn);
 			*pdwError = IsConnectionError(pConn);
 		}
 		OCIStmtRelease(handleStmt, pConn->handleError, NULL, 0, OCI_DEFAULT);
 	}
 	else
 	{
-		SetLastErrorText(pConn);
+		SetLastError(pConn);
 		*pdwError = IsConnectionError(pConn);
 	}
 	if (errorText != NULL)
 	{
-		wcsncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+		wcsncpy(errorText, pConn->lastErrorText, DBDRV_MAX_ERROR_TEXT);
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 	}
 	MutexUnlock(pConn->mutexQueryLock);
@@ -1100,13 +1097,13 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(ORACLE_CONN *pConn, ORACLE_STAT
 	}
 	else
 	{
-		SetLastErrorText(pConn);
+		SetLastError(pConn);
 		*pdwError = IsConnectionError(pConn);
 	}
 
 	if (errorText != NULL)
 	{
-		wcsncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+		wcsncpy(errorText, pConn->lastErrorText, DBDRV_MAX_ERROR_TEXT);
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 	}
 	MutexUnlock(pConn->mutexQueryLock);
@@ -1273,14 +1270,14 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
                   }
                   else
 			         {
-				         SetLastErrorText(pConn);
+				         SetLastError(pConn);
 				         *pdwError = IsConnectionError(pConn);
 			         }
 				      OCIDescriptorFree(handleParam, OCI_DTYPE_PARAM);
 					}
 					else
 					{
-						SetLastErrorText(pConn);
+						SetLastError(pConn);
 						*pdwError = IsConnectionError(pConn);
 					}
 				}
@@ -1288,13 +1285,13 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
 		}
 		else
 		{
-			SetLastErrorText(pConn);
+			SetLastError(pConn);
 			*pdwError = IsConnectionError(pConn);
 		}
 	}
 	else
 	{
-		SetLastErrorText(pConn);
+		SetLastError(pConn);
 		*pdwError = IsConnectionError(pConn);
 	}
 
@@ -1312,7 +1309,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ORACLE_CONN *pConn, WCHAR *p
 	safe_free(pConn->pBuffers);
 	if (errorText != NULL)
 	{
-		wcsncpy(errorText, pConn->szLastError, DBDRV_MAX_ERROR_TEXT);
+		wcsncpy(errorText, pConn->lastErrorText, DBDRV_MAX_ERROR_TEXT);
 		errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
 	}
 	MutexUnlock(pConn->mutexQueryLock);
@@ -1336,7 +1333,7 @@ extern "C" bool EXPORT DrvFetch(ORACLE_CONN *pConn)
 	}
 	else
 	{
-		SetLastErrorText(pConn);
+		SetLastError(pConn);
 		success = false;
 	}
 	return success;
@@ -1496,7 +1493,7 @@ extern "C" DWORD EXPORT DrvCommit(ORACLE_CONN *pConn)
 		}
 		else
 		{
-			SetLastErrorText(pConn);
+			SetLastError(pConn);
 			dwResult = IsConnectionError(pConn);
 		}
 	}
@@ -1528,7 +1525,7 @@ extern "C" DWORD EXPORT DrvRollback(ORACLE_CONN *pConn)
 		}
 		else
 		{
-			SetLastErrorText(pConn);
+			SetLastError(pConn);
 			dwResult = IsConnectionError(pConn);
 		}
 	}

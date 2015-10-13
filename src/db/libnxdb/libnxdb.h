@@ -73,7 +73,7 @@ struct db_driver_t
 	DWORD (* m_fpDrvCommit)(DBDRV_CONNECTION);
 	DWORD (* m_fpDrvRollback)(DBDRV_CONNECTION);
 	void (* m_fpDrvUnload)();
-	void (* m_fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, void *);
+	void (* m_fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, bool, void *);
 	int (* m_fpDrvGetColumnCount)(DBDRV_RESULT);
 	const char* (* m_fpDrvGetColumnName)(DBDRV_RESULT, int);
 	int (* m_fpDrvGetColumnCountAsync)(DBDRV_ASYNC_RESULT);

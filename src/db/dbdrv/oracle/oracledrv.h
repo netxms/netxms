@@ -66,7 +66,8 @@ struct ORACLE_CONN
 	OCIError *handleError;
 	MUTEX mutexQueryLock;
 	int nTransLevel;
-	WCHAR szLastError[DBDRV_MAX_ERROR_TEXT];
+	sb4 lastErrorCode;
+	WCHAR lastErrorText[DBDRV_MAX_ERROR_TEXT];
 	ORACLE_FETCH_BUFFER *pBuffers;
 	int nCols;
 	char **columnNames;
