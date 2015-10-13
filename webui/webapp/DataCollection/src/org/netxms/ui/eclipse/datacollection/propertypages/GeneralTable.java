@@ -23,7 +23,6 @@ import java.util.Map;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -83,9 +82,9 @@ public class GeneralTable extends PropertyPage
 	private ObjectSelector sourceNode;
    private Combo agentCacheMode;
 	private Combo schedulingMode;
+   private Combo retentionMode;
 	private LabeledSpinner pollingInterval;
 	private LabeledSpinner retentionTime;
-	private Button checkNoStorage;
 	private Combo clusterResource;
 	private Button statusActive;
 	private Button statusDisabled;
@@ -296,9 +295,10 @@ public class GeneralTable extends PropertyPage
       fd.right = new FormAttachment(50, -WidgetHelper.OUTER_SPACING / 2);
       fd.top = new FormAttachment(0, 0);
       schedulingMode = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, Messages.get().GeneralTable_PollingMode, fd);
-      schedulingMode.add(Messages.get().GeneralTable_FixedIntervals);
-      schedulingMode.add(Messages.get().GeneralTable_CustomSchedule);
-      schedulingMode.select(dci.isUseAdvancedSchedule() ? 1 : 0);
+      schedulingMode.add(Messages.get().General_FixedIntervalsDefault);
+      schedulingMode.add(Messages.get().General_FixedIntervalsCustom);
+      schedulingMode.add(Messages.get().General_CustomSchedule);
+      schedulingMode.select(dci.isUseAdvancedSchedule() ? 2 : ((dci.getPollingInterval() > 0) ? 1 : 0));
       schedulingMode.setEnabled(dci.getOrigin() != DataCollectionObject.PUSH);
       schedulingMode.addSelectionListener(new SelectionListener() {
 			@Override
@@ -310,15 +310,15 @@ public class GeneralTable extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				pollingInterval.setEnabled(schedulingMode.getSelectionIndex() == 0);
+				pollingInterval.setEnabled(schedulingMode.getSelectionIndex() == 1);
 			}
       });
       
       pollingInterval = new LabeledSpinner(groupPolling, SWT.NONE);
       pollingInterval.setLabel(Messages.get().General_PollingInterval);
       pollingInterval.setRange(1, 99999);
-      pollingInterval.setSelection(dci.getPollingInterval());
-      pollingInterval.setEnabled(!dci.isUseAdvancedSchedule() && (dci.getOrigin() != DataCollectionItem.PUSH));
+      pollingInterval.setSelection((dci.getPollingInterval() > 0) ? dci.getPollingInterval() : ConsoleSharedData.getSession().getDefaultDciPollingInterval());
+      pollingInterval.setEnabled(!dci.isUseAdvancedSchedule() && (dci.getPollingInterval() > 0) && (dci.getOrigin() != DataCollectionItem.PUSH));
       fd = new FormData();
       fd.left = new FormAttachment(50, WidgetHelper.OUTER_SPACING / 2);
       fd.right = new FormAttachment(100, 0);
@@ -388,29 +388,42 @@ public class GeneralTable extends PropertyPage
       gd.horizontalSpan = 2;
       groupStorage.setLayoutData(gd);
       GridLayout storageLayout = new GridLayout();
-      storageLayout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      storageLayout.numColumns = 2;
+      storageLayout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
       groupStorage.setLayout(storageLayout);
       
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      retentionMode = WidgetHelper.createLabeledCombo(groupStorage, SWT.READ_ONLY, "Retention mode", gd);
+      retentionMode.add("Use default retention time");
+      retentionMode.add("Use custom retention time");
+      retentionMode.add(Messages.get().GeneralTable_NoStorage);
+      retentionMode.select(((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) != 0) ? 2 : ((dci.getRetentionTime() > 0) ? 1 : 0));
+      retentionMode.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            int mode = retentionMode.getSelectionIndex();
+            retentionTime.setEnabled(mode == 1);
+         }
+      });
+
       retentionTime = new LabeledSpinner(groupStorage, SWT.NONE);
-      retentionTime.setLabel(Messages.get().General_RetentionTime);
+      retentionTime.setLabel(Messages.get().GeneralTable_RetentionTime);
       retentionTime.setRange(1, 99999);
-      retentionTime.setSelection(dci.getRetentionTime());
-      retentionTime.setEnabled((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) == 0);
+      retentionTime.setSelection((dci.getRetentionTime() > 0) ? dci.getRetentionTime() : ConsoleSharedData.getSession().getDefaultDciRetentionTime());
+      retentionTime.setEnabled(((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) == 0) && (dci.getRetentionTime() > 0));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       retentionTime.setLayoutData(gd);
-      
-      checkNoStorage = new Button(groupStorage, SWT.CHECK);
-      checkNoStorage.setText(Messages.get().GeneralTable_NoStorage);
-      checkNoStorage.setSelection((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) != 0);
-      checkNoStorage.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            retentionTime.setEnabled(!checkNoStorage.getSelection());
-         }
-      });
       
       return dialogArea;
 	}
@@ -480,8 +493,8 @@ public class GeneralTable extends PropertyPage
 		dci.setSourceNode(sourceNode.getObjectId());
       dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
 		dci.setUseAdvancedSchedule(schedulingMode.getSelectionIndex() == 1);
-		dci.setPollingInterval(pollingInterval.getSelection());
-		dci.setRetentionTime(retentionTime.getSelection());
+      dci.setPollingInterval((schedulingMode.getSelectionIndex() == 0) ? 0 : pollingInterval.getSelection());
+      dci.setRetentionTime((retentionMode.getSelectionIndex() == 0) ? 0 : retentionTime.getSelection());
 		if (checkUseCustomSnmpPort.getSelection())
 		{
 			dci.setSnmpPort(Integer.parseInt(customSnmpPort.getText()));
@@ -498,7 +511,7 @@ public class GeneralTable extends PropertyPage
 		else if (statusUnsupported.getSelection())
 			dci.setStatus(DataCollectionObject.NOT_SUPPORTED);
 		
-		if (checkNoStorage.getSelection())
+      if (retentionMode.getSelectionIndex() == 2)
 		   dci.setFlags(dci.getFlags() | DataCollectionObject.DCF_NO_STORAGE);
 		else
          dci.setFlags(dci.getFlags() & ~DataCollectionObject.DCF_NO_STORAGE);

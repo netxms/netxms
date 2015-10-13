@@ -240,6 +240,18 @@ public abstract class DataCollectionObject
 		return pollingInterval;
 	}
 
+   /**
+    * @return polling interval suitable for sorting
+    */
+   public int getComparablePollingInterval()
+   {
+      if ((flags & DCF_ADVANCED_SCHEDULE) != 0)
+         return -1;
+      if (pollingInterval <= 0)
+         return 0;
+      return pollingInterval;
+   }
+
 	/**
 	 * @param pollingInterval the pollingInterval to set
 	 */
@@ -254,6 +266,18 @@ public abstract class DataCollectionObject
 	public int getRetentionTime()
 	{
 		return retentionTime;
+	}
+	
+	/**
+	 * @return
+	 */
+	public int getComparableRetentionTime()
+	{
+	   if ((flags & DCF_NO_STORAGE) != 0)
+	      return -1;
+	   if (retentionTime <= 0)
+	      return 0;
+	   return retentionTime;
 	}
 
 	/**

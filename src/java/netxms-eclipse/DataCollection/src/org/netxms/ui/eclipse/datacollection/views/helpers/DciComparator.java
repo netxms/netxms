@@ -64,10 +64,10 @@ public class DciComparator extends ViewerComparator
 				result = dci1.getName().compareToIgnoreCase(dci2.getName());
 				break;
 			case DataCollectionEditor.COLUMN_INTERVAL:
-				result = (int)(dci1.getPollingInterval() - dci2.getPollingInterval());
+				result = (int)(dci1.getComparablePollingInterval() - dci2.getComparablePollingInterval());
 				break;
 			case DataCollectionEditor.COLUMN_RETENTION:
-				result = (int)(dci1.getRetentionTime() - dci2.getRetentionTime());
+				result = (int)(dci1.getComparableRetentionTime() - dci2.getComparableRetentionTime());
 				break;
 			case DataCollectionEditor.COLUMN_ORIGIN:
 			case DataCollectionEditor.COLUMN_DATATYPE:

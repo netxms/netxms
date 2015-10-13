@@ -344,8 +344,8 @@ public class General extends PropertyPage
       fd.right = new FormAttachment(50, -WidgetHelper.OUTER_SPACING / 2);
       fd.top = new FormAttachment(0, 0);
       schedulingMode = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, Messages.get().General_PollingMode, fd);
-      schedulingMode.add(Messages.get().General_FixedIntervals);
-      schedulingMode.add("Fixed intervals (custom)");
+      schedulingMode.add(Messages.get().General_FixedIntervalsDefault);
+      schedulingMode.add(Messages.get().General_FixedIntervalsCustom);
       schedulingMode.add(Messages.get().General_CustomSchedule);
       schedulingMode.select(dci.isUseAdvancedSchedule() ? 2 : ((dci.getPollingInterval() > 0) ? 1 : 0));
       schedulingMode.setEnabled(dci.getOrigin() != DataCollectionItem.PUSH);
@@ -407,7 +407,7 @@ public class General extends PropertyPage
       groupStorage.setLayoutData(gd);
       GridLayout storageLayout = new GridLayout();
       storageLayout.numColumns = 2;
-      storageLayout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      storageLayout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
       groupStorage.setLayout(storageLayout);
       
       gd = new GridData();
@@ -417,6 +417,7 @@ public class General extends PropertyPage
       retentionMode.add("Use default retention time");
       retentionMode.add("Use custom retention time");
       retentionMode.add(Messages.get().General_NoStorage);
+      retentionMode.select(((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) != 0) ? 2 : ((dci.getRetentionTime() > 0) ? 1 : 0));
       retentionMode.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
@@ -436,7 +437,7 @@ public class General extends PropertyPage
       retentionTime.setLabel(Messages.get().General_RetentionTime);
       retentionTime.setRange(1, 99999);
       retentionTime.setSelection((dci.getRetentionTime() > 0) ? dci.getRetentionTime() : ConsoleSharedData.getSession().getDefaultDciRetentionTime());
-      retentionTime.setEnabled((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) == 0);
+      retentionTime.setEnabled(((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) == 0) && (dci.getRetentionTime() > 0));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
