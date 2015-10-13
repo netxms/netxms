@@ -16,6 +16,7 @@
 - New SMS driver - slack.com
 - IPv6 support in built-in syslog server
 - Fixed event processing policy export/import issues
+- Global default retention time and polling interval for data collection
 - Management console:
 	- Object context menu available on geo map
 	- Filter in event template configurator
