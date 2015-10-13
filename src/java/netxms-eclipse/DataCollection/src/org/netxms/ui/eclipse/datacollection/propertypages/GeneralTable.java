@@ -436,7 +436,7 @@ public class GeneralTable extends PropertyPage
 		int index = origin.getSelectionIndex();
 		sourceNode.setEnabled(index != DataCollectionObject.PUSH);
 		schedulingMode.setEnabled(index != DataCollectionObject.PUSH);
-		pollingInterval.setEnabled((index != DataCollectionObject.PUSH) && (schedulingMode.getSelectionIndex() == 0));
+		pollingInterval.setEnabled((index != DataCollectionObject.PUSH) && (schedulingMode.getSelectionIndex() == 1));
 		checkUseCustomSnmpPort.setEnabled(index == DataCollectionObject.SNMP);
 		customSnmpPort.setEnabled((index == DataCollectionObject.SNMP) && checkUseCustomSnmpPort.getSelection());
       agentCacheMode.setEnabled((index == DataCollectionItem.AGENT) || (index == DataCollectionItem.SNMP));
@@ -492,7 +492,7 @@ public class GeneralTable extends PropertyPage
 		dci.setOrigin(origin.getSelectionIndex());
 		dci.setSourceNode(sourceNode.getObjectId());
       dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
-		dci.setUseAdvancedSchedule(schedulingMode.getSelectionIndex() == 1);
+		dci.setUseAdvancedSchedule(schedulingMode.getSelectionIndex() == 2);
       dci.setPollingInterval((schedulingMode.getSelectionIndex() == 0) ? 0 : pollingInterval.getSelection());
       dci.setRetentionTime((retentionMode.getSelectionIndex() == 0) ? 0 : retentionTime.getSelection());
 		if (checkUseCustomSnmpPort.getSelection())

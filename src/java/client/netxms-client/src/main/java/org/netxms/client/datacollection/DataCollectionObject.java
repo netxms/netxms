@@ -133,8 +133,8 @@ public abstract class DataCollectionObject
 		templateId = 0;
 		resourceId = 0;
 		sourceNode = 0;
-		pollingInterval = owner.getSession().getDefaultDciPollingInterval();
-		retentionTime = owner.getSession().getDefaultDciRetentionTime();
+		pollingInterval = 0; // system default
+		retentionTime = 0; // system default
 		origin = AGENT;
 		status = ACTIVE;
 		flags = 0;

@@ -462,7 +462,7 @@ public class General extends PropertyPage
 		int index = origin.getSelectionIndex();
 		sourceNode.setEnabled(index != DataCollectionItem.PUSH);
 		schedulingMode.setEnabled(index != DataCollectionItem.PUSH);
-		pollingInterval.setEnabled((index != DataCollectionItem.PUSH) && (schedulingMode.getSelectionIndex() == 0));
+		pollingInterval.setEnabled((index != DataCollectionItem.PUSH) && (schedulingMode.getSelectionIndex() == 1));
 		checkInterpretRawSnmpValue.setEnabled(index == DataCollectionItem.SNMP);
 		snmpRawType.setEnabled((index == DataCollectionItem.SNMP) && checkInterpretRawSnmpValue.getSelection());
 		checkUseCustomSnmpPort.setEnabled(index == DataCollectionItem.SNMP);
