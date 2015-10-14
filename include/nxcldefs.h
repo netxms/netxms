@@ -387,6 +387,7 @@ enum SessionState
 #define NX_NOTIFY_FILE_MONITORING_FAILED     26
 #define NX_NOTIFY_SESSION_KILLED             27
 #define NX_NOTIFY_GRAPHS_DELETED             28
+#define NX_NOTIFY_SCHEDULE_UPDATE            29
 
 /**
  * Request completion codes

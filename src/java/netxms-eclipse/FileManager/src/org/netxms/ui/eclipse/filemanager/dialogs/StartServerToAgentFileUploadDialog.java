@@ -34,7 +34,6 @@ import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.widgets.ServerFileSelector;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.DateTimeSelector;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.ScheduleSelector;
 
@@ -53,14 +52,17 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 	private boolean createJobOnHold;
 	private boolean scheduledTask;
 	private ScheduledTask schedule;
+	private boolean canScheduleFileUpload;
 	
 	/**
 	 * 
 	 * @param parentShell
+	 * @param canScheduleFileUpload 
 	 */
-	public StartServerToAgentFileUploadDialog(Shell parentShell)
+	public StartServerToAgentFileUploadDialog(Shell parentShell, boolean canScheduleFileUpload)
 	{
 		super(parentShell);
+		this.canScheduleFileUpload = canScheduleFileUpload;
 	}
 
 	/* (non-Javadoc)
@@ -119,26 +121,29 @@ public class StartServerToAgentFileUploadDialog extends Dialog
          }
       });
 		
-		checkIsSchedule = new Button(dialogArea, SWT.CHECK);
-		checkIsSchedule.setText("Schedule task");
-      checkIsSchedule.addSelectionListener(new SelectionListener() {
+		if(canScheduleFileUpload)
+		{
+   		checkIsSchedule = new Button(dialogArea, SWT.CHECK);
+   		checkIsSchedule.setText("Schedule task");
+         checkIsSchedule.addSelectionListener(new SelectionListener() {
+            
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {        
+               checkJobOnHold.setEnabled(!checkIsSchedule.getSelection());
+               scheduleSelector.setEnabled(checkIsSchedule.getSelection());
+            }
+            
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e); 
+            }
+         });
          
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {        
-            checkJobOnHold.setEnabled(!checkIsSchedule.getSelection());
-            scheduleSelector.setEnabled(checkIsSchedule.getSelection());
-         }
-         
-         @Override
-         public void widgetDefaultSelected(SelectionEvent e)
-         {
-            widgetSelected(e); 
-         }
-      });
-      
-      scheduleSelector = new ScheduleSelector(dialogArea, SWT.NONE);
-      scheduleSelector.setEnabled(false);
+         scheduleSelector = new ScheduleSelector(dialogArea, SWT.NONE);
+         scheduleSelector.setEnabled(false);
+		}
 		
 		return dialogArea;
 	}

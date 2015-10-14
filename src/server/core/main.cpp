@@ -1899,11 +1899,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if (szBuffer[0] == _T('+'))
       {
          int offset = _tcstoul(&szBuffer[1], NULL, 0);
-         AddOneTimeSchedule(_T("Execute.Script"), time(NULL) + offset, pArg, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
+         AddOneTimeSchedule(_T("Execute.Script"), time(NULL) + offset, pArg, 0, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
       }
       else
       {
-         AddSchedule(_T("Execute.Script"), szBuffer, pArg, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
+         AddSchedule(_T("Execute.Script"), szBuffer, pArg, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
       }
    }
 	else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))

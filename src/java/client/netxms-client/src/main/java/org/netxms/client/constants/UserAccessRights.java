@@ -42,9 +42,9 @@ public class UserAccessRights
    public static final long SYSTEM_ACCESS_VIEW_SYSLOG           = 0x020000000;
    public static final long SYSTEM_ACCESS_USERS_SCHEDULED_TASKS = 0x040000000;
    public static final long SYSTEM_ACCESS_OWN_SCHEDULED_TASKS   = 0x080000000;
-//   public static final long SYSTEM_ACCESS_ALL_SCHEDULED_TASKS   = 0x100000000;
-//   public static final long SYSTEM_ACCESS_SCHEDULE_SCRIPT       = 0x200000000;
-//   public static final long SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD  = 0x400000000;
+   public static final long SYSTEM_ACCESS_ALL_SCHEDULED_TASKS   = 0x100000000L;
+   public static final long SYSTEM_ACCESS_SCHEDULE_SCRIPT       = 0x200000000L;
+   public static final long SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD  = 0x400000000L;
 
 	
 	public static final int OBJECT_ACCESS_READ          = 0x00000001;

@@ -41,6 +41,7 @@ public class ScheduleSelector extends Composite
 {
    private Button radioOneTimeSchedule;
    private Button radioCronSchedule;
+   private Group scheduleGroup;
    private DateTimeSelector execDateSelector;
    private Text textSchedule; 
 	
@@ -54,7 +55,7 @@ public class ScheduleSelector extends Composite
       
       setLayout(new FillLayout());
 		
-		Group scheduleGroup = new Group(parent, SWT.NONE);
+		scheduleGroup = new Group(parent, SWT.NONE);
 		scheduleGroup.setText("Schedule");
       
 		GridLayout layout = new GridLayout();
@@ -131,8 +132,37 @@ public class ScheduleSelector extends Composite
 	   }
 	}
 
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.widgets.Control#setVisible(boolean)
+    */
+   @Override
+   public void setVisible(boolean visible)
+   {
+      super.setVisible(visible);
+      scheduleGroup.setVisible(visible);
+   }
+
    public ScheduledTask getSchedule()
    {
-      return new ScheduledTask("Upload.File", textSchedule.getText(), "", execDateSelector.getValue(), 0);
+      return new ScheduledTask("Upload.File", textSchedule.getText(), "", execDateSelector.getValue(), 0, 0);
+   }
+
+   public void setSchedule(ScheduledTask scheduledTask)
+   {
+      if(scheduledTask.getSchedule().isEmpty())
+      {
+         radioOneTimeSchedule.setSelection(true);
+         textSchedule.setEnabled(false); 
+         execDateSelector.setEnabled(true);
+         execDateSelector.setValue(scheduledTask.getExecutionTime());        
+      }
+      else
+      {
+         radioCronSchedule.setSelection(true);
+         textSchedule.setEnabled(true);
+         execDateSelector.setEnabled(false);
+         textSchedule.setText(scheduledTask.getSchedule());
+      }
    }
 }

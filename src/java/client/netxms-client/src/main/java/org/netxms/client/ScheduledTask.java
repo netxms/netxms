@@ -14,6 +14,26 @@ public class ScheduledTask
    private Date lastExecutionTime;
    private int flags;
    private long owner;
+   private long objectId;
+   
+   final private int DISABLED = 1;
+   final private int EXECUTED = 2;
+   final private int IN_PROGRES = 4;
+   final private int INTERNAL = 8;
+   final private String statusDescription[] = {"Disabled", "Executed", "In Progress", "Internal"};
+   
+   public ScheduledTask()
+   {
+      id = 0;
+      scheduledTaskId = "";
+      schedule = "";
+      parameters = "";
+      executionTime = new Date();
+      lastExecutionTime = new Date();
+      flags = 0;
+      owner = 0;
+      objectId = 0;
+   }
    
    public ScheduledTask(final NXCPMessage msg, long base)
    {
@@ -25,10 +45,11 @@ public class ScheduledTask
       lastExecutionTime = msg.getFieldAsDate(base+5);
       flags = msg.getFieldAsInt32(base+6);
       owner = msg.getFieldAsInt64(base+7);
+      objectId = msg.getFieldAsInt64(base+8);
    }
    
    public ScheduledTask(String scheduledTaskId, String schedule, String parameters,
-         Date executionTime, int flags)
+         Date executionTime, int flags, long objectId)
    {
       id = 0;
       this.scheduledTaskId = scheduledTaskId;
@@ -38,6 +59,7 @@ public class ScheduledTask
       lastExecutionTime = new Date(0);
       this.flags = flags;
       owner = 0;
+      this.objectId = objectId;
    }
    
    public void fillMessage(NXCPMessage msg)
@@ -51,7 +73,7 @@ public class ScheduledTask
       msg.setField(NXCPCodes.VID_PARAMETER, parameters);
       msg.setField(NXCPCodes.VID_LAST_EXECUTION_TIME, lastExecutionTime);
       msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
-    
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);    
    }
 
    /**
@@ -180,5 +202,47 @@ public class ScheduledTask
    public void setOwner(long owner)
    {
       this.owner = owner;
+   }   
+
+   /**
+    * @return the objectId
+    */
+   public long getObjectId()
+   {
+      return objectId;
+   }
+   
+   /**
+    * @param objectId the objectId to set
+    */
+   public void setObjectId(long objectId)
+   {
+      this.objectId = objectId;
+   } 
+   
+   public String getStatus()
+   {
+      if((flags & DISABLED) > 0)
+         return statusDescription[0];
+      if((flags & IN_PROGRES) > 0)
+         return statusDescription[2];
+      if((flags & EXECUTED) > 0)
+         return statusDescription[1];
+      if((flags & INTERNAL) > 0)
+         return statusDescription[3];
+      return "";
+   }
+   
+   public boolean isDisbaled()
+   {
+      return (flags & DISABLED) > 0;
+   }
+
+   public void setEnabed(boolean enabled)
+   {
+      if(enabled)
+         flags &= ~DISABLED;
+      else
+         flags |= DISABLED;   
    }
 }

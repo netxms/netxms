@@ -32,21 +32,19 @@ MUTEX FileUploadJob::m_sharedDataMutex = INVALID_MUTEX_HANDLE;
 void ScheduledUploadFile(const ScheduleParameters *params)
 {
    //get parameters - node id or name, server file name, agent file name
-   TCHAR nodeId[8];
    TCHAR serverFile[MAX_PATH];
    TCHAR agentFile[MAX_PATH];
-   AgentGetParameterArg(params->m_params, 1, nodeId, 8);
-   AgentGetParameterArg(params->m_params, 2, serverFile, MAX_PATH);
-   AgentGetParameterArg(params->m_params, 3, agentFile, MAX_PATH);
-   if(nodeId == NULL || serverFile == NULL || agentFile == NULL)
+   AgentGetParameterArg(params->m_params, 1, serverFile, MAX_PATH);
+   AgentGetParameterArg(params->m_params, 2, agentFile, MAX_PATH);
+
+   if(params->m_objectId == 0 || serverFile == NULL || agentFile == NULL)
    {
-      DbgPrintf(4, _T("UploadFile: One of parameters was nodeId=\'%s\', serverFile=\'%s\', agentFile=\'%s\'"),
-            nodeId, serverFile, agentFile);
+      DbgPrintf(4, _T("UploadFile: One of parameters was nodeId=\'%d\', serverFile=\'%s\', agentFile=\'%s\'"),
+            params->m_userId, serverFile, agentFile);
       return;
    }
 
-   UINT32 id = _tcstoul(nodeId, NULL, 0);
-   Node *object = (Node *)FindObjectById(id, OBJECT_NODE);
+   Node *object = (Node *)FindObjectById(params->m_objectId, OBJECT_NODE);
    if (object != NULL)
    {
       if (object->checkAccessRights(params->m_userId, OBJECT_ACCESS_CONTROL))
@@ -75,7 +73,7 @@ void ScheduledUploadFile(const ScheduleParameters *params)
          DbgPrintf(4, _T("ScheduledUploadFile: Access to node %s denied"), object->getName());
    }
    else
-      DbgPrintf(4, _T("ScheduledUploadFile: Node with id[%d(%s)] not found"), id, nodeId);
+      DbgPrintf(4, _T("ScheduledUploadFile: Node with id=\'%d\' not found"), params->m_userId);
 }
 
 /**

@@ -447,7 +447,7 @@ BOOL InitIdTable()
       DBFreeResult(hResult);
    }
 
-   // Get first available schedule id
+   // Get first available scheduled_tasks id
    hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM scheduled_tasks"));
    if (hResult != NULL)
    {

@@ -1581,5 +1581,6 @@ CREATE TABLE scheduled_tasks
 	last_execution_time integer not null,
 	flags integer not null,
 	owner integer not null,
+	object_id integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;

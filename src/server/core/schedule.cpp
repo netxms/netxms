@@ -27,7 +27,7 @@
  */
 ThreadPool *g_schedulerThreadPool = NULL;
 
-Schedule::Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 flags)
+Schedule::Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags)
 {
    m_id = id;
    m_taskId = _tcsdup(CHECK_NULL_EX(taskId));
@@ -37,9 +37,10 @@ Schedule::Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCH
    m_lastExecution = NEVER;
    m_flags = flags;
    m_owner = owner;
+   m_objectId = objectId;
 }
 
-Schedule::Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHAR *params, UINT32 owner, UINT32 flags)
+Schedule::Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags)
 {
    m_id = id;
    m_taskId = _tcsdup(CHECK_NULL_EX(taskId));
@@ -49,6 +50,7 @@ Schedule::Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHA
    m_lastExecution = NEVER;
    m_flags = flags;
    m_owner = owner;
+   m_objectId = objectId;
 }
 
 Schedule::Schedule(DB_RESULT hResult, int row)
@@ -61,9 +63,10 @@ Schedule::Schedule(DB_RESULT hResult, int row)
    m_lastExecution = DBGetFieldULong(hResult, row, 5);
    m_flags = DBGetFieldULong(hResult, row, 6);
    m_owner = DBGetFieldULong(hResult, row, 7);
+   m_objectId = DBGetFieldULong(hResult, row, 8);
 }
 
-void Schedule::update(const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, UINT32 owner)
+void Schedule::update(const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags)
 {
    safe_free(m_taskId);
    m_taskId = _tcsdup(taskId);
@@ -72,9 +75,11 @@ void Schedule::update(const TCHAR *taskId, const TCHAR *schedule, const TCHAR *p
    safe_free(m_params);
    m_params = _tcsdup(params);
    m_owner = owner;
+   m_objectId = objectId;
+   m_flags = flags;
 }
 
-void Schedule::update(const TCHAR *taskId, time_t nextExecution, const TCHAR *params, UINT32 owner)
+void Schedule::update(const TCHAR *taskId, time_t nextExecution, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags)
 {
    safe_free(m_taskId);
    m_taskId = _tcsdup(taskId);
@@ -82,6 +87,8 @@ void Schedule::update(const TCHAR *taskId, time_t nextExecution, const TCHAR *pa
    m_params = _tcsdup(params);
    m_executionTime = nextExecution;
    m_owner  = owner;
+   m_objectId = objectId;
+   m_flags = flags;
 }
 
 void Schedule::saveToDatabase(bool newObject)
@@ -93,13 +100,13 @@ void Schedule::saveToDatabase(bool newObject)
    {
 		hStmt = DBPrepare(db,
                     _T("INSERT INTO scheduled_tasks (taskId,schedule,params,execution_time,")
-                    _T("last_execution_time,flags,owner,id) VALUES (?,?,?,?,?,?,?,?)"));
+                    _T("last_execution_time,flags,owner,object_id,id) VALUES (?,?,?,?,?,?,?,?,?)"));
    }
    else
    {
       hStmt = DBPrepare(db,
                     _T("UPDATE scheduled_tasks SET taskId=?,schedule=?,params=?,")
-                    _T("execution_time=?,last_execution_time=?,flags=?,owner=? ")
+                    _T("execution_time=?,last_execution_time=?,flags=?,owner=?,object_id=? ")
                     _T("WHERE id=?"));
    }
 
@@ -110,7 +117,8 @@ void Schedule::saveToDatabase(bool newObject)
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (UINT32)m_lastExecution);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_flags);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_owner);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_id);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_objectId);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_id);
 
 	if (hStmt == NULL)
 		return;
@@ -118,6 +126,7 @@ void Schedule::saveToDatabase(bool newObject)
    DBExecute(hStmt);
    DBFreeStatement(hStmt);
 	DBConnectionPoolReleaseConnection(db);
+	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE,0);
 }
 
 void Schedule::run(ScheduleCallback *callback)
@@ -125,14 +134,14 @@ void Schedule::run(ScheduleCallback *callback)
    bool oneTimeSchedule = !_tcscmp(m_schedule, _T(""));
 
    setFlag(SCHEDULE_IN_PROGRES);
-   ScheduleParameters param(m_params, m_owner);
+	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE,0);
+   ScheduleParameters param(m_params, m_owner, m_objectId);
    callback->m_func(&param);
    setLastExecutionTime(time(NULL));
 
    if (oneTimeSchedule)
    {
       MutexLock(s_oneTimeScheduleLock);
-      setExecutionTime(NEVER);
    }
 
    removeFlag(SCHEDULE_IN_PROGRES);
@@ -158,6 +167,7 @@ void Schedule::fillMessage(NXCPMessage *msg)
    msg->setFieldFromTime(VID_LAST_EXECUTION_TIME, m_lastExecution);
    msg->setField(VID_FLAGS, (UINT32)m_flags);
    msg->setField(VID_OWNER, m_owner);
+   msg->setField(VID_OBJECT_ID, m_objectId);
 }
 
 void Schedule::fillMessage(NXCPMessage *msg, UINT32 base)
@@ -170,6 +180,7 @@ void Schedule::fillMessage(NXCPMessage *msg, UINT32 base)
    msg->setFieldFromTime(base + 5, m_lastExecution);
    msg->setField(base + 6, m_flags);
    msg->setField(base + 7, m_owner);
+   msg->setField(base + 8, m_objectId);
 }
 
 /**
@@ -197,6 +208,20 @@ static int ScheduleListSortCallback(const void *e1, const void *e2)
    Schedule * s1 = *((Schedule**)e1);
    Schedule * s2 = *((Schedule**)e2);
 
+   //Executed schedules schould go down
+   if(s1->checkFlag(SCHEDULE_EXECUTED) != s2->checkFlag(SCHEDULE_EXECUTED))
+   {
+      if(s1->checkFlag(SCHEDULE_EXECUTED))
+      {
+         return 1;
+      }
+      else
+      {
+         return -1;
+      }
+   }
+
+   //Schedules with execution time 0 should go down, others should be compared
    if (s1->getExecutionTime() == s2->getExecutionTime())
    {
       return 0;
@@ -220,7 +245,7 @@ void InitializeTaskScheduler()
    g_schedulerThreadPool = ThreadPoolCreate(1, 64, _T("SCHEDULER"));
    //read from DB configuration
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,taskId,schedule,params,execution_time,last_execution_time,flags,owner FROM scheduled_tasks"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id,taskId,schedule,params,execution_time,last_execution_time,flags,owner,object_id FROM scheduled_tasks"));
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
@@ -272,13 +297,13 @@ void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exe
 /**
  * Scheduled task creation function
  */
-UINT32 AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT64 systemRights, int flags)
+UINT32 AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemRights, UINT32 flags)
 {
    if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USERS_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
    DbgPrintf(7, _T("AddSchedule: Add cron schedule %s, %s, %s"), task, schedule, params);
    MutexLock(s_cronScheduleLock);
-   Schedule *sh = new Schedule(CreateUniqueId(IDG_SCHEDULE), task, schedule, params, flags, owner);
+   Schedule *sh = new Schedule(CreateUniqueId(IDG_SCHEDULE), task, schedule, params, owner, objectId, flags);
    sh->saveToDatabase(true);
    s_cronSchedules.add(sh);
    MutexUnlock(s_cronScheduleLock);
@@ -288,13 +313,13 @@ UINT32 AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params
 /**
  * One time schedule creation function
  */
-UINT32 AddOneTimeSchedule(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT64 systemRights, int flags)
+UINT32 AddOneTimeSchedule(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemRights, UINT32 flags)
 {
    if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USERS_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
    DbgPrintf(7, _T("AddOneTimeAction: Add one time schedule %s, %d, %s"), task, nextExecutionTime, params);
    MutexLock(s_oneTimeScheduleLock);
-   Schedule *sh = new Schedule(CreateUniqueId(IDG_SCHEDULE), task, nextExecutionTime, params, flags);
+   Schedule *sh = new Schedule(CreateUniqueId(IDG_SCHEDULE), task, nextExecutionTime, params, owner, objectId, flags);
    sh->saveToDatabase(true);
    s_oneTimeSchedules.add(sh);
    s_oneTimeSchedules.sort(ScheduleListSortCallback);
@@ -306,7 +331,7 @@ UINT32 AddOneTimeSchedule(const TCHAR *task, time_t nextExecutionTime, const TCH
 /**
  * Scheduled actionUpdate
  */
-UINT32 UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT64 systemAccessRights, int flags)
+UINT32 UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags)
 {
    DbgPrintf(7, _T("UpdateSchedule: update cron schedule %d, %s, %s, %s"), id, task, schedule, params);
    MutexLock(s_cronScheduleLock);
@@ -320,8 +345,7 @@ UINT32 UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TC
             rcc = RCC_ACCESS_DENIED;
             break;
          }
-         s_cronSchedules.get(i)->update(task, schedule, params, owner);
-         s_cronSchedules.get(i)->setFlag(flags);
+         s_cronSchedules.get(i)->update(task, schedule, params, owner, objectId, flags);
          s_cronSchedules.get(i)->saveToDatabase(false);
          break;
       }
@@ -333,7 +357,7 @@ UINT32 UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TC
 /**
  * One time action update
  */
-UINT32 UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT64 systemAccessRights, int flags)
+UINT32 UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags)
 {
    DbgPrintf(7, _T("UpdateOneTimeAction: update one time schedule %d, %s, %d, %s"), id, task, nextExecutionTime, params);
    bool found = true;
@@ -348,8 +372,7 @@ UINT32 UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, 
             rcc = RCC_ACCESS_DENIED;
             break;
          }
-         s_oneTimeSchedules.get(i)->update(task, nextExecutionTime, params, owner);
-         s_cronSchedules.get(i)->setFlag(flags);
+         s_oneTimeSchedules.get(i)->update(task, nextExecutionTime, params, owner, objectId, flags);
          s_oneTimeSchedules.get(i)->saveToDatabase(false);
          s_oneTimeSchedules.sort(ScheduleListSortCallback);
          found = true;
@@ -370,9 +393,10 @@ static void DeleteScheduledTaskFromDB(UINT32 id)
 {
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
    TCHAR query[256];
-   _sntprintf(query, 256, _T("DELETE FROM scheduled_tasks WHERE id = %s"), id);
+   _sntprintf(query, 256, _T("DELETE FROM scheduled_tasks WHERE id = %d"), id);
    DBQuery(db, query);
 	DBConnectionPoolReleaseConnection(db);
+	NotifyClientSessions(NX_NOTIFY_SCHEDULE_UPDATE,0);
 }
 
 /**
@@ -389,7 +413,7 @@ UINT32 RemoveSchedule(UINT32 id, UINT32 user, UINT64 systemRights)
    {
       if (s_cronSchedules.get(i)->getId() == id)
       {
-         if(s_cronSchedules.get(i)->canAccess(user, systemRights))
+         if(!s_cronSchedules.get(i)->canAccess(user, systemRights))
          {
             rcc = RCC_ACCESS_DENIED;
             break;
@@ -412,7 +436,7 @@ UINT32 RemoveSchedule(UINT32 id, UINT32 user, UINT64 systemRights)
    {
       if (s_oneTimeSchedules.get(i)->getId() == id)
       {
-         if(s_cronSchedules.get(i)->canAccess(user, systemRights))
+         if(!s_cronSchedules.get(i)->canAccess(user, systemRights))
          {
             rcc = RCC_ACCESS_DENIED;
             break;
@@ -500,16 +524,17 @@ UINT32 CreateScehduleFromMsg(NXCPMessage *request, UINT32 owner, UINT64 systemAc
    time_t nextExecutionTime = 0;
    TCHAR *params = request->getFieldAsString(VID_PARAMETER);
    int flags = request->getFieldAsInt32(VID_FLAGS);
+   int objectId = request->getFieldAsInt32(VID_OBJECT_ID);
    UINT32 result;
    if(request->isFieldExist(VID_SCHEDULE))
    {
       schedule = request->getFieldAsString(VID_SCHEDULE);
-      result = AddSchedule(taskId, schedule, params, owner, systemAccessRights, flags);
+      result = AddSchedule(taskId, schedule, params, owner, objectId, systemAccessRights, flags);
    }
    else
    {
       nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
-      result = AddOneTimeSchedule(taskId, nextExecutionTime, params, owner, systemAccessRights, flags);
+      result = AddOneTimeSchedule(taskId, nextExecutionTime, params, owner, objectId, systemAccessRights, flags);
    }
    safe_free(taskId);
    safe_free(schedule);
@@ -527,17 +552,18 @@ UINT32 UpdateScheduleFromMsg(NXCPMessage *request,  UINT32 owner, UINT64 systemA
    TCHAR *schedule = NULL;
    time_t nextExecutionTime = 0;
    TCHAR *params = request->getFieldAsString(VID_PARAMETER);
-   int flags = request->getFieldAsInt32(VID_FLAGS);
+   UINT32 flags = request->getFieldAsInt32(VID_FLAGS);
+   UINT32 objectId = request->getFieldAsInt32(VID_OBJECT_ID);
    UINT32 rcc;
    if(request->isFieldExist(VID_SCHEDULE))
    {
       schedule = request->getFieldAsString(VID_SCHEDULE);
-      rcc = UpdateSchedule(id, taskId, schedule, params, owner, systemAccessRights, flags);
+      rcc = UpdateSchedule(id, taskId, schedule, params, owner, objectId, systemAccessRights, flags);
    }
    else
    {
       nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
-      rcc = UpdateOneTimeAction(id, taskId, nextExecutionTime, params, owner, systemAccessRights, flags);
+      rcc = UpdateOneTimeAction(id, taskId, nextExecutionTime, params, owner, objectId, systemAccessRights, flags);
    }
    safe_free(taskId);
    safe_free(schedule);
@@ -566,6 +592,9 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
       for(int i = 0; i < s_oneTimeSchedules.size(); i++)
       {
          Schedule *sh = s_oneTimeSchedules.get(i);
+         if(sh->checkFlag(SCHEDULE_DISABLED) || sh->checkFlag(SCHEDULE_EXECUTED))
+            break;
+
          ScheduleCallback *callback = s_callbacks.get(sh->getTaskId());
          if(callback == NULL)
          {
@@ -626,6 +655,8 @@ static THREAD_RESULT THREAD_CALL CronCheckThread(void *arg)
       for(int i = 0; i < s_cronSchedules.size(); i++)
       {
          Schedule *sh = s_cronSchedules.get(i);
+         if(sh->checkFlag(SCHEDULE_DISABLED))
+            continue;
          ScheduleCallback *callback = s_callbacks.get(sh->getTaskId());
          if(callback == NULL)
          {

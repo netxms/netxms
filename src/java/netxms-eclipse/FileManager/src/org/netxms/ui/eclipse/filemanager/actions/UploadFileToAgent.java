@@ -32,6 +32,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
@@ -69,8 +70,8 @@ public class UploadFileToAgent implements IObjectActionDelegate
 	public void run(IAction action)
 	{
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      //TODO: implement access check: bool canScheduleFileUpload = (session.getUserSystemRights() & SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD) > 0;
-		final StartServerToAgentFileUploadDialog dlg = new StartServerToAgentFileUploadDialog(shell);
+      boolean canScheduleFileUpload = (session.getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD) > 0;
+		final StartServerToAgentFileUploadDialog dlg = new StartServerToAgentFileUploadDialog(shell, canScheduleFileUpload);
 		if (dlg.open() == Window.OK)
 		{
 			final Long[] nodeIdList = nodes.toArray(new Long[nodes.size()]);
@@ -94,15 +95,17 @@ public class UploadFileToAgent implements IObjectActionDelegate
 				   }
 				   else 
 				   {
-				      remoteFileName = null;
+				      if(!dlg.isScheduled())
+				         remoteFileName = null;
 				   }
 					for(int i = 0; i < nodeIdList.length; i++)
 					{
 					   if(dlg.isScheduled())
 					   {
 					      ScheduledTask task = dlg.getScheduledTask();
-					      String parameters = "(" + nodeIdList[i] + "," + dlg.getServerFile().getName() + "," + remoteFileName + ")";
+					      String parameters = "(" + dlg.getServerFile().getName() + "," + remoteFileName + ")";
 					      task.setParameters(parameters);
+					      task.setObjectId(nodeIdList[i]);
 					      session.addSchedule(task);
 					   }
 					   else

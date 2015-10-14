@@ -29,7 +29,7 @@
 #define SCHEDULE_DISABLED           1
 #define SCHEDULE_EXECUTED           2
 #define SCHEDULE_IN_PROGRES         4
-#define SCHEDULE_INTERNAL           5
+#define SCHEDULE_INTERNAL           8
 
 class Schedule;
 class ScheduleCallback;
@@ -74,8 +74,9 @@ class ScheduleParameters
 public:
    TCHAR *m_params;
    UINT32 m_userId;
+   UINT32 m_objectId;
 
-   ScheduleParameters(TCHAR *param, UINT32 userId){m_params = _tcsdup(param); m_userId = userId; }
+   ScheduleParameters(TCHAR *param, UINT32 userId, UINT32 objectId){m_params = _tcsdup(param); m_userId = userId; m_objectId = objectId; }
    ScheduleParameters(){ delete m_params; }
 };
 
@@ -90,11 +91,12 @@ private:
    time_t m_lastExecution;
    UINT32 m_flags;
    UINT32 m_owner;
+   UINT32 m_objectId;
 
 public:
 
-   Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 flags = 0);
-   Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHAR *params, UINT32 owner, UINT32 flags = 0);
+   Schedule(int id, const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags = 0);
+   Schedule(int id, const TCHAR *taskId, time_t executionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags = 0);
    Schedule(DB_RESULT hResult, int row);
 
    ~Schedule(){ delete m_taskId; delete m_schedule; delete m_params; }
@@ -105,14 +107,15 @@ public:
    const TCHAR *getParams() { return m_params; }
    time_t getExecutionTime() { return m_executionTime; }
    UINT32 getOwner() { return m_owner; }
+   UINT32 getObjectId() { return m_objectId; }
 
    void setLastExecutionTime(time_t time) { m_lastExecution = time; };
    void setExecutionTime(time_t time) { m_executionTime = time; }
-   void setFlag(int flag) { m_flags |= flag; }
-   void removeFlag(int flag) { m_flags &= ~flag; }
+   void setFlag(UINT32 flag) { m_flags |= flag; }
+   void removeFlag(UINT32 flag) { m_flags &= ~flag; }
 
-   void update(const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, UINT32 owner);
-   void update(const TCHAR *taskId, time_t nextExecution, const TCHAR *params, UINT32 owner);
+   void update(const TCHAR *taskId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags);
+   void update(const TCHAR *taskId, time_t nextExecution, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags);
 
    void saveToDatabase(bool newObject);
    void run(ScheduleCallback *callback);
@@ -125,10 +128,10 @@ public:
 };
 
 void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exec, UINT64 accessRight);
-UINT32 AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT64 systemRights, int flags = 0);
-UINT32 AddOneTimeSchedule(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT64 systemRights, int flags = 0);
-UINT32 UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT64 systemAccessRights, int flags);
-UINT32 UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT64 systemAccessRights, int flags);
+UINT32 AddSchedule(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemRights, UINT32 flags = 0);
+UINT32 AddOneTimeSchedule(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemRights, UINT32 flags = 0);
+UINT32 UpdateSchedule(int id, const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags);
+UINT32 UpdateOneTimeAction(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags);
 UINT32 RemoveSchedule(UINT32 id, UINT32 user, UINT64 systemRights);
 void GetCallbackIdList(NXCPMessage *msg, UINT64 accessRights);
 void GetSheduleList(NXCPMessage *msg, UINT32 user, UINT64 systemRights);

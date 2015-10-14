@@ -53,6 +53,14 @@
             name="%view.name.MappingTable"
             restorable="false">
       </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView"
+            icon="icons/clock.png"
+            id="org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView"
+            name="Scheduled Tasks">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -112,6 +120,12 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.add_config_variable"
             name="Add configuration variable">
       </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open scheduled task list"
+            id="org.netxms.ui.eclipse.serverconfig.command_scheduled_tasks"
+            name="Scheduled tasks">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -157,6 +171,17 @@
            style="push"
            toolbarPath="config/additions"
            tooltip="%action.tooltip.MappingTables">
+     </action>
+     <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.OpenScheduledTaskList"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_scheduled_tasks"
+           icon="icons/clock.png"
+           id="org.netxms.ui.eclipse.serverconfig.actions.open_scheduled_tasks"
+           label="Scheduled Tasks"
+           menubarPath="config/additions"
+           style="push"
+           toolbarPath="config/additions"
+           tooltip="Scheduled Tasks">
      </action>
 	   </actionSet>
 	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"

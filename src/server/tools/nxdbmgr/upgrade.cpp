@@ -574,6 +574,16 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V372 to V373
+ */
+static BOOL H_UpgradeFromV372(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE scheduled_tasks ADD object_id integer")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='373' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V371 to V372
  */
 static BOOL H_UpgradeFromV371(int currVersion, int newVersion)
@@ -8964,6 +8974,7 @@ static struct
    { 369, 370, H_UpgradeFromV369 },
    { 370, 371, H_UpgradeFromV370 },
    { 371, 372, H_UpgradeFromV371 },
+   { 372, 373, H_UpgradeFromV372 },
    { 0, 0, NULL }
 };
 
