@@ -176,6 +176,7 @@ CREATE TABLE object_properties
    city varchar(63) null,
    street_address varchar(255) null,
    postcode varchar(31) null,
+	maint_mode char(1) not null,
 	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 

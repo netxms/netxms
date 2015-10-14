@@ -174,7 +174,7 @@ bool NetObj::loadCommonProperties()
                              _T("status_thresholds,comments,is_system,")
 									  _T("location_type,latitude,longitude,location_accuracy,")
 									  _T("location_timestamp,guid,image,submap_id,country,city,")
-                             _T("street_address,postcode FROM object_properties ")
+                             _T("street_address,postcode,maint_mode FROM object_properties ")
                              _T("WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
@@ -225,6 +225,8 @@ bool NetObj::loadCommonProperties()
             DBGetField(hResult, 0, 25, postcode, 32);
             delete m_postalAddress;
             m_postalAddress = new PostalAddress(country, city, streetAddress, postcode);
+
+            m_maintenanceMode = DBGetFieldLong(hResult, 0, 26) ? true : false;
 
 				success = true;
 			}
@@ -347,7 +349,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("comments=?,is_system=?,location_type=?,latitude=?,")
 						  _T("longitude=?,location_accuracy=?,location_timestamp=?,")
 						  _T("guid=?,image=?,submap_id=?,country=?,city=?,")
-                    _T("street_address=?,postcode=? WHERE object_id=?"));
+                    _T("street_address=?,postcode=?,maint_mode=? WHERE object_id=?"));
 	}
 	else
 	{
@@ -357,8 +359,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("status_prop_alg,status_fixed_val,status_shift,status_translation,")
                     _T("status_single_threshold,status_thresholds,comments,is_system,")
 						  _T("location_type,latitude,longitude,location_accuracy,location_timestamp,")
-						  _T("guid,image,submap_id,country,city,street_address,postcode,object_id) ")
-                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+						  _T("guid,image,submap_id,country,city,street_address,postcode,maint_mode,object_id) ")
+                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -398,7 +400,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress->getCity(), DB_BIND_STATIC);
 	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress->getStreetAddress(), DB_BIND_STATIC);
 	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress->getPostCode(), DB_BIND_STATIC);
-	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_maintenanceMode ? _T("1") : _T("0"), DB_BIND_STATIC);
+	DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);

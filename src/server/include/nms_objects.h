@@ -430,6 +430,7 @@ protected:
    bool m_isDeleted;
    bool m_isHidden;
 	bool m_isSystem;
+	bool m_maintenanceMode;
 	uuid m_image;
    MUTEX m_mutexProperties;         // Object data access mutex
    MUTEX m_mutexRefCount;     // Reference counter access mutex

@@ -574,6 +574,20 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V371 to V372
+ */
+static BOOL H_UpgradeFromV371(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE object_properties ADD maint_mode char(1)\n")
+      _T("UPDATE object_properties SET maint_mode='0'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='372' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V370 to V371
  */
 static BOOL H_UpgradeFromV370(int currVersion, int newVersion)
@@ -8949,6 +8963,7 @@ static struct
    { 368, 369, H_UpgradeFromV368 },
    { 369, 370, H_UpgradeFromV369 },
    { 370, 371, H_UpgradeFromV370 },
+   { 371, 372, H_UpgradeFromV371 },
    { 0, 0, NULL }
 };
 
