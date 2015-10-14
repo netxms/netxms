@@ -159,6 +159,7 @@ public:
 };
 
 class ScheduleParameters;
+
 /**
  * Functions
  */

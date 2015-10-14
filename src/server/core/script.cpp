@@ -238,10 +238,12 @@ void ImportScript(ConfigEntry *config)
    ReloadScript(id);
 }
 
-void LIBNXSL_EXPORTABLE ExecuteScript(const ScheduleParameters *param)
+/**
+ * Execute library script from scheduler
+ */
+void ExecuteScript(const ScheduleParameters *param)
 {
    size_t bufSize = 512;
-   TCHAR *buffer[512];
    TCHAR name[256];
    nx_strncpy(name, param->m_params, 256);
    Trim(name);
@@ -286,7 +288,7 @@ void LIBNXSL_EXPORTABLE ExecuteScript(const ScheduleParameters *param)
 /**
  * Parse value list
  */
-bool LIBNXSL_EXPORTABLE ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
+bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
 {
    TCHAR *p = *start;
 

@@ -372,7 +372,6 @@ static void DeleteScheduledTaskFromDB(UINT32 id)
    TCHAR query[256];
    _sntprintf(query, 256, _T("DELETE FROM scheduled_tasks WHERE id = %s"), id);
    DBQuery(db, query);
-   DB_STATEMENT hStmt;
 	DBConnectionPoolReleaseConnection(db);
 }
 
@@ -600,7 +599,7 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
          if(now >= sh->getExecutionTime())
             continue;
 
-         sleepTime = sh->getExecutionTime() - now;
+         sleepTime = (int)(sh->getExecutionTime() - now);
          sleepTime = sleepTime < 0 ? 0 : sleepTime * 1000;
          break;
       }

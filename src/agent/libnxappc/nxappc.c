@@ -238,8 +238,10 @@ int LIBNXAPPC_EXPORTABLE nxappc_reconnect(void)
 {
 #ifdef _WIN32
 	struct sockaddr_in addrLocal;
+	u_long one = 1;
 #else
 	struct sockaddr_un addrLocal;
+   int f;
 #endif
 
    if (s_socket != -1)
@@ -253,7 +255,6 @@ int LIBNXAPPC_EXPORTABLE nxappc_reconnect(void)
 		return NXAPPC_FAIL;
 	
    // set socket non-blocking
-	u_long one = 1;
 	ioctlsocket(s_socket, FIONBIO, &one);
    
 	addrLocal.sin_family = AF_INET;
@@ -272,7 +273,7 @@ int LIBNXAPPC_EXPORTABLE nxappc_reconnect(void)
 		return NXAPPC_FAIL;
 	
    // set socket non-blocking
-   int f = fcntl(s_socket, F_GETFL);
+   f = fcntl(s_socket, F_GETFL);
    if (f != -1) 
       fcntl(s_socket, F_SETFL, f | O_NONBLOCK);
    
