@@ -34,8 +34,8 @@ void ScheduledUploadFile(const ScheduleParameters *params)
    //get parameters - node id or name, server file name, agent file name
    TCHAR serverFile[MAX_PATH];
    TCHAR agentFile[MAX_PATH];
-   AgentGetParameterArg(params->m_params, 1, serverFile, MAX_PATH);
-   AgentGetParameterArg(params->m_params, 2, agentFile, MAX_PATH);
+   AgentGetParameterArg(params->m_params, 1, serverFile, MAX_PATH, false);
+   AgentGetParameterArg(params->m_params, 2, agentFile, MAX_PATH, false);
 
    if(params->m_objectId == 0 || serverFile == NULL || agentFile == NULL)
    {
