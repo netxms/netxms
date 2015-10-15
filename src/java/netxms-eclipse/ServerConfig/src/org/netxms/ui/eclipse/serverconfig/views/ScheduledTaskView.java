@@ -386,7 +386,9 @@ public class ScheduledTaskView extends ViewPart
       if (selection.size() == 1) 
       {         
          mgr.add(actionEditScheduledTask);
-         mgr.add(actionReRun);
+         ScheduledTask origin = (ScheduledTask)selection.toList().get(0);
+         if(origin.getSchedule().isEmpty())
+            mgr.add(actionReRun);
       }
 
       if (selection.size() > 0)
