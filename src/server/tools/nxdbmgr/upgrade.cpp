@@ -574,6 +574,29 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V373 to V374
+ */
+static BOOL H_UpgradeFromV373(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE object_properties ADD maint_event_id $SQL:INT64\n")
+      _T("UPDATE object_properties SET maint_mode='0'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_MAINTENANCE_MODE_ENTERED, _T("SYS_MAINTENANCE_MODE_ENTERED"), SEVERITY_NORMAL, EF_LOG,
+         _T("Entered maintenance mode"),
+         _T("Generated when node, cluster, or mobile device enters maintenance mode.")));
+
+   CHK_EXEC(CreateEventTemplate(EVENT_MAINTENANCE_MODE_LEFT, _T("SYS_MAINTENANCE_MODE_LEFT"), SEVERITY_NORMAL, EF_LOG,
+         _T("Left maintenance mode"),
+         _T("Generated when node, cluster, or mobile device leaves maintenance mode.")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='374' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V372 to V373
  */
 static BOOL H_UpgradeFromV372(int currVersion, int newVersion)
@@ -8975,6 +8998,7 @@ static struct
    { 370, 371, H_UpgradeFromV370 },
    { 371, 372, H_UpgradeFromV371 },
    { 372, 373, H_UpgradeFromV372 },
+   { 373, 374, H_UpgradeFromV373 },
    { 0, 0, NULL }
 };
 

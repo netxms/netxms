@@ -43,6 +43,8 @@ NetObj::NetObj()
    m_isDeleted = false;
    m_isHidden = false;
 	m_isSystem = false;
+	m_maintenanceMode = false;
+	m_maintenanceEventId = 0;
    m_dwChildCount = 0;
    m_pChildList = NULL;
    m_dwParentCount = 0;
@@ -174,7 +176,7 @@ bool NetObj::loadCommonProperties()
                              _T("status_thresholds,comments,is_system,")
 									  _T("location_type,latitude,longitude,location_accuracy,")
 									  _T("location_timestamp,guid,image,submap_id,country,city,")
-                             _T("street_address,postcode,maint_mode FROM object_properties ")
+                             _T("street_address,postcode,maint_mode,maint_event_id FROM object_properties ")
                              _T("WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
@@ -227,6 +229,7 @@ bool NetObj::loadCommonProperties()
             m_postalAddress = new PostalAddress(country, city, streetAddress, postcode);
 
             m_maintenanceMode = DBGetFieldLong(hResult, 0, 26) ? true : false;
+            m_maintenanceEventId = DBGetFieldUInt64(hResult, 0, 27);
 
 				success = true;
 			}
@@ -2027,4 +2030,18 @@ void NetObj::setStatusPropagation(int method, int arg1, int arg2, int arg3, int 
    }
    setModified();
    unlockProperties();
+}
+
+/**
+ * Enter maintenance mode
+ */
+void NetObj::enterMaintenanceMode()
+{
+}
+
+/**
+ * Leave maintenance mode
+ */
+void NetObj::leaveMaintenanceMode()
+{
 }

@@ -177,6 +177,7 @@ CREATE TABLE object_properties
    street_address varchar(255) null,
    postcode varchar(31) null,
 	maint_mode char(1) not null,
+   maint_event_id SQL_INT64 not null,
 	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 

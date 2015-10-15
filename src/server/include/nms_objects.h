@@ -431,6 +431,7 @@ protected:
    bool m_isHidden;
 	bool m_isSystem;
 	bool m_maintenanceMode;
+	UINT64 m_maintenanceEventId;
 	uuid m_image;
    MUTEX m_mutexProperties;         // Object data access mutex
    MUTEX m_mutexRefCount;     // Reference counter access mutex
@@ -553,6 +554,11 @@ public:
    void setName(const TCHAR *pszName) { nx_strncpy(m_name, pszName, MAX_OBJECT_NAME); setModified(); }
    void resetStatus() { m_iStatus = STATUS_UNKNOWN; setModified(); }
    void setComments(TCHAR *text);	/* text must be dynamically allocated */
+
+   bool isInMaintenanceMode() { return m_maintenanceMode; }
+   UINT64 getMaintenanceEventId() { return m_maintenanceEventId; }
+   virtual void enterMaintenanceMode();
+   virtual void leaveMaintenanceMode();
 
    void fillMessage(NXCPMessage *msg);
    UINT32 modifyFromMessage(NXCPMessage *msg);

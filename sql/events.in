@@ -867,48 +867,62 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 		'    7) Access point serial number'
 	);
 
-   INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
-      (
-         EVENT_IF_MASK_CHANGED, 'SYS_IF_MASK_CHANGED',
-         EVENT_SEVERITY_NORMAL, 1,
-         'Interface "%2" changed mask from /%6 to /%4 (IP Addr: %3/%4, IfIndex: %5)',
-         'Generated when when network mask on interface is corrected.' CONCAT CRLF CONCAT
-         'Parameters:' CONCAT CRLF CONCAT
-         '   1) Interface object ID' CONCAT CRLF CONCAT
-         '   2) Interface name' CONCAT CRLF CONCAT
-         '   3) Interface IP address' CONCAT CRLF CONCAT
-         '   4) Interface netmask' CONCAT CRLF CONCAT
-         '   5) Interface index' CONCAT CRLF CONCAT
-         '   6) Interface old mask'
-      );
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+   (
+      EVENT_IF_MASK_CHANGED, 'SYS_IF_MASK_CHANGED',
+      EVENT_SEVERITY_NORMAL, 1,
+      'Interface "%2" changed mask from /%6 to /%4 (IP Addr: %3/%4, IfIndex: %5)',
+      'Generated when when network mask on interface is corrected.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Interface object ID' CONCAT CRLF CONCAT
+      '   2) Interface name' CONCAT CRLF CONCAT
+      '   3) Interface IP address' CONCAT CRLF CONCAT
+      '   4) Interface netmask' CONCAT CRLF CONCAT
+      '   5) Interface index' CONCAT CRLF CONCAT
+      '   6) Interface old mask'
+   );
 
-   INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
-      (
-         EVENT_IF_IPADDR_ADDED, 'SYS_IF_IPADDR_ADDED',
-         EVENT_SEVERITY_NORMAL, 1,
-         'IP address %3/%4 added to interface "%2"',
-         'Generated when IP address added to interface.' CONCAT CRLF CONCAT
-         'Parameters:' CONCAT CRLF CONCAT
-         '   1) Interface object ID' CONCAT CRLF CONCAT
-         '   2) Interface name' CONCAT CRLF CONCAT
-         '   3) IP address' CONCAT CRLF CONCAT
-         '   4) Network mask' CONCAT CRLF CONCAT
-         '   5) Interface index'
-      );
-      
-   INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
-      (
-         EVENT_IF_IPADDR_DELETED, 'SYS_IF_IPADDR_DELETED',
-         EVENT_SEVERITY_NORMAL, 1,
-         'IP address %3/%4 deleted from interface "%2"',
-         'Generated when IP address deleted from interface.' CONCAT CRLF CONCAT
-         'Parameters:' CONCAT CRLF CONCAT
-         '   1) Interface object ID' CONCAT CRLF CONCAT
-         '   2) Interface name' CONCAT CRLF CONCAT
-         '   3) IP address' CONCAT CRLF CONCAT
-         '   4) Network mask' CONCAT CRLF CONCAT
-         '   5) Interface index'
-      );
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+   (
+      EVENT_IF_IPADDR_ADDED, 'SYS_IF_IPADDR_ADDED',
+      EVENT_SEVERITY_NORMAL, 1,
+      'IP address %3/%4 added to interface "%2"',
+      'Generated when IP address added to interface.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Interface object ID' CONCAT CRLF CONCAT
+      '   2) Interface name' CONCAT CRLF CONCAT
+      '   3) IP address' CONCAT CRLF CONCAT
+      '   4) Network mask' CONCAT CRLF CONCAT
+      '   5) Interface index'
+   );
+   
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+   (
+      EVENT_IF_IPADDR_DELETED, 'SYS_IF_IPADDR_DELETED',
+      EVENT_SEVERITY_NORMAL, 1,
+      'IP address %3/%4 deleted from interface "%2"',
+      'Generated when IP address deleted from interface.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Interface object ID' CONCAT CRLF CONCAT
+      '   2) Interface name' CONCAT CRLF CONCAT
+      '   3) IP address' CONCAT CRLF CONCAT
+      '   4) Network mask' CONCAT CRLF CONCAT
+      '   5) Interface index'
+   );
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+   (
+      EVENT_MAINTENANCE_MODE_ENTERED, 'SYS_MAINTENANCE_MODE_ENTERED',
+      EVENT_SEVERITY_NORMAL, 1,
+      'Entered maintenance mode',
+      'Generated when node, cluster, or mobile device entered maintenance mode.'
+   );
+INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
+   (
+      EVENT_MAINTENANCE_MODE_LEFT, 'SYS_MAINTENANCE_MODE_LEFT',
+      EVENT_SEVERITY_NORMAL, 1,
+      'Left maintenance mode',
+      'Generated when node, cluster, or mobile device left maintenance mode.'
+   );
 
 /*
 ** SNMP traps
