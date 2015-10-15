@@ -45,6 +45,7 @@ public class UserAccessRights
    public static final long SYSTEM_ACCESS_ALL_SCHEDULED_TASKS   = 0x100000000L;
    public static final long SYSTEM_ACCESS_SCHEDULE_SCRIPT       = 0x200000000L;
    public static final long SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD  = 0x400000000L;
+   public static final long SYSTEM_ACCESS_SCHEDULE_MAINTENANCE  = 0x800000000L;
 
 	
 	public static final int OBJECT_ACCESS_READ          = 0x00000001;

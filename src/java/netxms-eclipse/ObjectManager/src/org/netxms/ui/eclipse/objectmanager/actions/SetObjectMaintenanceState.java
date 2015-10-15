@@ -38,15 +38,15 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 class SetObjectMaintenanceState extends AbstractHandler
 {
-   private boolean managed;
+   private boolean maintained;
    
    /**
     * @param manage
     */
-   protected SetObjectMaintenanceState(boolean managed)
+   protected SetObjectMaintenanceState(boolean maintained)
    {
       super();
-      this.managed = managed;
+      this.maintained = maintained;
    }
    
    /* (non-Javadoc)
@@ -69,7 +69,7 @@ class SetObjectMaintenanceState extends AbstractHandler
             for(Object o : objects)
             {
                if (o instanceof AbstractObject)
-                  session.setObjectMaintenance(((AbstractObject)o).getObjectId(), managed);
+                  session.setObjectMaintenance(((AbstractObject)o).getObjectId(), maintained);
             }
          }
          

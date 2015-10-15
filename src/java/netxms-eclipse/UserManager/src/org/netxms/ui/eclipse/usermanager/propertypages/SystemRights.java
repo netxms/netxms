@@ -94,7 +94,8 @@ public class SystemRights extends PropertyPage
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, "Manage own scheduled tasks");
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, "Manage all scheduled tasks");
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, "Schedule script task");
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, "Schedule file upload task");
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, "Schedule file upload task"); 
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, "Schedule object maintenance time interval"); 
 		
 		return dialogArea;
 	}

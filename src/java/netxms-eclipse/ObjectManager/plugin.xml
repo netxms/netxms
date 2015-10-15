@@ -889,6 +889,54 @@
                </and>
             </visibleWhen>
          </command>
+         <command
+               commandId="org.netxms.ui.eclipse.objectmanager.popupActions.ScheduleMaintenance"
+               label="Schedule Maintenance"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <and>
+                  <count
+                        value="+">
+                  </count>
+                  <iterate>
+                     <and>
+                        <instanceof
+                              value="org.netxms.client.objects.AbstractObject">
+                        </instanceof>
+                        <not>
+                           <or>
+                              <instanceof
+                                    value="org.netxms.client.objects.Template">
+                              </instanceof>
+                              <instanceof
+                                    value="org.netxms.client.objects.TemplateGroup">
+                              </instanceof>
+                              <instanceof
+                                    value="org.netxms.client.objects.TemplateRoot">
+                              </instanceof>
+                              <instanceof
+                                    value="org.netxms.client.objects.Dashboard">
+                              </instanceof>
+                              <instanceof
+                                    value="org.netxms.client.objects.DashboardRoot">
+                              </instanceof>
+                              <instanceof
+                                    value="org.netxms.client.objects.PolicyRoot">
+                              </instanceof>
+                              <instanceof
+                                    value="org.netxms.client.objects.PolicyGroup">
+                              </instanceof>
+                              <instanceof
+                                    value="org.netxms.client.objects.AgentPolicy">
+                              </instanceof>
+                           </or>
+                        </not>
+                     </and>
+                  </iterate>
+               </and>
+            </visibleWhen>
+         </command>
       </menuContribution>
    </extension>
    <extension
@@ -913,6 +961,10 @@
             id="org.netxms.ui.eclipse.objectmanager.popupActions.LeaveMaintenance"
             name="Leave Maintenance">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.objectmanager.popupActions.ScheduleMaintenance"
+            name="Schedule Maintenance">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -935,6 +987,10 @@
       <handler
             class="org.netxms.ui.eclipse.objectmanager.actions.EnterMaintenance"
             commandId="org.netxms.ui.eclipse.objectmanager.popupActions.EnterMaintenance">
+      </handler>
+      <handler
+            class="org.netxms.ui.eclipse.objectmanager.actions.ScheduleMaintenance"
+            commandId="org.netxms.ui.eclipse.objectmanager.popupActions.ScheduleMaintenance">
       </handler>
    </extension>
 

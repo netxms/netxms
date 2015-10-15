@@ -16,11 +16,11 @@ public class ScheduledTask
    private long owner;
    private long objectId;
    
-   final private int DISABLED = 1;
-   final private int EXECUTED = 2;
-   final private int IN_PROGRES = 4;
-   final private int INTERNAL = 8;
-   final private String statusDescription[] = {"Disabled", "Executed", "In Progress", "Internal"};
+   final static public int DISABLED = 1;
+   final static public int EXECUTED = 2;
+   final static public int IN_PROGRES = 4;
+   final static public int INTERNAL = 8;
+   final static private String statusDescription[] = {"Disabled", "Completed", "Running"};
    
    public ScheduledTask()
    {
@@ -222,14 +222,12 @@ public class ScheduledTask
    
    public String getStatus()
    {
-      if((flags & DISABLED) > 0)
-         return statusDescription[0];
       if((flags & IN_PROGRES) > 0)
          return statusDescription[2];
       if((flags & EXECUTED) > 0)
          return statusDescription[1];
-      if((flags & INTERNAL) > 0)
-         return statusDescription[3];
+      if((flags & DISABLED) > 0)
+         return statusDescription[0];
       return "";
    }
    

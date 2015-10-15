@@ -592,7 +592,10 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
       for(int i = 0; i < s_oneTimeSchedules.size(); i++)
       {
          Schedule *sh = s_oneTimeSchedules.get(i);
-         if(sh->checkFlag(SCHEDULE_DISABLED) || sh->checkFlag(SCHEDULE_EXECUTED))
+         if(sh->checkFlag(SCHEDULE_DISABLED))
+            continue;
+
+         if(sh->checkFlag(SCHEDULE_EXECUTED))
             break;
 
          ScheduleCallback *callback = s_callbacks.get(sh->getTaskId());
