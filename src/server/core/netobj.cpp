@@ -983,7 +983,8 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_OBJECT_NAME, m_name);
    pMsg->setField(VID_OBJECT_STATUS, (WORD)m_iStatus);
    pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
-   pMsg->setField(VID_IS_SYSTEM, (WORD)(m_isSystem ? 1 : 0));
+   pMsg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
+   pMsg->setField(VID_MAINTENANCE_MODE, (INT16)(m_maintenanceEventId ? 1 : 0));
 
    pMsg->setField(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
    pMsg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_iStatusCalcAlg);
