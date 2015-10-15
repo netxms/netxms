@@ -28,6 +28,7 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
+import org.netxms.ui.eclipse.serverconfig.dialogs.RerunTimeDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.ScheduledTaskEditor;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ScheduleTableEntryComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ScheduleTableEntryLabelProvider;
@@ -57,6 +58,7 @@ public class ScheduledTaskView extends ViewPart
    private Action actionDeleteScheduledTask;
    private Action actionDisbaleScheduledTask;
    private Action actionEnableScheduledTask;
+   private Action actionReRun;
    
    
    
@@ -154,7 +156,47 @@ public class ScheduledTaskView extends ViewPart
             setScheduledTaskEnabled(true);
          }
       };
+      
+      actionReRun = new Action("Rerun", SharedIcons.EXECUTE) 
+      {
+         @Override
+         public void run()
+         {
+            rerun();
+         }
+      };
    }
+
+   protected void rerun()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();      
+      if (selection.size() != 1)
+         return;
+      
+      final ScheduledTask origin = (ScheduledTask)selection.toList().get(0);
+      
+      final RerunTimeDialog dialog = new RerunTimeDialog(getSite().getShell(), origin.getExecutionTime());
+      
+      if (dialog.open() != Window.OK)
+         return;
+      
+      new ConsoleJob("Delete scheduled task", null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            origin.setExecutionTime(dialog.getRerunDate());
+            origin.setFlags(origin.getFlags() & ~ScheduledTask.EXECUTED);
+            session.updateSchedule(origin);            
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot update scheduled tasks";
+         }
+      }.start();
+      
+}
 
    protected void deleteScheduledTask()
    {
@@ -341,8 +383,11 @@ public class ScheduledTaskView extends ViewPart
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       mgr.add(actionNewScheduledTask);
       
-      if (selection.size() == 1)
+      if (selection.size() == 1) 
+      {         
          mgr.add(actionEditScheduledTask);
+         mgr.add(actionReRun);
+      }
 
       if (selection.size() > 0)
          mgr.add(actionDeleteScheduledTask);

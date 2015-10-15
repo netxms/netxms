@@ -70,9 +70,19 @@ public class ScheduleTableEntryComparator extends ViewerComparator
             result = task1.getStatus().compareToIgnoreCase(task2.getStatus());
             break;
          case ScheduledTaskView.OWNER:
-            AbstractUserObject user1 = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(task1.getOwner());
-            AbstractUserObject user2 = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(task2.getOwner());
-            result = user1.getName().compareTo(user2.getName());
+            String user1 = "";
+            String user2 = "";
+            if((task1.getFlags() & ScheduledTask.INTERNAL)>0)
+               user1= "Internal";
+            else
+               user1 = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(task1.getOwner()).getName();
+            
+            if((task2.getFlags() & ScheduledTask.INTERNAL)>0)
+               user2= "Internal";
+            else
+               user2 = ((NXCSession)ConsoleSharedData.getSession()).findUserDBObjectById(task2.getOwner()).getName();
+            
+            result = user1.compareTo(user2);
             break;
          default:
             result = 0;

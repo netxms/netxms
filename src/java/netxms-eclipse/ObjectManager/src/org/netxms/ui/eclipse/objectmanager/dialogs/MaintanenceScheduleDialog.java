@@ -3,17 +3,14 @@ package org.netxms.ui.eclipse.objectmanager.dialogs;
 import java.util.Date;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.DateTimeSelector;
-import org.netxms.ui.eclipse.widgets.LabeledText;
 
 public class MaintanenceScheduleDialog extends Dialog
 {

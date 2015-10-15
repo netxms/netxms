@@ -64,6 +64,8 @@ public class ScheduleTableEntryLabelProvider extends LabelProvider implements IT
          case ScheduledTaskView.STATUS:
             return task.getStatus();
          case ScheduledTaskView.OWNER:
+            if((task.getFlags() & ScheduledTask.INTERNAL)>0)
+               return "Internal";
             AbstractUserObject user = session.findUserDBObjectById(task.getOwner());
             return (user != null) ? user.getName() : ("[" + Long.toString(task.getOwner()) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
       }
