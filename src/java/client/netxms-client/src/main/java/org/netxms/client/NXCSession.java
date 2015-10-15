@@ -8601,6 +8601,13 @@ public class NXCSession
       return response.getFieldAsBinary(NXCPCodes.VID_FILE_DATA);
    }
    
+   /**
+    * Lists possible scheduled callbacks. 
+    * 
+    * @return List of callbacks dtring id
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
    public List<String> listScheduleCallbacks() throws NXCException, IOException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_LIST_SCHEDULE_CALLBACKS);
@@ -8658,4 +8665,15 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
    }
    
+   public void setObjectMaintenance(long objectId, boolean maintenance) throws NXCException, IOException
+   {
+      NXCPMessage msg;
+      if(maintenance)
+         msg = newMessage(NXCPCodes.CMD_ENTER_MAINT_MODE);
+      else
+         msg = newMessage(NXCPCodes.CMD_LEAVE_MAINT_MODE);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }   
 }

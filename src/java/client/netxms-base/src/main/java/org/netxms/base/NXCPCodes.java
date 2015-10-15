@@ -344,6 +344,8 @@ public class NXCPCodes
    public static final int CMD_ADD_SCHEDULE = 0x0142;
    public static final int CMD_UPDATE_SCHEDULE = 0x0143;
    public static final int CMD_REMOVE_SCHEDULE = 0x0144;
+   public static final int CMD_ENTER_MAINT_MODE = 0x0145;
+   public static final int CMD_LEAVE_MAINT_MODE = 0x0146;   
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
