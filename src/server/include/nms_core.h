@@ -108,6 +108,7 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nxcore_jobs.h"
 #include "nxcore_logs.h"
 #include "nxcore_schedule.h"
+#include "maintenance.h"
 
 /**
  * Common constants and macros

@@ -797,6 +797,7 @@ retry_db_lock:
 
 	InitLogAccess();
 	FileUploadJob::init();
+   InitMaintenanceJobScheduler();
 	InitMappingTables();
 
 	// Check if management node object presented in database
