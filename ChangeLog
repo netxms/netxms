@@ -2,11 +2,12 @@
 * 2.0-RC2
 *
 
+- Maintenance mode for nodes, clusters, and mobile devices (manual and scheduled)
 - Fixed broken instance discovery filters
 - Fixed agent crash when collecting SNMP data in cached mode
 - Agent returns correct OS version on Windows 10
 - New NXSL "Node" class attribute: bridgeBaseAddress
-- For LDAP mapping can be used same fields
+- One LDAP attribute can be used in multiple mappings
 - Fied deadlock on LDAP user deletion while LDAP synchronization
 - Add option to use encrypted password in password fileds in configuration files and in the server configuration parameters.
 - Added SMS driver for web service text2reach.com
