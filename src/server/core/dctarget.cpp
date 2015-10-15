@@ -804,3 +804,29 @@ void DataCollectionTarget::updatePingData()
    m_pingLastTimeStamp = 0;
    m_pingTime = PING_TIME_TIMEOUT;
 }
+
+/**
+ * Enter maintenance mode
+ */
+void DataCollectionTarget::enterMaintenanceMode()
+{
+   DbgPrintf(4, _T("Entering maintenance mode for %s [%d]"), m_name, m_id);
+   UINT64 eventId = PostEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, NULL);
+   lockProperties();
+   m_maintenanceMode = true;
+   m_maintenanceEventId = eventId;
+   unlockProperties();
+}
+
+/**
+ * Leave maintenance mode
+ */
+void DataCollectionTarget::leaveMaintenanceMode()
+{
+   DbgPrintf(4, _T("Leaving maintenance mode for %s [%d]"), m_name, m_id);
+   PostEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, NULL);
+   lockProperties();
+   m_maintenanceMode = false;
+   m_maintenanceEventId = 0;
+   unlockProperties();
+}

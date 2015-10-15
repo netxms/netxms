@@ -511,6 +511,8 @@ private:
    void generateEventCode(UINT32 dwRqId);
    void modifyObject(NXCPMessage *pRequest);
    void changeObjectMgmtStatus(NXCPMessage *pRequest);
+   void enterMaintenanceMode(NXCPMessage *request);
+   void leaveMaintenanceMode(NXCPMessage *request);
    void openNodeDCIList(NXCPMessage *pRequest);
    void closeNodeDCIList(NXCPMessage *pRequest);
    void modifyNodeDCI(NXCPMessage *pRequest);

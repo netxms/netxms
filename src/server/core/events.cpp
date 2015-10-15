@@ -865,7 +865,7 @@ static EVENT_TEMPLATE *FindEventTemplate(UINT32 eventCode)
  * @param names names for parameters (NULL if parameters are unnamed)
  * @param args event parameters
  */
-static BOOL RealPostEvent(Queue *queue, UINT32 eventCode, UINT32 sourceId,
+static BOOL RealPostEvent(Queue *queue, UINT64 *eventId, UINT32 eventCode, UINT32 sourceId,
                           const TCHAR *userTag, const char *format, const TCHAR **names, va_list args)
 {
    EVENT_TEMPLATE *pEventTemplate = NULL;
@@ -882,6 +882,8 @@ static BOOL RealPostEvent(Queue *queue, UINT32 eventCode, UINT32 sourceId,
       {
          // Template found, create new event
          pEvent = new Event(pEventTemplate, sourceId, userTag, format, names, args);
+         if (eventId != NULL)
+            *eventId = pEvent->getId();
 
          // Add new event to queue
          queue->put(pEvent);
@@ -924,9 +926,40 @@ BOOL NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *
    BOOL bResult;
 
    va_start(args, format);
-   bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, NULL, args);
+   bResult = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, NULL, format, NULL, args);
    va_end(args);
    return bResult;
+}
+
+/**
+ * Post event to system event queue and return ID of new event (0 in case of failure).
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IPv4 address
+ *        A - InetAddress object
+ *        h - MAC (hardware) address
+ *        i - Object ID
+ *        t - timestamp (time_t) as raw value (seconds since epoch)
+ */
+UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
+{
+   va_list args;
+   BOOL bResult;
+   UINT64 eventId;
+
+   va_start(args, format);
+   bResult = RealPostEvent(g_pEventQueue, &eventId, eventCode, sourceId, NULL, format, NULL, args);
+   va_end(args);
+   return bResult ? eventId : 0;
 }
 
 /**
@@ -954,7 +987,7 @@ BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, con
    BOOL bResult;
 
    va_start(args, names);
-   bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
+   bResult = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, NULL, format, names, args);
    va_end(args);
    return bResult;
 }
@@ -984,7 +1017,7 @@ BOOL NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceI
    BOOL bResult;
 
    va_start(args, names);
-   bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, userTag, format, names, args);
+   bResult = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, userTag, format, names, args);
    va_end(args);
    return bResult;
 }
@@ -1047,7 +1080,7 @@ BOOL NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const
    BOOL bResult;
 
    va_start(args, format);
-   bResult = RealPostEvent(g_pEventQueue, eventCode, sourceId, userTag, format, NULL, args);
+   bResult = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, userTag, format, NULL, args);
    va_end(args);
    return bResult;
 }
@@ -1077,7 +1110,7 @@ BOOL NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 source
    BOOL bResult;
 
    va_start(args, format);
-   bResult = RealPostEvent(queue, eventCode, sourceId, NULL, format, NULL, args);
+   bResult = RealPostEvent(queue, NULL, eventCode, sourceId, NULL, format, NULL, args);
    va_end(args);
    return bResult;
 }

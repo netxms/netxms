@@ -359,3 +359,35 @@ bool Container::showThresholdSummary()
 {
 	return true;
 }
+
+/**
+ * Enter maintenance mode
+ */
+void Container::enterMaintenanceMode()
+{
+   DbgPrintf(4, _T("Entering maintenance mode for container %s [%d]"), m_name, m_id);
+
+   LockChildList(FALSE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   {
+      if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
+         m_pChildList[i]->enterMaintenanceMode();
+   }
+   UnlockChildList();
+}
+
+/**
+ * Leave maintenance mode
+ */
+void Container::leaveMaintenanceMode()
+{
+   DbgPrintf(4, _T("Leaving maintenance mode for container %s [%d]"), m_name, m_id);
+
+   LockChildList(FALSE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   {
+      if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
+         m_pChildList[i]->leaveMaintenanceMode();
+   }
+   UnlockChildList();
+}

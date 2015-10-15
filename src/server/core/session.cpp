@@ -797,6 +797,12 @@ void ClientSession::processingThread()
          case CMD_SET_OBJECT_MGMT_STATUS:
             changeObjectMgmtStatus(pMsg);
             break;
+         case CMD_ENTER_MAINT_MODE:
+            enterMaintenanceMode(pMsg);
+            break;
+         case CMD_LEAVE_MAINT_MODE:
+            leaveMaintenanceMode(pMsg);
+            break;
          case CMD_LOAD_USER_DB:
             sendUserDB(pMsg->getId());
             break;
@@ -3150,6 +3156,106 @@ void ClientSession::changeObjectMgmtStatus(NXCPMessage *pRequest)
    }
 
    // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Enter maintenance mode for object
+ */
+void ClientSession::enterMaintenanceMode(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   // Get object id and check access rights
+   NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         if ((object->getObjectClass() == OBJECT_CONTAINER) ||
+             (object->getObjectClass() == OBJECT_CLUSTER) ||
+             (object->getObjectClass() == OBJECT_NODE) ||
+             (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
+             (object->getObjectClass() == OBJECT_ACCESSPOINT) ||
+             (object->getObjectClass() == OBJECT_ZONE) ||
+             (object->getObjectClass() == OBJECT_SUBNET) ||
+             (object->getObjectClass() == OBJECT_NETWORK) ||
+             (object->getObjectClass() == OBJECT_SERVICEROOT))
+         {
+            object->enterMaintenanceMode();
+            msg.setField(VID_RCC, RCC_SUCCESS);
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(),
+               _T("Requested maintenance mode enter for object %s [%d]"), object->getName(), object->getId());
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->getId(),
+            _T("Access denied on maintenance mode enter request for object %s [%d]"), object->getName(), object->getId());
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   sendMessage(&msg);
+}
+
+/**
+ * Leave maintenance mode for object
+ */
+void ClientSession::leaveMaintenanceMode(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   // Get object id and check access rights
+   NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
+      {
+         if ((object->getObjectClass() == OBJECT_CONTAINER) ||
+             (object->getObjectClass() == OBJECT_CLUSTER) ||
+             (object->getObjectClass() == OBJECT_NODE) ||
+             (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
+             (object->getObjectClass() == OBJECT_ACCESSPOINT) ||
+             (object->getObjectClass() == OBJECT_ZONE) ||
+             (object->getObjectClass() == OBJECT_SUBNET) ||
+             (object->getObjectClass() == OBJECT_NETWORK) ||
+             (object->getObjectClass() == OBJECT_SERVICEROOT))
+         {
+            object->leaveMaintenanceMode();
+            msg.setField(VID_RCC, RCC_SUCCESS);
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(),
+               _T("Requested maintenance mode exit for object %s [%d]"), object->getName(), object->getId());
+         }
+         else
+         {
+            msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+         }
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         WriteAuditLog(AUDIT_OBJECTS, FALSE, m_dwUserId, m_workstation, m_id, object->getId(),
+            _T("Access denied on maintenance mode exit request for object %s [%d]"), object->getName(), object->getId());
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
    sendMessage(&msg);
 }
 

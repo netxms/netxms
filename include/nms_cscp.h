@@ -555,6 +555,8 @@ typedef struct
 #define CMD_ADD_SCHEDULE               0x0142
 #define CMD_UPDATE_SCHEDULE            0x0143
 #define CMD_REMOVE_SCHEDULE            0x0144
+#define CMD_ENTER_MAINT_MODE           0x0145
+#define CMD_LEAVE_MAINT_MODE           0x0146
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
