@@ -80,7 +80,7 @@ BOOL IsPackageFileExist(const TCHAR *pszFileName)
 {
    TCHAR szFullPath[MAX_PATH];
 
-   _tcscpy(szFullPath, g_szDataDir);
+   _tcscpy(szFullPath, g_netxmsdDataDir);
    _tcscat(szFullPath, DDIR_PACKAGES);
    _tcscat(szFullPath, FS_PATH_SEPARATOR);
    _tcscat(szFullPath, pszFileName);
@@ -105,7 +105,7 @@ UINT32 UninstallPackage(UINT32 dwPkgId)
       if (DBGetNumRows(hResult) > 0)
       {
          // Delete file from directory
-         _tcscpy(szFileName, g_szDataDir);
+         _tcscpy(szFileName, g_netxmsdDataDir);
          _tcscat(szFileName, DDIR_PACKAGES);
          _tcscat(szFileName, FS_PATH_SEPARATOR);
          _tcscat(szFileName, CHECK_NULL_EX(DBGetField(hResult, 0, 0, szBuffer, MAX_DB_STRING)));
@@ -161,7 +161,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
    while(1)
    {
       // Get node object for upgrade
-      pNode = (Node *)pStartup->pQueue->Get();
+      pNode = (Node *)pStartup->pQueue->get();
       if (pNode == NULL)
          break;   // Queue is empty, exit
 
@@ -211,7 +211,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                pStartup->pSession->sendMessage(&msg);
 
                // Upload package file to agent
-               _tcscpy(szBuffer, g_szDataDir);
+               _tcscpy(szBuffer, g_netxmsdDataDir);
                _tcscat(szBuffer, DDIR_PACKAGES);
                _tcscat(szBuffer, FS_PATH_SEPARATOR);
                _tcscat(szBuffer, pStartup->szPkgFile);
@@ -342,7 +342,7 @@ THREAD_RESULT THREAD_CALL DeploymentManager(void *pArg)
    msg.setId(pStartup->dwRqId);
    for(i = 0; i < pStartup->nodeList->size(); i++)
    {
-      pQueue->Put(pStartup->nodeList->get(i));
+      pQueue->put(pStartup->nodeList->get(i));
       msg.setField(VID_OBJECT_ID, pStartup->nodeList->get(i)->getId());
       msg.setField(VID_DEPLOYMENT_STATUS, (WORD)DEPLOYMENT_STATUS_PENDING);
       pStartup->pSession->sendMessage(&msg);

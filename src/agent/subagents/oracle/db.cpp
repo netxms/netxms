@@ -262,7 +262,7 @@ struct TagListCallbackData
 /**
  * Tag list callback
  */
-static bool TagListCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult TagListCallback(const TCHAR *key, const void *value, void *data)
 {
    regmatch_t pmatch[16];
    if (_tregexec(&(((TagListCallbackData *)data)->preg), key, 16, pmatch, 0) == 0) // MATCH
@@ -276,7 +276,7 @@ static bool TagListCallback(const TCHAR *key, const void *value, void *data)
          ((TagListCallbackData *)data)->list->addPreallocated(s);
       }
    }
-   return true;
+   return _CONTINUE;
 }
 
 /**

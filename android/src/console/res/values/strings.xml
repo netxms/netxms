@@ -177,7 +177,23 @@
 	<string name="overview_accuracy">Accuracy: %1$s meters</string>
 	<string name="overview_timestamp">Timestamp: %1$s</string>
 	<string name="overview_comments">Comments</string>
-
+	<string name="overview_is_native_agent">Is Agent</string>
+	<string name="overview_is_bridge">Is Bridge</string>
+	<string name="overview_is_cdp">Is CDP</string>
+	<string name="overview_is8021x">Is Dot1x</string>
+	<string name="overview_is_lldp">Is LLDP</string>
+	<string name="overview_is_sonmp">Is NDP</string>
+	<string name="overview_is_printer">Is Printer</string>
+	<string name="overview_is_router">Is Router</string>
+	<string name="overview_is_smclp">Is SMCLP</string>
+	<string name="overview_is_snmp">Is SNMP</string>
+	<string name="overview_is_stp">Is STP</string>
+	<string name="overview_is_vrrp">Is VRRP</string>
+	<string name="overview_has_entity_mib">Has Entity MIB</string>
+	<string name="overview_has_ifxtable">Has ifXTable</string>
+	<string name="overview_snmp_port">SNMP Port</string>
+	<string name="overview_snmp_version">SNMP Version</string>
+	
 	<string name="provider_manual">Manual</string>
 	<string name="provider_network">Network</string>
 	<string name="provider_gps">GPS</string>

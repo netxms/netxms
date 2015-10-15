@@ -39,7 +39,9 @@ public interface GroupMarkers
 	public static final String MB_OBJECT_BINDING = "objectbinding"; //$NON-NLS-1$
 	public static final String MB_DATA_COLLECTION = "datacollection"; //$NON-NLS-1$
 	public static final String MB_TOPOLOGY = "topology"; //$NON-NLS-1$
+   public static final String MB_EVENTS_AND_LOGS = "eventsAndLogs"; //$NON-NLS-1$
 	public static final String MB_PROPERTIES = "properties"; //$NON-NLS-1$
 	public static final String MB_SECONDARY = "secondary"; //$NON-NLS-1$
-	public static final String MB_NXVS = "nxvs"; //$NON-NLS-1$
+	public static final String MB_ATM = "atm"; //$NON-NLS-1$
+   public static final String MB_NXVS = "nxvs"; //$NON-NLS-1$
 }

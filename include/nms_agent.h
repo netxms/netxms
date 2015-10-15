@@ -23,6 +23,17 @@
 #ifndef _nms_agent_h_
 #define _nms_agent_h_
 
+#ifdef _WIN32
+#ifdef LIBNXAGENT_EXPORTS
+#define LIBNXAGENT_EXPORTABLE __declspec(dllexport)
+#else
+#define LIBNXAGENT_EXPORTABLE __declspec(dllimport)
+#endif
+#else    /* _WIN32 */
+#define LIBNXAGENT_EXPORTABLE
+#endif
+
+
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxconfig.h>
@@ -93,6 +104,7 @@
 #define ERR_MEM_ALLOC_FAILED        ((UINT32)917)
 #define ERR_FILE_DELETE_FAILED      ((UINT32)918)
 #define ERR_NO_SESSION_AGENT        ((UINT32)919)
+#define ERR_SERVER_ID_UNSET         ((UINT32)920)
 
 /**
  * Parameter handler return codes
@@ -189,11 +201,21 @@
 #define DCIDESC_AGENT_SENT_TRAPS                  _T("Number of traps successfully sent to server")
 #define DCIDESC_AGENT_SOURCEPACKAGESUPPORT        _T("Check if source packages are supported")
 #define DCIDESC_AGENT_SUPPORTEDCIPHERS            _T("List of ciphers supported by agent")
+#define DCIDESC_AGENT_THREADPOOL_ACTIVEREQUESTS   _T("Agent thread pool {instance}: active requests")
+#define DCIDESC_AGENT_THREADPOOL_CURRSIZE         _T("Agent thread pool {instance}: current size")
+#define DCIDESC_AGENT_THREADPOOL_LOAD             _T("Agent thread pool {instance}: current load")
+#define DCIDESC_AGENT_THREADPOOL_LOADAVG          _T("Agent thread pool {instance}: load average (1 minute)")
+#define DCIDESC_AGENT_THREADPOOL_LOADAVG_5        _T("Agent thread pool {instance}: load average (5 minutes)")
+#define DCIDESC_AGENT_THREADPOOL_LOADAVG_15       _T("Agent thread pool {instance}: load average (15 minutes)")
+#define DCIDESC_AGENT_THREADPOOL_MAXSIZE          _T("Agent thread pool {instance}: max size")
+#define DCIDESC_AGENT_THREADPOOL_MINSIZE          _T("Agent thread pool {instance}: min size")
+#define DCIDESC_AGENT_THREADPOOL_USAGE            _T("Agent thread pool {instance}: usage")
 #define DCIDESC_AGENT_TIMEDOUTREQUESTS            _T("Number of timed out requests to agent")
 #define DCIDESC_AGENT_UNSUPPORTEDREQUESTS         _T("Number of requests for unsupported parameters")
 #define DCIDESC_AGENT_UPTIME                      _T("Agent's uptime")
 #define DCIDESC_AGENT_VERSION                     _T("Agent's version")
 #define DCIDESC_FILE_COUNT                        _T("Number of files {instance}")
+#define DCIDESC_FILE_FOLDERCOUNT                  _T("Number of folders {instance}")
 #define DCIDESC_FILE_HASH_CRC32                   _T("CRC32 checksum of {instance}")
 #define DCIDESC_FILE_HASH_MD5                     _T("MD5 hash of {instance}")
 #define DCIDESC_FILE_HASH_SHA1                    _T("SHA1 hash of {instance}")
@@ -205,9 +227,9 @@
 #define DCIDESC_SYSTEM_PLATFORMNAME               _T("Platform name")
 #define DCIDESC_PROCESS_COUNT                     _T("Number of {instance} processes")
 #define DCIDESC_PROCESS_COUNTEX                   _T("Number of {instance} processes (extended)")
-#define DCIDESC_PROCESS_ZOMBIE_COUNT              _T("Number of {instance} zombie processes")
 #define DCIDESC_PROCESS_CPUTIME                   _T("Total execution time for process {instance}")
 #define DCIDESC_PROCESS_GDIOBJ                    _T("GDI objects used by process {instance}")
+#define DCIDESC_PROCESS_HANDLES                   _T("Number of handles in process {instance}")
 #define DCIDESC_PROCESS_IO_OTHERB                 _T("")
 #define DCIDESC_PROCESS_IO_OTHEROP                _T("")
 #define DCIDESC_PROCESS_IO_READB                  _T("")
@@ -222,11 +244,12 @@
 #define DCIDESC_PROCESS_USERTIME                  _T("Total execution time in user mode for process {instance}")
 #define DCIDESC_PROCESS_VMSIZE                    _T("Virtual memory used by process {instance}")
 #define DCIDESC_PROCESS_WKSET                     _T("Physical memory used by process {instance}")
+#define DCIDESC_PROCESS_ZOMBIE_COUNT              _T("Number of {instance} zombie processes")
 #define DCIDESC_SYSTEM_APPADDRESSSPACE            _T("Address space available to applications (MB)")
 #define DCIDESC_SYSTEM_CONNECTEDUSERS             _T("Number of logged in users")
+#define DCIDESC_SYSTEM_HANDLECOUNT                _T("Total number of handles")
 #define DCIDESC_SYSTEM_PROCESSCOUNT               _T("Total number of processes")
 #define DCIDESC_SYSTEM_SERVICESTATE               _T("State of {instance} service")
-#define DCIDESC_SYSTEM_PROCESSCOUNT               _T("Total number of processes")
 #define DCIDESC_SYSTEM_THREADCOUNT                _T("Total number of threads")
 #define DCIDESC_PDH_COUNTERVALUE                  _T("Value of PDH counter {instance}")
 #define DCIDESC_PDH_VERSION                       _T("Version of PDH.DLL")
@@ -356,23 +379,29 @@
 #define DCTDESC_AGENT_SUBAGENTS                   _T("Loaded subagents")
 #define DCTDESC_FILESYSTEM_VOLUMES                _T("File system volumes")
 #define DCTDESC_SYSTEM_INSTALLED_PRODUCTS         _T("Installed products")
+#define DCTDESC_SYSTEM_OPEN_FILES                 _T("Open files")
 #define DCTDESC_SYSTEM_PROCESSES                  _T("Processes")
 
 /**
  * API for CommSession
  */
-class AbstractCommSession
+class AbstractCommSession : public RefCountObject
 {
 public:
    virtual bool isMasterServer() = 0;
    virtual bool isControlServer() = 0;
+   virtual bool canAcceptTraps() = 0;
+   virtual bool canAcceptFileUpdates() = 0;
+   virtual UINT64 getServerId() = 0;
    virtual const InetAddress& getServerAddress() = 0;
 
    virtual bool isIPv6Aware() = 0;
 
-   virtual void sendMessage(NXCPMessage *pMsg) = 0;
-   virtual void sendRawMessage(NXCP_MESSAGE *pMsg) = 0;
+   virtual void sendMessage(NXCPMessage *msg) = 0;
+   virtual void sendRawMessage(NXCP_MESSAGE *msg) = 0;
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) = 0;
+   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) = 0;
+   virtual UINT32 generateRequestId() = 0;
    virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
 };
 
@@ -406,7 +435,19 @@ typedef struct
    TCHAR name[MAX_PARAM_NAME];
    LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
    const TCHAR *arg;
+   TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_LIST;
+
+/**
+ * Subagent's table column information
+ */
+typedef struct
+{
+   TCHAR name[MAX_COLUMN_NAME];
+   TCHAR displayName[MAX_COLUMN_NAME];
+   int dataType;
+   bool isInstance;
+} NETXMS_SUBAGENT_TABLE_COLUMN;
 
 /**
  * Subagent's table information
@@ -418,6 +459,8 @@ typedef struct
    const TCHAR *arg;
    TCHAR instanceColumns[MAX_COLUMN_NAME * MAX_INSTANCE_COLUMNS];
    TCHAR description[MAX_DB_STRING];
+   int numColumns;
+   NETXMS_SUBAGENT_TABLE_COLUMN *columns;
 } NETXMS_SUBAGENT_TABLE;
 
 /**
@@ -431,7 +474,7 @@ typedef struct
    TCHAR description[MAX_DB_STRING];
 } NETXMS_SUBAGENT_ACTION;
 
-#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20110301)
+#define NETXMS_SUBAGENT_INFO_MAGIC     ((UINT32)0x20150626)
 
 class NXCPMessage;
 
@@ -531,45 +574,51 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
 #endif   /* _WIN32 */
 }
 
-//
-// API for subagents
-//
-BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize);
-BOOL LIBNETXMS_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize);
+/**
+ * API for subagents
+ */
+bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize);
+bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize);
 #ifdef UNICODE
 #define AgentGetParameterArg AgentGetParameterArgW
 #else
 #define AgentGetParameterArg AgentGetParameterArgA
 #endif
 
-void LIBNETXMS_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
+void LIBNXAGENT_EXPORTABLE AgentWriteLog(int logLevel, const TCHAR *format, ...)
 #if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
    __attribute__ ((format(printf, 2, 3)))
 #endif
 ;
-void LIBNETXMS_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_list args);
-void LIBNETXMS_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...)
+void LIBNXAGENT_EXPORTABLE AgentWriteLog2(int logLevel, const TCHAR *format, va_list args);
+void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog(int level, const TCHAR *format, ...)
 #if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
    __attribute__ ((format(printf, 2, 3)))
 #endif
 ;
-void LIBNETXMS_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args);
-void LIBNETXMS_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...);
-void LIBNETXMS_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList);
-bool LIBNETXMS_EXPORTABLE EnumerateSessions(bool (* callback)(AbstractCommSession *, void *), void *data);
-BOOL LIBNETXMS_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, UINT32 value);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, INT64 value);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value);
-BOOL LIBNETXMS_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value);
+void LIBNXAGENT_EXPORTABLE AgentWriteDebugLog2(int level, const TCHAR *format, va_list args);
 
-void LIBNETXMS_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCHAR *),
-                                          void (* sendTrap1)(UINT32, const TCHAR *, const char *, va_list),
-                                          void (* sendTrap2)(UINT32, const TCHAR *, int, TCHAR **),
-														bool (* enumerateSessions)(bool (*)(AbstractCommSession *, void *), void *),
-                                          bool (* sendFile)(void *, UINT32, const TCHAR *, long),
-                                          bool (* pushData)(const TCHAR *, const TCHAR *, UINT32));
+void LIBNXAGENT_EXPORTABLE AgentSendTrap(UINT32 dwEvent, const TCHAR *eventName, const char *pszFormat, ...);
+void LIBNXAGENT_EXPORTABLE AgentSendTrap2(UINT32 dwEvent, const TCHAR *eventName, int nCount, TCHAR **ppszArgList);
+
+bool LIBNXAGENT_EXPORTABLE AgentEnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data);
+AbstractCommSession LIBNXAGENT_EXPORTABLE *AgentFindServerSession(UINT64 serverId);
+
+bool LIBNXAGENT_EXPORTABLE AgentSendFileToServer(void *session, UINT32 requestId, const TCHAR *file, long offset);
+
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterData(const TCHAR *parameter, const TCHAR *value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt32(const TCHAR *parameter, LONG value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt32(const TCHAR *parameter, UINT32 value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataInt64(const TCHAR *parameter, INT64 value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataUInt64(const TCHAR *parameter, QWORD value);
+bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, double value);
+
+CONDITION LIBNXAGENT_EXPORTABLE AgentGetShutdownCondition();
+bool LIBNXAGENT_EXPORTABLE AgentSleepAndCheckForShutdown(UINT32 sleepTime);
+
+Config LIBNXAGENT_EXPORTABLE *AgentOpenRegistry();
+void LIBNXAGENT_EXPORTABLE AgentCloseRegistry(bool modified);
+
+const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory();
 
 #endif   /* _nms_agent_h_ */

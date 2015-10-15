@@ -56,7 +56,7 @@ public abstract class ConditionEditor extends Composite
 	/**
 	 * Initialize editor
 	 */
-	public void initialize()
+	public void initialize(ColumnFilter initialFilter)
 	{
       GridLayout layout = new GridLayout();
       layout.numColumns = 4;
@@ -87,7 +87,7 @@ public abstract class ConditionEditor extends Composite
          }
       });
       
-      createContent(this);
+      createContent(this, initialFilter);
       
       ImageHyperlink link = new ImageHyperlink(this, SWT.NONE);
       link.setImage(SharedIcons.IMG_DELETE_OBJECT);
@@ -122,7 +122,7 @@ public abstract class ConditionEditor extends Composite
 	 * 
 	 * @param parent
 	 */
-	protected abstract void createContent(Composite parent);
+	protected abstract void createContent(Composite parent, ColumnFilter initialFilter);
 	
 	/**
 	 * Create log filter
@@ -154,4 +154,12 @@ public abstract class ConditionEditor extends Composite
 	{
 		return operation.getSelectionIndex();
 	}
+	
+   /**
+    * @param op
+    */
+   protected void setSelectedOperation(int op)
+   {
+      operation.select(op);
+   }
 }

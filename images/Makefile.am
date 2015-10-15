@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-imagesdir=$(pkgdatadir)/images
+imagesdir=$(localstatedir)/lib/netxms/images
 
 images_DATA = \
 	092e4b35-4e7c-42df-b9b7-d5805bfac64e \

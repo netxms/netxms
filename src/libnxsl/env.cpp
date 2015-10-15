@@ -58,20 +58,25 @@ int F_rindex(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_round(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_rtrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_sha256(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_sleep(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_strftime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_udpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_upper(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_x2d(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
-int F_udpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
 /**
  * Default built-in function list
@@ -110,6 +115,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("round"), F_round, -1 },
 	{ _T("rtrim"), F_rtrim, 1 },
 	{ _T("sha1"), F_sha1, 1 },
+	{ _T("sha256"), F_sha256, 1 },
 	{ _T("sleep"), F_sleep, 1 },
 	{ _T("strftime"), F_strftime, -1 },
 	{ _T("substr"), F_substr, -1 },
@@ -119,11 +125,15 @@ static NXSL_ExtFunction m_builtinFunctions[] =
 	{ _T("trim"), F_trim, 1 },
    { _T("typeof"), F_typeof, 1 },
    { _T("upper"), F_upper, 1 },
+   { _T("x2d"), F_x2d, 1 },
    { _T("AddrInRange"), F_AddrInRange, 3 },
    { _T("AddrInSubnet"), F_AddrInSubnet, 3 },
+   { _T("ArrayToString"), F_ArrayToString, 2 },
+   { _T("ReadPersistentStorage"), F_ReadPersistentStorage, 1 },
 	{ _T("SecondsToUptime"), F_SecondsToUptime, 1 },
 	{ _T("TCPConnector"), F_tcpConnector, 2 },
 	{ _T("UDPConnector"), F_udpConnector, 2 },
+   { _T("WritePersistentStorage"), F_WritePersistentStorage, 2 }
 };
 
 /**
@@ -195,7 +205,7 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const TCHAR *pszName)
       pData = NXSLLoadFile(szBuffer, &dwSize);
       if (pData != NULL)
       {
-         pScript = (NXSL_Program *)NXSLCompile(pData, NULL, 0);
+         pScript = (NXSL_Program *)NXSLCompile(pData, NULL, 0, NULL);
          if (pScript != NULL)
          {
             vm->loadModule(pScript, pszName);

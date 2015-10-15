@@ -78,6 +78,14 @@
             name="Agent Action"
             restorable="false">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.objecttools.views.ServerCommandResults"
+            icon="icons/console.png"
+            id="org.netxms.ui.eclipse.objecttools.views.ServerCommandResults"
+            name="Server Command"
+            restorable="false">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -177,6 +185,16 @@
             class="org.netxms.ui.eclipse.objecttools.propertypages.Columns"
             id="org.netxms.ui.eclipse.objecttools.propertypages.Columns#4"
             name="%page.name.Columns">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.objecttools.ObjectTool">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.objecttools.propertypages.InputFields"
+            id="org.netxms.ui.eclipse.objecttools.propertypages.InputFields#5"
+            name="%page.name.InputFields">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.objecttools.ObjectTool">

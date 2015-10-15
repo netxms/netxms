@@ -50,6 +50,7 @@ import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
+import org.netxms.ui.eclipse.charts.api.DataPoint;
 import org.netxms.ui.eclipse.charts.api.HistoricalDataChart;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -62,6 +63,7 @@ import org.swtchart.ILegend;
 import org.swtchart.ILineSeries;
 import org.swtchart.ILineSeries.PlotSymbolType;
 import org.swtchart.IPlotArea;
+import org.swtchart.ISeries;
 import org.swtchart.ISeries.SeriesType;
 import org.swtchart.ISeriesSet;
 import org.swtchart.ITitle;
@@ -120,12 +122,13 @@ public class LineChart extends Chart implements HistoricalDataChart
 		ITitle title = getTitle();
 		title.setVisible(preferenceStore.getBoolean("Chart.ShowTitle")); //$NON-NLS-1$
 		title.setForeground(getColorFromPreferences("Chart.Colors.Title")); //$NON-NLS-1$
-		title.setFont(Activator.getDefault().getChartTitleFont(getDisplay()));
+		title.setFont(Activator.getDefault().getChartTitleFont());
 		
 		// Setup legend
 		ILegend legend = getLegend();
 		legend.setPosition(swtPositionFromInternal(legendPosition));
-		legend.setFont(Activator.getDefault().getChartFont(getDisplay()));
+		legend.setFont(Activator.getDefault().getChartFont());
+		legend.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
 		
 		// Default time range
 		timeTo = System.currentTimeMillis();
@@ -140,12 +143,12 @@ public class LineChart extends Chart implements HistoricalDataChart
 		xTick.setForeground(getColorFromPreferences("Chart.Axis.X.Color")); //$NON-NLS-1$
 		DateFormat format = new SimpleDateFormat(Messages.get().LineChart_ShortTimeFormat);
 		xTick.setFormat(format);
-		xTick.setFont(Activator.getDefault().getChartFont(getDisplay()));
+		xTick.setFont(Activator.getDefault().getChartFont());
 		
 		final IAxis yAxis = axisSet.getYAxis(0);
 		yAxis.getTitle().setVisible(false);
 		yAxis.getTick().setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
-		yAxis.getTick().setFont(Activator.getDefault().getChartFont(getDisplay()));
+		yAxis.getTick().setFont(Activator.getDefault().getChartFont());
 		
 		// Setup grid
 		xAxis.getGrid().setStyle(getLineStyleFromPreferences("Chart.Grid.X.Style")); //$NON-NLS-1$
@@ -168,14 +171,27 @@ public class LineChart extends Chart implements HistoricalDataChart
 				@Override
 				public void mouseExit(MouseEvent e)
 				{
+				   if (tooltipShown)
+				   {
+   				   getPlotArea().setToolTipText(null);
+   				   tooltipShown = false;
+				   }
 				}
 	
 				@Override
 				public void mouseHover(MouseEvent e)
 				{
-					Date timestamp = new Date((long)xAxis.getDataCoordinate(e.x));
-					double value = yAxis.getDataCoordinate(e.y);
-					getPlotArea().setToolTipText(RegionalSettings.getDateTimeFormat().format(timestamp) + "\n" + Chart.roundedDecimalValue(value, cachedTickStep)); //$NON-NLS-1$
+				   ISeries series = getSeriesAtPoint(e.x, e.y);
+				   if (series != null)
+				   {
+   					Date timestamp = new Date((long)xAxis.getDataCoordinate(e.x));
+   					double value = yAxis.getDataCoordinate(e.y);
+   					getPlotArea().setToolTipText(
+   					      series.getName() + "\n" + //$NON-NLS-1$
+   					      RegionalSettings.getDateTimeFormat().format(timestamp) + "\n" + //$NON-NLS-1$ 
+   					      Chart.roundedDecimalValue(value, cachedTickStep));
+   					tooltipShown = true;
+				   }
 				}
 			});
 			*/
@@ -257,7 +273,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 			@Override
 			public void mouseMove(MouseEvent e)
 			{
-				//selection.setEndPoint(e.x, e.y);
+				selection.setEndPoint(e.x, e.y);
 				plotArea.redraw();
 			}
 		};
@@ -381,7 +397,6 @@ public class LineChart extends Chart implements HistoricalDataChart
 		ILineSeries series = (ILineSeries)seriesSet.createSeries(SeriesType.LINE, Integer.toString(index), updateChart);
 
 		series.setName(description);
-		series.setAntialias(SWT.ON);
 		series.setSymbolType(PlotSymbolType.NONE);
 		series.setLineWidth(2);
 		series.setLineColor(getColorFromPreferences("Chart.Colors.Data." + index)); //$NON-NLS-1$
@@ -389,7 +404,14 @@ public class LineChart extends Chart implements HistoricalDataChart
 		series.setXDateSeries(xSeries);
 		series.setYSeries(ySeries);
 		
-	   series.enableStack(stacked, updateChart);
+		try
+		{
+		   series.enableStack(stacked, updateChart);
+		}
+		catch(IllegalStateException e)
+		{
+		   Activator.logError("Exception while addig chart series", e);
+		}
 		
 		return series;
 	}
@@ -1015,5 +1037,98 @@ public class LineChart extends Chart implements HistoricalDataChart
    {
       getAxisSet().getYAxis(0).setRange(new Range(from, to));
       adjustYAxis = false;
+   }
+   
+   /**
+    * Get data point closest to given point in plot area
+    * 
+    * @param px
+    * @param py
+    * @return
+    */
+   public DataPoint getClosestDataPoint(int px, int py) 
+   {
+      IAxis xAxis = getAxisSet().getXAxis(0);
+      IAxis yAxis = getAxisSet().getYAxis(0);
+
+      double x = xAxis.getDataCoordinate(px);
+      double y = yAxis.getDataCoordinate(py);
+
+      double closestX = 0;
+      double closestY = 0;
+      double minDist = Double.MAX_VALUE;
+      ISeries closestSeries = null;
+
+      /* over all series */
+      ISeries[] series = getSeriesSet().getSeries();
+      for(ISeries s : series) 
+      {
+          double[] xS = s.getXSeries();
+          double[] yS = s.getYSeries();
+
+          /* check all data points */
+          for (int i = 0; i < xS.length; i++) 
+          {
+              /* compute distance to mouse position */
+              double newDist = Math.sqrt(Math.pow((x - xS[i]), 2) + Math.pow((y - yS[i]), 2));
+
+              /* if closer to mouse, remember */
+              if (newDist < minDist) 
+              {
+                  minDist = newDist;
+                  closestX = xS[i];
+                  closestY = yS[i];
+                  closestSeries = s;
+              }
+          }
+      }
+      
+      return (closestSeries != null) ? new DataPoint(new Date((long)closestX), closestY, closestSeries) : null;
+   }
+   
+   /**
+    * Get series at given point
+    * 
+    * @param px
+    * @param py
+    * @return
+    */
+   public ISeries getSeriesAtPoint(int px, int py)
+   {
+      ISeries[] series = getSeriesSet().getSeries();
+      for(ISeries s : series) 
+      {
+         int size = s.getSize();
+         for(int i = 1; i < size; i++)
+         {
+            Point p1 = s.getPixelCoordinates(i - 1);
+            Point p2 = s.getPixelCoordinates(i);
+            if ((px > p1.x + 2) || (px < p2.x - 2) || (py < Math.min(p1.y, p2.y) - 2) || (py > Math.max(p1.y, p2.y) + 2))
+               continue;
+            if (pointToLineDistance(px, py, p2, p1) <= ((ILineSeries)s).getLineWidth() * 3.0)
+               return s;
+         }
+      }
+      return null;
+   }
+   
+   /**
+    * Calculate distance from point to line.
+    * https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
+    * 
+    * @param x
+    * @param y
+    * @param p1
+    * @param p2
+    * @return
+    */
+   private static double pointToLineDistance(int x, int y, Point p1, Point p2)
+   {
+      int dx = p2.x - p1.x;
+      int dy = p2.y - p1.y;
+      
+      double area2 = (double)Math.abs(dy * x - dx * y + p2.x * p1.y - p2.y * p1.x);
+      double dist = Math.sqrt(dx * dx + dy * dy);
+      return area2 / dist;
    }
 }

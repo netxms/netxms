@@ -220,7 +220,7 @@ static THREAD_RESULT THREAD_CALL ActionExecutionThread(void *arg)
    FILE *pipe = _tpopen(data->m_cmdLine, _T("r"));
    if (pipe != NULL)
    {
-      while (true)
+      while(true)
       {
          TCHAR line[4096];
 

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.Event;
-import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -96,8 +95,7 @@ public class EventLabelProvider extends LabelProvider implements ITableLabelProv
 			case EventTraceWidget.COLUMN_SEVERITY:
 				return StatusDisplayInfo.getStatusText(event.getSeverity());
 			case EventTraceWidget.COLUMN_EVENT:
-				EventTemplate tmpl = session.findEventTemplateByCode(event.getCode());
-				return (tmpl != null) ? tmpl.getName() : Integer.toString(event.getCode());
+			   return session.getEventName(event.getCode());
 			case EventTraceWidget.COLUMN_MESSAGE:
 				return event.getMessage();
 		}

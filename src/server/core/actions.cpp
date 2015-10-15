@@ -246,11 +246,11 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 /**
  * Run external command via system()
  */
-static THREAD_RESULT THREAD_CALL RunCommandThread(void *pArg)
+static void RunCommand(void *arg)
 {
    if (ConfigReadInt(_T("EscapeLocalCommands"), 0))
    {
-      String s = (TCHAR *)pArg;
+      String s = (TCHAR *)arg;
 #ifdef _WIN32
       s.replace(_T("\t"), _T("\\t"));
       s.replace(_T("\n"), _T("\\n"));
@@ -260,14 +260,13 @@ static THREAD_RESULT THREAD_CALL RunCommandThread(void *pArg)
       s.replace(_T("\n"), _T("\\\\n"));
       s.replace(_T("\r"), _T("\\\\r"));
 #endif
-      free(pArg);
-      pArg = _tcsdup(s.getBuffer());
+      free(arg);
+      arg = _tcsdup(s.getBuffer());
    }
-   DbgPrintf(3, _T("*actions* Executing command \"%s\""), (TCHAR *)pArg);
-	if (_tsystem((TCHAR *)pArg) == -1)
-	   DbgPrintf(5, _T("RunCommandThread: failed to execute command \"%s\""), (TCHAR *)pArg);
-	free(pArg);
-	return THREAD_OK;
+   DbgPrintf(3, _T("*actions* Executing command \"%s\""), (TCHAR *)arg);
+	if (_tsystem((TCHAR *)arg) == -1)
+	   DbgPrintf(5, _T("RunCommandThread: failed to execute command \"%s\""), (TCHAR *)arg);
+	free(arg);
 }
 
 /**
@@ -408,7 +407,7 @@ BOOL ExecuteAction(UINT32 dwActionId, Event *pEvent, const TCHAR *alarmMsg, cons
             case ACTION_EXEC:
                if (pszExpandedData[0] != 0)
                {
-					   ThreadCreate(RunCommandThread, 0, _tcsdup(pszExpandedData));
+                  ThreadPoolExecute(g_mainThreadPool, RunCommand, _tcsdup(pszExpandedData));
                }
                else
                {

@@ -131,30 +131,6 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 	}
 
 	/**
-	 * Hex digits
-	 */
-	final private static char[] HEX_DIGITS = { '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F' };
-	
-	/**
-	 * Convert byte array to hex string
-	 * 
-	 * @param bytes
-	 * @return
-	 */
-	private static String bytesToHexString(byte[] bytes)
-	{
-		char[] hexChars = new char[bytes.length * 2];
-		int v;
-		for(int j = 0; j < bytes.length; j++)
-		{
-			v = bytes[j] & 0xFF;
-			hexChars[j * 2] = HEX_DIGITS[v >>> 4];
-			hexChars[j * 2 + 1] = HEX_DIGITS[v & 0x0F];
-		}
-		return new String(hexChars);
-	}
-	
-	/**
 	 * Show login dialog and perform login
 	 */
 	private void doLogin()
@@ -240,7 +216,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			
 			try
 			{
-				RWT.getSettingStore().loadById(session.getUserName() + "@" + bytesToHexString(session.getServerId()));
+				RWT.getSettingStore().loadById(session.getUserName() + "@" + session.getServerId());
 			}
 			catch(IOException e)
 			{

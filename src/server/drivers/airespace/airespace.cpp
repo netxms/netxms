@@ -144,7 +144,7 @@ static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Tr
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
    SNMP_PDU *response;
-   UINT32 rcc = snmp->doRequest(request, &response, g_snmpTimeout, 3);
+   UINT32 rcc = snmp->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);
 	delete request;
    if (rcc == SNMP_ERR_SUCCESS)
    {
@@ -241,7 +241,7 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
    request->bindVariable(new SNMP_Variable(oid, nameLen));
 
    SNMP_PDU *response;
-   UINT32 rcc = snmp->doRequest(request, &response, g_snmpTimeout, 3);
+   UINT32 rcc = snmp->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);
 	delete request;
    if (rcc == SNMP_ERR_SUCCESS)
    {

@@ -114,6 +114,9 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
 
 	SetSocketExclusiveAddrUse(sock);
 	SetSocketReuseFlag(sock);
+#ifndef _WIN32
+   fcntl(sock, F_SETFD, fcntl(sock, F_GETFD) | FD_CLOEXEC);
+#endif
 
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));

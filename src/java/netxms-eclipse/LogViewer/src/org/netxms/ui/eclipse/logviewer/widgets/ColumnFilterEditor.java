@@ -55,12 +55,13 @@ public class ColumnFilterEditor extends DashboardComposite
 	 * @param columnElement 
 	 * @param column 
 	 */
-	public ColumnFilterEditor(Composite parent, FormToolkit toolkit, LogColumn column, final Runnable deleteHandler)
+	public ColumnFilterEditor(Composite parent, FormToolkit toolkit, LogColumn column, int operation, final Runnable deleteHandler)
 	{
 		super(parent, SWT.BORDER);
 		
 		this.toolkit = toolkit;
 		this.column = column;
+		this.booleanOperation = operation;
 		
 		toolkit.adapt(this);
 		
@@ -133,7 +134,7 @@ public class ColumnFilterEditor extends DashboardComposite
 			@Override
 			public void linkActivated(HyperlinkEvent e)
 			{
-				addCondition();
+				addCondition(null);
 			}
 		});
 
@@ -165,9 +166,9 @@ public class ColumnFilterEditor extends DashboardComposite
 	/**
 	 * Add condition
 	 */
-	private void addCondition()
+	private void addCondition(ColumnFilter initialFilter)
 	{
-		final ConditionEditor ce = createConditionEditor();
+		final ConditionEditor ce = createConditionEditor(initialFilter);
 		ce.setDeleteHandler(new Runnable() {
 			@Override
 			public void run()
@@ -194,7 +195,7 @@ public class ColumnFilterEditor extends DashboardComposite
 	 * @param currentElement
 	 * @return
 	 */
-	private ConditionEditor createConditionEditor()
+	private ConditionEditor createConditionEditor(ColumnFilter initialFilter)
 	{
 	   ConditionEditor editor;
 		switch(column.getType())
@@ -227,17 +228,28 @@ public class ColumnFilterEditor extends DashboardComposite
 			   editor = new TextConditionEditor(this, toolkit);
             break;
 		}
-		editor.initialize();
+		editor.initialize(initialFilter);
 		return editor;
 	}
 
 	/**
 	 * @param filterBuilder the filterBuilder to set
 	 */
-	public void attachFilterBuilder(FilterBuilder filterBuilder)
+	public void attachFilterBuilder(FilterBuilder filterBuilder, ColumnFilter initialFilter)
 	{
 		this.filterBuilder = filterBuilder;
-		addCondition();
+      if ((initialFilter == null) || (initialFilter.getSubFilters() == null))
+      {
+         addCondition(null);
+      }
+      else
+      {
+         for(ColumnFilter f : initialFilter.getSubFilters())
+         {
+            f.setOperation(f.getType());
+            addCondition(f);
+         }
+      }
 	}
 	
 	/**

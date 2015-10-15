@@ -59,6 +59,23 @@ public class DashboardComposite extends Canvas implements PaintListener
 	}
 
 	/* (non-Javadoc)
+	 * @see org.eclipse.swt.widgets.Scrollable#computeTrim(int, int, int, int)
+	 */
+	@Override
+	public Rectangle computeTrim(int x, int y, int width, int height)
+	{
+		Rectangle trim = super.computeTrim(x, y, width, height);
+		if (hasBorder)
+		{
+			trim.x -= 2;
+			trim.y -= 2;
+			trim.width += 4;
+			trim.height += 4;
+		}
+		return trim;
+	}
+
+	/* (non-Javadoc)
 	 * @see org.eclipse.swt.widgets.Scrollable#getClientArea()
 	 */
 	@Override
@@ -69,6 +86,8 @@ public class DashboardComposite extends Canvas implements PaintListener
 		{
 			area.x += 2;
 			area.y += 2;
+			area.width -= 4;
+			area.height -= 4;
 		}
 		return area;
 	}
@@ -79,7 +98,7 @@ public class DashboardComposite extends Canvas implements PaintListener
 	@Override
 	public int getBorderWidth()
 	{
-		return 2;
+		return hasBorder ? 2 : 0;
 	}
 
 	/* (non-Javadoc)

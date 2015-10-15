@@ -57,6 +57,34 @@
             id="org.netxms.ui.eclipse.nxsl.commands.clear_output"
             name="Clear output">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.commands.compile"
+            name="Compile">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.commands.showLineNumbers"
+            name="Show line numbers">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.commands.goToLine"
+            name="Go to line">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.commands.cut"
+            name="Cut">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.commands.copy"
+            name="Copy">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.commands.paste"
+            name="Paste">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.commands.selectAll"
+            name="Select all">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -128,6 +156,11 @@
             name="Script Executor"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+      <context
+            id="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            name="Script Editor"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -160,6 +193,60 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M3+M2+S">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.save"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+S">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.compile"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.showLineNumbers"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+M3+L">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.goToLine"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+G">
+      </key>
+      <key
+            commandId="org.eclipse.ui.edit.findReplace"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.selectAll"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+A">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.copy"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+C">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.cut"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+X">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.paste"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+V">
       </key>
    </extension>
 

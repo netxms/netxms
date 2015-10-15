@@ -129,7 +129,7 @@ static void LoadDriver(const TCHAR *file)
 	if (_tcschr(file, _T('\\')) == NULL)
 	{
 	   TCHAR path[MAX_PATH];
-	   _tcscpy(path, g_szLibDir);
+	   _tcscpy(path, g_netxmsdLibDir);
 	   _tcscat(path, LDIR_PDSDRV);
    	SetDllDirectory(path);
       resetDllPath = true;

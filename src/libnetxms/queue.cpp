@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -26,10 +26,11 @@
 /**
  * Queue constructor
  */
-Queue::Queue(UINT32 dwInitialSize, UINT32 dwBufferIncrement)
+Queue::Queue(UINT32 initialSize, UINT32 bufferIncrement)
 {
-   m_dwBufferSize = dwInitialSize;
-   m_dwBufferIncrement = dwBufferIncrement;
+   m_initialSize = initialSize;
+   m_bufferSize = initialSize;
+   m_bufferIncrement = bufferIncrement;
 	commonInit();
 }
 
@@ -38,8 +39,9 @@ Queue::Queue(UINT32 dwInitialSize, UINT32 dwBufferIncrement)
  */
 Queue::Queue()
 {
-   m_dwBufferSize = 256;
-   m_dwBufferIncrement = 32;
+   m_initialSize = 256;
+   m_bufferSize = 256;
+   m_bufferIncrement = 32;
 	commonInit();
 }
 
@@ -50,11 +52,11 @@ void Queue::commonInit()
 {
    m_mutexQueueAccess = MutexCreate();
    m_condWakeup = ConditionCreate(FALSE);
-   m_dwNumElements = 0;
-   m_dwFirst = 0;
-   m_dwLast = 0;
-   m_pElements = (void **)malloc(sizeof(void *) * m_dwBufferSize);
-	m_bShutdownFlag = FALSE;
+   m_numElements = 0;
+   m_first = 0;
+   m_last = 0;
+   m_elements = (void **)malloc(sizeof(void *) * m_bufferSize);
+	m_shutdownFlag = FALSE;
 }
 
 /**
@@ -64,30 +66,30 @@ Queue::~Queue()
 {
    MutexDestroy(m_mutexQueueAccess);
    ConditionDestroy(m_condWakeup);
-   safe_free(m_pElements);
+   safe_free(m_elements);
 }
 
 /**
  * Put new element into queue
  */
-void Queue::Put(void *pElement)
+void Queue::put(void *pElement)
 {
    lock();
-   if (m_dwNumElements == m_dwBufferSize)
+   if (m_numElements == m_bufferSize)
    {
       // Extend buffer
-      m_dwBufferSize += m_dwBufferIncrement;
-      m_pElements = (void **)realloc(m_pElements, sizeof(void *) * m_dwBufferSize);
+      m_bufferSize += m_bufferIncrement;
+      m_elements = (void **)realloc(m_elements, sizeof(void *) * m_bufferSize);
       
       // Move free space
-      memmove(&m_pElements[m_dwFirst + m_dwBufferIncrement], &m_pElements[m_dwFirst],
-              sizeof(void *) * (m_dwBufferSize - m_dwFirst - m_dwBufferIncrement));
-      m_dwFirst += m_dwBufferIncrement;
+      memmove(&m_elements[m_first + m_bufferIncrement], &m_elements[m_first],
+              sizeof(void *) * (m_bufferSize - m_first - m_bufferIncrement));
+      m_first += m_bufferIncrement;
    }
-   m_pElements[m_dwLast++] = pElement;
-   if (m_dwLast == m_dwBufferSize)
-      m_dwLast = 0;
-   m_dwNumElements++;
+   m_elements[m_last++] = pElement;
+   if (m_last == m_bufferSize)
+      m_last = 0;
+   m_numElements++;
    ConditionSet(m_condWakeup);
    unlock();
 }
@@ -95,24 +97,24 @@ void Queue::Put(void *pElement)
 /**
  * Insert new element into the beginning of a queue
  */
-void Queue::Insert(void *pElement)
+void Queue::insert(void *pElement)
 {
    lock();
-   if (m_dwNumElements == m_dwBufferSize)
+   if (m_numElements == m_bufferSize)
    {
       // Extend buffer
-      m_dwBufferSize += m_dwBufferIncrement;
-      m_pElements = (void **)realloc(m_pElements, sizeof(void *) * m_dwBufferSize);
+      m_bufferSize += m_bufferIncrement;
+      m_elements = (void **)realloc(m_elements, sizeof(void *) * m_bufferSize);
       
       // Move free space
-      memmove(&m_pElements[m_dwFirst + m_dwBufferIncrement], &m_pElements[m_dwFirst],
-              sizeof(void *) * (m_dwBufferSize - m_dwFirst - m_dwBufferIncrement));
-      m_dwFirst += m_dwBufferIncrement;
+      memmove(&m_elements[m_first + m_bufferIncrement], &m_elements[m_first],
+              sizeof(void *) * (m_bufferSize - m_first - m_bufferIncrement));
+      m_first += m_bufferIncrement;
    }
-   if (m_dwFirst == 0)
-      m_dwFirst = m_dwBufferSize;
-   m_pElements[--m_dwFirst] = pElement;
-   m_dwNumElements++;
+   if (m_first == 0)
+      m_first = m_bufferSize;
+   m_elements[--m_first] = pElement;
+   m_numElements++;
    ConditionSet(m_condWakeup);
    unlock();
 }
@@ -120,37 +122,36 @@ void Queue::Insert(void *pElement)
 /**
  * Get object from queue. Return NULL if queue is empty
  */
-void *Queue::Get()
+void *Queue::get()
 {
    void *pElement = NULL;
 
    lock();
-	if (m_bShutdownFlag)
+	if (m_shutdownFlag)
 	{
 		pElement = INVALID_POINTER_VALUE;
 	}
 	else
    {
-		while((m_dwNumElements > 0) && (pElement == NULL))
+		while((m_numElements > 0) && (pElement == NULL))
 		{
-			pElement = m_pElements[m_dwFirst++];
-			if (m_dwFirst == m_dwBufferSize)
-				m_dwFirst = 0;
-			m_dwNumElements--;
+			pElement = m_elements[m_first++];
+			if (m_first == m_bufferSize)
+				m_first = 0;
+			m_numElements--;
 		}
+      shrink();
    }
    unlock();
    return pElement;
 }
 
 /**
- * Get object from queue or block if queue if empty
+ * Get object from queue or block with timeout if queue if empty
  */
-void *Queue::GetOrBlock()
+void *Queue::getOrBlock(UINT32 timeout)
 {
-   void *pElement;
-
-   pElement = Get();
+   void *pElement = get();
    if (pElement != NULL)
    {
       return pElement;
@@ -158,8 +159,9 @@ void *Queue::GetOrBlock()
 
    do
    {
-      ConditionWait(m_condWakeup, INFINITE);
-      pElement = Get();
+      if (!ConditionWait(m_condWakeup, timeout))
+         break;
+      pElement = get();
    } while(pElement == NULL);
    return pElement;
 }
@@ -167,12 +169,13 @@ void *Queue::GetOrBlock()
 /**
  * Clear queue
  */
-void Queue::Clear()
+void Queue::clear()
 {
    lock();
-   m_dwNumElements = 0;
-   m_dwFirst = 0;
-   m_dwLast = 0;
+   m_numElements = 0;
+   m_first = 0;
+   m_last = 0;
+   shrink();
    unlock();
 }
 
@@ -180,10 +183,10 @@ void Queue::Clear()
  * Set shutdown flag
  * When this flag is set, Get() always return INVALID_POINTER_VALUE
  */
-void Queue::SetShutdownMode()
+void Queue::setShutdownMode()
 {
 	lock();
-	m_bShutdownFlag = TRUE;
+	m_shutdownFlag = TRUE;
 	ConditionSet(m_condWakeup);
 	unlock();
 }
@@ -199,15 +202,15 @@ void *Queue::find(void *key, QUEUE_COMPARATOR comparator)
 	UINT32 i, pos;
 
 	lock();
-	for(i = 0, pos = m_dwFirst; i < m_dwNumElements; i++)
+	for(i = 0, pos = m_first; i < m_numElements; i++)
 	{
-		if ((m_pElements[pos] != NULL) && comparator(key, m_pElements[pos]))
+		if ((m_elements[pos] != NULL) && comparator(key, m_elements[pos]))
 		{
-			element = m_pElements[pos];
+			element = m_elements[pos];
 			break;
 		}
 		pos++;
-		if (pos == m_dwBufferSize)
+		if (pos == m_bufferSize)
 			pos = 0;
 	}
 	unlock();
@@ -224,18 +227,36 @@ bool Queue::remove(void *key, QUEUE_COMPARATOR comparator)
 	UINT32 i, pos;
 
 	lock();
-	for(i = 0, pos = m_dwFirst; i < m_dwNumElements; i++)
+	for(i = 0, pos = m_first; i < m_numElements; i++)
 	{
-		if ((m_pElements[pos] != NULL) && comparator(key, m_pElements[pos]))
+		if ((m_elements[pos] != NULL) && comparator(key, m_elements[pos]))
 		{
-			m_pElements[pos] = NULL;
+			m_elements[pos] = NULL;
 			success = true;
 			break;
 		}
 		pos++;
-		if (pos == m_dwBufferSize)
+		if (pos == m_bufferSize)
 			pos = 0;
 	}
 	unlock();
 	return success;
+}
+
+/**
+ * Shrink queue if possible
+ */
+void Queue::shrink()
+{
+   if ((m_bufferSize == m_initialSize) || (m_numElements > m_initialSize / 2) || ((m_numElements > 0) && (m_last < m_first)))
+      return;
+
+   if ((m_numElements > 0) && (m_first > 0))
+   {
+      memmove(&m_elements[0], &m_elements[m_first], sizeof(void *) * m_numElements);
+      m_last -= m_first;
+      m_first = 0;
+   }
+   m_bufferSize = m_initialSize;
+   m_elements = (void **)realloc(m_elements, m_bufferSize * sizeof(void *));
 }

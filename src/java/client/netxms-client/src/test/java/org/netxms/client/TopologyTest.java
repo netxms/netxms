@@ -29,7 +29,7 @@ import org.netxms.client.topology.Route;
 /**
  * Tests for network topology functions
  */
-public class TopologyTest extends SessionTest
+public class TopologyTest extends AbstractSessionTest
 {
    
    public void testAddressMap() throws Exception

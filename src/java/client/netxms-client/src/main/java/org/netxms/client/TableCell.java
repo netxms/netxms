@@ -25,6 +25,7 @@ public class TableCell
 {
    private String value;
    private int status;
+   private long objectId;
    
    /**
     * @param value
@@ -33,6 +34,7 @@ public class TableCell
    {
       this.value = value;
       this.status = -1;
+      this.objectId = 0;
    }
 
    /**
@@ -43,6 +45,7 @@ public class TableCell
    {
       this.value = value;
       this.status = status;
+      this.objectId = 0;
    }
    
    /**
@@ -52,6 +55,7 @@ public class TableCell
    {
       value = src.value;
       status = src.status;
+      objectId = src.objectId;
    }
 
    /**
@@ -86,11 +90,28 @@ public class TableCell
       this.status = status;
    }
 
+   /**
+    * @return the objectId
+    */
+   public long getObjectId()
+   {
+      return objectId;
+   }
+
+   /**
+    * @param objectId the objectId to set
+    */
+   public void setObjectId(long objectId)
+   {
+      this.objectId = objectId;
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
    @Override
-   public String toString() {
-      return "TableCell{" +
-              "value='" + value + '\'' +
-              ", status=" + status +
-              '}';
+   public String toString()
+   {
+      return "TableCell [value=\"" + value + "\", status=" + status + ", objectId=" + objectId + "]";
    }
 }

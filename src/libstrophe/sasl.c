@@ -22,6 +22,18 @@
 #include "sasl.h"
 #include "md5.h"
 
+
+static int base64_encoded_len(xmpp_ctx_t *ctx, const unsigned len);
+
+static char *base64_encode(xmpp_ctx_t *ctx,
+                    const unsigned char * const buffer, const unsigned len);
+
+static int base64_decoded_len(xmpp_ctx_t *ctx,
+                       const char * const buffer, const unsigned len);
+
+static unsigned char *base64_decode(xmpp_ctx_t *ctx,
+                             const char * const buffer, const unsigned  len);
+
 /* make sure the stdint.h types are available */
 #if defined(_MSC_VER) /* Microsoft Visual C++ */
   typedef signed char             int8_t;
@@ -40,7 +52,7 @@
 
 /** generate authentication string for the SASL PLAIN mechanism */
 char *sasl_plain(xmpp_ctx_t *ctx, const char *authid, const char *password) {
-    int idlen, passlen;
+    size_t idlen, passlen;
     char *result = NULL;
     char *msg;
     
@@ -81,7 +93,7 @@ static char *_make_string(xmpp_ctx_t *ctx, const char *s, const unsigned len)
 static char *_make_quoted(xmpp_ctx_t *ctx, const char *s)
 {
     char *result;
-    int len = strlen(s);
+    size_t len = strlen(s);
 
     result = xmpp_alloc(ctx, len + 3);
     if (result != NULL) {
@@ -403,7 +415,7 @@ int base64_encoded_len(xmpp_ctx_t *ctx, const unsigned len)
     return ((len + 2)/3) << 2;
 }
 
-char *base64_encode(xmpp_ctx_t *ctx, 
+static char *base64_encode(xmpp_ctx_t *ctx, 
 		    const unsigned char * const buffer, const unsigned len)
 {
     int clen;
@@ -457,7 +469,7 @@ char *base64_encode(xmpp_ctx_t *ctx,
     return cbuf;
 }
 
-int base64_decoded_len(xmpp_ctx_t *ctx, 
+static int base64_decoded_len(xmpp_ctx_t *ctx, 
 		       const char * const buffer, const unsigned len)
 {
     int nudge;
@@ -481,7 +493,7 @@ int base64_decoded_len(xmpp_ctx_t *ctx,
     return 3 * (len >> 2) - nudge;
 }
 
-unsigned char *base64_decode(xmpp_ctx_t *ctx,
+static unsigned char *base64_decode(xmpp_ctx_t *ctx,
 			     const char * const buffer, const unsigned len)
 {
    int dlen;

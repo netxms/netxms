@@ -222,6 +222,19 @@ LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCom
 }
 
 /**
+ * Handler for System.HandleCount
+ */
+LONG H_HandleCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   PERFORMANCE_INFORMATION pi;
+   pi.cb = sizeof(PERFORMANCE_INFORMATION);
+   if (!GetPerformanceInfo(&pi, sizeof(PERFORMANCE_INFORMATION)))
+      return SYSINFO_RC_ERROR;
+   ret_uint(value, pi.HandleCount);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Handler for System.ConnectedUsers parameter
  */
 LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)

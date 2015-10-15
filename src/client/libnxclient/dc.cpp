@@ -26,11 +26,12 @@
 /**
  * Push data
  */
-UINT32 DataCollectionController::pushData(ObjectArray<NXCPushData> *data, UINT32 *failedIndex)
+UINT32 DataCollectionController::pushData(ObjectArray<NXCPushData> *data, time_t timestamp, UINT32 *failedIndex)
 {
    NXCPMessage msg;
    msg.setCode(CMD_PUSH_DCI_DATA);
    msg.setId(m_session->createMessageId());
+   msg.setFieldFromTime(VID_TIMESTAMP, timestamp);
    msg.setField(VID_NUM_ITEMS, (INT32)data->size());
 
    UINT32 id = VID_PUSH_DCI_DATA_BASE;

@@ -226,6 +226,7 @@ public class AgentConnectorService extends Service implements LocationListener
 		if (locationHandler != null)
 			locationHandler.removeCallbacks(locationTask);
 		if (locationManager != null)
+		{
 			if (agentActive)
 			{
 				if (locationHandler == null)
@@ -238,7 +239,10 @@ public class AgentConnectorService extends Service implements LocationListener
 				}
 			}
 			else
+			{
 				locationManager.removeUpdates(AgentConnectorService.this);
+			}
+		}
 	}
 
 	/**
@@ -616,7 +620,9 @@ public class AgentConnectorService extends Service implements LocationListener
 		{
 			Location location = null;
 			if (locationProvider.length() > 0) // Did we get an updated position?
+			{
 				location = locationManager.getLastKnownLocation(locationProvider);
+			}
 			else
 			{	// Try to get it using the best provider available
 				Criteria criteria = new Criteria();
@@ -628,7 +634,9 @@ public class AgentConnectorService extends Service implements LocationListener
 						location = locationManager.getLastKnownLocation(bestProvider);
 				}
 			}
-			if (location != null)
+			
+			// getLastLnownLocation may return fake location at 0,0 if location is not known yet
+			if ((location != null) && ((location.getLatitude() != 0.0) || (location.getLongitude() != 0.0)))
 			{
 				String locStatus = getString(R.string.info_location_good,
 						TimeHelper.getTimeString(location.getTime()),
@@ -681,8 +689,7 @@ public class AgentConnectorService extends Service implements LocationListener
 	/**
 	 * Internal handler to get new location based on location strategy set
 	 */
-	private final Runnable locationTask = new Runnable()
-	{
+	private final Runnable locationTask = new Runnable() {
 		@Override
 		public void run()
 		{
@@ -705,7 +712,7 @@ public class AgentConnectorService extends Service implements LocationListener
 				if (providerList.size() > 0)
 				{
 					allowedProviders = "";
-					for (int i = 0; i < providerList.size(); i++)
+					for(int i = 0; i < providerList.size(); i++)
 					{
 						allowedProviders += (i > 0 ? ", " : "") + providerList.get(i);
 						locationManager.requestLocationUpdates(providerList.get(i), 0, 0, AgentConnectorService.this); // 0, 0 to have it ASAP
@@ -715,16 +722,23 @@ public class AgentConnectorService extends Service implements LocationListener
 					locStatus = getString(R.string.info_location_acquiring, allowedProviders);
 				}
 				else
+				{
 					locationHandler.postDelayed(locationTask, getNextSchedule(locationInterval));
+				}
 				Log.i(TAG, locStatus);
 				updateLocationStatus(locStatus);
 				refreshHomeScreen();
 			}
 			else
+			{
 				locationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, 0, 0, AgentConnectorService.this); // 0, 0 to have it ASAP
+			}
 		}
 	};
 
+	/* (non-Javadoc)
+	 * @see android.location.LocationListener#onLocationChanged(android.location.Location)
+	 */
 	@Override
 	public void onLocationChanged(Location location)
 	{
@@ -743,18 +757,27 @@ public class AgentConnectorService extends Service implements LocationListener
 		refreshHomeScreen();
 	}
 
+	/* (non-Javadoc)
+	 * @see android.location.LocationListener#onProviderDisabled(java.lang.String)
+	 */
 	@Override
 	public void onProviderDisabled(String provider)
 	{
 		Log.d(TAG, "onProviderDisabled: " + provider);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.location.LocationListener#onProviderEnabled(java.lang.String)
+	 */
 	@Override
 	public void onProviderEnabled(String provider)
 	{
 		Log.d(TAG, "onProviderEnabled: " + provider);
 	}
 
+	/* (non-Javadoc)
+	 * @see android.location.LocationListener#onStatusChanged(java.lang.String, int, android.os.Bundle)
+	 */
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras)
 	{

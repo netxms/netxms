@@ -20,7 +20,6 @@ package org.netxms.client.datacollection;
 
 /**
  * This class contains styling for individual graph items
- *
  */
 public class GraphItemStyle
 {

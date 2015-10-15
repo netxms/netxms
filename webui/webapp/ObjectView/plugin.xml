@@ -85,6 +85,13 @@
             name="%tab.name.Nodes"
             order="50">
       </tab>
+      <tab
+            class="org.netxms.ui.eclipse.objectview.objecttabs.RackTab"
+            icon="icons/rack.gif"
+            id="org.netxms.ui.eclipse.objectview.objecttabs.RackTab"
+            name="Rack"
+            order="15">
+      </tab>
    </extension>
    <extension
          point="org.eclipse.ui.popupMenus">

@@ -30,7 +30,7 @@ import org.netxms.client.objects.Subnet;
  * @author Victor
  *
  */
-public class ObjectTest extends SessionTest
+public class ObjectTest extends AbstractSessionTest
 {
 	public void testObjectSync() throws Exception
 	{

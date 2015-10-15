@@ -4,7 +4,22 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Properties;
 
-
+/******************************************************************
+ *Documentation about test server configuration
+ ******************************************************************
+ *Test servers ID should be set as LOCAL_NODE_ID
+ *
+ *Test server agent configuration should contain:
+ *    EnableActions = yes
+ *    Action = echo: echo "Hi"
+ *    Subagent = filemgr.nsm
+ *    
+ *    [filemgr]
+ *    RootFolder = /var/log/netxms/
+ *    
+ *Test server configuration should contain:
+ *    LogFile = /var/log/netxms/netxmsd
+ ******************************************************************/
 public class TestConstants
 {   
    //Server connection constants
@@ -13,14 +28,14 @@ public class TestConstants
    public static String loginName = "admin";
    public static String password = "";
    //Other constants
-   public static int NODE_ID = 100;//cisco central
-   public static int LOCAL_NODE_ID = 100;//local node
+   public static int NODE_ID = 142;
+   public static int LOCAL_NODE_ID = 142;
    public static long SUBNET_ID = 796;
    public static String FILE_NAME = "/var/adm/messages";
    public static int FILE_OFFSET = 0;
    public static String ACTION = "netstat";
    public static int EVENT_CODE = 100000;
-   public static int CONNECTION_PULL = 100;
+   public static int CONNECTION_POOL = 100;
    //Reinitialize variables from properties file
    public static TestConstants testConstants = new TestConstants();
    
@@ -41,7 +56,7 @@ public class TestConstants
          FILE_OFFSET = Integer.parseInt(properties.getProperty("file.offset", "1000"));
          ACTION = properties.getProperty("action", "echo");
          EVENT_CODE = Integer.parseInt(properties.getProperty("event.code", "29"));
-         CONNECTION_PULL = Integer.parseInt(properties.getProperty("connection.pull", "100"));
+         CONNECTION_POOL = Integer.parseInt(properties.getProperty("connection.pull", "100"));
       }
       catch (Exception e)
       {
@@ -49,20 +64,3 @@ public class TestConstants
       }
    }
 }
-
-/******************************************************************
- *Documentation about test server configuration
- ******************************************************************
- *Test servers ID should be set as LOCAL_NODE_ID
- *
- *Test server agent configuration should contain:
- *    EnableActions = yes
- *    Action = echo: echo "Hi"
- *    Subagent = filemgr.nsm
- *    
- *    [filemgr]
- *    RootFolder = /var/log/netxms/
- *    
- *Test server configuration should contain:
- *    LogFile = /var/log/netxms/netxmsd
- ******************************************************************/

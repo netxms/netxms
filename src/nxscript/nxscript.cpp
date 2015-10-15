@@ -26,14 +26,14 @@
 #include "nxscript.h"
 
 
-static NXSL_TestClass *m_pTestClass;
+static NXSL_TestClass m_testClass;
 
 
 int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	TCHAR *buffer = (TCHAR *)malloc(1024);
 	_tcscpy(buffer, _T("test value"));
-   *ppResult = new NXSL_Value(new NXSL_Object(m_pTestClass, buffer));
+   *ppResult = new NXSL_Value(new NXSL_Object(&m_testClass, buffer));
    return 0;
 }
 
@@ -52,19 +52,18 @@ int main(int argc, char *argv[])
    NXSL_ExtFunction func;
    int i, ch;
    bool dump = false, printResult = false, compileOnly = false, binary = false;
+   int runCount = 1;
 
    func.m_iNumArgs = 0;
    func.m_pfHandler = F_new;
    _tcscpy(func.m_name, _T("new"));
-
-   m_pTestClass = new NXSL_TestClass;
 
    WriteToTerminal(_T("NetXMS Scripting Host  Version \x1b[1m") NETXMS_VERSION_STRING _T("\x1b[0m\n")
                    _T("Copyright (c) 2005-2015 Victor Kirhenshtein\n\n"));
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "bcde:o:r")) != -1)
+   while((ch = getopt(argc, argv, "bcC:de:o:r")) != -1)
    {
       switch(ch)
       {
@@ -73,6 +72,9 @@ int main(int argc, char *argv[])
             break;
          case 'c':
             compileOnly = true;
+            break;
+         case 'C':
+            runCount = strtol(optarg, NULL, 0);
             break;
          case 'd':
             dump = true;
@@ -105,6 +107,7 @@ int main(int argc, char *argv[])
                _T("Valid options are:\n")
                _T("   -b         Input is a binary file\n")
                _T("   -c         Compile only\n")
+               _T("   -C <count> Run script multiple times\n")
                _T("   -d         Dump compiled script code\n")
 				   _T("   -e <name>  Entry point\n")
                _T("   -o <file>  Write compiled script\n")
@@ -151,7 +154,7 @@ int main(int argc, char *argv[])
          return 1;
       }
 
-		pScript = NXSLCompile(pszSource, szError, 1024);
+		pScript = NXSLCompile(pszSource, szError, 1024, NULL);
 		free(pszSource);
    }
 
@@ -172,7 +175,7 @@ int main(int argc, char *argv[])
          }
          else
          {
-            _tprintf(_T("ERROR: cannot open output file \"%hs\": %s\n"), _tcserror(errno));
+            _tprintf(_T("ERROR: cannot open output file \"%hs\": %s\n"), outFile, _tcserror(errno));
          }
       }
 
@@ -183,31 +186,35 @@ int main(int argc, char *argv[])
 
          // Create VM
          NXSL_VM *vm = new NXSL_VM(pEnv);
+         if (vm->load(pScript))
+         {
+            while(runCount-- > 0)
+            {
+		         // Prepare arguments
+		         if (argc - optind > 1)
+		         {
+			         ppArgs = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * (argc - optind - 1));
+			         for(i = optind + 1; i < argc; i++)
+				         ppArgs[i - optind - 1] = new NXSL_Value(argv[i]);
+		         }
+		         else
+		         {
+			         ppArgs = NULL;
+		         }
 
-		   // Prepare arguments
-		   if (argc - optind > 1)
-		   {
-			   ppArgs = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * (argc - optind - 1));
-			   for(i = optind + 1; i < argc; i++)
-				   ppArgs[i - optind - 1] = new NXSL_Value(argv[i]);
-		   }
-		   else
-		   {
-			   ppArgs = NULL;
-		   }
-
-         if (vm->load(pScript) &&
-		       vm->run(argc - optind - 1, ppArgs, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
-		   {
-			   NXSL_Value *result = vm->getResult();
-			   if (printResult)
-               WriteToTerminalEx(_T("Result = %s\n"), (result != NULL) ? result->getValueAsCString() : _T("(null)"));
-		   }
-		   else
-		   {
-			   WriteToTerminalEx(_T("%s\n"), vm->getErrorText());
-		   }
-		   safe_free(ppArgs);
+               if (vm->run(argc - optind - 1, ppArgs, NULL, NULL, NULL, (entryPoint[0] != 0) ? entryPoint : NULL))
+		         {
+			         NXSL_Value *result = vm->getResult();
+			         if (printResult)
+                     WriteToTerminalEx(_T("Result = %s\n"), (result != NULL) ? result->getValueAsCString() : _T("(null)"));
+		         }
+		         else
+		         {
+			         WriteToTerminalEx(_T("%s\n"), vm->getErrorText());
+		         }
+		         safe_free(ppArgs);
+            }
+         }
          delete vm;
       }
       delete pScript;

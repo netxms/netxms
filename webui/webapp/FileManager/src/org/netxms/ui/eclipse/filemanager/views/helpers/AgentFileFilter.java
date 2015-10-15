@@ -20,7 +20,7 @@ package org.netxms.ui.eclipse.filemanager.views.helpers;
 
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
-import org.netxms.client.server.ServerFile;
+import org.netxms.client.server.AgentFile;
 
 /**
  * Filter for server file editor
@@ -38,10 +38,10 @@ public class AgentFileFilter extends ViewerFilter
 		if ((filterString == null) || (filterString.isEmpty()))
 			return true;
 		
-		final ServerFile filename = (ServerFile)element;
+		final AgentFile filename = (AgentFile)element;
 		
 		boolean pass = filename.getName().toLowerCase().contains(filterString.toLowerCase());
-		ServerFile[] children = filename.getChildren();
+		AgentFile[] children = filename.getChildren();
       if (!pass && children != null)
       {
          pass = containString(children);
@@ -49,7 +49,7 @@ public class AgentFileFilter extends ViewerFilter
       return pass;
 	}
 	
-	private boolean containString(ServerFile[] children)
+	private boolean containString(AgentFile[] children)
 	{
 	   if (children != null)
       {

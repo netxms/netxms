@@ -86,7 +86,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
 	DbgPrintf(1, _T("Apply template thread started"));
    while(1)
    {
-      TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)g_pTemplateUpdateQueue->GetOrBlock();
+      TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)g_pTemplateUpdateQueue->getOrBlock();
       if (pInfo == INVALID_POINTER_VALUE)
          break;
 
@@ -139,7 +139,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
       else
       {
 			DbgPrintf(8, _T("ApplyTemplateThread: failed"));
-         g_pTemplateUpdateQueue->Put(pInfo);    // Requeue
+         g_pTemplateUpdateQueue->put(pInfo);    // Requeue
          ThreadSleepMs(500);
       }
    }
@@ -651,6 +651,69 @@ MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId
 	return (MobileDevice *)g_idxMobileDeviceById.find(DeviceIdComparator, (void *)deviceId);
 }
 
+static Node *FindNodeByIPInternal(UINT32 zoneId, const InetAddress& ipAddr)
+{
+   Zone *zone = IsZoningEnabled() ? (Zone *)g_idxZoneByGUID.get(zoneId) : NULL;
+
+   Node *node = NULL;
+   if (IsZoningEnabled())
+   {
+      if (zone != NULL)
+      {
+         node = zone->getNodeByAddr(ipAddr);
+      }
+   }
+   else
+   {
+      node = (Node *)g_idxNodeByAddr.get(ipAddr);
+   }
+   if (node != NULL)
+      return node;
+
+   Interface *iface = NULL;
+   if (IsZoningEnabled())
+   {
+      if (zone != NULL)
+      {
+         iface = zone->getInterfaceByAddr(ipAddr);
+      }
+   }
+   else
+   {
+      iface = (Interface *)g_idxInterfaceByAddr.get(ipAddr);
+   }
+   return (iface != NULL) ? iface->getParentNode() : NULL;
+}
+
+/**
+ * Data for node find callback
+ */
+struct NodeFindCBData
+{
+   const InetAddress *addr;
+   Node *node;
+};
+
+/**
+ * Callback for finding node in all zones
+ */
+static bool NodeFindCB(NetObj *zone, void *data)
+{
+   Node *node = ((Zone *)zone)->getNodeByAddr(*((NodeFindCBData *)data)->addr);
+   if (node == NULL)
+   {
+      Interface *iface = ((Zone *)zone)->getInterfaceByAddr(*((NodeFindCBData *)data)->addr);
+      if (iface != NULL)
+         node = iface->getParentNode();
+   }
+
+   if (node == NULL)
+      return false;
+
+   ((NodeFindCBData *)data)->node = node;
+   return true;
+}
+
 /**
  * Find node by IP address
  */
@@ -659,36 +722,18 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddress& ipAddr)
    if (!ipAddr.isValidUnicast())
       return NULL;
 
-	Zone *zone = IsZoningEnabled() ? (Zone *)g_idxZoneByGUID.get(zoneId) : NULL;
-
-	Node *node = NULL;
-	if (IsZoningEnabled())
-	{
-		if (zone != NULL)
-		{
-			node = zone->getNodeByAddr(ipAddr);
-		}
-	}
-	else
-	{
-		node = (Node *)g_idxNodeByAddr.get(ipAddr);
-	}
-	if (node != NULL)
-		return node;
-
-	Interface *iface = NULL;
-	if (IsZoningEnabled())
-	{
-		if (zone != NULL)
-		{
-			iface = zone->getInterfaceByAddr(ipAddr);
-		}
-	}
-	else
-	{
-		iface = (Interface *)g_idxInterfaceByAddr.get(ipAddr);
-	}
-	return (iface != NULL) ? iface->getParentNode() : NULL;
+   if ((zoneId == ALL_ZONES) && IsZoningEnabled())
+   {
+      NodeFindCBData data;
+      data.addr = &ipAddr;
+      data.node = NULL;
+      g_idxZoneByGUID.find(NodeFindCB, &data);
+      return data.node;
+   }
+   else
+   {
+      return FindNodeByIPInternal(zoneId, ipAddr);
+   }
 }
 
 /**
@@ -935,17 +980,15 @@ NetObj NXCORE_EXPORTABLE *FindObjectByName(const TCHAR *name, int objClass)
  */
 static bool ObjectGuidComparator(NetObj *object, void *data)
 {
-	uuid_t temp;
-	object->getGuid(temp);
-	return !object->isDeleted() && !uuid_compare((BYTE *)data, temp);
+   return !object->isDeleted() && object->getGuid().equals(*((const uuid *)data));
 }
 
 /**
  * Find object by GUID
  */
-NetObj NXCORE_EXPORTABLE *FindObjectByGUID(uuid_t guid, int objClass)
+NetObj NXCORE_EXPORTABLE *FindObjectByGUID(const uuid& guid, int objClass)
 {
-	NetObj *object = g_idxObjectById.find(ObjectGuidComparator, guid);
+	NetObj *object = g_idxObjectById.find(ObjectGuidComparator, (void *)&guid);
 	return (object != NULL) ? (((objClass == -1) || (objClass == object->getObjectClass())) ? object : NULL) : NULL;
 }
 
@@ -1207,6 +1250,31 @@ BOOL LoadObjects()
          {
             delete pSubnet;
             nxlog_write(MSG_SUBNET_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Load racks
+   DbgPrintf(2, _T("Loading racks..."));
+   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM racks"));
+   if (hResult != 0)
+   {
+      Rack *rack;
+
+      dwNumRows = DBGetNumRows(hResult);
+      for(i = 0; i < dwNumRows; i++)
+      {
+         dwId = DBGetFieldULong(hResult, i, 0);
+         rack = new Rack;
+         if (rack->loadFromDatabase(dwId))
+         {
+            NetObjInsert(rack, FALSE);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            nxlog_write(MSG_RACK_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete rack;
          }
       }
       DBFreeResult(hResult);
@@ -1494,31 +1562,6 @@ BOOL LoadObjects()
          {
             delete pContainer;
             nxlog_write(MSG_CONTAINER_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
-         }
-      }
-      DBFreeResult(hResult);
-   }
-
-   // Load racks
-   DbgPrintf(2, _T("Loading racks..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM racks"));
-   if (hResult != 0)
-   {
-		Rack *rack;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
-      {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         rack = new Rack;
-         if (rack->loadFromDatabase(dwId))
-         {
-            NetObjInsert(rack, FALSE);  // Insert into indexes
-         }
-         else     // Object load failed
-         {
-            nxlog_write(MSG_RACK_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
-            delete rack;
          }
       }
       DBFreeResult(hResult);

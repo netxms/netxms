@@ -29,26 +29,21 @@
 #include <netdb.h>
 #endif
 
-
-//
-// Get policy list
-//
-
+/**
+ * Get policy list
+ */
 static int GetPolicyInventory(AgentConnection &conn)
 {
 	AgentPolicyInfo *ap;
 	UINT32 rcc = conn.getPolicyInventory(&ap);
 	if (rcc == ERR_SUCCESS)
 	{
-		TCHAR buffer[64];
-		uuid_t guid;
-
 		_tprintf(_T("GUID                                 Type Server\n")
 		         _T("----------------------------------------------------------\n"));
 		for(int i = 0; i < ap->size(); i++)
 		{
-			ap->getGuid(i, guid);
-			_tprintf(_T("%-16s %-4d %s\n"), uuid_to_string(guid, buffer), ap->getType(i), ap->getServer(i));
+		   TCHAR buffer[64];
+			_tprintf(_T("%-16s %-4d %s\n"), ap->getGuid(i).toString(buffer), ap->getType(i), ap->getServer(i));
 		}
 		delete ap;
 	}
@@ -97,11 +92,14 @@ int main(int argc, char *argv[])
    WORD wPort = AGENT_LISTEN_PORT;
    UINT32 dwTimeout = 5000, dwConnTimeout = 30000, dwError;
    TCHAR szSecret[MAX_SECRET_LENGTH] = _T("");
-   TCHAR szKeyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS;
+   TCHAR szKeyFile[MAX_PATH];
    RSA *pServerKey = NULL;
 	uuid_t guid;
 
    InitThreadLibrary();
+
+   GetNetXMSDirectory(nxDirData, szKeyFile);
+   _tcscat(szKeyFile, DFILE_KEYS);
 
    // Parse command line
    opterr = 1;
@@ -126,7 +124,7 @@ int main(int argc, char *argv[])
                      _T("   -h           : Display help and exit.\n")
 #ifdef _WITH_ENCRYPTION
                      _T("   -K <file>    : Specify server's key file\n")
-                     _T("                  (default is ") DEFAULT_DATA_DIR DFILE_KEYS _T(").\n")
+                     _T("                  (default is %s).\n")
 #endif
                      _T("   -p <port>    : Specify agent's port number. Default is %d.\n")
                      _T("   -q           : Quiet mode.\n")
@@ -134,7 +132,11 @@ int main(int argc, char *argv[])
                      _T("   -v           : Display version and exit.\n")
                      _T("   -w <seconds> : Set command timeout (default is 5 seconds)\n")
                      _T("   -W <seconds> : Set connection timeout (default is 30 seconds)\n")
-                     _T("\n"), wPort);
+                     _T("\n"), 
+#ifdef _WITH_ENCRYPTION
+                     szKeyFile,
+#endif
+                     wPort);
 				bStart = FALSE;
             break;
          case 'a':   // Auth method
@@ -237,9 +239,9 @@ int main(int argc, char *argv[])
 				WCHAR wguid[256];
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, wguid, 256);
 				wguid[255] = 0;
-				uuid_parse(wguid, guid);
+				_uuid_parse(wguid, guid);
 #else
-				uuid_parse(optarg, guid);
+				_uuid_parse(optarg, guid);
 #endif
 				break;
          case '?':
@@ -335,5 +337,6 @@ int main(int argc, char *argv[])
       }
    }
 
+   MsgWaitQueue::shutdown();
    return iExitCode;
 }

@@ -87,7 +87,8 @@ public class Table
 			   {
 			      int status = msg.getFieldAsInt32(varId++);
 	            row.get(j).setStatus((status == 65535) ? -1 : status);
-	            varId += 8;
+	            row.get(j).setObjectId(msg.getFieldAsInt64(varId++));
+	            varId += 7;
 			   }
 			}
 			data.add(row);
@@ -115,8 +116,10 @@ public class Table
              row.get(j).setValue(msg.getFieldAsString(varId++));
              if (extendedFormat)
              {
-                row.get(j).setStatus(msg.getFieldAsInt32(varId++));
-                varId += 8;
+                int status = msg.getFieldAsInt32(varId++);
+                row.get(j).setStatus((status == 65535) ? -1 : status);
+                row.get(j).setObjectId(msg.getFieldAsInt64(varId++));
+                varId += 7;
              }
          }
 			data.add(row);

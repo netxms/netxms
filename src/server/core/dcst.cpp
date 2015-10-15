@@ -61,11 +61,7 @@ UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId)
 
       if (isNew)
       {
-         uuid_t guid;
-         TCHAR guidText[64];
-         uuid_generate(guid);
-         uuid_to_string(guid, guidText);
-         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, guidText, DB_BIND_TRANSIENT);
+         DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, uuid::generate());
       }
 
       rcc = DBExecute(hStmt) ? RCC_SUCCESS : RCC_DB_FAILURE;
@@ -168,7 +164,7 @@ SummaryTableColumn::SummaryTableColumn(TCHAR *configStr)
 SummaryTable::SummaryTable(NXCPMessage *msg)
 {
    m_id = 0;
-   uuid_generate(m_guid);
+   m_guid = uuid::generate();
    m_title[0] = 0;
    m_menuPath[0] = 0;
    m_flags = msg->getFieldAsUInt32(VID_FLAGS);
@@ -198,7 +194,7 @@ SummaryTable::SummaryTable(INT32 id, DB_RESULT hResult)
 
    DBGetField(hResult, 0, 0, m_title, MAX_DB_STRING);
    m_flags = DBGetFieldULong(hResult, 0, 1);
-   DBGetFieldGUID(hResult, 0, 2, m_guid);
+   m_guid = DBGetFieldGUID(hResult, 0, 2);
    DBGetField(hResult, 0, 3, m_menuPath, MAX_DB_STRING);
 
    m_aggregationFunction = DCI_AGG_LAST;
@@ -356,7 +352,7 @@ void SummaryTable::createExportRecord(String &xml)
    xml.append(_T("\t\t<table id=\""));
    xml.append(m_id);
    xml.append(_T("\">\n\t\t\t<guid>"));
-   xml.append(uuid_to_string(m_guid, buffer));
+   xml.append(m_guid.toString(buffer));
    xml.append(_T("</guid>\n\t\t\t<title>"));
    xml.appendPreallocated(EscapeStringForXML(m_title, -1));
    xml.append(_T("</title>\n\t\t\t<flags>"));
@@ -493,7 +489,7 @@ bool ImportSummaryTable(ConfigEntry *config)
    }
 
    uuid_t temp;
-   if (uuid_parse(guid, temp) == -1)
+   if (_uuid_parse(guid, temp) == -1)
    {
       DbgPrintf(4, _T("ImportSummaryTable: GUID (%s) is invalid"), guid);
       return false;

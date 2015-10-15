@@ -27,7 +27,7 @@
 #include <getopt.h>
 #endif
 
-#define VALID_OPTIONS "bcCdDilLoOpPX"
+#define VALID_OPTIONS "bcCdDilLoOpPSuX"
 
 /**
  * Externals
@@ -41,6 +41,7 @@ extern const TCHAR *g_cc;
 extern const TCHAR *g_cxx;
 extern const TCHAR *g_ld;
 extern const TCHAR *g_perl;
+extern const TCHAR *g_serverLibs;
 
 /**
  * Show help
@@ -49,19 +50,21 @@ static void ShowHelp()
 {
 	printf("Available options:\n");
 #if HAVE_DECL_GETOPT_LONG
-	printf("   -b, --bindir    Binary directory\n"
-	       "   -o, --cc        C compiler\n"
-	       "   -c, --cflags    C compiler flags\n"
-	       "   -C, --cppflags  C/C++ compiler flags\n"
-	       "   -O, --cxx       C++ compiler\n"
-	       "   -X, --cxxflags  C++ compiler flags\n"
-	       "   -d, --datadir   Data directory\n"
-	       "   -D, --ld        Linker\n"
-	       "   -l, --ldflags   Linker flags (all except -l)\n"
-	       "   -L, --libdir    Library directory\n"
-	       "   -i, --libs      Linker flags (only -l)\n"
-	       "   -p, --perl      Perl interpreter\n"
-	       "   -P, --prefix    Installation prefix\n"
+	printf("   -b, --bindir       Binary directory\n"
+	       "   -o, --cc           C compiler\n"
+	       "   -c, --cflags       C compiler flags\n"
+	       "   -C, --cppflags     C/C++ compiler flags\n"
+	       "   -u, --curl-libs    Linker flags for using cURL\n"
+	       "   -O, --cxx          C++ compiler\n"
+	       "   -X, --cxxflags     C++ compiler flags\n"
+	       "   -d, --datadir      Data directory\n"
+	       "   -D, --ld           Linker\n"
+	       "   -l, --ldflags      Linker flags (all except -l)\n"
+	       "   -L, --libdir       Library directory\n"
+	       "   -i, --libs         Linker flags (only -l)\n"
+	       "   -p, --perl         Perl interpreter\n"
+	       "   -P, --prefix       Installation prefix\n"
+	       "   -S, --server-libs  Linker flags for server binaries (only -l)\n"
 	      );
 #else
 	printf("   -b  Binary directory\n"
@@ -76,6 +79,8 @@ static void ShowHelp()
 	       "   -O  C++ compiler\n"
 	       "   -p  Perl interpreter\n"
 	       "   -P  Installation prefix\n"
+	       "   -S  Linker flags for server binaries (only -l)\n"
+	       "   -u  Linker flags for using cURL\n"
 	       "   -X  C++ compiler flags\n"
 	      );
 #endif
@@ -108,6 +113,7 @@ int main(int argc, char *argv[])
 		{ (char *)"cc", 0, NULL, 'o' },
 		{ (char *)"cflags", 0, NULL, 'c' },
 		{ (char *)"cppflags", 0, NULL, 'C' },
+		{ (char *)"curl-libs", 0, NULL, 'u' },
 		{ (char *)"cxx", 0, NULL, 'O' },
 		{ (char *)"cxxflags", 0, NULL, 'X' },
 		{ (char *)"datadir", 0, NULL, 'd' },
@@ -117,6 +123,7 @@ int main(int argc, char *argv[])
 		{ (char *)"libs", 0, NULL, 'i' },
 		{ (char *)"perl", 0, NULL, 'p' },
 		{ (char *)"prefix", 0, NULL, 'P' },
+		{ (char *)"server-libs", 0, NULL, 'S' },
 		{ NULL, 0, 0, 0 }
 	};
 #endif
@@ -172,6 +179,16 @@ int main(int argc, char *argv[])
 			case 'P':
 				_tprintf(_T("%s\n"), PREFIX);
 				return 0;
+			case 'S':
+				_tprintf(_T("%s\n"), g_serverLibs);
+				return 0;
+         case 'u':
+#if HAVE_LIBCURL
+				_tprintf(_T("-lcurl\n"));
+#else
+				_tprintf(_T("\n"));
+#endif
+            return 0;
          case 'X':
             PrintFlags(g_cxxFlags);
             return 0;

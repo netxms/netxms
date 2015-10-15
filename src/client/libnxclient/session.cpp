@@ -148,7 +148,7 @@ UINT32 NXCSession::connect(const TCHAR *host, const TCHAR *login, const TCHAR *p
    WORD port = SERVER_LISTEN_PORT_FOR_CLIENTS;
    TCHAR *p = _tcsrchr(hostname, _T(':'));
    if ((p != NULL) && (p != hostname) &&
-       (((hostname[0] != _T('[')) && (NumChars(hostname, _T(':') == 1)) || (*(p - 1) == _T(']')))))
+       ((hostname[0] != _T('[')) || (NumChars(hostname, _T(':') == 1)) || (*(p - 1) == _T(']'))))
    {
       *p = 0;
       p++;
@@ -472,9 +472,9 @@ void NXCSession::receiverThread()
 /**
  * Message handler callback
  */
-static bool HandleMessageCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult HandleMessageCallback(const TCHAR *key, const void *value, void *data)
 {
-   return !((Controller *)value)->handleMessage((NXCPMessage *)data);
+   return ((Controller *)value)->handleMessage((NXCPMessage *)data) ? _STOP : _CONTINUE;
 }
 
 /**
@@ -483,9 +483,9 @@ static bool HandleMessageCallback(const TCHAR *key, const void *value, void *dat
 bool NXCSession::handleMessage(NXCPMessage *msg)
 {
    MutexLock(m_dataLock);
-   bool consumed = !m_controllers->forEach(HandleMessageCallback, msg);
+   EnumerationCallbackResult result = m_controllers->forEach(HandleMessageCallback, msg);
    MutexUnlock(m_dataLock);
-   return consumed;
+   return result == _STOP;
 }
 
 /**

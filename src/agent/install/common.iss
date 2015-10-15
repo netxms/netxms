@@ -1,6 +1,7 @@
 [Dirs]
 Name: "{app}\etc"
 Name: "{app}\etc\nxagentd.conf.d"
+Name: "{app}\lib"
 Name: "{app}\var"
 
 [Tasks]

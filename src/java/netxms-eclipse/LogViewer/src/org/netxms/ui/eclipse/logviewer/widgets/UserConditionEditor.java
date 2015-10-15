@@ -83,7 +83,7 @@ public class UserConditionEditor extends ConditionEditor
 	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected void createContent(Composite parent, ColumnFilter initialFilter)
 	{
 		Composite group = new Composite(this, SWT.NONE);
 		GridLayout layout = new GridLayout();

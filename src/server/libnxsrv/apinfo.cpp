@@ -22,11 +22,9 @@
 
 #include "libnxsrv.h"
 
-
-//
-// Constructor
-//
-
+/**
+ * Constructor
+ */
 AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
 {
 	m_size = msg->getFieldAsUInt32(VID_NUM_ELEMENTS);
@@ -52,11 +50,9 @@ AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
 	}
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 AgentPolicyInfo::~AgentPolicyInfo()
 {
 	for(int i = 0; i < m_size; i++)
@@ -66,20 +62,17 @@ AgentPolicyInfo::~AgentPolicyInfo()
 	safe_free(m_guidList);
 }
 
-
-//
-// Get GUID
-//
-
-bool AgentPolicyInfo::getGuid(int index, uuid_t guid)
+/**
+ * Get GUID
+ */
+uuid AgentPolicyInfo::getGuid(int index)
 {
 	if ((index >= 0) && (index < m_size))
 	{
-		memcpy(guid, &m_guidList[index * UUID_LENGTH], UUID_LENGTH);
-		return true;
+		return uuid(&m_guidList[index * UUID_LENGTH]);
 	}
 	else
 	{
-		return false;
+      return uuid::NULL_UUID;
 	}
 }

@@ -53,6 +53,14 @@
             name="%view.name.MappingTable"
             restorable="false">
       </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView"
+            icon="icons/clock.png"
+            id="org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView"
+            name="Scheduled Tasks">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -104,6 +112,20 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.save_exported_config"
             name="Save exported config">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.show_filter"
+            name="Show filter">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.add_config_variable"
+            name="Add configuration variable">
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open scheduled task list"
+            id="org.netxms.ui.eclipse.serverconfig.command_scheduled_tasks"
+            name="Scheduled tasks">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -150,6 +172,17 @@
            toolbarPath="config/additions"
            tooltip="%action.tooltip.MappingTables">
      </action>
+     <action
+           class="org.netxms.ui.eclipse.serverconfig.actions.OpenScheduledTaskList"
+           definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_scheduled_tasks"
+           icon="icons/clock.png"
+           id="org.netxms.ui.eclipse.serverconfig.actions.open_scheduled_tasks"
+           label="Scheduled Tasks"
+           menubarPath="config/additions"
+           style="push"
+           toolbarPath="config/additions"
+           tooltip="Scheduled Tasks">
+     </action>
 	   </actionSet>
 	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"
 		   label="%actionSet.label.ExportImport"
@@ -186,6 +219,11 @@
             name="Export File Builder"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+      <context
+            id="org.netxms.ui.eclipse.serverconfig.context.ServerConfigurationEditor"
+            name="Server Configuration Editor"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -206,6 +244,18 @@
             contextId="org.netxms.ui.eclipse.serverconfig.context.ExportFileBuilder"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+S">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.serverconfig.commands.show_filter"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.ServerConfigurationEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.serverconfig.commands.add_config_variable"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.ServerConfigurationEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+N">
       </key>
    </extension>
 

@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 #endif
 	if (pszSource != NULL)
 	{
-		pScript = NXSLCompile(pszSource, szError, 1024);
+		pScript = NXSLCompile(pszSource, szError, 1024, NULL);
 		free(pszSource);
 		if (pScript != NULL)
 		{

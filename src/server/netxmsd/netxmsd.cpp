@@ -57,7 +57,6 @@ static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T
                            _T("Valid options are:\n")
                            _T("   -e          : Run database check on startup\n")
                            _T("   -c <file>   : Set non-default configuration file\n")
-                           _T("               : Default is ") DEFAULT_CONFIG_FILE _T("\n")
                            _T("   -d          : Run as daemon/service\n")
                            _T("   -D <level>  : Set debug level (valid levels are 0..9)\n")
                            _T("   -h          : Display help and exit\n")

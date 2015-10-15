@@ -11,10 +11,10 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Display;
 import org.swtchart.Chart;
+import org.swtchart.IAxis.Direction;
 import org.swtchart.ILineSeries;
 import org.swtchart.LineStyle;
 import org.swtchart.Range;
-import org.swtchart.IAxis.Direction;
 import org.swtchart.internal.Util;
 import org.swtchart.internal.axis.Axis;
 import org.swtchart.internal.compress.CompressLineSeries;
@@ -25,7 +25,6 @@ import org.swtchart.internal.compress.CompressScatterSeries;
  */
 public class LineSeries extends Series implements ILineSeries
 {
-
 	/** the symbol size in pixel */
 	private int symbolSize;
 
@@ -53,9 +52,6 @@ public class LineSeries extends Series implements ILineSeries
 	/** the state indicating if step chart is enabled */
 	private boolean stepEnabled;
 
-	/** the anti-aliasing value for drawing line */
-	private int antialias;
-
 	/** the alpha value to draw area */
 	private static final int ALPHA = 50;
 
@@ -76,9 +72,6 @@ public class LineSeries extends Series implements ILineSeries
 
 	/** the default symbol type */
 	private static final PlotSymbolType DEFAULT_SYMBOL_TYPE = PlotSymbolType.CIRCLE;
-
-	/** the default anti-aliasing value */
-	private static final int DEFAULT_ANTIALIAS = SWT.DEFAULT;
 
 	/** the margin in pixels attached at the minimum/maximum plot */
 	//private static final int MARGIN_AT_MIN_MAX_PLOT = 6;
@@ -104,7 +97,6 @@ public class LineSeries extends Series implements ILineSeries
 
 		areaEnabled = false;
 
-		antialias = DEFAULT_ANTIALIAS;
 		lineWidth = DEFAULT_LINE_WIDTH;
 
 		compressor = new CompressLineSeries();
@@ -359,7 +351,6 @@ public class LineSeries extends Series implements ILineSeries
 	@Override
 	public Range getAdjustedRange(Axis axis, int length)
 	{
-
 		Range range;
 		if (axis.getDirection() == Direction.X)
 		{
@@ -379,26 +370,6 @@ public class LineSeries extends Series implements ILineSeries
 
 		return getRangeWithMargin(lowerPlotMargin, upperPlotMargin, length, axis, range);
 		*/
-	}
-
-	/*
-	 * @see ILineSeries#getAntialias()
-	 */
-	public int getAntialias()
-	{
-		return antialias;
-	}
-
-	/*
-	 * @see ILineSeries#setAntialias(int)
-	 */
-	public void setAntialias(int antialias)
-	{
-		if (antialias != SWT.DEFAULT && antialias != SWT.ON && antialias != SWT.OFF)
-		{
-			SWT.error(SWT.ERROR_INVALID_ARGUMENT);
-		}
-		this.antialias = antialias;
 	}
 
 	/**
@@ -466,9 +437,8 @@ public class LineSeries extends Series implements ILineSeries
 	@Override
 	protected void draw(GC gc, int width, int height, Axis xAxis, Axis yAxis)
 	{
-		int oldAntialias = gc.getAntialias();
 		int oldLineWidth = gc.getLineWidth();
-		gc.setAntialias(antialias);
+		gc.setAntialias(SWT.ON);
 		gc.setLineWidth(lineWidth);
 
 		if (lineStyle != LineStyle.NONE)
@@ -481,7 +451,6 @@ public class LineSeries extends Series implements ILineSeries
 			drawSymbolAndLabel(gc, width, height, xAxis, yAxis);
 		}
 
-		gc.setAntialias(oldAntialias);
 		gc.setLineWidth(oldLineWidth);
 	}
 
@@ -636,7 +605,6 @@ public class LineSeries extends Series implements ILineSeries
 	 */
 	private void drawSymbolAndLabel(GC gc, int width, int height, Axis xAxis, Axis yAxis)
 	{
-
 		// get x and y series
 		double[] xseries = compressor.getCompressedXSeries();
 		double[] yseries = compressor.getCompressedYSeries();

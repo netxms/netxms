@@ -45,7 +45,7 @@ static struct
    UINT32 dwType;
    int iVersion;
    UINT32 dwCommand;
-} PDU_type_to_command[] = 
+} s_pduTypeToCommand[] = 
 {
    { ASN_TRAP_V1_PDU, SNMP_VERSION_1, SNMP_TRAP },
    { ASN_TRAP_V2_PDU, SNMP_VERSION_2C, SNMP_TRAP },
@@ -80,6 +80,9 @@ SNMP_PDU::SNMP_PDU()
 	m_msgMaxSize = SNMP_DEFAULT_MSG_MAX_SIZE;
 	m_authObject = NULL;
 	m_reportable = true;
+   m_securityModel = SNMP_SECURITY_MODEL_V1;
+	m_dwAgentAddr = 0;
+	m_dwTimeStamp = 0;
 }
 
 /**
@@ -103,6 +106,9 @@ SNMP_PDU::SNMP_PDU(UINT32 dwCommand, UINT32 dwRqId, UINT32 dwVersion)
 	m_msgMaxSize = SNMP_DEFAULT_MSG_MAX_SIZE;
 	m_authObject = NULL;
 	m_reportable = true;
+   m_securityModel = (m_version == SNMP_VERSION_1) ? SNMP_SECURITY_MODEL_V1 : ((m_version == SNMP_VERSION_2C) ? SNMP_SECURITY_MODEL_V2C : SNMP_SECURITY_MODEL_USM);
+   m_dwAgentAddr = 0;
+   m_dwTimeStamp = 0;
 }
 
 /**
@@ -130,6 +136,8 @@ SNMP_PDU::SNMP_PDU(SNMP_PDU *src) : m_authoritativeEngine(&src->m_authoritativeE
    m_authObject = (src->m_authObject != NULL) ? strdup(src->m_authObject) : NULL;
 	m_reportable = src->m_reportable;
    m_securityModel = src->m_securityModel;
+   m_dwAgentAddr = 0;
+   m_dwTimeStamp = 0;
 }
 
 /**
@@ -919,7 +927,7 @@ bool SNMP_PDU::parse(BYTE *rawData, size_t rawLength, SNMP_SecurityContext *secu
 size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 {
    int i;
-   UINT32 dwValue, dwPDUType;
+   UINT32 dwValue;
    size_t dwBufferSize, dwBytes, dwVarBindsSize, dwPDUSize, dwPacketSize;
    BYTE *pbCurrPos, *pBlock, *pVarBinds, *pPacket;
 
@@ -950,21 +958,22 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
    }
 
    // Determine PDU type
-   for(i = 0; PDU_type_to_command[i].dwType != 0; i++)
-      if (((m_version == (UINT32)PDU_type_to_command[i].iVersion) ||
-           (PDU_type_to_command[i].iVersion == -1)) &&
-          (PDU_type_to_command[i].dwCommand == m_command))
+   UINT32 pduType = 0;
+   for(i = 0; s_pduTypeToCommand[i].dwType != 0; i++)
+      if (((m_version == (UINT32)s_pduTypeToCommand[i].iVersion) ||
+           (s_pduTypeToCommand[i].iVersion == -1)) &&
+          (s_pduTypeToCommand[i].dwCommand == m_command))
       {
-         dwPDUType = PDU_type_to_command[i].dwType;
+         pduType = s_pduTypeToCommand[i].dwType;
          break;
       }
 
    // Encode PDU header
-   if (dwPDUType != 0)
+   if (pduType != 0)
    {
       pbCurrPos = pBlock;
       dwPDUSize = 0;
-      switch(dwPDUType)
+      switch(pduType)
       {
          case ASN_TRAP_V1_PDU:
             dwBytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_pEnterprise->getValue(),
@@ -1051,7 +1060,7 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 			dwPacketSize += dwBytes;
 			pbCurrPos += dwBytes;
 
-			dwBytes = encodeV3ScopedPDU(dwPDUType, pBlock, dwPDUSize, pbCurrPos, dwBufferSize - dwPacketSize);
+			dwBytes = encodeV3ScopedPDU(pduType, pBlock, dwPDUSize, pbCurrPos, dwBufferSize - dwPacketSize);
 			if (securityContext->needEncryption())
 			{
 #ifdef _WITH_ENCRYPTION
@@ -1123,7 +1132,7 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
 			pbCurrPos += dwBytes;
 
 			// Encode PDU into packet
-			dwBytes = BER_Encode(dwPDUType, pBlock, dwPDUSize, pbCurrPos, dwBufferSize - dwPacketSize);
+			dwBytes = BER_Encode(pduType, pBlock, dwPDUSize, pbCurrPos, dwBufferSize - dwPacketSize);
 			dwPacketSize += dwBytes;
 		}
 

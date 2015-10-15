@@ -114,6 +114,12 @@ target
 /src/agent/core/nxagentd
 /src/agent/core/static_subagents.cpp
 /src/agent/install/Output
+/src/agent/subagents/java/java/.classpath
+/src/agent/subagents/java/java/.project
+/src/agent/subagents/java/java/.settings
+/src/agent/subagents/java/sample/.classpath
+/src/agent/subagents/java/sample/.project
+/src/agent/subagents/java/sample/.settings
 /src/agent/subagents/portCheck/x64
 /src/agent/tools/nxappget/nxappget
 /src/agent/tools/nxapush/nxapush
@@ -201,14 +207,13 @@ target
 /stamp-h1
 /status
 /tests/test-libnetxms/test-libnetxms
+/tests/test-libnxcc/test-libnxcc
 /tests/test-libnxdb/test-libnxdb
 /tools/inst.tar.gz
 /webui/eclipse
 /x64
 
 # Eclipse CDT
-/.project
-.cproject
 .metadata
 
 # Dolphin browser

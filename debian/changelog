@@ -1,3 +1,40 @@
+netxms (2.0-RC1-1) unstable; urgency=low
+
+  * Fixed LDAP authentication issues with Active Directory
+  * Fixed character encoding issues in LDAP user data
+  * Java subagent improved
+  * Fixed multiple issues with agent side data caching
+  * Hash maps implemented in NXSL
+  * Improved array implementation in NXSL
+  * New NXSL function ArrayToString
+  * New OS parameters and tables: System.HandleCount, System.OpenFiles, Process.Handles
+  * Unified macros in all types of object tools
+  * Server can be switched to case-insensitive login names mode
+  * Implemented support of "command generates output" option for server commands
+  * Network device driver for TelcoBridges gateways
+
+ -- Alex Kirhenshtein <alk@netxms.org>  Fri, 7 Aug 2015 10:38:00 +0300
+
+netxms (2.0-M5-1) unstable; urgency=low
+
+  * Fixed bug in handling floating point Windows performance counters
+  * Added "comments" attribute to NXSL "DCI" class
+  * New NXSL function sha256
+  * Fixed broken nxagent.sms SMS driver
+  * Added support for SNMP traps over IPv6
+  * Switched to SHA-256 for password hashing
+  * Timestamp can be provided in nxpush and nxapush
+  * New methods in NXSL class "Event": setMessage, setSeverity, setUserTag
+  * Command line options for nxagentd to change effective user and group after start
+  * Fixed occasional NXSL compiler crash on scripts with syntax errors
+  * Errors in auto bind/apply scripts interpreted as "ignore" instead of "false" result
+  * New core agent parameter File.FolderCount
+  * Fixed broken active discovery
+  * Improved system behaviour on large installations
+  * Fixed issues: #50, #630, #780, #781, #791, #794, #797, #798, #806, #815, #816, #817, #824, #832, #833, #837
+
+ -- Alex Kirhenshtein <alk@netxms.org>  Sat, 20 Jun 2015 13:50:29 +0300
+
 netxms (2.0-M4-1) unstable; urgency=low
 
   * MEGATEC protocol support in UPS subagent

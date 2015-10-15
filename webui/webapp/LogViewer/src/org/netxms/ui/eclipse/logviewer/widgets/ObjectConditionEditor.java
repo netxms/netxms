@@ -36,6 +36,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -82,7 +83,7 @@ public class ObjectConditionEditor extends ConditionEditor
 	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected void createContent(Composite parent, ColumnFilter initialFilter)
 	{
 		Composite group = new Composite(this, SWT.NONE);
 		GridLayout layout = new GridLayout();
@@ -114,6 +115,35 @@ public class ObjectConditionEditor extends ConditionEditor
 				selectObject();
 			}
 		});
+
+      if (initialFilter != null)
+      {
+         switch(initialFilter.getOperation())
+         {
+            case ColumnFilter.EQUALS:
+               setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
+               objectId = initialFilter.getNumericValue();
+               break;
+            case ColumnFilter.CHILDOF:
+               setSelectedOperation(initialFilter.isNegated() ? 3 : 2);
+               objectId = initialFilter.getNumericValue();
+               break;
+         }
+         
+         if (objectId != 0)
+         {
+            AbstractObject object = ConsoleSharedData.getSession().findObjectById(objectId);
+            if (object != null)
+            {
+               objectName.setText(object.getObjectName());
+               objectName.setImage(labelProvider.getImage(object));
+            }
+            else
+            {
+               objectName.setText("[" + objectId + "]");
+            }
+         }
+      }
 	}
 	
 	/**

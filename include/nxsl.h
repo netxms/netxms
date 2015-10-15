@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
 **
@@ -74,6 +74,9 @@
 #define NXSL_ERR_NO_SUCH_METHOD           30
 #define NXSL_ERR_NO_SUCH_CONSTANT         31
 #define NXSL_ERR_EXECUTION_ABORTED        32
+#define NXSL_ERR_NOT_HASHMAP              33
+#define NXSL_ERR_NOT_CONTAINER            34
+#define NXSL_ERR_KEY_NOT_STRING           35
 
 /**
  * Special return codes for external functions
@@ -129,7 +132,7 @@ struct NXSL_Program;
 extern "C" {
 #endif
 
-NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszError, int nBufSize);
+NXSL_Program LIBNXSL_EXPORTABLE *NXSLCompile(const TCHAR *pszSource, TCHAR *pszError, int nBufSize, int *errorLineNumber);
 NXSL_VM LIBNXSL_EXPORTABLE *NXSLCompileAndCreateVM(const TCHAR *pszSource, TCHAR *pszError, int nBufSize, NXSL_Environment *env);
 TCHAR LIBNXSL_EXPORTABLE *NXSLLoadFile(const TCHAR *pszFileName, UINT32 *pdwFileSize);
 

@@ -45,11 +45,9 @@
 #define COUNTER_TYPE_INT64    2
 #define COUNTER_TYPE_FLOAT    3
 
-
-//
-// Counter structure
-//
-
+/**
+ * Counter structure
+ */
 struct WINPERF_COUNTER
 {
    TCHAR *pszName;
@@ -78,6 +76,7 @@ private:
    TCHAR m_class;
 	MUTEX m_mutex;
 	CONDITION m_changeCondition;
+   THREAD m_collectorThread;
 
 	void collectorThread();
 	static THREAD_RESULT THREAD_CALL collectorThreadStarter(void *);
@@ -89,6 +88,7 @@ public:
 	void addCounter(WINPERF_COUNTER *c);
 
 	void startCollectorThread();
+   void joinCollectorThread();
 };
 
 /**
@@ -106,7 +106,8 @@ struct COUNTER_INDEX
 void CreateCounterIndex(TCHAR *pData);
 BOOL TranslateCounterName(const TCHAR *pszName, TCHAR *pszOut);
 int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName);
-void StartCollectorThreads(void);
+void StartCollectorThreads();
+void JoinCollectorThreads();
 TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufferSize);
 void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError);
 WINPERF_COUNTER *AddCounter(TCHAR *pszName, int iClass, int iNumSamples, int iDataType);
@@ -114,13 +115,5 @@ BOOL AddCounterFromConfig(TCHAR *pszStr);
 BOOL AddParameter(TCHAR *pszName, LONG (* fpHandler)(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *),
                   TCHAR *pArg, int iDataType, TCHAR *pszDescription);
 LONG H_CollectedCounterData(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
-
-
-//
-// Global variables
-//
-
-extern HANDLE g_hCondShutdown;
-
 
 #endif

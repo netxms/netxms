@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ public class MapContentProvider implements IGraphEntityRelationshipContentProvid
 				{
 					try
 					{
-						DciValue[] values = session.getLastValues(e.getKey(), true, false);
+						DciValue[] values = session.getLastValues(e.getKey(), true, false, false);
 						cachedDciValues.put(e.getKey(), values);
 					}
 					catch(Exception e2)

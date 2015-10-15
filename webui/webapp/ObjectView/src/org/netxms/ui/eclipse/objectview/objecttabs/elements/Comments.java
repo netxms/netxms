@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.Messages;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
 /**
  * Show object's comments
@@ -37,10 +38,12 @@ public class Comments extends OverviewPageElement
 	 * The constructor
 	 * 
 	 * @param parent
+	 * @param anchor
+	 * @param objectTab
 	 */
-	public Comments(Composite parent, OverviewPageElement anchor)
+	public Comments(Composite parent, OverviewPageElement anchor, ObjectTab objectTab)
 	{
-		super(parent, anchor);
+		super(parent, anchor, objectTab);
 	}
 
 	/* (non-Javadoc)

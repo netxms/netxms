@@ -23,11 +23,56 @@ import java.util.Random;
 /**
  * Basic connection tests
  */
-public class ConnectionTest extends SessionTest
+public class ConnectionTest extends AbstractSessionTest
 {	
-	public void testMultipleConnections() throws Exception
+   public void testConnect() throws Exception
+   {
+      final NXCSession session = connect();
+
+      assertEquals(0, session.getUserId());
+      
+      Thread.sleep(2000);
+      session.disconnect();
+   }
+
+   public void testEncryptedConnect() throws Exception
+   {
+      final NXCSession session = connect(true);
+
+      assertEquals(0, session.getUserId());
+      
+      Thread.sleep(2000);
+      session.disconnect();
+   }
+   
+   public void testIllegalStates() throws Exception
+   {
+      NXCSession session = connect();
+      try
+      {
+         session.connect();
+         assertTrue(false);
+      }
+      catch(IllegalStateException e)
+      {
+         System.out.println("IllegalStateException thrown (" + e.getMessage() + ")");
+      }
+      
+      session.disconnect();
+      try
+      {
+         session.connect();
+         assertTrue(false);
+      }
+      catch(IllegalStateException e)
+      {
+         System.out.println("IllegalStateException thrown (" + e.getMessage() + ")");
+      }
+   }
+
+   public void testMultipleConnections() throws Exception
 	{
-	   Thread[] t = new Thread[TestConstants.CONNECTION_PULL];
+	   Thread[] t = new Thread[TestConstants.CONNECTION_POOL];
 	   for(int i = 0; i < t.length; i++)
 	   {
 	      t[i] = new Thread(new Runnable() {

@@ -18,12 +18,18 @@
  */
 package org.netxms.ui.eclipse.osm.views;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -33,26 +39,30 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
-import org.netxms.ui.eclipse.osm.widgets.GeoMapViewer;
+import org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer;
 import org.netxms.ui.eclipse.osm.widgets.helpers.GeoMapListener;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Base class for all geographical views
  */
-public abstract class AbstractGeolocationView extends ViewPart
+public abstract class AbstractGeolocationView extends ViewPart implements ISelectionProvider
 {
 	public static final String JOB_FAMILY = "MapViewJob"; //$NON-NLS-1$
 	
-	protected GeoMapViewer map;
+	protected AbstractGeoMapViewer map;
 	
 	private MapAccessor mapAccessor;
 	private int zoomLevel = 15;
 	private Action actionZoomIn;
 	private Action actionZoomOut;
+	private ISelection selection;
+	private Set<ISelectionChangedListener> selectionChangeListeners = new HashSet<ISelectionChangedListener>();
 	
 	/**
 	 * Get initial center point for displayed map
@@ -93,7 +103,7 @@ public abstract class AbstractGeolocationView extends ViewPart
 	public void createPartControl(Composite parent)
 	{
 		// Map control
-		map = new GeoMapViewer(parent, SWT.BORDER, false, null);
+		map = createMapViewer(parent, SWT.BORDER);
 		map.setViewPart(this);
 		
 		createActions();
@@ -123,8 +133,19 @@ public abstract class AbstractGeolocationView extends ViewPart
 				mapAccessor.setLongitude(centerPoint.getLongitude());
 			}
 		});
+		
+		getSite().setSelectionProvider(this);
 	}
 
+	/**
+	 * Create actual map viewer control
+	 * 
+	 * @param parent
+	 * @param style
+	 * @return
+	 */
+	protected abstract AbstractGeoMapViewer createMapViewer(Composite parent, int style);
+	
 	/**
 	 * Create actions
 	 */
@@ -199,6 +220,9 @@ public abstract class AbstractGeolocationView extends ViewPart
 		// Create menu.
 		Menu menu = menuMgr.createContextMenu(map);
 		map.setMenu(menu);
+
+      // Register menu for extension.
+      getSite().registerContextMenu(menuMgr, this);
 	}
 
 	/**
@@ -209,8 +233,17 @@ public abstract class AbstractGeolocationView extends ViewPart
 	 */
 	protected void fillContextMenu(final IMenuManager manager)
 	{
-		manager.add(actionZoomIn);
-		manager.add(actionZoomOut);
+		AbstractObject object = map.getObjectAtPoint(map.getCurrentPoint());
+		selection = (object != null) ? new StructuredSelection(object) : new StructuredSelection();
+		if (!selection.isEmpty())
+		{
+		   ObjectContextMenu.fill(manager, getSite(), this);
+		}
+		else
+		{
+	      manager.add(actionZoomIn);
+	      manager.add(actionZoomOut);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -247,4 +280,40 @@ public abstract class AbstractGeolocationView extends ViewPart
 	{
 		return mapAccessor;
 	}
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ISelectionProvider#addSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
+   @Override
+   public void addSelectionChangedListener(ISelectionChangedListener listener)
+   {
+      selectionChangeListeners.add(listener);
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ISelectionProvider#removeSelectionChangedListener(org.eclipse.jface.viewers.ISelectionChangedListener)
+    */
+   @Override
+   public void removeSelectionChangedListener(ISelectionChangedListener listener)
+   {
+      selectionChangeListeners.remove(listener);
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
+    */
+   @Override
+   public ISelection getSelection()
+   {
+      return selection;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.ISelectionProvider#setSelection(org.eclipse.jface.viewers.ISelection)
+    */
+   @Override
+   public void setSelection(ISelection selection)
+   {
+      this.selection = selection;
+   }
 }

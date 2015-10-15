@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,26 +18,41 @@
  */
 package org.netxms.ui.eclipse.dashboard.views;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.UserAccessRights;
+import org.netxms.client.datacollection.DciDataRow;
 import org.netxms.client.objects.Dashboard;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.DashboardControl;
+import org.netxms.ui.eclipse.dashboard.widgets.ElementWidget;
+import org.netxms.ui.eclipse.dashboard.widgets.LineChartElement;
+import org.netxms.ui.eclipse.dashboard.widgets.LineChartElement.DataCacheElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardModifyListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -58,9 +73,10 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private DashboardControl dbc;
 	private Composite parentComposite;
 	private DashboardModifyListener dbcModifyListener;
-	private RefreshAction actionRefresh;
+	private Action actionRefresh;
 	private Action actionEditMode;
 	private Action actionSave;
+	private Action actionExportValues;
 	private Action actionAddAlarmBrowser;
 	private Action actionAddLabel;
 	private Action actionAddBarChart;
@@ -139,16 +155,32 @@ public class DashboardView extends ViewPart implements ISaveablePart
    		};
    		dbc.setModifyListener(dbcModifyListener);
 		}
+		
+		activateContext();
 		createActions();
 		contributeToActionBars();
 	}
+
+	/**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.dashboard.context.DashboardView"); //$NON-NLS-1$
+      }
+   }
 
 	/**
 	 * Create actions
 	 */
 	private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{
@@ -162,15 +194,24 @@ public class DashboardView extends ViewPart implements ISaveablePart
 			}
 		};
 		
-		actionSave = new Action(Messages.get().DashboardView_Save) {
+		actionSave = new Action(Messages.get().DashboardView_Save, SharedIcons.SAVE) {
 			@Override
 			public void run()
 			{
 				dbc.saveDashboard(DashboardView.this);
 			}
 		};
-		actionSave.setImageDescriptor(SharedIcons.SAVE);
 		actionSave.setEnabled(false);
+		
+		actionExportValues = new Action("E&xport line chart values", SharedIcons.CSV) {
+         @Override
+         public void run()
+         {
+            exportLineChartValues();
+         }
+		};
+		actionExportValues.setActionDefinitionId("org.netxms.ui.eclipse.dashboard.commands.export_line_chart_values"); //$NON-NLS-1$
+      handlerService.activateHandler(actionExportValues.getActionDefinitionId(), new ActionHandler(actionExportValues));
 		
 		actionEditMode = new Action(Messages.get().DashboardView_EditMode, Action.AS_CHECK_BOX) {
 			@Override
@@ -292,6 +333,8 @@ public class DashboardView extends ViewPart implements ISaveablePart
    		manager.add(actionAddDashboard);
    		manager.add(new Separator());
 	   }
+      manager.add(actionExportValues);
+      manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -307,7 +350,10 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	   {
    		manager.add(actionEditMode);
    		manager.add(actionSave);
+   		manager.add(new Separator());
 	   }
+	   manager.add(actionExportValues);
+      manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 	
@@ -409,5 +455,145 @@ public class DashboardView extends ViewPart implements ISaveablePart
 
 		actionSave.setEnabled((dbc != null) ? dbc.isModified() : false);
 		firePropertyChange(PROP_DIRTY);
+	}
+	
+	/**
+	 * Export all line chart values as CSV
+	 */
+	private void exportLineChartValues()
+	{
+	   FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
+	   fd.setFileName(dashboard.getObjectName() + ".csv");
+	   final String fileName = fd.open();
+	   if (fileName == null)
+	      return;
+	   
+	   final List<DataCacheElement> data = new ArrayList<DataCacheElement>();
+	   for(ElementWidget w : dbc.getElementWidgets())
+	   {
+	      if (!(w instanceof LineChartElement))
+	         continue;
+	      
+	      for(DataCacheElement d : ((LineChartElement)w).getDataCache())
+	      {
+	         data.add(d);
+	      }
+	   }
+	   
+      final DateFormat dfDate = RegionalSettings.getDateFormat();
+      final DateFormat dfTime = RegionalSettings.getTimeFormat();
+      final DateFormat dfDateTime = RegionalSettings.getDateTimeFormat();
+	   
+	   new ConsoleJob("Export line chart data", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            boolean doInterpolation = session.getPublicServerVariableAsBoolean("DashboardDataExportEnableInterpolation");
+            
+            // Build combined time series
+            // Time stamps in series are reversed - latest value first
+            List<Date> combinedTimeSeries = new ArrayList<Date>();
+            for(DataCacheElement d : data)
+            {
+               for(DciDataRow r : d.data.getValues())
+               {
+                  int i;
+                  for(i = 0; i < combinedTimeSeries.size(); i++)
+                  {
+                     if (combinedTimeSeries.get(i).getTime() == r.getTimestamp().getTime())
+                        break;                 
+                     if (combinedTimeSeries.get(i).getTime() < r.getTimestamp().getTime())
+                     {
+                        combinedTimeSeries.add(i, r.getTimestamp());
+                        break;
+                     }
+                  }
+                  if (i == combinedTimeSeries.size())
+                     combinedTimeSeries.add(r.getTimestamp());
+               }
+            }
+            
+            List<Double[]> combinedData = new ArrayList<Double[]>(data.size());
+            
+            // insert missing values
+            for(DataCacheElement d : data)
+            {
+               Double[] ySeries = new Double[combinedTimeSeries.size()];
+               int combinedIndex = 0;
+               double lastValue = 0;
+               long lastTimestamp = 0;
+               DciDataRow[] values = d.data.getValues();
+               for(int i = 0; i < values.length; i++)
+               {
+                  Date currentTimestamp = values[i].getTimestamp();
+                  double currentValue = values[i].getValueAsDouble();
+                  long currentCombinedTimestamp = combinedTimeSeries.get(combinedIndex).getTime();
+                  while(currentCombinedTimestamp > currentTimestamp.getTime())
+                  {
+                     if ((lastTimestamp != 0) && doInterpolation)
+                     {
+                        // do linear interpolation for missed value
+                        ySeries[combinedIndex] = lastValue + (currentValue - lastValue) * ((double)(lastTimestamp - currentCombinedTimestamp) / (double)(lastTimestamp - currentTimestamp.getTime()));
+                     }
+                     else
+                     {
+                        ySeries[combinedIndex] = null;
+                     }
+                     combinedIndex++;
+                     currentCombinedTimestamp = combinedTimeSeries.get(combinedIndex).getTime();
+                  }
+                  ySeries[combinedIndex++] = currentValue;
+                  lastTimestamp = currentTimestamp.getTime();
+                  lastValue = currentValue;
+               }
+               combinedData.add(ySeries);
+            }            
+            
+            BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
+            try
+            {
+               writer.write("# " + dashboard.getObjectName() + " " + dfDateTime.format(new Date()));
+               writer.newLine();
+               writer.write("DATE,TIME");
+               for(DataCacheElement d : data)
+               {
+                  writer.write(',');
+                  writer.write(d.name);
+               }
+               writer.newLine();
+               
+               for(int i = combinedTimeSeries.size() - 1; i >= 0; i--)
+               {
+                  Date d = combinedTimeSeries.get(i);
+                  writer.write(dfDate.format(d));
+                  writer.write(',');
+                  writer.write(dfTime.format(d));
+                  for(Double[] values : combinedData)
+                  {
+                     writer.write(',');
+                     if (values[i] != null)
+                     {
+                        double v = values[i];
+                        if (Math.abs(v) > 0.001)
+                           writer.write(String.format("%.3f", v));
+                        else
+                           writer.write(Double.toString(v));
+                     }
+                  }  
+                  writer.newLine();
+               }
+            }
+            finally
+            {
+               writer.close();
+            }
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot export line chart data";
+         }
+      }.start();
 	}
 }

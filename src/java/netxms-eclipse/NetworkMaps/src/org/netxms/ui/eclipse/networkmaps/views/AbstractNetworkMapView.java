@@ -81,13 +81,13 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.contexts.IContextService;
-import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.maps.MapLayoutAlgorithm;
+import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.configs.DCIImageConfiguration;
@@ -111,7 +111,7 @@ import org.netxms.ui.eclipse.networkmaps.views.helpers.ExtendedGraphViewer;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.LinkDciValueProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapContentProvider;
 import org.netxms.ui.eclipse.networkmaps.views.helpers.MapLabelProvider;
-import org.netxms.ui.eclipse.networkmaps.views.helpers.ObjectFigureType;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.FilteringMenuManager;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -178,6 +178,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionShowObjectDetails;
 	protected Action actionCopyImage;
    protected Action actionHideLinkLabels;
+   protected Action actionSelectAllObjects;
 
 	private String viewId;
 	private IStructuredSelection currentSelection = new StructuredSelection(new Object[0]);
@@ -235,7 +236,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	 * @see org.eclipse.ui.part.ViewPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	public void createPartControl(Composite parent)
+	public final void createPartControl(Composite parent)
 	{
 		FillLayout layout = new FillLayout();
 		parent.setLayout(layout);
@@ -250,7 +251,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		try
 		{
 			alwaysFitLayout = settings.getBoolean(viewId + ".alwaysFitLayout");
-			labelProvider.setObjectFigureType(ObjectFigureType.values()[settings.getInt(viewId + ".objectFigureType")]); //$NON-NLS-1$
+			labelProvider.setObjectFigureType(MapObjectDisplayMode.getByValue(settings.getInt(viewId + ".objectFigureType"))); //$NON-NLS-1$
 		}
 		catch(Exception e)
 		{
@@ -347,7 +348,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 					}
 				}
 
-				// Default behaviour
+				// Default behavior
 				actionOpenSubmap.run();
 			}
 		});
@@ -385,7 +386,16 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 
 		activateContext();
 		registerDoubleClickHandlers();
+		setupMapControl();
 		refreshMap();
+	}
+
+	/**
+	 * Called from createPartControl to allow subclasses to do additional map setup. Subclasses
+	 * should override this method instead of createPartControl. Default implementation do nothing.
+	 */
+	protected void setupMapControl()
+	{
 	}
 
    /**
@@ -609,7 +619,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		actionShowStatusBackground.setChecked(labelProvider.isShowStatusBackground());
-		actionShowStatusBackground.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
+		actionShowStatusBackground.setEnabled(labelProvider.getObjectFigureType() == MapObjectDisplayMode.ICON);
 
 		actionShowStatusIcon = new Action(Messages.get().AbstractNetworkMapView_ShowStatusIcon, Action.AS_CHECK_BOX) {
 			@Override
@@ -623,7 +633,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		actionShowStatusIcon.setChecked(labelProvider.isShowStatusIcons());
-		actionShowStatusIcon.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
+		actionShowStatusIcon.setEnabled(labelProvider.getObjectFigureType() == MapObjectDisplayMode.ICON);
 
 		actionShowStatusFrame = new Action(Messages.get().AbstractNetworkMapView_ShowStatusFrame, Action.AS_CHECK_BOX) {
 			@Override
@@ -637,7 +647,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			}
 		};
 		actionShowStatusFrame.setChecked(labelProvider.isShowStatusFrame());
-		actionShowStatusFrame.setEnabled(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
+		actionShowStatusFrame.setEnabled(labelProvider.getObjectFigureType() == MapObjectDisplayMode.ICON);
 
 		actionZoomIn = new Action(Messages.get().AbstractNetworkMapView_ZoomIn, SharedIcons.ZOOM_IN) {
 			@Override
@@ -757,61 +767,37 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 			@Override
 			public void run()
 			{
-				labelProvider.setObjectFigureType(ObjectFigureType.ICON);
-				updateObjectPositions();
-				saveLayout();
-				viewer.refresh(true);
-				actionShowStatusBackground.setEnabled(true);
-				actionShowStatusFrame.setEnabled(true);
-				actionShowStatusIcon.setEnabled(true);
+			   setObjectDisplayMode(MapObjectDisplayMode.ICON, true);
 			}
 		};
-		actionFiguresIcons.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.ICON);
+		actionFiguresIcons.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.ICON);
 
 		actionFiguresSmallLabels = new Action(Messages.get().AbstractNetworkMapView_SmallLabels, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				labelProvider.setObjectFigureType(ObjectFigureType.SMALL_LABEL);
-				updateObjectPositions();
-				saveLayout();
-				viewer.refresh(true);
-				actionShowStatusBackground.setEnabled(false);
-				actionShowStatusFrame.setEnabled(false);
-				actionShowStatusIcon.setEnabled(false);
+            setObjectDisplayMode(MapObjectDisplayMode.SMALL_LABEL, true);
 			}
 		};
-		actionFiguresSmallLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.SMALL_LABEL);
+		actionFiguresSmallLabels.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.SMALL_LABEL);
 
 		actionFiguresLargeLabels = new Action(Messages.get().AbstractNetworkMapView_LargeLabels, Action.AS_RADIO_BUTTON) {
 			@Override
 			public void run()
 			{
-				labelProvider.setObjectFigureType(ObjectFigureType.LARGE_LABEL);
-				updateObjectPositions();
-				saveLayout();
-				viewer.refresh(true);
-				actionShowStatusBackground.setEnabled(false);
-				actionShowStatusFrame.setEnabled(false);
-				actionShowStatusIcon.setEnabled(false);
+            setObjectDisplayMode(MapObjectDisplayMode.LARGE_LABEL, true);
 			}
 		};
-		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.LARGE_LABEL);
+		actionFiguresLargeLabels.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.LARGE_LABEL);
 		
 		actionFiguresStatusIcons = new Action(Messages.get().AbstractNetworkMapView_StatusIcons, Action.AS_RADIO_BUTTON) {
          @Override
          public void run()
          {
-            labelProvider.setObjectFigureType(ObjectFigureType.STATUS);
-            updateObjectPositions();
-            saveLayout();
-            viewer.refresh(true);
-            actionShowStatusBackground.setEnabled(false);
-            actionShowStatusFrame.setEnabled(false);
-            actionShowStatusIcon.setEnabled(false);
+            setObjectDisplayMode(MapObjectDisplayMode.STATUS, true);
          }
       };
-      actionFiguresStatusIcons.setChecked(labelProvider.getObjectFigureType() == ObjectFigureType.STATUS);
+      actionFiguresStatusIcons.setChecked(labelProvider.getObjectFigureType() == MapObjectDisplayMode.STATUS);
 
 		actionShowGrid = new Action(Messages.get().AbstractNetworkMapView_ShowGrid, Action.AS_CHECK_BOX) {
 			@Override
@@ -876,6 +862,17 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
          }
       };
       actionHideLinkLabels.setImageDescriptor(Activator.getImageDescriptor("icons/hide_link.png")); //$NON-NLS-1$
+      
+      actionSelectAllObjects = new Action("Select &all objects") {
+         @Override
+         public void run()
+         {
+            viewer.setSelection(new StructuredSelection(mapPage.getObjectElements()));
+         }
+      };
+      actionSelectAllObjects.setId("org.netxms.ui.eclipse.networkmaps.localActions.AbstractMap.SelectAllObjects"); //$NON-NLS-1$
+      actionSelectAllObjects.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.SelectAllObjects"); //$NON-NLS-1$
+      handlerService.activateHandler(actionSelectAllObjects.getActionDefinitionId(), new ActionHandler(actionSelectAllObjects));
 	}
 
 	/**
@@ -963,6 +960,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       manager.add(new Separator());      
       manager.add(actionCopyImage);
 		manager.add(new Separator());
+      manager.add(actionSelectAllObjects);
+      manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -1039,26 +1038,10 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	{
 		manager.add(actionOpenSubmap);
 		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_NXVS));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_TOPOLOGY));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
-
+		ObjectContextMenu.fill(manager, getSite(), this);
 		if (currentSelection.size() == 1)
 		{
-			manager.add(new Separator());
-			manager.add(actionShowObjectDetails);
-			manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
-			manager.add(new PropertyDialogAction(getSite(), this));
+			manager.insertAfter(GroupMarkers.MB_PROPERTIES, actionShowObjectDetails);
 		}
 	}
 
@@ -1117,6 +1100,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       manager.add(actionHideLinkLabels);  
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+      manager.add(new Separator()); 
+      manager.add(actionSelectAllObjects);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -1348,8 +1333,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		Object object = currentSelection.getFirstElement();
 		if (object instanceof AbstractObject)
 		{
-			long submapId = (object instanceof NetworkMap) ? ((AbstractObject)object).getObjectId() : ((AbstractObject)object)
-					.getSubmapId();
+			long submapId = (object instanceof NetworkMap) ? ((AbstractObject)object).getObjectId() : ((AbstractObject)object).getSubmapId();
 			if (submapId != 0)
 			{
 				try
@@ -1425,6 +1409,10 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		}
 	}
 
+	/**
+	 * @param string
+	 * @return
+	 */
 	private static int safeParseInt(String string)
 	{
 		if (string == null)
@@ -1524,5 +1512,23 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
             dciValueProvider.removeDcis(mapPage);
          }
       }
+   }
+   
+   /**
+    * @param mode
+    * @param saveLayout
+    */
+   protected void setObjectDisplayMode(MapObjectDisplayMode mode, boolean saveLayout)
+   {
+      labelProvider.setObjectFigureType(mode);
+      if (saveLayout)
+      {
+         updateObjectPositions();
+         saveLayout();
+      }
+      viewer.refresh(true);
+      actionShowStatusBackground.setEnabled(mode == MapObjectDisplayMode.ICON);
+      actionShowStatusFrame.setEnabled(mode == MapObjectDisplayMode.ICON);
+      actionShowStatusIcon.setEnabled(mode == MapObjectDisplayMode.ICON);
    }
 }

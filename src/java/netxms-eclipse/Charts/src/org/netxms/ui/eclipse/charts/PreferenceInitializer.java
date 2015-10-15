@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,13 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 	   ps.setDefault("Chart.Colors.Data.13", "217,170,169"); //$NON-NLS-1$ //$NON-NLS-2$
 	   ps.setDefault("Chart.Colors.Data.14", "198,214,172"); //$NON-NLS-1$ //$NON-NLS-2$
 	   ps.setDefault("Chart.Colors.Data.15", "186,176,201"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.DialNeedle", "51,78,113"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.DialNeedlePin", "239,228,176"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.DialScale", "0,0,0"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.DialScaleText", "0,0,0"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.DialValueBackground", "51,78,113"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.DialValueText", "255,255,255"); //$NON-NLS-1$ //$NON-NLS-2$
+      ps.setDefault("Chart.Colors.Legend", "0,0,0"); //$NON-NLS-1$ //$NON-NLS-2$
 	   ps.setDefault("Chart.Colors.PlotArea", "255,255,255"); //$NON-NLS-1$ //$NON-NLS-2$
 	   ps.setDefault("Chart.Colors.Selection", "0,0,128"); //$NON-NLS-1$ //$NON-NLS-2$
 	   ps.setDefault("Chart.Colors.Title", "0,0,0"); //$NON-NLS-1$ //$NON-NLS-2$

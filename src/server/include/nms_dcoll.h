@@ -167,17 +167,6 @@ public:
 	void setValue(const TCHAR *value) { m_value = value; }
 };
 
-/**
- * Table threshold definition
- */
-class NXCORE_EXPORTABLE TableThreshold
-{
-private:
-
-public:
-
-};
-
 class Template;
 
 /**
@@ -192,7 +181,7 @@ protected:
 	TCHAR m_systemTag[MAX_DB_STRING];
    time_t m_tLastPoll;           // Last poll time
    int m_iPollingInterval;       // Polling interval in seconds
-   int m_iRetentionTime;         // Retention time in seconds
+   int m_iRetentionTime;         // Retention time in days
    BYTE m_source;                // origin: SNMP, agent, etc.
    BYTE m_status;                // Item status: active, disabled or not supported
    BYTE m_busy;                  // 1 when item is queued for polling, 0 if not
@@ -207,7 +196,7 @@ protected:
    time_t m_tLastCheck;          // Last schedule checking time
    UINT32 m_dwErrorCount;         // Consequtive collection error count
 	UINT32 m_dwResourceId;	   	// Associated cluster resource ID
-	UINT32 m_dwProxyNode;          // Proxy node ID or 0 to disable
+	UINT32 m_sourceNode;          // Source node ID or 0 to disable
 	WORD m_snmpPort;					// Custom SNMP port or 0 for node default
 	TCHAR *m_pszPerfTabSettings;
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
@@ -254,20 +243,26 @@ public:
    const TCHAR *getDescription() { return m_szDescription; }
 	const TCHAR *getSystemTag() { return m_systemTag; }
 	const TCHAR *getPerfTabSettings() { return m_pszPerfTabSettings; }
+   int getPollingInterval() { return m_iPollingInterval; }
+   int getEffectivePollingInterval() { return (m_iPollingInterval > 0) ? m_iPollingInterval : m_defaultPollingInterval; }
    Template *getTarget() { return m_pNode; }
    UINT32 getTemplateId() { return m_dwTemplateId; }
    UINT32 getTemplateItemId() { return m_dwTemplateItemId; }
 	UINT32 getResourceId() { return m_dwResourceId; }
-	UINT32 getProxyNode() { return m_dwProxyNode; }
+	UINT32 getSourceNode() { return m_sourceNode; }
 	time_t getLastPollTime() { return m_tLastPoll; }
 	UINT32 getErrorCount() { return m_dwErrorCount; }
 	WORD getSnmpPort() { return m_snmpPort; }
    bool isShowOnObjectTooltip() { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
+   bool isShowInObjectOverview() { return (m_flags & DCF_SHOW_IN_OBJECT_OVERVIEW) ? true : false; }
    bool isAggregateOnCluster() { return (m_flags & DCF_AGGREGATE_ON_CLUSTER) ? true : false; }
-	bool isStatusDCO() {return (m_flags & DCF_CALCULATE_NODE_STATUSS) ? true : false; }
+	bool isStatusDCO() {return (m_flags & DCF_CALCULATE_NODE_STATUS) ? true : false; }
    int getAggregationFunction() { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
    Template *getNode() { return m_pNode; }
    int getRetentionTime() { return m_iRetentionTime; }
+   int getEffectiveRetentionTime() { return (m_iRetentionTime > 0) ? m_iRetentionTime : m_defaultRetentionTime; }
+   const TCHAR *getComments() { return m_comments; }
+   INT16 getAgentCacheMode();
 
 	bool matchClusterResource();
    bool isReadyForPolling(time_t currTime);
@@ -299,6 +294,9 @@ public:
    void setTransformationScript(const TCHAR *pszScript);
 
 	bool prepareForDeletion();
+
+	static int m_defaultRetentionTime;
+	static int m_defaultPollingInterval;
 };
 
 /**
@@ -332,6 +330,8 @@ protected:
    void clearCache();
 
 	virtual bool isCacheLoaded();
+
+   using DCObject::updateFromMessage;
 
 public:
    DCItem();
@@ -381,9 +381,6 @@ public:
    TCHAR *getAggregateValue(AggregationFunction func, time_t periodStart, time_t periodEnd);
 
    virtual void createMessage(NXCPMessage *pMsg);
-#if defined(__SUNPRO_CC) || defined(__HP_aCC)
-   using DCObject::updateFromMessage;
-#endif
    void updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **ppdwMapIndex, UINT32 **ppdwMapId);
    void fillMessageWithThresholds(NXCPMessage *msg);
 
@@ -613,8 +610,6 @@ extern double g_dAvgDBWriterQueueSize;
 extern double g_dAvgIDataWriterQueueSize;
 extern double g_dAvgRawDataWriterQueueSize;
 extern double g_dAvgDBAndIDataWriterQueueSize;
-extern double g_dAvgStatusPollerQueueSize;
-extern double g_dAvgConfigPollerQueueSize;
 extern double g_dAvgSyslogProcessingQueueSize;
 extern double g_dAvgSyslogWriterQueueSize;
 extern UINT32 g_dwAvgDCIQueuingTime;

@@ -203,7 +203,6 @@ static size_t EncodeContent(UINT32 type, const BYTE *data, size_t dataLength, BY
    UINT32 dwTemp;
    QWORD qwTemp;
    BYTE *pTemp, sign;
-   int i;
    size_t oidLength;
 
    switch(type)
@@ -274,7 +273,7 @@ static size_t EncodeContent(UINT32 type, const BYTE *data, size_t dataLength, BY
             nBytes++;
 
             // Encode other ids
-            for(i = 2; i < oidLength; i++, pdwCurrId++)
+            for(size_t i = 2; i < oidLength; i++, pdwCurrId++)
             {
                dwValue = *pdwCurrId;
 

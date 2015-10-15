@@ -107,6 +107,8 @@ public final class RCC extends CommonRCC
    public static final int NO_LOCATION_HISTORY = 115;
    public static final int NXSL_COMPILATION_ERROR = 117;
    public static final int NXSL_EXECUTION_ERROR = 118;
+   public static final int UNKNOWN_CONFIG_VARIABLE = 119;
+   public static final int UNSUPPORTED_AUTH_METHOD = 120;
 	
 	// SNMP-specific, has no corresponding RCC_xxx constants in C library
 	public static final int BAD_MIB_FILE_HEADER = 1001;

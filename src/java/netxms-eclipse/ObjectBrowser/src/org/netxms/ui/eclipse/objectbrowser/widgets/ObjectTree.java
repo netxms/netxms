@@ -108,6 +108,9 @@ public class ObjectTree extends Composite
          @Override
          public void run()
          {
+            if (isDisposed() || objectTree.getControl().isDisposed())
+               return;
+            
             objectTree.getTree().setRedraw(false);
             objectTree.refresh();
             if (statusIndicatorEnabled)

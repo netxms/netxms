@@ -27,7 +27,6 @@
  * Global variables
  */
 UINT64 LIBNXSRV_EXPORTABLE g_flags = AF_USE_SYSLOG | AF_CATCH_EXCEPTIONS | AF_LOG_SQL_ERRORS;
-UINT32 LIBNXSRV_EXPORTABLE g_snmpTimeout = 2000;
 UINT32 LIBNXSRV_EXPORTABLE g_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
 
 /**
@@ -71,6 +70,7 @@ static struct
    { ERR_MEM_ALLOC_FAILED, _T("Memory allocation failed") },
    { ERR_FILE_DELETE_FAILED, _T("File delete failed") },
    { ERR_NO_SESSION_AGENT, _T("Session agent not available") },
+   { ERR_SERVER_ID_UNSET, _T("Server ID is not set") },
    { -1, NULL }
 };
 

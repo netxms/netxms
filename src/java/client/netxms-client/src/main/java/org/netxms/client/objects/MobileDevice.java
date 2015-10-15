@@ -26,7 +26,7 @@ import org.netxms.client.NXCSession;
 /**
  * Mobile device object
  */
-public class MobileDevice extends GenericObject
+public class MobileDevice extends DataCollectionTarget
 {
 	private String deviceId;
 	private String vendor;

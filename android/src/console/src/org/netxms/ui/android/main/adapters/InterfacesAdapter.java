@@ -148,6 +148,7 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 		return groupPosition;
 	}
 
+	@SuppressWarnings("deprecation")
 	@SuppressLint("InflateParams")
 	@Override
 	public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent)

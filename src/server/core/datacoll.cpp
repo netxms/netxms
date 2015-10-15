@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,8 +30,6 @@
 /**
  * Externals
  */
-extern Queue g_statusPollQueue;
-extern Queue g_configPollQueue;
 extern Queue g_syslogProcessingQueue;
 extern Queue g_syslogWriteQueue;
 
@@ -43,8 +41,6 @@ double g_dAvgDBWriterQueueSize = 0;
 double g_dAvgIDataWriterQueueSize = 0;
 double g_dAvgRawDataWriterQueueSize = 0;
 double g_dAvgDBAndIDataWriterQueueSize = 0;
-double g_dAvgStatusPollerQueueSize = 0;
-double g_dAvgConfigPollerQueueSize = 0;
 double g_dAvgSyslogProcessingQueueSize = 0;
 double g_dAvgSyslogWriterQueueSize = 0;
 UINT32 g_dwAvgDCIQueuingTime = 0;
@@ -189,7 +185,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    TCHAR *pBuffer = (TCHAR *)malloc(MAX_LINE_SIZE * sizeof(TCHAR));
    while(!IsShutdownInProgress())
    {
-      DCObject *pItem = (DCObject *)g_dataCollectionQueue.GetOrBlock();
+      DCObject *pItem = (DCObject *)g_dataCollectionQueue.getOrBlock();
 		DataCollectionTarget *target = (DataCollectionTarget *)pItem->getTarget();
 
 		if (pItem->isScheduledForDeletion())
@@ -201,11 +197,11 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 			continue;
 		}
 
-      DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d proxy=%d"),
-		          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1, pItem->getProxyNode());
-		if (pItem->getProxyNode() != 0)
+      DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d sourceNode=%d"),
+		          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1, pItem->getSourceNode());
+		if (pItem->getSourceNode() != 0)
 		{
-			NetObj *object = FindObjectById(pItem->getProxyNode(), OBJECT_NODE);
+			NetObj *object = FindObjectById(pItem->getSourceNode(), OBJECT_NODE);
 			if (object != NULL)
 			{
 				if (object->isTrustedNode((target != NULL) ? target->getId() : 0))
@@ -279,7 +275,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
          // Decrement node's usage counter
          target->decRefCount();
-			if ((pItem->getProxyNode() != 0) && (pItem->getTarget() != NULL))
+			if ((pItem->getSourceNode() != 0) && (pItem->getTarget() != NULL))
 			{
 				pItem->getTarget()->decRefCount();
 			}
@@ -287,8 +283,8 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
       else     /* target == NULL */
       {
 			Template *n = pItem->getTarget();
-         DbgPrintf(3, _T("*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" target=%d proxy=%d)"),
-			          pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, pItem->getProxyNode());
+         DbgPrintf(3, _T("*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" target=%d sourceNode=%d)"),
+			          pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, pItem->getSourceNode());
       }
 
 		// Update item's last poll time and clear busy flag so item can be polled again
@@ -360,17 +356,14 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
    UINT32 i, currPos = 0;
    UINT32 pollerQS[12], dbWriterQS[12];
    UINT32 iDataWriterQS[12], rawDataWriterQS[12], dbAndIDataWriterQS[12];
-   UINT32 statusPollerQS[12], configPollerQS[12];
    UINT32 syslogProcessingQS[12], syslogWriterQS[12];
-   double sum1, sum2, sum3, sum4, sum5, sum6, sum7, sum8, sum9;
+   double sum1, sum2, sum3, sum4, sum5, sum8, sum9;
 
    memset(pollerQS, 0, sizeof(UINT32) * 12);
    memset(dbWriterQS, 0, sizeof(UINT32) * 12);
    memset(iDataWriterQS, 0, sizeof(UINT32) * 12);
    memset(rawDataWriterQS, 0, sizeof(UINT32) * 12);
    memset(dbAndIDataWriterQS, 0, sizeof(UINT32) * 12);
-   memset(statusPollerQS, 0, sizeof(UINT32) * 12);
-   memset(configPollerQS, 0, sizeof(UINT32) * 12);
    memset(syslogProcessingQS, 0, sizeof(UINT32) * 12);
    memset(syslogWriterQS, 0, sizeof(UINT32) * 12);
    g_dAvgPollerQueueSize = 0;
@@ -378,8 +371,6 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
    g_dAvgIDataWriterQueueSize = 0;
    g_dAvgRawDataWriterQueueSize = 0;
    g_dAvgDBAndIDataWriterQueueSize = 0;
-   g_dAvgStatusPollerQueueSize = 0;
-   g_dAvgConfigPollerQueueSize = 0;
    g_dAvgSyslogProcessingQueueSize = 0;
    g_dAvgSyslogWriterQueueSize = 0;
    while(!IsShutdownInProgress())
@@ -388,29 +379,25 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
          break;      // Shutdown has arrived
 
       // Get current values
-      pollerQS[currPos] = g_dataCollectionQueue.Size();
-      dbWriterQS[currPos] = g_dbWriterQueue->Size();
-      iDataWriterQS[currPos] = g_dciDataWriterQueue->Size();
-      rawDataWriterQS[currPos] = g_dciRawDataWriterQueue->Size();
-      dbAndIDataWriterQS[currPos] = g_dbWriterQueue->Size() + g_dciDataWriterQueue->Size() + g_dciRawDataWriterQueue->Size();
-      statusPollerQS[currPos] = g_statusPollQueue.Size();
-      configPollerQS[currPos] = g_configPollQueue.Size();
-      syslogProcessingQS[currPos] = g_syslogProcessingQueue.Size();
-      syslogWriterQS[currPos] = g_syslogWriteQueue.Size();
+      pollerQS[currPos] = g_dataCollectionQueue.size();
+      dbWriterQS[currPos] = g_dbWriterQueue->size();
+      iDataWriterQS[currPos] = g_dciDataWriterQueue->size();
+      rawDataWriterQS[currPos] = g_dciRawDataWriterQueue->size();
+      dbAndIDataWriterQS[currPos] = g_dbWriterQueue->size() + g_dciDataWriterQueue->size() + g_dciRawDataWriterQueue->size();
+      syslogProcessingQS[currPos] = g_syslogProcessingQueue.size();
+      syslogWriterQS[currPos] = g_syslogWriteQueue.size();
       currPos++;
       if (currPos == 12)
          currPos = 0;
 
       // Calculate new averages
-      for(i = 0, sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0, sum5 = 0, sum6 = 0, sum7 = 0, sum8 = 0, sum9 = 0; i < 12; i++)
+      for(i = 0, sum1 = 0, sum2 = 0, sum3 = 0, sum4 = 0, sum5 = 0, sum8 = 0, sum9 = 0; i < 12; i++)
       {
          sum1 += pollerQS[i];
          sum2 += dbWriterQS[i];
          sum3 += iDataWriterQS[i];
          sum4 += rawDataWriterQS[i];
          sum5 += dbAndIDataWriterQS[i];
-         sum6 += statusPollerQS[i];
-         sum7 += configPollerQS[i];
          sum8 += syslogProcessingQS[i];
          sum9 += syslogWriterQS[i];
       }
@@ -419,8 +406,6 @@ static THREAD_RESULT THREAD_CALL StatCollector(void *pArg)
       g_dAvgIDataWriterQueueSize = sum3 / 12;
       g_dAvgRawDataWriterQueueSize = sum4 / 12;
       g_dAvgDBAndIDataWriterQueueSize = sum5 / 12;
-      g_dAvgStatusPollerQueueSize = sum6 / 12;
-      g_dAvgConfigPollerQueueSize = sum7 / 12;
       g_dAvgSyslogProcessingQueueSize = sum8 / 12;
       g_dAvgSyslogWriterQueueSize = sum9 / 12;
    }
@@ -435,7 +420,7 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
    DbgPrintf(2, _T("DCI cache loader thread started"));
    while(true)
    {
-      DCItem *dci = (DCItem *)g_dciCacheLoaderQueue.GetOrBlock();
+      DCItem *dci = (DCItem *)g_dciCacheLoaderQueue.getOrBlock();
       if (dci == INVALID_POINTER_VALUE)
          break;
 

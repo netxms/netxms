@@ -24,7 +24,7 @@ import org.netxms.client.events.EventProcessingPolicyRule;
 /**
  * Tests for EPP management
  */
-public class EventProcessingPolicyTest extends SessionTest
+public class EventProcessingPolicyTest extends AbstractSessionTest
 {
 	public void testGetPolicy() throws Exception
 	{

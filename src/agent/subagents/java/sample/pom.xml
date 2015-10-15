@@ -1,0 +1,48 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.netxms</groupId>
+  <artifactId>netxms-agent-plugin-demo</artifactId>
+  <packaging>jar</packaging>
+  <version>2.0-RC1</version>
+  <name>NetXMS Java Agent Plug-in Demo</name>
+  <url>http://www.netxms.org</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.0</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+     <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>2.5</version>
+          <configuration>
+              <archive>
+                  <manifestEntries>
+                      <NetXMS-Plugin-Classname>org.netxms.agent.demo.DemoPlugin</NetXMS-Plugin-Classname>
+                  </manifestEntries>
+              </archive>
+          </configuration>
+      </plugin>
+  </plugins>
+  </build>
+   <dependencies>
+      <dependency>
+        <groupId>org.netxms</groupId>
+        <artifactId>netxms-agent</artifactId>
+        <version>${project.version}</version>
+        <scope>compile</scope>
+      </dependency>
+   </dependencies>
+</project>

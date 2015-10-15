@@ -297,12 +297,8 @@ UINT32 ExecuteCommand(TCHAR *pszCommand, StringList *args, pid_t *pid)
 /**
  * Structure for passing data to popen() worker
  */
-class POPEN_WORKER_DATA
+struct POPEN_WORKER_DATA
 {
-public:
-   POPEN_WORKER_DATA() {}
-   virtual ~POPEN_WORKER_DATA() {}
-
 	int status;
 	TCHAR *cmdLine;
    StringList values;
@@ -322,7 +318,7 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
 	{
       data->status = SYSINFO_RC_SUCCESS;
 
-      while (true)
+      while(true)
       {
          TCHAR value[MAX_RESULT_LENGTH];
 

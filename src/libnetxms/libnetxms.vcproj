@@ -342,10 +342,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\agent.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\array.cpp"
 				>
 			</File>
@@ -378,10 +374,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\gen_uuid.c"
-				>
-			</File>
-			<File
 				RelativePath=".\geolocation.cpp"
 				>
 			</File>
@@ -391,6 +383,10 @@
 			</File>
 			<File
 				RelativePath=".\hash.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\hashmapbase.cpp"
 				>
 			</File>
 			<File
@@ -407,6 +403,10 @@
 			</File>
 			<File
 				RelativePath=".\log.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\lz4.c"
 				>
 			</File>
 			<File
@@ -470,7 +470,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sha2.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\StackWalker.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\streamcomp.cpp"
 				>
 			</File>
 			<File
@@ -530,7 +538,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\uuid.c"
+				RelativePath=".\uuid.cpp"
 				>
 			</File>
 			<File
@@ -565,6 +573,10 @@
 			</File>
 			<File
 				RelativePath=".\libnetxms.h"
+				>
+			</File>
+			<File
+				RelativePath=".\lz4.h"
 				>
 			</File>
 			<File
@@ -632,6 +644,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sha2.h"
+				>
+			</File>
+			<File
 				RelativePath=".\StackWalker.h"
 				>
 			</File>
@@ -649,10 +665,6 @@
 			</File>
 			<File
 				RelativePath="..\..\include\uuid.h"
-				>
-			</File>
-			<File
-				RelativePath=".\uuidP.h"
 				>
 			</File>
 		</Filter>

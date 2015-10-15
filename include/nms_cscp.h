@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -108,6 +108,11 @@ typedef struct
       } string;
       struct
       {
+         UINT32 length;
+         BYTE value[1]; // actual size depends on length value
+      } binary;
+      struct
+      {
          union
          {
             UINT32 v4;
@@ -127,6 +132,7 @@ typedef struct
 #define df_uint64   data.uint64
 #define df_real     data.real
 #define df_string   data.string
+#define df_binary   data.binary
 #define df_inetaddr data.inetaddr
 
 /**
@@ -196,8 +202,10 @@ typedef struct
    } value;
 } DCI_DATA_ROW;
 
-#ifdef __HP_aCC
+#if defined(__HP_aCC)
 #pragma pack
+#elif defined(_AIX) && !defined(__GNUC__)
+#pragma pack(pop)
 #else
 #pragma pack()
 #endif
@@ -222,6 +230,7 @@ typedef struct
 #define MF_END_OF_SEQUENCE 0x0008
 #define MF_REVERSE_ORDER   0x0010
 #define MF_CONTROL         0x0020
+#define MF_COMPRESSED      0x0040
 
 /**
  * Message (command) codes
@@ -532,6 +541,22 @@ typedef struct
 #define CMD_ENABLE_IPV6                0x0134
 #define CMD_FORCE_DCI_POLL             0x0135
 #define CMD_GET_DCI_SCRIPT_LIST        0x0136
+#define CMD_DATA_COLLECTION_CONFIG     0x0137
+#define CMD_SET_SERVER_ID              0x0138
+#define CMD_GET_PUBLIC_CONFIG_VAR      0x0139
+#define CMD_ENABLE_FILE_UPDATES        0x013A
+#define CMD_DETACH_LDAP_USER           0x013B
+#define CMD_VALIDATE_PASSWORD          0x013C
+#define CMD_COMPILE_SCRIPT             0x013D
+#define CMD_CLEAN_AGENT_DCI_CONF       0x013E
+#define CMD_RESYNC_AGENT_DCI_CONF      0x013F
+#define CMD_LIST_SCHEDULE_CALLBACKS    0x0140
+#define CMD_LIST_SCHEDULES             0x0141
+#define CMD_ADD_SCHEDULE               0x0142
+#define CMD_UPDATE_SCHEDULE            0x0143
+#define CMD_REMOVE_SCHEDULE            0x0144
+#define CMD_ENTER_MAINT_MODE           0x0145
+#define CMD_LEAVE_MAINT_MODE           0x0146
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1047,6 +1072,36 @@ typedef struct
 #define VID_TOOL_LIST               ((UINT32)498)
 #define VID_NUM_SUMMARY_TABLES      ((UINT32)499)
 #define VID_SUMMARY_TABLE_LIST      ((UINT32)500)
+#define VID_OVERVIEW_DCI_COUNT      ((UINT32)501)
+#define VID_OVERVIEW_ONLY           ((UINT32)502)
+#define VID_AGENT_CACHE_MODE        ((UINT32)503)
+#define VID_DATE                    ((UINT32)504)
+#define VID_RECONCILIATION          ((UINT32)505)
+#define VID_DISPLAY_MODE            ((UINT32)506)
+#define VID_NUM_FIELDS              ((UINT32)507)
+#define VID_PASSWORD_IS_VALID       ((UINT32)508)
+#define VID_SERIALIZE               ((UINT32)509)
+#define VID_COMPILATION_STATUS      ((UINT32)510)
+#define VID_ERROR_LINE              ((UINT32)511)
+#define VID_SPEED                   ((UINT32)512)
+#define VID_IFTABLE_SUFFIX          ((UINT32)513)
+#define VID_SERVERCMD_TIMEOUT       ((UINT32)514)
+#define VID_SYS_CONTACT             ((UINT32)515)
+#define VID_SYS_LOCATION            ((UINT32)516)
+#define VID_RACK_ID                 ((UINT32)517)
+#define VID_RACK_IMAGE              ((UINT32)518)
+#define VID_RACK_POSITION           ((UINT32)519)
+#define VID_RACK_HEIGHT             ((UINT32)520)
+#define VID_SCHEDULE_COUNT          ((UINT32)521)
+#define VID_SCHEDULED_TASK_ID       ((UINT32)522)
+#define VID_TASK_HANDLER            ((UINT32)523)
+#define VID_SCHEDULE                ((UINT32)524)
+#define VID_EXECUTION_TIME          ((UINT32)525)
+#define VID_LAST_EXECUTION_TIME     ((UINT32)526)
+#define VID_CALLBACK_COUNT          ((UINT32)527)
+#define VID_DASHBOARDS              ((UINT32)528)
+#define VID_OWNER                   ((UINT32)529)
+#define VID_MAINTENANCE_MODE        ((UINT32)530)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1054,6 +1109,9 @@ typedef struct
 // Map elements list base
 #define VID_ELEMENT_LIST_BASE       ((UINT32)0x10000000)
 #define VID_LINK_LIST_BASE          ((UINT32)0x40000000)
+
+// Node info list base
+#define VID_NODE_INFO_LIST_BASE     ((UINT32)0x60000000)
 
 // Variable ranges for object's ACL
 #define VID_ACL_USER_BASE           ((UINT32)0x00001000)
@@ -1098,6 +1156,9 @@ typedef struct
 #define VID_CUSTOM_ATTRIBUTES_BASE  ((UINT32)0x70000000)
 #define VID_MODULE_DATA_BASE        ((UINT32)0x71000000)
 
+// Base value for overview DCI list
+#define VID_OVERVIEW_DCI_LIST_BASE  ((UINT32)0x72000000)
+
 // IP address list base
 #define VID_IP_ADDRESS_LIST_BASE    ((UINT32)0x7F000000)
 
@@ -1131,11 +1192,13 @@ typedef struct
 // Base value for network list
 #define VID_OBJECT_TOOLS_BASE       ((UINT32)0x10000000)
 
-// Base values for table data
+// Base values for table data and object tools
 #define VID_COLUMN_INFO_BASE        ((UINT32)0x10000000)
 #define VID_COLUMN_NAME_BASE        ((UINT32)0x10000000)
 #define VID_COLUMN_FMT_BASE         ((UINT32)0x20000000)
 #define VID_ROW_DATA_BASE           ((UINT32)0x30000000)
+#define VID_COLUMN_INFO_BASE        ((UINT32)0x10000000)
+#define VID_FIELD_LIST_BASE         ((UINT32)0x70000000)
 
 // Base value for event log records
 #define VID_EVENTLOG_MSG_BASE       ((UINT32)0x10000000)
@@ -1227,6 +1290,10 @@ typedef struct
 #define VID_FILE_LIST_BASE          ((UINT32)0x10000000)
 
 #define VID_LOC_LIST_BASE           ((UINT32)0x10000000)
+
+#define VID_SCHEDULE_LIST_BASE      ((UINT32)0x10000000)
+
+#define VID_CALLBACK_BASE           ((UINT32)0x10000000)
 
 #ifdef __cplusplus
 

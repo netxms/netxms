@@ -73,7 +73,9 @@ public class UserManagementView extends ViewPart
 	public static final int COLUMN_TYPE = 1;
 	public static final int COLUMN_FULLNAME = 2;
 	public static final int COLUMN_DESCRIPTION = 3;
-	public static final int COLUMN_GUID = 4;
+   public static final int COLUMN_SOURCE = 4;
+   public static final int COLUMN_AUTH_METHOD = 5;
+	public static final int COLUMN_GUID = 6;
 
 	private TableViewer viewer;
 	private NXCSession session;
@@ -98,8 +100,16 @@ public class UserManagementView extends ViewPart
 	{
 		session = ConsoleSharedData.getSession();
 
-		final String[] names = { Messages.get().UserManagementView_Name, Messages.get().UserManagementView_Type, Messages.get().UserManagementView_FullName, Messages.get().UserManagementView_Description, Messages.get().UserManagementView_GUID };
-		final int[] widths = { 100, 80, 180, 250, 250 };
+		final String[] names = { 
+		      Messages.get().UserManagementView_Name, 
+		      Messages.get().UserManagementView_Type, 
+		      Messages.get().UserManagementView_FullName, 
+		      Messages.get().UserManagementView_Description, 
+		      "Source", 
+		      "Authentication", 
+		      Messages.get().UserManagementView_GUID 
+		   };
+		final int[] widths = { 100, 80, 180, 250, 80, 170, 250 };
 		viewer = new SortableTableViewer(parent, names, widths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new UserLabelProvider());
@@ -158,7 +168,7 @@ public class UserManagementView extends ViewPart
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-			   session.lockUserDatabase();
+				session.lockUserDatabase();
 				databaseLocked = true;
 				runInUIThread(new Runnable() {
 					@Override
@@ -275,25 +285,7 @@ public class UserManagementView extends ViewPart
 			@Override
 			public void run()
 			{
-				final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
-
-				final Object firstElement = selection.getFirstElement();
-				if (firstElement instanceof User)
-				{
-					User user = (User)firstElement;
-					final ChangePasswordDialog dialog = new ChangePasswordDialog(getSite().getShell(), user.getId() == session.getUserId());
-					if (dialog.open() == Window.OK)
-					{
-						try
-						{
-						   session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
-						}
-						catch(Exception e)
-						{
-							MessageDialogHelper.openError(getSite().getShell(), Messages.get().UserManagementView_CannotChangePassword, e.getMessage());
-						}
-					}
-				}
+				changePassword();
 			}
 		};
 		actionChangePassword.setEnabled(false);
@@ -379,7 +371,7 @@ public class UserManagementView extends ViewPart
          mgr.add(actionDetachUserFromLDAP);
       
 		final Object firstElement = selection.getFirstElement();
-		if (firstElement instanceof User)
+		if (firstElement instanceof User && ! containLDAP)
 		{
 			mgr.add(actionChangePassword);
 		}
@@ -414,7 +406,7 @@ public class UserManagementView extends ViewPart
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-				   session.unlockUserDatabase();
+					session.unlockUserDatabase();
 				}
 
 				@Override
@@ -497,7 +489,7 @@ public class UserManagementView extends ViewPart
 			{
 				for(Object object : selection.toList())
 				{
-				   session.deleteUserDBObject(((AbstractUserObject)object).getId());
+					session.deleteUserDBObject(((AbstractUserObject)object).getId());
 				}
 			}
 
@@ -562,6 +554,32 @@ public class UserManagementView extends ViewPart
    }
    
    /**
+    * Change password
+    */
+   private void changePassword()
+   {
+      final IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
+
+      final Object firstElement = selection.getFirstElement();
+      if (firstElement instanceof User)
+      {
+         User user = (User)firstElement;
+         final ChangePasswordDialog dialog = new ChangePasswordDialog(getSite().getShell(), user.getId() == session.getUserId());
+         if (dialog.open() == Window.OK)
+         {
+            try
+            {
+               session.setUserPassword(user.getId(), dialog.getPassword(), dialog.getOldPassword());
+            }
+            catch(Exception e)
+            {
+               MessageDialogHelper.openError(getSite().getShell(), Messages.get().UserManagementView_CannotChangePassword, e.getMessage());
+            }
+         }
+      }
+   }
+   
+   /**
     * Set user/group to non LDAP 
     */
    private void detachLDAPUser()
@@ -575,7 +593,7 @@ public class UserManagementView extends ViewPart
             for(Object object : selection.toList())
             {                
                ((AbstractUserObject)object).setFlags(((AbstractUserObject)object).getFlags() & ~AbstractUserObject.LDAP_USER);
-               session.modifyUserDBObject(((AbstractUserObject)object), AbstractUserObject.MODIFY_FLAGS);
+               session.detachUserFromLdap(((AbstractUserObject)object));
             }
             
          }
@@ -586,5 +604,6 @@ public class UserManagementView extends ViewPart
             return Messages.get().UserManagementView_DetachError;
          }
       }.start();
+      changePassword();
    }
 }

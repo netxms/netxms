@@ -61,7 +61,7 @@ public class GeoLocation
     */
    public GeoLocation(long base, final NXCPMessage msg)
    {
-      type = 0;
+      type = UNSET;
       latitude = msg.getFieldAsDouble(base);
       longitude = msg.getFieldAsDouble(base+1);
       accuracy = msg.getFieldAsInt32(base+2);
@@ -108,6 +108,16 @@ public class GeoLocation
 		this.accuracy = accuracy;
 		this.timestamp = timestamp;
 	}
+
+	/**
+	 * Returns true if location was obtained automatically (from GPS or network)
+	 * 
+	 * @return
+	 */
+	public boolean isAutomatic()
+   {
+      return (type == GPS) || (type == NETWORK);
+   }
 
 	/**
 	 * @return the type

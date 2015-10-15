@@ -88,12 +88,61 @@ void ConsolePrintf(CONSOLE_CTX console, const TCHAR *pszFormat, ...)
       }
 
       MutexLock(console->socketMutex);
-      *console->output += szBuffer;
+      (*console->output).append(szBuffer);
       MutexUnlock(console->socketMutex);
    }
    else
    {
       console->pMsg->setField(VID_MESSAGE, szBuffer);
+		if (console->session != NULL)
+		{
+			console->session->postMessage(console->pMsg);
+		}
+		else
+		{
+			NXCP_MESSAGE *pRawMsg = console->pMsg->createMessage();
+			SendEx(console->hSocket, pRawMsg, ntohl(pRawMsg->size), 0, console->socketMutex);
+			free(pRawMsg);
+		}
+   }
+}
+
+/**
+ * Print message to console, either local or remote
+ */
+void ConsoleWrite(CONSOLE_CTX console, const TCHAR *text)
+{
+	if ((console->hSocket == -1) && (console->session == NULL) && (console->output == NULL))
+   {
+		WriteToTerminal(text);
+   }
+   else if (console->output != NULL)
+   {
+      // remove possible escape sequences
+      TCHAR *temp = _tcsdup(text);
+      for(int i = 0; temp[i] != 0; i++)
+      {
+         if (temp[i] == 27)
+         {
+            int start = i++;
+            if (temp[i] == '[')
+            {
+               for(i++; (temp[i] != 0) && (temp[i] != 'm'); i++);
+               if (temp[i] == 'm')
+                  i++;
+            }
+            memmove(&temp[start], &temp[i], (_tcslen(&temp[i]) + 1) * sizeof(TCHAR));
+            i = start - 1;
+         }
+      }
+
+      MutexLock(console->socketMutex);
+      (*console->output).appendPreallocated(temp);
+      MutexUnlock(console->socketMutex);
+   }
+   else
+   {
+      console->pMsg->setField(VID_MESSAGE, text);
 		if (console->session != NULL)
 		{
 			console->session->postMessage(console->pMsg);
@@ -131,7 +180,7 @@ void ShowServerStats(CONSOLE_CTX console)
 void ShowQueueStats(CONSOLE_CTX console, Queue *pQueue, const TCHAR *pszName)
 {
    if (pQueue != NULL)
-      ConsolePrintf(console, _T("%-32s : %d\n"), pszName, pQueue->Size());
+      ConsolePrintf(console, _T("%-32s : %d\n"), pszName, pQueue->size());
 }
 
 /**
@@ -142,11 +191,62 @@ void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p)
    ThreadPoolInfo info;
    ThreadPoolGetInfo(p, &info);
    ConsolePrintf(console, _T("\x1b[1m%s\x1b[0m\n")
-                          _T("   Threads:  %d (%d/%d)\n")
-                          _T("   Load:     %d%%\n")
-                          _T("   Usage:    %d%%\n")
-                          _T("   Requests: %d\n\n"),
-                 info.name, info.curThreads, info.minThreads, info.maxThreads, info.load, info.usage, info.activeRequests);
+                          _T("   Threads:      %d (%d/%d)\n")
+                          _T("   Load average: %0.2f %0.2f %0.2f\n")
+                          _T("   Current load: %d%%\n")
+                          _T("   Usage:        %d%%\n")
+                          _T("   Requests:     %d\n\n"),
+                 info.name, info.curThreads, info.minThreads, info.maxThreads, 
+                 info.loadAvg[0], info.loadAvg[1], info.loadAvg[2],
+                 info.load, info.usage, info.activeRequests);
+}
+
+/**
+ * Get thread pool stat (for internal DCI)
+ */
+LONG GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value)
+{
+   TCHAR poolName[64];
+   if (!AgentGetParameterArg(param, 1, poolName, 64))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   ThreadPoolInfo info;
+   if (!ThreadPoolGetInfo(poolName, &info))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   switch(stat)
+   {
+      case THREAD_POOL_CURR_SIZE:
+         ret_int(value, info.curThreads);
+         break;
+      case THREAD_POOL_LOAD:
+         ret_int(value, info.load);
+         break;
+      case THREAD_POOL_LOADAVG_1:
+         ret_double(value, info.loadAvg[0]);
+         break;
+      case THREAD_POOL_LOADAVG_5:
+         ret_double(value, info.loadAvg[1]);
+         break;
+      case THREAD_POOL_LOADAVG_15:
+         ret_double(value, info.loadAvg[2]);
+         break;
+      case THREAD_POOL_MAX_SIZE:
+         ret_int(value, info.maxThreads);
+         break;
+      case THREAD_POOL_MIN_SIZE:
+         ret_int(value, info.minThreads);
+         break;
+      case THREAD_POOL_REQUESTS:
+         ret_int(value, info.activeRequests);
+         break;
+      case THREAD_POOL_USAGE:
+         ret_int(value, info.usage);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**

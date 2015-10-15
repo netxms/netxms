@@ -35,6 +35,7 @@ void ProxySNMPRequest(NXCPMessage *pRequest, NXCPMessage *pResponse);
 UINT32 DeployPolicy(CommSession *session, NXCPMessage *request);
 UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request);
 UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg);
+void ClearDCISyncDatabase();
 
 /**
  * Constants
@@ -52,7 +53,7 @@ THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *pArg)
    // threads are already stopped, so we can safely destroy
    // session object
    UnregisterSession(((CommSession *)pArg)->getIndex());
-   delete (CommSession *)pArg;
+   ((CommSession *)pArg)->decRefCount();
    return THREAD_OK;
 }
 
@@ -88,25 +89,32 @@ THREAD_RESULT THREAD_CALL CommSession::proxyReadThreadStarter(void *pArg)
  */
 CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer)
 {
-   m_pSendQueue = new Queue;
-   m_pMessageQueue = new Queue;
+   m_sendQueue = new Queue;
+   m_processingQueue = new Queue;
    m_hSocket = hSocket;
    m_hProxySocket = -1;
    m_dwIndex = INVALID_INDEX;
    m_pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
+   m_hProxyReadThread = INVALID_THREAD_HANDLE;
+   m_serverId = 0;
    m_serverAddr = serverAddr;
    m_authenticated = (g_dwFlags & AF_REQUIRE_AUTH) ? false : true;
    m_masterServer = masterServer;
    m_controlServer = controlServer;
    m_proxyConnection = false;
    m_acceptTraps = false;
+   m_acceptFileUpdates = false;
    m_ipv6Aware = false;
    m_hCurrFile = -1;
+   m_fileRqId = 0;
+   m_compressor = NULL;
    m_pCtx = NULL;
    m_ts = time(NULL);
-	m_socketWriteMutex = MutexCreate();
+   m_socketWriteMutex = MutexCreate();
+   m_responseQueue = new MsgWaitQueue();
+   m_requestId = 0;
 }
 
 /**
@@ -118,14 +126,16 @@ CommSession::~CommSession()
    closesocket(m_hSocket);
    if (m_hProxySocket != -1)
       closesocket(m_hProxySocket);
-   delete m_pSendQueue;
-   delete m_pMessageQueue;
+   delete m_sendQueue;
+   delete m_processingQueue;
    safe_free(m_pMsgBuffer);
    if (m_hCurrFile != -1)
       close(m_hCurrFile);
+   delete m_compressor;
 	if ((m_pCtx != NULL) && (m_pCtx != PROXY_ENCRYPTION_CTX))
 		m_pCtx->decRefCount();
 	MutexDestroy(m_socketWriteMutex);
+   delete m_responseQueue;
 }
 
 /**
@@ -231,9 +241,42 @@ void CommSession::readThread()
 
             if (pRawMsg->code == CMD_FILE_DATA)
             {
-               if ((m_hCurrFile != -1) && (m_dwFileRqId == pRawMsg->id))
+               if ((m_hCurrFile != -1) && (m_fileRqId == pRawMsg->id))
                {
-                  if (write(m_hCurrFile, pRawMsg->fields, pRawMsg->numFields) == (int)pRawMsg->numFields)
+                  const BYTE *data;
+                  int dataSize;
+                  if (flags & MF_COMPRESSED)
+                  {
+                     BYTE *in = (BYTE *)pRawMsg->fields;
+                     if (m_compressor == NULL)
+                     {
+                        NXCPCompressionMethod method = (NXCPCompressionMethod)(*in);
+                        m_compressor = StreamCompressor::create(method, false, FILE_BUFFER_SIZE);
+                        if (m_compressor == NULL)
+                        {
+                           DebugPrintf(m_dwIndex, 5, _T("Unable to create stream compressor for method %d"), (int)method);
+                           data = NULL;
+                           dataSize = -1;
+                        }
+                     }
+
+                     if (m_compressor != NULL)
+                     {
+                        dataSize = (int)m_compressor->decompress(in + 4, (size_t)pRawMsg->numFields - 4, &data);
+                        if (dataSize != (int)ntohs(*((UINT16 *)(in + 2))))
+                        {
+                           // decompressed block size validation failed
+                           dataSize = -1;
+                        }
+                     }
+                  }
+                  else
+                  {
+                     data = (const BYTE *)pRawMsg->fields;
+                     dataSize = (int)pRawMsg->numFields;
+                  }
+
+                  if ((dataSize >= 0) && (write(m_hCurrFile, data, dataSize) == dataSize))
                   {
                      if (flags & MF_END_OF_FILE)
                      {
@@ -241,6 +284,7 @@ void CommSession::readThread()
 
                         close(m_hCurrFile);
                         m_hCurrFile = -1;
+                        delete_and_null(m_compressor);
 
                         msg.setCode(CMD_REQUEST_COMPLETED);
                         msg.setId(pRawMsg->id);
@@ -255,6 +299,7 @@ void CommSession::readThread()
 
                      close(m_hCurrFile);
                      m_hCurrFile = -1;
+                     delete_and_null(m_compressor);
 
                      msg.setCode(CMD_REQUEST_COMPLETED);
                      msg.setId(pRawMsg->id);
@@ -300,9 +345,14 @@ void CommSession::readThread()
                }
                delete pMsg;
             }
+            else if (pMsg->getCode() == CMD_REQUEST_COMPLETED)
+            {
+               DebugPrintf(m_dwIndex, 6, _T("Received message %s"), NXCPMessageCodeName(pMsg->getCode(), szBuffer));
+               m_responseQueue->put(pMsg);
+            }
             else
             {
-               m_pMessageQueue->Put(pMsg);
+               m_processingQueue->put(pMsg);
             }
          }
       }
@@ -315,8 +365,8 @@ void CommSession::readThread()
 #endif
 
    // Notify other threads to exit
-   m_pSendQueue->Put(INVALID_POINTER_VALUE);
-   m_pMessageQueue->Put(INVALID_POINTER_VALUE);
+   m_sendQueue->put(INVALID_POINTER_VALUE);
+   m_processingQueue->put(INVALID_POINTER_VALUE);
    if (m_hProxySocket != -1)
       shutdown(m_hProxySocket, SHUT_RDWR);
 
@@ -372,14 +422,14 @@ void CommSession::writeThread()
 
    while(1)
    {
-      pMsg = (NXCP_MESSAGE *)m_pSendQueue->GetOrBlock();
+      pMsg = (NXCP_MESSAGE *)m_sendQueue->getOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
 
       if (!sendRawMessage(pMsg, m_pCtx))
          break;
    }
-   m_pSendQueue->Clear();
+   m_sendQueue->clear();
 }
 
 /**
@@ -394,7 +444,7 @@ void CommSession::processingThread()
 
    while(1)
    {
-      pMsg = (NXCPMessage *)m_pMessageQueue->GetOrBlock();
+      pMsg = (NXCPMessage *)m_processingQueue->getOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
       dwCommand = pMsg->getCode();
@@ -481,6 +531,17 @@ void CommSession::processingThread()
                   msg.setField(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
+            case CMD_ENABLE_FILE_UPDATES:
+               if (m_masterServer)
+               {
+                  m_acceptFileUpdates = true;
+                  msg.setField(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+               }
+               break;
 				case CMD_SNMP_REQUEST:
 					if (m_masterServer && (g_dwFlags & AF_ENABLE_SNMP_PROXY))
 					{
@@ -547,6 +608,34 @@ void CommSession::processingThread()
             case CMD_ENABLE_IPV6:
                m_ipv6Aware = pMsg->getFieldAsBoolean(VID_ENABLED);
                msg.setField(VID_RCC, ERR_SUCCESS);
+               break;
+            case CMD_SET_SERVER_ID:
+               m_serverId = pMsg->getFieldAsUInt64(VID_SERVER_ID);
+               DebugPrintf(m_dwIndex, 1, _T("Server ID set to ") UINT64X_FMT(_T("016")), m_serverId);
+               msg.setField(VID_RCC, ERR_SUCCESS);
+               break;
+            case CMD_DATA_COLLECTION_CONFIG:
+               if (m_serverId != 0)
+               {
+                  ConfigureDataCollection(m_serverId, pMsg);
+                  msg.setField(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  DebugPrintf(m_dwIndex, 1, _T("Data collection configuration command received but server ID is not set"));
+                  msg.setField(VID_RCC, ERR_SERVER_ID_UNSET);
+               }
+               break;
+            case CMD_CLEAN_AGENT_DCI_CONF:
+               if (m_masterServer)
+               {
+                  ClearDCISyncDatabase();
+                  msg.setField(VID_RCC, ERR_SUCCESS);
+               }
+               else
+               {
+                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
+               }
                break;
             default:
                // Attempt to process unknown command by subagents
@@ -671,8 +760,7 @@ void CommSession::getParameter(NXCPMessage *pRequest, NXCPMessage *pMsg)
  */
 void CommSession::getList(NXCPMessage *pRequest, NXCPMessage *pMsg)
 {
-   TCHAR szParameter[MAX_PARAM_NAME];    //
-
+   TCHAR szParameter[MAX_PARAM_NAME];
    pRequest->getFieldAsString(VID_PARAMETER, szParameter, MAX_PARAM_NAME);
 
    StringList value;
@@ -680,9 +768,7 @@ void CommSession::getList(NXCPMessage *pRequest, NXCPMessage *pMsg)
    pMsg->setField(VID_RCC, dwErrorCode);
    if (dwErrorCode == ERR_SUCCESS)
    {
-		pMsg->setField(VID_NUM_STRINGS, (UINT32)value.size());
-		for(int i = 0; i < value.size(); i++)
-			pMsg->setField(VID_ENUM_VALUE_BASE + i, value.get(i));
+      value.fillMessage(pMsg, VID_ENUM_VALUE_BASE, VID_NUM_STRINGS);
    }
 }
 
@@ -782,13 +868,15 @@ UINT32 CommSession::openFile(TCHAR *szFullPath, UINT32 requestId)
       }
       else
       {
-         m_dwFileRqId = requestId;
+         m_fileRqId = requestId;
          return ERR_SUCCESS;
       }
    }
 }
 
-
+/**
+ * Progress callback for file sending
+ */
 static void SendFileProgressCallback(INT64 bytesTransferred, void *cbArg)
 {
 	((CommSession *)cbArg)->updateTimeStamp();
@@ -816,9 +904,9 @@ UINT32 CommSession::upgrade(NXCPMessage *pRequest)
       BuildFullPath(szPkgName, szFullPath);
 
       //Create line in registry file with upgrade file name to delete it after system start
-      Config *registry = OpenRegistry();
+      Config *registry = AgentOpenRegistry();
       registry->setValue(_T("/upgrade/file"), szFullPath);
-      CloseRegistry(true);
+      AgentCloseRegistry(true);
 
       return UpgradeAgent(szFullPath);
    }
@@ -873,9 +961,11 @@ void CommSession::updateConfig(NXCPMessage *pRequest, NXCPMessage *pMsg)
 							i--;
                   }
             }
-            write(hFile, pConfig, size);
+            if (write(hFile, pConfig, size) == size)
+               pMsg->setField(VID_RCC, ERR_SUCCESS);
+            else
+               pMsg->setField(VID_RCC, ERR_IO_FAILURE);
             close(hFile);
-            pMsg->setField(VID_RCC, ERR_SUCCESS);
          }
          else
          {
@@ -925,10 +1015,10 @@ UINT32 CommSession::setupProxyConnection(NXCPMessage *pRequest)
             NXCP_MESSAGE *pRawMsg;
 
             // Stop writing thread
-            m_pSendQueue->Put(INVALID_POINTER_VALUE);
+            m_sendQueue->put(INVALID_POINTER_VALUE);
 
             // Wait while all queued messages will be sent
-            while(m_pSendQueue->Size() > 0)
+            while(m_sendQueue->size() > 0)
                ThreadSleepMs(100);
 
             // Finish proxy connection setup
@@ -997,4 +1087,32 @@ void CommSession::proxyReadThread()
       }
    }
    disconnect();
+}
+
+/**
+ * Wait for request completion
+ */
+UINT32 CommSession::doRequest(NXCPMessage *msg, UINT32 timeout)
+{
+   sendMessage(msg);
+   NXCPMessage *response = m_responseQueue->waitForMessage(CMD_REQUEST_COMPLETED, msg->getId(), timeout);
+   UINT32 rcc;
+   if (response != NULL)
+   {
+      rcc = response->getFieldAsUInt32(VID_RCC);
+      delete response;
+   }
+   else
+   {
+      rcc = ERR_REQUEST_TIMEOUT;
+   }
+   return rcc;
+}
+
+/**
+ * Generate new request ID
+ */
+UINT32 CommSession::generateRequestId()
+{
+   return (UINT32)InterlockedIncrement(&m_requestId);
 }

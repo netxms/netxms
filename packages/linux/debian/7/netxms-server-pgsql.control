@@ -1,9 +1,0 @@
-Package: netxms-server-pgsql
-Version: @version@
-Section: net
-Priority: optional
-Architecture: @arch@
-Essential: no
-Depends: netxms-server (= @version@), postgresql-client-9.1
-Maintainer: Victor Kirhenshtein <victor@netxms.org>
-Description: PostgreSQL backend for NetXMS server

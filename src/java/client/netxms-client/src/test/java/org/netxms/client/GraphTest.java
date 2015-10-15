@@ -25,7 +25,7 @@ import org.netxms.client.datacollection.GraphSettings;
  * Graph configuration test
  *
  */
-public class GraphTest extends SessionTest
+public class GraphTest extends AbstractSessionTest
 {
 	public void testGetPredefinedGraphs() throws Exception
 	{

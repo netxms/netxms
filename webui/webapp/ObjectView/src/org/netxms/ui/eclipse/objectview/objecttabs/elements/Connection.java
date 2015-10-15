@@ -32,6 +32,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.Messages;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -47,10 +48,12 @@ public class Connection extends OverviewPageElement
 	
 	/**
 	 * @param parent
+	 * @param anchor
+	 * @param objectTab
 	 */
-	public Connection(Composite parent, OverviewPageElement anchor)
+	public Connection(Composite parent, OverviewPageElement anchor, ObjectTab objectTab)
 	{
-		super(parent, anchor);
+		super(parent, anchor, objectTab);
 		session = (NXCSession)ConsoleSharedData.getSession();
 	}
 

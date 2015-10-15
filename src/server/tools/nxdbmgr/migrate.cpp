@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004-2013 Victor Kirhenshtein
 **
@@ -35,17 +35,17 @@ static TCHAR s_dbDriver[MAX_PATH] = _T("");
 static TCHAR s_dbDrvParams[MAX_PATH] = _T("");
 static TCHAR s_dbServer[MAX_PATH] = _T("127.0.0.1");
 static TCHAR s_dbLogin[MAX_DB_LOGIN] = _T("netxms");
-static TCHAR s_dbPassword[MAX_DB_PASSWORD] = _T("");
+static TCHAR s_dbPassword[MAX_PASSWORD] = _T("");
 static TCHAR s_dbName[MAX_DB_NAME] = _T("netxms_db");
 static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDrvParams },
-   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
-   { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
+   { _T("DBPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
+   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
@@ -268,10 +268,7 @@ void MigrateDatabase(const TCHAR *sourceConfig)
    }
 
 	// Decrypt password
-	if (s_encryptedDbPassword[0] != 0)
-	{
-		DecryptPassword(s_dbLogin, s_encryptedDbPassword, s_dbPassword);
-	}
+   DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
 
    if (!ConnectToSource())
       goto cleanup;

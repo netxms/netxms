@@ -112,9 +112,15 @@ public class DciLabelProvider implements ITableLabelProvider
 			case DataCollectionEditor.COLUMN_INTERVAL:
 				if (dci.isUseAdvancedSchedule())
 					return Messages.get().DciLabelProvider_CustomSchedule;
+				if (dci.getPollingInterval() <= 0)
+				   return "default";
 				return Integer.toString(dci.getPollingInterval());
 			case DataCollectionEditor.COLUMN_RETENTION:
+			   if ((dci.getFlags() & DataCollectionItem.DCF_NO_STORAGE) != 0)
+			      return "none";
 				int days = dci.getRetentionTime();
+				if (days <= 0)
+				   return "default";
 				return Integer.toString(days) + ((days == 1) ? Messages.get().DciLabelProvider_Day : Messages.get().DciLabelProvider_Days);
 			case DataCollectionEditor.COLUMN_STATUS:
 				return statusTexts.get(dci.getStatus());

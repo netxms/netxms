@@ -89,7 +89,7 @@ void LoadNetworkDeviceDrivers()
 	memset(s_drivers, 0, sizeof(NetworkDeviceDriver *) * MAX_DEVICE_DRIVERS);
 
 	TCHAR path[MAX_PATH];
-	_tcscpy(path, g_szLibDir);
+	_tcscpy(path, g_netxmsdLibDir);
 	_tcscat(path, LDIR_NDD);
 
 	DbgPrintf(1, _T("Loading network device drivers from %s"), path);

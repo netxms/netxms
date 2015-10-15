@@ -18,6 +18,10 @@
  */
 package org.netxms.client.objecttools;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.netxms.base.Glob;
@@ -64,6 +68,7 @@ public class ObjectTool
    protected String commandShortName;
    protected ObjectToolFilter filter;
 	protected byte[] imageData;
+	protected Map<String, InputField> inputFields;
 
 	/**
 	 * Default implicit constructor.
@@ -71,6 +76,7 @@ public class ObjectTool
 	protected ObjectTool()
 	{
 	   filter = new ObjectToolFilter();
+	   inputFields = new HashMap<String, InputField>(0);
 	}
 	
 	/**
@@ -103,7 +109,78 @@ public class ObjectTool
             Logger.debug("ObjectTool.ObjectTool", "Failed to create object tool filter from XML");
       }
 		
+		int count = msg.getFieldAsInt32(baseId + 11);
+      inputFields = new HashMap<String, InputField>(count);
+      
+		long fieldId = baseId + 20;
+		for(int i = 0; i < count; i++)
+		{
+		   InputField f = new InputField(msg, fieldId);
+		   inputFields.put(f.getName(), f);
+		   fieldId += 10;
+		}
+		
+		if ((type == TYPE_ACTION) || 
+		    (type == TYPE_FILE_DOWNLOAD) || 
+		    (type == TYPE_LOCAL_COMMAND) || 
+		    (type == TYPE_SERVER_COMMAND) || 
+		    (type == TYPE_URL))
+		{
+	      validateInputFields();
+		}
 		createDisplayName();
+	}
+	
+	/**
+	 * Check if all input fields referenced in tool have definitions
+	 */
+	protected void validateInputFields()
+	{
+	   Set<String> names = new HashSet<String>();
+	   char[] in = data.toCharArray();
+	   char br = 0;
+	   int start = 0;
+	   for(int i = 0; i < in.length; i++)
+	   {
+	      if (in[i] == br)
+	      {
+	         if (br == ')')
+	            names.add(new String(Arrays.copyOfRange(in, start, i)));
+            br = 0;
+	      }
+	      else if ((in[i] == '%') && (br == 0))
+	      {
+   	      i++;
+   	      if (i == in.length)
+   	         break;  // invalid input
+   	      switch(in[i])
+   	      {
+   	         case '(':
+   	            br = ')';
+   	            break;
+               case '[':
+                  br = ']';
+                  break;
+               case '{':
+                  br = '}';
+                  break;
+               case '<':
+                  br = '>';
+                  break;
+   	         default:
+   	            break;
+   	      }
+   	      start = i + 1;
+	      }
+	   }
+	   
+	   for(String n : names)
+	   {
+	      if (!inputFields.containsKey(n))
+	      {
+	         inputFields.put(n, new InputField(n));
+	      }
+	   }
 	}
 	
 	/**
@@ -182,6 +259,27 @@ public class ObjectTool
 	}
 
 	/**
+	 * Get input field definition by name
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public InputField getInputField(String name)
+	{
+	   return inputFields.get(name);
+	}
+	
+	/**
+	 * Get all input fields
+	 * 
+	 * @return
+	 */
+	public InputField[] getInputFields()
+	{
+	   return inputFields.values().toArray(new InputField[inputFields.size()]);
+	}
+	
+   /**
 	 * @return the id
 	 */
 	public long getId()
@@ -211,6 +309,22 @@ public class ObjectTool
 	public int getFlags()
 	{
 		return flags;
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isVisibleInCommands()
+	{
+	   return (flags & SHOW_IN_COMMANDS) != 0;
+	}
+	
+	/**
+	 * @return
+	 */
+	public boolean isEnabled()
+	{
+	   return (flags & DISABLED) == 0;
 	}
 
 	/**

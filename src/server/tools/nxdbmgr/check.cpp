@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
@@ -153,7 +153,7 @@ static BOOL FindSubnetForNode(DWORD id, const TCHAR *name)
 			InetAddress addr = DBGetFieldInetAddr(hResult, i, 0);
          addr.setMaskBits(DBGetFieldLong(hResult, i, 1));
          InetAddress subnet = addr.getSubnetAddress();
-			
+
          _sntprintf(query, 256, _T("SELECT id FROM subnets WHERE ip_addr='%s'"), subnet.toString(buffer));
 			hResult2 = SQLSelect(query);
 			if (hResult2 != NULL)
@@ -225,8 +225,8 @@ static void CheckZones()
 						uuid_t guid;
 						TCHAR guidText[128];
 
-						uuid_generate(guid);
-                  _sntprintf(szQuery, 1024, 
+						_uuid_generate(guid);
+                  _sntprintf(szQuery, 1024,
                              _T("INSERT INTO object_properties (object_id,guid,name,")
                              _T("status,is_deleted,is_system,inherit_access_rights,")
                              _T("last_modified,status_calc_alg,status_prop_alg,")
@@ -235,7 +235,7 @@ static void CheckZones()
 									  _T("latitude,longitude,image) VALUES ")
                              _T("(%d,'%s','lost_zone_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
 									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000')"),
-									  (int)dwId, uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
+									  (int)dwId, _uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                }
@@ -285,8 +285,8 @@ static void CheckNodes()
 						uuid_t guid;
 						TCHAR guidText[128];
 
-						uuid_generate(guid);
-                  _sntprintf(szQuery, 1024, 
+						_uuid_generate(guid);
+                  _sntprintf(szQuery, 1024,
                              _T("INSERT INTO object_properties (object_id,guid,name,")
                              _T("status,is_deleted,is_system,inherit_access_rights,")
                              _T("last_modified,status_calc_alg,status_prop_alg,")
@@ -295,7 +295,7 @@ static void CheckNodes()
 									  _T("latitude,longitude,location_accuracy,location_timestamp,image,submap_id) VALUES ")
                              _T("(%d,'%s','lost_node_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
 									  _T("'0.000000','0.000000',0,0,'00000000-0000-0000-0000-000000000000',0)"),
-									  (int)dwId, uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
+									  (int)dwId, _uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                }
@@ -375,8 +375,8 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
 						uuid_t guid;
 						TCHAR guidText[128];
 
-						uuid_generate(guid);
-                  _sntprintf(szQuery, 1024, 
+						_uuid_generate(guid);
+                  _sntprintf(szQuery, 1024,
                              _T("INSERT INTO object_properties (object_id,guid,name,")
                              _T("status,is_deleted,is_system,inherit_access_rights,")
                              _T("last_modified,status_calc_alg,status_prop_alg,")
@@ -385,7 +385,7 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
 									  _T("latitude,longitude,image) VALUES ")
                              _T("(%d,'%s','lost_%s_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
 									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000')"),
-									  (int)dwId, uuid_to_string(guid, guidText), pszDisplayName, (int)dwId, TIME_T_FCAST(time(NULL)));
+									  (int)dwId, _uuid_to_string(guid, guidText), pszDisplayName, (int)dwId, TIME_T_FCAST(time(NULL)));
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
                   szName[0] = 0;
@@ -534,7 +534,7 @@ static void CheckEPP()
    DWORD dwId;
 
    StartStage(_T("Checking event processing policy..."));
-   
+
    // Check source object ID's
    hResult = SQLSelect(_T("SELECT object_id FROM policy_source_list"));
    if (hResult != NULL)
@@ -713,7 +713,7 @@ static void CheckIData()
 	DB_RESULT hResultNodes, hResult;
 
    StartStage(_T("Checking collected data..."));
-   
+
 	now = time(NULL);
    hResultNodes = SQLSelect(_T("SELECT id FROM nodes"));
    if (hResultNodes != NULL)

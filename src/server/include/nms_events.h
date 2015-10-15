@@ -55,7 +55,7 @@ private:
    UINT64 m_qwId;
    UINT64 m_qwRootId;    // Root event id
    UINT32 m_dwCode;
-   UINT32 m_dwSeverity;
+   int m_severity;
    UINT32 m_dwFlags;
    UINT32 m_dwSource;
 	TCHAR m_name[MAX_EVENT_NAME];
@@ -75,13 +75,15 @@ public:
 
    UINT64 getId() { return m_qwId; }
    UINT32 getCode() { return m_dwCode; }
-   UINT32 getSeverity() { return m_dwSeverity; }
+   UINT32 getSeverity() { return m_severity; }
    UINT32 getFlags() { return m_dwFlags; }
    UINT32 getSourceId() { return m_dwSource; }
 	const TCHAR *getName() { return m_name; }
    const TCHAR *getMessage() { return m_pszMessageText; }
    const TCHAR *getUserTag() { return m_pszUserTag; }
    time_t getTimeStamp() { return m_tTimeStamp; }
+
+   void setSeverity(int severity) { m_severity = severity; }
    
    UINT64 getRootId() { return m_qwRootId; }
    void setRootId(UINT64 qwId) { m_qwRootId = qwId; }
@@ -91,6 +93,8 @@ public:
    void expandMessageText();
    TCHAR *expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg = NULL, const TCHAR *alarmKey = NULL);
    static TCHAR *expandText(Event *event, UINT32 sourceObject, const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey);
+   void setMessage(const TCHAR *text) { safe_free(m_pszMessageText); m_pszMessageText = _tcsdup(CHECK_NULL_EX(text)); }
+   void setUserTag(const TCHAR *text) { safe_free(m_pszUserTag); m_pszUserTag = _tcsdup(CHECK_NULL_EX(text)); }
 
    UINT32 getParametersCount() { return m_parameters.size(); }
    const TCHAR *getParameter(int index) { return (TCHAR *)m_parameters.get(index); }
@@ -116,7 +120,7 @@ class EPRule
 {
 private:
    UINT32 m_id;
-   uuid_t m_guid;
+   uuid m_guid;
    UINT32 m_dwFlags;
    UINT32 m_dwNumSources;
    UINT32 *m_pdwSourceList;
@@ -152,8 +156,8 @@ public:
    EPRule(ConfigEntry *config);
    ~EPRule();
 
-   UINT32 getId() { return m_id; }
-   BYTE *getGuid() { return m_guid; }
+   UINT32 getId() const { return m_id; }
+   const uuid& getGuid() const { return m_guid; }
    void setId(UINT32 dwNewId) { m_id = dwNewId; }
    bool loadFromDB();
 	void saveToDB(DB_HANDLE hdb);
@@ -189,7 +193,7 @@ public:
    void processEvent(Event *pEvent);
    void sendToClient(ClientSession *pSession, UINT32 dwRqId);
    void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);
-   void exportRule(String &str, uuid_t guid);
+   void exportRule(String& str, const uuid& guid);
    void importRule(EPRule *rule);
 
    bool isActionInUse(UINT32 dwActionId);
@@ -211,6 +215,7 @@ EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 eventCode);
 EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName);
 
 BOOL NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
+UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
 BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...);
 BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters);
 BOOL NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...);

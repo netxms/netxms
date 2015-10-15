@@ -45,7 +45,7 @@ static UINT32 STPPortListHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Tr
    request->bindVariable(new SNMP_Variable(oid, var->getName()->getLength()));
 
 	SNMP_PDU *response = NULL;
-   UINT32 rcc = transport->doRequest(request, &response, g_snmpTimeout, 3);
+   UINT32 rcc = transport->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);
 	delete request;
 	if (rcc == SNMP_ERR_SUCCESS)
    {

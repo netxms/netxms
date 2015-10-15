@@ -2,17 +2,17 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NXMC Charts Plug-in
 Bundle-SymbolicName: org.netxms.ui.eclipse.charts;singleton:=true
-Bundle-Version: 2.0.3
+Bundle-Version: 2.0.4
 Bundle-Activator: org.netxms.ui.eclipse.charts.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.1",
- org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.3",
- org.netxms.webui.core;bundle-version="2.0.1",
+ org.netxms.ui.eclipse.clientlibrary;bundle-version="2.0.6",
+ org.netxms.webui.core;bundle-version="2.0.5",
  org.eclipse.birt.chart.engine;bundle-version="3.7.2",
  org.eclipse.birt.chart.device.extension;bundle-version="3.7.2",
  org.eclipse.birt.chart.engine.extension;bundle-version="3.7.2",
- org.swtchart;bundle-version="0.7.13",
- org.netxms.rap.draw2d;bundle-version="1.5.1"
+ org.swtchart;bundle-version="0.7.14",
+ org.netxms.rap.draw2d;bundle-version="1.5.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.charts.api,

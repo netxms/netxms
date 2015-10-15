@@ -46,6 +46,7 @@
 				AdditionalIncludeDirectories="..\..\..\..\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;JAVA_EXPORTS"
 				MinimalRebuild="true"
+				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
@@ -124,6 +125,7 @@
 				AdditionalIncludeDirectories="..\..\..\..\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;JAVA_EXPORTS"
 				MinimalRebuild="true"
+				ExceptionHandling="0"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
@@ -200,6 +202,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="..\..\..\..\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;JAVA_EXPORTS"
+				ExceptionHandling="0"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -278,6 +281,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="..\..\..\..\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;JAVA_EXPORTS"
+				ExceptionHandling="0"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
@@ -338,15 +342,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\Action.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\ConfigHelper.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ListParameter.cpp"
 				>
 			</File>
 			<File
@@ -354,27 +350,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Parameter.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ParameterType.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PushParameter.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\SubAgent.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\TableColumn.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\TableParameter.cpp"
 				>
 			</File>
 		</Filter>
@@ -384,23 +360,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\Action.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ConfigHelper.h"
-				>
-			</File>
-			<File
 				RelativePath=".\java_subagent.h"
-				>
-			</File>
-			<File
-				RelativePath=".\JNIException.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ListParameter.h"
 				>
 			</File>
 			<File
@@ -428,27 +388,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Parameter.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ParameterType.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PushParameter.h"
-				>
-			</File>
-			<File
 				RelativePath=".\SubAgent.h"
-				>
-			</File>
-			<File
-				RelativePath=".\TableColumn.h"
-				>
-			</File>
-			<File
-				RelativePath=".\TableParameter.h"
 				>
 			</File>
 			<File

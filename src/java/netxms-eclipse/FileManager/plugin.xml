@@ -15,7 +15,7 @@
             allowMultiple="true"
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.filemanager.views.AgentFileManager"
-            icon="icons/folder.gif"
+            icon="icons/filemgr.png"
             id="org.netxms.ui.eclipse.filemanager.views.AgentFileManager"
             name="File Manager"
             restorable="true">
@@ -26,6 +26,13 @@
       <factory
             adaptableType="org.netxms.client.server.ServerFile"
             class="org.netxms.ui.eclipse.filemanager.ServerFileAdapterFactory">
+         <adapter
+               type="org.eclipse.ui.model.IWorkbenchAdapter">
+         </adapter>
+      </factory>
+      <factory
+            adaptableType="org.netxms.client.server.AgentFile"
+            class="org.netxms.ui.eclipse.filemanager.AgentFileAdapterFactory">
          <adapter
                type="org.eclipse.ui.model.IWorkbenchAdapter">
          </adapter>
@@ -48,6 +55,7 @@
          <action
                class="org.netxms.ui.eclipse.filemanager.actions.OpenFileManager"
                enablesFor="1"
+               icon="icons/filemgr.png"
                id="org.netxms.ui.eclipse.filemanager.popupActions.FileManager_Node"
                label="&amp;File manager"
                menubarPath="objectmgmt"
@@ -116,8 +124,36 @@
       </command>
       <command
             description="%command.description.ServerFileList"
-            id="org.netxms.ui.eclipse.console.category.views.open_server_file_list"
+            id="org.netxms.ui.eclipse.filemanager.commands.open_server_file_list"
             name="%command.name.ServerFileList">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.filemanager.commands.showFilter"
+            name="Show filter">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.filemanager.commands.refreshFolder"
+            name="Refresh folder">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.filemanager.commands.newFolder"
+            name="New folder">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.filemanager.commands.delete"
+            name="Delete">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.filemanager.commands.rename"
+            name="Rename">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.filemanager.commands.download"
+            name="Download">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.filemanager.commands.uploadFile"
+            name="Upload file">
       </command>
    </extension>
    <extension
@@ -137,7 +173,7 @@
          </action>
          <action
                class="org.netxms.ui.eclipse.filemanager.actions.GetServerFileList"
-               definitionId="org.netxms.ui.eclipse.console.category.views.open_server_file_list"
+               definitionId="org.netxms.ui.eclipse.filemanager.commands.open_server_file_list"
                icon="icons/types/unknown.png"
                id="org.netxms.ui.eclipse.usermanager.view.server_files"
                label="%action.label.ServerFileList"
@@ -154,6 +190,56 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Ctrl+Alt+U">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.showFilter"
+            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.newFolder"
+            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+N">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.refreshFolder"
+            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F5">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.delete"
+            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="DEL">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.rename"
+            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+R">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.download"
+            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+D">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.uploadFile"
+            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+U">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            name="File Manager"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
 
 </plugin>

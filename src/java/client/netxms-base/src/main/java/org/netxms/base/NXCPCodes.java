@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2011 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -330,6 +330,22 @@ public class NXCPCodes
    public static final int CMD_ENABLE_IPV6 = 0x0134;
    public static final int CMD_FORCE_DCI_POLL = 0x0135;
    public static final int CMD_GET_DCI_SCRIPT_LIST = 0x0136;
+   public static final int CMD_DATA_COLLECTION_CONFIG = 0x0137;
+   public static final int CMD_SET_SERVER_ID = 0x0138;
+   public static final int CMD_GET_PUBLIC_CONFIG_VAR = 0x0139;
+   public static final int CMD_ENABLE_FILE_UPDATES = 0x013A;
+   public static final int CMD_DETACH_LDAP_USER = 0x013B;
+   public static final int CMD_VALIDATE_PASSWORD = 0x013C;
+   public static final int CMD_COMPILE_SCRIPT = 0x013D;
+   public static final int CMD_CLEAN_AGENT_DCI_CONF = 0x013E;
+   public static final int CMD_RESYNC_AGENT_DCI_CONF = 0x013F;
+   public static final int CMD_LIST_SCHEDULE_CALLBACKS = 0x0140;
+   public static final int CMD_LIST_SCHEDULES = 0x0141;
+   public static final int CMD_ADD_SCHEDULE = 0x0142;
+   public static final int CMD_UPDATE_SCHEDULE = 0x0143;
+   public static final int CMD_REMOVE_SCHEDULE = 0x0144;
+   public static final int CMD_ENTER_MAINT_MODE = 0x0145;
+   public static final int CMD_LEAVE_MAINT_MODE = 0x0146;   
 	
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -844,6 +860,36 @@ public class NXCPCodes
    public static final long VID_TOOL_LIST = 498;
    public static final long VID_NUM_SUMMARY_TABLES = 499;
    public static final long VID_SUMMARY_TABLE_LIST = 500;
+   public static final long VID_OVERVIEW_DCI_COUNT = 501;
+   public static final long VID_OVERVIEW_ONLY = 502;
+   public static final long VID_AGENT_CACHE_MODE = 503;
+   public static final long VID_DATE = 504;
+   public static final long VID_RECONCILLATION = 505;
+   public static final long VID_DISPLAY_MODE = 506;
+   public static final long VID_NUM_FIELDS = 507;
+   public static final long VID_PASSWORD_IS_VALID = 508;
+   public static final long VID_SERIALIZE = 509;
+   public static final long VID_COMPILATION_STATUS = 510;
+   public static final long VID_ERROR_LINE = 511;
+   public static final long VID_SPEED = 512;
+   public static final long VID_IFTABLE_SUFFIX = 513;
+   public static final long VID_SERVERCMD_TIMEOUT = 514;
+   public static final long VID_SYS_CONTACT = 515;
+   public static final long VID_SYS_LOCATION = 516;
+   public static final long VID_RACK_ID = 517;
+   public static final long VID_RACK_IMAGE = 518;
+   public static final long VID_RACK_POSITION = 519;
+   public static final long VID_RACK_HEIGHT = 520;
+   public static final long VID_SCHEDULE_COUNT = 521;
+   public static final long VID_SCHEDULED_TASK_ID = 522;
+   public static final long VID_TASK_HANDLER = 523;
+   public static final long VID_SCHEDULE = 524;
+   public static final long VID_EXECUTION_TIME = 525;
+   public static final long VID_LAST_EXECUTION_TIME = 526;
+   public static final long VID_CALLBACK_COUNT = 527;
+   public static final long VID_DASHBOARDS = 528;
+   public static final long VID_OWNER = 529;
+   public static final long VID_MAINTENANCE_MODE = 530;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -871,6 +917,7 @@ public class NXCPCodes
 	public static final long VID_CHILD_ID_LAST = 0xFFFFFFFEL;
 	public static final long VID_CUSTOM_ATTRIBUTES_BASE = 0x70000000L;
    public static final long VID_MODULE_DATA_BASE = 0x71000000L;
+   public static final long VID_OVERVIEW_DCI_LIST_BASE = 0x72000000L;
 	public static final long VID_RESOURCE_LIST_BASE = 0x20000000L;
 	public static final long VID_IP_ADDRESS_LIST_BASE = 0x7F000000L;
    public static final long VID_SYNC_SUBNETS_BASE = 0x28000000L;
@@ -888,6 +935,7 @@ public class NXCPCodes
 	public static final long VID_COLUMN_NAME_BASE = 0x10000000L;
 	public static final long VID_COLUMN_FMT_BASE = 0x20000000L;
 	public static final long VID_ROW_DATA_BASE = 0x30000000L;
+   public static final long VID_FIELD_LIST_BASE = 0x70000000L;
 	public static final long VID_LPP_RULE_BASE = 0x10000000L;
 	public static final long VID_LPP_LIST_BASE = 0x10000000L;
 	public static final long VID_LPPGROUP_LIST_BASE = 0x20000000L;
@@ -933,4 +981,6 @@ public class NXCPCodes
 	public static final long VID_EXTENSION_LIST_BASE = 0x10000000L;
 	public static final long VID_DCI_ID_LIST_BASE = 0x10000000L;
    public static final long VID_LOC_LIST_BASE = 0x10000000L;
+   public static final long VID_SCHEDULE_LIST_BASE = 0x10000000L;
+   public static final long VID_CALLBACK_BASE= 0x10000000L;
 }

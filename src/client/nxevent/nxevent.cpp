@@ -87,6 +87,7 @@ static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
             _tprintf(_T("Unable to send event: %s\n"), NXCGetErrorText(dwResult));
       }
       delete session;
+      NXCShutdown();
    }
    return dwResult;
 }

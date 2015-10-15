@@ -14,22 +14,34 @@ CREATE TABLE metadata
 	PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(metadata, 'System meta data (DBMS type, schema version, etc.)')
+COMMENT_COLUMN(metadata.var_name, 'Variable name')
+COMMENT_COLUMN(metadata.var_value, 'Variable value')
+
 /*
 ** System configuration table
 */
 CREATE TABLE config
 (
 	var_name varchar(63) not null,
-	var_value varchar(255) null,
+	var_value varchar(2000) null,
 #ifdef DB_ORACLE
 	is_visible integer default 1 not null,
 	need_server_restart integer default 0 not null,
+   data_type char(1) default 'S' not null,
+   is_public char(1) default 'N' not null,
 #else
 	is_visible integer not null default 1,
 	need_server_restart integer not null default 0,
+   data_type char(1) not null default 'S',
+   is_public char(1) not null default 'N',
 #endif
+   description varchar(255) null,
+   possible_values SQL_TEXT null,
 	PRIMARY KEY(var_name)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(config, 'System configuration table')
 
 /*
 ** System configuration data (for large data)
@@ -41,6 +53,8 @@ CREATE TABLE config_clob
 	PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(config_clob, 'System configuration data for large data')
+
 /*
 ** Users
 */
@@ -49,7 +63,7 @@ CREATE TABLE users
 	id integer not null,
 	guid varchar(36) not null,
 	name varchar(63) not null,
-	password varchar(48) not null,
+	password varchar(127) not null,
 	system_access SQL_INT64 not null,
 	flags integer not null,
 	full_name varchar(127) null,
@@ -69,6 +83,7 @@ CREATE TABLE users
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(users, 'System users')
 
 /*
 ** User groups
@@ -86,6 +101,7 @@ CREATE TABLE user_groups
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(user_groups, 'System user groups')
 
 /*
 ** Users to groups mapping
@@ -98,6 +114,7 @@ CREATE TABLE user_group_members
 	PRIMARY KEY(group_id,user_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(user_group_members, 'Users and group relationships')
 
 /*
 ** User profiles
@@ -111,6 +128,7 @@ CREATE TABLE user_profiles
 	PRIMARY KEY(user_id,var_name)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(user_profiles, 'User profiles')
 
 /*
 ** Custom attributes for user database objects
@@ -158,6 +176,8 @@ CREATE TABLE object_properties
    city varchar(63) null,
    street_address varchar(255) null,
    postcode varchar(31) null,
+	maint_mode char(1) not null,
+   maint_event_id SQL_INT64 not null,
 	PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
@@ -165,7 +185,6 @@ CREATE TABLE object_properties
 /*
 ** Object custom attributes
 */
-
 CREATE TABLE object_custom_attributes
 (
 	object_id integer not null,
@@ -176,11 +195,9 @@ CREATE TABLE object_custom_attributes
 
 CREATE INDEX idx_ocattr_oid ON object_custom_attributes(object_id);
 
-
 /*
 ** Zone objects
 */
-
 CREATE TABLE zones
 (
 	id integer not null,		// Zone object ID
@@ -266,13 +283,17 @@ CREATE TABLE nodes
 	uname varchar(255) null,
 	use_ifxtable integer not null,
 	snmp_sys_name varchar(127) null,
+	snmp_sys_contact varchar(127) null,
+	snmp_sys_location varchar(127) null,
 	bridge_base_addr varchar(15) null,
 	down_since integer not null,
    boot_time integer not null,
 	driver_name varchar(32) null,
 	rack_image varchar(36) null,
 	rack_position integer not null,
+   rack_height integer not null,
 	rack_id integer not null,
+   agent_cache_mode char(1) not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -353,6 +374,7 @@ CREATE TABLE interfaces
 	if_type integer not null,
 	if_index integer not null,
    mtu integer not null,
+   speed SQL_INT64 not null,
 	bridge_port integer not null,
 	phy_slot integer not null,
 	phy_port integer not null,
@@ -367,6 +389,7 @@ CREATE TABLE interfaces
 	dot1x_backend_state integer not null,
 	description varchar(255) null,
    alias varchar(255) null,
+   iftable_suffix varchar(127) null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1049,6 +1072,19 @@ CREATE TABLE object_tools_table_columns
 	PRIMARY KEY(tool_id,col_number)
 ) TABLE_TYPE;
 
+/**
+ * Input fields for object tools
+ */
+CREATE TABLE object_tools_input_fields
+(
+	tool_id integer not null,
+   name varchar(31) not null,
+   input_type char(1) not null,
+   display_name varchar(127) null,
+   config SQL_TEXT null,
+   PRIMARY KEY(tool_id,name)
+) TABLE_TYPE;
+
 /*
 ** Stored syslog messages
 */
@@ -1269,13 +1305,14 @@ CREATE TABLE network_maps
 	bg_color integer not null,
 	link_color integer not null,
 	link_routing integer not null,
+   object_display_mode integer not null,
 	filter SQL_TEXT null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** Elements of network maps
-*/
+/**
+ * Elements of network maps
+ */
 CREATE TABLE network_map_elements
 (
 	map_id integer not null,
@@ -1286,9 +1323,9 @@ CREATE TABLE network_map_elements
 	PRIMARY KEY(map_id,element_id)
 ) TABLE_TYPE;
 
-/*
-** Links on network maps
-*/
+/**
+ * Links on network maps
+ */
 CREATE TABLE network_map_links
 (
 	map_id integer not null,
@@ -1304,9 +1341,9 @@ CREATE TABLE network_map_links
 
 CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id);
 
-/*
-** Image Library
-*/
+/**
+ * Image Library
+ */
 CREATE TABLE images
 (
    guid varchar(36) not null,
@@ -1318,9 +1355,9 @@ CREATE TABLE images
    UNIQUE(name, category)
 ) TABLE_TYPE;
 
-/*
-** Dashboards
-*/
+/**
+ * Dashboards
+ */
 CREATE TABLE dashboards
 (
 	id integer not null,
@@ -1329,9 +1366,9 @@ CREATE TABLE dashboards
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-/*
-** Dashboard elements
-*/
+/**
+ * Dashboard elements
+ */
 CREATE TABLE dashboard_elements
 (
 	dashboard_id integer not null,
@@ -1342,18 +1379,28 @@ CREATE TABLE dashboard_elements
 	PRIMARY KEY(dashboard_id,element_id)
 ) TABLE_TYPE;
 
-/*
-** SLA business services
-*/
+/**
+ * Associations between dashboards and other objects
+ */
+CREATE TABLE dashboard_associations
+(
+   object_id integer not null,
+   dashboard_id integer not null,
+   PRIMARY KEY(object_id,dashboard_id)
+) TABLE_TYPE;
+
+/**
+ * SLA business services
+ */
 CREATE TABLE business_services
 (
      service_id integer not null,
      PRIMARY KEY(service_id)
 ) TABLE_TYPE;
 
-/*
-** SLA service checks
-*/
+/**
+ * SLA service checks
+ */
 CREATE TABLE slm_checks
 (
      id integer not null,
@@ -1519,5 +1566,22 @@ CREATE TABLE dci_summary_tables
 	node_filter SQL_TEXT null,
 	flags integer not null,
 	columns SQL_TEXT null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
+
+/*
+** Scheduled tasks
+*/
+CREATE TABLE scheduled_tasks
+(
+	id integer not null,
+	taskId varchar(255) null,
+	schedule varchar(127) null,
+	params varchar(1023) null,
+	execution_time integer not null,
+	last_execution_time integer not null,
+	flags integer not null,
+	owner integer not null,
+	object_id integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;

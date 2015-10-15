@@ -341,7 +341,7 @@
             commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddObject"
             contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="M1+A">
+            sequence="M1+M3+A">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.LinkObjects"
@@ -403,6 +403,12 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+G">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.SelectAllObjects"
+            contextId="org.netxms.ui.eclipse.networkmaps.context.NetworkMaps"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+A">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -454,6 +460,10 @@
       <command
             id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ShowGrid"
             name="Show grid">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.SelectAllObjects"
+            name="Select all objects">
       </command>
    </extension>
    <extension

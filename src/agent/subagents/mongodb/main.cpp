@@ -232,10 +232,8 @@ DECLARE_SUBAGENT_ENTRY_POINT(MONGODB)
    if (s_info.parameters != NULL)
       return FALSE;  // Most likely another instance of MONGODB subagent already loaded
 
-   //BOOL result = LoadConfiguration(config);
-
-	*ppInfo = &s_info;
-	return FALSE;
+   *ppInfo = &s_info;
+   return LoadConfiguration(config);
 }
 
 #ifdef _WIN32

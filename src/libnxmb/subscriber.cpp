@@ -23,41 +23,33 @@
 
 #include "libnxmb.h"
 
-
-//
-// Default constructor
-//
-
+/**
+ * Default constructor
+ */
 NXMBSubscriber::NXMBSubscriber(const TCHAR *id)
 {
 	m_id = _tcsdup(CHECK_NULL(id));
 }
 
-
-//
-// Desctructor
-//
-
+/**
+ * Desctructor
+ */
 NXMBSubscriber::~NXMBSubscriber()
 {
 	safe_free(m_id);
 }
 
-
-//
-// Default message handler
-//
-
+/**
+ * Default message handler
+ */
 void NXMBSubscriber::messageHandler(NXMBMessage &msg)
 {
 }
 
-
-//
-// If this method returns TRUE, dispatcher will delete subscriber object
-// on unregister or in own destructor
-//
-
+/**
+ * If this method returns TRUE, dispatcher will delete subscriber object
+ * on unregister or in own destructor
+ */
 bool NXMBSubscriber::isOwnedByDispatcher()
 {
 	return true;

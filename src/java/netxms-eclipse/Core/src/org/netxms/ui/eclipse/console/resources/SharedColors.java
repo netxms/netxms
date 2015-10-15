@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,12 +40,6 @@ public class SharedColors
 	public static final String COMMAND_BOX_TEXT = "CommandBox.Text";  //$NON-NLS-1$
 	public static final String COMMAND_BOX_BACKGROUND = "CommandBox.Background";  //$NON-NLS-1$
 	public static final String DASHBOARD_BACKGROUND = "Dashboard.Background";  //$NON-NLS-1$
-	public static final String DIAL_CHART_LEGEND = "DialChart.Legend";  //$NON-NLS-1$
-	public static final String DIAL_CHART_NEEDLE = "DialChart.Needle"; //$NON-NLS-1$
-	public static final String DIAL_CHART_NEEDLE_PIN = "DialChart.NeedlePin"; //$NON-NLS-1$
-	public static final String DIAL_CHART_SCALE = "DialChart.Scale";  //$NON-NLS-1$
-	public static final String DIAL_CHART_VALUE = "DialChart.Value";  //$NON-NLS-1$
-	public static final String DIAL_CHART_VALUE_BACKGROUND = "DialChart.ValueBackground";  //$NON-NLS-1$
 	public static final String ERROR_BACKGROUND = "ErrorBackground";  //$NON-NLS-1$
 	public static final String GEOMAP_TITLE = "GeoMap.Title";  //$NON-NLS-1$
 	public static final String MAP_GROUP_BOX_TITLE = "Map.GroupBox.Title";  //$NON-NLS-1$
@@ -58,6 +52,10 @@ public class SharedColors
 	public static final String OBJECT_TAB_BACKGROUND = "ObjectTab.Background";  //$NON-NLS-1$
 	public static final String OBJECT_TAB_HEADER = "ObjectTab.Header";  //$NON-NLS-1$
 	public static final String OBJECT_TAB_HEADER_BACKGROUND = "ObjectTab.Header.Background"; //$NON-NLS-1$
+   public static final String RACK_BACKGROUND = "Rack.Background"; //$NON-NLS-1$
+   public static final String RACK_BORDER = "Rack.Border"; //$NON-NLS-1$
+   public static final String RACK_EMPTY_SPACE = "Rack.EmptySpace"; //$NON-NLS-1$
+   public static final String RACK_TEXT = "Rack.Text"; //$NON-NLS-1$
 	public static final String RULE_EDITOR_BACKGROUND = "RuleEditor.Background"; //$NON-NLS-1$
 	public static final String RULE_EDITOR_NORMAL_TITLE_BACKGROUND = "RuleEditor.Title.Normal.Background"; //$NON-NLS-1$
 	public static final String RULE_EDITOR_DISABLED_TITLE_BACKGROUND = "RuleEditor.Title.Disabled.Background"; //$NON-NLS-1$
@@ -95,12 +93,6 @@ public class SharedColors
 		defaultColors.put(COMMAND_BOX_TEXT, new RGB(0, 0, 96));
 		defaultColors.put(COMMAND_BOX_BACKGROUND, new RGB(255, 255, 255));
 		defaultColors.put(DASHBOARD_BACKGROUND, new RGB(255, 255, 255));
-		defaultColors.put(DIAL_CHART_LEGEND, new RGB(0, 0, 0));
-		defaultColors.put(DIAL_CHART_NEEDLE, new RGB(51, 78, 113));
-		defaultColors.put(DIAL_CHART_NEEDLE_PIN, new RGB(239, 228, 176));
-		defaultColors.put(DIAL_CHART_SCALE, new RGB(0, 0, 0));
-		defaultColors.put(DIAL_CHART_VALUE, new RGB(255, 255, 255));
-		defaultColors.put(DIAL_CHART_VALUE_BACKGROUND, new RGB(51, 78, 113));
 		defaultColors.put(ERROR_BACKGROUND, new RGB(255, 0, 0));
 		defaultColors.put(GEOMAP_TITLE, new RGB(0, 0, 0));
 		defaultColors.put(MAP_GROUP_BOX_TITLE, new RGB(255, 255, 255));
@@ -113,6 +105,10 @@ public class SharedColors
 		defaultColors.put(OBJECT_TAB_BACKGROUND, new RGB(255, 255, 255));
 		defaultColors.put(OBJECT_TAB_HEADER, new RGB(255, 255, 255));
 		defaultColors.put(OBJECT_TAB_HEADER_BACKGROUND, new RGB(153, 180, 209));
+      defaultColors.put(RACK_BACKGROUND, new RGB(255, 255, 255));
+      defaultColors.put(RACK_BORDER, new RGB(92, 92, 92));
+      defaultColors.put(RACK_EMPTY_SPACE, new RGB(224, 224, 224));
+      defaultColors.put(RACK_TEXT, new RGB(0, 0, 0));
 		defaultColors.put(RULE_EDITOR_BACKGROUND, new RGB(255, 255, 255));
 		defaultColors.put(RULE_EDITOR_NORMAL_TITLE_BACKGROUND, new RGB(225, 233, 241));
 		defaultColors.put(RULE_EDITOR_DISABLED_TITLE_BACKGROUND, new RGB(202, 227, 206));

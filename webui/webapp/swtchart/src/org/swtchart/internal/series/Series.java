@@ -15,12 +15,12 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Event;
 import org.swtchart.Chart;
 import org.swtchart.IAxis;
+import org.swtchart.IAxis.Direction;
 import org.swtchart.IDisposeListener;
 import org.swtchart.IErrorBar;
 import org.swtchart.ISeries;
 import org.swtchart.ISeriesLabel;
 import org.swtchart.Range;
-import org.swtchart.IAxis.Direction;
 import org.swtchart.internal.axis.Axis;
 import org.swtchart.internal.compress.ICompress;
 
@@ -276,7 +276,6 @@ abstract public class Series implements ISeries
 	 */
 	public void setYSeries(double[] series)
 	{
-
 		if (series == null)
 		{
 			SWT.error(SWT.ERROR_NULL_ARGUMENT);
@@ -559,10 +558,11 @@ abstract public class Series implements ISeries
 	{
 		this.stackSeries = stackSeries;
 	}
-
+	
 	/*
 	 * @see ISeries#getPixelCoordinates(int)
 	 */
+	@Override
 	public Point getPixelCoordinates(int index)
 	{
 
@@ -793,5 +793,14 @@ abstract public class Series implements ISeries
    public double getCurY()
    {
       return ((ySeries != null) && (ySeries.length > 0)) ? ySeries[0] : 0;
+   }
+
+   /* (non-Javadoc)
+    * @see org.swtchart.ISeries#getSize()
+    */
+   @Override
+   public int getSize()
+   {
+      return xSeries.length;
    }
 }

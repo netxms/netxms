@@ -29,6 +29,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -40,26 +42,38 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.actions.RefreshAction;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.eventmanager.Activator;
 import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EditEventTemplateDialog;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateComparator;
+import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateFilter;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -83,19 +97,54 @@ public class EventConfigurator extends ViewPart implements SessionListener
 
 	private HashMap<Long, EventTemplate> eventTemplates;
 	private SortableTableViewer viewer;
+   private FilterText filterControl;
 	private Action actionNew;
 	private Action actionEdit;
 	private Action actionDelete;
-	private RefreshAction actionRefresh;
+   private Action actionShowFilter;
+	private Action actionRefresh;
 	private NXCSession session;
+	private EventTemplateFilter filter;
+	private boolean filterEnabled;
 
 	/* (non-Javadoc)
+	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+	 */
+	@Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
+
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      filterEnabled = settings.getBoolean("EventConfigurator.filterEnabled"); //$NON-NLS-1$
+   }
+
+   /* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	public void createPartControl(Composite parent)
 	{
 		session = (NXCSession)ConsoleSharedData.getSession();
+		
+      parent.setLayout(new FormLayout());
+      
+      // Create filter area
+      filterControl = new FilterText(parent, SWT.NONE);
+      filterControl.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterControl.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+         }
+      });
 		
 		final String[] names = { Messages.get().EventConfigurator_ColCode, Messages.get().EventConfigurator_ColName, Messages.get().EventConfigurator_ColSeverity, Messages.get().EventConfigurator_ColFlags, Messages.get().EventConfigurator_ColMessage, Messages.get().EventConfigurator_ColDescription };
 		final int[] widths = { 70, 200, 90, 50, 400, 400 };
@@ -104,6 +153,8 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new EventTemplateLabelProvider());
 		viewer.setComparator(new EventTemplateComparator());
+		filter = new EventTemplateFilter();
+		viewer.addFilter(filter);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener()
 		{
 			@Override
@@ -131,13 +182,34 @@ public class EventConfigurator extends ViewPart implements SessionListener
 				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 			}
 		});
-
-		makeActions();
+		
+      // Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterControl);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      viewer.getControl().setLayoutData(fd);
+      
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterControl.setLayoutData(fd);
+		
+      activateContext();
+		createActions();
 		contributeToActionBars();
 		createPopupMenu();
 
 		refreshView();
 		session.addListener(this);
+
+      // Set initial focus to filter input line
+      if (filterEnabled)
+         filterControl.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
 	}
 
 	/**
@@ -145,8 +217,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	 */
 	private void refreshView()
 	{
-		new ConsoleJob(Messages.get().EventConfigurator_OpenJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY)
-		{
+		new ConsoleJob(Messages.get().EventConfigurator_OpenJob_Title, this, Activator.PLUGIN_ID, JOB_FAMILY) {
 			@Override
 			protected String getErrorMessage()
 			{
@@ -213,6 +284,18 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		}
 	}
 
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.eventmanager.contexts.EventConfigurator"); //$NON-NLS-1$
+      }
+   }
+
 	/**
 	 * Contribute actions to action bar
 	 */
@@ -232,9 +315,9 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionNew);
-		manager.add(actionDelete);
-		manager.add(actionEdit);
 		manager.add(new Separator());
+      manager.add(actionShowFilter);
+      manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
 
@@ -247,8 +330,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionNew);
-		manager.add(actionEdit);
-		manager.add(actionDelete);
+      manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -256,9 +338,11 @@ public class EventConfigurator extends ViewPart implements SessionListener
 	/**
 	 * Create actions
 	 */
-	private void makeActions()
+	private void createActions()
 	{
-		actionRefresh = new RefreshAction() {
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{
@@ -266,37 +350,45 @@ public class EventConfigurator extends ViewPart implements SessionListener
 			}
 		};
 
-		actionNew = new Action() {
+		actionNew = new Action(Messages.get().EventConfigurator_NewEvent, SharedIcons.ADD_OBJECT) {
 			@Override
 			public void run()
 			{
 				createNewEventTemplate();
 			}
 		};
-		actionNew.setText(Messages.get().EventConfigurator_NewEvent);
-		actionNew.setImageDescriptor(Activator.getImageDescriptor("icons/new.png")); //$NON-NLS-1$
+		actionNew.setActionDefinitionId("org.netxms.ui.eclipse.eventmanager.commands.new_event_template"); //$NON-NLS-1$
+      handlerService.activateHandler(actionNew.getActionDefinitionId(), new ActionHandler(actionNew));
 
-		actionEdit = new Action() {
+		actionEdit = new Action(Messages.get().EventConfigurator_Properties, SharedIcons.EDIT) { //$NON-NLS-1$
 			@Override
 			public void run()
 			{
 				editEventTemplate();
 			}
 		};
-		actionEdit.setText(Messages.get().EventConfigurator_Properties);
-		actionEdit.setImageDescriptor(Activator.getImageDescriptor("icons/edit.png")); //$NON-NLS-1$
 		actionEdit.setEnabled(false);
 
-		actionDelete = new Action() {
+		actionDelete = new Action(Messages.get().EventConfigurator_Delete, SharedIcons.DELETE_OBJECT) {
 			@Override
 			public void run()
 			{
 				deleteEventTemplate();
 			}
 		};
-		actionDelete.setText(Messages.get().EventConfigurator_Delete);
-		actionDelete.setImageDescriptor(Activator.getImageDescriptor("icons/delete.png")); //$NON-NLS-1$
 		actionDelete.setEnabled(false);
+
+      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            enableFilter(actionShowFilter.isChecked());
+         }
+      };
+      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
+      actionShowFilter.setChecked(filterEnabled);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.eventmanager.commands.show_filter"); //$NON-NLS-1$
+      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 	}
 
 	/**
@@ -453,12 +545,48 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		}.start();
 	}
 
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   private void enableFilter(boolean enable)
+   {
+      filterEnabled = enable;
+      filterControl.setVisible(filterEnabled);
+      FormData fd = (FormData)viewer.getControl().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterControl) : new FormAttachment(0, 0);
+      viewer.getControl().getParent().layout();
+      if (enable)
+      {
+         filterControl.setFocus();
+      }
+      else
+      {
+         filterControl.setText(""); //$NON-NLS-1$
+         onFilterModify();
+      }
+      actionShowFilter.setChecked(enable);
+   }
+	
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      filter.setFilterText(filterControl.getText());
+      viewer.refresh();
+   }
+   
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
 	 */
 	@Override
 	public void dispose()
 	{
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings.put("EventConfigurator.filterEnabled", filterEnabled); //$NON-NLS-1$
+      
 		session.removeListener(this);
 		super.dispose();
 	}

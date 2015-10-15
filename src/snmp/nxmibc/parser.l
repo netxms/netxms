@@ -57,6 +57,10 @@ WHITESPC  [[:blank:]\t\n\r]
 #include "parser.tab.hpp"/* token codes from the parser */
 #include <nms_util.h>
 
+// prevent flex debug output on stdout
+#undef ECHO
+#define ECHO
+
 #ifdef _WIN32 
 #pragma warning(disable: 4018)
 #if defined(__64BIT__)

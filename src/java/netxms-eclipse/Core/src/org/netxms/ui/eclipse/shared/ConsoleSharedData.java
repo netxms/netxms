@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.shared;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import org.eclipse.swt.widgets.TrayItem;
 import org.netxms.client.NXCSession;
 
@@ -30,6 +31,7 @@ import org.netxms.client.NXCSession;
 public class ConsoleSharedData
 {
 	private static NXCSession session = null;
+	private static TimeZone timeZone = null;
 	private static TrayItem trayIcon = null;
 	private static Map<String, Object> consoleProperties = new HashMap<String, Object>(0);
 	
@@ -53,6 +55,36 @@ public class ConsoleSharedData
 		ConsoleSharedData.session = session;
 	}
 	
+   /**
+    * Get client timezone
+    * 
+    * @return
+    */
+   public static TimeZone getTimeZone()
+   {
+      return timeZone;
+   }
+   
+   /**
+    * Set server time zone
+    */
+   public static void setServerTimeZone()
+   {
+      if (session != null)
+      {
+         String tz = session.getServerTimeZone();
+         timeZone = TimeZone.getTimeZone(tz.replaceAll("[A-Za-z]+([\\+\\-][0-9]+).*", "GMT$1")); //$NON-NLS-1$ //$NON-NLS-2$
+      }
+   }
+   
+   /**
+    * Reset time zone to default
+    */
+   public static void resetTimeZone()
+   {
+      timeZone = null;
+   }
+   
 	/**
 	 * Get value of console property
 	 * 

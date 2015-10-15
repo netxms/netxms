@@ -65,7 +65,7 @@ public class AlarmStateConditionEditor extends ConditionEditor
 	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected void createContent(Composite parent, ColumnFilter initialFilter)
 	{
 		final Image[] stateImages = new Image[4];
 		stateImages[Alarm.STATE_OUTSTANDING] = Activator.getImageDescriptor("icons/outstanding.png").createImage(); //$NON-NLS-1$
@@ -91,6 +91,12 @@ public class AlarmStateConditionEditor extends ConditionEditor
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		state.setLayoutData(gd);
+
+      if ((initialFilter != null) && (initialFilter.getType() == ColumnFilter.EQUALS))
+      {
+         setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
+         state.select((int)initialFilter.getNumericValue());
+      }
 	}
 
 	/* (non-Javadoc)

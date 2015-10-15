@@ -34,15 +34,17 @@ public class ScriptEditDialog extends Dialog
 {
    private String script;
    private ScriptEditor editor;
+   private String hints;
    
    /**
     * @param parentShell
     * @param script
     */
-   public ScriptEditDialog(Shell parentShell, String script)
+   public ScriptEditDialog(Shell parentShell, String script, String hints)
    {
       super(parentShell);
       this.script = script;
+      this.hints = hints;
    }
 
    /* (non-Javadoc)
@@ -63,7 +65,7 @@ public class ScriptEditDialog extends Dialog
    {
       Composite area = (Composite)super.createDialogArea(parent);
       
-      editor = new ScriptEditor(area, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
+      editor = new ScriptEditor(area, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true, hints);
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.FILL;

@@ -370,6 +370,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\util.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\variable.cpp"
 				>
 			</File>

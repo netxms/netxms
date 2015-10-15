@@ -119,6 +119,13 @@ typedef void *yyscan_t;
 #define OPCODE_DECP_ELEMENT   66
 #define OPCODE_ABORT          67
 #define OPCODE_CATCH          68
+#define OPCODE_PUSH_CONSTREF  69
+#define OPCODE_HASHMAP_SET    70
+#define OPCODE_NEW_ARRAY      71
+#define OPCODE_NEW_HASHMAP    72
+#define OPCODE_CPOP           73
+#define OPCODE_STORAGE_READ   74
+#define OPCODE_STORAGE_WRITE  75
 
 class NXSL_Compiler;
 
@@ -156,10 +163,11 @@ public:
 class NXSL_Compiler
 {
 protected:
-   TCHAR *m_pszErrorText;
-   NXSL_Lexer *m_pLexer;
-   NXSL_Stack *m_pAddrStack;
-	NXSL_Stack *m_pBreakStack;
+   TCHAR *m_errorText;
+   int m_errorLineNumber;
+   NXSL_Lexer *m_lexer;
+   NXSL_Stack *m_addrStack;
+	NXSL_Stack *m_breakStack;
 	int m_idOpCode;
 
 public:
@@ -169,16 +177,17 @@ public:
    NXSL_Program *compile(const TCHAR *pszSourceCode);
    void error(const char *pszMsg);
 
-   const TCHAR *getErrorText() { return CHECK_NULL(m_pszErrorText); }
+   const TCHAR *getErrorText() { return CHECK_NULL(m_errorText); }
+   int getErrorLineNumber() { return m_errorLineNumber; }
 
-   void pushAddr(UINT32 dwAddr) { m_pAddrStack->push(CAST_TO_POINTER(dwAddr, void *)); }
+   void pushAddr(UINT32 dwAddr) { m_addrStack->push(CAST_TO_POINTER(dwAddr, void *)); }
    UINT32 popAddr();
    UINT32 peekAddr();
 
 	void addBreakAddr(UINT32 dwAddr);
 	void closeBreakLevel(NXSL_Program *pScript);
-	BOOL canUseBreak() { return m_pBreakStack->getSize() > 0; }
-	void newBreakLevel() { m_pBreakStack->push(new Queue); }
+	BOOL canUseBreak() { return m_breakStack->getSize() > 0; }
+	void newBreakLevel() { m_breakStack->push(new Queue); }
 
 	void setIdentifierOperation(int opcode) { m_idOpCode = opcode; }
 	int getIdentifierOperation() { return m_idOpCode; }

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
@@ -34,6 +35,8 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.osm.Activator;
 import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.osm.tools.MapAccessor;
+import org.netxms.ui.eclipse.osm.widgets.AbstractGeoMapViewer;
+import org.netxms.ui.eclipse.osm.widgets.ObjectGeoLocationViewer;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -65,6 +68,15 @@ public class WorldMap extends AbstractGeolocationView
 		}		
 		super.init(site, memento);
 	}
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.osm.views.AbstractGeolocationView#createMapViewer(org.eclipse.swt.widgets.Composite, int)
+    */
+   @Override
+   protected AbstractGeoMapViewer createMapViewer(Composite parent, int style)
+   {
+      return new ObjectGeoLocationViewer(parent, style);
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
@@ -121,8 +133,12 @@ public class WorldMap extends AbstractGeolocationView
 	protected void fillContextMenu(IMenuManager manager)
 	{
 		super.fillContextMenu(manager);
-		manager.add(new Separator());
-		manager.add(actionPlaceObject);
+		
+		if (getSelection().isEmpty())
+		{
+   		manager.add(new Separator());
+   		manager.add(actionPlaceObject);
+		}
 	}
 	
 	/**
@@ -135,7 +151,7 @@ public class WorldMap extends AbstractGeolocationView
 		{
 			final NXCObjectModificationData md = new NXCObjectModificationData(dlg.getSelectedObjects().get(0).getObjectId());
 			md.setGeolocation(map.getLocationAtPoint(map.getCurrentPoint()));
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+			final NXCSession session = ConsoleSharedData.getSession();
 			new ConsoleJob(Messages.get().WorldMap_JobTitle, this, Activator.PLUGIN_ID, null) {
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception

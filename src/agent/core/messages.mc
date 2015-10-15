@@ -308,4 +308,22 @@ Language=English
 Unable to add external subagent "%1"
 .
 
+MessageId=
+SymbolicName=MSG_LOCAL_DB_OPEN_FAILED
+Language=English
+Unable to open local database
+.
+
+MessageId=
+SymbolicName=MSG_LOCAL_DB_CORRUPTED
+Language=English
+Local database corrupted and cannot be used
+.
+
+MessageId=
+SymbolicName=MSG_DC_DBSCHEMA_UPGRADE_FAILED
+Language=English
+Data collection database schema upgrade failed
+.
+
 ;#endif

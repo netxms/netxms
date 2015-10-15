@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,16 +78,22 @@ public class ObjectFigureSmallLabel extends ObjectFigure
 	@Override
 	protected void paintFigure(Graphics gc)
 	{
+      Rectangle rect = new Rectangle(getBounds());
+      rect.x += BORDER_WIDTH / 2;
+      rect.y += BORDER_WIDTH / 2;
+      rect.width -= BORDER_WIDTH;
+      rect.height -= BORDER_WIDTH;
+      
 		gc.setAntialias(SWT.ON);
-		gc.setBackgroundColor(SharedColors.getColor(SharedColors.MAP_SMALL_LABEL_BACKGROUND, Display.getCurrent()));
-		gc.setForegroundColor(StatusDisplayInfo.getStatusColor(object.getStatus()));
-		Rectangle rect = new Rectangle(getBounds());
-		rect.x += BORDER_WIDTH / 2;
-		rect.y += BORDER_WIDTH / 2;
-		rect.width -= BORDER_WIDTH;
-		rect.height -= BORDER_WIDTH;
+		
+		gc.setBackgroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
+      gc.setAlpha(32);
+      gc.fillRoundRectangle(rect, 8, 8);
+      gc.setAlpha(255);
+      
+		gc.setForegroundColor(isElementSelected() ? SELECTION_COLOR : StatusDisplayInfo.getStatusColor(object.getStatus()));
+      gc.setLineStyle(labelProvider.isElementSelected(element) ? SWT.LINE_DOT : SWT.LINE_SOLID);
 		gc.setLineWidth(BORDER_WIDTH);
-		gc.fillRoundRectangle(rect, 8, 8);
 		gc.drawRoundRectangle(rect, 8, 8);
 	}
 }

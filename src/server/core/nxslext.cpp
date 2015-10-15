@@ -943,7 +943,7 @@ static int F_SNMPGet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 	pdu->bindVariable(new SNMP_Variable(varName, nameLen));
 
 	SNMP_PDU *rspPDU;
-   result = trans->doRequest(pdu, &rspPDU, g_snmpTimeout, 3 /* num retries */);
+   result = trans->doRequest(pdu, &rspPDU, SnmpGetDefaultTimeout(), 3);
    if (result == SNMP_ERR_SUCCESS)
    {
       if ((rspPDU->getNumVariables() > 0) && (rspPDU->getErrorCode() == SNMP_PDU_ERR_SUCCESS))
@@ -1066,7 +1066,7 @@ static int F_SNMPSet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM
 
 	// Send request and process response
 	UINT32 snmpResult;
-	if ((snmpResult = trans->doRequest(request, &response, g_snmpTimeout, 3)) == SNMP_ERR_SUCCESS)
+	if ((snmpResult = trans->doRequest(request, &response, SnmpGetDefaultTimeout(), 3)) == SNMP_ERR_SUCCESS)
 	{
 		if (response->getErrorCode() != 0)
 		{
@@ -1136,7 +1136,7 @@ static int F_SNMPWalk(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
    {
       rqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, requestId++, trans->getSnmpVersion());
       rqPDU->bindVariable(new SNMP_Variable(name, nameLen));
-      result = trans->doRequest(rqPDU, &rspPDU, g_snmpTimeout, 3);
+      result = trans->doRequest(rqPDU, &rspPDU, SnmpGetDefaultTimeout(), 3);
 
       // Analyze response
       if (result == SNMP_ERR_SUCCESS)
@@ -1308,8 +1308,8 @@ static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **
 	if (!argv[0]->isString())
 		return NXSL_ERR_NOT_STRING;
 
-	TCHAR buffer[MAX_DB_STRING];
-	if (ConfigReadStr(argv[0]->getValueAsCString(), buffer, MAX_DB_STRING, _T("")))
+	TCHAR buffer[MAX_CONFIG_VALUE];
+	if (ConfigReadStr(argv[0]->getValueAsCString(), buffer, MAX_CONFIG_VALUE, _T("")))
 	{
 		*ppResult = new NXSL_Value(buffer);
 	}

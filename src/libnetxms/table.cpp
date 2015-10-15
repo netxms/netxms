@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2014 Victor Kirhenshtein
 **
@@ -21,6 +21,7 @@
 **/
 
 #include "libnetxms.h"
+#include <expat.h>
 
 /**
  * Create empty table row
@@ -80,6 +81,240 @@ Table::Table(Table *src) : RefCountObject()
    m_columns = new ObjectArray<TableColumnDefinition>(src->m_columns->size(), 8, true);
 	for(i = 0; i < src->m_columns->size(); i++)
       m_columns->add(new TableColumnDefinition(src->m_columns->get(i)));
+}
+
+/**
+ * XML parser state for creating LogParser object from XML
+ */
+#define XML_STATE_INIT        -1
+#define XML_STATE_END         -2
+#define XML_STATE_ERROR       -255
+#define XML_STATE_TABLE       0
+#define XML_STATE_COLUMNS     1
+#define XML_STATE_COLUMN      2
+#define XML_STATE_DATA        3
+#define XML_STATE_ROW         4
+#define XML_STATE_CELL        5
+
+/**
+ * State information for XML parser
+ */
+typedef struct
+{
+   Table *table;
+	int state;
+	String *buffer;
+	int column;
+} XML_PARSER_STATE;
+
+/**
+ * Element start handler for XML parser
+ */
+static void StartElement(void *userData, const char *name, const char **attrs)
+{
+   XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+
+	if (!strcmp(name, "table"))
+	{
+      if (ps->state == XML_STATE_INIT)
+      {
+         ps->table->setExtendedFormat(XMLGetAttrBoolean(attrs, "extendedFormat", false));
+         ps->table->setSource(XMLGetAttrInt(attrs, "source", 0));
+         const char *title = XMLGetAttr(attrs, "name");
+		   if (title != NULL)
+		   {
+#ifdef UNICODE
+			   WCHAR *wtitle = WideStringFromUTF8String(title);
+            ps->table->setTitle(wtitle);
+			   free(wtitle);
+#else
+            ps->table->setTitle(title);
+#endif
+		   }
+		   ps->state = XML_STATE_TABLE;
+      }
+      else
+      {
+		   ps->state = XML_STATE_ERROR;
+      }
+	}
+	else if (!strcmp(name, "columns"))
+	{
+      ps->state = (ps->state == XML_STATE_TABLE) ? XML_STATE_COLUMNS : XML_STATE_ERROR;
+	}
+	else if (!strcmp(name, "column"))
+	{
+      if (ps->state == XML_STATE_COLUMNS)
+      {
+#ifdef UNICODE
+         wchar_t *name = WideStringFromUTF8String(CHECK_NULL_A(XMLGetAttr(attrs, "name")));
+         const char *tmp = XMLGetAttr(attrs, "displayName");
+         wchar_t *displayName = (tmp != NULL) ? WideStringFromUTF8String(tmp) : NULL;
+#else
+         const char *name = CHECK_NULL_A(XMLGetAttr(attrs, "name"));
+         const char *displayName = XMLGetAttr(attrs, "displayName");
+#endif
+         ps->table->addColumn(name, XMLGetAttrInt(attrs, "dataType", 0), displayName, XMLGetAttrBoolean(attrs, "isInstance", false));
+		   ps->state = XML_STATE_COLUMN;
+#ifdef UNICODE
+         safe_free(name);
+         safe_free(displayName);
+#endif
+      }
+      else
+      {
+		   ps->state = XML_STATE_ERROR;
+      }
+	}
+	else if (!strcmp(name, "data"))
+	{
+      ps->state = (ps->state == XML_STATE_TABLE) ? XML_STATE_DATA : XML_STATE_ERROR;
+	}
+	else if (!strcmp(name, "tr"))
+	{
+      if (ps->state == XML_STATE_DATA)
+      {
+         ps->table->addRow();
+         ps->table->setObjectId(ps->table->getNumRows() - 1, XMLGetAttrInt(attrs, "objectId", 0));
+         ps->column = 0;
+		   ps->state = XML_STATE_ROW;
+      }
+      else
+      {
+		   ps->state = XML_STATE_ERROR;
+      }
+	}
+	else if (!strcmp(name, "td"))
+	{
+      if (ps->state == XML_STATE_ROW)
+      {
+         ps->table->setStatus(ps->column, XMLGetAttrInt(attrs, "status", 0));
+         ps->state = XML_STATE_CELL;
+         ps->buffer->clear();
+      }
+      else
+      {
+		   ps->state = XML_STATE_ERROR;
+      }
+	}
+	else
+	{
+		ps->state = XML_STATE_ERROR;
+	}
+}
+
+/**
+ * Element end handler for XML parser
+ */
+static void EndElement(void *userData, const char *name)
+{
+   XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+   if (ps->state == XML_STATE_ERROR)
+      return;
+
+   if (!strcmp(name, "td"))
+	{
+      ps->table->set(ps->column, ps->buffer->getBuffer());
+      ps->column++;
+		ps->state = XML_STATE_ROW;
+	}
+	else if (!strcmp(name, "tr"))
+	{
+      ps->column = -1;
+      ps->state = XML_STATE_DATA;
+	}
+	else if (!strcmp(name, "column"))
+	{
+      ps->state = XML_STATE_COLUMNS;
+	}
+	else if (!strcmp(name, "columns") || !strcmp(name, "data"))
+	{
+      ps->state = XML_STATE_TABLE;
+	}
+}
+
+/**
+ * Data handler for XML parser
+ */
+static void CharData(void *userData, const XML_Char *s, int len)
+{
+   XML_PARSER_STATE *ps = (XML_PARSER_STATE *)userData;
+
+   if (ps->state == XML_STATE_CELL)
+   {
+      ps->buffer->appendMBString(s, len, CP_UTF8);
+   }
+}
+
+/**
+ * Parse XML document with table data
+ */
+bool Table::parseXML(const char *xml)
+{
+   XML_PARSER_STATE state;
+
+   XML_Parser parser = XML_ParserCreate(NULL);
+   XML_SetUserData(parser, &state);
+   XML_SetElementHandler(parser, StartElement, EndElement);
+   XML_SetCharacterDataHandler(parser, CharData);
+
+   state.table = this;
+   state.state = XML_STATE_INIT;
+   state.column = -1;
+   state.buffer = new String();
+
+   bool success = (XML_Parse(parser, xml, (int)strlen(xml), TRUE) != XML_STATUS_ERROR);
+   if (success)
+      success = (state.state != XML_STATE_ERROR);
+   XML_ParserFree(parser);
+   delete state.buffer;
+   return success;
+}
+
+/**
+ * Create table from XML document
+ */
+Table *Table::createFromXML(const char *xml)
+{
+   Table *table = new Table();
+   if (table->parseXML(xml))
+   {
+      return table;
+   }
+   delete table;
+   return NULL;
+}
+
+/**
+ * Create XML document from table
+ */
+TCHAR *Table::createXML()
+{
+   String xml;
+   xml.appendFormattedString(_T("<table extendedFormat=\"%s\" source=\"%d\"  name=\"%s\">\r\n"), m_extendedFormat ? _T("true") : _T("false"), m_source,
+                              (const TCHAR *)EscapeStringForXML2(m_title, -1));
+   xml.append(_T("<columns>\r\n"));
+   int i;
+   for(i = 0; i < m_columns->size(); i++)
+      xml.appendFormattedString(_T("<column name=\"%s\" displayName=\"%s\" isInstance=\"%s\" dataType=\"%d\"/>\r\n"),
+                  (const TCHAR *)EscapeStringForXML2(m_columns->get(i)->getName(), -1),
+                  (const TCHAR *)EscapeStringForXML2(m_columns->get(i)->getDisplayName(), -1),
+                  m_columns->get(i)->isInstanceColumn()? _T("true") : _T("false"), m_columns->get(i)->getDataType());
+   xml.append(_T("</columns>\r\n"));
+   xml.append(_T("<data>\r\n"));
+   for(i = 0; i < m_data->size(); i++)
+   {
+      xml.appendFormattedString(_T("<tr objectId=\"%d\">\r\n"), m_data->get(i)->getObjectId());
+      for(int j = 0; j < m_columns->size(); j++)
+      {
+         xml.appendFormattedString(_T("<td status=\"%d\">%s</td>\r\n"), m_data->get(i)->getStatus(j),
+                                    (const TCHAR *)EscapeStringForXML2(m_data->get(i)->getValue(j), -1));
+      }
+      xml.append(_T("</tr>\r\n"));
+   }
+   xml.append(_T("</data>\r\n"));
+   xml.append(_T("</table>"));
+   return _tcsdup(xml);
 }
 
 /**
@@ -149,12 +384,14 @@ void Table::createFromMessage(NXCPMessage *msg)
          TCHAR *value = msg->getFieldAsString(dwId++);
          if (m_extendedFormat)
          {
-            row->setPreallocated(j, value, msg->getFieldAsInt16(dwId++));
-            dwId += 8;
+            int status = msg->getFieldAsInt16(dwId++);
+            UINT32 objectId = msg->getFieldAsUInt32(dwId++);
+            row->setPreallocated(j, value, status, objectId);
+            dwId += 7;
          }
          else
          {
-            row->setPreallocated(j, value, -1);
+            row->setPreallocated(j, value, -1, 0);
          }
       }
    }
@@ -202,14 +439,15 @@ int Table::fillMessage(NXCPMessage &msg, int offset, int rowLimit)
 			msg.setField(id++, r->getObjectId());
          id += 9;
       }
-		for(int col = 0; col < m_columns->size(); col++) 
+		for(int col = 0; col < m_columns->size(); col++)
 		{
 			const TCHAR *tmp = r->getValue(col);
 			msg.setField(id++, CHECK_NULL_EX(tmp));
          if (m_extendedFormat)
          {
             msg.setField(id++, (UINT16)r->getStatus(col));
-            id += 8;
+            msg.setField(id++, r->getCellObjectId(col));
+            id += 7;
          }
 		}
 	}
@@ -425,6 +663,18 @@ int Table::getStatus(int nRow, int nCol)
 }
 
 /**
+ * Set object ID of given cell
+ */
+void Table::setCellObjectIdAt(int row, int col, UINT32 objectId)
+{
+   TableRow *r = m_data->get(row);
+   if (r != NULL)
+   {
+      r->setCellObjectId(col, objectId);
+   }
+}
+
+/**
  * Add all rows from another table.
  * Identical table format assumed.
  *
@@ -439,7 +689,7 @@ void Table::addAll(Table *src)
       TableRow *srcRow = src->m_data->get(i);
       for(int j = 0; j < numColumns; j++)
       {
-         dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j));
+         dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j), srcRow->getCellObjectId(j));
       }
       m_data->add(dstRow);
    }
@@ -459,7 +709,7 @@ void Table::copyRow(Table *src, int row)
 
    for(int j = 0; j < numColumns; j++)
    {
-      dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j));
+      dstRow->set(j, srcRow->getValue(j), srcRow->getStatus(j), srcRow->getCellObjectId(j));
    }
 
    m_data->add(dstRow);

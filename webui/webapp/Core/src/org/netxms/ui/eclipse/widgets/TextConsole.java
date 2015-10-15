@@ -21,14 +21,11 @@ package org.netxms.ui.eclipse.widgets;
 import java.io.IOException;
 import java.io.OutputStream;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Generic text console widget
@@ -48,18 +45,7 @@ public class TextConsole extends Composite
       setLayout(new FillLayout());
       console = new Text(this, SWT.MULTI | SWT.V_SCROLL);
       console.setEditable(false);
-
-      final Font font = new Font(getDisplay(), "Courier New", WidgetHelper.fontPixelsToPoints(getDisplay(), 16), SWT.NORMAL);
-      addDisposeListener(new DisposeListener() {
-         private static final long serialVersionUID = 1L;
-
-         @Override
-         public void widgetDisposed(DisposeEvent event)
-         {
-            font.dispose();
-         }
-      });
-      console.setFont(font);
+      console.setData(RWT.CUSTOM_VARIANT, "monospace");
    }
 
    /**

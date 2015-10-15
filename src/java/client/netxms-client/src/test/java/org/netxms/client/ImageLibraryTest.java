@@ -26,7 +26,7 @@ import org.netxms.client.constants.RCC;
 /**
  * Tests for image library
  */
-public class ImageLibraryTest extends SessionTest
+public class ImageLibraryTest extends AbstractSessionTest
 {
 	public void testGetLibrary() throws Exception
 	{

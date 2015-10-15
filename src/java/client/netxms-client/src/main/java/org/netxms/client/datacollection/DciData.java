@@ -22,7 +22,6 @@ import java.util.ArrayList;
 
 /**
  * Class to hold series of collected DCI data
- * 
  */
 public class DciData
 {
@@ -98,4 +97,22 @@ public class DciData
 	{
 		this.dataType = dataType;
 	}
+	
+	/**
+	 * Invert values
+	 */
+	public void invert()
+	{
+	   for(DciDataRow r : values)
+	      r.invert();
+	}
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "DciData [nodeId=" + nodeId + ", dciId=" + dciId + ", dataType=" + dataType + ", valuesSize=" + values.size() + "]";
+   }
 }

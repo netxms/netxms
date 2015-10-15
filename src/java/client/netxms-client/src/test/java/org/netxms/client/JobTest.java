@@ -24,7 +24,7 @@ import org.netxms.client.server.ServerJob;
  * @author Victor
  *
  */
-public class JobTest extends SessionTest
+public class JobTest extends AbstractSessionTest
 {
 	public void testJobList() throws Exception
 	{

@@ -98,7 +98,7 @@ static void AddDCIParam(StructArray<NETXMS_SUBAGENT_PARAM> *parameters, Query *q
    NETXMS_SUBAGENT_PARAM *param = new NETXMS_SUBAGENT_PARAM();
 
    _tcscpy(param->name, query->getName());
-   if(parameterRequired)
+   if (parameterRequired)
       _tcscat(param->name, _T("(*)"));
 
    param->handler = H_DirectQueryConfigurable;

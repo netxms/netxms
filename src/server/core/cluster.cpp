@@ -465,9 +465,19 @@ bool Cluster::isVirtualAddr(const InetAddress& addr)
 }
 
 /**
+ * Entry point for status poller thread
+ */
+void Cluster::statusPoll(PollerInfo *poller)
+{
+   poller->startExecution();
+   statusPoll(NULL, 0, poller);
+   delete poller;
+}
+
+/**
  * Status poll
  */
-void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
+void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller)
 {
 	UINT32 i, j, k, dwPollListSize;
 	InterfaceList *pIfList;
@@ -492,7 +502,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, int nPoller)
 	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling member nodes"), m_name);
 	for(i = 0, bAllDown = TRUE; i < dwPollListSize; i++)
 	{
-		((Node *)ppPollList[i])->statusPoll(pSession, dwRqId, nPoller);
+		((Node *)ppPollList[i])->statusPoll(pSession, dwRqId, poller);
 		if (!((Node *)ppPollList[i])->isDown())
 			bAllDown = FALSE;
 	}

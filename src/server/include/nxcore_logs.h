@@ -159,7 +159,7 @@ public:
 /**
  * Log handle - object used to access log
  */
-class LogHandle
+class LogHandle : public RefCountObject
 {
 private:
 	NXCORE_LOG *m_log;
@@ -178,10 +178,10 @@ private:
 
 public:
 	LogHandle(NXCORE_LOG *log);
-	~LogHandle();
+	virtual ~LogHandle();
 
 	void lock() { MutexLock(m_lock); }
-	void unlock() { MutexUnlock(m_lock); }
+	void release() { MutexUnlock(m_lock); decRefCount(); }
 
 	bool query(LogFilter *filter, INT64 *rowCount, const UINT32 userId);
 	Table *getData(INT64 startRow, INT64 numRows, bool refresh, const UINT32 userId);

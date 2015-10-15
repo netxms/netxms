@@ -237,7 +237,6 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 
 		createActions();
 		contributeToActionBars();
-      filterControl.setCloseAction(actionShowFilter);
       
       openEventProcessingPolicy();      
       activateContext();
@@ -394,8 +393,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          @Override
          public void run()
          {
-            enableFilter(!filterEnabled);
-            actionShowFilter.setChecked(filterEnabled);
+            enableFilter(actionShowFilter.isChecked());
          }
       };
       actionShowFilter.setChecked(filterEnabled);
@@ -1137,6 +1135,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          filterControl.setText(""); //$NON-NLS-1$
          onFilterModify();
       }
+      actionShowFilter.setChecked(enable);
    }
 
    /**

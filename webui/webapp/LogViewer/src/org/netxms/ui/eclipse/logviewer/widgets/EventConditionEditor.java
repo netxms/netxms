@@ -31,11 +31,14 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.eventmanager.dialogs.EventSelectionDialog;
 import org.netxms.ui.eclipse.logviewer.Messages;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -82,7 +85,7 @@ public class EventConditionEditor extends ConditionEditor
 	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected void createContent(Composite parent, ColumnFilter initialFilter)
 	{
 		Composite group = new Composite(this, SWT.NONE);
 		GridLayout layout = new GridLayout();
@@ -114,6 +117,23 @@ public class EventConditionEditor extends ConditionEditor
 				selectEvent();
 			}
 		});
+
+      if ((initialFilter != null) && (initialFilter.getType() == ColumnFilter.EQUALS))
+      {
+         setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
+         eventCode = initialFilter.getNumericValue();
+         EventTemplate e = ConsoleSharedData.getSession().findEventTemplateByCode(eventCode);
+         if (e != null)
+         {
+            objectName.setText(e.getName());
+            objectName.setImage(labelProvider.getImage(e));
+         }
+         else
+         {
+            objectName.setImage(StatusDisplayInfo.getStatusImage(Severity.UNKNOWN));
+            objectName.setText("[" + eventCode + "]");
+         }
+      }
 	}
 	
 	/**

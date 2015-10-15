@@ -141,10 +141,8 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
-		uuid_t guid;
-		object->getGuid(guid);
-		TCHAR buffer[128];
-		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
+		TCHAR buffer[64];
+      pValue = new NXSL_Value(object->getGuid().toString(buffer));
    }
    else if (!_tcscmp(pszAttr, _T("status")))
    {
@@ -227,10 +225,8 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
-		uuid_t guid;
-		zone->getGuid(guid);
-		TCHAR buffer[128];
-		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
+		TCHAR buffer[64];
+      pValue = new NXSL_Value(zone->getGuid().toString(buffer));
    }
    else if (!_tcscmp(pszAttr, _T("icmpProxy")))
    {
@@ -375,6 +371,11 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value((INT64)pNode->getBootTime());
    }
+   else if (!_tcscmp(pszAttr, _T("bridgeBaseAddress")))
+   {
+      TCHAR buffer[64];
+      pValue = new NXSL_Value(BinToStr(pNode->getBridgeId(), MAC_ADDR_LENGTH, buffer));
+   }
    else if (!_tcscmp(pszAttr, _T("city")))
    {
       pValue = new NXSL_Value(pNode->getPostalAddress()->getCity());
@@ -397,10 +398,8 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
-		uuid_t guid;
-		pNode->getGuid(guid);
-		TCHAR buffer[128];
-		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
+		TCHAR buffer[64];
+      pValue = new NXSL_Value(pNode->getGuid().toString(buffer));
    }
    else if (!_tcscmp(pszAttr, _T("id")))
    {
@@ -476,6 +475,18 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value(pNode->getSNMPObjectId());
    }
+   else if (!_tcscmp(pszAttr, _T("snmpSysContact")))
+   {
+      pValue = new NXSL_Value(pNode->getSysContact());
+   }
+   else if (!_tcscmp(pszAttr, _T("snmpSysDescription")))
+   {
+      pValue = new NXSL_Value(pNode->getSysDescription());
+   }
+   else if (!_tcscmp(pszAttr, _T("snmpSysLocation")))
+   {
+      pValue = new NXSL_Value(pNode->getSysLocation());
+   }
    else if (!_tcscmp(pszAttr, _T("snmpSysName")))
    {
       pValue = new NXSL_Value(pNode->getSysName());
@@ -491,10 +502,6 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    else if (!_tcscmp(pszAttr, _T("streetAddress")))
    {
       pValue = new NXSL_Value(pNode->getPostalAddress()->getStreetAddress());
-   }
-   else if (!_tcscmp(pszAttr, _T("sysDescription")))
-   {
-      pValue = new NXSL_Value(pNode->getSysDescription());
    }
    else if (!_tcscmp(pszAttr, _T("zone")))
 	{
@@ -588,10 +595,8 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
-		uuid_t guid;
-		iface->getGuid(guid);
-		TCHAR buffer[128];
-		pValue = new NXSL_Value(uuid_to_string(guid, buffer));
+		TCHAR buffer[64];
+      pValue = new NXSL_Value(iface->getGuid().toString(buffer));
    }
    else if (!_tcscmp(pszAttr, _T("id")))
    {
@@ -737,6 +742,10 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
    {
       pValue = new NXSL_Value(iface->getSlotNumber());
    }
+   else if (!_tcscmp(pszAttr, _T("speed")))
+   {
+      pValue = new NXSL_Value(iface->getSpeed());
+   }
    else if (!_tcscmp(pszAttr, _T("status")))
    {
       pValue = new NXSL_Value((LONG)iface->Status());
@@ -776,11 +785,61 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 }
 
 /**
+ * Event::setMessage() method
+ */
+NXSL_METHOD_DEFINITION(setMessage)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Event *event = (Event *)object->getData();
+   event->setMessage(argv[0]->getValueAsCString());
+   *result = new NXSL_Value();
+   return 0;
+}
+
+/**
+ * Event::setSeverity() method
+ */
+NXSL_METHOD_DEFINITION(setSeverity)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_STRING;
+
+   int s = argv[0]->getValueAsInt32();
+   if ((s >= SEVERITY_NORMAL) && (s <= SEVERITY_CRITICAL))
+   {
+      Event *event = (Event *)object->getData();
+      event->setSeverity(s);
+   }
+   *result = new NXSL_Value();
+   return 0;
+}
+
+/**
+ * Event::setUserTag() method
+ */
+NXSL_METHOD_DEFINITION(setUserTag)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   Event *event = (Event *)object->getData();
+   event->setUserTag(argv[0]->getValueAsCString());
+   *result = new NXSL_Value();
+   return 0;
+}
+
+/**
  * NXSL class Event: constructor
  */
 NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 {
    _tcscpy(m_name, _T("Event"));
+
+   NXSL_REGISTER_METHOD(setMessage, 1);
+   NXSL_REGISTER_METHOD(setSeverity, 1);
+   NXSL_REGISTER_METHOD(setUserTag, 1);
 }
 
 /**
@@ -788,10 +847,9 @@ NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
  */
 NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 {
-   Event *event;
    NXSL_Value *value = NULL;
 
-   event = (Event *)pObject->getData();
+   Event *event = (Event *)pObject->getData();
    if (!_tcscmp(pszAttr, _T("code")))
    {
       value = new NXSL_Value(event->getCode());
@@ -978,7 +1036,11 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    NXSL_Value *value = NULL;
 
    dci = (DCObject *)object->getData();
-   if (!_tcscmp(attr, _T("dataType")) && (dci->getType() == DCO_TYPE_ITEM))
+   if (!_tcscmp(attr, _T("comments")))
+   {
+		value = new NXSL_Value(dci->getComments());
+   }
+   else if (!_tcscmp(attr, _T("dataType")) && (dci->getType() == DCO_TYPE_ITEM))
    {
 		value = new NXSL_Value((LONG)((DCItem *)dci)->getDataType());
    }

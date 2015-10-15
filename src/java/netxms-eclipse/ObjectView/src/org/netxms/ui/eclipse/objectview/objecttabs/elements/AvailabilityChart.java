@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.Messages;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 
@@ -52,10 +53,11 @@ public class AvailabilityChart extends OverviewPageElement
 	/**
 	 * @param parent
 	 * @param object
+	 * @param objectTab
 	 */
-	public AvailabilityChart(Composite parent, OverviewPageElement anchor)
+	public AvailabilityChart(Composite parent, OverviewPageElement anchor, ObjectTab objectTab)
 	{
-		super(parent, anchor);
+		super(parent, anchor, objectTab);
 	}
 
 	/* (non-Javadoc)
@@ -159,12 +161,12 @@ public class AvailabilityChart extends OverviewPageElement
 		final Color fg = SharedColors.getColor(SharedColors.SERVICE_AVAILABILITY_LEGEND, getDisplay());
 		
 		gc.setBackground(colors.create(127, 154, 72));
-		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg, 0.2f, colors));
+		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg.getRGB(), 0.2f, colors));
 		gc.fillRectangle(5, 10, th, th);
 		gc.drawRectangle(5, 10, th, th);
 
 		gc.setBackground(colors.create(158, 65, 62));
-		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg, 0.2f, colors));
+		gc.setForeground(ColorConverter.adjustColor(gc.getBackground(), fg.getRGB(), 0.2f, colors));
 		gc.fillRectangle(5, 40, th, th);
 		gc.drawRectangle(5, 40, th, th);
 

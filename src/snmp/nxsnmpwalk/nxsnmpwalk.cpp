@@ -135,13 +135,15 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
                   }
                   else
                   {
-                     dwResult = SNMP_ERR_NO_OBJECT;
+                     // Consider no object/no instance as end of walk signal instead of failure
                      bRunning = FALSE;
                   }
                }
                else
                {
-                  dwResult = SNMP_ERR_AGENT;
+                  // Some SNMP agents sends NO_SUCH_NAME PDU error after last element in MIB
+                  if (pRespPDU->getErrorCode() != SNMP_PDU_ERR_NO_SUCH_NAME)
+                     dwResult = SNMP_ERR_AGENT;
                   bRunning = FALSE;
                }
                delete pRespPDU;

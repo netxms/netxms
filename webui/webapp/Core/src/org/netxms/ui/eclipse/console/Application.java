@@ -20,9 +20,11 @@ package org.netxms.ui.eclipse.console;
 
 import java.util.Locale;
 import java.util.Properties;
+import java.util.TimeZone;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.ClientInfo;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -49,11 +51,11 @@ public class Application implements IApplication
 		int timeout;
 		try
 		{
-			timeout = Integer.parseInt(properties.getProperty("sessionTimeout", "120"));			
+			timeout = Integer.parseInt(properties.getProperty("sessionTimeout", "600"));			
 		}
 		catch(NumberFormatException e)
 		{
-			timeout = 120;
+			timeout = 600;
 		}
 		
 		final Display display = PlatformUI.createDisplay();
@@ -66,6 +68,16 @@ public class Application implements IApplication
 					session.disconnect();
 			}
 		});
+		
+		ClientInfo clientInfo = RWT.getClient().getService(ClientInfo.class);
+		if (clientInfo != null)
+		{
+		   String[] tzList = TimeZone.getAvailableIDs(-clientInfo.getTimezoneOffset() * 60000);  // convert offset in minutes to milliseconds (in RAP - means ahead of UTC)
+		   if (tzList.length > 0)
+		   {
+		      RWT.getUISession().setAttribute(ConsoleSharedData.ATTRIBUTE_TIMEZONE, TimeZone.getTimeZone(tzList[0]));
+		   }
+		}
 		
 		SharedIcons.init(display);
 		WorkbenchAdvisor advisor = new ApplicationWorkbenchAdvisor();

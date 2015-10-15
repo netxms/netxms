@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -145,6 +145,24 @@ public class CompositeWithMessageBar extends Composite
       Composite c = new Composite(parent, SWT.NONE);
       c.setLayout(new FillLayout());
       return c;
+   }
+   
+   /**
+    * Set given composite as new content
+    * 
+    * @param c
+    */
+   public void setContent(Composite c)
+   {
+      if (content != null)
+         content.dispose();
+      content = c;
+      FormData fd = new FormData();
+      fd.top = new FormAttachment(0, 0);
+      fd.left = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      content.setLayoutData(fd);
    }
    
    /**

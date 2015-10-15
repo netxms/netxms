@@ -110,6 +110,51 @@ void UnregisterSession(UINT32 dwIndex)
 }
 
 /**
+ * Enumerates active agent sessions. Callback will be called for each valid session.
+ * Callback must return _STOP to stop enumeration or _CONTINUE to continue.
+ *
+ * @return true if enumeration was stopped by callback
+ */
+bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void *), void *data)
+{
+   bool result = false;
+   MutexLock(g_hSessionListAccess);
+   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   {
+      if (g_pSessionList[i] == NULL)
+         continue;
+
+      if (callback(g_pSessionList[i], data) == _STOP)
+      {
+         result = true;
+         break;
+      }
+   }
+   MutexUnlock(g_hSessionListAccess);
+   return result;
+}
+
+/**
+ * Find server session. Caller must call decRefCount() for session object when finished.
+ */
+AbstractCommSession *FindServerSession(UINT64 serverId)
+{
+   AbstractCommSession *session = NULL;
+   MutexLock(g_hSessionListAccess);
+   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   {
+      if ((g_pSessionList[i] != NULL) && (g_pSessionList[i]->getServerId() == serverId) && g_pSessionList[i]->canAcceptTraps())
+      {
+         session = g_pSessionList[i];
+         session->incRefCount();
+         break;
+      }
+   }
+   MutexUnlock(g_hSessionListAccess);
+   return session;
+}
+
+/**
  * TCP/IP Listener
  */ 
 THREAD_RESULT THREAD_CALL ListenerThread(void *)
@@ -346,6 +391,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
             }
             else
             {
+               DebugPrintf(INVALID_INDEX, 9, _T("Session registered for %s"), buffer);
                session->run();
             }
          }

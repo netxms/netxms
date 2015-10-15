@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package org.netxms.ui.eclipse.charts.widgets;
 
 import java.text.DecimalFormat;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
@@ -28,7 +29,6 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.charts.Messages;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -130,14 +130,16 @@ public class DialChartWidget extends GaugeWidget
 		
 		// Draw center part and border
 		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
-		gc.setForeground(SharedColors.getColor(SharedColors.DIAL_CHART_SCALE, getDisplay()));
+		gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
 		gc.fillArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, 0, 360);
 		gc.setLineWidth(2);
 		gc.drawArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
 		gc.setLineWidth(1);
 		
 		// Draw scale
-		gc.setForeground(getColorFromPreferences("Chart.Axis.X.Color")); //$NON-NLS-1$
+      Color scaleColor = getColorFromPreferences("Chart.Colors.DialScale");
+      Color scaleTextColor = getColorFromPreferences("Chart.Colors.DialScaleText");
+      gc.setForeground(scaleColor);
 		int textOffset = ((rect.width / 2) * SCALE_OFFSET / 200);
 		double arcLength = (outerRadius - scaleOuterOffset) * 4.7123889803846898576939650749193;	// r * (270 degrees angle in radians)
 		int step = (arcLength >= 200) ? 27 : 54;
@@ -149,6 +151,7 @@ public class DialChartWidget extends GaugeWidget
 		{
 			if (gridVisible)
 			{
+	         gc.setForeground(scaleColor);
 				Point l1 = positionOnArc(cx, cy, outerRadius - scaleOuterOffset, i);
 				Point l2 = positionOnArc(cx, cy, outerRadius - scaleInnerOffset, i);
 				gc.drawLine(l1.x, l1.y, l2.x, l2.y);
@@ -157,13 +160,15 @@ public class DialChartWidget extends GaugeWidget
 			String value = roundedMarkValue(i, angleValue, valueStep);
 			Point t = positionOnArc(cx, cy, outerRadius - textOffset, i);
 			Point ext = gc.textExtent(value);
+	      gc.setForeground(scaleTextColor);
 			gc.drawText(value, t.x - ext.x / 2, t.y - ext.y / 2, SWT.DRAW_TRANSPARENT);
 		}
+      gc.setForeground(scaleColor);
 		gc.drawArc(rect.x + scaleOuterOffset, rect.y + scaleOuterOffset, rect.width - scaleOuterOffset * 2, rect.height - scaleOuterOffset * 2, -45, 270);
 		gc.drawArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, -45, 270);
 		
 		// Draw needle
-		gc.setBackground(SharedColors.getColor(SharedColors.DIAL_CHART_NEEDLE, getDisplay()));
+		gc.setBackground(getColorFromPreferences("Chart.Colors.DialNeedle"));
 		double dciValue = dci.getValue();
 		if (dciValue < minValue)
 			dciValue = minValue;
@@ -175,7 +180,7 @@ public class DialChartWidget extends GaugeWidget
 		Point np2 = positionOnArc(cx, cy, NEEDLE_PIN_RADIUS / 2, angle + 90);
 		gc.fillPolygon(new int[] { np1.x, np1.y, needleEnd.x, needleEnd.y, np2.x, np2.y });
 		gc.fillArc(cx - NEEDLE_PIN_RADIUS, cy - NEEDLE_PIN_RADIUS, NEEDLE_PIN_RADIUS * 2 - 1, NEEDLE_PIN_RADIUS * 2 - 1, 0, 360);
-		gc.setBackground(SharedColors.getColor(SharedColors.DIAL_CHART_NEEDLE_PIN, getDisplay()));
+		gc.setBackground(getColorFromPreferences("Chart.Colors.DialNeedlePin"));
 		gc.fillArc(cx - NEEDLE_PIN_RADIUS / 2, cy - NEEDLE_PIN_RADIUS / 2, NEEDLE_PIN_RADIUS - 1, NEEDLE_PIN_RADIUS - 1, 0, 360);
 		
 		// Draw current value
@@ -183,10 +188,10 @@ public class DialChartWidget extends GaugeWidget
 		gc.setFont(WidgetHelper.getMatchingSizeFont(valueFonts, markFont));
 		Point ext = gc.textExtent(value);
 		gc.setLineWidth(3);
-		gc.setBackground(SharedColors.getColor(SharedColors.DIAL_CHART_VALUE_BACKGROUND, getDisplay()));
+		gc.setBackground(getColorFromPreferences("Chart.Colors.DialValueBackground"));
 		int boxW = Math.max(outerRadius - scaleInnerOffset - 6, ext.x + 8);
 		gc.fillRoundRectangle(cx - boxW / 2, cy + rect.height / 4, boxW, ext.y + 6, 3, 3);
-		gc.setForeground(SharedColors.getColor(SharedColors.DIAL_CHART_VALUE, getDisplay()));
+      gc.setForeground(getColorFromPreferences("Chart.Colors.DialValueText"));
 		gc.drawText(value, cx - ext.x / 2, cy + rect.height / 4 + 3, true);
 		
 		// Draw legend, ignore legend position
@@ -194,7 +199,7 @@ public class DialChartWidget extends GaugeWidget
 		{
          gc.setFont(legendInside ? markFont : null);
 			ext = gc.textExtent(dci.getName());
-			gc.setForeground(SharedColors.getColor(SharedColors.DIAL_CHART_LEGEND, getDisplay()));
+			gc.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
 			if (legendInside)
 			{
 				gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleInnerOffset / 2 + rect.height / 4, true);

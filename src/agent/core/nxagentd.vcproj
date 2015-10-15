@@ -378,6 +378,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\datacoll.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\dcsnmp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\epp.cpp"
 				>
 			</File>
@@ -395,6 +403,10 @@
 			</File>
 			<File
 				RelativePath=".\hddinfo.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\localdb.cpp"
 				>
 			</File>
 			<File

@@ -262,10 +262,9 @@ void NodeLink::applyTemplates()
 /**
  * Object deletion thread
  */
-static THREAD_RESULT THREAD_CALL DeleteThread(void *arg)
+static void DeleteNodeLink(void *arg)
 {
 	((NodeLink *)arg)->deleteObject();
-	return THREAD_OK;
 }
 
 /**
@@ -280,7 +279,7 @@ void NodeLink::onObjectDelete(UINT32 dwObjectId)
 		// object's OnObjectDelete, so we cannot call this->deleteObject()
 		// directly without potential deadlock
 		DbgPrintf(4, _T("Scheduling deletion of nodelink object %s [%u] due to linked node deletion"), m_name, m_id);
-		ThreadCreate(DeleteThread, 0, this);
+      ThreadPoolExecute(g_mainThreadPool, DeleteNodeLink, this);
 	}
    ServiceContainer::onObjectDelete(dwObjectId);
 }

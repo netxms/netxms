@@ -38,8 +38,6 @@ import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -819,31 +817,14 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
             {
                out.close();
             }
+            DownloadServiceHandler.addDownload(file.getName(), "export.xml", file, "application/xml");
 				runInUIThread(new Runnable() {
                @Override
                public void run()
                {
 						modified = false;
 						firePropertyChange(PROP_DIRTY);
-
-		            DownloadServiceHandler.addDownload(file.getName(), "export.xml", file, "application/xml");
-                  JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-                  if( executor != null ) 
-                  {
-                     StringBuilder js = new StringBuilder();
-                     js.append("var hiddenIFrameID = 'hiddenDownloader',");
-                     js.append("   iframe = document.getElementById(hiddenIFrameID);");
-                     js.append("if (iframe === null) {");
-                     js.append("   iframe = document.createElement('iframe');");
-                     js.append("   iframe.id = hiddenIFrameID;");
-                     js.append("   iframe.style.display = 'none';");
-                     js.append("   document.body.appendChild(iframe);");
-                     js.append("}");
-                     js.append("iframe.src = '");
-                     js.append(DownloadServiceHandler.createDownloadUrl(file.getName()));
-                     js.append("';");
-                     executor.execute(js.toString());
-                  }                 
+						DownloadServiceHandler.startDownload(file.getName());
                }
             });
 			}

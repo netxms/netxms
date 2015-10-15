@@ -22,7 +22,7 @@ import android.view.ViewGroup;
  * 
  */
 
-public class OverviewFragment extends AbstractListFragment implements LoaderManager.LoaderCallbacks<AbstractObject>
+public class OverviewFragment extends ExpandableListFragment implements LoaderManager.LoaderCallbacks<AbstractObject>
 {
 	private OverviewAdapter adapter = null;
 	private GenericObjectLoader loader = null;
@@ -46,8 +46,9 @@ public class OverviewFragment extends AbstractListFragment implements LoaderMana
 	public void onActivityCreated(Bundle savedInstanceState)
 	{
 		super.onActivityCreated(savedInstanceState);
-		adapter = new OverviewAdapter(getActivity());
+		adapter = new OverviewAdapter(getActivity(), null, null);
 		setListAdapter(adapter);
+		getExpandableListView().expandGroup(0);
 		setListShown(false, true);
 		loader = (GenericObjectLoader)getActivity().getSupportLoaderManager().initLoader(R.layout.overview_fragment, null, this);
 		if (loader != null)
@@ -56,7 +57,6 @@ public class OverviewFragment extends AbstractListFragment implements LoaderMana
 			loader.setService(service);
 		}
 	}
-
 	@Override
 	public void refresh()
 	{

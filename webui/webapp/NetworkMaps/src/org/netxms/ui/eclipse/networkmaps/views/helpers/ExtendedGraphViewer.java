@@ -88,6 +88,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	private Layer backgroundLayer;
 	private Layer decorationLayer;
 	private Layer indicatorLayer;
+   private Layer controlLayer;
 	private int crosshairX;
 	private int crosshairY;
 	private Crosshair crosshairFigure;
@@ -100,6 +101,8 @@ public class ExtendedGraphViewer extends GraphViewer
 	private Map<Long, DecorationLayerAbstractFigure> decorationFigures = new HashMap<Long, DecorationLayerAbstractFigure>();
 	private MouseListener backgroundMouseListener;
 	private ColorCache colors;
+	private Image iconBack;
+	private OverlayButton backButton = null;
 	
 	/**
 	 * @param composite
@@ -113,12 +116,15 @@ public class ExtendedGraphViewer extends GraphViewer
 		
 		final ScalableFigure rootLayer = graph.getRootLayer();
 		
+		iconBack = Activator.getImageDescriptor("icons/back.png").createImage();
+		
 		mapLoader = new MapLoader(composite.getDisplay());
 		graph.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
 				mapLoader.dispose();
+				iconBack.dispose();
 			}
 		});
 		
@@ -133,6 +139,9 @@ public class ExtendedGraphViewer extends GraphViewer
 		
 		indicatorLayer = new FreeformLayer();
 		rootLayer.add(indicatorLayer, null, 2);
+		
+      controlLayer = new FreeformLayer();
+      rootLayer.add(controlLayer, null);
 		
 		getZoomManager().setZoomLevels(zoomLevels);
 		
@@ -564,6 +573,37 @@ public class ExtendedGraphViewer extends GraphViewer
 	}
 	
 	/**
+    * Show "back" button
+    * 
+	 * @param action
+	 */
+	public void showBackButton(final Runnable action)
+	{
+	   if (backButton != null)
+	   {
+	      backButton.setAction(action);
+	   }
+	   else
+	   {
+	      backButton = new OverlayButton(iconBack, action);
+         controlLayer.add(backButton);
+         backButton.setLocation(new org.eclipse.draw2d.geometry.Point(10, 10));
+	   }
+	}
+	
+	/**
+	 * Hide "back" button
+	 */
+	public void hideBackButton()
+	{
+      if (backButton != null)
+      {
+         controlLayer.remove(backButton);
+         backButton = null;
+      }
+	}
+	
+	/**
 	 * Show crosshair at given location
 	 * 
 	 * @param x
@@ -810,7 +850,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	private class GridFigure extends Figure
 	{
 		/**
-		 * 
+		 * Create new grid figure
 		 */
 		public GridFigure()
 		{
@@ -831,5 +871,77 @@ public class ExtendedGraphViewer extends GraphViewer
 			for(int y = gridSize; y < size.height; y += gridSize)
 				gc.drawLine(0, y, size.width, y);
 		}
+	}
+	
+	/**
+	 * Overlay button
+	 */
+	private class OverlayButton extends Figure
+	{
+	   private Image icon;
+	   private Runnable action;
+	   
+	   /**
+	    * @param icon
+	    * @param action
+	    */
+	   public OverlayButton(Image icon, Runnable action)
+	   {
+	      this.icon = icon;
+	      this.action = action;
+	      addMouseListener(new MouseListener() {
+            @Override
+            public void mousePressed(MouseEvent me)
+            {
+               OverlayButton.this.action.run();
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent me)
+            {
+            }
+
+            @Override
+            public void mouseDoubleClicked(MouseEvent me)
+            {
+            }
+	      });
+	      setSize(getPreferredSize());
+	   }
+	   
+	   /* (non-Javadoc)
+       * @see org.eclipse.draw2d.Figure#getPreferredSize(int, int)
+       */
+      @Override
+      public Dimension getPreferredSize(int wHint, int hHint)
+      {
+         return new Dimension(icon.getImageData().width, icon.getImageData().height).expand(6, 6);
+      }
+
+      /* (non-Javadoc)
+       * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+       */
+      @Override
+      protected void paintFigure(Graphics gc)
+      {
+         org.eclipse.draw2d.geometry.Point pos = getLocation();
+         Dimension size = getSize();
+         gc.setLineWidth(1);
+         gc.setForegroundColor(colors.create(86, 20, 152));
+         gc.setBackgroundColor(gc.getForegroundColor());
+         gc.setAlpha(64);
+         gc.fillRectangle(pos.x, pos.y, size.width - 1, size.height - 1);
+         gc.setAlpha(255);
+         gc.drawRectangle(pos.x, pos.y, size.width - 1, size.height - 1);
+         gc.drawImage(icon, pos.x + 3, pos.y + 3);
+      }
+      
+      /**
+       * @param action
+       */
+      public void setAction(Runnable action)
+	   {
+	      this.action = action;
+	   }
 	}
 }

@@ -53,7 +53,7 @@ static UINT32 CDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transp
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
    SNMP_PDU *pRespPDU = NULL;
-   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
+   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
 	delete pRqPDU;
 
 	if (rcc == SNMP_ERR_SUCCESS)

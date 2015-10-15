@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.IllegalFormatException;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.Severity;
 
 /**
  * DCI value
@@ -74,22 +75,22 @@ public abstract class DciValue
 	 */
 	protected DciValue(long nodeId, NXCPMessage msg, long base)
 	{
-		long var = base;
+		long fieldId = base;
 	
 		this.nodeId = nodeId;
-		id = msg.getFieldAsInt64(var++);
-		name = msg.getFieldAsString(var++);
-		description = msg.getFieldAsString(var++);
-		source = msg.getFieldAsInt32(var++);
-		dataType = msg.getFieldAsInt32(var++);
-		value = msg.getFieldAsString(var++);
-		timestamp = new Date(msg.getFieldAsInt64(var++) * 1000);
-		status = msg.getFieldAsInt32(var++);
-		dcObjectType = msg.getFieldAsInt32(var++);
-		errorCount = msg.getFieldAsInt32(var++);
-		templateDciId = msg.getFieldAsInt64(var++);
-		if (msg.getFieldAsBoolean(var++))
-			activeThreshold = new Threshold(msg, var);
+		id = msg.getFieldAsInt64(fieldId++);
+		name = msg.getFieldAsString(fieldId++);
+		description = msg.getFieldAsString(fieldId++);
+		source = msg.getFieldAsInt32(fieldId++);
+		dataType = msg.getFieldAsInt32(fieldId++);
+		value = msg.getFieldAsString(fieldId++);
+		timestamp = msg.getFieldAsDate(fieldId++);
+		status = msg.getFieldAsInt32(fieldId++);
+		dcObjectType = msg.getFieldAsInt32(fieldId++);
+		errorCount = msg.getFieldAsInt32(fieldId++);
+		templateDciId = msg.getFieldAsInt64(fieldId++);
+		if (msg.getFieldAsBoolean(fieldId++))
+			activeThreshold = new Threshold(msg, fieldId);
 		else
 			activeThreshold = null;
 	}
@@ -236,7 +237,7 @@ public abstract class DciValue
 	         else
 	         {
 	            int j;
-	            for(j = i; !Character.isLetter(format[j]) && (j < format.length); j++);
+	            for(j = i;(j < format.length) && !Character.isLetter(format[j]); j++);
 	            
 	            boolean useMultipliers = false;
 	            if (format[i] == '*')
@@ -371,4 +372,14 @@ public abstract class DciValue
 	{
 		return templateDciId;
 	}
+
+   /**
+    * Get severity of active threshold
+    * 
+    * @return severity of active threshold or NORMAL if there are no active thresholds
+    */
+   public Severity getThresholdSeverity()
+   {
+      return (activeThreshold != null) ? activeThreshold.getCurrentSeverity() : Severity.NORMAL;
+   }
 }

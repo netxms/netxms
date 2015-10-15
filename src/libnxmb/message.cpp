@@ -23,33 +23,27 @@
 
 #include "libnxmb.h"
 
-
-//
-// Default constructor
-//
-
+/**
+ * Default constructor
+ */
 NXMBMessage::NXMBMessage()
 {
 	m_type = _tcsdup(_T("NONE"));
 	m_senderId = _tcsdup(_T("UNKNOWN"));
 }
 
-
-//
-// Create message with type and sender information
-//
-
+/**
+ * Create message with type and sender information
+ */
 NXMBMessage::NXMBMessage(const TCHAR *type, const TCHAR *senderId)
 {
 	m_type = _tcsdup(CHECK_NULL(type));
 	m_senderId = _tcsdup(CHECK_NULL(senderId));
 }
 
-
-//
-// Destructor
-//
-
+/**
+ * Destructor
+ */
 NXMBMessage::~NXMBMessage()
 {
 	safe_free(m_type);

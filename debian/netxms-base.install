@@ -3,5 +3,4 @@ usr/lib/*/libnetxms.so.*
 usr/lib/*/libnxclient.so.*
 usr/lib/*/libnxdb.so.*
 usr/lib/*/libnxsnmp.so.*
-usr/lib/*/libnxsqlite.so.*
 usr/lib/*/libnxtre.so.*

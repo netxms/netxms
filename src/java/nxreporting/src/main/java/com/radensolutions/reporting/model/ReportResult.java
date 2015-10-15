@@ -1,5 +1,7 @@
 package com.radensolutions.reporting.model;
 
+import org.hibernate.annotations.Type;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
@@ -20,9 +22,11 @@ public class ReportResult implements Serializable {
     private Date executionTime;
 
     @Column(name = "reportId")
+    @Type(type="uuid-char")
     private UUID reportId;
 
     @Column(name = "jobId")
+    @Type(type="uuid-char")
     private UUID jobId;
 
     @Column(name = "userId")

@@ -25,6 +25,7 @@
 #include <nms_agent.h>
 #include <nms_threads.h>
 #include <netxms-regex.h>
+#include <nxstat.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -43,6 +44,10 @@
 
 #if HAVE_POLL_H
 #include <poll.h>
+#endif
+
+#if HAVE_MALLOC_H && !WITH_JEMALLOC
+#include <malloc.h>
 #endif
 
 #ifdef _WIN32
@@ -160,6 +165,60 @@ TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer)
 	*out = 0;
    return bufPtr;
 }
+
+#ifdef UNICODE
+
+/**
+ * Convert IPv6 address from binary form to string
+ */
+char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer)
+{
+   static char internalBuffer[64];
+   char *bufPtr = (buffer == NULL) ? internalBuffer : buffer;
+
+   if (!memcmp(addr, "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 16))
+   {
+      strcpy(bufPtr, "::");
+      return bufPtr;
+   }
+
+   char *out = bufPtr;
+   WORD *curr = (WORD *)addr;
+   bool hasNulls = false;
+   for(int i = 0; i < 8; i++)
+   {
+      WORD value = ntohs(*curr);
+      if ((value != 0) || hasNulls)
+      {
+         if (out != bufPtr)
+            *out++ = ':';
+         snprintf(out, 5, "%x", value);
+         out = bufPtr + strlen(bufPtr);
+         curr++;
+      }
+      else
+      {
+         *out++ = ':';
+         do
+         {
+            i++;
+            curr++;
+         }
+         while((*curr == 0) && (i < 8));
+         if (i == 8)
+         {
+            *out++ = ':';
+            break;
+         }
+         i--;
+         hasNulls = true;
+      }
+   }
+   *out = 0;
+   return bufPtr;
+}
+
+#endif
 
 /**
  * Duplicate memory block
@@ -527,7 +586,7 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
             len = (int)min(_tcslen(result), bufSize - outpos - 1);
             memcpy(&buffer[outpos], result, len * sizeof(TCHAR));
          }
-         else 
+         else
          {
             len = 0;
          }
@@ -543,6 +602,53 @@ const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffe
 
 	buffer[outpos] = 0;
 	return buffer;
+}
+
+/**
+ * Create folder
+ */
+BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory)
+{
+   NX_STAT_STRUCT st;
+   TCHAR *previous = _tcsdup(directory);
+   TCHAR *ptr = _tcsrchr(previous, FS_PATH_SEPARATOR_CHAR);
+   BOOL result = FALSE;
+   if (ptr != NULL)
+   {
+      *ptr = 0;
+      if (CALL_STAT(previous, &st) != 0)
+      {
+         result = CreateFolder(previous);
+         if (result)
+         {
+            result = (CALL_STAT(previous, &st) == 0);
+         }
+      }
+      else
+      {
+         if (S_ISDIR(st.st_mode))
+         {
+            result = TRUE;
+         }
+      }
+   }
+   else
+   {
+      result = true;
+      st.st_mode = 0700;
+   }
+   safe_free(previous);
+
+   if (result)
+   {
+#ifdef _WIN32
+      result = CreateDirectory(directory, NULL);
+#else
+      result = (_tmkdir(directory, st.st_mode) == 0);
+#endif /* _WIN32 */
+   }
+
+   return result;
 }
 
 /**
@@ -820,11 +926,9 @@ void LIBNETXMS_EXPORTABLE TranslateStr(TCHAR *pszString, const TCHAR *pszSubStr,
    *pszDst = 0;
 }
 
-
-//
-// Get size of file in bytes
-//
-
+/**
+ * Get size of file in bytes
+ */
 QWORD LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName)
 {
 #ifdef _WIN32
@@ -849,6 +953,9 @@ QWORD LIBNETXMS_EXPORTABLE FileSizeW(const WCHAR *pszFileName)
 #endif
 }
 
+/**
+ * Get size of file in bytes
+ */
 QWORD LIBNETXMS_EXPORTABLE FileSizeA(const char *pszFileName)
 {
 #ifdef _WIN32
@@ -1050,6 +1157,24 @@ int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flag
 }
 
 /**
+ * Read exact number of bytes from socket
+ */
+bool RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout)
+{
+   size_t bytes = 0;
+   char *pos = (char *)buffer;
+   while(bytes < size)
+   {
+      int b = RecvEx(s, pos, size - bytes, 0, timeout);
+      if (b <= 0)
+         return false;
+      bytes += b;
+      pos += b;
+   }
+   return true;
+}
+
+/**
  * Connect with given timeout
  * Sets socket to non-blocking mode
  */
@@ -1152,6 +1277,27 @@ int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UIN
 		}
 	}
 	return rc;
+}
+
+/**
+ * Connect to given host/port
+ *
+ * @return connected socket on success or INVALID_SOCKET on error
+ */
+SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, UINT32 timeout)
+{
+   SOCKET s = socket(addr.getFamily(), SOCK_STREAM, 0);
+   if (s == INVALID_SOCKET)
+      return INVALID_SOCKET;
+
+   SockAddrBuffer saBuffer;
+   struct sockaddr *sa = addr.fillSockAddr(&saBuffer, port);
+   if (ConnectEx(s, sa, SA_LEN(sa), timeout) == -1)
+   {
+      closesocket(s);
+      s = INVALID_SOCKET;
+   }
+   return s;
 }
 
 /**
@@ -1315,6 +1461,17 @@ BOOL LIBNETXMS_EXPORTABLE GetWindowsVersionString(TCHAR *versionString, int strS
 					break;
 				case 3:
 					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("8.1") : _T("Server 2012 R2"));
+					break;
+				default:
+					_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
+					break;
+			}
+			break;
+		case 10:
+			switch(ver.dwMinorVersion)
+			{
+				case 0:
+					_tcscpy(buffer, (ver.wProductType == VER_NT_WORKSTATION) ? _T("10") : _T("Server"));
 					break;
 				default:
 					_sntprintf(buffer, 256, _T("NT %d.%d"), ver.dwMajorVersion, ver.dwMinorVersion);
@@ -1600,12 +1757,151 @@ TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *nu
 }
 
 /**
- * Decrypt password encrypted with nxencpassw
+ * Get step size for "%" and "/" crontab cases
  */
-BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd)
+static int GetStepSize(TCHAR *str)
 {
+  int step = 0;
+  if (str != NULL)
+  {
+    *str = 0;
+    str++;
+    step = *str == _T('\0') ? 1 : _tcstol(str, NULL, 10);
+  }
+
+  if (step <= 0)
+  {
+    step = 1;
+  }
+
+  return step;
+}
+
+/**
+ * Get last day of current month
+ */
+int LIBNETXMS_EXPORTABLE GetLastMonthDay(struct tm *currTime)
+{
+   switch(currTime->tm_mon)
+   {
+      case 1:  // February
+         if (((currTime->tm_year % 4) == 0) && (((currTime->tm_year % 100) != 0) || (((currTime->tm_year + 1900) % 400) == 0)))
+            return 29;
+         return 28;
+      case 0:  // January
+      case 2:  // March
+      case 4:  // May
+      case 6:  // July
+      case 7:  // August
+      case 9:  // October
+      case 11: // December
+         return 31;
+      default:
+         return 30;
+   }
+}
+
+/**
+ * Match schedule element
+ * NOTE: We assume that pattern can be modified during processing
+ */
+bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime)
+{
+   TCHAR *ptr, *curr;
+   int nStep, nCurr, nPrev;
+   bool bRun = true, bRange = false;
+
+   // Check for "last" pattern
+   if (*pszPattern == _T('L'))
+      return nValue == maxValue;
+
+	// Check if time() step was specified (% - special syntax)
+	ptr = _tcschr(pszPattern, _T('%'));
+	if (ptr != NULL)
+		return (currTime % GetStepSize(ptr)) != 0;
+
+   // Check if step was specified
+   ptr = _tcschr(pszPattern, _T('/'));
+   nStep = GetStepSize(ptr);
+
+   if (*pszPattern == _T('*'))
+      goto check_step;
+
+   for(curr = pszPattern; bRun; curr = ptr + 1)
+   {
+      for(ptr = curr; (*ptr != 0) && (*ptr != '-') && (*ptr != ','); ptr++);
+      switch(*ptr)
+      {
+         case '-':
+            if (bRange)
+               return false;  // Form like 1-2-3 is invalid
+            bRange = true;
+            *ptr = 0;
+            nPrev = _tcstol(curr, NULL, 10);
+            break;
+         case 'L':  // special case for last day ow week in a month (like 5L - last Friday)
+            if (bRange || (localTime == NULL))
+               return false;  // Range with L is not supported; nL form supported only for day of week
+            *ptr = 0;
+            nCurr = _tcstol(curr, NULL, 10);
+            if ((nValue == nCurr) && (localTime->tm_mday + 7 > GetLastMonthDay(localTime)))
+               return true;
+            ptr++;
+            if (*ptr != ',')
+               bRun = false;
+            break;
+         case 0:
+            bRun = false;
+            /* no break */
+         case ',':
+            *ptr = 0;
+            nCurr = _tcstol(curr, NULL, 10);
+            if (bRange)
+            {
+               if ((nValue >= nPrev) && (nValue <= nCurr))
+                  goto check_step;
+               bRange = false;
+            }
+            else
+            {
+               if (nValue == nCurr)
+                  return true;
+            }
+            break;
+      }
+   }
+
+   return false;
+
+check_step:
+   return (nValue % nStep) == 0;
+}
+
+/**
+ * Failure handler for DecryptPassword
+ */
+inline bool DecryptPasswordFail(const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd, size_t bufferLenght)
+{
+   if (decryptedPasswd != encryptedPasswd)
+      nx_strncpy(decryptedPasswd, encryptedPasswd, bufferLenght);
+   return false;
+}
+
+/**
+ * Decrypt password encrypted with nxencpassw.
+ * In case when it was not possible to decrypt password as the decrypted password will be set the original one.
+ * The buffer length for encryptedPasswd and decryptedPasswd should be the same.
+ */
+bool LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd, size_t bufferLenght)
+{
+   //check that lenght is correct
 	if (_tcslen(encryptedPasswd) != 44)
-		return FALSE;
+      return DecryptPasswordFail(encryptedPasswd, decryptedPasswd, bufferLenght);
+
+   //check that password contain only allowed symbols
+   int containSymbols = _tcsspn(encryptedPasswd,_T("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"));
+   if(encryptedPasswd[43] != _T('=') || (containSymbols != 43 && (containSymbols != 42 && encryptedPasswd[42] != _T('='))))
+      return DecryptPasswordFail(encryptedPasswd, decryptedPasswd, bufferLenght);
 
 #ifdef UNICODE
 	char *mbencrypted = MBStringFromWideString(encryptedPasswd);
@@ -1619,22 +1915,22 @@ BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encry
 	size_t encSize = 32;
 	base64_decode(mbencrypted, strlen(mbencrypted), (char *)encrypted, &encSize);
 	if (encSize != 32)
-		return FALSE;
+      return DecryptPasswordFail(encryptedPasswd, decryptedPasswd, bufferLenght);
 
 	CalculateMD5Hash((BYTE *)mblogin, strlen(mblogin), key);
 	ICEDecryptData(encrypted, 32, decrypted, key);
 	decrypted[31] = 0;
 
 #ifdef UNICODE
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, 32);
-	decryptedPasswd[31] = 0;
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, bufferLenght);
+	decryptedPasswd[bufferLenght - 1] = 0;
 	free(mbencrypted);
 	free(mblogin);
 #else
-	nx_strncpy(decryptedPasswd, (char *)decrypted, 32);
+	nx_strncpy(decryptedPasswd, (char *)decrypted, bufferLenght);
 #endif
 
-	return TRUE;
+	return true;
 }
 
 #ifndef UNDER_CE
@@ -1708,190 +2004,11 @@ BYTE LIBNETXMS_EXPORTABLE *LoadFileA(const char *pszFileName, UINT32 *pdwFileSiz
 
 #endif
 
-
-//
-// open/read/write for Windows CE
-//
-
-#ifdef UNDER_CE
-
-int LIBNETXMS_EXPORTABLE _topen(TCHAR *pszName, int nFlags, ...)
-{
-   HANDLE hFile;
-   UINT32 dwAccess, dwDisp;
-
-   dwAccess = (nFlags & O_RDONLY) ? GENERIC_READ :
-                 (nFlags & O_WRONLY) ? GENERIC_WRITE :
-                    (nFlags & O_RDWR) ? (GENERIC_READ | GENERIC_WRITE) : 0;
-   if ((nFlags & (O_CREAT | O_TRUNC)) == (O_CREAT | O_TRUNC))
-      dwDisp = CREATE_ALWAYS;
-   else if ((nFlags & (O_CREAT | O_EXCL)) == (O_CREAT | O_EXCL))
-      dwDisp = CREATE_NEW;
-   else if ((nFlags & O_CREAT) == O_CREAT)
-      dwDisp = OPEN_ALWAYS;
-   else if ((nFlags & O_TRUNC) == O_TRUNC)
-      dwDisp = TRUNCATE_EXISTING;
-   else
-      dwDisp = OPEN_EXISTING;
-   hFile = CreateFile(pszName, dwAccess, FILE_SHARE_READ, NULL, dwDisp,
-                      FILE_ATTRIBUTE_NORMAL, NULL);
-   return (hFile == INVALID_HANDLE_VALUE) ? -1 : (int)hFile;
-}
-
-int LIBNETXMS_EXPORTABLE read(int hFile, void *pBuffer, size_t nBytes)
-{
-   UINT32 dwBytes;
-
-   if (ReadFile((HANDLE)hFile, pBuffer, nBytes, &dwBytes, NULL))
-      return dwBytes;
-   else
-      return -1;
-}
-
-int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes)
-{
-   UINT32 dwBytes;
-
-   if (WriteFile((HANDLE)hFile, pBuffer, nBytes, &dwBytes, NULL))
-      return dwBytes;
-   else
-      return -1;
-}
-
-#endif   /* UNDER_CE */
-
-
-//
-// Memory debugging functions
-//
-
-#ifdef NETXMS_MEMORY_DEBUG
-
-#undef malloc
-#undef realloc
-#undef free
-
-typedef struct
-{
-	void *pAddr;
-	char szFile[MAX_PATH];
-	int nLine;
-	time_t nAllocTime;
-	LONG nBytes;
-} MEMORY_BLOCK;
-
-static MEMORY_BLOCK *m_pBlockList = NULL;
-static UINT32 m_dwNumBlocks = 0;
-static MUTEX m_mutex;
-static time_t m_nStartTime;
-
-void InitMemoryDebugger(void)
-{
-	m_mutex = MutexCreate();
-	m_nStartTime = time(NULL);
-}
-
-static void AddBlock(void *p, char *file, int line, size_t size)
-{
-	m_pBlockList = (MEMORY_BLOCK *)realloc(m_pBlockList, sizeof(MEMORY_BLOCK) * (m_dwNumBlocks + 1));
-	m_pBlockList[m_dwNumBlocks].pAddr = p;
-	strcpy(m_pBlockList[m_dwNumBlocks].szFile, file);
-	m_pBlockList[m_dwNumBlocks].nLine = line;
-	m_pBlockList[m_dwNumBlocks].nAllocTime = time(NULL);
-	m_pBlockList[m_dwNumBlocks].nBytes = size;
-	m_dwNumBlocks++;
-}
-
-static void DeleteBlock(void *ptr)
-{
-	UINT32 i;
-
-	for(i = 0; i < m_dwNumBlocks; i++)
-		if (m_pBlockList[i].pAddr == ptr)
-		{
-			m_dwNumBlocks--;
-			memmove(&m_pBlockList[i], &m_pBlockList[i + 1], sizeof(MEMORY_BLOCK) * (m_dwNumBlocks - i));
-			break;
-		}
-}
-
-void *nx_malloc(size_t size, char *file, int line)
-{
-	void *p;
-
-	p = malloc(size);
-	MutexLock(m_mutex, INFINITE);
-	AddBlock(p, file, line, size);
-	MutexUnlock(m_mutex);
-	return p;
-}
-
-void *nx_realloc(void *ptr, size_t size, char *file, int line)
-{
-	void *p;
-
-	p = realloc(ptr, size);
-	if (p != ptr)
-	{
-		MutexLock(m_mutex, INFINITE);
-		DeleteBlock(ptr);
-		AddBlock(p, file, line, size);
-		MutexUnlock(m_mutex);
-	}
-	return p;
-}
-
-void nx_free(void *ptr, char *file, int line)
-{
-	free(ptr);
-	MutexLock(m_mutex, INFINITE);
-	DeleteBlock(ptr);
-	MutexUnlock(m_mutex);
-}
-
-void PrintMemoryBlocks(void)
-{
-	UINT32 i;
-	LONG nBytes;
-
-	MutexLock(m_mutex, INFINITE);
-	for(i = 0, nBytes = 0; i < m_dwNumBlocks; i++)
-	{
-		nBytes += m_pBlockList[i].nBytes;
-		printf("%08X %d %s:%d (AGE: %d)\n", m_pBlockList[i].pAddr, m_pBlockList[i].nBytes, m_pBlockList[i].szFile, m_pBlockList[i].nLine, m_pBlockList[i].nAllocTime - m_nStartTime);
-	}
-	printf("%dK bytes (%d bytes) in %d blocks\n", nBytes / 1024, nBytes, m_dwNumBlocks);
-	MutexUnlock(m_mutex);
-}
-
-#endif
-
-
-//
-// IPSO placeholders
-//
-
-#ifdef _IPSO
-
-extern "C" void flockfile(FILE *fp)
-{
-}
-
-extern "C" void funlockfile(FILE *fp)
-{
-}
-
-extern "C" int __isthreaded = 1;
-
-#endif
-
-
-//
-// Get memory consumed by current process
-//
-
 #ifdef _WIN32
 
+/**
+ * Get memory consumed by current process
+ */
 INT64 LIBNETXMS_EXPORTABLE GetProcessRSS()
 {
 	PROCESS_MEMORY_COUNTERS pmc;
@@ -1901,16 +2018,12 @@ INT64 LIBNETXMS_EXPORTABLE GetProcessRSS()
 	return 0;
 }
 
-#endif
+#define BG_MASK 0xF0
+#define FG_MASK 0x0F
 
 /**
  * Apply terminal attributes to console - Win32 API specific
  */
-#ifdef _WIN32
-
-#define BG_MASK 0xF0
-#define FG_MASK 0x0F
-
 static WORD ApplyTerminalAttribute(HANDLE out, WORD currAttr, long code)
 {
 	WORD attr = currAttr;
@@ -2202,7 +2315,7 @@ char LIBNETXMS_EXPORTABLE *_itoa(int value, char *str, int base)
       *p++ = '-';
       value = -value;
    }
-   
+
    char buffer[64];
    char *t = buffer;
    do
@@ -2234,7 +2347,7 @@ WCHAR LIBNETXMS_EXPORTABLE *_itow(int value, WCHAR *str, int base)
       *p++ = '-';
       value = -value;
    }
-   
+
    WCHAR buffer[64];
    WCHAR *t = buffer;
    do
@@ -2270,4 +2383,275 @@ int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second)
    int target = hour * 3600 + minute * 60 + second;
    int curr = localTime.tm_hour * 3600 + localTime.tm_min * 60 + localTime.tm_sec;
    return (target >= curr) ? target - curr : 86400 - (curr - target);
+}
+
+/**
+ * Parse timestamp (should be in form YYMMDDhhmmss or YYYYMMDDhhmmss), local time
+ * If timestamp string is invalid returns default value
+ */
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue)
+{
+	int len = (int)strlen(text);
+	if ((len != 12) && (len != 14))
+		return defaultValue;
+
+	struct tm t;
+	char buffer[16], *curr;
+
+	strncpy(buffer, text, 16);
+	curr = &buffer[len - 2];
+
+	memset(&t, 0, sizeof(struct tm));
+	t.tm_isdst = -1;
+
+	t.tm_sec = strtol(curr, NULL, 10);
+	*curr = 0;
+	curr -= 2;
+
+	t.tm_min = strtol(curr, NULL, 10);
+	*curr = 0;
+	curr -= 2;
+
+	t.tm_hour = strtol(curr, NULL, 10);
+	*curr = 0;
+	curr -= 2;
+
+	t.tm_mday = strtol(curr, NULL, 10);
+	*curr = 0;
+	curr -= 2;
+
+	t.tm_mon = strtol(curr, NULL, 10) - 1;
+	*curr = 0;
+
+	if (len == 12)
+	{
+		curr -= 2;
+		t.tm_year = strtol(curr, NULL, 10) + 100;	// Assuming XXI century
+	}
+	else
+	{
+		curr -= 4;
+		t.tm_year = strtol(curr, NULL, 10) - 1900;
+	}
+
+	return mktime(&t);
+}
+
+/**
+ * Parse timestamp (should be in form YYMMDDhhmmss or YYYYMMDDhhmmss), local time
+ * If timestamp string is invalid returns default value
+ * (UNICODE version)
+ */
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValue)
+{
+   char buffer[16];
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, text, -1, buffer, 16, NULL, NULL);
+   buffer[15] = 0;
+   return ParseDateTimeA(buffer, defaultValue);
+}
+
+/**
+ * Get NetXMS directory
+ */
+void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir)
+{
+   *dir = 0;
+
+   const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+   if (homeDir != NULL)
+   {
+#ifdef _WIN32
+      switch(type)
+      {
+         case nxDirBin:
+            _sntprintf(dir, MAX_PATH, _T("%s\\bin"), homeDir);
+            break;
+         case nxDirData:
+            _sntprintf(dir, MAX_PATH, _T("%s\\var"), homeDir);
+            break;
+         case nxDirEtc:
+            _sntprintf(dir, MAX_PATH, _T("%s\\etc"), homeDir);
+            break;
+         case nxDirLib:
+            _sntprintf(dir, MAX_PATH, _T("%s\\lib"), homeDir);
+            break;
+         case nxDirShare:
+            _sntprintf(dir, MAX_PATH, _T("%s\\share"), homeDir);
+            break;
+         default:
+            nx_strncpy(dir, homeDir, MAX_PATH);
+            break;
+      }
+#else
+      switch(type)
+      {
+         case nxDirBin:
+            _sntprintf(dir, MAX_PATH, _T("%s/bin"), homeDir);
+            break;
+         case nxDirData:
+            _sntprintf(dir, MAX_PATH, _T("%s/var/lib/netxms"), homeDir);
+            break;
+         case nxDirEtc:
+            _sntprintf(dir, MAX_PATH, _T("%s/etc"), homeDir);
+            break;
+         case nxDirLib:
+            _sntprintf(dir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
+            break;
+         case nxDirShare:
+            _sntprintf(dir, MAX_PATH, _T("%s/share/netxms"), homeDir);
+            break;
+         default:
+            nx_strncpy(dir, homeDir, MAX_PATH);
+            break;
+      }
+#endif
+      return;
+   }
+
+#ifdef _WIN32
+   TCHAR installPath[MAX_PATH] = _T("");
+   HKEY hKey;
+   bool found = false;
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   {
+      DWORD size = MAX_PATH * sizeof(TCHAR);
+      found = (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, (BYTE *)installPath, &size) == ERROR_SUCCESS);
+      RegCloseKey(hKey);
+   }
+
+   if (!found)
+   {
+      if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Agent"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+      {
+         DWORD size = MAX_PATH * sizeof(TCHAR);
+         found = (RegQueryValueEx(hKey, _T("InstallPath"), NULL, NULL, (BYTE *)installPath, &size) == ERROR_SUCCESS);
+         RegCloseKey(hKey);
+      }
+   }
+
+   if (!found && (GetModuleFileName(NULL, installPath, MAX_PATH) > 0))
+   {
+      TCHAR *p = _tcsrchr(installPath, _T('\\'));
+      if (p != NULL)
+      {
+         *p = 0;
+         p = _tcsrchr(installPath, _T('\\'));
+         if (p != NULL)
+         {
+            *p = 0;
+            found = true;
+         }
+      }
+   }
+
+   if (!found)
+   {
+      _tcscpy(installPath, _T("C:\\NetXMS"));
+   }
+
+   switch(type)
+   {
+      case nxDirBin:
+         _sntprintf(dir, MAX_PATH, _T("%s\\bin"), installPath);
+         break;
+      case nxDirData:
+         _sntprintf(dir, MAX_PATH, _T("%s\\var"), installPath);
+         break;
+      case nxDirEtc:
+         _sntprintf(dir, MAX_PATH, _T("%s\\etc"), installPath);
+         break;
+      case nxDirLib:
+         _sntprintf(dir, MAX_PATH, _T("%s\\lib"), installPath);
+         break;
+      case nxDirShare:
+         _sntprintf(dir, MAX_PATH, _T("%s\\share"), installPath);
+         break;
+      default:
+         nx_strncpy(dir, installPath, MAX_PATH);
+         break;
+   }
+#else
+   switch(type)
+   {
+      case nxDirBin:
+#ifdef PREFIX
+         _tcscpy(dir, PREFIX _T("/bin"));
+#else
+         _tcscpy(dir, _T("/usr/bin"));
+#endif
+         break;
+      case nxDirData:
+#ifdef STATEDIR
+         _tcscpy(dir, STATEDIR);
+#else
+         _tcscpy(dir, _T("/var/lib/netxms"));
+#endif
+         break;
+      case nxDirEtc:
+#ifdef PREFIX
+         _tcscpy(dir, PREFIX _T("/etc"));
+#else
+         _tcscpy(dir, _T("/etc"));
+#endif
+         break;
+      case nxDirLib:
+#ifdef PKGLIBDIR
+         _tcscpy(dir, PKGLIBDIR);
+#else
+         _tcscpy(dir, _T("/usr/lib/netxms"));
+#endif
+         break;
+      case nxDirShare:
+#ifdef DATADIR
+         _tcscpy(dir, DATADIR);
+#else
+         _tcscpy(dir, _T("/usr/share/netxms"));
+#endif
+         break;
+      default:
+         _tcscpy(dir, _T("/usr"));
+         break;
+   }
+#endif
+}
+
+#if WITH_JEMALLOC
+
+/**
+ * Callback for jemalloc's malloc_stats_print
+ */
+static void jemalloc_stats_cb(void *arg, const char *text)
+{
+   fwrite(text, 1, strlen(text), (FILE *)arg);
+}
+
+#endif
+
+/**
+ * Get heap information using system-specific functions (if available)
+ */
+TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo()
+{
+#if WITH_JEMALLOC || HAVE_MALLOC_INFO
+   char *buffer = NULL;
+   size_t size = 0;
+   FILE *f = open_memstream(&buffer, &size);
+   if (f == NULL)
+      return NULL;
+#if WITH_JEMALLOC
+   malloc_stats_print(jemalloc_stats_cb, f, NULL);
+#else
+   malloc_info(0, f);
+#endif
+   fclose(f);
+#ifdef UNICODE
+   WCHAR *wtext = WideStringFromMBString(buffer);
+   free(buffer);
+   return wtext;
+#else
+   return buffer;
+#endif
+#else
+   return _tcsdup(_T("No heap information API available"));
+#endif
 }

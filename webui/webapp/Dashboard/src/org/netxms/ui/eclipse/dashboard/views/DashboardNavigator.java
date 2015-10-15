@@ -21,18 +21,14 @@ package org.netxms.ui.eclipse.dashboard.views;
 import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
-import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -40,7 +36,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DashboardRoot;
 import org.netxms.ui.eclipse.actions.RefreshAction;
-import org.netxms.ui.eclipse.console.resources.GroupMarkers;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectTree;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -183,20 +179,7 @@ public class DashboardNavigator extends ViewPart
 	 */
 	protected void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_TOPOLOGY));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
-		manager.add(new PropertyDialogAction(getSite(), objectTree.getTreeViewer()));
+		ObjectContextMenu.fill(manager, getSite(), objectTree.getTreeViewer());
 	}
 
 	/* (non-Javadoc)

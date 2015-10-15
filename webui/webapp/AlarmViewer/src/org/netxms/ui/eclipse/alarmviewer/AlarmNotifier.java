@@ -219,10 +219,14 @@ public class AlarmNotifier
          String id = "audio-" + fileName;
          DownloadServiceHandler.addDownload(id, fileName, localFile, "audio/wav"); //$NON-NLS-1$
          StringBuilder js = new StringBuilder();
+         js.append("var testAudio = document.createElement('audio');");
+         js.append("if (testAudio.canPlayType !== undefined)");
+         js.append("{");
          js.append("var audio = new Audio('");//$NON-NLS-1$
          js.append(DownloadServiceHandler.createDownloadUrl(id));
          js.append("');");//$NON-NLS-1$
          js.append("audio.play();");//$NON-NLS-1$  
+         js.append("}");
          executor.execute(js.toString());
       }
    }

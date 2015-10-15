@@ -26,6 +26,7 @@
 
 #include <nms_util.h>
 #include <nms_threads.h>
+#include <uuid.h>
 
 #ifdef _WIN32
 #include <wincrypt.h>
@@ -98,8 +99,9 @@ public:
    void setField(UINT32 fieldId, double value) { set(fieldId, NXCP_DT_FLOAT, &value); }
    void setField(UINT32 fieldId, const TCHAR *value) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value); }
    void setField(UINT32 fieldId, const TCHAR *value, size_t maxLen) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value, false, maxLen); }
-   void setField(UINT32 fieldId, BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, false, size); }
-   void setField(UINT32 fieldId, const InetAddress &value) { set(fieldId, NXCP_DT_INETADDR, (void *)&value); }
+   void setField(UINT32 fieldId, const BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, false, size); }
+   void setField(UINT32 fieldId, const InetAddress& value) { set(fieldId, NXCP_DT_INETADDR, &value); }
+   void setField(UINT32 fieldId, const uuid& value) { set(fieldId, NXCP_DT_BINARY, value.getValue(), false, UUID_LENGTH); }
 #ifdef UNICODE
    void setFieldFromMBString(UINT32 fieldId, const char *value);
 #else
@@ -127,6 +129,7 @@ public:
 	char *getFieldAsUtf8String(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0);
    UINT32 getFieldAsBinary(UINT32 fieldId, BYTE *buffer, size_t bufferSize);
    InetAddress getFieldAsInetAddress(UINT32 fieldId);
+   uuid getFieldAsGUID(UINT32 fieldId);
 
    void deleteAllFields();
 
@@ -161,29 +164,31 @@ typedef struct
 class LIBNETXMS_EXPORTABLE MsgWaitQueue
 {
 private:
-#ifdef _WIN32
+#if defined(_WIN32)
    CRITICAL_SECTION m_mutex;
    HANDLE m_wakeupEvents[MAX_MSGQUEUE_WAITERS];
    BYTE m_waiters[MAX_MSGQUEUE_WAITERS];
+#elif defined(_USE_GNU_PTH)
+   pth_mutex_t m_mutex;
+   pth_cond_t m_wakeupCondition;
 #else
    pthread_mutex_t m_mutex;
    pthread_cond_t m_wakeupCondition;
 #endif
-   CONDITION m_stopCondition;
    UINT32 m_holdTime;
    int m_size;
    int m_allocated;
    WAIT_QUEUE_ELEMENT *m_elements;
    UINT64 m_sequence;
-   THREAD m_hHkThread;
 
-   void housekeeperThread();
    void *waitForMessageInternal(UINT16 isBinary, UINT16 code, UINT32 id, UINT32 timeout);
 
    void lock()
    {
 #ifdef _WIN32
       EnterCriticalSection(&m_mutex);
+#elif defined(_USE_GNU_PTH)
+      pth_mutex_acquire(&m_mutex, FALSE, NULL);
 #else
       pthread_mutex_lock(&m_mutex);
 #endif
@@ -193,12 +198,22 @@ private:
    {
 #ifdef _WIN32
       LeaveCriticalSection(&m_mutex);
+#elif defined(_USE_GNU_PTH)
+      pth_mutex_release(&m_mutex);
 #else
       pthread_mutex_unlock(&m_mutex);
 #endif
    }
 
-   static THREAD_RESULT THREAD_CALL mwqThreadStarter(void *);
+   void housekeeperRun();
+
+   static MUTEX m_housekeeperLock;
+   static HashMap<UINT64, MsgWaitQueue> *m_activeQueues;
+   static CONDITION m_shutdownCondition;
+   static THREAD m_housekeeperThread;
+   static EnumerationCallbackResult houseKeeperCallback(const void *key, const void *object, void *arg);
+   static THREAD_RESULT THREAD_CALL housekeeperThread(void *);
+   static EnumerationCallbackResult diagInfoCallback(const void *key, const void *object, void *arg);
 
 public:
    MsgWaitQueue();
@@ -217,6 +232,9 @@ public:
 
    void clear();
    void setHoldTime(UINT32 holdTime) { m_holdTime = holdTime; }
+
+   static void shutdown();
+   static String getDiagInfo();
 };
 
 /**
@@ -332,6 +350,106 @@ public:
    virtual ~PipeMessageReceiver();
 };
 
+/**
+ * NXCP compression methods
+ */
+enum NXCPCompressionMethod
+{
+   NXCP_COMPRESSION_NONE = 0,
+   NXCP_COMPRESSION_LZ4 = 1
+};
+
+/**
+ * Abstract stream compressor
+ */
+class LIBNETXMS_EXPORTABLE StreamCompressor
+{
+public:
+   virtual ~StreamCompressor();
+
+   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize) = 0;
+   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out) = 0;
+   virtual size_t compressBufferSize(size_t dataSize) = 0;
+
+   static StreamCompressor *create(NXCPCompressionMethod method, bool compress, size_t maxBlockSize);
+};
+
+/**
+ * Dummy stream compressor
+ */
+class LIBNETXMS_EXPORTABLE DummyStreamCompressor : public StreamCompressor
+{
+public:
+   virtual ~DummyStreamCompressor();
+
+   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize);
+   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out);
+   virtual size_t compressBufferSize(size_t dataSize);
+};
+
+struct __LZ4_stream_t;
+struct __LZ4_streamDecode_t;
+
+/**
+ * LZ4 stream compressor
+ */
+class LIBNETXMS_EXPORTABLE LZ4StreamCompressor : public StreamCompressor
+{
+private:
+   union
+   {
+      __LZ4_stream_t *encoder;
+      __LZ4_streamDecode_t *decoder;
+   } m_stream;
+   char *m_buffer;
+   size_t m_maxBlockSize;
+   size_t m_bufferSize;
+   size_t m_bufferPos;
+   bool m_compress;
+
+public:
+   LZ4StreamCompressor(bool compress, size_t maxBlockSize);
+   virtual ~LZ4StreamCompressor();
+
+   virtual size_t compress(const BYTE *in, size_t inSize, BYTE *out, size_t maxOutSize);
+   virtual size_t decompress(const BYTE *in, size_t inSize, const BYTE **out);
+   virtual size_t compressBufferSize(size_t dataSize);
+};
+
+#if 0
+/**
+ * NXCP message consumer interface
+ */
+class LIBNETXMS_EXPORTABLE MessageConsumer
+{
+public:
+   virtual SOCKET getSocket() = 0;
+   virtual void processMessage(NXCPMessage *msg) = 0;
+};
+
+/**
+ * Socket receiver - manages receiving NXCP messages from multiple sockets
+ */
+class LIBNETXMS_EXPORTABLE SocketReceiver
+{
+private:
+   THREAD m_thread;
+   HashMap<SOCKET, MessageConsumer> *m_consumers;
+
+   static int m_maxSocketsPerThread;
+   static ObjectArray<SocketReceiver> *m_receivers;
+
+public:
+   static void start();
+   static void shutdown();
+
+   static void addConsumer(MessageConsumer *mc);
+   static void removeConsumer(MessageConsumer *mc);
+
+   static String getDiagInfo();
+};
+#endif
+
 #else    /* __cplusplus */
 
 typedef void NXCPMessage;
@@ -362,7 +480,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD wCode, TCHAR *buffer);
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
-														 MUTEX mutex);
+														 MUTEX mutex, NXCPCompressionMethod compressionMethod = NXCP_COMPRESSION_NONE);
 BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex);
 
 bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args));

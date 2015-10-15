@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.netxms.nxmc</groupId>
+  <artifactId>webapp</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <modules>
+    <module>../../src/java/client</module>
+    <module>ActionManager</module>
+    <module>AgentManager</module>
+    <module>AlarmViewer</module>
+    <module>Charts</module>
+    <module>Core</module>
+    <module>Dashboard</module>
+    <module>DataCollection</module>
+    <module>EPP</module>
+    <module>EventManager</module>
+    <module>FileManager</module>
+    <module>ImageLibrary</module>
+    <module>LogViewer</module>
+    <module>NXSL</module>
+    <module>NetworkMaps</module>
+    <module>OSM</module>
+    <module>ObjectBrowser</module>
+    <module>ObjectBrowser.AdapterFactory</module>
+    <module>ObjectManager</module>
+    <module>ObjectTools</module>
+    <module>ObjectView</module>
+    <module>PerfView</module>
+    <module>PolicyManager</module>
+    <module>Product</module> 
+    <module>Reporter</module>
+    <module>SLM</module>
+    <module>SNMP</module>
+    <module>ServerConfig</module>
+    <module>ServerJobManager</module>
+    <module>ServiceView</module>
+    <module>SwitchManager</module>
+    <module>Topology</module>
+    <module>UserManager</module>
+    <module>nebula/org.netxms.nebula.widgets.gallery</module>
+    <module>swtchart</module>
+  </modules>
+
+    <properties>
+        <tycho.version>0.23.0</tycho.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
+	    <tycho.groupid>org.eclipse.tycho</tycho.groupid>
+        <war.filename>nxmc</war.filename>
+        <assembly.version>2.4</assembly.version>
+        <replacer.version>1.4.1</replacer.version>
+    </properties>
+
+  <repositories>
+        
+        <repository>
+          <id>orbit1</id>
+          <layout>p2</layout>
+          <url>http://download.eclipse.org/tools/orbit/downloads/drops/R20150519210750/repository/</url>
+        </repository>
+        <repository>
+            <id>Babel Language Pack</id>
+            <url>http://archive.eclipse.org/technology/babel/update-site/R0.12.1/luna</url>
+            <layout>p2</layout>
+        </repository> 
+        <repository>
+            <id>emf</id>
+            <url>http://download.eclipse.org/releases/luna</url>
+            <layout>p2</layout>
+        </repository>
+        <repository>
+            <id>Birt</id>
+            <url>http://download.eclipse.org/releases/indigo/</url>
+            <layout>p2</layout>
+        </repository>
+        <repository>  
+            <id>rap-2.3</id>
+            <url>http://download.eclipse.org/rt/rap/2.3</url>
+            <layout>p2</layout>
+        </repository>
+        <repository>
+            <id>Rap-ClientScripting-RichText</id>
+            <url>http://download.eclipse.org/rt/rap/incubator/nightly</url>
+            <layout>p2</layout>
+        </repository>
+        <repository>
+            <id>zest</id>
+            <url>http://www.netxms.org/eclipse/zest-rap</url>
+            <layout>p2</layout>
+        </repository> 
+        
+        <repository>
+            <id>additionalPackage</id>
+            <url>http://download.eclipse.org/rt/rap/tools/2.3</url>
+            <layout>p2</layout>
+        </repository> 
+        <repository>
+            <id>warProducts</id>
+            <url>http://download.eclipse.org/libra/releases</url>
+            <layout>p2</layout>
+        </repository> 
+    </repositories> 
+
+
+  <build>
+    <plugins>
+
+    <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-versions-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <executions>
+            <execution>
+                <id>versions</id>
+                <phase>validate</phase>
+                <goals>
+                    <goal>update-pom</goal>
+                </goals>
+            </execution>
+        </executions>
+    </plugin>
+
+      <plugin>
+        <groupId>${tycho.groupid}</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <extensions>true</extensions>
+      </plugin>
+
+     <plugin>
+        <groupId>${tycho.groupid}</groupId>
+        <artifactId>tycho-compiler-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <encoding>${project.build.sourceEncoding}</encoding>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>${tycho.groupid}</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <resolver>p2</resolver> 
+       </configuration>
+      </plugin> 
+
+    </plugins>
+  </build>
+</project>

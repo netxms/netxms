@@ -102,13 +102,10 @@ static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport
  */
 InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
-   InterfaceList *pIfList = NULL;
    TCHAR szOid[128];
    UINT32 oid[MAX_OID_LEN];
-   pIfList = new InterfaceList(128*8);
 
-   pIfList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, 0, false);
-
+   InterfaceList *pIfList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, 0, false);
    if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.27514.1.11.4.1.1.1"), HandlerIndex, pIfList, FALSE) == SNMP_ERR_SUCCESS)
    {
       for(int i = 0; i < pIfList->size(); i++)
@@ -154,7 +151,8 @@ InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
  * @param *adminState
  * @param *operState
  */
-void QtechOLTDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex, InterfaceAdminState *adminState, InterfaceOperState *operState)
+void QtechOLTDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, UINT32 ifIndex,
+                                       int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
    UINT32 dwOperStatus = 0;
    TCHAR szOid[256];
@@ -184,7 +182,7 @@ void QtechOLTDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attribut
    }
    else
    {
-      NetworkDeviceDriver::getInterfaceState(snmp, attributes, driverData, ifIndex, adminState, operState);
+      NetworkDeviceDriver::getInterfaceState(snmp, attributes, driverData, ifIndex, ifTableSuffixLen, ifTableSuffix, adminState, operState);
    }
 }
 

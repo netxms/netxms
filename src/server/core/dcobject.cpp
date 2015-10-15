@@ -23,6 +23,16 @@
 #include "nxcore.h"
 
 /**
+ * Default retention time for collected data
+ */
+int DCObject::m_defaultRetentionTime = 30;
+
+/**
+ * Default data collection polling interval
+ */
+int DCObject::m_defaultPollingInterval = 60;
+
+/**
  * Default constructor for DCObject
  */
 DCObject::DCObject()
@@ -48,7 +58,7 @@ DCObject::DCObject()
 	m_flags = 0;
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
-	m_dwProxyNode = 0;
+	m_sourceNode = 0;
 	m_pszPerfTabSettings = NULL;
 	m_snmpPort = 0;	// use default
    m_transformationScriptSource = NULL;
@@ -82,7 +92,7 @@ DCObject::DCObject(const DCObject *pSrc)
    m_dwErrorCount = 0;
 	m_flags = pSrc->m_flags;
 	m_dwResourceId = pSrc->m_dwResourceId;
-	m_dwProxyNode = pSrc->m_dwProxyNode;
+	m_sourceNode = pSrc->m_sourceNode;
 	m_pszPerfTabSettings = (pSrc->m_pszPerfTabSettings != NULL) ? _tcsdup(pSrc->m_pszPerfTabSettings) : NULL;
 	m_snmpPort = pSrc->m_snmpPort;
 	m_comments = (pSrc->m_comments != NULL) ? _tcsdup(pSrc->m_comments) : NULL;
@@ -138,7 +148,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
-	m_dwProxyNode = 0;
+	m_sourceNode = 0;
 	m_pszPerfTabSettings = NULL;
 	m_snmpPort = 0;	// use default
    m_transformationScriptSource = NULL;
@@ -170,7 +180,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
    m_tLastCheck = 0;
    m_dwErrorCount = 0;
 	m_dwResourceId = 0;
-	m_dwProxyNode = 0;
+	m_sourceNode = 0;
    const TCHAR *perfTabSettings = config->getSubEntryValue(_T("perfTabSettings"));
    m_pszPerfTabSettings = (perfTabSettings != NULL) ? _tcsdup(perfTabSettings) : NULL;
 	m_snmpPort = (WORD)config->getSubEntryValueAsInt(_T("snmpPort"));
@@ -429,126 +439,6 @@ void DCObject::setStatus(int status, bool generateEvent)
 }
 
 /**
- * Get step size for "%" and "/" crontab cases
- */
-static int GetStepSize(TCHAR *str)
-{
-  int step = 0;
-  if (str != NULL)
-  {
-    *str = 0;
-    str++;
-    step = *str == _T('\0') ? 1 : _tcstol(str, NULL, 10);
-  }
-
-  if (step <= 0)
-  {
-    step = 1;
-  }
-
-  return step;
-}
-
-/**
- * Get last day of current month
- */
-static int GetLastMonthDay(struct tm *currTime)
-{
-   switch(currTime->tm_mon)
-   {
-      case 1:  // February
-         if (((currTime->tm_year % 4) == 0) && (((currTime->tm_year % 100) != 0) || (((currTime->tm_year + 1900) % 400) == 0)))
-            return 29;
-         return 28;
-      case 0:  // January
-      case 2:  // March
-      case 4:  // May
-      case 6:  // July
-      case 7:  // August
-      case 9:  // October
-      case 11: // December
-         return 31;
-      default:
-         return 30;
-   }
-}
-
-/**
- * Match schedule element
- * NOTE: We assume that pattern can be modified during processing
- */
-static bool MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime = 0)
-{
-   TCHAR *ptr, *curr;
-   int nStep, nCurr, nPrev;
-   bool bRun = true, bRange = false;
-
-   // Check for "last" pattern
-   if (*pszPattern == _T('L'))
-      return nValue == maxValue;
-
-	// Check if time() step was specified (% - special syntax)
-	ptr = _tcschr(pszPattern, _T('%'));
-	if (ptr != NULL)
-		return (currTime % GetStepSize(ptr)) != 0;
-
-   // Check if step was specified
-   ptr = _tcschr(pszPattern, _T('/'));
-   nStep = GetStepSize(ptr);
-
-   if (*pszPattern == _T('*'))
-      goto check_step;
-
-   for(curr = pszPattern; bRun; curr = ptr + 1)
-   {
-      for(ptr = curr; (*ptr != 0) && (*ptr != '-') && (*ptr != ','); ptr++);
-      switch(*ptr)
-      {
-         case '-':
-            if (bRange)
-               return false;  // Form like 1-2-3 is invalid
-            bRange = true;
-            *ptr = 0;
-            nPrev = _tcstol(curr, NULL, 10);
-            break;
-         case 'L':  // special case for last day ow week in a month (like 5L - last Friday)
-            if (bRange || (localTime == NULL))
-               return false;  // Range with L is not supported; nL form supported only for day of week
-            *ptr = 0;
-            nCurr = _tcstol(curr, NULL, 10);
-            if ((nValue == nCurr) && (localTime->tm_mday + 7 > GetLastMonthDay(localTime)))
-               return true;
-            ptr++;
-            if (*ptr != ',')
-               bRun = false;
-            break;
-         case 0:
-            bRun = false;
-         case ',':
-            *ptr = 0;
-            nCurr = _tcstol(curr, NULL, 10);
-            if (bRange)
-            {
-               if ((nValue >= nPrev) && (nValue <= nCurr))
-                  goto check_step;
-               bRange = false;
-            }
-            else
-            {
-               if (nValue == nCurr)
-                  return true;
-            }
-            break;
-      }
-   }
-
-   return false;
-
-check_step:
-   return (nValue % nStep) == 0;
-}
-
-/**
  * Match schedule to current time
  */
 bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp)
@@ -561,6 +451,7 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
       TCHAR *scriptName = _tcsdup(pszSchedule + 2);
       if (scriptName != NULL)
       {
+         bool success = false;
          TCHAR *closingBracker = _tcschr(scriptName, _T(']'));
          if (closingBracker != NULL)
          {
@@ -582,6 +473,7 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
                         DbgPrintf(7, _T("DCObject::matchSchedule(%%[%s]) expanded to \"%s\""), scriptName, temp);
                         nx_strncpy(expandedSchedule, temp, 1024);
                         realSchedule = expandedSchedule;
+                        success = true;
                      }
                   }
                }
@@ -593,12 +485,17 @@ bool DCObject::matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWi
             }
             g_pScriptLibrary->unlock();
          }
+         else
+         {
+            DbgPrintf(4, _T("DCObject::matchSchedule: invalid script schedule syntax in %d [%s]"), m_id, m_name);
+         }
          free(scriptName);
+         if (!success)
+            return false;
       }
       else
       {
-         // invalid syntax
-         // TODO: add logging
+         DbgPrintf(4, _T("DCObject::matchSchedule: invalid script schedule syntax in %d [%s]"), m_id, m_name);
          return false;
       }
    }
@@ -654,7 +551,7 @@ bool DCObject::isReadyForPolling(time_t currTime)
    lock();
    if ((m_status != ITEM_STATUS_DISABLED) && (!m_busy) &&
        isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
-		 matchClusterResource() && hasValue())
+       matchClusterResource() && hasValue() && (getAgentCacheMode() == AGENT_CACHE_OFF))
    {
       if (m_flags & DCF_ADVANCED_SCHEDULE)
       {
@@ -683,9 +580,9 @@ bool DCObject::isReadyForPolling(time_t currTime)
       else
       {
 			if (m_status == ITEM_STATUS_NOT_SUPPORTED)
-		      result = (m_tLastPoll + m_iPollingInterval * 10 <= currTime);
+		      result = (m_tLastPoll + getEffectivePollingInterval() * 10 <= currTime);
 			else
-		      result = (m_tLastPoll + m_iPollingInterval <= currTime);
+		      result = (m_tLastPoll + getEffectivePollingInterval() <= currTime);
       }
    }
    else
@@ -741,7 +638,7 @@ void DCObject::createMessage(NXCPMessage *pMsg)
    pMsg->setField(VID_DCI_SOURCE_TYPE, (WORD)m_source);
    pMsg->setField(VID_DCI_STATUS, (WORD)m_status);
 	pMsg->setField(VID_RESOURCE_ID, m_dwResourceId);
-	pMsg->setField(VID_AGENT_PROXY, m_dwProxyNode);
+	pMsg->setField(VID_AGENT_PROXY, m_sourceNode);
 	pMsg->setField(VID_SNMP_PORT, m_snmpPort);
 	if (m_comments != NULL)
 		pMsg->setField(VID_COMMENTS, m_comments);
@@ -769,7 +666,7 @@ void DCObject::updateFromMessage(NXCPMessage *pMsg)
    m_iRetentionTime = pMsg->getFieldAsUInt32(VID_RETENTION_TIME);
    setStatus(pMsg->getFieldAsUInt16(VID_DCI_STATUS), true);
 	m_dwResourceId = pMsg->getFieldAsUInt32(VID_RESOURCE_ID);
-	m_dwProxyNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
+	m_sourceNode = pMsg->getFieldAsUInt32(VID_AGENT_PROXY);
 	safe_free(m_pszPerfTabSettings);
 	m_pszPerfTabSettings = pMsg->getFieldAsString(VID_PERFTAB_SETTINGS);
 	m_snmpPort = pMsg->getFieldAsUInt16(VID_SNMP_PORT);
@@ -884,7 +781,7 @@ void DCObject::updateFromTemplate(DCObject *src)
    m_source = src->m_source;
    setStatus(src->m_status, true);
 	m_flags = src->m_flags;
-	m_dwProxyNode = src->m_dwProxyNode;
+	m_sourceNode = src->m_sourceNode;
 	m_dwResourceId = src->m_dwResourceId;
 	m_snmpPort = src->m_snmpPort;
 
@@ -963,4 +860,32 @@ void DCObject::setTransformationScript(const TCHAR *pszScript)
       m_transformationScriptSource = NULL;
       m_transformationScript = NULL;
    }
+}
+
+/**
+ * Get actual agent cache mode
+ */
+INT16 DCObject::getAgentCacheMode()
+{
+   if ((m_pNode->getObjectClass() != OBJECT_NODE) ||
+       ((m_source != DS_NATIVE_AGENT) && (m_source != DS_SNMP_AGENT)))
+      return AGENT_CACHE_OFF;
+
+   Node *node = (Node *)m_pNode;
+   if (m_sourceNode != 0)
+   {
+      node = (Node *)FindObjectById(m_sourceNode, OBJECT_NODE);
+      if (node == NULL)
+      {
+         return AGENT_CACHE_OFF;
+      }
+   }
+
+   if ((m_source == DS_SNMP_AGENT) && (node->getEffectiveSnmpProxy() == 0))
+      return AGENT_CACHE_OFF;
+
+   INT16 mode = DCF_GET_CACHE_MODE(m_flags);
+   if (mode != AGENT_CACHE_DEFAULT)
+      return mode;
+   return node->getAgentCacheMode();
 }

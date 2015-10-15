@@ -266,7 +266,16 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
 #else
          // write is used here because on linux fwrite is not working
          // after calling fwprintf on a stream
-			write(fileno(m_logFileHandle), data, strlen(data));
+			size_t size = strlen(data);
+			size_t offset = 0;
+			do
+			{
+			   int bw = write(fileno(m_logFileHandle), &data[offset], size);
+			   if (bw < 0)
+			      break;
+			   size -= bw;
+			   offset += bw;
+			} while(size > 0);
 #endif
          free(data);
 
@@ -538,7 +547,7 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 	char *mbMsg;
 #endif
 
-	if (!(m_flags & NXLOG_IS_OPEN))
+	if (!(m_flags & NXLOG_IS_OPEN) || (msg == 0))
 		return;
 
    memset(strings, 0, sizeof(TCHAR *) * 16);

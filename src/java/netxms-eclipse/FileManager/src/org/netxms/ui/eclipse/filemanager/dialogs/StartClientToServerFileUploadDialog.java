@@ -19,8 +19,12 @@
 package org.netxms.ui.eclipse.filemanager.dialogs;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -39,7 +43,7 @@ public class StartClientToServerFileUploadDialog extends Dialog
 {
 	private LocalFileSelector fileSelector;
 	private LabeledText textRemoteFile;
-	private File localFile;
+	private List<File> localFiles = new ArrayList<File>();
 	private String remoteFileName;
 	
 	/**
@@ -75,13 +79,30 @@ public class StartClientToServerFileUploadDialog extends Dialog
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		dialogArea.setLayout(layout);
 		
-		fileSelector = new LocalFileSelector(dialogArea, SWT.NONE, false, SWT.OPEN);
+		fileSelector = new LocalFileSelector(dialogArea, SWT.NONE, false, SWT.OPEN | SWT.MULTI);
 		fileSelector.setLabel(Messages.get().StartClientToServerFileUploadDialog_LocalFile);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.widthHint = 400;
 		fileSelector.setLayoutData(gd);
+		fileSelector.addModifyListener(new ModifyListener(){
+
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            localFiles = fileSelector.getFileList();
+            if(localFiles.size() > 1)
+            {
+               textRemoteFile.setEditable(false);
+            }
+            else
+            {
+               textRemoteFile.setEditable(true);
+            }
+         }
+		   
+		});
 		
 		textRemoteFile = new LabeledText(dialogArea, SWT.NONE);
 		textRemoteFile.setLabel(Messages.get().StartClientToServerFileUploadDialog_RemoteFileName);
@@ -99,15 +120,15 @@ public class StartClientToServerFileUploadDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		localFile = fileSelector.getFile();
-		if (localFile == null)
+		if (localFiles.size() <= 0)
 		{
 			MessageDialogHelper.openWarning(getShell(), Messages.get().StartClientToServerFileUploadDialog_Warning, Messages.get().StartClientToServerFileUploadDialog_WarningText);
 			return;
 		}
+		
 		remoteFileName = textRemoteFile.getText().trim();
-		if(remoteFileName.isEmpty())
-		   remoteFileName = localFile.getName();
+		if(remoteFileName.isEmpty() && localFiles.size() == 1)
+		   remoteFileName = localFiles.get(0).getName();
 		super.okPressed();
 	}
 
@@ -122,8 +143,8 @@ public class StartClientToServerFileUploadDialog extends Dialog
 	/**
 	 * @return the localFile
 	 */
-	public File getLocalFile()
+	public List<File> getLocalFiles()
 	{
-		return localFile;
+		return localFiles;
 	}
 }

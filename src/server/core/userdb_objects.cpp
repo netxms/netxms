@@ -21,6 +21,41 @@
 
 #include "nxcore.h"
 
+/**
+ * Generate hash for password
+ */
+static void CalculatePasswordHash(const TCHAR *password, PasswordHashType type, PasswordHash *ph, const BYTE *salt = NULL)
+{
+#ifdef UNICODE
+	char mbPassword[1024];
+	WideCharToMultiByte(CP_UTF8, 0, password, -1, mbPassword, 1024, NULL, NULL);
+	mbPassword[1023] = 0;
+#else
+   const char *mbPassword = password;
+#endif
+
+   BYTE buffer[1024];
+
+   memset(ph, 0, sizeof(PasswordHash));
+   ph->hashType = type;
+   switch(type)
+   {
+      case PWD_HASH_SHA1:
+      	CalculateSHA1Hash((BYTE *)mbPassword, strlen(mbPassword), ph->hash);
+         break;
+      case PWD_HASH_SHA256:
+         if (salt != NULL)
+            memcpy(buffer, salt, PASSWORD_SALT_LENGTH);
+         else
+            GenerateRandomBytes(buffer, PASSWORD_SALT_LENGTH);
+         strcpy((char *)&buffer[PASSWORD_SALT_LENGTH], mbPassword);
+      	CalculateSHA256Hash(buffer, strlen(mbPassword) + PASSWORD_SALT_LENGTH, ph->hash);
+         memcpy(ph->salt, buffer, PASSWORD_SALT_LENGTH);
+         break;
+      default:
+         break;
+   }
+}
 
 /*****************************************************************************
  **  UserDatabaseObject
@@ -38,7 +73,7 @@ UserDatabaseObject::UserDatabaseObject(DB_RESULT hResult, int row)
 	m_systemRights = DBGetFieldUInt64(hResult, row, 2);
 	m_flags = DBGetFieldULong(hResult, row, 3);
 	DBGetField(hResult, row, 4, m_description, MAX_USER_DESCR);
-	DBGetFieldGUID(hResult, row, 5, m_guid);
+	m_guid = DBGetFieldGUID(hResult, row, 5);
 	m_userDn = DBGetField(hResult, row, 6, NULL, 0);
 }
 
@@ -47,7 +82,13 @@ UserDatabaseObject::UserDatabaseObject(DB_RESULT hResult, int row)
  */
 UserDatabaseObject::UserDatabaseObject()
 {
+   m_id = 0;
+   m_guid = uuid::generate();
+   m_name[0] = 0;
    m_userDn = NULL;
+	m_systemRights = 0;
+	m_description[0] = 0;
+	m_flags = 0;
 }
 
 /**
@@ -56,7 +97,7 @@ UserDatabaseObject::UserDatabaseObject()
 UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 {
 	m_id = id;
-	uuid_generate(m_guid);
+   m_guid = uuid::generate();
 	nx_strncpy(m_name, name, MAX_USER_NAME);
 	m_systemRights = 0;
 	m_description[0] = 0;
@@ -98,7 +139,7 @@ void UserDatabaseObject::fillMessage(NXCPMessage *msg)
    msg->setField(VID_USER_FLAGS, (WORD)m_flags);
    msg->setField(VID_USER_SYS_RIGHTS, m_systemRights);
    msg->setField(VID_USER_DESCRIPTION, m_description);
-   msg->setField(VID_GUID, m_guid, UUID_LENGTH);
+   msg->setField(VID_GUID, m_guid);
    m_attributes.fillMessage(msg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
 }
 
@@ -140,19 +181,23 @@ void UserDatabaseObject::modifyFromMessage(NXCPMessage *msg)
 	if (fields & USER_MODIFY_FLAGS)
 	{
 	   flags = msg->getFieldAsUInt16(VID_USER_FLAGS);
-	   //Null dn if user is detached from LDAP
-      if((m_flags & UF_LDAP_USER) && !(flags & UF_LDAP_USER))
-         setDn(NULL);
 		// Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_LDAP_USER flags from message
 		// Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
-		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_LDAP_USER);
+		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD);
 		if ((m_id == 0) || (m_id == GROUP_EVERYONE))
 			m_flags |= flags & UF_CHANGE_PASSWORD;
 		else
-			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_LDAP_USER);
+			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD);
 
 	}
 
+	m_flags |= UF_MODIFIED;
+}
+
+void UserDatabaseObject::detachLdapUser()
+{
+   m_flags &= ~UF_LDAP_USER;
+   setDn(NULL);
 	m_flags |= UF_MODIFIED;
 }
 
@@ -191,12 +236,12 @@ bool UserDatabaseObject::loadCustomAttributes(DB_HANDLE hdb)
 /**
  * Callback for saving custom attribute in database
  */
-static bool SaveAttributeCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveAttributeCallback(const TCHAR *key, const void *value, void *data)
 {
    DB_STATEMENT hStmt = (DB_STATEMENT)data;
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (const TCHAR *)value, DB_BIND_STATIC);
-   return DBExecute(hStmt) ? true : false;
+   return DBExecute(hStmt) ? _CONTINUE : _STOP;
 }
 
 /**
@@ -214,7 +259,7 @@ bool UserDatabaseObject::saveCustomAttributes(DB_HANDLE hdb)
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         success = m_attributes.forEach(SaveAttributeCallback, hStmt);
+         success = (m_attributes.forEach(SaveAttributeCallback, hStmt) == _CONTINUE);
          DBFreeStatement(hStmt);
       }
 	}
@@ -308,12 +353,35 @@ User::User(DB_RESULT hResult, int row) : UserDatabaseObject(hResult, row)
 {
 	TCHAR buffer[256];
 
-	if (StrToBin(DBGetField(hResult, row, 7, buffer, 256), m_passwordHash, SHA1_DIGEST_SIZE) != SHA1_DIGEST_SIZE)
-	{
-		nxlog_write(MSG_INVALID_SHA1_HASH, EVENTLOG_WARNING_TYPE, "s", m_name);
-		CalculateSHA1Hash((BYTE *)"netxms", 6, m_passwordHash);
+   bool validHash = false;
+   DBGetField(hResult, row, 7, buffer, 256);
+   if (buffer[0] == _T('$'))
+   {
+      // new format - with hash type indicator
+      if (buffer[1] == 'A')
+      {
+         m_password.hashType = PWD_HASH_SHA256;
+         if (_tcslen(buffer) >= 82)
+         {
+            if ((StrToBin(&buffer[2], m_password.salt, PASSWORD_SALT_LENGTH) == PASSWORD_SALT_LENGTH) &&
+                (StrToBin(&buffer[18], m_password.hash, SHA256_DIGEST_SIZE) == SHA256_DIGEST_SIZE))
+               validHash = true;
+         }
+      }
+   }
+   else
+   {
+      // old format - SHA1 hash without salt
+      m_password.hashType = PWD_HASH_SHA1;
+      if (StrToBin(buffer, m_password.hash, SHA1_DIGEST_SIZE) == SHA1_DIGEST_SIZE)
+         validHash = true;
+   }
+   if (!validHash)
+   {
+	   nxlog_write(MSG_INVALID_PASSWORD_HASH, NXLOG_WARNING, "s", m_name);
+	   CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
       m_flags |= UF_MODIFIED | UF_CHANGE_PASSWORD;
-	}
+   }
 
 	DBGetField(hResult, row, 8, m_fullName, MAX_USER_FULLNAME);
 	m_graceLogins = DBGetFieldLong(hResult, row, 9);
@@ -337,7 +405,7 @@ User::User(DB_RESULT hResult, int row) : UserDatabaseObject(hResult, row)
 /**
  * Constructor for user object - create default superuser
  */
-User::User()
+User::User() : UserDatabaseObject()
 {
 	m_id = 0;
 	_tcscpy(m_name, _T("admin"));
@@ -345,10 +413,9 @@ User::User()
 	m_systemRights = SYSTEM_ACCESS_FULL;
 	m_fullName[0] = 0;
 	_tcscpy(m_description, _T("Built-in system administrator account"));
-	CalculateSHA1Hash((BYTE *)"netxms", 6, m_passwordHash);
+	CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
 	m_graceLogins = MAX_GRACE_LOGINS;
 	m_authMethod = AUTH_NETXMS_PASSWORD;
-	uuid_generate(m_guid);
 	m_certMappingMethod = USER_MAP_CERT_BY_CN;
 	m_certMappingData = NULL;
 	m_authFailures = 0;
@@ -370,7 +437,7 @@ User::User(UINT32 id, const TCHAR *name) : UserDatabaseObject(id, name)
 	m_authMethod = AUTH_NETXMS_PASSWORD;
 	m_certMappingMethod = USER_MAP_CERT_BY_CN;
 	m_certMappingData = NULL;
-	CalculateSHA1Hash((BYTE *)"", 0, m_passwordHash);
+	CalculatePasswordHash(_T(""), PWD_HASH_SHA256, &m_password);
 	m_authFailures = 0;
 	m_lastPasswordChange = 0;
 	m_minPasswordLength = -1;	// Use system-wide default
@@ -392,13 +459,26 @@ User::~User()
  */
 bool User::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR password[SHA1_DIGEST_SIZE * 2 + 1], guidText[64];
+	TCHAR password[128];
 
    // Clear modification flag
    m_flags &= ~UF_MODIFIED;
 
    // Create or update record in database
-   BinToStr(m_passwordHash, SHA1_DIGEST_SIZE, password);
+   switch(m_password.hashType)
+   {
+      case PWD_HASH_SHA1:
+         BinToStr(m_password.hash, SHA1_DIGEST_SIZE, password);
+         break;
+      case PWD_HASH_SHA256:
+         _tcscpy(password, _T("$A"));
+         BinToStr(m_password.salt, PASSWORD_SALT_LENGTH, &password[2]);
+         BinToStr(m_password.hash, SHA256_DIGEST_SIZE, &password[18]);
+         break;
+      default:
+         _tcscpy(password, _T("$$"));
+         break;
+   }
    DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("users"), _T("id"), m_id))
    {
@@ -424,7 +504,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_fullName, DB_BIND_STATIC);
    DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
    DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_graceLogins);
-   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guidText), DB_BIND_STATIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_authMethod);
    DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, m_certMappingMethod);
    DBBind(hStmt, 11, DB_SQLTYPE_VARCHAR, m_certMappingData, DB_BIND_STATIC);
@@ -437,21 +517,21 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 18, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
    DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_id);
 
-   BOOL rc = DBBegin(hdb);
-	if (rc)
+   bool success = DBBegin(hdb);
+	if (success)
 	{
-		rc = DBExecute(hStmt);
-		if (rc)
+		success = DBExecute(hStmt);
+		if (success)
 		{
-			rc = saveCustomAttributes(hdb);
+			success = saveCustomAttributes(hdb);
 		}
-		if (rc)
+		if (success)
 			DBCommit(hdb);
 		else
 			DBRollback(hdb);
 	}
    DBFreeStatement(hStmt);
-	return rc ? true : false;
+	return success;
 }
 
 /**
@@ -460,56 +540,46 @@ bool User::saveToDatabase(DB_HANDLE hdb)
 bool User::deleteFromDatabase(DB_HANDLE hdb)
 {
 	TCHAR query[256];
-	BOOL rc;
+	bool success;
 
-	rc = DBBegin(hdb);
-	if (rc)
+	success = DBBegin(hdb);
+	if (success)
 	{
 		_sntprintf(query, 256, _T("DELETE FROM users WHERE id=%d"), m_id);
-		rc = DBQuery(hdb, query);
-		if (rc)
+		success = DBQuery(hdb, query);
+		if (success)
 		{
 			_sntprintf(query, 256, _T("DELETE FROM user_profiles WHERE user_id=%d"), m_id);
-			rc = DBQuery(hdb, query);
-			if (rc)
+			success = DBQuery(hdb, query);
+			if (success)
 			{
 				_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
-				rc = DBQuery(hdb, query);
+				success = DBQuery(hdb, query);
 			}
 		}
-		if (rc)
+		if (success)
 			DBCommit(hdb);
 		else
 			DBRollback(hdb);
 	}
-	return rc ? true : false;
+	return success;
 }
 
 /**
  * Validate user's password
- * For non-UNICODE build, password must be UTF-8 encoded
  */
 bool User::validatePassword(const TCHAR *password)
 {
-   BYTE hash[SHA1_DIGEST_SIZE];
-
-#ifdef UNICODE
-	char mbPassword[1024];
-	WideCharToMultiByte(CP_UTF8, 0, password, -1, mbPassword, 1024, NULL, NULL);
-	mbPassword[1023] = 0;
-	CalculateSHA1Hash((BYTE *)mbPassword, strlen(mbPassword), hash);
-#else
-	CalculateSHA1Hash((BYTE *)password, strlen(password), hash);
-#endif
-	return !memcmp(hash, m_passwordHash, SHA1_DIGEST_SIZE);
-}
-
-/**
- * Validate user's password in hashed form
- */
-bool User::validateHashedPassword(const BYTE *password)
-{
-	return !memcmp(password, m_passwordHash, SHA1_DIGEST_SIZE);
+   PasswordHash ph;
+   CalculatePasswordHash(password, m_password.hashType, &ph, m_password.salt);
+   bool success = !memcmp(ph.hash, m_password.hash, PWD_HASH_SIZE(m_password.hashType));
+   if (success && m_password.hashType == PWD_HASH_SHA1)
+   {
+      // regenerate password hash if old format is used
+      CalculatePasswordHash(password, PWD_HASH_SHA256, &m_password);
+	   m_flags |= UF_MODIFIED;
+   }
+   return success;
 }
 
 /**
@@ -518,14 +588,7 @@ bool User::validateHashedPassword(const BYTE *password)
  */
 void User::setPassword(const TCHAR *password, bool clearChangePasswdFlag)
 {
-#ifdef UNICODE
-	char mbPassword[1024];
-	WideCharToMultiByte(CP_UTF8, 0, password, -1, mbPassword, 1024, NULL, NULL);
-	mbPassword[1023] = 0;
-	CalculateSHA1Hash((BYTE *)mbPassword, strlen(mbPassword), m_passwordHash);
-#else
-	CalculateSHA1Hash((BYTE *)password, strlen(password), m_passwordHash);
-#endif
+   CalculatePasswordHash(password, PWD_HASH_SHA256, &m_password);
 	m_graceLogins = MAX_GRACE_LOGINS;
 	m_flags |= UF_MODIFIED;
 	if (clearChangePasswdFlag)
@@ -682,7 +745,6 @@ Group::Group() : UserDatabaseObject()
 	m_flags = UF_MODIFIED;
 	m_systemRights = 0;
 	_tcscpy(m_description, _T("Built-in everyone group"));
-	uuid_generate(m_guid);
 	m_memberCount = 0;
 	m_members = NULL;
 }
@@ -709,8 +771,6 @@ Group::~Group()
  */
 bool Group::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR guidText[64];
-
    // Clear modification flag
    m_flags &= ~UF_MODIFIED;
 
@@ -730,53 +790,53 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, m_systemRights);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_flags);
    DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
-   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guidText), DB_BIND_STATIC);
+   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
    DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
 
-   BOOL rc = DBBegin(hdb);
-	if (rc)
+   bool success = DBBegin(hdb);
+	if (success)
 	{
-      rc = DBExecute(hStmt);
-		if (rc)
+      success = DBExecute(hStmt);
+		if (success)
 		{
          DBFreeStatement(hStmt);
          hStmt = DBPrepare(hdb, _T("DELETE FROM user_group_members WHERE group_id=?"));
          if (hStmt != NULL)
          {
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            rc = DBExecute(hStmt);
+            success = DBExecute(hStmt);
          }
          else
          {
-            rc = FALSE;
+            success = false;
          }
 
-			if (rc && (m_memberCount > 0))
+			if (success && (m_memberCount > 0))
 			{
             DBFreeStatement(hStmt);
             hStmt = DBPrepare(hdb, _T("INSERT INTO user_group_members (group_id,user_id) VALUES (?,?)"));
             if (hStmt != NULL)
             {
                DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-				   for(int i = 0; (i < m_memberCount) && rc; i++)
+				   for(int i = 0; (i < m_memberCount) && success; i++)
 				   {
                   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_members[i]);
-                  rc = DBExecute(hStmt);
+                  success = DBExecute(hStmt);
 				   }
             }
             else
             {
-               rc = FALSE;
+               success = false;
             }
 			}
 
-		   if (rc)
+		   if (success)
 		   {
-			   rc = saveCustomAttributes(hdb);
+			   success = saveCustomAttributes(hdb);
 		   }
 		}
-		if (rc)
+		if (success)
 			DBCommit(hdb);
 		else
 			DBRollback(hdb);
@@ -785,7 +845,7 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    if (hStmt != NULL)
       DBFreeStatement(hStmt);
 
-   return rc ? true : false;
+   return success;
 }
 
 /**
@@ -794,29 +854,29 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
 bool Group::deleteFromDatabase(DB_HANDLE hdb)
 {
 	TCHAR query[256];
-	BOOL rc;
+	bool success;
 
-	rc = DBBegin(hdb);
-	if (rc)
+	success = DBBegin(hdb);
+	if (success)
 	{
 		_sntprintf(query, 256, _T("DELETE FROM user_groups WHERE id=%d"), m_id);
-		rc = DBQuery(hdb, query);
-		if (rc)
+		success = DBQuery(hdb, query);
+		if (success)
 		{
 			_sntprintf(query, 256, _T("DELETE FROM user_group_members WHERE group_id=%d"), m_id);
-			rc = DBQuery(hdb, query);
-			if (rc)
+			success = DBQuery(hdb, query);
+			if (success)
 			{
 				_sntprintf(query, 256, _T("DELETE FROM userdb_custom_attributes WHERE object_id=%d"), m_id);
-				rc = DBQuery(hdb, query);
+				success = DBQuery(hdb, query);
 			}
 		}
-		if (rc)
+		if (success)
 			DBCommit(hdb);
 		else
 			DBRollback(hdb);
 	}
-	return rc ? true : false;
+	return success;
 }
 
 /**

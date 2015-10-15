@@ -341,14 +341,14 @@ bool ConfigEntry::getValueAsBoolean(int index, bool defaultValue)
 /**
  * Get entry value as GUID
  */
-bool ConfigEntry::getValueAsUUID(int index, uuid_t uuid)
+uuid ConfigEntry::getValueAsUUID(int index)
 {
    const TCHAR *value = getValue(index);
    if (value != NULL)
    {
-      return uuid_parse(value, uuid) == 0;
+      return uuid::parse(value);
    }
-   return false;
+   return uuid::NULL_UUID;
 }
 
 /**
@@ -459,16 +459,16 @@ bool ConfigEntry::getSubEntryValueAsBoolean(const TCHAR *name, int index, bool d
 /**
  * Get sub-entry value as UUID
  */
-bool ConfigEntry::getSubEntryValueAsUUID(const TCHAR *name, uuid_t uuid, int index)
+uuid ConfigEntry::getSubEntryValueAsUUID(const TCHAR *name, int index)
 {
    const TCHAR *value = getSubEntryValue(name, index);
    if (value != NULL)
    {
-      return uuid_parse(value, uuid) == 0;
+      return uuid::parse(value);
    }
    else
    {
-      return false;
+      return uuid::NULL_UUID;
    }
 }
 
@@ -612,11 +612,11 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix)
 /**
  * Add attribute
  */
-static bool AddAttribute(const TCHAR *key, const void *value, void *userData)
+static EnumerationCallbackResult AddAttribute(const TCHAR *key, const void *value, void *userData)
 {
    if (_tcscmp(key, _T("id")))
       ((String *)userData)->appendFormattedString(_T(" %s=\"%s\""), key, (const TCHAR *)value);
-   return true;
+   return _CONTINUE;
 }
 
 /**
@@ -876,16 +876,16 @@ bool Config::getValueAsBoolean(const TCHAR *path, bool defaultValue)
 /**
  * Get value at given path as UUID
  */
-bool Config::getValueAsUUID(const TCHAR *path, uuid_t uuid)
+uuid Config::getValueAsUUID(const TCHAR *path)
 {
    const TCHAR *value = getValue(path);
    if (value != NULL)
    {
-      return uuid_parse(value, uuid) == 0;
+      return uuid::parse(value);
    }
    else
    {
-      return false;
+      return uuid::NULL_UUID;
    }
 }
 
@@ -1074,10 +1074,10 @@ bool Config::setValue(const TCHAR *path, double value)
  * Set value
  * Returns false on error (usually caused by incorrect path)
  */
-bool Config::setValue(const TCHAR *path, uuid_t value)
+bool Config::setValue(const TCHAR *path, const uuid& value)
 {
    TCHAR buffer[64];
-   uuid_to_string(value, buffer);
+   value.toString(buffer);
    return setValue(path, buffer);
 }
 

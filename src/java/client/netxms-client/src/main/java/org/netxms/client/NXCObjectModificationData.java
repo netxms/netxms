@@ -30,10 +30,12 @@ import java.util.UUID;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.InetAddressEx;
 import org.netxms.base.PostalAddress;
+import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.client.datacollection.ConditionDciInfo;
 import org.netxms.client.maps.MapLayoutAlgorithm;
+import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.objects.ClusterResource;
@@ -100,6 +102,10 @@ public class NXCObjectModificationData
    public static final long MODIFY_PEER_GATEWAY       = 0x0020000000000000L;
    public static final long MODIFY_VPN_NETWORKS       = 0x0040000000000000L;
    public static final long MODIFY_POSTAL_ADDRESS     = 0x0080000000000000L;
+   public static final long MODIFY_AGENT_CACHE_MODE   = 0x0100000000000000L;
+   public static final long MODIFY_MAPOBJ_DISP_MODE   = 0x0200000000000000L;
+   public static final long MODIFY_RACK_PLACEMENT     = 0x0400000000000000L;
+   public static final long MODIFY_DASHBOARD_LIST     = 0x0800000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -173,9 +179,16 @@ public class NXCObjectModificationData
 	private int height;
 	private String filter;
 	private long peerGatewayId;
-	private List<IpAddressListElement> localNetworks;
-	private List<IpAddressListElement> remoteNetworks;
+	private List<InetAddressEx> localNetworks;
+	private List<InetAddressEx> remoteNetworks;
 	private PostalAddress postalAddress;
+	private AgentCacheMode agentCacheMode;
+	private MapObjectDisplayMode mapObjectDisplayMode;
+	private long rackId;
+	private UUID rackImage;
+	private short rackPosition;
+	private short rackHeight;
+	private Long[] dashboards;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1391,7 +1404,7 @@ public class NXCObjectModificationData
    /**
     * @return the localNetworks
     */
-   public List<IpAddressListElement> getLocalNetworks()
+   public List<InetAddressEx> getLocalNetworks()
    {
       return localNetworks;
    }
@@ -1399,7 +1412,7 @@ public class NXCObjectModificationData
    /**
     * @return the remoteNetworks
     */
-   public List<IpAddressListElement> getRemoteNetworks()
+   public List<InetAddressEx> getRemoteNetworks()
    {
       return remoteNetworks;
    }
@@ -1407,7 +1420,7 @@ public class NXCObjectModificationData
    /**
     * @param remoteNetworks the remoteNetworks to set
     */
-   public void setVpnNetworks(List<IpAddressListElement> localNetworks, List<IpAddressListElement> remoteNetworks)
+   public void setVpnNetworks(List<InetAddressEx> localNetworks, List<InetAddressEx> remoteNetworks)
    {
       this.localNetworks = localNetworks;
       this.remoteNetworks = remoteNetworks;
@@ -1429,5 +1442,105 @@ public class NXCObjectModificationData
    {
       this.postalAddress = postalAddress;
       flags |= MODIFY_POSTAL_ADDRESS;
+   }
+
+   /**
+    * @return the agentCacheMode
+    */
+   public AgentCacheMode getAgentCacheMode()
+   {
+      return agentCacheMode;
+   }
+
+   /**
+    * @param agentCacheMode the agentCacheMode to set
+    */
+   public void setAgentCacheMode(AgentCacheMode agentCacheMode)
+   {
+      this.agentCacheMode = agentCacheMode;
+      flags |= MODIFY_AGENT_CACHE_MODE;
+   }
+
+   /**
+    * @return the mapObjectDisplayMode
+    */
+   public MapObjectDisplayMode getMapObjectDisplayMode()
+   {
+      return mapObjectDisplayMode;
+   }
+
+   /**
+    * @param mapObjectDisplayMode the mapObjectDisplayMode to set
+    */
+   public void setMapObjectDisplayMode(MapObjectDisplayMode mapObjectDisplayMode)
+   {
+      this.mapObjectDisplayMode = mapObjectDisplayMode;
+      flags |= MODIFY_MAPOBJ_DISP_MODE;
+   }
+
+   /**
+    * @return the rackId
+    */
+   public long getRackId()
+   {
+      return rackId;
+   }
+
+   /**
+    * @return the rackImage
+    */
+   public UUID getRackImage()
+   {
+      return rackImage;
+   }
+
+   /**
+    * @return the rackPosition
+    */
+   public short getRackPosition()
+   {
+      return rackPosition;
+   }
+
+   /**
+    * @return the rackHeight
+    */
+   public short getRackHeight()
+   {
+      return rackHeight;
+   }
+   
+   /**
+    * Set rack placement data
+    * 
+    * @param rackId
+    * @param rackImage
+    * @param rackPosition
+    * @param rackHeight
+    */
+   public void setRackPlacement(long rackId, UUID rackImage, short rackPosition, short rackHeight)
+   {
+      this.rackId = rackId;
+      this.rackImage = rackImage;
+      this.rackPosition = rackPosition;
+      this.rackHeight = rackHeight;
+      flags |= MODIFY_RACK_PLACEMENT;
+   }
+
+   /**
+    * @return the dashboards
+    */
+   public Long[] getDashboards()
+   {
+      return dashboards;
+   }
+
+   /**
+    * @param dashboards the dashboards to set
+    */
+   public void setDashboards(Long[] dashboards)
+   {
+      this.dashboards = dashboards;
+      flags |= MODIFY_DASHBOARD_LIST;
    }
 }

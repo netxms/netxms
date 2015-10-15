@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:textIsSelectable="false"
+	    android:id="@+id/overview_text"
+		android:layout_width="match_parent"
+	    android:layout_height="36dp"
+		android:paddingLeft="36dp"
+		android:paddingStart="36dp"
+	    android:paddingRight="5dip"
+	    android:paddingEnd="5dip"
+ 	    android:paddingTop="10dip"
+	    android:paddingBottom="10dip"
+	    android:gravity="center_vertical"
+	    android:textSize="17sp"
+		android:textColor="@color/text_color"
+		android:cacheColorHint="@color/item_body"
+		android:background="@drawable/explist_selection"
+	    android:textStyle="bold" >
+	</TextView>

@@ -105,6 +105,9 @@
                 <instanceof
                       value="org.netxms.client.objects.Condition">
                 </instanceof>
+                <instanceof
+                      value="org.netxms.client.objects.MobileDevice">
+                </instanceof>
              </or>
           </enabledWhen>
         </page>
@@ -122,6 +125,9 @@
                  </instanceof>
                  <instanceof
                        value="org.netxms.client.objects.Cluster">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Rack">
                  </instanceof>
               </or>
            </enabledWhen>
@@ -266,6 +272,52 @@
               <instanceof
                     value="org.netxms.client.objects.VPNConnector">
               </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.RackPlacement"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.RackPlacement"
+              name="Rack">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.AbstractNode">
+              </instanceof>
+           </enabledWhen>
+        </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.Dashboards"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.Dashboards"
+              name="%page.name.Dashboards">
+           <enabledWhen>
+              <or>
+                 <instanceof
+                       value="org.netxms.client.objects.Node">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Subnet">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Container">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Cluster">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.ServiceRoot">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Condition">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.MobileDevice">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.Zone">
+                 </instanceof>
+                 <instanceof
+                       value="org.netxms.client.objects.EntireNetwork">
+                 </instanceof>
+              </or>
            </enabledWhen>
         </page>
   </extension>
@@ -481,6 +533,13 @@
                label="%action.label.CreateIface"
                menubarPath="objectcreation">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Node"
+               label="%action.label.BindTo"
+               menubarPath="objectbinding">
+         </action>
       </objectContribution>
 
 
@@ -509,6 +568,13 @@
                label="%action.label.AddNode"
                menubarPath="objectbinding">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Cluster"
+               label="%action.label.BindTo"
+               menubarPath="objectbinding">
+         </action>
       </objectContribution>
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.EntireNetwork"
@@ -530,6 +596,42 @@
                id="org.netxms.ui.eclipse.objectmanager.popupActions.changeInterfaceExpectedState"
                label="%action.label.ChangeExpState"
                menubarPath="objectmgmt">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.MobileDevice"
+            objectClass="org.netxms.client.objects.MobileDevice">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_MobileDevice"
+               label="%action.label.BindTo"
+               menubarPath="objectbinding">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Rack"
+            objectClass="org.netxms.client.objects.Rack">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Rack"
+               label="%action.label.BindTo"
+               menubarPath="objectbinding">
+         </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Subnet"
+            objectClass="org.netxms.client.objects.Subnet">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Subnet"
+               label="%action.label.BindTo"
+               menubarPath="objectbinding">
          </action>
       </objectContribution>
    </extension>
@@ -555,41 +657,46 @@
                style="push">
             <visibleWhen
                   checkEnabled="false">
-               <iterate>
-                  <and>
-                     <instanceof
-                           value="org.netxms.client.objects.AbstractObject">
-                     </instanceof>
-                     <not>
-                        <or>
-                           <instanceof
-                                 value="org.netxms.client.objects.Template">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.TemplateGroup">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.TemplateRoot">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.Dashboard">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.DashboardRoot">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.PolicyRoot">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.PolicyGroup">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.AgentPolicy">
-                           </instanceof>
-                        </or>
-                     </not>
-                  </and>
-               </iterate>
+               <and>
+                  <count
+                        value="+">
+                  </count>   
+	               <iterate>
+	                  <and>
+	                     <instanceof
+	                           value="org.netxms.client.objects.AbstractObject">
+	                     </instanceof>
+	                     <not>
+	                        <or>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.Template">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.TemplateGroup">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.TemplateRoot">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.Dashboard">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.DashboardRoot">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.PolicyRoot">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.PolicyGroup">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.AgentPolicy">
+	                           </instanceof>
+	                        </or>
+	                     </not>
+	                  </and>
+	               </iterate>
+               </and>
             </visibleWhen>
          </command>
          <command
@@ -598,41 +705,46 @@
                style="push">
             <visibleWhen
                   checkEnabled="false">
-               <iterate>
-                  <and>
-                     <instanceof
-                           value="org.netxms.client.objects.AbstractObject">
-                     </instanceof>
-                     <not>
-                        <or>
-                           <instanceof
-                                 value="org.netxms.client.objects.Template">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.TemplateGroup">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.TemplateRoot">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.Dashboard">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.DashboardRoot">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.PolicyRoot">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.PolicyGroup">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.AgentPolicy">
-                           </instanceof>
-                        </or>
-                     </not>
-                  </and>
-               </iterate>
+               <and>
+                  <count
+                        value="+">
+                  </count>   
+	               <iterate>
+	                  <and>
+	                     <instanceof
+	                           value="org.netxms.client.objects.AbstractObject">
+	                     </instanceof>
+	                     <not>
+	                        <or>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.Template">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.TemplateGroup">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.TemplateRoot">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.Dashboard">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.DashboardRoot">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.PolicyRoot">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.PolicyGroup">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.AgentPolicy">
+	                           </instanceof>
+	                        </or>
+	                     </not>
+	                  </and>
+	               </iterate>
+               </and>
             </visibleWhen>
          </command>
          <command
@@ -642,40 +754,196 @@
                style="push">
             <visibleWhen
                   checkEnabled="false">
-               <iterate>
-                  <and>
-                     <instanceof
-                           value="org.netxms.client.objects.AbstractObject">
-                     </instanceof>
-                     <not>
-                        <or>
-                           <instanceof
-                                 value="org.netxms.client.objects.EntireNetwork">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.ServiceRoot">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.TemplateRoot">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.NetworkMapRoot">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.DashboardRoot">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.BusinessServiceRoot">
-                           </instanceof>
-                           <instanceof
-                                 value="org.netxms.client.objects.PolicyRoot">
-                           </instanceof>
-                        </or>
-                     </not>
-                  </and>
-               </iterate>
+               <and>
+                  <count
+                        value="+">
+                  </count>   
+	               <iterate>
+	                  <and>
+	                     <instanceof
+	                           value="org.netxms.client.objects.AbstractObject">
+	                     </instanceof>
+	                     <not>
+	                        <or>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.EntireNetwork">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.ServiceRoot">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.TemplateRoot">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.NetworkMapRoot">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.DashboardRoot">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.BusinessServiceRoot">
+	                           </instanceof>
+	                           <instanceof
+	                                 value="org.netxms.client.objects.PolicyRoot">
+	                           </instanceof>
+	                        </or>
+	                     </not>
+	                  </and>
+	               </iterate>
+	            </and>
             </visibleWhen>
          </command>
+         <menu
+               id="maintenance"
+               label="&amp;Maintenance">
+            <command
+                  commandId="org.netxms.ui.eclipse.objectmanager.popupActions.EnterMaintenance"
+                  label="Enter maintenance mode"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <and>
+                     <count
+                           value="+">
+                     </count>
+                     <iterate>
+                        <and>
+                           <instanceof
+                                 value="org.netxms.client.objects.AbstractObject">
+                           </instanceof>
+                           <not>
+                              <or>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Template">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.TemplateGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.TemplateRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Dashboard">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.DashboardRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.PolicyRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.PolicyGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AgentPolicy">
+                                 </instanceof>
+                              </or>
+                           </not>
+                        </and>
+                     </iterate>
+                  </and>
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="org.netxms.ui.eclipse.objectmanager.popupActions.LeaveMaintenance"
+                  label="Leave maintenance mode"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <and>
+                     <count
+                           value="+">
+                     </count>
+                     <iterate>
+                        <and>
+                           <instanceof
+                                 value="org.netxms.client.objects.AbstractObject">
+                           </instanceof>
+                           <not>
+                              <or>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Template">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.TemplateGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.TemplateRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Dashboard">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.DashboardRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.PolicyRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.PolicyGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AgentPolicy">
+                                 </instanceof>
+                              </or>
+                           </not>
+                        </and>
+                     </iterate>
+                  </and>
+               </visibleWhen>
+            </command>
+            <separator
+                  name="ObjectManager.separator1">
+            </separator>
+            <command
+                  commandId="org.netxms.ui.eclipse.objectmanager.popupActions.ScheduleMaintenance"
+                  label="Schedule maintenance"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <and>
+                     <count
+                           value="+">
+                     </count>
+                     <iterate>
+                        <and>
+                           <instanceof
+                                 value="org.netxms.client.objects.AbstractObject">
+                           </instanceof>
+                           <not>
+                              <or>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Template">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.TemplateGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.TemplateRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.Dashboard">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.DashboardRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.PolicyRoot">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.PolicyGroup">
+                                 </instanceof>
+                                 <instanceof
+                                       value="org.netxms.client.objects.AgentPolicy">
+                                 </instanceof>
+                              </or>
+                           </not>
+                        </and>
+                     </iterate>
+                  </and>
+               </visibleWhen>
+            </command>
+         </menu>
       </menuContribution>
    </extension>
    <extension
@@ -692,6 +960,18 @@
             id="org.netxms.ui.eclipse.objectmanager.popupActions.DeleteObject"
             name="%action.label.Delete">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.objectmanager.popupActions.EnterMaintenance"
+            name="Enter Maintenance">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.objectmanager.popupActions.LeaveMaintenance"
+            name="Leave Maintenance">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.objectmanager.popupActions.ScheduleMaintenance"
+            name="Schedule Maintenance">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -706,6 +986,18 @@
       <handler
             class="org.netxms.ui.eclipse.objectmanager.actions.DeleteObject"
             commandId="org.netxms.ui.eclipse.objectmanager.popupActions.DeleteObject">
+      </handler>
+      <handler
+            class="org.netxms.ui.eclipse.objectmanager.actions.LeaveMaintenance"
+            commandId="org.netxms.ui.eclipse.objectmanager.popupActions.LeaveMaintenance">
+      </handler>
+      <handler
+            class="org.netxms.ui.eclipse.objectmanager.actions.EnterMaintenance"
+            commandId="org.netxms.ui.eclipse.objectmanager.popupActions.EnterMaintenance">
+      </handler>
+      <handler
+            class="org.netxms.ui.eclipse.objectmanager.actions.ScheduleMaintenance"
+            commandId="org.netxms.ui.eclipse.objectmanager.popupActions.ScheduleMaintenance">
       </handler>
    </extension>
 

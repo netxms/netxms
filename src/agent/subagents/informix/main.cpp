@@ -19,7 +19,7 @@ DBParameterGroup g_paramGroup[] = {
 		1100, _T("Informix.Session."),
 		_T("select ") DB_NULLARG_MAGIC _T(" ValueName, count(*) Count from syssessions"),
 		2, { NULL }, 0
-	}, 
+	},
 	{
 		1100, _T("Informix.Database."),
 			_T("select name ValueName, owner Owner, is_logging Logged, created Created from sysdatabases"),
@@ -31,7 +31,7 @@ DBParameterGroup g_paramGroup[] = {
 			_T("sum(nfree) Free,round((sum(nfree))/(sum(chksize))*100,2) FreePerc from sysdbspaces d,syschunks c ")
 			_T("where d.dbsnum=c.dbsnum	group by name order by name"),
 			5, { NULL }, 0
-	}, 
+	},
 	0
 };
 
@@ -120,7 +120,7 @@ static BOOL SubAgentInit(Config *config)
       { _T("DBName"),            CT_STRING, 0, 0, MAX_STR,       0, info.dsn },
       { _T("DBLogin"),           CT_STRING, 0, 0, MAX_USERNAME,  0, info.username },
       { _T("DBPassword"),        CT_STRING, 0, 0, MAX_PASSWORD,  0, info.password },
-      { _T("DBPasswordEncrypted"), CT_STRING, 0, 0, MAX_DB_STRING, 0, dbPassEncrypted },
+      { _T("DBPasswordEncrypted"), CT_STRING, 0, 0, MAX_PASSWORD, 0, info.password },
       { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
    };
 
@@ -151,10 +151,7 @@ static BOOL SubAgentInit(Config *config)
 			g_dbInfo[g_dbCount].accessMutex = MutexCreate();
 		}
 
-	   if (*dbPassEncrypted != '\0')
-	   {
-	      DecryptPassword(info.username, dbPassEncrypted, info.password);
-	   }
+      DecryptPassword(info.username, info.password, info.password, MAX_PASSWORD);
 	}
 
 	// Load configuration
@@ -171,7 +168,7 @@ static BOOL SubAgentInit(Config *config)
 		}
 		if (info.dsn[0] == 0)
 			continue;
-		
+
 		if (info.id[0] == 0)
 			_tcscpy(info.id, info.dsn);
 		memcpy(&g_dbInfo[++g_dbCount], &info, sizeof(DatabaseInfo));
@@ -181,10 +178,9 @@ static BOOL SubAgentInit(Config *config)
 			AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting username for "), MYNAMESTR);
 			result = FALSE;
 		}
-      if (*dbPassEncrypted != '\0')
-      {
-         result = DecryptPassword(info.username, dbPassEncrypted, info.password);
-      }
+
+      DecryptPassword(info.username, info.password, info.password, MAX_PASSWORD);
+
       if (info.password[0] == '\0')
       {
          AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("%s: error getting password for "), MYNAMESTR);
@@ -234,7 +230,7 @@ static void SubAgentShutdown()
 // Figure out Informix DBMS version
 //
 
-static int getInformixVersion(DB_HANDLE handle) 
+static int getInformixVersion(DB_HANDLE handle)
 {
 	return 1100;
 }
@@ -313,7 +309,7 @@ bool getParametersFromDB( int dbIndex )
 		AgentWriteDebugLog(7, _T("%s: got entry for '%s'"), MYNAMESTR, g_paramGroup[i].prefix);
 
 		if (g_paramGroup[i].version > info.version)	// this parameter group is not supported for this DB
-			continue; 
+			continue;
 
 		// Release previously allocated array of values for this group
 		for (int j = 0; j < g_paramGroup[i].valueCount[dbIndex]; j++)
@@ -336,7 +332,7 @@ bool getParametersFromDB( int dbIndex )
 			TCHAR colname[MAX_STR];
 			DBGetField(queryResult, j, 0, (g_paramGroup[i].values[dbIndex])[j].name, MAX_STR);
 			(g_paramGroup[i].values[dbIndex])[j].attrs = new StringMap;
-			for (int k = 1; DBGetColumnName(queryResult, k, colname, MAX_STR); k++) 
+			for (int k = 1; DBGetColumnName(queryResult, k, colname, MAX_STR); k++)
 			{
 				TCHAR colval[MAX_STR];
 				DBGetField(queryResult, j, k, colval, MAX_STR);

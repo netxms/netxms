@@ -25,7 +25,6 @@
 /**
  * Externals
  */
-extern Queue g_nodePollerQueue;
 void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
 
 /**
@@ -129,7 +128,7 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 	if (m_nodeId != 0)
 		sender = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    if (sender == NULL)
-      sender = FindNodeByIP(0, getIpAddr().getAddressV4());
+      sender = FindNodeByIP(0, getIpAddr());
 
 	if (sender != NULL)
 	{
@@ -183,9 +182,12 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 		      if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM) && (dci->getDataSource() == DS_PUSH_AGENT) && (dci->getStatus() == ITEM_STATUS_ACTIVE))
 		      {
 			      DbgPrintf(5, _T("%s: agent data push: found DCI %d"), target->getName(), dci->getId());
-			      time_t t = time(NULL);
+               time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
+               if (t == 0)
+			         t = time(NULL);
 			      target->processNewDCValue(dci, t, value);
-			      dci->setLastPollTime(t);
+               if (t > dci->getLastPollTime())
+			         dci->setLastPollTime(t);
 		      }
 		      else
 		      {
@@ -212,6 +214,23 @@ void AgentConnectionEx::printMsg(const TCHAR *format, ...)
    va_end(args);
 }
 
+static void cancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
+{
+   DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled."));
+   AgentConnection *conn = object->createAgentConnection();
+   if(conn != NULL)
+   {
+      NXCPMessage request;
+      request.setId(conn->generateRequestId());
+      request.setCode(CMD_CANCEL_FILE_MONITORING);
+      request.setField(VID_FILE_NAME, remoteFile);
+      request.setField(VID_OBJECT_ID, object->getId());
+      NXCPMessage* response = conn->customRequest(&request);
+      delete response;
+   }
+   delete conn;
+}
+
 /**
  * Recieve file monitoring information and resend to all required user sessions
  */
@@ -226,25 +245,25 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
       pMsg->getFieldAsString(VID_FILE_NAME, remoteFile, MAX_PATH);
       ObjectArray<ClientSession>* result = g_monitoringList.findClientByFNameAndNodeID(remoteFile, object->getId());
       DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: found %d sessions for remote file %s on node %s [%d]"), result->size(), remoteFile, object->getName(), object->getId());
+      int validSessionCount = result->size();
       for(int i = 0; i < result->size(); i++)
       {
-         result->get(i)->sendMessage(pMsg);
+         if(!result->get(i)->sendMessage(pMsg))
+         {
+            MONITORED_FILE file;
+            _tcsncpy(file.fileName, remoteFile, MAX_PATH);
+            file.nodeID = m_nodeId;
+            file.session = result->get(i);
+            g_monitoringList.removeMonitoringFile(&file);
+            validSessionCount--;
+
+            if(validSessionCount == 0)
+               cancelUnknownFileMonitoring(object, remoteFile);
+         }
       }
       if(result->size() == 0)
       {
-         DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled."));
-         AgentConnection *conn = object->createAgentConnection();
-         if(conn != NULL)
-         {
-            NXCPMessage request;
-            request.setId(conn->generateRequestId());
-            request.setCode(CMD_CANCEL_FILE_MONITORING);
-            request.setField(VID_FILE_NAME, remoteFile);
-            request.setField(VID_OBJECT_ID, object->getId());
-            NXCPMessage* response = conn->customRequest(&request);
-            delete response;
-         }
-         delete conn;
+         cancelUnknownFileMonitoring(object, remoteFile);
       }
       delete result;
 	}
@@ -253,6 +272,26 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
 		g_monitoringList.removeDisconectedNode(m_nodeId);
       DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: node object not found"));
 	}
+}
+
+/**
+ * Ask modules if they can procress custom message
+ */
+bool AgentConnectionEx::processCustomMessage(NXCPMessage *msg)
+{
+   TCHAR buffer[128];
+   DbgPrintf(6, _T("AgentConnectionEx::processCustomMessage: processing message %s ID %d"),
+      NXCPMessageCodeName(msg->getCode(), buffer), msg->getId());
+
+   for(UINT32 i = 0; i < g_dwNumModules; i++)
+   {
+      if (g_pModuleList[i].pfOnAgentMessage != NULL)
+      {
+         if (g_pModuleList[i].pfOnAgentMessage(msg, m_nodeId))
+            return true;    // accepted by module
+      }
+   }
+   return false;
 }
 
 /**
@@ -266,7 +305,9 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
    static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
 	SNMP_Engine localEngine(engineId, 12);
 
-   DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Received SNMP trap message from agent at %s, node ID %d"), getIpAddr().toString(ipStringBuffer), m_nodeId);
+   DbgPrintf(3, _T("AgentConnectionEx::onSnmpTrap(): Received SNMP trap message from agent at %s, node ID %d"),
+      getIpAddr().toString(ipStringBuffer), m_nodeId);
+
 	if (m_nodeId != 0)
 		proxyNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
    if (proxyNode != NULL)
@@ -429,4 +470,92 @@ UINT32 AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
 		rcc = ERR_INTERNAL_ERROR;
 	}
    return rcc;
+}
+
+/**
+ * Process collected data information (for DCI with agent-side cache)
+ */
+UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
+{
+   if (m_nodeId == 0)
+   {
+      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: node ID is 0 for agent session"));
+      return ERR_INTERNAL_ERROR;
+   }
+
+	Node *node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
+   if (node == NULL)
+   {
+      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find node object (node ID = %d)"), m_nodeId);
+      return ERR_INTERNAL_ERROR;
+   }
+
+   int origin = msg->getFieldAsInt16(VID_DCI_SOURCE_TYPE);
+   if ((origin != DS_NATIVE_AGENT) && (origin != DS_SNMP_AGENT))
+   {
+      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: unsupported data source type %d"), origin);
+      return ERR_INTERNAL_ERROR;
+   }
+
+   uuid nodeId = msg->getFieldAsGUID(VID_NODE_ID);
+   if (!nodeId.isNull())
+   {
+      Node *targetNode = (Node *)FindObjectByGUID(nodeId, OBJECT_NODE);
+      if (targetNode == NULL)
+      {
+         TCHAR buffer[64];
+         DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find target node with GUID %s"), nodeId.toString(buffer));
+         return ERR_INTERNAL_ERROR;
+      }
+      node = targetNode;
+   }
+
+   UINT32 dciId = msg->getFieldAsUInt32(VID_DCI_ID);
+   DCObject *dcObject = node->getDCObjectById(dciId);
+   if (dcObject == NULL)
+   {
+      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: cannot find DCI with ID %d on node %s [%d]"), dciId, node->getName(), node->getId());
+      return ERR_INTERNAL_ERROR;
+   }
+
+   int type = msg->getFieldAsInt16(VID_DCOBJECT_TYPE);
+   if ((dcObject->getType() != type) || (dcObject->getDataSource() != origin) || (dcObject->getAgentCacheMode() != AGENT_CACHE_ON))
+   {
+      DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: DCI %s [%d] on node %s [%d] configuration mismatch"), dcObject->getName(), dciId, node->getName(), node->getId());
+      return ERR_INTERNAL_ERROR;
+   }
+
+   void *value;
+   switch(type)
+   {
+      case DCO_TYPE_ITEM:
+         value = msg->getFieldAsString(VID_VALUE);
+         break;
+      case DCO_TYPE_LIST:
+         value = new StringList();
+         break;
+      case DCO_TYPE_TABLE:
+         value = new Table(msg);
+         break;
+      default:
+         DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on node %s [%d]"), type, dcObject->getName(), dciId, node->getName(), node->getId());
+         return ERR_INTERNAL_ERROR;
+   }
+
+   time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
+   bool success = node->processNewDCValue(dcObject, t, value);
+   if (t > dcObject->getLastPollTime())
+      dcObject->setLastPollTime(t);
+
+   switch(type)
+   {
+      case DCO_TYPE_ITEM:
+         free(value);
+         break;
+      case DCO_TYPE_LIST:
+         delete (StringList *)value;
+         break;
+   }
+
+   return success ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }

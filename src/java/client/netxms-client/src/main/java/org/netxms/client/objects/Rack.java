@@ -18,6 +18,10 @@
  */
 package org.netxms.client.objects;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.NXCSession;
@@ -72,5 +76,28 @@ public class Rack extends GenericObject
 	public int getHeight()
 	{
 		return height;
+	}
+	
+	/**
+	 * Get rack units, ordered by unit numbers
+	 * 
+	 * @return
+	 */
+	public List<AbstractNode> getUnits()
+	{
+	   List<AbstractNode> units = new ArrayList<AbstractNode>();
+	   for(AbstractObject o : getChildsAsArray())
+	   {
+	      if (o instanceof AbstractNode)
+	         units.add((AbstractNode)o);
+	   }
+	   Collections.sort(units, new Comparator<AbstractNode>() {
+         @Override
+         public int compare(AbstractNode node1, AbstractNode node2)
+         {
+            return node1.getRackPosition() - node2.getRackPosition();
+         }
+      });
+	   return units;
 	}
 }

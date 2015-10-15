@@ -418,6 +418,8 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                         currentItem.column, config.getTimeFrom(), config.getTimeTo(), 0);
                   thresholds[i] = null;
                }
+               if (currentItem.invertValues)
+                  data[i].invert();
                monitor.worked(1);
             }
 
@@ -528,6 +530,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             {
                MessageDialogHelper.openError(getSite().getShell(), Messages.get().HistoricalGraphView_Error,
                      String.format(Messages.get().HistoricalGraphView_LogScaleSwitchError, e.getLocalizedMessage()));
+               Activator.logError("Cannot change log scale mode", e);
             }
             setChecked(config.isLogScale());
          }

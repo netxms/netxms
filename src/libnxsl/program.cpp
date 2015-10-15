@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -49,7 +49,9 @@ const char *g_nxslCommandMnemonic[] =
 	"ESET", "ASET", "NAME", "FOREACH", "NEXT",
 	"GLOBAL", "GARRAY", "JZP", "JNZP", "ADDARR",
 	"AGETS", "CALL", "CASE", "EINC", "EDEC",
-   "EINCP", "EDECP", "ABORT", "CATCH"
+   "EINCP", "EDECP", "ABORT", "CATCH", "PUSH",
+   "SETHM", "NEWARR", "NEWHM", "CPOP",
+   "SREAD", "SWRITE"
 };
 
 /**
@@ -212,8 +214,7 @@ void NXSL_Program::dump(FILE *pFile)
       {
          case OPCODE_CALL_EXTERNAL:
          case OPCODE_GLOBAL:
-            _ftprintf(pFile, _T("%s, %d\n"), instr->m_operand.m_pszString,
-                      instr->m_nStackItems);
+            _ftprintf(pFile, _T("%s, %d\n"), instr->m_operand.m_pszString, instr->m_nStackItems);
             break;
          case OPCODE_CALL:
             _ftprintf(pFile, _T("%04X, %d\n"), instr->m_operand.m_dwAddr, instr->m_nStackItems);
@@ -227,8 +228,9 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_JNZ:
          case OPCODE_JZ_PEEK:
          case OPCODE_JNZ_PEEK:
-            fprintf(pFile, "%04X\n", instr->m_operand.m_dwAddr);
+            _ftprintf(pFile, _T("%04X\n"), instr->m_operand.m_dwAddr);
             break;
+         case OPCODE_PUSH_CONSTREF:
          case OPCODE_PUSH_VARIABLE:
          case OPCODE_SET:
          case OPCODE_BIND:
@@ -238,10 +240,6 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_DEC:
          case OPCODE_INCP:
          case OPCODE_DECP:
-         case OPCODE_INC_ELEMENT:
-         case OPCODE_DEC_ELEMENT:
-         case OPCODE_INCP_ELEMENT:
-         case OPCODE_DECP_ELEMENT:
 			case OPCODE_SAFE_GET_ATTR:
          case OPCODE_GET_ATTRIBUTE:
          case OPCODE_SET_ATTRIBUTE:
@@ -252,20 +250,22 @@ void NXSL_Program::dump(FILE *pFile)
          case OPCODE_PUSH_CONSTANT:
 			case OPCODE_CASE:
             if (instr->m_operand.m_pConstant->isNull())
-               fprintf(pFile, "<null>\n");
+               _ftprintf(pFile, _T("<null>\n"));
             else if (instr->m_operand.m_pConstant->isArray())
-               fprintf(pFile, "<array>\n");
+               _ftprintf(pFile, _T("<array>\n"));
+            else if (instr->m_operand.m_pConstant->isHashMap())
+               _ftprintf(pFile, _T("<hash map>\n"));
             else
                _ftprintf(pFile, _T("\"%s\"\n"), instr->m_operand.m_pConstant->getValueAsCString());
             break;
          case OPCODE_POP:
-            fprintf(pFile, "%d\n", instr->m_nStackItems);
+            _ftprintf(pFile, _T("%d\n"), instr->m_nStackItems);
             break;
          case OPCODE_CAST:
             _ftprintf(pFile, _T("[%s]\n"), g_szTypeNames[instr->m_nStackItems]);
             break;
          default:
-            fprintf(pFile, "\n");
+            _ftprintf(pFile, _T("\n"));
             break;
       }
    }
@@ -406,7 +406,8 @@ void NXSL_Program::serialize(ByteStream& s)
 
    // Serialize instructions
    header.codeSectionOffset = htonl((UINT32)s.pos());
-   for(int i = 0; i < m_instructionSet->size(); i++)
+   int i;
+   for(i = 0; i < m_instructionSet->size(); i++)
    {
       NXSL_Instruction *instr = m_instructionSet->get(i);
       s.write(instr->m_nOpCode);
@@ -456,28 +457,28 @@ void NXSL_Program::serialize(ByteStream& s)
 
    // write strings section
    header.stringSectionOffset = htonl((UINT32)s.pos());
-   for(int i = 0; i < strings.size(); i++)
+   for(i = 0; i < strings.size(); i++)
    {
       s.writeString(strings.get(i));
    }
 
    // write constants section
    header.constSectionOffset = htonl((UINT32)s.pos());
-   for(int i = 0; i < constants.size(); i++)
+   for(i = 0; i < constants.size(); i++)
    {
       constants.get(i)->serialize(s);
    }
 
    // write required modules list
    header.moduleSectionOffset = htonl((UINT32)s.pos());
-   for(int i = 0; i < m_requiredModules.size(); i++)
+   for(i = 0; i < m_requiredModules.size(); i++)
    {
       s.writeString(m_requiredModules.get(i));
    }
 
    // write function list
    header.functionSectionOffset = htonl((UINT32)s.pos());
-   for(int i = 0; i < m_functions->size(); i++)
+   for(i = 0; i < m_functions->size(); i++)
    {
       NXSL_Function *f = m_functions->get(i);
       s.writeString(f->m_name);

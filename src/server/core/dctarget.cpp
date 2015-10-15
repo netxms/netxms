@@ -93,6 +93,31 @@ void DataCollectionTarget::fillMessageInternal(NXCPMessage *msg)
 }
 
 /**
+ * Create NXCP message with object's data - stage 2
+ */
+void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg)
+{
+   Template::fillMessageInternalStage2(msg);
+
+   // Sent all DCIs marked for display on overview page
+   UINT32 fieldId = VID_OVERVIEW_DCI_LIST_BASE;
+   UINT32 count = 0;
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+	{
+      DCObject *dci = m_dcObjects->get(i);
+      if ((dci->getType() == DCO_TYPE_ITEM) && dci->isShowInObjectOverview() && (dci->getStatus() == ITEM_STATUS_ACTIVE))
+		{
+         count++;
+         ((DCItem *)dci)->fillLastValueMessage(msg, fieldId);
+         fieldId += 50;
+		}
+	}
+   unlockDciAccess();
+   msg->setField(VID_OVERVIEW_DCI_COUNT, count);
+}
+
+/**
  * Modify object from message
  */
 UINT32 DataCollectionTarget::modifyFromMessageInternal(NXCPMessage *pRequest)
@@ -144,7 +169,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
          queryItems.append(_T("(item_id="));
          queryItems.append(o->getId());
          queryItems.append(_T(" AND idata_timestamp<"));
-         queryItems.append((INT64)(now - o->getRetentionTime() * 86400));
+         queryItems.append((INT64)(now - o->getEffectiveRetentionTime() * 86400));
          queryItems.append(_T(')'));
          itemCount++;
       }
@@ -155,7 +180,7 @@ void DataCollectionTarget::cleanDCIData(DB_HANDLE hdb)
          queryTables.append(_T("(item_id="));
          queryTables.append(o->getId());
          queryTables.append(_T(" AND tdata_timestamp<"));
-         queryTables.append((INT64)(now - o->getRetentionTime() * 86400));
+         queryTables.append((INT64)(now - o->getEffectiveRetentionTime() * 86400));
          queryTables.append(_T(')'));
          tableCount++;
       }
@@ -470,7 +495,7 @@ void DataCollectionTarget::queueItemsForPolling(Queue *pPollerQueue)
       {
          object->setBusyFlag(TRUE);
          incRefCount();   // Increment reference count for each queued DCI
-         pPollerQueue->Put(object);
+         pPollerQueue->put(object);
 			DbgPrintf(8, _T("DataCollectionTarget(%s)->QueueItemsForPolling(): item %d \"%s\" added to queue"), m_name, object->getId(), object->getName());
       }
    }
@@ -577,138 +602,6 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
    }
 
    return dwError;
-}
-
-/**
- * Parse value list
- */
-static bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args)
-{
-   TCHAR *p = *start;
-
-   *p = 0;
-   p++;
-
-   TCHAR *s = p;
-   int state = 1; // normal text
-
-   for(; state > 0; p++)
-   {
-      switch(*p)
-      {
-         case '"':
-            if (state == 1)
-            {
-               state = 2;
-               s = p + 1;
-            }
-            else
-            {
-               state = 3;
-               *p = 0;
-               args.add(new NXSL_Value(s));
-            }
-            break;
-         case ',':
-            if (state == 1)
-            {
-               *p = 0;
-               Trim(s);
-               args.add(new NXSL_Value(s));
-               s = p + 1;
-            }
-            else if (state == 3)
-            {
-               state = 1;
-               s = p + 1;
-            }
-            break;
-         case 0:
-            if (state == 1)
-            {
-               Trim(s);
-               args.add(new NXSL_Value(s));
-               state = 0;
-            }
-            else
-            {
-               state = -1; // error
-            }
-            break;
-         case ' ':
-            break;
-         case ')':
-            if (state == 1)
-            {
-               *p = 0;
-               Trim(s);
-               args.add(new NXSL_Value(s));
-               state = 0;
-            }
-            else if (state == 3)
-            {
-               state = 0;
-            }
-            break;
-         case '\\':
-            if (state == 2)
-            {
-               memmove(p, p + 1, _tcslen(p) * sizeof(TCHAR));
-               switch(*p)
-               {
-                  case 'r':
-                     *p = '\r';
-                     break;
-                  case 'n':
-                     *p = '\n';
-                     break;
-                  case 't':
-                     *p = '\t';
-                     break;
-                  default:
-                     break;
-               }
-            }
-            else if (state == 3)
-            {
-               state = -1;
-            }
-            break;
-         case '%':
-            if ((state == 1) && (*(p + 1) == '('))
-            {
-               p++;
-               ObjectArray<NXSL_Value> elements(16, 16, false);
-               if (ParseValueList(&p, elements))
-               {
-                  NXSL_Array *array = new NXSL_Array();
-                  for(int i = 0; i < elements.size(); i++)
-                  {
-                     array->set(i, elements.get(i));
-                  }
-                  args.add(new NXSL_Value(array));
-                  state = 3;
-               }
-               else
-               {
-                  state = -1;
-                  elements.clear();
-               }
-            }
-            else if (state == 3)
-            {
-               state = -1;
-            }
-            break;
-         default:
-            if (state == 3)
-               state = -1;
-            break;
-      }
-   }
-
-   *start = p - 1;
-   return (state != -1);
 }
 
 /**
@@ -824,6 +717,7 @@ void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Ta
                row = tableData->getNumRows() - 1;
             }
             tableData->setStatusAt(row, i + offset, ((DCItem *)object)->getThresholdSeverity());
+            tableData->setCellObjectIdAt(row, i + offset, object->getId());
             tableData->getColumnDefinitions()->get(i + offset)->setDataType(((DCItem *)object)->getDataType());
             if (tableDefinition->getAggregationFunction() == F_LAST)
             {
@@ -909,4 +803,32 @@ void DataCollectionTarget::updatePingData()
 {
    m_pingLastTimeStamp = 0;
    m_pingTime = PING_TIME_TIMEOUT;
+}
+
+/**
+ * Enter maintenance mode
+ */
+void DataCollectionTarget::enterMaintenanceMode()
+{
+   DbgPrintf(4, _T("Entering maintenance mode for %s [%d]"), m_name, m_id);
+   UINT64 eventId = PostEvent2(EVENT_MAINTENANCE_MODE_ENTERED, m_id, NULL);
+   lockProperties();
+   m_maintenanceMode = true;
+   m_maintenanceEventId = eventId;
+   setModified();
+   unlockProperties();
+}
+
+/**
+ * Leave maintenance mode
+ */
+void DataCollectionTarget::leaveMaintenanceMode()
+{
+   DbgPrintf(4, _T("Leaving maintenance mode for %s [%d]"), m_name, m_id);
+   PostEvent(EVENT_MAINTENANCE_MODE_LEFT, m_id, NULL);
+   lockProperties();
+   m_maintenanceMode = false;
+   m_maintenanceEventId = 0;
+   setModified();
+   unlockProperties();
 }

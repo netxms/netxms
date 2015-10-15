@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,7 +37,9 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class ShowObjectAlarms extends AbstractHandler
 {
-
+   /* (non-Javadoc)
+    * @see org.eclipse.core.commands.AbstractHandler#execute(org.eclipse.core.commands.ExecutionEvent)
+    */
    @Override
    public Object execute(ExecutionEvent event) throws ExecutionException
    {

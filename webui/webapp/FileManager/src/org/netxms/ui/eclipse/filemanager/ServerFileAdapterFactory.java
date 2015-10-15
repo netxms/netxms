@@ -62,13 +62,7 @@ public class ServerFileAdapterFactory implements IAdapterFactory
 
 				@Override
 				public ImageDescriptor getImageDescriptor(Object object)
-				{
-               if (((ServerFile)object).isPlaceholder())
-                  return null;
-               
-				   if (((ServerFile)object).isDirectory())
-				      return Activator.getImageDescriptor("icons/folder.gif"); //$NON-NLS-1$
-				   
+				{				   
 					String[] parts = ((ServerFile)object).getName().split("\\."); //$NON-NLS-1$
 					if (parts.length < 2)
 						return Activator.getImageDescriptor("icons/types/unknown.png"); //$NON-NLS-1$
@@ -92,13 +86,13 @@ public class ServerFileAdapterFactory implements IAdapterFactory
                
                if (ext.equalsIgnoreCase("txt") || ext.equalsIgnoreCase("log") || ext.equalsIgnoreCase("jrn")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                   return Activator.getImageDescriptor("icons/types/text.png"); //$NON-NLS-1$
-					
+               
 					if (ext.equalsIgnoreCase("avi") || ext.equalsIgnoreCase("mkv") || ext.equalsIgnoreCase("mov") || ext.equalsIgnoreCase("wma")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 						return Activator.getImageDescriptor("icons/types/video.png"); //$NON-NLS-1$
 					
                if (ext.equalsIgnoreCase("ac3") || ext.equalsIgnoreCase("mp3") || ext.equalsIgnoreCase("wav")) //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                   return Activator.getImageDescriptor("icons/types/audio.png"); //$NON-NLS-1$
-					
+               
 					if (ext.equalsIgnoreCase("tar") || ext.equalsIgnoreCase("gz") ||  //$NON-NLS-1$ //$NON-NLS-2$
 					    ext.equalsIgnoreCase("tgz") || ext.equalsIgnoreCase("zip") || //$NON-NLS-1$ //$NON-NLS-2$
 					    ext.equalsIgnoreCase("rar") || ext.equalsIgnoreCase("7z") || //$NON-NLS-1$ //$NON-NLS-2$

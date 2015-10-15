@@ -263,6 +263,7 @@ UINT32 SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, WORD p
    if (!hostAddr.isValid())
       return SNMP_ERR_HOSTNAME;
 
+   m_port=port;
    hostAddr.fillSockAddr(&m_peerAddr, port);
 
    UINT32 dwResult;

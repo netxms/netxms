@@ -61,7 +61,7 @@ public class AlarmHDStateConditionEditor extends ConditionEditor
 	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#createContent(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	protected void createContent(Composite parent)
+	protected void createContent(Composite parent, ColumnFilter initialFilter)
 	{
 		state = new Combo(this, SWT.READ_ONLY | SWT.BORDER);
 		toolkit.adapt(state);
@@ -72,6 +72,12 @@ public class AlarmHDStateConditionEditor extends ConditionEditor
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		state.setLayoutData(gd);
+
+      if ((initialFilter != null) && (initialFilter.getType() == ColumnFilter.EQUALS))
+      {
+         setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
+         state.select((int)initialFilter.getNumericValue());
+      }
 	}
 
 	/* (non-Javadoc)

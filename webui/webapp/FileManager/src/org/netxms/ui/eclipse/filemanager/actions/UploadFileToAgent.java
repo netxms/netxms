@@ -31,6 +31,8 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
+import org.netxms.client.ScheduledTask;
+import org.netxms.client.constants.UserAccessRights;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Container;
 import org.netxms.client.objects.EntireNetwork;
@@ -67,10 +69,11 @@ public class UploadFileToAgent implements IObjectActionDelegate
 	 */
 	public void run(IAction action)
 	{
-		final StartServerToAgentFileUploadDialog dlg = new StartServerToAgentFileUploadDialog(shell);
+      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      boolean canScheduleFileUpload = (session.getUserSystemRights() & UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD) > 0;
+		final StartServerToAgentFileUploadDialog dlg = new StartServerToAgentFileUploadDialog(shell, canScheduleFileUpload);
 		if (dlg.open() == Window.OK)
 		{
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 			final Long[] nodeIdList = nodes.toArray(new Long[nodes.size()]);
 			new ConsoleJob(Messages.get().UploadFileToAgent_JobTitle, viewPart, Activator.PLUGIN_ID, null) {
 				@Override
@@ -92,10 +95,22 @@ public class UploadFileToAgent implements IObjectActionDelegate
 				   }
 				   else 
 				   {
-				      remoteFileName = null;
+				      if(!dlg.isScheduled())
+				         remoteFileName = null;
 				   }
 					for(int i = 0; i < nodeIdList.length; i++)
-						session.uploadFileToAgent(nodeIdList[i], dlg.getServerFile().getName(), remoteFileName, dlg.isCreateJobOnHold());
+					{
+					   if(dlg.isScheduled())
+					   {
+					      ScheduledTask task = dlg.getScheduledTask();
+					      String parameters = "(" + dlg.getServerFile().getName() + "," + remoteFileName + ")";
+					      task.setParameters(parameters);
+					      task.setObjectId(nodeIdList[i]);
+					      session.addSchedule(task);
+					   }
+					   else
+					      session.uploadFileToAgent(nodeIdList[i], dlg.getServerFile().getName(), remoteFileName, dlg.isCreateJobOnHold());
+					}
 				}
 			}.start();
 		}

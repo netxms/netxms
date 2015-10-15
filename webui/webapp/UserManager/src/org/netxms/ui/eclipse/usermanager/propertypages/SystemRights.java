@@ -90,6 +90,12 @@ public class SystemRights extends PropertyPage
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, Messages.get().SystemRights_LoginAsMobile);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, Messages.get().SystemRights_ManageImageLibrary);
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, Messages.get().SystemRights_ReportingServerAccess);
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_USERS_SCHEDULED_TASKS, "Manage users scheduled tasks");
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, "Manage own scheduled tasks");
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, "Manage all scheduled tasks");
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, "Schedule script task");
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, "Schedule file upload task"); 
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, "Schedule object maintenance time interval"); 
 		
 		return dialogArea;
 	}

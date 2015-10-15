@@ -66,7 +66,7 @@ public:
 	INT64 getValueAsInt64(int index = 0, INT64 defaultValue = 0);
 	UINT64 getValueAsUInt64(int index = 0, UINT64 defaultValue = 0);
 	bool getValueAsBoolean(int index = 0, bool defaultValue = false);
-	bool getValueAsUUID(int index, uuid_t uuid);
+	uuid getValueAsUUID(int index);
 
 	void addValue(const TCHAR *value);
 	void addValuePreallocated(TCHAR *value);
@@ -78,7 +78,7 @@ public:
 	INT64 getSubEntryValueAsInt64(const TCHAR *name, int index = 0, INT64 defaultValue = 0);
 	UINT64 getSubEntryValueAsUInt64(const TCHAR *name, int index = 0, UINT64 defaultValue = 0);
 	bool getSubEntryValueAsBoolean(const TCHAR *name, int index = 0, bool defaultValue = false);
-	bool getSubEntryValueAsUUID(const TCHAR *name, uuid_t uuid, int index = 0);
+	uuid getSubEntryValueAsUUID(const TCHAR *name, int index = 0);
 
    const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.get(name); }
 	INT32 getAttributeAsInt(const TCHAR *name, INT32 defaultValue = 0);
@@ -151,7 +151,7 @@ public:
 	INT64 getValueAsInt64(const TCHAR *path, INT64 defaultValue);
 	UINT64 getValueAsUInt64(const TCHAR *path, UINT64 defaultValue);
 	bool getValueAsBoolean(const TCHAR *path, bool defaultValue);
-	bool getValueAsUUID(const TCHAR *path, uuid_t uuid);
+	uuid getValueAsUUID(const TCHAR *path);
 	ObjectArray<ConfigEntry> *getSubEntries(const TCHAR *path, const TCHAR *mask);
 	ObjectArray<ConfigEntry> *getOrderedSubEntries(const TCHAR *path, const TCHAR *mask);
 
@@ -161,7 +161,7 @@ public:
 	bool setValue(const TCHAR *path, INT64 value);
 	bool setValue(const TCHAR *path, UINT64 value);
 	bool setValue(const TCHAR *path, double value);
-	bool setValue(const TCHAR *path, uuid_t value);
+	bool setValue(const TCHAR *path, const uuid& value);
 
 	bool parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate);
 

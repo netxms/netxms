@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
-import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -75,10 +74,15 @@ public class CurrentValueWidget extends GaugeWidget
 	protected void renderElement(GC gc, DataComparisonElement dci, int x, int y, int w, int h)
 	{
 		Rectangle rect = new Rectangle(x + INNER_MARGIN_WIDTH, y + INNER_MARGIN_HEIGHT, w - INNER_MARGIN_WIDTH * 2, h - INNER_MARGIN_HEIGHT * 2);
+		gc.setAntialias(SWT.ON);
 		
 		if (elementBordersVisible)
 		{
 		   gc.drawRectangle(rect);
+		   rect.x += INNER_MARGIN_WIDTH;
+		   rect.y += INNER_MARGIN_HEIGHT;
+		   rect.width -= INNER_MARGIN_WIDTH / 2;
+         rect.height -= INNER_MARGIN_HEIGHT / 2;
 		}
 		
 		if (legendVisible)
@@ -109,7 +113,7 @@ public class CurrentValueWidget extends GaugeWidget
 		{
          gc.setFont(null);
 			ext = gc.textExtent(dci.getName());
-			gc.setForeground(SharedColors.getColor(SharedColors.DIAL_CHART_LEGEND, getDisplay()));
+			gc.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
 			gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
 	}

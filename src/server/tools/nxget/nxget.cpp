@@ -271,7 +271,8 @@ int main(int argc, char *argv[])
    WORD wServicePort = 0, wServiceProto = 0;
    UINT32 dwTimeout = 5000, dwConnTimeout = 30000, dwServiceAddr = 0, dwError;
    TCHAR szSecret[MAX_SECRET_LENGTH] = _T(""), szRequest[MAX_DB_STRING] = _T("");
-   TCHAR keyFile[MAX_PATH] = DEFAULT_DATA_DIR DFILE_KEYS, szResponse[MAX_DB_STRING] = _T("");
+   TCHAR keyFile[MAX_PATH];
+   TCHAR szResponse[MAX_DB_STRING] = _T("");
    char szProxy[MAX_OBJECT_NAME] = "";
 	TCHAR szProxySecret[MAX_SECRET_LENGTH] = _T("");
    RSA *pServerKey = NULL;
@@ -283,6 +284,9 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
 	SetExceptionHandler(SEHDefaultConsoleHandler, NULL, NULL, _T("nxget"), 0, FALSE, FALSE);
 #endif
+
+   GetNetXMSDirectory(nxDirData, keyFile);
+   _tcscat(keyFile, DFILE_KEYS);
 
    // Parse command line
    opterr = 1;
@@ -312,7 +316,7 @@ int main(int argc, char *argv[])
                      _T("   -I           : Get list of supported parameters.\n")
 #ifdef _WITH_ENCRYPTION
                      _T("   -K <file>    : Specify server's key file\n")
-                     _T("                  (default is ") DEFAULT_DATA_DIR DFILE_KEYS _T(").\n")
+                     _T("                  (default is %s).\n")
 #endif
                      _T("   -l           : Requested parameter is a list.\n")
                      _T("   -n           : Show parameter's name in result.\n")
@@ -333,7 +337,11 @@ int main(int argc, char *argv[])
                      _T("   -W <seconds> : Set connection timeout (default is 30 seconds).\n")
                      _T("   -X <addr>    : Use proxy agent at given address.\n")
                      _T("   -Z <secret>  : Shared secret for proxy agent authentication.\n")
-                     _T("\n"), agentPort, agentPort);
+                     _T("\n"), 
+#ifdef _WITH_ENCRYPTION
+                     keyFile,
+#endif
+                     agentPort, agentPort);
             start = FALSE;
             break;
          case 'a':   // Auth method
@@ -704,5 +712,6 @@ int main(int argc, char *argv[])
       }
    }
 
+   MsgWaitQueue::shutdown();
    return iExitCode;
 }

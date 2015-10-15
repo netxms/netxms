@@ -96,7 +96,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 {
    while(!IsShutdownInProgress())
    {
-      Event *pEvent = (Event *)s_loggerQueue->GetOrBlock();
+      Event *pEvent = (Event *)s_loggerQueue->getOrBlock();
       if (pEvent == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -153,7 +153,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 					DBExecute(hStmt);
 					DbgPrintf(8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 					delete pEvent;
-					pEvent = (Event *)s_loggerQueue->Get();
+					pEvent = (Event *)s_loggerQueue->get();
 				} while((pEvent != NULL) && (pEvent != INVALID_POINTER_VALUE));
 				DBFreeStatement(hStmt);
 			}
@@ -181,7 +181,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 	s_threadStormDetector = ThreadCreateEx(EventStormDetector, 0, NULL);
    while(!IsShutdownInProgress())
    {
-      Event *pEvent = (Event *)g_pEventQueue->GetOrBlock();
+      Event *pEvent = (Event *)g_pEventQueue->getOrBlock();
       if (pEvent == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator
 
@@ -212,8 +212,8 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
          NetObj *pObject = FindObjectById(pEvent->getSourceId());
          if (pObject == NULL)
             pObject = g_pEntireNet;
-			DbgPrintf(5, _T("EVENT %d (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAG:\"%s\"%s) FROM %s: %s"), pEvent->getCode(), 
-                   pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
+			DbgPrintf(5, _T("EVENT %s [%d] (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAG:\"%s\"%s) FROM %s: %s"), 
+                   pEvent->getName(), pEvent->getCode(), pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
 						 CHECK_NULL_EX(pEvent->getUserTag()),
                    (pEvent->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
                    pObject->getName(), pEvent->getMessage());
@@ -232,7 +232,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 		// Logger will destroy event object after logging
 		if ((pEvent->getFlags() & EF_LOG) && (pEvent->getCode() != EVENT_DB_QUERY_FAILED))
 		{
-			s_loggerQueue->Put(pEvent);
+			s_loggerQueue->put(pEvent);
 		}
 		else
       {
@@ -243,7 +243,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       g_totalEventsProcessed++;
    }
 
-	s_loggerQueue->Put(INVALID_POINTER_VALUE);
+	s_loggerQueue->put(INVALID_POINTER_VALUE);
 	ThreadJoin(s_threadStormDetector);
 	ThreadJoin(s_threadLogger);
 	delete s_loggerQueue;

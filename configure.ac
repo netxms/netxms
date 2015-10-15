@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0-M4], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0-RC2], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -80,6 +80,7 @@ USE_INTERNAL_LIBTRE="no"
 FORCE_INTERNAL_LIBTRE="no"
 FORCE_INTERNAL_JANSSON="no"
 FORCE_INTERNAL_ZLIB="no"
+FORCE_INTERNAL_SQLITE="no"
 FORCE_32BIT_BUILD="no"
 FORCE_INTERNAL_GETOPT="no"
 LDFLAGS_PREFIX=""
@@ -96,6 +97,7 @@ TUXEDO_LIBS=""
 MONGODB_LIBS=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
+INSTALL_LIBPATH=""
 
 
 #--------------------------------------------------------------------
@@ -118,7 +120,7 @@ AC_ARG_WITH(runtime-prefix,
 AC_ARG_WITH(server,
 [AS_HELP_STRING(--with-server,build server)],
 [
-	COMPONENTS="$COMPONENTS sqlite snmp server agent"
+	COMPONENTS="$COMPONENTS sqlite snmp server agent sqlite_drv"
 ])
 
 AC_ARG_WITH(snmp,
@@ -142,16 +144,17 @@ AC_ARG_WITH(client-proxy,
 AC_ARG_WITH(agent,
 [AS_HELP_STRING(--with-agent,build agent)],
 [
-	COMPONENTS="$COMPONENTS sqlite snmp agent"
+	COMPONENTS="$COMPONENTS sqlite snmp agent sqlite_drv"
 ])
 
 AC_ARG_WITH(static-agent,
 [AS_HELP_STRING(--with-static-agent,build statically linked agent)],
 [
-	COMPONENTS="$COMPONENTS sqlite snmp static-agent"
+	COMPONENTS="$COMPONENTS sqlite snmp static-agent sqlite_drv"
 	FORCE_INTERNAL_EXPAT="yes"
-	FORCE_INTERNAL_LIBTRE="yes"
 	FORCE_INTERNAL_JANSSON="yes"
+	FORCE_INTERNAL_LIBTRE="yes"
+	FORCE_INTERNAL_SQLITE="yes"
 	FORCE_INTERNAL_ZLIB="yes"
 ])
 
@@ -214,6 +217,12 @@ AC_ARG_WITH(internal-zlib,
 [AS_HELP_STRING(--with-internal-zlib,force use of bundled zlib)],
 [
 	FORCE_INTERNAL_ZLIB="yes"
+])
+
+AC_ARG_WITH(internal-sqlite,
+[AS_HELP_STRING(--with-internal-sqlite,force use of bundled sqlite)],
+[
+	FORCE_INTERNAL_SQLITE="yes"
 ])
 
 AC_ARG_WITH(internal-getopt,
@@ -424,6 +433,19 @@ AC_ARG_WITH(openssl,
 	fi
 ])
 
+AC_ARG_WITH(jemalloc,
+[AS_HELP_STRING(--with-jemalloc,specify libjemalloc location)],
+[
+	if test "x$withval" != "xno" ; then
+		if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+			LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
+			LDFLAGS="$LDFLAGS -L${withval}/lib"
+			CPPFLAGS="$CPPFLAGS -I${withval}/include"
+			INSTALL_LIBPATH="${withval}/lib${INSTALL_LIBPATH:+:}${INSTALL_LIBPATH}"
+		fi
+	fi
+])
+
 AC_ARG_ENABLE(iconv,
 [AS_HELP_STRING(--disable-iconv,do not use iconv() for text conversions)],
 [
@@ -501,9 +523,9 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxlp db server agent libnxmap client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java netsvc db2 tuxedo mongodb"
-	SMSDRV_DIRS="kannel websms"
+	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server agent libnxmap client nxscript nxcproxy nxlptest tools"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
+	SMSDRV_DIRS="kannel slack text2reach websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
@@ -532,6 +554,7 @@ AC_ARG_WITH(tests,
 # LD_RUN_PATH ignored by linker and some tests may fail
 #--------------------------------------------------------------------
 
+export LD_RUN_PATH
 if test "x$LD_RUN_PATH" != "x"; then
 	LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}${LD_RUN_PATH}"
 	export LD_LIBRARY_PATH
@@ -542,11 +565,6 @@ fi
 # Validate command line parameters and set various checking options
 #--------------------------------------------------------------------
 
-check_substr "$COMPONENTS" "sqlite"
-if test $? = 0; then
-	MODULES="$MODULES sqlite"
-fi
-
 check_substr "$COMPONENTS" "snmp"
 if test $? = 0; then
 	NEED_ZLIB="yes"
@@ -555,12 +573,12 @@ fi
 
 check_substr "$COMPONENTS" "static-agent"
 if test $? = 0; then
-	if test "x$COMPONENTS" != "x sqlite snmp static-agent"; then
+	if test "x$COMPONENTS" != "x sqlite snmp static-agent sqlite_drv"; then
 		AC_MSG_ERROR(Static agent and other components are mutually exclusive.)
 	fi
 	STATIC_BUILD="yes"
 	BUILD_STATIC_AGENT="yes"
-	MODULES="$MODULES libnxlp db agent"
+	MODULES="$MODULES appagent libnxlp db agent"
 	DISABLE_ICONV="yes"
 	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT"
 	if test "x$PROPOSED_STATIC_SUBAGENTS" = "xdefault"; then
@@ -651,46 +669,18 @@ if test $? = 0; then
 	BUILD_STATIC_AGENT="yes"
 	DISABLE_ICONV="yes"
 	USE_PTH="yes"
-	MODULES="$MODULES libnxlp db agent"
-	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -D_USE_GNU_PTH -DSQLITE_THREADSAFE=0 -I/usr/local/include"
+	MODULES="$MODULES appagent libnxlp db agent"
+	CPPFLAGS="$CPPFLAGS -D_STATIC_AGENT -D_IPSO -DSQLITE_THREADSAFE=0 -I/usr/local/include"
 	LDFLAGS="$LDFLAGS -all-static"
 	STATIC_SUBAGENT_LIST="ecs ipso logwatch ping portcheck ups"
 	SUBAGENT_DIRS="ipso"
 	SUBAGENT_LIBS="../subagents/ecs/ecs.la ../subagents/ipso/ipso.la ../subagents/logwatch/logwatch.la ../subagents/ping/ping.la ../subagents/portCheck/portcheck.la ../subagents/ups/ups.la"
 fi
 
-check_substr "$COMPONENTS" "server"
-if test $? = 0; then
-	if test "x$DBDRIVER_SELECTED" != "xyes"; then
-		AC_MSG_ERROR(You must select at least one database driver when building server.)
-	fi
-	BUILD_SERVER="yes"
-	MODULES="$MODULES libnxmap libnxsl libnxlp db server nxscript"
-	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
-	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music"
-	if test "x$XMPP_SUPPORT" = "xyes"; then
-		MODULES="libstrophe $MODULES"
-		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
-	fi
-fi
-
-check_substr "$COMPONENTS" "client"
-if test $? = 0; then
-	BUILD_CLIENT="yes"
-	NEED_ZLIB="yes"
-	MODULES="$MODULES client"
-	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxsms"
-fi
-
-check_substr "$COMPONENTS" "client-proxy"
-if test $? = 0; then
-	MODULES="$MODULES nxcproxy"
-fi
-
 check_substr "$COMPONENTS" "agent"
 if test $? = 0; then
 	BUILD_AGENT="yes"
-	MODULES="$MODULES libnxlp db agent"
+	MODULES="$MODULES appagent libnxlp db agent"
 
 	case "$PLATFORM" in
 		Linux)
@@ -721,6 +711,34 @@ if test $? = 0; then
 			# unknown
 			;;
 	esac
+fi
+
+check_substr "$COMPONENTS" "server"
+if test $? = 0; then
+	if test "x$DBDRIVER_SELECTED" != "xyes"; then
+		AC_MSG_ERROR(You must select at least one database driver when building server.)
+	fi
+	BUILD_SERVER="yes"
+	MODULES="$MODULES libnxmap libnxsl libnxcc server nxscript"
+	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
+	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music"
+	if test "x$XMPP_SUPPORT" = "xyes"; then
+		MODULES="libstrophe $MODULES"
+		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
+	fi
+fi
+
+check_substr "$COMPONENTS" "client"
+if test $? = 0; then
+	BUILD_CLIENT="yes"
+	NEED_ZLIB="yes"
+	MODULES="$MODULES client"
+	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxsms"
+fi
+
+check_substr "$COMPONENTS" "client-proxy"
+if test $? = 0; then
+	MODULES="$MODULES nxcproxy"
 fi
 
 check_substr "$COMPONENTS" "mysql"
@@ -769,7 +787,7 @@ fi
 
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
-	SUBAGENT_DIRS="$SUBAGENT_DIRS java"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS java ubntlw"
 fi
 
 check_substr "$COMPONENTS" "tuxedo"
@@ -784,7 +802,7 @@ fi
 
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
-	MODULES="$MODULES libnxmap client libnxsl libnxlp db nxscript"
+	MODULES="$MODULES appagent libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript"
 fi
 
 
@@ -804,6 +822,10 @@ if test "x$PLATFORM" = "xSunOS"; then
 	AC_CHECK_PROG([CC], [cc], [cc])
 	AC_CHECK_PROG([CCC], [CC], [CC])
 fi
+if test "x$PLATFORM" = "xMinix"; then
+	AC_CHECK_PROG([CC], [clang], [clang])
+	AC_CHECK_PROG([CCC], [clang++], [clang++])
+fi
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX
@@ -812,6 +834,9 @@ if test "x$CXX" = "xg++"; then
 	if test "x$GPLUSPLUS" = "xno"; then
 		AC_MSG_ERROR([*** FATAL: Cannot find any usable C++ compiler])
 	fi
+fi
+if test "x$CXX" = "xclang++"; then
+	LIBS="$LIBS -lc++"
 fi
 AM_PROG_AS
 AC_PROG_INSTALL
@@ -871,6 +896,11 @@ case "$PLATFORM" in
    Darwin)
       CPPFLAGS="$CPPFLAGS -Wno-deprecated-declarations -O2"
       ;;
+   Minix)
+      CPPFLAGS="$CPPFLAGS -I/usr/pkg/include"
+      LDFLAGS="$LDFLAGS -L/usr/pkg/lib"
+      USE_PTH="yes"
+      ;;
    *)
       ;;
 esac
@@ -889,6 +919,16 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 	SQLFLAGS="-x c -Wundef"
 	CPPFLAGS="$CPPFLAGS -Wformat"
 
+	AC_MSG_CHECKING(whether C compiler accepts -Wno-unused-result)
+	OLD_CPPFLAGS="$CPPFLAGS"
+	CPPFLAGS="$CPPFLAGS -Wno-unused-result"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CPPFLAGS="$OLD_CPPFLAGS"
+			AC_MSG_RESULT(no)
+		])
+
 	AC_LANG_PUSH([C++])
 
 	AC_MSG_CHECKING(whether C++ compiler accepts -fno-rtti)
@@ -901,18 +941,15 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 			AC_MSG_RESULT(no)
 		])
 
-	check_substr "$COMPONENTS" "java"
-	if test $? != 0; then
-		AC_MSG_CHECKING(whether C++ compiler accepts -fno-exceptions)
-		OLD_CXXFLAGS="$CXXFLAGS"
-		CXXFLAGS="$CXXFLAGS -fno-exceptions"
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
-			[ AC_MSG_RESULT(yes) ], 
-			[ 
-				CXXFLAGS="$OLD_CXXFLAGS"
-				AC_MSG_RESULT(no)
-			])
-	fi
+	AC_MSG_CHECKING(whether C++ compiler accepts -fno-exceptions)
+	OLD_CXXFLAGS="$CXXFLAGS"
+	CXXFLAGS="$CXXFLAGS -fno-exceptions"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+		[ AC_MSG_RESULT(yes) ], 
+		[ 
+			CXXFLAGS="$OLD_CXXFLAGS"
+			AC_MSG_RESULT(no)
+		])
 
 	AC_LANG_POP([C++])
 
@@ -1018,6 +1055,24 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ 
 					LDFLAGS="-m64 $LDFLAGS"
+					AC_MSG_RESULT(yes) 
+				], 
+				[ 
+					CPPFLAGS="$OLD_CPPFLAGS"
+					AC_MSG_RESULT(no)
+				])
+		fi
+	fi
+
+	
+	if test "x$PLATFORM" = "xLinux"; then
+		if test "x$FORCE_32BIT_BUILD" = "xyes"; then
+			AC_MSG_CHECKING(whether C compiler accepts -m32)
+			OLD_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="$CPPFLAGS -m32"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
+				[ 
+					LDFLAGS="-m32 $LDFLAGS"
 					AC_MSG_RESULT(yes) 
 				], 
 				[ 
@@ -1269,6 +1324,8 @@ fi
 
 if test "x$USE_PTH" = "xyes"; then
 	AC_CHECK_HEADER(pth.h,,AC_MSG_ERROR([*** GNU Pth thread support not installed - please install first ***]))
+	CPPFLAGS="$CPPFLAGS -D_USE_GNU_PTH"
+	LIBS="$LIBS -lpth"
 else
 	AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR([*** POSIX thread support not installed - please install first ***]))
 
@@ -1402,6 +1459,7 @@ AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
 AC_CHECK_HEADERS([inttypes.h memory.h stdint.h stdlib.h strings.h string.h])
 AC_CHECK_HEADERS([readline/readline.h byteswap.h sys/select.h dlfcn.h locale.h])
 AC_CHECK_HEADERS([sys/sysctl.h sys/param.h sys/user.h vm/vm_param.h syslog.h])
+AC_CHECK_HEADERS([grp.h pwd.h malloc.h])
 AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 [[#ifdef HAVE_SYS_TYPES_H
 # include <sys/types.h>
@@ -1489,6 +1547,42 @@ if test "x$BUILD_SERVER" = "xyes" ; then
    LDFLAGS="$SAVED_LDFLAGS"
 fi
 
+check_substr "$COMPONENTS" "sqlite"
+if test $? = 0; then
+	if test "x$FORCE_INTERNAL_SQLITE" = "xyes"; then
+		HAVE_SQLITE=no
+	else
+		OLD_LIBS="$LIBS"
+		HAVE_SQLITE=yes
+		AC_CHECK_HEADER(sqlite3.h,,HAVE_SQLITE=no)
+		if test "x$HAVE_SQLITE" = "xyes"; then
+			AC_CHECK_LIB(sqlite3, sqlite3_initialize, [], [ HAVE_SQLITE=no ])
+		fi
+		if test "x$HAVE_SQLITE" = "xyes"; then
+			if test "x$cross_compiling" = "xyes"; then
+				AC_MSG_WARN([Cross-compiling mode is active, assuming libsqlite3 is thread-safe])
+			else
+				AC_MSG_CHECKING(if libsqlite3 is thread-safe)
+				AC_RUN_IFELSE([AC_LANG_PROGRAM([[
+#include <sqlite3.h>
+					]],[[
+						return sqlite3_threadsafe() ? 0 : 1;
+					]])
+				],[
+					AC_MSG_RESULT(yes)
+				],[
+					AC_MSG_RESULT(no)
+					HAVE_SQLITE=no
+				])
+			fi
+		fi
+		LIBS="$OLD_LIBS"
+	fi
+	if test "x$HAVE_SQLITE" = "xno"; then
+		MODULES="sqlite $MODULES"
+	fi
+fi
+
 if test "x$NEED_ZLIB" = "xyes"; then
 	if test "x$FORCE_INTERNAL_ZLIB" = "xyes"; then
 		HAVE_ZLIB=no
@@ -1574,7 +1668,7 @@ fi
 
 if test "x$HAVE_LIBCURL" = "xyes"; then
   SUBAGENT_DIRS="$SUBAGENT_DIRS netsvc"
-  SMSDRV_DIRS="$SMSDRV_DIRS kannel websms"
+  SMSDRV_DIRS="$SMSDRV_DIRS kannel slack text2reach websms"
   HDLINK_DIRS="$HDLINK_DIRS jira"
   AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
@@ -1583,6 +1677,9 @@ if test "x$LDAP_SUPPORT" = "xyes"; then
 	AC_CHECK_HEADER(ldap.h,HAVE_LDAP=yes,HAVE_LDAP=no)
 	if test "x$HAVE_LDAP" = "xyes"; then
 		AC_CHECK_LIB(ldap, ldap_init, [ HAVE_LDAP=yes ], [ HAVE_LDAP=no ])
+		if test "x$HAVE_LDAP" = "xyes"; then
+			AC_CHECK_LIB(lber, ber_init, [ SERVER_LIBS="-llber $SERVER_LIBS" ])
+		fi
 	fi
 	if test "x$HAVE_LDAP" = "xyes"; then
 		SERVER_LIBS="-lldap $SERVER_LIBS"   
@@ -1662,9 +1759,9 @@ AC_CHECK_FUNCS([strrchr strlwr strtol strtoul strtoll strtoull setlocale])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
 AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo])
-AC_CHECK_FUNCS([itoa _itoa isatty])
+AC_CHECK_FUNCS([itoa _itoa isatty getgrnam getpwnam malloc_info malloc_trim])
 
-AC_CHECK_DECLS([nanosleep, daemon])
+AC_CHECK_DECLS([nanosleep, daemon, strerror])
 
 # Do not use inet_pton on Solaris as it has binary compatibility problems
 if test "$PLATFORM" != "SunOS"; then
@@ -1724,6 +1821,7 @@ AC_CHECK_FUNCS([tcgetattr tcsetattr cfsetospeed cfsetispeed])
 # asprintf, scprintf, etc.
 AC_CHECK_FUNCS([asprintf aswprintf vasprintf vaswprintf])
 AC_CHECK_FUNCS([scprintf scwprintf vscprintf vscwprintf])
+AC_CHECK_FUNCS([snprintf vsnprintf])
 
 AC_MSG_CHECKING(whether snprintf returns required buffer size)
 AC_RUN_IFELSE(
@@ -1740,7 +1838,6 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ],
   [ AC_MSG_RESULT(no) ]
 )
-
 
 
 #--------------------------------------------------------------------
@@ -1815,6 +1912,15 @@ if test "x$PLATFORM" = "xLinux"; then
 #include <sys/reboot.h>
 #endif
 	])
+
+	AC_CHECK_HEADERS([jemalloc/jemalloc.h],
+		[
+			AC_CHECK_LIB(jemalloc, malloc,
+				[ 
+					WITH_JEMALLOC="yes"
+					AC_DEFINE(WITH_JEMALLOC,1,Define to 1 if libjemalloc is used)
+				])
+		])
 fi
 
 
@@ -1957,6 +2063,15 @@ if test "x$PLATFORM" = "xOpenBSD"; then
                 AC_MSG_RESULT(no)
                 AC_DEFINE(KINFO_PROC_HAS_KP_PROC,0,Define to 1 if struct kinfo_proc has member kp_proc)
         ])
+fi
+
+
+#--------------------------------------------------------------------
+# Minix specific checks
+#--------------------------------------------------------------------
+
+if test "x$PLATFORM" = "xMinix"; then
+	AC_CHECK_HEADERS([minix/minlib.h])
 fi
 
 
@@ -2328,9 +2443,6 @@ if test "x$ac_found_iconv" = "xyes"; then
     [Define as const if the declaration of iconv() needs const.])
 fi
 
-AC_MSG_CHECKING(if iconv descriptor cache is needed)
-
-
 if test "x$ac_cv_type_wchar_t" = "xyes"; then
 	if test $ac_cv_sizeof_wchar_t -eq 2; then
 		AC_DEFINE(UNICODE_UCS2, 1, Define to 1 if you have 2-byte wchar_t)
@@ -2470,9 +2582,12 @@ if test $? = 0; then
 	fi
 
 	AC_CHECK_HEADER(oci.h,,AC_MSG_ERROR([*** Cannot find oci.h - check your Oracle client installation ***]))
-	AC_CHECK_LIB(nnz11, nzstrcpy, [NNZ_LIB=-lnnz11],
+	AC_CHECK_LIB(nnz12, nzstrcpy, [NNZ_LIB=-lnnz12],
 		[
-			AC_CHECK_LIB(nnz10, nzstrcpy, [NNZ_LIB=-lnnz10], [], [-lclntsh])
+			AC_CHECK_LIB(nnz11, nzstrcpy, [NNZ_LIB=-lnnz11],
+				[
+					AC_CHECK_LIB(nnz10, nzstrcpy, [NNZ_LIB=-lnnz10], [], [-lclntsh])
+				], [-lclntsh])
 		], [-lclntsh])
 	AC_CHECK_LIB(clntsh, OCIHandleAlloc, [ORACLE_LIBS="-lclntsh $NNZ_LIB"],
 		[AC_MSG_ERROR(libclntsh is required for Oracle support)], [$NNZ_LIB])
@@ -2522,8 +2637,6 @@ fi
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
 	AC_CHECK_HEADER(jni.h,,AC_MSG_ERROR([*** Cannot find jni.h - check your JDK installation ***]))
-	AC_CHECK_LIB(jvm, JNI_CreateJavaVM, [JAVA_LIBS="-ljvm"],
-		[AC_MSG_ERROR(libjvm is required for Java support)])
 fi
 
 
@@ -2556,12 +2669,31 @@ if test $? = 0; then
 		AC_CHECK_LIB(rt, nanosleep, [ TUXEDO_LIBS="$TUXEDO_LIBS -lrt" ])
 	fi
 
+	if test "$PLATFORM" = "AIX"; then
+		AC_MSG_CHECKING(for xa_switchp in libengine)
+		OLD_LIBS_LIBENGINE="$LIBS"
+		LIBS="$LIBS -lengine"
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[ extern char *xa_switchp; ]], [[ *xa_switchp = 0; ]])],
+			[ 
+				AC_MSG_RESULT(yes) 
+				TUXEDO_LIBS="$TUXEDO_LIBS -lengine"
+			],
+         		[ AC_MSG_RESULT(no) ])
+		LIBS="$OLD_LIBS_LIBENGINE"
+	fi
+
 	LIBS="$LIBS $TUXEDO_LIBS"
-	AC_CHECK_LIB(tux, tpinit, [], [AC_MSG_ERROR(libtux is required for Tuxedo support)])
+	AC_CHECK_LIB(tux, tpcall, [], [AC_MSG_ERROR(libtux is required for Tuxedo support)])
 
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
 	LIBS="$OLD_LIBS"
+
+	if test "x$PLATFORM" = "xAIX"; then
+		if test -e $TUXEDO_BASE/lib/tpinit.o; then
+			TUXEDO_LIBS="$TUXEDO_BASE/lib/tpinit.o $TUXEDO_LIBS"
+		fi
+	fi
 fi
 
 #--------------------------------------------------------------------
@@ -2603,15 +2735,15 @@ fi
 
 if test "x$RUNTIME_PREFIX" = "x"; then
 	if test "x${BUILD_UNICODE}" = "xyes"; then
-		CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"\${prefix}\\\" -DDATADIR=L\\\"\${pkgdatadir}\\\" -DBINDIR=L\\\"\${bindir}\\\" -DLIBDIR=L\\\"\${libdir}\\\" -DPKGLIBDIR=L\\\"\${pkglibdir}\\\""
+		CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"\${prefix}\\\" -DDATADIR=L\\\"\${pkgdatadir}\\\" -DBINDIR=L\\\"\${bindir}\\\" -DLIBDIR=L\\\"\${libdir}\\\" -DPKGLIBDIR=L\\\"\${pkglibdir}\\\" -DSTATEDIR=L\\\"\${localstatedir}/lib/netxms\\\""
 	else
-		CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\" -DPKGLIBDIR=\\\"\${pkglibdir}\\\""
+		CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"\${prefix}\\\" -DDATADIR=\\\"\${pkgdatadir}\\\" -DBINDIR=\\\"\${bindir}\\\" -DLIBDIR=\\\"\${libdir}\\\" -DPKGLIBDIR=\\\"\${pkglibdir}\\\" -DSTATEDIR=\\\"\${localstatedir}/lib/netxms\\\""
 	fi
 else
 	if test "x${BUILD_UNICODE}" = "xyes"; then
-		CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"$RUNTIME_PREFIX\\\" -DDATADIR=L\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=L\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=L\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=L\\\"$RUNTIME_PREFIX/lib/netxms\\\""
+		CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"$RUNTIME_PREFIX\\\" -DDATADIR=L\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=L\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=L\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=L\\\"$RUNTIME_PREFIX/lib/netxms\\\" -DSTATEDIR=L\\\"$RUNTIME_PREFIX/var/lib/netxms\\\""
 	else
-		CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"$RUNTIME_PREFIX\\\" -DDATADIR=\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=\\\"$RUNTIME_PREFIX/lib/netxms\\\""
+		CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"$RUNTIME_PREFIX\\\" -DDATADIR=\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=\\\"$RUNTIME_PREFIX/lib/netxms\\\" -DSTATEDIR=\\\"$RUNTIME_PREFIX/var/lib/netxms\\\""
 	fi
 fi
 LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $LDFLAGS_SUFFIX"
@@ -2635,9 +2767,14 @@ if test "x$ENABLE_DEBUG" = "xno"; then
 	CPPFLAGS="$CPPFLAGS -DNDEBUG"
 fi
 
+if test "x$WITH_JEMALLOC" = "xyes"; then
+	LIBS="$LIBS -ljemalloc"
+fi
+
 AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
+AM_CONDITIONAL([USE_INTERNAL_SQLITE], [test "x$HAVE_SQLITE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$NEED_ZLIB/$HAVE_ZLIB" = "yes/no"])
 AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
@@ -2645,6 +2782,18 @@ AM_CONDITIONAL([USE_ENCRYPTION], [test "x${ac_cv_lib_crypto_RSA_new}" = "xyes"])
 AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
 AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
 
+
+#--------------------------------------------------------------------
+# Cleanup variables
+#--------------------------------------------------------------------
+
+AS_IF([test "x$with_dist" = "xyes"],
+[
+  SUBAGENT_DIRS=`echo $SUBAGENT_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+  MODULES=`echo $MODULES|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+  SMSDRV_DIRS=`echo $SMSDRV_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+  HDLINK_DIRS=`echo $HDLINK_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
+])
 
 #--------------------------------------------------------------------
 # Substitute variables
@@ -2693,6 +2842,7 @@ AC_SUBST(TUXEDO_LIBS)
 AC_SUBST(MONGODB_CPPFLAGS)
 AC_SUBST(MONGODB_LDFLAGS)
 AC_SUBST(MONGODB_LIBS)
+AC_SUBST(INSTALL_LIBPATH)
 
 #--------------------------------------------------------------------
 # Shared libs versions
@@ -2723,7 +2873,7 @@ AC_SUBST(MONGODB_LIBS)
 #	only the first ever interface is implemented, so age can only be `0'. 
 #--------------------------------------------------------------------
 
-NETXMS_LIBRARY_VERSION=1:0:0
+NETXMS_LIBRARY_VERSION=2:0:0
 AC_SUBST(NETXMS_LIBRARY_VERSION)
 
 #--------------------------------------------------------------------
@@ -2759,9 +2909,10 @@ AC_CONFIG_FILES([
 	m4/Makefile
 	src/Makefile
 	src/agent/Makefile
-	src/agent/appagent/Makefile
 	src/agent/core/Makefile
 	src/agent/install/Makefile
+	src/agent/libnxagent/Makefile
+	src/agent/libnxappc/Makefile
 	src/agent/libnxsd/Makefile
 	src/agent/subagents/Makefile
 	src/agent/subagents/aix/Makefile
@@ -2784,6 +2935,15 @@ AC_CONFIG_FILES([
 	src/agent/subagents/java/java/src/main/java/org/Makefile
 	src/agent/subagents/java/java/src/main/java/org/netxms/Makefile
 	src/agent/subagents/java/java/src/main/java/org/netxms/agent/Makefile
+	src/agent/subagents/java/java/src/main/java/org/netxms/agent/adapters/Makefile
+	src/agent/subagents/java/sample/Makefile
+	src/agent/subagents/java/sample/src/Makefile
+	src/agent/subagents/java/sample/src/main/Makefile
+	src/agent/subagents/java/sample/src/main/java/Makefile
+	src/agent/subagents/java/sample/src/main/java/org/Makefile
+	src/agent/subagents/java/sample/src/main/java/org/netxms/Makefile
+	src/agent/subagents/java/sample/src/main/java/org/netxms/agent/Makefile
+	src/agent/subagents/java/sample/src/main/java/org/netxms/agent/demo/Makefile
 	src/agent/subagents/linux/Makefile
 	src/agent/subagents/lmsensors/Makefile
 	src/agent/subagents/logwatch/Makefile
@@ -2799,6 +2959,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/sunos/Makefile
 	src/agent/subagents/tuxedo/Makefile
 	src/agent/subagents/mongodb/Makefile
+	src/agent/subagents/ubntlw/Makefile
 	src/agent/subagents/ups/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
@@ -2806,6 +2967,7 @@ AC_CONFIG_FILES([
 	src/agent/tools/Makefile
 	src/agent/tools/nxappget/Makefile
 	src/agent/tools/nxapush/Makefile
+	src/appagent/Makefile
 	src/client/Makefile
 	src/client/install/Makefile
 	src/client/libnxclient/Makefile
@@ -2830,8 +2992,10 @@ AC_CONFIG_FILES([
 	src/libexpat/Makefile
 	src/libexpat/libexpat/Makefile
 	src/libnetxms/Makefile
+	src/libnxcc/Makefile
 	src/libnxlp/Makefile
 	src/libnxmap/Makefile
+	src/libnxmb/Makefile
 	src/libnxsl/Makefile
 	src/libstrophe/Makefile
 	src/libtre/Makefile
@@ -2864,6 +3028,7 @@ AC_CONFIG_FILES([
 	src/server/drivers/procurve/Makefile
 	src/server/drivers/qtech-olt/Makefile
 	src/server/drivers/symbol-ws/Makefile
+	src/server/drivers/tb/Makefile
 	src/server/drivers/ubnt/Makefile
 	src/server/hdlink/Makefile
 	src/server/hdlink/jira/Makefile
@@ -2878,6 +3043,8 @@ AC_CONFIG_FILES([
 	src/server/smsdrv/kannel/Makefile
 	src/server/smsdrv/nxagent/Makefile
 	src/server/smsdrv/portech/Makefile
+	src/server/smsdrv/slack/Makefile
+	src/server/smsdrv/text2reach/Makefile
 	src/server/smsdrv/websms/Makefile
 	src/server/tools/Makefile
 	src/server/tools/nxaction/Makefile
@@ -2904,6 +3071,7 @@ AC_CONFIG_FILES([
 	tests/Makefile
 	tests/include/Makefile
 	tests/test-libnetxms/Makefile
+	tests/test-libnxcc/Makefile
 	tests/test-libnxdb/Makefile
 	tools/Makefile
 ])
@@ -3010,6 +3178,14 @@ if test "x${HAVE_JANSSON}" = "xno"; then
 else
 	echo "Use internal libjansson : NO"
 fi
+check_substr "$COMPONENTS" "sqlite"
+if test $? = 0; then
+	if test "x${HAVE_SQLITE}" = "xno"; then
+		echo "Use internal sqlite     : YES"
+	else
+		echo "Use internal sqlite     : NO"
+	fi
+fi
 if test "x${NEED_ZLIB}" = "xyes"; then
 	if test "x${HAVE_ZLIB}" = "xno"; then
 		echo "Use internal zlib       : YES"
@@ -3097,6 +3273,9 @@ fi
 if test "x${TUXEDO_LDFLAGS}" != "x"; then
 	echo "Tuxedo LDFLAGS          : ${TUXEDO_LDFLAGS}"
 fi
+if test "x${TUXEDO_LIBS}" != "x"; then
+	echo "Tuxedo LIBS             : ${TUXEDO_LIBS}"
+fi
 
 if test "x${MONGODB_CPPFLAGS}" != "x"; then
 	echo "MongoDB CPPFLAGS         : ${MONGODB_CPPFLAGS}"
@@ -3117,3 +3296,4 @@ echo "const TCHAR *g_cc = _T(\"${CC}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_cxx = _T(\"${CXX}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_ld = _T(\"${LD}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_perl = _T(\"${PERL}\");" >> $FLAGS_CPP
+echo "const TCHAR *g_serverLibs = _T(\"${SERVER_LIBS}\");" >> $FLAGS_CPP

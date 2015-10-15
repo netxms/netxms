@@ -20,6 +20,8 @@ package org.netxms.client;
 
 import java.util.List;
 
+import org.netxms.client.objecttools.InputField;
+import org.netxms.client.objecttools.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 
@@ -28,7 +30,7 @@ import org.netxms.client.objecttools.ObjectToolDetails;
  * Test object tools functionality
  *
  */
-public class ObjectToolsTest extends SessionTest
+public class ObjectToolsTest extends AbstractSessionTest
 {
 	public void testGet() throws Exception
 	{
@@ -69,5 +71,28 @@ public class ObjectToolsTest extends SessionTest
 		System.out.println("Object tool ID generated: " + id);
 		
 		session.disconnect();
+	}
+	
+	public void testCreateAndDelete() throws Exception
+	{
+      final NXCSession session = connect();
+
+      long id = session.generateObjectToolId();
+      assertFalse(id == 0);
+      System.out.println("Object tool ID generated: " + id);
+      
+      ObjectToolDetails td = new ObjectToolDetails(id, ObjectTool.TYPE_LOCAL_COMMAND, "UnitTest");
+      td.setData("ping %{10%(not a field)} -t %(address) -s %(size)");
+      td.addInputField(new InputField("size", InputFieldType.NUMBER, "Size (bytes)", null));
+      td.addInputField(new InputField("unused", InputFieldType.PASSWORD, "Unused field", null));
+      session.modifyObjectTool(td);
+      
+      td = session.getObjectToolDetails(id);
+      for(InputField f : td.getInputFields())
+         System.out.println(f);
+      
+      session.deleteObjectTool(id);
+      
+      session.disconnect();
 	}
 }

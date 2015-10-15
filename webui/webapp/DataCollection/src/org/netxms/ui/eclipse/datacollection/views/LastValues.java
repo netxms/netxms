@@ -155,8 +155,7 @@ public class LastValues extends ViewPart
       actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
       actionShowFilter.setChecked(dataView.isFilterEnabled());
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
-		final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
-		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
+		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 	}
 	
 	/**

@@ -37,33 +37,32 @@ TCHAR g_szDbDriver[MAX_PATH] = _T("");
 TCHAR g_szDbDrvParams[MAX_PATH] = _T("");
 TCHAR g_szDbServer[MAX_PATH] = _T("127.0.0.1");
 TCHAR g_szDbLogin[MAX_DB_LOGIN] = _T("netxms");
-TCHAR g_szDbPassword[MAX_DB_PASSWORD] = _T("");
+TCHAR g_szDbPassword[MAX_PASSWORD] = _T("");
 TCHAR g_szDbName[MAX_DB_NAME] = _T("netxms_db");
 TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
 
 /**
  * Config file template
  */
-static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
    { _T("BackgroundLogWriter"), CT_BOOLEAN64, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_flags, NULL },
    { _T("CodePage"), CT_MB_STRING, 0, 0, 256, 0, g_szCodePage, NULL },
    { _T("CreateCrashDumps"), CT_BOOLEAN64, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_flags, NULL },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, g_szDailyLogFileSuffix, NULL },
-   { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDir, NULL },
+   { _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdDataDir, NULL },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDriver, NULL },
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbDrvParams, NULL },
-   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword, NULL },
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, g_szDbLogin, NULL },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbName, NULL },
-   { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, g_szDbPassword, NULL },
+   { _T("DBPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, g_szDbPassword, NULL },
+   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, g_szDbPassword, NULL },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbSchema, NULL },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer, NULL },
    { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel, &g_debugLevel },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, NULL },
    { _T("FullCrashDumps"), CT_BOOLEAN64, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, NULL },
-   { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLibDir, NULL },
+   { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdLibDir, NULL },
    { _T("ListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, g_szListenAddress, NULL },
    { _T("LogFailedSQLQueries"), CT_BOOLEAN64, 0, 0, AF_LOG_SQL_ERRORS, 0, &g_flags, NULL },
    { _T("LogFile"), CT_STRING, 0, 0, MAX_PATH, 0, g_szLogFile, NULL },
@@ -85,9 +84,21 @@ bool NXCORE_EXPORTABLE LoadConfig()
    bool bSuccess = false;
 	Config *config;
 
-#if !defined(_WIN32) && !defined(_NETWARE)
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
+#ifdef _WIN32
+      TCHAR path[MAX_PATH];
+      GetNetXMSDirectory(nxDirEtc, path);
+      _tcscat(path, _T("\\netxmsd.conf"));
+      if (_taccess(path, 4) == 0)
+      {
+		   _tcscpy(g_szConfigFile, path);
+      }
+      else
+      {
+         _tcscpy(g_szConfigFile, _T("C:\\netxmsd.conf"));
+      }
+#else
       const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
       if ((homeDir != NULL) && (*homeDir != 0))
       {
@@ -113,20 +124,8 @@ bool NXCORE_EXPORTABLE LoadConfig()
 		}
 stop_search:
       ;
+#endif
 	}
-#endif
-
-   // Read default values from enviroment
-   const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-   if ((homeDir != NULL) && (*homeDir != 0))
-   {
-#ifdef _WIN32
-      _sntprintf(g_szLibDir, MAX_PATH, _T("%s%slib"), homeDir,
-         (homeDir[_tcslen(homeDir) - 1] != FS_PATH_SEPARATOR_CHAR) ? FS_PATH_SEPARATOR : _T(""));
-#else
-      _sntprintf(g_szLibDir, MAX_PATH, _T("%s/lib/netxms"), homeDir);
-#endif
-   }
 
    if (IsStandalone())
       _tprintf(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
@@ -148,10 +147,7 @@ stop_search:
 	delete config;
 
 	// Decrypt password
-	if (s_encryptedDbPassword[0] != 0)
-	{
-		DecryptPassword(g_szDbLogin, s_encryptedDbPassword, g_szDbPassword);
-	}
+   DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
 
    return bSuccess;
 }
@@ -206,6 +202,63 @@ INT32 NXCORE_EXPORTABLE MetaDataReadInt(const TCHAR *var, UINT32 defaultValue)
 }
 
 /**
+ * Write string value to metadata table
+ */
+bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *varName, const TCHAR *value)
+{
+   if (_tcslen(varName) > 63)
+      return false;
+
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+   // Check for variable existence
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM metadata WHERE var_name=?"));
+	if (hStmt == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+		return false;
+   }
+	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+	DB_RESULT hResult = DBSelectPrepared(hStmt);
+   bool bVarExist = false;
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         bVarExist = true;
+      DBFreeResult(hResult);
+   }
+	DBFreeStatement(hStmt);
+
+   // Create or update variable value
+   if (bVarExist)
+	{
+		hStmt = DBPrepare(hdb, _T("UPDATE metadata SET var_value=? WHERE var_name=?"));
+		if (hStmt == NULL)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+			return false;
+      }
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+	}
+   else
+	{
+		hStmt = DBPrepare(hdb, _T("INSERT INTO metadata (var_name,var_value) VALUES (?,?)"));
+		if (hStmt == NULL)
+      {
+         DBConnectionPoolReleaseConnection(hdb);
+			return false;
+      }
+		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, varName, DB_BIND_STATIC);
+		DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, value, DB_BIND_STATIC);
+	}
+   bool success = DBExecute(hStmt);
+	DBFreeStatement(hStmt);
+   DBConnectionPoolReleaseConnection(hdb);
+	return success;
+}
+
+/**
  * Config cache
  */
 static StringMap s_configCache;
@@ -228,6 +281,14 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcsncmp(name, _T("CAS"), 3))
    {
       CASReadSettings();
+   }
+   else if (!_tcscmp(name, _T("DefaultDCIPollingInterval")))
+   {
+      DCObject::m_defaultPollingInterval = _tcstol(value, NULL, 0);
+   }
+   else if (!_tcscmp(name, _T("DefaultDCIRetentionTime")))
+   {
+      DCObject::m_defaultRetentionTime = _tcstol(value, NULL, 0);
    }
    else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
    {
@@ -462,7 +523,7 @@ bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *varName, const TCHAR *value, 
 		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(isVisible ? 1 : 0));
 		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(needRestart ? 1 : 0));
 	}
-   bool success = DBExecute(hStmt) ? true : false;
+   bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
 	if (success)

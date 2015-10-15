@@ -28,7 +28,7 @@ DB_DRIVER g_driverHandle = NULL;
 /**
  * Polling queries
  */
-DatabaseQuery g_queries[] = 
+DatabaseQuery g_queries[] =
 {
    { _T("DATAFILE"), MAKE_ORACLE_VERSION(10, 2), 1,
       _T("SELECT regexp_substr(regexp_substr(f.name, '[/\\][^/\\]+$'), '[^/\\]+') AS name,")
@@ -319,15 +319,14 @@ static LONG H_TableQuery(const TCHAR *param, const TCHAR *arg, Table *value, Abs
  * Config template
  */
 static DatabaseInfo s_dbInfo;
-static TCHAR s_dbPassEncrypted[MAX_DB_STRING] = _T("");
-static NX_CFG_TEMPLATE s_configTemplate[] = 
+static NX_CFG_TEMPLATE s_configTemplate[] =
 {
 	{ _T("Id"),					   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.id },
 	{ _T("Name"),				   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.name },
 	{ _T("TnsName"),			   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.name },
 	{ _T("UserName"),			   CT_STRING, 0, 0, MAX_USERNAME,  0, s_dbInfo.username },
 	{ _T("Password"),			   CT_STRING, 0, 0, MAX_PASSWORD,  0, s_dbInfo.password },
-   { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_dbPassEncrypted },
+   { _T("EncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD,  0, s_dbInfo.password },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 
@@ -357,10 +356,8 @@ static BOOL SubAgentInit(Config *config)
 		{
 			if (s_dbInfo.id[0] == 0)
 				_tcscpy(s_dbInfo.id, s_dbInfo.name);
-         if (*s_dbPassEncrypted != 0)
-         {
-            DecryptPassword(s_dbInfo.username, s_dbPassEncrypted, s_dbInfo.password);
-         }
+
+         DecryptPassword(s_dbInfo.username, s_dbInfo.password, s_dbInfo.password, MAX_PASSWORD);
          s_instances->add(new DatabaseInstance(&s_dbInfo));
 		}
 	}
@@ -371,7 +368,6 @@ static BOOL SubAgentInit(Config *config)
 		TCHAR section[MAX_STR];
 		memset((void*)&s_dbInfo, 0, sizeof(s_dbInfo));
 		_sntprintf(section, MAX_STR, _T("oracle/databases/database#%d"), i);
-		s_dbPassEncrypted[0] = 0;
 
 		if (!config->parseTemplate(section, s_configTemplate))
 		{
@@ -382,10 +378,7 @@ static BOOL SubAgentInit(Config *config)
 		if (s_dbInfo.name[0] == 0)
 			continue;
 
-      if (*s_dbPassEncrypted != 0)
-      {
-         DecryptPassword(s_dbInfo.username, s_dbPassEncrypted, s_dbInfo.password);
-      }
+      DecryptPassword(s_dbInfo.username, s_dbInfo.password, s_dbInfo.password, MAX_PASSWORD);
 
       s_instances->add(new DatabaseInstance(&s_dbInfo));
 	}

@@ -45,7 +45,7 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
 	s_trapId = (QWORD)time(NULL) << 32;
    while(1)
    {
-      pMsg = (NXCP_MESSAGE *)s_trapQueue->GetOrBlock();
+      pMsg = (NXCP_MESSAGE *)s_trapQueue->getOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
@@ -75,7 +75,7 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
 		}
 		else
 		{
-         s_trapQueue->Insert(pMsg);	// Re-queue trap
+         s_trapQueue->insert(pMsg);	// Re-queue trap
 			ThreadSleep(1);
 		}
    }
@@ -90,7 +90,7 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
  */
 void ShutdownTrapSender()
 {
-	s_trapQueue->SetShutdownMode();
+	s_trapQueue->setShutdownMode();
 }
 
 /**
@@ -120,7 +120,7 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **
 	{
 		s_genTrapCount++;
 		s_lastTrapTime = time(NULL);
-      s_trapQueue->Put(msg.createMessage());
+      s_trapQueue->put(msg.createMessage());
 	}
 }
 
@@ -216,7 +216,7 @@ void ForwardTrap(NXCPMessage *msg)
 	{
 		s_genTrapCount++;
 		s_lastTrapTime = time(NULL);
-      s_trapQueue->Put(msg->createMessage());
+      s_trapQueue->put(msg->createMessage());
 	}
 }
 

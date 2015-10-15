@@ -1,6 +1,6 @@
-/* 
+/*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Raden Solutions
+** Copyright (C) 2003-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ protected:
    virtual bool onMessage(NXCPMessage *msg);
 
 public:
-   RSConnector(UINT32 addr, WORD port) : ISC(addr, port)
+   RSConnector(const InetAddress& addr, WORD port) : ISC(addr, port)
    {
    }
 
@@ -150,7 +150,7 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *arg)
 	DbgPrintf(1, _T("Reporting Server connector started (%s:%d)"), hostname, port);
 
    // Keep connection open
-   m_connector = new RSConnector(ResolveHostName(hostname), port);
+   m_connector = new RSConnector(InetAddress::resolveHostName(hostname), port);
    while(!SleepAndCheckForShutdown(15))
    {
       if (m_connector->nop() != ISC_ERR_SUCCESS)

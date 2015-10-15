@@ -4,7 +4,7 @@ pkglib_LTLIBRARIES = ups.la
 ups_la_SOURCES = apc.cpp bcmxcp.cpp main.cpp megatec.cpp metasys.cpp microdowell.cpp serial.cpp ups.cpp 
 ups_la_CPPFLAGS=-I@top_srcdir@/include
 ups_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
-ups_la_LIBADD= ../../../libnetxms/libnetxms.la
+ups_la_LIBADD= ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = ups.h ups.vcproj usb.cpp
 

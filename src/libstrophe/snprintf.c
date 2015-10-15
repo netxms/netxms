@@ -59,22 +59,18 @@
  *  A snprintf implementation.
  */
 
+#include <nms_common.h>
+
 /* JAM: we don't need this - #include "config.h" */
 
 /* JAM: changed declarations to xmpp_snprintf and xmpp_vsnprintf to
    avoid namespace collision. */
-
-#if !defined(HAVE_SNPRINTF) || !defined(HAVE_VSNPRINTF)
 
 #include <string.h>
 #include <ctype.h>
 #include <sys/types.h>
 
 /* Define this as a fall through, HAVE_STDARG_H is probably already set */
-
-#define HAVE_VARARGS_H
-#define HAVE_STDARG_H /* JAM: set always */
-
 
 /* varargs declarations: */
 
@@ -447,7 +443,6 @@ static int fmtstr (char *buffer, size_t *currlen, size_t maxlen,
 }
 
 /* Have to handle DP_F_NUM (ie 0x and 0 alternates) */
-
 static int fmtint (char *buffer, size_t *currlen, size_t maxlen,
 		   long value, int base, int min, int max, int flags)
 {
@@ -725,16 +720,13 @@ static int dopr_outch (char *buffer, size_t *currlen, size_t maxlen, char c)
   return 1;
 }
 
-#ifndef HAVE_VSNPRINTF
 int xmpp_vsnprintf (char *str, size_t count, const char *fmt, va_list args)
 {
   if (str != NULL)
     str[0] = 0;
   return dopr(str, count, fmt, args);
 }
-#endif /* !HAVE_VSNPRINTF */
 
-#ifndef HAVE_SNPRINTF
 /* VARARGS3 */
 #ifdef HAVE_STDARGS
 int xmpp_snprintf (char *str,size_t count,const char *fmt,...)
@@ -758,7 +750,6 @@ int xmpp_snprintf (va_alist) va_dcl
   VA_END;
   return total;
 }
-#endif /* !HAVE_SNPRINTF */
 
 #ifdef TEST_SNPRINTF
 #ifndef LONG_STRING
@@ -835,5 +826,3 @@ int main (void)
   printf ("%d tests failed out of %d.\n", fail, num);
 }
 #endif /* SNPRINTF_TEST */
-
-#endif /* !HAVE_SNPRINTF */

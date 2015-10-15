@@ -134,7 +134,6 @@ void ServerJob::markProgress(int pctCompleted)
 	}
 }
 
-
 /**
  *  Worker thread starter
  */
@@ -165,7 +164,6 @@ THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 	return THREAD_OK;
 }
 
-
 /**
  * Start job
  */
@@ -174,7 +172,6 @@ void ServerJob::start()
 	m_status = JOB_ACTIVE;
 	m_workerThread = ThreadCreateEx(WorkerThreadStarter, 0, this);
 }
-
 
 /**
  * Cancel job

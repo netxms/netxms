@@ -230,18 +230,16 @@ UINT32 AgentPolicy::modifyFromMessageInternal(NXCPMessage *pRequest)
 bool AgentPolicy::createDeploymentMessage(NXCPMessage *msg)
 {
 	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
-	msg->setField(VID_GUID, m_guid, UUID_LENGTH);
+	msg->setField(VID_GUID, m_guid);
 	return true;
 }
 
-
-//
-// Create uninstall message
-//
-
+/**
+ * Create uninstall message
+ */
 bool AgentPolicy::createUninstallMessage(NXCPMessage *msg)
 {
 	msg->setField(VID_POLICY_TYPE, (WORD)m_policyType);
-	msg->setField(VID_GUID, m_guid, UUID_LENGTH);
+	msg->setField(VID_GUID, m_guid);
 	return true;
 }

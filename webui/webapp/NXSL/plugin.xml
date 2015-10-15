@@ -57,6 +57,11 @@
             id="org.netxms.ui.eclipse.nxsl.commands.clear_output"
             name="Clear output">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.nxsl.commands.compile"
+            name="Compile">
+      </command>
+
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -128,6 +133,11 @@
             name="Script Executor"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+      <context
+            id="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            name="Script Editor"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -160,6 +170,18 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M3+M2+S">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.save"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+S">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.nxsl.commands.compile"
+            contextId="org.netxms.ui.eclipse.nxsl.context.ScriptEditor"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="F2">
       </key>
    </extension>
 

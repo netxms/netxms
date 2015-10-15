@@ -8,7 +8,5 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-EXTRA_DIST=01_fix-agent-data-dir.diff \
-           02_fix-server-data-dir.diff \
-           03_fix-server-data-install-dir.diff \
+EXTRA_DIST= \
            series

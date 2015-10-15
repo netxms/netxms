@@ -48,7 +48,6 @@ NetworkMap::NetworkMap() : NetObj()
 	m_discoveryRadius = -1;
 	m_flags = MF_SHOW_STATUS_ICON;
 	m_layout = MAP_LAYOUT_MANUAL;
-	uuid_clear(m_background);
 	m_iStatus = STATUS_NORMAL;
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
@@ -56,6 +55,7 @@ NetworkMap::NetworkMap() : NetObj()
 	m_backgroundColor = ConfigReadInt(_T("DefaultMapBackgroundColor"), 0xFFFFFF);
 	m_defaultLinkColor = -1;
    m_defaultLinkRouting = 1;  // default routing type "direct"
+   m_objectDisplayMode = 0;  // default display mode "icons"
 	m_nextElementId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, true);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, true);
@@ -73,7 +73,6 @@ NetworkMap::NetworkMap(int type, UINT32 seed) : NetObj()
 	m_discoveryRadius = -1;
 	m_flags = MF_SHOW_STATUS_ICON;
    m_layout = (type == NETMAP_USER_DEFINED) ? MAP_LAYOUT_MANUAL : MAP_LAYOUT_SPRING;
-	uuid_clear(m_background);
 	m_iStatus = STATUS_NORMAL;
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
@@ -81,6 +80,7 @@ NetworkMap::NetworkMap(int type, UINT32 seed) : NetObj()
 	m_backgroundColor = ConfigReadInt(_T("DefaultMapBackgroundColor"), 0xFFFFFF);
 	m_defaultLinkColor = -1;
    m_defaultLinkRouting = 1;  // default routing type "direct"
+   m_objectDisplayMode = 0;  // default display mode "icons"
 	m_nextElementId = 1;
 	m_elements = new ObjectArray<NetworkMapElement>(0, 32, true);
 	m_links = new ObjectArray<NetworkMapLink>(0, 32, true);
@@ -235,7 +235,7 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 BOOL NetworkMap::saveToDatabase(DB_HANDLE hdb)
 {
-	TCHAR query[1024], temp[64];
+	TCHAR query[1024];
 
 	lockProperties();
 
@@ -245,29 +245,30 @@ BOOL NetworkMap::saveToDatabase(DB_HANDLE hdb)
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("network_maps"), _T("id"), m_id))
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,seed=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,flags=?,link_color=?,link_routing=?,bg_color=?,filter=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE network_maps SET map_type=?,layout=?,seed=?,radius=?,background=?,bg_latitude=?,bg_longitude=?,bg_zoom=?,flags=?,link_color=?,link_routing=?,bg_color=?,object_display_mode=?,filter=? WHERE id=?"));
 	}
 	else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,seed,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color,filter,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO network_maps (map_type,layout,seed,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color,object_display_mode,filter,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		goto fail;
 
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_mapType);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_layout);
+	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_mapType);
+	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)m_layout);
 	DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_seedObject);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_discoveryRadius);
-	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, uuid_to_string(m_background, temp), DB_BIND_STATIC);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (INT32)m_discoveryRadius);
+	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_background);
 	DBBind(hStmt, 6, DB_SQLTYPE_DOUBLE, m_backgroundLatitude);
 	DBBind(hStmt, 7, DB_SQLTYPE_DOUBLE, m_backgroundLongitude);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_backgroundZoom);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (INT32)m_backgroundZoom);
 	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_flags);
-	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (LONG)m_defaultLinkColor);
-	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_defaultLinkRouting);
-	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (LONG)m_backgroundColor);
-	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 10, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkColor);
+	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_defaultLinkRouting);
+	DBBind(hStmt, 12, DB_SQLTYPE_INTEGER, (INT32)m_backgroundColor);
+	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (INT32)m_objectDisplayMode);
+	DBBind(hStmt, 14, DB_SQLTYPE_VARCHAR, m_filterSource, DB_BIND_STATIC);
+	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_id);
 
 	if (!DBExecute(hStmt))
 	{
@@ -364,7 +365,7 @@ BOOL NetworkMap::loadFromDatabase(UINT32 dwId)
 
 	   loadACLFromDB();
 
-		_sntprintf(query, 256, _T("SELECT map_type,layout,seed,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color,filter FROM network_maps WHERE id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT map_type,layout,seed,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color,object_display_mode,filter FROM network_maps WHERE id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(g_hCoreDB, query);
 		if (hResult == NULL)
 			return FALSE;
@@ -373,7 +374,7 @@ BOOL NetworkMap::loadFromDatabase(UINT32 dwId)
 		m_layout = DBGetFieldLong(hResult, 0, 1);
 		m_seedObject = DBGetFieldULong(hResult, 0, 2);
 		m_discoveryRadius = DBGetFieldLong(hResult, 0, 3);
-		DBGetFieldGUID(hResult, 0, 4, m_background);
+		m_background = DBGetFieldGUID(hResult, 0, 4);
 		m_backgroundLatitude = DBGetFieldDouble(hResult, 0, 5);
 		m_backgroundLongitude = DBGetFieldDouble(hResult, 0, 6);
 		m_backgroundZoom = (int)DBGetFieldLong(hResult, 0, 7);
@@ -381,8 +382,9 @@ BOOL NetworkMap::loadFromDatabase(UINT32 dwId)
 		m_defaultLinkColor = DBGetFieldLong(hResult, 0, 9);
 		m_defaultLinkRouting = DBGetFieldLong(hResult, 0, 10);
 		m_backgroundColor = DBGetFieldLong(hResult, 0, 11);
+		m_objectDisplayMode = DBGetFieldLong(hResult, 0, 12);
 
-      TCHAR *filter = DBGetField(hResult, 0, 12, NULL, 0);
+      TCHAR *filter = DBGetField(hResult, 0, 13, NULL, 0);
       setFilter(filter);
       safe_free(filter);
 
@@ -481,12 +483,13 @@ void NetworkMap::fillMessageInternal(NXCPMessage *msg)
 	msg->setField(VID_FLAGS, m_flags);
 	msg->setField(VID_SEED_OBJECT, m_seedObject);
 	msg->setField(VID_DISCOVERY_RADIUS, (UINT32)m_discoveryRadius);
-	msg->setField(VID_BACKGROUND, m_background, UUID_LENGTH);
+	msg->setField(VID_BACKGROUND, m_background);
 	msg->setField(VID_BACKGROUND_LATITUDE, m_backgroundLatitude);
 	msg->setField(VID_BACKGROUND_LONGITUDE, m_backgroundLongitude);
 	msg->setField(VID_BACKGROUND_ZOOM, (WORD)m_backgroundZoom);
 	msg->setField(VID_LINK_COLOR, (UINT32)m_defaultLinkColor);
-	msg->setField(VID_LINK_ROUTING, (WORD)m_defaultLinkRouting);
+	msg->setField(VID_LINK_ROUTING, (INT16)m_defaultLinkRouting);
+	msg->setField(VID_DISPLAY_MODE, (INT16)m_objectDisplayMode);
 	msg->setField(VID_BACKGROUND_COLOR, (UINT32)m_backgroundColor);
    msg->setField(VID_FILTER, CHECK_NULL_EX(m_filterSource));
 
@@ -531,14 +534,17 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 		m_defaultLinkColor = (int)request->getFieldAsUInt32(VID_LINK_COLOR);
 
 	if (request->isFieldExist(VID_LINK_ROUTING))
-		m_defaultLinkRouting = (int)request->getFieldAsUInt16(VID_LINK_ROUTING);
+		m_defaultLinkRouting = (int)request->getFieldAsInt16(VID_LINK_ROUTING);
+
+	if (request->isFieldExist(VID_DISPLAY_MODE))
+      m_objectDisplayMode = (int)request->getFieldAsInt16(VID_DISPLAY_MODE);
 
 	if (request->isFieldExist(VID_BACKGROUND_COLOR))
 		m_backgroundColor = (int)request->getFieldAsUInt32(VID_BACKGROUND_COLOR);
 
 	if (request->isFieldExist(VID_BACKGROUND))
 	{
-		request->getFieldAsBinary(VID_BACKGROUND, m_background, UUID_LENGTH);
+		m_background = request->getFieldAsGUID(VID_BACKGROUND);
 		m_backgroundLatitude = request->getFieldAsDouble(VID_BACKGROUND_LATITUDE);
 		m_backgroundLongitude = request->getFieldAsDouble(VID_BACKGROUND_LONGITUDE);
 		m_backgroundZoom = (int)request->getFieldAsUInt16(VID_BACKGROUND_ZOOM);
@@ -764,14 +770,18 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 		{
 			UINT32 e1 = elementIdFromObjectId(objects->getLinks()->get(i)->id1);
 			UINT32 e2 = elementIdFromObjectId(objects->getLinks()->get(i)->id2);
-         NetworkMapLink *l = new NetworkMapLink(e1, e2, objects->getLinks()->get(i)->type);
-			l->setConnector1Name(objects->getLinks()->get(i)->port1);
-			l->setConnector2Name(objects->getLinks()->get(i)->port2);
-			l->setConfig(objects->getLinks()->get(i)->config);
-			l->setFlags(1);
-			m_links->add(l);
-			modified = true;
-			DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d added"), m_name, l->getElement1(), l->getElement2());
+			// Element ID can be 0 if link points to object removed by filter
+			if ((e1 != 0) && (e2 != 0))
+			{
+            NetworkMapLink *l = new NetworkMapLink(e1, e2, objects->getLinks()->get(i)->type);
+            l->setConnector1Name(objects->getLinks()->get(i)->port1);
+            l->setConnector2Name(objects->getLinks()->get(i)->port2);
+            l->setConfig(objects->getLinks()->get(i)->config);
+            l->setFlags(1);
+            m_links->add(l);
+            modified = true;
+            DbgPrintf(5, _T("NetworkMap(%s)/updateObjects: link %d - %d added"), m_name, l->getElement1(), l->getElement2());
+			}
 		}
 	}
 

@@ -26,12 +26,20 @@
 /** 
  * Interval between checking messages TTL in milliseconds
  */
-#define TTL_CHECK_INTERVAL    500
+#define TTL_CHECK_INTERVAL    30000
 
 /**
  * Buffer allocation step
  */
 #define ALLOCATION_STEP       16
+
+/**
+ * Housekeeper data
+ */
+MUTEX MsgWaitQueue::m_housekeeperLock = MutexCreate();
+HashMap<UINT64, MsgWaitQueue> *MsgWaitQueue::m_activeQueues = new HashMap<UINT64, MsgWaitQueue>(false);
+CONDITION MsgWaitQueue::m_shutdownCondition = ConditionCreate(TRUE);
+THREAD MsgWaitQueue::m_housekeeperThread = INVALID_THREAD_HANDLE;
 
 /**
  * Constructor
@@ -43,17 +51,27 @@ MsgWaitQueue::MsgWaitQueue()
    m_allocated = 0;
    m_elements = NULL;
    m_sequence = 1;
-   m_stopCondition = ConditionCreate(FALSE);
-#ifdef _WIN32
+#if defined(_WIN32)
    InitializeCriticalSectionAndSpinCount(&m_mutex, 4000);
    memset(m_wakeupEvents, 0, MAX_MSGQUEUE_WAITERS * sizeof(HANDLE));
    m_wakeupEvents[0] = CreateEvent(NULL, FALSE, FALSE, NULL);
    memset(m_waiters, 0, MAX_MSGQUEUE_WAITERS);
+#elif defined(_USE_GNU_PTH)
+   pth_mutex_init(&m_mutex);
+   pth_cond_init(&m_wakeupCondition);
 #else
    pthread_mutex_init(&m_mutex, NULL);
    pthread_cond_init(&m_wakeupCondition, NULL);
 #endif
-   m_hHkThread = ThreadCreateEx(mwqThreadStarter, 0, this);
+
+   // register new queue
+   MutexLock(m_housekeeperLock);
+   m_activeQueues->set(CAST_FROM_POINTER(this, UINT64), this);
+   if (m_housekeeperThread == INVALID_THREAD_HANDLE)
+   {
+      m_housekeeperThread = ThreadCreateEx(MsgWaitQueue::housekeeperThread, 0, NULL);
+   }
+   MutexUnlock(m_housekeeperLock);
 }
 
 /**
@@ -61,21 +79,21 @@ MsgWaitQueue::MsgWaitQueue()
  */
 MsgWaitQueue::~MsgWaitQueue()
 {
-   ConditionSet(m_stopCondition);
+   // unregister queue
+   MutexLock(m_housekeeperLock);
+   m_activeQueues->remove(CAST_FROM_POINTER(this, UINT64));
+   MutexUnlock(m_housekeeperLock);
 
-   // Wait for housekeeper thread to terminate
-   ThreadJoin(m_hHkThread);
-
-   // Housekeeper thread stopped, proceed with object destruction
    clear();
    safe_free(m_elements);
-   ConditionDestroy(m_stopCondition);
 
-#ifdef _WIN32
+#if defined(_WIN32)
    DeleteCriticalSection(&m_mutex);
    for(int i = 0; i < MAX_MSGQUEUE_WAITERS; i++)
       if (m_wakeupEvents[i] != NULL)
          CloseHandle(m_wakeupEvents[i]);
+#elif defined(_USE_GNU_PTH)
+   // nothing to do if libpth is used
 #else
    pthread_mutex_destroy(&m_mutex);
    pthread_cond_destroy(&m_wakeupCondition);
@@ -137,10 +155,12 @@ void MsgWaitQueue::put(NXCPMessage *pMsg)
    m_elements[pos].sequence = m_sequence++;
    m_size++;
 
-#ifdef _WIN32
+#if defined(_WIN32)
    for(int i = 0; i < MAX_MSGQUEUE_WAITERS; i++)
       if (m_waiters[i])
          SetEvent(m_wakeupEvents[i]);
+#elif defined(_USE_GNU_PTH)
+   pth_cond_notify(&m_wakeupCondition, TRUE);
 #else
    pthread_cond_broadcast(&m_wakeupCondition);
 #endif
@@ -180,6 +200,8 @@ void MsgWaitQueue::put(NXCP_MESSAGE *pMsg)
    for(int i = 0; i < MAX_MSGQUEUE_WAITERS; i++)
       if (m_waiters[i])
          SetEvent(m_wakeupEvents[i]);
+#elif defined(_USE_GNU_PTH)
+   pth_cond_notify(&m_wakeupCondition, TRUE);
 #else
    pthread_cond_broadcast(&m_wakeupCondition);
 #endif
@@ -234,7 +256,7 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
 
       INT64 startTime = GetCurrentTimeMs();
        
-#ifdef _WIN32
+#if defined(_WIN32)
       // Find free slot if needed
       if (slot == -1)
       {
@@ -259,8 +281,7 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
       else
          Sleep(50);  // Just sleep if there are no waiter slots (highly unlikely during normal operation)
       EnterCriticalSection(&m_mutex);
-#else
-#if HAVE_PTHREAD_COND_RELTIMEDWAIT_NP || defined(_NETWARE)
+#elif HAVE_PTHREAD_COND_RELTIMEDWAIT_NP || defined(_NETWARE)
 	   struct timespec ts;
 
 	   ts.tv_sec = dwTimeOut / 1000;
@@ -270,6 +291,10 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
 #else
       pthread_cond_reltimedwait_np(&m_wakeupCondition, &m_mutex, &ts);
 #endif
+#elif defined(_USE_GNU_PTH)
+      pth_event_t ev = pth_event(PTH_EVENT_TIME, pth_timeout(dwTimeOut / 1000, (dwTimeOut % 1000) * 1000));
+      pth_cond_await(&m_wakeupCondition, &m_mutex, ev);
+      pth_event_free(ev, PTH_FREE_ALL);
 #else
 	   struct timeval now;
 	   struct timespec ts;
@@ -282,7 +307,6 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
 	   ts.tv_nsec = (now.tv_usec % 1000000) * 1000;
 
 	   pthread_cond_timedwait(&m_wakeupCondition, &m_mutex, &ts);
-#endif   /* HAVE_PTHREAD_COND_RELTIMEDWAIT_NP */
 #endif   /* _WIN32 */
 
       UINT32 sleepTime = (UINT32)(GetCurrentTimeMs() - startTime);
@@ -299,56 +323,110 @@ void *MsgWaitQueue::waitForMessageInternal(UINT16 isBinary, UINT16 wCode, UINT32
 }
 
 /**
- * Housekeeping thread
+ * Housekeeping run
  */
-void MsgWaitQueue::housekeeperThread()
+void MsgWaitQueue::housekeeperRun()
 {
-   while(!ConditionWait(m_stopCondition, TTL_CHECK_INTERVAL))
+   lock();
+   if (m_size > 0)
    {
-      lock();
-      if (m_size > 0)
-      {
-         for(int i = 0; i < m_allocated; i++)
-		   {
-            if (m_elements[i].msg == NULL)
-               continue;
+      for(int i = 0; i < m_allocated; i++)
+	   {
+         if (m_elements[i].msg == NULL)
+            continue;
 
-            if (m_elements[i].ttl <= TTL_CHECK_INTERVAL)
+         if (m_elements[i].ttl <= TTL_CHECK_INTERVAL)
+         {
+            if (m_elements[i].isBinary)
             {
-               if (m_elements[i].isBinary)
-               {
-                  safe_free(m_elements[i].msg);
-               }
-               else
-               {
-                  delete (NXCPMessage *)(m_elements[i].msg);
-               }
-               m_elements[i].msg = NULL;
-               m_size--;
+               safe_free(m_elements[i].msg);
             }
             else
             {
-               m_elements[i].ttl -= TTL_CHECK_INTERVAL;
+               delete (NXCPMessage *)(m_elements[i].msg);
             }
-		   }
-
-         // compact queue if possible
-         if ((m_allocated > ALLOCATION_STEP) && (m_size == 0))
-         {
-            m_allocated = ALLOCATION_STEP;
-            free(m_elements);
-            m_elements = (WAIT_QUEUE_ELEMENT *)calloc(m_allocated, sizeof(WAIT_QUEUE_ELEMENT));
+            m_elements[i].msg = NULL;
+            m_size--;
          }
+         else
+         {
+            m_elements[i].ttl -= TTL_CHECK_INTERVAL;
+         }
+	   }
+
+      // compact queue if possible
+      if ((m_allocated > ALLOCATION_STEP) && (m_size == 0))
+      {
+         m_allocated = ALLOCATION_STEP;
+         free(m_elements);
+         m_elements = (WAIT_QUEUE_ELEMENT *)calloc(m_allocated, sizeof(WAIT_QUEUE_ELEMENT));
       }
-      unlock();
    }
+   unlock();
 }
 
 /**
- * Housekeeper thread starter
+ * Callback for enumerating active queues
  */
-THREAD_RESULT THREAD_CALL MsgWaitQueue::mwqThreadStarter(void *arg)
+EnumerationCallbackResult MsgWaitQueue::houseKeeperCallback(const void *key, const void *object, void *arg)
 {
-   ((MsgWaitQueue *)arg)->housekeeperThread();
+   ((MsgWaitQueue *)object)->housekeeperRun();
+   return _CONTINUE;
+}
+
+/**
+ * Housekeeper thread
+ */
+THREAD_RESULT THREAD_CALL MsgWaitQueue::housekeeperThread(void *arg)
+{
+   while(!ConditionWait(m_shutdownCondition, TTL_CHECK_INTERVAL))
+   {
+      MutexLock(m_housekeeperLock);
+      m_activeQueues->forEach(MsgWaitQueue::houseKeeperCallback, NULL);
+      MutexUnlock(m_housekeeperLock);
+   }
    return THREAD_OK;
+}
+
+/**
+ * Shutdown message wait queue background tasks
+ */
+void MsgWaitQueue::shutdown()
+{
+   ConditionSet(m_shutdownCondition);
+   ThreadJoin(m_housekeeperThread);
+   MutexLock(m_housekeeperLock);
+   m_housekeeperThread = INVALID_THREAD_HANDLE;
+   MutexUnlock(m_housekeeperLock);
+}
+
+/**
+ * Diag info callback
+ */
+EnumerationCallbackResult MsgWaitQueue::diagInfoCallback(const void *key, const void *object, void *arg)
+{
+   MsgWaitQueue *q = (MsgWaitQueue *)object;
+   TCHAR buffer[256];
+   _sntprintf(buffer, 256, _T("   %p size=%d holdTime=%d\n"), q, q->m_size, q->m_holdTime);
+   ((String *)arg)->append(buffer);
+   return _CONTINUE;
+}
+
+/**
+ * Get diagnostic info
+ */
+String MsgWaitQueue::getDiagInfo()
+{
+   String out;
+   MutexLock(m_housekeeperLock);
+   out.append(m_activeQueues->size());
+   out.append(_T(" active queues\nHousekeeper thread state is "));
+   out.append((m_housekeeperThread != INVALID_THREAD_HANDLE) ? _T("RUNNING\n") : _T("STOPPED\n"));
+   if (m_activeQueues->size() > 0)
+   {
+      out.append(_T("Active queues:\n"));
+      m_activeQueues->forEach(MsgWaitQueue::diagInfoCallback, &out);
+   }
+   MutexUnlock(m_housekeeperLock);
+   return out;
 }

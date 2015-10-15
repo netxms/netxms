@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ import org.netxms.ui.eclipse.objectview.objecttabs.elements.Commands;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Comments;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.Connection;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.GeneralInfo;
+import org.netxms.ui.eclipse.objectview.objecttabs.elements.LastValues;
 import org.netxms.ui.eclipse.objectview.objecttabs.elements.OverviewPageElement;
 
 /**
@@ -96,17 +97,19 @@ public class ObjectOverview extends ObjectTab
 		gd.minimumWidth = SWT.DEFAULT;
 		rightColumn.setLayoutData(gd);
 
-		OverviewPageElement e = new GeneralInfo(leftColumn, null);
+		OverviewPageElement e = new GeneralInfo(leftColumn, null, this);
 		elements.add(e);
-		e = new Commands(leftColumn, e);
+      e = new LastValues(leftColumn, e, this);
 		elements.add(e);
-		e = new AvailabilityChart(leftColumn, e);
+		e = new Commands(leftColumn, e, this);
 		elements.add(e);
-		e = new Comments(leftColumn, e);
+		e = new AvailabilityChart(leftColumn, e, this);
 		elements.add(e);
-		e = new Capabilities(rightColumn, null);
+		e = new Comments(leftColumn, e, this);
 		elements.add(e);
-		e = new Connection(rightColumn, e);
+		e = new Capabilities(rightColumn, null, this);
+		elements.add(e);
+		e = new Connection(rightColumn, e, this);
 		elements.add(e);
 	}
 	

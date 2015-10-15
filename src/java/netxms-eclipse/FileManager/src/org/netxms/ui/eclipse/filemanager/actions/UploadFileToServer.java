@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.filemanager.actions;
 
+import java.io.File;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -66,35 +68,46 @@ public class UploadFileToServer implements IWorkbenchWindowActionDelegate
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.get().UploadFileToServer_JobTitle, null, Activator.PLUGIN_ID, null) {
-				@Override
-				protected void runInternal(final IProgressMonitor monitor) throws Exception
-				{
-					session.uploadFileToServer(dlg.getLocalFile(), dlg.getRemoteFileName(), new ProgressListener() {
-						private long prevWorkDone = 0;
-						
-						@Override
-						public void setTotalWorkAmount(long workTotal)
-						{
-							monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + dlg.getLocalFile().getAbsolutePath(), (int)workTotal);
-						}
-						
-						@Override
-						public void markProgress(long workDone)
-						{
-							monitor.worked((int)(workDone - prevWorkDone));
-							prevWorkDone = workDone;
-						}
-					});
-					monitor.done();
-				}
-				
-				@Override
-				protected String getErrorMessage()
-				{
-					return Messages.get().UploadFileToServer_JobError;
-				}
-			}.start();
+         List<File> fileList = dlg.getLocalFiles();
+         for(int i = 0; i < fileList.size(); i++)
+         {
+   			final File localFile = fileList.get(i);
+            String tmp;
+   			tmp = fileList.get(i).getName();
+   			if(fileList.size() == 1)
+   			   tmp = dlg.getRemoteFileName();
+            final String remoteFile = tmp;
+   			
+   			new ConsoleJob(Messages.get().UploadFileToServer_JobTitle, null, Activator.PLUGIN_ID, null) {
+   				@Override
+   				protected void runInternal(final IProgressMonitor monitor) throws Exception
+   				{
+   					session.uploadFileToServer(localFile, remoteFile, new ProgressListener() {
+   						private long prevWorkDone = 0;
+   						
+   						@Override
+   						public void setTotalWorkAmount(long workTotal)
+   						{
+   							monitor.beginTask(Messages.get().UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(), (int)workTotal);
+   						}
+   						
+   						@Override
+   						public void markProgress(long workDone)
+   						{
+   							monitor.worked((int)(workDone - prevWorkDone));
+   							prevWorkDone = workDone;
+   						}
+   					});
+   					monitor.done();
+   				}
+   				
+   				@Override
+   				protected String getErrorMessage()
+   				{
+   					return Messages.get().UploadFileToServer_JobError;
+   				}
+   			}.start();
+         }
 		}
 	}
 

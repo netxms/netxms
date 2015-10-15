@@ -316,31 +316,6 @@ void EscapeString(String &str)
 }
 
 /**
- * Check if given record exists in database
- */
-bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id)
-{
-	bool exist = false;
-
-	TCHAR query[256];
-	_sntprintf(query, 256, _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
-
-	DB_STATEMENT hStmt = DBPrepare(hdb, query);
-	if (hStmt != NULL)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
-		DB_RESULT hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
-		{
-			exist = (DBGetNumRows(hResult) > 0);
-			DBFreeResult(hResult);
-		}
-		DBFreeStatement(hStmt);
-	}
-	return exist;
-}
-
-/**
  * Prepare and execute SQL query with single binding - object ID.
  */
 bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, const TCHAR *query)

@@ -52,22 +52,10 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
  */
 static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
-   RequestData *data = (RequestData *)userdata;
-   if ((data->allocated - data->size) < (size * nmemb))
-   {
-      char *newData = (char *)realloc(data->data, data->allocated + CURL_MAX_HTTP_HEADER);
-      if (newData == NULL)
-      {
-         return 0;
-      }
-      data->data = newData;
-      data->allocated += CURL_MAX_HTTP_HEADER;
-   }
-
-   memcpy(data->data + data->size, ptr, size * nmemb);
-   data->size += size * nmemb;
-
-   return size * nmemb;
+   ByteStream *data = (ByteStream *)userdata;
+   size_t bytes = size * nmemb;
+   data->write(ptr, bytes);
+   return bytes;
 }
 
 /**
@@ -80,24 +68,24 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
    int ret = SYSINFO_RC_ERROR;
    int retCode = PC_ERR_BAD_PARAMS;
 
-   char url[2048] = {0};
-   char pattern[4096] = {0};
+   char url[2048] = "";
+   TCHAR pattern[4096] = _T("");
    regex_t compiledPattern;
 
    AgentGetParameterArgA(parameters, 1, url, 2048);
-   AgentGetParameterArgA(parameters, 2, pattern, 256);
+   AgentGetParameterArg(parameters, 2, pattern, 256);
    StrStripA(url);
-   StrStripA(pattern);
+   StrStrip(pattern);
    if (url[0] != 0)
    {
       if (pattern[0] == 0)
       {
-         strcpy(pattern, "^HTTP/1.[01] 200 .*");
+         _tcscpy(pattern, _T("^HTTP/1.[01] 200 .*"));
       }
 
-      AgentWriteDebugLog(5, _T("Check service: url=%hs, pattern=%hs"), url, pattern);
+      AgentWriteDebugLog(5, _T("Check service: url=%hs, pattern=%s"), url, pattern);
 
-      if (tre_regcomp(&compiledPattern, pattern, REG_EXTENDED | REG_ICASE | REG_NOSUB) == 0)
+      if (_tregcomp(&compiledPattern, pattern, REG_EXTENDED | REG_ICASE | REG_NOSUB) == 0)
       {
          CURL *curl = curl_easy_init();
          if (curl != NULL)
@@ -111,7 +99,8 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
             // curl_easy_setopt(curl, CURLOPT_VERBOSE, (long)1);
             curl_easy_setopt(curl, CURLOPT_HEADER, (long)1); // include header in data
             curl_easy_setopt(curl, CURLOPT_TIMEOUT, g_timeout);
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &OnCurlDataReceived);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnCurlDataReceived);
+            curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
 
             // SSL-related stuff
             curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, g_flags & NETSVC_AF_VERIFYPEER);
@@ -120,20 +109,27 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                curl_easy_setopt(curl, CURLOPT_CAINFO, g_certBundle);
             }
 
-            RequestData *data = (RequestData *)malloc(sizeof(RequestData));
-            memset(data, 0, sizeof(RequestData));
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
+            // Receiving buffer
+            ByteStream data(32768);
+            data.setAllocationStep(32768);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+
             if (curl_easy_setopt(curl, CURLOPT_URL, url) == CURLE_OK)
             {
                AgentWriteDebugLog(5, _T("Check service: all prepared"));
                if (curl_easy_perform(curl) == 0)
                {
-                  AgentWriteDebugLog(6, _T("Check service: got reply: %lu bytes"), data->size);
-                  if (data->allocated > 0)
+                  AgentWriteDebugLog(6, _T("Check service: got reply: %lu bytes"), (unsigned long)data.size());
+                  if (data.size() > 0)
                   {
-                     data->data[data->size] = 0;
-                     AgentWriteDebugLog(9, _T("Check service: data=%hs"), data->data);
-                     if (tre_regexec(&compiledPattern, data->data, 0, NULL, 0) == 0)
+                     data.write('\0');
+                     size_t size;
+#ifdef UNICODE
+                     WCHAR *wtext = WideStringFromUTF8String((char *)data.buffer(&size));
+                     if (tre_regwexec(&compiledPattern, wtext, 0, NULL, 0) == 0)
+#else
+                     if (tre_regexec(&compiledPattern, (char *)data.buffer(&size), 0, NULL, 0) == 0)
+#endif
                      {
                         AgentWriteDebugLog(5, _T("Check service: matched"));
                         retCode = PC_ERR_NONE;
@@ -143,7 +139,9 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                         AgentWriteDebugLog(5, _T("Check service: not matched"));
                         retCode = PC_ERR_NOMATCH;
                      }
-                     // do matching
+#ifdef UNICODE
+                     free(wtext);
+#endif
                   }
                   else
                   {
@@ -156,8 +154,6 @@ static LONG H_CheckService(const TCHAR *parameters, const TCHAR *arg, TCHAR *val
                   retCode = PC_ERR_CONNECT;
                }
             }
-            safe_free(data->data);
-            free(data);
             curl_easy_cleanup(curl);
          }
          else

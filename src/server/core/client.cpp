@@ -129,11 +129,14 @@ THREAD_RESULT THREAD_CALL ClientListener(void *arg)
 
 	SetSocketExclusiveAddrUse(sock);
 	SetSocketReuseFlag(sock);
+#ifndef _WIN32
+   fcntl(sock, F_SETFD, fcntl(sock, F_GETFD) | FD_CLOEXEC);
+#endif
 
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-   servAddr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
+   servAddr.sin_addr.s_addr = !_tcscmp(g_szListenAddress, _T("*")) ? 0 : ResolveHostName(g_szListenAddress);
    servAddr.sin_port = htons(wListenPort);
 
    // Bind socket
@@ -223,6 +226,9 @@ THREAD_RESULT THREAD_CALL ClientListenerIPv6(void *arg)
 #ifdef IPV6_V6ONLY
    int on = 1;
    setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
+#endif
+#ifndef _WIN32
+   fcntl(sock, F_SETFD, fcntl(sock, F_GETFD) | FD_CLOEXEC);
 #endif
 
    // Fill in local address structure
@@ -318,7 +324,7 @@ void DumpClientSessions(CONSOLE_CTX pCtx)
                          NXCPMessageCodeName(m_pSessionList[i]->getCurrentCmd(), szBuffer),
 					        pszCipherName[m_pSessionList[i]->getCipher() + 1],
 							  pszClientType[m_pSessionList[i]->getClientType()],
-                       m_pSessionList[i]->getUserName(), webServer,
+                       m_pSessionList[i]->getSessionName(), webServer,
                        m_pSessionList[i]->getClientInfo());
          iCount++;
       }
@@ -405,7 +411,7 @@ void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData)
 /**
  * Get number of active user sessions
  */
-int GetSessionCount(bool withRoot)
+int GetSessionCount(bool includeSystemAccount)
 {
    int i, nCount;
 
@@ -413,7 +419,7 @@ int GetSessionCount(bool withRoot)
    for(i = 0, nCount = 0; i < MAX_CLIENT_SESSIONS; i++)
    {
       if ((m_pSessionList[i] != NULL) &&
-          (withRoot || (m_pSessionList[i]->getUserId() != 0)))
+          (includeSystemAccount || (m_pSessionList[i]->getUserId() != 0)))
       {
          nCount++;
       }

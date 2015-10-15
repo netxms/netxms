@@ -16,7 +16,7 @@ pkglib_LTLIBRARIES = openbsd.la
 openbsd_la_SOURCES = openbsd.cpp system.cpp disk.cpp net.cpp
 openbsd_la_CPPFLAGS=-I@top_srcdir@/include
 openbsd_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
-openbsd_la_LIBADD = ../../../libnetxms/libnetxms.la -lkvm
+openbsd_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la -lkvm
 
 EXTRA_DIST = disk.h net.h system.h
 

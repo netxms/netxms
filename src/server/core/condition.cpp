@@ -111,7 +111,7 @@ BOOL Condition::loadFromDatabase(UINT32 dwId)
    DBFreeResult(hResult);
 
    // Compile script
-   NXSL_Program *p = (NXSL_Program *)NXSLCompile(m_scriptSource, szQuery, 512);
+   NXSL_Program *p = (NXSL_Program *)NXSLCompile(m_scriptSource, szQuery, 512, NULL);
    if (p != NULL)
    {
       m_script = new NXSL_VM(new NXSL_ServerEnv);
@@ -278,7 +278,7 @@ UINT32 Condition::modifyFromMessageInternal(NXCPMessage *pRequest)
       safe_free(m_scriptSource);
       delete m_script;
       m_scriptSource = pRequest->getFieldAsString(VID_SCRIPT);
-      NXSL_Program *p = (NXSL_Program *)NXSLCompile(m_scriptSource, szError, 1024);
+      NXSL_Program *p = (NXSL_Program *)NXSLCompile(m_scriptSource, szError, 1024, NULL);
       if (p != NULL)
       {
          m_script = new NXSL_VM(new NXSL_ServerEnv);
@@ -364,20 +364,21 @@ UINT32 Condition::modifyFromMessageInternal(NXCPMessage *pRequest)
  */
 void Condition::lockForPoll()
 {
-   incRefCount();
    m_queuedForPolling = TRUE;
 }
 
 /**
- * This method should be called by poller thread when poll finish
+ * Poller entry point
  */
-void Condition::endPoll()
+void Condition::doPoll(PollerInfo *poller)
 {
+   poller->startExecution();
+   check();
    lockProperties();
    m_queuedForPolling = FALSE;
    m_lastPoll = time(NULL);
    unlockProperties();
-   decRefCount();
+   delete poller;
 }
 
 /**

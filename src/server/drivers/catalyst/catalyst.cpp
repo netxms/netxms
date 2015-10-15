@@ -120,7 +120,6 @@ InterfaceList *CatalystDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
  */
 DECLARE_NDD_ENTRY_POINT(s_driverName, CatalystDriver);
 
-
 /**
  * DLL entry point
  */

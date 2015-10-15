@@ -29,6 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.rap.rwt.service.ServiceHandler;
 
 /**
@@ -135,6 +136,32 @@ public class DownloadServiceHandler implements ServiceHandler
 		{
 			downloads.put(id, new DownloadInfo(name, null, contentType, data));
 		}
+	}
+	
+	/**
+	 * Start download that was added previously
+	 * 
+	 * @param id
+	 */
+	public static void startDownload(String id)
+	{
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor != null) 
+      {
+         StringBuilder js = new StringBuilder();
+         js.append("var hiddenIFrameID = 'hiddenDownloader',");
+         js.append("   iframe = document.getElementById(hiddenIFrameID);");
+         js.append("if (iframe === null) {");
+         js.append("   iframe = document.createElement('iframe');");
+         js.append("   iframe.id = hiddenIFrameID;");
+         js.append("   iframe.style.display = 'none';");
+         js.append("   document.body.appendChild(iframe);");
+         js.append("}");
+         js.append("iframe.src = '");
+         js.append(DownloadServiceHandler.createDownloadUrl(id));
+         js.append("';");
+         executor.execute(js.toString());
+      }                 
 	}
 
 	/**

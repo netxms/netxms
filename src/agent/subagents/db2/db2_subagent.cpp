@@ -815,8 +815,8 @@ static const PDB2_INFO GetConfigs(Config *config, ConfigEntry *configEntry, cons
       { _T("DBName"),            CT_STRING,      0, 0, DB2_DB_MAX_NAME,   0, db2Info->db2DbName },
       { _T("DBAlias"),           CT_STRING,      0, 0, DB2_DB_MAX_NAME,   0, db2Info->db2DbAlias },
       { _T("UserName"),          CT_STRING,      0, 0, DB2_MAX_USER_NAME, 0, db2Info->db2UName },
-      { _T("Password"),          CT_STRING,      0, 0, STR_MAX,           0, db2Info->db2UPass },
-      { _T("EncryptedPassword"), CT_STRING,      0, 0, MAX_DB_STRING,     0, dbPassEncrypted },
+      { _T("Password"),          CT_STRING,      0, 0, MAX_PASSWORD,      0, db2Info->db2UPass },
+      { _T("EncryptedPassword"), CT_STRING,      0, 0, MAX_PASSWORD,      0, db2Info->db2UPass },
       { _T("ReconnectInterval"), CT_LONG,        0, 0, sizeof(LONG),      0, &db2Info->db2ReconnectInterval },
       { _T("QueryInterval"),     CT_LONG,        0, 0, sizeof(LONG),      0, &db2Info->db2QueryInterval },
       { _T(""),                  CT_END_OF_LIST, 0, 0, 0,                 0, NULL }
@@ -828,12 +828,7 @@ static const PDB2_INFO GetConfigs(Config *config, ConfigEntry *configEntry, cons
       noErr = FALSE;
    }
 
-   if (*dbPassEncrypted != '\0')
-   {
-      noErr = DecryptPassword(db2Info->db2UName, dbPassEncrypted, db2Info->db2UPass);
-      if(!noErr)
-         AgentWriteDebugLog(EVENTLOG_ERROR_TYPE, _T("%s: failed to decrypt password"), SUBAGENT_NAME);
-   }
+   DecryptPassword(db2Info->db2UName, db2Info->db2UPass, db2Info->db2UPass, MAX_PASSWORD);
 
    if (noErr)
    {

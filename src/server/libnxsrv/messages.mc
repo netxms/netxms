@@ -267,7 +267,7 @@ SQL query failed (Query = "%1"): %2
 .
 
 MessageId=
-SymbolicName=MSG_INVALID_SHA1_HASH
+SymbolicName=MSG_INVALID_PASSWORD_HASH
 Language=English
 Invalid password hash for user %1: password reset to default
 .

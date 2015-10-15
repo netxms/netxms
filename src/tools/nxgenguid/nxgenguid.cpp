@@ -1,6 +1,6 @@
 /* 
-** nxencpasswd - command line tool for encrypting passwords using NetXMS server key
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** nxgenguid - command line tool for GUID generation
+** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: nxencpasswd.cpp
+** File: nxgenguid.cpp
 **
 **/
 
@@ -53,12 +53,6 @@ int main(int argc, char *argv[])
       }
    }
 
-   uuid_t guid;
-   uuid_generate(guid);
-
-   TCHAR guidText[64];
-   uuid_to_string(guid, guidText);
-	_putts(guidText);
-
+   _putts(uuid::generate().toString());
 	return 0;
 }

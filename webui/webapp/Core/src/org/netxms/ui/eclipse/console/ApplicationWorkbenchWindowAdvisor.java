@@ -39,6 +39,7 @@ import org.eclipse.ui.keys.IBindingService;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Dashboard;
+import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -70,6 +71,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	@Override
 	public void preWindowOpen()
 	{
+      RegionalSettings.updateFromPreferences();
+      
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		configurer.setShowCoolBar(true);
 		configurer.setShowPerspectiveBar(true);

@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ import java.util.Map;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -42,6 +41,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AgentCacheMode;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.datacollection.DataCollectionTable;
@@ -79,11 +79,12 @@ public class GeneralTable extends PropertyPage
 	private Combo origin;
 	private Button checkUseCustomSnmpPort;
 	private Spinner customSnmpPort;
-	private ObjectSelector proxyNode;
+	private ObjectSelector sourceNode;
+   private Combo agentCacheMode;
 	private Combo schedulingMode;
+   private Combo retentionMode;
 	private LabeledSpinner pollingInterval;
 	private LabeledSpinner retentionTime;
-	private Button checkNoStorage;
 	private Combo clusterResource;
 	private Button statusActive;
 	private Button statusDisabled;
@@ -254,16 +255,27 @@ public class GeneralTable extends PropertyPage
       fd.top = new FormAttachment(checkUseCustomSnmpPort, WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       customSnmpPort.setLayoutData(fd);
       
-      proxyNode = new ObjectSelector(groupData, SWT.NONE, true);
-      proxyNode.setLabel(Messages.get().GeneralTable_ProxyNode);
+      sourceNode = new ObjectSelector(groupData, SWT.NONE, true);
+      sourceNode.setLabel(Messages.get().GeneralTable_ProxyNode);
+      sourceNode.setObjectClass(Node.class);
+      sourceNode.setObjectId(dci.getSourceNode());
+      sourceNode.setEnabled(dci.getOrigin() != DataCollectionObject.PUSH);
+      
+      fd = new FormData();
+      fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
+      fd.right = new FormAttachment(100, 0);
+      agentCacheMode = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, "Agent cache mode", fd);
+      agentCacheMode.add("Default");
+      agentCacheMode.add("On");
+      agentCacheMode.add("Off");
+      agentCacheMode.select(dci.getCacheMode().getValue());
+      agentCacheMode.setEnabled((dci.getOrigin() == DataCollectionItem.AGENT) || (dci.getOrigin() == DataCollectionItem.SNMP));
+
       fd = new FormData();
       fd.left = new FormAttachment(0, 0);
       fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
-      fd.right = new FormAttachment(100, 0);
-      proxyNode.setLayoutData(fd);
-      proxyNode.setObjectClass(Node.class);
-      proxyNode.setObjectId(dci.getProxyNode());
-      proxyNode.setEnabled(dci.getOrigin() != DataCollectionObject.PUSH);
+      fd.right = new FormAttachment(agentCacheMode.getParent(), -WidgetHelper.OUTER_SPACING, SWT.LEFT);
+      sourceNode.setLayoutData(fd);
       
       /** polling area **/
       Group groupPolling = new Group(dialogArea, SWT.NONE);
@@ -283,9 +295,10 @@ public class GeneralTable extends PropertyPage
       fd.right = new FormAttachment(50, -WidgetHelper.OUTER_SPACING / 2);
       fd.top = new FormAttachment(0, 0);
       schedulingMode = WidgetHelper.createLabeledCombo(groupPolling, SWT.READ_ONLY, Messages.get().GeneralTable_PollingMode, fd);
-      schedulingMode.add(Messages.get().GeneralTable_FixedIntervals);
-      schedulingMode.add(Messages.get().GeneralTable_CustomSchedule);
-      schedulingMode.select(dci.isUseAdvancedSchedule() ? 1 : 0);
+      schedulingMode.add(Messages.get().General_FixedIntervalsDefault);
+      schedulingMode.add(Messages.get().General_FixedIntervalsCustom);
+      schedulingMode.add(Messages.get().General_CustomSchedule);
+      schedulingMode.select(dci.isUseAdvancedSchedule() ? 2 : ((dci.getPollingInterval() > 0) ? 1 : 0));
       schedulingMode.setEnabled(dci.getOrigin() != DataCollectionObject.PUSH);
       schedulingMode.addSelectionListener(new SelectionListener() {
 			@Override
@@ -297,15 +310,15 @@ public class GeneralTable extends PropertyPage
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				pollingInterval.setEnabled(schedulingMode.getSelectionIndex() == 0);
+				pollingInterval.setEnabled(schedulingMode.getSelectionIndex() == 1);
 			}
       });
       
       pollingInterval = new LabeledSpinner(groupPolling, SWT.NONE);
       pollingInterval.setLabel(Messages.get().General_PollingInterval);
       pollingInterval.setRange(1, 99999);
-      pollingInterval.setSelection(dci.getPollingInterval());
-      pollingInterval.setEnabled(!dci.isUseAdvancedSchedule() && (dci.getOrigin() != DataCollectionItem.PUSH));
+      pollingInterval.setSelection((dci.getPollingInterval() > 0) ? dci.getPollingInterval() : ConsoleSharedData.getSession().getDefaultDciPollingInterval());
+      pollingInterval.setEnabled(!dci.isUseAdvancedSchedule() && (dci.getPollingInterval() > 0) && (dci.getOrigin() != DataCollectionItem.PUSH));
       fd = new FormData();
       fd.left = new FormAttachment(50, WidgetHelper.OUTER_SPACING / 2);
       fd.right = new FormAttachment(100, 0);
@@ -375,29 +388,42 @@ public class GeneralTable extends PropertyPage
       gd.horizontalSpan = 2;
       groupStorage.setLayoutData(gd);
       GridLayout storageLayout = new GridLayout();
-      storageLayout.verticalSpacing = WidgetHelper.OUTER_SPACING;
+      storageLayout.numColumns = 2;
+      storageLayout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
       groupStorage.setLayout(storageLayout);
       
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      retentionMode = WidgetHelper.createLabeledCombo(groupStorage, SWT.READ_ONLY, "Retention mode", gd);
+      retentionMode.add("Use default retention time");
+      retentionMode.add("Use custom retention time");
+      retentionMode.add(Messages.get().GeneralTable_NoStorage);
+      retentionMode.select(((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) != 0) ? 2 : ((dci.getRetentionTime() > 0) ? 1 : 0));
+      retentionMode.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            int mode = retentionMode.getSelectionIndex();
+            retentionTime.setEnabled(mode == 1);
+         }
+      });
+
       retentionTime = new LabeledSpinner(groupStorage, SWT.NONE);
-      retentionTime.setLabel(Messages.get().General_RetentionTime);
+      retentionTime.setLabel(Messages.get().GeneralTable_RetentionTime);
       retentionTime.setRange(1, 99999);
-      retentionTime.setSelection(dci.getRetentionTime());
-      retentionTime.setEnabled((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) == 0);
+      retentionTime.setSelection((dci.getRetentionTime() > 0) ? dci.getRetentionTime() : ConsoleSharedData.getSession().getDefaultDciRetentionTime());
+      retentionTime.setEnabled(((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) == 0) && (dci.getRetentionTime() > 0));
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       retentionTime.setLayoutData(gd);
-      
-      checkNoStorage = new Button(groupStorage, SWT.CHECK);
-      checkNoStorage.setText(Messages.get().GeneralTable_NoStorage);
-      checkNoStorage.setSelection((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) != 0);
-      checkNoStorage.addSelectionListener(new SelectionAdapter() {
-         @Override
-         public void widgetSelected(SelectionEvent e)
-         {
-            retentionTime.setEnabled(!checkNoStorage.getSelection());
-         }
-      });
       
       return dialogArea;
 	}
@@ -408,11 +434,12 @@ public class GeneralTable extends PropertyPage
 	private void onOriginChange()
 	{
 		int index = origin.getSelectionIndex();
-		proxyNode.setEnabled(index != DataCollectionObject.PUSH);
+		sourceNode.setEnabled(index != DataCollectionObject.PUSH);
 		schedulingMode.setEnabled(index != DataCollectionObject.PUSH);
-		pollingInterval.setEnabled((index != DataCollectionObject.PUSH) && (schedulingMode.getSelectionIndex() == 0));
+		pollingInterval.setEnabled((index != DataCollectionObject.PUSH) && (schedulingMode.getSelectionIndex() == 1));
 		checkUseCustomSnmpPort.setEnabled(index == DataCollectionObject.SNMP);
 		customSnmpPort.setEnabled((index == DataCollectionObject.SNMP) && checkUseCustomSnmpPort.getSelection());
+      agentCacheMode.setEnabled((index == DataCollectionItem.AGENT) || (index == DataCollectionItem.SNMP));
 	}
 	
 	/**
@@ -463,10 +490,11 @@ public class GeneralTable extends PropertyPage
 		dci.setDescription(description.getText().trim());
 		dci.setName(parameter.getText().trim());
 		dci.setOrigin(origin.getSelectionIndex());
-		dci.setProxyNode(proxyNode.getObjectId());
-		dci.setUseAdvancedSchedule(schedulingMode.getSelectionIndex() == 1);
-		dci.setPollingInterval(pollingInterval.getSelection());
-		dci.setRetentionTime(retentionTime.getSelection());
+		dci.setSourceNode(sourceNode.getObjectId());
+      dci.setCacheMode(AgentCacheMode.getByValue(agentCacheMode.getSelectionIndex()));
+		dci.setUseAdvancedSchedule(schedulingMode.getSelectionIndex() == 2);
+      dci.setPollingInterval((schedulingMode.getSelectionIndex() == 0) ? 0 : pollingInterval.getSelection());
+      dci.setRetentionTime((retentionMode.getSelectionIndex() == 0) ? 0 : retentionTime.getSelection());
 		if (checkUseCustomSnmpPort.getSelection())
 		{
 			dci.setSnmpPort(Integer.parseInt(customSnmpPort.getText()));
@@ -483,7 +511,7 @@ public class GeneralTable extends PropertyPage
 		else if (statusUnsupported.getSelection())
 			dci.setStatus(DataCollectionObject.NOT_SUPPORTED);
 		
-		if (checkNoStorage.getSelection())
+      if (retentionMode.getSelectionIndex() == 2)
 		   dci.setFlags(dci.getFlags() | DataCollectionObject.DCF_NO_STORAGE);
 		else
          dci.setFlags(dci.getFlags() & ~DataCollectionObject.DCF_NO_STORAGE);

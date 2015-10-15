@@ -329,3 +329,16 @@ void StringList::splitAndAdd(const TCHAR *src, const TCHAR *separator)
       curr = next;
    }
 }
+
+/**
+ * Fill NXCP message with list data
+ */
+void StringList::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId)
+{
+   msg->setField(countId, (UINT32)m_count);
+   UINT32 fieldId = baseId;
+   for(int i = 0; i < m_count; i++)
+   {
+      msg->setField(fieldId++, CHECK_NULL_EX(m_values[i]));
+   }
+}

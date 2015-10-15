@@ -23,34 +23,120 @@
 #include "nxcore.h"
 
 /**
- * Poller state structure
+ * Node poller queue (polls new nodes)
  */
-struct __poller_state
-{
-   int iType;
-   time_t timestamp;
-   TCHAR szMsg[128];
-   TCHAR szInfo[128];
-};
-
-/**
- * Poller queues
- */
-Queue g_statusPollQueue;
-Queue g_configPollQueue;
-Queue g_instancePollQueue;
-Queue g_topologyPollQueue;
-Queue g_routePollQueue;
-Queue g_discoveryPollQueue;
 Queue g_nodePollerQueue;
-Queue g_conditionPollerQueue;
-Queue g_businessServicePollerQueue;
 
 /**
- * Static data
+ * Thread pool for pollers
  */
-static __poller_state *m_pPollerState = NULL;
-static int m_iNumPollers = 0;
+ThreadPool *g_pollerThreadPool = NULL;
+
+/**
+ * Active pollers
+ */
+static HashMap<UINT64, PollerInfo> s_pollers(false);
+static MUTEX s_pollerLock = MutexCreate();
+
+/**
+ * Poller info destructor - will unregister poller and decrease ref count on object
+ */
+PollerInfo::~PollerInfo()
+{
+   MutexLock(s_pollerLock);
+   s_pollers.remove(CAST_FROM_POINTER(this, UINT64));
+   MutexUnlock(s_pollerLock);
+   m_object->decRefCount();
+}
+
+/**
+ * Register active poller
+ */
+PollerInfo *RegisterPoller(PollerType type, NetObj *object)
+{
+   PollerInfo *p = new PollerInfo(type, object);
+   object->incRefCount();
+   MutexLock(s_pollerLock);
+   s_pollers.set(CAST_FROM_POINTER(p, UINT64), p);
+   MutexUnlock(s_pollerLock);
+   return p;
+}
+
+/**
+ * Show poller information on console
+ */
+static EnumerationCallbackResult ShowPollerInfo(const void *key, const void *object, void *arg)
+{
+   static const TCHAR *pollerType[] = { _T("STAT"), _T("CONF"), _T("INST"), _T("ROUT"), _T("DISC"), _T("BSVC"), _T("COND"), _T("TOPO") };
+
+   PollerInfo *p = (PollerInfo *)object;
+   NetObj *o = p->getObject();
+
+   TCHAR name[32];
+   nx_strncpy(name, o->getName(), 31);
+   ConsolePrintf((CONSOLE_CTX)arg, _T("%s | %9d | %-30s | %s\n"), pollerType[p->getType()], o->getId(), name, p->getStatus()); 
+
+   return _CONTINUE;
+}
+
+/**
+ * Get poller diagnostic
+ */
+void ShowPollers(CONSOLE_CTX console)
+{
+   ConsoleWrite(console, _T("Type | Object ID | Object name                    | Status\n")
+                         _T("-----+-----------+--------------------------------+--------------------------\n"));
+   MutexLock(s_pollerLock);
+   s_pollers.forEach(ShowPollerInfo, console);
+   MutexUnlock(s_pollerLock);
+}
+
+/**
+ * Helper for AddThreadPoolMonitoringParameters
+ */
+inline TCHAR *BuildParamName(const TCHAR *format, const TCHAR *pool, TCHAR *buffer)
+{
+   _sntprintf(buffer, 256, format, pool);
+   return buffer;
+}
+
+/**
+ * Add thread pool monitoring parameters
+ */
+static void AddThreadPoolMonitoringParameters(Node *node, const TCHAR *poolName, int pollingInterval, int retentionTime)
+{
+#define BUILD_PARAM_NAME(x) BuildParamName(x, poolName, name)
+#define BUILD_PARAM_DESCR(x) BuildParamName(x, poolName, description)
+
+   TCHAR name[256], description[256];
+
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                BUILD_PARAM_NAME(_T("Server.ThreadPool.CurrSize(%s)")),
+                                DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, node,
+                                BUILD_PARAM_DESCR(_T("Thread pool %s: current size"))));
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+                                BUILD_PARAM_NAME(_T("Server.ThreadPool.Usage(%s)")), 
+                                DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, node,
+                                BUILD_PARAM_DESCR(_T("Thread pool %s: usage"))));
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM),
+                                BUILD_PARAM_NAME(_T("Server.ThreadPool.Load(%s)")), 
+                                DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, node,
+                                BUILD_PARAM_DESCR(_T("Thread pool %s: current load"))));
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM),
+                                BUILD_PARAM_NAME(_T("Server.ThreadPool.LoadAverage(%s)")), 
+                                DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
+                                BUILD_PARAM_DESCR(_T("Thread pool %s: load average (1 minute)"))));
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM),
+                                BUILD_PARAM_NAME(_T("Server.ThreadPool.LoadAverage5(%s)")), 
+                                DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
+                                BUILD_PARAM_DESCR(_T("Thread pool %s: load average (5 minutes)"))));
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM),
+                                BUILD_PARAM_NAME(_T("Server.ThreadPool.LoadAverage15(%s)")), 
+                                DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
+                                BUILD_PARAM_DESCR(_T("Thread pool %s: load average (15 minutes)"))));
+#undef BUILD_PARAM_NAME
+#undef BUILD_PARAM_DESCR
+}
 
 /**
  * Create management node object
@@ -59,65 +145,66 @@ static void CreateManagementNode(const InetAddress& addr)
 {
 	TCHAR buffer[256];
 
-	Node *pNode = new Node(addr, NF_IS_LOCAL_MGMT, 0, 0, 0);
-   NetObjInsert(pNode, TRUE);
-	pNode->setName(GetLocalHostName(buffer, 256));
-   pNode->configurationPoll(NULL, 0, -1, addr.getMaskBits());
-   pNode->unhide();
-   g_dwMgmtNode = pNode->getId();   // Set local management node ID
-   PostEvent(EVENT_NODE_ADDED, pNode->getId(), NULL);
+	Node *node = new Node(addr, NF_IS_LOCAL_MGMT, 0, 0, 0);
+   NetObjInsert(node, TRUE);
+	node->setName(GetLocalHostName(buffer, 256));
+
+   PollerInfo *p = RegisterPoller(POLLER_TYPE_CONFIGURATION, node);
+   p->startExecution();
+   node->configurationPoll(NULL, 0, p, addr.getMaskBits());
+   delete p;
+
+   node->unhide();
+   g_dwMgmtNode = node->getId();   // Set local management node ID
+   PostEvent(EVENT_NODE_ADDED, node->getId(), NULL);
 
 	// Bind to the root of service tree
-	g_pServiceRoot->AddChild(pNode);
-	pNode->AddParent(g_pServiceRoot);
+	g_pServiceRoot->AddChild(node);
+	node->AddParent(g_pServiceRoot);
    
    // Add default data collection items
 	int pollingInterval = ConfigReadInt(_T("DefaultDCIPollingInterval"), 60);
 	int retentionTime = ConfigReadInt(_T("DefaultDCIRetentionTime"), 30);
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), 
-                                 DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, pNode));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), 
+                                 DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, node));
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageDCPollerQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
                                  _T("Data collection poller's request queue for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageDBWriterQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
                                  _T("Database writer's request queue for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageDBWriterQueueSize.IData"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
                                  _T("Database writer's request queue (DCI data) for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageDBWriterQueueSize.Other"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
                                  _T("Database writer's request queue (other queries) for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageDCIQueuingTime"), 
-                                 DS_INTERNAL, DCI_DT_UINT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_UINT, pollingInterval, retentionTime, node,
                                  _T("Average time to queue DCI for polling for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                 _T("Server.AverageStatusPollerQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
-                                 _T("Status poller queue for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                 _T("Server.AverageConfigurationPollerQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
-                                 _T("Configuration poller queue for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageSyslogProcessingQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
                                  _T("Syslog processing queue for last minute")));
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
+   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
                                  _T("Server.AverageSyslogWriterQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
                                  _T("Syslog writer queue for last minute")));
+
    DCItem *pEventsPerMinuteDCI = new DCItem(CreateUniqueId(IDG_ITEM),
                                  _T("Server.TotalEventsProcessed"),
-                                 DS_INTERNAL, DCI_DT_UINT, pollingInterval, retentionTime, pNode,
+                                 DS_INTERNAL, DCI_DT_UINT, pollingInterval, retentionTime, node,
                                  _T("Events processed for last minute"));
    pEventsPerMinuteDCI->setDeltaCalcMethod(DCM_AVERAGE_PER_MINUTE);
-   pNode->addDCObject(pEventsPerMinuteDCI);
+   node->addDCObject(pEventsPerMinuteDCI);
+
+   AddThreadPoolMonitoringParameters(node, _T("MAIN"), pollingInterval, retentionTime);
+   AddThreadPoolMonitoringParameters(node, _T("POLLERS"), pollingInterval, retentionTime);
 }
 
 /**
@@ -147,7 +234,7 @@ static bool LocalMgmtNodeComparator(NetObj *object, void *data)
 void CheckForMgmtNode()
 {
    InterfaceList *pIfList;
-   Node *pNode;
+   Node *node;
    int i;
 
    pIfList = GetLocalInterfaceList();
@@ -158,15 +245,15 @@ void CheckForMgmtNode()
          InterfaceInfo *iface = pIfList->get(i);
          if (iface->type == IFTYPE_SOFTWARE_LOOPBACK)
             continue;
-         if ((pNode = FindNodeByIP(0, &iface->ipAddrList)) != NULL)
+         if ((node = FindNodeByIP(0, &iface->ipAddrList)) != NULL)
          {
             // Check management node flag
-            if (!(pNode->getFlags() & NF_IS_LOCAL_MGMT))
+            if (!(node->getFlags() & NF_IS_LOCAL_MGMT))
             {
-               pNode->setLocalMgmtFlag();
-               DbgPrintf(1, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"), pNode->getName(), pNode->getId());
+               node->setLocalMgmtFlag();
+               DbgPrintf(1, _T("Local management node %s [%d] was not have NF_IS_LOCAL_MGMT flag set"), node->getName(), node->getId());
             }
-            g_dwMgmtNode = pNode->getId();   // Set local management node ID
+            g_dwMgmtNode = node->getId();   // Set local management node ID
             break;
          }
       }
@@ -219,204 +306,6 @@ void CheckForMgmtNode()
 }
 
 /**
- * Set poller's state
- */
-static void SetPollerState(int nIdx, const TCHAR *pszMsg)
-{
-   nx_strncpy(m_pPollerState[nIdx].szMsg, pszMsg, 128);
-   m_pPollerState[nIdx].szInfo[0] = 0;
-   m_pPollerState[nIdx].timestamp = time(NULL);
-}
-
-/**
- * Set poller's info
- */
-void SetPollerInfo(int nIdx, const TCHAR *pszMsg)
-{
-   if (nIdx != -1)
-   {
-      nx_strncpy(m_pPollerState[nIdx].szInfo, pszMsg, 128);
-      m_pPollerState[nIdx].timestamp = time(NULL);
-   }
-}
-
-/**
- * Display current poller threads state
- */
-void ShowPollerState(CONSOLE_CTX pCtx)
-{
-   int i;
-   TCHAR szTime[64];
-   struct tm *ltm;
-
-   ConsolePrintf(pCtx, _T("PT  TIME                   STATE\n"));
-   for(i = 0; i < m_iNumPollers; i++)
-   {
-      ltm = localtime(&m_pPollerState[i].timestamp);
-      if (ltm != NULL)
-         _tcsftime(szTime, 64, _T("%d/%b/%Y %H:%M:%S"), ltm);
-      else
-         _tcscpy(szTime, _T("<error>             "));
-      if (m_pPollerState[i].szInfo[0] != 0)
-         ConsolePrintf(pCtx, _T("%c   %s   %s - %s\n"), m_pPollerState[i].iType, 
-                       szTime, m_pPollerState[i].szMsg, m_pPollerState[i].szInfo);
-      else
-         ConsolePrintf(pCtx, _T("%c   %s   %s\n"), m_pPollerState[i].iType, 
-                       szTime, m_pPollerState[i].szMsg);
-   }
-   ConsolePrintf(pCtx, _T("\n"));
-}
-
-/**
- * Status poll thread
- */
-static THREAD_RESULT THREAD_CALL StatusPoller(void *arg)
-{
-   NetObj *pObject;
-   TCHAR szBuffer[MAX_OBJECT_NAME + 64];
-
-	int unreachableDeleteDays = ConfigReadInt(_T("DeleteUnreachableNodesPeriod"), 0);
-	if (unreachableDeleteDays > 10000)
-	{
-		DbgPrintf(1, _T("Extremely high value of DeleteUnreachableNodesPeriod (%d), using 10000 instead)"), unreachableDeleteDays);
-		unreachableDeleteDays = 10000;
-	}
-
-   // Initialize state info
-   m_pPollerState[(long)arg].iType = 'S';
-   SetPollerState((long)arg, _T("init"));
-
-   // Main loop
-   while(!IsShutdownInProgress())
-   {
-      SetPollerState((long)arg, _T("wait"));
-      pObject = (NetObj *)g_statusPollQueue.GetOrBlock();
-      if (pObject == INVALID_POINTER_VALUE)
-         break;   // Shutdown indicator
-
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pObject->getName(), pObject->getId());
-      SetPollerState((long)arg, szBuffer);
-		if (pObject->getObjectClass() == OBJECT_NODE)
-		{
-			((Node *)pObject)->statusPoll(NULL, 0, (long)arg);
-			// Check if the node has to be deleted due to long downtime
-			if ((unreachableDeleteDays > 0) && (((Node *)pObject)->getDownTime() > 0) && 
-				 (time(NULL) - ((Node *)pObject)->getDownTime() > unreachableDeleteDays * 24 * 3600))
-			{
-				((Node*)pObject)->deleteObject();
-			}
-		}
-		else if (pObject->getObjectClass() == OBJECT_CLUSTER)
-		{
-			((Cluster *)pObject)->statusPoll(NULL, 0, (long)arg);
-		}
-      pObject->decRefCount();
-   }
-   SetPollerState((long)arg, _T("finished"));
-   return THREAD_OK;
-}
-
-/**
- * Configuration poller
- */
-static THREAD_RESULT THREAD_CALL ConfigurationPoller(void *arg)
-{
-   Node *pNode;
-   TCHAR szBuffer[MAX_OBJECT_NAME + 64];
-
-   // Initialize state info
-   m_pPollerState[(long)arg].iType = 'C';
-   SetPollerState((long)arg, _T("init"));
-
-   // Wait one minute to give status pollers chance to run first
-   ThreadSleep(60);
-
-   // Main loop
-   while(!IsShutdownInProgress())
-   {
-      SetPollerState((long)arg, _T("wait"));
-      pNode = (Node *)g_configPollQueue.GetOrBlock();
-      if (pNode == INVALID_POINTER_VALUE)
-         break;   // Shutdown indicator
-
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->getName(), pNode->getId());
-      SetPollerState((long)arg, szBuffer);
-      ObjectTransactionStart();
-      pNode->configurationPoll(NULL, 0, (long)arg, 0);
-      ObjectTransactionEnd();
-      pNode->decRefCount();
-   }
-   SetPollerState((long)arg, _T("finished"));
-   return THREAD_OK;
-}
-
-/**
- * Instance discovery poller
- */
-static THREAD_RESULT THREAD_CALL InstanceDiscoveryPoller(void *arg)
-{
-   Node *pNode;
-   TCHAR szBuffer[MAX_OBJECT_NAME + 64];
-
-   // Initialize state info
-   m_pPollerState[(long)arg].iType = 'I';
-   SetPollerState((long)arg, _T("init"));
-
-   // Wait two minutes to give status and configuration pollers chance to run first
-   ThreadSleep(120);
-
-   // Main loop
-   while(!IsShutdownInProgress())
-   {
-      SetPollerState((long)arg, _T("wait"));
-      pNode = (Node *)g_instancePollQueue.GetOrBlock();
-      if (pNode == INVALID_POINTER_VALUE)
-         break;   // Shutdown indicator
-
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->getName(), pNode->getId());
-      SetPollerState((long)arg, szBuffer);
-      ObjectTransactionStart();
-      pNode->instanceDiscoveryPoll(NULL, 0, (long)arg);
-      ObjectTransactionEnd();
-      pNode->decRefCount();
-   }
-   SetPollerState((long)arg, _T("finished"));
-   return THREAD_OK;
-}
-
-/**
- * Routing table poller
- */
-static THREAD_RESULT THREAD_CALL RoutePoller(void *arg)
-{
-   Node *pNode;
-   TCHAR szBuffer[MAX_OBJECT_NAME + 64];
-
-   // Initialize state info
-   m_pPollerState[(long)arg].iType = 'R';
-   SetPollerState((long)arg, _T("init"));
-
-   // Wait two minutes to give status and configuration pollers chance to run first
-   ThreadSleep(120);
-
-   // Main loop
-   while(!IsShutdownInProgress())
-   {
-      SetPollerState((long)arg, _T("wait"));
-      pNode = (Node *)g_routePollQueue.GetOrBlock();
-      if (pNode == INVALID_POINTER_VALUE)
-         break;   // Shutdown indicator
-
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->getName(), pNode->getId());
-      SetPollerState((long)arg, szBuffer);
-      pNode->updateRoutingTable();
-      pNode->decRefCount();
-   }
-   SetPollerState((long)arg, _T("finished"));
-   return THREAD_OK;
-}
-
-/**
  * Comparator for poller queue elements
  */
 static bool PollerQueueElementComparator(void *key, void *element)
@@ -460,7 +349,7 @@ static void CheckPotentialNode(Node *node, const InetAddress& ipAddr, UINT32 ifI
 					   memcpy(pInfo->bMacAddr, macAddr, MAC_ADDR_LENGTH);
 				   DbgPrintf(5, _T("DiscoveryPoller(): new node queued: %s/%d"),
 				             pInfo->ipAddr.toString(buffer), pInfo->ipAddr.getMaskBits());
-               g_nodePollerQueue.Put(pInfo);
+               g_nodePollerQueue.put(pInfo);
             }
 			   else
 			   {
@@ -507,215 +396,98 @@ static void CheckHostRoute(Node *node, ROUTE *route)
 /**
  * Discovery poller
  */
-static THREAD_RESULT THREAD_CALL DiscoveryPoller(void *arg)
+static void DiscoveryPoller(void *arg)
 {
-   Node *pNode;
-   TCHAR szBuffer[MAX_OBJECT_NAME + 64], szIpAddr[64];
-   ARP_CACHE *pArpCache;
-	ROUTING_TABLE *rt;
-	UINT32 i;
+   PollerInfo *poller = (PollerInfo *)arg;
+   poller->startExecution();
 
-   // Initialize state info
-   m_pPollerState[(long)arg].iType = 'D';
-   SetPollerState((long)arg, _T("init"));
+   Node *node = (Node *)poller->getObject();
+	if (node->getRuntimeFlags() & NDF_DELETE_IN_PROGRESS)
+	{
+      node->setDiscoveryPollTimeStamp();
+      delete poller;
+      return;
+	}
 
-   // Wait two minutes to give status and configuration pollers chance to run first
-   ThreadSleep(120);
+   DbgPrintf(4, _T("Starting discovery poll for node %s (%s) in zone %d"),
+	          node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneId());
 
-   // Main loop
-   while(!IsShutdownInProgress())
+   // Retrieve and analize node's ARP cache
+   ARP_CACHE *pArpCache = node->getArpCache();
+   if (pArpCache != NULL)
    {
-      SetPollerState((long)arg, _T("wait"));
-      pNode = (Node *)g_discoveryPollQueue.GetOrBlock();
-      if (pNode == INVALID_POINTER_VALUE)
-         break;   // Shutdown indicator
+      for(UINT32 i = 0; i < pArpCache->dwNumEntries; i++)
+			if (memcmp(pArpCache->pEntries[i].bMacAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6))	// Ignore broadcast addresses
+				CheckPotentialNode(node, pArpCache->pEntries[i].ipAddr, pArpCache->pEntries[i].dwIndex, pArpCache->pEntries[i].bMacAddr);
+      DestroyArpCache(pArpCache);
+   }
 
-		if (pNode->getRuntimeFlags() & NDF_DELETE_IN_PROGRESS)
+	// Retrieve and analize node's routing table
+   DbgPrintf(5, _T("Discovery poll for node %s (%s) - reading routing table"),
+             node->getName(), (const TCHAR *)node->getIpAddress().toString());
+	ROUTING_TABLE *rt = node->getRoutingTable();
+	if (rt != NULL)
+	{
+		for(int i = 0; i < rt->iNumEntries; i++)
 		{
-	      pNode->setDiscoveryPollTimeStamp();
-	      pNode->decRefCount();
-			continue;
+			CheckPotentialNode(node, rt->pRoutes[i].dwNextHop, rt->pRoutes[i].dwIfIndex);
+			if ((rt->pRoutes[i].dwDestMask == 0xFFFFFFFF) && (rt->pRoutes[i].dwDestAddr != 0))
+				CheckHostRoute(node, &rt->pRoutes[i]);
 		}
+		DestroyRoutingTable(rt);
+	}
 
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pNode->getName(), pNode->getId());
-      SetPollerState((long)arg, szBuffer);
-
-      DbgPrintf(4, _T("Starting discovery poll for node %s (%s) in zone %d"),
-		          pNode->getName(), pNode->getIpAddress().toString(szIpAddr), (int)pNode->getZoneId());
-
-      // Retrieve and analize node's ARP cache
-      pArpCache = pNode->getArpCache();
-      if (pArpCache != NULL)
-      {
-         for(i = 0; i < pArpCache->dwNumEntries; i++)
-				if (memcmp(pArpCache->pEntries[i].bMacAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6))	// Ignore broadcast addresses
-					CheckPotentialNode(pNode, pArpCache->pEntries[i].ipAddr, pArpCache->pEntries[i].dwIndex, pArpCache->pEntries[i].bMacAddr);
-         DestroyArpCache(pArpCache);
-      }
-
-		// Retrieve and analize node's routing table
-      DbgPrintf(5, _T("Discovery poll for node %s (%s) - reading routing table"),
-                pNode->getName(), pNode->getIpAddress().toString(szIpAddr));
-		rt = pNode->getRoutingTable();
-		if (rt != NULL)
-		{
-			for(i = 0; i < (UINT32)rt->iNumEntries; i++)
-			{
-				CheckPotentialNode(pNode, rt->pRoutes[i].dwNextHop, rt->pRoutes[i].dwIfIndex);
-				if ((rt->pRoutes[i].dwDestMask == 0xFFFFFFFF) && (rt->pRoutes[i].dwDestAddr != 0))
-					CheckHostRoute(pNode, &rt->pRoutes[i]);
-			}
-			DestroyRoutingTable(rt);
-		}
-
-      DbgPrintf(4, _T("Finished discovery poll for node %s (%s)"),
-                pNode->getName(), pNode->getIpAddress().toString(szIpAddr));
-      pNode->setDiscoveryPollTimeStamp();
-      pNode->decRefCount();
-   }
-   g_nodePollerQueue.Clear();
-   g_nodePollerQueue.Put(INVALID_POINTER_VALUE);
-   SetPollerState((long)arg, _T("finished"));
-   return THREAD_OK;
-}
-
-/**
- * Condition poller
- */
-static THREAD_RESULT THREAD_CALL ConditionPoller(void *arg)
-{
-   Condition *pCond;
-   TCHAR szBuffer[MAX_OBJECT_NAME + 64];
-
-   // Initialize state info
-   m_pPollerState[(long)arg].iType = 'N';
-   SetPollerState((long)arg, _T("init"));
-
-   // Main loop
-   while(!IsShutdownInProgress())
-   {
-      SetPollerState((long)arg, _T("wait"));
-      pCond = (Condition *)g_conditionPollerQueue.GetOrBlock();
-      if (pCond == INVALID_POINTER_VALUE)
-         break;   // Shutdown indicator
-
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), pCond->getName(), pCond->getId());
-      SetPollerState((long)arg, szBuffer);
-      pCond->check();
-      pCond->endPoll();
-   }
-   SetPollerState((long)arg, _T("finished"));
-   return THREAD_OK;
-}
-
-/**
- * Topology poller
- */
-static THREAD_RESULT THREAD_CALL TopologyPoller(void *arg)
-{
-   TCHAR szBuffer[MAX_OBJECT_NAME + 64];
-
-   // Initialize state info
-   m_pPollerState[(long)arg].iType = 'T';
-   SetPollerState((long)arg, _T("init"));
-
-   // Wait two minutes to give configuration pollers chance to run first
-   ThreadSleep(120);
-
-   // Main loop
-   while(!IsShutdownInProgress())
-   {
-      SetPollerState((long)arg, _T("wait"));
-      Node *node = (Node *)g_topologyPollQueue.GetOrBlock();
-      if (node == INVALID_POINTER_VALUE)
-         break;   // Shutdown indicator
-
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), node->getName(), node->getId());
-      SetPollerState((long)arg, szBuffer);
-		node->topologyPoll(NULL, 0, CAST_FROM_POINTER(arg, int));
-      node->decRefCount();
-   }
-   SetPollerState((long)arg, _T("finished"));
-   return THREAD_OK;
-}
-
-/**
- * Business service poller
- */
-static THREAD_RESULT THREAD_CALL BusinessServicePoller(void *arg)
-{
-   TCHAR szBuffer[MAX_OBJECT_NAME + 64];
-
-   // Initialize state info
-   m_pPollerState[(long)arg].iType = 'B';
-   SetPollerState((long)arg, _T("init"));
-
-   // Wait two minutes to give configuration pollers chance to run first
-   ThreadSleep(120);
-
-   // Main loop
-   while(!IsShutdownInProgress())
-   {
-      SetPollerState((long)arg, _T("wait"));
-		BusinessService *service = (BusinessService *)g_businessServicePollerQueue.GetOrBlock();
-      if (service == INVALID_POINTER_VALUE)
-         break;   // Shutdown indicator
-
-      _sntprintf(szBuffer, MAX_OBJECT_NAME + 64, _T("poll: %s [%d]"), service->getName(), service->getId());
-      SetPollerState((long)arg, szBuffer);
-		service->poll(NULL, 0, CAST_FROM_POINTER(arg, int));
-      service->decRefCount();
-   }
-   SetPollerState((long)arg, _T("finished"));
-   return THREAD_OK;
+   DbgPrintf(4, _T("Finished discovery poll for node %s (%s)"),
+             node->getName(), (const TCHAR *)node->getIpAddress().toString());
+   node->setDiscoveryPollTimeStamp();
+   delete poller;
 }
 
 /**
  * Check given address range with ICMP ping for new nodes
  */
-static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
+static void CheckRange(int nType, UINT32 addr1, UINT32 addr2)
 {
-   UINT32 dwAddr, dwFrom, dwTo;
-   TCHAR szIpAddr1[16], szIpAddr2[16];
-
+   UINT32 from, to;
    if (nType == 0)
    {
-      dwFrom = (dwAddr1 & dwAddr2) + 1;
-      dwTo = dwFrom | ~dwAddr2 - 1;
+      from = (addr1 & addr2) + 1;
+      to = from | ~addr2 - 1;
    }
    else
    {
-      dwFrom = dwAddr1;
-      dwTo = dwAddr2;
+      from = addr1;
+      to = addr2;
    }
-   DbgPrintf(4, _T("Starting active discovery check on range %s - %s"),
-             IpToStr(dwFrom, szIpAddr1), IpToStr(dwTo, szIpAddr2));
 
-   for(dwAddr = dwFrom; dwAddr <= dwTo; dwAddr++)
+   TCHAR ipAddr1[16], ipAddr2[16];
+   DbgPrintf(4, _T("Starting active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
+
+   for(UINT32 curr = from; curr <= to; curr++)
    {
-      if (IcmpPing(htonl(dwAddr), 3, g_icmpPingTimeout, NULL, g_icmpPingSize) == ICMP_SUCCESS)
+      InetAddress addr = InetAddress(curr);
+      if (IcmpPing(addr, 3, g_icmpPingTimeout, NULL, g_icmpPingSize) == ICMP_SUCCESS)
       {
-         DbgPrintf(5, _T("Active discovery - node %s responds to ICMP ping"),
-                   IpToStr(dwAddr, szIpAddr1));
-         if (FindNodeByIP(0, dwAddr) == NULL)
+         DbgPrintf(5, _T("Active discovery - node %s responds to ICMP ping"), addr.toString(ipAddr1));
+         if (FindNodeByIP(0, addr) == NULL)
          {
             Subnet *pSubnet;
 
-            pSubnet = FindSubnetForNode(0, dwAddr);
+            pSubnet = FindSubnetForNode(0, addr);
             if (pSubnet != NULL)
             {
-               if (!pSubnet->getIpAddress().equals(dwAddr) && 
-                   !InetAddress(dwAddr).isSubnetBroadcast(pSubnet->getIpAddress().getMaskBits()))
+               if (!pSubnet->getIpAddress().equals(addr) && 
+                   !addr.isSubnetBroadcast(pSubnet->getIpAddress().getMaskBits()))
                {
                   NEW_NODE *pInfo;
 
                   pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-                  pInfo->ipAddr = dwAddr;
+                  pInfo->ipAddr = addr;
                   pInfo->ipAddr.setMaskBits(pSubnet->getIpAddress().getMaskBits());
 						pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 						pInfo->ignoreFilter = FALSE;
 						memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-                  g_nodePollerQueue.Put(pInfo);
+                  g_nodePollerQueue.put(pInfo);
                }
             }
             else
@@ -723,18 +495,17 @@ static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
                NEW_NODE *pInfo;
 
                pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
-               pInfo->ipAddr = dwAddr;
+               pInfo->ipAddr = addr;
 					pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 					pInfo->ignoreFilter = FALSE;
 					memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-               g_nodePollerQueue.Put(pInfo);
+               g_nodePollerQueue.put(pInfo);
             }
          }
       }
    }
 
-   DbgPrintf(4, _T("Finished active discovery check on range %s - %s"),
-             IpToStr(dwFrom, szIpAddr1), IpToStr(dwTo, szIpAddr2));
+   DbgPrintf(4, _T("Finished active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
 }
 
 /**
@@ -742,31 +513,22 @@ static void CheckRange(int nType, UINT32 dwAddr1, UINT32 dwAddr2)
  */
 static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
 {
-   int i, nRows, nInterval;
-   DB_RESULT hResult;
-
-   // Initialize state info
-   m_pPollerState[(long)arg].iType = 'A';
-   SetPollerState((long)arg, _T("init"));
-
-   nInterval = ConfigReadInt(_T("ActiveDiscoveryInterval"), 7200);
+   int nInterval = ConfigReadInt(_T("ActiveDiscoveryInterval"), 7200);
 
    // Main loop
    while(!IsShutdownInProgress())
    {
-      SetPollerState((long)arg, _T("wait"));
       if (SleepAndCheckForShutdown(nInterval))
          break;
 
       if (!(g_flags & AF_ACTIVE_NETWORK_DISCOVERY))
          continue;
 
-      SetPollerState((long)arg, _T("check"));
-      hResult = DBSelect(g_hCoreDB, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=1"));
+      DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=1"));
       if (hResult != NULL)
       {
-         nRows = DBGetNumRows(hResult);
-         for(i = 0; i < nRows; i++)
+         int nRows = DBGetNumRows(hResult);
+         for(int i = 0; i < nRows; i++)
          {
             CheckRange(DBGetFieldLong(hResult, i, 0),
                        DBGetFieldIPAddr(hResult, i, 1),
@@ -775,7 +537,6 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
          DBFreeResult(hResult);
       }
    }
-   SetPollerState((long)arg, _T("finished"));
    return THREAD_OK;
 }
 
@@ -791,45 +552,39 @@ static void QueueForPolling(NetObj *object, void *data)
 				Node *node = (Node *)object;
 				if (node->isReadyForConfigurationPoll())
 				{
-					node->incRefCount();
 					node->lockForConfigurationPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for configuration poll"), (int)node->getId(), node->getName());
-					g_configPollQueue.Put(node);
+               ThreadPoolExecute(g_pollerThreadPool, node, &Node::configurationPoll, RegisterPoller(POLLER_TYPE_CONFIGURATION, node));
 				}
 				if (node->isReadyForInstancePoll())
 				{
-					node->incRefCount();
 					node->lockForInstancePoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for instance discovery poll"), (int)node->getId(), node->getName());
-					g_instancePollQueue.Put(node);
+               ThreadPoolExecute(g_pollerThreadPool, node, &Node::instanceDiscoveryPoll, RegisterPoller(POLLER_TYPE_INSTANCE_DISCOVERY, node));
 				}
 				if (node->isReadyForStatusPoll())
 				{
-					node->incRefCount();
 					node->lockForStatusPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for status poll"), (int)node->getId(), node->getName());
-					g_statusPollQueue.Put(node);
+               ThreadPoolExecute(g_pollerThreadPool, node, &Node::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, node));
 				}
 				if (node->isReadyForRoutePoll())
 				{
-					node->incRefCount();
 					node->lockForRoutePoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for routing table poll"), (int)node->getId(), node->getName());
-					g_routePollQueue.Put(node);
+               ThreadPoolExecute(g_pollerThreadPool, node, &Node::routingTablePoll, RegisterPoller(POLLER_TYPE_ROUTING_TABLE, node));
 				}
 				if (node->isReadyForDiscoveryPoll())
 				{
-					node->incRefCount();
 					node->lockForDiscoveryPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for discovery poll"), (int)node->getId(), node->getName());
-					g_discoveryPollQueue.Put(node);
+               ThreadPoolExecute(g_pollerThreadPool, DiscoveryPoller, RegisterPoller(POLLER_TYPE_DISCOVERY, node));
 				}
 				if (node->isReadyForTopologyPoll())
 				{
-					node->incRefCount();
 					node->lockForTopologyPoll();
 					DbgPrintf(6, _T("Node %d \"%s\" queued for topology poll"), (int)node->getId(), node->getName());
-					g_topologyPollQueue.Put(node);
+               ThreadPoolExecute(g_pollerThreadPool, node, &Node::topologyPoll, RegisterPoller(POLLER_TYPE_TOPOLOGY, node));
 				}
 			}
 			break;
@@ -840,7 +595,7 @@ static void QueueForPolling(NetObj *object, void *data)
 				{
 					cond->lockForPoll();
 					DbgPrintf(6, _T("Condition %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
-					g_conditionPollerQueue.Put(cond);
+               ThreadPoolExecute(g_pollerThreadPool, cond, &Condition::doPoll, RegisterPoller(POLLER_TYPE_CONDITION, cond));
 				}
 			}
 			break;
@@ -849,10 +604,9 @@ static void QueueForPolling(NetObj *object, void *data)
 				Cluster *cluster = (Cluster *)object;
 				if (cluster->isReadyForStatusPoll())
 				{
-					cluster->incRefCount();
 					cluster->lockForStatusPoll();
 					DbgPrintf(6, _T("Cluster %d \"%s\" queued for status poll"), (int)cluster->getId(), cluster->getName());
-					g_statusPollQueue.Put(cluster);
+               ThreadPoolExecute(g_pollerThreadPool, cluster, &Cluster::statusPoll, RegisterPoller(POLLER_TYPE_STATUS, cluster));
 				}
 			}
 			break;
@@ -861,10 +615,9 @@ static void QueueForPolling(NetObj *object, void *data)
 				BusinessService *service = (BusinessService *)object;
 				if (service->isReadyForPolling())
 				{
-					service->incRefCount();
 					service->lockForPolling();
 					DbgPrintf(6, _T("Business service %d \"%s\" queued for poll"), (int)object->getId(), object->getName());
-					g_businessServicePollerQueue.Put(service);
+               ThreadPoolExecute(g_pollerThreadPool, service, &BusinessService::poll, RegisterPoller(POLLER_TYPE_BUSINESS_SERVICE, service));
 				}
 			}
 			break;
@@ -878,77 +631,25 @@ static void QueueForPolling(NetObj *object, void *data)
  */
 THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 {
-   UINT32 dwWatchdogId;
-   int i, iCounter, iNumStatusPollers, iNumConfigPollers, numInstancePollers;
-   int nIndex, iNumDiscoveryPollers, iNumRoutePollers;
-   int iNumConditionPollers, iNumTopologyPollers, iNumBusinessServicePollers;
-
-   // Read configuration
-   iNumConditionPollers = ConfigReadInt(_T("NumberOfConditionPollers"), 10);
-   iNumStatusPollers = ConfigReadInt(_T("NumberOfStatusPollers"), 25);
-   iNumConfigPollers = ConfigReadInt(_T("NumberOfConfigurationPollers"), 10);
-   numInstancePollers = ConfigReadInt(_T("NumberOfInstancePollers"), 10);
-   iNumRoutePollers = ConfigReadInt(_T("NumberOfRoutingTablePollers"), 10);
-   iNumDiscoveryPollers = ConfigReadInt(_T("NumberOfDiscoveryPollers"), 1);
-   iNumTopologyPollers = ConfigReadInt(_T("NumberOfTopologyPollers"), 10);
-   iNumBusinessServicePollers = ConfigReadInt(_T("NumberOfBusinessServicePollers"), 10);
-   m_iNumPollers = iNumStatusPollers + iNumConfigPollers + numInstancePollers +
-                   iNumDiscoveryPollers + iNumRoutePollers + iNumConditionPollers + 
-						 iNumTopologyPollers + iNumBusinessServicePollers + 1;
-   DbgPrintf(2, _T("PollManager: %d pollers to start"), m_iNumPollers);
-
-   // Prepare static data
-   m_pPollerState = (__poller_state *)malloc(sizeof(__poller_state) * m_iNumPollers);
-
-   // Start status pollers
-   for(i = 0, nIndex = 0; i < iNumStatusPollers; i++, nIndex++)
-      ThreadCreate(StatusPoller, 0, CAST_TO_POINTER(nIndex, void *));
-
-   // Start configuration pollers
-   for(i = 0; i < iNumConfigPollers; i++, nIndex++)
-      ThreadCreate(ConfigurationPoller, 0, CAST_TO_POINTER(nIndex, void *));
-
-   // Start instance discovery pollers
-   for(i = 0; i < numInstancePollers; i++, nIndex++)
-      ThreadCreate(InstanceDiscoveryPoller, 0, CAST_TO_POINTER(nIndex, void *));
-
-   // Start routing table pollers
-   for(i = 0; i < iNumRoutePollers; i++, nIndex++)
-      ThreadCreate(RoutePoller, 0, CAST_TO_POINTER(nIndex, void *));
-
-   // Start discovery pollers
-   for(i = 0; i < iNumDiscoveryPollers; i++, nIndex++)
-      ThreadCreate(DiscoveryPoller, 0, CAST_TO_POINTER(nIndex, void *));
-
-   // Start condition pollers
-   for(i = 0; i < iNumConditionPollers; i++, nIndex++)
-      ThreadCreate(ConditionPoller, 0, CAST_TO_POINTER(nIndex, void *));
-
-   // Start topology pollers
-   for(i = 0; i < iNumTopologyPollers; i++, nIndex++)
-      ThreadCreate(TopologyPoller, 0, CAST_TO_POINTER(nIndex, void *));
-
-   // Start business service pollers
-   for(i = 0; i < iNumBusinessServicePollers; i++, nIndex++)
-      ThreadCreate(BusinessServicePoller, 0, CAST_TO_POINTER(nIndex, void *));
+   g_pollerThreadPool = ThreadPoolCreate(ConfigReadInt(_T("PollerThreadPoolBaseSize"), 10), ConfigReadInt(_T("PollerThreadPoolMaxSize"), 250), _T("POLLERS"));
 
    // Start active discovery poller
-   ThreadCreate(ActiveDiscoveryPoller, 0, CAST_TO_POINTER(nIndex, void *));
+   ThreadCreate(ActiveDiscoveryPoller, 0, NULL);
 
-   dwWatchdogId = WatchdogAddThread(_T("Poll Manager"), 60);
-   iCounter = 0;
+   UINT32 watchdogId = WatchdogAddThread(_T("Poll Manager"), 60);
+   int counter = 0;
 
    while(!IsShutdownInProgress())
    {
       if (SleepAndCheckForShutdown(5))
          break;      // Shutdown has arrived
-      WatchdogNotify(dwWatchdogId);
+      WatchdogNotify(watchdogId);
 
       // Check for management node every 10 minutes
-      iCounter++;
-      if (iCounter % 120 == 0)
+      counter++;
+      if (counter % 120 == 0)
       {
-         iCounter = 0;
+         counter = 0;
          CheckForMgmtNode();
       }
 
@@ -957,31 +658,10 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
 		g_idxObjectById.forEach(QueueForPolling, NULL);
    }
 
-   // Send stop signal to all pollers
-   g_statusPollQueue.Clear();
-   g_statusPollQueue.SetShutdownMode();
+   g_nodePollerQueue.clear();
+   g_nodePollerQueue.put(INVALID_POINTER_VALUE);
 
-   g_configPollQueue.Clear();
-   g_configPollQueue.SetShutdownMode();
-
-   g_instancePollQueue.Clear();
-   g_instancePollQueue.SetShutdownMode();
-
-   g_discoveryPollQueue.Clear();
-   g_discoveryPollQueue.SetShutdownMode();
-
-   g_routePollQueue.Clear();
-   g_routePollQueue.SetShutdownMode();
-
-   g_conditionPollerQueue.Clear();
-   g_conditionPollerQueue.SetShutdownMode();
-
-   g_topologyPollQueue.Clear();
-   g_topologyPollQueue.SetShutdownMode();
-
-   g_businessServicePollerQueue.Clear();
-   g_businessServicePollerQueue.SetShutdownMode();
-
+   ThreadPoolDestroy(g_pollerThreadPool);
    DbgPrintf(1, _T("PollManager: main thread terminated"));
    return THREAD_OK;
 }
@@ -991,19 +671,10 @@ THREAD_RESULT THREAD_CALL PollManager(void *pArg)
  */
 void ResetDiscoveryPoller()
 {
-   Node *pNode;
    NEW_NODE *pInfo;
 
-   // Clear queues
-   while((pNode = (Node *)g_discoveryPollQueue.Get()) != NULL)
-   {
-      if (pNode != INVALID_POINTER_VALUE)
-      {
-         pNode->setDiscoveryPollTimeStamp();
-         pNode->decRefCount();
-      }
-   }
-   while((pInfo = (NEW_NODE *)g_nodePollerQueue.Get()) != NULL)
+   // Clear node poller queue
+   while((pInfo = (NEW_NODE *)g_nodePollerQueue.get()) != NULL)
    {
       if (pInfo != INVALID_POINTER_VALUE)
          free(pInfo);

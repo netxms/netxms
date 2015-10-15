@@ -25,7 +25,7 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.NXCSession;
-import org.netxms.client.server.ServerFile;
+import org.netxms.client.server.AgentFile;
 import org.netxms.ui.eclipse.filemanager.Activator;
 import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -54,18 +54,18 @@ public class ViewAgentFilesProvider implements ITreeContentProvider
 	@Override
 	public Object[] getChildren(final Object parentElement)
 	{
-	   if(((ServerFile)parentElement).getChildren() == null)
+	   if(((AgentFile)parentElement).getChildren() == null)
 	   {
          ConsoleJob job = new ConsoleJob(Messages.get().ViewAgentFilesProvider_JobTitle, null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               final ServerFile[] files = session.listAgentFiles(((ServerFile)parentElement), ((ServerFile)parentElement).getFullName(), ((ServerFile)parentElement).getNodeId());
+               final AgentFile[] files = session.listAgentFiles(((AgentFile)parentElement), ((AgentFile)parentElement).getFullName(), ((AgentFile)parentElement).getNodeId());
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
                   {
-                     ((ServerFile)parentElement).setChildren(files);
+                     ((AgentFile)parentElement).setChildren(files);
                      ((StructuredViewer)viewer).refresh(parentElement);
                   }
                });
@@ -79,9 +79,9 @@ public class ViewAgentFilesProvider implements ITreeContentProvider
          };
          job.setUser(false);
          job.start();
-         return new ServerFile[] { new ServerFile(Messages.get().ViewAgentFilesProvider_Loading, ServerFile.PLACEHOLDER, (ServerFile)parentElement, ((ServerFile)parentElement).getNodeId()) };
+         return new AgentFile[] { new AgentFile(Messages.get().ViewAgentFilesProvider_Loading, AgentFile.PLACEHOLDER, (AgentFile)parentElement, ((AgentFile)parentElement).getNodeId()) };
 	   }
-		return ((ServerFile)parentElement).getChildren();
+		return ((AgentFile)parentElement).getChildren();
 	}
 
 	/* (non-Javadoc)
@@ -90,7 +90,7 @@ public class ViewAgentFilesProvider implements ITreeContentProvider
 	@Override
 	public Object getParent(Object element)
 	{
-		return ((ServerFile)element).getParent();
+		return ((AgentFile)element).getParent();
 	}
 
 	/* (non-Javadoc)
@@ -99,7 +99,7 @@ public class ViewAgentFilesProvider implements ITreeContentProvider
 	@Override
 	public boolean hasChildren(Object element)
 	{
-		return ((ServerFile)element).isDirectory();
+		return ((AgentFile)element).isDirectory();
 	}
 
 	/* (non-Javadoc)
@@ -116,8 +116,8 @@ public class ViewAgentFilesProvider implements ITreeContentProvider
    @Override
    public Object[] getElements(Object inputElement)
    {
-      List<ServerFile> list = new ArrayList<ServerFile>();
-      for(ServerFile e : (ServerFile[])inputElement)
+      List<AgentFile> list = new ArrayList<AgentFile>();
+      for(AgentFile e : (AgentFile[])inputElement)
          if (e.getParent() == null)
             list.add(e);      
       return list.toArray();

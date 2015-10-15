@@ -1,14 +1,28 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.client.objects;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import org.netxms.base.InetAddressEx;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
-import org.netxms.client.IpAddressListElement;
 import org.netxms.client.NXCSession;
 
 /**
@@ -17,8 +31,8 @@ import org.netxms.client.NXCSession;
 public class VPNConnector extends GenericObject
 {
    private long peerGatewayId;
-   private List<IpAddressListElement> localSubnets;
-   private List<IpAddressListElement> remoteSubnets;
+   private List<InetAddressEx> localSubnets;
+   private List<InetAddressEx> remoteSubnets;
    
    /**
     * Create from NXCP message
@@ -32,23 +46,19 @@ public class VPNConnector extends GenericObject
       
       peerGatewayId = msg.getFieldAsInt64(NXCPCodes.VID_PEER_GATEWAY);
       
-      long varId = NXCPCodes.VID_VPN_NETWORK_BASE;
+      long fieldId = NXCPCodes.VID_VPN_NETWORK_BASE;
       int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_LOCAL_NETS);
-      localSubnets = new ArrayList<IpAddressListElement>(count);
+      localSubnets = new ArrayList<InetAddressEx>(count);
       for(int i = 0; i < count; i++)
       {
-         InetAddress addr = msg.getFieldAsInetAddress(varId++);
-         InetAddress mask = msg.getFieldAsInetAddress(varId++);
-         localSubnets.add(new IpAddressListElement(IpAddressListElement.SUBNET, addr, mask));
+         localSubnets.add(msg.getFieldAsInetAddressEx(fieldId++));
       }
 
       count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_REMOTE_NETS);
-      remoteSubnets = new ArrayList<IpAddressListElement>(count);
+      remoteSubnets = new ArrayList<InetAddressEx>(count);
       for(int i = 0; i < count; i++)
       {
-         InetAddress addr = msg.getFieldAsInetAddress(varId++);
-         InetAddress mask = msg.getFieldAsInetAddress(varId++);
-         remoteSubnets.add(new IpAddressListElement(IpAddressListElement.SUBNET, addr, mask));
+         remoteSubnets.add(msg.getFieldAsInetAddressEx(fieldId++));
       }
    }
 
@@ -95,7 +105,7 @@ public class VPNConnector extends GenericObject
    /**
     * @return the localSubnets
     */
-   public List<IpAddressListElement> getLocalSubnets()
+   public List<InetAddressEx> getLocalSubnets()
    {
       return localSubnets;
    }
@@ -103,7 +113,7 @@ public class VPNConnector extends GenericObject
    /**
     * @return the remoteSubnets
     */
-   public List<IpAddressListElement> getRemoteSubnets()
+   public List<InetAddressEx> getRemoteSubnets()
    {
       return remoteSubnets;
    }

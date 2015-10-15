@@ -1,312 +1,557 @@
-/* 
- ** Java-Bridge NetXMS subagent
- ** Copyright (C) 2013 TEMPEST a.s.
- **
- ** This program is free software; you can redistribute it and/or modify
- ** it under the terms of the GNU General Public License as published by
- ** the Free Software Foundation; either version 2 of the License, or
- ** (at your option) any later version.
- **
- ** This program is distributed in the hope that it will be useful,
- ** but WITHOUT ANY WARRANTY; without even the implied warranty of
- ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- ** GNU General Public License for more details.
- **
- ** You should have received a copy of the GNU General Public License
- ** along with this program; if not, write to the Free Software
- ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- **
- ** File: SubAgent.java
- **
- **/
-
+/**
+ * Java-Bridge NetXMS subagent
+ * Copyright (C) 2013 TEMPEST a.s.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.agent;
 
-// This class is a Java representation of native subagent exposing to it required APIs
-// It also exposes native sendTrap, pushData and writeMessage agent API
-
+import java.io.File;
 import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.jar.Manifest;
-import java.util.jar.Attributes;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
-public class SubAgent {
+/**
+ * This class is a Java representation of native subagent exposing to it required APIs
+ * It also exposes native sendTrap, pushData and writeMessage agent API
+ */
+public class SubAgent
+{
+   public enum LogLevel
+   {
+      INFO(0x0004), WARNING(0x0002), ERROR(0x0001);
 
-	public enum LogLevel {
-		DEBUG(0x0080),
-		INFO(0x0004),
-		WARNING(0x0002),
-		ERROR(0x0001);
+      private int value;
 
-		private int value;
+      LogLevel(final int value)
+      {
+         this.value = value;
+      }
 
-		LogLevel(final int value) {
-		    this.value = value;
-		}
+      public int getValue()
+      {
+         return value;
+      }
+   }
 
-		public int getValue() {
-		    return value;
-		 }
-	}
+   private static final String JAR = ".jar";
+   private static final String PLUGIN_CLASSNAME_ATTRIBUTE_NAME = "NetXMS-Plugin-Classname";
+   private static final String MANIFEST_PATH = "META-INF/MANIFEST.MF";
 
-	private static final String JAR = ".jar";
-	public static final String PLUGIN_CLASSNAME_ATTRIBUTE_NAME = "NetXMS-Plugin-Classname";
-	public static final String MANIFEST_PATH = "META-INF/MANIFEST.MF";
-	
-	protected Map<String, Plugin> plugins;
-	protected Map<String, Action> actions;
-	protected Map<String, Parameter> parameters;
-	protected Map<String, ListParameter> listParameters;
-	protected Map<String, PushParameter> pushParameters;
-	protected Map<String, TableParameter> tableParameters;
-	
-	protected Config getConfig() {
-		return config;
-	}
-	
-	private Config config = null;
+   protected Map<String, Plugin> plugins;
+   protected Map<String, Action> actions;
+   protected Map<String, Parameter> parameters;
+   protected Map<String, ListParameter> lists;
+   protected Map<String, PushParameter> pushParameters;
+   protected Map<String, TableParameter> tables;
 
-	// native methods exposed by agent (see nms_agent.h)
-	protected static native String AgentGetParameterArg(String param, int index);
-	protected static native void AgentSendTrap(int event, String name, String[]args);
-	protected static native boolean AgentPushParameterData(String name, String value);
-	protected static boolean AgentPushParameterData(PushParameter pushParameter) {
-		return AgentPushParameterData(pushParameter.getName(), pushParameter.getValue());
-	}
-	
-	protected static native void AgentWriteLog(int level, String message);
-	protected static void AgentWriteLog(LogLevel level, String message) {
-		AgentWriteLog(level.getValue(), message);
-	}
+   private Config config = null;
 
-	protected static native void AgentWriteDebugLog(int level, String message);
-	protected static void AgentWriteDebugLog(LogLevel level, String message) {
-		AgentWriteDebugLog(level.getValue(), message);
-	}
-	// end of native methods exposed by agent
-	
-	// to be called from native subagent
-	public boolean init(Config config) {
-		for (Map.Entry<String, Plugin> entry: plugins.entrySet()) {
-			entry.getValue().init(config);
-		}
-		return true;
-	}
-	
-	// to be called from native subagent
-	public void shutdown() {
-		AgentWriteLog(LogLevel.DEBUG, "SubAgent.shutdown()");
-		for (Map.Entry<String, Plugin> entry: plugins.entrySet()) {
-			entry.getValue().shutdown();
-		}
-	}
+   /**
+    * Private constructor. Will be invoked by native wrapper only.
+    * @param config
+    */
+   private SubAgent(Config config)
+   {
+      plugins = new HashMap<String, Plugin>();
+      actions = new HashMap<String, Action>();
+      parameters = new HashMap<String, Parameter>();
+      lists = new HashMap<String, ListParameter>();
+      pushParameters = new HashMap<String, PushParameter>();
+      tables = new HashMap<String, TableParameter>();
 
-//	public boolean commandHandler() {
-//		return true;
-//	}
+      this.config = config;
+      writeDebugLog(1, "Java SubAgent created");
 
-	// will be called from subagent native initialization
-	protected boolean loadPlugin(String path, Config config) {
-		AgentWriteLog(LogLevel.DEBUG, "SubAgent.loadPlugin(" + path + ")");
-		Plugin plugin = null;
-		try {
-			plugin = path.toLowerCase().endsWith(JAR) ? createPluginWithJar(path, config) : createPluginWithClassname(path, config);
-			// TODO need to set it up with at least Config
-		} catch (Exception ex) {
-			AgentWriteLog(LogLevel.WARNING, "Failed to load plugin " + path + " with error: " + ex);
-		} finally {
-			if (plugin != null) {
-				plugins.put(plugin.getName(), plugin);
-				// register actions
-				Action[] _actions = plugin.getActions();
-				for (int i=0; i<_actions.length; i++) actions.put(getActionHash(plugin, _actions[i]), _actions[i]);
-				
-				// register paramaters
-				Parameter[] _parameters = plugin.getParameters();
-				for (int i=0; i<_parameters.length; i++) parameters.put(getParameterHash(plugin, _parameters[i]), _parameters[i]);
-				
-				// register list paramaters
-				ListParameter[] _listParameters = plugin.getListParameters();
-				for (int i=0; i<_listParameters.length; i++) listParameters.put(getListParameterHash(plugin, _listParameters[i]), _listParameters[i]);
-				
-				// register push paramaters
-				PushParameter[] _pushParameters = plugin.getPushParameters();
-				for (int i=0; i<_pushParameters.length; i++) pushParameters.put(getPushParameterHash(plugin, _pushParameters[i]), _pushParameters[i]);
+      // load all Plugins
+      ConfigEntry configEntry = config.getEntry("/Java/Plugin");
+      if (configEntry != null)
+      {
+         for(int i = 0; i < configEntry.getValueCount(); i++)
+         {
+            String entry = configEntry.getValue(i).trim();
+            try
+            {
+               loadPlugin(entry);
+            }
+            catch(Throwable e)
+            {
+               writeLog(LogLevel.ERROR, "JAVA: Exception in loadPlugin: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+            }
+         }
+      }
+      else
+      {
+         writeLog(LogLevel.WARNING, "No plugins defined in Java section");
+      }
+   }
 
-				// register table paramaters
-				TableParameter[] _tableParameters = plugin.getTableParameters();
-				for (int i=0; i<_tableParameters.length; i++) tableParameters.put(getTableParameterHash(plugin, _tableParameters[i]), _tableParameters[i]);
-				
-				AgentWriteLog(LogLevel.DEBUG, "SubAgent.loadPlugin actions=" + actions);
-				AgentWriteLog(LogLevel.DEBUG, "SubAgent.loadPlugin parameters=" + parameters);
-				AgentWriteLog(LogLevel.DEBUG, "SubAgent.loadPlugin listParameters=" + listParameters);
-				AgentWriteLog(LogLevel.DEBUG, "SubAgent.loadPlugin pushParameters=" + pushParameters);
-				AgentWriteLog(LogLevel.DEBUG, "SubAgent.loadPlugin tableParameters=" + tableParameters);
-				return true;
-			}
-		}
-		return false;
-	}
+   /**
+    * @return
+    */
+   protected Config getConfig()
+   {
+      return config;
+   }
 
-	protected Plugin createPluginWithClassname(String classname, Config config) throws Exception {
-		Class pluginClass = Class.forName(classname);
-		AgentWriteLog(LogLevel.DEBUG, "SubAgent.createPluginWithClassname loaded class " + pluginClass);
-		Plugin plugin = instantiatePlugin(pluginClass, config);
-		AgentWriteLog(LogLevel.DEBUG, "SubAgent.createPluginWithClassname created instance " + plugin);
-		return plugin;
-	}
-	
-	protected  Plugin createPluginWithJar(String jarFile, Config config) throws Exception {
-		URLClassLoader classLoader = new URLClassLoader(new URL[] {new URL(jarFile)});
-		URL url = classLoader.findResource(MANIFEST_PATH);
-		Manifest manifest = new Manifest(url.openStream());
-		Attributes attributes = manifest.getMainAttributes();
-		String pluginClassName = attributes.getValue(PLUGIN_CLASSNAME_ATTRIBUTE_NAME);
-		if (pluginClassName == null) throw new Exception("Failed to find " + PLUGIN_CLASSNAME_ATTRIBUTE_NAME + " attribute in manifest of " + jarFile);
-		Class<?> pluginClass = classLoader.loadClass(pluginClassName);
-		Plugin plugin = instantiatePlugin(pluginClass, config);
-		return plugin;
-	}
-	
-	// uses reflection to create an instance of Plugin
-	protected Plugin instantiatePlugin(Class pluginClass, Config config) throws Exception {
-		Plugin plugin = null;
-		Constructor<Plugin> constructor = pluginClass.getDeclaredConstructor(org.netxms.agent.Config.class);
-		if (constructor != null) {
-		      plugin = constructor.newInstance(config);
-		} else {
-		      throw new Exception("Failed to find constructor Plugin(Config) in class " + pluginClass);
-		}
-		return plugin;
-	}
+   /*===== native methods exposed by agent (see nms_agent.h) =====*/
+   
+   /**
+    * Extract argument from full parameter name.
+    * 
+    * For example:
+    *   parameter: Process.Count(java, 2)
+    *   
+    *   AgentGetParameterArg(parameter, 1) will return "java"
+    * 
+    * @param param full parameter name (as passed to handler)
+    * @param index argument index (first argument has index 1)
+    * @return extracted argument on success, empty string if argument is missing, null if input is malformed
+    */
+   public static native String getParameterArg(String param, int index);
 
-	// to be called from native subagent
-	public String parameterHandler(final String param, final String id) {
-		// retrieve appropriate Parameter from cache
-		Parameter parameter = getParameter(id);
-		if (parameter != null) {
-		      return parameter.getValue(param);
-		}
-		return null;
-	}
-	
-	// to be called from native subagent
-	public String[] listParameterHandler(final String param, final String id) {
-		// retrieve appropriate ListParameter from cache
-		ListParameter listParameter = getListParameter(id);
-		if (listParameter != null) {
-		      return listParameter.getValues(param);
-		}
-		return null;
-	}
-	
-	// to be called from native subagent
-	public String[][] tableParameterHandler(final String param, final String id) {
-		// retrieve appropriate TableParameter from cache
-		AgentWriteLog(LogLevel.DEBUG, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ")");
-		TableParameter tableParameter = getTableParameter(id);
-		if (tableParameter != null) {
-		      AgentWriteLog(LogLevel.DEBUG, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ") returning " + tableParameter.getValues(param));
-		      return tableParameter.getValues(param);
-		}
-		return null;
-	}
-	
-	// to be called from native subagent
-	public void actionHandler(final String param, final String[] args, final String id) {
-		// retrieve appropriate Action from cache
-		Action action = getAction(id);
-		if (action != null) {
-		      action.execute(param, args);
-		}
-	}
+   public static native void sendTrap(int event, String name, String[] args);
 
-	public String[] getActionIds() {
-		return actions.keySet().toArray(new String[0]);
-	}
-	
-	public String[] getParameterIds() {
-		return parameters.keySet().toArray(new String[0]);
-	}
-	
-	public String[] getListParameterIds() {
-		return listParameters.keySet().toArray(new String[0]);
-	}
-	
-	public String[] getPushParameterIds() {
-		return pushParameters.keySet().toArray(new String[0]);
-	}
-	
-	public String[] getTableParameterIds() {
-		return tableParameters.keySet().toArray(new String[0]);
-	}
+   protected static native boolean pushParameterData(String name, String value);
 
-	protected String getActionHash(Plugin plugin, Action action) {
-		return plugin.getName() + " / " + action.getName();
-	}
-	
-	protected Action getAction(String id) {
-		return actions.get(id);
-	}
-	
-	protected String getParameterHash(Plugin plugin, Parameter parameter) {
-		return plugin.getName() + " / " + parameter.getName();
-	}
-	
-	protected Parameter getParameter(String id) {
-		return parameters.get(id);
-	}
-	
-	protected String getListParameterHash(Plugin plugin, ListParameter listParameter) {
-		return plugin.getName() + " / " + listParameter.getName();
-	}
-	
-	protected ListParameter getListParameter(String id) {
-		return listParameters.get(id);
-	}
-	
-	protected String getPushParameterHash(Plugin plugin, PushParameter pushParameter) {
-		return plugin.getName() + " / " + pushParameter.getName();
-	}
-	
-	protected PushParameter getPushParameter(String id) {
-		return pushParameters.get(id);
-	}
-	
-	protected String getTableParameterHash(Plugin plugin, TableParameter tableParameter) {
-		return plugin.getName() + " / " + tableParameter.getName();
-	}
-	
-	protected TableParameter getTableParameter(String id) {
-		return tableParameters.get(id);
-	}
+   protected static native void writeLog(int level, String message);
 
-	private SubAgent(Config config) {
-		// will be invoked by native wrapper only
+   public static native void writeDebugLog(int level, String message);
 
-		plugins = new HashMap<String, Plugin>();
-		actions = new HashMap<String, Action>();
-		parameters = new HashMap<String, Parameter>();
-		listParameters = new HashMap<String, ListParameter>();
-		pushParameters = new HashMap<String, PushParameter>();
-		tableParameters = new HashMap<String, TableParameter>();
+   /*===== end of native methods exposed by agent =====*/
 
-		this.config = config;
-		AgentWriteLog(LogLevel.DEBUG, "Java SubAgent created");
-		
-		// load all Plugins
-		ConfigEntry configEntry = config.getEntry("/Java/Plugin");
-		if (configEntry != null) {
-			for (int i=0; i<configEntry.getValueCount(); i++) {
-			      String entry = configEntry.getValue(i).trim();
-			      loadPlugin(entry, config);
-			}
-		} else {
-			AgentWriteLog(LogLevel.DEBUG, "No Plugin defined in Java section!");
-		}
-	}
-	
+   /**
+    * Wrapper for native writeLog call
+    * 
+    * @param level
+    * @param message
+    */
+   public static void writeLog(LogLevel level, String message)
+   {
+      writeLog(level.getValue(), message);
+   }
+
+   /**
+    * Write exception's stack trace to debug log
+    * 
+    * @param level
+    * @param prefix
+    * @param e
+    */
+   public static void writeDebugLog(int level, String prefix, Throwable e)
+   {
+      for(StackTraceElement s : e.getStackTrace())
+      {
+         writeDebugLog(level, prefix + s.toString());
+      }
+   }
+   
+
+   /**
+    * Initialize (to be called from native subagent)
+    * 
+    * @param config
+    * @return
+    */
+   public boolean init(Config config)
+   {
+      for(Map.Entry<String, Plugin> entry : plugins.entrySet())
+      {
+         entry.getValue().init(config);
+      }
+      return true;
+   }
+
+   /**
+    * Shutdown (to be called from native subagent)
+    */
+   public void shutdown()
+   {
+      writeDebugLog(2, "JAVA: subagent shutdown initiated");
+      for(Map.Entry<String, Plugin> entry : plugins.entrySet())
+      {
+         try
+         {
+            writeDebugLog(5, "JAVA: calling shutdown() method for plugin " + entry.getKey());
+            entry.getValue().shutdown();
+         }
+         catch(Throwable e)
+         {
+            writeDebugLog(2, "JAVA: exception in plugin " + entry.getKey() + " shutdown handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         }
+      }
+      writeDebugLog(2, "JAVA: subagent shutdown completed");
+   }
+
+   /**
+    * will be called from subagent native initialization
+    * 
+    * @param path
+    * @return
+    */
+   protected boolean loadPlugin(String path)
+   {
+      writeDebugLog(2, "SubAgent.loadPlugin(" + path + ")");
+      Plugin[] loadList = path.toLowerCase().endsWith(JAR) ? createPluginWithJar(path, config) : createPluginWithClassname(path, config);
+      
+      if ((loadList == null) || (loadList.length == 0))
+         return false;
+      
+      for(Plugin p : loadList)
+      {
+         plugins.put(p.getName(), p);
+         writeDebugLog(2, "Java plugin " + p.getName() + " (" + p.getClass().getName() + ") loaded");
+         
+         // register actions
+         Action[] _actions = p.getActions();
+         for(int i = 0; i < _actions.length; i++)
+            actions.put(createContributionItemId(p, _actions[i]), _actions[i]);
+      
+         // register paramaters
+         Parameter[] _parameters = p.getParameters();
+         for(int i = 0; i < _parameters.length; i++)
+            parameters.put(createContributionItemId(p, _parameters[i]), _parameters[i]);
+      
+         // register list paramaters
+         ListParameter[] _listParameters = p.getListParameters();
+         for(int i = 0; i < _listParameters.length; i++)
+            lists.put(createContributionItemId(p, _listParameters[i]), _listParameters[i]);
+      
+         // register push paramaters
+         PushParameter[] _pushParameters = p.getPushParameters();
+         for(int i = 0; i < _pushParameters.length; i++)
+            pushParameters.put(createContributionItemId(p, _pushParameters[i]), _pushParameters[i]);
+      
+         // register table paramaters
+         TableParameter[] _tableParameters = p.getTableParameters();
+         for(int i = 0; i < _tableParameters.length; i++)
+            tables.put(createContributionItemId(p, _tableParameters[i]), _tableParameters[i]);
+      
+         writeDebugLog(6, "SubAgent.loadPlugin actions=" + actions);
+         writeDebugLog(6, "SubAgent.loadPlugin parameters=" + parameters);
+         writeDebugLog(6, "SubAgent.loadPlugin listParameters=" + lists);
+         writeDebugLog(6, "SubAgent.loadPlugin pushParameters=" + pushParameters);
+         writeDebugLog(6, "SubAgent.loadPlugin tableParameters=" + tables);
+      }
+      return true;
+   }
+
+   /**
+    * @param classname
+    * @param config
+    * @return
+    * @throws Exception
+    */
+   protected Plugin[] createPluginWithClassname(String classname, Config config)
+   {
+      try
+      {
+         Class<?> pluginClass = Class.forName(classname);
+         writeDebugLog(3, "SubAgent.createPluginWithClassname loaded class " + pluginClass);
+         Plugin plugin = instantiatePlugin(pluginClass.asSubclass(Plugin.class), config);
+         writeDebugLog(3, "SubAgent.createPluginWithClassname created instance " + plugin);
+         return new Plugin[] { plugin };
+      }
+      catch(Throwable e)
+      {
+         writeLog(LogLevel.WARNING, "Failed to load plugin " + classname + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         return null;
+      }
+   }
+
+   /**
+    * @param jarFile
+    * @param config
+    * @return
+    * @throws Exception
+    */
+   protected Plugin[] createPluginWithJar(String jarFile, Config config)
+   {
+      String classList;
+      URLClassLoader classLoader;
+      try
+      {
+         classLoader = new URLClassLoader(new URL[] { new File(jarFile).toURI().toURL() }, Thread.currentThread().getContextClassLoader() );
+         URL url = classLoader.findResource(MANIFEST_PATH);
+         Manifest manifest = new Manifest(url.openStream());
+         Attributes attributes = manifest.getMainAttributes();
+         classList = attributes.getValue(PLUGIN_CLASSNAME_ATTRIBUTE_NAME);
+         if (classList == null)
+         {
+            classLoader.close();
+            writeLog(LogLevel.WARNING, "Failed to find " + PLUGIN_CLASSNAME_ATTRIBUTE_NAME + " attribute in manifest of " + jarFile);
+            return null;
+         }
+      }
+      catch(Throwable e)
+      {
+         writeLog(LogLevel.WARNING, "Error processing jar file " + jarFile + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         return null;
+      }
+         
+      List<Plugin> pluginList = new ArrayList<Plugin>();
+      String[] classNames = classList.split(";");
+      for(String cn : classNames)
+      {
+         cn = cn.trim();
+         try
+         {
+            Class<?> pluginClass = Class.forName(cn, false, classLoader);
+            Plugin plugin = instantiatePlugin(pluginClass.asSubclass(Plugin.class), config);
+            pluginList.add(plugin);
+         }
+         catch(Throwable e)
+         {
+            writeLog(LogLevel.WARNING, "Failed to load plugin " + cn + " from jar file " + jarFile + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         }
+      }
+      return pluginList.toArray(new Plugin[pluginList.size()]);
+   }
+
+   /**
+    * uses reflection to create an instance of Plugin
+    * 
+    * @param pluginClass
+    * @param config
+    * @return
+    * @throws Exception
+    */
+   protected Plugin instantiatePlugin(Class<? extends Plugin> pluginClass, Config config) throws Exception
+   {
+      Plugin plugin = null;
+      Constructor<? extends Plugin> constructor = pluginClass.getDeclaredConstructor(org.netxms.agent.Config.class);
+      if (constructor != null)
+      {
+         plugin = constructor.newInstance(config);
+      }
+      else
+      {
+         throw new Exception("Failed to find constructor Plugin(Config) in class " + pluginClass);
+      }
+      return plugin;
+   }
+
+   /**
+    * to be called from native subagent
+    * 
+    * @param param
+    * @param id
+    * @return
+    */
+   public String parameterHandler(final String param, final String id) throws Throwable
+   {
+      try
+      {
+         Parameter parameter = parameters.get(id);
+         if (parameter != null)
+         {
+            return parameter.getValue(param);
+         }
+         return null;
+      }
+      catch(Throwable e)
+      {
+         writeDebugLog(6, "JAVA: Exception in parameter handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         writeDebugLog(6, "JAVA:   ", e);
+         throw e;
+      }
+   }
+
+   /**
+    * to be called from native subagent
+    * 
+    * @param param
+    * @param id
+    * @return
+    */
+   public String[] listHandler(final String param, final String id) throws Throwable
+   {
+      try
+      {
+         ListParameter listParameter = lists.get(id);
+         if (listParameter != null)
+         {
+            return listParameter.getValue(param);
+         }
+         return null;
+      }
+      catch(Throwable e)
+      {
+         writeDebugLog(6, "JAVA: Exception in list handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         writeDebugLog(6, "JAVA:   ", e);
+         throw e;
+      }
+   }
+
+   /**
+    * to be called from native subagent
+    * 
+    * @param param
+    * @param id
+    * @return
+    */
+   public String[][] tableHandler(final String param, final String id) throws Throwable
+   {
+      try
+      {
+         TableParameter tableParameter = tables.get(id);
+         if (tableParameter != null)
+         {
+            writeDebugLog(7, "SubAgent.tableParameterHandler(param=" + param + ", id=" + id + ") returning " + tableParameter.getValue(param));
+            return tableParameter.getValue(param);
+         }
+         return null;
+      }
+      catch(Throwable e)
+      {
+         writeDebugLog(6, "JAVA: Exception in table handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         writeDebugLog(6, "JAVA:   ", e);
+         throw e;
+      }
+   }
+
+   /**
+    * to be called from native subagent
+    * 
+    * @param param
+    * @param args
+    * @param id
+    */
+   public boolean actionHandler(final String param, final String[] args, final String id)
+   {
+      try
+      {
+         Action action = actions.get(id);
+         if (action != null)
+         {
+            return action.execute(param, args);
+         }
+      }
+      catch(Throwable e)
+      {
+         writeDebugLog(6, "JAVA: Exception in action handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         writeDebugLog(6, "JAVA:   ", e);
+      }
+      return false;
+   }
+
+   /**
+    * @return
+    */
+   public String[] getActions()
+   {
+      List<String> list = new ArrayList<String>();
+      for(Entry<String, Action> e : actions.entrySet())
+      {
+         list.add(e.getKey());
+         list.add(e.getValue().getName());
+         list.add(e.getValue().getDescription());
+      }
+      return list.toArray(new String[0]);
+   }
+
+   /**
+    * @return
+    */
+   public String[] getParameters()
+   {
+      List<String> list = new ArrayList<String>();
+      for(Entry<String, Parameter> e : parameters.entrySet())
+      {
+         list.add(e.getKey());
+         list.add(e.getValue().getName());
+         list.add(e.getValue().getDescription());
+         list.add(Integer.toString(e.getValue().getType().getValue()));
+      }
+      return list.toArray(new String[0]);
+   }
+
+   /**
+    * @return
+    */
+   public String[] getLists()
+   {
+      List<String> list = new ArrayList<String>();
+      for(Entry<String, ListParameter> e : lists.entrySet())
+      {
+         list.add(e.getKey());
+         list.add(e.getValue().getName());
+         list.add(e.getValue().getDescription());
+      }
+      return list.toArray(new String[0]);
+   }
+
+   /**
+    * @return
+    */
+   public String[] getPushParameters()
+   {
+      List<String> list = new ArrayList<String>();
+      for(Entry<String, PushParameter> e : pushParameters.entrySet())
+      {
+         list.add(e.getKey());
+         list.add(e.getValue().getName());
+         list.add(e.getValue().getDescription());
+         list.add(Integer.toString(e.getValue().getType().getValue()));
+      }
+      return list.toArray(new String[0]);
+   }
+
+   /**
+    * @return
+    */
+   public String[] getTables()
+   {
+      List<String> list = new ArrayList<String>();
+      if (tables.size() > 0)
+      {
+         list.add(Integer.toString(tables.size()));
+         for(Entry<String, TableParameter> e : tables.entrySet())
+         {
+            list.add(e.getKey());
+            list.add(e.getValue().getName());
+            list.add(e.getValue().getDescription());
+            
+            TableColumn[] columns = e.getValue().getColumns();
+            list.add(Integer.toString(columns.length));
+            for(TableColumn tc : columns)
+            {
+               list.add(tc.getName());
+               list.add(tc.getDisplayName());
+               list.add(Integer.toString(tc.getType().getValue()));
+               list.add(tc.isInstance() ? "T" : "F");
+            }
+         }
+      }
+      return list.toArray(new String[0]);
+   }
+   
+   /**
+    * @param plugin
+    * @param parameter
+    * @return
+    */
+   private static String createContributionItemId(Plugin plugin, AgentContributionItem ci)
+   {
+      return plugin.getName() + "/" + ci.getName();
+   }
 }

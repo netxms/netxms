@@ -1,7 +1,7 @@
 package com.radensolutions.reporting.dao;
 
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.radensolutions.reporting.service.ServerSettings;
-import org.apache.commons.dbcp.BasicDataSource;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
+import java.beans.PropertyVetoException;
 import java.util.Properties;
 
 @Configuration
@@ -35,13 +36,16 @@ public class DaoContextConfig {
 
     @Bean
     @Qualifier("systemDataSource")
-    public DataSource dataSource() {
-        BasicDataSource dataSource = new BasicDataSource();
+    public DataSource dataSource() throws PropertyVetoException {
+        ComboPooledDataSource dataSource = new ComboPooledDataSource();
         ServerSettings.DataSourceConfig dataSourceConfig = settings.getDataSourceConfig(ServerSettings.DC_ID_SYSTEM);
-        dataSource.setDriverClassName(dataSourceConfig.getDriver());
-        dataSource.setUrl(dataSourceConfig.getUrl());
-        dataSource.setUsername(dataSourceConfig.getUsername());
+        dataSource.setDriverClass(dataSourceConfig.getDriver());
+        dataSource.setJdbcUrl(dataSourceConfig.getUrl());
+        dataSource.setUser(dataSourceConfig.getUsername());
         dataSource.setPassword(dataSourceConfig.getPassword());
+        dataSource.setTestConnectionOnCheckout(true);
+        dataSource.setCheckoutTimeout(3000);
+        dataSource.setIdleConnectionTestPeriod(300);
         return dataSource;
     }
 

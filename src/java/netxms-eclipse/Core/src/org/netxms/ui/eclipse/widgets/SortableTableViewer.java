@@ -21,9 +21,12 @@ package org.netxms.ui.eclipse.widgets;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerRow;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Widget;
 import org.netxms.ui.eclipse.widgets.helpers.TableSortingListener;
 
@@ -135,6 +138,29 @@ public class SortableTableViewer extends TableViewer
 			columns[i].removeSelectionListener(sortingListener);
 		getTable().setSortColumn(null);
 	}
+
+   /**
+    * Get column index at given point
+    * 
+    * @param p
+    * @return
+    */
+   public TableColumn getColumnAtPoint(Point p)
+   {
+      TableItem item = getTable().getItem(p);
+      if (item == null)
+         return null;
+      int columnCount = getTable().getColumnCount();
+      for(int i = 0; i < columnCount; i++)
+      {
+         Rectangle rect = item.getBounds(i);
+         if (rect.contains(p))
+         {
+            return getTable().getColumn(i);
+         }
+      }
+      return null;
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.TableViewer#getViewerRowFromItem(org.eclipse.swt.widgets.Widget)

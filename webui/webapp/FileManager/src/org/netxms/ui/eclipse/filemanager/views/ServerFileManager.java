@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.filemanager.views;
 
+import java.io.File;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -349,24 +351,33 @@ public class ServerFileManager extends ViewPart implements SessionListener
             @Override
             protected void runInternal(final IProgressMonitor monitor) throws Exception
             {
-               session.uploadFileToServer(dlg.getLocalFile(), dlg.getRemoteFileName(), new ProgressListener() {
-                  private long prevWorkDone = 0;
-
-                  @Override
-                  public void setTotalWorkAmount(long workTotal)
-                  {
-                     monitor.beginTask(Messages.get(getDisplay()).UploadFileToServer_TaskNamePrefix
-                           + dlg.getLocalFile().getAbsolutePath(), (int)workTotal);
-                  }
-
-                  @Override
-                  public void markProgress(long workDone)
-                  {
-                     monitor.worked((int)(workDone - prevWorkDone));
-                     prevWorkDone = workDone;
-                  }
-               });
-               monitor.done();
+               List<File> fileList = dlg.getLocalFiles();
+               for(int i = 0; i < fileList.size(); i++)
+               {
+                  final File localFile = fileList.get(i);
+                  String remoteFile = fileList.get(i).getName();
+                  if(fileList.size() == 1)
+                     remoteFile = dlg.getRemoteFileName();
+                  
+                  session.uploadFileToServer(localFile, remoteFile, new ProgressListener() {
+                     private long prevWorkDone = 0;
+   
+                     @Override
+                     public void setTotalWorkAmount(long workTotal)
+                     {
+                        monitor.beginTask(Messages.get(getDisplay()).UploadFileToServer_TaskNamePrefix + localFile.getAbsolutePath(),
+                              (int)workTotal);
+                     }
+   
+                     @Override
+                     public void markProgress(long workDone)
+                     {
+                        monitor.worked((int)(workDone - prevWorkDone));
+                        prevWorkDone = workDone;
+                     }
+                  });
+                  monitor.done();
+               }
             }
 
             @Override

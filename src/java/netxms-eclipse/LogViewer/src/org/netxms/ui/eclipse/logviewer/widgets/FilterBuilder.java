@@ -77,6 +77,7 @@ public class FilterBuilder extends Composite
 	private ScrolledForm form;
 	private Section condition;
 	private Section ordering;
+   private ImageHyperlink addColumnLink;
 	private TableViewer orderingList;
 	private Action actionExecute;
 	private Action actionClose;
@@ -166,7 +167,7 @@ public class FilterBuilder extends Composite
 		clientArea.setLayout(layout);
 		condition.setClient(clientArea);
 		
-		final ImageHyperlink addColumnLink = toolkit.createImageHyperlink(clientArea, SWT.NONE);
+		addColumnLink = toolkit.createImageHyperlink(clientArea, SWT.NONE);
 		addColumnLink.setText(Messages.get().FilterBuilder_AddColumn);
 		addColumnLink.setImage(SharedIcons.IMG_ADD_OBJECT);
 		addColumnLink.addHyperlinkListener(new HyperlinkAdapter() {
@@ -348,29 +349,39 @@ public class FilterBuilder extends Composite
 				if (columns.get(column.getName()) != null)
 					return;	// Column already added
 				
-				// Add column
-				final ColumnFilterEditor editor = new ColumnFilterEditor((Composite)condition.getClient(), 
-						toolkit, column, new Runnable() {
-							@Override
-							public void run()
-							{
-								columns.remove(column.getName());
-								FilterBuilder.this.updateLayout();
-							}
-						});
-				editor.attachFilterBuilder(FilterBuilder.this);
-				editor.moveAbove(lastControl);
-				GridData gd = new GridData();
-				gd.grabExcessHorizontalSpace = true;
-				gd.horizontalAlignment = SWT.FILL;
-				editor.setLayoutData(gd);
-				
-				columns.put(column.getName(), editor);
-				
+            createColumnFilterEditor(column, lastControl, null);
 				FilterBuilder.this.updateLayout();
 			}
 		});
 	}
+
+   /**
+    * Create column filter editor
+    * 
+    * @param column
+    * @param lastControl
+    * @param initialFilter
+    */
+   private void createColumnFilterEditor(final LogColumn column, final Control lastControl, ColumnFilter initialFilter)
+   {
+      final ColumnFilterEditor editor = new ColumnFilterEditor((Composite)condition.getClient(), 
+            toolkit, column, (initialFilter != null) ? initialFilter.getOperation() : 0, new Runnable() {
+               @Override
+               public void run()
+               {
+                  columns.remove(column.getName());
+                  FilterBuilder.this.updateLayout();
+               }
+            });
+      editor.attachFilterBuilder(FilterBuilder.this, initialFilter);
+      editor.moveAbove(lastControl);
+      GridData gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      editor.setLayoutData(gd);
+      
+      columns.put(column.getName(), editor);
+   }
 	
 	/**
 	 * Create menu for selecting log column
@@ -448,4 +459,22 @@ public class FilterBuilder extends Composite
 		form.reflow(true);
 		getParent().layout(true, true);
 	}
+
+   /**
+    * Update filter builder from existing filter
+    * 
+    * @param filter
+    */
+   public void setFilter(LogFilter filter)
+   {
+      clearFilter();
+
+      for(Entry<String, ColumnFilter> cf : filter.getColumnFilters())
+         createColumnFilterEditor(logHandle.getColumn(cf.getKey()), addColumnLink, cf.getValue());
+
+      orderingColumns.addAll(filter.getOrderingColumns());
+      orderingList.setInput(orderingColumns.toArray());
+
+      updateLayout();
+   }
 }

@@ -153,7 +153,7 @@ public class EditThresholdDialog extends Dialog
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
-		gd.widthHint = 450;
+		gd.widthHint = 550;
 		activationEvent.setLayoutData(gd);
 		
 		deactivationEvent = new EventSelector(eventGroup, SWT.NONE);
@@ -243,7 +243,7 @@ public class EditThresholdDialog extends Dialog
 	private void createScriptGroup()
 	{
       scriptGroup = new Composite(conditionGroup, SWT.NONE);
-      scriptGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+      scriptGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
       GridLayout scriptLayout = new GridLayout();
       scriptLayout.numColumns = 2;
       scriptLayout.marginHeight = 0;
@@ -296,6 +296,9 @@ public class EditThresholdDialog extends Dialog
             editButton.getDisplay().removeFilter(SWT.KeyDown, keyListener);
          }
       });
+      
+      value = WidgetHelper.createLabeledText(conditionGroup, SWT.BORDER, 120, Messages.get().EditThresholdDialog_Value, 
+            (savedValue != null) ? savedValue : threshold.getValue(), WidgetHelper.DEFAULT_LAYOUT_DATA);
 	}
 	
 	/**
@@ -303,7 +306,8 @@ public class EditThresholdDialog extends Dialog
 	 */
 	private void openScriptEditor()
 	{
-      ScriptEditDialog dlg = new ScriptEditDialog(getShell(), script.getText());
+      ScriptEditDialog dlg = new ScriptEditDialog(getShell(), script.getText(), 
+            "Variables:\r\n\t$1\t\t\tcurrent DCI value;\r\n\t$2\t\t\tthreshold value;\r\n\t$dci\t\t\tthis DCI object;\r\n\t$isCluster\ttrue if DCI is on cluster;\r\n\t$node\t\tcurrent node object (null if DCI is not on the node);\r\n\t$object\t\tcurrent object.\r\n\r\nReturn value: true if threshold violated.");
       if (dlg.open() == Window.OK)
       {
          script.setText(dlg.getScript());
@@ -317,6 +321,7 @@ public class EditThresholdDialog extends Dialog
 	{
 	   savedScript = script.getText();
 	   scriptGroup.dispose();
+	   value.getParent().dispose();
 	}
 
 	/* (non-Javadoc)
@@ -358,6 +363,7 @@ public class EditThresholdDialog extends Dialog
 		if (threshold.getFunction() == Threshold.F_SCRIPT)
 		{
 		   threshold.setScript(script.getText());
+         threshold.setValue(value.getText());
 		}
 		else
 		{

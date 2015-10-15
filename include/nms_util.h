@@ -506,10 +506,11 @@ public:
 	int size();
    bool contains(const TCHAR *key) { return find(key) != NULL; }
 
-   bool forEach(bool (*cb)(const TCHAR *, const void *, void *), void *userData);
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData);
    const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData);
 
    StructArray<KeyValuePair> *toArray();
+   StringList *keys();
 };
 
 /**
@@ -593,6 +594,7 @@ public:
    void merge(const StringList *src, bool matchCase);
    TCHAR *join(const TCHAR *separator);
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);
+   void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId);
 };
 
 /**
@@ -628,13 +630,72 @@ public:
 
    void addAll(StringSet *src);
    void addAll(TCHAR **strings, int count);
+   void splitAndAdd(const TCHAR *src, const TCHAR *separator);
    void addAllPreallocated(TCHAR **strings, int count);
    void forEach(bool (*cb)(const TCHAR *, void *), void *userData);
 
    void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId);
    void addAllFromMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
 
-   String getAll(const TCHAR *separator);
+   String join(const TCHAR *separator);
+};
+
+/**
+ * Opaque hash map entry structure
+ */
+struct HashMapEntry;
+
+/**
+ * Hash map base class (for fixed size non-pointer keys)
+ */
+class LIBNETXMS_EXPORTABLE HashMapBase
+{
+private:
+   HashMapEntry *m_data;
+	bool m_objectOwner;
+   unsigned int m_keylen;
+
+	HashMapEntry *find(const void *key);
+	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
+
+protected:
+	void (*m_objectDestructor)(void *);
+
+	HashMapBase(bool objectOwner, unsigned int keylen);
+
+	void *_get(const void *key);
+	void _set(const void *key, void *value);
+	void _remove(const void *key);
+
+   bool _contains(const void *key) { return find(key) != NULL; }
+
+public:
+   virtual ~HashMapBase();
+
+   void setOwner(bool owner) { m_objectOwner = owner; }
+	void clear();
+
+	int size();
+
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void *, const void *, void *), void *userData);
+   const void *findElement(bool (*comparator)(const void *, const void *, void *), void *userData);
+};
+
+/**
+ * Hash map template for holding objects as values
+ */
+template <class K, class V> class HashMap : public HashMapBase
+{
+private:
+	static void destructor(void *object) { delete (V*)object; }
+
+public:
+	HashMap(bool objectOwner = false) : HashMapBase(objectOwner, sizeof(K)) { m_objectDestructor = destructor; }
+
+	V *get(const K& key) { return (V*)_get(&key); }
+	void set(const K& key, V *value) { _set(&key, (void *)value); }
+   void remove(const K& key) { _remove(&key); }
+   bool contains(const K& key) { return _contains(&key); }
 };
 
 /**
@@ -647,6 +708,7 @@ private:
    size_t m_size;
    size_t m_allocated;
    size_t m_pos;
+   size_t m_allocationStep;
 
 public:
    ByteStream(size_t initial = 8192);
@@ -660,7 +722,9 @@ public:
    size_t size() { return m_size; }
    bool eos() { return m_pos == m_size; }
 
-   BYTE *buffer(size_t *size) { *size = m_size; return m_data; }
+   void setAllocationStep(size_t s) { m_allocationStep = s; }
+
+   const BYTE *buffer(size_t *size) { *size = m_size; return m_data; }
 
    void write(const void *data, size_t size);
    void write(char c) { write(&c, 1); }
@@ -756,16 +820,17 @@ class TableCell
 private:
    TCHAR *m_value;
    int m_status;
+   UINT32 m_objectId;
 
 public:
-   TableCell() { m_value = NULL; m_status = -1; }
-   TableCell(const TCHAR *value) { m_value = _tcsdup_ex(value); m_status = -1; }
-   TableCell(const TCHAR *value, int status) { m_value = _tcsdup_ex(value); m_status = status; }
-   TableCell(TableCell *src) { m_value = _tcsdup_ex(src->m_value); m_status = src->m_status; }
+   TableCell() { m_value = NULL; m_status = -1; m_objectId = 0; }
+   TableCell(const TCHAR *value) { m_value = _tcsdup_ex(value); m_status = -1; m_objectId = 0; }
+   TableCell(const TCHAR *value, int status) { m_value = _tcsdup_ex(value); m_status = status; m_objectId = 0; }
+   TableCell(TableCell *src) { m_value = _tcsdup_ex(src->m_value); m_status = src->m_status; m_objectId = src->m_objectId; }
    ~TableCell() { safe_free(m_value); }
 
-   void set(const TCHAR *value, int status) { safe_free(m_value); m_value = _tcsdup_ex(value); m_status = status; }
-   void setPreallocated(TCHAR *value, int status) { safe_free(m_value); m_value = value; m_status = status; }
+   void set(const TCHAR *value, int status, UINT32 objectId) { safe_free(m_value); m_value = _tcsdup_ex(value); m_status = status; m_objectId = objectId; }
+   void setPreallocated(TCHAR *value, int status, UINT32 objectId) { safe_free(m_value); m_value = value; m_status = status; m_objectId = objectId; }
 
    const TCHAR *getValue() { return m_value; }
    void setValue(const TCHAR *value) { safe_free(m_value); m_value = _tcsdup_ex(value); }
@@ -773,6 +838,9 @@ public:
 
    int getStatus() { return m_status; }
    void setStatus(int status) { m_status = status; }
+
+   int getObjectId() { return m_objectId; }
+   void setObjectId(UINT32 id) { m_objectId = id; }
 };
 
 /**
@@ -792,8 +860,8 @@ public:
    void addColumn() { m_cells->add(new TableCell); }
    void deleteColumn(int index) { m_cells->remove(index); }
 
-   void set(int index, const TCHAR *value, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->set(value, status); }
-   void setPreallocated(int index, TCHAR *value, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocated(value, status); }
+   void set(int index, const TCHAR *value, int status, UINT32 objectId) { TableCell *c = m_cells->get(index); if (c != NULL) c->set(value, status, objectId); }
+   void setPreallocated(int index, TCHAR *value, int status, UINT32 objectId) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocated(value, status, objectId); }
 
    void setValue(int index, const TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setValue(value); }
    void setPreallocatedValue(int index, TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocatedValue(value); }
@@ -805,6 +873,9 @@ public:
 
    UINT32 getObjectId() { return m_objectId; }
    void setObjectId(UINT32 id) { m_objectId = id; }
+
+   UINT32 getCellObjectId(int index) { TableCell *c = m_cells->get(index); return (c != NULL) ? c->getObjectId() : 0; }
+   void setCellObjectId(int index, UINT32 id) { TableCell *c = m_cells->get(index); if (c != NULL) c->setObjectId(id); }
 };
 
 /**
@@ -821,6 +892,7 @@ private:
 
 	void createFromMessage(NXCPMessage *msg);
 	void destroy();
+   bool parseXML(const char *xml);
 
 public:
    Table();
@@ -894,6 +966,13 @@ public:
 
    UINT32 getObjectId(int row) { TableRow *r = m_data->get(row); return (r != NULL) ? r->getObjectId() : 0; }
    void setObjectId(int row, UINT32 id) { TableRow *r = m_data->get(row); if (r != NULL) r->setObjectId(id); }
+
+   void setCellObjectIdAt(int row, int col, UINT32 objectId);
+   void setCellObjectId(int col, UINT32 objectId) { setCellObjectIdAt(getNumRows() - 1, col, objectId); }
+   UINT32 getCellObjectId(int row, int col) { TableRow *r = m_data->get(row); return (r != NULL) ? r->getCellObjectId(col) : 0; }
+
+   static Table *createFromXML(const char *xml);
+   TCHAR *createXML();
 };
 
 /**
@@ -914,6 +993,15 @@ union SockAddrBuffer
 #define SA_LEN(sa) (((sa)->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6))
 #else
 #define SA_LEN(sa) sizeof(struct sockaddr_in)
+#endif
+
+/**
+ * Get port number from SockAddrBuffer
+ */
+#ifdef WITH_IPV6
+#define SA_PORT(sa) ((((struct sockaddr *)sa)->sa_family == AF_INET) ? ((struct sockaddr_in *)sa)->sin_port : ((struct sockaddr_in6 *)sa)->sin6_port)
+#else
+#define SA_PORT(sa) (((struct sockaddr_in *)sa)->sin_port)
 #endif
 
 /**
@@ -978,6 +1066,11 @@ public:
 
    String toString() const;
    TCHAR *toString(TCHAR *buffer) const;
+#ifdef UNICODE
+   char *toStringA(char *buffer) const;
+#else
+   char *toStringA(char *buffer) const { return toString(buffer); }
+#endif
 
    BYTE *buildHashKey(BYTE *key) const;
 
@@ -1136,24 +1229,6 @@ typedef struct __CODE_TO_TEXT
 #include <netxms_getopt.h>
 #endif
 
-
-//
-// Win32 API functions missing under WinCE
-//
-
-#if defined(UNDER_CE) && defined(__cplusplus)
-
-inline void GetSystemTimeAsFileTime(LPFILETIME pFt)
-{
-	SYSTEMTIME sysTime;
-
-	GetSystemTime(&sysTime);
-	SystemTimeToFileTime(&sysTime, pFt);
-}
-
-#endif // UNDER_CE
-
-
 //
 // Structures for opendir() / readdir() / closedir()
 //
@@ -1227,11 +1302,8 @@ typedef struct _dir_struc_w
 // Functions
 //
 
-#ifdef UNDER_CE
-#define close(x)        CloseHandle((HANDLE)(x))
-#endif
-
 #ifdef __cplusplus
+
 inline TCHAR *nx_strncpy(TCHAR *pszDest, const TCHAR *pszSrc, size_t nLen)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1400)
@@ -1261,6 +1333,10 @@ inline char *nx_strncpy_mb(char *pszDest, const char *pszSrc, size_t nLen)
 int LIBNETXMS_EXPORTABLE ConnectEx(SOCKET s, struct sockaddr *addr, int len, UINT32 timeout);
 int LIBNETXMS_EXPORTABLE SendEx(SOCKET hSocket, const void *data, size_t len, int flags, MUTEX mutex);
 int LIBNETXMS_EXPORTABLE RecvEx(SOCKET hSocket, void *data, size_t len, int flags, UINT32 timeout);
+bool LIBNETXMS_EXPORTABLE RecvAll(SOCKET s, void *buffer, size_t size, UINT32 timeout);
+
+SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, UINT32 timeout);
+
 #endif   /* __cplusplus */
 
 #ifdef __cplusplus
@@ -1298,6 +1374,11 @@ char LIBNETXMS_EXPORTABLE *IpToStrA(UINT32 dwAddr, char *szBuffer);
 #define IpToStrA IpToStr
 #endif
 TCHAR LIBNETXMS_EXPORTABLE *Ip6ToStr(const BYTE *addr, TCHAR *buffer);
+#ifdef UNICODE
+char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer);
+#else
+#define Ip6ToStrA Ip6ToStr
+#endif
 TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
 
 UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *name);
@@ -1370,9 +1451,17 @@ BOOL LIBNETXMS_EXPORTABLE RegexpMatchW(const WCHAR *str, const WCHAR *expr, bool
 #endif
 
 const TCHAR LIBNETXMS_EXPORTABLE *ExpandFileName(const TCHAR *name, TCHAR *buffer, size_t bufSize, bool allowShellCommand);
+BOOL LIBNETXMS_EXPORTABLE CreateFolder(const TCHAR *directory);
 TCHAR LIBNETXMS_EXPORTABLE *Trim(TCHAR *str);
 bool LIBNETXMS_EXPORTABLE MatchString(const TCHAR *pattern, const TCHAR *str, bool matchCase);
 TCHAR LIBNETXMS_EXPORTABLE **SplitString(const TCHAR *source, TCHAR sep, int *numStrings);
+int LIBNETXMS_EXPORTABLE GetLastMonthDay(struct tm *currTime);
+#ifdef __cplusplus
+bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime = 0);
+#else
+bool LIBNETXMS_EXPORTABLE MatchScheduleElement(TCHAR *pszPattern, int nValue, int maxValue, struct tm *localTime, time_t currTime);
+#endif
+
 
 #ifdef __cplusplus
 BOOL LIBNETXMS_EXPORTABLE IsValidObjectName(const TCHAR *pszName, BOOL bExtendedChars = FALSE);
@@ -1393,14 +1482,17 @@ void LIBNETXMS_EXPORTABLE CalculateMD5Hash(const unsigned char *data, size_t nby
 void LIBNETXMS_EXPORTABLE MD5HashForPattern(const unsigned char *data, size_t patternSize, size_t fullSize, BYTE *hash);
 void LIBNETXMS_EXPORTABLE CalculateSHA1Hash(unsigned char *data, size_t nbytes, unsigned char *hash);
 void LIBNETXMS_EXPORTABLE SHA1HashForPattern(unsigned char *data, size_t patternSize, size_t fullSize, unsigned char *hash);
+void LIBNETXMS_EXPORTABLE CalculateSHA256Hash(const unsigned char *data, size_t len, unsigned char *hash);
 BOOL LIBNETXMS_EXPORTABLE CalculateFileMD5Hash(const TCHAR *pszFileName, BYTE *pHash);
 BOOL LIBNETXMS_EXPORTABLE CalculateFileSHA1Hash(const TCHAR *pszFileName, BYTE *pHash);
 BOOL LIBNETXMS_EXPORTABLE CalculateFileCRC32(const TCHAR *pszFileName, UINT32 *pResult);
 
+void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size);
+
 void LIBNETXMS_EXPORTABLE ICEEncryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
 void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, const BYTE *key);
 
-BOOL LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd);
+bool LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encryptedPasswd, TCHAR *decryptedPasswd, size_t bufferLenght);
 
 int LIBNETXMS_EXPORTABLE NxDCIDataTypeFromText(const TCHAR *pszText);
 
@@ -1559,7 +1651,7 @@ WCHAR *wctime(const time_t *timep);
 #if !HAVE_PUTWS
 int putws(const WCHAR *s);
 #endif
-#if !HAVE_WCSERROR && HAVE_STRERROR
+#if !HAVE_WCSERROR && (HAVE_STRERROR || HAVE_DECL_STRERROR)
 WCHAR *wcserror(int errnum);
 #endif
 #if !HAVE_WCSERROR_R && HAVE_STRERROR_R
@@ -1656,12 +1748,6 @@ int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent 
 
 TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f);
 
-#ifdef UNDER_CE
-int LIBNETXMS_EXPORTABLE _topen(TCHAR *pszName, int nFlags, ...);
-int LIBNETXMS_EXPORTABLE read(int hFile, void *pBuffer, size_t nBytes);
-int LIBNETXMS_EXPORTABLE write(int hFile, void *pBuffer, size_t nBytes);
-#endif
-
 BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags, const TCHAR *msgModule,
                                      unsigned int msgCount, const TCHAR **messages);
 void LIBNETXMS_EXPORTABLE nxlog_close(void);
@@ -1708,6 +1794,14 @@ int LIBNETXMS_EXPORTABLE nx_inet_pton(int af, const char *src, void *dst);
 #endif
 
 int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second);
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeA(const char *text, time_t defaultValue);
+time_t LIBNETXMS_EXPORTABLE ParseDateTimeW(const WCHAR *text, time_t defaultValue);
+
+#ifdef UNICODE
+#define ParseDateTime ParseDateTimeW
+#else
+#define ParseDateTime ParseDateTimeA
+#endif
 
 #ifdef __cplusplus
 }
@@ -1719,6 +1813,19 @@ int LIBNETXMS_EXPORTABLE GetSleepTime(int hour, int minute, int second);
 //
 
 #ifdef __cplusplus
+
+enum nxDirectoryType
+{
+   nxDirBin = 0,
+   nxDirData = 1,
+   nxDirEtc = 2,
+   nxDirLib = 3,
+   nxDirShare = 4
+};
+
+TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo();
+
+void LIBNETXMS_EXPORTABLE GetNetXMSDirectory(nxDirectoryType type, TCHAR *dir);
 
 UINT32 LIBNETXMS_EXPORTABLE IcmpPing(const InetAddress& addr, int iNumRetries, UINT32 dwTimeout, UINT32 *pdwRTT, UINT32 dwPacketSize);
 

@@ -26,13 +26,14 @@
 /**
  * Constructor
  */
-LogHandle::LogHandle(NXCORE_LOG *info)
+LogHandle::LogHandle(NXCORE_LOG *info) : RefCountObject()
 {
 	m_log = info;
 	m_filter = NULL;
 	m_lock = MutexCreate();
 	m_resultSet = NULL;
 	m_rowCountLimit = 1000;
+	m_maxRecordId = 0;
 }
 
 /**

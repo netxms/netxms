@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,25 +16,25 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** $module: watchdog.cpp
+** File: watchdog.cpp
 **
 **/
 
 #include "nxcore.h"
 
-
-//
-// Constants
-//
-
+/**
+ * Max thread name length
+ */
 #define MAX_THREAD_NAME    64
+
+/**
+ * Max number of threads
+ */
 #define MAX_THREADS        64
 
-
-//
-// Static data
-//
-
+/**
+ * Thread list
+ */
 static struct
 {
    TCHAR szName[MAX_THREAD_NAME];
@@ -45,11 +45,9 @@ static struct
 static UINT32 m_dwNumThreads = 0;
 static MUTEX m_mutexWatchdogAccess = INVALID_MUTEX_HANDLE;
 
-
-//
-// Add thread to watch list
-//
-
+/**
+ * Add thread to watch list
+ */
 UINT32 WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval)
 {
    UINT32 dwId;
@@ -65,21 +63,17 @@ UINT32 WatchdogAddThread(const TCHAR *szName, time_t tNotifyInterval)
    return dwId;
 }
 
-
-//
-// Initialize watchdog
-//
-
+/**
+ * Initialize watchdog
+ */
 void WatchdogInit()
 {
    m_mutexWatchdogAccess = MutexCreate();
 }
 
-
-//
-// Set thread timestamp
-//
-
+/**
+ * Set thread timestamp
+ */
 void WatchdogNotify(UINT32 dwId)
 {
    if (IsShutdownInProgress())
@@ -96,11 +90,9 @@ void WatchdogNotify(UINT32 dwId)
    MutexUnlock(m_mutexWatchdogAccess);
 }
 
-
-//
-// Print current thread status
-//
-
+/**
+ * Print current thread status
+ */
 void WatchdogPrintStatus(CONSOLE_CTX pCtx)
 {
    UINT32 i;
@@ -114,11 +106,9 @@ void WatchdogPrintStatus(CONSOLE_CTX pCtx)
    MutexUnlock(m_mutexWatchdogAccess);
 }
 
-
-//
-// Watchdog thread
-//
-
+/**
+ * Watchdog thread
+ */
 THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 {
    UINT32 i;

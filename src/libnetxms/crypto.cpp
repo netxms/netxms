@@ -212,6 +212,7 @@ UINT32 LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphers()
 String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText()
 {
    String s;
+#ifdef _WITH_ENCRYPTION
    UINT32 cipherBit = 1;
    for(int i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
    {
@@ -228,6 +229,7 @@ String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText()
          s.append(s_cipherNames[i]);
       }
    }
+#endif
    return s;
 }
 
@@ -283,34 +285,41 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg,
 			RSA *pServerKey;
 
 			*ppCtx = NXCPEncryptionContext::create(dwCiphers);
-
-         // Encrypt key
-         int size = msg->getFieldAsBinary(VID_PUBLIC_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
-         pBufPos = ucKeyBuffer;
-         pServerKey = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&pBufPos, size);
-         if (pServerKey != NULL)
+         if (*ppCtx != NULL)
          {
-            (*ppResponse)->setField(VID_RCC, RCC_SUCCESS);
-            
-            size = RSA_public_encrypt((*ppCtx)->getKeyLength(), (*ppCtx)->getSessionKey(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
-            (*ppResponse)->setField(VID_SESSION_KEY, ucKeyBuffer, (UINT32)size);
-            (*ppResponse)->setField(VID_KEY_LENGTH, (WORD)(*ppCtx)->getKeyLength());
-            
-            int ivLength = EVP_CIPHER_iv_length(s_ciphers[(*ppCtx)->getCipher()]());
-            if ((ivLength <= 0) || (ivLength > EVP_MAX_IV_LENGTH))
-               ivLength = EVP_MAX_IV_LENGTH;
-            size = RSA_public_encrypt(ivLength, (*ppCtx)->getIV(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
-            (*ppResponse)->setField(VID_SESSION_IV, ucKeyBuffer, (UINT32)size);
-            (*ppResponse)->setField(VID_IV_LENGTH, (WORD)ivLength);
+            // Encrypt key
+            int size = msg->getFieldAsBinary(VID_PUBLIC_KEY, ucKeyBuffer, KEY_BUFFER_SIZE);
+            pBufPos = ucKeyBuffer;
+            pServerKey = d2i_RSAPublicKey(NULL, (OPENSSL_CONST BYTE **)&pBufPos, size);
+            if (pServerKey != NULL)
+            {
+               (*ppResponse)->setField(VID_RCC, RCC_SUCCESS);
+               
+               size = RSA_public_encrypt((*ppCtx)->getKeyLength(), (*ppCtx)->getSessionKey(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
+               (*ppResponse)->setField(VID_SESSION_KEY, ucKeyBuffer, (UINT32)size);
+               (*ppResponse)->setField(VID_KEY_LENGTH, (WORD)(*ppCtx)->getKeyLength());
+               
+               int ivLength = EVP_CIPHER_iv_length(s_ciphers[(*ppCtx)->getCipher()]());
+               if ((ivLength <= 0) || (ivLength > EVP_MAX_IV_LENGTH))
+                  ivLength = EVP_MAX_IV_LENGTH;
+               size = RSA_public_encrypt(ivLength, (*ppCtx)->getIV(), ucKeyBuffer, pServerKey, RSA_PKCS1_OAEP_PADDING);
+               (*ppResponse)->setField(VID_SESSION_IV, ucKeyBuffer, (UINT32)size);
+               (*ppResponse)->setField(VID_IV_LENGTH, (WORD)ivLength);
 
-            (*ppResponse)->setField(VID_CIPHER, (WORD)(*ppCtx)->getCipher());
-            RSA_free(pServerKey);
-            dwResult = RCC_SUCCESS;
+               (*ppResponse)->setField(VID_CIPHER, (WORD)(*ppCtx)->getCipher());
+               RSA_free(pServerKey);
+               dwResult = RCC_SUCCESS;
+            }
+            else
+            {
+               (*ppResponse)->setField(VID_RCC, RCC_INVALID_PUBLIC_KEY);
+               dwResult = RCC_INVALID_PUBLIC_KEY;
+            }
          }
          else
          {
-            (*ppResponse)->setField(VID_RCC, RCC_INVALID_PUBLIC_KEY);
-            dwResult = RCC_INVALID_PUBLIC_KEY;
+            (*ppResponse)->setField(VID_RCC, RCC_ENCRYPTION_ERROR);
+            dwResult = RCC_ENCRYPTION_ERROR;
          }
       }
    }
@@ -336,8 +345,8 @@ UINT32 LIBNETXMS_EXPORTABLE SetupEncryptionContext(NXCPMessage *msg,
    if (msg->getCode() == CMD_REQUEST_SESSION_KEY)
    {
       *ppResponse = new NXCPMessage(nNXCPVersion);
-      (*ppResponse)->SetCode(CMD_SESSION_KEY);
-      (*ppResponse)->SetId(msg->getId());
+      (*ppResponse)->setCode(CMD_SESSION_KEY);
+      (*ppResponse)->setId(msg->getId());
       (*ppResponse)->disableEncryption();
       (*ppResponse)->setField(VID_RCC, dwResult);
    }
@@ -802,5 +811,19 @@ bool NXCPEncryptionContext::decryptMessage(NXCP_ENCRYPTED_MESSAGE *msg, BYTE *de
    return true;
 #else    /* _WITH_ENCRYPTION */
    return false;
+#endif
+}
+
+/**
+ * Generate random bytes
+ */
+void LIBNETXMS_EXPORTABLE GenerateRandomBytes(BYTE *buffer, size_t size)
+{
+#ifdef _WITH_ENCRYPTION
+   RAND_bytes(buffer, (int)size);
+#else
+   srand((unsigned int)time(NULL));
+   for(size_t i = 0; i < size; i++)
+      buffer[i] = (BYTE)(rand() % 256);
 #endif
 }

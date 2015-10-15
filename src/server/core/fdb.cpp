@@ -233,7 +233,7 @@ static UINT32 FDBHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
 	pRqPDU->bindVariable(new SNMP_Variable(oid, oidLen));
 
    SNMP_PDU *pRespPDU;
-   UINT32 rcc = pTransport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
+   UINT32 rcc = pTransport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
 	delete pRqPDU;
 
 	if (rcc == SNMP_ERR_SUCCESS)
@@ -285,7 +285,7 @@ static UINT32 Dot1qTpFdbHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Tran
 	pRqPDU->bindVariable(new SNMP_Variable(oid, oidLen));
 
    SNMP_PDU *pRespPDU;
-   UINT32 rcc = pTransport->doRequest(pRqPDU, &pRespPDU, g_snmpTimeout, 3);
+   UINT32 rcc = pTransport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
 	delete pRqPDU;
 
 	if (rcc == SNMP_ERR_SUCCESS)

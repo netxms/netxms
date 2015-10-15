@@ -26,7 +26,7 @@ import org.netxms.client.server.ServerVariable;
  * Test functionality related to server configuration cariables
  *
  */
-public class ServerConfigTest extends SessionTest
+public class ServerConfigTest extends AbstractSessionTest
 {
 	public void testServerVariables() throws Exception
 	{
@@ -53,5 +53,16 @@ public class ServerConfigTest extends SessionTest
 		assertEquals(true, var == null);
 
 		session.disconnect();
+	}
+	
+	public void testGetPublicVariable() throws Exception
+	{
+      final NXCSession session = connect();
+
+      String value = session.getPublicServerVariable("DashboardDataExportEnableInterpolation");
+      assertNotNull(value);
+      System.out.println("value=" + value); 
+      
+      session.disconnect();
 	}
 }

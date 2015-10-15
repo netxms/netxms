@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,6 +50,14 @@ static int m_userCount = 0;
 static UserDatabaseObject **m_users = NULL;
 static MUTEX m_mutexUserDatabaseAccess = INVALID_MUTEX_HANDLE;
 static THREAD m_statusUpdateThread = INVALID_THREAD_HANDLE;
+
+/**
+ * Compare user names
+ */
+inline bool UserNameEquals(const TCHAR *n1, const TCHAR *n2)
+{
+   return (g_flags & AF_CASE_INSENSITIVE_LOGINS) ? (_tcsicmp(n1, n2) == 0) : (_tcscmp(n1, n2) == 0);
+}
 
 /**
  * Upgrade user accounts status in background
@@ -228,23 +236,22 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
    for(i = 0; i < m_userCount; i++)
    {
 		if ((!(m_users[i]->getId() & GROUP_FLAG)) &&
-			 (!_tcscmp(login, m_users[i]->getName())) &&
+			 UserNameEquals(login, m_users[i]->getName()) &&
 			 (!m_users[i]->isDeleted()))
       {
 			User *user = (User *)m_users[i];
          *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
 
-
-         if(user->isLDAPUser())
+         if (user->isLDAPUser())
          {
-            if(user->isDisabled() || user->hasSyncException())
+            if (user->isDisabled() || user->hasSyncException())
             {
                dwResult = RCC_ACCOUNT_DISABLED;
                goto result;
             }
             LDAPConnection conn;
             dwResult = conn.ldapUserLogin(user->getDn(), password);
-            if(dwResult == RCC_SUCCESS)
+            if (dwResult == RCC_SUCCESS)
                bPasswordValid = TRUE;
             goto result;
          }
@@ -309,7 +316,7 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
 					   }
 					   break;
                default:
-                  nxlog_write(MSG_UNKNOWN_AUTH_METHOD, EVENTLOG_WARNING_TYPE, "ds", user->getAuthMethod(), login);
+                  nxlog_write(MSG_UNKNOWN_AUTH_METHOD, NXLOG_WARNING, "ds", user->getAuthMethod(), login);
                   bPasswordValid = FALSE;
                   break;
             }
@@ -578,7 +585,7 @@ void RemoveDeletedLDAPEntry(StringObjectMap<Entry>* entryList, UINT32 m_action, 
          if (entryList->get(m_users[i]->getDn()) == NULL)
          {
             if (m_action == USER_DELETE)
-               DeleteUserDatabaseObject(m_users[i]->getId());
+               DeleteUserDatabaseObject(m_users[i]->getId(), true);
             if (m_action == USER_DISABLE)
             {
                m_users[i]->disable();
@@ -726,7 +733,7 @@ void SyncGroupMembers(Group* group, Entry *obj)
  * Gets user object from it's ID
  * DB should be locked outside this function
  */
-UserDatabaseObject* GetUser(UINT32 userID)
+UserDatabaseObject *GetUser(UINT32 userID)
 {
    for(int i = 0; i < m_userCount; i++)
    {
@@ -740,7 +747,7 @@ UserDatabaseObject* GetUser(UINT32 userID)
  * Gets user object from it's ID
  * DB should be locked outside this function
  */
-UserDatabaseObject* GetUser(const TCHAR* dn)
+UserDatabaseObject *GetUser(const TCHAR* dn)
 {
    for(int i = 0; i < m_userCount; i++)
    {
@@ -751,12 +758,12 @@ UserDatabaseObject* GetUser(const TCHAR* dn)
 }
 
 /**
- * Acess to user DB must be loked when this function is called
+ * Access to user DB must be locked when this function is called
  */
-bool UserNameIsUnique(TCHAR* name, UINT32 id)
+bool UserNameIsUnique(const TCHAR *name, UINT32 id)
 {
    for(int i = 0; i < m_userCount; i++)
-		if (!(m_users[i]->getId() & GROUP_FLAG) && !_tcscmp(m_users[i]->getName(), name) && m_users[i]->getId() != id)
+		if (!(m_users[i]->getId() & GROUP_FLAG) && UserNameEquals(m_users[i]->getName(), name) && m_users[i]->getId() != id)
          return false;
    return true;
 }
@@ -764,10 +771,10 @@ bool UserNameIsUnique(TCHAR* name, UINT32 id)
 /**
  * Acess to user DB must be loked when this function is called
  */
-bool GroupNameIsUnique(TCHAR* name, UINT32 id)
+bool GroupNameIsUnique(const TCHAR *name, UINT32 id)
 {
    for(int i = 0; i < m_userCount; i++)
-		if ((m_users[i]->getId() & GROUP_FLAG) && !_tcscmp(m_users[i]->getName(), name) && m_users[i]->getId() != id)
+		if ((m_users[i]->getId() & GROUP_FLAG) && UserNameEquals(m_users[i]->getName(), name) && m_users[i]->getId() != id)
          return false;
    return true;
 }
@@ -808,13 +815,14 @@ void DumpUsers(CONSOLE_CTX pCtx)
  * @param id user database object ID
  * @return RCC ready to be sent to client
  */
-UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id)
+UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id, bool alreadyLocked)
 {
    int i, j;
 
    DeleteUserFromAllObjects(id);
 
-   MutexLock(m_mutexUserDatabaseAccess);
+   if(!alreadyLocked)
+      MutexLock(m_mutexUserDatabaseAccess);
 
    for(i = 0; i < m_userCount; i++)
 	{
@@ -836,7 +844,8 @@ UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id)
 		}
 	}
 
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   if(!alreadyLocked)
+      MutexUnlock(m_mutexUserDatabaseAccess);
 
    SendUserDBUpdate(USER_DB_DELETE, id, NULL);
    return RCC_SUCCESS;
@@ -856,7 +865,7 @@ UINT32 NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, UINT32 *pd
    // Check for duplicate name
    for(i = 0; i < m_userCount; i++)
 	{
-      if (!_tcscmp(m_users[i]->getName(), pszName))
+      if (UserNameEquals(m_users[i]->getName(), pszName))
       {
          dwResult = RCC_OBJECT_ALREADY_EXISTS;
          break;
@@ -917,6 +926,29 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg)
 			}
 
 			m_users[i]->modifyFromMessage(msg);
+         SendUserDBUpdate(USER_DB_MODIFY, id, m_users[i]);
+         dwResult = RCC_SUCCESS;
+         break;
+      }
+
+   MutexUnlock(m_mutexUserDatabaseAccess);
+   return dwResult;
+}
+
+/**
+ * Modify user database object
+ */
+UINT32 NXCORE_EXPORTABLE DetachLdapUser(UINT32 id)
+{
+   UINT32 dwResult = RCC_INVALID_USER_ID;
+
+   MutexLock(m_mutexUserDatabaseAccess);
+
+   // Find object to be modified in list
+   for(int i = 0; i < m_userCount; i++)
+		if (m_users[i]->getId() == id)
+      {
+			m_users[i]->detachLdapUser();
          SendUserDBUpdate(USER_DB_MODIFY, id, m_users[i]);
          dwResult = RCC_SUCCESS;
          break;
@@ -1137,6 +1169,73 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
 }
 
 /**
+ * Validate user's password
+ */
+UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login, const TCHAR *password, bool *isValid)
+{
+	if (userId & GROUP_FLAG)
+		return RCC_INVALID_USER_ID;
+
+   UINT32 rcc = RCC_INVALID_USER_ID;
+   MutexLock(m_mutexUserDatabaseAccess);
+
+   // Find user
+   User *user = NULL;
+   for(int i = 0; i < m_userCount; i++)
+		if (m_users[i]->getId() == userId)
+      {
+         user = (User *)m_users[i];
+         rcc = RCC_SUCCESS;
+         break;
+      }
+
+   if (user != NULL)
+   {
+      if (user->isLDAPUser())
+      {
+         if (user->isDisabled() || user->hasSyncException())
+         {
+            rcc = RCC_ACCOUNT_DISABLED;
+         }
+         else
+         {
+            LDAPConnection conn;
+            rcc = conn.ldapUserLogin(user->getDn(), password);
+            if (rcc == RCC_SUCCESS)
+            {
+               *isValid = true;
+            }
+            else if (rcc == RCC_ACCESS_DENIED)
+            {
+               *isValid = false;
+               rcc = RCC_SUCCESS;
+            }
+         }
+      }
+      else
+      {
+         switch(user->getAuthMethod())
+         {
+            case AUTH_NETXMS_PASSWORD:
+            case AUTH_CERT_OR_PASSWD:
+   			   *isValid = user->validatePassword(password);
+               break;
+            case AUTH_RADIUS:
+            case AUTH_CERT_OR_RADIUS:
+               *isValid = RadiusAuth(login, password);
+               break;
+            default:
+               rcc = RCC_UNSUPPORTED_AUTH_METHOD;
+               break;
+         }
+      }
+   }
+
+   MutexUnlock(m_mutexUserDatabaseAccess);
+   return rcc;
+}
+
+/**
  * Open user database
  */
 UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count)
@@ -1229,7 +1328,12 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
 			 !_tcsicmp(_xmppId, ((User *)m_users[i])->getXmppId()))
       {
          DbgPrintf(4, _T("User %s authenticated for XMPP subscription"), m_users[i]->getName());
-         WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP subscription"));
+
+         TCHAR workstation[256];
+         _tcscpy(workstation, _T("XMPP:"));
+         nx_strncpy(&workstation[5], _xmppId, 251);
+         WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP subscription"));
+
          success = true;
          break;
       }
@@ -1276,16 +1380,20 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
 					 (((Group *)m_users[j])->isMember(m_users[i]->getId())))
 					systemRights |= ((Group *)m_users[j])->getSystemRights();
 
+         TCHAR workstation[256];
+         _tcscpy(workstation, _T("XMPP:"));
+         nx_strncpy(&workstation[5], _xmppId, 251);
+
          if (systemRights & SYSTEM_ACCESS_XMPP_COMMANDS)
          {
             DbgPrintf(4, _T("User %s authenticated for XMPP commands"), m_users[i]->getName());
-            WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP commands"));
+            WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP commands"));
             success = true;
          }
          else
          {
             DbgPrintf(4, _T("Access to XMPP commands denied for user %s"), m_users[i]->getName());
-            WriteAuditLog(AUDIT_SECURITY, FALSE, m_users[i]->getId(), NULL, AUDIT_SYSTEM_SID, 0, _T("Access to XMPP commands denied"));
+            WriteAuditLog(AUDIT_SECURITY, FALSE, m_users[i]->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("Access to XMPP commands denied"));
          }
          break;
       }

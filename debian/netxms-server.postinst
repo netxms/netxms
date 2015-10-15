@@ -29,7 +29,7 @@ Additional steps required:
         nxdbmgr init /usr/share/netxms/sql/dbinit_pgsql.sql
 
       MySQL:
-        nxdbmgr init /usr/share/netxms/sql/dbinit_pgsql.sql
+        nxdbmgr init /usr/share/netxms/sql/dbinit_mysql.sql
 
       Oracle:
         nxdbmgr init /usr/share/netxms/sql/dbinit_oracle.sql
@@ -83,11 +83,15 @@ LogFile=/var/log/netxmsd
 #DBLogin=netxms
 #DBPassword=netxms
 __END
+
+        if [ ! -z $2 ]; then
+          # previous version is set, it's upgrade
+          /usr/bin/nxdbmgr upgrade
+        fi
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
     ;;
-
     *)
         echo "postinst called with unknown argument \`$1'" >&2
         exit 1

@@ -46,6 +46,7 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
    PROCESS_MEMORY_COUNTERS mc;
    IO_COUNTERS ioCounters;
    FILETIME ftCreate, ftExit, ftKernel, ftUser;
+   DWORD handles;
 
    // Get value for current process instance
    switch(attr)
@@ -98,6 +99,12 @@ static unsigned __int64 GetProcessAttribute(HANDLE hProcess, int attr, int type,
       case PROCINFO_IO_OTHER_OP:
          GetProcessIoCounters(hProcess, &ioCounters);
          value = ioCounters.OtherOperationCount;
+         break;
+      case PROCINFO_HANDLES:
+         if (GetProcessHandleCount(hProcess, &handles))
+            value = handles;
+         else
+            value = 0;
          break;
       default:       // Unknown attribute
          AgentWriteLog(EVENTLOG_ERROR_TYPE, _T("GetProcessAttribute(): Unexpected attribute: 0x%02X"), attr);
@@ -298,24 +305,22 @@ static BOOL MatchProcess(DWORD pid, HANDLE hProcess, HMODULE hModule, BOOL bExtM
 	return bRet;
 }
 
-
-//
-// Get process-specific information
-// Parameter has the following syntax:
-//    Process.XXX(<process>,<type>,<cmdline>,<window>)
-// where
-//    XXX        - requested process attribute (see documentation for list of valid attributes)
-//    <process>  - process name (same as in Process.Count() parameter)
-//    <type>     - representation type (meaningful when more than one process with the same
-//                 name exists). Valid values are:
-//         min - minimal value among all processes named <process>
-//         max - maximal value among all processes named <process>
-//         avg - average value for all processes named <process>
-//         sum - sum of values for all processes named <process>
-//    <cmdline>  - command line
-//    <window>   - window title
-//
-
+/**
+ * Get process-specific information
+ * Parameter has the following syntax:
+ *    Process.XXX(<process>,<type>,<cmdline>,<window>)
+ * where
+ *    XXX        - requested process attribute (see documentation for list of valid attributes)
+ *    <process>  - process name (same as in Process.Count() parameter)
+ *    <type>     - representation type (meaningful when more than one process with the same
+ *                 name exists). Valid values are:
+ *         min - minimal value among all processes named <process>
+ *         max - maximal value among all processes named <process>
+ *         avg - average value for all processes named <process>
+ *         sum - sum of values for all processes named <process>
+ *    <cmdline>  - command line
+ *    <window>   - window title
+ */
 LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
    TCHAR buffer[256], procName[MAX_PATH], cmdLine[MAX_PATH], windowTitle[MAX_PATH];
@@ -392,24 +397,11 @@ LONG H_ProcInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
  */
 LONG H_ProcCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   DWORD dwSize, *pdwProcList;
    PERFORMANCE_INFORMATION pi;
-
-   // On Windows XP and higher, use new method
-   if (GetPerformanceInfo != NULL)
-   {
-      pi.cb = sizeof(PERFORMANCE_INFORMATION);
-      if (!GetPerformanceInfo(&pi, sizeof(PERFORMANCE_INFORMATION)))
-         return SYSINFO_RC_ERROR;
-      ret_uint(value, pi.ProcessCount);
-   }
-   else
-   {
-      pdwProcList = (DWORD *)malloc(sizeof(DWORD) * MAX_PROCESSES);
-      EnumProcesses(pdwProcList, sizeof(DWORD) * MAX_PROCESSES, &dwSize);
-      free(pdwProcList);
-      ret_int(value, dwSize / sizeof(DWORD));
-   }
+   pi.cb = sizeof(PERFORMANCE_INFORMATION);
+   if (!GetPerformanceInfo(&pi, sizeof(PERFORMANCE_INFORMATION)))
+      return SYSINFO_RC_ERROR;
+   ret_uint(value, pi.ProcessCount);
    return SYSINFO_RC_SUCCESS;
 }
 

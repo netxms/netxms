@@ -7,12 +7,12 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.TreeColumn;
-import org.netxms.client.server.ServerFile;
-import org.netxms.ui.eclipse.filemanager.views.ServerFileManager;
+import org.netxms.client.server.AgentFile;
+import org.netxms.ui.eclipse.filemanager.views.AgentFileManager;
 import org.netxms.ui.eclipse.widgets.SortableTreeViewer;
 
 /**
- * Comparator for ServerFile objects
+ * Comparator for AgentFile objects
  *
  */
 public class AgentFileComparator extends ViewerComparator
@@ -30,44 +30,74 @@ public class AgentFileComparator extends ViewerComparator
 		int rc;
 		switch((Integer)sortColumn.getData("ID")) //$NON-NLS-1$
 		{
-		   case ServerFileManager.COLUMN_NAME:
-            if(((ServerFile)e1).isDirectory() == ((ServerFile)e2).isDirectory())
+		   case AgentFileManager.COLUMN_NAME:
+            if(((AgentFile)e1).isDirectory() == ((AgentFile)e2).isDirectory())
             {
-               rc = ((ServerFile)e1).getName().compareToIgnoreCase(((ServerFile)e2).getName());
+               rc = ((AgentFile)e1).getName().compareToIgnoreCase(((AgentFile)e2).getName());
             }
             else
             {
-               rc = ((ServerFile)e1).isDirectory() ? -1 : 1;
+               rc = ((AgentFile)e1).isDirectory() ? -1 : 1;
             }           
             break;
-         case ServerFileManager.COLUMN_TYPE:
-            if(((ServerFile)e1).isDirectory() == ((ServerFile)e2).isDirectory())
+         case AgentFileManager.COLUMN_TYPE:
+            if(((AgentFile)e1).isDirectory() == ((AgentFile)e2).isDirectory())
             {
-               rc = ((ServerFile)e1).getExtension().compareToIgnoreCase(((ServerFile)e2).getExtension());
+               rc = ((AgentFile)e1).getExtension().compareToIgnoreCase(((AgentFile)e2).getExtension());
             }
             else
             {
-               rc = ((ServerFile)e1).isDirectory() ? -1 : 1;
+               rc = ((AgentFile)e1).isDirectory() ? -1 : 1;
             }  
             break;
-         case ServerFileManager.COLUMN_SIZE:
-            if((((ServerFile)e1).isDirectory() == ((ServerFile)e2).isDirectory()))
+         case AgentFileManager.COLUMN_SIZE:
+            if((((AgentFile)e1).isDirectory() == ((AgentFile)e2).isDirectory()))
             {
-               rc = Long.signum(((ServerFile)e1).getSize() - ((ServerFile)e2).getSize());
+               rc = Long.signum(((AgentFile)e1).getSize() - ((AgentFile)e2).getSize());
             }
             else
             {
-               rc = ((ServerFile)e1).isDirectory() ? -1 : 1;
+               rc = ((AgentFile)e1).isDirectory() ? -1 : 1;
             }
             break;
-         case ServerFileManager.COLUMN_MODIFYED:
-            if((((ServerFile)e1).isDirectory() == ((ServerFile)e2).isDirectory()))
+         case AgentFileManager.COLUMN_MODIFYED:
+            if((((AgentFile)e1).isDirectory() == ((AgentFile)e2).isDirectory()))
             {
-               rc = ((ServerFile)e1).getModifyicationTime().compareTo(((ServerFile)e2).getModifyicationTime());
+               rc = ((AgentFile)e1).getModifyicationTime().compareTo(((AgentFile)e2).getModifyicationTime());
             }
             else
             {
-               rc = ((ServerFile)e1).isDirectory() ? -1 : 1;
+               rc = ((AgentFile)e1).isDirectory() ? -1 : 1;
+            }  
+            break;
+         case AgentFileManager.COLUMN_OWNER:
+            if((((AgentFile)e1).isDirectory() == ((AgentFile)e2).isDirectory()))
+            {
+               rc = ((AgentFile)e1).getOwner().compareTo(((AgentFile)e2).getOwner());
+            }
+            else
+            {
+               rc = ((AgentFile)e1).isDirectory() ? -1 : 1;
+            }  
+            break;
+         case AgentFileManager.COLUMN_GROUP:
+            if((((AgentFile)e1).isDirectory() == ((AgentFile)e2).isDirectory()))
+            {
+               rc = ((AgentFile)e1).getGroup().compareTo(((AgentFile)e2).getGroup());
+            }
+            else
+            {
+               rc = ((AgentFile)e1).isDirectory() ? -1 : 1;
+            }  
+            break;
+         case AgentFileManager.COLUMN_ACCESS_RIGHTS:
+            if((((AgentFile)e1).isDirectory() == ((AgentFile)e2).isDirectory()))
+            {
+               rc = ((AgentFile)e1).getAccessRights().compareTo(((AgentFile)e2).getAccessRights());
+            }
+            else
+            {
+               rc = ((AgentFile)e1).isDirectory() ? -1 : 1;
             }  
             break;
          default:

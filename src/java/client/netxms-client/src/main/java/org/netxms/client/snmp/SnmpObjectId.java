@@ -43,7 +43,7 @@ public class SnmpObjectId
 	 */
 	public SnmpObjectId(long[] value)
 	{
-		this.value = Arrays.copyOf(value, value.length);
+		this.value = (value != null) ? Arrays.copyOf(value, value.length) : new long[0];
 	}
 	
 	/**

@@ -87,6 +87,18 @@
                menubarPath="additions">
          </action>
       </objectContribution>
+      <objectContribution
+            id="org.netxms.ui.eclipse.osm.actions.popup.object.Rack"
+            objectClass="org.netxms.client.objects.Rack">
+         <action
+               class="org.netxms.ui.eclipse.osm.actions.OpenLocationMap"
+               enablesFor="1"
+               icon="icons/map.png"
+               id="org.netxms.ui.eclipse.osm.popupActions.OpenLocationMap#Rack"
+               label="%action.label.Geolocation"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
    </extension>
    <extension
          point="org.eclipse.ui.commands">

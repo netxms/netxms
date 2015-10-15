@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-bkdir=$(pkgdatadir)/backgrounds
+bkdir=$(localstatedir)/lib/netxms/backgrounds
 
 bk_DATA = .keep
 

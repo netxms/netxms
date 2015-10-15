@@ -10,7 +10,6 @@ import org.netxms.client.IpAddressListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerVariable;
-import org.netxms.client.snmp.SnmpUsmCredential;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -23,11 +22,8 @@ public class DiscoveryConfig
 	private boolean useSnmpTraps;
 	private int filterFlags;
 	private String filter;
-	private String defaultCommunity;
 	private List<IpAddressListElement> targets;
 	private List<IpAddressListElement> addressFilter;
-	private List<String> communities;
-	private List<SnmpUsmCredential> usmCredentials;
 	
 	/**
 	 * Create empty object
@@ -56,12 +52,9 @@ public class DiscoveryConfig
 		config.useSnmpTraps = getBoolean(variables, "UseSNMPTrapsForDiscovery", false); //$NON-NLS-1$
 		config.filterFlags = getInteger(variables, "DiscoveryFilterFlags", 0); //$NON-NLS-1$
 		config.filter = getString(variables, "DiscoveryFilter", "none"); //$NON-NLS-1$ //$NON-NLS-2$
-		config.defaultCommunity = getString(variables, "DefaultCommunityString", "public"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		config.addressFilter = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_FILTER);
 		config.targets = session.getAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS);
-		config.communities = session.getSnmpCommunities();
-		config.usmCredentials = session.getSnmpUsmCredentials();
 		
 		return config;
 	}
@@ -144,12 +137,9 @@ public class DiscoveryConfig
       session.setServerVariable("UseSNMPTrapsForDiscovery", useSnmpTraps ? "1" : "0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		session.setServerVariable("DiscoveryFilterFlags", Integer.toString(filterFlags)); //$NON-NLS-1$
 		session.setServerVariable("DiscoveryFilter", filter); //$NON-NLS-1$
-		session.setServerVariable("DefaultCommunityString", defaultCommunity); //$NON-NLS-1$
 		
 		session.setAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_FILTER, addressFilter);
 		session.setAddressList(NXCSession.ADDRESS_LIST_DISCOVERY_TARGETS, targets);
-		session.updateSnmpCommunities(communities);
-		session.updateSnmpUsmCredentials(usmCredentials);
 		
 		session.resetServerComponent(NXCSession.SERVER_COMPONENT_DISCOVERY_MANAGER);
 	}
@@ -219,22 +209,6 @@ public class DiscoveryConfig
 	}
 
 	/**
-	 * @return the defaultCommunity
-	 */
-	public String getDefaultCommunity()
-	{
-		return defaultCommunity;
-	}
-
-	/**
-	 * @param defaultCommunity the defaultCommunity to set
-	 */
-	public void setDefaultCommunity(String defaultCommunity)
-	{
-		this.defaultCommunity = defaultCommunity;
-	}
-
-	/**
 	 * @return the targets
 	 */
 	public List<IpAddressListElement> getTargets()
@@ -264,38 +238,6 @@ public class DiscoveryConfig
 	public void setAddressFilter(List<IpAddressListElement> addressFilter)
 	{
 		this.addressFilter = addressFilter;
-	}
-
-	/**
-	 * @return the communities
-	 */
-	public List<String> getCommunities()
-	{
-		return communities;
-	}
-
-	/**
-	 * @param communities the communities to set
-	 */
-	public void setCommunities(List<String> communities)
-	{
-		this.communities = communities;
-	}
-
-	/**
-	 * @return the usmCredentials
-	 */
-	public List<SnmpUsmCredential> getUsmCredentials()
-	{
-		return usmCredentials;
-	}
-
-	/**
-	 * @param usmCredentials the usmCredentials to set
-	 */
-	public void setUsmCredentials(List<SnmpUsmCredential> usmCredentials)
-	{
-		this.usmCredentials = usmCredentials;
 	}
 
    /**

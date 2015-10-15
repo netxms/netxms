@@ -61,6 +61,10 @@
 
 #endif	/* __SYMBIAN32__ */
 
+#if HAVE_JEMALLOC_JEMALLOC_H
+#include <jemalloc/jemalloc.h>
+#endif
+
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
 #endif
@@ -106,9 +110,11 @@
 #define MAX_SECRET_LENGTH        64
 #define MAX_DB_STRING            256
 #define MAX_PARAM_NAME           256
+#define MAX_CONFIG_VALUE         2000
 #define MAX_COLUMN_NAME          64
 #define MAX_DNS_NAME             256
 #define MAX_HELPDESK_REF_LEN     64
+#define MAX_PASSWORD             48
 #define GROUP_FLAG               ((UINT32)0x80000000)
 
 #define NETXMS_MAX_CIPHERS       6
@@ -133,6 +139,7 @@
 #define INVALID_INDEX         0xFFFFFFFF
 #define MD5_DIGEST_SIZE       16
 #define SHA1_DIGEST_SIZE      20
+#define SHA256_DIGEST_SIZE    32
 
 #define FILE_BUFFER_SIZE      32768
 
@@ -183,7 +190,12 @@ typedef int bool;
 #define HAVE_VSCWPRINTF         1
 #endif
 
+#define HAVE_SNPRINTF           1
+#define HAVE_VSNPRINTF          1
+
 #define HAVE_GETADDRINFO        1
+
+#define HAVE_STDARG_H           1
 
 #ifndef va_copy
 #define va_copy(x,y)            (x = y)
@@ -317,7 +329,7 @@ typedef unsigned __int64 uint64_t;
 #define malloc(n)       HeapAlloc(GetProcessHeap(), 0, n)
 #define realloc(p, n)   (((p) == NULL) ? HeapAlloc(GetProcessHeap(), 0, n) : HeapReAlloc(GetProcessHeap(), 0, p, n))
 #define free(p)         HeapFree(GetProcessHeap(), 0, p)
-#define _tcsdup(s)       nx__tcsdup(s)
+#define _tcsdup(s)      nx__tcsdup(s)
 #define wcsdup(s)       nx_wcsdup(s)
 
 #undef _tcsdup
@@ -447,8 +459,11 @@ typedef int SOCKET;
 /*********** UNIX *********************/
 
 #ifndef PREFIX
+#ifdef UNICODE
+#define PREFIX    L"/usr/local"
+#else
 #define PREFIX		"/usr/local"
-#define PREFIXW		L"/usr/local"
+#endif
 #warning Installation prefix not defined, defaulting to /usr/local
 #endif
 
@@ -535,6 +550,11 @@ typedef int SOCKET;
 
 #ifdef __IBMCPP__
 #include <builtins.h>
+#endif
+
+#ifdef __minix
+#undef HAVE_ITOA  /* Minix has non-compatible itoa() */
+#undef HAVE_GETHOSTBYNAME2_R
 #endif
 
 #include <sys/socket.h>
@@ -1221,30 +1241,17 @@ typedef struct tagICMPHDR
 #define INVALID_PIPE_HANDLE (-1)
 #endif
 
+#ifdef __cplusplus
+
 /**
- * Memory debug
+ * Session enumeration callback return codes
  */
-#ifdef NETXMS_MEMORY_DEBUG
+enum EnumerationCallbackResult
+{
+   _STOP = 0,
+   _CONTINUE = 1
+};
 
-#ifdef __cplusplus
-extern "C" {
 #endif
-
-void *nx_malloc(size_t, char *, int);
-void *nx_realloc(void *, size_t, char *, int);
-void nx_free(void *, char *, int);
-
-void InitMemoryDebugger(void);
-void PrintMemoryBlocks(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-#define malloc(x) nx_malloc(x, __FILE__, __LINE__)
-#define realloc(p, x) nx_realloc(p, x, __FILE__,  __LINE__)
-#define free(p) nx_free(p, __FILE__, __LINE__)
-
-#endif	/* NETXMS_MEMORY_DEBUG */
 
 #endif   /* _nms_common_h_ */

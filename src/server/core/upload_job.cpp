@@ -29,6 +29,53 @@ int FileUploadJob::m_activeJobs = 0;
 int FileUploadJob::m_maxActiveJobs = 10;
 MUTEX FileUploadJob::m_sharedDataMutex = INVALID_MUTEX_HANDLE;
 
+void ScheduledUploadFile(const ScheduleParameters *params)
+{
+   //get parameters - node id or name, server file name, agent file name
+   TCHAR serverFile[MAX_PATH];
+   TCHAR agentFile[MAX_PATH];
+   AgentGetParameterArg(params->m_params, 1, serverFile, MAX_PATH);
+   AgentGetParameterArg(params->m_params, 2, agentFile, MAX_PATH);
+
+   if(params->m_objectId == 0 || serverFile == NULL || agentFile == NULL)
+   {
+      DbgPrintf(4, _T("UploadFile: One of parameters was nodeId=\'%d\', serverFile=\'%s\', agentFile=\'%s\'"),
+            params->m_userId, serverFile, agentFile);
+      return;
+   }
+
+   Node *object = (Node *)FindObjectById(params->m_objectId, OBJECT_NODE);
+   if (object != NULL)
+   {
+      if (object->checkAccessRights(params->m_userId, OBJECT_ACCESS_CONTROL))
+      {
+         TCHAR fullPath[MAX_PATH];
+
+         // Create full path to the file store
+         _tcscpy(fullPath, g_netxmsdDataDir);
+         _tcscat(fullPath, DDIR_FILES);
+         _tcscat(fullPath, FS_PATH_SEPARATOR);
+         int len = (int)_tcslen(fullPath);
+         nx_strncpy(&fullPath[len], GetCleanFileName(serverFile), MAX_PATH - len);
+
+         ServerJob *job = new FileUploadJob((Node *)object, fullPath, agentFile, params->m_userId, false);
+         if (AddJob(job))
+         {
+            DbgPrintf(4, _T("ScheduledUploadFile: File(%s) uploaded to %s node, to %s "), serverFile, object->getName(), agentFile);
+            //auditlog?
+         }
+         else
+         {
+            delete job;
+         }
+      }
+      else
+         DbgPrintf(4, _T("ScheduledUploadFile: Access to node %s denied"), object->getName());
+   }
+   else
+      DbgPrintf(4, _T("ScheduledUploadFile: Node with id=\'%d\' not found"), params->m_userId);
+}
+
 /**
  * Static initializer
  */
@@ -36,6 +83,7 @@ void FileUploadJob::init()
 {
 	m_sharedDataMutex = MutexCreate();
 	m_maxActiveJobs = ConfigReadInt(_T("MaxActiveUploadJobs"), 10);
+	RegisterSchedulerTaskHandler(_T("Upload.File"), ScheduledUploadFile, SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD);
 }
 
 /**

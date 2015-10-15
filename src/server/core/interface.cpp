@@ -34,6 +34,7 @@ Interface::Interface() : NetObj()
    m_index = 0;
    m_type = IFTYPE_OTHER;
    m_mtu = 0;
+   m_speed = 0;
 	m_bridgePortNumber = 0;
 	m_slotNumber = 0;
 	m_portNumber = 0;
@@ -52,6 +53,8 @@ Interface::Interface() : NetObj()
 	m_zoneId = 0;
 	m_pingTime = PING_TIME_TIMEOUT;
    m_pingLastTimeStamp = 0;
+   m_ifTableSuffixLen = 0;
+   m_ifTableSuffix = NULL;
 }
 
 /**
@@ -70,6 +73,7 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneId, bool bSynth
    m_index = 1;
    m_type = IFTYPE_OTHER;
    m_mtu = 0;
+   m_speed = 0;
 	m_bridgePortNumber = 0;
 	m_slotNumber = 0;
 	m_portNumber = 0;
@@ -89,6 +93,8 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneId, bool bSynth
    m_isHidden = true;
 	m_pingTime = PING_TIME_TIMEOUT;
 	m_pingLastTimeStamp = 0;
+   m_ifTableSuffixLen = 0;
+   m_ifTableSuffix = NULL;
 }
 
 /**
@@ -108,6 +114,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
    m_index = index;
    m_type = ifType;
    m_mtu = 0;
+   m_speed = 0;
    m_ipAddressList.add(addrList);
 	m_bridgePortNumber = 0;
 	m_slotNumber = 0;
@@ -128,6 +135,8 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
    m_isHidden = true;
 	m_pingTime = PING_TIME_TIMEOUT;
 	m_pingLastTimeStamp = 0;
+   m_ifTableSuffixLen = 0;
+   m_ifTableSuffix = NULL;
 }
 
 /**
@@ -135,6 +144,7 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
  */
 Interface::~Interface()
 {
+   safe_free(m_ifTableSuffix);
 }
 
 /**
@@ -167,7 +177,7 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
 		_T("mac_addr,flags,required_polls,bridge_port,phy_slot,")
 		_T("phy_port,peer_node_id,peer_if_id,description,")
 		_T("dot1x_pae_state,dot1x_backend_state,admin_state,")
-      _T("oper_state,peer_proto,alias,mtu FROM interfaces WHERE id=?"));
+      _T("oper_state,peer_proto,alias,mtu,speed,iftable_suffix FROM interfaces WHERE id=?"));
 	if (hStmt == NULL)
 		return FALSE;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -200,6 +210,21 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
 		m_peerDiscoveryProtocol = (LinkLayerProtocol)DBGetFieldLong(hResult, 0, 16);
 		DBGetField(hResult, 0, 17, m_alias, MAX_DB_STRING);
 		m_mtu = DBGetFieldULong(hResult, 0, 18);
+      m_speed = DBGetFieldUInt64(hResult, 0, 19);
+
+      TCHAR suffixText[128];
+      DBGetField(hResult, 0, 20, suffixText, 128);
+      StrStrip(suffixText);
+      if (suffixText[0] = 0)
+      {
+         UINT32 suffix[16];
+         size_t l = SNMPParseOID(suffixText, suffix, 16);
+         if (l > 0)
+         {
+            m_ifTableSuffixLen = (int)l;
+            m_ifTableSuffix = (UINT32 *)nx_memdup(suffix, l * sizeof(UINT32));
+         }
+      }
 
       m_pingTime = PING_TIME_TIMEOUT;
       m_pingLastTimeStamp = 0;
@@ -312,15 +337,15 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
 			_T("required_polls=?,bridge_port=?,phy_slot=?,phy_port=?,")
 			_T("peer_node_id=?,peer_if_id=?,description=?,admin_state=?,")
 			_T("oper_state=?,dot1x_pae_state=?,dot1x_backend_state=?,")
-         _T("peer_proto=?,alias=?,mtu=? WHERE id=?"));
+         _T("peer_proto=?,alias=?,mtu=?,speed=?,iftable_suffix=? WHERE id=?"));
 	}
    else
 	{
 		hStmt = DBPrepare(hdb,
 			_T("INSERT INTO interfaces (node_id,if_type,if_index,mac_addr,")
 			_T("flags,required_polls,bridge_port,phy_slot,phy_port,peer_node_id,peer_if_id,description,")
-         _T("admin_state,oper_state,dot1x_pae_state,dot1x_backend_state,peer_proto,alias,mtu,id) ")
-			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+         _T("admin_state,oper_state,dot1x_pae_state,dot1x_backend_state,peer_proto,alias,mtu,speed,iftable_suffix,id) ")
+			_T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -347,7 +372,17 @@ BOOL Interface::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, (INT32)m_peerDiscoveryProtocol);
 	DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_alias, DB_BIND_STATIC);
 	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_mtu);
-	DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 20, DB_SQLTYPE_BIGINT, m_speed);
+   if (m_ifTableSuffixLen > 0)
+   {
+      TCHAR buffer[128];
+      DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, SNMPConvertOIDToText(m_ifTableSuffixLen, m_ifTableSuffix, buffer, 128), DB_BIND_TRANSIENT);
+   }
+   else
+   {
+	   DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, NULL, DB_BIND_STATIC);
+   }
+	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -457,7 +492,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 		 (snmpTransport != NULL))
    {
       sendPollerMsg(rqId, _T("      Retrieving interface status from SNMP agent\r\n"));
-      pNode->getInterfaceStatusFromSNMP(snmpTransport, m_index, &adminState, &operState);
+      pNode->getInterfaceStatusFromSNMP(snmpTransport, m_index, m_ifTableSuffixLen, m_ifTableSuffix, &adminState, &operState);
 		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): new state from SNMP: adminState=%d operState=%d"), m_id, m_name, adminState, operState);
 		if ((adminState != IF_ADMIN_STATE_UNKNOWN) && (operState != IF_OPER_STATE_UNKNOWN))
 		{
@@ -655,7 +690,7 @@ void Interface::updatePingData()
 				   {
                   DbgPrintf(7, _T("Interface::updatePingData: proxy response: \"%s\""), buffer);
 					   TCHAR *eptr;
-					   long value = _tcstol(buffer, &eptr, 10);
+					   value = _tcstol(buffer, &eptr, 10);
                   if (*eptr != 0)
                   {
                      value = -1;
@@ -747,7 +782,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 				      {
 					      DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): proxy response: \"%s\""), m_id, m_name, buffer);
 					      TCHAR *eptr;
-					      long value = _tcstol(buffer, &eptr, 10);
+					      value = _tcstol(buffer, &eptr, 10);
                      if (*eptr != 0)
                      {
                         value = -1;
@@ -920,6 +955,7 @@ void Interface::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_IF_INDEX, m_index);
    pMsg->setField(VID_IF_TYPE, m_type);
    pMsg->setField(VID_MTU, m_mtu);
+   pMsg->setField(VID_SPEED, m_speed);
    pMsg->setField(VID_IF_SLOT, m_slotNumber);
    pMsg->setField(VID_IF_PORT, m_portNumber);
    pMsg->setField(VID_MAC_ADDR, m_macAddr, MAC_ADDR_LENGTH);
@@ -935,6 +971,7 @@ void Interface::fillMessageInternal(NXCPMessage *pMsg)
 	pMsg->setField(VID_DOT1X_PAE_STATE, m_dot1xPaeAuthState);
 	pMsg->setField(VID_DOT1X_BACKEND_STATE, m_dot1xBackendAuthState);
 	pMsg->setField(VID_ZONE_ID, m_zoneId);
+   pMsg->setFieldFromInt32Array(VID_IFTABLE_SUFFIX, m_ifTableSuffixLen, m_ifTableSuffix);
 }
 
 /**
@@ -1153,6 +1190,25 @@ void Interface::addIpAddress(const InetAddress& addr)
    m_ipAddressList.add(addr);
    setModified();
    unlockProperties();
+   if (!isExcludedFromTopology())
+   {
+		if (IsZoningEnabled())
+		{
+			Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+			if (zone != NULL)
+			{
+				zone->addToIndex(addr, this);
+			}
+			else
+			{
+				DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"), (int)m_zoneId, m_name, (int)m_id);
+			}
+		}
+		else
+		{
+         g_idxInterfaceByAddr.put(addr, this);
+      }
+   }
 }
 
 /**
@@ -1164,6 +1220,25 @@ void Interface::deleteIpAddress(InetAddress addr)
    m_ipAddressList.remove(addr);
    setModified();
    unlockProperties();
+   if (!isExcludedFromTopology())
+   {
+		if (IsZoningEnabled())
+		{
+			Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
+			if (zone != NULL)
+			{
+            zone->removeFromInterfaceIndex(addr);
+			}
+			else
+			{
+				DbgPrintf(2, _T("Cannot find zone object with GUID=%d for interface object %s [%d]"), (int)m_zoneId, m_name, (int)m_id);
+			}
+		}
+		else
+		{
+         g_idxInterfaceByAddr.remove(addr);
+      }
+   }
 }
 
 /**

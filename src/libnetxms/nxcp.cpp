@@ -345,10 +345,26 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_GRAPH_UPDATE"),
       _T("CMD_ENABLE_IPV6"),
       _T("CMD_FORCE_DCI_POLL"),
-      _T("CMD_GET_DCI_SCRIPT_LIST")
+      _T("CMD_GET_DCI_SCRIPT_LIST"),
+      _T("CMD_DATA_COLLECTION_CONFIG"),
+      _T("CMD_SET_SERVER_ID"),
+      _T("CMD_GET_PUBLIC_CONFIG_VAR"),
+      _T("CMD_ENABLE_FILE_UPDATES"),
+      _T("CMD_DETACH_LDAP_USER"),
+      _T("CMD_VALIDATE_PASSWORD"),
+      _T("CMD_COMPILE_SCRIPT"),
+      _T("CMD_CLEAN_AGENT_DCI_CONF"),
+      _T("CMD_RESYNC_AGENT_DCI_CONF"),
+      _T("CMD_LIST_SCHEDULE_CALLBACKS"),
+      _T("CMD_LIST_SCHEDULES"),
+      _T("CMD_ADD_SCHEDULE"),
+      _T("CMD_UPDATE_SCHEDULE"),
+      _T("CMD_REMOVE_SCHEDULE"),
+      _T("CMD_ENTER_MAINT_MODE"),
+      _T("CMD_LEAVE_MAINT_MODE")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_GET_DCI_SCRIPT_LIST))
+   if ((code >= CMD_LOGIN) && (code <= CMD_LEAVE_MAINT_MODE))
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), code);
@@ -560,7 +576,7 @@ NXCP_MESSAGE LIBNETXMS_EXPORTABLE *CreateRawNXCPMessage(WORD code, UINT32 id, WO
 BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHAR *pszFile,
                                            NXCPEncryptionContext *pCtx, long offset,
 														 void (* progressCallback)(INT64, void *), void *cbArg,
-														 MUTEX mutex)
+														 MUTEX mutex, NXCPCompressionMethod compressionMethod)
 {
    int hFile, iBytes;
 	INT64 bytesTransferred = 0;
@@ -568,6 +584,9 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
    BOOL bResult = FALSE;
    NXCP_MESSAGE *pMsg;
    NXCP_ENCRYPTED_MESSAGE *pEnMsg;
+
+   StreamCompressor *compressor = (compressionMethod != NXCP_COMPRESSION_NONE) ? StreamCompressor::create(compressionMethod, true, FILE_BUFFER_SIZE) : NULL;
+   BYTE *compBuffer = (compressor != NULL) ? (BYTE *)malloc(FILE_BUFFER_SIZE) : NULL;
 
    hFile = _topen(pszFile, O_RDONLY | O_BINARY);
    if (hFile != -1)
@@ -582,22 +601,39 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
 		if (lseek(hFile, offset, (offset < 0) ? SEEK_END : SEEK_SET) != -1)
 		{
 			// Allocate message and prepare it's header
-			pMsg = (NXCP_MESSAGE *)malloc(FILE_BUFFER_SIZE + NXCP_HEADER_SIZE + 8);
+         pMsg = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE + 8 + ((compressor != NULL) ? compressor->compressBufferSize(FILE_BUFFER_SIZE) + 4 : FILE_BUFFER_SIZE));
 			pMsg->id = htonl(id);
 			pMsg->code = htons(CMD_FILE_DATA);
-			pMsg->flags = htons(MF_BINARY);
+         pMsg->flags = htons(MF_BINARY | ((compressionMethod != NXCP_COMPRESSION_NONE) ? MF_COMPRESSED : 0));
 
 			while(1)
 			{
-				iBytes = read(hFile, pMsg->fields, min(FILE_BUFFER_SIZE, bytesToRead));
-				if (iBytes < 0)
-					break;
+            if (compressor != NULL)
+            {
+				   iBytes = read(hFile, compBuffer, min(FILE_BUFFER_SIZE, bytesToRead));
+				   if (iBytes < 0)
+					   break;
+               bytesToRead -= iBytes;
+               // Each compressed data block prepended with 4 bytes header
+               // First byte contains compression method, second is always 0,
+               // third and fourth contains uncompressed block size in network byte order
+               *((BYTE *)pMsg->fields) = (BYTE)compressionMethod;
+               *((BYTE *)pMsg->fields + 1) = 0;
+               *((UINT16 *)((BYTE *)pMsg->fields + 2)) = htons((UINT16)iBytes);
+               iBytes = (int)compressor->compress(compBuffer, iBytes, (BYTE *)pMsg->fields + 4, compressor->compressBufferSize(FILE_BUFFER_SIZE)) + 4;
+            }
+            else
+            {
+				   iBytes = read(hFile, pMsg->fields, min(FILE_BUFFER_SIZE, bytesToRead));
+				   if (iBytes < 0)
+					   break;
+               bytesToRead -= iBytes;
+            }
 
 				// Message should be aligned to 8 bytes boundary
 				dwPadding = (8 - (((UINT32)iBytes + NXCP_HEADER_SIZE) % 8)) & 7;
 				pMsg->size = htonl((UINT32)iBytes + NXCP_HEADER_SIZE + dwPadding);
 				pMsg->numFields = htonl((UINT32)iBytes);   // numFields contains actual data size for binary message
-            bytesToRead -= iBytes;
 				if (bytesToRead <= 0)
 					pMsg->flags |= htons(MF_END_OF_FILE);
 
@@ -633,6 +669,9 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 id, const TCHA
 		}
 		close(hFile);
 	}
+
+   safe_free(compBuffer);
+   delete compressor;
 
    // If file upload failed, send CMD_ABORT_FILE_TRANSFER
    if (!bResult)

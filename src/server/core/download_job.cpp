@@ -195,7 +195,7 @@ bool FileDownloadJob::run()
 			setFailureMessage(_T("Request timed out"));
 		}
 
-      if(!m_follow)
+      if(!m_follow || m_node->getFileUpdateConn() != NULL)
       {
          delete conn;
       }
@@ -214,7 +214,7 @@ bool FileDownloadJob::run()
 		m_session->sendMessage(&response);
 		if(m_follow)
 		{
-         g_monitoringList.addMonitoringFile(newFile);
+         g_monitoringList.addMonitoringFile(newFile, m_node, conn);
 		}
 		else
 		{

@@ -28,6 +28,14 @@
             name="%view.name.TrapMonitor"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            category="org.netxms.ui.eclipse.viewcategory.config"
+            class="org.netxms.ui.eclipse.snmp.views.SnmpCredentials"
+            id="org.netxms.ui.eclipse.snmp.views.SnmpCredentials"
+            name="SNMP Credentials"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
@@ -46,6 +54,11 @@
             description="%command.description.TrapMonitor"
             id="org.netxms.ui.eclipse.snmp.commands.open_snmp_trap_monitor"
             name="%command.name.TrapMonitor">
+      </command>
+      <command
+            description="%command.description.MIBExplorer"
+            id="org.netxms.ui.eclipse.snmp.commands.open_snmp_configuration"
+            name="Open SNMP Configuration">
       </command>
    </extension>
    <extension
@@ -86,6 +99,20 @@
                menubarPath="view/tools"
                style="push"
                tooltip="%action.tooltip.MIBExplorer">
+         </action>
+      </actionSet>
+      <actionSet
+            id="org.netxms.ui.eclipse.action_set.snmp_configuration"
+            label="SNMP Credentials"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.snmp.actions.SnmpConfigrationAction"
+               definitionId="org.netxms.ui.eclipse.snmp.commands.open_snmp_configuration"
+               id="org.netxms.ui.eclipse.snmp.actions.open_snmp_configuration"
+               label="SNMP Credentials"
+               menubarPath="config/additions"
+               style="push"
+               tooltip="Open SNMP Credentials">
          </action>
       </actionSet>
    </extension>

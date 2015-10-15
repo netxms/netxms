@@ -72,7 +72,8 @@ static bool getSensorValue(char *chipName, char *featureName, double *result) {
 
             sensors_subfeature_type types[2];
             types[1] = SENSORS_SUBFEATURE_UNKNOWN;
-            switch (feature->type) {
+            switch(feature->type)
+            {
                case SENSORS_FEATURE_TEMP:
                   types[0] = SENSORS_SUBFEATURE_TEMP_INPUT; // Celsius
                   break;
@@ -99,6 +100,9 @@ static bool getSensorValue(char *chipName, char *featureName, double *result) {
                   break;
                case SENSORS_FEATURE_CURR:
                   types[0] = SENSORS_SUBFEATURE_CURR_INPUT; // Amps
+                  break;
+               default:
+                  types[0] = SENSORS_SUBFEATURE_UNKNOWN;
                   break;
             }
 

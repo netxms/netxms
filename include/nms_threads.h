@@ -893,6 +893,11 @@ inline THREAD GetCurrentThreadId()
 #include <rwlock.h>
 
 /**
+ * String list
+ */
+class StringList;
+
+/**
  * Thread pool
  */
 struct ThreadPool;
@@ -907,8 +912,9 @@ struct ThreadPoolInfo
    int maxThreads;         // max threads
    int curThreads;         // current threads
    int activeRequests;     // number of active requests
-   int load;               // Pool load in % (can be more than 100% if there are more requests then threads available)
    int usage;              // Pool usage in %
+   int load;               // Pool current load in % (can be more than 100% if there are more requests then threads available)
+   double loadAvg[3];      // Pool load average
 };
 
 /**
@@ -920,9 +926,12 @@ typedef void (* ThreadPoolWorkerFunction)(void *);
 ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(int minThreads, int maxThreads, const TCHAR *name);
 void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p);
 void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunction f, void *arg);
+void LIBNETXMS_EXPORTABLE ThreadPoolExecuteSerialized(ThreadPool *p, const TCHAR *key, ThreadPoolWorkerFunction f, void *arg);
 void LIBNETXMS_EXPORTABLE ThreadPoolScheduleAbsolute(ThreadPool *p, time_t runTime, ThreadPoolWorkerFunction f, void *arg);
 void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay, ThreadPoolWorkerFunction f, void *arg);
 void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info);
+bool LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(const TCHAR *name, ThreadPoolInfo *info);
+StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools();
 void LIBNETXMS_EXPORTABLE ThreadPoolSetDebugCallback(void (*cb)(int, const TCHAR *, va_list));
 
 /**

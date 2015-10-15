@@ -387,12 +387,24 @@ public class NXCPMessage
 	
    /**
     * Set field of type INT16 to 1 if value is true and 0 otherwise.
+    * 
     * @param fieldId
     * @param value
     */
    public void setField(final long fieldId, final boolean value)
    {
       setField(new NXCPMessageField(fieldId, NXCPMessageField.TYPE_INT16, value ? 1L : 0L));
+   }
+   
+   /**
+    * Set INT64 field from Date object to number of seconds since epoch. If value is null, field will be set to 0.
+    * 
+    * @param fieldId field ID
+    * @param value Date object (can be null)
+    */
+   public void setField(final long fieldId, final Date value)
+   {
+      setField(new NXCPMessageField(fieldId, NXCPMessageField.TYPE_INT64, (value != null) ? value.getTime() / 1000L : 0L));
    }
    
 	/**
@@ -431,6 +443,18 @@ public class NXCPMessage
 		return (var != null) ? var.getAsReal() : 0;
 	}
 	
+   /**
+    * Get field as 16 bit integer
+    * 
+    * @param fieldId
+    * @return
+    */
+   public short getFieldAsInt16(final long fieldId)
+   {
+      final NXCPMessageField var = findField(fieldId);
+      return (var != null) ? var.getAsInteger().shortValue() : 0;
+   }
+   
 	/**
 	 * Get field as 32 bit integer
 	 * 

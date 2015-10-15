@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,11 +32,23 @@
 /**
  * Queued syslog message structure
  */
-struct QUEUED_SYSLOG_MESSAGE
+class QueuedSyslogMessage
 {
-   UINT32 dwSourceIP;
-   int nBytes;
-   char *psMsg;
+public:
+   InetAddress sourceAddr;
+   char *message;
+   int messageLength;
+
+   QueuedSyslogMessage(const InetAddress& addr, char *msg, int msgLen) : sourceAddr(addr)
+   {
+      message = (char *)nx_memdup(msg, msgLen + 1);
+      messageLength = msgLen;
+   }
+
+   ~QueuedSyslogMessage()
+   {
+      free(message);
+   }
 };
 
 /**
@@ -61,6 +73,8 @@ static UINT64 s_msgId = 1;
 static LogParser *s_parser = NULL;
 static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
 static NodeMatchingPolicy s_nodeMatchingPolicy = SOURCE_IP_THEN_HOSTNAME;
+static THREAD s_receiverThread = INVALID_THREAD_HANDLE;
+static bool s_running = true;
 
 /**
  * Parse timestamp field
@@ -244,7 +258,7 @@ static Node *FindNodeByHostname(const char *hostName)
    UINT32 ipAddr = ntohl(ResolveHostNameA(hostName));
 	if ((ipAddr != INADDR_NONE) && (ipAddr != INADDR_ANY))
    {
-      node = FindNodeByIP(0, ipAddr);
+      node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, ipAddr);
    }
 
    if (node == NULL)
@@ -263,15 +277,15 @@ static Node *FindNodeByHostname(const char *hostName)
 
 /**
  * Bind syslog message to NetXMS node object
- * dwSourceIP is an IP address from which we receive message
+ * sourceAddr is an IP address from which we receive message
  */
-static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
+static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr)
 {
    Node *node = NULL;
 
    if (s_nodeMatchingPolicy == SOURCE_IP_THEN_HOSTNAME)
    {
-      node = FindNodeByIP(0, dwSourceIP);
+      node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, sourceAddr);
       if (node == NULL)
       {
          node = FindNodeByHostname(pRec->szHostName);
@@ -282,7 +296,7 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
       node = FindNodeByHostname(pRec->szHostName);
       if (node == NULL)
       {
-         node = FindNodeByIP(0, dwSourceIP);
+         node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, sourceAddr);
       }
    }
 
@@ -302,7 +316,9 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, UINT32 dwSourceIP)
    else
    {
       if (pRec->szHostName[0] == 0)
-         IpToStrA(dwSourceIP, pRec->szHostName);
+      {
+         sourceAddr.toStringA(pRec->szHostName);
+      }
    }
 
    return node;
@@ -325,7 +341,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
    DbgPrintf(1, _T("Syslog writer thread started"));
    while(true)
    {
-      NX_SYSLOG_RECORD *r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.GetOrBlock();
+      NX_SYSLOG_RECORD *r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.getOrBlock();
       if (r == INVALID_POINTER_VALUE)
          break;
 
@@ -366,7 +382,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
          count++;
          if (count == 1000)
             break;
-         r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.Get();
+         r = (NX_SYSLOG_RECORD *)g_syslogWriteQueue.get();
          if ((r == NULL) || (r == INVALID_POINTER_VALUE))
             break;
       }
@@ -383,7 +399,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
 /**
  * Process syslog message
  */
-static void ProcessSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
+static void ProcessSyslogMessage(char *psMsg, int nMsgLen, const InetAddress& sourceAddr)
 {
    NX_SYSLOG_RECORD record;
 
@@ -391,16 +407,16 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
    if (ParseSyslogMessage(psMsg, nMsgLen, &record))
    {
       record.qwMsgId = s_msgId++;
-      Node *node = BindMsgToNode(&record, dwSourceIP);
+      Node *node = BindMsgToNode(&record, sourceAddr);
 
-      g_syslogWriteQueue.Put(nx_memdup(&record, sizeof(NX_SYSLOG_RECORD)));
+      g_syslogWriteQueue.put(nx_memdup(&record, sizeof(NX_SYSLOG_RECORD)));
 
       // Send message to all connected clients
       EnumerateClientSessions(BroadcastSyslogMessage, &record);
 
-		TCHAR ipAddr[32];
+		TCHAR ipAddr[64];
 		DbgPrintf(6, _T("Syslog message: ipAddr=%s objectId=%d tag=\"%hs\" msg=\"%hs\""),
-		          IpToStr(dwSourceIP, ipAddr), record.dwSourceObject, record.szTag, record.szMessage);
+		          sourceAddr.toString(ipAddr), record.dwSourceObject, record.szTag, record.szMessage);
 
 		MutexLock(s_parserLock);
 		if ((record.dwSourceObject != 0) && (s_parser != NULL) &&
@@ -429,17 +445,16 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
  */
 static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
 {
-   QUEUED_SYSLOG_MESSAGE *pMsg;
+   QueuedSyslogMessage *msg;
 
-   while(1)
+   while(true)
    {
-      pMsg = (QUEUED_SYSLOG_MESSAGE *)g_syslogProcessingQueue.GetOrBlock();
-      if (pMsg == INVALID_POINTER_VALUE)
+      msg = (QueuedSyslogMessage *)g_syslogProcessingQueue.getOrBlock();
+      if (msg == INVALID_POINTER_VALUE)
          break;
 
-      ProcessSyslogMessage(pMsg->psMsg, pMsg->nBytes, pMsg->dwSourceIP);
-      free(pMsg->psMsg);
-      free(pMsg);
+      ProcessSyslogMessage(msg->message, msg->messageLength, msg->sourceAddr);
+      delete msg;
    }
    return THREAD_OK;
 }
@@ -447,15 +462,9 @@ static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
 /**
  * Queue syslog message for processing
  */
-static void QueueSyslogMessage(char *psMsg, int nMsgLen, UINT32 dwSourceIP)
+static void QueueSyslogMessage(char *msg, int msgLen, const InetAddress& sourceAddr)
 {
-   QUEUED_SYSLOG_MESSAGE *pMsg;
-
-   pMsg = (QUEUED_SYSLOG_MESSAGE *)malloc(sizeof(QUEUED_SYSLOG_MESSAGE));
-   pMsg->dwSourceIP = dwSourceIP;
-   pMsg->nBytes = nMsgLen;
-   pMsg->psMsg = (char *)nx_memdup(psMsg, nMsgLen + 1);
-   g_syslogProcessingQueue.Put(pMsg);
+   g_syslogProcessingQueue.put(new QueuedSyslogMessage(sourceAddr, msg, msgLen));
 }
 
 /**
@@ -547,59 +556,133 @@ static void CreateParserFromConfig()
 /**
  * Syslog messages receiver thread
  */
-THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
+static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
 {
-   SOCKET hSocket;
-   struct sockaddr_in addr;
-   int nBytes, nPort, nRet;
-   socklen_t nAddrLen;
-   char sMsg[MAX_SYSLOG_MSG_LEN + 1];
-   DB_RESULT hResult;
-   fd_set rdfs;
-   struct timeval tv;
-
-   s_nodeMatchingPolicy = (NodeMatchingPolicy)ConfigReadInt(_T("SyslogNodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME);
-
-   // Determine first available message id
-   hResult = DBSelect(g_hCoreDB, _T("SELECT max(msg_id) FROM syslog"));
-   if (hResult != NULL)
+   SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+#ifdef WITH_IPV6
+   SOCKET hSocket6 = socket(AF_INET6, SOCK_DGRAM, 0);
+#endif
+   if ((hSocket == INVALID_SOCKET)
+#ifdef WITH_IPV6
+       && (hSocket6 == INVALID_SOCKET)
+#endif
+      )
    {
-      if (DBGetNumRows(hResult) > 0)
-      {
-         s_msgId = max(DBGetFieldUInt64(hResult, 0, 0) + 1, s_msgId);
-      }
-      DBFreeResult(hResult);
-   }
-
-   hSocket = socket(AF_INET, SOCK_DGRAM, 0);
-   if (hSocket == INVALID_SOCKET)
-   {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("SyslogDaemon"));
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("SyslogReceiver"));
       return THREAD_OK;
    }
 
 	SetSocketExclusiveAddrUse(hSocket);
 	SetSocketReuseFlag(hSocket);
+#ifndef _WIN32
+   fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
+#endif
+
+#ifdef WITH_IPV6
+   SetSocketExclusiveAddrUse(hSocket6);
+   SetSocketReuseFlag(hSocket6);
+#ifndef _WIN32
+   fcntl(hSocket6, F_SETFD, fcntl(hSocket6, F_GETFD) | FD_CLOEXEC);
+#endif
+#ifdef IPV6_V6ONLY
+   int on = 1;
+   setsockopt(hSocket6, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
+#endif
+#endif
 
    // Get listen port number
-   nPort = ConfigReadInt(_T("SyslogListenPort"), 514);
-   if ((nPort < 1) || (nPort > 65535))
-      nPort = 514;
+   int port = ConfigReadInt(_T("SyslogListenPort"), 514);
+   if ((port < 1) || (port > 65535))
+   {
+      DbgPrintf(2, _T("Syslog: invalid listen port number %d, using default"), port);
+      port = 514;
+   }
 
    // Fill in local address structure
-   memset(&addr, 0, sizeof(struct sockaddr_in));
-   addr.sin_family = AF_INET;
-   addr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
-   addr.sin_port = htons((WORD)nPort);
+   struct sockaddr_in servAddr;
+   memset(&servAddr, 0, sizeof(struct sockaddr_in));
+   servAddr.sin_family = AF_INET;
+
+#ifdef WITH_IPV6
+   struct sockaddr_in6 servAddr6;
+   memset(&servAddr6, 0, sizeof(struct sockaddr_in6));
+   servAddr6.sin6_family = AF_INET6;
+#endif
+
+   if (!_tcscmp(g_szListenAddress, _T("*")))
+   {
+      servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+#ifdef WITH_IPV6
+      memset(servAddr6.sin6_addr.s6_addr, 0, 16);
+#endif
+   }
+   else
+   {
+      InetAddress bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET);
+      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
+      {
+         servAddr.sin_addr.s_addr = htonl(bindAddress.getAddressV4());
+      }
+      else
+      {
+         servAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+      }
+#ifdef WITH_IPV6
+      bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET6);
+      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET6))
+      {
+         memcpy(servAddr6.sin6_addr.s6_addr, bindAddress.getAddressV6(), 16);
+      }
+      else
+      {
+         memset(servAddr6.sin6_addr.s6_addr, 0, 15);
+         servAddr6.sin6_addr.s6_addr[15] = 1;
+      }
+#endif
+   }
+   servAddr.sin_port = htons((UINT16)port);
+#ifdef WITH_IPV6
+   servAddr6.sin6_port = htons((UINT16)port);
+#endif
 
    // Bind socket
-   if (bind(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
+   TCHAR buffer[64];
+   int bindFailures = 0;
+   DbgPrintf(5, _T("Trying to bind on UDP %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
+   if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
-      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", nPort, _T("SyslogDaemon"), WSAGetLastError());
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", port, _T("SyslogReceiver"), WSAGetLastError());
+      bindFailures++;
       closesocket(hSocket);
+      hSocket = INVALID_SOCKET;
+   }
+
+#ifdef WITH_IPV6
+   DbgPrintf(5, _T("Trying to bind on UDP [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
+   if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
+   {
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", port, _T("SyslogReceiver"), WSAGetLastError());
+      bindFailures++;
+      closesocket(hSocket6);
+      hSocket6 = INVALID_SOCKET;
+   }
+#else
+   bindFailures++;
+#endif
+
+   // Abort if cannot bind to at least one socket
+   if (bindFailures == 2)
+   {
+      DbgPrintf(1, _T("Syslog receiver aborted - cannot bind at least one socket"));
       return THREAD_OK;
    }
-	nxlog_write(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(addr.sin_addr.s_addr), nPort);
+
+   if (hSocket != INVALID_SOCKET)
+      nxlog_write(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), port);
+#ifdef WITH_IPV6
+   if (hSocket6 != INVALID_SOCKET)
+      nxlog_write(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, port);
+#endif
 
    SetLogParserTraceCallback(DbgPrintf2);
    InitLogParserLibrary();
@@ -612,24 +695,49 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    THREAD hProcessingThread = ThreadCreateEx(SyslogProcessingThread, 0, NULL);
    THREAD hWriterThread = ThreadCreateEx(SyslogWriterThread, 0, NULL);
 
-   DbgPrintf(1, _T("Syslog Daemon started"));
+   DbgPrintf(1, _T("Syslog receiver thread started"));
 
    // Wait for packets
-   while(!IsShutdownInProgress())
+   while(s_running)
    {
-      FD_ZERO(&rdfs);
-      FD_SET(hSocket, &rdfs);
+      struct timeval tv;
       tv.tv_sec = 1;
       tv.tv_usec = 0;
-      nRet = select((int)hSocket + 1, &rdfs, NULL, NULL, &tv);
-      if (nRet > 0)
+
+      fd_set rdfs;
+      FD_ZERO(&rdfs);
+      if (hSocket != INVALID_SOCKET)
+         FD_SET(hSocket, &rdfs);
+#ifdef WITH_IPV6
+      if (hSocket6 != INVALID_SOCKET)
+         FD_SET(hSocket6, &rdfs);
+#endif
+
+#if defined(WITH_IPV6) && !defined(_WIN32)
+      SOCKET nfds = 0;
+      if (hSocket != INVALID_SOCKET)
+         nfds = hSocket;
+      if ((hSocket6 != INVALID_SOCKET) && (hSocket6 > nfds))
+         nfds = hSocket6;
+      int rc = select(SELECT_NFDS(nfds + 1), &rdfs, NULL, NULL, &tv);
+#else
+      int rc = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
+#endif
+      if (rc > 0)
       {
-         nAddrLen = sizeof(struct sockaddr_in);
-         nBytes = recvfrom(hSocket, sMsg, MAX_SYSLOG_MSG_LEN, 0, (struct sockaddr *)&addr, &nAddrLen);
-         if (nBytes > 0)
+         char syslogMessage[MAX_SYSLOG_MSG_LEN + 1];
+         SockAddrBuffer addr;
+         socklen_t addrLen = sizeof(SockAddrBuffer);
+#ifdef WITH_IPV6
+         SOCKET s = FD_ISSET(hSocket, &rdfs) ? hSocket : hSocket6;
+#else
+         SOCKET s = hSocket;
+#endif
+         int bytes = recvfrom(s, syslogMessage, MAX_SYSLOG_MSG_LEN, 0, (struct sockaddr *)&addr, &addrLen);
+         if (bytes > 0)
          {
-				sMsg[nBytes] = 0;
-            QueueSyslogMessage(sMsg, nBytes, ntohl(addr.sin_addr.s_addr));
+            syslogMessage[bytes] = 0;
+            QueueSyslogMessage(syslogMessage, bytes, InetAddress::createFromSockaddr((struct sockaddr *)&addr));
          }
          else
          {
@@ -637,7 +745,7 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
             ThreadSleepMs(100);
          }
       }
-      else if (nRet == -1)
+      else if (rc == -1)
       {
          // Sleep on error
          ThreadSleepMs(100);
@@ -645,18 +753,50 @@ THREAD_RESULT THREAD_CALL SyslogDaemon(void *pArg)
    }
 
    // Stop processing thread
-   g_syslogProcessingQueue.Put(INVALID_POINTER_VALUE);
+   g_syslogProcessingQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(hProcessingThread);
 
    // Stop writer thread - it must be done after processing thread already finished
-   g_syslogWriteQueue.Put(INVALID_POINTER_VALUE);
+   g_syslogWriteQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(hWriterThread);
 
 	delete s_parser;
    CleanupLogParserLibrary();
 
-   DbgPrintf(1, _T("Syslog Daemon stopped"));
+   DbgPrintf(1, _T("Syslog receiver thread stopped"));
    return THREAD_OK;
+}
+
+/**
+ * Start built-in syslog server
+ */
+void StartSyslogServer()
+{
+   s_nodeMatchingPolicy = (NodeMatchingPolicy)ConfigReadInt(_T("SyslogNodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME);
+
+   // Determine first available message id
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT max(msg_id) FROM syslog"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+      {
+         s_msgId = max(DBGetFieldUInt64(hResult, 0, 0) + 1, s_msgId);
+      }
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+
+   s_receiverThread = ThreadCreateEx(SyslogReceiver, 0, NULL);
+}
+
+/**
+ * Stop built-in syslog server
+ */
+void StopSyslogServer()
+{
+   s_running = false;
+   ThreadJoin(s_receiverThread);
 }
 
 /**

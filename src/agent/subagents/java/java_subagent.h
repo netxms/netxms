@@ -52,6 +52,28 @@ inline TCHAR *CStringFromJavaString(JNIEnv *env, jstring jstr)
 }
 
 /**
+ * Convert Java string to C string.
+ * Result string is in static buffer
+ */
+inline TCHAR *CStringFromJavaString(JNIEnv *env, jstring jstr, TCHAR *buffer, size_t bufferLen)
+{
+   const jchar *chars = env->GetStringChars(jstr, NULL);
+   jsize len = env->GetStringLength(jstr);
+#ifdef UNICODE
+#if UNICODE_UCS4
+   ucs2_to_ucs4(chars, min(len, bufferLen - 1), buffer, bufferLen);
+#else
+   memcpy(buffer, chars, min(len, bufferLen) * sizeof(WCHAR));
+#endif
+#else
+   ucs2_to_mb(chars, min(len, bufferLen - 1), buffer, bufferLen);
+#endif
+   env->ReleaseStringChars(jstr, chars);
+   buffer[min(len, bufferLen - 1)] = 0;
+   return buffer;
+}
+
+/**
  * Convert C string to Java string.
  */
 inline jstring JavaStringFromCString(JNIEnv *env, const TCHAR *str)
@@ -72,5 +94,28 @@ inline jstring JavaStringFromCString(JNIEnv *env, const TCHAR *str)
 #endif
    return js;
 }
+
+/**
+ * Create StringList from Java string array
+ */
+inline StringList *StringListFromJavaArray(JNIEnv *curEnv, jobjectArray a)
+{
+   StringList *list = new StringList();
+   jsize count = curEnv->GetArrayLength(a);
+   for(jsize i = 0; i < count; i++)
+   {
+      jstring s = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(a, i));
+      list->addPreallocated(CStringFromJavaString(curEnv, s));
+      curEnv->DeleteLocalRef(s);
+   }
+   return list;
+}
+
+/**
+ * Functions
+ */
+jclass CreateClassGlobalRef(JNIEnv *curEnv, const char *className);
+bool RegisterConfigHelperNatives(JNIEnv *curEnv);
+jobject CreateConfigInstance(JNIEnv *curEnv, Config *config);
 
 #endif

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?><target name="New Target" sequenceNumber="15">
+<locations>
+<location path="/home/zev/RAP" type="Directory"/>
+<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.emf.sdk.feature.group" version="2.8.3.v20130125-0826"/>
+<repository location="http://download.eclipse.org/releases/juno"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.birt.feature.group" version="3.7.2.v20120213-BDF9E9bGTzuHh03p2c0AWvmC3Ltk"/>
+<repository location="http://download.eclipse.org/releases/indigo"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.rap.sdk.feature.feature.group" version="2.3.2.20150128-1013"/>
+<unit id="org.eclipse.rap.equinox.target.feature.feature.group" version="2.3.2.20150210-1743"/>
+<unit id="org.eclipse.rap.feature.feature.group" version="2.3.2.20150128-1013"/>
+<unit id="org.eclipse.rap.examples.feature.feature.group" version="2.3.2.20150119-1706"/>
+<repository location="http://download.eclipse.org/rt/rap/2.3"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.netxms.rap.draw2d.feature.feature.group" version="1.5.2"/>
+<unit id="org.netxms.gef4.zest.feature.group" version="2.0.3"/>
+<repository location="http://www.netxms.org/eclipse/zest-rap/"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.babel.nls_rt.rap_ru.feature.group" version="4.4.0.v20141223043836"/>
+<unit id="org.eclipse.babel.nls_rt.rap_es.feature.group" version="4.4.0.v20141223043836"/>
+<unit id="org.eclipse.babel.nls_rt.rap_cs.feature.group" version="4.4.0.v20141223043836"/>
+<unit id="org.eclipse.babel.nls_eclipse_de.feature.group" version="4.4.0.v20141223043836"/>
+<unit id="org.eclipse.babel.nls_eclipse_es.feature.group" version="4.4.0.v20141223043836"/>
+<unit id="org.eclipse.babel.nls_rt.rap_zh.feature.group" version="4.4.0.v20141223043836"/>
+<unit id="org.eclipse.babel.nls_eclipse_zh.feature.group" version="4.4.0.v20141223043836"/>
+<unit id="org.eclipse.babel.nls_rt.rap_de.feature.group" version="4.4.0.v20141223043836"/>
+<unit id="org.eclipse.babel.nls_eclipse_ru.feature.group" version="4.4.0.v20141223043836"/>
+<unit id="org.eclipse.babel.nls_eclipse_cs.feature.group" version="4.4.0.v20141223043836"/>
+<repository location="http://archive.eclipse.org/technology/babel/update-site/R0.12.1/luna/"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="slicer" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.rap.clientscripting.feature.feature.group" version="0.2.0.20140425-1548"/>
+<unit id="org.eclipse.rap.richtext.feature.feature.group" version="0.2.0.20150623-1041"/>
+<unit id="org.eclipse.rap.fileupload.feature.feature.group" version="2.3.0.20140731-1501"/>
+<repository location="http://download.eclipse.org/rt/rap/incubator/nightly"/>
+</location>
+</locations>
+</target>

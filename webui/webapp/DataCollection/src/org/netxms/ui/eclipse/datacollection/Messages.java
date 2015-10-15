@@ -235,7 +235,8 @@ public class Messages extends NLS
 	public String General_DT_string;
 	public String General_DT_uint32;
 	public String General_DT_uint64;
-	public String General_FixedIntervals;
+	public String General_FixedIntervalsCustom;
+   public String General_FixedIntervalsDefault;
 	public String General_InterpretRawValue;
 	public String General_None;
    public String General_NoStorage;
@@ -275,7 +276,8 @@ public class Messages extends NLS
 	public String GeneralTable_Data;
 	public String GeneralTable_Description;
 	public String GeneralTable_Disabled;
-	public String GeneralTable_FixedIntervals;
+	public String GeneralTable_FixedIntervalsCustom;
+   public String GeneralTable_FixedIntervalsDefault;
 	public String GeneralTable_None;
    public String GeneralTable_NoStorage;
 	public String GeneralTable_NotSupported;

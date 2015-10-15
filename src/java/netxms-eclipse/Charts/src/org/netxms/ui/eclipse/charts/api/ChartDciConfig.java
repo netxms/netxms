@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import org.simpleframework.xml.Root;
 /**
  * DCI information for chart
  */
-@Root(name="dci")
+@Root(name="dci", strict=false)
 public class ChartDciConfig
 {
 	public static final String UNSET_COLOR = "UNSET"; //$NON-NLS-1$
@@ -59,6 +59,9 @@ public class ChartDciConfig
 	@Element(required=false)
 	public boolean showThresholds;
 
+   @Element(required=false)
+   public boolean invertValues;
+
 	@Element(required=false)
 	public String instance;
 	
@@ -77,6 +80,8 @@ public class ChartDciConfig
 		name = ""; //$NON-NLS-1$
 		lineWidth = 2;
 		area = false;
+		showThresholds = false;
+		invertValues = false;
 		instance = ""; //$NON-NLS-1$
 		column = ""; //$NON-NLS-1$
 	}
@@ -95,6 +100,8 @@ public class ChartDciConfig
 		this.name = src.name;
 		this.lineWidth = src.lineWidth;
 		this.area = src.area;
+		this.showThresholds = src.showThresholds;
+		this.invertValues = src.invertValues;
 		this.instance = src.instance;
 		this.column = src.column;
 	}
@@ -113,6 +120,8 @@ public class ChartDciConfig
 		color = UNSET_COLOR;
 		lineWidth = 2;
 		area = false;
+		showThresholds = false;
+		invertValues = false;
 		instance = ""; //$NON-NLS-1$
 		column = ""; //$NON-NLS-1$
 	}

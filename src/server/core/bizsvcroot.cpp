@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,33 +22,27 @@
 
 #include "nxcore.h"
 
-
-//
-// Business service tree root class default constructor
-//
-
+/**
+ * Business service tree root class default constructor
+ */
 BusinessServiceRoot::BusinessServiceRoot() : ServiceContainer()
 {
 	m_id = BUILTIN_OID_BUSINESSSERVICEROOT;
 	_tcscpy(m_name, _T("Business Services"));
-	uuid_generate(m_guid);
+   m_guid = uuid::generate();
 	m_iStatus = STATUS_NORMAL;
 }
 
-
-//
-// Business service root class destructor
-//
-
+/**
+ * Business service root class destructor
+ */
 BusinessServiceRoot::~BusinessServiceRoot()
 {
 }
 
-
-//
-// Save object to database
-//
-
+/**
+ * Save object to database
+ */
 BOOL BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024];

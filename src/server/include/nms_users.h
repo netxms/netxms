@@ -71,23 +71,23 @@ private:
 #if WITH_LDAP
    LDAP *m_ldapConn;
 #ifdef _WIN32
-   TCHAR m_connList[MAX_DB_STRING];
-   TCHAR m_searchBase[MAX_DB_STRING];
-   TCHAR m_searchFilter[MAX_DB_STRING];
-   TCHAR m_userDN[MAX_DB_STRING];
-   TCHAR m_userPassword[MAX_DB_STRING];
+   TCHAR m_connList[MAX_CONFIG_VALUE];
+   TCHAR m_searchBase[MAX_CONFIG_VALUE];
+   TCHAR m_searchFilter[MAX_CONFIG_VALUE];
+   TCHAR m_userDN[MAX_CONFIG_VALUE];
+   TCHAR m_userPassword[MAX_PASSWORD];
 #else
-   char m_connList[MAX_DB_STRING];
-   char m_searchBase[MAX_DB_STRING];
-   char m_searchFilter[MAX_DB_STRING];
-   char m_userDN[MAX_DB_STRING];
-   char m_userPassword[MAX_DB_STRING];
+   char m_connList[MAX_CONFIG_VALUE];
+   char m_searchBase[MAX_CONFIG_VALUE];
+   char m_searchFilter[MAX_CONFIG_VALUE];
+   char m_userDN[MAX_CONFIG_VALUE];
+   char m_userPassword[MAX_PASSWORD];
 #endif
-   char m_ldapFullNameAttr[MAX_DB_STRING];
-   char m_ldapLoginNameAttr[MAX_DB_STRING];
-   char m_ldapDescriptionAttr[MAX_DB_STRING];
-   TCHAR m_userClass[MAX_DB_STRING];
-   TCHAR m_groupClass[MAX_DB_STRING];
+   char m_ldapFullNameAttr[MAX_CONFIG_VALUE];
+   char m_ldapLoginNameAttr[MAX_CONFIG_VALUE];
+   char m_ldapDescriptionAttr[MAX_CONFIG_VALUE];
+   TCHAR m_userClass[MAX_CONFIG_VALUE];
+   TCHAR m_groupClass[MAX_CONFIG_VALUE];
    int m_action;
    int m_secure;
    int m_pageSize;
@@ -151,7 +151,7 @@ class NXCORE_EXPORTABLE UserDatabaseObject
 {
 protected:
 	UINT32 m_id;
-   uuid_t m_guid;
+   uuid m_guid;
 	TCHAR m_name[MAX_USER_NAME];
 	TCHAR m_description[MAX_USER_DESCR];
 	UINT64 m_systemRights;
@@ -173,13 +173,14 @@ public:
 
 	virtual void fillMessage(NXCPMessage *msg);
 	virtual void modifyFromMessage(NXCPMessage *msg);
+	void detachLdapUser();
 
 	UINT32 getId() { return m_id; }
 	const TCHAR *getName() { return m_name; }
 	const TCHAR *getDescription() { return m_description; }
 	UINT64 getSystemRights() { return m_systemRights; }
 	UINT32 getFlags() { return m_flags; }
-	TCHAR *getGuidAsText(TCHAR *buffer) { return uuid_to_string(m_guid, buffer); }
+   TCHAR *getGuidAsText(TCHAR *buffer) { return m_guid.toString(buffer); }
    const TCHAR *getDn() { return m_userDn; }
 
 	bool isDeleted() { return (m_flags & UF_DELETED) ? true : false; }
@@ -204,13 +205,42 @@ public:
 };
 
 /**
+ * Hash types
+ */
+enum PasswordHashType
+{
+   PWD_HASH_SHA1 = 0,
+   PWD_HASH_SHA256 = 1
+};
+
+/**
+ * Password salt length
+ */
+#define PASSWORD_SALT_LENGTH  8
+
+/**
+ * Password hash size
+ */
+#define PWD_HASH_SIZE(t) ((t == PWD_HASH_SHA256) ? SHA256_DIGEST_SIZE : ((t == PWD_HASH_SHA1) ? SHA1_DIGEST_SIZE : 0))
+
+/**
+ * Hashed password
+ */
+struct PasswordHash
+{
+   PasswordHashType hashType;
+   BYTE hash[SHA256_DIGEST_SIZE];
+   BYTE salt[PASSWORD_SALT_LENGTH];
+};
+
+/**
  * User object
  */
 class NXCORE_EXPORTABLE User : public UserDatabaseObject
 {
 protected:
 	TCHAR m_fullName[MAX_USER_FULLNAME];
-   BYTE m_passwordHash[SHA1_DIGEST_SIZE];
+   PasswordHash m_password;
    int m_graceLogins;
    int m_authMethod;
 	int m_certMappingMethod;
@@ -248,7 +278,6 @@ public:
    const TCHAR *getXmppId() { return m_xmppId; }
 
 	bool validatePassword(const TCHAR *password);
-	bool validateHashedPassword(const BYTE *password);
 	void decreaseGraceLogins() { if (m_graceLogins > 0) m_graceLogins--; m_flags |= UF_MODIFIED; }
 	void setPassword(const TCHAR *password, bool clearChangePasswdFlag);
 	void increaseAuthFailures();
@@ -335,11 +364,13 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
 bool AuthenticateUserForXMPPCommands(const char *xmppId);
 bool AuthenticateUserForXMPPSubscription(const char *xmppId);
 
+UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login, const TCHAR *password, bool *isValid);
 UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
 bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId);
-UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id);
+UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id, bool alreadyLocked = false);
 UINT32 NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, UINT32 *pdwId);
 UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE DetachLdapUser(UINT32 id);
 UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count);
 void NXCORE_EXPORTABLE CloseUserDatabase();
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name);
@@ -353,8 +384,8 @@ void SyncGroupMembers(Group* group, Entry *obj);
 UserDatabaseObject* GetUser(UINT32 userID);
 UserDatabaseObject* GetUser(const TCHAR* dn);
 THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg);
-bool UserNameIsUnique(TCHAR* name, UINT32 id);
-bool GroupNameIsUnique(TCHAR* name, UINT32 id);
+bool UserNameIsUnique(const TCHAR *name, UINT32 id);
+bool GroupNameIsUnique(const TCHAR *name, UINT32 id);
 void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId);
 void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups);
 void DumpUsers(CONSOLE_CTX pCtx);

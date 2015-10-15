@@ -29,7 +29,7 @@ import org.netxms.client.log.OrderingColumn;
  * @author Victor
  *
  */
-public class LogTest extends SessionTest
+public class LogTest extends AbstractSessionTest
 {
 	public void testOpenLog() throws Exception
 	{

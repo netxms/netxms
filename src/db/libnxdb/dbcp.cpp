@@ -37,7 +37,6 @@ static int m_connectionTTL;
 
 static MUTEX m_poolAccessMutex = INVALID_MUTEX_HANDLE;
 static ObjectArray<PoolConnectionInfo> m_connections;
-static DB_HANDLE m_hFallback;
 static THREAD m_maintThread = INVALID_THREAD_HANDLE;
 static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static CONDITION m_condRelease = INVALID_CONDITION_HANDLE;
@@ -139,9 +138,9 @@ static void ResetExpiredConnections()
 
    MutexLock(m_poolAccessMutex);
 
-	int availCount = 0;
+	int i, availCount = 0;
    ObjectArray<PoolConnectionInfo> reconnList(m_connections.size(), 16, false);
-	for(int i = 0; i < m_connections.size(); i++)
+	for(i = 0; i < m_connections.size(); i++)
 	{
 		PoolConnectionInfo *conn = m_connections.get(i);
 		if (!conn->inUse)
@@ -162,12 +161,12 @@ static void ResetExpiredConnections()
          reconnList.remove(count);
    }
 
-   for(int i = 0; i < count; i++)
+   for(i = 0; i < count; i++)
       reconnList.get(i)->inUse = true;
    MutexUnlock(m_poolAccessMutex);
 
    // do reconnects
-   for(int i = 0; i < count; i++)
+   for(i = 0; i < count; i++)
 	{
    	PoolConnectionInfo *conn = reconnList.get(i);
    	bool success = ResetConnection(conn);
@@ -210,7 +209,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
 bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
 																const TCHAR *login, const TCHAR *password, const TCHAR *schema,
 																int basePoolSize, int maxPoolSize, int cooldownTime,
-																int connTTL, DB_HANDLE fallback)
+																int connTTL)
 {
 	m_driver = driver;
 	nx_strncpy(m_server, CHECK_NULL_EX(server), 256);
@@ -223,7 +222,6 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
 	m_maxPoolSize = maxPoolSize;
 	m_cooldownTime = cooldownTime;
    m_connectionTTL = connTTL;
-	m_hFallback = fallback;
 
 	m_poolAccessMutex = MutexCreate();
    m_connections.setOwner(true);
@@ -323,7 +321,6 @@ retry:
 
 	if (handle == NULL)
 	{
-		handle = m_hFallback;
    	__DBDbgPrintf(1, _T("Database Connection Pool exhausted (call from %hs:%d)"), srcFile, srcLine);
       ConditionWait(m_condRelease, 10000);
       __DBDbgPrintf(5, _T("Database Connection Pool: retry acquire connection (call from %hs:%d)"), srcFile, srcLine);
@@ -339,9 +336,6 @@ retry:
  */
 void LIBNXDB_EXPORTABLE DBConnectionPoolReleaseConnection(DB_HANDLE handle)
 {
-	if (handle == m_hFallback)
-		return;
-
 	MutexLock(m_poolAccessMutex);
 
    for(int i = 0; i < m_connections.size(); i++)

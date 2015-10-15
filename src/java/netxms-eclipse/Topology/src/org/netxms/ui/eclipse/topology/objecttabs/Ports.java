@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2014 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,15 +20,12 @@ package org.netxms.ui.eclipse.topology.objecttabs;
 
 import java.util.HashSet;
 import java.util.Set;
-import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -37,13 +34,11 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.dialogs.PropertyDialogAction;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
-import org.netxms.ui.eclipse.console.resources.GroupMarkers;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.topology.widgets.DeviceView;
@@ -166,23 +161,7 @@ public class Ports extends ObjectTab implements ISelectionProvider
 	 */
 	private void fillContextMenu(IMenuManager manager)
 	{
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_CREATION));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_TOPOLOGY));
-		manager.add(new Separator());
-		manager.add(new GroupMarker(GroupMarkers.MB_DATA_COLLECTION));
-		if ((selection instanceof IStructuredSelection) && (((IStructuredSelection)selection).size() == 1))
-		{
-			manager.add(new Separator());
-			manager.add(new GroupMarker(GroupMarkers.MB_PROPERTIES));
-			manager.add(new PropertyDialogAction(getViewPart().getSite(), this));
-		}
+	   ObjectContextMenu.fill(manager, getViewPart().getSite(), this);
 	}
 
 	/* (non-Javadoc)

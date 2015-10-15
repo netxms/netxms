@@ -21,7 +21,7 @@ package org.netxms.client;
 /**
  * Event database sync test
  */
-public class EventDatabaseSyncTest extends SessionTest
+public class EventDatabaseSyncTest extends AbstractSessionTest
 {
 	public void testSyncEventDatabase() throws Exception
 	{

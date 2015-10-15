@@ -4,7 +4,7 @@ pkglib_LTLIBRARIES = ds18x20.la
 ds18x20_la_SOURCES = ds18x20.cpp
 ds18x20_la_CPPFLAGS=-I@top_srcdir@/include
 ds18x20_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
-ds18x20_la_LIBADD = ../../../libnetxms/libnetxms.la
+ds18x20_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = ds18x20.h
 

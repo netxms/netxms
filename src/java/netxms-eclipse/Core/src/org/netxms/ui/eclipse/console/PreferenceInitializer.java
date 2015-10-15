@@ -54,5 +54,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer
 		ps.setDefault("DATE_FORMAT_STRING", Messages.get().PreferenceInitializer_DefaultDateFormat); //$NON-NLS-1$
 		ps.setDefault("TIME_FORMAT_STRING", Messages.get().PreferenceInitializer_DefaultTimeFormat); //$NON-NLS-1$
       ps.setDefault("SHORT_TIME_FORMAT_STRING", Messages.get().PreferenceInitializer_DefaultShortTimeFormat); //$NON-NLS-1$
+      ps.setDefault("USE_SERVER_TIMEZONE", false); //$NON-NLS-1$
 	}
 }

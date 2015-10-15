@@ -19,6 +19,8 @@
 package org.netxms.ui.eclipse.filemanager.widgets;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
 import org.netxms.ui.eclipse.filemanager.Messages;
@@ -29,7 +31,7 @@ import org.netxms.ui.eclipse.widgets.AbstractSelector;
  */
 public class LocalFileSelector extends AbstractSelector
 {
-	private File file = null;
+	private List<File> fileList = new ArrayList<File>();
 	private String[] filterExtensions = { "*" }; //$NON-NLS-1$
 	private String[] filterNames = { Messages.get().LocalFileSelector_AllFiles };
 	private int selectorType;
@@ -58,11 +60,22 @@ public class LocalFileSelector extends AbstractSelector
 		fd.setText(Messages.get().LocalFileSelector_SelectFile);
 		fd.setFilterExtensions(filterExtensions);
 		fd.setFilterNames(filterNames);
-		String selected = fd.open();
-		if (selected != null)
-			setFile(new File(selected));
-		else
-			setFile(null);
+		fd.open();
+	   String files[] = fd.getFileNames();
+	   if(files.length > 0)
+	   {
+	      fileList.clear();
+	      for(int i = 0; i < files.length; i++)
+	      {
+	         fileList.add(new File(fd.getFilterPath(), files[i]));
+	      }
+	      updateFileList();
+	   }
+	   else
+	   {
+	      fileList.clear();
+         updateFileList();
+	   }
 	}
 
 	/* (non-Javadoc)
@@ -79,7 +92,19 @@ public class LocalFileSelector extends AbstractSelector
 	 */
 	public File getFile()
 	{
-		return file;
+	   if(fileList.size() > 0)
+	   {
+	      return fileList.get(0);
+	   }
+	   else
+	   {
+	      return null;
+	   }
+	}
+	
+	public List<File> getFileList()
+	{	   
+	   return fileList;
 	}
 
 	/**
@@ -87,15 +112,28 @@ public class LocalFileSelector extends AbstractSelector
 	 */
 	public void setFile(File file)
 	{
-		this.file = file;
-		if (file != null)
-		{
-			setText(file.getAbsolutePath());
-		}
-		else
-		{
-			setText(Messages.get().LocalFileSelector_None);
-		}
+      fileList.clear();
+      fileList.add(file);
+      updateFileList();
+	}
+	
+	private void updateFileList()
+	{
+	   StringBuilder fileListString = new StringBuilder();
+	   for(int i = 0; i < fileList.size(); i++)
+      {
+	      fileListString.append(fileList.get(i).getName());
+	      if(i != (fileList.size() - 1))
+	      {
+	         fileListString.append(", ");
+	      }
+      }
+	   
+	   if(fileList.size() == 0)
+	      fileListString.append(Messages.get().LocalFileSelector_None);
+	   
+	   setText(fileListString.toString());	   
+	   fireModifyListeners();
 	}
 
 	/**

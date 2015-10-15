@@ -51,6 +51,7 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.datacollection.DciValue;
+import org.netxms.client.maps.MapObjectDisplayMode;
 import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.elements.NetworkMapDCIContainer;
 import org.netxms.client.maps.elements.NetworkMapDCIImage;
@@ -103,7 +104,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean enableLongObjectName = false;
 	private boolean hideLinkLabel = false;
 	private ILabelProvider workbenchLabelProvider;
-	private ObjectFigureType objectFigureType = ObjectFigureType.ICON;
+	private MapObjectDisplayMode objectFigureType = MapObjectDisplayMode.ICON;
 	private ColorCache colors;
 	private Color defaultLinkColor = null;
 	private ManhattanConnectionRouter manhattanRouter = new ManhattanConnectionRouter();
@@ -578,7 +579,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	/**
 	 * @return the objectFigureType
 	 */
-	public ObjectFigureType getObjectFigureType()
+	public MapObjectDisplayMode getObjectFigureType()
 	{
 		return objectFigureType;
 	}
@@ -586,7 +587,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	/**
 	 * @param objectFigureType the objectFigureType to set
 	 */
-	public void setObjectFigureType(ObjectFigureType objectFigureType)
+	public void setObjectFigureType(MapObjectDisplayMode objectFigureType)
 	{
 		this.objectFigureType = objectFigureType;
 	}

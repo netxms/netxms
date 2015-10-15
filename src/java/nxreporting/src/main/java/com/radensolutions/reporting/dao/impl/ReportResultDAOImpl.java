@@ -1,7 +1,7 @@
 package com.radensolutions.reporting.dao.impl;
 
-import com.radensolutions.reporting.model.ReportResult;
 import com.radensolutions.reporting.dao.ReportResultDAO;
+import com.radensolutions.reporting.model.ReportResult;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -31,8 +31,8 @@ public class ReportResultDAOImpl implements ReportResultDAO {
 
     @Override
     public List<ReportResult> listResults(UUID reportId, int userId) {
-        String strQuery = "from ReportResult result where result.reportId = ? order by executionTime desc";
-        final Query query = sessionFactory.getCurrentSession().createQuery(strQuery).setParameter(0, reportId);
+        String strQuery = "from ReportResult result where result.reportId = :reportId order by executionTime desc";
+        final Query query = sessionFactory.getCurrentSession().createQuery(strQuery).setParameter("reportId", reportId);
         return checkedList(query.list(), ReportResult.class);
     }
 
@@ -47,8 +47,8 @@ public class ReportResultDAOImpl implements ReportResultDAO {
 
     @Override
     public List<ReportResult> findReportsResult(UUID jobId) {
-        final Query query = sessionFactory.getCurrentSession().createQuery("from ReportResult where jobId = ?")
-                .setParameter(0, jobId);
+        final Query query = sessionFactory.getCurrentSession().createQuery("from ReportResult where jobId = :jobId")
+                .setParameter("jobId", jobId);
         return checkedList(query.list(), ReportResult.class);
     }
 }

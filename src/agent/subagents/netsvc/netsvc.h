@@ -29,16 +29,6 @@ enum
 	PC_ERR_INTERNAL
 };
 
-/**
- * Request data for cURL call
- */
-struct RequestData
-{
-   size_t size;
-   size_t allocated;
-   char *data;
-};
-
 #define NETSVC_AF_VERIFYPEER 1
 
 extern UINT32 g_flags;

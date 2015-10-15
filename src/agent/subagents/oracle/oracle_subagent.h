@@ -37,7 +37,6 @@
 
 // Oracle-specific
 #define MAX_USERNAME	(30+1)
-#define MAX_PASSWORD	(30+1)
 
 /**
  * Database connection information
@@ -81,7 +80,7 @@ private:
    CONDITION m_stopCondition;
 
    static THREAD_RESULT THREAD_CALL pollerThreadStarter(void *arg);
-   
+
    void pollerThread();
    bool poll();
    int getOracleVersion();

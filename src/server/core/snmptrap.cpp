@@ -269,7 +269,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 	}
 
    // Match IP address to object
-   pNode = FindNodeByIP(0, srcAddr);
+   pNode = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, srcAddr);
 
    // Write trap to log if required
    if (m_bLogAllTraps || (pNode != NULL))
@@ -420,7 +420,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 				pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 				pInfo->ignoreFilter = FALSE;
 				memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-            g_nodePollerQueue.Put(pInfo);
+            g_nodePollerQueue.put(pInfo);
          }
       }
       else
@@ -432,7 +432,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 			pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
 			pInfo->ignoreFilter = FALSE;
 			memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
-         g_nodePollerQueue.Put(pInfo);
+         g_nodePollerQueue.put(pInfo);
       }
    }
    else  // unknown node, discovery disabled
@@ -446,12 +446,26 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
  */
 static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addrLen)
 {
-	UINT32 ipAddr = ntohl(((struct sockaddr_in *)addr)->sin_addr.s_addr);
-	Node *node = FindNodeByIP(0, ipAddr);
-	TCHAR buffer[32];
+   InetAddress ipAddr = InetAddress::createFromSockaddr(addr);
+	Node *node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, ipAddr);
+	TCHAR buffer[64];
 	DbgPrintf(6, _T("SNMPTrapReceiver: looking for SNMP security context for node %s %s"),
-	          IpToStr(ipAddr, buffer), (node != NULL) ? node->getName() : _T("<unknown>"));
+      ipAddr.toString(buffer), (node != NULL) ? node->getName() : _T("<unknown>"));
 	return (node != NULL) ? node->getSnmpSecurityContext() : NULL;
+}
+
+/**
+ * Create SNMP transport for receiver
+ */
+static SNMP_Transport *CreateTransport(SOCKET hSocket)
+{
+   if (hSocket == INVALID_SOCKET)
+      return NULL;
+
+   SNMP_Transport *t = new SNMP_UDPTransport(hSocket);
+	t->enableEngineIdAutoupdate(true);
+	t->setPeerUpdatedOnRecv(true);
+   return t;
 }
 
 /**
@@ -459,100 +473,227 @@ static SNMP_SecurityContext *ContextFinder(struct sockaddr *addr, socklen_t addr
  */
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 {
-   SNMP_UDPTransport *pTransport;
-   SNMP_PDU *pdu;
-
 	static BYTE engineId[] = { 0x80, 0x00, 0x00, 0x00, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00 };
 	SNMP_Engine localEngine(engineId, 12);
 
+   // Create socket(s)
    SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
-   if (hSocket == INVALID_SOCKET)
+#ifdef WITH_IPV6
+   SOCKET hSocket6 = socket(AF_INET6, SOCK_DGRAM, 0);
+#endif
+   if ((hSocket == INVALID_SOCKET)
+#ifdef WITH_IPV6
+       && (hSocket6 == INVALID_SOCKET)
+#endif
+      )
    {
-      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", "SNMPTrapReceiver");
+      nxlog_write(MSG_SOCKET_FAILED, EVENTLOG_ERROR_TYPE, "s", _T("SNMPTrapReceiver"));
       return THREAD_OK;
    }
 
-	SetSocketExclusiveAddrUse(hSocket);
-	SetSocketReuseFlag(hSocket);
+   SetSocketExclusiveAddrUse(hSocket);
+   SetSocketReuseFlag(hSocket);
+#ifndef _WIN32
+   fcntl(hSocket, F_SETFD, fcntl(hSocket, F_GETFD) | FD_CLOEXEC);
+#endif
+
+#ifdef WITH_IPV6
+   SetSocketExclusiveAddrUse(hSocket6);
+   SetSocketReuseFlag(hSocket6);
+#ifndef _WIN32
+   fcntl(hSocket6, F_SETFD, fcntl(hSocket6, F_GETFD) | FD_CLOEXEC);
+#endif
+#ifdef IPV6_V6ONLY
+   int on = 1;
+   setsockopt(hSocket6, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on, sizeof(int));
+#endif
+#endif
 
    // Fill in local address structure
    struct sockaddr_in servAddr;
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-   servAddr.sin_addr.s_addr = ResolveHostName(g_szListenAddress);
+
+#ifdef WITH_IPV6
+   struct sockaddr_in6 servAddr6;
+   memset(&servAddr6, 0, sizeof(struct sockaddr_in6));
+   servAddr6.sin6_family = AF_INET6;
+#endif
+   if (!_tcscmp(g_szListenAddress, _T("*")))
+	{
+		servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+#ifdef WITH_IPV6
+		memset(servAddr6.sin6_addr.s6_addr, 0, 16);
+#endif
+	}
+	else
+	{
+      InetAddress bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET);
+      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
+      {
+		   servAddr.sin_addr.s_addr = htonl(bindAddress.getAddressV4());
+      }
+      else
+      {
+   		servAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+      }
+#ifdef WITH_IPV6
+      bindAddress = InetAddress::resolveHostName(g_szListenAddress, AF_INET6);
+      if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET6))
+      {
+		   memcpy(servAddr6.sin6_addr.s6_addr, bindAddress.getAddressV6(), 16);
+      }
+      else
+      {
+   		memset(servAddr6.sin6_addr.s6_addr, 0, 15);
+         servAddr6.sin6_addr.s6_addr[15] = 1;
+      }
+#endif
+	}
    servAddr.sin_port = htons(m_wTrapPort);
+#ifdef WITH_IPV6
+   servAddr6.sin6_port = htons(m_wTrapPort);
+#endif
 
    // Bind socket
+   TCHAR buffer[64];
+   int bindFailures = 0;
+   DbgPrintf(5, _T("Trying to bind on UDP %s:%d"), SockaddrToStr((struct sockaddr *)&servAddr, buffer), ntohs(servAddr.sin_port));
    if (bind(hSocket, (struct sockaddr *)&servAddr, sizeof(struct sockaddr_in)) != 0)
    {
       nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", m_wTrapPort, _T("SNMPTrapReceiver"), WSAGetLastError());
+      bindFailures++;
       closesocket(hSocket);
+      hSocket = INVALID_SOCKET;
+   }
+
+#ifdef WITH_IPV6
+   DbgPrintf(5, _T("Trying to bind on UDP [%s]:%d"), SockaddrToStr((struct sockaddr *)&servAddr6, buffer), ntohs(servAddr6.sin6_port));
+   if (bind(hSocket6, (struct sockaddr *)&servAddr6, sizeof(struct sockaddr_in6)) != 0)
+   {
+      nxlog_write(MSG_BIND_ERROR, EVENTLOG_ERROR_TYPE, "dse", m_wTrapPort, _T("SNMPTrapReceiver"), WSAGetLastError());
+      bindFailures++;
+      closesocket(hSocket6);
+      hSocket6 = INVALID_SOCKET;
+   }
+#else
+   bindFailures++;
+#endif
+
+   // Abort if cannot bind to at least one socket
+   if (bindFailures == 2)
+   {
+      DbgPrintf(1, _T("SNMP trap receiver aborted - cannot bind at least one socket"));
       return THREAD_OK;
    }
-	nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), m_wTrapPort);
 
-   pTransport = new SNMP_UDPTransport(hSocket);
-	pTransport->enableEngineIdAutoupdate(true);
-	pTransport->setPeerUpdatedOnRecv(true);
+   if (hSocket != INVALID_SOCKET)
+	   nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "ad", ntohl(servAddr.sin_addr.s_addr), m_wTrapPort);
+#ifdef WITH_IPV6
+   if (hSocket6 != INVALID_SOCKET)
+	   nxlog_write(MSG_LISTENING_FOR_SNMP, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, m_wTrapPort);
+#endif
+
+   SNMP_Transport *snmp = CreateTransport(hSocket);
+#ifdef WITH_IPV6
+   SNMP_Transport *snmp6 = CreateTransport(hSocket6);
+#endif
+
    DbgPrintf(1, _T("SNMP Trap Receiver started on port %u"), m_wTrapPort);
 
    // Wait for packets
    while(!IsShutdownInProgress())
    {
-      struct sockaddr_in addr;
-      socklen_t addrLen = sizeof(struct sockaddr_in);
-      int bytes = pTransport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &addrLen, ContextFinder);
-      if ((bytes > 0) && (pdu != NULL))
+      struct timeval tv;
+      tv.tv_sec = 1;
+      tv.tv_usec = 0;
+
+      fd_set rdfs;
+      FD_ZERO(&rdfs);
+      if (hSocket != INVALID_SOCKET)
+         FD_SET(hSocket, &rdfs);
+#ifdef WITH_IPV6
+      if (hSocket6 != INVALID_SOCKET)
+         FD_SET(hSocket6, &rdfs);
+#endif
+
+#if defined(WITH_IPV6) && !defined(_WIN32)
+      SOCKET nfds = 0;
+      if (hSocket != INVALID_SOCKET)
+         nfds = hSocket;
+      if ((hSocket6 != INVALID_SOCKET) && (hSocket6 > nfds))
+         nfds = hSocket6;
+      int rc = select(SELECT_NFDS(nfds + 1), &rdfs, NULL, NULL, &tv);
+#else
+      int rc = select(SELECT_NFDS(hSocket + 1), &rdfs, NULL, NULL, &tv);
+#endif
+      if ((rc > 0) && !IsShutdownInProgress())
       {
-			DbgPrintf(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
-			if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
-			{
-				if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
-				{
-					SNMP_SecurityContext *context = pTransport->getSecurityContext();
-					context->setAuthoritativeEngine(localEngine);
-				}
-            ProcessTrap(pdu, InetAddress::createFromSockaddr((struct sockaddr *)&addr), ntohs(addr.sin_port), pTransport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
-			}
-			else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
-			{
-				// Engine ID discovery
-				DbgPrintf(6, _T("SNMPTrapReceiver: EngineId discovery"));
+         SockAddrBuffer addr;
+         socklen_t addrLen = sizeof(SockAddrBuffer);
+         SNMP_PDU *pdu;
+#ifdef WITH_IPV6
+         SNMP_Transport *transport = FD_ISSET(hSocket, &rdfs) ? snmp : snmp6;
+#else
+         SNMP_Transport *transport = snmp;
+#endif
+         int bytes = transport->readMessage(&pdu, 2000, (struct sockaddr *)&addr, &addrLen, ContextFinder);
+         if ((bytes > 0) && (pdu != NULL))
+         {
+            InetAddress sourceAddr = InetAddress::createFromSockaddr((struct sockaddr *)&addr);
+            DbgPrintf(6, _T("SNMPTrapReceiver: received PDU of type %d from %s"), pdu->getCommand(), (const TCHAR *)sourceAddr.toString());
+			   if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
+			   {
+				   if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
+				   {
+					   SNMP_SecurityContext *context = transport->getSecurityContext();
+					   context->setAuthoritativeEngine(localEngine);
+				   }
+               ProcessTrap(pdu, sourceAddr, ntohs(SA_PORT(&addr)), transport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
+			   }
+			   else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
+			   {
+				   // Engine ID discovery
+				   DbgPrintf(6, _T("SNMPTrapReceiver: EngineId discovery"));
 
-				SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
-				response->setReportable(false);
-				response->setMessageId(pdu->getMessageId());
-				response->setContextEngineId(localEngine.getId(), localEngine.getIdLen());
+				   SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
+				   response->setReportable(false);
+				   response->setMessageId(pdu->getMessageId());
+				   response->setContextEngineId(localEngine.getId(), localEngine.getIdLen());
 
-				SNMP_Variable *var = new SNMP_Variable(_T(".1.3.6.1.6.3.15.1.1.4.0"));
-				var->setValueFromString(ASN_INTEGER, _T("2"));
-				response->bindVariable(var);
+				   SNMP_Variable *var = new SNMP_Variable(_T(".1.3.6.1.6.3.15.1.1.4.0"));
+				   var->setValueFromString(ASN_INTEGER, _T("2"));
+				   response->bindVariable(var);
 
-				SNMP_SecurityContext *context = new SNMP_SecurityContext();
-				localEngine.setTime((int)time(NULL));
-				context->setAuthoritativeEngine(localEngine);
-				context->setSecurityModel(SNMP_SECURITY_MODEL_USM);
-				context->setAuthMethod(SNMP_AUTH_NONE);
-				context->setPrivMethod(SNMP_ENCRYPT_NONE);
-				pTransport->setSecurityContext(context);
+				   SNMP_SecurityContext *context = new SNMP_SecurityContext();
+				   localEngine.setTime((int)time(NULL));
+				   context->setAuthoritativeEngine(localEngine);
+				   context->setSecurityModel(SNMP_SECURITY_MODEL_USM);
+				   context->setAuthMethod(SNMP_AUTH_NONE);
+				   context->setPrivMethod(SNMP_ENCRYPT_NONE);
+				   transport->setSecurityContext(context);
 
-				pTransport->sendMessage(response);
-				delete response;
-			}
-			else if (pdu->getCommand() == SNMP_REPORT)
-			{
-				DbgPrintf(6, _T("SNMPTrapReceiver: REPORT PDU with error %s"), pdu->getVariable(0)->getName()->getValueAsText());
-			}
-         delete pdu;
-      }
-      else
-      {
-         // Sleep on error
-         ThreadSleepMs(100);
+				   transport->sendMessage(response);
+				   delete response;
+			   }
+			   else if (pdu->getCommand() == SNMP_REPORT)
+			   {
+				   DbgPrintf(6, _T("SNMPTrapReceiver: REPORT PDU with error %s"), pdu->getVariable(0)->getName()->getValueAsText());
+			   }
+            delete pdu;
+         }
+         else
+         {
+            // Sleep on error
+            ThreadSleepMs(100);
+         }
       }
    }
 
-   delete pTransport;
+   delete snmp;
+#ifdef WITH_IPV6
+   delete snmp6;
+#endif
    DbgPrintf(1, _T("SNMP Trap Receiver terminated"));
    return THREAD_OK;
 }

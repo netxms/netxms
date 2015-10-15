@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,6 +59,7 @@ public class AbstractChart extends PropertyPage
 	private Button checkTranslucent;
 	private Button checkTransposed;
    private Button checkLogScale;
+   private Button checkStacked;
    private YAxisRangeEditor yAxisRange;
 
 	/* (non-Javadoc)
@@ -134,6 +135,13 @@ public class AbstractChart extends PropertyPage
          gd = new GridData();
          gd.horizontalSpan = layout.numColumns;
          checkLogScale.setLayoutData(gd);
+         
+         checkStacked = new Button(optionsGroup, SWT.CHECK);
+         checkStacked.setText("&Stacked");
+         checkStacked.setSelection(((LineChartConfig)config).isStacked());
+         gd = new GridData();
+         gd.horizontalSpan = layout.numColumns;
+         checkStacked.setLayoutData(gd);
       }
       
 		if (config instanceof ComparisonChartConfig)
@@ -276,6 +284,7 @@ public class AbstractChart extends PropertyPage
 			((LineChartConfig)config).setShowGrid(checkShowGrid.getSelection());
          ((LineChartConfig)config).setExtendedLegend(checkExtendedLegend.getSelection());
          ((LineChartConfig)config).setLogScaleEnabled(checkLogScale.getSelection());
+         ((LineChartConfig)config).setStacked(checkStacked.getSelection());
 		}
 		return true;
 	}

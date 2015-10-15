@@ -50,35 +50,27 @@
  */
 #ifdef _WIN32
 
-#define DEFAULT_CONFIG_FILE   _T("C:\\netxmsd.conf")
-
-#define DEFAULT_SHELL         _T("cmd.exe")
-#define DEFAULT_LOG_FILE      _T("C:\\NetXMS.log")
-#define DEFAULT_DATA_DIR      _T("C:\\NetXMS\\var")
-#define DEFAULT_LIBDIR        _T("C:\\NetXMS\\lib")
+#define DEFAULT_LOG_FILE      _T("C:\\netxmsd.log")
 #define DEFAULT_DUMP_DIR      _T("C:\\")
+
+#define DDIR_PACKAGES         _T("\\packages")
+#define DDIR_BACKGROUNDS      _T("\\backgrounds")
+#define DFILE_KEYS            _T("\\server_key")
+#define DFILE_COMPILED_MIB    _T("\\netxms.mib")
+#define DDIR_IMAGES           _T("\\images")
+#define DDIR_FILES            _T("\\files")
 
 #define LDIR_NDD              _T("\\ndd")
 #define LDIR_PDSDRV           _T("\\pdsdrv")
 
-#define DDIR_MIBS             _T("\\mibs")
-#define DDIR_PACKAGES         _T("\\packages")
-#define DDIR_BACKGROUNDS      _T("\\backgrounds")
-#define DDIR_SHARED_FILES     _T("\\shared")
-#define DFILE_KEYS            _T("\\server_key")
-#define DFILE_COMPILED_MIB    _T("\\mibs\\netxms.mib")
-#define DDIR_IMAGES           _T("\\images")
-#define DDIR_FILES            _T("\\files")
-#define DDIR_REPORTS          _T("\\reports")
-
 #else    /* _WIN32 */
 
-#define DEFAULT_CONFIG_FILE   _T("{search}")
-
-#define DEFAULT_SHELL         _T("/bin/sh")
-
 #ifndef DATADIR
-#define DATADIR              _T("/var/netxms")
+#define DATADIR              _T("/usr/share/netxms")
+#endif
+
+#ifndef STATEDIR
+#define STATEDIR             _T("/var/lib/netxms")
 #endif
 
 #ifndef LIBDIR
@@ -89,23 +81,18 @@
 #define PKGLIBDIR            _T("/usr/lib/netxms")
 #endif
 
-#define DEFAULT_LOG_FILE      DATADIR _T("/log/netxmsd.log")
-#define DEFAULT_DATA_DIR      DATADIR
-#define DEFAULT_LIBDIR        PKGLIBDIR
-#define DEFAULT_DUMP_DIR      _T("/")
+#define DEFAULT_LOG_FILE      _T("/var/log/netxmsd.log")
+#define DEFAULT_DUMP_DIR      _T("/var/tmp")
 
 #define LDIR_NDD              _T("/ndd")
 #define LDIR_PDSDRV           _T("/pdsdrv")
 
-#define DDIR_MIBS             _T("/mibs")
 #define DDIR_PACKAGES         _T("/packages")
 #define DDIR_BACKGROUNDS      _T("/backgrounds")
-#define DDIR_SHARED_FILES     _T("/shared")
 #define DFILE_KEYS            _T("/.server_key")
-#define DFILE_COMPILED_MIB    _T("/mibs/netxms.mib")
+#define DFILE_COMPILED_MIB    _T("/netxms.mib")
 #define DDIR_IMAGES           _T("/images")
 #define DDIR_FILES            _T("/files")
-#define DDIR_REPORTS          _T("/reports")
 
 #endif   /* _WIN32 */
 
@@ -142,6 +129,8 @@
 #define AF_RESOLVE_IP_FOR_EACH_STATUS_POLL     _ULL(0x0000000080000000)
 #define AF_PERFDATA_STORAGE_DRIVER_LOADED      _ULL(0x0000000100000000)
 #define AF_BACKGROUND_LOG_WRITER               _ULL(0x0000000200000000)
+#define AF_CASE_INSENSITIVE_LOGINS             _ULL(0x0000000400000000)
+#define AF_TRAP_SOURCES_IN_ALL_ZONES           _ULL(0x0000000800000000)
 #define AF_SERVER_INITIALIZED                  _ULL(0x4000000000000000)
 #define AF_SHUTDOWN                            _ULL(0x8000000000000000)
 
@@ -152,15 +141,6 @@
 #define ENCRYPTION_ALLOWED    1
 #define ENCRYPTION_PREFERRED  2
 #define ENCRYPTION_REQUIRED   3
-
-/**
- * Flags for SnmpGet
- */
-#define SG_VERBOSE        0x0001
-#define SG_STRING_RESULT  0x0002
-#define SG_RAW_RESULT     0x0004
-#define SG_HSTRING_RESULT 0x0008
-#define SG_PSTRING_RESULT 0x0010
 
 /**
  * Agent action output callback events
@@ -211,6 +191,23 @@ typedef struct
  */
 class InterfaceInfo
 {
+private:
+   void init()
+   {
+      name[0] = 0;
+      description[0] = 0;
+      alias[0] = 0;
+      type = IFTYPE_OTHER;
+      mtu = 0;
+      speed = 0;
+      bridgePort = 0;
+      slot = 0;
+      port = 0;
+      memset(macAddr, 0, sizeof(macAddr));
+      isPhysicalPort = false;
+      isSystem = false;
+   }
+
 public:
    UINT32 index;
    TCHAR name[MAX_DB_STRING];			// Interface display name
@@ -218,6 +215,7 @@ public:
 	TCHAR alias[MAX_DB_STRING];	// Value of ifDescr MIB variable for SNMP agents
    UINT32 type;
    UINT32 mtu;
+   UINT64 speed;  // interface speed in bits/sec
 	UINT32 bridgePort;
 	UINT32 slot;
 	UINT32 port;
@@ -225,21 +223,22 @@ public:
    BYTE macAddr[MAC_ADDR_LENGTH];
 	bool isPhysicalPort;
    bool isSystem;
+   UINT32 ifTableSuffix[16];   // actual ifTable suffix
+   int ifTableSuffixLength;
 
    InterfaceInfo(UINT32 ifIndex)
-   { 
+   {
       index = ifIndex;
-      name[0] = 0;
-      description[0] = 0;
-      alias[0] = 0;
-      type = IFTYPE_OTHER;
-      mtu = 0;
-      bridgePort = 0;
-      slot = 0;
-      port = 0;
-      memset(macAddr, 0, sizeof(macAddr));
-      isPhysicalPort = false;
-      isSystem = false;
+      ifTableSuffixLength = 0;
+      init();
+   }
+
+   InterfaceInfo(UINT32 ifIndex, int suffixLen, const UINT32 *suffix)
+   {
+      index = ifIndex;
+      ifTableSuffixLength = ((suffixLen >= 0) && (suffixLen < 16)) ? suffixLen : 0;
+      memcpy(ifTableSuffix, suffix, ifTableSuffixLength * sizeof(UINT32));
+      init();
    }
 
    bool hasAddress(const InetAddress& addr) { return ipAddrList.hasAddress(addr); }
@@ -378,7 +377,7 @@ public:
 	~AgentPolicyInfo();
 
 	int size() { return m_size; }
-	bool getGuid(int index, uuid_t guid);
+	uuid getGuid(int index);
 	int getType(int index) { return ((index >= 0) && (index < m_size)) ? m_typeList[index] : -1; }
 	const TCHAR *getServer(int index) { return ((index >= 0) && (index < m_size)) ? m_serverList[index] : NULL; }
 };
@@ -455,13 +454,13 @@ private:
    time_t m_tLastCommandTime;
    SOCKET m_hSocket;
    UINT32 m_dwNumDataLines;
-   UINT32 m_dwRequestId;
+   VolatileCounter m_requestId;
    UINT32 m_dwCommandTimeout;
 	UINT32 m_connectionTimeout;
    UINT32 m_dwRecvTimeout;
    TCHAR **m_ppDataLines;
    MsgWaitQueue *m_pMsgWaitQueue;
-   BOOL m_bIsConnected;
+   bool m_isConnected;
    MUTEX m_mutexDataLock;
 	MUTEX m_mutexSocketWrite;
    THREAD m_hReceiverThread;
@@ -501,8 +500,9 @@ protected:
 	virtual void onDataPush(NXCPMessage *msg);
 	virtual void onFileMonitoringData(NXCPMessage *msg);
 	virtual void onSnmpTrap(NXCPMessage *pMsg);
-	virtual bool processCustomMessage(NXCPMessage *pMsg);
 	virtual void onFileDownload(BOOL success);
+	virtual UINT32 processCollectedData(NXCPMessage *msg);
+	virtual bool processCustomMessage(NXCPMessage *pMsg);
 
    void lock() { MutexLock(m_mutexDataLock); }
    void unlock() { MutexUnlock(m_mutexDataLock); }
@@ -514,9 +514,9 @@ public:
    AgentConnection(InetAddress addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
    virtual ~AgentConnection();
 
-   BOOL connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL);
+   bool connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL);
    void disconnect();
-   BOOL isConnected() { return m_bIsConnected; }
+   bool isConnected() { return m_isConnected; }
 	int getProtocolVersion() { return m_nProtocolVersion; }
 
 	SOCKET getSocket() { return m_hSocket; }
@@ -529,8 +529,9 @@ public:
    UINT32 getTable(const TCHAR *pszParam, Table **table);
    UINT32 nop();
    UINT32 enableIPv6();
+   UINT32 setServerId(UINT64 serverId);
    UINT32 execAction(const TCHAR *pszAction, int argc, TCHAR **argv, bool withOutput = false, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
-   UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL);
+   UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL, NXCPCompressionMethod compMethod = NXCP_COMPRESSION_NONE);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, const TCHAR *pszRequest = NULL, const TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
@@ -538,11 +539,12 @@ public:
    UINT32 getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize);
    UINT32 updateConfigFile(const TCHAR *pszConfig);
    UINT32 enableTraps();
+   UINT32 enableFileUpdates();
 	UINT32 getPolicyInventory(AgentPolicyInfo **info);
 	UINT32 uninstallPolicy(uuid_t guid);
    UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
 
-	UINT32 generateRequestId() { return m_dwRequestId++; }
+	UINT32 generateRequestId() { return (UINT32)InterlockedIncrement(&m_requestId); }
 	NXCPMessage *customRequest(NXCPMessage *pRequest, const TCHAR *recvFile = NULL, bool append = false, void (*downloadProgressCallback)(size_t, void *) = NULL,
 	                           void (*fileResendCallback)(NXCP_MESSAGE*, void *) = NULL, void *cbArg = NULL);
 
@@ -584,6 +586,7 @@ public:
 	                        SNMP_SecurityContext* (*contextFinder)(struct sockaddr *, socklen_t) = NULL);
    virtual int sendMessage(SNMP_PDU *pdu);
    virtual InetAddress getPeerIpAddress();
+   WORD getPort() { return m_port; }
 
    void setWaitForResponse(bool wait) { m_waitForResponse = wait; }
 };
@@ -601,7 +604,7 @@ class LIBNXSRV_EXPORTABLE ISC
 {
 private:
 	UINT32 m_flags;
-   UINT32 m_addr;
+   InetAddress m_addr;
 	WORD m_port;
    SOCKET m_socket;
    int m_protocolVersion;
@@ -630,7 +633,7 @@ protected:
 
 public:
    ISC();
-   ISC(UINT32 addr, WORD port = NETXMS_ISC_PORT);
+   ISC(const InetAddress& addr, WORD port = NETXMS_ISC_PORT);
    virtual ~ISC();
 
    UINT32 connect(UINT32 service, RSA *serverKey = NULL, BOOL requireEncryption = FALSE);
@@ -674,22 +677,10 @@ void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 
 const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code);
 
-UINT32 LIBNXSRV_EXPORTABLE SnmpNewRequestId();
-UINT32 LIBNXSRV_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
-                                  const TCHAR *szOidStr, const UINT32 *oidBinary, size_t oidLen, void *pValue,
-                                  size_t bufferSize, UINT32 dwFlags);
-UINT32 LIBNXSRV_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
-                                     const TCHAR *szOidStr, const UINT32 *oidBinary, size_t oidLen, void *pValue,
-                                     size_t bufferSize, UINT32 dwFlags, UINT32 *dataLen);
-UINT32 LIBNXSRV_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
-						                 UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *),
-                                   void *pUserArg, BOOL bVerbose);
-
 /**
  * Variables
  */
 extern UINT64 LIBNXSRV_EXPORTABLE g_flags;
-extern UINT32 LIBNXSRV_EXPORTABLE g_snmpTimeout;
 extern UINT32 LIBNXSRV_EXPORTABLE g_debugLevel;
 
 /**

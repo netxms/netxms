@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.objectview.Messages;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 
 /**
  * Generic table element
@@ -23,10 +24,11 @@ public abstract class TableElement extends OverviewPageElement
 	/**
 	 * @param parent
 	 * @param anchor
+	 * @param objectTab
 	 */
-	public TableElement(Composite parent, OverviewPageElement anchor)
+	public TableElement(Composite parent, OverviewPageElement anchor, ObjectTab objectTab)
 	{
-		super(parent, anchor);
+		super(parent, anchor, objectTab);
 	}
 
 	/* (non-Javadoc)

@@ -44,12 +44,13 @@ enum NXSL_DataTypes
    NXSL_DT_OBJECT     = 1,
    NXSL_DT_ARRAY      = 2,
    NXSL_DT_ITERATOR   = 3,
-   NXSL_DT_STRING     = 4,
-   NXSL_DT_REAL       = 5,
-   NXSL_DT_INT32      = 6,
-   NXSL_DT_INT64      = 7,
-   NXSL_DT_UINT32     = 8,
-   NXSL_DT_UINT64     = 9
+   NXSL_DT_HASHMAP    = 4,
+   NXSL_DT_STRING     = 5,
+   NXSL_DT_REAL       = 6,
+   NXSL_DT_INT32      = 7,
+   NXSL_DT_INT64      = 8,
+   NXSL_DT_UINT32     = 9,
+   NXSL_DT_UINT64     = 10
 };
 
 /**
@@ -149,6 +150,26 @@ public:
 };
 
 /**
+ * Reference counting object
+ */
+class LIBNXSL_EXPORTABLE NXSL_HandleCountObject
+{
+protected:
+   int m_handleCount;
+
+public:
+   NXSL_HandleCountObject()
+   {
+      m_handleCount = 0;
+   }
+
+	void incHandleCount() { m_handleCount++; }
+	void decHandleCount() { m_handleCount--; }
+	bool isUnused() { return m_handleCount < 1; }
+   bool isShared() { return m_handleCount > 1; }
+};
+
+/**
  * Array element
  */
 struct NXSL_ArrayElement
@@ -160,10 +181,9 @@ struct NXSL_ArrayElement
 /**
  * NXSL array
  */
-class LIBNXSL_EXPORTABLE NXSL_Array
+class LIBNXSL_EXPORTABLE NXSL_Array : public NXSL_HandleCountObject
 {
 private:
-	int m_refCount;
 	int m_size;
 	int m_allocated;
 	NXSL_ArrayElement *m_data;
@@ -174,15 +194,30 @@ public:
    NXSL_Array(const StringList *values);
 	~NXSL_Array();
 
-	void incRefCount() { m_refCount++; }
-	void decRefCount() { m_refCount--; }
-	BOOL isUnused() const { return m_refCount < 1; }
-
 	void set(int index, NXSL_Value *value);
 	NXSL_Value *get(int index) const;
 	NXSL_Value *getByPosition(int position) const;
 
 	int size() const { return m_size; }
+};
+
+/**
+ * NXSL hash map
+ */
+class LIBNXSL_EXPORTABLE NXSL_HashMap : public NXSL_HandleCountObject
+{
+private:
+   StringObjectMap<NXSL_Value> *m_values;
+
+public:
+	NXSL_HashMap();
+	NXSL_HashMap(const NXSL_HashMap *src);
+	~NXSL_HashMap();
+
+   void set(const TCHAR *key, NXSL_Value *value) { m_values->set(key, value); }
+   NXSL_Value *get(const TCHAR *key) const { return m_values->get(key); }
+
+	int size() const { return m_values->size(); }
 };
 
 /**
@@ -204,11 +239,56 @@ public:
 
 	void incRefCount() { m_refCount++; }
 	void decRefCount() { m_refCount--; }
-	BOOL isUnused() { return m_refCount < 1; }
+	bool isUnused() { return m_refCount < 1; }
 
 	NXSL_Value *next();
 
 	static int createIterator(NXSL_Stack *stack);
+};
+
+/**
+ * Object handle
+ */
+template <class T> class NXSL_Handle
+{
+private:
+   T *m_object;
+   int m_refCount;
+
+public:
+   NXSL_Handle(T *o) 
+   { 
+      m_object = o; 
+      o->incHandleCount(); 
+      m_refCount = 0; 
+   }
+   NXSL_Handle(NXSL_Handle<T> *h) 
+   { 
+      m_object = h->m_object; 
+      m_object->incHandleCount(); 
+      m_refCount = 0; 
+   }
+   ~NXSL_Handle() 
+   { 
+      m_object->decHandleCount(); 
+      if (m_object->isUnused()) 
+         delete m_object; 
+   }
+
+	void incRefCount() { m_refCount++; }
+	void decRefCount() { m_refCount--; }
+	bool isUnused() { return m_refCount < 1; }
+   bool isShared() { return m_refCount > 1; }
+
+   T *getObject() { return m_object; }
+   bool isSharedObject() { return m_object->isShared(); }
+
+   void cloneObject()
+   {
+      m_object->decHandleCount();
+      m_object = new T(m_object);
+      m_object->incHandleCount();
+   }
 };
 
 /**
@@ -232,9 +312,10 @@ protected:
       INT64 nInt64;
       UINT64 uInt64;
       double dReal;
-      NXSL_Object *pObject;
-		NXSL_Array *pArray;
-		NXSL_Iterator *pIterator;
+      NXSL_Object *object;
+		NXSL_Iterator *iterator;
+		NXSL_Handle<NXSL_Array> *arrayHandle;
+      NXSL_Handle<NXSL_HashMap> *hashMapHandle;
    } m_value;
 
    void updateNumber();
@@ -251,25 +332,26 @@ protected:
 
 public:
    NXSL_Value();
-   NXSL_Value(const NXSL_Value *);
-   NXSL_Value(NXSL_Object *pObject);
-   NXSL_Value(NXSL_Array *pArray);
-   NXSL_Value(NXSL_Iterator *pIterator);
+   NXSL_Value(const NXSL_Value *src);
+   NXSL_Value(NXSL_Object *object);
+   NXSL_Value(NXSL_Array *array);
+   NXSL_Value(NXSL_Iterator *iterator);
+   NXSL_Value(NXSL_HashMap *hashMap);
    NXSL_Value(INT32 nValue);
    NXSL_Value(INT64 nValue);
    NXSL_Value(UINT32 uValue);
    NXSL_Value(UINT64 uValue);
    NXSL_Value(double dValue);
-   NXSL_Value(const TCHAR *pszValue);
-   NXSL_Value(const TCHAR *pszValue, UINT32 dwLen);
+   NXSL_Value(const TCHAR *value);
+   NXSL_Value(const TCHAR *value, UINT32 len);
 #ifdef UNICODE
-   NXSL_Value(const char *pszValue);
+   NXSL_Value(const char *value);
 #endif
    ~NXSL_Value();
 
-   void set(INT32 nValue);
+   void set(INT32 value);
 
-	void setName(const TCHAR *name) { safe_free(m_name); m_name = _tcsdup(name); }
+	void setName(const TCHAR *name) { safe_free(m_name); m_name = _tcsdup_ex(name); }
 	const TCHAR *getName() const { return m_name; }
 
    bool convert(int nDataType);
@@ -279,6 +361,7 @@ public:
    bool isObject() const { return (m_nDataType == NXSL_DT_OBJECT); }
 	bool isObject(const TCHAR *className) const;
    bool isArray() const { return (m_nDataType == NXSL_DT_ARRAY); }
+   bool isHashMap() const { return (m_nDataType == NXSL_DT_HASHMAP); }
    bool isIterator() const { return (m_nDataType == NXSL_DT_ITERATOR); }
    bool isString() const { return (m_nDataType >= NXSL_DT_STRING); }
    bool isNumeric() const { return (m_nDataType > NXSL_DT_STRING); }
@@ -288,7 +371,7 @@ public:
    bool isZero() const;
    bool isNonZero() const;
 
-   const TCHAR *getValueAsString(UINT32 *pdwLen);
+   const TCHAR *getValueAsString(UINT32 *len);
    const TCHAR *getValueAsCString();
 #ifdef UNICODE
    const char *getValueAsMBString();
@@ -300,11 +383,12 @@ public:
    INT64 getValueAsInt64();
    UINT64 getValueAsUInt64();
    double getValueAsReal();
-   NXSL_Object *getValueAsObject() { return (m_nDataType == NXSL_DT_OBJECT) ? m_value.pObject : NULL; }
-   NXSL_Array *getValueAsArray() { return (m_nDataType == NXSL_DT_ARRAY) ? m_value.pArray : NULL; }
-   NXSL_Iterator *getValueAsIterator() { return (m_nDataType == NXSL_DT_ITERATOR) ? m_value.pIterator : NULL; }
+   NXSL_Object *getValueAsObject() { return (m_nDataType == NXSL_DT_OBJECT) ? m_value.object : NULL; }
+   NXSL_Array *getValueAsArray() { return (m_nDataType == NXSL_DT_ARRAY) ? m_value.arrayHandle->getObject() : NULL; }
+   NXSL_HashMap *getValueAsHashMap() { return (m_nDataType == NXSL_DT_HASHMAP) ? m_value.hashMapHandle->getObject() : NULL; }
+   NXSL_Iterator *getValueAsIterator() { return (m_nDataType == NXSL_DT_ITERATOR) ? m_value.iterator : NULL; }
 
-   void concatenate(const TCHAR *pszString, UINT32 dwLen);
+   void concatenate(const TCHAR *string, UINT32 len);
    
    void increment();
    void decrement();
@@ -327,6 +411,9 @@ public:
    BOOL LE(NXSL_Value *pVal);
    BOOL GT(NXSL_Value *pVal);
    BOOL GE(NXSL_Value *pVal);
+
+   void copyOnWrite();
+   void onVariableSet();
 
    bool equals(const NXSL_Value *v) const;
    void serialize(ByteStream& s) const;
@@ -563,12 +650,28 @@ struct NXSL_CatchPoint
 };
 
 /**
+ * NXSL storage class - base class for actual persistent storage
+ */
+class LIBNXSL_EXPORTABLE NXSL_Storage
+{
+protected:
+   StringObjectMap<NXSL_Value> *m_values;
+
+public:
+   NXSL_Storage();
+   virtual ~NXSL_Storage();
+
+   virtual void write(const TCHAR *name, NXSL_Value *value);
+   virtual NXSL_Value *read(const TCHAR *name);
+};
+
+/**
  * NXSL virtual machine
  */
 class LIBNXSL_EXPORTABLE NXSL_VM
 {
 private:
-   static bool createConstantsCallback(const TCHAR *key, const void *value, void *data);
+   static EnumerationCallbackResult createConstantsCallback(const TCHAR *key, const void *value, void *data);
 
 protected:
    NXSL_Environment *m_env;
@@ -587,6 +690,9 @@ protected:
    NXSL_VariableSystem *m_globals;
    NXSL_VariableSystem *m_locals;
 
+   NXSL_Storage *m_storage;
+   NXSL_Storage *m_localStorage;
+
    ObjectArray<NXSL_Function> *m_functions;
    ObjectArray<NXSL_Module> *m_modules;
 
@@ -600,6 +706,10 @@ protected:
    void callFunction(int nArgCount);
    void doUnaryOperation(int nOpCode);
    void doBinaryOperation(int nOpCode);
+   void getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value *index);
+   bool setArrayElement(NXSL_Value *array, NXSL_Value *index, NXSL_Value *value);
+   void getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Value *key);
+   bool setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value *value);
    void error(int nError);
    NXSL_Value *matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase);
 
@@ -611,13 +721,24 @@ protected:
    UINT32 getFunctionAddress(const TCHAR *pszName);
 
 public:
-   NXSL_VM(NXSL_Environment *env = NULL);
+   NXSL_VM(NXSL_Environment *env = NULL, NXSL_Storage *storage = NULL);
    ~NXSL_VM();
 
    void loadModule(NXSL_Program *module, const TCHAR *name);
 
 	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
 	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_globals->find(pszName); }
+
+	void setStorage(NXSL_Storage *storage);
+
+	void storageWrite(const TCHAR *name, NXSL_Value *value) { m_storage->write(name, value); }
+   void storageWrite(const TCHAR *name, const TCHAR *value) { m_storage->write(name, new NXSL_Value(value)); }
+   void storageWrite(const TCHAR *name, INT32 value) { m_storage->write(name, new NXSL_Value(value)); }
+   void storageWrite(const TCHAR *name, UINT32 value) { m_storage->write(name, new NXSL_Value(value)); }
+   void storageWrite(const TCHAR *name, INT64 value) { m_storage->write(name, new NXSL_Value(value)); }
+   void storageWrite(const TCHAR *name, UINT64 value) { m_storage->write(name, new NXSL_Value(value)); }
+   void storageWrite(const TCHAR *name, double value) { m_storage->write(name, new NXSL_Value(value)); }
+	NXSL_Value *storageRead(const TCHAR *name) { return m_storage->read(name); }
 
    bool load(NXSL_Program *program);
    bool run(ObjectArray<NXSL_Value> *args, NXSL_VariableSystem *pUserLocals = NULL,

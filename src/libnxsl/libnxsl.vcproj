@@ -401,6 +401,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\hashmap.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\instruction.cpp"
 				>
 			</File>
@@ -438,6 +442,10 @@
 			</File>
 			<File
 				RelativePath=".\stack.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\storage.cpp"
 				>
 			</File>
 			<File

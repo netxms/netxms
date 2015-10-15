@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -162,17 +162,3 @@ TCHAR *GetPdhErrorText(DWORD dwError, TCHAR *pszBuffer, int iBufSize)
 }
 
 #endif   /* _WIN32 */
-
-
-//
-// Replacement for libc version of issetugid() to prevent agent crash on IPSO
-//
-
-#ifdef _IPSO
-
-extern "C" int issetugid __P((void))
-{
-	return 0;
-}
-
-#endif

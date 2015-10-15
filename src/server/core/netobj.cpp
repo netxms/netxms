@@ -29,6 +29,7 @@ NetObj::NetObj()
 {
    int i;
 
+   m_id = 0;
    m_dwRefCount = 0;
    m_mutexProperties = MutexCreate();
    m_mutexRefCount = MutexCreate();
@@ -42,6 +43,8 @@ NetObj::NetObj()
    m_isDeleted = false;
    m_isHidden = false;
 	m_isSystem = false;
+	m_maintenanceMode = false;
+	m_maintenanceEventId = 0;
    m_dwChildCount = 0;
    m_pChildList = NULL;
    m_dwParentCount = 0;
@@ -62,10 +65,10 @@ NetObj::NetObj()
       m_iStatusTranslation[i] = i + 1;
       m_iStatusThresholds[i] = 80 - i * 20;
    }
-	uuid_clear(m_image);
 	m_submapId = 0;
    m_moduleData = NULL;
    m_postalAddress = new PostalAddress();
+   m_dashboards = new IntegerArray<UINT32>();
 }
 
 /**
@@ -85,6 +88,7 @@ NetObj::~NetObj()
    safe_free(m_pszComments);
    delete m_moduleData;
    delete m_postalAddress;
+   delete m_dashboards;
 }
 
 /**
@@ -115,9 +119,9 @@ struct ModuleDataDatabaseCallbackParams
 /**
  * Callback for deleting module data from database
  */
-static bool DeleteModuleDataCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult DeleteModuleDataCallback(const TCHAR *key, const void *value, void *data)
 {
-   return ((ModuleData *)value)->deleteFromDatabase(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id);
+   return ((ModuleData *)value)->deleteFromDatabase(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id) ? _CONTINUE : _STOP;
 }
 
 /**
@@ -150,7 +154,7 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       ModuleDataDatabaseCallbackParams data;
       data.id = m_id;
       data.hdb = hdb;
-      success = m_moduleData->forEach(DeleteModuleDataCallback, &data);
+      success = (m_moduleData->forEach(DeleteModuleDataCallback, &data) == _CONTINUE);
    }
 
    return success;
@@ -172,7 +176,7 @@ bool NetObj::loadCommonProperties()
                              _T("status_thresholds,comments,is_system,")
 									  _T("location_type,latitude,longitude,location_accuracy,")
 									  _T("location_timestamp,guid,image,submap_id,country,city,")
-                             _T("street_address,postcode FROM object_properties ")
+                             _T("street_address,postcode,maint_mode,maint_event_id FROM object_properties ")
                              _T("WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
@@ -212,8 +216,8 @@ bool NetObj::loadCommonProperties()
 					m_geoLocation = GeoLocation();
 				}
 
-				DBGetFieldGUID(hResult, 0, 19, m_guid);
-				DBGetFieldGUID(hResult, 0, 20, m_image);
+				m_guid = DBGetFieldGUID(hResult, 0, 19);
+				m_image = DBGetFieldGUID(hResult, 0, 20);
 				m_submapId = DBGetFieldULong(hResult, 0, 21);
 
             TCHAR country[64], city[64], streetAddress[256], postcode[32];
@@ -223,6 +227,9 @@ bool NetObj::loadCommonProperties()
             DBGetField(hResult, 0, 25, postcode, 32);
             delete m_postalAddress;
             m_postalAddress = new PostalAddress(country, city, streetAddress, postcode);
+
+            m_maintenanceMode = DBGetFieldLong(hResult, 0, 26) ? true : false;
+            m_maintenanceEventId = DBGetFieldUInt64(hResult, 0, 27);
 
 				success = true;
 			}
@@ -271,6 +278,35 @@ bool NetObj::loadCommonProperties()
 		}
 	}
 
+   // Load associated dashboards
+   if (success)
+   {
+      hStmt = DBPrepare(g_hCoreDB, _T("SELECT dashboard_id FROM dashboard_associations WHERE object_id=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
+         {
+            int count = DBGetNumRows(hResult);
+            for(int i = 0; i < count; i++)
+            {
+               m_dashboards->add(DBGetFieldULong(hResult, i, 0));
+            }
+            DBFreeResult(hResult);
+         }
+         else
+         {
+            success = false;
+         }
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+   }
+
 	if (success)
 		success = loadTrustedNodes();
 
@@ -283,20 +319,20 @@ bool NetObj::loadCommonProperties()
 /**
  * Callback for saving custom attribute in database
  */
-static bool SaveAttributeCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveAttributeCallback(const TCHAR *key, const void *value, void *data)
 {
    DB_STATEMENT hStmt = (DB_STATEMENT)data;
    DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, (const TCHAR *)value, DB_BIND_STATIC);
-   return DBExecute(hStmt) ? true : false;
+   return DBExecute(hStmt) ? _CONTINUE : _STOP;
 }
 
 /**
  * Callback for saving module data in database
  */
-static bool SaveModuleDataCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveModuleDataCallback(const TCHAR *key, const void *value, void *data)
 {
-   return ((ModuleData *)value)->saveToDatabase(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id);
+   return ((ModuleData *)value)->saveToDatabase(((ModuleDataDatabaseCallbackParams *)data)->hdb, ((ModuleDataDatabaseCallbackParams *)data)->id) ? _CONTINUE : _STOP;
 }
 
 /**
@@ -316,7 +352,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("comments=?,is_system=?,location_type=?,latitude=?,")
 						  _T("longitude=?,location_accuracy=?,location_timestamp=?,")
 						  _T("guid=?,image=?,submap_id=?,country=?,city=?,")
-                    _T("street_address=?,postcode=? WHERE object_id=?"));
+                    _T("street_address=?,postcode=?,maint_mode=? WHERE object_id=?"));
 	}
 	else
 	{
@@ -326,13 +362,13 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("status_prop_alg,status_fixed_val,status_shift,status_translation,")
                     _T("status_single_threshold,status_thresholds,comments,is_system,")
 						  _T("location_type,latitude,longitude,location_accuracy,location_timestamp,")
-						  _T("guid,image,submap_id,country,city,street_address,postcode,object_id) ")
-                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+						  _T("guid,image,submap_id,country,city,street_address,postcode,maint_mode,object_id) ")
+                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
 
-   TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32], guid[64], image[64];
+   TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32];
    for(int i = 0, j = 0; i < 4; i++, j += 2)
    {
       _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_iStatusTranslation[i]);
@@ -360,16 +396,17 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, lon, DB_BIND_STATIC);
 	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getAccuracy());
 	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, (UINT32)m_geoLocation.getTimestamp());
-	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, uuid_to_string(m_guid, guid), DB_BIND_STATIC);
-	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, uuid_to_string(m_image, image), DB_BIND_STATIC);
+	DBBind(hStmt, 20, DB_SQLTYPE_VARCHAR, m_guid);
+	DBBind(hStmt, 21, DB_SQLTYPE_VARCHAR, m_image);
 	DBBind(hStmt, 22, DB_SQLTYPE_INTEGER, m_submapId);
 	DBBind(hStmt, 23, DB_SQLTYPE_VARCHAR, m_postalAddress->getCountry(), DB_BIND_STATIC);
 	DBBind(hStmt, 24, DB_SQLTYPE_VARCHAR, m_postalAddress->getCity(), DB_BIND_STATIC);
 	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress->getStreetAddress(), DB_BIND_STATIC);
 	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress->getPostCode(), DB_BIND_STATIC);
-	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_maintenanceMode ? _T("1") : _T("0"), DB_BIND_STATIC);
+	DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_id);
 
-   bool success = DBExecute(hStmt) ? true : false;
+   bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 
    // Save custom attributes
@@ -377,14 +414,14 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    {
 		TCHAR szQuery[512];
 		_sntprintf(szQuery, 512, _T("DELETE FROM object_custom_attributes WHERE object_id=%d"), m_id);
-      success = DBQuery(hdb, szQuery) ? true : false;
+      success = DBQuery(hdb, szQuery);
 		if (success)
 		{
 			hStmt = DBPrepare(hdb, _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)"));
 			if (hStmt != NULL)
 			{
 				DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-            success = m_customAttributes.forEach(SaveAttributeCallback, hStmt);
+            success = (m_customAttributes.forEach(SaveAttributeCallback, hStmt) == _CONTINUE);
 				DBFreeStatement(hStmt);
 			}
 			else
@@ -394,13 +431,39 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 		}
    }
 
+   // Save dashboard associations
+   if (success)
+   {
+      TCHAR szQuery[512];
+      _sntprintf(szQuery, 512, _T("DELETE FROM dashboard_associations WHERE object_id=%d"), m_id);
+      success = DBQuery(hdb, szQuery);
+      if (success && (m_dashboards->size() > 0))
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO dashboard_associations (object_id,dashboard_id) VALUES (?,?)"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            for(int i = 0; (i < m_dashboards->size()) && success; i++)
+            {
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dashboards->get(i));
+               success = DBExecute(hStmt);
+            }
+            DBFreeStatement(hStmt);
+         }
+         else
+         {
+            success = false;
+         }
+      }
+   }
+
    // Save module data
    if (success && (m_moduleData != NULL))
    {
       ModuleDataDatabaseCallbackParams data;
       data.id = m_id;
       data.hdb = hdb;
-      success = m_moduleData->forEach(SaveModuleDataCallback, &data);
+      success = (m_moduleData->forEach(SaveModuleDataCallback, &data) == _CONTINUE);
    }
 
 	if (success)
@@ -899,26 +962,29 @@ struct SendModuleDataCallbackData
 /**
  * Callback for sending module data in NXCP message
  */
-static bool SendModuleDataCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SendModuleDataCallback(const TCHAR *key, const void *value, void *data)
 {
    ((SendModuleDataCallbackData *)data)->msg->setField(((SendModuleDataCallbackData *)data)->id, key);
    ((ModuleData *)value)->fillMessage(((SendModuleDataCallbackData *)data)->msg, ((SendModuleDataCallbackData *)data)->id + 1);
    ((SendModuleDataCallbackData *)data)->id += 0x100000;
-   return true;
+   return _CONTINUE;
 }
 
 /**
  * Fill NXCP message with object's data
+ * Object's properties are locked when this method is called. Method should not do any other locks.
+ * Data required other locks should be filled in fillMessageInternalStage2().
  */
 void NetObj::fillMessageInternal(NXCPMessage *pMsg)
 {
    pMsg->setField(VID_OBJECT_CLASS, (WORD)getObjectClass());
    pMsg->setField(VID_OBJECT_ID, m_id);
-	pMsg->setField(VID_GUID, m_guid, UUID_LENGTH);
+	pMsg->setField(VID_GUID, m_guid);
    pMsg->setField(VID_OBJECT_NAME, m_name);
    pMsg->setField(VID_OBJECT_STATUS, (WORD)m_iStatus);
    pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
-   pMsg->setField(VID_IS_SYSTEM, (WORD)(m_isSystem ? 1 : 0));
+   pMsg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
+   pMsg->setField(VID_MAINTENANCE_MODE, (INT16)(m_maintenanceEventId ? 1 : 0));
 
    pMsg->setField(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
    pMsg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_iStatusCalcAlg);
@@ -935,11 +1001,12 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_STATUS_THRESHOLD_3, (WORD)m_iStatusThresholds[2]);
    pMsg->setField(VID_STATUS_THRESHOLD_4, (WORD)m_iStatusThresholds[3]);
    pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
-	pMsg->setField(VID_IMAGE, m_image, UUID_LENGTH);
+	pMsg->setField(VID_IMAGE, m_image);
 	pMsg->setField(VID_SUBMAP_ID, m_submapId);
 	pMsg->setField(VID_NUM_TRUSTED_NODES, m_dwNumTrustedNodes);
 	if (m_dwNumTrustedNodes > 0)
 		pMsg->setFieldFromInt32Array(VID_TRUSTED_NODES, m_dwNumTrustedNodes, m_pdwTrustedNodes);
+   pMsg->setFieldFromInt32Array(VID_DASHBOARDS, m_dashboards);
 
    m_customAttributes.fillMessage(pMsg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
 
@@ -966,13 +1033,24 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
 }
 
 /**
+ * Fill NXCP message with object's data - stage 2
+ * Object's properties are not locked when this method is called. Should be
+ * used only to fill data where properties lock is not enough (like data 
+ * collection configuration).
+ */
+void NetObj::fillMessageInternalStage2(NXCPMessage *pMsg)
+{
+}
+
+/**
  * Fill NXCP message with object's data
  */
 void NetObj::fillMessage(NXCPMessage *msg)
 { 
    lockProperties(); 
-   fillMessageInternal(msg); 
+   fillMessageInternal(msg);
    unlockProperties(); 
+   fillMessageInternalStage2(msg);
 
    UINT32 i, dwId;
 
@@ -1056,7 +1134,7 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
 
 	// Change image
 	if (pRequest->isFieldExist(VID_IMAGE))
-		pRequest->getFieldAsBinary(VID_IMAGE, m_image, UUID_LENGTH);
+		m_image = pRequest->getFieldAsGUID(VID_IMAGE);
 
    // Change object's ACL
    if (pRequest->isFieldExist(VID_ACL_SIZE))
@@ -1136,6 +1214,12 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
       TCHAR buffer[32];
       pRequest->getFieldAsString(VID_POSTCODE, buffer, 32);
       m_postalAddress->setPostCode(buffer);
+   }
+
+   // Change dashboard list
+   if (pRequest->isFieldExist(VID_DASHBOARDS))
+   {
+      pRequest->getFieldAsInt32Array(VID_DASHBOARDS, m_dashboards);
    }
 
    return RCC_SUCCESS;
@@ -1947,4 +2031,18 @@ void NetObj::setStatusPropagation(int method, int arg1, int arg2, int arg3, int 
    }
    setModified();
    unlockProperties();
+}
+
+/**
+ * Enter maintenance mode
+ */
+void NetObj::enterMaintenanceMode()
+{
+}
+
+/**
+ * Leave maintenance mode
+ */
+void NetObj::leaveMaintenanceMode()
+{
 }

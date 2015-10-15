@@ -18,15 +18,18 @@
  */
 package org.netxms.client.objects;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.netxms.base.CompatTools;
 import org.netxms.base.GeoLocation;
+import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.base.NXCommon;
@@ -115,6 +118,7 @@ public abstract class AbstractObject
 	protected int objectClass;
 	protected ObjectStatus status = ObjectStatus.UNKNOWN;
 	protected boolean isDeleted = false;
+	protected boolean inMaintenanceMode = false;
 	protected String comments;
 	protected GeoLocation geolocation;
 	protected PostalAddress postalAddress;
@@ -132,6 +136,7 @@ public abstract class AbstractObject
 	protected int[] statusThresholds;
 	protected HashSet<Long> parents = new HashSet<Long>(0);
 	protected HashSet<Long> children = new HashSet<Long>(0);
+	protected List<Long> dashboards = new ArrayList<Long>(0);
 	protected Map<String, String> customAttributes = new HashMap<String, String>(0);
 	protected Map<String, Object> moduleData = null;
 	
@@ -191,6 +196,7 @@ public abstract class AbstractObject
 		objectClass = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_CLASS);
 		isDeleted = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED);
 		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
+		inMaintenanceMode = msg.getFieldAsBoolean(NXCPCodes.VID_MAINTENANCE_MODE);
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 		geolocation = new GeoLocation(msg);
 		postalAddress = new PostalAddress(msg);
@@ -241,10 +247,11 @@ public abstract class AbstractObject
 			Long[] nodes = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_TRUSTED_NODES);
 			trustedNodes.addAll(Arrays.asList(nodes));
 		}
-		for(i = 0, id = NXCPCodes.VID_CHILD_ID_BASE; i < count; i++, id++)
-		{
-			children.add(msg.getFieldAsInt64(id));
-		}
+		
+		// Dashboards
+		Long[] d = msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_DASHBOARDS);
+		if ((d != null) && (d.length > 0))
+		   dashboards.addAll(Arrays.asList(d));
 		
 		// Custom attributes
 		count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
@@ -273,6 +280,10 @@ public abstract class AbstractObject
 		      if (p != null)
 		      {
 		         moduleData.put(module, p.createModuleData(msg, id + 1));
+		      }
+		      else
+		      {
+		         Logger.error("AbstractObject", "Unable to find data provider for module " + module);
 		      }
 		   }
 		}
@@ -622,18 +633,45 @@ public abstract class AbstractObject
 	 */
 	public AbstractObject[] getTrustedNodes()
 	{
-		final AbstractObject[] list;
 		synchronized(trustedNodes)
 		{
-			list = new AbstractObject[trustedNodes.size()];
+	      final AbstractObject[] list = new AbstractObject[trustedNodes.size()];
 			final Iterator<Long> it = trustedNodes.iterator();
 			for(int i = 0; it.hasNext(); i++)
 			{
-				list[i] = session.findObjectById(it.next());
+			   long id = it.next();
+				AbstractObject o = session.findObjectById(id);
+				if (o != null)
+				   list[i] = o;
+				else
+				   list[i] = new UnknownObject(id, session);
 			}
+	      return list;
 		}
-		return list;
 	}
+
+   /**
+    * Get  list of associated dashboards
+    * 
+    * @param accessibleOnly if set to true, only accessible dashboards will be returned
+    * @return
+    */
+   public List<AbstractObject> getDashboards(boolean accessibleOnly)
+   {
+      synchronized(dashboards)
+      {
+         final List<AbstractObject> list = new ArrayList<AbstractObject>();
+         for(Long id : dashboards)
+         {
+            AbstractObject o = session.findObjectById(id);
+            if (o != null)
+               list.add(o);
+            else if (!accessibleOnly)
+               list.add(new UnknownObject(id, session));
+         }
+         return list;
+      }
+   }
 
 	/**
 	 * @return true if object has parents
@@ -853,5 +891,13 @@ public abstract class AbstractObject
    public PostalAddress getPostalAddress()
    {
       return postalAddress;
+   }
+
+   /**
+    * @return the inMaintenanceMode
+    */
+   public boolean isInMaintenanceMode()
+   {
+      return inMaintenanceMode;
    }
 }

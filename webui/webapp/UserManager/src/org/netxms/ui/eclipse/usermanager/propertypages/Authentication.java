@@ -140,6 +140,17 @@ public class Authentication extends PropertyPage
 		gridData.widthHint = 300;
       textMappingData = WidgetHelper.createLabeledText(groupMethod, SWT.SINGLE | SWT.BORDER, SWT.DEFAULT, Messages.get().Authentication_MappingData,
                                                        object.getCertMappingData(), gridData);
+      
+      if((object.getFlags() & AbstractUserObject.LDAP_USER) != 0)
+      {
+         checkChangePassword.setEnabled(false);
+         checkFixedPassword.setEnabled(false);
+         comboAuthMethod.setEnabled(false);
+         comboAuthMethod.add("LDAP password");
+         comboAuthMethod.select(5);
+         comboMappingMethod.setEnabled(false);
+         textMappingData.setEnabled(false);
+      }
 		
 		return dialogArea;
 	}
@@ -159,6 +170,7 @@ public class Authentication extends PropertyPage
 			flags |= AbstractUserObject.CHANGE_PASSWORD;
 		if (checkFixedPassword.getSelection())
 			flags |= AbstractUserObject.CANNOT_CHANGE_PASSWORD;
+		flags |= object.getFlags() & AbstractUserObject.LDAP_USER;
 		object.setFlags(flags);
 		
 		// Authentication

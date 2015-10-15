@@ -28,6 +28,7 @@ import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.NodeLink;
+import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceCheck;
 import org.netxms.client.objects.ServiceContainer;
 import org.netxms.client.objects.Subnet;
@@ -35,6 +36,8 @@ import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.objectview.Messages;
+import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
+import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -44,10 +47,12 @@ public class GeneralInfo extends TableElement
 {
 	/**
 	 * @param parent
+	 * @param anchor
+	 * @param objectTab
 	 */
-	public GeneralInfo(Composite parent, OverviewPageElement anchor)
+	public GeneralInfo(Composite parent, OverviewPageElement anchor, ObjectTab objectTab)
 	{
-		super(parent, anchor);
+		super(parent, anchor, objectTab);
 	}
 
 	/* (non-Javadoc)
@@ -63,17 +68,23 @@ public class GeneralInfo extends TableElement
 		if (object.getGuid() != null)
 			addPair(Messages.get().GeneralInfo_GUID, object.getGuid().toString());
 		addPair(Messages.get().GeneralInfo_Class, object.getObjectClassName());
-		addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()));
+		if (object.isInMaintenanceMode())
+         addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()) + " (maintenance)");
+		else
+		   addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()));
 		switch(object.getObjectClass())
 		{
 			case AbstractObject.OBJECT_INTERFACE:
 				Interface iface = (Interface)object;
 				addPair(Messages.get().GeneralInfo_IfIndex, Integer.toString(iface.getIfIndex()));
-				addPair(Messages.get().GeneralInfo_IfType, Integer.toString(iface.getIfType()));
+				String typeName = iface.getIfTypeName();
+				addPair(Messages.get().GeneralInfo_IfType, (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType()));
 				addPair(Messages.get().GeneralInfo_Description, iface.getDescription(), false);
             addPair("Alias", iface.getAlias(), false);
             if (iface.getMtu() > 0)
                addPair("MTU", Integer.toString(iface.getMtu()));
+            if (iface.getSpeed() > 0)
+               addPair("Speed", InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
             addPair(Messages.get().GeneralInfo_MACAddr, iface.getMacAddress().toString());
 				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
 				{
@@ -108,11 +119,22 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_PlatformName, node.getPlatformName(), false);
 				addPair(Messages.get().GeneralInfo_SysName, node.getSnmpSysName(), false);
 				addPair(Messages.get().GeneralInfo_SysOID, node.getSnmpOID(), false);
+            addPair("SNMP sysLocation", node.getSnmpSysLocation(), false);
+            addPair("SNMP sysContact", node.getSnmpSysContact(), false);
 				if ((node.getFlags() & AbstractNode.NF_IS_BRIDGE) != 0)
 					addPair(Messages.get().GeneralInfo_BridgeBaseAddress, node.getBridgeBaseAddress().toString());
 				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);
             if (node.getBootTime() != null)
                addPair(Messages.get().GeneralInfo_BootTime, RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
+            if (node.getRackId() != 0)
+            {
+               Rack rack = session.findObjectById(node.getRackId(), Rack.class);
+               if (rack != null)
+               {
+                  addPair("Rack", String.format("%s (units %d-%d)", rack.getObjectName(),
+                        node.getRackPosition() - node.getRackHeight() + 1, node.getRackPosition()));
+               }
+            }
 				break;
 			case AbstractObject.OBJECT_MOBILEDEVICE:
 				MobileDevice md = (MobileDevice)object;

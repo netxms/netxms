@@ -20,6 +20,8 @@ package org.netxms.client.objecttools;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import org.netxms.base.Logger;
@@ -60,6 +62,7 @@ public class ObjectToolDetails extends ObjectTool
 		commandName = "";
 		commandShortName = "";
 		imageData = null;
+		inputFields = new HashMap<String, InputField>();
 
 		createDisplayName();
 	}
@@ -106,6 +109,25 @@ public class ObjectToolDetails extends ObjectTool
 			varId += 4;
 		}
 
+      count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_FIELDS);
+      inputFields = new HashMap<String, InputField>(count);
+      
+      long fieldId = NXCPCodes.VID_FIELD_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         InputField f = new InputField(msg, fieldId);
+         inputFields.put(f.getName(), f);
+         fieldId += 10;
+      }
+      
+      if ((type == TYPE_ACTION) || 
+          (type == TYPE_FILE_DOWNLOAD) || 
+          (type == TYPE_LOCAL_COMMAND) || 
+          (type == TYPE_SERVER_COMMAND) || 
+          (type == TYPE_URL))
+      {
+         validateInputFields();
+      }
 		createDisplayName();
 	}
 	
@@ -143,15 +165,23 @@ public class ObjectToolDetails extends ObjectTool
 		msg.setField(NXCPCodes.VID_ACL, accessList.toArray(new Long[accessList.size()]));
 		
 		msg.setFieldInt16(NXCPCodes.VID_NUM_COLUMNS, columns.size());
-		long varId = NXCPCodes.VID_COLUMN_INFO_BASE;
+		long fieldId = NXCPCodes.VID_COLUMN_INFO_BASE;
 		for(int i = 0; i < columns.size(); i++)
 		{
 			ObjectToolTableColumn c = columns.get(i);
-			msg.setField(varId++, c.getName());
-			msg.setField(varId++, c.getSnmpOid());
-			msg.setFieldInt16(varId++, c.getFormat());
-			msg.setFieldInt16(varId++, c.getSubstringIndex());
+			msg.setField(fieldId++, c.getName());
+			msg.setField(fieldId++, c.getSnmpOid());
+			msg.setFieldInt16(fieldId++, c.getFormat());
+			msg.setFieldInt16(fieldId++, c.getSubstringIndex());
 		}
+		
+		msg.setFieldInt16(NXCPCodes.VID_NUM_FIELDS, inputFields.size());
+      fieldId = NXCPCodes.VID_FIELD_LIST_BASE;
+      for(InputField f : inputFields.values())
+      {
+         f.fillMessage(msg, fieldId);
+         fieldId += 10;
+      }
 	}
 
 	/**
@@ -168,6 +198,30 @@ public class ObjectToolDetails extends ObjectTool
 	public List<ObjectToolTableColumn> getColumns()
 	{
 		return columns;
+	}
+	
+	/**
+	 * Add or replace input field definition.
+	 * 
+	 * @param f
+	 */
+	public void addInputField(InputField f)
+	{
+	   inputFields.put(f.getName(), f);
+      modified = true;
+	}
+	
+	/**
+	 * Set input field definitions
+	 * 
+	 * @param fields
+	 */
+	public void setInputFields(Collection<InputField> fields)
+	{
+	   inputFields.clear();
+	   for(InputField f : fields)
+	      inputFields.put(f.getName(), f);
+      modified = true;
 	}
 
 	/**

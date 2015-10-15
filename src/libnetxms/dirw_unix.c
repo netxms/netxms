@@ -19,7 +19,6 @@
 **
 **/
 
-
 #include "libnetxms.h"
 #include <sys/stat.h>
 

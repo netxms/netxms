@@ -183,7 +183,7 @@ static void DBReconnect(DB_HANDLE hConn)
       {
 			MutexLock(hConn->m_driver->m_mutexReconnect);
          if ((hConn->m_driver->m_reconnect == 0) && (hConn->m_driver->m_fpEventHandler != NULL))
-				hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_LOST, NULL, NULL, hConn->m_driver->m_userArg);
+				hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_LOST, NULL, NULL, true, hConn->m_driver->m_userArg);
          hConn->m_driver->m_reconnect++;
          MutexUnlock(hConn->m_driver->m_mutexReconnect);
       }
@@ -194,7 +194,7 @@ static void DBReconnect(DB_HANDLE hConn)
       MutexLock(hConn->m_driver->m_mutexReconnect);
       hConn->m_driver->m_reconnect--;
       if ((hConn->m_driver->m_reconnect == 0) && (hConn->m_driver->m_fpEventHandler != NULL))
-			hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_RESTORED, NULL, NULL, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_CONNECTION_RESTORED, NULL, NULL, false, hConn->m_driver->m_userArg);
       MutexUnlock(hConn->m_driver->m_mutexReconnect);
    }
 }
@@ -271,7 +271,7 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
 		if (hConn->m_driver->m_logSqlErrors)
 			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwResult == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 	}
 
 #ifndef UNICODE
@@ -336,7 +336,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 		if (hConn->m_driver->m_logSqlErrors)
 			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 	}
 
 #ifndef UNICODE
@@ -475,7 +475,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn
          }
          else
          {
-            nLen *= 2;  // increase buffer size because driver may return field length in characters
+            nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
             pszTemp = (char *)malloc(nLen);
             hResult->m_driver->m_fpDrvGetFieldUTF8(hResult->m_data, iRow, iColumn, pszTemp, nLen);
          }
@@ -487,7 +487,7 @@ char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_RESULT hResult, int iRow, int iColumn
       LONG nLen = hResult->m_driver->m_fpDrvGetFieldLength(hResult->m_data, iRow, iColumn);
       if (nLen == -1)
          return NULL;
-      nLen *= 2;  // increase buffer size because driver may return field length in characters
+      nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
 
       WCHAR *wtemp = (WCHAR *)malloc(nLen * sizeof(WCHAR));
       hResult->m_driver->m_fpDrvGetField(hResult->m_data, iRow, iColumn, wtemp, nLen);
@@ -725,30 +725,11 @@ bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iC
 /**
  * Get field's value as GUID
  */
-bool LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn, uuid_t guid)
+uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn)
 {
-   TCHAR *pszVal, szBuffer[256];
-   bool bResult;
-
-   pszVal = DBGetField(hResult, iRow, iColumn, szBuffer, 256);
-   if (pszVal != NULL)
-   {
-      if (uuid_parse(pszVal, guid) == 0)
-      {
-         bResult = true;
-      }
-      else
-      {
-         uuid_clear(guid);
-         bResult = false;
-      }
-   }
-   else
-   {
-      uuid_clear(guid);
-      bResult = false;
-   }
-   return bResult;
+   TCHAR buffer[256];
+   TCHAR *value = DBGetField(hResult, iRow, iColumn, buffer, 256);
+   return (value == NULL) ? uuid::NULL_UUID : uuid::parse(value);
 }
 
 /**
@@ -819,7 +800,7 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
 		if (hConn->m_driver->m_logSqlErrors)
         nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
    }
 
 #ifndef UNICODE
@@ -1088,7 +1069,7 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
 		if (hConn->m_driver->m_logSqlErrors)
         nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 	}
 
    if (hConn->m_driver->m_dumpSql)
@@ -1238,7 +1219,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const T
 }
 
 /**
- * Bind string parameter with length valiadtion
+ * Bind string parameter with length validation
  */
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const TCHAR *value, int allocType, int maxLen)
 {
@@ -1313,6 +1294,15 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, double 
 }
 
 /**
+ * Bind UUID parameter
+ */
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const uuid& value)
+{
+   TCHAR buffer[64];
+   DBBind(hStmt, pos, sqlType, DB_CTYPE_STRING, value.toString(buffer), DB_BIND_TRANSIENT);
+}
+
+/**
  * Execute prepared statement (non-SELECT)
  */
 bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
@@ -1365,10 +1355,10 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 		{
 #ifdef UNICODE
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, dwResult == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 #else
 			WCHAR *query = WideStringFromMBString(hStmt->m_query);
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, dwResult == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 			free(query);
 #endif
 		}
@@ -1444,10 +1434,10 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 		{
 #ifdef UNICODE
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 #else
 			WCHAR *query = WideStringFromMBString(hStmt->m_query);
-			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, hConn->m_driver->m_userArg);
+			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
 			free(query);
 #endif
 		}
@@ -1611,202 +1601,4 @@ int LIBNXDB_EXPORTABLE DBIsTableExist(DB_HANDLE conn, const TCHAR *table)
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, table, -1, wname, 256);
    return conn->m_driver->m_fpDrvIsTableExist(conn->m_connection, wname);
 #endif
-}
-
-/**
- * Characters to be escaped before writing to SQL
- */
-static TCHAR m_szSpecialChars[] = _T("\x01\x02\x03\x04\x05\x06\x07\x08")
-                                  _T("\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10")
-                                  _T("\x11\x12\x13\x14\x15\x16\x17\x18")
-                                  _T("\x19\x1A\x1B\x1C\x1D\x1E\x1F")
-                                  _T("#%\\'\x7F");
-
-/**
- * Escape some special characters in string for writing into database.
- * DEPRECATED!
- */
-TCHAR LIBNXDB_EXPORTABLE *EncodeSQLString(const TCHAR *pszIn)
-{
-   TCHAR *pszOut;
-   int iPosIn, iPosOut, iStrSize;
-
-   if ((pszIn != NULL) && (*pszIn != 0))
-   {
-      // Allocate destination buffer
-      iStrSize = (int)_tcslen(pszIn) + 1;
-      for(iPosIn = 0; pszIn[iPosIn] != 0; iPosIn++)
-         if (_tcschr(m_szSpecialChars, pszIn[iPosIn])  != NULL)
-            iStrSize += 2;
-      pszOut = (TCHAR *)malloc(iStrSize * sizeof(TCHAR));
-
-      // Translate string
-      for(iPosIn = 0, iPosOut = 0; pszIn[iPosIn] != 0; iPosIn++)
-         if (_tcschr(m_szSpecialChars, pszIn[iPosIn]) != NULL)
-         {
-            pszOut[iPosOut++] = _T('#');
-            pszOut[iPosOut++] = bin2hex(pszIn[iPosIn] >> 4);
-            pszOut[iPosOut++] = bin2hex(pszIn[iPosIn] & 0x0F);
-         }
-         else
-         {
-            pszOut[iPosOut++] = pszIn[iPosIn];
-         }
-      pszOut[iPosOut] = 0;
-   }
-   else
-   {
-      // Encode empty strings as #00
-      pszOut = (TCHAR *)malloc(4 * sizeof(TCHAR));
-      _tcscpy(pszOut, _T("#00"));
-   }
-   return pszOut;
-}
-
-/**
- * Restore characters encoded by EncodeSQLString()
- * Characters are decoded "in place"
- */
-void LIBNXDB_EXPORTABLE DecodeSQLString(TCHAR *pszStr)
-{
-   int iPosIn, iPosOut;
-
-   if (pszStr == NULL)
-      return;
-
-   for(iPosIn = 0, iPosOut = 0; pszStr[iPosIn] != 0; iPosIn++)
-   {
-      if (pszStr[iPosIn] == _T('#'))
-      {
-         iPosIn++;
-         pszStr[iPosOut] = hex2bin(pszStr[iPosIn]) << 4;
-         iPosIn++;
-         pszStr[iPosOut] |= hex2bin(pszStr[iPosIn]);
-         iPosOut++;
-      }
-      else
-      {
-         pszStr[iPosOut++] = pszStr[iPosIn];
-      }
-   }
-   pszStr[iPosOut] = 0;
-}
-
-/**
- * Get database schema version
- * Will return 0 for unknown and -1 in case of SQL errors
- */
-int LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn)
-{
-	DB_RESULT hResult;
-	int version = 0;
-
-	// Read schema version from 'metadata' table, where it should
-	// be stored starting from schema version 87
-	// We ignore SQL error in this case, because table 'metadata'
-	// may not exist in old schema versions
-   hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='SchemaVersion'"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-         version = DBGetFieldLong(hResult, 0, 0);
-      DBFreeResult(hResult);
-   }
-
-	// If database schema version is less than 87, version number
-	// will be stored in 'config' table
-	if (version == 0)
-	{
-		hResult = DBSelect(conn, _T("SELECT var_value FROM config WHERE var_name='DBFormatVersion'"));
-		if (hResult != NULL)
-		{
-			if (DBGetNumRows(hResult) > 0)
-				version = DBGetFieldLong(hResult, 0, 0);
-			DBFreeResult(hResult);
-		}
-		else
-		{
-			version = -1;
-		}
-	}
-
-	return version;
-}
-
-/**
- * Get database syntax
- */
-int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn)
-{
-	DB_RESULT hResult;
-	TCHAR syntaxId[256];
-	bool read = false;
-	int syntax;
-
-   // Get database syntax
-   hResult = DBSelect(conn, _T("SELECT var_value FROM metadata WHERE var_name='Syntax'"));
-   if (hResult != NULL)
-   {
-      if (DBGetNumRows(hResult) > 0)
-      {
-         DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId) / sizeof(TCHAR));
-			read = true;
-      }
-      else
-      {
-         _tcscpy(syntaxId, _T("UNKNOWN"));
-      }
-      DBFreeResult(hResult);
-   }
-
-	// If database schema version is less than 87, syntax
-	// will be stored in 'config' table, so try it
-	if (!read)
-	{
-		hResult = DBSelect(conn, _T("SELECT var_value FROM config WHERE var_name='DBSyntax'"));
-		if (hResult != NULL)
-		{
-			if (DBGetNumRows(hResult) > 0)
-			{
-				DBGetField(hResult, 0, 0, syntaxId, sizeof(syntaxId) / sizeof(TCHAR));
-				read = true;
-			}
-			else
-			{
-				_tcscpy(syntaxId, _T("UNKNOWN"));
-			}
-			DBFreeResult(hResult);
-		}
-	}
-
-   if (!_tcscmp(syntaxId, _T("MYSQL")))
-   {
-      syntax = DB_SYNTAX_MYSQL;
-   }
-   else if (!_tcscmp(syntaxId, _T("PGSQL")))
-   {
-      syntax = DB_SYNTAX_PGSQL;
-   }
-   else if (!_tcscmp(syntaxId, _T("MSSQL")))
-   {
-      syntax = DB_SYNTAX_MSSQL;
-   }
-   else if (!_tcscmp(syntaxId, _T("ORACLE")))
-   {
-      syntax = DB_SYNTAX_ORACLE;
-   }
-   else if (!_tcscmp(syntaxId, _T("SQLITE")))
-   {
-      syntax = DB_SYNTAX_SQLITE;
-   }
-   else if (!_tcscmp(syntaxId, _T("DB2")))
-   {
-      syntax = DB_SYNTAX_DB2;
-   }
-   else
-   {
-		syntax = DB_SYNTAX_UNKNOWN;
-   }
-
-	return syntax;
 }

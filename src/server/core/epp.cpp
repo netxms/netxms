@@ -28,7 +28,7 @@
 EPRule::EPRule(UINT32 id)
 {
    m_id = id;
-   uuid_generate(m_guid);
+   m_guid = uuid::generate();
    m_dwFlags = 0;
    m_dwNumSources = 0;
    m_pdwSourceList = NULL;
@@ -54,7 +54,9 @@ EPRule::EPRule(UINT32 id)
 EPRule::EPRule(ConfigEntry *config)
 {
    m_id = 0;
-   config->getSubEntryValueAsUUID(_T("guid"), m_guid);
+   m_guid = config->getSubEntryValueAsUUID(_T("guid"));
+   if (m_guid.isNull())
+      m_guid = uuid::generate(); // generate random GUID if rule was imported without GUID
    m_dwFlags = config->getSubEntryValueAsUInt(_T("flags"));
    m_dwNumSources = 0;
    m_pdwSourceList = NULL;
@@ -117,7 +119,7 @@ EPRule::EPRule(ConfigEntry *config)
 EPRule::EPRule(DB_RESULT hResult, int row)
 {
    m_id = DBGetFieldULong(hResult, row, 0);
-   DBGetFieldGUID(hResult, row, 1, m_guid);
+   m_guid = DBGetFieldGUID(hResult, row, 1);
    m_dwFlags = DBGetFieldULong(hResult, row, 2);
    m_pszComment = DBGetField(hResult, row, 3, NULL, 0);
 	DBGetField(hResult, row, 4, m_szAlarmMessage, MAX_EVENT_MSG_LENGTH);
@@ -159,7 +161,7 @@ EPRule::EPRule(NXCPMessage *msg)
 
    m_dwFlags = msg->getFieldAsUInt32(VID_FLAGS);
    m_id = msg->getFieldAsUInt32(VID_RULE_ID);
-   msg->getFieldAsBinary(VID_GUID, m_guid, UUID_LENGTH);
+   m_guid = msg->getFieldAsGUID(VID_GUID);
    m_pszComment = msg->getFieldAsString(VID_COMMENTS);
 
    m_dwNumActions = msg->getFieldAsUInt32(VID_NUM_ACTIONS);
@@ -229,33 +231,37 @@ EPRule::~EPRule()
  */
 void EPRule::createNXMPRecord(String &str)
 {
-   str.appendFormattedString(_T("\t\t<rule id=\"%d\">\n")
-                          _T("\t\t\t<flags>%d</flags>\n")
-                          _T("\t\t\t<alarmMessage>%s</alarmMessage>\n")
-                          _T("\t\t\t<alarmKey>%s</alarmKey>\n")
-                          _T("\t\t\t<alarmSeverity>%d</alarmSeverity>\n")
-                          _T("\t\t\t<alarmTimeout>%d</alarmTimeout>\n")
-                          _T("\t\t\t<alarmTimeoutEvent>%d</alarmTimeoutEvent>\n")
-                          _T("\t\t\t<situation>%d</situation>\n")
-                          _T("\t\t\t<situationInstance>%s</situationInstance>\n")
-                          _T("\t\t\t<script>%s</script>\n")
-                          _T("\t\t\t<comments>%s</comments>\n")
-                          _T("\t\t\t<sources>\n"),
-                          m_id, m_dwFlags,
-                          (const TCHAR *)EscapeStringForXML2(m_szAlarmMessage),
-                          (const TCHAR *)EscapeStringForXML2(m_szAlarmKey),
-                          m_iAlarmSeverity, m_dwAlarmTimeout, m_dwAlarmTimeoutEvent,
-                          m_dwSituationId, (const TCHAR *)EscapeStringForXML2(m_szSituationInstance),
-                          (const TCHAR *)EscapeStringForXML2(m_pszScript),
-                          (const TCHAR *)EscapeStringForXML2(m_pszComment));
+   str.append(_T("\t\t<rule id=\""));
+   str.append(m_id);
+   str.append(_T("\">\n\t\t\t<guid>"));
+   str.append(m_guid.toString());
+   str.append(_T("\"</guid>\n\t\t\t<flags>"));
+   str.append(m_dwFlags);
+   str.append(_T("</flags>\n\t\t\t<alarmMessage>"));
+   str.append(EscapeStringForXML2(m_szAlarmMessage));
+   str.append(_T("</alarmMessage>\n\t\t\t<alarmKey>"));
+   str.append(EscapeStringForXML2(m_szAlarmKey));
+   str.append(_T("</alarmKey>\n\t\t\t<alarmSeverity>"));
+   str.append(m_iAlarmSeverity);
+   str.append(_T("</alarmSeverity>\n\t\t\t<alarmTimeout>"));
+   str.append(m_dwAlarmTimeout);
+   str.append(_T("</alarmTimeout>\n\t\t\t<alarmTimeoutEvent>"));
+   str.append(m_dwAlarmTimeoutEvent);
+   str.append(_T("</alarmTimeoutEvent>\n\t\t\t<situation>"));
+   str.append(m_dwSituationId);
+   str.append(_T("</situation>\n\t\t\t<situationInstance>"));
+   str.append(EscapeStringForXML2(m_szSituationInstance));
+   str.append(_T("</situationInstance>\n\t\t\t<script>"));
+   str.append(EscapeStringForXML2(m_pszScript));
+   str.append(_T("</script>\n\t\t\t<comments>"));
+   str.append(EscapeStringForXML2(m_pszComment));
+   str.append(_T("</comments>\n\t\t\t<sources>\n"));
 
    for(UINT32 i = 0; i < m_dwNumSources; i++)
    {
       NetObj *object = FindObjectById(m_pdwSourceList[i]);
       if (object != NULL)
       {
-         uuid_t guid;
-         object->getGuid(guid);
          TCHAR guidText[128];
          str.appendFormattedString(_T("\t\t\t\t<source id=\"%d\">\n")
                                 _T("\t\t\t\t\t<name>%s</name>\n")
@@ -264,7 +270,7 @@ void EPRule::createNXMPRecord(String &str)
                                 _T("\t\t\t\t</source>\n"),
                                 object->getId(),
                                 (const TCHAR *)EscapeStringForXML2(object->getName()),
-                                uuid_to_string(guid, guidText), object->getObjectClass());
+                                object->getGuid().toString(guidText), object->getObjectClass());
       }
    }
 
@@ -380,7 +386,6 @@ bool EPRule::matchSeverity(UINT32 dwSeverity)
  */
 bool EPRule::matchScript(Event *pEvent)
 {
-   NXSL_ServerEnv *pEnv;
    NXSL_Value **ppValueList, *pValue;
    NXSL_VariableSystem *pLocals, *pGlobals = NULL;
    bool bRet = true;
@@ -389,8 +394,6 @@ bool EPRule::matchScript(Event *pEvent)
 
    if (m_pScript == NULL)
       return true;
-
-   pEnv = new NXSL_ServerEnv;
 
    // Pass event's parameters as arguments and
    // other information as variables
@@ -458,14 +461,14 @@ struct SituationUpdateCallbackData
 /**
  * Situation update callback
  */
-static bool SituationUpdateCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SituationUpdateCallback(const TCHAR *key, const void *value, void *data)
 {
 	TCHAR *attrName = ((SituationUpdateCallbackData *)data)->evt->expandText(key);
 	TCHAR *attrValue = ((SituationUpdateCallbackData *)data)->evt->expandText((const TCHAR *)value);
 	((SituationUpdateCallbackData *)data)->s->UpdateSituation(((SituationUpdateCallbackData *)data)->text, attrName, attrValue);
 	free(attrName);
 	free(attrValue);
-   return true;
+   return _CONTINUE;
 }
 
 /**
@@ -630,13 +633,13 @@ bool EPRule::loadFromDB()
 /**
  * Callback for saving situation attributes
  */
-static bool SaveSituationAttribute(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveSituationAttribute(const TCHAR *key, const void *value, void *data)
 {
    DB_STATEMENT hStmt = (DB_STATEMENT)data;
    DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
    DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, (const TCHAR *)value, DB_BIND_STATIC);
    DBExecute(hStmt);
-   return true;
+   return _CONTINUE;
 }
 
 /**
@@ -653,7 +656,7 @@ void EPRule::saveToDB(DB_HANDLE hdb)
                        _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
 							  _T("situation_id,situation_instance) ")
                        _T("VALUES (%d,'%s',%d,%s,%s,%d,%s,%s,%d,%d,%d,%s)"),
-              m_id, uuid_to_string(m_guid, guidText),m_dwFlags, (const TCHAR *)DBPrepareString(hdb, m_pszComment),
+              m_id, m_guid.toString(guidText), m_dwFlags, (const TCHAR *)DBPrepareString(hdb, m_pszComment),
 				  (const TCHAR *)DBPrepareString(hdb, m_szAlarmMessage), m_iAlarmSeverity,
 	           (const TCHAR *)DBPrepareString(hdb, m_szAlarmKey),
 	           (const TCHAR *)DBPrepareString(hdb, m_pszScript), m_dwAlarmTimeout, m_dwAlarmTimeoutEvent,
@@ -708,7 +711,7 @@ void EPRule::createMessage(NXCPMessage *msg)
 {
    msg->setField(VID_FLAGS, m_dwFlags);
    msg->setField(VID_RULE_ID, m_id);
-   msg->setField(VID_GUID, m_guid, UUID_LENGTH);
+   msg->setField(VID_GUID, m_guid);
    msg->setField(VID_ALARM_SEVERITY, (WORD)m_iAlarmSeverity);
    msg->setField(VID_ALARM_KEY, m_szAlarmKey);
    msg->setField(VID_ALARM_MESSAGE, m_szAlarmMessage);
@@ -907,12 +910,12 @@ bool EventPolicy::isActionInUse(UINT32 dwActionId)
 /**
  * Export rule
  */
-void EventPolicy::exportRule(String &str, uuid_t guid)
+void EventPolicy::exportRule(String& str, const uuid& guid)
 {
    readLock();
    for(UINT32 i = 0; i < m_dwNumRules; i++)
    {
-      if (!uuid_compare(guid, m_ppRuleList[i]->getGuid()))
+      if (guid.equals(m_ppRuleList[i]->getGuid()))
       {
          m_ppRuleList[i]->createNXMPRecord(str);
          break;
@@ -932,7 +935,7 @@ void EventPolicy::importRule(EPRule *rule)
    bool newRule = true;
    for(UINT32 i = 0; i < m_dwNumRules; i++)
    {
-      if (!uuid_compare(rule->getGuid(), m_ppRuleList[i]->getGuid()))
+      if (rule->getGuid().equals(m_ppRuleList[i]->getGuid()))
       {
          delete m_ppRuleList[i];
          m_ppRuleList[i] = rule;

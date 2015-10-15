@@ -25,12 +25,13 @@
 /**
  * Request ID
  */
-static QWORD s_requestId = (QWORD)time(NULL) << 32;
+static UINT64 s_requestIdHigh = (UINT64)time(NULL) << 32;
+static VolatileCounter s_requestIdLow = 0;
 
 /**
  * Push parameter's data
  */
-bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId)
+bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_t timestamp)
 {
 	NXCPMessage msg;
 	bool success = false;
@@ -41,7 +42,8 @@ bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId)
 	msg.setField(VID_NAME, parameter);
 	msg.setField(VID_VALUE, value);
    msg.setField(VID_OBJECT_ID, objectId);
-   msg.setField(VID_REQUEST_ID, s_requestId++); 
+   msg.setFieldFromTime(VID_TIMESTAMP, timestamp);
+   msg.setField(VID_REQUEST_ID, s_requestIdHigh | (UINT64)InterlockedIncrement(&s_requestIdLow)); 
 
    if (g_dwFlags & AF_SUBAGENT_LOADER)
    {
@@ -82,13 +84,14 @@ static void ProcessPushRequest(HPIPE hPipe)
 		{
          UINT32 objectId = msg->getFieldAsUInt32(VID_OBJECT_ID);
 			UINT32 count = msg->getFieldAsUInt32(VID_NUM_ITEMS);
+         time_t timestamp = msg->getFieldAsTime(VID_TIMESTAMP);
 			UINT32 varId = VID_PUSH_DCI_DATA_BASE;
 			for(DWORD i = 0; i < count; i++)
 			{
 				TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
 				msg->getFieldAsString(varId++, name, MAX_PARAM_NAME);
 				msg->getFieldAsString(varId++, value, MAX_RESULT_LENGTH);
-				PushData(name, value, objectId);
+				PushData(name, value, objectId, timestamp);
 			}
 		}
 		else

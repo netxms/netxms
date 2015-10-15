@@ -533,18 +533,18 @@ static DWORD __stdcall WorkerThread(void *pArg)
       // Generate GUID for user "admin"
       if (bResult)
       {
-         uuid_generate(guid);
+         _uuid_generate(guid);
          _sntprintf(szQuery, 256, _T("UPDATE users SET guid='%s' WHERE id=0"),
-                    uuid_to_string(guid, szGUID));
+                    _uuid_to_string(guid, szGUID));
          bResult = DBQueryEx(hConn, szQuery);
       }
 
       // Generate GUID for "everyone" group
       if (bResult)
       {
-         uuid_generate(guid);
+         _uuid_generate(guid);
          _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=%d"),
-                    uuid_to_string(guid, szGUID), GROUP_EVERYONE);
+                    _uuid_to_string(guid, szGUID), GROUP_EVERYONE);
          bResult = DBQueryEx(hConn, szQuery);
       }
 

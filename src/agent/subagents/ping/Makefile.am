@@ -4,7 +4,7 @@ pkglib_LTLIBRARIES = ping.la
 ping_la_SOURCES = ping.cpp
 ping_la_CPPFLAGS=-I@top_srcdir@/include
 ping_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
-ping_la_LIBADD = ../../../libnetxms/libnetxms.la
+ping_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
 EXTRA_DIST = ping.h ping.vcproj
 

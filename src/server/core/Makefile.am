@@ -24,13 +24,14 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			node.cpp nodelink.cpp np.cpp nxsl_classes.cpp \
 			nxslext.cpp objects.cpp objtools.cpp package.cpp \
 			pds.cpp poll.cpp rack.cpp radius.cpp \
-			reporting.cpp rootobj.cpp script.cpp session.cpp \
-			situation.cpp slmcheck.cpp smclp.cpp sms.cpp snmp.cpp \
-			snmptrap.cpp stp.cpp subnet.cpp svccontainer.cpp \
-			swpkg.cpp syncer.cpp syslogd.cpp template.cpp timer.cpp \
-			tools.cpp tracert.cpp uniroot.cpp upload_job.cpp \
-			uptimecalc.cpp userdb.cpp userdb_objects.cpp vpnconn.cpp \
-			vrrp.cpp watchdog.cpp winperf.cpp xmpp.cpp zone.cpp 
+			reporting.cpp rootobj.cpp schedule.cpp script.cpp \
+			session.cpp situation.cpp slmcheck.cpp smclp.cpp \
+			sms.cpp snmp.cpp snmptrap.cpp stp.cpp subnet.cpp \
+			svccontainer.cpp swpkg.cpp syncer.cpp syslogd.cpp \
+			template.cpp timer.cpp tools.cpp tracert.cpp \
+			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
+			userdb_objects.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
+         winperf.cpp xmpp.cpp zone.cpp maintenance.cpp
 libnxcore_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) 
 libnxcore_la_LIBADD = \
@@ -40,6 +41,7 @@ libnxcore_la_LIBADD = \
 	../../libnxlp/libnxlp.la \
 	../../db/libnxdb/libnxdb.la \
 	../../libnxsl/libnxsl.la \
+	../../agent/libnxagent/libnxagent.la \
 	../../libnetxms/libnetxms.la \
 	@SERVER_LIBS@
 if XMPP_SUPPORT

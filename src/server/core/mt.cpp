@@ -146,14 +146,14 @@ struct FillMessageCallbackData
 /**
  * Callback for setting mapping table elements in NXCP message
  */
-static bool FillMessageCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult FillMessageCallback(const TCHAR *key, const void *value, void *data)
 {
    UINT32 id = ((FillMessageCallbackData *)data)->id;
 	((FillMessageCallbackData *)data)->msg->setField(id, key);
 	((FillMessageCallbackData *)data)->msg->setField(id + 1, ((MappingTableElement *)value)->getValue());
 	((FillMessageCallbackData *)data)->msg->setField(id + 2, ((MappingTableElement *)value)->getDescription());
 	((FillMessageCallbackData *)data)->id += 10;
-   return true;
+   return _CONTINUE;
 }
 
 /**
@@ -176,13 +176,13 @@ void MappingTable::fillMessage(NXCPMessage *msg)
 /**
  * Callback for saving elements into database
  */
-static bool SaveElementCallback(const TCHAR *key, const void *value, void *data)
+static EnumerationCallbackResult SaveElementCallback(const TCHAR *key, const void *value, void *data)
 {
    DB_STATEMENT hStmt = (DB_STATEMENT)data;
 	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, key, DB_BIND_STATIC);
 	DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, ((MappingTableElement *)value)->getValue(), DB_BIND_STATIC);
 	DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, ((MappingTableElement *)value)->getDescription(), DB_BIND_STATIC);
-   return DBExecute(hStmt) ? true : false;
+   return DBExecute(hStmt) ? _CONTINUE : _STOP;
 }
 
 /**
@@ -233,7 +233,7 @@ bool MappingTable::saveToDatabase()
 		goto failure2;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-   if (!m_data->forEach(SaveElementCallback, hStmt))
+   if (m_data->forEach(SaveElementCallback, hStmt) == _STOP)
       goto failure;
 	DBFreeStatement(hStmt);
 

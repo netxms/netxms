@@ -165,26 +165,40 @@ void CorrelateEvent(Event *pEvent)
 	DbgPrintf(6, _T("CorrelateEvent: event %s id ") UINT64_FMT _T(" source %s [%d]"),
 	          pEvent->getName(), pEvent->getId(), node->getName(), node->getId());
 
-   switch(pEvent->getCode())
+   UINT32 eventCode = pEvent->getCode();
+   if (eventCode == EVENT_MAINTENANCE_MODE_ENTERED || eventCode == EVENT_MAINTENANCE_MODE_LEFT)
+   {
+      DbgPrintf(6, _T("CorrelateEvent: finished, maintenance events ignored"));
+      return;
+   }
+
+   if (node->isInMaintenanceMode())
+   {
+      pEvent->setRootId(node->getMaintenanceEventId());
+      DbgPrintf(6, _T("CorrelateEvent: finished, rootId=") UINT64_FMT, pEvent->getRootId());
+      return;
+   }
+
+   switch(eventCode)
    {
       case EVENT_INTERFACE_DISABLED:
-			{
+         {
             Interface *pInterface = node->findInterfaceByIndex(pEvent->getParameterAsULong(4));
-				if (pInterface != NULL)
-				{
-					pInterface->setLastDownEventId(pEvent->getId());
-				}
-			}
-			break;
+            if (pInterface != NULL)
+            {
+               pInterface->setLastDownEventId(pEvent->getId());
+            }
+         }
+         break;
       case EVENT_INTERFACE_DOWN:
-			{
-				Interface *pInterface = node->findInterfaceByIndex(pEvent->getParameterAsULong(4));
-				if (pInterface != NULL)
-				{
-					pInterface->setLastDownEventId(pEvent->getId());
-				}
-			}
-			// there are intentionally no break
+         {
+            Interface *pInterface = node->findInterfaceByIndex(pEvent->getParameterAsULong(4));
+            if (pInterface != NULL)
+            {
+               pInterface->setLastDownEventId(pEvent->getId());
+            }
+         }
+         // there are intentionally no break
       case EVENT_SERVICE_DOWN:
       case EVENT_SNMP_FAIL:
          if (node->getRuntimeFlags() & NDF_UNREACHABLE)
@@ -203,16 +217,16 @@ void CorrelateEvent(Event *pEvent)
          node->setLastEventId(LAST_EVENT_AGENT_DOWN, 0);
          break;
       case EVENT_NODE_DOWN:
-		case EVENT_NODE_UNREACHABLE:
+      case EVENT_NODE_UNREACHABLE:
          node->setLastEventId(LAST_EVENT_NODE_DOWN, pEvent->getId());
          C_SysNodeDown(node, pEvent);
          break;
       case EVENT_NODE_UP:
          node->setLastEventId(LAST_EVENT_NODE_DOWN, 0);
          break;
-		case EVENT_NETWORK_CONNECTION_LOST:
-			m_networkLostEventId = pEvent->getId();
-			break;
+      case EVENT_NETWORK_CONNECTION_LOST:
+         m_networkLostEventId = pEvent->getId();
+         break;
       default:
          break;
    }

@@ -51,6 +51,7 @@ Template::Template() : NetObj()
 	m_applyFilterSource = NULL;
    m_iStatus = STATUS_NORMAL;
    m_dciAccessLock = RWLockCreate();
+   m_dciListModified = false;
 }
 
 /**
@@ -68,6 +69,7 @@ Template::Template(const TCHAR *pszName) : NetObj()
    m_iStatus = STATUS_NORMAL;
    m_isHidden = true;
    m_dciAccessLock = RWLockCreate();
+   m_dciListModified = false;
 }
 
 /**
@@ -79,6 +81,7 @@ Template::Template(ConfigEntry *config) : NetObj()
    m_dciLockStatus = -1;
    m_iStatus = STATUS_NORMAL;
    m_dciAccessLock = RWLockCreate();
+   m_dciListModified = false;
 
 	// Name and version
 	nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
@@ -415,6 +418,7 @@ bool Template::addDCObject(DCObject *object, bool alreadyLocked)
       if (object->getStatus() != ITEM_STATUS_DISABLED)
          object->setStatus(ITEM_STATUS_ACTIVE, false);
       object->setBusyFlag(FALSE);
+      m_isModified = true;
       success = true;
    }
 
@@ -454,6 +458,7 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
          // Destroy item
 			DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d from object %d"), (int)dcObjectId, (int)m_id);
 			destroyItem(object, i);
+         m_isModified = true;
          success = true;
 			DbgPrintf(7, _T("Template::DeleteDCObject: DCO deleted from object %d"), (int)m_id);
          break;
@@ -484,8 +489,8 @@ void Template::deleteChildDCIs(UINT32 dcObjectId)
 }
 
 /**
- * Delets DCI object deletes or shedules
- * deletion from DB and removes it from index
+ * Delete DCI object.
+ * Deletes or schedules deletion from DB and removes it from index
  * It is assumed that list is already locked
  */
 void Template::destroyItem(DCObject *object, int index)
@@ -588,49 +593,56 @@ bool Template::setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus
 /**
  * Lock data collection items list
  */
-BOOL Template::lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
+bool Template::lockDCIList(int sessionId, const TCHAR *pszNewOwner, TCHAR *pszCurrOwner)
 {
-   BOOL bSuccess;
+   bool success;
 
    lockProperties();
    if (m_dciLockStatus == -1)
    {
       m_dciLockStatus = sessionId;
-      m_bDCIListModified = FALSE;
+      m_dciListModified = false;
       nx_strncpy(m_szCurrDCIOwner, pszNewOwner, MAX_SESSION_NAME);
-      bSuccess = TRUE;
+      success = true;
    }
    else
    {
       if (pszCurrOwner != NULL)
          _tcscpy(pszCurrOwner, m_szCurrDCIOwner);
-      bSuccess = FALSE;
+      success = false;
    }
    unlockProperties();
-   return bSuccess;
+   return success;
 }
 
 /**
  * Unlock data collection items list
  */
-BOOL Template::unlockDCIList(int sessionId)
+bool Template::unlockDCIList(int sessionId)
 {
-   BOOL bSuccess = FALSE;
+   bool success = false;
+   bool callChangeHook = false;
 
    lockProperties();
    if (m_dciLockStatus == sessionId)
    {
       m_dciLockStatus = -1;
-      if (m_bDCIListModified && (getObjectClass() == OBJECT_TEMPLATE))
+      if (m_dciListModified)
       {
-         m_dwVersion++;
+         if (getObjectClass() == OBJECT_TEMPLATE)
+            m_dwVersion++;
          setModified();
+         callChangeHook = true;
       }
-      m_bDCIListModified = FALSE;
-      bSuccess = TRUE;
+      m_dciListModified = false;
+      success = true;
    }
    unlockProperties();
-   return bSuccess;
+
+   if (callChangeHook)
+      onDataCollectionChange();
+
+   return success;
 }
 
 /**
@@ -901,6 +913,8 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
    // Cleanup
    free(pdwItemList);
 
+   target->onDataCollectionChange();
+
    // Queue update if target is a cluster
    if (target->getObjectClass() == OBJECT_CLUSTER)
    {
@@ -925,7 +939,7 @@ void Template::queueUpdate()
          pInfo->pTemplate = this;
          pInfo->targetId = m_pChildList[i]->getId();
          pInfo->removeDCI = false;
-         g_pTemplateUpdateQueue->Put(pInfo);
+         g_pTemplateUpdateQueue->put(pInfo);
       }
    unlockProperties();
 }
@@ -942,7 +956,7 @@ void Template::queueRemoveFromTarget(UINT32 targetId, bool removeDCI)
    pInfo->pTemplate = this;
    pInfo->targetId = targetId;
    pInfo->removeDCI = removeDCI;
-   g_pTemplateUpdateQueue->Put(pInfo);
+   g_pTemplateUpdateQueue->put(pInfo);
    unlockProperties();
 }
 
@@ -1019,7 +1033,7 @@ void Template::createNXMPRecord(String &str)
 {
    TCHAR guid[48];
    str.appendFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<guid>%s</guid>\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n"),
-	                       m_id, uuid_to_string(m_guid, guid), (const TCHAR *)EscapeStringForXML2(m_name), m_flags);
+                             m_id, m_guid.toString(guid), (const TCHAR *)EscapeStringForXML2(m_name), m_flags);
 
    // Path in groups
    StringList path;
@@ -1115,10 +1129,12 @@ void Template::prepareForDeletion()
 
 /**
  * Check if template should be automatically applied to node
+ * Returns AutoBindDecision_Bind if applicable, AutoBindDecision_Unbind if not, 
+ * AutoBindDecision_Ignore if no change required (script error or no auto apply)
  */
-bool Template::isApplicable(Node *node)
+AutoBindDecision Template::isApplicable(Node *node)
 {
-	bool result = false;
+	AutoBindDecision result = AutoBindDecision_Ignore;
 
 	lockProperties();
 	if ((m_flags & TF_AUTO_APPLY) && (m_applyFilter != NULL))
@@ -1127,7 +1143,7 @@ bool Template::isApplicable(Node *node)
 		if (m_applyFilter->run())
 		{
 	      NXSL_Value *value = m_applyFilter->getResult();
-			result = ((value != NULL) && (value->getValueAsInt32() != 0));
+         result = ((value != NULL) && (value->getValueAsInt32() != 0)) ? AutoBindDecision_Bind : AutoBindDecision_Unbind;
 		}
 		else
 		{
@@ -1148,7 +1164,7 @@ bool Template::isApplicable(Node *node)
  * derived from DataCollectionTarget actual values will always be empty strings
  * with data type DCI_DT_NULL.
  */
-UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool includeNoValueObjects)
+UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool overviewOnly, bool includeNoValueObjects)
 {
    lockDciAccess(false);
 
@@ -1157,7 +1173,8 @@ UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool in
 	{
 		DCObject *object = m_dcObjects->get(i);
 		if ((object->hasValue() || includeNoValueObjects) &&
-          (!objectTooltipOnly || object->isShowOnObjectTooltip()))
+          (!objectTooltipOnly || object->isShowOnObjectTooltip()) &&
+          (!overviewOnly || object->isShowInObjectOverview()))
 		{
 			if (object->getType() == DCO_TYPE_ITEM)
 			{
@@ -1177,4 +1194,11 @@ UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool in
 
    unlockDciAccess();
    return RCC_SUCCESS;
+}
+
+/**
+ * Called when data collection configuration changed
+ */
+void Template::onDataCollectionChange()
+{
 }

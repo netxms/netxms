@@ -75,7 +75,7 @@ THREAD_RESULT THREAD_CALL ISC::receiverThreadStarter(void *arg)
 ISC::ISC()
 {
 	m_flags = 0;
-   m_addr = inet_addr("127.0.0.1");
+   m_addr = InetAddress::LOOPBACK;
    m_port = NETXMS_ISC_PORT;
    m_socket = -1;
    m_msgWaitQueue = new MsgWaitQueue;
@@ -91,7 +91,7 @@ ISC::ISC()
 /**
  * Create ISC connector for give IP address and port
  */
-ISC::ISC(UINT32 addr, WORD port)
+ISC::ISC(const InetAddress& addr, WORD port)
 {
 	m_flags = 0;
    m_addr = addr;
@@ -219,7 +219,7 @@ void ISC::receiverThread()
 		{
          // Convert message header to host format
          DbgPrintf(6, _T("ISC: Received raw message %s from peer at %s"),
-			          NXCPMessageCodeName(ntohs(pRawMsg->code), szBuffer), IpToStr(m_addr, szIpAddr));
+            NXCPMessageCodeName(ntohs(pRawMsg->code), szBuffer), m_addr.toString(szIpAddr));
          onBinaryMessage(pRawMsg);
 		}
 		else
@@ -264,7 +264,6 @@ void ISC::receiverThread()
  */
 UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
 {
-   struct sockaddr_in sa;
    TCHAR szBuffer[256];
    BOOL bForceEncryption = FALSE, bSecondPass = FALSE;
    UINT32 rcc = ISC_ERR_INTERNAL_ERROR;
@@ -286,8 +285,10 @@ UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
    if (m_socket != -1)
       closesocket(m_socket);
 
+   struct sockaddr *sa;
+
    // Create socket
-   m_socket = socket(AF_INET, SOCK_STREAM, 0);
+   m_socket = socket(m_addr.getFamily(), SOCK_STREAM, 0);
    if (m_socket == INVALID_SOCKET)
    {
 		rcc = ISC_ERR_SOCKET_ERROR;
@@ -296,17 +297,14 @@ UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
    }
 
    // Fill in address structure
-   memset(&sa, 0, sizeof(sa));
-   sa.sin_family = AF_INET;
-   sa.sin_addr.s_addr = m_addr;
-   sa.sin_port = htons(m_port);
+   SockAddrBuffer sb;
+   sa = m_addr.fillSockAddr(&sb, m_port);
 
    // Connect to server
-   if (::connect(m_socket, (struct sockaddr *)&sa, sizeof(sa)) == -1)
+   if (ConnectEx(m_socket, sa, SA_LEN(sa), 5000) == -1)
    {
 		rcc = ISC_ERR_CONNECT_FAILED;
-      printMessage(_T("Cannot establish connection with ISC peer %s"),
-               IpToStr(ntohl(m_addr), szBuffer));
+      printMessage(_T("Cannot establish connection with ISC peer %s"), m_addr.toString(szBuffer));
       goto connect_cleanup;
    }
 
@@ -316,16 +314,14 @@ UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
    if (!NXCPGetPeerProtocolVersion(m_socket, &m_protocolVersion, m_socketLock))
    {
 		rcc = ISC_ERR_INVALID_NXCP_VERSION;
-      printMessage(_T("Cannot detect NXCP version for ISC peer %s"),
-               IpToStr(ntohl(m_addr), szBuffer));
+      printMessage(_T("Cannot detect NXCP version for ISC peer %s"), m_addr.toString(szBuffer));
       goto connect_cleanup;
    }
 
    if (m_protocolVersion > NXCP_VERSION)
    {
 		rcc = ISC_ERR_INVALID_NXCP_VERSION;
-      printMessage(_T("ISC peer %s uses incompatible NXCP version %d"),
-               IpToStr(ntohl(m_addr), szBuffer), m_protocolVersion);
+      printMessage(_T("ISC peer %s uses incompatible NXCP version %d"), m_addr.toString(szBuffer), m_protocolVersion);
       goto connect_cleanup;
    }
 
@@ -340,8 +336,7 @@ setup_encryption:
       if ((rcc != ERR_SUCCESS) &&
 			 (m_flags & ISCF_REQUIRE_ENCRYPTION))
 		{
-			printMessage(_T("Cannot setup encrypted channel with ISC peer %s"),
-						IpToStr(ntohl(m_addr), szBuffer));
+         printMessage(_T("Cannot setup encrypted channel with ISC peer %s"), m_addr.toString(szBuffer));
 			goto connect_cleanup;
 		}
    }
@@ -350,8 +345,7 @@ setup_encryption:
       if (m_flags & ISCF_REQUIRE_ENCRYPTION)
       {
 			rcc = ISC_ERR_ENCRYPTION_REQUIRED;
-			printMessage(_T("Cannot setup encrypted channel with ISC peer %s"),
-						IpToStr(ntohl(m_addr), szBuffer));
+         printMessage(_T("Cannot setup encrypted channel with ISC peer %s"), m_addr.toString(szBuffer));
          goto connect_cleanup;
       }
    }
@@ -365,8 +359,7 @@ setup_encryption:
 			m_flags |= ISCF_REQUIRE_ENCRYPTION;
          goto setup_encryption;
       }
-      printMessage(_T("Communication with ISC peer %s failed (%s)"), IpToStr(ntohl(m_addr), szBuffer),
-               ISCErrorCodeToText(rcc));
+      printMessage(_T("Communication with ISC peer %s failed (%s)"), m_addr.toString(szBuffer), ISCErrorCodeToText(rcc));
       goto connect_cleanup;
    }
 

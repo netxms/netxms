@@ -35,7 +35,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
-import org.netxms.client.IpAddressListElement;
+import org.netxms.base.InetAddressEx;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractObject;
@@ -45,8 +45,8 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
-import org.netxms.ui.eclipse.objectmanager.dialogs.AddAddressListElementDialog;
-import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.AddressListElementComparator;
+import org.netxms.ui.eclipse.objectmanager.dialogs.AddSubnetDialog;
+import org.netxms.ui.eclipse.objectmanager.propertypages.helpers.SubnetComparator;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -60,8 +60,8 @@ public class VPNSubnets extends PropertyPage
    private TableViewer localNetworksList;
    private TableViewer remoteNetworksList;
    private boolean modified = false; 
-   private List<IpAddressListElement> localNetworksElements;
-   private List<IpAddressListElement> remoteNetworksElements;
+   private List<InetAddressEx> localNetworksElements;
+   private List<InetAddressEx> remoteNetworksElements;
 
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -108,8 +108,8 @@ public class VPNSubnets extends PropertyPage
       clientArea.setLayoutData(gd);
       
       //networks lists
-      localNetworksElements = new ArrayList<IpAddressListElement>(connector.getLocalSubnets());
-      remoteNetworksElements = new ArrayList<IpAddressListElement>(connector.getRemoteSubnets());
+      localNetworksElements = new ArrayList<InetAddressEx>(connector.getLocalSubnets());
+      remoteNetworksElements = new ArrayList<InetAddressEx>(connector.getRemoteSubnets());
       createNetworkList(clientArea, Messages.get().VPNSubnets_LocalNetworks, localNetworksList, localNetworksElements);
       createNetworkList(clientArea, Messages.get().VPNSubnets_RemoteNetworks, remoteNetworksList, remoteNetworksElements);
       
@@ -123,7 +123,7 @@ public class VPNSubnets extends PropertyPage
     * @param viewList viewer to be created and added to view
     * @param data elements that should be added as a content of this viewer
     */
-   private void createNetworkList(Composite dialogArea, String title, TableViewer viewList, final List<IpAddressListElement> data) 
+   private void createNetworkList(Composite dialogArea, String title, TableViewer viewList, final List<InetAddressEx> data) 
    {
       Group clientArea = new Group(dialogArea, SWT.NONE);
       clientArea.setText(title);      
@@ -148,7 +148,7 @@ public class VPNSubnets extends PropertyPage
       viewList.getTable().setLayoutData(gd);
       viewList.getTable().setSortDirection(SWT.UP);
       viewList.setContentProvider(new ArrayContentProvider());
-      viewList.setComparator(new AddressListElementComparator());
+      viewList.setComparator(new SubnetComparator());
       viewList.setInput(data.toArray());
       
       final TableViewer list = viewList;
@@ -183,15 +183,15 @@ public class VPNSubnets extends PropertyPage
    /**
     * Add element to subnet list
     */
-   private void addTargetAddressListElement(TableViewer elementList, List<IpAddressListElement> elements)
+   private void addTargetAddressListElement(TableViewer elementList, List<InetAddressEx> elements)
    {
-      AddAddressListElementDialog dlg = new AddAddressListElementDialog(getShell());
+      AddSubnetDialog dlg = new AddSubnetDialog(getShell());
       if (dlg.open() == Window.OK)
       {
-         IpAddressListElement element = new IpAddressListElement(IpAddressListElement.SUBNET, dlg.getAddress1(), dlg.getAddress2());
-         if (!elements.contains(element))
+         InetAddressEx subnet = dlg.getSubnet();
+         if (!elements.contains(subnet))
          {
-            elements.add(element);
+            elements.add(subnet);
             elementList.setInput(elements.toArray());
             modified = true;
          }
@@ -201,7 +201,7 @@ public class VPNSubnets extends PropertyPage
    /**
     * Remove element(s) from subnet list
     */
-   private void removeTargetAddressListElements(TableViewer elementList, List<IpAddressListElement> elements)
+   private void removeTargetAddressListElements(TableViewer elementList, List<InetAddressEx> elements)
    {
       IStructuredSelection selection = (IStructuredSelection)elementList.getSelection();
       if (selection.size() > 0)

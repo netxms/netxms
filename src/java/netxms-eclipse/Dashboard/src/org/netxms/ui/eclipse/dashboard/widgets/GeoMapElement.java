@@ -23,7 +23,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
-import org.netxms.ui.eclipse.osm.widgets.GeoMapViewer;
+import org.netxms.ui.eclipse.osm.widgets.ObjectGeoLocationViewer;
 
 /**
  * Geo map element for dashboard
@@ -31,7 +31,7 @@ import org.netxms.ui.eclipse.osm.widgets.GeoMapViewer;
  */
 public class GeoMapElement extends ElementWidget
 {
-	private GeoMapViewer mapWidget;
+	private ObjectGeoLocationViewer mapWidget;
 	private GeoMapConfig config;
 	
 	/**
@@ -57,7 +57,7 @@ public class GeoMapElement extends ElementWidget
 		layout.marginWidth = 0;
 		setLayout(layout);
 		
-		mapWidget = new GeoMapViewer(this, SWT.NONE, false, null);
+		mapWidget = new ObjectGeoLocationViewer(this, SWT.NONE);
 		mapWidget.setViewPart(viewPart);
 		mapWidget.setTitle(config.getTitle());
 		mapWidget.showMap(config.getLatitude(), config.getLongitude(), config.getZoom());

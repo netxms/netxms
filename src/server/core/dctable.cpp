@@ -177,7 +177,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
    m_status = (BYTE)DBGetFieldLong(hResult, iRow, 10);
 	DBGetField(hResult, iRow, 11, m_systemTag, MAX_DB_STRING);
 	m_dwResourceId = DBGetFieldULong(hResult, iRow, 12);
-	m_dwProxyNode = DBGetFieldULong(hResult, iRow, 13);
+	m_sourceNode = DBGetFieldULong(hResult, iRow, 13);
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 14, NULL, 0);
    TCHAR *pszTmp = DBGetField(hResult, iRow, 15, NULL, 0);
    m_comments = DBGetField(hResult, iRow, 16, NULL, 0);
@@ -301,7 +301,7 @@ bool DCTable::deleteAllData()
  *
  * @return true on success
  */
-bool DCTable::processNewValue(time_t nTimeStamp,const void *value, bool *updateStatus)
+bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateStatus)
 {
    *updateStatus = false;
    lock();
@@ -350,7 +350,7 @@ bool DCTable::processNewValue(time_t nTimeStamp,const void *value, bool *updateS
          return true;
       }
 
-      INT64 recordId = ((INT64)time(NULL) << 30) | (((INT64)tableId & 0xFFFF) << 14);
+      INT64 recordId = ((INT64)timestamp << 30) | (((INT64)tableId & 0xFFFF) << 14);
       BOOL success = FALSE;
 	   Table *data = (Table *)value;
 
@@ -360,7 +360,7 @@ bool DCTable::processNewValue(time_t nTimeStamp,const void *value, bool *updateS
 	   if (hStmt != NULL)
 	   {
 		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
-		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)nTimeStamp);
+		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)timestamp);
 		   DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, recordId);
 	      success = DBExecute(hStmt);
 		   DBFreeStatement(hStmt);
@@ -433,7 +433,7 @@ bool DCTable::processNewValue(time_t nTimeStamp,const void *value, bool *updateS
    checkThresholds((Table *)value);
 
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
-      PerfDataStorageRequest(this, nTimeStamp, (Table *)value);
+      PerfDataStorageRequest(this, timestamp, (Table *)value);
 
    return true;
 }
@@ -559,7 +559,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (INT32)m_status);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, m_systemTag, DB_BIND_STATIC);
 	DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, m_dwResourceId);
-	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_dwProxyNode);
+	DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_sourceNode);
 	DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
    DBBind(hStmt, 16, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
    DBBind(hStmt, 17, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
@@ -680,8 +680,11 @@ void DCTable::deleteFromDatabase()
 
 	DCObject::deleteFromDatabase();
 
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM tdata_%d WHERE item_id=%d"), m_pNode->getId(), (int)m_id);
-   QueueSQLRequest(szQuery);
+   if(m_pNode->getObjectClass() != OBJECT_TEMPLATE)
+   {
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM tdata_%d WHERE item_id=%d"), m_pNode->getId(), (int)m_id);
+      QueueSQLRequest(szQuery);
+   }
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM dc_tables WHERE item_id=%d"), (int)m_id);
    QueueSQLRequest(szQuery);

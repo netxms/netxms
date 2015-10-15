@@ -16,7 +16,7 @@
 
 #if !HAVE_UUID_T
 #undef uuid_t
-typedef unsigned char uuid_t[16];
+typedef unsigned char uuid_t[UUID_LENGTH];
 #endif
 
 /* UUID Variant definitions */
@@ -25,19 +25,59 @@ typedef unsigned char uuid_t[16];
 #define UUID_VARIANT_MICROSOFT   2
 #define UUID_VARIANT_OTHER       3
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void LIBNETXMS_EXPORTABLE uuid_clear(uuid_t uu);
-int LIBNETXMS_EXPORTABLE uuid_compare(uuid_t uu1, uuid_t uu2);
-void LIBNETXMS_EXPORTABLE uuid_generate(uuid_t out);
-int LIBNETXMS_EXPORTABLE uuid_is_null(uuid_t uu);
-int LIBNETXMS_EXPORTABLE uuid_parse(const TCHAR *in, uuid_t uu);
-TCHAR LIBNETXMS_EXPORTABLE *uuid_to_string(uuid_t uu, TCHAR *out);
+void LIBNETXMS_EXPORTABLE _uuid_clear(uuid_t uu);
+int LIBNETXMS_EXPORTABLE _uuid_compare(const uuid_t uu1, const uuid_t uu2);
+void LIBNETXMS_EXPORTABLE _uuid_generate(uuid_t out);
+bool LIBNETXMS_EXPORTABLE _uuid_is_null(const uuid_t uu);
+int LIBNETXMS_EXPORTABLE _uuid_parse(const TCHAR *in, uuid_t uu);
+TCHAR LIBNETXMS_EXPORTABLE *_uuid_to_string(const uuid_t uu, TCHAR *out);
 
 #ifdef __cplusplus
-}
+
+/**
+ * Wrapper class for UUID
+ * Lower case used to avoid conflict with UUID struct defined in Windows headers
+ */
+class LIBNETXMS_EXPORTABLE uuid
+{
+private:
+   uuid_t m_value;
+
+public:
+   uuid() { _uuid_clear(m_value); }
+   uuid(const uuid_t v) { memcpy(m_value, v, UUID_LENGTH); }
+
+   int compare(const uuid& u) const { return _uuid_compare(m_value, u.m_value); }
+   bool equals(const uuid& u) const { return _uuid_compare(m_value, u.m_value) == 0; }
+   const uuid_t& getValue() const { return m_value; }
+   bool isNull() const { return _uuid_is_null(m_value); }
+   TCHAR *toString(TCHAR *buffer) const { return _uuid_to_string(m_value, buffer); }
+   String toString() const { TCHAR buffer[64]; return String(_uuid_to_string(m_value, buffer)); }
+
+   /**
+    * Generate new UUID
+    */
+   static uuid generate() 
+   { 
+      uuid_t u;
+      _uuid_generate(u);
+      return uuid(u);
+   }
+
+   /**
+    * Parse string into UUID. Returns NULL UUID on error.
+    */
+   static uuid parse(const TCHAR *s)
+   {
+      uuid_t u;
+      if (_uuid_parse(s, u) != 0)
+         return NULL_UUID;
+      return uuid(u);
+   }
+
+   static const uuid NULL_UUID;
+};
+
 #endif
 
 #endif

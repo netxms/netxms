@@ -107,6 +107,8 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nxcore_situations.h"
 #include "nxcore_jobs.h"
 #include "nxcore_logs.h"
+#include "nxcore_schedule.h"
+#include "maintenance.h"
 
 /**
  * Common constants and macros
@@ -157,6 +159,7 @@ typedef void * HSNMPSESSION;
 #define IDG_DCT_COLUMN        21
 #define IDG_MAPPING_TABLE     22
 #define IDG_DCI_SUMMARY_TABLE 23
+#define IDG_SCHEDULE          24
 
 /**
  * Exit codes for console commands
@@ -295,6 +298,8 @@ protected:
    virtual void onDataPush(NXCPMessage *msg);
    virtual void onFileMonitoringData(NXCPMessage *msg);
 	virtual void onSnmpTrap(NXCPMessage *pMsg);
+	virtual UINT32 processCollectedData(NXCPMessage *msg);
+   virtual bool processCustomMessage(NXCPMessage *msg);
 
 public:
    AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
@@ -358,7 +363,7 @@ public:
 
    void run();
 
-   void postMessage(NXCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
+   void postMessage(NXCPMessage *pMsg) { m_pSendQueue->put(pMsg->createMessage()); }
    void sendMessage(NXCPMessage *pMsg);
 
 	int getId() { return m_id; }
@@ -392,7 +397,6 @@ private:
    UINT64 m_dwSystemAccess;    // User's system access rights
    UINT32 m_dwFlags;           // Session flags
 	int m_clientType;				// Client system type - desktop, web, mobile, etc.
-   NXCP_BUFFER *m_pMsgBuffer;
    NXCPEncryptionContext *m_pCtx;
 	BYTE m_challenge[CLIENT_CHALLENGE_SIZE];
    THREAD m_hWriteThread;
@@ -411,8 +415,9 @@ private:
 	struct sockaddr *m_clientAddr;
 	TCHAR m_workstation[256];      // IP address or name of connected host in textual form
    TCHAR m_webServerAddress[256]; // IP address or name of web server for web sessions
-   TCHAR m_szUserName[MAX_SESSION_NAME];   // String in form login_name@host
-   TCHAR m_szClientInfo[96];  // Client app info string
+   TCHAR m_loginName[MAX_USER_NAME];
+   TCHAR m_sessionName[MAX_SESSION_NAME];   // String in form login_name@host
+   TCHAR m_clientInfo[96];  // Client app info string
    TCHAR m_language[8];       // Client's desired language
    time_t m_loginTime;
    UINT32 m_dwOpenDCIListSize; // Number of open DCI lists
@@ -488,15 +493,18 @@ private:
    void sendAllObjects(NXCPMessage *pRequest);
    void sendSelectedObjects(NXCPMessage *pRequest);
    void sendEventLog(NXCPMessage *pRequest);
-   void sendAllConfigVars(UINT32 dwRqId);
-   void setConfigVariable(NXCPMessage *pRequest);
-   void deleteConfigVariable(NXCPMessage *pRequest);
+   void getConfigurationVariables(UINT32 dwRqId);
+   void getPublicConfigurationVariable(NXCPMessage *request);
+   void setConfigurationVariable(NXCPMessage *pRequest);
+   void deleteConfigurationVariable(NXCPMessage *pRequest);
    void sendUserDB(UINT32 dwRqId);
    void sendAllAlarms(UINT32 dwRqId);
    void createUser(NXCPMessage *pRequest);
    void updateUser(NXCPMessage *pRequest);
+   void detachLdapUser(NXCPMessage *pRequest);
    void deleteUser(NXCPMessage *pRequest);
-   void setPassword(NXCPMessage *pRequest);
+   void setPassword(NXCPMessage *request);
+   void validatePassword(NXCPMessage *request);
    void lockUserDB(UINT32 dwRqId, BOOL bLock);
    void sendEventDB(UINT32 dwRqId);
    void modifyEventTemplate(NXCPMessage *pRequest);
@@ -504,6 +512,8 @@ private:
    void generateEventCode(UINT32 dwRqId);
    void modifyObject(NXCPMessage *pRequest);
    void changeObjectMgmtStatus(NXCPMessage *pRequest);
+   void enterMaintenanceMode(NXCPMessage *request);
+   void leaveMaintenanceMode(NXCPMessage *request);
    void openNodeDCIList(NXCPMessage *pRequest);
    void closeNodeDCIList(NXCPMessage *pRequest);
    void modifyNodeDCI(NXCPMessage *pRequest);
@@ -569,8 +579,8 @@ private:
    void getAgentConfig(NXCPMessage *pRequest);
    void updateAgentConfig(NXCPMessage *pRequest);
    void executeAction(NXCPMessage *pRequest);
-   void sendObjectTools(UINT32 dwRqId);
-   void sendObjectToolDetails(NXCPMessage *pRequest);
+   void getObjectTools(UINT32 requestId);
+   void getObjectToolDetails(NXCPMessage *request);
    void updateObjectTool(NXCPMessage *pRequest);
    void deleteObjectTool(NXCPMessage *pRequest);
    void changeObjectToolStatus(NXCPMessage *pRequest);
@@ -687,6 +697,14 @@ private:
    void getLocationHistory(NXCPMessage *request);
    void getScreenshot(NXCPMessage *request);
 	void executeScript(NXCPMessage *request);
+   void compileScript(NXCPMessage *request);
+	void resyncAgentDciConfiguration(NXCPMessage *request);
+   void cleanAgentDciConfiguration(NXCPMessage *request);
+   void listScheduleCallbacks(NXCPMessage *request);
+   void listSchedules(NXCPMessage *request);
+   void addSchedule(NXCPMessage *request);
+   void updateSchedule(NXCPMessage *request);
+   void removeSchedule(NXCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
@@ -697,8 +715,8 @@ public:
 
    void run();
 
-   void postMessage(NXCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
-   void sendMessage(NXCPMessage *pMsg);
+   void postMessage(NXCPMessage *pMsg) { m_pSendQueue->put(pMsg->createMessage()); }
+   bool sendMessage(NXCPMessage *pMsg);
    void sendRawMessage(NXCP_MESSAGE *pMsg);
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
 	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long offset);
@@ -706,8 +724,9 @@ public:
    int getId() { return m_id; }
    void setId(int id) { if (m_id == -1) m_id = id; }
    int getState() { return m_state; }
-   const TCHAR *getUserName() { return m_szUserName; }
-   const TCHAR *getClientInfo() { return m_szClientInfo; }
+   const TCHAR *getLoginName() { return m_loginName; }
+   const TCHAR *getSessionName() { return m_sessionName; }
+   const TCHAR *getClientInfo() { return m_clientInfo; }
 	const TCHAR *getWorkstation() { return m_workstation; }
    const TCHAR *getWebServerAddress() { return m_webServerAddress; }
    UINT32 getUserId() { return m_dwUserId; }
@@ -739,7 +758,7 @@ public:
    void kill();
    void notify(UINT32 dwCode, UINT32 dwData = 0);
 
-	void queueUpdate(UPDATE_INFO *pUpdate) { m_pUpdateQueue->Put(pUpdate); }
+	void queueUpdate(UPDATE_INFO *pUpdate) { m_pUpdateQueue->put(pUpdate); }
    void onNewEvent(Event *pEvent);
    void onSyslogMessage(NX_SYSLOG_RECORD *pRec);
    void onNewSNMPTrap(NXCPMessage *pMsg);
@@ -804,6 +823,43 @@ struct GRAPH_ACL_AND_ID
 };
 
 /**
+ * Thread pool stats
+ */
+enum ThreadPoolStat
+{
+   THREAD_POOL_CURR_SIZE,
+   THREAD_POOL_MIN_SIZE,
+   THREAD_POOL_MAX_SIZE,
+   THREAD_POOL_REQUESTS,
+   THREAD_POOL_LOAD,
+   THREAD_POOL_USAGE,
+   THREAD_POOL_LOADAVG_1,
+   THREAD_POOL_LOADAVG_5,
+   THREAD_POOL_LOADAVG_15
+};
+
+/**
+ * Server command execution data
+ */
+class ServerCommandExecData
+{
+private:
+   TCHAR *m_command;
+   bool m_sendOutput;
+   UINT32 m_requestId;
+   ClientSession *m_session;
+
+public:
+   ServerCommandExecData(TCHAR *command, bool sendOutput, UINT32 requestId, ClientSession *session);
+   ~ServerCommandExecData();
+
+   bool sendOutput() { return m_sendOutput; }
+   const TCHAR *getCommand() { return m_command; }
+   UINT32 getRequestId() { return m_requestId; }
+   ClientSession *getSession() { return m_session; }
+};
+
+/**
  * Functions
  */
 bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
@@ -826,6 +882,7 @@ bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *name);
 
 bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 INT32 NXCORE_EXPORTABLE MetaDataReadInt(const TCHAR *var, UINT32 defaultValue);
+bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *varName, const TCHAR *value);
 
 bool NXCORE_EXPORTABLE LoadConfig();
 
@@ -843,6 +900,7 @@ void ConsolePrintf(CONSOLE_CTX pCtx, const TCHAR *pszFormat, ...)
    __attribute__ ((format(printf, 2, 3)))
 #endif
 ;
+void ConsoleWrite(CONSOLE_CTX pCtx, const TCHAR *text);
 int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx);
 
 void SaveObjects(DB_HANDLE hdb);
@@ -859,11 +917,9 @@ void StopDBWriter();
 void PerfDataStorageRequest(DCItem *dci, time_t timestamp, const TCHAR *value);
 void PerfDataStorageRequest(DCTable *dci, time_t timestamp, Table *value);
 
-bool NXCORE_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id);
-
 void DecodeSQLStringAndSetVariable(NXCPMessage *pMsg, UINT32 dwVarId, TCHAR *pszStr);
 
-SNMP_SecurityContext *SnmpCheckCommSettings(SNMP_Transport *pTransport, int *version, SNMP_SecurityContext *originalContext, StringList *customTestOids);
+SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAddr, INT16 *version, UINT16 originalPort, SNMP_SecurityContext *originalContext, StringList *customTestOids);
 void StrToMac(const TCHAR *pszStr, BYTE *pBuffer);
 
 void InitLocalNetInfo();
@@ -893,7 +949,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreation
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
 void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graphId);
-int GetSessionCount(bool withRoot = true);
+int GetSessionCount(bool includeSystemAccount);
 bool IsLoggedIn(UINT32 dwUserId);
 bool NXCORE_EXPORTABLE KillClientSession(int id);
 
@@ -934,6 +990,10 @@ UINT32 ChangeObjectToolStatus(UINT32 toolId, bool enabled);
 UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg);
 void CreateObjectToolExportRecord(String &xml, UINT32 id);
 bool ImportObjectTool(ConfigEntry *config);
+UINT32 GetObjectToolsIntoMessage(NXCPMessage *msg, UINT32 userId, bool fullAccess);
+UINT32 GetObjectToolDetailsIntoMessage(UINT32 toolId, NXCPMessage *msg);
+
+void ExecuteServerCommand(void *arg);
 
 UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId);
 UINT32 DeleteSummaryTable(LONG tableId);
@@ -969,17 +1029,17 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *);
 void DbgTestRWLock(RWLOCK hLock, const TCHAR *szName, CONSOLE_CTX console);
 void DumpClientSessions(CONSOLE_CTX console);
 void DumpMobileDeviceSessions(CONSOLE_CTX console);
-void ShowPollerState(CONSOLE_CTX console);
-void SetPollerInfo(int nIdx, const TCHAR *pszMsg);
 void ShowServerStats(CONSOLE_CTX console);
 void ShowQueueStats(CONSOLE_CTX console, Queue *pQueue, const TCHAR *pszName);
 void ShowThreadPool(CONSOLE_CTX console, ThreadPool *p);
+LONG GetThreadPoolStat(ThreadPoolStat stat, const TCHAR *param, TCHAR *value);
 void DumpProcess(CONSOLE_CTX console);
 
 GRAPH_ACL_ENTRY *LoadGraphACL(DB_HANDLE hdb, UINT32 graphId, int *pnACLSize);
 BOOL CheckGraphAccess(GRAPH_ACL_ENTRY *pACL, int nACLSize, UINT32 graphId, UINT32 graphUserId, UINT32 graphDesiredAccess);
 UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId);
 GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName);
+
 
 #if XMPP_SUPPORTED
 bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message);
@@ -1000,12 +1060,11 @@ class FileMonitoringList
 private:
    MUTEX m_mutex;
    ObjectArray<MONITORED_FILE>  m_monitoredFiles;
-   MONITORED_FILE* m_monitoredFile;
 
 public:
    FileMonitoringList();
    ~FileMonitoringList();
-   void addMonitoringFile(MONITORED_FILE *fileForAdd);
+   void addMonitoringFile(MONITORED_FILE *fileForAdd, Node *obj, AgentConnection *conn);
    bool checkDuplicate(MONITORED_FILE *fileForAdd);
    ObjectArray<ClientSession>* findClientByFNameAndNodeID(const TCHAR *fileName, UINT32 nodeID);
    bool removeMonitoringFile(MONITORED_FILE *fileForRemove);
@@ -1030,10 +1089,10 @@ extern TCHAR NXCORE_EXPORTABLE g_szListenAddress[];
 #ifndef _WIN32
 extern TCHAR NXCORE_EXPORTABLE g_szPIDFile[];
 #endif
-extern TCHAR g_szDataDir[];
-extern TCHAR g_szLibDir[];
+extern TCHAR NXCORE_EXPORTABLE g_netxmsdDataDir[];
+extern TCHAR NXCORE_EXPORTABLE g_netxmsdLibDir[];
 extern UINT32 NXCORE_EXPORTABLE g_processAffinityMask;
-extern QWORD g_qwServerId;
+extern UINT64 g_serverId;
 extern RSA *g_pServerKey;
 extern UINT32 g_icmpPingSize;
 extern UINT32 g_icmpPingTimeout;

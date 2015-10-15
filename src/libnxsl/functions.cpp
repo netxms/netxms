@@ -27,8 +27,8 @@
 /**
  * NXSL type names
  */
-const TCHAR *g_szTypeNames[] = { _T("null"), _T("object"), _T("array"), _T("iterator"), _T("string"),
-                                 _T("real"), _T("int32"), _T("int64"), _T("uint32"), _T("uint64") };
+const TCHAR *g_szTypeNames[] = { _T("null"), _T("object"), _T("array"), _T("iterator"), _T("hashmap"),
+                                 _T("string"), _T("real"), _T("int32"), _T("int64"), _T("uint32"), _T("uint64") };
 
 /**
  * NXSL function: Type of value
@@ -628,9 +628,23 @@ int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 }
 
 /**
+ * Convert hexadecimal string to decimal value
+ *   x2d(hex value)      -> value
+ */
+int F_x2d(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   UINT64 v = _tcstoull(argv[0]->getValueAsCString(), NULL, 16);
+   *result = (v <= 0x7FFFFFFF) ? new NXSL_Value((UINT32)v) : new NXSL_Value(v);
+   return 0;
+}
+
+/**
  * Convert decimal value to hexadecimal string
  *   d2x(value)          -> hex value
- *   d2x(value, padding) -> hex value padded vith zeros
+ *   d2x(value, padding) -> hex value padded with zeros
  */
 int F_d2x(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
@@ -1197,6 +1211,30 @@ int F_sha1(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 }
 
 /**
+ * sha256() function implementation
+ */
+int F_sha256(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isString())
+		return NXSL_ERR_NOT_STRING;
+
+   BYTE hash[SHA256_DIGEST_SIZE];
+#ifdef UNICODE
+   char *utf8Str = UTF8StringFromWideString(argv[0]->getValueAsCString());
+   CalculateSHA256Hash((BYTE *)utf8Str, strlen(utf8Str), hash);
+#else
+   const char *str = argv[0]->getValueAsCString();
+   CalculateSHA256Hash((BYTE *)str, strlen(str), hash);
+#endif
+
+   TCHAR text[SHA256_DIGEST_SIZE * 2 + 1];
+   BinToStr(hash, SHA256_DIGEST_SIZE, text);
+   *ppResult = new NXSL_Value(text);
+
+	return 0;
+}
+
+/**
  * Resolve IP address to host name
  */
 int F_gethostbyaddr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
@@ -1254,5 +1292,70 @@ int F_gethostbyname(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM 
    {
       *ppResult = new NXSL_Value;
    }
+   return 0;
+}
+
+/**
+ * Convert array to string (recursively for array values)
+ */
+static void ArrayToString(NXSL_Array *a, String& s, const TCHAR *separator)
+{
+   for(int i = 0; i < a->size(); i++)
+   {
+      if (!s.isEmpty())
+         s.append(separator);
+      NXSL_Value *e = a->getByPosition(i);
+      if (e->isArray())
+      {
+         ArrayToString(e->getValueAsArray(), s, separator);
+      }
+      else
+      {
+         s.append(e->getValueAsCString());
+      }
+   }
+}
+
+/**
+ * Convert array to string
+ */
+int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isArray())
+      return NXSL_ERR_NOT_ARRAY;
+
+   if (!argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   String s;
+   NXSL_Array *a = argv[0]->getValueAsArray();
+   ArrayToString(a, s, argv[1]->getValueAsCString());
+   *result = new NXSL_Value(s);
+   return 0;
+}
+
+/**
+ * Read persistent storage
+ */
+int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   *result = vm->storageRead(argv[0]->getValueAsCString());
+   return 0;
+}
+
+/**
+ * Write to persistent storage
+ */
+int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   vm->storageWrite(argv[0]->getValueAsCString(), new NXSL_Value(argv[1]));
+
+   *result = new NXSL_Value();
    return 0;
 }

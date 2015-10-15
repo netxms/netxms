@@ -188,6 +188,7 @@ ConstDefinition:
 		YYERROR;
 	}
 	safe_free_and_null($1);
+	$3 = NULL;
 }
 ;
 
@@ -235,11 +236,13 @@ IdentifierList:
 	T_IDENTIFIER 
 	{
 		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), pCompiler->getIdentifierOperation(), $1));
+		$1 = NULL;
 	}
 	',' IdentifierList
 |	T_IDENTIFIER
 	{
 		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), pCompiler->getIdentifierOperation(), $1));
+		$1 = NULL;
 	}
 ;
 
@@ -265,6 +268,7 @@ TryCatchBlock:
 	} 
 	Block T_CATCH 
 	{
+		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CPOP));
 		pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
 		pScript->resolveLastJump(OPCODE_CATCH);
 	} 
@@ -291,51 +295,61 @@ Expression:
 |	T_IDENTIFIER '=' Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SET, $1));
+	$1 = NULL;
 }
 |	T_IDENTIFIER T_ASSIGN_ADD { pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, strdup($1))); } Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_ADD));
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SET, $1));
+	$1 = NULL;
 }
 |	T_IDENTIFIER T_ASSIGN_SUB { pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, strdup($1))); } Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SUB));
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SET, $1));
+	$1 = NULL;
 }
 |	T_IDENTIFIER T_ASSIGN_MUL { pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, strdup($1))); } Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_MUL));
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SET, $1));
+	$1 = NULL;
 }
 |	T_IDENTIFIER T_ASSIGN_DIV { pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, strdup($1))); } Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_DIV));
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SET, $1));
+	$1 = NULL;
 }
 |	T_IDENTIFIER T_ASSIGN_REM { pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, strdup($1))); } Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_REM));
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SET, $1));
+	$1 = NULL;
 }
 |	T_IDENTIFIER T_ASSIGN_CONCAT { pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, strdup($1))); } Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CONCAT));
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SET, $1));
+	$1 = NULL;
 }
 |	T_IDENTIFIER T_ASSIGN_AND { pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, strdup($1))); } Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_BIT_AND));
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SET, $1));
+	$1 = NULL;
 }
 |	T_IDENTIFIER T_ASSIGN_OR { pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, strdup($1))); } Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_BIT_OR));
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SET, $1));
+	$1 = NULL;
 }
 |	T_IDENTIFIER T_ASSIGN_XOR { pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, strdup($1))); } Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_BIT_XOR));
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SET, $1));
+	$1 = NULL;
 }
 |	Expression '[' Expression ']' '=' Expression
 {
@@ -345,25 +359,38 @@ Expression:
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GET_ELEMENT));
 }
+|	StorageItem '=' Expression
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_STORAGE_WRITE));
+}
+|	StorageItem
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_STORAGE_READ));
+}
 |	Expression T_REF T_IDENTIFIER '=' Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SET_ATTRIBUTE, $3));
+	$3 = NULL;
 }
 |	Expression T_REF T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GET_ATTRIBUTE, $3));
+	$3 = NULL;
 }
 |	Expression T_REF FunctionName ParameterList ')'
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CALL_METHOD, $3, $4));
+	$3 = NULL;
 }
 |	Expression T_REF FunctionName ')'
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CALL_METHOD, $3, 0));
+	$3 = NULL;
 }
 |	T_IDENTIFIER '@' Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SAFE_GET_ATTR, $1));
+	$1 = NULL;
 }
 |	'-' Expression		%prec NEGATE
 {
@@ -380,18 +407,22 @@ Expression:
 |	T_INC T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_INCP, $2));
+	$2 = NULL;
 }
 |	T_DEC T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_DECP, $2));
+	$2 = NULL;
 }
 |	T_IDENTIFIER T_INC	%prec T_POST_INC
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_INC, $1));
+	$1 = NULL;
 }
 |	T_IDENTIFIER T_DEC	%prec T_POST_DEC
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_DEC, $1));
+	$1 = NULL;
 }
 /*
 |	T_INC Expression '[' Expression ']'
@@ -525,13 +556,21 @@ Operand:
 	FunctionCall
 |	TypeCast
 |	ArrayInitializer
+|	HashMapInitializer
 |	T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_VARIABLE, $1));
+	$1 = NULL;
+}
+|	T_COMPOUND_IDENTIFIER
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTREF, $1));
+	$1 = NULL;
 }
 |	Constant
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, $1));
+	$1 = NULL;
 }
 ;
 
@@ -545,12 +584,12 @@ TypeCast:
 ArrayInitializer:
 	'%' '(' 
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value(new NXSL_Array)));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_NEW_ARRAY));
 }
 	ArrayElements ')'
 |	'%' '(' ')'
 {
-	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value(new NXSL_Array)));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_NEW_ARRAY));
 }
 ;
 
@@ -565,6 +604,29 @@ ArrayElements:
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_ADD_TO_ARRAY));
 }
 ;
+
+HashMapInitializer:
+	'%' '{' 
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_NEW_HASHMAP));
+}
+	HashMapElements '}'
+|	'%' '{' '}'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_NEW_HASHMAP));
+}
+;
+
+HashMapElements:
+	HashMapElement ',' HashMapElements
+|	HashMapElement
+;
+
+HashMapElement:
+	Expression ':' Expression
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_HASHMAP_SET));
+}
 
 BuiltinType:
 	T_TYPE_INT32
@@ -636,11 +698,13 @@ SimpleStatement:
 	SimpleStatementKeyword Expression
 {
 	pScript->addInstruction($1);
+	$1 = NULL;
 }
 |	SimpleStatementKeyword
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value));
 	pScript->addInstruction($1);
+	$1 = NULL;
 }
 ;
 
@@ -819,13 +883,15 @@ Case:
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CASE, $2));
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
+	$2 = NULL;
 } 
 	':' StatementList
 |	T_CASE T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CASE_CONST, $2));
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JZ, INVALID_ADDRESS));
-} 
+	$2 = NULL;
+}
 	':' StatementList
 ;
 
@@ -852,10 +918,12 @@ GlobalVariableDeclaration:
 	T_IDENTIFIER
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GLOBAL, $1, 0));
+	$1 = NULL;
 }
 |	T_IDENTIFIER '=' Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_GLOBAL, $1, 1));
+	$1 = NULL;
 }
 ;
 
@@ -863,10 +931,12 @@ FunctionCall:
 	FunctionName ParameterList ')'
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, $2));
+	$1 = NULL;
 }
 |	FunctionName ')'
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_CALL_EXTERNAL, $1, 0));
+	$1 = NULL;
 }
 ;
 
@@ -880,6 +950,7 @@ Parameter:
 |	T_IDENTIFIER ':' Expression
 {
 	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_NAME, $1));
+	$1 = NULL;
 }
 ;
 
@@ -889,6 +960,15 @@ FunctionName:
 	$$ = $1;
 }
 ;
+
+StorageItem:
+	'#' T_IDENTIFIER
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value($2)));
+	safe_free_and_null($2);
+}
+|	'#' '(' Expression ')'
+;	
 
 Constant:
 	T_STRING

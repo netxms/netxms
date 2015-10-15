@@ -29,8 +29,6 @@ import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.TreeItem;
@@ -39,6 +37,7 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.DownloadServiceHandler;
 import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 
 /**
@@ -61,7 +60,7 @@ public class ExportToCsvAction extends Action
 	 */
 	private ExportToCsvAction(IViewPart viewPart, ColumnViewer viewer, ViewerProvider viewerProvider, boolean selectionOnly)
 	{
-		super(selectionOnly ? Messages.get().ExportToCsvAction_ExportToCsv : Messages.get().ExportToCsvAction_ExportAllToCsv, Activator.getImageDescriptor("icons/csv.png")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		super(selectionOnly ? Messages.get().ExportToCsvAction_ExportToCsv : Messages.get().ExportToCsvAction_ExportAllToCsv, SharedIcons.CSV);
 		
 		setId(selectionOnly ? "org.netxms.ui.eclipse.popupActions.ExportToCSV" : "org.netxms.ui.eclipse.actions.ExportToCSV");
 		
@@ -187,23 +186,7 @@ public class ExportToCsvAction extends Action
 					@Override
 					public void run()
 					{
-						JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-						if( executor != null ) 
-						{
-							StringBuilder js = new StringBuilder();
-							js.append("var hiddenIFrameID = 'hiddenDownloader',");
-							js.append("   iframe = document.getElementById(hiddenIFrameID);");
-							js.append("if (iframe === null) {");
-							js.append("   iframe = document.createElement('iframe');");
-							js.append("   iframe.id = hiddenIFrameID;");
-							js.append("   iframe.style.display = 'none';");
-							js.append("   document.body.appendChild(iframe);");
-							js.append("}");
-							js.append("iframe.src = '");
-							js.append(DownloadServiceHandler.createDownloadUrl(tmpFile.getName()));
-							js.append("';");
-							executor.execute(js.toString());
-						}						
+					   DownloadServiceHandler.startDownload(tmpFile.getName());
 					}
 				});
 			}

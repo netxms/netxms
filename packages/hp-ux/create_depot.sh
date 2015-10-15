@@ -20,7 +20,7 @@ mkdir build/init.d
 cp ../../contrib/startup/hp-ux/nxagentd build/init.d/
 
 mkdir build/etc
-cp ../../contrib/nxagentd.conf-dist build/etc/nxagentd.conf
+cp ../../contrib/nxagentd.conf-dist build/etc/nxagentd.conf-dist
 
 cat nxagent.psf | sed "s/@version@/$VERSION/" > nxagent.tmp.psf
 /usr/sbin/swpackage -vv -s nxagent.tmp.psf -x media_type=tape -d ./nxagent-$VERSION-hpux-ia64.depot

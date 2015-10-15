@@ -30,12 +30,18 @@ import org.netxms.ui.eclipse.eventmanager.views.EventConfigurator;
  */
 public class EventTemplateLabelProvider extends WorkbenchLabelProvider implements ITableLabelProvider
 {
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
+	 */
 	@Override
 	public Image getColumnImage(Object element, int columnIndex)
 	{
 		return (columnIndex == 0) ? getImage(element) : null;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnText(java.lang.Object, int)
+	 */
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{

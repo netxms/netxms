@@ -30,8 +30,8 @@
  */
 #define NETXMS_VERSION_MAJOR        2
 #define NETXMS_VERSION_MINOR        0
-#define NETXMS_VERSION_STRING       _T("2.0-M4")
-#define NETXMS_VERSION_STRING_A     "2.0-M4"
+#define NETXMS_VERSION_STRING       _T("2.0-RC2")
+#define NETXMS_VERSION_STRING_A     "2.0-RC2"
 
 #ifdef UNICODE
 #define IS_UNICODE_BUILD_STRING     _T(" (UNICODE)")
@@ -47,7 +47,7 @@
 #define CLIENT_PROTOCOL_VERSION_PUSH      1     /* Data push API */
 #define CLIENT_PROTOCOL_VERSION_TRAP      1     /* Event (trap) sending API */
 #define CLIENT_PROTOCOL_VERSION_MOBILE    1     /* All functionality relevant for mobile client */
-#define CLIENT_PROTOCOL_VERSION_FULL      1     /* All functionality */
+#define CLIENT_PROTOCOL_VERSION_FULL      2     /* All functionality */
 
 /**
  * Protocol version positions

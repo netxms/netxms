@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,15 +20,17 @@ package org.netxms.client.objects;
 
 import java.net.InetAddress;
 import java.util.Date;
+import java.util.UUID;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.MacAddress;
 import org.netxms.client.NXCSession;
+import org.netxms.client.constants.AgentCacheMode;
 
 /**
  * Abstract base class for node objects.
  */
-public abstract class AbstractNode extends GenericObject
+public abstract class AbstractNode extends DataCollectionTarget
 {
 	// SNMP versions
 	public static final int SNMP_VERSION_1 = 0;
@@ -98,6 +100,7 @@ public abstract class AbstractNode extends GenericObject
    protected long icmpProxyId;
 	protected int agentPort;
 	protected int agentAuthMethod;
+	protected AgentCacheMode agentCacheMode;
 	protected String agentSharedSecret;
 	protected String agentVersion;
 	protected String platformName;
@@ -110,6 +113,8 @@ public abstract class AbstractNode extends GenericObject
 	protected int snmpVersion;
 	protected int snmpPort;
 	protected String snmpSysName;
+   protected String snmpSysContact;
+   protected String snmpSysLocation;
 	protected String systemDescription;
 	protected String lldpNodeId;
 	protected int vrrpVersion;
@@ -119,7 +124,11 @@ public abstract class AbstractNode extends GenericObject
 	protected MacAddress bridgeBaseAddress;
 	protected int ifXTablePolicy;
 	protected Date bootTime;
-
+	protected long rackId;
+	protected UUID rackImage;
+	protected short rackPosition;
+	protected short rackHeight;
+	
 	/**
 	 * Create new node object.
 	 * 
@@ -154,6 +163,7 @@ public abstract class AbstractNode extends GenericObject
 		agentPort = msg.getFieldAsInt32(NXCPCodes.VID_AGENT_PORT);
 		agentAuthMethod = msg.getFieldAsInt32(NXCPCodes.VID_AUTH_METHOD);
 		agentSharedSecret = msg.getFieldAsString(NXCPCodes.VID_SHARED_SECRET);
+      agentCacheMode = AgentCacheMode.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_AGENT_CACHE_MODE));
 		agentVersion = msg.getFieldAsString(NXCPCodes.VID_AGENT_VERSION);
 		platformName = msg.getFieldAsString(NXCPCodes.VID_PLATFORM_NAME);
 		snmpAuthName = msg.getFieldAsString(NXCPCodes.VID_SNMP_AUTH_OBJECT);
@@ -167,6 +177,8 @@ public abstract class AbstractNode extends GenericObject
 		snmpVersion = msg.getFieldAsInt32(NXCPCodes.VID_SNMP_VERSION);
 		systemDescription = msg.getFieldAsString(NXCPCodes.VID_SYS_DESCRIPTION);
 		snmpSysName = msg.getFieldAsString(NXCPCodes.VID_SYS_NAME);
+      snmpSysContact = msg.getFieldAsString(NXCPCodes.VID_SYS_CONTACT);
+      snmpSysLocation = msg.getFieldAsString(NXCPCodes.VID_SYS_LOCATION);
 		lldpNodeId = msg.getFieldAsString(NXCPCodes.VID_LLDP_NODE_ID);
 		vrrpVersion = msg.getFieldAsInt32(NXCPCodes.VID_VRRP_VERSION);
 		driverName = msg.getFieldAsString(NXCPCodes.VID_DRIVER_NAME);
@@ -174,6 +186,10 @@ public abstract class AbstractNode extends GenericObject
 		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
 		bridgeBaseAddress = new MacAddress(msg.getFieldAsBinary(NXCPCodes.VID_BRIDGE_BASE_ADDRESS));
 		ifXTablePolicy = msg.getFieldAsInt32(NXCPCodes.VID_USE_IFXTABLE);
+		rackId = msg.getFieldAsInt64(NXCPCodes.VID_RACK_ID);
+		rackImage = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE);
+		rackPosition = msg.getFieldAsInt16(NXCPCodes.VID_RACK_POSITION);
+      rackHeight = msg.getFieldAsInt16(NXCPCodes.VID_RACK_HEIGHT);
 		
 		long bootTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_BOOT_TIME);
 		bootTime = (bootTimeSeconds > 0) ? new Date(bootTimeSeconds * 1000) : null;
@@ -268,6 +284,14 @@ public abstract class AbstractNode extends GenericObject
 	}
 
 	/**
+    * @return the agentCacheMode
+    */
+   public AgentCacheMode getAgentCacheMode()
+   {
+      return agentCacheMode;
+   }
+
+   /**
 	 * @return the agentVersion
 	 */
 	public String getAgentVersion()
@@ -456,6 +480,8 @@ public abstract class AbstractNode extends GenericObject
 	}
 
 	/**
+    * Get SNMP system name (value of sysName MIB entry)
+    * 
 	 * @return the snmpSysName
 	 */
 	public String getSnmpSysName()
@@ -464,6 +490,26 @@ public abstract class AbstractNode extends GenericObject
 	}
 
 	/**
+    * Get SNMP system contact (value of sysContact MIB entry)
+    * 
+	 * @return
+	 */
+	public String getSnmpSysContact()
+   {
+      return snmpSysContact;
+   }
+
+   /**
+    * Get SNMP system location (value of sysLocation MIB entry)
+    * 
+    * @return
+    */
+   public String getSnmpSysLocation()
+   {
+      return snmpSysLocation;
+   }
+
+   /**
 	 * @return the lldpNodeId
 	 */
 	public String getLldpNodeId()
@@ -564,5 +610,37 @@ public abstract class AbstractNode extends GenericObject
    public InetAddress getPrimaryIP()
    {
       return primaryIP;
+   }
+
+   /**
+    * @return the rackId
+    */
+   public long getRackId()
+   {
+      return rackId;
+   }
+
+   /**
+    * @return the rackImage
+    */
+   public UUID getRackImage()
+   {
+      return rackImage;
+   }
+
+   /**
+    * @return the rackPosition
+    */
+   public short getRackPosition()
+   {
+      return rackPosition;
+   }
+
+   /**
+    * @return the rackHeight
+    */
+   public short getRackHeight()
+   {
+      return rackHeight;
    }
 }

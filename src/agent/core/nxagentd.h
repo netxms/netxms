@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 #include <nxqueue.h>
 #include <nxlog.h>
 #include <nxcldefs.h>
+#include <nxdbapi.h>
 #include "messages.h"
 #include "nxsnmp.h"
 
@@ -58,11 +59,11 @@
  * Default files
  */
 #if defined(_WIN32)
-#define AGENT_DEFAULT_CONFIG     _T("C:\\nxagentd.conf")
-#define AGENT_DEFAULT_CONFIG_D   _T("C:\\nxagentd.conf.d")
+#define AGENT_DEFAULT_CONFIG     _T("{search}")
+#define AGENT_DEFAULT_CONFIG_D   _T("{search}")
 #define AGENT_DEFAULT_LOG        _T("C:\\nxagentd.log")
 #define AGENT_DEFAULT_FILE_STORE _T("C:\\")
-#define AGENT_DEFAULT_DATA_DIR   _T("C:\\")
+#define AGENT_DEFAULT_DATA_DIR   _T("{default}")
 #elif defined(_NETWARE)
 #define AGENT_DEFAULT_CONFIG     "SYS:ETC/nxagentd.conf"
 #define AGENT_DEFAULT_CONFIG_D   "SYS:ETC/nxagentd.conf.d"
@@ -154,13 +155,28 @@
 
 #endif   /* _WIN32 */
 
+/**
+ * Thread pool stats
+ */
+enum ThreadPoolStat
+{
+   THREAD_POOL_CURR_SIZE,
+   THREAD_POOL_MIN_SIZE,
+   THREAD_POOL_MAX_SIZE,
+   THREAD_POOL_REQUESTS,
+   THREAD_POOL_LOAD,
+   THREAD_POOL_USAGE,
+   THREAD_POOL_LOADAVG_1,
+   THREAD_POOL_LOADAVG_5,
+   THREAD_POOL_LOADAVG_15
+};
 
 /**
  * Request types for H_DirInfo
  */
 #define DIRINFO_FILE_COUNT       1
 #define DIRINFO_FILE_SIZE        2
-
+#define DIRINFO_FOLDER_COUNT     3
 
 /**
  * Request types for H_FileTime
@@ -168,7 +184,6 @@
 #define FILETIME_ATIME           1
 #define FILETIME_MTIME           2
 #define FILETIME_CTIME           3
-
 
 /**
  * Action types
@@ -280,18 +295,36 @@ public:
 };
 
 /**
+ * Pending request information
+ */
+struct PendingRequest
+{
+   UINT32 id;
+   INT64 expirationTime;
+   bool completed;
+
+   PendingRequest(NXCPMessage *msg, UINT32 timeout)
+   {
+      id = msg->getId();
+      expirationTime = GetCurrentTimeMs() + (INT64)timeout;
+      completed = false;
+   }
+};
+
+/**
  * Communication session
  */
 class CommSession : public AbstractCommSession
 {
 private:
    SOCKET m_hSocket;
-   Queue *m_pSendQueue;
-   Queue *m_pMessageQueue;
+   Queue *m_sendQueue;
+   Queue *m_processingQueue;
    NXCP_BUFFER *m_pMsgBuffer;
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
    THREAD m_hProxyReadThread;
+   UINT64 m_serverId;
    InetAddress m_serverAddr;        // IP address of connected host
    UINT32 m_dwIndex;
    bool m_authenticated;
@@ -299,13 +332,17 @@ private:
    bool m_controlServer;
    bool m_proxyConnection;
    bool m_acceptTraps;
+   bool m_acceptFileUpdates;
    bool m_ipv6Aware;
    int m_hCurrFile;
-   UINT32 m_dwFileRqId;
+   UINT32 m_fileRqId;
+   StreamCompressor *m_compressor;
 	NXCPEncryptionContext *m_pCtx;
    time_t m_ts;               // Last activity timestamp
    SOCKET m_hProxySocket;     // Socket for proxy connection
 	MUTEX m_socketWriteMutex;
+   VolatileCounter m_requestId;
+   MsgWaitQueue *m_responseQueue;
 
 	BOOL sendRawMessage(NXCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx);
    void authenticate(NXCPMessage *pRequest, NXCPMessage *pMsg);
@@ -333,15 +370,18 @@ private:
 
 public:
    CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool masterServer, bool controlServer);
-   ~CommSession();
+   virtual ~CommSession();
 
    void run();
    void disconnect();
 
-   virtual void sendMessage(NXCPMessage *pMsg) { m_pSendQueue->Put(pMsg->createMessage()); }
-   virtual void sendRawMessage(NXCP_MESSAGE *pMsg) { m_pSendQueue->Put(nx_memdup(pMsg, ntohl(pMsg->size))); }
+   virtual void sendMessage(NXCPMessage *msg) { m_sendQueue->put(msg->createMessage()); }
+   virtual void sendRawMessage(NXCP_MESSAGE *msg) { m_sendQueue->put(nx_memdup(msg, ntohl(msg->size))); }
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
+   virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout);
+   virtual UINT32 generateRequestId();
 
+   virtual UINT64 getServerId() { return m_serverId; }
 	virtual const InetAddress& getServerAddress() { return m_serverAddr; }
 
    virtual bool isIPv6Aware() { return m_ipv6Aware; }
@@ -353,6 +393,7 @@ public:
 	void updateTimeStamp() { m_ts = time(NULL); }
 
    bool canAcceptTraps() { return m_acceptTraps; }
+   bool canAcceptFileUpdates() { return m_acceptFileUpdates; }
 
    virtual bool isMasterServer() { return m_masterServer; }
    virtual bool isControlServer() { return m_controlServer; }
@@ -385,7 +426,7 @@ private:
 
 public:
    SessionAgentConnector(UINT32 id, SOCKET s);
-   ~SessionAgentConnector();
+   virtual ~SessionAgentConnector();
 
    void run();
    void disconnect();
@@ -409,6 +450,35 @@ public:
    SNMP_TrapProxyTransport(SOCKET hSocket);
 
    int readRawMessage(BYTE **rawData, UINT32 timeout, struct sockaddr *sender, socklen_t *addrSize);
+};
+
+/**
+ * SNMP target
+ */
+class SNMPTarget : public RefCountObject
+{
+private:
+   uuid m_guid;
+   UINT64 m_serverId;
+   InetAddress m_ipAddress;
+   UINT16 m_port;
+   BYTE m_snmpVersion;
+   BYTE m_authType;
+   BYTE m_encType;
+   char *m_authName;
+   char *m_authPassword;
+   char *m_encPassword;
+   SNMP_Transport *m_transport;
+
+public:
+   SNMPTarget(UINT64 serverId, NXCPMessage *msg, UINT32 baseId);
+   SNMPTarget(DB_RESULT hResult, int row);
+   virtual ~SNMPTarget();
+
+   const uuid& getGuid() const { return m_guid; }
+   SNMP_Transport *getTransport(UINT16 port);
+
+   bool saveToDatabase();
 };
 
 /**
@@ -442,11 +512,13 @@ void AddParameter(const TCHAR *szName, LONG (* fpHandler)(const TCHAR *, const T
                   int iDataType, const TCHAR *pszDescription);
 void AddPushParameter(const TCHAR *name, int dataType, const TCHAR *description);
 void AddList(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *), const TCHAR *arg);
-void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *), const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description);
+void AddTable(const TCHAR *name, LONG (* handler)(const TCHAR *, const TCHAR *, Table *, AbstractCommSession *),
+              const TCHAR *arg, const TCHAR *instanceColumns, const TCHAR *description,
+              int numColumns, NETXMS_SUBAGENT_TABLE_COLUMN *columns);
 BOOL AddExternalParameter(TCHAR *pszCfgLine, BOOL bShellExec, BOOL bIsList);
-UINT32 GetParameterValue(UINT32 dwSessionId, TCHAR *pszParam, TCHAR *pszValue, AbstractCommSession *session);
-UINT32 GetListValue(UINT32 dwSessionId, TCHAR *pszParam, StringList *pValue, AbstractCommSession *session);
-UINT32 GetTableValue(UINT32 dwSessionId, TCHAR *pszParam, Table *pValue, AbstractCommSession *session);
+UINT32 GetParameterValue(UINT32 sessionId, const TCHAR *param, TCHAR *value, AbstractCommSession *session);
+UINT32 GetListValue(UINT32 sessionId, const TCHAR *param, StringList *value, AbstractCommSession *session);
+UINT32 GetTableValue(UINT32 sessionId, const TCHAR *pParam, Table *value, AbstractCommSession *session);
 void GetParameterList(NXCPMessage *pMsg);
 void GetEnumList(NXCPMessage *pMsg);
 void GetTableList(NXCPMessage *pMsg);
@@ -498,11 +570,8 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
 void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat, va_list args);
 void ForwardTrap(NXCPMessage *msg);
 
-Config *OpenRegistry();
-void CloseRegistry(bool modified);
-
 void StartPushConnector();
-bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId);
+bool PushData(const TCHAR *parameter, const TCHAR *value, UINT32 objectId, time_t timestamp);
 
 void StartStorageDiscoveryConnector();
 
@@ -513,6 +582,20 @@ void StartSessionAgentConnector();
 SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName);
 
 UINT32 GenerateMessageId();
+
+bool OpenLocalDatabase();
+void CloseLocalDatabase();
+DB_HANDLE GetLocalDatabaseHandle();
+
+TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer);
+INT32 ReadMetadataAsInt(const TCHAR *attr);
+bool WriteMetadata(const TCHAR *name, const TCHAR *value);
+bool WriteMetadata(const TCHAR *name, INT32 value);
+
+void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg);
+
+bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void* ), void *data);
+AbstractCommSession *FindServerSession(UINT64 serverId);
 
 #ifdef _WIN32
 
@@ -542,6 +625,7 @@ extern TCHAR g_szConfigServer[];
 extern TCHAR g_szRegistrar[];
 extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
+extern TCHAR g_szDataDirectory[];
 extern TCHAR g_masterAgent[];
 extern TCHAR g_szSNMPTrapListenAddress[];
 extern UINT16 g_wListenPort;

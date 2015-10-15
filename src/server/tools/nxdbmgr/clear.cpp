@@ -82,16 +82,16 @@ static BOOL ClearTables()
 /**
  * Clear database
  */
-BOOL ClearDatabase()
+bool ClearDatabase()
 {
 	if (!ValidateDatabase())
-		return FALSE;
+		return false;
 
 	WriteToTerminal(_T("\n\n\x1b[1mWARNING!!!\x1b[0m\n"));
 	if (!GetYesNo(_T("This operation will clear all configuration and collected data from database.\nAre you sure?")))
-		return FALSE;
+		return false;
 
-	BOOL success = FALSE;
+	bool success = false;
 
 	if (DBBegin(g_hCoreDB))
 	{

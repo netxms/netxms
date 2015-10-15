@@ -23,139 +23,62 @@
 #ifndef __ORG_NETXMS_AGENT_SUBAGENT__
 #define __ORG_NETXMS_AGENT_SUBAGENT__
 
-#include "Action.h"
-#include "Parameter.h"
-#include "ListParameter.h"
-#include "PushParameter.h"
-#include "TableParameter.h"
-
-namespace org_netxms_agent
+class SubAgent
 {
-   class SubAgent
-   {
+private:
+   static jclass m_class;
+   static jclass m_stringClass;
+   static jmethodID m_actionHandler;
+   static jmethodID m_constructor;
+   static jmethodID m_getActions;
+   static jmethodID m_getLists;
+   static jmethodID m_getParameters;
+   static jmethodID m_getPushParameters;
+   static jmethodID m_getTables;
+   static jmethodID m_init;
+   static jmethodID m_listHandler;
+   static jmethodID m_parameterHandler;
+   static jmethodID m_shutdown;
+   static jmethodID m_tableHandler;
+   static bool m_initialized;
 
-      private:
-         JavaVM * jvm;
+   JavaVM *m_jvm;
+   jobject m_instance;
 
-      protected:
-                                 // cache method id
-         jmethodID jbooleaninitID;
-                                 // cache method id
-         jmethodID voidshutdownID;
-                                 // cache method id
-         jmethodID jbooleanloadPluginjstringjava_lang_StringID;
-                                 // cache method id
-         jmethodID jstringparameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID;
-                                 // cache method id
-         jmethodID jobjectArray_listParameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID;
-                                 // cache method id
-         jmethodID jobjectArray__tableParameterHandlerjstringjava_lang_Stringjstringjava_lang_StringID;
-                                 // cache method id
-         jmethodID voidactionHandlerjstringjava_lang_StringjobjectArray_java_lang_Stringjava_lang_Stringjstringjava_lang_StringID;
-         jclass stringArrayClass;
-                                 // cache method id
-         jmethodID jobjectArray_getActionIdsID;
-                                 // cache method id
-         jmethodID jobjectgetActionjstringjava_lang_StringID;
-                                 // cache method id
-         jmethodID jobjectArray_getParameterIdsID;
-                                 // cache method id
-         jmethodID jobjectgetParameterjstringjava_lang_StringID;
-                                 // cache method id
-         jmethodID jobjectArray_getListParameterIdsID;
-                                 // cache method id
-         jmethodID jobjectgetListParameterjstringjava_lang_StringID;
-                                 // cache method id
-         jmethodID jobjectArray_getPushParameterIdsID;
-                                 // cache method id
-         jmethodID jobjectgetPushParameterjstringjava_lang_StringID;
-                                 // cache method id
-         jmethodID jobjectArray_getTableParameterIdsID;
-                                 // cache method id
-         jmethodID jobjectgetTableParameterjstringjava_lang_StringID;
+   static bool getMethodId(JNIEnv *curEnv, const char *name, const char *profile, jmethodID *id);
 
-         jobject instance;
-         jclass instanceClass;   // cache class
+   SubAgent(JavaVM *jvm, jobject instance);
 
-         // Caching (if any)
+   JNIEnv *getCurrentEnv();
+   StringList *getContributionItems(jmethodID method, const TCHAR *methodName);
 
-         /**
-          * Get the environment matching to the current thread.
-          */
-         virtual JNIEnv * getCurrentEnv();
+public:
+   static bool initialize(JNIEnv *curEnv);
 
-      public:
-         // Constructor
-         /**
-          * Create a wrapping of the object from a JNIEnv.
-          * It will call the default constructor
-          * @param JEnv_ the Java Env
-          */
-         SubAgent(JavaVM * jvm_, jobject jconfig);
+   /**
+    * Create a wrapping of the object from a JNIEnv.
+    * It will call the default constructor
+    * @param jvm the Java VM
+    */
+   static SubAgent *createInstance(JavaVM *jvm, JNIEnv *curEnv, jobject config);
 
-         // Destructor
-         ~SubAgent();
+   ~SubAgent();
 
-         // Generic method
-         // Synchronization methods
-         /**
-          * Enter monitor associated with the object.
-          * Equivalent of creating a "synchronized(obj)" scope in Java.
-          */
-         void synchronize();
+   // Methods
+   bool init(jobject config);
+   void shutdown();
+   bool loadPlugin(const TCHAR *path);
 
-         /**
-          * Exit monitor associated with the object.
-          * Equivalent of ending a "synchronized(obj)" scope.
-          */
-         void endSynchronize();
+   LONG parameterHandler(const TCHAR *param, const TCHAR *id, TCHAR *value);
+   LONG listHandler(const TCHAR *param, const TCHAR *id, StringList *value);
+   LONG tableHandler(const TCHAR *param, const TCHAR *id, Table *value);
+   LONG actionHandler(const TCHAR *action, StringList *args, const TCHAR *id);
 
-         // Methods
-         bool init(jobject jconfig);
+   StringList *getActions() { return getContributionItems(m_getActions, _T("getActions")); }
+   StringList *getParameters() { return getContributionItems(m_getParameters, _T("getParameters")); }
+   StringList *getLists() { return getContributionItems(m_getLists, _T("getLists")); }
+   StringList *getPushParameters() { return getContributionItems(m_getPushParameters, _T("getPushParameters")); }
+   StringList *getTables() { return getContributionItems(m_getTables, _T("getTables")); }
+};
 
-         void shutdown();
-
-         bool loadPlugin(TCHAR const* path);
-
-         TCHAR* parameterHandler(TCHAR const* param, TCHAR const* id);
-
-         TCHAR** listParameterHandler(TCHAR const* param, TCHAR const* id, int *lenRow);
-
-         TCHAR*** tableParameterHandler(TCHAR const* param, TCHAR const* id, int *lenRow, int *lenCol);
-
-         void actionHandler(TCHAR const* param, TCHAR const* const* args, int argsSize, TCHAR const* id);
-
-         TCHAR** getActionIds(int *lenRow);
-
-         Action getAction(TCHAR const* id);
-
-         TCHAR **getParameterIds(int *lenRow);
-
-         Parameter *getParameter(TCHAR const* id);
-
-         TCHAR** getListParameterIds(int *lenRow);
-
-         ListParameter getListParameter(TCHAR const* id);
-
-         TCHAR** getPushParameterIds(int *lenRow);
-
-         PushParameter getPushParameter(TCHAR const* id);
-
-         TCHAR** getTableParameterIds(int *lenRow);
-
-         TableParameter getTableParameter(TCHAR const* id);
-
-         /**
-          * Get class name to use for static methods
-          * @return class name to use for static methods
-          */
-
-         static const char* className()
-         {
-            return "org/netxms/agent/SubAgent";
-         }
-
-   };
-
-}
 #endif

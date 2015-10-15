@@ -277,14 +277,20 @@
 #define MIB_TYPE_OBJGROUP              33
 #define MIB_TYPE_NOTIFGROUP            34
 
-
-//
-// Flags for SNMPSaveMIBTree
-//
-
+/**
+ * Flags for SNMPSaveMIBTree
+ */
 #define SMT_COMPRESS_DATA        0x01
 #define SMT_SKIP_DESCRIPTIONS    0x02
 
+/**
+ * Flags for SnmpGet
+ */
+#define SG_VERBOSE        0x0001
+#define SG_STRING_RESULT  0x0002
+#define SG_RAW_RESULT     0x0004
+#define SG_HSTRING_RESULT 0x0008
+#define SG_PSTRING_RESULT 0x0010
 
 #endif      /* NXSNMP_WITH_NET_SNMP */
 
@@ -634,6 +640,8 @@ public:
       return InetAddress();
    }
 
+   virtual WORD getPort()=0;
+
    UINT32 doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 timeout = INFINITE, int numRetries = 1);
 
 	void setSecurityContext(SNMP_SecurityContext *ctx);
@@ -664,6 +672,7 @@ protected:
    size_t m_dwBytesInBuffer;
    size_t m_dwBufferPos;
    BYTE *m_pBuffer;
+   WORD m_port;
 
    size_t preParsePDU();
    int recvData(UINT32 dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize);
@@ -683,6 +692,7 @@ public:
    UINT32 createUDPTransport(const TCHAR *hostName, WORD port = SNMP_DEFAULT_PORT);
    UINT32 createUDPTransport(const InetAddress& hostAddr, WORD port = SNMP_DEFAULT_PORT);
 	bool isConnected() { return m_connected; }
+   WORD getPort() { return m_port; }
 };
 
 /**
@@ -698,6 +708,20 @@ UINT32 LIBNXSNMP_EXPORTABLE SNMPLoadMIBTree(const TCHAR *fileName, SNMP_MIBObjec
 UINT32 LIBNXSNMP_EXPORTABLE SNMPGetMIBTreeTimestamp(const TCHAR *fileName, UINT32 *pdwTimestamp);
 UINT32 LIBNXSNMP_EXPORTABLE SNMPResolveDataType(const TCHAR *pszType);
 TCHAR LIBNXSNMP_EXPORTABLE *SNMPDataTypeName(UINT32 type, TCHAR *buffer, size_t bufferSize);
+
+UINT32 LIBNXSNMP_EXPORTABLE SnmpNewRequestId();
+void LIBNXSNMP_EXPORTABLE SnmpSetMessageIds(DWORD msgParseError, DWORD msgTypeError, DWORD msgGetError);
+void LIBNXSNMP_EXPORTABLE SnmpSetDefaultTimeout(UINT32 timeout);
+UINT32 LIBNXSNMP_EXPORTABLE SnmpGetDefaultTimeout();
+UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
+                                    const TCHAR *szOidStr, const UINT32 *oidBinary, size_t oidLen, void *pValue,
+                                    size_t bufferSize, UINT32 dwFlags);
+UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
+                                      const TCHAR *szOidStr, const UINT32 *oidBinary, size_t oidLen, void *pValue,
+                                      size_t bufferSize, UINT32 dwFlags, UINT32 *dataLen);
+UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
+						                   UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *),
+                                     void *pUserArg, BOOL bVerbose);
 
 #endif   /* __cplusplus */
 

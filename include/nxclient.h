@@ -157,7 +157,7 @@ class LIBNXCLIENT_EXPORTABLE DataCollectionController : public Controller
 public:
    DataCollectionController(NXCSession *session) : Controller(session) { }
 
-   UINT32 pushData(ObjectArray<NXCPushData> *data, UINT32 *failedIndex = NULL);
+   UINT32 pushData(ObjectArray<NXCPushData> *data, time_t timestamp = 0, UINT32 *failedIndex = NULL);
 };
 
 /**

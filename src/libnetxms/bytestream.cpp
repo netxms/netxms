@@ -31,6 +31,7 @@ ByteStream::ByteStream(size_t initial)
    m_allocated = initial;
    m_size = 0;
    m_pos = 0;
+   m_allocationStep = 4096;
    m_data = (m_allocated > 0) ? (BYTE *)malloc(m_allocated) : NULL;
 }
 
@@ -42,6 +43,7 @@ ByteStream::ByteStream(const void *data, size_t size)
    m_allocated = size;
    m_size = size;
    m_pos = 0;
+   m_allocationStep = 4096;
    m_data = (m_allocated > 0) ? (BYTE *)nx_memdup(data, size) : NULL;
 }
 
@@ -60,7 +62,7 @@ void ByteStream::write(const void *data, size_t size)
 {
    if (m_pos + size > m_allocated)
    {
-      m_allocated += max(size, 4096);
+      m_allocated += max(size, m_allocationStep);
       m_data = (BYTE *)realloc(m_data, m_allocated);
    }
    memcpy(&m_data[m_pos], data, size);

@@ -91,10 +91,10 @@ AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, co
    m_dwNumDataLines = 0;
    m_ppDataLines = NULL;
    m_pMsgWaitQueue = new MsgWaitQueue;
-   m_dwRequestId = 1;
+   m_requestId = 0;
 	m_connectionTimeout = 30000;	// 30 seconds
    m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
-   m_bIsConnected = FALSE;
+   m_isConnected = false;
    m_mutexDataLock = MutexCreate();
 	m_mutexSocketWrite = MutexCreate();
    m_hReceiverThread = INVALID_THREAD_HANDLE;
@@ -332,6 +332,10 @@ void AgentConnection::receiverThread()
 			pMsg = new NXCPMessage(pRawMsg, m_nProtocolVersion);
 			switch(pMsg->getCode())
 			{
+				case CMD_REQUEST_COMPLETED:
+            case CMD_SESSION_KEY:
+					m_pMsgWaitQueue->put(pMsg);
+					break;
 				case CMD_TRAP:
 					onTrap(pMsg);
 					delete pMsg;
@@ -340,8 +344,16 @@ void AgentConnection::receiverThread()
 					onDataPush(pMsg);
 					delete pMsg;
 					break;
-				case CMD_REQUEST_COMPLETED:
-					m_pMsgWaitQueue->put(pMsg);
+				case CMD_DCI_DATA:
+               {
+					   UINT32 rcc = processCollectedData(pMsg);
+                  NXCPMessage response;
+                  response.setCode(CMD_REQUEST_COMPLETED);
+                  response.setId(pMsg->getId());
+                  response.setField(VID_RCC, rcc);
+                  sendMessage(&response);
+               }
+					delete pMsg;
 					break;
             case CMD_FILE_MONITORING:
                onFileMonitoringData(pMsg);
@@ -378,7 +390,7 @@ void AgentConnection::receiverThread()
 		m_pCtx->decRefCount();
 		m_pCtx = NULL;
 	}
-   m_bIsConnected = FALSE;
+   m_isConnected = false;
    unlock();
 
    free(pRawMsg);
@@ -391,10 +403,12 @@ void AgentConnection::receiverThread()
 /**
  * Connect to agent
  */
-BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, UINT32 *pdwSocketError)
+bool AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, UINT32 *pdwSocketError)
 {
    TCHAR szBuffer[256];
-   BOOL bSuccess = FALSE, bForceEncryption = FALSE, bSecondPass = FALSE;
+   bool success = false;
+   bool forceEncryption = false;
+   bool secondPass = false;
    UINT32 dwError = 0;
 
    if (pdwError != NULL)
@@ -404,8 +418,8 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, 
       *pdwSocketError = 0;
 
    // Check if already connected
-   if (m_bIsConnected)
-      return FALSE;
+   if (m_isConnected)
+      return false;
 
    // Wait for receiver thread from previous connection, if any
    ThreadJoin(m_hReceiverThread);
@@ -453,18 +467,18 @@ BOOL AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, 
 setup_encryption:
    if ((m_iEncryptionPolicy == ENCRYPTION_PREFERRED) ||
        (m_iEncryptionPolicy == ENCRYPTION_REQUIRED) ||
-       (bForceEncryption))    // Agent require encryption
+       forceEncryption)    // Agent require encryption
    {
       if (pServerKey != NULL)
       {
          dwError = setupEncryption(pServerKey);
          if ((dwError != ERR_SUCCESS) &&
-             ((m_iEncryptionPolicy == ENCRYPTION_REQUIRED) || bForceEncryption))
+             ((m_iEncryptionPolicy == ENCRYPTION_REQUIRED) || forceEncryption))
             goto connect_cleanup;
       }
       else
       {
-         if ((m_iEncryptionPolicy == ENCRYPTION_REQUIRED) || bForceEncryption)
+         if ((m_iEncryptionPolicy == ENCRYPTION_REQUIRED) || forceEncryption)
          {
             dwError = ERR_ENCRYPTION_REQUIRED;
             goto connect_cleanup;
@@ -473,12 +487,12 @@ setup_encryption:
    }
 
    // Authenticate itself to agent
-   if ((dwError = authenticate(m_bUseProxy && !bSecondPass)) != ERR_SUCCESS)
+   if ((dwError = authenticate(m_bUseProxy && !secondPass)) != ERR_SUCCESS)
    {
       if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
           (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
       {
-         bForceEncryption = TRUE;
+         forceEncryption = true;
          goto setup_encryption;
       }
       printMsg(_T("Authentication to agent %s failed (%s)"), m_addr.toString(szBuffer),
@@ -492,7 +506,7 @@ setup_encryption:
       if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
           (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
       {
-         bForceEncryption = TRUE;
+         forceEncryption = true;
          goto setup_encryption;
       }
       if (dwError != ERR_UNKNOWN_COMMAND) // Older agents may not support enable IPv6 command
@@ -502,7 +516,7 @@ setup_encryption:
       }
    }
 
-   if (m_bUseProxy && !bSecondPass)
+   if (m_bUseProxy && !secondPass)
    {
       dwError = setupProxyConnection();
       if (dwError != ERR_SUCCESS)
@@ -514,16 +528,16 @@ setup_encryption:
 	      m_pCtx = NULL;
 		}
 		unlock();
-      bSecondPass = TRUE;
-      bForceEncryption = FALSE;
+      secondPass = true;
+      forceEncryption = false;
       goto setup_encryption;
    }
 
-   bSuccess = TRUE;
+   success = true;
    dwError = ERR_SUCCESS;
 
 connect_cleanup:
-   if (!bSuccess)
+   if (!success)
    {
 		if (pdwSocketError != NULL)
 			*pdwSocketError = (UINT32)WSAGetLastError();
@@ -550,10 +564,10 @@ connect_cleanup:
 
       unlock();
    }
-   m_bIsConnected = bSuccess;
+   m_isConnected = success;
    if (pdwError != NULL)
       *pdwError = dwError;
-   return bSuccess;
+   return success;
 }
 
 /**
@@ -574,7 +588,7 @@ void AgentConnection::disconnect()
       shutdown(m_hSocket, SHUT_RDWR);
    }
    destroyResultData();
-   m_bIsConnected = FALSE;
+   m_isConnected = false;
    unlock();
 }
 
@@ -680,7 +694,7 @@ InterfaceList *AgentConnection::getInterfaceList()
 
                TCHAR *eptr;
                iface->type = _tcstoul(pBuf, &eptr, 10);
-            
+
                // newer agents can return if_type(mtu)
                if (*eptr == _T('('))
                {
@@ -727,40 +741,35 @@ InterfaceList *AgentConnection::getInterfaceList()
  */
 UINT32 AgentConnection::getParameter(const TCHAR *pszParam, UINT32 dwBufSize, TCHAR *pszBuffer)
 {
-   NXCPMessage msg(m_nProtocolVersion), *pResponse;
-   UINT32 dwRqId, dwRetCode;
+   if (!m_isConnected)
+      return ERR_NOT_CONNECTED;
 
-   if (m_bIsConnected)
+   NXCPMessage msg(m_nProtocolVersion);
+   UINT32 dwRqId = generateRequestId();
+   msg.setCode(CMD_GET_PARAMETER);
+   msg.setId(dwRqId);
+   msg.setField(VID_PARAMETER, pszParam);
+
+   UINT32 dwRetCode;
+   if (sendMessage(&msg))
    {
-      dwRqId = m_dwRequestId++;
-      msg.setCode(CMD_GET_PARAMETER);
-      msg.setId(dwRqId);
-      msg.setField(VID_PARAMETER, pszParam);
-      if (sendMessage(&msg))
+      NXCPMessage *pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
+      if (pResponse != NULL)
       {
-         pResponse = waitForMessage(CMD_REQUEST_COMPLETED, dwRqId, m_dwCommandTimeout);
-         if (pResponse != NULL)
-         {
-            dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
-            if (dwRetCode == ERR_SUCCESS)
-               pResponse->getFieldAsString(VID_VALUE, pszBuffer, dwBufSize);
-            delete pResponse;
-         }
-         else
-         {
-            dwRetCode = ERR_REQUEST_TIMEOUT;
-         }
+         dwRetCode = pResponse->getFieldAsUInt32(VID_RCC);
+         if (dwRetCode == ERR_SUCCESS)
+            pResponse->getFieldAsString(VID_VALUE, pszBuffer, dwBufSize);
+         delete pResponse;
       }
       else
       {
-         dwRetCode = ERR_CONNECTION_BROKEN;
+         dwRetCode = ERR_REQUEST_TIMEOUT;
       }
    }
    else
    {
-      dwRetCode = ERR_NOT_CONNECTED;
+      dwRetCode = ERR_CONNECTION_BROKEN;
    }
-
    return dwRetCode;
 }
 
@@ -830,7 +839,7 @@ UINT32 AgentConnection::nop()
    NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
    msg.setCode(CMD_KEEPALIVE);
    msg.setId(dwRqId);
    if (sendMessage(&msg))
@@ -845,11 +854,25 @@ UINT32 AgentConnection::nop()
 UINT32 AgentConnection::enableIPv6()
 {
    NXCPMessage msg(m_nProtocolVersion);
-   UINT32 dwRqId;
-
-   dwRqId = m_dwRequestId++;
+   UINT32 dwRqId = generateRequestId();
    msg.setCode(CMD_ENABLE_IPV6);
    msg.setField(VID_ENABLED, (INT16)1);
+   msg.setId(dwRqId);
+   if (sendMessage(&msg))
+      return waitForRCC(dwRqId, m_dwCommandTimeout);
+   else
+      return ERR_CONNECTION_BROKEN;
+}
+
+/**
+ * Set server ID
+ */
+UINT32 AgentConnection::setServerId(UINT64 serverId)
+{
+   NXCPMessage msg(m_nProtocolVersion);
+   UINT32 dwRqId = generateRequestId();
+   msg.setCode(CMD_SET_SERVER_ID);
+   msg.setField(VID_SERVER_ID, serverId);
    msg.setId(dwRqId);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, m_dwCommandTimeout);
@@ -988,10 +1011,10 @@ UINT32 AgentConnection::getList(const TCHAR *pszParam)
    NXCPMessage msg(m_nProtocolVersion), *pResponse;
    UINT32 i, dwRqId, dwRetCode;
 
-   if (m_bIsConnected)
+   if (m_isConnected)
    {
       destroyResultData();
-      dwRqId = m_dwRequestId++;
+      dwRqId = generateRequestId();
       msg.setCode(CMD_GET_LIST);
       msg.setId(dwRqId);
       msg.setField(VID_PARAMETER, pszParam);
@@ -1037,9 +1060,9 @@ UINT32 AgentConnection::getTable(const TCHAR *pszParam, Table **table)
    UINT32 dwRqId, dwRetCode;
 
 	*table = NULL;
-   if (m_bIsConnected)
+   if (m_isConnected)
    {
-      dwRqId = m_dwRequestId++;
+      dwRqId = generateRequestId();
       msg.setCode(CMD_GET_TABLE);
       msg.setId(dwRqId);
       msg.setField(VID_PARAMETER, pszParam);
@@ -1090,7 +1113,7 @@ UINT32 AgentConnection::authenticate(BOOL bProxyData)
    if (iAuthMethod == AUTH_NONE)
       return ERR_SUCCESS;  // No authentication required
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
    msg.setCode(CMD_AUTHENTICATE);
    msg.setId(dwRqId);
    msg.setField(VID_AUTH_METHOD, (WORD)iAuthMethod);
@@ -1131,10 +1154,10 @@ UINT32 AgentConnection::execAction(const TCHAR *pszAction, int argc, TCHAR **arg
    UINT32 dwRqId;
    int i;
 
-   if (!m_bIsConnected)
+   if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
    msg.setCode(CMD_ACTION);
    msg.setId(dwRqId);
    msg.setField(VID_ACTION_NAME, pszAction);
@@ -1193,15 +1216,15 @@ UINT32 AgentConnection::execAction(const TCHAR *pszAction, int argc, TCHAR **arg
 /**
  * Upload file to agent
  */
-UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, void (* progressCallback)(INT64, void *), void *cbArg)
+UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinationFile, void (* progressCallback)(INT64, void *), void *cbArg, NXCPCompressionMethod compMethod)
 {
    UINT32 dwRqId, dwResult;
    NXCPMessage msg(m_nProtocolVersion);
 
-   if (!m_bIsConnected)
+   if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
    msg.setId(dwRqId);
 
    // Use core agent if destination file name is not set and file manager subagent otherwise
@@ -1232,7 +1255,7 @@ UINT32 AgentConnection::uploadFile(const TCHAR *localFile, const TCHAR *destinat
    {
 		m_fileUploadInProgress = true;
 		NXCPEncryptionContext *ctx = acquireEncryptionContext();
-      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite))
+      if (SendFileOverNXCP(m_hSocket, dwRqId, localFile, ctx, 0, progressCallback, cbArg, m_mutexSocketWrite, compMethod))
          dwResult = waitForRCC(dwRqId, m_dwCommandTimeout);
       else
          dwResult = ERR_IO_FAILURE;
@@ -1251,10 +1274,10 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
    NXCPMessage msg(m_nProtocolVersion);
    int i;
 
-   if (!m_bIsConnected)
+   if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
 
    msg.setCode(CMD_UPGRADE_AGENT);
    msg.setId(dwRqId);
@@ -1278,17 +1301,17 @@ UINT32 AgentConnection::startUpgrade(const TCHAR *pszPkgName)
  * Check status of network service via agent
  */
 UINT32 AgentConnection::checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType,
-                                            WORD wPort, WORD wProto, const TCHAR *pszRequest, 
+                                            WORD wPort, WORD wProto, const TCHAR *pszRequest,
                                             const TCHAR *pszResponse, UINT32 *responseTime)
 {
    UINT32 dwRqId, dwResult;
    NXCPMessage msg(m_nProtocolVersion), *pResponse;
    static WORD m_wDefaultPort[] = { 7, 22, 110, 25, 21, 80, 443, 23 };
 
-   if (!m_bIsConnected)
+   if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
 
    msg.setCode(CMD_CHECK_NETWORK_SERVICE);
    msg.setId(dwRqId);
@@ -1343,10 +1366,10 @@ UINT32 AgentConnection::getSupportedParameters(ObjectArray<AgentParameterDefinit
    *paramList = NULL;
 	*tableList = NULL;
 
-   if (!m_bIsConnected)
+   if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
 
    msg.setCode(CMD_GET_PARAMETER_LIST);
    msg.setId(dwRqId);
@@ -1404,7 +1427,7 @@ UINT32 AgentConnection::setupEncryption(RSA *pServerKey)
    NXCPMessage msg(m_nProtocolVersion), *pResp;
    UINT32 dwRqId, dwError, dwResult;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
 
    PrepareKeyRequestMsg(&msg, pServerKey, false);
    msg.setId(dwRqId);
@@ -1464,10 +1487,10 @@ UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
    *ppszConfig = NULL;
    *pdwSize = 0;
 
-   if (!m_bIsConnected)
+   if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
 
    msg.setCode(CMD_GET_AGENT_CONFIG);
    msg.setId(dwRqId);
@@ -1527,10 +1550,10 @@ UINT32 AgentConnection::updateConfigFile(const TCHAR *pszConfig)
    BYTE *pBuffer;
 #endif
 
-   if (!m_bIsConnected)
+   if (!m_isConnected)
       return ERR_NOT_CONNECTED;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
 
    msg.setCode(CMD_UPDATE_AGENT_CONFIG);
    msg.setId(dwRqId);
@@ -1662,7 +1685,7 @@ UINT32 AgentConnection::setupProxyConnection()
    NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
    msg.setCode(CMD_SETUP_PROXY_CONNECTION);
    msg.setId(dwRqId);
    msg.setField(VID_IP_ADDRESS, m_addr.getAddressV4());  // FIXME: V6 support in proxy
@@ -1681,11 +1704,30 @@ UINT32 AgentConnection::enableTraps()
    NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
    msg.setCode(CMD_ENABLE_AGENT_TRAPS);
    msg.setId(dwRqId);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, m_dwCommandTimeout);
+   else
+      return ERR_CONNECTION_BROKEN;
+}
+
+/**
+ * Enable trap receiving on connection
+ */
+UINT32 AgentConnection::enableFileUpdates()
+{
+   NXCPMessage msg(m_nProtocolVersion);
+   UINT32 dwRqId;
+
+   dwRqId = generateRequestId();
+   msg.setCode(CMD_ENABLE_FILE_UPDATES);
+   msg.setId(dwRqId);
+   if (sendMessage(&msg))
+   {
+      return waitForRCC(dwRqId, m_dwCommandTimeout);
+   }
    else
       return ERR_CONNECTION_BROKEN;
 }
@@ -1698,7 +1740,7 @@ UINT32 AgentConnection::takeScreenshot(const TCHAR *sessionName, BYTE **data, si
    NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
    msg.setCode(CMD_TAKE_SCREENSHOT);
    msg.setId(dwRqId);
    msg.setField(VID_NAME, sessionName);
@@ -1744,7 +1786,7 @@ NXCPMessage *AgentConnection::customRequest(NXCPMessage *pRequest, const TCHAR *
    UINT32 dwRqId, rcc;
 	NXCPMessage *msg = NULL;
 
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
    pRequest->setId(dwRqId);
 	if (recvFile != NULL)
 	{
@@ -1866,7 +1908,7 @@ UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
    UINT32 dwRqId, rcc;
 
 	*info = NULL;
-   dwRqId = m_dwRequestId++;
+   dwRqId = generateRequestId();
    msg.setCode(CMD_GET_POLICY_INVENTORY);
    msg.setId(dwRqId);
    if (sendMessage(&msg))
@@ -1925,6 +1967,14 @@ NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
 		ctx->incRefCount();
 	unlock();
 	return ctx;
+}
+
+/**
+ * Process collected data information (for DCI with agent-side cache)
+ */
+UINT32 AgentConnection::processCollectedData(NXCPMessage *msg)
+{
+   return ERR_NOT_IMPLEMENTED;
 }
 
 /**

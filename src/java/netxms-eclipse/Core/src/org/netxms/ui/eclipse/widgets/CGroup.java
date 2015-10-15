@@ -77,12 +77,13 @@ public abstract class CGroup extends Canvas
 		borderColor = SharedColors.getColor(SharedColors.CGROUP_BORDER, getDisplay());
 		titleColor = SharedColors.getColor(SharedColors.CGROUP_TITLE, getDisplay());
 		
-		FontData fd = JFaceResources.getDialogFont().getFontData()[0];
+		FontData fd = JFaceResources.getDefaultFont().getFontData()[0];
 		fd.setStyle(SWT.BOLD);
 		titleFont = new Font(getDisplay(), fd);
 		setFont(titleFont);
 		
 		headerSize = WidgetHelper.getTextExtent(this, text);
+		headerSize.y += 5;
 		
 		addDisposeListener(new DisposeListener() {
          @Override
@@ -166,19 +167,27 @@ public abstract class CGroup extends Canvas
 	 */
 	private void doPaint(GC gc)
 	{
+      Rectangle rect = getClientArea();
+      rect.x += BORDER_WIDTH / 2;
+      rect.y += BORDER_WIDTH / 2;
+      rect.width -= BORDER_WIDTH;
+      rect.height -= BORDER_WIDTH;
+      
 	   gc.setAntialias(SWT.ON);
-		gc.setForeground(borderColor);
-		gc.setLineWidth(BORDER_WIDTH);
-		Rectangle rect = getClientArea();
-		rect.x += BORDER_WIDTH / 2;
-		rect.y += BORDER_WIDTH / 2 + headerSize.y / 2;
-		rect.width -= BORDER_WIDTH;
-		rect.height -= BORDER_WIDTH + headerSize.y / 2;
-		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
 
-		gc.fillRectangle(8, 0, headerSize.x + 4, headerSize.y + 2);
+	   gc.setAlpha(127);
+      gc.setBackground(borderColor);
+      gc.fillRoundRectangle(rect.x, rect.y, rect.width, headerSize.y, 4, 4);
+      gc.setAlpha(255);
+	   
+	   gc.setForeground(borderColor);
+		gc.setLineWidth(BORDER_WIDTH);
+		gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 4, 4);
+		gc.setLineWidth(1);
+		gc.drawLine(rect.x, headerSize.y, rect.x + rect.width, headerSize.y);
+
 		gc.setForeground(titleColor);
-		gc.drawText(text, 10, 1);
+		gc.drawText(text, 10, BORDER_WIDTH, SWT.DRAW_TRANSPARENT);
 	}
 
 	/**

@@ -18,6 +18,8 @@
  */
 package org.netxms.client.services;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
@@ -25,14 +27,22 @@ import java.util.ServiceLoader;
  */
 public final class ServiceManager
 {
-   private static ServiceLoader<ServiceHandler> serviceLoader = ServiceLoader.load(ServiceHandler.class);
+   private static Map<ClassLoader, ServiceLoader<ServiceHandler>> serviceLoaders = new HashMap<ClassLoader, ServiceLoader<ServiceHandler>>();
    
    /**
     * Reload service providers
     */
-   public static synchronized void reload(ClassLoader loader)
+   public static synchronized void registerClassLoader(ClassLoader classLoader)
    {
-      serviceLoader = ServiceLoader.load(ServiceHandler.class, loader);
+      ServiceLoader<ServiceHandler> serviceLoader = serviceLoaders.get(classLoader);
+      if (serviceLoader != null)
+      {
+         serviceLoader.reload();
+      }
+      else
+      {
+         serviceLoaders.put(classLoader, ServiceLoader.load(ServiceHandler.class, classLoader));
+      }
    }
    
    /**
@@ -44,9 +54,12 @@ public final class ServiceManager
     */
    public static synchronized ServiceHandler getServiceHandler(String name, Class<? extends ServiceHandler> serviceClass)
    {
-      for(ServiceHandler s : serviceLoader)
-         if (s.getServiceName().equals(name) && serviceClass.isInstance(s))
-            return s;
+      for(ServiceLoader<ServiceHandler> loader : serviceLoaders.values())
+      {
+         for(ServiceHandler s : loader)
+            if (s.getServiceName().equals(name) && serviceClass.isInstance(s))
+               return s;
+      }
       return null;
    }
    
@@ -58,9 +71,12 @@ public final class ServiceManager
     */
    public static synchronized ServiceHandler getServiceHandler(String name)
    {
-      for(ServiceHandler s : serviceLoader)
-         if (s.getServiceName().equals(name))
-            return s;
+      for(ServiceLoader<ServiceHandler> loader : serviceLoaders.values())
+      {
+         for(ServiceHandler s : loader)
+            if (s.getServiceName().equals(name))
+               return s;
+      }
       return null;
    }
    
@@ -72,9 +88,12 @@ public final class ServiceManager
     */
    public static synchronized ServiceHandler getServiceHandler(Class<? extends ServiceHandler> serviceClass)
    {
-      for(ServiceHandler s : serviceLoader)
-         if (serviceClass.isInstance(s))
-            return s;
+      for(ServiceLoader<ServiceHandler> loader : serviceLoaders.values())
+      {
+         for(ServiceHandler s : loader)
+            if (serviceClass.isInstance(s))
+               return s;
+      }
       return null;
    }
    
@@ -83,7 +102,10 @@ public final class ServiceManager
     */
    public static synchronized void dump()
    {
-      for(ServiceHandler s : serviceLoader)
-         System.out.println(s.getServiceName());
+      for(ServiceLoader<ServiceHandler> loader : serviceLoaders.values())
+      {
+         for(ServiceHandler s : loader)
+            System.out.println(s.getServiceName());
+      }
    }
 }

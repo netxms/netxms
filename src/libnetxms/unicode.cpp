@@ -181,7 +181,7 @@ UCS2CHAR LIBNETXMS_EXPORTABLE *ucs2_strncpy(UCS2CHAR *pDst, const UCS2CHAR *pSrc
 /**
  * Convert UNICODE string to single-byte string using simple byte copy (works for ASCII only)
  */
-inline int WideCharToMultiByteSimpleCopy(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr,
+static int WideCharToMultiByteSimpleCopy(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr,
                                          int cchWideChar, char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
 {
    const WCHAR *pSrc;
@@ -203,7 +203,7 @@ inline int WideCharToMultiByteSimpleCopy(int iCodePage, DWORD dwFlags, const WCH
 /**
  * Convert UNICODE string to single-byte string using iconv
  */
-inline int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr, int cchWideChar,
+static int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *pWideCharStr, int cchWideChar,
                                     char *pByteStr, int cchByteChar, char *pDefaultChar, BOOL *pbUsedDefChar)
 {
    iconv_t cd;
@@ -245,7 +245,7 @@ inline int WideCharToMultiByteIconv(int iCodePage, DWORD dwFlags, const WCHAR *p
    {
       nRet = cchByteChar - outbytes;
    }
-   if ((cchWideChar == -1) && (outbytes > 0))
+   if (outbytes > 0)
    {
       *outbuf = 0;
    }
@@ -284,7 +284,7 @@ int LIBNETXMS_EXPORTABLE WideCharToMultiByte(int iCodePage, DWORD dwFlags, const
 /**
  * Convert single-byte to UNICODE string using simple byte copy (works correctly for ASCII only)
  */
-inline int MultiByteToWideCharSimpleCopy(int iCodePage, DWORD dwFlags, const char *pByteStr, int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
+static int MultiByteToWideCharSimpleCopy(int iCodePage, DWORD dwFlags, const char *pByteStr, int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
 {
    const char *pSrc;
    WCHAR *pDest;
@@ -305,7 +305,7 @@ inline int MultiByteToWideCharSimpleCopy(int iCodePage, DWORD dwFlags, const cha
 /**
  * Convert single-byte to UNICODE string using iconv
  */
-inline int MultiByteToWideCharIconv(int iCodePage, DWORD dwFlags, const char *pByteStr, int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
+static int MultiByteToWideCharIconv(int iCodePage, DWORD dwFlags, const char *pByteStr, int cchByteChar, WCHAR *pWideCharStr, int cchWideChar)
 {
    iconv_t cd;
    int nRet;
@@ -348,9 +348,9 @@ inline int MultiByteToWideCharIconv(int iCodePage, DWORD dwFlags, const char *pB
       outbuf -= sizeof(WCHAR);
       nRet--;
    }
-   if ((cchByteChar == -1) && (outbytes >= sizeof(WCHAR)))
+   if (outbytes >= sizeof(WCHAR))
    {
-      *((WCHAR *) outbuf) = 0;
+      *((WCHAR *)outbuf) = 0;
    }
 
    return nRet;
@@ -393,11 +393,10 @@ UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
  */
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString)
 {
-   WCHAR *pwszOut;
-   int nLen;
-
-   nLen = (int) strlen(pszString) + 1;
-   pwszOut = (WCHAR *) malloc(nLen * sizeof(WCHAR));
+   if (pszString == NULL)
+      return NULL;
+   int nLen = (int) strlen(pszString) + 1;
+   WCHAR *pwszOut = (WCHAR *) malloc(nLen * sizeof(WCHAR));
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszString, -1, pwszOut, nLen);
    return pwszOut;
 }
@@ -407,11 +406,10 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString)
  */
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString)
 {
-   WCHAR *pwszOut;
-   int nLen;
-
-   nLen = (int) strlen(pszString) + 1;
-   pwszOut = (WCHAR *) malloc(nLen * sizeof(WCHAR));
+   if (pszString == NULL)
+      return NULL;
+   int nLen = (int)strlen(pszString) + 1;
+   WCHAR *pwszOut = (WCHAR *) malloc(nLen * sizeof(WCHAR));
    MultiByteToWideChar(CP_UTF8, 0, pszString, -1, pwszOut, nLen);
    return pwszOut;
 }
@@ -422,11 +420,10 @@ WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString)
  */
 char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString)
 {
-   char *pszOut;
-   int nLen;
-
-   nLen = (int)wcslen(pwszString) + 1;
-   pszOut = (char *)malloc(nLen);
+   if (pwszString == NULL)
+      return NULL;
+   int nLen = (int)wcslen(pwszString) + 1;
+   char *pszOut = (char *)malloc(nLen);
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszString, -1, pszOut, nLen, NULL, NULL);
    return pszOut;
 }
@@ -440,7 +437,7 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString)
    int nLen;
 
    nLen = WideCharToMultiByte(CP_UTF8, 0, pwszString, -1, NULL, 0, NULL, NULL);
-   pszOut = (char *) malloc(nLen);
+   pszOut = (char *)malloc(nLen);
    WideCharToMultiByte(CP_UTF8, 0, pwszString, -1, pszOut, nLen, NULL, NULL);
    return pszOut;
 }
@@ -780,7 +777,7 @@ size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, i
 /**
  * Convert UCS-2 to multibyte
  */
-inline size_t ucs2_to_mb_simple_copy(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+static size_t ucs2_to_mb_simple_copy(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
    const UCS2CHAR *psrc;
    char *pdst;
@@ -799,7 +796,7 @@ inline size_t ucs2_to_mb_simple_copy(const UCS2CHAR *src, int srcLen, char *dst,
 
 #ifndef __DISABLE_ICONV
 
-inline size_t ucs2_to_mb_iconv(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
+static size_t ucs2_to_mb_iconv(const UCS2CHAR *src, int srcLen, char *dst, int dstLen)
 {
    iconv_t cd;
    const char *inbuf;
@@ -852,7 +849,7 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_mb(const UCS2CHAR *src, int srcLen, char *ds
 /**
  * Convert multibyte to UCS-2
  */
-inline size_t mb_to_ucs2_simple_copy(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+static size_t mb_to_ucs2_simple_copy(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
    const char *psrc;
    UCS2CHAR *pdst;
@@ -871,7 +868,7 @@ inline size_t mb_to_ucs2_simple_copy(const char *src, int srcLen, UCS2CHAR *dst,
 
 #ifndef __DISABLE_ICONV
 
-inline size_t mb_to_ucs2_iconv(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+static size_t mb_to_ucs2_iconv(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
 {
    iconv_t cd;
    const char *inbuf;
@@ -972,7 +969,7 @@ static size_t mb_to_utf8_simple_copy(const char *src, int srcLen, char *dst, int
    if (size >= dstLen)
       size = dstLen - 1;
    for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (*psrc < 128) ? (char) (*psrc) : '?';
+      *pdst = ((unsigned char)(*psrc) < 128) ? *psrc : '?';
    *pdst = 0;
    return size;
 }
@@ -1044,17 +1041,28 @@ size_t LIBNETXMS_EXPORTABLE mb_to_utf8(const char *src, int srcLen, char *dst, i
  */
 static size_t utf8_to_mb_simple_copy(const char *src, int srcLen, char *dst, int dstLen)
 {
-   const char *psrc;
-   char *pdst;
-   int pos, size;
-
-   size = (srcLen == -1) ? strlen(src) : srcLen;
-   if (size >= dstLen)
-      size = dstLen - 1;
-   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
-      *pdst = (*psrc < 128) ? (char) (*psrc) : '?';
+   const char *psrc = src;
+   char *pdst = dst;
+   int dsize = 0;
+   int ssize = (srcLen == -1) ? strlen(src) : srcLen;
+   for(int pos = 0; (pos < ssize) && (dsize < dstLen - 1); pos++, psrc++)
+   {
+      BYTE b = (BYTE)*psrc;
+      if ((b & 0x80) == 0)  // ASCII-7 character
+      {
+         *pdst = (char)b;
+         pdst++;
+         dsize++;
+      }
+      else if ((b & 0xC0) == 0xC0)  // UTF-8 start byte
+      {
+         *pdst = '?';
+         pdst++;
+         dsize++;
+      }
+   }
    *pdst = 0;
-   return size;
+   return dsize;
 }
 
 #ifndef __DISABLE_ICONV
@@ -1376,7 +1384,7 @@ int putws(const WCHAR *s)
 
 #endif /* !HAVE_PUTWS */
 
-#if !HAVE_WCSERROR && HAVE_STRERROR
+#if !HAVE_WCSERROR && (HAVE_STRERROR || HAVE_DECL_STRERROR)
 
 WCHAR *wcserror(int errnum)
 {
@@ -1398,7 +1406,7 @@ WCHAR *wcserror_r(int errnum, WCHAR *strerrbuf, size_t buflen)
 {
    char *mbbuf;
 #if HAVE_POSIX_STRERROR_R
-   int err;
+   int err = 0;
 #endif /* HAVE_POSIX_STRERROR_R */
 
    mbbuf = (char *)malloc(buflen);

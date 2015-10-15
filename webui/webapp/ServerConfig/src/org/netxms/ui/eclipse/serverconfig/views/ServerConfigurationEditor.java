@@ -49,6 +49,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -169,6 +170,7 @@ public class ServerConfigurationEditor extends ViewPart
 
 		// Create the help context id for the viewer's control
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(viewer.getControl(), "org.netxms.nxmc.serverconfig.viewer"); //$NON-NLS-1$
+		activateContext();
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
@@ -247,6 +249,18 @@ public class ServerConfigurationEditor extends ViewPart
 		manager.add(actionRefresh);
 	}
 
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.serverconfig.context.ServerConfigurationEditor"); //$NON-NLS-1$
+      }
+   }
+   
 	/**
 	 * Create actions
 	 */
@@ -254,7 +268,7 @@ public class ServerConfigurationEditor extends ViewPart
 	{
 	   final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 	   
-		actionRefresh = new RefreshAction() {
+		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
 			{
@@ -269,6 +283,8 @@ public class ServerConfigurationEditor extends ViewPart
 				addVariable();
 			}
 		};
+		actionAdd.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.add_config_variable"); //$NON-NLS-1$
+      handlerService.activateHandler(actionAdd.getActionDefinitionId(), new ActionHandler(actionAdd));
 		
 		actionEdit = new Action(Messages.get().ServerConfigurationEditor_ActionEdit, SharedIcons.EDIT) {
 			@Override
@@ -298,9 +314,8 @@ public class ServerConfigurationEditor extends ViewPart
 		};
       actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
       actionShowFilter.setChecked(filterEnabled);
-      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
-      final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
-      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.show_filter"); //$NON-NLS-1$
+      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 		
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);

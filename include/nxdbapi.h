@@ -103,7 +103,7 @@ struct PoolConnectionInfo
  */
 bool LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode);
 DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *initParameters,
-														bool dumpSQL, void (* fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, void *),
+														bool dumpSQL, void (* fpEventHandler)(DWORD, const WCHAR *, const WCHAR *, bool, void *),
 														void *userArg);
 void LIBNXDB_EXPORTABLE DBUnloadDriver(DB_DRIVER driver);
 const char LIBNXDB_EXPORTABLE *DBGetDriverName(DB_DRIVER driver);
@@ -130,6 +130,7 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, UINT32 
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, INT64 value);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, UINT64 value);
 void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, double value);
+void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, const uuid& value);
 bool LIBNXDB_EXPORTABLE DBExecute(DB_STATEMENT hStmt);
 bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText);
 DB_RESULT LIBNXDB_EXPORTABLE DBSelectPrepared(DB_STATEMENT hStmt);
@@ -160,8 +161,7 @@ bool LIBNXDB_EXPORTABLE DBGetFieldByteArray(DB_RESULT hResult, int iRow, int iCo
                                             int *pnArray, int nSize, int nDefault);
 bool LIBNXDB_EXPORTABLE DBGetFieldByteArray2(DB_RESULT hResult, int iRow, int iColumn,
                                              BYTE *data, int nSize, int nDefault);
-bool LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow,
-                                        int iColumn, uuid_t guid);
+uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_RESULT hResult, int iRow, int iColumn);
 
 DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *szQuery);
 DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText);
@@ -200,7 +200,7 @@ void LIBNXDB_EXPORTABLE DecodeSQLString(TCHAR *pszStr);
 bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *server, const TCHAR *dbName,
 																const TCHAR *login, const TCHAR *password, const TCHAR *schema,
 																int basePoolSize, int maxPoolSize, int cooldownTime,
-																int connTTL, DB_HANDLE fallback);
+																int connTTL);
 void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown();
 DB_HANDLE LIBNXDB_EXPORTABLE __DBConnectionPoolAcquireConnection(const char *srcFile, int srcLine);
 #define DBConnectionPoolAcquireConnection() __DBConnectionPoolAcquireConnection(__FILE__, __LINE__)
@@ -211,5 +211,9 @@ int LIBNXDB_EXPORTABLE DBConnectionPoolGetAcquiredCount();
 void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(UINT32 threshold);
 void LIBNXDB_EXPORTABLE DBSetDebugPrintCallback(void (*cb)(int, const TCHAR *, va_list));
 ObjectArray<PoolConnectionInfo> LIBNXDB_EXPORTABLE *DBConnectionPoolGetConnectionList();
+
+bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id);
+bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const uuid& id);
+bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const TCHAR *id);
 
 #endif   /* _nxsrvapi_h_ */

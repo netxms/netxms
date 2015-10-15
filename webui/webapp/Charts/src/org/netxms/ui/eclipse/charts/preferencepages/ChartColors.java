@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.netxms.ui.eclipse.charts.Activator;
@@ -37,7 +36,6 @@ import org.netxms.ui.eclipse.charts.Messages;
 public class ChartColors extends FieldEditorPreferencePage implements IWorkbenchPreferencePage
 {
 	private Group lineColors;
-	private Label filler;
 	
 	public ChartColors()
 	{
@@ -62,14 +60,20 @@ public class ChartColors extends FieldEditorPreferencePage implements IWorkbench
 		addField(new ColorFieldEditor("Chart.Colors.Background", Messages.get().ChartColors_Background, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new ColorFieldEditor("Chart.Colors.PlotArea", Messages.get().ChartColors_PlotArea, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new ColorFieldEditor("Chart.Colors.Title", Messages.get().ChartColors_Title, getFieldEditorParent())); //$NON-NLS-1$
-		
-		filler = new Label(getFieldEditorParent(), SWT.NONE);
+      addField(new ColorFieldEditor("Chart.Colors.Legend", "Legend text color:", getFieldEditorParent())); //$NON-NLS-1$
 
 		addField(new ColorFieldEditor("Chart.Axis.X.Color", Messages.get().ChartColors_TickX, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new ColorFieldEditor("Chart.Axis.Y.Color", Messages.get().ChartColors_TickY, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new ColorFieldEditor("Chart.Grid.X.Color", Messages.get().ChartColors_GridX, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new ColorFieldEditor("Chart.Grid.Y.Color", Messages.get().ChartColors_GridY, getFieldEditorParent())); //$NON-NLS-1$
 
+      addField(new ColorFieldEditor("Chart.Colors.DialNeedle", "Dial needle color:", getFieldEditorParent())); //$NON-NLS-1$
+      addField(new ColorFieldEditor("Chart.Colors.DialNeedlePin", "Dial needle pin color:", getFieldEditorParent())); //$NON-NLS-1$
+      addField(new ColorFieldEditor("Chart.Colors.DialScale", "Dial scale color:", getFieldEditorParent())); //$NON-NLS-1$
+      addField(new ColorFieldEditor("Chart.Colors.DialScaleText", "Dial scale text color:", getFieldEditorParent())); //$NON-NLS-1$
+      addField(new ColorFieldEditor("Chart.Colors.DialValueBackground", "Dial current value background color:", getFieldEditorParent())); //$NON-NLS-1$
+      addField(new ColorFieldEditor("Chart.Colors.DialValueText", "Dial current value text color:", getFieldEditorParent())); //$NON-NLS-1$
+		
 		lineColors = new Group(getFieldEditorParent(), SWT.NONE);
 		lineColors.setText(Messages.get().ChartColors_LineColors);
 			
@@ -108,9 +112,5 @@ public class ChartColors extends FieldEditorPreferencePage implements IWorkbench
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalSpan = 4;
 		lineColors.setLayoutData(gd);
-		
-		gd = new GridData();
-		gd.horizontalSpan = 2;
-		filler.setLayoutData(gd);
 	}
 }

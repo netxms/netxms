@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
@@ -40,7 +40,7 @@ bool g_dataOnlyMigration = false;
 bool g_skipDataMigration = false;
 int g_dbSyntax;
 const TCHAR *g_pszTableSuffix = _T("");
-const TCHAR *g_pszSqlType[6][3] = 
+const TCHAR *g_pszSqlType[6][3] =
 {
    { _T("text"), _T("text"), _T("bigint") },                 // MySQL
    { _T("text"), _T("varchar(4000)"), _T("bigint") },        // PostgreSQL
@@ -59,7 +59,7 @@ static TCHAR s_dbDriver[MAX_PATH] = _T("");
 static TCHAR s_dbDrvParams[MAX_PATH] = _T("");
 static TCHAR s_dbServer[MAX_PATH] = _T("127.0.0.1");
 static TCHAR s_dbLogin[MAX_DB_LOGIN] = _T("netxms");
-static TCHAR s_dbPassword[MAX_DB_PASSWORD] = _T("");
+static TCHAR s_dbPassword[MAX_PASSWORD] = _T("");
 static TCHAR s_dbName[MAX_DB_NAME] = _T("netxms_db");
 static TCHAR s_dbSchema[MAX_DB_NAME] = _T("");
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
@@ -67,10 +67,10 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("CodePage"), CT_MB_STRING, 0, 0, MAX_PATH, 0, m_szCodePage },
    { _T("DBDriver"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDriver },
    { _T("DBDrvParams"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbDrvParams },
-   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_DB_STRING, 0, s_encryptedDbPassword },
    { _T("DBLogin"), CT_STRING, 0, 0, MAX_DB_LOGIN, 0, s_dbLogin },
    { _T("DBName"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbName },
-   { _T("DBPassword"), CT_STRING, 0, 0, MAX_DB_PASSWORD, 0, s_dbPassword },
+   { _T("DBPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
+   { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, s_dbPassword },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, s_dbSchema },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, s_dbServer },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
@@ -188,14 +188,14 @@ DB_ASYNC_RESULT SQLAsyncSelect(const TCHAR *pszQuery)
 /**
  * Execute prepared statement and print error message on screen if query failed
  */
-BOOL SQLExecute(DB_STATEMENT hStmt)
+bool SQLExecute(DB_STATEMENT hStmt)
 {
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
    if (g_bTrace)
       ShowQuery(DBGetStatementSource(hStmt));
 
-   BOOL result = DBExecuteEx(hStmt, errorText);
+   bool result = DBExecuteEx(hStmt, errorText);
    if (!result)
       WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, DBGetStatementSource(hStmt));
    return result;
@@ -204,13 +204,10 @@ BOOL SQLExecute(DB_STATEMENT hStmt)
 /**
  * Execute SQL query and print error message on screen if query failed
  */
-BOOL SQLQuery(const TCHAR *pszQuery)
+bool SQLQuery(const TCHAR *pszQuery)
 {
-   BOOL bResult;
-	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-
 	if (*pszQuery == 0)
-		return TRUE;
+		return true;
 
 	String query(pszQuery);
 
@@ -221,21 +218,22 @@ BOOL SQLQuery(const TCHAR *pszQuery)
    if (g_bTrace)
       ShowQuery(query);
 
-   bResult = DBQueryEx(g_hCoreDB, (const TCHAR *)query, errorText);
-   if (!bResult)
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   bool success = DBQueryEx(g_hCoreDB, (const TCHAR *)query, errorText);
+   if (!success)
       WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, (const TCHAR *)query);
-   return bResult;
+   return success;
 }
 
 /**
  * Execute SQL batch
  */
-BOOL SQLBatch(const TCHAR *pszBatch)
+bool SQLBatch(const TCHAR *pszBatch)
 {
    String batch(pszBatch);
    TCHAR *pszBuffer, *pszQuery, *ptr;
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   BOOL bRet = TRUE;
+   bool success = true;
 	TCHAR table[128], column[128];
 
    batch.replace(_T("$SQL:TEXT"), g_pszSqlType[g_dbSyntax][SQL_TYPE_TEXT]);
@@ -258,7 +256,7 @@ BOOL SQLBatch(const TCHAR *pszBatch)
 				WriteToTerminalEx(_T("Cannot drop column \x1b[37;1m%s.%s\x1b[0m\n"), table, column);
 				if (!g_bIgnoreErrors)
 				{
-					bRet = FALSE;
+					success = false;
 					break;
 				}
 			}
@@ -273,7 +271,7 @@ BOOL SQLBatch(const TCHAR *pszBatch)
 				WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
 				if (!g_bIgnoreErrors)
 				{
-					bRet = FALSE;
+					success = false;
 					break;
 				}
 			}
@@ -282,17 +280,17 @@ BOOL SQLBatch(const TCHAR *pszBatch)
       ptr++;
       pszQuery = ptr;
    }
-   return bRet;
+   return success;
 }
 
 /**
  * Drop column from the table
  */
-BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column)
+bool SQLDropColumn(const TCHAR *table, const TCHAR *column)
 {
 	TCHAR query[1024];
 	DB_RESULT hResult;
-	BOOL success = FALSE;
+	bool success = false;
 
 	if (g_dbSyntax != DB_SYNTAX_SQLITE)
 	{
@@ -309,7 +307,7 @@ BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column)
 			const int blen = 2048;
 			TCHAR buffer[blen];
 			// Intermediate buffers for SQLs
-			TCHAR columnList[1024], createList[1024]; 
+			TCHAR columnList[1024], createList[1024];
 			// TABLE_INFO() columns
 			TCHAR tabColName[128], tabColType[64], tabColNull[10], tabColDefault[128];
 			columnList[0] = createList[0] = _T('\0');
@@ -345,14 +343,14 @@ BOOL SQLDropColumn(const TCHAR *table, const TCHAR *column)
 				// TODO: figure out if SQLite transactions will work here
 				_sntprintf(buffer, blen, _T("CREATE TABLE %s__backup__ (%s)"), table, columnList);
 				CHK_EXEC(SQLQuery(buffer));
-				_sntprintf(buffer, blen, _T("INSERT INTO %s__backup__  (%s) SELECT %s FROM %s"), 
+				_sntprintf(buffer, blen, _T("INSERT INTO %s__backup__  (%s) SELECT %s FROM %s"),
 					table, columnList, columnList, table);
 				CHK_EXEC(SQLQuery(buffer));
 				_sntprintf(buffer, blen, _T("DROP TABLE %s"), table);
 				CHK_EXEC(SQLQuery(buffer));
 				_sntprintf(buffer, blen, _T("ALTER TABLE %s__backup__ RENAME to %s"), table, table);
 				CHK_EXEC(SQLQuery(buffer));
-				success = TRUE;
+				success = true;
 			}
 		}
 	}
@@ -485,7 +483,7 @@ bool IsDatabaseRecordExist(const TCHAR *table, const TCHAR *idColumn, UINT32 id)
 /**
  * Check that database has correct schema version and is not locked
  */
-BOOL ValidateDatabase()
+bool ValidateDatabase()
 {
 	DB_RESULT hResult;
 	LONG nVersion = 0;
@@ -498,14 +496,14 @@ BOOL ValidateDatabase()
    {
       _tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\nUse \"upgrade\" command to upgrade your database first.\n"),
                nVersion, DB_FORMAT_VERSION);
-		return FALSE;
+		return false;
    }
    else if (nVersion > DB_FORMAT_VERSION)
    {
 		_tprintf(_T("Your database has format version %d, this tool is compiled for version %d.\n")
 		         _T("You need to upgrade your server before using this database.\n"),
 				   nVersion, DB_FORMAT_VERSION);
-		return FALSE;
+		return false;
    }
 
    // Check if database is locked
@@ -536,10 +534,10 @@ BOOL ValidateDatabase()
    if (bLocked)
    {
       _tprintf(_T("Database is locked by server %s [%s]\n"), szLockStatus, szLockInfo);
-		return FALSE;
+		return false;
    }
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -547,27 +545,72 @@ BOOL ValidateDatabase()
  */
 int main(int argc, char *argv[])
 {
-   BOOL bStart = TRUE, bForce = FALSE, bQuiet = FALSE, bReplaceValue = TRUE;
+   BOOL bStart = TRUE, bForce = FALSE, bQuiet = FALSE;
+   bool replaceValue = true;
    int ch;
-   TCHAR szConfigFile[MAX_PATH] = DEFAULT_CONFIG_FILE;
 
    InitThreadLibrary();
 
-   // Check for alternate config file location
+   TCHAR configFile[MAX_PATH] = _T("");
+
+   // Try to read config location
 #ifdef _WIN32
    HKEY hKey;
-   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0,
-                    KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
    {
       DWORD dwSize = MAX_PATH * sizeof(TCHAR);
-      RegQueryValueEx(hKey, _T("ConfigFile"), NULL, NULL, (BYTE *)szConfigFile, &dwSize);
+      RegQueryValueEx(hKey, _T("ConfigFile"), NULL, NULL, (BYTE *)configFile, &dwSize);
       RegCloseKey(hKey);
    }
 #else
    const TCHAR *env = _tgetenv(_T("NETXMSD_CONFIG"));
    if ((env != NULL) && (*env != 0))
-      nx_strncpy(szConfigFile, env, MAX_PATH);
+      nx_strncpy(configFile, env, MAX_PATH);
 #endif
+
+   // Search for config
+   if (configFile[0] == 0)
+   {
+#ifdef _WIN32
+      TCHAR path[MAX_PATH];
+      GetNetXMSDirectory(nxDirEtc, path);
+      _tcscat(path, _T("\\netxmsd.conf"));
+      if (_taccess(path, 4) == 0)
+      {
+		   _tcscpy(configFile, path);
+      }
+      else
+      {
+         _tcscpy(configFile, _T("C:\\netxmsd.conf"));
+      }
+#else
+      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
+      if ((homeDir != NULL) && (*homeDir != 0))
+      {
+         TCHAR config[MAX_PATH];
+         _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir);
+		   if (_taccess(config, 4) == 0)
+		   {
+			   _tcscpy(configFile, config);
+            goto stop_search;
+		   }
+      }
+		if (_taccess(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
+		{
+			_tcscpy(configFile, PREFIX _T("/etc/netxmsd.conf"));
+		}
+		else if (_taccess(_T("/usr/etc/netxmsd.conf"), 4) == 0)
+		{
+			_tcscpy(configFile, _T("/usr/etc/netxmsd.conf"));
+		}
+		else
+		{
+			_tcscpy(configFile, _T("/etc/netxmsd.conf"));
+		}
+stop_search:
+      ;
+#endif
+   }
 
    // Parse command line
    opterr = 1;
@@ -592,7 +635,7 @@ int main(int argc, char *argv[])
                      _T("   unlock             : Forced database unlock\n")
                      _T("   upgrade            : Upgrade database to new version\n")
                      _T("Valid options are:\n")
-                     _T("   -c <config> : Use alternate configuration file. Default is ") DEFAULT_CONFIG_FILE _T("\n")
+                     _T("   -c <config> : Use alternate configuration file. Default is %s\n")
                      _T("   -d          : Check collected data (may take very long time).\n")
                      _T("   -D          : Migrate only collected data.\n")
                      _T("   -f          : Force repair - do not ask for confirmation.\n")
@@ -608,7 +651,7 @@ int main(int argc, char *argv[])
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
                      _T("   -v          : Display version and exit.\n")
                      _T("   -X          : Ignore SQL errors when upgrading (USE WITH CAUTION!!!)\n")
-                     _T("\n"));
+                     _T("\n"), configFile);
             bStart = FALSE;
             break;
          case 'v':   // Print version and exit
@@ -617,10 +660,10 @@ int main(int argc, char *argv[])
             break;
          case 'c':
 #ifdef UNICODE
-	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, szConfigFile, MAX_PATH);
-				szConfigFile[MAX_PATH - 1] = 0;
+	         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, configFile, MAX_PATH);
+				configFile[MAX_PATH - 1] = 0;
 #else
-            nx_strncpy(szConfigFile, optarg, MAX_PATH);
+            nx_strncpy(configFile, optarg, MAX_PATH);
 #endif
             break;
 			case 'd':
@@ -636,7 +679,7 @@ int main(int argc, char *argv[])
 				g_isGuiMode = true;
 				break;
          case 'N':
-            bReplaceValue = FALSE;
+            replaceValue = false;
             break;
          case 'q':
             bQuiet = TRUE;
@@ -676,12 +719,12 @@ int main(int argc, char *argv[])
       _tprintf(_T("Command missing. Type nxdbmgr -h for command line syntax.\n"));
       return 1;
    }
-   if (strcmp(argv[optind], "batch") && 
-       strcmp(argv[optind], "check") && 
-       strcmp(argv[optind], "check-data-tables") && 
-       strcmp(argv[optind], "export") && 
-       strcmp(argv[optind], "get") && 
-       strcmp(argv[optind], "import") && 
+   if (strcmp(argv[optind], "batch") &&
+       strcmp(argv[optind], "check") &&
+       strcmp(argv[optind], "check-data-tables") &&
+       strcmp(argv[optind], "export") &&
+       strcmp(argv[optind], "get") &&
+       strcmp(argv[optind], "import") &&
        strcmp(argv[optind], "init") &&
        strcmp(argv[optind], "migrate") &&
        strcmp(argv[optind], "resetadmin") &&
@@ -700,39 +743,8 @@ int main(int argc, char *argv[])
    }
 
    // Read configuration file
-#if !defined(_WIN32) && !defined(_NETWARE)
-	if (!_tcscmp(szConfigFile, _T("{search}")))
-	{
-      const TCHAR *homeDir = _tgetenv(_T("NETXMS_HOME"));
-      if ((homeDir != NULL) && (*homeDir != 0))
-      {
-         TCHAR config[MAX_PATH];
-         _sntprintf(config, MAX_PATH, _T("%s/etc/netxmsd.conf"), homeDir);
-		   if (_taccess(config, 4) == 0)
-		   {
-			   _tcscpy(szConfigFile, config);
-            goto stop_search;
-		   }
-      }
-		if (_taccess(PREFIX _T("/etc/netxmsd.conf"), 4) == 0)
-		{
-			_tcscpy(szConfigFile, PREFIX _T("/etc/netxmsd.conf"));
-		}
-		else if (_taccess(_T("/usr/etc/netxmsd.conf"), 4) == 0)
-		{
-			_tcscpy(szConfigFile, _T("/usr/etc/netxmsd.conf"));
-		}
-		else
-		{
-			_tcscpy(szConfigFile, _T("/etc/netxmsd.conf"));
-		}
-stop_search:
-      ;
-	}
-#endif
-
 	Config *config = new Config();
-	if (!config->loadIniConfig(szConfigFile, _T("server")) || !config->parseTemplate(_T("server"), m_cfgTemplate))
+	if (!config->loadIniConfig(configFile, _T("server")) || !config->parseTemplate(_T("server"), m_cfgTemplate))
    {
       _tprintf(_T("Error loading configuration file\n"));
       return 2;
@@ -740,10 +752,7 @@ stop_search:
 	delete config;
 
 	// Decrypt password
-	if (s_encryptedDbPassword[0] != 0)
-	{
-		DecryptPassword(s_dbLogin, s_encryptedDbPassword, s_dbPassword);
-	}
+   DecryptPassword(s_dbLogin, s_dbPassword, s_dbPassword, MAX_PASSWORD);
 
 #ifndef _WIN32
 	SetDefaultCodepage(m_szCodePage);
@@ -837,8 +846,8 @@ stop_search:
 #else
 			char *var = argv[optind + 1];
 #endif
-			TCHAR buffer[MAX_DB_STRING];
-			ConfigReadStr(var, buffer, MAX_DB_STRING, _T(""));
+			TCHAR buffer[MAX_CONFIG_VALUE];
+			ConfigReadStr(var, buffer, MAX_CONFIG_VALUE, _T(""));
 			_tprintf(_T("%s\n"), buffer);
 #ifdef UNICODE
 			free(var);
@@ -853,7 +862,7 @@ stop_search:
 			char *var = argv[optind + 1];
 			char *value = argv[optind + 2];
 #endif
-			CreateConfigParam(var, value, 1, 0, bReplaceValue);
+			CreateConfigParam(var, value, true, false, replaceValue);
 #ifdef UNICODE
 			free(var);
 			free(value);

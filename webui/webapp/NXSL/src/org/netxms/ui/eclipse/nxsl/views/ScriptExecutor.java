@@ -101,7 +101,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
    {
       super.init(site);
 
-      session = (NXCSession)ConsoleSharedData.getSession();
+      session = ConsoleSharedData.getSession();
       objectId = Long.parseLong(site.getSecondaryId());
 
       setPartName(String.format(Messages.get().ScriptExecutor_PartName, session.getObjectName(objectId)));
@@ -176,7 +176,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
       gridData.grabExcessVerticalSpace = true;
       section.setLayoutData(gridData);
       
-      scriptEditor = new ScriptEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, 0);
+      scriptEditor = new ScriptEditor(section, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL, true);
       section.setClient(scriptEditor);
       scriptEditor.setText(""); //$NON-NLS-1$
       scriptEditor.getTextWidget().addModifyListener(new ModifyListener() {
@@ -497,7 +497,7 @@ public class ScriptExecutor extends ViewPart implements ISaveablePart2, TextOutp
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
             library = session.getScriptLibrary();
-
+            
             runInUIThread(new Runnable() {
                @Override
                public void run()

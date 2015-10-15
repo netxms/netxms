@@ -29,8 +29,7 @@ import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
  */
 public class EventTemplateAdapterFactory implements IAdapterFactory
 {
-	@SuppressWarnings("rawtypes")
-	private static final Class[] supportedClasses = 
+	private static final Class<?>[] supportedClasses = 
 	{
 		IWorkbenchAdapter.class
 	};
@@ -38,9 +37,8 @@ public class EventTemplateAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
 	 */
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Class[] getAdapterList()
+	public Class<?>[] getAdapterList()
 	{
 		return supportedClasses;
 	}
@@ -48,7 +46,7 @@ public class EventTemplateAdapterFactory implements IAdapterFactory
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes" })
 	@Override
 	public Object getAdapter(Object adaptableObject, Class adapterType)
 	{

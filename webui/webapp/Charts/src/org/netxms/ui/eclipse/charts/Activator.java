@@ -18,12 +18,12 @@
  */
 package org.netxms.ui.eclipse.charts;
 
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.tools.FontTools;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -34,6 +34,8 @@ public class Activator extends AbstractUIPlugin
 	// The plug-in ID
 	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.charts"; //$NON-NLS-1$
 
+	private static final String[] CHART_FONTS = { "Segoe UI", "DejaVu Sans", "Lucida Sans", "Arial", "Helvetica" };
+	
 	// The shared instance
 	private static Activator plugin;
 	
@@ -92,20 +94,51 @@ public class Activator extends AbstractUIPlugin
 	/**
 	 * @return the chartTitleFont
 	 */
-	public Font getChartTitleFont(Display display)
+	public Font getChartTitleFont()
 	{
 		if (chartTitleFont == null)
-			chartTitleFont = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 16), SWT.BOLD);
+			chartTitleFont = FontTools.createFont(CHART_FONTS, 2, SWT.BOLD); 
 		return chartTitleFont;
 	}
 
 	/**
 	 * @return the chartFont
 	 */
-	public Font getChartFont(Display display)
+	public Font getChartFont()
 	{
 		if (chartFont == null)
-			chartFont = new Font(display, "Verdana", WidgetHelper.fontPixelsToPoints(display, 12), SWT.NORMAL);
+			chartFont = FontTools.createFont(CHART_FONTS, SWT.NORMAL);
 		return chartFont;
 	}
+
+   /**
+    * Log via platform logging facilities
+    * 
+    * @param msg
+    */
+   public static void logInfo(String msg)
+   {
+      log(Status.INFO, msg, null);
+   }
+
+   /**
+    * Log via platform logging facilities
+    * 
+    * @param msg
+    */
+   public static void logError(String msg, Exception e)
+   {
+      log(Status.ERROR, msg, e);
+   }
+
+   /**
+    * Log via platform logging facilities
+    * 
+    * @param msg
+    * @param e
+    */
+   public static void log(int status, String msg, Exception e)
+   {
+      getDefault().getLog().log(new Status(status, PLUGIN_ID, Status.OK, msg, e));
+   }
 }

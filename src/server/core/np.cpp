@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -197,12 +197,17 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreation
    }
 
    // Add default DCIs
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT, 
-		ConfigReadInt(_T("DefaultDCIPollingInterval"), 60), 
+   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT,
+		ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
 		ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), pNode));
 
 	if (doConfPoll)
-		pNode->configurationPoll(NULL, 0, -1, ipAddr.getMaskBits());
+   {
+      PollerInfo *p = RegisterPoller(POLLER_TYPE_CONFIGURATION, pNode);
+      p->startExecution();
+		pNode->configurationPoll(NULL, 0, p, ipAddr.getMaskBits());
+      delete p;
+   }
 
    pNode->unhide();
    PostEvent(EVENT_NODE_ADDED, pNode->getId(), "d", (int)(discoveredNode ? 1 : 0));
@@ -256,7 +261,7 @@ static Interface *GetOldNodeWithNewIP(const InetAddress& ipAddr, UINT32 dwZoneId
 
 	if (iface == NULL)
 		DbgPrintf(6, _T("GetOldNodeWithNewIP: returning null (FindInterfaceByMAC!)"));
-	
+
 	return iface;
 }
 
@@ -363,45 +368,22 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
 		return true;
 
 	// *** SNMP ***
-	SNMP_Transport *pTransport = NULL;
-	if (snmpProxy != 0)
-	{
-		Node *proxyNode = (Node *)g_idxNodeById.get(snmpProxy);
-		if (proxyNode != NULL)
-		{
-			AgentConnection *pConn;
-
-			pConn = proxyNode->createAgentConnection();
-			if (pConn != NULL)
-			{
-				pTransport = new SNMP_ProxyTransport(pConn, ipAddr, 161);
-			}
-		}
-	}
-	else
-	{
-		pTransport = new SNMP_UDPTransport;
-		((SNMP_UDPTransport *)pTransport)->createUDPTransport(ipAddr, 161);
-	}
+   INT16 version;
+   StringList oids;
+   oids.add(_T(".1.3.6.1.2.1.1.2.0"));
+   oids.add(_T(".1.3.6.1.2.1.1.1.0"));
+   AddDriverSpecificOids(&oids);
+   SNMP_Transport *pTransport = SnmpCheckCommSettings(snmpProxy, ipAddr, &version, 0, NULL, &oids);
+   //pass correct port
    if (pTransport != NULL)
    {
-	   int version;
-      StringList oids;
-      oids.add(_T(".1.3.6.1.2.1.1.2.0"));
-      oids.add(_T(".1.3.6.1.2.1.1.1.0"));
-      AddDriverSpecificOids(&oids);
-      SNMP_SecurityContext *ctx = SnmpCheckCommSettings(pTransport, &version, NULL, &oids);
-	   if (ctx != NULL)
-	   {
-		   delete ctx;
-		   if (transport != NULL)
-		   {
-			   pTransport->setSnmpVersion(version);
-			   *transport = pTransport;
-			   pTransport = NULL;	// prevent deletion
-		   }
-		   reachable = true;
-	   }
+      if (transport != NULL)
+      {
+         pTransport->setSnmpVersion(version);
+         *transport = pTransport;
+         pTransport = NULL;	// prevent deletion
+      }
+      reachable = true;
 	   delete pTransport;
    }
 
@@ -414,7 +396,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
 static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
 {
    DISCOVERY_FILTER_DATA data;
-   TCHAR szFilter[MAX_DB_STRING], szBuffer[256], szIpAddr[64];
+   TCHAR szFilter[MAX_CONFIG_VALUE], szBuffer[256], szIpAddr[64];
    UINT32 dwTemp;
    AgentConnection *pAgentConn;
    BOOL bResult = FALSE;
@@ -493,7 +475,7 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
 	}
 
    // Read configuration
-   ConfigReadStr(_T("DiscoveryFilter"), szFilter, MAX_DB_STRING, _T(""));
+   ConfigReadStr(_T("DiscoveryFilter"), szFilter, MAX_CONFIG_VALUE, _T(""));
    StrStrip(szFilter);
 
    // Check for filter script
@@ -700,7 +682,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
 
    while(!IsShutdownInProgress())
    {
-      pInfo = (NEW_NODE *)g_nodePollerQueue.GetOrBlock();
+      pInfo = (NEW_NODE *)g_nodePollerQueue.getOrBlock();
       if (pInfo == INVALID_POINTER_VALUE)
          break;   // Shutdown indicator received
 

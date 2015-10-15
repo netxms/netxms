@@ -43,7 +43,7 @@ static Queue s_snmpTrapQueue;
  */
 void ShutdownSNMPTrapSender()
 {
-	s_snmpTrapQueue.SetShutdownMode();
+	s_snmpTrapQueue.setShutdownMode();
 }
 
 /**
@@ -117,16 +117,12 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
       pTransport->setPeerUpdatedOnRecv(true);
    }
 
-   BYTE *rawMessage = NULL;
-   int iBytes = 0;
-   socklen_t nAddrLen = sizeof(struct sockaddr_in);
-
    // Wait for packets
    while(!(g_dwFlags & AF_SHUTDOWN))
    {
-      rawMessage = NULL;
-      iBytes = 0;
-      iBytes = pTransport->readRawMessage(&rawMessage, 2000, (struct sockaddr *)&addr, &nAddrLen);
+      BYTE *rawMessage = NULL;
+      socklen_t nAddrLen = sizeof(struct sockaddr_in);
+      int iBytes = pTransport->readRawMessage(&rawMessage, 2000, (struct sockaddr *)&addr, &nAddrLen);
       if ((iBytes > 0) && (rawMessage != NULL))
       {
          UdpMessage *message = new UdpMessage();
@@ -135,7 +131,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
          message->lenght = iBytes;
          message->rawMessage = rawMessage;
          DebugPrintf(INVALID_INDEX, 6, _T("SNMPTrapReceiver: packet received from %s"), IpToStr(message->ipAddr, ipAddrStr));
-         s_snmpTrapQueue.Put(message);
+         s_snmpTrapQueue.put(message);
       }
       else
       {
@@ -158,7 +154,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
    while(1)
    {
       DebugPrintf(INVALID_INDEX, 8, _T("SNMPTrapSender: waiting for message"));
-      UdpMessage *pdu = (UdpMessage *)s_snmpTrapQueue.GetOrBlock();
+      UdpMessage *pdu = (UdpMessage *)s_snmpTrapQueue.getOrBlock();
       if (pdu == INVALID_POINTER_VALUE)
          break;
 
@@ -198,7 +194,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       if (!sent)
       {
          DebugPrintf(INVALID_INDEX, 6, _T("Cannot forward trap to server"));
-         s_snmpTrapQueue.Put(pdu);
+         s_snmpTrapQueue.put(pdu);
 			ThreadSleep(1);
       }
       else

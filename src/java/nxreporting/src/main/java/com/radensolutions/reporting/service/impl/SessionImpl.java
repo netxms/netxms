@@ -20,7 +20,7 @@ import java.util.*;
 
 @Component
 public class SessionImpl implements Session {
-    public static final Logger logger = LoggerFactory.getLogger(SessionImpl.class);
+    public static final Logger LOG = LoggerFactory.getLogger(SessionImpl.class);
     public static final int NXCP_VERSION = 0x02000000;
 
     @Autowired
@@ -119,7 +119,9 @@ public class SessionImpl implements Session {
         reply.setFieldInt32(NXCPCodes.VID_RCC, CommonRCC.SUCCESS);
         final int userId = request.getFieldAsInt32(NXCPCodes.VID_USER_ID);
         final UUID reportId = request.getFieldAsUUID(NXCPCodes.VID_REPORT_DEFINITION);
+        LOG.debug("Loading report results for {} (user={})", reportId, userId);
         final List<ReportResult> list = reportManager.listResults(reportId, userId);
+        LOG.debug("Got {} records", list.size());
         long index = NXCPCodes.VID_ROW_DATA_BASE;
         int jobNum = 0;
         for (ReportResult record : list) {
@@ -186,7 +188,7 @@ public class SessionImpl implements Session {
                     jobDetailsNum++;
                 }
             } catch (Exception e) {
-                logger.error("Application error: ", e);
+                LOG.error("Application error: ", e);
             }
         }
         reply.setFieldInt32(NXCPCodes.VID_NUM_ITEMS, jobDetailsNum);

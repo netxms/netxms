@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -25,23 +25,24 @@
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   24
+#define NUMBER_OF_GROUPS   25
 
 /**
  * Static data
  */
 static MUTEX s_mutexTableAccess;
-static UINT32 s_freeIdTable[NUMBER_OF_GROUPS] = { 100, 1, FIRST_USER_EVENT_ID, 1, 1, 
+static UINT32 s_freeIdTable[NUMBER_OF_GROUPS] = { 100, 1, FIRST_USER_EVENT_ID, 1, 1,
                                                    1, 1, 0x80000000,
                                                    1, 1, 0x80000001, 1, 1, 1, 1,
-                                                   10000, 10000, 1, 1, 1, 1, 1, 1, 1
+                                                   10000, 10000, 1, 1, 1, 1, 1, 1, 1, 1
                                                  };
-static UINT32 s_idLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF, 
+static UINT32 s_idLimits[NUMBER_OF_GROUPS] = { 0xFFFFFFFE, 0xFFFFFFFE, 0x7FFFFFFF, 0x7FFFFFFF,
                                                 0x7FFFFFFF, 0xFFFFFFFE, 0x7FFFFFFF, 0xFFFFFFFF,
                                                 0x7FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
                                                 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
-																0xFFFFFFFE, 0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE
+																0xFFFFFFFE, 0x7FFFFFFE, 0xFFFFFFFE, 0xFFFFFFFE,
+																0xFFFFFFFE
                                               };
 static UINT64 m_freeEventId = 1;
 static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
@@ -69,7 +70,8 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
 	_T("Situations"),
 	_T("Table Columns"),
 	_T("Mapping Tables"),
-   _T("DCI Summary Tables")
+   _T("DCI Summary Tables"),
+   _T("Scheduled Tasks")
 };
 
 /**
@@ -273,7 +275,7 @@ BOOL InitIdTable()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_THRESHOLD] = max(s_freeIdTable[IDG_THRESHOLD], 
+         s_freeIdTable[IDG_THRESHOLD] = max(s_freeIdTable[IDG_THRESHOLD],
                                               DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
@@ -281,7 +283,7 @@ BOOL InitIdTable()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_THRESHOLD] = max(s_freeIdTable[IDG_THRESHOLD], 
+         s_freeIdTable[IDG_THRESHOLD] = max(s_freeIdTable[IDG_THRESHOLD],
                                               DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
@@ -291,7 +293,7 @@ BOOL InitIdTable()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_USER] = max(s_freeIdTable[IDG_USER], 
+         s_freeIdTable[IDG_USER] = max(s_freeIdTable[IDG_USER],
                                          DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
@@ -301,7 +303,7 @@ BOOL InitIdTable()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_USER_GROUP] = max(s_freeIdTable[IDG_USER_GROUP], 
+         s_freeIdTable[IDG_USER_GROUP] = max(s_freeIdTable[IDG_USER_GROUP],
                                                DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
@@ -311,7 +313,7 @@ BOOL InitIdTable()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_ALARM] = max(s_freeIdTable[IDG_ALARM], 
+         s_freeIdTable[IDG_ALARM] = max(s_freeIdTable[IDG_ALARM],
                                           DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
@@ -321,7 +323,7 @@ BOOL InitIdTable()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_ALARM_NOTE] = max(s_freeIdTable[IDG_ALARM_NOTE], 
+         s_freeIdTable[IDG_ALARM_NOTE] = max(s_freeIdTable[IDG_ALARM_NOTE],
                                                DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
@@ -340,7 +342,7 @@ BOOL InitIdTable()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_PACKAGE] = max(s_freeIdTable[IDG_PACKAGE], 
+         s_freeIdTable[IDG_PACKAGE] = max(s_freeIdTable[IDG_PACKAGE],
                                             DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
@@ -350,7 +352,7 @@ BOOL InitIdTable()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_OBJECT_TOOL] = max(s_freeIdTable[IDG_OBJECT_TOOL], 
+         s_freeIdTable[IDG_OBJECT_TOOL] = max(s_freeIdTable[IDG_OBJECT_TOOL],
                                                 DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
@@ -360,7 +362,7 @@ BOOL InitIdTable()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_SCRIPT] = max(s_freeIdTable[IDG_SCRIPT], 
+         s_freeIdTable[IDG_SCRIPT] = max(s_freeIdTable[IDG_SCRIPT],
                                            DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
@@ -370,7 +372,7 @@ BOOL InitIdTable()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_AGENT_CONFIG] = max(s_freeIdTable[IDG_AGENT_CONFIG], 
+         s_freeIdTable[IDG_AGENT_CONFIG] = max(s_freeIdTable[IDG_AGENT_CONFIG],
                                                  DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
@@ -441,6 +443,16 @@ BOOL InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_DCI_SUMMARY_TABLE] = max(s_freeIdTable[IDG_DCI_SUMMARY_TABLE],
+                                                      DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available scheduled_tasks id
+   hResult = DBSelect(g_hCoreDB, _T("SELECT max(id) FROM scheduled_tasks"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_SCHEDULE] = max(s_freeIdTable[IDG_SCHEDULE],
                                                       DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }

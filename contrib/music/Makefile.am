@@ -8,7 +8,7 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-musicdir=$(pkgdatadir)/files
+musicdir=$(localstatedir)/lib/netxms/files
 
 music_DATA = \
 	Warning-A.wav \

@@ -62,10 +62,6 @@ static DWORD CreateMapObject(const TCHAR *name, const TCHAR *description)
 	if (!SQLQuery(query))
 		return FALSE;
 
-	uuid_t guid;
-	TCHAR guidText[128];
-
-	uuid_generate(guid);
    _sntprintf(query, 4096, 
               _T("INSERT INTO object_properties (object_id,guid,name,")
               _T("status,is_deleted,is_system,inherit_access_rights,")
@@ -75,7 +71,7 @@ static DWORD CreateMapObject(const TCHAR *name, const TCHAR *description)
 				  _T("latitude,longitude,image,comments) VALUES ")
               _T("(%d,'%s',%s,0,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
 				  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000',%s)"),
-				  (int)id, uuid_to_string(guid, guidText), 
+              (int)id, (const TCHAR *)uuid::generate().toString(),
 				  (const TCHAR *)DBPrepareString(g_hCoreDB, name), 
 				  TIME_T_FCAST(time(NULL)),
 				  (const TCHAR *)DBPrepareString(g_hCoreDB, description, 2048));

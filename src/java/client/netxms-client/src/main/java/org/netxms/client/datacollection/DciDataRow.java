@@ -88,4 +88,24 @@ public class DciDataRow
 		
 		return 0;
 	}
+
+   /**
+    * Invert value
+    */
+   public void invert()
+   {
+      if (value instanceof Long)
+         value = -((Long)value);
+      else if (value instanceof Double)
+         value = -((Double)value);
+   }
+
+   /* (non-Javadoc)
+    * @see java.lang.Object#toString()
+    */
+   @Override
+   public String toString()
+   {
+      return "DciDataRow [timestamp=" + timestamp + ", value=" + value + "]";
+   }
 }

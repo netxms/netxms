@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
@@ -44,6 +45,7 @@ public class NetworkMap extends PropertyPage
 	private LabeledText title;
 	private Scale zoomLevelScale;
 	private Spinner zoomLevelSpinner;
+	private Button enableObjectDoubleClick;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -124,6 +126,10 @@ public class NetworkMap extends PropertyPage
 			}
 		});
 
+		enableObjectDoubleClick = new Button(dialogArea, SWT.CHECK);
+		enableObjectDoubleClick.setText("Enable double click action on objects");
+		enableObjectDoubleClick.setSelection(config.isObjectDoubleClickEnabled());
+
 		return dialogArea;
 	}
 
@@ -136,6 +142,7 @@ public class NetworkMap extends PropertyPage
 		config.setObjectId(objectSelector.getObjectId());
 		config.setTitle(title.getText());
 		config.setZoomLevel(zoomLevelSpinner.getSelection());
+		config.setObjectDoubleClickEnabled(enableObjectDoubleClick.getSelection());
 		return true;
 	}
 }

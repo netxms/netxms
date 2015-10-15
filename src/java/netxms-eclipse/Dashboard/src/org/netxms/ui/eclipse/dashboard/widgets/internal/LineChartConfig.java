@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2015 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,9 @@ public class LineChartConfig extends AbstractChartConfig
    
    @Element(required = false)
    private boolean logScaleEnabled = false;
+
+   @Element(required = false)
+   private boolean stacked = false;
 
 	/**
 	 * Create line chart settings object from XML document
@@ -153,5 +156,21 @@ public class LineChartConfig extends AbstractChartConfig
    public void setLogScaleEnabled(boolean logScaleEnabled)
    {
       this.logScaleEnabled = logScaleEnabled;
+   }
+
+   /**
+    * @return the stacked
+    */
+   public boolean isStacked()
+   {
+      return stacked;
+   }
+
+   /**
+    * @param stacked the stacked to set
+    */
+   public void setStacked(boolean stacked)
+   {
+      this.stacked = stacked;
    }
 }

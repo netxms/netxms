@@ -61,11 +61,14 @@ static NXCORE_LOG s_logs[] =
 	},
 	{ _T("EventLog"), _T("event_log"), _T("event_id"), _T("event_source"), SYSTEM_ACCESS_VIEW_EVENT_LOG,
 		{
+         { _T("event_id"), _T("ID"), LC_INTEGER },
 			{ _T("event_timestamp"), _T("Time"), LC_TIMESTAMP },
 			{ _T("event_source"), _T("Source"), LC_OBJECT_ID },
 			{ _T("event_code"), _T("Event"), LC_EVENT_CODE },
 			{ _T("event_severity"), _T("Severity"), LC_SEVERITY },
 			{ _T("event_message"), _T("Message"), LC_TEXT },
+			{ _T("user_tag"), _T("User tag"), LC_TEXT },
+         { _T("root_event_id"), _T("Root ID"), LC_INTEGER },
 			{ NULL, NULL, 0 }
 		}
 	},
@@ -137,6 +140,7 @@ static int RegisterLogHandle(LogHandle *handle, ClientSession *session)
 	s_regList[i].sessionId = session->getId();
 
 	MutexUnlock(s_regListMutex);
+   DbgPrintf(6, _T("RegisterLogHandle: handle object %p registered as %d"), handle, i);
 	return i;
 }
 
@@ -197,32 +201,38 @@ int OpenLog(const TCHAR *name, ClientSession *session, UINT32 *rcc)
 UINT32 CloseLog(ClientSession *session, int logHandle)
 {
 	UINT32 rcc = RCC_INVALID_LOG_HANDLE;
+   LogHandle *log = NULL;
 
+   DbgPrintf(6, _T("CloseLog: close request from session %d for handle %d"), session->getId(), logHandle);
 	MutexLock(s_regListMutex);
 
 	if ((logHandle >= 0) && (logHandle < s_regListSize) &&
 	    (s_regList[logHandle].sessionId == session->getId()) &&
 		 (s_regList[logHandle].handle != NULL))
 	{
-		s_regList[logHandle].handle->lock();
-		s_regList[logHandle].handle->unlock();
-		delete s_regList[logHandle].handle;
-		s_regList[logHandle].handle = NULL;
-		rcc = RCC_SUCCESS;
+      log = s_regList[logHandle].handle;
+      s_regList[logHandle].handle = NULL;
 	}
 
 	MutexUnlock(s_regListMutex);
+
+   if (log != NULL)
+   {
+      log->decRefCount();
+      rcc = RCC_SUCCESS;
+   }
 	return rcc;
 }
 
 /**
- * Acqure log handle object
+ * Acquire log handle object
  * Caller must call LogHandle::unlock() when it finish work with acquired object
  */
 LogHandle *AcquireLogHandleObject(ClientSession *session, int logHandle)
 {
 	LogHandle *object = NULL;
 
+   DbgPrintf(6, _T("AcquireLogHandleObject: request from session %d for handle %d"), session->getId(), logHandle);
 	MutexLock(s_regListMutex);
 
 	if ((logHandle >= 0) && (logHandle < s_regListSize) &&
@@ -230,9 +240,11 @@ LogHandle *AcquireLogHandleObject(ClientSession *session, int logHandle)
 		 (s_regList[logHandle].handle != NULL))
 	{
 		object = s_regList[logHandle].handle;
-		object->lock();
+      object->incRefCount();
 	}
 
 	MutexUnlock(s_regListMutex);
+   if (object != NULL)
+      object->lock();
 	return object;
 }

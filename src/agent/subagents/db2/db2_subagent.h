@@ -50,7 +50,7 @@ typedef struct
    TCHAR db2DbName[DB2_DB_MAX_NAME];
    TCHAR db2DbAlias[DB2_DB_MAX_NAME];
    TCHAR db2UName[DB2_MAX_USER_NAME];
-   TCHAR db2UPass[STR_MAX];
+   TCHAR db2UPass[MAX_PASSWORD];
    LONG db2ReconnectInterval;
    LONG db2QueryInterval;
 } DB2_INFO, *PDB2_INFO;
