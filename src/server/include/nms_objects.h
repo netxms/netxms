@@ -2373,6 +2373,7 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddressList *ipAdd
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
 Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId);
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
+Node NXCORE_EXPORTABLE *FindNodeBySysName(const TCHAR *sysName);
 Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, const InetAddress& ipAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description);

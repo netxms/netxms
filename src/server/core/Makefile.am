@@ -16,10 +16,10 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			filemonitoring.cpp graph.cpp hdlink.cpp hk.cpp id.cpp \
 			import.cpp inaddr_index.cpp index.cpp interface.cpp \
 			isc.cpp job.cpp jobmgr.cpp jobqueue.cpp layer2.cpp \
-			ldap.cpp lln.cpp lldp.cpp \
-			locks.cpp logfilter.cpp loghandle.cpp logs.cpp \
-			macdb.cpp main.cpp mdconn.cpp mdsession.cpp \
-			mobile.cpp modules.cpp mt.cpp ndd.cpp ndp.cpp \
+			ldap.cpp lln.cpp lldp.cpp locks.cpp logfilter.cpp \
+			loghandle.cpp logs.cpp macdb.cpp main.cpp maint.cpp \
+			mdconn.cpp mdsession.cpp mobile.cpp modules.cpp \
+			mt.cpp ndd.cpp ndp.cpp \
 			netinfo.cpp netmap.cpp netobj.cpp netsrv.cpp \
 			node.cpp nodelink.cpp np.cpp nxsl_classes.cpp \
 			nxslext.cpp objects.cpp objtools.cpp package.cpp \
@@ -31,7 +31,7 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			template.cpp timer.cpp tools.cpp tracert.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
 			userdb_objects.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
-         winperf.cpp xmpp.cpp zone.cpp maintenance.cpp
+			winperf.cpp xmpp.cpp zone.cpp
 libnxcore_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) 
 libnxcore_la_LIBADD = \
