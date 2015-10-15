@@ -68,7 +68,10 @@ public class GeneralInfo extends TableElement
 		if (object.getGuid() != null)
 			addPair(Messages.get().GeneralInfo_GUID, object.getGuid().toString());
 		addPair(Messages.get().GeneralInfo_Class, object.getObjectClassName());
-		addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()));
+		if (object.isInMaintenanceMode())
+         addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()) + " (maintenance)");
+		else
+		   addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()));
 		switch(object.getObjectClass())
 		{
 			case AbstractObject.OBJECT_INTERFACE:

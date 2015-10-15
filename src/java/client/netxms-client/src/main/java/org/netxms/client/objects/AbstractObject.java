@@ -118,6 +118,7 @@ public abstract class AbstractObject
 	protected int objectClass;
 	protected ObjectStatus status = ObjectStatus.UNKNOWN;
 	protected boolean isDeleted = false;
+	protected boolean inMaintenanceMode = false;
 	protected String comments;
 	protected GeoLocation geolocation;
 	protected PostalAddress postalAddress;
@@ -195,6 +196,7 @@ public abstract class AbstractObject
 		objectClass = msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_CLASS);
 		isDeleted = msg.getFieldAsBoolean(NXCPCodes.VID_IS_DELETED);
 		status = ObjectStatus.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_OBJECT_STATUS));
+		inMaintenanceMode = msg.getFieldAsBoolean(NXCPCodes.VID_MAINTENANCE_MODE);
 		comments = msg.getFieldAsString(NXCPCodes.VID_COMMENTS);
 		geolocation = new GeoLocation(msg);
 		postalAddress = new PostalAddress(msg);
@@ -889,5 +891,13 @@ public abstract class AbstractObject
    public PostalAddress getPostalAddress()
    {
       return postalAddress;
+   }
+
+   /**
+    * @return the inMaintenanceMode
+    */
+   public boolean isInMaintenanceMode()
+   {
+      return inMaintenanceMode;
    }
 }

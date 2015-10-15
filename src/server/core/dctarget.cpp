@@ -815,6 +815,7 @@ void DataCollectionTarget::enterMaintenanceMode()
    lockProperties();
    m_maintenanceMode = true;
    m_maintenanceEventId = eventId;
+   setModified();
    unlockProperties();
 }
 
@@ -828,5 +829,6 @@ void DataCollectionTarget::leaveMaintenanceMode()
    lockProperties();
    m_maintenanceMode = false;
    m_maintenanceEventId = 0;
+   setModified();
    unlockProperties();
 }

@@ -889,6 +889,7 @@ public class NXCPCodes
    public static final long VID_CALLBACK_COUNT = 527;
    public static final long VID_DASHBOARDS = 528;
    public static final long VID_OWNER = 529;
+   public static final long VID_MAINTENANCE_MODE = 530;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
