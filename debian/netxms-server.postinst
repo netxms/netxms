@@ -84,10 +84,8 @@ LogFile=/var/log/netxmsd
 #DBPassword=netxms
 __END
 
-        if [ -z $2 ]; then
-          # install
-        else
-          # upgrade
+        if [ ! -z $2 ]; then
+          # previous version is set, it's upgrade
           /usr/bin/nxdbmgr upgrade
         fi
     ;;
