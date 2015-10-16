@@ -661,6 +661,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\maint.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\mdconn.cpp"
 				>
 			</File>
