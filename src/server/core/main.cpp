@@ -80,8 +80,10 @@ void InitCertificates();
 void InitUsers();
 void CleanupUsers();
 void LoadPerfDataStorageDrivers();
-void InitializeTaskScheduler();
-void CloseTaskScheduler();
+
+void ExecuteScheduledScript(const ScheduledTaskParameters *param);
+void MaintenanceModeEnter(const ScheduledTaskParameters *params);
+void MaintenanceModeLeave(const ScheduledTaskParameters *params);
 
 #if XMPP_SUPPORTED
 void StopXMPPConnector();
@@ -797,7 +799,6 @@ retry_db_lock:
 
 	InitLogAccess();
 	FileUploadJob::init();
-   InitMaintenanceJobScheduler();
 	InitMappingTables();
 
 	// Check if management node object presented in database
@@ -850,7 +851,9 @@ retry_db_lock:
    if (ConfigReadInt(_T("LdapSyncInterval"), 0))
 		ThreadCreate(SyncLDAPUsers, 0, NULL);
 
-   RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScript, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
+   RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScheduledScript, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
+   RegisterSchedulerTaskHandler(_T("Maintenance.Enter"), MaintenanceModeEnter, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
+   RegisterSchedulerTaskHandler(_T("Maintenance.Leave"), MaintenanceModeLeave, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
    InitializeTaskScheduler();
 
 	// Allow clients to connect
@@ -1900,11 +1903,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if (szBuffer[0] == _T('+'))
       {
          int offset = _tcstoul(&szBuffer[1], NULL, 0);
-         AddOneTimeSchedule(_T("Execute.Script"), time(NULL) + offset, pArg, 0, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
+         AddOneTimeScheduledTask(_T("Execute.Script"), time(NULL) + offset, pArg, 0, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
       }
       else
       {
-         AddSchedule(_T("Execute.Script"), szBuffer, pArg, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
+         AddScheduledTask(_T("Execute.Script"), szBuffer, pArg, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
       }
    }
 	else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))

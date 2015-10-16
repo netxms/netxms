@@ -108,7 +108,6 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nxcore_jobs.h"
 #include "nxcore_logs.h"
 #include "nxcore_schedule.h"
-#include "maintenance.h"
 
 /**
  * Common constants and macros
@@ -159,7 +158,7 @@ typedef void * HSNMPSESSION;
 #define IDG_DCT_COLUMN        21
 #define IDG_MAPPING_TABLE     22
 #define IDG_DCI_SUMMARY_TABLE 23
-#define IDG_SCHEDULE          24
+#define IDG_SCHEDULED_TASK    24
 
 /**
  * Exit codes for console commands
@@ -700,11 +699,11 @@ private:
    void compileScript(NXCPMessage *request);
 	void resyncAgentDciConfiguration(NXCPMessage *request);
    void cleanAgentDciConfiguration(NXCPMessage *request);
-   void listScheduleCallbacks(NXCPMessage *request);
-   void listSchedules(NXCPMessage *request);
-   void addSchedule(NXCPMessage *request);
-   void updateSchedule(NXCPMessage *request);
-   void removeSchedule(NXCPMessage *request);
+   void getSchedulerTaskHandlers(NXCPMessage *request);
+   void getScheduledTasks(NXCPMessage *request);
+   void addScheduledTask(NXCPMessage *request);
+   void updateScheduledTask(NXCPMessage *request);
+   void removeScheduledTask(NXCPMessage *request);
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

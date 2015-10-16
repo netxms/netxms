@@ -241,7 +241,7 @@ void ImportScript(ConfigEntry *config)
 /**
  * Execute library script from scheduler
  */
-void ExecuteScript(const ScheduleParameters *param)
+void ExecuteScheduledScript(const ScheduledTaskParameters *param)
 {
    size_t bufSize = 512;
    TCHAR name[256];

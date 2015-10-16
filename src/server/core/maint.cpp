@@ -22,7 +22,7 @@
 
 #include "nxcore.h"
 
-static void ScheduledMaintenance(const ScheduleParameters *params, bool enter)
+static void ScheduledMaintenance(const ScheduledTaskParameters *params, bool enter)
 {
    if(params->m_objectId == 0)
    {
@@ -55,18 +55,18 @@ static void ScheduledMaintenance(const ScheduleParameters *params, bool enter)
    }
 }
 
-static void MaintenanceEnter(const ScheduleParameters *params)
+/**
+ * Scheduled task handler - enter maintenance mode
+ */
+void MaintenanceModeEnter(const ScheduledTaskParameters *params)
 {
    ScheduledMaintenance(params, true);
 }
 
-static void MaintenanceLeave(const ScheduleParameters *params)
+/**
+ * Scheduled task handler - leave maintenance mode
+ */
+void MaintenanceModeLeave(const ScheduledTaskParameters *params)
 {
    ScheduledMaintenance(params, false);
-}
-
-void InitMaintenanceJobScheduler()
-{
-   RegisterSchedulerTaskHandler(_T("Maintenance.Enter"), MaintenanceEnter, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
-   RegisterSchedulerTaskHandler(_T("Maintenance.Leave"), MaintenanceLeave, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
 }

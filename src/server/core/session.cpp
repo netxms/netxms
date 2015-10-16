@@ -1401,19 +1401,19 @@ void ClientSession::processingThread()
             resyncAgentDciConfiguration(pMsg);
             break;
          case CMD_LIST_SCHEDULE_CALLBACKS:
-            listScheduleCallbacks(pMsg);
+            getSchedulerTaskHandlers(pMsg);
             break;
          case CMD_LIST_SCHEDULES:
-            listSchedules(pMsg);
+            getScheduledTasks(pMsg);
             break;
          case CMD_ADD_SCHEDULE:
-            addSchedule(pMsg);
+            addScheduledTask(pMsg);
             break;
          case CMD_UPDATE_SCHEDULE:
-            updateSchedule(pMsg);
+            updateScheduledTask(pMsg);
             break;
          case CMD_REMOVE_SCHEDULE:
-            removeSchedule(pMsg);
+            removeScheduledTask(pMsg);
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
             {
@@ -14052,12 +14052,12 @@ void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
 /**
  * List all possible Schedule ID's
  */
-void ClientSession::listScheduleCallbacks(NXCPMessage *request)
+void ClientSession::getSchedulerTaskHandlers(NXCPMessage *request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   GetCallbackIdList(&msg, m_dwSystemAccess);
+   GetSchedulerTaskHandlers(&msg, m_dwSystemAccess);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
@@ -14065,12 +14065,12 @@ void ClientSession::listScheduleCallbacks(NXCPMessage *request)
 /**
  * List all existing schedules
  */
-void ClientSession::listSchedules(NXCPMessage *request)
+void ClientSession::getScheduledTasks(NXCPMessage *request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   GetSheduleList(&msg, m_dwUserId, m_dwSystemAccess);
+   GetSheduledTasks(&msg, m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
@@ -14078,12 +14078,12 @@ void ClientSession::listSchedules(NXCPMessage *request)
 /**
  * Add new schedule
  */
-void ClientSession::addSchedule(NXCPMessage *request)
+void ClientSession::addScheduledTask(NXCPMessage *request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   UINT32 result = CreateScehduleFromMsg(request, m_dwUserId, m_dwSystemAccess);
+   UINT32 result = CreateScehduledTaskFromMsg(request, m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
@@ -14091,12 +14091,12 @@ void ClientSession::addSchedule(NXCPMessage *request)
 /**
  * Update existing schedule
  */
-void ClientSession::updateSchedule(NXCPMessage *request)
+void ClientSession::updateScheduledTask(NXCPMessage *request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   UINT32 result = UpdateScheduleFromMsg(request, m_dwUserId, m_dwSystemAccess);
+   UINT32 result = UpdateScheduledTaskFromMsg(request, m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
@@ -14104,12 +14104,12 @@ void ClientSession::updateSchedule(NXCPMessage *request)
 /**
  * Remove/delete schedule
  */
-void ClientSession::removeSchedule(NXCPMessage *request)
+void ClientSession::removeScheduledTask(NXCPMessage *request)
 {
    NXCPMessage msg;
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
-   UINT32 result = RemoveSchedule(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_dwSystemAccess);
+   UINT32 result = RemoveScheduledTask(request->getFieldAsUInt32(VID_SCHEDULED_TASK_ID), m_dwUserId, m_dwSystemAccess);
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
