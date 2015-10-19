@@ -354,3 +354,33 @@ void ClusterDisconnect()
    ThreadJoin(s_connectorThread);
    ThreadJoin(s_keepaliveThread);
 }
+
+/**
+ * Send notification to all connected nodes
+ */
+void LIBNXCC_EXPORTABLE ClusterNotify(NXCPMessage *msg)
+{
+   NXCP_MESSAGE *rawMsg = msg->createMessage();
+
+   for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)
+   {
+      if (g_nxccNodes[i].m_id == 0)
+         continue;   // empty slot
+
+      MutexLock(g_nxccNodes[i].m_mutex);
+      if (g_nxccNodes[i].m_socket != INVALID_SOCKET)
+      {
+         if (SendEx(g_nxccNodes[i].m_socket, rawMsg, ntohl(rawMsg->size), 0, NULL) <= 0)
+         {
+            ClusterDebug(5, _T("ClusterKeepaliveThread: send failed for peer %d [%s]"),
+               g_nxccNodes[i].m_id, (const TCHAR *)g_nxccNodes[i].m_addr->toString());
+            shutdown(g_nxccNodes[i].m_socket, SHUT_RDWR);
+            g_nxccNodes[i].m_socket = INVALID_SOCKET; // current socket will be closed by receiver
+            ChangeClusterNodeState(&g_nxccNodes[i], CLUSTER_NODE_DOWN);
+         }
+      }
+      MutexUnlock(g_nxccNodes[i].m_mutex);
+   }
+
+   free(rawMsg);
+}

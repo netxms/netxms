@@ -161,7 +161,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       try
       {
          if (out != null)
-            out.write(text);
+            out.write(text.replace("\r", ""));
       }
       catch(IOException e)
       {

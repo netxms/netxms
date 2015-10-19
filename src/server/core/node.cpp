@@ -6999,7 +6999,7 @@ void Node::collectProxyInfo(ProxyInfo *info)
          info->msg->setField(info->fieldId++, (INT16)dco->getType());
          info->msg->setField(info->fieldId++, (INT16)dco->getDataSource());
          info->msg->setField(info->fieldId++, dco->getName());
-         info->msg->setField(info->fieldId++, (INT32)dco->getPollingInterval());
+         info->msg->setField(info->fieldId++, (INT32)dco->getEffectivePollingInterval());
          info->msg->setFieldFromTime(info->fieldId++, dco->getLastPollTime());
          info->msg->setField(info->fieldId++, m_guid);
          info->msg->setField(info->fieldId++, dco->getSnmpPort());
@@ -7062,7 +7062,7 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
          msg.setField(fieldId++, (INT16)dco->getType());
          msg.setField(fieldId++, (INT16)dco->getDataSource());
          msg.setField(fieldId++, dco->getName());
-         msg.setField(fieldId++, (INT32)dco->getPollingInterval());
+         msg.setField(fieldId++, (INT32)dco->getEffectivePollingInterval());
          msg.setFieldFromTime(fieldId++, dco->getLastPollTime());
          fieldId += 4;
          count++;
