@@ -199,6 +199,8 @@ public:
 	NXSL_Value *getByPosition(int position) const;
 
 	int size() const { return m_size; }
+
+	StringList *toStringList() const;
 };
 
 /**

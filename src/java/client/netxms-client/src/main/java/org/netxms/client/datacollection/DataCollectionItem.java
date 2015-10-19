@@ -64,6 +64,7 @@ public class DataCollectionItem extends DataCollectionObject
 	public static final int IDM_AGENT_TABLE = 2;
 	public static final int IDM_SNMP_WALK_VALUES = 3;
 	public static final int IDM_SNMP_WALK_OIDS = 4;
+   public static final int IDM_SCRIPT = 5;
 	
 	private int dataType;
 	private int deltaCalculation;

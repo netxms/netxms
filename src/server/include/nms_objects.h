@@ -956,11 +956,13 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
+   virtual void enterMaintenanceMode();
+   virtual void leaveMaintenanceMode();
+
    virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
    virtual UINT32 getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 
-   virtual void enterMaintenanceMode();
-   virtual void leaveMaintenanceMode();
+   UINT32 getListFromScript(const TCHAR *param, StringList **list);
 
    UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
 	UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId);

@@ -74,6 +74,7 @@ public class InstanceDiscovery extends PropertyPage
       discoveryMethod.add(Messages.get().InstanceDiscovery_AgentTable);
       discoveryMethod.add(Messages.get().InstanceDiscovery_SnmpWalkValues);
       discoveryMethod.add(Messages.get().InstanceDiscovery_SnmpWalkOids);
+      discoveryMethod.add("Script");
       discoveryMethod.select(dci.getInstanceDiscoveryMethod());
       discoveryMethod.addSelectionListener(new SelectionListener() {
 			@Override
