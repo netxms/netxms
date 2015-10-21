@@ -149,7 +149,7 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *channel, const TCHAR *text)
       char *_text = MBStringFromWideString(text);
 #else
       char *_channel = strdup(channel);
-      char *_text = strdup(_text);
+      char *_text = strdup(text);
 #endif
 
       json_t *root = json_object();
