@@ -647,7 +647,8 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	int baseSize = ConfigReadInt(_T("ConnectionPoolBaseSize"), 5);
 	int maxSize = ConfigReadInt(_T("ConnectionPoolMaxSize"), 20);
 	int cooldownTime = ConfigReadInt(_T("ConnectionPoolCooldownTime"), 300);
-	DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, baseSize, maxSize, cooldownTime, 0);
+	int ttl = ConfigReadInt(_T("ConnectionPoolMaxLifetime"), 60*30);
+	DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, baseSize, maxSize, cooldownTime, ttl);
    g_flags |= AF_DB_CONNECTION_POOL_READY;
 
    UINT32 lrt = ConfigReadULong(_T("LongRunningQueryThreshold"), 0);
