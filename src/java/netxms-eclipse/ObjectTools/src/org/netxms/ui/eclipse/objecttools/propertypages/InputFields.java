@@ -18,9 +18,9 @@
  */
 package org.netxms.ui.eclipse.objecttools.propertypages;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -58,11 +58,13 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class InputFields extends PropertyPage
 {
 	private ObjectToolDetails objectTool;
-	private Map<String, InputField> fields = new HashMap<String, InputField>();
+	private List<InputField> fields = new ArrayList<InputField>();
 	private TableViewer viewer;
 	private Button buttonAdd;
 	private Button buttonEdit;
 	private Button buttonRemove;
+	private Button buttonUp;
+	private Button buttonDown;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createControl(org.eclipse.swt.widgets.Composite)
@@ -82,7 +84,7 @@ public class InputFields extends PropertyPage
 	{
 		objectTool = (ObjectToolDetails)getElement().getAdapter(ObjectToolDetails.class);
 		for(InputField f : objectTool.getInputFields())
-			fields.put(f.getName(), new InputField(f));
+			fields.add(new InputField(f));
 
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -90,6 +92,7 @@ public class InputFields extends PropertyPage
 		layout.verticalSpacing = WidgetHelper.DIALOG_SPACING;
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
+		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
 		viewer = new TableViewer(dialogArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
@@ -98,6 +101,8 @@ public class InputFields extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessVerticalSpace = true;
+		gd.horizontalSpan = 2;
+		gd.widthHint = WidgetHelper.BUTTON_WIDTH_HINT * 6;
 		viewer.getTable().setLayoutData(gd);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new InputFieldLabelProvider());
@@ -105,7 +110,7 @@ public class InputFields extends PropertyPage
          @Override
          public int compare(Viewer viewer, Object e1, Object e2)
          {
-            return ((InputField)e1).getName().compareToIgnoreCase(((InputField)e2).getName());
+            return ((InputField)e1).getSequence() - ((InputField)e2).getSequence();
          }
 		});
 		setupTableColumns();
@@ -116,6 +121,8 @@ public class InputFields extends PropertyPage
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				buttonEdit.setEnabled(selection.size() == 1);
 				buttonRemove.setEnabled(selection.size() > 0);
+            buttonUp.setEnabled(selection.size() == 1);
+            buttonDown.setEnabled(selection.size() == 1);
 			}
 		});
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
@@ -125,20 +132,71 @@ public class InputFields extends PropertyPage
 				editField();
 			}
 		});
-		viewer.setInput(fields.values().toArray());
-		
-      Composite buttons = new Composite(dialogArea, SWT.NONE);
+		viewer.setInput(fields.toArray());
+
+      Composite buttonsLeft = new Composite(dialogArea, SWT.NONE);
       RowLayout buttonLayout = new RowLayout();
       buttonLayout.type = SWT.HORIZONTAL;
       buttonLayout.pack = false;
       buttonLayout.marginWidth = 0;
-      buttons.setLayout(buttonLayout);
+      buttonsLeft.setLayout(buttonLayout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      gd.verticalIndent = WidgetHelper.OUTER_SPACING - WidgetHelper.INNER_SPACING;
+      buttonsLeft.setLayoutData(gd);
+		
+      buttonUp = new Button(buttonsLeft, SWT.PUSH);
+      buttonUp.setText("&Up");
+      buttonUp.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            moveFieldUp();
+         }
+      });
+      RowData rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      buttonUp.setLayoutData(rd);
+      buttonUp.setEnabled(false);
+      
+      buttonDown = new Button(buttonsLeft, SWT.PUSH);
+      buttonDown.setText("&Down");
+      buttonDown.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            moveFieldDown();
+         }
+      });
+      rd = new RowData();
+      rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
+      buttonDown.setLayoutData(rd);
+      buttonDown.setEnabled(false);
+      
+      Composite buttonsRight = new Composite(dialogArea, SWT.NONE);
+      buttonLayout = new RowLayout();
+      buttonLayout.type = SWT.HORIZONTAL;
+      buttonLayout.pack = false;
+      buttonLayout.marginWidth = 0;
+      buttonsRight.setLayout(buttonLayout);
       gd = new GridData();
       gd.horizontalAlignment = SWT.RIGHT;
       gd.verticalIndent = WidgetHelper.OUTER_SPACING - WidgetHelper.INNER_SPACING;
-      buttons.setLayoutData(gd);
+      buttonsRight.setLayoutData(gd);
 
-      buttonAdd = new Button(buttons, SWT.PUSH);
+      buttonAdd = new Button(buttonsRight, SWT.PUSH);
       buttonAdd.setText(Messages.get().Columns_Add);
       buttonAdd.addSelectionListener(new SelectionListener() {
 			@Override
@@ -153,11 +211,11 @@ public class InputFields extends PropertyPage
 				addField();
 			}
       });
-      RowData rd = new RowData();
+      rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonAdd.setLayoutData(rd);
 		
-      buttonEdit = new Button(buttons, SWT.PUSH);
+      buttonEdit = new Button(buttonsRight, SWT.PUSH);
       buttonEdit.setText(Messages.get().Columns_Edit);
       buttonEdit.addSelectionListener(new SelectionListener() {
 			@Override
@@ -175,8 +233,9 @@ public class InputFields extends PropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonEdit.setLayoutData(rd);
+      buttonEdit.setEnabled(false);
 
-      buttonRemove = new Button(buttons, SWT.PUSH);
+      buttonRemove = new Button(buttonsRight, SWT.PUSH);
       buttonRemove.setText(Messages.get().Columns_Delete);
       buttonRemove.addSelectionListener(new SelectionListener() {
 			@Override
@@ -194,6 +253,7 @@ public class InputFields extends PropertyPage
       rd = new RowData();
       rd.width = WidgetHelper.BUTTON_WIDTH_HINT;
       buttonRemove.setLayoutData(rd);
+      buttonRemove.setEnabled(false);
 
       return dialogArea;
 	}
@@ -229,13 +289,31 @@ public class InputFields extends PropertyPage
 		EditInputFieldDialog dlg = new EditInputFieldDialog(getShell(), true, f);
 		if (dlg.open() == Window.OK)
 		{
-			fields.put(f.getName(), f);
-			viewer.setInput(fields.values().toArray());
-			viewer.setSelection(new StructuredSelection(f));
+		   if (nameIsUnique(f.getName()))
+		   {
+		      f.setSequence(fields.size());
+   			fields.add(f);
+   			viewer.setInput(fields.toArray());
+   			viewer.setSelection(new StructuredSelection(f));
+		   }
 		}
 	}
 	
 	/**
+	 * Check if field name is unique
+	 * 
+	 * @param name
+	 * @return
+	 */
+	private boolean nameIsUnique(String name)
+   {
+	   for(InputField f : fields)
+	      if (f.getName().equalsIgnoreCase(name))
+	         return false;
+      return true;
+   }
+
+   /**
 	 * Edit column
 	 */
 	private void editField()
@@ -261,11 +339,63 @@ public class InputFields extends PropertyPage
 		Iterator<InputField> it = selection.iterator();
 		while(it.hasNext())
 		{
-			fields.remove(it.next().getName());
+			fields.remove(it.next());
 		}
-		viewer.setInput(fields.values().toArray());
+		viewer.setInput(fields.toArray());
 	}
 	
+	/**
+	 * Move selected field up 
+	 */
+	private void moveFieldUp()
+	{
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      InputField f = (InputField)selection.getFirstElement();
+      if (f.getSequence() > 0)
+      {
+         updateSequence(f.getSequence() - 1, 1);
+         f.setSequence(f.getSequence() - 1);
+         viewer.refresh();
+      }
+	}
+	
+   /**
+    * Move selected field down 
+    */
+   private void moveFieldDown()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      InputField f = (InputField)selection.getFirstElement();
+      if (f.getSequence() < fields.size() - 1)
+      {
+         updateSequence(f.getSequence() + 1, -1);
+         f.setSequence(f.getSequence() + 1);
+         viewer.refresh();
+      }
+   }
+   
+   /**
+    * @param curr
+    * @param delta
+    */
+   private void updateSequence(int curr, int delta)
+   {
+      for(InputField f : fields)
+      {
+         if (f.getSequence() == curr)
+         {
+            f.setSequence(curr + delta);
+            break;
+         }
+      }
+   }
+   
 	/**
 	 * Apply changes
 	 * 
@@ -273,7 +403,7 @@ public class InputFields extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		objectTool.setInputFields(fields.values());
+		objectTool.setInputFields(fields);
 	}
 	
 	/* (non-Javadoc)

@@ -4,6 +4,9 @@
 
 - Scripts can be used as instance source in instance discovery DCIs
 - NXSL node object attribute snmpSysDescription renamed back to sysDescription
+- Management console:
+	- Object tool input fields can be rearranged
+- Fixed issues: #948
 
 
 *

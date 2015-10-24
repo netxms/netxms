@@ -137,7 +137,7 @@ public final class ObjectToolExecutor
             @Override
             public int compare(InputField f1, InputField f2)
             {
-               return f1.getDisplayName().compareToIgnoreCase(f2.getDisplayName());
+               return f1.getSequence() - f2.getSequence();
             }
          });
          inputValues = readInputFields(fields);

@@ -1081,6 +1081,7 @@ CREATE TABLE object_tools_input_fields
    name varchar(31) not null,
    input_type char(1) not null,
    display_name varchar(127) null,
+   sequence_num integer not null,
    config SQL_TEXT null,
    PRIMARY KEY(tool_id,name)
 ) TABLE_TYPE;

@@ -61,7 +61,7 @@ public final class ObjectToolExecutor
    private ObjectToolExecutor()
    {
    }
-
+   
    /**
     * Check if tool is allowed for execution on each node from set
     * 
@@ -73,7 +73,7 @@ public final class ObjectToolExecutor
    {
       if (tool.getType() != ObjectTool.TYPE_INTERNAL)
          return true;
-
+      
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
       if (handler != null)
       {
@@ -87,7 +87,7 @@ public final class ObjectToolExecutor
          return false;
       }
    }
-
+   
    /**
     * Check if given tool is applicable for all nodes in set
     * 
@@ -102,7 +102,7 @@ public final class ObjectToolExecutor
             return false;
       return true;
    }
-
+   
    /**
     * Execute object tool on node set
     * 
@@ -126,7 +126,7 @@ public final class ObjectToolExecutor
                Messages.get().ObjectToolsDynamicMenu_ConfirmExec, message))
             return;
       }
-
+      
       final Map<String, String> inputValues;
       final InputField[] fields = tool.getInputFields();
       if (fields.length > 0)
@@ -135,7 +135,7 @@ public final class ObjectToolExecutor
             @Override
             public int compare(InputField f1, InputField f2)
             {
-               return f1.getDisplayName().compareToIgnoreCase(f2.getDisplayName());
+               return f1.getSequence() - f2.getSequence();
             }
          });
          inputValues = readInputFields(fields);
@@ -254,7 +254,7 @@ public final class ObjectToolExecutor
             break;
       }
    }
-
+   
    /**
     * Execute table tool
     * 
@@ -286,16 +286,16 @@ public final class ObjectToolExecutor
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       final String action = substituteMacros(tool.getData(), node, inputValues);
-
+      
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
-      {
+      {      
          new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, node.object.getObjectName()), null, Activator.PLUGIN_ID, null) {
             @Override
             protected String getErrorMessage()
             {
                return String.format(Messages.get().ObjectToolsDynamicMenu_CannotExecuteOnNode, node.object.getObjectName());
             }
-
+   
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -389,7 +389,7 @@ public final class ObjectToolExecutor
       final String fileName = substituteMacros(parameters[0], node, inputValues);
       final int maxFileSize = Integer.parseInt(parameters[1]);
       final boolean follow = parameters[2].equals("true") ? true : false; //$NON-NLS-1$
-
+      
       ConsoleJob job = new ConsoleJob(Messages.get().ObjectToolsDynamicMenu_DownloadFromAgent, null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
@@ -462,7 +462,7 @@ public final class ObjectToolExecutor
    private static String substituteMacros(String s, NodeInfo node, Map<String, String> inputValues)
    {
       StringBuilder sb = new StringBuilder();
-
+      
       char[] src = s.toCharArray();
       for(int i = 0; i < s.length(); i++)
       {
@@ -470,14 +470,14 @@ public final class ObjectToolExecutor
          {
             i++;
             if (i == s.length())
-               break; // malformed string
-
+               break;   // malformed string
+            
             switch(src[i])
             {
                case 'a':
                   sb.append((node.object != null) ? node.object.getPrimaryIP().getHostAddress() : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
                   break;
-               case 'A': // alarm message
+               case 'A':   // alarm message
                   if (node.alarm != null)
                      sb.append(node.alarm.getMessage());
                   break;
@@ -494,7 +494,7 @@ public final class ObjectToolExecutor
                case 'I':
                   sb.append((node.object != null) ? Long.toString(node.object.getObjectId()) : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
                   break;
-               case 'm': // alarm message
+               case 'm':   // alarm message
                   if (node.alarm != null)
                      sb.append(node.alarm.getMessage());
                   break;
@@ -519,18 +519,18 @@ public final class ObjectToolExecutor
                case 'v':
                   sb.append(NXCommon.VERSION);
                   break;
-               case 'y': // alarm state
+               case 'y':   // alarm state
                   if (node.alarm != null)
                      sb.append(node.alarm.getState());
                   break;
-               case 'Y': // alarm ID
+               case 'Y':   // alarm ID
                   if (node.alarm != null)
                      sb.append(node.alarm.getId());
                   break;
                case '%':
                   sb.append('%');
                   break;
-               case '{': // object's custom attribute
+               case '{':   // object's custom attribute
                   StringBuilder attr = new StringBuilder();
                   for(i++; i < s.length(); i++)
                   {
@@ -569,7 +569,7 @@ public final class ObjectToolExecutor
             sb.append(src[i]);
          }
       }
-
+      
       return sb.toString();
    }
 }
