@@ -34,6 +34,7 @@ LONG H_Desktops(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractC
 LONG H_HandleCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
 LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_InterfaceNames(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_IPRoutingTable(const TCHAR *cmd, const TCHAR *arg, StringList *pValue, AbstractCommSession *session);
 LONG H_NetInterface64bitSupport(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_NetInterfaceStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -196,6 +197,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
 {
    { _T("Net.ArpCache"), H_ArpCache, NULL },
    { _T("Net.InterfaceList"), H_InterfaceList, NULL },
+   { _T("Net.InterfaceNames"), H_InterfaceNames, NULL },
    { _T("Net.IP.RoutingTable"), H_IPRoutingTable, NULL },
 	{ _T("System.ActiveUserSessions"), H_ActiveUserSessions, NULL },
 	{ _T("System.Desktops(*)"), H_Desktops, NULL },
