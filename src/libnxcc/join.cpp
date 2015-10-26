@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
@@ -16,52 +16,33 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
-** File: ceh.cpp
+** File: join.cpp
 **
-*/
+**/
 
 #include "libnxcc.h"
 
 /**
- * Constructor
+ * Process joining of single cluster node
  */
-ClusterEventHandler::ClusterEventHandler()
+void ClusterNodeJoin(void *arg)
 {
+   ClusterNodeInfo *node = (ClusterNodeInfo *)arg;
+   ClusterDebug(4, _T("ClusterNodeJoin: requesting join from from node %d [%s]"), node->m_id, (const TCHAR *)node->m_addr->toString());
+
+   NXCPMessage msg;
+   msg.setCode(CMD_JOIN_CLUSTER);
+   msg.setField(VID_NODE_ID, g_nxccNodeId);
+   msg.setField(VID_IS_MASTER, (INT16)(g_nxccMasterNode ? 1 : 0));
+
+   NXCPMessage *response = ClusterSendDirectCommandEx(node->m_id, &msg);
 }
 
 /**
- * Destructor
+ * Process join request received from other node
  */
-ClusterEventHandler::~ClusterEventHandler()
+void ProcessClusterJoinRequest(ClusterNodeInfo *node, NXCPMessage *msg)
 {
-}
+   ClusterDebug(4, _T("ProcessClusterJoinRequest: request from node %d [%s]"), node->m_id, (const TCHAR *)node->m_addr->toString());
 
-/**
- * Node join handler
- */
-void ClusterEventHandler::onNodeJoin(UINT32 nodeId)
-{
-}
-
-/**
- * Node disconnect handler
- */
-void ClusterEventHandler::onNodeDisconnect(UINT32 nodeId)
-{
-}
-
-/**
- * Shutdown handler
- */
-void ClusterEventHandler::onShutdown()
-{
-}
-
-/**
- * Incoming message handler
- * Should return true if message was processed
- */
-bool ClusterEventHandler::onMessage(NXCPMessage *msg, UINT32 sourceNodeId)
-{
-   return false;
 }

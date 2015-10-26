@@ -32,11 +32,17 @@ bool g_nxccInitialized = false;
 bool g_nxccMasterNode = false;
 bool g_nxccShutdown = false;
 UINT16 g_nxccListenPort = 47000;
+UINT32 g_nxccCommandTimeout = 500;
 
 /**
  * Other cluster nodes
  */
 ClusterNodeInfo g_nxccNodes[CLUSTER_MAX_NODE_ID];
+
+/**
+ * Cluster thread pool
+ */
+ThreadPool *g_nxccThreadPool;
 
 /**
  * Debug callback
@@ -90,6 +96,7 @@ static bool AddPeerNode(TCHAR *cfg)
    g_nxccNodes[id].m_addr = new InetAddress(InetAddress::resolveHostName(s));
    g_nxccNodes[id].m_port = (UINT16)(47000 + id);
    g_nxccNodes[id].m_socket = INVALID_SOCKET;
+   g_nxccNodes[id].m_msgWaitQueue = new MsgWaitQueue();
    ClusterDebug(1, _T("ClusterInit: added peer node %d"), id);
    return true;
 }
@@ -100,6 +107,7 @@ static bool AddPeerNode(TCHAR *cfg)
 static TCHAR *s_peerNodeList = NULL;
 static NX_CFG_TEMPLATE s_clusterConfigTemplate[] =
 {
+   { _T("CommandTimeout"), CT_LONG, 0, 0, 0, 0, &g_nxccCommandTimeout, NULL },
    { _T("NodeId"), CT_LONG, 0, 0, 0, 0, &g_nxccNodeId, NULL },
    { _T("PeerNode"), CT_STRING_LIST, '\n', 0, 0, 0, &s_peerNodeList, NULL },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
@@ -115,6 +123,8 @@ bool LIBNXCC_EXPORTABLE ClusterInit(Config *config, const TCHAR *section, Cluste
 
    if ((g_nxccNodeId < 1) || (g_nxccNodeId > CLUSTER_MAX_NODE_ID))
       return false;
+
+   g_nxccThreadPool = ThreadPoolCreate(1, 16, _T("CLUSTER"));
 
    memset(g_nxccNodes, 0, sizeof(g_nxccNodes));
    for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)
@@ -159,6 +169,12 @@ void LIBNXCC_EXPORTABLE ClusterShutdown()
 
    g_nxccShutdown = true;
    ClusterDisconnect();
+
+   for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)
+   {
+      MutexDestroy(g_nxccNodes[i].m_mutex);
+      delete g_nxccNodes[i].m_msgWaitQueue;
+   }
 }
 
 /**

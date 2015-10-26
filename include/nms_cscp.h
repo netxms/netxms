@@ -557,6 +557,7 @@ typedef struct
 #define CMD_REMOVE_SCHEDULE            0x0144
 #define CMD_ENTER_MAINT_MODE           0x0145
 #define CMD_LEAVE_MAINT_MODE           0x0146
+#define CMD_JOIN_CLUSTER               0x0147
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1102,6 +1103,7 @@ typedef struct
 #define VID_DASHBOARDS              ((UINT32)528)
 #define VID_OWNER                   ((UINT32)529)
 #define VID_MAINTENANCE_MODE        ((UINT32)530)
+#define VID_IS_MASTER               ((UINT32)531)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

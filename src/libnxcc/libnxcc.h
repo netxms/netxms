@@ -49,6 +49,7 @@ struct ClusterNodeInfo
    bool m_master;
    MUTEX m_mutex;
    THREAD m_receiverThread;
+   MsgWaitQueue *m_msgWaitQueue;
 };
 
 /**
@@ -69,5 +70,7 @@ extern bool g_nxccInitialized;
 extern bool g_nxccMasterNode;
 extern bool g_nxccShutdown;
 extern UINT16 g_nxccListenPort;
+extern UINT32 g_nxccCommandTimeout;
+extern ThreadPool *g_nxccThreadPool;
 
 #endif

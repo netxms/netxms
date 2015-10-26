@@ -1,4 +1,4 @@
-SOURCES = ceh.cpp comm.cpp main.cpp
+SOURCES = ceh.cpp comm.cpp join.cpp main.cpp
 
 lib_LTLIBRARIES = libnxcc.la
 

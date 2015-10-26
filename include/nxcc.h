@@ -18,6 +18,14 @@
 #include <nxconfig.h>
 
 /**
+ * Cluster error codes
+ */
+#define NXCC_RCC_SUCCESS         0
+#define NXCC_RCC_INVALID_NODE    1
+#define NXCC_RCC_TIMEOUT         2
+#define NXCC_RCC_COMM_FAILURE    3
+
+/**
  * Cluster node states
  */
 enum ClusterNodeState
@@ -40,7 +48,7 @@ public:
    virtual void onNodeDisconnect(UINT32 nodeId);
    virtual void onShutdown();
    
-   virtual void onMessage(NXCPMessage *msg, UINT32 sourceNodeId);
+   virtual bool onMessage(NXCPMessage *msg, UINT32 sourceNodeId);
 };
 
 /**
@@ -53,5 +61,11 @@ void LIBNXCC_EXPORTABLE ClusterShutdown();
 void LIBNXCC_EXPORTABLE ClusterSetDebugCallback(void (*cb)(int, const TCHAR *, va_list));
 
 bool LIBNXCC_EXPORTABLE ClusterIsMasterNode();
+
+void LIBNXCC_EXPORTABLE ClusterNotify(NXCPMessage *msg);
+int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg);
+UINT32 LIBNXCC_EXPORTABLE ClusterSendDirectCommand(UINT32 nodeId, NXCPMessage *msg);
+NXCPMessage LIBNXCC_EXPORTABLE *ClusterSendDirectCommandEx(UINT32 nodeId, NXCPMessage *msg);
+void LIBNXCC_EXPORTABLE ClusterSendResponse(UINT32 nodeId, UINT32 requestId, UINT32 rcc);
 
 #endif
