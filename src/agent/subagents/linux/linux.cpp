@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2013 Raden Solutions
+** Copyright (C) 2004-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -478,6 +478,7 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
 	{ _T("Net.ArpCache"),                 H_NetArpCache,        NULL },
 	{ _T("Net.IP.RoutingTable"),          H_NetRoutingTable,    NULL },
 	{ _T("Net.InterfaceList"),            H_NetIfList,          NULL },
+   { _T("Net.InterfaceNames"),           H_NetIfNames,         NULL },
 	{ _T("System.ActiveUserSessions"),    H_ActiveUserSessions, NULL },
 	{ _T("System.ProcessList"),           H_ProcessList,        NULL }
 };
