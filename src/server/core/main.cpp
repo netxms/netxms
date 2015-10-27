@@ -86,6 +86,7 @@ void MaintenanceModeEnter(const ScheduledTaskParameters *params);
 void MaintenanceModeLeave(const ScheduledTaskParameters *params);
 
 #if XMPP_SUPPORTED
+void StartXMPPConnector();
 void StopXMPPConnector();
 #endif
 
@@ -115,10 +116,6 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *);
 THREAD_RESULT THREAD_CALL JobManagerThread(void *);
 THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
 THREAD_RESULT THREAD_CALL ReportingServerConnector(void *);
-
-#if XMPP_SUPPORTED
-THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *);
-#endif
 
 /**
  * Global variables
@@ -169,9 +166,6 @@ static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
 static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
-#if XMPP_SUPPORTED
-static THREAD m_thXMPPConnector = INVALID_THREAD_HANDLE;
-#endif
 static int m_nShutdownReason = SHUTDOWN_DEFAULT;
 
 #ifndef _WIN32
@@ -318,7 +312,7 @@ static void LoadGlobalConfig()
 		g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCS;
    if (ConfigReadInt(_T("UseFQDNForNodeNames"), 1))
       g_flags |= AF_USE_FQDN_FOR_NODE_NAMES;
-   if (ConfigReadInt(_T("ApplyDCIFromTemplateToDisabledDCI"), 0))
+   if (ConfigReadInt(_T("ApplyDCIFromTemplateToDisabledDCI"), 1))
       g_flags |= AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE;
    if (ConfigReadInt(_T("ResolveDNSToIPOnStatusPoll"), 0))
       g_flags |= AF_RESOLVE_IP_FOR_EACH_STATUS_POLL;
@@ -882,7 +876,7 @@ retry_db_lock:
 #if XMPP_SUPPORTED
    if (ConfigReadInt(_T("EnableXMPPConnector"), 1))
    {
-      m_thXMPPConnector = ThreadCreateEx(XMPPConnectionManager, 0, NULL);
+      StartXMPPConnector();
    }
 #endif
 
@@ -936,9 +930,6 @@ void NXCORE_EXPORTABLE Shutdown()
 	ThreadJoin(m_thHouseKeeper);
 	ThreadJoin(m_thPollManager);
 	ThreadJoin(m_thSyncer);
-#if XMPP_SUPPORTED
-   ThreadJoin(m_thXMPPConnector);
-#endif
 
 	// Call shutdown functions for the modules
    // CALL_ALL_MODULES cannot be used here because it checks for shutdown flag

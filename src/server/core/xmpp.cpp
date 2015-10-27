@@ -245,7 +245,7 @@ static MUTEX s_xmppMutex = MutexCreate();
 /**
  * XMPP thread
  */
-THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
+static THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
 {
    xmpp_initialize();
 
@@ -302,10 +302,126 @@ THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *arg)
 }
 
 /**
+ * Outgoing message queue
+ */
+static Queue s_xmppMessageQueue;
+
+/**
+ * Message to send
+ */
+class XMPPMessage
+{
+private:
+   char *m_rcpt;
+   char *m_text;
+   time_t m_timestamp;
+
+public:
+
+   XMPPMessage(const TCHAR *rcpt, const TCHAR *text)
+   {
+#ifdef UNICODE
+      m_rcpt = UTF8StringFromWideString(rcpt);
+      m_text = UTF8StringFromWideString(text);
+#else
+      m_rcpt = UTF8StringFromMBString(rcpt);
+      m_text = UTF8StringFromMBString(text);
+#endif
+      m_timestamp = time(NULL);
+   }
+
+   ~XMPPMessage()
+   {
+      free(m_rcpt);
+      free(m_text);
+   }
+
+   const char *getRecipient() { return m_rcpt; }
+   const char *getText() { return m_text; }
+   time_t getAge() { return time(NULL) - m_timestamp; }
+};
+
+/**
+ * Message sender
+ */
+static THREAD_RESULT THREAD_CALL XMPPMessageSender(void *arg)
+{
+   DbgPrintf(1, _T("XMPP message sender started"));
+
+   while(true)
+   {
+      XMPPMessage *m = (XMPPMessage *)s_xmppMessageQueue.getOrBlock();
+      if (m == INVALID_POINTER_VALUE)
+         break;
+
+      MutexLock(s_xmppMutex);
+      if ((s_xmppContext == NULL) || (s_xmppConnection == NULL) || !s_xmppConnected)
+      {
+         MutexUnlock(s_xmppMutex);
+         if (m->getAge() < 3600)
+         {
+            s_xmppMessageQueue.insert(m);
+            DbgPrintf(6, _T("XMPPMessageSender: XMPP connection unavailable, will retry in 30 seconds"));
+            if (SleepAndCheckForShutdown(30))   // retry message sending in 30 seconds
+               break;
+         }
+         else
+         {
+            DbgPrintf(6, _T("XMPPMessageSender: XMPP connection unavailable, dropping undelivered message to %hs"), m->getRecipient());
+            delete m;
+         }
+         continue;
+      }
+
+      xmpp_stanza_t *msg = xmpp_stanza_new(s_xmppContext);
+      xmpp_stanza_set_name(msg, "message");
+      xmpp_stanza_set_type(msg, "chat");
+      xmpp_stanza_set_attribute(msg, "to", m->getRecipient());
+
+      xmpp_stanza_t *body = xmpp_stanza_new(s_xmppContext);
+      xmpp_stanza_set_name(body, "body");
+
+      xmpp_stanza_t *text = xmpp_stanza_new(s_xmppContext);
+      xmpp_stanza_set_text(text, m->getText());
+      xmpp_stanza_add_child_ex(body, text, FALSE);
+      xmpp_stanza_add_child_ex(msg, body, FALSE);
+
+      xmpp_send(s_xmppConnection, msg);
+      xmpp_stanza_release(msg);
+
+      MutexUnlock(s_xmppMutex);
+      delete m;
+   }
+
+   DbgPrintf(1, _T("XMPP message sender stopped"));
+   return THREAD_OK;
+}
+
+/**
+ * XMPP threads
+ */
+static THREAD s_connManagerThread = INVALID_THREAD_HANDLE;
+static THREAD s_msgSenderThread = INVALID_THREAD_HANDLE;
+
+/**
+ * Start XMPP connector
+ */
+void StartXMPPConnector()
+{
+   s_connManagerThread = ThreadCreateEx(XMPPConnectionManager, 0, NULL);
+   s_msgSenderThread = ThreadCreateEx(XMPPMessageSender, 0, NULL);
+}
+
+/**
  * Stop XMPP connector
  */
 void StopXMPPConnector()
 {
+   XMPPMessage *m;
+   while((m = (XMPPMessage *)s_xmppMessageQueue.get()) != NULL)
+      delete m;
+   s_xmppMessageQueue.put(INVALID_POINTER_VALUE);
+
    MutexLock(s_xmppMutex);
    if (s_xmppContext != NULL)
    {
@@ -315,52 +431,17 @@ void StopXMPPConnector()
          xmpp_stop(s_xmppContext);
    }
    MutexUnlock(s_xmppMutex);
+
+   ThreadJoin(s_connManagerThread);
+   ThreadJoin(s_msgSenderThread);
 }
 
 /**
  * Send message to XMPP recipient
  */
-bool SendXMPPMessage(const TCHAR *rcpt, const TCHAR *message)
+void SendXMPPMessage(const TCHAR *rcpt, const TCHAR *text)
 {
-   MutexLock(s_xmppMutex);
-   if ((s_xmppContext == NULL) || (s_xmppConnection == NULL) || !s_xmppConnected)
-   {
-      MutexUnlock(s_xmppMutex);
-      return false;
-   }
-
-#ifdef UNICODE
-   char *_rcpt = UTF8StringFromWideString(rcpt);
-   char *_message = UTF8StringFromWideString(message);
-#else
-   const char *_rcpt = rcpt;
-   const char *_message = message;
-#endif
-
-	xmpp_stanza_t *msg = xmpp_stanza_new(s_xmppContext);
-	xmpp_stanza_set_name(msg, "message");
-	xmpp_stanza_set_type(msg, "chat");
-	xmpp_stanza_set_attribute(msg, "to", _rcpt);
-
-	xmpp_stanza_t *body = xmpp_stanza_new(s_xmppContext);
-	xmpp_stanza_set_name(body, "body");
-
-	xmpp_stanza_t *text = xmpp_stanza_new(s_xmppContext);
-	xmpp_stanza_set_text(text, _message);
-	xmpp_stanza_add_child_ex(body, text, FALSE);
-	xmpp_stanza_add_child_ex(msg, body, FALSE);
-
-	xmpp_send(s_xmppConnection, msg);
-	xmpp_stanza_release(msg);
-
-   MutexUnlock(s_xmppMutex);
-
-#ifdef UNICODE
-   free(_rcpt);
-   free(_message);
-#endif
-
-   return true;
+   s_xmppMessageQueue.put(new XMPPMessage(rcpt, text));
 }
 
 #endif
