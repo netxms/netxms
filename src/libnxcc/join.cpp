@@ -36,13 +36,89 @@ void ClusterNodeJoin(void *arg)
    msg.setField(VID_IS_MASTER, (INT16)(g_nxccMasterNode ? 1 : 0));
 
    NXCPMessage *response = ClusterSendDirectCommandEx(node->m_id, &msg);
+   if (response != NULL)
+   {
+      ClusterJoinResponse r = (ClusterJoinResponse)response->getFieldAsInt16(VID_RCC);
+      ClusterDebug(4, _T("ClusterNodeJoin: join response from node %d [%s]: %d"), node->m_id, (const TCHAR *)node->m_addr->toString(), r);
+      switch(r)
+      {
+         case CJR_ACCEPTED_AS_SECONDARY:
+            ChangeClusterNodeState(node, CLUSTER_NODE_UP);
+            node->m_master = response->getFieldAsBoolean(VID_IS_MASTER);
+            break;
+         case CJR_ACCEPTED_AS_MASTER:
+            ChangeClusterNodeState(node, CLUSTER_NODE_SYNC);
+            break;
+      }
+      delete response;
+   }
 }
 
 /**
  * Process join request received from other node
  */
-void ProcessClusterJoinRequest(ClusterNodeInfo *node, NXCPMessage *msg)
+void ProcessClusterJoinRequest(ClusterNodeInfo *node, NXCPMessage *request)
 {
    ClusterDebug(4, _T("ProcessClusterJoinRequest: request from node %d [%s]"), node->m_id, (const TCHAR *)node->m_addr->toString());
 
+   NXCPMessage response;
+   response.setCode(CMD_REQUEST_COMPLETED);
+   response.setId(request->getId());
+
+   response.setField(VID_IS_MASTER, (INT16)(g_nxccMasterNode ? 1 : 0));
+
+   bool remoteMaster = request->getFieldAsBoolean(VID_IS_MASTER);
+   if (g_nxccMasterNode && !remoteMaster)
+   {
+      response.setField(VID_RCC, (INT16)CJR_ACCEPTED_AS_SECONDARY);
+      ClusterDebug(4, _T("ProcessClusterJoinRequest: node %d [%s] accepted into running cluster"), node->m_id, (const TCHAR *)node->m_addr->toString());
+      ChangeClusterNodeState(node, CLUSTER_NODE_SYNC);
+   }
+   else if (!g_nxccMasterNode && !remoteMaster)
+   {
+      response.setField(VID_RCC, (INT16)CJR_WAIT_FOR_MASTER);
+      ClusterDebug(4, _T("ProcessClusterJoinRequest: waiting for master"));
+   }
+   else if (!g_nxccMasterNode && remoteMaster)
+   {
+      response.setField(VID_RCC, (INT16)CJR_ACCEPTED_AS_MASTER);
+      ClusterDebug(4, _T("ProcessClusterJoinRequest: joined running cluster with node %d [%s] as master"), node->m_id, (const TCHAR *)node->m_addr->toString());
+      ChangeClusterNodeState(node, CLUSTER_NODE_UP);
+   }
+   else
+   {
+      response.setField(VID_RCC, (INT16)CJR_SPLIT_BRAIN);
+      ClusterDebug(4, _T("ProcessClusterJoinRequest: split-brain condition detected"));
+   }
+
+   ClusterSendMessage(node, &response);
+
+   // Promote this node to master if all cluster nodes already connected
+   // and there are no master yet (new cluster)
+   if (!g_nxccMasterNode && !remoteMaster && ClusterAllNodesConnected())
+   {
+      PromoteClusterNode();
+   }
+}
+
+/**
+ * Promote this node to master if possible
+ */
+void PromoteClusterNode()
+{
+   for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)
+      if ((g_nxccNodes[i].m_id > 0) && (g_nxccNodes[i].m_id < g_nxccNodeId) && (g_nxccNodes[i].m_state >= CLUSTER_NODE_CONNECTED))
+      {
+         ClusterDebug(4, _T("PromoteClusterNode: found connected node with higher priority"));
+         break;
+      }
+
+   ClusterDebug(4, _T("PromoteClusterNode: promote this node to master"));
+   g_nxccMasterNode = true;
+
+   NXCPMessage msg;
+   msg.setCode(CMD_CLUSTER_NOTIFY);
+   msg.setField(VID_NODE_ID, g_nxccNodeId);
+   msg.setField(VID_NOTIFICATION_CODE, (INT16)CN_NEW_MASTER);
+   ClusterNotify(&msg);
 }

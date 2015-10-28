@@ -53,11 +53,34 @@ struct ClusterNodeInfo
 };
 
 /**
+ * Cluster join responses
+ */
+enum ClusterJoinResponse
+{
+   CJR_ACCEPTED_AS_SECONDARY = 0,
+   CJR_ACCEPTED_AS_MASTER = 1,
+   CJR_WAIT_FOR_MASTER = 2,
+   CJR_SPLIT_BRAIN = 3
+};
+
+/**
+ * Cluster notification codes
+ */
+enum ClusterNotificationCode
+{
+   CN_NEW_MASTER = 1
+};
+
+/**
  * Internal functions
  */
 void ClusterDebug(int level, const TCHAR *format, ...);
 
 void ClusterDisconnect();
+void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state);
+void ClusterSendMessage(ClusterNodeInfo *node, NXCPMessage *msg);
+
+void PromoteClusterNode();
 
 /**
  * Global cluster node settings

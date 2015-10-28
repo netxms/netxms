@@ -44,6 +44,13 @@ void ClusterEventHandler::onNodeJoin(UINT32 nodeId)
 }
 
 /**
+ * Node up handler
+ */
+void ClusterEventHandler::onNodeUp(UINT32 nodeId)
+{
+}
+
+/**
  * Node disconnect handler
  */
 void ClusterEventHandler::onNodeDisconnect(UINT32 nodeId)

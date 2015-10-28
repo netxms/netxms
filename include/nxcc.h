@@ -32,7 +32,8 @@ enum ClusterNodeState
 {
    CLUSTER_NODE_DOWN = 0,
    CLUSTER_NODE_CONNECTED = 1,
-   CLUSTER_NODE_UP = 2
+   CLUSTER_NODE_SYNC = 2,
+   CLUSTER_NODE_UP = 3
 };
 
 /**
@@ -45,6 +46,7 @@ public:
    virtual ~ClusterEventHandler();
    
    virtual void onNodeJoin(UINT32 nodeId);
+   virtual void onNodeUp(UINT32 nodeId);
    virtual void onNodeDisconnect(UINT32 nodeId);
    virtual void onShutdown();
    
@@ -61,6 +63,7 @@ void LIBNXCC_EXPORTABLE ClusterShutdown();
 void LIBNXCC_EXPORTABLE ClusterSetDebugCallback(void (*cb)(int, const TCHAR *, va_list));
 
 bool LIBNXCC_EXPORTABLE ClusterIsMasterNode();
+bool LIBNXCC_EXPORTABLE ClusterAllNodesConnected();
 
 void LIBNXCC_EXPORTABLE ClusterNotify(NXCPMessage *msg);
 int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg);

@@ -51,9 +51,20 @@ static VolatileCounter s_commandId = 1;
 static CONDITION s_joinCondition = ConditionCreate(TRUE);
 
 /**
- * Change cluster node state
+ * Process cluster notification
  */
-static void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state);
+static void ProcessClusterNotification(ClusterNodeInfo *node, ClusterNotificationCode code)
+{
+   switch(code)
+   {
+      case CN_NEW_MASTER:
+         ClusterDebug(3, _T("Node %d [%s] is new master"), node->m_id, (const TCHAR *)node->m_addr->toString());
+         node->m_master = true;
+         ChangeClusterNodeState(node, CLUSTER_NODE_UP);
+         ConditionSet(s_joinCondition);
+         break;
+   }
+}
 
 /**
  * Node receiver thread
@@ -88,11 +99,16 @@ static THREAD_RESULT THREAD_CALL ClusterReceiverThread(void *arg)
 
          switch(msg->getCode())
          {
-            case CMD_KEEPALIVE:
-               delete msg;
+            case CMD_CLUSTER_NOTIFY:
+               ProcessClusterNotification(node, (ClusterNotificationCode)msg->getFieldAsInt16(VID_NOTIFICATION_CODE));
                break;
             case CMD_JOIN_CLUSTER:
                ProcessClusterJoinRequest(node, msg);
+               delete msg;
+               if (g_nxccMasterNode)
+                  ConditionSet(s_joinCondition);
+               break;
+            case CMD_KEEPALIVE:
                delete msg;
                break;
             default:
@@ -148,9 +164,9 @@ static int FindClusterNode(UINT32 id)
 /**
  * Change cluster node state
  */
-static void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state)
+void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state)
 {
-   static const TCHAR *stateNames[] = { _T("DOWN"), _T("CONNECTED"), _T("UP") };
+   static const TCHAR *stateNames[] = { _T("DOWN"), _T("CONNECTED"), _T("SYNC"), _T("UP") };
 
    if (node->m_state == state)
       return;
@@ -169,8 +185,11 @@ static void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state
          node->m_receiverThread = INVALID_THREAD_HANDLE;
          g_nxccEventHandler->onNodeDisconnect(node->m_id);
          break;
-      case CLUSTER_NODE_UP:
+      case CLUSTER_NODE_SYNC:
          g_nxccEventHandler->onNodeJoin(node->m_id);
+         break;
+      case CLUSTER_NODE_UP:
+         g_nxccEventHandler->onNodeUp(node->m_id);
          break;
    }
 }
@@ -327,6 +346,27 @@ static THREAD_RESULT THREAD_CALL ClusterKeepaliveThread(void *arg)
 
    ClusterDebug(1, _T("Cluster keepalive thread stopped"));
    return THREAD_OK;
+}
+
+/**
+ * Send message to cluster node
+ */
+void ClusterSendMessage(ClusterNodeInfo *node, NXCPMessage *msg)
+{
+   NXCP_MESSAGE *rawMsg = msg->createMessage();
+   MutexLock(node->m_mutex);
+   if (node->m_socket != INVALID_SOCKET)
+   {
+      if (SendEx(node->m_socket, rawMsg, ntohl(rawMsg->size), 0, NULL) <= 0)
+      {
+         ClusterDebug(5, _T("ClusterSendResponse: send failed for peer %d [%s]"), node->m_id, (const TCHAR *)node->m_addr->toString());
+         shutdown(node->m_socket, SHUT_RDWR);
+         node->m_socket = INVALID_SOCKET; // current socket will be closed by receiver
+         ChangeClusterNodeState(node, CLUSTER_NODE_DOWN);
+      }
+   }
+   MutexUnlock(node->m_mutex);
+   free(rawMsg);
 }
 
 /**
@@ -520,20 +560,23 @@ void LIBNXCC_EXPORTABLE ClusterSendResponse(UINT32 nodeId, UINT32 requestId, UIN
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(requestId);
 
-   NXCP_MESSAGE *rawMsg = msg.createMessage();
-   MutexLock(node->m_mutex);
-   if (node->m_socket != INVALID_SOCKET)
-   {
-      if (SendEx(node->m_socket, rawMsg, ntohl(rawMsg->size), 0, NULL) <= 0)
+   ClusterSendMessage(node, &msg);
+}
+
+/**
+ * Check if all cluster nodes connected
+ */
+bool LIBNXCC_EXPORTABLE ClusterAllNodesConnected()
+{
+   int total = 0, connected = 0;
+   for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)
+      if (g_nxccNodes[i].m_id > 0)
       {
-         ClusterDebug(5, _T("ClusterSendResponse: send failed for peer %d [%s]"), nodeId, (const TCHAR *)node->m_addr->toString());
-         shutdown(node->m_socket, SHUT_RDWR);
-         node->m_socket = INVALID_SOCKET; // current socket will be closed by receiver
-         ChangeClusterNodeState(node, CLUSTER_NODE_DOWN);
+         total++;
+         if (g_nxccNodes[i].m_state >= CLUSTER_NODE_CONNECTED)
+            connected++;
       }
-   }
-   MutexUnlock(node->m_mutex);
-   free(rawMsg);
+   return total == connected;
 }
 
 /**
@@ -591,8 +634,8 @@ bool LIBNXCC_EXPORTABLE ClusterJoin()
    else
    {
       // no other nodes, declare self as master
-      g_nxccMasterNode = true;
       ClusterDebug(1, _T("ClusterJoin: cannot contact other nodes, declaring self as master"));
+      PromoteClusterNode();
    }
 
    return true;

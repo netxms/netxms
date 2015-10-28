@@ -362,10 +362,11 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_REMOVE_SCHEDULE"),
       _T("CMD_ENTER_MAINT_MODE"),
       _T("CMD_LEAVE_MAINT_MODE"),
-      _T("CMD_JOIN_CLUSTER")
+      _T("CMD_JOIN_CLUSTER"),
+      _T("CMD_CLUSTER_NOTIFY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_JOIN_CLUSTER))
+   if ((code >= CMD_LOGIN) && (code <= CMD_CLUSTER_NOTIFY))
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), code);
