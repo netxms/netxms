@@ -58,14 +58,19 @@ public:
  */
 bool LIBNXCC_EXPORTABLE ClusterInit(Config *config, const TCHAR *section, ClusterEventHandler *eventHandler);
 bool LIBNXCC_EXPORTABLE ClusterJoin();
+void LIBNXCC_EXPORTABLE ClusterSetRunning();
 void LIBNXCC_EXPORTABLE ClusterShutdown();
 
 void LIBNXCC_EXPORTABLE ClusterSetDebugCallback(void (*cb)(int, const TCHAR *, va_list));
 
+UINT32 LIBNXCC_EXPORTABLE ClusterGetLocalNodeId();
 bool LIBNXCC_EXPORTABLE ClusterIsMasterNode();
+bool LIBNXCC_EXPORTABLE ClusterIsSyncNeeded();
 bool LIBNXCC_EXPORTABLE ClusterAllNodesConnected();
 
 void LIBNXCC_EXPORTABLE ClusterNotify(NXCPMessage *msg);
+void LIBNXCC_EXPORTABLE ClusterNotify(INT16 code);
+void LIBNXCC_EXPORTABLE ClusterDirectNotify(UINT32 nodeId, INT16 code);
 int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg);
 UINT32 LIBNXCC_EXPORTABLE ClusterSendDirectCommand(UINT32 nodeId, NXCPMessage *msg);
 NXCPMessage LIBNXCC_EXPORTABLE *ClusterSendDirectCommandEx(UINT32 nodeId, NXCPMessage *msg);

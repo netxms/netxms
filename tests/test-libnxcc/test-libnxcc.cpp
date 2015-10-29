@@ -84,9 +84,10 @@ int main(int argc, char *argv[])
    config->setValue(_T("/CLUSTER/PeerNode"), (s_nodeId == 1) ? _T("2:127.0.0.1") : _T("1:127.0.0.1"));
 
    ClusterSetDebugCallback(DebugCallback);
-   ClusterInit(config, _T("CLUSTER"), new EventHandler());
+   AssertTrue(ClusterInit(config, _T("CLUSTER"), new EventHandler()));
 
-   ClusterJoin();
+   AssertTrue(ClusterJoin());
+   ClusterSetRunning();
    _tprintf(_T("CLUSTER RUNNING\n"));
 
    ThreadSleep(1);

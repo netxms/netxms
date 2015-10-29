@@ -27,6 +27,8 @@
  */
 void ClusterNodeJoin(void *arg)
 {
+   static const TCHAR *rspNames[] = { _T("ACCEPTED AS SECONDARY"), _T("ACCEPTED AS MASTER"), _T("WAIT FOR MASTER"), _T("SPLIT BRAIN") };
+
    ClusterNodeInfo *node = (ClusterNodeInfo *)arg;
    ClusterDebug(4, _T("ClusterNodeJoin: requesting join from from node %d [%s]"), node->m_id, (const TCHAR *)node->m_addr->toString());
 
@@ -39,15 +41,18 @@ void ClusterNodeJoin(void *arg)
    if (response != NULL)
    {
       ClusterJoinResponse r = (ClusterJoinResponse)response->getFieldAsInt16(VID_RCC);
-      ClusterDebug(4, _T("ClusterNodeJoin: join response from node %d [%s]: %d"), node->m_id, (const TCHAR *)node->m_addr->toString(), r);
+      ClusterDebug(4, _T("ClusterNodeJoin: join response from node %d [%s]: %s"), node->m_id, (const TCHAR *)node->m_addr->toString(), rspNames[r]);
       switch(r)
       {
          case CJR_ACCEPTED_AS_SECONDARY:
             ChangeClusterNodeState(node, CLUSTER_NODE_UP);
             node->m_master = response->getFieldAsBoolean(VID_IS_MASTER);
+            g_nxccNeedSync = true;
+            SetJoinCondition();
             break;
          case CJR_ACCEPTED_AS_MASTER:
             ChangeClusterNodeState(node, CLUSTER_NODE_SYNC);
+            SetJoinCondition();
             break;
       }
       delete response;
@@ -82,8 +87,11 @@ void ProcessClusterJoinRequest(ClusterNodeInfo *node, NXCPMessage *request)
    else if (!g_nxccMasterNode && remoteMaster)
    {
       response.setField(VID_RCC, (INT16)CJR_ACCEPTED_AS_MASTER);
-      ClusterDebug(4, _T("ProcessClusterJoinRequest: joined running cluster with node %d [%s] as master"), node->m_id, (const TCHAR *)node->m_addr->toString());
+      ClusterDebug(4, _T("ProcessClusterJoinRequest: joined running cluster as secondary with node %d [%s] as master"), node->m_id, (const TCHAR *)node->m_addr->toString());
+      node->m_master = true;
       ChangeClusterNodeState(node, CLUSTER_NODE_UP);
+      g_nxccNeedSync = true;
+      SetJoinCondition();
    }
    else
    {
@@ -102,15 +110,15 @@ void ProcessClusterJoinRequest(ClusterNodeInfo *node, NXCPMessage *request)
 }
 
 /**
- * Promote this node to master if possible
+ * Promote cluster node - callback for running on separate thread
  */
-void PromoteClusterNode()
+static void PromoteClusterNodeCB(void *arg)
 {
    for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)
       if ((g_nxccNodes[i].m_id > 0) && (g_nxccNodes[i].m_id < g_nxccNodeId) && (g_nxccNodes[i].m_state >= CLUSTER_NODE_CONNECTED))
       {
          ClusterDebug(4, _T("PromoteClusterNode: found connected node with higher priority"));
-         break;
+         return;
       }
 
    ClusterDebug(4, _T("PromoteClusterNode: promote this node to master"));
@@ -121,4 +129,14 @@ void PromoteClusterNode()
    msg.setField(VID_NODE_ID, g_nxccNodeId);
    msg.setField(VID_NOTIFICATION_CODE, (INT16)CN_NEW_MASTER);
    ClusterNotify(&msg);
+
+   SetJoinCondition();
+}
+
+/**
+ * Promote this node to master if possible (always executed on separate thread)
+ */
+void PromoteClusterNode()
+{
+   ThreadPoolExecute(g_nxccThreadPool, PromoteClusterNodeCB, NULL);
 }

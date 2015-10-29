@@ -31,6 +31,7 @@ ClusterNodeState g_nxccState = CLUSTER_NODE_DOWN;
 bool g_nxccInitialized = false;
 bool g_nxccMasterNode = false;
 bool g_nxccShutdown = false;
+bool g_nxccNeedSync = false;
 UINT16 g_nxccListenPort = 47000;
 UINT32 g_nxccCommandTimeout = 500;
 
@@ -183,6 +184,22 @@ void LIBNXCC_EXPORTABLE ClusterShutdown()
 bool LIBNXCC_EXPORTABLE ClusterIsMasterNode()
 {
    return g_nxccMasterNode;
+}
+
+/**
+ * Check if synchronization needed
+ */
+bool LIBNXCC_EXPORTABLE ClusterIsSyncNeeded()
+{
+   return g_nxccNeedSync;
+}
+
+/**
+ * Get local node ID
+ */
+UINT32 LIBNXCC_EXPORTABLE ClusterGetLocalNodeId()
+{
+   return g_nxccNodeId;
 }
 
 #ifdef _WIN32
