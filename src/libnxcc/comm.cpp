@@ -528,7 +528,7 @@ int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg)
       if (response != NULL)
       {
          UINT32 rcc = response->getFieldAsInt32(VID_RCC);
-         if (rcc != 0)
+         if (rcc != NXCC_RCC_SUCCESS)
          {
             ClusterDebug(5, _T("ClusterCommand: failed request to peer %d [%s] RCC=%d"),
                g_nxccNodes[i].m_id, (const TCHAR *)g_nxccNodes[i].m_addr->toString(), rcc);
@@ -639,6 +639,23 @@ void LIBNXCC_EXPORTABLE ClusterSendResponse(UINT32 nodeId, UINT32 requestId, UIN
    msg.setId(requestId);
 
    ClusterSendMessage(node, &msg);
+}
+
+/**
+ * Send response to cluster peer
+ */
+void LIBNXCC_EXPORTABLE ClusterSendResponseEx(UINT32 nodeId, UINT32 requestId, NXCPMessage *msg)
+{
+   int index = FindClusterNode(nodeId);
+   if (index == -1)
+      return;
+
+   ClusterNodeInfo *node = &g_nxccNodes[index];
+
+   msg->setCode(CMD_REQUEST_COMPLETED);
+   msg->setId(requestId);
+
+   ClusterSendMessage(node, msg);
 }
 
 /**
