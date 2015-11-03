@@ -335,6 +335,8 @@ public:
 	size_t length() const { return m_length; }
 	bool isEmpty() const { return m_length == 0; }
 
+	wchar_t charAt(size_t pos) const { return ((pos >= 0) && (pos < m_length)) ? m_buffer[pos] : 0; }
+
 	TCHAR *substring(int nStart, int nLen, TCHAR *pszBuffer = NULL);
 	int find(const TCHAR *str, int nStart = 0);
 
