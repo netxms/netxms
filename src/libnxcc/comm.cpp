@@ -149,6 +149,9 @@ static THREAD_RESULT THREAD_CALL ClusterReceiverThread(void *arg)
             case CMD_KEEPALIVE:
                delete msg;
                break;
+            case CMD_REQUEST_COMPLETED:
+               node->m_msgWaitQueue->put(msg);
+               break;
             default:
                if (g_nxccEventHandler->onMessage(msg, node->m_id))
                   delete msg;

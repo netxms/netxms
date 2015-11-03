@@ -24,6 +24,8 @@
 #define NXCC_RCC_INVALID_NODE    1
 #define NXCC_RCC_TIMEOUT         2
 #define NXCC_RCC_COMM_FAILURE    3
+#define NXCC_RCC_NOT_MASTER      4
+#define NXCC_RCC_INVALID_REQUEST 5
 
 /**
  * Cluster node states
