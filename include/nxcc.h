@@ -64,6 +64,7 @@ void LIBNXCC_EXPORTABLE ClusterShutdown();
 void LIBNXCC_EXPORTABLE ClusterSetDebugCallback(void (*cb)(int, const TCHAR *, va_list));
 
 UINT32 LIBNXCC_EXPORTABLE ClusterGetLocalNodeId();
+UINT32 LIBNXCC_EXPORTABLE ClusterGetMasterNodeId();
 bool LIBNXCC_EXPORTABLE ClusterIsMasterNode();
 bool LIBNXCC_EXPORTABLE ClusterIsSyncNeeded();
 bool LIBNXCC_EXPORTABLE ClusterAllNodesConnected();

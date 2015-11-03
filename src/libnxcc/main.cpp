@@ -187,6 +187,21 @@ bool LIBNXCC_EXPORTABLE ClusterIsMasterNode()
 }
 
 /**
+ * Get ID of current master. Will return 0 if there is no master node at the moment.
+ */
+UINT32 LIBNXCC_EXPORTABLE ClusterGetMasterNodeId()
+{
+   if (g_nxccMasterNode)
+      return g_nxccNodeId;
+   for(int i = 0; i < CLUSTER_MAX_NODE_ID; i++)
+   {
+      if (g_nxccNodes[i].m_master)
+         return g_nxccNodes[i].m_id;
+   }
+   return 0;
+}
+
+/**
  * Check if synchronization needed
  */
 bool LIBNXCC_EXPORTABLE ClusterIsSyncNeeded()
