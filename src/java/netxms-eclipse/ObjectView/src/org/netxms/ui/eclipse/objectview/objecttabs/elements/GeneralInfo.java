@@ -126,6 +126,8 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);
             if (node.getBootTime() != null)
                addPair(Messages.get().GeneralInfo_BootTime, RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
+            if (node.getLastAgentCommTime() != null)
+               addPair("Agent Last Communication Time", RegionalSettings.getDateTimeFormat().format(node.getLastAgentCommTime()), false);
             if (node.getRackId() != 0)
             {
                Rack rack = session.findObjectById(node.getRackId(), Rack.class);

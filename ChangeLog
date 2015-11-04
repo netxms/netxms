@@ -6,7 +6,7 @@
 - NXSL node object attribute snmpSysDescription renamed back to sysDescription
 - Management console:
 	- Object tool input fields can be rearranged
-- Fixed issues: #948, #967
+- Fixed issues: #847, #948, #967
 
 
 *

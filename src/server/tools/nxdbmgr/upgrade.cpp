@@ -574,6 +574,20 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V375 to V376
+ */
+static BOOL H_UpgradeFromV375(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE nodes ADD last_agent_comm_time integer\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='376' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V374 to V375
  */
 static BOOL H_UpgradeFromV374(int currVersion, int newVersion)
@@ -9015,6 +9029,7 @@ static struct
    { 372, 373, H_UpgradeFromV372 },
    { 373, 374, H_UpgradeFromV373 },
    { 374, 375, H_UpgradeFromV374 },
+   { 375, 376, H_UpgradeFromV375 },
    { 0, 0, NULL }
 };
 

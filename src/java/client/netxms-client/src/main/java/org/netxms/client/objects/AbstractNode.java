@@ -124,6 +124,7 @@ public abstract class AbstractNode extends DataCollectionTarget
 	protected MacAddress bridgeBaseAddress;
 	protected int ifXTablePolicy;
 	protected Date bootTime;
+	protected Date lastAgentCommTime;
 	protected long rackId;
 	protected UUID rackImage;
 	protected short rackPosition;
@@ -193,6 +194,10 @@ public abstract class AbstractNode extends DataCollectionTarget
 		
 		long bootTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_BOOT_TIME);
 		bootTime = (bootTimeSeconds > 0) ? new Date(bootTimeSeconds * 1000) : null;
+		
+
+      long commTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_COMM_TIME);
+      lastAgentCommTime = (commTimeSeconds > 0) ? new Date(commTimeSeconds * 1000) : null;
 	}
 
 	/**
@@ -642,5 +647,10 @@ public abstract class AbstractNode extends DataCollectionTarget
    public short getRackHeight()
    {
       return rackHeight;
+   }
+
+   public Date getLastAgentCommTime()
+   {
+      return lastAgentCommTime;
    }
 }

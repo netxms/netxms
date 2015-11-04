@@ -1183,6 +1183,7 @@ protected:
 	time_t m_downSince;
    time_t m_bootTime;
    time_t m_agentUpTime;
+   time_t m_lastAgentCommTime;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_hSmclpAccessMutex;
@@ -1266,6 +1267,7 @@ protected:
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
    void updateRackBinding();
+   void setLastAgentCommTime() {m_lastAgentCommTime = time(NULL); setModified();}
 
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 

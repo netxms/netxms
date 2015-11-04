@@ -78,6 +78,7 @@ Node::Node() : DataCollectionTarget()
    m_pRoutingTable = NULL;
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
+   m_lastAgentCommTime = 0;
 	m_linkLayerNeighbors = NULL;
 	m_vrrpInfo = NULL;
 	m_pTopology = NULL;
@@ -163,6 +164,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_pRoutingTable = NULL;
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
+   m_lastAgentCommTime = 0;
 	m_linkLayerNeighbors = NULL;
 	m_vrrpInfo = NULL;
 	m_pTopology = NULL;
@@ -255,7 +257,8 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
 		_T("usm_priv_password,usm_methods,snmp_sys_name,bridge_base_addr,")
       _T("runtime_flags,down_since,boot_time,driver_name,icmp_proxy,")
       _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,")
-      _T("rack_id,rack_image,rack_position,rack_height FROM nodes WHERE id=?"));
+      _T("rack_id,rack_image,rack_position,rack_height,")
+      _T("last_agent_comm_time FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
 		return FALSE;
 
@@ -337,6 +340,7 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
    m_rackImage = DBGetFieldGUID(hResult, 0, 34);
    m_rackPosition = (INT16)DBGetFieldLong(hResult, 0, 35);
    m_rackHeight = (INT16)DBGetFieldLong(hResult, 0, 36);
+   m_lastAgentCommTime = DBGetFieldLong(hResult, 0, 37);
 
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
@@ -431,7 +435,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 			_T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,icmp_proxy=?,required_polls=?,")
 			_T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
 			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_height=?,rack_id=?,boot_time=?,")
-         _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=? WHERE id=?"));
+         _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=? WHERE id=?"));
 	}
    else
 	{
@@ -440,8 +444,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 		  _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
 		  _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
 		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
-        _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,id) ")
-		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+        _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,id) ")
+		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -497,7 +501,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC);
    DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC);
    DBBind(hStmt, 37, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC);
-	DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, (LONG)m_lastAgentCommTime);	// rack ID
+	DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -3409,6 +3414,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
 			DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): already connected"), m_name, m_id);
          if (newConnection != NULL)
             *newConnection = false;
+         setLastAgentCommTime();
 			return TRUE;
 		}
 
@@ -3441,6 +3447,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       }
       m_pAgentConnection->enableTraps();
       setFileUpdateConn(NULL);
+      setLastAgentCommTime();
       CALL_ALL_MODULES(pfOnConnectToAgent, (this, m_pAgentConnection));
 	}
    return success;
@@ -3765,9 +3772,11 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
       {
          case ERR_SUCCESS:
             dwResult = DCE_SUCCESS;
+            setLastAgentCommTime();
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
             dwResult = DCE_NOT_SUPPORTED;
+            setLastAgentCommTime();
             goto end_loop;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
@@ -3822,9 +3831,11 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
       {
          case ERR_SUCCESS:
             dwResult = DCE_SUCCESS;
+            setLastAgentCommTime();
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
             dwResult = DCE_NOT_SUPPORTED;
+            setLastAgentCommTime();
             goto end_loop;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
@@ -3882,9 +3893,11 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
 				*list = new StringList;
 				for(i = 0; i < m_pAgentConnection->getNumDataLines(); i++)
 					(*list)->add(m_pAgentConnection->getDataLine(i));
+            setLastAgentCommTime();
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
             dwResult = DCE_NOT_SUPPORTED;
+            setLastAgentCommTime();
             goto end_loop;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
@@ -4294,6 +4307,7 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_SYS_CONTACT, CHECK_NULL_EX(m_sysContact));
    pMsg->setField(VID_SYS_LOCATION, CHECK_NULL_EX(m_sysLocation));
    pMsg->setField(VID_BOOT_TIME, (UINT32)m_bootTime);
+   pMsg->setField(VID_AGENT_COMM_TIME, (UINT32)m_lastAgentCommTime);
 	pMsg->setField(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress, 6);
 	if (m_lldpNodeId != NULL)
 		pMsg->setField(VID_LLDP_NODE_ID, m_lldpNodeId);
@@ -4868,6 +4882,8 @@ AgentConnectionEx *Node::createAgentConnection()
       delete conn;
       conn = NULL;
    }
+   else
+      setLastAgentCommTime();
 	DbgPrintf(6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_name, (int)m_id, conn);
    return conn;
 }
