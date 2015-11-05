@@ -596,6 +596,7 @@ public:
    void merge(const StringList *src, bool matchCase);
    TCHAR *join(const TCHAR *separator);
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);
+   void sort(bool ascending = true, bool caseSensitive = false);
    void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId);
 };
 
