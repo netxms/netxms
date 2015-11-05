@@ -490,9 +490,9 @@ protected:
    bool m_ignoreCase;
 	void (*m_objectDestructor)(void *);
 
-	StringMapEntry *find(const TCHAR *key);
+	StringMapEntry *find(const TCHAR *key) const;
 	void setObject(TCHAR *key, void *value, bool keyPreAlloc);
-	void *getObject(const TCHAR *key);
+	void *getObject(const TCHAR *key) const;
 	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
 
 public:
@@ -505,14 +505,14 @@ public:
 	void remove(const TCHAR *key);
 	void clear();
 
-	int size();
-   bool contains(const TCHAR *key) { return find(key) != NULL; }
+	int size() const;
+   bool contains(const TCHAR *key) const { return find(key) != NULL; }
 
-   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData);
-   const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData);
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData) const;
+   const void *findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData) const;
 
-   StructArray<KeyValuePair> *toArray();
-   StringList *keys();
+   StructArray<KeyValuePair> *toArray() const;
+   StringList *keys() const;
 };
 
 /**
@@ -538,11 +538,11 @@ public:
 
    void addAll(StringMap *src);
 
-	const TCHAR *get(const TCHAR *key) { return (const TCHAR *)getObject(key); }
-	UINT32 getULong(const TCHAR *key, UINT32 defaultValue);
-	bool getBoolean(const TCHAR *key, bool defaultValue);
+	const TCHAR *get(const TCHAR *key) const { return (const TCHAR *)getObject(key); }
+	UINT32 getULong(const TCHAR *key, UINT32 defaultValue) const;
+	bool getBoolean(const TCHAR *key, bool defaultValue) const;
 
-   void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId);
+   void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
 };
 
 /**
@@ -557,7 +557,7 @@ public:
 	StringObjectMap(bool objectOwner) : StringMapBase(objectOwner) { m_objectDestructor = destructor; }
 
 	void set(const TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, false); }
-	T *get(const TCHAR *key) { return (T*)getObject(key); }
+	T *get(const TCHAR *key) const { return (T*)getObject(key); }
 };
 
 /**
