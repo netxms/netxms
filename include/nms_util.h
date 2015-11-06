@@ -504,6 +504,7 @@ public:
 
 	void remove(const TCHAR *key);
 	void clear();
+   void filterElements(bool (*filter)(const TCHAR *, const void *, void *), void *userData);
 
 	int size() const;
    bool contains(const TCHAR *key) const { return find(key) != NULL; }

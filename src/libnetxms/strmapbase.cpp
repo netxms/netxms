@@ -66,7 +66,8 @@ void StringMapBase::clear()
       HASH_DEL(m_data, entry);
       free(entry->key);
       safe_free(entry->originalKey);
-      destroyObject(entry->value);
+      if (m_objectOwner)
+         destroyObject(entry->value);
       free(entry);
    }
 }
@@ -207,6 +208,26 @@ const void *StringMapBase::findElement(bool (*comparator)(const TCHAR *, const v
       }
    }
    return result;
+}
+
+/**
+ * Filter elements (delete those for which filter callback returns false)
+ */
+void StringMapBase::filterElements(bool (*filter)(const TCHAR *, const void *, void *), void *userData)
+{
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (!filter(m_ignoreCase ? entry->originalKey : entry->key, entry->value, userData))
+      {
+         HASH_DEL(m_data, entry);
+         free(entry->key);
+         safe_free(entry->originalKey);
+         if (m_objectOwner)
+            destroyObject(entry->value);
+         free(entry);
+      }
+   }
 }
 
 /**
