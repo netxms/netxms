@@ -1,1 +1,0 @@
-#extend-diff-ignore = "(^|/)(config\.sub.*|config\.guess|Makefile|src/tools/nxdevcfg/flags.cpp)$"

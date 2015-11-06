@@ -2906,9 +2906,6 @@ AC_CONFIG_FILES([
 	contrib/startup/suse/Makefile
 	contrib/startup/ubuntu/Makefile
 	contrib/startup/solaris/Makefile
-	debian/Makefile
-	debian/patches/Makefile
-	debian/source/Makefile
 	doc/Makefile
 	doc/internal/Makefile
 	doc/manuals/Makefile
