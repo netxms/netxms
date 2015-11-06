@@ -38,6 +38,7 @@ f none /opt/netxms/lib/libavaya-ers.so 0755 root other
 f none /opt/netxms/lib/libcisco.so 0755 root other
 f none /opt/netxms/lib/libcrypto.so.1.0.0 0555 root other
 f none /opt/netxms/lib/libnetxms.so.2.0.0 0755 root other
+f none /opt/netxms/lib/libnxagent.so.2.0.0 0755 root other
 f none /opt/netxms/lib/libnxcore.so.2.0.0 0755 root other
 f none /opt/netxms/lib/libnxdb.so.2.0.0 0755 root other
 f none /opt/netxms/lib/libnxexpat.so.2.0.0 0755 root other
@@ -532,6 +533,8 @@ s none /opt/netxms/lib/libnsm_sms.so=/opt/netxms/lib/netxms/sms.nsm
 s none /opt/netxms/lib/libnsm_sunos.so=/opt/netxms/lib/netxms/sunos.nsm
 s none /opt/netxms/lib/libnsm_tuxedo.so=/opt/netxms/lib/netxms/tuxedo.nsm
 s none /opt/netxms/lib/libnsm_ups.so=/opt/netxms/lib/netxms/ups.nsm
+s none /opt/netxms/lib/libnxagent.so.2=libnxagent.so.2.0.0
+s none /opt/netxms/lib/libnxagent.so=libnxagent.so.2.0.0
 s none /opt/netxms/lib/libnxcore.so.2=libnxcore.so.2.0.0
 s none /opt/netxms/lib/libnxcore.so=libnxcore.so.2.0.0
 s none /opt/netxms/lib/libnxdb.so.2=libnxdb.so.2.0.0
