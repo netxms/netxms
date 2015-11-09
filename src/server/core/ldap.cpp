@@ -143,32 +143,34 @@ int ldap_parse_page_control(LDAP *ldap, LDAPControl **controls,
 }
 #endif /* HAVE_LDAP_PARSE_PAGE_CONTROL */
 
-#ifdef _WIN32
-void LDAPConnection::prepareStringForInit(TCHAR *connectionLine)
+/**
+ * Correctly formats ldap connection string (according to OS)
+ */
+void LDAPConnection::prepareStringForInit(LDAP_CHAR *connectionLine)
 {
-   TCHAR *comma;
-   TCHAR *lastSlash;
-   TCHAR *nearestSpace;
+   LDAP_CHAR *comma;
+   LDAP_CHAR *lastSlash;
+   LDAP_CHAR *nearestSpace;
 
-   comma=_tcschr(connectionLine,_T(','));
+   comma=ldap_strchr(connectionLine,_TLDAP(','));
    while(comma != NULL)
    {
-      *comma = _T(' ');
-      comma=_tcschr(connectionLine,_T(','));
+      *comma = _TLDAP(' ');
+      comma=ldap_strchr(connectionLine,_TLDAP(','));
    }
 
-   if(_tcsstr(connectionLine,_T("ldaps://")))
+   if(ldap_strstr(connectionLine,_TLDAP("ldaps://")))
    {
       m_secure = 1;
    }
 
-   lastSlash=_tcsrchr(connectionLine, _T('/'));
+   lastSlash=ldap_strchr(connectionLine, _TLDAP('/'));
    while(lastSlash != NULL)
    {
       *lastSlash = 0;
       lastSlash++;
 
-      nearestSpace=_tcsrchr(connectionLine,_T(' '));
+      nearestSpace=ldap_strchr(connectionLine,_TLDAP(' '));
       if(nearestSpace == NULL)
       {
          nearestSpace = connectionLine;
@@ -178,52 +180,11 @@ void LDAPConnection::prepareStringForInit(TCHAR *connectionLine)
          nearestSpace++;
       }
       *nearestSpace = 0;
-      _tcscat(connectionLine, lastSlash);
+      ldap_strcat(connectionLine, lastSlash);
 
-      lastSlash=_tcsrchr(connectionLine, _T('/'));
+      lastSlash=ldap_strchr(connectionLine, _TLDAP('/'));
    }
 }
-#else
-void LDAPConnection::prepareStringForInit(char *connectionLine)
-{
-   char *comma;
-   char *lastSlash;
-   char *nearestSpace;
-
-   comma=strchr(connectionLine,',');
-   while(comma != NULL)
-   {
-      *comma = ' ';
-      comma=strchr(connectionLine,',');
-   }
-
-   if(strstr(connectionLine,"ldaps://"))
-   {
-      m_secure = 1;
-   }
-
-   lastSlash=strrchr(connectionLine, '/');
-   while(lastSlash != NULL)
-   {
-      *lastSlash = 0;
-      lastSlash++;
-
-      nearestSpace=strrchr(connectionLine,' ');
-      if(nearestSpace == NULL)
-      {
-         nearestSpace = connectionLine;
-      }
-      else
-      {
-         nearestSpace++;
-      }
-      *nearestSpace = 0;
-      strcat(connectionLine, lastSlash);
-
-      lastSlash=strrchr(connectionLine, '/');
-   }
-}
-#endif // _WIN32
 
 /**
  * Init connection with LDAP(init search line, start checking thread, init check interval)
@@ -291,31 +252,27 @@ void LDAPConnection::getAllSyncParameters()
    ConfigReadStr(_T("LdapSyncUserPassword"), tmpPwd, MAX_PASSWORD, _T(""));
    ConfigReadStr(_T("LdapSyncUser"), tmpLogin, MAX_CONFIG_VALUE, _T(""));
    DecryptPassword(tmpLogin, tmpPwd, tmpPwd, MAX_PASSWORD);
-#ifdef _WIN32
-   ConfigReadStr(_T("LdapConnectionString"), m_connList, MAX_CONFIG_VALUE, _T(""));
-   _tcsncpy(m_userDN, tmpLogin, MAX_CONFIG_VALUE);
-   ConfigReadStr(_T("LdapSearchBase"), m_searchBase, MAX_CONFIG_VALUE, _T(""));
-   ConfigReadStr(_T("LdapSearchFilter"), m_searchFilter, MAX_CONFIG_VALUE, _T("(objectClass=*)"));
+   LdapConfigRead(_T("LdapConnectionString"), m_connList, MAX_CONFIG_VALUE, _TLDAP(""));
+   LdapConfigRead(_T("LdapSyncUser"), m_userDN, MAX_CONFIG_VALUE, _TLDAP(""));
+   LdapConfigRead(_T("LdapSearchBase"), m_searchBase, MAX_CONFIG_VALUE, _TLDAP(""));
+   LdapConfigRead(_T("LdapSearchFilter"), m_searchFilter, MAX_CONFIG_VALUE, _TLDAP("(objectClass=*)"));
    if (m_searchFilter[0] == 0)
-      _tcscpy(m_searchFilter, _T("(objectClass=*)"));
+      ldap_strcpy(m_searchFilter, _TLDAP("(objectClass=*)"));
+#ifdef _WIN32
    _tcsncpy(m_userPassword, tmpPwd, MAX_PASSWORD);
 #else
-   ConfigReadStrUTF8(_T("LdapConnectionString"), m_connList, MAX_CONFIG_VALUE, "");
-   ConfigReadStrUTF8(_T("LdapSyncUser"), m_userDN, MAX_CONFIG_VALUE, "");
-   ConfigReadStrUTF8(_T("LdapSearchBase"), m_searchBase, MAX_CONFIG_VALUE, "");
-   ConfigReadStrUTF8(_T("LdapSearchFilter"), m_searchFilter, MAX_CONFIG_VALUE, "(objectClass=*)");
-   if (m_searchFilter[0] == 0)
-      strcpy(m_searchFilter, "(objectClass=*)");
 
 #ifdef UNICODE
    char *utf8Password = UTF8StringFromWideString(tmpPwd);
    strcpy(m_userPassword, utf8Password);
    safe_free(utf8Password);
 #else
-   strcpy(m_userPassword, tmpPwd);
+   char *utf8Password = UTF8StringFromMBString(tmpPwd)
+   strcpy(m_userPassword, utf8Password);
+   safe_free(utf8Password);
 #endif // UNICODE
 
-#endif
+#endif //win32
    ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_CONFIG_VALUE, "");
    ConfigReadStrUTF8(_T("LdapMappingFullName"), m_ldapFullNameAttr, MAX_CONFIG_VALUE, "");
    ConfigReadStrUTF8(_T("LdapMappingDescription"), m_ldapDescriptionAttr, MAX_CONFIG_VALUE, "");
@@ -324,6 +281,8 @@ void LDAPConnection::getAllSyncParameters()
    m_action = ConfigReadInt(_T("LdapUserDeleteAction"), 1); //default value - to disable user(value=1)
    m_pageSize = ConfigReadInt(_T("LdapPageSize"), 1000); //default value - 1000
 }
+
+
 
 /**
  * Get users, according to search line & insetr in netxms DB missing
@@ -338,49 +297,91 @@ void LDAPConnection::syncUsers()
       return;
    }
 
-#ifdef _WIN32
-   struct l_timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
-#else
-   struct timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
-#endif
+   struct ldap_timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
    LDAPMessage *searchResult;
    StringObjectMap<Entry> *userEntryList = new StringObjectMap<Entry>(true); //as unique string ID is used dn
    StringObjectMap<Entry> *groupEntryList= new StringObjectMap<Entry>(true); //as unique string ID is used dn
 
-   int rc = ldap_search_ext_s(
-            m_ldapConn,		// LDAP session handle
-            m_searchBase,	// Search Base
-            LDAP_SCOPE_SUBTREE,	// Search Scope – everything below o=Acme
-            m_searchFilter, // Search Filter – only inetOrgPerson objects
-            NULL,	// returnAllAttributes – NULL means Yes
-            0,		// attributesOnly – False means we want values
-            NULL,	// Server controls – There are none
-            NULL,	// Client controls – There are none
-            &timeOut,	// search Timeout
-            LDAP_NO_LIMIT,	// no size limit
-            &searchResult );
+   //Parse search base string. As separater is used ';' if this symbol is not escaped
+   LDAP_CHAR *tmp  = ldap_strdup(m_searchBase);
+   LDAP_CHAR *separator = tmp;
+   LDAP_CHAR *base = tmp;
+   int size = ldap_strlen(tmp);
+   int rc = LDAP_SUCCESS;
 
-   if (rc != LDAP_SUCCESS)
+   while (separator != NULL && rc == LDAP_SUCCESS)
    {
-      if (rc == LDAP_SIZELIMIT_EXCEEDED)
+      while (true)
       {
-         rc = readInPages(userEntryList, groupEntryList);
+         separator = ldap_strchr(separator, ';');
+         if(separator != NULL)
+         {
+            if ((separator - tmp) > 0)
+            {
+               if(separator[-1] != '\\')
+               {
+                  separator[0] = 0;
+               }
+               else
+               {
+                  separator++;
+                  continue;
+               }
+            }
+            else
+            {
+               base++;
+               continue;
+            }
+         }
+         break;
+      }
+
+      rc = ldap_search_ext_s(
+               m_ldapConn,		// LDAP session handle
+               base,	// Search Base
+               LDAP_SCOPE_SUBTREE,	// Search Scope – everything below o=Acme
+               m_searchFilter, // Search Filter – only inetOrgPerson objects
+               NULL,	// returnAllAttributes – NULL means Yes
+               0,		// attributesOnly – False means we want values
+               NULL,	// Server controls – There are none
+               NULL,	// Client controls – There are none
+               &timeOut,	// search Timeout
+               LDAP_NO_LIMIT,	// no size limit
+               &searchResult );
+
+      if (rc != LDAP_SUCCESS)
+      {
+         if (rc == LDAP_SIZELIMIT_EXCEEDED)
+         {
+            rc = readInPages(userEntryList, groupEntryList);
+         }
+         else
+         {
+            TCHAR* error = getErrorString(rc);
+            DbgPrintf(1, _T("LDAPConnection::syncUsers(): LDAP could not get search results. Error code: %s"), error);
+            safe_free(error);
+         }
       }
       else
       {
-         TCHAR* error = getErrorString(rc);
-         DbgPrintf(1, _T("LDAPConnection::syncUsers(): LDAP could not get search results. Error code: %s"), error);
-         safe_free(error);
+         fillLists(searchResult, userEntryList, groupEntryList);
+      }
+
+      ldap_msgfree(searchResult);
+      if(separator != NULL && (separator - tmp) < size)
+      {
+         separator++;
+         base = separator;
+      }
+      else
+      {
+         separator = NULL;
       }
    }
-   else
-   {
-      fillLists(searchResult, userEntryList, groupEntryList);
-   }
 
-   ldap_msgfree(searchResult);
+   safe_free(tmp);
    closeLDAPConnection();
-
    if(rc == LDAP_SUCCESS)
    {
       //compare new LDAP list with old users
@@ -414,11 +415,7 @@ int LDAPConnection::readInPages(StringObjectMap<Entry> *userEntryList, StringObj
    struct berval *cookie = NULL;
 
    LDAPMessage *searchResult;
-#ifdef _WIN32
-   struct l_timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
-#else
-   struct timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
-#endif
+   struct ldap_timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
    int rc;
 
    do {
@@ -484,6 +481,23 @@ int LDAPConnection::readInPages(StringObjectMap<Entry> *userEntryList, StringObj
    return rc;
 }
 
+TCHAR *LDAPConnection::ldap_internal_get_dn(LDAP *conn, LDAPMessage *entry)
+{
+#ifdef _WIN32
+   TCHAR *_dn = ldap_get_dn(m_ldapConn, entry);
+   TCHAR *dn = _tcsdup(_dn);
+#else
+   char *_dn = ldap_get_dn(m_ldapConn, entry);
+#ifdef UNICODE
+   WCHAR *dn = WideStringFromUTF8String(_dn);
+#else
+   char *dn = MBStringFromUTF8String(_dn);
+#endif
+#endif
+   ldap_memfree(_dn);
+   return dn;
+}
+
 /**
  * Fills lists of users and groups from search results
  */
@@ -497,16 +511,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry>
    for (entry = ldap_first_entry(m_ldapConn, searchResult); entry != NULL; entry = ldap_next_entry(m_ldapConn, entry))
    {
       Entry *newObj = new Entry();
-#ifdef _WIN32
-      TCHAR *dn = ldap_get_dn(m_ldapConn, entry);
-#else
-#ifdef UNICODE
-      char *_dn = ldap_get_dn(m_ldapConn, entry);
-      TCHAR *dn = WideStringFromUTF8String(_dn);
-#else
-      char *dn = ldap_get_dn(m_ldapConn, entry);
-#endif /* UNICODE */
-#endif /* _WIN32 */
+      TCHAR *dn = ldap_internal_get_dn(m_ldapConn, entry);
       DbgPrintf(4, _T("LDAPConnection::fillLists(): Found dn: %s"), dn);
       TCHAR *value;
       for(i = 0, value = getAttrValue(entry, "objectClass", i); value != NULL; value = getAttrValue(entry, "objectClass", ++i))
@@ -529,12 +534,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry>
       if (newObj->m_type == LDAP_DEFAULT)
       {
          DbgPrintf(4, _T("LDAPConnection::fillLists(): %s is not a user nor a group"), dn);
-#if defined(UNICODE) && !defined(_WIN32)
          free(dn);
-         ldap_memfree(_dn);
-#else
-         ldap_memfree(dn);
-#endif
          delete newObj;
          continue;
       }
@@ -585,12 +585,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry>
          DbgPrintf(4, _T("LDAPConnection::fillLists(): Unknown object is not added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
          delete newObj;
       }
-#if defined(UNICODE) && !defined(_WIN32)
       free(dn);
-      ldap_memfree(_dn);
-#else
-      ldap_memfree(dn);
-#endif
    }
 }
 
@@ -689,11 +684,7 @@ UINT32 LDAPConnection::ldapUserLogin(const TCHAR *name, const TCHAR *password)
 
 // Prevent empty password, bind against ADS will succeed with
 // empty password by default.
-#ifdef _WIN32
-   if(wcslen(m_userPassword) == 0)
-#else
-   if(strlen(m_userPassword) == 0)
-#endif
+   if(ldap_strlen(m_userPassword) == 0)
    {
       return RCC_ACCESS_DENIED;
    }
