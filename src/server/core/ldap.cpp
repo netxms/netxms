@@ -267,7 +267,7 @@ void LDAPConnection::getAllSyncParameters()
    strcpy(m_userPassword, utf8Password);
    safe_free(utf8Password);
 #else
-   char *utf8Password = UTF8StringFromMBString(tmpPwd)
+   char *utf8Password = UTF8StringFromMBString(tmpPwd);
    strcpy(m_userPassword, utf8Password);
    safe_free(utf8Password);
 #endif // UNICODE
