@@ -73,7 +73,8 @@ public:
 #define ldap_strcpy _tcscpy
 #define ldap_strcat _tcscat
 #define ldap_strlen _tcslen
-#define ldap_timeval l_timeval
+#define ldap_timeval _timeval
+#define ldap_strdup _tcsdup
 #define LdapConfigRead ConfigReadStr
 #define _TLDAP(x) _T(x)
 
@@ -87,6 +88,7 @@ public:
 #define ldap_strcat strcat
 #define ldap_strlen strlen
 #define ldap_timeval timeval
+#define ldap_strdup strdup
 #define LdapConfigRead ConfigReadStrUTF8
 #define _TLDAP(x) x
 
