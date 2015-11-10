@@ -5,6 +5,7 @@
 - Scripts can be used as instance source in instance discovery DCIs
 - NXSL node object attribute snmpSysDescription renamed back to sysDescription
 - Selectors in NXSL
+- Subnet mask for synthetic subnets can be set in server configuration
 - Management console:
 	- Object tool input fields can be rearranged
 - Fixed issues: #847, #948, #967

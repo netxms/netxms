@@ -1000,7 +1000,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
                if (addr.getMaskBits() == 0)
 				   {
 					   bSyntheticMask = true;
-                  addr.setMaskBits((addr.getFamily() == AF_INET) ? 24 : 64);
+			         addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("DefaultSubnetMaskIPv6"), 64));
                   info->ipAddrList.replace(addr);
 				   }
 
@@ -6095,7 +6095,7 @@ void Node::resolveVlanPorts(VlanList *vlanList)
 }
 
 /**
- * Create new subnet and bins to this node
+ * Create new subnet and binds to this node
  */
 Subnet *Node::createSubnet(const InetAddress& baseAddr, bool syntheticMask)
 {
@@ -6231,7 +6231,7 @@ void Node::checkSubnetBinding()
             else
             {
                DbgPrintf(6, _T("Zero subnet mask on interface %s [%d]"), iface->getName(), iface->getIfIndex());
-               addr.setMaskBits((addr.getFamily() == AF_INET) ? 24 : 64);
+               addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("DefaultSubnetMaskIPv6"), 64));
                pSubnet = createSubnet(addr, true);
             }
 			   pSubnet->addNode(this);
@@ -6272,7 +6272,7 @@ void Node::checkSubnetBinding()
       else
       {
          InetAddress addr(m_ipAddress);
-         addr.setMaskBits((addr.getFamily() == AF_INET) ? 24 : 64);
+         addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("DefaultSubnetMaskIPv6"), 64));
 		   pSubnet = createSubnet(addr, true);
       }
    }

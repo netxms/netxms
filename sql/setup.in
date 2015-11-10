@@ -42,6 +42,8 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DefaultDCIRetentionTime','30',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DefaultEncryptionPolicy','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DefaultMapBackgroundColor','0xffffff',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultSubnetMaskIPv4','24',1,0,'I','Default mask for synthetic IPv4 subnets');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultSubnetMaskIPv6','64',1,0,'I','Default mask for synthetic IPv6 subnets');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DeleteAlarmsOfDeletedObject','1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DeleteEmptySubnets','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DeleteEventsOfDeletedObject','1',1,0);
