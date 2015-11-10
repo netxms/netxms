@@ -145,7 +145,7 @@ public class ScheduleSelector extends Composite
 
    public ScheduledTask getSchedule()
    {
-      return new ScheduledTask("Upload.File", textSchedule.getText(), "", execDateSelector.getValue(), 0, 0);
+      return new ScheduledTask("Upload.File", radioCronSchedule.getSelection() ? textSchedule.getText() : "","", execDateSelector.getValue(), 0, 0);
    }
 
    public void setSchedule(ScheduledTask scheduledTask)
@@ -159,6 +159,7 @@ public class ScheduleSelector extends Composite
       }
       else
       {
+         radioOneTimeSchedule.setSelection(false);
          radioCronSchedule.setSelection(true);
          textSchedule.setEnabled(true);
          execDateSelector.setEnabled(false);

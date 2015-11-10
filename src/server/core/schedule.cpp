@@ -118,6 +118,8 @@ void ScheduledTask::update(const TCHAR *taskHandlerId, time_t nextExecution, con
 {
    free(m_taskHandlerId);
    taskHandlerId = _tcsdup(CHECK_NULL_EX(taskHandlerId));
+   free(m_schedule);
+   m_schedule = _tcsdup(_T(""));
    safe_free(m_params);
    m_params = _tcsdup(CHECK_NULL_EX(params));
    m_executionTime = nextExecution;
@@ -335,6 +337,7 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
    DbgPrintf(7, _T("UpdateSchedule: update cron schedule %d, %s, %s, %s"), id, task, schedule, params);
    MutexLock(s_cronScheduleLock);
    UINT32 rcc = RCC_SUCCESS;
+   bool found = false;
    for (int i = 0; i < s_cronSchedules.size(); i++)
    {
       if (s_cronSchedules.get(i)->getId() == id && s_oneTimeSchedules.get(i)->canAccess(owner, systemAccessRights))
@@ -346,10 +349,42 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
          }
          s_cronSchedules.get(i)->update(task, schedule, params, owner, objectId, flags);
          s_cronSchedules.get(i)->saveToDatabase(false);
+         found = true;
          break;
       }
    }
    MutexUnlock(s_cronScheduleLock);
+
+   if(!found)
+   {
+      //check in different que and if exists - remove from one and add to another
+      MutexLock(s_oneTimeScheduleLock);
+      for (int i = 0; i < s_oneTimeSchedules.size(); i++)
+      {
+         if (s_oneTimeSchedules.get(i)->getId() == id)
+         {
+            if(!s_oneTimeSchedules.get(i)->canAccess(owner, systemAccessRights))
+            {
+               rcc = RCC_ACCESS_DENIED;
+               break;
+            }
+            ScheduledTask *st = s_oneTimeSchedules.get(i);
+            s_oneTimeSchedules.unlink(i);
+            s_oneTimeSchedules.sort(ScheduledTaskComparator);
+            st->update(task, schedule, params, owner, objectId, flags);
+            st->saveToDatabase(false);
+
+            MutexLock(s_cronScheduleLock);
+            s_cronSchedules.add(st);
+            MutexUnlock(s_cronScheduleLock);
+
+            found = true;
+            break;
+         }
+      }
+      MutexUnlock(s_oneTimeScheduleLock);
+   }
+
    return rcc;
 }
 
@@ -379,6 +414,36 @@ UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutio
       }
    }
    MutexUnlock(s_oneTimeScheduleLock);
+
+   if(!found)
+   {
+      //check in different que and if exists - remove from one and add to another
+      MutexLock(s_cronScheduleLock);
+      for (int i = 0; i < s_cronSchedules.size(); i++)
+      {
+         if (s_cronSchedules.get(i)->getId() == id && s_oneTimeSchedules.get(i)->canAccess(owner, systemAccessRights))
+         {
+            if(!s_oneTimeSchedules.get(i)->canAccess(owner, systemAccessRights))
+            {
+               rcc = RCC_ACCESS_DENIED;
+               break;
+            }
+            ScheduledTask *st = s_cronSchedules.get(i);
+            s_cronSchedules.unlink(i);
+            st->update(task, nextExecutionTime, params, owner, objectId, flags);
+            st->saveToDatabase(false);
+
+            MutexLock(s_oneTimeScheduleLock);
+            s_oneTimeSchedules.add(st);
+            s_oneTimeSchedules.sort(ScheduledTaskComparator);
+            MutexUnlock(s_oneTimeScheduleLock);
+
+            found = true;
+            break;
+         }
+      }
+      MutexUnlock(s_cronScheduleLock);
+   }
 
    if(found)
       ConditionSet(s_cond);
