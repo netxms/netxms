@@ -4159,6 +4159,18 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
       {
          _sntprintf(buffer, bufSize, _T("%f"), g_dAvgSyslogWriterQueueSize);
       }
+      else if (!_tcsicmp(param, _T("Server.DBWriter.Requests.IData")))
+      {
+         _sntprintf(buffer, bufSize, UINT64_FMT, g_idataWriteRequests);
+      }
+      else if (!_tcsicmp(param, _T("Server.DBWriter.Requests.Other")))
+      {
+         _sntprintf(buffer, bufSize, UINT64_FMT, g_otherWriteRequests);
+      }
+      else if (!_tcsicmp(param, _T("Server.DBWriter.Requests.RawData")))
+      {
+         _sntprintf(buffer, bufSize, UINT64_FMT, g_rawDataWriteRequests);
+      }
       else if (MatchString(_T("Server.ThreadPool.ActiveRequests(*)"), param, FALSE))
       {
          rc = GetThreadPoolStat(THREAD_POOL_REQUESTS, param, buffer);

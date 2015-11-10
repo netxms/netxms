@@ -73,6 +73,9 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 			list.add(new AgentParameter("Server.AverageDCPollerQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDCQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AverageSyslogProcessingQueueSize", Messages.get().SelectInternalParamDlg_SyslogProcessingQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AverageSyslogWriterQueueSize", Messages.get().SelectInternalParamDlg_SyslogWriterQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DBWriter.Requests.IData", "DB writer requests (DCI data)", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DBWriter.Requests.Other", "DB writer requests (other queries)", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DBWriter.Requests.RawData", "DB writer requests (raw DCI data)", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.ActiveRequests(*)", "Thread pool {instance}: active requests", DataCollectionItem.DT_INT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.CurrSize(*)", "Thread pool {instance}: current size", DataCollectionItem.DT_INT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.Load(*)", "Thread pool {instance}: current load", DataCollectionItem.DT_INT)); //$NON-NLS-1$

@@ -1114,6 +1114,9 @@ extern DB_HANDLE NXCORE_EXPORTABLE g_hCoreDB;
 extern Queue *g_dbWriterQueue;
 extern Queue *g_dciDataWriterQueue;
 extern Queue *g_dciRawDataWriterQueue;
+extern UINT64 g_idataWriteRequests;
+extern UINT64 g_rawDataWriteRequests;
+extern UINT64 g_otherWriteRequests;
 
 extern int NXCORE_EXPORTABLE g_dbSyntax;
 extern FileMonitoringList g_monitoringList;

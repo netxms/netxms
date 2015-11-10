@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,6 +43,13 @@ Queue *g_dciDataWriterQueue = NULL;
 Queue *g_dciRawDataWriterQueue = NULL;
 
 /**
+ * Performance counters
+ */
+UINT64 g_idataWriteRequests = 0;
+UINT64 g_rawDataWriteRequests = 0;
+UINT64 g_otherWriteRequests = 0;
+
+/**
  * Static data
  */
 static int m_numWriters = 1;
@@ -61,6 +68,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query)
 	rq->bindCount = 0;
    g_dbWriterQueue->put(rq);
 	DbgPrintf(8, _T("SQL request queued: %s"), query);
+	g_otherWriteRequests++;
 }
 
 /**
@@ -99,6 +107,7 @@ void NXCORE_EXPORTABLE QueueSQLRequest(const TCHAR *query, int bindCount, int *s
 
    g_dbWriterQueue->put(rq);
 	DbgPrintf(8, _T("SQL request queued: %s"), query);
+   g_otherWriteRequests++;
 }
 
 /**
@@ -112,6 +121,7 @@ void QueueIDataInsert(time_t timestamp, UINT32 nodeId, UINT32 dciId, const TCHAR
 	rq->dciId = dciId;
 	nx_strncpy(rq->value, value, MAX_RESULT_LENGTH);
 	g_dciDataWriterQueue->put(rq);
+	g_idataWriteRequests++;
 }
 
 /**
@@ -125,6 +135,7 @@ void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue
 	nx_strncpy(rq->rawValue, rawValue, MAX_RESULT_LENGTH);
 	nx_strncpy(rq->transformedValue, transformedValue, MAX_RESULT_LENGTH);
 	g_dciRawDataWriterQueue->put(rq);
+	g_rawDataWriteRequests++;
 }
 
 /**
