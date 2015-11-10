@@ -26,7 +26,7 @@
 /**
  * Constants
  */
-#define MAX_ERROR_NUMBER         35
+#define MAX_ERROR_NUMBER         36
 #define CONTROL_STACK_LIMIT      32768
 
 /**
@@ -73,7 +73,8 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
    _T("Execution aborted"),
 	_T("Attempt to use hash map element access operation on non hash map"),
    _T("Function or operation argument is not a container"),
-   _T("Hash map key is not a string")
+   _T("Hash map key is not a string"),
+   _T("Selector not found")
 };
 
 /**
@@ -1245,6 +1246,12 @@ void NXSL_VM::execute()
             error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
          break;
+      case OPCODE_PUSHCP:
+         m_dataStack->push(new NXSL_Value((INT32)m_cp + cp->m_nStackItems));
+         break;
+      case OPCODE_SELECT:
+         dwNext = callSelector(cp->m_operand.m_pszString, cp->m_nStackItems);
+         break;
       default:
          break;
    }
@@ -1857,6 +1864,83 @@ UINT32 NXSL_VM::getFunctionAddress(const TCHAR *pszName)
          return f->m_dwAddr;
    }
    return INVALID_ADDRESS;
+}
+
+/**
+ * Call selector
+ */
+UINT32 NXSL_VM::callSelector(const TCHAR *name, int numElements)
+{
+   NXSL_ExtSelector *selector = m_env->findSelector(name);
+   if (selector == NULL)
+   {
+      error(NXSL_ERR_NO_SELECTOR);
+      return 0;
+   }
+
+   int err, selection = -1;
+   UINT32 addr = 0;
+   NXSL_Value *options = NULL;
+   UINT32 *addrList = (UINT32 *)alloca(sizeof(UINT32) * numElements);
+   NXSL_Value **valueList = (NXSL_Value **)alloca(sizeof(NXSL_Value *) * numElements);
+   memset(valueList, 0, sizeof(NXSL_Value *) * numElements);
+
+   for(int i = numElements - 1; i >= 0; i--)
+   {
+      NXSL_Value *v = (NXSL_Value *)m_dataStack->pop();
+      if (v == NULL)
+      {
+         error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         goto cleanup;
+      }
+
+      if (!v->isInteger())
+      {
+         delete v;
+         error(NXSL_ERR_INTERNAL);
+         goto cleanup;
+      }
+      addrList[i] = v->getValueAsUInt32();
+      delete v;
+
+      valueList[i] = (NXSL_Value *)m_dataStack->pop();
+      if (valueList[i] == NULL)
+      {
+         error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         goto cleanup;
+      }
+   }
+
+   options = (NXSL_Value *)m_dataStack->pop();
+   if (options == NULL)
+   {
+      error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+      goto cleanup;
+   }
+
+   err = selector->m_handler(name, options, numElements, valueList, &selection, this);
+   if (err == NXSL_ERR_SUCCESS)
+   {
+      if ((selection >= 0) && (selection < numElements))
+      {
+         addr = addrList[selection];
+      }
+      else
+      {
+         addr = m_cp + 1;
+      }
+   }
+   else
+   {
+      error(err);
+   }
+
+cleanup:
+   for(int j = 0; j < numElements; j++)
+      delete valueList[j];
+   delete options;
+
+   return addr;
 }
 
 /**

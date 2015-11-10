@@ -77,6 +77,7 @@
 #define NXSL_ERR_NOT_HASHMAP              33
 #define NXSL_ERR_NOT_CONTAINER            34
 #define NXSL_ERR_KEY_NOT_STRING           35
+#define NXSL_ERR_NO_SELECTOR              36
 
 /**
  * Special return codes for external functions

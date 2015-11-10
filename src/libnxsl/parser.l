@@ -69,6 +69,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"println"  return T_PRINTLN;
 <INITIAL>"real"     return T_TYPE_REAL;
 <INITIAL>"return"   return T_RETURN;
+<INITIAL>"select"   return T_SELECT;
 <INITIAL>"string"   return T_TYPE_STRING;
 <INITIAL>"sub"      return T_SUB;
 <INITIAL>"switch"   return T_SWITCH;
@@ -78,6 +79,7 @@ static void LexerError(const char *pszMsg, yyscan_t scanner);
 <INITIAL>"uint32"   return T_TYPE_UINT32;
 <INITIAL>"uint64"   return T_TYPE_UINT64;
 <INITIAL>"use"      return T_USE;
+<INITIAL>"when"     return T_WHEN;
 <INITIAL>"while"    return T_WHILE;
 
 <INITIAL>{identifier}	{ yylval->valStr = strdup(yytext); return T_IDENTIFIER; }

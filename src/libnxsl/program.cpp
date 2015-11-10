@@ -51,7 +51,7 @@ const char *g_nxslCommandMnemonic[] =
 	"AGETS", "CALL", "CASE", "EINC", "EDEC",
    "EINCP", "EDECP", "ABORT", "CATCH", "PUSH",
    "SETHM", "NEWARR", "NEWHM", "CPOP",
-   "SREAD", "SWRITE"
+   "SREAD", "SWRITE", "SELECT", "PUSHCP"
 };
 
 /**
@@ -100,16 +100,16 @@ bool NXSL_Program::addConstant(const char *name, NXSL_Value *value)
 /**
  * Resolve last jump with INVALID_ADDRESS to current address
  */
-void NXSL_Program::resolveLastJump(int nOpCode)
+void NXSL_Program::resolveLastJump(int opcode, int offset)
 {
    for(int i = m_instructionSet->size(); i > 0;)
    {
       i--;
       NXSL_Instruction *instr = m_instructionSet->get(i);
-      if ((instr->m_nOpCode == nOpCode) &&
+      if ((instr->m_nOpCode == opcode) &&
           (instr->m_operand.m_dwAddr == INVALID_ADDRESS))
       {
-         instr->m_operand.m_dwAddr = m_instructionSet->size();
+         instr->m_operand.m_dwAddr = m_instructionSet->size() + offset;
          break;
       }
    }
@@ -214,6 +214,7 @@ void NXSL_Program::dump(FILE *pFile)
       {
          case OPCODE_CALL_EXTERNAL:
          case OPCODE_GLOBAL:
+         case OPCODE_SELECT:
             _ftprintf(pFile, _T("%s, %d\n"), instr->m_operand.m_pszString, instr->m_nStackItems);
             break;
          case OPCODE_CALL:
@@ -259,6 +260,7 @@ void NXSL_Program::dump(FILE *pFile)
                _ftprintf(pFile, _T("\"%s\"\n"), instr->m_operand.m_pConstant->getValueAsCString());
             break;
          case OPCODE_POP:
+         case OPCODE_PUSHCP:
             _ftprintf(pFile, _T("%d\n"), instr->m_nStackItems);
             break;
          case OPCODE_CAST:

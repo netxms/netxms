@@ -86,6 +86,7 @@ NXSL_Instruction::NXSL_Instruction(int nLine, short nOpCode, UINT32 dwAddr)
    m_nOpCode = nOpCode;
    m_nSourceLine = nLine;
    m_operand.m_dwAddr = dwAddr;
+   m_nStackItems = 0;
 }
 
 /**
@@ -161,6 +162,7 @@ OperandType NXSL_Instruction::getOperandType()
       case OPCODE_PUSH_CONSTREF:
       case OPCODE_PUSH_VARIABLE:
       case OPCODE_SAFE_GET_ATTR:
+      case OPCODE_SELECT:
       case OPCODE_SET:
       case OPCODE_SET_ATTRIBUTE:
          return OP_TYPE_STRING;
