@@ -331,6 +331,7 @@ void LDAPConnection::syncUsers()
             else
             {
                base++;
+               separator++;
                continue;
             }
          }
