@@ -23,6 +23,10 @@
 #include "libnxsl.h"
 #include <netxms-regex.h>
 
+#if HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
+
 /**
  * Constants
  */
