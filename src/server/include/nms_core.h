@@ -862,6 +862,7 @@ public:
  * Functions
  */
 bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
+bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE hdb, const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 #ifdef UNICODE
 bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
 #else
@@ -869,6 +870,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iB
 #endif
 bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
 int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault);
+int NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *szVar, int iDefault);
 UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, UINT32 dwDefault);
 bool NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray, int nSize, int nDefault);
 bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, bool bCreate, bool isVisible = true, bool needRestart = false);
@@ -1110,7 +1112,6 @@ extern TCHAR g_szDbPassword[];
 extern TCHAR g_szDbName[];
 extern TCHAR g_szDbSchema[];
 extern DB_DRIVER g_dbDriver;
-extern DB_HANDLE NXCORE_EXPORTABLE g_hCoreDB;
 extern Queue *g_dbWriterQueue;
 extern Queue *g_dciDataWriterQueue;
 extern Queue *g_dciRawDataWriterQueue;

@@ -524,7 +524,9 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
       if (!(g_flags & AF_ACTIVE_NETWORK_DISCOVERY))
          continue;
 
-      DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=1"));
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=1"));
+      DBConnectionPoolReleaseConnection(hdb);
       if (hResult != NULL)
       {
          int nRows = DBGetNumRows(hResult);

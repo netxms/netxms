@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,10 +62,10 @@ Cluster::~Cluster()
 /**
  * Create object from database data
  */
-BOOL Cluster::loadFromDatabase(UINT32 dwId)
+bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
 	TCHAR szQuery[256];
-   BOOL bResult = FALSE;
+   bool bResult = false;
 	DB_RESULT hResult;
 	UINT32 dwNodeId;
 	NetObj *pObject;
@@ -73,33 +73,33 @@ BOOL Cluster::loadFromDatabase(UINT32 dwId)
 
    m_id = dwId;
 
-   if (!loadCommonProperties())
+   if (!loadCommonProperties(hdb))
    {
       DbgPrintf(2, _T("Cannot load common properties for cluster object %d"), dwId);
-      return FALSE;
+      return false;
    }
 
 	_sntprintf(szQuery, 256, _T("SELECT cluster_type,zone_guid FROM clusters WHERE id=%d"), (int)m_id);
-	hResult = DBSelect(g_hCoreDB, szQuery);
+	hResult = DBSelect(hdb, szQuery);
 	if (hResult == NULL)
-		return FALSE;
+		return false;
 
 	m_dwClusterType = DBGetFieldULong(hResult, 0, 0);
 	m_zoneId = DBGetFieldULong(hResult, 0, 1);
 	DBFreeResult(hResult);
 
    // Load DCI and access list
-   loadACLFromDB();
-   loadItemsFromDB();
+   loadACLFromDB(hdb);
+   loadItemsFromDB(hdb);
    for(i = 0; i < m_dcObjects->size(); i++)
-      if (!m_dcObjects->get(i)->loadThresholdsFromDB())
-         return FALSE;
+      if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
+         return false;
 
    if (!m_isDeleted)
    {
 		// Load member nodes
 		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM cluster_members WHERE cluster_id=%d"), m_id);
-		hResult = DBSelect(g_hCoreDB, szQuery);
+		hResult = DBSelect(hdb, szQuery);
 		if (hResult != NULL)
 		{
 			nRows = DBGetNumRows(hResult);
@@ -127,7 +127,7 @@ BOOL Cluster::loadFromDatabase(UINT32 dwId)
 				}
 			}
 			if (i == nRows)
-				bResult = TRUE;
+				bResult = true;
 			DBFreeResult(hResult);
 		}
 
@@ -135,7 +135,7 @@ BOOL Cluster::loadFromDatabase(UINT32 dwId)
 		if (bResult)
 		{
 			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT subnet_addr,subnet_mask FROM cluster_sync_subnets WHERE cluster_id=%d"), m_id);
-			hResult = DBSelect(g_hCoreDB, szQuery);
+			hResult = DBSelect(hdb, szQuery);
 			if (hResult != NULL)
 			{
 				int count = DBGetNumRows(hResult);
@@ -149,7 +149,7 @@ BOOL Cluster::loadFromDatabase(UINT32 dwId)
 			}
 			else
 			{
-				bResult = FALSE;
+				bResult = false;
 			}
 		}
 
@@ -157,7 +157,7 @@ BOOL Cluster::loadFromDatabase(UINT32 dwId)
 		if (bResult)
 		{
 			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT resource_id,resource_name,ip_addr,current_owner FROM cluster_resources WHERE cluster_id=%d"), m_id);
-			hResult = DBSelect(g_hCoreDB, szQuery);
+			hResult = DBSelect(hdb, szQuery);
 			if (hResult != NULL)
 			{
 				m_dwNumResources = DBGetNumRows(hResult);
@@ -176,13 +176,13 @@ BOOL Cluster::loadFromDatabase(UINT32 dwId)
 			}
 			else
 			{
-				bResult = FALSE;
+				bResult = false;
 			}
 		}
 	}
    else
    {
-      bResult = TRUE;
+      bResult = true;
    }
 
    return bResult;

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -66,7 +66,8 @@ static BOOL LoadActions()
    BOOL bResult = FALSE;
    UINT32 i;
 
-   hResult = DBSelect(g_hCoreDB, _T("SELECT action_id,action_name,action_type,")
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   hResult = DBSelect(hdb, _T("SELECT action_id,action_name,action_type,")
                                  _T("is_disabled,rcpt_addr,email_subject,action_data ")
                                  _T("FROM actions ORDER BY action_id"));
    if (hResult != NULL)
@@ -92,6 +93,7 @@ static BOOL LoadActions()
    {
       nxlog_write(MSG_ACTIONS_LOAD_FAILED, EVENTLOG_ERROR_TYPE, NULL);
    }
+   DBConnectionPoolReleaseConnection(hdb);
    return bResult;
 }
 
@@ -581,6 +583,8 @@ UINT32 DeleteActionFromDB(UINT32 dwActionId)
    UINT32 i, dwResult = RCC_INVALID_ACTION_ID;
    TCHAR szQuery[256];
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    RWLockWriteLock(m_rwlockActionListAccess, INFINITE);
 
    for(i = 0; i < m_dwNumActions; i++)
@@ -593,13 +597,14 @@ UINT32 DeleteActionFromDB(UINT32 dwActionId)
          safe_free(m_pActionList[i].pszData);
          memmove(&m_pActionList[i], &m_pActionList[i + 1], sizeof(NXC_ACTION) * (m_dwNumActions - i));
          _sntprintf(szQuery, 256, _T("DELETE FROM actions WHERE action_id=%d"), dwActionId);
-         DBQuery(g_hCoreDB, szQuery);
+         DBQuery(hdb, szQuery);
 
          dwResult = RCC_SUCCESS;
          break;
       }
 
    RWLockUnlock(m_rwlockActionListAccess);
+   DBConnectionPoolReleaseConnection(hdb);
    return dwResult;
 }
 

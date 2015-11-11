@@ -150,10 +150,12 @@ GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName)
    GRAPH_ACL_AND_ID result;
    result.graphId = 0;
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    // Check existence and access rights
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT graph_id FROM graphs WHERE name=%s"), 
-              (const TCHAR *)DBPrepareString(g_hCoreDB, graphName));
-   hResult = DBSelect(g_hCoreDB, szQuery);
+              (const TCHAR *)DBPrepareString(hdb, graphName));
+   hResult = DBSelect(hdb, szQuery);
 
    if (hResult != NULL)
    {
@@ -172,5 +174,7 @@ GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName)
    {
       result.status = RCC_DB_FAILURE;
    }
+
+   DBConnectionPoolReleaseConnection(hdb);
    return result;
 }

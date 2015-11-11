@@ -41,31 +41,30 @@ UniversalRoot::~UniversalRoot()
  * Link child objects
  * This method is expected to be called only at startup, so we don't lock
  */
-void UniversalRoot::LinkChildObjects()
+void UniversalRoot::linkChildObjects()
 {
-   UINT32 i, dwNumChilds, dwObjectId;
-   NetObj *pObject;
-   TCHAR szQuery[256];
-   DB_RESULT hResult;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   // Load child list and link objects
+   TCHAR szQuery[256];
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_id);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+
+   DB_RESULT hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
-      dwNumChilds = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumChilds; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwObjectId = DBGetFieldULong(hResult, i, 0);
-         pObject = FindObjectById(dwObjectId);
+         UINT32 dwObjectId = DBGetFieldULong(hResult, i, 0);
+         NetObj *pObject = FindObjectById(dwObjectId);
          if (pObject != NULL)
-            LinkObject(pObject);
+            linkObject(pObject);
          else
-            nxlog_write(MSG_ROOT_INVALID_CHILD_ID, EVENTLOG_WARNING_TYPE, "ds", 
-                        dwObjectId, g_szClassName[getObjectClass()]);
+            nxlog_write(MSG_ROOT_INVALID_CHILD_ID, EVENTLOG_WARNING_TYPE, "ds", dwObjectId, g_szClassName[getObjectClass()]);
       }
       DBFreeResult(hResult);
    }
+
+   DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**
@@ -103,8 +102,8 @@ BOOL UniversalRoot::saveToDatabase(DB_HANDLE hdb)
 /**
  * Load properties from database
  */
-void UniversalRoot::LoadFromDB()
+void UniversalRoot::loadFromDatabase(DB_HANDLE hdb)
 {
-   loadCommonProperties();
-   loadACLFromDB();
+   loadCommonProperties(hdb);
+   loadACLFromDB(hdb);
 }

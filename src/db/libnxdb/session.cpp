@@ -1551,24 +1551,32 @@ bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
  */
 String LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int maxSize)
 {
+   return DBPrepareString(conn->m_driver, str, maxSize);
+}
+
+/**
+ * Prepare string for using in SQL statement
+ */
+String LIBNXDB_EXPORTABLE DBPrepareString(DB_DRIVER drv, const TCHAR *str, int maxSize)
+{
 	String out;
 	if ((maxSize > 0) && (str != NULL) && (maxSize < (int)_tcslen(str)))
 	{
 		TCHAR *temp = (TCHAR *)malloc((maxSize + 1) * sizeof(TCHAR));
 		nx_strncpy(temp, str, maxSize + 1);
 #ifdef UNICODE
-		out.setBuffer(conn->m_driver->m_fpDrvPrepareStringW(temp));
+		out.setBuffer(drv->m_fpDrvPrepareStringW(temp));
 #else
-		out.setBuffer(conn->m_driver->m_fpDrvPrepareStringA(temp));
+		out.setBuffer(drv->m_fpDrvPrepareStringA(temp));
 #endif
 		free(temp);
 	}
 	else	
 	{
 #ifdef UNICODE
-		out.setBuffer(conn->m_driver->m_fpDrvPrepareStringW(CHECK_NULL_EX(str)));
+		out.setBuffer(drv->m_fpDrvPrepareStringW(CHECK_NULL_EX(str)));
 #else
-		out.setBuffer(conn->m_driver->m_fpDrvPrepareStringA(CHECK_NULL_EX(str)));
+		out.setBuffer(drv->m_fpDrvPrepareStringA(CHECK_NULL_EX(str)));
 #endif
 	}
 	return out;
@@ -1585,6 +1593,14 @@ String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int 
 	String s = DBPrepareString(conn, wcs, maxSize);
 	free(wcs);
 	return s;
+}
+
+String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str, int maxSize)
+{
+   WCHAR *wcs = WideStringFromMBString(str);
+   String s = DBPrepareString(drv, wcs, maxSize);
+   free(wcs);
+   return s;
 }
 
 #endif

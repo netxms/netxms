@@ -66,7 +66,7 @@ static void CalculatePasswordHash(const TCHAR *password, PasswordHashType type, 
  * Expects fields in the following order:
  *    id,name,system_access,flags,description,guid,ldap_dn
  */
-UserDatabaseObject::UserDatabaseObject(DB_RESULT hResult, int row)
+UserDatabaseObject::UserDatabaseObject(DB_HANDLE hdb, DB_RESULT hResult, int row)
 {
 	m_id = DBGetFieldULong(hResult, row, 0);
 	DBGetField(hResult, row, 1, m_name, MAX_USER_NAME);
@@ -349,7 +349,7 @@ void UserDatabaseObject::disable()
  *    auth_failures,last_passwd_change,min_passwd_length,disabled_until,
  *    last_login,xmpp_id
  */
-User::User(DB_RESULT hResult, int row) : UserDatabaseObject(hResult, row)
+User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, hResult, row)
 {
 	TCHAR buffer[256];
 
@@ -399,7 +399,7 @@ User::User(DB_RESULT hResult, int row) : UserDatabaseObject(hResult, row)
 	if (m_id == 0)
 		m_systemRights = SYSTEM_ACCESS_FULL;
 
-	loadCustomAttributes(g_hCoreDB);
+	loadCustomAttributes(hdb);
 }
 
 /**
@@ -709,13 +709,13 @@ void User::setFullName(const TCHAR *fullName)
  * Expects fields in the following order:
  *    id,name,system_access,flags,description,guid,ldap_dn
  */
-Group::Group(DB_RESULT hr, int row) : UserDatabaseObject(hr, row)
+Group::Group(DB_HANDLE hdb, DB_RESULT hr, int row) : UserDatabaseObject(hdb, hr, row)
 {
 	DB_RESULT hResult;
 	TCHAR query[256];
 
 	_sntprintf(query, 256, _T("SELECT user_id FROM user_group_members WHERE group_id=%d"), m_id);
-   hResult = DBSelect(g_hCoreDB, query);
+   hResult = DBSelect(hdb, query);
    if (hResult != NULL)
 	{
 		m_memberCount = DBGetNumRows(hResult);
@@ -732,7 +732,7 @@ Group::Group(DB_RESULT hr, int row) : UserDatabaseObject(hr, row)
 		DBFreeResult(hResult);
 	}
 
-	loadCustomAttributes(g_hCoreDB);
+	loadCustomAttributes(hdb);
 }
 
 /**

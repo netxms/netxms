@@ -132,7 +132,6 @@ TCHAR NXCORE_EXPORTABLE g_szListenAddress[MAX_PATH] = _T("*");
 #ifndef _WIN32
 TCHAR NXCORE_EXPORTABLE g_szPIDFile[MAX_PATH] = _T("/var/run/netxmsd.pid");
 #endif
-DB_HANDLE g_hCoreDB = 0;
 UINT32 g_dwDiscoveryPollingInterval;
 UINT32 g_dwStatusPollingInterval;
 UINT32 g_dwConfigurationPollingInterval;
@@ -189,8 +188,7 @@ bool NXCORE_EXPORTABLE SleepAndCheckForShutdown(int seconds)
  */
 void NXCORE_EXPORTABLE ShutdownDB()
 {
-	if (g_hCoreDB != NULL)
-		DBDisconnect(g_hCoreDB);
+   DBConnectionPoolShutdown();
 	DBUnloadDriver(g_dbDriver);
 }
 
@@ -294,8 +292,6 @@ static void LoadGlobalConfig()
 		g_flags |= AF_ENABLE_ZONING;
 	if (ConfigReadInt(_T("EnableObjectTransactions"), 0))
 		g_flags |= AF_ENABLE_OBJECT_TRANSACTIONS;
-	if (ConfigReadInt(_T("EnableMultipleDBConnections"), 1))
-		g_flags |= AF_ENABLE_MULTIPLE_DB_CONN;
 	if (ConfigReadInt(_T("RunNetworkDiscovery"), 0))
 		g_flags |= AF_ENABLE_NETWORK_DISCOVERY;
 	if (ConfigReadInt(_T("ActiveNetworkDiscovery"), 0))
@@ -608,15 +604,16 @@ BOOL NXCORE_EXPORTABLE Initialize()
 		return FALSE;
 
 	// Connect to database
+	DB_HANDLE hdbBootstrap = NULL;
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 	for(i = 0; ; i++)
 	{
-		g_hCoreDB = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
-		if ((g_hCoreDB != NULL) || (i == 5))
+	   hdbBootstrap = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
+		if ((hdbBootstrap != NULL) || (i == 5))
 			break;
 		ThreadSleep(5);
 	}
-	if (g_hCoreDB == NULL)
+	if (hdbBootstrap == NULL)
 	{
 		nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
 		return FALSE;
@@ -624,26 +621,33 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	DbgPrintf(1, _T("Successfully connected to database %s@%s"), g_szDbName, g_szDbServer);
 
 	// Check database version
-	iDBVersion = DBGetSchemaVersion(g_hCoreDB);
+	iDBVersion = DBGetSchemaVersion(hdbBootstrap);
 	if (iDBVersion != DB_FORMAT_VERSION)
 	{
 		nxlog_write(MSG_WRONG_DB_VERSION, EVENTLOG_ERROR_TYPE, "dd", iDBVersion, DB_FORMAT_VERSION);
+		DBDisconnect(hdbBootstrap);
 		return FALSE;
 	}
 
 	// Read database syntax
-	g_dbSyntax = DBGetSyntax(g_hCoreDB);
+	g_dbSyntax = DBGetSyntax(hdbBootstrap);
    if (g_dbSyntax == DB_SYNTAX_ORACLE)
    {
       DBSetSessionInitCallback(OracleSessionInitCallback);
    }
 
-	int baseSize = ConfigReadInt(_T("ConnectionPoolBaseSize"), 5);
-	int maxSize = ConfigReadInt(_T("ConnectionPoolMaxSize"), 20);
-	int cooldownTime = ConfigReadInt(_T("ConnectionPoolCooldownTime"), 300);
-	int ttl = ConfigReadInt(_T("ConnectionPoolMaxLifetime"), 60*30);
-	DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, baseSize, maxSize, cooldownTime, ttl);
-   g_flags |= AF_DB_CONNECTION_POOL_READY;
+	int baseSize = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolBaseSize"), 10);
+	int maxSize = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolMaxSize"), 30);
+	int cooldownTime = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolCooldownTime"), 300);
+	int ttl = ConfigReadIntEx(hdbBootstrap, _T("DBConnectionPoolMaxLifetime"), 14400);
+
+   DBDisconnect(hdbBootstrap);
+
+	if (!DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, baseSize, maxSize, cooldownTime, ttl))
+	{
+      nxlog_write(MSG_DBCONNPOOL_INIT_FAILED, EVENTLOG_ERROR_TYPE, NULL);
+	   return FALSE;
+	}
 
    UINT32 lrt = ConfigReadULong(_T("LongRunningQueryThreshold"), 0);
    if (lrt != 0)
@@ -728,7 +732,9 @@ retry_db_lock:
 	DbgPrintf(2, _T("ID table created"));
 
 	// Update status for unfinished jobs in job history
-	DBQuery(g_hCoreDB, _T("UPDATE job_history SET status=4,failure_message='Aborted due to server shutdown or crash' WHERE status NOT IN (3,4,5)"));
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DBQuery(hdb, _T("UPDATE job_history SET status=4,failure_message='Aborted due to server shutdown or crash' WHERE status NOT IN (3,4,5)"));
+	DBConnectionPoolReleaseConnection(hdb);
 
 	// Load and compile scripts
 	LoadScripts();
@@ -939,10 +945,13 @@ void NXCORE_EXPORTABLE Shutdown()
 			g_pModuleList[i].pfShutdown();
 	}
 
-	SaveObjects(g_hCoreDB);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	SaveObjects(hdb);
 	DbgPrintf(2, _T("All objects saved to database"));
-	SaveUsers(g_hCoreDB);
+	SaveUsers(hdb);
 	DbgPrintf(2, _T("All users saved to database"));
+	DBConnectionPoolReleaseConnection(hdb);
+
 	StopDBWriter();
 	DbgPrintf(1, _T("Database writer stopped"));
 
@@ -952,11 +961,6 @@ void NXCORE_EXPORTABLE Shutdown()
 	UnlockDB();
 
 	DBConnectionPoolShutdown();
-
-	// Disconnect from database and unload driver
-	if (g_hCoreDB != NULL)
-		DBDisconnect(g_hCoreDB);
-
 	DBUnloadDriver(g_dbDriver);
 	DbgPrintf(1, _T("Database driver unloaded"));
 
@@ -994,12 +998,14 @@ void NXCORE_EXPORTABLE FastShutdown()
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
 
-	SaveObjects(g_hCoreDB);
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	SaveObjects(hdb);
 	DbgPrintf(2, _T("All objects saved to database"));
-	SaveUsers(g_hCoreDB);
+	SaveUsers(hdb);
 	DbgPrintf(2, _T("All users saved to database"));
+	DBConnectionPoolReleaseConnection(hdb);
 
-	// Remove database lock first, because we have a chance to loose DB connection
+	// Remove database lock first, because we have a chance to lose DB connection
 	UnlockDB();
 
 	// Stop database writers
@@ -1432,7 +1438,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_CATCH_EXCEPTIONS));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_HELPDESK_LINK_ACTIVE));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_LOCKED));
-			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_ENABLE_MULTIPLE_DB_CONN));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_DB_CONNECTION_LOST));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_NO_NETWORK_CONNECTIVITY));
 			ConsolePrintf(pCtx, SHOW_FLAG_VALUE(AF_EVENT_STORM_DETECTED));

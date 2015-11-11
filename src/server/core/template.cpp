@@ -167,7 +167,7 @@ void Template::setAutoApplyFilter(const TCHAR *filter)
  *
  * @param dwId object ID
  */
-BOOL Template::loadFromDatabase(UINT32 dwId)
+bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
@@ -177,11 +177,11 @@ BOOL Template::loadFromDatabase(UINT32 dwId)
 
    m_id = dwId;
 
-   if (!loadCommonProperties())
+   if (!loadCommonProperties(hdb))
       return FALSE;
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT version,flags,apply_filter FROM templates WHERE id=%d"), dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
 
@@ -209,17 +209,17 @@ BOOL Template::loadFromDatabase(UINT32 dwId)
    DBFreeResult(hResult);
 
    // Load DCI and access list
-   loadACLFromDB();
-   loadItemsFromDB();
+   loadACLFromDB(hdb);
+   loadItemsFromDB(hdb);
    for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
-      if (!m_dcObjects->get(i)->loadThresholdsFromDB())
+      if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
          bResult = FALSE;
 
    // Load related nodes list
    if (!m_isDeleted)
    {
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM dct_node_map WHERE template_id=%d"), m_id);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          dwNumNodes = DBGetNumRows(hResult);
@@ -352,9 +352,9 @@ bool Template::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load data collection items from database
  */
-void Template::loadItemsFromDB()
+void Template::loadItemsFromDB(DB_HANDLE hdb)
 {
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
+	DB_STATEMENT hStmt = DBPrepare(hdb,
 	           _T("SELECT item_id,name,source,datatype,polling_interval,retention_time,")
               _T("status,delta_calculation,transformation,template_id,description,")
               _T("instance,template_item_id,flags,resource_id,")
@@ -369,13 +369,13 @@ void Template::loadItemsFromDB()
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				m_dcObjects->add(new DCItem(hResult, i, this));
+				m_dcObjects->add(new DCItem(hdb, hResult, i, this));
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);
 	}
 
-	hStmt = DBPrepare(g_hCoreDB,
+	hStmt = DBPrepare(hdb,
 	           _T("SELECT item_id,template_id,template_item_id,name,")
 				  _T("description,flags,source,snmp_port,polling_interval,retention_time,")
               _T("status,system_tag,resource_id,proxy_node,perftab_settings,")
@@ -388,7 +388,7 @@ void Template::loadItemsFromDB()
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				m_dcObjects->add(new DCTable(hResult, i, this));
+				m_dcObjects->add(new DCTable(hdb, hResult, i, this));
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);

@@ -143,21 +143,12 @@ void QueueRawDciDataUpdate(time_t timestamp, UINT32 dciId, const TCHAR *rawValue
  */
 static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
 {
-   DB_HANDLE hdb;
-
-   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   DB_HANDLE hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
+   if (hdb == NULL)
    {
-		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-      hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
-      if (hdb == NULL)
-      {
-         nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
-         return THREAD_OK;
-      }
-   }
-   else
-   {
-      hdb = g_hCoreDB;
+      nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
+      return THREAD_OK;
    }
 
    while(1)
@@ -186,10 +177,7 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
       free(rq);
    }
 
-   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
-   {
-      DBDisconnect(hdb);
-   }
+   DBDisconnect(hdb);
    return THREAD_OK;
 }
 
@@ -198,21 +186,12 @@ static THREAD_RESULT THREAD_CALL DBWriteThread(void *arg)
  */
 static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 {
-   DB_HANDLE hdb;
-
-   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   DB_HANDLE hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
+   if (hdb == NULL)
    {
-		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-      hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
-      if (hdb == NULL)
-      {
-         nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
-         return THREAD_OK;
-      }
-   }
-   else
-   {
-      hdb = g_hCoreDB;
+      nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
+      return THREAD_OK;
    }
 
    while(1)
@@ -264,10 +243,7 @@ static THREAD_RESULT THREAD_CALL IDataWriteThread(void *arg)
 	}
 
 stop:
-   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
-   {
-      DBDisconnect(hdb);
-   }
+   DBDisconnect(hdb);
    return THREAD_OK;
 }
 
@@ -276,21 +252,12 @@ stop:
  */
 static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
 {
-   DB_HANDLE hdb;
-
-   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   DB_HANDLE hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
+   if (hdb == NULL)
    {
-		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-      hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
-      if (hdb == NULL)
-      {
-         nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
-         return THREAD_OK;
-      }
-   }
-   else
-   {
-      hdb = g_hCoreDB;
+      nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
+      return THREAD_OK;
    }
 
    while(1)
@@ -340,10 +307,7 @@ static THREAD_RESULT THREAD_CALL RawDataWriteThread(void *arg)
 	}
 
 stop:
-   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
-   {
-      DBDisconnect(hdb);
-   }
+   DBDisconnect(hdb);
    return THREAD_OK;
 }
 
@@ -354,14 +318,11 @@ void StartDBWriter()
 {
    int i;
 
-   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
-   {
-      m_numWriters = ConfigReadInt(_T("NumberOfDatabaseWriters"), 1);
-      if (m_numWriters < 1)
-         m_numWriters = 1;
-      if (m_numWriters > MAX_DB_WRITERS)
-         m_numWriters = MAX_DB_WRITERS;
-   }
+   m_numWriters = ConfigReadInt(_T("NumberOfDatabaseWriters"), 1);
+   if (m_numWriters < 1)
+      m_numWriters = 1;
+   if (m_numWriters > MAX_DB_WRITERS)
+      m_numWriters = MAX_DB_WRITERS;
 
    for(i = 0; i < m_numWriters; i++)
       m_hWriteThreadList[i] = ThreadCreateEx(DBWriteThread, 0, NULL);

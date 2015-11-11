@@ -162,7 +162,7 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  *    status,system_tag,resource_id,proxy_node,perftab_settings,
  *    transformation_script,comments
  */
-DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
+DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
    m_id = DBGetFieldULong(hResult, iRow, 0);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 1);
@@ -188,7 +188,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
 	m_lastValue = NULL;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=? ORDER BY sequence_number"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=? ORDER BY sequence_number"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -203,10 +203,10 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 		DBFreeStatement(hStmt);
 	}
 
-	loadCustomSchedules();
+	loadCustomSchedules(hdb);
 
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
-   loadThresholds();
+   loadThresholds(hdb);
 }
 
 /**
@@ -621,9 +621,9 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 /**
  * Load thresholds from database
  */
-bool DCTable::loadThresholds()
+bool DCTable::loadThresholds(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT id,activation_event,deactivation_event FROM dct_thresholds WHERE table_id=? ORDER BY sequence_number"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,activation_event,deactivation_event FROM dct_thresholds WHERE table_id=? ORDER BY sequence_number"));
    if (hStmt == NULL)
       return false;
 
@@ -634,7 +634,7 @@ bool DCTable::loadThresholds()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         DCTableThreshold *t = new DCTableThreshold(hResult, i);
+         DCTableThreshold *t = new DCTableThreshold(hdb, hResult, i);
          m_thresholds->add(t);
       }
       DBFreeResult(hResult);

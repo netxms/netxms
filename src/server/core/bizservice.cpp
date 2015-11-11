@@ -58,13 +58,13 @@ BusinessService::~BusinessService()
 /**
  * Create object from database data
  */
-BOOL BusinessService::loadFromDatabase(UINT32 id)
+bool BusinessService::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-	if (!ServiceContainer::loadFromDatabase(id))
+	if (!ServiceContainer::loadFromDatabase(hdb, id))
 		return FALSE;
 
 	// now it doesn't make any sense but hopefully will do in the future
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT service_id FROM business_services WHERE service_id=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT service_id FROM business_services WHERE service_id=?"));
 	if (hStmt == NULL)
 	{
 		DbgPrintf(4, _T("Cannot prepare select from business_services"));
@@ -114,7 +114,7 @@ BOOL BusinessService::saveToDatabase(DB_HANDLE hdb)
 	}
 	DBFreeStatement(hStmt);
 
-	hStmt = DBPrepare(g_hCoreDB, bNewObject ? _T("INSERT INTO business_services (service_id) VALUES (?)") :
+	hStmt = DBPrepare(hdb, bNewObject ? _T("INSERT INTO business_services (service_id) VALUES (?)") :
 											  _T("UPDATE business_services SET service_id=service_id WHERE service_id=?"));
 	if (hStmt == NULL)
 	{

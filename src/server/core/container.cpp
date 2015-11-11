@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -78,7 +78,7 @@ Container::~Container()
  *
  * @param dwId object ID
  */
-BOOL Container::loadFromDatabase(UINT32 dwId)
+bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
@@ -86,19 +86,19 @@ BOOL Container::loadFromDatabase(UINT32 dwId)
 
    m_id = dwId;
 
-   if (!loadCommonProperties())
-      return FALSE;
+   if (!loadCommonProperties(hdb))
+      return false;
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT category,flags,auto_bind_filter FROM containers WHERE id=%d"), dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
-      return FALSE;     // Query failed
+      return false;     // Query failed
 
    if (DBGetNumRows(hResult) == 0)
    {
       // No object with given ID in database
       DBFreeResult(hResult);
-      return FALSE;
+      return false;
    }
 
    m_dwCategory = DBGetFieldULong(hResult, 0, 0);
@@ -119,13 +119,13 @@ BOOL Container::loadFromDatabase(UINT32 dwId)
    DBFreeResult(hResult);
 
    // Load access list
-   loadACLFromDB();
+   loadACLFromDB(hdb);
 
    // Load child list for later linkage
    if (!m_isDeleted)
    {
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT object_id FROM container_members WHERE container_id=%d"), m_id);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          m_dwChildIdListSize = DBGetNumRows(hResult);
@@ -139,7 +139,7 @@ BOOL Container::loadFromDatabase(UINT32 dwId)
       }
    }
 
-   return TRUE;
+   return true;
 }
 
 /**

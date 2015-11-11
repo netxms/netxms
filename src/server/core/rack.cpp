@@ -48,16 +48,16 @@ Rack::~Rack()
 /**
  * Create object from database data
  */
-BOOL Rack::loadFromDatabase(UINT32 id)
+bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-	if (!Container::loadFromDatabase(id))
-		return FALSE;
+	if (!Container::loadFromDatabase(hdb, id))
+		return false;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT height FROM racks WHERE id=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT height FROM racks WHERE id=?"));
 	if (hStmt == NULL)
-		return FALSE;
+		return false;
 
-	BOOL success = FALSE;
+	bool success = false;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
@@ -66,7 +66,7 @@ BOOL Rack::loadFromDatabase(UINT32 id)
 		if (DBGetNumRows(hResult) > 0)
 		{
 			m_height = DBGetFieldLong(hResult, 0, 0);
-			success = TRUE;
+			success = true;
 		}
 		DBFreeResult(hResult);
 	}

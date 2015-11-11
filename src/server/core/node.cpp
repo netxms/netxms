@@ -232,22 +232,22 @@ Node::~Node()
 /**
  * Create object from database data
  */
-BOOL Node::loadFromDatabase(UINT32 dwId)
+bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    int i, iNumRows;
    UINT32 dwSubnetId;
    NetObj *pObject;
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    m_id = dwId;
 
-   if (!loadCommonProperties())
+   if (!loadCommonProperties(hdb))
    {
       DbgPrintf(2, _T("Cannot load common properties for node object %d"), dwId);
-      return FALSE;
+      return false;
    }
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
+	DB_STATEMENT hStmt = DBPrepare(hdb,
 		_T("SELECT primary_name,primary_ip,node_flags,")
       _T("snmp_version,auth_method,secret,")
       _T("agent_port,status_poll_type,snmp_oid,agent_version,")
@@ -260,14 +260,14 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
       _T("rack_id,rack_image,rack_position,rack_height,")
       _T("last_agent_comm_time FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
-		return FALSE;
+		return false;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult == NULL)
 	{
 		DBFreeStatement(hStmt);
-      return FALSE;     // Query failed
+      return false;     // Query failed
 	}
 
    if (DBGetNumRows(hResult) == 0)
@@ -275,7 +275,7 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
       DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
       DbgPrintf(2, _T("Missing record in \"nodes\" table for node object %d"), dwId);
-      return FALSE;
+      return false;
    }
 
    DBGetField(hResult, 0, 0, m_primaryName, MAX_DNS_NAME);
@@ -348,16 +348,16 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
    if (!m_isDeleted)
    {
       // Link node to subnets
-		hStmt = DBPrepare(g_hCoreDB, _T("SELECT subnet_id FROM nsmap WHERE node_id=?"));
+		hStmt = DBPrepare(hdb, _T("SELECT subnet_id FROM nsmap WHERE node_id=?"));
 		if (hStmt == NULL)
-			return FALSE;
+			return false;
 
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
       hResult = DBSelectPrepared(hStmt);
       if (hResult == NULL)
 		{
 			DBFreeStatement(hStmt);
-         return FALSE;     // Query failed
+         return false;     // Query failed
 		}
 
       iNumRows = DBGetNumRows(hResult);
@@ -385,18 +385,18 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
       DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
 
-		loadItemsFromDB();
-      loadACLFromDB();
+		loadItemsFromDB(hdb);
+      loadACLFromDB(hdb);
 
       // Walk through all items in the node and load appropriate thresholds
-		bResult = TRUE;
+		bResult = true;
       for(i = 0; i < m_dcObjects->size(); i++)
       {
-         if (!m_dcObjects->get(i)->loadThresholdsFromDB())
+         if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
          {
             DbgPrintf(3, _T("Cannot load thresholds for DCI %d of node %d (%s)"),
                       m_dcObjects->get(i)->getId(), dwId, m_name);
-            bResult = FALSE;
+            bResult = false;
          }
       }
 
@@ -404,7 +404,7 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
    }
    else
    {
-      bResult = TRUE;
+      bResult = true;
    }
 
    return bResult;

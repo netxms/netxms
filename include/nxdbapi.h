@@ -189,8 +189,10 @@ int LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn);
 int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn);
 
 String LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int maxSize = -1);
+String LIBNXDB_EXPORTABLE DBPrepareString(DB_DRIVER drv, const TCHAR *str, int maxSize = -1);
 #ifdef UNICODE
 String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int maxSize = -1);
+String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str, int maxSize = -1);
 #else
 #define DBPrepareStringA DBPrepareString
 #endif

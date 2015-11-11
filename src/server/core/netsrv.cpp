@@ -130,25 +130,25 @@ BOOL NetworkService::saveToDatabase(DB_HANDLE hdb)
 /**
  * Load properties from database
  */
-BOOL NetworkService::loadFromDatabase(UINT32 dwId)
+bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
    UINT32 dwHostNodeId;
    NetObj *pObject;
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    m_id = dwId;
 
-   if (!loadCommonProperties())
-      return FALSE;
+   if (!loadCommonProperties(hdb))
+      return false;
 
    _sntprintf(szQuery, 256, _T("SELECT node_id,service_type,")
                                _T("ip_bind_addr,ip_proto,ip_port,check_request,check_responce,")
                                _T("poller_node_id,required_polls FROM network_services WHERE id=%d"), dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
-      return FALSE;     // Query failed
+      return false;     // Query failed
 
    if (DBGetNumRows(hResult) != 0)
    {
@@ -180,7 +180,7 @@ BOOL NetworkService::loadFromDatabase(UINT32 dwId)
             m_hostNode = (Node *)pObject;
             pObject->AddChild(this);
             AddParent(pObject);
-            bResult = TRUE;
+            bResult = true;
          }
 
          // Check that polling node ID is valid
@@ -189,27 +189,26 @@ BOOL NetworkService::loadFromDatabase(UINT32 dwId)
             pObject = FindObjectById(m_pollerNode);
             if (pObject == NULL)
             {
-               nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE,
-                        "dds", dwId, m_pollerNode, _T("network service"));
-               bResult = FALSE;
+               nxlog_write(MSG_INVALID_NODE_ID_EX, EVENTLOG_ERROR_TYPE, "dds", dwId, m_pollerNode, _T("network service"));
+               bResult = false;
             }
             else if (pObject->getObjectClass() != OBJECT_NODE)
             {
                nxlog_write(MSG_NODE_NOT_NODE, EVENTLOG_ERROR_TYPE, "dd", dwId, m_pollerNode);
-               bResult = FALSE;
+               bResult = false;
             }
          }
       }
       else
       {
-         bResult = TRUE;
+         bResult = true;
       }
    }
 
    DBFreeResult(hResult);
 
    // Load access list
-   loadACLFromDB();
+   loadACLFromDB(hdb);
 
    return bResult;
 }

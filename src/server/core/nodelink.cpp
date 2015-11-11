@@ -51,19 +51,19 @@ NodeLink::~NodeLink()
 /**
  * Create object from database data
  */
-BOOL NodeLink::loadFromDatabase(UINT32 id)
+bool NodeLink::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
 	const int script_length = 1024;
 	m_id = id;
 
-	if (!ServiceContainer::loadFromDatabase(id))
-		return FALSE;
+	if (!ServiceContainer::loadFromDatabase(hdb, id))
+		return false;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT node_id FROM node_links WHERE nodelink_id=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT node_id FROM node_links WHERE nodelink_id=?"));
 	if (hStmt == NULL)
 	{
 		DbgPrintf(4, _T("Cannot prepare select from node_links"));
-		return FALSE;
+		return false;
 	}
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 
@@ -71,7 +71,7 @@ BOOL NodeLink::loadFromDatabase(UINT32 id)
 	if (hResult == NULL)
 	{
 		DBFreeStatement(hStmt);
-		return FALSE;
+		return false;
 	}
 
 	if (DBGetNumRows(hResult) == 0)
@@ -79,7 +79,7 @@ BOOL NodeLink::loadFromDatabase(UINT32 id)
 		DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
 		DbgPrintf(4, _T("Cannot load nodelink object %ld - record missing"), (long)m_id);
-		return FALSE;
+		return false;
 	}
 
 	m_nodeId	= DBGetFieldLong(hResult, 0, 0);
@@ -88,13 +88,13 @@ BOOL NodeLink::loadFromDatabase(UINT32 id)
 		DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
 		DbgPrintf(4, _T("Cannot load nodelink object %ld - node id is missing"), (long)m_id);
-		return FALSE;
+		return false;
 	}
 
 	DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -122,7 +122,7 @@ BOOL NodeLink::saveToDatabase(DB_HANDLE hdb)
 	}
 	DBFreeStatement(hStmt);
 
-	hStmt = DBPrepare(g_hCoreDB, bNewObject ? _T("INSERT INTO node_links (node_id,nodelink_id) VALUES (?,?)") :
+	hStmt = DBPrepare(hdb, bNewObject ? _T("INSERT INTO node_links (node_id,nodelink_id) VALUES (?,?)") :
 											  _T("UPDATE node_links SET node_id=? WHERE nodelink_id=?"));
 	if (hStmt == NULL)
 	{

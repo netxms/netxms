@@ -154,20 +154,20 @@ void SlmCheck::compileScript()
 /**
  * Create object from database data
  */
-BOOL SlmCheck::loadFromDatabase(UINT32 id)
+bool SlmCheck::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
 	UINT32 thresholdId;
 
 	m_id = id;
 
-	if (!loadCommonProperties())
-		return FALSE;
+	if (!loadCommonProperties(hdb))
+		return false;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT type,content,threshold_id,template_id,current_ticket,is_template,reason FROM slm_checks WHERE id=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT type,content,threshold_id,template_id,current_ticket,is_template,reason FROM slm_checks WHERE id=?"));
 	if (hStmt == NULL)
 	{
 		DbgPrintf(4, _T("Cannot prepare select from slm_checks"));
-		return FALSE;
+		return false;
 	}
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 
@@ -175,7 +175,7 @@ BOOL SlmCheck::loadFromDatabase(UINT32 id)
 	if (hResult == NULL)
 	{
 		DBFreeStatement(hStmt);
-		return FALSE;
+		return false;
 	}
 
 	if (DBGetNumRows(hResult) == 0)
@@ -183,7 +183,7 @@ BOOL SlmCheck::loadFromDatabase(UINT32 id)
 		DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
 		DbgPrintf(4, _T("Cannot load check object %ld - record missing"), (long)m_id);
-		return FALSE;
+		return false;
 	}
 
 	m_type = SlmCheck::CheckType(DBGetFieldLong(hResult, 0, 0));
@@ -205,39 +205,24 @@ BOOL SlmCheck::loadFromDatabase(UINT32 id)
 	DBFreeStatement(hStmt);
 
 	// Load access list
-	loadACLFromDB();
+	loadACLFromDB(hdb);
 
 	return TRUE;
 }
 
-
-//
-// Save service to database
-//
-
+/**
+ * Save service check to database
+ */
 BOOL SlmCheck::saveToDatabase(DB_HANDLE hdb)
 {
-	BOOL bNewObject = TRUE;
-	BOOL ret = FALSE;
-	DB_RESULT hResult = NULL;
+	bool ret = false;
 
 	lockProperties();
 
 	saveCommonProperties(hdb);
 
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM slm_checks WHERE id=?"));
-	if (hStmt == NULL)
-		goto finish;
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-	hResult = DBSelectPrepared(hStmt);
-	if (hResult != NULL)
-	{
-		bNewObject = (DBGetNumRows(hResult) <= 0);
-		DBFreeResult(hResult);
-	}
-	DBFreeStatement(hStmt);
-
-	hStmt = DBPrepare(g_hCoreDB, bNewObject ?
+	bool newObject = IsDatabaseRecordExist(hdb, _T("slm_checks"), _T("id"), m_id);
+	DB_STATEMENT hStmt = DBPrepare(hdb, newObject ?
 		_T("INSERT INTO slm_checks (id,type,content,threshold_id,reason,is_template,template_id,current_ticket) VALUES (?,?,?,?,?,?,?,?)") :
 		_T("UPDATE slm_checks SET id=?,type=?,content=?,threshold_id=?,reason=?,is_template=?,template_id=?,current_ticket=? WHERE id=?"));
 	if (hStmt == NULL)
@@ -250,7 +235,7 @@ BOOL SlmCheck::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)(m_isTemplate ? 1 : 0));
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_templateId);
 	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_currentTicketId);
-	if (!bNewObject)
+	if (!newObject)
 		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
 
 	if (!DBExecute(hStmt))
@@ -262,7 +247,7 @@ BOOL SlmCheck::saveToDatabase(DB_HANDLE hdb)
 	DBFreeStatement(hStmt);
 
 	saveACLToDB(hdb);
-	ret = TRUE;
+	ret = true;
 
 finish:
 	// Unlock object and clear modification flag

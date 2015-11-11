@@ -237,15 +237,15 @@ DCObject::~DCObject()
  * Load custom schedules from database
  * (assumes that no schedules was created before this call)
  */
-BOOL DCObject::loadCustomSchedules()
+bool DCObject::loadCustomSchedules(DB_HANDLE hdb)
 {
    if (!(m_flags & DCF_ADVANCED_SCHEDULE))
-		return TRUE;
+		return true;
 
 	TCHAR query[256];
 
    _sntprintf(query, 256, _T("SELECT schedule FROM dci_schedules WHERE item_id=%d"), m_id);
-   DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+   DB_RESULT hResult = DBSelect(hdb, query);
    if (hResult != NULL)
    {
       m_dwNumSchedules = (UINT32)DBGetNumRows(hResult);
@@ -760,7 +760,7 @@ void DCObject::createNXMPRecord(String &str)
 /**
  * Load data collection object thresholds from database
  */
-bool DCObject::loadThresholdsFromDB()
+bool DCObject::loadThresholdsFromDB(DB_HANDLE hdb)
 {
 	return true;
 }

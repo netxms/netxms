@@ -63,13 +63,13 @@ void ServiceContainer::initServiceContainer()
 /**
  * Create object from database data
  */
-BOOL ServiceContainer::loadFromDatabase(UINT32 id)
+bool ServiceContainer::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-	if (!Container::loadFromDatabase(id))
-		return FALSE;
+	if (!Container::loadFromDatabase(hdb, id))
+		return false;
 
 	initUptimeStats();
-	return TRUE;
+	return true;
 }
 
 /**
@@ -165,9 +165,11 @@ BOOL ServiceContainer::addHistoryRecord()
 	DB_RESULT hResult;
 	DB_STATEMENT hStmt;
 
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	if (ServiceContainer::logRecordId < 0)
 	{
-		hResult = DBSelect(g_hCoreDB, _T("SELECT max(record_id) FROM slm_service_history"));
+		hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM slm_service_history"));
 		if (hResult == NULL)
 			return FALSE;
 		ServiceContainer::logRecordId = DBGetNumRows(hResult) > 0 ? DBGetFieldLong(hResult, 0, 0) : 0;
@@ -176,7 +178,7 @@ BOOL ServiceContainer::addHistoryRecord()
 
 	ServiceContainer::logRecordId++;
 
-	hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO slm_service_history (record_id,service_id,change_timestamp,new_status) ")
+	hStmt = DBPrepare(hdb, _T("INSERT INTO slm_service_history (record_id,service_id,change_timestamp,new_status) ")
 		_T("VALUES (?,?,?,?)"));
 	if (hStmt != NULL)
 	{
@@ -197,6 +199,7 @@ BOOL ServiceContainer::addHistoryRecord()
 	}
 
 	DBFreeStatement(hStmt);
+	DBConnectionPoolReleaseConnection(hdb);
 	return TRUE;
 }
 
@@ -223,8 +226,9 @@ double ServiceContainer::getUptimeFromDBFor(Period period, INT32 *downtime)
 	INT32 timediffTillNow	= ServiceContainer::getSecondsSinceBeginningOf(period, &beginTime);
 	double percentage = 0;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT change_timestamp,new_status FROM slm_service_history ")
-	                                          _T("WHERE service_id=? AND change_timestamp>?"));
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT change_timestamp,new_status FROM slm_service_history ")
+	                                    _T("WHERE service_id=? AND change_timestamp>?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -264,6 +268,7 @@ double ServiceContainer::getUptimeFromDBFor(Period period, INT32 *downtime)
 		DBFreeStatement(hStmt);
 	}
 
+	DBConnectionPoolReleaseConnection(hdb);
 	return percentage;
 }
 

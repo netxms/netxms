@@ -77,9 +77,9 @@ static void UpdateAlarmInDB(NXC_ALARM *pAlarm)
               pAlarm->nState, pAlarm->dwAckByUser, pAlarm->dwTermByUser,
               pAlarm->dwLastChangeTime, pAlarm->nCurrentSeverity,
               pAlarm->dwRepeatCount, pAlarm->nHelpDeskState,
-			     (const TCHAR *)DBPrepareString(g_hCoreDB, pAlarm->szHelpDeskRef),
+			     (const TCHAR *)DBPrepareString(g_dbDriver, pAlarm->szHelpDeskRef),
               pAlarm->dwTimeout, pAlarm->dwTimeoutEvent,
-			     (const TCHAR *)DBPrepareString(g_hCoreDB, pAlarm->szMessage),
+			     (const TCHAR *)DBPrepareString(g_dbDriver, pAlarm->szMessage),
 				  pAlarm->dwResolvedByUser, pAlarm->ackTimeout, pAlarm->dwAlarmId);
    QueueSQLRequest(szQuery);
 
@@ -87,9 +87,10 @@ static void UpdateAlarmInDB(NXC_ALARM *pAlarm)
 	{
 		_sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)pAlarm->dwAlarmId);
 		QueueSQLRequest(szQuery);
+
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		DeleteAlarmNotes(hdb, pAlarm->dwAlarmId);
-      DBConnectionPoolReleaseConnection(hdb);
+	   DBConnectionPoolReleaseConnection(hdb);
 	}
 }
 
@@ -345,11 +346,11 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
                  _T("(%d,%d,%d,%d,%d,%s,%d,%d,%s,%d,%d,%d,%d,%s,%d,%d,%d,%d,") UINT64_FMT _T(",%d)"),
               alarm->dwAlarmId, alarm->dwCreationTime, alarm->dwLastChangeTime,
 				  alarm->dwSourceObject, alarm->dwSourceEventCode,
-				  (const TCHAR *)DBPrepareString(g_hCoreDB, alarm->szMessage),
+				  (const TCHAR *)DBPrepareString(g_dbDriver, alarm->szMessage),
               alarm->nOriginalSeverity, alarm->nCurrentSeverity,
-				  (const TCHAR *)DBPrepareString(g_hCoreDB, alarm->szKey),
+				  (const TCHAR *)DBPrepareString(g_dbDriver, alarm->szKey),
 				  alarm->nState, alarm->dwAckByUser, alarm->dwResolvedByUser, alarm->nHelpDeskState,
-				  (const TCHAR *)DBPrepareString(g_hCoreDB, alarm->szHelpDeskRef),
+				  (const TCHAR *)DBPrepareString(g_dbDriver, alarm->szHelpDeskRef),
               alarm->dwRepeatCount, alarm->dwTermByUser, alarm->dwTimeout,
 				  alarm->dwTimeoutEvent, alarm->qwSourceEventId, alarm->ackTimeout);
       QueueSQLRequest(szQuery);
@@ -1423,13 +1424,14 @@ bool InitAlarmManager()
    DB_RESULT hResult;
 
    // Load active alarms into memory
-   hResult = DBSelect(g_hCoreDB, _T("SELECT alarm_id,source_object_id,")
-                                 _T("source_event_code,source_event_id,message,")
-                                 _T("original_severity,current_severity,")
-                                 _T("alarm_key,creation_time,last_change_time,")
-                                 _T("hd_state,hd_ref,ack_by,repeat_count,")
-                                 _T("alarm_state,timeout,timeout_event,resolved_by,")
-                                 _T("ack_timeout FROM alarms WHERE alarm_state<>3"));
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   hResult = DBSelect(hdb, _T("SELECT alarm_id,source_object_id,")
+                           _T("source_event_code,source_event_id,message,")
+                           _T("original_severity,current_severity,")
+                           _T("alarm_key,creation_time,last_change_time,")
+                           _T("hd_state,hd_ref,ack_by,repeat_count,")
+                           _T("alarm_state,timeout,timeout_event,resolved_by,")
+                           _T("ack_timeout FROM alarms WHERE alarm_state<>3"));
    if (hResult == NULL)
       return false;
 
@@ -1456,7 +1458,7 @@ bool InitAlarmManager()
          alarm->nState = (BYTE)DBGetFieldLong(hResult, i, 14);
          alarm->dwTimeout = DBGetFieldULong(hResult, i, 15);
          alarm->dwTimeoutEvent = DBGetFieldULong(hResult, i, 16);
-			alarm->noteCount = GetNoteCount(g_hCoreDB, alarm->dwAlarmId);
+			alarm->noteCount = GetNoteCount(hdb, alarm->dwAlarmId);
          alarm->dwResolvedByUser = DBGetFieldULong(hResult, i, 17);
          alarm->ackTimeout = DBGetFieldULong(hResult, i, 18);
          m_alarmList->add(alarm);
@@ -1464,6 +1466,7 @@ bool InitAlarmManager()
    }
 
    DBFreeResult(hResult);
+   DBConnectionPoolReleaseConnection(hdb);
 
 	m_hWatchdogThread = ThreadCreateEx(WatchdogThread, 0, NULL);
    return true;

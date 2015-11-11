@@ -330,13 +330,13 @@ DCTableThreshold::DCTableThreshold(DCTableThreshold *src)
  * Create table threshold from database
  * Expected column order: id,activation_event,deactivation_event
  */
-DCTableThreshold::DCTableThreshold(DB_RESULT hResult, int row)
+DCTableThreshold::DCTableThreshold(DB_HANDLE hdb, DB_RESULT hResult, int row)
 {
    m_id = DBGetFieldLong(hResult, row, 0);
    m_activationEvent = DBGetFieldULong(hResult, row, 1);
    m_deactivationEvent = DBGetFieldULong(hResult, row, 2);
    m_groups = new ObjectArray<DCTableConditionGroup>(4, 4, true);
-   loadConditions();
+   loadConditions(hdb);
    m_activeKeys = new StringSet;
 }
 
@@ -388,9 +388,9 @@ DCTableThreshold::DCTableThreshold(ConfigEntry *e)
 /**
  * Load conditions from database
  */
-void DCTableThreshold::loadConditions()
+void DCTableThreshold::loadConditions(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT group_id,column_name,check_operation,check_value FROM dct_threshold_conditions WHERE threshold_id=? ORDER BY group_id,sequence_number"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT group_id,column_name,check_operation,check_value FROM dct_threshold_conditions WHERE threshold_id=? ORDER BY group_id,sequence_number"));
    if (hStmt == NULL)
       return;
 

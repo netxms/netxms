@@ -108,7 +108,7 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
  *    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
  *    instd_method,instd_data,instd_filter,samples,comments
  */
-DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
+DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
    m_id = DBGetFieldULong(hResult, iRow, 0);
    DBGetField(hResult, iRow, 1, m_name, MAX_ITEM_NAME);
@@ -155,7 +155,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
    // Load last raw value from database
 	TCHAR szQuery[256];
    _sntprintf(szQuery, 256, _T("SELECT raw_value,last_poll_time FROM raw_dci_values WHERE item_id=%d"), m_id);
-   DB_RESULT hTempResult = DBSelect(g_hCoreDB, szQuery);
+   DB_RESULT hTempResult = DBSelect(hdb, szQuery);
    if (hTempResult != NULL)
    {
       if (DBGetNumRows(hTempResult) > 0)
@@ -168,7 +168,7 @@ DCItem::DCItem(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
       DBFreeResult(hTempResult);
    }
 
-	loadCustomSchedules();
+	loadCustomSchedules(hdb);
 }
 
 /**
@@ -292,11 +292,11 @@ void DCItem::clearCache()
 /**
  * Load data collection items thresholds from database
  */
-bool DCItem::loadThresholdsFromDB()
+bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb)
 {
    bool result = false;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
+	DB_STATEMENT hStmt = DBPrepare(hdb,
 	           _T("SELECT threshold_id,fire_value,rearm_value,check_function,")
               _T("check_operation,sample_count,script,event_code,current_state,")
               _T("rearm_event_code,repeat_interval,current_severity,")

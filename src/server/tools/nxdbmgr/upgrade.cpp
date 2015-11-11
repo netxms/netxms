@@ -574,6 +574,23 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V377 to V378
+ */
+static BOOL H_UpgradeFromV377(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("DELETE FROM config WHERE var_name='EnableMultipleDBConnections'\n")
+      _T("UPDATE config SET var_name='DBConnectionPoolBaseSize' WHERE var_name='ConnectionPoolBaseSize'\n")
+      _T("UPDATE config SET var_name='DBConnectionPoolMaxSize' WHERE var_name='ConnectionPoolMaxSize'\n")
+      _T("UPDATE config SET var_name='DBConnectionPoolCooldownTime' WHERE var_name='ConnectionPoolCooldownTime'\n")
+      _T("UPDATE config SET var_name='DBConnectionPoolMaxLifetime' WHERE var_name='ConnectionPoolMaxLifetime'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='378' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V376 to V377
  */
 static BOOL H_UpgradeFromV376(int currVersion, int newVersion)
@@ -9042,6 +9059,7 @@ static struct
    { 374, 375, H_UpgradeFromV374 },
    { 375, 376, H_UpgradeFromV375 },
    { 376, 377, H_UpgradeFromV376 },
+   { 377, 378, H_UpgradeFromV377 },
    { 0, 0, NULL }
 };
 

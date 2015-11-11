@@ -206,7 +206,7 @@ protected:
    void lock() { MutexLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
 
-	BOOL loadCustomSchedules();
+	bool loadCustomSchedules(DB_HANDLE hdb);
    bool matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp);
 
 	void expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
@@ -229,7 +229,7 @@ public:
 
    virtual BOOL saveToDB(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
-   virtual bool loadThresholdsFromDB();
+   virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    virtual void processNewError();
@@ -336,7 +336,7 @@ protected:
 public:
    DCItem();
    DCItem(const DCItem *pItem);
-   DCItem(DB_RESULT hResult, int iRow, Template *pNode);
+   DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode);
    DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
           int iPollingInterval, int iRetentionTime, Template *pNode,
           const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
@@ -349,7 +349,7 @@ public:
 
    virtual BOOL saveToDB(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
-   virtual bool loadThresholdsFromDB();
+   virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
    void updateCacheSize(UINT32 dwCondId = 0);
    void reloadCache();
@@ -502,11 +502,11 @@ private:
    UINT32 m_deactivationEvent;
    StringSet *m_activeKeys;
 
-   void loadConditions();
+   void loadConditions(DB_HANDLE hdb);
 
 public:
    DCTableThreshold();
-   DCTableThreshold(DB_RESULT hResult, int row);
+   DCTableThreshold(DB_HANDLE hdb, DB_RESULT hResult, int row);
    DCTableThreshold(NXCPMessage *msg, UINT32 *baseId);
    DCTableThreshold(DCTableThreshold *src);
    DCTableThreshold(ConfigEntry *e);
@@ -543,7 +543,7 @@ protected:
    bool transform(Table *value);
    void checkThresholds(Table *value);
 
-   bool loadThresholds();
+   bool loadThresholds(DB_HANDLE hdb);
    bool saveThresholds(DB_HANDLE hdb);
 
 public:
@@ -551,7 +551,7 @@ public:
    DCTable(const DCTable *src);
    DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
 	        Template *node, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
-   DCTable(DB_RESULT hResult, int iRow, Template *pNode);
+   DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode);
    DCTable(ConfigEntry *config, Template *owner);
 	virtual ~DCTable();
 

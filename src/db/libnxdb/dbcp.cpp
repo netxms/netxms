@@ -23,6 +23,7 @@
 
 #include "libnxdb.h"
 
+static bool s_initialized = false;
 static DB_DRIVER m_driver;
 static TCHAR m_server[256];
 static TCHAR m_login[256];
@@ -44,9 +45,10 @@ static CONDITION m_condRelease = INVALID_CONDITION_HANDLE;
 /**
  * Create connections on pool initialization
  */
-static void DBConnectionPoolPopulate()
+static bool DBConnectionPoolPopulate()
 {
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+	bool success = false;
 
 	MutexLock(m_poolAccessMutex);
 	for(int i = 0; i < m_basePoolSize; i++)
@@ -62,6 +64,7 @@ static void DBConnectionPoolPopulate()
          conn->srcFile[0] = 0;
          conn->srcLine = 0;
          m_connections.add(conn);
+         success = true;
       }
       else
       {
@@ -70,6 +73,7 @@ static void DBConnectionPoolPopulate()
       }
 	}
 	MutexUnlock(m_poolAccessMutex);
+	return success;
 }
 
 /**
@@ -211,6 +215,9 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
 																int basePoolSize, int maxPoolSize, int cooldownTime,
 																int connTTL)
 {
+   if (s_initialized)
+      return true;   // already initialized
+
 	m_driver = driver;
 	nx_strncpy(m_server, CHECK_NULL_EX(server), 256);
 	nx_strncpy(m_dbName, CHECK_NULL_EX(dbName), 256);
@@ -228,10 +235,18 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
    m_condShutdown = ConditionCreate(TRUE);
    m_condRelease = ConditionCreate(FALSE);
 
-	DBConnectionPoolPopulate();
+	if (!DBConnectionPoolPopulate())
+	{
+	   // cannot open at least one connection
+	   ConditionDestroy(m_condShutdown);
+	   ConditionDestroy(m_condRelease);
+	   MutexDestroy(m_poolAccessMutex);
+	   return false;
+	}
 
    m_maintThread = ThreadCreateEx(MaintenanceThread, 0, NULL);
 
+   s_initialized = true;
 	__DBDbgPrintf(1, _T("Database Connection Pool initialized"));
 
 	return true;
@@ -242,6 +257,9 @@ bool LIBNXDB_EXPORTABLE DBConnectionPoolStartup(DB_DRIVER driver, const TCHAR *s
  */
 void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
 {
+   if (!s_initialized)
+      return;
+
    ConditionSet(m_condShutdown);
    ThreadJoin(m_maintThread);
 
@@ -256,6 +274,7 @@ void LIBNXDB_EXPORTABLE DBConnectionPoolShutdown()
 
    m_connections.clear();
 
+   s_initialized = false;
 	__DBDbgPrintf(1, _T("Database Connection Pool terminated"));
 
 }

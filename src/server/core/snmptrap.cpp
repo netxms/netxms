@@ -54,8 +54,10 @@ static BOOL LoadTrapCfg()
    TCHAR *pszOID, szQuery[256], szBuffer[MAX_DB_STRING];
    UINT32 i, j, pdwBuffer[MAX_OID_LEN];
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    // Load traps
-   hResult = DBSelect(g_hCoreDB, _T("SELECT trap_id,snmp_oid,event_code,description,user_tag FROM snmp_trap_cfg"));
+   hResult = DBSelect(hdb, _T("SELECT trap_id,snmp_oid,event_code,description,user_tag FROM snmp_trap_cfg"));
    if (hResult != NULL)
    {
       m_dwNumTraps = DBGetNumRows(hResult);
@@ -88,7 +90,7 @@ static BOOL LoadTrapCfg()
          _sntprintf(szQuery, 256, _T("SELECT snmp_oid,description,flags FROM snmp_trap_pmap ")
                                   _T("WHERE trap_id=%d ORDER BY parameter"),
                     m_pTrapCfg[i].dwId);
-         hResult = DBSelect(g_hCoreDB, szQuery);
+         hResult = DBSelect(hdb, szQuery);
          if (hResult != NULL)
          {
             m_pTrapCfg[i].dwNumMaps = DBGetNumRows(hResult);
@@ -131,6 +133,7 @@ static BOOL LoadTrapCfg()
    {
       bResult = FALSE;
    }
+   DBConnectionPoolReleaseConnection(hdb);
    return bResult;
 }
 
@@ -146,13 +149,15 @@ void InitTraps()
 	m_bLogAllTraps = ConfigReadInt(_T("LogAllSNMPTraps"), FALSE);
 	s_allowVarbindConversion = ConfigReadInt(_T("AllowTrapVarbindsConversion"), 1) ? true : false;
 
-	hResult = DBSelect(g_hCoreDB, _T("SELECT max(trap_id) FROM snmp_trap_log"));
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	hResult = DBSelect(hdb, _T("SELECT max(trap_id) FROM snmp_trap_log"));
 	if (hResult != NULL)
 	{
 		if (DBGetNumRows(hResult) > 0)
 			m_qnTrapId = DBGetFieldInt64(hResult, 0, 0) + 1;
 		DBFreeResult(hResult);
 	}
+	DBConnectionPoolReleaseConnection(hdb);
 
 	m_wTrapPort = (UINT16)ConfigReadULong(_T("SNMPTrapPort"), m_wTrapPort); // 162 by default;
 }
@@ -298,7 +303,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,'%s',%s)"),
                  m_qnTrapId, dwTimeStamp, srcAddr.toString(szBuffer),
                  (pNode != NULL) ? pNode->getId() : (UINT32)0, pdu->getTrapId()->getValueAsText(),
-                 (const TCHAR *)DBPrepareString(g_hCoreDB, pszTrapArgs));
+                 (const TCHAR *)DBPrepareString(g_dbDriver, pszTrapArgs));
       QueueSQLRequest(szQuery);
 
       // Notify connected clients
@@ -908,10 +913,12 @@ UINT32 CreateNewTrap(UINT32 *pdwTrapId)
 	m_dwNumTraps++;
    MutexUnlock(m_mutexTrapCfgAccess);
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description,user_tag) ")
                       _T("VALUES (%d,'',%d,'','')"), *pdwTrapId, (UINT32)EVENT_SNMP_UNMATCHED_TRAP);
-   if (!DBQuery(g_hCoreDB, szQuery))
+   if (!DBQuery(hdb, szQuery))
       dwResult = RCC_DB_FAILURE;
+   DBConnectionPoolReleaseConnection(hdb);
 
    return dwResult;
 }
@@ -938,15 +945,16 @@ UINT32 CreateNewTrap(NXC_TRAP_CFG_ENTRY *pTrap)
 			m_pTrapCfg[m_dwNumTraps].pMaps[i].pdwObjectId = (UINT32 *)nx_memdup(pTrap->pMaps[i].pdwObjectId, sizeof(UINT32) * pTrap->pMaps[i].dwOidLen);
 	}
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	// Write new trap to database
    SNMPConvertOIDToText(m_pTrapCfg[m_dwNumTraps].dwOidLen, m_pTrapCfg[m_dwNumTraps].pdwObjectId, szOID, 1024);
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO snmp_trap_cfg (trap_id,snmp_oid,event_code,description,user_tag) ")
                       _T("VALUES (%d,'%s',%d,%s,%s)"), m_pTrapCfg[m_dwNumTraps].dwId,
 	          szOID, m_pTrapCfg[m_dwNumTraps].dwEventCode,
-				 (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[m_dwNumTraps].szDescription),
-				 (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[m_dwNumTraps].szUserTag));
+				 (const TCHAR *)DBPrepareString(hdb, m_pTrapCfg[m_dwNumTraps].szDescription),
+				 (const TCHAR *)DBPrepareString(hdb, m_pTrapCfg[m_dwNumTraps].szUserTag));
 
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	if(DBBegin(hdb))
    {
       bSuccess = DBQuery(hdb, szQuery);
@@ -1026,13 +1034,14 @@ UINT32 UpdateTrapFromMsg(NXCPMessage *pMsg)
 				m_pTrapCfg[i].pMaps[j].dwFlags = pMsg->getFieldAsUInt32(dwId4);
          }
 
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
          // Update database
          SNMPConvertOIDToText(m_pTrapCfg[i].dwOidLen, m_pTrapCfg[i].pdwObjectId, szOID, 1024);
          _sntprintf(szQuery, 1024, _T("UPDATE snmp_trap_cfg SET snmp_oid='%s',event_code=%d,description=%s,user_tag=%s WHERE trap_id=%d"),
                     szOID, m_pTrapCfg[i].dwEventCode,
-						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[i].szDescription),
-						  (const TCHAR *)DBPrepareString(g_hCoreDB, m_pTrapCfg[i].szUserTag), m_pTrapCfg[i].dwId);
-			DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+						  (const TCHAR *)DBPrepareString(hdb, m_pTrapCfg[i].szDescription),
+						  (const TCHAR *)DBPrepareString(hdb, m_pTrapCfg[i].szUserTag), m_pTrapCfg[i].dwId);
          if(DBBegin(hdb))
          {
             bSuccess = DBQuery(hdb, szQuery);

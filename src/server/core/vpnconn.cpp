@@ -55,19 +55,19 @@ VPNConnector::~VPNConnector()
 /**
  * Create object from database data
  */
-BOOL VPNConnector::loadFromDatabase(UINT32 dwId)
+bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    m_id = dwId;
 
-   if (!loadCommonProperties())
-      return FALSE;
+   if (!loadCommonProperties(hdb))
+      return false;
 
    // Load network lists
    TCHAR szQuery[256];
    _sntprintf(szQuery, 256, _T("SELECT ip_addr,ip_netmask,network_type FROM vpn_connector_networks WHERE vpn_id=%d"), m_id);
-   DB_RESULT hResult = DBSelect(g_hCoreDB, szQuery);
+   DB_RESULT hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
-      return FALSE;     // Query failed
+      return false;     // Query failed
    int count = DBGetNumRows(hResult);
    for(int i = 0; i < count; i++)
    {
@@ -82,11 +82,11 @@ BOOL VPNConnector::loadFromDatabase(UINT32 dwId)
 
    // Load custom properties
    _sntprintf(szQuery, 256, _T("SELECT node_id,peer_gateway FROM vpn_connectors WHERE id=%d"), dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
-      return FALSE;     // Query failed
+      return false;     // Query failed
 
-   BOOL success = FALSE;
+   bool success = false;
    if (DBGetNumRows(hResult) != 0)
    {
       UINT32 dwNodeId = DBGetFieldULong(hResult, 0, 0);
@@ -108,19 +108,19 @@ BOOL VPNConnector::loadFromDatabase(UINT32 dwId)
          {
             pObject->AddChild(this);
             AddParent(pObject);
-            success = TRUE;
+            success = true;
          }
       }
       else
       {
-         success = TRUE;
+         success = true;
       }
    }
 
    DBFreeResult(hResult);
 
    // Load access list
-   loadACLFromDB();
+   loadACLFromDB(hdb);
 
    return success;
 }

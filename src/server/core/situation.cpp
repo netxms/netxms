@@ -161,12 +161,14 @@ void Situation::SaveToDatabase()
 	size_t qlen;
 	BOOL isUpdate;
 	
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	escName = EncodeSQLString(CHECK_NULL_EX(m_name));
 	escComments = EncodeSQLString(CHECK_NULL_EX(m_comments));
 	qlen = _tcslen(escName) + _tcslen(escComments) + 256;
 	query = (TCHAR *)malloc(qlen * sizeof(TCHAR));
 	_sntprintf(query, qlen, _T("SELECT id FROM situations WHERE id=%d"), m_id);
-	result = DBSelect(g_hCoreDB, query);
+	result = DBSelect(hdb, query);
 	if (result != NULL)
 	{
 		isUpdate = DBGetNumRows(result) > 0;
@@ -184,8 +186,10 @@ void Situation::SaveToDatabase()
 		           m_id, escName, escComments);
 	free(escName);
 	free(escComments);
-	DBQuery(g_hCoreDB, query);
+	DBQuery(hdb, query);
 	free(query);
+
+	DBConnectionPoolReleaseConnection(hdb);
 }
 
 
@@ -195,10 +199,11 @@ void Situation::SaveToDatabase()
 
 void Situation::DeleteFromDatabase()
 {
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	TCHAR query[256];
-	
 	_sntprintf(query, 256, _T("DELETE FROM situations WHERE id=%d"), m_id);
-	DBQuery(g_hCoreDB, query);
+	DBQuery(hdb, query);
+	DBConnectionPoolReleaseConnection(hdb);
 }
 
 
@@ -344,8 +349,10 @@ BOOL SituationsInit()
 {
 	BOOL success = TRUE;
 	
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    // Load situations from database
-   DB_RESULT result = DBSelect(g_hCoreDB, _T("SELECT id,name,comments FROM situations ORDER BY id"));
+   DB_RESULT result = DBSelect(hdb, _T("SELECT id,name,comments FROM situations ORDER BY id"));
    if (result != NULL)
    {
    	int count = DBGetNumRows(result);
@@ -361,6 +368,7 @@ BOOL SituationsInit()
 		DbgPrintf(3, _T("Cannot load situations from database due to DBSelect() failure"));
 		success = FALSE;
 	}
+   DBConnectionPoolReleaseConnection(hdb);
 	return success;
 }
 

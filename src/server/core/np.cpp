@@ -504,7 +504,8 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
 		if (autoFilterFlags & DFF_ONLY_RANGE)
       {
 			DbgPrintf(4, _T("AcceptNewNode(%s): auto filter - checking range"), szIpAddr);
-         DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=2"));
+			DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         DB_RESULT hResult = DBSelect(hdb, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=2"));
          if (hResult != NULL)
          {
             int nRows = DBGetNumRows(hResult);
@@ -531,6 +532,7 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
             }
             DBFreeResult(hResult);
          }
+         DBConnectionPoolReleaseConnection(hdb);
 			DbgPrintf(4, _T("AcceptNewNode(%s): auto filter - range check result is %d"), szIpAddr, bResult);
 			if (!bResult)
 				return FALSE;

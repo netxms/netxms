@@ -132,7 +132,7 @@ String ColumnFilter::generateSql()
 			{
 				if (m_negated)
 					sql += _T("NOT ");
-				sql.appendFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(g_hCoreDB, m_value.like));
+				sql.appendFormattedString(_T("%s LIKE %s"), m_column, (const TCHAR *)DBPrepareString(g_dbDriver, m_value.like));
 			}
 			break;
 		case FILTER_SET:

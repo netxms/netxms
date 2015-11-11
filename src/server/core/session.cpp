@@ -1479,10 +1479,11 @@ void ClientSession::onFileUpload(BOOL bSuccess)
     case CMD_INSTALL_PACKAGE:
       if (!bSuccess)
       {
-        TCHAR szQuery[256];
-
-        _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), m_dwUploadData);
-        DBQuery(g_hCoreDB, szQuery);
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         TCHAR szQuery[256];
+         _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), m_dwUploadData);
+         DBQuery(hdb, szQuery);
+         DBConnectionPoolReleaseConnection(hdb);
       }
       break;
     case CMD_MODIFY_IMAGE:
@@ -2099,10 +2100,10 @@ void ClientSession::deleteEventTemplate(NXCPMessage *pRequest)
    // Check access rights
    if (checkSysAccessRights(SYSTEM_ACCESS_EDIT_EVENT_DB) && (dwEventCode >= FIRST_USER_EVENT_ID))
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       TCHAR szQuery[256];
-
       _sntprintf(szQuery, 256, _T("DELETE FROM event_cfg WHERE event_code=%d"), dwEventCode);
-      if (DBQuery(g_hCoreDB, szQuery))
+      if (DBQuery(hdb, szQuery))
       {
          DeleteEventTemplateFromList(dwEventCode);
 
@@ -2120,6 +2121,7 @@ void ClientSession::deleteEventTemplate(NXCPMessage *pRequest)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -2412,8 +2414,10 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
    // Check user rights
    if ((m_dwUserId == 0) || (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
       // Retrieve configuration variables from database
-      DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT var_name,var_value,need_server_restart FROM config WHERE is_visible=1"));
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value,need_server_restart FROM config WHERE is_visible=1"));
       if (hResult != NULL)
       {
          // Send events, one per message
@@ -2429,6 +2433,7 @@ void ClientSession::getConfigurationVariables(UINT32 dwRqId)
          }
          DBFreeResult(hResult);
       }
+      DBConnectionPoolReleaseConnection(hdb);
       msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
@@ -6654,7 +6659,10 @@ void ClientSession::InstallPackage(NXCPMessage *pRequest)
                                    m_dwUploadData, szPkgName, szPkgVersion, pszEscDescr,
                                    szPlatform, pszCleanFileName);
                         free(pszEscDescr);
-                        DBQuery(g_hCoreDB, szQuery);
+
+                        DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+                        DBQuery(hdb, szQuery);
+                        DBConnectionPoolReleaseConnection(hdb);
                      }
                      else
                      {
@@ -6797,9 +6805,11 @@ void ClientSession::DeployPackage(NXCPMessage *pRequest)
       dwPkgId = pRequest->getFieldAsUInt32(VID_PACKAGE_ID);
       if (IsValidPackageId(dwPkgId))
       {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
          // Read package information
          _sntprintf(szQuery, 256, _T("SELECT platform,pkg_file,version FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
-         hResult = DBSelect(g_hCoreDB, szQuery);
+         hResult = DBSelect(hdb, szQuery);
          if (hResult != NULL)
          {
             if (DBGetNumRows(hResult) > 0)
@@ -6866,6 +6876,7 @@ void ClientSession::DeployPackage(NXCPMessage *pRequest)
             msg.setField(VID_RCC, RCC_DB_FAILURE);
             bSuccess = FALSE;
          }
+         DBConnectionPoolReleaseConnection(hdb);
       }
       else
       {
@@ -7020,12 +7031,14 @@ void ClientSession::getUserVariable(NXCPMessage *pRequest)
    dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
       // Try to read variable from database
       pRequest->getFieldAsString(VID_NAME, szVarName, MAX_VARIABLE_NAME);
       _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
                  _T("SELECT var_value FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
                  dwUserId, szVarName);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
@@ -7048,6 +7061,7 @@ void ClientSession::getUserVariable(NXCPMessage *pRequest)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -7080,11 +7094,13 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
       pRequest->getFieldAsString(VID_NAME, szVarName, MAX_VARIABLE_NAME);
       if (IsValidObjectName(szVarName))
       {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
          // Check if variable already exist in database
          _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
                     _T("SELECT var_name FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
                     dwUserId, szVarName);
-         hResult = DBSelect(g_hCoreDB, szQuery);
+         hResult = DBSelect(hdb, szQuery);
          if (hResult != NULL)
          {
             if (DBGetNumRows(hResult) > 0)
@@ -7107,7 +7123,7 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
                        _T("INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (%d,'%s','%s')"),
                        dwUserId, szVarName, pszValue);
          free(pszValue);
-         if (DBQuery(g_hCoreDB, szQuery))
+         if (DBQuery(hdb, szQuery))
          {
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
@@ -7115,6 +7131,8 @@ void ClientSession::setUserVariable(NXCPMessage *pRequest)
          {
             msg.setField(VID_RCC, RCC_DB_FAILURE);
          }
+
+         DBConnectionPoolReleaseConnection(hdb);
       }
       else
       {
@@ -7148,8 +7166,9 @@ void ClientSession::enumUserVariables(NXCPMessage *pRequest)
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
       pRequest->getFieldAsString(VID_SEARCH_PATTERN, szPattern, MAX_VARIABLE_NAME);
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       _sntprintf(szQuery, 256, _T("SELECT var_name FROM user_profiles WHERE user_id=%d"), dwUserId);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          dwNumRows = DBGetNumRows(hResult);
@@ -7170,6 +7189,7 @@ void ClientSession::enumUserVariables(NXCPMessage *pRequest)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -7196,13 +7216,15 @@ void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
    dwUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
    if ((dwUserId == m_dwUserId) || (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS))
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
       // Try to delete variable from database
       pRequest->getFieldAsString(VID_NAME, szVarName, MAX_VARIABLE_NAME);
       TranslateStr(szVarName, _T("*"), _T("%"));
       _sntprintf(szQuery, MAX_VARIABLE_NAME + 256,
                  _T("DELETE FROM user_profiles WHERE user_id=%d AND var_name LIKE '%s'"),
                  dwUserId, szVarName);
-      if (DBQuery(g_hCoreDB, szQuery))
+      if (DBQuery(hdb, szQuery))
       {
          msg.setField(VID_RCC, RCC_SUCCESS);
       }
@@ -7210,6 +7232,7 @@ void ClientSession::deleteUserVariable(NXCPMessage *pRequest)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -7239,6 +7262,8 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS)
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
       dwSrcUserId = pRequest->isFieldExist(VID_USER_ID) ? pRequest->getFieldAsUInt32(VID_USER_ID) : m_dwUserId;
       dwDstUserId = pRequest->getFieldAsUInt32(VID_DST_USER_ID);
       bMove = (BOOL)pRequest->getFieldAsUInt16(VID_MOVE_FLAG);
@@ -7247,7 +7272,7 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
       _sntprintf(szQuery, 8192,
                  _T("SELECT var_name,var_value FROM user_profiles WHERE user_id=%d AND var_name LIKE '%s'"),
                  dwSrcUserId, szVarName);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          nRows = DBGetNumRows(hResult);
@@ -7259,7 +7284,7 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
             _sntprintf(szQuery, 32768,
                        _T("SELECT var_name FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
                        dwDstUserId, szCurrVar);
-            hResult2 = DBSelect(g_hCoreDB, szQuery);
+            hResult2 = DBSelect(hdb, szQuery);
             if (hResult2 != NULL)
             {
                bExist = (DBGetNumRows(hResult2) > 0);
@@ -7280,14 +7305,14 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
                           _T("INSERT INTO user_profiles (user_id,var_name,var_value) VALUES (%d,'%s','%s')"),
                           dwDstUserId, szCurrVar, pszValue);
             free(pszValue);
-            DBQuery(g_hCoreDB, szQuery);
+            DBQuery(hdb, szQuery);
 
             if (bMove)
             {
                _sntprintf(szQuery, 32768,
                           _T("DELETE FROM user_profiles WHERE user_id=%d AND var_name='%s'"),
                           dwSrcUserId, szCurrVar);
-               DBQuery(g_hCoreDB, szQuery);
+               DBQuery(hdb, szQuery);
             }
          }
          DBFreeResult(hResult);
@@ -7297,6 +7322,7 @@ void ClientSession::copyUserVariable(NXCPMessage *pRequest)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -7978,7 +8004,8 @@ void ClientSession::sendScriptList(UINT32 dwRqId)
    msg.setId(dwRqId);
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
-      hResult = DBSelect(g_hCoreDB, _T("SELECT script_id,script_name FROM script_library"));
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      hResult = DBSelect(hdb, _T("SELECT script_id,script_name FROM script_library"));
       if (hResult != NULL)
       {
          msg.setField(VID_RCC, RCC_SUCCESS);
@@ -7995,6 +8022,7 @@ void ClientSession::sendScriptList(UINT32 dwRqId)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -8017,9 +8045,10 @@ void ClientSession::sendScript(NXCPMessage *pRequest)
    msg.setId(pRequest->getId());
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SCRIPTS)
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       dwScriptId = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
       _sntprintf(szQuery, 256, _T("SELECT script_name,script_code FROM script_library WHERE script_id=%d"), dwScriptId);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
@@ -8042,6 +8071,7 @@ void ClientSession::sendScript(NXCPMessage *pRequest)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -8147,9 +8177,10 @@ void ClientSession::renameScript(NXCPMessage *pRequest)
       {
          if (IsValidScriptId(dwScriptId))
          {
+            DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
             _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("UPDATE script_library SET script_name=%s WHERE script_id=%d"),
-                      (const TCHAR *)DBPrepareString(g_hCoreDB, szName), dwScriptId);
-            if (DBQuery(g_hCoreDB, szQuery))
+                      (const TCHAR *)DBPrepareString(hdb, szName), dwScriptId);
+            if (DBQuery(hdb, szQuery))
             {
                ReloadScript(dwScriptId);
                msg.setField(VID_RCC, RCC_SUCCESS);
@@ -8158,6 +8189,7 @@ void ClientSession::renameScript(NXCPMessage *pRequest)
             {
                msg.setField(VID_RCC, RCC_DB_FAILURE);
             }
+            DBConnectionPoolReleaseConnection(hdb);
          }
          else
          {
@@ -8192,8 +8224,9 @@ void ClientSession::deleteScript(NXCPMessage *pRequest)
       dwScriptId = pRequest->getFieldAsUInt32(VID_SCRIPT_ID);
       if (IsValidScriptId(dwScriptId))
       {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM script_library WHERE script_id=%d"), dwScriptId);
-         if (DBQuery(g_hCoreDB, szQuery))
+         if (DBQuery(hdb, szQuery))
          {
             g_pScriptLibrary->lock();
             g_pScriptLibrary->deleteScript(dwScriptId);
@@ -8204,6 +8237,7 @@ void ClientSession::deleteScript(NXCPMessage *pRequest)
          {
             msg.setField(VID_RCC, RCC_DB_FAILURE);
          }
+         DBConnectionPoolReleaseConnection(hdb);
       }
       else
       {
@@ -8317,6 +8351,8 @@ void ClientSession::sendSyslog(NXCPMessage *pRequest)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    MutexLock(m_mutexSendSyslog);
 
    // Retrieve events from database
@@ -8326,7 +8362,7 @@ void ClientSession::sendSyslog(NXCPMessage *pRequest)
       case DB_SYNTAX_PGSQL:
       case DB_SYNTAX_SQLITE:
          dwNumRows = 0;
-         hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM syslog"));
+         hTempResult = DBSelect(hdb, _T("SELECT count(*) FROM syslog"));
          if (hTempResult != NULL)
          {
             if (DBGetNumRows(hTempResult) > 0)
@@ -8363,7 +8399,6 @@ void ClientSession::sendSyslog(NXCPMessage *pRequest)
          szQuery[0] = 0;
          break;
    }
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    hResult = DBAsyncSelect(hdb, szQuery);
    if (hResult != NULL)
    {
@@ -8407,8 +8442,8 @@ void ClientSession::sendSyslog(NXCPMessage *pRequest)
 		sendMessage(&msg);
 	}
 
-   DBConnectionPoolReleaseConnection(hdb);
    MutexUnlock(m_mutexSendSyslog);
+   DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**
@@ -8456,6 +8491,7 @@ void ClientSession::SendTrapLog(NXCPMessage *pRequest)
       msg.deleteAllFields();
       msg.setCode(CMD_TRAP_LOG_RECORDS);
 
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       MutexLock(m_mutexSendTrapLog);
 
       // Retrieve trap log records from database
@@ -8465,7 +8501,7 @@ void ClientSession::SendTrapLog(NXCPMessage *pRequest)
          case DB_SYNTAX_PGSQL:
          case DB_SYNTAX_SQLITE:
             dwNumRows = 0;
-            hTempResult = DBSelect(g_hCoreDB, _T("SELECT count(*) FROM snmp_trap_log"));
+            hTempResult = DBSelect(hdb, _T("SELECT count(*) FROM snmp_trap_log"));
             if (hTempResult != NULL)
             {
                if (DBGetNumRows(hTempResult) > 0)
@@ -8504,7 +8540,6 @@ void ClientSession::SendTrapLog(NXCPMessage *pRequest)
             break;
       }
 
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       hResult = DBAsyncSelect(hdb, szQuery);
       if (hResult != NULL)
       {
@@ -8535,8 +8570,8 @@ void ClientSession::SendTrapLog(NXCPMessage *pRequest)
          msg.setEndOfSequence();
       }
 
-      DBConnectionPoolReleaseConnection(hdb);
       MutexUnlock(m_mutexSendTrapLog);
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -8759,7 +8794,8 @@ void ClientSession::sendAgentCfgList(UINT32 dwRqId)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
-      hResult = DBSelect(g_hCoreDB, _T("SELECT config_id,config_name,sequence_number FROM agent_configs"));
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      hResult = DBSelect(hdb, _T("SELECT config_id,config_name,sequence_number FROM agent_configs"));
       if (hResult != NULL)
       {
          dwNumRows = DBGetNumRows(hResult);
@@ -8779,6 +8815,7 @@ void ClientSession::sendAgentCfgList(UINT32 dwRqId)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -8804,9 +8841,10 @@ void ClientSession::OpenAgentConfig(NXCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       dwCfgId = pRequest->getFieldAsUInt32(VID_CONFIG_ID);
       _sntprintf(szQuery, 256, _T("SELECT config_name,config_file,config_filter,sequence_number FROM agent_configs WHERE config_id=%d"), dwCfgId);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
@@ -8832,6 +8870,7 @@ void ClientSession::OpenAgentConfig(NXCPMessage *pRequest)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -8859,9 +8898,10 @@ void ClientSession::SaveAgentConfig(NXCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       dwCfgId = pRequest->getFieldAsUInt32(VID_CONFIG_ID);
       _sntprintf(szQuery, 256, _T("SELECT config_name FROM agent_configs WHERE config_id=%d"), dwCfgId);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          bCreate = (DBGetNumRows(hResult) == 0);
@@ -8889,7 +8929,7 @@ void ClientSession::SaveAgentConfig(NXCPMessage *pRequest)
                msg.setField(VID_CONFIG_ID, dwCfgId);
 
                // Request sequence number
-               hResult = DBSelect(g_hCoreDB, _T("SELECT max(sequence_number) FROM agent_configs"));
+               hResult = DBSelect(hdb, _T("SELECT max(sequence_number) FROM agent_configs"));
                if (hResult != NULL)
                {
                   if (DBGetNumRows(hResult) > 0)
@@ -8921,7 +8961,7 @@ void ClientSession::SaveAgentConfig(NXCPMessage *pRequest)
          free(pszEscText);
          free(pszEscFilter);
 
-         if (DBQuery(g_hCoreDB, pszQuery))
+         if (DBQuery(hdb, pszQuery))
          {
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
@@ -8935,6 +8975,7 @@ void ClientSession::SaveAgentConfig(NXCPMessage *pRequest)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -8960,15 +9001,16 @@ void ClientSession::DeleteAgentConfig(NXCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       dwCfgId = pRequest->getFieldAsUInt32(VID_CONFIG_ID);
       _sntprintf(szQuery, 256, _T("SELECT config_name FROM agent_configs WHERE config_id=%d"), dwCfgId);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) > 0)
          {
             _sntprintf(szQuery, 256, _T("DELETE FROM agent_configs WHERE config_id=%d"), dwCfgId);
-            if (DBQuery(g_hCoreDB, szQuery))
+            if (DBQuery(hdb, szQuery))
             {
                msg.setField(VID_RCC, RCC_SUCCESS);
             }
@@ -8987,6 +9029,7 @@ void ClientSession::DeleteAgentConfig(NXCPMessage *pRequest)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -9012,33 +9055,35 @@ void ClientSession::SwapAgentConfigs(NXCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_AGENT_CFG)
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
       _sntprintf(szQuery, 256, _T("SELECT config_id,sequence_number FROM agent_configs WHERE config_id=%d OR config_id=%d"),
                  pRequest->getFieldAsUInt32(VID_CONFIG_ID), pRequest->getFieldAsUInt32(VID_CONFIG_ID_2));
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          if (DBGetNumRows(hResult) >= 2)
          {
-            if (DBBegin(g_hCoreDB))
+            if (DBBegin(hdb))
             {
                _sntprintf(szQuery, 256, _T("UPDATE agent_configs SET sequence_number=%d WHERE config_id=%d"),
                           DBGetFieldULong(hResult, 1, 1), DBGetFieldULong(hResult, 0, 0));
-               bRet = DBQuery(g_hCoreDB, szQuery);
+               bRet = DBQuery(hdb, szQuery);
                if (bRet)
                {
                   _sntprintf(szQuery, 256, _T("UPDATE agent_configs SET sequence_number=%d WHERE config_id=%d"),
                              DBGetFieldULong(hResult, 0, 1), DBGetFieldULong(hResult, 1, 0));
-                  bRet = DBQuery(g_hCoreDB, szQuery);
+                  bRet = DBQuery(hdb, szQuery);
                }
 
                if (bRet)
                {
-                  DBCommit(g_hCoreDB);
+                  DBCommit(hdb);
                   msg.setField(VID_RCC, RCC_SUCCESS);
                }
                else
                {
-                  DBRollback(g_hCoreDB);
+                  DBRollback(hdb);
                   msg.setField(VID_RCC, RCC_DB_FAILURE);
                }
             }
@@ -9057,6 +9102,7 @@ void ClientSession::SwapAgentConfigs(NXCPMessage *pRequest)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -9090,7 +9136,8 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
    DbgPrintf(3, _T("Finding config for agent at %s: platform=\"%s\", version=\"%d.%d.%d\""),
              SockaddrToStr(m_clientAddr, szBuffer), szPlatform, (int)wMajor, (int)wMinor, (int)wRelease);
 
-   hResult = DBSelect(g_hCoreDB, _T("SELECT config_id,config_file,config_filter FROM agent_configs ORDER BY sequence_number"));
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   hResult = DBSelect(hdb, _T("SELECT config_id,config_file,config_filter FROM agent_configs ORDER BY sequence_number"));
    if (hResult != NULL)
    {
       nNumRows = DBGetNumRows(hResult);
@@ -9164,6 +9211,7 @@ void ClientSession::sendConfigForAgent(NXCPMessage *pRequest)
    {
       msg.setField(VID_RCC, (WORD)1);  // DB Failure
    }
+   DBConnectionPoolReleaseConnection(hdb);
 
    sendMessage(&msg);
 }
@@ -9388,9 +9436,10 @@ void ClientSession::getAddrList(NXCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=%d"),
                 pRequest->getFieldAsUInt32(VID_ADDR_LIST_TYPE));
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          dwNumRec = DBGetNumRows(hResult);
@@ -9408,6 +9457,7 @@ void ClientSession::getAddrList(NXCPMessage *pRequest)
       {
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -9431,10 +9481,11 @@ void ClientSession::setAddrList(NXCPMessage *pRequest)
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
       dwListType = pRequest->getFieldAsUInt32(VID_ADDR_LIST_TYPE);
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM address_lists WHERE list_type=%d"), dwListType);
-      DBBegin(g_hCoreDB);
-      if (DBQuery(g_hCoreDB, szQuery))
+      DBBegin(hdb);
+      if (DBQuery(hdb, szQuery))
       {
          dwNumRec = pRequest->getFieldAsUInt32(VID_NUM_RECORDS);
          for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwNumRec; i++, dwId += 10)
@@ -9443,26 +9494,27 @@ void ClientSession::setAddrList(NXCPMessage *pRequest)
                       dwListType, pRequest->getFieldAsUInt32(dwId),
                       IpToStr(pRequest->getFieldAsUInt32(dwId + 1), szIpAddr1),
                       IpToStr(pRequest->getFieldAsUInt32(dwId + 2), szIpAddr2));
-            if (!DBQuery(g_hCoreDB, szQuery))
+            if (!DBQuery(hdb, szQuery))
                break;
          }
 
          if (i == dwNumRec)
          {
-            DBCommit(g_hCoreDB);
+            DBCommit(hdb);
             msg.setField(VID_RCC, RCC_SUCCESS);
          }
          else
          {
-            DBRollback(g_hCoreDB);
+            DBRollback(hdb);
             msg.setField(VID_RCC, RCC_DB_FAILURE);
          }
       }
       else
       {
-         DBRollback(g_hCoreDB);
+         DBRollback(hdb);
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
+      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
@@ -10060,7 +10112,7 @@ void ClientSession::saveGraph(NXCPMessage *pRequest)
 			else
 			{
 				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), graphId);
-				DBQuery(g_hCoreDB, szQuery);
+				DBQuery(hdb, szQuery);
 
 				_sntprintf(szQuery, 16384, _T("UPDATE graphs SET name='%s',config='%s' WHERE graph_id=%d"),
 				           pszEscName, pszEscData, graphId);
@@ -10313,7 +10365,8 @@ void ClientSession::AddCACertificate(NXCPMessage *pRequest)
 				free(pszEscComments);
 				BinToStr(pData, dwLen, &pszQuery[_tcslen(pszQuery)]);
 				_tcscat(pszQuery, _T("')"));
-				if (DBQuery(g_hCoreDB, pszQuery))
+				DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+				if (DBQuery(hdb, pszQuery))
 				{
                NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, dwCertId);
 					msg.setField(VID_RCC, RCC_SUCCESS);
@@ -10323,6 +10376,7 @@ void ClientSession::AddCACertificate(NXCPMessage *pRequest)
 				{
 					msg.setField(VID_RCC, RCC_DB_FAILURE);
 				}
+				DBConnectionPoolReleaseConnection(hdb);
 				free(pszQuery);
 			}
 			else
@@ -10367,9 +10421,10 @@ void ClientSession::DeleteCertificate(NXCPMessage *pRequest)
 	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 #ifdef _WITH_ENCRYPTION
+	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		dwCertId = pRequest->getFieldAsUInt32(VID_CERTIFICATE_ID);
 		_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM certificates WHERE cert_id=%d"), dwCertId);
-		if (DBQuery(g_hCoreDB, szQuery))
+		if (DBQuery(hdb, szQuery))
 		{
 			msg.setField(VID_RCC, RCC_SUCCESS);
 			NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, dwCertId);
@@ -10379,6 +10434,7 @@ void ClientSession::DeleteCertificate(NXCPMessage *pRequest)
 		{
 			msg.setField(VID_RCC, RCC_DB_FAILURE);
 		}
+		DBConnectionPoolReleaseConnection(hdb);
 #else
 		msg.setField(VID_RCC, RCC_NO_ENCRYPTION_SUPPORT);
 #endif
@@ -10413,18 +10469,19 @@ void ClientSession::UpdateCertificateComments(NXCPMessage *pRequest)
 		pszComments= pRequest->getFieldAsString(VID_COMMENTS);
 		if (pszComments != NULL)
 		{
+		   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 			pszEscComments = EncodeSQLString(pszComments);
 			free(pszComments);
 			qlen = (UINT32)_tcslen(pszEscComments) + 256;
 			pszQuery = (TCHAR *)malloc(qlen * sizeof(TCHAR));
 			_sntprintf(pszQuery, qlen, _T("SELECT subject FROM certificates WHERE cert_id=%d"), dwCertId);
-			hResult = DBSelect(g_hCoreDB, pszQuery);
+			hResult = DBSelect(hdb, pszQuery);
 			if (hResult != NULL)
 			{
 				if (DBGetNumRows(hResult) > 0)
 				{
 					_sntprintf(pszQuery, qlen, _T("UPDATE certificates SET comments='%s' WHERE cert_id=%d"), pszEscComments, dwCertId);
-					if (DBQuery(g_hCoreDB, pszQuery))
+					if (DBQuery(hdb, pszQuery))
 					{
                   NotifyClientSessions(NX_NOTIFY_CERTIFICATE_CHANGED, dwCertId);
 						msg.setField(VID_RCC, RCC_SUCCESS);
@@ -10446,6 +10503,7 @@ void ClientSession::UpdateCertificateComments(NXCPMessage *pRequest)
 			}
 			free(pszEscComments);
 			free(pszQuery);
+			DBConnectionPoolReleaseConnection(hdb);
 		}
 		else
 		{
@@ -10477,7 +10535,8 @@ void ClientSession::getCertificateList(UINT32 dwRqId)
 	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
 	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
 	{
-		hResult = DBSelect(g_hCoreDB, _T("SELECT cert_id,cert_type,comments,subject FROM certificates"));
+	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		hResult = DBSelect(hdb, _T("SELECT cert_id,cert_type,comments,subject FROM certificates"));
 		if (hResult != NULL)
 		{
 			nRows = DBGetNumRows(hResult);
@@ -10516,6 +10575,7 @@ void ClientSession::getCertificateList(UINT32 dwRqId)
 		{
 			msg.setField(VID_RCC, RCC_DB_FAILURE);
 		}
+		DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
 	{
@@ -11559,7 +11619,8 @@ void ClientSession::sendUsmCredentials(UINT32 dwRqId)
 
 	if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
 	{
-		hResult = DBSelect(g_hCoreDB, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials"));
+	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		hResult = DBSelect(hdb, _T("SELECT user_name,auth_method,priv_method,auth_password,priv_password FROM usm_credentials"));
 		if (hResult != NULL)
 		{
 			count = DBGetNumRows(hResult);
@@ -11585,6 +11646,7 @@ void ClientSession::sendUsmCredentials(UINT32 dwRqId)
 		{
 			msg.setField(VID_RCC, RCC_DB_FAILURE);
 		}
+		DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
 	{
@@ -11626,8 +11688,8 @@ void ClientSession::updateUsmCredentials(NXCPMessage *request)
 					request->getFieldAsString(id++, authPasswd, MAX_DB_STRING);
 					request->getFieldAsString(id++, privPasswd, MAX_DB_STRING);
 					_sntprintf(query, 4096, _T("INSERT INTO usm_credentials (id,user_name,auth_method,priv_method,auth_password,priv_password) VALUES(%d,%s,%d,%d,%s,%s)"),
-								  i + 1, (const TCHAR *)DBPrepareString(g_hCoreDB, name), authMethod, privMethod,
-								  (const TCHAR *)DBPrepareString(g_hCoreDB, authPasswd), (const TCHAR *)DBPrepareString(g_hCoreDB, privPasswd));
+								  i + 1, (const TCHAR *)DBPrepareString(hdb, name), authMethod, privMethod,
+								  (const TCHAR *)DBPrepareString(hdb, authPasswd), (const TCHAR *)DBPrepareString(hdb, privPasswd));
 					if (!DBQuery(hdb, query))
 						break;
 				}
@@ -11905,9 +11967,11 @@ void ClientSession::sendLibraryImage(NXCPMessage *request)
 
 	if (rcc == RCC_SUCCESS)
 	{
+	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 		TCHAR query[MAX_DB_STRING];
 		_sntprintf(query, MAX_DB_STRING, _T("SELECT name,category,mimetype,protected FROM images WHERE guid = '%s'"), guidText);
-		DB_RESULT result = DBSelect(g_hCoreDB, query);
+		DB_RESULT result = DBSelect(hdb, query);
 		if (result != NULL)
 		{
 			int count = DBGetNumRows(result);
@@ -11950,6 +12014,7 @@ void ClientSession::sendLibraryImage(NXCPMessage *request)
 		{
 			rcc = RCC_DB_FAILURE;
 		}
+		DBConnectionPoolReleaseConnection(hdb);
 	}
 
 	msg.setField(VID_RCC, rcc);
@@ -12054,9 +12119,9 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
 				if (!isProtected)
 				{
 					_sntprintf(query, MAX_DB_STRING, _T("UPDATE images SET name = %s, category = %s, mimetype = %s WHERE guid = '%s'"),
-							(const TCHAR *)DBPrepareString(g_hCoreDB, name),
-							(const TCHAR *)DBPrepareString(g_hCoreDB, category),
-							(const TCHAR *)DBPrepareString(g_hCoreDB, mimetype, 32),
+							(const TCHAR *)DBPrepareString(hdb, name),
+							(const TCHAR *)DBPrepareString(hdb, category),
+							(const TCHAR *)DBPrepareString(hdb, mimetype, 32),
 							guidText);
 				}
 				else
@@ -12069,9 +12134,9 @@ void ClientSession::updateLibraryImage(NXCPMessage *request)
 				// not found in DB, create
 				_sntprintf(query, MAX_DB_STRING, _T("INSERT INTO images (guid, name, category, mimetype, protected) VALUES ('%s', %s, %s, %s, 0)"),
 						guidText,
-						(const TCHAR *)DBPrepareString(g_hCoreDB, name),
-						(const TCHAR *)DBPrepareString(g_hCoreDB, category),
-						(const TCHAR *)DBPrepareString(g_hCoreDB, mimetype, 32));
+						(const TCHAR *)DBPrepareString(hdb, name),
+						(const TCHAR *)DBPrepareString(hdb, category),
+						(const TCHAR *)DBPrepareString(hdb, mimetype, 32));
 			}
 
 			if (query[0] != 0)
@@ -12226,14 +12291,15 @@ void ClientSession::listLibraryImages(NXCPMessage *request)
 	}
 	debugPrintf(5, _T("listLibraryImages: category=%s"), category[0] == 0 ? _T("*ANY*") : category);
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 	_tcscpy(query, _T("SELECT guid,name,category,mimetype,protected FROM images"));
 	if (category[0] != 0)
 	{
 		_tcscat(query, _T(" WHERE category = "));
-      _tcscat(query, (const TCHAR *)DBPrepareString(g_hCoreDB, category));
+      _tcscat(query, (const TCHAR *)DBPrepareString(hdb, category));
 	}
 
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	DB_RESULT result = DBSelect(hdb, query);
 	if (result != NULL)
 	{

@@ -247,7 +247,8 @@ void ReloadCertificates()
 	if (m_pTrustedCertStore != NULL)
 	{
 		_sntprintf(szBuffer, 256, _T("SELECT cert_data,subject FROM certificates WHERE cert_type=%d"), CERT_TYPE_TRUSTED_CA);
-		hResult = DBSelect(g_hCoreDB, szBuffer);
+		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+		hResult = DBSelect(hdb, szBuffer);
 		if (hResult != NULL)
 		{
 			nRows = DBGetNumRows(hResult);
@@ -289,6 +290,7 @@ void ReloadCertificates()
 			if (nLoaded > 0)
 				nxlog_write(MSG_CA_CERTIFICATES_LOADED, EVENTLOG_INFORMATION_TYPE, "d", nLoaded);
 		}
+		DBConnectionPoolReleaseConnection(hdb);
 	}
 	else
 	{
