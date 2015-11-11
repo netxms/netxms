@@ -336,10 +336,10 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          Node *originNode = FindNodeByIP(0, originSenderIP); //create function
 
          SNMP_ProxyTransport *pTransport;
-         if(originNode != NULL)
-            pTransport = (SNMP_ProxyTransport*)originNode->createSnmpTransport((WORD)msg->getFieldAsUInt16(VID_PORT));
+         if (originNode != NULL)
+            pTransport = (SNMP_ProxyTransport *)originNode->createSnmpTransport((WORD)msg->getFieldAsUInt16(VID_PORT));
 
-         if(ConfigReadInt(_T("LogAllSNMPTraps"), FALSE) && originNode == NULL)
+         if (ConfigReadInt(_T("LogAllSNMPTraps"), FALSE) && (originNode == NULL))
          {
             AgentConnection *pConn;
 
@@ -350,11 +350,11 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
             }
          }
 
-         if(pTransport != NULL)
+         if (pTransport != NULL)
          {
             pTransport->setWaitForResponse(false);
             SNMP_PDU *pdu = new SNMP_PDU;
-            if(pdu->parse(pduBytes, pduLenght, (originNode != NULL) ? originNode->getSnmpSecurityContext() : NULL, true))
+            if (pdu->parse(pduBytes, pduLenght, (originNode != NULL) ? originNode->getSnmpSecurityContext() : NULL, true))
             {
                DbgPrintf(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
                if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))

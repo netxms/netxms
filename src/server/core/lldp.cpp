@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -165,15 +165,26 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 	newOid[oid->getLength() - 4] = 8;	// lldpRemPortDesc
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
+   newOid[oid->getLength() - 4] = 9;   // lldpRemSysName
+   pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
+
 	SNMP_PDU *pRespPDU = NULL;
    UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
 	delete pRqPDU;
-	if (rcc == SNMP_ERR_SUCCESS)
+	if ((rcc == SNMP_ERR_SUCCESS) && (pRespPDU->getNumVariables() >= 4))
    {
 		// Build LLDP ID for remote system
 		TCHAR remoteId[256];
       BuildLldpId(pRespPDU->getVariable(0)->getValueAsInt(), var->getValue(), (int)var->getValueLength(), remoteId, 256);
 		Node *remoteNode = FindNodeByLLDPId(remoteId);
+
+		// Try to find node by sysName as fallback
+		if (remoteNode == NULL)
+		{
+		   TCHAR sysName[256];
+		   remoteNode = FindNodeBySysName(pRespPDU->getVariable(4)->getValueAsString(sysName, 256));
+		}
+
 		if (remoteNode != NULL)
 		{
 			nbs->setData(2, transport);
@@ -224,9 +235,8 @@ static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Trans
 
 			nbs->addConnection(&info);
 		}
-
-		delete pRespPDU;
 	}
+   delete pRespPDU;
 	return SNMP_ERR_SUCCESS;
 }
 

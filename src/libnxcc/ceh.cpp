@@ -44,6 +44,13 @@ void ClusterEventHandler::onNodeJoin(UINT32 nodeId)
 }
 
 /**
+ * Node up handler
+ */
+void ClusterEventHandler::onNodeUp(UINT32 nodeId)
+{
+}
+
+/**
  * Node disconnect handler
  */
 void ClusterEventHandler::onNodeDisconnect(UINT32 nodeId)
@@ -59,7 +66,9 @@ void ClusterEventHandler::onShutdown()
 
 /**
  * Incoming message handler
+ * Should return true if message was processed
  */
-void ClusterEventHandler::onMessage(NXCPMessage *msg, UINT32 sourceNodeId)
+bool ClusterEventHandler::onMessage(NXCPMessage *msg, UINT32 sourceNodeId)
 {
+   return false;
 }

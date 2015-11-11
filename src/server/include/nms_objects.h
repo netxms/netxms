@@ -956,11 +956,13 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
+   virtual void enterMaintenanceMode();
+   virtual void leaveMaintenanceMode();
+
    virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
    virtual UINT32 getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 
-   virtual void enterMaintenanceMode();
-   virtual void leaveMaintenanceMode();
+   UINT32 getListFromScript(const TCHAR *param, StringList **list);
 
    UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
 	UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId);
@@ -1181,6 +1183,7 @@ protected:
 	time_t m_downSince;
    time_t m_bootTime;
    time_t m_agentUpTime;
+   time_t m_lastAgentCommTime;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_hSmclpAccessMutex;
@@ -1264,6 +1267,7 @@ protected:
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
    void updateRackBinding();
+   void setLastAgentCommTime() {m_lastAgentCommTime = time(NULL); setModified();}
 
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 
@@ -2373,6 +2377,7 @@ Node NXCORE_EXPORTABLE *FindNodeByIP(UINT32 zoneId, const InetAddressList *ipAdd
 Node NXCORE_EXPORTABLE *FindNodeByMAC(const BYTE *macAddr);
 Node NXCORE_EXPORTABLE *FindNodeByBridgeId(const BYTE *bridgeId);
 Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId);
+Node NXCORE_EXPORTABLE *FindNodeBySysName(const TCHAR *sysName);
 Interface NXCORE_EXPORTABLE *FindInterfaceByIP(UINT32 zoneId, const InetAddress& ipAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByMAC(const BYTE *macAddr);
 Interface NXCORE_EXPORTABLE *FindInterfaceByDescription(const TCHAR *description);

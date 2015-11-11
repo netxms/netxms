@@ -241,7 +241,7 @@ void ImportScript(ConfigEntry *config)
 /**
  * Execute library script from scheduler
  */
-void ExecuteScript(const ScheduleParameters *param)
+void ExecuteScheduledScript(const ScheduledTaskParameters *param)
 {
    size_t bufSize = 512;
    TCHAR name[256];
@@ -249,6 +249,16 @@ void ExecuteScript(const ScheduleParameters *param)
    Trim(name);
 
    ObjectArray<NXSL_Value> args(16, 16, false);
+
+   Node *object = (Node *)FindObjectById(param->m_objectId, OBJECT_NODE);
+   if (object != NULL)
+   {
+      if (!object->checkAccessRights(param->m_userId, OBJECT_ACCESS_CONTROL))
+      {
+			DbgPrintf(4, _T("ExecuteScript(%s): access denied for userId=\'%d\', for %s object"), param, param->m_userId, object->getName());
+         return;
+      }
+   }
 
    // Can be in form parameter(arg1, arg2, ... argN)
    TCHAR *p = _tcschr(name, _T('('));
@@ -269,6 +279,8 @@ void ExecuteScript(const ScheduleParameters *param)
    NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
    if (vm != NULL)
    {
+      if(object != NULL)
+         vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
       if (vm->run(&args))
       {
 			DbgPrintf(4, _T("ExecuteScript(%s): Script executed sucesfully."), param, vm->getErrorText());

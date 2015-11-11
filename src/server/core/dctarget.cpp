@@ -665,6 +665,78 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
 }
 
 /**
+ * Get list from library script
+ */
+UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **list)
+{
+   TCHAR name[256];
+   nx_strncpy(name, param, 256);
+   Trim(name);
+
+   ObjectArray<NXSL_Value> args(16, 16, false);
+
+   // Can be in form parameter(arg1, arg2, ... argN)
+   TCHAR *p = _tcschr(name, _T('('));
+   if (p != NULL)
+   {
+      if (name[_tcslen(name) - 1] != _T(')'))
+         return DCE_NOT_SUPPORTED;
+      name[_tcslen(name) - 1] = 0;
+
+      if (!ParseValueList(&p, args))
+      {
+         // argument parsing error
+         args.clear();
+         return DCE_NOT_SUPPORTED;
+      }
+   }
+
+   UINT32 rc = DCE_NOT_SUPPORTED;
+   NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
+   if (vm != NULL)
+   {
+      vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, this)));
+      if (getObjectClass() == OBJECT_NODE)
+      {
+         vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
+      }
+      vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
+      if (vm->run(&args))
+      {
+         NXSL_Value *value = vm->getResult();
+         if (value->isArray())
+         {
+            *list = value->getValueAsArray()->toStringList();
+         }
+         else if (value->isString())
+         {
+            *list = new StringList;
+            (*list)->add(value->getValueAsCString());
+         }
+         else
+         {
+            *list = new StringList;
+         }
+         rc = DCE_SUCCESS;
+      }
+      else
+      {
+         DbgPrintf(4, _T("DataCollectionTarget(%s)->getListFromScript(%s): Script execution error: %s"), m_name, param, vm->getErrorText());
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", name, vm->getErrorText(), m_id);
+         rc = DCE_COMM_ERROR;
+      }
+      delete vm;
+   }
+   else
+   {
+      args.setOwner(true);
+      DbgPrintf(4, _T("DataCollectionTarget(%s)->getListFromScript(%s): script \"%s\" not found"), m_name, param, name);
+   }
+   DbgPrintf(7, _T("DataCollectionTarget(%s)->getListFromScript(%s): rc=%d"), m_name, param, rc);
+   return rc;
+}
+
+/**
  * Get last (current) DCI values for summary table.
  */
 void DataCollectionTarget::getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData)

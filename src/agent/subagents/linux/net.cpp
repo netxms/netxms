@@ -546,6 +546,35 @@ LONG H_NetIfList(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, A
    return SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Handler for Net.InterfaceNames list
+ */
+LONG H_NetIfNames(const TCHAR* pszParam, const TCHAR* pArg, StringList* pValue, AbstractCommSession *session)
+{
+   ObjectArray<LinuxInterfaceInfo> *ifList = GetInterfaces();
+   if (ifList == NULL)
+   {
+      AgentWriteDebugLog(4, _T("H_NetIfNames: failed to get interface list"));
+      return SYSINFO_RC_ERROR;
+   }
+
+   TCHAR infoString[1024], macAddr[32], ipAddr[64];
+   for(int i = 0; i < ifList->size(); i++)
+   {
+#ifdef UNICODE
+      pValue->addPreallocated(WideStringFromMBString(ifList->get(i)->name));
+#else
+      pValue->add(ifList->get(i)->name);
+#endif
+   }
+
+   delete ifList;
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for interface parameters (using ioctl)
+ */
 LONG H_NetIfInfoFromIOCTL(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    char *eptr, szBuffer[256];
@@ -638,6 +667,9 @@ static LONG ValueFromLine(char *pszLine, int nPos, TCHAR *pValue)
    return nRet;
 }
 
+/**
+ * Handler for interface parameters (using /proc file system)
+ */
 LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
    char *ptr, szBuffer[256], szName[IFNAMSIZ];
@@ -647,7 +679,7 @@ LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
    if (!AgentGetParameterArgA(pszParam, 1, szBuffer, 256))
       return SYSINFO_RC_UNSUPPORTED;
 
-// Check if we have interface name or index
+   // Check if we have interface name or index
    nIndex = strtol(szBuffer, &ptr, 10);
    if (*ptr == 0)
    {
@@ -661,7 +693,7 @@ LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
       strncpy(szName, szBuffer, IFNAMSIZ);
    }
 
-// Get interface information
+   // Get interface information
    if (nRet == SYSINFO_RC_SUCCESS)
    {
       // If name is an alias (i.e. eth0:1), remove alias number

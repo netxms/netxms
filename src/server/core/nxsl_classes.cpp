@@ -479,10 +479,6 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    {
       pValue = new NXSL_Value(pNode->getSysContact());
    }
-   else if (!_tcscmp(pszAttr, _T("snmpSysDescription")))
-   {
-      pValue = new NXSL_Value(pNode->getSysDescription());
-   }
    else if (!_tcscmp(pszAttr, _T("snmpSysLocation")))
    {
       pValue = new NXSL_Value(pNode->getSysLocation());
@@ -502,6 +498,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    else if (!_tcscmp(pszAttr, _T("streetAddress")))
    {
       pValue = new NXSL_Value(pNode->getPostalAddress()->getStreetAddress());
+   }
+   else if (!_tcscmp(pszAttr, _T("sysDescription")))
+   {
+      pValue = new NXSL_Value(pNode->getSysDescription());
    }
    else if (!_tcscmp(pszAttr, _T("zone")))
 	{

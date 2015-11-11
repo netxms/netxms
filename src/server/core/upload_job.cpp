@@ -29,13 +29,16 @@ int FileUploadJob::m_activeJobs = 0;
 int FileUploadJob::m_maxActiveJobs = 10;
 MUTEX FileUploadJob::m_sharedDataMutex = INVALID_MUTEX_HANDLE;
 
-void ScheduledUploadFile(const ScheduleParameters *params)
+/**
+ * Scheduled file upload
+ */
+void ScheduledFileUpload(const ScheduledTaskParameters *params)
 {
    //get parameters - node id or name, server file name, agent file name
    TCHAR serverFile[MAX_PATH];
    TCHAR agentFile[MAX_PATH];
-   AgentGetParameterArg(params->m_params, 1, serverFile, MAX_PATH);
-   AgentGetParameterArg(params->m_params, 2, agentFile, MAX_PATH);
+   AgentGetParameterArg(params->m_params, 1, serverFile, MAX_PATH, false);
+   AgentGetParameterArg(params->m_params, 2, agentFile, MAX_PATH, false);
 
    if(params->m_objectId == 0 || serverFile == NULL || agentFile == NULL)
    {
@@ -83,7 +86,7 @@ void FileUploadJob::init()
 {
 	m_sharedDataMutex = MutexCreate();
 	m_maxActiveJobs = ConfigReadInt(_T("MaxActiveUploadJobs"), 10);
-	RegisterSchedulerTaskHandler(_T("Upload.File"), ScheduledUploadFile, SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD);
+	RegisterSchedulerTaskHandler(_T("Upload.File"), ScheduledFileUpload, SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD);
 }
 
 /**

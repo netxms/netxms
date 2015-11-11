@@ -83,11 +83,11 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *initArgs)
 #ifdef UNICODE
    WCHAR buffer[1024];
 
-   ExtractNamedOptionValue(initArgs, _T("url"), buffer, 1024);
-   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_url, 1024, NULL, NULL);
+   if (ExtractNamedOptionValue(initArgs, _T("url"), buffer, 1024))
+      WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_url, 1024, NULL, NULL);
 
-   ExtractNamedOptionValue(initArgs, _T("username"), buffer, 64);
-   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_username, 64, NULL, NULL);
+   if (ExtractNamedOptionValue(initArgs, _T("username"), buffer, 64))
+      WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_username, 64, NULL, NULL);
 #else
    ExtractNamedOptionValue(initArgs, _T("url"), s_url, 1024);
    ExtractNamedOptionValue(initArgs, _T("username"), s_username, 64);
@@ -149,7 +149,7 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *channel, const TCHAR *text)
       char *_text = MBStringFromWideString(text);
 #else
       char *_channel = strdup(channel);
-      char *_text = strdup(_text);
+      char *_text = strdup(text);
 #endif
 
       json_t *root = json_object();
@@ -189,7 +189,7 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *channel, const TCHAR *text)
                }
                else
                {
-                  DbgPrintf(4, _T("Slack: got error: %s"), data->data);
+                  DbgPrintf(4, _T("Slack: got error: %hs"), data->data);
                }
             }
          }

@@ -831,6 +831,23 @@ Node NXCORE_EXPORTABLE *FindNodeByLLDPId(const TCHAR *lldpId)
 }
 
 /**
+ * SNMP sysName comparator
+ */
+static bool SysNameComparator(NetObj *object, void *sysName)
+{
+   const TCHAR *n = ((Node *)object)->getSysName();
+   return (n != NULL) && !_tcscmp(n, (const TCHAR *)sysName);
+}
+
+/**
+ * Find node by SNMP sysName
+ */
+Node NXCORE_EXPORTABLE *FindNodeBySysName(const TCHAR *sysName)
+{
+   return (Node *)g_idxNodeById.find(SysNameComparator, (void *)sysName);
+}
+
+/**
  * Bridge ID comparator
  */
 static bool BridgeIdComparator(NetObj *object, void *bridgeId)

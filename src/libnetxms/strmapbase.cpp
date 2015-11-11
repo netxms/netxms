@@ -66,7 +66,8 @@ void StringMapBase::clear()
       HASH_DEL(m_data, entry);
       free(entry->key);
       safe_free(entry->originalKey);
-      destroyObject(entry->value);
+      if (m_objectOwner)
+         destroyObject(entry->value);
       free(entry);
    }
 }
@@ -74,7 +75,7 @@ void StringMapBase::clear()
 /**
  * Find entry index by key
  */
-StringMapEntry *StringMapBase::find(const TCHAR *key)
+StringMapEntry *StringMapBase::find(const TCHAR *key) const
 {
 	if (key == NULL)
 		return NULL;
@@ -149,7 +150,7 @@ void StringMapBase::setObject(TCHAR *key, void *value, bool keyPreAllocated)
 /**
  * Get value by key
  */
-void *StringMapBase::getObject(const TCHAR *key)
+void *StringMapBase::getObject(const TCHAR *key) const
 {
 	StringMapEntry *entry = find(key);
    return (entry != NULL) ? entry->value : NULL;
@@ -176,7 +177,7 @@ void StringMapBase::remove(const TCHAR *key)
  * Enumerate entries
  * Returns _CONTINUE if whole map was enumerated and _STOP if enumeration was aborted by callback.
  */
-EnumerationCallbackResult StringMapBase::forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData)
+EnumerationCallbackResult StringMapBase::forEach(EnumerationCallbackResult (*cb)(const TCHAR *, const void *, void *), void *userData) const
 {
    EnumerationCallbackResult result = _CONTINUE;
    StringMapEntry *entry, *tmp;
@@ -194,7 +195,7 @@ EnumerationCallbackResult StringMapBase::forEach(EnumerationCallbackResult (*cb)
 /**
  * Find entry
  */
-const void *StringMapBase::findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData)
+const void *StringMapBase::findElement(bool (*comparator)(const TCHAR *, const void *, void *), void *userData) const
 {
    const void *result = NULL;
    StringMapEntry *entry, *tmp;
@@ -210,9 +211,29 @@ const void *StringMapBase::findElement(bool (*comparator)(const TCHAR *, const v
 }
 
 /**
+ * Filter elements (delete those for which filter callback returns false)
+ */
+void StringMapBase::filterElements(bool (*filter)(const TCHAR *, const void *, void *), void *userData)
+{
+   StringMapEntry *entry, *tmp;
+   HASH_ITER(hh, m_data, entry, tmp)
+   {
+      if (!filter(m_ignoreCase ? entry->originalKey : entry->key, entry->value, userData))
+      {
+         HASH_DEL(m_data, entry);
+         free(entry->key);
+         safe_free(entry->originalKey);
+         if (m_objectOwner)
+            destroyObject(entry->value);
+         free(entry);
+      }
+   }
+}
+
+/**
  * Convert to key/value array
  */
-StructArray<KeyValuePair> *StringMapBase::toArray()
+StructArray<KeyValuePair> *StringMapBase::toArray() const
 {
    StructArray<KeyValuePair> *a = new StructArray<KeyValuePair>(size());
    StringMapEntry *entry, *tmp;
@@ -229,7 +250,7 @@ StructArray<KeyValuePair> *StringMapBase::toArray()
 /**
  * Get list of all keys
  */
-StringList *StringMapBase::keys()
+StringList *StringMapBase::keys() const
 {
    StringList *list = new StringList();
    StringMapEntry *entry, *tmp;
@@ -243,7 +264,7 @@ StringList *StringMapBase::keys()
 /**
  * Get size
  */
-int StringMapBase::size()
+int StringMapBase::size() const
 {
    return HASH_COUNT(m_data);
 }

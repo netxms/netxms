@@ -56,6 +56,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_PRINT
 %token T_PRINTLN
 %token T_RETURN
+%token T_SELECT
 %token T_SUB
 %token T_SWITCH
 %token T_TRUE
@@ -67,6 +68,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %token T_TYPE_UINT32
 %token T_TYPE_UINT64
 %token T_USE
+%token T_WHEN
 %token T_WHILE
 
 %token <valStr> T_COMPOUND_IDENTIFIER
@@ -101,6 +103,7 @@ int yylex(YYSTYPE *lvalp, yyscan_t scanner);
 %type <valStr> FunctionName
 %type <valInt32> BuiltinType
 %type <valInt32> ParameterList
+%type <valInt32> SelectList
 %type <pInstruction> SimpleStatementKeyword
 
 %destructor { safe_free($$); } <valStr>
@@ -664,6 +667,7 @@ BuiltinStatement:
 |	ForStatement
 |	ForEachStatement
 |	SwitchStatement
+|	SelectStatement
 |	ArrayStatement
 |	GlobalStatement
 |	T_BREAK ';'
@@ -675,7 +679,7 @@ BuiltinStatement:
 	}
 	else
 	{
-		pCompiler->error("\"break\" statement can be used only within loops and \"switch\" statements");
+		pCompiler->error("\"break\" statement can be used only within loops, \"switch\", and \"select\" statements");
 		YYERROR;
 	}
 }
@@ -898,6 +902,67 @@ Case:
 Default:
 	T_DEFAULT ':' StatementList
 |
+;
+
+SelectStatement:
+	T_SELECT
+{ 
+	pCompiler->newBreakLevel();
+	pCompiler->newSelectLevel();
+}
+	T_IDENTIFIER SelectOptions	'{' SelectList '}'
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_SELECT, $3, $6));
+	pCompiler->closeBreakLevel(pScript);
+
+	UINT32 addr = pCompiler->popSelectJumpAddr();
+	if (addr != INVALID_ADDRESS)
+	{
+		pScript->createJumpAt(addr, pScript->getCodeSize());
+	}
+	pCompiler->closeSelectLevel();
+}
+;
+
+SelectOptions:
+	'(' Expression ')'
+|
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSH_CONSTANT, new NXSL_Value()));
+}
+;
+
+SelectList:
+	SelectEntry	SelectList
+{ 
+	$$ = $2 + 1; 
+}
+|	SelectEntry
+{
+	$$ = 1;
+}
+;
+
+SelectEntry:
+	T_WHEN
+{
+} 
+	Expression
+{
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_PUSHCP, (short)2));
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_JMP, INVALID_ADDRESS));
+	UINT32 addr = pCompiler->popSelectJumpAddr();
+	if (addr != INVALID_ADDRESS)
+	{
+		pScript->createJumpAt(addr, pScript->getCodeSize());
+	}
+} 
+	':' StatementList
+{
+	pCompiler->pushSelectJumpAddr(pScript->getCodeSize());
+	pScript->addInstruction(new NXSL_Instruction(pLexer->getCurrLine(), OPCODE_NOP));
+	pScript->resolveLastJump(OPCODE_JMP);
+}
 ;
 
 ArrayStatement:

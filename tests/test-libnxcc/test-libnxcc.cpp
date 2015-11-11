@@ -4,6 +4,7 @@
 #include <testtools.h>
 
 static MUTEX cbLock = MutexCreate();
+static UINT32 s_nodeId;
 
 static void DebugCallback(int level, const TCHAR *format, va_list args)
 {
@@ -34,11 +35,31 @@ public:
       _tprintf(_T("** cluster shutdown\n"));
    }
 
-   virtual void onMessage(NXCPMessage *msg, UINT32 sourceNodeId)
+   virtual bool onMessage(NXCPMessage *msg, UINT32 sourceNodeId)
    {
-
+      if (msg->getCode() == 111)
+      {
+         ClusterSendResponse(sourceNodeId, msg->getId(), NXCC_RCC_SUCCESS);
+      }
+      return false;
    }
 };
+
+static void TestCommand()
+{
+   NXCPMessage msg;
+   msg.setCode(111);
+   int e = ClusterSendCommand(&msg);
+   _tprintf(_T("TestCommand: %d errors\n"), e);
+}
+
+static void TestDirectCommand()
+{
+   NXCPMessage msg;
+   msg.setCode(111);
+   UINT32 rcc = ClusterSendDirectCommand(s_nodeId == 1 ? 2 : 1, &msg);
+   _tprintf(_T("TestDirectCommand: rcc=%d\n"), rcc);
+}
 
 /**
  * main()
@@ -56,17 +77,23 @@ int main(int argc, char *argv[])
    WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
 
-   UINT32 nodeId = strtoul(argv[1], NULL, 0);
+   s_nodeId = strtoul(argv[1], NULL, 0);
 
    Config *config = new Config();
-   config->setValue(_T("/CLUSTER/NodeId"), nodeId);
-   config->setValue(_T("/CLUSTER/PeerNode"), (nodeId == 1) ? _T("2:127.0.0.1") : _T("1:127.0.0.1"));
+   config->setValue(_T("/CLUSTER/NodeId"), s_nodeId);
+   config->setValue(_T("/CLUSTER/PeerNode"), (s_nodeId == 1) ? _T("2:127.0.0.1") : _T("1:127.0.0.1"));
 
    ClusterSetDebugCallback(DebugCallback);
-   ClusterInit(config, _T("CLUSTER"), new EventHandler());
+   AssertTrue(ClusterInit(config, _T("CLUSTER"), new EventHandler()));
 
-   ClusterJoin();
+   AssertTrue(ClusterJoin());
+   ClusterSetRunning();
    _tprintf(_T("CLUSTER RUNNING\n"));
+
+   ThreadSleep(1);
+
+   TestCommand();
+   TestDirectCommand();
 
    ThreadSleep(60);
 

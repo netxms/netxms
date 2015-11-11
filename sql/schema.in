@@ -294,6 +294,7 @@ CREATE TABLE nodes
    rack_height integer not null,
 	rack_id integer not null,
    agent_cache_mode char(1) not null,
+   last_agent_comm_time integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1081,6 +1082,7 @@ CREATE TABLE object_tools_input_fields
    name varchar(31) not null,
    input_type char(1) not null,
    display_name varchar(127) null,
+   sequence_num integer not null,
    config SQL_TEXT null,
    PRIMARY KEY(tool_id,name)
 ) TABLE_TYPE;

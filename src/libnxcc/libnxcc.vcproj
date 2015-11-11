@@ -346,6 +346,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\join.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\main.cpp"
 				>
 			</File>

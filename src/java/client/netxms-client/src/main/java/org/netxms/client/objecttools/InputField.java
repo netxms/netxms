@@ -13,6 +13,7 @@ public class InputField
    private String name;
    private InputFieldType type;
    private String displayName;
+   private int sequence;
    private InputFieldOptions options;
    
    /**
@@ -25,6 +26,7 @@ public class InputField
       this.name = name;
       this.type = InputFieldType.TEXT;
       this.displayName = name;
+      this.sequence = 0;
       this.options = new InputFieldOptions();
    }
 
@@ -41,6 +43,7 @@ public class InputField
       this.name = name;
       this.type = type;
       this.displayName = displayName;
+      this.sequence = 0;
       this.options = InputFieldOptions.createFromXml(config);
    }
    
@@ -54,6 +57,7 @@ public class InputField
       this.name = src.name;
       this.type = src.type;
       this.displayName = src.displayName;
+      this.sequence = src.sequence;
       this.options = new InputFieldOptions(src.options);
    }
 
@@ -69,6 +73,7 @@ public class InputField
       type = InputFieldType.getByValue(msg.getFieldAsInt32(baseId + 1));
       displayName = msg.getFieldAsString(baseId + 2);
       options = InputFieldOptions.createFromXml(msg.getFieldAsString(baseId + 3));
+      sequence = msg.getFieldAsInt32(baseId + 4);
    }
    
    /**
@@ -83,6 +88,7 @@ public class InputField
       msg.setFieldInt16(baseId + 1, type.getValue());
       msg.setField(baseId + 2, displayName);
       msg.setField(baseId + 3, options.createXml());
+      msg.setFieldInt16(baseId + 4, sequence);
    }
 
    /**
@@ -147,6 +153,22 @@ public class InputField
    public void setName(String name)
    {
       this.name = name;
+   }
+
+   /**
+    * @return the sequence
+    */
+   public int getSequence()
+   {
+      return sequence;
+   }
+
+   /**
+    * @param sequence the sequence to set
+    */
+   public void setSequence(int sequence)
+   {
+      this.sequence = sequence;
    }
 
    /* (non-Javadoc)

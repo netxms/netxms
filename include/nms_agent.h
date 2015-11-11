@@ -577,8 +577,8 @@ inline void ret_uint64(TCHAR *rbuf, QWORD value)
 /**
  * API for subagents
  */
-bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize);
-bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize);
+bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgA(const TCHAR *param, int index, char *arg, int maxSize, bool inBrackets = true);
+bool LIBNXAGENT_EXPORTABLE AgentGetParameterArgW(const TCHAR *param, int index, WCHAR *arg, int maxSize, bool inBrackets = true);
 #ifdef UNICODE
 #define AgentGetParameterArg AgentGetParameterArgW
 #else

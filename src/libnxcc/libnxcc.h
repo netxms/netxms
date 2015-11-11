@@ -49,6 +49,27 @@ struct ClusterNodeInfo
    bool m_master;
    MUTEX m_mutex;
    THREAD m_receiverThread;
+   MsgWaitQueue *m_msgWaitQueue;
+};
+
+/**
+ * Cluster join responses
+ */
+enum ClusterJoinResponse
+{
+   CJR_ACCEPTED_AS_SECONDARY = 0,
+   CJR_ACCEPTED_AS_MASTER = 1,
+   CJR_WAIT_FOR_MASTER = 2,
+   CJR_SPLIT_BRAIN = 3
+};
+
+/**
+ * Standard cluster notification codes
+ */
+enum ClusterNotificationCode
+{
+   CN_NEW_MASTER = 1,
+   CN_NODE_RUNNING = 2
 };
 
 /**
@@ -57,6 +78,13 @@ struct ClusterNodeInfo
 void ClusterDebug(int level, const TCHAR *format, ...);
 
 void ClusterDisconnect();
+void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state);
+void ClusterSendMessage(ClusterNodeInfo *node, NXCPMessage *msg);
+void ClusterDirectNotify(ClusterNodeInfo *node, INT16 code);
+
+void PromoteClusterNode();
+
+void SetJoinCondition();
 
 /**
  * Global cluster node settings
@@ -68,6 +96,9 @@ extern ClusterNodeInfo g_nxccNodes[CLUSTER_MAX_NODE_ID];
 extern bool g_nxccInitialized;
 extern bool g_nxccMasterNode;
 extern bool g_nxccShutdown;
+extern bool g_nxccNeedSync;
 extern UINT16 g_nxccListenPort;
+extern UINT32 g_nxccCommandTimeout;
+extern ThreadPool *g_nxccThreadPool;
 
 #endif

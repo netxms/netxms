@@ -180,7 +180,7 @@ public class ScheduledTaskView extends ViewPart
       if (dialog.open() != Window.OK)
          return;
       
-      new ConsoleJob("Delete scheduled task", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Rerun scheduled task", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -192,7 +192,7 @@ public class ScheduledTaskView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot update scheduled tasks";
+            return "Cannot rerun scheduled tasks";
          }
       }.start();
       
@@ -231,7 +231,7 @@ public class ScheduledTaskView extends ViewPart
       
       final ScheduledTask origin = (ScheduledTask)selection.toList().get(0);
       
-      new ConsoleJob("Delete scheduled task", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Update scheduled task", null, Activator.PLUGIN_ID, null) {
          private ScheduledTask task = null;
          
          @Override
@@ -267,7 +267,7 @@ public class ScheduledTaskView extends ViewPart
       if (selection.size() < 0)
          return;
       
-      new ConsoleJob("Delete scheduled task", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Update scheduled task", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -289,7 +289,7 @@ public class ScheduledTaskView extends ViewPart
 
    private void createNewScheduledTask()
    {     
-      new ConsoleJob("Delete scheduled task", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Create scheduled task", null, Activator.PLUGIN_ID, null) {
          private ScheduledTask task = null;
          
          @Override
@@ -314,7 +314,7 @@ public class ScheduledTaskView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot update scheduled tasks";
+            return "Cannot create scheduled tasks";
          }
       }.start();
    }
@@ -386,7 +386,9 @@ public class ScheduledTaskView extends ViewPart
       if (selection.size() == 1) 
       {         
          mgr.add(actionEditScheduledTask);
-         mgr.add(actionReRun);
+         ScheduledTask origin = (ScheduledTask)selection.toList().get(0);
+         if(origin.getSchedule().isEmpty())
+            mgr.add(actionReRun);
       }
 
       if (selection.size() > 0)

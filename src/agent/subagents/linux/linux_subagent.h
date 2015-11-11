@@ -71,7 +71,14 @@ public:
    char name[16];
    ObjectArray<InetAddress> addrList;
 
-   LinuxInterfaceInfo() : addrList(16, 16, true) { }
+   LinuxInterfaceInfo() : addrList(16, 16, true)
+   {
+      index = 0;
+      type = IFTYPE_OTHER;
+      mtu = 0;
+      memset(macAddr, 0, sizeof(macAddr));
+      name[0] = 0;
+   }
 };
 
 /**
@@ -198,6 +205,7 @@ LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSessio
 LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetIfNames(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 
 LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_ProcessTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);

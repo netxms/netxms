@@ -101,6 +101,7 @@ AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, co
    m_pCtx = NULL;
    m_iEncryptionPolicy = m_iDefaultEncryptionPolicy;
    m_bUseProxy = FALSE;
+   m_iProxyAuth = AUTH_NONE;
    m_dwRecvTimeout = 420000;  // 7 minutes
    m_nProtocolVersion = NXCP_VERSION;
 	m_hCurrFile = -1;

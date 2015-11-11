@@ -80,10 +80,13 @@ void InitCertificates();
 void InitUsers();
 void CleanupUsers();
 void LoadPerfDataStorageDrivers();
-void InitializeTaskScheduler();
-void CloseTaskScheduler();
+
+void ExecuteScheduledScript(const ScheduledTaskParameters *param);
+void MaintenanceModeEnter(const ScheduledTaskParameters *params);
+void MaintenanceModeLeave(const ScheduledTaskParameters *params);
 
 #if XMPP_SUPPORTED
+void StartXMPPConnector();
 void StopXMPPConnector();
 #endif
 
@@ -113,10 +116,6 @@ THREAD_RESULT THREAD_CALL BeaconPoller(void *);
 THREAD_RESULT THREAD_CALL JobManagerThread(void *);
 THREAD_RESULT THREAD_CALL UptimeCalculator(void *);
 THREAD_RESULT THREAD_CALL ReportingServerConnector(void *);
-
-#if XMPP_SUPPORTED
-THREAD_RESULT THREAD_CALL XMPPConnectionManager(void *);
-#endif
 
 /**
  * Global variables
@@ -167,9 +166,6 @@ static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
 static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
-#if XMPP_SUPPORTED
-static THREAD m_thXMPPConnector = INVALID_THREAD_HANDLE;
-#endif
 static int m_nShutdownReason = SHUTDOWN_DEFAULT;
 
 #ifndef _WIN32
@@ -316,7 +312,7 @@ static void LoadGlobalConfig()
 		g_flags |= AF_ENABLE_NXSL_CONTAINER_FUNCS;
    if (ConfigReadInt(_T("UseFQDNForNodeNames"), 1))
       g_flags |= AF_USE_FQDN_FOR_NODE_NAMES;
-   if (ConfigReadInt(_T("ApplyDCIFromTemplateToDisabledDCI"), 0))
+   if (ConfigReadInt(_T("ApplyDCIFromTemplateToDisabledDCI"), 1))
       g_flags |= AF_APPLY_TO_DISABLED_DCI_FROM_TEMPLATE;
    if (ConfigReadInt(_T("ResolveDNSToIPOnStatusPoll"), 0))
       g_flags |= AF_RESOLVE_IP_FOR_EACH_STATUS_POLL;
@@ -645,7 +641,8 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	int baseSize = ConfigReadInt(_T("ConnectionPoolBaseSize"), 5);
 	int maxSize = ConfigReadInt(_T("ConnectionPoolMaxSize"), 20);
 	int cooldownTime = ConfigReadInt(_T("ConnectionPoolCooldownTime"), 300);
-	DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, baseSize, maxSize, cooldownTime, 0);
+	int ttl = ConfigReadInt(_T("ConnectionPoolMaxLifetime"), 60*30);
+	DBConnectionPoolStartup(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, baseSize, maxSize, cooldownTime, ttl);
    g_flags |= AF_DB_CONNECTION_POOL_READY;
 
    UINT32 lrt = ConfigReadULong(_T("LongRunningQueryThreshold"), 0);
@@ -797,7 +794,6 @@ retry_db_lock:
 
 	InitLogAccess();
 	FileUploadJob::init();
-   InitMaintenanceJobScheduler();
 	InitMappingTables();
 
 	// Check if management node object presented in database
@@ -850,7 +846,9 @@ retry_db_lock:
    if (ConfigReadInt(_T("LdapSyncInterval"), 0))
 		ThreadCreate(SyncLDAPUsers, 0, NULL);
 
-   RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScript, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
+   RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScheduledScript, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
+   RegisterSchedulerTaskHandler(_T("Maintenance.Enter"), MaintenanceModeEnter, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
+   RegisterSchedulerTaskHandler(_T("Maintenance.Leave"), MaintenanceModeLeave, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
    InitializeTaskScheduler();
 
 	// Allow clients to connect
@@ -878,7 +876,7 @@ retry_db_lock:
 #if XMPP_SUPPORTED
    if (ConfigReadInt(_T("EnableXMPPConnector"), 1))
    {
-      m_thXMPPConnector = ThreadCreateEx(XMPPConnectionManager, 0, NULL);
+      StartXMPPConnector();
    }
 #endif
 
@@ -932,9 +930,6 @@ void NXCORE_EXPORTABLE Shutdown()
 	ThreadJoin(m_thHouseKeeper);
 	ThreadJoin(m_thPollManager);
 	ThreadJoin(m_thSyncer);
-#if XMPP_SUPPORTED
-   ThreadJoin(m_thXMPPConnector);
-#endif
 
 	// Call shutdown functions for the modules
    // CALL_ALL_MODULES cannot be used here because it checks for shutdown flag
@@ -1900,11 +1895,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       if (szBuffer[0] == _T('+'))
       {
          int offset = _tcstoul(&szBuffer[1], NULL, 0);
-         AddOneTimeSchedule(_T("Execute.Script"), time(NULL) + offset, pArg, 0, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
+         AddOneTimeScheduledTask(_T("Execute.Script"), time(NULL) + offset, pArg, 0, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
       }
       else
       {
-         AddSchedule(_T("Execute.Script"), szBuffer, pArg, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
+         AddScheduledTask(_T("Execute.Script"), szBuffer, pArg, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
       }
    }
 	else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))

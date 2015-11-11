@@ -574,6 +574,46 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V376 to V377
+ */
+static BOOL H_UpgradeFromV376(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("DefaultSubnetMaskIPv4"), _T("24"), _T("Default mask for synthetic IPv4 subnets"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("DefaultSubnetMaskIPv6"), _T("64"), _T("Default mask for synthetic IPv6 subnets"), 'I', true, false, false, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='377' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V375 to V376
+ */
+static BOOL H_UpgradeFromV375(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE nodes ADD last_agent_comm_time integer\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='376' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V374 to V375
+ */
+static BOOL H_UpgradeFromV374(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE object_tools_input_fields ADD sequence_num integer\n")
+      _T("UPDATE object_tools_input_fields SET sequence_num=-1\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='375' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V373 to V374
  */
 static BOOL H_UpgradeFromV373(int currVersion, int newVersion)
@@ -8999,6 +9039,9 @@ static struct
    { 371, 372, H_UpgradeFromV371 },
    { 372, 373, H_UpgradeFromV372 },
    { 373, 374, H_UpgradeFromV373 },
+   { 374, 375, H_UpgradeFromV374 },
+   { 375, 376, H_UpgradeFromV375 },
+   { 376, 377, H_UpgradeFromV376 },
    { 0, 0, NULL }
 };
 

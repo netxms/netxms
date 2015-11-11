@@ -452,7 +452,7 @@ BOOL InitIdTable()
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
-         s_freeIdTable[IDG_SCHEDULE] = max(s_freeIdTable[IDG_SCHEDULE],
+         s_freeIdTable[IDG_SCHEDULED_TASK] = max(s_freeIdTable[IDG_SCHEDULED_TASK],
                                                       DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }

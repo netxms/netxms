@@ -126,6 +126,8 @@ typedef void *yyscan_t;
 #define OPCODE_CPOP           73
 #define OPCODE_STORAGE_READ   74
 #define OPCODE_STORAGE_WRITE  75
+#define OPCODE_SELECT         76
+#define OPCODE_PUSHCP         77
 
 class NXSL_Compiler;
 
@@ -168,6 +170,7 @@ protected:
    NXSL_Lexer *m_lexer;
    NXSL_Stack *m_addrStack;
 	NXSL_Stack *m_breakStack;
+	NXSL_Stack *m_selectStack;
 	int m_idOpCode;
 
 public:
@@ -188,6 +191,11 @@ public:
 	void closeBreakLevel(NXSL_Program *pScript);
 	BOOL canUseBreak() { return m_breakStack->getSize() > 0; }
 	void newBreakLevel() { m_breakStack->push(new Queue); }
+
+	void newSelectLevel() { m_selectStack->push(new Queue); }
+   void closeSelectLevel();
+   void pushSelectJumpAddr(UINT32 addr);
+   UINT32 popSelectJumpAddr();
 
 	void setIdentifierOperation(int opcode) { m_idOpCode = opcode; }
 	int getIdentifierOperation() { return m_idOpCode; }

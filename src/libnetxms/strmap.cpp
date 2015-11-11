@@ -92,7 +92,7 @@ void StringMap::set(const TCHAR *key, UINT32 value)
 /**
  * Get value by key as UINT32
  */
-UINT32 StringMap::getULong(const TCHAR *key, UINT32 defaultValue)
+UINT32 StringMap::getULong(const TCHAR *key, UINT32 defaultValue) const
 {
 	const TCHAR *value = get(key);
 	if (value == NULL)
@@ -103,7 +103,7 @@ UINT32 StringMap::getULong(const TCHAR *key, UINT32 defaultValue)
 /**
  * Get value by key as boolean
  */
-bool StringMap::getBoolean(const TCHAR *key, bool defaultValue)
+bool StringMap::getBoolean(const TCHAR *key, bool defaultValue) const
 {
 	const TCHAR *value = get(key);
 	if (value == NULL)
@@ -118,7 +118,7 @@ bool StringMap::getBoolean(const TCHAR *key, bool defaultValue)
 /**
  * Fill NXCP message with map data
  */
-void StringMap::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId)
+void StringMap::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const
 {
    msg->setField(sizeFieldId, (UINT32)size());
    UINT32 id = baseFieldId;

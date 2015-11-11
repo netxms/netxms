@@ -813,7 +813,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    UINT32 numFields = pMsg->getFieldAsUInt16(VID_NUM_FIELDS);
    if (numFields > 0)
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_input_fields (tool_id,name,input_type,display_name,config) VALUES (?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_input_fields (tool_id,name,input_type,display_name,config,sequence_num) VALUES (?,?,?,?,?,?)"));
       if (hStmt == NULL)
          return ReturnDBFailure(hdb, hStmt);
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, toolId);
@@ -825,7 +825,8 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
          DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, pMsg->getFieldAsUInt16(fieldId++));
          DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
          DBBind(hStmt, 5, DB_SQLTYPE_TEXT, pMsg->getFieldAsString(fieldId++), DB_BIND_DYNAMIC);
-         fieldId += 6;
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, pMsg->getFieldAsInt16(fieldId++));
+         fieldId += 5;
 
          if (!DBExecute(hStmt))
             return ReturnDBFailure(hdb, hStmt);
@@ -1192,7 +1193,7 @@ void CreateObjectToolExportRecord(String &xml, UINT32 id)
  */
 static bool LoadInputFieldDefinitions(UINT32 toolId, DB_HANDLE hdb, NXCPMessage *msg, UINT32 countFieldId, UINT32 baseFieldId)
 {
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,config FROM object_tools_input_fields WHERE tool_id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,input_type,display_name,config,sequence_num FROM object_tools_input_fields WHERE tool_id=? ORDER BY name"));
    if (hStmt == NULL)
       return false;
 
@@ -1220,7 +1221,12 @@ static bool LoadInputFieldDefinitions(UINT32 toolId, DB_HANDLE hdb, NXCPMessage 
          TCHAR *cfg = DBGetField(hResult, i, 3, NULL, 0);
          msg->setField(fieldId++, cfg);
 
-         fieldId += 6;
+         int seq = DBGetFieldLong(hResult, i, 4);
+         if (seq == -1)
+            seq = i;
+         msg->setField(fieldId++, (INT16)seq);
+
+         fieldId += 5;
       }
       DBFreeResult(hResult);
       success = true;

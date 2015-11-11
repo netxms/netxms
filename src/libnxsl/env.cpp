@@ -78,6 +78,9 @@ int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NX
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
+int S_max(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
+int S_min(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
+
 /**
  * Default built-in function list
  */
@@ -137,13 +140,24 @@ static NXSL_ExtFunction m_builtinFunctions[] =
 };
 
 /**
+ * Default built-in selector list
+ */
+static NXSL_ExtSelector m_builtinSelectors[] =
+{
+   { _T("max"), S_max },
+   { _T("min"), S_min }
+};
+
+/**
  * Constructor
  */
 NXSL_Environment::NXSL_Environment()
 {
-   m_dwNumFunctions = sizeof(m_builtinFunctions) / sizeof(NXSL_ExtFunction);
-   m_pFunctionList = (NXSL_ExtFunction *)nx_memdup(m_builtinFunctions, sizeof(m_builtinFunctions));
-   m_pLibrary = NULL;
+   m_numFunctions = sizeof(m_builtinFunctions) / sizeof(NXSL_ExtFunction);
+   m_functions = (NXSL_ExtFunction *)nx_memdup(m_builtinFunctions, sizeof(m_builtinFunctions));
+   m_numSelectors = sizeof(m_builtinSelectors) / sizeof(NXSL_ExtSelector);
+   m_selectors = (NXSL_ExtSelector *)nx_memdup(m_builtinSelectors, sizeof(m_builtinSelectors));
+   m_library = NULL;
 }
 
 /**
@@ -151,30 +165,54 @@ NXSL_Environment::NXSL_Environment()
  */
 NXSL_Environment::~NXSL_Environment()
 {
-   safe_free(m_pFunctionList);
+   safe_free(m_functions);
+   safe_free(m_selectors);
 }
 
 /**
  * Find function by name
  */
-NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *pszName)
+NXSL_ExtFunction *NXSL_Environment::findFunction(const TCHAR *name)
 {
    UINT32 i;
 
-   for(i = 0; i < m_dwNumFunctions; i++)
-      if (!_tcscmp(m_pFunctionList[i].m_name, pszName))
-         return &m_pFunctionList[i];
+   for(i = 0; i < m_numFunctions; i++)
+      if (!_tcscmp(m_functions[i].m_name, name))
+         return &m_functions[i];
    return NULL;
 }
 
 /**
  * Register function set
  */
-void NXSL_Environment::registerFunctionSet(UINT32 dwNumFunctions, NXSL_ExtFunction *pList)
+void NXSL_Environment::registerFunctionSet(UINT32 count, NXSL_ExtFunction *list)
 {
-   m_pFunctionList = (NXSL_ExtFunction *)realloc(m_pFunctionList, sizeof(NXSL_ExtFunction) * (m_dwNumFunctions + dwNumFunctions));
-   memcpy(&m_pFunctionList[m_dwNumFunctions], pList, sizeof(NXSL_ExtFunction) * dwNumFunctions);
-   m_dwNumFunctions += dwNumFunctions;
+   m_functions = (NXSL_ExtFunction *)realloc(m_functions, sizeof(NXSL_ExtFunction) * (m_numFunctions + count));
+   memcpy(&m_functions[m_numFunctions], list, sizeof(NXSL_ExtFunction) * count);
+   m_numFunctions += count;
+}
+
+/**
+ * Find selector by name
+ */
+NXSL_ExtSelector *NXSL_Environment::findSelector(const TCHAR *name)
+{
+   UINT32 i;
+
+   for(i = 0; i < m_numSelectors; i++)
+      if (!_tcscmp(m_selectors[i].m_name, name))
+         return &m_selectors[i];
+   return NULL;
+}
+
+/**
+ * Register selector set
+ */
+void NXSL_Environment::registerSelectorSet(UINT32 count, NXSL_ExtSelector *list)
+{
+   m_selectors = (NXSL_ExtSelector *)realloc(m_selectors, sizeof(NXSL_ExtSelector) * (m_numSelectors + count));
+   memcpy(&m_selectors[m_numSelectors], list, sizeof(NXSL_ExtSelector) * count);
+   m_numSelectors += count;
 }
 
 /**
@@ -188,9 +226,9 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const TCHAR *pszName)
    bool bRet = false;
 
    // First, try to find module in library
-   if (m_pLibrary != NULL)
+   if (m_library != NULL)
    {
-      pScript = m_pLibrary->findScript(pszName);
+      pScript = m_library->findScript(pszName);
       if (pScript != NULL)
       {
          vm->loadModule(pScript, pszName);

@@ -194,7 +194,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       if (!sent)
       {
          DebugPrintf(INVALID_INDEX, 6, _T("Cannot forward trap to server"));
-         s_snmpTrapQueue.put(pdu);
+         s_snmpTrapQueue.insert(pdu);
 			ThreadSleep(1);
       }
       else

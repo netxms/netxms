@@ -441,6 +441,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\selectors.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stack.cpp"
 				>
 			</File>

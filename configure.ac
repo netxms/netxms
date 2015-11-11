@@ -89,6 +89,7 @@ LTINIT_CC=""
 LTINIT_CXX=""
 SQLFLAGS=""
 RUNTIME_PREFIX=""
+RUNTIME_STATE_DIR=""
 HPUX_HPPA="no"
 XMPP_SUPPORT="yes"
 LDAP_SUPPORT="yes"
@@ -115,6 +116,13 @@ AC_ARG_WITH(runtime-prefix,
 [AS_HELP_STRING(--with-runtime-prefix=prefix,installation prefix to be used at run time)],
 [
    RUNTIME_PREFIX="$withval"
+   RUNTIME_STATE_DIR="$RUNTIME_PREFIX/var"
+])
+
+AC_ARG_WITH(runtime-state-dir,
+[AS_HELP_STRING(--with-runtime-state-dir=path,state directory to be used at run time)],
+[
+   RUNTIME_STATE_DIR="$withval"
 ])
 
 AC_ARG_WITH(server,
@@ -2741,10 +2749,11 @@ if test "x$RUNTIME_PREFIX" = "x"; then
 	fi
 else
 	if test "x${BUILD_UNICODE}" = "xyes"; then
-		CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"$RUNTIME_PREFIX\\\" -DDATADIR=L\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=L\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=L\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=L\\\"$RUNTIME_PREFIX/lib/netxms\\\" -DSTATEDIR=L\\\"$RUNTIME_PREFIX/var/lib/netxms\\\""
+		CPPFLAGS="$CPPFLAGS -DPREFIX=L\\\"$RUNTIME_PREFIX\\\" -DDATADIR=L\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=L\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=L\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=L\\\"$RUNTIME_PREFIX/lib/netxms\\\" -DSTATEDIR=L\\\"$RUNTIME_STATE_DIR/lib/netxms\\\""
 	else
-		CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"$RUNTIME_PREFIX\\\" -DDATADIR=\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=\\\"$RUNTIME_PREFIX/lib/netxms\\\" -DSTATEDIR=\\\"$RUNTIME_PREFIX/var/lib/netxms\\\""
+		CPPFLAGS="$CPPFLAGS -DPREFIX=\\\"$RUNTIME_PREFIX\\\" -DDATADIR=\\\"$RUNTIME_PREFIX/share/netxms\\\" -DBINDIR=\\\"$RUNTIME_PREFIX/bin\\\" -DLIBDIR=\\\"$RUNTIME_PREFIX/lib\\\" -DPKGLIBDIR=\\\"$RUNTIME_PREFIX/lib/netxms\\\" -DSTATEDIR=\\\"$RUNTIME_STATE_DIR/lib/netxms\\\""
 	fi
+	LDFLAGS_SUFFIX="$LDFLAGS_SUFFIX -R $RUNTIME_PREFIX/lib"
 fi
 LDFLAGS="$LDFLAGS_PREFIX $LDFLAGS $LDFLAGS_SUFFIX"
 
@@ -2897,9 +2906,6 @@ AC_CONFIG_FILES([
 	contrib/startup/suse/Makefile
 	contrib/startup/ubuntu/Makefile
 	contrib/startup/solaris/Makefile
-	debian/Makefile
-	debian/patches/Makefile
-	debian/source/Makefile
 	doc/Makefile
 	doc/internal/Makefile
 	doc/manuals/Makefile

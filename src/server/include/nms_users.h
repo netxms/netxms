@@ -62,6 +62,39 @@ public:
    ~Entry();
 };
 
+#if WITH_LDAP
+//Defines to remove string encoding difference between Windows and other systems
+#ifdef _WIN32
+
+#define LDAP_CHAR TCHAR
+#define ldap_strchr _tcschr
+#define ldap_strstr _tcsstr
+#define ldap_strrchr _tcsrchr
+#define ldap_strcpy _tcscpy
+#define ldap_strcat _tcscat
+#define ldap_strlen _tcslen
+#define ldap_timeval l_timeval
+#define ldap_strdup _tcsdup
+#define LdapConfigRead ConfigReadStr
+#define _TLDAP(x) _T(x)
+
+#else
+
+#define LDAP_CHAR char
+#define ldap_strchr strchr
+#define ldap_strstr strstr
+#define ldap_strrchr strrchr
+#define ldap_strcpy strcpy
+#define ldap_strcat strcat
+#define ldap_strlen strlen
+#define ldap_timeval timeval
+#define ldap_strdup strdup
+#define LdapConfigRead ConfigReadStrUTF8
+#define _TLDAP(x) x
+
+#endif // _WIN32
+#endif // WITH_LDAP
+
 /**
  * LDAP connector
  */
@@ -70,19 +103,11 @@ class LDAPConnection
 private:
 #if WITH_LDAP
    LDAP *m_ldapConn;
-#ifdef _WIN32
-   TCHAR m_connList[MAX_CONFIG_VALUE];
-   TCHAR m_searchBase[MAX_CONFIG_VALUE];
-   TCHAR m_searchFilter[MAX_CONFIG_VALUE];
-   TCHAR m_userDN[MAX_CONFIG_VALUE];
-   TCHAR m_userPassword[MAX_PASSWORD];
-#else
-   char m_connList[MAX_CONFIG_VALUE];
-   char m_searchBase[MAX_CONFIG_VALUE];
-   char m_searchFilter[MAX_CONFIG_VALUE];
-   char m_userDN[MAX_CONFIG_VALUE];
-   char m_userPassword[MAX_PASSWORD];
-#endif
+   LDAP_CHAR m_connList[MAX_CONFIG_VALUE];
+   LDAP_CHAR m_searchBase[MAX_CONFIG_VALUE];
+   LDAP_CHAR m_searchFilter[MAX_CONFIG_VALUE];
+   LDAP_CHAR m_userDN[MAX_CONFIG_VALUE];
+   LDAP_CHAR m_userPassword[MAX_PASSWORD];
    char m_ldapFullNameAttr[MAX_CONFIG_VALUE];
    char m_ldapLoginNameAttr[MAX_CONFIG_VALUE];
    char m_ldapDescriptionAttr[MAX_CONFIG_VALUE];
@@ -100,13 +125,10 @@ private:
    void compareGroupList(StringObjectMap<Entry>* groupEntryList);
    void compareUserLists(StringObjectMap<Entry>* userEntryList);
    TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, UINT32 i = 0);
-#ifdef _WIN32
-   void prepareStringForInit(TCHAR *connectionLine);
-#else
-   void prepareStringForInit(char *connectionLine);
-#endif // _WIN32
+   void prepareStringForInit(LDAP_CHAR *connectionLine);
    int readInPages(StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList);
    void fillLists(LDAPMessage *searchResult, StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList);
+   TCHAR *ldap_internal_get_dn(LDAP *conn, LDAPMessage *entry);
 #endif // WITH_LDAP
 
 public:

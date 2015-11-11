@@ -34,5 +34,4 @@ serverinclude_HEADERS = \
 	nxsrvapi.h \
 	nddrv.h \
 	pdsdrv.h \
-	server_timers.h \
-	maintenance.h
+	server_timers.h

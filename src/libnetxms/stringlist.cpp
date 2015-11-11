@@ -331,6 +331,50 @@ void StringList::splitAndAdd(const TCHAR *src, const TCHAR *separator)
 }
 
 /**
+ * Comparator for qsort - ascending, case sensitive
+ */
+static int sortcb_asc_case(const void *s1, const void *s2)
+{
+   return _tcscmp((const TCHAR *)s1, (const TCHAR *)s2);
+}
+
+/**
+ * Comparator for qsort - ascending, case insensitive
+ */
+static int sortcb_asc_nocase(const void *s1, const void *s2)
+{
+   return _tcsicmp((const TCHAR *)s1, (const TCHAR *)s2);
+}
+
+/**
+ * Comparator for qsort - descending, case sensitive
+ */
+static int sortcb_desc_case(const void *s1, const void *s2)
+{
+   return -_tcscmp((const TCHAR *)s1, (const TCHAR *)s2);
+}
+
+/**
+ * Comparator for qsort - descending, case insensitive
+ */
+static int sortcb_desc_nocase(const void *s1, const void *s2)
+{
+   return -_tcsicmp((const TCHAR *)s1, (const TCHAR *)s2);
+}
+
+/**
+ * Sort string list
+ */
+void StringList::sort(bool ascending, bool caseSensitive)
+{
+   qsort(m_values, m_count, sizeof(TCHAR *),
+         ascending ?
+            (caseSensitive ? sortcb_asc_case : sortcb_asc_nocase) :
+            (caseSensitive ? sortcb_desc_case : sortcb_desc_nocase)
+      );
+}
+
+/**
  * Fill NXCP message with list data
  */
 void StringList::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId)

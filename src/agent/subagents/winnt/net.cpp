@@ -260,6 +260,35 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
 }
 
 /**
+ * Net.InterfaceNames list handler
+ */
+LONG H_InterfaceNames(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   LONG result = SYSINFO_RC_SUCCESS;
+
+   const ULONG flags = GAA_FLAG_INCLUDE_PREFIX | GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_DNS_SERVER;
+   ULONG size = 0;
+   if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, NULL, &size) != ERROR_BUFFER_OVERFLOW)
+      return SYSINFO_RC_ERROR;
+
+   IP_ADAPTER_ADDRESSES *buffer = (IP_ADAPTER_ADDRESSES *)malloc(size);
+   if (GetAdaptersAddresses(AF_UNSPEC, flags, NULL, buffer, &size) == ERROR_SUCCESS)
+   {
+      for(IP_ADAPTER_ADDRESSES *iface = buffer; iface != NULL; iface = iface->Next)
+      {
+         value->add(iface->FriendlyName);
+      }
+   }
+   else
+   {
+      result = SYSINFO_RC_ERROR;
+   }
+
+   free(buffer);
+   return result;
+}
+
+/**
  * Get IP statistics
  */
 LONG H_NetIPStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)

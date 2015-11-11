@@ -199,6 +199,8 @@ public:
 	NXSL_Value *getByPosition(int position) const;
 
 	int size() const { return m_size; }
+
+	StringList *toStringList() const;
 };
 
 /**
@@ -445,6 +447,15 @@ struct NXSL_ExtFunction
    int m_iNumArgs;   // Number of arguments or -1 for variable number
 };
 
+/**
+ * External selector structure
+ */
+struct NXSL_ExtSelector
+{
+   TCHAR m_name[MAX_FUNCTION_NAME];
+   int (* m_handler)(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
+};
+
 class NXSL_Library;
 
 /**
@@ -453,10 +464,13 @@ class NXSL_Library;
 class LIBNXSL_EXPORTABLE NXSL_Environment
 {
 private:
-   UINT32 m_dwNumFunctions;
-   NXSL_ExtFunction *m_pFunctionList;
+   UINT32 m_numFunctions;
+   NXSL_ExtFunction *m_functions;
 
-   NXSL_Library *m_pLibrary;
+   UINT32 m_numSelectors;
+   NXSL_ExtSelector *m_selectors;
+
+   NXSL_Library *m_library;
 
 public:
    NXSL_Environment();
@@ -465,10 +479,13 @@ public:
 	virtual void print(NXSL_Value *value);
 	virtual void trace(int level, const TCHAR *text);
 
-   void setLibrary(NXSL_Library *pLib) { m_pLibrary = pLib; }
+   void setLibrary(NXSL_Library *lib) { m_library = lib; }
 
-   NXSL_ExtFunction *findFunction(const TCHAR *pszName);
-   void registerFunctionSet(UINT32 dwNumFunctions, NXSL_ExtFunction *pList);
+   NXSL_ExtFunction *findFunction(const TCHAR *name);
+   void registerFunctionSet(UINT32 count, NXSL_ExtFunction *list);
+
+   NXSL_ExtSelector *findSelector(const TCHAR *name);
+   void registerSelectorSet(UINT32 count, NXSL_ExtSelector *list);
 
    bool loadModule(NXSL_VM *vm, const TCHAR *name);
 };
@@ -594,7 +611,7 @@ public:
    bool addFunction(const char *pszName, UINT32 dwAddr, char *pszError);
    void resolveFunctions();
    void addInstruction(NXSL_Instruction *pInstruction) { m_instructionSet->add(pInstruction); }
-   void resolveLastJump(int nOpCode);
+   void resolveLastJump(int opcode, int offset = 0);
 	void createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr);
    void addRequiredModule(char *pszName);
 	void optimize();
@@ -704,6 +721,7 @@ protected:
    void execute();
    bool unwind();
    void callFunction(int nArgCount);
+   UINT32 callSelector(const TCHAR *name, int numElements);
    void doUnaryOperation(int nOpCode);
    void doBinaryOperation(int nOpCode);
    void getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value *index);

@@ -1,12 +1,27 @@
 *
+* 2.0
+*
+
+- Scripts can be used as instance source in instance discovery DCIs
+- NXSL node object attribute snmpSysDescription renamed back to sysDescription
+- Selectors in NXSL
+- Subnet mask for synthetic subnets can be set in server configuration
+- Added cumulative counters for server DB writer requests
+- Management console:
+	- Object tool input fields can be rearranged
+- Fixed issues: #847, #948, #967
+
+
+*
 * 2.0-RC2
 *
 
+- Maintenance mode for nodes, clusters, and mobile devices (manual and scheduled)
 - Fixed broken instance discovery filters
 - Fixed agent crash when collecting SNMP data in cached mode
 - Agent returns correct OS version on Windows 10
 - New NXSL "Node" class attribute: bridgeBaseAddress
-- For LDAP mapping can be used same fields
+- One LDAP attribute can be used in multiple mappings
 - Fied deadlock on LDAP user deletion while LDAP synchronization
 - Add option to use encrypted password in password fileds in configuration files and in the server configuration parameters.
 - Added SMS driver for web service text2reach.com
@@ -17,6 +32,8 @@
 - IPv6 support in built-in syslog server
 - Fixed event processing policy export/import issues
 - Global default retention time and polling interval for data collection
+- Initial support for scheduled tasks within system
+- Scheduled file upload
 - Management console:
 	- Object context menu available on geo map
 	- Filter in event template configurator
@@ -26,7 +43,7 @@
 	- Dashboards can be associated with other objects (nodes, containers, etc.) and opened from object's context menu
 	- Forced DCI polls from summary tables
 	- Script hints
-- Fixed issues: #786, #831, #841, #852, #864, #890, #891, #892, #896, #897, #898, #900, #902, #903, #905, #907, #910, #913, #917, #919, #921, #928, #933, #937, #943, #945, #947
+- Fixed issues: #786, #831, #841, #852, #864, #878, #883, #886, #890, #891, #892, #896, #897, #898, #900, #902, #903, #905, #907, #910, #913, #917, #919, #921, #928, #933, #937, #943, #945, #947
 
 
 *
