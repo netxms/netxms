@@ -80,15 +80,21 @@ static BOOL ClearTables()
 }
 
 /**
+ * Warning texts
+ */
+static const TCHAR *s_warningTextClear = _T("This operation will clear all configuration and collected data from database.\nAre you sure?");
+static const TCHAR *s_warningTextMigration = _T("This operation will clear all configuration and collected data from destination database before migration.\nAre you sure?");
+
+/**
  * Clear database
  */
-bool ClearDatabase()
+bool ClearDatabase(bool preMigration)
 {
 	if (!ValidateDatabase())
 		return false;
 
 	WriteToTerminal(_T("\n\n\x1b[1mWARNING!!!\x1b[0m\n"));
-	if (!GetYesNo(_T("This operation will clear all configuration and collected data from database.\nAre you sure?")))
+	if (!GetYesNo(preMigration ? s_warningTextMigration : s_warningTextClear))
 		return false;
 
 	bool success = false;

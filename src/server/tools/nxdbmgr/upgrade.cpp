@@ -574,6 +574,20 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V379 to V380
+ */
+static BOOL H_UpgradeFromV379(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("UPDATE object_properties SET maint_event_id=0 WHERE maint_event_id IS NULL\n")
+      _T("UPDATE nodes SET last_agent_comm_time=0 WHERE last_agent_comm_time IS NULL\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='380' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V378 to V379
  */
 static BOOL H_UpgradeFromV378(int currVersion, int newVersion)
@@ -618,6 +632,7 @@ static BOOL H_UpgradeFromV375(int currVersion, int newVersion)
 {
    static TCHAR batch[] =
       _T("ALTER TABLE nodes ADD last_agent_comm_time integer\n")
+      _T("UPDATE nodes SET last_agent_comm_time=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
@@ -647,7 +662,7 @@ static BOOL H_UpgradeFromV373(int currVersion, int newVersion)
 {
    static TCHAR batch[] =
       _T("ALTER TABLE object_properties ADD maint_event_id $SQL:INT64\n")
-      _T("UPDATE object_properties SET maint_mode='0'\n")
+      _T("UPDATE object_properties SET maint_mode='0',maint_event_id=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
@@ -9071,6 +9086,7 @@ static struct
    { 376, 377, H_UpgradeFromV376 },
    { 377, 378, H_UpgradeFromV377 },
    { 378, 379, H_UpgradeFromV378 },
+   { 379, 380, H_UpgradeFromV379 },
    { 0, 0, NULL }
 };
 

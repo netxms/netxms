@@ -24,7 +24,7 @@
 
 DECLARE_DRIVER_HEADER("ORACLE")
 
-extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR *errorText);
+static DWORD DrvQueryInternal(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR *errorText);
 
 /**
  * Prepare string for using in SQL query - enclose in quotes and escape as needed
@@ -230,7 +230,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 					}
 
                // Setup session
-               DrvQuery(pConn, L"ALTER SESSION SET NLS_LANGUAGE='AMERICAN' NLS_NUMERIC_CHARACTERS='.,'", NULL);
+               DrvQueryInternal(pConn, L"ALTER SESSION SET NLS_LANGUAGE='AMERICAN' NLS_NUMERIC_CHARACTERS='.,'", NULL);
 				}
 				else
 				{
@@ -825,7 +825,7 @@ extern "C" void EXPORT DrvFreeStatement(ORACLE_STATEMENT *stmt)
 /**
  * Perform non-SELECT query
  */
-extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR *errorText)
+static DWORD DrvQueryInternal(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCHAR *errorText)
 {
 	OCIStmt *handleStmt;
 	DWORD dwResult;
@@ -868,6 +868,14 @@ extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *pConn, const WCHAR *pwszQuery, WCH
 	free(ucs2Query);
 #endif
 	return dwResult;
+}
+
+/**
+ * Perform non-SELECT query - entry point
+ */
+extern "C" DWORD EXPORT DrvQuery(ORACLE_CONN *conn, const WCHAR *query, WCHAR *errorText)
+{
+   return DrvQueryInternal(conn, query, errorText);
 }
 
 /**
