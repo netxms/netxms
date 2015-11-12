@@ -58,7 +58,6 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableCheckPointSNMP','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableEventStormDetection','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableISCListener','0',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableMultipleDBConnections','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableNXSLContainerFunctions','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableObjectTransactions','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableSNMPTraps','1',1,1);
