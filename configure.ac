@@ -1511,48 +1511,47 @@ if test "x$BUILD_SERVER" = "xyes" ; then
    AC_CHECK_LIB(termcap, tgetstr, [SERVER_LIBS="$SERVER_LIBS -ltermcap"], [AC_CHECK_LIB(ncurses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lncurses"], AC_CHECK_LIB(curses, tgetstr, [SERVER_LIBS="$SERVER_LIBS -lcurses"]))])
    if test "x$DISABLE_READLINE" = "xno"; then
       AC_CHECK_LIB(readline, readline, [SERVER_LIBS="$SERVER_LIBS -lreadline"], [AC_CHECK_LIB(edit, readline, [SERVER_LIBS="$SERVER_LIBS -ledit"])])
-   fi
-   AC_CHECK_LIB(rt, timer_create, [SERVER_LIBS="$SERVER_LIBS -lrt"])
-   SAVED_LDFLAGS="$LDFLAGS"
-   LDFLAGS="$LDFLAGS $SERVER_LIBS"
 
-   AC_CHECK_FUNCS([readline timer_create])
-   AC_CHECK_TYPES([timer_t])
+      SAVED_LIBS="$LIBS"
+      LIBS="$LIBS $SERVER_LIBS"
 
-   # Check if passing rl_insert to rl_bind_key needs cast
-   if test "$ac_cv_func_readline" = "yes"; then
-      AC_LANG_PUSH([C++])
+      AC_CHECK_FUNCS([readline])
 
-      AC_MSG_CHECKING(for rl_insert cast)
+      # Check if passing rl_insert to rl_bind_key needs cast
+      if test "$ac_cv_func_readline" = "yes"; then
+         AC_LANG_PUSH([C++])
 
-      AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-         [
-#include <stdio.h>
-#include <readline/readline.h>
-         ],[ rl_bind_key('\t', (Function *)rl_insert); ])],
-         [ 
-            AC_MSG_RESULT((Function *)) 
-            AC_DEFINE(RL_INSERT_CAST,(Function *),Required cast for rl_insert)
-         ],[
+         AC_MSG_CHECKING(for rl_insert cast)
+
          AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
             [
 #include <stdio.h>
 #include <readline/readline.h>
-            ],[ rl_bind_key('\t', (rl_command_func_t *)rl_insert); ])],
+            ],[ rl_bind_key('\t', (Function *)rl_insert); ])],
             [ 
-               AC_MSG_RESULT((rl_command_func_t *)) 
-               AC_DEFINE(RL_INSERT_CAST,(rl_command_func_t *),Required cast for rl_insert)
-            ],[ 
-               AC_MSG_RESULT(not needed) 
-               AC_DEFINE(RL_INSERT_CAST,,Required cast for rl_insert)
+               AC_MSG_RESULT((Function *)) 
+               AC_DEFINE(RL_INSERT_CAST,(Function *),Required cast for rl_insert)
+            ],[
+            AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+               [
+#include <stdio.h>
+#include <readline/readline.h>
+               ],[ rl_bind_key('\t', (rl_command_func_t *)rl_insert); ])],
+               [ 
+                  AC_MSG_RESULT((rl_command_func_t *)) 
+                  AC_DEFINE(RL_INSERT_CAST,(rl_command_func_t *),Required cast for rl_insert)
+               ],[ 
+                  AC_MSG_RESULT(not needed) 
+                  AC_DEFINE(RL_INSERT_CAST,,Required cast for rl_insert)
+               ]
+            )
             ]
          )
-         ]
-      )
 
-      AC_LANG_POP([C++])
+         AC_LANG_POP([C++])
+      fi
+      LIBS="$SAVED_LIBS"
    fi
-   LDFLAGS="$SAVED_LDFLAGS"
 fi
 
 check_substr "$COMPONENTS" "sqlite"

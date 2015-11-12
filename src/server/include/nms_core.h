@@ -95,7 +95,6 @@ typedef __console_ctx * CONSOLE_CTX;
 /**
  * Server includes
  */
-#include "server_timers.h"
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nxcore_winperf.h"

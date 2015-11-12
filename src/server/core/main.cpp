@@ -588,8 +588,6 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	InitLocalNetInfo();
    SnmpSetMessageIds(MSG_OID_PARSE_ERROR, MSG_SNMP_UNKNOWN_TYPE, MSG_SNMP_GET_ERROR);
 
-   Timer::globalInit();
-
 	// Create queue for delayed SQL queries
 	g_dbWriterQueue = new Queue(256, 64);
 	g_dciDataWriterQueue = new Queue(1024, 1024);
