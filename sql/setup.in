@@ -106,7 +106,6 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MinPasswordLength','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MinViewRefreshInterval','1000',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MobileDeviceListenerPort','4747',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('NumberOfDatabaseWriters','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('NumberOfDataCollectors','25',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('NumberOfUpgradeThreads','10',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('PasswordComplexity','0',1,0);

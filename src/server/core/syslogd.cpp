@@ -351,6 +351,7 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
       if (hStmt == NULL)
       {
          free(r);
+         DBConnectionPoolReleaseConnection(hdb);
          continue;
       }
 

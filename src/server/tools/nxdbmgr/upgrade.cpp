@@ -574,6 +574,16 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V378 to V379
+ */
+static BOOL H_UpgradeFromV378(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='NumberOfDatabaseWriters'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='379' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V377 to V378
  */
 static BOOL H_UpgradeFromV377(int currVersion, int newVersion)
@@ -9060,6 +9070,7 @@ static struct
    { 375, 376, H_UpgradeFromV375 },
    { 376, 377, H_UpgradeFromV376 },
    { 377, 378, H_UpgradeFromV377 },
+   { 378, 379, H_UpgradeFromV378 },
    { 0, 0, NULL }
 };
 

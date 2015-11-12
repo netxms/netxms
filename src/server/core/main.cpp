@@ -1377,6 +1377,13 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
          ConsolePrintf(pCtx, _T("%d database connections in use\n\n"), list->size());
          delete list;
       }
+      else if (IsCommand(_T("DBSTATS"), szBuffer, 3))
+      {
+         ConsolePrintf(pCtx, _T("Background writer requests:\n"));
+         ConsolePrintf(pCtx, _T("   DCI data ....... ") INT64_FMT _T("\n"), g_idataWriteRequests);
+         ConsolePrintf(pCtx, _T("   DCI raw data ... ") INT64_FMT _T("\n"), g_rawDataWriteRequests);
+         ConsolePrintf(pCtx, _T("   Others ......... ") INT64_FMT _T("\n"), g_otherWriteRequests);
+      }
 		else if (IsCommand(_T("FDB"), szBuffer, 3))
 		{
 			// Get argument
@@ -1927,6 +1934,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   set <variable> <value>    - Set value of server configuration variable\n")
 				_T("   show components <node>    - Show physical components of given node\n")
             _T("   show dbcp                 - Show active sessions in database connection pool\n")
+            _T("   show dbstats              - Show DB library statistics\n")
 				_T("   show fdb <node>           - Show forwarding database for node\n")
 				_T("   show flags                - Show internal server flags\n")
             _T("   show heap                 - Show heap information\n")
