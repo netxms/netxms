@@ -352,7 +352,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("comments=?,is_system=?,location_type=?,latitude=?,")
 						  _T("longitude=?,location_accuracy=?,location_timestamp=?,")
 						  _T("guid=?,image=?,submap_id=?,country=?,city=?,")
-                    _T("street_address=?,postcode=?,maint_mode=? WHERE object_id=?"));
+                    _T("street_address=?,postcode=?,maint_mode=?,maint_event_id=? WHERE object_id=?"));
 	}
 	else
 	{
@@ -362,8 +362,9 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("status_prop_alg,status_fixed_val,status_shift,status_translation,")
                     _T("status_single_threshold,status_thresholds,comments,is_system,")
 						  _T("location_type,latitude,longitude,location_accuracy,location_timestamp,")
-						  _T("guid,image,submap_id,country,city,street_address,postcode,maint_mode,object_id) ")
-                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+						  _T("guid,image,submap_id,country,city,street_address,postcode,maint_mode,")
+						  _T("maint_event_id,object_id) ")
+                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -404,7 +405,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress->getStreetAddress(), DB_BIND_STATIC);
 	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress->getPostCode(), DB_BIND_STATIC);
    DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_maintenanceMode ? _T("1") : _T("0"), DB_BIND_STATIC);
-	DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 28, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
+	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
