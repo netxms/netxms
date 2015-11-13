@@ -3,6 +3,8 @@
 	<name>nxdbmgr</name>
 	<comment></comment>
 	<projects>
+		<project>libnetxms</project>
+		<project>libnxdb</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

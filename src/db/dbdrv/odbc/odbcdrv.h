@@ -123,6 +123,7 @@ typedef struct
    ODBCDRV_CONN *pConn;
    bool noMoreRows;
 	char **columnNames;
+   NETXMS_WCHAR **values;
 } ODBCDRV_ASYNC_QUERY_RESULT;
 
 
