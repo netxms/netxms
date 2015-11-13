@@ -160,9 +160,9 @@ static bool MigrateTable(const TCHAR *table)
          }
          if (!SQLExecute(hStmt))
          {
+            _tprintf(_T("Failed input record:\n"));
             for(int i = 0; i < columnCount; i++)
             {
-               _tprintf(_T("Failed input record:\n"));
                DBGetColumnNameAsync(hResult, i, buffer, 256);
                TCHAR *value = DBGetFieldAsync(hResult, i, NULL, 0);
                _tprintf(_T("   %s = \"%s\"\n"), buffer, CHECK_NULL(value));

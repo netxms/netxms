@@ -893,8 +893,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResul
 		{
 			SQLLEN dataSize;
 			char temp[1];
-		   long rc = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_CHAR,
-		                        temp, 0, &dataSize);
+		   long rc = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_CHAR, temp, 0, &dataSize);
 			if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
 			{
 				nLen = (LONG)dataSize;
@@ -907,8 +906,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResul
 /**
  * Get field from current row in async query result
  */
-extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult,
-                                                 int iColumn, NETXMS_WCHAR *pBuffer, int iBufSize)
+extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult, int iColumn, NETXMS_WCHAR *pBuffer, int iBufSize)
 {
    SQLLEN iDataSize;
    long iResult;
