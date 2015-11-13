@@ -1393,7 +1393,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(ORACLE_CONN *pConn, int nColumn, WCHAR
       ub4 length = 0;
       OCILobGetLength(pConn->handleService, pConn->handleError, pConn->pBuffers[nColumn].lobLocator, &length);
 
-		nLen = min(nBufSize - 1, ((int)(length / sizeof(UCS2CHAR))));
+		nLen = min(nBufSize - 1, (int)length);
       ub4 amount = nLen;
 #if UNICODE_UCS4
       UCS2CHAR *ucs2buffer = (UCS2CHAR *)malloc(nLen * sizeof(UCS2CHAR));
