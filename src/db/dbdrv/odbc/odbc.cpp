@@ -895,7 +895,8 @@ extern "C" bool EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
                else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer)))
                {
                   WCHAR *temp = (WCHAR *)malloc(dataSize);
-                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, temp, dataSize, &dataSize);
+                  memcpy(temp, buffer, sizeof(buffer));
+                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, &temp[255], dataSize - 255 * sizeof(WCHAR), &dataSize);
                   if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
                   {
                      pResult->values[i] = temp;
@@ -917,7 +918,8 @@ extern "C" bool EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
                else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer)))
                {
                   UCS2CHAR *temp = (UCS2CHAR *)malloc(dataSize);
-                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, temp, dataSize, &dataSize);
+                  memcpy(temp, buffer, sizeof(buffer));
+                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, &temp[255], dataSize - 255 * sizeof(UCS2CHAR), &dataSize);
                   if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
                   {
                      int len = ucs2_strlen(temp);
@@ -939,7 +941,8 @@ extern "C" bool EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
                else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer)))
                {
                   char *temp = (char *)malloc(dataSize);
-                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_CHAR, temp, dataSize, &dataSize);
+                  memcpy(temp, buffer, sizeof(buffer));
+                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_CHAR, &temp[255], dataSize - 255, &dataSize);
                   if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
                   {
                      pResult->values[i] = WideStringFromMBString(temp);

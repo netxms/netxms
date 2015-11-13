@@ -173,7 +173,7 @@ static bool MigrateTable(const TCHAR *table)
          }
 
          rows++;
-         if (rows >= 4096)
+         if (rows >= g_migrationTxnSize)
          {
             rows = 0;
             DBCommit(g_hCoreDB);
@@ -293,8 +293,11 @@ void MigrateDatabase(const TCHAR *sourceConfig)
 	   }
    }
 
-	if (!MigrateDataTables())
-		goto cleanup;
+   if (!g_skipDataSchemaMigration)
+   {
+      if (!MigrateDataTables())
+         goto cleanup;
+   }
 
 	success = true;
 

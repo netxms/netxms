@@ -84,6 +84,7 @@ static BOOL ClearTables()
  */
 static const TCHAR *s_warningTextClear = _T("This operation will clear all configuration and collected data from database.\nAre you sure?");
 static const TCHAR *s_warningTextMigration = _T("This operation will clear all configuration and collected data from destination database before migration.\nAre you sure?");
+static const TCHAR *s_warningTextMigrationNoData = _T("This operation will clear all configuration from destination database before migration (collected data will be kept).\nAre you sure?");
 
 /**
  * Clear database
@@ -94,14 +95,22 @@ bool ClearDatabase(bool preMigration)
 		return false;
 
 	WriteToTerminal(_T("\n\n\x1b[1mWARNING!!!\x1b[0m\n"));
-	if (!GetYesNo(preMigration ? s_warningTextMigration : s_warningTextClear))
+	if (!GetYesNo(preMigration ? (g_skipDataSchemaMigration ? s_warningTextMigrationNoData : s_warningTextMigration) : s_warningTextClear))
 		return false;
 
 	bool success = false;
 
 	if (DBBegin(g_hCoreDB))
 	{
-		if (DeleteDataTables() &&	ClearTables())
+	   if (!g_skipDataSchemaMigration)
+	      success = DeleteDataTables();
+	   else
+	      success = true;
+
+	   if (success)
+	      success = ClearTables();
+
+	   if (success)
 		{
 			success = DBCommit(g_hCoreDB);
 			_tprintf(success ? _T("Database successfully cleared\n") : _T("ERROR: cannot commit transaction\n"));
