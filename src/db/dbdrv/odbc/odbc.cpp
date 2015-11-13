@@ -888,15 +888,15 @@ extern "C" bool EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 #if defined(_WIN32) || defined(UNICODE_UCS2)
                WCHAR buffer[256];
                rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
-               if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize <= sizeof(buffer)))) && (dataSize != SQL_NULL_DATA))
+               if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize <= sizeof(buffer) - sizeof(WCHAR)))) && (dataSize != SQL_NULL_DATA))
                {
                   pResult->values[i] = wcsdup(buffer);
                }
-               else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer)))
+               else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer) - sizeof(WCHAR)))
                {
-                  WCHAR *temp = (WCHAR *)malloc(dataSize);
+                  WCHAR *temp = (WCHAR *)malloc(dataSize + sizeof(WCHAR));
                   memcpy(temp, buffer, sizeof(buffer));
-                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, &temp[255], dataSize - 255 * sizeof(WCHAR), &dataSize);
+                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(WCHAR), &dataSize);
                   if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
                   {
                      pResult->values[i] = temp;
@@ -909,17 +909,17 @@ extern "C" bool EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 #else
                UCS2CHAR buffer[256];
                rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
-               if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize <= sizeof(buffer)))) && (dataSize != SQL_NULL_DATA))
+               if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize <= sizeof(buffer) - sizeof(UCS2CHAR)))) && (dataSize != SQL_NULL_DATA))
                {
                   int len = ucs2_strlen(buffer);
                   pResult->values[i] = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
                   ucs2_to_ucs4(buffer, -1, pResult->values[i], len + 1);
                }
-               else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer)))
+               else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer) - sizeof(UCS2CHAR)))
                {
-                  UCS2CHAR *temp = (UCS2CHAR *)malloc(dataSize);
+                  UCS2CHAR *temp = (UCS2CHAR *)malloc(dataSize + sizeof(UCS2CHAR));
                   memcpy(temp, buffer, sizeof(buffer));
-                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, &temp[255], dataSize - 255 * sizeof(UCS2CHAR), &dataSize);
+                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(UCS2CHAR), &dataSize);
                   if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
                   {
                      int len = ucs2_strlen(temp);
@@ -934,15 +934,15 @@ extern "C" bool EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
             {
                char buffer[256];
                rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_CHAR, buffer, sizeof(buffer), &dataSize);
-               if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize <= sizeof(buffer)))) && (dataSize != SQL_NULL_DATA))
+               if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize <= sizeof(buffer) - 1))) && (dataSize != SQL_NULL_DATA))
                {
                   pResult->values[i] = WideStringFromMBString(buffer);
                }
-               else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer)))
+               else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer) - 1))
                {
-                  char *temp = (char *)malloc(dataSize);
+                  char *temp = (char *)malloc(dataSize + 1);
                   memcpy(temp, buffer, sizeof(buffer));
-                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_CHAR, &temp[255], dataSize - 255, &dataSize);
+                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_CHAR, &temp[255], dataSize - 254, &dataSize);
                   if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
                   {
                      pResult->values[i] = WideStringFromMBString(temp);
