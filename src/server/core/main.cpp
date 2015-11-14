@@ -1377,6 +1377,15 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
       }
       else if (IsCommand(_T("DBSTATS"), szBuffer, 3))
       {
+         LIBNXDB_PERF_COUNTERS counters;
+         DBGetPerfCounters(&counters);
+         ConsolePrintf(pCtx, _T("SQL query counters:\n"));
+         ConsolePrintf(pCtx, _T("   Total .......... ") INT64_FMT _T("\n"), counters.totalQueries);
+         ConsolePrintf(pCtx, _T("   SELECT ......... ") INT64_FMT _T("\n"), counters.selectQueries);
+         ConsolePrintf(pCtx, _T("   Non-SELECT ..... ") INT64_FMT _T("\n"), counters.nonSelectQueries);
+         ConsolePrintf(pCtx, _T("   Long running ... ") INT64_FMT _T("\n"), counters.longRunningQueries);
+         ConsolePrintf(pCtx, _T("   Failed ......... ") INT64_FMT _T("\n"), counters.failedQueries);
+
          ConsolePrintf(pCtx, _T("Background writer requests:\n"));
          ConsolePrintf(pCtx, _T("   DCI data ....... ") INT64_FMT _T("\n"), g_idataWriteRequests);
          ConsolePrintf(pCtx, _T("   DCI raw data ... ") INT64_FMT _T("\n"), g_rawDataWriteRequests);

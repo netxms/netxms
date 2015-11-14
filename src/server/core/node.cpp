@@ -4159,6 +4159,36 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
       {
          _sntprintf(buffer, bufSize, _T("%f"), g_dAvgSyslogWriterQueueSize);
       }
+      else if (!_tcsicmp(param, _T("Server.DB.Queries.Failed")))
+      {
+         LIBNXDB_PERF_COUNTERS counters;
+         DBGetPerfCounters(&counters);
+         _sntprintf(buffer, bufSize, UINT64_FMT, counters.failedQueries);
+      }
+      else if (!_tcsicmp(param, _T("Server.DB.Queries.LongRunning")))
+      {
+         LIBNXDB_PERF_COUNTERS counters;
+         DBGetPerfCounters(&counters);
+         _sntprintf(buffer, bufSize, UINT64_FMT, counters.longRunningQueries);
+      }
+      else if (!_tcsicmp(param, _T("Server.DB.Queries.NonSelect")))
+      {
+         LIBNXDB_PERF_COUNTERS counters;
+         DBGetPerfCounters(&counters);
+         _sntprintf(buffer, bufSize, UINT64_FMT, counters.nonSelectQueries);
+      }
+      else if (!_tcsicmp(param, _T("Server.DB.Queries.Select")))
+      {
+         LIBNXDB_PERF_COUNTERS counters;
+         DBGetPerfCounters(&counters);
+         _sntprintf(buffer, bufSize, UINT64_FMT, counters.selectQueries);
+      }
+      else if (!_tcsicmp(param, _T("Server.DB.Queries.Total")))
+      {
+         LIBNXDB_PERF_COUNTERS counters;
+         DBGetPerfCounters(&counters);
+         _sntprintf(buffer, bufSize, UINT64_FMT, counters.totalQueries);
+      }
       else if (!_tcsicmp(param, _T("Server.DBWriter.Requests.IData")))
       {
          _sntprintf(buffer, bufSize, UINT64_FMT, g_idataWriteRequests);
