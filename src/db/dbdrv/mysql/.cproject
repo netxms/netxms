@@ -24,6 +24,7 @@
 								<option id="gnu.cpp.compiler.option.include.paths.1210602853" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MYSQL_INCLUDE_DIR}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1263944301" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_THREAD_SAFE"/>
@@ -37,6 +38,7 @@
 								<option id="gnu.c.compiler.option.include.paths.2082713074" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MYSQL_INCLUDE_DIR}&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.2025899122" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_THREAD_SAFE"/>
@@ -57,6 +59,7 @@
 								<option id="gnu.both.asm.option.include.paths.2099217060" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${NETXMS_BASE}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${MYSQL_INCLUDE_DIR}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1550691010" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>

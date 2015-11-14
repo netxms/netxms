@@ -12233,7 +12233,10 @@ void ClientSession::deleteLibraryImage(NXCPMessage *request)
 				_sntprintf(query, MAX_DB_STRING, _T("DELETE FROM images WHERE protected = 0 AND guid = '%s'"), guidText);
 				if (DBQuery(hdb, query))
 				{
-					// TODO: remove from FS?
+				   TCHAR fileName[MAX_PATH];
+               _sntprintf(fileName, MAX_PATH, _T("%s%s%s%s"), g_netxmsdDataDir, DDIR_IMAGES, FS_PATH_SEPARATOR, guidText);
+               DbgPrintf(5, _T("deleteLibraryImage: guid=%s, fileName=%s"), guidText, fileName);
+               _tremove(fileName);
 				}
 				else
 				{
