@@ -83,6 +83,11 @@ Template::Template(ConfigEntry *config) : NetObj()
    m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
 
+   // GUID
+   uuid guid = config->getSubEntryValueAsUUID(_T("guid"));
+   if (!guid.isNull())
+      m_guid = guid;
+
 	// Name and version
 	nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
 	m_dwVersion = config->getSubEntryValueAsUInt(_T("version"), 0, 0x00010000);
@@ -360,7 +365,7 @@ void Template::loadItemsFromDB(DB_HANDLE hdb)
               _T("instance,template_item_id,flags,resource_id,")
               _T("proxy_node,base_units,unit_multiplier,custom_units_name,")
 	           _T("perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
-				  _T("instd_method,instd_data,instd_filter,samples,comments FROM items WHERE node_id=?"));
+				  _T("instd_method,instd_data,instd_filter,samples,comments,guid FROM items WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1029,7 +1034,7 @@ StringSet *Template::getDCIScriptList()
 /**
  * Create management pack record
  */
-void Template::createNXMPRecord(String &str)
+void Template::createExportRecord(String &str)
 {
    TCHAR guid[48];
    str.appendFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<guid>%s</guid>\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n"),
@@ -1061,7 +1066,7 @@ void Template::createNXMPRecord(String &str)
 
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
-      m_dcObjects->get(i)->createNXMPRecord(str);
+      m_dcObjects->get(i)->createExportRecord(str);
    unlockDciAccess();
 
    str.append(_T("\t\t\t</dataCollection>\n"));
@@ -1201,4 +1206,39 @@ UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool ov
  */
 void Template::onDataCollectionChange()
 {
+}
+
+/**
+ * Update template from import
+ */
+void Template::updateFromImport(ConfigEntry *config)
+{
+   // Name and version
+   m_dwVersion = config->getSubEntryValueAsUInt(_T("version"), 0, m_dwVersion);
+   m_flags = config->getSubEntryValueAsUInt(_T("flags"), 0, m_flags);
+
+   // Auto-apply filter
+   if (m_flags & TF_AUTO_APPLY)
+      setAutoApplyFilter(config->getSubEntryValue(_T("filter")));
+
+   /*
+   // Data collection
+   ConfigEntry *dcRoot = config->findEntry(_T("dataCollection"));
+   if (dcRoot != NULL)
+   {
+      ObjectArray<ConfigEntry> *dcis = dcRoot->getSubEntries(_T("dci#*"));
+      for(int i = 0; i < dcis->size(); i++)
+      {
+         m_dcObjects->add(new DCItem(dcis->get(i), this));
+      }
+      delete dcis;
+
+      ObjectArray<ConfigEntry> *dctables = dcRoot->getSubEntries(_T("dctable#*"));
+      for(int i = 0; i < dctables->size(); i++)
+      {
+         m_dcObjects->add(new DCTable(dctables->get(i), this));
+      }
+      delete dctables;
+   }
+   */
 }

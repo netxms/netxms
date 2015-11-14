@@ -160,7 +160,7 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  *    item_id,template_id,template_item_id,name,
  *    description,flags,source,snmp_port,polling_interval,retention_time,
  *    status,system_tag,resource_id,proxy_node,perftab_settings,
- *    transformation_script,comments
+ *    transformation_script,comments,guid
  */
 DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
@@ -181,6 +181,7 @@ DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : 
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 14, NULL, 0);
    TCHAR *pszTmp = DBGetField(hResult, iRow, 15, NULL, 0);
    m_comments = DBGetField(hResult, iRow, 16, NULL, 0);
+   m_guid = DBGetFieldGUID(hResult, iRow, 17);
    setTransformationScript(pszTmp);
    free(pszTmp);
 
@@ -532,14 +533,15 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 		hStmt = DBPrepare(hdb, _T("UPDATE dc_tables SET node_id=?,template_id=?,template_item_id=?,name=?,")
 		                       _T("description=?,flags=?,source=?,snmp_port=?,polling_interval=?,")
                              _T("retention_time=?,status=?,system_tag=?,resource_id=?,proxy_node=?,")
-									  _T("perftab_settings=?,transformation_script=?,comments=? WHERE item_id=?"));
+									  _T("perftab_settings=?,transformation_script=?,comments=?,guid=? WHERE item_id=?"));
 	}
 	else
 	{
 		hStmt = DBPrepare(hdb, _T("INSERT INTO dc_tables (node_id,template_id,template_item_id,name,")
 		                       _T("description,flags,source,snmp_port,polling_interval,")
 		                       _T("retention_time,status,system_tag,resource_id,proxy_node,perftab_settings,")
-									  _T("transformation_script,comments,item_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+									  _T("transformation_script,comments,guid,item_id) ")
+									  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -563,7 +565,8 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
    DBBind(hStmt, 16, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
    DBBind(hStmt, 17, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
-	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_guid);
+	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -999,13 +1002,14 @@ void DCTable::updateFromTemplate(DCObject *src)
 /**
  * Create management pack record
  */
-void DCTable::createNXMPRecord(String &str)
+void DCTable::createExportRecord(String &str)
 {
 	UINT32 i;
 
    lock();
 
    str.appendFormattedString(_T("\t\t\t\t<dctable id=\"%d\">\n")
+                          _T("\t\t\t\t\t<guid>%s</guid>\n")
                           _T("\t\t\t\t\t<name>%s</name>\n")
                           _T("\t\t\t\t\t<description>%s</description>\n")
                           _T("\t\t\t\t\t<origin>%d</origin>\n")
@@ -1014,7 +1018,8 @@ void DCTable::createNXMPRecord(String &str)
                           _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
                           _T("\t\t\t\t\t<flags>%d</flags>\n")
                           _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n"),
-								  (int)m_id, (const TCHAR *)EscapeStringForXML2(m_name),
+								  (int)m_id, (const TCHAR *)m_guid.toString(),
+								  (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_szDescription),
                           (int)m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),

@@ -9755,7 +9755,7 @@ void ClientSession::exportConfiguration(NXCPMessage *pRequest)
             object = FindObjectById(pdwTemplateList[i]);
             if (object != NULL)
             {
-               ((Template *)object)->createNXMPRecord(str);
+               ((Template *)object)->createExportRecord(str);
             }
          }
          str += _T("\t</templates>\n");

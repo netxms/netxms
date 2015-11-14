@@ -722,7 +722,8 @@ public:
    void queueUpdate();
    void queueRemoveFromTarget(UINT32 targetId, bool removeDCI);
 
-   void createNXMPRecord(String &str);
+   void createExportRecord(String &str);
+   void updateFromImport(ConfigEntry *config);
 
 	bool enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), void *pArg);
 	void associateItems();

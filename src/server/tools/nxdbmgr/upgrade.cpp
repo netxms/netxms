@@ -574,6 +574,22 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Upgrade from V380 to V381
+ */
+static BOOL H_UpgradeFromV380(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE items ADD guid varchar(36)\n")
+      _T("ALTER TABLE dc_tables ADD guid varchar(36)\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(GenerateGUID(_T("items"), _T("item_id"), _T("guid")));
+   CHK_EXEC(GenerateGUID(_T("dc_tables"), _T("item_id"), _T("guid")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='381' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V379 to V380
  */
 static BOOL H_UpgradeFromV379(int currVersion, int newVersion)
@@ -9087,6 +9103,7 @@ static struct
    { 377, 378, H_UpgradeFromV377 },
    { 378, 379, H_UpgradeFromV378 },
    { 379, 380, H_UpgradeFromV379 },
+   { 380, 381, H_UpgradeFromV380 },
    { 0, 0, NULL }
 };
 

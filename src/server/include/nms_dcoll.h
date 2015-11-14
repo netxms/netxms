@@ -176,6 +176,7 @@ class NXCORE_EXPORTABLE DCObject
 {
 protected:
    UINT32 m_id;
+   uuid m_guid;
    TCHAR m_name[MAX_ITEM_NAME];
    TCHAR m_szDescription[MAX_DB_STRING];
 	TCHAR m_systemTag[MAX_DB_STRING];
@@ -237,6 +238,7 @@ public:
 	virtual bool hasValue();
 
 	UINT32 getId() { return m_id; }
+	const uuid& getGuid() { return m_guid; }
    int getDataSource() { return m_source; }
    int getStatus() { return m_status; }
    const TCHAR *getName() { return m_name; }
@@ -282,7 +284,7 @@ public:
 	virtual bool deleteAllData();
 
    virtual void getEventList(UINT32 **ppdwList, UINT32 *pdwSize);
-   virtual void createNXMPRecord(String &str);
+   virtual void createExportRecord(String &str);
 
 	void setName(const TCHAR *pszName) { nx_strncpy(m_name, pszName, MAX_ITEM_NAME); }
 	void setDescription(const TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
@@ -390,7 +392,7 @@ public:
 	virtual bool deleteAllData();
 
    virtual void getEventList(UINT32 **ppdwList, UINT32 *pdwSize);
-   virtual void createNXMPRecord(String &str);
+   virtual void createExportRecord(String &str);
 
 	int getThresholdCount() const { return (m_thresholds != NULL) ? m_thresholds->size() : 0; }
 	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), void *pArg);
@@ -571,7 +573,7 @@ public:
 	virtual void deleteExpiredData();
 	virtual bool deleteAllData();
 
-   virtual void createNXMPRecord(String &str);
+   virtual void createExportRecord(String &str);
 
 	void fillLastValueMessage(NXCPMessage *msg);
    void fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId);

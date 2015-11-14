@@ -106,7 +106,7 @@ DCItem::DCItem(const DCItem *pSrc) : DCObject(pSrc)
  *    delta_calculation,transformation,template_id,description,instance,
  *    template_item_id,flags,resource_id,proxy_node,base_units,unit_multiplier,
  *    custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,
- *    instd_method,instd_data,instd_filter,samples,comments
+ *    instd_method,instd_data,instd_filter,samples,comments,guid
  */
 DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
@@ -151,6 +151,7 @@ DCItem::DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DC
    free(pszTmp);
 	m_sampleCount = DBGetFieldLong(hResult, iRow, 26);
    m_comments = DBGetField(hResult, iRow, 27, NULL, 0);
+   m_guid = DBGetFieldGUID(hResult, iRow, 28);
 
    // Load last raw value from database
 	TCHAR szQuery[256];
@@ -340,7 +341,8 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
                  _T("resource_id=?,proxy_node=?,base_units=?,")
 		           _T("unit_multiplier=?,custom_units_name=?,perftab_settings=?,")
 	              _T("system_tag=?,snmp_port=?,snmp_raw_value_type=?,")
-					  _T("instd_method=?,instd_data=?,instd_filter=?,samples=?,comments=? WHERE item_id=?"));
+					  _T("instd_method=?,instd_data=?,instd_filter=?,samples=?,")
+					  _T("comments=?,guid=? WHERE item_id=?"));
 	}
    else
 	{
@@ -350,8 +352,8 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
                  _T("transformation,description,instance,template_item_id,flags,")
                  _T("resource_id,proxy_node,base_units,unit_multiplier,")
 		           _T("custom_units_name,perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
-					  _T("instd_method,instd_data,instd_filter,samples,comments,item_id) VALUES ")
-		           _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+					  _T("instd_method,instd_data,instd_filter,samples,comments,guid,item_id) VALUES ")
+		           _T("(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -386,7 +388,8 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 26, DB_SQLTYPE_TEXT, m_instanceFilterSource, DB_BIND_STATIC);
 	DBBind(hStmt, 27, DB_SQLTYPE_INTEGER, (INT32)m_sampleCount);
    DBBind(hStmt, 28, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
-	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 29, DB_SQLTYPE_VARCHAR, m_guid);
+	DBBind(hStmt, 30, DB_SQLTYPE_INTEGER, m_id);
 
    bool bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -1524,13 +1527,14 @@ void DCItem::getEventList(UINT32 **ppdwList, UINT32 *pdwSize)
 /**
  * Create management pack record
  */
-void DCItem::createNXMPRecord(String &str)
+void DCItem::createExportRecord(String &str)
 {
 	UINT32 i;
 
    lock();
 
    str.appendFormattedString(_T("\t\t\t\t<dci id=\"%d\">\n")
+                             _T("\t\t\t\t\t<guid>%s</guid>\n")
                           _T("\t\t\t\t\t<name>%s</name>\n")
                           _T("\t\t\t\t\t<description>%s</description>\n")
                           _T("\t\t\t\t\t<dataType>%d</dataType>\n")
@@ -1545,7 +1549,8 @@ void DCItem::createNXMPRecord(String &str)
                           _T("\t\t\t\t\t<snmpRawValueType>%d</snmpRawValueType>\n")
                           _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n")
                           _T("\t\t\t\t\t<instanceDiscoveryMethod>%d</instanceDiscoveryMethod>\n"),
-								  (int)m_id, (const TCHAR *)EscapeStringForXML2(m_name),
+								  (int)m_id, (const TCHAR *)m_guid.toString(),
+								  (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_szDescription),
                           m_dataType, m_sampleCount, (int)m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_instance),

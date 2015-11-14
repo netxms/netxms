@@ -38,6 +38,7 @@ int DCObject::m_defaultPollingInterval = 60;
 DCObject::DCObject()
 {
    m_id = 0;
+   m_guid = uuid::generate();
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
    m_busy = 0;
@@ -74,6 +75,7 @@ DCObject::DCObject(const DCObject *pSrc)
    UINT32 i;
 
    m_id = pSrc->m_id;
+   m_guid = pSrc->m_guid;
    m_dwTemplateId = pSrc->m_dwTemplateId;
    m_dwTemplateItemId = pSrc->m_dwTemplateItemId;
    m_busy = 0;
@@ -125,6 +127,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
                const TCHAR *pszDescription, const TCHAR *systemTag)
 {
    m_id = dwId;
+   m_guid = uuid::generate();
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
    nx_strncpy(m_name, szName, MAX_ITEM_NAME);
@@ -162,6 +165,9 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
 DCObject::DCObject(ConfigEntry *config, Template *owner)
 {
    m_id = CreateUniqueId(IDG_ITEM);
+   m_guid = config->getSubEntryValueAsUUID(_T("guid"));
+   if (m_guid.isNull())
+      m_guid = uuid::generate();
    m_dwTemplateId = 0;
    m_dwTemplateItemId = 0;
 	nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
@@ -413,7 +419,10 @@ void DCObject::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExp
    lock();
    m_pNode = pNewNode;
 	if (dwNewId != 0)
+	{
 		m_id = dwNewId;
+		m_guid = uuid::generate();
+	}
 
 	if (doMacroExpansion)
 	{
@@ -753,7 +762,7 @@ void DCObject::getEventList(UINT32 **ppdwList, UINT32 *pdwSize)
 /**
  * Create management pack record
  */
-void DCObject::createNXMPRecord(String &str)
+void DCObject::createExportRecord(String &str)
 {
 }
 
