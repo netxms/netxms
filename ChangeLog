@@ -7,6 +7,8 @@
 - Selectors in NXSL
 - Subnet mask for synthetic subnets can be set in server configuration
 - Added cumulative counters for server DB writer requests
+- Fixed data corruption issues in ODBC and Oracle DB drivers
+- Additional internal server metrics for monitoring DB activity and performance
 - Management console:
 	- Object tool input fields can be rearranged
 - Fixed issues: #847, #948, #967
