@@ -101,44 +101,6 @@ inline TCHAR *BuildParamName(const TCHAR *format, const TCHAR *pool, TCHAR *buff
 }
 
 /**
- * Add thread pool monitoring parameters
- */
-static void AddThreadPoolMonitoringParameters(Node *node, const TCHAR *poolName, int pollingInterval, int retentionTime)
-{
-#define BUILD_PARAM_NAME(x) BuildParamName(x, poolName, name)
-#define BUILD_PARAM_DESCR(x) BuildParamName(x, poolName, description)
-
-   TCHAR name[256], description[256];
-
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                BUILD_PARAM_NAME(_T("Server.ThreadPool.CurrSize(%s)")),
-                                DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, node,
-                                BUILD_PARAM_DESCR(_T("Thread pool %s: current size"))));
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                BUILD_PARAM_NAME(_T("Server.ThreadPool.Usage(%s)")), 
-                                DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, node,
-                                BUILD_PARAM_DESCR(_T("Thread pool %s: usage"))));
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM),
-                                BUILD_PARAM_NAME(_T("Server.ThreadPool.Load(%s)")), 
-                                DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, node,
-                                BUILD_PARAM_DESCR(_T("Thread pool %s: current load"))));
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM),
-                                BUILD_PARAM_NAME(_T("Server.ThreadPool.LoadAverage(%s)")), 
-                                DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
-                                BUILD_PARAM_DESCR(_T("Thread pool %s: load average (1 minute)"))));
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM),
-                                BUILD_PARAM_NAME(_T("Server.ThreadPool.LoadAverage5(%s)")), 
-                                DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
-                                BUILD_PARAM_DESCR(_T("Thread pool %s: load average (5 minutes)"))));
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM),
-                                BUILD_PARAM_NAME(_T("Server.ThreadPool.LoadAverage15(%s)")), 
-                                DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
-                                BUILD_PARAM_DESCR(_T("Thread pool %s: load average (15 minutes)"))));
-#undef BUILD_PARAM_NAME
-#undef BUILD_PARAM_DESCR
-}
-
-/**
  * Create management node object
  */
 static void CreateManagementNode(const InetAddress& addr)
@@ -161,50 +123,6 @@ static void CreateManagementNode(const InetAddress& addr)
 	// Bind to the root of service tree
 	g_pServiceRoot->AddChild(node);
 	node->AddParent(g_pServiceRoot);
-   
-   // Add default data collection items
-	int pollingInterval = ConfigReadInt(_T("DefaultDCIPollingInterval"), 60);
-	int retentionTime = ConfigReadInt(_T("DefaultDCIRetentionTime"), 30);
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), 
-                                 DS_INTERNAL, DCI_DT_INT, pollingInterval, retentionTime, node));
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                 _T("Server.AverageDCPollerQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
-                                 _T("Data collection poller's request queue for last minute")));
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                 _T("Server.AverageDBWriterQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
-                                 _T("Database writer's request queue for last minute")));
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                 _T("Server.AverageDBWriterQueueSize.IData"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
-                                 _T("Database writer's request queue (DCI data) for last minute")));
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                 _T("Server.AverageDBWriterQueueSize.Other"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
-                                 _T("Database writer's request queue (other queries) for last minute")));
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                 _T("Server.AverageDCIQueuingTime"), 
-                                 DS_INTERNAL, DCI_DT_UINT, pollingInterval, retentionTime, node,
-                                 _T("Average time to queue DCI for polling for last minute")));
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                 _T("Server.AverageSyslogProcessingQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
-                                 _T("Syslog processing queue for last minute")));
-   node->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), 
-                                 _T("Server.AverageSyslogWriterQueueSize"), 
-                                 DS_INTERNAL, DCI_DT_FLOAT, pollingInterval, retentionTime, node,
-                                 _T("Syslog writer queue for last minute")));
-
-   DCItem *pEventsPerMinuteDCI = new DCItem(CreateUniqueId(IDG_ITEM),
-                                 _T("Server.TotalEventsProcessed"),
-                                 DS_INTERNAL, DCI_DT_UINT, pollingInterval, retentionTime, node,
-                                 _T("Events processed for last minute"));
-   pEventsPerMinuteDCI->setDeltaCalcMethod(DCM_AVERAGE_PER_MINUTE);
-   node->addDCObject(pEventsPerMinuteDCI);
-
-   AddThreadPoolMonitoringParameters(node, _T("MAIN"), pollingInterval, retentionTime);
-   AddThreadPoolMonitoringParameters(node, _T("POLLERS"), pollingInterval, retentionTime);
 }
 
 /**

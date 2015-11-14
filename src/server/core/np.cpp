@@ -196,11 +196,6 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreation
       pNode->checkSubnetBinding();
    }
 
-   // Add default DCIs
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT,
-		ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
-		ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), pNode));
-
 	if (doConfPoll)
    {
       PollerInfo *p = RegisterPoller(POLLER_TYPE_CONFIGURATION, pNode);
