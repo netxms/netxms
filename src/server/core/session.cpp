@@ -4827,40 +4827,40 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 							   case OBJECT_MOBILEDEVICE:
 								   pRequest->getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
 								   object = new MobileDevice(szObjectName, deviceId);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_CONTAINER:
 								   object = new Container(szObjectName, pRequest->getFieldAsUInt32(VID_CATEGORY));
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   object->calculateCompoundStatus();	// Force status change to NORMAL
 								   break;
 							   case OBJECT_RACK:
 								   object = new Rack(szObjectName, (int)pRequest->getFieldAsUInt16(VID_HEIGHT));
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_TEMPLATEGROUP:
 								   object = new TemplateGroup(szObjectName);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   object->calculateCompoundStatus();	// Force status change to NORMAL
 								   break;
 							   case OBJECT_TEMPLATE:
 								   object = new Template(szObjectName);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   object->calculateCompoundStatus();	// Force status change to NORMAL
 								   break;
 							   case OBJECT_POLICYGROUP:
 								   object = new PolicyGroup(szObjectName);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   object->calculateCompoundStatus();	// Force status change to NORMAL
 								   break;
 							   case OBJECT_AGENTPOLICY_CONFIG:
 								   object = new AgentPolicyConfig(szObjectName);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   object->calculateCompoundStatus();	// Force status change to NORMAL
 								   break;
 							   case OBJECT_CLUSTER:
 								   object = new Cluster(szObjectName, zoneId);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_NETWORKSERVICE:
 								   iServiceType = (int)pRequest->getFieldAsUInt16(VID_SERVICE_TYPE);
@@ -4871,37 +4871,37 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 								   object = new NetworkService(iServiceType, wIpProto, wIpPort,
 																	     pszRequest, pszResponse, (Node *)pParent);
 								   object->setName(szObjectName);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_VPNCONNECTOR:
 								   object = new VPNConnector(TRUE);
 								   object->setName(szObjectName);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_CONDITION:
 								   object = new Condition(TRUE);
 								   object->setName(szObjectName);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_NETWORKMAPGROUP:
 								   object = new NetworkMapGroup(szObjectName);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   object->calculateCompoundStatus();	// Force status change to NORMAL
 								   break;
 							   case OBJECT_NETWORKMAP:
 								   object = new NetworkMap((int)pRequest->getFieldAsUInt16(VID_MAP_TYPE), pRequest->getFieldAsUInt32(VID_SEED_OBJECT));
 								   object->setName(szObjectName);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_DASHBOARD:
 								   object = new Dashboard(szObjectName);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_ZONE:
 								   if ((zoneId > 0) && (zoneId != ALL_ZONES) && (g_idxZoneByGUID.get(zoneId) == NULL))
 								   {
 									   object = new Zone(zoneId, szObjectName);
-									   NetObjInsert(object, TRUE);
+									   NetObjInsert(object, true, false);
 								   }
 								   else
 								   {
@@ -4910,14 +4910,14 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 								   break;
 							   case OBJECT_BUSINESSSERVICE:
 								   object = new BusinessService(szObjectName);
-								   NetObjInsert(object, TRUE);
+								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_NODELINK:
 								   nodeId = pRequest->getFieldAsUInt32(VID_NODE_ID);
 								   if (nodeId > 0)
 								   {
 									   object = new NodeLink(szObjectName, nodeId);
-									   NetObjInsert(object, TRUE);
+									   NetObjInsert(object, true, false);
 								   }
 								   else
 								   {
@@ -4925,8 +4925,8 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 								   }
 								   break;
 							   case OBJECT_SLMCHECK:
-								   object = new SlmCheck(szObjectName, pRequest->getFieldAsUInt16(VID_IS_TEMPLATE) ? true : false);
-								   NetObjInsert(object, TRUE);
+								   object = new SlmCheck(szObjectName, pRequest->getFieldAsBoolean(VID_IS_TEMPLATE));
+								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_INTERFACE:
                            {

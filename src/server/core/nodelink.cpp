@@ -224,7 +224,7 @@ void NodeLink::applyTemplate(SlmCheck *tmpl)
 		check = new SlmCheck(tmpl);
 		check->AddParent(this);
 		AddChild(check);
-		NetObjInsert(check, TRUE);
+		NetObjInsert(check, true, false);
 		check->unhide();
 	}
 	else

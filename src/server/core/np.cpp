@@ -165,7 +165,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreation
 		pNode->setAgentPort(agentPort);
 	if (snmpPort != 0)
 		pNode->setSnmpPort(snmpPort);
-   NetObjInsert(pNode, TRUE);
+   NetObjInsert(pNode, true, false);
    if (pszName != NULL)
       pNode->setName(pszName);
 

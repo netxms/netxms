@@ -525,7 +525,7 @@ void DCTable::processNewError()
 /**
  * Save to database
  */
-BOOL DCTable::saveToDB(DB_HANDLE hdb)
+bool DCTable::saveToDatabase(DB_HANDLE hdb)
 {
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("dc_tables"), _T("item_id"), m_id))
@@ -568,7 +568,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
    DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_guid);
 	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_id);
 
-	BOOL result = DBExecute(hStmt);
+	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 
 	if (result)
@@ -583,7 +583,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 		}
 		else
 		{
-			result = FALSE;
+			result = false;
 		}
 
 		if (result && (m_columns->size() > 0))
@@ -610,7 +610,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 			}
 			else
 			{
-				result = FALSE;
+				result = false;
 			}
 		}
 	}
@@ -618,7 +618,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
    saveThresholds(hdb);
 
    unlock();
-	return result ? DCObject::saveToDB(hdb) : FALSE;
+	return result ? DCObject::saveToDatabase(hdb) : false;
 }
 
 /**
@@ -1032,11 +1032,11 @@ void DCTable::createExportRecord(String &str)
 		str += _T("</transformation>\n");
 	}
 
-	if (m_dwNumSchedules > 0)
+   if ((m_schedules != NULL) && (m_schedules->size() > 0))
    {
       str += _T("\t\t\t\t\t<schedules>\n");
-      for(i = 0; i < m_dwNumSchedules; i++)
-         str.appendFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_ppScheduleList[i]));
+      for(i = 0; i < m_schedules->size(); i++)
+         str.appendFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_schedules->get(i)));
       str += _T("\t\t\t\t\t</schedules>\n");
    }
 
@@ -1069,4 +1069,36 @@ void DCTable::createExportRecord(String &str)
 
    unlock();
    str += _T("\t\t\t\t</dctable>\n");
+}
+
+/**
+ * Create DCObject from import file
+ */
+void DCTable::updateFromImport(ConfigEntry *config)
+{
+   DCObject::updateFromImport(config);
+
+   m_columns->clear();
+   ConfigEntry *columnsRoot = config->findEntry(_T("columns"));
+   if (columnsRoot != NULL)
+   {
+      ObjectArray<ConfigEntry> *columns = columnsRoot->getSubEntries(_T("column#*"));
+      for(int i = 0; i < columns->size(); i++)
+      {
+         m_columns->add(new DCTableColumn(columns->get(i)));
+      }
+      delete columns;
+   }
+
+   m_thresholds->clear();
+   ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
+   if (thresholdsRoot != NULL)
+   {
+      ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
+      for(int i = 0; i < thresholds->size(); i++)
+      {
+         m_thresholds->add(new DCTableThreshold(thresholds->get(i)));
+      }
+      delete thresholds;
+   }
 }

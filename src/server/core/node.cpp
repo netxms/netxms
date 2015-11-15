@@ -517,7 +517,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    {
 		lockDciAccess(false);
       for(int i = 0; i < m_dcObjects->size(); i++)
-         m_dcObjects->get(i)->saveToDB(hdb);
+         m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
    }
 
@@ -1047,7 +1047,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
    pInterface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
 
    // Insert to objects' list and generate event
-   NetObjInsert(pInterface, TRUE);
+   NetObjInsert(pInterface, true, false);
    addInterface(pInterface);
    if (!m_isHidden)
       pInterface->unhide();
@@ -2536,7 +2536,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
                   }
                }
                ap = new AccessPoint((const TCHAR *)name, info->getIndex(), info->getMacAddr());
-               NetObjInsert(ap, TRUE);
+               NetObjInsert(ap, true, false);
                DbgPrintf(5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_name, ap->getName(), ap->getId());
                newAp = true;
             }
@@ -6150,7 +6150,7 @@ Subnet *Node::createSubnet(const InetAddress& baseAddr, bool syntheticMask)
       }
    }
    Subnet *s = new Subnet(addr, m_zoneId, syntheticMask);
-   NetObjInsert(s, TRUE);
+   NetObjInsert(s, true, false);
    if (g_flags & AF_ENABLE_ZONING)
    {
 	   Zone *zone = FindZoneByGUID(m_zoneId);

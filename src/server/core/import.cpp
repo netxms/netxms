@@ -351,7 +351,7 @@ NetObj *FindTemplateRoot(ConfigEntry *config)
       if (o == NULL)
       {
          o = new TemplateGroup(name);
-         NetObjInsert(o, TRUE);
+         NetObjInsert(o, true, false);
          o->AddParent(parent);
          parent->AddChild(o);
          o->unhide();
@@ -431,7 +431,7 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
             DbgPrintf(5, _T("ImportConfig(): template with GUID %s not found"), (const TCHAR *)guid.toString());
             NetObj *parent = FindTemplateRoot(tc);
             object = new Template(tc);
-            NetObjInsert(object, TRUE);
+            NetObjInsert(object, true, true);
             object->AddParent(parent);
             parent->AddChild(object);
             object->unhide();

@@ -224,31 +224,31 @@ void ObjectsInit()
 
    // Create "Entire Network" object
    g_pEntireNet = new Network;
-   NetObjInsert(g_pEntireNet, FALSE);
+   NetObjInsert(g_pEntireNet, false, false);
 
    // Create "Service Root" object
    g_pServiceRoot = new ServiceRoot;
-   NetObjInsert(g_pServiceRoot, FALSE);
+   NetObjInsert(g_pServiceRoot, false, false);
 
    // Create "Template Root" object
    g_pTemplateRoot = new TemplateRoot;
-   NetObjInsert(g_pTemplateRoot, FALSE);
+   NetObjInsert(g_pTemplateRoot, false, false);
 
 	// Create "Policy Root" object
    g_pPolicyRoot = new PolicyRoot;
-   NetObjInsert(g_pPolicyRoot, FALSE);
+   NetObjInsert(g_pPolicyRoot, false, false);
    
 	// Create "Network Maps Root" object
    g_pMapRoot = new NetworkMapRoot;
-   NetObjInsert(g_pMapRoot, FALSE);
+   NetObjInsert(g_pMapRoot, false, false);
    
 	// Create "Dashboard Root" object
    g_pDashboardRoot = new DashboardRoot;
-   NetObjInsert(g_pDashboardRoot, FALSE);
+   NetObjInsert(g_pDashboardRoot, false, false);
    
    // Create "Business Service Root" object
    g_pBusinessServiceRoot = new BusinessServiceRoot;
-   NetObjInsert(g_pBusinessServiceRoot, FALSE);
+   NetObjInsert(g_pBusinessServiceRoot, false, false);
    
 	DbgPrintf(1, _T("Built-in objects created"));
 
@@ -262,13 +262,14 @@ void ObjectsInit()
 /**
  * Insert new object into network
  */
-void NetObjInsert(NetObj *pObject, BOOL bNewObject)
+void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 {
-   if (bNewObject)   
+   if (newObject)
    {
       // Assign unique ID to new object
       pObject->setId(CreateUniqueId(IDG_NETWORK_OBJECT));
-		pObject->generateGuid();
+      if (!importedObject) // imported objects already have valid GUID
+         pObject->generateGuid();
 
       // Create tables for storing data collection values
       if ((pObject->getObjectClass() == OBJECT_NODE) || 
@@ -402,7 +403,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 					{
 						g_idxSubnetByAddr.put(((Subnet *)pObject)->getIpAddress(), pObject);
 					}
-               if (bNewObject)
+               if (newObject)
                {
                   PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", pObject->getId(), pObject->getName(), 
                      &((Subnet *)pObject)->getIpAddress(), ((Subnet *)pObject)->getIpAddress().getMaskBits());
@@ -463,7 +464,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
    }
 
 	// Notify modules about object creation
-	if (bNewObject)
+	if (newObject)
 	{
       CALL_ALL_MODULES(pfPostObjectCreate, (pObject));
 	}
@@ -1184,7 +1185,7 @@ BOOL LoadObjects()
       pZone = new Zone;
       pZone->generateGuid();
       pZone->loadFromDatabase(hdb, BUILTIN_OID_ZONE0);
-      NetObjInsert(pZone, FALSE);
+      NetObjInsert(pZone, false, false);
       g_pEntireNet->AddZone(pZone);
 
       hResult = DBSelect(hdb, _T("SELECT id FROM zones WHERE id<>4"));
@@ -1199,7 +1200,7 @@ BOOL LoadObjects()
             {
                if (!pZone->isDeleted())
                   g_pEntireNet->AddZone(pZone);
-               NetObjInsert(pZone, FALSE);  // Insert into indexes
+               NetObjInsert(pZone, false, false);  // Insert into indexes
             }
             else     // Object load failed
             {
@@ -1227,7 +1228,7 @@ BOOL LoadObjects()
          pCondition = new Condition;
          if (pCondition->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pCondition, FALSE);  // Insert into indexes
+            NetObjInsert(pCondition, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1267,7 +1268,7 @@ BOOL LoadObjects()
                   g_pEntireNet->AddSubnet(pSubnet);
                }
             }
-            NetObjInsert(pSubnet, FALSE);  // Insert into indexes
+            NetObjInsert(pSubnet, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1292,7 +1293,7 @@ BOOL LoadObjects()
          rack = new Rack;
          if (rack->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(rack, FALSE);  // Insert into indexes
+            NetObjInsert(rack, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1317,7 +1318,7 @@ BOOL LoadObjects()
          md = new MobileDevice;
          if (md->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(md, FALSE);  // Insert into indexes
+            NetObjInsert(md, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1342,7 +1343,7 @@ BOOL LoadObjects()
          pNode = new Node;
          if (pNode->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pNode, FALSE);  // Insert into indexes
+            NetObjInsert(pNode, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1367,7 +1368,7 @@ BOOL LoadObjects()
          ap = new AccessPoint;
          if (ap->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(ap, FALSE);  // Insert into indexes
+            NetObjInsert(ap, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1392,7 +1393,7 @@ BOOL LoadObjects()
          pInterface = new Interface;
          if (pInterface->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pInterface, FALSE);  // Insert into indexes
+            NetObjInsert(pInterface, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1417,7 +1418,7 @@ BOOL LoadObjects()
          pService = new NetworkService;
          if (pService->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pService, FALSE);  // Insert into indexes
+            NetObjInsert(pService, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1442,7 +1443,7 @@ BOOL LoadObjects()
          pConnector = new VPNConnector;
          if (pConnector->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pConnector, FALSE);  // Insert into indexes
+            NetObjInsert(pConnector, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1467,7 +1468,7 @@ BOOL LoadObjects()
          pCluster = new Cluster;
          if (pCluster->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pCluster, FALSE);  // Insert into indexes
+            NetObjInsert(pCluster, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1494,7 +1495,7 @@ BOOL LoadObjects()
          pTemplate = new Template;
          if (pTemplate->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pTemplate, FALSE);  // Insert into indexes
+            NetObjInsert(pTemplate, false, false);  // Insert into indexes
 				pTemplate->calculateCompoundStatus();	// Force status change to NORMAL
          }
          else     // Object load failed
@@ -1529,7 +1530,7 @@ BOOL LoadObjects()
 			}
          if (policy->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(policy, FALSE);  // Insert into indexes
+            NetObjInsert(policy, false, false);  // Insert into indexes
 				policy->calculateCompoundStatus();	// Force status change to NORMAL
          }
          else     // Object load failed
@@ -1553,7 +1554,7 @@ BOOL LoadObjects()
          NetworkMap *map = new NetworkMap;
          if (map->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(map, FALSE);  // Insert into indexes
+            NetObjInsert(map, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1579,7 +1580,7 @@ BOOL LoadObjects()
          pContainer = new Container;
          if (pContainer->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pContainer, FALSE);  // Insert into indexes
+            NetObjInsert(pContainer, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1605,7 +1606,7 @@ BOOL LoadObjects()
          pGroup = new TemplateGroup;
          if (pGroup->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pGroup, FALSE);  // Insert into indexes
+            NetObjInsert(pGroup, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1631,7 +1632,7 @@ BOOL LoadObjects()
          pGroup = new PolicyGroup;
          if (pGroup->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pGroup, FALSE);  // Insert into indexes
+            NetObjInsert(pGroup, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1657,7 +1658,7 @@ BOOL LoadObjects()
          pGroup = new NetworkMapGroup;
          if (pGroup->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pGroup, FALSE);  // Insert into indexes
+            NetObjInsert(pGroup, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1682,7 +1683,7 @@ BOOL LoadObjects()
          pd = new Dashboard;
          if (pd->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pd, FALSE);  // Insert into indexes
+            NetObjInsert(pd, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1706,7 +1707,7 @@ BOOL LoadObjects()
 		   BusinessService *service = new BusinessService;
 		   if (service->loadFromDatabase(hdb, dwId))
 		   {
-			   NetObjInsert(service, FALSE);  // Insert into indexes
+			   NetObjInsert(service, false, false);  // Insert into indexes
 		   }
 		   else     // Object load failed
 		   {
@@ -1730,7 +1731,7 @@ BOOL LoadObjects()
 		   NodeLink *nl = new NodeLink;
 		   if (nl->loadFromDatabase(hdb, dwId))
 		   {
-			   NetObjInsert(nl, FALSE);  // Insert into indexes
+			   NetObjInsert(nl, false, false);  // Insert into indexes
 		   }
 		   else     // Object load failed
 		   {
@@ -1753,7 +1754,7 @@ BOOL LoadObjects()
          SlmCheck *check = new SlmCheck;
          if (check->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(check, FALSE);  // Insert into indexes
+            NetObjInsert(check, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {

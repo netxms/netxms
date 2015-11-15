@@ -108,7 +108,7 @@ static void CreateManagementNode(const InetAddress& addr)
 	TCHAR buffer[256];
 
 	Node *node = new Node(addr, NF_IS_LOCAL_MGMT, 0, 0, 0);
-   NetObjInsert(node, TRUE);
+   NetObjInsert(node, true, false);
 	node->setName(GetLocalHostName(buffer, 256));
 
    PollerInfo *p = RegisterPoller(POLLER_TYPE_CONFIGURATION, node);

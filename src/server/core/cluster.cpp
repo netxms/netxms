@@ -217,7 +217,7 @@ BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
    {
 		lockDciAccess(false);
       for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
-         m_dcObjects->get(i)->saveToDB(hdb);
+         m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
 
 		// Save cluster members list

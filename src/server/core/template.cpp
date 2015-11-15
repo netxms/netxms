@@ -317,7 +317,7 @@ BOOL Template::saveToDatabase(DB_HANDLE hdb)
    // Save data collection items
 	lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
-      m_dcObjects->get(i)->saveToDB(hdb);
+      m_dcObjects->get(i)->saveToDatabase(hdb);
 	unlockDciAccess();
 
    // Clear modifications flag
@@ -797,6 +797,32 @@ DCObject *Template::getDCObjectByDescription(const TCHAR *description)
 }
 
 /**
+ * Get item by GUID
+ */
+DCObject *Template::getDCObjectByGUID(const uuid& guid, bool lock)
+{
+   DCObject *object = NULL;
+
+   if (lock)
+      lockDciAccess(false);
+
+   // Check if that item exists
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *curr = m_dcObjects->get(i);
+      if (guid.equals(curr->getGuid()))
+      {
+         object = curr;
+         break;
+      }
+   }
+
+   if (lock)
+      unlockDciAccess();
+   return object;
+}
+
+/**
  * Get item by it's index
  */
 DCObject *Template::getDCObjectByIndex(int index)
@@ -1214,31 +1240,82 @@ void Template::onDataCollectionChange()
 void Template::updateFromImport(ConfigEntry *config)
 {
    // Name and version
+   lockProperties();
    m_dwVersion = config->getSubEntryValueAsUInt(_T("version"), 0, m_dwVersion);
    m_flags = config->getSubEntryValueAsUInt(_T("flags"), 0, m_flags);
+   unlockProperties();
 
    // Auto-apply filter
-   if (m_flags & TF_AUTO_APPLY)
-      setAutoApplyFilter(config->getSubEntryValue(_T("filter")));
+   setAutoApplyFilter(config->getSubEntryValue(_T("filter")));
 
-   /*
    // Data collection
+   ObjectArray<uuid> guidList(32, 32, true);
+
+   lockDciAccess(true);
    ConfigEntry *dcRoot = config->findEntry(_T("dataCollection"));
    if (dcRoot != NULL)
    {
       ObjectArray<ConfigEntry> *dcis = dcRoot->getSubEntries(_T("dci#*"));
       for(int i = 0; i < dcis->size(); i++)
       {
-         m_dcObjects->add(new DCItem(dcis->get(i), this));
+         ConfigEntry *e = dcis->get(i);
+         uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
+         DCObject *curr = !guid.isNull() ? getDCObjectByGUID(guid, false) : NULL;
+         if ((curr != NULL) && (curr->getType() == DCO_TYPE_ITEM))
+         {
+            curr->updateFromImport(e);
+         }
+         else
+         {
+            m_dcObjects->add(new DCItem(e, this));
+         }
+         guidList.add(new uuid(guid));
       }
       delete dcis;
 
       ObjectArray<ConfigEntry> *dctables = dcRoot->getSubEntries(_T("dctable#*"));
       for(int i = 0; i < dctables->size(); i++)
       {
-         m_dcObjects->add(new DCTable(dctables->get(i), this));
+         ConfigEntry *e = dctables->get(i);
+         uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
+         DCObject *curr = !guid.isNull() ? getDCObjectByGUID(guid, false) : NULL;
+         if ((curr != NULL) && (curr->getType() == DCO_TYPE_TABLE))
+         {
+            curr->updateFromImport(e);
+         }
+         else
+         {
+            m_dcObjects->add(new DCTable(e, this));
+         }
+         guidList.add(new uuid(guid));
       }
       delete dctables;
    }
-   */
+
+   // Delete DCIs missing in import
+   IntegerArray<UINT32> deleteList;
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      bool found = false;
+      for(int j = 0; j < guidList.size(); j++)
+      {
+         if (guidList.get(j)->equals(m_dcObjects->get(i)->getGuid()))
+         {
+            found = true;
+            break;
+         }
+      }
+
+      if (!found)
+      {
+         deleteList.add(m_dcObjects->get(i)->getId());
+      }
+   }
+
+   for(int i = 0; i < deleteList.size(); i++)
+      deleteDCObject(deleteList.get(i), false);
+
+   unlockDciAccess();
+
+   queueUpdate();
 }

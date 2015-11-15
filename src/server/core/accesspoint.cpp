@@ -171,7 +171,7 @@ BOOL AccessPoint::saveToDatabase(DB_HANDLE hdb)
    {
 		lockDciAccess(false);
       for(int i = 0; i < m_dcObjects->size(); i++)
-         m_dcObjects->get(i)->saveToDB(hdb);
+         m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
    }
 

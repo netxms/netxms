@@ -701,6 +701,7 @@ public:
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
    int getItemType(UINT32 dwItemId);
    DCObject *getDCObjectById(UINT32 itemId, bool lock = true);
+   DCObject *getDCObjectByGUID(const uuid& guid, bool lock = true);
    DCObject *getDCObjectByTemplateId(UINT32 tmplItemId);
    DCObject *getDCObjectByIndex(int index);
    DCObject *getDCObjectByName(const TCHAR *name);
@@ -2355,7 +2356,7 @@ struct CONTAINER_CATEGORY
 
 void ObjectsInit();
 
-void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, BOOL bNewObject);
+void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, bool newObject, bool importedObject);
 void NetObjDeleteFromIndexes(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
 

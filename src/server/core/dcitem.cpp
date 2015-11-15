@@ -327,7 +327,7 @@ bool DCItem::loadThresholdsFromDB(DB_HANDLE hdb)
 /**
  * Save to database
  */
-BOOL DCItem::saveToDB(DB_HANDLE hdb)
+bool DCItem::saveToDatabase(DB_HANDLE hdb)
 {
    // Prepare and execute query
 	DB_STATEMENT hStmt;
@@ -448,7 +448,7 @@ BOOL DCItem::saveToDB(DB_HANDLE hdb)
    }
 
    unlock();
-	return bResult ? DCObject::saveToDB(hdb) : FALSE;
+	return bResult ? DCObject::saveToDatabase(hdb) : false;
 }
 
 /**
@@ -1565,11 +1565,11 @@ void DCItem::createExportRecord(String &str)
 		str += _T("</transformation>\n");
 	}
 
-	if (m_dwNumSchedules > 0)
+	if ((m_schedules != NULL) && (m_schedules->size() > 0))
    {
       str += _T("\t\t\t\t\t<schedules>\n");
-      for(i = 0; i < m_dwNumSchedules; i++)
-         str.appendFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_ppScheduleList[i]));
+      for(i = 0; i < m_schedules->size(); i++)
+         str.appendFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_schedules->get(i)));
       str += _T("\t\t\t\t\t</schedules>\n");
    }
 
@@ -1905,4 +1905,44 @@ void DCItem::filterInstanceList(StringMap *instances)
    instances->forEach(FilterCallback, &data);
    instances->clear();
    instances->addAll(&filteredInstances);
+}
+
+/**
+ * Create DCObject from import file
+ */
+void DCItem::updateFromImport(ConfigEntry *config)
+{
+   DCObject::updateFromImport(config);
+
+   nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
+   m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
+   m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
+   m_sampleCount = (BYTE)config->getSubEntryValueAsInt(_T("samples"));
+   m_snmpRawValueType = (WORD)config->getSubEntryValueAsInt(_T("snmpRawValueType"));
+   m_instanceDiscoveryMethod = (WORD)config->getSubEntryValueAsInt(_T("instanceDiscoveryMethod"));
+   const TCHAR *value = config->getSubEntryValue(_T("instanceDiscoveryData"));
+   safe_free(m_instanceDiscoveryData);
+   m_instanceDiscoveryData = _tcsdup_ex(value);
+   setInstanceFilter(config->getSubEntryValue(_T("instanceFilter")));
+
+   ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
+   if (thresholdsRoot != NULL)
+   {
+      ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
+      if (m_thresholds != NULL)
+         m_thresholds->clear();
+      else
+         m_thresholds = new ObjectArray<Threshold>(thresholds->size(), 8, true);
+      for(int i = 0; i < thresholds->size(); i++)
+      {
+         m_thresholds->add(new Threshold(thresholds->get(i), this));
+      }
+      delete thresholds;
+   }
+   else
+   {
+      delete_and_null(m_thresholds);
+   }
+
+   updateCacheSize();
 }

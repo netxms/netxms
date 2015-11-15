@@ -192,8 +192,7 @@ protected:
    UINT32 m_dwTemplateItemId;     // Related template item's id
    Template *m_pNode;             // Pointer to node or template object this item related to
    MUTEX m_hMutex;
-   UINT32 m_dwNumSchedules;
-   TCHAR **m_ppScheduleList;
+   StringList *m_schedules;
    time_t m_tLastCheck;          // Last schedule checking time
    UINT32 m_dwErrorCount;         // Consequtive collection error count
 	UINT32 m_dwResourceId;	   	// Associated cluster resource ID
@@ -208,7 +207,7 @@ protected:
    void unlock() { MutexUnlock(m_hMutex); }
 
 	bool loadCustomSchedules(DB_HANDLE hdb);
-   bool matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp);
+   bool matchSchedule(struct tm *pCurrTime, const TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp);
 
 	void expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
 
@@ -227,8 +226,9 @@ public:
 	virtual int getType() const { return DCO_TYPE_GENERIC; }
 
    virtual void updateFromTemplate(DCObject *dcObject);
+   virtual void updateFromImport(ConfigEntry *config);
 
-   virtual BOOL saveToDB(DB_HANDLE hdb);
+   virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
@@ -348,8 +348,9 @@ public:
 	virtual int getType() const { return DCO_TYPE_ITEM; }
 
    virtual void updateFromTemplate(DCObject *dcObject);
+   virtual void updateFromImport(ConfigEntry *config);
 
-   virtual BOOL saveToDB(DB_HANDLE hdb);
+   virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
@@ -560,8 +561,9 @@ public:
 	virtual int getType() const { return DCO_TYPE_TABLE; }
 
    virtual void updateFromTemplate(DCObject *dcObject);
+   virtual void updateFromImport(ConfigEntry *config);
 
-   virtual BOOL saveToDB(DB_HANDLE hdb);
+   virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
