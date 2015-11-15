@@ -144,37 +144,38 @@ void ClientSession::ThreadStarter_##func(void *pArg) \
 	free(pArg); \
 }
 
-DEFINE_THREAD_STARTER(getCollectedData)
-DEFINE_THREAD_STARTER(getTableCollectedData)
-DEFINE_THREAD_STARTER(clearDCIData)
-DEFINE_THREAD_STARTER(forceDCIPoll)
-DEFINE_THREAD_STARTER(queryL2Topology)
-DEFINE_THREAD_STARTER(sendEventLog)
-DEFINE_THREAD_STARTER(sendSyslog)
-DEFINE_THREAD_STARTER(createObject)
-DEFINE_THREAD_STARTER(getServerFile)
-DEFINE_THREAD_STARTER(getAgentFile)
 DEFINE_THREAD_STARTER(cancelFileMonitoring)
-DEFINE_THREAD_STARTER(queryServerLog)
-DEFINE_THREAD_STARTER(getServerLogQueryData)
+DEFINE_THREAD_STARTER(clearDCIData)
+DEFINE_THREAD_STARTER(createObject)
 DEFINE_THREAD_STARTER(executeAction)
-DEFINE_THREAD_STARTER(findNodeConnection)
-DEFINE_THREAD_STARTER(findMacAddress)
-DEFINE_THREAD_STARTER(findIpAddress)
-DEFINE_THREAD_STARTER(processConsoleCommand)
-DEFINE_THREAD_STARTER(sendMib)
-DEFINE_THREAD_STARTER(getNetworkPath)
-DEFINE_THREAD_STARTER(queryParameter)
-DEFINE_THREAD_STARTER(queryAgentTable)
-DEFINE_THREAD_STARTER(getAlarmEvents)
-DEFINE_THREAD_STARTER(openHelpdeskIssue)
-DEFINE_THREAD_STARTER(forwardToReportingServer)
-DEFINE_THREAD_STARTER(fileManagerControl)
-DEFINE_THREAD_STARTER(uploadUserFileToAgent)
-DEFINE_THREAD_STARTER(getSwitchForwardingDatabase)
-DEFINE_THREAD_STARTER(getRoutingTable)
-DEFINE_THREAD_STARTER(getLocationHistory)
 DEFINE_THREAD_STARTER(executeScript)
+DEFINE_THREAD_STARTER(fileManagerControl)
+DEFINE_THREAD_STARTER(findIpAddress)
+DEFINE_THREAD_STARTER(findMacAddress)
+DEFINE_THREAD_STARTER(findNodeConnection)
+DEFINE_THREAD_STARTER(forceDCIPoll)
+DEFINE_THREAD_STARTER(forwardToReportingServer)
+DEFINE_THREAD_STARTER(getAgentFile)
+DEFINE_THREAD_STARTER(getAlarmEvents)
+DEFINE_THREAD_STARTER(getCollectedData)
+DEFINE_THREAD_STARTER(getLocationHistory)
+DEFINE_THREAD_STARTER(getNetworkPath)
+DEFINE_THREAD_STARTER(getRoutingTable)
+DEFINE_THREAD_STARTER(getServerFile)
+DEFINE_THREAD_STARTER(getServerLogQueryData)
+DEFINE_THREAD_STARTER(getSwitchForwardingDatabase)
+DEFINE_THREAD_STARTER(getTableCollectedData)
+DEFINE_THREAD_STARTER(importConfiguration)
+DEFINE_THREAD_STARTER(openHelpdeskIssue)
+DEFINE_THREAD_STARTER(processConsoleCommand)
+DEFINE_THREAD_STARTER(queryAgentTable)
+DEFINE_THREAD_STARTER(queryL2Topology)
+DEFINE_THREAD_STARTER(queryParameter)
+DEFINE_THREAD_STARTER(queryServerLog)
+DEFINE_THREAD_STARTER(sendEventLog)
+DEFINE_THREAD_STARTER(sendMib)
+DEFINE_THREAD_STARTER(sendSyslog)
+DEFINE_THREAD_STARTER(uploadUserFileToAgent)
 
 /**
  * Client communication read thread starter
@@ -1157,7 +1158,7 @@ void ClientSession::processingThread()
             exportConfiguration(pMsg);
             break;
          case CMD_IMPORT_CONFIGURATION:
-            importConfiguration(pMsg);
+            CALL_IN_NEW_THREAD(importConfiguration, pMsg);
             break;
 			case CMD_GET_GRAPH_LIST:
 				sendGraphList(pMsg->getId());
