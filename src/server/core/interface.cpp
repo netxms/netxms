@@ -1146,12 +1146,14 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
 /**
  * Set MAC address for interface
  */
-void Interface::setMacAddr(const BYTE *pbNewMac)
+void Interface::setMacAddr(const BYTE *macAddr, bool updateMacDB)
 {
    lockProperties();
-   MacDbRemove(m_macAddr);
-   memcpy(m_macAddr, pbNewMac, MAC_ADDR_LENGTH);
-   MacDbAddInterface(this);
+   if (updateMacDB)
+      MacDbRemove(m_macAddr);
+   memcpy(m_macAddr, macAddr, MAC_ADDR_LENGTH);
+   if (updateMacDB)
+      MacDbAddInterface(this);
    setModified();
    unlockProperties();
 }

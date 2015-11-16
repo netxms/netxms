@@ -10,9 +10,10 @@
 - Added cumulative counters for server DB writer requests
 - Fixed data corruption issues in ODBC and Oracle DB drivers
 - Additional internal server metrics for monitoring DB activity and performance
+- Added interface creation hook
 - Management console:
 	- Object tool input fields can be rearranged
-- Fixed issues: #847, #948, #967
+- Fixed issues: #847, #948, #967, #979, #980
 
 
 *

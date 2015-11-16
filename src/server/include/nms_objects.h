@@ -829,7 +829,7 @@ public:
    UINT64 getLastDownEventId() { return m_lastDownEventId; }
    void setLastDownEventId(QWORD id) { m_lastDownEventId = id; }
 
-   void setMacAddr(const BYTE *pbNewMac);
+   void setMacAddr(const BYTE *macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
    void setBridgePortNumber(UINT32 bpn) { m_bridgePortNumber = bpn; setModified(); }
    void setSlotNumber(UINT32 slot) { m_slotNumber = slot; setModified(); }
@@ -1244,6 +1244,7 @@ protected:
    UINT32 getInterfaceCount(Interface **ppInterface);
 
    void checkInterfaceNames(InterfaceList *pIfList);
+   bool filterInterface(InterfaceInfo *info);
    Subnet *createSubnet(const InetAddress& baseAddr, bool syntheticMask);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 	void updatePrimaryIpAddr();

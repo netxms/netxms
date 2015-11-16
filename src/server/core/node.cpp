@@ -951,6 +951,58 @@ bool Node::isMyIP(const InetAddress& addr)
 }
 
 /**
+ * Filter interface - should return true if system should proceed with interface creation
+ */
+bool Node::filterInterface(InterfaceInfo *info)
+{
+   NXSL_VM *vm = g_pScriptLibrary->createVM(_T("Hook::CreateInterface"), new NXSL_ServerEnv);
+   if (vm == NULL)
+   {
+      DbgPrintf(7, _T("Node::filterInterface(%s [%u]): hook script \"Hook::CreateInterface\" not found"), m_name, m_id);
+      return true;
+   }
+
+   Interface *iface;
+   if (info->name[0] != 0)
+      iface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name,
+                                 info->index, info->ipAddrList, info->type, m_zoneId);
+   else
+      iface = new Interface(info->ipAddrList, m_zoneId, false);
+   iface->setMacAddr(info->macAddr, false);
+   iface->setBridgePortNumber(info->bridgePort);
+   iface->setSlotNumber(info->slot);
+   iface->setPortNumber(info->port);
+   iface->setPhysicalPortFlag(info->isPhysicalPort);
+   iface->setManualCreationFlag(false);
+   iface->setSystemFlag(info->isSystem);
+   iface->setMTU(info->mtu);
+   iface->setSpeed(info->speed);
+   iface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
+
+   bool pass = true;
+   NXSL_Value *argv = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, iface));
+   vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
+   if (vm->run(1, &argv))
+   {
+      NXSL_Value *result = vm->getResult();
+      if ((result != NULL) && result->isInteger())
+      {
+         pass = (result->getValueAsInt32() != 0);
+      }
+   }
+   else
+   {
+      DbgPrintf(4, _T("Node::filterInterface(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
+   }
+   delete vm;
+   delete iface;
+
+   DbgPrintf(6, _T("Node::filterInterface(%s [%u]): interface \"%s\" (ifIndex=%d) %s by filter"),
+             m_name, m_id, info->name, info->index, pass ? _T("accepted") : _T("rejected"));
+   return pass;
+}
+
+/**
  * Create new interface - convenience wrapper
  */
 Interface *Node::createNewInterface(const InetAddress& ipAddr, BYTE *macAddr)
@@ -1035,7 +1087,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
                                  info->index, info->ipAddrList, info->type, m_zoneId);
    else
       pInterface = new Interface(info->ipAddrList, m_zoneId, bSyntheticMask);
-   pInterface->setMacAddr(info->macAddr);
+   pInterface->setMacAddr(info->macAddr, false);
 	pInterface->setBridgePortNumber(info->bridgePort);
 	pInterface->setSlotNumber(info->slot);
 	pInterface->setPortNumber(info->port);
@@ -2796,7 +2848,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                      PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
                                pInterface->getId(), pInterface->getIfIndex(),
                                pInterface->getName(), szOldMac, szNewMac);
-                     pInterface->setMacAddr(ifInfo->macAddr);
+                     pInterface->setMacAddr(ifInfo->macAddr, true);
                   }
                   if (_tcscmp(ifInfo->name, pInterface->getName()))
                   {
@@ -2893,8 +2945,15 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          {
             // New interface
             sendPollerMsg(rqid, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->name);
-            createNewInterface(ifInfo, false);
-            hasChanges = true;
+            if (filterInterface(ifInfo))
+            {
+               createNewInterface(ifInfo, false);
+               hasChanges = true;
+            }
+            else
+            {
+               sendPollerMsg(rqid, POLLER_WARNING _T("   Creation of interface object \"%s\" blocked by filter\r\n"), ifInfo->name);
+            }
          }
       }
    }
@@ -2975,7 +3034,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                   PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
                             pInterface->getId(), pInterface->getIfIndex(),
                             pInterface->getName(), szOldMac, szNewMac);
-                  pInterface->setMacAddr(macAddr);
+                  pInterface->setMacAddr(macAddr, true);
 					}
 				}
          }
