@@ -574,6 +574,50 @@ static bool ConvertObjectToolMacros(UINT32 id, const TCHAR *text, const TCHAR *c
 }
 
 /**
+ * Create library script
+ */
+static bool CreateLibraryScript(UINT32 id, const TCHAR *name, const TCHAR *code)
+{
+   // Check if script exists
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT script_id FROM script_library WHERE script_id=%d OR script_name=%s"),
+              id, (const TCHAR *)DBPrepareString(g_hCoreDB, name));
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == NULL)
+      return false;
+   bool exist = (DBGetNumRows(hResult) > 0);
+   DBFreeResult(hResult);
+   if (exist)
+      return true;
+
+   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO script_library (script_id,script_name,script_code) VALUES (?,?,?)"));
+   if (hStmt == NULL)
+      return false;
+
+   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, id);
+   DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, code, DB_BIND_STATIC);
+
+   bool success = SQLExecute(hStmt);
+   DBFreeStatement(hStmt);
+   return success;
+}
+
+/**
+ * Upgrade from V381 to V382
+ */
+static BOOL H_UpgradeFromV381(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateLibraryScript(11, _T("Hook::StatusPoll"), _T("")));
+   CHK_EXEC(CreateLibraryScript(12, _T("Hook::ConfigurationPoll"), _T("")));
+   CHK_EXEC(CreateLibraryScript(13, _T("Hook::InstancePoll"), _T("")));
+   CHK_EXEC(CreateLibraryScript(14, _T("Hook::TopologyPoll"), _T("")));
+   CHK_EXEC(CreateLibraryScript(15, _T("Hook::CreateInterface"), _T("return true;\r\n")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='382' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V380 to V381
  */
 static BOOL H_UpgradeFromV380(int currVersion, int newVersion)
@@ -9104,6 +9148,7 @@ static struct
    { 378, 379, H_UpgradeFromV378 },
    { 379, 380, H_UpgradeFromV379 },
    { 380, 381, H_UpgradeFromV380 },
+   { 381, 382, H_UpgradeFromV381 },
    { 0, 0, NULL }
 };
 

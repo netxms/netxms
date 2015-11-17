@@ -5,10 +5,22 @@
 */
 
 INSERT INTO script_library (script_id,script_name,script_code)
-	VALUES (1,'Filter::SNMP','sub main()' CONCAT CRLF CONCAT '{' CONCAT CRLF CONCAT '   return $1->isSNMP;' CONCAT CRLF CONCAT '}' CONCAT CRLF);
+	VALUES (1,'Filter::SNMP','return $1->isSNMP;' CONCAT CRLF);
 INSERT INTO script_library (script_id,script_name,script_code)
-	VALUES (2,'Filter::Agent','sub main()' CONCAT CRLF CONCAT '{' CONCAT CRLF CONCAT '   return $1->isAgent;' CONCAT CRLF CONCAT '}' CONCAT CRLF);
+	VALUES (2,'Filter::Agent','return $1->isAgent;' CONCAT CRLF);
 INSERT INTO script_library (script_id,script_name,script_code)
-	VALUES (3,'Filter::AgentOrSNMP','sub main()' CONCAT CRLF CONCAT '{' CONCAT CRLF CONCAT '   return $1->isAgent || $1->isSNMP;' CONCAT CRLF CONCAT '}' CONCAT CRLF);
+	VALUES (3,'Filter::AgentOrSNMP','return $1->isAgent || $1->isSNMP;' CONCAT CRLF);
+
 INSERT INTO script_library (script_id,script_name,script_code)
 	VALUES (4,'DCI::SampleTransform','sub dci_transform()' CONCAT CRLF CONCAT '{' CONCAT CRLF CONCAT '   return $1 + 1;' CONCAT CRLF CONCAT '}' CONCAT CRLF);
+
+INSERT INTO script_library (script_id,script_name,script_code)
+	VALUES (11,'Hook::StatusPoll','');
+INSERT INTO script_library (script_id,script_name,script_code)
+	VALUES (12,'Hook::ConfigurationPoll','');
+INSERT INTO script_library (script_id,script_name,script_code)
+	VALUES (13,'Hook::InstancePoll','');
+INSERT INTO script_library (script_id,script_name,script_code)
+	VALUES (14,'Hook::TopologyPoll','');
+INSERT INTO script_library (script_id,script_name,script_code)
+	VALUES (15,'Hook::CreateInterface','return true;' CONCAT CRLF);
