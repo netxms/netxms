@@ -569,6 +569,8 @@ public:
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    virtual void processNewError();
 
+   virtual bool hasValue();
+
    virtual void createMessage(NXCPMessage *pMsg);
    virtual void updateFromMessage(NXCPMessage *pMsg);
 

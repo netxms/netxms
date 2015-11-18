@@ -1102,3 +1102,13 @@ void DCTable::updateFromImport(ConfigEntry *config)
       delete thresholds;
    }
 }
+
+/**
+ * Should return true if object has (or can have) value
+ */
+bool DCTable::hasValue()
+{
+   if (m_pNode->getObjectClass() == OBJECT_CLUSTER)
+      return isAggregateOnCluster();
+   return true;
+}
