@@ -1424,6 +1424,7 @@ void DCItem::updateFromTemplate(DCObject *src)
 
    m_dataType = item->m_dataType;
    m_deltaCalculation = item->m_deltaCalculation;
+   m_sampleCount = item->m_sampleCount;
 
 	m_nBaseUnits = item->m_nBaseUnits;
 	m_nMultiplier = item->m_nMultiplier;
