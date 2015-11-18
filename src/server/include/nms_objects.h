@@ -1260,7 +1260,7 @@ protected:
 	void applyUserTemplates();
 	void doInstanceDiscovery(UINT32 requestId);
 	StringMap *getInstanceList(DCItem *dci);
-	void updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
+	bool updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
    void collectProxyInfo(ProxyInfo *info);

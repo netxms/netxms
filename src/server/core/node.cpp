@@ -3235,6 +3235,7 @@ void Node::doInstanceDiscovery(UINT32 requestId)
 
 	// process instance discovery DCIs
 	// it should be done that way to prevent DCI list lock for long time
+   bool changed = false;
 	for(int i = 0; i < rootItems.size(); i++)
 	{
 		DCItem *dci = rootItems.get(i);
@@ -3246,7 +3247,8 @@ void Node::doInstanceDiscovery(UINT32 requestId)
 		{
 			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
 			dci->filterInstanceList(instances);
-         updateInstances(dci, instances, requestId);
+         if (updateInstances(dci, instances, requestId))
+            changed = true;
 			delete instances;
 		}
 		else
@@ -3257,6 +3259,9 @@ void Node::doInstanceDiscovery(UINT32 requestId)
 		}
 		dci->setBusyFlag(FALSE);
 	}
+
+	if (changed)
+	   onDataCollectionChange();
 }
 
 /**
@@ -3366,8 +3371,10 @@ static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const void 
 /**
  * Update instance DCIs created from instance discovery DCI
  */
-void Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
+bool Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
 {
+   bool changed = false;
+
    lockDciAccess(true);
 
 	// Delete DCIs for missing instances and update existing
@@ -3391,6 +3398,7 @@ void Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
 			{
             ((DCItem *)object)->setInstance(name);
 			   ((DCItem *)object)->updateFromTemplate(root);
+			   changed = true;
          }
 			instances->remove(dciInstance);
 		}
@@ -3401,6 +3409,7 @@ void Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
 			          m_name, m_id, root->getName(), root->getId(), dciInstance);
          sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dciInstance);
 			deleteList.add(object->getId());
+			changed = true;
 		}
    }
 
@@ -3408,13 +3417,18 @@ void Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
 		deleteDCObject(deleteList.get(i), false);
 
 	// Create new instances
-   CreateInstanceDCIData data;
-   data.root = root;
-   data.object = this;
-   data.requestId = requestId;
-   instances->forEach(CreateInstanceDCI, &data);
+	if (instances->size() > 0)
+	{
+      CreateInstanceDCIData data;
+      data.root = root;
+      data.object = this;
+      data.requestId = requestId;
+      instances->forEach(CreateInstanceDCI, &data);
+      changed = true;
+	}
 
    unlockDciAccess();
+   return changed;
 }
 
 /**
