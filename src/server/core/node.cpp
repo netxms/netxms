@@ -4499,27 +4499,36 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    {
       InetAddress ipAddr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
 
-      // Check if received IP address is one of node's interface addresses
-      LockChildList(FALSE);
-      UINT32 i;
-      for(i = 0; i < m_dwChildCount; i++)
-         if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
-             ((Interface *)m_pChildList[i])->getIpAddressList()->hasAddress(ipAddr))
-            break;
-      UnlockChildList();
-      if (i == m_dwChildCount)
+      if (m_dwFlags & NF_REMOTE_AGENT)
       {
-         return RCC_INVALID_IP_ADDR;
+         lockProperties();
+         m_ipAddress = ipAddr;
+         setModified();
+         unlockProperties();
       }
-
-      //Check that there is no node with same IP as we try to change
-      if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) ||
-       (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
+      else
       {
-         return RCC_ALREADY_EXIST;
-      }
+         // Check if received IP address is one of node's interface addresses
+         LockChildList(FALSE);
+         UINT32 i;
+         for(i = 0; i < m_dwChildCount; i++)
+            if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
+                ((Interface *)m_pChildList[i])->getIpAddressList()->hasAddress(ipAddr))
+               break;
+         UnlockChildList();
+         if (i == m_dwChildCount)
+         {
+            return RCC_INVALID_IP_ADDR;
+         }
 
-      setPrimaryIPAddress(ipAddr);
+         // Check that there is no node with same IP as we try to change
+         if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) || (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
+         {
+            return RCC_ALREADY_EXIST;
+         }
+
+         setPrimaryIPAddress(ipAddr);
+      }
 
 		// Update primary name if it is not set with the same message
 		if (!pRequest->isFieldExist(VID_PRIMARY_NAME))
@@ -4539,7 +4548,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 		pRequest->getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
 
       InetAddress ipAddr = InetAddress::resolveHostName(primaryName);
-      if (ipAddr.isValid())
+      if (ipAddr.isValid() && !(m_dwFlags & NF_REMOTE_AGENT))
       {
          // Check if received IP address is one of node's interface addresses
          LockChildList(FALSE);
@@ -4552,8 +4561,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
          if (i == m_dwChildCount)
          {
             // Check that there is no node with same IP as we try to change
-            if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) ||
-                (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
+            if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) || (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
             {
                return RCC_ALREADY_EXIST;
             }
