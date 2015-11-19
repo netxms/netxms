@@ -224,31 +224,31 @@ void ObjectsInit()
 
    // Create "Entire Network" object
    g_pEntireNet = new Network;
-   NetObjInsert(g_pEntireNet, FALSE);
+   NetObjInsert(g_pEntireNet, false, false);
 
    // Create "Service Root" object
    g_pServiceRoot = new ServiceRoot;
-   NetObjInsert(g_pServiceRoot, FALSE);
+   NetObjInsert(g_pServiceRoot, false, false);
 
    // Create "Template Root" object
    g_pTemplateRoot = new TemplateRoot;
-   NetObjInsert(g_pTemplateRoot, FALSE);
+   NetObjInsert(g_pTemplateRoot, false, false);
 
 	// Create "Policy Root" object
    g_pPolicyRoot = new PolicyRoot;
-   NetObjInsert(g_pPolicyRoot, FALSE);
+   NetObjInsert(g_pPolicyRoot, false, false);
    
 	// Create "Network Maps Root" object
    g_pMapRoot = new NetworkMapRoot;
-   NetObjInsert(g_pMapRoot, FALSE);
+   NetObjInsert(g_pMapRoot, false, false);
    
 	// Create "Dashboard Root" object
    g_pDashboardRoot = new DashboardRoot;
-   NetObjInsert(g_pDashboardRoot, FALSE);
+   NetObjInsert(g_pDashboardRoot, false, false);
    
    // Create "Business Service Root" object
    g_pBusinessServiceRoot = new BusinessServiceRoot;
-   NetObjInsert(g_pBusinessServiceRoot, FALSE);
+   NetObjInsert(g_pBusinessServiceRoot, false, false);
    
 	DbgPrintf(1, _T("Built-in objects created"));
 
@@ -262,13 +262,14 @@ void ObjectsInit()
 /**
  * Insert new object into network
  */
-void NetObjInsert(NetObj *pObject, BOOL bNewObject)
+void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 {
-   if (bNewObject)   
+   if (newObject)
    {
       // Assign unique ID to new object
       pObject->setId(CreateUniqueId(IDG_NETWORK_OBJECT));
-		pObject->generateGuid();
+      if (!importedObject) // imported objects already have valid GUID
+         pObject->generateGuid();
 
       // Create tables for storing data collection values
       if ((pObject->getObjectClass() == OBJECT_NODE) || 
@@ -279,9 +280,11 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
          TCHAR szQuery[256], szQueryTemplate[256];
          UINT32 i;
 
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
          MetaDataReadStr(_T("IDataTableCreationCommand"), szQueryTemplate, 255, _T(""));
          _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->getId());
-         DBQuery(g_hCoreDB, szQuery);
+         DBQuery(hdb, szQuery);
 
          for(i = 0; i < 10; i++)
          {
@@ -290,7 +293,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             if (szQueryTemplate[0] != 0)
             {
                _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->getId(), pObject->getId());
-               DBQuery(g_hCoreDB, szQuery);
+               DBQuery(hdb, szQuery);
             }
          }
 
@@ -301,7 +304,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             if (szQueryTemplate[0] != 0)
             {
                _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->getId(), pObject->getId());
-               DBQuery(g_hCoreDB, szQuery);
+               DBQuery(hdb, szQuery);
             }
          }
 
@@ -312,9 +315,11 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
             if (szQueryTemplate[0] != 0)
             {
                _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), szQueryTemplate, pObject->getId(), pObject->getId());
-               DBQuery(g_hCoreDB, szQuery);
+               DBQuery(hdb, szQuery);
             }
          }
+
+         DBConnectionPoolReleaseConnection(hdb);
 		}
    }
 	g_idxObjectById.put(pObject->getId(), pObject);
@@ -398,7 +403,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
 					{
 						g_idxSubnetByAddr.put(((Subnet *)pObject)->getIpAddress(), pObject);
 					}
-               if (bNewObject)
+               if (newObject)
                {
                   PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", pObject->getId(), pObject->getName(), 
                      &((Subnet *)pObject)->getIpAddress(), ((Subnet *)pObject)->getIpAddress().getMaskBits());
@@ -459,7 +464,7 @@ void NetObjInsert(NetObj *pObject, BOOL bNewObject)
    }
 
 	// Notify modules about object creation
-	if (bNewObject)
+	if (newObject)
 	{
       CALL_ALL_MODULES(pfPostObjectCreate, (pObject));
 	}
@@ -1139,9 +1144,11 @@ BOOL LoadObjects()
    // Prevent objects to change it's modification flag
    g_bModificationsLocked = TRUE;
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    // Load container categories
    DbgPrintf(2, _T("Loading container categories..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT category,name,image_id,description FROM container_categories"));
+   hResult = DBSelect(hdb, _T("SELECT category,name,image_id,description FROM container_categories"));
    if (hResult != NULL)
    {
       g_dwNumCategories = DBGetNumRows(hResult);
@@ -1159,13 +1166,13 @@ BOOL LoadObjects()
 
    // Load built-in object properties
    DbgPrintf(2, _T("Loading built-in object properties..."));
-   g_pEntireNet->LoadFromDB();
-   g_pServiceRoot->LoadFromDB();
-   g_pTemplateRoot->LoadFromDB();
-	g_pPolicyRoot->LoadFromDB();
-	g_pMapRoot->LoadFromDB();
-	g_pDashboardRoot->LoadFromDB();
-	g_pBusinessServiceRoot->LoadFromDB();
+   g_pEntireNet->loadFromDatabase(hdb);
+   g_pServiceRoot->loadFromDatabase(hdb);
+   g_pTemplateRoot->loadFromDatabase(hdb);
+	g_pPolicyRoot->loadFromDatabase(hdb);
+	g_pMapRoot->loadFromDatabase(hdb);
+	g_pDashboardRoot->loadFromDatabase(hdb);
+	g_pBusinessServiceRoot->loadFromDatabase(hdb);
 
    // Load zones
    if (g_flags & AF_ENABLE_ZONING)
@@ -1177,11 +1184,11 @@ BOOL LoadObjects()
       // Load (or create) default zone
       pZone = new Zone;
       pZone->generateGuid();
-      pZone->loadFromDatabase(BUILTIN_OID_ZONE0);
-      NetObjInsert(pZone, FALSE);
+      pZone->loadFromDatabase(hdb, BUILTIN_OID_ZONE0);
+      NetObjInsert(pZone, false, false);
       g_pEntireNet->AddZone(pZone);
 
-      hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM zones WHERE id<>4"));
+      hResult = DBSelect(hdb, _T("SELECT id FROM zones WHERE id<>4"));
       if (hResult != 0)
       {
          dwNumRows = DBGetNumRows(hResult);
@@ -1189,11 +1196,11 @@ BOOL LoadObjects()
          {
             dwId = DBGetFieldULong(hResult, i, 0);
             pZone = new Zone;
-            if (pZone->loadFromDatabase(dwId))
+            if (pZone->loadFromDatabase(hdb, dwId))
             {
                if (!pZone->isDeleted())
                   g_pEntireNet->AddZone(pZone);
-               NetObjInsert(pZone, FALSE);  // Insert into indexes
+               NetObjInsert(pZone, false, false);  // Insert into indexes
             }
             else     // Object load failed
             {
@@ -1209,7 +1216,7 @@ BOOL LoadObjects()
    // We should load conditions before nodes because
    // DCI cache size calculation uses information from condition objects
    DbgPrintf(2, _T("Loading conditions..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM conditions"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM conditions"));
    if (hResult != NULL)
    {
       Condition *pCondition;
@@ -1219,9 +1226,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pCondition = new Condition;
-         if (pCondition->loadFromDatabase(dwId))
+         if (pCondition->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pCondition, FALSE);  // Insert into indexes
+            NetObjInsert(pCondition, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1234,7 +1241,7 @@ BOOL LoadObjects()
 
    // Load subnets
    DbgPrintf(2, _T("Loading subnets..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM subnets"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM subnets"));
    if (hResult != 0)
    {
       Subnet *pSubnet;
@@ -1244,7 +1251,7 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pSubnet = new Subnet;
-         if (pSubnet->loadFromDatabase(dwId))
+         if (pSubnet->loadFromDatabase(hdb, dwId))
          {
             if (!pSubnet->isDeleted())
             {
@@ -1261,7 +1268,7 @@ BOOL LoadObjects()
                   g_pEntireNet->AddSubnet(pSubnet);
                }
             }
-            NetObjInsert(pSubnet, FALSE);  // Insert into indexes
+            NetObjInsert(pSubnet, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1274,7 +1281,7 @@ BOOL LoadObjects()
 
    // Load racks
    DbgPrintf(2, _T("Loading racks..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM racks"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM racks"));
    if (hResult != 0)
    {
       Rack *rack;
@@ -1284,9 +1291,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          rack = new Rack;
-         if (rack->loadFromDatabase(dwId))
+         if (rack->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(rack, FALSE);  // Insert into indexes
+            NetObjInsert(rack, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1299,7 +1306,7 @@ BOOL LoadObjects()
 
    // Load mobile devices
    DbgPrintf(2, _T("Loading mobile devices..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM mobile_devices"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM mobile_devices"));
    if (hResult != 0)
    {
       MobileDevice *md;
@@ -1309,9 +1316,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          md = new MobileDevice;
-         if (md->loadFromDatabase(dwId))
+         if (md->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(md, FALSE);  // Insert into indexes
+            NetObjInsert(md, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1324,7 +1331,7 @@ BOOL LoadObjects()
 
    // Load nodes
    DbgPrintf(2, _T("Loading nodes..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM nodes"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM nodes"));
    if (hResult != NULL)
    {
       Node *pNode;
@@ -1334,9 +1341,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pNode = new Node;
-         if (pNode->loadFromDatabase(dwId))
+         if (pNode->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pNode, FALSE);  // Insert into indexes
+            NetObjInsert(pNode, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1349,7 +1356,7 @@ BOOL LoadObjects()
 
    // Load access points
    DbgPrintf(2, _T("Loading access points..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM access_points"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM access_points"));
    if (hResult != NULL)
    {
 		AccessPoint *ap;
@@ -1359,9 +1366,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          ap = new AccessPoint;
-         if (ap->loadFromDatabase(dwId))
+         if (ap->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(ap, FALSE);  // Insert into indexes
+            NetObjInsert(ap, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1374,7 +1381,7 @@ BOOL LoadObjects()
 
    // Load interfaces
    DbgPrintf(2, _T("Loading interfaces..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM interfaces"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM interfaces"));
    if (hResult != 0)
    {
       Interface *pInterface;
@@ -1384,9 +1391,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pInterface = new Interface;
-         if (pInterface->loadFromDatabase(dwId))
+         if (pInterface->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pInterface, FALSE);  // Insert into indexes
+            NetObjInsert(pInterface, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1399,7 +1406,7 @@ BOOL LoadObjects()
 
    // Load network services
    DbgPrintf(2, _T("Loading network services..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM network_services"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM network_services"));
    if (hResult != 0)
    {
       NetworkService *pService;
@@ -1409,9 +1416,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pService = new NetworkService;
-         if (pService->loadFromDatabase(dwId))
+         if (pService->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pService, FALSE);  // Insert into indexes
+            NetObjInsert(pService, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1424,7 +1431,7 @@ BOOL LoadObjects()
 
    // Load VPN connectors
    DbgPrintf(2, _T("Loading VPN connectors..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM vpn_connectors"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM vpn_connectors"));
    if (hResult != NULL)
    {
       VPNConnector *pConnector;
@@ -1434,9 +1441,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pConnector = new VPNConnector;
-         if (pConnector->loadFromDatabase(dwId))
+         if (pConnector->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pConnector, FALSE);  // Insert into indexes
+            NetObjInsert(pConnector, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1449,7 +1456,7 @@ BOOL LoadObjects()
 
    // Load clusters
    DbgPrintf(2, _T("Loading clusters..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM clusters"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM clusters"));
    if (hResult != NULL)
    {
       Cluster *pCluster;
@@ -1459,9 +1466,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pCluster = new Cluster;
-         if (pCluster->loadFromDatabase(dwId))
+         if (pCluster->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pCluster, FALSE);  // Insert into indexes
+            NetObjInsert(pCluster, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1478,7 +1485,7 @@ BOOL LoadObjects()
 
    // Load templates
    DbgPrintf(2, _T("Loading templates..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM templates"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM templates"));
    if (hResult != NULL)
    {
       dwNumRows = DBGetNumRows(hResult);
@@ -1486,9 +1493,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pTemplate = new Template;
-         if (pTemplate->loadFromDatabase(dwId))
+         if (pTemplate->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pTemplate, FALSE);  // Insert into indexes
+            NetObjInsert(pTemplate, false, false);  // Insert into indexes
 				pTemplate->calculateCompoundStatus();	// Force status change to NORMAL
          }
          else     // Object load failed
@@ -1502,7 +1509,7 @@ BOOL LoadObjects()
 
    // Load agent policies
    DbgPrintf(2, _T("Loading agent policies..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id,policy_type FROM ap_common"));
+   hResult = DBSelect(hdb, _T("SELECT id,policy_type FROM ap_common"));
    if (hResult != NULL)
    {
       dwNumRows = DBGetNumRows(hResult);
@@ -1521,9 +1528,9 @@ BOOL LoadObjects()
 					policy = new AgentPolicy(type);
 					break;
 			}
-         if (policy->loadFromDatabase(dwId))
+         if (policy->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(policy, FALSE);  // Insert into indexes
+            NetObjInsert(policy, false, false);  // Insert into indexes
 				policy->calculateCompoundStatus();	// Force status change to NORMAL
          }
          else     // Object load failed
@@ -1537,7 +1544,7 @@ BOOL LoadObjects()
 
    // Load network maps
    DbgPrintf(2, _T("Loading network maps..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM network_maps"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM network_maps"));
    if (hResult != NULL)
    {
       dwNumRows = DBGetNumRows(hResult);
@@ -1545,9 +1552,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          NetworkMap *map = new NetworkMap;
-         if (map->loadFromDatabase(dwId))
+         if (map->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(map, FALSE);  // Insert into indexes
+            NetObjInsert(map, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1561,7 +1568,7 @@ BOOL LoadObjects()
    // Load container objects
    DbgPrintf(2, _T("Loading containers..."));
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_CONTAINER);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       Container *pContainer;
@@ -1571,9 +1578,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pContainer = new Container;
-         if (pContainer->loadFromDatabase(dwId))
+         if (pContainer->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pContainer, FALSE);  // Insert into indexes
+            NetObjInsert(pContainer, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1587,7 +1594,7 @@ BOOL LoadObjects()
    // Load template group objects
    DbgPrintf(2, _T("Loading template groups..."));
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_TEMPLATEGROUP);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       TemplateGroup *pGroup;
@@ -1597,9 +1604,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pGroup = new TemplateGroup;
-         if (pGroup->loadFromDatabase(dwId))
+         if (pGroup->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pGroup, FALSE);  // Insert into indexes
+            NetObjInsert(pGroup, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1613,7 +1620,7 @@ BOOL LoadObjects()
    // Load policy group objects
    DbgPrintf(2, _T("Loading policy groups..."));
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_POLICYGROUP);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       PolicyGroup *pGroup;
@@ -1623,9 +1630,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pGroup = new PolicyGroup;
-         if (pGroup->loadFromDatabase(dwId))
+         if (pGroup->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pGroup, FALSE);  // Insert into indexes
+            NetObjInsert(pGroup, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1639,7 +1646,7 @@ BOOL LoadObjects()
    // Load map group objects
    DbgPrintf(2, _T("Loading map groups..."));
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_NETWORKMAPGROUP);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
       NetworkMapGroup *pGroup;
@@ -1649,9 +1656,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pGroup = new NetworkMapGroup;
-         if (pGroup->loadFromDatabase(dwId))
+         if (pGroup->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pGroup, FALSE);  // Insert into indexes
+            NetObjInsert(pGroup, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1664,7 +1671,7 @@ BOOL LoadObjects()
 
    // Load dashboard objects
    DbgPrintf(2, _T("Loading dashboards..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM dashboards"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM dashboards"));
    if (hResult != 0)
    {
       Dashboard *pd;
@@ -1674,9 +1681,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          pd = new Dashboard;
-         if (pd->loadFromDatabase(dwId))
+         if (pd->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(pd, FALSE);  // Insert into indexes
+            NetObjInsert(pd, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1690,7 +1697,7 @@ BOOL LoadObjects()
    // Loading business service objects
    DbgPrintf(2, _T("Loading business services..."));
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_BUSINESSSERVICE);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
 	   dwNumRows = DBGetNumRows(hResult);
@@ -1698,9 +1705,9 @@ BOOL LoadObjects()
 	   {
 		   dwId = DBGetFieldULong(hResult, i, 0);
 		   BusinessService *service = new BusinessService;
-		   if (service->loadFromDatabase(dwId))
+		   if (service->loadFromDatabase(hdb, dwId))
 		   {
-			   NetObjInsert(service, FALSE);  // Insert into indexes
+			   NetObjInsert(service, false, false);  // Insert into indexes
 		   }
 		   else     // Object load failed
 		   {
@@ -1714,7 +1721,7 @@ BOOL LoadObjects()
    // Loading business service objects
    DbgPrintf(2, _T("Loading node links..."));
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_NODELINK);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
 	   dwNumRows = DBGetNumRows(hResult);
@@ -1722,9 +1729,9 @@ BOOL LoadObjects()
 	   {
 		   dwId = DBGetFieldULong(hResult, i, 0);
 		   NodeLink *nl = new NodeLink;
-		   if (nl->loadFromDatabase(dwId))
+		   if (nl->loadFromDatabase(hdb, dwId))
 		   {
-			   NetObjInsert(nl, FALSE);  // Insert into indexes
+			   NetObjInsert(nl, false, false);  // Insert into indexes
 		   }
 		   else     // Object load failed
 		   {
@@ -1737,7 +1744,7 @@ BOOL LoadObjects()
 
    // Load service check objects
    DbgPrintf(2, _T("Loading service checks..."));
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM slm_checks"));
+   hResult = DBSelect(hdb, _T("SELECT id FROM slm_checks"));
    if (hResult != 0)
    {
       dwNumRows = DBGetNumRows(hResult);
@@ -1745,9 +1752,9 @@ BOOL LoadObjects()
       {
          dwId = DBGetFieldULong(hResult, i, 0);
          SlmCheck *check = new SlmCheck;
-         if (check->loadFromDatabase(dwId))
+         if (check->loadFromDatabase(hdb, dwId))
          {
-            NetObjInsert(check, FALSE);  // Insert into indexes
+            NetObjInsert(check, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
@@ -1758,6 +1765,8 @@ BOOL LoadObjects()
       DBFreeResult(hResult);
    }
 
+   DBConnectionPoolReleaseConnection(hdb);
+
 	// Load custom object classes provided by modules
    CALL_ALL_MODULES(pfLoadObjects, ());
 
@@ -1766,12 +1775,12 @@ BOOL LoadObjects()
 	g_idxObjectById.forEach(LinkChildObjectsCallback, NULL);
 
    // Link childs to root objects
-   g_pServiceRoot->LinkChildObjects();
-   g_pTemplateRoot->LinkChildObjects();
-   g_pPolicyRoot->LinkChildObjects();
-   g_pMapRoot->LinkChildObjects();
-	g_pDashboardRoot->LinkChildObjects();
-	g_pBusinessServiceRoot->LinkChildObjects();
+   g_pServiceRoot->linkChildObjects();
+   g_pTemplateRoot->linkChildObjects();
+   g_pPolicyRoot->linkChildObjects();
+   g_pMapRoot->linkChildObjects();
+	g_pDashboardRoot->linkChildObjects();
+	g_pBusinessServiceRoot->linkChildObjects();
 
 	// Link custom object classes provided by modules
    CALL_ALL_MODULES(pfLinkObjects, ());

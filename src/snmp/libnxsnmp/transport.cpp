@@ -164,7 +164,12 @@ retry:
 
 								if (request->getContextEngineIdLength() == 0)
 								{
-									request->setContextEngineId((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
+								   // Use provided context engine ID if set in response
+								   // Use authoritative engine ID if response has no context engine id
+								   if ((*response)->getContextEngineIdLength() > 0)
+								      request->setContextEngineId((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
+								   else if ((*response)->getAuthoritativeEngine().getIdLen() != 0)
+								      request->setContextEngineId((*response)->getAuthoritativeEngine().getId(), (*response)->getAuthoritativeEngine().getIdLen());
 									canRetry = true;
 								}
 								if (m_securityContext->getAuthoritativeEngine().getIdLen() == 0)
@@ -226,6 +231,7 @@ retry:
  */
 SNMP_UDPTransport::SNMP_UDPTransport() : SNMP_Transport()
 {
+   m_port = SNMP_DEFAULT_PORT;
    m_hSocket = -1;
    m_dwBufferSize = SNMP_DEFAULT_MSG_MAX_SIZE;
    m_dwBufferPos = 0;
@@ -239,6 +245,7 @@ SNMP_UDPTransport::SNMP_UDPTransport() : SNMP_Transport()
  */
 SNMP_UDPTransport::SNMP_UDPTransport(SOCKET hSocket) : SNMP_Transport()
 {
+   m_port = SNMP_DEFAULT_PORT;
    m_hSocket = hSocket;
    m_dwBufferSize = SNMP_DEFAULT_MSG_MAX_SIZE;
    m_dwBufferPos = 0;
@@ -250,7 +257,7 @@ SNMP_UDPTransport::SNMP_UDPTransport(SOCKET hSocket) : SNMP_Transport()
 /**
  * Create SNMP_UDPTransport transport connected to given host using host name
  */
-UINT32 SNMP_UDPTransport::createUDPTransport(const TCHAR *hostName, WORD port)
+UINT32 SNMP_UDPTransport::createUDPTransport(const TCHAR *hostName, UINT16 port)
 {
    return createUDPTransport(InetAddress::resolveHostName(hostName), port);
 }
@@ -258,12 +265,12 @@ UINT32 SNMP_UDPTransport::createUDPTransport(const TCHAR *hostName, WORD port)
 /**
  * Create SNMP_UDPTransport transport connected to given host
  */
-UINT32 SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, WORD port)
+UINT32 SNMP_UDPTransport::createUDPTransport(const InetAddress& hostAddr, UINT16 port)
 {
    if (!hostAddr.isValid())
       return SNMP_ERR_HOSTNAME;
 
-   m_port=port;
+   m_port = port;
    hostAddr.fillSockAddr(&m_peerAddr, port);
 
    UINT32 dwResult;

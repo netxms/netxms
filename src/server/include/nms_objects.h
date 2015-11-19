@@ -482,11 +482,11 @@ protected:
 
    void setModified();                  // Used to mark object as modified
 
-   bool loadACLFromDB();
+   bool loadACLFromDB(DB_HANDLE hdb);
    bool saveACLToDB(DB_HANDLE hdb);
-   bool loadCommonProperties();
+   bool loadCommonProperties(DB_HANDLE hdb);
    bool saveCommonProperties(DB_HANDLE hdb);
-	bool loadTrustedNodes();
+	bool loadTrustedNodes(DB_HANDLE hdb);
 	bool saveTrustedNodes(DB_HANDLE hdb);
    bool executeQueryOnObject(DB_HANDLE hdb, const TCHAR *query) { return ExecuteQueryOnObject(hdb, m_id, query); }
 
@@ -547,7 +547,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
    void setId(UINT32 dwId) { m_id = dwId; setModified(); }
    void generateGuid() { m_guid = uuid::generate(); }
@@ -667,7 +667,7 @@ protected:
 
    virtual void onDataCollectionChange();
 
-   void loadItemsFromDB();
+   void loadItemsFromDB(DB_HANDLE hdb);
    void destroyItems();
    void updateInstanceDiscoveryItems(DCItem *dci);
 
@@ -687,7 +687,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
@@ -701,6 +701,7 @@ public:
    bool setItemStatus(UINT32 dwNumItems, UINT32 *pdwItemList, int iStatus);
    int getItemType(UINT32 dwItemId);
    DCObject *getDCObjectById(UINT32 itemId, bool lock = true);
+   DCObject *getDCObjectByGUID(const uuid& guid, bool lock = true);
    DCObject *getDCObjectByTemplateId(UINT32 tmplItemId);
    DCObject *getDCObjectByIndex(int index);
    DCObject *getDCObjectByName(const TCHAR *name);
@@ -722,7 +723,8 @@ public:
    void queueUpdate();
    void queueRemoveFromTarget(UINT32 targetId, bool removeDCI);
 
-   void createNXMPRecord(String &str);
+   void createExportRecord(String &str);
+   void updateFromImport(ConfigEntry *config);
 
 	bool enumDCObjects(bool (* pfCallback)(DCObject *, UINT32, void *), void *pArg);
 	void associateItems();
@@ -785,7 +787,7 @@ public:
    virtual int getObjectClass() const { return OBJECT_INTERFACE; }
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
    Node *getParentNode();
    UINT32 getParentNodeId();
@@ -827,7 +829,7 @@ public:
    UINT64 getLastDownEventId() { return m_lastDownEventId; }
    void setLastDownEventId(QWORD id) { m_lastDownEventId = id; }
 
-   void setMacAddr(const BYTE *pbNewMac);
+   void setMacAddr(const BYTE *macAddr, bool updateMacDB);
    void setIpAddress(const InetAddress& addr);
    void setBridgePortNumber(UINT32 bpn) { m_bridgePortNumber = bpn; setModified(); }
    void setSlotNumber(UINT32 slot) { m_slotNumber = slot; setModified(); }
@@ -890,7 +892,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
    void statusPoll(ClientSession *session, UINT32 rqId, Node *pollerNode, Queue *eventQueue);
 
@@ -921,7 +923,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
    bool isLocalAddr(const InetAddress& addr);
    bool isRemoteAddr(const InetAddress& addr);
@@ -1012,7 +1014,7 @@ public:
 
    virtual int getObjectClass() const { return OBJECT_MOBILEDEVICE; }
 
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
@@ -1055,7 +1057,7 @@ public:
 
    virtual int getObjectClass() const { return OBJECT_ACCESSPOINT; }
 
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
@@ -1102,7 +1104,7 @@ public:
    virtual int getObjectClass() const { return OBJECT_CLUSTER; }
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
@@ -1242,6 +1244,7 @@ protected:
    UINT32 getInterfaceCount(Interface **ppInterface);
 
    void checkInterfaceNames(InterfaceList *pIfList);
+   bool filterInterface(InterfaceInfo *info);
    Subnet *createSubnet(const InetAddress& baseAddr, bool syntheticMask);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 	void updatePrimaryIpAddr();
@@ -1257,7 +1260,7 @@ protected:
 	void applyUserTemplates();
 	void doInstanceDiscovery(UINT32 requestId);
 	StringMap *getInstanceList(DCItem *dci);
-	void updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
+	bool updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
    void collectProxyInfo(ProxyInfo *info);
@@ -1293,7 +1296,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
 	TCHAR *expandText(const TCHAR *textTemplate, StringMap *inputFields, const TCHAR *userName);
 
@@ -1639,7 +1642,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
    void addNode(Node *node) { AddChild(node); node->AddParent(this); calculateCompoundStatus(TRUE); }
 
@@ -1666,10 +1669,10 @@ public:
    virtual ~UniversalRoot();
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
-   virtual void LoadFromDB();
+   void loadFromDatabase(DB_HANDLE hdb);
 
-   void LinkChildObjects();
-   void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+   void linkChildObjects();
+   void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
 };
 
 /**
@@ -1726,7 +1729,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
 	virtual bool showThresholdSummary();
 
@@ -1783,7 +1786,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 };
 
 /**
@@ -1812,7 +1815,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
 	virtual bool showThresholdSummary();
 
@@ -1857,7 +1860,7 @@ public:
 
    void AddSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
    void AddZone(Zone *pZone) { AddChild(pZone); pZone->AddParent(this); }
-   void LoadFromDB(void);
+   void loadFromDatabase(DB_HANDLE hdb);
 };
 
 /**
@@ -1891,7 +1894,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
    void lockForPoll();
    void doPoll(PollerInfo *poller);
@@ -1929,7 +1932,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
@@ -1958,7 +1961,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
@@ -2066,7 +2069,7 @@ public:
 
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
    virtual void onObjectDelete(UINT32 dwObjectId);
 
@@ -2128,7 +2131,7 @@ public:
 
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
-   virtual BOOL loadFromDatabase(UINT32 dwId);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
 	virtual bool showThresholdSummary();
 };
@@ -2175,7 +2178,7 @@ public:
 
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
-	virtual BOOL loadFromDatabase(UINT32 dwId);
+	virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
 	virtual void postModify();
 
@@ -2223,7 +2226,7 @@ public:
 	ServiceContainer();
 	ServiceContainer(const TCHAR *pszName);
 
-	virtual BOOL loadFromDatabase(UINT32 dwId);
+	virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
@@ -2248,10 +2251,10 @@ public:
 	virtual int getObjectClass() const { return OBJECT_BUSINESSSERVICEROOT; }
 
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
-   void LoadFromDB();
+   void loadFromDatabase(DB_HANDLE hdb);
 
-   void LinkChildObjects();
-   void LinkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+   void linkChildObjects();
+   void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
 };
 
 /**
@@ -2277,7 +2280,7 @@ public:
 
 	virtual int getObjectClass() const { return OBJECT_BUSINESSSERVICE; }
 
-	virtual BOOL loadFromDatabase(UINT32 dwId);
+	virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
@@ -2313,7 +2316,7 @@ public:
 
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
 	virtual bool deleteFromDatabase(DB_HANDLE hdb);
-	virtual BOOL loadFromDatabase(UINT32 dwId);
+	virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
 	void execute();
 	void applyTemplates();
@@ -2354,7 +2357,7 @@ struct CONTAINER_CATEGORY
 
 void ObjectsInit();
 
-void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, BOOL bNewObject);
+void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, bool newObject, bool importedObject);
 void NetObjDeleteFromIndexes(NetObj *pObject);
 void NetObjDelete(NetObj *pObject);
 

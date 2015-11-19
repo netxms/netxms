@@ -112,16 +112,16 @@ bool AgentPolicyConfig::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load from database
  */
-BOOL AgentPolicyConfig::loadFromDatabase(UINT32 dwId)
+bool AgentPolicyConfig::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
 	BOOL success = FALSE;
 
-	if (AgentPolicy::loadFromDatabase(dwId))
+	if (AgentPolicy::loadFromDatabase(hdb, dwId))
 	{
 		TCHAR query[256];
 
 		_sntprintf(query, 256, _T("SELECT file_content FROM ap_config_files WHERE policy_id=%d"), dwId);
-		DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult != NULL)
 		{
 			if (DBGetNumRows(hResult) > 0)

@@ -38,6 +38,8 @@ bool g_checkData = false;
 bool g_checkDataTablesOnly = false;
 bool g_dataOnlyMigration = false;
 bool g_skipDataMigration = false;
+bool g_skipDataSchemaMigration = false;
+int g_migrationTxnSize = 4096;
 int g_dbSyntax;
 const TCHAR *g_pszTableSuffix = _T("");
 const TCHAR *g_pszSqlType[6][3] =
@@ -54,7 +56,6 @@ const TCHAR *g_pszSqlType[6][3] =
  * Static data
  */
 static char m_szCodePage[MAX_PATH] = ICONV_DEFAULT_CODEPAGE;
-static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static TCHAR s_dbDriver[MAX_PATH] = _T("");
 static TCHAR s_dbDrvParams[MAX_PATH] = _T("");
 static TCHAR s_dbServer[MAX_PATH] = _T("127.0.0.1");
@@ -614,7 +615,7 @@ stop_search:
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "c:dDfGhIMNqstvX")) != -1)
+   while((ch = getopt(argc, argv, "c:dDfGhIMNqsStT:vX")) != -1)
    {
       switch(ch)
       {
@@ -648,7 +649,9 @@ stop_search:
                      _T("   -N          : Do not replace existing configuration value (\"set\" command only).\n")
                      _T("   -q          : Quiet mode (don't show startup banner).\n")
                      _T("   -s          : Skip collected data during migration.\n")
+                     _T("   -S          : Skip collected data during migration and do not clear or create data tables.\n")
                      _T("   -t          : Enable trace mode (show executed SQL queries).\n")
+                     _T("   -T <recs>   : Transaction size for migration.\n")
                      _T("   -v          : Display version and exit.\n")
                      _T("   -X          : Ignore SQL errors when upgrading (USE WITH CAUTION!!!)\n")
                      _T("\n"), configFile);
@@ -687,8 +690,20 @@ stop_search:
          case 's':
             g_skipDataMigration = true;
             break;
+         case 'S':
+            g_skipDataMigration = true;
+            g_skipDataSchemaMigration = true;
+            break;
          case 't':
             g_bTrace = TRUE;
+            break;
+         case 'T':
+            g_migrationTxnSize = strtol(optarg, NULL, 0);
+            if ((g_migrationTxnSize < 1) || (g_migrationTxnSize > 100000))
+            {
+               _tprintf(_T("WARNING: invalid transaction size, reset to default"));
+               g_migrationTxnSize = 4096;
+            }
             break;
          case 'I':
             g_pszTableSuffix = _T(" TYPE=InnoDB");

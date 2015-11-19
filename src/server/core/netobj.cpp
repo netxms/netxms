@@ -94,9 +94,9 @@ NetObj::~NetObj()
 /**
  * Create object from database data
  */
-BOOL NetObj::loadFromDatabase(UINT32 dwId)
+bool NetObj::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
-   return FALSE;     // Abstract objects cannot be loaded from database
+   return false;     // Abstract objects cannot be loaded from database
 }
 
 /**
@@ -163,12 +163,12 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load common object properties from database
  */
-bool NetObj::loadCommonProperties()
+bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 {
    bool success = false;
 
    // Load access options
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
+	DB_STATEMENT hStmt = DBPrepare(hdb,
 	                          _T("SELECT name,status,is_deleted,")
                              _T("inherit_access_rights,last_modified,status_calc_alg,")
                              _T("status_prop_alg,status_fixed_val,status_shift,")
@@ -241,7 +241,7 @@ bool NetObj::loadCommonProperties()
 	// Load custom attributes
 	if (success)
 	{
-		hStmt = DBPrepare(g_hCoreDB, _T("SELECT attr_name,attr_value FROM object_custom_attributes WHERE object_id=?"));
+		hStmt = DBPrepare(hdb, _T("SELECT attr_name,attr_value FROM object_custom_attributes WHERE object_id=?"));
 		if (hStmt != NULL)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -281,7 +281,7 @@ bool NetObj::loadCommonProperties()
    // Load associated dashboards
    if (success)
    {
-      hStmt = DBPrepare(g_hCoreDB, _T("SELECT dashboard_id FROM dashboard_associations WHERE object_id=?"));
+      hStmt = DBPrepare(hdb, _T("SELECT dashboard_id FROM dashboard_associations WHERE object_id=?"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -308,7 +308,7 @@ bool NetObj::loadCommonProperties()
    }
 
 	if (success)
-		success = loadTrustedNodes();
+		success = loadTrustedNodes(hdb);
 
 	if (!success)
 		DbgPrintf(4, _T("NetObj::loadCommonProperties() failed for object %s [%ld] class=%d"), m_name, (long)m_id, getObjectClass());
@@ -352,7 +352,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("comments=?,is_system=?,location_type=?,latitude=?,")
 						  _T("longitude=?,location_accuracy=?,location_timestamp=?,")
 						  _T("guid=?,image=?,submap_id=?,country=?,city=?,")
-                    _T("street_address=?,postcode=?,maint_mode=? WHERE object_id=?"));
+                    _T("street_address=?,postcode=?,maint_mode=?,maint_event_id=? WHERE object_id=?"));
 	}
 	else
 	{
@@ -362,8 +362,9 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("status_prop_alg,status_fixed_val,status_shift,status_translation,")
                     _T("status_single_threshold,status_thresholds,comments,is_system,")
 						  _T("location_type,latitude,longitude,location_accuracy,location_timestamp,")
-						  _T("guid,image,submap_id,country,city,street_address,postcode,maint_mode,object_id) ")
-                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+						  _T("guid,image,submap_id,country,city,street_address,postcode,maint_mode,")
+						  _T("maint_event_id,object_id) ")
+                    _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -404,7 +405,8 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 25, DB_SQLTYPE_VARCHAR, m_postalAddress->getStreetAddress(), DB_BIND_STATIC);
 	DBBind(hStmt, 26, DB_SQLTYPE_VARCHAR, m_postalAddress->getPostCode(), DB_BIND_STATIC);
    DBBind(hStmt, 27, DB_SQLTYPE_VARCHAR, m_maintenanceMode ? _T("1") : _T("0"), DB_BIND_STATIC);
-	DBBind(hStmt, 28, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 28, DB_SQLTYPE_BIGINT, m_maintenanceEventId);
+	DBBind(hStmt, 29, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -881,11 +883,11 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Load ACL from database
  */
-bool NetObj::loadACLFromDB()
+bool NetObj::loadACLFromDB(DB_HANDLE hdb)
 {
    bool success = false;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT user_id,access_rights FROM acl WHERE object_id=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT user_id,access_rights FROM acl WHERE object_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -1595,14 +1597,14 @@ void NetObj::commentsToMessage(NXCPMessage *pMsg)
 /**
  * Load trusted nodes list from database
  */
-bool NetObj::loadTrustedNodes()
+bool NetObj::loadTrustedNodes(DB_HANDLE hdb)
 {
 	DB_RESULT hResult;
 	TCHAR query[256];
 	int i, count;
 
 	_sntprintf(query, 256, _T("SELECT target_node_id FROM trusted_nodes WHERE source_object_id=%d"), m_id);
-	hResult = DBSelect(g_hCoreDB, query);
+	hResult = DBSelect(hdb, query);
 	if (hResult != NULL)
 	{
 		count = DBGetNumRows(hResult);
@@ -1958,11 +1960,13 @@ bool NetObj::isLocationTableExists()
 {
    TCHAR table[256];
    _sntprintf(table, 256, _T("gps_history_%d"), m_id);
-   int rc = DBIsTableExist(g_hCoreDB, table);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   int rc = DBIsTableExist(hdb, table);
    if (rc == DBIsTableExist_Failure)
    {
       _tprintf(_T("WARNING: call to DBIsTableExist(\"%s\") failed\n"), table);
    }
+   DBConnectionPoolReleaseConnection(hdb);
    return rc != DBIsTableExist_NotFound;
 }
 

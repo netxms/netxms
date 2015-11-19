@@ -41,12 +41,14 @@ BOOL IsPackageInstalled(TCHAR *pszName, TCHAR *pszVersion, TCHAR *pszPlatform)
    free(pszEscVersion);
    free(pszEscPlatform);
 
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
       bResult = (DBGetNumRows(hResult) > 0);
       DBFreeResult(hResult);
    }
+   DBConnectionPoolReleaseConnection(hdb);
    return bResult;
 }
 
@@ -61,13 +63,16 @@ BOOL IsValidPackageId(UINT32 dwPkgId)
    TCHAR szQuery[256];
    BOOL bResult = FALSE;
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    _sntprintf(szQuery, 256, _T("SELECT pkg_name FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
       bResult = (DBGetNumRows(hResult) > 0);
       DBFreeResult(hResult);
    }
+   DBConnectionPoolReleaseConnection(hdb);
    return bResult;
 }
 
@@ -98,8 +103,10 @@ UINT32 UninstallPackage(UINT32 dwPkgId)
    DB_RESULT hResult;
    UINT32 dwResult;
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    _sntprintf(szQuery, 256, _T("SELECT pkg_file FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -113,7 +120,7 @@ UINT32 UninstallPackage(UINT32 dwPkgId)
          {
             // Delete record from database
             _sntprintf(szQuery, 256, _T("DELETE FROM agent_pkg WHERE pkg_id=%d"), dwPkgId);
-            DBQuery(g_hCoreDB, szQuery);
+            DBQuery(hdb, szQuery);
             dwResult = RCC_SUCCESS;
          }
          else
@@ -131,6 +138,8 @@ UINT32 UninstallPackage(UINT32 dwPkgId)
    {
       dwResult = RCC_DB_FAILURE;
    }
+
+   DBConnectionPoolReleaseConnection(hdb);
    return dwResult;
 }
 

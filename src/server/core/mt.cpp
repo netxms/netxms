@@ -56,11 +56,9 @@ MappingTable *MappingTable::createFromMessage(NXCPMessage *msg)
 /**
  * Create mapping table object from database
  */
-MappingTable *MappingTable::createFromDatabase(LONG id)
+MappingTable *MappingTable::createFromDatabase(DB_HANDLE hdb, LONG id)
 {
 	MappingTable *mt = NULL;
-
-	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT name,flags,description FROM mapping_tables WHERE id=?"));
 	if (hStmt != NULL)
@@ -108,7 +106,6 @@ MappingTable *MappingTable::createFromDatabase(LONG id)
 		}
 	}
 
-	DBConnectionPoolReleaseConnection(hdb);
 	return mt;
 }
 
@@ -316,18 +313,23 @@ void InitMappingTables()
 {
 	s_mappingTablesLock = RWLockCreate();
 
-	DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT id FROM mapping_tables"));
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_RESULT hResult = DBSelect(hdb, _T("SELECT id FROM mapping_tables"));
 	if (hResult == NULL)
+	{
+	   DBConnectionPoolReleaseConnection(hdb);
 		return;
+	}
 
 	int count = DBGetNumRows(hResult);
 	for(int i = 0; i < count; i++)
 	{
-		MappingTable *mt = MappingTable::createFromDatabase(DBGetFieldLong(hResult, i, 0));
+		MappingTable *mt = MappingTable::createFromDatabase(hdb, DBGetFieldLong(hResult, i, 0));
 		if (mt != NULL)
 			s_mappingTables.add(mt);
 	}
 	DBFreeResult(hResult);
+	DBConnectionPoolReleaseConnection(hdb);
 	DbgPrintf(2, _T("%d mapping tables loaded"), s_mappingTables.size());
 }
 

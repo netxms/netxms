@@ -349,26 +349,26 @@ bool NetworkMap::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load from database
  */
-BOOL NetworkMap::loadFromDatabase(UINT32 dwId)
+bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
 	m_id = dwId;
 
-	if (!loadCommonProperties())
+	if (!loadCommonProperties(hdb))
    {
       DbgPrintf(2, _T("Cannot load common properties for network map object %d"), dwId);
-      return FALSE;
+      return false;
    }
 
    if (!m_isDeleted)
    {
 		TCHAR query[256];
 
-	   loadACLFromDB();
+	   loadACLFromDB(hdb);
 
 		_sntprintf(query, 256, _T("SELECT map_type,layout,seed,radius,background,bg_latitude,bg_longitude,bg_zoom,flags,link_color,link_routing,bg_color,object_display_mode,filter FROM network_maps WHERE id=%d"), dwId);
-		DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult == NULL)
-			return FALSE;
+			return false;
 
 		m_mapType = DBGetFieldLong(hResult, 0, 0);
 		m_layout = DBGetFieldLong(hResult, 0, 1);
@@ -392,7 +392,7 @@ BOOL NetworkMap::loadFromDatabase(UINT32 dwId)
 
 	   // Load elements
       _sntprintf(query, 256, _T("SELECT element_id,element_type,element_data,flags FROM network_map_elements WHERE map_id=%d"), m_id);
-      hResult = DBSelect(g_hCoreDB, query);
+      hResult = DBSelect(hdb, query);
       if (hResult != NULL)
       {
          int count = DBGetNumRows(hResult);
@@ -446,7 +446,7 @@ BOOL NetworkMap::loadFromDatabase(UINT32 dwId)
 
 		// Load links
       _sntprintf(query, 256, _T("SELECT element1,element2,link_type,link_name,connector_name1,connector_name2,element_data,flags FROM network_map_links WHERE map_id=%d"), m_id);
-      hResult = DBSelect(g_hCoreDB, query);
+      hResult = DBSelect(hdb, query);
       if (hResult != NULL)
       {
          int count = DBGetNumRows(hResult);
@@ -468,7 +468,7 @@ BOOL NetworkMap::loadFromDatabase(UINT32 dwId)
 
 	m_iStatus = STATUS_NORMAL;
 
-	return TRUE;
+	return true;
 }
 
 /**

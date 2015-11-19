@@ -66,18 +66,18 @@ void Dashboard::calculateCompoundStatus(BOOL bForcedRecalc)
 /**
  * Create object from database
  */
-BOOL Dashboard::loadFromDatabase(UINT32 dwId)
+bool Dashboard::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
-	if (!Container::loadFromDatabase(dwId))
-		return FALSE;
+	if (!Container::loadFromDatabase(hdb, dwId))
+		return false;
 
 	m_iStatus = STATUS_NORMAL;
 
 	TCHAR query[256];
 	_sntprintf(query, 256, _T("SELECT num_columns,options FROM dashboards WHERE id=%d"), (int)dwId);
-	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+	DB_RESULT hResult = DBSelect(hdb, query);
 	if (hResult == NULL)
-		return FALSE;
+		return false;
 	if (DBGetNumRows(hResult) > 0)
 	{
 		m_numColumns = (int)DBGetFieldLong(hResult, 0, 0);
@@ -87,9 +87,9 @@ BOOL Dashboard::loadFromDatabase(UINT32 dwId)
 
 	_sntprintf(query, 256, _T("SELECT element_type,element_data,layout_data FROM dashboard_elements ")
 								  _T("WHERE dashboard_id=%d ORDER BY element_id"), (int)dwId);
-	hResult = DBSelect(g_hCoreDB, query);
+	hResult = DBSelect(hdb, query);
 	if (hResult == NULL)
-		return FALSE;
+		return false;
 
 	int count = DBGetNumRows(hResult);
 	for(int i = 0; i < count; i++)
@@ -102,7 +102,7 @@ BOOL Dashboard::loadFromDatabase(UINT32 dwId)
 	}
 
 	DBFreeResult(hResult);
-	return TRUE;
+	return true;
 }
 
 /**

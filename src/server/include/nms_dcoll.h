@@ -176,6 +176,7 @@ class NXCORE_EXPORTABLE DCObject
 {
 protected:
    UINT32 m_id;
+   uuid m_guid;
    TCHAR m_name[MAX_ITEM_NAME];
    TCHAR m_szDescription[MAX_DB_STRING];
 	TCHAR m_systemTag[MAX_DB_STRING];
@@ -191,8 +192,7 @@ protected:
    UINT32 m_dwTemplateItemId;     // Related template item's id
    Template *m_pNode;             // Pointer to node or template object this item related to
    MUTEX m_hMutex;
-   UINT32 m_dwNumSchedules;
-   TCHAR **m_ppScheduleList;
+   StringList *m_schedules;
    time_t m_tLastCheck;          // Last schedule checking time
    UINT32 m_dwErrorCount;         // Consequtive collection error count
 	UINT32 m_dwResourceId;	   	// Associated cluster resource ID
@@ -206,8 +206,8 @@ protected:
    void lock() { MutexLock(m_hMutex); }
    void unlock() { MutexUnlock(m_hMutex); }
 
-	BOOL loadCustomSchedules();
-   bool matchSchedule(struct tm *pCurrTime, TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp);
+	bool loadCustomSchedules(DB_HANDLE hdb);
+   bool matchSchedule(struct tm *pCurrTime, const TCHAR *pszSchedule, BOOL *bWithSeconds, time_t currTimestamp);
 
 	void expandMacros(const TCHAR *src, TCHAR *dst, size_t dstLen);
 
@@ -226,10 +226,11 @@ public:
 	virtual int getType() const { return DCO_TYPE_GENERIC; }
 
    virtual void updateFromTemplate(DCObject *dcObject);
+   virtual void updateFromImport(ConfigEntry *config);
 
-   virtual BOOL saveToDB(DB_HANDLE hdb);
+   virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
-   virtual bool loadThresholdsFromDB();
+   virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    virtual void processNewError();
@@ -237,6 +238,7 @@ public:
 	virtual bool hasValue();
 
 	UINT32 getId() { return m_id; }
+	const uuid& getGuid() { return m_guid; }
    int getDataSource() { return m_source; }
    int getStatus() { return m_status; }
    const TCHAR *getName() { return m_name; }
@@ -282,7 +284,7 @@ public:
 	virtual bool deleteAllData();
 
    virtual void getEventList(UINT32 **ppdwList, UINT32 *pdwSize);
-   virtual void createNXMPRecord(String &str);
+   virtual void createExportRecord(String &str);
 
 	void setName(const TCHAR *pszName) { nx_strncpy(m_name, pszName, MAX_ITEM_NAME); }
 	void setDescription(const TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
@@ -336,7 +338,7 @@ protected:
 public:
    DCItem();
    DCItem(const DCItem *pItem);
-   DCItem(DB_RESULT hResult, int iRow, Template *pNode);
+   DCItem(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode);
    DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
           int iPollingInterval, int iRetentionTime, Template *pNode,
           const TCHAR *pszDescription = NULL, const TCHAR *systemTag = NULL);
@@ -346,10 +348,11 @@ public:
 	virtual int getType() const { return DCO_TYPE_ITEM; }
 
    virtual void updateFromTemplate(DCObject *dcObject);
+   virtual void updateFromImport(ConfigEntry *config);
 
-   virtual BOOL saveToDB(DB_HANDLE hdb);
+   virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
-   virtual bool loadThresholdsFromDB();
+   virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
    void updateCacheSize(UINT32 dwCondId = 0);
    void reloadCache();
@@ -390,7 +393,7 @@ public:
 	virtual bool deleteAllData();
 
    virtual void getEventList(UINT32 **ppdwList, UINT32 *pdwSize);
-   virtual void createNXMPRecord(String &str);
+   virtual void createExportRecord(String &str);
 
 	int getThresholdCount() const { return (m_thresholds != NULL) ? m_thresholds->size() : 0; }
 	BOOL enumThresholds(BOOL (* pfCallback)(Threshold *, UINT32, void *), void *pArg);
@@ -502,11 +505,11 @@ private:
    UINT32 m_deactivationEvent;
    StringSet *m_activeKeys;
 
-   void loadConditions();
+   void loadConditions(DB_HANDLE hdb);
 
 public:
    DCTableThreshold();
-   DCTableThreshold(DB_RESULT hResult, int row);
+   DCTableThreshold(DB_HANDLE hdb, DB_RESULT hResult, int row);
    DCTableThreshold(NXCPMessage *msg, UINT32 *baseId);
    DCTableThreshold(DCTableThreshold *src);
    DCTableThreshold(ConfigEntry *e);
@@ -543,7 +546,7 @@ protected:
    bool transform(Table *value);
    void checkThresholds(Table *value);
 
-   bool loadThresholds();
+   bool loadThresholds(DB_HANDLE hdb);
    bool saveThresholds(DB_HANDLE hdb);
 
 public:
@@ -551,19 +554,22 @@ public:
    DCTable(const DCTable *src);
    DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, int retentionTime,
 	        Template *node, const TCHAR *description = NULL, const TCHAR *systemTag = NULL);
-   DCTable(DB_RESULT hResult, int iRow, Template *pNode);
+   DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode);
    DCTable(ConfigEntry *config, Template *owner);
 	virtual ~DCTable();
 
 	virtual int getType() const { return DCO_TYPE_TABLE; }
 
    virtual void updateFromTemplate(DCObject *dcObject);
+   virtual void updateFromImport(ConfigEntry *config);
 
-   virtual BOOL saveToDB(DB_HANDLE hdb);
+   virtual bool saveToDatabase(DB_HANDLE hdb);
    virtual void deleteFromDatabase();
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
    virtual void processNewError();
+
+   virtual bool hasValue();
 
    virtual void createMessage(NXCPMessage *pMsg);
    virtual void updateFromMessage(NXCPMessage *pMsg);
@@ -571,7 +577,7 @@ public:
 	virtual void deleteExpiredData();
 	virtual bool deleteAllData();
 
-   virtual void createNXMPRecord(String &str);
+   virtual void createExportRecord(String &str);
 
 	void fillLastValueMessage(NXCPMessage *msg);
    void fillLastValueSummaryMessage(NXCPMessage *pMsg, UINT32 dwId);

@@ -223,36 +223,36 @@ public class ObjectTool
 		
 	   if ((flags & REQUIRES_OS_MATCH) != 0)
       {
-	      boolean matchs = false;
+	      boolean match = false;
 	      String[] substrings = filter.toolOS.split(",");
 	      for(int i = 0; i < substrings.length; i++)
 	      {
-	         if(Pattern.matches(substrings[i], node.getPlatformName()))
+	         if (Pattern.matches(substrings[i], node.getPlatformName()))
 	         {
-	            matchs = true;
+	            match = true;
 	         }
 	      }
-	      if(!matchs)
+	      if (!match)
 	         return false;  //Not correct type of OS
       }
 	    
 	   if ((flags & REQUIRES_TEMPLATE_MATCH) != 0)
       {
-	      boolean matchs = false;
+	      boolean match = false;
          String[] substrings = filter.toolTemplate.split(",");
          Set<AbstractObject> parents = node.getAllParents(AbstractObject.OBJECT_TEMPLATE);
          for(AbstractObject parent : parents)
          {
             for(int i = 0; i < substrings.length; i++)
             {
-               if(Pattern.matches(substrings[i], parent.getObjectName()))
+               if (Pattern.matches(substrings[i], parent.getObjectName()))
                {
-                  matchs = true;
+                  match = true;
                }
             }
          }
-         if(!matchs)
-            return false;  //Does not belong to those templates
+         if (!match)
+            return false;  // Does not belong to those templates
       }
 		
 		return true;

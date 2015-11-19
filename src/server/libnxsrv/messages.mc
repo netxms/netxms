@@ -986,4 +986,10 @@ Language=English
 Performance data storage driver "%1" cannot be loaded because of API version mismatch (driver: %3; server: %2)
 .
 
+MessageId=
+SymbolicName=MSG_DBCONNPOOL_INIT_FAILED
+Language=English
+Failed to initialize database connection pool
+.
+
 ;#endif

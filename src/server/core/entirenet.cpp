@@ -57,10 +57,10 @@ BOOL Network::saveToDatabase(DB_HANDLE hdb)
 /**
  * Load properties from database
  */
-void Network::LoadFromDB()
+void Network::loadFromDatabase(DB_HANDLE hdb)
 {
-   loadCommonProperties();
-   loadACLFromDB();
+   loadCommonProperties(hdb);
+   loadACLFromDB(hdb);
 }
 
 /**

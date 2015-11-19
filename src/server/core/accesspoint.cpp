@@ -68,21 +68,21 @@ AccessPoint::~AccessPoint()
 /**
  * Create object from database data
  */
-BOOL AccessPoint::loadFromDatabase(UINT32 dwId)
+bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    m_id = dwId;
 
-   if (!loadCommonProperties())
+   if (!loadCommonProperties(hdb))
    {
       DbgPrintf(2, _T("Cannot load common properties for access point object %d"), dwId);
-      return FALSE;
+      return false;
    }
 
 	TCHAR query[256];
 	_sntprintf(query, 256, _T("SELECT mac_address,vendor,model,serial_number,node_id,ap_state,ap_index FROM access_points WHERE id=%d"), (int)m_id);
-	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+	DB_RESULT hResult = DBSelect(hdb, query);
 	if (hResult == NULL)
-		return FALSE;
+		return false;
 
 	DBGetFieldByteArray2(hResult, 0, 0, m_macAddr, MAC_ADDR_LENGTH, 0);
 	m_vendor = DBGetField(hResult, 0, 1, NULL, 0);
@@ -95,14 +95,14 @@ BOOL AccessPoint::loadFromDatabase(UINT32 dwId)
 	DBFreeResult(hResult);
 
    // Load DCI and access list
-   loadACLFromDB();
-   loadItemsFromDB();
+   loadACLFromDB(hdb);
+   loadItemsFromDB(hdb);
    for(int i = 0; i < m_dcObjects->size(); i++)
-      if (!m_dcObjects->get(i)->loadThresholdsFromDB())
-         return FALSE;
+      if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
+         return false;
 
    // Link access point to node
-	BOOL success = FALSE;
+	bool success = false;
    if (!m_isDeleted)
    {
       NetObj *object = FindObjectById(m_nodeId);
@@ -118,12 +118,12 @@ BOOL AccessPoint::loadFromDatabase(UINT32 dwId)
       {
          object->AddChild(this);
          AddParent(object);
-         success = TRUE;
+         success = true;
       }
    }
    else
    {
-      success = TRUE;
+      success = true;
    }
 
    return success;
@@ -171,7 +171,7 @@ BOOL AccessPoint::saveToDatabase(DB_HANDLE hdb)
    {
 		lockDciAccess(false);
       for(int i = 0; i < m_dcObjects->size(); i++)
-         m_dcObjects->get(i)->saveToDB(hdb);
+         m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
    }
 

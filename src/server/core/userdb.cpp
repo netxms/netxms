@@ -127,20 +127,25 @@ BOOL LoadUsers()
    int i;
    DB_RESULT hResult;
 
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
    // Load users
-   hResult = DBSelect(g_hCoreDB,
+   hResult = DBSelect(hdb,
 	                   _T("SELECT id,name,system_access,flags,description,guid,ldap_dn,")
 							 _T("password,full_name,grace_logins,auth_method,")
 							 _T("cert_mapping_method,cert_mapping_data,auth_failures,")
 							 _T("last_passwd_change,min_passwd_length,disabled_until,")
 							 _T("last_login,xmpp_id FROM users"));
    if (hResult == NULL)
-      return FALSE;
+   {
+      DBConnectionPoolReleaseConnection(hdb);
+      return false;
+   }
 
    m_userCount = DBGetNumRows(hResult);
    m_users = (UserDatabaseObject **)malloc(sizeof(UserDatabaseObject *) * m_userCount);
    for(i = 0; i < m_userCount; i++)
-		m_users[i] = new User(hResult, i);
+		m_users[i] = new User(hdb, hResult, i);
 
    DBFreeResult(hResult);
 
@@ -159,15 +164,18 @@ BOOL LoadUsers()
    }
 
    // Load groups
-   hResult = DBSelect(g_hCoreDB, _T("SELECT id,name,system_access,flags,description,guid,ldap_dn FROM user_groups"));
+   hResult = DBSelect(hdb, _T("SELECT id,name,system_access,flags,description,guid,ldap_dn FROM user_groups"));
    if (hResult == NULL)
+   {
+      DBConnectionPoolReleaseConnection(hdb);
       return FALSE;
+   }
 
 	int mark = m_userCount;
    m_userCount += DBGetNumRows(hResult);
    m_users = (UserDatabaseObject **)realloc(m_users, sizeof(UserDatabaseObject *) * m_userCount);
    for(i = mark; i < m_userCount; i++)
-		m_users[i] = new Group(hResult, i - mark);
+		m_users[i] = new Group(hdb, hResult, i - mark);
 
    DBFreeResult(hResult);
 
@@ -185,6 +193,7 @@ BOOL LoadUsers()
       nxlog_write(MSG_EVERYONE_GROUP_CREATED, EVENTLOG_WARNING_TYPE, NULL);
    }
 
+   DBConnectionPoolReleaseConnection(hdb);
    return TRUE;
 }
 
@@ -1090,10 +1099,12 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
 				int passwordHistoryLength = ConfigReadInt(_T("PasswordHistoryLength"), 0);
 				if (passwordHistoryLength > 0)
 				{
+				   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
 					TCHAR query[8192], *ph = NULL;
 
 					_sntprintf(query, 8192, _T("SELECT password_history FROM users WHERE id=%d"), id);
-					DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+					DB_RESULT hResult = DBSelect(hdb, query);
 					if (hResult != NULL)
 					{
 						if (DBGetNumRows(hResult) > 0)
@@ -1143,7 +1154,7 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
 							BinToStr(newPasswdHash, SHA1_DIGEST_SIZE, &ph[(phLen - 1) * SHA1_DIGEST_SIZE * 2]);
 
 							_sntprintf(query, 8192, _T("UPDATE users SET password_history='%s' WHERE id=%d"), ph, id);
-							DBQuery(g_hCoreDB, query);
+							DBQuery(hdb, query);
 						}
 
 						free(ph);
@@ -1155,6 +1166,7 @@ UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, co
 						dwResult = RCC_DB_FAILURE;
 						break;
 					}
+					DBConnectionPoolReleaseConnection(hdb);
 				}
 
 				user->updatePasswordChangeTime();

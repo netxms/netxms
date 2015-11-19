@@ -83,7 +83,8 @@ void InitAuditLog()
 {
 	DB_RESULT hResult;
 
-   hResult = DBSelect(g_hCoreDB, _T("SELECT max(record_id) FROM audit_log"));
+	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   hResult = DBSelect(hdb, _T("SELECT max(record_id) FROM audit_log"));
    if (hResult != NULL)
    {
       if (DBGetNumRows(hResult) > 0)
@@ -116,6 +117,7 @@ void InitAuditLog()
 
 		SendSyslogRecord(_T("NetXMS server audit subsystem started"));
 	}
+	DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**
@@ -150,8 +152,8 @@ void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32
 	va_end(args);
 
 	query.appendFormattedString(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES(%d,") TIME_T_FMT _T(",%s,%d,%d,%s,%d,%d,%s)"),
-      InterlockedIncrement(&m_recordId), time(NULL), (const TCHAR *)DBPrepareString(g_hCoreDB, subsys), isSuccess ? 1 : 0, 
-		userId, (const TCHAR *)DBPrepareString(g_hCoreDB, workstation), sessionId, objectId, (const TCHAR *)DBPrepareString(g_hCoreDB, text));
+      InterlockedIncrement(&m_recordId), time(NULL), (const TCHAR *)DBPrepareString(g_dbDriver, subsys), isSuccess ? 1 : 0,
+		userId, (const TCHAR *)DBPrepareString(g_dbDriver, workstation), sessionId, objectId, (const TCHAR *)DBPrepareString(g_dbDriver, text));
 	QueueSQLRequest(query);
 
 	msg.setCode(CMD_AUDIT_RECORD);

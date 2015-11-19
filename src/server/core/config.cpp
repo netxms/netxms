@@ -164,7 +164,8 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int 
    if (_tcslen(szVar) > 127)
       return false;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT var_value FROM metadata WHERE var_name=?"));
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM metadata WHERE var_name=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, szVar, DB_BIND_STATIC);
@@ -180,6 +181,7 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int 
 		}
 		DBFreeStatement(hStmt);
 	}
+	DBConnectionPoolReleaseConnection(hdb);
    return bSuccess;
 }
 
@@ -299,11 +301,8 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
 /**
  * Read string value from configuration table
  */
-bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault)
+bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE dbHandle, const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault)
 {
-   DB_RESULT hResult;
-   bool bSuccess = false;
-
    nx_strncpy(szBuffer, szDefault, iBufSize);
    if (_tcslen(szVar) > 127)
       return false;
@@ -318,12 +317,13 @@ bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
       return true;
    }
 
-   DB_HANDLE hdb = (g_flags & AF_DB_CONNECTION_POOL_READY) ? DBConnectionPoolAcquireConnection() : g_hCoreDB;
+   bool bSuccess = false;
+   DB_HANDLE hdb = (dbHandle == NULL) ? DBConnectionPoolAcquireConnection() : dbHandle;
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, szVar, DB_BIND_STATIC);
-		hResult = DBSelectPrepared(hStmt);
+		DB_RESULT hResult = DBSelectPrepared(hStmt);
 	   if (hResult != NULL)
 		{
 			if (DBGetNumRows(hResult) > 0)
@@ -336,7 +336,7 @@ bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
 		}
 		DBFreeStatement(hStmt);
 	}
-   if (g_flags & AF_DB_CONNECTION_POOL_READY)
+   if (dbHandle == NULL)
       DBConnectionPoolReleaseConnection(hdb);
 
    if (bSuccess)
@@ -347,6 +347,14 @@ bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iB
    }
 
    return bSuccess;
+}
+
+/**
+ * Read string value from configuration table
+ */
+bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *var, TCHAR *buffer, int bufferSize, const TCHAR *defaultValue)
+{
+   return ConfigReadStrEx(NULL, var, buffer, bufferSize, defaultValue);
 }
 
 /**
@@ -385,7 +393,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *szVar, char *szBuffer, int
    if (_tcslen(szVar) > 127)
       return false;
 
-   DB_HANDLE hdb = (g_flags & AF_DB_CONNECTION_POOL_READY) ? DBConnectionPoolAcquireConnection() : g_hCoreDB;
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM config WHERE var_name=?"));
 	if (hStmt != NULL)
 	{
@@ -402,8 +410,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *szVar, char *szBuffer, int
 		}
 		DBFreeStatement(hStmt);
 	}
-   if (g_flags & AF_DB_CONNECTION_POOL_READY)
-      DBConnectionPoolReleaseConnection(hdb);
+   DBConnectionPoolReleaseConnection(hdb);
 
    return bSuccess;
 }
@@ -413,9 +420,17 @@ bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *szVar, char *szBuffer, int
  */
 int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault)
 {
+   return ConfigReadIntEx(NULL, szVar, iDefault);
+}
+
+/**
+ * Read integer value from configuration table
+ */
+int NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *szVar, int iDefault)
+{
    TCHAR szBuffer[64];
 
-   if (ConfigReadStr(szVar, szBuffer, 64, _T("")))
+   if (ConfigReadStrEx(hdb, szVar, szBuffer, 64, _T("")))
       return _tcstol(szBuffer, NULL, 0);
    else
       return iDefault;

@@ -163,30 +163,30 @@ UINT32 Interface::getPingTime()
 /**
  * Create object from database record
  */
-BOOL Interface::loadFromDatabase(UINT32 dwId)
+bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    m_id = dwId;
 
-   if (!loadCommonProperties())
-      return FALSE;
+   if (!loadCommonProperties(hdb))
+      return false;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
+	DB_STATEMENT hStmt = DBPrepare(hdb,
 		_T("SELECT if_type,if_index,node_id,")
 		_T("mac_addr,flags,required_polls,bridge_port,phy_slot,")
 		_T("phy_port,peer_node_id,peer_if_id,description,")
 		_T("dot1x_pae_state,dot1x_backend_state,admin_state,")
       _T("oper_state,peer_proto,alias,mtu,speed,iftable_suffix FROM interfaces WHERE id=?"));
 	if (hStmt == NULL)
-		return FALSE;
+		return false;
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
 
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult == NULL)
 	{
 		DBFreeStatement(hStmt);
-      return FALSE;     // Query failed
+      return false;     // Query failed
 	}
 
    if (DBGetNumRows(hResult) != 0)
@@ -215,7 +215,7 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
       TCHAR suffixText[128];
       DBGetField(hResult, 0, 20, suffixText, 128);
       StrStrip(suffixText);
-      if (suffixText[0] = 0)
+      if (suffixText[0] == 0)
       {
          UINT32 suffix[16];
          size_t l = SNMPParseOID(suffixText, suffix, 16);
@@ -246,12 +246,12 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
             object->AddChild(this);
             AddParent(object);
 				m_zoneId = ((Node *)object)->getZoneId();
-            bResult = TRUE;
+            bResult = true;
          }
       }
       else
       {
-         bResult = TRUE;
+         bResult = true;
       }
    }
 
@@ -259,7 +259,7 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
 	DBFreeStatement(hStmt);
 
    // Read IP addresses
-   hStmt = DBPrepare(g_hCoreDB, _T("SELECT ip_addr,ip_netmask FROM interface_address_list WHERE iface_id = ?"));
+   hStmt = DBPrepare(hdb, _T("SELECT ip_addr,ip_netmask FROM interface_address_list WHERE iface_id = ?"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -280,7 +280,7 @@ BOOL Interface::loadFromDatabase(UINT32 dwId)
    }
 
    // Load access list
-   loadACLFromDB();
+   loadACLFromDB(hdb);
 
 	// Validate loopback flag
 	if (m_type == IFTYPE_SOFTWARE_LOOPBACK)
@@ -1146,12 +1146,14 @@ void Interface::setPeer(Node *node, Interface *iface, LinkLayerProtocol protocol
 /**
  * Set MAC address for interface
  */
-void Interface::setMacAddr(const BYTE *pbNewMac)
+void Interface::setMacAddr(const BYTE *macAddr, bool updateMacDB)
 {
    lockProperties();
-   MacDbRemove(m_macAddr);
-   memcpy(m_macAddr, pbNewMac, MAC_ADDR_LENGTH);
-   MacDbAddInterface(this);
+   if (updateMacDB)
+      MacDbRemove(m_macAddr);
+   memcpy(m_macAddr, macAddr, MAC_ADDR_LENGTH);
+   if (updateMacDB)
+      MacDbAddInterface(this);
    setModified();
    unlockProperties();
 }

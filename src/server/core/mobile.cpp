@@ -70,21 +70,21 @@ MobileDevice::~MobileDevice()
 /**
  * Create object from database data
  */
-BOOL MobileDevice::loadFromDatabase(UINT32 dwId)
+bool MobileDevice::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    m_id = dwId;
 
-   if (!loadCommonProperties())
+   if (!loadCommonProperties(hdb))
    {
       DbgPrintf(2, _T("Cannot load common properties for mobile device object %d"), dwId);
-      return FALSE;
+      return false;
    }
 
 	TCHAR query[256];
 	_sntprintf(query, 256, _T("SELECT device_id,vendor,model,serial_number,os_name,os_version,user_id,battery_level FROM mobile_devices WHERE id=%d"), (int)m_id);
-	DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+	DB_RESULT hResult = DBSelect(hdb, query);
 	if (hResult == NULL)
-		return FALSE;
+		return false;
 
 	m_deviceId = DBGetField(hResult, 0, 0, NULL, 0);
 	m_vendor = DBGetField(hResult, 0, 1, NULL, 0);
@@ -97,13 +97,13 @@ BOOL MobileDevice::loadFromDatabase(UINT32 dwId)
 	DBFreeResult(hResult);
 
    // Load DCI and access list
-   loadACLFromDB();
-   loadItemsFromDB();
+   loadACLFromDB(hdb);
+   loadItemsFromDB(hdb);
    for(int i = 0; i < m_dcObjects->size(); i++)
-      if (!m_dcObjects->get(i)->loadThresholdsFromDB())
-         return FALSE;
+      if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
+         return false;
 
-   return TRUE;
+   return true;
 }
 
 /**
@@ -148,7 +148,7 @@ BOOL MobileDevice::saveToDatabase(DB_HANDLE hdb)
    {
 		lockDciAccess(false);
       for(int i = 0; i < m_dcObjects->size(); i++)
-         m_dcObjects->get(i)->saveToDB(hdb);
+         m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
    }
 

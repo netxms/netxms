@@ -351,7 +351,7 @@ NetObj *FindTemplateRoot(ConfigEntry *config)
       if (o == NULL)
       {
          o = new TemplateGroup(name);
-         NetObjInsert(o, TRUE);
+         NetObjInsert(o, true, false);
          o->AddParent(parent);
          parent->AddChild(o);
          o->unhide();
@@ -418,12 +418,24 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 		templates = templatesRoot->getSubEntries(_T("template#*"));
 		for(i = 0; i < templates->size(); i++)
 		{
-         NetObj *parent = FindTemplateRoot(templates->get(i));
-			Template *object = new Template(templates->get(i));
-			NetObjInsert(object, TRUE);
-			object->AddParent(parent);
-			parent->AddChild(object);
-			object->unhide();
+		   ConfigEntry *tc = templates->get(i);
+		   uuid guid = tc->getSubEntryValueAsUUID(_T("guid"));
+		   Template *object = (Template *)FindObjectByGUID(guid, OBJECT_TEMPLATE);
+		   if (object != NULL)
+		   {
+		      DbgPrintf(5, _T("ImportConfig(): found existing template %s [%d] with GUID %s"), object->getName(), object->getId(), (const TCHAR *)guid.toString());
+		      object->updateFromImport(tc);
+		   }
+		   else
+		   {
+            DbgPrintf(5, _T("ImportConfig(): template with GUID %s not found"), (const TCHAR *)guid.toString());
+            NetObj *parent = FindTemplateRoot(tc);
+            object = new Template(tc);
+            NetObjInsert(object, true, true);
+            object->AddParent(parent);
+            parent->AddChild(object);
+            object->unhide();
+		   }
 		}
 		DbgPrintf(5, _T("ImportConfig(): templates imported"));
 	}

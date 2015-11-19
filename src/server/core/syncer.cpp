@@ -115,23 +115,6 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
 {
    int iSyncInterval;
    UINT32 dwWatchdogId;
-   DB_HANDLE hdb;
-
-   // Establish separate connection to database if needed
-   if (g_flags & AF_ENABLE_MULTIPLE_DB_CONN)
-   {
-		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-      hdb = DBConnect(g_dbDriver, g_szDbServer, g_szDbName, g_szDbLogin, g_szDbPassword, g_szDbSchema, errorText);
-      if (hdb == NULL)
-      {
-         nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
-         hdb = g_hCoreDB;   // Switch to main DB connection
-      }
-   }
-   else
-   {
-      hdb = g_hCoreDB;
-   }
 
    // Read configuration
    iSyncInterval = ConfigReadInt(_T("SyncInterval"), 60);
@@ -146,15 +129,11 @@ THREAD_RESULT THREAD_CALL Syncer(void *arg)
       WatchdogNotify(dwWatchdogId);
       if (!(g_flags & AF_DB_CONNECTION_LOST))    // Don't try to save if DB connection is lost
       {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
          SaveObjects(hdb);
          SaveUsers(hdb);
+         DBConnectionPoolReleaseConnection(hdb);
       }
-   }
-
-   // Disconnect from database if using separate connection
-   if (hdb != g_hCoreDB)
-   {
-      DBDisconnect(hdb);
    }
 
    DbgPrintf(1, _T("Syncer thread terminated"));

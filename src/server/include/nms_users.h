@@ -186,7 +186,7 @@ protected:
 
 public:
 	UserDatabaseObject();
-	UserDatabaseObject(DB_RESULT hResult, int row);
+	UserDatabaseObject(DB_HANDLE hdb, DB_RESULT hResult, int row);
 	UserDatabaseObject(UINT32 id, const TCHAR *name);
 	virtual ~UserDatabaseObject();
 
@@ -276,7 +276,7 @@ protected:
 
 public:
 	User();
-	User(DB_RESULT hResult, int row);
+	User(DB_HANDLE hdb, DB_RESULT hResult, int row);
 	User(UINT32 id, const TCHAR *name);
 	virtual ~User();
 
@@ -321,7 +321,7 @@ protected:
 
 public:
 	Group();
-	Group(DB_RESULT hResult, int row);
+	Group(DB_HANDLE hdb, DB_RESULT hResult, int row);
 	Group(UINT32 id, const TCHAR *name);
 	virtual ~Group();
 

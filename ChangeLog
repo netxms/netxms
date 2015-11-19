@@ -2,14 +2,18 @@
 * 2.0
 *
 
+- Template import correctly handles updates for existing templates
 - Scripts can be used as instance source in instance discovery DCIs
 - NXSL node object attribute snmpSysDescription renamed back to sysDescription
 - Selectors in NXSL
 - Subnet mask for synthetic subnets can be set in server configuration
 - Added cumulative counters for server DB writer requests
+- Fixed data corruption issues in ODBC and Oracle DB drivers
+- Additional internal server metrics for monitoring DB activity and performance
+- Added interface creation hook
 - Management console:
 	- Object tool input fields can be rearranged
-- Fixed issues: #847, #948, #967
+- Fixed issues: #205, #847, #948, #967, #979, #980, #991
 
 
 *

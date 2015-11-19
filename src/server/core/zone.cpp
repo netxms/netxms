@@ -67,20 +67,18 @@ Zone::~Zone()
 /**
  * Create object from database data
  */
-BOOL Zone::loadFromDatabase(UINT32 dwId)
+bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
-   TCHAR szQuery[256];
-   DB_RESULT hResult;
-
    m_id = dwId;
 
-   if (!loadCommonProperties())
-      return FALSE;
+   if (!loadCommonProperties(hdb))
+      return false;
 
+   TCHAR szQuery[256];
    _sntprintf(szQuery, 256, _T("SELECT zone_guid,agent_proxy,snmp_proxy,icmp_proxy FROM zones WHERE id=%d"), dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   DB_RESULT hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
-      return FALSE;     // Query failed
+      return false;     // Query failed
 
    if (DBGetNumRows(hResult) == 0)
    {
@@ -88,12 +86,12 @@ BOOL Zone::loadFromDatabase(UINT32 dwId)
       if (dwId == BUILTIN_OID_ZONE0)
       {
          m_zoneId = 0;
-         return TRUE;
+         return true;
       }
       else
       {
 			DbgPrintf(4, _T("Cannot load zone object %ld - missing record in \"zones\" table"), (long)m_id);
-         return FALSE;
+         return false;
       }
    }
 
@@ -105,9 +103,9 @@ BOOL Zone::loadFromDatabase(UINT32 dwId)
    DBFreeResult(hResult);
 
    // Load access list
-   loadACLFromDB();
+   loadACLFromDB(hdb);
 
-   return TRUE;
+   return true;
 }
 
 /**

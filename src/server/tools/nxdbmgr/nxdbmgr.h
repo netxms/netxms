@@ -51,7 +51,7 @@
 
 void CheckDatabase();
 void InitDatabase(const char *pszInitFile);
-bool ClearDatabase();
+bool ClearDatabase(bool preMigration);
 void ExportDatabase(const char *file);
 void ImportDatabase(const char *file);
 void MigrateDatabase(const TCHAR *sourceConfig);
@@ -97,6 +97,8 @@ extern bool g_checkData;
 extern bool g_checkDataTablesOnly;
 extern bool g_dataOnlyMigration;
 extern bool g_skipDataMigration;
+extern bool g_skipDataSchemaMigration;
+extern int g_migrationTxnSize;
 extern int g_dbSyntax;
 extern const TCHAR *g_pszTableSuffix;
 extern const TCHAR *g_pszSqlType[6][3];

@@ -38,7 +38,8 @@ void LoadScripts()
    int i, nRows;
 
    g_pScriptLibrary = new NXSL_Library;
-   hResult = DBSelect(g_hCoreDB, _T("SELECT script_id,script_name,script_code FROM script_library"));
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   hResult = DBSelect(hdb, _T("SELECT script_id,script_name,script_code FROM script_library"));
    if (hResult != NULL)
    {
       nRows = DBGetNumRows(hResult);
@@ -62,6 +63,7 @@ void LoadScripts()
       }
       DBFreeResult(hResult);
    }
+   DBConnectionPoolReleaseConnection(hdb);
 }
 
 /**

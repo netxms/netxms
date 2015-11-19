@@ -672,7 +672,7 @@ protected:
    size_t m_dwBytesInBuffer;
    size_t m_dwBufferPos;
    BYTE *m_pBuffer;
-   WORD m_port;
+   UINT16 m_port;
 
    size_t preParsePDU();
    int recvData(UINT32 dwTimeout, struct sockaddr *pSender, socklen_t *piAddrSize);
@@ -689,10 +689,10 @@ public:
    virtual int sendMessage(SNMP_PDU *pPDU);
    virtual InetAddress getPeerIpAddress();
 
-   UINT32 createUDPTransport(const TCHAR *hostName, WORD port = SNMP_DEFAULT_PORT);
-   UINT32 createUDPTransport(const InetAddress& hostAddr, WORD port = SNMP_DEFAULT_PORT);
+   UINT32 createUDPTransport(const TCHAR *hostName, UINT16 port = SNMP_DEFAULT_PORT);
+   UINT32 createUDPTransport(const InetAddress& hostAddr, UINT16 port = SNMP_DEFAULT_PORT);
 	bool isConnected() { return m_connected; }
-   WORD getPort() { return m_port; }
+   UINT16 getPort() { return m_port; }
 };
 
 /**

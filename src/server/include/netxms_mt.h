@@ -63,7 +63,7 @@ public:
 	~MappingTable();
 
 	static MappingTable *createFromMessage(NXCPMessage *msg);
-	static MappingTable *createFromDatabase(LONG id);
+	static MappingTable *createFromDatabase(DB_HANDLE hdb, LONG id);
 
 	bool saveToDatabase();
 	bool deleteFromDatabase();

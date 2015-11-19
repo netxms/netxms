@@ -160,9 +160,9 @@ DCTable::DCTable(UINT32 id, const TCHAR *name, int source, int pollingInterval, 
  *    item_id,template_id,template_item_id,name,
  *    description,flags,source,snmp_port,polling_interval,retention_time,
  *    status,system_tag,resource_id,proxy_node,perftab_settings,
- *    transformation_script,comments
+ *    transformation_script,comments,guid
  */
-DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
+DCTable::DCTable(DB_HANDLE hdb, DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 {
    m_id = DBGetFieldULong(hResult, iRow, 0);
    m_dwTemplateId = DBGetFieldULong(hResult, iRow, 1);
@@ -181,6 +181,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	m_pszPerfTabSettings = DBGetField(hResult, iRow, 14, NULL, 0);
    TCHAR *pszTmp = DBGetField(hResult, iRow, 15, NULL, 0);
    m_comments = DBGetField(hResult, iRow, 16, NULL, 0);
+   m_guid = DBGetFieldGUID(hResult, iRow, 17);
    setTransformationScript(pszTmp);
    free(pszTmp);
 
@@ -188,7 +189,7 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 	m_columns = new ObjectArray<DCTableColumn>(8, 8, true);
 	m_lastValue = NULL;
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=? ORDER BY sequence_number"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT column_name,flags,snmp_oid,display_name FROM dc_table_columns WHERE table_id=? ORDER BY sequence_number"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -203,10 +204,10 @@ DCTable::DCTable(DB_RESULT hResult, int iRow, Template *pNode) : DCObject()
 		DBFreeStatement(hStmt);
 	}
 
-	loadCustomSchedules();
+	loadCustomSchedules(hdb);
 
    m_thresholds = new ObjectArray<DCTableThreshold>(0, 4, true);
-   loadThresholds();
+   loadThresholds(hdb);
 }
 
 /**
@@ -524,7 +525,7 @@ void DCTable::processNewError()
 /**
  * Save to database
  */
-BOOL DCTable::saveToDB(DB_HANDLE hdb)
+bool DCTable::saveToDatabase(DB_HANDLE hdb)
 {
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("dc_tables"), _T("item_id"), m_id))
@@ -532,14 +533,15 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 		hStmt = DBPrepare(hdb, _T("UPDATE dc_tables SET node_id=?,template_id=?,template_item_id=?,name=?,")
 		                       _T("description=?,flags=?,source=?,snmp_port=?,polling_interval=?,")
                              _T("retention_time=?,status=?,system_tag=?,resource_id=?,proxy_node=?,")
-									  _T("perftab_settings=?,transformation_script=?,comments=? WHERE item_id=?"));
+									  _T("perftab_settings=?,transformation_script=?,comments=?,guid=? WHERE item_id=?"));
 	}
 	else
 	{
 		hStmt = DBPrepare(hdb, _T("INSERT INTO dc_tables (node_id,template_id,template_item_id,name,")
 		                       _T("description,flags,source,snmp_port,polling_interval,")
 		                       _T("retention_time,status,system_tag,resource_id,proxy_node,perftab_settings,")
-									  _T("transformation_script,comments,item_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+									  _T("transformation_script,comments,guid,item_id) ")
+									  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
@@ -563,9 +565,10 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 	DBBind(hStmt, 15, DB_SQLTYPE_TEXT, m_pszPerfTabSettings, DB_BIND_STATIC);
    DBBind(hStmt, 16, DB_SQLTYPE_TEXT, m_transformationScriptSource, DB_BIND_STATIC);
    DBBind(hStmt, 17, DB_SQLTYPE_TEXT, m_comments, DB_BIND_STATIC);
-	DBBind(hStmt, 18, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 18, DB_SQLTYPE_VARCHAR, m_guid);
+	DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_id);
 
-	BOOL result = DBExecute(hStmt);
+	bool result = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 
 	if (result)
@@ -580,7 +583,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 		}
 		else
 		{
-			result = FALSE;
+			result = false;
 		}
 
 		if (result && (m_columns->size() > 0))
@@ -607,7 +610,7 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
 			}
 			else
 			{
-				result = FALSE;
+				result = false;
 			}
 		}
 	}
@@ -615,15 +618,15 @@ BOOL DCTable::saveToDB(DB_HANDLE hdb)
    saveThresholds(hdb);
 
    unlock();
-	return result ? DCObject::saveToDB(hdb) : FALSE;
+	return result ? DCObject::saveToDatabase(hdb) : false;
 }
 
 /**
  * Load thresholds from database
  */
-bool DCTable::loadThresholds()
+bool DCTable::loadThresholds(DB_HANDLE hdb)
 {
-   DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("SELECT id,activation_event,deactivation_event FROM dct_thresholds WHERE table_id=? ORDER BY sequence_number"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id,activation_event,deactivation_event FROM dct_thresholds WHERE table_id=? ORDER BY sequence_number"));
    if (hStmt == NULL)
       return false;
 
@@ -634,7 +637,7 @@ bool DCTable::loadThresholds()
       int count = DBGetNumRows(hResult);
       for(int i = 0; i < count; i++)
       {
-         DCTableThreshold *t = new DCTableThreshold(hResult, i);
+         DCTableThreshold *t = new DCTableThreshold(hdb, hResult, i);
          m_thresholds->add(t);
       }
       DBFreeResult(hResult);
@@ -999,13 +1002,14 @@ void DCTable::updateFromTemplate(DCObject *src)
 /**
  * Create management pack record
  */
-void DCTable::createNXMPRecord(String &str)
+void DCTable::createExportRecord(String &str)
 {
 	UINT32 i;
 
    lock();
 
    str.appendFormattedString(_T("\t\t\t\t<dctable id=\"%d\">\n")
+                          _T("\t\t\t\t\t<guid>%s</guid>\n")
                           _T("\t\t\t\t\t<name>%s</name>\n")
                           _T("\t\t\t\t\t<description>%s</description>\n")
                           _T("\t\t\t\t\t<origin>%d</origin>\n")
@@ -1014,7 +1018,8 @@ void DCTable::createNXMPRecord(String &str)
                           _T("\t\t\t\t\t<systemTag>%s</systemTag>\n")
                           _T("\t\t\t\t\t<flags>%d</flags>\n")
                           _T("\t\t\t\t\t<snmpPort>%d</snmpPort>\n"),
-								  (int)m_id, (const TCHAR *)EscapeStringForXML2(m_name),
+								  (int)m_id, (const TCHAR *)m_guid.toString(),
+								  (const TCHAR *)EscapeStringForXML2(m_name),
                           (const TCHAR *)EscapeStringForXML2(m_szDescription),
                           (int)m_source, m_iPollingInterval, m_iRetentionTime,
                           (const TCHAR *)EscapeStringForXML2(m_systemTag),
@@ -1027,11 +1032,11 @@ void DCTable::createNXMPRecord(String &str)
 		str += _T("</transformation>\n");
 	}
 
-	if (m_dwNumSchedules > 0)
+   if ((m_schedules != NULL) && (m_schedules->size() > 0))
    {
       str += _T("\t\t\t\t\t<schedules>\n");
-      for(i = 0; i < m_dwNumSchedules; i++)
-         str.appendFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_ppScheduleList[i]));
+      for(i = 0; i < m_schedules->size(); i++)
+         str.appendFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_schedules->get(i)));
       str += _T("\t\t\t\t\t</schedules>\n");
    }
 
@@ -1064,4 +1069,46 @@ void DCTable::createNXMPRecord(String &str)
 
    unlock();
    str += _T("\t\t\t\t</dctable>\n");
+}
+
+/**
+ * Create DCObject from import file
+ */
+void DCTable::updateFromImport(ConfigEntry *config)
+{
+   DCObject::updateFromImport(config);
+
+   m_columns->clear();
+   ConfigEntry *columnsRoot = config->findEntry(_T("columns"));
+   if (columnsRoot != NULL)
+   {
+      ObjectArray<ConfigEntry> *columns = columnsRoot->getSubEntries(_T("column#*"));
+      for(int i = 0; i < columns->size(); i++)
+      {
+         m_columns->add(new DCTableColumn(columns->get(i)));
+      }
+      delete columns;
+   }
+
+   m_thresholds->clear();
+   ConfigEntry *thresholdsRoot = config->findEntry(_T("thresholds"));
+   if (thresholdsRoot != NULL)
+   {
+      ObjectArray<ConfigEntry> *thresholds = thresholdsRoot->getSubEntries(_T("threshold#*"));
+      for(int i = 0; i < thresholds->size(); i++)
+      {
+         m_thresholds->add(new DCTableThreshold(thresholds->get(i)));
+      }
+      delete thresholds;
+   }
+}
+
+/**
+ * Should return true if object has (or can have) value
+ */
+bool DCTable::hasValue()
+{
+   if (m_pNode->getObjectClass() == OBJECT_CLUSTER)
+      return isAggregateOnCluster();
+   return true;
 }

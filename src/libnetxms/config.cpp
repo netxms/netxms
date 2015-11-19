@@ -132,6 +132,7 @@ ConfigEntry::ConfigEntry(const TCHAR *name, ConfigEntry *parent, const TCHAR *fi
    m_first = NULL;
    m_last = NULL;
    m_next = NULL;
+   m_parent = NULL;
    if (parent != NULL)
       parent->addEntry(this);
    m_valueCount = 0;

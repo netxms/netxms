@@ -95,7 +95,6 @@ typedef __console_ctx * CONSOLE_CTX;
 /**
  * Server includes
  */
-#include "server_timers.h"
 #include "nms_dcoll.h"
 #include "nms_users.h"
 #include "nxcore_winperf.h"
@@ -445,37 +444,38 @@ private:
    static THREAD_RESULT THREAD_CALL updateThreadStarter(void *);
    static void pollerThreadStarter(void *);
 
-	DECLARE_THREAD_STARTER(getCollectedData)
-	DECLARE_THREAD_STARTER(getTableCollectedData)
-	DECLARE_THREAD_STARTER(clearDCIData)
-	DECLARE_THREAD_STARTER(forceDCIPoll)
-	DECLARE_THREAD_STARTER(queryParameter)
-	DECLARE_THREAD_STARTER(queryAgentTable)
-	DECLARE_THREAD_STARTER(queryL2Topology)
-	DECLARE_THREAD_STARTER(sendEventLog)
-	DECLARE_THREAD_STARTER(sendSyslog)
-	DECLARE_THREAD_STARTER(createObject)
-	DECLARE_THREAD_STARTER(getServerFile)
-	DECLARE_THREAD_STARTER(getAgentFile)
-	DECLARE_THREAD_STARTER(cancelFileMonitoring)
-	DECLARE_THREAD_STARTER(queryServerLog)
-	DECLARE_THREAD_STARTER(getServerLogQueryData)
-	DECLARE_THREAD_STARTER(executeAction)
-	DECLARE_THREAD_STARTER(findNodeConnection)
-	DECLARE_THREAD_STARTER(findMacAddress)
-	DECLARE_THREAD_STARTER(findIpAddress)
-	DECLARE_THREAD_STARTER(processConsoleCommand)
-	DECLARE_THREAD_STARTER(sendMib)
-	DECLARE_THREAD_STARTER(getNetworkPath)
-	DECLARE_THREAD_STARTER(getAlarmEvents)
-	DECLARE_THREAD_STARTER(openHelpdeskIssue)
-	DECLARE_THREAD_STARTER(forwardToReportingServer)
-   DECLARE_THREAD_STARTER(fileManagerControl)
-   DECLARE_THREAD_STARTER(uploadUserFileToAgent)
-   DECLARE_THREAD_STARTER(getSwitchForwardingDatabase)
-   DECLARE_THREAD_STARTER(getRoutingTable)
-   DECLARE_THREAD_STARTER(getLocationHistory)
+   DECLARE_THREAD_STARTER(cancelFileMonitoring)
+   DECLARE_THREAD_STARTER(clearDCIData)
+   DECLARE_THREAD_STARTER(createObject)
+   DECLARE_THREAD_STARTER(executeAction)
    DECLARE_THREAD_STARTER(executeScript)
+   DECLARE_THREAD_STARTER(fileManagerControl)
+   DECLARE_THREAD_STARTER(findIpAddress)
+   DECLARE_THREAD_STARTER(findMacAddress)
+   DECLARE_THREAD_STARTER(findNodeConnection)
+   DECLARE_THREAD_STARTER(forceDCIPoll)
+   DECLARE_THREAD_STARTER(forwardToReportingServer)
+   DECLARE_THREAD_STARTER(getAgentFile)
+   DECLARE_THREAD_STARTER(getAlarmEvents)
+   DECLARE_THREAD_STARTER(getCollectedData)
+   DECLARE_THREAD_STARTER(getLocationHistory)
+   DECLARE_THREAD_STARTER(getNetworkPath)
+   DECLARE_THREAD_STARTER(getRoutingTable)
+   DECLARE_THREAD_STARTER(getServerFile)
+   DECLARE_THREAD_STARTER(getServerLogQueryData)
+   DECLARE_THREAD_STARTER(getSwitchForwardingDatabase)
+   DECLARE_THREAD_STARTER(getTableCollectedData)
+   DECLARE_THREAD_STARTER(importConfiguration)
+   DECLARE_THREAD_STARTER(openHelpdeskIssue)
+   DECLARE_THREAD_STARTER(processConsoleCommand)
+   DECLARE_THREAD_STARTER(queryAgentTable)
+   DECLARE_THREAD_STARTER(queryL2Topology)
+   DECLARE_THREAD_STARTER(queryParameter)
+   DECLARE_THREAD_STARTER(queryServerLog)
+   DECLARE_THREAD_STARTER(sendEventLog)
+   DECLARE_THREAD_STARTER(sendMib)
+   DECLARE_THREAD_STARTER(sendSyslog)
+   DECLARE_THREAD_STARTER(uploadUserFileToAgent)
 
    void readThread();
    void writeThread();
@@ -862,6 +862,7 @@ public:
  * Functions
  */
 bool NXCORE_EXPORTABLE ConfigReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
+bool NXCORE_EXPORTABLE ConfigReadStrEx(DB_HANDLE hdb, const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 #ifdef UNICODE
 bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
 #else
@@ -869,6 +870,7 @@ bool NXCORE_EXPORTABLE ConfigReadStrA(const WCHAR *szVar, char *szBuffer, int iB
 #endif
 bool NXCORE_EXPORTABLE ConfigReadStrUTF8(const TCHAR *szVar, char *szBuffer, int iBufSize, const char *szDefault);
 int NXCORE_EXPORTABLE ConfigReadInt(const TCHAR *szVar, int iDefault);
+int NXCORE_EXPORTABLE ConfigReadIntEx(DB_HANDLE hdb, const TCHAR *szVar, int iDefault);
 UINT32 NXCORE_EXPORTABLE ConfigReadULong(const TCHAR *szVar, UINT32 dwDefault);
 bool NXCORE_EXPORTABLE ConfigReadByteArray(const TCHAR *pszVar, int *pnArray, int nSize, int nDefault);
 bool NXCORE_EXPORTABLE ConfigWriteStr(const TCHAR *szVar, const TCHAR *szValue, bool bCreate, bool isVisible = true, bool needRestart = false);
@@ -1110,7 +1112,6 @@ extern TCHAR g_szDbPassword[];
 extern TCHAR g_szDbName[];
 extern TCHAR g_szDbSchema[];
 extern DB_DRIVER g_dbDriver;
-extern DB_HANDLE NXCORE_EXPORTABLE g_hCoreDB;
 extern Queue *g_dbWriterQueue;
 extern Queue *g_dciDataWriterQueue;
 extern Queue *g_dciRawDataWriterQueue;

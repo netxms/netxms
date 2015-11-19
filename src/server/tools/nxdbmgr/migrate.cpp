@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ extern const TCHAR *g_tables[];
 /**
  * Source config
  */
-static TCHAR s_encryptedDbPassword[MAX_DB_STRING] = _T("");
 static TCHAR s_dbDriver[MAX_PATH] = _T("");
 static TCHAR s_dbDrvParams[MAX_PATH] = _T("");
 static TCHAR s_dbServer[MAX_PATH] = _T("127.0.0.1");
@@ -161,12 +160,20 @@ static bool MigrateTable(const TCHAR *table)
          }
          if (!SQLExecute(hStmt))
          {
+            _tprintf(_T("Failed input record:\n"));
+            for(int i = 0; i < columnCount; i++)
+            {
+               DBGetColumnNameAsync(hResult, i, buffer, 256);
+               TCHAR *value = DBGetFieldAsync(hResult, i, NULL, 0);
+               _tprintf(_T("   %s = \"%s\"\n"), buffer, CHECK_NULL(value));
+               safe_free(value);
+            }
             success = false;
             break;
          }
 
          rows++;
-         if (rows >= 4096)
+         if (rows >= g_migrationTxnSize)
          {
             rows = 0;
             DBCommit(g_hCoreDB);
@@ -275,7 +282,7 @@ void MigrateDatabase(const TCHAR *sourceConfig)
 
    if (!g_dataOnlyMigration)
    {
-	   if (!ClearDatabase())
+	   if (!ClearDatabase(true))
 		   goto cleanup;
 
 	   // Migrate tables
@@ -286,8 +293,11 @@ void MigrateDatabase(const TCHAR *sourceConfig)
 	   }
    }
 
-	if (!MigrateDataTables())
-		goto cleanup;
+   if (!g_skipDataSchemaMigration)
+   {
+      if (!MigrateDataTables())
+         goto cleanup;
+   }
 
 	success = true;
 

@@ -165,7 +165,7 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreation
 		pNode->setAgentPort(agentPort);
 	if (snmpPort != 0)
 		pNode->setSnmpPort(snmpPort);
-   NetObjInsert(pNode, TRUE);
+   NetObjInsert(pNode, true, false);
    if (pszName != NULL)
       pNode->setName(pszName);
 
@@ -195,11 +195,6 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreation
       pNode->setMgmtStatus(FALSE);
       pNode->checkSubnetBinding();
    }
-
-   // Add default DCIs
-   pNode->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), _T("Status"), DS_INTERNAL, DCI_DT_INT,
-		ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
-		ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), pNode));
 
 	if (doConfPoll)
    {
@@ -504,7 +499,8 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
 		if (autoFilterFlags & DFF_ONLY_RANGE)
       {
 			DbgPrintf(4, _T("AcceptNewNode(%s): auto filter - checking range"), szIpAddr);
-         DB_RESULT hResult = DBSelect(g_hCoreDB, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=2"));
+			DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         DB_RESULT hResult = DBSelect(hdb, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=2"));
          if (hResult != NULL)
          {
             int nRows = DBGetNumRows(hResult);
@@ -531,6 +527,7 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
             }
             DBFreeResult(hResult);
          }
+         DBConnectionPoolReleaseConnection(hdb);
 			DbgPrintf(4, _T("AcceptNewNode(%s): auto filter - range check result is %d"), szIpAddr, bResult);
 			if (!bResult)
 				return FALSE;

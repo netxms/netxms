@@ -73,6 +73,11 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 			list.add(new AgentParameter("Server.AverageDCPollerQueueSize", Messages.get().SelectInternalParamDlg_DCI_AvgDCQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AverageSyslogProcessingQueueSize", Messages.get().SelectInternalParamDlg_SyslogProcessingQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.AverageSyslogWriterQueueSize", Messages.get().SelectInternalParamDlg_SyslogWriterQueue, DataCollectionItem.DT_FLOAT)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.Failed", "Failed DB queries", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.LongRunning", "Long running DB queries", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.NonSelect", "Non-SELECT DB queries", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.Select", "SELECT DB queries", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.DB.Queries.Total", "Total DB queries", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.DBWriter.Requests.IData", "DB writer requests (DCI data)", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.DBWriter.Requests.Other", "DB writer requests (other queries)", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.DBWriter.Requests.RawData", "DB writer requests (raw DCI data)", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$

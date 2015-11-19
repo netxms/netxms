@@ -145,11 +145,11 @@ bool AgentPolicy::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load from database
  */
-BOOL AgentPolicy::loadFromDatabase(UINT32 dwId)
+bool AgentPolicy::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
 	m_id = dwId;
 
-	if (!loadCommonProperties())
+	if (!loadCommonProperties(hdb))
    {
       DbgPrintf(2, _T("Cannot load common properties for agent policy object %d"), dwId);
       return FALSE;
@@ -159,10 +159,10 @@ BOOL AgentPolicy::loadFromDatabase(UINT32 dwId)
    {
 		TCHAR query[256];
 
-	   loadACLFromDB();
+	   loadACLFromDB(hdb);
 
 		_sntprintf(query, 256, _T("SELECT version FROM ap_common WHERE id=%d"), dwId);
-		DB_RESULT hResult = DBSelect(g_hCoreDB, query);
+		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult == NULL)
 			return FALSE;
 
@@ -171,7 +171,7 @@ BOOL AgentPolicy::loadFromDatabase(UINT32 dwId)
 
 	   // Load related nodes list
       _sntprintf(query, 256, _T("SELECT node_id FROM ap_bindings WHERE policy_id=%d"), m_id);
-      hResult = DBSelect(g_hCoreDB, query);
+      hResult = DBSelect(hdb, query);
       if (hResult != NULL)
       {
          int numNodes = DBGetNumRows(hResult);

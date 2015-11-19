@@ -193,7 +193,7 @@ void ImportDatabase(const char *file)
 		goto cleanup;
 	}
 
-	if (!ClearDatabase())
+	if (!ClearDatabase(false))
 		goto cleanup;
 
 	// Import tables

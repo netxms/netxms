@@ -232,22 +232,22 @@ Node::~Node()
 /**
  * Create object from database data
  */
-BOOL Node::loadFromDatabase(UINT32 dwId)
+bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    int i, iNumRows;
    UINT32 dwSubnetId;
    NetObj *pObject;
-   BOOL bResult = FALSE;
+   bool bResult = false;
 
    m_id = dwId;
 
-   if (!loadCommonProperties())
+   if (!loadCommonProperties(hdb))
    {
       DbgPrintf(2, _T("Cannot load common properties for node object %d"), dwId);
-      return FALSE;
+      return false;
    }
 
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
+	DB_STATEMENT hStmt = DBPrepare(hdb,
 		_T("SELECT primary_name,primary_ip,node_flags,")
       _T("snmp_version,auth_method,secret,")
       _T("agent_port,status_poll_type,snmp_oid,agent_version,")
@@ -260,14 +260,14 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
       _T("rack_id,rack_image,rack_position,rack_height,")
       _T("last_agent_comm_time FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
-		return FALSE;
+		return false;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwId);
 	DB_RESULT hResult = DBSelectPrepared(hStmt);
    if (hResult == NULL)
 	{
 		DBFreeStatement(hStmt);
-      return FALSE;     // Query failed
+      return false;     // Query failed
 	}
 
    if (DBGetNumRows(hResult) == 0)
@@ -275,7 +275,7 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
       DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
       DbgPrintf(2, _T("Missing record in \"nodes\" table for node object %d"), dwId);
-      return FALSE;
+      return false;
    }
 
    DBGetField(hResult, 0, 0, m_primaryName, MAX_DNS_NAME);
@@ -348,16 +348,16 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
    if (!m_isDeleted)
    {
       // Link node to subnets
-		hStmt = DBPrepare(g_hCoreDB, _T("SELECT subnet_id FROM nsmap WHERE node_id=?"));
+		hStmt = DBPrepare(hdb, _T("SELECT subnet_id FROM nsmap WHERE node_id=?"));
 		if (hStmt == NULL)
-			return FALSE;
+			return false;
 
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
       hResult = DBSelectPrepared(hStmt);
       if (hResult == NULL)
 		{
 			DBFreeStatement(hStmt);
-         return FALSE;     // Query failed
+         return false;     // Query failed
 		}
 
       iNumRows = DBGetNumRows(hResult);
@@ -385,18 +385,18 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
       DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
 
-		loadItemsFromDB();
-      loadACLFromDB();
+		loadItemsFromDB(hdb);
+      loadACLFromDB(hdb);
 
       // Walk through all items in the node and load appropriate thresholds
-		bResult = TRUE;
+		bResult = true;
       for(i = 0; i < m_dcObjects->size(); i++)
       {
-         if (!m_dcObjects->get(i)->loadThresholdsFromDB())
+         if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
          {
             DbgPrintf(3, _T("Cannot load thresholds for DCI %d of node %d (%s)"),
                       m_dcObjects->get(i)->getId(), dwId, m_name);
-            bResult = FALSE;
+            bResult = false;
          }
       }
 
@@ -404,7 +404,7 @@ BOOL Node::loadFromDatabase(UINT32 dwId)
    }
    else
    {
-      bResult = TRUE;
+      bResult = true;
    }
 
    return bResult;
@@ -517,7 +517,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    {
 		lockDciAccess(false);
       for(int i = 0; i < m_dcObjects->size(); i++)
-         m_dcObjects->get(i)->saveToDB(hdb);
+         m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
    }
 
@@ -951,6 +951,58 @@ bool Node::isMyIP(const InetAddress& addr)
 }
 
 /**
+ * Filter interface - should return true if system should proceed with interface creation
+ */
+bool Node::filterInterface(InterfaceInfo *info)
+{
+   NXSL_VM *vm = g_pScriptLibrary->createVM(_T("Hook::CreateInterface"), new NXSL_ServerEnv);
+   if (vm == NULL)
+   {
+      DbgPrintf(7, _T("Node::filterInterface(%s [%u]): hook script \"Hook::CreateInterface\" not found"), m_name, m_id);
+      return true;
+   }
+
+   Interface *iface;
+   if (info->name[0] != 0)
+      iface = new Interface(info->name, (info->description[0] != 0) ? info->description : info->name,
+                                 info->index, info->ipAddrList, info->type, m_zoneId);
+   else
+      iface = new Interface(info->ipAddrList, m_zoneId, false);
+   iface->setMacAddr(info->macAddr, false);
+   iface->setBridgePortNumber(info->bridgePort);
+   iface->setSlotNumber(info->slot);
+   iface->setPortNumber(info->port);
+   iface->setPhysicalPortFlag(info->isPhysicalPort);
+   iface->setManualCreationFlag(false);
+   iface->setSystemFlag(info->isSystem);
+   iface->setMTU(info->mtu);
+   iface->setSpeed(info->speed);
+   iface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
+
+   bool pass = true;
+   NXSL_Value *argv = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, iface));
+   vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
+   if (vm->run(1, &argv))
+   {
+      NXSL_Value *result = vm->getResult();
+      if ((result != NULL) && result->isInteger())
+      {
+         pass = (result->getValueAsInt32() != 0);
+      }
+   }
+   else
+   {
+      DbgPrintf(4, _T("Node::filterInterface(%s [%u]): hook script execution error: %s"), m_name, m_id, vm->getErrorText());
+   }
+   delete vm;
+   delete iface;
+
+   DbgPrintf(6, _T("Node::filterInterface(%s [%u]): interface \"%s\" (ifIndex=%d) %s by filter"),
+             m_name, m_id, info->name, info->index, pass ? _T("accepted") : _T("rejected"));
+   return pass;
+}
+
+/**
  * Create new interface - convenience wrapper
  */
 Interface *Node::createNewInterface(const InetAddress& ipAddr, BYTE *macAddr)
@@ -1035,7 +1087,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
                                  info->index, info->ipAddrList, info->type, m_zoneId);
    else
       pInterface = new Interface(info->ipAddrList, m_zoneId, bSyntheticMask);
-   pInterface->setMacAddr(info->macAddr);
+   pInterface->setMacAddr(info->macAddr, false);
 	pInterface->setBridgePortNumber(info->bridgePort);
 	pInterface->setSlotNumber(info->slot);
 	pInterface->setPortNumber(info->port);
@@ -1047,7 +1099,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
    pInterface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
 
    // Insert to objects' list and generate event
-   NetObjInsert(pInterface, TRUE);
+   NetObjInsert(pInterface, true, false);
    addInterface(pInterface);
    if (!m_isHidden)
       pInterface->unhide();
@@ -2536,7 +2588,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
                   }
                }
                ap = new AccessPoint((const TCHAR *)name, info->getIndex(), info->getMacAddr());
-               NetObjInsert(ap, TRUE);
+               NetObjInsert(ap, true, false);
                DbgPrintf(5, _T("ConfPoll(%s): created new access point object %s [%d]"), m_name, ap->getName(), ap->getId());
                newAp = true;
             }
@@ -2796,7 +2848,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                      PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
                                pInterface->getId(), pInterface->getIfIndex(),
                                pInterface->getName(), szOldMac, szNewMac);
-                     pInterface->setMacAddr(ifInfo->macAddr);
+                     pInterface->setMacAddr(ifInfo->macAddr, true);
                   }
                   if (_tcscmp(ifInfo->name, pInterface->getName()))
                   {
@@ -2893,8 +2945,15 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          {
             // New interface
             sendPollerMsg(rqid, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->name);
-            createNewInterface(ifInfo, false);
-            hasChanges = true;
+            if (filterInterface(ifInfo))
+            {
+               createNewInterface(ifInfo, false);
+               hasChanges = true;
+            }
+            else
+            {
+               sendPollerMsg(rqid, POLLER_WARNING _T("   Creation of interface object \"%s\" blocked by filter\r\n"), ifInfo->name);
+            }
          }
       }
    }
@@ -2975,7 +3034,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
                   PostEvent(EVENT_MAC_ADDR_CHANGED, m_id, "idsss",
                             pInterface->getId(), pInterface->getIfIndex(),
                             pInterface->getName(), szOldMac, szNewMac);
-                  pInterface->setMacAddr(macAddr);
+                  pInterface->setMacAddr(macAddr, true);
 					}
 				}
          }
@@ -3176,6 +3235,7 @@ void Node::doInstanceDiscovery(UINT32 requestId)
 
 	// process instance discovery DCIs
 	// it should be done that way to prevent DCI list lock for long time
+   bool changed = false;
 	for(int i = 0; i < rootItems.size(); i++)
 	{
 		DCItem *dci = rootItems.get(i);
@@ -3187,7 +3247,8 @@ void Node::doInstanceDiscovery(UINT32 requestId)
 		{
 			DbgPrintf(5, _T("Node::doInstanceDiscovery(%s [%u]): read %d values"), m_name, m_id, instances->size());
 			dci->filterInstanceList(instances);
-         updateInstances(dci, instances, requestId);
+         if (updateInstances(dci, instances, requestId))
+            changed = true;
 			delete instances;
 		}
 		else
@@ -3198,6 +3259,9 @@ void Node::doInstanceDiscovery(UINT32 requestId)
 		}
 		dci->setBusyFlag(FALSE);
 	}
+
+	if (changed)
+	   onDataCollectionChange();
 }
 
 /**
@@ -3307,8 +3371,10 @@ static EnumerationCallbackResult CreateInstanceDCI(const TCHAR *key, const void 
 /**
  * Update instance DCIs created from instance discovery DCI
  */
-void Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
+bool Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
 {
+   bool changed = false;
+
    lockDciAccess(true);
 
 	// Delete DCIs for missing instances and update existing
@@ -3332,6 +3398,7 @@ void Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
 			{
             ((DCItem *)object)->setInstance(name);
 			   ((DCItem *)object)->updateFromTemplate(root);
+			   changed = true;
          }
 			instances->remove(dciInstance);
 		}
@@ -3342,6 +3409,7 @@ void Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
 			          m_name, m_id, root->getName(), root->getId(), dciInstance);
          sendPollerMsg(requestId, _T("      Existing instance \"%s\" not found and will be deleted\r\n"), dciInstance);
 			deleteList.add(object->getId());
+			changed = true;
 		}
    }
 
@@ -3349,13 +3417,18 @@ void Node::updateInstances(DCItem *root, StringMap *instances, UINT32 requestId)
 		deleteDCObject(deleteList.get(i), false);
 
 	// Create new instances
-   CreateInstanceDCIData data;
-   data.root = root;
-   data.object = this;
-   data.requestId = requestId;
-   instances->forEach(CreateInstanceDCI, &data);
+	if (instances->size() > 0)
+	{
+      CreateInstanceDCIData data;
+      data.root = root;
+      data.object = this;
+      data.requestId = requestId;
+      instances->forEach(CreateInstanceDCI, &data);
+      changed = true;
+	}
 
    unlockDciAccess();
+   return changed;
 }
 
 /**
@@ -4159,6 +4232,36 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
       {
          _sntprintf(buffer, bufSize, _T("%f"), g_dAvgSyslogWriterQueueSize);
       }
+      else if (!_tcsicmp(param, _T("Server.DB.Queries.Failed")))
+      {
+         LIBNXDB_PERF_COUNTERS counters;
+         DBGetPerfCounters(&counters);
+         _sntprintf(buffer, bufSize, UINT64_FMT, counters.failedQueries);
+      }
+      else if (!_tcsicmp(param, _T("Server.DB.Queries.LongRunning")))
+      {
+         LIBNXDB_PERF_COUNTERS counters;
+         DBGetPerfCounters(&counters);
+         _sntprintf(buffer, bufSize, UINT64_FMT, counters.longRunningQueries);
+      }
+      else if (!_tcsicmp(param, _T("Server.DB.Queries.NonSelect")))
+      {
+         LIBNXDB_PERF_COUNTERS counters;
+         DBGetPerfCounters(&counters);
+         _sntprintf(buffer, bufSize, UINT64_FMT, counters.nonSelectQueries);
+      }
+      else if (!_tcsicmp(param, _T("Server.DB.Queries.Select")))
+      {
+         LIBNXDB_PERF_COUNTERS counters;
+         DBGetPerfCounters(&counters);
+         _sntprintf(buffer, bufSize, UINT64_FMT, counters.selectQueries);
+      }
+      else if (!_tcsicmp(param, _T("Server.DB.Queries.Total")))
+      {
+         LIBNXDB_PERF_COUNTERS counters;
+         DBGetPerfCounters(&counters);
+         _sntprintf(buffer, bufSize, UINT64_FMT, counters.totalQueries);
+      }
       else if (!_tcsicmp(param, _T("Server.DBWriter.Requests.IData")))
       {
          _sntprintf(buffer, bufSize, UINT64_FMT, g_idataWriteRequests);
@@ -4396,27 +4499,36 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    {
       InetAddress ipAddr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
 
-      // Check if received IP address is one of node's interface addresses
-      LockChildList(FALSE);
-      UINT32 i;
-      for(i = 0; i < m_dwChildCount; i++)
-         if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
-             ((Interface *)m_pChildList[i])->getIpAddressList()->hasAddress(ipAddr))
-            break;
-      UnlockChildList();
-      if (i == m_dwChildCount)
+      if (m_dwFlags & NF_REMOTE_AGENT)
       {
-         return RCC_INVALID_IP_ADDR;
+         lockProperties();
+         m_ipAddress = ipAddr;
+         setModified();
+         unlockProperties();
       }
-
-      //Check that there is no node with same IP as we try to change
-      if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) ||
-       (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
+      else
       {
-         return RCC_ALREADY_EXIST;
-      }
+         // Check if received IP address is one of node's interface addresses
+         LockChildList(FALSE);
+         UINT32 i;
+         for(i = 0; i < m_dwChildCount; i++)
+            if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
+                ((Interface *)m_pChildList[i])->getIpAddressList()->hasAddress(ipAddr))
+               break;
+         UnlockChildList();
+         if (i == m_dwChildCount)
+         {
+            return RCC_INVALID_IP_ADDR;
+         }
 
-      setPrimaryIPAddress(ipAddr);
+         // Check that there is no node with same IP as we try to change
+         if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) || (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
+         {
+            return RCC_ALREADY_EXIST;
+         }
+
+         setPrimaryIPAddress(ipAddr);
+      }
 
 		// Update primary name if it is not set with the same message
 		if (!pRequest->isFieldExist(VID_PRIMARY_NAME))
@@ -4436,7 +4548,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 		pRequest->getFieldAsString(VID_PRIMARY_NAME, primaryName, MAX_DNS_NAME);
 
       InetAddress ipAddr = InetAddress::resolveHostName(primaryName);
-      if (ipAddr.isValid())
+      if (ipAddr.isValid() && !(m_dwFlags & NF_REMOTE_AGENT))
       {
          // Check if received IP address is one of node's interface addresses
          LockChildList(FALSE);
@@ -4449,8 +4561,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
          if (i == m_dwChildCount)
          {
             // Check that there is no node with same IP as we try to change
-            if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) ||
-                (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
+            if ((FindNodeByIP(m_zoneId, ipAddr) != NULL) || (FindSubnetByIP(m_zoneId, ipAddr) != NULL))
             {
                return RCC_ALREADY_EXIST;
             }
@@ -6120,7 +6231,7 @@ Subnet *Node::createSubnet(const InetAddress& baseAddr, bool syntheticMask)
       }
    }
    Subnet *s = new Subnet(addr, m_zoneId, syntheticMask);
-   NetObjInsert(s, TRUE);
+   NetObjInsert(s, true, false);
    if (g_flags & AF_ENABLE_ZONING)
    {
 	   Zone *zone = FindZoneByGUID(m_zoneId);

@@ -339,7 +339,7 @@ ServerInfo::ServerInfo(const TCHAR *name, bool control, bool master)
       if (m_address.isValid())
       {
          int bits = strtol(p, NULL, 10);
-         if ((bits >= 0) && (bits <= 32))
+         if ((bits >= 0) && (bits <= ((m_address.getFamily() == AF_INET) ? 32 : 128)))
             m_address.setMaskBits(bits);
       }
       m_redoResolve = false;

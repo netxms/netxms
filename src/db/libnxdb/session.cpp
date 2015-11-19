@@ -29,6 +29,15 @@
 #define IS_VALID_STATEMENT_HANDLE(s) ((s != NULL) && (s->m_connection != NULL))
 
 /**
+ * Performance counters
+ */
+static UINT64 s_perfSelectQueries = 0;
+static UINT64 s_perfNonSelectQueries = 0;
+static UINT64 s_perfTotalQueries = 0;
+static UINT64 s_perfLongRunningQueries = 0;
+static UINT64 s_perfFailedQueries = 0;
+
+/**
  * Session init callback
  */
 static void (*s_sessionInitCb)(DB_HANDLE session) = NULL;
@@ -249,6 +258,9 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
       dwResult = hConn->m_driver->m_fpDrvQuery(hConn->m_connection, pwszQuery, wcErrorText);
    }
 
+   s_perfNonSelectQueries++;
+   s_perfTotalQueries++;
+
    ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
    {
@@ -257,6 +269,7 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
    if ((dwResult == DBERR_SUCCESS) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
    {
       __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
+      s_perfLongRunningQueries++;
    }
    
    MutexUnlock(hConn->m_mutexTransLock);
@@ -268,6 +281,7 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
 
    if (dwResult != DBERR_SUCCESS)
 	{	
+      s_perfFailedQueries++;
 		if (hConn->m_driver->m_logSqlErrors)
 			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
@@ -308,6 +322,10 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
    
    MutexLock(hConn->m_mutexTransLock);
    INT64 ms = GetCurrentTimeMs();
+
+   s_perfSelectQueries++;
+   s_perfTotalQueries++;
+
    hResult = hConn->m_driver->m_fpDrvSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
@@ -323,6 +341,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
    if ((hResult != NULL) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
    {
       __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
+      s_perfLongRunningQueries++;
    }
    MutexUnlock(hConn->m_mutexTransLock);
 
@@ -333,6 +352,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, T
 
 	if (hResult == NULL)
 	{
+	   s_perfFailedQueries++;
 		if (hConn->m_driver->m_logSqlErrors)
 			nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", szQuery, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
@@ -772,6 +792,10 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
    
    MutexLock(hConn->m_mutexTransLock);
    INT64 ms = GetCurrentTimeMs();
+
+   s_perfSelectQueries++;
+   s_perfTotalQueries++;
+
    hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
@@ -787,9 +811,11 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
    if ((hResult != NULL) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
    {
       __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), szQuery, (int)ms);
+      s_perfLongRunningQueries++;
    }
    if (hResult == NULL)
    {
+      s_perfFailedQueries++;
       MutexUnlock(hConn->m_mutexTransLock);
 
 #ifndef UNICODE
@@ -1070,6 +1096,9 @@ DB_STATEMENT LIBNXDB_EXPORTABLE DBPrepareEx(DB_HANDLE hConn, const TCHAR *query,
         nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", query, errorText);
 		if (hConn->m_driver->m_fpEventHandler != NULL)
 			hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, pwszQuery, wcErrorText, errorCode == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
+
+		s_perfFailedQueries++;
+		s_perfTotalQueries++;
 	}
 
    if (hConn->m_driver->m_dumpSql)
@@ -1323,6 +1352,9 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 	MutexLock(hConn->m_mutexTransLock);
    UINT64 ms = GetCurrentTimeMs();
 
+   s_perfNonSelectQueries++;
+   s_perfTotalQueries++;
+
 	DWORD dwResult = hConn->m_driver->m_fpDrvExecute(hConn->m_connection, hStmt->m_statement, wcErrorText);
    ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
@@ -1332,6 +1364,7 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
    if ((dwResult == DBERR_SUCCESS) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
    {
       __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
+      s_perfLongRunningQueries++;
    }
 
    // Do reconnect if needed, but don't retry statement execution
@@ -1362,6 +1395,7 @@ bool LIBNXDB_EXPORTABLE DBExecuteEx(DB_STATEMENT hStmt, TCHAR *errorText)
 			free(query);
 #endif
 		}
+		s_perfFailedQueries++;
 	}
 
    return dwResult == DBERR_SUCCESS;
@@ -1398,6 +1432,9 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 	DB_HANDLE hConn = hStmt->m_connection;
    MutexLock(hConn->m_mutexTransLock);
 
+   s_perfSelectQueries++;
+   s_perfTotalQueries++;
+
    INT64 ms = GetCurrentTimeMs();
    DWORD dwError = DBERR_OTHER_ERROR;
 	DBDRV_RESULT hResult = hConn->m_driver->m_fpDrvSelectPrepared(hConn->m_connection, hStmt->m_statement, &dwError, wcErrorText);
@@ -1411,6 +1448,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
    if ((hResult != NULL) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
    {
       __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
+      s_perfLongRunningQueries++;
    }
 
    // Do reconnect if needed, but don't retry statement execution
@@ -1441,6 +1479,7 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedEx(DB_STATEMENT hStmt, TCHAR *error
 			free(query);
 #endif
 		}
+		s_perfFailedQueries++;
 	}
 
 	if (hResult != NULL)
@@ -1551,24 +1590,32 @@ bool LIBNXDB_EXPORTABLE DBRollback(DB_HANDLE hConn)
  */
 String LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int maxSize)
 {
+   return DBPrepareString(conn->m_driver, str, maxSize);
+}
+
+/**
+ * Prepare string for using in SQL statement
+ */
+String LIBNXDB_EXPORTABLE DBPrepareString(DB_DRIVER drv, const TCHAR *str, int maxSize)
+{
 	String out;
 	if ((maxSize > 0) && (str != NULL) && (maxSize < (int)_tcslen(str)))
 	{
 		TCHAR *temp = (TCHAR *)malloc((maxSize + 1) * sizeof(TCHAR));
 		nx_strncpy(temp, str, maxSize + 1);
 #ifdef UNICODE
-		out.setBuffer(conn->m_driver->m_fpDrvPrepareStringW(temp));
+		out.setBuffer(drv->m_fpDrvPrepareStringW(temp));
 #else
-		out.setBuffer(conn->m_driver->m_fpDrvPrepareStringA(temp));
+		out.setBuffer(drv->m_fpDrvPrepareStringA(temp));
 #endif
 		free(temp);
 	}
 	else	
 	{
 #ifdef UNICODE
-		out.setBuffer(conn->m_driver->m_fpDrvPrepareStringW(CHECK_NULL_EX(str)));
+		out.setBuffer(drv->m_fpDrvPrepareStringW(CHECK_NULL_EX(str)));
 #else
-		out.setBuffer(conn->m_driver->m_fpDrvPrepareStringA(CHECK_NULL_EX(str)));
+		out.setBuffer(drv->m_fpDrvPrepareStringA(CHECK_NULL_EX(str)));
 #endif
 	}
 	return out;
@@ -1587,6 +1634,14 @@ String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int 
 	return s;
 }
 
+String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str, int maxSize)
+{
+   WCHAR *wcs = WideStringFromMBString(str);
+   String s = DBPrepareString(drv, wcs, maxSize);
+   free(wcs);
+   return s;
+}
+
 #endif
 
 /**
@@ -1601,4 +1656,16 @@ int LIBNXDB_EXPORTABLE DBIsTableExist(DB_HANDLE conn, const TCHAR *table)
    MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, table, -1, wname, 256);
    return conn->m_driver->m_fpDrvIsTableExist(conn->m_connection, wname);
 #endif
+}
+
+/**
+ * Get performance counters
+ */
+void LIBNXDB_EXPORTABLE DBGetPerfCounters(LIBNXDB_PERF_COUNTERS *counters)
+{
+   counters->failedQueries = s_perfFailedQueries;
+   counters->longRunningQueries = s_perfLongRunningQueries;
+   counters->nonSelectQueries = s_perfNonSelectQueries;
+   counters->selectQueries = s_perfSelectQueries;
+   counters->totalQueries = s_perfTotalQueries;
 }

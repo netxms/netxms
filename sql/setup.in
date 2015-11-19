@@ -27,10 +27,11 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ClientListenerPort','4701',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConditionPollingInterval','60',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConfigurationPollingInterval','3600',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConnectionPoolBaseSize','5',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConnectionPoolCooldownTime','300',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConnectionPoolMaxSize','20',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,is_public,description) VALUES ('DashboardDataExportEnableInterpolation','1',1,1,'B','Y','Enable/disable data interpolation in dashboard data export');
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DBConnectionPoolBaseSize','10',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DBConnectionPoolCooldownTime','300',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DBConnectionPoolMaxLifetime','14400',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DBConnectionPoolMaxSize','30',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DBLockInfo','',0,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DBLockPID','0',0,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DBLockStatus','UNLOCKED',0,1);
@@ -57,7 +58,6 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableCheckPointSNMP','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableEventStormDetection','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableISCListener','0',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableMultipleDBConnections','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableNXSLContainerFunctions','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableObjectTransactions','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('EnableSNMPTraps','1',1,1);
@@ -106,7 +106,6 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MinPasswordLength','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MinViewRefreshInterval','1000',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MobileDeviceListenerPort','4747',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('NumberOfDatabaseWriters','1',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('NumberOfDataCollectors','25',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('NumberOfUpgradeThreads','10',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('PasswordComplexity','0',1,0);

@@ -553,7 +553,7 @@ void EPRule::generateAlarm(Event *pEvent)
 /**
  * Load rule from database
  */
-bool EPRule::loadFromDB()
+bool EPRule::loadFromDB(DB_HANDLE hdb)
 {
    DB_RESULT hResult;
    TCHAR szQuery[256], name[MAX_DB_STRING], value[MAX_DB_STRING];
@@ -562,7 +562,7 @@ bool EPRule::loadFromDB()
 
    // Load rule's sources
    _sntprintf(szQuery, 256, _T("SELECT object_id FROM policy_source_list WHERE rule_id=%d"), m_id);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
       m_dwNumSources = DBGetNumRows(hResult);
@@ -578,7 +578,7 @@ bool EPRule::loadFromDB()
 
    // Load rule's events
    _sntprintf(szQuery, 256, _T("SELECT event_code FROM policy_event_list WHERE rule_id=%d"), m_id);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
       m_dwNumEvents = DBGetNumRows(hResult);
@@ -594,7 +594,7 @@ bool EPRule::loadFromDB()
 
    // Load rule's actions
    _sntprintf(szQuery, 256, _T("SELECT action_id FROM policy_action_list WHERE rule_id=%d"), m_id);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
       m_dwNumActions = DBGetNumRows(hResult);
@@ -610,7 +610,7 @@ bool EPRule::loadFromDB()
 
    // Load situation attributes
    _sntprintf(szQuery, 256, _T("SELECT attr_name,attr_value FROM policy_situation_attr_list WHERE rule_id=%d"), m_id);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult != NULL)
    {
       count = DBGetNumRows(hResult);
@@ -783,10 +783,11 @@ bool EventPolicy::loadFromDB()
    DB_RESULT hResult;
    bool bSuccess = false;
 
-   hResult = DBSelect(g_hCoreDB, _T("SELECT rule_id,rule_guid,flags,comments,alarm_message,")
-                                 _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
-											_T("situation_id,situation_instance ")
-                                 _T("FROM event_policy ORDER BY rule_id"));
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   hResult = DBSelect(hdb, _T("SELECT rule_id,rule_guid,flags,comments,alarm_message,")
+                           _T("alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,")
+	                        _T("situation_id,situation_instance ")
+                           _T("FROM event_policy ORDER BY rule_id"));
    if (hResult != NULL)
    {
       UINT32 i;
@@ -797,11 +798,12 @@ bool EventPolicy::loadFromDB()
       for(i = 0; i < m_dwNumRules; i++)
       {
          m_ppRuleList[i] = new EPRule(hResult, i);
-         bSuccess = bSuccess && m_ppRuleList[i]->loadFromDB();
+         bSuccess = bSuccess && m_ppRuleList[i]->loadFromDB(hdb);
       }
       DBFreeResult(hResult);
    }
 
+   DBConnectionPoolReleaseConnection(hdb);
    return bSuccess;
 }
 

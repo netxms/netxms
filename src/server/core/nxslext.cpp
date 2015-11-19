@@ -628,7 +628,7 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 	const TCHAR *name = argv[1]->getValueAsCString();
 
 	Container *container = new Container(name, 0);
-	NetObjInsert(container, TRUE);
+	NetObjInsert(container, true, false);
 	parent->AddChild(container);
 	container->AddParent(parent);
 	container->unhide();

@@ -99,6 +99,18 @@ struct PoolConnectionInfo
 };
 
 /**
+ * DB library performance counters
+ */
+struct LIBNXDB_PERF_COUNTERS
+{
+   UINT64 selectQueries;
+   UINT64 nonSelectQueries;
+   UINT64 totalQueries;
+   UINT64 longRunningQueries;
+   UINT64 failedQueries;
+};
+
+/**
  * Functions
  */
 bool LIBNXDB_EXPORTABLE DBInit(DWORD logMsgCode, DWORD sqlErrorMsgCode);
@@ -189,8 +201,10 @@ int LIBNXDB_EXPORTABLE DBGetSchemaVersion(DB_HANDLE conn);
 int LIBNXDB_EXPORTABLE DBGetSyntax(DB_HANDLE conn);
 
 String LIBNXDB_EXPORTABLE DBPrepareString(DB_HANDLE conn, const TCHAR *str, int maxSize = -1);
+String LIBNXDB_EXPORTABLE DBPrepareString(DB_DRIVER drv, const TCHAR *str, int maxSize = -1);
 #ifdef UNICODE
 String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_HANDLE conn, const char *str, int maxSize = -1);
+String LIBNXDB_EXPORTABLE DBPrepareStringA(DB_DRIVER drv, const char *str, int maxSize = -1);
 #else
 #define DBPrepareStringA DBPrepareString
 #endif
@@ -211,6 +225,7 @@ int LIBNXDB_EXPORTABLE DBConnectionPoolGetAcquiredCount();
 void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(UINT32 threshold);
 void LIBNXDB_EXPORTABLE DBSetDebugPrintCallback(void (*cb)(int, const TCHAR *, va_list));
 ObjectArray<PoolConnectionInfo> LIBNXDB_EXPORTABLE *DBConnectionPoolGetConnectionList();
+void LIBNXDB_EXPORTABLE DBGetPerfCounters(LIBNXDB_PERF_COUNTERS *counters);
 
 bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, UINT32 id);
 bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table, const TCHAR *idColumn, const uuid& id);

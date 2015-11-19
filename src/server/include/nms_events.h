@@ -159,7 +159,7 @@ public:
    UINT32 getId() const { return m_id; }
    const uuid& getGuid() const { return m_guid; }
    void setId(UINT32 dwNewId) { m_id = dwNewId; }
-   bool loadFromDB();
+   bool loadFromDB(DB_HANDLE hdb);
 	void saveToDB(DB_HANDLE hdb);
    bool processEvent(Event *pEvent);
    void createMessage(NXCPMessage *pMsg);

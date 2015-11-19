@@ -781,8 +781,7 @@ extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
 /**
  * Perform asynchronous SELECT query
  */
-extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery,
-                                                 DWORD *pdwError, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
    ODBCDRV_ASYNC_QUERY_RESULT *pResult = NULL;
    long iResult;
@@ -842,6 +841,10 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_
 				}
 			}
 
+			// Column values cache
+			pResult->values = (NETXMS_WCHAR **)malloc(sizeof(NETXMS_WCHAR *) * pResult->iNumCols);
+			memset(pResult->values, 0, sizeof(NETXMS_WCHAR *) * pResult->iNumCols);
+
 			*pdwError = DBERR_SUCCESS;
       }
       else
@@ -866,94 +869,134 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_
  */
 extern "C" bool EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 {
-   bool bResult = false;
+   bool success = false;
 
    if (pResult != NULL)
    {
-      long iResult;
+      SQLRETURN rc = SQLFetch(pResult->pConn->sqlStatement);
+      success = ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO));
+      if (success)
+      {
+         for(int i = 0; i < pResult->iNumCols; i++)
+         {
+            safe_free(pResult->values[i]);
+            pResult->values[i] = NULL;
 
-      iResult = SQLFetch(pResult->pConn->sqlStatement);
-      bResult = ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO));
-      if (!bResult)
+            SQLLEN dataSize;
+            if (m_useUnicode)
+            {
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+               WCHAR buffer[256];
+               rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
+               if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize <= sizeof(buffer) - sizeof(WCHAR)))) && (dataSize != SQL_NULL_DATA))
+               {
+                  pResult->values[i] = wcsdup(buffer);
+               }
+               else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer) - sizeof(WCHAR)))
+               {
+                  WCHAR *temp = (WCHAR *)malloc(dataSize + sizeof(WCHAR));
+                  memcpy(temp, buffer, sizeof(buffer));
+                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(WCHAR), &dataSize);
+                  if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+                  {
+                     pResult->values[i] = temp;
+                  }
+                  else
+                  {
+                     free(temp);
+                  }
+               }
+#else
+               UCS2CHAR buffer[256];
+               rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
+               if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize <= sizeof(buffer) - sizeof(UCS2CHAR)))) && (dataSize != SQL_NULL_DATA))
+               {
+                  int len = ucs2_strlen(buffer);
+                  pResult->values[i] = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
+                  ucs2_to_ucs4(buffer, -1, pResult->values[i], len + 1);
+               }
+               else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer) - sizeof(UCS2CHAR)))
+               {
+                  UCS2CHAR *temp = (UCS2CHAR *)malloc(dataSize + sizeof(UCS2CHAR));
+                  memcpy(temp, buffer, sizeof(buffer));
+                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(UCS2CHAR), &dataSize);
+                  if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+                  {
+                     int len = ucs2_strlen(temp);
+                     pResult->values[i] = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
+                     ucs2_to_ucs4(temp, -1, pResult->values[i], len + 1);
+                  }
+                  free(temp);
+               }
+#endif
+            }
+            else
+            {
+               char buffer[256];
+               rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_CHAR, buffer, sizeof(buffer), &dataSize);
+               if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize <= sizeof(buffer) - 1))) && (dataSize != SQL_NULL_DATA))
+               {
+                  pResult->values[i] = WideStringFromMBString(buffer);
+               }
+               else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer) - 1))
+               {
+                  char *temp = (char *)malloc(dataSize + 1);
+                  memcpy(temp, buffer, sizeof(buffer));
+                  rc = SQLGetData(pResult->pConn->sqlStatement, (short)i + 1, SQL_C_CHAR, &temp[255], dataSize - 254, &dataSize);
+                  if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+                  {
+                     pResult->values[i] = WideStringFromMBString(temp);
+                  }
+                  free(temp);
+               }
+            }
+         }
+      }
+      else
+      {
          pResult->noMoreRows = true;
+      }
    }
-   return bResult;
+   return success;
 }
 
 /**
  * Get field length from async query result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult, int iColumn)
+extern "C" LONG EXPORT DrvGetFieldLengthAsync(ODBCDRV_ASYNC_QUERY_RESULT *result, int col)
 {
-   LONG nLen = -1;
+   if (result == NULL)
+      return -1;
 
-   if (pResult != NULL)
-   {
-      if ((iColumn < pResult->iNumCols) && (iColumn >= 0))
-		{
-			SQLLEN dataSize;
-			char temp[1];
-		   long rc = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_CHAR,
-		                        temp, 0, &dataSize);
-			if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
-			{
-				nLen = (LONG)dataSize;
-			}
-		}
-   }
-   return nLen;
+   if ((col >= result->iNumCols) || (col < 0))
+      return -1;
+
+   return (result->values[col] != NULL) ? (LONG)wcslen(result->values[col]) : -1;
 }
 
 /**
  * Get field from current row in async query result
  */
-extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult,
-                                                 int iColumn, NETXMS_WCHAR *pBuffer, int iBufSize)
+extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *result, int col, NETXMS_WCHAR *buffer, int bufferSize)
 {
-   SQLLEN iDataSize;
-   long iResult;
-
    // Check if we have valid result handle
-   if (pResult == NULL)
+   if (result == NULL)
       return NULL;
 
    // Check if there are valid fetched row
-   if (pResult->noMoreRows)
+   if (result->noMoreRows)
       return NULL;
 
-   if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
+   if ((col >= 0) && (col < result->iNumCols) && (result->values[col] != NULL))
    {
-   	if (m_useUnicode)
-   	{
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-		   iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
-		                        pBuffer, iBufSize * sizeof(WCHAR), &iDataSize);
-#else
-			SQLWCHAR *tempBuff = (SQLWCHAR *)malloc(iBufSize * sizeof(SQLWCHAR));
-		   iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR,
-		                        tempBuff, iBufSize * sizeof(SQLWCHAR), &iDataSize);
-		   ucs2_to_ucs4(tempBuff, -1, pBuffer, iBufSize);
-		   pBuffer[iBufSize - 1] = 0;
-		   free(tempBuff);
-#endif
-		}
-		else
-		{
-			SQLCHAR *tempBuff = (SQLCHAR *)malloc(iBufSize * sizeof(SQLCHAR));
-		   iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_CHAR,
-		                        tempBuff, iBufSize * sizeof(SQLCHAR), &iDataSize);
-		   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)tempBuff, -1, pBuffer, iBufSize);
-		   pBuffer[iBufSize - 1] = 0;
-		   free(tempBuff);
-		}
-      if (((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO)) || (iDataSize == SQL_NULL_DATA))
-         pBuffer[0] = 0;
+      wcsncpy(buffer, result->values[col], bufferSize - 1);
+      buffer[bufferSize - 1] = 0;
    }
    else
    {
-      pBuffer[0] = 0;
+      buffer[0] = 0;
    }
-   return pBuffer;
+   return buffer;
 }
 
 /**
@@ -980,6 +1023,13 @@ extern "C" void EXPORT DrvFreeAsyncResult(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
    if (pResult != NULL)
    {
       SQLFreeHandle(SQL_HANDLE_STMT, pResult->pConn->sqlStatement);
+      for(int i = 0; i < pResult->iNumCols; i++)
+      {
+         safe_free(pResult->columnNames[i]);
+         safe_free(pResult->values[i]);
+      }
+      free(pResult->columnNames);
+      free(pResult->values);
       MutexUnlock(pResult->pConn->mutexQuery);
       free(pResult);
    }

@@ -83,6 +83,11 @@ Template::Template(ConfigEntry *config) : NetObj()
    m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
 
+   // GUID
+   uuid guid = config->getSubEntryValueAsUUID(_T("guid"));
+   if (!guid.isNull())
+      m_guid = guid;
+
 	// Name and version
 	nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("Unnamed Template")), MAX_OBJECT_NAME);
 	m_dwVersion = config->getSubEntryValueAsUInt(_T("version"), 0, 0x00010000);
@@ -167,7 +172,7 @@ void Template::setAutoApplyFilter(const TCHAR *filter)
  *
  * @param dwId object ID
  */
-BOOL Template::loadFromDatabase(UINT32 dwId)
+bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    TCHAR szQuery[256];
    DB_RESULT hResult;
@@ -177,11 +182,11 @@ BOOL Template::loadFromDatabase(UINT32 dwId)
 
    m_id = dwId;
 
-   if (!loadCommonProperties())
+   if (!loadCommonProperties(hdb))
       return FALSE;
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT version,flags,apply_filter FROM templates WHERE id=%d"), dwId);
-   hResult = DBSelect(g_hCoreDB, szQuery);
+   hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
       return FALSE;     // Query failed
 
@@ -209,17 +214,17 @@ BOOL Template::loadFromDatabase(UINT32 dwId)
    DBFreeResult(hResult);
 
    // Load DCI and access list
-   loadACLFromDB();
-   loadItemsFromDB();
+   loadACLFromDB(hdb);
+   loadItemsFromDB(hdb);
    for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
-      if (!m_dcObjects->get(i)->loadThresholdsFromDB())
+      if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
          bResult = FALSE;
 
    // Load related nodes list
    if (!m_isDeleted)
    {
       _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT node_id FROM dct_node_map WHERE template_id=%d"), m_id);
-      hResult = DBSelect(g_hCoreDB, szQuery);
+      hResult = DBSelect(hdb, szQuery);
       if (hResult != NULL)
       {
          dwNumNodes = DBGetNumRows(hResult);
@@ -312,7 +317,7 @@ BOOL Template::saveToDatabase(DB_HANDLE hdb)
    // Save data collection items
 	lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
-      m_dcObjects->get(i)->saveToDB(hdb);
+      m_dcObjects->get(i)->saveToDatabase(hdb);
 	unlockDciAccess();
 
    // Clear modifications flag
@@ -352,15 +357,15 @@ bool Template::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load data collection items from database
  */
-void Template::loadItemsFromDB()
+void Template::loadItemsFromDB(DB_HANDLE hdb)
 {
-	DB_STATEMENT hStmt = DBPrepare(g_hCoreDB,
+	DB_STATEMENT hStmt = DBPrepare(hdb,
 	           _T("SELECT item_id,name,source,datatype,polling_interval,retention_time,")
               _T("status,delta_calculation,transformation,template_id,description,")
               _T("instance,template_item_id,flags,resource_id,")
               _T("proxy_node,base_units,unit_multiplier,custom_units_name,")
 	           _T("perftab_settings,system_tag,snmp_port,snmp_raw_value_type,")
-				  _T("instd_method,instd_data,instd_filter,samples,comments FROM items WHERE node_id=?"));
+				  _T("instd_method,instd_data,instd_filter,samples,comments,guid FROM items WHERE node_id=?"));
 	if (hStmt != NULL)
 	{
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
@@ -369,13 +374,13 @@ void Template::loadItemsFromDB()
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				m_dcObjects->add(new DCItem(hResult, i, this));
+				m_dcObjects->add(new DCItem(hdb, hResult, i, this));
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);
 	}
 
-	hStmt = DBPrepare(g_hCoreDB,
+	hStmt = DBPrepare(hdb,
 	           _T("SELECT item_id,template_id,template_item_id,name,")
 				  _T("description,flags,source,snmp_port,polling_interval,retention_time,")
               _T("status,system_tag,resource_id,proxy_node,perftab_settings,")
@@ -388,7 +393,7 @@ void Template::loadItemsFromDB()
 		{
 			int count = DBGetNumRows(hResult);
 			for(int i = 0; i < count; i++)
-				m_dcObjects->add(new DCTable(hResult, i, this));
+				m_dcObjects->add(new DCTable(hdb, hResult, i, this));
 			DBFreeResult(hResult);
 		}
 		DBFreeStatement(hStmt);
@@ -792,6 +797,32 @@ DCObject *Template::getDCObjectByDescription(const TCHAR *description)
 }
 
 /**
+ * Get item by GUID
+ */
+DCObject *Template::getDCObjectByGUID(const uuid& guid, bool lock)
+{
+   DCObject *object = NULL;
+
+   if (lock)
+      lockDciAccess(false);
+
+   // Check if that item exists
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *curr = m_dcObjects->get(i);
+      if (guid.equals(curr->getGuid()))
+      {
+         object = curr;
+         break;
+      }
+   }
+
+   if (lock)
+      unlockDciAccess();
+   return object;
+}
+
+/**
  * Get item by it's index
  */
 DCObject *Template::getDCObjectByIndex(int index)
@@ -1029,7 +1060,7 @@ StringSet *Template::getDCIScriptList()
 /**
  * Create management pack record
  */
-void Template::createNXMPRecord(String &str)
+void Template::createExportRecord(String &str)
 {
    TCHAR guid[48];
    str.appendFormattedString(_T("\t\t<template id=\"%d\">\n\t\t\t<guid>%s</guid>\n\t\t\t<name>%s</name>\n\t\t\t<flags>%d</flags>\n"),
@@ -1061,7 +1092,7 @@ void Template::createNXMPRecord(String &str)
 
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
-      m_dcObjects->get(i)->createNXMPRecord(str);
+      m_dcObjects->get(i)->createExportRecord(str);
    unlockDciAccess();
 
    str.append(_T("\t\t\t</dataCollection>\n"));
@@ -1201,4 +1232,90 @@ UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool ov
  */
 void Template::onDataCollectionChange()
 {
+}
+
+/**
+ * Update template from import
+ */
+void Template::updateFromImport(ConfigEntry *config)
+{
+   // Name and version
+   lockProperties();
+   m_dwVersion = config->getSubEntryValueAsUInt(_T("version"), 0, m_dwVersion);
+   m_flags = config->getSubEntryValueAsUInt(_T("flags"), 0, m_flags);
+   unlockProperties();
+
+   // Auto-apply filter
+   setAutoApplyFilter(config->getSubEntryValue(_T("filter")));
+
+   // Data collection
+   ObjectArray<uuid> guidList(32, 32, true);
+
+   lockDciAccess(true);
+   ConfigEntry *dcRoot = config->findEntry(_T("dataCollection"));
+   if (dcRoot != NULL)
+   {
+      ObjectArray<ConfigEntry> *dcis = dcRoot->getSubEntries(_T("dci#*"));
+      for(int i = 0; i < dcis->size(); i++)
+      {
+         ConfigEntry *e = dcis->get(i);
+         uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
+         DCObject *curr = !guid.isNull() ? getDCObjectByGUID(guid, false) : NULL;
+         if ((curr != NULL) && (curr->getType() == DCO_TYPE_ITEM))
+         {
+            curr->updateFromImport(e);
+         }
+         else
+         {
+            m_dcObjects->add(new DCItem(e, this));
+         }
+         guidList.add(new uuid(guid));
+      }
+      delete dcis;
+
+      ObjectArray<ConfigEntry> *dctables = dcRoot->getSubEntries(_T("dctable#*"));
+      for(int i = 0; i < dctables->size(); i++)
+      {
+         ConfigEntry *e = dctables->get(i);
+         uuid guid = e->getSubEntryValueAsUUID(_T("guid"));
+         DCObject *curr = !guid.isNull() ? getDCObjectByGUID(guid, false) : NULL;
+         if ((curr != NULL) && (curr->getType() == DCO_TYPE_TABLE))
+         {
+            curr->updateFromImport(e);
+         }
+         else
+         {
+            m_dcObjects->add(new DCTable(e, this));
+         }
+         guidList.add(new uuid(guid));
+      }
+      delete dctables;
+   }
+
+   // Delete DCIs missing in import
+   IntegerArray<UINT32> deleteList;
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      bool found = false;
+      for(int j = 0; j < guidList.size(); j++)
+      {
+         if (guidList.get(j)->equals(m_dcObjects->get(i)->getGuid()))
+         {
+            found = true;
+            break;
+         }
+      }
+
+      if (!found)
+      {
+         deleteList.add(m_dcObjects->get(i)->getId());
+      }
+   }
+
+   for(int i = 0; i < deleteList.size(); i++)
+      deleteDCObject(deleteList.get(i), false);
+
+   unlockDciAccess();
+
+   queueUpdate();
 }

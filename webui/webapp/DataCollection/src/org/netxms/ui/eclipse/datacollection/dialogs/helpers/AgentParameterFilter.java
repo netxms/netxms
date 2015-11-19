@@ -21,6 +21,7 @@ package org.netxms.ui.eclipse.datacollection.dialogs.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.netxms.client.AgentParameter;
+import org.netxms.client.AgentTable;
 
 /**
  * Filter for agent parameters list
@@ -35,7 +36,8 @@ public class AgentParameterFilter extends ViewerFilter
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element)
 	{
-		return (filter == null) || filter.isEmpty() || ((AgentParameter)element).getName().toLowerCase().contains(filter);
+	   String name = (element instanceof AgentTable) ? ((AgentTable)element).getName() : ((AgentParameter)element).getName();
+		return (filter == null) || filter.isEmpty() || name.toLowerCase().contains(filter);
 	}
 
 	/**

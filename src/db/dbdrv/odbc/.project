@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>nxdbmgr</name>
+	<name>odbc.ddr</name>
 	<comment></comment>
 	<projects>
 		<project>libnetxms</project>
-		<project>libnxdb</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -28,12 +27,30 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1441567917391</id>
+			<id>1447360039862</id>
+			<name></name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.lo</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1447360039865</id>
 			<name></name>
 			<type>6</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-*.o</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1447360039867</id>
+			<name></name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-*.la</arguments>
 			</matcher>
 		</filter>
 	</filteredResources>
