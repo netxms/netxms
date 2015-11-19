@@ -604,6 +604,16 @@ static bool CreateLibraryScript(UINT32 id, const TCHAR *name, const TCHAR *code)
 }
 
 /**
+ * Upgrade from V382 to V383
+ */
+static BOOL H_UpgradeFromV382(int currVersion, int newVersion)
+{
+   CHK_EXEC(ResizeColumn(_T("nodes"), _T("primary_ip"), 48, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='383' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V381 to V382
  */
 static BOOL H_UpgradeFromV381(int currVersion, int newVersion)
@@ -9149,6 +9159,7 @@ static struct
    { 379, 380, H_UpgradeFromV379 },
    { 380, 381, H_UpgradeFromV380 },
    { 381, 382, H_UpgradeFromV381 },
+   { 382, 383, H_UpgradeFromV382 },
    { 0, 0, NULL }
 };
 

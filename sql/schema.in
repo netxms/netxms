@@ -258,7 +258,7 @@ CREATE TABLE nodes
 (
 	id integer not null,
 	primary_name varchar(255) null,
-	primary_ip varchar(15) not null,
+	primary_ip varchar(48) not null,
 	node_flags integer not null,
 	runtime_flags integer not null,
 	snmp_version integer not null,
