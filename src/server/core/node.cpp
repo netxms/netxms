@@ -4065,7 +4065,7 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
       }
       else
       {
-         rc = DCE_NOT_SUPPORTED;
+         _tcscpy(buffer, _T("-1"));
       }
    }
    else if (MatchString(_T("Net.IP.NextHop(*)"), param, FALSE))
