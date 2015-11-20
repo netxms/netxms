@@ -18,7 +18,12 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
+import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 
 /**
@@ -303,5 +308,54 @@ public abstract class TableComparisonChartConfig extends DashboardElementConfig
    public void setAutoScale(boolean autoScale)
    {
       this.autoScale = autoScale;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getObjects()
+    */
+   @Override
+   public Set<Long> getObjects()
+   {
+      Set<Long> objects = super.getObjects();
+      objects.add(nodeId);
+      return objects;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapObjects(java.util.Map)
+    */
+   @Override
+   public void remapObjects(Map<Long, ObjectIdMatchingData> remapData)
+   {
+      super.remapObjects(remapData);
+      ObjectIdMatchingData md = remapData.get(nodeId);
+      if (md != null)
+         nodeId = md.dstId;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getDataCollectionItems()
+    */
+   @Override
+   public Map<Long, Long> getDataCollectionItems()
+   {
+      Map<Long, Long> dcis = new HashMap<Long, Long>();
+      dcis.put(dciId,  nodeId);
+      return dcis;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapDataCollectionItems(java.util.Map)
+    */
+   @Override
+   public void remapDataCollectionItems(Map<Long, DciIdMatchingData> remapData)
+   {
+      super.remapDataCollectionItems(remapData);
+      DciIdMatchingData md = remapData.get(dciId);
+      if (md != null)
+      {
+         nodeId = md.dstNodeId;
+         dciId = md.dstDciId;
+      }
    }
 }
