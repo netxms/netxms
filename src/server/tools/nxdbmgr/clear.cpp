@@ -30,7 +30,7 @@ extern const TCHAR *g_tables[];
 /**
  * Delete idata_xx tables
  */
-static BOOL DeleteDataTables()
+static bool DeleteDataTables()
 {
 	DB_RESULT hResult;
 	TCHAR query[256];
@@ -57,16 +57,16 @@ static BOOL DeleteDataTables()
 	else
 	{
 		if (!g_bIgnoreErrors)
-			return FALSE;
+			return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
 /**
  * Clear tables
  */
-static BOOL ClearTables()
+static bool ClearTables()
 {
 	TCHAR query[256];
 	int i;
@@ -76,7 +76,7 @@ static BOOL ClearTables()
 		_sntprintf(query, 256, _T("DELETE FROM %s"), g_tables[i]);
 		CHK_EXEC(SQLQuery(query));
 	}
-	return TRUE;
+	return true;
 }
 
 /**

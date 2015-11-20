@@ -42,7 +42,7 @@
 /**
  * Execute with error check
  */
-#define CHK_EXEC(x) do { if (!(x)) if (!g_bIgnoreErrors) return FALSE; } while (0)
+#define CHK_EXEC(x) do { if (!(x)) if (!g_bIgnoreErrors) return false; } while (0)
 
 
 //

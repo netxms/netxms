@@ -1004,8 +1004,6 @@ void DCTable::updateFromTemplate(DCObject *src)
  */
 void DCTable::createExportRecord(String &str)
 {
-	UINT32 i;
-
    lock();
 
    str.appendFormattedString(_T("\t\t\t\t<dctable id=\"%d\">\n")
@@ -1027,23 +1025,27 @@ void DCTable::createExportRecord(String &str)
 
 	if (m_transformationScriptSource != NULL)
 	{
-		str += _T("\t\t\t\t\t<transformation>");
+		str.append(_T("\t\t\t\t\t<transformation>"));
 		str.appendPreallocated(EscapeStringForXML(m_transformationScriptSource, -1));
-		str += _T("</transformation>\n");
+		str.append(_T("</transformation>\n"));
 	}
 
    if ((m_schedules != NULL) && (m_schedules->size() > 0))
    {
-      str += _T("\t\t\t\t\t<schedules>\n");
-      for(i = 0; i < m_schedules->size(); i++)
-         str.appendFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_schedules->get(i)));
-      str += _T("\t\t\t\t\t</schedules>\n");
+      str.append(_T("\t\t\t\t\t<schedules>\n"));
+      for(int i = 0; i < m_schedules->size(); i++)
+      {
+         str.append(_T("\t\t\t\t\t\t<schedule>"));
+         str.append(EscapeStringForXML2(m_schedules->get(i)));
+         str.append(_T("</schedule>\n"));
+      }
+      str.append(_T("\t\t\t\t\t</schedules>\n"));
    }
 
 	if (m_columns != NULL)
 	{
 	   str += _T("\t\t\t\t\t<columns>\n");
-		for(i = 0; i < (UINT32)m_columns->size(); i++)
+		for(int i = 0; i < m_columns->size(); i++)
 		{
 			m_columns->get(i)->createNXMPRecord(str, i + 1);
 		}
@@ -1053,7 +1055,7 @@ void DCTable::createExportRecord(String &str)
 	if (m_thresholds != NULL)
 	{
 	   str += _T("\t\t\t\t\t<thresholds>\n");
-		for(i = 0; i < (UINT32)m_thresholds->size(); i++)
+		for(int i = 0; i < m_thresholds->size(); i++)
 		{
 			m_thresholds->get(i)->createNXMPRecord(str, i + 1);
 		}
@@ -1062,13 +1064,13 @@ void DCTable::createExportRecord(String &str)
 
 	if (m_pszPerfTabSettings != NULL)
 	{
-		str += _T("\t\t\t\t\t<perfTabSettings>");
+		str.append(_T("\t\t\t\t\t<perfTabSettings>"));
 		str.appendPreallocated(EscapeStringForXML(m_pszPerfTabSettings, -1));
-		str += _T("</perfTabSettings>\n");
+		str.append(_T("</perfTabSettings>\n"));
 	}
 
    unlock();
-   str += _T("\t\t\t\t</dctable>\n");
+   str.append(_T("\t\t\t\t</dctable>\n"));
 }
 
 /**

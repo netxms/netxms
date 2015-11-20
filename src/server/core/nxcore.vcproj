@@ -829,10 +829,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\timer.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\tools.cpp"
 				>
 			</File>
