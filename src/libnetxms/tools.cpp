@@ -1898,9 +1898,9 @@ bool LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encry
 	if (_tcslen(encryptedPasswd) != 44)
       return DecryptPasswordFail(encryptedPasswd, decryptedPasswd, bufferLenght);
 
-   //check that password contain only allowed symbols
-   int containSymbols = _tcsspn(encryptedPasswd,_T("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"));
-   if(encryptedPasswd[43] != _T('=') || (containSymbols != 43 && (containSymbols != 42 && encryptedPasswd[42] != _T('='))))
+   // check that password contains only allowed symbols
+   int invalidSymbolIndex = (int)_tcsspn(encryptedPasswd, _T("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"));
+   if ((invalidSymbolIndex < 42) || ((invalidSymbolIndex != 44) && ((encryptedPasswd[invalidSymbolIndex] != _T('=')) || ((invalidSymbolIndex == 42) && (encryptedPasswd[43] != _T('='))))))
       return DecryptPasswordFail(encryptedPasswd, decryptedPasswd, bufferLenght);
 
 #ifdef UNICODE
@@ -1922,7 +1922,7 @@ bool LIBNETXMS_EXPORTABLE DecryptPassword(const TCHAR *login, const TCHAR *encry
 	decrypted[31] = 0;
 
 #ifdef UNICODE
-	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, bufferLenght);
+	MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)decrypted, -1, decryptedPasswd, (int)bufferLenght);
 	decryptedPasswd[bufferLenght - 1] = 0;
 	free(mbencrypted);
 	free(mblogin);
