@@ -346,15 +346,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\msi.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\net.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\procinfo.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\prod.cpp"
 				>
 			</File>
 			<File
