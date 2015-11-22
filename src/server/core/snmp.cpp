@@ -231,6 +231,7 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
 	int i, count, snmpVer = SNMP_VERSION_2C;
 	TCHAR buffer[1024];
    SNMP_Transport *pTransport;
+   StringList *communities = NULL;
 
    TCHAR tmp[MAX_CONFIG_VALUE];
 	ConfigReadStr(_T("SNMPPorts"), tmp, MAX_CONFIG_VALUE, _T("161"));
@@ -300,24 +301,27 @@ restart_check:
       }
 
       // Check community from list
-      StringList communities;
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
-      if (hResult != NULL)
+      if (communities == NULL)
       {
-         int count = DBGetNumRows(hResult);
-         for(int i = 0; i < count; i++)
-            communities.addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
-         DBFreeResult(hResult);
+         communities = new StringList();
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+         DB_RESULT hResult = DBSelect(hdb, _T("SELECT community FROM snmp_communities"));
+         if (hResult != NULL)
+         {
+            int count = DBGetNumRows(hResult);
+            for(int i = 0; i < count; i++)
+               communities->addPreallocated(DBGetField(hResult, i, 0, NULL, 0));
+            DBFreeResult(hResult);
+         }
+         DBConnectionPoolReleaseConnection(hdb);
       }
-      DBConnectionPoolReleaseConnection(hdb);
 
       for(i = 0; i < count; i++)
       {
 #ifdef UNICODE
-         char *community = MBStringFromWideString(communities.get(i));
+         char *community = MBStringFromWideString(communities->get(i));
 #else
-         const char *community = communities.get(i);
+         const char *community = communities->get(i);
 #endif
          if ((originalContext == NULL) ||
              (originalContext->getSecurityModel() == SNMP_SECURITY_MODEL_USM) ||
@@ -354,11 +358,13 @@ restart_check:
    }
 
 fail:
+   delete communities;
    delete ports;
 	DbgPrintf(5, _T("SnmpCheckCommSettings(%s): failed"), (const TCHAR *)ipAddr.toString());
 	return NULL;
 
 success:
+   delete communities;
    delete ports;
    DbgPrintf(5, _T("SnmpCheckCommSettings(%s): success (version=%d)"), (const TCHAR *)ipAddr.toString(), pTransport->getSnmpVersion());
 	return pTransport;
