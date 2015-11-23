@@ -7220,12 +7220,16 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
    msg.setField(VID_NUM_ELEMENTS, data.count);
    msg.setField(VID_NUM_NODES, data.nodeInfoCount);
 
-   UINT32 rcc = ERR_CONNECTION_BROKEN;
+   UINT32 rcc;
    NXCPMessage *response = conn->customRequest(&msg);
    if (response != NULL)
    {
       rcc = response->getFieldAsUInt32(VID_RCC);
       delete response;
+   }
+   else
+   {
+      rcc = ERR_REQUEST_TIMEOUT;
    }
 
    if (rcc == ERR_SUCCESS)

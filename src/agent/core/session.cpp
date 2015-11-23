@@ -35,12 +35,12 @@ void ProxySNMPRequest(NXCPMessage *pRequest, NXCPMessage *pResponse);
 UINT32 DeployPolicy(CommSession *session, NXCPMessage *request);
 UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request);
 UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg);
-void ClearDCISyncDatabase();
+void ClearDataCollectionConfiguration();
 
 /**
- * Constants
+ * Max message size
  */
-#define RAW_MSG_SIZE    262144
+#define MAX_MSG_SIZE    4194304
 
 /**
  * Client communication read thread
@@ -92,9 +92,8 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_sendQueue = new Queue;
    m_processingQueue = new Queue;
    m_hSocket = hSocket;
-   m_hProxySocket = -1;
+   m_hProxySocket = INVALID_SOCKET;
    m_dwIndex = INVALID_INDEX;
-   m_pMsgBuffer = (NXCP_BUFFER *)malloc(sizeof(NXCP_BUFFER));
    m_hWriteThread = INVALID_THREAD_HANDLE;
    m_hProcessingThread = INVALID_THREAD_HANDLE;
    m_hProxyReadThread = INVALID_THREAD_HANDLE;
@@ -124,11 +123,10 @@ CommSession::~CommSession()
 {
    shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
-   if (m_hProxySocket != -1)
+   if (m_hProxySocket != INVALID_SOCKET)
       closesocket(m_hProxySocket);
    delete m_sendQueue;
    delete m_processingQueue;
-   safe_free(m_pMsgBuffer);
    if (m_hCurrFile != -1)
       close(m_hCurrFile);
    delete m_compressor;
@@ -164,90 +162,62 @@ void CommSession::disconnect()
  */
 void CommSession::readThread()
 {
-   NXCP_MESSAGE *pRawMsg;
-   NXCPMessage *pMsg;
-   BYTE *pDecryptionBuffer = NULL;
-   int iErr;
-   TCHAR szBuffer[256];  //
-   WORD flags;
-
-   // Initialize raw message receiving function
-   RecvNXCPMessage(0, NULL, m_pMsgBuffer, 0, NULL, NULL, 0);
-
-   pRawMsg = (NXCP_MESSAGE *)malloc(RAW_MSG_SIZE);
-#ifdef _WITH_ENCRYPTION
-   pDecryptionBuffer = (BYTE *)malloc(RAW_MSG_SIZE);
-#endif
-   while(1)
+   SocketMessageReceiver receiver(m_hSocket, 4096, MAX_MSG_SIZE);
+   while(true)
    {
-      if ((iErr = RecvNXCPMessage(m_hSocket, pRawMsg, m_pMsgBuffer, RAW_MSG_SIZE, &m_pCtx, pDecryptionBuffer, (g_dwIdleTimeout + 1) * 1000)) <= 0)
+      if (!m_proxyConnection)
       {
-         break;
-      }
+         MessageReceiverResult result;
+         NXCPMessage *msg = receiver.readMessage((g_dwIdleTimeout + 1) * 1000, &result);
 
-      // Check if message is too large
-      if (iErr == 1)
-         continue;
-
-      // Check for decryption failure
-      if (iErr == 2)
-      {
-         nxlog_write(MSG_DECRYPTION_FAILURE, EVENTLOG_WARNING_TYPE, NULL);
-         continue;
-      }
-
-      // Check for timeout
-      if (iErr == 3)
-      {
-         if (m_ts < time(NULL) - (time_t)g_dwIdleTimeout)
+         // Check for decryption error
+         if (result == MSGRECV_DECRYPTION_FAILURE)
          {
-				DebugPrintf(m_dwIndex, 5, _T("Session disconnected by timeout (last activity timestamp is %d)"), (int)m_ts);
+            DebugPrintf(m_dwIndex, 4, _T("Unable to decrypt received message"));
+            continue;
+         }
+
+         // Check for timeout
+         if (result == MSGRECV_TIMEOUT)
+         {
+            if (m_ts < time(NULL) - (time_t)g_dwIdleTimeout)
+            {
+               DebugPrintf(m_dwIndex, 5, _T("Session disconnected by timeout (last activity timestamp is %d)"), (int)m_ts);
+               break;
+            }
+            continue;
+         }
+
+         // Receive error
+         if (msg == NULL)
+         {
+            DebugPrintf(m_dwIndex, 5, _T("Message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
             break;
          }
-         continue;
-      }
 
-      // Check that actual received packet size is equal to encoded in packet
-      if ((int)ntohl(pRawMsg->size) != iErr)
-      {
-         DebugPrintf(m_dwIndex, 5, _T("Actual message size doesn't match wSize value (%d,%d)"), iErr, ntohl(pRawMsg->size));
-         continue;   // Bad packet, wait for next
-      }
+         // Update activity timestamp
+         m_ts = time(NULL);
 
-      // Update activity timestamp
-      m_ts = time(NULL);
-
-      if (g_debugLevel >= 8)
-      {
-         String msgDump = NXCPMessage::dump(pRawMsg, NXCP_VERSION);
-         DebugPrintf(m_dwIndex, 8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
-      }
-
-      if (m_proxyConnection)
-      {
-         // Forward received message to remote peer
-         SendEx(m_hProxySocket, (char *)pRawMsg, iErr, 0, NULL);
-      }
-      else
-      {
-         flags = ntohs(pRawMsg->flags);
-         if (flags & MF_BINARY)
+         if (g_debugLevel >= 8)
          {
-            // Convert message header to host format
-            pRawMsg->id = ntohl(pRawMsg->id);
-            pRawMsg->code = ntohs(pRawMsg->code);
-            pRawMsg->numFields = ntohl(pRawMsg->numFields);
-            DebugPrintf(m_dwIndex, 6, _T("Received raw message %s"), NXCPMessageCodeName(pRawMsg->code, szBuffer));
+            String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
+            DebugPrintf(m_dwIndex, 8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
+         }
 
-            if (pRawMsg->code == CMD_FILE_DATA)
+         if (msg->isBinary())
+         {
+            TCHAR buffer[64];
+            DebugPrintf(m_dwIndex, 6, _T("Received raw message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+
+            if (msg->getCode() == CMD_FILE_DATA)
             {
-               if ((m_hCurrFile != -1) && (m_fileRqId == pRawMsg->id))
+               if ((m_hCurrFile != -1) && (m_fileRqId == msg->getId()))
                {
                   const BYTE *data;
                   int dataSize;
-                  if (flags & MF_COMPRESSED)
+                  if (msg->isCompressed())
                   {
-                     BYTE *in = (BYTE *)pRawMsg->fields;
+                     BYTE *in = msg->getBinaryData();
                      if (m_compressor == NULL)
                      {
                         NXCPCompressionMethod method = (NXCPCompressionMethod)(*in);
@@ -262,7 +232,7 @@ void CommSession::readThread()
 
                      if (m_compressor != NULL)
                      {
-                        dataSize = (int)m_compressor->decompress(in + 4, (size_t)pRawMsg->numFields - 4, &data);
+                        dataSize = (int)m_compressor->decompress(in + 4, msg->getBinaryDataSize() - 4, &data);
                         if (dataSize != (int)ntohs(*((UINT16 *)(in + 2))))
                         {
                            // decompressed block size validation failed
@@ -272,102 +242,137 @@ void CommSession::readThread()
                   }
                   else
                   {
-                     data = (const BYTE *)pRawMsg->fields;
-                     dataSize = (int)pRawMsg->numFields;
+                     data = msg->getBinaryData();
+                     dataSize = (int)msg->getBinaryDataSize();
                   }
 
                   if ((dataSize >= 0) && (write(m_hCurrFile, data, dataSize) == dataSize))
                   {
-                     if (flags & MF_END_OF_FILE)
+                     if (msg->isEndOfFile())
                      {
-                        NXCPMessage msg;
+                        NXCPMessage response;
 
                         close(m_hCurrFile);
                         m_hCurrFile = -1;
                         delete_and_null(m_compressor);
 
-                        msg.setCode(CMD_REQUEST_COMPLETED);
-                        msg.setId(pRawMsg->id);
-                        msg.setField(VID_RCC, ERR_SUCCESS);
-                        sendMessage(&msg);
+                        response.setCode(CMD_REQUEST_COMPLETED);
+                        response.setId(msg->getId());
+                        response.setField(VID_RCC, ERR_SUCCESS);
+                        sendMessage(&response);
                      }
                   }
                   else
                   {
                      // I/O error
-                     NXCPMessage msg;
+                     NXCPMessage response;
 
                      close(m_hCurrFile);
                      m_hCurrFile = -1;
                      delete_and_null(m_compressor);
 
-                     msg.setCode(CMD_REQUEST_COMPLETED);
-                     msg.setId(pRawMsg->id);
-                     msg.setField(VID_RCC, ERR_IO_FAILURE);
-                     sendMessage(&msg);
+                     response.setCode(CMD_REQUEST_COMPLETED);
+                     response.setId(msg->getId());
+                     response.setField(VID_RCC, ERR_IO_FAILURE);
+                     sendMessage(&response);
                   }
                }
             }
          }
-         else if (flags & MF_CONTROL)
+         else if (msg->isControl())
          {
-            // Convert message header to host format
-            pRawMsg->id = ntohl(pRawMsg->id);
-            pRawMsg->code = ntohs(pRawMsg->code);
-            pRawMsg->numFields = ntohl(pRawMsg->numFields);
-            DebugPrintf(m_dwIndex, 6, _T("Received control message %s"), NXCPMessageCodeName(pRawMsg->code, szBuffer));
+            TCHAR buffer[64];
+            DebugPrintf(m_dwIndex, 6, _T("Received control message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 
-            if (pRawMsg->code == CMD_GET_NXCP_CAPS)
+            if (msg->getCode() == CMD_GET_NXCP_CAPS)
             {
                NXCP_MESSAGE *pMsg = (NXCP_MESSAGE *)malloc(NXCP_HEADER_SIZE);
-               pMsg->id = htonl(pRawMsg->id);
+               pMsg->id = htonl(msg->getId());
                pMsg->code = htons((WORD)CMD_NXCP_CAPS);
                pMsg->flags = htons(MF_CONTROL);
                pMsg->numFields = htonl(NXCP_VERSION << 24);
                pMsg->size = htonl(NXCP_HEADER_SIZE);
                sendRawMessage(pMsg, m_pCtx);
             }
+            delete msg;
          }
          else
          {
-            // Create message object from raw message
-            pMsg = new NXCPMessage(pRawMsg);
-            if (pMsg->getCode() == CMD_REQUEST_SESSION_KEY)
+            TCHAR buffer[64];
+            DebugPrintf(m_dwIndex, 6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
+
+            if (msg->getCode() == CMD_REQUEST_SESSION_KEY)
             {
-               DebugPrintf(m_dwIndex, 6, _T("Received message %s"), NXCPMessageCodeName(pMsg->getCode(), szBuffer));
                if (m_pCtx == NULL)
                {
                   NXCPMessage *pResponse;
-
-                  SetupEncryptionContext(pMsg, &m_pCtx, &pResponse, NULL, NXCP_VERSION);
+                  SetupEncryptionContext(msg, &m_pCtx, &pResponse, NULL, NXCP_VERSION);
                   sendMessage(pResponse);
                   delete pResponse;
+                  receiver.setEncryptionContext(m_pCtx);
                }
-               delete pMsg;
+               delete msg;
             }
-            else if (pMsg->getCode() == CMD_REQUEST_COMPLETED)
+            else if (msg->getCode() == CMD_REQUEST_COMPLETED)
             {
-               DebugPrintf(m_dwIndex, 6, _T("Received message %s"), NXCPMessageCodeName(pMsg->getCode(), szBuffer));
-               m_responseQueue->put(pMsg);
+               m_responseQueue->put(msg);
+            }
+            else if (msg->getCode() == CMD_SETUP_PROXY_CONNECTION)
+            {
+               DWORD rcc = setupProxyConnection(msg);
+               // When proxy session established incoming messages will
+               // not be processed locally. Acknowledgement message sent
+               // by SetupProxyConnection() in case of success.
+               if (rcc == ERR_SUCCESS)
+               {
+                  m_processingQueue->put(INVALID_POINTER_VALUE);
+               }
+               else
+               {
+                  NXCPMessage response;
+                  response.setCode(CMD_REQUEST_COMPLETED);
+                  response.setId(msg->getId());
+                  response.setField(VID_RCC, rcc);
+                  sendMessage(&response);
+               }
+               delete msg;
             }
             else
             {
-               m_processingQueue->put(pMsg);
+               m_processingQueue->put(msg);
             }
          }
       }
+      else  // m_proxyConnection
+      {
+         fd_set rdfs;
+         struct timeval tv;
+         char buffer[32768];
+
+         FD_ZERO(&rdfs);
+         FD_SET(m_hSocket, &rdfs);
+         tv.tv_sec = g_dwIdleTimeout + 1;
+         tv.tv_usec = 0;
+         int rc = select(SELECT_NFDS(m_hSocket + 1), &rdfs, NULL, NULL, &tv);
+         if (rc <= 0)
+            break;
+         if (rc > 0)
+         {
+            // Update activity timestamp
+            m_ts = time(NULL);
+
+            rc = recv(m_hSocket, buffer, 32768, 0);
+            if (rc <= 0)
+               break;
+            SendEx(m_hProxySocket, buffer, rc, 0, NULL);
+         }
+      }
    }
-   if (iErr < 0)
-      nxlog_write(MSG_SESSION_BROKEN, EVENTLOG_WARNING_TYPE, "e", WSAGetLastError());
-   free(pRawMsg);
-#ifdef _WITH_ENCRYPTION
-   free(pDecryptionBuffer);
-#endif
 
    // Notify other threads to exit
    m_sendQueue->put(INVALID_POINTER_VALUE);
    m_processingQueue->put(INVALID_POINTER_VALUE);
-   if (m_hProxySocket != -1)
+   if (m_hProxySocket != INVALID_SOCKET)
       shutdown(m_hProxySocket, SHUT_RDWR);
 
    // Wait for other threads to finish
@@ -448,7 +453,6 @@ void CommSession::processingThread()
       if (pMsg == INVALID_POINTER_VALUE)    // Session termination indicator
          break;
       dwCommand = pMsg->getCode();
-      DebugPrintf(m_dwIndex, 6, _T("Received message %s"), NXCPMessageCodeName((WORD)dwCommand, szBuffer));
 
       // Prepare response message
       msg.setCode(CMD_REQUEST_COMPLETED);
@@ -510,15 +514,6 @@ void CommSession::processingThread()
                break;
             case CMD_UPDATE_AGENT_CONFIG:
                updateConfig(pMsg, &msg);
-               break;
-            case CMD_SETUP_PROXY_CONNECTION:
-               dwRet = setupProxyConnection(pMsg);
-               // Proxy session established, incoming messages will
-               // not be processed locally. Acknowledgement message sent
-               // by SetupProxyConnection() in case of success.
-               if (dwRet == ERR_SUCCESS)
-                  goto stop_processing;
-               msg.setField(VID_RCC, dwRet);
                break;
             case CMD_ENABLE_AGENT_TRAPS:
                if (m_masterServer)
@@ -629,7 +624,7 @@ void CommSession::processingThread()
             case CMD_CLEAN_AGENT_DCI_CONF:
                if (m_masterServer)
                {
-                  ClearDCISyncDatabase();
+                  ClearDataCollectionConfiguration();
                   msg.setField(VID_RCC, ERR_SUCCESS);
                }
                else
@@ -1066,7 +1061,7 @@ void CommSession::proxyReadThread()
 {
    fd_set rdfs;
    struct timeval tv;
-   char pBuffer[8192];
+   char buffer[32768];
    int nRet;
 
    while(1)
@@ -1080,10 +1075,10 @@ void CommSession::proxyReadThread()
          break;
       if (nRet > 0)
       {
-         nRet = recv(m_hProxySocket, pBuffer, 8192, 0);
+         nRet = recv(m_hProxySocket, buffer, 32768, 0);
          if (nRet <= 0)
             break;
-         SendEx(m_hSocket, pBuffer, nRet, 0, m_socketWriteMutex);
+         SendEx(m_hSocket, buffer, nRet, 0, m_socketWriteMutex);
       }
    }
    disconnect();

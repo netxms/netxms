@@ -320,7 +320,6 @@ private:
    SOCKET m_hSocket;
    Queue *m_sendQueue;
    Queue *m_processingQueue;
-   NXCP_BUFFER *m_pMsgBuffer;
    THREAD m_hWriteThread;
    THREAD m_hProcessingThread;
    THREAD m_hProxyReadThread;
