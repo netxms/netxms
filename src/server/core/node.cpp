@@ -7132,7 +7132,7 @@ void Node::collectProxyInfo(ProxyInfo *info)
 
       if (((snmpProxy && (dco->getDataSource() == DS_SNMP_AGENT) && (dco->getSourceNode() == 0)) ||
            ((dco->getDataSource() == DS_NATIVE_AGENT) && (dco->getSourceNode() == info->proxyId))) &&
-          (dco->getAgentCacheMode() == AGENT_CACHE_ON))
+          dco->hasValue() && (dco->getAgentCacheMode() == AGENT_CACHE_ON))
       {
          info->msg->setField(info->fieldId++, dco->getId());
          info->msg->setField(info->fieldId++, (INT16)dco->getType());
@@ -7194,6 +7194,7 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
    {
       DCObject *dco = m_dcObjects->get(i);
       if ((dco->getStatus() != ITEM_STATUS_DISABLED) &&
+          dco->hasValue() &&
           (dco->getAgentCacheMode() == AGENT_CACHE_ON) &&
           (dco->getSourceNode() == 0))
       {
