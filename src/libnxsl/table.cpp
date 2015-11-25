@@ -35,8 +35,7 @@ NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
  */
 NXSL_METHOD_DEFINITION(addRow)
 {
-   ((Table *)object->getData())->addRow();
-   *result = new NXSL_Value;
+   *result = new NXSL_Value((INT32)((Table *)object->getData())->addRow());
    return 0;
 }
 
@@ -48,8 +47,7 @@ NXSL_METHOD_DEFINITION(addColumn)
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
 
-   ((Table *)object->getData())->addColumn(argv[0]->getValueAsCString());
-   *result = new NXSL_Value;
+   *result = new NXSL_Value((INT32)((Table *)object->getData())->addColumn(argv[0]->getValueAsCString()));
    return 0;
 }
 
