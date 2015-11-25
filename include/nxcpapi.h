@@ -83,6 +83,8 @@ public:
    bool isEndOfSequence() { return (m_flags & MF_END_OF_SEQUENCE) ? true : false; }
    bool isReverseOrder() { return (m_flags & MF_REVERSE_ORDER) ? true : false; }
    bool isBinary() { return (m_flags & MF_BINARY) ? true : false; }
+   bool isControl() { return (m_flags & MF_CONTROL) ? true : false; }
+   bool isCompressed() { return (m_flags & MF_COMPRESSED) ? true : false; }
 
    BYTE *getBinaryData() { return m_data; }
    size_t getBinaryDataSize() { return m_dataSize; }

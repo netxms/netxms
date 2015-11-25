@@ -90,7 +90,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 	private RefreshAction actionRefresh;
 	private Action actionOpen; 
 	private Action actionProperties; 
-	private Action actionDelete; 
+	private Action actionDelete;
 	private Action actionShowFilter;
    private GraphTreeFilter filter; 
 
@@ -219,7 +219,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 	   if (filterEnabled)
 	      filterText.setFocus();
 	   else
-		viewer.getTree().setFocus();
+	      viewer.getTree().setFocus();
 	}
 
 	/**
@@ -297,7 +297,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
       {
          contextService.activateContext("org.netxms.ui.eclipse.perfview.context.PredefinedGraphTree"); //$NON-NLS-1$
       }
-	}
+   }
 	
 	/**
 	 * Create pop-up menu for user list
@@ -391,13 +391,12 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<GraphSettings> list = session.getPredefinedGraphs();
+				final List<GraphSettings> list = session.getPredefinedGraphs(false);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
 						viewer.setInput(list);
-						viewer.expandToLevel(2);
 					}
 				});
 			}

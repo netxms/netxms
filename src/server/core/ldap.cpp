@@ -309,7 +309,7 @@ void LDAPConnection::syncUsers()
    int size = ldap_strlen(tmp);
    int rc = LDAP_SUCCESS;
 
-   while (separator != NULL && rc == LDAP_SUCCESS)
+   while (separator != NULL)
    {
       while (true)
       {
@@ -338,6 +338,7 @@ void LDAPConnection::syncUsers()
          break;
       }
 
+      DbgPrintf(6, _T("LDAPConnection::syncUsers(): Search Base DN: ") LDAP_TFMT, base);
       rc = ldap_search_ext_s(
                m_ldapConn,		// LDAP session handle
                base,	// Search Base
@@ -355,7 +356,7 @@ void LDAPConnection::syncUsers()
       {
          if (rc == LDAP_SIZELIMIT_EXCEEDED)
          {
-            rc = readInPages(userEntryList, groupEntryList);
+            rc = readInPages(userEntryList, groupEntryList, base);
          }
          else
          {
@@ -397,7 +398,7 @@ void LDAPConnection::syncUsers()
 /**
  * Reads and process each page
  */
-int LDAPConnection::readInPages(StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList)
+int LDAPConnection::readInPages(StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList, LDAP_CHAR *base)
 {
    DbgPrintf(7, _T("LDAPConnection::readInPages(): Getting LDAP results as a pages."));
    LDAPControl *pageControl=NULL, *controls[2] = { NULL, NULL };
@@ -431,10 +432,11 @@ int LDAPConnection::readInPages(StringObjectMap<Entry> *userEntryList, StringObj
       /* Insert the control into a list to be passed to the search. */
       controls[0] = pageControl;
 
+      DbgPrintf(6, _T("LDAPConnection::syncUsers(): Search Base DN: %s"), base);
       /* Search for entries in the directory using the parmeters. */
       rc = ldap_search_ext_s(
                m_ldapConn,		// LDAP session handle
-               m_searchBase,	// Search Base
+               base,	// Search Base
                LDAP_SCOPE_SUBTREE,	// Search Scope – everything below o=Acme
                m_searchFilter, // Search Filter – only inetOrgPerson objects
                NULL,	// returnAllAttributes – NULL means Yes

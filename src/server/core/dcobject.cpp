@@ -71,8 +71,6 @@ DCObject::DCObject()
  */
 DCObject::DCObject(const DCObject *pSrc)
 {
-   UINT32 i;
-
    m_id = pSrc->m_id;
    m_guid = pSrc->m_guid;
    m_dwTemplateId = pSrc->m_dwTemplateId;

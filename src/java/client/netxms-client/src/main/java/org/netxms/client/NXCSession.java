@@ -6547,9 +6547,10 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<GraphSettings> getPredefinedGraphs() throws IOException, NXCException
+   public List<GraphSettings> getPredefinedGraphs(boolean graphTemplates) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_GRAPH_LIST);
+      msg.setField(NXCPCodes.VID_GRAPH_TEMPALTE, graphTemplates);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_GRAPHS);
@@ -6587,6 +6588,8 @@ public class NXCSession
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SAVE_GRAPH);
       msg.setFieldInt32(NXCPCodes.VID_GRAPH_ID, (int) graph.getId());
       msg.setField(NXCPCodes.VID_NAME, graph.getName());
+      msg.setFieldInt32(NXCPCodes.VID_FLAGS, graph.getFlags());
+      msg.setField(NXCPCodes.VID_FILTER, graph.getFilters());
       msg.setField(NXCPCodes.VID_GRAPH_CONFIG, graph.getConfig());
       msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, graph.getAccessList().size());
       long varId = NXCPCodes.VID_GRAPH_ACL_BASE;
@@ -6595,7 +6598,7 @@ public class NXCSession
          msg.setFieldInt32(varId++, (int) e.getUserId());
          msg.setFieldInt32(varId++, e.getAccessRights());
       }      
-      msg.setFieldInt16(NXCPCodes.VID_FLAGS, overwrite ? 1 : 0);
+      msg.setFieldInt16(NXCPCodes.VID_OVERVRITE, overwrite ? 1 : 0);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       return response.getFieldAsInt64(NXCPCodes.VID_GRAPH_ID);

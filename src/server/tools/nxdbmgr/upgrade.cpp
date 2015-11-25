@@ -604,6 +604,21 @@ static bool CreateLibraryScript(UINT32 id, const TCHAR *name, const TCHAR *code)
 }
 
 /**
+ * Upgrade from V373 to V374
+ */
+static BOOL H_UpgradeFromV383(int currVersion, int newVersion)
+{
+   CHK_EXEC(ConvertStrings(_T("graphs"), _T("graph_id"), _T("config")));
+   static TCHAR batch[] =
+      _T("ALTER TABLE graphs ADD flags integer\n")
+      _T("ALTER TABLE graphs ADD filters $SQL:TEXT\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='384' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V382 to V383
  */
 static BOOL H_UpgradeFromV382(int currVersion, int newVersion)
@@ -9160,6 +9175,7 @@ static struct
    { 380, 381, H_UpgradeFromV380 },
    { 381, 382, H_UpgradeFromV381 },
    { 382, 383, H_UpgradeFromV382 },
+   { 383, 384, H_UpgradeFromV383 },
    { 0, 0, NULL }
 };
 

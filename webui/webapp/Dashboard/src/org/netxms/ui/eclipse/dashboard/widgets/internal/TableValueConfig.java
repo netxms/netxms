@@ -20,8 +20,10 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.ObjectIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
@@ -92,7 +94,33 @@ public class TableValueConfig extends DashboardElementConfig
 			objectId = md.dstId;
 	}
 
-	/**
+	/* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#getDataCollectionItems()
+    */
+   @Override
+   public Map<Long, Long> getDataCollectionItems()
+   {
+      Map<Long, Long> dcis = new HashMap<Long, Long>();
+      dcis.put(dciId,  objectId);
+      return dcis;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig#remapDataCollectionItems(java.util.Map)
+    */
+   @Override
+   public void remapDataCollectionItems(Map<Long, DciIdMatchingData> remapData)
+   {
+      super.remapDataCollectionItems(remapData);
+      DciIdMatchingData md = remapData.get(dciId);
+      if (md != null)
+      {
+         objectId = md.dstNodeId;
+         dciId = md.dstDciId;
+      }
+   }
+
+   /**
 	 * @return the title
 	 */
 	public String getTitle()

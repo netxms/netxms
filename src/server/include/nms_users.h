@@ -77,6 +77,7 @@ public:
 #define ldap_strdup _tcsdup
 #define LdapConfigRead ConfigReadStr
 #define _TLDAP(x) _T(x)
+#define LDAP_TFMT _T("%s")
 
 #else
 
@@ -91,6 +92,7 @@ public:
 #define ldap_strdup strdup
 #define LdapConfigRead ConfigReadStrUTF8
 #define _TLDAP(x) x
+#define LDAP_TFMT _T("%hs")
 
 #endif // _WIN32
 #endif // WITH_LDAP
@@ -126,7 +128,7 @@ private:
    void compareUserLists(StringObjectMap<Entry>* userEntryList);
    TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, UINT32 i = 0);
    void prepareStringForInit(LDAP_CHAR *connectionLine);
-   int readInPages(StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList);
+   int readInPages(StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList, LDAP_CHAR *base);
    void fillLists(LDAPMessage *searchResult, StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList);
    TCHAR *ldap_internal_get_dn(LDAP *conn, LDAPMessage *entry);
 #endif // WITH_LDAP

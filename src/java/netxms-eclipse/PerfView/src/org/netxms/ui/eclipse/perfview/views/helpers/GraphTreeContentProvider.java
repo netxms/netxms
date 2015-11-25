@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.perfview.views.helpers;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -26,7 +27,6 @@ import java.util.Map;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.netxms.client.datacollection.GraphSettings;
-import org.netxms.ui.eclipse.perfview.Messages;
 
 /**
  * Content provider for predefined graph tree
@@ -35,7 +35,7 @@ import org.netxms.ui.eclipse.perfview.Messages;
 public class GraphTreeContentProvider implements ITreeContentProvider
 {
    private List<GraphSettings> input = null;
-	private GraphFolder rootFolder = new GraphFolder(Messages.get().GraphTreeContentProvider_Root, null);;
+	private List<Object> list = new ArrayList<Object>();
 	private Map<GraphSettings, GraphFolder> parentFolders = new HashMap<GraphSettings, GraphFolder>();
 	
 	/* (non-Javadoc)
@@ -78,7 +78,7 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 	public Object[] getElements(Object inputElement)
 	{
 	   updateModel();
-		return new Object[] { rootFolder };
+		return list.toArray();
 	}
 
 	/* (non-Javadoc)
@@ -113,7 +113,7 @@ public class GraphTreeContentProvider implements ITreeContentProvider
 	private void updateModel()
 	{
       parentFolders.clear();
-      rootFolder.clear();
+      list.clear();
       
       if (input != null)
       {
@@ -122,7 +122,7 @@ public class GraphTreeContentProvider implements ITreeContentProvider
          {
             String[] path = input.get(i).getName().split("\\-\\>"); //$NON-NLS-1$
          
-            GraphFolder root = rootFolder;
+            GraphFolder root = null;
             for(int j = 0; j < path.length - 1; j++)
             {
                String key = path[j].replace("&", ""); //$NON-NLS-1$ //$NON-NLS-2$
@@ -131,12 +131,27 @@ public class GraphTreeContentProvider implements ITreeContentProvider
                {
                   curr = new GraphFolder(path[j], root);
                   folders.put(key, curr);
-                  root.addFolder(curr);
+                  if(root == null)
+                  {
+                     list.add(curr);
+                  }
+                  else
+                  {
+                     root.addFolder(curr);
+                  }
                }
                root = curr;
             }
-   
-            root.addGraph(input.get(i));
+            
+            if(root == null)
+            {
+               list.add(input.get(i));
+            }
+            else
+            {
+               root.addGraph(input.get(i));               
+            }
+            
             parentFolders.put(input.get(i), root);
          }
       }

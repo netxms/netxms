@@ -54,7 +54,7 @@ public class PredefinedChartConfig extends ChartConfig
 	 */
 	public GraphSettings createServerSettings() throws Exception
 	{
-		GraphSettings settings = new GraphSettings(id, ownerId, accessList);
+		GraphSettings settings = new GraphSettings(id, ownerId, 0, accessList);
 		settings.setName(name);
 		settings.setConfig(createXml());
 		return settings;

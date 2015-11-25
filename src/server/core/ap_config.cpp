@@ -114,7 +114,7 @@ bool AgentPolicyConfig::deleteFromDatabase(DB_HANDLE hdb)
  */
 bool AgentPolicyConfig::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
-	BOOL success = FALSE;
+	bool success = false;
 
 	if (AgentPolicy::loadFromDatabase(hdb, dwId))
 	{
@@ -127,7 +127,7 @@ bool AgentPolicyConfig::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 			if (DBGetNumRows(hResult) > 0)
 			{
 				m_fileContent = DBGetField(hResult, 0, 0, NULL, 0);
-				success = TRUE;
+				success = true;
 			}
 			DBFreeResult(hResult);
 		}

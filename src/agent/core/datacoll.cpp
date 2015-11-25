@@ -1055,7 +1055,10 @@ void ShutdownLocalDataCollector()
    MutexDestroy(s_serverSyncStatusLock);
 }
 
-void ClearDCISyncDatabase()
+/**
+ * Clear data collection configuration
+ */
+void ClearDataCollectionConfiguration()
 {
    MutexLock(s_itemLock);
    DB_HANDLE db = GetLocalDatabaseHandle();
@@ -1066,7 +1069,6 @@ void ClearDCISyncDatabase()
    MutexUnlock(s_itemLock);
 
    MutexLock(s_serverSyncStatusLock);
-
    s_serverSyncStatus.clear();
    MutexUnlock(s_serverSyncStatusLock);
 }

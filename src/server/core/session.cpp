@@ -1161,7 +1161,7 @@ void ClientSession::processingThread()
             CALL_IN_NEW_THREAD(importConfiguration, pMsg);
             break;
 			case CMD_GET_GRAPH_LIST:
-				sendGraphList(pMsg->getId());
+				sendGraphList(pMsg);
 				break;
 			case CMD_SAVE_GRAPH:
 			   saveGraph(pMsg);
@@ -9954,88 +9954,13 @@ void ClientSession::SendDCIInfo(NXCPMessage *pRequest)
 /**
  * Send list of available graphs to client
  */
-void ClientSession::sendGraphList(UINT32 dwRqId)
+void ClientSession::sendGraphList(NXCPMessage *request)
 {
    NXCPMessage msg;
-	DB_RESULT hResult;
-	GRAPH_ACL_ENTRY *pACL = NULL;
-	int i, j, nRows, nACLSize;
-	UINT32 dwId, dwNumGraphs, dwGraphId, dwOwner;
-	UINT32 *pdwUsers, *pdwRights, dwGraphACLSize;
-	TCHAR *pszStr;
-
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(dwRqId);
-
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	pACL = LoadGraphACL(hdb, 0, &nACLSize);
-	if (nACLSize != -1)
-	{
-		hResult = DBSelect(hdb, _T("SELECT graph_id,owner_id,name,config FROM graphs"));
-		if (hResult != NULL)
-		{
-			pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
-			pdwRights = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
-			nRows = DBGetNumRows(hResult);
-			for(i = 0, dwNumGraphs = 0, dwId = VID_GRAPH_LIST_BASE; i < nRows; i++)
-			{
-				dwGraphId = DBGetFieldULong(hResult, i, 0);
-				dwOwner = DBGetFieldULong(hResult, i, 1);
-				if ((m_dwUserId == 0) ||
-				    (m_dwUserId == dwOwner) ||
-				    CheckGraphAccess(pACL, nACLSize, dwGraphId, m_dwUserId, NXGRAPH_ACCESS_READ))
-				{
-					msg.setField(dwId++, dwGraphId);
-					msg.setField(dwId++, dwOwner);
-					pszStr = DBGetField(hResult, i, 2, NULL, 0);
-					if (pszStr != NULL)
-					{
-						DecodeSQLStringAndSetVariable(&msg, dwId++, pszStr);
-						free(pszStr);
-					}
-					pszStr = DBGetField(hResult, i, 3, NULL, 0);
-					if (pszStr != NULL)
-					{
-						DecodeSQLStringAndSetVariable(&msg, dwId++, pszStr);
-						free(pszStr);
-					}
-
-					// ACL for graph
-					for(j = 0, dwGraphACLSize = 0; j < nACLSize; j++)
-					{
-						if (pACL[j].dwGraphId == dwGraphId)
-						{
-							pdwUsers[dwGraphACLSize] = pACL[j].dwUserId;
-							pdwRights[dwGraphACLSize] = pACL[j].dwAccess;
-							dwGraphACLSize++;
-						}
-					}
-					msg.setField(dwId++, dwGraphACLSize);
-					msg.setFieldFromInt32Array(dwId++, dwGraphACLSize, pdwUsers);
-					msg.setFieldFromInt32Array(dwId++, dwGraphACLSize, pdwRights);
-
-					dwId += 3;
-					dwNumGraphs++;
-				}
-			}
-			DBFreeResult(hResult);
-			free(pdwUsers);
-			free(pdwRights);
-			msg.setField(VID_NUM_GRAPHS, dwNumGraphs);
-			msg.setField(VID_RCC, RCC_SUCCESS);
-		}
-		else
-		{
-			msg.setField(VID_RCC, RCC_DB_FAILURE);
-		}
-		safe_free(pACL);
-	}
-	else
-	{
-		msg.setField(VID_RCC, RCC_DB_FAILURE);
-	}
-
-   DBConnectionPoolReleaseConnection(hdb);
+   msg.setId(request->getId());
+   bool templageGraphs = request->getFieldAsBoolean(VID_GRAPH_TEMPALTE);
+   FillGraphListMsg(&msg, m_dwUserId, templageGraphs);
    sendMessage(&msg);
 }
 
@@ -10045,161 +9970,9 @@ void ClientSession::sendGraphList(UINT32 dwRqId)
 void ClientSession::saveGraph(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-	BOOL bNew, bSuccess;
-	UINT32 id, graphId, graphUserId, graphAccess, accessRightStatus;
-	UINT16 overwrite;
-	TCHAR szQuery[16384], *pszEscName, *pszEscData, *pszTemp, dwGraphName[255];
-	int i, nACLSize;
-
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
-
-	graphId = pRequest->getFieldAsUInt32(VID_GRAPH_ID);
-	pRequest->getFieldAsString(VID_NAME,dwGraphName,255);
-	overwrite = pRequest->getFieldAsUInt16(VID_FLAGS);
-
-   GRAPH_ACL_AND_ID nameUniq = IsGraphNameExists(dwGraphName);
-
-   if (nameUniq.graphId == graphId)
-   {
-      nameUniq.status = RCC_SUCCESS;
-   }
-
-	if (graphId == 0)
-	{
-		graphId = nameUniq.graphId ? nameUniq.graphId : CreateUniqueId(IDG_GRAPH);
-		bNew = TRUE;
-		accessRightStatus = RCC_SUCCESS;
-	}
-	else
-	{
-	   accessRightStatus = GetGraphAccessCheckResult(graphId, m_dwUserId);
-		bNew = FALSE;
-	}
-
-   if (accessRightStatus == RCC_SUCCESS && (nameUniq.status == RCC_SUCCESS || (overwrite && bNew)))
-   {
-      bSuccess = TRUE;
-      if (nameUniq.status != RCC_SUCCESS)
-      {
-         bNew = FALSE;
-         graphId = nameUniq.graphId;
-      }
-   }
-   else
-   {
-      bSuccess = FALSE;
-      msg.setField(VID_RCC, accessRightStatus ? accessRightStatus : nameUniq.status );
-   }
-
-	// Create/update graph
-	if (bSuccess)
-	{
-		debugPrintf(5, _T("%s graph %d"), bNew ? _T("Creating") : _T("Updating"), graphId);
-		bSuccess = FALSE;
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		if (DBBegin(hdb))
-		{
-			pRequest->getFieldAsString(VID_NAME, szQuery, 256);
-			pszEscName = EncodeSQLString(szQuery);
-			pszTemp = pRequest->getFieldAsString(VID_GRAPH_CONFIG);
-			pszEscData = EncodeSQLString(CHECK_NULL_EX(pszTemp));
-			safe_free(pszTemp);
-			if (bNew)
-			{
-				_sntprintf(szQuery, 16384, _T("INSERT INTO graphs (graph_id,owner_id,name,config) VALUES (%d,%d,'%s','%s')"),
-				           graphId, m_dwUserId, pszEscName, pszEscData);
-			}
-			else
-			{
-				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), graphId);
-				DBQuery(hdb, szQuery);
-
-				_sntprintf(szQuery, 16384, _T("UPDATE graphs SET name='%s',config='%s' WHERE graph_id=%d"),
-				           pszEscName, pszEscData, graphId);
-			}
-
-			if (DBQuery(hdb, szQuery))
-			{
-				// Insert new ACL
-				nACLSize = (int)pRequest->getFieldAsUInt32(VID_ACL_SIZE);
-				for(i = 0, id = VID_GRAPH_ACL_BASE, bSuccess = TRUE; i < nACLSize; i++)
-				{
-					graphUserId = pRequest->getFieldAsUInt32(id++);
-					graphAccess = pRequest->getFieldAsUInt32(id++);
-					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO graph_acl (graph_id,user_id,user_rights) VALUES (%d,%d,%d)"),
-					          graphId, graphUserId, graphAccess);
-					if (!DBQuery(hdb, szQuery))
-					{
-						bSuccess = FALSE;
-						msg.setField(VID_RCC, RCC_DB_FAILURE);
-						break;
-					}
-				}
-			}
-			else
-			{
-				msg.setField(VID_RCC, RCC_DB_FAILURE);
-			}
-
-			if (bSuccess)
-			{
-				DBCommit(hdb);
-				msg.setField(VID_RCC, RCC_SUCCESS);
-				msg.setField(VID_GRAPH_ID, graphId);
-
-            //send notificaion
-				NXCPMessage update;
-				int dwId = VID_GRAPH_LIST_BASE;
-            update.setCode(CMD_GRAPH_UPDATE);
-            update.setField(dwId++, graphId);
-            update.setField(dwId++, m_dwUserId);
-            update.setField(dwId++, dwGraphName);
-            update.setField(dwId++, pszEscData);
-
-            int nACLSize;
-            GRAPH_ACL_ENTRY *pACL = LoadGraphACL(hdb, 0, &nACLSize);
-            if ((pACL != NULL) && (nACLSize > 0))
-            {
-               UINT32 *pdwUsers = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
-               UINT32 *pdwRights = (UINT32 *)malloc(sizeof(UINT32) * nACLSize);
-               // ACL for graph
-               for(int j = 0; j < nACLSize; j++)
-               {
-                  pdwUsers[j] = pACL[j].dwUserId;
-                  pdwRights[j] = pACL[j].dwAccess;
-               }
-               msg.setField(dwId++, nACLSize);
-               msg.setFieldFromInt32Array(dwId++, nACLSize, pdwUsers);
-               msg.setFieldFromInt32Array(dwId++, nACLSize, pdwRights);
-
-               free(pdwUsers);
-               free(pdwRights);
-            }
-            else
-            {
-               msg.setField(dwId++, (INT32)0);
-               msg.setFieldFromInt32Array(dwId++, 0, &graphId);
-               msg.setFieldFromInt32Array(dwId++, 0, &graphId);
-            }
-            msg.setField(VID_NUM_GRAPHS, 1);
-
-            NotifyClientGraphUpdate(&update, graphId);
-			}
-			else
-			{
-				DBRollback(hdb);
-			}
-			free(pszEscName);
-			free(pszEscData);
-		}
-		else
-		{
-			msg.setField(VID_RCC, RCC_DB_FAILURE);
-		}
-      DBConnectionPoolReleaseConnection(hdb);
-	}
-
+   SaveGraph(pRequest, m_dwUserId, &msg);
    sendMessage(&msg);
 }
 
@@ -10209,68 +9982,10 @@ void ClientSession::saveGraph(NXCPMessage *pRequest)
 void ClientSession::deleteGraph(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-	UINT32 dwGraphId, dwOwner;
-	GRAPH_ACL_ENTRY *pACL = NULL;
-	int nACLSize;
-	DB_RESULT hResult;
-	TCHAR szQuery[256];
-
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
-
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-	dwGraphId = pRequest->getFieldAsUInt32(VID_GRAPH_ID);
-	_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT owner_id FROM graphs WHERE graph_id=%d"), dwGraphId);
-	hResult = DBSelect(hdb, szQuery);
-	if (hResult != NULL)
-	{
-		if (DBGetNumRows(hResult) > 0)
-		{
-			dwOwner = DBGetFieldULong(hResult, 0, 0);
-			pACL = LoadGraphACL(hdb, dwGraphId, &nACLSize);
-			if (nACLSize != -1)
-			{
-				if ((m_dwUserId == 0) ||
-				    (m_dwUserId == dwOwner) ||
-				    CheckGraphAccess(pACL, nACLSize, dwGraphId, m_dwUserId, NXGRAPH_ACCESS_READ))
-				{
-					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graphs WHERE graph_id=%d"), dwGraphId);
-					if (DBQuery(hdb, szQuery))
-					{
-						_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), dwGraphId);
-						DBQuery(hdb, szQuery);
-						msg.setField(VID_RCC, RCC_SUCCESS);
-						NotifyClientSessions(NX_NOTIFY_GRAPHS_DELETED, dwGraphId);
-					}
-					else
-					{
-						msg.setField(VID_RCC, RCC_DB_FAILURE);
-					}
-				}
-				else
-				{
-					msg.setField(VID_RCC, RCC_ACCESS_DENIED);
-				}
-				safe_free(pACL);
-			}
-			else
-			{
-				msg.setField(VID_RCC, RCC_DB_FAILURE);
-			}
-		}
-		else
-		{
-			msg.setField(VID_RCC, RCC_INVALID_GRAPH_ID);
-		}
-		DBFreeResult(hResult);
-	}
-	else
-	{
-		msg.setField(VID_RCC, RCC_DB_FAILURE);
-	}
-
-   DBConnectionPoolReleaseConnection(hdb);
+   UINT32 result = DeleteGraph(pRequest->getFieldAsUInt32(VID_GRAPH_ID), m_dwUserId);
+   msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
 

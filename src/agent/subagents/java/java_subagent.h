@@ -63,13 +63,13 @@ inline TCHAR *CStringFromJavaString(JNIEnv *env, jstring jstr, TCHAR *buffer, si
 #if UNICODE_UCS4
    ucs2_to_ucs4(chars, min(len, bufferLen - 1), buffer, bufferLen);
 #else
-   memcpy(buffer, chars, min(len, bufferLen) * sizeof(WCHAR));
+   memcpy(buffer, chars, min((size_t)len, bufferLen) * sizeof(WCHAR));
 #endif
 #else
    ucs2_to_mb(chars, min(len, bufferLen - 1), buffer, bufferLen);
 #endif
    env->ReleaseStringChars(jstr, chars);
-   buffer[min(len, bufferLen - 1)] = 0;
+   buffer[min((size_t)len, bufferLen - 1)] = 0;
    return buffer;
 }
 

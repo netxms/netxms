@@ -411,11 +411,11 @@ void NXSL_Value::set(INT32 nValue)
  */
 void NXSL_Value::updateNumber()
 {
-   TCHAR *eptr;
-   INT64 nVal;
-   double dVal;
+   if (m_pszValStr[0] == 0)
+      return;
 
-   nVal = _tcstoll(m_pszValStr, &eptr, 0);
+   TCHAR *eptr;
+   INT64 nVal = _tcstoll(m_pszValStr, &eptr, 0);
    if ((*eptr == 0) && ((UINT32)(eptr - m_pszValStr) == m_dwStrLen))
    {
       if (nVal > 0x7FFFFFFF)
@@ -431,7 +431,7 @@ void NXSL_Value::updateNumber()
    }
    else
    {
-      dVal = _tcstod(m_pszValStr, &eptr);
+      double dVal = _tcstod(m_pszValStr, &eptr);
       if ((*eptr == 0) && ((UINT32)(eptr - m_pszValStr) == m_dwStrLen))
       {
          m_nDataType = NXSL_DT_REAL;

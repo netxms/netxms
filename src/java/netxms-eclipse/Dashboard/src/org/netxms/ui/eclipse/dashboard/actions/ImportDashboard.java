@@ -209,7 +209,7 @@ public class ImportDashboard implements IObjectActionDelegate
 				continue;
 			
 			AbstractObject object = session.findObjectByName(d.srcName);
-			if ((object != null) && (object.getObjectClass() == d.objectClass))
+			if ((object != null) && isCompatibleClasses(object.getObjectClass(), d.objectClass))
 			{
 				d.dstId = object.getObjectId();
 				d.dstName = object.getObjectName();
@@ -260,6 +260,20 @@ public class ImportDashboard implements IObjectActionDelegate
 			return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Check if two classes are compatible for object matching
+	 * 
+	 * @param c1
+	 * @param c2
+	 * @return
+	 */
+	public static boolean isCompatibleClasses(int c1, int c2)
+	{
+	   return (c1 == c2) || 
+	          ((c1 == AbstractObject.OBJECT_NODE) && (c2 == AbstractObject.OBJECT_CLUSTER)) ||
+	          ((c1 == AbstractObject.OBJECT_CLUSTER) && (c2 == AbstractObject.OBJECT_NODE));
 	}
 	
 	/**
