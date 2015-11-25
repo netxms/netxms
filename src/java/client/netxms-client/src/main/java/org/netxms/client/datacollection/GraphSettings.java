@@ -59,13 +59,17 @@ public class GraphSettings
 	public static final int ACCESS_READ  = 0x01;
 	public static final int ACCESS_WRITE = 0x02;
 	
+	public static final int GRAPH_FLAG_TEMPLATE = 1;
+	
 	private long id;
 	private long ownerId;
+	private int flags;
 	private String name;
 	private String shortName;
 	private List<AccessListElement> accessList;
 	private String config;
 	private Set<GraphSettingsChangeListener> changeListeners = new HashSet<GraphSettingsChangeListener>(0);
+	private String filters;
 	
 	/**
 	 * Create default settings
@@ -74,24 +78,28 @@ public class GraphSettings
 	{
 		id = 0;
 		ownerId = 0;
+      flags = 0;
 		name = "noname";
 		shortName = "noname";
 		accessList = new ArrayList<AccessListElement>(0);
 		config = "<chart></chart>";
+      filters = "<objectToolFilter></objectToolFilter>";
 	}
 	
 	/**
 	 * Create settings
 	 */
-	public GraphSettings(long id, long ownerId, Collection<AccessListElement> accessList)
+	public GraphSettings(long id, long ownerId, int flags, Collection<AccessListElement> accessList)
 	{
 		this.id = id;
 		this.ownerId = ownerId;
 		name = "noname";
 		shortName = "noname";
+		this.flags = flags;
 		this.accessList = new ArrayList<AccessListElement>(accessList.size());
 		this.accessList.addAll(accessList);
 		config = "<chart></chart>";
+		filters = "<objectToolFilter></objectToolFilter>";
 	}
 	
 	/**
@@ -104,21 +112,23 @@ public class GraphSettings
 	{
 		id = msg.getFieldAsInt64(baseId);
 		ownerId = msg.getFieldAsInt64(baseId + 1);
-		name = msg.getFieldAsString(baseId + 2);
+      flags = (int)msg.getFieldAsInt64(baseId + 2);
+      name = msg.getFieldAsString(baseId + 3);
+      config = msg.getFieldAsString(baseId + 4);
+      filters = msg.getFieldAsString(baseId + 5);
 		
 		String[] parts = name.split("->");
 		shortName = (parts.length > 1) ? parts[parts.length - 1] : name;
 		
-		int count = msg.getFieldAsInt32(baseId + 4);  // ACL size
-		long[] users = msg.getFieldAsUInt32Array(baseId + 5);
-		long[] rights = msg.getFieldAsUInt32Array(baseId + 6);
+		int count = msg.getFieldAsInt32(baseId + 6);  // ACL size
+		long[] users = msg.getFieldAsUInt32Array(baseId + 7);
+		long[] rights = msg.getFieldAsUInt32Array(baseId + 8);
 		accessList = new ArrayList<AccessListElement>(count);
 		for(int i = 0; i < count; i++)
 		{
 			accessList.add(new AccessListElement(users[i], (int)rights[i]));
 		}
 		
-		config = msg.getFieldAsString(baseId + 3);
 	}
 	
 	/**
@@ -215,4 +225,36 @@ public class GraphSettings
 	{
 		this.config = config;
 	}
+
+   /**
+    * @return the flags
+    */
+   public int getFlags()
+   {
+      return flags;
+   }
+
+   /**
+    * @param flags the flags to set
+    */
+   public void setFlags(int flags)
+   {
+      this.flags = flags;
+   }
+
+   /**
+    * @return the filters
+    */
+   public String getFilters()
+   {
+      return filters;
+   }
+
+   /**
+    * @param filters the filters to set
+    */
+   public void setFilters(String filters)
+   {
+      this.filters = filters;
+   }
 }

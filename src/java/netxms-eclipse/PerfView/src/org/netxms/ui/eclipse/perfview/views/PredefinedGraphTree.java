@@ -391,13 +391,12 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final List<GraphSettings> list = session.getPredefinedGraphs();
+				final List<GraphSettings> list = session.getPredefinedGraphs(false);
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
 						viewer.setInput(list);
-						viewer.expandToLevel(2);
 					}
 				});
 			}

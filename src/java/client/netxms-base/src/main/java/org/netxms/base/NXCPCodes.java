@@ -892,6 +892,8 @@ public class NXCPCodes
    public static final long VID_MAINTENANCE_MODE = 530;
    public static final long VID_IS_MASTER = 531;
    public static final long VID_AGENT_COMM_TIME = 532;
+   public static final long VID_GRAPH_TEMPALTE = 533;
+   public static final long VID_OVERVRITE = 534;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

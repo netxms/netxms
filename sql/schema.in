@@ -1173,8 +1173,10 @@ CREATE TABLE graphs
 (
 	graph_id integer not null,
 	owner_id integer not null,
+	flags integer not null,
 	name varchar(255) not null,
 	config SQL_TEXT not null,
+	filters SQL_TEXT not null,
 	PRIMARY KEY(graph_id)
 ) TABLE_TYPE;
 

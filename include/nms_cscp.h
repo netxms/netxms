@@ -1106,6 +1106,8 @@ typedef struct
 #define VID_MAINTENANCE_MODE        ((UINT32)530)
 #define VID_IS_MASTER               ((UINT32)531)
 #define VID_AGENT_COMM_TIME         ((UINT32)532)
+#define VID_GRAPH_TEMPALTE          ((UINT32)533)
+#define VID_OVERVRITE               ((UINT32)534)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

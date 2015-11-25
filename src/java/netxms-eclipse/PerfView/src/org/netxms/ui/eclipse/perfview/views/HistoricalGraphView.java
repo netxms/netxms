@@ -898,7 +898,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       if (result == Window.CANCEL)
          return;
 
-      final GraphSettings gs = new GraphSettings(0, session.getUserId(), new ArrayList<AccessListElement>(0));
+      final GraphSettings gs = new GraphSettings(0, session.getUserId(), 0, new ArrayList<AccessListElement>(0));
       gs.setName(dlg.getName());
       try
       {
