@@ -269,7 +269,7 @@ public class ImportDashboard implements IObjectActionDelegate
 	 * @param c2
 	 * @return
 	 */
-	private static boolean isCompatibleClasses(int c1, int c2)
+	public static boolean isCompatibleClasses(int c1, int c2)
 	{
 	   return (c1 == c2) || 
 	          ((c1 == AbstractObject.OBJECT_NODE) && (c2 == AbstractObject.OBJECT_CLUSTER)) ||

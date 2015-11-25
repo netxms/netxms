@@ -42,6 +42,7 @@ import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
+import org.netxms.ui.eclipse.dashboard.actions.ImportDashboard;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.IdMatchingContentProvider;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.IdMatchingLabelProvider;
@@ -198,6 +199,7 @@ public class IdMatchingDialog extends Dialog
 		switch(data.objectClass)
 		{
 			case AbstractObject.OBJECT_NODE:
+         case AbstractObject.OBJECT_CLUSTER:
 				classFilter = ObjectSelectionDialog.createNodeSelectionFilter(false);
 				break;
 			case AbstractObject.OBJECT_CONTAINER:
@@ -219,7 +221,7 @@ public class IdMatchingDialog extends Dialog
 		if (dlg.open() == Window.OK)
 		{
 			AbstractObject object = dlg.getSelectedObjects().get(0);
-			if (object.getObjectClass() == data.objectClass)
+			if (ImportDashboard.isCompatibleClasses(object.getObjectClass(), data.objectClass))
 			{
 				data.dstId = object.getObjectId();
 				data.dstName = object.getObjectName();
