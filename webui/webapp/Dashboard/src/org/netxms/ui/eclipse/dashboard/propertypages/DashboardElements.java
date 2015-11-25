@@ -306,7 +306,7 @@ public class DashboardElements extends PropertyPage
 		try
 		{
 			numColumns = Integer.parseInt(columnCount.getText());
-			if ((numColumns < 1) || (numColumns > 8))
+			if ((numColumns < 1) || (numColumns > 64))
 				throw new NumberFormatException();
 		}
 		catch(NumberFormatException e)
