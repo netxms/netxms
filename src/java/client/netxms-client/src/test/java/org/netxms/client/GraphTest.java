@@ -31,7 +31,7 @@ public class GraphTest extends AbstractSessionTest
 	{
 		final NXCSession session = connect();
 		
-		List<GraphSettings> graphs = session.getPredefinedGraphs();
+		List<GraphSettings> graphs = session.getPredefinedGraphs(false);
 		System.out.println(graphs.size() + " graphs retrieved");
 		for(GraphSettings gs : graphs)
 			System.out.println(">>> " + gs.getName());
