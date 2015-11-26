@@ -15,6 +15,7 @@
 - Management console:
 	- Object tool input fields can be rearranged
 	- Line width can be configured for line charts on dashboards
+	- Column sizes saved in table DCI last values view
 - Fixed issues: #205, #847, #948, #967, #979, #980, #991, #997, #1002, #1003, #1019, #1024
 
 

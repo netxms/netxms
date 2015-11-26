@@ -62,7 +62,7 @@ public class TableValueElement extends ElementWidget
 		if (config.getTitle().trim().isEmpty())
 		{
 			setLayout(new FillLayout());
-			viewer = new TableValue(this, SWT.NONE, viewPart);
+			viewer = new TableValue(this, SWT.NONE, viewPart, parent.getDashboardObject().getGuid().toString());
 		}
 		else
 		{
@@ -76,13 +76,13 @@ public class TableValueElement extends ElementWidget
 			title.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			title.setFont(JFaceResources.getBannerFont());
 			
-			viewer = new TableValue(this, SWT.NONE, viewPart);
+			viewer = new TableValue(this, SWT.NONE, viewPart, parent.getDashboardObject().getGuid().toString());
 			viewer.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		}
 
 		viewer.setObject(config.getObjectId(), config.getDciId());	
 		viewer.refresh(null);
-		
+
 		final ViewRefreshController refreshController = new ViewRefreshController(viewPart, config.getRefreshRate(), new Runnable() {
 			@Override
 			public void run()

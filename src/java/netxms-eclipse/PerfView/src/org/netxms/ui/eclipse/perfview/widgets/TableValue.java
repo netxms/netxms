@@ -69,6 +69,7 @@ public class TableValue extends Composite
    private IViewPart viewPart;
    private long objectId = 0;
    private long dciId = 0;
+   private String configId;
    private String objectName = null;
    private Table currentData = null;
    private SortableTableViewer viewer;
@@ -82,11 +83,12 @@ public class TableValue extends Composite
     * @param style
     * @param viewPart
     */
-   public TableValue(Composite parent, int style, IViewPart viewPart)
+   public TableValue(Composite parent, int style, IViewPart viewPart, String configId)
    {
       super(parent, style);
 
       this.viewPart = viewPart;
+      this.configId = configId;
       session = (NXCSession)ConsoleSharedData.getSession();
 
       setLayout(new FillLayout());
@@ -228,12 +230,22 @@ public class TableValue extends Composite
          final int[] widths = new int[names.length];
          Arrays.fill(widths, 150);
          viewer.createColumns(names, widths, 0, SWT.UP);
-         WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "TableLastValues"); //$NON-NLS-1$
+         
+         StringBuilder sb = new StringBuilder("TableLastValues.");
+         sb.append(dciId);
+         if (configId != null)
+         {
+            sb.append('.');
+            sb.append(configId);
+         }
+         final String id = sb.toString();
+         
+         WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), id); //$NON-NLS-1$
          viewer.getTable().addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(DisposeEvent e)
             {
-               WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "TableLastValues"); //$NON-NLS-1$
+               WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), id); //$NON-NLS-1$
             }
          });
          viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
