@@ -244,7 +244,7 @@ static DWORD CalculateAverageTime(QWORD *opcount, QWORD *times)
 		totalOps += opcount[i];
 		totalTime += times[i];
 	}
-	return (DWORD)(totalTime / totalOps);
+	return totalOps == 0 ? 0 : (DWORD)(totalTime / totalOps);
 }
 
 
