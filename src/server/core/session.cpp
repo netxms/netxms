@@ -4060,6 +4060,8 @@ static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxR
  */
 bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *response, DataCollectionTarget *dcTarget, int dciType)
 {
+   static UINT32 s_rowSize[] = { 8, 8, 16, 16, 516, 16 };
+
 	// Find DCI object
 	DCObject *dci = dcTarget->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID));
 	if (dci == NULL)
@@ -4090,14 +4092,142 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 	if ((maxRows == 0) || (maxRows > MAX_DCI_DATA_RECORDS))
 		maxRows = MAX_DCI_DATA_RECORDS;
 
+   DCI_DATA_HEADER *pData = NULL;
+   DCI_DATA_ROW *pCurr;
+
+	// If only last value requested, try to get it from cache first
+	if ((maxRows == 1) && (timeTo == 0))
+	{
+	   debugPrintf(7, _T("getCollectedDataFromDB: maxRows set to 1, will try to read cached value"));
+
+      TCHAR dataColumn[MAX_COLUMN_NAME] = _T("");
+      ItemValue value;
+
+	   if (dciType == DCO_TYPE_ITEM)
+	   {
+	      ItemValue *v = ((DCItem *)dci)->getInternalLastValue();
+	      if (v == NULL)
+	         goto read_from_db;
+	      value = *v;
+	      delete v;
+	   }
+	   else
+	   {
+         request->getFieldAsString(VID_DATA_COLUMN, dataColumn, MAX_COLUMN_NAME);
+         Table *t = ((DCTable *)dci)->getLastValue();
+         if (t == NULL)
+            goto read_from_db;
+
+         int column = t->getColumnIndex(dataColumn);
+         if (column == -1)
+         {
+            t->decRefCount();
+            goto read_from_db;
+         }
+
+         TCHAR *instance = request->getFieldAsString(VID_INSTANCE);
+         int row = t->findRowByInstance(instance);
+
+         switch(((DCTable *)dci)->getColumnDataType(dataColumn))
+         {
+            case DCI_DT_INT:
+               value = (row != -1) ? t->getAsInt(row, column) : (INT32)0;
+               break;
+            case DCI_DT_UINT:
+               value = (row != -1) ? t->getAsUInt(row, column) : (UINT32)0;
+               break;
+            case DCI_DT_INT64:
+               value = (row != -1) ? t->getAsInt64(row, column) : (INT64)0;
+               break;
+            case DCI_DT_UINT64:
+               value = (row != -1) ? t->getAsUInt64(row, column) : (UINT64)0;
+               break;
+            case DCI_DT_FLOAT:
+               value = (row != -1) ? t->getAsDouble(row, column) : (double)0;
+               break;
+            case DCI_DT_STRING:
+               value = (row != -1) ? t->getAsString(row, column) : _T("");
+               break;
+         }
+         t->decRefCount();
+	   }
+
+      // Send CMD_REQUEST_COMPLETED message
+      response->setField(VID_RCC, RCC_SUCCESS);
+      if (dciType == DCO_TYPE_ITEM)
+         ((DCItem *)dci)->fillMessageWithThresholds(response);
+      sendMessage(response);
+
+      int dataType;
+      switch(dciType)
+      {
+         case DCO_TYPE_ITEM:
+            dataType = ((DCItem *)dci)->getDataType();
+            break;
+         case DCO_TYPE_TABLE:
+            dataType = ((DCTable *)dci)->getColumnDataType(dataColumn);
+            break;
+         default:
+            dataType = DCI_DT_STRING;
+            break;
+      }
+
+      // Allocate memory for data and prepare data header
+      pData = (DCI_DATA_HEADER *)malloc(s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
+      pData->dataType = htonl((UINT32)dataType);
+      pData->dciId = htonl(dci->getId());
+
+      // Fill memory block with records
+      pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
+      pCurr->timeStamp = dci->getLastPollTime();
+      switch(dataType)
+      {
+         case DCI_DT_INT:
+         case DCI_DT_UINT:
+            pCurr->value.int32 = htonl(value.getUInt32());
+            break;
+         case DCI_DT_INT64:
+         case DCI_DT_UINT64:
+            pCurr->value.ext.v64.int64 = htonq(value.getUInt64());
+            break;
+         case DCI_DT_FLOAT:
+            pCurr->value.ext.v64.real = htond(value.getDouble());
+            break;
+         case DCI_DT_STRING:
+#ifdef UNICODE
+#ifdef UNICODE_UCS4
+            ucs4_to_ucs2(value.getString(), -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
+#else
+            nx_strncpy(pCurr->value.string, value.getString(), MAX_DCI_STRING_VALUE);
+#endif
+#else
+            mb_to_ucs2(value.getString(), -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
+#endif
+            SwapWideString(pCurr->value.string);
+            break;
+      }
+      pData->numRows = 1;
+
+      // Prepare and send raw message with fetched data
+      NXCP_MESSAGE *msg =
+         CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
+                              s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
+                              pData, NULL);
+      free(pData);
+      sendRawMessage(msg);
+      free(msg);
+
+      return true;
+	}
+
+read_from_db:
+   debugPrintf(7, _T("getCollectedDataFromDB: will read from database (maxRows = %d)"), maxRows);
+
 	TCHAR condition[256] = _T("");
 	if (timeFrom != 0)
 		_tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND d.tdata_timestamp>=?") : _T(" AND idata_timestamp>=?"));
 	if (timeTo != 0)
 		_tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND d.tdata_timestamp<=?") : _T(" AND idata_timestamp<=?"));
-
-	DCI_DATA_HEADER *pData = NULL;
-	DCI_DATA_ROW *pCurr;
 
 	bool success = false;
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -4136,7 +4266,6 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
-		   static UINT32 m_dwRowSize[] = { 8, 8, 16, 16, 516, 16 };
 #if !defined(UNICODE) || defined(UNICODE_UCS4)
 			TCHAR szBuffer[MAX_DCI_STRING_VALUE];
 #endif
@@ -4164,7 +4293,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 			}
 
 			// Allocate memory for data and prepare data header
-			pData = (DCI_DATA_HEADER *)malloc(numRows * m_dwRowSize[dataType] + sizeof(DCI_DATA_HEADER));
+			pData = (DCI_DATA_HEADER *)malloc(numRows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
 			pData->dataType = htonl((UINT32)dataType);
 			pData->dciId = htonl(dci->getId());
 
@@ -4201,7 +4330,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 						SwapWideString(pCurr->value.string);
 						break;
 				}
-				pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + m_dwRowSize[dataType]);
+				pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + s_rowSize[dataType]);
 			}
 			DBFreeResult(hResult);
 			pData->numRows = htonl(numRows);
@@ -4209,7 +4338,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 			// Prepare and send raw message with fetched data
 			NXCP_MESSAGE *msg =
 				CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
-											numRows * m_dwRowSize[dataType] + sizeof(DCI_DATA_HEADER),
+											numRows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
 											pData, NULL);
 			free(pData);
 			sendRawMessage(msg);
