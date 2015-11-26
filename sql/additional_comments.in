@@ -1,0 +1,30 @@
+/*
+** Input file for database initialization script.
+** This file should be processed by C preprocessor to produce
+** real initialization script.
+**
+** ex: syntax=c
+*/
+
+/*
+** Common constants
+*/
+#include <nxevent.h>
+#include <nms_locks.h>
+#include <netxmsdb.h>
+#include <nxtools.h>
+
+#include "database.in"
+
+/*
+** Object ID in table names ("%d" in metadata) is replaced with letter "N".
+*/
+
+/*
+** idata_N
+*/
+
+COMMENT_TABLE(idata_N, 'Storage table for collected DCI values. Tables are created by the server in runtime.');
+COMMENT_COLUMN(idata_N.item_id, 'DCI ID');
+COMMENT_COLUMN(idata_N.idata_timestamp, 'Record timestamp');
+COMMENT_COLUMN(idata_N.idata_value, 'Collected value');

@@ -107,6 +107,7 @@ target
 /sql/dbschema_oracle.sql
 /sql/dbschema_pgsql.sql
 /sql/dbschema_sqlite.sql
+/sql/additional_comments.sql
 /sql/gen.cmd
 /src/agent/core/MSG00001.bin
 /src/agent/core/messages.c
