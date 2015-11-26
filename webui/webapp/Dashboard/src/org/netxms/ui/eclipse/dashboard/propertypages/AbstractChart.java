@@ -38,6 +38,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TubeChartConfig;
 import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
@@ -49,7 +50,7 @@ public class AbstractChart extends PropertyPage
 	private LabeledText title;
 	private Spinner timeRange;
 	private Combo timeUnits;
-	private Spinner refreshRate;
+	private LabeledSpinner refreshRate;
 	private Combo legendPosition;
 	private Button checkShowTitle;
 	private Button checkShowLegend;
@@ -60,7 +61,8 @@ public class AbstractChart extends PropertyPage
 	private Button checkTransposed;
    private Button checkLogScale;
    private Button checkStacked;
-   private YAxisRangeEditor yAxisRange;
+   private LabeledSpinner lineWidth;
+   private YAxisRangeEditor yAxisRange;   
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -74,7 +76,7 @@ public class AbstractChart extends PropertyPage
 		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
-		layout.makeColumnsEqualWidth = true;
+		layout.makeColumnsEqualWidth = false;
 		dialogArea.setLayout(layout);
 		
 		title = new LabeledText(dialogArea, SWT.NONE);
@@ -98,7 +100,7 @@ public class AbstractChart extends PropertyPage
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.verticalSpan = 2;
+		gd.verticalSpan = (config instanceof LineChartConfig) ? 3 : 2;
 		optionsGroup.setLayoutData(gd);
 		GridLayout optionsLayout = new GridLayout();
 		optionsGroup.setLayout(optionsLayout);
@@ -206,14 +208,44 @@ public class AbstractChart extends PropertyPage
 			timeUnits.select(((LineChartConfig)config).getTimeUnits());
 		}
 		
+		Composite rateAndWidthArea = new Composite(dialogArea, SWT.NONE);
+		layout = new GridLayout();
+		layout.numColumns = (config instanceof LineChartConfig) ? 2 : 1;
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+		layout.makeColumnsEqualWidth = true;
+		rateAndWidthArea.setLayout(layout);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      rateAndWidthArea.setLayoutData(gd);
+		
+		refreshRate = new LabeledSpinner(rateAndWidthArea, SWT.NONE);
+		refreshRate.setLabel(Messages.get().AbstractChart_RefreshInterval);
+		refreshRate.setRange(1, 10000);
+      refreshRate.setSelection(config.getRefreshRate());
 		gd = new GridData();
 		gd.verticalAlignment = SWT.TOP;
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		refreshRate = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().AbstractChart_RefreshInterval, 1, 10000, gd);
-		refreshRate.setSelection(config.getRefreshRate());
+		refreshRate.setLayoutData(gd);
 		
-		if(!(config instanceof PieChartConfig))
+		if (config instanceof LineChartConfig)
+		{
+         lineWidth = new LabeledSpinner(rateAndWidthArea, SWT.NONE);
+         lineWidth.setLabel("Line width");
+         lineWidth.setRange(1, 32);
+         lineWidth.setSelection(((LineChartConfig)config).getLineWidth());
+         gd = new GridData();
+         gd.verticalAlignment = SWT.TOP;
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         lineWidth.setLayoutData(gd);
+		}
+		
+		if (!(config instanceof PieChartConfig))
       {
 	      yAxisRange = new YAxisRangeEditor(dialogArea, SWT.NONE);
 	      gd = new GridData();
@@ -285,6 +317,7 @@ public class AbstractChart extends PropertyPage
          ((LineChartConfig)config).setExtendedLegend(checkExtendedLegend.getSelection());
          ((LineChartConfig)config).setLogScaleEnabled(checkLogScale.getSelection());
          ((LineChartConfig)config).setStacked(checkStacked.getSelection());
+         ((LineChartConfig)config).setLineWidth(lineWidth.getSelection());
 		}
 		return true;
 	}

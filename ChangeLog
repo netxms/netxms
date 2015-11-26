@@ -14,6 +14,7 @@
 - Improved System.InstalledProducts table handling on Windows
 - Management console:
 	- Object tool input fields can be rearranged
+	- Line width can be configured for line charts on dashboards
 - Fixed issues: #205, #847, #948, #967, #979, #980, #991, #997, #1002, #1003, #1019, #1024
 
 

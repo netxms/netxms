@@ -90,6 +90,7 @@ public class LineChartElement extends ElementWidget
 		chart.setGridVisible(config.isShowGrid());
 		chart.setLogScaleEnabled(config.isLogScaleEnabled());
 		chart.setStacked(config.isStacked());
+		chart.setLineWidth(config.getLineWidth());
 		if (!config.isAutoScale())
 		   chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());
 		

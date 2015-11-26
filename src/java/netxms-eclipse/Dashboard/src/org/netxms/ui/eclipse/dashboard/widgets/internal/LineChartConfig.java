@@ -45,6 +45,9 @@ public class LineChartConfig extends AbstractChartConfig
 
    @Element(required = false)
    private boolean stacked = false;
+   
+   @Element(required = false)
+   private int lineWidth = 2;
 
 	/**
 	 * Create line chart settings object from XML document
@@ -172,5 +175,21 @@ public class LineChartConfig extends AbstractChartConfig
    public void setStacked(boolean stacked)
    {
       this.stacked = stacked;
+   }
+
+   /**
+    * @return the lineWidth
+    */
+   public int getLineWidth()
+   {
+      return lineWidth;
+   }
+
+   /**
+    * @param lineWidth the lineWidth to set
+    */
+   public void setLineWidth(int lineWidth)
+   {
+      this.lineWidth = lineWidth;
    }
 }

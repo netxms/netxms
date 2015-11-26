@@ -87,6 +87,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 	private boolean stacked;
 	//private boolean selectionActive = false;
 	private boolean adjustYAxis = true;
+	private int lineWidth = 2;
 	private int zoomLevel = 0;
 	private int legendPosition = GraphSettings.POSITION_BOTTOM;
 	//private MouseMoveListener moveListener;
@@ -398,7 +399,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 
 		series.setName(description);
 		series.setSymbolType(PlotSymbolType.NONE);
-		series.setLineWidth(2);
+		series.setLineWidth(lineWidth);
 		series.setLineColor(getColorFromPreferences("Chart.Colors.Data." + index)); //$NON-NLS-1$
 		
 		series.setXDateSeries(xSeries);
@@ -1039,6 +1040,31 @@ public class LineChart extends Chart implements HistoricalDataChart
       adjustYAxis = false;
    }
    
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#setLineWidth(int)
+    */
+   @Override
+   public void setLineWidth(int width)
+   {
+      lineWidth = width;
+
+      // update existing series
+      for(ISeries s : getSeriesSet().getSeries())
+      {
+         if (s instanceof ILineSeries)
+            ((ILineSeries)s).setLineWidth(lineWidth);
+      }
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.HistoricalDataChart#getLineWidth()
+    */
+   @Override
+   public int getLineWidth()
+   {
+      return lineWidth;
+   }
+
    /**
     * Get data point closest to given point in plot area
     * 
