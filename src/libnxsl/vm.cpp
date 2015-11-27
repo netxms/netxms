@@ -1232,12 +1232,81 @@ void NXSL_VM::execute()
          }
          break;
       case OPCODE_STORAGE_READ:   // Read from storage; stack should contain item name on top
-         pValue = (NXSL_Value *)m_dataStack->pop();
+         pValue = (cp->m_nStackItems > 0) ? (NXSL_Value *)m_dataStack->peek() : (NXSL_Value *)m_dataStack->pop();
          if (pValue != NULL)
          {
             if (pValue->isString())
             {
                m_dataStack->push(m_storage->read(pValue->getValueAsCString()));
+            }
+            else
+            {
+               error(NXSL_ERR_NOT_STRING);
+            }
+            if (cp->m_nStackItems == 0)
+               delete pValue;
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
+      case OPCODE_STORAGE_INC:  // Post increment/decrement for storage item
+      case OPCODE_STORAGE_DEC:
+         pValue = (NXSL_Value *)m_dataStack->pop();
+         if (pValue != NULL)
+         {
+            if (pValue->isString())
+            {
+               NXSL_Value *sval = m_storage->read(pValue->getValueAsCString());
+               if (sval->isNumeric())
+               {
+                  m_dataStack->push(new NXSL_Value(sval));
+                  if (cp->m_nOpCode == OPCODE_STORAGE_INC)
+                     sval->increment();
+                  else
+                     sval->decrement();
+                  m_storage->write(pValue->getValueAsCString(), sval);
+               }
+               else
+               {
+                  error(NXSL_ERR_NOT_NUMBER);
+                  delete sval;
+               }
+            }
+            else
+            {
+               error(NXSL_ERR_NOT_STRING);
+            }
+            delete pValue;
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
+      case OPCODE_STORAGE_INCP: // Pre increment/decrement for storage item
+      case OPCODE_STORAGE_DECP:
+         pValue = (NXSL_Value *)m_dataStack->pop();
+         if (pValue != NULL)
+         {
+            if (pValue->isString())
+            {
+               NXSL_Value *sval = m_storage->read(pValue->getValueAsCString());
+               if (sval->isNumeric())
+               {
+                  if (cp->m_nOpCode == OPCODE_STORAGE_INCP)
+                     sval->increment();
+                  else
+                     sval->decrement();
+                  m_dataStack->push(new NXSL_Value(sval));
+                  m_storage->write(pValue->getValueAsCString(), sval);
+               }
+               else
+               {
+                  error(NXSL_ERR_NOT_NUMBER);
+                  delete sval;
+               }
             }
             else
             {
