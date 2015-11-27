@@ -1232,6 +1232,9 @@ UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool ov
  */
 void Template::onDataCollectionChange()
 {
+   // Do not queue updates for subclasses
+   if (getObjectClass() == OBJECT_TEMPLATE)
+      queueUpdate();
 }
 
 /**

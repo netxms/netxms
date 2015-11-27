@@ -764,3 +764,11 @@ void Cluster::unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI)
    DataCollectionTarget::unbindFromTemplate(dwTemplateId, removeDCI);
    queueUpdate();
 }
+
+/**
+ * Called when data collection configuration changed
+ */
+void Cluster::onDataCollectionChange()
+{
+   queueUpdate();
+}

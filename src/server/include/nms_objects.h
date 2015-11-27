@@ -1096,6 +1096,8 @@ protected:
    virtual void fillMessageInternal(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
 
+   virtual void onDataCollectionChange();
+
 public:
 	Cluster();
    Cluster(const TCHAR *pszName, UINT32 zoneId);

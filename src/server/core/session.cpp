@@ -3452,10 +3452,6 @@ void ClientSession::closeNodeDCIList(NXCPMessage *request)
                      break;
                   }
             }
-
-            // Queue template update
-            if ((object->getObjectClass() == OBJECT_TEMPLATE) || (object->getObjectClass() == OBJECT_CLUSTER))
-               ((Template *)object)->queueUpdate();
          }
          else
          {
