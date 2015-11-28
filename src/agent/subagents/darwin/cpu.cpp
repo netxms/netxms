@@ -63,8 +63,6 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 
 void StartCpuUsageCollector(void)
 {
-	int i, j;
-
 	m_cpuUsageMutex = MutexCreate();
 
 #define SIZE sizeof(float) * CPU_USAGE_SLOTS * MAX_CPU
@@ -94,7 +92,7 @@ void StartCpuUsageCollector(void)
 
 	// fill all slots with current cpu usage
 #define FILL(x) memcpy(x + i, x, sizeof(float));
-	for (i = 0; i < (CPU_USAGE_SLOTS * MAX_CPU) - 1; i++)
+	for (int i = 0; i < (CPU_USAGE_SLOTS * MAX_CPU) - 1; i++)
 	{
 			FILL(m_cpuUsage);
 			FILL(m_cpuUsageUser);
