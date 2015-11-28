@@ -71,5 +71,6 @@ clean-local:
 EXTRA_DIST = \
 	$(sql_DATA) \
 	$(SOURCE) \
+	$(ADDITIONAL_COMMENTS_FILE) \
 	change-ansi-event_log.sql \
 	strip.pl
