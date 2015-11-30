@@ -40,9 +40,9 @@ void ScheduledFileUpload(const ScheduledTaskParameters *params)
    AgentGetParameterArg(params->m_params, 1, serverFile, MAX_PATH, false);
    AgentGetParameterArg(params->m_params, 2, agentFile, MAX_PATH, false);
 
-   if(params->m_objectId == 0 || serverFile == NULL || agentFile == NULL)
+   if(params->m_objectId == 0 || serverFile[0] == 0 || agentFile[0] == 0)
    {
-      DbgPrintf(4, _T("UploadFile: One of parameters was nodeId=\'%d\', serverFile=\'%s\', agentFile=\'%s\'"),
+      DbgPrintf(4, _T("UploadFile: Input parameters are invalid. nodeId=%d, serverFile='%s', agentFile='%s'"),
             params->m_userId, serverFile, agentFile);
       return;
    }
