@@ -1666,6 +1666,8 @@ public:
  */
 class NXCORE_EXPORTABLE UniversalRoot : public NetObj
 {
+   using NetObj::loadFromDatabase;
+
 public:
    UniversalRoot();
    virtual ~UniversalRoot();
@@ -1851,6 +1853,8 @@ public:
  */
 class NXCORE_EXPORTABLE Network : public NetObj
 {
+   using NetObj::loadFromDatabase;
+
 public:
    Network();
    virtual ~Network();
@@ -2246,6 +2250,8 @@ public:
  */
 class NXCORE_EXPORTABLE BusinessServiceRoot : public ServiceContainer
 {
+   using ServiceContainer::loadFromDatabase;
+
 public:
 	BusinessServiceRoot();
 	virtual ~BusinessServiceRoot();
