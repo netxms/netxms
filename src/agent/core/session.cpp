@@ -443,9 +443,8 @@ void CommSession::writeThread()
 void CommSession::processingThread()
 {
    NXCPMessage *pMsg;
-   TCHAR szBuffer[128];
    NXCPMessage msg;
-   UINT32 dwCommand, dwRet;
+   UINT32 dwCommand;
 
    while(1)
    {
@@ -645,9 +644,6 @@ void CommSession::processingThread()
       sendMessage(&msg);
       msg.deleteAllFields();
    }
-
-stop_processing:
-   ;
 }
 
 /**

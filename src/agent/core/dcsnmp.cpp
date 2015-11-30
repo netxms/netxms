@@ -153,8 +153,6 @@ void UpdateSnmpTarget(SNMPTarget *target)
  */
 bool GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue)
 {
-   bool success = false;
-
    MutexLock(s_snmpTargetsLock);
    SNMPTarget *t = s_snmpTargets.get(target.getValue());
    if (t == NULL)

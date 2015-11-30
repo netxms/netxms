@@ -97,7 +97,6 @@ static bool InitModem(Serial *serial)
  */
 bool InitSender(const TCHAR *pszInitArgs)
 {
-	bool bRet = false;
 	TCHAR *portName;
 	
 	if (pszInitArgs == NULL || *pszInitArgs == 0)

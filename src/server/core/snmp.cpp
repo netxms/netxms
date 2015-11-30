@@ -228,7 +228,7 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
 {
    DbgPrintf(5, _T("SnmpCheckCommSettings(%s): starting check (proxy=%d, originalPort=%d)"), (const TCHAR *)ipAddr.toString(), snmpProxy, (int)originalPort);
 
-	int i, count, snmpVer = SNMP_VERSION_2C;
+	int i, count = 0, snmpVer = SNMP_VERSION_2C;
 	TCHAR buffer[1024];
    SNMP_Transport *pTransport;
    StringList *communities = NULL;

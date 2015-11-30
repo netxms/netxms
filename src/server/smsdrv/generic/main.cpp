@@ -99,7 +99,6 @@ static bool InitModem(Serial *serial)
  */
 extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 {
-	bool bRet = false;
 	TCHAR *portName;
 	
 	if (pszInitArgs == NULL || *pszInitArgs == 0)

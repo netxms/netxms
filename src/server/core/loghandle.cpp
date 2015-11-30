@@ -300,7 +300,6 @@ Table *LogHandle::createTable()
 	Table *table = new Table();
 
 	LOG_COLUMN *column = m_log->columns;
-	bool first = true;
 	int columnCount = 0;
 	while (column->name != NULL)
 	{

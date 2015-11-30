@@ -49,7 +49,7 @@
 #include "libnetxms.h"
 #include <assert.h>
 
-static char _ID[]="<qsort.c gjm 1.12 1998-03-19 altered 2007-05-11 vk>";
+/* static char _ID[]="<qsort.c gjm 1.12 1998-03-19 altered 2007-05-11 vk>"; */
 
 /* How many bytes are there per word? (Must be a power of 2,
  * and must in fact equal sizeof(int).)

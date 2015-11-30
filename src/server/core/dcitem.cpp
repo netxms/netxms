@@ -681,9 +681,6 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
  */
 bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool *updateStatus)
 {
-	static int updateRawValueTypes[] = { DB_SQLTYPE_VARCHAR, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER };
-	static int updateValueTypes[] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
-
    ItemValue rawValue, *pValue;
 
    lock();

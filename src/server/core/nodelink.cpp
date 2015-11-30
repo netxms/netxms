@@ -53,7 +53,6 @@ NodeLink::~NodeLink()
  */
 bool NodeLink::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 {
-	const int script_length = 1024;
 	m_id = id;
 
 	if (!ServiceContainer::loadFromDatabase(hdb, id))

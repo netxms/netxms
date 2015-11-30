@@ -37,12 +37,12 @@ MonitoredFileList::MonitoredFileList()
 {
    m_mutex = MutexCreate();
    m_monitoredFiles.setOwner(true);
-};
+}
 
 MonitoredFileList::~MonitoredFileList()
 {
    MutexDestroy(m_mutex);
-};
+}
 
 void MonitoredFileList::addMonitoringFile(const TCHAR *fileName)
 {
@@ -66,7 +66,7 @@ void MonitoredFileList::addMonitoringFile(const TCHAR *fileName)
       m_monitoredFiles.add(m_newFile);
    }
    Unlock();
-};
+}
 
 bool MonitoredFileList::checkFileMonitored(const TCHAR *fileName)
 {
@@ -82,7 +82,7 @@ bool MonitoredFileList::checkFileMonitored(const TCHAR *fileName)
    }
    Unlock();
    return result;
-};
+}
 
 bool MonitoredFileList::removeMonitoringFile(const TCHAR *fileName)
 {
@@ -108,17 +108,17 @@ bool MonitoredFileList::removeMonitoringFile(const TCHAR *fileName)
    }
    Unlock();
    return alreadyMonitored;
-};
+}
 
 void MonitoredFileList::Lock()
 {
    MutexLock(m_mutex);
-};
+}
 
 void MonitoredFileList::Unlock()
 {
    MutexUnlock(m_mutex);
-};
+}
 
 /**
  * Data for message sending callback
@@ -140,7 +140,7 @@ static EnumerationCallbackResult SendFileUpdateCallback(AbstractCommSession *ses
       return _STOP;
    }
    return _CONTINUE;
-};
+}
 
 /**
  * Thread sending file updates over NXCP
@@ -150,7 +150,6 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
    FollowData *flData = (reinterpret_cast<FollowData*>(args));
    int hFile, threadSleepTime = 1;
    BYTE* readBytes = NULL;
-   BOOL bResult = FALSE;
    NXCPMessage *pMsg;
    UINT32 readSize;
 
@@ -225,4 +224,4 @@ THREAD_RESULT THREAD_CALL SendFileUpdatesOverNXCP(void *args)
    delete flData;
    close(hFile);
    return THREAD_OK;
-};
+}

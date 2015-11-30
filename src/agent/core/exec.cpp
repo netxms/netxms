@@ -368,7 +368,7 @@ static THREAD_RESULT THREAD_CALL POpenWorker(void *arg)
  */
 LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 {
-	TCHAR *pszCmdLine, szBuffer[1024], szTempFile[MAX_PATH];
+	TCHAR *pszCmdLine, szBuffer[1024];
 	const TCHAR *sptr;
 	int i, iSize, iStatus;
 

@@ -109,7 +109,7 @@ static BOOL ExecCommand(char *pszCmd)
  */
 static void Shell()
 {
-   char *ptr, szCommand[256];
+   char *ptr;
 
    printf("\nNetXMS Server Remote Console V" NETXMS_VERSION_STRING_A " Ready\n"
           "Enter \"help\" for command list\n\n");
@@ -130,6 +130,7 @@ static void Shell()
       fputs("\x1b[33mnetxmsd:\x1b[0m ", stdout);
 #endif
       fflush(stdout);
+      char szCommand[256];
       if (fgets(szCommand, 255, stdin) == NULL)
          break;   // Error reading stdin
       ptr = strchr(szCommand, '\n');

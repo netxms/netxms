@@ -326,7 +326,6 @@ static InterfaceList *SysGetLocalIfList()
    free(pBuffer);
 
 #else
-   UINT32 i, dwBits;
    TCHAR *pChar;
 
    if (imp_NxSubAgentGetIfList != NULL)
@@ -335,7 +334,7 @@ static InterfaceList *SysGetLocalIfList()
       if (imp_NxSubAgentGetIfList(&list))
       {
          pIfList = new InterfaceList(list.size());
-         for(i = 0; i < list.size(); i++)
+         for(UINT32 i = 0; i < list.size(); i++)
          {
             TCHAR *pTemp = _tcsdup(list.get(i));
             TCHAR *pBuf = pTemp;

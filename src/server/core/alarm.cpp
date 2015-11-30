@@ -27,8 +27,6 @@
  */
 static ObjectArray<NXC_ALARM> *m_alarmList;
 static MUTEX m_mutex = INVALID_MUTEX_HANDLE;
-static UINT32 m_dwNotifyCode;
-static NXC_ALARM *m_pNotifyAlarmInfo;
 static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_hWatchdogThread = INVALID_THREAD_HANDLE;
 
@@ -1193,7 +1191,6 @@ static UINT32 DoUpdateAlarmComment(NXC_ALARM *alarm, UINT32 noteId, const TCHAR 
 UINT32 AddAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
-   bool newNote = false;
 
    MutexLock(m_mutex);
    for(int i = 0; i < m_alarmList->size(); i++)
@@ -1216,7 +1213,6 @@ UINT32 AddAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId)
 UINT32 UpdateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT32 userId)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
-   bool newNote = false;
 
    MutexLock(m_mutex);
    for(int i = 0; i < m_alarmList->size(); i++)

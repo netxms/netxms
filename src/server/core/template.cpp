@@ -997,7 +997,6 @@ void Template::queueRemoveFromTarget(UINT32 targetId, bool removeDCI)
 UINT32 *Template::getDCIEventsList(UINT32 *pdwCount)
 {
    UINT32 i, j, *pdwList;
-   DCItem *pItem = NULL;
 
    pdwList = NULL;
    *pdwCount = 0;

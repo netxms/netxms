@@ -265,7 +265,6 @@ void ISC::receiverThread()
 UINT32 ISC::connect(UINT32 service, RSA *pServerKey, BOOL requireEncryption)
 {
    TCHAR szBuffer[256];
-   BOOL bForceEncryption = FALSE, bSecondPass = FALSE;
    UINT32 rcc = ISC_ERR_INTERNAL_ERROR;
 
    // Check if already connected
