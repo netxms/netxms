@@ -593,7 +593,7 @@ void ConfigEntry::print(FILE *file, int level, TCHAR *prefix)
    // Do not print empty values for non-leaf nodes
    if ((m_first == NULL) || ((m_valueCount > 0) && (m_values[0][0] != 0)))
    {
-      for(int i = 0, len = 0; i < m_valueCount; i++)
+      for(int i = 0; i < m_valueCount; i++)
       {
          if (isatty(fileno(file)))
             WriteToTerminalEx(_T("%s  value: \x1b[1m%s\x1b[0m\n"), prefix, m_values[i]);
@@ -649,7 +649,7 @@ void ConfigEntry::createXml(String &xml, int level)
       xml.appendPreallocated(EscapeStringForXML(m_values[0], -1));
    xml.appendFormattedString(_T("</%s>\n"), name);
 
-   for(int i = 1, len = 0; i < m_valueCount; i++)
+   for(int i = 1; i < m_valueCount; i++)
    {
       if (m_id == 0)
          xml.appendFormattedString(_T("%*s<%s>"), level * 4, _T(""), name);

@@ -127,4 +127,18 @@ public interface HistoricalDataChart extends DataChart
 	 * @return
 	 */
 	public boolean isExtendedLegend();
+	
+	/**
+	 * Set line width for chart
+	 * 
+	 * @param width
+	 */
+	public void setLineWidth(int width);
+	
+	/**
+	 * Get line width
+	 * 
+	 * @return
+	 */
+	public int getLineWidth();
 }

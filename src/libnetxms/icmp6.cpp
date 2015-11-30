@@ -297,7 +297,6 @@ UINT32 IcmpPing6(const InetAddress &addr, int iNumRetries, UINT32 dwTimeout, UIN
    UINT32 result = ICMP_UNREACHEABLE;
    while(iNumRetries--)
    {
-      UINT32 rtt = 0;
       p->sequence++;
       p->checksum = CalculateChecksum((UINT16 *)p, size);
       if (sendto(sd, (char *)p + 40, bytes, 0, (struct sockaddr *)&dest, sizeof(struct sockaddr_in6)) == bytes)

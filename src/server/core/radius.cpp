@@ -619,7 +619,7 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 {
 	AUTH_HDR *auth;
 	VALUE_PAIR *req, *vp;
-	UINT32 server_ip, local_ip = 0;
+	UINT32 server_ip;
 	struct sockaddr saremote;
 	struct sockaddr_in *sin;
 	struct timeval		tv;

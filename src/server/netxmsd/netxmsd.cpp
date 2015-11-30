@@ -333,7 +333,6 @@ int main(int argc, char* argv[])
    HKEY hKey;
    DWORD dwSize;
 #else
-   int i;
    FILE *fp;
 #endif
 

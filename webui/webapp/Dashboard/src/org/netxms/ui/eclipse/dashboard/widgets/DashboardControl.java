@@ -622,4 +622,12 @@ public class DashboardControl extends Composite
    {
       return selectionProvider;
    }
+
+   /**
+    * @return the dashboard
+    */
+   public Dashboard getDashboardObject()
+   {
+      return dashboard;
+   }
 }

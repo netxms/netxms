@@ -16,7 +16,6 @@ LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 	char szUser[256];
 	char szPassword[256];
 	TCHAR szTimeout[64];
-	bool bIsOk = false;
 
 	AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
 	AgentGetParameterArgA(param, 2, szUser, sizeof(szUser));

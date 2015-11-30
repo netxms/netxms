@@ -24,7 +24,7 @@ enum
 {
 	INTERVAL_1MIN,
 	INTERVAL_5MIN,
-	INTERVAL_15MIN,
+	INTERVAL_15MIN
 };
 
 #define __darwin_h__

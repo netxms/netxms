@@ -997,7 +997,6 @@ void Template::queueRemoveFromTarget(UINT32 targetId, bool removeDCI)
 UINT32 *Template::getDCIEventsList(UINT32 *pdwCount)
 {
    UINT32 i, j, *pdwList;
-   DCItem *pItem = NULL;
 
    pdwList = NULL;
    *pdwCount = 0;
@@ -1232,6 +1231,9 @@ UINT32 Template::getLastValues(NXCPMessage *msg, bool objectTooltipOnly, bool ov
  */
 void Template::onDataCollectionChange()
 {
+   // Do not queue updates for subclasses
+   if (getObjectClass() == OBJECT_TEMPLATE)
+      queueUpdate();
 }
 
 /**

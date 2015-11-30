@@ -95,12 +95,7 @@ LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
-   char szArg[128] = {0};
-	FILE *hFile;
 	double dLoad[3];
-
-	// get processor
-	//AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
 
 	if (getloadavg(dLoad, 3) == 3)
 	{

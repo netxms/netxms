@@ -195,110 +195,216 @@ LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstract
 }
 
 /**
+ * Get memory zones low watermark
+ */
+static long GetMemoryZonesLowWatermark()
+{
+   FILE *hFile = fopen("/proc/zoneinfo", "r");
+   if (hFile == NULL)
+      return 0;
+
+   long total = 0;
+   bool zoneHeaderScanned = false;
+   bool lowFieldScaned = false;
+   char buffer[256];
+   while(fgets(buffer, sizeof(buffer), hFile) != NULL)
+   {
+      long v;
+      if (sscanf(buffer, "Node %ld, zone %*s\n", &v) == 1)
+      {
+         zoneHeaderScanned = true;
+         lowFieldScaned = false;
+         continue;
+      }
+
+      if (sscanf(buffer, " low %ld\n", &v) == 1)
+      {
+         if (zoneHeaderScanned && !lowFieldScaned)
+         {
+            total += v;
+            lowFieldScaned = true;
+         }
+         continue;
+      }
+   }
+   fclose(hFile);
+
+   return total * getpagesize() / 1024;   // convert pages to KB
+}
+
+/**
+ * Memory counters
+ */
+static long s_memTotal = 0;
+static long s_memFree = 0;
+static long s_memAvailable = 0;
+static long s_memBuffers = 0;
+static long s_memCached = 0;
+static long s_memFileActive = 0;
+static long s_memFileInactive = 0;
+static long s_memSlabReclaimable = 0;
+static long s_swapTotal = 0;
+static long s_swapFree = 0;
+static INT64 s_memStatTimestamp = 0;
+static MUTEX s_memStatLock = MutexCreate();
+
+/**
+ * Collect memory usage info
+ */
+static bool CollectMemoryUsageInfo()
+{
+   FILE *hFile = fopen("/proc/meminfo", "r");
+   if (hFile == NULL)
+      return false;
+
+   bool memAvailPresent = false;
+   char buffer[256];
+   while(fgets(buffer, sizeof(buffer), hFile) != NULL)
+   {
+      if (sscanf(buffer, "MemTotal: %lu kB\n", &s_memTotal) == 1)
+         continue;
+      if (sscanf(buffer, "MemFree: %lu kB\n", &s_memFree) == 1)
+         continue;
+      if (sscanf(buffer, "MemAvailable: %lu kB\n", &s_memAvailable) == 1)
+      {
+         memAvailPresent = true;
+         continue;
+      }
+      if (sscanf(buffer, "SwapTotal: %lu kB\n", &s_swapTotal) == 1)
+         continue;
+      if (sscanf(buffer, "SwapFree: %lu kB\n", &s_swapFree) == 1)
+         continue;
+      if (sscanf(buffer, "Buffers: %lu kB\n", &s_memBuffers) == 1)
+         continue;
+      if (sscanf(buffer, "Cached: %lu kB\n", &s_memCached) == 1)
+         continue;
+      if (sscanf(buffer, "Active(file): %lu kB\n", &s_memFileActive) == 1)
+         continue;
+      if (sscanf(buffer, "Inactive(file): %lu kB\n", &s_memFileInactive) == 1)
+         continue;
+      if (sscanf(buffer, "SReclaimable: %lu kB\n", &s_memSlabReclaimable) == 1)
+         continue;
+   }
+
+   fclose(hFile);
+
+   if (!memAvailPresent)
+   {
+      // Available memory calculation taken from the following kernel patch:
+      // https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=34e431b0ae398fc54ea69ff85ec700722c9da773
+      long lowWatermark = GetMemoryZonesLowWatermark();
+      s_memAvailable = s_memFree - lowWatermark;
+      long pageCache = s_memFileActive + s_memFileInactive;
+      s_memAvailable += pageCache - min(pageCache / 2, lowWatermark);
+      s_memAvailable += s_memSlabReclaimable - min(s_memSlabReclaimable / 2, lowWatermark);
+      if (s_memAvailable < 0)
+         s_memAvailable = 0;
+   }
+
+   s_memStatTimestamp = GetCurrentTimeMs();
+   return true;
+}
+
+/**
  * Handler for System.Memory.* parameters
  */
 LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
-	int nRet = SYSINFO_RC_ERROR;
-	FILE *hFile;
-	unsigned long nMemTotal, nMemFree, nSwapTotal, nSwapFree, nBuffers;
-	char *pTag;
+   MutexLock(s_memStatLock);
+   if (s_memStatTimestamp < GetCurrentTimeMs() - 1000)
+   {
+      if (!CollectMemoryUsageInfo())
+      {
+         MutexUnlock(s_memStatLock);
+         return SYSINFO_RC_ERROR;
+      }
+   }
 
-	nMemTotal = nMemFree = nSwapTotal = nSwapFree = nBuffers = 0;
+   LONG rc = SYSINFO_RC_SUCCESS;
+   switch((long)pArg)
+   {
+      case PHYSICAL_FREE: // ph-free
+         ret_uint64(pValue, ((QWORD)s_memFree) * 1024);
+         break;
+      case PHYSICAL_FREE_PCT: // ph-free percentage
+         ret_uint(pValue, (DWORD)((QWORD)s_memFree * 100 / (QWORD)s_memTotal));
+         break;
+      case PHYSICAL_TOTAL: // ph-total
+         ret_uint64(pValue, ((QWORD)s_memTotal) * 1024);
+         break;
+      case PHYSICAL_USED: // ph-used
+         ret_uint64(pValue, ((QWORD)(s_memTotal - s_memFree)) * 1024);
+         break;
+      case PHYSICAL_USED_PCT: // ph-used percentage
+         ret_uint(pValue, (DWORD)((QWORD)(s_memTotal - s_memFree) * 100 / (QWORD)s_memTotal));
+         break;
+      case PHYSICAL_AVAILABLE:
+         ret_uint64(pValue, ((QWORD)s_memAvailable) * 1024);
+         break;
+      case PHYSICAL_AVAILABLE_PCT:
+         ret_uint(pValue, (DWORD)((QWORD)s_memAvailable * 100 / (QWORD)s_memTotal));
+         break;
+      case PHYSICAL_CACHED:
+         ret_uint64(pValue, ((QWORD)s_memCached) * 1024);
+         break;
+      case PHYSICAL_CACHED_PCT:
+         ret_uint(pValue, (DWORD)((QWORD)s_memCached * 100 / (QWORD)s_memTotal));
+         break;
+      case PHYSICAL_BUFFERS:
+         ret_uint64(pValue, ((QWORD)s_memBuffers) * 1024);
+         break;
+      case PHYSICAL_BUFFERS_PCT:
+         ret_uint(pValue, (DWORD)((QWORD)s_memBuffers * 100 / (QWORD)s_memTotal));
+         break;
+      case SWAP_FREE: // sw-free
+         ret_uint64(pValue, ((QWORD)s_swapFree) * 1024);
+         break;
+      case SWAP_FREE_PCT: // sw-free percentage
+         if (s_swapTotal > 0)
+            ret_uint(pValue, (DWORD)((QWORD)s_swapFree * 100 / (QWORD)s_swapTotal));
+         else
+            ret_uint(pValue, 100);
+         break;
+      case SWAP_TOTAL: // sw-total
+         ret_uint64(pValue, ((QWORD)s_swapTotal) * 1024);
+         break;
+      case SWAP_USED: // sw-used
+         ret_uint64(pValue, ((QWORD)(s_swapTotal - s_swapFree)) * 1024);
+         break;
+      case SWAP_USED_PCT: // sw-used percentage
+         if (s_swapTotal > 0)
+            ret_uint(pValue, (DWORD)((QWORD)(s_swapTotal - s_swapFree) * 100 / (QWORD)s_swapTotal));
+         else
+            ret_uint(pValue, 0);
+         break;
+      case VIRTUAL_FREE: // vi-free
+         ret_uint64(pValue, ((QWORD)s_memFree + (QWORD)s_swapFree) * 1024);
+         break;
+      case VIRTUAL_FREE_PCT: // vi-free percentage
+         ret_uint(pValue, (DWORD)(((QWORD)s_memFree + (QWORD)s_swapFree) * 100 / ((QWORD)s_memTotal + (QWORD)s_swapTotal)));
+         break;
+      case VIRTUAL_TOTAL: // vi-total
+         ret_uint64(pValue, ((QWORD)s_memTotal + (QWORD)s_swapTotal) * 1024);
+         break;
+      case VIRTUAL_USED: // vi-used
+         ret_uint64(pValue, ((QWORD)(s_memTotal - s_memFree) + (QWORD)(s_swapTotal - s_swapFree)) * 1024);
+         break;
+      case VIRTUAL_USED_PCT: // vi-used percentage
+         ret_uint(pValue, (DWORD)(((QWORD)(s_memTotal - s_memFree) + (QWORD)(s_swapTotal - s_swapFree)) * 100 / ((QWORD)s_memTotal + (QWORD)s_swapTotal)));
+         break;
+      case VIRTUAL_AVAILABLE:
+         ret_uint64(pValue, ((QWORD)s_memAvailable + (QWORD)s_swapFree) * 1024);
+         break;
+      case VIRTUAL_AVAILABLE_PCT:
+         ret_uint(pValue, (DWORD)(((QWORD)s_memAvailable + (QWORD)s_swapFree) * 100 / ((QWORD)s_memTotal + (QWORD)s_swapTotal)));
+         break;
+      default: // error
+         rc = SYSINFO_RC_UNSUPPORTED;
+         break;
+   }
 
-	hFile = fopen("/proc/meminfo", "r");
-	if (hFile != NULL)
-	{
-		char szTmp[128];
-		while (fgets(szTmp, sizeof(szTmp), hFile) != NULL)
-		{
-			if (sscanf(szTmp, "MemTotal: %lu kB\n", &nMemTotal) == 1)
-				continue;
-			if (sscanf(szTmp, "MemFree: %lu kB\n", &nMemFree) == 1)
-				continue;
-			if (sscanf(szTmp, "SwapTotal: %lu kB\n", &nSwapTotal) == 1)
-				continue;
-			if (sscanf(szTmp, "SwapFree: %lu kB\n", &nSwapFree) == 1)
-				continue;
-			if (sscanf(szTmp, "Buffers: %lu kB\n", &nBuffers) == 1)
-				continue;
-		}
-
-		fclose(hFile);
-
-		nRet = SYSINFO_RC_SUCCESS;
-		switch((long)pArg)
-		{
-			case PHYSICAL_FREE: // ph-free
-				ret_uint64(pValue, ((QWORD)nMemFree) * 1024);
-				break;
-			case PHYSICAL_FREE_PCT: // ph-free percentage
-				ret_uint(pValue, (DWORD)((QWORD)nMemFree * 100 / (QWORD)nMemTotal));
-				break;
-			case PHYSICAL_TOTAL: // ph-total
-				ret_uint64(pValue, ((QWORD)nMemTotal) * 1024);
-				break;
-			case PHYSICAL_USED: // ph-used
-				ret_uint64(pValue, ((QWORD)(nMemTotal - nMemFree)) * 1024);
-				break;
-			case PHYSICAL_USED_PCT: // ph-used percentage
-				ret_uint(pValue, (DWORD)((QWORD)(nMemTotal - nMemFree) * 100 / (QWORD)nMemTotal));
-				break;
-			case PHYSICAL_AVAILABLE:
-				ret_uint64(pValue, ((QWORD)nMemFree + (QWORD)nBuffers) * 1024);
-				break;
-			case PHYSICAL_AVAILABLE_PCT:
-				ret_uint(pValue, (DWORD)(((QWORD)nMemFree + (QWORD)nBuffers) * 100 / (QWORD)nMemTotal));
-				break;
-			case SWAP_FREE: // sw-free
-				ret_uint64(pValue, ((QWORD)nSwapFree) * 1024);
-				break;
-			case SWAP_FREE_PCT: // sw-free percentage
-				if (nSwapTotal > 0)
-					ret_uint(pValue, (DWORD)((QWORD)nSwapFree * 100 / (QWORD)nSwapTotal));
-				else
-					ret_uint(pValue, 100);
-				break;
-			case SWAP_TOTAL: // sw-total
-				ret_uint64(pValue, ((QWORD)nSwapTotal) * 1024);
-				break;
-			case SWAP_USED: // sw-used
-				ret_uint64(pValue, ((QWORD)(nSwapTotal - nSwapFree)) * 1024);
-				break;
-			case SWAP_USED_PCT: // sw-used percentage
-				if (nSwapTotal > 0)
-					ret_uint(pValue, (DWORD)((QWORD)(nSwapTotal - nSwapFree) * 100 / (QWORD)nSwapTotal));
-				else
-					ret_uint(pValue, 0);
-				break;
-			case VIRTUAL_FREE: // vi-free
-				ret_uint64(pValue, ((QWORD)nMemFree + (QWORD)nSwapFree) * 1024);
-				break;
-			case VIRTUAL_FREE_PCT: // vi-free percentage
-				ret_uint(pValue, (DWORD)(((QWORD)nMemFree + (QWORD)nSwapFree) * 100 / ((QWORD)nMemTotal + (QWORD)nSwapTotal)));
-				break;
-			case VIRTUAL_TOTAL: // vi-total
-				ret_uint64(pValue, ((QWORD)nMemTotal + (QWORD)nSwapTotal) * 1024);
-				break;
-			case VIRTUAL_USED: // vi-used
-				ret_uint64(pValue, ((QWORD)(nMemTotal - nMemFree) + (QWORD)(nSwapTotal - nSwapFree)) * 1024);
-				break;
-			case VIRTUAL_USED_PCT: // vi-used percentage
-				ret_uint(pValue, (DWORD)(((QWORD)(nMemTotal - nMemFree) + (QWORD)(nSwapTotal - nSwapFree)) * 100 / ((QWORD)nMemTotal + (QWORD)nSwapTotal)));
-				break;
-			case VIRTUAL_AVAILABLE:
-				ret_uint64(pValue, ((QWORD)nMemFree + (QWORD)nSwapFree + (QWORD)nBuffers) * 1024);
-				break;
-			case VIRTUAL_AVAILABLE_PCT:
-				ret_uint(pValue, (DWORD)(((QWORD)nMemFree + (QWORD)nSwapFree + (QWORD)nBuffers) * 100 / ((QWORD)nMemTotal + (QWORD)nSwapTotal)));
-				break;
-			default: // error
-				nRet = SYSINFO_RC_ERROR;
-				break;
-		}
-	}
-
-	return nRet;
+   MutexUnlock(s_memStatLock);
+	return rc;
 }
 
 /**

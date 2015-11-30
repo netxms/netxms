@@ -245,7 +245,6 @@ void ImportScript(ConfigEntry *config)
  */
 void ExecuteScheduledScript(const ScheduledTaskParameters *param)
 {
-   size_t bufSize = 512;
    TCHAR name[256];
    nx_strncpy(name, param->m_params, 256);
    Trim(name);

@@ -546,7 +546,7 @@ bool ValidateDatabase()
  */
 int main(int argc, char *argv[])
 {
-   BOOL bStart = TRUE, bForce = FALSE, bQuiet = FALSE;
+   BOOL bStart = TRUE, bQuiet = FALSE;
    bool replaceValue = true;
    int ch;
 

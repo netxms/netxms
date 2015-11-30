@@ -253,16 +253,6 @@ static BOOL AddDeviceFromConfig(const TCHAR *pszStr)
 }
 
 /**
- * Configuration file template
- */
-static TCHAR *m_pszDeviceList = NULL;
-static NX_CFG_TEMPLATE cfgTemplate[] =
-{
-	{ _T("Device"), CT_STRING_LIST, _T('\n'), 0, 0, 0, &m_pszDeviceList },
-	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
-};
-
-/**
  * Subagent initialization
  */
 static BOOL SubAgentInit(Config *config)

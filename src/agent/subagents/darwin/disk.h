@@ -29,7 +29,7 @@ enum
 	DISK_FREE_PERC,
 	DISK_USED,
 	DISK_USED_PERC,
-	DISK_TOTAL,
+	DISK_TOTAL
 };
 
 LONG H_DiskInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

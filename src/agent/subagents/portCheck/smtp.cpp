@@ -13,7 +13,6 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 	char szHost[256];
 	char szTo[256];
 	TCHAR szTimeout[64];
-	bool bIsOk = false;
 
 	AgentGetParameterArgA(param, 1, szHost, sizeof(szHost));
 	AgentGetParameterArgA(param, 2, szTo, sizeof(szTo));

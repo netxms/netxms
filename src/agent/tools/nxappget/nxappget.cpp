@@ -30,7 +30,6 @@
 //
 
 static int optVerbose = 1;
-static int optBatchSize = 0;
 
 #if HAVE_DECL_GETOPT_LONG
 static struct option longOptions[] =
@@ -80,7 +79,6 @@ int main(int argc, char *argv[])
 
 	InitThreadLibrary();
 
-	BOOL bStart = TRUE;
 	opterr = 0;
 #if HAVE_DECL_GETOPT_LONG
 	while ((c = getopt_long(argc, argv, SHORT_OPTIONS, longOptions, NULL)) != -1)

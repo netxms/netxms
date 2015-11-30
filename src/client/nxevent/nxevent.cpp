@@ -49,7 +49,7 @@ static void DebugCallback(const TCHAR *pMsg)
  */
 static DWORD SendEvent(int iNumArgs, char **pArgList, BOOL bEncrypt)
 {
-   DWORD dwResult;
+   DWORD dwResult = RCC_SYSTEM_FAILURE;
 
    if (!NXCInitialize())
    {

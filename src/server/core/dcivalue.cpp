@@ -91,7 +91,7 @@ const ItemValue& ItemValue::operator=(const ItemValue &src)
 
 const ItemValue& ItemValue::operator=(const TCHAR *pszStr)
 {
-   nx_strncpy(m_szString, pszStr, MAX_DB_STRING);
+   nx_strncpy(m_szString, CHECK_NULL_EX(pszStr), MAX_DB_STRING);
    m_iInt32 = _tcstol(m_szString, NULL, 0);
    m_iInt64 = _tcstoll(m_szString, NULL, 0);
    m_dwInt32 = _tcstoul(m_szString, NULL, 0);

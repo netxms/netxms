@@ -137,7 +137,7 @@ UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
    }
    DBConnectionPoolReleaseConnection(hdb);
    return rcc;
-};
+}
 
 /**
  * Check if graph name already exist
@@ -145,7 +145,6 @@ UINT32 GetGraphAccessCheckResult(UINT32 graphId, UINT32 graphUserId)
 GRAPH_ACL_AND_ID IsGraphNameExists(const TCHAR *graphName)
 {
    TCHAR szQuery[256];
-   GRAPH_ACL_ENTRY *pACL = NULL;
    DB_RESULT hResult;
    GRAPH_ACL_AND_ID result;
    result.graphId = 0;
@@ -493,4 +492,5 @@ UINT32 DeleteGraph(UINT32 graphId, UINT32 userId)
 	}
 
    DBConnectionPoolReleaseConnection(hdb);
+   return result;
 }

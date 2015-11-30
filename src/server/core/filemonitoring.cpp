@@ -116,7 +116,6 @@ bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
 void FileMonitoringList::removeDisconectedNode(UINT32 nodeId)
 {
    lock();
-   bool deleted = false;
    for(int i = 0; i < m_monitoredFiles.size(); i++)
    {
       MONITORED_FILE* m_monitoredFile = m_monitoredFiles.get(i);

@@ -67,6 +67,11 @@ public:
    void setTimeStamp(UINT32 dwTime) { m_dwTimeStamp = dwTime; }
    UINT32 getTimeStamp() { return m_dwTimeStamp; }
 
+   INT32 getInt32() { return m_iInt32; }
+   UINT32 getUInt32() { return m_dwInt32; }
+   INT64 getInt64() { return m_iInt64; }
+   UINT64 getUInt64() { return m_qwInt64; }
+   double getDouble() { return m_dFloat; }
    const TCHAR *getString() { return m_szString; }
 
    operator double() { return m_dFloat; }

@@ -61,7 +61,6 @@ static THREAD_RESULT THREAD_CALL ProcessingThread(void *arg)
    NXCP_BUFFER *pRecvBuffer;
    NXCPMessage *pRequest, response;
    UINT32 serviceId;
-	void *serviceData = NULL;
 	TCHAR buffer[256], dbgPrefix[128];
 	WORD flags;
 	static NXCPEncryptionContext *pDummyCtx = NULL;

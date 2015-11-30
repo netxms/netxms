@@ -364,6 +364,7 @@ DCTableThreshold::DCTableThreshold(NXCPMessage *msg, UINT32 *baseId)
  */
 DCTableThreshold::DCTableThreshold(ConfigEntry *e)
 {
+   m_id = 0;
    m_activationEvent = EventCodeFromName(e->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_TABLE_THRESHOLD_ACTIVATED")));
    m_deactivationEvent = EventCodeFromName(e->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_TABLE_THRESHOLD_DEACTIVATED")));
 

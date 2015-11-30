@@ -162,7 +162,7 @@ BOOL ExecCommand(TCHAR *pszCommand)
 	{
 		int nPid;
 		char *pCmd[128];
-		int i, nCount = 0;
+		int nCount = 0;
 		char *pTmp;
 		struct stat st;
 		int state = 0;
