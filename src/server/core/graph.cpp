@@ -493,4 +493,5 @@ UINT32 DeleteGraph(UINT32 graphId, UINT32 userId)
 	}
 
    DBConnectionPoolReleaseConnection(hdb);
+   return result;
 }
