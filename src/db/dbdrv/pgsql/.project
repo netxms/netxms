@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>ups</name>
+	<name>pgsql.ddr</name>
 	<comment></comment>
 	<projects>
 		<project>libnetxms</project>
-		<project>libnxagent</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -28,7 +27,7 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1448909435979</id>
+			<id>1448956563948</id>
 			<name></name>
 			<type>6</type>
 			<matcher>
@@ -37,7 +36,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1448909435986</id>
+			<id>1448956563951</id>
 			<name></name>
 			<type>6</type>
 			<matcher>
@@ -46,7 +45,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1448909435990</id>
+			<id>1448956563954</id>
 			<name></name>
 			<type>6</type>
 			<matcher>

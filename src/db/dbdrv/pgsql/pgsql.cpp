@@ -731,13 +731,11 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(PG_CONN *pConn, PG_STATEMENT *h
  */
 extern "C" LONG EXPORT DrvGetFieldLength(DBDRV_RESULT pResult, int nRow, int nColumn)
 {
-   char *pszValue;
-
 	if (pResult == NULL)
       return -1;
 
-   pszValue = PQgetvalue((PGresult *)pResult, nRow, nColumn);
-   return (pszValue != NULL) ? (LONG)strlen(pszValue) : (LONG)-1;
+   const char *value = PQgetvalue((PGresult *)pResult, nRow, nColumn);
+   return (value != NULL) ? (LONG)strlen(value) : (LONG)-1;
 }
 
 /**
@@ -748,7 +746,11 @@ extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT pResult, int nRow, int nColumn
 	if (pResult == NULL)
       return NULL;
 
-   MultiByteToWideChar(CP_UTF8, 0, PQgetvalue((PGresult *)pResult, nRow, nColumn), -1, pBuffer, nBufLen);
+	const char *value = PQgetvalue((PGresult *)pResult, nRow, nColumn);
+	if (value == NULL)
+	   return NULL;
+
+   MultiByteToWideChar(CP_UTF8, 0, value, -1, pBuffer, nBufLen);
    pBuffer[nBufLen - 1] = 0;
 	return pBuffer;
 }
@@ -761,7 +763,11 @@ extern "C" char EXPORT *DrvGetFieldUTF8(DBDRV_RESULT pResult, int nRow, int nCol
 	if (pResult == NULL)
       return NULL;
 
-   strncpy(pBuffer, PQgetvalue((PGresult *)pResult, nRow, nColumn), nBufLen);
+	const char *value = PQgetvalue((PGresult *)pResult, nRow, nColumn);
+	if (value == NULL)
+	   return NULL;
+
+   strncpy(pBuffer, value, nBufLen);
    pBuffer[nBufLen - 1] = 0;
 	return pBuffer;
 }
@@ -774,21 +780,17 @@ extern "C" int EXPORT DrvGetNumRows(DBDRV_RESULT pResult)
 	return (pResult != NULL) ? PQntuples((PGresult *)pResult) : 0;
 }
 
-
-//
-// Get column count in query result
-//
-
+/**
+ * Get column count in query result
+ */
 extern "C" int EXPORT DrvGetColumnCount(DBDRV_RESULT hResult)
 {
 	return (hResult != NULL) ? PQnfields((PGresult *)hResult) : 0;
 }
 
-
-//
-// Get column name in query result
-//
-
+/**
+ * Get column name in query result
+ */
 extern "C" const char EXPORT *DrvGetColumnName(DBDRV_RESULT hResult, int column)
 {
 	return (hResult != NULL) ? PQfname((PGresult *)hResult, column) : NULL;
