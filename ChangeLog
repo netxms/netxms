@@ -12,6 +12,7 @@
 - Additional internal server metrics for monitoring DB activity and performance
 - Added interface creation hook
 - Improved System.InstalledProducts table handling on Windows
+- Fixed inefficient query in Oracle monitoring subagent
 - Management console:
 	- Object tool input fields can be rearranged
 	- Line width can be configured for line charts on dashboards
