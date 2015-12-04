@@ -319,6 +319,23 @@ static void TestInetAddress()
    AssertTrue(a.sameSubnet(b));
    AssertFalse(a.sameSubnet(c));
    EndTest();
+   
+   StartTest(_T("InetAddress - buildHashKey() - IPv4"));
+   a = InetAddress::parse("10.3.1.91");
+   BYTE key[18];
+   a.buildHashKey(key);
+#if WORDS_BIGENDIAN
+   AssertTrue(memcmp(key, "\x06\x02\x0A\x03\x01\x5B\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 18) == 0);
+#else
+   AssertTrue(memcmp(key, "\x06\x02\x5B\x01\x03\x0A\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 18) == 0);
+#endif
+   EndTest();
+   
+   StartTest(_T("InetAddress - buildHashKey() - IPv6"));
+   a = InetAddress::parse("fe80:1234::6e88:14ff:fec4:b8f8");
+   a.buildHashKey(key);
+   AssertTrue(memcmp(key, "\x12\x0A\xFE\x80\x12\x34\x00\x00\x00\x00\x6E\x88\x14\xFF\xFE\xC4\xB8\xF8", 18) == 0);
+   EndTest();
 }
 
 /**
