@@ -1113,7 +1113,7 @@ void DCItem::reloadCache()
    }
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_ASYNC_RESULT hResult = DBAsyncSelect(hdb, szBuffer);
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, szBuffer);
 
    lock();
 
@@ -1135,8 +1135,8 @@ void DCItem::reloadCache()
          moreData = DBFetch(hResult);
          if (moreData)
          {
-            DBGetFieldAsync(hResult, 0, szBuffer, MAX_DB_STRING);
-            m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldAsyncULong(hResult, 1));
+            DBGetField(hResult, 0, szBuffer, MAX_DB_STRING);
+            m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldULong(hResult, 1));
          }
          else
          {
@@ -1148,7 +1148,7 @@ void DCItem::reloadCache()
       for(; i < m_requiredCacheSize; i++)
          m_ppValueCache[i] = new ItemValue(_T(""), 1);
 
-      DBFreeAsyncResult(hResult);
+      DBFreeResult(hResult);
    }
    else
    {

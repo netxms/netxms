@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -72,7 +72,6 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 	String query;
 	TCHAR buffer[256];
 	char *errmsg;
-	DB_ASYNC_RESULT hResult;
 	int i, columnCount = 0;
 	BOOL success = TRUE;
 
@@ -82,7 +81,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 	{
 		_sntprintf(buffer, 256, _T("SELECT * FROM %s"), name);
 
-		hResult = SQLAsyncSelect(buffer);
+		DB_UNBUFFERED_RESULT hResult = SQLSelectUnbuffered(buffer);
 		if (hResult != NULL)
 		{
 			while(DBFetch(hResult))
@@ -90,11 +89,11 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 				query = _T("");
 
 				// Column names
-				columnCount = DBGetColumnCountAsync(hResult);
+				columnCount = DBGetColumnCount(hResult);
 				query.appendFormattedString(_T("INSERT INTO %s ("), name);
 				for(i = 0; i < columnCount; i++)
 				{
-					DBGetColumnNameAsync(hResult, i, buffer, 256);
+					DBGetColumnName(hResult, i, buffer, 256);
 					query += buffer;
 					query += _T(",");
 				}
@@ -105,7 +104,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 				TCHAR data[8192];
 				for(i = 0; i < columnCount; i++)
 				{
-					TCHAR *escapedString = EscapeString(DBGetFieldAsync(hResult, i, data, 8192));
+					TCHAR *escapedString = EscapeString(DBGetField(hResult, i, data, 8192));
 					query.appendPreallocated(escapedString);
 					query += _T(",");
 				}
@@ -123,7 +122,7 @@ static BOOL ExportTable(sqlite3 *db, const TCHAR *name)
 				}
 				free(utf8query);
 			}
-			DBFreeAsyncResult(hResult);
+			DBFreeResult(hResult);
 
 			if (success)
 			{

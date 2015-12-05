@@ -95,6 +95,6 @@ typedef struct
    bool noMoreRows;
    int iNumCols;
    unsigned long *pulColLengths;
-} MYSQL_ASYNC_RESULT;
+} MYSQL_UNBUFFERED_RESULT;
 
 #endif   /* _mysqldrv_h_ */

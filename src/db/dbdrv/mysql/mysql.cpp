@@ -363,11 +363,13 @@ extern "C" void EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, int
 		{
 			case DB_CTYPE_UINT32:
 				b->is_unsigned = true;
+				/* no break */
 			case DB_CTYPE_INT32:
 				b->buffer_type = MYSQL_TYPE_LONG;
 				break;
 			case DB_CTYPE_UINT64:
 				b->is_unsigned = true;
+            /* no break */
 			case DB_CTYPE_INT64:
 				b->buffer_type = MYSQL_TYPE_LONGLONG;
 				break;
@@ -800,11 +802,11 @@ extern "C" void EXPORT DrvFreeResult(MYSQL_RESULT *hResult)
 }
 
 /**
- * Perform asynchronous SELECT query
+ * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(MYSQL_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-	MYSQL_ASYNC_RESULT *pResult = NULL;
+	MYSQL_UNBUFFERED_RESULT *pResult = NULL;
 	char *pszQueryUTF8;
 	
 	if (pConn == NULL)
@@ -817,7 +819,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pw
 	MutexLock(pConn->mutexQueryLock);
 	if (mysql_query(pConn->pMySQL, pszQueryUTF8) == 0)
 	{
-		pResult = (MYSQL_ASYNC_RESULT *)malloc(sizeof(MYSQL_ASYNC_RESULT));
+		pResult = (MYSQL_UNBUFFERED_RESULT *)malloc(sizeof(MYSQL_UNBUFFERED_RESULT));
 		pResult->connection = pConn;
 		pResult->pHandle = mysql_use_result(pConn->pMySQL);
 		if (pResult->pHandle != NULL)
@@ -869,7 +871,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(MYSQL_CONN *pConn, WCHAR *pw
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" bool EXPORT DrvFetch(MYSQL_ASYNC_RESULT *hResult)
+extern "C" bool EXPORT DrvFetch(MYSQL_UNBUFFERED_RESULT *hResult)
 {
 	bool bResult = true;
 	
@@ -909,7 +911,7 @@ extern "C" bool EXPORT DrvFetch(MYSQL_ASYNC_RESULT *hResult)
 /**
  * Get field length from async query result result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthAsync(MYSQL_ASYNC_RESULT *hResult, int iColumn)
+extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn)
 {
 	// Check if we have valid result handle
 	if (hResult == NULL)
@@ -929,7 +931,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(MYSQL_ASYNC_RESULT *hResult, int i
 /**
  * Get field from current row in async query result
  */
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(DBDRV_ASYNC_RESULT hResult, int iColumn, WCHAR *pBuffer, int iBufSize)
+extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn, WCHAR *pBuffer, int iBufSize)
 {
 	int iLen;
 	
@@ -938,20 +940,18 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DBDRV_ASYNC_RESULT hResult, int iColum
 		return NULL;
 	
 	// Check if there are valid fetched row
-	if ((((MYSQL_ASYNC_RESULT *)hResult)->noMoreRows) ||
-		(((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow == NULL))
+	if ((hResult->noMoreRows) || (hResult->pCurrRow == NULL))
 		return NULL;
 	
 	// Check if column number is valid
-	if ((iColumn < 0) || (iColumn >= ((MYSQL_ASYNC_RESULT *)hResult)->iNumCols))
+	if ((iColumn < 0) || (iColumn >= hResult->iNumCols))
 		return NULL;
 	
 	// Now get column data
-	iLen = min((int)((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths[iColumn], iBufSize - 1);
+	iLen = min((int)hResult->pulColLengths[iColumn], iBufSize - 1);
 	if (iLen > 0)
 	{
-		MultiByteToWideChar(CP_UTF8, 0, ((MYSQL_ASYNC_RESULT *)hResult)->pCurrRow[iColumn],
-		                    iLen, pBuffer, iBufSize);
+		MultiByteToWideChar(CP_UTF8, 0, hResult->pCurrRow[iColumn], iLen, pBuffer, iBufSize);
 	}
 	pBuffer[iLen] = 0;
 	
@@ -961,45 +961,45 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DBDRV_ASYNC_RESULT hResult, int iColum
 /**
  * Get column count in async query result
  */
-extern "C" int EXPORT DrvGetColumnCountAsync(DBDRV_ASYNC_RESULT hResult)
+extern "C" int EXPORT DrvGetColumnCountUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult)
 {
-	return ((hResult != NULL) && (((MYSQL_ASYNC_RESULT *)hResult)->pHandle != NULL))? (int)mysql_num_fields(((MYSQL_ASYNC_RESULT *)hResult)->pHandle) : 0;
+	return ((hResult != NULL) && (hResult->pHandle != NULL))? (int)mysql_num_fields(hResult->pHandle) : 0;
 }
 
 /**
  * Get column name in async query result
  */
-extern "C" const char EXPORT *DrvGetColumnNameAsync(DBDRV_ASYNC_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int column)
 {
 	MYSQL_FIELD *field;
 
-	if ((hResult == NULL) || (((MYSQL_ASYNC_RESULT *)hResult)->pHandle == NULL))
+	if ((hResult == NULL) || (hResult->pHandle == NULL))
 		return NULL;
 
-	field = mysql_fetch_field_direct(((MYSQL_ASYNC_RESULT *)hResult)->pHandle, column);
+	field = mysql_fetch_field_direct(hResult->pHandle, column);
 	return (field != NULL) ? field->name : NULL;
 }
 
 /**
  * Destroy result of async query
  */
-extern "C" void EXPORT DrvFreeAsyncResult(DBDRV_ASYNC_RESULT hResult)
+extern "C" void EXPORT DrvFreeUnbufferedResult(MYSQL_UNBUFFERED_RESULT *hResult)
 {
 	if (hResult != NULL)
 	{
 		// Check if all result rows fetched
-		if (!((MYSQL_ASYNC_RESULT *)hResult)->noMoreRows)
+		if (!hResult->noMoreRows)
 		{
 			// Fetch remaining rows
-			while(mysql_fetch_row(((MYSQL_ASYNC_RESULT *)hResult)->pHandle) != NULL);
+			while(mysql_fetch_row(hResult->pHandle) != NULL);
 			
 			// Now we are ready for next query, so unlock query mutex
-			MutexUnlock(((MYSQL_ASYNC_RESULT *)hResult)->connection->mutexQueryLock);
+			MutexUnlock(hResult->connection->mutexQueryLock);
 		}
 		
 		// Free allocated memory
-		mysql_free_result(((MYSQL_ASYNC_RESULT *)hResult)->pHandle);
-		safe_free(((MYSQL_ASYNC_RESULT *)hResult)->pulColLengths);
+		mysql_free_result(hResult->pHandle);
+		safe_free(hResult->pulColLengths);
 		free(hResult);
 	}
 }

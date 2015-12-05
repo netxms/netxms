@@ -1,6 +1,6 @@
 /* $Id$ */
 /** Oracle Database Driver
-** Copyright (C) 2007, 2008, 2009 Victor Kirhenshtein
+** Copyright (C) 2007-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,15 +62,11 @@ struct ORACLE_CONN
 	OCIServer *handleServer;
 	OCISvcCtx *handleService;
 	OCISession *handleSession;
-	OCIStmt *handleStmt;
 	OCIError *handleError;
 	MUTEX mutexQueryLock;
 	int nTransLevel;
 	sb4 lastErrorCode;
 	WCHAR lastErrorText[DBDRV_MAX_ERROR_TEXT];
-	ORACLE_FETCH_BUFFER *pBuffers;
-	int nCols;
-	char **columnNames;
    ub4 prefetchLimit;
 };
 
@@ -125,6 +121,15 @@ struct ORACLE_RESULT
 	int nCols;
 	WCHAR **pData;
 	char **columnNames;
+};
+
+struct ORACLE_UNBUFFERED_RESULT
+{
+   ORACLE_CONN *connection;
+   OCIStmt *handleStmt;
+   ORACLE_FETCH_BUFFER *pBuffers;
+   int nCols;
+   char **columnNames;
 };
 
 #endif   /* _oracledrv_h_ */

@@ -170,17 +170,15 @@ DB_RESULT SQLSelect(const TCHAR *pszQuery)
 }
 
 /**
- * Execute SQL SELECT query via DBAsyncSelect and print error message on screen if query failed
+ * Execute SQL SELECT query via DBSelectUnbuffered and print error message on screen if query failed
  */
-DB_ASYNC_RESULT SQLAsyncSelect(const TCHAR *pszQuery)
+DB_UNBUFFERED_RESULT SQLSelectUnbuffered(const TCHAR *pszQuery)
 {
-   DB_ASYNC_RESULT hResult;
-	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-
    if (g_bTrace)
       ShowQuery(pszQuery);
 
-   hResult = DBAsyncSelectEx(g_hCoreDB, pszQuery, errorText);
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(g_hCoreDB, pszQuery, errorText);
    if (hResult == NULL)
       WriteToTerminalEx(_T("SQL query failed (%s):\n\x1b[33;1m%s\x1b[0m\n"), errorText, pszQuery);
    return hResult;

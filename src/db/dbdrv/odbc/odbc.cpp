@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004-2014 Victor Kirhenshtein
+** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -779,11 +779,11 @@ extern "C" void EXPORT DrvFreeResult(ODBCDRV_QUERY_RESULT *pResult)
 }
 
 /**
- * Perform asynchronous SELECT query
+ * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
-   ODBCDRV_ASYNC_QUERY_RESULT *pResult = NULL;
+   ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult = NULL;
    long iResult;
    short wNumCols;
 	int i;
@@ -814,7 +814,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_
 	   if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
       {
          // Allocate result buffer and determine column info
-         pResult = (ODBCDRV_ASYNC_QUERY_RESULT *)malloc(sizeof(ODBCDRV_ASYNC_QUERY_RESULT));
+         pResult = (ODBCDRV_UNBUFFERED_QUERY_RESULT *)malloc(sizeof(ODBCDRV_UNBUFFERED_QUERY_RESULT));
          SQLNumResultCols(pConn->sqlStatement, &wNumCols);
          pResult->iNumCols = wNumCols;
          pResult->pConn = pConn;
@@ -867,7 +867,7 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(ODBCDRV_CONN *pConn, NETXMS_
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" bool EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
+extern "C" bool EXPORT DrvFetch(ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult)
 {
    bool success = false;
 
@@ -963,7 +963,7 @@ extern "C" bool EXPORT DrvFetch(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
 /**
  * Get field length from async query result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthAsync(ODBCDRV_ASYNC_QUERY_RESULT *result, int col)
+extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(ODBCDRV_UNBUFFERED_QUERY_RESULT *result, int col)
 {
    if (result == NULL)
       return -1;
@@ -977,7 +977,7 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(ODBCDRV_ASYNC_QUERY_RESULT *result
 /**
  * Get field from current row in async query result
  */
-extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *result, int col, NETXMS_WCHAR *buffer, int bufferSize)
+extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldUnbuffered(ODBCDRV_UNBUFFERED_QUERY_RESULT *result, int col, NETXMS_WCHAR *buffer, int bufferSize)
 {
    // Check if we have valid result handle
    if (result == NULL)
@@ -1002,7 +1002,7 @@ extern "C" NETXMS_WCHAR EXPORT *DrvGetFieldAsync(ODBCDRV_ASYNC_QUERY_RESULT *res
 /**
  * Get column count in async query result
  */
-extern "C" int EXPORT DrvGetColumnCountAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
+extern "C" int EXPORT DrvGetColumnCountUnbuffered(ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult)
 {
 	return (pResult != NULL) ? pResult->iNumCols : 0;
 }
@@ -1010,7 +1010,7 @@ extern "C" int EXPORT DrvGetColumnCountAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult
 /**
  * Get column name in async query result
  */
-extern "C" const char EXPORT *DrvGetColumnNameAsync(ODBCDRV_ASYNC_QUERY_RESULT *pResult, int column)
+extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult, int column)
 {
 	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
 }
@@ -1018,7 +1018,7 @@ extern "C" const char EXPORT *DrvGetColumnNameAsync(ODBCDRV_ASYNC_QUERY_RESULT *
 /**
  * Destroy result of async query
  */
-extern "C" void EXPORT DrvFreeAsyncResult(ODBCDRV_ASYNC_QUERY_RESULT *pResult)
+extern "C" void EXPORT DrvFreeUnbufferedResult(ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult)
 {
    if (pResult != NULL)
    {

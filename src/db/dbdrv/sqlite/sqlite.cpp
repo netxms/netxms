@@ -586,11 +586,11 @@ extern "C" const char EXPORT *DrvGetColumnName(SQLITE_RESULT *hResult, int colum
 }
 
 /**
- * Perform asynchronous SELECT query
+ * Perform unbuffered SELECT query
  */
-extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-   DBDRV_ASYNC_RESULT hResult;
+   DBDRV_UNBUFFERED_RESULT hResult;
    char *pszQueryUTF8;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
@@ -622,7 +622,7 @@ retry:
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" bool EXPORT DrvFetch(DBDRV_ASYNC_RESULT hResult)
+extern "C" bool EXPORT DrvFetch(DBDRV_UNBUFFERED_RESULT hResult)
 {
 	if (hResult == NULL)
 		return false;
@@ -645,9 +645,9 @@ retry:
 }
 
 /**
- * Get field length from async query result
+ * Get field length from unbuffered query result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthAsync(DBDRV_RESULT hResult, int iColumn)
+extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int iColumn)
 {
    if ((iColumn >= 0) && (iColumn < ((SQLITE_CONN *)hResult)->nNumCols))
       return (LONG)strlen((char *)sqlite3_column_text(((SQLITE_CONN *)hResult)->pvm, iColumn));
@@ -655,9 +655,9 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(DBDRV_RESULT hResult, int iColumn)
 }
 
 /**
- * Get field from current row in async query result
+ * Get field from current row in unbuffered query result
  */
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(DBDRV_ASYNC_RESULT hResult, int iColumn, WCHAR *pBuffer, int iBufSize)
+extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int iColumn, WCHAR *pBuffer, int iBufSize)
 {
    char *pszData;
    WCHAR *pwszRet = NULL;
@@ -678,7 +678,7 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(DBDRV_ASYNC_RESULT hResult, int iColum
 /**
  * Get column count in async query result
  */
-extern "C" int EXPORT DrvGetColumnCountAsync(DBDRV_ASYNC_RESULT hResult)
+extern "C" int EXPORT DrvGetColumnCountUnbuffered(DBDRV_UNBUFFERED_RESULT hResult)
 {
 	return (hResult != NULL) ? ((SQLITE_CONN *)hResult)->nNumCols : 0;
 }
@@ -686,7 +686,7 @@ extern "C" int EXPORT DrvGetColumnCountAsync(DBDRV_ASYNC_RESULT hResult)
 /**
  * Get column name in async query result
  */
-extern "C" const char EXPORT *DrvGetColumnNameAsync(DBDRV_ASYNC_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int column)
 {
    const char *pszRet = NULL;
 
@@ -700,7 +700,7 @@ extern "C" const char EXPORT *DrvGetColumnNameAsync(DBDRV_ASYNC_RESULT hResult, 
 /**
  * Destroy result of async query
  */
-extern "C" void EXPORT DrvFreeAsyncResult(DBDRV_ASYNC_RESULT hResult)
+extern "C" void EXPORT DrvFreeUnbufferedResult(DBDRV_UNBUFFERED_RESULT hResult)
 {
    if (hResult != NULL)
    {
