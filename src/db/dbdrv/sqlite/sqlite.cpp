@@ -590,16 +590,20 @@ extern "C" const char EXPORT *DrvGetColumnName(SQLITE_RESULT *hResult, int colum
  */
 extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(SQLITE_CONN *hConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-   DBDRV_UNBUFFERED_RESULT hResult;
+   SQLITE_UNBUFFERED_RESULT *result;
    char *pszQueryUTF8;
+   sqlite3_stmt *stmt;
 
    pszQueryUTF8 = UTF8StringFromWideString(pwszQuery);
    MutexLock(hConn->mutexQueryLock);
 retry:
-   int rc = sqlite3_prepare(hConn->pdb, pszQueryUTF8, -1, &hConn->pvm, NULL);
+   int rc = sqlite3_prepare(hConn->pdb, pszQueryUTF8, -1, &stmt, NULL);
 	if (rc == SQLITE_OK)
    {
-      hResult = hConn;
+      result = (SQLITE_UNBUFFERED_RESULT *)malloc(sizeof(SQLITE_UNBUFFERED_RESULT));
+      result->connection = hConn;
+      result->stmt = stmt;
+      result->prepared = false;
 		*pdwError = DBERR_SUCCESS;
    }
    else if ((rc == SQLITE_LOCKED) || (rc == SQLITE_LOCKED_SHAREDCACHE))
@@ -612,33 +616,49 @@ retry:
    {
 		GetErrorMessage(hConn->pdb, errorText);
       MutexUnlock(hConn->mutexQueryLock);
-      hResult = NULL;
+      result = NULL;
 		*pdwError = DBERR_OTHER_ERROR;
    }
    free(pszQueryUTF8);
-   return hResult;
+   return result;
+}
+
+/**
+ * Perform unbuffered SELECT query using prepared statement
+ */
+extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(SQLITE_CONN *hConn, sqlite3_stmt *stmt, DWORD *pdwError, WCHAR *errorText)
+{
+   if ((hConn == NULL) || (stmt == NULL))
+      return NULL;
+
+   SQLITE_UNBUFFERED_RESULT *result = (SQLITE_UNBUFFERED_RESULT *)malloc(sizeof(SQLITE_UNBUFFERED_RESULT));
+   result->connection = hConn;
+   result->stmt = stmt;
+   result->prepared = true;
+   *pdwError = DBERR_SUCCESS;
+   return result;
 }
 
 /**
  * Fetch next result line from asynchronous SELECT results
  */
-extern "C" bool EXPORT DrvFetch(DBDRV_UNBUFFERED_RESULT hResult)
+extern "C" bool EXPORT DrvFetch(SQLITE_UNBUFFERED_RESULT *result)
 {
-	if (hResult == NULL)
+	if (result == NULL)
 		return false;
 
 retry:
-   int rc = sqlite3_step(((SQLITE_CONN *)hResult)->pvm);
+   int rc = sqlite3_step(result->stmt);
 	if (rc == SQLITE_ROW)
 	{
-		((SQLITE_CONN *)hResult)->nNumCols = sqlite3_column_count(((SQLITE_CONN *)hResult)->pvm);
+		result->numColumns = sqlite3_column_count(result->stmt);
 		return true;
 	}
    else if ((rc == SQLITE_LOCKED) || (rc == SQLITE_LOCKED_SHAREDCACHE))
    {
       // database locked by another thread, retry in 10 milliseconds
       ThreadSleepMs(10);
-      sqlite3_reset(((SQLITE_CONN *)hResult)->pvm);
+      sqlite3_reset(result->stmt);
       goto retry;
    }
 	return false;
@@ -647,24 +667,24 @@ retry:
 /**
  * Get field length from unbuffered query result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int iColumn)
+extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int iColumn)
 {
-   if ((iColumn >= 0) && (iColumn < ((SQLITE_CONN *)hResult)->nNumCols))
-      return (LONG)strlen((char *)sqlite3_column_text(((SQLITE_CONN *)hResult)->pvm, iColumn));
+   if ((iColumn >= 0) && (iColumn < result->numColumns))
+      return (LONG)strlen((char *)sqlite3_column_text(result->stmt, iColumn));
    return 0;
 }
 
 /**
  * Get field from current row in unbuffered query result
  */
-extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int iColumn, WCHAR *pBuffer, int iBufSize)
+extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int iColumn, WCHAR *pBuffer, int iBufSize)
 {
    char *pszData;
    WCHAR *pwszRet = NULL;
 
-   if ((iColumn >= 0) && (iColumn < ((SQLITE_CONN *)hResult)->nNumCols))
+   if ((iColumn >= 0) && (iColumn < result->numColumns))
    {
-      pszData = (char *)sqlite3_column_text(((SQLITE_CONN *)hResult)->pvm, iColumn);
+      pszData = (char *)sqlite3_column_text(result->stmt, iColumn);
       if (pszData != NULL)
       {
          MultiByteToWideChar(CP_UTF8, 0, pszData, -1, pBuffer, iBufSize);
@@ -678,21 +698,21 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, 
 /**
  * Get column count in async query result
  */
-extern "C" int EXPORT DrvGetColumnCountUnbuffered(DBDRV_UNBUFFERED_RESULT hResult)
+extern "C" int EXPORT DrvGetColumnCountUnbuffered(SQLITE_UNBUFFERED_RESULT *result)
 {
-	return (hResult != NULL) ? ((SQLITE_CONN *)hResult)->nNumCols : 0;
+	return (result != NULL) ? result->numColumns : 0;
 }
 
 /**
  * Get column name in async query result
  */
-extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(DBDRV_UNBUFFERED_RESULT hResult, int column)
+extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(SQLITE_UNBUFFERED_RESULT *result, int column)
 {
    const char *pszRet = NULL;
 
-   if ((column >= 0) && (column < ((SQLITE_CONN *)hResult)->nNumCols))
+   if ((column >= 0) && (column < result->numColumns))
    {
-      pszRet = sqlite3_column_name(((SQLITE_CONN *)hResult)->pvm, column);
+      pszRet = sqlite3_column_name(result->stmt, column);
    }
    return pszRet;
 }
@@ -700,12 +720,16 @@ extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(DBDRV_UNBUFFERED_RESULT
 /**
  * Destroy result of async query
  */
-extern "C" void EXPORT DrvFreeUnbufferedResult(DBDRV_UNBUFFERED_RESULT hResult)
+extern "C" void EXPORT DrvFreeUnbufferedResult(SQLITE_UNBUFFERED_RESULT *result)
 {
-   if (hResult != NULL)
+   if (result != NULL)
    {
-		sqlite3_finalize(((SQLITE_CONN *)hResult)->pvm);
-      MutexUnlock(((SQLITE_CONN *)hResult)->mutexQueryLock);
+      if (result->prepared)
+         sqlite3_reset(result->stmt);
+      else
+         sqlite3_finalize(result->stmt);
+      MutexUnlock(result->connection->mutexQueryLock);
+      free(result);
    }
 }
 

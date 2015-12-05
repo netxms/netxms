@@ -59,8 +59,17 @@ typedef struct
 {
    sqlite3 *pdb;
    MUTEX mutexQueryLock;
-   sqlite3_stmt *pvm;
-   int nNumCols;              // Number of columns in async result
 } SQLITE_CONN;
+
+/**
+ * Structure for unbuffered select result
+ */
+typedef struct
+{
+   SQLITE_CONN *connection;
+   sqlite3_stmt *stmt;
+   int numColumns;
+   bool prepared;
+} SQLITE_UNBUFFERED_RESULT;
 
 #endif   /* _sqlitedrv_h_ */
