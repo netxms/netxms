@@ -1,6 +1,6 @@
 /* 
 ** MySQL Database Driver
-** Copyright (C) 2003 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -90,11 +90,14 @@ typedef struct
 typedef struct
 {
    MYSQL_CONN *connection;
-   MYSQL_RES *pHandle;
+   MYSQL_RES *resultSet;
    MYSQL_ROW pCurrRow;
    bool noMoreRows;
-   int iNumCols;
-   unsigned long *pulColLengths;
+   int numColumns;
+   MYSQL_BIND *bindings;
+   unsigned long *lengthFields;
+   bool isPreparedStatement;
+   MYSQL_STMT *statement;
 } MYSQL_UNBUFFERED_RESULT;
 
 #endif   /* _mysqldrv_h_ */
