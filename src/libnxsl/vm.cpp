@@ -23,10 +23,6 @@
 #include "libnxsl.h"
 #include <netxms-regex.h>
 
-#if HAVE_ALLOCA_H
-#include <alloca.h>
-#endif
-
 /**
  * Constants
  */
@@ -1954,7 +1950,11 @@ UINT32 NXSL_VM::callSelector(const TCHAR *name, int numElements)
    int err, selection = -1;
    UINT32 addr = 0;
    NXSL_Value *options = NULL;
+#if HAVE_ALLOCA
    UINT32 *addrList = (UINT32 *)alloca(sizeof(UINT32) * numElements);
+#else
+   UINT32 *addrList = (UINT32 *)malloc(sizeof(UINT32) * numElements);
+#endif
    NXSL_Value **valueList = (NXSL_Value **)alloca(sizeof(NXSL_Value *) * numElements);
    memset(valueList, 0, sizeof(NXSL_Value *) * numElements);
 
@@ -2012,6 +2012,10 @@ cleanup:
    for(int j = 0; j < numElements; j++)
       delete valueList[j];
    delete options;
+
+#if !HAVE_ALLOCA
+   free(addrList);
+#endif
 
    return addr;
 }

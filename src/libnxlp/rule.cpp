@@ -23,10 +23,6 @@
 
 #include "libnxlp.h"
 
-#if HAVE_ALLOCA_H
-#include <alloca.h>
-#endif
-
 /**
  * Constructor
  */
@@ -156,7 +152,11 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 
 				if (m_numParams > 0)
 				{
+#if HAVE_ALLOCA
 					params = (TCHAR **)alloca(sizeof(TCHAR *) * m_numParams);
+#else
+					params = (TCHAR **)malloc(sizeof(TCHAR *) * m_numParams);
+#endif
 					for(i = 0; i < m_numParams; i++)
 					{
 						if (m_pmatch[i + 1].rm_so != -1)
@@ -176,7 +176,10 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 				cb(m_eventCode, m_eventName, line, source, eventId, level, m_numParams, params, objectId, userArg);
 				
 				for(i = 0; i < m_numParams; i++)
-					safe_free(params[i]);
+					free(params[i]);
+#if !HAVE_ALLOCA
+            free(params);
+#endif
 			}		
 			return true;
 		}

@@ -197,6 +197,8 @@ typedef int bool;
 
 #define HAVE_STDARG_H           1
 
+#define HAVE_ALLOCA             1
+
 #ifndef va_copy
 #define va_copy(x,y)            (x = y)
 #endif
@@ -532,6 +534,10 @@ typedef int SOCKET;
 
 #if HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+
+#if HAVE_ALLOCA_H
+#include <alloca.h>
 #endif
 
 #include <dirent.h>

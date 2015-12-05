@@ -670,7 +670,7 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
 		my_bool isNull;
 
 		memset(&b, 0, sizeof(MYSQL_BIND));
-#if HAVE_ALLOCA || defined(_WIN32)
+#if HAVE_ALLOCA
 		b.buffer = alloca(hResult->lengthFields[iColumn] + 1);
 #else
 		b.buffer = malloc(hResult->lengthFields[iColumn] + 1);
@@ -706,7 +706,7 @@ static void *GetFieldInternal(MYSQL_RESULT *hResult, int iRow, int iColumn, void
 			pRet = pBuffer;
 		}
       MutexUnlock(hResult->connection->mutexQueryLock);
-#if !HAVE_ALLOCA && !defined(_WIN32)
+#if !HAVE_ALLOCA
 		free(b.buffer);
 #endif
 	}

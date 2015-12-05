@@ -24,10 +24,6 @@
 #include "libnetxms.h"
 #include "strmap-internal.h"
 
-#if HAVE_ALLOCA_H
-#include <alloca.h>
-#endif
-
 /**
  * Standard object destructor
  */
@@ -84,10 +80,17 @@ StringMapEntry *StringMapBase::find(const TCHAR *key) const
    int keyLen = (int)(_tcslen(key) * sizeof(TCHAR));
    if (m_ignoreCase)
    {
+#if HAVE_ALLOCA
       TCHAR *ukey = (TCHAR *)alloca(keyLen + sizeof(TCHAR));
+#else
+      TCHAR *ukey = (TCHAR *)malloc(keyLen + sizeof(TCHAR));
+#endif
       memcpy(ukey, key, keyLen + sizeof(TCHAR));
       _tcsupr(ukey);
       HASH_FIND(hh, m_data, ukey, keyLen, entry);
+#if !HAVE_ALLOCA
+      free(ukey);
+#endif
    }
    else
    {
