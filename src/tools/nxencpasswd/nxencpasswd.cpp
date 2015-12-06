@@ -33,10 +33,11 @@ int main(int argc, char *argv[])
 	int ch;
 
    bool isAgentSecret = false;
+   bool decrypt = false;
 
    // Parse command line
    opterr = 1;
-   while((ch = getopt(argc, argv, "hK:va")) != -1)
+   while((ch = getopt(argc, argv, "hK:vaz")) != -1)
    {
       switch(ch)
       {
@@ -55,6 +56,9 @@ int main(int argc, char *argv[])
          case 'a':   // Obfuscate agent's secret
             isAgentSecret = true;
             break;
+         case 'z':   // Decrypt
+            decrypt = true;
+            break;
          case '?':
 				return 1;
          default:
@@ -67,6 +71,23 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Required arguments missing. Run nxencpasswd -h for help.\n");
 		return 1;
 	}
+
+   if (decrypt) {
+#if UNICODE
+      TCHAR login[128], password[256];
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind], -1, login, 128);
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, argv[optind + 1], -1, password, 256);
+
+      TCHAR decrypted[256] = {0};
+#else
+      char *login = argv[optind];
+      char *password = argv[optind + 1];
+      char decrypted[256] = {0};
+#endif
+      DecryptPassword(login, password, decrypted, 256);
+      _tprintf(_T("Decrypted: \"%s\"\n"), decrypted);
+      return 0;
+   }
 
 	// Encrypt password
 	BYTE plainText[32], encrypted[32], key[16];
