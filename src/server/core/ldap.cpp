@@ -239,8 +239,7 @@ void LDAPConnection::initLDAP()
    //set all LDAP options
    int version = LDAP_VERSION3;
    ldap_set_option(m_ldapConn, LDAP_OPT_PROTOCOL_VERSION, &version); //default verion 2, it's recomended to use version 3
-   int referrals = LDAP_OPT_OFF;
-   ldap_set_option(m_ldapConn, LDAP_OPT_REFERRALS, &referrals);
+   ldap_set_option(m_ldapConn, LDAP_OPT_REFERRALS, LDAP_OPT_OFF);
 }
 
 /**
