@@ -585,7 +585,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry>
       }
       else
       {
-         DbgPrintf(4, _T("LDAPConnection::fillLists(): Unknown object is not added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
+         DbgPrintf(4, _T("LDAPConnection::fillLists(): Unknown object is not added: dn: %s, login name: %s, full name: %s, description: %s"), dn, CHECK_NULL(newObj->m_loginName), CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
          delete newObj;
       }
       free(dn);
