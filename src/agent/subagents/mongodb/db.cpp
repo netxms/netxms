@@ -409,6 +409,7 @@ LONG DatabaseInstance::setDbNames(StringList *value)
 #endif
    }
    MutexUnlock(m_databaseListLock);
+   return SYSINFO_RC_SUCCESS;
 }
 
 /**
