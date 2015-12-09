@@ -397,6 +397,62 @@ static void TestQueue()
    AssertEquals(q->size(), 5);
    AssertEquals(q->allocated(), 16);
    EndTest();
+
+   delete q;
+}
+
+/**
+ * Key for hash map
+ */
+typedef char HASH_KEY[6];
+
+/**
+ * Test hash map
+ */
+static void TestHashMap()
+{
+   StartTest(_T("HashMap: create"));
+   HashMap<HASH_KEY, String> *hashMap = new HashMap<HASH_KEY, String>(true);
+   AssertEquals(hashMap->size(), 0);
+   EndTest();
+
+   HASH_KEY k1 = { '1', '2', '3', '4', '5', '6' };
+   HASH_KEY k2 = { '0', '0', 'a', 'b', 'c', 'd' };
+   HASH_KEY k3 = { '0', '0', '3', 'X', '1', '1' };
+
+   StartTest(_T("HashMap: set/get"));
+
+   hashMap->set(k1, new String(_T("String 1")));
+   hashMap->set(k2, new String(_T("String 2")));
+   hashMap->set(k3, new String(_T("String 3")));
+
+   String *s = hashMap->get(k1);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 1")));
+
+   s = hashMap->get(k2);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 2")));
+
+   s = hashMap->get(k3);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 3")));
+
+   EndTest();
+
+   StartTest(_T("HashMap: replace"));
+   hashMap->set(k2, new String(_T("REPLACE")));
+   s = hashMap->get(k2);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("REPLACE")));
+   EndTest();
+
+   StartTest(_T("HashMap: remove"));
+   hashMap->remove(k3);
+   AssertNull(hashMap->get(k3));
+   EndTest();
+
+   delete hashMap;
 }
 
 /**
@@ -418,5 +474,6 @@ int main(int argc, char *argv[])
    TestInetAddress();
    TestItoa();
    TestQueue();
+   TestHashMap();
    return 0;
 }
