@@ -604,6 +604,16 @@ static bool CreateLibraryScript(UINT32 id, const TCHAR *name, const TCHAR *code)
 }
 
 /**
+ * Upgrade from V384 to V385
+ */
+static BOOL H_UpgradeFromV384(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET is_visible=1,need_server_restart=0 WHERE var_name='SNMPPorts'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='385' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V373 to V374
  */
 static BOOL H_UpgradeFromV383(int currVersion, int newVersion)
@@ -890,8 +900,7 @@ static BOOL H_UpgradeFromV365(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV364(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("SNMPPorts"), _T("161"), false, false));
-
+   CHK_EXEC(CreateConfigParam(_T("SNMPPorts"), _T("161"), true, false));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='365' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -9176,6 +9185,7 @@ static struct
    { 381, 382, H_UpgradeFromV381 },
    { 382, 383, H_UpgradeFromV382 },
    { 383, 384, H_UpgradeFromV383 },
+   { 384, 385, H_UpgradeFromV384 },
    { 0, 0, NULL }
 };
 

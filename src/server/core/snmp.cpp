@@ -248,7 +248,7 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
       else
       {
          port = (UINT16)_tcstoul(ports->get(j), NULL, 10);
-         if (port == originalPort)
+         if ((port == originalPort) || (port == 0))
             continue;
       }
 
