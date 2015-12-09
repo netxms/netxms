@@ -59,6 +59,7 @@ public class SystemRights extends PropertyPage
 		GridLayout layout = new GridLayout();
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
+		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, Messages.get().SystemRights_UnlinkTicket);
@@ -125,7 +126,7 @@ public class SystemRights extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		int systemRights = 0;
+		long systemRights = 0;
 		for(Entry<Long, Button> e : buttons.entrySet())
 			if (e.getValue().getSelection())
 				systemRights |= e.getKey();
