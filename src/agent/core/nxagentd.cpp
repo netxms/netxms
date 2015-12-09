@@ -1447,7 +1447,7 @@ int main(int argc, char *argv[])
 				break;
 #endif
          case 'v':   // Print version and exit
-            _tprintf(_T("NetXMS Core Agent Version ") AGENT_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING IS_UNICODE_BUILD_STRING _T("\n"));
+            _tprintf(_T("NetXMS Core Agent Version ") AGENT_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" (") NETXMS_BUILD_TAG _T(")") IS_UNICODE_BUILD_STRING _T("\n"));
             iAction = ACTION_NONE;
             break;
          case 'W':   // Watchdog process

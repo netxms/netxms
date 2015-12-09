@@ -41,7 +41,7 @@
 #ifdef _NETWARE
 #include <config-netware.h>
 #else
-#include "config.h"
+#include <config.h>
 #ifdef WITH_OPENSSL
 #define _WITH_ENCRYPTION   1
 #endif

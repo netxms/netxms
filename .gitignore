@@ -35,6 +35,8 @@ target
 .deps
 .idea
 
+/netxms-build-tag.h
+
 /netxms-*.tar.gz
 /*.apkg
 
