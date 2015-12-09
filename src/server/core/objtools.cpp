@@ -1024,7 +1024,7 @@ bool ImportObjectTool(ConfigEntry *config)
 	   ObjectArray<ConfigEntry> *inputFields = inputFieldsRoot->getOrderedSubEntries(_T("inputField#*"));
       if (inputFields->size() > 0)
       {
-         hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_input_fields (tool_id,name,input_type,display_name,config) VALUES (?,?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO object_tools_input_fields (tool_id,name,input_type,display_name,config,sequence_num) VALUES (?,?,?,?,?,?)"));
          if (hStmt == NULL)
             return ImportFailure(hdb, hStmt);
 
@@ -1036,6 +1036,7 @@ bool ImportObjectTool(ConfigEntry *config)
             DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)c->getSubEntryValueAsInt(_T("type")));
             DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, c->getSubEntryValue(_T("displayName")), DB_BIND_STATIC);
             DBBind(hStmt, 5, DB_SQLTYPE_TEXT, c->getSubEntryValue(_T("config")), DB_BIND_STATIC);
+            DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (INT32)(i + 1));
 
             if (!DBExecute(hStmt))
             {
