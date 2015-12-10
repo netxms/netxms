@@ -442,7 +442,7 @@ public:
 /**
  * Agent connection
  */
-class LIBNXSRV_EXPORTABLE AgentConnection
+class LIBNXSRV_EXPORTABLE AgentConnection : public RefCountObject
 {
 private:
    InetAddress m_addr;
@@ -474,7 +474,7 @@ private:
 	TCHAR m_currentFileName[MAX_PATH];
 	UINT32 m_dwDownloadRequestId;
 	CONDITION m_condFileDownload;
-	BOOL m_fileDownloadSucceeded;
+	bool m_fileDownloadSucceeded;
 	void (*m_downloadProgressCallback)(size_t, void *);
 	void *m_downloadProgressCallbackArg;
 	bool m_deleteFileOnDownloadFailure;
@@ -483,6 +483,9 @@ private:
 
    void receiverThread();
    static THREAD_RESULT THREAD_CALL receiverThreadStarter(void *);
+
+   void processCollectedDataCallback(NXCPMessage *msg);
+   void onDataPushCallback(NXCPMessage *msg);
 
 protected:
    void destroyResultData();
@@ -498,7 +501,7 @@ protected:
 	virtual void onDataPush(NXCPMessage *msg);
 	virtual void onFileMonitoringData(NXCPMessage *msg);
 	virtual void onSnmpTrap(NXCPMessage *pMsg);
-	virtual void onFileDownload(BOOL success);
+	virtual void onFileDownload(bool success);
 	virtual UINT32 processCollectedData(NXCPMessage *msg);
 	virtual bool processCustomMessage(NXCPMessage *pMsg);
 
@@ -507,8 +510,6 @@ protected:
 	NXCPEncryptionContext *acquireEncryptionContext();
 
 public:
-   BOOL sendMessage(NXCPMessage *pMsg);
-   NXCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
    AgentConnection(InetAddress addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
    virtual ~AgentConnection();
 
@@ -516,8 +517,11 @@ public:
    void disconnect();
    bool isConnected() { return m_isConnected; }
 	int getProtocolVersion() { return m_nProtocolVersion; }
-
 	SOCKET getSocket() { return m_hSocket; }
+
+   bool sendMessage(NXCPMessage *pMsg);
+   bool sendRawMessage(NXCP_MESSAGE *pMsg);
+   NXCPMessage *waitForMessage(WORD wCode, UINT32 dwId, UINT32 dwTimeOut) { return m_pMsgWaitQueue->waitForMessage(wCode, dwId, dwTimeOut); }
 
    ARP_CACHE *getArpCache();
    InterfaceList *getInterfaceList();
@@ -560,7 +564,6 @@ public:
    void setPort(WORD wPort) { m_wPort = wPort; }
    void setAuthData(int method, const TCHAR *secret);
    void setDeleteFileOnDownloadFailure(bool flag) { m_deleteFileOnDownloadFailure = flag; }
-   BOOL sendRawMessage(NXCP_MESSAGE *pMsg);
 };
 
 /**
@@ -680,6 +683,7 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code);
  */
 extern UINT64 LIBNXSRV_EXPORTABLE g_flags;
 extern UINT32 LIBNXSRV_EXPORTABLE g_debugLevel;
+extern ThreadPool LIBNXSRV_EXPORTABLE *g_agentConnectionThreadPool;
 
 /**
  * Helper finctions for checking server flags
@@ -698,6 +702,5 @@ inline bool IsShutdownInProgress()
 {
 	return (g_flags & AF_SHUTDOWN) ? true : false;
 }
-
 
 #endif   /* _nxsrvapi_h_ */

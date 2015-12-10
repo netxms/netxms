@@ -254,7 +254,7 @@ static void GetAgentTable(void *pArg)
                   {
                      msg.setField(VID_RCC, (dwResult == ERR_UNKNOWN_PARAMETER) ? RCC_UNKNOWN_PARAMETER : RCC_COMM_FAILURE);
                   }
-                  delete pConn;
+                  pConn->decRefCount();
                }
                else
                {

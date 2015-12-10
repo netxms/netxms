@@ -723,6 +723,7 @@ retry_db_lock:
    DbgPrintf(2, _T("Creating thread pools"));
    ThreadPoolSetDebugCallback(DbgPrintf2);
    g_mainThreadPool = ThreadPoolCreate(8, 256, _T("MAIN"));
+   g_agentConnectionThreadPool = ThreadPoolCreate(4, 256, _T("AGENT"));
 
 	// Setup unique identifiers table
 	if (!InitIdTable())
@@ -901,7 +902,6 @@ void NXCORE_EXPORTABLE Shutdown()
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
 
-   //shutdown schedule
    CloseTaskScheduler();
 
    // Stop DCI cache loading thread
@@ -967,6 +967,7 @@ void NXCORE_EXPORTABLE Shutdown()
    ShutdownAlarmManager();
 	DbgPrintf(1, _T("Event processing stopped"));
 
+	ThreadPoolDestroy(g_agentConnectionThreadPool);
    ThreadPoolDestroy(g_mainThreadPool);
    MsgWaitQueue::shutdown();
 
@@ -1629,6 +1630,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ShowThreadPool(pCtx, g_mainThreadPool);
 			ShowThreadPool(pCtx, g_pollerThreadPool);
 			ShowThreadPool(pCtx, g_schedulerThreadPool);
+         ShowThreadPool(pCtx, g_agentConnectionThreadPool);
 		}
 		else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
 		{

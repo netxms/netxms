@@ -119,8 +119,10 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
  */
 void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 {
-	TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
+   if (g_flags & AF_SHUTDOWN)
+      return;
 
+	TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
 	msg->getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
 	msg->getFieldAsString(VID_VALUE, value, MAX_RESULT_LENGTH);
 
@@ -214,7 +216,10 @@ void AgentConnectionEx::printMsg(const TCHAR *format, ...)
    va_end(args);
 }
 
-static void cancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
+/**
+ * Cancel unknown file monitoring
+ */
+static void CancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
 {
    DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled."));
    AgentConnection *conn = object->createAgentConnection();
@@ -227,8 +232,8 @@ static void cancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
       request.setField(VID_OBJECT_ID, object->getId());
       NXCPMessage* response = conn->customRequest(&request);
       delete response;
+      conn->decRefCount();
    }
-   delete conn;
 }
 
 /**
@@ -257,13 +262,13 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
             g_monitoringList.removeMonitoringFile(&file);
             validSessionCount--;
 
-            if(validSessionCount == 0)
-               cancelUnknownFileMonitoring(object, remoteFile);
+            if (validSessionCount == 0)
+               CancelUnknownFileMonitoring(object, remoteFile);
          }
       }
-      if(result->size() == 0)
+      if (result->size() == 0)
       {
-         cancelUnknownFileMonitoring(object, remoteFile);
+         CancelUnknownFileMonitoring(object, remoteFile);
       }
       delete result;
 	}
@@ -477,6 +482,9 @@ UINT32 AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
  */
 UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 {
+   if (g_flags & AF_SHUTDOWN)
+      return ERR_INTERNAL_ERROR;
+
    if (m_nodeId == 0)
    {
       DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: node ID is 0 for agent session"));
@@ -542,6 +550,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
          return ERR_INTERNAL_ERROR;
    }
 
+   DbgPrintf(7, _T("AgentConnectionEx::processCollectedData: processing DCI %s [%d] (type=%d) on node %s [%d]"), dcObject->getName(), dciId, type, node->getName(), node->getId());
    time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
    bool success = node->processNewDCValue(dcObject, t, value);
    if (t > dcObject->getLastPollTime())

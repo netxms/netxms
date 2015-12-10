@@ -322,6 +322,7 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
       if (!transform((Table *)value))
       {
          unlock();
+         ((Table *)value)->decRefCount();
          return false;
       }
    }

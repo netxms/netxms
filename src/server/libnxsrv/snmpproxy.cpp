@@ -40,7 +40,7 @@ SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *conn, const InetAddres
  */
 SNMP_ProxyTransport::~SNMP_ProxyTransport()
 {
-	delete m_agentConnection;
+	m_agentConnection->decRefCount();
 	delete m_response;
 }
 

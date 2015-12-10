@@ -7587,7 +7587,7 @@ void ClientSession::getAgentConfig(NXCPMessage *pRequest)
             if (pConn != NULL)
             {
                dwResult = pConn->getConfigFile(&pszConfig, &size);
-               delete pConn;
+               pConn->decRefCount();
                switch(dwResult)
                {
                   case ERR_SUCCESS:
@@ -7682,7 +7682,7 @@ void ClientSession::updateAgentConfig(NXCPMessage *pRequest)
                      msg.setField(VID_RCC, RCC_COMM_FAILURE);
                      break;
                }
-               delete pConn;
+               pConn->decRefCount();
             }
             else
             {
@@ -7813,7 +7813,7 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
                      msg.setField(VID_RCC, RCC_COMM_FAILURE);
                      break;
                }
-               delete pConn;
+               pConn->decRefCount();
             }
             else
             {
@@ -10954,7 +10954,7 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
          node->incRefCount();
          AgentConnection *conn = node->createAgentConnection();
          debugPrintf(6, _T("Cancel file monitoring %s"), remoteFile);
-         if(conn != NULL)
+         if (conn != NULL)
          {
             request->setId(conn->generateRequestId());
             response = conn->customRequest(request);
@@ -10977,7 +10977,7 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
                msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
             }
             delete response;
-            delete conn;
+            conn->decRefCount();
          }
          else
          {
@@ -13366,7 +13366,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
             Node *node = (Node *)object;
             node->incRefCount();
             AgentConnection *conn = node->createAgentConnection();
-            if(conn != NULL)
+            if (conn != NULL)
             {
                request->setId(conn->generateRequestId());
                response = conn->customRequest(request);
@@ -13427,7 +13427,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                {
                   msg.setField(VID_RCC, RCC_TIMEOUT);
                }
-               delete conn;
+               conn->decRefCount();
             }
             else
             {
@@ -13517,14 +13517,14 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
             Node *node = (Node *)object;
             node->incRefCount();
             AgentConnection *conn = node->createAgentConnection();
-            if(conn != NULL)
+            if (conn != NULL)
             {
                conn->sendMessage(request);
                response = conn->waitForMessage(CMD_REQUEST_COMPLETED, request->getId(), 10000);
                if (response != NULL)
                {
                   rcc = response->getFieldAsUInt32(VID_RCC);
-                  if(rcc == RCC_SUCCESS)
+                  if (rcc == RCC_SUCCESS)
                   {
                      response->setCode(CMD_REQUEST_COMPLETED);
                      responseMessage = response;
@@ -13533,7 +13533,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
                      WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
                         _T("Started direct upload of file \"%s\" to agent"), fileName);
                      //Set all required for file download
-                     m_agentConn.put((QWORD)request->getId(),(NetObj *)conn);
+                     m_agentConn.put((QWORD)request->getId(), (NetObj *)conn);
                   }
                   else
                   {
@@ -13545,9 +13545,9 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
                {
                   msg.setField(VID_RCC, RCC_TIMEOUT);
                }
-               if(rcc != RCC_SUCCESS)
+               if (rcc != RCC_SUCCESS)
                {
-                  delete conn;
+                  conn->decRefCount();
                }
             }
             else
@@ -13784,7 +13784,7 @@ void ClientSession::getScreenshot(NXCPMessage *request)
             Node *node = (Node *)object;
             node->incRefCount();
             AgentConnection *conn = node->createAgentConnection();
-            if(conn != NULL)
+            if (conn != NULL)
             {
                BYTE *data = NULL;
                size_t size;
@@ -13798,7 +13798,7 @@ void ClientSession::getScreenshot(NXCPMessage *request)
                   msg.setField(VID_RCC, AgentErrorToRCC(dwError));
                }
                safe_free(data);
-               delete conn;
+               conn->decRefCount();
             }
             else
             {
@@ -13893,10 +13893,11 @@ void ClientSession::cleanAgentDciConfiguration(NXCPMessage *request)
             Node *node = (Node *)object;
             node->incRefCount();
             AgentConnectionEx *conn = node->createAgentConnection();
-            if(conn != NULL)
+            if (conn != NULL)
             {
                node->clearDataCollectionConfigFromAgent(conn);
                msg.setField(VID_RCC, RCC_SUCCESS);
+               conn->decRefCount();
             }
             else
             {

@@ -202,7 +202,7 @@ Node::~Node()
    MutexDestroy(m_hSmclpAccessMutex);
    MutexDestroy(m_mutexRTAccess);
 	MutexDestroy(m_mutexTopoAccess);
-   delete m_pAgentConnection;
+   m_pAgentConnection->decRefCount();
    delete m_smclpConnection;
    delete m_paramList;
 	delete m_tableList;
@@ -1870,7 +1870,8 @@ void Node::updatePrimaryIpAddr()
       }
 
 		agentLock();
-		delete_and_null(m_pAgentConnection);
+		m_pAgentConnection->decRefCount();
+		m_pAgentConnection = NULL;
 		agentUnlock();
 	}
 }
@@ -3471,7 +3472,8 @@ bool Node::connectToSMCLP()
  */
 bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnection)
 {
-   bool success;
+   if (g_flags & AF_SHUTDOWN)
+      return false;
 
    // Create new agent connection object if needed
    if (m_pAgentConnection == NULL)
@@ -3488,7 +3490,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
          if (newConnection != NULL)
             *newConnection = false;
          setLastAgentCommTime();
-			return TRUE;
+			return true;
 		}
 
 		// Close current connection or clean up after broken connection
@@ -3501,7 +3503,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    m_pAgentConnection->setAuthData(m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(m_pAgentConnection);
 	DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
-   success = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
+   bool success = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
    if (success)
 	{
 		m_pAgentConnection->setCommandTimeout(g_agentCommandTimeout);
@@ -3859,7 +3861,8 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
 				DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_name, szParam);
-				delete_and_null(m_pAgentConnection);
+				m_pAgentConnection->decRefCount();
+				m_pAgentConnection = NULL;
             if (!connectToAgent())
                goto end_loop;
 				DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_name, szParam);
@@ -3918,7 +3921,8 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
 				DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
-				delete_and_null(m_pAgentConnection);
+				m_pAgentConnection->decRefCount();
+				m_pAgentConnection = NULL;
             if (!connectToAgent())
                goto end_loop;
 				DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): connection to agent restored successfully"), m_name, name);
@@ -3980,7 +3984,8 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
 				DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
-				delete_and_null(m_pAgentConnection);
+				m_pAgentConnection->decRefCount();
+				m_pAgentConnection = NULL;
             if (!connectToAgent())
                goto end_loop;
 				DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
@@ -4537,7 +4542,8 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 		}
 
 		agentLock();
-		delete_and_null(m_pAgentConnection);
+      m_pAgentConnection->decRefCount();
+      m_pAgentConnection = NULL;
 		agentUnlock();
 	}
 
@@ -4939,8 +4945,7 @@ UINT32 Node::checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, i
       if (pConn != NULL)
       {
          dwError = pConn->checkNetworkService(pdwStatus, ipAddr, iServiceType, wPort, wProto, pszRequest, pszResponse, responseTime);
-         pConn->disconnect();
-         delete pConn;
+         pConn->decRefCount();
       }
    }
    return dwError;
@@ -5006,7 +5011,9 @@ AgentConnectionEx *Node::createAgentConnection()
       conn = NULL;
    }
    else
+   {
       setLastAgentCommTime();
+   }
 	DbgPrintf(6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_name, (int)m_id, conn);
    return conn;
 }
@@ -5089,7 +5096,8 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
    unlockProperties();
 
    agentLock();
-   delete_and_null(m_pAgentConnection);
+   m_pAgentConnection->decRefCount();
+   m_pAgentConnection = NULL;
    agentUnlock();
 
    pollerUnlock();
@@ -5137,7 +5145,8 @@ void Node::changeZone(UINT32 newZone)
    unlockProperties();
 
    agentLock();
-   delete_and_null(m_pAgentConnection);
+   m_pAgentConnection->decRefCount();
+   m_pAgentConnection = NULL;
    agentUnlock();
 
    pollerUnlock();
@@ -7067,8 +7076,7 @@ void Node::updatePingData()
                   DbgPrintf(7, _T("Node::updatePingData: incorrect value: %d or error while parsing: %s"), value, eptr);
                }
             }
-            conn->disconnect();
-            delete conn;
+            conn->decRefCount();
          }
          else
          {

@@ -185,7 +185,7 @@ bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *o
       DBConnectionPoolReleaseConnection(hdb);
 
       bool found = false;
-		for(int i = 0; (i < contexts.size()) && !found; i++)
+		for(int i = 0; (i < contexts.size()) && !found && !(g_flags & AF_SHUTDOWN); i++)
 		{
 		   SNMP_SecurityContext *ctx = contexts.get(i);
 			pTransport->setSecurityContext(ctx);
@@ -236,7 +236,7 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
    TCHAR tmp[MAX_CONFIG_VALUE];
 	ConfigReadStr(_T("SNMPPorts"), tmp, MAX_CONFIG_VALUE, _T("161"));
    StringList *ports = new StringList(tmp, _T(","));
-   for(int j = -1; j < ports->size(); j++)
+   for(int j = -1; (j < ports->size()) && !(g_flags & AF_SHUTDOWN); j++)
    {
       UINT16 port;
       if (j == -1)
@@ -290,7 +290,7 @@ restart_check:
       {
          DbgPrintf(5, _T("SnmpCheckCommSettings(%s): trying version %d community '%hs'"), (const TCHAR *)ipAddr.toString(), snmpVer, originalContext->getCommunity());
          pTransport->setSecurityContext(new SNMP_SecurityContext(originalContext));
-         for(int i = 0; i < testOids->size(); i++)
+         for(int i = 0; (i < testOids->size()) && !(g_flags & AF_SHUTDOWN); i++)
          {
             if (SnmpGet(snmpVer, pTransport, testOids->get(i), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
             {
@@ -316,7 +316,7 @@ restart_check:
          DBConnectionPoolReleaseConnection(hdb);
       }
 
-      for(i = 0; i < count; i++)
+      for(i = 0; (i < count) && !(g_flags & AF_SHUTDOWN); i++)
       {
 #ifdef UNICODE
          char *community = MBStringFromWideString(communities->get(i));
@@ -332,7 +332,7 @@ restart_check:
 #ifdef UNICODE
             free(community);
 #endif
-            for(int j = 0; j < testOids->size(); j++)
+            for(int j = 0; (j < testOids->size()) && !(g_flags & AF_SHUTDOWN); j++)
             {
                if (SnmpGet(snmpVer, pTransport, testOids->get(j), NULL, 0, buffer, sizeof(buffer), 0) == SNMP_ERR_SUCCESS)
                {
