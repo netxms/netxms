@@ -497,11 +497,11 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_rackPosition); // rack position
    DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_rackHeight);   // device height in rack units
 	DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_rackId);	// rack ID
-	DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);	// rack ID
+	DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);
    DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC);
    DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC);
    DBBind(hStmt, 37, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC);
-	DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, (LONG)m_lastAgentCommTime);	// rack ID
+	DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, (LONG)m_lastAgentCommTime);
 	DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL bResult = DBExecute(hStmt);
@@ -4421,8 +4421,8 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
 	pMsg->setField(VID_SYS_DESCRIPTION, CHECK_NULL_EX(m_sysDescription));
    pMsg->setField(VID_SYS_CONTACT, CHECK_NULL_EX(m_sysContact));
    pMsg->setField(VID_SYS_LOCATION, CHECK_NULL_EX(m_sysLocation));
-   pMsg->setField(VID_BOOT_TIME, (UINT32)m_bootTime);
-   pMsg->setField(VID_AGENT_COMM_TIME, (UINT32)m_lastAgentCommTime);
+   pMsg->setFieldFromTime(VID_BOOT_TIME, m_bootTime);
+   pMsg->setFieldFromTime(VID_AGENT_COMM_TIME, m_lastAgentCommTime);
 	pMsg->setField(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress, 6);
 	if (m_lldpNodeId != NULL)
 		pMsg->setField(VID_LLDP_NODE_ID, m_lldpNodeId);

@@ -1272,7 +1272,7 @@ protected:
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
    void updateRackBinding();
-   void setLastAgentCommTime() {m_lastAgentCommTime = time(NULL); setModified();}
+   void setLastAgentCommTime() { time_t now = time(NULL); if (m_lastAgentCommTime < now - 60) { m_lastAgentCommTime = now; setModified(); } }
 
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 
