@@ -614,3 +614,6 @@ mibs_DATA = \
 	ZONE-DEFENSE-MGMT-MIB.txt
  
 EXTRA_DIST=$(mibs_DATA)
+
+install-data-hook:
+	if test "x@BUILD_SERVER@" = "xyes"; then LD_LIBRARY_PATH="$(DESTDIR)$(libdir):@INSTALL_LIBPATH@:${LD_LIBRARY_PATH}" $(DESTDIR)$(bindir)/nxmibc -d $(DESTDIR)$(pkgdatadir)/mibs -o $(DESTDIR)$(localstatedir)/lib/netxms/netxms.mib; fi
