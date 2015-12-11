@@ -202,7 +202,8 @@ Node::~Node()
    MutexDestroy(m_hSmclpAccessMutex);
    MutexDestroy(m_mutexRTAccess);
 	MutexDestroy(m_mutexTopoAccess);
-   m_pAgentConnection->decRefCount();
+	if (m_pAgentConnection != NULL)
+	   m_pAgentConnection->decRefCount();
    delete m_smclpConnection;
    delete m_paramList;
 	delete m_tableList;
@@ -1870,8 +1871,7 @@ void Node::updatePrimaryIpAddr()
       }
 
 		agentLock();
-		m_pAgentConnection->decRefCount();
-		m_pAgentConnection = NULL;
+		deleteAgentConnection();
 		agentUnlock();
 	}
 }
@@ -3861,8 +3861,7 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
 				DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_name, szParam);
-				m_pAgentConnection->decRefCount();
-				m_pAgentConnection = NULL;
+		      deleteAgentConnection();
             if (!connectToAgent())
                goto end_loop;
 				DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_name, szParam);
@@ -3921,8 +3920,7 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
 				DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
-				m_pAgentConnection->decRefCount();
-				m_pAgentConnection = NULL;
+		      deleteAgentConnection();
             if (!connectToAgent())
                goto end_loop;
 				DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): connection to agent restored successfully"), m_name, name);
@@ -3984,8 +3982,7 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
 				DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
-				m_pAgentConnection->decRefCount();
-				m_pAgentConnection = NULL;
+		      deleteAgentConnection();
             if (!connectToAgent())
                goto end_loop;
 				DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
@@ -4542,8 +4539,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 		}
 
 		agentLock();
-      m_pAgentConnection->decRefCount();
-      m_pAgentConnection = NULL;
+      deleteAgentConnection();
 		agentUnlock();
 	}
 
@@ -5096,8 +5092,7 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
    unlockProperties();
 
    agentLock();
-   m_pAgentConnection->decRefCount();
-   m_pAgentConnection = NULL;
+   deleteAgentConnection();
    agentUnlock();
 
    pollerUnlock();
@@ -5145,8 +5140,7 @@ void Node::changeZone(UINT32 newZone)
    unlockProperties();
 
    agentLock();
-   m_pAgentConnection->decRefCount();
-   m_pAgentConnection = NULL;
+   deleteAgentConnection();
    agentUnlock();
 
    pollerUnlock();
