@@ -518,34 +518,55 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
  */
 DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
 {
-   DWORD i, dwBufferSize, dwBytes, dwType, dwStatus;
-	TCHAR *pBuffer, *newName;
-
 	if (m_info.parameters != NULL)
 		return FALSE;	// Most likely another instance of WINPERF subagent already loaded
 
 	// Read performance counter indexes
-	pBuffer = NULL;
-	dwBufferSize = 0;
+	TCHAR *counters = NULL;
+	size_t countersBufferSize = 0;
+   DWORD status;
 	do
 	{
-		dwBufferSize += 8192;
-		pBuffer = (TCHAR *)realloc(pBuffer, dwBufferSize);
-		dwBytes = dwBufferSize;
-		dwStatus = RegQueryValueEx(HKEY_PERFORMANCE_DATA, _T("Counter 009"), NULL, &dwType, (BYTE *)pBuffer, &dwBytes);
-	} while(dwStatus == ERROR_MORE_DATA);
-	if (dwStatus == ERROR_SUCCESS)
+		countersBufferSize += 8192;
+		counters = (TCHAR *)realloc(counters, countersBufferSize);
+		DWORD bytes = (DWORD)countersBufferSize;
+      DWORD type;
+		status = RegQueryValueEx(HKEY_PERFORMANCE_DATA, _T("Counter 009"), NULL, &type, (BYTE *)counters, &bytes);
+	} while(status == ERROR_MORE_DATA);
+   if ((status != ERROR_SUCCESS) || (counters[0] == 0))
+   {
+      AgentWriteDebugLog(1, _T("WinPerf: failed to read counters from HKEY_PERFORMANCE_DATA"));
+
+      HKEY hKey;
+      status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009"), 0, KEY_READ, &hKey);
+      if (status == ERROR_SUCCESS)
+      {
+	      DWORD bytes = (DWORD)countersBufferSize;
+         DWORD type;
+	      status = RegQueryValueEx(HKEY_PERFORMANCE_DATA, _T("Counter"), NULL, &type, (BYTE *)counters, &bytes);
+	      while(status == ERROR_MORE_DATA)
+	      {
+		      countersBufferSize += 8192;
+		      counters = (TCHAR *)realloc(counters, countersBufferSize);
+		      bytes = (DWORD)countersBufferSize;
+   	      status = RegQueryValueEx(HKEY_PERFORMANCE_DATA, _T("Counter"), NULL, &type, (BYTE *)counters, &bytes);
+	      }
+         RegCloseKey(hKey);
+      }
+   }
+	if (status == ERROR_SUCCESS)
 	{
-		CreateCounterIndex(pBuffer);
+		CreateCounterIndex(counters);
 	}
-	safe_free(pBuffer);
+	safe_free(counters);
 
    // Init parameters list
    m_info.numParameters = sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM);
    m_info.parameters = (NETXMS_SUBAGENT_PARAM *)nx_memdup(m_parameters, sizeof(m_parameters));
 
 	// Check counter names for H_CounterAlias
-	for(i = 0; i < m_info.numParameters; i++)
+   TCHAR *newName;
+	for(UINT32 i = 0; i < m_info.numParameters; i++)
 	{
 		if (m_info.parameters[i].handler == H_CounterAlias)
 		{

@@ -30,6 +30,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				Description=""
+				CommandLine=""
+				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -108,6 +111,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				Description=""
+				CommandLine=""
+				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -188,6 +194,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				Description=""
+				CommandLine=""
+				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -266,6 +275,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				Description=""
+				CommandLine=""
+				Outputs=""
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"

@@ -77,9 +77,7 @@ void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError)
  */
 void CreateCounterIndex(TCHAR *pData)
 {
-	TCHAR *pCurr;
-
-	for(pCurr = pData; *pCurr != 0; )
+	for(TCHAR *pCurr = pData; *pCurr != 0; )
 	{
 		m_pCounterList = (COUNTER_INDEX *)realloc(m_pCounterList, sizeof(COUNTER_INDEX) * (m_dwNumCounters + 1));
 		m_pCounterList[m_dwNumCounters].dwIndex = _tcstoul(pCurr, NULL, 10);
@@ -88,6 +86,7 @@ void CreateCounterIndex(TCHAR *pData)
 		pCurr += _tcslen(pCurr) + 1;
 		m_dwNumCounters++;
 	}
+   AgentWriteDebugLog(2, _T("WinPerf: %d counter indexes read"), m_dwNumCounters);
 }
 
 /**
