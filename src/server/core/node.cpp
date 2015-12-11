@@ -2314,7 +2314,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
    oids.add(_T(".1.3.6.1.2.1.1.1.0"));
    AddDriverSpecificOids(&oids);
    SNMP_Transport *pTransport = SnmpCheckCommSettings(getEffectiveSnmpProxy(), (getEffectiveSnmpProxy() == m_id) ? InetAddress::LOOPBACK : m_ipAddress, &m_snmpVersion, m_snmpPort, m_snmpSecurity, &oids);
-   if(pTransport == NULL)
+   if (pTransport == NULL)
    {
       DbgPrintf(5, _T("ConfPoll(%s): unable to create SNMP transport"), m_name);
       return false;

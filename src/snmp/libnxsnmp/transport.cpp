@@ -105,7 +105,7 @@ UINT32 SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 
 		}
 	}
 
-   while(numRetries-- >= 0)
+   while(--numRetries >= 0)
    {
 		int timeSyncRetries = 3;
 
