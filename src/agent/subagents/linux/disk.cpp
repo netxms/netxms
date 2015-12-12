@@ -267,6 +267,9 @@ LONG H_FileSystemType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
       struct mntent *mnt;
 		while((mnt = getmntent(f)) != NULL)
 		{
+		   if (!strcmp(mnt->mnt_type, "rootfs"))
+		      continue;  // ignore rootfs entries
+
 			if (!strcmp(mnt->mnt_fsname, path) || !strcmp(mnt->mnt_dir, path))
 			{
             ret_mbstring(value, mnt->mnt_type);
