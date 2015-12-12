@@ -676,7 +676,7 @@ void LDAPConnection::updateMembers(StringList *memberList, const char *firstAttr
    LDAP_CHAR memberAttr[30];
    requiredAttr[1] = _TLDAP('\0');
 
-   LDAP_CHAR *filter = _TLDAP("(objectClass=*)");
+   const LDAP_CHAR *filter = _TLDAP("(objectClass=*)");
 
    while(true)
    {

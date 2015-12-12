@@ -1204,6 +1204,9 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller
 		return;
 	}
 
+	if (g_flags & AF_SHUTDOWN)
+	   return;
+
    UINT32 i, dwPollListSize, dwOldFlags = m_dwFlags;
    NetObj *pPollerNode = NULL, **ppPollList;
    BOOL bAllDown;
@@ -1899,6 +1902,9 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
 			m_dwDynamicFlags &= ~NDF_QUEUED_FOR_CONFIG_POLL;
 		return;
 	}
+
+   if (g_flags & AF_SHUTDOWN)
+      return;
 
    UINT32 dwOldFlags = m_dwFlags;
    TCHAR szBuffer[4096];
@@ -3069,37 +3075,11 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 }
 
 /**
- * Callback: apply template to nodes
+ * Filter for selecting templates from objects
  */
-static void ApplyTemplate(NetObj *object, void *node)
+static bool TemplateSelectionFilter(NetObj *object, void *userData)
 {
-   if ((object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted())
-   {
-      Template *pTemplate = (Template *)object;
-      AutoBindDecision decision = pTemplate->isApplicable((Node *)node);
-		if (decision == AutoBindDecision_Bind)
-		{
-			if (!pTemplate->isChild(((Node *)node)->getId()))
-			{
-				DbgPrintf(4, _T("Node::ApplyUserTemplates(): applying template %d \"%s\" to node %d \"%s\""),
-				          pTemplate->getId(), pTemplate->getName(), ((Node *)node)->getId(), ((Node *)node)->getName());
-				pTemplate->applyToTarget((Node *)node);
-				PostEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", ((Node *)node)->getId(), ((Node *)node)->getName(), pTemplate->getId(), pTemplate->getName());
-			}
-		}
-		else if (decision == AutoBindDecision_Unbind)
-		{
-			if (pTemplate->isAutoRemoveEnabled() && pTemplate->isChild(((Node *)node)->getId()))
-			{
-				DbgPrintf(4, _T("Node::ApplyUserTemplates(): removing template %d \"%s\" from node %d \"%s\""),
-				          pTemplate->getId(), pTemplate->getName(), ((Node *)node)->getId(), ((Node *)node)->getName());
-				pTemplate->DeleteChild((Node *)node);
-				((Node *)node)->DeleteParent(pTemplate);
-				pTemplate->queueRemoveFromTarget(((Node *)node)->getId(), TRUE);
-				PostEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", ((Node *)node)->getId(), ((Node *)node)->getName(), pTemplate->getId(), pTemplate->getName());
-			}
-		}
-   }
+   return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && ((Template *)object)->isAutoApplyEnabled();
 }
 
 /**
@@ -3107,7 +3087,36 @@ static void ApplyTemplate(NetObj *object, void *node)
  */
 void Node::applyUserTemplates()
 {
-	g_idxObjectById.forEach(ApplyTemplate, this);
+   ObjectArray<NetObj> *templates = g_idxObjectById.getObjects(true, TemplateSelectionFilter);
+   for(int i = 0; i < templates->size(); i++)
+   {
+      Template *pTemplate = (Template *)templates->get(i);
+      AutoBindDecision decision = pTemplate->isApplicable(this);
+      if (decision == AutoBindDecision_Bind)
+      {
+         if (!pTemplate->isChild(m_id))
+         {
+            DbgPrintf(4, _T("Node::ApplyUserTemplates(): applying template %d \"%s\" to node %d \"%s\""),
+                      pTemplate->getId(), pTemplate->getName(), m_id, m_name);
+            pTemplate->applyToTarget(this);
+            PostEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
+         }
+      }
+      else if (decision == AutoBindDecision_Unbind)
+      {
+         if (pTemplate->isAutoRemoveEnabled() && pTemplate->isChild(m_id))
+         {
+            DbgPrintf(4, _T("Node::ApplyUserTemplates(): removing template %d \"%s\" from node %d \"%s\""),
+                      pTemplate->getId(), pTemplate->getName(), m_id, m_name);
+            pTemplate->DeleteChild(this);
+            DeleteParent(pTemplate);
+            pTemplate->queueRemoveFromTarget(m_id, true);
+            PostEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
+         }
+      }
+      pTemplate->decRefCount();
+   }
+   delete templates;
 }
 
 /**
@@ -3180,6 +3189,9 @@ void Node::instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, Polle
 			m_dwDynamicFlags &= ~NDF_QUEUED_FOR_INSTANCE_POLL;
 		return;
 	}
+
+   if (g_flags & AF_SHUTDOWN)
+      return;
 
    poller->setStatus(_T("wait for lock"));
    pollerLock();
@@ -5359,6 +5371,9 @@ void Node::updateRoutingTable()
 		return;
 	}
 
+   if (g_flags & AF_SHUTDOWN)
+      return;
+
    ROUTING_TABLE *pRT = getRoutingTable();
    if (pRT != NULL)
    {
@@ -5849,6 +5864,9 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
 			m_dwDynamicFlags &= ~NDF_QUEUED_FOR_TOPOLOGY_POLL;
 		return;
 	}
+
+   if (g_flags & AF_SHUTDOWN)
+      return;
 
 	pollerLock();
    m_pollRequestor = pSession;

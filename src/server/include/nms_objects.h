@@ -680,7 +680,7 @@ protected:
    bool m_dciListModified;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 	TCHAR *m_applyFilterSource;
-	NXSL_VM *m_applyFilter;
+	NXSL_Program *m_applyFilter;
 	RWLOCK m_dciAccessLock;
 
    virtual void prepareForDeletion();
@@ -1753,7 +1753,7 @@ private:
 protected:
 	UINT32 m_flags;
    UINT32 m_dwCategory;
-	NXSL_VM *m_bindFilter;
+	NXSL_Program *m_bindFilter;
 	TCHAR *m_bindFilterSource;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg);

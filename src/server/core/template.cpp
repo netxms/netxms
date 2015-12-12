@@ -154,7 +154,7 @@ void Template::setAutoApplyFilter(const TCHAR *filter)
 		TCHAR error[256];
 
 		m_applyFilterSource = _tcsdup(filter);
-		m_applyFilter = NXSLCompileAndCreateVM(m_applyFilterSource, error, 256, new NXSL_ServerEnv);
+		m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256, NULL);
 		if (m_applyFilter == NULL)
 			nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
 	}
@@ -206,7 +206,7 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		{
 			TCHAR error[256];
 
-			m_applyFilter = NXSLCompileAndCreateVM(m_applyFilterSource, error, 256, new NXSL_ServerEnv);
+			m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256, NULL);
 			if (m_applyFilter == NULL)
 				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
 		}
@@ -895,7 +895,7 @@ UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
 		{
 			TCHAR error[256];
 
-			m_applyFilter = NXSLCompileAndCreateVM(m_applyFilterSource, error, 256, new NXSL_ServerEnv);
+			m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256, NULL);
 			if (m_applyFilter == NULL)
 				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
 		}
@@ -1166,25 +1166,37 @@ AutoBindDecision Template::isApplicable(Node *node)
 {
 	AutoBindDecision result = AutoBindDecision_Ignore;
 
+	NXSL_VM *filter = NULL;
 	lockProperties();
 	if ((m_flags & TF_AUTO_APPLY) && (m_applyFilter != NULL))
 	{
-		m_applyFilter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
-		if (m_applyFilter->run())
-		{
-	      NXSL_Value *value = m_applyFilter->getResult();
-         result = ((value != NULL) && (value->getValueAsInt32() != 0)) ? AutoBindDecision_Bind : AutoBindDecision_Unbind;
-		}
-		else
-		{
-			TCHAR buffer[1024];
-
-			_sntprintf(buffer, 1024, _T("Template::%s::%d"), m_name, m_id);
-			PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_applyFilter->getErrorText(), m_id);
-			nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, m_applyFilter->getErrorText());
-		}
+	   NXSL_VM *filter = new NXSL_VM(new NXSL_ServerEnv());
+	   if (!filter->load(m_applyFilter))
+	   {
+	      delete_and_null(filter);
+	   }
 	}
-	unlockProperties();
+   unlockProperties();
+
+   if (filter == NULL)
+      return result;
+
+   filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)));
+   if (filter->run())
+   {
+      NXSL_Value *value = filter->getResult();
+      result = ((value != NULL) && (value->getValueAsInt32() != 0)) ? AutoBindDecision_Bind : AutoBindDecision_Unbind;
+   }
+   else
+   {
+      lockProperties();
+      TCHAR buffer[1024];
+      _sntprintf(buffer, 1024, _T("Template::%s::%d"), m_name, m_id);
+      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, filter->getErrorText(), m_id);
+      nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, filter->getErrorText());
+      unlockProperties();
+   }
+   delete filter;
 	return result;
 }
 
