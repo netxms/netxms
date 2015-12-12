@@ -64,7 +64,7 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 		msg.setField(VID_PDU, pBuffer, (UINT32)size);
       free(pBuffer);
 
-      if(m_waitForResponse)
+      if (m_waitForResponse)
       {
          m_response = m_agentConnection->customRequest(&msg);
          if (m_response != NULL)

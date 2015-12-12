@@ -97,9 +97,15 @@ void StartSyslogServer();
 void StopSyslogServer();
 
 /**
+ * Housekeeper control
+ */
+void StartHouseKeeper();
+void StopHouseKeeper();
+void RunHouseKeeper();
+
+/**
  * Thread functions
  */
-THREAD_RESULT THREAD_CALL HouseKeeper(void *);
 THREAD_RESULT THREAD_CALL Syncer(void *);
 THREAD_RESULT THREAD_CALL NodePoller(void *);
 THREAD_RESULT THREAD_CALL PollManager(void *);
@@ -163,7 +169,6 @@ INT16 g_defaultAgentCacheMode = AGENT_CACHE_OFF;
  */
 static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
-static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
 static int m_nShutdownReason = SHUTDOWN_DEFAULT;
 
@@ -814,8 +819,9 @@ retry_db_lock:
 	ThreadCreate(NodePoller, 0, NULL);
 	ThreadCreate(JobManagerThread, 0, NULL);
 	m_thSyncer = ThreadCreateEx(Syncer, 0, NULL);
-	m_thHouseKeeper = ThreadCreateEx(HouseKeeper, 0, NULL);
 	m_thPollManager = ThreadCreateEx(PollManager, 0, NULL);
+
+   StartHouseKeeper();
 
 	// Start event processor
 	ThreadCreate(EventProcessor, 0, NULL);
@@ -929,9 +935,9 @@ void NXCORE_EXPORTABLE Shutdown()
 	DbgPrintf(2, _T("All threads was notified, continue with shutdown"));
 
 	StopSyslogServer();
+	StopHouseKeeper();
 
 	// Wait for critical threads
-	ThreadJoin(m_thHouseKeeper);
 	ThreadJoin(m_thPollManager);
 	ThreadJoin(m_thSyncer);
 
@@ -1124,6 +1130,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsoleWrite(pCtx, _T("Variable name missing\n"));
 		}
 	}
+   else if (IsCommand(_T("HKRUN"), szBuffer, 2))
+   {
+      ConsoleWrite(pCtx, _T("Starting housekeeper\n"));
+      RunHouseKeeper();
+   }
 	else if (IsCommand(_T("RAISE"), szBuffer, 5))
 	{
 		// Get argument
@@ -1936,6 +1947,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   kill <session>            - Kill client session\n")
 				_T("   get <variable>            - Get value of server configuration variable\n")
 				_T("   help                      - Display this help\n")
+            _T("   hkrun                     - Run housekeeper immediately\n")
 				_T("   ldapsync                  - Synchronize ldap users with local user database\n")
             _T("   ping <address>            - Send ICMP echo request to given IP address\n")
             _T("   poll <type> <node>        - Initiate node poll\n")
