@@ -334,7 +334,7 @@ static void LoadGlobalConfig()
 	g_thresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
 	g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
 
-	UINT32 snmpTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 2000);
+	UINT32 snmpTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 1500);
    SnmpSetDefaultTimeout(snmpTimeout);
 }
 

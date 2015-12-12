@@ -135,7 +135,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SMTPRetryCount','1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SNMPPorts','161',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SMTPServer','localhost',1,0);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SNMPRequestTimeout','2000',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SNMPRequestTimeout','1500',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SNMPTrapLogRetentionTime','90',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SNMPTrapPort','162',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StatusCalculationAlgorithm','1',1,1);

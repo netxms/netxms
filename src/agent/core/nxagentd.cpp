@@ -151,7 +151,7 @@ UINT16 g_wListenPort = AGENT_LISTEN_PORT;
 ObjectArray<ServerInfo> g_serverList(8, 8, true);
 UINT32 g_dwServerCount = 0;
 UINT32 g_dwExecTimeout = 2000;     // External process execution timeout in milliseconds
-UINT32 g_dwSNMPTimeout = 3000;
+UINT32 g_dwSNMPTimeout = 1500;
 time_t g_tmAgentStartTime;
 UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 32;

@@ -619,6 +619,7 @@ protected:
 	SNMP_Engine *m_contextEngine;
 	bool m_enableEngineIdAutoupdate;
 	bool m_updatePeerOnRecv;
+	bool m_reliable;
 	int m_snmpVersion;
 
 public:

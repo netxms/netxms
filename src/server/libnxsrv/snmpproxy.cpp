@@ -28,6 +28,7 @@
  */
 SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *conn, const InetAddress& ipAddr, WORD port)
 {
+   m_reliable = true;   // no need for retries on server side, agent will do retry if needed
 	m_agentConnection = conn;
 	m_ipAddr = ipAddr;
 	m_port = port;
