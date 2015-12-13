@@ -334,7 +334,7 @@ AutoBindDecision Container::isSuitableForNode(Node *node)
 	lockProperties();
 	if ((m_flags & CF_AUTO_BIND) && (m_bindFilter != NULL))
 	{
-	   NXSL_VM *filter = new NXSL_VM(new NXSL_ServerEnv());
+	   filter = new NXSL_VM(new NXSL_ServerEnv());
 	   if (!filter->load(m_bindFilter))
 	   {
 	      delete_and_null(filter);

@@ -1170,7 +1170,7 @@ AutoBindDecision Template::isApplicable(Node *node)
 	lockProperties();
 	if ((m_flags & TF_AUTO_APPLY) && (m_applyFilter != NULL))
 	{
-	   NXSL_VM *filter = new NXSL_VM(new NXSL_ServerEnv());
+	   filter = new NXSL_VM(new NXSL_ServerEnv());
 	   if (!filter->load(m_applyFilter))
 	   {
 	      delete_and_null(filter);
