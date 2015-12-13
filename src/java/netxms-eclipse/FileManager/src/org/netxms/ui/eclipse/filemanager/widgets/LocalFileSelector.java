@@ -125,7 +125,7 @@ public class LocalFileSelector extends AbstractSelector
 	      fileListString.append(fileList.get(i).getName());
 	      if(i != (fileList.size() - 1))
 	      {
-	         fileListString.append(", ");
+	         fileListString.append(", "); //$NON-NLS-1$
 	      }
       }
 	   

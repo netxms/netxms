@@ -103,7 +103,7 @@ public class UploadFileToAgent implements IObjectActionDelegate
 					   if(dlg.isScheduled())
 					   {
 					      ScheduledTask task = dlg.getScheduledTask();
-					      String parameters = dlg.getServerFile().getName() + "," + remoteFileName;
+					      String parameters = dlg.getServerFile().getName() + "," + remoteFileName; //$NON-NLS-1$
 					      task.setParameters(parameters);
 					      task.setObjectId(nodeIdList[i]);
 					      task.setFlags(ScheduledTask.INTERNAL);
