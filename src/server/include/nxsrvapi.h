@@ -486,6 +486,8 @@ private:
 
    void processCollectedDataCallback(NXCPMessage *msg);
    void onDataPushCallback(NXCPMessage *msg);
+   void onSnmpTrapCallback(NXCPMessage *msg);
+   void onTrapCallback(NXCPMessage *msg);
 
 protected:
    void destroyResultData();

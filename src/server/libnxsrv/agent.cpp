@@ -350,8 +350,15 @@ void AgentConnection::receiverThread()
 					m_pMsgWaitQueue->put(pMsg);
 					break;
 				case CMD_TRAP:
-					onTrap(pMsg);
-					delete pMsg;
+               if (g_agentConnectionThreadPool != NULL)
+               {
+                  incRefCount();
+                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onTrapCallback, pMsg);
+               }
+               else
+               {
+                  delete pMsg;
+               }
 					break;
 				case CMD_PUSH_DCI_DATA:
 				   if (g_agentConnectionThreadPool != NULL)
@@ -385,7 +392,15 @@ void AgentConnection::receiverThread()
 					delete pMsg;
                break;
             case CMD_SNMP_TRAP:
-               onSnmpTrap(pMsg);
+               if (g_agentConnectionThreadPool != NULL)
+               {
+                  incRefCount();
+                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSnmpTrapCallback, pMsg);
+               }
+               else
+               {
+                  delete pMsg;
+               }
                break;
 				default:
 					if (processCustomMessage(pMsg))
@@ -985,6 +1000,16 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
 }
 
 /**
+ * Callback for processing data push on separate thread
+ */
+void AgentConnection::onTrapCallback(NXCPMessage *msg)
+{
+   onTrap(msg);
+   delete msg;
+   decRefCount();
+}
+
+/**
  * Trap handler. Should be overriden in derived classes to implement
  * actual trap processing. Default implementation do nothing.
  */
@@ -1016,6 +1041,16 @@ void AgentConnection::onDataPush(NXCPMessage *pMsg)
  */
 void AgentConnection::onFileMonitoringData(NXCPMessage *pMsg)
 {
+}
+
+/**
+ * Callback for processing data push on separate thread
+ */
+void AgentConnection::onSnmpTrapCallback(NXCPMessage *msg)
+{
+   onSnmpTrap(msg);
+   delete msg;
+   decRefCount();
 }
 
 /**
