@@ -1209,7 +1209,6 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller
 
    UINT32 i, dwPollListSize, dwOldFlags = m_dwFlags;
    NetObj *pPollerNode = NULL, **ppPollList;
-   BOOL bAllDown;
 	SNMP_Transport *pTransport;
 	Cluster *pCluster;
    time_t tNow, tExpire;
@@ -1421,36 +1420,32 @@ restart_agent_check:
 	// This check is disabled for nodes without IP address
 	if (m_ipAddress.isValidUnicast())
 	{
+	   bool allDown = true;
 		LockChildList(FALSE);
 		if (m_dwChildCount > 0)
 		{
-			for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
+			for(i = 0; i < m_dwChildCount; i++)
 				if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
-					 (m_pChildList[i]->Status() != STATUS_CRITICAL) &&
-					 (m_pChildList[i]->Status() != STATUS_UNKNOWN) &&
-					 (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
-					 (m_pChildList[i]->Status() != STATUS_DISABLED))
+                (((Interface *)m_pChildList[i])->getAdminState() != IF_ADMIN_STATE_DOWN) &&
+					 (((Interface *)m_pChildList[i])->getOperState() == IF_OPER_STATE_UP) &&
+					 (m_pChildList[i]->Status() != STATUS_UNMANAGED))
 				{
-					bAllDown = FALSE;
+					allDown = false;
 					break;
 				}
 		}
-		else
-		{
-			bAllDown = FALSE;
-		}
 		UnlockChildList();
-		if (bAllDown && (m_dwFlags & NF_IS_NATIVE_AGENT) &&
+		if (allDown && (m_dwFlags & NF_IS_NATIVE_AGENT) &&
 		    (!(m_dwFlags & NF_DISABLE_NXCP)))
 		   if (!(m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))
-		      bAllDown = FALSE;
-		if (bAllDown && (m_dwFlags & NF_IS_SNMP) &&
+		      allDown = false;
+		if (allDown && (m_dwFlags & NF_IS_SNMP) &&
 		    (!(m_dwFlags & NF_DISABLE_SNMP)))
 		   if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))
-		      bAllDown = FALSE;
+            allDown = false;
 
-		DbgPrintf(6, _T("StatusPoll(%s): bAllDown=%s, dynFlags=0x%08X"), m_name, bAllDown ? _T("true") : _T("false"), m_dwDynamicFlags);
-		if (bAllDown)
+		DbgPrintf(6, _T("StatusPoll(%s): allDown=%s, dynFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_dwDynamicFlags);
+		if (allDown)
 		{
 		   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
 		   {
@@ -1463,7 +1458,7 @@ restart_agent_check:
 
 					// Set interfaces and network services to UNKNOWN state
 					LockChildList(FALSE);
-					for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
+					for(i = 0; i < m_dwChildCount; i++)
 						if (((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) || (m_pChildList[i]->getObjectClass() == OBJECT_NETWORKSERVICE)) &&
 							 (m_pChildList[i]->Status() == STATUS_CRITICAL))
 						{
