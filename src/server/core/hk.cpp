@@ -23,23 +23,49 @@
 #include "nxcore.h"
 
 /**
+ * Delete empty subnets from given list
+ */
+static void DeleteEmptySubnetsFromList(ObjectArray<NetObj> *subnets)
+{
+   for(int i = 0; i < subnets->size(); i++)
+   {
+      NetObj *object = subnets->get(i);
+      DbgPrintf(7, _T("DeleteEmptySubnets: checking subnet %s [%d] (refs: %d refs, children: %d, parents: %d)"),
+                object->getName(), object->getId(), object->getRefCount(), object->getChildCount(), object->getParentCount());
+      if (object->isEmpty())
+      {
+         DbgPrintf(5, _T("DeleteEmptySubnets: delete subnet %s [%d] (refs: %d, children: %d, parents: %d)"),
+                   object->getName(), object->getId(), object->getRefCount(), object->getChildCount(), object->getParentCount());
+         object->deleteObject();
+      }
+      object->decRefCount();
+   }
+}
+
+/**
  * Delete empty subnets
  */
 static void DeleteEmptySubnets()
 {
-	ObjectArray<NetObj> *subnets = g_idxSubnetByAddr.getObjects(true);
-	for(int i = 0; i < subnets->size(); i++)
-	{
-		NetObj *object = subnets->get(i);
-		if (object->isEmpty())
-		{
-		   DbgPrintf(5, _T("DeleteEmptySubnets: subnet %s [%d] has %d refs, children: %d, parents: %d"),
-            object->getName(), object->getId(), object->getRefCount(), object->getChildCount(), object->getParentCount());
-			object->deleteObject();
-		}
-      object->decRefCount();
-	}
-	delete subnets;
+   if (IsZoningEnabled())
+   {
+      ObjectArray<NetObj> *zones = g_idxZoneByGUID.getObjects(true);
+      for(int i = 0; i < zones->size(); i++)
+      {
+         Zone *zone = (Zone *)zones->get(i);
+         ObjectArray<NetObj> *subnets = zone->getSubnets(true);
+         DeleteEmptySubnetsFromList(subnets);
+         delete subnets;
+         zone->decRefCount();
+      }
+      delete zones;
+   }
+   else
+   {
+      ObjectArray<NetObj> *subnets = g_idxSubnetByAddr.getObjects(true);
+      DeleteEmptySubnetsFromList(subnets);
+      delete subnets;
+   }
 }
 
 /**
