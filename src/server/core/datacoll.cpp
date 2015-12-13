@@ -234,43 +234,45 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
       time_t currTime = time(NULL);
       if (target != NULL)
       {
-			void *data;
-
-			switch(pItem->getType())
-			{
-				case DCO_TYPE_ITEM:
-					data = GetItemData(target, (DCItem *)pItem, pBuffer, &dwError);
-					break;
-				case DCO_TYPE_TABLE:
-					data = GetTableData(target, (DCTable *)pItem, &dwError);
-					break;
-				default:
-					data = NULL;
-					dwError = DCE_NOT_SUPPORTED;
-					break;
-			}
-
-         // Transform and store received value into database or handle error
-         switch(dwError)
+         if (!IsShutdownInProgress())
          {
-            case DCE_SUCCESS:
-					if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
-	               pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-					if (!((DataCollectionTarget *)pItem->getTarget())->processNewDCValue(pItem, currTime, data))
-               {
-                  // value processing failed, convert to data collection error
+            void *data;
+            switch(pItem->getType())
+            {
+               case DCO_TYPE_ITEM:
+                  data = GetItemData(target, (DCItem *)pItem, pBuffer, &dwError);
+                  break;
+               case DCO_TYPE_TABLE:
+                  data = GetTableData(target, (DCTable *)pItem, &dwError);
+                  break;
+               default:
+                  data = NULL;
+                  dwError = DCE_NOT_SUPPORTED;
+                  break;
+            }
+
+            // Transform and store received value into database or handle error
+            switch(dwError)
+            {
+               case DCE_SUCCESS:
+                  if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+                     pItem->setStatus(ITEM_STATUS_ACTIVE, true);
+                  if (!((DataCollectionTarget *)pItem->getTarget())->processNewDCValue(pItem, currTime, data))
+                  {
+                     // value processing failed, convert to data collection error
+                     pItem->processNewError();
+                  }
+                  break;
+               case DCE_COMM_ERROR:
+                  if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+                     pItem->setStatus(ITEM_STATUS_ACTIVE, true);
                   pItem->processNewError();
-               }
-               break;
-            case DCE_COMM_ERROR:
-					if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
-	               pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-               pItem->processNewError();
-               break;
-            case DCE_NOT_SUPPORTED:
-               // Change item's status
-               pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
-               break;
+                  break;
+               case DCE_NOT_SUPPORTED:
+                  // Change item's status
+                  pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
+                  break;
+            }
          }
 
          // Decrement node's usage counter
@@ -302,6 +304,9 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
  */
 static void QueueItems(NetObj *object, void *data)
 {
+   if (IsShutdownInProgress())
+      return;
+
 	DbgPrintf(8, _T("ItemPoller: calling DataCollectionTarget::queueItemsForPolling for object %s [%d]"),
 				 object->getName(), object->getId());
 	((DataCollectionTarget *)object)->queueItemsForPolling(&g_dataCollectionQueue);

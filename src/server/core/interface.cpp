@@ -454,6 +454,9 @@ bool Interface::deleteFromDatabase(DB_HANDLE hdb)
  */
 void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy)
 {
+   if (IsShutdownInProgress())
+      return;
+
    m_pollRequestor = session;
    Node *pNode = getParentNode();
    if (pNode == NULL)

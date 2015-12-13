@@ -1204,7 +1204,7 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller
 		return;
 	}
 
-	if (g_flags & AF_SHUTDOWN)
+	if (IsShutdownInProgress())
 	   return;
 
    UINT32 i, dwPollListSize, dwOldFlags = m_dwFlags;
@@ -1216,6 +1216,14 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller
    Queue *pQueue = new Queue;     // Delayed event queue
    poller->setStatus(_T("wait for lock"));
    pollerLock();
+
+   if (IsShutdownInProgress())
+   {
+      delete pQueue;
+      pollerUnlock();
+      return;
+   }
+
    m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_name);
    DbgPrintf(5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
@@ -1898,7 +1906,7 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
 		return;
 	}
 
-   if (g_flags & AF_SHUTDOWN)
+   if (IsShutdownInProgress())
       return;
 
    UINT32 dwOldFlags = m_dwFlags;
@@ -1907,6 +1915,13 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
 
    poller->setStatus(_T("wait for lock"));
    pollerLock();
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
    m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting configuration poll for node %s\r\n"), m_name);
    DbgPrintf(4, _T("Starting configuration poll for node %s (ID: %d)"), m_name, m_id);
@@ -3082,6 +3097,9 @@ static bool TemplateSelectionFilter(NetObj *object, void *userData)
  */
 void Node::applyUserTemplates()
 {
+   if (IsShutdownInProgress())
+      return;
+
    ObjectArray<NetObj> *templates = g_idxObjectById.getObjects(true, TemplateSelectionFilter);
    for(int i = 0; i < templates->size(); i++)
    {
@@ -3127,6 +3145,9 @@ static bool ContainerSelectionFilter(NetObj *object, void *userData)
  */
 void Node::updateContainerMembership()
 {
+   if (IsShutdownInProgress())
+      return;
+
    ObjectArray<NetObj> *containers = g_idxObjectById.getObjects(true, ContainerSelectionFilter);
    for(int i = 0; i < containers->size(); i++)
    {
@@ -3185,11 +3206,18 @@ void Node::instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, Polle
 		return;
 	}
 
-   if (g_flags & AF_SHUTDOWN)
+   if (IsShutdownInProgress())
       return;
 
    poller->setStatus(_T("wait for lock"));
    pollerLock();
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
    m_pollRequestor = session;
    sendPollerMsg(requestId, _T("Starting instance discovery poll for node %s\r\n"), m_name);
    DbgPrintf(4, _T("Starting instance discovery poll for node %s (ID: %d)"), m_name, m_id);
@@ -5366,7 +5394,7 @@ void Node::updateRoutingTable()
 		return;
 	}
 
-   if (g_flags & AF_SHUTDOWN)
+   if (IsShutdownInProgress())
       return;
 
    ROUTING_TABLE *pRT = getRoutingTable();
@@ -5860,12 +5888,18 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
 		return;
 	}
 
-   if (g_flags & AF_SHUTDOWN)
+   if (IsShutdownInProgress())
       return;
 
 	pollerLock();
-   m_pollRequestor = pSession;
 
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
+   m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting topology poll for node %s\r\n"), m_name);
 	DbgPrintf(4, _T("Started topology poll for node %s [%d]"), m_name, m_id);
 
@@ -6468,6 +6502,12 @@ void Node::checkSubnetBinding()
 void Node::updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId)
 {
    pollerLock();
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
    m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting interface names poll for node %s\r\n"), m_name);
    DbgPrintf(4, _T("Starting interface names poll for node %s (ID: %d)"), m_name, m_id);

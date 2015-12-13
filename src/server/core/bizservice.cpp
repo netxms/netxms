@@ -206,6 +206,12 @@ void BusinessService::poll(PollerInfo *poller)
  */
 void BusinessService::poll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller)
 {
+   if (IsShutdownInProgress())
+   {
+      m_busy = false;
+      return;
+   }
+
 	DbgPrintf(5, _T("Started polling of business service %s [%d]"), m_name, (int)m_id);
 	m_lastPollTime = time(NULL);
 

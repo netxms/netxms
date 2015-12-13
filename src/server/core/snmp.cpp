@@ -200,7 +200,7 @@ bool SnmpCheckV3CommSettings(SNMP_Transport *pTransport, SNMP_SecurityContext *o
       DBConnectionPoolReleaseConnection(hdb);
 
       bool found = false;
-		for(int i = 0; (i < contexts.size()) && !found && !(g_flags & AF_SHUTDOWN); i++)
+		for(int i = 0; (i < contexts.size()) && !found && !IsShutdownInProgress(); i++)
 		{
 		   SNMP_SecurityContext *ctx = contexts.get(i);
 			pTransport->setSecurityContext(ctx);
@@ -246,7 +246,7 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
    TCHAR tmp[MAX_CONFIG_VALUE];
 	ConfigReadStr(_T("SNMPPorts"), tmp, MAX_CONFIG_VALUE, _T("161"));
    StringList *ports = new StringList(tmp, _T(","));
-   for(int j = -1; (j < ports->size()) && !(g_flags & AF_SHUTDOWN); j++)
+   for(int j = -1; (j < ports->size()) && !IsShutdownInProgress(); j++)
    {
       UINT16 port;
       if (j == -1)
@@ -294,6 +294,9 @@ SNMP_Transport *SnmpCheckCommSettings(UINT32 snmpProxy, const InetAddress& ipAdd
          goto success;
       }
 
+      if (IsShutdownInProgress())
+         goto fail;
+
       pTransport->setSnmpVersion(SNMP_VERSION_2C);
 restart_check:
       // Check current community first
@@ -325,7 +328,7 @@ restart_check:
          DBConnectionPoolReleaseConnection(hdb);
       }
 
-      for(int i = 0; (i < communities->size()) && !(g_flags & AF_SHUTDOWN); i++)
+      for(int i = 0; (i < communities->size()) && !IsShutdownInProgress(); i++)
       {
 #ifdef UNICODE
          char *community = MBStringFromWideString(communities->get(i));
@@ -356,7 +359,7 @@ restart_check:
 #endif
       }
 
-      if (pTransport->getSnmpVersion() == SNMP_VERSION_2C)
+      if ((pTransport->getSnmpVersion() == SNMP_VERSION_2C) && !IsShutdownInProgress())
       {
          pTransport->setSnmpVersion(SNMP_VERSION_1);
          goto restart_check;

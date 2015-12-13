@@ -319,6 +319,12 @@ static void DiscoveryPoller(void *arg)
    PollerInfo *poller = (PollerInfo *)arg;
    poller->startExecution();
 
+   if (IsShutdownInProgress())
+   {
+      delete poller;
+      return;
+   }
+
    Node *node = (Node *)poller->getObject();
 	if (node->getRuntimeFlags() & NDF_DELETE_IN_PROGRESS)
 	{
@@ -381,7 +387,7 @@ static void CheckRange(int nType, UINT32 addr1, UINT32 addr2)
    TCHAR ipAddr1[16], ipAddr2[16];
    DbgPrintf(4, _T("Starting active discovery check on range %s - %s"), IpToStr(from, ipAddr1), IpToStr(to, ipAddr2));
 
-   for(UINT32 curr = from; curr <= to; curr++)
+   for(UINT32 curr = from; (curr <= to) && !IsShutdownInProgress(); curr++)
    {
       InetAddress addr = InetAddress(curr);
       if (IcmpPing(addr, 3, g_icmpPingTimeout, NULL, g_icmpPingSize) == ICMP_SUCCESS)
@@ -448,7 +454,7 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
       if (hResult != NULL)
       {
          int nRows = DBGetNumRows(hResult);
-         for(int i = 0; i < nRows; i++)
+         for(int i = 0; (i < nRows) && !IsShutdownInProgress(); i++)
          {
             CheckRange(DBGetFieldLong(hResult, i, 0),
                        DBGetFieldIPAddr(hResult, i, 1),
@@ -465,6 +471,9 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
  */
 static void QueueForPolling(NetObj *object, void *data)
 {
+   if (IsShutdownInProgress())
+      return;
+
 	switch(object->getObjectClass())
 	{
 		case OBJECT_NODE:
