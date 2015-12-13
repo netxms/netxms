@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -154,7 +154,7 @@ static bool SnmpTestRequest(SNMP_Transport *snmp, StringList *testOids)
    UINT32 rc = snmp->doRequest(&request, &response, SnmpGetDefaultTimeout(), 3);
    if (rc == SNMP_ERR_SUCCESS)
    {
-      success = (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS);
+      success = (response->getErrorCode() == SNMP_PDU_ERR_SUCCESS) || (response->getErrorCode() == SNMP_PDU_ERR_NO_SUCH_NAME);
       delete response;
    }
    return success;
