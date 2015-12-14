@@ -1887,6 +1887,22 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ]
 )
 
+AC_MSG_CHECKING(whether free correctly handles NULL pointer)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([ 
+#include <stdlib.h>
+     ], [
+     free(NULL);
+     return 0;
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(FREE_IS_NULL_SAFE, 1, Define to 1 if free corectly handles NULL pointer)
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
 
 #--------------------------------------------------------------------
 # Checks for macros and definitions
