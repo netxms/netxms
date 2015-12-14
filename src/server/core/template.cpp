@@ -199,18 +199,14 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    m_dwVersion = DBGetFieldULong(hResult, 0, 0);
 	m_flags = DBGetFieldULong(hResult, 0, 1);
-	if (m_flags & TF_AUTO_APPLY)
-	{
-		m_applyFilterSource = DBGetField(hResult, 0, 2, NULL, 0);
-		if (m_applyFilterSource != NULL)
-		{
-			TCHAR error[256];
-
-			m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256, NULL);
-			if (m_applyFilter == NULL)
-				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
-		}
-	}
+   m_applyFilterSource = DBGetField(hResult, 0, 2, NULL, 0);
+   if (m_applyFilterSource != NULL)
+   {
+      TCHAR error[256];
+      m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256, NULL);
+      if (m_applyFilter == NULL)
+         nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+   }
    DBFreeResult(hResult);
 
    // Load DCI and access list
@@ -888,7 +884,7 @@ UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Change apply filter
 	if (pRequest->isFieldExist(VID_AUTOBIND_FILTER))
 	{
-		safe_free(m_applyFilterSource);
+		free(m_applyFilterSource);
 		delete m_applyFilter;
 		m_applyFilterSource = pRequest->getFieldAsString(VID_AUTOBIND_FILTER);
 		if (m_applyFilterSource != NULL)

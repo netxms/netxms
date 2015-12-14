@@ -103,19 +103,14 @@ bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
    m_dwCategory = DBGetFieldULong(hResult, 0, 0);
 	m_flags = DBGetFieldULong(hResult, 0, 1);
-	if (m_flags & CF_AUTO_BIND)
-	{
-		// Auto-bind enabled
-		m_bindFilterSource = DBGetField(hResult, 0, 2, NULL, 0);
-		if (m_bindFilterSource != NULL)
-		{
-			TCHAR error[256];
-
-			m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, NULL);
-			if (m_bindFilter == NULL)
-				nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
-		}
-	}
+   m_bindFilterSource = DBGetField(hResult, 0, 2, NULL, 0);
+   if (m_bindFilterSource != NULL)
+   {
+      TCHAR error[256];
+      m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, NULL);
+      if (m_bindFilter == NULL)
+         nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+   }
    DBFreeResult(hResult);
 
    // Load access list
