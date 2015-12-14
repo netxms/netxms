@@ -992,4 +992,10 @@ Language=English
 Failed to initialize database connection pool
 .
 
+MessageId=
+SymbolicName=MSG_INSTANCE_FILTER_SCRIPT_COMPILATION_ERROR
+Language=English
+Failed to compile instance filter script for DCI %3 "%4" on %1 "%2": %5
+.
+
 ;#endif

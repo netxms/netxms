@@ -3719,9 +3719,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   private DciData getCollectedDataInternal(
-      long nodeId, long dciId, String instance, String dataColumn, Date from, Date to, int maxRows)
-      throws IOException, NXCException
+   private DciData getCollectedDataInternal(long nodeId, long dciId, String instance, String dataColumn, Date from, Date to, int maxRows) throws IOException, NXCException
    {
       NXCPMessage msg;
       if (instance != null) // table DCI
@@ -3794,8 +3792,7 @@ public class NXCSession
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows)
-      throws IOException, NXCException
+   public DciData getCollectedData(long nodeId, long dciId, Date from, Date to, int maxRows) throws IOException, NXCException
    {
       return getCollectedDataInternal(nodeId, dciId, null, null, from, to, maxRows);
    }

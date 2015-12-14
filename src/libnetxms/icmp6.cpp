@@ -26,10 +26,6 @@
 
 #define MAX_PACKET_SIZE   8192
 
-#if HAVE_ALLOCA_H
-#include <alloca.h>
-#endif
-
 #if HAVE_POLL_H
 #include <poll.h>
 #endif
@@ -167,7 +163,11 @@ static UINT32 WaitForReply(int sock, struct sockaddr_in6 *addr, UINT32 id, UINT3
    UINT32 rtt = 0;
    UINT32 result = ICMP_TIMEOUT;
    UINT32 dwTimeLeft, dwElapsedTime;
+#if HAVE_ALLOCA
    char *buffer = (char *)alloca(MAX_PACKET_SIZE);
+#else
+   char *buffer = (char *)malloc(MAX_PACKET_SIZE);
+#endif
 
 #ifdef USE_KQUEUE
    int kq;
@@ -263,6 +263,9 @@ static UINT32 WaitForReply(int sock, struct sockaddr_in6 *addr, UINT32 id, UINT3
 #ifdef USE_KQUEUE
    close(kq);
 #endif
+#if !HAVE_ALLOCA
+   free(buffer);
+#endif
    return result;
 }
 
@@ -283,7 +286,11 @@ UINT32 IcmpPing6(const InetAddress &addr, int iNumRetries, UINT32 dwTimeout, UIN
    // Prepare packet and calculate checksum
    static char payload[64] = "NetXMS ICMPv6 probe [01234567890]";
    int size = max(sizeof(PACKET_HEADER), min((int)dwPacketSize, MAX_PACKET_SIZE));
+#if HAVE_ALLOCA
    PACKET_HEADER *p = (PACKET_HEADER *)alloca(size);
+#else
+   PACKET_HEADER *p = (PACKET_HEADER *)malloc(size);
+#endif
    memset(p, 0, size);
    memcpy(p->srcAddr, src.sin6_addr.s6_addr, 16);
    memcpy(p->destAddr, dest.sin6_addr.s6_addr, 16);
@@ -310,6 +317,9 @@ UINT32 IcmpPing6(const InetAddress &addr, int iNumRetries, UINT32 dwTimeout, UIN
    }
 
    close(sd);
+#if !HAVE_ALLOCA
+   free(p);
+#endif
    return result;
 }
 

@@ -32,8 +32,6 @@
 /**
  * Forward declarations of classes
  */
-class AgentConnection;
-class AgentConnectionEx;
 class ClientSession;
 class Queue;
 class DataCollectionTarget;
@@ -118,6 +116,31 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
  */
 #define CLF_QUEUED_FOR_STATUS_POLL     0x0001
 #define CLF_DOWN                       0x0002
+
+/**
+ * Extended agent connection
+ */
+class NXCORE_EXPORTABLE AgentConnectionEx : public AgentConnection
+{
+protected:
+   UINT32 m_nodeId;
+
+   virtual void printMsg(const TCHAR *format, ...);
+   virtual void onTrap(NXCPMessage *msg);
+   virtual void onDataPush(NXCPMessage *msg);
+   virtual void onFileMonitoringData(NXCPMessage *msg);
+   virtual void onSnmpTrap(NXCPMessage *pMsg);
+   virtual UINT32 processCollectedData(NXCPMessage *msg);
+   virtual bool processCustomMessage(NXCPMessage *msg);
+
+public:
+   AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
+            AgentConnection(ipAddr, port, authMethod, secret) { m_nodeId = nodeId; }
+   virtual ~AgentConnectionEx();
+
+   UINT32 deployPolicy(AgentPolicy *policy);
+   UINT32 uninstallPolicy(AgentPolicy *policy);
+};
 
 /**
  * Poller types
@@ -657,7 +680,7 @@ protected:
    bool m_dciListModified;
    TCHAR m_szCurrDCIOwner[MAX_SESSION_NAME];
 	TCHAR *m_applyFilterSource;
-	NXSL_VM *m_applyFilter;
+	NXSL_Program *m_applyFilter;
 	RWLOCK m_dciAccessLock;
 
    virtual void prepareForDeletion();
@@ -1141,7 +1164,19 @@ class NXCORE_EXPORTABLE Node : public DataCollectionTarget
 	friend class Subnet;
 
 private:
-   void onSnmpProxyChange(UINT32 oldProxy);
+	/**
+	 * Delete agent connection
+	 */
+	void deleteAgentConnection()
+	{
+	   if (m_pAgentConnection != NULL)
+	   {
+	      m_pAgentConnection->decRefCount();
+	      m_pAgentConnection = NULL;
+	   }
+	}
+
+	void onSnmpProxyChange(UINT32 oldProxy);
 
    static void onDataCollectionChangeAsyncCallback(void *arg);
 
@@ -1272,7 +1307,7 @@ protected:
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
    void updateRackBinding();
-   void setLastAgentCommTime() {m_lastAgentCommTime = time(NULL); setModified();}
+   void setLastAgentCommTime() { time_t now = time(NULL); if (m_lastAgentCommTime < now - 60) { m_lastAgentCommTime = now; setModified(); } }
 
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 
@@ -1718,7 +1753,7 @@ private:
 protected:
 	UINT32 m_flags;
    UINT32 m_dwCategory;
-	NXSL_VM *m_bindFilter;
+	NXSL_Program *m_bindFilter;
 	TCHAR *m_bindFilterSource;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg);
@@ -1846,6 +1881,7 @@ public:
 	Interface *findInterface(bool (*comparator)(NetObj *, void *), void *data) { return (Interface *)m_idxInterfaceByAddr->find(comparator, data); }
 	Node *findNode(bool (*comparator)(NetObj *, void *), void *data) { return (Node *)m_idxNodeByAddr->find(comparator, data); }
    void forEachSubnet(void (*callback)(const InetAddress& addr, NetObj *, void *), void *data) { m_idxSubnetByAddr->forEach(callback, data); }
+   ObjectArray<NetObj> *getSubnets(bool updateRefCount) { return m_idxSubnetByAddr->getObjects(updateRefCount); }
 };
 
 /**

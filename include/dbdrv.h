@@ -28,7 +28,7 @@
 /**
  * API version
  */
-#define DBDRV_API_VERSION           15
+#define DBDRV_API_VERSION           16
 
 
 //
@@ -64,7 +64,7 @@ const char EXPORT *drvName = name;
 typedef void * DBDRV_CONNECTION;
 typedef void * DBDRV_STATEMENT;
 typedef void * DBDRV_RESULT;
-typedef void * DBDRV_ASYNC_RESULT;
+typedef void * DBDRV_UNBUFFERED_RESULT;
 
 
 //

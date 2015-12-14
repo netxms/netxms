@@ -75,6 +75,7 @@ public:
 #define ldap_strlen _tcslen
 #define ldap_timeval l_timeval
 #define ldap_strdup _tcsdup
+#define ldap_sprintf _tcsprintf
 #define LdapConfigRead ConfigReadStr
 #define _TLDAP(x) _T(x)
 #define LDAP_TFMT _T("%s")
@@ -90,6 +91,7 @@ public:
 #define ldap_strlen strlen
 #define ldap_timeval timeval
 #define ldap_strdup strdup
+#define ldap_sprintf sprintf
 #define LdapConfigRead ConfigReadStrUTF8
 #define _TLDAP(x) x
 #define LDAP_TFMT _T("%hs")
@@ -131,6 +133,7 @@ private:
    int readInPages(StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList, LDAP_CHAR *base);
    void fillLists(LDAPMessage *searchResult, StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList);
    TCHAR *ldap_internal_get_dn(LDAP *conn, LDAPMessage *entry);
+   void updateMembers(StringList *memberList, const char *firstAttr, LDAPMessage *forstEntry, const LDAP_CHAR *dn);
 #endif // WITH_LDAP
 
 public:

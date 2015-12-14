@@ -151,7 +151,7 @@ UINT16 g_wListenPort = AGENT_LISTEN_PORT;
 ObjectArray<ServerInfo> g_serverList(8, 8, true);
 UINT32 g_dwServerCount = 0;
 UINT32 g_dwExecTimeout = 2000;     // External process execution timeout in milliseconds
-UINT32 g_dwSNMPTimeout = 3000;
+UINT32 g_dwSNMPTimeout = 1500;
 time_t g_tmAgentStartTime;
 UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 32;
@@ -1447,7 +1447,7 @@ int main(int argc, char *argv[])
 				break;
 #endif
          case 'v':   // Print version and exit
-            _tprintf(_T("NetXMS Core Agent Version ") AGENT_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING IS_UNICODE_BUILD_STRING _T("\n"));
+            _tprintf(_T("NetXMS Core Agent Version ") AGENT_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" (") NETXMS_BUILD_TAG _T(")") IS_UNICODE_BUILD_STRING _T("\n"));
             iAction = ACTION_NONE;
             break;
          case 'W':   // Watchdog process

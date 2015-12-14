@@ -1113,7 +1113,7 @@ void DCItem::reloadCache()
    }
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_ASYNC_RESULT hResult = DBAsyncSelect(hdb, szBuffer);
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, szBuffer);
 
    lock();
 
@@ -1135,8 +1135,8 @@ void DCItem::reloadCache()
          moreData = DBFetch(hResult);
          if (moreData)
          {
-            DBGetFieldAsync(hResult, 0, szBuffer, MAX_DB_STRING);
-            m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldAsyncULong(hResult, 1));
+            DBGetField(hResult, 0, szBuffer, MAX_DB_STRING);
+            m_ppValueCache[i] = new ItemValue(szBuffer, DBGetFieldULong(hResult, 1));
          }
          else
          {
@@ -1148,7 +1148,7 @@ void DCItem::reloadCache()
       for(; i < m_requiredCacheSize; i++)
          m_ppValueCache[i] = new ItemValue(_T(""), 1);
 
-      DBFreeAsyncResult(hResult);
+      DBFreeResult(hResult);
    }
    else
    {
@@ -1485,8 +1485,12 @@ void DCItem::setInstanceFilter(const TCHAR *pszScript)
       StrStrip(m_instanceFilterSource);
       if (m_instanceFilterSource[0] != 0)
       {
-			/* TODO: add compilation error handling */
-         m_instanceFilter = NXSLCompileAndCreateVM(m_instanceFilterSource, NULL, 0, new NXSL_ServerEnv);
+         TCHAR errorText[1024];
+         m_instanceFilter = NXSLCompile(m_instanceFilterSource, errorText, 1024, NULL);
+         if (m_instanceFilter == NULL)
+         {
+            nxlog_write(MSG_INSTANCE_FILTER_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dsdss", m_pNode->getId(), m_pNode->getName(), m_id, m_name, errorText);
+         }
       }
       else
       {
@@ -1892,17 +1896,25 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
  */
 void DCItem::filterInstanceList(StringMap *instances)
 {
+   lock();
    if (m_instanceFilter == NULL)
+   {
+      unlock();
 		return;
+   }
+
+   FilterCallbackData data;
+   data.instanceFilter = new NXSL_VM(new NXSL_ServerEnv());
+   data.instanceFilter->load(m_instanceFilter);
+   unlock();
 
    StringMap filteredInstances;
-   FilterCallbackData data;
    data.filteredInstances = &filteredInstances;
-   data.instanceFilter = m_instanceFilter;
    data.dci = this;
    instances->forEach(FilterCallback, &data);
    instances->clear();
    instances->addAll(&filteredInstances);
+   delete data.instanceFilter;
 }
 
 /**

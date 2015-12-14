@@ -23,23 +23,49 @@
 #include "nxcore.h"
 
 /**
+ * Delete empty subnets from given list
+ */
+static void DeleteEmptySubnetsFromList(ObjectArray<NetObj> *subnets)
+{
+   for(int i = 0; i < subnets->size(); i++)
+   {
+      NetObj *object = subnets->get(i);
+      DbgPrintf(7, _T("DeleteEmptySubnets: checking subnet %s [%d] (refs: %d refs, children: %d, parents: %d)"),
+                object->getName(), object->getId(), object->getRefCount(), object->getChildCount(), object->getParentCount());
+      if (object->isEmpty())
+      {
+         DbgPrintf(5, _T("DeleteEmptySubnets: delete subnet %s [%d] (refs: %d, children: %d, parents: %d)"),
+                   object->getName(), object->getId(), object->getRefCount(), object->getChildCount(), object->getParentCount());
+         object->deleteObject();
+      }
+      object->decRefCount();
+   }
+}
+
+/**
  * Delete empty subnets
  */
 static void DeleteEmptySubnets()
 {
-	ObjectArray<NetObj> *subnets = g_idxSubnetByAddr.getObjects(true);
-	for(int i = 0; i < subnets->size(); i++)
-	{
-		NetObj *object = subnets->get(i);
-		if (object->isEmpty())
-		{
-		   DbgPrintf(5, _T("DeleteEmptySubnets: subnet %s [%d] has %d refs, children: %d, parents: %d"),
-            object->getName(), object->getId(), object->getRefCount(), object->getChildCount(), object->getParentCount());
-			object->deleteObject();
-		}
-      object->decRefCount();
-	}
-	delete subnets;
+   if (IsZoningEnabled())
+   {
+      ObjectArray<NetObj> *zones = g_idxZoneByGUID.getObjects(true);
+      for(int i = 0; i < zones->size(); i++)
+      {
+         Zone *zone = (Zone *)zones->get(i);
+         ObjectArray<NetObj> *subnets = zone->getSubnets(true);
+         DeleteEmptySubnetsFromList(subnets);
+         delete subnets;
+         zone->decRefCount();
+      }
+      delete zones;
+   }
+   else
+   {
+      ObjectArray<NetObj> *subnets = g_idxSubnetByAddr.getObjects(true);
+      DeleteEmptySubnetsFromList(subnets);
+      delete subnets;
+   }
 }
 
 /**
@@ -119,9 +145,19 @@ static void CleanDciData(NetObj *object, void *data)
 }
 
 /**
+ * Housekeeper wakeup condition
+ */
+static CONDITION s_wakeupCondition = INVALID_CONDITION_HANDLE;
+
+/**
+ * Housekeeper shutdown flag
+ */
+static bool s_shutdown = false;
+
+/**
  * Housekeeper thread
  */
-THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
+static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 {
    // Read housekeeping configuration
    int hour;
@@ -156,8 +192,12 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
    int sleepTime = GetSleepTime(hour, minute, 0);
    DbgPrintf(4, _T("Housekeeper: sleeping for %d seconds"), sleepTime);
 
-   while(!SleepAndCheckForShutdown(sleepTime))
+   while(!s_shutdown)
    {
+      ConditionWait(s_wakeupCondition, sleepTime * 1000);
+      if (s_shutdown)
+         break;
+
       DbgPrintf(4, _T("Housekeeper: wakeup"));
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
@@ -225,4 +265,37 @@ THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 
    DbgPrintf(1, _T("Housekeeper thread terminated"));
    return THREAD_OK;
+}
+
+/**
+ * Housekeeper thread handle
+ */
+static THREAD s_thread = INVALID_THREAD_HANDLE;
+
+/**
+ * Start housekeeper
+ */
+void StartHouseKeeper()
+{
+   s_wakeupCondition = ConditionCreate(FALSE);
+   s_thread = ThreadCreateEx(HouseKeeper, 0, NULL);
+}
+
+/**
+ * Stop housekeeper
+ */
+void StopHouseKeeper()
+{
+   s_shutdown = true;
+   ConditionSet(s_wakeupCondition);
+   ThreadJoin(s_thread);
+   ConditionDestroy(s_wakeupCondition);
+}
+
+/**
+ * Run housekeeper
+ */
+void RunHouseKeeper()
+{
+   ConditionSet(s_wakeupCondition);
 }

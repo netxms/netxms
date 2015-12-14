@@ -67,7 +67,7 @@ DatabaseQuery g_queries[] =
             _T("(SELECT count(*) FROM dba_jobs WHERE nvl(failures,0) <> 0) FailedJobs,")
       		_T("(SELECT sum(a.value) FROM v$sesstat a, v$statname b, v$session s WHERE a.statistic#=b.statistic# AND s.sid=a.sid AND b.name='opened cursors current') OpenCursors,")
             _T("(SELECT count(*) FROM dba_objects WHERE status!='VALID') InvalidObjects,")
-            _T("(SELECT count(*) FROM v$lock) Locks,")
+            _T("(SELECT /*+ cardinality(l.s 3000) cardinality(l.r 13000) */ count(*) FROM v$lock l) Locks,")
             _T("(SELECT count(*) FROM v$session) SessionCount ")
          _T("FROM dual")
    },

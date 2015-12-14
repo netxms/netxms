@@ -122,7 +122,7 @@ static bool MigrateTable(const TCHAR *table)
    bool success = false;
    TCHAR buffer[256], errorText[DBDRV_MAX_ERROR_TEXT];
    _sntprintf(buffer, 256, _T("SELECT * FROM %s"), table);
-   DB_ASYNC_RESULT hResult = DBAsyncSelectEx(s_hdbSource, buffer, errorText);
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbufferedEx(s_hdbSource, buffer, errorText);
    if (hResult == NULL)
    {
 		_tprintf(_T("ERROR: unable to read data from source table (%s)\n"), errorText);
@@ -134,10 +134,10 @@ static bool MigrateTable(const TCHAR *table)
    String query = _T("INSERT INTO ");
    query += table;
    query += _T(" (");
-	int columnCount = DBGetColumnCountAsync(hResult);
+	int columnCount = DBGetColumnCount(hResult);
 	for(int i = 0; i < columnCount; i++)
 	{
-		DBGetColumnNameAsync(hResult, i, buffer, 256);
+		DBGetColumnName(hResult, i, buffer, 256);
 		query += buffer;
 		query += _T(",");
 	}
@@ -156,15 +156,15 @@ static bool MigrateTable(const TCHAR *table)
       {
 			for(int i = 0; i < columnCount; i++)
          {
-            DBBind(hStmt, i + 1, DB_SQLTYPE_VARCHAR, DBGetFieldAsync(hResult, i, NULL, 0), DB_BIND_DYNAMIC);
+            DBBind(hStmt, i + 1, DB_SQLTYPE_VARCHAR, DBGetField(hResult, i, NULL, 0), DB_BIND_DYNAMIC);
          }
          if (!SQLExecute(hStmt))
          {
             _tprintf(_T("Failed input record:\n"));
             for(int i = 0; i < columnCount; i++)
             {
-               DBGetColumnNameAsync(hResult, i, buffer, 256);
-               TCHAR *value = DBGetFieldAsync(hResult, i, NULL, 0);
+               DBGetColumnName(hResult, i, buffer, 256);
+               TCHAR *value = DBGetField(hResult, i, NULL, 0);
                _tprintf(_T("   %s = \"%s\"\n"), buffer, CHECK_NULL(value));
                safe_free(value);
             }
@@ -199,7 +199,7 @@ static bool MigrateTable(const TCHAR *table)
 		_tprintf(_T("ERROR: cannot prepare INSERT statement (%s)\n"), errorText);
       DBRollback(g_hCoreDB);
    }
-   DBFreeAsyncResult(hResult);
+   DBFreeResult(hResult);
 	return success;
 }
 

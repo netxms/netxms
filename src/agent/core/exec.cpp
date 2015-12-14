@@ -416,6 +416,7 @@ LONG RunExternal(const TCHAR *pszCmd, const TCHAR *pszArg, StringList *value)
 		PROCESS_INFORMATION pi;
 		SECURITY_ATTRIBUTES sa;
 		HANDLE hOutput;
+      TCHAR szTempFile[MAX_PATH];
 
 		// Create temporary file to hold process output
 		GetTempPath(MAX_PATH - 1, szBuffer);

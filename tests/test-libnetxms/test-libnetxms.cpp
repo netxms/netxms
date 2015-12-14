@@ -319,6 +319,23 @@ static void TestInetAddress()
    AssertTrue(a.sameSubnet(b));
    AssertFalse(a.sameSubnet(c));
    EndTest();
+   
+   StartTest(_T("InetAddress - buildHashKey() - IPv4"));
+   a = InetAddress::parse("10.3.1.91");
+   BYTE key[18];
+   a.buildHashKey(key);
+#if WORDS_BIGENDIAN
+   AssertTrue(memcmp(key, "\x06\x02\x0A\x03\x01\x5B\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 18) == 0);
+#else
+   AssertTrue(memcmp(key, "\x06\x02\x5B\x01\x03\x0A\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 18) == 0);
+#endif
+   EndTest();
+   
+   StartTest(_T("InetAddress - buildHashKey() - IPv6"));
+   a = InetAddress::parse("fe80:1234::6e88:14ff:fec4:b8f8");
+   a.buildHashKey(key);
+   AssertTrue(memcmp(key, "\x12\x0A\xFE\x80\x12\x34\x00\x00\x00\x00\x6E\x88\x14\xFF\xFE\xC4\xB8\xF8", 18) == 0);
+   EndTest();
 }
 
 /**
@@ -380,6 +397,62 @@ static void TestQueue()
    AssertEquals(q->size(), 5);
    AssertEquals(q->allocated(), 16);
    EndTest();
+
+   delete q;
+}
+
+/**
+ * Key for hash map
+ */
+typedef char HASH_KEY[6];
+
+/**
+ * Test hash map
+ */
+static void TestHashMap()
+{
+   StartTest(_T("HashMap: create"));
+   HashMap<HASH_KEY, String> *hashMap = new HashMap<HASH_KEY, String>(true);
+   AssertEquals(hashMap->size(), 0);
+   EndTest();
+
+   HASH_KEY k1 = { '1', '2', '3', '4', '5', '6' };
+   HASH_KEY k2 = { '0', '0', 'a', 'b', 'c', 'd' };
+   HASH_KEY k3 = { '0', '0', '3', 'X', '1', '1' };
+
+   StartTest(_T("HashMap: set/get"));
+
+   hashMap->set(k1, new String(_T("String 1")));
+   hashMap->set(k2, new String(_T("String 2")));
+   hashMap->set(k3, new String(_T("String 3")));
+
+   String *s = hashMap->get(k1);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 1")));
+
+   s = hashMap->get(k2);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 2")));
+
+   s = hashMap->get(k3);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("String 3")));
+
+   EndTest();
+
+   StartTest(_T("HashMap: replace"));
+   hashMap->set(k2, new String(_T("REPLACE")));
+   s = hashMap->get(k2);
+   AssertNotNull(s);
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("REPLACE")));
+   EndTest();
+
+   StartTest(_T("HashMap: remove"));
+   hashMap->remove(k3);
+   AssertNull(hashMap->get(k3));
+   EndTest();
+
+   delete hashMap;
 }
 
 /**
@@ -401,5 +474,6 @@ int main(int argc, char *argv[])
    TestInetAddress();
    TestItoa();
    TestQueue();
+   TestHashMap();
    return 0;
 }

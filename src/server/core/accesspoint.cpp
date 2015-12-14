@@ -491,7 +491,7 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 						}
 					}
 					conn->disconnect();
-					delete conn;
+					conn->decRefCount();
 				}
 				else
 				{
@@ -586,7 +586,7 @@ void AccessPoint::updatePingData()
                }
             }
             conn->disconnect();
-            delete conn;
+            conn->decRefCount();
          }
          else
          {

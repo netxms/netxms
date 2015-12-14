@@ -391,7 +391,7 @@ void Condition::check()
    UINT32 i, dwNumValues;
    int iOldStatus = m_iStatus;
 
-   if ((m_script == NULL) || (m_iStatus == STATUS_UNMANAGED))
+   if ((m_script == NULL) || (m_iStatus == STATUS_UNMANAGED) || IsShutdownInProgress())
       return;
 
    lockProperties();

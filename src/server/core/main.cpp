@@ -97,9 +97,15 @@ void StartSyslogServer();
 void StopSyslogServer();
 
 /**
+ * Housekeeper control
+ */
+void StartHouseKeeper();
+void StopHouseKeeper();
+void RunHouseKeeper();
+
+/**
  * Thread functions
  */
-THREAD_RESULT THREAD_CALL HouseKeeper(void *);
 THREAD_RESULT THREAD_CALL Syncer(void *);
 THREAD_RESULT THREAD_CALL NodePoller(void *);
 THREAD_RESULT THREAD_CALL PollManager(void *);
@@ -163,7 +169,6 @@ INT16 g_defaultAgentCacheMode = AGENT_CACHE_OFF;
  */
 static CONDITION m_condShutdown = INVALID_CONDITION_HANDLE;
 static THREAD m_thPollManager = INVALID_THREAD_HANDLE;
-static THREAD m_thHouseKeeper = INVALID_THREAD_HANDLE;
 static THREAD m_thSyncer = INVALID_THREAD_HANDLE;
 static int m_nShutdownReason = SHUTDOWN_DEFAULT;
 
@@ -334,7 +339,7 @@ static void LoadGlobalConfig()
 	g_thresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
 	g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
 
-	UINT32 snmpTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 2000);
+	UINT32 snmpTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 1500);
    SnmpSetDefaultTimeout(snmpTimeout);
 }
 
@@ -723,6 +728,7 @@ retry_db_lock:
    DbgPrintf(2, _T("Creating thread pools"));
    ThreadPoolSetDebugCallback(DbgPrintf2);
    g_mainThreadPool = ThreadPoolCreate(8, 256, _T("MAIN"));
+   g_agentConnectionThreadPool = ThreadPoolCreate(4, 256, _T("AGENT"));
 
 	// Setup unique identifiers table
 	if (!InitIdTable())
@@ -813,8 +819,9 @@ retry_db_lock:
 	ThreadCreate(NodePoller, 0, NULL);
 	ThreadCreate(JobManagerThread, 0, NULL);
 	m_thSyncer = ThreadCreateEx(Syncer, 0, NULL);
-	m_thHouseKeeper = ThreadCreateEx(HouseKeeper, 0, NULL);
 	m_thPollManager = ThreadCreateEx(PollManager, 0, NULL);
+
+   StartHouseKeeper();
 
 	// Start event processor
 	ThreadCreate(EventProcessor, 0, NULL);
@@ -901,7 +908,6 @@ void NXCORE_EXPORTABLE Shutdown()
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
 
-   //shutdown schedule
    CloseTaskScheduler();
 
    // Stop DCI cache loading thread
@@ -911,14 +917,6 @@ void NXCORE_EXPORTABLE Shutdown()
    StopXMPPConnector();
 #endif
 
-#ifndef _WIN32
-	if (IsStandalone() && (m_nShutdownReason != SHUTDOWN_BY_SIGNAL))
-	{
-		pthread_kill(m_signalHandlerThread, SIGUSR1);   // Terminate signal handler
-	}
-#endif
-
-	// Stop event processor
 	g_pEventQueue->clear();
 	g_pEventQueue->put(INVALID_POINTER_VALUE);
 
@@ -929,9 +927,9 @@ void NXCORE_EXPORTABLE Shutdown()
 	DbgPrintf(2, _T("All threads was notified, continue with shutdown"));
 
 	StopSyslogServer();
+	StopHouseKeeper();
 
 	// Wait for critical threads
-	ThreadJoin(m_thHouseKeeper);
 	ThreadJoin(m_thPollManager);
 	ThreadJoin(m_thSyncer);
 
@@ -967,11 +965,13 @@ void NXCORE_EXPORTABLE Shutdown()
    ShutdownAlarmManager();
 	DbgPrintf(1, _T("Event processing stopped"));
 
+	ThreadPoolDestroy(g_agentConnectionThreadPool);
    ThreadPoolDestroy(g_mainThreadPool);
    MsgWaitQueue::shutdown();
 
 	delete g_pScriptLibrary;
 
+   DbgPrintf(1, _T("Server shutdown complete"));
 	nxlog_close();
 
 	// Remove PID file
@@ -993,6 +993,8 @@ void NXCORE_EXPORTABLE Shutdown()
  */
 void NXCORE_EXPORTABLE FastShutdown()
 {
+   DbgPrintf(1, _T("Using fast shutdown procedure"));
+
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
 
@@ -1010,6 +1012,7 @@ void NXCORE_EXPORTABLE FastShutdown()
 	StopDBWriter();
 	DbgPrintf(1, _T("Database writer stopped"));
 
+   DbgPrintf(1, _T("Server shutdown complete"));
 	nxlog_close();
 }
 
@@ -1123,6 +1126,11 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsoleWrite(pCtx, _T("Variable name missing\n"));
 		}
 	}
+   else if (IsCommand(_T("HKRUN"), szBuffer, 2))
+   {
+      ConsoleWrite(pCtx, _T("Starting housekeeper\n"));
+      RunHouseKeeper();
+   }
 	else if (IsCommand(_T("RAISE"), szBuffer, 5))
 	{
 		// Get argument
@@ -1629,6 +1637,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ShowThreadPool(pCtx, g_mainThreadPool);
 			ShowThreadPool(pCtx, g_pollerThreadPool);
 			ShowThreadPool(pCtx, g_schedulerThreadPool);
+         ShowThreadPool(pCtx, g_agentConnectionThreadPool);
 		}
 		else if (IsCommand(_T("TOPOLOGY"), szBuffer, 1))
 		{
@@ -1934,6 +1943,7 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
             _T("   kill <session>            - Kill client session\n")
 				_T("   get <variable>            - Get value of server configuration variable\n")
 				_T("   help                      - Display this help\n")
+            _T("   hkrun                     - Run housekeeper immediately\n")
 				_T("   ldapsync                  - Synchronize ldap users with local user database\n")
             _T("   ping <address>            - Send ICMP echo request to given IP address\n")
             _T("   poll <type> <node>        - Initiate node poll\n")
@@ -1989,7 +1999,6 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 {
 	sigset_t signals;
 	int nSignal;
-	BOOL bCallShutdown = FALSE;
 
 	m_signalHandlerThread = pthread_self();
 
@@ -2018,11 +2027,16 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 			{
 				case SIGTERM:
 				case SIGINT:
-					m_nShutdownReason = SHUTDOWN_BY_SIGNAL;
-					if (IsStandalone())
-						bCallShutdown = TRUE;
-					ConditionSet(m_condShutdown);
-					goto stop_handler;
+				   // avoid repeat Shutdown() call
+				   if (!(g_flags & AF_SHUTDOWN))
+				   {
+                  m_nShutdownReason = SHUTDOWN_BY_SIGNAL;
+                  if (IsStandalone())
+                     Shutdown(); // will never return
+                  else
+                     ConditionSet(m_condShutdown);
+				   }
+				   break;
 				case SIGSEGV:
 					abort();
 					break;
@@ -2046,8 +2060,6 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 
 stop_handler:
 	sigprocmask(SIG_UNBLOCK, &signals, NULL);
-	if (bCallShutdown)
-		Shutdown();
 	return THREAD_OK;
 }
 
@@ -2132,8 +2144,11 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 #if USE_READLINE
    		free(ptr);
 #endif
-		   m_nShutdownReason = SHUTDOWN_FROM_CONSOLE;
-		   Shutdown();
+   		if (!(g_flags & AF_SHUTDOWN))
+   		{
+            m_nShutdownReason = SHUTDOWN_FROM_CONSOLE;
+            Shutdown();
+   		}
       }
       else
       {

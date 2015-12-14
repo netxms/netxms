@@ -153,6 +153,7 @@ bool FileUploadJob::run()
 		{
 			setFailureMessage(AgentErrorCodeToText(rcc));
 		}
+		conn->decRefCount();
 	}
 	else
 	{

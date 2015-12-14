@@ -53,6 +53,7 @@ SNMP_Transport::SNMP_Transport()
 	m_securityContext = NULL;
 	m_enableEngineIdAutoupdate = false;
 	m_updatePeerOnRecv = false;
+	m_reliable = false;
 	m_snmpVersion = SNMP_VERSION_2C;
 }
 
@@ -105,7 +106,9 @@ UINT32 SNMP_Transport::doRequest(SNMP_PDU *request, SNMP_PDU **response, UINT32 
 		}
 	}
 
-   while(numRetries-- >= 0)
+	if (m_reliable)
+	   numRetries = 1;   // Don't do retry on reliable transport
+   while(--numRetries >= 0)
    {
 		int timeSyncRetries = 3;
 

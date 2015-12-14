@@ -240,7 +240,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
 
    dwError = pConn->execAction(pCmd[0], nCount - 1, &pCmd[1]);
    pConn->disconnect();
-   delete pConn;
+   pConn->decRefCount();
    free(pTmp);
    return dwError == ERR_SUCCESS;
 }

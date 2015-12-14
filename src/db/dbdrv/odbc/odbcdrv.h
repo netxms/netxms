@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004-2011 Victor Kirhenshtein
+** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -115,7 +115,7 @@ typedef struct
 } ODBCDRV_QUERY_RESULT;
 
 /**
- * Async result buffer structure
+ * Unbuffered result buffer structure
  */
 typedef struct
 {
@@ -124,7 +124,7 @@ typedef struct
    bool noMoreRows;
 	char **columnNames;
    NETXMS_WCHAR **values;
-} ODBCDRV_ASYNC_QUERY_RESULT;
+} ODBCDRV_UNBUFFERED_QUERY_RESULT;
 
 
 #endif   /* _odbcdrv_h_ */

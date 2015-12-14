@@ -284,31 +284,6 @@ typedef struct
 } UPDATE_INFO;
 
 /**
- * Extended agent connection
- */
-class AgentConnectionEx : public AgentConnection
-{
-protected:
-	UINT32 m_nodeId;
-
-   virtual void printMsg(const TCHAR *format, ...);
-   virtual void onTrap(NXCPMessage *msg);
-   virtual void onDataPush(NXCPMessage *msg);
-   virtual void onFileMonitoringData(NXCPMessage *msg);
-	virtual void onSnmpTrap(NXCPMessage *pMsg);
-	virtual UINT32 processCollectedData(NXCPMessage *msg);
-   virtual bool processCustomMessage(NXCPMessage *msg);
-
-public:
-   AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
-            AgentConnection(ipAddr, port, authMethod, secret) { m_nodeId = nodeId; }
-   virtual ~AgentConnectionEx();
-
-	UINT32 deployPolicy(AgentPolicy *policy);
-	UINT32 uninstallPolicy(AgentPolicy *policy);
-};
-
-/**
  * Mobile device session
  */
 class NXCORE_EXPORTABLE MobileDeviceSession

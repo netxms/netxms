@@ -121,12 +121,12 @@ public class InterfacesTab extends ObjectTab
 		viewer.setComparator(new InterfaceListComparator());
 		viewer.getTable().setHeaderVisible(true);
 		viewer.getTable().setLinesVisible(true);
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable.V3"); //$NON-NLS-1$
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable.V4"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable.V3"); //$NON-NLS-1$
+				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable.V4"); //$NON-NLS-1$
 			}
 		});
 		createActions();

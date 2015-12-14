@@ -319,7 +319,7 @@ void CommSession::readThread()
             }
             else if (msg->getCode() == CMD_SETUP_PROXY_CONNECTION)
             {
-               DWORD rcc = setupProxyConnection(msg);
+               UINT32 rcc = setupProxyConnection(msg);
                // When proxy session established incoming messages will
                // not be processed locally. Acknowledgement message sent
                // by SetupProxyConnection() in case of success.

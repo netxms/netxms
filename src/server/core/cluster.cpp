@@ -479,6 +479,9 @@ void Cluster::statusPoll(PollerInfo *poller)
  */
 void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller)
 {
+   if (IsShutdownInProgress())
+      return;
+
 	UINT32 i, j, k, dwPollListSize;
 	InterfaceList *pIfList;
 	BOOL bModified = FALSE, bAllDown;

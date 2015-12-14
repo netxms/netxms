@@ -311,8 +311,7 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
 						}
 					}
 				}
-				conn->disconnect();
-				delete conn;
+				conn->decRefCount();
 			}
 		}
 	}

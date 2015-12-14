@@ -249,7 +249,7 @@ static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
 /**
  * Process trap
  */
-void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq)
+void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine, bool isInformRq)
 {
    UINT32 dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
    TCHAR *pszTrapArgs, szBuffer[4096];
@@ -263,13 +263,13 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 	if (isInformRq)
 	{
 		SNMP_PDU *response = new SNMP_PDU(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
-		if (pTransport->getSecurityContext() == NULL)
+		if (snmpTransport->getSecurityContext() == NULL)
 		{
-			pTransport->setSecurityContext(new SNMP_SecurityContext(pdu->getCommunity()));
+		   snmpTransport->setSecurityContext(new SNMP_SecurityContext(pdu->getCommunity()));
 		}
 		response->setMessageId(pdu->getMessageId());
 		response->setContextEngineId(localEngine->getId(), localEngine->getIdLen());
-		pTransport->sendMessage(response);
+		snmpTransport->sendMessage(response);
 		delete response;
 	}
 

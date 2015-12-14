@@ -195,7 +195,7 @@ bool FileDownloadJob::run()
 			setFailureMessage(_T("Request timed out"));
 		}
 
-      if(!m_follow || m_node->getFileUpdateConn() != NULL)
+      if (!m_follow || m_node->getFileUpdateConn() != NULL)
       {
          delete conn;
       }

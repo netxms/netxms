@@ -445,10 +445,14 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
 	if (rulesRoot != NULL)
 	{
 		rules = rulesRoot->getOrderedSubEntries(_T("rule#*"));
-		for(i = 0; i < rules->size(); i++)
+		if (rules->size() > 0)
 		{
-         EPRule *rule = new EPRule(rules->get(i));
-         g_pEventPolicy->importRule(rule);
+         for(i = 0; i < rules->size(); i++)
+         {
+            EPRule *rule = new EPRule(rules->get(i));
+            g_pEventPolicy->importRule(rule);
+         }
+         g_pEventPolicy->saveToDB();
 		}
 		DbgPrintf(5, _T("ImportConfig(): event processing policy rules imported"));
 	}

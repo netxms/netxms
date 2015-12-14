@@ -212,7 +212,7 @@ THREAD_RESULT THREAD_CALL MobileDeviceListenerIPv6(void *arg)
 
    // Set up queue
    listen(sock, SOMAXCONN);
-	nxlog_write(MSG_LISTENING_FOR_MOBILE_DEVICES, EVENTLOG_INFORMATION_TYPE, "Ad", servAddr.sin6_addr.s6_addr, wListenPort);
+	nxlog_write(MSG_LISTENING_FOR_MOBILE_DEVICES, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr.sin6_addr.s6_addr, wListenPort);
 
    // Wait for connection requests
    while(!IsShutdownInProgress())

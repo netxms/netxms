@@ -28,6 +28,7 @@
  */
 SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *conn, const InetAddress& ipAddr, WORD port)
 {
+   m_reliable = true;   // no need for retries on server side, agent will do retry if needed
 	m_agentConnection = conn;
 	m_ipAddr = ipAddr;
 	m_port = port;
@@ -40,7 +41,7 @@ SNMP_ProxyTransport::SNMP_ProxyTransport(AgentConnection *conn, const InetAddres
  */
 SNMP_ProxyTransport::~SNMP_ProxyTransport()
 {
-	delete m_agentConnection;
+	m_agentConnection->decRefCount();
 	delete m_response;
 }
 
@@ -63,7 +64,7 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
 		msg.setField(VID_PDU, pBuffer, (UINT32)size);
       free(pBuffer);
 
-      if(m_waitForResponse)
+      if (m_waitForResponse)
       {
          m_response = m_agentConnection->customRequest(&msg);
          if (m_response != NULL)

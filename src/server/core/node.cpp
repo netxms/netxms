@@ -202,7 +202,8 @@ Node::~Node()
    MutexDestroy(m_hSmclpAccessMutex);
    MutexDestroy(m_mutexRTAccess);
 	MutexDestroy(m_mutexTopoAccess);
-   delete m_pAgentConnection;
+	if (m_pAgentConnection != NULL)
+	   m_pAgentConnection->decRefCount();
    delete m_smclpConnection;
    delete m_paramList;
 	delete m_tableList;
@@ -497,11 +498,11 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 31, DB_SQLTYPE_INTEGER, m_rackPosition); // rack position
    DBBind(hStmt, 32, DB_SQLTYPE_INTEGER, m_rackHeight);   // device height in rack units
 	DBBind(hStmt, 33, DB_SQLTYPE_INTEGER, m_rackId);	// rack ID
-	DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);	// rack ID
+	DBBind(hStmt, 34, DB_SQLTYPE_INTEGER, (LONG)m_bootTime);
    DBBind(hStmt, 35, DB_SQLTYPE_VARCHAR, _itot(m_agentCacheMode, cacheMode, 10), DB_BIND_STATIC);
    DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC);
    DBBind(hStmt, 37, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC);
-	DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, (LONG)m_lastAgentCommTime);	// rack ID
+	DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, (LONG)m_lastAgentCommTime);
 	DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL bResult = DBExecute(hStmt);
@@ -1203,9 +1204,11 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller
 		return;
 	}
 
+	if (IsShutdownInProgress())
+	   return;
+
    UINT32 i, dwPollListSize, dwOldFlags = m_dwFlags;
    NetObj *pPollerNode = NULL, **ppPollList;
-   BOOL bAllDown;
 	SNMP_Transport *pTransport;
 	Cluster *pCluster;
    time_t tNow, tExpire;
@@ -1213,6 +1216,14 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller
    Queue *pQueue = new Queue;     // Delayed event queue
    poller->setStatus(_T("wait for lock"));
    pollerLock();
+
+   if (IsShutdownInProgress())
+   {
+      delete pQueue;
+      pollerUnlock();
+      return;
+   }
+
    m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting status poll for node %s\r\n"), m_name);
    DbgPrintf(5, _T("Starting status poll for node %s (ID: %d)"), m_name, m_id);
@@ -1417,36 +1428,32 @@ restart_agent_check:
 	// This check is disabled for nodes without IP address
 	if (m_ipAddress.isValidUnicast())
 	{
+	   bool allDown = true;
 		LockChildList(FALSE);
 		if (m_dwChildCount > 0)
 		{
-			for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
+			for(i = 0; i < m_dwChildCount; i++)
 				if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
-					 (m_pChildList[i]->Status() != STATUS_CRITICAL) &&
-					 (m_pChildList[i]->Status() != STATUS_UNKNOWN) &&
-					 (m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
-					 (m_pChildList[i]->Status() != STATUS_DISABLED))
+                (((Interface *)m_pChildList[i])->getAdminState() != IF_ADMIN_STATE_DOWN) &&
+					 (((Interface *)m_pChildList[i])->getOperState() == IF_OPER_STATE_UP) &&
+					 (m_pChildList[i]->Status() != STATUS_UNMANAGED))
 				{
-					bAllDown = FALSE;
+					allDown = false;
 					break;
 				}
 		}
-		else
-		{
-			bAllDown = FALSE;
-		}
 		UnlockChildList();
-		if (bAllDown && (m_dwFlags & NF_IS_NATIVE_AGENT) &&
+		if (allDown && (m_dwFlags & NF_IS_NATIVE_AGENT) &&
 		    (!(m_dwFlags & NF_DISABLE_NXCP)))
 		   if (!(m_dwDynamicFlags & NDF_AGENT_UNREACHABLE))
-		      bAllDown = FALSE;
-		if (bAllDown && (m_dwFlags & NF_IS_SNMP) &&
+		      allDown = false;
+		if (allDown && (m_dwFlags & NF_IS_SNMP) &&
 		    (!(m_dwFlags & NF_DISABLE_SNMP)))
 		   if (!(m_dwDynamicFlags & NDF_SNMP_UNREACHABLE))
-		      bAllDown = FALSE;
+            allDown = false;
 
-		DbgPrintf(6, _T("StatusPoll(%s): bAllDown=%s, dynFlags=0x%08X"), m_name, bAllDown ? _T("true") : _T("false"), m_dwDynamicFlags);
-		if (bAllDown)
+		DbgPrintf(6, _T("StatusPoll(%s): allDown=%s, dynFlags=0x%08X"), m_name, allDown ? _T("true") : _T("false"), m_dwDynamicFlags);
+		if (allDown)
 		{
 		   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
 		   {
@@ -1459,7 +1466,7 @@ restart_agent_check:
 
 					// Set interfaces and network services to UNKNOWN state
 					LockChildList(FALSE);
-					for(i = 0, bAllDown = TRUE; i < m_dwChildCount; i++)
+					for(i = 0; i < m_dwChildCount; i++)
 						if (((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) || (m_pChildList[i]->getObjectClass() == OBJECT_NETWORKSERVICE)) &&
 							 (m_pChildList[i]->Status() == STATUS_CRITICAL))
 						{
@@ -1870,7 +1877,7 @@ void Node::updatePrimaryIpAddr()
       }
 
 		agentLock();
-		delete_and_null(m_pAgentConnection);
+		deleteAgentConnection();
 		agentUnlock();
 	}
 }
@@ -1899,12 +1906,22 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
 		return;
 	}
 
+   if (IsShutdownInProgress())
+      return;
+
    UINT32 dwOldFlags = m_dwFlags;
    TCHAR szBuffer[4096];
    bool hasChanges = false;
 
    poller->setStatus(_T("wait for lock"));
    pollerLock();
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
    m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting configuration poll for node %s\r\n"), m_name);
    DbgPrintf(4, _T("Starting configuration poll for node %s (ID: %d)"), m_name, m_id);
@@ -2313,7 +2330,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
    oids.add(_T(".1.3.6.1.2.1.1.1.0"));
    AddDriverSpecificOids(&oids);
    SNMP_Transport *pTransport = SnmpCheckCommSettings(getEffectiveSnmpProxy(), (getEffectiveSnmpProxy() == m_id) ? InetAddress::LOOPBACK : m_ipAddress, &m_snmpVersion, m_snmpPort, m_snmpSecurity, &oids);
-   if(pTransport == NULL)
+   if (pTransport == NULL)
    {
       DbgPrintf(5, _T("ConfPoll(%s): unable to create SNMP transport"), m_name);
       return false;
@@ -3068,37 +3085,11 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 }
 
 /**
- * Callback: apply template to nodes
+ * Filter for selecting templates from objects
  */
-static void ApplyTemplate(NetObj *object, void *node)
+static bool TemplateSelectionFilter(NetObj *object, void *userData)
 {
-   if ((object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted())
-   {
-      Template *pTemplate = (Template *)object;
-      AutoBindDecision decision = pTemplate->isApplicable((Node *)node);
-		if (decision == AutoBindDecision_Bind)
-		{
-			if (!pTemplate->isChild(((Node *)node)->getId()))
-			{
-				DbgPrintf(4, _T("Node::ApplyUserTemplates(): applying template %d \"%s\" to node %d \"%s\""),
-				          pTemplate->getId(), pTemplate->getName(), ((Node *)node)->getId(), ((Node *)node)->getName());
-				pTemplate->applyToTarget((Node *)node);
-				PostEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", ((Node *)node)->getId(), ((Node *)node)->getName(), pTemplate->getId(), pTemplate->getName());
-			}
-		}
-		else if (decision == AutoBindDecision_Unbind)
-		{
-			if (pTemplate->isAutoRemoveEnabled() && pTemplate->isChild(((Node *)node)->getId()))
-			{
-				DbgPrintf(4, _T("Node::ApplyUserTemplates(): removing template %d \"%s\" from node %d \"%s\""),
-				          pTemplate->getId(), pTemplate->getName(), ((Node *)node)->getId(), ((Node *)node)->getName());
-				pTemplate->DeleteChild((Node *)node);
-				((Node *)node)->DeleteParent(pTemplate);
-				pTemplate->queueRemoveFromTarget(((Node *)node)->getId(), TRUE);
-				PostEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", ((Node *)node)->getId(), ((Node *)node)->getName(), pTemplate->getId(), pTemplate->getName());
-			}
-		}
-   }
+   return (object->getObjectClass() == OBJECT_TEMPLATE) && !object->isDeleted() && ((Template *)object)->isAutoApplyEnabled();
 }
 
 /**
@@ -3106,7 +3097,39 @@ static void ApplyTemplate(NetObj *object, void *node)
  */
 void Node::applyUserTemplates()
 {
-	g_idxObjectById.forEach(ApplyTemplate, this);
+   if (IsShutdownInProgress())
+      return;
+
+   ObjectArray<NetObj> *templates = g_idxObjectById.getObjects(true, TemplateSelectionFilter);
+   for(int i = 0; i < templates->size(); i++)
+   {
+      Template *pTemplate = (Template *)templates->get(i);
+      AutoBindDecision decision = pTemplate->isApplicable(this);
+      if (decision == AutoBindDecision_Bind)
+      {
+         if (!pTemplate->isChild(m_id))
+         {
+            DbgPrintf(4, _T("Node::ApplyUserTemplates(): applying template %d \"%s\" to node %d \"%s\""),
+                      pTemplate->getId(), pTemplate->getName(), m_id, m_name);
+            pTemplate->applyToTarget(this);
+            PostEvent(EVENT_TEMPLATE_AUTOAPPLY, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
+         }
+      }
+      else if (decision == AutoBindDecision_Unbind)
+      {
+         if (pTemplate->isAutoRemoveEnabled() && pTemplate->isChild(m_id))
+         {
+            DbgPrintf(4, _T("Node::ApplyUserTemplates(): removing template %d \"%s\" from node %d \"%s\""),
+                      pTemplate->getId(), pTemplate->getName(), m_id, m_name);
+            pTemplate->DeleteChild(this);
+            DeleteParent(pTemplate);
+            pTemplate->queueRemoveFromTarget(m_id, true);
+            PostEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
+         }
+      }
+      pTemplate->decRefCount();
+   }
+   delete templates;
 }
 
 /**
@@ -3122,6 +3145,9 @@ static bool ContainerSelectionFilter(NetObj *object, void *userData)
  */
 void Node::updateContainerMembership()
 {
+   if (IsShutdownInProgress())
+      return;
+
    ObjectArray<NetObj> *containers = g_idxObjectById.getObjects(true, ContainerSelectionFilter);
    for(int i = 0; i < containers->size(); i++)
    {
@@ -3180,8 +3206,18 @@ void Node::instanceDiscoveryPoll(ClientSession *session, UINT32 requestId, Polle
 		return;
 	}
 
+   if (IsShutdownInProgress())
+      return;
+
    poller->setStatus(_T("wait for lock"));
    pollerLock();
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
    m_pollRequestor = session;
    sendPollerMsg(requestId, _T("Starting instance discovery poll for node %s\r\n"), m_name);
    DbgPrintf(4, _T("Starting instance discovery poll for node %s (ID: %d)"), m_name, m_id);
@@ -3471,7 +3507,8 @@ bool Node::connectToSMCLP()
  */
 bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnection)
 {
-   bool success;
+   if (g_flags & AF_SHUTDOWN)
+      return false;
 
    // Create new agent connection object if needed
    if (m_pAgentConnection == NULL)
@@ -3488,7 +3525,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
          if (newConnection != NULL)
             *newConnection = false;
          setLastAgentCommTime();
-			return TRUE;
+			return true;
 		}
 
 		// Close current connection or clean up after broken connection
@@ -3501,7 +3538,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    m_pAgentConnection->setAuthData(m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(m_pAgentConnection);
 	DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
-   success = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
+   bool success = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
    if (success)
 	{
 		m_pAgentConnection->setCommandTimeout(g_agentCommandTimeout);
@@ -3859,7 +3896,7 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
 				DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): timeout; resetting connection to agent..."), m_name, szParam);
-				delete_and_null(m_pAgentConnection);
+		      deleteAgentConnection();
             if (!connectToAgent())
                goto end_loop;
 				DbgPrintf(7, _T("Node(%s)->GetItemFromAgent(%s): connection to agent restored successfully"), m_name, szParam);
@@ -3918,7 +3955,7 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
 				DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
-				delete_and_null(m_pAgentConnection);
+		      deleteAgentConnection();
             if (!connectToAgent())
                goto end_loop;
 				DbgPrintf(7, _T("Node(%s)->getTableFromAgent(%s): connection to agent restored successfully"), m_name, name);
@@ -3980,7 +4017,7 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
          case ERR_REQUEST_TIMEOUT:
 				// Reset connection to agent after timeout
 				DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): timeout; resetting connection to agent..."), m_name, name);
-				delete_and_null(m_pAgentConnection);
+		      deleteAgentConnection();
             if (!connectToAgent())
                goto end_loop;
 				DbgPrintf(7, _T("Node(%s)->getListFromAgent(%s): connection to agent restored successfully"), m_name, name);
@@ -4421,8 +4458,8 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
 	pMsg->setField(VID_SYS_DESCRIPTION, CHECK_NULL_EX(m_sysDescription));
    pMsg->setField(VID_SYS_CONTACT, CHECK_NULL_EX(m_sysContact));
    pMsg->setField(VID_SYS_LOCATION, CHECK_NULL_EX(m_sysLocation));
-   pMsg->setField(VID_BOOT_TIME, (UINT32)m_bootTime);
-   pMsg->setField(VID_AGENT_COMM_TIME, (UINT32)m_lastAgentCommTime);
+   pMsg->setFieldFromTime(VID_BOOT_TIME, m_bootTime);
+   pMsg->setFieldFromTime(VID_AGENT_COMM_TIME, m_lastAgentCommTime);
 	pMsg->setField(VID_BRIDGE_BASE_ADDRESS, m_baseBridgeAddress, 6);
 	if (m_lldpNodeId != NULL)
 		pMsg->setField(VID_LLDP_NODE_ID, m_lldpNodeId);
@@ -4537,7 +4574,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
 		}
 
 		agentLock();
-		delete_and_null(m_pAgentConnection);
+      deleteAgentConnection();
 		agentUnlock();
 	}
 
@@ -4939,8 +4976,7 @@ UINT32 Node::checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, i
       if (pConn != NULL)
       {
          dwError = pConn->checkNetworkService(pdwStatus, ipAddr, iServiceType, wPort, wProto, pszRequest, pszResponse, responseTime);
-         pConn->disconnect();
-         delete pConn;
+         pConn->decRefCount();
       }
    }
    return dwError;
@@ -5006,7 +5042,9 @@ AgentConnectionEx *Node::createAgentConnection()
       conn = NULL;
    }
    else
+   {
       setLastAgentCommTime();
+   }
 	DbgPrintf(6, _T("Node::createAgentConnection(%s [%d]): conn=%p"), m_name, (int)m_id, conn);
    return conn;
 }
@@ -5089,7 +5127,7 @@ void Node::changeIPAddress(const InetAddress& ipAddr)
    unlockProperties();
 
    agentLock();
-   delete_and_null(m_pAgentConnection);
+   deleteAgentConnection();
    agentUnlock();
 
    pollerUnlock();
@@ -5137,7 +5175,7 @@ void Node::changeZone(UINT32 newZone)
    unlockProperties();
 
    agentLock();
-   delete_and_null(m_pAgentConnection);
+   deleteAgentConnection();
    agentUnlock();
 
    pollerUnlock();
@@ -5355,6 +5393,9 @@ void Node::updateRoutingTable()
 		m_dwDynamicFlags &= ~NDF_QUEUED_FOR_ROUTE_POLL;
 		return;
 	}
+
+   if (IsShutdownInProgress())
+      return;
 
    ROUTING_TABLE *pRT = getRoutingTable();
    if (pRT != NULL)
@@ -5847,9 +5888,18 @@ void Node::topologyPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poll
 		return;
 	}
 
-	pollerLock();
-   m_pollRequestor = pSession;
+   if (IsShutdownInProgress())
+      return;
 
+	pollerLock();
+
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
+   m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting topology poll for node %s\r\n"), m_name);
 	DbgPrintf(4, _T("Started topology poll for node %s [%d]"), m_name, m_id);
 
@@ -6452,6 +6502,12 @@ void Node::checkSubnetBinding()
 void Node::updateInterfaceNames(ClientSession *pSession, UINT32 dwRqId)
 {
    pollerLock();
+   if (IsShutdownInProgress())
+   {
+      pollerUnlock();
+      return;
+   }
+
    m_pollRequestor = pSession;
    sendPollerMsg(dwRqId, _T("Starting interface names poll for node %s\r\n"), m_name);
    DbgPrintf(4, _T("Starting interface names poll for node %s (ID: %d)"), m_name, m_id);
@@ -7067,8 +7123,7 @@ void Node::updatePingData()
                   DbgPrintf(7, _T("Node::updatePingData: incorrect value: %d or error while parsing: %s"), value, eptr);
                }
             }
-            conn->disconnect();
-            delete conn;
+            conn->decRefCount();
          }
          else
          {

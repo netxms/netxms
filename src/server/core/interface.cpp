@@ -454,6 +454,9 @@ bool Interface::deleteFromDatabase(DB_HANDLE hdb)
  */
 void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueue, Cluster *cluster, SNMP_Transport *snmpTransport, UINT32 nodeIcmpProxy)
 {
+   if (IsShutdownInProgress())
+      return;
+
    m_pollRequestor = session;
    Node *pNode = getParentNode();
    if (pNode == NULL)
@@ -791,9 +794,10 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
                }
             }
 
+            DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): response time %d"), m_id, m_name, (int)value);
 				if (value >= 0)
 				{
-               m_pingTime = value;
+               m_pingTime = (UINT32)value;
 					if (value < 10000)
 					{
 						*adminState = IF_ADMIN_STATE_UP;

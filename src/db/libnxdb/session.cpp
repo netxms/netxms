@@ -412,21 +412,21 @@ bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_RESULT hResult, int column, TCHAR *bu
 }
 
 /**
- * Get column count for async request
+ * Get column count for unbuffered result set
  */
-int LIBNXDB_EXPORTABLE DBGetColumnCountAsync(DB_ASYNC_RESULT hResult)
+int LIBNXDB_EXPORTABLE DBGetColumnCount(DB_UNBUFFERED_RESULT hResult)
 {
-	return hResult->m_driver->m_fpDrvGetColumnCountAsync(hResult->m_data);
+	return hResult->m_driver->m_fpDrvGetColumnCountUnbuffered(hResult->m_data);
 }
 
 /**
- * Get column name for async request
+ * Get column name for unbuffered result set
  */
-bool LIBNXDB_EXPORTABLE DBGetColumnNameAsync(DB_ASYNC_RESULT hResult, int column, TCHAR *buffer, int bufSize)
+bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_UNBUFFERED_RESULT hResult, int column, TCHAR *buffer, int bufSize)
 {
 	const char *name;
 
-	name = hResult->m_driver->m_fpDrvGetColumnNameAsync(hResult->m_data, column);
+	name = hResult->m_driver->m_fpDrvGetColumnNameUnbuffered(hResult->m_data, column);
 	if (name != NULL)
 	{
 #ifdef UNICODE
@@ -775,12 +775,12 @@ void LIBNXDB_EXPORTABLE DBFreeResult(DB_RESULT hResult)
 }
 
 /**
- * Asyncronous SELECT query
+ * Unbuffered SELECT query
  */
-DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
+DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbufferedEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *errorText)
 {
-   DBDRV_ASYNC_RESULT hResult;
-	DB_ASYNC_RESULT result = NULL;
+   DBDRV_UNBUFFERED_RESULT hResult;
+	DB_UNBUFFERED_RESULT result = NULL;
    DWORD dwError = DBERR_OTHER_ERROR;
 #ifdef UNICODE
 #define pwszQuery szQuery
@@ -796,17 +796,17 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
    s_perfSelectQueries++;
    s_perfTotalQueries++;
 
-   hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
+   hResult = hConn->m_driver->m_fpDrvSelectUnbuffered(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
    {
       DBReconnect(hConn);
-      hResult = hConn->m_driver->m_fpDrvAsyncSelect(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
+      hResult = hConn->m_driver->m_fpDrvSelectUnbuffered(hConn->m_connection, pwszQuery, &dwError, wcErrorText);
    }
 
    ms = GetCurrentTimeMs() - ms;
    if (hConn->m_driver->m_dumpSql)
    {
-      __DBDbgPrintf(9, _T("%s async query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (int)ms);
+      __DBDbgPrintf(9, _T("%s unbuffered query: \"%s\" [%d ms]"), (hResult != NULL) ? _T("Successful") : _T("Failed"), szQuery, (int)ms);
    }
    if ((hResult != NULL) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
    {
@@ -835,7 +835,7 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
    
 	if (hResult != NULL)
 	{
-		result = (DB_ASYNC_RESULT)malloc(sizeof(db_async_result_t));
+		result = (DB_UNBUFFERED_RESULT)malloc(sizeof(db_unbuffered_result_t));
 		result->m_driver = hConn->m_driver;
 		result->m_connection = hConn;
 		result->m_data = hResult;
@@ -846,37 +846,37 @@ DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelectEx(DB_HANDLE hConn, const TCHAR 
 #undef wcErrorText
 }
 
-DB_ASYNC_RESULT LIBNXDB_EXPORTABLE DBAsyncSelect(DB_HANDLE hConn, const TCHAR *query)
+DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectUnbuffered(DB_HANDLE hConn, const TCHAR *query)
 {
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 
-	return DBAsyncSelectEx(hConn, query, errorText);
+	return DBSelectUnbufferedEx(hConn, query, errorText);
 }
 
 /**
- * Fetch next row from asynchronous SELECT result
+ * Fetch next row from unbuffered SELECT result
  */
-bool LIBNXDB_EXPORTABLE DBFetch(DB_ASYNC_RESULT hResult)
+bool LIBNXDB_EXPORTABLE DBFetch(DB_UNBUFFERED_RESULT hResult)
 {
 	return hResult->m_driver->m_fpDrvFetch(hResult->m_data);
 }
 
 /**
- * Get field's value from asynchronous SELECT result
+ * Get field's value from unbuffered SELECT result
  */
-TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, TCHAR *pBuffer, int iBufSize)
+TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, TCHAR *pBuffer, int iBufSize)
 {
 #ifdef UNICODE
    if (pBuffer != NULL)
    {
-	   return hResult->m_driver->m_fpDrvGetFieldAsync(hResult->m_data, iColumn, pBuffer, iBufSize);
+	   return hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pBuffer, iBufSize);
    }
    else
    {
       INT32 nLen;
       WCHAR *pszTemp;
 
-      nLen = hResult->m_driver->m_fpDrvGetFieldLengthAsync(hResult->m_data, iColumn);
+      nLen = hResult->m_driver->m_fpDrvGetFieldLengthUnbuffered(hResult->m_data, iColumn);
       if (nLen == -1)
       {
          pszTemp = NULL;
@@ -885,7 +885,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
       {
          nLen++;
          pszTemp = (WCHAR *)malloc(nLen * sizeof(WCHAR));
-         hResult->m_driver->m_fpDrvGetFieldAsync(hResult->m_data, iColumn, pszTemp, nLen);
+         hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pszTemp, nLen);
       }
       return pszTemp;
    }
@@ -897,7 +897,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
    if (pBuffer != NULL)
    {
 		pwszBuffer = (WCHAR *)malloc(iBufSize * sizeof(WCHAR));
-		if (hResult->m_driver->m_fpDrvGetFieldAsync(hResult->m_data, iColumn, pwszBuffer, iBufSize) != NULL)
+		if (hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pwszBuffer, iBufSize) != NULL)
 		{
 			WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR,
 									  pwszBuffer, -1, pBuffer, iBufSize, NULL, NULL);
@@ -911,7 +911,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
    }
    else
    {
-		nLen = hResult->m_driver->m_fpDrvGetFieldLengthAsync(hResult->m_data, iColumn);
+		nLen = hResult->m_driver->m_fpDrvGetFieldLengthUnbuffered(hResult->m_data, iColumn);
       if (nLen == -1)
       {
          pszRet = NULL;
@@ -920,7 +920,7 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
       {
          nLen++;
          pwszBuffer = (WCHAR *)malloc(nLen * sizeof(WCHAR));
-			pwszData = hResult->m_driver->m_fpDrvGetFieldAsync(hResult->m_data, iColumn, pwszBuffer, nLen);
+			pwszData = hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, pwszBuffer, nLen);
          if (pwszData != NULL)
          {
             nLen = (int)wcslen(pwszData) + 1;
@@ -940,15 +940,15 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetFieldAsync(DB_ASYNC_RESULT hResult, int iColumn, 
 }
 
 /**
- * Get field's value as unsigned long from asynchronous SELECT result
+ * Get field's value as unsigned long from unbuffered SELECT result
  */
-UINT32 LIBNXDB_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iColumn)
+UINT32 LIBNXDB_EXPORTABLE DBGetFieldULong(DB_UNBUFFERED_RESULT hResult, int iColumn)
 {
    INT32 iVal;
    UINT32 dwVal;
    TCHAR szBuffer[64];
 
-   if (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL)
+   if (DBGetField(hResult, iColumn, szBuffer, 64) == NULL)
       return 0;
 	StrStrip(szBuffer);
 	if (szBuffer[0] == _T('-'))
@@ -964,15 +964,15 @@ UINT32 LIBNXDB_EXPORTABLE DBGetFieldAsyncULong(DB_ASYNC_RESULT hResult, int iCol
 }
 
 /**
- * Get field's value as unsigned 64-bit int from asynchronous SELECT result
+ * Get field's value as unsigned 64-bit int from unbuffered SELECT result
  */
-UINT64 LIBNXDB_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iColumn)
+UINT64 LIBNXDB_EXPORTABLE DBGetFieldUInt64(DB_UNBUFFERED_RESULT hResult, int iColumn)
 {
    INT64 iVal;
    UINT64 qwVal;
    TCHAR szBuffer[64];
 
-   if (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL)
+   if (DBGetField(hResult, iColumn, szBuffer, 64) == NULL)
       return 0;
 	StrStrip(szBuffer);
 	if (szBuffer[0] == _T('-'))
@@ -988,61 +988,65 @@ UINT64 LIBNXDB_EXPORTABLE DBGetFieldAsyncUInt64(DB_ASYNC_RESULT hResult, int iCo
 }
 
 /**
- * Get field's value as signed long from asynchronous SELECT result
+ * Get field's value as signed long from unbuffered SELECT result
  */
-INT32 LIBNXDB_EXPORTABLE DBGetFieldAsyncLong(DB_ASYNC_RESULT hResult, int iColumn)
+INT32 LIBNXDB_EXPORTABLE DBGetFieldLong(DB_UNBUFFERED_RESULT hResult, int iColumn)
 {
    TCHAR szBuffer[64];
-   
-   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : _tcstol(szBuffer, NULL, 10);
+   return DBGetField(hResult, iColumn, szBuffer, 64) == NULL ? 0 : _tcstol(szBuffer, NULL, 10);
 }
 
 /**
- * Get field's value as signed 64-bit int from asynchronous SELECT result
+ * Get field's value as signed 64-bit int from unbuffered SELECT result
  */
-INT64 LIBNXDB_EXPORTABLE DBGetFieldAsyncInt64(DB_ASYNC_RESULT hResult, int iColumn)
+INT64 LIBNXDB_EXPORTABLE DBGetFieldInt64(DB_UNBUFFERED_RESULT hResult, int iColumn)
 {
    TCHAR szBuffer[64];
-   
-   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : _tcstoll(szBuffer, NULL, 10);
+   return DBGetField(hResult, iColumn, szBuffer, 64) == NULL ? 0 : _tcstoll(szBuffer, NULL, 10);
 }
 
 /**
- * Get field's value as signed long from asynchronous SELECT result
+ * Get field's value as signed long from unbuffered SELECT result
  */
-double LIBNXDB_EXPORTABLE DBGetFieldAsyncDouble(DB_ASYNC_RESULT hResult, int iColumn)
+double LIBNXDB_EXPORTABLE DBGetFieldDouble(DB_UNBUFFERED_RESULT hResult, int iColumn)
 {
    TCHAR szBuffer[64];
-   
-   return DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL ? 0 : _tcstod(szBuffer, NULL);
+   return DBGetField(hResult, iColumn, szBuffer, 64) == NULL ? 0 : _tcstod(szBuffer, NULL);
 }
 
 /**
- * Get field's value as IPv4 address from asynchronous SELECT result
+ * Get field's value as IPv4 address from unbuffered SELECT result
  */
-UINT32 LIBNXDB_EXPORTABLE DBGetFieldAsyncIPAddr(DB_ASYNC_RESULT hResult, int iColumn)
+UINT32 LIBNXDB_EXPORTABLE DBGetFieldIPAddr(DB_UNBUFFERED_RESULT hResult, int iColumn)
 {
-   TCHAR szBuffer[64];
-   
-   return (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL) ? INADDR_NONE : ntohl(_t_inet_addr(szBuffer));
+   TCHAR buffer[64];
+   return (DBGetField(hResult, iColumn, buffer, 64) == NULL) ? INADDR_NONE : ntohl(_t_inet_addr(buffer));
 }
 
 /**
- * Get field's value as IP address from asynchronous SELECT result
+ * Get field's value as IP address from unbuffered SELECT result
  */
-InetAddress LIBNXDB_EXPORTABLE DBGetFieldAsyncInetAddr(DB_ASYNC_RESULT hResult, int iColumn)
+InetAddress LIBNXDB_EXPORTABLE DBGetFieldInetAddr(DB_UNBUFFERED_RESULT hResult, int iColumn)
 {
-   TCHAR szBuffer[64];
-   
-   return (DBGetFieldAsync(hResult, iColumn, szBuffer, 64) == NULL) ? InetAddress() : InetAddress::parse(szBuffer);
+   TCHAR buffer[64];
+   return (DBGetField(hResult, iColumn, buffer, 64) == NULL) ? InetAddress() : InetAddress::parse(buffer);
 }
 
 /**
- * Free asynchronous SELECT result
+ * Get field's value as GUID from unbuffered SELECT result
  */
-void LIBNXDB_EXPORTABLE DBFreeAsyncResult(DB_ASYNC_RESULT hResult)
+uuid LIBNXDB_EXPORTABLE DBGetFieldGUID(DB_UNBUFFERED_RESULT hResult, int iColumn)
 {
-	hResult->m_driver->m_fpDrvFreeAsyncResult(hResult->m_data);
+   TCHAR buffer[64];
+   return (DBGetField(hResult, iColumn, buffer, 64) == NULL) ? uuid::NULL_UUID : uuid::parse(buffer);
+}
+
+/**
+ * Free unbuffered SELECT result
+ */
+void LIBNXDB_EXPORTABLE DBFreeResult(DB_UNBUFFERED_RESULT hResult)
+{
+	hResult->m_driver->m_fpDrvFreeUnbufferedResult(hResult->m_data);
 	MutexUnlock(hResult->m_connection->m_mutexTransLock);
 	free(hResult);
 }
@@ -1501,6 +1505,98 @@ DB_RESULT LIBNXDB_EXPORTABLE DBSelectPrepared(DB_STATEMENT hStmt)
 {
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 	return DBSelectPreparedEx(hStmt, errorText);
+}
+
+/**
+ * Execute prepared SELECT statement without caching results
+ */
+DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbufferedEx(DB_STATEMENT hStmt, TCHAR *errorText)
+{
+   if (!IS_VALID_STATEMENT_HANDLE(hStmt))
+   {
+      _tcscpy(errorText, _T("Invalid statement handle"));
+      return NULL;
+   }
+
+   DB_UNBUFFERED_RESULT result = NULL;
+#ifdef UNICODE
+#define wcErrorText errorText
+#else
+   WCHAR wcErrorText[DBDRV_MAX_ERROR_TEXT] = L"";
+#endif
+
+   DB_HANDLE hConn = hStmt->m_connection;
+   MutexLock(hConn->m_mutexTransLock);
+
+   s_perfSelectQueries++;
+   s_perfTotalQueries++;
+
+   INT64 ms = GetCurrentTimeMs();
+   DWORD dwError = DBERR_OTHER_ERROR;
+   DBDRV_UNBUFFERED_RESULT hResult = hConn->m_driver->m_fpDrvSelectPreparedUnbuffered(hConn->m_connection, hStmt->m_statement, &dwError, wcErrorText);
+
+   ms = GetCurrentTimeMs() - ms;
+   if (hConn->m_driver->m_dumpSql)
+   {
+      __DBDbgPrintf(9, _T("%s prepared sync query: \"%s\" [%d ms]"),
+                    (hResult != NULL) ? _T("Successful") : _T("Failed"), hStmt->m_query, (int)ms);
+   }
+   if ((hResult != NULL) && ((UINT32)ms > g_sqlQueryExecTimeThreshold))
+   {
+      __DBDbgPrintf(3, _T("Long running query: \"%s\" [%d ms]"), hStmt->m_query, (int)ms);
+      s_perfLongRunningQueries++;
+   }
+
+   // Do reconnect if needed, but don't retry statement execution
+   // because it will fail anyway
+   if ((hResult == NULL) && (dwError == DBERR_CONNECTION_LOST) && hConn->m_reconnectEnabled)
+   {
+      DBReconnect(hConn);
+   }
+
+#ifndef UNICODE
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, wcErrorText, -1, errorText, DBDRV_MAX_ERROR_TEXT, NULL, NULL);
+   errorText[DBDRV_MAX_ERROR_TEXT - 1] = 0;
+#endif
+
+   if (hResult == NULL)
+   {
+      MutexUnlock(hConn->m_mutexTransLock);
+
+      if (hConn->m_driver->m_logSqlErrors)
+         nxlog_write(g_sqlErrorMsgCode, EVENTLOG_ERROR_TYPE, "ss", hStmt->m_query, errorText);
+      if (hConn->m_driver->m_fpEventHandler != NULL)
+      {
+#ifdef UNICODE
+         hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, hStmt->m_query, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
+#else
+         WCHAR *query = WideStringFromMBString(hStmt->m_query);
+         hConn->m_driver->m_fpEventHandler(DBEVENT_QUERY_FAILED, query, wcErrorText, dwError == DBERR_CONNECTION_LOST, hConn->m_driver->m_userArg);
+         free(query);
+#endif
+      }
+      s_perfFailedQueries++;
+   }
+
+   if (hResult != NULL)
+   {
+      result = (DB_UNBUFFERED_RESULT)malloc(sizeof(db_unbuffered_result_t));
+      result->m_driver = hConn->m_driver;
+      result->m_connection = hConn;
+      result->m_data = hResult;
+   }
+
+   return result;
+#undef wcErrorText
+}
+
+/**
+ * Execute prepared SELECT statement
+ */
+DB_UNBUFFERED_RESULT LIBNXDB_EXPORTABLE DBSelectPreparedUnbuffered(DB_STATEMENT hStmt)
+{
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   return DBSelectPreparedUnbufferedEx(hStmt, errorText);
 }
 
 /**

@@ -119,8 +119,10 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
  */
 void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 {
-	TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
+   if (g_flags & AF_SHUTDOWN)
+      return;
 
+	TCHAR name[MAX_PARAM_NAME], value[MAX_RESULT_LENGTH];
 	msg->getFieldAsString(VID_NAME, name, MAX_PARAM_NAME);
 	msg->getFieldAsString(VID_VALUE, value, MAX_RESULT_LENGTH);
 
@@ -214,7 +216,10 @@ void AgentConnectionEx::printMsg(const TCHAR *format, ...)
    va_end(args);
 }
 
-static void cancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
+/**
+ * Cancel unknown file monitoring
+ */
+static void CancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
 {
    DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: unknown subscription will be canceled."));
    AgentConnection *conn = object->createAgentConnection();
@@ -227,8 +232,8 @@ static void cancelUnknownFileMonitoring(Node *object,TCHAR *remoteFile)
       request.setField(VID_OBJECT_ID, object->getId());
       NXCPMessage* response = conn->customRequest(&request);
       delete response;
+      conn->decRefCount();
    }
-   delete conn;
 }
 
 /**
@@ -257,13 +262,13 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
             g_monitoringList.removeMonitoringFile(&file);
             validSessionCount--;
 
-            if(validSessionCount == 0)
-               cancelUnknownFileMonitoring(object, remoteFile);
+            if (validSessionCount == 0)
+               CancelUnknownFileMonitoring(object, remoteFile);
          }
       }
-      if(result->size() == 0)
+      if (result->size() == 0)
       {
-         cancelUnknownFileMonitoring(object, remoteFile);
+         CancelUnknownFileMonitoring(object, remoteFile);
       }
       delete result;
 	}
@@ -292,6 +297,20 @@ bool AgentConnectionEx::processCustomMessage(NXCPMessage *msg)
       }
    }
    return false;
+}
+
+/**
+ * Create SNMP proxy transport for sending trap response
+ */
+static SNMP_ProxyTransport *CreateSNMPProxyTransport(AgentConnectionEx *conn, Node *originNode, const InetAddress& originAddr, UINT16 port)
+{
+   conn->incRefCount();
+   SNMP_ProxyTransport *snmpTransport = new SNMP_ProxyTransport(conn, originAddr, port);
+   if (originNode != NULL)
+   {
+      snmpTransport->setSecurityContext(originNode->getSnmpSecurityContext());
+   }
+   return snmpTransport;
 }
 
 /**
@@ -333,43 +352,31 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          UINT32 pduLenght = msg->getFieldAsUInt32(VID_PDU_SIZE);
          BYTE *pduBytes = (BYTE*)malloc(pduLenght);
          msg->getFieldAsBinary(VID_PDU, pduBytes, pduLenght);
-         Node *originNode = FindNodeByIP(0, originSenderIP); //create function
-
-         SNMP_ProxyTransport *pTransport;
-         if (originNode != NULL)
-            pTransport = (SNMP_ProxyTransport *)originNode->createSnmpTransport((WORD)msg->getFieldAsUInt16(VID_PORT));
-
-         if (ConfigReadInt(_T("LogAllSNMPTraps"), FALSE) && (originNode == NULL))
+         Node *originNode = FindNodeByIP(0, originSenderIP);
+         if ((originNode != NULL) || ConfigReadInt(_T("LogAllSNMPTraps"), FALSE))
          {
-            AgentConnection *pConn;
-
-            pConn = proxyNode->createAgentConnection();
-            if (pConn != NULL)
-            {
-               pTransport = new SNMP_ProxyTransport(pConn, originSenderIP, msg->getFieldAsUInt16(VID_PORT));
-            }
-         }
-
-         if (pTransport != NULL)
-         {
-            pTransport->setWaitForResponse(false);
             SNMP_PDU *pdu = new SNMP_PDU;
             if (pdu->parse(pduBytes, pduLenght, (originNode != NULL) ? originNode->getSnmpSecurityContext() : NULL, true))
             {
                DbgPrintf(6, _T("SNMPTrapReceiver: received PDU of type %d"), pdu->getCommand());
                if ((pdu->getCommand() == SNMP_TRAP) || (pdu->getCommand() == SNMP_INFORM_REQUEST))
                {
+                  bool isInformRequest = (pdu->getCommand() == SNMP_INFORM_REQUEST);
+                  SNMP_ProxyTransport *snmpTransport = isInformRequest ? CreateSNMPProxyTransport(this, originNode, originSenderIP, msg->getFieldAsUInt16(VID_PORT)) : NULL;
                   if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_INFORM_REQUEST))
                   {
-                     SNMP_SecurityContext *context = pTransport->getSecurityContext();
+                     SNMP_SecurityContext *context = snmpTransport->getSecurityContext();
                      context->setAuthoritativeEngine(localEngine);
                   }
-                  ProcessTrap(pdu, originSenderIP, msg->getFieldAsUInt16(VID_PORT), pTransport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
+                  ProcessTrap(pdu, originSenderIP, msg->getFieldAsUInt16(VID_PORT), snmpTransport, &localEngine, isInformRequest);
+                  delete snmpTransport;
                }
                else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
                {
                   // Engine ID discovery
                   DbgPrintf(6, _T("SNMPTrapReceiver: EngineId discovery"));
+
+                  SNMP_ProxyTransport *snmpTransport = CreateSNMPProxyTransport(this, originNode, originSenderIP, msg->getFieldAsUInt16(VID_PORT));
 
                   SNMP_PDU *response = new SNMP_PDU(SNMP_REPORT, pdu->getRequestId(), pdu->getVersion());
                   response->setReportable(false);
@@ -386,10 +393,12 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                   context->setSecurityModel(SNMP_SECURITY_MODEL_USM);
                   context->setAuthMethod(SNMP_AUTH_NONE);
                   context->setPrivMethod(SNMP_ENCRYPT_NONE);
-                  pTransport->setSecurityContext(context);
+                  snmpTransport->setSecurityContext(context);
 
-                  pTransport->sendMessage(response);
+                  snmpTransport->setWaitForResponse(false);
+                  snmpTransport->sendMessage(response);
                   delete response;
+                  delete snmpTransport;
                }
                else if (pdu->getCommand() == SNMP_REPORT)
                {
@@ -477,6 +486,9 @@ UINT32 AgentConnectionEx::uninstallPolicy(AgentPolicy *policy)
  */
 UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 {
+   if (g_flags & AF_SHUTDOWN)
+      return ERR_INTERNAL_ERROR;
+
    if (m_nodeId == 0)
    {
       DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: node ID is 0 for agent session"));
@@ -542,6 +554,7 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
          return ERR_INTERNAL_ERROR;
    }
 
+   DbgPrintf(7, _T("AgentConnectionEx::processCollectedData: processing DCI %s [%d] (type=%d) on node %s [%d]"), dcObject->getName(), dciId, type, node->getName(), node->getId());
    time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
    bool success = node->processNewDCValue(dcObject, t, value);
    if (t > dcObject->getLastPollTime())

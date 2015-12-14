@@ -1924,7 +1924,6 @@ void ClientSession::login(NXCPMessage *pRequest)
  */
 void ClientSession::sendEventDB(UINT32 dwRqId)
 {
-   DB_ASYNC_RESULT hResult;
    NXCPMessage msg;
    TCHAR szBuffer[4096];
 
@@ -1945,26 +1944,26 @@ void ClientSession::sendEventDB(UINT32 dwRqId)
          msg.setId(dwRqId);
 
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         hResult = DBAsyncSelect(hdb, _T("SELECT event_code,event_name,severity,flags,message,description FROM event_cfg"));
+         DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, _T("SELECT event_code,event_name,severity,flags,message,description FROM event_cfg"));
          if (hResult != NULL)
          {
             while(DBFetch(hResult))
             {
-               msg.setField(VID_EVENT_CODE, DBGetFieldAsyncULong(hResult, 0));
-               msg.setField(VID_NAME, DBGetFieldAsync(hResult, 1, szBuffer, 1024));
-               msg.setField(VID_SEVERITY, DBGetFieldAsyncULong(hResult, 2));
-               msg.setField(VID_FLAGS, DBGetFieldAsyncULong(hResult, 3));
+               msg.setField(VID_EVENT_CODE, DBGetFieldULong(hResult, 0));
+               msg.setField(VID_NAME, DBGetField(hResult, 1, szBuffer, 1024));
+               msg.setField(VID_SEVERITY, DBGetFieldULong(hResult, 2));
+               msg.setField(VID_FLAGS, DBGetFieldULong(hResult, 3));
 
-               DBGetFieldAsync(hResult, 4, szBuffer, 4096);
+               DBGetField(hResult, 4, szBuffer, 4096);
                msg.setField(VID_MESSAGE, szBuffer);
 
-               DBGetFieldAsync(hResult, 5, szBuffer, 4096);
+               DBGetField(hResult, 5, szBuffer, 4096);
                msg.setField(VID_DESCRIPTION, szBuffer);
 
                sendMessage(&msg);
                msg.deleteAllFields();
             }
-            DBFreeAsyncResult(hResult);
+            DBFreeResult(hResult);
          }
          DBConnectionPoolReleaseConnection(hdb);
 
@@ -2290,7 +2289,6 @@ void ClientSession::sendSelectedObjects(NXCPMessage *pRequest)
 void ClientSession::sendEventLog(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
-   DB_ASYNC_RESULT hResult = NULL;
    DB_RESULT hTempResult;
    UINT32 dwRqId, dwMaxRecords, dwNumRows, dwId;
    TCHAR szQuery[1024], szBuffer[1024];
@@ -2351,7 +2349,7 @@ void ClientSession::sendEventLog(NXCPMessage *pRequest)
          szQuery[0] = 0;
          break;
    }
-   hResult = DBAsyncSelect(hdb, szQuery);
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, szQuery);
    if (hResult != NULL)
    {
       msg.setField(VID_RCC, RCC_SUCCESS);
@@ -2370,18 +2368,18 @@ void ClientSession::sendEventLog(NXCPMessage *pRequest)
             dwNumRows = 0;
             dwId = VID_EVENTLOG_MSG_BASE;
          }
-         msg.setField(dwId++, DBGetFieldAsyncUInt64(hResult, 0));
-         msg.setField(dwId++, DBGetFieldAsyncULong(hResult, 1));
-         msg.setField(dwId++, DBGetFieldAsyncULong(hResult, 2));
-         msg.setField(dwId++, DBGetFieldAsyncULong(hResult, 3));
-         msg.setField(dwId++, (WORD)DBGetFieldAsyncLong(hResult, 4));
-         DBGetFieldAsync(hResult, 5, szBuffer, 1024);
+         msg.setField(dwId++, DBGetFieldUInt64(hResult, 0));
+         msg.setField(dwId++, DBGetFieldULong(hResult, 1));
+         msg.setField(dwId++, DBGetFieldULong(hResult, 2));
+         msg.setField(dwId++, DBGetFieldULong(hResult, 3));
+         msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, 4));
+         DBGetField(hResult, 5, szBuffer, 1024);
          msg.setField(dwId++, szBuffer);
-         DBGetFieldAsync(hResult, 6, szBuffer, 1024);
+         DBGetField(hResult, 6, szBuffer, 1024);
          msg.setField(dwId++, szBuffer);
          msg.setField(dwId++, (UINT32)0);	// Do not send parameters
       }
-      DBFreeAsyncResult(hResult);
+      DBFreeResult(hResult);
 
       // Send remaining records with End-Of-Sequence notification
       msg.setField(VID_NUM_RECORDS, dwNumRows);
@@ -4259,7 +4257,7 @@ read_from_db:
 		if (timeTo != 0)
 			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, timeTo);
 
-		DB_RESULT hResult = DBSelectPrepared(hStmt);
+		DB_UNBUFFERED_RESULT hResult = DBSelectPreparedUnbuffered(hStmt);
 		if (hResult != NULL)
 		{
 #if !defined(UNICODE) || defined(UNICODE_UCS4)
@@ -4271,8 +4269,6 @@ read_from_db:
 			if (dciType == DCO_TYPE_ITEM)
 				((DCItem *)dci)->fillMessageWithThresholds(response);
 			sendMessage(response);
-
-			UINT32 numRows = (UINT32)DBGetNumRows(hResult);
 
 			int dataType;
 			switch(dciType)
@@ -4289,38 +4285,48 @@ read_from_db:
 			}
 
 			// Allocate memory for data and prepare data header
-			pData = (DCI_DATA_HEADER *)malloc(numRows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
+			int allocated = 8192;
+			int rows = 0;
+			pData = (DCI_DATA_HEADER *)malloc(allocated * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
 			pData->dataType = htonl((UINT32)dataType);
 			pData->dciId = htonl(dci->getId());
 
 			// Fill memory block with records
 			pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
-			for(UINT32 i = 0; i < numRows; i++)
+			while(DBFetch(hResult))
 			{
-				pCurr->timeStamp = htonl(DBGetFieldULong(hResult, i, 0));
+			   if (rows == allocated)
+			   {
+			      allocated += 8192;
+		         pData = (DCI_DATA_HEADER *)realloc(pData, allocated * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER));
+		         pCurr = (DCI_DATA_ROW *)(((char *)pData + s_rowSize[dataType] * rows) + sizeof(DCI_DATA_HEADER));
+			   }
+            rows++;
+
+				pCurr->timeStamp = htonl(DBGetFieldULong(hResult, 0));
 				switch(dataType)
 				{
 					case DCI_DT_INT:
 					case DCI_DT_UINT:
-						pCurr->value.int32 = htonl(DBGetFieldULong(hResult, i, 1));
+						pCurr->value.int32 = htonl(DBGetFieldULong(hResult, 1));
 						break;
 					case DCI_DT_INT64:
 					case DCI_DT_UINT64:
-						pCurr->value.ext.v64.int64 = htonq(DBGetFieldUInt64(hResult, i, 1));
+						pCurr->value.ext.v64.int64 = htonq(DBGetFieldUInt64(hResult, 1));
 						break;
 					case DCI_DT_FLOAT:
-						pCurr->value.ext.v64.real = htond(DBGetFieldDouble(hResult, i, 1));
+						pCurr->value.ext.v64.real = htond(DBGetFieldDouble(hResult, 1));
 						break;
 					case DCI_DT_STRING:
 #ifdef UNICODE
 #ifdef UNICODE_UCS4
-						DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
+						DBGetField(hResult, 1, szBuffer, MAX_DCI_STRING_VALUE);
 						ucs4_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #else
-						DBGetField(hResult, i, 1, pCurr->value.string, MAX_DCI_STRING_VALUE);
+						DBGetField(hResult, 1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #endif
 #else
-						DBGetField(hResult, i, 1, szBuffer, MAX_DCI_STRING_VALUE);
+						DBGetField(hResult, 1, szBuffer, MAX_DCI_STRING_VALUE);
 						mb_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #endif
 						SwapWideString(pCurr->value.string);
@@ -4329,12 +4335,12 @@ read_from_db:
 				pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + s_rowSize[dataType]);
 			}
 			DBFreeResult(hResult);
-			pData->numRows = htonl(numRows);
+			pData->numRows = htonl(rows);
 
 			// Prepare and send raw message with fetched data
 			NXCP_MESSAGE *msg =
 				CreateRawNXCPMessage(CMD_DCI_DATA, request->getId(), 0,
-											numRows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
+											rows * s_rowSize[dataType] + sizeof(DCI_DATA_HEADER),
 											pData, NULL);
 			free(pData);
 			sendRawMessage(msg);
@@ -6658,7 +6664,6 @@ void ClientSession::LockPackageDB(UINT32 dwRqId, BOOL bLock)
 void ClientSession::SendAllPackages(UINT32 dwRqId)
 {
    NXCPMessage msg;
-   DB_ASYNC_RESULT hResult;
    BOOL bSuccess = FALSE;
    TCHAR szBuffer[MAX_DB_STRING];
 
@@ -6671,7 +6676,7 @@ void ClientSession::SendAllPackages(UINT32 dwRqId)
       if (m_dwFlags & CSF_PACKAGE_DB_LOCKED)
       {
          DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-         hResult = DBAsyncSelect(hdb, _T("SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg"));
+         DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, _T("SELECT pkg_id,version,platform,pkg_file,pkg_name,description FROM agent_pkg"));
          if (hResult != NULL)
          {
             msg.setField(VID_RCC, RCC_SUCCESS);
@@ -6683,12 +6688,12 @@ void ClientSession::SendAllPackages(UINT32 dwRqId)
 
             while(DBFetch(hResult))
             {
-               msg.setField(VID_PACKAGE_ID, DBGetFieldAsyncULong(hResult, 0));
-               msg.setField(VID_PACKAGE_VERSION, DBGetFieldAsync(hResult, 1, szBuffer, MAX_DB_STRING));
-               msg.setField(VID_PLATFORM_NAME, DBGetFieldAsync(hResult, 2, szBuffer, MAX_DB_STRING));
-               msg.setField(VID_FILE_NAME, DBGetFieldAsync(hResult, 3, szBuffer, MAX_DB_STRING));
-               msg.setField(VID_PACKAGE_NAME, DBGetFieldAsync(hResult, 4, szBuffer, MAX_DB_STRING));
-               DBGetFieldAsync(hResult, 5, szBuffer, MAX_DB_STRING);
+               msg.setField(VID_PACKAGE_ID, DBGetFieldULong(hResult, 0));
+               msg.setField(VID_PACKAGE_VERSION, DBGetField(hResult, 1, szBuffer, MAX_DB_STRING));
+               msg.setField(VID_PLATFORM_NAME, DBGetField(hResult, 2, szBuffer, MAX_DB_STRING));
+               msg.setField(VID_FILE_NAME, DBGetField(hResult, 3, szBuffer, MAX_DB_STRING));
+               msg.setField(VID_PACKAGE_NAME, DBGetField(hResult, 4, szBuffer, MAX_DB_STRING));
+               DBGetField(hResult, 5, szBuffer, MAX_DB_STRING);
                DecodeSQLString(szBuffer);
                msg.setField(VID_DESCRIPTION, szBuffer);
                sendMessage(&msg);
@@ -6698,7 +6703,7 @@ void ClientSession::SendAllPackages(UINT32 dwRqId)
             msg.setField(VID_PACKAGE_ID, (UINT32)0);
             sendMessage(&msg);
 
-            DBFreeAsyncResult(hResult);
+            DBFreeResult(hResult);
          }
          else
          {
@@ -7582,7 +7587,7 @@ void ClientSession::getAgentConfig(NXCPMessage *pRequest)
             if (pConn != NULL)
             {
                dwResult = pConn->getConfigFile(&pszConfig, &size);
-               delete pConn;
+               pConn->decRefCount();
                switch(dwResult)
                {
                   case ERR_SUCCESS:
@@ -7677,7 +7682,7 @@ void ClientSession::updateAgentConfig(NXCPMessage *pRequest)
                      msg.setField(VID_RCC, RCC_COMM_FAILURE);
                      break;
                }
-               delete pConn;
+               pConn->decRefCount();
             }
             else
             {
@@ -7808,7 +7813,7 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
                      msg.setField(VID_RCC, RCC_COMM_FAILURE);
                      break;
                }
-               delete pConn;
+               pConn->decRefCount();
             }
             else
             {
@@ -8466,7 +8471,6 @@ void ClientSession::sendSyslog(NXCPMessage *pRequest)
    NXCPMessage msg;
    UINT32 dwMaxRecords, dwNumRows, dwId;
    DB_RESULT hTempResult;
-   DB_ASYNC_RESULT hResult;
    TCHAR szQuery[1024], szBuffer[1024];
    WORD wRecOrder;
 
@@ -8525,7 +8529,7 @@ void ClientSession::sendSyslog(NXCPMessage *pRequest)
          szQuery[0] = 0;
          break;
    }
-   hResult = DBAsyncSelect(hdb, szQuery);
+   DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, szQuery);
    if (hResult != NULL)
    {
 		msg.setField(VID_RCC, RCC_SUCCESS);
@@ -8545,16 +8549,16 @@ void ClientSession::sendSyslog(NXCPMessage *pRequest)
             dwNumRows = 0;
             dwId = VID_SYSLOG_MSG_BASE;
          }
-         msg.setField(dwId++, DBGetFieldAsyncUInt64(hResult, 0));
-         msg.setField(dwId++, DBGetFieldAsyncULong(hResult, 1));
-         msg.setField(dwId++, (WORD)DBGetFieldAsyncLong(hResult, 2));
-         msg.setField(dwId++, (WORD)DBGetFieldAsyncLong(hResult, 3));
-         msg.setField(dwId++, DBGetFieldAsyncULong(hResult, 4));
-         msg.setField(dwId++, DBGetFieldAsync(hResult, 5, szBuffer, 1024));
-         msg.setField(dwId++, DBGetFieldAsync(hResult, 6, szBuffer, 1024));
-         msg.setField(dwId++, DBGetFieldAsync(hResult, 7, szBuffer, 1024));
+         msg.setField(dwId++, DBGetFieldUInt64(hResult, 0));
+         msg.setField(dwId++, DBGetFieldULong(hResult, 1));
+         msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, 2));
+         msg.setField(dwId++, (WORD)DBGetFieldLong(hResult, 3));
+         msg.setField(dwId++, DBGetFieldULong(hResult, 4));
+         msg.setField(dwId++, DBGetField(hResult, 5, szBuffer, 1024));
+         msg.setField(dwId++, DBGetField(hResult, 6, szBuffer, 1024));
+         msg.setField(dwId++, DBGetField(hResult, 7, szBuffer, 1024));
       }
-      DBFreeAsyncResult(hResult);
+      DBFreeResult(hResult);
 
       // Send remaining records with End-Of-Sequence notification
       msg.setField(VID_NUM_RECORDS, dwNumRows);
@@ -8601,7 +8605,6 @@ void ClientSession::SendTrapLog(NXCPMessage *pRequest)
    TCHAR szBuffer[4096], szQuery[1024];
    UINT32 dwId, dwNumRows, dwMaxRecords;
    DB_RESULT hTempResult;
-   DB_ASYNC_RESULT hResult;
    WORD wRecOrder;
 
    wRecOrder = ((g_dbSyntax == DB_SYNTAX_MSSQL) || (g_dbSyntax == DB_SYNTAX_ORACLE)) ? RECORD_ORDER_REVERSED : RECORD_ORDER_NORMAL;
@@ -8666,7 +8669,7 @@ void ClientSession::SendTrapLog(NXCPMessage *pRequest)
             break;
       }
 
-      hResult = DBAsyncSelect(hdb, szQuery);
+      DB_UNBUFFERED_RESULT hResult = DBSelectUnbuffered(hdb, szQuery);
       if (hResult != NULL)
       {
          // Send events, one per message
@@ -8681,14 +8684,14 @@ void ClientSession::SendTrapLog(NXCPMessage *pRequest)
                dwNumRows = 0;
                dwId = VID_TRAP_LOG_MSG_BASE;
             }
-            msg.setField(dwId++, DBGetFieldAsyncUInt64(hResult, 0));
-            msg.setField(dwId++, DBGetFieldAsyncULong(hResult, 1));
-            msg.setField(dwId++, DBGetFieldAsyncIPAddr(hResult, 2));
-            msg.setField(dwId++, DBGetFieldAsyncULong(hResult, 3));
-            msg.setField(dwId++, DBGetFieldAsync(hResult, 4, szBuffer, 256));
-            msg.setField(dwId++, DBGetFieldAsync(hResult, 5, szBuffer, 4096));
+            msg.setField(dwId++, DBGetFieldUInt64(hResult, 0));
+            msg.setField(dwId++, DBGetFieldULong(hResult, 1));
+            msg.setField(dwId++, DBGetFieldIPAddr(hResult, 2));
+            msg.setField(dwId++, DBGetFieldULong(hResult, 3));
+            msg.setField(dwId++, DBGetField(hResult, 4, szBuffer, 256));
+            msg.setField(dwId++, DBGetField(hResult, 5, szBuffer, 4096));
          }
-         DBFreeAsyncResult(hResult);
+         DBFreeResult(hResult);
 
          // Send remaining records with End-Of-Sequence notification
          msg.setField(VID_NUM_RECORDS, dwNumRows);
@@ -10951,7 +10954,7 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
          node->incRefCount();
          AgentConnection *conn = node->createAgentConnection();
          debugPrintf(6, _T("Cancel file monitoring %s"), remoteFile);
-         if(conn != NULL)
+         if (conn != NULL)
          {
             request->setId(conn->generateRequestId());
             response = conn->customRequest(request);
@@ -10974,7 +10977,7 @@ void ClientSession::cancelFileMonitoring(NXCPMessage *request)
                msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
             }
             delete response;
-            delete conn;
+            conn->decRefCount();
          }
          else
          {
@@ -13363,7 +13366,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
             Node *node = (Node *)object;
             node->incRefCount();
             AgentConnection *conn = node->createAgentConnection();
-            if(conn != NULL)
+            if (conn != NULL)
             {
                request->setId(conn->generateRequestId());
                response = conn->customRequest(request);
@@ -13424,7 +13427,7 @@ void ClientSession::fileManagerControl(NXCPMessage *request)
                {
                   msg.setField(VID_RCC, RCC_TIMEOUT);
                }
-               delete conn;
+               conn->decRefCount();
             }
             else
             {
@@ -13514,14 +13517,14 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
             Node *node = (Node *)object;
             node->incRefCount();
             AgentConnection *conn = node->createAgentConnection();
-            if(conn != NULL)
+            if (conn != NULL)
             {
                conn->sendMessage(request);
                response = conn->waitForMessage(CMD_REQUEST_COMPLETED, request->getId(), 10000);
                if (response != NULL)
                {
                   rcc = response->getFieldAsUInt32(VID_RCC);
-                  if(rcc == RCC_SUCCESS)
+                  if (rcc == RCC_SUCCESS)
                   {
                      response->setCode(CMD_REQUEST_COMPLETED);
                      responseMessage = response;
@@ -13530,7 +13533,7 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
                      WriteAuditLog(AUDIT_SYSCFG, TRUE, m_dwUserId, m_workstation, m_id, objectId,
                         _T("Started direct upload of file \"%s\" to agent"), fileName);
                      //Set all required for file download
-                     m_agentConn.put((QWORD)request->getId(),(NetObj *)conn);
+                     m_agentConn.put((QWORD)request->getId(), (NetObj *)conn);
                   }
                   else
                   {
@@ -13542,9 +13545,9 @@ void ClientSession::uploadUserFileToAgent(NXCPMessage *request)
                {
                   msg.setField(VID_RCC, RCC_TIMEOUT);
                }
-               if(rcc != RCC_SUCCESS)
+               if (rcc != RCC_SUCCESS)
                {
-                  delete conn;
+                  conn->decRefCount();
                }
             }
             else
@@ -13781,7 +13784,7 @@ void ClientSession::getScreenshot(NXCPMessage *request)
             Node *node = (Node *)object;
             node->incRefCount();
             AgentConnection *conn = node->createAgentConnection();
-            if(conn != NULL)
+            if (conn != NULL)
             {
                BYTE *data = NULL;
                size_t size;
@@ -13795,7 +13798,7 @@ void ClientSession::getScreenshot(NXCPMessage *request)
                   msg.setField(VID_RCC, AgentErrorToRCC(dwError));
                }
                safe_free(data);
-               delete conn;
+               conn->decRefCount();
             }
             else
             {
@@ -13890,10 +13893,11 @@ void ClientSession::cleanAgentDciConfiguration(NXCPMessage *request)
             Node *node = (Node *)object;
             node->incRefCount();
             AgentConnectionEx *conn = node->createAgentConnection();
-            if(conn != NULL)
+            if (conn != NULL)
             {
                node->clearDataCollectionConfigFromAgent(conn);
                msg.setField(VID_RCC, RCC_SUCCESS);
+               conn->decRefCount();
             }
             else
             {

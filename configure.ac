@@ -1470,7 +1470,7 @@ fi
 # Checks for header files
 #--------------------------------------------------------------------
 
-AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h alloca.h])
+AC_CHECK_HEADERS([sys/types.h sys/stat.h unistd.h stdarg.h fcntl.h])
 AC_CHECK_HEADERS([sys/int_types.h time.h sys/time.h sys/utsname.h sys/wait.h])
 AC_CHECK_HEADERS([arpa/inet.h netdb.h netinet/in.h netinet/tcp.h net/nh.h sys/socket.h])
 AC_CHECK_HEADERS([fcntl.h dirent.h sys/ioctl.h sys/sockio.h poll.h termios.h])
@@ -1489,6 +1489,37 @@ AC_CHECK_HEADERS([net/if.h net/if_arp.h net/if_dl.h net/if_types.h],,,
 # include <sys/socket.h>
 #endif
 ]])
+
+
+#--------------------------------------------------------------------
+# Checks for alloca
+#--------------------------------------------------------------------
+
+AC_CHECK_HEADERS([alloca.h])
+AC_MSG_CHECKING(for alloca)
+AC_LANG_PUSH([C++])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#if HAVE_MALLOC_H
+#include <malloc.h>
+#endif
+#if HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
+]],[[
+	char *p = (char *)alloca(256);
+	return (p != NULL) ? 0 : 1;
+]])
+],[
+	AC_MSG_RESULT(yes)
+	AC_DEFINE(HAVE_ALLOCA,1,Define to 1 if alloca function is available)
+],[
+	AC_MSG_RESULT(no)
+	AC_DEFINE(HAVE_ALLOCA,0,Define to 1 if alloca function is available)
+])
+AC_LANG_POP([C++])
 
 
 #--------------------------------------------------------------------

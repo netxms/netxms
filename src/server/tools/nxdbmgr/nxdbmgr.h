@@ -59,7 +59,7 @@ void UpgradeDatabase();
 void UnlockDatabase();
 void ReindexIData();
 DB_RESULT SQLSelect(const TCHAR *pszQuery);
-DB_ASYNC_RESULT SQLAsyncSelect(const TCHAR *pszQuery);
+DB_UNBUFFERED_RESULT SQLSelectUnbuffered(const TCHAR *pszQuery);
 bool SQLExecute(DB_STATEMENT hStmt);
 bool SQLQuery(const TCHAR *pszQuery);
 bool SQLBatch(const TCHAR *pszBatch);

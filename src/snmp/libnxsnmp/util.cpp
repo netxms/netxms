@@ -55,7 +55,7 @@ void LIBNXSNMP_EXPORTABLE SnmpSetMessageIds(DWORD msgParseError, DWORD msgTypeEr
 /**
  * Default timeout for utility finctions
  */
-static UINT32 s_snmpTimeout = 2000;
+static UINT32 s_snmpTimeout = 1500;
 
 /**
  * Set SNMP timeout

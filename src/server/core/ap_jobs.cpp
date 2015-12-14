@@ -64,6 +64,7 @@ bool PolicyDeploymentJob::run()
       if (conn != NULL)
       {
          UINT32 rcc = conn->deployPolicy(m_policy);
+         conn->decRefCount();
          if (rcc == ERR_SUCCESS)
          {
             m_policy->linkNode(m_node);
@@ -123,6 +124,7 @@ bool PolicyUninstallJob::run()
 	if (conn != NULL)
 	{
 		UINT32 rcc = conn->uninstallPolicy(m_policy);
+		conn->decRefCount();
 		if (rcc == ERR_SUCCESS)
 		{
 			m_policy->unlinkNode(m_node);

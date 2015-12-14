@@ -3,6 +3,8 @@
 	<name>ups</name>
 	<comment></comment>
 	<projects>
+		<project>libnetxms</project>
+		<project>libnxagent</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

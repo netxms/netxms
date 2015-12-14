@@ -45,8 +45,9 @@
 
 typedef struct
 {
-	PGconn *pHandle;
-	PGresult *pFetchBuffer;
+	PGconn *handle;
+	PGresult *fetchBuffer;
+	bool keepFetchBuffer;
 	MUTEX mutexQueryLock;
 } PG_CONN;
 
