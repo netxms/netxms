@@ -917,14 +917,6 @@ void NXCORE_EXPORTABLE Shutdown()
    StopXMPPConnector();
 #endif
 
-#ifndef _WIN32
-	if (IsStandalone() && (m_nShutdownReason != SHUTDOWN_BY_SIGNAL))
-	{
-		pthread_kill(m_signalHandlerThread, SIGUSR1);   // Terminate signal handler
-	}
-#endif
-
-	// Stop event processor
 	g_pEventQueue->clear();
 	g_pEventQueue->put(INVALID_POINTER_VALUE);
 
@@ -979,6 +971,7 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	delete g_pScriptLibrary;
 
+   DbgPrintf(1, _T("Server shutdown complete"));
 	nxlog_close();
 
 	// Remove PID file
@@ -1000,6 +993,8 @@ void NXCORE_EXPORTABLE Shutdown()
  */
 void NXCORE_EXPORTABLE FastShutdown()
 {
+   DbgPrintf(1, _T("Using fast shutdown procedure"));
+
 	g_flags |= AF_SHUTDOWN;     // Set shutdown flag
 	ConditionSet(m_condShutdown);
 
@@ -1017,6 +1012,7 @@ void NXCORE_EXPORTABLE FastShutdown()
 	StopDBWriter();
 	DbgPrintf(1, _T("Database writer stopped"));
 
+   DbgPrintf(1, _T("Server shutdown complete"));
 	nxlog_close();
 }
 
@@ -2003,7 +1999,6 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 {
 	sigset_t signals;
 	int nSignal;
-	BOOL bCallShutdown = FALSE;
 
 	m_signalHandlerThread = pthread_self();
 
@@ -2032,11 +2027,16 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 			{
 				case SIGTERM:
 				case SIGINT:
-					m_nShutdownReason = SHUTDOWN_BY_SIGNAL;
-					if (IsStandalone())
-						bCallShutdown = TRUE;
-					ConditionSet(m_condShutdown);
-					goto stop_handler;
+				   // avoid repeat Shutdown() call
+				   if (!(g_flags & AF_SHUTDOWN))
+				   {
+                  m_nShutdownReason = SHUTDOWN_BY_SIGNAL;
+                  if (IsStandalone())
+                     Shutdown(); // will never return
+                  else
+                     ConditionSet(m_condShutdown);
+				   }
+				   break;
 				case SIGSEGV:
 					abort();
 					break;
@@ -2060,8 +2060,6 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL SignalHandler(void *pArg)
 
 stop_handler:
 	sigprocmask(SIG_UNBLOCK, &signals, NULL);
-	if (bCallShutdown)
-		Shutdown();
 	return THREAD_OK;
 }
 
@@ -2146,8 +2144,11 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 #if USE_READLINE
    		free(ptr);
 #endif
-		   m_nShutdownReason = SHUTDOWN_FROM_CONSOLE;
-		   Shutdown();
+   		if (!(g_flags & AF_SHUTDOWN))
+   		{
+            m_nShutdownReason = SHUTDOWN_FROM_CONSOLE;
+            Shutdown();
+   		}
       }
       else
       {
