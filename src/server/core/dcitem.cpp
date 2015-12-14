@@ -1232,7 +1232,8 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
    switch(nFunction)
    {
       case F_LAST:
-         pValue = (m_cacheSize > 0) ? new NXSL_Value(m_ppValueCache[0]->getString()) : new NXSL_Value;
+         // cache placeholders will have timestamp 1
+         pValue = ((m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? new NXSL_Value(m_ppValueCache[0]->getString()) : new NXSL_Value;
          break;
       case F_DIFF:
          if (m_cacheSize >= 2)
