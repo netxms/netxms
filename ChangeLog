@@ -13,11 +13,15 @@
 - Added interface creation hook
 - Improved System.InstalledProducts table handling on Windows
 - Fixed inefficient query in Oracle monitoring subagent
+- Server shutdown speed improved
+- Faster SNMP probing during configuration polls
+- Fixed false negative in node down detection if expected state of some interfaces set to IGNORE
+- Agent SNMP proxy improved
 - Management console:
 	- Object tool input fields can be rearranged
 	- Line width can be configured for line charts on dashboards
 	- Column sizes saved in table DCI last values view
-- Fixed issues: #205, #847, #948, #967, #979, #980, #991, #997, #1002, #1003, #1019, #1024, #1032
+- Fixed issues: #205, #847, #948, #967, #979, #980, #991, #997, #1002, #1003, #1019, #1024, #1032, #1071, #1081, #1082, #1083, #1085
 
 
 *
