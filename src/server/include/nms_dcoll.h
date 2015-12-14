@@ -330,7 +330,7 @@ protected:
 	WORD m_instanceDiscoveryMethod;
 	TCHAR *m_instanceDiscoveryData;
 	TCHAR *m_instanceFilterSource;
-	NXSL_VM *m_instanceFilter;
+	NXSL_Program *m_instanceFilter;
 
    bool transform(ItemValue &value, time_t nElapsedTime);
    void checkThresholds(ItemValue &value);
@@ -369,7 +369,6 @@ public:
    int getThresholdSeverity();
 	WORD getInstanceDiscoveryMethod() { return m_instanceDiscoveryMethod; }
 	const TCHAR *getInstanceDiscoveryData() { return m_instanceDiscoveryData; }
-	NXSL_VM *getInstanceFilter() { return m_instanceFilter; }
 	const TCHAR *getInstance() { return m_instance; }
 	int getSampleCount() { return m_sampleCount; }
 
