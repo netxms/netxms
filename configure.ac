@@ -95,6 +95,7 @@ XMPP_SUPPORT="yes"
 LDAP_SUPPORT="yes"
 DISABLE_READLINE="no"
 TUXEDO_LIBS=""
+ZEROMQ_LIBS=""
 MONGODB_LIBS=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
@@ -269,6 +270,15 @@ AC_ARG_WITH(tuxedo,
 		TUXEDO_BASE="$withval"
 	fi
 	COMPONENTS="$COMPONENTS tuxedo"
+fi ])
+
+AC_ARG_WITH(zeromq,
+[AS_HELP_STRING(--with-zeromq,build  with ZeroMQ)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		ZEROMQ_BASE="$withval"
+	fi
+	COMPONENTS="$COMPONENTS zeromq"
 fi ])
 
 AC_ARG_WITH(mongodb,
@@ -2767,6 +2777,38 @@ if test $? = 0; then
 fi
 
 #--------------------------------------------------------------------
+# ZeroMQ
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "zeromq"
+if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	if test "x$ZEROMQ_BASE" != "x"; then
+		ZEROMQ_CPPFLAGS="-I$ZEROMQ_BASE/include"
+		ZEROMQ_LDFLAGS="-L$ZEROMQ_BASE/lib"
+		CPPFLAGS="$CPPFLAGS $ZEROMQ_CPPFLAGS"
+		LDFLAGS="$LDFLAGS $ZEROMQ_LDFLAGS"
+	else
+        ZEROMQ_CPPFLAGS="-I/usr/local/include"
+		ZEROMQ_LDFLAGS="-L/usr/local/lib"
+		CPPFLAGS="$CPPFLAGS $ZEROMQ_CPPFLAGS"
+		LDFLAGS="$LDFLAGS $ZEROMQ_LDFLAGS"
+    fi
+	
+	AC_CHECK_HEADER(zmq.h,,AC_MSG_ERROR([*** Cannot find zmq.h - check your ZeroMQ installation ***]))
+	AC_CHECK_LIB(zmq, zmq_sleep, [ SERVER_LIBS="$SERVER_LIBS -lzmq" ])
+    
+	AC_DEFINE(WITH_ZMQ, 1, Define to 1 if ZeroMQ is supported)
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
+
+#--------------------------------------------------------------------
 # MongoDB
 #--------------------------------------------------------------------
 
@@ -2910,6 +2952,9 @@ AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(TUXEDO_CPPFLAGS)
 AC_SUBST(TUXEDO_LDFLAGS)
 AC_SUBST(TUXEDO_LIBS)
+AC_SUBST(ZEROMQ_CPPFLAGS)
+AC_SUBST(ZEROMQ_LDFLAGS)
+AC_SUBST(ZEROMQ_LIBS)
 AC_SUBST(MONGODB_CPPFLAGS)
 AC_SUBST(MONGODB_LDFLAGS)
 AC_SUBST(MONGODB_LIBS)
@@ -3345,8 +3390,8 @@ if test "x${TUXEDO_LIBS}" != "x"; then
 	echo "Tuxedo LIBS             : ${TUXEDO_LIBS}"
 fi
 
-if test "x${MONGODB_CPPFLAGS}" != "x"; then
-	echo "MongoDB CPPFLAGS         : ${MONGODB_CPPFLAGS}"
+if test "x${ZEROMQ_CPPFLAGS}" != "x"; then
+	echo "ZeroMQ CPPFLAGS         : ${ZEROMQ_CPPFLAGS}"
 fi
 if test "x${MONGODB_LDFLAGS}" != "x"; then
 	echo "MongoDB LDFLAGS          : ${MONGODB_LDFLAGS}"
