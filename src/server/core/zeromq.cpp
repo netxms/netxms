@@ -19,6 +19,7 @@ void ZmqInit()
    int rc = zmq_bind (sender, "tcp://127.0.0.1:5559");
    if(rc != 0)
       DbgPrintf(1, _T("ZmqInit: sender start failed."));
+   DbgPrintf(1, _T("ZmqInit: sender starteds"));
 }
 
 void ZmsStop()
@@ -48,21 +49,23 @@ static bool ZmqSendEvent(Event *event)
  */
 void ZmqTest()
 {
-   ZmqInit();
-
+   /*
    void *ct1 = zmq_ctx_new ();
    void *rec = zmq_socket (ct1, ZMQ_PULL);
    int rc = zmq_bind (rec, "tcp://*:5559");
    if(rc != 0)
       DbgPrintf(1, _T("ZmqTest: reciever start failed."));
+*/
+   ZmqInit();
 
    ZmqSendEvent(NULL);
+   /*
    char str[512];
    rc = zmq_recv(rec, str, 512, 0);
    if(rc != 0)
       DbgPrintf(1, _T("ZmqTest: read failed start failed."));
    DbgPrintf(1, _T("ZmqTest: recieved: %hs"), str);
-
+   */
    ZmsStop();
 }
 
