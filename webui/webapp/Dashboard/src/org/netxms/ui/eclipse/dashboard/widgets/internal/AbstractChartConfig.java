@@ -20,8 +20,8 @@ package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
 import java.util.Map;
 import java.util.Set;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphSettings;
-import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.dashboard.dialogs.helpers.DciIdMatchingData;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;

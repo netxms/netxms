@@ -722,6 +722,121 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+*  Upgrade from V417 to V418
+*/
+static BOOL H_UpgradeFromV417(int currVersion, int newVersion)
+{
+   //Update in object tools objectToolFilter objectMenuFilter
+   //move object tool flags to filter structure
+   DB_RESULT hResult = SQLSelect(_T("SELECT tool_id,flags,tool_filter FROM object_tools"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         int filteringFlag = 0;
+         int objectToolFlag = DBGetFieldLong(hResult, i, 1);
+         TCHAR *xml = DBGetField(hResult, i, 2, NULL, 0);
+
+         //Separate and reorder flags for filter and for object tools
+         for(int j = 1; j < 0x5; j=j<<1) //REQUIRES_SNMP 0x01, REQUIRES_AGENT 0x02, REQUIRES_OID_MATCH 0x04
+         {
+            if((objectToolFlag & j) > 0)
+            {
+               objectToolFlag = objectToolFlag & ~j;
+               filteringFlag = filteringFlag | j;
+            }
+         }
+         if((objectToolFlag & 0x08) > 0) //ASK_CONFIRMATION
+         {
+            objectToolFlag = objectToolFlag & ~0x08;
+            objectToolFlag = objectToolFlag | 0x01;
+         }
+         if((objectToolFlag & 0x10) > 0) //GENERATES_OUTPUT
+         {
+            objectToolFlag = objectToolFlag & ~0x10;
+            objectToolFlag = objectToolFlag | 0x02;
+         }
+         if((objectToolFlag & 0x20) > 0) //DISABLED
+         {
+            objectToolFlag = objectToolFlag & ~0x20;
+            objectToolFlag = objectToolFlag | 0x04;
+         }
+         if((objectToolFlag & 0x40) > 0) //SHOW_IN_COMMANDS
+         {
+            objectToolFlag = objectToolFlag & ~0x40;
+            objectToolFlag = objectToolFlag | 0x08;
+         }
+         if((objectToolFlag & 0x80) > 0) //REQUIRES_NODE_OS_MATCH
+         {
+            objectToolFlag = objectToolFlag & ~0x80;
+            filteringFlag = filteringFlag | 0x08;
+         }
+         if((objectToolFlag & 0x100) > 0) //REQUIRES_TEMPLATE_MATCH
+         {
+            objectToolFlag = objectToolFlag & ~0x100;
+            filteringFlag = filteringFlag | 0x10;
+         }
+         if((objectToolFlag & 0x10000) > 0) //SNMP_INDEXED_BY_VALUE
+         {
+            objectToolFlag = objectToolFlag & ~0x10000;
+            objectToolFlag = objectToolFlag | 0x10;
+         }
+         if((objectToolFlag & 0x20000) > 0) //REQUIRES_WORKSTATION_OS_MATCH
+         {
+            objectToolFlag = objectToolFlag & ~0x20000;
+            filteringFlag = filteringFlag | 0x20;
+         }
+
+         //Add filter flags to XML
+         TCHAR *ptr = _tcsrchr(xml, '<');
+         TCHAR tmp[2048];
+         if(ptr != NULL)
+         {
+            *ptr = 0;
+            _sntprintf(tmp, 2048, _T("%s<flags>%d</flags></objectMenuFilter>"), xml, filteringFlag);
+            _tcsncpy(tmp, _T("<objectMenuFilter"), 17); //Change main tag name
+         }
+         else
+         {
+            _sntprintf(tmp, 2048, _T("<objectMenuFilter><flags>%d</flags></objectMenuFilter>"), filteringFlag);
+         }
+
+         DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("UPDATE object_tools SET flags=?,tool_filter=? WHERE tool_id=?"));
+         if (hStmt != NULL)
+         {
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, objectToolFlag);
+            DBBind(hStmt, 2, DB_SQLTYPE_TEXT, tmp, DB_BIND_STATIC);
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+            if (!SQLExecute(hStmt))
+            {
+               if (!g_bIgnoreErrors)
+               {
+                  DBFreeStatement(hStmt);
+                  DBFreeResult(hResult);
+                  return FALSE;
+               }
+            }
+         }
+         else if (!g_bIgnoreErrors)
+         {
+            DBFreeResult(hResult);
+            return FALSE;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return false;
+   }
+
+   CHK_EXEC(SetSchemaVersion(418));
+   return TRUE;
+}
+
+/**
 *  Upgrade from V416 to V417
 */
 static BOOL H_UpgradeFromV416(int currVersion, int newVersion)
@@ -2021,6 +2136,7 @@ static BOOL H_UpgradeFromV385(int currVersion, int newVersion)
    CHK_EXEC(SetSchemaVersion(386));
    return TRUE;
 }
+
 
 /**
  * Upgrade from V384 to V385
@@ -10625,6 +10741,7 @@ static struct
    { 414, 415, H_UpgradeFromV414 },
    { 415, 416, H_UpgradeFromV415 },
    { 416, 417, H_UpgradeFromV416 },
+   { 417, 418, H_UpgradeFromV417 },
    { 0, 0, NULL }
 };
 

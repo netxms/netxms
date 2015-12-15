@@ -46,7 +46,6 @@ import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
-import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.propertypages.helpers.AccessListComparator;
 import org.netxms.ui.eclipse.perfview.propertypages.helpers.AccessListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -60,7 +59,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class PredefinedGraph extends PropertyPage
 {
-	private PredefinedChartConfig config;
+   private GraphSettings settings;
 	private LabeledText name;
 	private SortableTableViewer userList;
 	private HashMap<Integer, Button> accessChecks = new HashMap<Integer, Button>(2);
@@ -72,10 +71,10 @@ public class PredefinedGraph extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		config = (PredefinedChartConfig)getElement().getAdapter(PredefinedChartConfig.class);
+	   settings = (GraphSettings)getElement().getAdapter(GraphSettings.class);
 		
-		acl = new HashMap<Long, AccessListElement>(config.getAccessList().size());
-		for(AccessListElement e : config.getAccessList())
+		acl = new HashMap<Long, AccessListElement>(settings.getAccessList().size());
+		for(AccessListElement e : settings.getAccessList())
 			acl.put(e.getUserId(), new AccessListElement(e));
 		
 		// Initiate loading of user manager plugin if it was not loaded before
@@ -91,7 +90,7 @@ public class PredefinedGraph extends PropertyPage
 		
       name = new LabeledText(dialogArea, SWT.NONE, SWT.BORDER);
       name.setLabel(Messages.get().PredefinedGraph_Name);
-      name.setText(config.getName());
+      name.setText(settings.getName());
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -279,9 +278,9 @@ public class PredefinedGraph extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		config.setName(name.getText());
-		config.getAccessList().clear();
-		config.getAccessList().addAll(acl.values());
+	   settings.setName(name.getText());
+	   settings.getAccessList().clear();
+	   settings.getAccessList().addAll(acl.values());
 		if (isApply)
 		{
 			setValid(false);
@@ -290,7 +289,7 @@ public class PredefinedGraph extends PropertyPage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph(((PredefinedChartConfig)config).createServerSettings(), true);
+					session.saveGraph(settings, true);
 				}
 	
 				@Override

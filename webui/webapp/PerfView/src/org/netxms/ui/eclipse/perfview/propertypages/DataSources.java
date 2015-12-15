@@ -41,17 +41,19 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.ChartConfig;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.datacollection.dialogs.DataSourceEditDlg;
 import org.netxms.ui.eclipse.datacollection.dialogs.SelectDciDialog;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
-import org.netxms.ui.eclipse.perfview.ChartConfig;
 import org.netxms.ui.eclipse.perfview.Messages;
-import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.propertypages.helpers.DciListLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -77,6 +79,7 @@ public class DataSources extends PropertyPage
 	private Button upButton;
 	private Button downButton;
 	private List<ChartDciConfig> dciList = null;
+	private boolean graphIsTemplate = false;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -86,6 +89,8 @@ public class DataSources extends PropertyPage
 	{
 		config = (ChartConfig)getElement().getAdapter(ChartConfig.class);
 		
+		if(config instanceof GraphSettings)
+		   graphIsTemplate = ((GraphSettings)config).isTemplate();
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
       dciList = new ArrayList<ChartDciConfig>();
@@ -300,7 +305,7 @@ public class DataSources extends PropertyPage
 		if (dci == null)
 			return;
 		
-		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci);
+		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, graphIsTemplate);
 		if (dlg.open() == Window.OK)
 		{
 			viewer.update(dci, null);
@@ -364,7 +369,7 @@ public class DataSources extends PropertyPage
 	protected void applyChanges(final boolean isApply)
 	{
 		config.setDciList(dciList.toArray(new ChartDciConfig[dciList.size()]));
-		if ((config instanceof PredefinedChartConfig) && isApply)
+		if ((config instanceof GraphSettings) && isApply)
 		{
 			setValid(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -372,7 +377,7 @@ public class DataSources extends PropertyPage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph(((PredefinedChartConfig)config).createServerSettings(), true);
+					session.saveGraph((GraphSettings)config, true);
 				}
 	
 				@Override

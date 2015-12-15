@@ -317,7 +317,7 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 	// Create/update graph
 	if (sucess)
 	{
-		DbgPrintf(5, _T("%s graph %d"), isNew ? _T("Creating") : _T("Updating"), graphId);
+		DbgPrintf(5, _T("SaveGraph: %s graph %d"), isNew ? _T("Creating") : _T("Updating"), graphId);
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
       flags = pRequest->getFieldAsUInt32(VID_FLAGS);

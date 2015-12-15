@@ -6,6 +6,7 @@
 	- EPP rules can be configured to generate categorised alarms
 	- Alarm categories can be created and configured in Alarm Category Configurator
 	- By default view_all_alarms acl added to Everyone group
+- Added template graphs
 - New NXSL functions: mktime, GetSyslogRuleCheckCount, GetSyslogRuleMatchCount
 - New NXSL "Node" class attributes: isInMaintenanceMode, lastAgentCommTime
 - Operator "new" in NXSL which can be used to instantiate objects if object class supports it
@@ -14,7 +15,7 @@
 - SMS driver for SMSEagle gateway
 - Fixed FDB handling on Cisco switches
 - Added support for CHAP, MS-CHAPv1, and MS-CHAPv2 in RADIUS authentication
-- Fixed issues: #130, #953, #1043, #1097, #1192, #1206, #1285, #1312, #1318, #1320, #1326
+- Fixed issues: #130, #876, #953, #1043, #1097, #1192, #1206, #1285, #1312, #1318, #1320, #1326
 
 
 *

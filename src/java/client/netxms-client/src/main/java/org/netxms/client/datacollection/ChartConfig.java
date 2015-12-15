@@ -16,15 +16,15 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.perfview;
+package org.netxms.client.datacollection;
 
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 import org.netxms.client.TimePeriod;
-import org.netxms.client.datacollection.GraphItemStyle;
-import org.netxms.client.datacollection.GraphSettings;
-import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
+import org.netxms.client.xml.XmlDateConverter;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementArray;
 import org.simpleframework.xml.Root;
@@ -40,75 +40,77 @@ import org.simpleframework.xml.core.Persister;
 public class ChartConfig
 {
 	@ElementArray(required = true)
-	private ChartDciConfig[] dciList = new ChartDciConfig[0];
+	protected ChartDciConfig[] dciList = new ChartDciConfig[0];
 	
 	@Element(required = false)
-	private String title = ""; //$NON-NLS-1$
+	protected String title = ""; //$NON-NLS-1$
 	
 	@Element(required = false)
-	private int legendPosition = GraphSettings.POSITION_BOTTOM;
+	protected int legendPosition = GraphSettings.POSITION_BOTTOM;
 	
 	@Element(required = false)
-	private boolean showLegend = true;
+	protected boolean showLegend = true;
 	
 	@Element(required = false)
-	private boolean extendedLegend = true;
+	protected boolean extendedLegend = true;
 	
 	@Element(required = false)
-	private boolean showTitle = false;
+	protected boolean showTitle = false;
 
 	@Element(required = false)
-	private boolean showGrid = true;
+	protected boolean showGrid = true;
 
 	@Element(required = false)
-	private boolean showHostNames = false;
+	protected boolean showHostNames = false;
 
 	@Element(required = false)
-	private boolean autoRefresh = true;
+	protected boolean autoRefresh = true;
 
 	@Element(required = false)
-	private boolean logScale = false;
+	protected boolean logScale = false;
 
    @Element(required = false)
-   private boolean stacked = false;
+   protected boolean stacked = false;
 
    @Element(required = false)
-   private boolean translucent = true;
+   protected boolean translucent = true;
    
    @Element(required = false)
-   private boolean area = false;
+   protected boolean area = false;
    
    @Element(required = false)
-   private int lineWidth = 2;
+   protected int lineWidth = 2;
    
    @Element(required = false)
-   private boolean autoScale = true;
+   protected boolean autoScale = true;
    
    @Element(required = false)
-   private int minYScaleValue = 0;
+   protected int minYScaleValue = 0;
 
    @Element(required = false)
-   private int maxYScaleValue = 100;
+   protected int maxYScaleValue = 100;
 
 	@Element(required = false)
-	private int refreshRate = 30;
+	protected int refreshRate = 30;
 
 	@Element(required=false)
-	private int timeUnits = GraphSettings.TIME_UNIT_HOUR;
+	protected int timeUnits = GraphSettings.TIME_UNIT_HOUR;
 	
 	@Element(required=false)
-	private int timeRange = 1;
+	protected int timeRange = 1;
 	
 	@Element(required=false)
-	private int timeFrameType = GraphSettings.TIME_FRAME_BACK_FROM_NOW;
+	protected int timeFrameType = GraphSettings.TIME_FRAME_BACK_FROM_NOW;
 	
 	@Element(required=false)
 	@Convert(XmlDateConverter.class)
-	private Date timeFrom;
+	protected Date timeFrom;
 	
 	@Element(required=false)
 	@Convert(XmlDateConverter.class)
-	private Date timeTo;
+	protected Date timeTo;
+
+   private Set<GraphSettingsChangeListener> changeListeners = new HashSet<GraphSettingsChangeListener>(0);
 	
 	/**
 	 * Create chart settings object from XML document
@@ -117,271 +119,11 @@ public class ChartConfig
 	 * @return deserialized object
 	 * @throws Exception if the object cannot be fully deserialized
 	 */
-	public static ChartConfig createFromXml(final String xml) throws Exception
-	{
-		if (xml == null)
-			return new ChartConfig();
-		return internalCreate(ChartConfig.class, xml);
-	}
-	
-	/**
-	 * Internal creation method.
-	 * 
-	 * @param objectClass
-	 * @param xml
-	 * @return
-	 * @throws Exception
-	 */
-	protected static ChartConfig internalCreate(Class<? extends ChartConfig> objectClass, final String xml) throws Exception
-	{
-		// Compatibility mode: decode old predefined graph configuration
-		// should be removed in 1.2.2
-		if (!xml.startsWith("<chart>")) //$NON-NLS-1$
-		{
-			ChartConfig config = objectClass.newInstance();
-			config.parseLegacyConfig(xml);
-			return config;
-		}
-		
-		Serializer serializer = new Persister(new AnnotationStrategy());
-		return serializer.read(objectClass, xml);
-	}
-
-	/**
-	 * Parse legacy predefined graph config
-	 * 
-	 * @param settings
-	 */
-	private void parseLegacyConfig(String settings)
-	{
-		autoRefresh = false;
-		showLegend = false;
-		showGrid = false;
-		
-		int dciCount = 0;
-		
-		GraphItemStyle[] itemStyles = new GraphItemStyle[GraphSettings.MAX_GRAPH_ITEM_COUNT];
-		for(int i = 0; i < itemStyles.length; i++)
-			itemStyles[i] = new GraphItemStyle();
-		
-		String[] elements = settings.split("\u007F"); //$NON-NLS-1$
-		for(int i = 0; i < elements.length; i++)
-		{
-			int index = elements[i].indexOf(':');
-			if (index == -1)
-				continue;
-			
-			final String name = elements[i].substring(0, index);
-			final String value = elements[i].substring(index + 1);
-			
-			if (name.equals("A")) //$NON-NLS-1$
-			{
-				refreshRate = safeParseInt(value, 30);
-			}
-			else if (name.equals("F")) //$NON-NLS-1$
-			{
-				int flags = safeParseInt(value, 0);
-				if ((flags & GraphSettings.GF_AUTO_UPDATE) != 0)
-					autoRefresh = true;
-				if ((flags & GraphSettings.GF_SHOW_GRID) != 0)
-					showGrid = true;
-				if ((flags & GraphSettings.GF_SHOW_LEGEND) != 0)
-					showLegend = true;
-				if ((flags & GraphSettings.GF_SHOW_HOST_NAMES) != 0)
-					showHostNames = true;
-				if ((flags & GraphSettings.GF_LOG_SCALE) != 0)
-					logScale = true;
-			}
-			else if (name.equals("N")) //$NON-NLS-1$
-			{
-				dciCount = safeParseInt(value, 0);
-				dciList = new ChartDciConfig[dciCount];
-				for(int j = 0; j < dciCount; j++)
-					dciList[j] = new ChartDciConfig();
-			}
-			else if (name.equals("TFT")) //$NON-NLS-1$
-			{
-				timeFrameType = safeParseInt(value, GraphSettings.TIME_FRAME_BACK_FROM_NOW);
-			}
-			else if (name.equals("TU")) //$NON-NLS-1$
-			{
-				timeUnits = safeParseInt(value, GraphSettings.TIME_UNIT_HOUR);
-			}
-			else if (name.equals("NTU")) //$NON-NLS-1$
-			{
-				timeRange = safeParseInt(value, 1);
-			}
-			else if (name.equals("TS")) //$NON-NLS-1$
-			{
-				timeFrom = new Date((long)safeParseInt(value, 0) * 1000L);
-			}
-			else if (name.equals("TF")) //$NON-NLS-1$
-			{
-				timeTo = new Date((long)safeParseInt(value, 0) * 1000L);
-			}
-			else if (name.equals("T")) //$NON-NLS-1$
-			{
-				title = value;
-			}
-			else if (name.equals("S")) //$NON-NLS-1$
-			{
-				// autoscale flag
-			}
-			else if (name.equals("G")) //$NON-NLS-1$
-			{
-				showGrid = (safeParseInt(value, 1) != 0);
-			}
-			else if (name.equals("L")) //$NON-NLS-1$
-			{
-				showLegend = (safeParseInt(value, 1) != 0);
-			}
-			else if (name.equals("R")) //$NON-NLS-1$
-			{
-				// show ruler flag
-			}
-			else if (name.equals("H")) //$NON-NLS-1$
-			{
-				showHostNames = (safeParseInt(value, 0) != 0);
-			}
-			else if (name.equals("O")) //$NON-NLS-1$
-			{
-				logScale = (safeParseInt(value, 0) != 0);
-			}
-			else if (name.equals("CA")) //$NON-NLS-1$
-			{
-				// axis color
-			}
-			else if (name.equals("CB")) //$NON-NLS-1$
-			{
-				// background color
-			}
-			else if (name.equals("CG")) //$NON-NLS-1$
-			{
-				// grid color
-			}
-			else if (name.equals("CLF")) //$NON-NLS-1$
-			{
-				// legend text color
-			}
-			else if (name.equals("CLB")) //$NON-NLS-1$
-			{
-				// legend background color
-			}
-			else if (name.equals("CP")) //$NON-NLS-1$
-			{
-				// plot area color
-			}
-			else if (name.equals("CR")) //$NON-NLS-1$
-			{
-				// ruler color
-			}
-			else if (name.equals("CS")) //$NON-NLS-1$
-			{
-				// selection color
-			}
-			else if (name.equals("CT")) //$NON-NLS-1$
-			{
-				// text color
-			}
-			else if (name.charAt(0) == 'C')	// Item color
-			{
-				int item = safeParseInt(name.substring(1), -1);
-				if ((item >= 0) && (item < itemStyles.length))
-					itemStyles[item].setColor(safeParseInt(value, 0));
-			}
-			else if (name.charAt(0) == 'T')	// Item type
-			{
-				int item = safeParseInt(name.substring(1), -1);
-				if ((item >= 0) && (item < itemStyles.length))
-					itemStyles[item].setType(safeParseInt(value, 0));
-			}
-			else if (name.charAt(0) == 'W')	// Item line width
-			{
-				int item = safeParseInt(name.substring(1), -1);
-				if ((item >= 0) && (item < itemStyles.length))
-					itemStyles[item].setLineWidth(safeParseInt(value, 0));
-			}
-			else if ((name.charAt(0) == 'F') && (name.charAt(1) == 'L'))	// Item flags
-			{
-				int item = safeParseInt(name.substring(2), -1);
-				if ((item >= 0) && (item < itemStyles.length))
-					itemStyles[item].setFlags(safeParseInt(value, 0));
-			}
-			else if (name.charAt(0) == 'N')	// Node ID
-			{
-				int item = safeParseInt(name.substring(1), -1);
-				if ((item >= 0) && (item < dciCount))
-					dciList[item].nodeId = safeParseLong(value, 0);
-			}
-			else if (name.charAt(0) == 'I')	// DCI information
-			{
-				if (name.charAt(1) == 'D')	// description
-				{
-					int item = safeParseInt(name.substring(2), -1);
-					if ((item >= 0) && (item < dciCount))
-						dciList[item].name = value;
-				}
-				else if (name.charAt(1) == 'N')	// name
-				{
-				}
-				else if (name.charAt(1) == 'S')	// source
-				{
-				}
-				else if (name.charAt(1) == 'T')	// data type
-				{
-				}
-				else	// assume DCI ID - Ixxx
-				{
-					int item = safeParseInt(name.substring(1), -1);
-					if ((item >= 0) && (item < dciCount))
-						dciList[item].dciId = safeParseLong(value, 0);
-				}
-			}
-		}
-		
-		// Apply item styles
-		for(int i = 0; (i < dciList.length) && (i < itemStyles.length); i++)
-		{
-			dciList[i].color = "0x" + Integer.toHexString(itemStyles[i].getColor()); //$NON-NLS-1$
-			dciList[i].lineWidth = itemStyles[i].getLineWidth();
-		}
-	}
-	
-	/**
-	 * Parse int without throwing exception
-	 * @param text text to parse
-	 * @param defVal default value to be used in case of parse error
-	 * @return parsed value
-	 */
-	static private int safeParseInt(String text, int defVal)
-	{
-		try
-		{
-			return Integer.parseInt(text);
-		}
-		catch(NumberFormatException e)
-		{
-		}
-		return defVal;
-	}
-
-	/**
-	 * Parse long without throwing exception
-	 * @param text text to parse
-	 * @param defVal default value to be used in case of parse error
-	 * @return parsed value
-	 */
-	static private long safeParseLong(String text, long defVal)
-	{
-		try
-		{
-			return Long.parseLong(text);
-		}
-		catch(NumberFormatException e)
-		{
-		}
-		return defVal;
-	}
+   public static ChartConfig createFromXml(final String xml) throws Exception
+   {
+      Serializer serializer = new Persister(new AnnotationStrategy());
+      return serializer.read(ChartConfig.class, xml);
+   }
 	
 	/**
 	 * Create XML from configuration.
@@ -802,5 +544,61 @@ public class ChartConfig
       timeUnits = tp.getTimeUnitValue();
       timeFrom = tp.getTimeFromValue();
       timeTo = tp.getTimeToValue();
-   }  
+   } 
+
+   /**
+    * Add change listener
+    * 
+    * @param listener change listener
+    */
+   public void addChangeListener(GraphSettingsChangeListener listener)
+   {
+      changeListeners.add(listener);
+   }
+   
+   /**
+    * Remove change listener
+    * 
+    * @param listener change listener to remove
+    */
+   public void removeChangeListener(GraphSettingsChangeListener listener)
+   {
+      changeListeners.remove(listener);
+   }
+   
+   /**
+    * Fire change notification
+    */
+   public void fireChangeNotification()
+   {
+      for(GraphSettingsChangeListener l : changeListeners)
+         l.onGraphSettingsChange(this);
+   }
+
+   public void setConfig(ChartConfig config)
+   {
+      dciList = config.dciList.clone();
+      title = config.title; 
+      legendPosition = config.legendPosition; 
+      showLegend = config.showLegend; 
+      extendedLegend = config.extendedLegend; 
+      showTitle = config.showTitle; 
+      showGrid = config.showGrid; 
+      showHostNames = config.showHostNames; 
+      autoRefresh = config.autoRefresh; 
+      logScale = config.logScale; 
+      stacked = config.stacked; 
+      translucent = config.translucent; 
+      area = config.area;
+      lineWidth = config.lineWidth;
+      autoScale = config.autoScale; 
+      minYScaleValue = config.minYScaleValue; 
+      maxYScaleValue = config.maxYScaleValue; 
+      refreshRate = config.refreshRate; 
+      timeUnits = config.timeUnits; 
+      timeRange = config.timeRange; 
+      timeFrameType = config.timeFrameType; 
+      timeFrom = config.timeFrom; 
+      timeTo = config.timeTo; 
+   }
 }

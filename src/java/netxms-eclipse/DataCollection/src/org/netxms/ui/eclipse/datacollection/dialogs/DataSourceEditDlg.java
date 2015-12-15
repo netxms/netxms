@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.DciSelector;
 import org.netxms.ui.eclipse.tools.ColorConverter;
@@ -47,23 +47,28 @@ public class DataSourceEditDlg extends Dialog
 	private DciSelector dciSelector;
 	private LabeledText name;
    private LabeledText displayFormat;
+   private LabeledText dciName;
+   private LabeledText dciDescription;
 	private Button colorAuto;
 	private Button colorCustom;
 	private ColorSelector colorSelector;
 	private Combo displayType;
 	private Button checkShowThresholds;
 	private Button checkInvertValues;
+   private Button checkMultipeMatch;
 	private LabeledText instance;
 	private LabeledText dataColumn;
+	private boolean graphIsTemplate;
 	
 	/**
 	 * @param parentShell
 	 * @param dci
 	 */
-	public DataSourceEditDlg(Shell parentShell, ChartDciConfig dci)
+	public DataSourceEditDlg(Shell parentShell, ChartDciConfig dci, boolean graphIsTemplate)
 	{
 		super(parentShell);
 		this.dci = dci;
+		this.graphIsTemplate = graphIsTemplate;
 	}
 
 	/* (non-Javadoc)
@@ -89,17 +94,20 @@ public class DataSourceEditDlg extends Dialog
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
-		
-		dciSelector = new DciSelector(dialogArea, SWT.NONE, false);
-		dciSelector.setLabel(Messages.get().DataSourceEditDlg_DCI);
-		dciSelector.setDciId(dci.nodeId, dci.dciId);
-		dciSelector.setDcObjectType(dci.type);
-		GridData gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.widthHint = 400;
-		gd.horizontalSpan = 2;
-		dciSelector.setLayoutData(gd);
+
+      GridData gd = new GridData();
+		if(!graphIsTemplate)
+      {
+   		dciSelector = new DciSelector(dialogArea, SWT.NONE, false);
+   		dciSelector.setLabel(Messages.get().DataSourceEditDlg_DCI);
+   		dciSelector.setDciId(dci.nodeId, dci.dciId);
+   		dciSelector.setDcObjectType(dci.type);
+   		gd.horizontalAlignment = SWT.FILL;
+   		gd.grabExcessHorizontalSpace = true;
+   		gd.widthHint = 400;
+   		gd.horizontalSpan = 2;
+   		dciSelector.setLayoutData(gd);
+      }
 		
 		name = new LabeledText(dialogArea, SWT.NONE);
 		name.setLabel(Messages.get().DataSourceEditDlg_DispName);
@@ -119,6 +127,27 @@ public class DataSourceEditDlg extends Dialog
       gd.horizontalSpan = 2;
       displayFormat.setLayoutData(gd);
       
+		if(graphIsTemplate)
+		{
+		   dciName = new LabeledText(dialogArea, SWT.NONE);
+		   dciName.setLabel("DCI Name");
+		   dciName.setText(dci.dciName);
+	      gd = new GridData();
+	      gd.horizontalAlignment = SWT.FILL;
+	      gd.grabExcessHorizontalSpace = true;
+	      gd.horizontalSpan = 2;
+	      dciName.setLayoutData(gd);	      
+
+	      dciDescription = new LabeledText(dialogArea, SWT.NONE);
+	      dciDescription.setLabel("DCI Description");
+	      dciDescription.setText(dci.dciDescription);
+         gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalSpan = 2;
+         dciDescription.setLayoutData(gd);
+		}
+		
 		if (dci.type == ChartDciConfig.TABLE)
 		{
 			Group tableGroup = new Group(dialogArea, SWT.NONE);
@@ -179,6 +208,13 @@ public class DataSourceEditDlg extends Dialog
       checkInvertValues = new Button(optionsGroup, SWT.CHECK);
       checkInvertValues.setText(Messages.get().DataSourceEditDlg_InvertValues);
       checkInvertValues.setSelection(dci.invertValues);
+      
+      if(graphIsTemplate)
+      {
+         checkMultipeMatch = new Button(optionsGroup, SWT.CHECK);
+         checkMultipeMatch.setText("Multiple match");
+         checkMultipeMatch.setSelection(dci.multiMatch);         
+      }
 
       /*** Color group ***/
 		Group colorGroup = new Group(dialogArea, SWT.NONE);
@@ -247,8 +283,17 @@ public class DataSourceEditDlg extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		dci.nodeId = dciSelector.getNodeId();
-		dci.dciId = dciSelector.getDciId();
+      if(graphIsTemplate)
+      {
+         dci.dciName = dciName.getText();
+         dci.dciDescription = dciDescription.getText();
+         dci.multiMatch = checkMultipeMatch.getSelection();
+      }
+      else
+      {
+   		dci.nodeId = dciSelector.getNodeId();
+   		dci.dciId = dciSelector.getDciId();
+      }
 		dci.name = name.getText();
 		dci.displayFormat = displayFormat.getText();
 		if (colorAuto.getSelection())

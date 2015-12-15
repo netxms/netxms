@@ -27,6 +27,8 @@ import java.util.List;
 import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.ObjectMenuFilter;
+import org.netxms.client.objects.MenuFiltringObj;
 
 /**
  * Detailed information about object tool
@@ -55,7 +57,7 @@ public class ObjectToolDetails extends ObjectTool
 		data = "";
 		flags = 0;
 		description = "";
-		filter = new ObjectToolFilter();
+		filter = new ObjectMenuFilter();
 		confirmationText = "";
 		accessList = new ArrayList<Long>(0);
 		columns = new ArrayList<ObjectToolTableColumn>(0);
@@ -89,11 +91,11 @@ public class ObjectToolDetails extends ObjectTool
 		imageData = msg.getFieldAsBinary(NXCPCodes.VID_IMAGE_DATA);
       try
       {
-         filter = ObjectToolFilter.createFromXml(filterData);
+         filter = ObjectMenuFilter.createFromXml(filterData);
       }
       catch(Exception e)
       {
-         filter = new ObjectToolFilter();
+         filter = new ObjectMenuFilter();
          Logger.debug("ObjectToolDetails.ObjectToolDetails", "Failed to convert object tool filter to string");
       }
 		
@@ -269,43 +271,6 @@ public class ObjectToolDetails extends ObjectTool
 		this.description = description;
 		modified = true;
 	}
-
-	/**
-	 * @param snmpOid the snmpOid to set
-	 */
-	public void setSnmpOid(String snmpOid)
-	{
-	   filter.snmpOid = snmpOid;
-		modified = true;
-	}
-	
-
-	/**
-    * @param toolTemplate the comma separated list of template name regexps
-    */
-   public void setToolTemplate(String toolTemplate)
-   {
-      filter.toolTemplate = toolTemplate;
-      modified = true;
-   }
-
-   /**
-    * @param toolNodeOS  the comma separated list of OS name regexps
-    */
-   public void setToolNodeOS(String toolNodeOS)
-   {
-      filter.toolNodeOS = toolNodeOS;
-      modified = true;
-   }
-   
-   /**
-    * @param toolWorkstationOS  the comma separated list of OS name regexps
-    */
-   public void setToolWorkstationOS(String toolWorkstationOS)
-   {
-      filter.toolWorkstationOS = toolWorkstationOS;
-      modified = true;
-   }
 
 	/**
 	 * @param data the data to set

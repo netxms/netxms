@@ -168,11 +168,17 @@ public class TableValueConfig extends DashboardElementConfig
 		this.dciId = dciId;
 	}
 
+	/**
+	 * @return
+	 */
 	public int getRefreshRate()
 	{
 		return refreshRate;
 	}
 
+	/**
+	 * @param refreshRate
+	 */
 	public void setRefreshRate(int refreshRate)
 	{
 		this.refreshRate = refreshRate;

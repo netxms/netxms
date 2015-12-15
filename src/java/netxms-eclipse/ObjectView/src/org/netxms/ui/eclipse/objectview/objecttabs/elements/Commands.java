@@ -33,7 +33,7 @@ import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.Node;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objecttools.api.NodeInfo;
+import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolExecutor;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolsCache;
 import org.netxms.ui.eclipse.objectview.Activator;
@@ -115,8 +115,8 @@ public class Commands extends OverviewPageElement
 		      if (!tool.isVisibleInCommands() || !tool.isEnabled() || !tool.isApplicableForNode((AbstractNode)getObject()))
 		         continue;
 
-            final Set<NodeInfo> nodes = new HashSet<NodeInfo>(1);
-            nodes.add(new NodeInfo((AbstractNode)getObject(), null));
+            final Set<ObjectContext> nodes = new HashSet<ObjectContext>(1);
+            nodes.add(new ObjectContext((AbstractNode)getObject(), null));
             if (!ObjectToolExecutor.isToolAllowed(tool, nodes))
                continue;
 		      

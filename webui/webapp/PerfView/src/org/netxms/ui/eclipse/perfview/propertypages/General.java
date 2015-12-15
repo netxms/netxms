@@ -34,11 +34,11 @@ import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.NXCSession;
+import org.netxms.client.datacollection.ChartConfig;
+import org.netxms.client.datacollection.GraphSettings;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
-import org.netxms.ui.eclipse.perfview.ChartConfig;
 import org.netxms.ui.eclipse.perfview.Messages;
-import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -75,7 +75,7 @@ public class General extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		config = (ChartConfig)getElement().getAdapter(ChartConfig.class);
+	   config = (ChartConfig)getElement().getAdapter(ChartConfig.class);
 		
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -346,7 +346,7 @@ public class General extends PropertyPage
 		config.setMinYScaleValue(yAxisRange.getMinY());
 		config.setMaxYScaleValue(yAxisRange.getMaxY());
 		
-		if ((config instanceof PredefinedChartConfig) && isApply)
+		if ((config instanceof GraphSettings) && isApply)
 		{
 			setValid(false);
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
@@ -354,7 +354,7 @@ public class General extends PropertyPage
 				@Override
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
-					session.saveGraph(((PredefinedChartConfig)config).createServerSettings(), true);
+					session.saveGraph((GraphSettings)config, true);
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()

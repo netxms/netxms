@@ -47,8 +47,8 @@ import org.netxms.client.objects.Container;
 import org.netxms.client.objects.ServiceRoot;
 import org.netxms.client.objects.Subnet;
 import org.netxms.client.objecttools.ObjectTool;
+import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objects.ObjectWrapper;
-import org.netxms.ui.eclipse.objecttools.api.NodeInfo;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolExecutor;
 import org.netxms.ui.eclipse.objecttools.api.ObjectToolsCache;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -98,7 +98,7 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 		if ((selection == null) || !(selection instanceof IStructuredSelection))
 			return;
 
-		final Set<NodeInfo> nodes = buildNodeSet((IStructuredSelection)selection);
+		final Set<ObjectContext> nodes = buildNodeSet((IStructuredSelection)selection);
 		final Menu toolsMenu = new Menu(menu);
 		
 		final ImageCache imageCache = new ImageCache();
@@ -180,33 +180,33 @@ public class ObjectToolsDynamicMenu extends ContributionItem implements IWorkben
 	 * @param selection
 	 * @return
 	 */
-	private Set<NodeInfo> buildNodeSet(IStructuredSelection selection)
+	private Set<ObjectContext> buildNodeSet(IStructuredSelection selection)
 	{
-		final Set<NodeInfo> nodes = new HashSet<NodeInfo>();
+		final Set<ObjectContext> nodes = new HashSet<ObjectContext>();
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		
 		for(Object o : selection.toList())
 		{
 			if (o instanceof AbstractNode)
 			{
-				nodes.add(new NodeInfo((AbstractNode)o, null));
+				nodes.add(new ObjectContext((AbstractNode)o, null));
 			}
 			else if ((o instanceof Container) || (o instanceof ServiceRoot) || (o instanceof Subnet) || (o instanceof Cluster))
 			{
 				for(AbstractObject n : ((AbstractObject)o).getAllChilds(AbstractObject.OBJECT_NODE))
-					nodes.add(new NodeInfo((AbstractNode)n, null));
+					nodes.add(new ObjectContext((AbstractNode)n, null));
 			}
 			else if (o instanceof Alarm)
 			{
 				AbstractNode n = (AbstractNode)session.findObjectById(((Alarm)o).getSourceObjectId(), AbstractNode.class);
 				if (n != null)
-					nodes.add(new NodeInfo(n, (Alarm)o));
+					nodes.add(new ObjectContext(n, (Alarm)o));
 			} 
 			else if (o instanceof ObjectWrapper)
 			{
 			   AbstractObject n = ((ObjectWrapper)o).getObject();
 			   if ((n != null) && (n instanceof AbstractNode))
-			      nodes.add(new NodeInfo((AbstractNode)n, null));
+			      nodes.add(new ObjectContext((AbstractNode)n, null));
 			}
 		}
 		return nodes;

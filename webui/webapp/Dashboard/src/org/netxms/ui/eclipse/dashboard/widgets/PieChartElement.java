@@ -22,9 +22,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
-import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 

@@ -108,7 +108,6 @@ public class UninstallPolicy implements IObjectActionDelegate
                         }
                      }
                   }
-						System.out.println(sb.toString());
    
                   if(sb.length() != 0)
                   {

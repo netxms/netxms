@@ -41,8 +41,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.propertypages.helpers.DciListLabelProvider;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.AbstractChartConfig;
@@ -304,7 +304,7 @@ public class DataSources extends PropertyPage
 		if (dci == null)
 			return;
 		
-		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci);
+		DataSourceEditDlg dlg = new DataSourceEditDlg(getShell(), dci, false);
 		if (dlg.open() == Window.OK)
 		{
 			viewer.update(dci, null);

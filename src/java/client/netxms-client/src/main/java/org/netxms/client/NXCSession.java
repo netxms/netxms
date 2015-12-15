@@ -525,7 +525,7 @@ public class NXCSession
                      processImageLibraryUpdate(msg);
                      break;
                   case NXCPCodes.CMD_GRAPH_UPDATE:
-                     GraphSettings graph = new GraphSettings(msg, NXCPCodes.VID_GRAPH_LIST_BASE);
+                     GraphSettings graph = GraphSettings.createGraphSettings(msg, NXCPCodes.VID_GRAPH_LIST_BASE);
                      sendNotification(new SessionNotification(SessionNotification.PREDEFINED_GRAPHS_CHANGED, graph.getId(), graph));
                      break;
                   case NXCPCodes.CMD_ALARM_CATEGORY_UPDATE:
@@ -6958,10 +6958,12 @@ public class NXCSession
       return file.getFile();
    }
 
+
    /**
-    * Get list of predefined graphs.
+    * Get list of predefined graphs or graph templates
     *
-    * @return list of predefined graphs
+    * @param graphTemplate defines if non template or template graph list should re requested 
+    * @return message with predefined graphs or with template graphs
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
@@ -6976,7 +6978,7 @@ public class NXCSession
       long varId = NXCPCodes.VID_GRAPH_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         list.add(new GraphSettings(response, varId));
+         list.add(GraphSettings.createGraphSettings(response, varId));
          varId += 10;
       }
       return list;
@@ -7004,18 +7006,7 @@ public class NXCSession
    public long saveGraph(GraphSettings graph, boolean overwrite) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SAVE_GRAPH);
-      msg.setFieldInt32(NXCPCodes.VID_GRAPH_ID, (int) graph.getId());
-      msg.setField(NXCPCodes.VID_NAME, graph.getName());
-      msg.setFieldInt32(NXCPCodes.VID_FLAGS, graph.getFlags());
-      msg.setField(NXCPCodes.VID_FILTER, graph.getFilters());
-      msg.setField(NXCPCodes.VID_GRAPH_CONFIG, graph.getConfig());
-      msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, graph.getAccessList().size());
-      long varId = NXCPCodes.VID_GRAPH_ACL_BASE;
-      for(AccessListElement e : graph.getAccessList())
-      {
-         msg.setFieldInt32(varId++, (int) e.getUserId());
-         msg.setFieldInt32(varId++, e.getAccessRights());
-      }      
+      graph.fillMessage(msg);
       msg.setFieldInt16(NXCPCodes.VID_OVERVRITE, overwrite ? 1 : 0);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());

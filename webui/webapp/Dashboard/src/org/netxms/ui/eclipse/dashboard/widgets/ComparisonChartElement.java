@@ -31,9 +31,9 @@ import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.dashboards.DashboardElement;
+import org.netxms.client.datacollection.ChartDciConfig;
 import org.netxms.client.datacollection.DciData;
 import org.netxms.client.datacollection.DciDataRow;
-import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
 import org.netxms.ui.eclipse.dashboard.Activator;
 import org.netxms.ui.eclipse.dashboard.Messages;
@@ -62,7 +62,7 @@ public abstract class ComparisonChartElement extends ElementWidget
 		super(parent, element, viewPart);
 		session = (NXCSession)ConsoleSharedData.getSession();
 
-		setLayout(new FillLayout());	
+		setLayout(new FillLayout());
 		
 		addDisposeListener(new DisposeListener() {
          @Override

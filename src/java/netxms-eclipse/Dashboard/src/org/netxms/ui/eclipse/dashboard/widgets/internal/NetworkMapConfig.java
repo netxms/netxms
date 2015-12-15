@@ -40,7 +40,7 @@ public class NetworkMapConfig extends DashboardElementConfig
 	
 	@Element(required=false)
 	private int zoomLevel = 100;	// in percents
-	
+
    @Element(required=false)
 	private boolean objectDoubleClickEnabled = false;
 

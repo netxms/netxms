@@ -16,10 +16,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-package org.netxms.ui.eclipse.charts.api;
+package org.netxms.client.datacollection;
 
-import org.netxms.client.datacollection.DataCollectionObject;
-import org.netxms.client.datacollection.DciValue;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
@@ -45,6 +43,12 @@ public class ChartDciConfig
 	
 	@Attribute
 	public long dciId;
+
+   @Element(required=false)
+	public String dciName;
+
+   @Element(required=false)
+   public String dciDescription;
 	
 	@Element(required=false)
 	public int type;
@@ -70,6 +74,9 @@ public class ChartDciConfig
    @Element(required=false)
    public boolean invertValues;
 
+   @Element(required=false)
+   public boolean multiMatch;
+
 	@Element(required=false)
 	public String instance;
 	
@@ -86,6 +93,8 @@ public class ChartDciConfig
 	{
 		nodeId = 0;
 		dciId = 0;
+		dciName = ""; //$NON-NLS-1$
+		dciDescription = ""; //$NON-NLS-1$
 		type = ITEM;
 		color = UNSET_COLOR;
 		name = ""; //$NON-NLS-1$
@@ -94,6 +103,7 @@ public class ChartDciConfig
 		area = false;
 		showThresholds = false;
 		invertValues = false;
+		multiMatch = false;
 		instance = ""; //$NON-NLS-1$
 		column = ""; //$NON-NLS-1$
       displayFormat = "%s"; //$NON-NLS-1$
@@ -108,6 +118,8 @@ public class ChartDciConfig
 	{
 		this.nodeId = src.nodeId;
 		this.dciId = src.dciId;
+      this.dciName = src.dciName;
+      this.dciDescription = src.dciDescription;
 		this.type = src.type;
 		this.color = src.color;
 		this.name = src.name;
@@ -116,6 +128,7 @@ public class ChartDciConfig
 		this.area = src.area;
 		this.showThresholds = src.showThresholds;
 		this.invertValues = src.invertValues;
+		this.multiMatch = src.multiMatch;
 		this.instance = src.instance;
 		this.column = src.column;
 		this.displayFormat = src.displayFormat;
@@ -130,6 +143,8 @@ public class ChartDciConfig
 	{
 		nodeId = dci.getNodeId();
 		dciId = dci.getId();
+      dciName = dci.getName();
+      dciDescription = dci.getDescription();
 		type = dci.getDcObjectType();
 		name = dci.getDescription();
 		color = UNSET_COLOR;
@@ -137,6 +152,7 @@ public class ChartDciConfig
 		area = false;
 		showThresholds = false;
 		invertValues = false;
+		multiMatch = false;
 		instance = ""; //$NON-NLS-1$
 		column = ""; //$NON-NLS-1$
       displayFormat = "%s"; //$NON-NLS-1$
@@ -190,4 +206,36 @@ public class ChartDciConfig
 	{
 	   return ((displayType == DEFAULT) && area) ? AREA : displayType;
 	}
+
+   /**
+    * @return the dciName
+    */
+   public String getDciName()
+   {
+      return dciName == null ? "" : dciName;
+   }
+
+   /**
+    * @param dciName the dciName to set
+    */
+   public void setDciName(String dciName)
+   {
+      this.dciName = dciName;
+   }
+
+   /**
+    * @return the dciDescription
+    */
+   public String getDciDescription()
+   {
+      return dciDescription == null ? "" : dciDescription;
+   }
+
+   /**
+    * @param dciDescription the dciDescription to set
+    */
+   public void setDciDescription(String dciDescription)
+   {
+      this.dciDescription = dciDescription;
+   }
 }

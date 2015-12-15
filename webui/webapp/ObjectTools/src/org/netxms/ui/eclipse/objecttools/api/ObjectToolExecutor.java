@@ -43,6 +43,7 @@ import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.filemanager.views.AgentFileViewer;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objects.ObjectContext;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.dialogs.ObjectToolInputDialog;
@@ -72,7 +73,7 @@ public final class ObjectToolExecutor
     * @param nodes
     * @return
     */
-   public static boolean isToolAllowed(ObjectTool tool, Set<NodeInfo> nodes)
+   public static boolean isToolAllowed(ObjectTool tool, Set<ObjectContext> nodes)
    {
       if (tool.getType() != ObjectTool.TYPE_INTERNAL)
          return true;
@@ -80,7 +81,7 @@ public final class ObjectToolExecutor
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
       if (handler != null)
       {
-         for(NodeInfo n : nodes)
+         for(ObjectContext n : nodes)
             if (!handler.canExecuteOnNode(n.object, tool))
                return false;
          return true;
@@ -98,9 +99,9 @@ public final class ObjectToolExecutor
     * @param nodes
     * @return
     */
-   public static boolean isToolApplicable(ObjectTool tool, Set<NodeInfo> nodes)
+   public static boolean isToolApplicable(ObjectTool tool, Set<ObjectContext> nodes)
    {
-      for(NodeInfo n : nodes)
+      for(ObjectContext n : nodes)
          if (!tool.isApplicableForNode(n.object))
             return false;
       return true;
@@ -111,7 +112,7 @@ public final class ObjectToolExecutor
     * 
     * @param tool Object tool
     */
-   public static void execute(final Set<NodeInfo> nodes, final ObjectTool tool)
+   public static void execute(final Set<ObjectContext> nodes, final ObjectTool tool)
    {
       final Map<String, String> inputValues;
       final InputField[] fields = tool.getInputFields();
@@ -138,12 +139,12 @@ public final class ObjectToolExecutor
          String message = tool.getConfirmationText();
          if (nodes.size() == 1)
          {
-            NodeInfo node = nodes.iterator().next();
-            message = substituteMacros(message, node, new HashMap<String, String>(0));
+            ObjectContext node = nodes.iterator().next();
+            message = node.substituteMacros(message, new HashMap<String, String>(0));
          }
          else
          {
-            message = substituteMacros(message, new NodeInfo(null, null), new HashMap<String, String>(0));
+            message = new ObjectContext(null, null).substituteMacros(message, new HashMap<String, String>(0));
          }
          if (!MessageDialogHelper.openQuestion(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
                Messages.get().ObjectToolsDynamicMenu_ConfirmExec, message))
@@ -191,7 +192,7 @@ public final class ObjectToolExecutor
                   @Override
                   public void run()
                   {
-                     for(NodeInfo n : nodes)
+                     for(ObjectContext n : nodes)
                         executeOnNode(n, tool, inputValues);
                   }
                });
@@ -206,7 +207,7 @@ public final class ObjectToolExecutor
       }
       else
       {
-         for(NodeInfo n : nodes)
+         for(ObjectContext n : nodes)
             executeOnNode(n, tool, inputValues);
       }
    }
@@ -232,7 +233,7 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeOnNode(final NodeInfo node, final ObjectTool tool, Map<String, String> inputValues)
+   private static void executeOnNode(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues)
    {
       switch(tool.getType())
       {
@@ -267,7 +268,7 @@ public final class ObjectToolExecutor
     * @param node
     * @param tool
     */
-   private static void executeTableTool(final NodeInfo node, final ObjectTool tool)
+   private static void executeTableTool(final ObjectContext node, final ObjectTool tool)
    {
       final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
       try
@@ -371,10 +372,10 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeAgentAction(final NodeInfo node, final ObjectTool tool, Map<String, String> inputValues)
+   private static void executeAgentAction(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      String[] parts = splitCommandLine(substituteMacros(tool.getData(), node, inputValues));
+      String[] parts = splitCommandLine(node.substituteMacros(tool.getData(), inputValues));
       final String action = parts[0];
       final String[] args = Arrays.copyOfRange(parts, 1, parts.length);
       
@@ -424,7 +425,7 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeServerCommand(final NodeInfo node, final ObjectTool tool, final Map<String, String> inputValues)
+   private static void executeServerCommand(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
@@ -473,7 +474,7 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void executeServerScript(final NodeInfo node, final ObjectTool tool, final Map<String, String> inputValues)
+   private static void executeServerScript(final ObjectContext node, final ObjectTool tool, final Map<String, String> inputValues)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
@@ -521,12 +522,12 @@ public final class ObjectToolExecutor
     * @param inputValues 
     * @param inputValues 
     */
-   private static void executeFileDownload(final NodeInfo node, final ObjectTool tool, Map<String, String> inputValues)
+   private static void executeFileDownload(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       String[] parameters = tool.getData().split("\u007F"); //$NON-NLS-1$
       
-      final String fileName = substituteMacros(parameters[0], node, inputValues);
+      final String fileName = node.substituteMacros(parameters[0], inputValues);
       final int maxFileSize = Integer.parseInt(parameters[1]);
       final boolean follow = parameters[2].equals("true") ? true : false; //$NON-NLS-1$
       
@@ -566,7 +567,7 @@ public final class ObjectToolExecutor
     * @param node
     * @param tool
     */
-   private static void executeInternalTool(final NodeInfo node, final ObjectTool tool)
+   private static void executeInternalTool(final ObjectContext node, final ObjectTool tool)
    {
       ObjectToolHandler handler = ObjectToolsCache.findHandler(tool.getData());
       if (handler != null)
@@ -584,132 +585,10 @@ public final class ObjectToolExecutor
     * @param tool
     * @param inputValues 
     */
-   private static void openURL(final NodeInfo node, final ObjectTool tool, Map<String, String> inputValues)
+   private static void openURL(final ObjectContext node, final ObjectTool tool, Map<String, String> inputValues)
    {
-      final String url = substituteMacros(tool.getData(), node, inputValues);
+      final String url = node.substituteMacros(tool.getData(), inputValues);
       final UrlLauncher launcher = RWT.getClient().getService(UrlLauncher.class);
       launcher.openURL(url);
-   }
-   
-   /**
-    * Substitute macros in string
-    * 
-    * @param s
-    * @param node
-    * @param inputValues 
-    * @return
-    */
-   private static String substituteMacros(String s, NodeInfo node, Map<String, String> inputValues)
-   {
-      StringBuilder sb = new StringBuilder();
-      
-      char[] src = s.toCharArray();
-      for(int i = 0; i < s.length(); i++)
-      {
-         if (src[i] == '%')
-         {
-            i++;
-            if (i == s.length())
-               break;   // malformed string
-            
-            switch(src[i])
-            {
-               case 'a':
-                  sb.append((node.object != null) ? node.object.getPrimaryIP().getHostAddress() : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
-                  break;
-               case 'A':   // alarm message
-                  if (node.alarm != null)
-                     sb.append(node.alarm.getMessage());
-                  break;
-               case 'c':
-                  if (node.alarm != null)
-                     sb.append(node.alarm.getSourceEventCode());
-                  break;
-               case 'g':
-                  sb.append((node.object != null) ? node.object.getGuid().toString() : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
-                  break;
-               case 'i':
-                  sb.append((node.object != null) ? String.format("0x%08X", node.object.getObjectId()) : Messages.get().ObjectToolsDynamicMenu_MultipleNodes); //$NON-NLS-1$
-                  break;
-               case 'I':
-                  sb.append((node.object != null) ? Long.toString(node.object.getObjectId()) : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
-                  break;
-               case 'm':   // alarm message
-                  if (node.alarm != null)
-                     sb.append(node.alarm.getMessage());
-                  break;
-               case 'n':
-                  sb.append((node.object != null) ? node.object.getObjectName() : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
-                  break;
-               case 'N':
-                  if (node.alarm != null)
-                     sb.append(ConsoleSharedData.getSession().getEventName(node.alarm.getSourceEventCode()));
-                  break;
-               case 's':
-                  if (node.alarm != null)
-                     sb.append(node.alarm.getCurrentSeverity());
-                  break;
-               case 'S':
-                  if (node.alarm != null)
-                     sb.append(StatusDisplayInfo.getStatusText(node.alarm.getCurrentSeverity()));
-                  break;
-               case 'U':
-                  sb.append(ConsoleSharedData.getSession().getUserName());
-                  break;
-               case 'v':
-                  sb.append(NXCommon.VERSION);
-                  break;
-               case 'y':   // alarm state
-                  if (node.alarm != null)
-                     sb.append(node.alarm.getState());
-                  break;
-               case 'Y':   // alarm ID
-                  if (node.alarm != null)
-                     sb.append(node.alarm.getId());
-                  break;
-               case '%':
-                  sb.append('%');
-                  break;
-               case '{':   // object's custom attribute
-                  StringBuilder attr = new StringBuilder();
-                  for(i++; i < s.length(); i++)
-                  {
-                     if (src[i] == '}')
-                        break;
-                     attr.append(src[i]);
-                  }
-                  if ((node.object != null) && (attr.length() > 0))
-                  {
-                     String value = node.object.getCustomAttributes().get(attr.toString());
-                     if (value != null)
-                        sb.append(value);
-                  }
-                  break;
-               case '(':   // input field
-                  StringBuilder name = new StringBuilder();
-                  for(i++; i < s.length(); i++)
-                  {
-                     if (src[i] == ')')
-                        break;
-                     name.append(src[i]);
-                  }
-                  if (name.length() > 0)
-                  {
-                     String value = inputValues.get(name.toString());
-                     if (value != null)
-                        sb.append(value);
-                  }
-                  break;
-               default:
-                  break;
-            }
-         }
-         else
-         {
-            sb.append(src[i]);
-         }
-      }
-      
-      return sb.toString();
    }
 }

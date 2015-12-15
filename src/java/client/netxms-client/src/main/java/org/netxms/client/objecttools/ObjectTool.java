@@ -23,18 +23,17 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
-import org.netxms.base.Glob;
 import org.netxms.base.Logger;
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.ObjectMenuFilter;
 import org.netxms.client.objects.AbstractNode;
-import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.MenuFiltringObj;
 
 /**
  * NetXMS object tool representation
  *
  */
-public class ObjectTool
+public class ObjectTool implements MenuFiltringObj
 {
 	public static final int TYPE_INTERNAL       = 0;
 	public static final int TYPE_ACTION         = 1;
@@ -45,18 +44,12 @@ public class ObjectTool
 	public static final int TYPE_SERVER_COMMAND = 6;
 	public static final int TYPE_FILE_DOWNLOAD  = 7;
    public static final int TYPE_SERVER_SCRIPT  = 8;
-	
-	public static final int REQUIRES_SNMP                 = 0x00000001;
-	public static final int REQUIRES_AGENT                = 0x00000002;
-	public static final int REQUIRES_OID_MATCH            = 0x00000004;
-	public static final int ASK_CONFIRMATION              = 0x00000008;
-	public static final int GENERATES_OUTPUT              = 0x00000010;
-	public static final int DISABLED                      = 0x00000020;
-	public static final int SHOW_IN_COMMANDS              = 0x00000040;
-   public static final int REQUIRES_NODE_OS_MATCH        = 0x00000080;
-   public static final int REQUIRES_TEMPLATE_MATCH       = 0x00000100;
-	public static final int SNMP_INDEXED_BY_VALUE         = 0x00010000;
-	public static final int REQUIRES_WORKSTATION_OS_MATCH = 0x00020000;
+
+   public static final int ASK_CONFIRMATION          = 0x00000001;
+   public static final int GENERATES_OUTPUT          = 0x00000002;
+   public static final int DISABLED                  = 0x00000004;
+   public static final int SHOW_IN_COMMANDS          = 0x00000008;
+   public static final int SNMP_INDEXED_BY_VALUE     = 0x00000010;
 	
 	protected long id;
 	protected String name;
@@ -68,7 +61,7 @@ public class ObjectTool
 	protected String confirmationText;
 	protected String commandName;
    protected String commandShortName;
-   protected ObjectToolFilter filter;
+   protected ObjectMenuFilter filter;
 	protected byte[] imageData;
 	protected Map<String, InputField> inputFields;
 
@@ -77,7 +70,7 @@ public class ObjectTool
 	 */
 	protected ObjectTool()
 	{
-	   filter = new ObjectToolFilter();
+	   filter = new ObjectMenuFilter();
 	   inputFields = new HashMap<String, InputField>(0);
 	}
 	
@@ -102,11 +95,11 @@ public class ObjectTool
 		imageData = msg.getFieldAsBinary(baseId + 10);
 		try
       {
-         filter = ObjectToolFilter.createFromXml(filterData);
+         filter = ObjectMenuFilter.createFromXml(filterData);
       }
       catch(Exception e)
       {
-         filter = new ObjectToolFilter();
+         filter = new ObjectMenuFilter();
          if (!filterData.isEmpty())
             Logger.debug("ObjectTool.ObjectTool", "Failed to create object tool filter from XML");
       }
@@ -209,70 +202,7 @@ public class ObjectTool
 	 */
 	public boolean isApplicableForNode(AbstractNode node)
 	{
-		if (((flags & REQUIRES_SNMP) != 0) &&
-			 ((node.getFlags() & AbstractNode.NF_IS_SNMP) == 0))
-			return false;	// Node does not support SNMP
-		
-		if (((flags & REQUIRES_AGENT) != 0) &&
-				 ((node.getFlags() & AbstractNode.NF_IS_NATIVE_AGENT) == 0))
-				return false;	// Node does not have NetXMS agent
-		
-		if ((flags & REQUIRES_OID_MATCH) != 0)
-		{
-			if (!Glob.matchIgnoreCase(filter.snmpOid, node.getSnmpOID()))
-				return false;	// OID does not match
-		}
-		
-	   if ((flags & REQUIRES_NODE_OS_MATCH) != 0)
-      {
-	      boolean match = false;
-	      String[] substrings = filter.toolNodeOS.split(",");
-	      for(int i = 0; i < substrings.length; i++)
-	      {;
-	         if (Pattern.matches(substrings[i], node.getPlatformName()))
-	         {
-	            match = true;
-	         }
-	      }
-	      if (!match)
-	         return false;  //Not correct type of OS
-      }
-	   
-	   if ((flags & REQUIRES_WORKSTATION_OS_MATCH) != 0)
-      {
-         boolean match = false;
-         String[] substrings = filter.toolWorkstationOS.split(",");
-         for(int i = 0; i < substrings.length; i++)
-         {;
-            if (Pattern.matches(substrings[i], System.getProperty("os.name")))
-            {
-               match = true;
-            }
-         }
-         if (!match)
-            return false;  //Not correct type of OS
-      }
-	    
-	   if ((flags & REQUIRES_TEMPLATE_MATCH) != 0)
-      {
-	      boolean match = false;
-         String[] substrings = filter.toolTemplate.split(",");
-         Set<AbstractObject> parents = node.getAllParents(AbstractObject.OBJECT_TEMPLATE);
-         for(AbstractObject parent : parents)
-         {
-            for(int i = 0; i < substrings.length; i++)
-            {
-               if (Pattern.matches(substrings[i], parent.getObjectName()))
-               {
-                  match = true;
-               }
-            }
-         }
-         if (!match)
-            return false;  // Does not belong to those templates
-      }
-		
-		return true;
+		return filter.isApplicableForNode(node);
 	}
 
 	/**
@@ -450,5 +380,17 @@ public class ObjectTool
    public String getToolTemplate()
    {
       return filter.toolTemplate;
+   }
+
+   @Override
+   public ObjectMenuFilter getFilter()
+   {
+      return filter;
+   }
+
+   @Override
+   public void setFilter(ObjectMenuFilter filter)
+   {
+      this.filter = filter;      
    }
 }

@@ -122,7 +122,6 @@ public class Messages extends NLS
    public static String ObjectToolsDynamicMenu_ExecuteServerCmd;
    public static String ObjectToolsDynamicMenu_HandlerNotDefined;
    public static String ObjectToolsDynamicMenu_Information;
-   public static String ObjectToolsDynamicMenu_MultipleNodes;
    public static String ObjectToolsDynamicMenu_ServerCmdExecError;
    public static String ObjectToolsDynamicMenu_ServerCommandExecuted;
    public static String ObjectToolsDynamicMenu_ServerScriptExecError;

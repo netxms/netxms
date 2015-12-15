@@ -20,16 +20,22 @@ package org.netxms.client.datacollection;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import org.netxms.base.Logger;
+import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPMessage;
 import org.netxms.client.AccessListElement;
+import org.netxms.client.ObjectMenuFilter;
+import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.MenuFiltringObj;
+import org.simpleframework.xml.Serializer;
+import org.simpleframework.xml.convert.AnnotationStrategy;
+import org.simpleframework.xml.core.Persister;
 
 /**
  * Settings for predefined graph
  */
-public class GraphSettings
+public class GraphSettings extends ChartConfig  implements MenuFiltringObj
 {
 	public static final int MAX_GRAPH_ITEM_COUNT = 16;
 	
@@ -67,9 +73,7 @@ public class GraphSettings
 	private String name;
 	private String shortName;
 	private List<AccessListElement> accessList;
-	private String config;
-	private Set<GraphSettingsChangeListener> changeListeners = new HashSet<GraphSettingsChangeListener>(0);
-	private String filters;
+	private ObjectMenuFilter filters;
 	
 	/**
 	 * Create default settings
@@ -82,8 +86,7 @@ public class GraphSettings
 		name = "noname";
 		shortName = "noname";
 		accessList = new ArrayList<AccessListElement>(0);
-		config = "<chart></chart>";
-      filters = "<objectToolFilter></objectToolFilter>";
+		filters = new ObjectMenuFilter();
 	}
 	
 	/**
@@ -98,9 +101,35 @@ public class GraphSettings
 		this.flags = flags;
 		this.accessList = new ArrayList<AccessListElement>(accessList.size());
 		this.accessList.addAll(accessList);
-		config = "<chart></chart>";
-		filters = "<objectToolFilter></objectToolFilter>";
+      filters = new ObjectMenuFilter();
 	}
+	
+   public GraphSettings(GraphSettings data, String name)
+   {
+      id = data.id;
+      ownerId = data.ownerId;
+      this.name = data.name;      
+      shortName = data.shortName;
+      flags = data.flags & ~GRAPH_FLAG_TEMPLATE;
+      this.accessList = new ArrayList<AccessListElement>(data.accessList.size());
+      this.accessList.addAll(data.accessList);
+      filters = data.filters;
+      setConfig(data);
+      setTitle(name);
+   }
+
+   /**
+    * Create chart settings object from XML document
+    * 
+    * @param xml XML document
+    * @return deserialized object
+    * @throws Exception if the object cannot be fully deserialized
+    */
+   public static GraphSettings createFromXml(final String xml) throws Exception
+   {
+      Serializer serializer = new Persister(new AnnotationStrategy());
+      return serializer.read(GraphSettings.class, xml);
+   }
 	
 	/**
 	 * Create graph settings object from NXCP message
@@ -108,27 +137,70 @@ public class GraphSettings
 	 * @param msg NXCP message
 	 * @param baseId base variable id
 	 */
-	public GraphSettings(final NXCPMessage msg, long baseId)
+	static public GraphSettings createGraphSettings(final NXCPMessage msg, long baseId)
 	{
-		id = msg.getFieldAsInt64(baseId);
-		ownerId = msg.getFieldAsInt64(baseId + 1);
-      flags = (int)msg.getFieldAsInt64(baseId + 2);
-      name = msg.getFieldAsString(baseId + 3);
-      config = msg.getFieldAsString(baseId + 4);
-      filters = msg.getFieldAsString(baseId + 5);
+	   GraphSettings gs;
+      try
+      {
+         gs = GraphSettings.createFromXml(msg.getFieldAsString(baseId + 4));
+      }
+      catch(Exception e)
+      {
+         gs = new GraphSettings();
+         Logger.debug("GraphSettings.CreateGraphSettings", "Cannot parse ChartConfig XML", e);
+      }
+      gs.id = msg.getFieldAsInt64(baseId);
+      gs.ownerId = msg.getFieldAsInt64(baseId + 1);
+      gs.flags = (int)msg.getFieldAsInt64(baseId + 2);
+      gs.name = msg.getFieldAsString(baseId + 3);
+      
+      try
+      {
+         gs.filters = ObjectMenuFilter.createFromXml(msg.getFieldAsString(baseId + 5));
+      }
+      catch(Exception e)
+      {
+         Logger.debug("GraphSettings.CreateGraphSettings", "Cannot parse ObjectMenuFilter XML: ", e);
+         gs.filters = new ObjectMenuFilter();
+      }
 		
-		String[] parts = name.split("->");
-		shortName = (parts.length > 1) ? parts[parts.length - 1] : name;
+		String[] parts = gs.name.split("->");
+		gs.shortName = (parts.length > 1) ? parts[parts.length - 1] : gs.name;
 		
 		int count = msg.getFieldAsInt32(baseId + 6);  // ACL size
 		long[] users = msg.getFieldAsUInt32Array(baseId + 7);
 		long[] rights = msg.getFieldAsUInt32Array(baseId + 8);
-		accessList = new ArrayList<AccessListElement>(count);
+		gs.accessList = new ArrayList<AccessListElement>(count);
 		for(int i = 0; i < count; i++)
 		{
-			accessList.add(new AccessListElement(users[i], (int)rights[i]));
+		   gs.accessList.add(new AccessListElement(users[i], (int)rights[i]));
 		}
 		
+		return gs;
+	}
+	
+	public void fillMessage(NXCPMessage msg)
+	{
+	   msg.setFieldInt32(NXCPCodes.VID_GRAPH_ID, (int) id);
+      msg.setField(NXCPCodes.VID_NAME, name);
+      msg.setFieldInt32(NXCPCodes.VID_FLAGS, flags);
+      msg.setField(NXCPCodes.VID_FILTER, getFiltersAsXML());
+      try
+      {
+         msg.setField(NXCPCodes.VID_GRAPH_CONFIG, createXml());
+      }
+      catch(Exception e)
+      {
+         Logger.debug("GraphSettings.CreateGraphSettings", "Cannot convert ChartConfig to XML: ", e);
+         msg.setField(NXCPCodes.VID_GRAPH_CONFIG, "");
+      }
+      msg.setFieldInt32(NXCPCodes.VID_ACL_SIZE, accessList.size());
+      long varId = NXCPCodes.VID_GRAPH_ACL_BASE;
+      for(AccessListElement el : accessList)
+      {
+         msg.setFieldInt32(varId++, (int) el.getUserId());
+         msg.setFieldInt32(varId++, el.getAccessRights());
+      }      
 	}
 	
 	/**
@@ -181,51 +253,6 @@ public class GraphSettings
 		shortName = (parts.length > 1) ? parts[parts.length - 1] : name;
 	}
 
-	/**
-	 * Add change listener
-	 * 
-	 * @param listener change listener
-	 */
-	public void addChangeListener(GraphSettingsChangeListener listener)
-	{
-		changeListeners.add(listener);
-	}
-	
-	/**
-	 * Remove change listener
-	 * 
-	 * @param listener change listener to remove
-	 */
-	public void removeChangeListener(GraphSettingsChangeListener listener)
-	{
-		changeListeners.remove(listener);
-	}
-	
-	/**
-	 * Fire change notification
-	 */
-	public void fireChangeNotification()
-	{
-		for(GraphSettingsChangeListener l : changeListeners)
-			l.onGraphSettingsChange(this);
-	}
-
-	/**
-	 * @return the config
-	 */
-	public String getConfig()
-	{
-		return config;
-	}
-
-	/**
-	 * @param config the config to set
-	 */
-	public void setConfig(String config)
-	{
-		this.config = config;
-	}
-
    /**
     * @return the flags
     */
@@ -245,16 +272,72 @@ public class GraphSettings
    /**
     * @return the filters
     */
-   public String getFilters()
+   public ObjectMenuFilter getFilters()
    {
       return filters;
    }
 
    /**
+    * @return the filters as string
+    */
+   public String getFiltersAsXML()
+   {
+      try
+      {
+         return filters.createXml();
+      }
+      catch(Exception e)
+      {
+         Logger.debug("GraphSettings.CreateGraphSettings", "Cannot create XML from ObjectMenuFilter: ", e);
+         return "";
+      }
+   }
+
+   /**
     * @param filters the filters to set
     */
-   public void setFilters(String filters)
+   public void setFilters(ObjectMenuFilter filters)
    {
       this.filters = filters;
+   }
+   
+   /**
+    * Checks if this graph template is applicable for node
+    * 
+    * @param node
+    * @return
+    */
+   public boolean isApplicableForNode(AbstractNode node)
+   {      
+      return filters.isApplicableForNode(node);
+   }
+
+   
+   /**
+    * Checks if this graph is template
+    * 
+    * @return isTemplate
+    */
+   public boolean isTemplate()
+   {
+      return (flags & GRAPH_FLAG_TEMPLATE) > 0;
+   }
+
+   @Override
+   public ObjectMenuFilter getFilter()
+   {
+      return filters;
+   }
+
+   @Override
+   public void setFilter(ObjectMenuFilter filter)
+   {
+      this.filters = filter;
+   }
+
+   @Override
+   public int getType()
+   {
+      return 0;
    }
 }

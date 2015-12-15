@@ -28,6 +28,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.client.ObjectMenuFilter;
+import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.client.objects.MenuFiltringObj;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.client.objecttools.ObjectToolDetails;
 import org.netxms.ui.eclipse.objecttools.Messages;
@@ -38,7 +41,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
  */
 public class Filter extends PropertyPage
 {
-	private ObjectToolDetails objectTool;
+	private ObjectMenuFilter filter;
 	private Button checkAgent;
 	private Button checkSNMP;
 	private Button checkMatchOID;
@@ -66,7 +69,8 @@ public class Filter extends PropertyPage
 	@Override
 	protected Control createContents(Composite parent)
 	{
-		objectTool = (ObjectToolDetails)getElement().getAdapter(ObjectToolDetails.class);
+	   MenuFiltringObj obj = (MenuFiltringObj)getElement().getAdapter(MenuFiltringObj.class);
+	   filter = obj.getFilter();
 
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
@@ -78,15 +82,15 @@ public class Filter extends PropertyPage
 		
 		checkAgent = new Button(dialogArea, SWT.CHECK);
 		checkAgent.setText(Messages.get().Filter_AgentNeeded);
-		checkAgent.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_AGENT) != 0);
+		checkAgent.setSelection((filter.flags & ObjectMenuFilter.REQUIRES_AGENT) != 0);
 		
 		checkSNMP = new Button(dialogArea, SWT.CHECK);
 		checkSNMP.setText(Messages.get().Filter_SNMPNeeded);
-		checkSNMP.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_SNMP) != 0);
+		checkSNMP.setSelection((filter.flags & ObjectMenuFilter.REQUIRES_SNMP) != 0);
 		
 		checkMatchOID = new Button(dialogArea, SWT.CHECK);
 		checkMatchOID.setText(Messages.get().Filter_OIDShouldMatch);
-		checkMatchOID.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_OID_MATCH) != 0);
+		checkMatchOID.setSelection((filter.flags & ObjectMenuFilter.REQUIRES_OID_MATCH) != 0);
 		checkMatchOID.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -104,7 +108,7 @@ public class Filter extends PropertyPage
 		});
 		
 		textOID = new Text(dialogArea, SWT.BORDER);
-		textOID.setText(objectTool.getSnmpOid());
+		textOID.setText(filter.snmpOid);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -114,7 +118,7 @@ public class Filter extends PropertyPage
 		
 		checkMatchNodeOS = new Button(dialogArea, SWT.CHECK);
 		checkMatchNodeOS.setText(Messages.get().Filter_OSShouldMatch);
-		checkMatchNodeOS.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_NODE_OS_MATCH) != 0);
+		checkMatchNodeOS.setSelection((filter.flags & ObjectMenuFilter.REQUIRES_NODE_OS_MATCH) != 0);
 		checkMatchNodeOS.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
@@ -132,7 +136,7 @@ public class Filter extends PropertyPage
 		});
 		
 		textNodeOS = new Text(dialogArea, SWT.BORDER);
-		textNodeOS.setText(objectTool.getToolNodeOS());
+		textNodeOS.setText(filter.toolNodeOS);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -140,11 +144,11 @@ public class Filter extends PropertyPage
 		textNodeOS.setLayoutData(gd);
 		textNodeOS.setEnabled(checkMatchNodeOS.getSelection());
 		
-		if (objectTool.getType() == ObjectTool.TYPE_LOCAL_COMMAND)
+		if (obj instanceof ObjectTool && obj.getType() == ObjectTool.TYPE_LOCAL_COMMAND)
 		{
    		checkMatchWorkstationOS = new Button(dialogArea, SWT.CHECK);
    		checkMatchWorkstationOS.setText("Workstation OS name should match this template(coma separated regular expression list)");
-   		checkMatchWorkstationOS.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_WORKSTATION_OS_MATCH) != 0);
+   		checkMatchWorkstationOS.setSelection((filter.flags & ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH) != 0);
    		checkMatchWorkstationOS.addSelectionListener(new SelectionListener() {         
             @Override
             public void widgetSelected(SelectionEvent e)
@@ -162,7 +166,7 @@ public class Filter extends PropertyPage
          });
    		
    		textWorkstationOS = new Text(dialogArea, SWT.BORDER);
-   		textWorkstationOS.setText(objectTool.getToolWorkstationOS());
+   		textWorkstationOS.setText(filter.toolWorkstationOS);
    		gd = new GridData();
    		gd.horizontalAlignment = SWT.FILL;
          gd.grabExcessHorizontalSpace = true;
@@ -173,7 +177,7 @@ public class Filter extends PropertyPage
 		
 		checkMatchTemplate = new Button(dialogArea, SWT.CHECK);
 		checkMatchTemplate.setText(Messages.get().Filter_TemplateShouldMatch);
-		checkMatchTemplate.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_TEMPLATE_MATCH) != 0);
+		checkMatchTemplate.setSelection((filter.flags & ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH) != 0);
 		checkMatchTemplate.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetSelected(SelectionEvent e)
@@ -191,7 +195,7 @@ public class Filter extends PropertyPage
       });
       
 		textTemplate = new Text(dialogArea, SWT.BORDER);
-		textTemplate.setText(objectTool.getToolTemplate());
+		textTemplate.setText(filter.toolTemplate);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -210,44 +214,44 @@ public class Filter extends PropertyPage
 	protected void applyChanges(final boolean isApply)
 	{
 		if (checkAgent.getSelection())
-			objectTool.setFlags(objectTool.getFlags() | ObjectTool.REQUIRES_AGENT);
+		   filter.flags = filter.flags | ObjectMenuFilter.REQUIRES_AGENT;
 		else
-			objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.REQUIRES_AGENT);
+		   filter.flags = filter.flags & ~ObjectMenuFilter.REQUIRES_AGENT;
 
 		if (checkSNMP.getSelection())
-			objectTool.setFlags(objectTool.getFlags() | ObjectTool.REQUIRES_SNMP);
+		   filter.flags = filter.flags | ObjectMenuFilter.REQUIRES_SNMP;
 		else
-			objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.REQUIRES_SNMP);
+		   filter.flags = filter.flags & ~ObjectMenuFilter.REQUIRES_SNMP;
 
 		if (checkMatchOID.getSelection())
-			objectTool.setFlags(objectTool.getFlags() | ObjectTool.REQUIRES_OID_MATCH);
+			filter.flags = filter.flags | ObjectMenuFilter.REQUIRES_OID_MATCH;
 		else
-			objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.REQUIRES_OID_MATCH);
+		   filter.flags = filter.flags & ~ObjectMenuFilter.REQUIRES_OID_MATCH;
 		
-		objectTool.setSnmpOid(textOID.getText());		
+		filter.snmpOid = textOID.getText();		
 
       if (checkMatchNodeOS.getSelection())
-         objectTool.setFlags(objectTool.getFlags() | ObjectTool.REQUIRES_NODE_OS_MATCH);
+         filter.flags = filter.flags | ObjectMenuFilter.REQUIRES_NODE_OS_MATCH;
       else
-         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.REQUIRES_NODE_OS_MATCH);
+         filter.flags = filter.flags & ~ObjectMenuFilter.REQUIRES_NODE_OS_MATCH;
       
-      objectTool.setToolNodeOS(textNodeOS.getText());
+      filter.toolNodeOS = textNodeOS.getText();
       
       if ((checkMatchWorkstationOS != null) && checkMatchWorkstationOS.getSelection())
-         objectTool.setFlags(objectTool.getFlags() | ObjectTool.REQUIRES_WORKSTATION_OS_MATCH);
+         filter.flags = filter.flags | ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH;
       else
-         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.REQUIRES_WORKSTATION_OS_MATCH);
+         filter.flags = filter.flags & ~ObjectMenuFilter.REQUIRES_WORKSTATION_OS_MATCH;
       
       if (textWorkstationOS != null)
-         objectTool.setToolWorkstationOS(textWorkstationOS.getText());
+         filter.toolWorkstationOS = textWorkstationOS.getText();
 
       if (checkMatchTemplate.getSelection())
-         objectTool.setFlags(objectTool.getFlags() | ObjectTool.REQUIRES_TEMPLATE_MATCH);
+         filter.flags = filter.flags | ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH;
       else
-         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.REQUIRES_TEMPLATE_MATCH);
+         filter.flags = filter.flags & ~ObjectMenuFilter.REQUIRES_TEMPLATE_MATCH;
       
-      objectTool.setToolTemplate(textTemplate.getText());
-	}
+      filter.toolTemplate = textTemplate.getText();
+   }
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#performApply()

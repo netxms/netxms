@@ -197,9 +197,19 @@
             id="org.netxms.ui.eclipse.objecttools.propertypages.Filter#3"
             name="%page.name.Filter">
          <enabledWhen>
-            <instanceof
-                  value="org.netxms.client.objecttools.ObjectTool">
-            </instanceof>
+            <or>
+               <instanceof
+                     value="org.netxms.client.objecttools.ObjectTool">
+               </instanceof>
+               <and>
+                  <instanceof
+                        value="org.netxms.client.datacollection.GraphSettings">
+                  </instanceof>
+                  <test
+                        property="org.netxms.ui.eclipse.perfview.isTemplateGraph">
+                  </test>
+               </and>
+            </or>
          </enabledWhen>
       </page>
       <page

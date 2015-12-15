@@ -43,6 +43,14 @@
             name="%view.name.HistData"
             restorable="true">
       </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.perfview.views.TemplateGraphView"
+            icon="icons/chart_line.png"
+            id="org.netxms.ui.eclipse.perfview.views.TemplateGraphView"
+            name="Template Graphs"
+            restorable="true">
+      </view>
    </extension>
 
    <extension
@@ -155,7 +163,7 @@
             name="%page.name.General">
          <enabledWhen>
             <instanceof
-                  value="org.netxms.ui.eclipse.perfview.ChartConfig">
+                  value="org.netxms.client.datacollection.ChartConfig">
             </instanceof>
          </enabledWhen>
       </page>
@@ -164,10 +172,15 @@
             id="org.netxms.ui.eclipse.perfview.propertypages.DataSources#10"
             name="%page.name.DataSources">
          <enabledWhen>
-            <instanceof
-                  value="org.netxms.ui.eclipse.perfview.ChartConfig">
-            </instanceof>
-         </enabledWhen>
+            <and>
+               <instanceof
+                     value="org.netxms.client.datacollection.ChartConfig">
+               </instanceof>
+               <not>
+                  <test
+                        property="org.netxms.ui.eclipse.perfview.isTemplateGraph">
+                  </test>
+               </not></and></enabledWhen>
       </page>
       <page
             class="org.netxms.ui.eclipse.perfview.propertypages.PredefinedGraph"
@@ -175,8 +188,23 @@
             name="%page.name.PredefGraph">
          <enabledWhen>
             <instanceof
-                  value="org.netxms.ui.eclipse.perfview.PredefinedChartConfig">
+                  value="org.netxms.client.datacollection.GraphSettings">
             </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.perfview.propertypages.TemplateDataSources"
+            id="org.netxms.ui.eclipse.perfview.propertypages.PredefinedGraph#10"
+            name="Template Source">
+         <enabledWhen>
+            <and>
+               <instanceof
+                     value="org.netxms.client.datacollection.GraphSettings">
+               </instanceof>
+               <test
+                     property="org.netxms.ui.eclipse.perfview.isTemplateGraph">
+               </test>
+            </and>
          </enabledWhen>
       </page>
    </extension>
@@ -190,6 +218,11 @@
       <command
             id="org.netxms.ui.eclipse.perfview.commands.show_graph_filter"
             name="Show filter">
+      </command>
+      <command
+            description="Open Template Graphs"
+            id="org.netxms.ui.eclipse.perfview.commands.open_template_graph_view"
+            name="Template Graphs">
       </command>
    </extension>
    <extension
@@ -207,6 +240,16 @@
                menubarPath="view/primary"
                style="push"
                toolbarPath="view/additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.perfview.actions.OpenGraphTemplateView"
+               definitionId="org.netxms.ui.eclipse.perfview.commands.open_template_graph_view"
+               icon="icons/chart_line.png"
+               id="org.netxms.ui.eclipse.perfview.action.open_template_graph_view"
+               label="Template Graph Configuration"
+               menubarPath="config/additions"
+               style="push"
+               tooltip="Open Template Graph Configuration">
          </action>
       </actionSet>
    </extension>
@@ -247,6 +290,53 @@
             name="Graphs"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="popup:org.eclipse.ui.popup.any?after=objectmgmt">
+         <dynamic
+               class="org.netxms.ui.eclipse.perfview.TemplateGraphDynamicMenu"
+               id="org.netxms.ui.eclipse.objecttools.templateGraphDynamicMenu">
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate
+                     ifEmpty="false"
+                     operator="and">
+                  <or>
+                     <instanceof
+                           value="org.netxms.client.objects.Node">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.events.Alarm">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.Cluster">
+                     </instanceof>
+                     <instanceof
+                           value="org.netxms.client.objects.MobileDevice">
+                     </instanceof>
+                  </or>
+               </iterate>
+            </visibleWhen>
+         </dynamic>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.netxms.ui.eclipse.loginlisteners">
+      <loginlistener
+            class="org.netxms.ui.eclipse.perfview.LoginListener">
+      </loginlistener>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="org.netxms.ui.eclipse.perfview.GraphTemplatePropertyTester"
+            id="org.netxms.ui.eclipse.perfview.GraphTemplatePropertyTester"
+            namespace="org.netxms.ui.eclipse.perfview"
+            properties="isTemplateGraph"
+            type="org.netxms.client.datacollection.GraphSettings">
+      </propertyTester>
    </extension>
 
 </plugin>

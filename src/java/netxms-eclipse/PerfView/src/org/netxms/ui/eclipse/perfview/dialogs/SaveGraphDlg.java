@@ -29,7 +29,7 @@ public class SaveGraphDlg extends Dialog
 	private Label errorMessage;
 	private String name;
 	private Button checkOverwrite;
-	private String ErrorMessage;
+	private String errorMessageText;
 	private boolean havePermissionToOverwrite;
 	
 	/**
@@ -39,7 +39,7 @@ public class SaveGraphDlg extends Dialog
 	{
 		super(parentShell);
 		name = initialName;
-		ErrorMessage = message;
+		errorMessageText = message;
 		this.havePermissionToOverwrite = havePermissionToOverwrite;
 	}
 	
@@ -75,16 +75,19 @@ public class SaveGraphDlg extends Dialog
 		gd.widthHint = 400;
 		fieldName.setLayoutData(gd);
 		
-      if(ErrorMessage != null && havePermissionToOverwrite)
+      if(errorMessageText != null)
       {
          errorMessage = new Label(dialogArea, SWT.LEFT);
          errorMessage.setForeground(SharedColors.getColor(SharedColors.STATUS_CRITICAL, parent.getDisplay()));
          errorMessage.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-         errorMessage.setText(ErrorMessage);
-         
-         checkOverwrite = new Button(dialogArea, SWT.CHECK);
-         checkOverwrite.setText(Messages.get().SaveGraphDlg_Overwrite);
+         errorMessage.setText(errorMessageText);         
       }   
+      
+      if(havePermissionToOverwrite)
+      {
+         checkOverwrite = new Button(dialogArea, SWT.CHECK);
+         checkOverwrite.setText(Messages.get().SaveGraphDlg_Overwrite);         
+      }
 		
 		return dialogArea;
 	}
@@ -101,7 +104,7 @@ public class SaveGraphDlg extends Dialog
 			MessageDialogHelper.openWarning(getShell(), Messages.get().SaveGraphDlg_Warning, Messages.get().SaveGraphDlg_WarningEmptyName);
 			return;
 		}
-		if (ErrorMessage != null && checkOverwrite.getSelection())
+		if (havePermissionToOverwrite && checkOverwrite.getSelection())
 		{
 		   setReturnCode(OVERRIDE);
 		   super.close();

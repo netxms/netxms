@@ -29,5 +29,5 @@ public interface GraphSettingsChangeListener
 	 * 
 	 * @param settings graph settings object
 	 */
-	public abstract void onGraphSettingsChange(GraphSettings settings);
+	public abstract void onGraphSettingsChange(ChartConfig settings);
 }

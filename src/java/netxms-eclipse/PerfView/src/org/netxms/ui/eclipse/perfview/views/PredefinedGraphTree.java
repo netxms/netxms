@@ -68,7 +68,6 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
-import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphFolder;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeContentProvider;
 import org.netxms.ui.eclipse.perfview.views.helpers.GraphTreeFilter;
@@ -474,28 +473,19 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 			return;
 		
 		GraphSettings settings = (GraphSettings)selection.getFirstElement();
-		PredefinedChartConfig config;
-		try
-		{
-			config = PredefinedChartConfig.createFromServerConfig(settings);
-		}
-		catch(Exception e)
-		{
-			config = new PredefinedChartConfig();
-		}
-		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, config);
+		PropertyDialog dlg = PropertyDialog.createDialogOn(getSite().getShell(), null, settings);
+		final GraphSettings newSettings = settings;
 		if (dlg != null)
 		{
 			if (dlg.open() == Window.OK)
 			{
 				try
 				{
-					final GraphSettings s = config.createServerSettings();
 					new ConsoleJob(Messages.get().PredefinedGraphTree_UpdateJobName, null, Activator.PLUGIN_ID, null) {
 						@Override
 						protected void runInternal(IProgressMonitor monitor) throws Exception
 						{
-							session.saveGraph(s, true);
+							session.saveGraph(newSettings, true);
 						}
 						
 						@Override
@@ -510,17 +500,9 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 					MessageDialogHelper.openError(getSite().getShell(), "Internal Error", String.format("Unexpected exception: %s", e.getLocalizedMessage())); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
-			settings.setName(config.getName());
+			settings.setName(newSettings.getName());
 			settings.getAccessList().clear();
-			settings.getAccessList().addAll(config.getAccessList());
-			try
-			{
-				settings.setConfig(config.createXml());
-			}
-			catch(Exception e)
-			{
-				MessageDialogHelper.openError(getSite().getShell(), "Internal Error", String.format("Unexpected exception: %s", e.getLocalizedMessage())); //$NON-NLS-1$ //$NON-NLS-2$
-			}
+			settings.getAccessList().addAll(newSettings.getAccessList());
 			viewer.update(settings, null);
 		}
 	}
@@ -591,9 +573,9 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
                public void run()
                {
                   if(!(n.getObject() instanceof GraphSettings))
-                  {
                      return;
-                  }                       
+                  if(((GraphSettings)n.getObject()).isTemplate())
+                     return;
                   
                   final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();  
                   
@@ -611,7 +593,8 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
                   
                   if(!objectUpdated)
                   {
-                     list.add((GraphSettings)n.getObject());
+                     if(((GraphSettings)n.getObject()).isTemplate())
+                        list.add((GraphSettings)n.getObject());
                   }
                   viewer.refresh();
                   

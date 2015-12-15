@@ -142,6 +142,7 @@ public class Messages extends NLS
 	public String ApplicationWorkbenchWindowAdvisor_PasswordChanged;
    public String ApplicationWorkbenchWindowAdvisor_PkcsFiles;
    public String ApplicationWorkbenchWindowAdvisor_Error;
+   public String ObjectContext_MultipleNodes;
 	public String ApplicationWorkbenchWindowAdvisor_Information;
 	public String ObjectNameValidator_ErrorMessage1;
    public String ObjectNameValidator_ErrorMessage2;
