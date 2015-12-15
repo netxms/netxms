@@ -75,6 +75,7 @@ void StopWatchdog();
 int WatchdogMain(DWORD pid);
 
 void InitSessionList();
+void DestroySessionList();
 
 BOOL RegisterOnServer(const TCHAR *pszServer);
 
@@ -1069,7 +1070,8 @@ void Shutdown()
       ThreadJoin(s_snmpTrapSenderThread);
 	}
 
-   MsgWaitQueue::shutdown();
+	DestroySessionList();
+	MsgWaitQueue::shutdown();
 
    UnloadAllSubAgents();
    CloseLocalDatabase();

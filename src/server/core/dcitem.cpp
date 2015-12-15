@@ -1490,7 +1490,10 @@ void DCItem::setInstanceFilter(const TCHAR *pszScript)
          m_instanceFilter = NXSLCompile(m_instanceFilterSource, errorText, 1024, NULL);
          if (m_instanceFilter == NULL)
          {
-            nxlog_write(MSG_INSTANCE_FILTER_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dsdss", m_pNode->getId(), m_pNode->getName(), m_id, m_name, errorText);
+            // node can be NULL if this DCI was just created from template
+            // in this case compilation error will be reported on template level anyway
+            if (m_pNode != NULL)
+               nxlog_write(MSG_INSTANCE_FILTER_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dsdss", m_pNode->getId(), m_pNode->getName(), m_id, m_name, errorText);
          }
       }
       else

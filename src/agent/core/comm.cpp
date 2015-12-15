@@ -60,6 +60,15 @@ void InitSessionList()
 }
 
 /**
+ * Destroy session list
+ */
+void DestroySessionList()
+{
+   MutexDestroy(g_hSessionListAccess);
+   free(g_pSessionList);
+}
+
+/**
  * Validates server's address
  */
 static bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer)
@@ -425,9 +434,10 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    MutexUnlock(m_mutexWatchdogActive);
    MutexDestroy(m_mutexWatchdogActive);
 
-   MutexDestroy(g_hSessionListAccess);
-   free(g_pSessionList);
    closesocket(hSocket);
+#ifdef WITH_IPV6
+   closesocket(hSocket6);
+#endif
    DebugPrintf(INVALID_INDEX, 1, _T("Listener thread terminated"));
    return THREAD_OK;
 }

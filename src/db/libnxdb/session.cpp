@@ -300,7 +300,6 @@ bool LIBNXDB_EXPORTABLE DBQueryEx(DB_HANDLE hConn, const TCHAR *szQuery, TCHAR *
 bool LIBNXDB_EXPORTABLE DBQuery(DB_HANDLE hConn, const TCHAR *query)
 {
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-
 	return DBQueryEx(hConn, query, errorText);
 }
 

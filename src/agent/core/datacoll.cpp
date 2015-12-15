@@ -39,6 +39,11 @@ bool GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *valu
 static bool s_dataCollectorStarted = false;
 
 /**
+ * Unsaved poll time indicator
+ */
+static bool s_pollTimeChanged = false;
+
+/**
  * Data collection item
  */
 class DataCollectionItem : public RefCountObject
@@ -71,6 +76,7 @@ public:
    UINT16 getSnmpPort() const { return m_snmpPort; }
    int getSnmpRawValueType() const { return (int)m_snmpRawValueType; }
    UINT32 getPollingInterval() const { return (UINT32)m_pollingInterval; }
+   time_t getLastPollTime() { return m_lastPollTime; }
 
    bool equals(const DataCollectionItem *item) const { return (m_serverId == item->m_serverId) && (m_id == item->m_id); }
 
@@ -159,7 +165,7 @@ DataCollectionItem::~DataCollectionItem()
  */
 void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
 {
-   //if at leas one of fields changed - set all fields and save to DB
+   // if at least one of fields changed - set all fields and save to DB
    if ((m_type != item->m_type) || (m_origin != item->m_origin) || _tcscmp(m_name, item->m_name) ||
        (m_pollingInterval != item->m_pollingInterval) || m_snmpTargetGuid.compare(item->m_snmpTargetGuid) ||
        (m_snmpPort != item->m_snmpPort) || (m_snmpRawValueType != item->m_snmpRawValueType) || (m_lastPollTime < item->m_lastPollTime))
@@ -244,10 +250,7 @@ void DataCollectionItem::deleteFromDatabase()
 void DataCollectionItem::setLastPollTime(time_t time)
 {
    m_lastPollTime = time;
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
-      (UINT64)m_lastPollTime, m_serverId, m_id);
-   DBQuery(GetLocalDatabaseHandle(), query);
+   s_pollTimeChanged = true;
 }
 
 /**
@@ -472,6 +475,12 @@ static HashMap<UINT64, ServerSyncStatus> s_serverSyncStatus(true);
 static MUTEX s_serverSyncStatusLock = INVALID_MUTEX_HANDLE;
 
 /**
+ * List of all data collection items
+ */
+static ObjectArray<DataCollectionItem> s_items(64, 64, true);
+static MUTEX s_itemLock = INVALID_MUTEX_HANDLE;
+
+/**
  * Callback to check if reconciliation is needed for session
  */
 static EnumerationCallbackResult ReconciliationQueryCallback(AbstractCommSession *session, void *arg)
@@ -507,6 +516,24 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       MutexUnlock(s_serverSyncStatusLock);
       if (!run)
       {
+         // Save last poll times when reconciliation thread is idle
+         MutexLock(s_itemLock);
+         if (s_pollTimeChanged)
+         {
+            DBBegin(hdb);
+            TCHAR query[256];
+            for(int i = 0; i < s_items.size(); i++)
+            {
+               DataCollectionItem *dci = s_items.get(i);
+               _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
+                          dci->getLastPollTime(), dci->getServerId(), dci->getId());
+               DBQuery(hdb, query);
+            }
+            DBCommit(hdb);
+            s_pollTimeChanged = false;
+         }
+         MutexUnlock(s_itemLock);
+
          if (vacuumNeeded)
          {
             DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: vacuum local database"));
@@ -520,9 +547,11 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       TCHAR query[1024];
       _sntprintf(query, 1024, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue WHERE server_id=") UINT64_FMT _T(" ORDER BY timestamp LIMIT 100"), serverId);
 
-      DB_RESULT hResult = DBSelect(hdb, query);
+      TCHAR sqlError[DBDRV_MAX_ERROR_TEXT];
+      DB_RESULT hResult = DBSelectEx(hdb, query, sqlError);
       if (hResult == NULL)
       {
+         DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: database query failed: %s"), sqlError);
          sleepTime = 30000;
          continue;
       }
@@ -544,6 +573,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
             else
             {
                DebugPrintf(INVALID_INDEX, 5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
+               sent = true;  // record should be deleted
             }
 
             if (sent)
@@ -575,7 +605,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       }
       DBFreeResult(hResult);
 
-      sleepTime = (count == 100) ? 100 : 30000;
+      sleepTime = (count > 0) ? 100 : 30000;
    }
 
    DebugPrintf(INVALID_INDEX, 1, _T("Data reconciliation thread stopped"));
@@ -611,14 +641,14 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
       {
          if (!e->sendToServer(false))
          {
-            e->saveToDatabase();
             status->queueSize++;
+            e->saveToDatabase();
          }
       }
       else
       {
-         e->saveToDatabase();
          status->queueSize++;
+         e->saveToDatabase();
       }
       MutexUnlock(s_serverSyncStatusLock);
 
@@ -744,12 +774,6 @@ static void SnmpDataCollectionCallback(void *arg)
    dci->setLastPollTime(time(NULL));
    dci->finishDataCollection();
 }
-
-/**
- * List of all data collection items
- */
-static ObjectArray<DataCollectionItem> s_items(64, 64, true);
-static MUTEX s_itemLock = INVALID_MUTEX_HANDLE;
 
 /**
  * Data collectors thread pool
