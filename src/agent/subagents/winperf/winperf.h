@@ -96,14 +96,15 @@ public:
  */
 struct COUNTER_INDEX
 {
-	DWORD dwIndex;
-	TCHAR *pszName;
+	DWORD index;
+	TCHAR *englishName;
+	TCHAR *localName;
 };
 
 /**
  * Functions
  */
-void CreateCounterIndex(TCHAR *pData);
+void CreateCounterIndex(TCHAR *engilshCounters, TCHAR *localCounters);
 BOOL TranslateCounterName(const TCHAR *pszName, TCHAR *pszOut);
 int CheckCounter(const TCHAR *pszName, TCHAR **ppszNewName);
 void StartCollectorThreads();

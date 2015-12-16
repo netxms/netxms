@@ -30,8 +30,7 @@
 /**
  * List of configured counters
  */
-static COUNTER_INDEX *m_pCounterList = NULL;
-static DWORD m_dwNumCounters = 0;
+static StructArray<COUNTER_INDEX> m_counterIndexes;
 
 /**
  * Get error text for PDH functions
@@ -75,36 +74,62 @@ void ReportPdhError(TCHAR *pszFunction, TCHAR *pszPdhCall, PDH_STATUS dwError)
 /**
  * Create index of counters
  */
-void CreateCounterIndex(TCHAR *pData)
+void CreateCounterIndex(TCHAR *englishCounters, TCHAR *localCounters)
 {
-	for(TCHAR *pCurr = pData; *pCurr != 0; )
+	for(TCHAR *curr = englishCounters; *curr != 0; )
 	{
-		m_pCounterList = (COUNTER_INDEX *)realloc(m_pCounterList, sizeof(COUNTER_INDEX) * (m_dwNumCounters + 1));
-		m_pCounterList[m_dwNumCounters].dwIndex = _tcstoul(pCurr, NULL, 10);
-		pCurr += _tcslen(pCurr) + 1;
-		m_pCounterList[m_dwNumCounters].pszName = _tcsdup(pCurr);
-		pCurr += _tcslen(pCurr) + 1;
-		m_dwNumCounters++;
+      COUNTER_INDEX ci;
+		ci.index = _tcstoul(curr, NULL, 10);
+		curr += _tcslen(curr) + 1;
+		ci.englishName = _tcsdup(curr);
+		curr += _tcslen(curr) + 1;
+      ci.localName = NULL;
+      m_counterIndexes.add(&ci);
 	}
-   AgentWriteDebugLog(2, _T("WinPerf: %d counter indexes read"), m_dwNumCounters);
+   AgentWriteDebugLog(2, _T("WinPerf: %d counter indexes read"), m_counterIndexes.size());
+
+   int translations = 0;
+	for(TCHAR *curr = localCounters; *curr != 0; )
+	{
+		DWORD index = _tcstoul(curr, NULL, 10);
+		curr += _tcslen(curr) + 1;
+      for(int i = 0; i < m_counterIndexes.size(); i++)
+      {
+         COUNTER_INDEX *ci = m_counterIndexes.get(i);
+         if (ci->index == index)
+         {
+            ci->localName = _tcsdup(curr);
+            translations++;
+            break;
+         }
+      }
+		curr += _tcslen(curr) + 1;
+	}
+   AgentWriteDebugLog(2, _T("WinPerf: %d counter translations read"), translations);
+
 }
 
 /**
  * Translate single counter name's element
  */
-static BOOL TranslateElement(TCHAR *pszText)
+static bool TranslateElement(TCHAR *name)
 {
-	DWORD i, dwSize;
-
-	for(i = 0; i < m_dwNumCounters; i++)
+   for(int i = 0; i < m_counterIndexes.size(); i++)
 	{
-		if (!_tcsicmp(m_pCounterList[i].pszName, pszText))
+      COUNTER_INDEX *ci = m_counterIndexes.get(i);
+      if (!_tcsicmp(ci->englishName, name))
 		{
-			dwSize = MAX_ELEMENT_LENGTH * sizeof(TCHAR);
-			return PdhLookupPerfNameByIndex(NULL, m_pCounterList[i].dwIndex, pszText, &dwSize) == ERROR_SUCCESS;
+         if (ci->localName != NULL)
+         {
+            _tcscpy(name, ci->localName);
+            return true;
+         }
+			
+         DWORD size = MAX_ELEMENT_LENGTH * sizeof(TCHAR);
+			return PdhLookupPerfNameByIndex(NULL, ci->index, name, &size) == ERROR_SUCCESS;
 		}
 	}
-	return FALSE;
+	return false;
 }
 
 /**
@@ -115,7 +140,7 @@ BOOL TranslateCounterName(const TCHAR *pszName, TCHAR *pszOut)
 	const TCHAR *pCurr = pszName;
 	const TCHAR *pSlash, *pBrace, *pNext;
 	TCHAR szTemp[MAX_ELEMENT_LENGTH];
-	BOOL bs1, bs2;
+	bool bs1, bs2;
 	int nLen;
 
 	// Generic counter name looks like following:

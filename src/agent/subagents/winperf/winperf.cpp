@@ -543,22 +543,44 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
       {
 	      DWORD bytes = (DWORD)countersBufferSize;
          DWORD type;
-	      status = RegQueryValueEx(HKEY_PERFORMANCE_DATA, _T("Counter"), NULL, &type, (BYTE *)counters, &bytes);
+	      status = RegQueryValueEx(hKey, _T("Counter"), NULL, &type, (BYTE *)counters, &bytes);
 	      while(status == ERROR_MORE_DATA)
 	      {
 		      countersBufferSize += 8192;
 		      counters = (TCHAR *)realloc(counters, countersBufferSize);
 		      bytes = (DWORD)countersBufferSize;
-   	      status = RegQueryValueEx(HKEY_PERFORMANCE_DATA, _T("Counter"), NULL, &type, (BYTE *)counters, &bytes);
+   	      status = RegQueryValueEx(hKey, _T("Counter"), NULL, &type, (BYTE *)counters, &bytes);
 	      }
          RegCloseKey(hKey);
       }
    }
 	if (status == ERROR_SUCCESS)
 	{
-		CreateCounterIndex(counters);
+	   countersBufferSize = 8192;
+	   TCHAR *localCounters = (TCHAR *)malloc(countersBufferSize);
+      localCounters[0] = 0;
+
+      HKEY hKey;
+      status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\CurrentLanguage"), 0, KEY_READ, &hKey);
+      if (status == ERROR_SUCCESS)
+      {
+	      DWORD bytes = (DWORD)countersBufferSize;
+         DWORD type;
+	      status = RegQueryValueEx(hKey, _T("Counter"), NULL, &type, (BYTE *)localCounters, &bytes);
+	      while(status == ERROR_MORE_DATA)
+	      {
+		      countersBufferSize += 8192;
+		      localCounters = (TCHAR *)realloc(localCounters, countersBufferSize);
+		      bytes = (DWORD)countersBufferSize;
+   	      status = RegQueryValueEx(hKey, _T("Counter"), NULL, &type, (BYTE *)localCounters, &bytes);
+	      }
+         RegCloseKey(hKey);
+      }
+
+		CreateCounterIndex(counters, localCounters);
+      free(localCounters);
 	}
-	safe_free(counters);
+	free(counters);
 
    // Init parameters list
    m_info.numParameters = sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM);
