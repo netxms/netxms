@@ -920,6 +920,9 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    }
    DebugPrintf(INVALID_INDEX, 4, _T("%d data collection elements received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+   bool txnOpen = false;
+
    MutexLock(s_itemLock);
 
    // Update and add new
@@ -939,6 +942,11 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       {
          DataCollectionItem *newItem = new DataCollectionItem(item);
          s_items.add(newItem);
+         if (!txnOpen)
+         {
+            DBBegin(hdb);
+            txnOpen = true;
+         }
          newItem->saveToDatabase(true);
       }
    }
@@ -960,13 +968,24 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       }
       if (!exist)
       {
+         if (!txnOpen)
+         {
+            DBBegin(hdb);
+            txnOpen = true;
+         }
          item->deleteFromDatabase();
          s_items.unlink(i);
          item->decRefCount();
          i--;
       }
    }
+
+   if (txnOpen)
+      DBCommit(hdb);
+
    MutexUnlock(s_itemLock);
+
+   DebugPrintf(INVALID_INDEX, 4, _T("Data collection for server ") UINT64X_FMT(_T("016")) _T(" reconfigured"), serverId);
 }
 
 /**
