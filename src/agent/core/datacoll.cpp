@@ -899,20 +899,27 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       return;
    }
 
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+
    int count = msg->getFieldAsInt32(VID_NUM_NODES);
-   UINT32 fieldId = VID_NODE_INFO_LIST_BASE;
-   for(int i = 0; i < count; i++)
+   if (count > 0)
    {
-      SNMPTarget *target = new SNMPTarget(serverId, msg, fieldId);
-      UpdateSnmpTarget(target);
-      fieldId += 50;
+      DBBegin(hdb);
+      UINT32 fieldId = VID_NODE_INFO_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         SNMPTarget *target = new SNMPTarget(serverId, msg, fieldId);
+         UpdateSnmpTarget(target);
+         fieldId += 50;
+      }
+      DBCommit(hdb);
    }
    DebugPrintf(INVALID_INDEX, 4, _T("%d SNMP targets received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
    ObjectArray<DataCollectionItem> config(32, 32, true);
 
    count = msg->getFieldAsInt32(VID_NUM_ELEMENTS);
-   fieldId = VID_ELEMENT_LIST_BASE;
+   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < count; i++)
    {
       config.add(new DataCollectionItem(serverId, msg, fieldId));
@@ -920,7 +927,6 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
    }
    DebugPrintf(INVALID_INDEX, 4, _T("%d data collection elements received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
-   DB_HANDLE hdb = GetLocalDatabaseHandle();
    bool txnOpen = false;
 
    MutexLock(s_itemLock);
