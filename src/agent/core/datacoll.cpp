@@ -375,20 +375,15 @@ public:
    UINT64 getServerId() { return m_serverId; }
    UINT32 getDciId() { return m_dciId; }
 
-   void saveToDatabase();
+   void saveToDatabase(DB_STATEMENT hStmt);
    bool sendToServer(bool reconcillation);
 };
 
 /**
  * Save data element to database
  */
-void DataElement::saveToDatabase()
+void DataElement::saveToDatabase(DB_STATEMENT hStmt)
 {
-    DB_HANDLE db = GetLocalDatabaseHandle();
-    DB_STATEMENT hStmt= DBPrepare(db, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value) VALUES (?,?,?,?,?,?,?)"));
-    if (hStmt == NULL)
-       return;
-
    DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, m_serverId);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_dciId);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_type);
@@ -408,7 +403,6 @@ void DataElement::saveToDatabase()
          break;
    }
    DBExecute(hStmt);
-   DBFreeStatement(hStmt);
 }
 
 /**
@@ -473,6 +467,55 @@ struct ServerSyncStatus
  */
 static HashMap<UINT64, ServerSyncStatus> s_serverSyncStatus(true);
 static MUTEX s_serverSyncStatusLock = INVALID_MUTEX_HANDLE;
+
+/**
+ * Database writer queue
+ */
+static Queue s_databaseWriterQueue;
+
+/**
+ * Database writer
+ */
+static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
+{
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+   DebugPrintf(INVALID_INDEX, 1, _T("Database writer thread started"));
+
+   while(true)
+   {
+      DataElement *e = (DataElement *)s_databaseWriterQueue.getOrBlock();
+      if (e == INVALID_POINTER_VALUE)
+         break;
+
+      DB_STATEMENT hStmt= DBPrepare(hdb, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value) VALUES (?,?,?,?,?,?,?)"));
+      if (hStmt == NULL)
+      {
+         delete e;
+         continue;
+      }
+
+      int count = 0;
+
+      DBBegin(hdb);
+      while((e != NULL) && (e != INVALID_POINTER_VALUE))
+      {
+         e->saveToDatabase(hStmt);
+         delete e;
+
+         count++;
+         if (count > 200)
+            break;
+
+         e = (DataElement *)s_databaseWriterQueue.getOrBlock(500);  // Wait up to 500 ms for next data block
+      }
+      DBCommit(hdb);
+      DBFreeStatement(hStmt);
+      DebugPrintf(INVALID_INDEX, 7, _T("Database writer: %d records inserted"), count);
+   }
+
+   DebugPrintf(INVALID_INDEX, 1, _T("Database writer thread stopped"));
+   return THREAD_OK;
+}
 
 /**
  * List of all data collection items
@@ -642,13 +685,15 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
          if (!e->sendToServer(false))
          {
             status->queueSize++;
-            e->saveToDatabase();
+            s_databaseWriterQueue.put(e);
+            e = NULL;
          }
       }
       else
       {
          status->queueSize++;
-         e->saveToDatabase();
+         s_databaseWriterQueue.put(e);
+         e = NULL;
       }
       MutexUnlock(s_serverSyncStatusLock);
 
@@ -1016,6 +1061,7 @@ static const TCHAR *s_upgradeQueries[] =
  */
 static THREAD s_dataCollectionSchedulerThread = INVALID_THREAD_HANDLE;
 static THREAD s_dataSenderThread = INVALID_THREAD_HANDLE;
+static THREAD s_databaseWriterThread = INVALID_THREAD_HANDLE;
 static THREAD s_reconciliationThread = INVALID_THREAD_HANDLE;
 
 /**
@@ -1049,6 +1095,7 @@ void StartLocalDataCollector()
 
    s_dataCollectionSchedulerThread = ThreadCreateEx(DataCollectionScheduler, 0, NULL);
    s_dataSenderThread = ThreadCreateEx(DataSender, 0, NULL);
+   s_databaseWriterThread = ThreadCreateEx(DatabaseWriter, 0, NULL);
    s_reconciliationThread = ThreadCreateEx(ReconciliationThread, 0, NULL);
 
    s_dataCollectorStarted = true;
@@ -1071,6 +1118,10 @@ void ShutdownLocalDataCollector()
    DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data sender thread termination"));
    s_dataSenderQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_dataSenderThread);
+
+   DebugPrintf(INVALID_INDEX, 5, _T("Waiting for database writer thread termination"));
+   s_databaseWriterQueue.put(INVALID_POINTER_VALUE);
+   ThreadJoin(s_databaseWriterThread);
 
    DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data reconciliation thread termination"));
    ThreadJoin(s_reconciliationThread);
