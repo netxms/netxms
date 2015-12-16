@@ -72,6 +72,10 @@ int SNMP_ProxyTransport::sendMessage(SNMP_PDU *pdu)
             nRet = 1;
          }
       }
+      else
+      {
+         m_agentConnection->sendMessage(&msg);
+      }
    }
 
    return nRet;

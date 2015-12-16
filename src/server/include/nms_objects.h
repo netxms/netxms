@@ -1169,10 +1169,10 @@ private:
 	 */
 	void deleteAgentConnection()
 	{
-	   if (m_pAgentConnection != NULL)
+	   if (m_agentConnection != NULL)
 	   {
-	      m_pAgentConnection->decRefCount();
-	      m_pAgentConnection = NULL;
+	      m_agentConnection->decRefCount();
+	      m_agentConnection = NULL;
 	   }
 	}
 
@@ -1228,7 +1228,9 @@ protected:
    MUTEX m_hSmclpAccessMutex;
    MUTEX m_mutexRTAccess;
 	MUTEX m_mutexTopoAccess;
-   AgentConnectionEx *m_pAgentConnection;
+	MUTEX m_snmpProxyConnectionLock;
+   AgentConnectionEx *m_agentConnection;
+   AgentConnectionEx *m_snmpProxyConnection;
    SMCLP_Connection *m_smclpConnection;
 	QWORD m_lastAgentTrapId;	     // ID of last received agent trap
    QWORD m_lastAgentPushRequestId; // ID of last received agent push request
@@ -1482,6 +1484,7 @@ public:
    void closeTableList() { unlockProperties(); }
 
    AgentConnectionEx *createAgentConnection();
+   AgentConnectionEx *acquireSnmpProxyConnection();
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext();
    UINT32 getEffectiveSnmpProxy();

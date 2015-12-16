@@ -55,7 +55,9 @@ Node::Node() : DataCollectionTarget()
    m_hSmclpAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
 	m_mutexTopoAccess = MutexCreate();
-   m_pAgentConnection = NULL;
+	m_snmpProxyConnectionLock = MutexCreate();
+   m_agentConnection = NULL;
+   m_snmpProxyConnection = NULL;
    m_smclpConnection = NULL;
 	m_lastAgentTrapId = 0;
 	m_lastSNMPTrapId = 0;
@@ -140,7 +142,9 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_hSmclpAccessMutex = MutexCreate();
    m_mutexRTAccess = MutexCreate();
 	m_mutexTopoAccess = MutexCreate();
-   m_pAgentConnection = NULL;
+   m_snmpProxyConnectionLock = MutexCreate();
+   m_agentConnection = NULL;
+   m_snmpProxyConnection = NULL;
    m_smclpConnection = NULL;
 	m_lastAgentTrapId = 0;
 	m_lastSNMPTrapId = 0;
@@ -202,8 +206,11 @@ Node::~Node()
    MutexDestroy(m_hSmclpAccessMutex);
    MutexDestroy(m_mutexRTAccess);
 	MutexDestroy(m_mutexTopoAccess);
-	if (m_pAgentConnection != NULL)
-	   m_pAgentConnection->decRefCount();
+	MutexDestroy(m_snmpProxyConnectionLock);
+	if (m_agentConnection != NULL)
+	   m_agentConnection->decRefCount();
+	if (m_snmpProxyConnection != NULL)
+	   m_snmpProxyConnection->decRefCount();
    delete m_smclpConnection;
    delete m_paramList;
 	delete m_tableList;
@@ -558,7 +565,7 @@ ARP_CACHE *Node::getArpCache()
    {
       agentLock();
       if (connectToAgent())
-         pArpCache = m_pAgentConnection->getArpCache();
+         pArpCache = m_agentConnection->getArpCache();
       agentUnlock();
    }
    else if (m_dwFlags & NF_IS_SNMP)
@@ -588,7 +595,7 @@ InterfaceList *Node::getInterfaceList()
       agentLock();
       if (connectToAgent())
       {
-         pIfList = m_pAgentConnection->getInterfaceList();
+         pIfList = m_agentConnection->getInterfaceList();
       }
       agentUnlock();
    }
@@ -3511,15 +3518,15 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       return false;
 
    // Create new agent connection object if needed
-   if (m_pAgentConnection == NULL)
+   if (m_agentConnection == NULL)
 	{
-      m_pAgentConnection = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
+      m_agentConnection = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
 		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): new agent connection created"), m_name, m_id);
 	}
 	else
 	{
 		// Check if we already connected
-		if (m_pAgentConnection->nop() == ERR_SUCCESS)
+		if (m_agentConnection->nop() == ERR_SUCCESS)
 		{
 			DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): already connected"), m_name, m_id);
          if (newConnection != NULL)
@@ -3529,23 +3536,23 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
 		}
 
 		// Close current connection or clean up after broken connection
-		m_pAgentConnection->disconnect();
+		m_agentConnection->disconnect();
 		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): existing connection reset"), m_name, m_id);
 	}
    if (newConnection != NULL)
       *newConnection = true;
-   m_pAgentConnection->setPort(m_agentPort);
-   m_pAgentConnection->setAuthData(m_agentAuthMethod, m_szSharedSecret);
-   setAgentProxy(m_pAgentConnection);
+   m_agentConnection->setPort(m_agentPort);
+   m_agentConnection->setAuthData(m_agentAuthMethod, m_szSharedSecret);
+   setAgentProxy(m_agentConnection);
 	DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
-   bool success = m_pAgentConnection->connect(g_pServerKey, FALSE, error, socketError);
+   bool success = m_agentConnection->connect(g_pServerKey, FALSE, error, socketError);
    if (success)
 	{
-		m_pAgentConnection->setCommandTimeout(g_agentCommandTimeout);
-      UINT32 rcc = m_pAgentConnection->setServerId(g_serverId);
+		m_agentConnection->setCommandTimeout(g_agentCommandTimeout);
+      UINT32 rcc = m_agentConnection->setServerId(g_serverId);
       if (rcc == ERR_SUCCESS)
       {
-         syncDataCollectionWithAgent(m_pAgentConnection);
+         syncDataCollectionWithAgent(m_agentConnection);
       }
       else
       {
@@ -3555,10 +3562,10 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
             m_dwDynamicFlags |= NDF_CACHE_MODE_NOT_SUPPORTED;
          }
       }
-      m_pAgentConnection->enableTraps();
+      m_agentConnection->enableTraps();
       setFileUpdateConn(NULL);
       setLastAgentCommTime();
-      CALL_ALL_MODULES(pfOnConnectToAgent, (this, m_pAgentConnection));
+      CALL_ALL_MODULES(pfOnConnectToAgent, (this, m_agentConnection));
 	}
    return success;
 }
@@ -3870,14 +3877,14 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
    agentLock();
 
    // Establish connection if needed
-   if (m_pAgentConnection == NULL)
+   if (m_agentConnection == NULL)
       if (!connectToAgent())
          goto end_loop;
 
    // Get parameter from agent
    while(dwTries-- > 0)
    {
-      dwError = m_pAgentConnection->getParameter(szParam, dwBufSize, szBuffer);
+      dwError = m_agentConnection->getParameter(szParam, dwBufSize, szBuffer);
       switch(dwError)
       {
          case ERR_SUCCESS:
@@ -3929,14 +3936,14 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
    agentLock();
 
    // Establish connection if needed
-   if (m_pAgentConnection == NULL)
+   if (m_agentConnection == NULL)
       if (!connectToAgent())
          goto end_loop;
 
    // Get parameter from agent
    while(dwTries-- > 0)
    {
-      dwError = m_pAgentConnection->getTable(name, table);
+      dwError = m_agentConnection->getTable(name, table);
       switch(dwError)
       {
          case ERR_SUCCESS:
@@ -3988,21 +3995,21 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
    agentLock();
 
    // Establish connection if needed
-   if (m_pAgentConnection == NULL)
+   if (m_agentConnection == NULL)
       if (!connectToAgent())
          goto end_loop;
 
    // Get parameter from agent
    while(dwTries-- > 0)
    {
-		dwError = m_pAgentConnection->getList(name);
+		dwError = m_agentConnection->getList(name);
       switch(dwError)
       {
          case ERR_SUCCESS:
             dwResult = DCE_SUCCESS;
 				*list = new StringList;
-				for(i = 0; i < m_pAgentConnection->getNumDataLines(); i++)
-					(*list)->add(m_pAgentConnection->getDataLine(i));
+				for(i = 0; i < m_agentConnection->getNumDataLines(); i++)
+					(*list)->add(m_agentConnection->getDataLine(i));
             setLastAgentCommTime();
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
@@ -4739,7 +4746,7 @@ void Node::onSnmpProxyChange(UINT32 oldProxy)
          if (!newConnection)
          {
             DbgPrintf(4, _T("Node::onSnmpProxyChange(%s [%d]): initiating data collection sync for %s [%d]"), m_name, m_id, node->m_name, node->m_id);
-            node->syncDataCollectionWithAgent(node->m_pAgentConnection);
+            node->syncDataCollectionWithAgent(node->m_agentConnection);
          }
       }
       node->agentUnlock();
@@ -4757,7 +4764,7 @@ void Node::onSnmpProxyChange(UINT32 oldProxy)
          if (!newConnection)
          {
             DbgPrintf(4, _T("Node::onSnmpProxyChange(%s [%d]): initiating data collection sync for %s [%d]"), m_name, m_id, node->m_name, node->m_id);
-            node->syncDataCollectionWithAgent(node->m_pAgentConnection);
+            node->syncDataCollectionWithAgent(node->m_agentConnection);
          }
       }
       node->agentUnlock();
@@ -5050,6 +5057,30 @@ AgentConnectionEx *Node::createAgentConnection()
 }
 
 /**
+ * Acquire SNMP proxy agent connection
+ */
+AgentConnectionEx *Node::acquireSnmpProxyConnection()
+{
+   MutexLock(m_snmpProxyConnectionLock);
+
+   if ((m_snmpProxyConnection != NULL) && !m_snmpProxyConnection->isConnected())
+   {
+      m_snmpProxyConnection->decRefCount();
+      m_snmpProxyConnection = NULL;
+   }
+
+   if (m_snmpProxyConnection == NULL)
+      m_snmpProxyConnection = createAgentConnection();
+
+   AgentConnectionEx *conn = m_snmpProxyConnection;
+   if (conn != NULL)
+      conn->incRefCount();
+
+   MutexUnlock(m_snmpProxyConnectionLock);
+   return conn;
+}
+
+/**
  * Set node's primary IP address.
  * Assumed that all necessary locks already in place
  */
@@ -5220,7 +5251,7 @@ ROUTING_TABLE *Node::getRoutingTable()
       agentLock();
       if (connectToAgent())
       {
-         pRT = m_pAgentConnection->getRoutingTable();
+         pRT = m_agentConnection->getRoutingTable();
       }
       agentUnlock();
    }
@@ -5582,13 +5613,11 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
       Node *proxyNode = (snmpProxy == m_id) ? this : (Node *)g_idxNodeById.get(snmpProxy);
 		if (proxyNode != NULL)
 		{
-			AgentConnection *pConn;
-
-			pConn = proxyNode->createAgentConnection();
-			if (pConn != NULL)
+			AgentConnection *conn = proxyNode->acquireSnmpProxyConnection();
+			if (conn != NULL)
 			{
             // Use loopback address if node is SNMP proxy for itself
-            pTransport = new SNMP_ProxyTransport(pConn, (snmpProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, (port != 0) ? port : m_snmpPort);
+            pTransport = new SNMP_ProxyTransport(conn, (snmpProxy == m_id) ? InetAddress::LOOPBACK : m_ipAddress, (port != 0) ? port : m_snmpPort);
 			}
 		}
 	}
@@ -7330,7 +7359,7 @@ void Node::onDataCollectionChangeAsyncCallback(void *arg)
    if (node->connectToAgent(NULL, NULL, &newConnection))
    {
       if (!newConnection)
-         node->syncDataCollectionWithAgent(node->m_pAgentConnection);
+         node->syncDataCollectionWithAgent(node->m_agentConnection);
    }
    node->agentUnlock();
 }

@@ -875,6 +875,9 @@ ARP_CACHE *AgentConnection::getArpCache()
  */
 UINT32 AgentConnection::nop()
 {
+   if (!m_isConnected)
+      return ERR_CONNECTION_BROKEN;
+
    NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
 

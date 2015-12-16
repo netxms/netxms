@@ -82,22 +82,26 @@ static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
 /**
  * Send SNMP request to target, receive response, and send it to server
  */
-void ProxySNMPRequest(NXCPMessage *pRequest, NXCPMessage *pResponse)
+void CommSession::proxySnmpRequest(NXCPMessage *request)
 {
-	UINT32 dwSizeIn = pRequest->getFieldAsUInt32(VID_PDU_SIZE);
+   NXCPMessage response;
+   response.setCode(CMD_REQUEST_COMPLETED);
+   response.setId(request->getId());
+
+	UINT32 dwSizeIn = request->getFieldAsUInt32(VID_PDU_SIZE);
 	if (dwSizeIn > 0)
 	{
 		BYTE *pduIn = (BYTE *)malloc(dwSizeIn);
 		if (pduIn != NULL)
 		{
-			pRequest->getFieldAsBinary(VID_PDU, pduIn, dwSizeIn);
+			request->getFieldAsBinary(VID_PDU, pduIn, dwSizeIn);
 
 			SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
 			if (hSocket != INVALID_SOCKET)
 			{
-				InetAddress addr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
+				InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
             SockAddrBuffer sa;
-            addr.fillSockAddr(&sa, pRequest->getFieldAsUInt16(VID_PORT));
+            addr.fillSockAddr(&sa, request->getFieldAsUInt16(VID_PORT));
 				if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
 				{
 					BYTE *pduOut = (BYTE *)malloc(SNMP_BUFFER_SIZE);
@@ -111,39 +115,41 @@ void ProxySNMPRequest(NXCPMessage *pRequest, NXCPMessage *pResponse)
                         UINT32 dwSizeOut;
 								if (ReadPDU(hSocket, pduOut, &dwSizeOut))
 								{
-									pResponse->setField(VID_PDU_SIZE, dwSizeOut);
-									pResponse->setField(VID_PDU, pduOut, dwSizeOut);
+									response.setField(VID_PDU_SIZE, dwSizeOut);
+									response.setField(VID_PDU, pduOut, dwSizeOut);
 									break;
 								}
 							}
 						}
 						free(pduOut);
-						pResponse->setField(VID_RCC, (nRetries == 3) ? ERR_REQUEST_TIMEOUT : ERR_SUCCESS);
+						response.setField(VID_RCC, (nRetries == 3) ? ERR_REQUEST_TIMEOUT : ERR_SUCCESS);
 					}
 					else
 					{
-						pResponse->setField(VID_RCC, ERR_OUT_OF_RESOURCES);
+						response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
 					}
 				}
 				else
 				{
-					pResponse->setField(VID_RCC, ERR_SOCKET_ERROR);
+					response.setField(VID_RCC, ERR_SOCKET_ERROR);
 				}
 				closesocket(hSocket);
 			}
 			else
 			{
-				pResponse->setField(VID_RCC, ERR_SOCKET_ERROR);
+				response.setField(VID_RCC, ERR_SOCKET_ERROR);
 			}
 			free(pduIn);
 		}
 		else
 		{
-			pResponse->setField(VID_RCC, ERR_OUT_OF_RESOURCES);
+			response.setField(VID_RCC, ERR_OUT_OF_RESOURCES);
 		}
 	}
 	else
 	{
-		pResponse->setField(VID_RCC, ERR_MALFORMED_COMMAND);
+		response.setField(VID_RCC, ERR_MALFORMED_COMMAND);
 	}
+	sendMessage(&response);
+	delete request;
 }

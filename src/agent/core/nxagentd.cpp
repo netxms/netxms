@@ -741,7 +741,6 @@ BOOL Initialize()
 		SaveRegistry();
 	}
 
-   //Create FileStore folder
    CreateFolder(g_szFileStore);
 
 #ifdef _WIN32
@@ -780,6 +779,10 @@ BOOL Initialize()
 
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
+	   if (g_dwFlags & AF_ENABLE_SNMP_PROXY)
+	   {
+	      g_snmpProxyThreadPool = ThreadPoolCreate(2, 128, _T("SNMPPROXY"));
+	   }
 	   InitSessionList();
 
 		// Initialize built-in parameters
@@ -1072,6 +1075,11 @@ void Shutdown()
 
 	DestroySessionList();
 	MsgWaitQueue::shutdown();
+
+   if (g_dwFlags & AF_ENABLE_SNMP_PROXY)
+   {
+      ThreadPoolDestroy(g_snmpProxyThreadPool);
+   }
 
    UnloadAllSubAgents();
    CloseLocalDatabase();

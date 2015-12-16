@@ -361,6 +361,7 @@ private:
    void writeThread();
    void processingThread();
    void proxyReadThread();
+   void proxySnmpRequest(NXCPMessage *request);
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
@@ -649,6 +650,7 @@ extern UINT32 g_dwRejectedConnections;
 
 extern CommSession **g_pSessionList;
 extern MUTEX g_hSessionListAccess;
+extern ThreadPool *g_snmpProxyThreadPool;
 
 #ifdef _WIN32
 extern TCHAR g_windowsEventSourceName[];
