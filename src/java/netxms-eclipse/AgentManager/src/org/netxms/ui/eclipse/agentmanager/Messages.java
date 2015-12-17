@@ -81,12 +81,16 @@ public class Messages extends NLS
    public static String ServerStoredAgentConfigEditorView_ConfigFile;
    public static String ServerStoredAgentConfigEditorView_Delete;
    public static String ServerStoredAgentConfigEditorView_Filter;
+   public static String ServerStoredAgentConfigEditorView_JobDelete;
    public static String ServerStoredAgentConfigEditorView_JobError_Delete;
    public static String ServerStoredAgentConfigEditorView_JobError_GetContent;
    public static String ServerStoredAgentConfigEditorView_JobError_GetList;
    public static String ServerStoredAgentConfigEditorView_JobError_MoveDown;
    public static String ServerStoredAgentConfigEditorView_JobError_MoveUp;
    public static String ServerStoredAgentConfigEditorView_JobError_Save;
+   public static String ServerStoredAgentConfigEditorView_JobMoveDown;
+   public static String ServerStoredAgentConfigEditorView_JobMoveUp;
+   public static String ServerStoredAgentConfigEditorView_JobSave;
    public static String ServerStoredAgentConfigEditorView_JobTitle_CreateNew;
    public static String ServerStoredAgentConfigEditorView_JobTitle_GetContent;
    public static String ServerStoredAgentConfigEditorView_MoveDown;

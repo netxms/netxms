@@ -60,19 +60,19 @@ public class ChartColors extends FieldEditorPreferencePage implements IWorkbench
 		addField(new ColorFieldEditor("Chart.Colors.Background", Messages.get().ChartColors_Background, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new ColorFieldEditor("Chart.Colors.PlotArea", Messages.get().ChartColors_PlotArea, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new ColorFieldEditor("Chart.Colors.Title", Messages.get().ChartColors_Title, getFieldEditorParent())); //$NON-NLS-1$
-      addField(new ColorFieldEditor("Chart.Colors.Legend", "Legend text color:", getFieldEditorParent())); //$NON-NLS-1$
-
+      addField(new ColorFieldEditor("Chart.Colors.Legend", Messages.get().ChartColors_LegendTextColor, getFieldEditorParent())); //$NON-NLS-1$
+		
 		addField(new ColorFieldEditor("Chart.Axis.X.Color", Messages.get().ChartColors_TickX, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new ColorFieldEditor("Chart.Axis.Y.Color", Messages.get().ChartColors_TickY, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new ColorFieldEditor("Chart.Grid.X.Color", Messages.get().ChartColors_GridX, getFieldEditorParent())); //$NON-NLS-1$
 		addField(new ColorFieldEditor("Chart.Grid.Y.Color", Messages.get().ChartColors_GridY, getFieldEditorParent())); //$NON-NLS-1$
 
-      addField(new ColorFieldEditor("Chart.Colors.DialNeedle", "Dial needle color:", getFieldEditorParent())); //$NON-NLS-1$
-      addField(new ColorFieldEditor("Chart.Colors.DialNeedlePin", "Dial needle pin color:", getFieldEditorParent())); //$NON-NLS-1$
-      addField(new ColorFieldEditor("Chart.Colors.DialScale", "Dial scale color:", getFieldEditorParent())); //$NON-NLS-1$
-      addField(new ColorFieldEditor("Chart.Colors.DialScaleText", "Dial scale text color:", getFieldEditorParent())); //$NON-NLS-1$
-      addField(new ColorFieldEditor("Chart.Colors.DialValueBackground", "Dial current value background color:", getFieldEditorParent())); //$NON-NLS-1$
-      addField(new ColorFieldEditor("Chart.Colors.DialValueText", "Dial current value text color:", getFieldEditorParent())); //$NON-NLS-1$
+      addField(new ColorFieldEditor("Chart.Colors.DialNeedle", Messages.get().ChartColors_DialNeedleColor, getFieldEditorParent())); //$NON-NLS-1$
+      addField(new ColorFieldEditor("Chart.Colors.DialNeedlePin", Messages.get().ChartColors_DialNeedlePinColor, getFieldEditorParent())); //$NON-NLS-1$
+      addField(new ColorFieldEditor("Chart.Colors.DialScale", Messages.get().ChartColors_DialScaleColor, getFieldEditorParent())); //$NON-NLS-1$
+      addField(new ColorFieldEditor("Chart.Colors.DialScaleText", Messages.get().ChartColors_DialScaleTextColor, getFieldEditorParent())); //$NON-NLS-1$
+      addField(new ColorFieldEditor("Chart.Colors.DialValueBackground", Messages.get().ChartColors_DialCurrValueBkgndColor, getFieldEditorParent())); //$NON-NLS-1$
+      addField(new ColorFieldEditor("Chart.Colors.DialValueText", Messages.get().ChartColors_DialCurrValueTextColor, getFieldEditorParent())); //$NON-NLS-1$
 		
 		lineColors = new Group(getFieldEditorParent(), SWT.NONE);
 		lineColors.setText(Messages.get().ChartColors_LineColors);

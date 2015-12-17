@@ -114,7 +114,7 @@ public class CurrentValueWidget extends GaugeWidget
 		{
          gc.setFont(null);
 			ext = gc.textExtent(dci.getName(), SWT.DRAW_TRANSPARENT);
-			gc.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
+			gc.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
 			gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + rect.height + 4, true);
 		}
 	}

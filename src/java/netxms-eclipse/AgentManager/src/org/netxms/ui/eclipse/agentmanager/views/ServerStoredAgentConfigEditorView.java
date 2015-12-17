@@ -436,7 +436,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
       final ConfigListElement element2 = elements.get(index - 1);
 
-      new ConsoleJob("Move configuration up", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ServerStoredAgentConfigEditorView_JobMoveUp, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -476,7 +476,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
       final ConfigListElement elemen2 = elements.get(index + 1);
 
-      new ConsoleJob("Move configuration down", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ServerStoredAgentConfigEditorView_JobMoveDown, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -510,7 +510,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
 
       final ConfigListElement element = (ConfigListElement)selection.getFirstElement();
 
-      new ConsoleJob("Delete configuration", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ServerStoredAgentConfigEditorView_JobDelete, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -638,7 +638,7 @@ public class ServerStoredAgentConfigEditorView extends ViewPart implements ISave
       content.setFilter(filterEditor.getText());
       content.setName(nameField.getText());
 
-      new ConsoleJob("Save configuration", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ServerStoredAgentConfigEditorView_JobSave, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {

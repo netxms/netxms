@@ -131,15 +131,15 @@ public class DialChartWidget extends GaugeWidget
 		
 		// Draw center part and border
 		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
-		gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color"));
+		gc.setForeground(getColorFromPreferences("Chart.Axis.Y.Color")); //$NON-NLS-1$
 		gc.fillArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, 0, 360);
 		gc.setLineWidth(2);
 		gc.drawArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
 		gc.setLineWidth(1);
 		
 		// Draw scale
-      Color scaleColor = getColorFromPreferences("Chart.Colors.DialScale");
-      Color scaleTextColor = getColorFromPreferences("Chart.Colors.DialScaleText");
+      Color scaleColor = getColorFromPreferences("Chart.Colors.DialScale"); //$NON-NLS-1$
+      Color scaleTextColor = getColorFromPreferences("Chart.Colors.DialScaleText"); //$NON-NLS-1$
       gc.setForeground(scaleColor);
 		int textOffset = ((rect.width / 2) * SCALE_OFFSET / 200);
 		double arcLength = (outerRadius - scaleOuterOffset) * 4.7123889803846898576939650749193;	// r * (270 degrees angle in radians)
@@ -169,7 +169,7 @@ public class DialChartWidget extends GaugeWidget
 		gc.drawArc(rect.x + scaleInnerOffset, rect.y + scaleInnerOffset, rect.width - scaleInnerOffset * 2, rect.height - scaleInnerOffset * 2, -45, 270);
 		
 		// Draw needle
-		gc.setBackground(getColorFromPreferences("Chart.Colors.DialNeedle"));
+		gc.setBackground(getColorFromPreferences("Chart.Colors.DialNeedle")); //$NON-NLS-1$
 		double dciValue = dci.getValue();
 		if (dciValue < minValue)
 			dciValue = minValue;
@@ -181,7 +181,7 @@ public class DialChartWidget extends GaugeWidget
 		Point np2 = positionOnArc(cx, cy, NEEDLE_PIN_RADIUS / 2, angle + 90);
 		gc.fillPolygon(new int[] { np1.x, np1.y, needleEnd.x, needleEnd.y, np2.x, np2.y });
 		gc.fillArc(cx - NEEDLE_PIN_RADIUS, cy - NEEDLE_PIN_RADIUS, NEEDLE_PIN_RADIUS * 2 - 1, NEEDLE_PIN_RADIUS * 2 - 1, 0, 360);
-		gc.setBackground(getColorFromPreferences("Chart.Colors.DialNeedlePin"));
+		gc.setBackground(getColorFromPreferences("Chart.Colors.DialNeedlePin")); //$NON-NLS-1$
 		gc.fillArc(cx - NEEDLE_PIN_RADIUS / 2, cy - NEEDLE_PIN_RADIUS / 2, NEEDLE_PIN_RADIUS - 1, NEEDLE_PIN_RADIUS - 1, 0, 360);
 		
 		// Draw current value
@@ -189,10 +189,10 @@ public class DialChartWidget extends GaugeWidget
 		gc.setFont(WidgetHelper.getMatchingSizeFont(valueFonts, markFont));
 		Point ext = gc.textExtent(value, SWT.DRAW_TRANSPARENT);
 		gc.setLineWidth(3);
-		gc.setBackground(getColorFromPreferences("Chart.Colors.DialValueBackground"));
+		gc.setBackground(getColorFromPreferences("Chart.Colors.DialValueBackground")); //$NON-NLS-1$
 		int boxW = Math.max(outerRadius - scaleInnerOffset - 6, ext.x + 8);
 		gc.fillRoundRectangle(cx - boxW / 2, cy + rect.height / 4, boxW, ext.y + 6, 3, 3);
-      gc.setForeground(getColorFromPreferences("Chart.Colors.DialValueText"));
+      gc.setForeground(getColorFromPreferences("Chart.Colors.DialValueText")); //$NON-NLS-1$
 		gc.drawText(value, cx - ext.x / 2, cy + rect.height / 4 + 3, true);
 		
 		// Draw legend, ignore legend position
@@ -200,7 +200,7 @@ public class DialChartWidget extends GaugeWidget
 		{
          gc.setFont(legendInside ? markFont : null);
 			ext = gc.textExtent(dci.getName(), SWT.DRAW_TRANSPARENT);
-			gc.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
+			gc.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
 			if (legendInside)
 			{
 				gc.drawText(dci.getName(), rect.x + ((rect.width - ext.x) / 2), rect.y + scaleInnerOffset / 2 + rect.height / 4, true);

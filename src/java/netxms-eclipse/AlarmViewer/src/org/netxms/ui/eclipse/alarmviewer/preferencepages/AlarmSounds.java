@@ -119,7 +119,7 @@ public class AlarmSounds extends PreferencePage implements IWorkbenchPreferenceP
          GridData gridData = new GridData();
          gridData.verticalAlignment = GridData.END;
          button.setLayoutData(gridData);
-         button.setImage(Activator.getImageDescriptor("icons/sound.png").createImage());
+         button.setImage(Activator.getImageDescriptor("icons/sound.png").createImage()); //$NON-NLS-1$
          final int index = i; 
          button.addMouseListener(new MouseListener() {
             
