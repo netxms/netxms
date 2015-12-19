@@ -540,8 +540,8 @@ setup_encryption:
       goto connect_cleanup;
    }
 
-   // Test connectivity and enable IPv6 support
-   if ((dwError = enableIPv6()) != ERR_SUCCESS)
+   // Test connectivity and inform agent about server capabilities
+   if ((dwError = setServerCapabilities()) != ERR_SUCCESS)
    {
       if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
           (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
@@ -891,14 +891,16 @@ UINT32 AgentConnection::nop()
 }
 
 /**
- * Notify agent that server is IPv6 aware
+ * inform agent about server capabilities
  */
-UINT32 AgentConnection::enableIPv6()
+UINT32 AgentConnection::setServerCapabilities()
 {
    NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId = generateRequestId();
-   msg.setCode(CMD_ENABLE_IPV6);
-   msg.setField(VID_ENABLED, (INT16)1);
+   msg.setCode(CMD_SET_SERVER_CAPABILITIES);
+   msg.setField(VID_ENABLED, (INT16)1);   // Enables IPv6 on pre-2.0 agents
+   msg.setField(VID_IPV6_SUPPORT, (INT16)1);
+   msg.setField(VID_BULK_RECONCILIATION, (INT16)1);
    msg.setId(dwRqId);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, m_dwCommandTimeout);

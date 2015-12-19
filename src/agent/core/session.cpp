@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -609,8 +609,10 @@ void CommSession::processingThread()
                   msg.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
-            case CMD_ENABLE_IPV6:
-               m_ipv6Aware = pMsg->getFieldAsBoolean(VID_ENABLED);
+            case CMD_SET_SERVER_CAPABILITIES:
+               // Servers before 2.0 use VID_ENABLED
+               m_ipv6Aware = pMsg->isFieldExist(VID_IPV6_SUPPORT) ? pMsg->getFieldAsBoolean(VID_IPV6_SUPPORT) : pMsg->getFieldAsBoolean(VID_ENABLED);
+               m_bulkReconciliationSupported = pMsg->getFieldAsBoolean(VID_BULK_RECONCILIATION);
                msg.setField(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_SET_SERVER_ID:

@@ -333,6 +333,7 @@ private:
    bool m_acceptTraps;
    bool m_acceptFileUpdates;
    bool m_ipv6Aware;
+   bool m_bulkReconciliationSupported;
    int m_hCurrFile;
    UINT32 m_fileRqId;
    StreamCompressor *m_compressor;
@@ -394,6 +395,7 @@ public:
 
    bool canAcceptTraps() { return m_acceptTraps; }
    bool canAcceptFileUpdates() { return m_acceptFileUpdates; }
+   bool isBulkReconciliationSupported() { return m_bulkReconciliationSupported; }
 
    virtual bool isMasterServer() { return m_masterServer; }
    virtual bool isControlServer() { return m_controlServer; }

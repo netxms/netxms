@@ -538,7 +538,7 @@ typedef struct
 #define CMD_FILEMGR_CREATE_FOLDER      0x0131
 #define CMD_QUERY_ADHOC_SUMMARY_TABLE  0x0132
 #define CMD_GRAPH_UPDATE               0x0133
-#define CMD_ENABLE_IPV6                0x0134
+#define CMD_SET_SERVER_CAPABILITIES    0x0134
 #define CMD_FORCE_DCI_POLL             0x0135
 #define CMD_GET_DCI_SCRIPT_LIST        0x0136
 #define CMD_DATA_COLLECTION_CONFIG     0x0137
@@ -1108,6 +1108,8 @@ typedef struct
 #define VID_AGENT_COMM_TIME         ((UINT32)532)
 #define VID_GRAPH_TEMPALTE          ((UINT32)533)
 #define VID_OVERVRITE               ((UINT32)534)
+#define VID_IPV6_SUPPORT            ((UINT32)535)
+#define VID_BULK_RECONCILIATION     ((UINT32)536)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

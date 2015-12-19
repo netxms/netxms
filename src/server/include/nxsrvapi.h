@@ -532,7 +532,7 @@ public:
    UINT32 getList(const TCHAR *pszParam);
    UINT32 getTable(const TCHAR *pszParam, Table **table);
    UINT32 nop();
-   UINT32 enableIPv6();
+   UINT32 setServerCapabilities();
    UINT32 setServerId(UINT64 serverId);
    UINT32 execAction(const TCHAR *pszAction, int argc, TCHAR **argv, bool withOutput = false, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL, NXCPCompressionMethod compMethod = NXCP_COMPRESSION_NONE);

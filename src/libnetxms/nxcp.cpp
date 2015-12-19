@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -343,7 +343,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_FILEMGR_CREATE_FOLDER"),
       _T("CMD_QUERY_ADHOC_SUMMARY_TABLE"),
       _T("CMD_GRAPH_UPDATE"),
-      _T("CMD_ENABLE_IPV6"),
+      _T("CMD_SET_SERVER_CAPABILITIES"),
       _T("CMD_FORCE_DCI_POLL"),
       _T("CMD_GET_DCI_SCRIPT_LIST"),
       _T("CMD_DATA_COLLECTION_CONFIG"),
