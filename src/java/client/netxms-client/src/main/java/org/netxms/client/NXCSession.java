@@ -4434,6 +4434,7 @@ public class NXCSession
       if ((flags & NXCObjectModificationData.MODIFY_OBJECT_FLAGS) != 0)
       {
          msg.setFieldInt32(NXCPCodes.VID_FLAGS, data.getObjectFlags());
+         msg.setFieldInt32(NXCPCodes.VID_FLAGS_MASK, data.getObjectFlagsMask());
       }
 
       if ((flags & NXCObjectModificationData.MODIFY_IFXTABLE_POLICY) != 0)

@@ -48,6 +48,7 @@ public class MapObjectFilter extends PropertyPage
 	private Button checkboxEnableFilter;
 	private ScriptEditor filterSource;
 	private String initialFilter;
+	private boolean initialEnable;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -61,7 +62,8 @@ public class MapObjectFilter extends PropertyPage
 		if (object == null)	// Paranoid check
 			return dialogArea;
 		
-		initialFilter = object.getFilter().trim();
+		initialFilter = object.getFilter();
+		initialEnable = (object.getFlags() & NetworkMap.MF_FILTER_OBJECTS) != 0;
 		
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -72,7 +74,7 @@ public class MapObjectFilter extends PropertyPage
       // Enable/disable check box
       checkboxEnableFilter = new Button(dialogArea, SWT.CHECK);
       checkboxEnableFilter.setText(Messages.get().MapObjectFilter_FilterObjects);
-      checkboxEnableFilter.setSelection(!initialFilter.isEmpty());
+      checkboxEnableFilter.setSelection(initialEnable);
       checkboxEnableFilter.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e)
@@ -105,7 +107,7 @@ public class MapObjectFilter extends PropertyPage
       
       filterSource = new ScriptEditor(dialogArea, SWT.BORDER, SWT.H_SCROLL | SWT.V_SCROLL);
 		filterSource.setText(initialFilter);
-		filterSource.setEnabled(!initialFilter.isEmpty());
+		filterSource.setEnabled(initialEnable);
 		
 		gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
@@ -126,8 +128,8 @@ public class MapObjectFilter extends PropertyPage
 	 */
 	protected void applyChanges(final boolean isApply)
 	{
-		final String filter = checkboxEnableFilter.getSelection() ? filterSource.getText().trim() : ""; //$NON-NLS-1$
-		if (initialFilter.equals(filter))
+		final String filter = filterSource.getText();
+		if (initialFilter.equals(filter) && (checkboxEnableFilter.getSelection() == initialEnable))
 			return;		// Nothing to apply
 
 		if (isApply)
@@ -136,13 +138,13 @@ public class MapObjectFilter extends PropertyPage
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setFilter(filter);
+		md.setObjectFlags(checkboxEnableFilter.getSelection() ? NetworkMap.MF_FILTER_OBJECTS : 0, NetworkMap.MF_FILTER_OBJECTS);
 		
 		new ConsoleJob(Messages.get().MapObjectFilter_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				session.modifyObject(md);
-				initialFilter = filter;
 			}
 
 			@Override
@@ -154,6 +156,8 @@ public class MapObjectFilter extends PropertyPage
 						@Override
 						public void run()
 						{
+			            initialFilter = filter;
+			            initialEnable = checkboxEnableFilter.getSelection();
 							MapObjectFilter.this.setValid(true);
 						}
 					});

@@ -161,6 +161,7 @@ public class NXCObjectModificationData
 	private String request;
 	private String response;
 	private int objectFlags;
+   private int objectFlagsMask;
 	private int ifXTablePolicy;
 	private String reportDefinition;
 	private List<ClusterResource> resourceList;
@@ -1038,16 +1039,33 @@ public class NXCObjectModificationData
 		return objectFlags;
 	}
 
+   /**
+    * @return the objectFlagsMask
+    */
+   public int getObjectFlagsMask()
+   {
+      return objectFlagsMask;
+   }
+
 	/**
 	 * @param nodeFlags the nodeFlags to set
 	 */
 	public void setObjectFlags(int objectFlags)
 	{
-		this.objectFlags = objectFlags;
-		flags |= MODIFY_OBJECT_FLAGS;
+	   setObjectFlags(objectFlags, 0x7FFFFFFF);
 	}
 
-	/**
+   /**
+    * @param nodeFlags the nodeFlags to set
+    */
+   public void setObjectFlags(int objectFlags, int objectFlagsMask)
+   {
+      this.objectFlags = objectFlags;
+      this.objectFlagsMask = objectFlagsMask;
+      flags |= MODIFY_OBJECT_FLAGS;
+   }
+
+   /**
 	 * @return the ifXTablePolicy
 	 */
 	public int getIfXTablePolicy()

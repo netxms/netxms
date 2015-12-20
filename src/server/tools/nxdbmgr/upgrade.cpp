@@ -634,6 +634,38 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V386 to V387
+ */
+static BOOL H_UpgradeFromV386(int currVersion, int newVersion)
+{
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,flags,filter FROM network_maps WHERE filter IS NOT NULL"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         TCHAR *filter = DBGetField(hResult, i, 2, NULL, 0);
+         if ((filter != NULL) && (filter[0] != 0))
+         {
+            TCHAR query[256];
+            _sntprintf(query, 256, _T("UPDATE network_maps SET flags=%d WHERE id=%d"),
+               DBGetFieldULong(hResult, i, 1) | MF_FILTER_OBJECTS, DBGetFieldULong(hResult, i, 0));
+            CHK_EXEC(SQLQuery(query));
+         }
+         free(filter);
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='387' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V385 to V386
  */
 static BOOL H_UpgradeFromV385(int currVersion, int newVersion)
@@ -9287,6 +9319,7 @@ static struct
    { 383, 384, H_UpgradeFromV383 },
    { 384, 385, H_UpgradeFromV384 },
    { 385, 386, H_UpgradeFromV385 },
+   { 386, 387, H_UpgradeFromV386 },
    { 0, 0, NULL }
 };
 

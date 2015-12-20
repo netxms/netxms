@@ -522,7 +522,11 @@ UINT32 NetworkMap::modifyFromMessageInternal(NXCPMessage *request)
 		m_layout = (int)request->getFieldAsUInt16(VID_LAYOUT);
 
 	if (request->isFieldExist(VID_FLAGS))
-		m_flags = request->getFieldAsUInt32(VID_FLAGS);
+	{
+	   UINT32 mask = request->isFieldExist(VID_FLAGS_MASK) ? request->getFieldAsUInt32(VID_FLAGS_MASK) : 0xFFFFFFFF;
+	   m_flags &= ~mask;
+		m_flags |= (request->getFieldAsUInt32(VID_FLAGS) & mask);
+	}
 
 	if (request->isFieldExist(VID_SEED_OBJECT))
 		m_seedObject = request->getFieldAsUInt32(VID_SEED_OBJECT);
@@ -680,7 +684,7 @@ void NetworkMap::updateObjects(nxmap_ObjList *objects)
 	DbgPrintf(5, _T("NetworkMap(%s): updateObjects called"), m_name);
 
    // Filter out unallowed objects
-   if ((m_filter != NULL) && (objects->getNumObjects() > 0))
+   if ((m_flags & MF_FILTER_OBJECTS) && (m_filter != NULL) && (objects->getNumObjects() > 0))
    {
       IntegerArray<UINT32> *idList = objects->getObjects();
       for(int i = 0; i < idList->size(); i++)

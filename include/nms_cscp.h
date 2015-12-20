@@ -1111,6 +1111,7 @@ typedef struct
 #define VID_IPV6_SUPPORT            ((UINT32)535)
 #define VID_BULK_RECONCILIATION     ((UINT32)536)
 #define VID_STATUS                  ((UINT32)537)
+#define VID_FLAGS_MASK              ((UINT32)538)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
