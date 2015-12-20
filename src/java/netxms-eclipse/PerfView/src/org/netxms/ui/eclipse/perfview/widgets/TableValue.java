@@ -22,18 +22,24 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerRow;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IViewPart;
@@ -43,7 +49,9 @@ import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableColumnDefinition;
+import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.charts.api.DataComparisonChart;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.perfview.Activator;
 import org.netxms.ui.eclipse.perfview.Messages;
@@ -73,6 +81,7 @@ public class TableValue extends Composite
    private String objectName = null;
    private Table currentData = null;
    private SortableTableViewer viewer;
+   private CLabel errorLabel;
    private CellSelectionManager cellSelectionManager;
    private Action actionShowLineChart;
    private Action actionShowBarChart;
@@ -91,12 +100,19 @@ public class TableValue extends Composite
       this.configId = configId;
       session = (NXCSession)ConsoleSharedData.getSession();
 
-      setLayout(new FillLayout());
+      setLayout(new FormLayout());
 
       viewer = new SortableTableViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new TableContentProvider());
       viewer.setLabelProvider(new TableLabelProvider());
       cellSelectionManager = new CellSelectionManager(viewer);
+      
+      FormData fd = new FormData();
+      fd.top = new FormAttachment(0, 0);
+      fd.left = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      viewer.getControl().setLayoutData(fd);
 
       createActions();
       createPopupMenu();
@@ -189,7 +205,7 @@ public class TableValue extends Composite
    public void refresh(final Runnable postRefreshHook)
    {
       viewer.setInput(null);
-      new ConsoleJob(String.format(Messages.get().TableValue_JobName, dciId), viewPart, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(String.format(Messages.get().TableValue_JobName, dciId), viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -200,6 +216,14 @@ public class TableValue extends Composite
                {
                   if (viewer.getControl().isDisposed())
                      return;
+                  
+                  if (errorLabel != null)
+                  {
+                     errorLabel.dispose();
+                     errorLabel = null;
+                     viewer.getControl().setVisible(true);
+                     viewer.getControl().getParent().layout(true, true);
+                  }
                   updateViewer(table);
                   if (postRefreshHook != null)
                   {
@@ -214,7 +238,40 @@ public class TableValue extends Composite
          {
             return String.format(Messages.get().TableValue_JobError, dciId);
          }
-      }.start();
+
+         @Override
+         protected IStatus createFailureStatus(final Exception e)
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  if (viewer.getControl().isDisposed())
+                     return;
+                  
+                  if (errorLabel == null)
+                  {
+                     errorLabel = new CLabel(viewer.getControl().getParent(), SWT.NONE);
+                     errorLabel.setFont(JFaceResources.getBannerFont());
+                     errorLabel.setImage(StatusDisplayInfo.getStatusImage(Severity.CRITICAL));
+                     errorLabel.moveAbove(viewer.getControl());
+                     FormData fd = new FormData();
+                     fd.top = new FormAttachment(0, 0);
+                     fd.left = new FormAttachment(0, 0);
+                     fd.right = new FormAttachment(100, 0);
+                     fd.bottom = new FormAttachment(100, 0);
+                     errorLabel.setLayoutData(fd);
+                     viewer.getControl().getParent().layout(true, true);
+                     viewer.getControl().setVisible(false);
+                  }
+                  errorLabel.setText(getErrorMessage() + " (" + e.getLocalizedMessage() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+               }
+            });
+            return Status.OK_STATUS;
+         }
+      };
+      job.setUser(false);
+      job.start();
    }
 
    /**
