@@ -88,6 +88,38 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
 	VALUES (20,'8e26af4b-e478-44c9-9c12-0b049ccb6c3c',7944,'Terminate table threshold violation alarms',
 		'%m',6,'DCTTHR_%i_%3_%5','',0,EVENT_ALARM_TIMEOUT,0,'');
 
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+	VALUES (21,'ea1dee96-b42e-499c-a992-0b0f9e4874b9',7944,'Generate an alarm when one of the system threads hangs or stops unexpectedly',
+        '%m',5,'SYS_THREAD_HANG_%1','',0,EVENT_ALARM_TIMEOUT,0,'');
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+	VALUES (22,'f0c5a6b2-7427-45e5-8333-7d60d2b408e6',7944,'Terminate the alarm when one of the system threads which previously hanged or stoped unexpectedly returned to the running state',
+        '%m',6,'SYS_THREAD_HANG_%1','',0,EVENT_ALARM_TIMEOUT,0,'');
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+	VALUES (23,'ed3397a8-a496-4534-839b-5a6fc77c167c',7944,'Generate an alarm when the object enters the maintanance mode',
+        '%m',5,'MAINTENANCE_MODE_%i','',0,EVENT_ALARM_TIMEOUT,0,'');
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+	VALUES (24,'20a0f4a5-d90e-4961-ba88-a65b9ee45d07',7944,'Terminate the alarm when the object leaves the maintanance mode',
+        '%m',6,'MAINTENANCE_MODE_%i','',0,EVENT_ALARM_TIMEOUT,0,'');
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+    VALUES (25,'c6f66840-4758-420f-a27d-7bbf7b66a511',7944,'Generate an alarm if the NetXMS agent on the node stops responding',
+        '%m',5,'AGENT_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT,0,'');
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+    VALUES (26,'9fa60260-c2ec-4371-b4e4-f5346b1d8400',7944,'Terminate the alarm if the NetXMS agent on the node start responding again',
+        '%m',6,'AGENT_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT,0,'');
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+    VALUES (27,'20ef861f-b8e4-4e04-898e-e57d13863661',7944,'Generate an alarm if the SNMP agent on the node stops responding',
+        '%m',5,'SNMP_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT,0,'');
+
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+    VALUES (28,'33f6193a-e103-4f5f-8bee-870bbcc08066',7944,'Terminate the alarm if the SNMP agent on the node start responding again',
+        '%m',6,'SNMP_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT,0,'');
+
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (2,EVENT_SERVICE_DOWN);
@@ -111,3 +143,11 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (17,EVENT_THRESHOLD_RE
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (18,EVENT_THRESHOLD_REARMED);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (19,EVENT_TABLE_THRESHOLD_ACTIVATED);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (20,EVENT_TABLE_THRESHOLD_DEACTIVATED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (21,EVENT_THREAD_HANGS);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (22,EVENT_THREAD_RUNNING);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (23,EVENT_MAINTENANCE_MODE_ENTERED);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (24,EVENT_MAINTENANCE_MODE_LEFT);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (25,EVENT_AGENT_FAIL);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (26,EVENT_AGENT_OK);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (27,EVENT_SNMP_FAIL);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (28,EVENT_SNMP_OK);

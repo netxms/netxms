@@ -604,6 +604,105 @@ static bool CreateLibraryScript(UINT32 id, const TCHAR *name, const TCHAR *code)
 }
 
 /**
+ * Check if an event pair is handled by any EPP rules
+ */
+static bool IsEventPairInUse(UINT32 code1, UINT32 code2)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT count(*) FROM policy_event_list WHERE event_code=%d OR event_code=%d"), code1, code2);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == NULL)
+      return false;
+   bool inUse = (DBGetFieldLong(hResult, 0, 0) > 0);
+   DBFreeResult(hResult);
+   return inUse;
+}
+
+/**
+ * Return the next free EPP rule ID
+ */
+static int NextFreeEPPruleID()
+{
+   int ruleId = 1;
+	DB_RESULT hResult = SQLSelect(_T("SELECT max(rule_id) FROM event_policy"));
+	if (hResult != NULL)
+	{
+	   ruleId = DBGetFieldLong(hResult, 0, 0) + 1;
+		DBFreeResult(hResult);
+	}
+	return ruleId;
+}
+
+/**
+ * Upgrade from V385 to V386
+ */
+static BOOL H_UpgradeFromV385(int currVersion, int newVersion)
+{
+   TCHAR query[1024];
+   int ruleId = NextFreeEPPruleID();
+
+   if (!IsEventPairInUse(EVENT_THREAD_HANGS, EVENT_THREAD_RUNNING))
+   {
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'ea1dee96-b42e-499c-a992-0b0f9e4874b9',7944,'Generate an alarm when one of the system threads hangs or stops unexpectedly','%%m',5,'SYS_THREAD_HANG_%%1','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_THREAD_HANGS);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'f0c5a6b2-7427-45e5-8333-7d60d2b408e6',7944,'Terminate the alarm when one of the system threads which previously hanged or stopped unexpectedly returned to the running state','%%m',6,'SYS_THREAD_HANG_%%1','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_THREAD_RUNNING);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+   }
+
+   if (!IsEventPairInUse(EVENT_MAINTENANCE_MODE_ENTERED, EVENT_MAINTENANCE_MODE_LEFT))
+   {
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'ed3397a8-a496-4534-839b-5a6fc77c167c',7944,'Generate an alarm when the object enters the maintenance mode','%%m',5,'MAINTENANCE_MODE_%%i','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_MAINTENANCE_MODE_ENTERED);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'20a0f4a5-d90e-4961-ba88-a65b9ee45d07',7944,'Terminate the alarm when the object leaves the maintenance mode','%%m',6,'MAINTENANCE_MODE_%%i','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_MAINTENANCE_MODE_LEFT);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+   }
+
+   if (!IsEventPairInUse(EVENT_AGENT_FAIL, EVENT_AGENT_OK))
+   {
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'c6f66840-4758-420f-a27d-7bbf7b66a511',7944,'Generate an alarm if the NetXMS agent on the node stops responding','%%m',5,'AGENT_UNREACHABLE_%%i','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_AGENT_FAIL);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'9fa60260-c2ec-4371-b4e4-f5346b1d8400',7944,'Terminate the alarm if the NetXMS agent on the node start responding again','%%m',6,'AGENT_UNREACHABLE_%%i','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_AGENT_OK);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+   }
+
+   if (!IsEventPairInUse(EVENT_SNMP_FAIL, EVENT_SNMP_OK))
+   {
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'20ef861f-b8e4-4e04-898e-e57d13863661',7944,'Generate an alarm if the SNMP agent on the node stops responding','%%m',5,'SNMP_UNREACHABLE_%%i','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_SNMP_FAIL);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'33f6193a-e103-4f5f-8bee-870bbcc08066',7944,'Terminate the alarm if the SNMP agent on the node start responding again','%%m',6,'SNMP_UNREACHABLE_%%i','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_SNMP_OK);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+   }
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET severity='3' WHERE event_code=14 OR event_code=15")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='386' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V384 to V385
  */
 static BOOL H_UpgradeFromV384(int currVersion, int newVersion)
@@ -9186,6 +9285,7 @@ static struct
    { 382, 383, H_UpgradeFromV382 },
    { 383, 384, H_UpgradeFromV383 },
    { 384, 385, H_UpgradeFromV384 },
+   { 385, 386, H_UpgradeFromV385 },
    { 0, 0, NULL }
 };
 

@@ -227,7 +227,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_SNMP_FAIL, 'SYS_SNMP_UNREACHABLE',
-		EVENT_SEVERITY_WARNING, 1,
+		EVENT_SEVERITY_MAJOR, 1,
 		'SNMP agent is not responding',
 		'Generated when node''s SNMP agent is not responding.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
@@ -236,7 +236,7 @@ INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description)
 INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES
 	(
 		EVENT_AGENT_FAIL, 'SYS_AGENT_UNREACHABLE',
-		EVENT_SEVERITY_WARNING, 1,
+		EVENT_SEVERITY_MAJOR, 1,
 		'Native agent is not responding',
 		'Generated when node''s native agent is not responding.' CONCAT CRLF CONCAT
 		'Parameters:' CONCAT CRLF CONCAT
