@@ -15,12 +15,14 @@ INSERT INTO script_library (script_id,script_name,script_code)
 	VALUES (4,'DCI::SampleTransform','sub dci_transform()' CONCAT CRLF CONCAT '{' CONCAT CRLF CONCAT '   return $1 + 1;' CONCAT CRLF CONCAT '}' CONCAT CRLF);
 
 INSERT INTO script_library (script_id,script_name,script_code)
-	VALUES (11,'Hook::StatusPoll','');
+	VALUES (11,'Hook::StatusPoll','/* Available global variables:' CONCAT CRLF CONCAT ' *  $node - current node, object of ''Node'' type' CONCAT CRLF CONCAT ' *' CONCAT CRLF CONCAT ' * Expected return value:' CONCAT CRLF CONCAT ' *  none - returned value is ignored' CONCAT CRLF CONCAT ' */' CONCAT CRLF);
 INSERT INTO script_library (script_id,script_name,script_code)
-	VALUES (12,'Hook::ConfigurationPoll','');
+	VALUES (12,'Hook::ConfigurationPoll','/* Available global variables:' CONCAT CRLF CONCAT ' *  $node - current node, object of ''Node'' type' CONCAT CRLF CONCAT ' *' CONCAT CRLF CONCAT ' * Expected return value:' CONCAT CRLF CONCAT ' *  none - returned value is ignored' CONCAT CRLF CONCAT ' */' CONCAT CRLF);
 INSERT INTO script_library (script_id,script_name,script_code)
-	VALUES (13,'Hook::InstancePoll','');
+	VALUES (13,'Hook::InstancePoll','/* Available global variables:' CONCAT CRLF CONCAT ' *  $node - current node, object of ''Node'' type' CONCAT CRLF CONCAT ' *' CONCAT CRLF CONCAT ' * Expected return value:' CONCAT CRLF CONCAT ' *  none - returned value is ignored' CONCAT CRLF CONCAT ' */' CONCAT CRLF);
 INSERT INTO script_library (script_id,script_name,script_code)
-	VALUES (14,'Hook::TopologyPoll','');
+	VALUES (14,'Hook::TopologyPoll','/* Available global variables:' CONCAT CRLF CONCAT ' *  $node - current node, object of ''Node'' type' CONCAT CRLF CONCAT ' *' CONCAT CRLF CONCAT ' * Expected return value:' CONCAT CRLF CONCAT ' *  none - returned value is ignored' CONCAT CRLF CONCAT ' */' CONCAT CRLF);
 INSERT INTO script_library (script_id,script_name,script_code)
-	VALUES (15,'Hook::CreateInterface','return true;' CONCAT CRLF);
+	VALUES (15,'Hook::CreateInterface','/* Available global variables:' CONCAT CRLF CONCAT ' *  $node - current node, object of ''Node'' type' CONCAT CRLF CONCAT ' *  $1 - current interface, object of ''Interface'' type' CONCAT CRLF CONCAT ' *' CONCAT CRLF CONCAT ' * Expected return value:' CONCAT CRLF CONCAT ' *  true/false - boolean - whether interface should be created' CONCAT CRLF CONCAT ' */' CONCAT CRLF CONCAT 'return true;' CONCAT CRLF);
+INSERT INTO script_library (script_id,script_name,script_code)
+	VALUES (16,'Hook::AcceptNewNode','/* Available global variables:' CONCAT CRLF CONCAT ' *  $ipAddr - IP address of the node being processed' CONCAT CRLF CONCAT ' *  $ipNetMask - netmask of the node being processed' CONCAT CRLF CONCAT ' *  $macAddr - MAC address of the node being processed' CONCAT CRLF CONCAT ' *  $zoneId - zone ID of the node being processed' CONCAT CRLF CONCAT ' *' CONCAT CRLF CONCAT ' * Expected return value:' CONCAT CRLF CONCAT ' *  true/false - boolean - whether node should be created' CONCAT CRLF CONCAT ' */' CONCAT CRLF CONCAT 'return true;' CONCAT CRLF);
