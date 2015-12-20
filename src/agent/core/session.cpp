@@ -1113,6 +1113,15 @@ UINT32 CommSession::doRequest(NXCPMessage *msg, UINT32 timeout)
 }
 
 /**
+ * Wait for request completion
+ */
+NXCPMessage *CommSession::doRequestEx(NXCPMessage *msg, UINT32 timeout)
+{
+   sendMessage(msg);
+   return m_responseQueue->waitForMessage(CMD_REQUEST_COMPLETED, msg->getId(), timeout);
+}
+
+/**
  * Generate new request ID
  */
 UINT32 CommSession::generateRequestId()

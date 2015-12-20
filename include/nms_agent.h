@@ -107,6 +107,13 @@
 #define ERR_SERVER_ID_UNSET         ((UINT32)920)
 
 /**
+ * Bulk data reconciliation DCI processing status codes
+ */
+#define BULK_DATA_REC_RETRY      0
+#define BULK_DATA_REC_SUCCESS    1
+#define BULK_DATA_REC_FAILURE    2
+
+/**
  * Parameter handler return codes
  */
 #define SYSINFO_RC_SUCCESS       0
@@ -405,6 +412,7 @@ public:
    virtual void sendRawMessage(NXCP_MESSAGE *msg) = 0;
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) = 0;
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) = 0;
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) = 0;
    virtual UINT32 generateRequestId() = 0;
    virtual UINT32 openFile(TCHAR* nameOfFile, UINT32 requestId) = 0;
 };

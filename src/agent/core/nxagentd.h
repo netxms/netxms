@@ -380,6 +380,7 @@ public:
    virtual void sendRawMessage(NXCP_MESSAGE *msg) { m_sendQueue->put(nx_memdup(msg, ntohl(msg->size))); }
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout);
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout);
    virtual UINT32 generateRequestId();
 
    virtual UINT64 getServerId() { return m_serverId; }
@@ -598,6 +599,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg);
 
 bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void* ), void *data);
 AbstractCommSession *FindServerSession(UINT64 serverId);
+AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData);
 
 #ifdef _WIN32
 

@@ -131,6 +131,7 @@ protected:
    virtual void onFileMonitoringData(NXCPMessage *msg);
    virtual void onSnmpTrap(NXCPMessage *pMsg);
    virtual UINT32 processCollectedData(NXCPMessage *msg);
+   virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *msg);
 
 public:

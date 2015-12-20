@@ -374,9 +374,11 @@ public:
    time_t getTimestamp() { return m_timestamp; }
    UINT64 getServerId() { return m_serverId; }
    UINT32 getDciId() { return m_dciId; }
+   int getType() { return m_type; }
 
    void saveToDatabase(DB_STATEMENT hStmt);
    bool sendToServer(bool reconcillation);
+   void fillReconciliationMessage(NXCPMessage *msg, UINT32 baseId);
 };
 
 /**
@@ -447,6 +449,19 @@ bool DataElement::sendToServer(bool reconciliation)
    // consider internal error as success because it means that server
    // cannot accept data for some reason and retry is not feasible
    return (rcc == ERR_SUCCESS) || (rcc == ERR_INTERNAL_ERROR);
+}
+
+/**
+ * Fill bulk reconciliation message with DCI data
+ */
+void DataElement::fillReconciliationMessage(NXCPMessage *msg, UINT32 baseId)
+{
+   msg->setField(baseId, m_dciId);
+   msg->setField(baseId + 1, (INT16)m_origin);
+   msg->setField(baseId + 2, (INT16)m_type);
+   msg->setField(baseId + 3, m_snmpNode);
+   msg->setFieldFromTime(baseId + 4, m_timestamp);
+   msg->setField(baseId + 5, m_value.item);
 }
 
 /**
@@ -524,19 +539,18 @@ static ObjectArray<DataCollectionItem> s_items(64, 64, true);
 static MUTEX s_itemLock = INVALID_MUTEX_HANDLE;
 
 /**
- * Callback to check if reconciliation is needed for session
+ * Session comparator
  */
-static EnumerationCallbackResult ReconciliationQueryCallback(AbstractCommSession *session, void *arg)
+static bool SessionComparator(AbstractCommSession *session, void *data)
 {
-   if (session->getServerId() == 0)
-      return _CONTINUE;
+   if ((session->getServerId() == 0) || !session->canAcceptTraps())
+      return false;
    ServerSyncStatus *s = s_serverSyncStatus.get(session->getServerId());
    if ((s != NULL) && (s->queueSize > 0))
    {
-      *((UINT64 *)arg) = session->getServerId();
-      return _STOP;
+      return true;
    }
-   return _CONTINUE;
+   return false;
 }
 
 /**
@@ -551,13 +565,11 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
    bool vacuumNeeded = false;
    while(!AgentSleepAndCheckForShutdown(sleepTime))
    {
-      UINT64 serverId = 0;
-
       // Check if there is something to sync
       MutexLock(s_serverSyncStatusLock);
-      bool run = EnumerateSessions(ReconciliationQueryCallback, &serverId);
+      CommSession *session = (CommSession *)FindServerSession(SessionComparator, NULL);
       MutexUnlock(s_serverSyncStatusLock);
-      if (!run)
+      if (session == NULL)
       {
          // Save last poll times when reconciliation thread is idle
          MutexLock(s_itemLock);
@@ -588,7 +600,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       }
 
       TCHAR query[1024];
-      _sntprintf(query, 1024, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue WHERE server_id=") UINT64_FMT _T(" ORDER BY timestamp LIMIT 100"), serverId);
+      _sntprintf(query, 1024, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue WHERE server_id=") UINT64_FMT _T(" ORDER BY timestamp LIMIT 100"), session->getServerId());
 
       TCHAR sqlError[DBDRV_MAX_ERROR_TEXT];
       DB_RESULT hResult = DBSelectEx(hdb, query, sqlError);
@@ -596,39 +608,107 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       {
          DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: database query failed: %s"), sqlError);
          sleepTime = 30000;
+         session->decRefCount();
          continue;
       }
 
       int count = DBGetNumRows(hResult);
       if (count > 0)
       {
+         ObjectArray<DataElement> bulkSendList(count, 10, true);
          ObjectArray<DataElement> deleteList(count, 10, true);
          for(int i = 0; i < count; i++)
          {
             DataElement *e = new DataElement(hResult, i);
-            bool sent = false;
-            MutexLock(s_serverSyncStatusLock);
-            ServerSyncStatus *status = s_serverSyncStatus.get(e->getServerId());
-            if (status != NULL)
+            if ((e->getType() == DCO_TYPE_ITEM) && session->isBulkReconciliationSupported())
             {
-               sent = e->sendToServer(true);
+               bulkSendList.add(e);
             }
             else
             {
-               DebugPrintf(INVALID_INDEX, 5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
-               sent = true;  // record should be deleted
+               bool sent = false;
+               MutexLock(s_serverSyncStatusLock);
+               ServerSyncStatus *status = s_serverSyncStatus.get(e->getServerId());
+               if (status != NULL)
+               {
+                  sent = e->sendToServer(true);
+               }
+               else
+               {
+                  DebugPrintf(INVALID_INDEX, 5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
+                  sent = true;  // record should be deleted
+               }
+
+               if (sent)
+               {
+                  status->queueSize--;
+                  deleteList.add(e);
+               }
+               else
+               {
+                  delete e;
+               }
+               MutexUnlock(s_serverSyncStatusLock);
+            }
+         }
+
+         if (bulkSendList.size() > 0)
+         {
+            DebugPrintf(INVALID_INDEX, 6, _T("ReconciliationThread: %d records to be sent in bulk mode"), bulkSendList.size());
+
+            NXCPMessage msg;
+            msg.setCode(CMD_DCI_DATA);
+            msg.setId(session->generateRequestId());
+            msg.setField(VID_BULK_RECONCILIATION, (INT16)1);
+            msg.setField(VID_NUM_ELEMENTS, (INT16)bulkSendList.size());
+
+            UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+            for(int i = 0; i < bulkSendList.size(); i++)
+            {
+               bulkSendList.get(i)->fillReconciliationMessage(&msg, fieldId);
+               fieldId += 10;
             }
 
-            if (sent)
+            NXCPMessage *response = session->doRequestEx(&msg, 2000);
+            if (response != NULL)
             {
-               status->queueSize--;
-               deleteList.add(e);
+               UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+               if (rcc == ERR_SUCCESS)
+               {
+                  MutexLock(s_serverSyncStatusLock);
+                  ServerSyncStatus *serverSyncStatus = s_serverSyncStatus.get(session->getServerId());
+
+                  // Check status for each data element
+                  BYTE status[100];
+                  memset(status, 0, 100);
+                  response->getFieldAsBinary(VID_STATUS, status, 100);
+                  bulkSendList.setOwner(false);
+                  for(int i = 0; i < bulkSendList.size(); i++)
+                  {
+                     DataElement *e = bulkSendList.get(i);
+                     if (status[i] != BULK_DATA_REC_RETRY)
+                     {
+                        deleteList.add(e);
+                        serverSyncStatus->queueSize--;
+                     }
+                     else
+                     {
+                        delete e;
+                     }
+                  }
+
+                  MutexUnlock(s_serverSyncStatusLock);
+               }
+               else
+               {
+                  DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: bulk send failed (%d)"), rcc);
+               }
+               delete response;
             }
             else
             {
-               delete e;
+               DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: timeout on bulk send"));
             }
-            MutexUnlock(s_serverSyncStatusLock);
          }
 
          if (deleteList.size() > 0)
@@ -648,6 +728,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       }
       DBFreeResult(hResult);
 
+      session->decRefCount();
       sleepTime = (count > 0) ? 100 : 30000;
    }
 
@@ -727,6 +808,7 @@ public:
    virtual void sendRawMessage(NXCP_MESSAGE *pMsg) { }
    virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) { return false; }
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
    virtual UINT32 generateRequestId() { return 0; }
    virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId) { return ERR_INTERNAL_ERROR; }
 };

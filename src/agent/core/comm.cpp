@@ -164,6 +164,26 @@ AbstractCommSession *FindServerSession(UINT64 serverId)
 }
 
 /**
+ * Find server session using comparator callback. Caller must call decRefCount() for session object when finished.
+ */
+AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData)
+{
+   AbstractCommSession *session = NULL;
+   MutexLock(g_hSessionListAccess);
+   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   {
+      if ((g_pSessionList[i] != NULL) && (comparator(g_pSessionList[i], userData)))
+      {
+         session = g_pSessionList[i];
+         session->incRefCount();
+         break;
+      }
+   }
+   MutexUnlock(g_hSessionListAccess);
+   return session;
+}
+
+/**
  * TCP/IP Listener
  */ 
 THREAD_RESULT THREAD_CALL ListenerThread(void *)

@@ -17,6 +17,7 @@
 - Faster SNMP probing during configuration polls
 - Fixed false negative in node down detection if expected state of some interfaces set to IGNORE
 - Agent SNMP proxy improved
+- Improved agent data cache reconciliation
 - Management console:
 	- Object tool input fields can be rearranged
 	- Line width can be configured for line charts on dashboards

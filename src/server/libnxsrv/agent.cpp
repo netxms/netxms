@@ -2046,11 +2046,21 @@ NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
  */
 void AgentConnection::processCollectedDataCallback(NXCPMessage *msg)
 {
-   UINT32 rcc = processCollectedData(msg);
    NXCPMessage response;
    response.setCode(CMD_REQUEST_COMPLETED);
    response.setId(msg->getId());
-   response.setField(VID_RCC, rcc);
+
+   if (msg->getFieldAsBoolean(VID_BULK_RECONCILIATION))
+   {
+      UINT32 rcc = processBulkCollectedData(msg, &response);
+      response.setField(VID_RCC, rcc);
+   }
+   else
+   {
+      UINT32 rcc = processCollectedData(msg);
+      response.setField(VID_RCC, rcc);
+   }
+
    sendMessage(&response);
    delete msg;
    decRefCount();
@@ -2060,6 +2070,14 @@ void AgentConnection::processCollectedDataCallback(NXCPMessage *msg)
  * Process collected data information (for DCI with agent-side cache)
  */
 UINT32 AgentConnection::processCollectedData(NXCPMessage *msg)
+{
+   return ERR_NOT_IMPLEMENTED;
+}
+
+/**
+ * Process collected data information in bulk mode (for DCI with agent-side cache)
+ */
+UINT32 AgentConnection::processBulkCollectedData(NXCPMessage *request, NXCPMessage *response)
 {
    return ERR_NOT_IMPLEMENTED;
 }

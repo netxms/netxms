@@ -505,6 +505,7 @@ protected:
 	virtual void onSnmpTrap(NXCPMessage *pMsg);
 	virtual void onFileDownload(bool success);
 	virtual UINT32 processCollectedData(NXCPMessage *msg);
+   virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
 	virtual bool processCustomMessage(NXCPMessage *pMsg);
 
    void lock() { MutexLock(m_mutexDataLock); }
