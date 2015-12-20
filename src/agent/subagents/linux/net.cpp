@@ -318,7 +318,10 @@ static LinuxInterfaceInfo *ParseInterfaceMessage(nlmsghdr *messageHeader)
             strncpy(ifInfo->name, (char *)RTA_DATA(attribute), sizeof(ifInfo->name));
             break;
          case IFLA_ADDRESS:
-            memcpy(ifInfo->macAddr, (BYTE *)RTA_DATA(attribute), 6);
+            if (RTA_PAYLOAD(attribute) > 0)
+            {
+               memcpy(ifInfo->macAddr, (BYTE *)RTA_DATA(attribute), min(RTA_PAYLOAD(attribute), sizeof(ifInfo->macAddr)));
+            }
             break;
          case IFLA_MTU:
             ifInfo->mtu = *((unsigned int *)RTA_DATA(attribute));
@@ -393,7 +396,7 @@ static void ParseAddressMessage(nlmsghdr *messageHeader, ObjectArray<LinuxInterf
 }
 
 /**
- * Get interfce information
+ * Get interface information
  */
 static ObjectArray<LinuxInterfaceInfo> *GetInterfaces()
 {
