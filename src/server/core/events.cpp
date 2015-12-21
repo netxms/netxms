@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,38 +40,40 @@ static RWLOCK m_rwlockTemplateAccess;
  */
 Event::Event()
 {
-   m_qwId = 0;
+   m_id = 0;
 	m_name[0] = 0;
-   m_qwRootId = 0;
-   m_dwCode = 0;
+   m_rootId = 0;
+   m_code = 0;
    m_severity = SEVERITY_NORMAL;
-   m_dwSource = 0;
-   m_dwFlags = 0;
-   m_pszMessageText = NULL;
-   m_pszMessageTemplate = NULL;
-   m_tTimeStamp = 0;
-	m_pszUserTag = NULL;
-	m_pszCustomMessage = NULL;
+   m_sourceId = 0;
+   m_dciId = 0;
+   m_flags = 0;
+   m_messageText = NULL;
+   m_messageTemplate = NULL;
+   m_timeStamp = 0;
+	m_userTag = NULL;
+	m_customMessage = NULL;
 	m_parameters.setOwner(true);
 }
 
 /**
  * Copy constructor for event
  */
-Event::Event(Event *src)
+Event::Event(const Event *src)
 {
-   m_qwId = src->m_qwId;
+   m_id = src->m_id;
    _tcscpy(m_name, src->m_name);
-   m_qwRootId = src->m_qwRootId;
-   m_dwCode = src->m_dwCode;
+   m_rootId = src->m_rootId;
+   m_code = src->m_code;
    m_severity = src->m_severity;
-   m_dwSource = src->m_dwSource;
-   m_dwFlags = src->m_dwFlags;
-   m_pszMessageText = _tcsdup_ex(src->m_pszMessageText);
-   m_pszMessageTemplate = _tcsdup_ex(src->m_pszMessageTemplate);
-   m_tTimeStamp = src->m_tTimeStamp;
-	m_pszUserTag = _tcsdup_ex(src->m_pszUserTag);
-	m_pszCustomMessage = _tcsdup_ex(src->m_pszCustomMessage);
+   m_sourceId = src->m_sourceId;
+   m_dciId = src->m_dciId;
+   m_flags = src->m_flags;
+   m_messageText = _tcsdup_ex(src->m_messageText);
+   m_messageTemplate = _tcsdup_ex(src->m_messageTemplate);
+   m_timeStamp = src->m_timeStamp;
+	m_userTag = _tcsdup_ex(src->m_userTag);
+	m_customMessage = _tcsdup_ex(src->m_customMessage);
 	m_parameters.setOwner(true);
    for(int i = 0; i < src->m_parameters.size(); i++)
    {
@@ -83,21 +85,22 @@ Event::Event(Event *src)
 /**
  * Construct event from template
  */
-Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, const char *szFormat, const TCHAR **names, va_list args)
+Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *userTag, const char *szFormat, const TCHAR **names, va_list args)
 {
 	_tcscpy(m_name, pTemplate->szName);
-   m_tTimeStamp = time(NULL);
-   m_qwId = CreateUniqueEventId();
-   m_qwRootId = 0;
-   m_dwCode = pTemplate->dwCode;
+   m_timeStamp = time(NULL);
+   m_id = CreateUniqueEventId();
+   m_rootId = 0;
+   m_code = pTemplate->dwCode;
    m_severity = pTemplate->dwSeverity;
-   m_dwFlags = pTemplate->dwFlags;
-   m_dwSource = sourceId;
-   m_pszMessageText = NULL;
-	m_pszUserTag = (userTag != NULL) ? _tcsdup(userTag) : NULL;
-   if ((m_pszUserTag != NULL) && (_tcslen(m_pszUserTag) >= MAX_USERTAG_LENGTH))
-      m_pszUserTag[MAX_USERTAG_LENGTH - 1] = 0;
-	m_pszCustomMessage = NULL;
+   m_flags = pTemplate->dwFlags;
+   m_sourceId = sourceId;
+   m_dciId = dciId;
+   m_messageText = NULL;
+	m_userTag = _tcsdup_ex(userTag);
+   if ((m_userTag != NULL) && (_tcslen(m_userTag) >= MAX_USERTAG_LENGTH))
+      m_userTag[MAX_USERTAG_LENGTH - 1] = 0;
+	m_customMessage = NULL;
 	m_parameters.setOwner(true);
 
    // Create parameters
@@ -182,7 +185,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, c
       }
    }
 
-   m_pszMessageTemplate = _tcsdup(pTemplate->pszMessageTemplate);
+   m_messageTemplate = _tcsdup(pTemplate->pszMessageTemplate);
 }
 
 /**
@@ -190,10 +193,10 @@ Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, c
  */
 Event::~Event()
 {
-   safe_free(m_pszMessageText);
-   safe_free(m_pszMessageTemplate);
-	safe_free(m_pszUserTag);
-	safe_free(m_pszCustomMessage);
+   safe_free(m_messageText);
+   safe_free(m_messageTemplate);
+	safe_free(m_userTag);
+	safe_free(m_customMessage);
 }
 
 /**
@@ -201,16 +204,16 @@ Event::~Event()
  */
 void Event::expandMessageText()
 {
-   if (m_pszMessageTemplate != NULL)
+   if (m_messageTemplate != NULL)
    {
-      if (m_pszMessageText != NULL)
+      if (m_messageText != NULL)
       {
-         free(m_pszMessageText);
-         m_pszMessageText = NULL;
+         free(m_messageText);
+         m_messageText = NULL;
       }
-      m_pszMessageText = expandText(m_pszMessageTemplate);
-      free(m_pszMessageTemplate);
-      m_pszMessageTemplate = NULL;
+      m_messageText = expandText(m_messageTemplate);
+      free(m_messageTemplate);
+      m_messageTemplate = NULL;
    }
 }
 
@@ -219,7 +222,7 @@ void Event::expandMessageText()
  */
 TCHAR *Event::expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey)
 {
-	return Event::expandText(this, m_dwSource, textTemplate, alarmMsg, alarmKey);
+	return Event::expandText(this, m_sourceId, textTemplate, alarmMsg, alarmKey);
 }
 
 /**
@@ -281,7 +284,7 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                case 'c':   // Event code
                   dwSize += 16;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-						_sntprintf(&pText[dwPos], 16, _T("%u"), (unsigned int)((event != NULL) ? event->m_dwCode : 0));
+						_sntprintf(&pText[dwPos], 16, _T("%u"), (unsigned int)((event != NULL) ? event->m_code : 0));
                   dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'g':   // Source object's GUID
@@ -312,21 +315,21 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                   }
                   break;
                case 'm':
-                  if ((event != NULL) && (event->m_pszMessageText != NULL))
+                  if ((event != NULL) && (event->m_messageText != NULL))
                   {
-                     dwSize += (UINT32)_tcslen(event->m_pszMessageText);
+                     dwSize += (UINT32)_tcslen(event->m_messageText);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], event->m_pszMessageText);
-                     dwPos += (UINT32)_tcslen(event->m_pszMessageText);
+                     _tcscpy(&pText[dwPos], event->m_messageText);
+                     dwPos += (UINT32)_tcslen(event->m_messageText);
                   }
                   break;
                case 'M':	// Custom message (usually set by matching script in EPP)
-                  if ((event != NULL) && (event->m_pszCustomMessage != NULL))
+                  if ((event != NULL) && (event->m_customMessage != NULL))
                   {
-                     dwSize += (UINT32)_tcslen(event->m_pszCustomMessage);
+                     dwSize += (UINT32)_tcslen(event->m_customMessage);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], event->m_pszCustomMessage);
-                     dwPos += (UINT32)_tcslen(event->m_pszCustomMessage);
+                     _tcscpy(&pText[dwPos], event->m_customMessage);
+                     dwPos += (UINT32)_tcslen(event->m_customMessage);
                   }
                   break;
                case 'n':   // Name of event source
@@ -368,7 +371,7 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
 						if (event != NULL)
 						{
-							lt = localtime(&event->m_tTimeStamp);
+							lt = localtime(&event->m_timeStamp);
 						}
 						else
 						{
@@ -381,16 +384,16 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
                case 'T':   // Event's timestamp as number of seconds since epoch
                   dwSize += 16;
                   pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-						_sntprintf(&pText[dwPos], 16, _T("%lu"), (unsigned long)((event != NULL) ? event->m_tTimeStamp : time(NULL)));
+						_sntprintf(&pText[dwPos], 16, _T("%lu"), (unsigned long)((event != NULL) ? event->m_timeStamp : time(NULL)));
                   dwPos = (UINT32)_tcslen(pText);
                   break;
                case 'u':	// User tag
-                  if ((event != NULL) && (event->m_pszUserTag != NULL))
+                  if ((event != NULL) && (event->m_userTag != NULL))
                   {
-                     dwSize += (UINT32)_tcslen(event->m_pszUserTag);
+                     dwSize += (UINT32)_tcslen(event->m_userTag);
 	                  pText = (TCHAR *)realloc(pText, dwSize * sizeof(TCHAR));
-                     _tcscpy(&pText[dwPos], event->m_pszUserTag);
-                     dwPos += (UINT32)_tcslen(event->m_pszUserTag);
+                     _tcscpy(&pText[dwPos], event->m_userTag);
+                     dwPos += (UINT32)_tcslen(event->m_userTag);
                   }
                   break;
                case 'v':   // NetXMS server version
@@ -482,21 +485,21 @@ TCHAR *Event::expandText(Event *event, UINT32 sourceObject, const TCHAR *textTem
 											_tcscpy(&pText[dwPos], temp);
 											dwPos += (UINT32)_tcslen(temp);
 											DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Script %s executed successfully"),
-												(int)((event != NULL) ? event->m_dwCode : 0), textTemplate, scriptName);
+												(int)((event != NULL) ? event->m_code : 0), textTemplate, scriptName);
 										}
 									}
 								}
 								else
 								{
 									DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Script %s execution error: %s"),
-												 (int)((event != NULL) ? event->m_dwCode : 0), textTemplate, scriptName, vm->getErrorText());
+												 (int)((event != NULL) ? event->m_code : 0), textTemplate, scriptName, vm->getErrorText());
 									PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", scriptName, vm->getErrorText(), 0);
 								}
 							}
 							else
 							{
 								DbgPrintf(4, _T("Event::ExpandText(%d, \"%s\"): Cannot find script %s"),
-									(int)((event != NULL) ? event->m_dwCode : 0), textTemplate, scriptName);
+									(int)((event != NULL) ? event->m_code : 0), textTemplate, scriptName);
 							}
 						}
 						break;
@@ -656,40 +659,38 @@ void Event::setParameter(int index, const TCHAR *name, const TCHAR *value)
 /**
  * Fill message with event data
  */
-void Event::prepareMessage(NXCPMessage *pMsg)
+void Event::prepareMessage(NXCPMessage *msg) const
 {
-	UINT32 dwId = VID_EVENTLOG_MSG_BASE;
+	msg->setField(VID_NUM_RECORDS, (UINT32)1);
+	msg->setField(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
 
-	pMsg->setField(VID_NUM_RECORDS, (UINT32)1);
-	pMsg->setField(VID_RECORDS_ORDER, (WORD)RECORD_ORDER_NORMAL);
-	pMsg->setField(dwId++, m_qwId);
-	pMsg->setField(dwId++, m_dwCode);
-	pMsg->setField(dwId++, (UINT32)m_tTimeStamp);
-	pMsg->setField(dwId++, m_dwSource);
-	pMsg->setField(dwId++, (WORD)m_severity);
-	pMsg->setField(dwId++, CHECK_NULL(m_pszMessageText));
-	pMsg->setField(dwId++, CHECK_NULL(m_pszUserTag));
-	pMsg->setField(dwId++, (UINT32)m_parameters.size());
+	UINT32 id = VID_EVENTLOG_MSG_BASE;
+	msg->setField(id++, m_id);
+	msg->setField(id++, m_code);
+	msg->setField(id++, (UINT32)m_timeStamp);
+	msg->setField(id++, m_sourceId);
+	msg->setField(id++, (WORD)m_severity);
+	msg->setField(id++, CHECK_NULL_EX(m_messageText));
+	msg->setField(id++, CHECK_NULL_EX(m_userTag));
+	msg->setField(id++, (UINT32)m_parameters.size());
 	for(int i = 0; i < m_parameters.size(); i++)
-		pMsg->setField(dwId++, (TCHAR *)m_parameters.get(i));
+	   msg->setField(id++, (TCHAR *)m_parameters.get(i));
+	msg->setField(id++, m_dciId);
 }
 
 /**
  * Load event configuration from database
  */
-static BOOL LoadEvents()
+static bool LoadEvents()
 {
-   DB_RESULT hResult;
-   UINT32 i;
-   BOOL bSuccess = FALSE;
-
+   bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   hResult = DBSelect(hdb, _T("SELECT event_code,severity,flags,message,description,event_name FROM event_cfg ORDER BY event_code"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT event_code,severity,flags,message,description,event_name FROM event_cfg ORDER BY event_code"));
    if (hResult != NULL)
    {
       m_dwNumTemplates = DBGetNumRows(hResult);
       m_pEventTemplates = (EVENT_TEMPLATE *)malloc(sizeof(EVENT_TEMPLATE) * m_dwNumTemplates);
-      for(i = 0; i < m_dwNumTemplates; i++)
+      for(UINT32 i = 0; i < m_dwNumTemplates; i++)
       {
          m_pEventTemplates[i].dwCode = DBGetFieldULong(hResult, i, 0);
          m_pEventTemplates[i].dwSeverity = DBGetFieldLong(hResult, i, 1);
@@ -700,7 +701,7 @@ static BOOL LoadEvents()
       }
 
       DBFreeResult(hResult);
-      bSuccess = TRUE;
+      success = true;
    }
    else
    {
@@ -708,7 +709,7 @@ static BOOL LoadEvents()
    }
 
    DBConnectionPoolReleaseConnection(hdb);
-   return bSuccess;
+   return success;
 }
 
 /**
@@ -865,40 +866,39 @@ static EVENT_TEMPLATE *FindEventTemplate(UINT32 eventCode)
  * @param names names for parameters (NULL if parameters are unnamed)
  * @param args event parameters
  */
-static BOOL RealPostEvent(Queue *queue, UINT64 *eventId, UINT32 eventCode, UINT32 sourceId,
+static bool RealPostEvent(Queue *queue, UINT64 *eventId, UINT32 eventCode, UINT32 sourceId, UINT32 dciId,
                           const TCHAR *userTag, const char *format, const TCHAR **names, va_list args)
 {
-   EVENT_TEMPLATE *pEventTemplate = NULL;
-   Event *pEvent;
-   BOOL bResult = FALSE;
+   EVENT_TEMPLATE *eventTemplate = NULL;
+   bool success = false;
 
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
 
    // Find event template
    if (m_dwNumTemplates > 0)    // Is there any templates?
    {
-      pEventTemplate = FindEventTemplate(eventCode);
-      if (pEventTemplate != NULL)
+      eventTemplate = FindEventTemplate(eventCode);
+      if (eventTemplate != NULL)
       {
          // Template found, create new event
-         pEvent = new Event(pEventTemplate, sourceId, userTag, format, names, args);
+         Event *evt = new Event(eventTemplate, sourceId, dciId, userTag, format, names, args);
          if (eventId != NULL)
-            *eventId = pEvent->getId();
+            *eventId = evt->getId();
 
          // Add new event to queue
-         queue->put(pEvent);
+         queue->put(evt);
 
-         bResult = TRUE;
+         success = true;
       }
    }
 
    RWLockUnlock(m_rwlockTemplateAccess);
 
-   if (pEventTemplate == NULL)
+   if (eventTemplate == NULL)
    {
       DbgPrintf(3, _T("RealPostEvent: event with code %d not defined"), eventCode);
    }
-   return bResult;
+   return success;
 }
 
 /**
@@ -920,15 +920,42 @@ static BOOL RealPostEvent(Queue *queue, UINT64 *eventId, UINT32 eventCode, UINT3
  *        i - Object ID
  *        t - timestamp (time_t) as raw value (seconds since epoch)
  */
-BOOL NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
+bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
-   BOOL bResult;
-
    va_start(args, format);
-   bResult = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, NULL, format, NULL, args);
+   bool success = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, 0, NULL, format, NULL, args);
    va_end(args);
-   return bResult;
+   return success;
+}
+
+/**
+ * Post DCI-related event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param dciId DCI ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IPv4 address
+ *        A - InetAddress object
+ *        h - MAC (hardware) address
+ *        i - Object ID
+ *        t - timestamp (time_t) as raw value (seconds since epoch)
+ */
+bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, const char *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   bool success = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, dciId, NULL, format, NULL, args);
+   va_end(args);
+   return success;
 }
 
 /**
@@ -953,13 +980,11 @@ BOOL NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *
 UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
-   BOOL bResult;
    UINT64 eventId;
-
    va_start(args, format);
-   bResult = RealPostEvent(g_pEventQueue, &eventId, eventCode, sourceId, NULL, format, NULL, args);
+   bool success = RealPostEvent(g_pEventQueue, &eventId, eventCode, sourceId, 0, NULL, format, NULL, args);
    va_end(args);
-   return bResult ? eventId : 0;
+   return success ? eventId : 0;
 }
 
 /**
@@ -981,15 +1006,42 @@ UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, UINT32 sourceId, const cha
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
  */
-BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...)
+bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...)
 {
    va_list args;
-   BOOL bResult;
-
    va_start(args, names);
-   bResult = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, NULL, format, names, args);
+   bool success = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, 0, NULL, format, names, args);
    va_end(args);
-   return bResult;
+   return success;
+}
+
+/**
+ * Post DCI-related event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param dciId DCI ID
+ * @param format Parameter format string, each parameter represented by one character.
+ *    The following format characters can be used:
+ *        s - String
+ *        m - Multibyte string
+ *        u - UNICODE string
+ *        d - Decimal integer
+ *        D - 64-bit decimal integer
+ *        x - Hex integer
+ *        a - IPv4 address
+ *        A - InetAddress object
+ *        h - MAC (hardware) address
+ *        i - Object ID
+ * @param names names for parameters (NULL if parameters are unnamed)
+ */
+bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, const char *format, const TCHAR **names, ...)
+{
+   va_list args;
+   va_start(args, names);
+   bool success = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, dciId, NULL, format, names, args);
+   va_end(args);
+   return success;
 }
 
 /**
@@ -1011,15 +1063,13 @@ BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, con
  *        i - Object ID
  * @param names names for parameters (NULL if parameters are unnamed)
  */
-BOOL NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...)
+bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...)
 {
    va_list args;
-   BOOL bResult;
-
    va_start(args, names);
-   bResult = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, userTag, format, names, args);
+   bool success = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, 0, userTag, format, names, args);
    va_end(args);
-   return bResult;
+   return success;
 }
 
 /**
@@ -1029,7 +1079,7 @@ BOOL NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceI
  * @param sourceId Event source object ID
  * @param parameters event parameters list
  */
-BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters)
+bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters)
 {
    /*
    int count = parameters->size();
@@ -1050,7 +1100,39 @@ BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, Str
 
    return RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
    */
-   return FALSE;
+   return false;
+}
+
+/**
+ * Post DCI-related event to system event queue.
+ *
+ * @param eventCode Event code
+ * @param sourceId Event source object ID
+ * @param dciId DCI ID
+ * @param parameters event parameters list
+ */
+bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, StringMap *parameters)
+{
+   /*
+   int count = parameters->size();
+   if (count > 1023)
+      count = 1023;
+
+   char format[1024];
+   memset(format, 's', count);
+   format[count] = 0;
+
+   const TCHAR *names[1024];
+   const TCHAR *args[1024];
+   for(int i = 0; i < count; i++)
+   {
+      names[i] = parameters->getKeyByIndex(i);
+      args[i] = parameters->getValueByIndex(i);
+   }
+
+   return RealPostEvent(g_pEventQueue, eventCode, sourceId, NULL, format, names, args);
+   */
+   return false;
 }
 
 /**
@@ -1074,15 +1156,13 @@ BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, Str
  * @param names names for parameters (NULL if parameters are unnamed)
  * @param args event parameters
  */
-BOOL NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...)
+bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...)
 {
    va_list args;
-   BOOL bResult;
-
    va_start(args, format);
-   bResult = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, userTag, format, NULL, args);
+   bool success = RealPostEvent(g_pEventQueue, NULL, eventCode, sourceId, 0, userTag, format, NULL, args);
    va_end(args);
-   return bResult;
+   return success;
 }
 
 /**
@@ -1104,15 +1184,13 @@ BOOL NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const
  *        h - MAC (hardware) address
  *        i - Object ID
  */
-BOOL NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...)
+bool NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...)
 {
    va_list args;
-   BOOL bResult;
-
    va_start(args, format);
-   bResult = RealPostEvent(queue, NULL, eventCode, sourceId, NULL, format, NULL, args);
+   bool success = RealPostEvent(queue, NULL, eventCode, sourceId, 0, NULL, format, NULL, args);
    va_end(args);
-   return bResult;
+   return success;
 }
 
 /**

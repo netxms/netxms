@@ -5415,7 +5415,7 @@ void ClientSession::onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm)
 
    if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_ALARMS))
    {
-      object = FindObjectById(pAlarm->dwSourceObject);
+      object = FindObjectById(pAlarm->sourceObject);
       if (object != NULL)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
          {

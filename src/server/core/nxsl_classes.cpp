@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -900,7 +900,7 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 NXSL_METHOD_DEFINITION(acknowledge)
 {
    NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
-   *result = new NXSL_Value(AckAlarmById(alarm->dwAlarmId, NULL, false, 0));
+   *result = new NXSL_Value(AckAlarmById(alarm->alarmId, NULL, false, 0));
    return 0;
 }
 
@@ -910,7 +910,7 @@ NXSL_METHOD_DEFINITION(acknowledge)
 NXSL_METHOD_DEFINITION(resolve)
 {
    NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
-   *result = new NXSL_Value(ResolveAlarmById(alarm->dwAlarmId, NULL, false));
+   *result = new NXSL_Value(ResolveAlarmById(alarm->alarmId, NULL, false));
    return 0;
 }
 
@@ -920,7 +920,7 @@ NXSL_METHOD_DEFINITION(resolve)
 NXSL_METHOD_DEFINITION(terminate)
 {
    NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
-   *result = new NXSL_Value(ResolveAlarmById(alarm->dwAlarmId, NULL, true));
+   *result = new NXSL_Value(ResolveAlarmById(alarm->alarmId, NULL, true));
    return 0;
 }
 
@@ -954,67 +954,71 @@ NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 
    if (!_tcscmp(pszAttr, _T("ackBy")))
    {
-      value = new NXSL_Value(alarm->dwAckByUser);
+      value = new NXSL_Value(alarm->ackByUser);
    }
    else if (!_tcscmp(pszAttr, _T("creationTime")))
    {
-      value = new NXSL_Value(alarm->dwCreationTime);
+      value = new NXSL_Value(alarm->creationTime);
+   }
+   else if (!_tcscmp(pszAttr, _T("dciId")))
+   {
+      value = new NXSL_Value(alarm->dciId);
    }
    else if (!_tcscmp(pszAttr, _T("eventCode")))
    {
-      value = new NXSL_Value(alarm->dwSourceEventCode);
+      value = new NXSL_Value(alarm->sourceEventCode);
    }
    else if (!_tcscmp(pszAttr, _T("eventId")))
    {
-      value = new NXSL_Value(alarm->qwSourceEventId);
+      value = new NXSL_Value(alarm->sourceEventId);
    }
    else if (!_tcscmp(pszAttr, _T("helpdeskReference")))
    {
-      value = new NXSL_Value(alarm->szHelpDeskRef);
+      value = new NXSL_Value(alarm->helpDeskRef);
    }
    else if (!_tcscmp(pszAttr, _T("helpdeskState")))
    {
-      value = new NXSL_Value(alarm->nHelpDeskState);
+      value = new NXSL_Value(alarm->helpDeskState);
    }
    else if (!_tcscmp(pszAttr, _T("id")))
    {
-      value = new NXSL_Value(alarm->dwAlarmId);
+      value = new NXSL_Value(alarm->alarmId);
    }
    else if (!_tcscmp(pszAttr, _T("key")))
    {
-      value = new NXSL_Value(alarm->szKey);
+      value = new NXSL_Value(alarm->key);
    }
    else if (!_tcscmp(pszAttr, _T("lastChangeTime")))
    {
-      value = new NXSL_Value(alarm->dwLastChangeTime);
+      value = new NXSL_Value(alarm->lastChangeTime);
    }
    else if (!_tcscmp(pszAttr, _T("message")))
    {
-      value = new NXSL_Value(alarm->szMessage);
+      value = new NXSL_Value(alarm->message);
    }
    else if (!_tcscmp(pszAttr, _T("originalSeverity")))
    {
-      value = new NXSL_Value(alarm->nOriginalSeverity);
+      value = new NXSL_Value(alarm->originalSeverity);
    }
    else if (!_tcscmp(pszAttr, _T("repeatCount")))
    {
-      value = new NXSL_Value(alarm->dwRepeatCount);
+      value = new NXSL_Value(alarm->repeatCount);
    }
    else if (!_tcscmp(pszAttr, _T("resolvedBy")))
    {
-      value = new NXSL_Value(alarm->dwResolvedByUser);
+      value = new NXSL_Value(alarm->resolvedByUser);
    }
    else if (!_tcscmp(pszAttr, _T("severity")))
    {
-      value = new NXSL_Value(alarm->nCurrentSeverity);
+      value = new NXSL_Value(alarm->currentSeverity);
    }
    else if (!_tcscmp(pszAttr, _T("sourceObject")))
    {
-      value = new NXSL_Value(alarm->dwSourceObject);
+      value = new NXSL_Value(alarm->sourceObject);
    }
    else if (!_tcscmp(pszAttr, _T("state")))
    {
-      value = new NXSL_Value(alarm->nState);
+      value = new NXSL_Value(alarm->state);
    }
    return value;
 }

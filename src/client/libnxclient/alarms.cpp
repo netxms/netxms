@@ -261,27 +261,28 @@ UINT32 AlarmController::getAll(ObjectArray<NXC_ALARM> **alarms)
 NXC_ALARM *AlarmController::createAlarmFromMessage(NXCPMessage *msg)
 {
    NXC_ALARM *alarm = new NXC_ALARM();
-   alarm->dwAlarmId = msg->getFieldAsUInt32(VID_ALARM_ID);
-   alarm->dwAckByUser = msg->getFieldAsUInt32(VID_ACK_BY_USER);
-   alarm->dwResolvedByUser = msg->getFieldAsUInt32(VID_RESOLVED_BY_USER);
-   alarm->dwTermByUser = msg->getFieldAsUInt32(VID_TERMINATED_BY_USER);
-   alarm->qwSourceEventId = msg->getFieldAsUInt64(VID_EVENT_ID);
-   alarm->dwSourceEventCode = msg->getFieldAsUInt32(VID_EVENT_CODE);
-   alarm->dwSourceObject = msg->getFieldAsUInt32(VID_OBJECT_ID);
-   alarm->dwCreationTime = msg->getFieldAsUInt32(VID_CREATION_TIME);
-   alarm->dwLastChangeTime = msg->getFieldAsUInt32(VID_LAST_CHANGE_TIME);
-   msg->getFieldAsString(VID_ALARM_KEY, alarm->szKey, MAX_DB_STRING);
-	msg->getFieldAsString(VID_ALARM_MESSAGE, alarm->szMessage, MAX_EVENT_MSG_LENGTH);
-   alarm->nState = (BYTE)msg->getFieldAsUInt16(VID_STATE);
-   alarm->nCurrentSeverity = (BYTE)msg->getFieldAsUInt16(VID_CURRENT_SEVERITY);
-   alarm->nOriginalSeverity = (BYTE)msg->getFieldAsUInt16(VID_ORIGINAL_SEVERITY);
-   alarm->dwRepeatCount = msg->getFieldAsUInt32(VID_REPEAT_COUNT);
-   alarm->nHelpDeskState = (BYTE)msg->getFieldAsUInt16(VID_HELPDESK_STATE);
-   msg->getFieldAsString(VID_HELPDESK_REF, alarm->szHelpDeskRef, MAX_HELPDESK_REF_LEN);
-	alarm->dwTimeout = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT);
-	alarm->dwTimeoutEvent = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
+   alarm->alarmId = msg->getFieldAsUInt32(VID_ALARM_ID);
+   alarm->ackByUser = msg->getFieldAsUInt32(VID_ACK_BY_USER);
+   alarm->resolvedByUser = msg->getFieldAsUInt32(VID_RESOLVED_BY_USER);
+   alarm->termByUser = msg->getFieldAsUInt32(VID_TERMINATED_BY_USER);
+   alarm->sourceEventId = msg->getFieldAsUInt64(VID_EVENT_ID);
+   alarm->sourceEventCode = msg->getFieldAsUInt32(VID_EVENT_CODE);
+   alarm->sourceObject = msg->getFieldAsUInt32(VID_OBJECT_ID);
+   alarm->dciId = msg->getFieldAsUInt32(VID_DCI_ID);
+   alarm->creationTime = msg->getFieldAsUInt32(VID_CREATION_TIME);
+   alarm->lastChangeTime = msg->getFieldAsUInt32(VID_LAST_CHANGE_TIME);
+   msg->getFieldAsString(VID_ALARM_KEY, alarm->key, MAX_DB_STRING);
+	msg->getFieldAsString(VID_ALARM_MESSAGE, alarm->message, MAX_EVENT_MSG_LENGTH);
+   alarm->state = (BYTE)msg->getFieldAsUInt16(VID_STATE);
+   alarm->currentSeverity = (BYTE)msg->getFieldAsUInt16(VID_CURRENT_SEVERITY);
+   alarm->originalSeverity = (BYTE)msg->getFieldAsUInt16(VID_ORIGINAL_SEVERITY);
+   alarm->repeatCount = msg->getFieldAsUInt32(VID_REPEAT_COUNT);
+   alarm->helpDeskState = (BYTE)msg->getFieldAsUInt16(VID_HELPDESK_STATE);
+   msg->getFieldAsString(VID_HELPDESK_REF, alarm->helpDeskRef, MAX_HELPDESK_REF_LEN);
+	alarm->timeout = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT);
+	alarm->timeoutEvent = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
 	alarm->noteCount = msg->getFieldAsUInt32(VID_NUM_COMMENTS);
-   alarm->pUserData = NULL;
+   alarm->userData = NULL;
    return alarm;
 }
 
@@ -312,11 +313,11 @@ TCHAR *AlarmController::formatAlarmText(NXC_ALARM *alarm, const TCHAR *format)
 	static const TCHAR *severityText[] = { _T("NORMAL"), _T("WARNING"), _T("MINOR"), _T("MAJOR"), _T("CRITICAL") };
 
    ObjectController *oc = (ObjectController *)m_session->getController(CONTROLLER_OBJECTS);
-   AbstractObject *object = oc->findObjectById(alarm->dwSourceObject);
+   AbstractObject *object = oc->findObjectById(alarm->sourceObject);
    if (object == NULL)
    {
-	   oc->syncSingleObject(alarm->dwSourceObject);
-	   object = oc->findObjectById(alarm->dwSourceObject);
+	   oc->syncSingleObject(alarm->sourceObject);
+	   object = oc->findObjectById(alarm->sourceObject);
    }
 
 	String out;
@@ -344,43 +345,46 @@ TCHAR *AlarmController::formatAlarmText(NXC_ALARM *alarm, const TCHAR *format)
             out += ((object != NULL) && (object->getObjectClass() == OBJECT_NODE)) ? ((Node *)object)->getPrimaryHostname() : _T("<unknown>");
 				break;
 			case 'c':
-				out.appendFormattedString(_T("%u"), (unsigned int)alarm->dwRepeatCount);
+				out.appendFormattedString(_T("%u"), (unsigned int)alarm->repeatCount);
 				break;
+         case 'd':
+            out.appendFormattedString(_T("%u"), (unsigned int)alarm->dciId);
+            break;
 			case 'e':
-				out.appendFormattedString(_T("%u"), (unsigned int)alarm->dwSourceEventCode);
+				out.appendFormattedString(_T("%u"), (unsigned int)alarm->sourceEventCode);
 				break;
 			case 'E':
-            out += ((EventController *)m_session->getController(CONTROLLER_EVENTS))->getEventName(alarm->dwSourceEventCode, buffer, 128);
+            out += ((EventController *)m_session->getController(CONTROLLER_EVENTS))->getEventName(alarm->sourceEventCode, buffer, 128);
 				break;
 			case 'h':
-				out.appendFormattedString(_T("%d"), (int)alarm->nHelpDeskState);
+				out.appendFormattedString(_T("%d"), (int)alarm->helpDeskState);
 				break;
 			case 'H':
-				out += helpdeskState[alarm->nHelpDeskState];
+				out += helpdeskState[alarm->helpDeskState];
 				break;
 			case 'i':
-				out.appendFormattedString(_T("%u"), (unsigned int)alarm->dwSourceObject);
+				out.appendFormattedString(_T("%u"), (unsigned int)alarm->sourceObject);
 				break;
 			case 'I':
-				out.appendFormattedString(_T("%u"), (unsigned int)alarm->dwAlarmId);
+				out.appendFormattedString(_T("%u"), (unsigned int)alarm->alarmId);
 				break;
 			case 'm':
-				out += alarm->szMessage;
+				out.append(alarm->message);
 				break;
 			case 'n':
-				out += (object != NULL) ? object->getName() : _T("<unknown>");
+				out.append((object != NULL) ? object->getName() : _T("<unknown>"));
 				break;
 			case 's':
-				out.appendFormattedString(_T("%d"), (int)alarm->nCurrentSeverity);
+				out.appendFormattedString(_T("%d"), (int)alarm->currentSeverity);
 				break;
 			case 'S':
-				out += severityText[alarm->nCurrentSeverity];
+				out += severityText[alarm->currentSeverity];
 				break;
 			case 'x':
-				out.appendFormattedString(_T("%d"), (int)alarm->nState);
+				out.appendFormattedString(_T("%d"), (int)alarm->state);
 				break;
 			case 'X':
-				out += alarmState[alarm->nState];
+				out += alarmState[alarm->state];
 				break;
 			case 0:
 				curr--;

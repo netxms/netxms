@@ -755,6 +755,7 @@ CREATE TABLE event_log
 	event_code integer not null,
 	event_timestamp integer not null,
 	event_source integer not null,		/* Source object ID */
+	dci_id integer not null,                /* ID of related DCI or 0 */
 	event_severity integer not null,
 	event_message varchar(2000) null,
 	root_event_id SQL_INT64 not null,	/* Non-zero if current event correlates to some other event */
@@ -940,6 +941,7 @@ CREATE TABLE alarms
 	source_object_id integer not null,
 	source_event_code integer not null,
 	source_event_id SQL_INT64 not null,
+	dci_id integer not null,
 	message varchar(2000) null,
 	original_severity integer not null,
 	current_severity integer not null,

@@ -634,6 +634,22 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V387 to V388
+ */
+static BOOL H_UpgradeFromV387(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE alarms ADD dci_id integer\n")
+      _T("UPDATE alarms SET dci_id=0\n")
+      _T("ALTER TABLE event_log ADD dci_id integer\n")
+      _T("UPDATE event_log SET dci_id=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='388' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V386 to V387
  */
 static BOOL H_UpgradeFromV386(int currVersion, int newVersion)
@@ -9320,6 +9336,7 @@ static struct
    { 384, 385, H_UpgradeFromV384 },
    { 385, 386, H_UpgradeFromV385 },
    { 386, 387, H_UpgradeFromV386 },
+   { 387, 388, H_UpgradeFromV387 },
    { 0, 0, NULL }
 };
 

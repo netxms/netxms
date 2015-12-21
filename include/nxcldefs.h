@@ -1022,28 +1022,29 @@ typedef struct
  */
 typedef struct
 {
-   QWORD qwSourceEventId;  // Originating event ID
-   UINT32 dwAlarmId;        // Unique alarm ID
-   UINT32 dwCreationTime;   // Alarm creation time in UNIX time format
-   UINT32 dwLastChangeTime; // Alarm's last change time in UNIX time format
-   UINT32 dwSourceObject;   // Source object ID
-   UINT32 dwSourceEventCode;// Originating event code
-   BYTE nCurrentSeverity;  // Alarm's current severity
-   BYTE nOriginalSeverity; // Alarm's original severity
-   BYTE nState;            // Current state
-   BYTE nHelpDeskState;    // State of alarm in helpdesk system
-   UINT32 dwAckByUser;      // ID of user who was acknowledged this alarm (0 for system)
-	UINT32 dwResolvedByUser; // ID of user who was resolved this alarm (0 for system)
-   UINT32 dwTermByUser;     // ID of user who was terminated this alarm (0 for system)
-   UINT32 dwRepeatCount;
-	UINT32 dwTimeout;
-	UINT32 dwTimeoutEvent;
-   TCHAR szMessage[MAX_EVENT_MSG_LENGTH];
-   TCHAR szKey[MAX_DB_STRING];
-   TCHAR szHelpDeskRef[MAX_HELPDESK_REF_LEN];
-   void *pUserData;        // Can be freely used by client application
-	UINT32 noteCount;        // Number of notes added to alarm
-   UINT32 ackTimeout;  // Sticky acknowledgment end time. If acknowladgmant without timeout put 0
+   QWORD sourceEventId;    // Originating event ID
+   UINT32 alarmId;         // Unique alarm ID
+   UINT32 creationTime;    // Alarm creation time in UNIX time format
+   UINT32 lastChangeTime;  // Alarm's last change time in UNIX time format
+   UINT32 sourceObject;    // Source object ID
+   UINT32 sourceEventCode; // Originating event code
+   UINT32 dciId;           // related DCI ID
+   BYTE currentSeverity;   // Alarm's current severity
+   BYTE originalSeverity;  // Alarm's original severity
+   BYTE state;             // Current state
+   BYTE helpDeskState;     // State of alarm in helpdesk system
+   UINT32 ackByUser;       // ID of user who was acknowledged this alarm (0 for system)
+	UINT32 resolvedByUser;  // ID of user who was resolved this alarm (0 for system)
+   UINT32 termByUser;      // ID of user who was terminated this alarm (0 for system)
+   UINT32 repeatCount;
+	UINT32 timeout;
+	UINT32 timeoutEvent;
+   TCHAR message[MAX_EVENT_MSG_LENGTH];
+   TCHAR key[MAX_DB_STRING];
+   TCHAR helpDeskRef[MAX_HELPDESK_REF_LEN];
+   void *userData;         // Can be freely used by client application
+	UINT32 noteCount;       // Number of notes added to alarm
+   UINT32 ackTimeout;      // Sticky acknowledgment end time. If acknowladgmant without timeout put 0
 } NXC_ALARM;
 
 /**

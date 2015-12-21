@@ -120,6 +120,7 @@ int main(int argc, char *argv[])
 						 "   %%a Primary IP address of source object\n"
 						 "   %%A Primary host name of source object\n"
 						 "   %%c Repeat count\n"
+						 "   %%d Related DCI ID\n"
 						 "   %%e Event code\n"
 						 "   %%E Event name\n"
 						 "   %%h Helpdesk state as number\n"

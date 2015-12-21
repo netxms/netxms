@@ -468,7 +468,7 @@ void DCItem::checkThresholds(ItemValue &value)
       {
          case ACTIVATED:
             {
-               PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
+               PostDciEventWithNames(t->getEventCode(), m_pNode->getId(), m_id, "ssssisd",
 					   s_paramNamesReach, m_name, m_szDescription, t->getStringValue(),
                   (const TCHAR *)checkValue, m_id, m_instance, 0);
 				   EVENT_TEMPLATE *evt = FindEventTemplateByCode(t->getEventCode());
@@ -479,7 +479,7 @@ void DCItem::checkThresholds(ItemValue &value)
             }
             break;
          case DEACTIVATED:
-            PostEventWithNames(t->getRearmEventCode(), m_pNode->getId(), "ssisss",
+            PostDciEventWithNames(t->getRearmEventCode(), m_pNode->getId(), m_id, "ssisss",
 					s_paramNamesRearm, m_name, m_szDescription, m_id, m_instance,
 					t->getStringValue(), (const TCHAR *)checkValue);
             break;
@@ -490,7 +490,7 @@ void DCItem::checkThresholds(ItemValue &value)
                UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
 				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now))
 				   {
-					   PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
+					   PostDciEventWithNames(t->getEventCode(), m_pNode->getId(), m_id, "ssssisd",
 						   s_paramNamesReach, m_name, m_szDescription, t->getStringValue(),
 						   (const TCHAR *)checkValue, m_id, m_instance, 1);
 					   EVENT_TEMPLATE *evt = FindEventTemplateByCode(t->getEventCode());
@@ -780,7 +780,7 @@ void DCItem::processNewError()
       {
          case ACTIVATED:
             {
-               PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
+               PostDciEventWithNames(t->getEventCode(), m_pNode->getId(), m_id, "ssssisd",
 					   s_paramNamesReach, m_name, m_szDescription, _T(""), _T(""),
                   m_id, m_instance, 0);
 				   EVENT_TEMPLATE *evt = FindEventTemplateByCode(t->getEventCode());
@@ -793,7 +793,7 @@ void DCItem::processNewError()
             }
             break;
          case DEACTIVATED:
-            PostEventWithNames(t->getRearmEventCode(), m_pNode->getId(), "ssisss",
+            PostDciEventWithNames(t->getRearmEventCode(), m_pNode->getId(), m_id, "ssisss",
 					s_paramNamesRearm, m_name, m_szDescription, m_id, m_instance, _T(""), _T(""));
             break;
          case ALREADY_ACTIVE:
@@ -803,7 +803,7 @@ void DCItem::processNewError()
                UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
 				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now))
 				   {
-					   PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
+					   PostDciEventWithNames(t->getEventCode(), m_pNode->getId(), m_id, "ssssisd",
 						   s_paramNamesReach, m_name, m_szDescription, _T(""), _T(""),
 						   m_id, m_instance, 1);
 					   EVENT_TEMPLATE *evt = FindEventTemplateByCode(t->getEventCode());
@@ -952,7 +952,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
 
 			_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
                     (m_pNode != NULL) ? m_pNode->getName() : _T("(null)"), m_id);
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, m_transformationScript->getErrorText(), m_id);
+         PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", szBuffer, m_transformationScript->getErrorText(), m_id);
          success = false;
       }
    }
@@ -1889,7 +1889,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
 
 		_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"),
                  (dci->getNode() != NULL) ? dci->getNode()->getName() : _T("(null)"), dci->getId());
-      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, instanceFilter->getErrorText(), dci->getId());
+      PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", szBuffer, instanceFilter->getErrorText(), dci->getId());
       ((FilterCallbackData *)data)->filteredInstances->set(key, (const TCHAR *)value);
    }
    return _CONTINUE;
