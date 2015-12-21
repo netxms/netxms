@@ -220,6 +220,12 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
 }
 #endif
 
+#ifdef UNICODE
+#define UTF8StringFromTchar(x) UTF8StringFromWideString(x)
+#else
+#define UTF8StringFromTchar(x) x
+#endif
+
 /**
  * Class for serial communications
  */
