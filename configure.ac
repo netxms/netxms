@@ -92,6 +92,7 @@ RUNTIME_PREFIX=""
 RUNTIME_STATE_DIR=""
 HPUX_HPPA="no"
 XMPP_SUPPORT="yes"
+ZMQ_SUPPORT="no"
 LDAP_SUPPORT="yes"
 DISABLE_READLINE="no"
 TUXEDO_LIBS=""
@@ -279,6 +280,7 @@ AC_ARG_WITH(zeromq,
 		ZEROMQ_BASE="$withval"
 	fi
 	COMPONENTS="$COMPONENTS zeromq"
+   ZMQ_SUPPORT=yes
 fi ])
 
 AC_ARG_WITH(mongodb,
@@ -2894,6 +2896,7 @@ AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${ac_cv_lib_crypto_RSA_new}" = "xyes"])
 AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
 AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
+AM_CONDITIONAL([ZMQ_SUPPORT], [test "x$ZMQ_SUPPORT" = "xyes"])
 
 
 #--------------------------------------------------------------------
@@ -3241,6 +3244,11 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 	else
 		echo "XMPP support            : NO"
 	fi
+	if test "x${ZMQ_SUPPORT}" = "xyes"; then
+		echo "ZeroMQ support          : YES"
+	else
+		echo "ZeroMQ support          : NO"
+	fi
 else
 	echo "Build Server            : NO"
 fi
@@ -3390,11 +3398,18 @@ if test "x${TUXEDO_LIBS}" != "x"; then
 	echo "Tuxedo LIBS             : ${TUXEDO_LIBS}"
 fi
 
+if test "x${MONGODB_CPPFLAGS}" != "x"; then
+       echo "MongoDB CPPFLAGS     : ${MONGODB_CPPFLAGS}"
+fi
+if test "x${MONGODB_LDFLAGS}" != "x"; then
+	echo "MongoDB LDFLAGS         : ${MONGODB_LDFLAGS}"
+fi
+
 if test "x${ZEROMQ_CPPFLAGS}" != "x"; then
 	echo "ZeroMQ CPPFLAGS         : ${ZEROMQ_CPPFLAGS}"
 fi
-if test "x${MONGODB_LDFLAGS}" != "x"; then
-	echo "MongoDB LDFLAGS          : ${MONGODB_LDFLAGS}"
+if test "x${ZEROMQ_LDFLAGS}" != "x"; then
+	echo "ZeroMQ LDFLAGS          : ${ZEROMQ_LDFLAGS}"
 fi
 
 FLAGS_CPP="src/tools/nxdevcfg/flags.cpp"

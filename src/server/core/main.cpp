@@ -891,6 +891,10 @@ retry_db_lock:
    }
 #endif
 
+#if WITH_ZMQ
+   StartZMQConnector();
+#endif
+
 	g_flags |= AF_SERVER_INITIALIZED;
 	DbgPrintf(1, _T("Server initialization completed"));
 	return TRUE;
@@ -915,6 +919,10 @@ void NXCORE_EXPORTABLE Shutdown()
 
 #if XMPP_SUPPORTED
    StopXMPPConnector();
+#endif
+
+#if WITH_ZMQ
+   StopZMQConnector();
 #endif
 
 	g_pEventQueue->clear();

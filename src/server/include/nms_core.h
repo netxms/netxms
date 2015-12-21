@@ -1023,6 +1023,12 @@ UINT32 DeleteGraph(UINT32 graphId, UINT32 userId);
 void SendXMPPMessage(const TCHAR *rcpt, const TCHAR *text);
 #endif
 
+#if WITH_ZMQ
+void StartZMQConnector();
+void StopZMQConnector();
+void ZmqPublishEvent(Event *event);
+#endif
+
 /**
  * File monitoring
  */
