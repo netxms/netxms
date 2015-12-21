@@ -600,7 +600,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       }
 
       TCHAR query[1024];
-      _sntprintf(query, 1024, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue WHERE server_id=") UINT64_FMT _T(" ORDER BY timestamp LIMIT 100"), session->getServerId());
+      _sntprintf(query, 1024, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue WHERE server_id=") UINT64_FMT _T(" ORDER BY timestamp LIMIT %d"), session->getServerId(), BULK_DATA_BLOCK_SIZE);
 
       TCHAR sqlError[DBDRV_MAX_ERROR_TEXT];
       DB_RESULT hResult = DBSelectEx(hdb, query, sqlError);
@@ -679,9 +679,9 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                   ServerSyncStatus *serverSyncStatus = s_serverSyncStatus.get(session->getServerId());
 
                   // Check status for each data element
-                  BYTE status[100];
-                  memset(status, 0, 100);
-                  response->getFieldAsBinary(VID_STATUS, status, 100);
+                  BYTE status[BULK_DATA_BLOCK_SIZE];
+                  memset(status, 0, BULK_DATA_BLOCK_SIZE);
+                  response->getFieldAsBinary(VID_STATUS, status, BULK_DATA_BLOCK_SIZE);
                   bulkSendList.setOwner(false);
                   for(int i = 0; i < bulkSendList.size(); i++)
                   {
@@ -729,7 +729,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       DBFreeResult(hResult);
 
       session->decRefCount();
-      sleepTime = (count > 0) ? 100 : 30000;
+      sleepTime = (count > 0) ? 50 : 30000;
    }
 
    DebugPrintf(INVALID_INDEX, 1, _T("Data reconciliation thread stopped"));

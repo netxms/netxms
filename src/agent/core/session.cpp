@@ -110,6 +110,7 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_acceptTraps = false;
    m_acceptFileUpdates = false;
    m_ipv6Aware = false;
+   m_bulkReconciliationSupported = false;
    m_hCurrFile = -1;
    m_fileRqId = 0;
    m_compressor = NULL;

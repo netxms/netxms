@@ -114,6 +114,11 @@
 #define BULK_DATA_REC_FAILURE    2
 
 /**
+ * Max bulk data block size
+ */
+#define BULK_DATA_BLOCK_SIZE     1024
+
+/**
  * Parameter handler return codes
  */
 #define SYSINFO_RC_SUCCESS       0
