@@ -22,17 +22,14 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
-import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.Rack;
-import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -40,15 +37,13 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 
 /**
- * "Rack" property page for NetXMS object
+ * "Rack" property page for rack object
  */
-public class RackPlacement extends PropertyPage
+public class RackProperties extends PropertyPage
 {
-	private AbstractNode node;
-	private ObjectSelector rackSelector;
-	private ImageSelector rackImageSelector;
+	private Rack rack;
 	private LabeledSpinner rackHeight;
-	private LabeledSpinner rackPosition;
+	private Combo numberingScheme;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -58,7 +53,7 @@ public class RackPlacement extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		node = (AbstractNode)getElement().getAdapter(AbstractNode.class);
+		rack = (Rack)getElement().getAdapter(Rack.class);
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -67,42 +62,22 @@ public class RackPlacement extends PropertyPage
 		layout.numColumns = 2;
       dialogArea.setLayout(layout);
 
-      rackSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      rackSelector.setLabel("Rack");
-      rackSelector.setObjectClass(Rack.class);
-      rackSelector.setObjectId(node.getRackId());
-		GridData gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = SWT.FILL;
-		gd.horizontalSpan = 2;
-		rackSelector.setLayoutData(gd);
-		
-		rackImageSelector = new ImageSelector(dialogArea, SWT.NONE);
-		rackImageSelector.setLabel("Rack image");
-		rackImageSelector.setImageGuid(node.getRackImage(), false);
-      gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
-      gd.horizontalSpan = 2;
-      rackImageSelector.setLayoutData(gd);
-      
-      rackPosition = new LabeledSpinner(dialogArea, SWT.NONE);
-      rackPosition.setLabel("Position");
-      rackPosition.setRange(1, 50);
-      rackPosition.setSelection(node.getRackPosition());
-      gd = new GridData();
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalAlignment = SWT.FILL;
-      rackPosition.setLayoutData(gd);
-		
       rackHeight = new LabeledSpinner(dialogArea, SWT.NONE);
       rackHeight.setLabel("Height");
       rackHeight.setRange(1, 50);
-      rackHeight.setSelection(node.getRackHeight());
-      gd = new GridData();
+      rackHeight.setSelection(rack.getHeight());
+      GridData gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
       rackHeight.setLayoutData(gd);
+      
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      numberingScheme = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY | SWT.DROP_DOWN, "Numbering", gd);
+      numberingScheme.add("Bottom to top");
+      numberingScheme.add("Top to bottom");
+      numberingScheme.select(rack.isTopBottomNumbering() ? 1 : 0);
       
 		return dialogArea;
 	}
@@ -117,11 +92,12 @@ public class RackPlacement extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		final NXCObjectModificationData md = new NXCObjectModificationData(node.getObjectId());
-		md.setRackPlacement(rackSelector.getObjectId(), rackImageSelector.getImageGuid(), (short)rackPosition.getSelection(), (short)rackHeight.getSelection());
+		final NXCObjectModificationData md = new NXCObjectModificationData(rack.getObjectId());
+		md.setHeight(rackHeight.getSelection());
+		md.setRackNumberingTopBottom(numberingScheme.getSelectionIndex() == 1);
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format("Updating rack placement for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format("Updating rack %s properties", rack.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -143,7 +119,7 @@ public class RackPlacement extends PropertyPage
 						@Override
 						public void run()
 						{
-							RackPlacement.this.setValid(true);
+							RackProperties.this.setValid(true);
 						}
 					});
 				}
@@ -177,9 +153,7 @@ public class RackPlacement extends PropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		rackSelector.setObjectId(0);
-		rackImageSelector.setImageGuid(NXCommon.EMPTY_GUID, true);
-		rackPosition.setSelection(1);
-		rackHeight.setSelection(1);
+		rackHeight.setSelection(42);
+		numberingScheme.select(0);
 	}
 }

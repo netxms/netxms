@@ -634,6 +634,20 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V388 to V389
+ */
+static BOOL H_UpgradeFromV388(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE racks ADD top_bottom_num char(1)\n")
+      _T("UPDATE racks SET top_bottom_num='0'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='389' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V387 to V388
  */
 static BOOL H_UpgradeFromV387(int currVersion, int newVersion)
@@ -9337,6 +9351,7 @@ static struct
    { 385, 386, H_UpgradeFromV385 },
    { 386, 387, H_UpgradeFromV386 },
    { 387, 388, H_UpgradeFromV387 },
+   { 388, 389, H_UpgradeFromV388 },
    { 0, 0, NULL }
 };
 

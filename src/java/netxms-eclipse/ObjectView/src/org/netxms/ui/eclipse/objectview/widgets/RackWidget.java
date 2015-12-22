@@ -155,28 +155,51 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       gc.setForeground(SharedColors.getColor(SharedColors.RACK_TEXT, getDisplay()));
       gc.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, getDisplay()));
       gc.setLineWidth(1);
-      double dy = rect.y + rect.height - (borderWidth + 1) / 2;
-      for(int u = 1; u <= rack.getHeight(); u++, dy -= unitHeight)
+      double dy = rack.isTopBottomNumbering() ? rect.y + unitHeight + (borderWidth + 1) / 2 : rect.y + rect.height - (borderWidth + 1) / 2;
+      if (rack.isTopBottomNumbering())
+         unitBaselines[0] = (int)(dy - unitHeight);
+      for(int u = 1; u <= rack.getHeight(); u++)
       {
          int y = (int)dy;
-         unitBaselines[u - 1] = y;
          gc.drawLine(MARGIN_WIDTH, y, UNIT_NUMBER_WIDTH, y);
          String label = Integer.toString(u);
          Point textExtent = gc.textExtent(label);
          gc.drawText(label, UNIT_NUMBER_WIDTH - textExtent.x, y - (int)unitHeight / 2 - textExtent.y / 2);
+         if (rack.isTopBottomNumbering())
+         {
+            unitBaselines[u] = y;
+            dy += unitHeight;
+         }
+         else
+         {
+            unitBaselines[u - 1] = y;
+            dy -= unitHeight;
+         }
       }
-      unitBaselines[rack.getHeight()] = (int)dy;
+      if (!rack.isTopBottomNumbering())
+         unitBaselines[rack.getHeight()] = (int)dy;
       
       // Draw units
       objects.clear();
       List<AbstractNode> units = rack.getUnits();
       for(AbstractNode n : units)
       {
-         if ((n.getRackPosition() > rack.getHeight()) || (n.getRackPosition() - n.getRackHeight() < 0))
+         if ((n.getRackPosition() < 1) || (n.getRackPosition() > rack.getHeight()) || 
+             (rack.isTopBottomNumbering() && (n.getRackPosition() + n.getRackHeight() > rack.getHeight() + 1)) ||
+             (!rack.isTopBottomNumbering() && (n.getRackPosition() - n.getRackHeight() < 0)))
             continue;
          
-         int bottomLine = unitBaselines[n.getRackPosition() - n.getRackHeight()]; // lower border
-         int topLine = unitBaselines[n.getRackPosition()];   // upper border
+         int topLine, bottomLine;
+         if (rack.isTopBottomNumbering())
+         {
+            bottomLine = unitBaselines[n.getRackPosition() + n.getRackHeight() - 1]; // lower border
+            topLine = unitBaselines[n.getRackPosition() - 1];   // upper border
+         }
+         else
+         {
+            bottomLine = unitBaselines[n.getRackPosition() - n.getRackHeight()]; // lower border
+            topLine = unitBaselines[n.getRackPosition()];   // upper border
+         }
          final Rectangle unitRect = new Rectangle(rect.x + (borderWidth + 1) / 2, topLine + 1, rect.width - borderWidth, bottomLine - topLine);
 
          if ((unitRect.width <= 0) || (unitRect.height <= 0))
@@ -203,22 +226,44 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
             }
             else
             {
-               unitRect.height = unitBaselines[n.getRackPosition() - 1] - topLine;
-               gc.drawImage(imageDefaultTop, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
-
-               r = imageDefaultMiddle.getBounds();
-               int u = n.getRackPosition() - 1;
-               for(int i = 1; i < n.getRackHeight() - 1; i++, u--)
+               if (rack.isTopBottomNumbering())
                {
+                  unitRect.height = unitBaselines[n.getRackPosition()] - topLine;
+                  gc.drawImage(imageDefaultTop, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
+                  
+                  r = imageDefaultMiddle.getBounds();
+                  int u = n.getRackPosition() + 1;
+                  for(int i = 1; i < n.getRackHeight() - 1; i++, u++)
+                  {
+                     unitRect.y = unitBaselines[u - 1];
+                     unitRect.height = unitBaselines[u] - unitRect.y;
+                     gc.drawImage(imageDefaultMiddle, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
+                  }
+                  
+                  r = imageDefaultBottom.getBounds();
+                  unitRect.y = unitBaselines[u - 1];
+                  unitRect.height = unitBaselines[u] - unitRect.y;
+                  gc.drawImage(imageDefaultBottom, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
+               }
+               else
+               {
+                  unitRect.height = unitBaselines[n.getRackPosition() - 1] - topLine;
+                  gc.drawImage(imageDefaultTop, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
+   
+                  r = imageDefaultMiddle.getBounds();
+                  int u = n.getRackPosition() - 1;
+                  for(int i = 1; i < n.getRackHeight() - 1; i++, u--)
+                  {
+                     unitRect.y = unitBaselines[u];
+                     unitRect.height = unitBaselines[u - 1] - unitRect.y;
+                     gc.drawImage(imageDefaultMiddle, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
+                  }
+                  
+                  r = imageDefaultBottom.getBounds();
                   unitRect.y = unitBaselines[u];
                   unitRect.height = unitBaselines[u - 1] - unitRect.y;
-                  gc.drawImage(imageDefaultMiddle, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
+                  gc.drawImage(imageDefaultBottom, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
                }
-               
-               r = imageDefaultBottom.getBounds();
-               unitRect.y = unitBaselines[u];
-               unitRect.height = unitBaselines[u - 1] - unitRect.y;
-               gc.drawImage(imageDefaultBottom, 0, 0, r.width, r.height, unitRect.x, unitRect.y, unitRect.width, unitRect.height);
             }
          }
       }

@@ -320,6 +320,16 @@
               </or>
            </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.objectmanager.propertypages.RackProperties"
+              id="org.netxms.ui.eclipse.objectmanager.propertypages.RackProperties#1"
+              name="Rack">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.Rack">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension

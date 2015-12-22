@@ -4520,6 +4520,11 @@ public class NXCSession
          msg.setFieldInt16(NXCPCodes.VID_HEIGHT, data.getHeight());
       }
 
+      if ((flags & NXCObjectModificationData.MODIFY_RACK_NUMB_SCHEME) != 0)
+      {
+         msg.setField(NXCPCodes.VID_TOP_BOTTOM, data.isRackNumberingTopBottom());
+      }
+
       if ((flags & NXCObjectModificationData.MODIFY_PEER_GATEWAY) != 0)
       {
          msg.setFieldInt32(NXCPCodes.VID_PEER_GATEWAY, (int)data.getPeerGatewayId());

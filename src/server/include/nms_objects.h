@@ -1816,6 +1816,7 @@ class NXCORE_EXPORTABLE Rack : public Container
 {
 protected:
 	int m_height;	// Rack height in units
+	bool m_topBottomNumbering;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);

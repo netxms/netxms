@@ -134,7 +134,8 @@ public class GeneralInfo extends TableElement
                if (rack != null)
                {
                   addPair("Rack", String.format("%s (units %d-%d)", rack.getObjectName(),
-                        node.getRackPosition() - node.getRackHeight() + 1, node.getRackPosition()));
+                          rack.isTopBottomNumbering() ? node.getRackPosition() : node.getRackPosition() - node.getRackHeight() + 1,
+                          rack.isTopBottomNumbering() ? node.getRackPosition() + node.getRackHeight() - 1 : node.getRackPosition()));
                }
             }
 				break;

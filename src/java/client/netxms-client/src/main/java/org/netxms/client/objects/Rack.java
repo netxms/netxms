@@ -32,6 +32,7 @@ import org.netxms.client.NXCSession;
 public class Rack extends GenericObject
 {
 	private int height;
+	private boolean topBottomNumbering;
 	
 	/**
 	 * @param msg
@@ -41,6 +42,7 @@ public class Rack extends GenericObject
 	{
 		super(msg, session);
 		height = msg.getFieldAsInt32(NXCPCodes.VID_HEIGHT);
+		topBottomNumbering = msg.getFieldAsBoolean(NXCPCodes.VID_TOP_BOTTOM);
 	}
 
 	/* (non-Javadoc)
@@ -79,6 +81,14 @@ public class Rack extends GenericObject
 	}
 	
 	/**
+    * @return the topBottomNumbering
+    */
+   public boolean isTopBottomNumbering()
+   {
+      return topBottomNumbering;
+   }
+
+   /**
 	 * Get rack units, ordered by unit numbers
 	 * 
 	 * @return

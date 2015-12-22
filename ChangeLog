@@ -22,6 +22,7 @@
 	- Object tool input fields can be rearranged
 	- Line width can be configured for line charts on dashboards
 	- Column sizes saved in table DCI last values view
+	- Rack height and numbering direction can be changed
 - Fixed issues: #205, #847, #849, #948, #963, #967, #971, #978, #979, #980, #983, #991, #997, #1002, #1003, #1004, #1013, #1019, #1024, #1029, #1032, #1058, #1071, #1072, #1081, #1082, #1083, #1084, #1085
 
 

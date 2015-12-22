@@ -106,6 +106,7 @@ public class NXCObjectModificationData
    public static final long MODIFY_MAPOBJ_DISP_MODE   = 0x0200000000000000L;
    public static final long MODIFY_RACK_PLACEMENT     = 0x0400000000000000L;
    public static final long MODIFY_DASHBOARD_LIST     = 0x0800000000000000L;
+   public static final long MODIFY_RACK_NUMB_SCHEME   = 0x1000000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -190,6 +191,7 @@ public class NXCObjectModificationData
 	private short rackPosition;
 	private short rackHeight;
 	private Long[] dashboards;
+	private boolean rackNumberingTopBottom;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1560,5 +1562,22 @@ public class NXCObjectModificationData
    {
       this.dashboards = dashboards;
       flags |= MODIFY_DASHBOARD_LIST;
+   }
+
+   /**
+    * @return the rackNumberingTopBottom
+    */
+   public boolean isRackNumberingTopBottom()
+   {
+      return rackNumberingTopBottom;
+   }
+
+   /**
+    * @param rackNumberingTopBottom the rackNumberingTopBottom to set
+    */
+   public void setRackNumberingTopBottom(boolean rackNumberingTopBottom)
+   {
+      this.rackNumberingTopBottom = rackNumberingTopBottom;
+      flags |= MODIFY_RACK_NUMB_SCHEME;
    }
 }

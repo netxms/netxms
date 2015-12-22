@@ -898,6 +898,7 @@ public class NXCPCodes
    public static final long VID_BULK_RECONCILIATION = 536;
    public static final long VID_STATUS = 537;
    public static final long VID_FLAGS_MASK = 538;
+   public static final long VID_TOP_BOTTOM = 539;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
