@@ -36,8 +36,6 @@ DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot = NULL;
 BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot = NULL;
 
 UINT32 NXCORE_EXPORTABLE g_dwMgmtNode = 0;
-UINT32 g_dwNumCategories = 0;
-CONTAINER_CATEGORY *g_pContainerCatList = NULL;
 
 Queue *g_pTemplateUpdateQueue = NULL;
 
@@ -1146,24 +1144,6 @@ BOOL LoadObjects()
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-   // Load container categories
-   DbgPrintf(2, _T("Loading container categories..."));
-   hResult = DBSelect(hdb, _T("SELECT category,name,image_id,description FROM container_categories"));
-   if (hResult != NULL)
-   {
-      g_dwNumCategories = DBGetNumRows(hResult);
-      g_pContainerCatList = (CONTAINER_CATEGORY *)malloc(sizeof(CONTAINER_CATEGORY) * g_dwNumCategories);
-      for(i = 0; i < (int)g_dwNumCategories; i++)
-      {
-         g_pContainerCatList[i].dwCatId = DBGetFieldULong(hResult, i, 0);
-         DBGetField(hResult, i, 1, g_pContainerCatList[i].szName, MAX_OBJECT_NAME);
-         g_pContainerCatList[i].dwImageId = DBGetFieldULong(hResult, i, 2);
-         g_pContainerCatList[i].pszDescription = DBGetField(hResult, i, 3, NULL, 0);
-         DecodeSQLString(g_pContainerCatList[i].pszDescription);
-      }
-      DBFreeResult(hResult);
-   }
-
    // Load built-in object properties
    DbgPrintf(2, _T("Loading built-in object properties..."));
    g_pEntireNet->loadFromDatabase(hdb);
@@ -1567,7 +1547,7 @@ BOOL LoadObjects()
 
    // Load container objects
    DbgPrintf(2, _T("Loading containers..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_CONTAINER);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_CONTAINER);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -1593,7 +1573,7 @@ BOOL LoadObjects()
 
    // Load template group objects
    DbgPrintf(2, _T("Loading template groups..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_TEMPLATEGROUP);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_TEMPLATEGROUP);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -1619,7 +1599,7 @@ BOOL LoadObjects()
 
    // Load policy group objects
    DbgPrintf(2, _T("Loading policy groups..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_POLICYGROUP);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_POLICYGROUP);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -1645,7 +1625,7 @@ BOOL LoadObjects()
 
    // Load map group objects
    DbgPrintf(2, _T("Loading map groups..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_NETWORKMAPGROUP);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_NETWORKMAPGROUP);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -1696,7 +1676,7 @@ BOOL LoadObjects()
 
    // Loading business service objects
    DbgPrintf(2, _T("Loading business services..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_BUSINESSSERVICE);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_BUSINESSSERVICE);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -1720,7 +1700,7 @@ BOOL LoadObjects()
 
    // Loading business service objects
    DbgPrintf(2, _T("Loading node links..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM containers WHERE object_class=%d"), OBJECT_NODELINK);
+   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_NODELINK);
    hResult = DBSelect(hdb, szQuery);
    if (hResult != 0)
    {
@@ -1846,7 +1826,6 @@ static void DumpObjectCallback(NetObj *object, void *data)
       return;
 
 	CONSOLE_CTX pCtx = dd->console;
-   CONTAINER_CATEGORY *pCat;
 
 	ConsolePrintf(pCtx, _T("Object ID %d \"%s\"\n")
                        _T("   Class: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
@@ -1882,10 +1861,6 @@ static void DumpObjectCallback(NetObj *object, void *data)
             const InetAddress& a = ((Interface *)object)->getIpAddressList()->get(n);
             ConsolePrintf(pCtx, _T("   IP address: %s/%d\n"), a.toString(dd->buffer), a.getMaskBits());
          }
-         break;
-      case OBJECT_CONTAINER:
-         pCat = FindContainerCategory(((Container *)object)->getCategory());
-         ConsolePrintf(pCtx, _T("   Category: %s\n"), pCat ? pCat->szName : _T("<unknown>"));
          break;
       case OBJECT_TEMPLATE:
          ConsolePrintf(pCtx, _T("   Version: %d.%d\n"), 

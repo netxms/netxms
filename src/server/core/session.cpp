@@ -947,9 +947,6 @@ void ClientSession::processingThread()
          case CMD_LOAD_ACTIONS:
             sendAllActions(pMsg->getId());
             break;
-         case CMD_GET_CONTAINER_CAT_LIST:
-            SendContainerCategories(pMsg->getId());
-            break;
          case CMD_DELETE_OBJECT:
             deleteObject(pMsg);
             break;
@@ -6100,35 +6097,6 @@ void ClientSession::sendAllActions(UINT32 dwRqId)
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
       sendMessage(&msg);
    }
-}
-
-
-//
-// Send list of configured container categories to client
-//
-
-void ClientSession::SendContainerCategories(UINT32 dwRqId)
-{
-   NXCPMessage msg;
-   UINT32 i;
-
-   // Prepare response message
-   msg.setCode(CMD_CONTAINER_CAT_DATA);
-   msg.setId(dwRqId);
-
-   for(i = 0; i < g_dwNumCategories; i++)
-   {
-      msg.setField(VID_CATEGORY_ID, g_pContainerCatList[i].dwCatId);
-      msg.setField(VID_CATEGORY_NAME, g_pContainerCatList[i].szName);
-      //msg.setField(VID_IMAGE_ID, g_pContainerCatList[i].dwImageId);
-      msg.setField(VID_DESCRIPTION, g_pContainerCatList[i].pszDescription);
-      sendMessage(&msg);
-      msg.deleteAllFields();
-   }
-
-   // Send end-of-list indicator
-   msg.setField(VID_CATEGORY_ID, (UINT32)0);
-   sendMessage(&msg);
 }
 
 /**

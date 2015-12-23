@@ -451,10 +451,9 @@ CREATE TABLE vpn_connector_networks
 /*
 ** Container objects
 */
-CREATE TABLE containers
+CREATE TABLE object_containers
 (
 	id integer not null,
-	category integer not null,
 	object_class integer not null,
 	flags integer not null,
 	auto_bind_filter SQL_TEXT null,
@@ -490,11 +489,9 @@ CREATE TABLE cond_dci_map
 	PRIMARY KEY(condition_id,sequence_number)
 ) TABLE_TYPE;
 
-
-/*
-** Data collection templates
-*/
-
+/**
+ * Data collection templates
+ */
 CREATE TABLE templates
 (
 	id integer not null,
@@ -504,11 +501,9 @@ CREATE TABLE templates
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-
-/*
-** Mapping hosts to templates
-*/
-
+/**
+ * Mapping hosts to templates
+ */
 CREATE TABLE dct_node_map
 (
 	template_id integer not null,
@@ -516,11 +511,9 @@ CREATE TABLE dct_node_map
 	PRIMARY KEY(template_id,node_id)
 ) TABLE_TYPE;
 
-
-/*
-** Nodes to subnets mapping
-*/
-
+/**
+ * Nodes to subnets mapping 
+ */
 CREATE TABLE nsmap
 (
 	subnet_id integer not null,
@@ -528,11 +521,9 @@ CREATE TABLE nsmap
 	PRIMARY KEY(subnet_id,node_id)
 ) TABLE_TYPE;
 
-
-/*
-** Container members
-*/
-
+/**
+ * Container members 
+ */
 CREATE TABLE container_members
 (
 	container_id integer not null,
@@ -540,25 +531,9 @@ CREATE TABLE container_members
 	PRIMARY KEY(container_id,object_id)
 ) TABLE_TYPE;
 
-
-/*
-** Container categories
-*/
-
-CREATE TABLE container_categories
-(
-	category integer not null,
-	name varchar(63),
-	image_id integer not null,
-	description SQL_TEXT,
-	PRIMARY KEY(category)
-) TABLE_TYPE;
-
-
-/*
-** Objects' ACLs
-*/
-
+/**
+ * Objects' ACLs
+ */
 CREATE TABLE acl
 (
 	object_id integer not null,
@@ -567,11 +542,11 @@ CREATE TABLE acl
 	PRIMARY KEY(object_id,user_id)
 ) TABLE_TYPE;
 
-/*
-** Trusted nodes - used for cross-node data collection
-** Source object is an object providing data (it can be node or condition),
-** and target node is a node owning DCI
-*/
+/**
+ * Trusted nodes - used for cross-node data collection
+ * Source object is an object providing data (it can be node or condition),
+ * and target node is a node owning DCI
+ */
 CREATE TABLE trusted_nodes
 (
 	source_object_id integer not null,
@@ -579,16 +554,16 @@ CREATE TABLE trusted_nodes
 	PRIMARY KEY(source_object_id,target_node_id)
 ) TABLE_TYPE;
 
-/*
-** Data collection items
-**
-** If node_id != 0, it's an item bound to node,	and template_id points to
-** the template used for creating this item. In this case, template_id = 0
-** means that item was created manually.
-** If node_id = 0, it's a template item, and template_id points to a template
-** this item belongs to.
-** If both node_id and template_id is 0, it's an error.
-*/
+/**
+ * Data collection items
+ *
+ * If node_id != 0, it's an item bound to node,	and template_id points to
+ * the template used for creating this item. In this case, template_id = 0
+ * means that item was created manually.
+ * If node_id = 0, it's a template item, and template_id points to a template
+ * this item belongs to.
+ * If both node_id and template_id is 0, it's an error.
+ */
 CREATE TABLE items
 (
 	item_id integer not null,

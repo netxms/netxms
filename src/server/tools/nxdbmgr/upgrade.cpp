@@ -634,6 +634,66 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V389 to V390
+ */
+static BOOL H_UpgradeFromV389(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE object_containers (")
+      _T("   id integer not null,")
+      _T("   object_class integer not null,")
+      _T("   flags integer not null,")
+      _T("   auto_bind_filter $SQL:TEXT null,")
+      _T("   PRIMARY KEY(id))")));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,object_class,flags,auto_bind_filter FROM containers"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      if (count > 0)
+      {
+         DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO object_containers (id,object_class,flags,auto_bind_filter) VALUES (?,?,?,?)"));
+         if (hStmt != NULL)
+         {
+            for(int i = 0; i < count; i++)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldLong(hResult, i, 1));
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 2));
+               DBBind(hStmt, 4, DB_SQLTYPE_TEXT, DBGetField(hResult, i, 3, NULL, 0), DB_BIND_DYNAMIC);
+               if (!SQLExecute(hStmt))
+               {
+                  if (!g_bIgnoreErrors)
+                  {
+                     DBFreeStatement(hStmt);
+                     DBFreeResult(hResult);
+                     return FALSE;
+                  }
+               }
+            }
+            DBFreeStatement(hStmt);
+         }
+         else if (!g_bIgnoreErrors)
+         {
+            DBFreeResult(hResult);
+            return FALSE;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+
+   CHK_EXEC(SQLQuery(_T("DROP TABLE containers")));
+   CHK_EXEC(SQLQuery(_T("DROP TABLE container_categories")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='390' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V388 to V389
  */
 static BOOL H_UpgradeFromV388(int currVersion, int newVersion)
@@ -6147,11 +6207,9 @@ static BOOL H_UpgradeFromV69(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V68 to V69
-//
-
+/**
+ * Upgrade from V68 to V69
+ */
 static BOOL H_UpgradeFromV68(int currVersion, int newVersion)
 {
 	if (!CreateTable(_T("CREATE TABLE audit_log (")
@@ -9352,6 +9410,7 @@ static struct
    { 386, 387, H_UpgradeFromV386 },
    { 387, 388, H_UpgradeFromV387 },
    { 388, 389, H_UpgradeFromV388 },
+   { 389, 390, H_UpgradeFromV389 },
    { 0, 0, NULL }
 };
 

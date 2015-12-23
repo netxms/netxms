@@ -318,11 +318,11 @@ typedef struct
 #define CMD_CREATE_ACTION              0x0051
 #define CMD_DELETE_ACTION              0x0052
 #define CMD_ACTION_DATA                0x0053
-#define CMD_GET_CONTAINER_CAT_LIST     0x0054
-#define CMD_CONTAINER_CAT_DATA         0x0055
-#define CMD_DELETE_CONTAINER_CAT       0x0056
-#define CMD_CREATE_CONTAINER_CAT       0x0057
-#define CMD_MODIFY_CONTAINER_CAT       0x0058
+//UNUSED: #define CMD_GET_CONTAINER_CAT_LIST     0x0054
+//UNUSED: #define CMD_CONTAINER_CAT_DATA         0x0055
+//UNUSED: #define CMD_DELETE_CONTAINER_CAT       0x0056
+//UNUSED: #define CMD_CREATE_CONTAINER_CAT       0x0057
+//UNUSED: #define CMD_MODIFY_CONTAINER_CAT       0x0058
 #define CMD_POLL_NODE                  0x0059
 #define CMD_POLLING_INFO               0x005A
 #define CMD_COPY_DCI                   0x005B

@@ -134,30 +134,29 @@ typedef void * HSNMPSESSION;
  * Unique identifier group codes
  */
 #define IDG_NETWORK_OBJECT    0
-#define IDG_CONTAINER_CAT     1
-#define IDG_EVENT             2
-#define IDG_ITEM              3
-#define IDG_SNMP_TRAP         4
-#define IDG_JOB               5
-#define IDG_ACTION            6
-#define IDG_EVENT_GROUP       7
-#define IDG_THRESHOLD         8
-#define IDG_USER              9
-#define IDG_USER_GROUP        10
-#define IDG_ALARM             11
-#define IDG_ALARM_NOTE        12
-#define IDG_PACKAGE           13
-#define IDG_SLM_TICKET        14
-#define IDG_OBJECT_TOOL       15
-#define IDG_SCRIPT            16
-#define IDG_AGENT_CONFIG      17
-#define IDG_GRAPH					18
-#define IDG_CERTIFICATE			19
-#define IDG_SITUATION         20
-#define IDG_DCT_COLUMN        21
-#define IDG_MAPPING_TABLE     22
-#define IDG_DCI_SUMMARY_TABLE 23
-#define IDG_SCHEDULED_TASK    24
+#define IDG_EVENT             1
+#define IDG_ITEM              2
+#define IDG_SNMP_TRAP         3
+#define IDG_JOB               4
+#define IDG_ACTION            5
+#define IDG_EVENT_GROUP       6
+#define IDG_THRESHOLD         7
+#define IDG_USER              8
+#define IDG_USER_GROUP        9
+#define IDG_ALARM             10
+#define IDG_ALARM_NOTE        11
+#define IDG_PACKAGE           12
+#define IDG_SLM_TICKET        13
+#define IDG_OBJECT_TOOL       14
+#define IDG_SCRIPT            15
+#define IDG_AGENT_CONFIG      16
+#define IDG_GRAPH					17
+#define IDG_CERTIFICATE			18
+#define IDG_SITUATION         19
+#define IDG_DCT_COLUMN        20
+#define IDG_MAPPING_TABLE     21
+#define IDG_DCI_SUMMARY_TABLE 22
+#define IDG_SCHEDULED_TASK    23
 
 /**
  * Exit codes for console commands
@@ -528,7 +527,6 @@ private:
    void updateAction(NXCPMessage *pRequest);
    void deleteAction(NXCPMessage *pRequest);
    void sendAllActions(UINT32 dwRqId);
-   void SendContainerCategories(UINT32 dwRqId);
    void forcedNodePoll(NXCPMessage *pRequest);
    void onTrap(NXCPMessage *pRequest);
    void onWakeUpNode(NXCPMessage *pRequest);
