@@ -447,12 +447,84 @@ static void TestHashMap()
    AssertTrue(!_tcscmp(s->getBuffer(), _T("REPLACE")));
    EndTest();
 
+   StartTest(_T("HashMap: iterator"));
+   Iterator<String> *it = hashMap->iterator();
+   AssertTrue(it->hasNext());
+   s = it->next();
+   AssertNotNull(s);
+   AssertNotNull(it->next());
+   AssertNotNull(it->next());
+   AssertFalse(it->hasNext());
+   AssertNull(it->next());
+   AssertFalse(it->hasNext());
+   delete it;
+   EndTest();
+
    StartTest(_T("HashMap: remove"));
    hashMap->remove(k3);
    AssertNull(hashMap->get(k3));
    EndTest();
 
+   StartTest(_T("HashMap: clear"));
+   hashMap->clear();
+   AssertEquals(hashMap->size(), 0);
+   it = hashMap->iterator();
+   AssertFalse(it->hasNext());
+   AssertNull(it->next());
+   delete it;
+   EndTest();
+
    delete hashMap;
+}
+
+/**
+ * Test array
+ */
+static void TestObjectArray()
+{
+   StartTest(_T("ObjectArray: create"));
+   ObjectArray<String> *array = new ObjectArray<String>(16, 16, true);
+   AssertEquals(array->size(), 0);
+   EndTest();
+
+   StartTest(_T("ObjectArray: add/get"));
+   array->add(new String(_T("value 1")));
+   array->add(new String(_T("value 2")));
+   array->add(new String(_T("value 3")));
+   array->add(new String(_T("value 4")));
+   AssertEquals(array->size(), 4);
+   AssertNull(array->get(4));
+   AssertNotNull(array->get(1));
+   AssertTrue(!_tcscmp(array->get(1)->getBuffer(), _T("value 2")));
+   EndTest();
+
+   StartTest(_T("ObjectArray: replace"));
+   array->replace(0, new String(_T("replace")));
+   AssertEquals(array->size(), 4);
+   AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("replace")));
+   EndTest();
+
+   StartTest(_T("ObjectArray: remove"));
+   array->remove(0);
+   AssertEquals(array->size(), 3);
+   AssertTrue(!_tcscmp(array->get(0)->getBuffer(), _T("value 2")));
+   EndTest();
+
+   StartTest(_T("ObjectArray: iterator"));
+   Iterator<String> *it = array->iterator();
+   AssertTrue(it->hasNext());
+   String *s = it->next();
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 2")));
+   s = it->next();
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 3")));
+   s = it->next();
+   AssertTrue(!_tcscmp(s->getBuffer(), _T("value 4")));
+   s = it->next();
+   AssertNull(s);
+   delete it;
+   EndTest();
+
+   delete array;
 }
 
 /**
@@ -475,5 +547,6 @@ int main(int argc, char *argv[])
    TestItoa();
    TestQueue();
    TestHashMap();
+   TestObjectArray();
    return 0;
 }

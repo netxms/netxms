@@ -93,7 +93,7 @@ void HashMapBase::clear()
 /**
  * Find entry index by key
  */
-HashMapEntry *HashMapBase::find(const void *key)
+HashMapEntry *HashMapBase::find(const void *key) const
 {
 	if (key == NULL)
 		return NULL;
@@ -133,7 +133,7 @@ void HashMapBase::_set(const void *key, void *value)
 /**
  * Get value by key
  */
-void *HashMapBase::_get(const void *key)
+void *HashMapBase::_get(const void *key) const
 {
    HashMapEntry *entry;
    HASH_FIND(hh, m_data, key, m_keylen, entry);
@@ -161,7 +161,7 @@ void HashMapBase::_remove(const void *key)
  * Enumerate entries
  * Returns true if whole map was enumerated and false if enumeration was aborted by callback.
  */
-EnumerationCallbackResult HashMapBase::forEach(EnumerationCallbackResult (*cb)(const void *, const void *, void *), void *userData)
+EnumerationCallbackResult HashMapBase::forEach(EnumerationCallbackResult (*cb)(const void *, const void *, void *), void *userData) const
 {
    EnumerationCallbackResult result = _CONTINUE;
    HashMapEntry *entry, *tmp;
@@ -179,7 +179,7 @@ EnumerationCallbackResult HashMapBase::forEach(EnumerationCallbackResult (*cb)(c
 /**
  * Find entry
  */
-const void *HashMapBase::findElement(bool (*comparator)(const void *, const void *, void *), void *userData)
+const void *HashMapBase::findElement(bool (*comparator)(const void *, const void *, void *), void *userData) const
 {
    const void *result = NULL;
    HashMapEntry *entry, *tmp;
@@ -197,7 +197,50 @@ const void *HashMapBase::findElement(bool (*comparator)(const void *, const void
 /**
  * Get size
  */
-int HashMapBase::size()
+int HashMapBase::size() const
 {
    return HASH_COUNT(m_data);
+}
+
+/**
+ * Hash map iterator
+ */
+HashMapIterator::HashMapIterator(HashMapBase *hashMap)
+{
+   m_hashMap = hashMap;
+   m_curr = NULL;
+   m_next = NULL;
+}
+
+/**
+ * Next element availability indicator
+ */
+bool HashMapIterator::hasNext()
+{
+   if (m_hashMap->m_data == NULL)
+      return false;
+
+   return (m_curr != NULL) ? (m_next != NULL) : true;
+}
+
+/**
+ * Get next element
+ */
+void *HashMapIterator::next()
+{
+   if (m_hashMap->m_data == NULL)
+      return NULL;
+
+   if (m_curr == NULL)  // iteration not started
+   {
+      HASH_ITER_START(hh, m_hashMap->m_data, m_curr, m_next);
+   }
+   else
+   {
+      if (m_next == NULL)
+         return NULL;
+
+      HASH_ITER_NEXT(hh, m_curr, m_next);
+   }
+   return m_curr->value;
 }

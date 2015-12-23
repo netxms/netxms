@@ -25,13 +25,14 @@
 /**
  * Parameter handlers
  */
-LONG H_ActiveConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_ActiveConnections(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_AgentTraps(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_AgentUptime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_CRC32(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_DataCollectorQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_DirInfo(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
-LONG H_IsSubagentLoaded(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_IsSubagentLoaded(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_MD5Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SHA1Hash(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SubAgentList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
@@ -223,6 +224,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.ActiveConnections"), H_ActiveConnections, NULL, DCI_DT_UINT, DCIDESC_AGENT_ACTIVECONNECTIONS },
    { _T("Agent.AuthenticationFailures"), H_UIntPtr, (TCHAR *)&m_dwAuthenticationFailures, DCI_DT_UINT, DCIDESC_AGENT_AUTHENTICATIONFAILURES },
    { _T("Agent.ConfigurationServer"), H_StringConstant, g_szConfigServer, DCI_DT_STRING, DCIDESC_AGENT_CONFIG_SERVER },
+   { _T("Agent.DataCollectorQueueSize"), H_DataCollectorQueueSize, NULL, DCI_DT_UINT, DCIDESC_AGENT_DATACOLLQUEUESIZE },
    { _T("Agent.FailedRequests"), H_UIntPtr, (TCHAR *)&m_dwFailedRequests, DCI_DT_UINT, DCIDESC_AGENT_FAILEDREQUESTS },
    { _T("Agent.GeneratedTraps"), H_AgentTraps, _T("G"), DCI_DT_UINT64, DCIDESC_AGENT_GENERATED_TRAPS },
    { _T("Agent.IsSubagentLoaded(*)"), H_IsSubagentLoaded, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_SUBAGENT_LOADED },

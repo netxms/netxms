@@ -1254,3 +1254,23 @@ void ClearDataCollectionConfiguration()
    s_serverSyncStatus.clear();
    MutexUnlock(s_serverSyncStatusLock);
 }
+
+/**
+ * Handler for data collector queue size
+ */
+LONG H_DataCollectorQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   if (!s_dataCollectorStarted)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   UINT32 count = 0;
+   MutexLock(s_serverSyncStatusLock);
+   Iterator<ServerSyncStatus> *it = s_serverSyncStatus.iterator();
+   while(it->hasNext())
+      count += (UINT32)it->next()->queueSize;
+   delete it;
+   MutexUnlock(s_serverSyncStatusLock);
+
+   ret_uint(value, count);
+   return SYSINFO_RC_SUCCESS;
+}
