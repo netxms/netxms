@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -666,6 +666,10 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 	{
 		delete_and_null(m_thresholds);
 	}
+
+	// Update data type in thresholds
+   for(int i = 0; i < getThresholdCount(); i++)
+      m_thresholds->get(i)->setDataType(m_dataType);
 
 	safe_free(ppNewList);
    safe_free(newThresholds);
@@ -1453,6 +1457,10 @@ void DCItem::updateFromTemplate(DCObject *src)
       t->bindToItem(m_id, m_pNode->getId());
 		m_thresholds->add(t);
    }
+
+   // Update data type in thresholds
+   for(i = 0; i < getThresholdCount(); i++)
+      m_thresholds->get(i)->setDataType(m_dataType);
 
    if ((item->getInstanceDiscoveryMethod() != IDM_NONE) && (m_instanceDiscoveryMethod == IDM_NONE))
    {
