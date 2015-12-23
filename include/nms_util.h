@@ -631,6 +631,11 @@ public:
 	void replace(int index, const TCHAR *value);
 	void addOrReplace(int index, const TCHAR *value);
 	void addOrReplacePreallocated(int index, TCHAR *value);
+#ifdef UNICODE
+   void addMBString(const char *value) { addPreallocated(WideStringFromMBString(value)); }
+#else
+	void addMBString(const char *value) { add(value); }
+#endif
 	void clear();
 	int size() const { return m_count; }
 	const TCHAR *get(int index) const { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
