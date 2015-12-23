@@ -22,6 +22,10 @@ escape		\\[bnrt0\"\\]
 #pragma warning(disable : 4244 4267)
 #endif
 
+#ifdef __HP_aCC
+#pragma diag_suppress 2111, 2177
+#endif
+
 #define YY_EXTRA_TYPE	NXSL_Lexer*
 #define YY_INPUT(buf, result, maxSize) { result = yyextra->lexerInput(buf, maxSize); }
 

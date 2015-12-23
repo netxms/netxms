@@ -203,7 +203,11 @@
 #define _tpopen   wpopen
 #define _fgetts   fgetws
 #define _fputts   fputws
+#if HAVE_DECL_PUTWS && HAVE_PUTWS
 #define _putts    putws
+#else
+#define _putts(s) fputws((s), stdout)
+#endif
 #define _puttc    putwc
 #define _tcstol   wcstol
 #define _tcstoul  wcstoul

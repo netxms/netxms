@@ -138,8 +138,8 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
 
    UINT32 oid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 9, 4, 1, 3, 0 };
    oid[(sizeof(oid) / sizeof(oid[0])) - 1] = apIndex;
-   UINT32 type;
-   if (SnmpGet(version, transport, NULL, oid, 16, &type, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+   INT32 type;
+   if (SnmpGet(version, transport, NULL, oid, 16, &type, sizeof(INT32), 0) != SNMP_ERR_SUCCESS)
    {
       type = -1;
    }

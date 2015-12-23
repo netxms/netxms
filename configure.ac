@@ -2161,6 +2161,12 @@ AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
 AC_CHECK_FUNCS([itow _itow])
 
+AC_CHECK_DECLS([putws],,,[
+#if HAVE_WCHAR_H
+#include <wchar.h>
+#endif
+])
+
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,
 		[ ac_found_iconv=yes

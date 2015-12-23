@@ -172,7 +172,7 @@ public:
    PollerInfo(PollerType type, NetObj *object) { m_type = type; m_object = object; _tcscpy(m_status, _T("awaiting execution")); }
    ~PollerInfo();
 
-   const PollerType getType() const { return m_type; }
+   PollerType getType() const { return m_type; }
    NetObj *getObject() const { return m_object; }
    const TCHAR *getStatus() const { return m_status; }
 

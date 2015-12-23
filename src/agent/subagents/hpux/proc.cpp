@@ -48,11 +48,10 @@ static time_t m_processListUpdated = 0;
 static int m_processCount = 0;
 static MUTEX m_processListLock = INVALID_MUTEX_HANDLE;
 
-//
-// Handler for System.ProcessCount parameter
-//
-
-LONG H_SysProcessCount(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.ProcessCount parameter
+ */
+LONG H_SysProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	struct pst_dynamic pd;
 	LONG nRet = SYSINFO_RC_ERROR;
@@ -65,11 +64,9 @@ LONG H_SysProcessCount(const char *pszParam, const char *pArg, char *pValue, Abs
 	return nRet;
 }
 
-
-//
-// Get process list
-//
-
+/**
+ * Get process list
+ */
 static struct pst_status *GetProcessList(int *pnNumProcs)
 {
 	int nSize = 0, nCount;
@@ -120,12 +117,10 @@ static struct pst_status *GetProcessList(int *pnNumProcs)
 	return pBuffer;
 }
 
-
-//
-// Handler for System.ThreadCount parameter
-//
-
-LONG H_SysThreadCount(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.ThreadCount parameter
+ */
+LONG H_SysThreadCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet;
 	struct pst_status *pList;
@@ -149,19 +144,17 @@ LONG H_SysThreadCount(const char *pszParam, const char *pArg, char *pValue, Abst
 	return nRet;
 }
 
-
-//
-// Handler for Process.Count(*) parameter
-//
-
-LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for Process.Count(*) parameter
+ */
+LONG H_ProcessCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	struct pst_status *pst;
 	int i, nCount, nTotal;
 	char szArg[256];
 	LONG nRet = SYSINFO_RC_ERROR;
 
-	if (!AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg)))
+	if (!AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg)))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	pst = GetProcessList(&nCount);
@@ -179,24 +172,22 @@ LONG H_ProcessCount(const char *pszParam, const char *pArg, char *pValue, Abstra
 	return nRet;
 }
 
-
-//
-// Handler for Process.xxx() parameters
-// Parameter has the following syntax:
-//    Process.XXX(<process>,<type>,<cmdline>)
-// where
-//    XXX        - requested process attribute (see documentation for list of valid attributes)
-//    <process>  - process name (same as in Process.Count() parameter)
-//    <type>     - representation type (meaningful when more than one process with the same
-//                 name exists). Valid values are:
-//         min - minimal value among all processes named <process>
-//         max - maximal value among all processes named <process>
-//         avg - average value for all processes named <process>
-//         sum - sum of values for all processes named <process>
-//    <cmdline>  - command line
-//
-
-LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for Process.xxx() parameters
+ * Parameter has the following syntax:
+ *    Process.XXX(<process>,<type>,<cmdline>)
+ * where
+ *    XXX        - requested process attribute (see documentation for list of valid attributes)
+ *    <process>  - process name (same as in Process.Count() parameter)
+ *    <type>     - representation type (meaningful when more than one process with the same
+ *                 name exists). Valid values are:
+ *         min - minimal value among all processes named <process>
+ *         max - maximal value among all processes named <process>
+ *         avg - average value for all processes named <process>
+ *         sum - sum of values for all processes named <process>
+ *    <cmdline>  - command line
+ */
+LONG H_ProcessInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_SUCCESS;
 	char szBuffer[256] = "";
@@ -206,7 +197,7 @@ LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue, Abstrac
 	static const char *pszTypeList[]={ "min", "max", "avg", "sum", NULL };
 
 	// Get parameter type arguments
-	AgentGetParameterArg(pszParam, 2, szBuffer, sizeof(szBuffer));
+	AgentGetParameterArgA(pszParam, 2, szBuffer, sizeof(szBuffer));
 	if (szBuffer[0] == 0)     // Omited type
 	{
 		nType = INFOTYPE_SUM;
@@ -220,7 +211,7 @@ LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue, Abstrac
 			return SYSINFO_RC_UNSUPPORTED;     // Unsupported type
 	}
 
-	AgentGetParameterArg(pszParam, 1, szBuffer, sizeof(szBuffer));
+	AgentGetParameterArgA(pszParam, 1, szBuffer, sizeof(szBuffer));
 
 	pList = GetProcessList(&nProcCount);
 	if (pList != NULL)
@@ -307,12 +298,10 @@ LONG H_ProcessInfo(const char *pszParam, const char *pArg, char *pValue, Abstrac
 	return nRet;
 }
 
-
-//
-// Handler for System.ProcessList enum
-//
-
-LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.ProcessList list
+ */
+LONG H_ProcessList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	int i, nCount;
@@ -325,7 +314,7 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue, A
 		for (i = 0; i < nCount; i++)
 		{
 			snprintf(szBuff, sizeof(szBuff), "%d %s", (DWORD)pst[i].pst_pid, pst[i].pst_ucomm);
-			pValue->add(szBuff);
+			pValue->addMBString(szBuff);
 		}
 		nRet = SYSINFO_RC_SUCCESS;
 	}
@@ -333,20 +322,18 @@ LONG H_ProcessList(const char *pszParam, const char *pArg, StringList *pValue, A
 	return nRet;
 }
 
-
 /**
  * Init Process.* functions
  */
-void InitProc(void)
+void InitProc()
 {
    m_processListLock = MutexCreate();
 }
 
-
 /**
  * Cleanup Process.* functions
  */
-void ShutdownProc(void)
+void ShutdownProc()
 {
    if (m_processList != NULL)
    {

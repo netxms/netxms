@@ -105,8 +105,8 @@ typedef struct t_ProcEnt
 void StartIOStatCollector();
 void ShutdownIOStatCollector();
 
-LONG H_IOStats(const char *cmd, const char *arg, char *value, AbstractCommSession *session);
-LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value, AbstractCommSession *session);
+LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 
 
 //
@@ -114,6 +114,5 @@ LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value, AbstractCommS
 //
 
 extern BOOL g_bShutdown;
-
 
 #endif

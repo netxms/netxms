@@ -39,21 +39,11 @@ enum
 };
 
 
-LONG H_NetIfInfo(const char *, const char *, char *, AbstractCommSession *);
-LONG H_NetIpForwarding(const char *, const char *, char *, AbstractCommSession *);
+LONG H_NetIfInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
-LONG H_NetArpCache(const char *, const char *, StringList *, AbstractCommSession *);
-LONG H_NetRoutingTable(const char *, const char *, StringList *, AbstractCommSession *);
-LONG H_NetIfList(const char *, const char *, StringList *, AbstractCommSession *);
+LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 
 #endif // __NET_H__
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-
-$Log: not supported by cvs2svn $
-Revision 1.1  2006/10/04 14:59:14  alk
-initial version of HPUX subagent
-
-
-*/

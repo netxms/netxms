@@ -41,26 +41,26 @@ enum
 };
 
 
-LONG H_ProcessList(const char *, const char *, StringList *, AbstractCommSession *);
-LONG H_Uptime(const char *, const char *, char *, AbstractCommSession *);
-LONG H_Uname(const char *, const char *, char *, AbstractCommSession *);
-LONG H_Hostname(const char *, const char *, char *, AbstractCommSession *);
-LONG H_Hostname(const char *, const char *, char *, AbstractCommSession *);
-LONG H_CpuLoad(const char *, const char *, char *, AbstractCommSession *);
-LONG H_CpuUsage(const char *, const char *, char *, AbstractCommSession *);
-LONG H_ProcessCount(const char *, const char *, char *, AbstractCommSession *);
-LONG H_ProcessInfo(const char *, const char *, char *, AbstractCommSession *);
-LONG H_SysProcessCount(const char *, const char *, char *, AbstractCommSession *);
-LONG H_SysThreadCount(const char *, const char *, char *, AbstractCommSession *);
-LONG H_MemoryInfo(const char *, const char *, char *, AbstractCommSession *);
-LONG H_SourcePkgSupport(const char *, const char *, char *, AbstractCommSession *);
-LONG H_ConnectedUsers(const char *, const char *, char *, AbstractCommSession *);
-LONG H_OpenFiles(const char *, const char *, char *, AbstractCommSession *);
+LONG H_ProcessList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_Uptime(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_Uname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_Hostname(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuLoad(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_CpuUsage(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_ProcessCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_ProcessInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_SysProcessCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_SysThreadCount(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_ConnectedUsers(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_OpenFiles(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
-void StartCpuUsageCollector(void);
-void ShutdownCpuUsageCollector(void);
+void StartCpuUsageCollector();
+void ShutdownCpuUsageCollector();
 
-void InitProc(void);
-void ShutdownProc(void);
+void InitProc();
+void ShutdownProc();
 
 #endif // __SYSTEM_H__
