@@ -26,6 +26,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Interface;
 
 /**
  * Label decorator for NetXMS objects
@@ -78,6 +79,13 @@ public class ObjectDecorator extends BaseLabelProvider implements ILightweightLa
 	      decoration.addOverlay(maintModeImage, IDecoration.TOP_RIGHT);
 	      decoration.addSuffix(" [Maintenance]");
 	      decoration.setForegroundColor(maintColor);
+		}
+		if (element instanceof Interface)
+		{
+		   if ((((Interface)element).getOperState() == Interface.OPER_STATE_DOWN) &&
+		       (((Interface)element).getAdminState() == Interface.ADMIN_STATE_UP) &&
+		       (((Interface)element).getExpectedState() == Interface.EXPECTED_STATE_IGNORE))
+		      decoration.addOverlay(statusImages[ObjectStatus.CRITICAL.getValue()], IDecoration.TOP_LEFT);
 		}
 	}
 }
