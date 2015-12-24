@@ -25,6 +25,7 @@
 Makefile
 Makefile.in
 pom.xml.versionsBackup
+*.swp
 
 Debug
 Release
@@ -34,6 +35,9 @@ target
 .libs
 .deps
 .idea
+
+.cproject
+.project
 
 /netxms-build-tag.h
 /include/netxms-build-tag.h
