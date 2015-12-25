@@ -234,15 +234,3 @@ INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_N
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_NODE_ADDED);
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_SUBNET_ADDED);
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_INTERFACE_ADDED);
-
-
-/*
-** Default container categories
-*/
-
-INSERT INTO container_categories (category,name,image_id,description)
-   VALUES (1,'Group',0,'Generic object group');
-INSERT INTO container_categories (category,name,image_id,description)
-   VALUES (2,'Location',0,'Geografic location');
-INSERT INTO container_categories (category,name,image_id,description)
-   VALUES (3,'Service',0,'Logical service');

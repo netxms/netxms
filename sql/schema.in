@@ -741,7 +741,7 @@ CREATE TABLE event_log
 
 CREATE INDEX idx_event_log_event_timestamp ON event_log(event_timestamp);
 
-#if defined(DB_MSSQL) || defined(DB_POSTGRESQL)
+#if defined(DB_POSTGRESQL)
 CREATE INDEX idx_event_log_root_id ON event_log(root_event_id) WHERE root_event_id > 0;
 #elif defined(DB_ORACLE)
 CREATE OR REPLACE FUNCTION zero_to_null(id NUMBER)
