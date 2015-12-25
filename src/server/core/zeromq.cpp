@@ -102,7 +102,6 @@ bool Subscription::removeItem(UINT32 dciId)
    return !ignoreItems && items->size() == 0;
 }
 
-
 /**
  *
  */
@@ -111,11 +110,11 @@ bool Subscription::match(UINT32 dciId)
    return ignoreItems || items->contains(dciId);
 }
 
-
 /**
- *
+ * Load subscriptions from database
  */
-static void LoadSubscriptions() {
+static void LoadSubscriptions()
+{
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
 	DB_RESULT result = DBSelect(db, _T("SELECT object_id, subscription_type, ignore_items, items FROM zmq_subscription"));
    if (result != NULL)
@@ -235,11 +234,11 @@ static bool SaveSubscriptionInternal(DB_STATEMENT statement, HashMap<UINT32, Sub
    return true;
 }
 
-
 /**
- *
+ * Save subscriptions to database
  */
-static bool SaveSubscriptions() {
+static bool SaveSubscriptions()
+{
    DB_HANDLE db = DBConnectionPoolAcquireConnection();
 
    bool success = false;
@@ -272,14 +271,21 @@ static bool SaveSubscriptions() {
    }
 
    DBConnectionPoolReleaseConnection(db);
-
    return success;
 }
 
-
+/**
+ * Add dynamic string to JSON
+ */
+inline json_t *json_string_dynamic(char *s)
+{
+   json_t *json = json_string(s);
+   free(s);
+   return json;
+}
 
 /**
- *
+ * Convert event object to JSON representation
  */
 static char *EventToJson(const Event *event, const NetObj *object)
 {
@@ -294,12 +300,12 @@ static char *EventToJson(const Event *event, const NetObj *object)
    json_object_set_new(root, "time", json_integer(event->getTimeStamp()));
    json_object_set_new(root, "code", json_integer(event->getCode()));
    json_object_set_new(root, "severity", json_integer(event->getSeverity()));
-   json_object_set_new(root, "message", json_string(UTF8StringFromTchar(event->getMessage())));
+   json_object_set_new(root, "message", json_string_dynamic(UTF8StringFromTString(event->getMessage())));
 
    json_object_set_new(source, "id", json_integer(event->getSourceId()));
    int objectType = object->getObjectClass();
    json_object_set_new(source, "type", json_integer(objectType));
-   json_object_set_new(source, "name", json_string(UTF8StringFromTchar(object->getName())));
+   json_object_set_new(source, "name", json_string_dynamic(UTF8StringFromTString(object->getName())));
    if (objectType == OBJECT_NODE)
    {
       InetAddress ip = ((Node *)object)->getIpAddress();
@@ -312,7 +318,7 @@ static char *EventToJson(const Event *event, const NetObj *object)
    {
       char name[16];
       sprintf(name, "p%d", i+1);
-      json_object_set_new(args, name, json_string(UTF8StringFromTchar(event->getParameter(i))));
+      json_object_set_new(args, name, json_string_dynamic(UTF8StringFromTString(event->getParameter(i))));
    }
 
    char *message = json_dumps(root, 0);
@@ -320,9 +326,8 @@ static char *EventToJson(const Event *event, const NetObj *object)
    return message;
 }
 
-
 /**
- *
+ * Convert DCI value to JSON representation
  */
 static char *DataToJson(const NetObj *object, UINT32 dciId, const TCHAR *dciName, const TCHAR *value)
 {
@@ -335,7 +340,9 @@ static char *DataToJson(const NetObj *object, UINT32 dciId, const TCHAR *dciName
 
    json_t *record = json_object();
    json_object_set_new(record, "id", json_integer(dciId));
-   json_object_set_new(record, UTF8StringFromTchar(dciName), json_string(UTF8StringFromTchar(value)));
+   char *utf8name = UTF8StringFromTString(dciName);
+   json_object_set_new(record, utf8name, json_string_dynamic(UTF8StringFromTString(value)));
+   free(utf8name);
    json_array_append(data, record);
 
    char *message = json_dumps(root, 0);
@@ -343,9 +350,8 @@ static char *DataToJson(const NetObj *object, UINT32 dciId, const TCHAR *dciName
    return message;
 }
 
-
 /**
- *
+ * Subscribe
  */
 static bool Subscribe(HashMap<UINT32, Subscription> *map, MUTEX mutex, UINT32 objectId, UINT32 dciId)
 {

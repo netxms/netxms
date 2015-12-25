@@ -221,9 +221,9 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
 #endif
 
 #ifdef UNICODE
-#define UTF8StringFromTchar(x) UTF8StringFromWideString(x)
+#define UTF8StringFromTString(s) UTF8StringFromWideString(s)
 #else
-#define UTF8StringFromTchar(x) x
+#define UTF8StringFromTString(s) UTF8StringFromMBString(s)
 #endif
 
 /**

@@ -92,11 +92,12 @@ RUNTIME_PREFIX=""
 RUNTIME_STATE_DIR=""
 HPUX_HPPA="no"
 XMPP_SUPPORT="yes"
-ZMQ_SUPPORT="no"
+ZEROMQ_SUPPORT="no"
+ZEROMQ_CPPFLAGS=""
+ZEROMQ_LDFLAGS=""
 LDAP_SUPPORT="yes"
 DISABLE_READLINE="no"
 TUXEDO_LIBS=""
-ZEROMQ_LIBS=""
 MONGODB_LIBS=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
@@ -280,7 +281,7 @@ AC_ARG_WITH(zeromq,
 		ZEROMQ_BASE="$withval"
 	fi
 	COMPONENTS="$COMPONENTS zeromq"
-   ZMQ_SUPPORT=yes
+   ZEROMQ_SUPPORT=yes
 fi ])
 
 AC_ARG_WITH(mongodb,
@@ -2829,15 +2830,10 @@ if test $? = 0; then
 		ZEROMQ_LDFLAGS="-L$ZEROMQ_BASE/lib"
 		CPPFLAGS="$CPPFLAGS $ZEROMQ_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $ZEROMQ_LDFLAGS"
-	else
-        ZEROMQ_CPPFLAGS="-I/usr/local/include"
-		ZEROMQ_LDFLAGS="-L/usr/local/lib"
-		CPPFLAGS="$CPPFLAGS $ZEROMQ_CPPFLAGS"
-		LDFLAGS="$LDFLAGS $ZEROMQ_LDFLAGS"
-    fi
+	fi
 	
 	AC_CHECK_HEADER(zmq.h,,AC_MSG_ERROR([*** Cannot find zmq.h - check your ZeroMQ installation ***]))
-	AC_CHECK_LIB(zmq, zmq_sleep, [ SERVER_LIBS="$SERVER_LIBS -lzmq" ])
+	AC_CHECK_LIB(zmq, zmq_ctx_new, [ SERVER_LIBS="$SERVER_LIBS -lzmq" ], AC_MSG_ERROR([*** libzmq is missing or too old - check your ZeroMQ installation ***]))
     
 	AC_DEFINE(WITH_ZMQ, 1, Define to 1 if ZeroMQ is supported)
 
@@ -2932,7 +2928,7 @@ AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${ac_cv_lib_crypto_RSA_new}" = "xyes"])
 AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
 AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
-AM_CONDITIONAL([ZMQ_SUPPORT], [test "x$ZMQ_SUPPORT" = "xyes"])
+AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
 
 
 #--------------------------------------------------------------------
@@ -2991,13 +2987,12 @@ AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(TUXEDO_CPPFLAGS)
 AC_SUBST(TUXEDO_LDFLAGS)
 AC_SUBST(TUXEDO_LIBS)
-AC_SUBST(ZEROMQ_CPPFLAGS)
-AC_SUBST(ZEROMQ_LDFLAGS)
-AC_SUBST(ZEROMQ_LIBS)
 AC_SUBST(MONGODB_CPPFLAGS)
 AC_SUBST(MONGODB_LDFLAGS)
 AC_SUBST(MONGODB_LIBS)
 AC_SUBST(INSTALL_LIBPATH)
+AC_SUBST(ZEROMQ_CPPFLAGS)
+AC_SUBST(ZEROMQ_LDFLAGS)
 
 #--------------------------------------------------------------------
 # Shared libs versions
@@ -3280,7 +3275,7 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 	else
 		echo "XMPP support            : NO"
 	fi
-	if test "x${ZMQ_SUPPORT}" = "xyes"; then
+	if test "x${ZEROMQ_SUPPORT}" = "xyes"; then
 		echo "ZeroMQ support          : YES"
 	else
 		echo "ZeroMQ support          : NO"

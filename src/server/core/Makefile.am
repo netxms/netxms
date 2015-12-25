@@ -32,8 +32,8 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
 			userdb_objects.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
 			winperf.cpp xmpp.cpp zeromq.cpp zone.cpp
-libnxcore_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) 
+libnxcore_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include @ZEROMQ_CPPFLAGS@
+libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @ZEROMQ_LDFLAGS@
 libnxcore_la_LIBADD = \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
@@ -54,7 +54,7 @@ if USE_INTERNAL_LIBTRE
 libnxcore_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
 endif
 
-if ZMQ_SUPPORT
+if ZEROMQ_SUPPORT
 if USE_INTERNAL_JANSSON
 libnxcore_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
 else
