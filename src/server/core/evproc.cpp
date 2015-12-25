@@ -22,6 +22,10 @@
 
 #include "nxcore.h"
 
+#if WITH_ZMQ
+#include "zeromq.h"
+#endif
+
 /**
  * Number of processed events since start
  */

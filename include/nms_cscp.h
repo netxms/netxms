@@ -560,6 +560,13 @@ typedef struct
 #define CMD_JOIN_CLUSTER               0x0147
 #define CMD_CLUSTER_NOTIFY             0x0148
 
+#define CMD_ZMQ_SUBSCRIBE_EVENT        0x0149
+#define CMD_ZMQ_UNSUBSCRIBE_EVENT      0x014A
+#define CMD_ZMQ_SUBSCRIBE_DATA         0x014B
+#define CMD_ZMQ_UNSUBSCRIBE_DATA       0x014C
+#define CMD_ZMQ_LIST_EVENT_SUBSCRIPTIONS 0x014D
+#define CMD_ZMQ_LIST_DATA_SUBSCRIPTIONS 0x014E
+
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
 #define CMD_RS_SCHEDULE_EXECUTION      0x1102
@@ -1305,6 +1312,8 @@ typedef struct
 #define VID_SCHEDULE_LIST_BASE      ((UINT32)0x10000000)
 
 #define VID_CALLBACK_BASE           ((UINT32)0x10000000)
+
+#define VID_ZMQ_SUBSCRIPTION_BASE   ((UINT32)0x10000000)
 
 #ifdef __cplusplus
 

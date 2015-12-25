@@ -33,6 +33,10 @@
 #include <dirent.h>
 #endif
 
+#ifdef WITH_ZMQ
+#include "zeromq.h"
+#endif
+
 #ifndef min
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #endif
@@ -1412,6 +1416,26 @@ void ClientSession::processingThread()
             break;
          case CMD_REMOVE_SCHEDULE:
             removeScheduledTask(pMsg);
+#ifdef WITH_ZMQ
+         case CMD_ZMQ_SUBSCRIBE_EVENT:
+            zmqManageSubscription(pMsg, zmq::EVENT, true);
+            break;
+         case CMD_ZMQ_UNSUBSCRIBE_EVENT:
+            zmqManageSubscription(pMsg, zmq::EVENT, false);
+            break;
+         case CMD_ZMQ_SUBSCRIBE_DATA:
+            zmqManageSubscription(pMsg, zmq::DATA, true);
+            break;
+         case CMD_ZMQ_UNSUBSCRIBE_DATA:
+            zmqManageSubscription(pMsg, zmq::DATA, false);
+            break;
+         case CMD_ZMQ_LIST_EVENT_SUBSCRIPTIONS:
+            zmqListSubscriptions(pMsg, zmq::EVENT);
+            break;
+         case CMD_ZMQ_LIST_DATA_SUBSCRIPTIONS:
+            zmqListSubscriptions(pMsg, zmq::DATA);
+            break;
+#endif
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
             {
@@ -13995,3 +14019,74 @@ void ClientSession::removeScheduledTask(NXCPMessage *request)
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
+
+#ifdef WITH_ZMQ
+/**
+ * Manage subscription for ZMQ forwarder
+ */
+void ClientSession::zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   UINT32 objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+   NetObj *object = FindObjectById(objectId);
+   if ((object != NULL) && !object->isDeleted())
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         UINT32 dciId = request->getFieldAsUInt32(VID_DCI_ID);
+         UINT32 eventCode = request->getFieldAsUInt32(VID_EVENT_CODE);
+         bool success;
+         switch (type)
+         {
+            case zmq::EVENT:
+               if (subscribe)
+               {
+                  success = ZmqSubscribeEvent(objectId, eventCode, dciId);
+               }
+               else
+               {
+                  success = ZmqUnsubscribeEvent(objectId, eventCode, dciId);
+               }
+               break;
+            case zmq::DATA:
+               if (subscribe)
+               {
+                  success = ZmqSubscribeData(objectId, dciId);
+               }
+               else
+               {
+                  success = ZmqUnsubscribeData(objectId, dciId);
+               }
+               break;
+         }
+         msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+   sendMessage(&msg);
+}
+
+void ClientSession::zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   ZmqFillSubscriptionListMessage(&msg, type);
+
+   msg.setField(VID_RCC, RCC_SUCCESS);
+
+   sendMessage(&msg);
+}
+
+#endif

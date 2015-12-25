@@ -43,6 +43,10 @@
 #include <sys/wait.h>
 #endif
 
+#ifdef WITH_ZMQ
+#include "zeromq.h"
+#endif
+
 /**
  * Format string to show value of global flag
  */

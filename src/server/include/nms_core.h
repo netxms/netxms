@@ -107,6 +107,9 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nxcore_jobs.h"
 #include "nxcore_logs.h"
 #include "nxcore_schedule.h"
+#ifdef WITH_ZMQ
+#include "zeromq.h"
+#endif
 
 /**
  * Common constants and macros
@@ -677,6 +680,10 @@ private:
    void addScheduledTask(NXCPMessage *request);
    void updateScheduledTask(NXCPMessage *request);
    void removeScheduledTask(NXCPMessage *request);
+#ifdef WITH_ZMQ
+   void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
+   void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
+#endif
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
@@ -1021,12 +1028,6 @@ UINT32 DeleteGraph(UINT32 graphId, UINT32 userId);
 
 #if XMPP_SUPPORTED
 void SendXMPPMessage(const TCHAR *rcpt, const TCHAR *text);
-#endif
-
-#if WITH_ZMQ
-void StartZMQConnector();
-void StopZMQConnector();
-void ZmqPublishEvent(Event *event);
 #endif
 
 /**

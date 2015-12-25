@@ -22,6 +22,10 @@
 
 #include "nxcore.h"
 
+#ifdef WITH_ZMQ
+#include "zeromq.h"
+#endif
+
 /**
  * Event parameter names
  */
@@ -757,6 +761,9 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
    }
 
    unlock();
+
+   ZmqPublishData(m_pNode->getId(), m_id, m_name, pValue->getString());
+
    return true;
 }
 
