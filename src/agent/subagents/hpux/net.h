@@ -45,5 +45,6 @@ LONG H_NetIpForwarding(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSessio
 LONG H_NetArpCache(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetRoutingTable(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 LONG H_NetIfList(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
+LONG H_NetIfNames(const TCHAR *, const TCHAR *, StringList *, AbstractCommSession *);
 
 #endif // __NET_H__

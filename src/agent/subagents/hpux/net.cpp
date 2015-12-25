@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for HP-UX
-** Copyright (C) 2010 Victor Kirhenshtein
+** Copyright (C) 2010-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -224,39 +224,55 @@ static int GetInterfaceList(NETIF **iflist)
 }
 
 /**
- * Handler for Net.InterfaceList enum
+ * Handler for Net.InterfaceList list
  */
-LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
+LONG H_NetIfList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-	int i, j, ifCount;
 	NETIF *ifList;
-	char macAddr[16], ipAddr[32], buffer[256];
-
-	ifCount = GetInterfaceList(&ifList);
+	int ifCount = GetInterfaceList(&ifList);
 	if (ifCount == -1)
 		return SYSINFO_RC_ERROR;
 
-	for(i = 0; i < ifCount; i++)
+	for(int i = 0; i < ifCount; i++)
 	{
+	   char macAddr[16], ipAddr[32], buffer[256];
 		BinToStrA(ifList[i].macAddr, 6, macAddr);
 		if (ifList[i].ipAddrCount == 0)
 		{
 			snprintf(buffer, 256, "%d 0.0.0.0/0 %d %s %s", ifList[i].ifIndex, ifList[i].ifType, macAddr, ifList[i].ifName);
-			pValue->addMBString(buffer);
+			value->addMBString(buffer);
 		}
 		else
 		{
 			snprintf(buffer, 256, "%d %s/%d %d %s %s", ifList[i].ifIndex, IpToStrA(ifList[i].ipAddrList[0].addr, ipAddr),
 			         BitsInMask(ifList[i].ipAddrList[0].mask), ifList[i].ifType, macAddr, ifList[i].ifName);
-			pValue->addMBString(buffer);
+			value->addMBString(buffer);
 
-			for(j = 1; j < ifList[i].ipAddrCount; j++)
+			for(int j = 1; j < ifList[i].ipAddrCount; j++)
 			{
 				snprintf(buffer, 256, "%d %s/%d %d %s %s:%d", ifList[i].ifIndex, IpToStrA(ifList[i].ipAddrList[j].addr, ipAddr),
 				         BitsInMask(ifList[i].ipAddrList[j].mask), ifList[i].ifType, macAddr, ifList[i].ifName, j);
-				pValue->addMBString(buffer);
+				value->addMBString(buffer);
 			}
 		}
+	}
+	free(ifList);
+	return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for Net.InterfaceNames list
+ */
+LONG H_NetIfNames(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+	NETIF *ifList;
+	int ifCount = GetInterfaceList(&ifList);
+	if (ifCount == -1)
+		return SYSINFO_RC_ERROR;
+
+	for(int i = 0; i < ifCount; i++)
+	{
+		value->addMBString(ifList[i].ifName);
 	}
 	free(ifList);
 	return SYSINFO_RC_SUCCESS;

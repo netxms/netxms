@@ -2302,6 +2302,41 @@ WCHAR LIBNETXMS_EXPORTABLE *wcslwr(WCHAR *str)
 
 #endif
 
+#if !defined(_WIN32) && (!HAVE_WCSFTIME || !WORKING_WCSFTIME)
+
+/**
+ * wide char version of strftime
+ */
+size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCHAR *format, const struct tm *t)
+{
+#if HAVE_ALLOCA
+   char *mbuf = (char *)alloca(bufsize);
+   size_t flen = wcslen(format) + 1;
+   char *mfmt = (char *)alloca(flen);
+   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, format, -1, mfmt, flen, NULL, NULL);
+#else
+   char *mbuf = (char *)malloc(bufsize);
+   char *mfmt = MBStringFromWideString(format);
+#endif
+   size_t rc = strftime(mbuf, bufsize, mfmt, t);
+   if (rc > 0)
+   {
+      MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, mbuf, -1, buffer, (int)bufsize);
+      buffer[bufsize - 1] = 0;
+   }
+   else
+   {
+      buffer[0] = 0;
+   }
+#if !HAVE_ALLOCA
+   free(mbuf);
+   free(mfmt);
+#endif
+   return rc;
+}
+
+#endif
+
 #if !HAVE__ITOA && !defined(_WIN32)
 
 /**

@@ -231,7 +231,11 @@
 #define _tunlink  wunlink
 #define _trename  wrename
 #define _tremove  wremove
+#if HAVE_WCSFTIME && WORKING_WCSFTIME
 #define _tcsftime wcsftime
+#else
+#define _tcsftime nx_wcsftime
+#endif
 #define _tctime   wctime
 #define _istspace iswspace
 #define _istdigit iswdigit

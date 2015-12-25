@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for HP-UX
-** Copyright (C) 2006 Alex Kirhenshtein
+** Copyright (C) 2006-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -173,11 +173,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-   { _T("FileSystem.MountPoints"), H_MountPoints,     NULL },
-	{ _T("Net.ArpCache"),           H_NetArpCache,     NULL },
-	{ _T("Net.IP.RoutingTable"),    H_NetRoutingTable, NULL },
-	{ _T("Net.InterfaceList"),      H_NetIfList,       NULL },
-	{ _T("System.ProcessList"),     H_ProcessList,     NULL },
+   { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
+   { _T("Net.ArpCache"), H_NetArpCache, NULL },
+   { _T("Net.IP.RoutingTable"), H_NetRoutingTable, NULL },
+   { _T("Net.InterfaceList"), H_NetIfList, NULL },
+   { _T("Net.InterfaceNames"), H_NetIfNames, NULL },
+   { _T("System.ProcessList"), H_ProcessList, NULL },
 };
 
 /**

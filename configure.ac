@@ -2171,13 +2171,49 @@ AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws])
 AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
 AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
-AC_CHECK_FUNCS([itow _itow])
+AC_CHECK_FUNCS([itow _itow wcsftime])
 
 AC_CHECK_DECLS([putws],,,[
 #if HAVE_WCHAR_H
 #include <wchar.h>
 #endif
 ])
+
+if test "x$ac_cv_func_wcsftime" = "xyes"; then
+	AC_MSG_CHECKING(whether wcsftime is working correctly)
+	AC_RUN_IFELSE(
+	  [AC_LANG_PROGRAM([
+#include <stdio.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#if HAVE_WCHAR_H
+#include <wchar.h>
+#endif
+	     ], [[
+		wchar_t buffer[64];
+		struct tm *ltm;
+		time_t t;
+
+		t = time(NULL);
+		ltm = localtime(&t);
+		wcsftime(buffer, 64, L"%Y", ltm);
+		return wcstol(buffer, NULL, 10) == ltm->tm_year + 1900 ? 0 : 1;
+	     ]])
+	  ],
+	  [ AC_MSG_RESULT(yes)
+	    AC_DEFINE(WORKING_WCSFTIME, 1, Define to 1 if wcsftime is working correctly)
+	  ],
+	  [ AC_MSG_RESULT(no) ],
+	  [ AC_MSG_RESULT(no) ]
+	)
+fi
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,
