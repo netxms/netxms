@@ -872,7 +872,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(ODBCDRV_CONN *pCon
 /**
  * Perform unbuffered SELECT query using prepared statement
  */
-extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(ODBCDRV_CONN *pConn, ODBCDRV_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
+extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(ODBCDRV_CONN *pConn, ODBCDRV_STATEMENT *stmt, DWORD *pdwError, NETXMS_WCHAR *errorText)
 {
    ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult = NULL;
 
@@ -890,8 +890,8 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(ODBCDRV_CO
       pResult->numColumns = wNumCols;
       pResult->pConn = pConn;
       pResult->noMoreRows = false;
-		pResult->values = (WCHAR **)malloc(sizeof(WCHAR *) * pResult->numColumns);
-      memset(pResult->values, 0, sizeof(WCHAR *) * pResult->numColumns);
+		pResult->values = (NETXMS_WCHAR **)malloc(sizeof(WCHAR *) * pResult->numColumns);
+      memset(pResult->values, 0, sizeof(NETXMS_WCHAR *) * pResult->numColumns);
 
 		// Get column names
 		pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
