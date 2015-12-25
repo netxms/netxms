@@ -735,7 +735,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(MSSQL_CONN *pConn,
 }
 
 /**
- * Perform SELECT query using prepared statement
+ * Perform unbuffered SELECT query using prepared statement
  */
 extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(MSSQL_CONN *pConn, MSSQL_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
 {
