@@ -35,6 +35,7 @@ import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -170,6 +171,8 @@ import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.AuthCertificate;
 import org.netxms.client.users.User;
 import org.netxms.client.users.UserGroup;
+import org.netxms.client.zeromq.ZmqSubscription;
+import org.netxms.client.zeromq.ZmqSubscriptionType;
 
 /**
  * Communication session with NetXMS server.
@@ -8681,5 +8684,82 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-   }   
+   }
+   
+   /**
+    * Manage subscription for ZMQ event forwarder
+    * @param objectId Node id
+    * @param dciId DCI ID. 0 means "disabled DCI source filter for events"
+    * @param subscribe
+    * @throws IOException
+    * @throws NXCException
+    */
+   public void updateZmqEventSubscription(final long objectId, final long dciId, boolean subscribe) throws IOException, NXCException
+   {
+       final NXCPMessage msg;
+       if (subscribe)
+       {
+	   msg = newMessage(NXCPCodes.CMD_ZMQ_SUBSCRIBE_EVENT);
+       }
+       else
+       {
+	   msg = newMessage(NXCPCodes.CMD_ZMQ_UNSUBSCRIBE_EVENT);
+       }
+       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
+       sendMessage(msg);
+       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Manage subscription for ZMQ data forwarder
+    * @param objectId
+    * @param dciId
+    * @param subscribe
+    * @throws IOException
+    * @throws NXCException
+    */
+   public void updateZmqDataSubscription(final long objectId, final long dciId, boolean subscribe) throws IOException, NXCException
+   {
+       final NXCPMessage msg;
+       if (subscribe)
+       {
+	   msg = newMessage(NXCPCodes.CMD_ZMQ_SUBSCRIBE_DATA);
+       }
+       else
+       {
+	   msg = newMessage(NXCPCodes.CMD_ZMQ_UNSUBSCRIBE_DATA);
+       }
+       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
+       sendMessage(msg);
+       waitForRCC(msg.getMessageId());
+   }
+   
+   public List<ZmqSubscription> getZmqSubscriptions(ZmqSubscriptionType type) throws IOException, NXCException
+   {
+       final NXCPMessage msg = newMessage(type == ZmqSubscriptionType.EVENT ? NXCPCodes.CMD_ZMQ_LIST_EVENT_SUBSCRIPTIONS : NXCPCodes.CMD_ZMQ_LIST_DATA_SUBSCRIPTIONS);
+       sendMessage(msg);
+       final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+       final List<ZmqSubscription> subscriptions = new ArrayList<ZmqSubscription>();
+       
+       long baseId = NXCPCodes.VID_ZMQ_SUBSCRIPTION_BASE;
+       while (true)
+       {
+	   long objectId = response.getFieldAsInt32(baseId);
+	   if (objectId == 0)
+	   {
+	       break;
+	   }
+	   boolean ignoreItems = response.getFieldAsBoolean(baseId + 1);
+	   long[] dciElements = response.getFieldAsUInt32Array(baseId + 2);
+	   
+	   subscriptions.add(new ZmqSubscription(objectId, ignoreItems, dciElements));
+	   
+	   baseId += 10;
+       }
+       
+       return subscriptions;
+   }
 }

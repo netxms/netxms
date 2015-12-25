@@ -346,7 +346,14 @@ public class NXCPCodes
    public static final int CMD_REMOVE_SCHEDULE = 0x0144;
    public static final int CMD_ENTER_MAINT_MODE = 0x0145;
    public static final int CMD_LEAVE_MAINT_MODE = 0x0146;   
-	
+
+   public static final int CMD_ZMQ_SUBSCRIBE_EVENT = 0x0149;
+   public static final int CMD_ZMQ_UNSUBSCRIBE_EVENT = 0x014a;
+   public static final int CMD_ZMQ_SUBSCRIBE_DATA = 0x014b;
+   public static final int CMD_ZMQ_UNSUBSCRIBE_DATA = 0x014c;
+   public static final int CMD_ZMQ_LIST_EVENT_SUBSCRIPTIONS = 0x014d;
+   public static final int CMD_ZMQ_LIST_DATA_SUBSCRIPTIONS = 0x014e;
+
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
 	public static final int CMD_RS_GET_REPORT_DEFINITION = 0x1101;
@@ -992,4 +999,5 @@ public class NXCPCodes
    public static final long VID_LOC_LIST_BASE = 0x10000000L;
    public static final long VID_SCHEDULE_LIST_BASE = 0x10000000L;
    public static final long VID_CALLBACK_BASE= 0x10000000L;
+   public static final long VID_ZMQ_SUBSCRIPTION_BASE= 0x10000000L;
 }
