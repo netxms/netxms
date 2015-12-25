@@ -545,7 +545,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server agent libnxmap client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
 	SMSDRV_DIRS="kannel slack text2reach websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
@@ -675,6 +675,11 @@ if test $? = 0; then
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/darwin/darwin.la"
 			STATIC_SUBAGENT_LIST="darwin $STATIC_SUBAGENT_LIST"
 			;;
+		Minix)
+			SUBAGENT_DIRS="minix"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/minix/minix.la"
+			STATIC_SUBAGENT_LIST="minix $STATIC_SUBAGENT_LIST"
+			;;
 		*)
 			# unknown
 			;;
@@ -727,6 +732,9 @@ if test $? = 0; then
       ;;
 		Darwin)
 			SUBAGENT_DIRS="darwin"
+			;;
+		Minix)
+			SUBAGENT_DIRS="minix"
 			;;
 		*)
 			# unknown
@@ -3094,6 +3102,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/linux/Makefile
 	src/agent/subagents/lmsensors/Makefile
 	src/agent/subagents/logwatch/Makefile
+	src/agent/subagents/minix/Makefile
 	src/agent/subagents/netbsd/Makefile
 	src/agent/subagents/netsvc/Makefile
 	src/agent/subagents/odbcquery/Makefile
