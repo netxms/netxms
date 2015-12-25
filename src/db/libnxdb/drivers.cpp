@@ -143,7 +143,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    if (*pdwAPIVersion != DBDRV_API_VERSION)
    {
       if (s_writeLog)
-         __DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Database driver \"%s\" cannot be loaded because of API version mismatch (driver: %d; server: %d)"),
+         __DBWriteLog(EVENTLOG_ERROR_TYPE, _T("Database driver \"%s\" cannot be loaded because of API version mismatch (server: %d; driver: %d)"),
                   module, (int)(DBDRV_API_VERSION), (int)(*pdwAPIVersion));
 		goto failure;
    }
