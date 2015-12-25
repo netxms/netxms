@@ -762,7 +762,9 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
 
    unlock();
 
+#ifdef WITH_ZMQ
    ZmqPublishData(m_pNode->getId(), m_id, m_name, pValue->getString());
+#endif
 
    return true;
 }
