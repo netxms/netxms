@@ -877,6 +877,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\zeromq.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\zone.cpp"
 				>
 			</File>

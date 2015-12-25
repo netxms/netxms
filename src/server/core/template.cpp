@@ -175,27 +175,27 @@ void Template::setAutoApplyFilter(const TCHAR *filter)
 bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
    TCHAR szQuery[256];
-   DB_RESULT hResult;
    UINT32 i, dwNumNodes, dwNodeId;
    NetObj *pObject;
-   BOOL bResult = TRUE;
 
    m_id = dwId;
 
    if (!loadCommonProperties(hdb))
-      return FALSE;
+      return false;
 
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT version,flags,apply_filter FROM templates WHERE id=%d"), dwId);
-   hResult = DBSelect(hdb, szQuery);
+   DB_RESULT hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
-      return FALSE;     // Query failed
+      return false;
 
    if (DBGetNumRows(hResult) == 0)
    {
       // No object with given ID in database
       DBFreeResult(hResult);
-      return FALSE;
+      return false;
    }
+
+   bool success = true;
 
    m_dwVersion = DBGetFieldULong(hResult, 0, 0);
 	m_flags = DBGetFieldULong(hResult, 0, 1);
@@ -214,7 +214,7 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    loadItemsFromDB(hdb);
    for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
       if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
-         bResult = FALSE;
+         success = false;
 
    // Load related nodes list
    if (!m_isDeleted)
@@ -251,7 +251,7 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 
 	m_iStatus = STATUS_NORMAL;
 
-   return bResult;
+   return success;
 }
 
 /**
