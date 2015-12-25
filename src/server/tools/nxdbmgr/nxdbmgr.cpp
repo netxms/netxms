@@ -295,6 +295,11 @@ bool SQLDropColumn(const TCHAR *table, const TCHAR *column)
 	{
 		_sntprintf(query, 1024, _T("ALTER TABLE %s DROP COLUMN %s"), table, column);
 		success = SQLQuery(query);
+      if (g_dbSyntax == DB_SYNTAX_DB2)
+      {
+         _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
+         success = SQLQuery(query);
+      }
 	}
 	else
 	{

@@ -162,8 +162,10 @@ static BOOL DropPrimaryKey(const TCHAR *table)
 
 	switch(g_dbSyntax)
 	{
-		case DB_SYNTAX_ORACLE:
+		case DB_SYNTAX_DB2:
+		case DB_SYNTAX_INFORMIX:
 		case DB_SYNTAX_MYSQL:
+		case DB_SYNTAX_ORACLE:
 			_sntprintf(query, 1024, _T("ALTER TABLE %s DROP PRIMARY KEY"), table);
 			success = SQLQuery(query);
 			break;
@@ -192,6 +194,12 @@ static BOOL DropPrimaryKey(const TCHAR *table)
 			success = FALSE;
 			break;
 	}
+
+   if ((g_dbSyntax == DB_SYNTAX_DB2) && success)
+   {
+      _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
+      success = SQLQuery(query);
+   }
 	return success;
 }
 
@@ -1881,6 +1889,11 @@ static BOOL H_UpgradeFromV325(int currVersion, int newVersion)
       _T("ALTER TABLE network_map_links DROP COLUMN bend_points\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
+
+   if (g_dbSyntax == DB_SYNTAX_DB2)
+   {
+      CHK_EXEC(SQLQuery(_T("CALL Sysproc.admin_cmd('REORG TABLE network_map_links')")));
+   }
 
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='326' WHERE var_name='SchemaVersion'")));
    return TRUE;
