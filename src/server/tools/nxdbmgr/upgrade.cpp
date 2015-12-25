@@ -633,6 +633,28 @@ static int NextFreeEPPruleID()
 	return ruleId;
 }
 
+/*
+ * Upgrade from V390 to V391
+ */
+static BOOL H_UpgradeFromV390(int currVersion, int newVersion)
+{
+   if (!CreateTable(_T("CREATE TABLE zmq_subscription (")
+            _T("object_id integer not null,")
+            _T("subscription_type char(1) not null,")
+            _T("ignore_items integer not null,")
+            _T("items $SQL:TEXT,")
+            _T("PRIMARY KEY(object_id, subscription_type))")))
+   {
+      if (!g_bIgnoreErrors)
+      {
+         return FALSE;
+      }
+   }
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='391' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
 /**
  * Upgrade from V389 to V390
  */
@@ -9411,6 +9433,7 @@ static struct
    { 387, 388, H_UpgradeFromV387 },
    { 388, 389, H_UpgradeFromV388 },
    { 389, 390, H_UpgradeFromV389 },
+   { 390, 391, H_UpgradeFromV390 },
    { 0, 0, NULL }
 };
 

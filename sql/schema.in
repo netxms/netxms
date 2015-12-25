@@ -1569,3 +1569,15 @@ CREATE TABLE scheduled_tasks
 	object_id integer not null,
 	PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+/*
+** ZMQ Subscriptions
+*/
+CREATE TABLE zmq_subscription
+(
+	object_id integer not null,
+   subscription_type char(1) not null,
+   ignore_items integer not null,
+   items SQL_TEXT,
+	PRIMARY KEY(object_id, subscription_type)
+) TABLE_TYPE;
