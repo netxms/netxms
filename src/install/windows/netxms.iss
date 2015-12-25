@@ -222,8 +222,7 @@ Source: "..\..\java\build\win32.win32.x86\nxmc\*"; DestDir: "{app}\bin"; Flags: 
 ; Third party files
 Source: "..\files\windows\x86\libmysql.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\mysql
 Source: "..\files\windows\x86\libpq.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "..\files\windows\x86\libintl-8.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
-Source: "..\files\windows\x86\libiconv-2.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
+Source: "..\files\windows\x86\intl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\pgsql
 Source: "..\files\windows\x86\oci.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
 Source: "..\files\windows\x86\oraociei11.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server\oracle
 Source: "..\files\windows\x86\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
