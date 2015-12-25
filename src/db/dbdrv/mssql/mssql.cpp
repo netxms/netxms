@@ -906,8 +906,12 @@ extern "C" void EXPORT DrvFreeUnbufferedResult(MSSQL_UNBUFFERED_QUERY_RESULT *pR
    MutexUnlock(pResult->pConn->mutexQuery);
    free(pResult->dataBuffer);
    for(int i = 0; i < pResult->numColumns; i++)
-      safe_free(pResult->data[i]);
+   {
+      free(pResult->data[i]);
+      free(pResult->columnNames[i]);
+   }
    free(pResult->data);
+   free(pResult->columnNames);
    free(pResult);
 }
 

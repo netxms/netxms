@@ -982,7 +982,14 @@ extern "C" void EXPORT DrvFreeUnbufferedResult(DB2DRV_UNBUFFERED_QUERY_RESULT *p
    else
 	   SQLFreeHandle(SQL_HANDLE_STMT, pResult->sqlStatement);
 	MutexUnlock(pResult->pConn->mutexQuery);
-	free(pResult);
+
+   for(int i = 0; i < pResult->numColumns; i++)
+	{
+		free(pResult->columnNames[i]);
+	}
+	free(pResult->columnNames);
+
+   free(pResult);
 }
 
 /**
