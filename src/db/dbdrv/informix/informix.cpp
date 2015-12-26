@@ -170,31 +170,25 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 	return out;
 }
 
-
-//
-// Initialize driver
-//
-
-extern "C" bool EXPORT DrvInit(const char *cmdLine)
+/**
+ * Initialize driver
+ */
+extern "C" bool EXPORT DrvInit(const char *cmdLine, void (*dbgPrintCb)(int, const TCHAR *, va_list))
 {
 	return true;
 }
 
-
-//
-// Unload handler
-//
-
+/**
+ * Unload handler
+ */
 extern "C" void EXPORT DrvUnload()
 {
 }
 
-
-//
-// Connect to database
-// database should be set to Informix source name. Host and schema are ignored
-//
-
+/**
+ * Connect to database
+ * database should be set to Informix source name. Host and schema are ignored
+ */
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *host, char *login, char *password, char *database, const char *schema, WCHAR *errorText)
 {
 	long iResult;

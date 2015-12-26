@@ -116,7 +116,7 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine)
+extern "C" bool EXPORT DrvInit(const char *cmdLine, void (*dbgPrintCb)(int, const TCHAR *, va_list))
 {
    if (!sqlite3_threadsafe() ||	// Fail if SQLite compiled without threading support
 		 (sqlite3_initialize() != SQLITE_OK))

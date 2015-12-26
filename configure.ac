@@ -2640,6 +2640,10 @@ if test $? = 0; then
 
 	AC_CHECK_HEADER(libpq-fe.h,,AC_MSG_ERROR([Cannot find libpq-fe.h - check your PostgreSQL client installation]))
 
+	AC_CHECK_DECLS([PGRES_SINGLE_TUPLE],,,[
+#include <libpq-fe.h>
+	])
+
 	AC_CHECK_LIB(m, floor)
 	AC_CHECK_LIB(pq, PQconnectdb, [PGSQL_LIBS="-lpq"], [
 		if test "x$PLATFORM" = "xSunOS"; then

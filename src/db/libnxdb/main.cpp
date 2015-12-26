@@ -67,6 +67,14 @@ void LIBNXDB_EXPORTABLE DBSetDebugPrintCallback(void (*cb)(int, const TCHAR *, v
 }
 
 /**
+ * Set debug print callback
+ */
+void *__DBGetDebugPrintCallback()
+{
+   return (void *)s_dbgPrintCb;
+}
+
+/**
  * Set long running query threshold (milliseconds)
  */
 void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(UINT32 threshold)

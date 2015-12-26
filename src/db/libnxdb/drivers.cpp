@@ -87,7 +87,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 														void *userArg)
 {
    static DWORD dwVersionZero = 0;
-   bool (* fpDrvInit)(const char *);
+   bool (* fpDrvInit)(const char *, void (*)(int, const TCHAR *, va_list));
    DWORD *pdwAPIVersion;
    TCHAR szErrorText[256];
 	const char *driverName;
@@ -184,7 +184,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
 	}
 
    // Import symbols
-   fpDrvInit = (bool (*)(const char *))DLGetSymbolAddrEx(driver->m_handle, "DrvInit");
+   fpDrvInit = (bool (*)(const char *, void (*)(int, const TCHAR *, va_list)))DLGetSymbolAddrEx(driver->m_handle, "DrvInit");
    driver->m_fpDrvConnect = (DBDRV_CONNECTION (*)(const char *, const char *, const char *, const char *, const char *, WCHAR *))DLGetSymbolAddrEx(driver->m_handle, "DrvConnect");
    driver->m_fpDrvDisconnect = (void (*)(DBDRV_CONNECTION))DLGetSymbolAddrEx(driver->m_handle, "DrvDisconnect");
    driver->m_fpDrvSetPrefetchLimit = (bool (*)(DBDRV_CONNECTION, int))DLGetSymbolAddrEx(driver->m_handle, "DrvSetPrefetchLimit", false);
@@ -249,9 +249,9 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    {
       mbInitParameters[0] = 0;
    }
-   if (!fpDrvInit(mbInitParameters))
+   if (!fpDrvInit(mbInitParameters, (void (*)(int, const TCHAR *, va_list))__DBGetDebugPrintCallback()))
 #else
-   if (!fpDrvInit(CHECK_NULL_EX(initParameters)))
+   if (!fpDrvInit(CHECK_NULL_EX(initParameters, (void (*)(int, const TCHAR *, va_list))__DBGetDebugPrintCallback())))
 #endif
    {
       if (s_writeLog)
