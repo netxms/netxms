@@ -35,8 +35,8 @@
 #else
 #include <dlfcn.h>
 #endif
-#ifndef RTLD_GLOBAL
-#define RTLD_GLOBAL	0
+#ifndef RTLD_LOCAL
+#define RTLD_LOCAL	0
 #endif
 #endif
 
@@ -103,7 +103,7 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText
 #else    /* not _WIN32 and not _NETWARE */
 #ifdef UNICODE
 	char *mbbuffer = MBStringFromWideString(pszLibName);
-   hModule = dlopen(mbbuffer, RTLD_NOW | RTLD_GLOBAL);
+   hModule = dlopen(mbbuffer, RTLD_NOW | RTLD_LOCAL);
    if ((hModule == NULL) && (pszErrorText != NULL))
    {
    	WCHAR *wbuffer = WideStringFromMBString(dlerror());
@@ -112,7 +112,7 @@ HMODULE LIBNETXMS_EXPORTABLE DLOpen(const TCHAR *pszLibName, TCHAR *pszErrorText
    }
    free(mbbuffer);
 #else
-   hModule = dlopen(pszLibName, RTLD_NOW | RTLD_GLOBAL);
+   hModule = dlopen(pszLibName, RTLD_NOW | RTLD_LOCAL);
    if ((hModule == NULL) && (pszErrorText != NULL))
       nx_strncpy(pszErrorText, dlerror(), 255);
 #endif
