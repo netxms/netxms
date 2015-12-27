@@ -21,7 +21,14 @@
 			    android:targetClass="org.netxms.ui.android.main.activities.ConsolePreferences"
 			    android:action="org.netxms.ui.android.ConsolePreferences.notifications" />
 	</Preference>
-	<Preference android:title="@string/pref_interface"
+	<Preference android:title="@string/pref_alarms"
+	    android:summary="@string/pref_alarms_summary">
+			<intent
+			    android:targetPackage="org.netxms.ui.android"
+			    android:targetClass="org.netxms.ui.android.main.activities.ConsolePreferences"
+			    android:action="org.netxms.ui.android.ConsolePreferences.alarms" />
+	</Preference>
+		<Preference android:title="@string/pref_interface"
 	    android:summary="@string/pref_interface_summary">
 			<intent
 			    android:targetPackage="org.netxms.ui.android"

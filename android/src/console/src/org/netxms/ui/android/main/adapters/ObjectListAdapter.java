@@ -8,9 +8,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.android.R;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
@@ -31,27 +33,25 @@ public class ObjectListAdapter extends BaseAdapter
 	private final Context context;
 	private final List<AbstractObject> objectList = new ArrayList<AbstractObject>(0);
 
-	private static final int[] statusImageId = {
-			R.drawable.status_normal, // STATUS_NORMAL = 0;
-			R.drawable.status_warning, // STATUS_WARNING = 1;
-			R.drawable.status_minor, // STATUS_MINOR = 2;
-			R.drawable.status_major, // STATUS_MAJOR = 3;
-			R.drawable.status_critical, // STATUS_CRITICAL = 4;
-			R.drawable.status_unknown, // STATUS_UNKNOWN = 5;
-			R.drawable.status_unmanaged, // STATUS_UNMANAGED = 6;
-			R.drawable.status_disabled, // STATUS_DISABLED = 7;
-			R.drawable.status_testing // STATUS_TESTING = 8;
+	private static final int[] statusImageId = { R.drawable.status_normal, // STATUS_NORMAL = 0;
+	R.drawable.status_warning, // STATUS_WARNING = 1;
+	R.drawable.status_minor, // STATUS_MINOR = 2;
+	R.drawable.status_major, // STATUS_MAJOR = 3;
+	R.drawable.status_critical, // STATUS_CRITICAL = 4;
+	R.drawable.status_unknown, // STATUS_UNKNOWN = 5;
+	R.drawable.status_unmanaged, // STATUS_UNMANAGED = 6;
+	R.drawable.status_disabled, // STATUS_DISABLED = 7;
+	R.drawable.status_testing// STATUS_TESTING = 8;
 	};
-	private static final int[] statusTextId = {
-			R.string.status_normal, // STATUS_NORMAL = 0;
-			R.string.status_warning, // STATUS_WARNING = 1;
-			R.string.status_minor, // STATUS_MINOR = 2;
-			R.string.status_major, // STATUS_MAJOR = 3;
-			R.string.status_critical, // STATUS_CRITICAL = 4;
-			R.string.status_unknown, // STATUS_UNKNOWN = 5;
-			R.string.status_unmanaged, // STATUS_UNMANAGED = 6;
-			R.string.status_disabled, // STATUS_DISABLED = 7;
-			R.string.status_testing // STATUS_TESTING = 8;
+	private static final int[] statusTextId = { R.string.status_normal, // STATUS_NORMAL = 0;
+	R.string.status_warning, // STATUS_WARNING = 1;
+	R.string.status_minor, // STATUS_MINOR = 2;
+	R.string.status_major, // STATUS_MAJOR = 3;
+	R.string.status_critical, // STATUS_CRITICAL = 4;
+	R.string.status_unknown, // STATUS_UNKNOWN = 5;
+	R.string.status_unmanaged, // STATUS_UNMANAGED = 6;
+	R.string.status_disabled, // STATUS_DISABLED = 7;
+	R.string.status_testing// STATUS_TESTING = 8;
 	};
 
 	/**
@@ -128,6 +128,7 @@ public class ObjectListAdapter extends BaseAdapter
 	 * @see android.widget.Adapter#getView(int, android.view.View,
 	 * android.view.ViewGroup)
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
 	{
@@ -216,8 +217,7 @@ public class ObjectListAdapter extends BaseAdapter
 		layers[0] = parent.getResources().getDrawable(objectIconId);
 		layers[1] = parent.getResources().getDrawable(ObjectListAdapter.statusImageId[objectStatus.getValue()]);
 		LayerDrawable drawable = new LayerDrawable(layers);
-		drawable.setLayerInset(1, layers[0].getIntrinsicWidth() - layers[1].getIntrinsicWidth(),
-				layers[0].getIntrinsicHeight() - layers[1].getIntrinsicHeight(), 0, 0);
+		drawable.setLayerInset(1, layers[0].getIntrinsicWidth() - layers[1].getIntrinsicWidth(), layers[0].getIntrinsicHeight() - layers[1].getIntrinsicHeight(), 0, 0);
 		objectIcon.setImageDrawable(drawable);
 
 		return view;

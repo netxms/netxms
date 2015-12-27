@@ -132,12 +132,13 @@ public class NodeInfoFragment extends AbstractFragmentActivity
 			return null;
 		}
 
+		@SuppressWarnings("deprecation")
 		@Override
 		public CharSequence getPageTitle(int position)
 		{
 			if (position >= 0 && position < labels.size())
 			{
-				SpannableStringBuilder sb = new SpannableStringBuilder("  " + labels.get(position)); // space added before text for convenience
+				SpannableStringBuilder sb = new SpannableStringBuilder("  " + labels.get(position));// space added before text for convenience
 				Drawable icon = r.getDrawable(icons.get(position));
 				icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
 				ImageSpan span = new ImageSpan(icon, ImageSpan.ALIGN_BASELINE);

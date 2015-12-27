@@ -9,6 +9,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.netxms.base.Logger;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -30,6 +31,7 @@ import org.netxms.ui.android.receivers.AlarmIntentReceiver;
 import org.netxms.ui.android.service.helpers.AndroidLoggingFacility;
 import org.netxms.ui.android.service.tasks.ConnectTask;
 import org.netxms.ui.android.service.tasks.ExecActionTask;
+
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -42,8 +44,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.res.Resources;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Handler;
@@ -74,10 +74,11 @@ public class ClientConnectorService extends Service implements SessionListener
 	public static final String ACTION_DISCONNECT = "org.netxms.ui.android.ACTION_DISCONNECT";
 	public static final String ACTION_FORCE_DISCONNECT = "org.netxms.ui.android.ACTION_FORCE_DISCONNECT";
 	public static final String ACTION_RESCHEDULE = "org.netxms.ui.android.ACTION_RESCHEDULE";
-	public static final String ACTION_CONFIGURE = "org.netxms.ui.android.ACTION_CONFIGURE";
+	public static final String ACTION_RECONNECT_ON_CONFIGURE = "org.netxms.ui.android.RECONNECT_ON_CONFIGURE";
 	public static final String ACTION_ALARM_ACKNOWLEDGE = "org.netxms.ui.android.ACTION_ALARM_ACKNOWLEDGE";
 	public static final String ACTION_ALARM_RESOLVE = "org.netxms.ui.android.ACTION_ALARM_RESOLVE";
 	public static final String ACTION_ALARM_TERMINATE = "org.netxms.ui.android.ACTION_ALARM_TERMINATE";
+	public static final String ACTION_EXIT = "org.netxms.ui.android.ACTION_EXIT";
 	private static final String TAG = "nxclient/ClientConnectorService";
 	private static final String LASTALARM_KEY = "LastALarmIdNotified";
 
@@ -119,6 +120,10 @@ public class ClientConnectorService extends Service implements SessionListener
 	private boolean encrypt = false;
 	private boolean enabled = false;
 	private boolean notifyAlarm = false;
+	private boolean notifyAlarmInStatusBar = false;
+	private boolean notifyAlarmBySound = false;
+	private boolean notifyAlarmByLed = false;
+	private boolean notifyAlarmByVibration = false;
 	private int notificationType = NOTIFY_STATUS_NEVER;
 	private boolean notifyIcon = false;
 	private boolean notifyToast = false;
@@ -159,7 +164,7 @@ public class ClientConnectorService extends Service implements SessionListener
 
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		lastAlarmIdNotified = sp.getInt(LASTALARM_KEY, 0);
-		configure();
+		hasToReconnect();
 
 		receiver = new BroadcastReceiver()
 		{
@@ -199,8 +204,18 @@ public class ClientConnectorService extends Service implements SessionListener
 					reconnect(false);
 				else
 					disconnect(false);
-			else if (intent.getAction().equals(ACTION_CONFIGURE))
-				reconnect(configure());
+			else if (intent.getAction().equals(ACTION_RECONNECT_ON_CONFIGURE))
+			{
+				if (hasToReconnect())
+				{
+					// Reset last alarm notified in case of app reconfiguration and force reconnection
+					lastAlarmIdNotified = 0;
+					clearNotifications();
+					reconnect(true);
+				}
+				else
+					reconnect(false);
+			}
 			else if (intent.getAction().equals(ACTION_ALARM_ACKNOWLEDGE))
 			{
 				acknowledgeAlarm(intent.getLongExtra("alarmId", 0), false);
@@ -216,6 +231,8 @@ public class ClientConnectorService extends Service implements SessionListener
 				terminateAlarm(intent.getLongExtra("alarmId", 0));
 				hideNotification(NOTIFY_ALARM);
 			}
+			else if (intent.getAction().equals(ACTION_EXIT))
+				exitApp();
 		return super.onStartCommand(intent, flags, startId);
 	}
 
@@ -264,7 +281,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * Show alarm notification
+	 * Show alarm notification (status bar, LED, sound and vibration)
 	 * 
 	 * @param alarm	alarm object
 	 * @param text	notification text
@@ -274,31 +291,31 @@ public class ClientConnectorService extends Service implements SessionListener
 		Severity severity = alarm.getCurrentSeverity();
 		if (notifyAlarm)
 		{
-			Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowserFragment.class);
-			PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
-			NotificationCompat.Builder nb = new NotificationCompat.Builder(getApplicationContext())
-					.setSmallIcon(getAlarmIcon(severity))
-					.setWhen(System.currentTimeMillis())
-					.setDefaults(Notification.DEFAULT_LIGHTS)
-					.setContentText(text)
-					.setContentTitle(getString(R.string.notification_title))
-					.setContentIntent(intent);
+			NotificationCompat.Builder nb = new NotificationCompat.Builder(getApplicationContext());
 			final String sound = GetAlarmSound(severity);
 			if ((sound != null) && (sound.length() > 0))
 				nb.setSound(Uri.parse(sound));
-			nb.addAction(R.drawable.alarm_acknowledged, getString(R.string.alarm_acknowledge), createPendingIntent(ACTION_ALARM_ACKNOWLEDGE, alarm.getId()));
-			nb.addAction(R.drawable.alarm_resolved, getString(R.string.alarm_resolve), createPendingIntent(ACTION_ALARM_RESOLVE, alarm.getId()));
-			nb.addAction(R.drawable.alarm_terminated, getString(R.string.alarm_terminate), createPendingIntent(ACTION_ALARM_TERMINATE, alarm.getId()));
-			notificationManager.notify(NOTIFY_ALARM,
-					new NotificationCompat.BigTextStyle(nb)
-							.bigText(text)
-							.build());
-		}
-		else
-		{
-			Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), Uri.parse(GetAlarmSound(severity)));
-			if (r != null)
-				r.play();
+			final int color = GetAlarmColor(severity);
+			if ((color & 0x00FFFFFF) != 0) // Alpha channel is always set, check for black to disable signalling by LED
+				nb.setLights(color, GetAlarmColorTimeOn(), GetAlarmColorTimeOff());
+			nb.setVibrate(GetAlarmVibrationPattern());
+			Notification notification;
+			if (notifyAlarmInStatusBar)
+			{
+				Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowserFragment.class);
+				PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
+				nb.setSmallIcon(getAlarmIcon(severity));
+				nb.setWhen(System.currentTimeMillis());
+				nb.setContentText(text);
+				nb.setContentTitle(getString(R.string.notification_title)).setContentIntent(intent);
+				nb.addAction(R.drawable.alarm_acknowledged, getString(R.string.alarm_acknowledge), createPendingIntent(ACTION_ALARM_ACKNOWLEDGE, alarm.getId()));
+				nb.addAction(R.drawable.alarm_resolved, getString(R.string.alarm_resolve), createPendingIntent(ACTION_ALARM_RESOLVE, alarm.getId()));
+				nb.addAction(R.drawable.alarm_terminated, getString(R.string.alarm_terminate), createPendingIntent(ACTION_ALARM_TERMINATE, alarm.getId()));
+				notification = new NotificationCompat.BigTextStyle(nb).bigText(text).build();
+			}
+			else
+				notification = new NotificationCompat.BigTextStyle(nb).build();
+			notificationManager.notify(NOTIFY_ALARM, notification);
 		}
 	}
 
@@ -310,11 +327,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private PendingIntent createPendingIntent(String action, long id)
 	{
-		return PendingIntent.getService(
-				getApplicationContext(),
-				0,
-				new Intent(getApplicationContext(), ClientConnectorService.class).setAction(action).putExtra("alarmId", id),
-				PendingIntent.FLAG_UPDATE_CURRENT);
+		return PendingIntent.getService(getApplicationContext(), 0, new Intent(getApplicationContext(), ClientConnectorService.class).setAction(action).putExtra("alarmId", id), PendingIntent.FLAG_UPDATE_CURRENT);
 	}
 
 	/**
@@ -366,15 +379,17 @@ public class ClientConnectorService extends Service implements SessionListener
 			{
 				Intent notifyIntent = new Intent(getApplicationContext(), HomeScreen.class);
 				PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
-				NotificationCompat.Builder nb = new NotificationCompat.Builder(getApplicationContext())
-						.setSmallIcon(icon)
-						.setWhen(System.currentTimeMillis())
-						.setAutoCancel(false)
-						.setOnlyAlertOnce(true)
-						.setOngoing(true)
-						.setContentText(text)
-						.setContentTitle(getString(R.string.notification_title))
-						.setContentIntent(intent);
+				NotificationCompat.Builder nb = new NotificationCompat.Builder(getApplicationContext());
+				nb.setSmallIcon(icon);
+				nb.setWhen(System.currentTimeMillis());
+				nb.setAutoCancel(false);
+				nb.setOnlyAlertOnce(true);
+				nb.setOngoing(true);
+				nb.setContentText(text);
+				nb.setContentTitle(getString(R.string.notification_title));
+				nb.setContentIntent(intent);
+				nb.addAction(android.R.drawable.ic_menu_revert, getString(R.string.reconnect), createPendingIntent(ACTION_FORCE_CONNECT, 0));
+				nb.addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.exit), createPendingIntent(ACTION_EXIT, 0));
 				notificationManager.notify(NOTIFY_STATUS, nb.build());
 			}
 		}
@@ -383,8 +398,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	/**
 	 * Hide notification
 	 * 
-	 * @param id
-	 *           notification id
+	 * @param id notification id
 	 */
 	private void hideNotification(int id)
 	{
@@ -400,29 +414,35 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * Configure service, notify callers if it is necessary to reconnect
-	 * depending if a particular subset of parameters have been changed.
+	 * Check if it is necessary to reconnect depending if a 
+	 * particular subset of parameters have been changed.
 	 * 
 	 * @return true If it is necessary to force a reconnection
 	 */
-	private boolean configure()
+	private boolean hasToReconnect()
 	{
-		boolean needsToReconnect = enabled != sp.getBoolean("global.scheduler.enable", false) ||
-				!server.equalsIgnoreCase(sp.getString("connection.server", "")) ||
-				port != SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701) ||
-				!login.equals(sp.getString("connection.login", "")) ||
-				!password.equals(sp.getString("connection.password", "")) ||
-				encrypt != sp.getBoolean("connection.encrypt", false) ||
-				notifyAlarm != sp.getBoolean("global.notification.alarm", true) ||
-				notificationType != Integer.parseInt(sp.getString("global.notification.status", "0")) ||
-				notifyIcon != sp.getBoolean("global.notification.icon", false) ||
-				notifyToast != sp.getBoolean("global.notification.toast", true) ||
-				schedulerPostpone != Integer.parseInt(sp.getString("global.scheduler.postpone", "1")) ||
-				schedulerDuration != Integer.parseInt(sp.getString("global.scheduler.duration", "1")) ||
-				schedulerInterval != Integer.parseInt(sp.getString("global.scheduler.interval", "15")) ||
-				schedulerDailyEnabled != sp.getBoolean("global.scheduler.daily.enable", false) ||
-				schedulerDailyOn != getMinutes("global.scheduler.daily.on") ||
-				schedulerDailyOff != getMinutes("global.scheduler.daily.off");
+		// TODO: cleanup alarm icon on change settings
+		// TODO: check reconnect on new flags added (vibration, led,...)
+		boolean needsToReconnect = enabled != sp.getBoolean("global.scheduler.enable", false);
+		needsToReconnect |= !server.equalsIgnoreCase(sp.getString("connection.server", ""));
+		needsToReconnect |= port != SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701);
+		needsToReconnect |= !login.equals(sp.getString("connection.login", ""));
+		needsToReconnect |= !password.equals(sp.getString("connection.password", ""));
+		needsToReconnect |= encrypt != sp.getBoolean("connection.encrypt", false);
+		needsToReconnect |= notifyAlarm != sp.getBoolean("global.notification.alarm", true);
+		needsToReconnect |= notifyAlarmInStatusBar != sp.getBoolean("global.statusbar.alarm", true);
+		needsToReconnect |= notifyAlarmBySound != sp.getBoolean("global.sound.alarm", false);
+		needsToReconnect |= notifyAlarmByLed != sp.getBoolean("global.led.alarm", false);
+		needsToReconnect |= notifyAlarmByVibration != sp.getBoolean("global.vibration.alarm", false);
+		needsToReconnect |= notificationType != Integer.parseInt(sp.getString("global.notification.status", "0"));
+		needsToReconnect |= notifyIcon != sp.getBoolean("global.notification.icon", false);
+		needsToReconnect |= notifyToast != sp.getBoolean("global.notification.toast", true);
+		needsToReconnect |= schedulerPostpone != Integer.parseInt(sp.getString("global.scheduler.postpone", "1"));
+		needsToReconnect |= schedulerDuration != Integer.parseInt(sp.getString("global.scheduler.duration", "1"));
+		needsToReconnect |= schedulerInterval != Integer.parseInt(sp.getString("global.scheduler.interval", "15"));
+		needsToReconnect |= schedulerDailyEnabled != sp.getBoolean("global.scheduler.daily.enable", false);
+		needsToReconnect |= schedulerDailyOn != getMinutes("global.scheduler.daily.on");
+		needsToReconnect |= schedulerDailyOff != getMinutes("global.scheduler.daily.off");
 
 		enabled = sp.getBoolean("global.scheduler.enable", false);
 		server = sp.getString("connection.server", "");
@@ -431,6 +451,10 @@ public class ClientConnectorService extends Service implements SessionListener
 		password = sp.getString("connection.password", "");
 		encrypt = sp.getBoolean("connection.encrypt", false);
 		notifyAlarm = sp.getBoolean("global.notification.alarm", true);
+		notifyAlarmInStatusBar = sp.getBoolean("global.statusbar.alarm", true);
+		notifyAlarmBySound = sp.getBoolean("global.sound.alarm", false);
+		notifyAlarmByLed = sp.getBoolean("global.led.alarm", false);
+		notifyAlarmByVibration = sp.getBoolean("global.vibration.alarm", false);
 		notificationType = Integer.parseInt(sp.getString("global.notification.status", "0"));
 		notifyIcon = sp.getBoolean("global.notification.icon", false);
 		notifyToast = sp.getBoolean("global.notification.toast", true);
@@ -451,9 +475,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void reconnect(boolean force)
 	{
-		if (force || (isScheduleExpired() || NXApplication.isActivityVisible()) &&
-				connectionStatus != ConnectionStatus.CS_CONNECTED &&
-				connectionStatus != ConnectionStatus.CS_ALREADYCONNECTED)
+		if (force || (isScheduleExpired() || NXApplication.isActivityVisible()) && connectionStatus != ConnectionStatus.CS_CONNECTED && connectionStatus != ConnectionStatus.CS_ALREADYCONNECTED)
 		{
 			Log.i(TAG, "Reconnecting...");
 			synchronized (mutex)
@@ -474,9 +496,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	public void disconnect(boolean force)
 	{
-		if (force || enabled && !NXApplication.isActivityVisible() &&
-				(connectionStatus == ConnectionStatus.CS_CONNECTED ||
-				connectionStatus == ConnectionStatus.CS_ALREADYCONNECTED))
+		if (force || enabled && !NXApplication.isActivityVisible() && (connectionStatus == ConnectionStatus.CS_CONNECTED || connectionStatus == ConnectionStatus.CS_ALREADYCONNECTED))
 		{
 			Log.i(TAG, "Disconnecting...");
 			nullifySession();
@@ -550,7 +570,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		if (enabled)
 		{
-			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+			Calendar cal = Calendar.getInstance();// get a Calendar object with current time
 			return cal.getTimeInMillis() > sp.getLong("global.scheduler.next_activation", 0);
 		}
 		return true;
@@ -587,7 +607,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			cancelSchedule();
 		else
 		{
-			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+			Calendar cal = Calendar.getInstance();// get a Calendar object with current time
 			if (action.equals(ACTION_RESCHEDULE))
 				cal.add(Calendar.MINUTE, schedulerPostpone);
 			if (action.equals(ACTION_DISCONNECT))
@@ -599,7 +619,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				int on = schedulerDailyOn;
 				int off = schedulerDailyOff;
 				if (off < on)
-					off += ONE_DAY_MINUTES; // Next day!
+					off += ONE_DAY_MINUTES;// Next day!
 				Calendar calOn = (Calendar)cal.clone();
 				setDayOffset(calOn, on);
 				Calendar calOff = (Calendar)cal.clone();
@@ -613,7 +633,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				else if (cal.after(calOff))
 				{
 					cal = (Calendar)calOn.clone();
-					setDayOffset(cal, on + ONE_DAY_MINUTES); // Move to the next activation of the excluded range
+					setDayOffset(cal, on + ONE_DAY_MINUTES);// Move to the next activation of the excluded range
 					Log.i(TAG, "schedule (after): rescheduled for daily interval");
 				}
 			}
@@ -786,7 +806,25 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * Refresh homescreen  activity
+	 * Exit from App
+	 */
+	private void exitApp()
+	{
+		if (homeScreen != null)
+		{
+			homeScreen.runOnUiThread(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					homeScreen.exit();
+				}
+			});
+		}
+	}
+
+	/**
+	 * Refresh homescreen activity
 	 */
 	private void refreshHomeScreen()
 	{
@@ -886,6 +924,72 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 	}
 
+	int GetAlarmColor(Severity severity)
+	{
+		if (sp.getBoolean("global.led.alarm", false))
+		{
+			switch (severity)
+			{
+				case NORMAL:// Normal
+					return sp.getInt("alarm.led.normal", 0);
+				case WARNING:// Warning
+					return sp.getInt("alarm.led.warning", 0);
+				case MINOR:// Minor
+					return sp.getInt("alarm.led.minor", 0);
+				case MAJOR:// Major
+					return sp.getInt("alarm.led.major", 0);
+				case CRITICAL:// Critical
+					return sp.getInt("alarm.led.critical", 0);
+				case UNKNOWN:// Unknown
+					return sp.getInt("alarm.led.unknown", 0);
+				case TERMINATE:// Terminate
+					return sp.getInt("alarm.led.terminate", 0);
+				case RESOLVE:// Resolve
+					return sp.getInt("alarm.led.resolve", 0);
+			}
+		}
+		return 0x0;
+	}
+
+	/**
+	 * Get alarm led time for on period
+	 */
+	int GetAlarmColorTimeOn()
+	{
+		return sp.getInt("alarm.led.time.on", 1000);// msecs
+	}
+
+	/**
+	 * Get alarm led time for off period
+	 */
+	int GetAlarmColorTimeOff()
+	{
+		return sp.getInt("alarm.led.time.off", 2000);// msecs
+	}
+
+	/**
+	 * Get alarm vibration pattern 
+	 */
+	private long[] GetAlarmVibrationPattern()
+	{
+		if (sp.getBoolean("global.vibration.alarm", false))
+		{
+			// In Morse Code, "s" = "dot-dot-dot", "o" = "dash-dash-dash" 
+			int dot = 100;// Length of a Morse Code "dot" in milliseconds (real is 200) 
+			int dash = 250;// Length of a Morse Code "dash" in milliseconds (real is 500)
+			int short_gap = 100;// Length of Gap Between dots/dashes (real is 200)
+			int medium_gap = 250;// Length of Gap Between Letters (real is 500)
+			//int long_gap = 500;// Length of Gap Between Words (real is 1000)
+			long[] pattern = { 0, // Start immediately 
+			dot, short_gap, dot, short_gap, dot, // s 
+			medium_gap, dash, short_gap, dash, short_gap, dash, // o 
+			medium_gap, dot, short_gap, dot, short_gap, dot// s 
+			};
+			return pattern;
+		}
+		return null;
+	}
+
 	/**
 	 * Get alarm sound based on alarm severity
 	 * 
@@ -893,25 +997,26 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private String GetAlarmSound(Severity severity)
 	{
-		switch (severity)
-		{
-			case NORMAL: // Normal
-				return sp.getString("alarm.sound.normal", "");
-			case WARNING: // Warning
-				return sp.getString("alarm.sound.warning", "");
-			case MINOR: // Minor
-				return sp.getString("alarm.sound.minor", "");
-			case MAJOR: // Major
-				return sp.getString("alarm.sound.major", "");
-			case CRITICAL: // Critical
-				return sp.getString("alarm.sound.critical", "");
-			case UNKNOWN: // Unknown
-				return sp.getString("alarm.sound.unknown", "");
-			case TERMINATE: // Terminate
-				return sp.getString("alarm.sound.terminate", "");
-			case RESOLVE: // Resolve
-				return sp.getString("alarm.sound.resolve", "");
-		}
+		if (sp.getBoolean("global.sound.alarm", false))
+			switch (severity)
+			{
+				case NORMAL:// Normal
+					return sp.getString("alarm.sound.normal", "");
+				case WARNING:// Warning
+					return sp.getString("alarm.sound.warning", "");
+				case MINOR:// Minor
+					return sp.getString("alarm.sound.minor", "");
+				case MAJOR:// Major
+					return sp.getString("alarm.sound.major", "");
+				case CRITICAL:// Critical
+					return sp.getString("alarm.sound.critical", "");
+				case UNKNOWN:// Unknown
+					return sp.getString("alarm.sound.unknown", "");
+				case TERMINATE:// Terminate
+					return sp.getString("alarm.sound.terminate", "");
+				case RESOLVE:// Resolve
+					return sp.getString("alarm.sound.resolve", "");
+			}
 		return "";
 	}
 
@@ -924,21 +1029,21 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		switch (severity)
 		{
-			case NORMAL: // Normal
+			case NORMAL:// Normal
 				return R.drawable.status_normal;
-			case WARNING: // Warning
+			case WARNING:// Warning
 				return R.drawable.status_warning;
-			case MINOR: // Minor
+			case MINOR:// Minor
 				return R.drawable.status_minor;
-			case MAJOR: // Major
+			case MAJOR:// Major
 				return R.drawable.status_major;
-			case CRITICAL: // Critical
+			case CRITICAL:// Critical
 				return R.drawable.status_critical;
-			case UNKNOWN: // Unknown
+			case UNKNOWN:// Unknown
 				return R.drawable.status_unknown;
-			case TERMINATE: // Terminate
+			case TERMINATE:// Terminate
 				return R.drawable.status_terminate;
-			case RESOLVE: // Resolve
+			case RESOLVE:// Resolve
 				return R.drawable.status_resolve;
 		}
 		return android.R.drawable.stat_notify_sdcard;
@@ -1278,7 +1383,7 @@ public class ClientConnectorService extends Service implements SessionListener
 		long next = sp.getLong("global.scheduler.next_activation", 0);
 		if (next != 0)
 		{
-			Calendar cal = Calendar.getInstance(); // get a Calendar object with current time
+			Calendar cal = Calendar.getInstance();// get a Calendar object with current time
 			if (cal.getTimeInMillis() < next)
 			{
 				cal.setTimeInMillis(next);

@@ -41,12 +41,16 @@ public class ConsolePreferences extends PreferenceActivity
 		{
 			addPreferencesFromResource(R.xml.preference_notifications);
 		}
+		else if (action != null && action.equals("org.netxms.ui.android.ConsolePreferences.alarms"))
+		{
+			addPreferencesFromResource(R.xml.preference_alarms);
+		}
 		else if (action != null && action.equals("org.netxms.ui.android.ConsolePreferences.interface"))
 		{
 			addPreferencesFromResource(R.xml.preference_interface);
 		}
 		else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB)
-		{	// Load the legacy preferences headers
+		{// Load the legacy preferences headers
 			addPreferencesFromResource(R.xml.preference_headers_legacy);
 		}
 	}
@@ -75,7 +79,7 @@ public class ConsolePreferences extends PreferenceActivity
 	protected void onDestroy()
 	{
 		Intent i = new Intent(this, ClientConnectorService.class);
-		i.setAction(ClientConnectorService.ACTION_CONFIGURE);
+		i.setAction(ClientConnectorService.ACTION_RECONNECT_ON_CONFIGURE);
 		startService(i);
 		super.onDestroy();
 	}
