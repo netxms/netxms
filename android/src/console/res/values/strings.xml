@@ -65,18 +65,34 @@
 	<string name="pref_global_autostart_enabled">Allow automatic start of service</string>
 	<string name="pref_global_autostart_disabled">Block automatic start of service</string>
 	<string name="pref_notifications">Notifications</string>
-	<string name="pref_notifications_summary">Customize notifications (toast, notification bar, alarms sounds, &#8230;)</string>
+	<string name="pref_notifications_summary">Customize notifications (toast, notification bar, &#8230;)</string>
 	<string name="pref_status">Connection status</string>
+	
+	<string name="pref_alarms_summary">Customize alarms (notification bar, sounds, led colors, &#8230;)</string>
 	<string name="pref_alarms">Alarms</string>
-	<string name="pref_alarm_sound">Alarm sound by severity</string>
-	<string name="pref_alarm_sound_normal">Normal alarm sound</string>
-	<string name="pref_alarm_sound_warning">Warning alarm sound</string>
-	<string name="pref_alarm_sound_minor">Minor alarm sound</string>
-	<string name="pref_alarm_sound_major">Major alarm sound</string>
-	<string name="pref_alarm_sound_critical">Critical alarm sound</string>
-	<string name="pref_alarm_sound_unknown">Unknown alarm sound</string>
-	<string name="pref_alarm_sound_terminate">Terminate alarm sound</string>
-	<string name="pref_alarm_sound_resolve">Resolve alarm sound</string>
+	<string name="pref_global_alarm_notification">Alarms notifications</string>
+	<string name="pref_global_alarm_notification_enabled">Alarms notifications are enabled</string>
+	<string name="pref_global_alarm_notification_disabled">Alarms notification are disabled</string>
+	<string name="pref_global_alarm_statusbar">Status bar</string>
+	<string name="pref_global_alarm_statusbar_enabled">Notifications in status bar are enabled</string>
+	<string name="pref_global_alarm_statusbar_disabled">Notifications in status bar are disabled</string>
+	<string name="pref_global_alarm_sound">Sound</string>
+	<string name="pref_global_alarm_sound_enabled">Notifications by sound are enabled</string>
+	<string name="pref_global_alarm_sound_disabled">Notifications by sound are disabled</string>
+	<string name="pref_global_alarm_led">LED</string>
+	<string name="pref_global_alarm_led_enabled">Notifications by LED are enabled</string>
+	<string name="pref_global_alarm_led_disabled">Notifications by LED are disabled</string>
+	<string name="pref_global_alarm_vibration">Vibration</string>
+	<string name="pref_global_alarm_vibration_enabled">Notifications by vibration are enabled</string>
+	<string name="pref_global_alarm_vibration_disabled">Notifications by vibration are disabled</string>
+	<string name="pref_alarm_sound">Sound</string>
+	<string name="pref_alarm_led">LED color</string>
+	<string name="pref_critical_alarms">Critical alarms</string>
+	<string name="pref_major_alarms">Major alarms</string>
+	<string name="pref_minor_alarms">Minor alarms</string>
+	<string name="pref_warning_alarms">Warning alarms</string>
+	<string name="pref_normal_alarms">Normal alarms</string>
+			
 	<string name="pref_global_notification_toast">Toast notification</string>
 	<string name="pref_global_notification_toast_enabled">Toast is enabled</string>
 	<string name="pref_global_notification_toast_disabled">Toast is disabled</string>
@@ -84,9 +100,6 @@
 	<string name="pref_global_notification_icon_enabled">Icon in status bar is enabled</string>
 	<string name="pref_global_notification_icon_disabled">Icon in status bar is disabled</string>
 	<string name="pref_global_notification_status">Notification behaviour</string>
-	<string name="pref_global_notification_alarm">Alarm notification</string>
-	<string name="pref_global_notification_alarm_enabled">Alarm in status bar is enabled</string>
-	<string name="pref_global_notification_alarm_disabled">Alarm in status bar is disabled</string>
 	<string name="pref_interface">Interface</string>
 	<string name="pref_interface_summary">Customize interface parameters (multipliers, text size, legend, &#8230;)</string>
 	<string name="pref_multipliers">Multipliers</string>
@@ -287,4 +300,7 @@
 	<string name="navigate_to">Navigate to</string>
 	
 	<string name="menu_tools">Tools</string>
+	
+	<string name="dialog_color_picker">Color picker</string>
+    <string name="press_color_to_apply">Press on color to apply</string>    
 </resources>

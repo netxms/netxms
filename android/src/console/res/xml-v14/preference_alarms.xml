@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<org.netxms.ui.android.main.settings.CustomSwitchPreference android:key="global.notification.alarm" android:summaryOn="@string/pref_global_alarm_notification_enabled" android:summaryOff="@string/pref_global_alarm_notification_disabled" android:title="@string/pref_global_alarm_notification" android:enabled="true" android:defaultValue="true"/>
+	<org.netxms.ui.android.main.settings.CustomSwitchPreference android:key="global.statusbar.alarm" android:summaryOn="@string/pref_global_alarm_statusbar_enabled" android:summaryOff="@string/pref_global_alarm_statusbar_disabled" android:title="@string/pref_global_alarm_statusbar" android:enabled="true" android:defaultValue="true" android:dependency="global.notification.alarm"/>
+	<org.netxms.ui.android.main.settings.CustomSwitchPreference android:key="global.sound.alarm" android:summaryOn="@string/pref_global_alarm_sound_enabled" android:summaryOff="@string/pref_global_alarm_sound_disabled" android:title="@string/pref_global_alarm_sound" android:enabled="true" android:defaultValue="true" android:dependency="global.notification.alarm"/>
+	<org.netxms.ui.android.main.settings.CustomSwitchPreference android:key="global.led.alarm" android:summaryOn="@string/pref_global_alarm_led_enabled" android:summaryOff="@string/pref_global_alarm_led_disabled" android:title="@string/pref_global_alarm_led" android:enabled="true" android:defaultValue="false" android:dependency="global.notification.alarm"/>
+	<org.netxms.ui.android.main.settings.CustomSwitchPreference android:key="global.vibration.alarm" android:summaryOn="@string/pref_global_alarm_vibration_enabled" android:summaryOff="@string/pref_global_alarm_vibration_disabled" android:title="@string/pref_global_alarm_vibration" android:enabled="true" android:defaultValue="false" android:dependency="global.notification.alarm"/>
+	<PreferenceCategory android:title="@string/pref_critical_alarms">
+		<RingtonePreference android:key="alarm.sound.critical" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound" android:icon="@drawable/status_critical" android:dependency="global.sound.alarm" />
+		<net.margaritov.preference.colorpicker.ColorPickerPreference android:key="alarm.led.critical" android:title="@string/pref_alarm_led" android:defaultValue="@color/alarm_default_led_color" alphaSlider="false" hexValue="true" android:icon="@drawable/status_critical" android:dependency="global.led.alarm" />
+	</PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_major_alarms">
+    	<RingtonePreference android:key="alarm.sound.major" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound" android:icon="@drawable/status_major" android:dependency="global.sound.alarm" />
+		<net.margaritov.preference.colorpicker.ColorPickerPreference android:key="alarm.led.major" android:title="@string/pref_alarm_led" android:defaultValue="@color/alarm_default_led_color" alphaSlider="false" hexValue="true" android:icon="@drawable/status_major" android:dependency="global.led.alarm" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_minor_alarms">
+		<RingtonePreference android:key="alarm.sound.minor" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound" android:icon="@drawable/status_minor" android:dependency="global.sound.alarm" />
+		<net.margaritov.preference.colorpicker.ColorPickerPreference android:key="alarm.led.minor" android:title="@string/pref_alarm_led" android:defaultValue="@color/alarm_default_led_color" alphaSlider="false" hexValue="true" android:icon="@drawable/status_minor" android:dependency="global.led.alarm" />
+	</PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_warning_alarms">
+		<RingtonePreference android:key="alarm.sound.warning" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound" android:icon="@drawable/status_warning" android:dependency="global.sound.alarm" />
+   		<net.margaritov.preference.colorpicker.ColorPickerPreference android:key="alarm.led.warning" android:title="@string/pref_alarm_led" android:defaultValue="@color/alarm_default_led_color" alphaSlider="false" hexValue="true" android:icon="@drawable/status_warning" android:dependency="global.led.alarm" />
+	</PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_normal_alarms">
+	    <RingtonePreference android:key="alarm.sound.normal" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound" android:icon="@drawable/status_normal" android:dependency="global.sound.alarm" />
+	    <net.margaritov.preference.colorpicker.ColorPickerPreference android:key="alarm.led.normal" android:title="@string/pref_alarm_led" android:defaultValue="@color/alarm_default_led_color" alphaSlider="false" hexValue="true" android:icon="@drawable/status_normal" android:dependency="global.led.alarm" />
+	</PreferenceCategory>
+</PreferenceScreen>

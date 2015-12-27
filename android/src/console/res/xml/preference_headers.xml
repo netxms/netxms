@@ -20,6 +20,12 @@
     </header>
 	<header
     	android:fragment="org.netxms.ui.android.main.fragments.ConsolePreferencesFragment"
+        android:title="@string/pref_alarms"
+        android:summary="@string/pref_alarms_summary">
+    	<extra android:name="settings" android:value="alarms" />
+    </header>
+		<header
+    	android:fragment="org.netxms.ui.android.main.fragments.ConsolePreferencesFragment"
         android:title="@string/pref_interface"
         android:summary="@string/pref_interface_summary">
     	<extra android:name="settings" android:value="interface" />

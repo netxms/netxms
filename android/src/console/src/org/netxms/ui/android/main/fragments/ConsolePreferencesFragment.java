@@ -34,6 +34,10 @@ public class ConsolePreferencesFragment extends PreferenceFragment
 		{
 			addPreferencesFromResource(R.xml.preference_notifications);
 		}
+		else if (action != null && action.equals("alarms"))
+		{
+			addPreferencesFromResource(R.xml.preference_alarms);
+		}
 		else if (action != null && action.equals("interface"))
 		{
 			addPreferencesFromResource(R.xml.preference_interface);
