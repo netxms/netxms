@@ -251,7 +251,7 @@ DB_DRIVER LIBNXDB_EXPORTABLE DBLoadDriver(const TCHAR *module, const TCHAR *init
    }
    if (!fpDrvInit(mbInitParameters, (void (*)(int, const TCHAR *, va_list))__DBGetDebugPrintCallback()))
 #else
-   if (!fpDrvInit(CHECK_NULL_EX(initParameters, (void (*)(int, const TCHAR *, va_list))__DBGetDebugPrintCallback())))
+   if (!fpDrvInit(CHECK_NULL_EX(initParameters), (void (*)(int, const TCHAR *, va_list))__DBGetDebugPrintCallback()))
 #endif
    {
       if (s_writeLog)
