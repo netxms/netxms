@@ -220,6 +220,7 @@ target
 
 # Eclipse CDT
 .metadata
+.recommenders
 
 # Dolphin browser
 .directory
