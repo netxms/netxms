@@ -788,6 +788,9 @@ extern "C" WCHAR EXPORT *DrvGetField(DBDRV_RESULT pResult, int nRow, int nColumn
 	if (pResult == NULL)
       return NULL;
 
+	if (PQfformat((PGresult *)pResult, nColumn) != 0)
+		return NULL;
+
 	const char *value = PQgetvalue((PGresult *)pResult, nRow, nColumn);
 	if (value == NULL)
 	   return NULL;
@@ -873,9 +876,15 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(PG_CONN *pConn, WC
       retry = false;
       if (PQsendQuery(pConn->handle, queryUTF8))
       {
+#ifdef _WIN32
+         if (PQsetSingleRowMode(pConn->handle))
+         {
+            result->singleRowMode = true;
+#else
          if ((s_PQsetSingleRowMode == NULL) || s_PQsetSingleRowMode(pConn->handle))
          {
             result->singleRowMode = (s_PQsetSingleRowMode != NULL);
+#endif
             result->currRow = 0;
 
             // Fetch first row (to check for errors in Select instead of Fetch call)
@@ -967,9 +976,15 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(PG_CONN *p
       retry = false;
       if (PQsendQueryPrepared(pConn->handle, hStmt->name, hStmt->pcount, hStmt->buffers, NULL, NULL, 0))
       {
+#ifdef _WIN32
+         if (PQsetSingleRowMode(pConn->handle))
+         {
+            result->singleRowMode = true;
+#else
          if ((s_PQsetSingleRowMode == NULL) || s_PQsetSingleRowMode(pConn->handle))
          {
             result->singleRowMode = (s_PQsetSingleRowMode != NULL);
+#endif
             result->currRow = 0;
 
             // Fetch first row (to check for errors in Select instead of Fetch call)
@@ -1126,16 +1141,8 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(PG_UNBUFFERED_RESULT *result, int
 	if (nColumn >= PQnfields(result->fetchBuffer))
 		return NULL;
 
-	// FIXME: correct processing of binary fields
-	// PQfformat not supported in 7.3
-#ifdef HAVE_PQFFORMAT
-	if (PQfformat(pConn->fetchBuffer, nColumn) != 0)
-#else
-	if (PQbinaryTuples(result->fetchBuffer) != 0)
-#endif
-	{
+	if (PQfformat(result->fetchBuffer, nColumn) != 0)
 		return NULL;
-	}
 
 	char *value = PQgetvalue(result->fetchBuffer, result->currRow, nColumn);
 	if (value == NULL)
