@@ -199,6 +199,8 @@ public:
 	NXSL_Value *getByPosition(int position) const;
 
 	int size() const { return m_size; }
+	int getMinIndex() const { return (m_size > 0) ? m_data[0].index : 0; }
+   int getMaxIndex() const { return (m_size > 0) ? m_data[m_size - 1].index : 0; }
 
 	StringList *toStringList() const;
 };
@@ -726,8 +728,10 @@ protected:
    void doBinaryOperation(int nOpCode);
    void getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value *index);
    bool setArrayElement(NXSL_Value *array, NXSL_Value *index, NXSL_Value *value);
+   void getArrayAttribute(NXSL_Array *a, const TCHAR *attribute, bool safe);
    void getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Value *key);
    bool setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value *value);
+   void getHashMapAttribute(NXSL_HashMap *m, const TCHAR *attribute, bool safe);
    void error(int nError);
    NXSL_Value *matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase);
 
