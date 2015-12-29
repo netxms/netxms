@@ -8,6 +8,7 @@
 - Selectors in NXSL
 - Array attributes in NXSL: size, minIndex, maxIndex
 - Hash map attributes in NXSL: size
+- New NXSL function: mapList
 - Subnet mask for synthetic subnets can be set in server configuration
 - Added cumulative counters for server DB writer requests
 - Fixed data corruption issues in ODBC and Oracle DB drivers
