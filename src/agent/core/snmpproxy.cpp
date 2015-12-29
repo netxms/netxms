@@ -152,4 +152,5 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
 	}
 	sendMessage(&response);
 	delete request;
+	decRefCount();
 }
