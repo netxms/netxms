@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Raden Solutions
+** Copyright (C) 2003-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -672,7 +672,7 @@ void LDAPConnection::updateMembers(StringList *memberList, const char *firstAttr
    char *attribute;
    BerElement *ber;
    LDAP_CHAR *requiredAttr[2];
-   LDAP_CHAR memberAttr[30];
+   LDAP_CHAR memberAttr[32];
    requiredAttr[1] = NULL;
 
    const LDAP_CHAR *filter = _TLDAP("(objectClass=*)");
@@ -681,7 +681,7 @@ void LDAPConnection::updateMembers(StringList *memberList, const char *firstAttr
    {
       // request next members
       struct ldap_timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
-      ldap_snprintf(memberAttr, 32, _TLDAP("member;range=%d-%s"), end+1, _TLDAP("*"));
+      ldap_snprintf(memberAttr, 32, _TLDAP("member;range=%d-*"), end + 1);
       requiredAttr[0] = memberAttr;
       DbgPrintf(4, _T("LDAPConnection::updateMembers(): request members id ") LDAP_TFMT _T(" group: ") LDAP_TFMT, dn, memberAttr);
 
@@ -898,6 +898,7 @@ LDAPConnection::LDAPConnection()
    m_ldapConn = NULL;
    m_action = 1;
    m_secure = 0;
+   m_pageSize = 1000;
 }
 
 /**
