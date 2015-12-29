@@ -21,6 +21,7 @@
 - Agent SNMP proxy improved
 - Improved agent data cache reconciliation
 - Fixed Oracle 12c compatibility issues
+- Automatic configuration import from templates directory on server startup
 - Management console:
 	- Object tool input fields can be rearranged
 	- Line width can be configured for line charts on dashboards

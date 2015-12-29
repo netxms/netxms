@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 NetXMS Team
+** Copyright (C) 2003-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,6 +84,7 @@ void InitCertificates();
 void InitUsers();
 void CleanupUsers();
 void LoadPerfDataStorageDrivers();
+void ImportLocalConfiguration();
 
 void ExecuteScheduledScript(const ScheduledTaskParameters *param);
 void MaintenanceModeEnter(const ScheduledTaskParameters *params);
@@ -810,6 +811,10 @@ retry_db_lock:
 	FileUploadJob::init();
 	InitMappingTables();
 
+   InitClientListeners();
+	if (ConfigReadInt(_T("ImportConfigurationOnStartup"), 1))
+	   ImportLocalConfiguration();
+
 	// Check if management node object presented in database
 	CheckForMgmtNode();
 	if (g_dwMgmtNode == 0)
@@ -867,7 +872,6 @@ retry_db_lock:
    InitializeTaskScheduler();
 
 	// Allow clients to connect
-	InitClientListeners();
 	ThreadCreate(ClientListener, 0, NULL);
 #ifdef WITH_IPV6
 	ThreadCreate(ClientListenerIPv6, 0, NULL);

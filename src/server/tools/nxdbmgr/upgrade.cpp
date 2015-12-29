@@ -642,22 +642,27 @@ static int NextFreeEPPruleID()
 }
 
 /*
+ * Upgrade from V391 to V392
+ */
+static BOOL H_UpgradeFromV391(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("ImportConfigurationOnStartup"), _T("0"), _T("Import configuration from local files on server startup"), 'B', true, true, false, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='392' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/*
  * Upgrade from V390 to V391
  */
 static BOOL H_UpgradeFromV390(int currVersion, int newVersion)
 {
-   if (!CreateTable(_T("CREATE TABLE zmq_subscription (")
-            _T("object_id integer not null,")
-            _T("subscription_type char(1) not null,")
-            _T("ignore_items integer not null,")
-            _T("items $SQL:TEXT,")
-            _T("PRIMARY KEY(object_id, subscription_type))")))
-   {
-      if (!g_bIgnoreErrors)
-      {
-         return FALSE;
-      }
-   }
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE zmq_subscription (")
+      _T("   object_id integer not null,")
+      _T("   subscription_type char(1) not null,")
+      _T("   ignore_items integer not null,")
+      _T("   items $SQL:TEXT,")
+      _T("   PRIMARY KEY(object_id, subscription_type))")));
 
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='391' WHERE var_name='SchemaVersion'")));
    return TRUE;
@@ -9447,6 +9452,7 @@ static struct
    { 388, 389, H_UpgradeFromV388 },
    { 389, 390, H_UpgradeFromV389 },
    { 390, 391, H_UpgradeFromV390 },
+   { 391, 392, H_UpgradeFromV391 },
    { 0, 0, NULL }
 };
 

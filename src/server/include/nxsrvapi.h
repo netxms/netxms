@@ -53,6 +53,9 @@
 #define DEFAULT_LOG_FILE      _T("C:\\netxmsd.log")
 #define DEFAULT_DUMP_DIR      _T("C:\\")
 
+#define LDIR_NDD              _T("\\ndd")
+#define LDIR_PDSDRV           _T("\\pdsdrv")
+
 #define DDIR_PACKAGES         _T("\\packages")
 #define DDIR_BACKGROUNDS      _T("\\backgrounds")
 #define DFILE_KEYS            _T("\\server_key")
@@ -60,8 +63,7 @@
 #define DDIR_IMAGES           _T("\\images")
 #define DDIR_FILES            _T("\\files")
 
-#define LDIR_NDD              _T("\\ndd")
-#define LDIR_PDSDRV           _T("\\pdsdrv")
+#define DDIR_TEMPLATES        _T("\\templates")
 
 #else    /* _WIN32 */
 
@@ -93,6 +95,8 @@
 #define DFILE_COMPILED_MIB    _T("/netxms.mib")
 #define DDIR_IMAGES           _T("/images")
 #define DDIR_FILES            _T("/files")
+
+#define DDIR_TEMPLATES        _T("/templates")
 
 #endif   /* _WIN32 */
 

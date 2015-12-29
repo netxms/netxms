@@ -552,7 +552,7 @@ AC_ARG_WITH(dist,
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
-	CONTRIB_MODULES="mibs backgrounds music"
+	CONTRIB_MODULES="mibs backgrounds music templates"
 	CLIENT_COMPONENTS="nxalarm nxevent nxpush nxsms"
 	SERVER_TOOLS="nxconfig"
 )
@@ -750,7 +750,7 @@ if test $? = 0; then
 	BUILD_SERVER="yes"
 	MODULES="$MODULES libnxmap libnxsl libnxcc server nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
-	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music"
+	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
 	if test "x$XMPP_SUPPORT" = "xyes"; then
 		MODULES="libstrophe $MODULES"
 		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
@@ -3059,6 +3059,7 @@ AC_CONFIG_FILES([
 	contrib/startup/suse/Makefile
 	contrib/startup/ubuntu/Makefile
 	contrib/startup/solaris/Makefile
+	contrib/templates/Makefile
 	doc/Makefile
 	doc/internal/Makefile
 	doc/manuals/Makefile
