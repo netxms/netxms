@@ -1573,18 +1573,18 @@ static BOOL H_UpgradeFromV345(int currVersion, int newVersion)
    CHK_EXEC(ConvertNetMasks(_T("interfaces"), _T("ip_netmask"), _T("id")));
    CHK_EXEC(ConvertNetMasks(_T("vpn_connector_networks"), _T("ip_netmask"), _T("vpn_id"), _T("ip_addr")));
 
-   DB_RESULT hResult = SQLSelect(_T("SELECT community_id,addr_type,addr1,addr2 FROM address_lists WHERE list_type=0"));
+   DB_RESULT hResult = SQLSelect(_T("SELECT community_id,list_type,addr1,addr2 FROM address_lists WHERE addr_type=0"));
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
       if (count > 0)
       {
-         CHK_EXEC(SQLQuery(_T("DELETE FROM address_lists WHERE list_type=0")));
+         CHK_EXEC(SQLQuery(_T("DELETE FROM address_lists WHERE addr_type=0")));
 
          for(int i = 0; i < count; i++)
          {
             TCHAR query[256], addr[64];
-            _sntprintf(query, 256, _T("INSERT INTO address_lists (list_type,community_id,addr_type,addr1,addr2) VALUES (0,%d,%d,'%s','%d')"),
+            _sntprintf(query, 256, _T("INSERT INTO address_lists (addr_type,community_id,list_type,addr1,addr2) VALUES (0,%d,%d,'%s','%d')"),
                DBGetFieldLong(hResult, i, 0), DBGetFieldLong(hResult, i, 1), DBGetField(hResult, i, 2, addr, 64),
                BitsInMask(DBGetFieldIPAddr(hResult, i, 3)));
             CHK_EXEC(SQLQuery(query));
@@ -6018,11 +6018,9 @@ static BOOL H_UpgradeFromV75(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V74 to V75
-//
-
+/**
+ * Upgrade from V74 to V75
+ */
 static BOOL H_UpgradeFromV74(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
@@ -6056,11 +6054,9 @@ static BOOL H_UpgradeFromV74(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V73 to V74
-//
-
+/**
+ * Upgrade from V73 to V74
+ */
 static BOOL H_UpgradeFromV73(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =

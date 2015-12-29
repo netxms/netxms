@@ -35,7 +35,6 @@ import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -7504,18 +7503,18 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<IpAddressListElement> getAddressList(int listId) throws IOException, NXCException
+   public List<InetAddressListElement> getAddressList(int listId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ADDR_LIST);
       msg.setFieldInt32(NXCPCodes.VID_ADDR_LIST_TYPE, listId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
-      final List<IpAddressListElement> list = new ArrayList<IpAddressListElement>(count);
+      final List<InetAddressListElement> list = new ArrayList<InetAddressListElement>(count);
       long varId = NXCPCodes.VID_ADDR_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         list.add(new IpAddressListElement(response, varId));
+         list.add(new InetAddressListElement(response, varId));
          varId += 10;
       }
       return list;
@@ -7529,18 +7528,16 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void setAddressList(int listId, List<IpAddressListElement> list) throws IOException, NXCException
+   public void setAddressList(int listId, List<InetAddressListElement> list) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ADDR_LIST);
       msg.setFieldInt32(NXCPCodes.VID_ADDR_LIST_TYPE, listId);
       msg.setFieldInt32(NXCPCodes.VID_NUM_RECORDS, list.size());
-      long varId = NXCPCodes.VID_ADDR_LIST_BASE;
-      for(IpAddressListElement e : list)
+      long fieldId = NXCPCodes.VID_ADDR_LIST_BASE;
+      for(InetAddressListElement e : list)
       {
-         msg.setFieldInt32(varId++, e.getType());
-         msg.setField(varId++, e.getAddr1());
-         msg.setField(varId++, e.getAddr2());
-         varId += 7;
+         e.fillMessage(msg, fieldId);
+         fieldId += 10;
       }
       sendMessage(msg);
       waitForRCC(msg.getMessageId());

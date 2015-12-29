@@ -1142,6 +1142,7 @@ public:
    int getHostBits() const { return (m_family == AF_INET) ? (32 - m_maskBits) : (128 - m_maskBits); }
 
    InetAddress getSubnetAddress() const;
+   InetAddress getSubnetBroadcast() const;
    bool isSubnetBroadcast(int maskBits) const;
 
    String toString() const;

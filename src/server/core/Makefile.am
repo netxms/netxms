@@ -1,8 +1,8 @@
 # vim:ts=3:sw=3
 
 lib_LTLIBRARIES = libnxcore.la
-libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
-			agent.cpp agent_policy.cpp alarm.cpp audit.cpp \
+libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
+			admin.cpp agent.cpp agent_policy.cpp alarm.cpp audit.cpp \
 			ap_config.cpp ap_jobs.cpp beacon.cpp bizservice.cpp \
 			bizsvcroot.cpp bridge.cpp cas_validator.cpp cdp.cpp \
 			cert.cpp client.cpp cluster.cpp columnfilter.cpp \

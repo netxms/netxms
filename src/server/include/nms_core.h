@@ -263,6 +263,39 @@ typedef struct
 #define NNF_IS_LLDP           0x0080
 
 /**
+ * Address list element types
+ */
+#define InetAddressListElement_SUBNET     0
+#define InetAddressListElement_RANGE      1
+
+/**
+ * IP address list element
+ */
+class NXCORE_EXPORTABLE InetAddressListElement
+{
+private:
+   int m_type;
+   InetAddress m_baseAddress;
+   InetAddress m_endAddress;
+
+public:
+   InetAddressListElement(NXCPMessage *msg, UINT32 baseId);
+   InetAddressListElement(const InetAddress& baseAddr, const InetAddress& endAddr);
+   InetAddressListElement(const InetAddress& baseAddr, int maskBits);
+   InetAddressListElement(DB_RESULT hResult, int row);
+
+   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+
+   bool contains(const InetAddress& addr) const;
+
+   int getType() const { return m_type; }
+   const InetAddress& getBaseAddress() const { return m_baseAddress; }
+   const InetAddress& getEndAddress() const { return m_endAddress; }
+
+   String toString() const;
+};
+
+/**
  * Node information for autodiscovery filter
  */
 typedef struct
@@ -584,8 +617,8 @@ private:
    void SendObjectComments(NXCPMessage *pRequest);
    void updateObjectComments(NXCPMessage *pRequest);
    void pushDCIData(NXCPMessage *pRequest);
-   void getAddrList(NXCPMessage *pRequest);
-   void setAddrList(NXCPMessage *pRequest);
+   void getAddrList(NXCPMessage *request);
+   void setAddrList(NXCPMessage *request);
    void resetComponent(NXCPMessage *pRequest);
    void getDCIEventList(NXCPMessage *request);
    void getDCIScriptList(NXCPMessage *request);

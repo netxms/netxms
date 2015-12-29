@@ -51,7 +51,7 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.part.ViewPart;
-import org.netxms.client.IpAddressListElement;
+import org.netxms.client.InetAddressListElement;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.NetworkDiscovery;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -100,13 +100,13 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    @Override
    public void init(IViewSite site, IMemento memento) throws PartInitException
    {
-      super.init(site, memento);
+      super.init(site, memento);         
    }
 
    /*
     * (non-Javadoc)
     * 
-    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets .Composite)
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
     */
    @Override
    public void createPartControl(Composite parent)
@@ -590,7 +590,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
    /*
     * (non-Javadoc)
     * 
-    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor )
+    * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
     */
    @Override
    public void doSave(IProgressMonitor monitor)
@@ -685,8 +685,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell());
       if (dlg.open() == Window.OK)
       {
-         final List<IpAddressListElement> list = config.getTargets();
-         IpAddressListElement element = new IpAddressListElement(dlg.getType(), dlg.getAddress1(), dlg.getAddress2());
+         final List<InetAddressListElement> list = config.getTargets();
+         InetAddressListElement element = dlg.getElement();
          if (!list.contains(element))
          {
             list.add(element);
@@ -701,7 +701,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
     */
    private void removeTargetAddressListElements()
    {
-      final List<IpAddressListElement> list = config.getTargets();
+      final List<InetAddressListElement> list = config.getTargets();
       IStructuredSelection selection = (IStructuredSelection)activeDiscoveryAddressList.getSelection();
       if (selection.size() > 0)
       {
@@ -722,8 +722,8 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
       AddAddressListElementDialog dlg = new AddAddressListElementDialog(getSite().getShell());
       if (dlg.open() == Window.OK)
       {
-         final List<IpAddressListElement> list = config.getAddressFilter();
-         IpAddressListElement element = new IpAddressListElement(dlg.getType(), dlg.getAddress1(), dlg.getAddress2());
+         final List<InetAddressListElement> list = config.getAddressFilter();
+         InetAddressListElement element = dlg.getElement();
          if (!list.contains(element))
          {
             list.add(element);
@@ -738,7 +738,7 @@ public class NetworkDiscoveryConfigurator extends ViewPart implements ISaveableP
     */
    private void removeAddressFilterElements()
    {
-      final List<IpAddressListElement> list = config.getAddressFilter();
+      final List<InetAddressListElement> list = config.getAddressFilter();
       IStructuredSelection selection = (IStructuredSelection)filterAddressList.getSelection();
       if (selection.size() > 0)
       {

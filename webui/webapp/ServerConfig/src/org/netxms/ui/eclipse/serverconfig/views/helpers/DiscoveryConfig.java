@@ -6,7 +6,7 @@ package org.netxms.ui.eclipse.serverconfig.views.helpers;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import org.netxms.client.IpAddressListElement;
+import org.netxms.client.InetAddressListElement;
 import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.server.ServerVariable;
@@ -21,8 +21,8 @@ public class DiscoveryConfig
 	private boolean useSnmpTraps;
 	private int filterFlags;
 	private String filter;
-	private List<IpAddressListElement> targets;
-	private List<IpAddressListElement> addressFilter;
+	private List<InetAddressListElement> targets;
+	private List<InetAddressListElement> addressFilter;
 	
 	/**
 	 * Create empty object
@@ -207,7 +207,7 @@ public class DiscoveryConfig
 	/**
 	 * @return the targets
 	 */
-	public List<IpAddressListElement> getTargets()
+	public List<InetAddressListElement> getTargets()
 	{
 		return targets;
 	}
@@ -215,7 +215,7 @@ public class DiscoveryConfig
 	/**
 	 * @param targets the targets to set
 	 */
-	public void setTargets(List<IpAddressListElement> targets)
+	public void setTargets(List<InetAddressListElement> targets)
 	{
 		this.targets = targets;
 	}
@@ -223,7 +223,7 @@ public class DiscoveryConfig
 	/**
 	 * @return the addressFilter
 	 */
-	public List<IpAddressListElement> getAddressFilter()
+	public List<InetAddressListElement> getAddressFilter()
 	{
 		return addressFilter;
 	}
@@ -231,7 +231,7 @@ public class DiscoveryConfig
 	/**
 	 * @param addressFilter the addressFilter to set
 	 */
-	public void setAddressFilter(List<IpAddressListElement> addressFilter)
+	public void setAddressFilter(List<InetAddressListElement> addressFilter)
 	{
 		this.addressFilter = addressFilter;
 	}

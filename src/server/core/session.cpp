@@ -71,6 +71,7 @@ void UnregisterClientSession(int id);
 void ResetDiscoveryPoller();
 NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession *session);
 void RemovePendingFileTransferRequests(ClientSession *session);
+bool UpdateAddressListFromMessage(NXCPMessage *msg);
 
 /**
  * Node poller start data
@@ -9545,31 +9546,29 @@ void ClientSession::pushDCIData(NXCPMessage *pRequest)
 /**
  * Get address list
  */
-void ClientSession::getAddrList(NXCPMessage *pRequest)
+void ClientSession::getAddrList(NXCPMessage *request)
 {
    NXCPMessage msg;
-   TCHAR szQuery[256];
-   UINT32 i, dwNumRec, dwId;
-   DB_RESULT hResult;
-
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=%d"),
-                pRequest->getFieldAsUInt32(VID_ADDR_LIST_TYPE));
-      hResult = DBSelect(hdb, szQuery);
+
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=%d"), request->getFieldAsInt32(VID_ADDR_LIST_TYPE));
+      DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult != NULL)
       {
-         dwNumRec = DBGetNumRows(hResult);
-         msg.setField(VID_NUM_RECORDS, dwNumRec);
-         for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwNumRec; i++, dwId += 7)
+         int count = DBGetNumRows(hResult);
+         msg.setField(VID_NUM_RECORDS, (INT32)count);
+
+         UINT32 fieldId = VID_ADDR_LIST_BASE;
+         for(int i = 0; i < count; i++)
          {
-            msg.setField(dwId++, DBGetFieldULong(hResult, i, 0));
-            msg.setField(dwId++, DBGetFieldIPAddr(hResult, i, 1));
-            msg.setField(dwId++, DBGetFieldIPAddr(hResult, i, 2));
+            InetAddressListElement(hResult, i).fillMessage(&msg, fieldId);
+            fieldId += 10;
          }
          DBFreeResult(hResult);
          msg.setField(VID_RCC, RCC_SUCCESS);
@@ -9591,55 +9590,29 @@ void ClientSession::getAddrList(NXCPMessage *pRequest)
 /**
  * Set address list
  */
-void ClientSession::setAddrList(NXCPMessage *pRequest)
+void ClientSession::setAddrList(NXCPMessage *request)
 {
    NXCPMessage msg;
-   UINT32 i, dwId, dwNumRec, dwListType;
-   TCHAR szQuery[256], szIpAddr1[24], szIpAddr2[24];
-
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
+   int listType = request->getFieldAsInt32(VID_ADDR_LIST_TYPE);
    if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      dwListType = pRequest->getFieldAsUInt32(VID_ADDR_LIST_TYPE);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM address_lists WHERE list_type=%d"), dwListType);
-      DBBegin(hdb);
-      if (DBQuery(hdb, szQuery))
+      if (UpdateAddressListFromMessage(request))
       {
-         dwNumRec = pRequest->getFieldAsUInt32(VID_NUM_RECORDS);
-         for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwNumRec; i++, dwId += 10)
-         {
-            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2,community_id) VALUES (%d,%d,'%s','%s',0)"),
-                      dwListType, pRequest->getFieldAsUInt32(dwId),
-                      IpToStr(pRequest->getFieldAsUInt32(dwId + 1), szIpAddr1),
-                      IpToStr(pRequest->getFieldAsUInt32(dwId + 2), szIpAddr2));
-            if (!DBQuery(hdb, szQuery))
-               break;
-         }
-
-         if (i == dwNumRec)
-         {
-            DBCommit(hdb);
-            msg.setField(VID_RCC, RCC_SUCCESS);
-         }
-         else
-         {
-            DBRollback(hdb);
-            msg.setField(VID_RCC, RCC_DB_FAILURE);
-         }
+         msg.setField(VID_RCC, RCC_SUCCESS);
+         WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Address list %d modified"), listType);
       }
       else
       {
-         DBRollback(hdb);
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
-      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on modify address list %d"), listType);
    }
 
    sendMessage(&msg);
