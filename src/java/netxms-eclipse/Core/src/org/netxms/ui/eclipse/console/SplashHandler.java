@@ -79,8 +79,8 @@ public class SplashHandler extends BasicSplashHandler
 		
 		setForeground(new RGB((foregroundColorInteger & 0xFF0000) >> 16, (foregroundColorInteger & 0xFF00) >> 8, foregroundColorInteger & 0xFF));
 		
-		final Color versionColor = new Color(Display.getCurrent(), 56, 56, 52);
-		final Font versionFont = new Font(Display.getCurrent(), "Verdana", 9, SWT.BOLD); //$NON-NLS-1$
+		final Color versionColor = new Color(Display.getCurrent(), 255, 255, 255);
+		final Font versionFont = new Font(Display.getCurrent(), "Verdana", 10, SWT.NONE); //$NON-NLS-1$
 		Composite content = getContent();
 		content.addPaintListener(new PaintListener() {
 			@Override
@@ -88,7 +88,7 @@ public class SplashHandler extends BasicSplashHandler
 			{
 				e.gc.setForeground(versionColor);
 				e.gc.setFont(versionFont);
-				e.gc.drawText(Messages.get().SplashHandler_Version + NXCommon.VERSION + " (" + BuildNumber.TEXT + ")", 209, 181, true);
+				e.gc.drawText(Messages.get().SplashHandler_Version + NXCommon.VERSION + " (" + BuildNumber.TEXT + ")", 10, 290, true);
 			}
 		});
 		content.addDisposeListener(new DisposeListener() {
