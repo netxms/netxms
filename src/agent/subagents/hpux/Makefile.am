@@ -20,7 +20,7 @@ pkglib_LTLIBRARIES = hpux.la
 hpux_la_SOURCES = disk.cpp iostat.cpp main.cpp net.cpp proc.cpp system.cpp
 hpux_la_CPPFLAGS = -I@top_srcdir@/include -D_PSTAT64
 hpux_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la -lnm
-hpux_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
+hpux_la_LDFLAGS = -module -avoid-version -export-symbols ../platform-subagent.sym
 
 EXTRA_DIST = disk.h hpux.h net.h system.h
 
