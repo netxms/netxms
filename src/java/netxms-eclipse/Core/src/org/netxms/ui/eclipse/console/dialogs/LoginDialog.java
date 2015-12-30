@@ -133,11 +133,11 @@ public class LoginDialog extends Dialog
       dialogLayout.numColumns = 2;
       dialogLayout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
       dialogLayout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
-      dialogLayout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
+      dialogLayout.horizontalSpacing = WidgetHelper.DIALOG_SPACING * 2;
       dialogArea.getBody().setLayout(dialogLayout);
 
       RGB customColor = BrandingManager.getInstance().getLoginTitleColor();
-      labelColor = (customColor != null) ? new Color(dialogArea.getDisplay(), customColor) : new Color(dialogArea.getDisplay(), 255, 255, 255);
+      labelColor = (customColor != null) ? new Color(dialogArea.getDisplay(), customColor) : new Color(dialogArea.getDisplay(), dialogArea.getBody().getBackground().getRGB());
       dialogArea.addDisposeListener(new DisposeListener() {
          @Override
          public void widgetDisposed(DisposeEvent e)
@@ -159,7 +159,7 @@ public class LoginDialog extends Dialog
       });
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.CENTER;
-      gd.verticalAlignment = SWT.CENTER;
+      gd.verticalAlignment = SWT.TOP;
       gd.grabExcessVerticalSpace = true;
       label.setLayoutData(gd);
 
