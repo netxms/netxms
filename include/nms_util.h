@@ -358,6 +358,8 @@ public:
 class LIBNETXMS_EXPORTABLE AbstractIterator
 {
 public:
+   virtual ~AbstractIterator();
+
    virtual bool hasNext() = 0;
    virtual void *next() = 0;
 };

@@ -2690,3 +2690,10 @@ TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo()
    return _tcsdup(_T("No heap information API available"));
 #endif
 }
+
+/**
+ * Destructor for abstract iterator
+ */
+AbstractIterator::~AbstractIterator()
+{
+}

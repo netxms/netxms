@@ -476,7 +476,7 @@ private:
 
 public:
    NXSL_Environment();
-   ~NXSL_Environment();
+   virtual ~NXSL_Environment();
 
 	virtual void print(NXSL_Value *value);
 	virtual void trace(int level, const TCHAR *text);
