@@ -540,8 +540,8 @@ setup_encryption:
       goto connect_cleanup;
    }
 
-   // Test connectivity and enable IPv6 support
-   if ((dwError = enableIPv6()) != ERR_SUCCESS)
+   // Test connectivity and inform agent about server capabilities
+   if ((dwError = setServerCapabilities()) != ERR_SUCCESS)
    {
       if ((dwError == ERR_ENCRYPTION_REQUIRED) &&
           (m_iEncryptionPolicy != ENCRYPTION_DISABLED))
@@ -875,6 +875,9 @@ ARP_CACHE *AgentConnection::getArpCache()
  */
 UINT32 AgentConnection::nop()
 {
+   if (!m_isConnected)
+      return ERR_CONNECTION_BROKEN;
+
    NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId;
 
@@ -888,14 +891,16 @@ UINT32 AgentConnection::nop()
 }
 
 /**
- * Notify agent that server is IPv6 aware
+ * inform agent about server capabilities
  */
-UINT32 AgentConnection::enableIPv6()
+UINT32 AgentConnection::setServerCapabilities()
 {
    NXCPMessage msg(m_nProtocolVersion);
    UINT32 dwRqId = generateRequestId();
-   msg.setCode(CMD_ENABLE_IPV6);
-   msg.setField(VID_ENABLED, (INT16)1);
+   msg.setCode(CMD_SET_SERVER_CAPABILITIES);
+   msg.setField(VID_ENABLED, (INT16)1);   // Enables IPv6 on pre-2.0 agents
+   msg.setField(VID_IPV6_SUPPORT, (INT16)1);
+   msg.setField(VID_BULK_RECONCILIATION, (INT16)1);
    msg.setId(dwRqId);
    if (sendMessage(&msg))
       return waitForRCC(dwRqId, m_dwCommandTimeout);
@@ -2041,11 +2046,21 @@ NXCPEncryptionContext *AgentConnection::acquireEncryptionContext()
  */
 void AgentConnection::processCollectedDataCallback(NXCPMessage *msg)
 {
-   UINT32 rcc = processCollectedData(msg);
    NXCPMessage response;
    response.setCode(CMD_REQUEST_COMPLETED);
    response.setId(msg->getId());
-   response.setField(VID_RCC, rcc);
+
+   if (msg->getFieldAsBoolean(VID_BULK_RECONCILIATION))
+   {
+      UINT32 rcc = processBulkCollectedData(msg, &response);
+      response.setField(VID_RCC, rcc);
+   }
+   else
+   {
+      UINT32 rcc = processCollectedData(msg);
+      response.setField(VID_RCC, rcc);
+   }
+
    sendMessage(&response);
    delete msg;
    decRefCount();
@@ -2055,6 +2070,14 @@ void AgentConnection::processCollectedDataCallback(NXCPMessage *msg)
  * Process collected data information (for DCI with agent-side cache)
  */
 UINT32 AgentConnection::processCollectedData(NXCPMessage *msg)
+{
+   return ERR_NOT_IMPLEMENTED;
+}
+
+/**
+ * Process collected data information in bulk mode (for DCI with agent-side cache)
+ */
+UINT32 AgentConnection::processBulkCollectedData(NXCPMessage *request, NXCPMessage *response)
 {
    return ERR_NOT_IMPLEMENTED;
 }

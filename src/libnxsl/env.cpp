@@ -165,8 +165,8 @@ NXSL_Environment::NXSL_Environment()
  */
 NXSL_Environment::~NXSL_Environment()
 {
-   safe_free(m_functions);
-   safe_free(m_selectors);
+   free(m_functions);
+   free(m_selectors);
 }
 
 /**

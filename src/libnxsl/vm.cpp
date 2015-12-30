@@ -1089,6 +1089,14 @@ void NXSL_VM::execute()
                   error(NXSL_ERR_INTERNAL);
                }
             }
+            else if (pValue->getDataType() == NXSL_DT_ARRAY)
+            {
+               getArrayAttribute(pValue->getValueAsArray(), cp->m_operand.m_pszString, cp->m_nOpCode == OPCODE_SAFE_GET_ATTR);
+            }
+            else if (pValue->getDataType() == NXSL_DT_HASHMAP)
+            {
+               getHashMapAttribute(pValue->getValueAsHashMap(), cp->m_operand.m_pszString, cp->m_nOpCode == OPCODE_SAFE_GET_ATTR);
+            }
             else
             {
                error(NXSL_ERR_NOT_OBJECT);
@@ -2173,5 +2181,49 @@ void NXSL_VM::setStorage(NXSL_Storage *storage)
       if (m_localStorage == NULL)
          m_localStorage = new NXSL_Storage();
       m_storage = m_localStorage;
+   }
+}
+
+/**
+ * Get array's attribute
+ */
+void NXSL_VM::getArrayAttribute(NXSL_Array *a, const TCHAR *attribute, bool safe)
+{
+   if (!_tcscmp(attribute, _T("maxIndex")))
+   {
+      m_dataStack->push((a->size() > 0) ? new NXSL_Value((INT32)a->getMaxIndex()) : new NXSL_Value());
+   }
+   else if (!_tcscmp(attribute, _T("minIndex")))
+   {
+      m_dataStack->push((a->size() > 0) ? new NXSL_Value((INT32)a->getMinIndex()) : new NXSL_Value());
+   }
+   else if (!_tcscmp(attribute, _T("size")))
+   {
+      m_dataStack->push(new NXSL_Value((INT32)a->size()));
+   }
+   else
+   {
+      if (safe)
+         m_dataStack->push(new NXSL_Value());
+      else
+         error(NXSL_ERR_NO_SUCH_ATTRIBUTE);
+   }
+}
+
+/**
+ * Get hash map's attribute
+ */
+void NXSL_VM::getHashMapAttribute(NXSL_HashMap *m, const TCHAR *attribute, bool safe)
+{
+   if (!_tcscmp(attribute, _T("size")))
+   {
+      m_dataStack->push(new NXSL_Value((INT32)m->size()));
+   }
+   else
+   {
+      if (safe)
+         m_dataStack->push(new NXSL_Value());
+      else
+         error(NXSL_ERR_NO_SUCH_ATTRIBUTE);
    }
 }

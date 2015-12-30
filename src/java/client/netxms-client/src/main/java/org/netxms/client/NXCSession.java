@@ -170,6 +170,8 @@ import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.AuthCertificate;
 import org.netxms.client.users.User;
 import org.netxms.client.users.UserGroup;
+import org.netxms.client.zeromq.ZmqSubscription;
+import org.netxms.client.zeromq.ZmqSubscriptionType;
 
 /**
  * Communication session with NetXMS server.
@@ -4434,6 +4436,7 @@ public class NXCSession
       if ((flags & NXCObjectModificationData.MODIFY_OBJECT_FLAGS) != 0)
       {
          msg.setFieldInt32(NXCPCodes.VID_FLAGS, data.getObjectFlags());
+         msg.setFieldInt32(NXCPCodes.VID_FLAGS_MASK, data.getObjectFlagsMask());
       }
 
       if ((flags & NXCObjectModificationData.MODIFY_IFXTABLE_POLICY) != 0)
@@ -4517,6 +4520,11 @@ public class NXCSession
       if ((flags & NXCObjectModificationData.MODIFY_HEIGHT) != 0)
       {
          msg.setFieldInt16(NXCPCodes.VID_HEIGHT, data.getHeight());
+      }
+
+      if ((flags & NXCObjectModificationData.MODIFY_RACK_NUMB_SCHEME) != 0)
+      {
+         msg.setField(NXCPCodes.VID_TOP_BOTTOM, data.isRackNumberingTopBottom());
       }
 
       if ((flags & NXCObjectModificationData.MODIFY_PEER_GATEWAY) != 0)
@@ -7495,18 +7503,18 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public List<IpAddressListElement> getAddressList(int listId) throws IOException, NXCException
+   public List<InetAddressListElement> getAddressList(int listId) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_ADDR_LIST);
       msg.setFieldInt32(NXCPCodes.VID_ADDR_LIST_TYPE, listId);
       sendMessage(msg);
       final NXCPMessage response = waitForRCC(msg.getMessageId());
       int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
-      final List<IpAddressListElement> list = new ArrayList<IpAddressListElement>(count);
+      final List<InetAddressListElement> list = new ArrayList<InetAddressListElement>(count);
       long varId = NXCPCodes.VID_ADDR_LIST_BASE;
       for(int i = 0; i < count; i++)
       {
-         list.add(new IpAddressListElement(response, varId));
+         list.add(new InetAddressListElement(response, varId));
          varId += 10;
       }
       return list;
@@ -7520,18 +7528,16 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void setAddressList(int listId, List<IpAddressListElement> list) throws IOException, NXCException
+   public void setAddressList(int listId, List<InetAddressListElement> list) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_ADDR_LIST);
       msg.setFieldInt32(NXCPCodes.VID_ADDR_LIST_TYPE, listId);
       msg.setFieldInt32(NXCPCodes.VID_NUM_RECORDS, list.size());
-      long varId = NXCPCodes.VID_ADDR_LIST_BASE;
-      for(IpAddressListElement e : list)
+      long fieldId = NXCPCodes.VID_ADDR_LIST_BASE;
+      for(InetAddressListElement e : list)
       {
-         msg.setFieldInt32(varId++, e.getType());
-         msg.setField(varId++, e.getAddr1());
-         msg.setField(varId++, e.getAddr2());
-         varId += 7;
+         e.fillMessage(msg, fieldId);
+         fieldId += 10;
       }
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
@@ -8675,5 +8681,82 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
-   }   
+   }
+   
+   /**
+    * Manage subscription for ZMQ event forwarder
+    * @param objectId Node id
+    * @param dciId DCI ID. 0 means "disabled DCI source filter for events"
+    * @param subscribe
+    * @throws IOException
+    * @throws NXCException
+    */
+   public void updateZmqEventSubscription(final long objectId, final long dciId, boolean subscribe) throws IOException, NXCException
+   {
+       final NXCPMessage msg;
+       if (subscribe)
+       {
+	   msg = newMessage(NXCPCodes.CMD_ZMQ_SUBSCRIBE_EVENT);
+       }
+       else
+       {
+	   msg = newMessage(NXCPCodes.CMD_ZMQ_UNSUBSCRIBE_EVENT);
+       }
+       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
+       sendMessage(msg);
+       waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Manage subscription for ZMQ data forwarder
+    * @param objectId
+    * @param dciId
+    * @param subscribe
+    * @throws IOException
+    * @throws NXCException
+    */
+   public void updateZmqDataSubscription(final long objectId, final long dciId, boolean subscribe) throws IOException, NXCException
+   {
+       final NXCPMessage msg;
+       if (subscribe)
+       {
+	   msg = newMessage(NXCPCodes.CMD_ZMQ_SUBSCRIBE_DATA);
+       }
+       else
+       {
+	   msg = newMessage(NXCPCodes.CMD_ZMQ_UNSUBSCRIBE_DATA);
+       }
+       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)objectId);
+       msg.setFieldInt32(NXCPCodes.VID_DCI_ID, (int) dciId);
+       sendMessage(msg);
+       waitForRCC(msg.getMessageId());
+   }
+   
+   public List<ZmqSubscription> getZmqSubscriptions(ZmqSubscriptionType type) throws IOException, NXCException
+   {
+       final NXCPMessage msg = newMessage(type == ZmqSubscriptionType.EVENT ? NXCPCodes.CMD_ZMQ_LIST_EVENT_SUBSCRIPTIONS : NXCPCodes.CMD_ZMQ_LIST_DATA_SUBSCRIPTIONS);
+       sendMessage(msg);
+       final NXCPMessage response = waitForRCC(msg.getMessageId());
+
+       final List<ZmqSubscription> subscriptions = new ArrayList<ZmqSubscription>();
+       
+       long baseId = NXCPCodes.VID_ZMQ_SUBSCRIPTION_BASE;
+       while (true)
+       {
+	   long objectId = response.getFieldAsInt32(baseId);
+	   if (objectId == 0)
+	   {
+	       break;
+	   }
+	   boolean ignoreItems = response.getFieldAsBoolean(baseId + 1);
+	   long[] dciElements = response.getFieldAsUInt32Array(baseId + 2);
+	   
+	   subscriptions.add(new ZmqSubscription(objectId, ignoreItems, dciElements));
+	   
+	   baseId += 10;
+       }
+       
+       return subscriptions;
+   }
 }

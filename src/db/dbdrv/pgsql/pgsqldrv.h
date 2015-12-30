@@ -1,6 +1,6 @@
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,14 +43,18 @@
 #include <libpq-fe.h>
 #include <string.h>
 
+/**
+ * PostgreSQL connection
+ */
 typedef struct
 {
 	PGconn *handle;
-	PGresult *fetchBuffer;
-	bool keepFetchBuffer;
 	MUTEX mutexQueryLock;
 } PG_CONN;
 
+/**
+ * Prepared statement
+ */
 typedef struct
 {
 	PG_CONN *connection;
@@ -59,5 +63,17 @@ typedef struct
 	int allocated;	// Allocated buffers
 	char **buffers;	
 } PG_STATEMENT;
+
+/**
+ * Unbuffered query result
+ */
+typedef struct
+{
+   PG_CONN *conn;
+   PGresult *fetchBuffer;
+   bool keepFetchBuffer;
+   bool singleRowMode;
+   int currRow;
+} PG_UNBUFFERED_RESULT;
 
 #endif   /* _pgsqldrv_h_ */

@@ -1,6 +1,6 @@
 /* 
 ** Informix Database Driver
-** Copyright (C) 2010-2014 Raden Solutinos
+** Copyright (C) 2010-2015 Raden Solutinos
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,18 +22,14 @@
 
 DECLARE_DRIVER_HEADER("INFORMIX")
 
-
-//
-// Constants
-//
-
+/**
+ * Data buffer size
+ */
 #define DATA_BUFFER_SIZE      65536
 
-
-//
-// Convert INFORMIX state to NetXMS database error code and get error text
-//
-
+/**
+ * Convert INFORMIX state to NetXMS database error code and get error text
+ */
 static DWORD GetSQLErrorInfo(SQLSMALLINT nHandleType, SQLHANDLE hHandle, WCHAR *errorText)
 {
 	SQLRETURN nRet;
@@ -174,31 +170,25 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 	return out;
 }
 
-
-//
-// Initialize driver
-//
-
-extern "C" bool EXPORT DrvInit(const char *cmdLine)
+/**
+ * Initialize driver
+ */
+extern "C" bool EXPORT DrvInit(const char *cmdLine, void (*dbgPrintCb)(int, const TCHAR *, va_list))
 {
 	return true;
 }
 
-
-//
-// Unload handler
-//
-
+/**
+ * Unload handler
+ */
 extern "C" void EXPORT DrvUnload()
 {
 }
 
-
-//
-// Connect to database
-// database should be set to Informix source name. Host and schema are ignored
-//
-
+/**
+ * Connect to database
+ * database should be set to Informix source name. Host and schema are ignored
+ */
 extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *host, char *login, char *password, char *database, const char *schema, WCHAR *errorText)
 {
 	long iResult;
@@ -398,36 +388,31 @@ extern "C" void EXPORT DrvFreeStatement(INFORMIX_STATEMENT *statement)
 	free(statement);
 }
 
-
-//
-// Perform non-SELECT query
-//
-
+/**
+ * Perform non-SELECT query
+ */
 extern "C" DWORD EXPORT DrvQuery(INFORMIX_CONN *pConn, WCHAR *pwszQuery, WCHAR *errorText)
 {
-	long iResult;
 	DWORD dwResult;
 
 	MutexLock(pConn->mutexQuery);
 
 	// Allocate statement handle
-	iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
+   SQLHSTMT sqlStatement;
+	SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &sqlStatement);
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		// Execute statement
-		iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
-		if (
-			(iResult == SQL_SUCCESS) || 
-			(iResult == SQL_SUCCESS_WITH_INFO) || 
-			(iResult == SQL_NO_DATA))
+		iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO) || (iResult == SQL_NO_DATA))
 		{
 			dwResult = DBERR_SUCCESS;
 		}
 		else
 		{
-			dwResult = GetSQLErrorInfo(SQL_HANDLE_STMT, pConn->sqlStatement, errorText);
+			dwResult = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
 		}
-		SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
+		SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
 	}
 	else
 	{
@@ -438,26 +423,24 @@ extern "C" DWORD EXPORT DrvQuery(INFORMIX_CONN *pConn, WCHAR *pwszQuery, WCHAR *
 	return dwResult;
 }
 
-
-//
-// Process results of SELECT query
-//
-
+/**
+ * Process results of SELECT query
+ */
 static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 {
 	// Allocate result buffer and determine column info
 	INFORMIX_QUERY_RESULT *pResult = (INFORMIX_QUERY_RESULT *)malloc(sizeof(INFORMIX_QUERY_RESULT));
 	short wNumCols;
 	SQLNumResultCols(statement, &wNumCols);
-	pResult->iNumCols = wNumCols;
-	pResult->iNumRows = 0;
-	pResult->pValues = NULL;
+	pResult->numColumns = wNumCols;
+	pResult->numRows = 0;
+	pResult->values = NULL;
 
 	BYTE *pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE * sizeof(wchar_t));
 
 	// Get column names
-	pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
-	for(int i = 0; i < (int)pResult->iNumCols; i++)
+	pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
+	for(int i = 0; i < (int)pResult->numColumns; i++)
 	{
 		char name[256];
 		SQLSMALLINT len;
@@ -481,9 +464,9 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 	SQLRETURN iResult;
 	while(iResult = SQLFetch(statement), (iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
-		pResult->iNumRows++;
-		pResult->pValues = (WCHAR **)realloc(pResult->pValues, sizeof(WCHAR *) * (pResult->iNumRows * pResult->iNumCols));
-		for(int i = 1; i <= (int)pResult->iNumCols; i++)
+		pResult->numRows++;
+		pResult->values = (WCHAR **)realloc(pResult->values, sizeof(WCHAR *) * (pResult->numRows * pResult->numColumns));
+		for(int i = 1; i <= (int)pResult->numColumns; i++)
 		{
 			SQLLEN iDataSize;
 
@@ -491,11 +474,11 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 			iResult = SQLGetData(statement, (short)i, SQL_C_WCHAR, pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
 			if (iDataSize != SQL_NULL_DATA)
 			{
-				pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
+				pResult->values[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
 			}
 			else
 			{
-				pResult->pValues[iCurrValue++] = wcsdup(L"");
+				pResult->values[iCurrValue++] = wcsdup(L"");
 			}
 		}
 	}
@@ -504,11 +487,9 @@ static INFORMIX_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 	return pResult;
 }
 
-
-//
-// Perform SELECT query
-//
-
+/**
+ * Perform SELECT query
+ */
 extern "C" DBDRV_RESULT EXPORT DrvSelect(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
 	INFORMIX_QUERY_RESULT *pResult = NULL;
@@ -516,23 +497,24 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(INFORMIX_CONN *pConn, WCHAR *pwszQuery,
 	MutexLock(pConn->mutexQuery);
 
 	// Allocate statement handle
-	long iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
+   SQLHSTMT sqlStatement;
+	SQLRETURN iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &sqlStatement);
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		// Execute statement
-		iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+		iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
 		if (
 			(iResult == SQL_SUCCESS) || 
 			(iResult == SQL_SUCCESS_WITH_INFO))
 		{
-			pResult = ProcessSelectResults(pConn->sqlStatement);
+			pResult = ProcessSelectResults(sqlStatement);
 			*pdwError = DBERR_SUCCESS;
 		}
 		else
 		{
-			*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, pConn->sqlStatement, errorText);
+			*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
 		}
-		SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
+		SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
 	}
 	else
 	{
@@ -543,20 +525,16 @@ extern "C" DBDRV_RESULT EXPORT DrvSelect(INFORMIX_CONN *pConn, WCHAR *pwszQuery,
 	return pResult;
 }
 
-
-//
-// Perform SELECT query using prepared statement
-//
-
+/**
+ * Perform SELECT query using prepared statement
+ */
 extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *statement, DWORD *pdwError, WCHAR *errorText)
 {
 	INFORMIX_QUERY_RESULT *pResult = NULL;
 
 	MutexLock(pConn->mutexQuery);
 	long rc = SQLExecute(statement->handle);
-	if (
-		(rc == SQL_SUCCESS) ||
-		(rc == SQL_SUCCESS_WITH_INFO))
+	if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
 	{
 		pResult = ProcessSelectResults(statement->handle);
 		*pdwError = DBERR_SUCCESS;
@@ -569,31 +547,27 @@ extern "C" DBDRV_RESULT EXPORT DrvSelectPrepared(INFORMIX_CONN *pConn, INFORMIX_
 	return pResult;
 }
 
-
-//
-// Get field length from result
-//
-
+/**
+ * Get field length from result
+ */
 extern "C" LONG EXPORT DrvGetFieldLength(INFORMIX_QUERY_RESULT *pResult, int iRow, int iColumn)
 {
 	LONG nLen = -1;
 
 	if (pResult != NULL)
 	{
-		if ((iRow < pResult->iNumRows) && (iRow >= 0) &&
-				(iColumn < pResult->iNumCols) && (iColumn >= 0))
+		if ((iRow < pResult->numRows) && (iRow >= 0) &&
+				(iColumn < pResult->numColumns) && (iColumn >= 0))
 		{
-			nLen = (LONG)wcslen(pResult->pValues[iRow * pResult->iNumCols + iColumn]);
+			nLen = (LONG)wcslen(pResult->values[iRow * pResult->numColumns + iColumn]);
 		}
 	}
 	return nLen;
 }
 
-
-//
-// Get field value from result
-//
-
+/**
+ * Get field value from result
+ */
 extern "C" WCHAR EXPORT *DrvGetField(INFORMIX_QUERY_RESULT *pResult, int iRow, int iColumn,
 		WCHAR *pBuffer, int nBufSize)
 {
@@ -601,13 +575,13 @@ extern "C" WCHAR EXPORT *DrvGetField(INFORMIX_QUERY_RESULT *pResult, int iRow, i
 
 	if (pResult != NULL)
 	{
-		if ((iRow < pResult->iNumRows) && (iRow >= 0) &&
-				(iColumn < pResult->iNumCols) && (iColumn >= 0))
+		if ((iRow < pResult->numRows) && (iRow >= 0) &&
+				(iColumn < pResult->numColumns) && (iColumn >= 0))
 		{
 #ifdef _WIN32
-			wcsncpy_s(pBuffer, nBufSize, pResult->pValues[iRow * pResult->iNumCols + iColumn], _TRUNCATE);
+			wcsncpy_s(pBuffer, nBufSize, pResult->values[iRow * pResult->numColumns + iColumn], _TRUNCATE);
 #else
-			wcsncpy(pBuffer, pResult->pValues[iRow * pResult->iNumCols + iColumn], nBufSize);
+			wcsncpy(pBuffer, pResult->values[iRow * pResult->numColumns + iColumn], nBufSize);
 			pBuffer[nBufSize - 1] = 0;
 #endif
 			pValue = pBuffer;
@@ -623,7 +597,7 @@ extern "C" WCHAR EXPORT *DrvGetField(INFORMIX_QUERY_RESULT *pResult, int iRow, i
 
 extern "C" int EXPORT DrvGetNumRows(INFORMIX_QUERY_RESULT *pResult)
 {
-	return (pResult != NULL) ? pResult->iNumRows : 0;
+	return (pResult != NULL) ? pResult->numRows : 0;
 }
 
 
@@ -633,56 +607,49 @@ extern "C" int EXPORT DrvGetNumRows(INFORMIX_QUERY_RESULT *pResult)
 
 extern "C" int EXPORT DrvGetColumnCount(INFORMIX_QUERY_RESULT *pResult)
 {
-	return (pResult != NULL) ? pResult->iNumCols : 0;
+	return (pResult != NULL) ? pResult->numColumns : 0;
 }
 
-
-//
-// Get column name in query result
-//
-
+/**
+ * Get column name in query result
+ */
 extern "C" const char EXPORT *DrvGetColumnName(INFORMIX_QUERY_RESULT *pResult, int column)
 {
-	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
+	return ((pResult != NULL) && (column >= 0) && (column < pResult->numColumns)) ? pResult->columnNames[column] : NULL;
 }
 
-
-//
-// Free SELECT results
-//
-
+/**
+ * Free SELECT results
+ */
 extern "C" void EXPORT DrvFreeResult(INFORMIX_QUERY_RESULT *pResult)
 {
-	if (pResult != NULL)
+	if (pResult == NULL)
+      return;
+
+	int i, iNumValues;
+
+	iNumValues = pResult->numColumns * pResult->numRows;
+	for(i = 0; i < iNumValues; i++)
 	{
-		int i, iNumValues;
-
-		iNumValues = pResult->iNumCols * pResult->iNumRows;
-		for(i = 0; i < iNumValues; i++)
-		{
-			safe_free(pResult->pValues[i]);
-		}
-		safe_free(pResult->pValues);
-
-		for(i = 0; i < pResult->iNumCols; i++)
-		{
-			safe_free(pResult->columnNames[i]);
-		}
-		safe_free(pResult->columnNames);
-
-		free(pResult);
+		free(pResult->values[i]);
 	}
+	free(pResult->values);
+
+	for(i = 0; i < pResult->numColumns; i++)
+	{
+		free(pResult->columnNames[i]);
+	}
+	free(pResult->columnNames);
+
+	free(pResult);
 }
 
-
-//
-// Perform asynchronous SELECT query
-//
-
-extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(INFORMIX_CONN *pConn, WCHAR *pwszQuery,
-		DWORD *pdwError, WCHAR *errorText)
+/**
+ * Perform unbuffered SELECT query
+ */
+extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(INFORMIX_CONN *pConn, WCHAR *pwszQuery, DWORD *pdwError, WCHAR *errorText)
 {
-	INFORMIX_ASYNC_QUERY_RESULT *pResult = NULL;
+	INFORMIX_UNBUFFERED_QUERY_RESULT *pResult = NULL;
 	long iResult;
 	short wNumCols;
 	int i;
@@ -690,29 +657,32 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(INFORMIX_CONN *pConn, WCHAR 
 	MutexLock(pConn->mutexQuery);
 
 	// Allocate statement handle
-	iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &pConn->sqlStatement);
+   SQLHSTMT sqlStatement;
+	iResult = SQLAllocHandle(SQL_HANDLE_STMT, pConn->sqlConn, &sqlStatement);
 	if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 	{
 		// Execute statement
-		iResult = SQLExecDirectW(pConn->sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
+		iResult = SQLExecDirectW(sqlStatement, (SQLWCHAR *)pwszQuery, SQL_NTS);
 		if ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO))
 		{
 			// Allocate result buffer and determine column info
-			pResult = (INFORMIX_ASYNC_QUERY_RESULT *)malloc(sizeof(INFORMIX_ASYNC_QUERY_RESULT));
-			SQLNumResultCols(pConn->sqlStatement, &wNumCols);
-			pResult->iNumCols = wNumCols;
+			pResult = (INFORMIX_UNBUFFERED_QUERY_RESULT *)malloc(sizeof(INFORMIX_UNBUFFERED_QUERY_RESULT));
+         pResult->sqlStatement = sqlStatement;
+         pResult->isPrepared = false;
+         
+         SQLNumResultCols(sqlStatement, &wNumCols);
+			pResult->numColumns = wNumCols;
 			pResult->pConn = pConn;
 			pResult->noMoreRows = false;
 
 			// Get column names
-			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->iNumCols);
-			for(i = 0; i < pResult->iNumCols; i++)
+			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
+			for(i = 0; i < pResult->numColumns; i++)
 			{
 				SQLWCHAR name[256];
 				SQLSMALLINT len;
 
-				iResult = SQLColAttributeW(pConn->sqlStatement, (SQLSMALLINT)(i + 1),
-						SQL_DESC_NAME, name, 256, &len, NULL); 
+				iResult = SQLColAttributeW(sqlStatement, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, name, 256, &len, NULL); 
 				if (
 					(iResult == SQL_SUCCESS) || 
 					(iResult == SQL_SUCCESS_WITH_INFO))
@@ -730,9 +700,9 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(INFORMIX_CONN *pConn, WCHAR 
 		}
 		else
 		{
-			*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, pConn->sqlStatement, errorText);
+			*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, sqlStatement, errorText);
 			// Free statement handle if query failed
-			SQLFreeHandle(SQL_HANDLE_STMT, pConn->sqlStatement);
+			SQLFreeHandle(SQL_HANDLE_STMT, sqlStatement);
 		}
 	}
 	else
@@ -748,9 +718,62 @@ extern "C" DBDRV_ASYNC_RESULT EXPORT DrvAsyncSelect(INFORMIX_CONN *pConn, WCHAR 
 }
 
 /**
- * Fetch next result line from asynchronous SELECT results
+ * Perform unbuffered SELECT query using prepared statement
  */
-extern "C" bool EXPORT DrvFetch(INFORMIX_ASYNC_QUERY_RESULT *pResult)
+extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *stmt, DWORD *pdwError, WCHAR *errorText)
+{
+   INFORMIX_UNBUFFERED_QUERY_RESULT *pResult = NULL;
+
+   MutexLock(pConn->mutexQuery);
+	SQLRETURN rc = SQLExecute(stmt->handle);
+   if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+   {
+      // Allocate result buffer and determine column info
+      pResult = (INFORMIX_UNBUFFERED_QUERY_RESULT *)malloc(sizeof(INFORMIX_UNBUFFERED_QUERY_RESULT));
+      pResult->sqlStatement = stmt->handle;
+      pResult->isPrepared = true;
+      
+      short wNumCols;
+      SQLNumResultCols(pResult->sqlStatement, &wNumCols);
+      pResult->numColumns = wNumCols;
+      pResult->pConn = pConn;
+      pResult->noMoreRows = false;
+
+		// Get column names
+		pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
+		for(int i = 0; i < pResult->numColumns; i++)
+		{
+			SQLWCHAR name[256];
+			SQLSMALLINT len;
+
+			rc = SQLColAttributeW(pResult->sqlStatement, (SQLSMALLINT)(i + 1), SQL_DESC_NAME, name, 256, &len, NULL); 
+			if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+			{
+				name[len] = 0;
+				pResult->columnNames[i] = MBStringFromUCS2String((UCS2CHAR *)name);
+			}
+			else
+			{
+				pResult->columnNames[i] = strdup("");
+			}
+		}
+
+      *pdwError = DBERR_SUCCESS;
+   }
+   else
+   {
+		*pdwError = GetSQLErrorInfo(SQL_HANDLE_STMT, stmt->handle, errorText);
+   }
+
+   if (pResult == NULL) // Unlock mutex if query has failed
+      MutexUnlock(pConn->mutexQuery);
+	return pResult;
+}
+
+/**
+ * Fetch next result line from unbuffered SELECT results
+ */
+extern "C" bool EXPORT DrvFetch(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
 {
 	bool bResult = false;
 
@@ -758,7 +781,7 @@ extern "C" bool EXPORT DrvFetch(INFORMIX_ASYNC_QUERY_RESULT *pResult)
 	{
 		long iResult;
 
-		iResult = SQLFetch(pResult->pConn->sqlStatement);
+		iResult = SQLFetch(pResult->sqlStatement);
 		bResult = ((iResult == SQL_SUCCESS) || (iResult == SQL_SUCCESS_WITH_INFO));
 		if (!bResult)
 		{
@@ -769,19 +792,19 @@ extern "C" bool EXPORT DrvFetch(INFORMIX_ASYNC_QUERY_RESULT *pResult)
 }
 
 /**
- * Get field length from async query result
+ * Get field length from unbuffered query result
  */
-extern "C" LONG EXPORT DrvGetFieldLengthAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult, int iColumn)
+extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult, int iColumn)
 {
 	LONG nLen = -1;
 
 	if (pResult != NULL)
 	{
-		if ((iColumn < pResult->iNumCols) && (iColumn >= 0))
+		if ((iColumn < pResult->numColumns) && (iColumn >= 0))
 		{
 			SQLLEN dataSize;
 			char temp[1];
-			long rc = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_CHAR, temp, 0, &dataSize);
+			long rc = SQLGetData(pResult->sqlStatement, (short)iColumn + 1, SQL_C_CHAR, temp, 0, &dataSize);
 			if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
 			{
 				nLen = (LONG)dataSize;
@@ -792,9 +815,9 @@ extern "C" LONG EXPORT DrvGetFieldLengthAsync(INFORMIX_ASYNC_QUERY_RESULT *pResu
 }
 
 /**
- * Get field from current row in async query result
+ * Get field from current row in unbuffered query result
  */
-extern "C" WCHAR EXPORT *DrvGetFieldAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult, int iColumn, WCHAR *pBuffer, int iBufSize)
+extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult, int iColumn, WCHAR *pBuffer, int iBufSize)
 {
 	SQLLEN iDataSize;
 	long iResult;
@@ -811,12 +834,12 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult, 
 		return NULL;
 	}
 
-	if ((iColumn >= 0) && (iColumn < pResult->iNumCols))
+	if ((iColumn >= 0) && (iColumn < pResult->numColumns))
 	{
 		// At least on HP-UX driver expects length in chars, not bytes
 		// otherwise it crashes
 		// TODO: check other platforms
-		iResult = SQLGetData(pResult->pConn->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR, pBuffer, iBufSize, &iDataSize);
+		iResult = SQLGetData(pResult->sqlStatement, (short)iColumn + 1, SQL_C_WCHAR, pBuffer, iBufSize, &iDataSize);
 		if (((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO)) || (iDataSize == SQL_NULL_DATA))
 		{
 			pBuffer[0] = 0;
@@ -830,32 +853,42 @@ extern "C" WCHAR EXPORT *DrvGetFieldAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult, 
 }
 
 /**
- * Get column count in async query result
+ * Get column count in unbuffered query result
  */
-extern "C" int EXPORT DrvGetColumnCountAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult)
+extern "C" int EXPORT DrvGetColumnCountUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
 {
-	return (pResult != NULL) ? pResult->iNumCols : 0;
+	return (pResult != NULL) ? pResult->numColumns : 0;
 }
 
 /**
- * Get column name in async query result
+ * Get column name in unbuffered query result
  */
-extern "C" const char EXPORT *DrvGetColumnNameAsync(INFORMIX_ASYNC_QUERY_RESULT *pResult, int column)
+extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult, int column)
 {
-	return ((pResult != NULL) && (column >= 0) && (column < pResult->iNumCols)) ? pResult->columnNames[column] : NULL;
+	return ((pResult != NULL) && (column >= 0) && (column < pResult->numColumns)) ? pResult->columnNames[column] : NULL;
 }
 
 /**
- * Destroy result of async query
+ * Destroy result of unbuffered query
  */
-extern "C" void EXPORT DrvFreeAsyncResult(INFORMIX_ASYNC_QUERY_RESULT *pResult)
+extern "C" void EXPORT DrvFreeUnbufferedResult(INFORMIX_UNBUFFERED_QUERY_RESULT *pResult)
 {
-	if (pResult != NULL)
+	if (pResult == NULL)
+      return;
+
+   if (pResult->isPrepared)
+   	SQLCloseCursor(pResult->sqlStatement);
+   else
+	   SQLFreeHandle(SQL_HANDLE_STMT, pResult->sqlStatement);
+	MutexUnlock(pResult->pConn->mutexQuery);
+
+   for(int i = 0; i < pResult->numColumns; i++)
 	{
-		SQLFreeHandle(SQL_HANDLE_STMT, pResult->pConn->sqlStatement);
-		MutexUnlock(pResult->pConn->mutexQuery);
-		free(pResult);
+		free(pResult->columnNames[i]);
 	}
+	free(pResult->columnNames);
+
+   free(pResult);
 }
 
 /**
@@ -952,9 +985,7 @@ extern "C" int EXPORT DrvIsTableExist(INFORMIX_CONN *pConn, const WCHAR *name)
 bool WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
 	if (dwReason == DLL_PROCESS_ATTACH)
-	{
 		DisableThreadLibraryCalls(hInstance);
-	}
 	return true;
 }
 

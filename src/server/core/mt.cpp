@@ -511,7 +511,7 @@ UINT32 ListMappingTables(NXCPMessage *msg)
  * Returns: mapped value if key found; otherwise default value or null if default value is not provided
  * Table can be referenced by name or ID
  */
-int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+int F_map(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 {
 	if ((argc < 2) || (argc > 3))
 		return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -531,8 +531,68 @@ int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 			break;
 		}
 	}
-	*ppResult = (value != NULL) ? new NXSL_Value(value) : ((argc == 3) ? new NXSL_Value(argv[2]) : new NXSL_Value);
+	*result = (value != NULL) ? new NXSL_Value(value) : ((argc == 3) ? new NXSL_Value(argv[2]) : new NXSL_Value);
 	RWLockUnlock(s_mappingTablesLock);
 
 	return 0;
+}
+
+/**
+ * NXSL API: function mapList
+ * Format: mapList(table, list, separator, [default])
+ * Returns: list of mapped values; for each element mapped value if key found, otherwise default value or empty string if default value is not provided
+ * Table can be referenced by name or ID
+ */
+int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if ((argc < 3) || (argc > 4))
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   if (!argv[0]->isString() || !argv[1]->isString() || !argv[2]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if ((argc == 4) && !argv[3]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   int count;
+   TCHAR **strings = SplitString(argv[1]->getValueAsCString(), argv[2]->getValueAsCString()[0], &count);
+
+   LONG tableId = (argv[0]->isInteger()) ? argv[0]->getValueAsInt32() : 0;
+   MappingTable *mt = NULL;
+   RWLockReadLock(s_mappingTablesLock, INFINITE);
+   for(int i = 0; i < s_mappingTables.size(); i++)
+   {
+      MappingTable *t = s_mappingTables.get(i);
+      if (((tableId > 0) && (t->getId() == tableId)) || !_tcsicmp(argv[0]->getValueAsCString(), t->getName()))
+      {
+         mt = t;
+         break;
+      }
+   }
+
+   if (mt != NULL)
+   {
+      String mappedList;
+      for(int i = 0; i < count; i++)
+      {
+         if (i > 0)
+            mappedList.append(argv[2]->getValueAsCString());
+
+         const TCHAR *v = mt->get(strings[i]);
+         mappedList.append((v != NULL) ? v : ((argc == 4) ? argv[3]->getValueAsCString() : _T("")));
+         free(strings[i]);
+      }
+      *result = new NXSL_Value(mappedList);
+   }
+   else
+   {
+      // mapping table not found, return original value
+      *result = new NXSL_Value(argv[0]);
+      for(int i = 0; i < count; i++)
+         free(strings[i]);
+   }
+   RWLockUnlock(s_mappingTablesLock);
+
+   free(strings);
+   return 0;
 }

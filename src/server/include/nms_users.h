@@ -63,7 +63,8 @@ public:
 };
 
 #if WITH_LDAP
-//Defines to remove string encoding difference between Windows and other systems
+
+// Defines to handle string encoding difference between Windows and other systems
 #ifdef _WIN32
 
 #define LDAP_CHAR TCHAR
@@ -75,7 +76,7 @@ public:
 #define ldap_strlen _tcslen
 #define ldap_timeval l_timeval
 #define ldap_strdup _tcsdup
-#define ldap_sprintf _tcsprintf
+#define ldap_snprintf _sntprintf
 #define LdapConfigRead ConfigReadStr
 #define _TLDAP(x) _T(x)
 #define LDAP_TFMT _T("%s")
@@ -91,7 +92,7 @@ public:
 #define ldap_strlen strlen
 #define ldap_timeval timeval
 #define ldap_strdup strdup
-#define ldap_sprintf sprintf
+#define ldap_snprintf snprintf
 #define LdapConfigRead ConfigReadStrUTF8
 #define _TLDAP(x) x
 #define LDAP_TFMT _T("%hs")

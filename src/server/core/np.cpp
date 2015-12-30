@@ -505,24 +505,7 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
             int nRows = DBGetNumRows(hResult);
             for(int i = 0; (i < nRows) && (!bResult); i++)
             {
-               int nType = DBGetFieldLong(hResult, i, 0);
-               if (nType == 0)
-               {
-                  // Subnet
-                  InetAddress subnet = DBGetFieldInetAddr(hResult, i, 1);
-                  subnet.setMaskBits(DBGetFieldLong(hResult, i, 2));
-                  bResult = subnet.contain(data.ipAddr);
-               }
-               else
-               {
-                  // Range
-                  InetAddress addr1 = DBGetFieldInetAddr(hResult, i, 1);
-                  InetAddress addr2 = DBGetFieldInetAddr(hResult, i, 2);
-                  if ((addr1.getFamily() == data.ipAddr.getFamily()) && (addr2.getFamily() == data.ipAddr.getFamily()))
-                     bResult = (addr1.compareTo(data.ipAddr) <= 0) && (addr2.compareTo(data.ipAddr) >= 0);
-                  else
-                     bResult = FALSE;
-               }
+               bResult = InetAddressListElement(hResult, i).contains(data.ipAddr);
             }
             DBFreeResult(hResult);
          }

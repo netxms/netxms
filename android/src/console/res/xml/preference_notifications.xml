@@ -5,17 +5,4 @@
         <CheckBoxPreference android:summaryOff="@string/pref_global_notification_toast_disabled" android:summaryOn="@string/pref_global_notification_toast_enabled" android:key="global.notification.toast" android:enabled="true" android:defaultValue="false" android:title="@string/pref_global_notification_toast"/>
     	<CheckBoxPreference android:summaryOff="@string/pref_global_notification_icon_disabled" android:summaryOn="@string/pref_global_notification_icon_enabled" android:key="global.notification.icon" android:enabled="true" android:defaultValue="true" android:title="@string/pref_global_notification_icon"/>
 	</PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_alarms">
-	    <CheckBoxPreference android:key="global.notification.alarm" android:summaryOn="@string/pref_global_notification_alarm_enabled" android:summaryOff="@string/pref_global_notification_alarm_disabled" android:title="@string/pref_global_notification_alarm" android:enabled="true" android:defaultValue="true"/>
-		<RingtonePreference android:title="@string/pref_alarm_sound_normal" android:ringtoneType="all" android:showDefault="true" android:showSilent="true" android:key="alarm.sound.normal" android:icon="@drawable/status_normal" />
-		<RingtonePreference android:key="alarm.sound.warning" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_warning" android:icon="@drawable/status_warning" />
-		<RingtonePreference android:key="alarm.sound.minor" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_minor" android:icon="@drawable/status_minor" />
-		<RingtonePreference android:key="alarm.sound.major" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_major" android:icon="@drawable/status_major" />
-		<RingtonePreference android:key="alarm.sound.critical" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_critical" android:icon="@drawable/status_critical" />
-<!-- Not really useful 
-		<RingtonePreference android:key="alarm.sound.unknown" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_unknown" android:icon="@drawable/status_unknown" />
-		<RingtonePreference android:key="alarm.sound.terminate" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_terminate" android:icon="@drawable/status_terminate" />
-		<RingtonePreference android:key="alarm.sound.resolve" android:showDefault="true" android:showSilent="true" android:ringtoneType="all" android:title="@string/pref_alarm_sound_resolve" android:icon="@drawable/status_resolve" />
- -->
- 	</PreferenceCategory>
 </PreferenceScreen>

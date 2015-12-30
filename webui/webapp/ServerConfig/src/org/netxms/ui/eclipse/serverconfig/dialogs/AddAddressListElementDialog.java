@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.serverconfig.dialogs;
 
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.eclipse.jface.dialogs.Dialog;
@@ -30,7 +32,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-import org.netxms.client.IpAddressListElement;
+import org.netxms.client.InetAddressListElement;
 import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -45,9 +47,7 @@ public class AddAddressListElementDialog extends Dialog
 	private Button radioRange;
 	private LabeledText textAddr1;
 	private LabeledText textAddr2;
-	private InetAddress address1;
-	private InetAddress address2;
-	private int type;
+	private InetAddressListElement element;
 	
 	/**
 	 * @param parentShell
@@ -127,7 +127,7 @@ public class AddAddressListElementDialog extends Dialog
 		
 		textAddr2 = new LabeledText(dialogArea, SWT.NONE);
 		textAddr2.setLabel(Messages.get().AddAddressListElementDialog_NetMask);
-		textAddr2.setText("255.255.255.0"); //$NON-NLS-1$
+		textAddr2.setText("0"); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -142,41 +142,41 @@ public class AddAddressListElementDialog extends Dialog
 	@Override
 	protected void okPressed()
 	{
-		type = radioSubnet.getSelection() ? IpAddressListElement.SUBNET : IpAddressListElement.RANGE;
 		try
 		{
-			address1 = InetAddress.getByName(textAddr1.getText());
-			address2 = InetAddress.getByName(textAddr2.getText());
+	      if (radioSubnet.getSelection())
+	      {
+	         InetAddress baseAddress = InetAddress.getByName(textAddr1.getText().trim());
+	         int maskBits = Integer.parseInt(textAddr2.getText().trim());
+	         if ((maskBits < 0) ||
+	             ((baseAddress instanceof Inet4Address) && (maskBits > 32)) ||
+                ((baseAddress instanceof Inet6Address) && (maskBits > 128)))
+	            throw new NumberFormatException("Invalid network mask");
+	         element = new InetAddressListElement(baseAddress, maskBits);
+	      }
+	      else
+	      {
+            element = new InetAddressListElement(InetAddress.getByName(textAddr1.getText().trim()), InetAddress.getByName(textAddr2.getText().trim()));
+	      }
 		}
 		catch(UnknownHostException e)
 		{
 			MessageDialogHelper.openWarning(getShell(), Messages.get().AddAddressListElementDialog_Warning, Messages.get().AddAddressListElementDialog_EnterValidData);
 			return;
 		}
+      catch(NumberFormatException e)
+      {
+         MessageDialogHelper.openWarning(getShell(), Messages.get().AddAddressListElementDialog_Warning, Messages.get().AddAddressListElementDialog_EnterValidData);
+         return;
+      }
 		super.okPressed();
 	}
 
-	/**
-	 * @return the address1
-	 */
-	public InetAddress getAddress1()
-	{
-		return address1;
-	}
-
-	/**
-	 * @return the address2
-	 */
-	public InetAddress getAddress2()
-	{
-		return address2;
-	}
-
-	/**
-	 * @return the type
-	 */
-	public int getType()
-	{
-		return type;
-	}
+   /**
+    * @return the element
+    */
+   public InetAddressListElement getElement()
+   {
+      return element;
+   }
 }

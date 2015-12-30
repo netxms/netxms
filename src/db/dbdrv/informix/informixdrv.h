@@ -1,6 +1,6 @@
 /* 
 ** Informix Database Driver
-** Copyright (C) 2010, 2011 Raden Solutions
+** Copyright (C) 2010-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -63,24 +63,19 @@
 #define TCHAR char
 #endif
 
-
-//
-// Driver connection handle structure
-//
-
+/**
+ * Driver connection handle structure
+ */
 typedef struct
 {
    MUTEX mutexQuery;
    SQLHENV sqlEnv;
    SQLHDBC sqlConn;
-   SQLHSTMT sqlStatement;
 } INFORMIX_CONN;
 
-
-//
-// Prepared statement structure
-//
-
+/**
+ * Prepared statement structure
+ */
 typedef struct
 {
 	SQLHSTMT handle;
@@ -88,31 +83,28 @@ typedef struct
 	INFORMIX_CONN *connection;
 } INFORMIX_STATEMENT;
 
-
-//
-// Result buffer structure
-//
-
+/**
+ * Result buffer structure
+ */
 typedef struct
 {
-   long iNumRows;
-   long iNumCols;
-   WCHAR **pValues;
+   int numRows;
+   int numColumns;
+   WCHAR **values;
 	char **columnNames;
 } INFORMIX_QUERY_RESULT;
 
-
-//
-// Async result buffer structure
-//
-
+/**
+ * Async result buffer structure
+ */
 typedef struct
 {
-   long iNumCols;
+   SQLHSTMT sqlStatement;
+   bool isPrepared;
+   long numColumns;
    INFORMIX_CONN *pConn;
    bool noMoreRows;
 	char **columnNames;
-} INFORMIX_ASYNC_QUERY_RESULT;
-
+} INFORMIX_UNBUFFERED_QUERY_RESULT;
 
 #endif   /* _informixdrv_h_ */

@@ -6,6 +6,9 @@
 - Scripts can be used as instance source in instance discovery DCIs
 - NXSL node object attribute snmpSysDescription renamed back to sysDescription
 - Selectors in NXSL
+- Array attributes in NXSL: size, minIndex, maxIndex
+- Hash map attributes in NXSL: size
+- New NXSL function: mapList
 - Subnet mask for synthetic subnets can be set in server configuration
 - Added cumulative counters for server DB writer requests
 - Fixed data corruption issues in ODBC and Oracle DB drivers
@@ -17,11 +20,23 @@
 - Faster SNMP probing during configuration polls
 - Fixed false negative in node down detection if expected state of some interfaces set to IGNORE
 - Agent SNMP proxy improved
+- Improved agent data cache reconciliation
+- Fixed Oracle 12c compatibility issues
+- Automatic configuration import from templates directory on server startup
+- Fixed address list configuration bug
 - Management console:
 	- Object tool input fields can be rearranged
 	- Line width can be configured for line charts on dashboards
 	- Column sizes saved in table DCI last values view
-- Fixed issues: #205, #847, #948, #967, #979, #980, #991, #997, #1002, #1003, #1019, #1024, #1032, #1058, #1071, #1081, #1082, #1083, #1085
+	- Rack height and numbering direction can be changed
+- Android Console:
+	- Refactoring of Alarms configuration section: alarm notification events fully customizable, added notify by vibration (SOS pattern) and by LED color (set to black to disable a specific category)
+	- Added action buttons in status bar for notification icon (reconect, disconnect and exit), only for Android version starting from v4.1
+	- Updated support library
+- Android Agent:
+	- Support for Marshmallow devices (v6.0)
+	- Updated support library
+- Fixed issues: #205, #847, #849, #948, #963, #964, #966, #967, #971, #974, #978, #979, #980, #983, #991, #997, #1002, #1003, #1004, #1013, #1019, #1024, #1029, #1032, #1058, #1071, #1072, #1074, #1081, #1082, #1083, #1084, #1085
 
 
 *

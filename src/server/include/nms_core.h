@@ -107,6 +107,9 @@ typedef __console_ctx * CONSOLE_CTX;
 #include "nxcore_jobs.h"
 #include "nxcore_logs.h"
 #include "nxcore_schedule.h"
+#ifdef WITH_ZMQ
+#include "zeromq.h"
+#endif
 
 /**
  * Common constants and macros
@@ -134,30 +137,29 @@ typedef void * HSNMPSESSION;
  * Unique identifier group codes
  */
 #define IDG_NETWORK_OBJECT    0
-#define IDG_CONTAINER_CAT     1
-#define IDG_EVENT             2
-#define IDG_ITEM              3
-#define IDG_SNMP_TRAP         4
-#define IDG_JOB               5
-#define IDG_ACTION            6
-#define IDG_EVENT_GROUP       7
-#define IDG_THRESHOLD         8
-#define IDG_USER              9
-#define IDG_USER_GROUP        10
-#define IDG_ALARM             11
-#define IDG_ALARM_NOTE        12
-#define IDG_PACKAGE           13
-#define IDG_SLM_TICKET        14
-#define IDG_OBJECT_TOOL       15
-#define IDG_SCRIPT            16
-#define IDG_AGENT_CONFIG      17
-#define IDG_GRAPH					18
-#define IDG_CERTIFICATE			19
-#define IDG_SITUATION         20
-#define IDG_DCT_COLUMN        21
-#define IDG_MAPPING_TABLE     22
-#define IDG_DCI_SUMMARY_TABLE 23
-#define IDG_SCHEDULED_TASK    24
+#define IDG_EVENT             1
+#define IDG_ITEM              2
+#define IDG_SNMP_TRAP         3
+#define IDG_JOB               4
+#define IDG_ACTION            5
+#define IDG_EVENT_GROUP       6
+#define IDG_THRESHOLD         7
+#define IDG_USER              8
+#define IDG_USER_GROUP        9
+#define IDG_ALARM             10
+#define IDG_ALARM_NOTE        11
+#define IDG_PACKAGE           12
+#define IDG_SLM_TICKET        13
+#define IDG_OBJECT_TOOL       14
+#define IDG_SCRIPT            15
+#define IDG_AGENT_CONFIG      16
+#define IDG_GRAPH					17
+#define IDG_CERTIFICATE			18
+#define IDG_SITUATION         19
+#define IDG_DCT_COLUMN        20
+#define IDG_MAPPING_TABLE     21
+#define IDG_DCI_SUMMARY_TABLE 22
+#define IDG_SCHEDULED_TASK    23
 
 /**
  * Exit codes for console commands
@@ -259,6 +261,39 @@ typedef struct
 #define NNF_IS_CDP            0x0020
 #define NNF_IS_SONMP          0x0040
 #define NNF_IS_LLDP           0x0080
+
+/**
+ * Address list element types
+ */
+#define InetAddressListElement_SUBNET     0
+#define InetAddressListElement_RANGE      1
+
+/**
+ * IP address list element
+ */
+class NXCORE_EXPORTABLE InetAddressListElement
+{
+private:
+   int m_type;
+   InetAddress m_baseAddress;
+   InetAddress m_endAddress;
+
+public:
+   InetAddressListElement(NXCPMessage *msg, UINT32 baseId);
+   InetAddressListElement(const InetAddress& baseAddr, const InetAddress& endAddr);
+   InetAddressListElement(const InetAddress& baseAddr, int maskBits);
+   InetAddressListElement(DB_RESULT hResult, int row);
+
+   void fillMessage(NXCPMessage *msg, UINT32 baseId) const;
+
+   bool contains(const InetAddress& addr) const;
+
+   int getType() const { return m_type; }
+   const InetAddress& getBaseAddress() const { return m_baseAddress; }
+   const InetAddress& getEndAddress() const { return m_endAddress; }
+
+   String toString() const;
+};
 
 /**
  * Node information for autodiscovery filter
@@ -528,7 +563,6 @@ private:
    void updateAction(NXCPMessage *pRequest);
    void deleteAction(NXCPMessage *pRequest);
    void sendAllActions(UINT32 dwRqId);
-   void SendContainerCategories(UINT32 dwRqId);
    void forcedNodePoll(NXCPMessage *pRequest);
    void onTrap(NXCPMessage *pRequest);
    void onWakeUpNode(NXCPMessage *pRequest);
@@ -583,8 +617,8 @@ private:
    void SendObjectComments(NXCPMessage *pRequest);
    void updateObjectComments(NXCPMessage *pRequest);
    void pushDCIData(NXCPMessage *pRequest);
-   void getAddrList(NXCPMessage *pRequest);
-   void setAddrList(NXCPMessage *pRequest);
+   void getAddrList(NXCPMessage *request);
+   void setAddrList(NXCPMessage *request);
    void resetComponent(NXCPMessage *pRequest);
    void getDCIEventList(NXCPMessage *request);
    void getDCIScriptList(NXCPMessage *request);
@@ -679,6 +713,10 @@ private:
    void addScheduledTask(NXCPMessage *request);
    void updateScheduledTask(NXCPMessage *request);
    void removeScheduledTask(NXCPMessage *request);
+#ifdef WITH_ZMQ
+   void zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe);
+   void zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type);
+#endif
 
 public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);

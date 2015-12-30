@@ -90,7 +90,6 @@ typedef struct
    MUTEX mutexQuery;
    SQLHENV sqlEnv;
    SQLHDBC sqlConn;
-   SQLHSTMT sqlStatement;
 } ODBCDRV_CONN;
 
 /**
@@ -108,8 +107,8 @@ typedef struct
  */
 typedef struct
 {
-   long iNumRows;
-   long iNumCols;
+   long numRows;
+   long numColumns;
    NETXMS_WCHAR **pValues;
 	char **columnNames;
 } ODBCDRV_QUERY_RESULT;
@@ -119,7 +118,9 @@ typedef struct
  */
 typedef struct
 {
-   long iNumCols;
+   SQLHSTMT sqlStatement;
+   bool isPrepared;
+   int numColumns;
    ODBCDRV_CONN *pConn;
    bool noMoreRows;
 	char **columnNames;

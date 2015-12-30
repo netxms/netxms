@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for HP-UX
-** Copyright (C) 2010 Victor Kirhenshtein
+** Copyright (C) 2010-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -102,7 +102,8 @@ static int IfNameToIndex(const char *name)
 	fd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (fd != -1)
 	{
-		nx_strncpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
+		strncpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
+		ifr.ifr_name[sizeof(ifr.ifr_name) - 1] = 0;
 		if (ioctl(fd, SIOCGIFINDEX, &ifr) == 0)
 		{
 			index = ifr.ifr_index;
@@ -223,37 +224,35 @@ static int GetInterfaceList(NETIF **iflist)
 }
 
 /**
- * Handler for Net.InterfaceList enum
+ * Handler for Net.InterfaceList list
  */
-LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
+LONG H_NetIfList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
 {
-	int i, j, ifCount;
 	NETIF *ifList;
-	char macAddr[16], ipAddr[32], buffer[256];
-
-	ifCount = GetInterfaceList(&ifList);
+	int ifCount = GetInterfaceList(&ifList);
 	if (ifCount == -1)
 		return SYSINFO_RC_ERROR;
 
-	for(i = 0; i < ifCount; i++)
+	for(int i = 0; i < ifCount; i++)
 	{
-		BinToStr(ifList[i].macAddr, 6, macAddr);
+	   char macAddr[16], ipAddr[32], buffer[256];
+		BinToStrA(ifList[i].macAddr, 6, macAddr);
 		if (ifList[i].ipAddrCount == 0)
 		{
 			snprintf(buffer, 256, "%d 0.0.0.0/0 %d %s %s", ifList[i].ifIndex, ifList[i].ifType, macAddr, ifList[i].ifName);
-			pValue->add(buffer);
+			value->addMBString(buffer);
 		}
 		else
 		{
-			snprintf(buffer, 256, "%d %s/%d %d %s %s", ifList[i].ifIndex, IpToStr(ifList[i].ipAddrList[0].addr, ipAddr),
+			snprintf(buffer, 256, "%d %s/%d %d %s %s", ifList[i].ifIndex, IpToStrA(ifList[i].ipAddrList[0].addr, ipAddr),
 			         BitsInMask(ifList[i].ipAddrList[0].mask), ifList[i].ifType, macAddr, ifList[i].ifName);
-			pValue->add(buffer);
+			value->addMBString(buffer);
 
-			for(j = 1; j < ifList[i].ipAddrCount; j++)
+			for(int j = 1; j < ifList[i].ipAddrCount; j++)
 			{
-				snprintf(buffer, 256, "%d %s/%d %d %s %s:%d", ifList[i].ifIndex, IpToStr(ifList[i].ipAddrList[j].addr, ipAddr),
+				snprintf(buffer, 256, "%d %s/%d %d %s %s:%d", ifList[i].ifIndex, IpToStrA(ifList[i].ipAddrList[j].addr, ipAddr),
 				         BitsInMask(ifList[i].ipAddrList[j].mask), ifList[i].ifType, macAddr, ifList[i].ifName, j);
-				pValue->add(buffer);
+				value->addMBString(buffer);
 			}
 		}
 	}
@@ -262,9 +261,27 @@ LONG H_NetIfList(const char *pszParam, const char *pArg, StringList *pValue, Abs
 }
 
 /**
+ * Handler for Net.InterfaceNames list
+ */
+LONG H_NetIfNames(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+	NETIF *ifList;
+	int ifCount = GetInterfaceList(&ifList);
+	if (ifCount == -1)
+		return SYSINFO_RC_ERROR;
+
+	for(int i = 0; i < ifCount; i++)
+	{
+		value->addMBString(ifList[i].ifName);
+	}
+	free(ifList);
+	return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Handler for Net.ArpCache enum
  */
-LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
+LONG H_NetArpCache(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int i, mib;
 	struct nmparms np;
@@ -288,9 +305,9 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue, A
 				if (((arpCache[i].Type == INTM_DYNAMIC) || (arpCache[i].Type == INTM_STATIC)) &&
 				    (arpCache[i].PhysAddr.o_length > 0))
 				{
-					snprintf(buffer, 256, "%s %s %d", BinToStr(arpCache[i].PhysAddr.o_bytes, arpCache[i].PhysAddr.o_length, mac),
-					         IpToStr(arpCache[i].NetAddr, ip), arpCache[i].IfIndex);
-					pValue->add(buffer);
+					snprintf(buffer, 256, "%s %s %d", BinToStrA(arpCache[i].PhysAddr.o_bytes, arpCache[i].PhysAddr.o_length, mac),
+					         IpToStrA(arpCache[i].NetAddr, ip), arpCache[i].IfIndex);
+					pValue->addMBString(buffer);
 				}
 			}
 			nRet = SYSINFO_RC_SUCCESS;
@@ -303,7 +320,7 @@ LONG H_NetArpCache(const char *pszParam, const char *pArg, StringList *pValue, A
 /**
  * Handler for Net.IP.Forwarding parameter
  */
-LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_NetIpForwarding(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int ipVer = CAST_FROM_POINTER(pArg, int);
 	int nRet = SYSINFO_RC_ERROR;
@@ -330,7 +347,7 @@ LONG H_NetIpForwarding(const char *pszParam, const char *pArg, char *pValue, Abs
 }
 
 
-LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
+LONG H_NetRoutingTable(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 
@@ -339,12 +356,10 @@ LONG H_NetRoutingTable(const char *pszParam, const char *pArg, StringList *pValu
 	return nRet;
 }
 
-
-//
-// Handler for Net.Interface.* parameters
-//
-
-LONG H_NetIfInfo(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for Net.Interface.* parameters
+ */
+LONG H_NetIfInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	char *eptr, buffer[256];
 	nmapi_iftable ift[1024];
@@ -352,7 +367,7 @@ LONG H_NetIfInfo(const char *pszParam, const char *pArg, char *pValue, AbstractC
 	unsigned int size;
 	LONG nRet = SYSINFO_RC_SUCCESS;
 
-	if (!AgentGetParameterArg(pszParam, 1, buffer, 256))
+	if (!AgentGetParameterArgA(pszParam, 1, buffer, 256))
 	{
 		return SYSINFO_RC_ERROR;
 	}
@@ -407,7 +422,7 @@ LONG H_NetIfInfo(const char *pszParam, const char *pArg, char *pValue, AbstractC
 					ret_int(pValue, (iface.ifOper == 1) ? 1 : 0);
 					break;
 				case IF_INFO_DESCRIPTION:
-					ret_string(pValue, iface.ifDescr);
+					ret_mbstring(pValue, iface.ifDescr);
 					break;
 				case IF_INFO_MTU:
 					ret_int(pValue, iface.ifMtu);

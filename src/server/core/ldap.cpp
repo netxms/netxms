@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Raden Solutions
+** Copyright (C) 2003-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -306,7 +306,7 @@ void LDAPConnection::syncUsers()
    LDAP_CHAR *tmp  = ldap_strdup(m_searchBase);
    LDAP_CHAR *separator = tmp;
    LDAP_CHAR *base = tmp;
-   int size = ldap_strlen(tmp);
+   size_t size = ldap_strlen(tmp);
    int rc = LDAP_SUCCESS;
 
    while (separator != NULL)
@@ -371,7 +371,7 @@ void LDAPConnection::syncUsers()
       }
 
       ldap_msgfree(searchResult);
-      if(separator != NULL && (separator - tmp) < size)
+      if ((separator != NULL) && ((size_t)(separator - tmp) < size))
       {
          separator++;
          base = separator;
@@ -568,7 +568,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry>
                value = getAttrValue(entry, attribute, ++i);
             }
          }
-         if(!strncmp(attribute, "member;range=", 13))
+         if (!strncmp(attribute, "member;range=", 13))
          {
             DbgPrintf(4, _T("LDAPConnection::fillLists(): found member attr: %hs"), attribute);
             DbgPrintf(4, _T("LDAPConnection::fillLists(): there are more members, than can be provided in one request"));
@@ -576,7 +576,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry>
 #if !defined(_WIN32) && defined(UNICODE)
             char *tmpDn = UTF8StringFromWideString(dn);
             updateMembers(newObj->m_memberList, attribute, entry, tmpDn);
-            safe_free(tmpDn);
+            free(tmpDn);
 #else
             updateMembers(newObj->m_memberList, attribute, entry, dn);
 #endif
@@ -585,13 +585,13 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry>
       }
       ber_free(ber, 0);
 
-      //entry is added only if it was of a correct type
-      if(newObj->m_type == LDAP_USER && newObj->m_loginName != NULL)
+      // entry is added only if it was of a correct type
+      if (newObj->m_type == LDAP_USER && newObj->m_loginName != NULL)
       {
          DbgPrintf(4, _T("LDAPConnection::fillLists(): User added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
          userEntryList->set(dn, newObj);
       }
-      else if(newObj->m_type == LDAP_GROUP && newObj->m_loginName != NULL)
+      else if (newObj->m_type == LDAP_GROUP && newObj->m_loginName != NULL)
       {
          DbgPrintf(4, _T("LDAPConnection::fillLists(): Group added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
          groupEntryList->set(dn, newObj);
@@ -604,7 +604,6 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry>
       free(dn);
    }
 }
-
 
 /**
  * Get attribute's value
@@ -655,10 +654,10 @@ void LDAPConnection::updateMembers(StringList *memberList, const char *firstAttr
 {
    int start, end;
 
-   //get start, end member count
+   // get start, end member count
    ParseRange(firstAttr, &start, &end);
 
-   //add recieved members
+   // add recieved members
    int i = 0;
    TCHAR *value = getAttrValue(firstEntry, firstAttr, i);
    while(value != NULL)
@@ -673,33 +672,31 @@ void LDAPConnection::updateMembers(StringList *memberList, const char *firstAttr
    char *attribute;
    BerElement *ber;
    LDAP_CHAR *requiredAttr[2];
-   LDAP_CHAR memberAttr[30];
-   requiredAttr[1] = _TLDAP('\0');
+   LDAP_CHAR memberAttr[32];
+   requiredAttr[1] = NULL;
 
    const LDAP_CHAR *filter = _TLDAP("(objectClass=*)");
 
    while(true)
    {
-      //request next members
+      // request next members
       struct ldap_timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
-      ldap_sprintf(memberAttr, _TLDAP("member;range=%d-%s"), end+1, _TLDAP("*"));
+      ldap_snprintf(memberAttr, 32, _TLDAP("member;range=%d-*"), end + 1);
       requiredAttr[0] = memberAttr;
       DbgPrintf(4, _T("LDAPConnection::updateMembers(): request members id ") LDAP_TFMT _T(" group: ") LDAP_TFMT, dn, memberAttr);
 
-
       int rc = ldap_search_ext_s(
                m_ldapConn,		// LDAP session handle
-               dn,	// Search Base
+               (LDAP_CHAR *)dn,	// Search Base
                LDAP_SCOPE_SUBTREE,	// Search Scope – everything below o=Acme
-               filter, // Search Filter – only inetOrgPerson objects
+               (LDAP_CHAR *)filter, // Search Filter – only inetOrgPerson objects
                requiredAttr,	// returnAllAttributes – NULL means Yes
                0,		// attributesOnly – False means we want values
                NULL,	// Server controls – There are none
                NULL,	// Client controls – There are none
                &timeOut,	// search Timeout
                LDAP_NO_LIMIT,	// no size limit
-               &searchResult );
-
+               &searchResult);
 
       if(rc != LDAP_SUCCESS)
       {
@@ -711,13 +708,13 @@ void LDAPConnection::updateMembers(StringList *memberList, const char *firstAttr
 
       bool found = false;
       DbgPrintf(4, _T("LDAPConnection::fillLists(): Found entry count: %d"), ldap_count_entries(m_ldapConn, searchResult));
-      for (entry = ldap_first_entry(m_ldapConn, searchResult); entry != NULL; entry = ldap_next_entry(m_ldapConn, entry))
+      for(entry = ldap_first_entry(m_ldapConn, searchResult); entry != NULL; entry = ldap_next_entry(m_ldapConn, entry))
       {
          for(attribute = ldap_first_attributeA(m_ldapConn, entry, &ber); attribute != NULL; attribute = ldap_next_attributeA(m_ldapConn, entry, ber))
          {
-            if(!strncmp(attribute, "member;range=", 13))
+            if (!strncmp(attribute, "member;range=", 13))
             {
-               //add recieved members
+               // add received members
                i = 0;
                TCHAR *value = getAttrValue(entry, attribute, i);
                if(value != NULL)
@@ -732,7 +729,6 @@ void LDAPConnection::updateMembers(StringList *memberList, const char *firstAttr
                   memberList->addPreallocated(value);
                   value = getAttrValue(entry, attribute, ++i);
                }
-
             }
             ldap_memfreeA(attribute);
          }
@@ -740,10 +736,10 @@ void LDAPConnection::updateMembers(StringList *memberList, const char *firstAttr
       }
       ldap_msgfree(searchResult);
 
-      if(end == -1 || !found)
+      if (end == -1 || !found)
          break;
 
-      if(start == -1)
+      if (start == -1)
       {
          DbgPrintf(4, _T("LDAPConnection::updateMembers(): member start interval returned as: %d"), start);
          break;
@@ -902,6 +898,7 @@ LDAPConnection::LDAPConnection()
    m_ldapConn = NULL;
    m_action = 1;
    m_secure = 0;
+   m_pageSize = 1000;
 }
 
 /**

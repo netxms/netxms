@@ -28,6 +28,7 @@
 Rack::Rack() : Container()
 {
 	m_height = 42;
+	m_topBottomNumbering = false;
 }
 
 /**
@@ -36,6 +37,7 @@ Rack::Rack() : Container()
 Rack::Rack(const TCHAR *name, int height) : Container(name, 0)
 {
 	m_height = height;
+   m_topBottomNumbering = false;
 }
 
 /**
@@ -53,7 +55,7 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 	if (!Container::loadFromDatabase(hdb, id))
 		return false;
 
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT height FROM racks WHERE id=?"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT height,top_bottom_num FROM racks WHERE id=?"));
 	if (hStmt == NULL)
 		return false;
 
@@ -66,6 +68,7 @@ bool Rack::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 		if (DBGetNumRows(hResult) > 0)
 		{
 			m_height = DBGetFieldLong(hResult, 0, 0);
+			m_topBottomNumbering = DBGetFieldLong(hResult, 0, 1) ? true : false;
 			success = true;
 		}
 		DBFreeResult(hResult);
@@ -85,17 +88,18 @@ BOOL Rack::saveToDatabase(DB_HANDLE hdb)
 	DB_STATEMENT hStmt;
 	if (IsDatabaseRecordExist(hdb, _T("racks"), _T("id"), m_id))
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE racks SET height=? WHERE id=?"));
+		hStmt = DBPrepare(hdb, _T("UPDATE racks SET height=?,top_bottom_num=? WHERE id=?"));
 	}
 	else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO racks (height,id) VALUES (?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO racks (height,top_bottom_num,id) VALUES (?,?,?)"));
 	}
 	if (hStmt == NULL)
 		return FALSE;
 
 	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)m_height);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
+	DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, m_topBottomNumbering ? _T("1") : _T("0"), DB_BIND_STATIC);
+   DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_id);
 	BOOL success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
 	return success;
@@ -119,6 +123,7 @@ void Rack::fillMessageInternal(NXCPMessage *pMsg)
 {
    Container::fillMessageInternal(pMsg);
    pMsg->setField(VID_HEIGHT, (WORD)m_height);
+   pMsg->setField(VID_TOP_BOTTOM, (INT16)(m_topBottomNumbering ? 1 : 0));
 }
 
 /**
@@ -128,6 +133,9 @@ UINT32 Rack::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
 	if (pRequest->isFieldExist(VID_HEIGHT))
 		m_height = (int)pRequest->getFieldAsUInt16(VID_HEIGHT);
+
+   if (pRequest->isFieldExist(VID_TOP_BOTTOM))
+      m_topBottomNumbering = (int)pRequest->getFieldAsBoolean(VID_TOP_BOTTOM);
 
    return Container::modifyFromMessageInternal(pRequest);
 }

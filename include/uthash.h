@@ -861,13 +861,29 @@ do {                                                                            
             (HASH_BLOOM_BYTELEN)))
 
 #ifdef NO_DECLTYPE
+
 #define HASH_ITER(hh,head,el,tmp)                                                \
 for((el)=(head), (*(char**)(&(tmp)))=(char*)((head)?(head)->hh.next:NULL);       \
   el; (el)=(tmp),(*(char**)(&(tmp)))=(char*)((tmp)?(tmp)->hh.next:NULL)) 
+
+#define HASH_ITER_START(hh,head,el,tmp)                                          \
+do { (el)=(head); (*(char**)(&(tmp)))=(char*)((head)?(head)->hh.next:NULL); } while(0)
+
+#define HASH_ITER_NEXT(hh,el,tmp)                                                \
+do { (el)=(tmp); (*(char**)(&(tmp)))=(char*)((tmp)?(tmp)->hh.next:NULL); } while(0)
+
 #else
+
 #define HASH_ITER(hh,head,el,tmp)                                                \
 for((el)=(head),(tmp)=DECLTYPE(el)((head)?(head)->hh.next:NULL);                 \
   el; (el)=(tmp),(tmp)=DECLTYPE(el)((tmp)?(tmp)->hh.next:NULL))
+
+#define HASH_ITER_START(hh,head,el,tmp)                                          \
+do { (el)=(head); (tmp)=DECLTYPE(el)((head)?(head)->hh.next:NULL); } while(0)
+
+#define HASH_ITER_NEXT(hh,el,tmp)                                                \
+do { (el)=(tmp); (tmp)=DECLTYPE(el)((tmp)?(tmp)->hh.next:NULL); } while(0)
+
 #endif
 
 /* obtain a count of items in the hash */

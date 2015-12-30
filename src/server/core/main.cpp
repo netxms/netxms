@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 NetXMS Team
+** Copyright (C) 2003-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,6 +43,10 @@
 #include <sys/wait.h>
 #endif
 
+#ifdef WITH_ZMQ
+#include "zeromq.h"
+#endif
+
 /**
  * Format string to show value of global flag
  */
@@ -80,6 +84,7 @@ void InitCertificates();
 void InitUsers();
 void CleanupUsers();
 void LoadPerfDataStorageDrivers();
+void ImportLocalConfiguration();
 
 void ExecuteScheduledScript(const ScheduledTaskParameters *param);
 void MaintenanceModeEnter(const ScheduledTaskParameters *params);
@@ -806,6 +811,10 @@ retry_db_lock:
 	FileUploadJob::init();
 	InitMappingTables();
 
+   InitClientListeners();
+	if (ConfigReadInt(_T("ImportConfigurationOnStartup"), 1))
+	   ImportLocalConfiguration();
+
 	// Check if management node object presented in database
 	CheckForMgmtNode();
 	if (g_dwMgmtNode == 0)
@@ -863,7 +872,6 @@ retry_db_lock:
    InitializeTaskScheduler();
 
 	// Allow clients to connect
-	InitClientListeners();
 	ThreadCreate(ClientListener, 0, NULL);
 #ifdef WITH_IPV6
 	ThreadCreate(ClientListenerIPv6, 0, NULL);
@@ -891,6 +899,10 @@ retry_db_lock:
    }
 #endif
 
+#if WITH_ZMQ
+   StartZMQConnector();
+#endif
+
 	g_flags |= AF_SERVER_INITIALIZED;
 	DbgPrintf(1, _T("Server initialization completed"));
 	return TRUE;
@@ -915,6 +927,10 @@ void NXCORE_EXPORTABLE Shutdown()
 
 #if XMPP_SUPPORTED
    StopXMPPConnector();
+#endif
+
+#if WITH_ZMQ
+   StopZMQConnector();
 #endif
 
 	g_pEventQueue->clear();

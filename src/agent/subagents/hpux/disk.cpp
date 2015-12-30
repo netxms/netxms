@@ -25,13 +25,13 @@
 
 #include "disk.h"
 
-LONG H_DiskInfo(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct statvfs s;
 	char szArg[512] = {0};
 
-	AgentGetParameterArg(pszParam, 1, szArg, sizeof(szArg));
+	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
 
 	if (szArg[0] != 0 && statvfs(szArg, &s) == 0)
 	{

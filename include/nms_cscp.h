@@ -318,11 +318,11 @@ typedef struct
 #define CMD_CREATE_ACTION              0x0051
 #define CMD_DELETE_ACTION              0x0052
 #define CMD_ACTION_DATA                0x0053
-#define CMD_GET_CONTAINER_CAT_LIST     0x0054
-#define CMD_CONTAINER_CAT_DATA         0x0055
-#define CMD_DELETE_CONTAINER_CAT       0x0056
-#define CMD_CREATE_CONTAINER_CAT       0x0057
-#define CMD_MODIFY_CONTAINER_CAT       0x0058
+//UNUSED: #define CMD_GET_CONTAINER_CAT_LIST     0x0054
+//UNUSED: #define CMD_CONTAINER_CAT_DATA         0x0055
+//UNUSED: #define CMD_DELETE_CONTAINER_CAT       0x0056
+//UNUSED: #define CMD_CREATE_CONTAINER_CAT       0x0057
+//UNUSED: #define CMD_MODIFY_CONTAINER_CAT       0x0058
 #define CMD_POLL_NODE                  0x0059
 #define CMD_POLLING_INFO               0x005A
 #define CMD_COPY_DCI                   0x005B
@@ -538,7 +538,7 @@ typedef struct
 #define CMD_FILEMGR_CREATE_FOLDER      0x0131
 #define CMD_QUERY_ADHOC_SUMMARY_TABLE  0x0132
 #define CMD_GRAPH_UPDATE               0x0133
-#define CMD_ENABLE_IPV6                0x0134
+#define CMD_SET_SERVER_CAPABILITIES    0x0134
 #define CMD_FORCE_DCI_POLL             0x0135
 #define CMD_GET_DCI_SCRIPT_LIST        0x0136
 #define CMD_DATA_COLLECTION_CONFIG     0x0137
@@ -559,6 +559,13 @@ typedef struct
 #define CMD_LEAVE_MAINT_MODE           0x0146
 #define CMD_JOIN_CLUSTER               0x0147
 #define CMD_CLUSTER_NOTIFY             0x0148
+
+#define CMD_ZMQ_SUBSCRIBE_EVENT        0x0149
+#define CMD_ZMQ_UNSUBSCRIBE_EVENT      0x014A
+#define CMD_ZMQ_SUBSCRIBE_DATA         0x014B
+#define CMD_ZMQ_UNSUBSCRIBE_DATA       0x014C
+#define CMD_ZMQ_LIST_EVENT_SUBSCRIPTIONS 0x014D
+#define CMD_ZMQ_LIST_DATA_SUBSCRIPTIONS 0x014E
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1108,6 +1115,11 @@ typedef struct
 #define VID_AGENT_COMM_TIME         ((UINT32)532)
 #define VID_GRAPH_TEMPALTE          ((UINT32)533)
 #define VID_OVERVRITE               ((UINT32)534)
+#define VID_IPV6_SUPPORT            ((UINT32)535)
+#define VID_BULK_RECONCILIATION     ((UINT32)536)
+#define VID_STATUS                  ((UINT32)537)
+#define VID_FLAGS_MASK              ((UINT32)538)
+#define VID_TOP_BOTTOM              ((UINT32)539)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1300,6 +1312,8 @@ typedef struct
 #define VID_SCHEDULE_LIST_BASE      ((UINT32)0x10000000)
 
 #define VID_CALLBACK_BASE           ((UINT32)0x10000000)
+
+#define VID_ZMQ_SUBSCRIPTION_BASE   ((UINT32)0x10000000)
 
 #ifdef __cplusplus
 

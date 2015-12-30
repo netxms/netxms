@@ -58,7 +58,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	@Override
 	public void onCreateStep2(Bundle savedInstanceState)
 	{
-		setIntentionalExit(false); // Allow autorestart on change connectivity status for premature exit
+		setIntentionalExit(false);// Allow autorestart on change connectivity status for premature exit
 		setContentView(R.layout.homescreen);
 
 		GridView gridview = (GridView)findViewById(R.id.ActivityList);
@@ -124,11 +124,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 		}
 		else if (item.getItemId() == R.string.exit)
 		{
-			if (service != null)
-				service.shutdown();
-			setIntentionalExit(true); // Avoid autorestart on change connectivity status for intentional exit
-			moveTaskToBack(true);
-			System.exit(0);
+			exit();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -143,8 +139,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public void onItemClick(AdapterView<?> parent, View view, int position, long id)
 	{
 		// Avoid starting activity if no connection
-		if (service != null
-				&& (service.getConnectionStatus() == ConnectionStatus.CS_CONNECTED || service.getConnectionStatus() == ConnectionStatus.CS_ALREADYCONNECTED))
+		if (service != null && (service.getConnectionStatus() == ConnectionStatus.CS_CONNECTED || service.getConnectionStatus() == ConnectionStatus.CS_ALREADYCONNECTED))
 			switch ((int)id)
 			{
 				case ACTIVITY_ALARMS:
@@ -193,12 +188,30 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 		});
 	}
 
+	/**
+	 * Exit from app and shutdown service
+	 */
+	public void exit()
+	{
+		if (service != null)
+			service.shutdown();
+		setIntentionalExit(true);// Avoid autorestart on change connectivity status for intentional exit
+		moveTaskToBack(true);
+		System.exit(0);
+	}
+
+	/**
+	 * Refresh pending status of alarms, called from service
+	 */
 	public void refreshPendingAlarms()
 	{
 		adapter.setPendingAlarms(service.getAlarms().length);
 		adapter.notifyDataSetChanged();
 	}
 
+	/**
+	 * Refresh the activity status, called from service
+	 */
 	public void refreshActivityStatus()
 	{
 		refreshPendingAlarms();

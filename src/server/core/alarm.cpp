@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -71,23 +71,25 @@ static void UpdateAlarmInDB(NXC_ALARM *pAlarm)
    _sntprintf(szQuery, 4096, _T("UPDATE alarms SET alarm_state=%d,ack_by=%d,term_by=%d,")
                              _T("last_change_time=%d,current_severity=%d,repeat_count=%d,")
                              _T("hd_state=%d,hd_ref=%s,timeout=%d,timeout_event=%d,")
-									  _T("message=%s,resolved_by=%d, ack_timeout=%d WHERE alarm_id=%d"),
-              pAlarm->nState, pAlarm->dwAckByUser, pAlarm->dwTermByUser,
-              pAlarm->dwLastChangeTime, pAlarm->nCurrentSeverity,
-              pAlarm->dwRepeatCount, pAlarm->nHelpDeskState,
-			     (const TCHAR *)DBPrepareString(g_dbDriver, pAlarm->szHelpDeskRef),
-              pAlarm->dwTimeout, pAlarm->dwTimeoutEvent,
-			     (const TCHAR *)DBPrepareString(g_dbDriver, pAlarm->szMessage),
-				  pAlarm->dwResolvedByUser, pAlarm->ackTimeout, pAlarm->dwAlarmId);
+									  _T("message=%s,resolved_by=%d,ack_timeout=%d,source_object_id=%d,")
+									  _T("dci_id=%d WHERE alarm_id=%d"),
+              pAlarm->state, pAlarm->ackByUser, pAlarm->termByUser,
+              pAlarm->lastChangeTime, pAlarm->currentSeverity,
+              pAlarm->repeatCount, pAlarm->helpDeskState,
+			     (const TCHAR *)DBPrepareString(g_dbDriver, pAlarm->helpDeskRef),
+              pAlarm->timeout, pAlarm->timeoutEvent,
+			     (const TCHAR *)DBPrepareString(g_dbDriver, pAlarm->message),
+				  pAlarm->resolvedByUser, pAlarm->ackTimeout, pAlarm->sourceObject,
+				  pAlarm->dciId, pAlarm->alarmId);
    QueueSQLRequest(szQuery);
 
-	if (pAlarm->nState == ALARM_STATE_TERMINATED)
+	if (pAlarm->state == ALARM_STATE_TERMINATED)
 	{
-		_sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)pAlarm->dwAlarmId);
+		_sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)pAlarm->alarmId);
 		QueueSQLRequest(szQuery);
 
 		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-		DeleteAlarmNotes(hdb, pAlarm->dwAlarmId);
+		DeleteAlarmNotes(hdb, pAlarm->alarmId);
 	   DBConnectionPoolReleaseConnection(hdb);
 	}
 }
@@ -107,26 +109,27 @@ static void UpdateObjectStatus(UINT32 objectId)
  */
 void FillAlarmInfoMessage(NXCPMessage *pMsg, NXC_ALARM *pAlarm)
 {
-   pMsg->setField(VID_ALARM_ID, pAlarm->dwAlarmId);
-   pMsg->setField(VID_ACK_BY_USER, pAlarm->dwAckByUser);
-   pMsg->setField(VID_RESOLVED_BY_USER, pAlarm->dwResolvedByUser);
-   pMsg->setField(VID_TERMINATED_BY_USER, pAlarm->dwTermByUser);
-   pMsg->setField(VID_EVENT_CODE, pAlarm->dwSourceEventCode);
-   pMsg->setField(VID_EVENT_ID, pAlarm->qwSourceEventId);
-   pMsg->setField(VID_OBJECT_ID, pAlarm->dwSourceObject);
-   pMsg->setField(VID_CREATION_TIME, pAlarm->dwCreationTime);
-   pMsg->setField(VID_LAST_CHANGE_TIME, pAlarm->dwLastChangeTime);
-   pMsg->setField(VID_ALARM_KEY, pAlarm->szKey);
-   pMsg->setField(VID_ALARM_MESSAGE, pAlarm->szMessage);
-   pMsg->setField(VID_STATE, (WORD)(pAlarm->nState & ALARM_STATE_MASK));	// send only state to client, without flags
-   pMsg->setField(VID_IS_STICKY, (WORD)((pAlarm->nState & ALARM_STATE_STICKY) ? 1 : 0));
-   pMsg->setField(VID_CURRENT_SEVERITY, (WORD)pAlarm->nCurrentSeverity);
-   pMsg->setField(VID_ORIGINAL_SEVERITY, (WORD)pAlarm->nOriginalSeverity);
-   pMsg->setField(VID_HELPDESK_STATE, (WORD)pAlarm->nHelpDeskState);
-   pMsg->setField(VID_HELPDESK_REF, pAlarm->szHelpDeskRef);
-   pMsg->setField(VID_REPEAT_COUNT, pAlarm->dwRepeatCount);
-   pMsg->setField(VID_ALARM_TIMEOUT, pAlarm->dwTimeout);
-   pMsg->setField(VID_ALARM_TIMEOUT_EVENT, pAlarm->dwTimeoutEvent);
+   pMsg->setField(VID_ALARM_ID, pAlarm->alarmId);
+   pMsg->setField(VID_ACK_BY_USER, pAlarm->ackByUser);
+   pMsg->setField(VID_RESOLVED_BY_USER, pAlarm->resolvedByUser);
+   pMsg->setField(VID_TERMINATED_BY_USER, pAlarm->termByUser);
+   pMsg->setField(VID_EVENT_CODE, pAlarm->sourceEventCode);
+   pMsg->setField(VID_EVENT_ID, pAlarm->sourceEventId);
+   pMsg->setField(VID_OBJECT_ID, pAlarm->sourceObject);
+   pMsg->setField(VID_DCI_ID, pAlarm->dciId);
+   pMsg->setField(VID_CREATION_TIME, pAlarm->creationTime);
+   pMsg->setField(VID_LAST_CHANGE_TIME, pAlarm->lastChangeTime);
+   pMsg->setField(VID_ALARM_KEY, pAlarm->key);
+   pMsg->setField(VID_ALARM_MESSAGE, pAlarm->message);
+   pMsg->setField(VID_STATE, (WORD)(pAlarm->state & ALARM_STATE_MASK));	// send only state to client, without flags
+   pMsg->setField(VID_IS_STICKY, (WORD)((pAlarm->state & ALARM_STATE_STICKY) ? 1 : 0));
+   pMsg->setField(VID_CURRENT_SEVERITY, (WORD)pAlarm->currentSeverity);
+   pMsg->setField(VID_ORIGINAL_SEVERITY, (WORD)pAlarm->originalSeverity);
+   pMsg->setField(VID_HELPDESK_STATE, (WORD)pAlarm->helpDeskState);
+   pMsg->setField(VID_HELPDESK_REF, pAlarm->helpDeskRef);
+   pMsg->setField(VID_REPEAT_COUNT, pAlarm->repeatCount);
+   pMsg->setField(VID_ALARM_TIMEOUT, pAlarm->timeout);
+   pMsg->setField(VID_ALARM_TIMEOUT_EVENT, pAlarm->timeoutEvent);
    pMsg->setField(VID_NUM_COMMENTS, pAlarm->noteCount);
    pMsg->setField(VID_TIMESTAMP, (UINT32)((pAlarm->ackTimeout != 0) ? (pAlarm->ackTimeout - time(NULL)) : 0));
 }
@@ -257,9 +260,9 @@ static UINT32 GetNoteCount(DB_HANDLE hdb, UINT32 alarmId)
 /**
  * Create new alarm
  */
-void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
-                                      int iSeverity, UINT32 dwTimeout,
-									           UINT32 dwTimeoutEvent, Event *pEvent, UINT32 ackTimeout)
+void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int state,
+                                      int iSeverity, UINT32 timeout,
+									           UINT32 timeoutEvent, Event *pEvent, UINT32 ackTimeout)
 {
    TCHAR szQuery[2048];
    UINT32 alarmId = 0;
@@ -270,30 +273,31 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
    TCHAR *pszExpKey = pEvent->expandText(pszKey);
 
    // Check if we have a duplicate alarm
-   if (((nState & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED) && (*pszExpKey != 0))
+   if (((state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED) && (*pszExpKey != 0))
    {
       MutexLock(m_mutex);
 
       for(int i = 0; i < m_alarmList->size(); i++)
       {
          NXC_ALARM *alarm = m_alarmList->get(i);
-			if (!_tcscmp(pszExpKey, alarm->szKey))
+			if (!_tcscmp(pszExpKey, alarm->key))
          {
-            alarm->dwRepeatCount++;
-            alarm->dwLastChangeTime = (UINT32)time(NULL);
-            alarm->dwSourceObject = pEvent->getSourceId();
-				if ((alarm->nState & ALARM_STATE_STICKY) == 0)
-					alarm->nState = nState;
-            alarm->nCurrentSeverity = iSeverity;
-				alarm->dwTimeout = dwTimeout;
-				alarm->dwTimeoutEvent = dwTimeoutEvent;
+            alarm->repeatCount++;
+            alarm->lastChangeTime = (UINT32)time(NULL);
+            alarm->sourceObject = pEvent->getSourceId();
+            alarm->dciId = pEvent->getDciId();
+				if ((alarm->state & ALARM_STATE_STICKY) == 0)
+					alarm->state = state;
+            alarm->currentSeverity = iSeverity;
+				alarm->timeout = timeout;
+				alarm->timeoutEvent = timeoutEvent;
 				alarm->ackTimeout = ackTimeout;
-            nx_strncpy(alarm->szMessage, pszExpMsg, MAX_EVENT_MSG_LENGTH);
+            nx_strncpy(alarm->message, pszExpMsg, MAX_EVENT_MSG_LENGTH);
 
             NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
             UpdateAlarmInDB(alarm);
 
-				alarmId = alarm->dwAlarmId;		// needed for correct update of related events
+				alarmId = alarm->alarmId;		// needed for correct update of related events
 
             bNewAlarm = FALSE;
             break;
@@ -308,26 +312,27 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
       // Create new alarm structure
       NXC_ALARM *alarm = new NXC_ALARM();
       alarmId = CreateUniqueId(IDG_ALARM);
-      alarm->dwAlarmId = alarmId;
-      alarm->qwSourceEventId = pEvent->getId();
-      alarm->dwSourceEventCode = pEvent->getCode();
-      alarm->dwSourceObject = pEvent->getSourceId();
-      alarm->dwCreationTime = (UINT32)time(NULL);
-      alarm->dwLastChangeTime = alarm->dwCreationTime;
-      alarm->nState = nState;
-      alarm->nOriginalSeverity = iSeverity;
-      alarm->nCurrentSeverity = iSeverity;
-      alarm->dwRepeatCount = 1;
-      alarm->nHelpDeskState = ALARM_HELPDESK_IGNORED;
-		alarm->dwTimeout = dwTimeout;
-		alarm->dwTimeoutEvent = dwTimeoutEvent;
+      alarm->alarmId = alarmId;
+      alarm->sourceEventId = pEvent->getId();
+      alarm->sourceEventCode = pEvent->getCode();
+      alarm->sourceObject = pEvent->getSourceId();
+      alarm->dciId = pEvent->getDciId();
+      alarm->creationTime = (UINT32)time(NULL);
+      alarm->lastChangeTime = alarm->creationTime;
+      alarm->state = state;
+      alarm->originalSeverity = iSeverity;
+      alarm->currentSeverity = iSeverity;
+      alarm->repeatCount = 1;
+      alarm->helpDeskState = ALARM_HELPDESK_IGNORED;
+		alarm->timeout = timeout;
+		alarm->timeoutEvent = timeoutEvent;
 		alarm->noteCount = 0;
 		alarm->ackTimeout = 0;
-      nx_strncpy(alarm->szMessage, pszExpMsg, MAX_EVENT_MSG_LENGTH);
-      nx_strncpy(alarm->szKey, pszExpKey, MAX_DB_STRING);
+      nx_strncpy(alarm->message, pszExpMsg, MAX_EVENT_MSG_LENGTH);
+      nx_strncpy(alarm->key, pszExpKey, MAX_DB_STRING);
 
       // Add new alarm to active alarm list if needed
-		if ((alarm->nState & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
+		if ((alarm->state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
       {
          MutexLock(m_mutex);
          DbgPrintf(7, _T("AlarmManager: adding new active alarm, current alarm count %d"), m_alarmList->size());
@@ -340,17 +345,19 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
 			        _T("INSERT INTO alarms (alarm_id,creation_time,last_change_time,")
                  _T("source_object_id,source_event_code,message,original_severity,")
                  _T("current_severity,alarm_key,alarm_state,ack_by,resolved_by,hd_state,")
-                 _T("hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id, ack_timeout) VALUES ")
-                 _T("(%d,%d,%d,%d,%d,%s,%d,%d,%s,%d,%d,%d,%d,%s,%d,%d,%d,%d,") UINT64_FMT _T(",%d)"),
-              alarm->dwAlarmId, alarm->dwCreationTime, alarm->dwLastChangeTime,
-				  alarm->dwSourceObject, alarm->dwSourceEventCode,
-				  (const TCHAR *)DBPrepareString(g_dbDriver, alarm->szMessage),
-              alarm->nOriginalSeverity, alarm->nCurrentSeverity,
-				  (const TCHAR *)DBPrepareString(g_dbDriver, alarm->szKey),
-				  alarm->nState, alarm->dwAckByUser, alarm->dwResolvedByUser, alarm->nHelpDeskState,
-				  (const TCHAR *)DBPrepareString(g_dbDriver, alarm->szHelpDeskRef),
-              alarm->dwRepeatCount, alarm->dwTermByUser, alarm->dwTimeout,
-				  alarm->dwTimeoutEvent, alarm->qwSourceEventId, alarm->ackTimeout);
+                 _T("hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id,")
+                 _T("ack_timeout,dci_id) VALUES ")
+                 _T("(%d,%d,%d,%d,%d,%s,%d,%d,%s,%d,%d,%d,%d,%s,%d,%d,%d,%d,") UINT64_FMT _T(",%d,%d)"),
+              alarm->alarmId, alarm->creationTime, alarm->lastChangeTime,
+				  alarm->sourceObject, alarm->sourceEventCode,
+				  (const TCHAR *)DBPrepareString(g_dbDriver, alarm->message),
+              alarm->originalSeverity, alarm->currentSeverity,
+				  (const TCHAR *)DBPrepareString(g_dbDriver, alarm->key),
+				  alarm->state, alarm->ackByUser, alarm->resolvedByUser, alarm->helpDeskState,
+				  (const TCHAR *)DBPrepareString(g_dbDriver, alarm->helpDeskRef),
+              alarm->repeatCount, alarm->termByUser, alarm->timeout,
+				  alarm->timeoutEvent, alarm->sourceEventId, alarm->ackTimeout,
+				  alarm->dciId);
       QueueSQLRequest(szQuery);
 
       // Notify connected clients about new alarm
@@ -358,7 +365,7 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
    }
 
    // Update status of related object if needed
-   if ((nState & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
+   if ((state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
 		UpdateObjectStatus(pEvent->getSourceId());
 
 	// Add record to alarm_events table
@@ -383,23 +390,23 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int nState,
  */
 static UINT32 DoAck(NXC_ALARM *alarm, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime)
 {
-   if ((alarm->nState & ALARM_STATE_MASK) != ALARM_STATE_OUTSTANDING)
+   if ((alarm->state & ALARM_STATE_MASK) != ALARM_STATE_OUTSTANDING)
       return RCC_ALARM_NOT_OUTSTANDING;
 
    if (session != NULL)
    {
-      WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), alarm->dwSourceObject,
-         _T("Acknowledged alarm %d (%s) on object %s"), alarm->dwAlarmId, alarm->szMessage,
-         GetObjectName(alarm->dwSourceObject, _T("")));
+      WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), alarm->sourceObject,
+         _T("Acknowledged alarm %d (%s) on object %s"), alarm->alarmId, alarm->message,
+         GetObjectName(alarm->sourceObject, _T("")));
    }
 
    UINT32 endTime = acknowledgmentActionTime != 0 ? (UINT32)time(NULL) + acknowledgmentActionTime : 0;
    alarm->ackTimeout = endTime;
-   alarm->nState = ALARM_STATE_ACKNOWLEDGED;
+   alarm->state = ALARM_STATE_ACKNOWLEDGED;
 	if (sticky)
-      alarm->nState |= ALARM_STATE_STICKY;
-   alarm->dwAckByUser = (session != NULL) ? session->getUserId() : 0;
-   alarm->dwLastChangeTime = (UINT32)time(NULL);
+      alarm->state |= ALARM_STATE_STICKY;
+   alarm->ackByUser = (session != NULL) ? session->getUserId() : 0;
+   alarm->lastChangeTime = (UINT32)time(NULL);
    NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
    UpdateAlarmInDB(alarm);
    return RCC_SUCCESS;
@@ -408,7 +415,7 @@ static UINT32 DoAck(NXC_ALARM *alarm, ClientSession *session, bool sticky, UINT3
 /**
  * Acknowledge alarm with given ID
  */
-UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime)
+UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 alarmId, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime)
 {
    UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
@@ -416,10 +423,10 @@ UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 dwAlarmId, ClientSession *session, 
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (alarm->dwAlarmId == dwAlarmId)
+      if (alarm->alarmId == alarmId)
       {
          dwRet = DoAck(alarm, session, sticky, acknowledgmentActionTime);
-         dwObject = alarm->dwSourceObject;
+         dwObject = alarm->sourceObject;
          break;
       }
    }
@@ -441,10 +448,10 @@ UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *sess
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (!_tcscmp(alarm->szHelpDeskRef, hdref))
+      if (!_tcscmp(alarm->helpDeskRef, hdref))
       {
          dwRet = DoAck(alarm, session, sticky, acknowledgmentActionTime);
-         dwObject = alarm->dwSourceObject;
+         dwObject = alarm->sourceObject;
          break;
       }
    }
@@ -459,7 +466,7 @@ UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *sess
  * Resolve and possibly terminate alarm with given ID
  * Should return RCC which can be sent to client
  */
-UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 dwAlarmId, ClientSession *session, bool terminate)
+UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 alarmId, ClientSession *session, bool terminate)
 {
    UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
 
@@ -467,25 +474,25 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 dwAlarmId, ClientSession *sessi
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (alarm->dwAlarmId == dwAlarmId)
+      if (alarm->alarmId == alarmId)
       {
          // If alarm is open in helpdesk, it cannot be terminated
-         if (alarm->nHelpDeskState != ALARM_HELPDESK_OPEN)
+         if (alarm->helpDeskState != ALARM_HELPDESK_OPEN)
          {
-            dwObject = alarm->dwSourceObject;
+            dwObject = alarm->sourceObject;
             if (session != NULL)
             {
                WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), dwObject,
                   _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-                  dwAlarmId, alarm->szMessage, GetObjectName(dwObject, _T("")));
+                  alarmId, alarm->message, GetObjectName(dwObject, _T("")));
             }
 
 				if (terminate)
-               alarm->dwTermByUser = (session != NULL) ? session->getUserId() : 0;
+               alarm->termByUser = (session != NULL) ? session->getUserId() : 0;
 				else
-               alarm->dwResolvedByUser = (session != NULL) ? session->getUserId() : 0;
-            alarm->dwLastChangeTime = (UINT32)time(NULL);
-				alarm->nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
+               alarm->resolvedByUser = (session != NULL) ? session->getUserId() : 0;
+            alarm->lastChangeTime = (UINT32)time(NULL);
+				alarm->state = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
 				alarm->ackTimeout = 0;
 				NotifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, alarm);
             UpdateAlarmInDB(alarm);
@@ -522,28 +529,28 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-		if ((useRegexp ? RegexpMatch(alarm->szKey, pszKey, TRUE) : !_tcscmp(pszKey, alarm->szKey)) &&
-         (alarm->nHelpDeskState != ALARM_HELPDESK_OPEN))
+		if ((useRegexp ? RegexpMatch(alarm->key, pszKey, TRUE) : !_tcscmp(pszKey, alarm->key)) &&
+         (alarm->helpDeskState != ALARM_HELPDESK_OPEN))
       {
          // Add alarm's source object to update list
          int j;
          for(j = 0; j < numObjects; j++)
          {
-            if (pdwObjectList[j] == alarm->dwSourceObject)
+            if (pdwObjectList[j] == alarm->sourceObject)
                break;
          }
          if (j == numObjects)
          {
-            pdwObjectList[numObjects++] = alarm->dwSourceObject;
+            pdwObjectList[numObjects++] = alarm->sourceObject;
          }
 
          // Resolve or terminate alarm
-			alarm->nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
-         alarm->dwLastChangeTime = dwCurrTime;
+			alarm->state = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
+         alarm->lastChangeTime = dwCurrTime;
 			if (terminate)
-				alarm->dwTermByUser = 0;
+				alarm->termByUser = 0;
 			else
-				alarm->dwResolvedByUser = 0;
+				alarm->resolvedByUser = 0;
          alarm->ackTimeout = 0;
 			NotifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, alarm);
          UpdateAlarmInDB(alarm);
@@ -557,7 +564,7 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
 	         // Add record to alarm_events table if alarm is resolved
 	         TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
 	         const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, pEvent->getName(), valSeverity, valSource, valTimestamp, pEvent->getMessage() };
-	         _sntprintf(valAlarmId, 16, _T("%d"), (int)alarm->dwAlarmId);
+	         _sntprintf(valAlarmId, 16, _T("%d"), (int)alarm->alarmId);
 	         _sntprintf(valEventId, 32, UINT64_FMT, pEvent->getId());
 	         _sntprintf(valEventCode, 16, _T("%d"), (int)pEvent->getCode());
 	         _sntprintf(valSeverity, 16, _T("%d"), (int)pEvent->getSeverity());
@@ -590,25 +597,25 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (!_tcscmp(alarm->szHelpDeskRef, hdref))
+      if (!_tcscmp(alarm->helpDeskRef, hdref))
       {
-         objectId = alarm->dwSourceObject;
+         objectId = alarm->sourceObject;
          if (session != NULL)
          {
             WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), objectId,
                _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-               alarm->dwAlarmId, alarm->szMessage, GetObjectName(objectId, _T("")));
+               alarm->alarmId, alarm->message, GetObjectName(objectId, _T("")));
          }
 
 			if (terminate)
-            alarm->dwTermByUser = (session != NULL) ? session->getUserId() : 0;
+            alarm->termByUser = (session != NULL) ? session->getUserId() : 0;
 			else
-            alarm->dwResolvedByUser = (session != NULL) ? session->getUserId() : 0;
-         alarm->dwLastChangeTime = (UINT32)time(NULL);
-			alarm->nState = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
+            alarm->resolvedByUser = (session != NULL) ? session->getUserId() : 0;
+         alarm->lastChangeTime = (UINT32)time(NULL);
+			alarm->state = terminate ? ALARM_STATE_TERMINATED : ALARM_STATE_RESOLVED;
 			alarm->ackTimeout = 0;
-         if (alarm->nHelpDeskState != ALARM_HELPDESK_IGNORED)
-            alarm->nHelpDeskState = ALARM_HELPDESK_CLOSED;
+         if (alarm->helpDeskState != ALARM_HELPDESK_IGNORED)
+            alarm->helpDeskState = ALARM_HELPDESK_CLOSED;
 			NotifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, alarm);
          UpdateAlarmInDB(alarm);
 			if (terminate)
@@ -655,24 +662,24 @@ UINT32 OpenHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (alarm->dwAlarmId == alarmId)
+      if (alarm->alarmId == alarmId)
       {
-         if (alarm->nHelpDeskState == ALARM_HELPDESK_IGNORED)
+         if (alarm->helpDeskState == ALARM_HELPDESK_IGNORED)
          {
             /* TODO: unlock alarm list before call */
-            const TCHAR *nodeName = GetObjectName(alarm->dwSourceObject, _T("[unknown]"));
-            int messageLen = (int)(_tcslen(nodeName) + _tcslen(alarm->szMessage) + 32) * sizeof(TCHAR);
+            const TCHAR *nodeName = GetObjectName(alarm->sourceObject, _T("[unknown]"));
+            int messageLen = (int)(_tcslen(nodeName) + _tcslen(alarm->message) + 32) * sizeof(TCHAR);
             TCHAR *message = (TCHAR *)malloc(messageLen);
-            _sntprintf(message, messageLen, _T("%s: %s"), nodeName, alarm->szMessage);
-            rcc = CreateHelpdeskIssue(message, alarm->szHelpDeskRef);
+            _sntprintf(message, messageLen, _T("%s: %s"), nodeName, alarm->message);
+            rcc = CreateHelpdeskIssue(message, alarm->helpDeskRef);
             free(message);
             if (rcc == RCC_SUCCESS)
             {
-               alarm->nHelpDeskState = ALARM_HELPDESK_OPEN;
+               alarm->helpDeskState = ALARM_HELPDESK_OPEN;
 			      NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
                UpdateAlarmInDB(alarm);
-               nx_strncpy(hdref, alarm->szHelpDeskRef, MAX_HELPDESK_REF_LEN);
-               DbgPrintf(5, _T("Helpdesk issue created for alarm %d, reference \"%s\""), alarm->dwAlarmId, alarm->szHelpDeskRef);
+               nx_strncpy(hdref, alarm->helpDeskRef, MAX_HELPDESK_REF_LEN);
+               DbgPrintf(5, _T("Helpdesk issue created for alarm %d, reference \"%s\""), alarm->alarmId, alarm->helpDeskRef);
             }
          }
          else
@@ -697,11 +704,11 @@ UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, TCHAR *url, size_t size)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (alarm->dwAlarmId == alarmId)
+      if (alarm->alarmId == alarmId)
       {
-         if ((alarm->nHelpDeskState != ALARM_HELPDESK_IGNORED) && (alarm->szHelpDeskRef[0] != 0))
+         if ((alarm->helpDeskState != ALARM_HELPDESK_IGNORED) && (alarm->helpDeskRef[0] != 0))
          {
-            rcc = GetHelpdeskIssueUrl(alarm->szHelpDeskRef, url, size);
+            rcc = GetHelpdeskIssueUrl(alarm->helpDeskRef, url, size);
          }
          else
          {
@@ -717,7 +724,7 @@ UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, TCHAR *url, size_t size)
 /**
  * Unlink helpdesk issue from alarm
  */
-UINT32 UnlinkHelpdeskIssueById(UINT32 dwAlarmId, ClientSession *session)
+UINT32 UnlinkHelpdeskIssueById(UINT32 alarmId, ClientSession *session)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
@@ -725,16 +732,16 @@ UINT32 UnlinkHelpdeskIssueById(UINT32 dwAlarmId, ClientSession *session)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (alarm->dwAlarmId == dwAlarmId)
+      if (alarm->alarmId == alarmId)
       {
          if (session != NULL)
          {
             WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), 
-               alarm->dwSourceObject, _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"), 
-               alarm->szHelpDeskRef, alarm->dwAlarmId, alarm->szMessage, 
-               GetObjectName(alarm->dwSourceObject, _T("")));
+               alarm->sourceObject, _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"),
+               alarm->helpDeskRef, alarm->alarmId, alarm->message,
+               GetObjectName(alarm->sourceObject, _T("")));
          }
-         alarm->nHelpDeskState = ALARM_HELPDESK_IGNORED;
+         alarm->helpDeskState = ALARM_HELPDESK_IGNORED;
 			NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
          UpdateAlarmInDB(alarm);
          rcc = RCC_SUCCESS;
@@ -757,16 +764,16 @@ UINT32 UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (!_tcscmp(alarm->szHelpDeskRef, hdref))
+      if (!_tcscmp(alarm->helpDeskRef, hdref))
       {
          if (session != NULL)
          {
             WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(),
-               alarm->dwSourceObject, _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"),
-               alarm->szHelpDeskRef, alarm->dwAlarmId, alarm->szMessage, 
-               GetObjectName(alarm->dwSourceObject, _T("")));
+               alarm->sourceObject, _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"),
+               alarm->helpDeskRef, alarm->alarmId, alarm->message,
+               GetObjectName(alarm->sourceObject, _T("")));
          }
-         alarm->nHelpDeskState = ALARM_HELPDESK_IGNORED;
+         alarm->helpDeskState = ALARM_HELPDESK_IGNORED;
 			NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
          UpdateAlarmInDB(alarm);
          rcc = RCC_SUCCESS;
@@ -781,7 +788,7 @@ UINT32 UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session)
 /**
  * Delete alarm with given ID
  */
-void NXCORE_EXPORTABLE DeleteAlarm(UINT32 dwAlarmId, bool objectCleanup)
+void NXCORE_EXPORTABLE DeleteAlarm(UINT32 alarmId, bool objectCleanup)
 {
    DWORD dwObject;
 
@@ -791,9 +798,9 @@ void NXCORE_EXPORTABLE DeleteAlarm(UINT32 dwAlarmId, bool objectCleanup)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (alarm->dwAlarmId == dwAlarmId)
+      if (alarm->alarmId == alarmId)
       {
-         dwObject = alarm->dwSourceObject;
+         dwObject = alarm->sourceObject;
          NotifyClients(NX_NOTIFY_ALARM_DELETED, alarm);
          m_alarmList->remove(i);
          break;
@@ -807,13 +814,13 @@ void NXCORE_EXPORTABLE DeleteAlarm(UINT32 dwAlarmId, bool objectCleanup)
    {
       TCHAR szQuery[256];
 
-      _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%d"), (int)dwAlarmId);
+      _sntprintf(szQuery, 256, _T("DELETE FROM alarms WHERE alarm_id=%d"), (int)alarmId);
       QueueSQLRequest(szQuery);
-      _sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)dwAlarmId);
+      _sntprintf(szQuery, 256, _T("DELETE FROM alarm_events WHERE alarm_id=%d"), (int)alarmId);
       QueueSQLRequest(szQuery);
 
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	   DeleteAlarmNotes(hdb, dwAlarmId);
+	   DeleteAlarmNotes(hdb, alarmId);
 	   DBConnectionPoolReleaseConnection(hdb);
 
       UpdateObjectStatus(dwObject);
@@ -832,9 +839,9 @@ bool DeleteObjectAlarms(UINT32 objectId, DB_HANDLE hdb)
 	for(int i = m_alarmList->size() - 1; i >= 0; i--)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-		if (alarm->dwSourceObject == objectId)
+		if (alarm->sourceObject == objectId)
       {
-			DeleteAlarm(alarm->dwAlarmId, true);
+			DeleteAlarm(alarm->alarmId, true);
       }
 	}
 
@@ -891,7 +898,7 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      NetObj *pObject = FindObjectById(alarm->dwSourceObject);
+      NetObj *pObject = FindObjectById(alarm->sourceObject);
       if (pObject != NULL)
       {
          if (pObject->checkAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS))
@@ -913,7 +920,7 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
  * Get alarm with given ID into NXCP message
  * Should return RCC that can be sent to client
  */
-UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, NXCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, NXCPMessage *msg)
 {
    UINT32 dwRet = RCC_INVALID_ALARM_ID;
 
@@ -921,7 +928,7 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, NXCPMessage *msg)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (alarm->dwAlarmId == dwAlarmId)
+      if (alarm->alarmId == alarmId)
       {
 			FillAlarmInfoMessage(msg, alarm);
 			dwRet = RCC_SUCCESS;
@@ -937,13 +944,13 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, NXCPMessage *msg)
  * Get all related events for alarm with given ID into NXCP message
  * Should return RCC that can be sent to client
  */
-UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 dwAlarmId, NXCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 alarmId, NXCPMessage *msg)
 {
    UINT32 dwRet = RCC_INVALID_ALARM_ID;
 
    MutexLock(m_mutex);
    for(int i = 0; i < m_alarmList->size(); i++)
-      if (m_alarmList->get(i)->dwAlarmId == dwAlarmId)
+      if (m_alarmList->get(i)->alarmId == alarmId)
       {
 			dwRet = RCC_SUCCESS;
          break;
@@ -953,7 +960,7 @@ UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 dwAlarmId, NXCPMessage *msg)
 	// we don't call FillAlarmEventsMessage from within loop
 	// to prevent alarm list lock for a long time
 	if (dwRet == RCC_SUCCESS)
-		FillAlarmEventsMessage(msg, dwAlarmId);
+		FillAlarmEventsMessage(msg, alarmId);
 
 	return dwRet;
 }
@@ -961,7 +968,7 @@ UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 dwAlarmId, NXCPMessage *msg)
 /**
  * Get source object for given alarm id
  */
-NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 dwAlarmId)
+NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 alarmId)
 {
    UINT32 dwObjectId = 0;
 
@@ -969,9 +976,9 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 dwAlarmId)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (alarm->dwAlarmId == dwAlarmId)
+      if (alarm->alarmId == alarmId)
       {
-         dwObjectId = alarm->dwSourceObject;
+         dwObjectId = alarm->sourceObject;
          break;
       }
    }
@@ -990,9 +997,9 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(const TCHAR *hdref)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (!_tcscmp(alarm->szHelpDeskRef, hdref))
+      if (!_tcscmp(alarm->helpDeskRef, hdref))
       {
-         dwObjectId = alarm->dwSourceObject;
+         dwObjectId = alarm->sourceObject;
          break;
       }
    }
@@ -1012,11 +1019,11 @@ int GetMostCriticalStatusForObject(UINT32 dwObjectId)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if ((alarm->dwSourceObject == dwObjectId) &&
-			 ((alarm->nState & ALARM_STATE_MASK) < ALARM_STATE_RESOLVED) &&
-          ((alarm->nCurrentSeverity > iStatus) || (iStatus == STATUS_UNKNOWN)))
+      if ((alarm->sourceObject == dwObjectId) &&
+			 ((alarm->state & ALARM_STATE_MASK) < ALARM_STATE_RESOLVED) &&
+          ((alarm->currentSeverity > iStatus) || (iStatus == STATUS_UNKNOWN)))
       {
-         iStatus = (int)alarm->nCurrentSeverity;
+         iStatus = (int)alarm->currentSeverity;
       }
    }
    MutexUnlock(m_mutex);
@@ -1034,7 +1041,7 @@ void GetAlarmStats(NXCPMessage *pMsg)
    pMsg->setField(VID_NUM_ALARMS, m_alarmList->size());
    memset(dwCount, 0, sizeof(UINT32) * 5);
    for(int i = 0; i < m_alarmList->size(); i++)
-      dwCount[m_alarmList->get(i)->nCurrentSeverity]++;
+      dwCount[m_alarmList->get(i)->currentSeverity]++;
    MutexUnlock(m_mutex);
    pMsg->setFieldFromInt32Array(VID_ALARMS_BY_SEVERITY, 5, dwCount);
 }
@@ -1054,33 +1061,33 @@ static THREAD_RESULT THREAD_CALL WatchdogThread(void *arg)
 	   for(int i = 0; i < m_alarmList->size(); i++)
 		{
          NXC_ALARM *alarm = m_alarmList->get(i);
-			if ((alarm->dwTimeout > 0) &&
-				 ((alarm->nState & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING) &&
-				 (((time_t)alarm->dwLastChangeTime + (time_t)alarm->dwTimeout) < now))
+			if ((alarm->timeout > 0) &&
+				 ((alarm->state & ALARM_STATE_MASK) == ALARM_STATE_OUTSTANDING) &&
+				 (((time_t)alarm->lastChangeTime + (time_t)alarm->timeout) < now))
 			{
 				DbgPrintf(5, _T("Alarm timeout: alarm_id=%u, last_change=%u, timeout=%u, now=%u"),
-				          alarm->dwAlarmId, alarm->dwLastChangeTime,
-							 alarm->dwTimeout, (UINT32)now);
+				          alarm->alarmId, alarm->lastChangeTime,
+							 alarm->timeout, (UINT32)now);
 
-				PostEvent(alarm->dwTimeoutEvent, alarm->dwSourceObject, "dssd",
-				          alarm->dwAlarmId, alarm->szMessage,
-							 alarm->szKey, alarm->dwSourceEventCode);
-				alarm->dwTimeout = 0;	// Disable repeated timeout events
+				PostEvent(alarm->timeoutEvent, alarm->sourceObject, "dssd",
+				          alarm->alarmId, alarm->message,
+							 alarm->key, alarm->sourceEventCode);
+				alarm->timeout = 0;	// Disable repeated timeout events
 				UpdateAlarmInDB(alarm);
 			}
 
 			if ((alarm->ackTimeout != 0) &&
-				 ((alarm->nState & ALARM_STATE_STICKY) != 0) &&
+				 ((alarm->state & ALARM_STATE_STICKY) != 0) &&
 				 (((time_t)alarm->ackTimeout <= now)))
 			{
 				DbgPrintf(5, _T("Alarm acknowledgment timeout: alarm_id=%u, timeout=%u, now=%u"),
-				          alarm->dwAlarmId, alarm->ackTimeout, (UINT32)now);
+				          alarm->alarmId, alarm->ackTimeout, (UINT32)now);
 
-				PostEvent(alarm->dwTimeoutEvent, alarm->dwSourceObject, "dssd",
-				          alarm->dwAlarmId, alarm->szMessage,
-							 alarm->szKey, alarm->dwSourceEventCode);
+				PostEvent(alarm->timeoutEvent, alarm->sourceObject, "dssd",
+				          alarm->alarmId, alarm->message,
+							 alarm->key, alarm->sourceEventCode);
 				alarm->ackTimeout = 0;	// Disable repeated timeout events
-				alarm->nState = ALARM_STATE_OUTSTANDING;
+				alarm->state = ALARM_STATE_OUTSTANDING;
 				UpdateAlarmInDB(alarm);
 				NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
 			}
@@ -1124,7 +1131,7 @@ static UINT32 DoUpdateAlarmComment(NXC_ALARM *alarm, UINT32 noteId, const TCHAR 
 
 	if (noteId != 0)
 	{
-      if (IsValidNoteId(alarm->dwAlarmId, noteId))
+      if (IsValidNoteId(alarm->alarmId, noteId))
 		{
 			DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 			DB_STATEMENT hStmt = DBPrepare(hdb, _T("UPDATE alarm_notes SET change_time=?,user_id=?,note_text=? WHERE note_id=?"));
@@ -1158,7 +1165,7 @@ static UINT32 DoUpdateAlarmComment(NXC_ALARM *alarm, UINT32 noteId, const TCHAR 
 		if (hStmt != NULL)
 		{
 			DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, noteId);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, alarm->dwAlarmId);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, alarm->alarmId);
 			DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 			DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, userId);
 			DBBind(hStmt, 5, DB_SQLTYPE_TEXT, text, DB_BIND_STATIC);
@@ -1176,9 +1183,9 @@ static UINT32 DoUpdateAlarmComment(NXC_ALARM *alarm, UINT32 noteId, const TCHAR 
       if(newNote)
          alarm->noteCount++;
 		NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
-      if (syncWithHelpdesk && (alarm->nHelpDeskState == ALARM_HELPDESK_OPEN))
+      if (syncWithHelpdesk && (alarm->helpDeskState == ALARM_HELPDESK_OPEN))
       {
-         AddHelpdeskIssueComment(alarm->szHelpDeskRef, text);
+         AddHelpdeskIssueComment(alarm->helpDeskRef, text);
       }
 	}
 
@@ -1196,7 +1203,7 @@ UINT32 AddAlarmComment(const TCHAR *hdref, const TCHAR *text, UINT32 userId)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (!_tcscmp(alarm->szHelpDeskRef, hdref))
+      if (!_tcscmp(alarm->helpDeskRef, hdref))
       {
          rcc = DoUpdateAlarmComment(alarm, 0, text, userId, false);
          break;
@@ -1218,7 +1225,7 @@ UINT32 UpdateAlarmComment(UINT32 alarmId, UINT32 noteId, const TCHAR *text, UINT
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (alarm->dwAlarmId == alarmId)
+      if (alarm->alarmId == alarmId)
       {
          rcc = DoUpdateAlarmComment(alarm, noteId, text, userId, true);
          break;
@@ -1240,7 +1247,7 @@ UINT32 DeleteAlarmCommentByID(UINT32 alarmId, UINT32 noteId)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if (alarm->dwAlarmId == alarmId)
+      if (alarm->alarmId == alarmId)
       {
          if (IsValidNoteId(alarmId, noteId))
          {
@@ -1344,7 +1351,7 @@ ObjectArray<NXC_ALARM> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *alarm = m_alarmList->get(i);
-      if ((objectId == 0) || (alarm->dwSourceObject == objectId))
+      if ((objectId == 0) || (alarm->sourceObject == objectId))
       {
          result->add((NXC_ALARM *)nx_memdup(alarm, sizeof(NXC_ALARM)));
       }
@@ -1368,7 +1375,7 @@ int F_FindAlarmById(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *v
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *a = m_alarmList->get(i);
-      if (a->dwAlarmId == alarmId)
+      if (a->alarmId == alarmId)
       {
          alarm = (NXC_ALARM *)nx_memdup(a, sizeof(NXC_ALARM));
          break;
@@ -1395,7 +1402,7 @@ int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       NXC_ALARM *a = m_alarmList->get(i);
-      if (!_tcscmp(a->szKey, key))
+      if (!_tcscmp(a->key, key))
       {
          alarm = (NXC_ALARM *)nx_memdup(a, sizeof(NXC_ALARM));
          break;
@@ -1427,7 +1434,7 @@ bool InitAlarmManager()
                            _T("alarm_key,creation_time,last_change_time,")
                            _T("hd_state,hd_ref,ack_by,repeat_count,")
                            _T("alarm_state,timeout,timeout_event,resolved_by,")
-                           _T("ack_timeout FROM alarms WHERE alarm_state<>3"));
+                           _T("ack_timeout,dci_id FROM alarms WHERE alarm_state<>3"));
    if (hResult == NULL)
       return false;
 
@@ -1437,26 +1444,27 @@ bool InitAlarmManager()
       for(int i = 0; i < count; i++)
       {
          NXC_ALARM *alarm = new NXC_ALARM();
-         alarm->dwAlarmId = DBGetFieldULong(hResult, i, 0);
-         alarm->dwSourceObject = DBGetFieldULong(hResult, i, 1);
-         alarm->dwSourceEventCode = DBGetFieldULong(hResult, i, 2);
-         alarm->qwSourceEventId = DBGetFieldUInt64(hResult, i, 3);
-         DBGetField(hResult, i, 4, alarm->szMessage, MAX_EVENT_MSG_LENGTH);
-         alarm->nOriginalSeverity = (BYTE)DBGetFieldLong(hResult, i, 5);
-         alarm->nCurrentSeverity = (BYTE)DBGetFieldLong(hResult, i, 6);
-         DBGetField(hResult, i, 7, alarm->szKey, MAX_DB_STRING);
-         alarm->dwCreationTime = DBGetFieldULong(hResult, i, 8);
-         alarm->dwLastChangeTime = DBGetFieldULong(hResult, i, 9);
-         alarm->nHelpDeskState = (BYTE)DBGetFieldLong(hResult, i, 10);
-         DBGetField(hResult, i, 11, alarm->szHelpDeskRef, MAX_HELPDESK_REF_LEN);
-         alarm->dwAckByUser = DBGetFieldULong(hResult, i, 12);
-         alarm->dwRepeatCount = DBGetFieldULong(hResult, i, 13);
-         alarm->nState = (BYTE)DBGetFieldLong(hResult, i, 14);
-         alarm->dwTimeout = DBGetFieldULong(hResult, i, 15);
-         alarm->dwTimeoutEvent = DBGetFieldULong(hResult, i, 16);
-			alarm->noteCount = GetNoteCount(hdb, alarm->dwAlarmId);
-         alarm->dwResolvedByUser = DBGetFieldULong(hResult, i, 17);
+         alarm->alarmId = DBGetFieldULong(hResult, i, 0);
+         alarm->sourceObject = DBGetFieldULong(hResult, i, 1);
+         alarm->sourceEventCode = DBGetFieldULong(hResult, i, 2);
+         alarm->sourceEventId = DBGetFieldUInt64(hResult, i, 3);
+         DBGetField(hResult, i, 4, alarm->message, MAX_EVENT_MSG_LENGTH);
+         alarm->originalSeverity = (BYTE)DBGetFieldLong(hResult, i, 5);
+         alarm->currentSeverity = (BYTE)DBGetFieldLong(hResult, i, 6);
+         DBGetField(hResult, i, 7, alarm->key, MAX_DB_STRING);
+         alarm->creationTime = DBGetFieldULong(hResult, i, 8);
+         alarm->lastChangeTime = DBGetFieldULong(hResult, i, 9);
+         alarm->helpDeskState = (BYTE)DBGetFieldLong(hResult, i, 10);
+         DBGetField(hResult, i, 11, alarm->helpDeskRef, MAX_HELPDESK_REF_LEN);
+         alarm->ackByUser = DBGetFieldULong(hResult, i, 12);
+         alarm->repeatCount = DBGetFieldULong(hResult, i, 13);
+         alarm->state = (BYTE)DBGetFieldLong(hResult, i, 14);
+         alarm->timeout = DBGetFieldULong(hResult, i, 15);
+         alarm->timeoutEvent = DBGetFieldULong(hResult, i, 16);
+			alarm->noteCount = GetNoteCount(hdb, alarm->alarmId);
+         alarm->resolvedByUser = DBGetFieldULong(hResult, i, 17);
          alarm->ackTimeout = DBGetFieldULong(hResult, i, 18);
+         alarm->dciId = DBGetFieldULong(hResult, i, 19);
          m_alarmList->add(alarm);
       }
    }

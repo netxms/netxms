@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@
  * Externals
  */
 void UnregisterSession(UINT32 dwIndex);
-void ProxySNMPRequest(NXCPMessage *pRequest, NXCPMessage *pResponse);
 UINT32 DeployPolicy(CommSession *session, NXCPMessage *request);
 UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request);
 UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg);
@@ -41,6 +40,11 @@ void ClearDataCollectionConfiguration();
  * Max message size
  */
 #define MAX_MSG_SIZE    4194304
+
+/**
+ * SNMP proxy thread pool
+ */
+ThreadPool *g_snmpProxyThreadPool = NULL;
 
 /**
  * Client communication read thread
@@ -106,6 +110,7 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_acceptTraps = false;
    m_acceptFileUpdates = false;
    m_ipv6Aware = false;
+   m_bulkReconciliationSupported = false;
    m_hCurrFile = -1;
    m_fileRqId = 0;
    m_compressor = NULL;
@@ -301,45 +306,61 @@ void CommSession::readThread()
             TCHAR buffer[64];
             DebugPrintf(m_dwIndex, 6, _T("Received message %s"), NXCPMessageCodeName(msg->getCode(), buffer));
 
-            if (msg->getCode() == CMD_REQUEST_SESSION_KEY)
+            UINT32 rcc;
+            switch(msg->getCode())
             {
-               if (m_pCtx == NULL)
-               {
-                  NXCPMessage *pResponse;
-                  SetupEncryptionContext(msg, &m_pCtx, &pResponse, NULL, NXCP_VERSION);
-                  sendMessage(pResponse);
-                  delete pResponse;
-                  receiver.setEncryptionContext(m_pCtx);
-               }
-               delete msg;
-            }
-            else if (msg->getCode() == CMD_REQUEST_COMPLETED)
-            {
-               m_responseQueue->put(msg);
-            }
-            else if (msg->getCode() == CMD_SETUP_PROXY_CONNECTION)
-            {
-               UINT32 rcc = setupProxyConnection(msg);
-               // When proxy session established incoming messages will
-               // not be processed locally. Acknowledgement message sent
-               // by SetupProxyConnection() in case of success.
-               if (rcc == ERR_SUCCESS)
-               {
-                  m_processingQueue->put(INVALID_POINTER_VALUE);
-               }
-               else
-               {
-                  NXCPMessage response;
-                  response.setCode(CMD_REQUEST_COMPLETED);
-                  response.setId(msg->getId());
-                  response.setField(VID_RCC, rcc);
-                  sendMessage(&response);
-               }
-               delete msg;
-            }
-            else
-            {
-               m_processingQueue->put(msg);
+               case CMD_REQUEST_COMPLETED:
+                  m_responseQueue->put(msg);
+                  break;
+               case CMD_REQUEST_SESSION_KEY:
+                  if (m_pCtx == NULL)
+                  {
+                     NXCPMessage *pResponse;
+                     SetupEncryptionContext(msg, &m_pCtx, &pResponse, NULL, NXCP_VERSION);
+                     sendMessage(pResponse);
+                     delete pResponse;
+                     receiver.setEncryptionContext(m_pCtx);
+                  }
+                  delete msg;
+                  break;
+               case CMD_SETUP_PROXY_CONNECTION:
+                  rcc = setupProxyConnection(msg);
+                  // When proxy session established incoming messages will
+                  // not be processed locally. Acknowledgment message sent
+                  // by SetupProxyConnection() in case of success.
+                  if (rcc == ERR_SUCCESS)
+                  {
+                     m_processingQueue->put(INVALID_POINTER_VALUE);
+                  }
+                  else
+                  {
+                     NXCPMessage response;
+                     response.setCode(CMD_REQUEST_COMPLETED);
+                     response.setId(msg->getId());
+                     response.setField(VID_RCC, rcc);
+                     sendMessage(&response);
+                  }
+                  delete msg;
+                  break;
+               case CMD_SNMP_REQUEST:
+                  if (m_masterServer && (g_dwFlags & AF_ENABLE_SNMP_PROXY))
+                  {
+                     incRefCount();
+                     ThreadPoolExecute(g_snmpProxyThreadPool, this, &CommSession::proxySnmpRequest, msg);
+                  }
+                  else
+                  {
+                     NXCPMessage response;
+                     response.setCode(CMD_REQUEST_COMPLETED);
+                     response.setId(msg->getId());
+                     response.setField(VID_RCC, ERR_ACCESS_DENIED);
+                     sendMessage(&response);
+                     delete msg;
+                  }
+                  break;
+               default:
+                  m_processingQueue->put(msg);
+                  break;
             }
          }
       }
@@ -536,16 +557,6 @@ void CommSession::processingThread()
                   msg.setField(VID_RCC, ERR_ACCESS_DENIED);
                }
                break;
-				case CMD_SNMP_REQUEST:
-					if (m_masterServer && (g_dwFlags & AF_ENABLE_SNMP_PROXY))
-					{
-						ProxySNMPRequest(pMsg, &msg);
-					}
-					else
-					{
-                  msg.setField(VID_RCC, ERR_ACCESS_DENIED);
-					}
-					break;
 				case CMD_DEPLOY_AGENT_POLICY:
 					if (m_masterServer)
 					{
@@ -599,8 +610,10 @@ void CommSession::processingThread()
                   msg.setField(VID_RCC, ERR_ACCESS_DENIED);
 					}
 					break;
-            case CMD_ENABLE_IPV6:
-               m_ipv6Aware = pMsg->getFieldAsBoolean(VID_ENABLED);
+            case CMD_SET_SERVER_CAPABILITIES:
+               // Servers before 2.0 use VID_ENABLED
+               m_ipv6Aware = pMsg->isFieldExist(VID_IPV6_SUPPORT) ? pMsg->getFieldAsBoolean(VID_IPV6_SUPPORT) : pMsg->getFieldAsBoolean(VID_ENABLED);
+               m_bulkReconciliationSupported = pMsg->getFieldAsBoolean(VID_BULK_RECONCILIATION);
                msg.setField(VID_RCC, ERR_SUCCESS);
                break;
             case CMD_SET_SERVER_ID:
@@ -1098,6 +1111,15 @@ UINT32 CommSession::doRequest(NXCPMessage *msg, UINT32 timeout)
       rcc = ERR_REQUEST_TIMEOUT;
    }
    return rcc;
+}
+
+/**
+ * Wait for request completion
+ */
+NXCPMessage *CommSession::doRequestEx(NXCPMessage *msg, UINT32 timeout)
+{
+   sendMessage(msg);
+   return m_responseQueue->waitForMessage(CMD_REQUEST_COMPLETED, msg->getId(), timeout);
 }
 
 /**

@@ -32,12 +32,10 @@
 
 #include "system.h"
 
-
-//
-// Handler for System.Uptime parameter
-//
-
-LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.Uptime parameter
+ */
+LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	FILE *hFile;
 	unsigned int uptime = 0;
@@ -60,12 +58,10 @@ LONG H_Uptime(const char *pszParam, const char *pArg, char *pValue, AbstractComm
 	return uptime > 0 ? SYSINFO_RC_SUCCESS : SYSINFO_RC_ERROR;
 }
 
-
-//
-// Handler for System.Uname parameter
-//
-
-LONG H_Uname(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.Uname parameter
+ */
+LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	struct utsname utsName;
 	int nRet = SYSINFO_RC_ERROR;
@@ -79,7 +75,7 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue, AbstractCommS
 				utsName.machine);
 		// TODO: processor & platform
 
-		ret_string(pValue, szBuff);
+		ret_mbstring(pValue, szBuff);
 
 		nRet = SYSINFO_RC_SUCCESS;
 	}
@@ -87,31 +83,27 @@ LONG H_Uname(const char *pszParam, const char *pArg, char *pValue, AbstractCommS
 	return nRet;
 }
 
-
-//
-// Handler for System.Hostname parameter
-//
-
-LONG H_Hostname(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.Hostname parameter
+ */
+LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	char szBuff[128];
 
 	if (gethostname(szBuff, sizeof(szBuff)) == 0)
 	{
-		ret_string(pValue, szBuff);
+		ret_mbstring(pValue, szBuff);
 		nRet = SYSINFO_RC_SUCCESS;
 	}
 
 	return nRet;
 }
 
-
-//
-// Handler for System.ConnectedUsers parameter
-//
-
-LONG H_ConnectedUsers(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.ConnectedUsers parameter
+ */
+LONG H_ConnectedUsers(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *f;
@@ -138,12 +130,10 @@ LONG H_ConnectedUsers(const char *pszParam, const char *pArg, char *pValue, Abst
 	return nRet;
 }
 
-
-//
-// Handler for System.ActiveUserSessions enum
-//
-
-LONG H_ActiveUserSessions(const char *pszParam, const char *pArg, StringList *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.ActiveUserSessions list
+ */
+LONG H_ActiveUserSessions(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	FILE *f;
@@ -160,7 +150,7 @@ LONG H_ActiveUserSessions(const char *pszParam, const char *pArg, StringList *pV
 			{
 				snprintf(szBuffer, 1024, "\"%s\" \"%s\" \"%s\"", rec.ut_user,
 				         rec.ut_line, rec.ut_host);
-				pValue->add(szBuffer);
+				pValue->addMBString(szBuffer);
 			}
 		}
 		fclose(f);
@@ -169,12 +159,10 @@ LONG H_ActiveUserSessions(const char *pszParam, const char *pArg, StringList *pV
 	return nRet;
 }
 
-
-//
-// Handler for System.IO.OpenFiles parameter
-//
-
-LONG H_OpenFiles(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.IO.OpenFiles parameter
+ */
+LONG H_OpenFiles(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct pst_dynamic info;
@@ -188,12 +176,10 @@ LONG H_OpenFiles(const char *pszParam, const char *pArg, char *pValue, AbstractC
 	return nRet;
 }
 
-
-//
-// Handler for System.CPU.LoadAvg parameter
-//
-
-LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.CPU.LoadAvg parameter
+ */
+LONG H_CpuLoad(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_ERROR;
 	struct pst_dynamic info;
@@ -219,12 +205,10 @@ LONG H_CpuLoad(const char *pszParam, const char *pArg, char *pValue, AbstractCom
 	return nRet;
 }
 
-
-//
-// Handler for System.Memory.* parameters
-//
-
-LONG H_MemoryInfo(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.Memory.* parameters
+ */
+LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	LONG nRet = SYSINFO_RC_ERROR;
 	int mode = CAST_FROM_POINTER(pArg, int);
@@ -388,6 +372,9 @@ static void CpuUsageCollector()
 	}
 }
 
+/**
+ * CPU usage collector
+ */
 static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
 {
 	while(m_stopCollectorThread == false)
@@ -398,7 +385,10 @@ static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
 	return THREAD_OK;
 }
 
-void StartCpuUsageCollector(void)
+/**
+ * Start CPU usage collector
+ */
+void StartCpuUsageCollector()
 {
 	int i;
 
@@ -425,14 +415,20 @@ void StartCpuUsageCollector(void)
 	m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread, 0, NULL);
 }
 
-void ShutdownCpuUsageCollector(void)
+/**
+ * Shutdown CPU usage collector
+ */
+void ShutdownCpuUsageCollector()
 {
 	m_stopCollectorThread = true;
 	ThreadJoin(m_cpuUsageCollector);
 	MutexDestroy(m_cpuUsageMutex);
 }
 
-LONG H_CpuUsage(const char *pszParam, const char *pArg, char *pValue, AbstractCommSession *session)
+/**
+ * Handler for System.CPU.Usage* parameters
+ */
+LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	double usage = 0;
 	int i, count;

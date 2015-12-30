@@ -148,6 +148,44 @@ static BOOL IfIndexToName(int ifIndex, char *ifName)
 }
 
 /**
+ * Interface names list
+ */
+LONG H_NetIfNames(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   int nRet = SYSINFO_RC_ERROR;
+   struct lifnum ln;
+   struct lifconf lc;
+   struct lifreq rq;
+   int i, nFd;
+
+   nFd = socket(AF_INET, SOCK_DGRAM, 0);
+   if (nFd >= 0)
+   {
+      ln.lifn_family = AF_INET;
+      ln.lifn_flags = (g_flags & SF_IF_ALL_ZONES) ? LIFC_ALLZONES : 0;
+      if (ioctl(nFd, SIOCGLIFNUM, &ln) == 0)
+      {
+         lc.lifc_family = AF_INET;
+         lc.lifc_flags = (g_flags & SF_IF_ALL_ZONES) ? LIFC_ALLZONES : 0;
+         lc.lifc_len = sizeof(struct lifreq) * ln.lifn_count;
+         lc.lifc_buf = (caddr_t)malloc(lc.lifc_len);
+         if (ioctl(nFd, SIOCGLIFCONF, &lc) == 0)
+         {
+            for (i = 0; i < ln.lifn_count; i++)
+            {
+               value->addMBString(lc.lifc_req[i].lifr_name);
+            }
+            nRet = SYSINFO_RC_SUCCESS;
+         }
+         free(lc.lifc_buf);
+      }
+      close(nFd);
+   }
+
+   return nRet;
+}
+
+/**
  * Interface list
  */
 LONG H_NetIfList(const TCHAR *pszParam, const TCHAR *pArg, StringList *pValue, AbstractCommSession *session)
@@ -454,4 +492,3 @@ LONG H_NetInterfaceLink(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue,
 
    return nRet;
 }
-

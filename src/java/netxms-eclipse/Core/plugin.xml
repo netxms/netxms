@@ -62,15 +62,15 @@
          </property>
          <property
                name="aboutText"
-               value="NetXMS Management Console&#x0A;&#x0A;Version 2.0-RC2&#x0A;Copyright (c) 2003-2015 Raden Solutions">
+               value="NetXMS Management Console&#x0A;&#x0A;Version 2.0&#x0A;Copyright (c) 2003-2015 Raden Solutions">
          </property>
          <property
                name="startupForegroundColor"
-               value="410B73">
+               value="F18515">
          </property>
          <property
                name="startupMessageRect"
-               value="7,275,441,18">
+               value="7,300,490,18">
          </property>
          <property
                name="preferenceCustomization"
@@ -78,11 +78,15 @@
          </property>
          <property
                name="aboutImage"
-               value="icons/launcher/128x128.png">
+               value="icons/about.png">
          </property>
          <property
                name="windowImages"
                value="icons/launcher/16x16.png,icons/launcher/32x32.png,icons/launcher/48x48.png,icons/launcher/64x64.png,icons/launcher/128x128.png">
+         </property>
+         <property
+               name="startupProgressRect"
+               value="0,325,500,5">
          </property>
       </product>
    </extension>

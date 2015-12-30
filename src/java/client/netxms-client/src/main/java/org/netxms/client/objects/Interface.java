@@ -53,6 +53,10 @@ public class Interface extends GenericObject
 	public static final int OPER_STATE_UP            = 1;
 	public static final int OPER_STATE_DOWN          = 2;
 	public static final int OPER_STATE_TESTING       = 3;
+
+   public static final int EXPECTED_STATE_UP        = 0;
+   public static final int EXPECTED_STATE_DOWN      = 1;
+   public static final int EXPECTED_STATE_IGNORE    = 2;
 	
 	public static final int PAE_STATE_UNKNOWN        = 0;
 	public static final int PAE_STATE_INITIALIZE     = 1;

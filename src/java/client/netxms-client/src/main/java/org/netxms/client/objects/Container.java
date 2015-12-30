@@ -30,7 +30,6 @@ public class Container extends GenericObject
 	public static final int CF_AUTO_BIND = 0x000001;
 	public static final int CF_AUTO_UNBIND = 0x000002;
 	
-	private int category;
 	private int flags;
 	private String autoBindFilter;
 	
@@ -40,7 +39,6 @@ public class Container extends GenericObject
 	public Container(NXCPMessage msg, NXCSession session)
 	{
 		super(msg, session);
-		category = msg.getFieldAsInt32(NXCPCodes.VID_CATEGORY);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		autoBindFilter = msg.getFieldAsString(NXCPCodes.VID_AUTOBIND_FILTER);
 	}
@@ -62,14 +60,6 @@ public class Container extends GenericObject
    {
       return true;
    }
-
-	/**
-	 * @return the category
-	 */
-	public int getCategory()
-	{
-		return category;
-	}
 
 	/**
 	 * @return true if automatic bind is enabled

@@ -227,7 +227,7 @@ public class MapOptions extends PropertyPage
 			flags |= NetworkMap.MF_SHOW_STATUS_BKGND;
 		if (checkCalculateStatus.getSelection())
 			flags |= NetworkMap.MF_CALCULATE_STATUS;
-		md.setObjectFlags(flags);
+		md.setObjectFlags(flags, 0x1F);
 		
 		md.setMapObjectDisplayMode(MapObjectDisplayMode.getByValue(objectDisplayMode.getSelectionIndex()));
 		md.setConnectionRouting(routingAlgorithm.getSelectionIndex() + 1);

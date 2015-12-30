@@ -131,6 +131,7 @@ protected:
    virtual void onFileMonitoringData(NXCPMessage *msg);
    virtual void onSnmpTrap(NXCPMessage *pMsg);
    virtual UINT32 processCollectedData(NXCPMessage *msg);
+   virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *msg);
 
 public:
@@ -171,7 +172,7 @@ public:
    PollerInfo(PollerType type, NetObj *object) { m_type = type; m_object = object; _tcscpy(m_status, _T("awaiting execution")); }
    ~PollerInfo();
 
-   const PollerType getType() const { return m_type; }
+   PollerType getType() const { return m_type; }
    NetObj *getObject() const { return m_object; }
    const TCHAR *getStatus() const { return m_status; }
 
@@ -1169,10 +1170,10 @@ private:
 	 */
 	void deleteAgentConnection()
 	{
-	   if (m_pAgentConnection != NULL)
+	   if (m_agentConnection != NULL)
 	   {
-	      m_pAgentConnection->decRefCount();
-	      m_pAgentConnection = NULL;
+	      m_agentConnection->decRefCount();
+	      m_agentConnection = NULL;
 	   }
 	}
 
@@ -1228,7 +1229,9 @@ protected:
    MUTEX m_hSmclpAccessMutex;
    MUTEX m_mutexRTAccess;
 	MUTEX m_mutexTopoAccess;
-   AgentConnectionEx *m_pAgentConnection;
+	MUTEX m_snmpProxyConnectionLock;
+   AgentConnectionEx *m_agentConnection;
+   AgentConnectionEx *m_snmpProxyConnection;
    SMCLP_Connection *m_smclpConnection;
 	QWORD m_lastAgentTrapId;	     // ID of last received agent trap
    QWORD m_lastAgentPushRequestId; // ID of last received agent push request
@@ -1482,6 +1485,7 @@ public:
    void closeTableList() { unlockProperties(); }
 
    AgentConnectionEx *createAgentConnection();
+   AgentConnectionEx *acquireSnmpProxyConnection();
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext();
    UINT32 getEffectiveSnmpProxy();
@@ -1752,12 +1756,11 @@ private:
 
 protected:
 	UINT32 m_flags;
-   UINT32 m_dwCategory;
 	NXSL_Program *m_bindFilter;
 	TCHAR *m_bindFilterSource;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   virtual void fillMessageInternal(NXCPMessage *msg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
 
 public:
    Container();
@@ -1776,8 +1779,6 @@ public:
 
    virtual void enterMaintenanceMode();
    virtual void leaveMaintenanceMode();
-
-   UINT32 getCategory() { return m_dwCategory; }
 
    void linkChildObjects();
    void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
@@ -1812,6 +1813,7 @@ class NXCORE_EXPORTABLE Rack : public Container
 {
 protected:
 	int m_height;	// Rack height in units
+	bool m_topBottomNumbering;
 
    virtual void fillMessageInternal(NXCPMessage *pMsg);
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
@@ -2382,23 +2384,9 @@ inline const InetAddress& GetObjectIpAddress(NetObj *object)
    return InetAddress::INVALID;
 }
 
-//
-// Container category information
-//
-
-struct CONTAINER_CATEGORY
-{
-   UINT32 dwCatId;
-   TCHAR szName[MAX_OBJECT_NAME];
-   TCHAR *pszDescription;
-   UINT32 dwImageId;
-};
-
-
-//
-// Functions
-//
-
+/**
+ * Functions
+ */
 void ObjectsInit();
 
 void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, bool newObject, bool importedObject);
@@ -2433,7 +2421,6 @@ Subnet NXCORE_EXPORTABLE *FindSubnetForNode(UINT32 zoneId, const InetAddress& no
 MobileDevice NXCORE_EXPORTABLE *FindMobileDeviceByDeviceID(const TCHAR *deviceId);
 AccessPoint NXCORE_EXPORTABLE *FindAccessPointByMAC(const BYTE *macAddr);
 UINT32 NXCORE_EXPORTABLE FindLocalMgmtNode();
-CONTAINER_CATEGORY NXCORE_EXPORTABLE *FindContainerCategory(UINT32 dwId);
 Zone NXCORE_EXPORTABLE *FindZoneByGUID(UINT32 dwZoneGUID);
 Cluster NXCORE_EXPORTABLE *FindClusterByResourceIP(UINT32 zone, const InetAddress& ipAddr);
 bool NXCORE_EXPORTABLE IsClusterIP(UINT32 zone, const InetAddress& ipAddr);
@@ -2465,8 +2452,6 @@ extern DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot;
 extern BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot;
 
 extern UINT32 NXCORE_EXPORTABLE g_dwMgmtNode;
-extern UINT32 g_dwNumCategories;
-extern CONTAINER_CATEGORY *g_pContainerCatList;
 extern const TCHAR *g_szClassName[];
 extern BOOL g_bModificationsLocked;
 extern Queue *g_pTemplateUpdateQueue;

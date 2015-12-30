@@ -129,7 +129,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		ILegend legend = getLegend();
 		legend.setPosition(swtPositionFromInternal(legendPosition));
 		legend.setFont(Activator.getDefault().getChartFont());
-		legend.setForeground(getColorFromPreferences("Chart.Colors.Legend"));
+		legend.setForeground(getColorFromPreferences("Chart.Colors.Legend")); //$NON-NLS-1$
 		
 		// Default time range
 		timeTo = System.currentTimeMillis();
@@ -411,7 +411,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		}
 		catch(IllegalStateException e)
 		{
-		   Activator.logError("Exception while addig chart series", e);
+		   Activator.logError("Exception while addig chart series", e); //$NON-NLS-1$
 		}
 		
 		return series;

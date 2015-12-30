@@ -64,6 +64,7 @@ public class TimePreference extends DialogPreference
 		return (picker);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void onBindDialogView(View v)
 	{
@@ -73,10 +74,11 @@ public class TimePreference extends DialogPreference
 		picker.setCurrentMinute(lastMinute);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void onDialogClosed(boolean positiveResult)
 	{
-		picker.clearFocus(); // Force reading of values input by keyboard
+		picker.clearFocus();// Force reading of values input by keyboard
 		super.onDialogClosed(positiveResult);
 
 		if (positiveResult)

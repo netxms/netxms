@@ -22,8 +22,11 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.BaseLabelProvider;
 import org.eclipse.jface.viewers.IDecoration;
 import org.eclipse.jface.viewers.ILightweightLabelDecorator;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Interface;
 
 /**
  * Label decorator for NetXMS objects
@@ -32,6 +35,8 @@ public class ObjectDecorator extends BaseLabelProvider implements ILightweightLa
 {
 	// Status images
 	private ImageDescriptor[] statusImages;
+	private ImageDescriptor maintModeImage;
+	private Color maintColor;
 	
 	/**
 	 * Default constructor
@@ -47,9 +52,21 @@ public class ObjectDecorator extends BaseLabelProvider implements ILightweightLa
 		statusImages[6] = Activator.getImageDescriptor("icons/status/unmanaged.gif"); //$NON-NLS-1$
 		statusImages[7] = Activator.getImageDescriptor("icons/status/disabled.gif"); //$NON-NLS-1$
 		statusImages[8] = Activator.getImageDescriptor("icons/status/testing.png"); //$NON-NLS-1$
+		maintModeImage = Activator.getImageDescriptor("icons/maint_mode.png"); //$NON-NLS-1$
+		maintColor = new Color(Display.getDefault(), 96, 96, 144);
 	}
 
 	/* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      maintColor.dispose();
+      super.dispose();
+   }
+
+   /* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ILightweightLabelDecorator#decorate(java.lang.Object, org.eclipse.jface.viewers.IDecoration)
 	 */
 	@Override
@@ -57,5 +74,18 @@ public class ObjectDecorator extends BaseLabelProvider implements ILightweightLa
 	{
 		ObjectStatus status = ((AbstractObject)element).getStatus();
 		decoration.addOverlay(statusImages[status.getValue()], IDecoration.BOTTOM_RIGHT);
+		if (((AbstractObject)element).isInMaintenanceMode())
+		{
+	      decoration.addOverlay(maintModeImage, IDecoration.TOP_RIGHT);
+	      decoration.addSuffix(" [Maintenance]");
+	      decoration.setForegroundColor(maintColor);
+		}
+		if (element instanceof Interface)
+		{
+		   if ((((Interface)element).getOperState() == Interface.OPER_STATE_DOWN) &&
+		       (((Interface)element).getAdminState() == Interface.ADMIN_STATE_UP) &&
+		       (((Interface)element).getExpectedState() == Interface.EXPECTED_STATE_IGNORE))
+		      decoration.addOverlay(statusImages[ObjectStatus.CRITICAL.getValue()], IDecoration.TOP_LEFT);
+		}
 	}
 }

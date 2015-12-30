@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0-RC2], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -92,6 +92,9 @@ RUNTIME_PREFIX=""
 RUNTIME_STATE_DIR=""
 HPUX_HPPA="no"
 XMPP_SUPPORT="yes"
+ZEROMQ_SUPPORT="no"
+ZEROMQ_CPPFLAGS=""
+ZEROMQ_LDFLAGS=""
 LDAP_SUPPORT="yes"
 DISABLE_READLINE="no"
 TUXEDO_LIBS=""
@@ -269,6 +272,16 @@ AC_ARG_WITH(tuxedo,
 		TUXEDO_BASE="$withval"
 	fi
 	COMPONENTS="$COMPONENTS tuxedo"
+fi ])
+
+AC_ARG_WITH(zeromq,
+[AS_HELP_STRING(--with-zeromq,build  with ZeroMQ)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		ZEROMQ_BASE="$withval"
+	fi
+	COMPONENTS="$COMPONENTS zeromq"
+   ZEROMQ_SUPPORT=yes
 fi ])
 
 AC_ARG_WITH(mongodb,
@@ -532,14 +545,14 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server agent libnxmap client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
 	SMSDRV_DIRS="kannel slack text2reach websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
 	TOP_LEVEL_MODULES="include sql images tests"
 	SERVER_INCLUDE="include"
-	CONTRIB_MODULES="mibs backgrounds music"
+	CONTRIB_MODULES="mibs backgrounds music templates"
 	CLIENT_COMPONENTS="nxalarm nxevent nxpush nxsms"
 	SERVER_TOOLS="nxconfig"
 )
@@ -662,6 +675,11 @@ if test $? = 0; then
 			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/darwin/darwin.la"
 			STATIC_SUBAGENT_LIST="darwin $STATIC_SUBAGENT_LIST"
 			;;
+		Minix)
+			SUBAGENT_DIRS="minix"
+			SUBAGENT_LIBS="$SUBAGENT_LIBS ../subagents/minix/minix.la"
+			STATIC_SUBAGENT_LIST="minix $STATIC_SUBAGENT_LIST"
+			;;
 		*)
 			# unknown
 			;;
@@ -715,6 +733,9 @@ if test $? = 0; then
 		Darwin)
 			SUBAGENT_DIRS="darwin"
 			;;
+		Minix)
+			SUBAGENT_DIRS="minix"
+			;;
 		*)
 			# unknown
 			;;
@@ -729,7 +750,7 @@ if test $? = 0; then
 	BUILD_SERVER="yes"
 	MODULES="$MODULES libnxmap libnxsl libnxcc server nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
-	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music"
+	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
 	if test "x$XMPP_SUPPORT" = "xyes"; then
 		MODULES="libstrophe $MODULES"
 		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
@@ -1887,6 +1908,22 @@ AC_RUN_IFELSE(
   [ AC_MSG_RESULT(no) ]
 )
 
+AC_MSG_CHECKING(whether free correctly handles NULL pointer)
+AC_RUN_IFELSE(
+  [AC_LANG_PROGRAM([ 
+#include <stdlib.h>
+     ], [
+     free(NULL);
+     return 0;
+     ])
+  ],
+  [ AC_MSG_RESULT(yes)
+    AC_DEFINE(FREE_IS_NULL_SAFE, 1, Define to 1 if free corectly handles NULL pointer)
+  ],
+  [ AC_MSG_RESULT(no) ],
+  [ AC_MSG_RESULT(no) ]
+)
+
 
 #--------------------------------------------------------------------
 # Checks for macros and definitions
@@ -2143,7 +2180,49 @@ AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws])
 AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
 AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
-AC_CHECK_FUNCS([itow _itow])
+AC_CHECK_FUNCS([itow _itow wcsftime])
+
+AC_CHECK_DECLS([putws],,,[
+#if HAVE_WCHAR_H
+#include <wchar.h>
+#endif
+])
+
+if test "x$ac_cv_func_wcsftime" = "xyes"; then
+	AC_MSG_CHECKING(whether wcsftime is working correctly)
+	AC_RUN_IFELSE(
+	  [AC_LANG_PROGRAM([
+#include <stdio.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#if HAVE_WCHAR_H
+#include <wchar.h>
+#endif
+	     ], [[
+		wchar_t buffer[64];
+		struct tm *ltm;
+		time_t t;
+
+		t = time(NULL);
+		ltm = localtime(&t);
+		wcsftime(buffer, 64, L"%Y", ltm);
+		return wcstol(buffer, NULL, 10) == ltm->tm_year + 1900 ? 0 : 1;
+	     ]])
+	  ],
+	  [ AC_MSG_RESULT(yes)
+	    AC_DEFINE(WORKING_WCSFTIME, 1, Define to 1 if wcsftime is working correctly)
+	  ],
+	  [ AC_MSG_RESULT(no) ],
+	  [ AC_MSG_RESULT(no) ]
+	)
+fi
 
 if test "x$DISABLE_ICONV" != "xyes"; then
 	AC_CHECK_LIB(iconv, libiconv_open,
@@ -2561,6 +2640,10 @@ if test $? = 0; then
 
 	AC_CHECK_HEADER(libpq-fe.h,,AC_MSG_ERROR([Cannot find libpq-fe.h - check your PostgreSQL client installation]))
 
+	AC_CHECK_DECLS([PGRES_SINGLE_TUPLE],,,[
+#include <libpq-fe.h>
+	])
+
 	AC_CHECK_LIB(m, floor)
 	AC_CHECK_LIB(pq, PQconnectdb, [PGSQL_LIBS="-lpq"], [
 		if test "x$PLATFORM" = "xSunOS"; then
@@ -2745,6 +2828,33 @@ if test $? = 0; then
 fi
 
 #--------------------------------------------------------------------
+# ZeroMQ
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "zeromq"
+if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	if test "x$ZEROMQ_BASE" != "x"; then
+		ZEROMQ_CPPFLAGS="-I$ZEROMQ_BASE/include"
+		ZEROMQ_LDFLAGS="-L$ZEROMQ_BASE/lib"
+		CPPFLAGS="$CPPFLAGS $ZEROMQ_CPPFLAGS"
+		LDFLAGS="$LDFLAGS $ZEROMQ_LDFLAGS"
+	fi
+	
+	AC_CHECK_HEADER(zmq.h,,AC_MSG_ERROR([*** Cannot find zmq.h - check your ZeroMQ installation ***]))
+	AC_CHECK_LIB(zmq, zmq_ctx_new, [ SERVER_LIBS="$SERVER_LIBS -lzmq" ], AC_MSG_ERROR([*** libzmq is missing or too old - check your ZeroMQ installation ***]))
+    
+	AC_DEFINE(WITH_ZMQ, 1, Define to 1 if ZeroMQ is supported)
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
+
+#--------------------------------------------------------------------
 # MongoDB
 #--------------------------------------------------------------------
 
@@ -2830,6 +2940,7 @@ AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${ac_cv_lib_crypto_RSA_new}" = "xyes"])
 AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
 AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
+AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
 
 
 #--------------------------------------------------------------------
@@ -2892,6 +3003,8 @@ AC_SUBST(MONGODB_CPPFLAGS)
 AC_SUBST(MONGODB_LDFLAGS)
 AC_SUBST(MONGODB_LIBS)
 AC_SUBST(INSTALL_LIBPATH)
+AC_SUBST(ZEROMQ_CPPFLAGS)
+AC_SUBST(ZEROMQ_LDFLAGS)
 
 #--------------------------------------------------------------------
 # Shared libs versions
@@ -2946,6 +3059,7 @@ AC_CONFIG_FILES([
 	contrib/startup/suse/Makefile
 	contrib/startup/ubuntu/Makefile
 	contrib/startup/solaris/Makefile
+	contrib/templates/Makefile
 	doc/Makefile
 	doc/internal/Makefile
 	doc/manuals/Makefile
@@ -2993,6 +3107,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/linux/Makefile
 	src/agent/subagents/lmsensors/Makefile
 	src/agent/subagents/logwatch/Makefile
+	src/agent/subagents/minix/Makefile
 	src/agent/subagents/netbsd/Makefile
 	src/agent/subagents/netsvc/Makefile
 	src/agent/subagents/odbcquery/Makefile
@@ -3174,6 +3289,11 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 	else
 		echo "XMPP support            : NO"
 	fi
+	if test "x${ZEROMQ_SUPPORT}" = "xyes"; then
+		echo "ZeroMQ support          : YES"
+	else
+		echo "ZeroMQ support          : NO"
+	fi
 else
 	echo "Build Server            : NO"
 fi
@@ -3324,10 +3444,17 @@ if test "x${TUXEDO_LIBS}" != "x"; then
 fi
 
 if test "x${MONGODB_CPPFLAGS}" != "x"; then
-	echo "MongoDB CPPFLAGS         : ${MONGODB_CPPFLAGS}"
+       echo "MongoDB CPPFLAGS     : ${MONGODB_CPPFLAGS}"
 fi
 if test "x${MONGODB_LDFLAGS}" != "x"; then
-	echo "MongoDB LDFLAGS          : ${MONGODB_LDFLAGS}"
+	echo "MongoDB LDFLAGS         : ${MONGODB_LDFLAGS}"
+fi
+
+if test "x${ZEROMQ_CPPFLAGS}" != "x"; then
+	echo "ZeroMQ CPPFLAGS         : ${ZEROMQ_CPPFLAGS}"
+fi
+if test "x${ZEROMQ_LDFLAGS}" != "x"; then
+	echo "ZeroMQ LDFLAGS          : ${ZEROMQ_LDFLAGS}"
 fi
 
 FLAGS_CPP="src/tools/nxdevcfg/flags.cpp"

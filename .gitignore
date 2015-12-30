@@ -25,6 +25,7 @@
 Makefile
 Makefile.in
 pom.xml.versionsBackup
+*.swp
 
 Debug
 Release
@@ -219,6 +220,7 @@ target
 
 # Eclipse CDT
 .metadata
+.recommenders
 
 # Dolphin browser
 .directory

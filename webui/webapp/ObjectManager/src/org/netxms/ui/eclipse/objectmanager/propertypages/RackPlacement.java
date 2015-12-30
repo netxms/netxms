@@ -40,8 +40,7 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 
 /**
- * "Comments" property page for NetXMS object
- *
+ * "Rack" property page for NetXMS object
  */
 public class RackPlacement extends PropertyPage
 {

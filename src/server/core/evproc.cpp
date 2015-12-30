@@ -22,6 +22,10 @@
 
 #include "nxcore.h"
 
+#if WITH_ZMQ
+#include "zeromq.h"
+#endif
+
 /**
  * Number of processed events since start
  */
@@ -106,10 +110,10 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		{ 
 			TCHAR szQuery[4096];
 			_sntprintf(szQuery, 4096, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,")
-											  _T("event_severity,event_message,root_event_id,user_tag) VALUES (") UINT64_FMT 
+											  _T("dci_id,event_severity,event_message,root_event_id,user_tag) VALUES (") UINT64_FMT
 											  _T(",%d,%d,%d,%d,%s,") UINT64_FMT _T(",%s)"), pEvent->getId(), pEvent->getCode(), 
-											  (UINT32)pEvent->getTimeStamp(), pEvent->getSourceId(), pEvent->getSeverity(), 
-											  (const TCHAR *)DBPrepareString(hdb, pEvent->getMessage(), MAX_EVENT_MSG_LENGTH - 1),
+											  (UINT32)pEvent->getTimeStamp(), pEvent->getSourceId(), pEvent->getDciId(), pEvent->getSeverity(),
+											  (const TCHAR *)DBPrepareString(hdb, pEvent->getMessage(), MAX_EVENT_MSG_LENGTH),
 											  pEvent->getRootId(), (const TCHAR *)DBPrepareString(hdb, pEvent->getUserTag(), 63));
 			DBQuery(hdb, szQuery);
 			DbgPrintf(8, _T("EventLogger: DBQuery: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
@@ -118,8 +122,8 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 		else
 		{
 			DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,")
-				_T("event_source,event_severity,event_message,root_event_id,user_tag) ")
-				_T("VALUES (?,?,?,?,?,?,?,?)"));
+				_T("event_source,dci_id,event_severity,event_message,root_event_id,user_tag) ")
+				_T("VALUES (?,?,?,?,?,?,?,?,?)"));
 			if (hStmt != NULL)
 			{
 				do
@@ -128,28 +132,11 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 					DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, pEvent->getCode());
 					DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (UINT32)pEvent->getTimeStamp());
 					DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, pEvent->getSourceId());
-					DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
-					if (_tcslen(pEvent->getMessage()) < MAX_EVENT_MSG_LENGTH)
-					{
-						DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC);
-					}
-					else
-					{
-						TCHAR *temp = _tcsdup(pEvent->getMessage());
-						temp[MAX_EVENT_MSG_LENGTH - 1] = 0;
-						DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, temp, DB_BIND_DYNAMIC);
-					}
-					DBBind(hStmt, 7, DB_SQLTYPE_BIGINT, pEvent->getRootId());
-					if (_tcslen(pEvent->getMessage()) <= 63)
-					{
-						DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, pEvent->getUserTag(), DB_BIND_STATIC);
-					}
-					else
-					{
-						TCHAR *temp = _tcsdup(pEvent->getMessage());
-						temp[63] = 0;
-						DBBind(hStmt, 8, DB_SQLTYPE_VARCHAR, temp, DB_BIND_DYNAMIC);
-					}
+               DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, pEvent->getDciId());
+					DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, pEvent->getSeverity());
+               DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, pEvent->getMessage(), DB_BIND_STATIC, MAX_EVENT_MSG_LENGTH);
+					DBBind(hStmt, 8, DB_SQLTYPE_BIGINT, pEvent->getRootId());
+               DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, pEvent->getUserTag(), DB_BIND_STATIC, 63);
 					DBExecute(hStmt);
 					DbgPrintf(8, _T("EventLogger: DBExecute: id=%d,code=%d"), (int)pEvent->getId(), (int)pEvent->getCode());
 					delete pEvent;
@@ -222,6 +209,10 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       // Pass event through event processing policy if it is not correlated
       if (pEvent->getRootId() == 0)
 		{
+#ifdef WITH_ZMQ
+         ZmqPublishEvent(pEvent);
+#endif
+
          g_pEventPolicy->processEvent(pEvent);
 			DbgPrintf(7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), pEvent->getId(), pEvent->getCode());
 		}

@@ -572,3 +572,89 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
 
    return success ? ERR_SUCCESS : ERR_INTERNAL_ERROR;
 }
+
+/**
+ * Process collected data information in bulk mode (for DCI with agent-side cache)
+ */
+UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMessage *response)
+{
+   if (g_flags & AF_SHUTDOWN)
+      return ERR_INTERNAL_ERROR;
+
+   if (m_nodeId == 0)
+   {
+      DbgPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: node ID is 0 for agent session"));
+      return ERR_INTERNAL_ERROR;
+   }
+
+   Node *node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
+   if (node == NULL)
+   {
+      DbgPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find node object (node ID = %d)"), m_nodeId);
+      return ERR_INTERNAL_ERROR;
+   }
+
+   int count = request->getFieldAsInt16(VID_NUM_ELEMENTS);
+   if (count > BULK_DATA_BLOCK_SIZE)
+      count = BULK_DATA_BLOCK_SIZE;
+   DbgPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: %d elements from node %s [%d]"), count, node->getName(), node->getId());
+
+   BYTE status[BULK_DATA_BLOCK_SIZE];
+   memset(status, 0, BULK_DATA_BLOCK_SIZE);
+   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+   for(int i = 0; i < count; i++, fieldId += 10)
+   {
+      int origin = request->getFieldAsInt16(fieldId + 1);
+      if ((origin != DS_NATIVE_AGENT) && (origin != DS_SNMP_AGENT))
+      {
+         DbgPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: unsupported data source type %d (element %d)"), origin, i);
+         status[i] = BULK_DATA_REC_FAILURE;
+         continue;
+      }
+
+      uuid nodeId = request->getFieldAsGUID(fieldId + 3);
+      if (!nodeId.isNull())
+      {
+         Node *targetNode = (Node *)FindObjectByGUID(nodeId, OBJECT_NODE);
+         if (targetNode == NULL)
+         {
+            TCHAR buffer[64];
+            DbgPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find target node with GUID %s (element %d)"), nodeId.toString(buffer), i);
+            status[i] = BULK_DATA_REC_FAILURE;
+            continue;
+         }
+         node = targetNode;
+      }
+
+      UINT32 dciId = request->getFieldAsUInt32(fieldId);
+      DCObject *dcObject = node->getDCObjectById(dciId);
+      if (dcObject == NULL)
+      {
+         DbgPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: cannot find DCI with ID %d on node %s [%d] (element %d)"), dciId, node->getName(), node->getId(), i);
+         status[i] = BULK_DATA_REC_FAILURE;
+         continue;
+      }
+
+      int type = request->getFieldAsInt16(fieldId + 2);
+      if ((type != DCO_TYPE_ITEM) || (dcObject->getType() != type) || (dcObject->getDataSource() != origin) || (dcObject->getAgentCacheMode() != AGENT_CACHE_ON))
+      {
+         DbgPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: DCI %s [%d] on node %s [%d] configuration mismatch (element %d)"), dcObject->getName(), dciId, node->getName(), node->getId(), i);
+         status[i] = BULK_DATA_REC_FAILURE;
+         continue;
+      }
+
+      void *value = request->getFieldAsString(fieldId + 5);
+
+      DbgPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%d] (type=%d) on node %s [%d] (element %d)"), dcObject->getName(), dciId, type, node->getName(), node->getId(), i);
+      time_t t = request->getFieldAsTime(fieldId + 4);
+      bool success = node->processNewDCValue(dcObject, t, value);
+      if (t > dcObject->getLastPollTime())
+         dcObject->setLastPollTime(t);
+      status[i] = success ? BULK_DATA_REC_SUCCESS : BULK_DATA_REC_FAILURE;
+
+      free(value);
+   }
+
+   response->setField(VID_STATUS, status, BULK_DATA_BLOCK_SIZE);
+   return ERR_SUCCESS;
+}

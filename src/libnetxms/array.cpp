@@ -229,3 +229,32 @@ void *Array::find(const void *key, int (*cb)(const void *, const void *)) const
 {
    return bsearch(key, m_data, m_size, m_elementSize, cb);
 }
+
+/**
+ * Array iterator
+ */
+ArrayIterator::ArrayIterator(const Array *array)
+{
+   m_array = array;
+   m_pos = -1;
+}
+
+/**
+ * Next element availability indicator
+ */
+bool ArrayIterator::hasNext()
+{
+   return (m_pos + 1) < m_array->size();
+}
+
+/**
+ * Get next element
+ */
+void *ArrayIterator::next()
+{
+   if ((m_pos + 1) >= m_array->size())
+      return NULL;
+
+   m_pos++;
+   return m_array->get(m_pos);
+}

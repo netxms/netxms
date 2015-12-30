@@ -170,6 +170,7 @@ public:
 	void setRearmEvent(UINT32 dwEvent) { m_rearmEventCode = dwEvent; }
 	void setSampleCount(int nVal) { m_sampleCount = nVal; }
 	void setValue(const TCHAR *value) { m_value = value; }
+	void setDataType(BYTE type) { m_dataType = type; }
 };
 
 class Template;

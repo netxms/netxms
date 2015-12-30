@@ -220,6 +220,12 @@ char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
 }
 #endif
 
+#ifdef UNICODE
+#define UTF8StringFromTString(s) UTF8StringFromWideString(s)
+#else
+#define UTF8StringFromTString(s) UTF8StringFromMBString(s)
+#endif
+
 /**
  * Class for serial communications
  */
@@ -347,6 +353,34 @@ public:
 };
 
 /**
+ * Abstract iterator class (to be implemented by actual iterable class)
+ */
+class LIBNETXMS_EXPORTABLE AbstractIterator
+{
+public:
+   virtual ~AbstractIterator();
+
+   virtual bool hasNext() = 0;
+   virtual void *next() = 0;
+};
+
+/**
+ * Iterator class (public interface for iteration)
+ */
+template <class T> class Iterator
+{
+private:
+   AbstractIterator *m_worker;
+
+public:
+   Iterator(AbstractIterator *worker) { m_worker = worker; }
+   ~Iterator() { delete m_worker; }
+
+   bool hasNext() { return m_worker->hasNext(); }
+   T *next() { return (T *)m_worker->next(); }
+};
+
+/**
  * Dynamic array class
  */
 class LIBNETXMS_EXPORTABLE Array
@@ -393,6 +427,22 @@ public:
 };
 
 /**
+ * Array iterator class
+ */
+class LIBNETXMS_EXPORTABLE ArrayIterator : public AbstractIterator
+{
+private:
+   const Array *m_array;
+   int m_pos;
+
+public:
+   ArrayIterator(const Array *array);
+
+   virtual bool hasNext();
+   virtual void *next();
+};
+
+/**
  * Template class for dynamic array which holds objects
  */
 template <class T> class ObjectArray : public Array
@@ -414,6 +464,8 @@ public:
    void remove(T *object) { Array::remove((void *)object); }
 	void unlink(int index) { Array::unlink(index); }
    void unlink(T *object) { Array::unlink((void *)object); }
+
+   Iterator<T> *iterator() const { return new Iterator<T>(new ArrayIterator(this)); }
 };
 
 /**
@@ -587,6 +639,11 @@ public:
 	void replace(int index, const TCHAR *value);
 	void addOrReplace(int index, const TCHAR *value);
 	void addOrReplacePreallocated(int index, TCHAR *value);
+#ifdef UNICODE
+   void addMBString(const char *value) { addPreallocated(WideStringFromMBString(value)); }
+#else
+	void addMBString(const char *value) { add(value); }
+#endif
 	void clear();
 	int size() const { return m_count; }
 	const TCHAR *get(int index) const { return ((index >=0) && (index < m_count)) ? m_values[index] : NULL; }
@@ -654,12 +711,14 @@ struct HashMapEntry;
  */
 class LIBNETXMS_EXPORTABLE HashMapBase
 {
+   friend class HashMapIterator;
+
 private:
    HashMapEntry *m_data;
 	bool m_objectOwner;
    unsigned int m_keylen;
 
-	HashMapEntry *find(const void *key);
+	HashMapEntry *find(const void *key) const;
 	void destroyObject(void *object) { if (object != NULL) m_objectDestructor(object); }
 
 protected:
@@ -667,11 +726,11 @@ protected:
 
 	HashMapBase(bool objectOwner, unsigned int keylen);
 
-	void *_get(const void *key);
+	void *_get(const void *key) const;
 	void _set(const void *key, void *value);
 	void _remove(const void *key);
 
-   bool _contains(const void *key) { return find(key) != NULL; }
+   bool _contains(const void *key) const { return find(key) != NULL; }
 
 public:
    virtual ~HashMapBase();
@@ -679,10 +738,27 @@ public:
    void setOwner(bool owner) { m_objectOwner = owner; }
 	void clear();
 
-	int size();
+	int size() const;
 
-   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void *, const void *, void *), void *userData);
-   const void *findElement(bool (*comparator)(const void *, const void *, void *), void *userData);
+   EnumerationCallbackResult forEach(EnumerationCallbackResult (*cb)(const void *, const void *, void *), void *userData) const;
+   const void *findElement(bool (*comparator)(const void *, const void *, void *), void *userData) const;
+};
+
+/**
+ * Hash map iterator
+ */
+class LIBNETXMS_EXPORTABLE HashMapIterator : public AbstractIterator
+{
+private:
+   HashMapBase *m_hashMap;
+   HashMapEntry *m_curr;
+   HashMapEntry *m_next;
+
+public:
+   HashMapIterator(HashMapBase *hashMap);
+
+   virtual bool hasNext();
+   virtual void *next();
 };
 
 /**
@@ -700,6 +776,8 @@ public:
 	void set(const K& key, V *value) { _set(&key, (void *)value); }
    void remove(const K& key) { _remove(&key); }
    bool contains(const K& key) { return _contains(&key); }
+
+   Iterator<V> *iterator() { return new Iterator<V>(new HashMapIterator(this)); }
 };
 
 /**
@@ -1066,6 +1144,7 @@ public:
    int getHostBits() const { return (m_family == AF_INET) ? (32 - m_maskBits) : (128 - m_maskBits); }
 
    InetAddress getSubnetAddress() const;
+   InetAddress getSubnetBroadcast() const;
    bool isSubnetBroadcast(int maskBits) const;
 
    String toString() const;
@@ -1692,6 +1771,12 @@ int LIBNETXMS_EXPORTABLE wcscasecmp(const wchar_t *s1, const wchar_t *s2);
 
 #if !HAVE_WCSNCASECMP && !defined(_WIN32)
 int LIBNETXMS_EXPORTABLE wcsncasecmp(const wchar_t *s1, const wchar_t *s2, size_t n);
+#endif
+
+#if !defined(_WIN32) && (!HAVE_WCSFTIME || !WORKING_WCSFTIME)
+size_t LIBNETXMS_EXPORTABLE nx_wcsftime(WCHAR *buffer, size_t bufsize, const WCHAR *format, const struct tm *t);
+#undef wcsftime
+#define wcsftime nx_wcsftime
 #endif
 
 #ifndef _WIN32

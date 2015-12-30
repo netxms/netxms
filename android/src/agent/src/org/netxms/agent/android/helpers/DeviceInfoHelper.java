@@ -79,7 +79,7 @@ public class DeviceInfoHelper
 		{
 			try
 			{
-				Pattern emailPattern = Patterns.EMAIL_ADDRESS; // API level 8+
+				Pattern emailPattern = Patterns.EMAIL_ADDRESS;// API level 8+
 				Account[] accounts = AccountManager.get(context).getAccounts();
 				for (Account account : accounts)
 					if (emailPattern.matcher(account.name).matches())
@@ -167,6 +167,8 @@ public class DeviceInfoHelper
 				return "ANDROID (LOLLIPOP)";
 			case Build.VERSION_CODES.LOLLIPOP_MR1:
 				return "ANDROID (LOLLIPOP_MR1)";
+			case Build.VERSION_CODES.M:
+				return "ANDROID (M)";
 		}
 		return "ANDROID (UNKNOWN)";
 	}
@@ -190,7 +192,7 @@ public class DeviceInfoHelper
 //				int temp = battIntent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
 //	            int voltage = battIntent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1);
 				if (rawlevel >= 0 && scale > 0)
-					level = (rawlevel * 100) / scale + 0.5; // + 0.5 for round on cast
+					level = (rawlevel * 100) / scale + 0.5;// + 0.5 for round on cast
 			}
 		}
 		return (int)level;

@@ -41,24 +41,19 @@
 #define _SQLNCLI_ODBC_
 #include <sqlncli.h>
 
-
-//
-// Driver connection handle structure
-//
-
+/**
+ * Driver connection handle structure
+ */
 typedef struct
 {
    MUTEX mutexQuery;
    SQLHENV sqlEnv;
    SQLHDBC sqlConn;
-   SQLHSTMT sqlStatement;
 } MSSQL_CONN;
 
-
-//
-// Prepared statement structure
-//
-
+/**
+ * Prepared statement structure
+ */
 typedef struct
 {
 	SQLHSTMT handle;
@@ -71,24 +66,25 @@ typedef struct
  */
 typedef struct
 {
-   long iNumRows;
-   long iNumCols;
+   int numRows;
+   int numColumns;
    WCHAR **pValues;
 	char **columnNames;
 } MSSQL_QUERY_RESULT;
 
 /**
- * Async result buffer structure
+ * Unbuffered result buffer structure
  */
 typedef struct
 {
-   long iNumCols;
+   SQLHSTMT sqlStatement;
+   bool isPrepared;
+   int numColumns;
    MSSQL_CONN *pConn;
    bool noMoreRows;
 	char **columnNames;
    WCHAR **data;
    BYTE *dataBuffer;
-} MSSQL_ASYNC_QUERY_RESULT;
-
+} MSSQL_UNBUFFERED_QUERY_RESULT;
 
 #endif   /* _mssqldrv_h_ */

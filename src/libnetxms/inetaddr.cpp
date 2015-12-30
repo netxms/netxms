@@ -206,6 +206,19 @@ InetAddress InetAddress::getSubnetAddress() const
 }
 
 /**
+ * Get corresponding subnet broadcast address for this InetAddress
+ */
+InetAddress InetAddress::getSubnetBroadcast() const
+{
+   InetAddress addr(*this);
+   if ((m_family == AF_INET) && (m_maskBits < 32))
+   {
+      addr.m_addr.v4 = m_addr.v4 | (0xFFFFFFFF >> m_maskBits);
+   }
+   return addr;
+}
+
+/**
  * Check if this address is a subnet broadcast for given subnet mask length
  */
 bool InetAddress::isSubnetBroadcast(int maskBits) const

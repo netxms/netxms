@@ -29,7 +29,8 @@ extern UINT32 g_nxslNumSituationFunctions;
 extern NXSL_ExtFunction g_nxslSituationFunctions[];
 
 void RegisterDCIFunctions(NXSL_Environment *pEnv);
-int F_map(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_map(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
 int F_FindAlarmById(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -1327,6 +1328,7 @@ static int F_GetConfigurationVariable(int argc, NXSL_Value **argv, NXSL_Value **
 static NXSL_ExtFunction m_nxslServerFunctions[] =
 {
 	{ _T("map"), F_map, -1 },
+   { _T("mapList"), F_mapList, -1 },
 	{ _T("AgentReadList"), F_AgentReadList, 2 },
 	{ _T("AgentReadParameter"), F_AgentReadParameter, 2 },
 	{ _T("AgentReadTable"), F_AgentReadTable, 2 },

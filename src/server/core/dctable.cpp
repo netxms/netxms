@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -471,7 +471,7 @@ bool DCTable::transform(Table *value)
 
 		   _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
                     (m_pNode != NULL) ? m_pNode->getName() : _T("(null)"), m_id);
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, m_transformationScript->getErrorText(), m_id);
+         PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", szBuffer, m_transformationScript->getErrorText(), m_id);
       }
       success = false;
    }
@@ -497,12 +497,12 @@ void DCTable::checkThresholds(Table *value)
          switch(result)
          {
             case ACTIVATED:
-               PostEventWithNames(t->getActivationEvent(), m_pNode->getId(), "ssids", paramNames, m_name, m_szDescription, m_id, row, instance);
+               PostDciEventWithNames(t->getActivationEvent(), m_pNode->getId(), m_id, "ssids", paramNames, m_name, m_szDescription, m_id, row, instance);
                if (!(m_flags & DCF_ALL_THRESHOLDS))
                   i = m_thresholds->size();  // Stop processing (for current row)
                break;
             case DEACTIVATED:
-               PostEventWithNames(t->getDeactivationEvent(), m_pNode->getId(), "ssids", paramNames, m_name, m_szDescription, m_id, row, instance);
+               PostDciEventWithNames(t->getDeactivationEvent(), m_pNode->getId(), m_id, "ssids", paramNames, m_name, m_szDescription, m_id, row, instance);
                break;
             case ALREADY_ACTIVE:
 				   i = m_thresholds->size();  // Threshold condition still true, stop processing

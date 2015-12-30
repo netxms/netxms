@@ -53,6 +53,9 @@
 #define DEFAULT_LOG_FILE      _T("C:\\netxmsd.log")
 #define DEFAULT_DUMP_DIR      _T("C:\\")
 
+#define LDIR_NDD              _T("\\ndd")
+#define LDIR_PDSDRV           _T("\\pdsdrv")
+
 #define DDIR_PACKAGES         _T("\\packages")
 #define DDIR_BACKGROUNDS      _T("\\backgrounds")
 #define DFILE_KEYS            _T("\\server_key")
@@ -60,8 +63,7 @@
 #define DDIR_IMAGES           _T("\\images")
 #define DDIR_FILES            _T("\\files")
 
-#define LDIR_NDD              _T("\\ndd")
-#define LDIR_PDSDRV           _T("\\pdsdrv")
+#define DDIR_TEMPLATES        _T("\\templates")
 
 #else    /* _WIN32 */
 
@@ -93,6 +95,8 @@
 #define DFILE_COMPILED_MIB    _T("/netxms.mib")
 #define DDIR_IMAGES           _T("/images")
 #define DDIR_FILES            _T("/files")
+
+#define DDIR_TEMPLATES        _T("/templates")
 
 #endif   /* _WIN32 */
 
@@ -505,6 +509,7 @@ protected:
 	virtual void onSnmpTrap(NXCPMessage *pMsg);
 	virtual void onFileDownload(bool success);
 	virtual UINT32 processCollectedData(NXCPMessage *msg);
+   virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
 	virtual bool processCustomMessage(NXCPMessage *pMsg);
 
    void lock() { MutexLock(m_mutexDataLock); }
@@ -532,7 +537,7 @@ public:
    UINT32 getList(const TCHAR *pszParam);
    UINT32 getTable(const TCHAR *pszParam, Table **table);
    UINT32 nop();
-   UINT32 enableIPv6();
+   UINT32 setServerCapabilities();
    UINT32 setServerId(UINT64 serverId);
    UINT32 execAction(const TCHAR *pszAction, int argc, TCHAR **argv, bool withOutput = false, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL, NXCPCompressionMethod compMethod = NXCP_COMPRESSION_NONE);

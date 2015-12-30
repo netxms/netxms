@@ -115,7 +115,7 @@ static void ProcessDiskStats(struct pst_diskinfo *di)
 			dev->devMinor = di->psd_dev.psd_minor;
 			strcpy(dev->hwPath, di->psd_hw_path.psh_name);
 			memcpy(&dev->last, di, sizeof(struct pst_diskinfo));
-			AgentWriteDebugLog(4, "HPUX: device %d.%d hwpath %s added to I/O stat collection",
+			AgentWriteDebugLog(4, _T("HPUX: device %d.%d hwpath %s added to I/O stat collection"),
 			                   dev->devMajor, dev->devMinor, dev->hwPath);
 			return;  // No prev data for new device, ignore this sample
 		}
@@ -142,17 +142,15 @@ static void ProcessDiskStats(struct pst_diskinfo *di)
 	memcpy(&dev->last, di, sizeof(struct pst_diskinfo));
 }
 
-
-//
-// I/O stat collector
-//
-
+/**
+ * I/O stat collector
+ */
 static THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 {
 	struct pst_diskinfo di[64];
 	int index, count;
 
-	AgentWriteDebugLog(1, "HPUX: I/O stat collector thread started");
+	AgentWriteDebugLog(1, _T("HPUX: I/O stat collector thread started"));
 
 	while(!ConditionWait(s_condShutdown, 1000))
 	{
@@ -172,15 +170,13 @@ static THREAD_RESULT THREAD_CALL IOStatCollector(void *arg)
 		MutexUnlock(s_dataLock);
 	}
 
-	AgentWriteDebugLog(1, "HPUX: I/O stat collector thread stopped");
+	AgentWriteDebugLog(1, _T("HPUX: I/O stat collector thread stopped"));
 	return THREAD_OK;
 }
 
-
-//
-// Initialize I/O stat collector
-//
-
+/**
+ * Initialize I/O stat collector
+ */
 void StartIOStatCollector()
 {
 	memset(&s_total, 0, sizeof(s_total));
@@ -190,11 +186,9 @@ void StartIOStatCollector()
 	s_collectorThread = ThreadCreateEx(IOStatCollector, 0, NULL);
 }
 
-
-//
-// Shutdown I/O stat collector
-//
-
+/**
+ * Shutdown I/O stat collector
+ */
 void ShutdownIOStatCollector()
 {
 	ConditionSet(s_condShutdown);
@@ -203,11 +197,9 @@ void ShutdownIOStatCollector()
 	ConditionDestroy(s_condShutdown);
 }
 
-
-//
-// Calculate average value for 32bit series
-//
-
+/**
+ * Calculate average value for 32bit series
+ */
 static double CalculateAverage32(int *series)
 {
 	double sum = 0;
@@ -216,11 +208,9 @@ static double CalculateAverage32(int *series)
 	return sum / (double)SAMPLE_COUNT;
 }
 
-
-//
-// Calculate average value for 64bit series
-//
-
+/**
+ * Calculate average value for 64bit series
+ */
 static QWORD CalculateAverage64(QWORD *series)
 {
 	QWORD sum = 0;
@@ -229,11 +219,9 @@ static QWORD CalculateAverage64(QWORD *series)
 	return sum / SAMPLE_COUNT;
 }
 
-
-//
-// Calculate average wait time
-//
-
+/**
+ * Calculate average wait time
+ */
 static DWORD CalculateAverageTime(QWORD *opcount, QWORD *times)
 {
 	QWORD totalOps = 0;
@@ -247,12 +235,10 @@ static DWORD CalculateAverageTime(QWORD *opcount, QWORD *times)
 	return totalOps == 0 ? 0 : (DWORD)(totalTime / totalOps);
 }
 
-
-//
-// Get total I/O stat value
-//
-
-LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value, AbstractCommSession *session)
+/**
+ * Get total I/O stat value
+ */
+LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	LONG rc = SYSINFO_RC_SUCCESS;
 
@@ -288,19 +274,17 @@ LONG H_IOStatsTotal(const char *cmd, const char *arg, char *value, AbstractCommS
 	return rc;
 }
 
-
-//
-// Get I/O stat for specific device
-//
-
-LONG H_IOStats(const char *cmd, const char *arg, char *value, AbstractCommSession *session)
+/**
+ * Get I/O stat for specific device
+ */
+LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
 	char device[MAX_PATH];
 	struct stat devInfo;
 	LONG rc = SYSINFO_RC_SUCCESS;
 	int i;
 
-	if (!AgentGetParameterArg(cmd, 1, device, MAX_PATH))
+	if (!AgentGetParameterArgA(cmd, 1, device, MAX_PATH))
 		return SYSINFO_RC_UNSUPPORTED;
 
 	if (stat(device, &devInfo) != 0)

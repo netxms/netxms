@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,10 @@
 **/
 
 #include "nxcore.h"
+
+#ifdef WITH_ZMQ
+#include "zeromq.h"
+#endif
 
 /**
  * Event parameter names
@@ -468,7 +472,7 @@ void DCItem::checkThresholds(ItemValue &value)
       {
          case ACTIVATED:
             {
-               PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
+               PostDciEventWithNames(t->getEventCode(), m_pNode->getId(), m_id, "ssssisd",
 					   s_paramNamesReach, m_name, m_szDescription, t->getStringValue(),
                   (const TCHAR *)checkValue, m_id, m_instance, 0);
 				   EVENT_TEMPLATE *evt = FindEventTemplateByCode(t->getEventCode());
@@ -479,7 +483,7 @@ void DCItem::checkThresholds(ItemValue &value)
             }
             break;
          case DEACTIVATED:
-            PostEventWithNames(t->getRearmEventCode(), m_pNode->getId(), "ssisss",
+            PostDciEventWithNames(t->getRearmEventCode(), m_pNode->getId(), m_id, "ssisss",
 					s_paramNamesRearm, m_name, m_szDescription, m_id, m_instance,
 					t->getStringValue(), (const TCHAR *)checkValue);
             break;
@@ -490,7 +494,7 @@ void DCItem::checkThresholds(ItemValue &value)
                UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
 				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now))
 				   {
-					   PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
+					   PostDciEventWithNames(t->getEventCode(), m_pNode->getId(), m_id, "ssssisd",
 						   s_paramNamesReach, m_name, m_szDescription, t->getStringValue(),
 						   (const TCHAR *)checkValue, m_id, m_instance, 1);
 					   EVENT_TEMPLATE *evt = FindEventTemplateByCode(t->getEventCode());
@@ -667,6 +671,10 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 		delete_and_null(m_thresholds);
 	}
 
+	// Update data type in thresholds
+   for(int i = 0; i < getThresholdCount(); i++)
+      m_thresholds->get(i)->setDataType(m_dataType);
+
 	safe_free(ppNewList);
    safe_free(newThresholds);
    updateCacheSize();
@@ -753,6 +761,11 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
    }
 
    unlock();
+
+#ifdef WITH_ZMQ
+   ZmqPublishData(m_pNode->getId(), m_id, m_name, pValue->getString());
+#endif
+
    return true;
 }
 
@@ -780,7 +793,7 @@ void DCItem::processNewError()
       {
          case ACTIVATED:
             {
-               PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
+               PostDciEventWithNames(t->getEventCode(), m_pNode->getId(), m_id, "ssssisd",
 					   s_paramNamesReach, m_name, m_szDescription, _T(""), _T(""),
                   m_id, m_instance, 0);
 				   EVENT_TEMPLATE *evt = FindEventTemplateByCode(t->getEventCode());
@@ -793,7 +806,7 @@ void DCItem::processNewError()
             }
             break;
          case DEACTIVATED:
-            PostEventWithNames(t->getRearmEventCode(), m_pNode->getId(), "ssisss",
+            PostDciEventWithNames(t->getRearmEventCode(), m_pNode->getId(), m_id, "ssisss",
 					s_paramNamesRearm, m_name, m_szDescription, m_id, m_instance, _T(""), _T(""));
             break;
          case ALREADY_ACTIVE:
@@ -803,7 +816,7 @@ void DCItem::processNewError()
                UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
 				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now))
 				   {
-					   PostEventWithNames(t->getEventCode(), m_pNode->getId(), "ssssisd",
+					   PostDciEventWithNames(t->getEventCode(), m_pNode->getId(), m_id, "ssssisd",
 						   s_paramNamesReach, m_name, m_szDescription, _T(""), _T(""),
 						   m_id, m_instance, 1);
 					   EVENT_TEMPLATE *evt = FindEventTemplateByCode(t->getEventCode());
@@ -952,7 +965,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
 
 			_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::TransformationScript"),
                     (m_pNode != NULL) ? m_pNode->getName() : _T("(null)"), m_id);
-         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, m_transformationScript->getErrorText(), m_id);
+         PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", szBuffer, m_transformationScript->getErrorText(), m_id);
          success = false;
       }
    }
@@ -1232,7 +1245,8 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
    switch(nFunction)
    {
       case F_LAST:
-         pValue = (m_cacheSize > 0) ? new NXSL_Value(m_ppValueCache[0]->getString()) : new NXSL_Value;
+         // cache placeholders will have timestamp 1
+         pValue = ((m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? new NXSL_Value(m_ppValueCache[0]->getString()) : new NXSL_Value;
          break;
       case F_DIFF:
          if (m_cacheSize >= 2)
@@ -1453,6 +1467,10 @@ void DCItem::updateFromTemplate(DCObject *src)
 		m_thresholds->add(t);
    }
 
+   // Update data type in thresholds
+   for(i = 0; i < getThresholdCount(); i++)
+      m_thresholds->get(i)->setDataType(m_dataType);
+
    if ((item->getInstanceDiscoveryMethod() != IDM_NONE) && (m_instanceDiscoveryMethod == IDM_NONE))
    {
       expandInstance();
@@ -1489,7 +1507,10 @@ void DCItem::setInstanceFilter(const TCHAR *pszScript)
          m_instanceFilter = NXSLCompile(m_instanceFilterSource, errorText, 1024, NULL);
          if (m_instanceFilter == NULL)
          {
-            nxlog_write(MSG_INSTANCE_FILTER_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dsdss", m_pNode->getId(), m_pNode->getName(), m_id, m_name, errorText);
+            // node can be NULL if this DCI was just created from template
+            // in this case compilation error will be reported on template level anyway
+            if (m_pNode != NULL)
+               nxlog_write(MSG_INSTANCE_FILTER_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dsdss", m_pNode->getId(), m_pNode->getName(), m_id, m_name, errorText);
          }
       }
       else
@@ -1885,7 +1906,7 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
 
 		_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"),
                  (dci->getNode() != NULL) ? dci->getNode()->getName() : _T("(null)"), dci->getId());
-      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", szBuffer, instanceFilter->getErrorText(), dci->getId());
+      PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", szBuffer, instanceFilter->getErrorText(), dci->getId());
       ((FilterCallbackData *)data)->filteredInstances->set(key, (const TCHAR *)value);
    }
    return _CONTINUE;

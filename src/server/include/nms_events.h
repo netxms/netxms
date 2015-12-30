@@ -52,65 +52,67 @@ struct EVENT_TEMPLATE
 class NXCORE_EXPORTABLE Event
 {
 private:
-   UINT64 m_qwId;
-   UINT64 m_qwRootId;    // Root event id
-   UINT32 m_dwCode;
+   UINT64 m_id;
+   UINT64 m_rootId;    // Root event id
+   UINT32 m_code;
    int m_severity;
-   UINT32 m_dwFlags;
-   UINT32 m_dwSource;
+   UINT32 m_flags;
+   UINT32 m_sourceId;
+   UINT32 m_dciId;
 	TCHAR m_name[MAX_EVENT_NAME];
-   TCHAR *m_pszMessageText;
-   TCHAR *m_pszMessageTemplate;
-   time_t m_tTimeStamp;
-	TCHAR *m_pszUserTag;
-	TCHAR *m_pszCustomMessage;
+   TCHAR *m_messageText;
+   TCHAR *m_messageTemplate;
+   time_t m_timeStamp;
+	TCHAR *m_userTag;
+	TCHAR *m_customMessage;
 	Array m_parameters;
 	StringList m_parameterNames;
 
 public:
    Event();
-   Event(Event *src);
-   Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, va_list args);
+   Event(const Event *src);
+   Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *userTag, const char *format, const TCHAR **names, va_list args);
    ~Event();
 
-   UINT64 getId() { return m_qwId; }
-   UINT32 getCode() { return m_dwCode; }
-   UINT32 getSeverity() { return m_severity; }
-   UINT32 getFlags() { return m_dwFlags; }
-   UINT32 getSourceId() { return m_dwSource; }
-	const TCHAR *getName() { return m_name; }
-   const TCHAR *getMessage() { return m_pszMessageText; }
-   const TCHAR *getUserTag() { return m_pszUserTag; }
-   time_t getTimeStamp() { return m_tTimeStamp; }
+   UINT64 getId() const { return m_id; }
+   UINT32 getCode() const { return m_code; }
+   UINT32 getSeverity() const { return m_severity; }
+   UINT32 getFlags() const { return m_flags; }
+   UINT32 getSourceId() const { return m_sourceId; }
+   UINT32 getDciId() const { return m_dciId; }
+	const TCHAR *getName() const { return m_name; }
+   const TCHAR *getMessage() const { return m_messageText; }
+   const TCHAR *getUserTag() const { return m_userTag; }
+   time_t getTimeStamp() const { return m_timeStamp; }
 
    void setSeverity(int severity) { m_severity = severity; }
    
-   UINT64 getRootId() { return m_qwRootId; }
-   void setRootId(UINT64 qwId) { m_qwRootId = qwId; }
+   UINT64 getRootId() const { return m_rootId; }
+   void setRootId(UINT64 id) { m_rootId = id; }
 
-   void prepareMessage(NXCPMessage *pMsg);
+   void prepareMessage(NXCPMessage *msg) const;
 
    void expandMessageText();
    TCHAR *expandText(const TCHAR *textTemplate, const TCHAR *alarmMsg = NULL, const TCHAR *alarmKey = NULL);
    static TCHAR *expandText(Event *event, UINT32 sourceObject, const TCHAR *textTemplate, const TCHAR *alarmMsg, const TCHAR *alarmKey);
-   void setMessage(const TCHAR *text) { safe_free(m_pszMessageText); m_pszMessageText = _tcsdup(CHECK_NULL_EX(text)); }
-   void setUserTag(const TCHAR *text) { safe_free(m_pszUserTag); m_pszUserTag = _tcsdup(CHECK_NULL_EX(text)); }
+   void setMessage(const TCHAR *text) { free(m_messageText); m_messageText = _tcsdup_ex(text); }
+   void setUserTag(const TCHAR *text) { free(m_userTag); m_userTag = _tcsdup_ex(text); }
 
-   UINT32 getParametersCount() { return m_parameters.size(); }
-   const TCHAR *getParameter(int index) { return (TCHAR *)m_parameters.get(index); }
-   UINT32 getParameterAsULong(int index) { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoul(v, NULL, 0) : 0; }
-   UINT64 getParameterAsUInt64(int index) { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoull(v, NULL, 0) : 0; }
+   UINT32 getParametersCount() const { return m_parameters.size(); }
+   const TCHAR *getParameter(int index) const { return (TCHAR *)m_parameters.get(index); }
+   UINT32 getParameterAsULong(int index) const { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoul(v, NULL, 0) : 0; }
+   UINT64 getParameterAsUInt64(int index) const { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoull(v, NULL, 0) : 0; }
 
-	const TCHAR *getNamedParameter(const TCHAR *name) { return getParameter(m_parameterNames.indexOfIgnoreCase(name)); }
-   UINT32 getNamedParameterAsULong(const TCHAR *name) { return getParameterAsULong(m_parameterNames.indexOfIgnoreCase(name)); }
-   UINT64 getNamedParameterAsUInt64(const TCHAR *name) { return getParameterAsUInt64(m_parameterNames.indexOfIgnoreCase(name)); }
+	const TCHAR *getNamedParameter(const TCHAR *name) const { return getParameter(m_parameterNames.indexOfIgnoreCase(name)); }
+   UINT32 getNamedParameterAsULong(const TCHAR *name) const { return getParameterAsULong(m_parameterNames.indexOfIgnoreCase(name)); }
+   UINT64 getNamedParameterAsUInt64(const TCHAR *name) const { return getParameterAsUInt64(m_parameterNames.indexOfIgnoreCase(name)); }
 
 	void addParameter(const TCHAR *name, const TCHAR *value);
 	void setNamedParameter(const TCHAR *name, const TCHAR *value);
 	void setParameter(int index, const TCHAR *name, const TCHAR *value);
 
-   const TCHAR *getCustomMessage() { return CHECK_NULL_EX(m_pszCustomMessage); }
-   void setCustomMessage(const TCHAR *message) { safe_free(m_pszCustomMessage); m_pszCustomMessage = (message != NULL) ? _tcsdup(message) : NULL; }
+   const TCHAR *getCustomMessage() const { return CHECK_NULL_EX(m_customMessage); }
+   void setCustomMessage(const TCHAR *message) { free(m_customMessage); m_customMessage = _tcsdup_ex(message); }
 };
 
 /**
@@ -214,13 +216,16 @@ UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValu
 EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 eventCode);
 EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName);
 
-BOOL NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
+bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
+bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, const char *format, ...);
 UINT64 NXCORE_EXPORTABLE PostEvent2(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
-BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...);
-BOOL NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters);
-BOOL NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...);
-BOOL NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...);
-BOOL NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...);
+bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, const char *format, const TCHAR **names, ...);
+bool NXCORE_EXPORTABLE PostEventWithNames(UINT32 eventCode, UINT32 sourceId, StringMap *parameters);
+bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, const char *format, const TCHAR **names, ...);
+bool NXCORE_EXPORTABLE PostDciEventWithNames(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, StringMap *parameters);
+bool NXCORE_EXPORTABLE PostEventWithTagAndNames(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, const TCHAR **names, ...);
+bool NXCORE_EXPORTABLE PostEventWithTag(UINT32 eventCode, UINT32 sourceId, const TCHAR *userTag, const char *format, ...);
+bool NXCORE_EXPORTABLE PostEventEx(Queue *queue, UINT32 eventCode, UINT32 sourceId, const char *format, ...);
 void NXCORE_EXPORTABLE ResendEvents(Queue *queue);
 
 const TCHAR NXCORE_EXPORTABLE *GetStatusAsText(int status, bool allCaps);

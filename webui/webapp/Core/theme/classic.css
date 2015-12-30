@@ -2083,6 +2083,24 @@ Label.gray {
   background-color: #f0f0f0;
 }
 
+Text.login {
+  font: 16px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+}
+
+Button.login {
+  font: 16px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+}
+
+Button.login[PUSH], Button.login[TOGGLE], Button.login[BORDER] {
+  background-image: none;
+  background-color: #b0b0b0;
+  color: #ffffff;
+}
+
+Link.login {
+  font: 16px "Segoe UI", "Liberation Sans", Verdana, "Lucida Sans", Arial, Helvetica, sans-serif;
+}
+
 
 /* FileUpload */
 

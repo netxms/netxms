@@ -370,18 +370,24 @@ static void DiscoveryPoller(void *arg)
 /**
  * Check given address range with ICMP ping for new nodes
  */
-static void CheckRange(int nType, UINT32 addr1, UINT32 addr2)
+static void CheckRange(const InetAddressListElement& range)
 {
-   UINT32 from, to;
-   if (nType == 0)
+   if (range.getBaseAddress().getFamily() != AF_INET)
    {
-      from = (addr1 & addr2) + 1;
-      to = from | ~addr2 - 1;
+      DbgPrintf(4, _T("Active discovery on range %s skipped - only IPv4 ranges supported"), (const TCHAR *)range.toString());
+      return;
+   }
+
+   UINT32 from = range.getBaseAddress().getAddressV4();
+   UINT32 to;
+   if (range.getType() == InetAddressListElement_SUBNET)
+   {
+      from++;
+      to = range.getBaseAddress().getSubnetBroadcast().getAddressV4() - 1;
    }
    else
    {
-      from = addr1;
-      to = addr2;
+      to = range.getEndAddress().getAddressV4();
    }
 
    TCHAR ipAddr1[16], ipAddr2[16];
@@ -456,9 +462,7 @@ static THREAD_RESULT THREAD_CALL ActiveDiscoveryPoller(void *arg)
          int nRows = DBGetNumRows(hResult);
          for(int i = 0; (i < nRows) && !IsShutdownInProgress(); i++)
          {
-            CheckRange(DBGetFieldLong(hResult, i, 0),
-                       DBGetFieldIPAddr(hResult, i, 1),
-                       DBGetFieldIPAddr(hResult, i, 2));
+            CheckRange(InetAddressListElement(hResult, i));
          }
          DBFreeResult(hResult);
       }

@@ -1160,8 +1160,25 @@ typedef struct tagICMPHDR
 /**
  * Free memory block if it isn't NULL
  */
+#if FREE_IS_NULL_SAFE
+#define safe_free(x) free(x);
+#define safe_free_and_null(x) { free(x); x = NULL; }
+#else
 #define safe_free(x) { if ((x) != NULL) free(x); }
 #define safe_free_and_null(x) { if ((x) != NULL) { free(x); x = NULL; } }
+#endif
+
+/**
+ * free() wrapper if it isn't NULL safe
+ */
+#if defined(__cplusplus) && !FREE_IS_NULL_SAFE
+inline void nx_free(void *p)
+{
+   if (p != NULL)
+      free(p);
+}
+#define free nx_free
+#endif
 
 /**
  * delete object and nullify pointer

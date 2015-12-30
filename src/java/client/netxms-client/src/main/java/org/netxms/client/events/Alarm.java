@@ -56,6 +56,7 @@ public class Alarm
 	private long sourceEventId;
 	private int sourceEventCode;
 	private long sourceObjectId;
+	private long dciId;
 	private Date creationTime;
 	private Date lastChangeTime;
 	private String message;
@@ -84,6 +85,7 @@ public class Alarm
 		sourceEventId = msg.getFieldAsInt64(NXCPCodes.VID_EVENT_ID);
 		sourceEventCode = msg.getFieldAsInt32(NXCPCodes.VID_EVENT_CODE);
 		sourceObjectId = msg.getFieldAsInt64(NXCPCodes.VID_OBJECT_ID);
+      dciId = msg.getFieldAsInt64(NXCPCodes.VID_DCI_ID);
 		creationTime = new Date(msg.getFieldAsInt64(NXCPCodes.VID_CREATION_TIME) * 1000);
 		lastChangeTime = new Date(msg.getFieldAsInt64(NXCPCodes.VID_LAST_CHANGE_TIME) * 1000);
 		message = msg.getFieldAsString(NXCPCodes.VID_ALARM_MESSAGE);
@@ -177,6 +179,14 @@ public class Alarm
 	}
 
 	/**
+    * @return the dciId
+    */
+   public long getDciId()
+   {
+      return dciId;
+   }
+
+   /**
 	 * @return the creationTime
 	 */
 	public Date getCreationTime()

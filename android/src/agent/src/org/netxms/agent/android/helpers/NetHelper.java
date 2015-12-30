@@ -56,6 +56,7 @@ public class NetHelper
 	 * @param context	context on which to operate
 	 * @return true if access to internet is available
 	 */
+	@SuppressWarnings("deprecation")
 	static public boolean isInternetOn(Context context)
 	{
 		if (context != null)

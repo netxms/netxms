@@ -333,6 +333,7 @@ private:
    bool m_acceptTraps;
    bool m_acceptFileUpdates;
    bool m_ipv6Aware;
+   bool m_bulkReconciliationSupported;
    int m_hCurrFile;
    UINT32 m_fileRqId;
    StreamCompressor *m_compressor;
@@ -361,6 +362,7 @@ private:
    void writeThread();
    void processingThread();
    void proxyReadThread();
+   void proxySnmpRequest(NXCPMessage *request);
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
@@ -378,6 +380,7 @@ public:
    virtual void sendRawMessage(NXCP_MESSAGE *msg) { m_sendQueue->put(nx_memdup(msg, ntohl(msg->size))); }
 	virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset);
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout);
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout);
    virtual UINT32 generateRequestId();
 
    virtual UINT64 getServerId() { return m_serverId; }
@@ -393,6 +396,7 @@ public:
 
    bool canAcceptTraps() { return m_acceptTraps; }
    bool canAcceptFileUpdates() { return m_acceptFileUpdates; }
+   bool isBulkReconciliationSupported() { return m_bulkReconciliationSupported; }
 
    virtual bool isMasterServer() { return m_masterServer; }
    virtual bool isControlServer() { return m_controlServer; }
@@ -595,6 +599,7 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg);
 
 bool EnumerateSessions(EnumerationCallbackResult (* callback)(AbstractCommSession *, void* ), void *data);
 AbstractCommSession *FindServerSession(UINT64 serverId);
+AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData);
 
 #ifdef _WIN32
 
@@ -649,6 +654,7 @@ extern UINT32 g_dwRejectedConnections;
 
 extern CommSession **g_pSessionList;
 extern MUTEX g_hSessionListAccess;
+extern ThreadPool *g_snmpProxyThreadPool;
 
 #ifdef _WIN32
 extern TCHAR g_windowsEventSourceName[];

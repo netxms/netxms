@@ -39,6 +39,11 @@ bool GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *valu
 static bool s_dataCollectorStarted = false;
 
 /**
+ * Unsaved poll time indicator
+ */
+static bool s_pollTimeChanged = false;
+
+/**
  * Data collection item
  */
 class DataCollectionItem : public RefCountObject
@@ -71,6 +76,7 @@ public:
    UINT16 getSnmpPort() const { return m_snmpPort; }
    int getSnmpRawValueType() const { return (int)m_snmpRawValueType; }
    UINT32 getPollingInterval() const { return (UINT32)m_pollingInterval; }
+   time_t getLastPollTime() { return m_lastPollTime; }
 
    bool equals(const DataCollectionItem *item) const { return (m_serverId == item->m_serverId) && (m_id == item->m_id); }
 
@@ -159,7 +165,7 @@ DataCollectionItem::~DataCollectionItem()
  */
 void DataCollectionItem::updateAndSave(const DataCollectionItem *item)
 {
-   //if at leas one of fields changed - set all fields and save to DB
+   // if at least one of fields changed - set all fields and save to DB
    if ((m_type != item->m_type) || (m_origin != item->m_origin) || _tcscmp(m_name, item->m_name) ||
        (m_pollingInterval != item->m_pollingInterval) || m_snmpTargetGuid.compare(item->m_snmpTargetGuid) ||
        (m_snmpPort != item->m_snmpPort) || (m_snmpRawValueType != item->m_snmpRawValueType) || (m_lastPollTime < item->m_lastPollTime))
@@ -244,10 +250,7 @@ void DataCollectionItem::deleteFromDatabase()
 void DataCollectionItem::setLastPollTime(time_t time)
 {
    m_lastPollTime = time;
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
-      (UINT64)m_lastPollTime, m_serverId, m_id);
-   DBQuery(GetLocalDatabaseHandle(), query);
+   s_pollTimeChanged = true;
 }
 
 /**
@@ -371,21 +374,18 @@ public:
    time_t getTimestamp() { return m_timestamp; }
    UINT64 getServerId() { return m_serverId; }
    UINT32 getDciId() { return m_dciId; }
+   int getType() { return m_type; }
 
-   void saveToDatabase();
+   void saveToDatabase(DB_STATEMENT hStmt);
    bool sendToServer(bool reconcillation);
+   void fillReconciliationMessage(NXCPMessage *msg, UINT32 baseId);
 };
 
 /**
  * Save data element to database
  */
-void DataElement::saveToDatabase()
+void DataElement::saveToDatabase(DB_STATEMENT hStmt)
 {
-    DB_HANDLE db = GetLocalDatabaseHandle();
-    DB_STATEMENT hStmt= DBPrepare(db, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value) VALUES (?,?,?,?,?,?,?)"));
-    if (hStmt == NULL)
-       return;
-
    DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, m_serverId);
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_dciId);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_type);
@@ -405,7 +405,6 @@ void DataElement::saveToDatabase()
          break;
    }
    DBExecute(hStmt);
-   DBFreeStatement(hStmt);
 }
 
 /**
@@ -453,6 +452,19 @@ bool DataElement::sendToServer(bool reconciliation)
 }
 
 /**
+ * Fill bulk reconciliation message with DCI data
+ */
+void DataElement::fillReconciliationMessage(NXCPMessage *msg, UINT32 baseId)
+{
+   msg->setField(baseId, m_dciId);
+   msg->setField(baseId + 1, (INT16)m_origin);
+   msg->setField(baseId + 2, (INT16)m_type);
+   msg->setField(baseId + 3, m_snmpNode);
+   msg->setFieldFromTime(baseId + 4, m_timestamp);
+   msg->setField(baseId + 5, m_value.item);
+}
+
+/**
  * Server data sync status object
  */
 struct ServerSyncStatus
@@ -472,19 +484,73 @@ static HashMap<UINT64, ServerSyncStatus> s_serverSyncStatus(true);
 static MUTEX s_serverSyncStatusLock = INVALID_MUTEX_HANDLE;
 
 /**
- * Callback to check if reconciliation is needed for session
+ * Database writer queue
  */
-static EnumerationCallbackResult ReconciliationQueryCallback(AbstractCommSession *session, void *arg)
+static Queue s_databaseWriterQueue;
+
+/**
+ * Database writer
+ */
+static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
 {
-   if (session->getServerId() == 0)
-      return _CONTINUE;
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+   DebugPrintf(INVALID_INDEX, 1, _T("Database writer thread started"));
+
+   while(true)
+   {
+      DataElement *e = (DataElement *)s_databaseWriterQueue.getOrBlock();
+      if (e == INVALID_POINTER_VALUE)
+         break;
+
+      DB_STATEMENT hStmt= DBPrepare(hdb, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value) VALUES (?,?,?,?,?,?,?)"));
+      if (hStmt == NULL)
+      {
+         delete e;
+         continue;
+      }
+
+      int count = 0;
+
+      DBBegin(hdb);
+      while((e != NULL) && (e != INVALID_POINTER_VALUE))
+      {
+         e->saveToDatabase(hStmt);
+         delete e;
+
+         count++;
+         if (count > 200)
+            break;
+
+         e = (DataElement *)s_databaseWriterQueue.getOrBlock(500);  // Wait up to 500 ms for next data block
+      }
+      DBCommit(hdb);
+      DBFreeStatement(hStmt);
+      DebugPrintf(INVALID_INDEX, 7, _T("Database writer: %d records inserted"), count);
+   }
+
+   DebugPrintf(INVALID_INDEX, 1, _T("Database writer thread stopped"));
+   return THREAD_OK;
+}
+
+/**
+ * List of all data collection items
+ */
+static ObjectArray<DataCollectionItem> s_items(64, 64, true);
+static MUTEX s_itemLock = INVALID_MUTEX_HANDLE;
+
+/**
+ * Session comparator
+ */
+static bool SessionComparator(AbstractCommSession *session, void *data)
+{
+   if ((session->getServerId() == 0) || !session->canAcceptTraps())
+      return false;
    ServerSyncStatus *s = s_serverSyncStatus.get(session->getServerId());
    if ((s != NULL) && (s->queueSize > 0))
    {
-      *((UINT64 *)arg) = session->getServerId();
-      return _STOP;
+      return true;
    }
-   return _CONTINUE;
+   return false;
 }
 
 /**
@@ -499,14 +565,30 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
    bool vacuumNeeded = false;
    while(!AgentSleepAndCheckForShutdown(sleepTime))
    {
-      UINT64 serverId = 0;
-
       // Check if there is something to sync
       MutexLock(s_serverSyncStatusLock);
-      bool run = EnumerateSessions(ReconciliationQueryCallback, &serverId);
+      CommSession *session = (CommSession *)FindServerSession(SessionComparator, NULL);
       MutexUnlock(s_serverSyncStatusLock);
-      if (!run)
+      if (session == NULL)
       {
+         // Save last poll times when reconciliation thread is idle
+         MutexLock(s_itemLock);
+         if (s_pollTimeChanged)
+         {
+            DBBegin(hdb);
+            TCHAR query[256];
+            for(int i = 0; i < s_items.size(); i++)
+            {
+               DataCollectionItem *dci = s_items.get(i);
+               _sntprintf(query, 256, _T("UPDATE dc_config SET last_poll=") UINT64_FMT _T(" WHERE server_id=") UINT64_FMT _T(" AND dci_id=%d"),
+                          dci->getLastPollTime(), dci->getServerId(), dci->getId());
+               DBQuery(hdb, query);
+            }
+            DBCommit(hdb);
+            s_pollTimeChanged = false;
+         }
+         MutexUnlock(s_itemLock);
+
          if (vacuumNeeded)
          {
             DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: vacuum local database"));
@@ -518,44 +600,115 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       }
 
       TCHAR query[1024];
-      _sntprintf(query, 1024, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue WHERE server_id=") UINT64_FMT _T(" ORDER BY timestamp LIMIT 100"), serverId);
+      _sntprintf(query, 1024, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue WHERE server_id=") UINT64_FMT _T(" ORDER BY timestamp LIMIT %d"), session->getServerId(), BULK_DATA_BLOCK_SIZE);
 
-      DB_RESULT hResult = DBSelect(hdb, query);
+      TCHAR sqlError[DBDRV_MAX_ERROR_TEXT];
+      DB_RESULT hResult = DBSelectEx(hdb, query, sqlError);
       if (hResult == NULL)
       {
+         DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: database query failed: %s"), sqlError);
          sleepTime = 30000;
+         session->decRefCount();
          continue;
       }
 
       int count = DBGetNumRows(hResult);
       if (count > 0)
       {
+         ObjectArray<DataElement> bulkSendList(count, 10, true);
          ObjectArray<DataElement> deleteList(count, 10, true);
          for(int i = 0; i < count; i++)
          {
             DataElement *e = new DataElement(hResult, i);
-            bool sent = false;
-            MutexLock(s_serverSyncStatusLock);
-            ServerSyncStatus *status = s_serverSyncStatus.get(e->getServerId());
-            if (status != NULL)
+            if ((e->getType() == DCO_TYPE_ITEM) && session->isBulkReconciliationSupported())
             {
-               sent = e->sendToServer(true);
+               bulkSendList.add(e);
             }
             else
             {
-               DebugPrintf(INVALID_INDEX, 5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
+               bool sent = false;
+               MutexLock(s_serverSyncStatusLock);
+               ServerSyncStatus *status = s_serverSyncStatus.get(e->getServerId());
+               if (status != NULL)
+               {
+                  sent = e->sendToServer(true);
+               }
+               else
+               {
+                  DebugPrintf(INVALID_INDEX, 5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
+                  sent = true;  // record should be deleted
+               }
+
+               if (sent)
+               {
+                  status->queueSize--;
+                  deleteList.add(e);
+               }
+               else
+               {
+                  delete e;
+               }
+               MutexUnlock(s_serverSyncStatusLock);
+            }
+         }
+
+         if (bulkSendList.size() > 0)
+         {
+            DebugPrintf(INVALID_INDEX, 6, _T("ReconciliationThread: %d records to be sent in bulk mode"), bulkSendList.size());
+
+            NXCPMessage msg;
+            msg.setCode(CMD_DCI_DATA);
+            msg.setId(session->generateRequestId());
+            msg.setField(VID_BULK_RECONCILIATION, (INT16)1);
+            msg.setField(VID_NUM_ELEMENTS, (INT16)bulkSendList.size());
+
+            UINT32 fieldId = VID_ELEMENT_LIST_BASE;
+            for(int i = 0; i < bulkSendList.size(); i++)
+            {
+               bulkSendList.get(i)->fillReconciliationMessage(&msg, fieldId);
+               fieldId += 10;
             }
 
-            if (sent)
+            NXCPMessage *response = session->doRequestEx(&msg, 2000);
+            if (response != NULL)
             {
-               status->queueSize--;
-               deleteList.add(e);
+               UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
+               if (rcc == ERR_SUCCESS)
+               {
+                  MutexLock(s_serverSyncStatusLock);
+                  ServerSyncStatus *serverSyncStatus = s_serverSyncStatus.get(session->getServerId());
+
+                  // Check status for each data element
+                  BYTE status[BULK_DATA_BLOCK_SIZE];
+                  memset(status, 0, BULK_DATA_BLOCK_SIZE);
+                  response->getFieldAsBinary(VID_STATUS, status, BULK_DATA_BLOCK_SIZE);
+                  bulkSendList.setOwner(false);
+                  for(int i = 0; i < bulkSendList.size(); i++)
+                  {
+                     DataElement *e = bulkSendList.get(i);
+                     if (status[i] != BULK_DATA_REC_RETRY)
+                     {
+                        deleteList.add(e);
+                        serverSyncStatus->queueSize--;
+                     }
+                     else
+                     {
+                        delete e;
+                     }
+                  }
+
+                  MutexUnlock(s_serverSyncStatusLock);
+               }
+               else
+               {
+                  DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: bulk send failed (%d)"), rcc);
+               }
+               delete response;
             }
             else
             {
-               delete e;
+               DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: timeout on bulk send"));
             }
-            MutexUnlock(s_serverSyncStatusLock);
          }
 
          if (deleteList.size() > 0)
@@ -575,7 +728,8 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       }
       DBFreeResult(hResult);
 
-      sleepTime = (count == 100) ? 100 : 30000;
+      session->decRefCount();
+      sleepTime = (count > 0) ? 50 : 30000;
    }
 
    DebugPrintf(INVALID_INDEX, 1, _T("Data reconciliation thread stopped"));
@@ -611,14 +765,16 @@ static THREAD_RESULT THREAD_CALL DataSender(void *arg)
       {
          if (!e->sendToServer(false))
          {
-            e->saveToDatabase();
             status->queueSize++;
+            s_databaseWriterQueue.put(e);
+            e = NULL;
          }
       }
       else
       {
-         e->saveToDatabase();
          status->queueSize++;
+         s_databaseWriterQueue.put(e);
+         e = NULL;
       }
       MutexUnlock(s_serverSyncStatusLock);
 
@@ -652,6 +808,7 @@ public:
    virtual void sendRawMessage(NXCP_MESSAGE *pMsg) { }
    virtual bool sendFile(UINT32 requestId, const TCHAR *file, long offset) { return false; }
    virtual UINT32 doRequest(NXCPMessage *msg, UINT32 timeout) { return RCC_NOT_IMPLEMENTED; }
+   virtual NXCPMessage *doRequestEx(NXCPMessage *msg, UINT32 timeout) { return NULL; }
    virtual UINT32 generateRequestId() { return 0; }
    virtual UINT32 openFile(TCHAR *fileName, UINT32 requestId) { return ERR_INTERNAL_ERROR; }
 };
@@ -746,12 +903,6 @@ static void SnmpDataCollectionCallback(void *arg)
 }
 
 /**
- * List of all data collection items
- */
-static ObjectArray<DataCollectionItem> s_items(64, 64, true);
-static MUTEX s_itemLock = INVALID_MUTEX_HANDLE;
-
-/**
  * Data collectors thread pool
  */
 static ThreadPool *s_dataCollectorPool = NULL;
@@ -830,26 +981,35 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       return;
    }
 
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+
    int count = msg->getFieldAsInt32(VID_NUM_NODES);
-   UINT32 fieldId = VID_NODE_INFO_LIST_BASE;
-   for(int i = 0; i < count; i++)
+   if (count > 0)
    {
-      SNMPTarget *target = new SNMPTarget(serverId, msg, fieldId);
-      UpdateSnmpTarget(target);
-      fieldId += 50;
+      DBBegin(hdb);
+      UINT32 fieldId = VID_NODE_INFO_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         SNMPTarget *target = new SNMPTarget(serverId, msg, fieldId);
+         UpdateSnmpTarget(target);
+         fieldId += 50;
+      }
+      DBCommit(hdb);
    }
    DebugPrintf(INVALID_INDEX, 4, _T("%d SNMP targets received from server ") UINT64X_FMT(_T("016")), count, serverId);
 
    ObjectArray<DataCollectionItem> config(32, 32, true);
 
    count = msg->getFieldAsInt32(VID_NUM_ELEMENTS);
-   fieldId = VID_ELEMENT_LIST_BASE;
+   UINT32 fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < count; i++)
    {
       config.add(new DataCollectionItem(serverId, msg, fieldId));
       fieldId += 10;
    }
    DebugPrintf(INVALID_INDEX, 4, _T("%d data collection elements received from server ") UINT64X_FMT(_T("016")), count, serverId);
+
+   bool txnOpen = false;
 
    MutexLock(s_itemLock);
 
@@ -870,6 +1030,11 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       {
          DataCollectionItem *newItem = new DataCollectionItem(item);
          s_items.add(newItem);
+         if (!txnOpen)
+         {
+            DBBegin(hdb);
+            txnOpen = true;
+         }
          newItem->saveToDatabase(true);
       }
    }
@@ -891,13 +1056,24 @@ void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg)
       }
       if (!exist)
       {
+         if (!txnOpen)
+         {
+            DBBegin(hdb);
+            txnOpen = true;
+         }
          item->deleteFromDatabase();
          s_items.unlink(i);
          item->decRefCount();
          i--;
       }
    }
+
+   if (txnOpen)
+      DBCommit(hdb);
+
    MutexUnlock(s_itemLock);
+
+   DebugPrintf(INVALID_INDEX, 4, _T("Data collection for server ") UINT64X_FMT(_T("016")) _T(" reconfigured"), serverId);
 }
 
 /**
@@ -992,6 +1168,7 @@ static const TCHAR *s_upgradeQueries[] =
  */
 static THREAD s_dataCollectionSchedulerThread = INVALID_THREAD_HANDLE;
 static THREAD s_dataSenderThread = INVALID_THREAD_HANDLE;
+static THREAD s_databaseWriterThread = INVALID_THREAD_HANDLE;
 static THREAD s_reconciliationThread = INVALID_THREAD_HANDLE;
 
 /**
@@ -1025,6 +1202,7 @@ void StartLocalDataCollector()
 
    s_dataCollectionSchedulerThread = ThreadCreateEx(DataCollectionScheduler, 0, NULL);
    s_dataSenderThread = ThreadCreateEx(DataSender, 0, NULL);
+   s_databaseWriterThread = ThreadCreateEx(DatabaseWriter, 0, NULL);
    s_reconciliationThread = ThreadCreateEx(ReconciliationThread, 0, NULL);
 
    s_dataCollectorStarted = true;
@@ -1047,6 +1225,10 @@ void ShutdownLocalDataCollector()
    DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data sender thread termination"));
    s_dataSenderQueue.put(INVALID_POINTER_VALUE);
    ThreadJoin(s_dataSenderThread);
+
+   DebugPrintf(INVALID_INDEX, 5, _T("Waiting for database writer thread termination"));
+   s_databaseWriterQueue.put(INVALID_POINTER_VALUE);
+   ThreadJoin(s_databaseWriterThread);
 
    DebugPrintf(INVALID_INDEX, 5, _T("Waiting for data reconciliation thread termination"));
    ThreadJoin(s_reconciliationThread);
@@ -1071,4 +1253,24 @@ void ClearDataCollectionConfiguration()
    MutexLock(s_serverSyncStatusLock);
    s_serverSyncStatus.clear();
    MutexUnlock(s_serverSyncStatusLock);
+}
+
+/**
+ * Handler for data collector queue size
+ */
+LONG H_DataCollectorQueueSize(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   if (!s_dataCollectorStarted)
+      return SYSINFO_RC_UNSUPPORTED;
+
+   UINT32 count = 0;
+   MutexLock(s_serverSyncStatusLock);
+   Iterator<ServerSyncStatus> *it = s_serverSyncStatus.iterator();
+   while(it->hasNext())
+      count += (UINT32)it->next()->queueSize;
+   delete it;
+   MutexUnlock(s_serverSyncStatusLock);
+
+   ret_uint(value, count);
+   return SYSINFO_RC_SUCCESS;
 }

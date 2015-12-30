@@ -33,6 +33,7 @@ public class Event
 	private final int code;
 	private final Date timeStamp;
 	private final long sourceId;
+	private final long dciId;
 	private final int severity;
 	private final String message;
 	private final String userTag;
@@ -61,6 +62,7 @@ public class Event
 		{
 			parameters[i] = msg.getFieldAsString(varId++);
 		}
+		dciId = msg.getFieldAsInt64(varId++);
 	}
 
 	/**
@@ -96,6 +98,14 @@ public class Event
 	}
 
 	/**
+    * @return the dciId
+    */
+   public long getDciId()
+   {
+      return dciId;
+   }
+
+   /**
 	 * @return the severity
 	 */
 	public int getSeverity()

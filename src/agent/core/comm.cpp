@@ -60,6 +60,15 @@ void InitSessionList()
 }
 
 /**
+ * Destroy session list
+ */
+void DestroySessionList()
+{
+   MutexDestroy(g_hSessionListAccess);
+   free(g_pSessionList);
+}
+
+/**
  * Validates server's address
  */
 static bool IsValidServerAddress(const InetAddress &addr, bool *pbMasterServer, bool *pbControlServer)
@@ -144,6 +153,26 @@ AbstractCommSession *FindServerSession(UINT64 serverId)
    for(UINT32 i = 0; i < g_dwMaxSessions; i++)
    {
       if ((g_pSessionList[i] != NULL) && (g_pSessionList[i]->getServerId() == serverId) && g_pSessionList[i]->canAcceptTraps())
+      {
+         session = g_pSessionList[i];
+         session->incRefCount();
+         break;
+      }
+   }
+   MutexUnlock(g_hSessionListAccess);
+   return session;
+}
+
+/**
+ * Find server session using comparator callback. Caller must call decRefCount() for session object when finished.
+ */
+AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *, void *), void *userData)
+{
+   AbstractCommSession *session = NULL;
+   MutexLock(g_hSessionListAccess);
+   for(UINT32 i = 0; i < g_dwMaxSessions; i++)
+   {
+      if ((g_pSessionList[i] != NULL) && (comparator(g_pSessionList[i], userData)))
       {
          session = g_pSessionList[i];
          session->incRefCount();
@@ -425,9 +454,10 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
    MutexUnlock(m_mutexWatchdogActive);
    MutexDestroy(m_mutexWatchdogActive);
 
-   MutexDestroy(g_hSessionListAccess);
-   free(g_pSessionList);
    closesocket(hSocket);
+#ifdef WITH_IPV6
+   closesocket(hSocket6);
+#endif
    DebugPrintf(INVALID_INDEX, 1, _T("Listener thread terminated"));
    return THREAD_OK;
 }

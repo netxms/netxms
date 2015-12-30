@@ -393,6 +393,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\addrlist.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\admin.cpp"
 				>
 			</File>
@@ -874,6 +878,10 @@
 			</File>
 			<File
 				RelativePath=".\xmpp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\zeromq.cpp"
 				>
 			</File>
 			<File

@@ -162,8 +162,10 @@ static BOOL DropPrimaryKey(const TCHAR *table)
 
 	switch(g_dbSyntax)
 	{
-		case DB_SYNTAX_ORACLE:
+		case DB_SYNTAX_DB2:
+		case DB_SYNTAX_INFORMIX:
 		case DB_SYNTAX_MYSQL:
+		case DB_SYNTAX_ORACLE:
 			_sntprintf(query, 1024, _T("ALTER TABLE %s DROP PRIMARY KEY"), table);
 			success = SQLQuery(query);
 			break;
@@ -192,6 +194,12 @@ static BOOL DropPrimaryKey(const TCHAR *table)
 			success = FALSE;
 			break;
 	}
+
+   if ((g_dbSyntax == DB_SYNTAX_DB2) && success)
+   {
+      _sntprintf(query, 1024, _T("CALL Sysproc.admin_cmd('REORG TABLE %s')"), table);
+      success = SQLQuery(query);
+   }
 	return success;
 }
 
@@ -604,6 +612,254 @@ static bool CreateLibraryScript(UINT32 id, const TCHAR *name, const TCHAR *code)
 }
 
 /**
+ * Check if an event pair is handled by any EPP rules
+ */
+static bool IsEventPairInUse(UINT32 code1, UINT32 code2)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("SELECT count(*) FROM policy_event_list WHERE event_code=%d OR event_code=%d"), code1, code2);
+   DB_RESULT hResult = SQLSelect(query);
+   if (hResult == NULL)
+      return false;
+   bool inUse = (DBGetFieldLong(hResult, 0, 0) > 0);
+   DBFreeResult(hResult);
+   return inUse;
+}
+
+/**
+ * Return the next free EPP rule ID
+ */
+static int NextFreeEPPruleID()
+{
+   int ruleId = 1;
+	DB_RESULT hResult = SQLSelect(_T("SELECT max(rule_id) FROM event_policy"));
+	if (hResult != NULL)
+	{
+	   ruleId = DBGetFieldLong(hResult, 0, 0) + 1;
+		DBFreeResult(hResult);
+	}
+	return ruleId;
+}
+
+/*
+ * Upgrade from V391 to V392
+ */
+static BOOL H_UpgradeFromV391(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("ImportConfigurationOnStartup"), _T("0"), _T("Import configuration from local files on server startup"), 'B', true, true, false, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='392' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/*
+ * Upgrade from V390 to V391
+ */
+static BOOL H_UpgradeFromV390(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE zmq_subscription (")
+      _T("   object_id integer not null,")
+      _T("   subscription_type char(1) not null,")
+      _T("   ignore_items integer not null,")
+      _T("   items $SQL:TEXT,")
+      _T("   PRIMARY KEY(object_id, subscription_type))")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='391' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V389 to V390
+ */
+static BOOL H_UpgradeFromV389(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE object_containers (")
+      _T("   id integer not null,")
+      _T("   object_class integer not null,")
+      _T("   flags integer not null,")
+      _T("   auto_bind_filter $SQL:TEXT null,")
+      _T("   PRIMARY KEY(id))")));
+
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,object_class,flags,auto_bind_filter FROM containers"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      if (count > 0)
+      {
+         DB_STATEMENT hStmt = DBPrepare(g_hCoreDB, _T("INSERT INTO object_containers (id,object_class,flags,auto_bind_filter) VALUES (?,?,?,?)"));
+         if (hStmt != NULL)
+         {
+            for(int i = 0; i < count; i++)
+            {
+               DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 0));
+               DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, DBGetFieldLong(hResult, i, 1));
+               DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, DBGetFieldULong(hResult, i, 2));
+               DBBind(hStmt, 4, DB_SQLTYPE_TEXT, DBGetField(hResult, i, 3, NULL, 0), DB_BIND_DYNAMIC);
+               if (!SQLExecute(hStmt))
+               {
+                  if (!g_bIgnoreErrors)
+                  {
+                     DBFreeStatement(hStmt);
+                     DBFreeResult(hResult);
+                     return FALSE;
+                  }
+               }
+            }
+            DBFreeStatement(hStmt);
+         }
+         else if (!g_bIgnoreErrors)
+         {
+            DBFreeResult(hResult);
+            return FALSE;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+
+   CHK_EXEC(SQLQuery(_T("DROP TABLE containers")));
+   CHK_EXEC(SQLQuery(_T("DROP TABLE container_categories")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='390' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V388 to V389
+ */
+static BOOL H_UpgradeFromV388(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE racks ADD top_bottom_num char(1)\n")
+      _T("UPDATE racks SET top_bottom_num='0'\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='389' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V387 to V388
+ */
+static BOOL H_UpgradeFromV387(int currVersion, int newVersion)
+{
+   static TCHAR batch[] =
+      _T("ALTER TABLE alarms ADD dci_id integer\n")
+      _T("UPDATE alarms SET dci_id=0\n")
+      _T("ALTER TABLE event_log ADD dci_id integer\n")
+      _T("UPDATE event_log SET dci_id=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='388' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V386 to V387
+ */
+static BOOL H_UpgradeFromV386(int currVersion, int newVersion)
+{
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,flags,filter FROM network_maps WHERE filter IS NOT NULL"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         TCHAR *filter = DBGetField(hResult, i, 2, NULL, 0);
+         if ((filter != NULL) && (filter[0] != 0))
+         {
+            TCHAR query[256];
+            _sntprintf(query, 256, _T("UPDATE network_maps SET flags=%d WHERE id=%d"),
+               DBGetFieldULong(hResult, i, 1) | MF_FILTER_OBJECTS, DBGetFieldULong(hResult, i, 0));
+            CHK_EXEC(SQLQuery(query));
+         }
+         free(filter);
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return FALSE;
+   }
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='387' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V385 to V386
+ */
+static BOOL H_UpgradeFromV385(int currVersion, int newVersion)
+{
+   TCHAR query[1024];
+   int ruleId = NextFreeEPPruleID();
+
+   if (!IsEventPairInUse(EVENT_THREAD_HANGS, EVENT_THREAD_RUNNING))
+   {
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'ea1dee96-b42e-499c-a992-0b0f9e4874b9',7944,'Generate an alarm when one of the system threads hangs or stops unexpectedly','%%m',5,'SYS_THREAD_HANG_%%1','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_THREAD_HANGS);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'f0c5a6b2-7427-45e5-8333-7d60d2b408e6',7944,'Terminate the alarm when one of the system threads which previously hanged or stopped unexpectedly returned to the running state','%%m',6,'SYS_THREAD_HANG_%%1','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_THREAD_RUNNING);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+   }
+
+   if (!IsEventPairInUse(EVENT_MAINTENANCE_MODE_ENTERED, EVENT_MAINTENANCE_MODE_LEFT))
+   {
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'ed3397a8-a496-4534-839b-5a6fc77c167c',7944,'Generate an alarm when the object enters the maintenance mode','%%m',5,'MAINTENANCE_MODE_%%i','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_MAINTENANCE_MODE_ENTERED);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'20a0f4a5-d90e-4961-ba88-a65b9ee45d07',7944,'Terminate the alarm when the object leaves the maintenance mode','%%m',6,'MAINTENANCE_MODE_%%i','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_MAINTENANCE_MODE_LEFT);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+   }
+
+   if (!IsEventPairInUse(EVENT_AGENT_FAIL, EVENT_AGENT_OK))
+   {
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'c6f66840-4758-420f-a27d-7bbf7b66a511',7944,'Generate an alarm if the NetXMS agent on the node stops responding','%%m',5,'AGENT_UNREACHABLE_%%i','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_AGENT_FAIL);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'9fa60260-c2ec-4371-b4e4-f5346b1d8400',7944,'Terminate the alarm if the NetXMS agent on the node start responding again','%%m',6,'AGENT_UNREACHABLE_%%i','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_AGENT_OK);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+   }
+
+   if (!IsEventPairInUse(EVENT_SNMP_FAIL, EVENT_SNMP_OK))
+   {
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'20ef861f-b8e4-4e04-898e-e57d13863661',7944,'Generate an alarm if the SNMP agent on the node stops responding','%%m',5,'SNMP_UNREACHABLE_%%i','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_SNMP_FAIL);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+      _sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'33f6193a-e103-4f5f-8bee-870bbcc08066',7944,'Terminate the alarm if the SNMP agent on the node start responding again','%%m',6,'SNMP_UNREACHABLE_%%i','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+      CHK_EXEC(SQLQuery(query));
+      _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_SNMP_OK);
+      CHK_EXEC(SQLQuery(query));
+      ruleId++;
+   }
+
+   CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET severity='3' WHERE event_code=14 OR event_code=15")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='386' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V384 to V385
  */
 static BOOL H_UpgradeFromV384(int currVersion, int newVersion)
@@ -614,7 +870,7 @@ static BOOL H_UpgradeFromV384(int currVersion, int newVersion)
 }
 
 /**
- * Upgrade from V373 to V374
+ * Upgrade from V383 to V384
  */
 static BOOL H_UpgradeFromV383(int currVersion, int newVersion)
 {
@@ -643,11 +899,12 @@ static BOOL H_UpgradeFromV382(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV381(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateLibraryScript(11, _T("Hook::StatusPoll"), _T("")));
-   CHK_EXEC(CreateLibraryScript(12, _T("Hook::ConfigurationPoll"), _T("")));
-   CHK_EXEC(CreateLibraryScript(13, _T("Hook::InstancePoll"), _T("")));
-   CHK_EXEC(CreateLibraryScript(14, _T("Hook::TopologyPoll"), _T("")));
-   CHK_EXEC(CreateLibraryScript(15, _T("Hook::CreateInterface"), _T("return true;\r\n")));
+   CHK_EXEC(CreateLibraryScript(11, _T("Hook::StatusPoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
+   CHK_EXEC(CreateLibraryScript(12, _T("Hook::ConfigurationPoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
+   CHK_EXEC(CreateLibraryScript(13, _T("Hook::InstancePoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
+   CHK_EXEC(CreateLibraryScript(14, _T("Hook::TopologyPoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
+   CHK_EXEC(CreateLibraryScript(15, _T("Hook::CreateInterface"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *  $1 - current interface, object of 'Interface' type\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether interface should be created\r\n */\r\nreturn true;\r\n")));
+   CHK_EXEC(CreateLibraryScript(16, _T("Hook::AcceptNewNode"), _T("/* Available global variables:\r\n *  $ipAddr - IP address of the node being processed\r\n *  $ipNetMask - netmask of the node being processed\r\n *  $macAddr - MAC address of the node being processed\r\n *  $zoneId - zone ID of the node being processed\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether node should be created\r\n */\r\nreturn true;\r\n")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='382' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -1316,18 +1573,18 @@ static BOOL H_UpgradeFromV345(int currVersion, int newVersion)
    CHK_EXEC(ConvertNetMasks(_T("interfaces"), _T("ip_netmask"), _T("id")));
    CHK_EXEC(ConvertNetMasks(_T("vpn_connector_networks"), _T("ip_netmask"), _T("vpn_id"), _T("ip_addr")));
 
-   DB_RESULT hResult = SQLSelect(_T("SELECT community_id,addr_type,addr1,addr2 FROM address_lists WHERE list_type=0"));
+   DB_RESULT hResult = SQLSelect(_T("SELECT community_id,list_type,addr1,addr2 FROM address_lists WHERE addr_type=0"));
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
       if (count > 0)
       {
-         CHK_EXEC(SQLQuery(_T("DELETE FROM address_lists WHERE list_type=0")));
+         CHK_EXEC(SQLQuery(_T("DELETE FROM address_lists WHERE addr_type=0")));
 
          for(int i = 0; i < count; i++)
          {
             TCHAR query[256], addr[64];
-            _sntprintf(query, 256, _T("INSERT INTO address_lists (list_type,community_id,addr_type,addr1,addr2) VALUES (0,%d,%d,'%s','%d')"),
+            _sntprintf(query, 256, _T("INSERT INTO address_lists (addr_type,community_id,list_type,addr1,addr2) VALUES (0,%d,%d,'%s','%d')"),
                DBGetFieldLong(hResult, i, 0), DBGetFieldLong(hResult, i, 1), DBGetField(hResult, i, 2, addr, 64),
                BitsInMask(DBGetFieldIPAddr(hResult, i, 3)));
             CHK_EXEC(SQLQuery(query));
@@ -1637,6 +1894,11 @@ static BOOL H_UpgradeFromV325(int currVersion, int newVersion)
       _T("ALTER TABLE network_map_links DROP COLUMN bend_points\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
+
+   if (g_dbSyntax == DB_SYNTAX_DB2)
+   {
+      CHK_EXEC(SQLQuery(_T("CALL Sysproc.admin_cmd('REORG TABLE network_map_links')")));
+   }
 
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='326' WHERE var_name='SchemaVersion'")));
    return TRUE;
@@ -5756,11 +6018,9 @@ static BOOL H_UpgradeFromV75(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V74 to V75
-//
-
+/**
+ * Upgrade from V74 to V75
+ */
 static BOOL H_UpgradeFromV74(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
@@ -5794,11 +6054,9 @@ static BOOL H_UpgradeFromV74(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V73 to V74
-//
-
+/**
+ * Upgrade from V73 to V74
+ */
 static BOOL H_UpgradeFromV73(int currVersion, int newVersion)
 {
    static TCHAR m_szBatch[] =
@@ -5985,11 +6243,9 @@ static BOOL H_UpgradeFromV69(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V68 to V69
-//
-
+/**
+ * Upgrade from V68 to V69
+ */
 static BOOL H_UpgradeFromV68(int currVersion, int newVersion)
 {
 	if (!CreateTable(_T("CREATE TABLE audit_log (")
@@ -9186,6 +9442,13 @@ static struct
    { 382, 383, H_UpgradeFromV382 },
    { 383, 384, H_UpgradeFromV383 },
    { 384, 385, H_UpgradeFromV384 },
+   { 385, 386, H_UpgradeFromV385 },
+   { 386, 387, H_UpgradeFromV386 },
+   { 387, 388, H_UpgradeFromV387 },
+   { 388, 389, H_UpgradeFromV388 },
+   { 389, 390, H_UpgradeFromV389 },
+   { 390, 391, H_UpgradeFromV390 },
+   { 391, 392, H_UpgradeFromV391 },
    { 0, 0, NULL }
 };
 

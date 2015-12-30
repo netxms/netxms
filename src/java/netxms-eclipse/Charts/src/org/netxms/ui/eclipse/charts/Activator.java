@@ -36,7 +36,7 @@ public class Activator extends AbstractUIPlugin
 	// The plug-in ID
 	public static final String PLUGIN_ID = "org.netxms.ui.eclipse.charts"; //$NON-NLS-1$
 
-	private static final String[] CHART_FONTS = { "Segoe UI", "DejaVu Sans", "Lucida Sans", "Arial", "Helvetica" };
+	private static final String[] CHART_FONTS = { "Segoe UI", "DejaVu Sans", "Lucida Sans", "Arial", "Helvetica" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 	
 	// The shared instance
 	private static Activator plugin;

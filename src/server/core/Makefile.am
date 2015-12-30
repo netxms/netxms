@@ -1,8 +1,8 @@
 # vim:ts=3:sw=3
 
 lib_LTLIBRARIES = libnxcore.la
-libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
-			agent.cpp agent_policy.cpp alarm.cpp audit.cpp \
+libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
+			admin.cpp agent.cpp agent_policy.cpp alarm.cpp audit.cpp \
 			ap_config.cpp ap_jobs.cpp beacon.cpp bizservice.cpp \
 			bizsvcroot.cpp bridge.cpp cas_validator.cpp cdp.cpp \
 			cert.cpp client.cpp cluster.cpp columnfilter.cpp \
@@ -31,9 +31,9 @@ libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp admin.cpp \
 			template.cpp tools.cpp tracert.cpp \
 			uniroot.cpp upload_job.cpp uptimecalc.cpp userdb.cpp \
 			userdb_objects.cpp vpnconn.cpp vrrp.cpp watchdog.cpp \
-			winperf.cpp xmpp.cpp zone.cpp
-libnxcore_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
-libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) 
+			winperf.cpp xmpp.cpp zeromq.cpp zone.cpp
+libnxcore_la_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include @ZEROMQ_CPPFLAGS@
+libnxcore_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION) @ZEROMQ_LDFLAGS@
 libnxcore_la_LIBADD = \
 	../libnxsrv/libnxsrv.la \
 	../../snmp/libnxsnmp/libnxsnmp.la \
@@ -52,6 +52,14 @@ libnxcore_la_LIBADD += @top_srcdir@/src/libexpat/libexpat/libnxexpat.la
 endif
 if USE_INTERNAL_LIBTRE
 libnxcore_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
+endif
+
+if ZEROMQ_SUPPORT
+if USE_INTERNAL_JANSSON
+libnxcore_la_LIBADD += @top_srcdir@/src/jansson/libnxjansson.la
+else
+libnxcore_la_LIBADD += -ljansson
+endif
 endif
 
 EXTRA_DIST = \

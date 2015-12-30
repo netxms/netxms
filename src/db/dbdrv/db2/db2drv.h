@@ -1,6 +1,6 @@
 /* 
 ** DB2 Database Driver
-** Copyright (C) 2010 Raden Solutions
+** Copyright (C) 2010-2015 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,7 +67,6 @@ typedef struct
    MUTEX mutexQuery;
    SQLHENV sqlEnv;
    SQLHDBC sqlConn;
-   SQLHSTMT sqlStatement;
 } DB2DRV_CONN;
 
 /**
@@ -85,9 +84,9 @@ typedef struct
  */
 typedef struct
 {
-   long iNumRows;
-   long iNumCols;
-   NETXMS_WCHAR **pValues;
+   long numRows;
+   long numColumns;
+   NETXMS_WCHAR **values;
 	char **columnNames;
 } DB2DRV_QUERY_RESULT;
 
@@ -96,11 +95,12 @@ typedef struct
  */
 typedef struct
 {
-   long iNumCols;
+   SQLHSTMT sqlStatement;
+   bool isPrepared;
+   long numColumns;
    DB2DRV_CONN *pConn;
    bool noMoreRows;
 	char **columnNames;
-} DB2DRV_ASYNC_QUERY_RESULT;
-
+} DB2DRV_UNBUFFERED_QUERY_RESULT;
 
 #endif   /* _db2drv_h_ */

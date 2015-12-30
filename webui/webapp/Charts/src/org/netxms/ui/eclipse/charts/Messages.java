@@ -25,9 +25,16 @@ public class Messages extends NLS
 	public String ChartColors_8th;
 	public String ChartColors_9th;
 	public String ChartColors_Background;
-	public String ChartColors_GridX;
+	public String ChartColors_DialCurrValueBkgndColor;
+   public String ChartColors_DialCurrValueTextColor;
+   public String ChartColors_DialNeedleColor;
+   public String ChartColors_DialNeedlePinColor;
+   public String ChartColors_DialScaleColor;
+   public String ChartColors_DialScaleTextColor;
+   public String ChartColors_GridX;
 	public String ChartColors_GridY;
-	public String ChartColors_LineColors;
+	public String ChartColors_LegendTextColor;
+   public String ChartColors_LineColors;
 	public String ChartColors_PlotArea;
 	public String ChartColors_TickX;
 	public String ChartColors_TickY;

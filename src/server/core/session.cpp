@@ -33,6 +33,10 @@
 #include <dirent.h>
 #endif
 
+#ifdef WITH_ZMQ
+#include "zeromq.h"
+#endif
+
 #ifndef min
 #define min(a,b) ((a) < (b) ? (a) : (b))
 #endif
@@ -67,6 +71,7 @@ void UnregisterClientSession(int id);
 void ResetDiscoveryPoller();
 NXCPMessage *ForwardMessageToReportingServer(NXCPMessage *request, ClientSession *session);
 void RemovePendingFileTransferRequests(ClientSession *session);
+bool UpdateAddressListFromMessage(NXCPMessage *msg);
 
 /**
  * Node poller start data
@@ -947,9 +952,6 @@ void ClientSession::processingThread()
          case CMD_LOAD_ACTIONS:
             sendAllActions(pMsg->getId());
             break;
-         case CMD_GET_CONTAINER_CAT_LIST:
-            SendContainerCategories(pMsg->getId());
-            break;
          case CMD_DELETE_OBJECT:
             deleteObject(pMsg);
             break;
@@ -1415,6 +1417,26 @@ void ClientSession::processingThread()
             break;
          case CMD_REMOVE_SCHEDULE:
             removeScheduledTask(pMsg);
+#ifdef WITH_ZMQ
+         case CMD_ZMQ_SUBSCRIBE_EVENT:
+            zmqManageSubscription(pMsg, zmq::EVENT, true);
+            break;
+         case CMD_ZMQ_UNSUBSCRIBE_EVENT:
+            zmqManageSubscription(pMsg, zmq::EVENT, false);
+            break;
+         case CMD_ZMQ_SUBSCRIBE_DATA:
+            zmqManageSubscription(pMsg, zmq::DATA, true);
+            break;
+         case CMD_ZMQ_UNSUBSCRIBE_DATA:
+            zmqManageSubscription(pMsg, zmq::DATA, false);
+            break;
+         case CMD_ZMQ_LIST_EVENT_SUBSCRIPTIONS:
+            zmqListSubscriptions(pMsg, zmq::EVENT);
+            break;
+         case CMD_ZMQ_LIST_DATA_SUBSCRIPTIONS:
+            zmqListSubscriptions(pMsg, zmq::DATA);
+            break;
+#endif
          default:
             if ((m_wCurrentCmd >> 8) == 0x11)
             {
@@ -5415,7 +5437,7 @@ void ClientSession::onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm)
 
    if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_ALARMS))
    {
-      object = FindObjectById(pAlarm->dwSourceObject);
+      object = FindObjectById(pAlarm->sourceObject);
       if (object != NULL)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
          {
@@ -6100,35 +6122,6 @@ void ClientSession::sendAllActions(UINT32 dwRqId)
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
       sendMessage(&msg);
    }
-}
-
-
-//
-// Send list of configured container categories to client
-//
-
-void ClientSession::SendContainerCategories(UINT32 dwRqId)
-{
-   NXCPMessage msg;
-   UINT32 i;
-
-   // Prepare response message
-   msg.setCode(CMD_CONTAINER_CAT_DATA);
-   msg.setId(dwRqId);
-
-   for(i = 0; i < g_dwNumCategories; i++)
-   {
-      msg.setField(VID_CATEGORY_ID, g_pContainerCatList[i].dwCatId);
-      msg.setField(VID_CATEGORY_NAME, g_pContainerCatList[i].szName);
-      //msg.setField(VID_IMAGE_ID, g_pContainerCatList[i].dwImageId);
-      msg.setField(VID_DESCRIPTION, g_pContainerCatList[i].pszDescription);
-      sendMessage(&msg);
-      msg.deleteAllFields();
-   }
-
-   // Send end-of-list indicator
-   msg.setField(VID_CATEGORY_ID, (UINT32)0);
-   sendMessage(&msg);
 }
 
 /**
@@ -9553,31 +9546,29 @@ void ClientSession::pushDCIData(NXCPMessage *pRequest)
 /**
  * Get address list
  */
-void ClientSession::getAddrList(NXCPMessage *pRequest)
+void ClientSession::getAddrList(NXCPMessage *request)
 {
    NXCPMessage msg;
-   TCHAR szQuery[256];
-   UINT32 i, dwNumRec, dwId;
-   DB_RESULT hResult;
-
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
    if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
       DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=%d"),
-                pRequest->getFieldAsUInt32(VID_ADDR_LIST_TYPE));
-      hResult = DBSelect(hdb, szQuery);
+
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("SELECT addr_type,addr1,addr2 FROM address_lists WHERE list_type=%d"), request->getFieldAsInt32(VID_ADDR_LIST_TYPE));
+      DB_RESULT hResult = DBSelect(hdb, query);
       if (hResult != NULL)
       {
-         dwNumRec = DBGetNumRows(hResult);
-         msg.setField(VID_NUM_RECORDS, dwNumRec);
-         for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwNumRec; i++, dwId += 7)
+         int count = DBGetNumRows(hResult);
+         msg.setField(VID_NUM_RECORDS, (INT32)count);
+
+         UINT32 fieldId = VID_ADDR_LIST_BASE;
+         for(int i = 0; i < count; i++)
          {
-            msg.setField(dwId++, DBGetFieldULong(hResult, i, 0));
-            msg.setField(dwId++, DBGetFieldIPAddr(hResult, i, 1));
-            msg.setField(dwId++, DBGetFieldIPAddr(hResult, i, 2));
+            InetAddressListElement(hResult, i).fillMessage(&msg, fieldId);
+            fieldId += 10;
          }
          DBFreeResult(hResult);
          msg.setField(VID_RCC, RCC_SUCCESS);
@@ -9599,55 +9590,29 @@ void ClientSession::getAddrList(NXCPMessage *pRequest)
 /**
  * Set address list
  */
-void ClientSession::setAddrList(NXCPMessage *pRequest)
+void ClientSession::setAddrList(NXCPMessage *request)
 {
    NXCPMessage msg;
-   UINT32 i, dwId, dwNumRec, dwListType;
-   TCHAR szQuery[256], szIpAddr1[24], szIpAddr2[24];
-
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
+   int listType = request->getFieldAsInt32(VID_ADDR_LIST_TYPE);
    if (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG)
    {
-      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-      dwListType = pRequest->getFieldAsUInt32(VID_ADDR_LIST_TYPE);
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM address_lists WHERE list_type=%d"), dwListType);
-      DBBegin(hdb);
-      if (DBQuery(hdb, szQuery))
+      if (UpdateAddressListFromMessage(request))
       {
-         dwNumRec = pRequest->getFieldAsUInt32(VID_NUM_RECORDS);
-         for(i = 0, dwId = VID_ADDR_LIST_BASE; i < dwNumRec; i++, dwId += 10)
-         {
-            _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO address_lists (list_type,addr_type,addr1,addr2,community_id) VALUES (%d,%d,'%s','%s',0)"),
-                      dwListType, pRequest->getFieldAsUInt32(dwId),
-                      IpToStr(pRequest->getFieldAsUInt32(dwId + 1), szIpAddr1),
-                      IpToStr(pRequest->getFieldAsUInt32(dwId + 2), szIpAddr2));
-            if (!DBQuery(hdb, szQuery))
-               break;
-         }
-
-         if (i == dwNumRec)
-         {
-            DBCommit(hdb);
-            msg.setField(VID_RCC, RCC_SUCCESS);
-         }
-         else
-         {
-            DBRollback(hdb);
-            msg.setField(VID_RCC, RCC_DB_FAILURE);
-         }
+         msg.setField(VID_RCC, RCC_SUCCESS);
+         WriteAuditLog(AUDIT_SYSCFG, true, m_dwUserId, m_workstation, m_id, 0, _T("Address list %d modified"), listType);
       }
       else
       {
-         DBRollback(hdb);
          msg.setField(VID_RCC, RCC_DB_FAILURE);
       }
-      DBConnectionPoolReleaseConnection(hdb);
    }
    else
    {
       msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      WriteAuditLog(AUDIT_SYSCFG, false, m_dwUserId, m_workstation, m_id, 0, _T("Access denied on modify address list %d"), listType);
    }
 
    sendMessage(&msg);
@@ -14027,3 +13992,74 @@ void ClientSession::removeScheduledTask(NXCPMessage *request)
    msg.setField(VID_RCC, result);
    sendMessage(&msg);
 }
+
+#ifdef WITH_ZMQ
+/**
+ * Manage subscription for ZMQ forwarder
+ */
+void ClientSession::zmqManageSubscription(NXCPMessage *request, zmq::SubscriptionType type, bool subscribe)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   UINT32 objectId = request->getFieldAsUInt32(VID_OBJECT_ID);
+   NetObj *object = FindObjectById(objectId);
+   if ((object != NULL) && !object->isDeleted())
+   {
+      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
+      {
+         UINT32 dciId = request->getFieldAsUInt32(VID_DCI_ID);
+         UINT32 eventCode = request->getFieldAsUInt32(VID_EVENT_CODE);
+         bool success;
+         switch (type)
+         {
+            case zmq::EVENT:
+               if (subscribe)
+               {
+                  success = ZmqSubscribeEvent(objectId, eventCode, dciId);
+               }
+               else
+               {
+                  success = ZmqUnsubscribeEvent(objectId, eventCode, dciId);
+               }
+               break;
+            case zmq::DATA:
+               if (subscribe)
+               {
+                  success = ZmqSubscribeData(objectId, dciId);
+               }
+               else
+               {
+                  success = ZmqUnsubscribeData(objectId, dciId);
+               }
+               break;
+         }
+         msg.setField(VID_RCC, success ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+   sendMessage(&msg);
+}
+
+void ClientSession::zmqListSubscriptions(NXCPMessage *request, zmq::SubscriptionType type)
+{
+   NXCPMessage msg;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   ZmqFillSubscriptionListMessage(&msg, type);
+
+   msg.setField(VID_RCC, RCC_SUCCESS);
+
+   sendMessage(&msg);
+}
+
+#endif

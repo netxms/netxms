@@ -505,3 +505,43 @@ stop_processing:
 	DbgPrintf(4, _T("ImportConfig() finished, rcc = %d"), rcc);
 	return rcc;
 }
+
+/**
+ * Import local configuration (configuration files stored on server)
+ */
+void ImportLocalConfiguration()
+{
+   TCHAR path[MAX_PATH];
+   GetNetXMSDirectory(nxDirShare, path);
+   _tcscat(path, DDIR_TEMPLATES);
+
+   int count = 0;
+   DbgPrintf(1, _T("Import configuration files from %s"), path);
+   _TDIR *dir = _topendir(path);
+   if (dir != NULL)
+   {
+      _tcscat(path, FS_PATH_SEPARATOR);
+      int insPos = (int)_tcslen(path);
+
+      struct _tdirent *f;
+      while((f = _treaddir(dir)) != NULL)
+      {
+         if (MatchString(_T("*.xml"), f->d_name, FALSE))
+         {
+            _tcscpy(&path[insPos], f->d_name);
+            Config *config = new Config();
+            if (config->loadXmlConfig(path, "configuration"))
+            {
+               ImportConfig(config, CFG_IMPORT_REPLACE_EVENT_BY_CODE | CFG_IMPORT_REPLACE_EVENT_BY_NAME);
+            }
+            else
+            {
+               DbgPrintf(1, _T("Error loading configuration from %s"), path);
+            }
+            delete config;
+         }
+      }
+      _tclosedir(dir);
+   }
+   DbgPrintf(1, _T("%d configuration files processed"), count);
+}

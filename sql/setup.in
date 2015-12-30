@@ -81,6 +81,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('HousekeeperStartTime','02:00',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('IcmpPingSize','46',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('IcmpPingTimeout','1500',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('ImportConfigurationOnStartup','1',1,1,'B','Import configuration from local files on server startup');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('InstancePollingInterval','600',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('InternalCA','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('IntruderLockoutThreshold','0',1,0);
@@ -234,15 +235,3 @@ INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_N
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_NODE_ADDED);
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_SUBNET_ADDED);
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_INTERFACE_ADDED);
-
-
-/*
-** Default container categories
-*/
-
-INSERT INTO container_categories (category,name,image_id,description)
-   VALUES (1,'Group',0,'Generic object group');
-INSERT INTO container_categories (category,name,image_id,description)
-   VALUES (2,'Location',0,'Geografic location');
-INSERT INTO container_categories (category,name,image_id,description)
-   VALUES (3,'Service',0,'Logical service');

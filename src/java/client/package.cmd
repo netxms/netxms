@@ -4,20 +4,23 @@ del /q /s /f netxms-base\target\*
 del /q /s /f netxms-client\target\*
 del /q /s /f mobile-agent\target\*
 
-cd api-build
+cd netxms-base
+mvn clean install javadoc:jar
+cd ..
 
-call mvn -N versions:update-child-modules
-call mvn clean
-call mvn -Dmaven.test.skip=true -N install %*
-call mvn -Dmaven.test.skip=true install %*
+cd netxms-client
+mvn clean install javadoc:jar
+cd ..
 
-for /f "tokens=2 delims=>< " %%a in ('findstr "<version>" pom.xml') do (
+cd mobile-agent
+mvn -Dmaven.test.skip=true clean install javadoc:jar
+cd ..
+
+for /f "tokens=2 delims=>< " %%a in ('findstr "<version>" netxms-base\pom.xml') do (
   @set version=%%a
   goto :break
 )
 :break
-
-cd ..
 
 copy netxms-base\target\netxms-base-%version%.jar ..\..\..\android\src\console\libs\
 copy netxms-client\target\netxms-client-%version%.jar ..\..\..\android\src\console\libs\

@@ -203,7 +203,11 @@
 #define _tpopen   wpopen
 #define _fgetts   fgetws
 #define _fputts   fputws
+#if HAVE_DECL_PUTWS && HAVE_PUTWS
 #define _putts    putws
+#else
+#define _putts(s) fputws((s), stdout)
+#endif
 #define _puttc    putwc
 #define _tcstol   wcstol
 #define _tcstoul  wcstoul
@@ -227,7 +231,11 @@
 #define _tunlink  wunlink
 #define _trename  wrename
 #define _tremove  wremove
+#if HAVE_WCSFTIME && WORKING_WCSFTIME
 #define _tcsftime wcsftime
+#else
+#define _tcsftime nx_wcsftime
+#endif
 #define _tctime   wctime
 #define _istspace iswspace
 #define _istdigit iswdigit
