@@ -33,4 +33,5 @@ serverinclude_HEADERS = \
 	nxmodule.h \
 	nxsrvapi.h \
 	nddrv.h \
-	pdsdrv.h
+	pdsdrv.h \
+	zeromq.h

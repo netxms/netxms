@@ -64,4 +64,4 @@ endif
 
 EXTRA_DIST = \
 	nxcore.vcproj \
-	nxcore.h radius.h zeromq.h
+	nxcore.h radius.h
