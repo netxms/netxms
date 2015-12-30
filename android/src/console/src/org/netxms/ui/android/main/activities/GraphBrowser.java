@@ -210,7 +210,7 @@ public class GraphBrowser extends AbstractClientActivity
 			{
 				NXCSession session = service.getSession();
 				if (session != null)
-					graphs = session.getPredefinedGraphs();
+					graphs = session.getPredefinedGraphs(false);
 			}
 			catch (NXCException e)
 			{
