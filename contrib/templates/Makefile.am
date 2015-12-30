@@ -12,3 +12,5 @@ templatesdir=$(pkgdatadir)/templates
 
 templates_DATA = \
 	netxms_server.xml
+
+EXTRA_DIST = $(templates_DATA)
