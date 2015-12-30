@@ -70,7 +70,7 @@
          </property>
          <property
                name="startupMessageRect"
-               value="7,308,491,18">
+               value="7,300,490,18">
          </property>
          <property
                name="preferenceCustomization"
@@ -78,7 +78,7 @@
          </property>
          <property
                name="aboutImage"
-               value="icons/launcher/128x128.png">
+               value="icons/about.png">
          </property>
          <property
                name="windowImages"
@@ -86,7 +86,7 @@
          </property>
          <property
                name="startupProgressRect"
-               value="0,328,500,2">
+               value="0,325,500,5">
          </property>
       </product>
    </extension>

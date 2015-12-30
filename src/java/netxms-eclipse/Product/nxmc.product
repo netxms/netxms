@@ -4,7 +4,7 @@
 <product name="%product.name" uid="org.netxms.ui.eclipse.console.product" id="org.netxms.ui.eclipse.console.product" application="org.netxms.ui.eclipse.console.application" version="2.0.0" useFeatures="false" includeLaunchers="true">
 
    <aboutInfo>
-      <image path="/Core/icons/launcher/128x128.png"/>
+      <image path="/Core/icons/about.png"/>
       <text>
          NetXMS Management Console
 
@@ -26,8 +26,8 @@ Copyright (c) 2003-2015 Raden Solutions
 
    <splash
       location="org.netxms.ui.eclipse.console"
-      startupProgressRect="0,328,500,2"
-      startupMessageRect="7,308,491,18"
+      startupProgressRect="0,325,500,5"
+      startupMessageRect="7,300,490,18"
       startupForegroundColor="F18515" />
    <launcher name="nxmc">
       <macosx icon="/Core/icons/launcher/nxmc.icns"/>
