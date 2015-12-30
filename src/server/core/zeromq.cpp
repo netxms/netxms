@@ -204,19 +204,11 @@ static bool SaveSubscriptionInternal(DB_STATEMENT statement, HashMap<UINT32, Sub
       Subscription *sub = it->next();
 
       StringList *itemList = new StringList();
-      /*
-       * TODO: uncomment when Iterator will be fixed or rewrite
-       */
-      /*
-      Iterator<UINT32> *itemIterator = sub->getItems()->iterator();
-      while (itemIterator->hasNext())
+      IntegerArray<UINT32> *items = sub->getItems();
+      for (int i =  0; i < items->size(); i++)
       {
-         itemList->add(*(itemIterator->next()));
+         itemList->add(items->get(i));
       }
-      */
-
-      // TODO: test data, remove
-      // itemlist->add(10); itemlist->add(20); itemlist->add(30); 
 
       DBBind(statement, 1, DB_SQLTYPE_VARCHAR, sub->getObjectId());
       DBBind(statement, 2, DB_SQLTYPE_VARCHAR, type, DB_BIND_STATIC);
