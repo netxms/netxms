@@ -14,17 +14,17 @@ import org.netxms.ui.android.main.activities.helpers.ChartDciConfig;
 import org.netxms.ui.android.main.dashboards.configs.LineChartConfig;
 import org.netxms.ui.android.service.ClientConnectorService;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-import android.util.Log;
-
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GraphView.GraphViewData;
 import com.jjoe64.graphview.GraphView.LegendAlign;
 import com.jjoe64.graphview.GraphViewSeries;
 import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
 import com.jjoe64.graphview.LineGraphView;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.util.Log;
 
 /**
  * Bar chart element
@@ -105,6 +105,7 @@ public class LineChartElement extends AbstractDashboardElement
 				@Override
 				public void run()
 				{
+					graphView.removeAllSeries();
 					for (int i = 0; i < dciData.length && i < Colors.DEFAULT_ITEM_COLORS.length; i++)
 					{
 						DciDataRow[] dciDataRow = dciData[i].getValues();
