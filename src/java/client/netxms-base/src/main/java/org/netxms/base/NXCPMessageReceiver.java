@@ -31,9 +31,11 @@ public class NXCPMessageReceiver
    private int maxBufferSize;
 	private byte[] recvBuffer;
 	private int bufferPos = 0;
-	
+
 	/**
-	 * @param bufferSize Size of receive buffer in bytes
+	 * Constructor
+	 * @param defaultBufferSize default receiving buffer size (in bytes)
+	 * @param maxBufferSize maximum receiving buffer size (in bytes)
 	 */
 	public NXCPMessageReceiver(int defaultBufferSize, int maxBufferSize)
 	{

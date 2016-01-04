@@ -18,12 +18,12 @@
  */
 package org.netxms.base;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import javax.xml.bind.DatatypeConverter;
 
 /**
  * Utility class to encrypt and decrypt passwords in same way as nxcencpasswd do.
@@ -36,9 +36,9 @@ public class EncryptedPassword
    /**
     * Encrypt password for given login.
     * 
-    * @param login
-    * @param password
-    * @return
+    * @param login login name
+    * @param password plain text password
+    * @return password obfuscated wiht ICE algorithm
     * @throws NoSuchAlgorithmException
     * @throws UnsupportedEncodingException
     */
@@ -50,9 +50,9 @@ public class EncryptedPassword
    }
    
    /**
-    * @param login
-    * @param password
-    * @return
+    * @param login login name
+    * @param password ICE-obfuscated password
+    * @return clear-text password
     * @throws NoSuchAlgorithmException
     * @throws IOException
     */
