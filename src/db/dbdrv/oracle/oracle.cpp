@@ -213,8 +213,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 				if (OCISessionBegin(pConn->handleService, pConn->handleError,
 				                    pConn->handleSession, OCI_CRED_RDBMS, OCI_STMT_CACHE) == OCI_SUCCESS)
 				{
-					OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleSession, 0,
-					           OCI_ATTR_SESSION, pConn->handleError);
+					OCIAttrSet(pConn->handleService, OCI_HTYPE_SVCCTX, pConn->handleSession, 0, OCI_ATTR_SESSION, pConn->handleError);
 					pConn->mutexQueryLock = MutexCreate();
 					pConn->nTransLevel = 0;
 					pConn->lastErrorCode = 0;
@@ -235,6 +234,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 				else
 				{
 					GetErrorFromHandle(pConn->handleError, &pConn->lastErrorCode, errorText);
+			      OCIServerDetach(pConn->handleServer, pConn->handleError, OCI_DEFAULT);
 					OCIHandleFree(pConn->handleEnv, OCI_HTYPE_ENV);
 					free(pConn);
 					pConn = NULL;
@@ -269,14 +269,14 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
  */
 extern "C" void EXPORT DrvDisconnect(ORACLE_CONN *pConn)
 {
-	if (pConn != NULL)
-	{
-		OCISessionEnd(pConn->handleService, pConn->handleError, NULL, OCI_DEFAULT);
-		OCIServerDetach(pConn->handleServer, pConn->handleError, OCI_DEFAULT);
-		OCIHandleFree(pConn->handleEnv, OCI_HTYPE_ENV);
-     	MutexDestroy(pConn->mutexQueryLock);
-      free(pConn);
-	}
+	if (pConn == NULL)
+	   return;
+
+   OCISessionEnd(pConn->handleService, pConn->handleError, NULL, OCI_DEFAULT);
+   OCIServerDetach(pConn->handleServer, pConn->handleError, OCI_DEFAULT);
+   OCIHandleFree(pConn->handleEnv, OCI_HTYPE_ENV);
+   MutexDestroy(pConn->mutexQueryLock);
+   free(pConn);
 }
 
 /**
