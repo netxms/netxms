@@ -572,11 +572,11 @@ static NETXMS_WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
             size_t tempSize = sizeof(buffer) * 4;
             WCHAR *temp = (WCHAR *)malloc(tempSize);
             memcpy(temp, buffer, sizeof(buffer));
-            size_t offset = sizeof(buffer) - 1;
+            size_t offset = sizeof(buffer) - sizeof(WCHAR);
             while(true)
             {
                SQLLEN readSize = tempSize - offset;
-               rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[offset], readSize, &dataSize);
+               rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, (char *)temp + offset, readSize, &dataSize);
                if ((rc == SQL_SUCCESS) || (rc == SQL_NO_DATA))
                   break;
                if (dataSize == SQL_NO_TOTAL)
@@ -588,7 +588,7 @@ static NETXMS_WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
                   tempSize += dataSize - readSize;
                }
                temp = (WCHAR *)realloc(temp, tempSize);
-               offset += readSize - 1;
+               offset += readSize - sizeof(WCHAR);
             }
             result = temp;
          }
@@ -622,11 +622,11 @@ static NETXMS_WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
             size_t tempSize = sizeof(buffer) * 4;
             UCS2CHAR *temp = (UCS2CHAR *)malloc(tempSize);
             memcpy(temp, buffer, sizeof(buffer));
-            size_t offset = sizeof(buffer) - 1;
+            size_t offset = sizeof(buffer) - sizeof(UCS2CHAR);
             while(true)
             {
                SQLLEN readSize = tempSize - offset;
-               rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[offset], readSize, &dataSize);
+               rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, (char *)temp + offset, readSize, &dataSize);
                if ((rc == SQL_SUCCESS) || (rc == SQL_NO_DATA))
                   break;
                if (dataSize == SQL_NO_TOTAL)
@@ -638,7 +638,7 @@ static NETXMS_WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
                   tempSize += dataSize - readSize;
                }
                temp = (UCS2CHAR *)realloc(temp, tempSize);
-               offset += readSize - 1;
+               offset += readSize - sizeof(UCS2CHAR);
             }
             int len = ucs2_strlen(temp);
             result = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
