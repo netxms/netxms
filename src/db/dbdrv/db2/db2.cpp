@@ -1,6 +1,6 @@
 /* 
 ** DB2 Database Driver
-** Copyright (C) 2010-2015 Raden Solutinos
+** Copyright (C) 2010-2016 Raden Solutinos
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,11 +23,6 @@
 #include "db2drv.h"
 
 DECLARE_DRIVER_HEADER("DB2")
-
-/**
- * Data buffer size
- */
-#define DATA_BUFFER_SIZE      65536
 
 /**
  * Convert DB2 state to NetXMS database error code and get error text
@@ -516,6 +511,119 @@ extern "C" DWORD EXPORT DrvQuery(DB2DRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, NE
 }
 
 /**
+ * Get complete field data
+ */
+static NETXMS_WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
+{
+   NETXMS_WCHAR *result = NULL;
+   SQLINTEGER dataSize;
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+   WCHAR buffer[256];
+   SQLRETURN rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
+   if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize >= 0) && (dataSize <= (SQLLEN)(sizeof(buffer) - sizeof(WCHAR))))) && (dataSize != SQL_NULL_DATA))
+   {
+      result = wcsdup(buffer);
+   }
+   else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA))
+   {
+      if (dataSize > (SQLLEN)(sizeof(buffer) - sizeof(WCHAR)))
+      {
+         WCHAR *temp = (WCHAR *)malloc(dataSize + sizeof(WCHAR));
+         memcpy(temp, buffer, sizeof(buffer));
+         rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(WCHAR), &dataSize);
+         if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+         {
+            result = temp;
+         }
+         else
+         {
+            free(temp);
+         }
+      }
+      else if (dataSize == SQL_NO_TOTAL)
+      {
+         size_t tempSize = sizeof(buffer) * 4;
+         WCHAR *temp = (WCHAR *)malloc(tempSize);
+         memcpy(temp, buffer, sizeof(buffer));
+         size_t offset = sizeof(buffer) - 1;
+         while(true)
+         {
+            SQLINTEGER readSize = (SQLINTEGER)(tempSize - offset);
+            rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[offset], readSize, &dataSize);
+            if ((rc == SQL_SUCCESS) || (rc == SQL_NO_DATA))
+               break;
+            if (dataSize == SQL_NO_TOTAL)
+            {
+               tempSize += sizeof(buffer) * 4;
+            }
+            else
+            {
+               tempSize += dataSize - readSize;
+            }
+            temp = (WCHAR *)realloc(temp, tempSize);
+            offset += readSize - 1;
+         }
+         result = temp;
+      }
+   }
+#else
+   UCS2CHAR buffer[256];
+   SQLRETURN rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
+   if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize >= 0) && (dataSize <= (SQLLEN)(sizeof(buffer) - sizeof(UCS2CHAR))))) && (dataSize != SQL_NULL_DATA))
+   {
+      int len = ucs2_strlen(buffer);
+      result = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
+      ucs2_to_ucs4(buffer, -1, pResult->values[i], len + 1);
+   }
+   else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA))
+   {
+      if (dataSize > (SQLLEN)(sizeof(buffer) - sizeof(UCS2CHAR)))
+      {
+         UCS2CHAR *temp = (UCS2CHAR *)malloc(dataSize + sizeof(UCS2CHAR));
+         memcpy(temp, buffer, sizeof(buffer));
+         rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(UCS2CHAR), &dataSize);
+         if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+         {
+            int len = ucs2_strlen(temp);
+            result = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
+            ucs2_to_ucs4(temp, -1, result, len + 1);
+         }
+         free(temp);
+      }
+      else if (dataSize == SQL_NO_TOTAL)
+      {
+         size_t tempSize = sizeof(buffer) * 4;
+         UCS2CHAR *temp = (UCS2CHAR *)malloc(tempSize);
+         memcpy(temp, buffer, sizeof(buffer));
+         size_t offset = sizeof(buffer) - 1;
+         while(true)
+         {
+            SQLLEN readSize = tempSize - offset;
+            rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[offset], readSize, &dataSize);
+            if ((rc == SQL_SUCCESS) || (rc == SQL_NO_DATA))
+               break;
+            if (dataSize == SQL_NO_TOTAL)
+            {
+               tempSize += sizeof(buffer) * 4;
+            }
+            else
+            {
+               tempSize += dataSize - readSize;
+            }
+            temp = (UCS2CHAR *)realloc(temp, tempSize);
+            offset += readSize - 1;
+         }
+         int len = ucs2_strlen(temp);
+         result = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
+         ucs2_to_ucs4(temp, -1, result, len + 1);
+         free(temp);
+      }
+   }
+#endif
+   return (result != NULL) ? result : wcsdup(L"");
+}
+
+/**
  * Process results of SELECT query
  */
 static DB2DRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
@@ -527,8 +635,6 @@ static DB2DRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 	pResult->numColumns = wNumCols;
 	pResult->numRows = 0;
 	pResult->values = NULL;
-
-	BYTE *pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
 
 	// Get column names
 	pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
@@ -558,26 +664,10 @@ static DB2DRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT statement)
 		pResult->values = (NETXMS_WCHAR **)realloc(pResult->values, sizeof(NETXMS_WCHAR *) * (pResult->numRows * pResult->numColumns));
 		for(int i = 1; i <= (int)pResult->numColumns; i++)
 		{
-			SQLLEN iDataSize;
-
-			pDataBuffer[0] = 0;
-			iResult = SQLGetData(statement, (short)i, SQL_C_WCHAR, pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
-			if (iDataSize != SQL_NULL_DATA)
-			{
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-				pResult->values[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
-#else
-				pResult->values[iCurrValue++] = UCS4StringFromUCS2String((const UCS2CHAR *)pDataBuffer);
-#endif
-			}
-			else
-			{
-				pResult->values[iCurrValue++] = wcsdup(L"");
-			}
+			pResult->values[iCurrValue++] = GetFieldData(statement, (short)i);
 		}
 	}
 
-	free(pDataBuffer);
 	return pResult;
 }
 

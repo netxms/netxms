@@ -1,6 +1,6 @@
 /* 
 ** MS SQL Database Driver
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,11 +26,6 @@
 #define EXPORT __declspec(dllexport)
 
 DECLARE_DRIVER_HEADER("MSSQL")
-
-/**
- * Constants
- */
-#define DATA_BUFFER_SIZE      65536
 
 /**
  * Selected ODBC driver
@@ -460,6 +455,64 @@ extern "C" DWORD EXPORT DrvQuery(MSSQL_CONN *pConn, WCHAR *pwszQuery, WCHAR *err
 }
 
 /**
+ * Get complete field data
+ */
+static WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
+{
+   WCHAR *result = NULL;
+   SQLLEN dataSize;
+   WCHAR buffer[256];
+   SQLRETURN rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
+   if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize >= 0) && (dataSize <= (SQLLEN)(sizeof(buffer) - sizeof(WCHAR))))) && (dataSize != SQL_NULL_DATA))
+   {
+      result = wcsdup(buffer);
+   }
+   else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA))
+   {
+      if (dataSize > (SQLLEN)(sizeof(buffer) - sizeof(WCHAR)))
+      {
+         WCHAR *temp = (WCHAR *)malloc(dataSize + sizeof(WCHAR));
+         memcpy(temp, buffer, sizeof(buffer));
+         rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(WCHAR), &dataSize);
+         if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+         {
+            result = temp;
+         }
+         else
+         {
+            free(temp);
+         }
+      }
+      else if (dataSize == SQL_NO_TOTAL)
+      {
+         size_t tempSize = sizeof(buffer) * 4;
+         WCHAR *temp = (WCHAR *)malloc(tempSize);
+         memcpy(temp, buffer, sizeof(buffer));
+         size_t offset = sizeof(buffer) - 1;
+         while(true)
+         {
+            SQLLEN readSize = tempSize - offset;
+            rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[offset], readSize, &dataSize);
+            if ((rc == SQL_SUCCESS) || (rc == SQL_NO_DATA))
+               break;
+            if (dataSize == SQL_NO_TOTAL)
+            {
+               tempSize += sizeof(buffer) * 4;
+            }
+            else
+            {
+               tempSize += dataSize - readSize;
+            }
+            temp = (WCHAR *)realloc(temp, tempSize);
+            offset += readSize - 1;
+         }
+         result = temp;
+      }
+   }
+   return (result != NULL) ? result : wcsdup(L"");
+}
+
+/**
  * Process results of SELECT query
  */
 static MSSQL_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
@@ -471,8 +524,6 @@ static MSSQL_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
    pResult->numColumns = wNumCols;
    pResult->numRows = 0;
    pResult->pValues = NULL;
-
-   BYTE *pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
 
 	// Get column names
 	pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
@@ -505,22 +556,10 @@ static MSSQL_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
                   sizeof(WCHAR *) * (pResult->numRows * pResult->numColumns));
       for(int i = 1; i <= (int)pResult->numColumns; i++)
       {
-		   SQLLEN iDataSize;
-
-			pDataBuffer[0] = 0;
-         iResult = SQLGetData(stmt, (short)i, SQL_C_WCHAR, pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
-			if (iDataSize != SQL_NULL_DATA)
-			{
-      		pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
-			}
-			else
-			{
-				pResult->pValues[iCurrValue++] = wcsdup(L"");
-			}
+         pResult->pValues[iCurrValue++] = GetFieldData(stmt, (short)i);
       }
    }
 
-   free(pDataBuffer);
 	return pResult;
 }
 
@@ -694,7 +733,6 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(MSSQL_CONN *pConn,
          pResult->noMoreRows = false;
 			pResult->data = (WCHAR **)malloc(sizeof(WCHAR *) * pResult->numColumns);
          memset(pResult->data, 0, sizeof(WCHAR *) * pResult->numColumns);
-         pResult->dataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
 
 			// Get column names
 			pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
@@ -757,7 +795,6 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(MSSQL_CONN
       pResult->noMoreRows = false;
 		pResult->data = (WCHAR **)malloc(sizeof(WCHAR *) * pResult->numColumns);
       memset(pResult->data, 0, sizeof(WCHAR *) * pResult->numColumns);
-      pResult->dataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
 
 		// Get column names
 		pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
@@ -806,19 +843,8 @@ extern "C" bool EXPORT DrvFetch(MSSQL_UNBUFFERED_QUERY_RESULT *pResult)
       {
          for(int i = 0; i < pResult->numColumns; i++)
          {
-            safe_free(pResult->data[i]);
-
-            SQLLEN iDataSize;
-			   pResult->dataBuffer[0] = 0;
-            iResult = SQLGetData(pResult->sqlStatement, (short)i + 1, SQL_C_WCHAR, pResult->dataBuffer, DATA_BUFFER_SIZE, &iDataSize);
-			   if (iDataSize != SQL_NULL_DATA)
-			   {
-      		   pResult->data[i] = wcsdup((const WCHAR *)pResult->dataBuffer);
-			   }
-			   else
-			   {
-				   pResult->data[i] = NULL;
-			   }
+            free(pResult->data[i]);
+            pResult->data[i] = GetFieldData(pResult->sqlStatement, (short)i + 1);
          }
       }
       else
@@ -904,7 +930,6 @@ extern "C" void EXPORT DrvFreeUnbufferedResult(MSSQL_UNBUFFERED_QUERY_RESULT *pR
    else
       SQLFreeHandle(SQL_HANDLE_STMT, pResult->sqlStatement);
    MutexUnlock(pResult->pConn->mutexQuery);
-   free(pResult->dataBuffer);
    for(int i = 0; i < pResult->numColumns; i++)
    {
       free(pResult->data[i]);

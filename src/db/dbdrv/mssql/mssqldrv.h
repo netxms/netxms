@@ -1,6 +1,6 @@
 /* 
 ** MS SQL Database Driver
-** Copyright (C) 2004-2011 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,7 +84,6 @@ typedef struct
    bool noMoreRows;
 	char **columnNames;
    WCHAR **data;
-   BYTE *dataBuffer;
 } MSSQL_UNBUFFERED_QUERY_RESULT;
 
 #endif   /* _mssqldrv_h_ */
