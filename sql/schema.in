@@ -1,7 +1,7 @@
 /*
 ** NetXMS Database Schema
 **
-** ex: syntax=sql
+** ex: syntax=sql ts=2 sw=2 expandtab
 */
 
 /*
@@ -9,9 +9,9 @@
 */
 CREATE TABLE metadata
 (
-	var_name varchar(63) not null,
-	var_value varchar(255) not null,
-	PRIMARY KEY(var_name)
+  var_name varchar(63) not null,
+  var_value varchar(255) not null,
+  PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(metadata, 'System meta data (DBMS type, schema version, etc.)')
@@ -23,34 +23,36 @@ COMMENT_COLUMN(metadata.var_value, 'Variable value')
 */
 CREATE TABLE config
 (
-	var_name varchar(63) not null,
-	var_value varchar(2000) null,
+  var_name varchar(63) not null,
+  var_value varchar(2000) null,
 #ifdef DB_ORACLE
-	is_visible integer default 1 not null,
-	need_server_restart integer default 0 not null,
-   data_type char(1) default 'S' not null,
-   is_public char(1) default 'N' not null,
+  is_visible integer default 1 not null,
+  need_server_restart integer default 0 not null,
+  data_type char(1) default 'S' not null,
+  is_public char(1) default 'N' not null,
 #else
-	is_visible integer not null default 1,
-	need_server_restart integer not null default 0,
-   data_type char(1) not null default 'S',
-   is_public char(1) not null default 'N',
+  is_visible integer not null default 1,
+  need_server_restart integer not null default 0,
+  data_type char(1) not null default 'S',
+  is_public char(1) not null default 'N',
 #endif
-   description varchar(255) null,
-   possible_values SQL_TEXT null,
-	PRIMARY KEY(var_name)
+  description varchar(255) null,
+  possible_values SQL_TEXT null,
+  PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(config, 'System configuration table')
+COMMENT_TABLE(config, 'Server configuration')
+COMMENT_COLUMN(config.var_name, 'Variable name')
+COMMENT_COLUMN(config.var_value, 'Variable value')
 
 /*
 ** System configuration data (for large data)
 */
 CREATE TABLE config_clob
 (
-	var_name varchar(63) not null,
-	var_value SQL_TEXT null,
-	PRIMARY KEY(var_name)
+  var_name varchar(63) not null,
+  var_value SQL_TEXT null,
+  PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(config_clob, 'System configuration data for large data')
@@ -60,27 +62,27 @@ COMMENT_TABLE(config_clob, 'System configuration data for large data')
 */
 CREATE TABLE users
 (
-	id integer not null,
-	guid varchar(36) not null,
-	name varchar(63) not null,
-	password varchar(127) not null,
-	system_access SQL_INT64 not null,
-	flags integer not null,
-	full_name varchar(127) null,
-	description varchar(255) null,
-	grace_logins integer not null,
-	auth_method integer not null,
-	cert_mapping_method integer not null,
-	cert_mapping_data SQL_TEXT null,
-	auth_failures integer not null,
-	last_passwd_change integer not null,
-	min_passwd_length integer not null,
-	disabled_until integer not null,
-	last_login integer not null,
-	password_history SQL_TEXT null,
-   xmpp_id varchar(127) null,
-   ldap_dn SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  guid varchar(36) not null,
+  name varchar(63) not null,
+  password varchar(127) not null,
+  system_access SQL_INT64 not null,
+  flags integer not null,
+  full_name varchar(127) null,
+  description varchar(255) null,
+  grace_logins integer not null,
+  auth_method integer not null,
+  cert_mapping_method integer not null,
+  cert_mapping_data SQL_TEXT null,
+  auth_failures integer not null,
+  last_passwd_change integer not null,
+  min_passwd_length integer not null,
+  disabled_until integer not null,
+  last_login integer not null,
+  password_history SQL_TEXT null,
+  xmpp_id varchar(127) null,
+  ldap_dn SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(users, 'System users')
@@ -91,14 +93,14 @@ COMMENT_TABLE(users, 'System users')
 
 CREATE TABLE user_groups
 (
-	id integer not null,
-	guid varchar(36) not null,
-	name varchar(63) not null,
-	system_access SQL_INT64 not null,
-	flags integer not null,
-	description varchar(255),
-	ldap_dn SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  guid varchar(36) not null,
+  name varchar(63) not null,
+  system_access SQL_INT64 not null,
+  flags integer not null,
+  description varchar(255),
+  ldap_dn SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(user_groups, 'System user groups')
@@ -109,9 +111,9 @@ COMMENT_TABLE(user_groups, 'System user groups')
 
 CREATE TABLE user_group_members
 (
-	group_id integer not null,
-	user_id integer not null,
-	PRIMARY KEY(group_id,user_id)
+  group_id integer not null,
+  user_id integer not null,
+  PRIMARY KEY(group_id,user_id)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(user_group_members, 'Users and group relationships')
@@ -122,10 +124,10 @@ COMMENT_TABLE(user_group_members, 'Users and group relationships')
 
 CREATE TABLE user_profiles
 (
-	user_id integer not null,
-	var_name varchar(255) not null,
-	var_value SQL_TEXT not null,
-	PRIMARY KEY(user_id,var_name)
+  user_id integer not null,
+  var_name varchar(255) not null,
+  var_value SQL_TEXT not null,
+  PRIMARY KEY(user_id,var_name)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(user_profiles, 'User profiles')
@@ -136,10 +138,10 @@ COMMENT_TABLE(user_profiles, 'User profiles')
 
 CREATE TABLE userdb_custom_attributes
 (
-	object_id integer not null,
-	attr_name varchar(255) not null,
-	attr_value SQL_TEXT not null,
-	PRIMARY KEY(object_id,attr_name)
+  object_id integer not null,
+  attr_name varchar(255) not null,
+  attr_value SQL_TEXT not null,
+  PRIMARY KEY(object_id,attr_name)
 ) TABLE_TYPE;
 
 
@@ -149,36 +151,36 @@ CREATE TABLE userdb_custom_attributes
 
 CREATE TABLE object_properties
 (
-	object_id integer not null,
-	guid varchar(36) not null,
-	name varchar(63) not null,
-	status integer not null,
-	is_deleted integer not null,
-	is_system integer not null,
-	last_modified integer not null,
-	inherit_access_rights integer not null,
-	status_calc_alg integer not null,
-	status_prop_alg integer not null,
-	status_fixed_val integer not null,
-	status_shift integer not null,
-	status_translation varchar(8) not null,
-	status_single_threshold integer not null,
-	status_thresholds varchar(8) not null,
-	comments SQL_TEXT null,
-	location_type integer not null,
-	latitude varchar(20),
-	longitude varchar(20),
-	location_accuracy integer not null,
-	location_timestamp integer not null,
-	image varchar(36) not null,
-	submap_id integer not null,
-   country varchar(63) null,
-   city varchar(63) null,
-   street_address varchar(255) null,
-   postcode varchar(31) null,
-	maint_mode char(1) not null,
-   maint_event_id SQL_INT64 not null,
-	PRIMARY KEY(object_id)
+  object_id integer not null,
+  guid varchar(36) not null,
+  name varchar(63) not null,
+  status integer not null,
+  is_deleted integer not null,
+  is_system integer not null,
+  last_modified integer not null,
+  inherit_access_rights integer not null,
+  status_calc_alg integer not null,
+  status_prop_alg integer not null,
+  status_fixed_val integer not null,
+  status_shift integer not null,
+  status_translation varchar(8) not null,
+  status_single_threshold integer not null,
+  status_thresholds varchar(8) not null,
+  comments SQL_TEXT null,
+  location_type integer not null,
+  latitude varchar(20),
+  longitude varchar(20),
+  location_accuracy integer not null,
+  location_timestamp integer not null,
+  image varchar(36) not null,
+  submap_id integer not null,
+  country varchar(63) null,
+  city varchar(63) null,
+  street_address varchar(255) null,
+  postcode varchar(31) null,
+  maint_mode char(1) not null,
+  maint_event_id SQL_INT64 not null,
+  PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
 
@@ -187,10 +189,10 @@ CREATE TABLE object_properties
 */
 CREATE TABLE object_custom_attributes
 (
-	object_id integer not null,
-	attr_name varchar(127) not null,
-	attr_value SQL_TEXT null,
-	PRIMARY KEY(object_id,attr_name)
+  object_id integer not null,
+  attr_name varchar(127) not null,
+  attr_value SQL_TEXT null,
+  PRIMARY KEY(object_id,attr_name)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_ocattr_oid ON object_custom_attributes(object_id);
@@ -200,12 +202,12 @@ CREATE INDEX idx_ocattr_oid ON object_custom_attributes(object_id);
 */
 CREATE TABLE zones
 (
-	id integer not null,		// Zone object ID
-	zone_guid integer not null,	// Globally unique ID for zone
-	agent_proxy integer not null,
-	snmp_proxy integer not null,
-	icmp_proxy integer not null,
-	PRIMARY KEY(id)
+  id integer not null,    // Zone object ID
+  zone_guid integer not null, // Globally unique ID for zone
+  agent_proxy integer not null,
+  snmp_proxy integer not null,
+  icmp_proxy integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -213,16 +215,16 @@ CREATE TABLE zones
 */
 CREATE TABLE mobile_devices
 (
-	id integer not null,
-	device_id varchar(64) not null,
-	vendor varchar(64) null,
-	model varchar(128) null,
-	serial_number varchar(64) null,
-	os_name varchar(32) null,
-	os_version varchar(64) null,
-	user_id varchar(64) null,
-	battery_level integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  device_id varchar(64) not null,
+  vendor varchar(64) null,
+  model varchar(128) null,
+  serial_number varchar(64) null,
+  os_name varchar(32) null,
+  os_version varchar(64) null,
+  user_id varchar(64) null,
+  battery_level integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -230,15 +232,15 @@ CREATE TABLE mobile_devices
 */
 CREATE TABLE access_points
 (
-	id integer not null,
-	node_id integer not null,
-	mac_address varchar(12) null,
-	vendor varchar(64) null,
-	model varchar(128) null,
-	serial_number varchar(64) null,
-   ap_state integer not null,
-   ap_index integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  node_id integer not null,
+  mac_address varchar(12) null,
+  vendor varchar(64) null,
+  model varchar(128) null,
+  serial_number varchar(64) null,
+  ap_state integer not null,
+  ap_index integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -246,10 +248,10 @@ CREATE TABLE access_points
 */
 CREATE TABLE racks
 (
-	id integer not null,
-	height integer not null,
-	top_bottom_num char(1) not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  height integer not null,
+  top_bottom_num char(1) not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -257,46 +259,46 @@ CREATE TABLE racks
 */
 CREATE TABLE nodes
 (
-	id integer not null,
-	primary_name varchar(255) null,
-	primary_ip varchar(48) not null,
-	node_flags integer not null,
-	runtime_flags integer not null,
-	snmp_version integer not null,
-	snmp_port integer not null,
-	community varchar(127) null,
-	usm_auth_password varchar(127) null,
-	usm_priv_password varchar(127) null,
-	usm_methods integer not null,
-	snmp_oid varchar(255) null,
-	auth_method integer not null,
-	secret varchar(64) null,
-	agent_port integer not null,
-	status_poll_type integer not null,
-	agent_version varchar(63) null,
-	platform_name varchar(63) null,
-	poller_node_id integer not null,
-	zone_guid integer not null,
-	proxy_node integer not null,
-	snmp_proxy integer not null,
-	icmp_proxy integer not null,
-	required_polls integer not null,
-	uname varchar(255) null,
-	use_ifxtable integer not null,
-	snmp_sys_name varchar(127) null,
-	snmp_sys_contact varchar(127) null,
-	snmp_sys_location varchar(127) null,
-	bridge_base_addr varchar(15) null,
-	down_since integer not null,
-   boot_time integer not null,
-	driver_name varchar(32) null,
-	rack_image varchar(36) null,
-	rack_position integer not null,
-   rack_height integer not null,
-	rack_id integer not null,
-   agent_cache_mode char(1) not null,
-   last_agent_comm_time integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  primary_name varchar(255) null,
+  primary_ip varchar(48) not null,
+  node_flags integer not null,
+  runtime_flags integer not null,
+  snmp_version integer not null,
+  snmp_port integer not null,
+  community varchar(127) null,
+  usm_auth_password varchar(127) null,
+  usm_priv_password varchar(127) null,
+  usm_methods integer not null,
+  snmp_oid varchar(255) null,
+  auth_method integer not null,
+  secret varchar(64) null,
+  agent_port integer not null,
+  status_poll_type integer not null,
+  agent_version varchar(63) null,
+  platform_name varchar(63) null,
+  poller_node_id integer not null,
+  zone_guid integer not null,
+  proxy_node integer not null,
+  snmp_proxy integer not null,
+  icmp_proxy integer not null,
+  required_polls integer not null,
+  uname varchar(255) null,
+  use_ifxtable integer not null,
+  snmp_sys_name varchar(127) null,
+  snmp_sys_contact varchar(127) null,
+  snmp_sys_location varchar(127) null,
+  bridge_base_addr varchar(15) null,
+  down_since integer not null,
+  boot_time integer not null,
+  driver_name varchar(32) null,
+  rack_image varchar(36) null,
+  rack_position integer not null,
+  rack_height integer not null,
+  rack_id integer not null,
+  agent_cache_mode char(1) not null,
+  last_agent_comm_time integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 
@@ -306,10 +308,10 @@ CREATE TABLE nodes
 
 CREATE TABLE clusters
 (
-	id integer not null,
-	cluster_type integer not null,
-	zone_guid integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  cluster_type integer not null,
+  zone_guid integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 
@@ -319,9 +321,9 @@ CREATE TABLE clusters
 
 CREATE TABLE cluster_members
 (
-	cluster_id integer not null,
-	node_id integer not null,
-	PRIMARY KEY(cluster_id,node_id)
+  cluster_id integer not null,
+  node_id integer not null,
+  PRIMARY KEY(cluster_id,node_id)
 ) TABLE_TYPE;
 
 
@@ -331,10 +333,10 @@ CREATE TABLE cluster_members
 
 CREATE TABLE cluster_sync_subnets
 (
-	cluster_id integer not null,
-	subnet_addr varchar(48) not null,
-	subnet_mask integer not null,
-	PRIMARY KEY(cluster_id,subnet_addr)
+  cluster_id integer not null,
+  subnet_addr varchar(48) not null,
+  subnet_mask integer not null,
+  PRIMARY KEY(cluster_id,subnet_addr)
 ) TABLE_TYPE;
 
 
@@ -344,12 +346,12 @@ CREATE TABLE cluster_sync_subnets
 
 CREATE TABLE cluster_resources
 (
-	cluster_id integer not null,
-	resource_id integer not null,
-	resource_name varchar(255),
-	ip_addr varchar(48) not null,
-	current_owner integer not null,
-	PRIMARY KEY(cluster_id,resource_id)
+  cluster_id integer not null,
+  resource_id integer not null,
+  resource_name varchar(255),
+  ip_addr varchar(48) not null,
+  current_owner integer not null,
+  PRIMARY KEY(cluster_id,resource_id)
 ) TABLE_TYPE;
 
 /*
@@ -357,12 +359,12 @@ CREATE TABLE cluster_resources
 */
 CREATE TABLE subnets
 (
-	id integer not null,
-	ip_addr varchar(48) not null,
-	ip_netmask integer not null,
-	zone_guid integer not null,
-	synthetic_mask integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  ip_addr varchar(48) not null,
+  ip_netmask integer not null,
+  zone_guid integer not null,
+  synthetic_mask integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -370,29 +372,29 @@ CREATE TABLE subnets
 */
 CREATE TABLE interfaces
 (
-	id integer not null,
-	node_id integer not null,
-	flags integer not null,
-	if_type integer not null,
-	if_index integer not null,
-   mtu integer not null,
-   speed SQL_INT64 not null,
-	bridge_port integer not null,
-	phy_slot integer not null,
-	phy_port integer not null,
-	peer_node_id integer not null,
-	peer_if_id integer not null,
-   peer_proto integer not null,
-	mac_addr varchar(12) not null,
-	required_polls integer not null,
-	admin_state integer not null,
-	oper_state integer not null,
-	dot1x_pae_state integer not null,
-	dot1x_backend_state integer not null,
-	description varchar(255) null,
-   alias varchar(255) null,
-   iftable_suffix varchar(127) null,
-	PRIMARY KEY(id)
+  id integer not null,
+  node_id integer not null,
+  flags integer not null,
+  if_type integer not null,
+  if_index integer not null,
+  mtu integer not null,
+  speed SQL_INT64 not null,
+  bridge_port integer not null,
+  phy_slot integer not null,
+  phy_port integer not null,
+  peer_node_id integer not null,
+  peer_if_id integer not null,
+  peer_proto integer not null,
+  mac_addr varchar(12) not null,
+  required_polls integer not null,
+  admin_state integer not null,
+  oper_state integer not null,
+  dot1x_pae_state integer not null,
+  dot1x_backend_state integer not null,
+  description varchar(255) null,
+  alias varchar(255) null,
+  iftable_suffix varchar(127) null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -400,10 +402,10 @@ CREATE TABLE interfaces
 */
 CREATE TABLE interface_address_list
 (
-   iface_id integer not null,
-	ip_addr varchar(48) not null,
-	ip_netmask integer not null,
-   PRIMARY KEY(iface_id,ip_addr)
+  iface_id integer not null,
+  ip_addr varchar(48) not null,
+  ip_netmask integer not null,
+  PRIMARY KEY(iface_id,ip_addr)
 ) TABLE_TYPE;
 
 /*
@@ -412,17 +414,17 @@ CREATE TABLE interface_address_list
 
 CREATE TABLE network_services
 (
-	id integer not null,
-	node_id integer not null,
-	service_type integer not null,
-	ip_bind_addr varchar(48) not null,
-	ip_proto integer not null,
-	ip_port integer not null,
-	check_request SQL_TEXT null,
-	check_responce SQL_TEXT null,
-	poller_node_id integer not null,
-	required_polls integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  node_id integer not null,
+  service_type integer not null,
+  ip_bind_addr varchar(48) not null,
+  ip_proto integer not null,
+  ip_port integer not null,
+  check_request SQL_TEXT null,
+  check_responce SQL_TEXT null,
+  poller_node_id integer not null,
+  required_polls integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -430,10 +432,10 @@ CREATE TABLE network_services
 */
 CREATE TABLE vpn_connectors
 (
-	id integer not null,
-	node_id integer not null,
-	peer_gateway integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  node_id integer not null,
+  peer_gateway integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -441,11 +443,11 @@ CREATE TABLE vpn_connectors
 */
 CREATE TABLE vpn_connector_networks
 (
-	vpn_id integer not null,
-	network_type integer not null,	// 0 == local, 1 == remote
-	ip_addr varchar(48) not null,
-	ip_netmask integer not null,
-	PRIMARY KEY(vpn_id,ip_addr)
+  vpn_id integer not null,
+  network_type integer not null,  // 0 == local, 1 == remote
+  ip_addr varchar(48) not null,
+  ip_netmask integer not null,
+  PRIMARY KEY(vpn_id,ip_addr)
 ) TABLE_TYPE;
 
 /*
@@ -453,11 +455,11 @@ CREATE TABLE vpn_connector_networks
 */
 CREATE TABLE object_containers
 (
-	id integer not null,
-	object_class integer not null,
-	flags integer not null,
-	auto_bind_filter SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  object_class integer not null,
+  flags integer not null,
+  auto_bind_filter SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -465,14 +467,14 @@ CREATE TABLE object_containers
 */
 CREATE TABLE conditions
 (
-	id integer not null,
-	activation_event integer not null,
-	deactivation_event integer not null,
-	source_object integer not null,
-	active_status integer not null,
-	inactive_status integer not null,
-	script SQL_TEXT not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  activation_event integer not null,
+  deactivation_event integer not null,
+  source_object integer not null,
+  active_status integer not null,
+  inactive_status integer not null,
+  script SQL_TEXT not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -480,13 +482,13 @@ CREATE TABLE conditions
 */
 CREATE TABLE cond_dci_map
 (
-	condition_id integer not null,
-	sequence_number integer not null,
-	dci_id integer not null,
-	node_id integer not null,
-	dci_func integer not null,
-	num_polls integer not null,
-	PRIMARY KEY(condition_id,sequence_number)
+  condition_id integer not null,
+  sequence_number integer not null,
+  dci_id integer not null,
+  node_id integer not null,
+  dci_func integer not null,
+  num_polls integer not null,
+  PRIMARY KEY(condition_id,sequence_number)
 ) TABLE_TYPE;
 
 /**
@@ -494,11 +496,11 @@ CREATE TABLE cond_dci_map
  */
 CREATE TABLE templates
 (
-	id integer not null,
-	version integer not null,
-	flags integer not null,
-	apply_filter SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  version integer not null,
+  flags integer not null,
+  apply_filter SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /**
@@ -506,9 +508,9 @@ CREATE TABLE templates
  */
 CREATE TABLE dct_node_map
 (
-	template_id integer not null,
-	node_id integer not null,
-	PRIMARY KEY(template_id,node_id)
+  template_id integer not null,
+  node_id integer not null,
+  PRIMARY KEY(template_id,node_id)
 ) TABLE_TYPE;
 
 /**
@@ -516,9 +518,9 @@ CREATE TABLE dct_node_map
  */
 CREATE TABLE nsmap
 (
-	subnet_id integer not null,
-	node_id integer not null,
-	PRIMARY KEY(subnet_id,node_id)
+  subnet_id integer not null,
+  node_id integer not null,
+  PRIMARY KEY(subnet_id,node_id)
 ) TABLE_TYPE;
 
 /**
@@ -526,9 +528,9 @@ CREATE TABLE nsmap
  */
 CREATE TABLE container_members
 (
-	container_id integer not null,
-	object_id integer not null,
-	PRIMARY KEY(container_id,object_id)
+  container_id integer not null,
+  object_id integer not null,
+  PRIMARY KEY(container_id,object_id)
 ) TABLE_TYPE;
 
 /**
@@ -536,10 +538,10 @@ CREATE TABLE container_members
  */
 CREATE TABLE acl
 (
-	object_id integer not null,
-	user_id integer not null,
-	access_rights integer not null,
-	PRIMARY KEY(object_id,user_id)
+  object_id integer not null,
+  user_id integer not null,
+  access_rights integer not null,
+  PRIMARY KEY(object_id,user_id)
 ) TABLE_TYPE;
 
 /**
@@ -549,15 +551,15 @@ CREATE TABLE acl
  */
 CREATE TABLE trusted_nodes
 (
-	source_object_id integer not null,
-	target_node_id integer not null,
-	PRIMARY KEY(source_object_id,target_node_id)
+  source_object_id integer not null,
+  target_node_id integer not null,
+  PRIMARY KEY(source_object_id,target_node_id)
 ) TABLE_TYPE;
 
 /**
  * Data collection items
  *
- * If node_id != 0, it's an item bound to node,	and template_id points to
+ * If node_id != 0, it's an item bound to node, and template_id points to
  * the template used for creating this item. In this case, template_id = 0
  * means that item was created manually.
  * If node_id = 0, it's a template item, and template_id points to a template
@@ -566,37 +568,37 @@ CREATE TABLE trusted_nodes
  */
 CREATE TABLE items
 (
-	item_id integer not null,
-	node_id integer not null,
-	template_id integer not null,
-	template_item_id integer not null,
-   guid varchar(36) not null,
-	name varchar(1023) null,
-	description varchar(255) null,
-	flags integer not null,
-	source integer not null,	// 0 for internal or 1 for native agent or 2 for SNMP
-	snmp_port integer not null,
-	datatype integer not null,
-	polling_interval integer not null,
-	retention_time integer not null,
-	status integer not null,			// ACTIVE, DISABLED or NOT_SUPPORTED
-	snmp_raw_value_type integer not null,
-	delta_calculation integer not null,
-	transformation SQL_TEXT,         // Transformation script
-	instance varchar(255) null,		// Free form text which can be used in events
-	system_tag varchar(255) null,     		// System tag
-	resource_id integer not null,  	// associated cluster resource ID
-	proxy_node integer not null,   	// ID of proxy node (for SNMP and agent items)
-	base_units integer not null,		// bytes, seconds, etc.
-	unit_multiplier integer not null,	// kilo, mega, milli, etc.
-	custom_units_name varchar(63) null,	// units name of base_units = CUSTOM
-	perftab_settings SQL_TEXT null,			// Settings for displaying graph on performance tab
-	instd_method integer not null,
-	instd_data varchar(255) null,
-	instd_filter SQL_TEXT null,
-	samples integer not null,
-	comments SQL_TEXT null,
-	PRIMARY KEY(item_id)
+  item_id integer not null,
+  node_id integer not null,
+  template_id integer not null,
+  template_item_id integer not null,
+  guid varchar(36) not null,
+  name varchar(1023) null,
+  description varchar(255) null,
+  flags integer not null,
+  source integer not null,  // 0 for internal or 1 for native agent or 2 for SNMP
+  snmp_port integer not null,
+  datatype integer not null,
+  polling_interval integer not null,
+  retention_time integer not null,
+  status integer not null,      // ACTIVE, DISABLED or NOT_SUPPORTED
+  snmp_raw_value_type integer not null,
+  delta_calculation integer not null,
+  transformation SQL_TEXT,         // Transformation script
+  instance varchar(255) null,   // Free form text which can be used in events
+  system_tag varchar(255) null,         // System tag
+  resource_id integer not null,   // associated cluster resource ID
+  proxy_node integer not null,    // ID of proxy node (for SNMP and agent items)
+  base_units integer not null,    // bytes, seconds, etc.
+  unit_multiplier integer not null, // kilo, mega, milli, etc.
+  custom_units_name varchar(63) null, // units name of base_units = CUSTOM
+  perftab_settings SQL_TEXT null,     // Settings for displaying graph on performance tab
+  instd_method integer not null,
+  instd_data varchar(255) null,
+  instd_filter SQL_TEXT null,
+  samples integer not null,
+  comments SQL_TEXT null,
+  PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_items_node_id ON items(node_id);
@@ -606,26 +608,26 @@ CREATE INDEX idx_items_node_id ON items(node_id);
 */
 CREATE TABLE dc_tables
 (
-	item_id integer not null,
-	node_id integer not null,
-	template_id integer not null,
-	template_item_id integer not null,
-   guid varchar(36) not null,
-	name varchar(1023) null,
-	description varchar(255) null,
-	flags integer not null,
-	source integer not null,	// 0 for internal or 1 for native agent or 2 for SNMP
-	snmp_port integer not null,
-	polling_interval integer not null,
-	retention_time integer not null,
-	status integer not null,			// ACTIVE, DISABLED or NOT_SUPPORTED
-	system_tag varchar(255) null,     		// System tag
-	resource_id integer not null,  	// associated cluster resource ID
-	proxy_node integer not null,   	// ID of proxy node (for SNMP and agent items)
-	perftab_settings SQL_TEXT null,			// Settings for displaying graph on performance tab
-	transformation_script SQL_TEXT null,
-	comments SQL_TEXT null,
-	PRIMARY KEY(item_id)
+  item_id integer not null,
+  node_id integer not null,
+  template_id integer not null,
+  template_item_id integer not null,
+  guid varchar(36) not null,
+  name varchar(1023) null,
+  description varchar(255) null,
+  flags integer not null,
+  source integer not null,  // 0 for internal or 1 for native agent or 2 for SNMP
+  snmp_port integer not null,
+  polling_interval integer not null,
+  retention_time integer not null,
+  status integer not null,      // ACTIVE, DISABLED or NOT_SUPPORTED
+  system_tag varchar(255) null,         // System tag
+  resource_id integer not null,   // associated cluster resource ID
+  proxy_node integer not null,    // ID of proxy node (for SNMP and agent items)
+  perftab_settings SQL_TEXT null,     // Settings for displaying graph on performance tab
+  transformation_script SQL_TEXT null,
+  comments SQL_TEXT null,
+  PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_dc_tables_node_id ON dc_tables(node_id);
@@ -635,13 +637,13 @@ CREATE INDEX idx_dc_tables_node_id ON dc_tables(node_id);
 */
 CREATE TABLE dc_table_columns
 (
-	table_id integer not null,
-	sequence_number integer not null,
-	column_name varchar(63) not null,
-	snmp_oid varchar(1023) null,		// SNMP OID for this column, valid only for SNMP tables
-	flags integer not null,
-	display_name varchar(255) null,
-	PRIMARY KEY(table_id,column_name)
+  table_id integer not null,
+  sequence_number integer not null,
+  column_name varchar(63) not null,
+  snmp_oid varchar(1023) null,    // SNMP OID for this column, valid only for SNMP tables
+  flags integer not null,
+  display_name varchar(255) null,
+  PRIMARY KEY(table_id,column_name)
 ) TABLE_TYPE;
 
 /*
@@ -649,9 +651,9 @@ CREATE TABLE dc_table_columns
 */
 CREATE TABLE dct_column_names
 (
-	column_id integer not null,
-	column_name varchar(63) not null,
-	PRIMARY KEY(column_id)
+  column_id integer not null,
+  column_name varchar(63) not null,
+  PRIMARY KEY(column_id)
 ) TABLE_TYPE;
 
 /*
@@ -659,12 +661,12 @@ CREATE TABLE dct_column_names
 */
 CREATE TABLE dct_thresholds
 (
-	id integer not null,
-	table_id integer not null,
-	sequence_number integer not null,
-	activation_event integer not null,
-	deactivation_event integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  table_id integer not null,
+  sequence_number integer not null,
+  activation_event integer not null,
+  deactivation_event integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -672,13 +674,13 @@ CREATE TABLE dct_thresholds
 */
 CREATE TABLE dct_threshold_conditions
 (
-	threshold_id integer not null,
-	group_id integer not null,
-	sequence_number integer not null,
-	column_name varchar(63) null,
-	check_operation integer not null,
-	check_value varchar(255) null,
-	PRIMARY KEY(threshold_id,group_id,sequence_number)
+  threshold_id integer not null,
+  group_id integer not null,
+  sequence_number integer not null,
+  column_name varchar(63) null,
+  check_operation integer not null,
+  check_value varchar(255) null,
+  PRIMARY KEY(threshold_id,group_id,sequence_number)
 ) TABLE_TYPE;
 
 /*
@@ -686,10 +688,10 @@ CREATE TABLE dct_threshold_conditions
 */
 CREATE TABLE dci_schedules
 (
-	schedule_id integer not null,
-	item_id integer not null,
-	schedule varchar(255) null,
-	PRIMARY KEY(item_id,schedule_id)
+  schedule_id integer not null,
+  item_id integer not null,
+  schedule varchar(255) null,
+  PRIMARY KEY(item_id,schedule_id)
 ) TABLE_TYPE;
 
 /*
@@ -697,11 +699,11 @@ CREATE TABLE dci_schedules
 */
 CREATE TABLE raw_dci_values
 (
-	item_id integer not null,
-	raw_value varchar(255) null,
-	transformed_value varchar(255) null,
-	last_poll_time integer not null,
-	PRIMARY KEY(item_id)
+  item_id integer not null,
+  raw_value varchar(255) null,
+  transformed_value varchar(255) null,
+  last_poll_time integer not null,
+  PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
 #if !defined(DB_ORACLE) && !defined(DB_DB2) && !defined(DB_POSTGRESQL)
@@ -713,13 +715,13 @@ CREATE INDEX idx_raw_dci_values_item_id ON raw_dci_values(item_id);
 */
 CREATE TABLE event_cfg
 (
-	event_code integer not null,
-	event_name varchar(63) not null,	// Short event name
-	severity integer not null,
-	flags integer not null,
-	message varchar(2000) null,		/* Message template */
-	description SQL_TEXT null,
-	PRIMARY KEY(event_code)
+  event_code integer not null,
+  event_name varchar(63) not null,  // Short event name
+  severity integer not null,
+  flags integer not null,
+  message varchar(2000) null,   /* Message template */
+  description SQL_TEXT null,
+  PRIMARY KEY(event_code)
 ) TABLE_TYPE;
 
 /*
@@ -727,16 +729,16 @@ CREATE TABLE event_cfg
 */
 CREATE TABLE event_log
 (
-	event_id SQL_INT64 not null,
-	event_code integer not null,
-	event_timestamp integer not null,
-	event_source integer not null,		/* Source object ID */
-	dci_id integer not null,                /* ID of related DCI or 0 */
-	event_severity integer not null,
-	event_message varchar(2000) null,
-	root_event_id SQL_INT64 not null,	/* Non-zero if current event correlates to some other event */
-	user_tag varchar(63) null,
-	PRIMARY KEY(event_id)
+  event_id SQL_INT64 not null,
+  event_code integer not null,
+  event_timestamp integer not null,
+  event_source integer not null,    /* Source object ID */
+  dci_id integer not null,                /* ID of related DCI or 0 */
+  event_severity integer not null,
+  event_message varchar(2000) null,
+  root_event_id SQL_INT64 not null, /* Non-zero if current event correlates to some other event */
+  user_tag varchar(63) null,
+  PRIMARY KEY(event_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_event_log_event_timestamp ON event_log(event_timestamp);
@@ -765,20 +767,20 @@ CREATE INDEX idx_event_log_root_id ON event_log(root_event_id);
 */
 CREATE TABLE actions
 (
-	action_id integer not null,
-	action_name varchar(63) not null,
-	action_type integer not null,
-	is_disabled integer not null,
-	// Field "rcpt_addr" holds e-mail address for e-mail actions,
-	// phone number for sms actions, and remote host address for
-	// remote execution actions
-	rcpt_addr varchar(255) null,
-	email_subject varchar(255) null,
-	// Field "action_data" holds message text for e-mail and sms actions,
-	// command line for external command execution actions, or
-	// action name with optional arguments for remote execution actions
-	action_data SQL_TEXT null,
-	PRIMARY KEY(action_id)
+  action_id integer not null,
+  action_name varchar(63) not null,
+  action_type integer not null,
+  is_disabled integer not null,
+  // Field "rcpt_addr" holds e-mail address for e-mail actions,
+  // phone number for sms actions, and remote host address for
+  // remote execution actions
+  rcpt_addr varchar(255) null,
+  email_subject varchar(255) null,
+  // Field "action_data" holds message text for e-mail and sms actions,
+  // command line for external command execution actions, or
+  // action name with optional arguments for remote execution actions
+  action_data SQL_TEXT null,
+  PRIMARY KEY(action_id)
 ) TABLE_TYPE;
 
 /*
@@ -786,12 +788,12 @@ CREATE TABLE actions
 */
 CREATE TABLE event_groups
 (
-	id integer not null,
-	name varchar(63) not null,
-	description varchar(255) not null,
-	range_start integer not null,
-	range_end integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  name varchar(63) not null,
+  description varchar(255) not null,
+  range_start integer not null,
+  range_end integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -799,9 +801,9 @@ CREATE TABLE event_groups
 */
 CREATE TABLE event_group_members
 (
-	group_id integer not null,
-	event_code integer not null,
-	PRIMARY KEY(group_id,event_code)
+  group_id integer not null,
+  event_code integer not null,
+  PRIMARY KEY(group_id,event_code)
 ) TABLE_TYPE;
 
 /*
@@ -809,56 +811,56 @@ CREATE TABLE event_group_members
 */
 CREATE TABLE event_policy
 (
-	rule_id integer not null,   // Rule number
-   rule_guid varchar(36) not null,
-	flags integer not null,
-	comments SQL_TEXT null,
-	script SQL_TEXT null,
-	alarm_message varchar(2000) null,
-	alarm_severity integer not null,
-	alarm_key varchar(255) null,    // Alarm key (used for auto termination)
-	alarm_timeout integer not null,	// Timeout before sending event
-	alarm_timeout_event integer not null,  // Event to be sent on timeout
-	situation_id integer not null,  // Situation to update
-	situation_instance varchar(255) null,
-	PRIMARY KEY(rule_id)
+  rule_id integer not null,   // Rule number
+  rule_guid varchar(36) not null,
+  flags integer not null,
+  comments SQL_TEXT null,
+  script SQL_TEXT null,
+  alarm_message varchar(2000) null,
+  alarm_severity integer not null,
+  alarm_key varchar(255) null,    // Alarm key (used for auto termination)
+  alarm_timeout integer not null, // Timeout before sending event
+  alarm_timeout_event integer not null,  // Event to be sent on timeout
+  situation_id integer not null,  // Situation to update
+  situation_instance varchar(255) null,
+  PRIMARY KEY(rule_id)
 ) TABLE_TYPE;
 
 CREATE TABLE policy_source_list
 (
-	rule_id integer not null,
-	object_id integer not null,
-	PRIMARY KEY(rule_id,object_id)
+  rule_id integer not null,
+  object_id integer not null,
+  PRIMARY KEY(rule_id,object_id)
 ) TABLE_TYPE;
 
 CREATE TABLE policy_event_list
 (
-	rule_id integer not null,
-	event_code integer not null,
-	PRIMARY KEY(rule_id,event_code)
+  rule_id integer not null,
+  event_code integer not null,
+  PRIMARY KEY(rule_id,event_code)
 ) TABLE_TYPE;
 
 CREATE TABLE policy_action_list
 (
-	rule_id integer not null,
-	action_id integer not null,
-	PRIMARY KEY(rule_id,action_id)
+  rule_id integer not null,
+  action_id integer not null,
+  PRIMARY KEY(rule_id,action_id)
 ) TABLE_TYPE;
 
 CREATE TABLE policy_time_range_list
 (
-	rule_id integer not null,
-	time_range_id integer not null,
-	PRIMARY KEY(rule_id,time_range_id)
+  rule_id integer not null,
+  time_range_id integer not null,
+  PRIMARY KEY(rule_id,time_range_id)
 ) TABLE_TYPE;
 
 CREATE TABLE policy_situation_attr_list
 (
-	rule_id integer not null,
-	situation_id integer not null,
-	attr_name varchar(255) not null,
-	attr_value varchar(255) null,
-	PRIMARY KEY(rule_id,situation_id,attr_name)
+  rule_id integer not null,
+  situation_id integer not null,
+  attr_name varchar(255) not null,
+  attr_value varchar(255) null,
+  PRIMARY KEY(rule_id,situation_id,attr_name)
 ) TABLE_TYPE;
 
 
@@ -868,12 +870,12 @@ CREATE TABLE policy_situation_attr_list
 
 CREATE TABLE time_ranges
 (
-	time_range_id integer not null,
-	wday_mask integer not null,	// Bits 0 .. 6 for each day of week
-	mday_mask integer not null,	// Bits 0 .. 30 for each day of month
-	month_mask integer not null,	// Bits 0 .. 11 for each month
-	time_range varchar(255) not null, // In format HHMMHHMM[,HHMMHHMM[,...]]
-	PRIMARY KEY(time_range_id)
+  time_range_id integer not null,
+  wday_mask integer not null, // Bits 0 .. 6 for each day of week
+  mday_mask integer not null, // Bits 0 .. 30 for each day of month
+  month_mask integer not null,  // Bits 0 .. 11 for each month
+  time_range varchar(255) not null, // In format HHMMHHMM[,HHMMHHMM[,...]]
+  PRIMARY KEY(time_range_id)
 ) TABLE_TYPE;
 
 /*
@@ -881,23 +883,23 @@ CREATE TABLE time_ranges
 */
 CREATE TABLE thresholds
 (
-	threshold_id integer not null,
-	item_id integer not null,
-	sequence_number integer not null,
-	fire_value varchar(255) null,
-	rearm_value varchar(255) null,
-	check_function integer not null,
-	check_operation integer not null,
-	sample_count integer not null,
-   script SQL_TEXT null,
-	event_code integer not null,
-	rearm_event_code integer not null,
-	repeat_interval integer not null,
-	current_state integer not null,
-	current_severity integer not null,
-   match_count integer not null,
-	last_event_timestamp integer not null,
-	PRIMARY KEY(threshold_id)
+  threshold_id integer not null,
+  item_id integer not null,
+  sequence_number integer not null,
+  fire_value varchar(255) null,
+  rearm_value varchar(255) null,
+  check_function integer not null,
+  check_operation integer not null,
+  sample_count integer not null,
+  script SQL_TEXT null,
+  event_code integer not null,
+  rearm_event_code integer not null,
+  repeat_interval integer not null,
+  current_state integer not null,
+  current_severity integer not null,
+  match_count integer not null,
+  last_event_timestamp integer not null,
+  PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_thresholds_item_id ON thresholds(item_id);
@@ -908,28 +910,28 @@ CREATE INDEX idx_thresholds_sequence ON thresholds(sequence_number);
 */
 CREATE TABLE alarms
 (
-	alarm_id integer not null,	// Unique alarm identifier
-	alarm_state integer not null,
-	hd_state integer not null,	// Help desk system state
-	hd_ref varchar(63) null,	// Help desk reference
-	creation_time integer not null,
-	last_change_time integer not null,
-	source_object_id integer not null,
-	source_event_code integer not null,
-	source_event_id SQL_INT64 not null,
-	dci_id integer not null,
-	message varchar(2000) null,
-	original_severity integer not null,
-	current_severity integer not null,
-	repeat_count integer not null,
-	alarm_key varchar(255) null,     // Alarm key (used for auto acknowlegment)
-	ack_by integer not null,         // ID of user who was acknowleged alarm
-	resolved_by integer not null,    // ID of user who was resolved alarm
-	term_by integer not null,        // ID of user who was terminated alarm
-	timeout integer not null,
-	timeout_event integer not null,
-	ack_timeout integer not null,
-	PRIMARY KEY(alarm_id)
+  alarm_id integer not null,  // Unique alarm identifier
+  alarm_state integer not null,
+  hd_state integer not null,  // Help desk system state
+  hd_ref varchar(63) null,  // Help desk reference
+  creation_time integer not null,
+  last_change_time integer not null,
+  source_object_id integer not null,
+  source_event_code integer not null,
+  source_event_id SQL_INT64 not null,
+  dci_id integer not null,
+  message varchar(2000) null,
+  original_severity integer not null,
+  current_severity integer not null,
+  repeat_count integer not null,
+  alarm_key varchar(255) null,     // Alarm key (used for auto acknowlegment)
+  ack_by integer not null,         // ID of user who was acknowleged alarm
+  resolved_by integer not null,    // ID of user who was resolved alarm
+  term_by integer not null,        // ID of user who was terminated alarm
+  timeout integer not null,
+  timeout_event integer not null,
+  ack_timeout integer not null,
+  PRIMARY KEY(alarm_id)
 ) TABLE_TYPE;
 
 /*
@@ -937,12 +939,12 @@ CREATE TABLE alarms
 */
 CREATE TABLE alarm_notes
 (
-	note_id integer not null,
-	alarm_id integer not null,
-	change_time integer not null,
-	user_id integer not null,	// Last edited by
-	note_text SQL_TEXT null,
-	PRIMARY KEY(note_id)
+  note_id integer not null,
+  alarm_id integer not null,
+  change_time integer not null,
+  user_id integer not null, // Last edited by
+  note_text SQL_TEXT null,
+  PRIMARY KEY(note_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_alarm_notes_alarm_id ON alarm_notes(alarm_id);
@@ -952,15 +954,15 @@ CREATE INDEX idx_alarm_notes_alarm_id ON alarm_notes(alarm_id);
 */
 CREATE TABLE alarm_events
 (
-	alarm_id integer not null,
-	event_id SQL_INT64 not null,
-	event_code integer not null,
-	event_name varchar(63) null,
-	severity integer not null,
-	source_object_id integer not null,
-	event_timestamp integer not null,
-	message varchar(2000) null,
-	PRIMARY KEY(alarm_id,event_id)
+  alarm_id integer not null,
+  event_id SQL_INT64 not null,
+  event_code integer not null,
+  event_name varchar(63) null,
+  severity integer not null,
+  source_object_id integer not null,
+  event_timestamp integer not null,
+  message varchar(2000) null,
+  PRIMARY KEY(alarm_id,event_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_alarm_events_alarm_id ON alarm_events(alarm_id);
@@ -972,12 +974,12 @@ CREATE INDEX idx_alarm_events_alarm_id ON alarm_events(alarm_id);
 
 CREATE TABLE snmp_trap_cfg
 (
-	trap_id integer not null,
-	snmp_oid varchar(255),
-	event_code integer not null,
-	user_tag varchar(63),
-	description varchar(255),
-	PRIMARY KEY(trap_id)
+  trap_id integer not null,
+  snmp_oid varchar(255),
+  event_code integer not null,
+  user_tag varchar(63),
+  description varchar(255),
+  PRIMARY KEY(trap_id)
 ) TABLE_TYPE;
 
 
@@ -987,12 +989,12 @@ CREATE TABLE snmp_trap_cfg
 
 CREATE TABLE snmp_trap_pmap
 (
-	trap_id integer not null,
-	parameter integer not null,
-	flags integer not null,
-	snmp_oid varchar(255) null,
-	description varchar(255) null,
-	PRIMARY KEY(trap_id,parameter)
+  trap_id integer not null,
+  parameter integer not null,
+  flags integer not null,
+  snmp_oid varchar(255) null,
+  description varchar(255) null,
+  PRIMARY KEY(trap_id,parameter)
 ) TABLE_TYPE;
 
 /*
@@ -1000,13 +1002,13 @@ CREATE TABLE snmp_trap_pmap
 */
 CREATE TABLE agent_pkg
 (
-	pkg_id integer not null,
-	pkg_name varchar(63),
-	version varchar(31),
-	platform varchar(63),
-	pkg_file varchar(255),
-	description varchar(255),
-	PRIMARY KEY(pkg_id)
+  pkg_id integer not null,
+  pkg_name varchar(63),
+  version varchar(31),
+  platform varchar(63),
+  pkg_file varchar(255),
+  description varchar(255),
+  PRIMARY KEY(pkg_id)
 ) TABLE_TYPE;
 
 /*
@@ -1014,19 +1016,19 @@ CREATE TABLE agent_pkg
 */
 CREATE TABLE object_tools
 (
-	tool_id integer not null,
-   guid varchar(36) not null,
-	tool_name varchar(255) null,
-	tool_type integer not null,
-	tool_data SQL_TEXT null,
-	description varchar(255) null,
-	flags integer not null,
-	tool_filter SQL_TEXT null,
-	confirmation_text varchar(255) null,
-   command_name varchar(255) null,
-   command_short_name varchar(31) null,
-   icon SQL_TEXT null,
-	PRIMARY KEY(tool_id)
+  tool_id integer not null,
+  guid varchar(36) not null,
+  tool_name varchar(255) null,
+  tool_type integer not null,
+  tool_data SQL_TEXT null,
+  description varchar(255) null,
+  flags integer not null,
+  tool_filter SQL_TEXT null,
+  confirmation_text varchar(255) null,
+  command_name varchar(255) null,
+  command_short_name varchar(31) null,
+  icon SQL_TEXT null,
+  PRIMARY KEY(tool_id)
 ) TABLE_TYPE;
 
 /*
@@ -1034,9 +1036,9 @@ CREATE TABLE object_tools
 */
 CREATE TABLE object_tools_acl
 (
-	tool_id integer not null,
-	user_id integer not null,
-	PRIMARY KEY(tool_id,user_id)
+  tool_id integer not null,
+  user_id integer not null,
+  PRIMARY KEY(tool_id,user_id)
 ) TABLE_TYPE;
 
 /*
@@ -1044,13 +1046,13 @@ CREATE TABLE object_tools_acl
 */
 CREATE TABLE object_tools_table_columns
 (
-	tool_id integer not null,
-	col_number integer not null,
-	col_name varchar(255) null,
-	col_oid varchar(255) null,
-	col_format integer,	// Column format (integer, string, etc.)
-	col_substr integer,	// Number of matching substring in regexp
-	PRIMARY KEY(tool_id,col_number)
+  tool_id integer not null,
+  col_number integer not null,
+  col_name varchar(255) null,
+  col_oid varchar(255) null,
+  col_format integer, // Column format (integer, string, etc.)
+  col_substr integer, // Number of matching substring in regexp
+  PRIMARY KEY(tool_id,col_number)
 ) TABLE_TYPE;
 
 /**
@@ -1058,13 +1060,13 @@ CREATE TABLE object_tools_table_columns
  */
 CREATE TABLE object_tools_input_fields
 (
-	tool_id integer not null,
-   name varchar(31) not null,
-   input_type char(1) not null,
-   display_name varchar(127) null,
-   sequence_num integer not null,
-   config SQL_TEXT null,
-   PRIMARY KEY(tool_id,name)
+  tool_id integer not null,
+  name varchar(31) not null,
+  input_type char(1) not null,
+  display_name varchar(127) null,
+  sequence_num integer not null,
+  config SQL_TEXT null,
+  PRIMARY KEY(tool_id,name)
 ) TABLE_TYPE;
 
 /*
@@ -1072,15 +1074,15 @@ CREATE TABLE object_tools_input_fields
 */
 CREATE TABLE syslog
 (
-	msg_id SQL_INT64 not null,
-	msg_timestamp integer not null,
-	facility integer not null,
-	severity integer not null,
-	source_object_id integer not null,
-	hostname varchar(127) null,
-	msg_tag varchar(32) null,
-	msg_text SQL_TEXT null,
-	PRIMARY KEY(msg_id)
+  msg_id SQL_INT64 not null,
+  msg_timestamp integer not null,
+  facility integer not null,
+  severity integer not null,
+  source_object_id integer not null,
+  hostname varchar(127) null,
+  msg_tag varchar(32) null,
+  msg_text SQL_TEXT null,
+  PRIMARY KEY(msg_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_syslog_msg_timestamp ON syslog(msg_timestamp);
@@ -1092,10 +1094,10 @@ CREATE INDEX idx_syslog_msg_timestamp ON syslog(msg_timestamp);
 
 CREATE TABLE script_library
 (
-	script_id integer not null,
-	script_name varchar(255) not null,
-	script_code SQL_TEXT null,
-	PRIMARY KEY(script_id)
+  script_id integer not null,
+  script_name varchar(255) not null,
+  script_code SQL_TEXT null,
+  PRIMARY KEY(script_id)
 ) TABLE_TYPE;
 
 
@@ -1105,13 +1107,13 @@ CREATE TABLE script_library
 
 CREATE TABLE snmp_trap_log
 (
-	trap_id SQL_INT64 not null,
-	trap_timestamp integer not null,
-	ip_addr varchar(48) not null,
-	object_id integer not null,
-	trap_oid varchar(255) not null,
-	trap_varlist SQL_TEXT null,
-	PRIMARY KEY(trap_id)
+  trap_id SQL_INT64 not null,
+  trap_timestamp integer not null,
+  ip_addr varchar(48) not null,
+  object_id integer not null,
+  trap_oid varchar(255) not null,
+  trap_varlist SQL_TEXT null,
+  PRIMARY KEY(trap_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_snmp_trap_log_tt ON snmp_trap_log(trap_timestamp);
@@ -1121,12 +1123,12 @@ CREATE INDEX idx_snmp_trap_log_tt ON snmp_trap_log(trap_timestamp);
 */
 CREATE TABLE agent_configs
 (
-	config_id integer not null,
-	config_name varchar(255) not null,
-	config_file SQL_TEXT not null,
-	config_filter SQL_TEXT not null,
-	sequence_number integer not null,
-	PRIMARY KEY(config_id)
+  config_id integer not null,
+  config_name varchar(255) not null,
+  config_file SQL_TEXT not null,
+  config_filter SQL_TEXT not null,
+  sequence_number integer not null,
+  PRIMARY KEY(config_id)
 ) TABLE_TYPE;
 
 /*
@@ -1134,12 +1136,12 @@ CREATE TABLE agent_configs
 */
 CREATE TABLE address_lists
 (
-	list_type integer not null, // discovery filter, etc.
-	community_id integer not null, // community id for snmp community addr list, otherwise 0
-	addr_type integer not null, // 0 - addr/mask, 1 - address range
-	addr1 varchar(48) not null,
-	addr2 varchar(48) not null,
-	PRIMARY KEY(list_type,community_id,addr_type,addr1,addr2)
+  list_type integer not null, // discovery filter, etc.
+  community_id integer not null, // community id for snmp community addr list, otherwise 0
+  addr_type integer not null, // 0 - addr/mask, 1 - address range
+  addr1 varchar(48) not null,
+  addr2 varchar(48) not null,
+  PRIMARY KEY(list_type,community_id,addr_type,addr1,addr2)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_address_lists_list_type ON address_lists(list_type);
@@ -1149,13 +1151,13 @@ CREATE INDEX idx_address_lists_list_type ON address_lists(list_type);
 */
 CREATE TABLE graphs
 (
-	graph_id integer not null,
-	owner_id integer not null,
-	flags integer not null,
-	name varchar(255) not null,
-	config SQL_TEXT not null,
-	filters SQL_TEXT not null,
-	PRIMARY KEY(graph_id)
+  graph_id integer not null,
+  owner_id integer not null,
+  flags integer not null,
+  name varchar(255) not null,
+  config SQL_TEXT not null,
+  filters SQL_TEXT not null,
+  PRIMARY KEY(graph_id)
 ) TABLE_TYPE;
 
 /*
@@ -1163,10 +1165,10 @@ CREATE TABLE graphs
 */
 CREATE TABLE graph_acl
 (
-	graph_id integer not null,
-	user_id integer not null,
-	user_rights integer not null,
-	PRIMARY KEY(graph_id,user_id)
+  graph_id integer not null,
+  user_id integer not null,
+  user_rights integer not null,
+  PRIMARY KEY(graph_id,user_id)
 ) TABLE_TYPE;
 
 
@@ -1176,12 +1178,12 @@ CREATE TABLE graph_acl
 
 CREATE TABLE certificates
 (
-	cert_id integer not null,
-	cert_type integer not null,
-	cert_data SQL_TEXT not null,	// Certificate in PEM format
-	subject SQL_TEXT not null,
-	comments SQL_TEXT not null,
-	PRIMARY KEY(cert_id)
+  cert_id integer not null,
+  cert_type integer not null,
+  cert_data SQL_TEXT not null,  // Certificate in PEM format
+  subject SQL_TEXT not null,
+  comments SQL_TEXT not null,
+  PRIMARY KEY(cert_id)
 ) TABLE_TYPE;
 
 /*
@@ -1189,16 +1191,16 @@ CREATE TABLE certificates
 */
 CREATE TABLE audit_log
 (
-	record_id integer not null,
-	timestamp integer not null,
-	subsystem varchar(32) not null,
-	success integer not null,
-	user_id integer not null,	// 0x7FFFFFFF for system
-	workstation varchar(63) not null,
-   session_id integer not null,
-	object_id integer not null,
-	message SQL_TEXT null,
-	PRIMARY KEY(record_id)
+  record_id integer not null,
+  timestamp integer not null,
+  subsystem varchar(32) not null,
+  success integer not null,
+  user_id integer not null, // 0x7FFFFFFF for system
+  workstation varchar(63) not null,
+  session_id integer not null,
+  object_id integer not null,
+  message SQL_TEXT null,
+  PRIMARY KEY(record_id)
 ) TABLE_TYPE;
 
 /*
@@ -1206,10 +1208,10 @@ CREATE TABLE audit_log
 */
 CREATE TABLE situations
 (
-	id integer not null,
-	name varchar(127) not null,
-	comments SQL_TEXT not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  name varchar(127) not null,
+  comments SQL_TEXT not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 
@@ -1219,9 +1221,9 @@ CREATE TABLE situations
 
 CREATE TABLE snmp_communities
 (
-	id integer not null,
-	community varchar(255) null,
-	PRIMARY KEY(id)
+  id integer not null,
+  community varchar(255) null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 
@@ -1231,10 +1233,10 @@ CREATE TABLE snmp_communities
 
 CREATE TABLE ap_common
 (
-	id integer not null,
-	policy_type integer not null,
-	version integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  policy_type integer not null,
+  version integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -1242,9 +1244,9 @@ CREATE TABLE ap_common
 */
 CREATE TABLE ap_bindings
 (
-	policy_id integer not null,
-	node_id integer not null,
-	PRIMARY KEY(policy_id,node_id)
+  policy_id integer not null,
+  node_id integer not null,
+  PRIMARY KEY(policy_id,node_id)
 ) TABLE_TYPE;
 
 /*
@@ -1252,9 +1254,9 @@ CREATE TABLE ap_bindings
 */
 CREATE TABLE ap_config_files
 (
-	policy_id integer not null,
-	file_content SQL_TEXT null,
-	PRIMARY KEY(policy_id)
+  policy_id integer not null,
+  file_content SQL_TEXT null,
+  PRIMARY KEY(policy_id)
 ) TABLE_TYPE;
 
 /*
@@ -1262,13 +1264,13 @@ CREATE TABLE ap_config_files
 */
 CREATE TABLE usm_credentials
 (
-	id integer not null,
-	user_name varchar(255) not null,
-	auth_method integer not null,
-	priv_method integer not null,
-	auth_password varchar(255),
-	priv_password varchar(255),
-	PRIMARY KEY(id)
+  id integer not null,
+  user_name varchar(255) not null,
+  auth_method integer not null,
+  priv_method integer not null,
+  auth_password varchar(255),
+  priv_password varchar(255),
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -1276,22 +1278,22 @@ CREATE TABLE usm_credentials
 */
 CREATE TABLE network_maps
 (
-	id integer not null,
-	map_type integer not null,
-	layout integer not null,
-	seed integer not null,
-	radius integer not null,
-	background varchar(36) null,
-	bg_latitude varchar(20) null,
-	bg_longitude varchar(20) null,
-	bg_zoom integer null,
-	flags integer not null,
-	bg_color integer not null,
-	link_color integer not null,
-	link_routing integer not null,
-   object_display_mode integer not null,
-	filter SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  map_type integer not null,
+  layout integer not null,
+  seed integer not null,
+  radius integer not null,
+  background varchar(36) null,
+  bg_latitude varchar(20) null,
+  bg_longitude varchar(20) null,
+  bg_zoom integer null,
+  flags integer not null,
+  bg_color integer not null,
+  link_color integer not null,
+  link_routing integer not null,
+  object_display_mode integer not null,
+  filter SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /**
@@ -1299,12 +1301,12 @@ CREATE TABLE network_maps
  */
 CREATE TABLE network_map_elements
 (
-	map_id integer not null,
-	element_id integer not null,
-	element_type integer not null,
-	element_data SQL_TEXT not null,
-	flags integer not null,
-	PRIMARY KEY(map_id,element_id)
+  map_id integer not null,
+  element_id integer not null,
+  element_type integer not null,
+  element_data SQL_TEXT not null,
+  flags integer not null,
+  PRIMARY KEY(map_id,element_id)
 ) TABLE_TYPE;
 
 /**
@@ -1312,15 +1314,15 @@ CREATE TABLE network_map_elements
  */
 CREATE TABLE network_map_links
 (
-	map_id integer not null,
-	element1 integer not null,
-	element2 integer not null,
-	link_type integer not null,
-	link_name varchar(255) null,
-	connector_name1 varchar(255) null,
-	connector_name2 varchar(255) null,
-	element_data SQL_TEXT null,
-	flags integer not null
+  map_id integer not null,
+  element1 integer not null,
+  element2 integer not null,
+  link_type integer not null,
+  link_name varchar(255) null,
+  connector_name1 varchar(255) null,
+  connector_name2 varchar(255) null,
+  element_data SQL_TEXT null,
+  flags integer not null
 ) TABLE_TYPE;
 
 CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id);
@@ -1330,13 +1332,13 @@ CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id);
  */
 CREATE TABLE images
 (
-   guid varchar(36) not null,
-   name varchar(63) not null,
-   category varchar(63) not null,
-   mimetype varchar(32) not null,
-   protected integer default 0,
-   PRIMARY KEY(guid),
-   UNIQUE(name, category)
+  guid varchar(36) not null,
+  name varchar(63) not null,
+  category varchar(63) not null,
+  mimetype varchar(32) not null,
+  protected integer default 0,
+  PRIMARY KEY(guid),
+  UNIQUE(name, category)
 ) TABLE_TYPE;
 
 /**
@@ -1344,10 +1346,10 @@ CREATE TABLE images
  */
 CREATE TABLE dashboards
 (
-	id integer not null,
-	num_columns integer not null,
-	options integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  num_columns integer not null,
+  options integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /**
@@ -1355,12 +1357,12 @@ CREATE TABLE dashboards
  */
 CREATE TABLE dashboard_elements
 (
-	dashboard_id integer not null,
-	element_id integer not null,
-	element_type integer not null,
-	element_data SQL_TEXT null,
-	layout_data SQL_TEXT null,
-	PRIMARY KEY(dashboard_id,element_id)
+  dashboard_id integer not null,
+  element_id integer not null,
+  element_type integer not null,
+  element_data SQL_TEXT null,
+  layout_data SQL_TEXT null,
+  PRIMARY KEY(dashboard_id,element_id)
 ) TABLE_TYPE;
 
 /**
@@ -1368,9 +1370,9 @@ CREATE TABLE dashboard_elements
  */
 CREATE TABLE dashboard_associations
 (
-   object_id integer not null,
-   dashboard_id integer not null,
-   PRIMARY KEY(object_id,dashboard_id)
+  object_id integer not null,
+  dashboard_id integer not null,
+  PRIMARY KEY(object_id,dashboard_id)
 ) TABLE_TYPE;
 
 /**
@@ -1378,8 +1380,8 @@ CREATE TABLE dashboard_associations
  */
 CREATE TABLE business_services
 (
-     service_id integer not null,
-     PRIMARY KEY(service_id)
+  service_id integer not null,
+  PRIMARY KEY(service_id)
 ) TABLE_TYPE;
 
 /**
@@ -1387,15 +1389,15 @@ CREATE TABLE business_services
  */
 CREATE TABLE slm_checks
 (
-     id integer not null,
-     type integer not null, // 1 - threshold, 2 - script
-     content SQL_TEXT null, // if type == 2
-     threshold_id integer not null, // if type == 1; refers to thresholds.id
-     reason varchar(255) null,
-     is_template integer not null,
-     template_id integer not null,  // template check ID
-     current_ticket integer not null,
-     PRIMARY KEY(id)
+  id integer not null,
+  type integer not null, // 1 - threshold, 2 - script
+  content SQL_TEXT null, // if type == 2
+  threshold_id integer not null, // if type == 1; refers to thresholds.id
+  reason varchar(255) null,
+  is_template integer not null,
+  template_id integer not null,  // template check ID
+  current_ticket integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -1403,9 +1405,9 @@ CREATE TABLE slm_checks
 */
 CREATE TABLE node_links
 (
-     nodelink_id integer not null,
-     node_id integer not null, // refers to node.id
-     PRIMARY KEY(nodelink_id)
+  nodelink_id integer not null,
+  node_id integer not null, // refers to node.id
+  PRIMARY KEY(nodelink_id)
 ) TABLE_TYPE;
 
 /*
@@ -1413,14 +1415,14 @@ CREATE TABLE node_links
 */
 CREATE TABLE slm_agreements
 (
-     agreement_id integer not null,
-     service_id integer not null,
-     org_id integer not null,
-     uptime varchar(63) not null, // required uptime, numeric(10,2) ?
-     period integer not null, // 1 - day, 2 - month
-     start_date integer not null, // date in YYYYMMDD format
-     notes varchar(255),
-     PRIMARY KEY(agreement_id)
+  agreement_id integer not null,
+  service_id integer not null,
+  org_id integer not null,
+  uptime varchar(63) not null, // required uptime, numeric(10,2) ?
+  period integer not null, // 1 - day, 2 - month
+  start_date integer not null, // date in YYYYMMDD format
+  notes varchar(255),
+  PRIMARY KEY(agreement_id)
 ) TABLE_TYPE;
 
 
@@ -1430,13 +1432,13 @@ CREATE TABLE slm_agreements
 
 CREATE TABLE slm_tickets
 (
-     ticket_id integer not null,
-     service_id integer not null,
-     check_id integer not null,
-     create_timestamp integer not null,
-     close_timestamp integer not null,
-     reason varchar(255) null,
-     PRIMARY KEY(ticket_id)
+  ticket_id integer not null,
+  service_id integer not null,
+  check_id integer not null,
+  create_timestamp integer not null,
+  close_timestamp integer not null,
+  reason varchar(255) null,
+  PRIMARY KEY(ticket_id)
 ) TABLE_TYPE;
 
 
@@ -1446,11 +1448,11 @@ CREATE TABLE slm_tickets
 
 CREATE TABLE slm_service_history
 (
-     record_id integer not null,
-     service_id integer not null,
-     change_timestamp integer not null,
-     new_status integer not null,
-	 PRIMARY KEY(record_id)
+  record_id integer not null,
+  service_id integer not null,
+  change_timestamp integer not null,
+  new_status integer not null,
+  PRIMARY KEY(record_id)
 ) TABLE_TYPE;
 
 
@@ -1460,13 +1462,13 @@ CREATE TABLE slm_service_history
 
 CREATE TABLE organizations
 (
-     id integer not null,
-	  parent_id integer not null,
-	  org_type integer not null,
-     name varchar(63) not null,
-     description varchar(255),
-	  manager integer not null,	// manager - id from "persons" table
-     PRIMARY KEY(id)
+  id integer not null,
+  parent_id integer not null,
+  org_type integer not null,
+  name varchar(63) not null,
+  description varchar(255),
+  manager integer not null, // manager - id from "persons" table
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 
@@ -1476,13 +1478,13 @@ CREATE TABLE organizations
 
 CREATE TABLE persons
 (
-	id integer not null,
-	org_id integer not null,
-	first_name varchar(63),
-	last_name varchar(63),
-	title varchar(255),
-	status integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  org_id integer not null,
+  first_name varchar(63),
+  last_name varchar(63),
+  title varchar(255),
+  status integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -1490,18 +1492,18 @@ CREATE TABLE persons
 */
 CREATE TABLE job_history
 (
-	id integer not null,
-	time_created integer not null,
-	time_started integer not null,
-	time_finished integer not null,
-	job_type varchar(127) null,
-	description varchar(255) null,
-	additional_info varchar(255) null,
-	node_id integer not null,
-	user_id integer not null,
-	status integer not null,
-	failure_message varchar(255) null,
-	PRIMARY KEY(id)
+  id integer not null,
+  time_created integer not null,
+  time_started integer not null,
+  time_finished integer not null,
+  job_type varchar(127) null,
+  description varchar(255) null,
+  additional_info varchar(255) null,
+  node_id integer not null,
+  user_id integer not null,
+  status integer not null,
+  failure_message varchar(255) null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -1509,9 +1511,9 @@ CREATE TABLE job_history
 */
 CREATE TABLE licenses
 (
-	id integer not null,
-	content SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  content SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -1519,11 +1521,11 @@ CREATE TABLE licenses
 */
 CREATE TABLE mapping_tables
 (
-	id integer not null,
-	name varchar(63) not null,
-	flags integer not null,
-	description SQL_TEXT4K null,
-	PRIMARY KEY(id)
+  id integer not null,
+  name varchar(63) not null,
+  flags integer not null,
+  description SQL_TEXT4K null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -1531,11 +1533,11 @@ CREATE TABLE mapping_tables
 */
 CREATE TABLE mapping_data
 (
-	table_id integer not null,
-	md_key varchar(63) not null,
-	md_value varchar(255) null,
-	description SQL_TEXT4K null,
-	PRIMARY KEY(table_id,md_key)
+  table_id integer not null,
+  md_key varchar(63) not null,
+  md_value varchar(255) null,
+  description SQL_TEXT4K null,
+  PRIMARY KEY(table_id,md_key)
 ) TABLE_TYPE;
 
 /*
@@ -1543,14 +1545,14 @@ CREATE TABLE mapping_data
 */
 CREATE TABLE dci_summary_tables
 (
-	id integer not null,
-   guid varchar(36) not null,
-	menu_path varchar(255) not null,
-	title varchar(127) null,
-	node_filter SQL_TEXT null,
-	flags integer not null,
-	columns SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  guid varchar(36) not null,
+  menu_path varchar(255) not null,
+  title varchar(127) null,
+  node_filter SQL_TEXT null,
+  flags integer not null,
+  columns SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -1558,16 +1560,16 @@ CREATE TABLE dci_summary_tables
 */
 CREATE TABLE scheduled_tasks
 (
-	id integer not null,
-	taskId varchar(255) null,
-	schedule varchar(127) null,
-	params varchar(1023) null,
-	execution_time integer not null,
-	last_execution_time integer not null,
-	flags integer not null,
-	owner integer not null,
-	object_id integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  taskId varchar(255) null,
+  schedule varchar(127) null,
+  params varchar(1023) null,
+  execution_time integer not null,
+  last_execution_time integer not null,
+  flags integer not null,
+  owner integer not null,
+  object_id integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 /*
@@ -1575,9 +1577,9 @@ CREATE TABLE scheduled_tasks
 */
 CREATE TABLE zmq_subscription
 (
-	object_id integer not null,
-   subscription_type char(1) not null,
-   ignore_items integer not null,
-   items SQL_TEXT,
-	PRIMARY KEY(object_id, subscription_type)
+  object_id integer not null,
+  subscription_type char(1) not null,
+  ignore_items integer not null,
+  items SQL_TEXT,
+  PRIMARY KEY(object_id, subscription_type)
 ) TABLE_TYPE;
