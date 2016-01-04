@@ -6,7 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-import org.netxms.base.CompatTools;
+import java.util.Arrays;
 import org.netxms.base.NXCPCodes;
 import org.netxms.base.NXCPException;
 import org.netxms.base.NXCPMessage;
@@ -127,7 +127,7 @@ class SessionWorker implements Runnable {
              msg.setEndOfFile(true);
           }
 
-          msg.setBinaryData(bytesRead  == -1 ? new byte[0] : CompatTools.arrayCopy(buffer, bytesRead));
+          msg.setBinaryData(bytesRead  == -1 ? new byte[0] : Arrays.copyOf(buffer, bytesRead));
           sendMessage(msg);
 
           if (bytesRead < FILE_BUFFER_SIZE)
