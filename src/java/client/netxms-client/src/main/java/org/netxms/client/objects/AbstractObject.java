@@ -18,19 +18,30 @@
  */
 package org.netxms.client.objects;
 
-import org.netxms.base.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import org.netxms.base.GeoLocation;
+import org.netxms.base.Logger;
+import org.netxms.base.NXCPCodes;
+import org.netxms.base.NXCPMessage;
+import org.netxms.base.NXCommon;
+import org.netxms.base.PostalAddress;
 import org.netxms.client.AccessListElement;
 import org.netxms.client.ModuleDataProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.ObjectStatus;
 import org.netxms.client.services.ServiceManager;
 
-import java.util.*;
-
 /**
  * Abstract base class for all NetXMS objects (both built-in and provided by extensions)
  */
-@SuppressWarnings("unused")
 public abstract class AbstractObject
 {
 	/** Entire network */
