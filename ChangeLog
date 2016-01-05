@@ -4,7 +4,7 @@
 
 - Fixed random server crash if ODBC database driver is used
 - Fixed incorrect reading of long text fields by MS SQL database driver
-- Fixed issues: #1063
+- Fixed issues: #1052, #1063
 
 
 *
