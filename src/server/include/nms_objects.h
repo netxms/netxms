@@ -1131,6 +1131,7 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool showThresholdSummary();
 
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
