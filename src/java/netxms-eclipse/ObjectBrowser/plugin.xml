@@ -37,6 +37,11 @@
             id="org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator"
             name="%command.ToggleStatusInd.name">
       </command>
+      <command
+            description="Rename"
+            id="org.netxms.ui.eclipse.objectbrowser.commands.rename_object"
+            name="Rename">
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -74,6 +79,12 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="Ctrl+F3">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objectbrowser.commands.rename_object"
+            contextId="org.netxms.ui.eclipse.objectbrowser.context.ObjectBrowser"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="F2">
+      </key>
    </extension>
 
   <extension
@@ -109,5 +120,17 @@
            properties="isAlarmsVisible"
            type="org.netxms.client.objects.AbstractObject">
      </propertyTester>
+  </extension>
+  <extension
+        point="org.eclipse.ui.menus">
+     <menuContribution
+           allPopups="false"
+           locationURI="popup:org.eclipse.ui.popup.any?before=objectmgmt">
+        <command
+              commandId="org.netxms.ui.eclipse.objectbrowser.commands.rename_object"
+              label="Rename"
+              style="push">
+        </command>
+     </menuContribution>
   </extension>
 </plugin>
