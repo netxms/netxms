@@ -97,12 +97,14 @@ mibs_DATA = \
 	CISCO-VLAN-MEMBERSHIP-MIB.txt \
 	CISCO-VTP-MIB.txt \
 	CONFIG-MIB.txt \
+	Console-Monitoring-MIB.txt \
 	COSINE-GLOBAL-REG.txt \
 	COSINE-InVision-MIB.txt \
 	COSINE-ORION-MIB.txt \
 	CPQHOST-MIB.txt \
 	CPQPOWER-MIB.txt \
 	CPU-PROTECT-MIB.txt \
+	CYBEROAM-MIB.txt \
 	DDM-MGMT-MIB.txt \
 	DELIBERANT-MIB.txt \
 	Dell-Vendor-MIB.txt \
@@ -147,6 +149,8 @@ mibs_DATA = \
 	DES3552-SWL3MGMT-MIB.txt \
 	DES3552P-L2MGMT-MIB.txt \
 	DES3552P-SWL3MGMT-MIB.txt \
+	DESKSNMP-MIB.txt \
+	DESKTRAP-MIB.txt \
 	DGS-3120-24PC-L3MGMT-MIB.txt \
 	DGS-3120-24SC-DC-L3MGMT-MIB.txt \
 	DGS-3120-24SC-L3MGMT-MIB.txt \
@@ -217,6 +221,7 @@ mibs_DATA = \
 	FOUNDRY-SN-TRAP-MIB.txt \
 	FOUNDRY-SN-VSRP-MIB.txt \
 	FROGFOOT-RESOURCES-MIB.txt \
+	FSC-RAID-MIB.txt \
 	H3C-COMMON-SYSTEM-MIB.txt \
 	H3C-CONFIG-MAN-MIB.txt \
 	H3C-ENTITY-EXT-MIB.txt \
@@ -309,6 +314,7 @@ mibs_DATA = \
 	HP-ICF-USBPORT.txt \
 	HP-ICF-VRRP-MIB.txt \
 	HP-ICF-XRRP.txt \
+	HP-LASERJET-COMMON-MIB.txt \
 	HP-SNTPclientConfiguration-MIB.txt \
 	HP-SwitchStack-MIB.txt \
 	HP-VLAN.txt \
@@ -332,6 +338,7 @@ mibs_DATA = \
 	IGMPV3-MIB.txt \
 	INET-ADDRESS-MIB.txt \
 	INTEGRATED-SERVICES-MIB.txt \
+	IOMEGANAS-MIB.txt \
 	IP-FORWARD-MIB.txt \
 	IP-MAC-BIND-MIB.txt \
 	IP-MCST-VLAN-REP-MIB.txt \
@@ -348,6 +355,7 @@ mibs_DATA = \
 	L2PROTOCOL-TUNNEL-MIB.txt \
 	LAG-MIB.txt \
 	LANNET-MIB.txt \
+	LINKSYS-MODEL-MIB.txt \
 	LLDP-EXT-DOT1-MIB.txt \
 	LLDP-EXT-DOT3-MIB.txt \
 	LLDP-EXT-MED-MIB.txt \
@@ -369,6 +377,7 @@ mibs_DATA = \
 	MSSQLSERVER-MIB.txt \
 	MSTP-MIB.txt \
 	MTA-MIB.txt \
+	NAS-MIB.txt \
 	NET-SNMP-AGENT-MIB.txt \
 	NET-SNMP-MIB.txt \
 	NET-SNMP-MONITOR-MIB.txt \
@@ -414,6 +423,7 @@ mibs_DATA = \
 	NTWS-SYSTEM-MIB.txt \
 	NTWS-TRAP-MIB.txt \
 	NTWS-TRAPLOG-MIB.txt \
+	OKIDATA-MIB.txt \
 	OPTIMUX-MIB.txt \
 	OSPF-MIB.txt \
 	OSPF-TRAP-MIB.txt \
@@ -611,7 +621,10 @@ mibs_DATA = \
 	WS-USER-MGMT-MIB.txt \
 	WWW-MIB.txt \
 	XPPC-MIB.txt \
-	ZONE-DEFENSE-MGMT-MIB.txt
+	ZONE-DEFENSE-MGMT-MIB.txt \
+	ZYXEL-MIB.txt \
+	ZYXEL-ZYWALL-ZLD-COMMON-MIB.txt
+
  
 EXTRA_DIST=$(mibs_DATA)
 

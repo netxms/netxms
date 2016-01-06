@@ -1,0 +1,5238 @@
+--
+-- MIB definition created by MIF -> MIB converter
+--
+-- CREATED: Monday, April 15, 2002
+--
+-- Language: "en|US|iso8859-1"
+-- MIF - Version: V2.0
+--
+
+--
+-- $Id$
+--
+
+DESKSNMP-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Title:	MIB for <description>
+--
+
+IMPORTS
+	OBJECT-TYPE				FROM RFC-1212
+	mib-2, DisplayString		FROM RFC1213-MIB
+	TimeTicks,
+	Counter, Gauge, enterprises	FROM RFC1155-SMI;
+
+sni            OBJECT IDENTIFIER   ::= { enterprises 231 }
+
+
+sniProductMibs OBJECT IDENTIFIER   ::= { sni 2 }
+sniExtensions  OBJECT IDENTIFIER   ::= { sniProductMibs 10 }
+sniDesktopMgmt OBJECT IDENTIFIER   ::= { sniExtensions 3 }
+sniDeskInfo    OBJECT IDENTIFIER   ::= { sniDesktopMgmt 1 }
+
+-- ... Group with ID = 1 will not be saved !!! 
+
+-- GROUP: "SNI PC-Information" 
+sniPCInformation 	OBJECT IDENTIFIER ::= { sniDeskInfo 2 }
+-- Description: ""
+-- Class: "SNI DESKINFO|PC-INFORMATION|1.0 US"
+
+sniPCManufacturer 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPCInformation 1 }
+
+sniPCName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPCInformation 2 }
+
+sniProductVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPCInformation 3 }
+
+sniPCSerialNumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPCInformation 4 }
+
+sniChassisType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-desktop ( 3 ),
+ 		e-low-profile-desktop ( 4 ),
+ 		e-pizza-box ( 5 ),
+ 		e-mini-tower ( 6 ),
+ 		e-tower ( 7 ),
+ 		e-portable ( 8 ),
+ 		e-laptop ( 9 ),
+ 		e-notebook ( 10 ),
+ 		e-handheld ( 11 ),
+ 		e-docking-station ( 12 ),
+ 		e-all-in-one ( 13 ),
+ 		e-sub-notebook ( 14 ),
+ 		e-space-saving ( 15 ),
+ 		e-lunch-box ( 16 ),
+ 		e-mainserver ( 17 ),
+ 		e-expansion-chassis ( 18 ),
+ 		e-sub-chassis ( 19 ),
+ 		e-bus-expansion-chassis ( 20 ),
+ 		e-peripheral-chassis ( 21 ),
+ 		e-raid-chassis ( 22 ),
+ 		e-rack-mount-chassis ( 23 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPCInformation 5 }
+
+sniChassisColor 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPCInformation 6 }
+
+sniHousingGeometry 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPCInformation 7 }
+
+sniCustomerSpecificSerialNumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPCInformation 8 }
+
+sniUUID 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPCInformation 9 }
+
+
+-- GROUP: "SNI Bios" 
+sniBios 	OBJECT IDENTIFIER ::= { sniDeskInfo 3 }
+-- Description: ""
+-- Class: "SNI DESKINFO|BIOS|1.0 US"
+
+sniBiosManufacturer 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 1 }
+
+sniAdaptions 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 2 }
+
+sniFeatures 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 3 }
+
+sniBiosVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 4 }
+
+sniLoaderVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 5 }
+
+sniRomSizekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 6 }
+
+sniBiosDate 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 7 }
+
+sniStatus 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 10 }
+
+sniStartaddress 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 11 }
+
+sniEndaddress 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 13 }
+
+sniISABus 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 15 }
+
+sniMCABus 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 16 }
+
+sniEISABus 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 17 }
+
+sniPCIBus 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 18 }
+
+sniPCMCIAInterface 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 19 }
+
+sniPlugandPlayPnP 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 20 }
+
+sniAdvPowerManagemAPM 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 21 }
+
+sniVLBus 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 22 }
+
+sniESCDBus 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 23 }
+
+sniIRDABus 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 24 }
+
+sniBootfromCDROM 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 25 }
+
+sniBootfromPCMCIA 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 26 }
+
+sniBiosShadowing 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 27 }
+
+sniSavetoDiskStd 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 28 }
+
+sniSecurity 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 29 }
+
+sniUSB 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 30 }
+
+sniSoftwarePowerOff 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 31 }
+
+sniRemoteOn 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 32 }
+
+sniAPMSpecificVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 33 }
+
+sniPNPSpecificVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 35 }
+
+sniFlashBIOS 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 37 }
+
+sniPC98 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 38 }
+
+sniBootDeviceSelectable 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 39 }
+
+sniBIOSRomSocketed 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 40 }
+
+sniEnhancedDiskDriveEDD 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 41 }
+
+sniNEC9800FloppySupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 42 }
+
+sniToshibaFloppySupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 43 }
+
+sni360kBFloppySupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 44 }
+
+sni720kBFloppySupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 45 }
+
+sni1MB2FloppySupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 46 }
+
+sni2MB88FloppySupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 47 }
+
+sniInt5PrintScreenService 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 48 }
+
+sniInt9Keyboard8042Supp 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 49 }
+
+sniSoftwarePowerOn 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 50 }
+
+sniISAMemoryGapSupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 51 }
+
+sniIEEE1394Support 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 52 }
+
+sniDMISupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 53 }
+
+sniACPISupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 54 }
+
+sniSystemMonitoring 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 55 }
+
+sniInt14SerialServices 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 56 }
+
+sniInt17PrinterServices 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 57 }
+
+sniInt10CGAVideoServices 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 58 }
+
+sniAGPSupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 59 }
+
+sniI2OBootSupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 60 }
+
+sniLS120BootSupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 61 }
+
+sniAtapiZIPDriveBootSupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 62 }
+
+sniSMARTBatterieSupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniBios 63 }
+
+
+-- GROUP: "SNI Memory" 
+sniMemory 	OBJECT IDENTIFIER ::= { sniDeskInfo 4 }
+-- Description: ""
+-- Class: "SNI DESKINFO|MEMORY|1.0 US"
+
+sniPhysicalMemoryMB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 1 }
+
+sniBaseMemorykB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 2 }
+
+sniFreePhysicalMemorykB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 3 }
+
+sniFreeUserResourcesPercentage 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 4 }
+
+sniFreeGDIResourcesPercentage 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 5 }
+
+sniVirtualMemoryType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-no-paging ( 1 ),
+ 		e-dos-paging ( 2 ),
+ 		e-protected-paging ( 3 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 6 }
+
+sniSwapFileName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 7 }
+
+sniSwapFileSizekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 8 }
+
+sniSwapFileUsedPercentage 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 9 }
+
+sniEMMSizekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 10 }
+
+sniEMMFreekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 11 }
+
+sniEMMDriverVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 12 }
+
+sniEMMDriverName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 13 }
+
+sniXMSSizekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 14 }
+
+sniXMSFreeMemorykB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 15 }
+
+sniXMSDriverVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 16 }
+
+sniXMSDriverName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMemory 17 }
+
+
+-- GROUP: "SNI Graphic" 
+sniGraphic 	OBJECT IDENTIFIER ::= { sniDeskInfo 5 }
+-- Description: ""
+-- Class: "SNI DESKINFO|GRAPHIC|1.0 US"
+
+sniGraphicCardManufacturer 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 1 }
+
+sniGraphicController 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 2 }
+
+sniGraphicCardDate 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 3 }
+
+sniShadowed 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 4 }
+
+sniGraphicType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-cga ( 3 ),
+ 		e-ega ( 4 ),
+ 		e-vga ( 5 ),
+ 		e-svga ( 6 ),
+ 		e-mda ( 7 ),
+ 		e-hgc ( 8 ),
+ 		e-mcga ( 9 ),
+ 		e-8514a ( 10 ),
+ 		e-xga ( 11 ),
+ 		e-frame-buffer ( 12 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 5 }
+
+sniDriver 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 6 }
+
+sniGraphicmode 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 7 }
+
+snivertResolutionPixel 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 8 }
+
+snihorResolutionPixel 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 9 }
+
+sniColorResolution 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 10 }
+
+sniRefreshrateHz 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 11 }
+
+sniScanMode 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-interlaced ( 3 ),
+ 		e-non-interlaced ( 4 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 12 }
+
+sniMinRefreshrateHz 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 13 }
+
+sniMaxRefreshrateHz 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 14 }
+
+sniMemorySizeKB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 15 }
+
+sniMemoryType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-vram ( 3 ),
+ 		e-dram ( 4 ),
+ 		e-sram ( 5 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 16 }
+
+sniGraphicCardLocation 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-integrated ( 3 ),
+ 		e-add-on ( 4 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 17 }
+
+sniStandardBios 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 18 }
+
+sniVESAExtensions 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 19 }
+
+sniDPMS 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 20 }
+
+sniDDC 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 21 }
+
+sniShadowing 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 22 }
+
+sniUpgradable 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniGraphic 23 }
+
+
+-- GROUP: "SNI Monitor" 
+sniMonitor 	OBJECT IDENTIFIER ::= { sniDeskInfo 6 }
+-- Description: ""
+-- Class: "SNI DESKINFO|MONITOR|1.0 US"
+
+sniMonitorName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 1 }
+
+sniSizeInch 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 2 }
+
+sniDDCSupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 3 }
+
+sniDPMSSupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 4 }
+
+sniMaxhorizResolution 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 5 }
+
+sniMaxverticalResolution 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 6 }
+
+sniMaxhorizontalFrequency 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 7 }
+
+sniMinhorizontalFrequency 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 8 }
+
+sniMaximumRefreshrate 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 9 }
+
+sniMinimumRefreshrate 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 10 }
+
+sniSerialNumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 11 }
+
+sniWeekofManufacture 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 12 }
+
+sniYearofManufacture 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMonitor 13 }
+
+
+-- GROUP: "SNI Operating System" 
+sniOperatingSystem 	OBJECT IDENTIFIER ::= { sniDeskInfo 7 }
+-- Description: ""
+-- Class: "SNI DESKINFO|OPERATING SYSTEM|1.0 US"
+
+sniOSName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniOperatingSystem 1 }
+
+sniOSVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniOperatingSystem 2 }
+
+sniOSLanguage 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniOperatingSystem 3 }
+
+sniOSInstallationDirectory 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniOperatingSystem 4 }
+
+sniOSNameSecondary 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniOperatingSystem 5 }
+
+sniOSVersionSecondary 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniOperatingSystem 6 }
+
+sniOSLanguageSecondary 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniOperatingSystem 7 }
+
+sniOSInstallDirSec 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniOperatingSystem 8 }
+
+sniPreInstallationVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniOperatingSystem 9 }
+
+sniPreInstallationLanguage 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniOperatingSystem 10 }
+
+
+-- TABLE: "SNI Software"
+-- Description: ""
+-- Class: "SNI DESKINFO|SOFTWARE|1.0 US"
+
+sniSoftware 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniSoftwareEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 8 } 
+
+sniSoftwareEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniSoftwareEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniSoftwareIndex } 
+ 	::= { sniSoftware 1 } 
+
+SniSoftwareEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniSoftwareIndex 	INTEGER, 
+ 	 	sniSoftwareName 	DisplayString, 
+ 	 	sniSoftwareVersion 	DisplayString, 
+ 	 	sniInstallationDirectory 	DisplayString, 
+ 	 	sniAtPreInstallTime 	INTEGER, 
+ 	 	sniVersion 	DisplayString 
+ 	 	 	} 
+
+sniSoftwareIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSoftwareEntry 1 }
+
+sniSoftwareName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSoftwareEntry 2 }
+
+sniSoftwareVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSoftwareEntry 3 }
+
+sniInstallationDirectory 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSoftwareEntry 4 }
+
+sniAtPreInstallTime 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSoftwareEntry 5 }
+
+sniVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSoftwareEntry 6 }
+
+
+-- TABLE: "SNI Hardware"
+-- Description: ""
+-- Class: "SNI DESKINFO|HARDWARE|1.0 US"
+
+sniHardware 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniHardwareEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 10 } 
+
+sniHardwareEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniHardwareEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniHardwareIndex } 
+ 	::= { sniHardware 1 } 
+
+SniHardwareEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniHardwareIndex 	INTEGER, 
+ 	 	sniHardwareName 	DisplayString, 
+ 	 	sniDriverDirectory 	DisplayString 
+ 	 	 	} 
+
+sniHardwareIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwareEntry 1 }
+
+sniHardwareName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwareEntry 2 }
+
+sniDriverDirectory 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwareEntry 3 }
+
+
+-- TABLE: "SNI Logical Drives"
+-- Description: ""
+-- Class: "SNI DESKINFO|LOGICAL DRIVES|1.0 US"
+
+sniLogicalDrives 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniLogicalDrivesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 12 } 
+
+sniLogicalDrivesEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniLogicalDrivesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniDriveletter } 
+ 	::= { sniLogicalDrives 1 } 
+
+SniLogicalDrivesEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniDriveletter 	DisplayString, 
+ 	 	sniLogicalDriveType 	INTEGER, 
+ 	 	sniVolumename 	DisplayString, 
+ 	 	sniLogicalDriveSizekB 	INTEGER, 
+ 	 	sniLogicalDriveFreeSpacekB 	INTEGER, 
+ 	 	sniLogicalDriveSectorSizeByte 	INTEGER, 
+ 	 	sniClusterSizeByte 	INTEGER, 
+ 	 	sniSectorsPerCluster 	INTEGER, 
+ 	 	sniClusters 	INTEGER, 
+ 	 	sniSectors 	INTEGER, 
+ 	 	sniNetworkpath 	DisplayString, 
+ 	 	sniLogicalDrivePartitionName 	DisplayString, 
+ 	 	sniLogicalDrivePartitionSizekB 	INTEGER, 
+ 	 	sniLogicalDrivePartitionFreeSpacekB 	INTEGER, 
+ 	 	sniLogicalDrivePartitionLabel 	DisplayString, 
+ 	 	sniLogicalDrivePartitionFilesystem 	INTEGER, 
+ 	 	sniLogicalDrivePartitionCompressed 	INTEGER, 
+ 	 	sniLogicalDrivePartitionEncrypted 	INTEGER, 
+ 	 	sniLogicalDrivePartitionActive 	INTEGER, 
+ 	 	sniLogicalDrivePartitionBootable 	INTEGER 
+ 	 	 	} 
+
+sniDriveletter 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 1 }
+
+sniLogicalDriveType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-harddisk ( 3 ),
+ 		e-removable-disk ( 4 ),
+ 		e-remote ( 5 ),
+ 		e-cd-rom ( 6 ),
+ 		e-floppy-disk ( 7 ),
+ 		e-ramdrive ( 8 ),
+ 		e-disk-array ( 9 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 2 }
+
+sniVolumename 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 3 }
+
+sniLogicalDriveSizekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 4 }
+
+sniLogicalDriveFreeSpacekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 5 }
+
+sniLogicalDriveSectorSizeByte 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 6 }
+
+sniClusterSizeByte 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 7 }
+
+sniSectorsPerCluster 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 8 }
+
+sniClusters 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 9 }
+
+sniSectors 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 10 }
+
+sniNetworkpath 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 11 }
+
+sniLogicalDrivePartitionName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 12 }
+
+sniLogicalDrivePartitionSizekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 13 }
+
+sniLogicalDrivePartitionFreeSpacekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 14 }
+
+sniLogicalDrivePartitionLabel 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 15 }
+
+sniLogicalDrivePartitionFilesystem 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-unknown ( 0 ),
+ 		e-fat ( 3 ),
+ 		e-hpfs ( 4 ),
+ 		e-ntfs ( 5 ),
+ 		e-ofs ( 6 ),
+ 		e-mfs ( 7 ),
+ 		e-hfs ( 8 ),
+ 		e-vxfs ( 9 ),
+ 		e-sfs ( 10 ),
+ 		e-s5 ( 11 ),
+ 		e-s52k ( 12 ),
+ 		e-ufs ( 13 ),
+ 		e-ffs ( 14 ),
+ 		e-netware286 ( 15 ),
+ 		e-netware386 ( 16 ),
+ 		e-cdfs ( 17 ),
+ 		e-fat32 ( 18 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 16 }
+
+sniLogicalDrivePartitionCompressed 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 17 }
+
+sniLogicalDrivePartitionEncrypted 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 18 }
+
+sniLogicalDrivePartitionActive 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 19 }
+
+sniLogicalDrivePartitionBootable 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniLogicalDrivesEntry 20 }
+
+
+-- TABLE: "SNI Physical Drives"
+-- Description: ""
+-- Class: "SNI DESKINFO|PHYSICAL DRIVES|1.0 US"
+
+sniPhysicalDrives 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniPhysicalDrivesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 14 } 
+
+sniPhysicalDrivesEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniPhysicalDrivesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniPhysicalDrive } 
+ 	::= { sniPhysicalDrives 1 } 
+
+SniPhysicalDrivesEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniPhysicalDrive 	INTEGER, 
+ 	 	sniPhysicalDriveName 	DisplayString, 
+ 	 	sniPhysicalDriveType 	INTEGER, 
+ 	 	sniInterface 	INTEGER, 
+ 	 	sniMediaLoaded 	INTEGER, 
+ 	 	sniRemovableDrive 	INTEGER, 
+ 	 	sniRemovableMedia 	INTEGER, 
+ 	 	sniSCSIID 	INTEGER, 
+ 	 	sniSCSILUN 	INTEGER, 
+ 	 	sniPhysicalDriveTotalSpacekB 	INTEGER, 
+ 	 	sniTracks 	INTEGER, 
+ 	 	sniSectorsPerTrack 	INTEGER, 
+ 	 	sniHeads 	INTEGER, 
+ 	 	sniWritePreComp 	INTEGER, 
+ 	 	sniLandingZone 	INTEGER, 
+ 	 	sniPhysicalDriveSectorSizeByte 	INTEGER, 
+ 	 	sniBadBlocks 	INTEGER, 
+ 	 	sniPhysicalDrivePartitions 	INTEGER, 
+ 	 	sniPhysicalDriveLocation 	INTEGER, 
+ 	 	sniSMART 	INTEGER, 
+ 	 	sniSMARTCrossreference 	INTEGER 
+ 	 	 	} 
+
+sniPhysicalDrive 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 1 }
+
+sniPhysicalDriveName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 2 }
+
+sniPhysicalDriveType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-other ( 1 ),
+ 		e-harddisk ( 3 ),
+ 		e-floppydisk ( 4 ),
+ 		e-optical-rom ( 5 ),
+ 		e-optical-worm ( 6 ),
+ 		e-optical-rw ( 7 ),
+ 		e-cd ( 8 ),
+ 		e-flash-disk ( 9 ),
+ 		e-bernoulli-disk ( 10 ),
+ 		e-optical-fd ( 11 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 3 }
+
+sniInterface 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-scsi ( 3 ),
+ 		e-esdi ( 4 ),
+ 		e-ide ( 5 ),
+ 		e-cmd ( 6 ),
+ 		e-ipi ( 7 ),
+ 		e-st506 ( 8 ),
+ 		e-dssi ( 9 ),
+ 		e-parallel ( 10 ),
+ 		e-hippi ( 11 ),
+ 		e-qic2 ( 12 ),
+ 		e-fd ( 13 ),
+ 		e-pcmcia ( 14 ),
+ 		e-eide ( 15 ),
+ 		e-ide-eide ( 16 ),
+ 		e-atapi ( 17 ),
+ 		e-usb ( 18 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 4 }
+
+sniMediaLoaded 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 5 }
+
+sniRemovableDrive 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 6 }
+
+sniRemovableMedia 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 7 }
+
+sniSCSIID 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 8 }
+
+sniSCSILUN 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 9 }
+
+sniPhysicalDriveTotalSpacekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 10 }
+
+sniTracks 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 11 }
+
+sniSectorsPerTrack 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 12 }
+
+sniHeads 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 13 }
+
+sniWritePreComp 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 14 }
+
+sniLandingZone 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 15 }
+
+sniPhysicalDriveSectorSizeByte 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 16 }
+
+sniBadBlocks 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 17 }
+
+sniPhysicalDrivePartitions 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 18 }
+
+sniPhysicalDriveLocation 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-internal ( 3 ),
+ 		e-external ( 4 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 19 }
+
+sniSMART 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-ok ( 3 ),
+ 		e-warning ( 4 ),
+ 		e-critical ( 5 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 20 }
+
+sniSMARTCrossreference 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPhysicalDrivesEntry 21 }
+
+
+-- TABLE: "SNI Partitions"
+-- Description: ""
+-- Class: "SNI DESKINFO|PARTITIONS|1.0 US"
+
+sniPartitions 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniPartitionsEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 16 } 
+
+sniPartitionsEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniPartitionsEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniPhysicalDriveIndex, sniPartitionIndex } 
+ 	::= { sniPartitions 1 } 
+
+SniPartitionsEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniPhysicalDriveIndex 	INTEGER, 
+ 	 	sniPartitionIndex 	INTEGER, 
+ 	 	sniPartitionName 	DisplayString, 
+ 	 	sniPartitionSizekB 	INTEGER, 
+ 	 	sniPartitionFreeSpacekB 	INTEGER, 
+ 	 	sniLabel 	DisplayString, 
+ 	 	sniPartitionFilesystem 	INTEGER, 
+ 	 	sniPartitionCompressed 	INTEGER, 
+ 	 	sniPartitionEncrypted 	INTEGER, 
+ 	 	sniPartitionActive 	INTEGER, 
+ 	 	sniPartitionBootable 	INTEGER 
+ 	 	 	} 
+
+sniPhysicalDriveIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPartitionsEntry 1 }
+
+sniPartitionIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPartitionsEntry 2 }
+
+sniPartitionName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPartitionsEntry 3 }
+
+sniPartitionSizekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPartitionsEntry 4 }
+
+sniPartitionFreeSpacekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPartitionsEntry 5 }
+
+sniLabel 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPartitionsEntry 6 }
+
+sniPartitionFilesystem 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-unknown ( 0 ),
+ 		e-fat ( 3 ),
+ 		e-hpfs ( 4 ),
+ 		e-ntfs ( 5 ),
+ 		e-ofs ( 6 ),
+ 		e-mfs ( 7 ),
+ 		e-hfs ( 8 ),
+ 		e-vxfs ( 9 ),
+ 		e-sfs ( 10 ),
+ 		e-s5 ( 11 ),
+ 		e-s52k ( 12 ),
+ 		e-ufs ( 13 ),
+ 		e-ffs ( 14 ),
+ 		e-netware286 ( 15 ),
+ 		e-netware386 ( 16 ),
+ 		e-cdfs ( 17 ),
+ 		e-fat32 ( 18 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPartitionsEntry 7 }
+
+sniPartitionCompressed 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPartitionsEntry 8 }
+
+sniPartitionEncrypted 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPartitionsEntry 9 }
+
+sniPartitionActive 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPartitionsEntry 10 }
+
+sniPartitionBootable 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniPartitionsEntry 11 }
+
+
+-- GROUP: "SNI Mainboard" 
+sniMainboard 	OBJECT IDENTIFIER ::= { sniDeskInfo 18 }
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD|1.0 US"
+
+sniMainboardManufacturer 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboard 1 }
+
+sniMainboardName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboard 2 }
+
+sniMainboardVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboard 3 }
+
+sniProductID 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboard 4 }
+
+sniProductType 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboard 5 }
+
+sniMaxMemoryMB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboard 6 }
+
+sniUsedMemorySlots 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboard 7 }
+
+sniNumberMemorySlots 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboard 8 }
+
+sniOnBoardMouse 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboard 9 }
+
+sniHarddiskAccelerator 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboard 10 }
+
+sniMainboardGSNumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboard 11 }
+
+sniMainboardVariant 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboard 12 }
+
+
+-- TABLE: "SNI Mainboard: Processors"
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD: PROCESSORS|1.0 US"
+
+sniMainboardProcessors 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniMainboardProcessorsEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 19 } 
+
+sniMainboardProcessorsEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniMainboardProcessorsEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniProcessorIndex } 
+ 	::= { sniMainboardProcessors 1 } 
+
+SniMainboardProcessorsEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniProcessorIndex 	INTEGER, 
+ 	 	sniProcessorType 	INTEGER, 
+ 	 	sniFamily 	DisplayString, 
+ 	 	sniProcessorVersion 	DisplayString, 
+ 	 	sniCurrentProcSpeedMHz 	INTEGER, 
+ 	 	sniMaxBoardSpeedMHz 	INTEGER, 
+ 	 	sniProcessorSerialnumber 	DisplayString 
+ 	 	 	} 
+
+sniProcessorIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardProcessorsEntry 1 }
+
+sniProcessorType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-cpu ( 3 ),
+ 		e-co-processor ( 4 ),
+ 		e-sound-processor ( 5 ),
+ 		e-graphic-processor ( 6 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardProcessorsEntry 2 }
+
+sniFamily 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardProcessorsEntry 3 }
+
+sniProcessorVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardProcessorsEntry 4 }
+
+sniCurrentProcSpeedMHz 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardProcessorsEntry 5 }
+
+sniMaxBoardSpeedMHz 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardProcessorsEntry 6 }
+
+sniProcessorSerialnumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardProcessorsEntry 7 }
+
+
+-- TABLE: "SNI Mainboard: Cache"
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD: CACHE|1.0 US"
+
+sniMainboardCache 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniMainboardCacheEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 21 } 
+
+sniMainboardCacheEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniMainboardCacheEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniCacheIndex } 
+ 	::= { sniMainboardCache 1 } 
+
+SniMainboardCacheEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniCacheIndex 	INTEGER, 
+ 	 	sniCacheActive 	INTEGER, 
+ 	 	sniCacheSizekB 	INTEGER, 
+ 	 	sniMaximumSizekB 	INTEGER, 
+ 	 	sniLevel 	INTEGER, 
+ 	 	sniCacheBurstType 	INTEGER, 
+ 	 	sniCacheSynchron 	INTEGER, 
+ 	 	sniCacheSRAM 	INTEGER, 
+ 	 	sniBurstTypeSupport 	INTEGER, 
+ 	 	sniSynchronSupport 	INTEGER, 
+ 	 	sniSRAMSupport 	INTEGER, 
+ 	 	sniWriteThrough 	INTEGER, 
+ 	 	sniWriteBack 	INTEGER, 
+ 	 	sniDataCache 	INTEGER, 
+ 	 	sniInstructionCache 	INTEGER, 
+ 	 	sniInternal 	INTEGER, 
+ 	 	sniInSocket 	INTEGER 
+ 	 	 	} 
+
+sniCacheIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 1 }
+
+sniCacheActive 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 2 }
+
+sniCacheSizekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 3 }
+
+sniMaximumSizekB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 4 }
+
+sniLevel 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 5 }
+
+sniCacheBurstType 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-unknown ( 0 ),
+ 		e-non-burst ( 1 ),
+ 		e-burst ( 2 ),
+ 		e-burst-nonburst ( 3 ),
+ 		e-pipelinedburst ( 4 ),
+ 		e-nonburst-pipelinedburst ( 5 ),
+ 		e-burst-pipelinedburst ( 6 ),
+ 		e-burst-nonburst-pipelinedburst ( 7 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 6 }
+
+sniCacheSynchron 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-no ( 2 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 7 }
+
+sniCacheSRAM 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 128 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 8 }
+
+sniBurstTypeSupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-unknown ( 0 ),
+ 		e-non-burst ( 1 ),
+ 		e-burst ( 2 ),
+ 		e-burst-nonburst ( 3 ),
+ 		e-pipelinedburst ( 4 ),
+ 		e-nonburst-pipelinedburst ( 5 ),
+ 		e-burst-pipelinedburst ( 6 ),
+ 		e-burst-nonburst-pipelinedburst ( 7 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 9 }
+
+sniSynchronSupport 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-synchron ( 1 ),
+ 		e-asynchron ( 2 ),
+ 		e-synchron-asynchron ( 3 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 10 }
+
+sniSRAMSupport 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 128 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 11 }
+
+sniWriteThrough 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 12 }
+
+sniWriteBack 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 13 }
+
+sniDataCache 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 14 }
+
+sniInstructionCache 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 15 }
+
+sniInternal 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 16 }
+
+sniInSocket 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardCacheEntry 17 }
+
+
+-- TABLE: "SNI Mainboard: Ports"
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD: PORTS|1.0 US"
+
+sniMainboardPorts 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniMainboardPortsEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 23 } 
+
+sniMainboardPortsEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniMainboardPortsEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniPortIndex } 
+ 	::= { sniMainboardPorts 1 } 
+
+SniMainboardPortsEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniPortIndex 	INTEGER, 
+ 	 	sniPortName 	DisplayString, 
+ 	 	sniPortType 	INTEGER, 
+ 	 	sniIOBaseAddress 	INTEGER, 
+ 	 	sniPortIRQ 	INTEGER, 
+ 	 	sniPortDMA 	INTEGER 
+ 	 	 	} 
+
+sniPortIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardPortsEntry 1 }
+
+sniPortName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardPortsEntry 2 }
+
+sniPortType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 255 ),
+ 		e-no-interface ( 0 ),
+ 		e-proprietary ( 1 ),
+ 		e-centronics ( 2 ),
+ 		e-mini-centronics ( 3 ),
+ 		e-db25-male ( 4 ),
+ 		e-db25-female ( 5 ),
+ 		e-db15-male ( 6 ),
+ 		e-db15-female ( 7 ),
+ 		e-db9-male ( 8 ),
+ 		e-db9-female ( 9 ),
+ 		e-rj11 ( 10 ),
+ 		e-rj45 ( 11 ),
+ 		e-mini-scsi ( 12 ),
+ 		e-mini-din ( 13 ),
+ 		e-micro-din ( 14 ),
+ 		e-ps2 ( 15 ),
+ 		e-infra-red ( 16 ),
+ 		e-hp-hil ( 17 ),
+ 		e-access-bus ( 18 ),
+ 		e-ssa-scsi ( 19 ),
+ 		e-circ-din8-male ( 20 ),
+ 		e-circ-din8-female ( 21 ),
+ 		e-ide ( 22 ),
+ 		e-fd ( 23 ),
+ 		e-dil9 ( 24 ),
+ 		e-dil25 ( 25 ),
+ 		e-dil50 ( 26 ),
+ 		e-dil68 ( 27 ),
+ 		e-cd-rom-sound ( 28 ),
+ 		e-centronics14 ( 29 ),
+ 		e-centronics26 ( 30 ),
+ 		e-pc98 ( 31 ),
+ 		e-pc98-hireso ( 32 ),
+ 		e-pch98 ( 33 ),
+ 		e-pc98note ( 34 ),
+ 		e-pc98full ( 35 ),
+ 		e-usb ( 36 ),
+ 		e-mini-jack ( 37 ),
+ 		e-firewire ( 38 ),
+ 		e-other ( 2147483647 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardPortsEntry 3 }
+
+sniIOBaseAddress 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardPortsEntry 4 }
+
+sniPortIRQ 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardPortsEntry 5 }
+
+sniPortDMA 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardPortsEntry 6 }
+
+
+-- TABLE: "SNI Mainboard: System Slots"
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD: SYSTEM SLOTS|1.0 US"
+
+sniMainboardSystemSlots 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniMainboardSystemSlotsEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 25 } 
+
+sniMainboardSystemSlotsEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniMainboardSystemSlotsEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniSystemSlotIndex } 
+ 	::= { sniMainboardSystemSlots 1 } 
+
+SniMainboardSystemSlotsEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniSystemSlotIndex 	INTEGER, 
+ 	 	sniSystemSlotName 	DisplayString, 
+ 	 	sniSystemSlotType 	INTEGER, 
+ 	 	sniNumber 	INTEGER, 
+ 	 	sniInUse 	INTEGER, 
+ 	 	sniBusWidth 	INTEGER, 
+ 	 	sniSlotLength 	INTEGER, 
+ 	 	sniSharedSlot 	INTEGER 
+ 	 	 	} 
+
+sniSystemSlotIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardSystemSlotsEntry 1 }
+
+sniSystemSlotName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardSystemSlotsEntry 2 }
+
+sniSystemSlotType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-isa ( 3 ),
+ 		e-mca ( 4 ),
+ 		e-eisa ( 5 ),
+ 		e-pci ( 6 ),
+ 		e-pcmcia ( 7 ),
+ 		e-vlb ( 8 ),
+ 		e-proprietary ( 9 ),
+ 		e-processor-card ( 10 ),
+ 		e-memory-card ( 11 ),
+ 		e-riser-card ( 12 ),
+ 		e-nubus ( 13 ),
+ 		e-pci66 ( 14 ),
+ 		e-pc98c20 ( 15 ),
+ 		e-pc98c24 ( 16 ),
+ 		e-pc98e ( 17 ),
+ 		e-pc98-localbus ( 18 ),
+ 		e-pc98-card ( 19 ),
+ 		e-agp ( 20 ),
+ 		e-agp2x ( 21 ),
+ 		e-agp4x ( 22 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardSystemSlotsEntry 3 }
+
+sniNumber 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardSystemSlotsEntry 4 }
+
+sniInUse 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardSystemSlotsEntry 5 }
+
+sniBusWidth 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-8 ( 3 ),
+ 		e-16 ( 4 ),
+ 		e-32 ( 5 ),
+ 		e-64 ( 6 ),
+ 		e-128 ( 7 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardSystemSlotsEntry 6 }
+
+sniSlotLength 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-full ( 3 ),
+ 		e-half ( 4 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardSystemSlotsEntry 7 }
+
+sniSharedSlot 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardSystemSlotsEntry 8 }
+
+
+-- TABLE: "SNI Mainboard: Onboard Devices"
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD: ONBOARD DEVICES|1.0 US"
+
+sniMainboardOnboardDevices 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniMainboardOnboardDevicesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 27 } 
+
+sniMainboardOnboardDevicesEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniMainboardOnboardDevicesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniOnboardDeviceIndex } 
+ 	::= { sniMainboardOnboardDevices 1 } 
+
+SniMainboardOnboardDevicesEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniOnboardDeviceIndex 	INTEGER, 
+ 	 	sniOnboardDeviceName 	DisplayString, 
+ 	 	sniOnboardDeviceType 	INTEGER, 
+ 	 	sniOnboardDeviceActive 	INTEGER 
+ 	 	 	} 
+
+sniOnboardDeviceIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardOnboardDevicesEntry 1 }
+
+sniOnboardDeviceName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardOnboardDevicesEntry 2 }
+
+sniOnboardDeviceType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-other ( 1 ),
+ 		e-graphic-card ( 3 ),
+ 		e-scsi ( 4 ),
+ 		e-ethernet-card ( 5 ),
+ 		e-tokenring-card ( 6 ),
+ 		e-sound-card ( 7 ),
+ 		e-mouse ( 8 ),
+ 		e-hd-accelerator ( 9 ),
+ 		e-sni-chip ( 10 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardOnboardDevicesEntry 3 }
+
+sniOnboardDeviceActive 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardOnboardDevicesEntry 4 }
+
+
+-- TABLE: "SNI Mainboard: Memory"
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD: MEMORY|1.0 US"
+
+sniMainboardMemory 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniMainboardMemoryEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 29 } 
+
+sniMainboardMemoryEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniMainboardMemoryEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniMemoryControllerIndex } 
+ 	::= { sniMainboardMemory 1 } 
+
+SniMainboardMemoryEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniMemoryControllerIndex 	INTEGER, 
+ 	 	sniNumberOfMemoryModules 	INTEGER, 
+ 	 	sniMaxNumberofModules 	INTEGER, 
+ 	 	sniMaximumModuleSizeMB 	INTEGER, 
+ 	 	sniSupportedSpeeds 	INTEGER, 
+ 	 	sniErrorCorrectionECC 	INTEGER, 
+ 	 	sniStandardSupport 	INTEGER, 
+ 	 	sniFastPageModeSupport 	INTEGER, 
+ 	 	sniEDOSupport 	INTEGER, 
+ 	 	sniParitySupport 	INTEGER, 
+ 	 	sniECCSupport 	INTEGER, 
+ 	 	sniSIMMSupport 	INTEGER, 
+ 	 	sniDIMMSupport 	INTEGER, 
+ 	 	sniRIMMSupport 	INTEGER, 
+ 	 	sniMaximumNumberOfLowLevelDevices 	INTEGER, 
+ 	 	sniTotalNumberOfLowLevelDevices 	INTEGER 
+ 	 	 	} 
+
+sniMemoryControllerIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 1 }
+
+sniNumberOfMemoryModules 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 2 }
+
+sniMaxNumberofModules 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 3 }
+
+sniMaximumModuleSizeMB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 4 }
+
+sniSupportedSpeeds 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-other ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-70-ns ( 4 ),
+ 		e-60-ns ( 8 ),
+ 		e-50-ns ( 16 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 5 }
+
+sniErrorCorrectionECC 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-no ( 3 ),
+ 		e-single-bit ( 4 ),
+ 		e-double-bit ( 5 ),
+ 		e-scrubbing ( 6 ),
+ 		e-other ( 8 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 6 }
+
+sniStandardSupport 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 4 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 7 }
+
+sniFastPageModeSupport 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 8 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 8 }
+
+sniEDOSupport 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 16 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 9 }
+
+sniParitySupport 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 32 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 10 }
+
+sniECCSupport 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 64 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 11 }
+
+sniSIMMSupport 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 128 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 12 }
+
+sniDIMMSupport 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 256 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 13 }
+
+sniRIMMSupport 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 512 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 14 }
+
+sniMaximumNumberOfLowLevelDevices 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 15 }
+
+sniTotalNumberOfLowLevelDevices 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryEntry 16 }
+
+
+-- TABLE: "SNI Mainboard: Memory Modules"
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD: MEMORY MODULES|1.0 US"
+
+sniMainboardMemoryModules 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniMainboardMemoryModulesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 31 } 
+
+sniMainboardMemoryModulesEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniMainboardMemoryModulesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniMemoryController, sniMemoryModule } 
+ 	::= { sniMainboardMemoryModules 1 } 
+
+SniMainboardMemoryModulesEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniMemoryController 	INTEGER, 
+ 	 	sniMemoryModule 	INTEGER, 
+ 	 	sniMemoryModuleName 	DisplayString, 
+ 	 	sniModuleSizeMB 	INTEGER, 
+ 	 	sniSpeedns 	INTEGER, 
+ 	 	sniStandardMemoryModule 	INTEGER, 
+ 	 	sniEDO 	INTEGER, 
+ 	 	sniSIMM 	INTEGER, 
+ 	 	sniDIMM 	INTEGER, 
+ 	 	sniFastPageMode 	INTEGER, 
+ 	 	sniParity 	INTEGER, 
+ 	 	sniECC 	INTEGER, 
+ 	 	sniMemoryBank 	INTEGER, 
+ 	 	sniAttachedMemoryBank 	INTEGER, 
+ 	 	sniRIMM 	INTEGER 
+ 	 	 	} 
+
+sniMemoryController 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 1 }
+
+sniMemoryModule 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 2 }
+
+sniMemoryModuleName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 3 }
+
+sniModuleSizeMB 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 4 }
+
+sniSpeedns 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 5 }
+
+sniStandardMemoryModule 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 4 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 6 }
+
+sniEDO 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 16 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 7 }
+
+sniSIMM 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 128 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 8 }
+
+sniDIMM 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 256 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 9 }
+
+sniFastPageMode 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 8 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 10 }
+
+sniParity 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 32 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 11 }
+
+sniECC 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 64 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 12 }
+
+sniMemoryBank 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 13 }
+
+sniAttachedMemoryBank 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 14 }
+
+sniRIMM 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-no ( 0 ),
+ 		e-unknown ( 2 ),
+ 		e-yes ( 512 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesEntry 15 }
+
+
+-- GROUP: "SNI State Of Supply: System Data" 
+sniStateOfSupplySystemData 	OBJECT IDENTIFIER ::= { sniDeskInfo 33 }
+-- Description: ""
+-- Class: "SNI DESKINFO|STATE OF SUPPLY: SYSTEM DATA|1.0 US"
+
+sniSystemName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySystemData 1 }
+
+sniIdentNumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySystemData 2 }
+
+sniSystemSerialNumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySystemData 3 }
+
+sniProductionMonth 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySystemData 4 }
+
+
+-- GROUP: "SNI State Of Supply: Mainboard" 
+sniStateOfSupplyMainboard 	OBJECT IDENTIFIER ::= { sniDeskInfo 34 }
+-- Description: ""
+-- Class: "SNI DESKINFO|STATE OF SUPPLY: MAINBOARD|1.0 US"
+
+sniProductName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyMainboard 1 }
+
+sniGSNumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyMainboard 2 }
+
+sniMainboardSerialNumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyMainboard 3 }
+
+sniBIOSVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyMainboard 4 }
+
+
+-- TABLE: "SNI State Of Supply: Internal Devices"
+-- Description: ""
+-- Class: "SNI DESKINFO|STATE OF SUPPLY: INTERNAL DEVICES|1.0 US"
+
+sniStateOfSupplyInternalDevices 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniStateOfSupplyInternalDevicesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 35 } 
+
+sniStateOfSupplyInternalDevicesEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniStateOfSupplyInternalDevicesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniDeviceIndex } 
+ 	::= { sniStateOfSupplyInternalDevices 1 } 
+
+SniStateOfSupplyInternalDevicesEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniDeviceIndex 	INTEGER, 
+ 	 	sniDeviceName 	DisplayString, 
+ 	 	sniDeviceType 	INTEGER, 
+ 	 	sniDeviceSerialnumber 	DisplayString, 
+ 	 	sniNumberofDevices 	INTEGER 
+ 	 	 	} 
+
+sniDeviceIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyInternalDevicesEntry 1 }
+
+sniDeviceName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyInternalDevicesEntry 2 }
+
+sniDeviceType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-other ( 1 ),
+ 		e-power-supply ( 3 ),
+ 		e-harddisk ( 4 ),
+ 		e-floppydisk ( 5 ),
+ 		e-cd-rom ( 6 ),
+ 		e-magneto-optical-disk ( 7 ),
+ 		e-streamer ( 8 ),
+ 		e-floptical-disk ( 9 ),
+ 		e-chipcard-reader ( 10 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyInternalDevicesEntry 3 }
+
+sniDeviceSerialnumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyInternalDevicesEntry 4 }
+
+sniNumberofDevices 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyInternalDevicesEntry 5 }
+
+
+-- TABLE: "SNI State Of Supply: Add-On Modules"
+-- Description: ""
+-- Class: "SNI DESKINFO|STATE OF SUPPLY: ADDON MODULES|1.0 US"
+
+sniStateOfSupplyAddOnModules 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniStateOfSupplyAddOnModulesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 37 } 
+
+sniStateOfSupplyAddOnModulesEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniStateOfSupplyAddOnModulesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniModuleIndex } 
+ 	::= { sniStateOfSupplyAddOnModules 1 } 
+
+SniStateOfSupplyAddOnModulesEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniModuleIndex 	INTEGER, 
+ 	 	sniModuleName 	DisplayString, 
+ 	 	sniModuleType 	INTEGER, 
+ 	 	sniModuleSerialnumber 	DisplayString, 
+ 	 	sniNumberofModules 	INTEGER 
+ 	 	 	} 
+
+sniModuleIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnModulesEntry 1 }
+
+sniModuleName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnModulesEntry 2 }
+
+sniModuleType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-other ( 1 ),
+ 		e-cache ( 3 ),
+ 		e-dram ( 4 ),
+ 		e-video-memory ( 5 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnModulesEntry 3 }
+
+sniModuleSerialnumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnModulesEntry 4 }
+
+sniNumberofModules 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnModulesEntry 5 }
+
+
+-- TABLE: "SNI State Of Supply: Add-On Boards"
+-- Description: ""
+-- Class: "SNI DESKINFO|STATE OF SUPPLY: ADDON BOARDS|1.0 US"
+
+sniStateOfSupplyAddOnBoards 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniStateOfSupplyAddOnBoardsEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 39 } 
+
+sniStateOfSupplyAddOnBoardsEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniStateOfSupplyAddOnBoardsEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniBoardIndex } 
+ 	::= { sniStateOfSupplyAddOnBoards 1 } 
+
+SniStateOfSupplyAddOnBoardsEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniBoardIndex 	INTEGER, 
+ 	 	sniBoardName 	DisplayString, 
+ 	 	sniBoardType 	INTEGER, 
+ 	 	sniBoardSerialnumber 	DisplayString, 
+ 	 	sniNumberofBoards 	INTEGER, 
+ 	 	sniVendorID 	DisplayString, 
+ 	 	sniBoardIRQ 	DisplayString, 
+ 	 	sniBoardDMA 	DisplayString, 
+ 	 	sniIOAddress 	DisplayString, 
+ 	 	sniMemoryMapping 	DisplayString 
+ 	 	 	} 
+
+sniBoardIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnBoardsEntry 1 }
+
+sniBoardName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnBoardsEntry 2 }
+
+sniBoardType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-other ( 1 ),
+ 		e-video ( 3 ),
+ 		e-net ( 4 ),
+ 		e-scsi ( 5 ),
+ 		e-audio ( 6 ),
+ 		e-fax ( 7 ),
+ 		e-modem ( 8 ),
+ 		e-tv ( 9 ),
+ 		e-mpeg ( 10 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnBoardsEntry 3 }
+
+sniBoardSerialnumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnBoardsEntry 4 }
+
+sniNumberofBoards 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnBoardsEntry 5 }
+
+sniVendorID 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnBoardsEntry 6 }
+
+sniBoardIRQ 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnBoardsEntry 7 }
+
+sniBoardDMA 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnBoardsEntry 8 }
+
+sniIOAddress 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnBoardsEntry 9 }
+
+sniMemoryMapping 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplyAddOnBoardsEntry 10 }
+
+
+-- TABLE: "SNI State Of Supply: SCSI Devices"
+-- Description: ""
+-- Class: "SNI DESKINFO|STATE OF SUPPLY: SCSI DEVICES|1.0 US"
+
+sniStateOfSupplySCSIDevices 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniStateOfSupplySCSIDevicesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 41 } 
+
+sniStateOfSupplySCSIDevicesEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniStateOfSupplySCSIDevicesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniSCSIDeviceIndex } 
+ 	::= { sniStateOfSupplySCSIDevices 1 } 
+
+SniStateOfSupplySCSIDevicesEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniSCSIDeviceIndex 	INTEGER, 
+ 	 	sniSCSIDeviceName 	DisplayString, 
+ 	 	sniSCSIDeviceType 	INTEGER, 
+ 	 	sniTargetID 	INTEGER, 
+ 	 	sniHostAdapterID 	INTEGER, 
+ 	 	sniCapacity 	DisplayString, 
+ 	 	sniSCSIDeviceSerialnumber 	DisplayString, 
+ 	 	sniInfo 	DisplayString, 
+ 	 	sniNumberOfSCSIDevices 	INTEGER 
+ 	 	 	} 
+
+sniSCSIDeviceIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySCSIDevicesEntry 1 }
+
+sniSCSIDeviceName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySCSIDevicesEntry 2 }
+
+sniSCSIDeviceType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-other ( 1 ),
+ 		e-tape ( 3 ),
+ 		e-printer ( 4 ),
+ 		e-processor ( 5 ),
+ 		e-worm ( 6 ),
+ 		e-cdrom ( 7 ),
+ 		e-scanner ( 8 ),
+ 		e-optical-disk ( 9 ),
+ 		e-jukebox ( 10 ),
+ 		e-communication ( 11 ),
+ 		e-ascit8-defined ( 12 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySCSIDevicesEntry 3 }
+
+sniTargetID 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySCSIDevicesEntry 4 }
+
+sniHostAdapterID 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySCSIDevicesEntry 5 }
+
+sniCapacity 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySCSIDevicesEntry 6 }
+
+sniSCSIDeviceSerialnumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySCSIDevicesEntry 7 }
+
+sniInfo 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySCSIDevicesEntry 8 }
+
+sniNumberOfSCSIDevices 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniStateOfSupplySCSIDevicesEntry 9 }
+
+
+-- TABLE: "SNI Anti-Virus"
+-- Description: ""
+-- Class: "SNI DESKINFO|ANTI-VIRUS|1.0 US"
+
+sniAntiVirus 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniAntiVirusEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 43 } 
+
+sniAntiVirusEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniAntiVirusEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniAntiVirusProgramIndex } 
+ 	::= { sniAntiVirus 1 } 
+
+SniAntiVirusEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniAntiVirusProgramIndex 	INTEGER, 
+ 	 	sniAntiVirusLogfile 	DisplayString, 
+ 	 	sniScannerName 	DisplayString, 
+ 	 	sniErrorKeyword1 	DisplayString, 
+ 	 	sniErrorKeyword2 	DisplayString, 
+ 	 	sniErrorKeyword3 	DisplayString, 
+ 	 	sniErrorKeyword4 	DisplayString, 
+ 	 	sniErrorKeyword5 	DisplayString, 
+ 	 	sniErrorKeyword6 	DisplayString, 
+ 	 	sniErrorKeyword7 	DisplayString, 
+ 	 	sniErrorKeyword8 	DisplayString, 
+ 	 	sniErrorKeyword9 	DisplayString, 
+ 	 	sniErrorKeyword10 	DisplayString, 
+ 	 	sniWarningKeyword1 	DisplayString, 
+ 	 	sniWarningKeyword2 	DisplayString, 
+ 	 	sniWarningKeyword3 	DisplayString, 
+ 	 	sniWarningKeyword4 	DisplayString, 
+ 	 	sniWarningKeyword5 	DisplayString, 
+ 	 	sniWarningKeyword6 	DisplayString, 
+ 	 	sniWarningKeyword7 	DisplayString, 
+ 	 	sniWarningKeyword8 	DisplayString, 
+ 	 	sniWarningKeyword9 	DisplayString, 
+ 	 	sniWarningKeyword10 	DisplayString, 
+ 	 	sniDistinguishWarningError 	INTEGER 
+ 	 	 	} 
+
+sniAntiVirusProgramIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 1 }
+
+sniAntiVirusLogfile 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 2 }
+
+sniScannerName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 3 }
+
+sniErrorKeyword1 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 4 }
+
+sniErrorKeyword2 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 5 }
+
+sniErrorKeyword3 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 6 }
+
+sniErrorKeyword4 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 7 }
+
+sniErrorKeyword5 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 8 }
+
+sniErrorKeyword6 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 9 }
+
+sniErrorKeyword7 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 10 }
+
+sniErrorKeyword8 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 11 }
+
+sniErrorKeyword9 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 12 }
+
+sniErrorKeyword10 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 13 }
+
+sniWarningKeyword1 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 14 }
+
+sniWarningKeyword2 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 15 }
+
+sniWarningKeyword3 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 16 }
+
+sniWarningKeyword4 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 17 }
+
+sniWarningKeyword5 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 18 }
+
+sniWarningKeyword6 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 19 }
+
+sniWarningKeyword7 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 20 }
+
+sniWarningKeyword8 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 21 }
+
+sniWarningKeyword9 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 22 }
+
+sniWarningKeyword10 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 23 }
+
+sniDistinguishWarningError 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniAntiVirusEntry 24 }
+
+
+-- GROUP: "SNI Mouse" 
+sniMouse 	OBJECT IDENTIFIER ::= { sniDeskInfo 45 }
+-- Description: ""
+-- Class: "SNI DESKINFO|MOUSE|1.0 US"
+
+sniMouseManufacturer 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMouse 1 }
+
+sniMouseDriverName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMouse 2 }
+
+sniDriverVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMouse 3 }
+
+sniMouseInterface 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-serial ( 3 ),
+ 		e-ps-2 ( 4 ),
+ 		e-infra-red ( 5 ),
+ 		e-bus ( 6 ),
+ 		e-usb ( 7 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMouse 4 }
+
+sniMouseIRQ 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMouse 5 }
+
+sniMousePort 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMouse 6 }
+
+sniSupportedButtons 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMouse 7 }
+
+sniButtonsExchanged 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMouse 8 }
+
+sniSpeedPercentage 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMouse 9 }
+
+sniShowMouseTrails 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMouse 10 }
+
+
+-- GROUP: "SNI Keyboard" 
+sniKeyboard 	OBJECT IDENTIFIER ::= { sniDeskInfo 46 }
+-- Description: ""
+-- Class: "SNI DESKINFO|KEYBOARD|1.0 US"
+
+sniKeyboardType 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniKeyboard 1 }
+
+sniLayout 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniKeyboard 2 }
+
+sniInterfaceType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-mini-din ( 3 ),
+ 		e-micro-din ( 4 ),
+ 		e-ps-2 ( 5 ),
+ 		e-infra-red ( 6 ),
+ 		e-hp-hil ( 7 ),
+ 		e-db-9 ( 8 ),
+ 		e-access-bus ( 9 ),
+ 		e-usb ( 10 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniKeyboard 3 }
+
+sniCodepage 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniKeyboard 4 }
+
+sniWindowsDriver 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniKeyboard 5 }
+
+sniDOSDriver 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniKeyboard 6 }
+
+
+-- GROUP: "SNI DeskView Version" 
+sniDeskViewVersion 	OBJECT IDENTIFIER ::= { sniDeskInfo 47 }
+-- Description: ""
+-- Class: "SNI DESKINFO|DESKVIEW VERSION|1.0 US"
+
+sniSysInf32Version 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniDeskViewVersion 1 }
+
+sniSysInf16Version 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniDeskViewVersion 2 }
+
+sniDeskInfoAgentVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniDeskViewVersion 3 }
+
+sniDINetVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniDeskViewVersion 4 }
+
+sniDNAgentVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniDeskViewVersion 5 }
+
+sniDNBrowserVersion 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniDeskViewVersion 6 }
+
+
+-- TABLE: "SNI SMART Values"
+-- Description: ""
+-- Class: "SNI DESKINFO|SMART VALUES|1.0 US"
+
+sniSMARTValues 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniSMARTValuesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 48 } 
+
+sniSMARTValuesEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniSMARTValuesEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniSMARTIndex } 
+ 	::= { sniSMARTValues 1 } 
+
+SniSMARTValuesEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniSMARTIndex 	INTEGER, 
+ 	 	sniPhysicalDriveCrossreference 	INTEGER, 
+ 	 	sniSMARTID 	INTEGER, 
+ 	 	sniSMARTName 	DisplayString, 
+ 	 	sniSMARTErrorThreshold 	INTEGER, 
+ 	 	sniSMARTWarningThreshold 	INTEGER, 
+ 	 	sniCurrentSMARTValue 	INTEGER, 
+ 	 	sniSMARTState 	INTEGER 
+ 	 	 	} 
+
+sniSMARTIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSMARTValuesEntry 1 }
+
+sniPhysicalDriveCrossreference 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSMARTValuesEntry 2 }
+
+sniSMARTID 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSMARTValuesEntry 3 }
+
+sniSMARTName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSMARTValuesEntry 4 }
+
+sniSMARTErrorThreshold 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSMARTValuesEntry 5 }
+
+sniSMARTWarningThreshold 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSMARTValuesEntry 6 }
+
+sniCurrentSMARTValue 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSMARTValuesEntry 7 }
+
+sniSMARTState 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-ok ( 3 ),
+ 		e-warning ( 4 ),
+ 		e-critical ( 5 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniSMARTValuesEntry 8 }
+
+
+-- TABLE: "SNI Hardware: Powersupply"
+-- Description: ""
+-- Class: "SNI DESKINFO|HARDWARE: POWERSUPPLY|1.0 US"
+
+sniHardwarePowersupply 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniHardwarePowersupplyEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 50 } 
+
+sniHardwarePowersupplyEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniHardwarePowersupplyEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniPowersupplyIndex } 
+ 	::= { sniHardwarePowersupply 1 } 
+
+SniHardwarePowersupplyEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniPowersupplyIndex 	INTEGER, 
+ 	 	sniPowersupplySerialNumber 	DisplayString, 
+ 	 	sniPowersupplyGSLevel 	DisplayString, 
+ 	 	sniPowersupplyRevision 	DisplayString, 
+ 	 	sniPowersupplyManufacturingDate 	DisplayString, 
+ 	 	sniOutputPowerW 	DisplayString, 
+ 	 	sniMonitorOutletSupported 	INTEGER, 
+ 	 	sniMonitorOutlet 	INTEGER, 
+ 	 	sniVoltage5V 	DisplayString, 
+ 	 	sniVoltage12V 	DisplayString, 
+ 	 	sniMin5VCurrentA 	DisplayString, 
+ 	 	sniOutputCurrentmA 	DisplayString, 
+ 	 	sniPulsPerRevolution 	INTEGER, 
+ 	 	sniPowersFanControlSupp 	INTEGER, 
+ 	 	sniPowersupplyFanSpeed 	INTEGER, 
+ 	 	sniPowersupplyFanControl 	INTEGER 
+ 	 	 	} 
+
+sniPowersupplyIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 1 }
+
+sniPowersupplySerialNumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 2 }
+
+sniPowersupplyGSLevel 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 3 }
+
+sniPowersupplyRevision 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 4 }
+
+sniPowersupplyManufacturingDate 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 5 }
+
+sniOutputPowerW 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 6 }
+
+sniMonitorOutletSupported 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 7 }
+
+sniMonitorOutlet 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-other ( 1 ),
+ 		e-off ( 3 ),
+ 		e-on ( 4 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 8 }
+
+sniVoltage5V 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 9 }
+
+sniVoltage12V 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 10 }
+
+sniMin5VCurrentA 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 11 }
+
+sniOutputCurrentmA 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 12 }
+
+sniPulsPerRevolution 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 13 }
+
+sniPowersFanControlSupp 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 14 }
+
+sniPowersupplyFanSpeed 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-other ( 1 ),
+ 		e-controlled ( 3 ),
+ 		e-full-speed ( 4 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 15 }
+
+sniPowersupplyFanControl 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-other ( 1 ),
+ 		e-not-controlled ( 3 ),
+ 		e-on-off ( 4 ),
+ 		e-full-controlled ( 5 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePowersupplyEntry 16 }
+
+
+-- TABLE: "SNI Hardware: Drive Bays"
+-- Description: ""
+-- Class: "SNI DESKINFO|HARDWARE: DRIVE BAYS|1.0 US"
+
+sniHardwareDriveBays 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniHardwareDriveBaysEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 52 } 
+
+sniHardwareDriveBaysEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniHardwareDriveBaysEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniDriveBayIndex } 
+ 	::= { sniHardwareDriveBays 1 } 
+
+SniHardwareDriveBaysEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniDriveBayIndex 	INTEGER, 
+ 	 	sniDriveBayType 	INTEGER, 
+ 	 	sniNumberOfDriveBays 	INTEGER, 
+ 	 	sniAccessible 	INTEGER 
+ 	 	 	} 
+
+sniDriveBayIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwareDriveBaysEntry 1 }
+
+sniDriveBayType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-other ( 1 ),
+ 		e-3-5-inch ( 3 ),
+ 		e-5-25-inch ( 4 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwareDriveBaysEntry 2 }
+
+sniNumberOfDriveBays 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwareDriveBaysEntry 3 }
+
+sniAccessible 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwareDriveBaysEntry 4 }
+
+
+-- TABLE: "SNI Mainboard: Resource Usage"
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD: RESOURCE USAGE|1.0 US"
+
+sniMainboardResourceUsage 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniMainboardResourceUsageEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 54 } 
+
+sniMainboardResourceUsageEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniMainboardResourceUsageEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniResourceUsageIndex } 
+ 	::= { sniMainboardResourceUsage 1 } 
+
+SniMainboardResourceUsageEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniResourceUsageIndex 	INTEGER, 
+ 	 	sniBusType 	INTEGER, 
+ 	 	sniBusLoad 	DisplayString 
+ 	 	 	} 
+
+sniResourceUsageIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardResourceUsageEntry 1 }
+
+sniBusType 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-other ( 1 ),
+ 		e-pci ( 3 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardResourceUsageEntry 2 }
+
+sniBusLoad 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardResourceUsageEntry 3 }
+
+
+-- TABLE: "SNI Hardware: PCI-BaseAddress"
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD: PCI-BaseAddress|1.0 US"
+
+sniHardwarePCIBaseAddress 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniHardwarePCIBaseAddressEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 56 } 
+
+sniHardwarePCIBaseAddressEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniHardwarePCIBaseAddressEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniPCIBaseAddressIndex } 
+ 	::= { sniHardwarePCIBaseAddress 1 } 
+
+SniHardwarePCIBaseAddressEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniPCIBaseAddressIndex 	INTEGER, 
+ 	 	sniPCIIndex1 	INTEGER, 
+ 	 	sniMemoryIOSpace 	INTEGER, 
+ 	 	sniPrefetchable 	INTEGER, 
+ 	 	sniPCIMemoryMapping 	INTEGER, 
+ 	 	sniBaseAddress 	DisplayString 
+ 	 	 	} 
+
+sniPCIBaseAddressIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIBaseAddressEntry 1 }
+
+sniPCIIndex1 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIBaseAddressEntry 2 }
+
+sniMemoryIOSpace 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-memory-space ( 3 ),
+ 		e-io-space ( 4 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIBaseAddressEntry 3 }
+
+sniPrefetchable 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIBaseAddressEntry 4 }
+
+sniPCIMemoryMapping 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-in-32bit-space ( 3 ),
+ 		e-below-1-mbyte ( 4 ),
+ 		e-in-64bit-space ( 5 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIBaseAddressEntry 5 }
+
+sniBaseAddress 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIBaseAddressEntry 6 }
+
+
+-- TABLE: "SNI Hardware: PCI-Characteristics"
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD: PCI-Characteristics|1.0 US"
+
+sniHardwarePCICharacteristics 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniHardwarePCICharacteristicsEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 58 } 
+
+sniHardwarePCICharacteristicsEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniHardwarePCICharacteristicsEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniPCICharacteristicsIndex } 
+ 	::= { sniHardwarePCICharacteristics 1 } 
+
+SniHardwarePCICharacteristicsEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniPCICharacteristicsIndex 	INTEGER, 
+ 	 	sniPCIIndex2 	INTEGER, 
+ 	 	sniCharacteristicNumber 	INTEGER, 
+ 	 	sniCharacteristicInfo 	DisplayString, 
+ 	 	sniModeNumber 	INTEGER, 
+ 	 	sniModeInfo 	DisplayString 
+ 	 	 	} 
+
+sniPCICharacteristicsIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCICharacteristicsEntry 1 }
+
+sniPCIIndex2 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCICharacteristicsEntry 2 }
+
+sniCharacteristicNumber 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCICharacteristicsEntry 3 }
+
+sniCharacteristicInfo 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCICharacteristicsEntry 4 }
+
+sniModeNumber 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCICharacteristicsEntry 5 }
+
+sniModeInfo 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCICharacteristicsEntry 6 }
+
+
+-- TABLE: "SNI Hardware: PCI-Info"
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD: PCI-Info|1.0 US"
+
+sniHardwarePCIInfo 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniHardwarePCIInfoEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 60 } 
+
+sniHardwarePCIInfoEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniHardwarePCIInfoEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniPCIInfoIndex } 
+ 	::= { sniHardwarePCIInfo 1 } 
+
+SniHardwarePCIInfoEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniPCIInfoIndex 	INTEGER, 
+ 	 	sniPCIIndex3 	INTEGER, 
+ 	 	sniDeviceID 	INTEGER, 
+ 	 	sniPCIDeviceType 	DisplayString, 
+ 	 	sniPCIDeviceName 	DisplayString, 
+ 	 	sniRevisionID 	INTEGER, 
+ 	 	sniPCIBusNumber 	INTEGER, 
+ 	 	sniPCISlotNumber 	INTEGER, 
+ 	 	sniPCIVendorID 	INTEGER, 
+ 	 	sniVendorName 	DisplayString, 
+ 	 	sniBaseClassID 	INTEGER, 
+ 	 	sniSubClassID 	INTEGER, 
+ 	 	sniProgrammingInterfaceID 	INTEGER, 
+ 	 	sniBaseClassDescription 	DisplayString, 
+ 	 	sniSubClassDescription 	DisplayString, 
+ 	 	sniSingleMultiFunction 	INTEGER, 
+ 	 	sniDeviceCommand 	INTEGER, 
+ 	 	sniDeviceStatus 	INTEGER, 
+ 	 	sniCacheLineSize 	INTEGER, 
+ 	 	sniLatencyTimer 	INTEGER, 
+ 	 	sniCompletionCode 	INTEGER, 
+ 	 	sniBuildinSelfTestSupport 	INTEGER, 
+ 	 	sniInterruptLine 	INTEGER, 
+ 	 	sniInterruptPin 	INTEGER, 
+ 	 	sniMinimumGrant 	INTEGER, 
+ 	 	sniMaximumLatencyTime 	INTEGER, 
+ 	 	sniSubVendorID 	INTEGER, 
+ 	 	sniSubSystemID 	INTEGER, 
+ 	 	sniCIS 	DisplayString, 
+ 	 	sniExpROMBaseAddressReg 	DisplayString, 
+ 	 	sniExpansionROMBaseAddress 	DisplayString, 
+ 	 	sniDecodeenabled 	INTEGER, 
+ 	 	sniFunctionnumber 	INTEGER, 
+ 	 	sniDevicenumber 	INTEGER 
+ 	 	 	} 
+
+sniPCIInfoIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 1 }
+
+sniPCIIndex3 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 2 }
+
+sniDeviceID 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 3 }
+
+sniPCIDeviceType 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 4 }
+
+sniPCIDeviceName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 5 }
+
+sniRevisionID 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 6 }
+
+sniPCIBusNumber 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 7 }
+
+sniPCISlotNumber 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 8 }
+
+sniPCIVendorID 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 9 }
+
+sniVendorName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 10 }
+
+sniBaseClassID 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 11 }
+
+sniSubClassID 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 12 }
+
+sniProgrammingInterfaceID 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 13 }
+
+sniBaseClassDescription 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 14 }
+
+sniSubClassDescription 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 15 }
+
+sniSingleMultiFunction 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-single ( 3 ),
+ 		e-multi ( 4 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 16 }
+
+sniDeviceCommand 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 17 }
+
+sniDeviceStatus 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 18 }
+
+sniCacheLineSize 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 19 }
+
+sniLatencyTimer 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 20 }
+
+sniCompletionCode 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 21 }
+
+sniBuildinSelfTestSupport 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 22 }
+
+sniInterruptLine 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 23 }
+
+sniInterruptPin 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-unknown ( 0 ),
+ 		e-none ( 3 ),
+ 		e-inta ( 4 ),
+ 		e-intb ( 5 ),
+ 		e-intc ( 6 ),
+ 		e-intd ( 7 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 24 }
+
+sniMinimumGrant 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 25 }
+
+sniMaximumLatencyTime 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 26 }
+
+sniSubVendorID 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 27 }
+
+sniSubSystemID 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 28 }
+
+sniCIS 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	"Reserved"
+ 	::= { sniHardwarePCIInfoEntry 29 }
+
+sniExpROMBaseAddressReg 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 30 }
+
+sniExpansionROMBaseAddress 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 31 }
+
+sniDecodeenabled 	OBJECT-TYPE
+	SYNTAX 	INTEGER	{ 
+ 		e-no ( 0 ),
+ 		e-yes ( 1 ),
+ 		e-unknown ( 2 )
+			}  
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 32 }
+
+sniFunctionnumber 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 33 }
+
+sniDevicenumber 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniHardwarePCIInfoEntry 34 }
+
+
+-- TABLE: "SNI Mainboard: Memory Modules Ex"
+-- Description: ""
+-- Class: "SNI DESKINFO|MAINBOARD: MEMORY MODULES EX|1.0 US"
+
+sniMainboardMemoryModulesEx 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniMainboardMemoryModulesExEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 62 } 
+
+sniMainboardMemoryModulesExEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniMainboardMemoryModulesExEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniMemoryController2, sniMemoryModule2 } 
+ 	::= { sniMainboardMemoryModulesEx 1 } 
+
+SniMainboardMemoryModulesExEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniMemoryController2 	INTEGER, 
+ 	 	sniMemoryModule2 	INTEGER, 
+ 	 	sniMemoryModuleSerialnumber 	DisplayString, 
+ 	 	sniMemoryModuleManufacturer 	DisplayString, 
+ 	 	sniLocationMemoryBank 	DisplayString, 
+ 	 	sniNumberOfLowLevelDevices 	INTEGER, 
+ 	 	sniSpeedMHz 	INTEGER, 
+ 	 	sniMemoryTypeEx 	INTEGER, 
+ 	 	sniMemorymoduleFormfactorandType 	DisplayString 
+ 	 	 	} 
+
+sniMemoryController2 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesExEntry 1 }
+
+sniMemoryModule2 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesExEntry 2 }
+
+sniMemoryModuleSerialnumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesExEntry 3 }
+
+sniMemoryModuleManufacturer 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesExEntry 4 }
+
+sniLocationMemoryBank 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesExEntry 5 }
+
+sniNumberOfLowLevelDevices 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesExEntry 6 }
+
+sniSpeedMHz 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesExEntry 7 }
+
+sniMemoryTypeEx 	OBJECT-TYPE
+ 	SYNTAX	INTEGER {
+ 		e-other ( 1 ),
+ 		e-unknown ( 2 ),
+ 		e-dram ( 3 ),
+ 		e-edram ( 4 ),
+ 		e-vram ( 5 ),
+ 		e-sram ( 6 ),
+ 		e-ram ( 7 ),
+ 		e-rom ( 8 ),
+ 		e-flash ( 9 ),
+ 		e-eeprom ( 10 ),
+ 		e-feprom ( 11 ),
+ 		e-eprom ( 12 ),
+ 		e-cdram ( 13 ),
+ 		e-3dram ( 14 ),
+ 		e-sdram ( 15 ),
+ 		e-sgram ( 16 ),
+ 		e-rdram ( 17 )
+ 			}
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesExEntry 8 }
+
+sniMemorymoduleFormfactorandType 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniMainboardMemoryModulesExEntry 9 }
+
+
+-- GROUP: "SNI USER" 
+sniUSER 	OBJECT IDENTIFIER ::= { sniDeskInfo 64 }
+-- Description: ""
+-- Class: "SNI DESKINFO|USER|1.0 US"
+
+sniUsername 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniUSER 1 }
+
+sniPhonenumber 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniUSER 2 }
+
+sniPlace 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniUSER 3 }
+
+sniDepartment 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniUSER 4 }
+
+sniJobTitle 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniUSER 5 }
+
+sniContact 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniUSER 6 }
+
+sniAdditionalUserInformation 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniUSER 7 }
+
+sniServicePartner 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniUSER 8 }
+
+sniServiceContact 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniUSER 9 }
+
+sniEndOfContract 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniUSER 10 }
+
+sniAdditionalServiceInformation 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniUSER 11 }
+
+sniGeneralInformation 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniUSER 12 }
+
+
+-- TABLE: "SNI Network"
+-- Description: ""
+-- Class: "SNI DESKINFO|NETWORK|1.0 US"
+
+sniNetwork 	OBJECT-TYPE 
+ 	SYNTAX 	SEQUENCE OF SniNetworkEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"" 
+ 	::= { sniDeskInfo 65 } 
+
+sniNetworkEntry 	 	OBJECT-TYPE 
+ 	SYNTAX 	SniNetworkEntry 
+ 	ACCESS 	not-accessible 
+ 	STATUS 	mandatory 
+ 	DESCRIPTION 	"An entry of the table" 
+ 	INDEX 	{ sniNetworkAdapterIndex } 
+ 	::= { sniNetwork 1 } 
+
+SniNetworkEntry 	::= 
+ 	SEQUENCE 	{ 
+ 	 	sniNetworkAdapterIndex 	INTEGER, 
+ 	 	sniNetworkAdapter 	DisplayString, 
+ 	 	sniMACAddress 	DisplayString, 
+ 	 	sniComputerName 	DisplayString, 
+ 	 	sniDHCPServer 	DisplayString, 
+ 	 	sniDNSHostname 	DisplayString, 
+ 	 	sniDNSDomainname 	DisplayString, 
+ 	 	sniDNSServer1 	DisplayString, 
+ 	 	sniDNSServer2 	DisplayString, 
+ 	 	sniDNSServer3 	DisplayString, 
+ 	 	sniDNSServer4 	DisplayString, 
+ 	 	sniDNSServer5 	DisplayString, 
+ 	 	sniIPAddress1 	DisplayString, 
+ 	 	sniIPAddress2 	DisplayString, 
+ 	 	sniIPAddress3 	DisplayString, 
+ 	 	sniIPAddress4 	DisplayString, 
+ 	 	sniIPAddress5 	DisplayString, 
+ 	 	sniSubnetMask1 	DisplayString, 
+ 	 	sniSubnetMask2 	DisplayString, 
+ 	 	sniSubnetMask3 	DisplayString, 
+ 	 	sniSubnetMask4 	DisplayString, 
+ 	 	sniSubnetMask5 	DisplayString, 
+ 	 	sniGateway1 	DisplayString, 
+ 	 	sniGateway2 	DisplayString, 
+ 	 	sniGateway3 	DisplayString, 
+ 	 	sniGateway4 	DisplayString, 
+ 	 	sniGateway5 	DisplayString 
+ 	 	 	} 
+
+sniNetworkAdapterIndex 	OBJECT-TYPE
+	SYNTAX 	INTEGER 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 1 }
+
+sniNetworkAdapter 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 2 }
+
+sniMACAddress 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 3 }
+
+sniComputerName 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 4 }
+
+sniDHCPServer 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 5 }
+
+sniDNSHostname 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 6 }
+
+sniDNSDomainname 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 7 }
+
+sniDNSServer1 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 8 }
+
+sniDNSServer2 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 9 }
+
+sniDNSServer3 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 10 }
+
+sniDNSServer4 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 11 }
+
+sniDNSServer5 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 12 }
+
+sniIPAddress1 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 13 }
+
+sniIPAddress2 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 14 }
+
+sniIPAddress3 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 15 }
+
+sniIPAddress4 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 16 }
+
+sniIPAddress5 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 17 }
+
+sniSubnetMask1 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 18 }
+
+sniSubnetMask2 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 19 }
+
+sniSubnetMask3 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 20 }
+
+sniSubnetMask4 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 21 }
+
+sniSubnetMask5 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 22 }
+
+sniGateway1 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 23 }
+
+sniGateway2 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 24 }
+
+sniGateway3 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 25 }
+
+sniGateway4 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 26 }
+
+sniGateway5 	OBJECT-TYPE
+	SYNTAX 	DisplayString 
+ 	ACCESS	read-only
+ 	STATUS	mandatory
+ 	DESCRIPTION	""
+ 	::= { sniNetworkEntry 27 }
+
+
+END
