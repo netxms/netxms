@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.datacollection.views.helpers;
 
 import java.util.HashMap;
+import java.util.Set;
 
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -27,6 +28,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
@@ -128,7 +130,19 @@ public class DciLabelProvider implements ITableLabelProvider
 				if (dci.getTemplateId() == 0)
 					return null;
 				AbstractObject object = session.findObjectById(dci.getTemplateId());
-				return (object != null) ? object.getObjectName() : Messages.get().DciLabelProvider_Unknown;
+				if(object == null)
+				   return  Messages.get().DciLabelProvider_Unknown;
+				if(!(object instanceof Template))
+				   return object.getObjectName();
+				Set<AbstractObject> parents = object.getAllParents(null);
+				StringBuilder sb = new StringBuilder();
+				for(AbstractObject parent : parents)
+				{
+				   sb.append(parent.getObjectName());
+				   sb.append("/");
+				}
+				sb.append(object.getObjectName());
+				return sb.toString();
 		}
 		return null;
 	}
