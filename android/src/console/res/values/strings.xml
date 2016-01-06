@@ -15,6 +15,7 @@
 	<string name="no_items">No items to show&#8230;</string>
 	<string name="warning">Warning</string>
 	<string name="long_time_execution">This task could take a long time to execute. Would you like to proceed anyway?</string>
+	<string name="crash_toast_text">NetXMS Client crashed and needs to send a report to developers</string>
 						
 	<string name="progress_gathering_data">Gathering data&#8230;</string>
 	<string name="progress_processing_data">Processing data&#8230;</string>

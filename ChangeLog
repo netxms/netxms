@@ -2,6 +2,11 @@
 * 2.0.2
 *
 
+- Android Console:
+	- Updated ACRA library: now crash reports are sent via e-mail (will use the app installed on device to send mail)
+	- Fixed bug in action bar commands: disconnect and exit sometimes wasn't working
+- Android Agent:
+	- Updated ACRA library: now crash reports are sent via e-mail (will use the app installed on device to send mail)
 - Fixed issues: #1042, #1049
 
 *

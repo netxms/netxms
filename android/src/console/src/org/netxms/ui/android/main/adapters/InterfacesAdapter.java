@@ -199,7 +199,7 @@ public class InterfacesAdapter extends BaseExpandableListAdapter
 			case DISABLED:
 				return R.drawable.status_disabled;
 			case TESTING:
-				return R.drawable.status_unknown;	// TODO: 2014Oct10 Implement corresponding settings section
+				return R.drawable.status_unknown;
 		}
 		return R.drawable.status_unknown;
 	}

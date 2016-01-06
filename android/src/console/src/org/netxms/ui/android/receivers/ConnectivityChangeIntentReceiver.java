@@ -1,6 +1,5 @@
 package org.netxms.ui.android.receivers;
 
-import org.netxms.ui.android.main.activities.HomeScreen;
 import org.netxms.ui.android.service.ClientConnectorService;
 
 import android.content.BroadcastReceiver;
@@ -25,7 +24,7 @@ public class ConnectivityChangeIntentReceiver extends BroadcastReceiver
 	public void onReceive(Context context, Intent intent)
 	{
 		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-		if (!sp.getBoolean(HomeScreen.INTENTIONAL_EXIT_KEY, false))
+		if (!sp.getBoolean(ClientConnectorService.INTENTIONAL_EXIT_KEY, false))
 			if (intent.getExtras() != null)
 			{
 				if (!sp.getBoolean("global.scheduler.enable", false)) // Try to connect only when the scheduler is disabled

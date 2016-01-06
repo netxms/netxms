@@ -8,6 +8,7 @@ import org.netxms.client.objects.GenericObject;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.main.adapters.ActivityListAdapter;
 import org.netxms.ui.android.main.fragments.AlarmBrowserFragment;
+import org.netxms.ui.android.service.ClientConnectorService;
 import org.netxms.ui.android.service.ClientConnectorService.ConnectionStatus;
 
 import android.annotation.SuppressLint;
@@ -45,7 +46,6 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	public static final int ACTIVITY_ENTIRENETWORK = 4;
 	public static final int ACTIVITY_GRAPHS = 5;
 	public static final int ACTIVITY_MACADDRESS = 6;
-	public static final String INTENTIONAL_EXIT_KEY = "IntentionalExit";
 
 	private ActivityListAdapter adapter;
 	private TextView statusText;
@@ -195,7 +195,8 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	{
 		if (service != null)
 			service.shutdown();
-		setIntentionalExit(true);// Avoid autorestart on change connectivity status for intentional exit
+		else
+			setIntentionalExit(true);// Avoid autorestart on change connectivity status for intentional exit (shutdown will do itself)
 		moveTaskToBack(true);
 		System.exit(0);
 	}
@@ -233,7 +234,7 @@ public class HomeScreen extends AbstractClientActivity implements OnItemClickLis
 	{
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		SharedPreferences.Editor editor = prefs.edit();
-		editor.putBoolean(INTENTIONAL_EXIT_KEY, flag);
+		editor.putBoolean(ClientConnectorService.INTENTIONAL_EXIT_KEY, flag);
 		editor.commit();
 	}
 }
