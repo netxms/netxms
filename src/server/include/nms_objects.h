@@ -1286,7 +1286,7 @@ protected:
 
    void checkInterfaceNames(InterfaceList *pIfList);
    bool filterInterface(InterfaceInfo *info);
-   Subnet *createSubnet(const InetAddress& baseAddr, bool syntheticMask);
+   Subnet *createSubnet(InetAddress& baseAddr, bool syntheticMask);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 	void updatePrimaryIpAddr();
 	bool confPollAgent(UINT32 dwRqId);
