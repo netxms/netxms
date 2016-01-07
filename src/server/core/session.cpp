@@ -2180,6 +2180,25 @@ void ClientSession::generateEventCode(UINT32 dwRqId)
 }
 
 /**
+ * Data for session object filter
+ */
+struct SessionObjectFilterData
+{
+   ClientSession *session;
+   time_t baseTimeStamp;
+};
+
+/**
+ * Object filter for ClientSession::sendAllObjects
+ */
+static bool SessionObjectFilter(NetObj *object, void *data)
+{
+   return !object->isHidden() && !object->isSystem() && !object->isDeleted() &&
+          (object->getTimeStamp() >= ((SessionObjectFilterData *)data)->baseTimeStamp) &&
+          object->checkAccessRights(((SessionObjectFilterData *)data)->session->getUserId(), OBJECT_ACCESS_READ);
+}
+
+/**
  * Send all objects to client
  */
 void ClientSession::sendAllObjects(NXCPMessage *pRequest)
@@ -2199,35 +2218,30 @@ void ClientSession::sendAllObjects(NXCPMessage *pRequest)
    else
       m_dwFlags &= ~CSF_SYNC_OBJECT_COMMENTS;
 
-   // Get client's last known time stamp
-   UINT32 dwTimeStamp = pRequest->getFieldAsUInt32(VID_TIMESTAMP);
-
    // Prepare message
    msg.setCode(CMD_OBJECT);
 
    // Send objects, one per message
-	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true);
+   SessionObjectFilterData data;
+   data.session = this;
+   data.baseTimeStamp = pRequest->getFieldAsTime(VID_TIMESTAMP);
+	ObjectArray<NetObj> *objects = g_idxObjectById.getObjects(true, SessionObjectFilter, &data);
    MutexLock(m_mutexSendObjects);
 	for(int i = 0; i < objects->size(); i++)
 	{
 		NetObj *object = objects->get(i);
-      if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ) &&
-          (object->getTimeStamp() >= dwTimeStamp) &&
-          !object->isHidden() && !object->isSystem())
+      object->fillMessage(&msg);
+      if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
+         object->commentsToMessage(&msg);
+      if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
       {
-         object->fillMessage(&msg);
-         if (m_dwFlags & CSF_SYNC_OBJECT_COMMENTS)
-            object->commentsToMessage(&msg);
-         if (!object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
-         {
-            // mask passwords
-            msg.setField(VID_SHARED_SECRET, _T("********"));
-            msg.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
-            msg.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
-         }
-         sendMessage(&msg);
-         msg.deleteAllFields();
+         // mask passwords
+         msg.setField(VID_SHARED_SECRET, _T("********"));
+         msg.setField(VID_SNMP_AUTH_PASSWORD, _T("********"));
+         msg.setField(VID_SNMP_PRIV_PASSWORD, _T("********"));
       }
+      sendMessage(&msg);
+      msg.deleteAllFields();
       object->decRefCount();
 	}
 	delete objects;
