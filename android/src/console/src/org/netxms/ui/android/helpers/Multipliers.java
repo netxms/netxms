@@ -42,7 +42,7 @@ public class Multipliers
 						1024. * 1024 * 1024 * 1024 * 1024 * 1024,
 						1024. * 1024 * 1024 * 1024 * 1024 * 1024 * 1024,
 						1024. * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 }, };
-		if (type > 0 && type < values.length && mul > 0 && mul < values[type].length)
+		if (type >= 0 && type < values.length && mul >= 0 && mul < values[type].length)
 			return values[type][mul];
 		else
 			return 1;
