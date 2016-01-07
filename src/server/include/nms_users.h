@@ -358,12 +358,9 @@ typedef struct
 class AccessList
 {
 private:
-   UINT32 m_dwNumElements;
-   ACL_ELEMENT *m_pElements;
-   MUTEX m_hMutex;
-
-   void lock() { MutexLock(m_hMutex); }
-   void unlock() { MutexUnlock(m_hMutex); }
+   int m_size;
+   int m_allocated;
+   ACL_ELEMENT *m_elements;
 
 public:
    AccessList();

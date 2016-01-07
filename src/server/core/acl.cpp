@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,9 +27,9 @@
  */
 AccessList::AccessList()
 {
-   m_pElements = NULL;
-   m_dwNumElements = 0;
-   m_hMutex = MutexCreate();
+   m_size = 0;
+   m_allocated = 0;
+   m_elements = NULL;
 }
 
 /**
@@ -37,8 +37,7 @@ AccessList::AccessList()
  */
 AccessList::~AccessList()
 {
-   safe_free(m_pElements);
-   MutexDestroy(m_hMutex);
+   free(m_elements);
 }
 
 /**
@@ -46,24 +45,26 @@ AccessList::~AccessList()
  */
 void AccessList::addElement(UINT32 dwUserId, UINT32 dwAccessRights)
 {
-   UINT32 i;
+   int i;
 
-   lock();
-   for(i = 0; i < m_dwNumElements; i++)
-      if (m_pElements[i].dwUserId == dwUserId)    // Object already exist in list
+   for(i = 0; i < m_size; i++)
+      if (m_elements[i].dwUserId == dwUserId)    // Object already exist in list
       {
-         m_pElements[i].dwAccessRights = dwAccessRights;
+         m_elements[i].dwAccessRights = dwAccessRights;
          break;
       }
 
-   if (i == m_dwNumElements)
+   if (i == m_size)
    {
-      m_pElements = (ACL_ELEMENT *)realloc(m_pElements, sizeof(ACL_ELEMENT) * (m_dwNumElements + 1));
-      m_pElements[m_dwNumElements].dwUserId = dwUserId;
-      m_pElements[m_dwNumElements].dwAccessRights = dwAccessRights;
-      m_dwNumElements++;
+      if (m_size == m_allocated)
+      {
+         m_allocated += 16;
+         m_elements = (ACL_ELEMENT *)realloc(m_elements, sizeof(ACL_ELEMENT) * m_allocated);
+      }
+      m_elements[m_size].dwUserId = dwUserId;
+      m_elements[m_size].dwAccessRights = dwAccessRights;
+      m_size++;
    }
-   unlock();
 }
 
 /**
@@ -71,20 +72,16 @@ void AccessList::addElement(UINT32 dwUserId, UINT32 dwAccessRights)
  */
 bool AccessList::deleteElement(UINT32 dwUserId)
 {
-   UINT32 i;
-   bool bDeleted = false;
-
-   lock();
-   for(i = 0; i < m_dwNumElements; i++)
-      if (m_pElements[i].dwUserId == dwUserId)
+   bool deleted = false;
+   for(int i = 0; i < m_size; i++)
+      if (m_elements[i].dwUserId == dwUserId)
       {
-         m_dwNumElements--;
-         memmove(&m_pElements[i], &m_pElements[i + 1], sizeof(ACL_ELEMENT) * (m_dwNumElements - i));
-         bDeleted = true;
+         m_size--;
+         memmove(&m_elements[i], &m_elements[i + 1], sizeof(ACL_ELEMENT) * (m_size - i));
+         deleted = true;
          break;
       }
-   unlock();
-   return bDeleted;
+   return deleted;
 }
 
 /**
@@ -94,36 +91,33 @@ bool AccessList::deleteElement(UINT32 dwUserId)
  */
 bool AccessList::getUserRights(UINT32 dwUserId, UINT32 *pdwAccessRights)
 {
-   UINT32 i;
-   bool bFound = false;
-
-   lock();
+   int i;
+   bool found = false;
 
    // Check for explicit rights
-   for(i = 0; i < m_dwNumElements; i++)
-      if (m_pElements[i].dwUserId == dwUserId)
+   for(i = 0; i < m_size; i++)
+      if (m_elements[i].dwUserId == dwUserId)
       {
-         *pdwAccessRights = m_pElements[i].dwAccessRights;
-         bFound = true;
+         *pdwAccessRights = m_elements[i].dwAccessRights;
+         found = true;
          break;
       }
 
-   if (!bFound)
+   if (!found)
    {
       *pdwAccessRights = 0;   // Default: no access
-      for(i = 0; i < m_dwNumElements; i++)
-         if (m_pElements[i].dwUserId & GROUP_FLAG)
+      for(i = 0; i < m_size; i++)
+         if (m_elements[i].dwUserId & GROUP_FLAG)
          {
-            if (CheckUserMembership(dwUserId, m_pElements[i].dwUserId))
+            if (CheckUserMembership(dwUserId, m_elements[i].dwUserId))
             {
-               *pdwAccessRights |= m_pElements[i].dwAccessRights;
-               bFound = true;
+               *pdwAccessRights |= m_elements[i].dwAccessRights;
+               found = true;
             }
          }
    }
 
-   unlock();
-   return bFound;
+   return found;
 }
 
 /**
@@ -131,12 +125,8 @@ bool AccessList::getUserRights(UINT32 dwUserId, UINT32 *pdwAccessRights)
  */
 void AccessList::enumerateElements(void (* pHandler)(UINT32, UINT32, void *), void *pArg)
 {
-   UINT32 i;
-
-   lock();
-   for(i = 0; i < m_dwNumElements; i++)
-      pHandler(m_pElements[i].dwUserId, m_pElements[i].dwAccessRights, pArg);
-   unlock();
+   for(int i = 0; i < m_size; i++)
+      pHandler(m_elements[i].dwUserId, m_elements[i].dwAccessRights, pArg);
 }
 
 /**
@@ -144,17 +134,15 @@ void AccessList::enumerateElements(void (* pHandler)(UINT32, UINT32, void *), vo
  */
 void AccessList::fillMessage(NXCPMessage *pMsg)
 {
-   UINT32 i, dwId1, dwId2;
+   pMsg->setField(VID_ACL_SIZE, m_size);
 
-   lock();
-   pMsg->setField(VID_ACL_SIZE, m_dwNumElements);
-   for(i = 0, dwId1 = VID_ACL_USER_BASE, dwId2 = VID_ACL_RIGHTS_BASE;
-       i < m_dwNumElements; i++, dwId1++, dwId2++)
+   UINT32 dwId1, dwId2;
+   int i;
+   for(i = 0, dwId1 = VID_ACL_USER_BASE, dwId2 = VID_ACL_RIGHTS_BASE; i < m_size; i++, dwId1++, dwId2++)
    {
-      pMsg->setField(dwId1, m_pElements[i].dwUserId);
-      pMsg->setField(dwId2, m_pElements[i].dwAccessRights);
+      pMsg->setField(dwId1, m_elements[i].dwUserId);
+      pMsg->setField(dwId2, m_elements[i].dwAccessRights);
    }
-   unlock();
 }
 
 /**
@@ -162,9 +150,8 @@ void AccessList::fillMessage(NXCPMessage *pMsg)
  */
 void AccessList::deleteAll()
 {
-   lock();
-   m_dwNumElements = 0;
-   safe_free(m_pElements);
-   m_pElements = NULL;
-   unlock();
+   m_size = 0;
+   m_allocated = 0;
+   free(m_elements);
+   m_elements = NULL;
 }

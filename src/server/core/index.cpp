@@ -38,7 +38,7 @@ ObjectIndex::ObjectIndex()
  */
 ObjectIndex::~ObjectIndex()
 {
-	safe_free(m_elements);
+	free(m_elements);
 	RWLockDestroy(m_lock);
 }
 

@@ -473,8 +473,8 @@ protected:
    UINT32 m_dwParentCount;     // Number of parent objects
    NetObj **m_pParentList;    // Array of pointers to parent objects
 
-   AccessList *m_pAccessList;
-   BOOL m_bInheritAccessRights;
+   AccessList *m_accessList;
+   bool m_inheritAccessRights;
    MUTEX m_mutexACL;
 
 	UINT32 m_dwNumTrustedNodes;	// Trusted nodes
