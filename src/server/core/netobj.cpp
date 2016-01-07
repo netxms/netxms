@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,8 +49,8 @@ NetObj::NetObj()
    m_pChildList = NULL;
    m_dwParentCount = 0;
    m_pParentList = NULL;
-   m_pAccessList = new AccessList;
-   m_bInheritAccessRights = TRUE;
+   m_accessList = new AccessList();
+   m_inheritAccessRights = true;
 	m_dwNumTrustedNodes = 0;
 	m_pdwTrustedNodes = NULL;
    m_pollRequestor = NULL;
@@ -83,7 +83,7 @@ NetObj::~NetObj()
    RWLockDestroy(m_rwlockChildList);
    safe_free(m_pChildList);
    safe_free(m_pParentList);
-   delete m_pAccessList;
+   delete m_accessList;
 	safe_free(m_pdwTrustedNodes);
    safe_free(m_pszComments);
    delete m_moduleData;
@@ -189,7 +189,7 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 				DBGetField(hResult, 0, 0, m_name, MAX_OBJECT_NAME);
 				m_iStatus = DBGetFieldLong(hResult, 0, 1);
 				m_isDeleted = DBGetFieldLong(hResult, 0, 2) ? true : false;
-				m_bInheritAccessRights = DBGetFieldLong(hResult, 0, 3) ? TRUE : FALSE;
+				m_inheritAccessRights = DBGetFieldLong(hResult, 0, 3) ? true : false;
 				m_dwTimeStamp = DBGetFieldULong(hResult, 0, 4);
 				m_iStatusCalcAlg = DBGetFieldLong(hResult, 0, 5);
 				m_iStatusPropAlg = DBGetFieldLong(hResult, 0, 6);
@@ -381,7 +381,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
 	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_iStatus);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(m_isDeleted ? 1 : 0));
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_bInheritAccessRights);
+	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(m_inheritAccessRights ? 1 : 0));
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_dwTimeStamp);
 	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_iStatusCalcAlg);
 	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_iStatusPropAlg);
@@ -894,12 +894,9 @@ bool NetObj::loadACLFromDB(DB_HANDLE hdb)
 		DB_RESULT hResult = DBSelectPrepared(hStmt);
 		if (hResult != NULL)
 		{
-			int i, iNumRows;
-
-			iNumRows = DBGetNumRows(hResult);
-			for(i = 0; i < iNumRows; i++)
-				m_pAccessList->addElement(DBGetFieldULong(hResult, i, 0),
-												  DBGetFieldULong(hResult, i, 1));
+			int count = DBGetNumRows(hResult);
+			for(int i = 0; i < count; i++)
+				m_accessList->addElement(DBGetFieldULong(hResult, i, 0), DBGetFieldULong(hResult, i, 1));
 			DBFreeResult(hResult);
 			success = true;
 		}
@@ -945,7 +942,7 @@ bool NetObj::saveACLToDB(DB_HANDLE hdb)
    {
       sp.dwObjectId = m_id;
       sp.hdb = hdb;
-      m_pAccessList->enumerateElements(EnumerationHandler, &sp);
+      m_accessList->enumerateElements(EnumerationHandler, &sp);
       success = true;
    }
    unlockACL();
@@ -988,7 +985,7 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
    pMsg->setField(VID_MAINTENANCE_MODE, (INT16)(m_maintenanceEventId ? 1 : 0));
 
-   pMsg->setField(VID_INHERIT_RIGHTS, (WORD)m_bInheritAccessRights);
+   pMsg->setField(VID_INHERIT_RIGHTS, m_inheritAccessRights);
    pMsg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_iStatusCalcAlg);
    pMsg->setField(VID_STATUS_PROPAGATION_ALG, (WORD)m_iStatusPropAlg);
    pMsg->setField(VID_FIXED_STATUS, (WORD)m_iFixedStatus);
@@ -1012,7 +1009,6 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
 
    m_customAttributes.fillMessage(pMsg, VID_NUM_CUSTOM_ATTRIBUTES, VID_CUSTOM_ATTRIBUTES_BASE);
 
-   m_pAccessList->fillMessage(pMsg);
 	m_geoLocation.fillMessage(*pMsg);
 
    pMsg->setField(VID_COUNTRY, m_postalAddress->getCountry());
@@ -1053,6 +1049,10 @@ void NetObj::fillMessage(NXCPMessage *msg)
    fillMessageInternal(msg);
    unlockProperties(); 
    fillMessageInternalStage2(msg);
+
+   lockACL();
+   m_accessList->fillMessage(msg);
+   unlockACL();
 
    UINT32 i, dwId;
 
@@ -1141,15 +1141,13 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Change object's ACL
    if (pRequest->isFieldExist(VID_ACL_SIZE))
    {
-      UINT32 i, dwNumElements;
-
       lockACL();
-      dwNumElements = pRequest->getFieldAsUInt32(VID_ACL_SIZE);
-      m_bInheritAccessRights = pRequest->getFieldAsUInt16(VID_INHERIT_RIGHTS);
-      m_pAccessList->deleteAll();
-      for(i = 0; i < dwNumElements; i++)
-         m_pAccessList->addElement(pRequest->getFieldAsUInt32(VID_ACL_USER_BASE + i),
-                                   pRequest->getFieldAsUInt32(VID_ACL_RIGHTS_BASE +i));
+      m_inheritAccessRights = pRequest->getFieldAsBoolean(VID_INHERIT_RIGHTS);
+      m_accessList->deleteAll();
+      int count = pRequest->getFieldAsUInt32(VID_ACL_SIZE);
+      for(int i = 0; i < count; i++)
+         m_accessList->addElement(pRequest->getFieldAsUInt32(VID_ACL_USER_BASE + i),
+                                  pRequest->getFieldAsUInt32(VID_ACL_RIGHTS_BASE + i));
       unlockACL();
    }
 
@@ -1254,13 +1252,13 @@ UINT32 NetObj::getUserRights(UINT32 userId)
 
    // Check if have direct right assignment
    lockACL();
-   bool hasDirectRights = m_pAccessList->getUserRights(userId, &dwRights);
+   bool hasDirectRights = m_accessList->getUserRights(userId, &dwRights);
    unlockACL();
 
    if (!hasDirectRights)
    {
       // We don't. If this object inherit rights from parents, get them
-      if (m_bInheritAccessRights)
+      if (m_inheritAccessRights)
       {
          UINT32 i;
 
@@ -1293,7 +1291,7 @@ BOOL NetObj::checkAccessRights(UINT32 userId, UINT32 requiredRights)
 void NetObj::dropUserAccess(UINT32 dwUserId)
 {
    lockACL();
-   bool modified = m_pAccessList->deleteElement(dwUserId);
+   bool modified = m_accessList->deleteElement(dwUserId);
    unlockACL();
    if (modified)
    {

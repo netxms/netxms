@@ -1987,17 +1987,37 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
 }
 
 /**
+ * Callback for postponed object deletion
+ */
+static void DeleteObjectCallback(void *arg)
+{
+   NetObj *object = (NetObj *)arg;
+   while(object->getRefCount() > 0)
+      ThreadSleep(1);
+   DbgPrintf(4, _T("Executing postponed delete of object %s [%d]"), object->getName(), object->getId());
+   delete object;
+}
+
+/**
  * Delete object (final step)
  * This function should be called ONLY from syncer thread
  * Object will be removed from index by ID and destroyed.
  */
-void NetObjDelete(NetObj *pObject)
+void NetObjDelete(NetObj *object)
 {
-	DbgPrintf(4, _T("Final delete step for object %s [%d]"), pObject->getName(), pObject->getId());
+	DbgPrintf(4, _T("Final delete step for object %s [%d]"), object->getName(), object->getId());
 
    // Delete object from index by ID and object itself
-	g_idxObjectById.remove(pObject->getId());
-   delete pObject;
+	g_idxObjectById.remove(object->getId());
+	if (object->getRefCount() == 0)
+	{
+	   delete object;
+	}
+	else
+	{
+	   DbgPrintf(4, _T("Object %s [%d] has %d references at final delete step - postpone deletion"), object->getName(), object->getId());
+	   ThreadPoolExecuteSerialized(g_mainThreadPool, _T("DeleteObject"), DeleteObjectCallback, object);
+	}
 }
 
 /**

@@ -473,8 +473,8 @@ protected:
    UINT32 m_dwParentCount;     // Number of parent objects
    NetObj **m_pParentList;    // Array of pointers to parent objects
 
-   AccessList *m_pAccessList;
-   BOOL m_bInheritAccessRights;
+   AccessList *m_accessList;
+   bool m_inheritAccessRights;
    MUTEX m_mutexACL;
 
 	UINT32 m_dwNumTrustedNodes;	// Trusted nodes
@@ -2390,9 +2390,9 @@ inline const InetAddress& GetObjectIpAddress(NetObj *object)
  */
 void ObjectsInit();
 
-void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, bool newObject, bool importedObject);
-void NetObjDeleteFromIndexes(NetObj *pObject);
-void NetObjDelete(NetObj *pObject);
+void NXCORE_EXPORTABLE NetObjInsert(NetObj *object, bool newObject, bool importedObject);
+void NetObjDeleteFromIndexes(NetObj *object);
+void NetObjDelete(NetObj *object);
 
 void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, Interface *iface);
 ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp);
