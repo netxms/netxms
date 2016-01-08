@@ -603,6 +603,11 @@ NXCPMessage LIBNXCC_EXPORTABLE *ClusterSendDirectCommandEx(UINT32 nodeId, NXCPMe
    msg->setId(requestId);
    NXCP_MESSAGE *rawMsg = msg->createMessage();
 
+   TCHAR buffer[64];
+   ClusterDebug(7, _T("ClusterSendDirectCommandEx: sending message %s (%d) to peer %d [%s]"),
+                NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(),
+                node->m_id, (const TCHAR *)node->m_addr->toString());
+
    bool sent = false;
    MutexLock(node->m_mutex);
    if (node->m_socket != INVALID_SOCKET)
@@ -618,6 +623,10 @@ NXCPMessage LIBNXCC_EXPORTABLE *ClusterSendDirectCommandEx(UINT32 nodeId, NXCPMe
          node->m_socket = INVALID_SOCKET; // current socket will be closed by receiver
          ChangeClusterNodeState(node, CLUSTER_NODE_DOWN);
       }
+   }
+   else
+   {
+      ClusterDebug(5, _T("ClusterDirectCommand: send failed for peer %d [%s]"), nodeId, (const TCHAR *)node->m_addr->toString());
    }
    MutexUnlock(node->m_mutex);
 
