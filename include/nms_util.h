@@ -596,6 +596,7 @@ public:
 	bool getBoolean(const TCHAR *key, bool defaultValue) const;
 
    void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
+   void loadMessage(const NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId);
 };
 
 /**

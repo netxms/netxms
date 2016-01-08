@@ -711,7 +711,7 @@ UINT32 UpdateObjectToolFromMessage(NXCPMessage *pMsg)
    DBBind(hStmt, 9, DB_SQLTYPE_VARCHAR, pMsg->getFieldAsString(VID_COMMAND_SHORT_NAME), DB_BIND_DYNAMIC);
 
    size_t size;
-   BYTE *imageData = pMsg->getBinaryFieldPtr(VID_IMAGE_DATA, &size);
+   const BYTE *imageData = pMsg->getBinaryFieldPtr(VID_IMAGE_DATA, &size);
    if (size > 0)
    {
       TCHAR *imageHexData = (TCHAR *)malloc((size * 2 + 1) * sizeof(TCHAR));
