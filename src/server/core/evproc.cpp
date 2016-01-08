@@ -111,7 +111,7 @@ static THREAD_RESULT THREAD_CALL EventLogger(void *arg)
 			TCHAR szQuery[4096];
 			_sntprintf(szQuery, 4096, _T("INSERT INTO event_log (event_id,event_code,event_timestamp,event_source,")
 											  _T("dci_id,event_severity,event_message,root_event_id,user_tag) VALUES (") UINT64_FMT
-											  _T(",%d,%d,%d,%d,%s,") UINT64_FMT _T(",%s)"), pEvent->getId(), pEvent->getCode(), 
+											  _T(",%d,%d,%d,%d,%d,%s,") UINT64_FMT _T(",%s)"), pEvent->getId(), pEvent->getCode(), 
 											  (UINT32)pEvent->getTimeStamp(), pEvent->getSourceId(), pEvent->getDciId(), pEvent->getSeverity(),
 											  (const TCHAR *)DBPrepareString(hdb, pEvent->getMessage(), MAX_EVENT_MSG_LENGTH),
 											  pEvent->getRootId(), (const TCHAR *)DBPrepareString(hdb, pEvent->getUserTag(), 63));
