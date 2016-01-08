@@ -316,7 +316,7 @@ public:
 	const String& operator =(const String &src);
    const String&  operator +=(const TCHAR *str);
    const String&  operator +=(const String &str);
-   operator const TCHAR*() { return CHECK_NULL_EX(m_buffer); }
+   operator const TCHAR*() const { return CHECK_NULL_EX(m_buffer); }
 
 	char *getUTF8String();
 
