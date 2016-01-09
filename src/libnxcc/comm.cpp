@@ -154,10 +154,11 @@ static THREAD_RESULT THREAD_CALL ClusterReceiverThread(void *arg)
                node->m_msgWaitQueue->put(msg);
                break;
             default:
-               if (g_nxccEventHandler->onMessage(msg, node->m_id))
-                  delete msg;
-               else
+               ClusterMessageProcessingResult r = g_nxccEventHandler->onMessage(msg, node->m_id);
+               if (r == CLUSTER_MSG_IGNORED)
                   node->m_msgWaitQueue->put(msg);
+               else if (r == CLUSTER_MSG_PROCESSED)
+                  delete msg;
                break;
          }
       }

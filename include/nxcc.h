@@ -39,6 +39,16 @@ enum ClusterNodeState
 };
 
 /**
+ * Cluster message processing result
+ */
+enum ClusterMessageProcessingResult
+{
+   CLUSTER_MSG_IGNORED = 0,
+   CLUSTER_MSG_PROCESSED = 1,
+   CLUSTER_MSG_QUEUED = 2
+};
+
+/**
  * Cluster node event handler
  */
 class LIBNXCC_EXPORTABLE ClusterEventHandler
@@ -52,7 +62,7 @@ public:
    virtual void onNodeDisconnect(UINT32 nodeId);
    virtual void onShutdown();
    
-   virtual bool onMessage(NXCPMessage *msg, UINT32 sourceNodeId);
+   virtual ClusterMessageProcessingResult onMessage(NXCPMessage *msg, UINT32 sourceNodeId);
 };
 
 /**
