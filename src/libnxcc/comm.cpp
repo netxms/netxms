@@ -141,6 +141,7 @@ static THREAD_RESULT THREAD_CALL ClusterReceiverThread(void *arg)
          {
             case CMD_CLUSTER_NOTIFY:
                ProcessClusterNotification(node, (ClusterNotificationCode)msg->getFieldAsInt16(VID_NOTIFICATION_CODE));
+               delete msg;
                break;
             case CMD_JOIN_CLUSTER:
                ProcessClusterJoinRequest(node, msg);
