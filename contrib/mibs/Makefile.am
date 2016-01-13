@@ -235,6 +235,7 @@ mibs_DATA = \
 	H3C-SYS-MAN-MIB.txt \
 	H3C-SYSLOG-MIB.txt \
 	H3C-TRAP-MIB.txt \
+	HC-RMON-MIB.txt \
 	HCNUM-TC.txt \
 	HH3C-CFCARD-MIB.txt \
 	HH3C-COMMON-SYSTEM-MIB.txt \
