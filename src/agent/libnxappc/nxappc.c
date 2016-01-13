@@ -179,7 +179,7 @@ int LIBNXAPPC_EXPORTABLE nxappc_send_data(void *data, int size)
    msg[1] = 0; // reserved
    *((unsigned short *)&msg[2]) = (unsigned short)size;
    memcpy(&msg[4], data, size);
-   return (send(s_socket, msg, size + 4, 0) == size) ? NXAPPC_SUCCESS : NXAPPC_FAIL;
+   return (send(s_socket, msg, size + 4, 0) == size + 4) ? NXAPPC_SUCCESS : NXAPPC_FAIL;
 }
 
 /**
