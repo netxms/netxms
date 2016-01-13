@@ -42,6 +42,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <fcntl.h>
+#include <alloca.h>
 
 #define SOCKET int
 #define closesocket(x) close(x)
@@ -162,8 +163,17 @@ int LIBNXAPPC_EXPORTABLE nxappc_send_event(int code, const char *name, const cha
  */
 int LIBNXAPPC_EXPORTABLE nxappc_send_data(void *data, int size)
 {
+   if ((size < 0) || (size > 65532))
+      return NXAPPC_FAIL;
+
    CHECK_CHANNEL;
-   return (send(s_socket, data, size, 0) == size) ? NXAPPC_SUCCESS : NXAPPC_FAIL;
+
+   char *msg = alloca(size + 4);
+   msg[0] = NXAPPC_CMD_SEND_DATA;
+   msg[1] = 0; // reserved
+   *((unsigned short *)&msg[2]) = (unsigned short)size;
+   memcpy(&msg[4], data, size);
+   return (send(s_socket, msg, size + 4, 0) == size) ? NXAPPC_SUCCESS : NXAPPC_FAIL;
 }
 
 /**
