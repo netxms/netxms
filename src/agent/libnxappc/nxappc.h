@@ -1,6 +1,6 @@
 /*
 ** NetXMS Application Connector Library
-** Copyright (C) 2015 Raden Solutions
+** Copyright (C) 2015-2016 Raden Solutions
 **
 ** Permission is hereby granted, free of charge, to any person obtaining
 ** a copy of this software and associated documentation files
@@ -42,11 +42,9 @@
 extern "C" {
 #endif
 
-void LIBNXAPPC_EXPORTABLE nxappc_set_timeout(int t);
-int LIBNXAPPC_EXPORTABLE nxappc_connect(void);
-int LIBNXAPPC_EXPORTABLE nxappc_connect_ex(const char *name);
-int LIBNXAPPC_EXPORTABLE nxappc_reconnect(void);
-void LIBNXAPPC_EXPORTABLE nxappc_disconnect(void);
+int LIBNXAPPC_EXPORTABLE nxappc_open_channel(void);
+void LIBNXAPPC_EXPORTABLE nxappc_reset_channel(void);
+int LIBNXAPPC_EXPORTABLE nxappc_set_channel_name(const char *channel);
 
 int LIBNXAPPC_EXPORTABLE nxappc_send_event(int code, const char *name, const char *format, ...);
 int LIBNXAPPC_EXPORTABLE nxappc_send_data(void *data, int size);
