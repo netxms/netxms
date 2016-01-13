@@ -24,6 +24,12 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#else
+#define HAVE_ALLOCA_H   1
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -42,13 +48,13 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <fcntl.h>
+
+#if HAVE_ALLOCA_H
 #include <alloca.h>
+#endif
 
 #define SOCKET int
 #define closesocket(x) close(x)
-#define WSAGetLastError() (errno)
-#define WSAEWOULDBLOCK EWOULDBLOCK
-#define WSAEINPROGRESS EINPROGRESS
 
 #define SELECT_NFDS(f) ((f) + 1)
 
