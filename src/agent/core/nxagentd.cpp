@@ -95,7 +95,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            AbstractCommSession *(* findServerSession)(UINT64),
                                            bool (* sendFile)(void *, UINT32, const TCHAR *, long),
                                            bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
-                                           void (* saveRegistry)(),
+                                           void (* saveRegistry)(), DB_HANDLE (* getLocalDatabaseHandle)(),
                                            CONDITION shutdownCondition, Config *registry, const TCHAR *dataDirectory);
 
 /**
@@ -756,7 +756,7 @@ BOOL Initialize()
    // Initialize API for subagents
    s_subAgentsStopCondition = ConditionCreate(TRUE);
    InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessions, FindServerSession,
-      SendFileToServer, PushData, SaveRegistry, s_subAgentsStopCondition, s_registry, g_szDataDirectory);
+      SendFileToServer, PushData, SaveRegistry, GetLocalDatabaseHandle, s_subAgentsStopCondition, s_registry, g_szDataDirectory);
    DebugPrintf(INVALID_INDEX, 1, _T("Subagent API initialized"));
 
    // Initialize cryptografy
