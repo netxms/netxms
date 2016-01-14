@@ -43,6 +43,7 @@ mibs_DATA = \
 	AtiL2-MIB.txt \
 	ATM-TC-MIB.txt \
 	AUTH-MIB.txt \
+	BASP-Config-MIB.txta \
 	BAY-STACK-ADAC-MIB.txt \
 	BAY-STACK-ARP-INSPECTION-MIB.txt \
 	BAY-STACK-DHCP-SNOOPING-MIB.txt \
@@ -62,6 +63,8 @@ mibs_DATA = \
 	BN-IF-EXTENSIONS-MIB.txt \
 	BPDU-PROTECTION-MIB.txt \
 	BPDU-TUNNELING-MIB.txt \
+	Brcm-adapterInfo-MIB.txt \
+	Brcm-BSAPTrap-MIB.txt \
 	BRIDGE-MIB.txt \
 	CABLE-DIAG-MIB.txt \
 	CDX-6500-COMMON-MIB.txt \
