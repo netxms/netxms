@@ -146,13 +146,28 @@ int LIBNXAPPC_EXPORTABLE nxappc_open_channel(void)
 /**
  * Reset channel
  */
-void LIBNXAPPC_EXPORTABLE nxappc_reset_channel(void)
+int LIBNXAPPC_EXPORTABLE nxappc_reset_channel(void)
 {
    if (s_socket != -1)
    {
       closesocket(s_socket);
       s_socket = -1;
    }
+   return nxappc_open_channel();
+}
+
+/**
+ * Send with retry
+ */
+static int send_data(void *data, int size)
+{
+   int rc = send(s_socket, data, size, 0);
+   if (rc >= 0)
+      return rc;
+   rc = nxappc_reset_channel();
+   if (rc < 0)
+      return rc;
+   return send(s_socket, data, size, 0);
 }
 
 /**
@@ -179,7 +194,7 @@ int LIBNXAPPC_EXPORTABLE nxappc_send_data(void *data, int size)
    msg[1] = 0; // reserved
    *((unsigned short *)&msg[2]) = (unsigned short)size;
    memcpy(&msg[4], data, size);
-   return (send(s_socket, msg, size + 4, 0) == size + 4) ? NXAPPC_SUCCESS : NXAPPC_FAIL;
+   return (send_data(msg, size + 4) == size + 4) ? NXAPPC_SUCCESS : NXAPPC_FAIL;
 }
 
 /**

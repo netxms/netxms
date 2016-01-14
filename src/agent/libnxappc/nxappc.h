@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 int LIBNXAPPC_EXPORTABLE nxappc_open_channel(void);
-void LIBNXAPPC_EXPORTABLE nxappc_reset_channel(void);
+int LIBNXAPPC_EXPORTABLE nxappc_reset_channel(void);
 int LIBNXAPPC_EXPORTABLE nxappc_set_channel_name(const char *channel);
 
 int LIBNXAPPC_EXPORTABLE nxappc_send_event(int code, const char *name, const char *format, ...);
