@@ -141,7 +141,7 @@ public class LoginJob implements IRunnableWithProgress
          monitor.worked(5);
 
          monitor.setTaskName(Messages.get(display).LoginJob_subscribe);
-         session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS | NXCSession.CHANNEL_EVENTS);
+         session.subscribe(NXCSession.CHANNEL_ALARMS);
          monitor.worked(5);
 
          RWT.getUISession(display).setAttribute(ConsoleSharedData.ATTRIBUTE_SESSION, session);

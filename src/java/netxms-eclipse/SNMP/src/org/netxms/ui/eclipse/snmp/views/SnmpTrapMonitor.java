@@ -18,17 +18,11 @@
  */
 package org.netxms.ui.eclipse.snmp.views;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
-import org.netxms.ui.eclipse.snmp.Activator;
-import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.widgets.SnmpTrapTraceWidget;
 import org.netxms.ui.eclipse.views.AbstractTraceView;
 import org.netxms.ui.eclipse.widgets.AbstractTraceWidget;
@@ -41,51 +35,22 @@ public class SnmpTrapMonitor extends AbstractTraceView
 	public static final String ID = "org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor"; //$NON-NLS-1$
 	
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
-	 */
-	@Override
-	public void init(IViewSite site, IMemento memento) throws PartInitException
-	{
-		super.init(site, memento);
-		if (memento != null)
-		{
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.get().SnmpTrapMonitor_SubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					session.subscribe(NXCSession.CHANNEL_SNMP_TRAPS);
-				}
-				
-				@Override
-				protected String getErrorMessage()
-				{
-					return Messages.get().SnmpTrapMonitor_SubscribeJob_Error;
-				}
-			}.start();
-		}
-	}
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
+   @Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
+      subscribe(NXCSession.CHANNEL_SNMP_TRAPS);
+   }
 
-	/* (non-Javadoc)
+   /* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()
 	 */
 	@Override
 	public void dispose()
 	{
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.get().SnmpTrapMonitor_UnsubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				session.unsubscribe(NXCSession.CHANNEL_SNMP_TRAPS);
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().SnmpTrapMonitor_UnsubscribeJob_Error;
-			}
-		}.start();
+      unsubscribe(NXCSession.CHANNEL_SNMP_TRAPS);
 		super.dispose();
 	}
 

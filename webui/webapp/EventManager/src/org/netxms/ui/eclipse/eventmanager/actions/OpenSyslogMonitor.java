@@ -18,18 +18,13 @@
  */
 package org.netxms.ui.eclipse.eventmanager.actions;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.eventmanager.Activator;
 import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
@@ -65,34 +60,14 @@ public class OpenSyslogMonitor implements IWorkbenchWindowActionDelegate
 		if(window == null)
 			return;
 
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.get().OpenSyslogMonitor_JobTitle, null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				session.subscribe(NXCSession.CHANNEL_SYSLOG);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						try 
-						{
-							window.getActivePage().showView(SyslogMonitor.ID);
-						} 
-						catch (PartInitException e) 
-						{
-							MessageDialogHelper.openError(window.getShell(), Messages.get().OpenSyslogMonitor_Error, Messages.get().OpenSyslogMonitor_ErrorText + e.getMessage());
-						}
-					}
-				});
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().OpenSyslogMonitor_JobError;
-			}
-		}.start();
+		try 
+		{
+			window.getActivePage().showView(SyslogMonitor.ID);
+		} 
+		catch (PartInitException e) 
+		{
+			MessageDialogHelper.openError(window.getShell(), Messages.get().OpenSyslogMonitor_Error, Messages.get().OpenSyslogMonitor_ErrorText + e.getMessage());
+		}
 	}
 
 	/* (non-Javadoc)

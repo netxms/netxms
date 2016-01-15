@@ -439,14 +439,15 @@ private:
    UINT32 m_dwUploadData;
    uuid_t m_uploadImageGuid;
    TCHAR m_szCurrFileName[MAX_PATH];
-   UINT32 m_dwRefCount;
+   VolatileCounter m_refCount;
    UINT32 m_dwEncryptionRqId;
    UINT32 m_dwEncryptionResult;
    CONDITION m_condEncryptionSetup;
-   UINT32 m_dwActiveChannels;     // Active data channels
 	CONSOLE_CTX m_console;			// Server console context
 	StringList m_musicTypeList;
 	ObjectIndex m_agentConn;
+	StringObjectMap<UINT32> m_subscriptions;
+	MUTEX m_subscriptionLock;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
    static THREAD_RESULT THREAD_CALL writeThreadStarter(void *);
@@ -722,8 +723,8 @@ public:
    ClientSession(SOCKET hSocket, struct sockaddr *addr);
    ~ClientSession();
 
-   void incRefCount() { m_dwRefCount++; }
-   void decRefCount() { if (m_dwRefCount > 0) m_dwRefCount--; }
+   void incRefCount() { InterlockedIncrement(&m_refCount); }
+   void decRefCount() { InterlockedDecrement(&m_refCount); }
 
    void run();
 
@@ -733,27 +734,28 @@ public:
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
 	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long offset);
 
-   int getId() { return m_id; }
+   int getId() const { return m_id; }
    void setId(int id) { if (m_id == -1) m_id = id; }
-   int getState() { return m_state; }
-   const TCHAR *getLoginName() { return m_loginName; }
-   const TCHAR *getSessionName() { return m_sessionName; }
-   const TCHAR *getClientInfo() { return m_clientInfo; }
-	const TCHAR *getWorkstation() { return m_workstation; }
-   const TCHAR *getWebServerAddress() { return m_webServerAddress; }
-   UINT32 getUserId() { return m_dwUserId; }
-	UINT64 getSystemRights() { return m_dwSystemAccess; }
-   UINT32 getFlags() { return m_dwFlags; }
-   bool isAuthenticated() { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
-   bool isTerminated() { return (m_dwFlags & CSF_TERMINATED) ? true : false; }
-   bool isConsoleOpen() { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }
-   bool isSubscribed(UINT32 dwChannel) { return (m_dwActiveChannels & dwChannel) ? true : false; }
-   WORD getCurrentCmd() { return m_wCurrentCmd; }
-   int getCipher() { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
-	int getClientType() { return m_clientType; }
-   time_t getLoginTime() { return m_loginTime; }
 
-	bool checkSysAccessRights(UINT64 requiredAccess)
+   int getState() const { return m_state; }
+   const TCHAR *getLoginName() const { return m_loginName; }
+   const TCHAR *getSessionName() const { return m_sessionName; }
+   const TCHAR *getClientInfo() const { return m_clientInfo; }
+	const TCHAR *getWorkstation() const { return m_workstation; }
+   const TCHAR *getWebServerAddress() const { return m_webServerAddress; }
+   UINT32 getUserId() const { return m_dwUserId; }
+	UINT64 getSystemRights() const { return m_dwSystemAccess; }
+   UINT32 getFlags() const { return m_dwFlags; }
+   bool isAuthenticated() const { return (m_dwFlags & CSF_AUTHENTICATED) ? true : false; }
+   bool isTerminated() const { return (m_dwFlags & CSF_TERMINATED) ? true : false; }
+   bool isConsoleOpen() const { return (m_dwFlags & CSF_CONSOLE_OPEN) ? true : false; }
+   WORD getCurrentCmd() const { return m_wCurrentCmd; }
+   int getCipher() const { return (m_pCtx == NULL) ? -1 : m_pCtx->getCipher(); }
+	int getClientType() const { return m_clientType; }
+   time_t getLoginTime() const { return m_loginTime; }
+   bool isSubscribedTo(const TCHAR *channel) const;
+
+	bool checkSysAccessRights(UINT64 requiredAccess) const
    {
       return (m_dwUserId == 0) ? true :
          ((requiredAccess & m_dwSystemAccess) == requiredAccess);

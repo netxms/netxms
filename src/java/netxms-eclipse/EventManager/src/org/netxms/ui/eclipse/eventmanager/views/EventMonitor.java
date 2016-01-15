@@ -22,6 +22,9 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.PartInitException;
+import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventTraceWidget;
 import org.netxms.ui.eclipse.views.AbstractTraceView;
 import org.netxms.ui.eclipse.widgets.AbstractTraceWidget;
@@ -34,6 +37,26 @@ public class EventMonitor extends AbstractTraceView
 	public static final String ID = "org.netxms.ui.eclipse.eventmanager.views.EventMonitor"; //$NON-NLS-1$
 	
 	/* (non-Javadoc)
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
+   @Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
+      subscribe(NXCSession.CHANNEL_EVENTS);
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      unsubscribe(NXCSession.CHANNEL_EVENTS);
+      super.dispose();
+   }
+
+   /* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#fillLocalPullDown(org.eclipse.jface.action.IMenuManager)
 	 */
 	@Override

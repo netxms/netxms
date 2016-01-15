@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -103,7 +103,7 @@ typedef struct
 } LIBRARY_IMAGE_UPDATE_INFO;
 
 /**
- * Callback to delete agent connections for loading files in distructor
+ * Callback to delete agent connections for loading files in destructor
  */
 static void DeleteCallback(NetObj* obj, void *data)
 {
@@ -135,7 +135,7 @@ static void ImageLibraryDeleteCallback(ClientSession *pSession, void *pArg)
 	pData->pSession = this; \
 	pData->pMsg = msg; \
 	msg = NULL; /* prevent deletion by main processing thread*/ \
-	m_dwRefCount++; \
+	InterlockedIncrement(&m_refCount); \
 	ThreadPoolExecute(g_mainThreadPool, ThreadStarter_##func, pData); \
 }
 
@@ -144,7 +144,7 @@ void ClientSession::ThreadStarter_##func(void *pArg) \
 { \
    ((PROCTHREAD_START_DATA *)pArg)->pSession->debugPrintf(6, _T("Method ") _T(#func) _T(" called on background thread")); \
    ((PROCTHREAD_START_DATA *)pArg)->pSession->func(((PROCTHREAD_START_DATA *)pArg)->pMsg); \
-	((PROCTHREAD_START_DATA *)pArg)->pSession->m_dwRefCount--; \
+	InterlockedDecrement(&((PROCTHREAD_START_DATA *)pArg)->pSession->m_refCount); \
 	delete ((PROCTHREAD_START_DATA *)pArg)->pMsg; \
 	free(pArg); \
 }
@@ -227,7 +227,7 @@ THREAD_RESULT THREAD_CALL ClientSession::updateThreadStarter(void *pArg)
 /**
  * Client session class constructor
  */
-ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
+ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr) : m_subscriptions(true)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -249,6 +249,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_mutexSendAuditLog = MutexCreate();
    m_mutexSendSituations = MutexCreate();
    m_mutexPollerInit = MutexCreate();
+   m_subscriptionLock = MutexCreate();
    m_dwFlags = 0;
 	m_clientType = CLIENT_TYPE_DESKTOP;
 	m_clientAddr = (struct sockaddr *)nx_memdup(addr, (addr->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6));
@@ -263,15 +264,21 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    _tcscpy(m_sessionName, _T("<not logged in>"));
 	_tcscpy(m_clientInfo, _T("n/a"));
    m_dwUserId = INVALID_INDEX;
+   m_dwSystemAccess = 0;
    m_dwOpenDCIListSize = 0;
    m_pOpenDCIList = NULL;
    m_ppEPPRuleList = NULL;
+   m_wCurrentCmd = 0;
    m_hCurrFile = -1;
    m_dwFileRqId = 0;
-   m_dwRefCount = 0;
+   m_dwUploadCommand = 0;
+   m_dwNumRecordsToUpload = 0;
+   m_dwRecordsUploaded = 0;
+   m_refCount = 0;
    m_dwEncryptionRqId = 0;
+   m_dwEncryptionResult = 0;
+   m_dwUploadData = 0;
    m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
-   m_dwActiveChannels = 0;
 	m_console = NULL;
    m_loginTime = time(NULL);
    m_musicTypeList.add(_T("wav"));
@@ -299,6 +306,7 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexSendAuditLog);
    MutexDestroy(m_mutexSendSituations);
    MutexDestroy(m_mutexPollerInit);
+   MutexDestroy(m_subscriptionLock);
    safe_free(m_pOpenDCIList);
    if (m_ppEPPRuleList != NULL)
    {
@@ -352,6 +360,17 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
       va_end(args);
 		DbgPrintf(level, _T("[CLSN-%d] %s"), m_id, buffer);
    }
+}
+
+/**
+ * Check channel subscription
+ */
+bool ClientSession::isSubscribedTo(const TCHAR *channel) const
+{
+   MutexLock(m_subscriptionLock);
+   bool subscribed = m_subscriptions.contains(channel);
+   MutexUnlock(m_subscriptionLock);
+   return subscribed;
 }
 
 /**
@@ -568,13 +587,13 @@ void ClientSession::readThread()
    }
 
    // Waiting while reference count becomes 0
-   if (m_dwRefCount > 0)
+   if (m_refCount > 0)
    {
       debugPrintf(3, _T("Waiting for pending requests..."));
       do
       {
          ThreadSleep(1);
-      } while(m_dwRefCount > 0);
+      } while(m_refCount > 0);
    }
 
    if (m_dwFlags & CSF_AUTHENTICATED)
@@ -1456,7 +1475,7 @@ void ClientSession::processingThread()
 							if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
 							{
 								pMsg = NULL;	// Prevent deletion
-								m_dwRefCount++;
+								InterlockedIncrement(&m_refCount);
 							}
 							break;   // Message was processed by the module
 						}
@@ -2694,7 +2713,7 @@ void ClientSession::onNewEvent(Event *pEvent)
 {
    UPDATE_INFO *pUpdate;
    NXCPMessage *msg;
-   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_EVENTS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_EVENTS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG))
    {
       NetObj *object = FindObjectById(pEvent->getSourceId());
       //If can't find object - just send to all events, if object found send to thous who have rights
@@ -2718,7 +2737,7 @@ void ClientSession::onObjectChange(NetObj *object)
 {
    UPDATE_INFO *pUpdate;
 
-   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_OBJECTS))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_OBJECTS))
       if (object->isDeleted() || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
@@ -5449,7 +5468,7 @@ void ClientSession::onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm)
    UPDATE_INFO *pUpdate;
    NetObj *object;
 
-   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_ALARMS))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_ALARMS))
    {
       object = FindObjectById(pAlarm->sourceObject);
       if (object != NULL)
@@ -6176,7 +6195,7 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
             ((Node *)object)->incRefCount();
-            m_dwRefCount++;
+            InterlockedIncrement(&m_refCount);
 
             pData->pNode = (Node *)object;
             ThreadPoolExecute(g_mainThreadPool, pollerThreadStarter, pData);
@@ -7040,7 +7059,7 @@ void ClientSession::DeployPackage(NXCPMessage *pRequest)
          _tcscpy(pInfo->szPlatform, szPlatform);
          _tcscpy(pInfo->szVersion, szVersion);
 
-         m_dwRefCount++;
+         InterlockedIncrement(&m_refCount);
          ThreadCreate(DeploymentManager, 0, pInfo);
          msg.setField(VID_RCC, RCC_SUCCESS);
       }
@@ -8044,26 +8063,53 @@ void ClientSession::execTableTool(NXCPMessage *pRequest)
 /**
  * Change current subscription
  */
-void ClientSession::changeSubscription(NXCPMessage *pRequest)
+void ClientSession::changeSubscription(NXCPMessage *request)
 {
    NXCPMessage msg;
-   UINT32 dwFlags;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
 
-   dwFlags = pRequest->getFieldAsUInt32(VID_FLAGS);
-
-   if (pRequest->getFieldAsUInt16(VID_OPERATION) != 0)
+   TCHAR channel[64];
+   request->getFieldAsString(VID_NAME, channel, 64);
+   Trim(channel);
+   if (channel[0] != 0)
    {
-      m_dwActiveChannels |= dwFlags;   // Subscribe
+      MutexLock(m_subscriptionLock);
+      UINT32 *count = m_subscriptions.get(channel);
+      if (request->getFieldAsBoolean(VID_OPERATION))
+      {
+         // Subscribe
+         if (count == NULL)
+         {
+            count = new UINT32;
+            *count = 1;
+            m_subscriptions.set(channel, count);
+         }
+         else
+         {
+            (*count)++;
+         }
+         debugPrintf(5, _T("Subscription added: %s (%d)"), channel, *count);
+      }
+      else
+      {
+         // Unsubscribe
+         if (count != NULL)
+         {
+            (*count)--;
+            debugPrintf(5, _T("Subscription removed: %s (%d)"), channel, *count);
+            if (*count == 0)
+               m_subscriptions.remove(channel);
+         }
+      }
+      MutexUnlock(m_subscriptionLock);
+      msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      m_dwActiveChannels &= ~dwFlags;   // Unsubscribe
+      msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
    }
 
-   // Send response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-   msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
 
@@ -8456,7 +8502,7 @@ void ClientSession::KillSession(NXCPMessage *pRequest)
 void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
 {
    UPDATE_INFO *pUpdate;
-   if (isAuthenticated() && isSubscribed(NXC_CHANNEL_SYSLOG) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_SYSLOG))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SYSLOG) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_SYSLOG))
    {
       NetObj *object = FindObjectById(pRec->dwSourceObject);
       //If can't find object - just send to all events, if object found send to thous who have rights
@@ -8589,7 +8635,7 @@ void ClientSession::sendSyslog(NXCPMessage *pRequest)
 void ClientSession::onNewSNMPTrap(NXCPMessage *pMsg)
 {
    UPDATE_INFO *pUpdate;
-   if (isAuthenticated() && isSubscribed(NXC_CHANNEL_SNMP_TRAPS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_TRAP_LOG))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SNMP_TRAPS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_TRAP_LOG))
    {
       NetObj *object = FindObjectById(pMsg->getFieldAsUInt32(VID_TRAP_LOG_MSG_BASE + 3));
       //If can't find object - just send to all events, if object found send to thous who have rights
@@ -8809,7 +8855,7 @@ void ClientSession::StartSnmpWalk(NXCPMessage *pRequest)
             msg.setField(VID_RCC, RCC_SUCCESS);
 
             object->incRefCount();
-            m_dwRefCount++;
+            InterlockedIncrement(&m_refCount);
 
             pArg = (WALKER_THREAD_ARGS *)malloc(sizeof(WALKER_THREAD_ARGS));
             pArg->pSession = this;
@@ -10743,7 +10789,7 @@ void ClientSession::onSituationChange(NXCPMessage *msg)
 {
    UPDATE_INFO *pUpdate;
 
-   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SITUATIONS))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SITUATIONS))
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_SITUATION;

@@ -18,20 +18,14 @@
  */
 package org.netxms.ui.eclipse.eventmanager.views;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.NXCSession;
-import org.netxms.ui.eclipse.eventmanager.Activator;
-import org.netxms.ui.eclipse.eventmanager.Messages;
 import org.netxms.ui.eclipse.eventmanager.widgets.SyslogTraceWidget;
-import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.views.AbstractTraceView;
 import org.netxms.ui.eclipse.widgets.AbstractTraceWidget;
 
@@ -43,32 +37,16 @@ public class SyslogMonitor extends AbstractTraceView
 	public static final String ID = "org.netxms.ui.eclipse.eventmanager.views.SyslogMonitor"; //$NON-NLS-1$
 	
 	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
-	 */
-	@Override
-	public void init(IViewSite site, IMemento memento) throws PartInitException
-	{
-		super.init(site, memento);
-		if (memento != null)
-		{
-			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-			new ConsoleJob(Messages.get().SyslogMonitor_SubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
-				@Override
-				protected void runInternal(IProgressMonitor monitor) throws Exception
-				{
-					session.subscribe(NXCSession.CHANNEL_SYSLOG);
-				}
-				
-				@Override
-				protected String getErrorMessage()
-				{
-					return Messages.get().SyslogMonitor_SubscribeJob_Error;
-				}
-			}.start();
-		}
-	}
+    * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
+    */
+   @Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
+      subscribe(NXCSession.CHANNEL_SYSLOG);
+   }
 
-	/* (non-Javadoc)
+   /* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#createTraceWidget(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -95,20 +73,7 @@ public class SyslogMonitor extends AbstractTraceView
 	@Override
 	public void dispose()
 	{
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.get().SyslogMonitor_UnsubscribeJob_Title, null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				session.unsubscribe(NXCSession.CHANNEL_SYSLOG);
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().SyslogMonitor_UnsubscribeJob_Error;
-			}
-		}.start();
+      unsubscribe(NXCSession.CHANNEL_SYSLOG);
 		super.dispose();
 	}
 }
