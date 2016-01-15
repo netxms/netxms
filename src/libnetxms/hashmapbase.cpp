@@ -41,7 +41,7 @@ struct HashMapEntry
 /**
  * Delete key
  */
-#define DELETE_KEY(e) do { if (m_keylen > 16) free(e->key.p); } while(0)
+#define DELETE_KEY(m, e) do { if ((m)->m_keylen > 16) free((e)->key.p); } while(0)
 
 /**
  * Get pointer to key
@@ -84,7 +84,7 @@ void HashMapBase::clear()
    HASH_ITER(hh, m_data, entry, tmp)
    {
       HASH_DEL(m_data, entry);
-      DELETE_KEY(entry);
+      DELETE_KEY(this, entry);
       destroyObject(entry->value);
       free(entry);
    }
@@ -150,7 +150,7 @@ void HashMapBase::_remove(const void *key)
    if (entry != NULL)
    {
       HASH_DEL(m_data, entry);
-      DELETE_KEY(entry);
+      DELETE_KEY(this, entry);
 		if (m_objectOwner)
          destroyObject(entry->value);
       free(entry);
@@ -243,4 +243,19 @@ void *HashMapIterator::next()
       HASH_ITER_NEXT(hh, m_curr, m_next);
    }
    return m_curr->value;
+}
+
+/**
+ * Remove current element
+ */
+void HashMapIterator::remove()
+{
+   if (m_curr == NULL)
+      return;
+
+   HASH_DEL(m_hashMap->m_data, m_curr);
+   DELETE_KEY(m_hashMap, m_curr);
+   if (m_hashMap->m_objectOwner)
+      m_hashMap->destroyObject(m_curr->value);
+   free(m_curr);
 }

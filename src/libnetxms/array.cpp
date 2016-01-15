@@ -233,7 +233,7 @@ void *Array::find(const void *key, int (*cb)(const void *, const void *)) const
 /**
  * Array iterator
  */
-ArrayIterator::ArrayIterator(const Array *array)
+ArrayIterator::ArrayIterator(Array *array)
 {
    m_array = array;
    m_pos = -1;
@@ -257,4 +257,16 @@ void *ArrayIterator::next()
 
    m_pos++;
    return m_array->get(m_pos);
+}
+
+/**
+ * Remove current element
+ */
+void ArrayIterator::remove()
+{
+   if (((m_pos + 1) >= m_array->size()) || (m_pos < 0))
+      return;
+
+   m_array->remove(m_pos);
+   m_pos--;
 }

@@ -460,6 +460,23 @@ static void TestHashMap()
    delete it;
    EndTest();
 
+   StartTest(_T("HashMap: iterator remove"));
+   it = hashMap->iterator();
+   AssertTrue(it->hasNext());
+   AssertNotNull(it->next());
+   s = it->next();
+   AssertNotNull(s);
+   it->remove();
+   AssertTrue(it->hasNext());
+   AssertNotNull(it->next());
+   AssertFalse(it->hasNext());
+   AssertNull(it->next());
+   delete it;
+   AssertNotNull(hashMap->get(k1));
+   AssertNull(hashMap->get(k2));
+   AssertNotNull(hashMap->get(k3));
+   EndTest();
+
    StartTest(_T("HashMap: remove"));
    hashMap->remove(k3);
    AssertNull(hashMap->get(k3));

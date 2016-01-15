@@ -362,6 +362,7 @@ public:
 
    virtual bool hasNext() = 0;
    virtual void *next() = 0;
+   virtual void remove() = 0;
 };
 
 /**
@@ -378,6 +379,7 @@ public:
 
    bool hasNext() { return m_worker->hasNext(); }
    T *next() { return (T *)m_worker->next(); }
+   void remove() { m_worker->remove(); }
 };
 
 /**
@@ -432,14 +434,15 @@ public:
 class LIBNETXMS_EXPORTABLE ArrayIterator : public AbstractIterator
 {
 private:
-   const Array *m_array;
+   Array *m_array;
    int m_pos;
 
 public:
-   ArrayIterator(const Array *array);
+   ArrayIterator(Array *array);
 
    virtual bool hasNext();
    virtual void *next();
+   virtual void remove();
 };
 
 /**
@@ -465,7 +468,7 @@ public:
 	void unlink(int index) { Array::unlink(index); }
    void unlink(T *object) { Array::unlink((void *)object); }
 
-   Iterator<T> *iterator() const { return new Iterator<T>(new ArrayIterator(this)); }
+   Iterator<T> *iterator() { return new Iterator<T>(new ArrayIterator(this)); }
 };
 
 /**
@@ -760,6 +763,7 @@ public:
 
    virtual bool hasNext();
    virtual void *next();
+   virtual void remove();
 };
 
 /**
