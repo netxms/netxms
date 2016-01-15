@@ -43,7 +43,7 @@ mibs_DATA = \
 	AtiL2-MIB.txt \
 	ATM-TC-MIB.txt \
 	AUTH-MIB.txt \
-	BASP-Config-MIB.txta \
+	BASP-Config-MIB.txt \
 	BAY-STACK-ADAC-MIB.txt \
 	BAY-STACK-ARP-INSPECTION-MIB.txt \
 	BAY-STACK-DHCP-SNOOPING-MIB.txt \
