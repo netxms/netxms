@@ -85,7 +85,8 @@ void HashMapBase::clear()
    {
       HASH_DEL(m_data, entry);
       DELETE_KEY(this, entry);
-      destroyObject(entry->value);
+      if (m_objectOwner)
+         destroyObject(entry->value);
       free(entry);
    }
 }
