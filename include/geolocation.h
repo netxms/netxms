@@ -69,17 +69,18 @@ public:
 
 	GeoLocation& operator =(const GeoLocation &src);
 
-	int getType() { return m_type; }
-	double getLatitude() { return m_lat; }
-	double getLongitude() { return m_lon; }
-	const TCHAR *getLatitudeAsString() { return m_latStr; }
-	const TCHAR *getLongitudeAsString() { return m_lonStr; }
-	bool isValid() { return m_isValid; }
-	int getAccuracy() { return m_accuracy; }
-	time_t getTimestamp() { return m_timestamp; }
-   bool sameLocation(double lat, double lon, int oldAccurasy);
+	int getType() const { return m_type; }
+	double getLatitude() const { return m_lat; }
+	double getLongitude() const { return m_lon; }
+	const TCHAR *getLatitudeAsString() const { return m_latStr; }
+	const TCHAR *getLongitudeAsString() const { return m_lonStr; }
+	bool isValid() const { return m_isValid; }
+   bool isManual() const { return m_type == GL_MANUAL; }
+	int getAccuracy() const { return m_accuracy; }
+	time_t getTimestamp() const { return m_timestamp; }
+   bool sameLocation(double lat, double lon, int oldAccurasy) const;
 
-	void fillMessage(NXCPMessage &msg);
+	void fillMessage(NXCPMessage &msg) const;
 };
 
 

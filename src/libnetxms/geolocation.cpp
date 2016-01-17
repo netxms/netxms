@@ -167,7 +167,7 @@ GeoLocation& GeoLocation::operator =(const GeoLocation &src)
 /**
  * Fill NXCP message
  */
-void GeoLocation::fillMessage(NXCPMessage &msg)
+void GeoLocation::fillMessage(NXCPMessage &msg) const
 {
 	msg.setField(VID_GEOLOCATION_TYPE, (WORD)m_type);
 	msg.setField(VID_LATITUDE, m_lat);
@@ -360,7 +360,7 @@ bool GeoLocation::parseLongitude(const TCHAR *lon)
 /**
  * Check if this locations is (almost) same as given location
  */
-bool GeoLocation::sameLocation(double lat, double lon, int oldAccuracy)
+bool GeoLocation::sameLocation(double lat, double lon, int oldAccuracy) const
 {
    const double R = 6371000; // Earth radius in meters
 

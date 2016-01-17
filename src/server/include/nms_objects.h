@@ -537,16 +537,20 @@ public:
    int getPropagatedStatus();
    UINT32 getTimeStamp() const { return m_dwTimeStamp; }
 	const uuid& getGuid() const { return m_guid; }
-	const TCHAR *getComments() { return CHECK_NULL_EX(m_pszComments); }
-   PostalAddress *getPostalAddress() { return m_postalAddress; }
+	const TCHAR *getComments() const { return CHECK_NULL_EX(m_pszComments); }
+
+	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
+	void setGeoLocation(const GeoLocation& geoLocation) { m_geoLocation = geoLocation; markAsModified(); }
+
+   const PostalAddress *getPostalAddress() const { return m_postalAddress; }
    void setPostalAddress(PostalAddress * addr) { delete m_postalAddress; m_postalAddress = addr; markAsModified();}
 
-   bool isModified() { return m_isModified; }
-   bool isDeleted() { return m_isDeleted; }
-   bool isOrphaned() { return m_dwParentCount == 0; }
-   bool isEmpty() { return m_dwChildCount == 0; }
+   bool isModified() const { return m_isModified; }
+   bool isDeleted() const { return m_isDeleted; }
+   bool isOrphaned() const { return m_dwParentCount == 0; }
+   bool isEmpty() const { return m_dwChildCount == 0; }
 
-	bool isSystem() { return m_isSystem; }
+	bool isSystem() const { return m_isSystem; }
 	void setSystemFlag(bool flag) { m_isSystem = flag; }
 
    UINT32 getRefCount();

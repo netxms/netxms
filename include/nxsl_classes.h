@@ -89,12 +89,12 @@ struct NXSL_ExtMethod
    int numArgs;   // Number of arguments or -1 for variable number
 };
 
-#define NXSL_METHOD_DEFINITION(name) \
-   static int M_##name (NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+#define NXSL_METHOD_DEFINITION(clazz, name) \
+   static int M_##clazz##_##name (NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 
-#define NXSL_REGISTER_METHOD(name, argc) { \
+#define NXSL_REGISTER_METHOD(clazz, name, argc) { \
       NXSL_ExtMethod *m = new NXSL_ExtMethod; \
-      m->handler = M_##name; \
+      m->handler = M_##clazz##_##name; \
       m->numArgs = argc; \
       m_methods->set(_T(#name), m); \
    }
@@ -112,8 +112,8 @@ public:
    NXSL_Class();
    virtual ~NXSL_Class();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
-   virtual BOOL setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual bool setAttr(NXSL_Object *object, const TCHAR *attr, NXSL_Value *value);
 
    virtual int callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
@@ -836,11 +836,25 @@ public:
 };
 
 /**
+ * NXSL "Connector" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_GeoLocationClass : public NXSL_Class
+{
+public:
+   NXSL_GeoLocationClass();
+   virtual ~NXSL_GeoLocationClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual void onObjectDelete(NXSL_Object *object);
+};
+
+/**
  * Class definition instances
  */
 extern NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
 extern NXSL_StaticTableClass LIBNXSL_EXPORTABLE g_nxslStaticTableClass;
 extern NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
 extern NXSL_ConnectorClass LIBNXSL_EXPORTABLE g_nxslConnectorClass;
+extern NXSL_GeoLocationClass LIBNXSL_EXPORTABLE g_nxslGeoLocationClass;
 
 #endif

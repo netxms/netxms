@@ -43,7 +43,7 @@ public:
    NXSL_TestClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
-   virtual BOOL setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue);
+   virtual bool setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue);
 };
 
 #endif

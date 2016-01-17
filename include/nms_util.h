@@ -1273,10 +1273,10 @@ public:
    PostalAddress(const TCHAR *country, const TCHAR *city, const TCHAR *streetAddress, const TCHAR *postcode);
    ~PostalAddress();
 
-   const TCHAR *getCountry() { return CHECK_NULL_EX(m_country); }
-   const TCHAR *getCity() { return CHECK_NULL_EX(m_city); }
-   const TCHAR *getStreetAddress() { return CHECK_NULL_EX(m_streetAddress); }
-   const TCHAR *getPostCode() { return CHECK_NULL_EX(m_postcode); }
+   const TCHAR *getCountry() const { return CHECK_NULL_EX(m_country); }
+   const TCHAR *getCity() const { return CHECK_NULL_EX(m_city); }
+   const TCHAR *getStreetAddress() const { return CHECK_NULL_EX(m_streetAddress); }
+   const TCHAR *getPostCode() const { return CHECK_NULL_EX(m_postcode); }
 
    void setCountry(const TCHAR *country) { safe_free(m_country); m_country = _tcsdup_ex(country); }
    void setCity(const TCHAR *city) { safe_free(m_city); m_city = _tcsdup_ex(city); }

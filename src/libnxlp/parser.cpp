@@ -71,7 +71,8 @@ struct XML_PARSER_STATE
 	String macro;
 	bool invertedRule;
 	bool breakFlag;
-	XML_PARSER_STATE(): encodings(1, 1, true) {}
+
+	XML_PARSER_STATE() : encodings(1, 1, true) { }
 };
 
 /**
