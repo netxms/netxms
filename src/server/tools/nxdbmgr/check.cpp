@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -232,9 +232,9 @@ static void CheckZones()
                              _T("last_modified,status_calc_alg,status_prop_alg,")
                              _T("status_fixed_val,status_shift,status_translation,")
                              _T("status_single_threshold,status_thresholds,location_type,")
-									  _T("latitude,longitude,image) VALUES ")
+									  _T("latitude,longitude,image,maint_mode,maint_event_id) VALUES ")
                              _T("(%d,'%s','lost_zone_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
-									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000')"),
+									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000','0',0)"),
 									  (int)dwId, _uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
@@ -292,9 +292,10 @@ static void CheckNodes()
                              _T("last_modified,status_calc_alg,status_prop_alg,")
                              _T("status_fixed_val,status_shift,status_translation,")
                              _T("status_single_threshold,status_thresholds,location_type,")
-									  _T("latitude,longitude,location_accuracy,location_timestamp,image,submap_id) VALUES ")
+									  _T("latitude,longitude,location_accuracy,location_timestamp,")
+									  _T("image,submap_id,maint_mode,maint_event_id) VALUES ")
                              _T("(%d,'%s','lost_node_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
-									  _T("'0.000000','0.000000',0,0,'00000000-0000-0000-0000-000000000000',0)"),
+									  _T("'0.000000','0.000000',0,0,'00000000-0000-0000-0000-000000000000',0,'0',0)"),
 									  (int)dwId, _uuid_to_string(guid, guidText), (int)dwId, TIME_T_FCAST(time(NULL)));
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
@@ -382,9 +383,9 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
                              _T("last_modified,status_calc_alg,status_prop_alg,")
                              _T("status_fixed_val,status_shift,status_translation,")
                              _T("status_single_threshold,status_thresholds,location_type,")
-									  _T("latitude,longitude,image) VALUES ")
+									  _T("latitude,longitude,image,maint_mode,maint_event_id) VALUES ")
                              _T("(%d,'%s','lost_%s_%d',5,0,0,1,") TIME_T_FMT _T(",0,0,0,0,0,0,'00000000',0,")
-									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000')"),
+									  _T("'0.000000','0.000000','00000000-0000-0000-0000-000000000000','0',0)"),
 									  (int)dwId, _uuid_to_string(guid, guidText), pszDisplayName, (int)dwId, TIME_T_FCAST(time(NULL)));
                   if (SQLQuery(szQuery))
                      m_iNumFixes++;
