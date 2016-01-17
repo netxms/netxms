@@ -38,7 +38,10 @@ LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
 	int result = CheckSSH(szHost, 0, nPort, NULL, NULL, dwTimeout);
    if (*arg == 'R')
    {
-	   ret_int64(value, GetCurrentTimeMs() - start);
+      if (result == PC_ERR_NONE)
+         ret_int64(value, GetCurrentTimeMs() - start);
+      else
+         nRet = SYSINFO_RC_ERROR;
    }
    else
    {

@@ -38,7 +38,10 @@ LONG H_CheckCustom(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
    int result = CheckCustom(szHost, 0, nPort, dwTimeout);
    if (*arg == 'R')
    {
-	   ret_int64(value, GetCurrentTimeMs() - start);
+      if (result == PC_ERR_NONE)
+         ret_int64(value, GetCurrentTimeMs() - start);
+      else
+         nRet = SYSINFO_RC_ERROR;
    }
    else
    {
