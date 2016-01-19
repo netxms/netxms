@@ -2879,10 +2879,6 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
 void ClientSession::sendUserDB(UINT32 dwRqId)
 {
    NXCPMessage msg;
-	UserDatabaseObject **users;
-   int i, userCount;
-
-   // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(dwRqId);
    msg.setField(VID_RCC, RCC_SUCCESS);
@@ -2890,15 +2886,16 @@ void ClientSession::sendUserDB(UINT32 dwRqId)
 	msg.deleteAllFields();
 
    // Send user database
-	users = OpenUserDatabase(&userCount);
-   for(i = 0; i < userCount; i++)
+	Iterator<UserDatabaseObject> *users = OpenUserDatabase();
+	while(users->hasNext())
    {
-		msg.setCode((users[i]->getId() & GROUP_FLAG) ? CMD_GROUP_DATA : CMD_USER_DATA);
-		users[i]->fillMessage(&msg);
+	   UserDatabaseObject *object = users->next();
+		msg.setCode(object->isGroup() ? CMD_GROUP_DATA : CMD_USER_DATA);
+		object->fillMessage(&msg);
       sendMessage(&msg);
       msg.deleteAllFields();
    }
-	CloseUserDatabase();
+	CloseUserDatabase(users);
 
    // Send end-of-database notification
    msg.setCode(CMD_USER_DB_EOF);

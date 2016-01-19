@@ -2,6 +2,7 @@
 * 2.0.2
 *
 
+- Optimized LDAP synchronization for large directories
 - Added NXSL API for manipulating object geolocation
 - Android Console:
 	- Updated ACRA library: now crash reports are sent via e-mail (will use the app installed on device to send mail)
