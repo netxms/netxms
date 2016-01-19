@@ -174,6 +174,27 @@ static void TestStringSet()
    AssertTrue(s->contains(_T("key-888 lorem ipsum")));
    EndTest(GetCurrentTimeMs() - start);
 
+   StartTest(_T("String set - iterator"));
+   Iterator<const TCHAR> *it = s->iterator();
+   AssertTrue(it->hasNext());
+   bool found = false;
+   while(it->hasNext())
+   {
+      const TCHAR *v = it->next();
+      AssertNotNull(v);
+      if (!_tcscmp(v, _T("key-42 lorem ipsum")))
+      {
+         found = true;
+         break;
+      }
+   }
+   AssertTrue(found);
+   it->remove();
+   AssertEquals(s->size(), 9999);
+   AssertFalse(s->contains(_T("key-42 lorem ipsum")));
+   delete it;
+   EndTest();
+
    StartTest(_T("String set - clear"));
    start = GetCurrentTimeMs();
    s->clear();

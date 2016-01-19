@@ -673,10 +673,35 @@ struct StringSetEntry;
 class NXCPMessage;
 
 /**
+ * String set
+ */
+class StringSet;
+
+/**
+ * String set iterator
+ */
+class LIBNETXMS_EXPORTABLE StringSetIterator : public AbstractIterator
+{
+private:
+   StringSet *m_stringSet;
+   StringSetEntry *m_curr;
+   StringSetEntry *m_next;
+
+public:
+   StringSetIterator(StringSet *stringSet);
+
+   virtual bool hasNext();
+   virtual void *next();
+   virtual void remove();
+};
+
+/**
  * String set class
  */
 class LIBNETXMS_EXPORTABLE StringSet
 {
+   friend class StringSetIterator;
+
 private:
    StringSetEntry *m_data;
 
@@ -689,20 +714,23 @@ public:
    void remove(const TCHAR *str);
    void clear();
 
-   int size();
-   bool contains(const TCHAR *str);
-   bool equals(StringSet *s);
+   int size() const;
+   bool contains(const TCHAR *str) const;
+   bool equals(const StringSet *s) const;
 
    void addAll(StringSet *src);
    void addAll(TCHAR **strings, int count);
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);
    void addAllPreallocated(TCHAR **strings, int count);
-   void forEach(bool (*cb)(const TCHAR *, void *), void *userData);
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId);
-   void addAllFromMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
+   void forEach(bool (*cb)(const TCHAR *, void *), void *userData) const;
+
+   void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const;
+   void addAllFromMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
 
    String join(const TCHAR *separator);
+
+   Iterator<const TCHAR> *iterator() { return new Iterator<const TCHAR>(new StringSetIterator(this)); }
 };
 
 /**
