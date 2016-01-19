@@ -938,6 +938,7 @@ UINT32 NXCORE_EXPORTABLE DetachLdapUser(UINT32 id)
    UserDatabaseObject *object = s_userDatabase.get(id);
    if (object != NULL)
    {
+      s_ldapNames.remove(object->getDn());
       object->detachLdapUser();
       SendUserDBUpdate(USER_DB_MODIFY, id, object);
       dwResult = RCC_SUCCESS;

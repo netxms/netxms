@@ -305,8 +305,8 @@ void UserDatabaseObject::setName(const TCHAR *name)
 
 void UserDatabaseObject::setDn(const TCHAR *dn)
 {
-   safe_free(m_userDn);
-   m_userDn = (dn != NULL) ? _tcsdup(dn) : NULL;
+   free(m_userDn);
+   m_userDn = _tcsdup_ex(dn);
    m_flags |= UF_MODIFIED;
 }
 
