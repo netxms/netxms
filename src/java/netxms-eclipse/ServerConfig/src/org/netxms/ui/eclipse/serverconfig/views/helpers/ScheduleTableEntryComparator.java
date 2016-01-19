@@ -6,7 +6,6 @@ import org.eclipse.swt.SWT;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.users.AbstractUserObject;
 import org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;

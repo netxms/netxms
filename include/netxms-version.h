@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -31,8 +31,8 @@
  */
 #define NETXMS_VERSION_MAJOR        2
 #define NETXMS_VERSION_MINOR        0
-#define NETXMS_VERSION_STRING       _T("2.0")
-#define NETXMS_VERSION_STRING_A     "2.0"
+#define NETXMS_VERSION_STRING       _T("2.0.1")
+#define NETXMS_VERSION_STRING_A     "2.0.1"
 
 #ifdef UNICODE
 #define IS_UNICODE_BUILD_STRING     _T(" (UNICODE)")
@@ -48,7 +48,7 @@
 #define CLIENT_PROTOCOL_VERSION_PUSH      1     /* Data push API */
 #define CLIENT_PROTOCOL_VERSION_TRAP      1     /* Event (trap) sending API */
 #define CLIENT_PROTOCOL_VERSION_MOBILE    1     /* All functionality relevant for mobile client */
-#define CLIENT_PROTOCOL_VERSION_FULL      3     /* All functionality */
+#define CLIENT_PROTOCOL_VERSION_FULL      4     /* All functionality */
 
 /**
  * Protocol version positions

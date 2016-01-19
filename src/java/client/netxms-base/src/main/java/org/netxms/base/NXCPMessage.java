@@ -74,11 +74,10 @@ public class NXCPMessage
 
 	/**
 	 * Create NXCPMessage from binary NXCP message
-	 *
-	 * @param nxcpMessage binary NXCP message
-	 * @throws java.io.IOException
-	 * @throws GeneralSecurityException 
-	 * @throws NXCPException 
+	 * @param nxcpMessage
+	 * @param ectx
+	 * @throws IOException
+	 * @throws NXCPException
 	 */
 	public NXCPMessage(final byte[] nxcpMessage, EncryptionContext ectx) throws IOException, NXCPException
 	{
@@ -127,12 +126,12 @@ public class NXCPMessage
 			createFromStream(inputStream, byteArrayInputStream);
 		}
 	}
-	
+
 	/**
 	 * Create NXCPMessage from prepared input byte stream
-	 *
-	 * @param nxcpMessage binary NXCP message
-	 * @throws java.io.IOException
+	 * @param inputStream
+	 * @param byteArrayInputStream
+	 * @throws IOException
 	 */
 	private void createFromStream(NXCPDataInputStream inputStream, ByteArrayInputStream byteArrayInputStream) throws IOException
 	{
@@ -651,9 +650,7 @@ public class NXCPMessage
 
 	/**
 	 * Set or clear raw (binary) message flag
-	 * 
-	 * @param isControl
-	 *           true to set control message flag
+	 * @param isRaw
 	 */
 	public void setBinaryMessage(boolean isRaw)
 	{

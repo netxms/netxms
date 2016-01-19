@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0.1], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -92,7 +92,8 @@ RUNTIME_PREFIX=""
 RUNTIME_STATE_DIR=""
 HPUX_HPPA="no"
 XMPP_SUPPORT="yes"
-ZEROMQ_SUPPORT="no"
+ZEROMQ_SUPPORT="yes"
+ZEROMQ_REQUIRED="no"
 ZEROMQ_CPPFLAGS=""
 ZEROMQ_LDFLAGS=""
 LDAP_SUPPORT="yes"
@@ -279,9 +280,12 @@ AC_ARG_WITH(zeromq,
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
 		ZEROMQ_BASE="$withval"
+		ZEROMQ_REQUIRED=yes
 	fi
 	COMPONENTS="$COMPONENTS zeromq"
-   ZEROMQ_SUPPORT=yes
+	ZEROMQ_SUPPORT=yes
+else
+	ZEROMQ_SUPPORT=no
 fi ])
 
 AC_ARG_WITH(mongodb,
@@ -521,6 +525,7 @@ AC_ARG_ENABLE(unicode,
 	BUILD_UNICODE="yes"
 	CPPFLAGS="$CPPFLAGS -DUNICODE"
 	FORCE_INTERNAL_LIBTRE="yes"
+	DISABLE_READLINE="yes"
 ])
 
 AC_ARG_ENABLE(debug,
@@ -2844,10 +2849,24 @@ if test $? = 0; then
 		LDFLAGS="$LDFLAGS $ZEROMQ_LDFLAGS"
 	fi
 	
-	AC_CHECK_HEADER(zmq.h,,AC_MSG_ERROR([*** Cannot find zmq.h - check your ZeroMQ installation ***]))
-	AC_CHECK_LIB(zmq, zmq_ctx_new, [ SERVER_LIBS="$SERVER_LIBS -lzmq" ], AC_MSG_ERROR([*** libzmq is missing or too old - check your ZeroMQ installation ***]))
+	AC_CHECK_HEADER(zmq.h,,[
+		if test "x$ZEROMQ_REQUIRED" = "xyes"; then
+			AC_MSG_ERROR([*** Cannot find zmq.h - check your ZeroMQ installation ***])
+		else
+			ZEROMQ_SUPPORT="no"
+		fi
+	])
+	AC_CHECK_LIB(zmq, zmq_ctx_new, [ SERVER_LIBS="$SERVER_LIBS -lzmq" ], [
+		if test "x$ZEROMQ_REQUIRED" = "xyes"; then
+			AC_MSG_ERROR([*** libzmq is missing or too old - check your ZeroMQ installation ***])
+		else
+			ZEROMQ_SUPPORT="no"
+		fi
+	])
     
-	AC_DEFINE(WITH_ZMQ, 1, Define to 1 if ZeroMQ is supported)
+	if test "x$ZEROMQ_SUPPORT" = "xyes"; then
+		AC_DEFINE(WITH_ZMQ, 1, Define to 1 if ZeroMQ is supported)
+	fi
 
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"

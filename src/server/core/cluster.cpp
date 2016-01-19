@@ -189,6 +189,14 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 }
 
 /**
+ * Called by client session handler to check if threshold summary should be shown for this object.
+ */
+bool Cluster::showThresholdSummary()
+{
+   return true;
+}
+
+/**
  * Save object to database
  */
 BOOL Cluster::saveToDatabase(DB_HANDLE hdb)

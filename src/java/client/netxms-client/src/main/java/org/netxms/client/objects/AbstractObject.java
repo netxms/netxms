@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import org.netxms.base.CompatTools;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.Logger;
 import org.netxms.base.NXCPCodes;
@@ -124,7 +123,7 @@ public abstract class AbstractObject
 	protected PostalAddress postalAddress;
 	protected UUID image;
 	protected long submapId;
-	protected HashSet<Long> trustedNodes = new HashSet<Long>(0);
+	protected final HashSet<Long> trustedNodes = new HashSet<Long>(0);
 	protected boolean inheritAccessRights = true;
 	protected HashSet<AccessListElement> accessList = new HashSet<AccessListElement>(0);
 	protected int statusCalculationMethod;
@@ -134,10 +133,10 @@ public abstract class AbstractObject
 	protected ObjectStatus[] statusTransformation;
 	protected int statusSingleThreshold;
 	protected int[] statusThresholds;
-	protected HashSet<Long> parents = new HashSet<Long>(0);
-	protected HashSet<Long> children = new HashSet<Long>(0);
-	protected List<Long> dashboards = new ArrayList<Long>(0);
-	protected Map<String, String> customAttributes = new HashMap<String, String>(0);
+	protected final HashSet<Long> parents = new HashSet<Long>(0);
+	protected final HashSet<Long> children = new HashSet<Long>(0);
+	protected final List<Long> dashboards = new ArrayList<Long>(0);
+	protected final Map<String, String> customAttributes = new HashMap<String, String>(0);
 	protected Map<String, Object> moduleData = null;
 	
 	private int effectiveRights = 0;
@@ -302,7 +301,7 @@ public abstract class AbstractObject
 	/**
 	 * Get number of parent objects
 	 * 
-	 * @return
+	 * @return number of parent objects
 	 */
 	public int getParentCount()
 	{
@@ -392,10 +391,8 @@ public abstract class AbstractObject
 		
 		synchronized(parents)
 		{
-			final Iterator<Long> it = parents.iterator();
-			while(it.hasNext())
+			for (Long id : parents)
 			{
-				long id = it.next();
 				if (id == objectId)
 				{
 					// Direct parent
@@ -422,9 +419,13 @@ public abstract class AbstractObject
 	 */
 	public boolean isChildOf(final long[] objects)
 	{
-		for(int i = 0; i < objects.length; i++)
-			if (isChildOf(objects[i]))
+		for (long object : objects)
+		{
+			if (isChildOf(object))
+			{
 				return true;
+			}
+		}
 		return false;
 	}
 
@@ -439,10 +440,8 @@ public abstract class AbstractObject
 		
 		synchronized(parents)
 		{
-			final Iterator<Long> it = parents.iterator();
-			while(it.hasNext())
+			for (Long id : parents)
 			{
-				long id = it.next();
 				if (id == objectId)
 				{
 					// Direct parent
@@ -463,12 +462,13 @@ public abstract class AbstractObject
 		synchronized(parents)
 		{
 			list = new HashSet<AbstractObject>(children.size());
-			final Iterator<Long> it = parents.iterator();
-			while(it.hasNext())
+			for (Long parent : parents)
 			{
-				AbstractObject obj = session.findObjectById(it.next());
+				AbstractObject obj = session.findObjectById(parent);
 				if (obj != null)
+				{
 					list.add(obj);
+				}
 			}
 		}
 		return list.toArray(new AbstractObject[list.size()]);
@@ -483,12 +483,13 @@ public abstract class AbstractObject
 		synchronized(children)
 		{
 			list = new HashSet<AbstractObject>(children.size());
-			final Iterator<Long> it = children.iterator();
-			while(it.hasNext())
+			for (Long aChildren : children)
 			{
-				AbstractObject obj = session.findObjectById(it.next());
+				AbstractObject obj = session.findObjectById(aChildren);
 				if (obj != null)
+				{
 					list.add(obj);
+				}
 			}
 		}
 		return list.toArray(new AbstractObject[list.size()]);
@@ -497,7 +498,7 @@ public abstract class AbstractObject
 	/**
 	 * Return identifiers of all child objects
 	 * 
-	 * @return
+	 * @return list of children
 	 */
 	public long[] getChildIdList()
 	{
@@ -515,7 +516,7 @@ public abstract class AbstractObject
 	/**
 	 * Return identifiers of all parent objects
 	 * 
-	 * @return
+	 * @return list of object parents
 	 */
 	public long[] getParentIdList()
 	{
@@ -539,18 +540,31 @@ public abstract class AbstractObject
 	{
 		synchronized(children)
 		{
-			final Iterator<Long> it = children.iterator();
-			while(it.hasNext())
-			{
-				AbstractObject obj = session.findObjectById(it.next());
-				if (obj != null)
-				{
-					if ((classFilter == null) || CompatTools.arrayContains(classFilter, obj.getObjectClass()))
+			for (Long child : children) {
+				AbstractObject obj = session.findObjectById(child);
+				if (obj != null) {
+					if (matchClassFilter(classFilter, obj.getObjectClass())) {
 						set.add(obj);
+					}
 					obj.getAllChildsInternal(classFilter, set);
 				}
 			}
 		}
+	}
+
+	private boolean matchClassFilter(int[] classFilter, int objectClass)
+	{
+		if (classFilter == null)
+		{
+			return true;
+		}
+		for (int filter : classFilter) {
+			if (objectClass == filter)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -588,14 +602,14 @@ public abstract class AbstractObject
 	{
 		synchronized(parents)
 		{
-			final Iterator<Long> it = parents.iterator();
-			while(it.hasNext())
-			{
-				AbstractObject obj = session.findObjectById(it.next());
+			for (Long parent : parents) {
+				AbstractObject obj = session.findObjectById(parent);
 				if (obj != null)
 				{
-					if ((classFilter == null) || CompatTools.arrayContains(classFilter, obj.getObjectClass()))
+					if (matchClassFilter(classFilter, obj.getObjectClass()))
+					{
 						set.add(obj);
+					}
 					obj.getAllParentsInternal(classFilter, set);
 				}
 			}
@@ -654,7 +668,7 @@ public abstract class AbstractObject
     * Get  list of associated dashboards
     * 
     * @param accessibleOnly if set to true, only accessible dashboards will be returned
-    * @return
+    * @return list of the dashboard objects
     */
    public List<AbstractObject> getDashboards(boolean accessibleOnly)
    {
@@ -877,8 +891,8 @@ public abstract class AbstractObject
    /**
     * Get module-specific data
     * 
-    * @param module
-    * @return
+    * @param module module name
+    * @return custom data in module-specific format
     */
    public Object getModuleData(String module)
    {

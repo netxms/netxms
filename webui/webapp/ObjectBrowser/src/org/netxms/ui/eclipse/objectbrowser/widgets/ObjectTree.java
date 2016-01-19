@@ -723,4 +723,22 @@ public class ObjectTree extends Composite
          }
       });
    }
+   
+   /**
+    * Disables refresh option in RefreshTimer class.
+    * Is used for object name edit.  
+    */
+   public void disableRefresh()
+   {
+      refreshTimer.disableRefresh();
+   }
+
+   /**
+    * Enables refresh option in RefreshTimer class.  
+    * Is used for object name edit. 
+    */
+   public void enableRefresh()
+   {
+      refreshTimer.enableRefresh();
+   }
 }

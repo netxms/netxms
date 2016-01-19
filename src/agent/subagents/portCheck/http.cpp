@@ -73,7 +73,10 @@ LONG H_CheckHTTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
    int result = (arg[1] == 'S') ? CheckHTTPS(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout) : CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout);
    if (*arg == 'R')
    {
-	   ret_int64(value, GetCurrentTimeMs() - start);
+      if (result == PC_ERR_NONE)
+         ret_int64(value, GetCurrentTimeMs() - start);
+      else
+         nRet = SYSINFO_RC_ERROR;
    }
    else
    {

@@ -123,7 +123,7 @@
       <command
             categoryId="org.netxms.ui.eclipse.console.category.views"
             description="Open scheduled task list"
-            id="org.netxms.ui.eclipse.serverconfig.command_scheduled_tasks"
+            id="org.netxms.ui.eclipse.serverconfig.commands.open_scheduled_tasks"
             name="Scheduled tasks">
       </command>
    </extension>

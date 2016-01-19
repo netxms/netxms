@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #include "setup.iss"
-OutputBaseFilename=netxms-2.0
+OutputBaseFilename=netxms-2.0.1
 
 [Components]
 Name: "base"; Description: "Base Files"; Types: full compact custom; Flags: fixed
@@ -86,6 +86,8 @@ Source: "..\..\..\Release\portech.sms"; DestDir: "{app}\bin"; Flags: ignoreversi
 Source: "..\..\..\Release\portech.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\dbemu.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\Release\dbemu.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\Release\kannel.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\Release\kannel.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\slack.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\Release\slack.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\text2reach.sms"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
@@ -203,6 +205,7 @@ Source: "..\..\..\sql\dbschema_pgsql.sql"; DestDir: "{app}\lib\sql"; Flags: igno
 Source: "..\..\..\sql\dbschema_sqlite.sql"; DestDir: "{app}\lib\sql"; Flags: ignoreversion; Components: server
 Source: "{app}\var\mibs\*.txt"; DestDir: "{app}\share\mibs"; Flags: ignoreversion external skipifsourcedoesntexist; Components: server
 Source: "..\..\..\contrib\mibs\*.txt"; DestDir: "{app}\share\mibs"; Flags: ignoreversion; Components: server
+Source: "..\..\..\contrib\templates\*.xml"; DestDir: "{app}\share\templates"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\netxmsd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
 Source: "..\..\..\contrib\nxagentd.conf-dist"; DestDir: "{app}\etc"; Flags: ignoreversion; Components: server
 Source: "..\..\..\images\*"; DestDir: "{app}\var\images"; Flags: ignoreversion; Components: server

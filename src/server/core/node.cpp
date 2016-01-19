@@ -1056,7 +1056,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
 			   if (pSubnet == NULL)
 			   {
 				   // Check if netmask is 0 (detect), and if yes, create
-				   // new subnet with class mask
+				   // new subnet with default mask
                if (addr.getMaskBits() == 0)
 				   {
 					   bSyntheticMask = true;
@@ -1068,11 +1068,16 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
                if (addr.getHostBits() >= 2)
 				   {
 					   pSubnet = createSubnet(addr, bSyntheticMask);
+					   if (bSyntheticMask)
+					   {
+					      // createSubnet may adjust address mask bits
+	                  info->ipAddrList.replace(addr);
+					   }
 				   }
 			   }
 			   else
 			   {
-				   // Set correct netmask if we was asked for it
+				   // Set correct netmask if we were asked for it
                if (addr.getMaskBits() == 0)
 				   {
 					   bSyntheticMask = pSubnet->isSyntheticMask();
@@ -6299,16 +6304,22 @@ void Node::resolveVlanPorts(VlanList *vlanList)
 /**
  * Create new subnet and binds to this node
  */
-Subnet *Node::createSubnet(const InetAddress& baseAddr, bool syntheticMask)
+Subnet *Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
 {
    InetAddress addr = baseAddr.getSubnetAddress();
    if (syntheticMask)
    {
       while(FindSubnetByIP(m_zoneId, addr) != NULL)
       {
-         addr.setMaskBits(addr.getMaskBits() + 1);
+         baseAddr.setMaskBits(baseAddr.getMaskBits() + 1);
+         InetAddress addr = baseAddr.getSubnetAddress();
       }
+
+      // Do not create subnet if there are no address space for it
+      if (baseAddr.getHostBits() < 2)
+         return NULL;
    }
+
    Subnet *s = new Subnet(addr, m_zoneId, syntheticMask);
    NetObjInsert(s, true, false);
    if (g_flags & AF_ENABLE_ZONING)

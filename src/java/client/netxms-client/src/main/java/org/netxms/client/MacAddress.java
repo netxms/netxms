@@ -22,8 +22,6 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.netxms.base.CompatTools;
-
 /**
  * MAC address representation
  *
@@ -50,7 +48,7 @@ public class MacAddress
 	{
 		if (src != null)
 		{
-			value = CompatTools.arrayCopy(src, 6);
+			value = Arrays.copyOf(src, 6);
 		}
 		else
 		{
@@ -143,13 +141,13 @@ public class MacAddress
 	 */
 	public byte[] getValue()
 	{
-		return CompatTools.arrayCopy(value, 6);
+		return Arrays.copyOf(value, 6);
 	}
 	
 	/**
 	 * Compare this MAC address to another MAC address.
 	 * 
-	 * @param dst
+	 * @param dst another @see MacAddress to be compared with.
 	 * @return 0 if two MAC addresses are equal, negative if this MAC address is "lower", and positive if "higher"
 	 */
 	public int compareTo(MacAddress dst)

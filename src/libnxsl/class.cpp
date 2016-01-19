@@ -54,9 +54,9 @@ NXSL_Value *NXSL_Class::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
  * Set attribute
  * Default implementation always returns error
  */
-BOOL NXSL_Class::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue)
+bool NXSL_Class::setAttr(NXSL_Object *object, const TCHAR *attr, NXSL_Value *value)
 {
-   return FALSE;
+   return false;
 }
 
 /**

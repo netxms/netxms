@@ -469,6 +469,10 @@ typedef int SOCKET;
 #warning Installation prefix not defined, defaulting to /usr/local
 #endif
 
+#if HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
+
 #if HAVE_WCHAR_H
 #include <wchar.h>
 #endif
@@ -534,10 +538,6 @@ typedef int SOCKET;
 
 #if HAVE_FCNTL_H
 #include <fcntl.h>
-#endif
-
-#if HAVE_ALLOCA_H
-#include <alloca.h>
 #endif
 
 #include <dirent.h>

@@ -924,15 +924,15 @@ enum AggregationFunction
 #define DEPLOYMENT_STATUS_FINISHED     255
 
 /**
- * Session subscription codes (data channels)
+ * Core subscription channels
  */
-#define NXC_CHANNEL_EVENTS       0x00000001
-#define NXC_CHANNEL_SYSLOG       0x00000002
-#define NXC_CHANNEL_ALARMS       0x00000004
-#define NXC_CHANNEL_OBJECTS      0x00000008
-#define NXC_CHANNEL_SNMP_TRAPS   0x00000010
-#define NXC_CHANNEL_AUDIT_LOG    0x00000020
-#define NXC_CHANNEL_SITUATIONS   0x00000040
+#define NXC_CHANNEL_EVENTS       _T("Core.Events")
+#define NXC_CHANNEL_SYSLOG       _T("Core.Syslog")
+#define NXC_CHANNEL_ALARMS       _T("Core.Alarms")
+#define NXC_CHANNEL_OBJECTS      _T("Core.Objects")
+#define NXC_CHANNEL_SNMP_TRAPS   _T("Core.SNMP.Traps")
+#define NXC_CHANNEL_AUDIT_LOG    _T("Core.Audit")
+#define NXC_CHANNEL_SITUATIONS   _T("Core.Situations")
 
 /**
  * Node creation flags

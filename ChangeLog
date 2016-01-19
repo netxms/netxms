@@ -1,4 +1,27 @@
 *
+* 2.0.2
+*
+
+- Optimized LDAP synchronization for large directories
+- Added NXSL API for manipulating object geolocation
+- Android Console:
+	- Updated ACRA library: now crash reports are sent via e-mail (will use the app installed on device to send mail)
+	- Fixed bug in action bar commands: disconnect and exit sometimes wasn't working
+- Android Agent:
+	- Updated ACRA library: now crash reports are sent via e-mail (will use the app installed on device to send mail)
+- Fixed issues: #1042, #1049, #1117, #1125, #1133
+
+
+*
+* 2.0.1
+*
+
+- Fixed random server crash if ODBC database driver is used
+- Fixed incorrect reading of long text fields by MS SQL database driver
+- Fixed issues: #1052, #1063
+
+
+*
 * 2.0
 *
 

@@ -316,7 +316,7 @@ public:
 	const String& operator =(const String &src);
    const String&  operator +=(const TCHAR *str);
    const String&  operator +=(const String &str);
-   operator const TCHAR*() { return CHECK_NULL_EX(m_buffer); }
+   operator const TCHAR*() const { return CHECK_NULL_EX(m_buffer); }
 
 	char *getUTF8String();
 
@@ -362,6 +362,7 @@ public:
 
    virtual bool hasNext() = 0;
    virtual void *next() = 0;
+   virtual void remove() = 0;
 };
 
 /**
@@ -378,6 +379,7 @@ public:
 
    bool hasNext() { return m_worker->hasNext(); }
    T *next() { return (T *)m_worker->next(); }
+   void remove() { m_worker->remove(); }
 };
 
 /**
@@ -432,14 +434,15 @@ public:
 class LIBNETXMS_EXPORTABLE ArrayIterator : public AbstractIterator
 {
 private:
-   const Array *m_array;
+   Array *m_array;
    int m_pos;
 
 public:
-   ArrayIterator(const Array *array);
+   ArrayIterator(Array *array);
 
    virtual bool hasNext();
    virtual void *next();
+   virtual void remove();
 };
 
 /**
@@ -465,7 +468,7 @@ public:
 	void unlink(int index) { Array::unlink(index); }
    void unlink(T *object) { Array::unlink((void *)object); }
 
-   Iterator<T> *iterator() const { return new Iterator<T>(new ArrayIterator(this)); }
+   Iterator<T> *iterator() { return new Iterator<T>(new ArrayIterator(this)); }
 };
 
 /**
@@ -596,6 +599,7 @@ public:
 	bool getBoolean(const TCHAR *key, bool defaultValue) const;
 
    void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
+   void loadMessage(const NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId);
 };
 
 /**
@@ -669,10 +673,35 @@ struct StringSetEntry;
 class NXCPMessage;
 
 /**
+ * String set
+ */
+class StringSet;
+
+/**
+ * String set iterator
+ */
+class LIBNETXMS_EXPORTABLE StringSetIterator : public AbstractIterator
+{
+private:
+   StringSet *m_stringSet;
+   StringSetEntry *m_curr;
+   StringSetEntry *m_next;
+
+public:
+   StringSetIterator(StringSet *stringSet);
+
+   virtual bool hasNext();
+   virtual void *next();
+   virtual void remove();
+};
+
+/**
  * String set class
  */
 class LIBNETXMS_EXPORTABLE StringSet
 {
+   friend class StringSetIterator;
+
 private:
    StringSetEntry *m_data;
 
@@ -685,20 +714,23 @@ public:
    void remove(const TCHAR *str);
    void clear();
 
-   int size();
-   bool contains(const TCHAR *str);
-   bool equals(StringSet *s);
+   int size() const;
+   bool contains(const TCHAR *str) const;
+   bool equals(const StringSet *s) const;
 
    void addAll(StringSet *src);
    void addAll(TCHAR **strings, int count);
    void splitAndAdd(const TCHAR *src, const TCHAR *separator);
    void addAllPreallocated(TCHAR **strings, int count);
-   void forEach(bool (*cb)(const TCHAR *, void *), void *userData);
 
-   void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId);
-   void addAllFromMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
+   void forEach(bool (*cb)(const TCHAR *, void *), void *userData) const;
+
+   void fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const;
+   void addAllFromMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase);
 
    String join(const TCHAR *separator);
+
+   Iterator<const TCHAR> *iterator() { return new Iterator<const TCHAR>(new StringSetIterator(this)); }
 };
 
 /**
@@ -759,6 +791,7 @@ public:
 
    virtual bool hasNext();
    virtual void *next();
+   virtual void remove();
 };
 
 /**
@@ -1268,10 +1301,10 @@ public:
    PostalAddress(const TCHAR *country, const TCHAR *city, const TCHAR *streetAddress, const TCHAR *postcode);
    ~PostalAddress();
 
-   const TCHAR *getCountry() { return CHECK_NULL_EX(m_country); }
-   const TCHAR *getCity() { return CHECK_NULL_EX(m_city); }
-   const TCHAR *getStreetAddress() { return CHECK_NULL_EX(m_streetAddress); }
-   const TCHAR *getPostCode() { return CHECK_NULL_EX(m_postcode); }
+   const TCHAR *getCountry() const { return CHECK_NULL_EX(m_country); }
+   const TCHAR *getCity() const { return CHECK_NULL_EX(m_city); }
+   const TCHAR *getStreetAddress() const { return CHECK_NULL_EX(m_streetAddress); }
+   const TCHAR *getPostCode() const { return CHECK_NULL_EX(m_postcode); }
 
    void setCountry(const TCHAR *country) { safe_free(m_country); m_country = _tcsdup_ex(country); }
    void setCity(const TCHAR *city) { safe_free(m_city); m_city = _tcsdup_ex(city); }

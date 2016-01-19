@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -118,7 +118,7 @@ void StringSet::clear()
 /**
  * Check if given string is in set
  */
-bool StringSet::contains(const TCHAR *str)
+bool StringSet::contains(const TCHAR *str) const
 {
    StringSetEntry *entry;
    int keyLen = (int)(_tcslen(str) * sizeof(TCHAR));
@@ -129,7 +129,7 @@ bool StringSet::contains(const TCHAR *str)
 /**
  * Check if two given sets are equal
  */
-bool StringSet::equals(StringSet *s)
+bool StringSet::equals(const StringSet *s) const
 {
    if (s->size() != size())
       return false;
@@ -146,7 +146,7 @@ bool StringSet::equals(StringSet *s)
 /**
  * Get set size
  */
-int StringSet::size()
+int StringSet::size() const
 {
    return HASH_COUNT(m_data);
 }
@@ -154,7 +154,7 @@ int StringSet::size()
 /**
  * Enumerate entries
  */
-void StringSet::forEach(bool (*cb)(const TCHAR *, void *), void *userData)
+void StringSet::forEach(bool (*cb)(const TCHAR *, void *), void *userData) const
 {
    StringSetEntry *entry, *tmp;
    HASH_ITER(hh, m_data, entry, tmp)
@@ -236,7 +236,7 @@ void StringSet::addAllPreallocated(TCHAR **strings, int count)
  * @param baseId base ID for data fields
  * @param countId ID of field where number of strings should be placed
  */
-void StringSet::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId)
+void StringSet::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId) const
 {
    UINT32 varId = baseId;
    StringSetEntry *entry, *tmp;
@@ -256,7 +256,7 @@ void StringSet::fillMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId)
  * @param clearBeforeAdd if set to true, existing content will be deleted
  * @param toUppercase if set to true, all strings will be converted to upper case before adding
  */
-void StringSet::addAllFromMessage(NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase)
+void StringSet::addAllFromMessage(const NXCPMessage *msg, UINT32 baseId, UINT32 countId, bool clearBeforeAdd, bool toUppercase)
 {
    if (clearBeforeAdd)
       clear();
@@ -292,4 +292,60 @@ String StringSet::join(const TCHAR *separator)
       result += entry->str;
    }
    return result;
+}
+
+/**
+ * Hash map iterator
+ */
+StringSetIterator::StringSetIterator(StringSet *stringSet)
+{
+   m_stringSet = stringSet;
+   m_curr = NULL;
+   m_next = NULL;
+}
+
+/**
+ * Next element availability indicator
+ */
+bool StringSetIterator::hasNext()
+{
+   if (m_stringSet->m_data == NULL)
+      return false;
+
+   return (m_curr != NULL) ? (m_next != NULL) : true;
+}
+
+/**
+ * Get next element
+ */
+void *StringSetIterator::next()
+{
+   if (m_stringSet->m_data == NULL)
+      return NULL;
+
+   if (m_curr == NULL)  // iteration not started
+   {
+      HASH_ITER_START(hh, m_stringSet->m_data, m_curr, m_next);
+   }
+   else
+   {
+      if (m_next == NULL)
+         return NULL;
+
+      HASH_ITER_NEXT(hh, m_curr, m_next);
+   }
+   return m_curr->str;
+}
+
+/**
+ * Remove current element
+ */
+void StringSetIterator::remove()
+{
+   if (m_curr == NULL)
+      return;
+
+   HASH_DEL(m_stringSet->m_data, m_curr);
+   free(m_curr->str);
+   free(m_curr);
 }

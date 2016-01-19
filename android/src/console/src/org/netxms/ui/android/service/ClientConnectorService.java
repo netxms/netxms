@@ -79,9 +79,10 @@ public class ClientConnectorService extends Service implements SessionListener
 	public static final String ACTION_ALARM_RESOLVE = "org.netxms.ui.android.ACTION_ALARM_RESOLVE";
 	public static final String ACTION_ALARM_TERMINATE = "org.netxms.ui.android.ACTION_ALARM_TERMINATE";
 	public static final String ACTION_EXIT = "org.netxms.ui.android.ACTION_EXIT";
+	public static final String INTENTIONAL_EXIT_KEY = "IntentionalExit";
+
 	private static final String TAG = "nxclient/ClientConnectorService";
 	private static final String LASTALARM_KEY = "LastALarmIdNotified";
-
 	private static final int NOTIFY_ALARM = 1;
 	private static final int NOTIFY_STATUS = 2;
 	private static final int NOTIFY_STATUS_NEVER = 0;
@@ -191,6 +192,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	public int onStartCommand(Intent intent, int flags, int startId)
 	{
 		if ((intent != null) && (intent.getAction() != null))
+		{
+			Log.d(TAG, "onStartCommand: " + intent.getAction());
 			if (intent.getAction().equals(ACTION_CONNECT))
 				reconnect(false);
 			else if (intent.getAction().equals(ACTION_FORCE_CONNECT))
@@ -233,6 +236,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			}
 			else if (intent.getAction().equals(ACTION_EXIT))
 				exitApp();
+		}
 		return super.onStartCommand(intent, flags, startId);
 	}
 
@@ -265,18 +269,19 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		cancelSchedule();
 		clearNotifications();
-		savePreferences();
+		saveSatusOnExit();
 		unregisterReceiver(receiver);
 		stopSelf();
 	}
 
 	/**
-	 * 
+	 * Save status for intentional exit from app 
 	 */
-	public void savePreferences()
+	public void saveSatusOnExit()
 	{
 		SharedPreferences.Editor editor = sp.edit();
 		editor.putInt(LASTALARM_KEY, (int)lastAlarmIdNotified);
+		editor.putBoolean(ClientConnectorService.INTENTIONAL_EXIT_KEY, true);
 		editor.commit();
 	}
 
@@ -421,8 +426,6 @@ public class ClientConnectorService extends Service implements SessionListener
 	 */
 	private boolean hasToReconnect()
 	{
-		// TODO: cleanup alarm icon on change settings
-		// TODO: check reconnect on new flags added (vibration, led,...)
 		boolean needsToReconnect = enabled != sp.getBoolean("global.scheduler.enable", false);
 		needsToReconnect |= !server.equalsIgnoreCase(sp.getString("connection.server", ""));
 		needsToReconnect |= port != SafeParser.parseInt(sp.getString("connection.port", "4701"), 4701);
@@ -744,7 +747,8 @@ public class ClientConnectorService extends Service implements SessionListener
 			{
 				try
 				{
-					session.syncObjectSet(new long[] { objectId }, false, NXCSession.OBJECT_SYNC_NOTIFY);
+					if (session != null)
+						session.syncObjectSet(new long[] { objectId }, false, NXCSession.OBJECT_SYNC_NOTIFY);
 				}
 				catch (Exception e)
 				{
@@ -806,7 +810,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	}
 
 	/**
-	 * Exit from App
+	 * Exit intentionally from App
 	 */
 	private void exitApp()
 	{
@@ -821,6 +825,8 @@ public class ClientConnectorService extends Service implements SessionListener
 				}
 			});
 		}
+		else	// Home app is no more running
+			shutdown();
 	}
 
 	/**
@@ -980,10 +986,25 @@ public class ClientConnectorService extends Service implements SessionListener
 			int short_gap = 100;// Length of Gap Between dots/dashes (real is 200)
 			int medium_gap = 250;// Length of Gap Between Letters (real is 500)
 			//int long_gap = 500;// Length of Gap Between Words (real is 1000)
-			long[] pattern = { 0, // Start immediately 
-			dot, short_gap, dot, short_gap, dot, // s 
-			medium_gap, dash, short_gap, dash, short_gap, dash, // o 
-			medium_gap, dot, short_gap, dot, short_gap, dot// s 
+			long[] pattern = {
+					0, // Start immediately 
+					dot,
+					short_gap,
+					dot,
+					short_gap,
+					dot, // s 
+					medium_gap,
+					dash,
+					short_gap,
+					dash,
+					short_gap,
+					dash, // o 
+					medium_gap,
+					dot,
+					short_gap,
+					dot,
+					short_gap,
+					dot// s 
 			};
 			return pattern;
 		}
@@ -1111,7 +1132,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		try
 		{
-			session.acknowledgeAlarm(id, sticky, 0);
+			if (session != null)
+				session.acknowledgeAlarm(id, sticky, 0);
 		}
 		catch (Exception e)
 		{
@@ -1135,7 +1157,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		try
 		{
-			session.resolveAlarm(id);
+			if (session != null)
+				session.resolveAlarm(id);
 		}
 		catch (Exception e)
 		{
@@ -1159,7 +1182,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		try
 		{
-			session.terminateAlarm(id);
+			if (session != null)
+				session.terminateAlarm(id);
 		}
 		catch (Exception e)
 		{
@@ -1184,7 +1208,8 @@ public class ClientConnectorService extends Service implements SessionListener
 	{
 		try
 		{
-			session.setObjectManaged(id, state);
+			if (session != null)
+				session.setObjectManaged(id, state);
 		}
 		catch (Exception e)
 		{
@@ -1387,7 +1412,7 @@ public class ClientConnectorService extends Service implements SessionListener
 			if (cal.getTimeInMillis() < next)
 			{
 				cal.setTimeInMillis(next);
-				return " " + getString(R.string.notify_next_connection_schedule, DateFormat.getDateTimeInstance().format(cal));
+				return " " + getString(R.string.notify_next_connection_schedule, DateFormat.getDateTimeInstance().format(cal.getTime()));
 			}
 		}
 		return "";

@@ -1,6 +1,6 @@
 /* 
 ** ODBC Database Driver
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,11 +24,6 @@
 
 
 DECLARE_DRIVER_HEADER("ODBC")
-
-/**
- * Size of data buffer
- */
-#define DATA_BUFFER_SIZE      65536
 
 /**
  * Flag for enable/disable UNICODE
@@ -541,6 +536,171 @@ extern "C" DWORD EXPORT DrvQuery(ODBCDRV_CONN *pConn, NETXMS_WCHAR *pwszQuery, N
 }
 
 /**
+ * Get complete field data
+ */
+static NETXMS_WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
+{
+   NETXMS_WCHAR *result = NULL;
+   SQLLEN dataSize;
+   if (m_useUnicode)
+   {
+#if defined(_WIN32) || defined(UNICODE_UCS2)
+      WCHAR buffer[256];
+      SQLRETURN rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
+      if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize >= 0) && (dataSize <= (SQLLEN)(sizeof(buffer) - sizeof(WCHAR))))) && (dataSize != SQL_NULL_DATA))
+      {
+         result = wcsdup(buffer);
+      }
+      else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA))
+      {
+         if (dataSize > (SQLLEN)(sizeof(buffer) - sizeof(WCHAR)))
+         {
+            WCHAR *temp = (WCHAR *)malloc(dataSize + sizeof(WCHAR));
+            memcpy(temp, buffer, sizeof(buffer));
+            rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(WCHAR), &dataSize);
+            if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+            {
+               result = temp;
+            }
+            else
+            {
+               free(temp);
+            }
+         }
+         else if (dataSize == SQL_NO_TOTAL)
+         {
+            size_t tempSize = sizeof(buffer) * 4;
+            WCHAR *temp = (WCHAR *)malloc(tempSize);
+            memcpy(temp, buffer, sizeof(buffer));
+            size_t offset = sizeof(buffer) - sizeof(WCHAR);
+            while(true)
+            {
+               SQLLEN readSize = tempSize - offset;
+               rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, (char *)temp + offset, readSize, &dataSize);
+               if ((rc == SQL_SUCCESS) || (rc == SQL_NO_DATA))
+                  break;
+               if (dataSize == SQL_NO_TOTAL)
+               {
+                  tempSize += sizeof(buffer) * 4;
+               }
+               else
+               {
+                  tempSize += dataSize - readSize;
+               }
+               temp = (WCHAR *)realloc(temp, tempSize);
+               offset += readSize - sizeof(WCHAR);
+            }
+            result = temp;
+         }
+      }
+#else
+      UCS2CHAR buffer[256];
+      SQLRETURN rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
+      if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize >= 0) && (dataSize <= (SQLLEN)(sizeof(buffer) - sizeof(UCS2CHAR))))) && (dataSize != SQL_NULL_DATA))
+      {
+         int len = ucs2_strlen(buffer);
+         result = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
+         ucs2_to_ucs4(buffer, -1, result, len + 1);
+      }
+      else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA))
+      {
+         if (dataSize > (SQLLEN)(sizeof(buffer) - sizeof(UCS2CHAR)))
+         {
+            UCS2CHAR *temp = (UCS2CHAR *)malloc(dataSize + sizeof(UCS2CHAR));
+            memcpy(temp, buffer, sizeof(buffer));
+            rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(UCS2CHAR), &dataSize);
+            if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+            {
+               int len = ucs2_strlen(temp);
+               result = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
+               ucs2_to_ucs4(temp, -1, result, len + 1);
+            }
+            free(temp);
+         }
+         else if (dataSize == SQL_NO_TOTAL)
+         {
+            size_t tempSize = sizeof(buffer) * 4;
+            UCS2CHAR *temp = (UCS2CHAR *)malloc(tempSize);
+            memcpy(temp, buffer, sizeof(buffer));
+            size_t offset = sizeof(buffer) - sizeof(UCS2CHAR);
+            while(true)
+            {
+               SQLLEN readSize = tempSize - offset;
+               rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, (char *)temp + offset, readSize, &dataSize);
+               if ((rc == SQL_SUCCESS) || (rc == SQL_NO_DATA))
+                  break;
+               if (dataSize == SQL_NO_TOTAL)
+               {
+                  tempSize += sizeof(buffer) * 4;
+               }
+               else
+               {
+                  tempSize += dataSize - readSize;
+               }
+               temp = (UCS2CHAR *)realloc(temp, tempSize);
+               offset += readSize - sizeof(UCS2CHAR);
+            }
+            int len = ucs2_strlen(temp);
+            result = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
+            ucs2_to_ucs4(temp, -1, result, len + 1);
+            free(temp);
+         }
+      }
+#endif
+   }
+   else
+   {
+      char buffer[256];
+      SQLRETURN rc = SQLGetData(sqlStatement, column, SQL_C_CHAR, buffer, sizeof(buffer), &dataSize);
+      if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize >= 0) && (dataSize <= (SQLLEN)(sizeof(buffer) - 1)))) && (dataSize != SQL_NULL_DATA))
+      {
+         result = WideStringFromMBString(buffer);
+      }
+      else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA))
+      {
+         if (dataSize > (SQLLEN)(sizeof(buffer) - 1))
+         {
+            char *temp = (char *)malloc(dataSize + 1);
+            memcpy(temp, buffer, sizeof(buffer));
+            rc = SQLGetData(sqlStatement, column, SQL_C_CHAR, &temp[255], dataSize - 254, &dataSize);
+            if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
+            {
+               result = WideStringFromMBString(temp);
+            }
+            free(temp);
+         }
+         else if (dataSize == SQL_NO_TOTAL)
+         {
+            size_t tempSize = sizeof(buffer) * 4;
+            char *temp = (char *)malloc(tempSize);
+            memcpy(temp, buffer, sizeof(buffer));
+            size_t offset = sizeof(buffer) - 1;
+            while(true)
+            {
+               SQLLEN readSize = tempSize - offset;
+               rc = SQLGetData(sqlStatement, column, SQL_C_CHAR, &temp[offset], readSize, &dataSize);
+               if ((rc == SQL_SUCCESS) || (rc == SQL_NO_DATA))
+                  break;
+               if (dataSize == SQL_NO_TOTAL)
+               {
+                  tempSize += sizeof(buffer) * 4;
+               }
+               else
+               {
+                  tempSize += dataSize - readSize;
+               }
+               temp = (char *)realloc(temp, tempSize);
+               offset += readSize - 1;
+            }
+            result = WideStringFromMBString(temp);
+            free(temp);
+         }
+      }
+   }
+   return (result != NULL) ? result : wcsdup(L"");
+}
+
+/**
  * Process results of SELECT query
  */
 static ODBCDRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
@@ -552,8 +712,6 @@ static ODBCDRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
    pResult->numColumns = wNumCols;
    pResult->numRows = 0;
    pResult->pValues = NULL;
-
-   BYTE *pDataBuffer = (BYTE *)malloc(DATA_BUFFER_SIZE);
 
 	// Get column names
 	pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->numColumns);
@@ -586,34 +744,10 @@ static ODBCDRV_QUERY_RESULT *ProcessSelectResults(SQLHSTMT stmt)
                   sizeof(NETXMS_WCHAR *) * (pResult->numRows * pResult->numColumns));
       for(int i = 1; i <= (int)pResult->numColumns; i++)
       {
-		   SQLLEN iDataSize;
-
-			pDataBuffer[0] = 0;
-         iResult = SQLGetData(stmt, (short)i, m_useUnicode ? SQL_C_WCHAR : SQL_C_CHAR,
-                              pDataBuffer, DATA_BUFFER_SIZE, &iDataSize);
-			if (iDataSize != SQL_NULL_DATA)
-			{
-				if (m_useUnicode)
-				{
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-         		pResult->pValues[iCurrValue++] = wcsdup((const WCHAR *)pDataBuffer);
-#else
-            	pResult->pValues[iCurrValue++] = UCS4StringFromUCS2String((const UCS2CHAR *)pDataBuffer);
-#endif
-				}
-				else
-				{
-         		pResult->pValues[iCurrValue++] = WideStringFromMBString((const char *)pDataBuffer);
-				}
-			}
-			else
-			{
-				pResult->pValues[iCurrValue++] = wcsdup(L"");
-			}
+         pResult->pValues[iCurrValue++] = GetFieldData(stmt, (short)i);
       }
    }
 
-   free(pDataBuffer);
 	return pResult;
 }
 
@@ -938,77 +1072,8 @@ extern "C" bool EXPORT DrvFetch(ODBCDRV_UNBUFFERED_QUERY_RESULT *pResult)
       {
          for(int i = 0; i < pResult->numColumns; i++)
          {
-            safe_free(pResult->values[i]);
-            pResult->values[i] = NULL;
-
-            SQLLEN dataSize;
-            if (m_useUnicode)
-            {
-#if defined(_WIN32) || defined(UNICODE_UCS2)
-               WCHAR buffer[256];
-               rc = SQLGetData(pResult->sqlStatement, (short)i + 1, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
-               if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize <= sizeof(buffer) - sizeof(WCHAR)))) && (dataSize != SQL_NULL_DATA))
-               {
-                  pResult->values[i] = wcsdup(buffer);
-               }
-               else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer) - sizeof(WCHAR)))
-               {
-                  WCHAR *temp = (WCHAR *)malloc(dataSize + sizeof(WCHAR));
-                  memcpy(temp, buffer, sizeof(buffer));
-                  rc = SQLGetData(pResult->sqlStatement, (short)i + 1, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(WCHAR), &dataSize);
-                  if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
-                  {
-                     pResult->values[i] = temp;
-                  }
-                  else
-                  {
-                     free(temp);
-                  }
-               }
-#else
-               UCS2CHAR buffer[256];
-               rc = SQLGetData(pResult->sqlStatement, (short)i + 1, SQL_C_WCHAR, buffer, sizeof(buffer), &dataSize);
-               if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize <= sizeof(buffer) - sizeof(UCS2CHAR)))) && (dataSize != SQL_NULL_DATA))
-               {
-                  int len = ucs2_strlen(buffer);
-                  pResult->values[i] = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
-                  ucs2_to_ucs4(buffer, -1, pResult->values[i], len + 1);
-               }
-               else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer) - sizeof(UCS2CHAR)))
-               {
-                  UCS2CHAR *temp = (UCS2CHAR *)malloc(dataSize + sizeof(UCS2CHAR));
-                  memcpy(temp, buffer, sizeof(buffer));
-                  rc = SQLGetData(pResult->sqlStatement, (short)i + 1, SQL_C_WCHAR, &temp[255], dataSize - 254 * sizeof(UCS2CHAR), &dataSize);
-                  if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
-                  {
-                     int len = ucs2_strlen(temp);
-                     pResult->values[i] = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
-                     ucs2_to_ucs4(temp, -1, pResult->values[i], len + 1);
-                  }
-                  free(temp);
-               }
-#endif
-            }
-            else
-            {
-               char buffer[256];
-               rc = SQLGetData(pResult->sqlStatement, (short)i + 1, SQL_C_CHAR, buffer, sizeof(buffer), &dataSize);
-               if (((rc == SQL_SUCCESS) || ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize <= sizeof(buffer) - 1))) && (dataSize != SQL_NULL_DATA))
-               {
-                  pResult->values[i] = WideStringFromMBString(buffer);
-               }
-               else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA) && (dataSize > sizeof(buffer) - 1))
-               {
-                  char *temp = (char *)malloc(dataSize + 1);
-                  memcpy(temp, buffer, sizeof(buffer));
-                  rc = SQLGetData(pResult->sqlStatement, (short)i + 1, SQL_C_CHAR, &temp[255], dataSize - 254, &dataSize);
-                  if ((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
-                  {
-                     pResult->values[i] = WideStringFromMBString(temp);
-                  }
-                  free(temp);
-               }
-            }
+            free(pResult->values[i]);
+            pResult->values[i] = GetFieldData(pResult->sqlStatement, (short)i + 1);
          }
       }
       else

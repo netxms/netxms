@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,10 +46,12 @@ bool RadiusAuth(const TCHAR *pszLogin, const TCHAR *pszPasswd);
 /**
  * Static data
  */
-static int m_userCount = 0;
-static UserDatabaseObject **m_users = NULL;
-static MUTEX m_mutexUserDatabaseAccess = INVALID_MUTEX_HANDLE;
-static THREAD m_statusUpdateThread = INVALID_THREAD_HANDLE;
+static HashMap<UINT32, UserDatabaseObject> s_userDatabase(true);
+static StringObjectMap<UserDatabaseObject> s_ldapNames(false);
+static StringObjectMap<User> s_users(false);
+static StringObjectMap<Group> s_groups(false);
+static RWLOCK s_userDatabaseLock = RWLockCreate();
+static THREAD s_statusUpdateThread = INVALID_THREAD_HANDLE;
 
 /**
  * Compare user names
@@ -57,6 +59,50 @@ static THREAD m_statusUpdateThread = INVALID_THREAD_HANDLE;
 inline bool UserNameEquals(const TCHAR *n1, const TCHAR *n2)
 {
    return (g_flags & AF_CASE_INSENSITIVE_LOGINS) ? (_tcsicmp(n1, n2) == 0) : (_tcscmp(n1, n2) == 0);
+}
+
+/**
+ * Add user database object
+ */
+inline void AddDatabaseObject(UserDatabaseObject *object)
+{
+   s_userDatabase.set(object->getId(), object);
+   if (object->isGroup())
+      s_groups.set(object->getName(), (Group *)object);
+   else
+      s_users.set(object->getName(), (User *)object);
+   if (object->isLDAPUser())
+      s_ldapNames.set(object->getDn(), object);
+}
+
+/**
+ * Remove user database object
+ */
+inline void RemoveDatabaseObject(UserDatabaseObject *object)
+{
+   if (object->isGroup())
+      s_groups.remove(object->getName());
+   else
+      s_users.remove(object->getName());
+   if (object->isLDAPUser())
+      s_ldapNames.remove(object->getDn());
+}
+
+/**
+ * Get effective system rights for user
+ */
+static UINT64 GetEffectiveSystemRights(User *user)
+{
+   UINT64 systemRights = user->getSystemRights();
+   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
+   while(it->hasNext())
+   {
+      UserDatabaseObject *object = it->next();
+      if (object->isGroup() && (((Group *)object)->isMember(user->getId())))
+         systemRights |= ((Group *)object)->getSystemRights();
+   }
+   delete it;
+   return systemRights;
 }
 
 /**
@@ -71,14 +117,16 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 
 		time_t blockInactiveAccounts = (time_t)ConfigReadInt(_T("BlockInactiveUserAccounts"), 0) * 86400;
 
-		MutexLock(m_mutexUserDatabaseAccess);
+		RWLockWriteLock(s_userDatabaseLock, INFINITE);
 		time_t now = time(NULL);
-		for(int i = 0; i < m_userCount; i++)
+		Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
+		while(it->hasNext())
 		{
-			if (m_users[i]->isDeleted() || (m_users[i]->getId() & GROUP_FLAG))
+		   UserDatabaseObject *object = it->next();
+			if (object->isDeleted() || object->isGroup())
 				continue;
 
-			User *user = (User *)m_users[i];
+			User *user = (User *)object;
 
 			if (user->isDisabled() && (user->getReEnableTime() > 0) && (user->getReEnableTime() <= now))
 			{
@@ -95,7 +143,8 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
 				DbgPrintf(3, _T("User account \"%s\" disabled due to inactivity"), user->getName());
 			}
 		}
-		MutexUnlock(m_mutexUserDatabaseAccess);
+		delete it;
+		RWLockUnlock(s_userDatabaseLock);
 	}
 
 	DbgPrintf(2, _T("User account status update thread stopped"));
@@ -107,8 +156,9 @@ static THREAD_RESULT THREAD_CALL AccountStatusUpdater(void *arg)
  */
 void InitUsers()
 {
-   m_mutexUserDatabaseAccess = MutexCreate();
-	m_statusUpdateThread = ThreadCreateEx(AccountStatusUpdater, 0, NULL);
+   s_users.setIgnoreCase((g_flags & AF_CASE_INSENSITIVE_LOGINS) != 0);
+   s_groups.setIgnoreCase((g_flags & AF_CASE_INSENSITIVE_LOGINS) != 0);
+	s_statusUpdateThread = ThreadCreateEx(AccountStatusUpdater, 0, NULL);
 }
 
 /**
@@ -116,7 +166,7 @@ void InitUsers()
  */
 void CleanupUsers()
 {
-	ThreadJoin(m_statusUpdateThread);
+	ThreadJoin(s_statusUpdateThread);
 }
 
 /**
@@ -142,24 +192,20 @@ BOOL LoadUsers()
       return false;
    }
 
-   m_userCount = DBGetNumRows(hResult);
-   m_users = (UserDatabaseObject **)malloc(sizeof(UserDatabaseObject *) * m_userCount);
-   for(i = 0; i < m_userCount; i++)
-		m_users[i] = new User(hdb, hResult, i);
+   int count = DBGetNumRows(hResult);
+   for(i = 0; i < count; i++)
+   {
+		User *user = new User(hdb, hResult, i);
+		AddDatabaseObject(user);
+   }
 
    DBFreeResult(hResult);
 
-   // Check if user with UID 0 was loaded
-   for(i = 0; i < m_userCount; i++)
-		if (m_users[i]->getId() == 0)
-         break;
-
    // Create superuser account if it doesn't exist
-   if (i == m_userCount)
+   if (!s_userDatabase.contains(0))
    {
-      m_userCount++;
-      m_users = (UserDatabaseObject **)realloc(m_users, sizeof(UserDatabaseObject *) * m_userCount);
-		m_users[i] = new User();
+		User *user = new User();
+		AddDatabaseObject(user);
       nxlog_write(MSG_SUPERUSER_CREATED, EVENTLOG_WARNING_TYPE, NULL);
    }
 
@@ -171,25 +217,20 @@ BOOL LoadUsers()
       return FALSE;
    }
 
-	int mark = m_userCount;
-   m_userCount += DBGetNumRows(hResult);
-   m_users = (UserDatabaseObject **)realloc(m_users, sizeof(UserDatabaseObject *) * m_userCount);
-   for(i = mark; i < m_userCount; i++)
-		m_users[i] = new Group(hdb, hResult, i - mark);
+   count = DBGetNumRows(hResult);
+   for(i = 0; i < count; i++)
+   {
+		Group *group = new Group(hdb, hResult, i);
+		AddDatabaseObject(group);
+   }
 
    DBFreeResult(hResult);
 
-   // Check if everyone group was loaded
-   for(i = mark; i < m_userCount; i++)
-		if (m_users[i]->getId() == GROUP_EVERYONE)
-         break;
-
    // Create everyone group if it doesn't exist
-   if (i == m_userCount)
+   if (!s_userDatabase.contains(GROUP_EVERYONE))
    {
-      m_userCount++;
-      m_users = (UserDatabaseObject **)realloc(m_users, sizeof(UserDatabaseObject *) * m_userCount);
-		m_users[i] = new Group();
+		Group *group = new Group();
+		AddDatabaseObject(group);
       nxlog_write(MSG_EVERYONE_GROUP_CREATED, EVENTLOG_WARNING_TYPE, NULL);
    }
 
@@ -205,23 +246,24 @@ void SaveUsers(DB_HANDLE hdb)
    int i;
 
    // Save users
-   MutexLock(m_mutexUserDatabaseAccess);
-   for(i = 0; i < m_userCount; i++)
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
+   while(it->hasNext())
    {
-      if (m_users[i]->isDeleted())
+      UserDatabaseObject *object = it->next();
+      if (object->isDeleted())
       {
-			m_users[i]->deleteFromDatabase(hdb);
-			delete m_users[i];
-         m_userCount--;
-         memmove(&m_users[i], &m_users[i + 1], sizeof(UserDatabaseObject *) * (m_userCount - i));
-         i--;
+			object->deleteFromDatabase(hdb);
+			RemoveDatabaseObject(object);
+			it->remove();
       }
-		else if (m_users[i]->isModified())
+		else if (object->isModified())
       {
-			m_users[i]->saveToDatabase(hdb);
+			object->saveToDatabase(hdb);
       }
    }
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   delete it;
+   RWLockUnlock(s_userDatabaseLock);
 }
 
 /**
@@ -241,207 +283,195 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
    UINT32 dwResult = RCC_ACCESS_DENIED;
    BOOL bPasswordValid = FALSE;
 
-   MutexLock(m_mutexUserDatabaseAccess);
-   for(i = 0; i < m_userCount; i++)
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   User *user = s_users.get(login);
+   if ((user != NULL) && !user->isDeleted())
    {
-		if ((!(m_users[i]->getId() & GROUP_FLAG)) &&
-			 UserNameEquals(login, m_users[i]->getName()) &&
-			 (!m_users[i]->isDeleted()))
-      {
-			User *user = (User *)m_users[i];
-         *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
+      *pdwId = user->getId(); // always set user ID for caller so audit log will contain correct user ID on failures as well
 
-         if (user->isLDAPUser())
+      if (user->isLDAPUser())
+      {
+         if (user->isDisabled() || user->hasSyncException())
          {
-            if (user->isDisabled() || user->hasSyncException())
-            {
-               dwResult = RCC_ACCOUNT_DISABLED;
-               goto result;
-            }
-            LDAPConnection conn;
-            dwResult = conn.ldapUserLogin(user->getDn(), password);
-            if (dwResult == RCC_SUCCESS)
-               bPasswordValid = TRUE;
+            dwResult = RCC_ACCOUNT_DISABLED;
             goto result;
          }
+         LDAPConnection conn;
+         dwResult = conn.ldapUserLogin(user->getDn(), password);
+         if (dwResult == RCC_SUCCESS)
+            bPasswordValid = TRUE;
+         goto result;
+      }
 
-			// Determine authentication method to use
-         if (!ssoAuth)
+      // Determine authentication method to use
+      if (!ssoAuth)
+      {
+         int method = user->getAuthMethod();
+         if ((method == AUTH_CERT_OR_PASSWD) || (method == AUTH_CERT_OR_RADIUS))
          {
-			   int method = user->getAuthMethod();
-			   if ((method == AUTH_CERT_OR_PASSWD) || (method == AUTH_CERT_OR_RADIUS))
-			   {
-				   if (dwSigLen > 0)
-				   {
-					   // certificate auth
-					   method = AUTH_CERTIFICATE;
-				   }
-				   else
-				   {
-					   method = (method == AUTH_CERT_OR_PASSWD) ? AUTH_NETXMS_PASSWORD : AUTH_RADIUS;
-				   }
-			   }
-
-            switch(method)
+            if (dwSigLen > 0)
             {
-               case AUTH_NETXMS_PASSWORD:
-					   if (dwSigLen == 0)
-					   {
-						   bPasswordValid = user->validatePassword(password);
-					   }
-					   else
-					   {
-						   // We got certificate instead of password
-						   bPasswordValid = FALSE;
-					   }
-                  break;
-               case AUTH_RADIUS:
-					   if (dwSigLen == 0)
-					   {
-	                  bPasswordValid = RadiusAuth(login, password);
-					   }
-					   else
-					   {
-						   // We got certificate instead of password
-						   bPasswordValid = FALSE;
-					   }
-                  break;
-				   case AUTH_CERTIFICATE:
-					   if ((dwSigLen != 0) && (pCert != NULL))
-					   {
-#ifdef _WITH_ENCRYPTION
-						   bPasswordValid = ValidateUserCertificate((X509 *)pCert, login, pChallenge,
-						                                            (BYTE *)password, dwSigLen,
-																			     user->getCertMappingMethod(),
-																			     user->getCertMappingData());
-#else
-						   bPasswordValid = FALSE;
-#endif
-					   }
-					   else
-					   {
-						   // We got password instead of certificate
-						   bPasswordValid = FALSE;
-					   }
-					   break;
-               default:
-                  nxlog_write(MSG_UNKNOWN_AUTH_METHOD, NXLOG_WARNING, "ds", user->getAuthMethod(), login);
-                  bPasswordValid = FALSE;
-                  break;
+               // certificate auth
+               method = AUTH_CERTIFICATE;
+            }
+            else
+            {
+               method = (method == AUTH_CERT_OR_PASSWD) ? AUTH_NETXMS_PASSWORD : AUTH_RADIUS;
             }
          }
-         else
+
+         switch(method)
          {
-				DbgPrintf(4, _T("User \"%s\" already authenticated by SSO server"), user->getName());
-            bPasswordValid = TRUE;
+            case AUTH_NETXMS_PASSWORD:
+               if (dwSigLen == 0)
+               {
+                  bPasswordValid = user->validatePassword(password);
+               }
+               else
+               {
+                  // We got certificate instead of password
+                  bPasswordValid = FALSE;
+               }
+               break;
+            case AUTH_RADIUS:
+               if (dwSigLen == 0)
+               {
+                  bPasswordValid = RadiusAuth(login, password);
+               }
+               else
+               {
+                  // We got certificate instead of password
+                  bPasswordValid = FALSE;
+               }
+               break;
+            case AUTH_CERTIFICATE:
+               if ((dwSigLen != 0) && (pCert != NULL))
+               {
+#ifdef _WITH_ENCRYPTION
+                  bPasswordValid = ValidateUserCertificate((X509 *)pCert, login, pChallenge,
+                                                           (BYTE *)password, dwSigLen,
+                                                           user->getCertMappingMethod(),
+                                                           user->getCertMappingData());
+#else
+                  bPasswordValid = FALSE;
+#endif
+               }
+               else
+               {
+                  // We got password instead of certificate
+                  bPasswordValid = FALSE;
+               }
+               break;
+            default:
+               nxlog_write(MSG_UNKNOWN_AUTH_METHOD, NXLOG_WARNING, "ds", user->getAuthMethod(), login);
+               bPasswordValid = FALSE;
+               break;
          }
+      }
+      else
+      {
+         DbgPrintf(4, _T("User \"%s\" already authenticated by SSO server"), user->getName());
+         bPasswordValid = TRUE;
+      }
 
 result:
-         if (bPasswordValid)
+      if (bPasswordValid)
+      {
+         if (!user->isDisabled())
          {
-            if (!user->isDisabled())
+            user->resetAuthFailures();
+            if (!ssoAuth)
             {
-					user->resetAuthFailures();
-               if (!ssoAuth)
+               if (user->getFlags() & UF_CHANGE_PASSWORD)
                {
-					   if (user->getFlags() & UF_CHANGE_PASSWORD)
+                  DbgPrintf(4, _T("Password for user \"%s\" need to be changed"), user->getName());
+                  if (user->getId() != 0)	// Do not check grace logins for built-in admin user
                   {
-						   DbgPrintf(4, _T("Password for user \"%s\" need to be changed"), user->getName());
-						   if (user->getId() != 0)	// Do not check grace logins for built-in admin user
-						   {
-							   if (user->getGraceLogins() <= 0)
-							   {
-								   DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
-								   dwResult = RCC_NO_GRACE_LOGINS;
-								   break;
-							   }
-							   user->decreaseGraceLogins();
-						   }
+                     if (user->getGraceLogins() <= 0)
+                     {
+                        DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
+                        dwResult = RCC_NO_GRACE_LOGINS;
+                     }
+                     else
+                     {
+                        user->decreaseGraceLogins();
+                     }
+                  }
+                  *pbChangePasswd = true;
+               }
+               else
+               {
+                  // Check if password was expired
+                  int passwordExpirationTime = ConfigReadInt(_T("PasswordExpiration"), 0);
+                  if ((user->getAuthMethod() == AUTH_NETXMS_PASSWORD) &&
+                      (passwordExpirationTime > 0) &&
+                      ((user->getFlags() & UF_PASSWORD_NEVER_EXPIRES) == 0) &&
+                      (time(NULL) > user->getPasswordChangeTime() + passwordExpirationTime * 86400))
+                  {
+                     DbgPrintf(4, _T("Password for user \"%s\" has expired"), user->getName());
+                     if (user->getId() != 0)	// Do not check grace logins for built-in admin user
+                     {
+                        if (user->getGraceLogins() <= 0)
+                        {
+                           DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
+                           dwResult = RCC_NO_GRACE_LOGINS;
+                        }
+                        else
+                        {
+                           user->decreaseGraceLogins();
+                        }
+                     }
                      *pbChangePasswd = true;
                   }
                   else
                   {
-						   // Check if password was expired
-						   int passwordExpirationTime = ConfigReadInt(_T("PasswordExpiration"), 0);
-						   if ((user->getAuthMethod() == AUTH_NETXMS_PASSWORD) &&
-							    (passwordExpirationTime > 0) &&
-							    ((user->getFlags() & UF_PASSWORD_NEVER_EXPIRES) == 0) &&
-							    (time(NULL) > user->getPasswordChangeTime() + passwordExpirationTime * 86400))
-						   {
-							   DbgPrintf(4, _T("Password for user \"%s\" has expired"), user->getName());
-							   if (user->getId() != 0)	// Do not check grace logins for built-in admin user
-							   {
-								   if (user->getGraceLogins() <= 0)
-								   {
-									   DbgPrintf(4, _T("User \"%s\" has no grace logins left"), user->getName());
-									   dwResult = RCC_NO_GRACE_LOGINS;
-									   break;
-								   }
-								   user->decreaseGraceLogins();
-							   }
-							   *pbChangePasswd = true;
-						   }
-						   else
-						   {
-							   *pbChangePasswd = false;
-						   }
+                     *pbChangePasswd = false;
                   }
                }
-               else
-               {
-				      *pbChangePasswd = false;
-               }
-               *pdwSystemRights = user->getSystemRights();
-					user->updateLastLogin();
-               dwResult = RCC_SUCCESS;
-
-               // Collect system rights from groups this user belongs to
-               for(j = 0; j < m_userCount; j++)
-						if ((m_users[j]->getId() & GROUP_FLAG) &&
-							 (((Group *)m_users[j])->isMember(user->getId())))
-							*pdwSystemRights |= ((Group *)m_users[j])->getSystemRights();
             }
             else
             {
-               dwResult = RCC_ACCOUNT_DISABLED;
+               *pbChangePasswd = false;
             }
-				*pbIntruderLockout = false;
+            *pdwSystemRights = GetEffectiveSystemRights(user);
+            user->updateLastLogin();
+            dwResult = RCC_SUCCESS;
          }
-			else
-			{
-				user->increaseAuthFailures();
-				*pbIntruderLockout = user->isIntruderLockoutActive();
-			}
-         break;
+         else
+         {
+            dwResult = RCC_ACCOUNT_DISABLED;
+         }
+         *pbIntruderLockout = false;
+      }
+      else
+      {
+         user->increaseAuthFailures();
+         *pbIntruderLockout = user->isIntruderLockoutActive();
       }
    }
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   RWLockUnlock(s_userDatabaseLock);
    return dwResult;
 }
 
 /**
  * Check if user is a member of specific group
  */
-bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId)
+bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId)
 {
-   bool result = false;
-
-	if (!(dwGroupId & GROUP_FLAG))
+	if (!(groupId & GROUP_FLAG))
 		return false;
 
-   if (dwGroupId == GROUP_EVERYONE)
+   if (groupId == GROUP_EVERYONE)
 		return true;
 
-   MutexLock(m_mutexUserDatabaseAccess);
-   for(int i = 0; i < m_userCount; i++)
+   bool result = false;
+   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   Group *group = (Group *)s_userDatabase.get(groupId);
+   if (group != NULL)
    {
-		if (m_users[i]->getId() == dwGroupId)
-		{
-			result = ((Group *)m_users[i])->isMember(dwUserId);
-			break;
-		}
+      result = group->isMember(userId);
    }
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   RWLockUnlock(s_userDatabaseLock);
    return result;
 }
 
@@ -451,19 +481,20 @@ bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId)
  */
 void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId)
 {
-   UINT32 *list = (UINT32 *)malloc(sizeof(UINT32) * m_userCount);
-   UINT32 count = 0;
-   for(int i = 0; i < m_userCount; i++)
+   IntegerArray<UINT32> list;
+   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
+   while(it->hasNext())
    {
-		if ((m_users[i]->getId() & GROUP_FLAG) && (m_users[i]->getId() != GROUP_EVERYONE) && ((Group *)m_users[i])->isMember(userId))
+      UserDatabaseObject *object = it->next();
+		if (object->isGroup() && (object->getId() != GROUP_EVERYONE) && ((Group *)object)->isMember(userId))
 		{
-         list[count++] = m_users[i]->getId();
+         list.add(object->getId());
 		}
    }
-   msg->setField(VID_NUM_GROUPS, count);
-   if (count > 0)
-      msg->setFieldFromInt32Array(VID_GROUPS, count, list);
-   free(list);
+   delete it;
+   msg->setField(VID_NUM_GROUPS, (INT32)list.size());
+   if (list.size() > 0)
+      msg->setFieldFromInt32Array(VID_GROUPS, &list);
 }
 
 /**
@@ -471,14 +502,16 @@ void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId)
  */
 void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups)
 {
-   for(int i = 0; i < m_userCount; i++)
+   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
+   while(it->hasNext())
    {
-		if ((m_users[i]->getId() & GROUP_FLAG) && (m_users[i]->getId() != GROUP_EVERYONE))
+      UserDatabaseObject *object = it->next();
+		if (object->isGroup() && (object->getId() != GROUP_EVERYONE))
 		{
          bool found = false;
          for(int j = 0; j < numGroups; j++)
          {
-            if (m_users[i]->getId() == groups[j])
+            if (object->getId() == groups[j])
             {
                found = true;
                break;
@@ -486,14 +519,15 @@ void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups)
          }
          if (found)
          {
-            ((Group *)m_users[i])->addUser(userId);
+            ((Group *)object)->addUser(userId);
          }
          else
          {
-            ((Group *)m_users[i])->deleteUser(userId);
+            ((Group *)object)->deleteUser(userId);
          }
 		}
    }
+   delete it;
 }
 
 /**
@@ -501,291 +535,254 @@ void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups)
  */
 bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize)
 {
-	bool found = false;
+   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != NULL)
+      nx_strncpy(buffer, object->getName(), bufSize);
+   RWLockUnlock(s_userDatabaseLock);
+	return object != NULL;
+}
 
-   MutexLock(m_mutexUserDatabaseAccess);
-   for(int i = 0; i < m_userCount; i++)
-		if (m_users[i]->getId() == id)
-		{
-			nx_strncpy(buffer, m_users[i]->getName(), bufSize);
-			found = true;
-			break;
-		}
-   MutexUnlock(m_mutexUserDatabaseAccess);
+/**
+ * Check if provided user name is not used or belongs to given user.
+ * Access to user DB must be locked when this function is called
+ */
+inline bool UserNameIsUnique(const TCHAR *name, User *user)
+{
+   User *u = s_users.get(name);
+   return (u == NULL) || ((user != NULL) && (user->getId() == u->getId()));
+}
 
-	return found;
+/**
+ * Check if provided group name is not used or belongs to given group.
+ * Access to user DB must be locked when this function is called
+ */
+inline bool GroupNameIsUnique(const TCHAR *name, Group *group)
+{
+   Group *g = s_groups.get(name);
+   return (g == NULL) || ((group != NULL) && (group->getId() == g->getId()));
 }
 
 /**
  * Update/Add LDAP user
  */
-void NXCORE_EXPORTABLE UpdateLDAPUser(const TCHAR *dn, Entry *obj)
+void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
 {
-   MutexLock(m_mutexUserDatabaseAccess);
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+
    bool userModified = false;
-   for(int i = 0; i < m_userCount; i++)
+   bool conflict = false;
+
+   // Check existing user with same DN
+   UserDatabaseObject *object = s_ldapNames.get(dn);
+   if ((object != NULL) && object->isGroup())
    {
-		if (!(m_users[i]->getId() & GROUP_FLAG) && m_users[i]->isLDAPUser() && !_tcscmp(CHECK_NULL_EX(m_users[i]->getDn()), dn))
-		{
-         User* user = (User *)m_users[i];
-         if (!user->isDeleted())
-         {
-            user->removeSyncException();
-            if (!UserNameIsUnique(obj->m_loginName, m_users[i]->getId()))
-            {
-               user->setSyncException();
-               TCHAR mistakeDescription[MAX_USER_DESCR];
-               _sntprintf(mistakeDescription, MAX_USER_DESCR, _T("UpdateLDAPUser(): Ldap sync error. User with name \"%s\" already exists."), obj->m_loginName);
-               user->setDescription(mistakeDescription);
-               DbgPrintf(4, mistakeDescription);
-            }
-            else
-            {
-               user->setName(obj->m_loginName);
-               user->setFullName(obj->m_fullName);
-               user->setDescription(obj->m_description);
-               DbgPrintf(4, _T("UpdateLDAPUser(): User updated: dn: %s, login name: %s, full name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
-            }
-            if(user->isModified())
-            {
-               SendUserDBUpdate(USER_DB_MODIFY, user->getId(), m_users[i]);
-            }
-         }
-         userModified = true;
-         break;
-		}
+      DbgPrintf(4, _T("UpdateLDAPUser(): got user with DN=%s but found existing group %s with same DN"), dn, object->getName());
+      conflict = true;
    }
 
-   if (!userModified)
+   if ((object != NULL) && !conflict)
    {
-      if (UserNameIsUnique(obj->m_loginName, INVALID_INDEX))
+      User *user = (User *)object;
+      if (!user->isDeleted())
       {
-         User* user = new User(CreateUniqueId(IDG_USER), obj->m_loginName);
+         user->removeSyncException();
+         if (!UserNameIsUnique(obj->m_loginName, user))
+         {
+            user->setSyncException();
+            TCHAR conflictDescription[MAX_USER_DESCR];
+            _sntprintf(conflictDescription, MAX_USER_DESCR, _T("UpdateLDAPUser(): LDAP sync error. User with name \"%s\" already exists."), obj->m_loginName);
+            user->setDescription(conflictDescription);
+            DbgPrintf(4, conflictDescription);
+         }
+         else
+         {
+            user->setName(obj->m_loginName);
+            user->setFullName(obj->m_fullName);
+            user->setDescription(obj->m_description);
+            DbgPrintf(4, _T("UpdateLDAPUser(): User updated: DN: %s, login name: %s, full name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
+         }
+         if (user->isModified())
+         {
+            SendUserDBUpdate(USER_DB_MODIFY, user->getId(), user);
+         }
+      }
+      userModified = true;
+   }
+
+   if (!userModified && !conflict)
+   {
+      if (UserNameIsUnique(obj->m_loginName, NULL))
+      {
+         User *user = new User(CreateUniqueId(IDG_USER), obj->m_loginName);
          user->setFullName(obj->m_fullName);
          user->setDescription(obj->m_description);
          user->setFlags(UF_MODIFIED | UF_LDAP_USER);
          user->setDn(dn);
-         m_users = (UserDatabaseObject **)realloc(m_users, sizeof(UserDatabaseObject *) * (m_userCount + 1));
-         m_users[m_userCount] = user;
-         m_userCount++;
+         AddDatabaseObject(user);
          SendUserDBUpdate(USER_DB_CREATE, user->getId(), user);
-         DbgPrintf(4, _T("UpdateLDAPUser(): User added: dn: %s, login name: %s, full name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
+         DbgPrintf(4, _T("UpdateLDAPUser(): User added: DN: %s, login name: %s, full name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_fullName), CHECK_NULL(obj->m_description));
       }
       else
       {
-         DbgPrintf(4, _T("UpdateLDAPUser(): User with name %s already exists, but is not LDAP user. LDAP user won`t be creadted."), obj->m_loginName);
+         DbgPrintf(4, _T("UpdateLDAPUser(): User with name \"%s\" already exists, but is not an LDAP user. LDAP user won't be created."), obj->m_loginName);
       }
    }
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   RWLockUnlock(s_userDatabaseLock);
 }
 
 /**
- * Goes throught all existing ldap entries and check that in newly gotten list they also exist.
- * If ldap entries does not exists in new list - it will be disabled or removed depending on action parameter.
+ * Goes through all existing LDAP entries and check that in newly gotten list they also exist.
+ * If LDAP entries does not exists in new list - it will be disabled or removed depending on action parameter.
  */
-void RemoveDeletedLDAPEntry(StringObjectMap<Entry>* entryList, UINT32 m_action, bool isUser)
+void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryList, UINT32 m_action, bool isUser)
 {
-   MutexLock(m_mutexUserDatabaseAccess);
-   for(int i = 0; i < m_userCount; i++)
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
+   while(it->hasNext())
    {
-      bool validType = isUser ? !(m_users[i]->getId() & GROUP_FLAG) : ((m_users[i]->getId() & GROUP_FLAG) ? true : false);
-      if (validType && m_users[i]->isLDAPUser() && !m_users[i]->isDeleted())
+      UserDatabaseObject *object = it->next();
+      if (!object->isLDAPUser() || object->isDeleted())
+         continue;
+
+      if (isUser ? ((object->getId() & GROUP_FLAG) == 0) : ((object->getId() & GROUP_FLAG) != 0))
 		{
-         if (entryList->get(m_users[i]->getDn()) == NULL)
+         if (!entryList->contains(object->getDn()))
          {
             if (m_action == USER_DELETE)
-               DeleteUserDatabaseObject(m_users[i]->getId(), true);
-            if (m_action == USER_DISABLE)
             {
-               m_users[i]->disable();
-               m_users[i]->setDescription(_T("LDAP entry was deleted."));
+               DbgPrintf(4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was removed from user database"), isUser ? _T("user") : _T("group"), object->getDn());
+               DeleteUserDatabaseObject(object->getId(), true);
             }
-            DbgPrintf(4, _T("RemoveDeletedLDAPEntry(): Ldap %s entry was removed form DB."), m_users[i]->getDn());
+            else if (m_action == USER_DISABLE)
+            {
+               DbgPrintf(4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was unlinked form user database"), isUser ? _T("user") : _T("group"), object->getDn());
+               object->disable();
+               object->setDescription(_T("LDAP entry was deleted."));
+            }
          }
 		}
    }
-   MutexUnlock(m_mutexUserDatabaseAccess);
-}
-
-/**
- * Update/Add LDAP group
- */
-void NXCORE_EXPORTABLE UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users inside group, and delete removed from the group
-{
-   MutexLock(m_mutexUserDatabaseAccess);
-   bool userModified = false;
-   for(int i = 0; i < m_userCount; i++)
-   {
-		if ((m_users[i]->getId() & GROUP_FLAG) && m_users[i]->isLDAPUser() && !_tcscmp(CHECK_NULL_EX(m_users[i]->getDn()), dn))
-		{
-         Group* group = (Group *)m_users[i];
-         if(!group->isDeleted())
-         {
-            group->removeSyncException();
-            if(!GroupNameIsUnique(obj->m_loginName, m_users[i]->getId()))
-            {
-               group->setSyncException();
-               TCHAR mistakeDescription[MAX_USER_DESCR];
-               _sntprintf(mistakeDescription, MAX_USER_DESCR, _T("UpdateLDAPGroup(): LDAP sync error. Group with \"%s\" name already exists."), obj->m_loginName);
-               group->setDescription(mistakeDescription);
-               DbgPrintf(4, mistakeDescription);
-            }
-            else
-            {
-               group->setName(obj->m_loginName);
-               group->setDescription(obj->m_description);
-               DbgPrintf(4, _T("UpdateLDAPGroup(): Group updated: dn: %s, login name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
-            }
-            if(group->isModified())
-            {
-               SendUserDBUpdate(USER_DB_MODIFY, group->getId(), m_users[i]);
-            }
-            SyncGroupMembers(group , obj);
-         }
-         userModified = true;
-         break;
-		}
-   }
-   if(!userModified)
-   {
-      if(GroupNameIsUnique(obj->m_loginName, INVALID_INDEX))
-      {
-         Group* group = new Group(CreateUniqueId(IDG_USER_GROUP), obj->m_loginName);
-         group->setDescription(obj->m_description);
-         group->setFlags(UF_MODIFIED | UF_LDAP_USER);
-         group->setDn(dn);
-         SendUserDBUpdate(USER_DB_CREATE, group->getId(), group);
-         m_users = (UserDatabaseObject **)realloc(m_users, sizeof(UserDatabaseObject *) * (m_userCount + 1));
-         m_users[m_userCount] = group;
-         m_userCount++;
-         SyncGroupMembers(group , obj);
-         DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: dn: %s, login name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
-      }
-      else
-      {
-         DbgPrintf(4, _T("UpdateLDAPGroup(): Group with %s name already exists, but is not LDAP user. LDAP user won't be creadted."), obj->m_loginName);
-      }
-   }
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   RWLockUnlock(s_userDatabaseLock);
 }
 
 /**
  * Synchronize new user list with old user list of given group. Not LDAP usera will not be changed.
  */
-void SyncGroupMembers(Group* group, Entry *obj)
+static void SyncGroupMembers(Group *group, Entry *obj)
 {
-   StringList* newMembers = obj->m_memberList;
+   DbgPrintf(4, _T("SyncGroupMembers(): Sync for LDAP group: %s"), group->getDn());
+
+   StringSet *newMembers = obj->m_memberList;
    UINT32 *oldMembers = NULL;
    int count = group->getMembers(&oldMembers);
-   int i, j;
-   DbgPrintf(4, _T("SyncGroupMembers(): Sync for group: %s."), group->getDn());
 
    /**
-    * Go throught existing group member list checking each ldap user by dn
-    * with new gotten group member list and removing ldap users not existing in last list.
+    * Go through existing group member list checking each LDAP user by DN
+    * with new gotten group member list and removing LDAP users not existing in last list.
     */
-   for(i = 0; i < count; i++)
+   for(int i = 0; i < count; i++)
    {
-      UserDatabaseObject * user = GetUser(oldMembers[i]);
-      if(user != NULL && user->isLDAPUser())
+      UserDatabaseObject *user = s_userDatabase.get(oldMembers[i]);
+      if ((user == NULL) || user->isGroup() || !user->isLDAPUser())
+         continue;
+
+      if (!newMembers->contains(user->getDn()))
       {
-         bool found = false;
-         for(j = 0; j < newMembers->size(); j++)
-         {
-            if(!_tcscmp(newMembers->get(j), CHECK_NULL_EX(user->getDn())))
-            {
-               found = true;
-               break;
-            }
-         }
-         if(!found)
-         {
-            DbgPrintf(4, _T("SyncGroupMembers: Remove from %s group deleted user: %s"), group->getDn(), user->getDn());
-            group->deleteUser(user->getId());
-            count = group->getMembers(&oldMembers);
-            i--;
-         }
+         DbgPrintf(4, _T("SyncGroupMembers: Remove from %s group deleted user: %s"), group->getDn(), user->getDn());
+         group->deleteUser(user->getId());
+         count = group->getMembers(&oldMembers);
+         i--;
       }
    }
 
    /**
-    * Go throught new gotten group member list checking each ldap user by dn
+    * Go through new gotten group member list checking each LDAP user by DN
     * with existing group member list and adding users not existing in last list.
     */
-   for(i = 0; i < newMembers->size(); i++)
+   Iterator<const TCHAR> *it = newMembers->iterator();
+   while(it->hasNext())
    {
-      UserDatabaseObject * userNew = GetUser(newMembers->get(i));
-      if(userNew != NULL && userNew->isLDAPUser())
+      const TCHAR *dn = it->next();
+      UserDatabaseObject *user = s_ldapNames.get(dn);
+      if ((user == NULL) || user->isGroup())
+         continue;
+
+      if (!group->isMember(user->getId()))
       {
-         bool found = false;
-         for(j = 0; j <count; j++)
-         {
-            UINT32 member = oldMembers[j];
-            UserDatabaseObject * userOld = GetUser(member);
-            if(!_tcscmp(CHECK_NULL_EX(userOld->getDn()), userNew->getDn()) && userOld->isLDAPUser()) //check that is ldap user  ->  if not - continue to check (it may happend that we have 2 users with 1 ldap - 1 ldapUser, other is not ldap?)
-            {
-               found = true;
-               break;
-            }
-         }
-         if(!found)
-         {
-            DbgPrintf(4, _T("SyncGroupMembers: %s user added to %s group"), newMembers->get(i), group->getDn());
-            group->addUser(userNew->getId());
-            count = group->getMembers(&oldMembers);
-         }
+         DbgPrintf(4, _T("SyncGroupMembers: LDAP user %s added to LDAP group %s"), user->getDn(), group->getDn());
+         group->addUser(user->getId());
       }
    }
+   delete it;
 }
 
 /**
- * Gets user object from it's ID
- * DB should be locked outside this function
+ * Update/Add LDAP group
  */
-UserDatabaseObject *GetUser(UINT32 userID)
+void UpdateLDAPGroup(const TCHAR *dn, Entry *obj) //no full name, add users inside group, and delete removed from the group
 {
-   for(int i = 0; i < m_userCount; i++)
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
+
+   bool userModified = false;
+   bool conflict = false;
+
+   // Check existing user with same DN
+   UserDatabaseObject *object = s_ldapNames.get(dn);
+   if ((object != NULL) && !object->isGroup())
    {
-      if(m_users[i]->getId() == userID)
-         return m_users[i];
+      DbgPrintf(4, _T("UpdateLDAPUser(): got group with DN=%s but found existing user %s with same DN"), dn, object->getName());
+      conflict = true;
    }
-   return NULL;
-}
 
-/**
- * Gets user object from it's ID
- * DB should be locked outside this function
- */
-UserDatabaseObject *GetUser(const TCHAR* dn)
-{
-   for(int i = 0; i < m_userCount; i++)
+   if ((object != NULL) && !conflict)
    {
-      if(!_tcscmp(CHECK_NULL_EX(m_users[i]->getDn()), CHECK_NULL_EX(dn)))
-         return m_users[i];
+      Group *group = (Group *)object;
+      if (!group->isDeleted())
+      {
+         group->removeSyncException();
+         if (!GroupNameIsUnique(obj->m_loginName, group))
+         {
+            group->setSyncException();
+            TCHAR conflictDescription[MAX_USER_DESCR];
+            _sntprintf(conflictDescription, MAX_USER_DESCR, _T("UpdateLDAPGroup(): LDAP sync error. Group with name \"%s\" already exists."), obj->m_loginName);
+            group->setDescription(conflictDescription);
+            DbgPrintf(4, conflictDescription);
+         }
+         else
+         {
+            group->setName(obj->m_loginName);
+            group->setDescription(obj->m_description);
+            DbgPrintf(4, _T("UpdateLDAPGroup(): Group updated: DN: %s, login name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
+         }
+         if (group->isModified())
+         {
+            SendUserDBUpdate(USER_DB_MODIFY, group->getId(), group);
+         }
+         SyncGroupMembers(group , obj);
+      }
+      userModified = true;
    }
-   return NULL;
-}
 
-/**
- * Access to user DB must be locked when this function is called
- */
-bool UserNameIsUnique(const TCHAR *name, UINT32 id)
-{
-   for(int i = 0; i < m_userCount; i++)
-		if (!(m_users[i]->getId() & GROUP_FLAG) && UserNameEquals(m_users[i]->getName(), name) && m_users[i]->getId() != id)
-         return false;
-   return true;
-}
-
-/**
- * Acess to user DB must be loked when this function is called
- */
-bool GroupNameIsUnique(const TCHAR *name, UINT32 id)
-{
-   for(int i = 0; i < m_userCount; i++)
-		if ((m_users[i]->getId() & GROUP_FLAG) && UserNameEquals(m_users[i]->getName(), name) && m_users[i]->getId() != id)
-         return false;
-   return true;
+   if (!userModified)
+   {
+      if (GroupNameIsUnique(obj->m_loginName, NULL))
+      {
+         Group *group = new Group(CreateUniqueId(IDG_USER_GROUP), obj->m_loginName);
+         group->setDescription(obj->m_description);
+         group->setFlags(UF_MODIFIED | UF_LDAP_USER);
+         group->setDn(dn);
+         SendUserDBUpdate(USER_DB_CREATE, group->getId(), group);
+         AddDatabaseObject(group);
+         SyncGroupMembers(group , obj);
+         DbgPrintf(4, _T("UpdateLDAPGroup(): Group added: DN: %s, login name: %s, description: %s"), dn, obj->m_loginName, CHECK_NULL(obj->m_description));
+      }
+      else
+      {
+         DbgPrintf(4, _T("UpdateLDAPGroup(): Group with name \"%s\" already exists, but is not an LDAP group. LDAP group won't be created."), obj->m_loginName);
+      }
+   }
+   RWLockUnlock(s_userDatabaseLock);
 }
 
 /**
@@ -797,24 +794,21 @@ void DumpUsers(CONSOLE_CTX pCtx)
 {
    ConsolePrintf(pCtx, _T("Login name           GUID                                 System rights\n")
                        _T("-----------------------------------------------------------------------\n"));
-   MutexLock(m_mutexUserDatabaseAccess);
 
-   for(int i = 0; i < m_userCount; i++)
+   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
+   while(it->hasNext())
    {
-		if (!(m_users[i]->getId() & GROUP_FLAG))
+      UserDatabaseObject *object = it->next();
+		if (!object->isGroup())
       {
-			UINT64 systemRights = m_users[i]->getSystemRights();
-			for(int j = 0; j < m_userCount; j++)
-         {
-				if ((m_users[j]->getId() & GROUP_FLAG) && (((Group *) m_users[j])->isMember(m_users[i]->getId())))
-					systemRights |= ((Group *)m_users[j])->getSystemRights();
-			}
-
          TCHAR szGUID[64];
-         ConsolePrintf(pCtx, _T("%-20s %-36s 0x") UINT64X_FMT(_T("016")) _T("\n"), m_users[i]->getName(), m_users[i]->getGuidAsText(szGUID), systemRights);
+         UINT64 systemRights = GetEffectiveSystemRights((User *)object);
+         ConsolePrintf(pCtx, _T("%-20s %-36s 0x") UINT64X_FMT(_T("016")) _T("\n"), object->getName(), object->getGuidAsText(szGUID), systemRights);
 		}
 	}
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   delete it;
+   RWLockUnlock(s_userDatabaseLock);
    ConsolePrintf(pCtx, _T("\n"));
 }
 
@@ -830,31 +824,29 @@ UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id, bool alreadyLocked)
 
    DeleteUserFromAllObjects(id);
 
-   if(!alreadyLocked)
-      MutexLock(m_mutexUserDatabaseAccess);
+   if (!alreadyLocked)
+      RWLockWriteLock(s_userDatabaseLock, INFINITE);
 
-   for(i = 0; i < m_userCount; i++)
-	{
-		if (m_users[i]->getId() == id)
-		{
-			m_users[i]->setDeleted();
-			if (!(id & GROUP_FLAG))
-			{
-				// Remove user from all groups
-				for(j = 0; j < m_userCount; j++)
-				{
-					if (m_users[j]->getId() & GROUP_FLAG)
-					{
-						((Group *)m_users[j])->deleteUser(id);
-					}
-				}
-			}
-			break;
-		}
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != NULL)
+   {
+      object->setDeleted();
+      if (!(id & GROUP_FLAG))
+      {
+         Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
+         while(it->hasNext())
+         {
+            UserDatabaseObject *group = it->next();
+            if (group->getId() & GROUP_FLAG)
+            {
+               ((Group *)group)->deleteUser(id);
+            }
+         }
+      }
 	}
 
-   if(!alreadyLocked)
-      MutexUnlock(m_mutexUserDatabaseAccess);
+   if (!alreadyLocked)
+      RWLockUnlock(s_userDatabaseLock);
 
    SendUserDBUpdate(USER_DB_DELETE, id, NULL);
    return RCC_SUCCESS;
@@ -863,45 +855,35 @@ UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id, bool alreadyLocked)
 /**
  * Create new user or group
  */
-UINT32 NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, UINT32 *pdwId)
+UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *id)
 {
    UINT32 dwResult = RCC_SUCCESS;
-	UserDatabaseObject *object;
-	int i;
 
-   MutexLock(m_mutexUserDatabaseAccess);
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
 
    // Check for duplicate name
-   for(i = 0; i < m_userCount; i++)
-	{
-      if (UserNameEquals(m_users[i]->getName(), pszName))
-      {
-         dwResult = RCC_OBJECT_ALREADY_EXISTS;
-         break;
-      }
+   UserDatabaseObject *object = isGroup ? (UserDatabaseObject *)s_groups.get(name) : (UserDatabaseObject *)s_users.get(name);
+   if (object != NULL)
+   {
+      dwResult = RCC_OBJECT_ALREADY_EXISTS;
 	}
 
 	if (dwResult == RCC_SUCCESS)
 	{
-		if (bIsGroup)
+		if (isGroup)
 		{
-			object = new Group(CreateUniqueId(IDG_USER_GROUP), pszName);
+			object = new Group(CreateUniqueId(IDG_USER_GROUP), name);
 		}
 		else
 		{
-			object = new User(CreateUniqueId(IDG_USER), pszName);
+			object = new User(CreateUniqueId(IDG_USER), name);
 		}
-
-		m_users = (UserDatabaseObject **)realloc(m_users, sizeof(UserDatabaseObject *) * (m_userCount + 1));
-		m_users[m_userCount] = object;
-		m_userCount++;
-
+		AddDatabaseObject(object);
 		SendUserDBUpdate(USER_DB_CREATE, object->getId(), object);
-
-		*pdwId = object->getId();
+		*id = object->getId();
 	}
 
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   RWLockUnlock(s_userDatabaseLock);
 	return dwResult;
 }
 
@@ -915,32 +897,32 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg)
 
 	id = msg->getFieldAsUInt32(VID_USER_ID);
 
-   MutexLock(m_mutexUserDatabaseAccess);
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
 
-   // Find object to be modified in list
-   for(i = 0; i < m_userCount; i++)
-		if (m_users[i]->getId() == id)
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != NULL)
+   {
+      TCHAR name[MAX_USER_NAME];
+
+      fields = msg->getFieldAsUInt32(VID_FIELDS);
+      if (fields & USER_MODIFY_LOGIN_NAME)
       {
-			TCHAR name[MAX_USER_NAME];
-
-			fields = msg->getFieldAsUInt32(VID_FIELDS);
-			if (fields & USER_MODIFY_LOGIN_NAME)
-			{
-				msg->getFieldAsString(VID_USER_NAME, name, MAX_USER_NAME);
-				if (!IsValidObjectName(name))
-				{
-					dwResult = RCC_INVALID_OBJECT_NAME;
-					break;
-				}
-			}
-
-			m_users[i]->modifyFromMessage(msg);
-         SendUserDBUpdate(USER_DB_MODIFY, id, m_users[i]);
-         dwResult = RCC_SUCCESS;
-         break;
+         msg->getFieldAsString(VID_USER_NAME, name, MAX_USER_NAME);
+         if (!IsValidObjectName(name))
+         {
+            dwResult = RCC_INVALID_OBJECT_NAME;
+         }
       }
 
-   MutexUnlock(m_mutexUserDatabaseAccess);
+      if (dwResult != RCC_INVALID_OBJECT_NAME)
+      {
+         object->modifyFromMessage(msg);
+         SendUserDBUpdate(USER_DB_MODIFY, id, object);
+         dwResult = RCC_SUCCESS;
+      }
+   }
+
+   RWLockUnlock(s_userDatabaseLock);
    return dwResult;
 }
 
@@ -951,35 +933,31 @@ UINT32 NXCORE_EXPORTABLE DetachLdapUser(UINT32 id)
 {
    UINT32 dwResult = RCC_INVALID_USER_ID;
 
-   MutexLock(m_mutexUserDatabaseAccess);
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
 
-   // Find object to be modified in list
-   for(int i = 0; i < m_userCount; i++)
-		if (m_users[i]->getId() == id)
-      {
-			m_users[i]->detachLdapUser();
-         SendUserDBUpdate(USER_DB_MODIFY, id, m_users[i]);
-         dwResult = RCC_SUCCESS;
-         break;
-      }
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != NULL)
+   {
+      s_ldapNames.remove(object->getDn());
+      object->detachLdapUser();
+      SendUserDBUpdate(USER_DB_MODIFY, id, object);
+      dwResult = RCC_SUCCESS;
+   }
 
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   RWLockUnlock(s_userDatabaseLock);
    return dwResult;
 }
 
 /**
  * Send user DB update for given user ID.
- * Access to suer database must be already locked.
+ * Access to user database must be already locked.
  */
 void SendUserDBUpdate(int code, UINT32 id)
 {
-   for(int i = 0; i < m_userCount; i++)
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != NULL)
    {
-      if (m_users[i]->getId() == id)
-      {
-         SendUserDBUpdate(code, id, m_users[i]);
-         break;
-      }
+      SendUserDBUpdate(code, id, object);
    }
 }
 
@@ -1059,124 +1037,124 @@ static bool CheckPasswordComplexity(const TCHAR *password)
  */
 UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword)
 {
-	int i;
-   UINT32 dwResult = RCC_INVALID_USER_ID;
-
 	if (id & GROUP_FLAG)
 		return RCC_INVALID_USER_ID;
 
-   MutexLock(m_mutexUserDatabaseAccess);
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
 
    // Find user
-   for(i = 0; i < m_userCount; i++)
-		if (m_users[i]->getId() == id)
+   User *user = (User *)s_userDatabase.get(id);
+   if (user == NULL)
+   {
+      RWLockUnlock(s_userDatabaseLock);
+      return RCC_INVALID_USER_ID;
+   }
+
+   UINT32 dwResult = RCC_INVALID_USER_ID;
+   if (changeOwnPassword)
+   {
+      if (!user->canChangePassword() || !user->validatePassword(oldPassword))
       {
-			User *user = (User *)m_users[i];
-			if (changeOwnPassword)
-			{
-				if (!user->canChangePassword() || !user->validatePassword(oldPassword))
-				{
-					dwResult = RCC_ACCESS_DENIED;
-					break;
-				}
-
-				// Check password length
-				int minLength = (user->getMinMasswordLength() == -1) ? ConfigReadInt(_T("MinPasswordLength"), 0) : user->getMinMasswordLength();
-				if ((int)_tcslen(newPassword) < minLength)
-				{
-					dwResult = RCC_WEAK_PASSWORD;
-					break;
-				}
-
-				// Check password complexity
-				if (!CheckPasswordComplexity(newPassword))
-				{
-					dwResult = RCC_WEAK_PASSWORD;
-					break;
-				}
-
-				// Update password history
-				int passwordHistoryLength = ConfigReadInt(_T("PasswordHistoryLength"), 0);
-				if (passwordHistoryLength > 0)
-				{
-				   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-
-					TCHAR query[8192], *ph = NULL;
-
-					_sntprintf(query, 8192, _T("SELECT password_history FROM users WHERE id=%d"), id);
-					DB_RESULT hResult = DBSelect(hdb, query);
-					if (hResult != NULL)
-					{
-						if (DBGetNumRows(hResult) > 0)
-						{
-							ph = DBGetField(hResult, 0, 0, NULL, 0);
-						}
-						DBFreeResult(hResult);
-					}
-
-					if (ph != NULL)
-					{
-						BYTE newPasswdHash[SHA1_DIGEST_SIZE];
-#ifdef UNICODE
-						char *mb = UTF8StringFromWideString(newPassword);
-						CalculateSHA1Hash((BYTE *)mb, strlen(mb), newPasswdHash);
-						free(mb);
-#else
-						CalculateSHA1Hash((BYTE *)newPassword, strlen(newPassword), newPasswdHash);
-#endif
-
-						int phLen = (int)_tcslen(ph) / (SHA1_DIGEST_SIZE * 2);
-						if (phLen > passwordHistoryLength)
-							phLen = passwordHistoryLength;
-
-						for(int i = 0; i < phLen; i++)
-						{
-							BYTE hash[SHA1_DIGEST_SIZE];
-							StrToBin(&ph[i * SHA1_DIGEST_SIZE * 2], hash, SHA1_DIGEST_SIZE);
-							if (!memcmp(hash, newPasswdHash, SHA1_DIGEST_SIZE))
-							{
-								dwResult = RCC_REUSED_PASSWORD;
-								break;
-							}
-						}
-
-						if (dwResult != RCC_REUSED_PASSWORD)
-						{
-							if (phLen == passwordHistoryLength)
-							{
-								memmove(ph, &ph[SHA1_DIGEST_SIZE * 2], (phLen - 1) * SHA1_DIGEST_SIZE * 2 * sizeof(TCHAR));
-							}
-							else
-							{
-								ph = (TCHAR *)realloc(ph, (phLen + 1) * SHA1_DIGEST_SIZE * 2 * sizeof(TCHAR) + sizeof(TCHAR));
-								phLen++;
-							}
-							BinToStr(newPasswdHash, SHA1_DIGEST_SIZE, &ph[(phLen - 1) * SHA1_DIGEST_SIZE * 2]);
-
-							_sntprintf(query, 8192, _T("UPDATE users SET password_history='%s' WHERE id=%d"), ph, id);
-							DBQuery(hdb, query);
-						}
-
-						free(ph);
-						if (dwResult == RCC_REUSED_PASSWORD)
-							break;
-					}
-					else
-					{
-						dwResult = RCC_DB_FAILURE;
-						break;
-					}
-					DBConnectionPoolReleaseConnection(hdb);
-				}
-
-				user->updatePasswordChangeTime();
-			}
-			user->setPassword(newPassword, changeOwnPassword);
-         dwResult = RCC_SUCCESS;
-         break;
+         dwResult = RCC_ACCESS_DENIED;
+         goto finish;
       }
 
-   MutexUnlock(m_mutexUserDatabaseAccess);
+      // Check password length
+      int minLength = (user->getMinMasswordLength() == -1) ? ConfigReadInt(_T("MinPasswordLength"), 0) : user->getMinMasswordLength();
+      if ((int)_tcslen(newPassword) < minLength)
+      {
+         dwResult = RCC_WEAK_PASSWORD;
+         goto finish;
+      }
+
+      // Check password complexity
+      if (!CheckPasswordComplexity(newPassword))
+      {
+         dwResult = RCC_WEAK_PASSWORD;
+         goto finish;
+      }
+
+      // Update password history
+      int passwordHistoryLength = ConfigReadInt(_T("PasswordHistoryLength"), 0);
+      if (passwordHistoryLength > 0)
+      {
+         DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+
+         TCHAR query[8192], *ph = NULL;
+
+         _sntprintf(query, 8192, _T("SELECT password_history FROM users WHERE id=%d"), id);
+         DB_RESULT hResult = DBSelect(hdb, query);
+         if (hResult != NULL)
+         {
+            if (DBGetNumRows(hResult) > 0)
+            {
+               ph = DBGetField(hResult, 0, 0, NULL, 0);
+            }
+            DBFreeResult(hResult);
+         }
+
+         if (ph != NULL)
+         {
+            BYTE newPasswdHash[SHA1_DIGEST_SIZE];
+#ifdef UNICODE
+            char *mb = UTF8StringFromWideString(newPassword);
+            CalculateSHA1Hash((BYTE *)mb, strlen(mb), newPasswdHash);
+            free(mb);
+#else
+            CalculateSHA1Hash((BYTE *)newPassword, strlen(newPassword), newPasswdHash);
+#endif
+
+            int phLen = (int)_tcslen(ph) / (SHA1_DIGEST_SIZE * 2);
+            if (phLen > passwordHistoryLength)
+               phLen = passwordHistoryLength;
+
+            for(int i = 0; i < phLen; i++)
+            {
+               BYTE hash[SHA1_DIGEST_SIZE];
+               StrToBin(&ph[i * SHA1_DIGEST_SIZE * 2], hash, SHA1_DIGEST_SIZE);
+               if (!memcmp(hash, newPasswdHash, SHA1_DIGEST_SIZE))
+               {
+                  dwResult = RCC_REUSED_PASSWORD;
+                  goto finish;
+               }
+            }
+
+            if (dwResult != RCC_REUSED_PASSWORD)
+            {
+               if (phLen == passwordHistoryLength)
+               {
+                  memmove(ph, &ph[SHA1_DIGEST_SIZE * 2], (phLen - 1) * SHA1_DIGEST_SIZE * 2 * sizeof(TCHAR));
+               }
+               else
+               {
+                  ph = (TCHAR *)realloc(ph, (phLen + 1) * SHA1_DIGEST_SIZE * 2 * sizeof(TCHAR) + sizeof(TCHAR));
+                  phLen++;
+               }
+               BinToStr(newPasswdHash, SHA1_DIGEST_SIZE, &ph[(phLen - 1) * SHA1_DIGEST_SIZE * 2]);
+
+               _sntprintf(query, 8192, _T("UPDATE users SET password_history='%s' WHERE id=%d"), ph, id);
+               DBQuery(hdb, query);
+            }
+
+            free(ph);
+            if (dwResult == RCC_REUSED_PASSWORD)
+               goto finish;
+         }
+         else
+         {
+            dwResult = RCC_DB_FAILURE;
+            goto finish;
+         }
+         DBConnectionPoolReleaseConnection(hdb);
+      }
+
+      user->updatePasswordChangeTime();
+   }
+   user->setPassword(newPassword, changeOwnPassword);
+   dwResult = RCC_SUCCESS;
+
+finish:
+   RWLockUnlock(s_userDatabaseLock);
    return dwResult;
 }
 
@@ -1189,20 +1167,13 @@ UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login,
 		return RCC_INVALID_USER_ID;
 
    UINT32 rcc = RCC_INVALID_USER_ID;
-   MutexLock(m_mutexUserDatabaseAccess);
+   RWLockReadLock(s_userDatabaseLock, INFINITE);
 
    // Find user
-   User *user = NULL;
-   for(int i = 0; i < m_userCount; i++)
-		if (m_users[i]->getId() == userId)
-      {
-         user = (User *)m_users[i];
-         rcc = RCC_SUCCESS;
-         break;
-      }
-
+   User *user = (User *)s_userDatabase.get(userId);
    if (user != NULL)
    {
+      rcc = RCC_SUCCESS;
       if (user->isLDAPUser())
       {
          if (user->isDisabled() || user->hasSyncException())
@@ -1243,26 +1214,26 @@ UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login,
       }
    }
 
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   RWLockUnlock(s_userDatabaseLock);
    return rcc;
 }
 
 /**
  * Open user database
  */
-UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count)
+Iterator<UserDatabaseObject> NXCORE_EXPORTABLE *OpenUserDatabase()
 {
-   MutexLock(m_mutexUserDatabaseAccess);
-	*count = m_userCount;
-	return m_users;
+   RWLockReadLock(s_userDatabaseLock, INFINITE);
+	return s_userDatabase.iterator();
 }
 
 /**
  * Close user database
  */
-void NXCORE_EXPORTABLE CloseUserDatabase()
+void NXCORE_EXPORTABLE CloseUserDatabase(Iterator<UserDatabaseObject> *it)
 {
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   delete it;
+   RWLockUnlock(s_userDatabaseLock);
 }
 
 /**
@@ -1272,16 +1243,13 @@ const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name)
 {
 	const TCHAR *value = NULL;
 
-   MutexLock(m_mutexUserDatabaseAccess);
+   RWLockReadLock(s_userDatabaseLock, INFINITE);
 
-   for(int i = 0; i < m_userCount; i++)
-		if (m_users[i]->getId() == id)
-      {
-			value = m_users[i]->getAttribute(name);
-         break;
-      }
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != NULL)
+      value = object->getAttribute(name);
 
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   RWLockUnlock(s_userDatabaseLock);
 	return value;
 }
 
@@ -1299,16 +1267,15 @@ UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name
  */
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value)
 {
-   MutexLock(m_mutexUserDatabaseAccess);
+   RWLockWriteLock(s_userDatabaseLock, INFINITE);
 
-   for(int i = 0; i < m_userCount; i++)
-		if (m_users[i]->getId() == id)
-      {
-			m_users[i]->setAttribute(name, value);
-         break;
-      }
+   UserDatabaseObject *object = s_userDatabase.get(id);
+   if (object != NULL)
+   {
+      object->setAttribute(name, value);
+   }
 
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   RWLockUnlock(s_userDatabaseLock);
 }
 
 /**
@@ -1332,25 +1299,28 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId)
    if (sep != NULL)
       *sep = 0;
 
-   MutexLock(m_mutexUserDatabaseAccess);
-   for(int i = 0; i < m_userCount; i++)
+   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
+   while(it->hasNext())
    {
-		if (!(m_users[i]->getId() & GROUP_FLAG) &&
-          !m_users[i]->isDisabled() && !m_users[i]->isDeleted() &&
-			 !_tcsicmp(_xmppId, ((User *)m_users[i])->getXmppId()))
+      UserDatabaseObject *object = it->next();
+		if (!object->isGroup() &&
+          !object->isDisabled() && !object->isDeleted() &&
+			 !_tcsicmp(_xmppId, ((User *)object)->getXmppId()))
       {
-         DbgPrintf(4, _T("User %s authenticated for XMPP subscription"), m_users[i]->getName());
+         DbgPrintf(4, _T("User %s authenticated for XMPP subscription"), object->getName());
 
          TCHAR workstation[256];
          _tcscpy(workstation, _T("XMPP:"));
          nx_strncpy(&workstation[5], _xmppId, 251);
-         WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP subscription"));
+         WriteAuditLog(AUDIT_SECURITY, TRUE, object->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP subscription"));
 
          success = true;
          break;
       }
    }
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   delete it;
+   RWLockUnlock(s_userDatabaseLock);
 
    free(_xmppId);
    return success;
@@ -1377,20 +1347,16 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
    if (sep != NULL)
       *sep = 0;
 
-   MutexLock(m_mutexUserDatabaseAccess);
-   for(int i = 0; i < m_userCount; i++)
+   RWLockReadLock(s_userDatabaseLock, INFINITE);
+   Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
+   while(it->hasNext())
    {
-		if (!(m_users[i]->getId() & GROUP_FLAG) &&
-          !m_users[i]->isDisabled() && !m_users[i]->isDeleted() &&
-			 !_tcsicmp(_xmppId, ((User *)m_users[i])->getXmppId()))
+      UserDatabaseObject *object = it->next();
+      if (!object->isGroup() &&
+          !object->isDisabled() && !object->isDeleted() &&
+          !_tcsicmp(_xmppId, ((User *)object)->getXmppId()))
       {
-         UINT64 systemRights = m_users[i]->getSystemRights();
-
-         // Collect system rights from groups this user belongs to
-         for(int j = 0; j < m_userCount; j++)
-				if ((m_users[j]->getId() & GROUP_FLAG) &&
-					 (((Group *)m_users[j])->isMember(m_users[i]->getId())))
-					systemRights |= ((Group *)m_users[j])->getSystemRights();
+         UINT64 systemRights = GetEffectiveSystemRights((User *)object);
 
          TCHAR workstation[256];
          _tcscpy(workstation, _T("XMPP:"));
@@ -1398,19 +1364,20 @@ bool AuthenticateUserForXMPPCommands(const char *xmppId)
 
          if (systemRights & SYSTEM_ACCESS_XMPP_COMMANDS)
          {
-            DbgPrintf(4, _T("User %s authenticated for XMPP commands"), m_users[i]->getName());
-            WriteAuditLog(AUDIT_SECURITY, TRUE, m_users[i]->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP commands"));
+            DbgPrintf(4, _T("User %s authenticated for XMPP commands"), object->getName());
+            WriteAuditLog(AUDIT_SECURITY, TRUE, object->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("User authenticated for XMPP commands"));
             success = true;
          }
          else
          {
-            DbgPrintf(4, _T("Access to XMPP commands denied for user %s"), m_users[i]->getName());
-            WriteAuditLog(AUDIT_SECURITY, FALSE, m_users[i]->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("Access to XMPP commands denied"));
+            DbgPrintf(4, _T("Access to XMPP commands denied for user %s"), object->getName());
+            WriteAuditLog(AUDIT_SECURITY, FALSE, object->getId(), workstation, AUDIT_SYSTEM_SID, 0, _T("Access to XMPP commands denied"));
          }
          break;
       }
    }
-   MutexUnlock(m_mutexUserDatabaseAccess);
+   delete it;
+   RWLockUnlock(s_userDatabaseLock);
 
    free(_xmppId);
    return success;

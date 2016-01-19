@@ -1,0 +1,212 @@
+-->#
+--># Copyright (C) Siemens AG 1998
+-->#               All rights reserved
+-->#
+-->#protocol specification
+-->%PROTOCOL SNMP
+-->#
+-->#configuration
+-->%REMCONFIG NO
+-->%REMOPERATION NO
+-->#
+
+Console-Monitoring-MIB DEFINITIONS ::= BEGIN
+
+--
+-- Title:   MIB for the BS2000 Console Monitoring
+--
+-- Date:   Nov. 1996
+-- Author: Birgit Lamers        BS2000 DC3
+-- Reason: New value 'waiting' for consMonCmdResult
+--
+-- Date:   June 1996
+-- Author: Birgit Lamers        BS2000 DC3
+--
+
+
+IMPORTS
+	enterprises
+	    FROM RFC1155-SMI
+	DisplayString
+	    FROM RFC1213-MIB
+	OBJECT-TYPE
+	    FROM RFC-1212;
+
+
+sni                        OBJECT IDENTIFIER ::= { enterprises 231 }
+sniProductMibs             OBJECT IDENTIFIER ::= { sni 2 }
+sniAppMon                  OBJECT IDENTIFIER ::= { sniProductMibs 23 }
+appConsMon                 OBJECT IDENTIFIER ::= { sniAppMon 4 }
+consMonGlobalData          OBJECT IDENTIFIER ::= { appConsMon 1 }
+consMonBS2Group            OBJECT IDENTIFIER ::= { appConsMon 2 }
+
+consMonVersion       OBJECT-TYPE
+	SYNTAX  DisplayString
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION "Version of consol monitor"
+	::= {consMonGlobalData 1}
+
+
+consMonMsgFilter     OBJECT-TYPE
+	SYNTAX  DisplayString
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION "Pathname of the message filter file"
+	::= {consMonGlobalData 2}
+
+
+consMonNegMsgFilter     OBJECT-TYPE
+	SYNTAX  DisplayString
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION "Pathname of the negative message filter file;
+		     messages in this file are not sent as traps"
+	::= {consMonGlobalData 3}
+
+
+
+
+consMonCmdFreeIndex          OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION "The next free index in the BS2000 command table.
+		     Read this object before setting a new entry in
+		     consMonCmdTable!"
+	::= {consMonBS2Group 1}
+
+consMonCmdTabNum             OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION "The number of entries in the table consMonCmdTable"
+	::= {consMonBS2Group 2}
+
+consMonCmdTable           OBJECT-TYPE
+	SYNTAX  SEQUENCE OF ConsMonCmdEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION "The BS2000 command table"
+	::= {consMonBS2Group 3}
+
+consMonCmdEntry        OBJECT-TYPE
+	SYNTAX  ConsMonCmdEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION "An entry in the command table"
+	INDEX {consMonCmdIndex}
+	::= {consMonCmdTable 1}
+
+
+ConsMonCmdEntry ::=
+	SEQUENCE 
+	{
+	    consMonCmdIndex                   INTEGER,
+	    consMonCmd                        DisplayString,
+	    consMonCmdResult                  INTEGER,
+	    consMonCmdMainRetco               DisplayString
+	}
+
+consMonCmdIndex   OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION "A unique value for each entry, its value
+		     ranges between 1 and the value of consMonCmdTabNum"
+	::= {consMonCmdEntry 1}
+
+consMonCmd           OBJECT-TYPE
+	SYNTAX  DisplayString
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION "A BS2000 console command"
+	::= {consMonCmdEntry 2}
+
+consMonCmdResult        OBJECT-TYPE
+	SYNTAX  INTEGER {
+		  none(1),
+		  executing(2),
+		  ok(3),
+		  error(4),
+		  waiting(5)
+		}
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION "Result of the BS2000 console command. 'none' means,
+		     that the command has not yet terminated"
+	::= {consMonCmdEntry 3}
+
+consMonCmdMainRetco     OBJECT-TYPE
+	SYNTAX  DisplayString
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION "The main returncode of the console command"
+	::= {consMonCmdEntry 4}
+
+
+-- consMonOutTabNum             OBJECT-TYPE
+--         SYNTAX  INTEGER
+--         ACCESS  read-only
+--         STATUS  mandatory
+--         DESCRIPTION "The number of entries in the table consMonOutTable"
+--         ::= {consMonBS2Group 3}
+
+consMonOutTable           OBJECT-TYPE
+	SYNTAX  SEQUENCE OF ConsMonOutEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION "The output table containing the result of the commands "
+	::= {consMonBS2Group 4}
+
+consMonOutEntry        OBJECT-TYPE
+	SYNTAX  ConsMonOutEntry
+	ACCESS  not-accessible
+	STATUS  mandatory
+	DESCRIPTION "An entry in the output table"
+	INDEX {consMonOutCmdIndex, consMonOutLineNo}
+	::= {consMonOutTable 1}
+
+
+ConsMonOutEntry ::=
+	SEQUENCE 
+	{
+	    consMonOutCmdIndex                INTEGER,
+	    consMonOutLineNo                  INTEGER,
+	    consMonOutContents                DisplayString
+	}
+
+consMonOutCmdIndex   OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION "The first index in the output table. It is equal to
+		     consMonCmdIndex of the corresponding command in the
+		     command table"
+	::= {consMonOutEntry 1}
+
+consMonOutLineNo OBJECT-TYPE
+	SYNTAX  INTEGER
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION "The second index in the output table. It counts the
+		     number of output lines belonging of one command"
+	::= {consMonOutEntry 2}
+
+consMonOutContents    OBJECT-TYPE
+	SYNTAX  DisplayString
+	ACCESS  read-only
+	STATUS  mandatory
+	DESCRIPTION "the contents of one line of the output of the command"
+	::= {consMonOutEntry 3}
+
+
+consMonBS2Ans        OBJECT-TYPE
+	SYNTAX  DisplayString
+	ACCESS  read-write
+	STATUS  mandatory
+	DESCRIPTION "Answer to an BS2000 console message"
+	::= {consMonBS2Group 5}
+
+
+END

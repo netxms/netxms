@@ -473,8 +473,8 @@ protected:
    UINT32 m_dwParentCount;     // Number of parent objects
    NetObj **m_pParentList;    // Array of pointers to parent objects
 
-   AccessList *m_pAccessList;
-   BOOL m_bInheritAccessRights;
+   AccessList *m_accessList;
+   bool m_inheritAccessRights;
    MUTEX m_mutexACL;
 
 	UINT32 m_dwNumTrustedNodes;	// Trusted nodes
@@ -537,16 +537,20 @@ public:
    int getPropagatedStatus();
    UINT32 getTimeStamp() const { return m_dwTimeStamp; }
 	const uuid& getGuid() const { return m_guid; }
-	const TCHAR *getComments() { return CHECK_NULL_EX(m_pszComments); }
-   PostalAddress *getPostalAddress() { return m_postalAddress; }
+	const TCHAR *getComments() const { return CHECK_NULL_EX(m_pszComments); }
+
+	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
+	void setGeoLocation(const GeoLocation& geoLocation) { m_geoLocation = geoLocation; markAsModified(); }
+
+   const PostalAddress *getPostalAddress() const { return m_postalAddress; }
    void setPostalAddress(PostalAddress * addr) { delete m_postalAddress; m_postalAddress = addr; markAsModified();}
 
-   bool isModified() { return m_isModified; }
-   bool isDeleted() { return m_isDeleted; }
-   bool isOrphaned() { return m_dwParentCount == 0; }
-   bool isEmpty() { return m_dwChildCount == 0; }
+   bool isModified() const { return m_isModified; }
+   bool isDeleted() const { return m_isDeleted; }
+   bool isOrphaned() const { return m_dwParentCount == 0; }
+   bool isEmpty() const { return m_dwChildCount == 0; }
 
-	bool isSystem() { return m_isSystem; }
+	bool isSystem() const { return m_isSystem; }
 	void setSystemFlag(bool flag) { m_isSystem = flag; }
 
    UINT32 getRefCount();
@@ -1131,6 +1135,7 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool showThresholdSummary();
 
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
 
@@ -1285,7 +1290,7 @@ protected:
 
    void checkInterfaceNames(InterfaceList *pIfList);
    bool filterInterface(InterfaceInfo *info);
-   Subnet *createSubnet(const InetAddress& baseAddr, bool syntheticMask);
+   Subnet *createSubnet(InetAddress& baseAddr, bool syntheticMask);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 	void updatePrimaryIpAddr();
 	bool confPollAgent(UINT32 dwRqId);
@@ -2389,9 +2394,9 @@ inline const InetAddress& GetObjectIpAddress(NetObj *object)
  */
 void ObjectsInit();
 
-void NXCORE_EXPORTABLE NetObjInsert(NetObj *pObject, bool newObject, bool importedObject);
-void NetObjDeleteFromIndexes(NetObj *pObject);
-void NetObjDelete(NetObj *pObject);
+void NXCORE_EXPORTABLE NetObjInsert(NetObj *object, bool newObject, bool importedObject);
+void NetObjDeleteFromIndexes(NetObj *object);
+void NetObjDelete(NetObj *object);
 
 void UpdateInterfaceIndex(const InetAddress& oldIpAddr, const InetAddress& newIpAddr, Interface *iface);
 ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp);

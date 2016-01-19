@@ -62,8 +62,8 @@ private:
    size_t m_dataSize;      // binary data size
 
    void *set(UINT32 fieldId, BYTE type, const void *value, bool isSigned = false, size_t size = 0);
-   void *get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType = NULL);
-   NXCP_MESSAGE_FIELD *find(UINT32 fieldId);
+   void *get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType = NULL) const;
+   NXCP_MESSAGE_FIELD *find(UINT32 fieldId) const;
 
 public:
    NXCPMessage(int version = NXCP_VERSION);
@@ -73,24 +73,24 @@ public:
 
    NXCP_MESSAGE *createMessage();
 
-   UINT16 getCode() { return m_code; }
+   UINT16 getCode() const { return m_code; }
    void setCode(UINT16 code) { m_code = code; }
 
-   UINT32 getId() { return m_id; }
+   UINT32 getId() const { return m_id; }
    void setId(UINT32 id) { m_id = id; }
 
-   bool isEndOfFile() { return (m_flags & MF_END_OF_FILE) ? true : false; }
-   bool isEndOfSequence() { return (m_flags & MF_END_OF_SEQUENCE) ? true : false; }
-   bool isReverseOrder() { return (m_flags & MF_REVERSE_ORDER) ? true : false; }
-   bool isBinary() { return (m_flags & MF_BINARY) ? true : false; }
-   bool isControl() { return (m_flags & MF_CONTROL) ? true : false; }
-   bool isCompressed() { return (m_flags & MF_COMPRESSED) ? true : false; }
+   bool isEndOfFile() const { return (m_flags & MF_END_OF_FILE) ? true : false; }
+   bool isEndOfSequence() const { return (m_flags & MF_END_OF_SEQUENCE) ? true : false; }
+   bool isReverseOrder() const { return (m_flags & MF_REVERSE_ORDER) ? true : false; }
+   bool isBinary() const { return (m_flags & MF_BINARY) ? true : false; }
+   bool isControl() const { return (m_flags & MF_CONTROL) ? true : false; }
+   bool isCompressed() const { return (m_flags & MF_COMPRESSED) ? true : false; }
 
-   BYTE *getBinaryData() { return m_data; }
-   size_t getBinaryDataSize() { return m_dataSize; }
+   const BYTE *getBinaryData() const { return m_data; }
+   size_t getBinaryDataSize() const { return m_dataSize; }
 
-   bool isFieldExist(UINT32 fieldId) { return find(fieldId) != NULL; }
-   int getFieldType(UINT32 fieldId);
+   bool isFieldExist(UINT32 fieldId) const { return find(fieldId) != NULL; }
+   int getFieldType(UINT32 fieldId) const;
 
    void setField(UINT32 fieldId, INT16 value) { set(fieldId, NXCP_DT_INT16, &value, true); }
    void setField(UINT32 fieldId, UINT16 value) { set(fieldId, NXCP_DT_INT16, &value, false); }
@@ -99,6 +99,7 @@ public:
    void setField(UINT32 fieldId, INT64 value) { set(fieldId, NXCP_DT_INT64, &value, true); }
    void setField(UINT32 fieldId, UINT64 value) { set(fieldId, NXCP_DT_INT64, &value, false); }
    void setField(UINT32 fieldId, double value) { set(fieldId, NXCP_DT_FLOAT, &value); }
+   void setField(UINT32 fieldId, bool value) { INT16 v = value ? 1 : 0; set(fieldId, NXCP_DT_INT16, &v, true); }
    void setField(UINT32 fieldId, const TCHAR *value) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value); }
    void setField(UINT32 fieldId, const TCHAR *value, size_t maxLen) { if (value != NULL) set(fieldId, NXCP_DT_STRING, value, false, maxLen); }
    void setField(UINT32 fieldId, const BYTE *value, size_t size) { set(fieldId, NXCP_DT_BINARY, value, false, size); }
@@ -114,24 +115,24 @@ public:
    void setFieldFromInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data);
    bool setFieldFromFile(UINT32 fieldId, const TCHAR *pszFileName);
 
-   INT16 getFieldAsInt16(UINT32 fieldId);
-   UINT16 getFieldAsUInt16(UINT32 fieldId);
-   INT32 getFieldAsInt32(UINT32 fieldId);
-   UINT32 getFieldAsUInt32(UINT32 fieldId);
-   INT64 getFieldAsInt64(UINT32 fieldId);
-   UINT64 getFieldAsUInt64(UINT32 fieldId);
-   double getFieldAsDouble(UINT32 fieldId);
-   bool getFieldAsBoolean(UINT32 fieldId);
-   time_t getFieldAsTime(UINT32 fieldId);
-   UINT32 getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer);
-   UINT32 getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data);
-   BYTE *getBinaryFieldPtr(UINT32 fieldId, size_t *size);
-   TCHAR *getFieldAsString(UINT32 fieldId, TCHAR *buffer = NULL, size_t bufferSize = 0);
-	char *getFieldAsMBString(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0);
-	char *getFieldAsUtf8String(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0);
-   UINT32 getFieldAsBinary(UINT32 fieldId, BYTE *buffer, size_t bufferSize);
-   InetAddress getFieldAsInetAddress(UINT32 fieldId);
-   uuid getFieldAsGUID(UINT32 fieldId);
+   INT16 getFieldAsInt16(UINT32 fieldId) const;
+   UINT16 getFieldAsUInt16(UINT32 fieldId) const;
+   INT32 getFieldAsInt32(UINT32 fieldId) const;
+   UINT32 getFieldAsUInt32(UINT32 fieldId) const;
+   INT64 getFieldAsInt64(UINT32 fieldId) const;
+   UINT64 getFieldAsUInt64(UINT32 fieldId) const;
+   double getFieldAsDouble(UINT32 fieldId) const;
+   bool getFieldAsBoolean(UINT32 fieldId) const;
+   time_t getFieldAsTime(UINT32 fieldId) const;
+   UINT32 getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer) const;
+   UINT32 getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data) const;
+   const BYTE *getBinaryFieldPtr(UINT32 fieldId, size_t *size) const;
+   TCHAR *getFieldAsString(UINT32 fieldId, TCHAR *buffer = NULL, size_t bufferSize = 0) const;
+	char *getFieldAsMBString(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0) const;
+	char *getFieldAsUtf8String(UINT32 fieldId, char *buffer = NULL, size_t bufferSize = 0) const;
+   UINT32 getFieldAsBinary(UINT32 fieldId, BYTE *buffer, size_t bufferSize) const;
+   InetAddress getFieldAsInetAddress(UINT32 fieldId) const;
+   uuid getFieldAsGUID(UINT32 fieldId) const;
 
    void deleteAllFields();
 
@@ -139,7 +140,7 @@ public:
    void setEndOfSequence() { m_flags |= MF_END_OF_SEQUENCE; }
    void setReverseOrderFlag() { m_flags |= MF_REVERSE_ORDER; }
 
-   static String dump(NXCP_MESSAGE *msg, int version);
+   static String dump(const NXCP_MESSAGE *msg, int version);
 };
 
 /**

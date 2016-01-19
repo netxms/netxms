@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -127,5 +127,20 @@ void StringMap::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFie
    {
       msg->setField(id++, m_ignoreCase ? entry->originalKey : entry->key);
       msg->setField(id++, (TCHAR *)entry->value);
+   }
+}
+
+/**
+ * Load data from NXCP message
+ */
+void StringMap::loadMessage(const NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId)
+{
+   int count = msg->getFieldAsInt32(sizeFieldId);
+   UINT32 id = baseFieldId;
+   for(int i = 0; i < count; i++)
+   {
+      TCHAR *key = msg->getFieldAsString(id++);
+      TCHAR *value = msg->getFieldAsString(id++);
+      setPreallocated(key, value);
    }
 }

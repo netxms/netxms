@@ -1,7 +1,7 @@
 /*
 ** NetXMS Database Schema
 **
-** ex: syntax=sql
+** ex: syntax=sql ts=2 sw=2 expandtab
 */
 
 /*
@@ -9,9 +9,9 @@
 */
 CREATE TABLE metadata
 (
-	var_name varchar(63) not null,
-	var_value varchar(255) not null,
-	PRIMARY KEY(var_name)
+  var_name varchar(63) not null,
+  var_value varchar(255) not null,
+  PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(metadata, 'System meta data (DBMS type, schema version, etc.)')
@@ -23,67 +23,97 @@ COMMENT_COLUMN(metadata.var_value, 'Variable value')
 */
 CREATE TABLE config
 (
-	var_name varchar(63) not null,
-	var_value varchar(2000) null,
+  var_name varchar(63) not null,
+  var_value varchar(2000) null,
 #ifdef DB_ORACLE
-	is_visible integer default 1 not null,
-	need_server_restart integer default 0 not null,
-   data_type char(1) default 'S' not null,
-   is_public char(1) default 'N' not null,
+  is_visible integer default 1 not null,
+  need_server_restart integer default 0 not null,
+  data_type char(1) default 'S' not null,
+  is_public char(1) default 'N' not null,
 #else
-	is_visible integer not null default 1,
-	need_server_restart integer not null default 0,
-   data_type char(1) not null default 'S',
-   is_public char(1) not null default 'N',
+  is_visible integer not null default 1,
+  need_server_restart integer not null default 0,
+  data_type char(1) not null default 'S',
+  is_public char(1) not null default 'N',
 #endif
-   description varchar(255) null,
-   possible_values SQL_TEXT null,
-	PRIMARY KEY(var_name)
+  description varchar(255) null,
+  possible_values SQL_TEXT null,
+  PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(config, 'System configuration table')
+COMMENT_TABLE(config, 'Server configuration')
+COMMENT_COLUMN(config.var_name, 'Parameter name')
+COMMENT_COLUMN(config.var_value, 'Value')
+COMMENT_COLUMN(config.is_visible, 'GUI visibility indicator')
+COMMENT_COLUMN(config.need_server_restart, 'Change take effect after server restart')
+COMMENT_COLUMN(config.data_type, 'Not used in current verion')
+COMMENT_COLUMN(config.is_public, 'No used in current version')
+COMMENT_COLUMN(config.description, 'Not used in current version')
+COMMENT_COLUMN(config.possible_values, 'Not used in current version')
 
 /*
 ** System configuration data (for large data)
 */
 CREATE TABLE config_clob
 (
-	var_name varchar(63) not null,
-	var_value SQL_TEXT null,
-	PRIMARY KEY(var_name)
+  var_name varchar(63) not null,
+  var_value SQL_TEXT null,
+  PRIMARY KEY(var_name)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(config_clob, 'System configuration data for large data')
+COMMENT_TABLE(config_clob, 'System configuration table for large data elements')
+COMMENT_COLUMN(config_clob.var_name, 'Parameter name')
+COMMENT_COLUMN(config_clob.var_value, 'Value')
 
 /*
 ** Users
 */
 CREATE TABLE users
 (
-	id integer not null,
-	guid varchar(36) not null,
-	name varchar(63) not null,
-	password varchar(127) not null,
-	system_access SQL_INT64 not null,
-	flags integer not null,
-	full_name varchar(127) null,
-	description varchar(255) null,
-	grace_logins integer not null,
-	auth_method integer not null,
-	cert_mapping_method integer not null,
-	cert_mapping_data SQL_TEXT null,
-	auth_failures integer not null,
-	last_passwd_change integer not null,
-	min_passwd_length integer not null,
-	disabled_until integer not null,
-	last_login integer not null,
-	password_history SQL_TEXT null,
-   xmpp_id varchar(127) null,
-   ldap_dn SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  guid varchar(36) not null,
+  name varchar(63) not null,
+  password varchar(127) not null,
+  system_access SQL_INT64 not null,
+  flags integer not null,
+  full_name varchar(127) null,
+  description varchar(255) null,
+  grace_logins integer not null,
+  auth_method integer not null,
+  cert_mapping_method integer not null,
+  cert_mapping_data SQL_TEXT null,
+  auth_failures integer not null,
+  last_passwd_change integer not null,
+  min_passwd_length integer not null,
+  disabled_until integer not null,
+  last_login integer not null,
+  password_history SQL_TEXT null,
+  xmpp_id varchar(127) null,
+  ldap_dn SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(users, 'System users')
+COMMENT_COLUMN(users.id, 'User id')
+COMMENT_COLUMN(users.guid, 'User guid')
+COMMENT_COLUMN(users.name, 'Login name')
+COMMENT_COLUMN(users.password, 'Hashed password')
+COMMENT_COLUMN(users.system_access, 'Bit-mask of system access rights')
+COMMENT_COLUMN(users.flags, 'Account flags (locked, password never expire etc.)')
+COMMENT_COLUMN(users.full_name, 'Full name')
+COMMENT_COLUMN(users.description, 'Description')
+COMMENT_COLUMN(users.grace_logins, '')
+COMMENT_COLUMN(users.auth_method, '')
+COMMENT_COLUMN(users.cert_mapping_method, '')
+COMMENT_COLUMN(users.cert_mapping_data, '')
+COMMENT_COLUMN(users.auth_failures, '')
+COMMENT_COLUMN(users.last_passwd_change, '')
+COMMENT_COLUMN(users.min_passwd_length, '')
+COMMENT_COLUMN(users.disabled_until, '')
+COMMENT_COLUMN(users.last_login, '')
+COMMENT_COLUMN(users.password_history, '')
+COMMENT_COLUMN(users.xmpp_id, '')
+COMMENT_COLUMN(users.ldap_dn, '')
 
 /*
 ** User groups
@@ -91,17 +121,24 @@ COMMENT_TABLE(users, 'System users')
 
 CREATE TABLE user_groups
 (
-	id integer not null,
-	guid varchar(36) not null,
-	name varchar(63) not null,
-	system_access SQL_INT64 not null,
-	flags integer not null,
-	description varchar(255),
-	ldap_dn SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  guid varchar(36) not null,
+  name varchar(63) not null,
+  system_access SQL_INT64 not null,
+  flags integer not null,
+  description varchar(255),
+  ldap_dn SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(user_groups, 'System user groups')
+COMMENT_COLUMN(user_groups.id, '')
+COMMENT_COLUMN(user_groups.guid, '')
+COMMENT_COLUMN(user_groups.name, '')
+COMMENT_COLUMN(user_groups.system_access, '')
+COMMENT_COLUMN(user_groups.flags, '')
+COMMENT_COLUMN(user_groups.description, '')
+COMMENT_COLUMN(user_groups.ldap_dn, '')
 
 /*
 ** Users to groups mapping
@@ -109,12 +146,14 @@ COMMENT_TABLE(user_groups, 'System user groups')
 
 CREATE TABLE user_group_members
 (
-	group_id integer not null,
-	user_id integer not null,
-	PRIMARY KEY(group_id,user_id)
+  group_id integer not null,
+  user_id integer not null,
+  PRIMARY KEY(group_id,user_id)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(user_group_members, 'Users and group relationships')
+COMMENT_COLUMN(user_group_members.group_id, '')
+COMMENT_COLUMN(user_group_members.user_id, '')
 
 /*
 ** User profiles
@@ -122,13 +161,16 @@ COMMENT_TABLE(user_group_members, 'Users and group relationships')
 
 CREATE TABLE user_profiles
 (
-	user_id integer not null,
-	var_name varchar(255) not null,
-	var_value SQL_TEXT not null,
-	PRIMARY KEY(user_id,var_name)
+  user_id integer not null,
+  var_name varchar(255) not null,
+  var_value SQL_TEXT not null,
+  PRIMARY KEY(user_id,var_name)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(user_profiles, 'User profiles')
+COMMENT_COLUMN(user_profiles.user_id, '')
+COMMENT_COLUMN(user_profiles.var_name, '')
+COMMENT_COLUMN(user_profiles.var_value, '')
 
 /*
 ** Custom attributes for user database objects
@@ -136,12 +178,16 @@ COMMENT_TABLE(user_profiles, 'User profiles')
 
 CREATE TABLE userdb_custom_attributes
 (
-	object_id integer not null,
-	attr_name varchar(255) not null,
-	attr_value SQL_TEXT not null,
-	PRIMARY KEY(object_id,attr_name)
+  object_id integer not null,
+  attr_name varchar(255) not null,
+  attr_value SQL_TEXT not null,
+  PRIMARY KEY(object_id,attr_name)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(userdb_custom_attributes, '')
+COMMENT_COLUMN(userdb_custom_attributes.object_id, '')
+COMMENT_COLUMN(userdb_custom_attributes.attr_name, '')
+COMMENT_COLUMN(userdb_custom_attributes.attr_value, '')
 
 /*
 ** Common object properties
@@ -149,156 +195,264 @@ CREATE TABLE userdb_custom_attributes
 
 CREATE TABLE object_properties
 (
-	object_id integer not null,
-	guid varchar(36) not null,
-	name varchar(63) not null,
-	status integer not null,
-	is_deleted integer not null,
-	is_system integer not null,
-	last_modified integer not null,
-	inherit_access_rights integer not null,
-	status_calc_alg integer not null,
-	status_prop_alg integer not null,
-	status_fixed_val integer not null,
-	status_shift integer not null,
-	status_translation varchar(8) not null,
-	status_single_threshold integer not null,
-	status_thresholds varchar(8) not null,
-	comments SQL_TEXT null,
-	location_type integer not null,
-	latitude varchar(20),
-	longitude varchar(20),
-	location_accuracy integer not null,
-	location_timestamp integer not null,
-	image varchar(36) not null,
-	submap_id integer not null,
-   country varchar(63) null,
-   city varchar(63) null,
-   street_address varchar(255) null,
-   postcode varchar(31) null,
-	maint_mode char(1) not null,
-   maint_event_id SQL_INT64 not null,
-	PRIMARY KEY(object_id)
+  object_id integer not null,
+  guid varchar(36) not null,
+  name varchar(63) not null,
+  status integer not null,
+  is_deleted integer not null,
+  is_system integer not null,
+  last_modified integer not null,
+  inherit_access_rights integer not null,
+  status_calc_alg integer not null,
+  status_prop_alg integer not null,
+  status_fixed_val integer not null,
+  status_shift integer not null,
+  status_translation varchar(8) not null,
+  status_single_threshold integer not null,
+  status_thresholds varchar(8) not null,
+  comments SQL_TEXT null,
+  location_type integer not null,
+  latitude varchar(20),
+  longitude varchar(20),
+  location_accuracy integer not null,
+  location_timestamp integer not null,
+  image varchar(36) not null,
+  submap_id integer not null,
+  country varchar(63) null,
+  city varchar(63) null,
+  street_address varchar(255) null,
+  postcode varchar(31) null,
+  maint_mode char(1) not null,
+  maint_event_id SQL_INT64 not null,
+  PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(object_properties, '')
+COMMENT_COLUMN(object_properties.object_id, '')
+COMMENT_COLUMN(object_properties.guid, '')
+COMMENT_COLUMN(object_properties.name, '')
+COMMENT_COLUMN(object_properties.status, '')
+COMMENT_COLUMN(object_properties.is_deleted, '')
+COMMENT_COLUMN(object_properties.is_system, '')
+COMMENT_COLUMN(object_properties.last_modified, '')
+COMMENT_COLUMN(object_properties.inherit_access_rights, '')
+COMMENT_COLUMN(object_properties.status_calc_alg, '')
+COMMENT_COLUMN(object_properties.status_prop_alg, '')
+COMMENT_COLUMN(object_properties.status_fixed_val, '')
+COMMENT_COLUMN(object_properties.status_shift, '')
+COMMENT_COLUMN(object_properties.status_translation, '')
+COMMENT_COLUMN(object_properties.status_single_threshold, '')
+COMMENT_COLUMN(object_properties.status_thresholds, '')
+COMMENT_COLUMN(object_properties.comments, '')
+COMMENT_COLUMN(object_properties.location_type, '')
+COMMENT_COLUMN(object_properties.latitude, '')
+COMMENT_COLUMN(object_properties.longitude, '')
+COMMENT_COLUMN(object_properties.location_accuracy, '')
+COMMENT_COLUMN(object_properties.location_timestamp, '')
+COMMENT_COLUMN(object_properties.image, '')
+COMMENT_COLUMN(object_properties.submap_id, '')
+COMMENT_COLUMN(object_properties.country, '')
+COMMENT_COLUMN(object_properties.city, '')
+COMMENT_COLUMN(object_properties.street_address, '')
+COMMENT_COLUMN(object_properties.postcode, '')
+COMMENT_COLUMN(object_properties.maint_mode, '')
+COMMENT_COLUMN(object_properties.maint_event_id, '')
 
 /*
 ** Object custom attributes
 */
 CREATE TABLE object_custom_attributes
 (
-	object_id integer not null,
-	attr_name varchar(127) not null,
-	attr_value SQL_TEXT null,
-	PRIMARY KEY(object_id,attr_name)
+  object_id integer not null,
+  attr_name varchar(127) not null,
+  attr_value SQL_TEXT null,
+  PRIMARY KEY(object_id,attr_name)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_ocattr_oid ON object_custom_attributes(object_id);
+
+COMMENT_TABLE(object_custom_attributes, '')
+COMMENT_COLUMN(object_custom_attributes.object_id, '')
+COMMENT_COLUMN(object_custom_attributes.attr_name, '')
+COMMENT_COLUMN(object_custom_attributes.attr_value, '')
 
 /*
 ** Zone objects
 */
 CREATE TABLE zones
 (
-	id integer not null,		// Zone object ID
-	zone_guid integer not null,	// Globally unique ID for zone
-	agent_proxy integer not null,
-	snmp_proxy integer not null,
-	icmp_proxy integer not null,
-	PRIMARY KEY(id)
+  id integer not null,    // Zone object ID
+  zone_guid integer not null, // Globally unique ID for zone
+  agent_proxy integer not null,
+  snmp_proxy integer not null,
+  icmp_proxy integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(zones, '')
+COMMENT_COLUMN(zones.id, '')
+COMMENT_COLUMN(zones.zone_guid, '')
+COMMENT_COLUMN(zones.agent_proxy, '')
+COMMENT_COLUMN(zones.snmp_proxy, '')
+COMMENT_COLUMN(zones.icmp_proxy, '')
 
 /*
 ** Mobile device objects
 */
 CREATE TABLE mobile_devices
 (
-	id integer not null,
-	device_id varchar(64) not null,
-	vendor varchar(64) null,
-	model varchar(128) null,
-	serial_number varchar(64) null,
-	os_name varchar(32) null,
-	os_version varchar(64) null,
-	user_id varchar(64) null,
-	battery_level integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  device_id varchar(64) not null,
+  vendor varchar(64) null,
+  model varchar(128) null,
+  serial_number varchar(64) null,
+  os_name varchar(32) null,
+  os_version varchar(64) null,
+  user_id varchar(64) null,
+  battery_level integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(mobile_devices, '')
+COMMENT_COLUMN(mobile_devices.id, '')
+COMMENT_COLUMN(mobile_devices.device_id, '')
+COMMENT_COLUMN(mobile_devices.vendor, '')
+COMMENT_COLUMN(mobile_devices.model, '')
+COMMENT_COLUMN(mobile_devices.serial_number, '')
+COMMENT_COLUMN(mobile_devices.os_name, '')
+COMMENT_COLUMN(mobile_devices.os_version, '')
+COMMENT_COLUMN(mobile_devices.user_id, '')
+COMMENT_COLUMN(mobile_devices.battery_level, '')
 
 /*
 ** Access point objects
 */
 CREATE TABLE access_points
 (
-	id integer not null,
-	node_id integer not null,
-	mac_address varchar(12) null,
-	vendor varchar(64) null,
-	model varchar(128) null,
-	serial_number varchar(64) null,
-   ap_state integer not null,
-   ap_index integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  node_id integer not null,
+  mac_address varchar(12) null,
+  vendor varchar(64) null,
+  model varchar(128) null,
+  serial_number varchar(64) null,
+  ap_state integer not null,
+  ap_index integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(access_points, '')
+COMMENT_COLUMN(access_points.id, '')
+COMMENT_COLUMN(access_points.node_id, '')
+COMMENT_COLUMN(access_points.mac_address, '')
+COMMENT_COLUMN(access_points.vendor, '')
+COMMENT_COLUMN(access_points.model, '')
+COMMENT_COLUMN(access_points.serial_number, '')
+COMMENT_COLUMN(access_points.ap_state, '')
+COMMENT_COLUMN(access_points.ap_index, '')
 
 /*
 ** Rack objects
 */
 CREATE TABLE racks
 (
-	id integer not null,
-	height integer not null,
-	top_bottom_num char(1) not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  height integer not null,
+  top_bottom_num char(1) not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(racks, '')
+COMMENT_COLUMN(racks.id, '')
+COMMENT_COLUMN(racks.height, '')
+COMMENT_COLUMN(racks.top_bottom_num, '')
 
 /*
 ** Nodes information
 */
 CREATE TABLE nodes
 (
-	id integer not null,
-	primary_name varchar(255) null,
-	primary_ip varchar(48) not null,
-	node_flags integer not null,
-	runtime_flags integer not null,
-	snmp_version integer not null,
-	snmp_port integer not null,
-	community varchar(127) null,
-	usm_auth_password varchar(127) null,
-	usm_priv_password varchar(127) null,
-	usm_methods integer not null,
-	snmp_oid varchar(255) null,
-	auth_method integer not null,
-	secret varchar(64) null,
-	agent_port integer not null,
-	status_poll_type integer not null,
-	agent_version varchar(63) null,
-	platform_name varchar(63) null,
-	poller_node_id integer not null,
-	zone_guid integer not null,
-	proxy_node integer not null,
-	snmp_proxy integer not null,
-	icmp_proxy integer not null,
-	required_polls integer not null,
-	uname varchar(255) null,
-	use_ifxtable integer not null,
-	snmp_sys_name varchar(127) null,
-	snmp_sys_contact varchar(127) null,
-	snmp_sys_location varchar(127) null,
-	bridge_base_addr varchar(15) null,
-	down_since integer not null,
-   boot_time integer not null,
-	driver_name varchar(32) null,
-	rack_image varchar(36) null,
-	rack_position integer not null,
-   rack_height integer not null,
-	rack_id integer not null,
-   agent_cache_mode char(1) not null,
-   last_agent_comm_time integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  primary_name varchar(255) null,
+  primary_ip varchar(48) not null,
+  node_flags integer not null,
+  runtime_flags integer not null,
+  snmp_version integer not null,
+  snmp_port integer not null,
+  community varchar(127) null,
+  usm_auth_password varchar(127) null,
+  usm_priv_password varchar(127) null,
+  usm_methods integer not null,
+  snmp_oid varchar(255) null,
+  auth_method integer not null,
+  secret varchar(64) null,
+  agent_port integer not null,
+  status_poll_type integer not null,
+  agent_version varchar(63) null,
+  platform_name varchar(63) null,
+  poller_node_id integer not null,
+  zone_guid integer not null,
+  proxy_node integer not null,
+  snmp_proxy integer not null,
+  icmp_proxy integer not null,
+  required_polls integer not null,
+  uname varchar(255) null,
+  use_ifxtable integer not null,
+  snmp_sys_name varchar(127) null,
+  snmp_sys_contact varchar(127) null,
+  snmp_sys_location varchar(127) null,
+  bridge_base_addr varchar(15) null,
+  down_since integer not null,
+  boot_time integer not null,
+  driver_name varchar(32) null,
+  rack_image varchar(36) null,
+  rack_position integer not null,
+  rack_height integer not null,
+  rack_id integer not null,
+  agent_cache_mode char(1) not null,
+  last_agent_comm_time integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(nodes, '')
+COMMENT_COLUMN(nodes.id, '')
+COMMENT_COLUMN(nodes.primary_name, '')
+COMMENT_COLUMN(nodes.primary_ip, '')
+COMMENT_COLUMN(nodes.node_flags, '')
+COMMENT_COLUMN(nodes.runtime_flags, '')
+COMMENT_COLUMN(nodes.snmp_version, '')
+COMMENT_COLUMN(nodes.snmp_port, '')
+COMMENT_COLUMN(nodes.community, '')
+COMMENT_COLUMN(nodes.usm_auth_password, '')
+COMMENT_COLUMN(nodes.usm_priv_password, '')
+COMMENT_COLUMN(nodes.usm_methods, '')
+COMMENT_COLUMN(nodes.snmp_oid, '')
+COMMENT_COLUMN(nodes.auth_method, '')
+COMMENT_COLUMN(nodes.secret, '')
+COMMENT_COLUMN(nodes.agent_port, '')
+COMMENT_COLUMN(nodes.status_poll_type, '')
+COMMENT_COLUMN(nodes.agent_version, '')
+COMMENT_COLUMN(nodes.platform_name, '')
+COMMENT_COLUMN(nodes.poller_node_id, '')
+COMMENT_COLUMN(nodes.zone_guid, '')
+COMMENT_COLUMN(nodes.proxy_node, '')
+COMMENT_COLUMN(nodes.snmp_proxy, '')
+COMMENT_COLUMN(nodes.icmp_proxy, '')
+COMMENT_COLUMN(nodes.required_polls, '')
+COMMENT_COLUMN(nodes.uname, '')
+COMMENT_COLUMN(nodes.use_ifxtable, '')
+COMMENT_COLUMN(nodes.snmp_sys_name, '')
+COMMENT_COLUMN(nodes.snmp_sys_contact, '')
+COMMENT_COLUMN(nodes.snmp_sys_location, '')
+COMMENT_COLUMN(nodes.bridge_base_addr, '')
+COMMENT_COLUMN(nodes.down_since, '')
+COMMENT_COLUMN(nodes.boot_time, '')
+COMMENT_COLUMN(nodes.driver_name, '')
+COMMENT_COLUMN(nodes.rack_image, '')
+COMMENT_COLUMN(nodes.rack_position, '')
+COMMENT_COLUMN(nodes.rack_height, '')
+COMMENT_COLUMN(nodes.rack_id, '')
+COMMENT_COLUMN(nodes.agent_cache_mode, '')
+COMMENT_COLUMN(nodes.last_agent_comm_time, '')
 
 /*
 ** Clusters information
@@ -306,12 +460,16 @@ CREATE TABLE nodes
 
 CREATE TABLE clusters
 (
-	id integer not null,
-	cluster_type integer not null,
-	zone_guid integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  cluster_type integer not null,
+  zone_guid integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(clusters, '')
+COMMENT_COLUMN(clusters.id, '')
+COMMENT_COLUMN(clusters.cluster_type, '')
+COMMENT_COLUMN(clusters.zone_guid, '')
 
 /*
 ** Cluster members
@@ -319,11 +477,14 @@ CREATE TABLE clusters
 
 CREATE TABLE cluster_members
 (
-	cluster_id integer not null,
-	node_id integer not null,
-	PRIMARY KEY(cluster_id,node_id)
+  cluster_id integer not null,
+  node_id integer not null,
+  PRIMARY KEY(cluster_id,node_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(cluster_members, '')
+COMMENT_COLUMN(cluster_members.cluster_id, '')
+COMMENT_COLUMN(cluster_members.node_id, '')
 
 /*
 ** Cluster interconnect subnets
@@ -331,12 +492,16 @@ CREATE TABLE cluster_members
 
 CREATE TABLE cluster_sync_subnets
 (
-	cluster_id integer not null,
-	subnet_addr varchar(48) not null,
-	subnet_mask integer not null,
-	PRIMARY KEY(cluster_id,subnet_addr)
+  cluster_id integer not null,
+  subnet_addr varchar(48) not null,
+  subnet_mask integer not null,
+  PRIMARY KEY(cluster_id,subnet_addr)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(cluster_sync_subnets, '')
+COMMENT_COLUMN(cluster_sync_subnets.cluster_id, '')
+COMMENT_COLUMN(cluster_sync_subnets.subnet_addr, '')
+COMMENT_COLUMN(cluster_sync_subnets.subnet_mask, '')
 
 /*
 ** Cluster resources
@@ -344,67 +509,105 @@ CREATE TABLE cluster_sync_subnets
 
 CREATE TABLE cluster_resources
 (
-	cluster_id integer not null,
-	resource_id integer not null,
-	resource_name varchar(255),
-	ip_addr varchar(48) not null,
-	current_owner integer not null,
-	PRIMARY KEY(cluster_id,resource_id)
+  cluster_id integer not null,
+  resource_id integer not null,
+  resource_name varchar(255),
+  ip_addr varchar(48) not null,
+  current_owner integer not null,
+  PRIMARY KEY(cluster_id,resource_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(cluster_resources, '')
+COMMENT_COLUMN(cluster_resources.cluster_id, '')
+COMMENT_COLUMN(cluster_resources.resource_id, '')
+COMMENT_COLUMN(cluster_resources.resource_name, '')
+COMMENT_COLUMN(cluster_resources.ip_addr, '')
+COMMENT_COLUMN(cluster_resources.current_owner, '')
 
 /*
 ** Subnets
 */
 CREATE TABLE subnets
 (
-	id integer not null,
-	ip_addr varchar(48) not null,
-	ip_netmask integer not null,
-	zone_guid integer not null,
-	synthetic_mask integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  ip_addr varchar(48) not null,
+  ip_netmask integer not null,
+  zone_guid integer not null,
+  synthetic_mask integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(subnets, '')
 
 /*
 ** Nodes' interfaces
 */
 CREATE TABLE interfaces
 (
-	id integer not null,
-	node_id integer not null,
-	flags integer not null,
-	if_type integer not null,
-	if_index integer not null,
-   mtu integer not null,
-   speed SQL_INT64 not null,
-	bridge_port integer not null,
-	phy_slot integer not null,
-	phy_port integer not null,
-	peer_node_id integer not null,
-	peer_if_id integer not null,
-   peer_proto integer not null,
-	mac_addr varchar(12) not null,
-	required_polls integer not null,
-	admin_state integer not null,
-	oper_state integer not null,
-	dot1x_pae_state integer not null,
-	dot1x_backend_state integer not null,
-	description varchar(255) null,
-   alias varchar(255) null,
-   iftable_suffix varchar(127) null,
-	PRIMARY KEY(id)
+  id integer not null,
+  node_id integer not null,
+  flags integer not null,
+  if_type integer not null,
+  if_index integer not null,
+  mtu integer not null,
+  speed SQL_INT64 not null,
+  bridge_port integer not null,
+  phy_slot integer not null,
+  phy_port integer not null,
+  peer_node_id integer not null,
+  peer_if_id integer not null,
+  peer_proto integer not null,
+  mac_addr varchar(12) not null,
+  required_polls integer not null,
+  admin_state integer not null,
+  oper_state integer not null,
+  dot1x_pae_state integer not null,
+  dot1x_backend_state integer not null,
+  description varchar(255) null,
+  alias varchar(255) null,
+  iftable_suffix varchar(127) null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(interfaces, '')
+COMMENT_COLUMN(interfaces.id, '')
+COMMENT_COLUMN(interfaces.node_id, '')
+COMMENT_COLUMN(interfaces.flags, '')
+COMMENT_COLUMN(interfaces.if_type, '')
+COMMENT_COLUMN(interfaces.if_index, '')
+COMMENT_COLUMN(interfaces.mtu, '')
+COMMENT_COLUMN(interfaces.speed, '')
+COMMENT_COLUMN(interfaces.bridge_port, '')
+COMMENT_COLUMN(interfaces.phy_slot, '')
+COMMENT_COLUMN(interfaces.phy_port, '')
+COMMENT_COLUMN(interfaces.peer_node_id, '')
+COMMENT_COLUMN(interfaces.peer_if_id, '')
+COMMENT_COLUMN(interfaces.peer_proto, '')
+COMMENT_COLUMN(interfaces.mac_addr, '')
+COMMENT_COLUMN(interfaces.required_polls, '')
+COMMENT_COLUMN(interfaces.admin_state, '')
+COMMENT_COLUMN(interfaces.oper_state, '')
+COMMENT_COLUMN(interfaces.dot1x_pae_state, '')
+COMMENT_COLUMN(interfaces.dot1x_backend_state, '')
+COMMENT_COLUMN(interfaces.description, '')
+COMMENT_COLUMN(interfaces.alias, '')
+COMMENT_COLUMN(interfaces.iftable_suffix, '')
 
 /*
 ** Interface IP addresses
 */
 CREATE TABLE interface_address_list
 (
-   iface_id integer not null,
-	ip_addr varchar(48) not null,
-	ip_netmask integer not null,
-   PRIMARY KEY(iface_id,ip_addr)
+  iface_id integer not null,
+  ip_addr varchar(48) not null,
+  ip_netmask integer not null,
+  PRIMARY KEY(iface_id,ip_addr)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(interface_address_list, '')
+COMMENT_COLUMN(interface_address_list.iface_id, '')
+COMMENT_COLUMN(interface_address_list.ip_addr, '')
+COMMENT_COLUMN(interface_address_list.ip_netmask, '')
 
 /*
 ** Network services
@@ -412,135 +615,204 @@ CREATE TABLE interface_address_list
 
 CREATE TABLE network_services
 (
-	id integer not null,
-	node_id integer not null,
-	service_type integer not null,
-	ip_bind_addr varchar(48) not null,
-	ip_proto integer not null,
-	ip_port integer not null,
-	check_request SQL_TEXT null,
-	check_responce SQL_TEXT null,
-	poller_node_id integer not null,
-	required_polls integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  node_id integer not null,
+  service_type integer not null,
+  ip_bind_addr varchar(48) not null,
+  ip_proto integer not null,
+  ip_port integer not null,
+  check_request SQL_TEXT null,
+  check_responce SQL_TEXT null,
+  poller_node_id integer not null,
+  required_polls integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(network_services, '')
+COMMENT_COLUMN(network_services.id, '')
+COMMENT_COLUMN(network_services.node_id, '')
+COMMENT_COLUMN(network_services.service_type, '')
+COMMENT_COLUMN(network_services.ip_bind_addr, '')
+COMMENT_COLUMN(network_services.ip_proto, '')
+COMMENT_COLUMN(network_services.ip_port, '')
+COMMENT_COLUMN(network_services.check_request, '')
+COMMENT_COLUMN(network_services.check_responce, '')
+COMMENT_COLUMN(network_services.poller_node_id, '')
+COMMENT_COLUMN(network_services.required_polls, '')
 
 /*
 ** VPN connectors
 */
 CREATE TABLE vpn_connectors
 (
-	id integer not null,
-	node_id integer not null,
-	peer_gateway integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  node_id integer not null,
+  peer_gateway integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(vpn_connectors, '')
+COMMENT_COLUMN(vpn_connectors.id, '')
+COMMENT_COLUMN(vpn_connectors.node_id, '')
+COMMENT_COLUMN(vpn_connectors.peer_gateway, '')
 
 /*
 ** VPN connector networks
 */
 CREATE TABLE vpn_connector_networks
 (
-	vpn_id integer not null,
-	network_type integer not null,	// 0 == local, 1 == remote
-	ip_addr varchar(48) not null,
-	ip_netmask integer not null,
-	PRIMARY KEY(vpn_id,ip_addr)
+  vpn_id integer not null,
+  network_type integer not null,  // 0 == local, 1 == remote
+  ip_addr varchar(48) not null,
+  ip_netmask integer not null,
+  PRIMARY KEY(vpn_id,ip_addr)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(vpn_connector_networks, '')
+COMMENT_COLUMN(vpn_connector_networks.vpn_id, '')
+COMMENT_COLUMN(vpn_connector_networks.network_type, '')
+COMMENT_COLUMN(vpn_connector_networks.ip_addr, '')
+COMMENT_COLUMN(vpn_connector_networks.ip_netmask, '')
 
 /*
 ** Container objects
 */
 CREATE TABLE object_containers
 (
-	id integer not null,
-	object_class integer not null,
-	flags integer not null,
-	auto_bind_filter SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  object_class integer not null,
+  flags integer not null,
+  auto_bind_filter SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(object_containers, '')
+COMMENT_COLUMN(object_containers.id, '')
+COMMENT_COLUMN(object_containers.object_class, '')
+COMMENT_COLUMN(object_containers.flags, '')
+COMMENT_COLUMN(object_containers.auto_bind_filter, '')
 
 /*
 ** Condition objects
 */
 CREATE TABLE conditions
 (
-	id integer not null,
-	activation_event integer not null,
-	deactivation_event integer not null,
-	source_object integer not null,
-	active_status integer not null,
-	inactive_status integer not null,
-	script SQL_TEXT not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  activation_event integer not null,
+  deactivation_event integer not null,
+  source_object integer not null,
+  active_status integer not null,
+  inactive_status integer not null,
+  script SQL_TEXT not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(conditions, '')
+COMMENT_COLUMN(conditions.id, '')
+COMMENT_COLUMN(conditions.activation_event, '')
+COMMENT_COLUMN(conditions.deactivation_event, '')
+COMMENT_COLUMN(conditions.source_object, '')
+COMMENT_COLUMN(conditions.active_status, '')
+COMMENT_COLUMN(conditions.inactive_status, '')
+COMMENT_COLUMN(conditions.script, '')
 
 /*
 ** DCI to condition mapping
 */
 CREATE TABLE cond_dci_map
 (
-	condition_id integer not null,
-	sequence_number integer not null,
-	dci_id integer not null,
-	node_id integer not null,
-	dci_func integer not null,
-	num_polls integer not null,
-	PRIMARY KEY(condition_id,sequence_number)
+  condition_id integer not null,
+  sequence_number integer not null,
+  dci_id integer not null,
+  node_id integer not null,
+  dci_func integer not null,
+  num_polls integer not null,
+  PRIMARY KEY(condition_id,sequence_number)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(cond_dci_map, '')
+COMMENT_COLUMN(cond_dci_map.condition_id, '')
+COMMENT_COLUMN(cond_dci_map.sequence_number, '')
+COMMENT_COLUMN(cond_dci_map.dci_id, '')
+COMMENT_COLUMN(cond_dci_map.node_id, '')
+COMMENT_COLUMN(cond_dci_map.dci_func, '')
+COMMENT_COLUMN(cond_dci_map.num_polls, '')
 
 /**
  * Data collection templates
  */
 CREATE TABLE templates
 (
-	id integer not null,
-	version integer not null,
-	flags integer not null,
-	apply_filter SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  version integer not null,
+  flags integer not null,
+  apply_filter SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(templates, '')
+COMMENT_COLUMN(templates.id, '')
+COMMENT_COLUMN(templates.version, '')
+COMMENT_COLUMN(templates.flags, '')
+COMMENT_COLUMN(templates.apply_filter, '')
 
 /**
  * Mapping hosts to templates
  */
 CREATE TABLE dct_node_map
 (
-	template_id integer not null,
-	node_id integer not null,
-	PRIMARY KEY(template_id,node_id)
+  template_id integer not null,
+  node_id integer not null,
+  PRIMARY KEY(template_id,node_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(dct_node_map, '')
+COMMENT_COLUMN(dct_node_map.template_id, '')
+COMMENT_COLUMN(dct_node_map.node_id, '')
 
 /**
  * Nodes to subnets mapping 
  */
 CREATE TABLE nsmap
 (
-	subnet_id integer not null,
-	node_id integer not null,
-	PRIMARY KEY(subnet_id,node_id)
+  subnet_id integer not null,
+  node_id integer not null,
+  PRIMARY KEY(subnet_id,node_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(nsmap, '')
+COMMENT_COLUMN(nsmap.subnet_id, '')
+COMMENT_COLUMN(nsmap.node_id, '')
 
 /**
  * Container members 
  */
 CREATE TABLE container_members
 (
-	container_id integer not null,
-	object_id integer not null,
-	PRIMARY KEY(container_id,object_id)
+  container_id integer not null,
+  object_id integer not null,
+  PRIMARY KEY(container_id,object_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(container_members, '')
+COMMENT_COLUMN(container_members.container_id, '')
+COMMENT_COLUMN(container_members.object_id, '')
 
 /**
  * Objects' ACLs
  */
 CREATE TABLE acl
 (
-	object_id integer not null,
-	user_id integer not null,
-	access_rights integer not null,
-	PRIMARY KEY(object_id,user_id)
+  object_id integer not null,
+  user_id integer not null,
+  access_rights integer not null,
+  PRIMARY KEY(object_id,user_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(acl, '')
+COMMENT_COLUMN(acl.object_id, '')
+COMMENT_COLUMN(acl.user_id, '')
+COMMENT_COLUMN(acl.access_rights, '')
 
 /**
  * Trusted nodes - used for cross-node data collection
@@ -549,15 +821,19 @@ CREATE TABLE acl
  */
 CREATE TABLE trusted_nodes
 (
-	source_object_id integer not null,
-	target_node_id integer not null,
-	PRIMARY KEY(source_object_id,target_node_id)
+  source_object_id integer not null,
+  target_node_id integer not null,
+  PRIMARY KEY(source_object_id,target_node_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(trusted_nodes, '')
+COMMENT_COLUMN(trusted_nodes.source_object_id, '')
+COMMENT_COLUMN(trusted_nodes.target_node_id, '')
 
 /**
  * Data collection items
  *
- * If node_id != 0, it's an item bound to node,	and template_id points to
+ * If node_id != 0, it's an item bound to node, and template_id points to
  * the template used for creating this item. In this case, template_id = 0
  * means that item was created manually.
  * If node_id = 0, it's a template item, and template_id points to a template
@@ -566,177 +842,276 @@ CREATE TABLE trusted_nodes
  */
 CREATE TABLE items
 (
-	item_id integer not null,
-	node_id integer not null,
-	template_id integer not null,
-	template_item_id integer not null,
-   guid varchar(36) not null,
-	name varchar(1023) null,
-	description varchar(255) null,
-	flags integer not null,
-	source integer not null,	// 0 for internal or 1 for native agent or 2 for SNMP
-	snmp_port integer not null,
-	datatype integer not null,
-	polling_interval integer not null,
-	retention_time integer not null,
-	status integer not null,			// ACTIVE, DISABLED or NOT_SUPPORTED
-	snmp_raw_value_type integer not null,
-	delta_calculation integer not null,
-	transformation SQL_TEXT,         // Transformation script
-	instance varchar(255) null,		// Free form text which can be used in events
-	system_tag varchar(255) null,     		// System tag
-	resource_id integer not null,  	// associated cluster resource ID
-	proxy_node integer not null,   	// ID of proxy node (for SNMP and agent items)
-	base_units integer not null,		// bytes, seconds, etc.
-	unit_multiplier integer not null,	// kilo, mega, milli, etc.
-	custom_units_name varchar(63) null,	// units name of base_units = CUSTOM
-	perftab_settings SQL_TEXT null,			// Settings for displaying graph on performance tab
-	instd_method integer not null,
-	instd_data varchar(255) null,
-	instd_filter SQL_TEXT null,
-	samples integer not null,
-	comments SQL_TEXT null,
-	PRIMARY KEY(item_id)
+  item_id integer not null,
+  node_id integer not null,
+  template_id integer not null,
+  template_item_id integer not null,
+  guid varchar(36) not null,
+  name varchar(1023) null,
+  description varchar(255) null,
+  flags integer not null,
+  source integer not null,  // 0 for internal or 1 for native agent or 2 for SNMP
+  snmp_port integer not null,
+  datatype integer not null,
+  polling_interval integer not null,
+  retention_time integer not null,
+  status integer not null,      // ACTIVE, DISABLED or NOT_SUPPORTED
+  snmp_raw_value_type integer not null,
+  delta_calculation integer not null,
+  transformation SQL_TEXT,         // Transformation script
+  instance varchar(255) null,   // Free form text which can be used in events
+  system_tag varchar(255) null,         // System tag
+  resource_id integer not null,   // associated cluster resource ID
+  proxy_node integer not null,    // ID of proxy node (for SNMP and agent items)
+  base_units integer not null,    // bytes, seconds, etc.
+  unit_multiplier integer not null, // kilo, mega, milli, etc.
+  custom_units_name varchar(63) null, // units name of base_units = CUSTOM
+  perftab_settings SQL_TEXT null,     // Settings for displaying graph on performance tab
+  instd_method integer not null,
+  instd_data varchar(255) null,
+  instd_filter SQL_TEXT null,
+  samples integer not null,
+  comments SQL_TEXT null,
+  PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_items_node_id ON items(node_id);
+
+COMMENT_TABLE(items, '')
+COMMENT_COLUMN(items.item_id, '')
+COMMENT_COLUMN(items.node_id, '')
+COMMENT_COLUMN(items.template_id, '')
+COMMENT_COLUMN(items.template_item_id, '')
+COMMENT_COLUMN(items.guid, '')
+COMMENT_COLUMN(items.name, '')
+COMMENT_COLUMN(items.description, '')
+COMMENT_COLUMN(items.flags, '')
+COMMENT_COLUMN(items.source, '')
+COMMENT_COLUMN(items.snmp_port, '')
+COMMENT_COLUMN(items.datatype, '')
+COMMENT_COLUMN(items.polling_interval, '')
+COMMENT_COLUMN(items.retention_time, '')
+COMMENT_COLUMN(items.status, '')
+COMMENT_COLUMN(items.snmp_raw_value_type, '')
+COMMENT_COLUMN(items.delta_calculation, '')
+COMMENT_COLUMN(items.transformation, '')
+COMMENT_COLUMN(items.instance, '')
+COMMENT_COLUMN(items.system_tag, '')
+COMMENT_COLUMN(items.resource_id, '')
+COMMENT_COLUMN(items.proxy_node, '')
+COMMENT_COLUMN(items.base_units, '')
+COMMENT_COLUMN(items.unit_multiplier, '')
+COMMENT_COLUMN(items.custom_units_name, '')
+COMMENT_COLUMN(items.perftab_settings, '')
+COMMENT_COLUMN(items.instd_method, '')
+COMMENT_COLUMN(items.instd_data, '')
+COMMENT_COLUMN(items.instd_filter, '')
+COMMENT_COLUMN(items.samples, '')
+COMMENT_COLUMN(items.comments, '')
 
 /*
 ** Data collection tables
 */
 CREATE TABLE dc_tables
 (
-	item_id integer not null,
-	node_id integer not null,
-	template_id integer not null,
-	template_item_id integer not null,
-   guid varchar(36) not null,
-	name varchar(1023) null,
-	description varchar(255) null,
-	flags integer not null,
-	source integer not null,	// 0 for internal or 1 for native agent or 2 for SNMP
-	snmp_port integer not null,
-	polling_interval integer not null,
-	retention_time integer not null,
-	status integer not null,			// ACTIVE, DISABLED or NOT_SUPPORTED
-	system_tag varchar(255) null,     		// System tag
-	resource_id integer not null,  	// associated cluster resource ID
-	proxy_node integer not null,   	// ID of proxy node (for SNMP and agent items)
-	perftab_settings SQL_TEXT null,			// Settings for displaying graph on performance tab
-	transformation_script SQL_TEXT null,
-	comments SQL_TEXT null,
-	PRIMARY KEY(item_id)
+  item_id integer not null,
+  node_id integer not null,
+  template_id integer not null,
+  template_item_id integer not null,
+  guid varchar(36) not null,
+  name varchar(1023) null,
+  description varchar(255) null,
+  flags integer not null,
+  source integer not null,  // 0 for internal or 1 for native agent or 2 for SNMP
+  snmp_port integer not null,
+  polling_interval integer not null,
+  retention_time integer not null,
+  status integer not null,      // ACTIVE, DISABLED or NOT_SUPPORTED
+  system_tag varchar(255) null,         // System tag
+  resource_id integer not null,   // associated cluster resource ID
+  proxy_node integer not null,    // ID of proxy node (for SNMP and agent items)
+  perftab_settings SQL_TEXT null,     // Settings for displaying graph on performance tab
+  transformation_script SQL_TEXT null,
+  comments SQL_TEXT null,
+  PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_dc_tables_node_id ON dc_tables(node_id);
+
+COMMENT_TABLE(dc_tables, '')
+COMMENT_COLUMN(dc_tables.item_id, '')
+COMMENT_COLUMN(dc_tables.node_id, '')
+COMMENT_COLUMN(dc_tables.template_id, '')
+COMMENT_COLUMN(dc_tables.template_item_id, '')
+COMMENT_COLUMN(dc_tables.guid, '')
+COMMENT_COLUMN(dc_tables.name, '')
+COMMENT_COLUMN(dc_tables.description, '')
+COMMENT_COLUMN(dc_tables.flags, '')
+COMMENT_COLUMN(dc_tables.source, '')
+COMMENT_COLUMN(dc_tables.snmp_port, '')
+COMMENT_COLUMN(dc_tables.polling_interval, '')
+COMMENT_COLUMN(dc_tables.retention_time, '')
+COMMENT_COLUMN(dc_tables.status, '')
+COMMENT_COLUMN(dc_tables.system_tag, '')
+COMMENT_COLUMN(dc_tables.resource_id, '')
+COMMENT_COLUMN(dc_tables.proxy_node, '')
+COMMENT_COLUMN(dc_tables.perftab_settings, '')
+COMMENT_COLUMN(dc_tables.transformation_script, '')
+COMMENT_COLUMN(dc_tables.comments, '')
 
 /*
 ** Columns for data collection tables
 */
 CREATE TABLE dc_table_columns
 (
-	table_id integer not null,
-	sequence_number integer not null,
-	column_name varchar(63) not null,
-	snmp_oid varchar(1023) null,		// SNMP OID for this column, valid only for SNMP tables
-	flags integer not null,
-	display_name varchar(255) null,
-	PRIMARY KEY(table_id,column_name)
+  table_id integer not null,
+  sequence_number integer not null,
+  column_name varchar(63) not null,
+  snmp_oid varchar(1023) null,    // SNMP OID for this column, valid only for SNMP tables
+  flags integer not null,
+  display_name varchar(255) null,
+  PRIMARY KEY(table_id,column_name)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(dc_table_columns, '')
+COMMENT_COLUMN(dc_table_columns.table_id, '')
+COMMENT_COLUMN(dc_table_columns.sequence_number, '')
+COMMENT_COLUMN(dc_table_columns.column_name, '')
+COMMENT_COLUMN(dc_table_columns.snmp_oid, '')
+COMMENT_COLUMN(dc_table_columns.flags, '')
+COMMENT_COLUMN(dc_table_columns.display_name, '')
 
 /*
 ** Column name dictionary
 */
 CREATE TABLE dct_column_names
 (
-	column_id integer not null,
-	column_name varchar(63) not null,
-	PRIMARY KEY(column_id)
+  column_id integer not null,
+  column_name varchar(63) not null,
+  PRIMARY KEY(column_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(dct_column_names, '')
+COMMENT_COLUMN(dct_column_names.column_id, '')
+COMMENT_COLUMN(dct_column_names.column_name, '')
 
 /*
 ** Table thresholds
 */
 CREATE TABLE dct_thresholds
 (
-	id integer not null,
-	table_id integer not null,
-	sequence_number integer not null,
-	activation_event integer not null,
-	deactivation_event integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  table_id integer not null,
+  sequence_number integer not null,
+  activation_event integer not null,
+  deactivation_event integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(dct_thresholds, '')
+COMMENT_COLUMN(dct_thresholds.id, '')
+COMMENT_COLUMN(dct_thresholds.table_id, '')
+COMMENT_COLUMN(dct_thresholds.sequence_number, '')
+COMMENT_COLUMN(dct_thresholds.activation_event, '')
+COMMENT_COLUMN(dct_thresholds.deactivation_event, '')
 
 /*
 ** Table threshold conditions
 */
 CREATE TABLE dct_threshold_conditions
 (
-	threshold_id integer not null,
-	group_id integer not null,
-	sequence_number integer not null,
-	column_name varchar(63) null,
-	check_operation integer not null,
-	check_value varchar(255) null,
-	PRIMARY KEY(threshold_id,group_id,sequence_number)
+  threshold_id integer not null,
+  group_id integer not null,
+  sequence_number integer not null,
+  column_name varchar(63) null,
+  check_operation integer not null,
+  check_value varchar(255) null,
+  PRIMARY KEY(threshold_id,group_id,sequence_number)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(dct_threshold_conditions, '')
+COMMENT_COLUMN(dct_threshold_conditions.threshold_id, '')
+COMMENT_COLUMN(dct_threshold_conditions.group_id, '')
+COMMENT_COLUMN(dct_threshold_conditions.sequence_number, '')
+COMMENT_COLUMN(dct_threshold_conditions.column_name, '')
+COMMENT_COLUMN(dct_threshold_conditions.check_operation, '')
+COMMENT_COLUMN(dct_threshold_conditions.check_value, '')
 
 /*
 ** Schedules for DCIs
 */
 CREATE TABLE dci_schedules
 (
-	schedule_id integer not null,
-	item_id integer not null,
-	schedule varchar(255) null,
-	PRIMARY KEY(item_id,schedule_id)
+  schedule_id integer not null,
+  item_id integer not null,
+  schedule varchar(255) null,
+  PRIMARY KEY(item_id,schedule_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(dci_schedules, '')
+COMMENT_COLUMN(dci_schedules.schedule_id, '')
+COMMENT_COLUMN(dci_schedules.item_id, '')
+COMMENT_COLUMN(dci_schedules.schedule, '')
 
 /*
 ** Latest raw values for all data collection items
 */
 CREATE TABLE raw_dci_values
 (
-	item_id integer not null,
-	raw_value varchar(255) null,
-	transformed_value varchar(255) null,
-	last_poll_time integer not null,
-	PRIMARY KEY(item_id)
+  item_id integer not null,
+  raw_value varchar(255) null,
+  transformed_value varchar(255) null,
+  last_poll_time integer not null,
+  PRIMARY KEY(item_id)
 ) TABLE_TYPE;
 
 #if !defined(DB_ORACLE) && !defined(DB_DB2) && !defined(DB_POSTGRESQL)
 CREATE INDEX idx_raw_dci_values_item_id ON raw_dci_values(item_id);
 #endif
 
+COMMENT_TABLE(raw_dci_values, '')
+COMMENT_COLUMN(raw_dci_values.item_id, '')
+COMMENT_COLUMN(raw_dci_values.raw_value, '')
+COMMENT_COLUMN(raw_dci_values.transformed_value, '')
+COMMENT_COLUMN(raw_dci_values.last_poll_time, '')
+
 /*
 ** Events configuration
 */
 CREATE TABLE event_cfg
 (
-	event_code integer not null,
-	event_name varchar(63) not null,	// Short event name
-	severity integer not null,
-	flags integer not null,
-	message varchar(2000) null,		/* Message template */
-	description SQL_TEXT null,
-	PRIMARY KEY(event_code)
+  event_code integer not null,
+  event_name varchar(63) not null,  // Short event name
+  severity integer not null,
+  flags integer not null,
+  message varchar(2000) null,   /* Message template */
+  description SQL_TEXT null,
+  PRIMARY KEY(event_code)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(event_cfg, '')
+COMMENT_COLUMN(event_cfg.event_code, '')
+COMMENT_COLUMN(event_cfg.event_name, '')
+COMMENT_COLUMN(event_cfg.severity, '')
+COMMENT_COLUMN(event_cfg.flags, '')
+COMMENT_COLUMN(event_cfg.message, '')
+COMMENT_COLUMN(event_cfg.description, '')
 
 /*
 ** Event log
 */
 CREATE TABLE event_log
 (
-	event_id SQL_INT64 not null,
-	event_code integer not null,
-	event_timestamp integer not null,
-	event_source integer not null,		/* Source object ID */
-	dci_id integer not null,                /* ID of related DCI or 0 */
-	event_severity integer not null,
-	event_message varchar(2000) null,
-	root_event_id SQL_INT64 not null,	/* Non-zero if current event correlates to some other event */
-	user_tag varchar(63) null,
-	PRIMARY KEY(event_id)
+  event_id SQL_INT64 not null,
+  event_code integer not null,
+  event_timestamp integer not null,
+  event_source integer not null,    /* Source object ID */
+  dci_id integer not null,                /* ID of related DCI or 0 */
+  event_severity integer not null,
+  event_message varchar(2000) null,
+  root_event_id SQL_INT64 not null, /* Non-zero if current event correlates to some other event */
+  user_tag varchar(63) null,
+  PRIMARY KEY(event_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_event_log_event_timestamp ON event_log(event_timestamp);
@@ -760,211 +1135,355 @@ CREATE INDEX idx_event_log_root_id ON event_log(zero_to_null(root_event_id));
 CREATE INDEX idx_event_log_root_id ON event_log(root_event_id);
 #endif
 
+COMMENT_TABLE(event_log, '')
+COMMENT_COLUMN(event_log.event_id, '')
+COMMENT_COLUMN(event_log.event_code, '')
+COMMENT_COLUMN(event_log.event_timestamp, '')
+COMMENT_COLUMN(event_log.event_source, '')
+COMMENT_COLUMN(event_log.dci_id, '')
+COMMENT_COLUMN(event_log.event_severity, '')
+COMMENT_COLUMN(event_log.event_message, '')
+COMMENT_COLUMN(event_log.root_event_id, '')
+COMMENT_COLUMN(event_log.user_tag, '')
+
 /*
 ** Actions on events
 */
 CREATE TABLE actions
 (
-	action_id integer not null,
-	action_name varchar(63) not null,
-	action_type integer not null,
-	is_disabled integer not null,
-	// Field "rcpt_addr" holds e-mail address for e-mail actions,
-	// phone number for sms actions, and remote host address for
-	// remote execution actions
-	rcpt_addr varchar(255) null,
-	email_subject varchar(255) null,
-	// Field "action_data" holds message text for e-mail and sms actions,
-	// command line for external command execution actions, or
-	// action name with optional arguments for remote execution actions
-	action_data SQL_TEXT null,
-	PRIMARY KEY(action_id)
+  action_id integer not null,
+  action_name varchar(63) not null,
+  action_type integer not null,
+  is_disabled integer not null,
+  // Field "rcpt_addr" holds e-mail address for e-mail actions,
+  // phone number for sms actions, and remote host address for
+  // remote execution actions
+  rcpt_addr varchar(255) null,
+  email_subject varchar(255) null,
+  // Field "action_data" holds message text for e-mail and sms actions,
+  // command line for external command execution actions, or
+  // action name with optional arguments for remote execution actions
+  action_data SQL_TEXT null,
+  PRIMARY KEY(action_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(actions, '')
+COMMENT_COLUMN(actions.action_id, '')
+COMMENT_COLUMN(actions.action_name, '')
+COMMENT_COLUMN(actions.action_type, '')
+COMMENT_COLUMN(actions.is_disabled, '')
+COMMENT_COLUMN(actions.rcpt_addr, '')
+COMMENT_COLUMN(actions.email_subject, '')
+COMMENT_COLUMN(actions.action_data, '')
 
 /*
 ** Event groups
 */
 CREATE TABLE event_groups
 (
-	id integer not null,
-	name varchar(63) not null,
-	description varchar(255) not null,
-	range_start integer not null,
-	range_end integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  name varchar(63) not null,
+  description varchar(255) not null,
+  range_start integer not null,
+  range_end integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(event_groups, '')
+COMMENT_COLUMN(event_groups.id, '')
+COMMENT_COLUMN(event_groups.name, '')
+COMMENT_COLUMN(event_groups.description, '')
+COMMENT_COLUMN(event_groups.range_start, '')
+COMMENT_COLUMN(event_groups.range_end, '')
 
 /*
 ** Event group members
 */
 CREATE TABLE event_group_members
 (
-	group_id integer not null,
-	event_code integer not null,
-	PRIMARY KEY(group_id,event_code)
+  group_id integer not null,
+  event_code integer not null,
+  PRIMARY KEY(group_id,event_code)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(event_group_members, '')
+COMMENT_COLUMN(event_group_members.group_id, '')
+COMMENT_COLUMN(event_group_members.event_code, '')
 
 /*
 ** Event processing policy
 */
 CREATE TABLE event_policy
 (
-	rule_id integer not null,   // Rule number
-   rule_guid varchar(36) not null,
-	flags integer not null,
-	comments SQL_TEXT null,
-	script SQL_TEXT null,
-	alarm_message varchar(2000) null,
-	alarm_severity integer not null,
-	alarm_key varchar(255) null,    // Alarm key (used for auto termination)
-	alarm_timeout integer not null,	// Timeout before sending event
-	alarm_timeout_event integer not null,  // Event to be sent on timeout
-	situation_id integer not null,  // Situation to update
-	situation_instance varchar(255) null,
-	PRIMARY KEY(rule_id)
+  rule_id integer not null,   // Rule number
+  rule_guid varchar(36) not null,
+  flags integer not null,
+  comments SQL_TEXT null,
+  script SQL_TEXT null,
+  alarm_message varchar(2000) null,
+  alarm_severity integer not null,
+  alarm_key varchar(255) null,    // Alarm key (used for auto termination)
+  alarm_timeout integer not null, // Timeout before sending event
+  alarm_timeout_event integer not null,  // Event to be sent on timeout
+  situation_id integer not null,  // Situation to update
+  situation_instance varchar(255) null,
+  PRIMARY KEY(rule_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(event_policy, '')
+COMMENT_COLUMN(event_policy.rule_id, '')
+COMMENT_COLUMN(event_policy.rule_guid, '')
+COMMENT_COLUMN(event_policy.flags, '')
+COMMENT_COLUMN(event_policy.comments, '')
+COMMENT_COLUMN(event_policy.script, '')
+COMMENT_COLUMN(event_policy.alarm_message, '')
+COMMENT_COLUMN(event_policy.alarm_severity, '')
+COMMENT_COLUMN(event_policy.alarm_key, '')
+COMMENT_COLUMN(event_policy.alarm_timeout, '')
+COMMENT_COLUMN(event_policy.alarm_timeout_event, '')
+COMMENT_COLUMN(event_policy.situation_id, '')
+COMMENT_COLUMN(event_policy.situation_instance, '')
+
+/**
+ *
+ */
 CREATE TABLE policy_source_list
 (
-	rule_id integer not null,
-	object_id integer not null,
-	PRIMARY KEY(rule_id,object_id)
+  rule_id integer not null,
+  object_id integer not null,
+  PRIMARY KEY(rule_id,object_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(policy_source_list, '')
+COMMENT_COLUMN(policy_source_list.rule_id, '')
+COMMENT_COLUMN(policy_source_list.object_id, '')
+
+/**
+ *
+ */
 CREATE TABLE policy_event_list
 (
-	rule_id integer not null,
-	event_code integer not null,
-	PRIMARY KEY(rule_id,event_code)
+  rule_id integer not null,
+  event_code integer not null,
+  PRIMARY KEY(rule_id,event_code)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(policy_event_list, '')
+COMMENT_COLUMN(policy_event_list.rule_id, '')
+COMMENT_COLUMN(policy_event_list.event_code, '')
+
+/**
+ *
+ */
 CREATE TABLE policy_action_list
 (
-	rule_id integer not null,
-	action_id integer not null,
-	PRIMARY KEY(rule_id,action_id)
+  rule_id integer not null,
+  action_id integer not null,
+  PRIMARY KEY(rule_id,action_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(policy_action_list, '')
+COMMENT_COLUMN(policy_action_list.rule_id, '')
+COMMENT_COLUMN(policy_action_list.action_id, '')
+
+/**
+ *
+ */
 CREATE TABLE policy_time_range_list
 (
-	rule_id integer not null,
-	time_range_id integer not null,
-	PRIMARY KEY(rule_id,time_range_id)
+  rule_id integer not null,
+  time_range_id integer not null,
+  PRIMARY KEY(rule_id,time_range_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(policy_time_range_list, '')
+COMMENT_COLUMN(policy_time_range_list.rule_id, '')
+COMMENT_COLUMN(policy_time_range_list.time_range_id, '')
+
+/**
+ *
+ */
 CREATE TABLE policy_situation_attr_list
 (
-	rule_id integer not null,
-	situation_id integer not null,
-	attr_name varchar(255) not null,
-	attr_value varchar(255) null,
-	PRIMARY KEY(rule_id,situation_id,attr_name)
+  rule_id integer not null,
+  situation_id integer not null,
+  attr_name varchar(255) not null,
+  attr_value varchar(255) null,
+  PRIMARY KEY(rule_id,situation_id,attr_name)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(policy_situation_attr_list, '')
+COMMENT_COLUMN(policy_situation_attr_list.rule_id, '')
+COMMENT_COLUMN(policy_situation_attr_list.situation_id, '')
+COMMENT_COLUMN(policy_situation_attr_list.attr_name, '')
+COMMENT_COLUMN(policy_situation_attr_list.attr_value, '')
 
 /*
 ** Time range objects
 */
-
 CREATE TABLE time_ranges
 (
-	time_range_id integer not null,
-	wday_mask integer not null,	// Bits 0 .. 6 for each day of week
-	mday_mask integer not null,	// Bits 0 .. 30 for each day of month
-	month_mask integer not null,	// Bits 0 .. 11 for each month
-	time_range varchar(255) not null, // In format HHMMHHMM[,HHMMHHMM[,...]]
-	PRIMARY KEY(time_range_id)
+  time_range_id integer not null,
+  wday_mask integer not null, // Bits 0 .. 6 for each day of week
+  mday_mask integer not null, // Bits 0 .. 30 for each day of month
+  month_mask integer not null,  // Bits 0 .. 11 for each month
+  time_range varchar(255) not null, // In format HHMMHHMM[,HHMMHHMM[,...]]
+  PRIMARY KEY(time_range_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(time_ranges, '')
+COMMENT_COLUMN(time_ranges.time_range_id, '')
+COMMENT_COLUMN(time_ranges.wday_mask, '')
+COMMENT_COLUMN(time_ranges.mday_mask, '')
+COMMENT_COLUMN(time_ranges.month_mask, '')
+COMMENT_COLUMN(time_ranges.time_range, '')
 
 /*
 ** Threshold checking rules
 */
 CREATE TABLE thresholds
 (
-	threshold_id integer not null,
-	item_id integer not null,
-	sequence_number integer not null,
-	fire_value varchar(255) null,
-	rearm_value varchar(255) null,
-	check_function integer not null,
-	check_operation integer not null,
-	sample_count integer not null,
-   script SQL_TEXT null,
-	event_code integer not null,
-	rearm_event_code integer not null,
-	repeat_interval integer not null,
-	current_state integer not null,
-	current_severity integer not null,
-   match_count integer not null,
-	last_event_timestamp integer not null,
-	PRIMARY KEY(threshold_id)
+  threshold_id integer not null,
+  item_id integer not null,
+  sequence_number integer not null,
+  fire_value varchar(255) null,
+  rearm_value varchar(255) null,
+  check_function integer not null,
+  check_operation integer not null,
+  sample_count integer not null,
+  script SQL_TEXT null,
+  event_code integer not null,
+  rearm_event_code integer not null,
+  repeat_interval integer not null,
+  current_state integer not null,
+  current_severity integer not null,
+  match_count integer not null,
+  last_event_timestamp integer not null,
+  PRIMARY KEY(threshold_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_thresholds_item_id ON thresholds(item_id);
 CREATE INDEX idx_thresholds_sequence ON thresholds(sequence_number);
+
+COMMENT_TABLE(thresholds, '')
+COMMENT_COLUMN(thresholds.threshold_id, '')
+COMMENT_COLUMN(thresholds.item_id, '')
+COMMENT_COLUMN(thresholds.sequence_number, '')
+COMMENT_COLUMN(thresholds.fire_value, '')
+COMMENT_COLUMN(thresholds.rearm_value, '')
+COMMENT_COLUMN(thresholds.check_function, '')
+COMMENT_COLUMN(thresholds.check_operation, '')
+COMMENT_COLUMN(thresholds.sample_count, '')
+COMMENT_COLUMN(thresholds.script, '')
+COMMENT_COLUMN(thresholds.event_code, '')
+COMMENT_COLUMN(thresholds.rearm_event_code, '')
+COMMENT_COLUMN(thresholds.repeat_interval, '')
+COMMENT_COLUMN(thresholds.current_state, '')
+COMMENT_COLUMN(thresholds.current_severity, '')
+COMMENT_COLUMN(thresholds.match_count, '')
+COMMENT_COLUMN(thresholds.last_event_timestamp, '')
 
 /*
 ** Alarms
 */
 CREATE TABLE alarms
 (
-	alarm_id integer not null,	// Unique alarm identifier
-	alarm_state integer not null,
-	hd_state integer not null,	// Help desk system state
-	hd_ref varchar(63) null,	// Help desk reference
-	creation_time integer not null,
-	last_change_time integer not null,
-	source_object_id integer not null,
-	source_event_code integer not null,
-	source_event_id SQL_INT64 not null,
-	dci_id integer not null,
-	message varchar(2000) null,
-	original_severity integer not null,
-	current_severity integer not null,
-	repeat_count integer not null,
-	alarm_key varchar(255) null,     // Alarm key (used for auto acknowlegment)
-	ack_by integer not null,         // ID of user who was acknowleged alarm
-	resolved_by integer not null,    // ID of user who was resolved alarm
-	term_by integer not null,        // ID of user who was terminated alarm
-	timeout integer not null,
-	timeout_event integer not null,
-	ack_timeout integer not null,
-	PRIMARY KEY(alarm_id)
+  alarm_id integer not null,  // Unique alarm identifier
+  alarm_state integer not null,
+  hd_state integer not null,  // Help desk system state
+  hd_ref varchar(63) null,  // Help desk reference
+  creation_time integer not null,
+  last_change_time integer not null,
+  source_object_id integer not null,
+  source_event_code integer not null,
+  source_event_id SQL_INT64 not null,
+  dci_id integer not null,
+  message varchar(2000) null,
+  original_severity integer not null,
+  current_severity integer not null,
+  repeat_count integer not null,
+  alarm_key varchar(255) null,     // Alarm key (used for auto acknowlegment)
+  ack_by integer not null,         // ID of user who was acknowleged alarm
+  resolved_by integer not null,    // ID of user who was resolved alarm
+  term_by integer not null,        // ID of user who was terminated alarm
+  timeout integer not null,
+  timeout_event integer not null,
+  ack_timeout integer not null,
+  PRIMARY KEY(alarm_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(alarms, '')
+COMMENT_COLUMN(alarms.alarm_id, '')
+COMMENT_COLUMN(alarms.alarm_state, '')
+COMMENT_COLUMN(alarms.hd_state, '')
+COMMENT_COLUMN(alarms.hd_ref, '')
+COMMENT_COLUMN(alarms.creation_time, '')
+COMMENT_COLUMN(alarms.last_change_time, '')
+COMMENT_COLUMN(alarms.source_object_id, '')
+COMMENT_COLUMN(alarms.source_event_code, '')
+COMMENT_COLUMN(alarms.source_event_id, '')
+COMMENT_COLUMN(alarms.dci_id, '')
+COMMENT_COLUMN(alarms.message, '')
+COMMENT_COLUMN(alarms.original_severity, '')
+COMMENT_COLUMN(alarms.current_severity, '')
+COMMENT_COLUMN(alarms.repeat_count, '')
+COMMENT_COLUMN(alarms.alarm_key, '')
+COMMENT_COLUMN(alarms.ack_by, '')
+COMMENT_COLUMN(alarms.resolved_by, '')
+COMMENT_COLUMN(alarms.term_by, '')
+COMMENT_COLUMN(alarms.timeout, '')
+COMMENT_COLUMN(alarms.timeout_event, '')
+COMMENT_COLUMN(alarms.ack_timeout, '')
 
 /*
 ** Alarm notes
 */
 CREATE TABLE alarm_notes
 (
-	note_id integer not null,
-	alarm_id integer not null,
-	change_time integer not null,
-	user_id integer not null,	// Last edited by
-	note_text SQL_TEXT null,
-	PRIMARY KEY(note_id)
+  note_id integer not null,
+  alarm_id integer not null,
+  change_time integer not null,
+  user_id integer not null, // Last edited by
+  note_text SQL_TEXT null,
+  PRIMARY KEY(note_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_alarm_notes_alarm_id ON alarm_notes(alarm_id);
+
+COMMENT_TABLE(alarm_notes, '')
+COMMENT_COLUMN(alarm_notes.note_id, '')
+COMMENT_COLUMN(alarm_notes.alarm_id, '')
+COMMENT_COLUMN(alarm_notes.change_time, '')
+COMMENT_COLUMN(alarm_notes.user_id, '')
+COMMENT_COLUMN(alarm_notes.note_text, '')
 
 /*
 ** Source events for alarms
 */
 CREATE TABLE alarm_events
 (
-	alarm_id integer not null,
-	event_id SQL_INT64 not null,
-	event_code integer not null,
-	event_name varchar(63) null,
-	severity integer not null,
-	source_object_id integer not null,
-	event_timestamp integer not null,
-	message varchar(2000) null,
-	PRIMARY KEY(alarm_id,event_id)
+  alarm_id integer not null,
+  event_id SQL_INT64 not null,
+  event_code integer not null,
+  event_name varchar(63) null,
+  severity integer not null,
+  source_object_id integer not null,
+  event_timestamp integer not null,
+  message varchar(2000) null,
+  PRIMARY KEY(alarm_id,event_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_alarm_events_alarm_id ON alarm_events(alarm_id);
 
+COMMENT_TABLE(alarm_events, '')
+COMMENT_COLUMN(alarm_events.alarm_id, '')
+COMMENT_COLUMN(alarm_events.event_id, '')
+COMMENT_COLUMN(alarm_events.event_code, '')
+COMMENT_COLUMN(alarm_events.event_name, '')
+COMMENT_COLUMN(alarm_events.severity, '')
+COMMENT_COLUMN(alarm_events.source_object_id, '')
+COMMENT_COLUMN(alarm_events.event_timestamp, '')
+COMMENT_COLUMN(alarm_events.message, '')
 
 /*
 ** SNMP trap configuration
@@ -972,132 +1491,198 @@ CREATE INDEX idx_alarm_events_alarm_id ON alarm_events(alarm_id);
 
 CREATE TABLE snmp_trap_cfg
 (
-	trap_id integer not null,
-	snmp_oid varchar(255),
-	event_code integer not null,
-	user_tag varchar(63),
-	description varchar(255),
-	PRIMARY KEY(trap_id)
+  trap_id integer not null,
+  snmp_oid varchar(255),
+  event_code integer not null,
+  user_tag varchar(63),
+  description varchar(255),
+  PRIMARY KEY(trap_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(snmp_trap_cfg, '')
+COMMENT_COLUMN(snmp_trap_cfg.trap_id, '')
+COMMENT_COLUMN(snmp_trap_cfg.snmp_oid, '')
+COMMENT_COLUMN(snmp_trap_cfg.event_code, '')
+COMMENT_COLUMN(snmp_trap_cfg.user_tag, '')
+COMMENT_COLUMN(snmp_trap_cfg.description, '')
 
 /*
 ** SNMP trap parameters mapping
 */
-
 CREATE TABLE snmp_trap_pmap
 (
-	trap_id integer not null,
-	parameter integer not null,
-	flags integer not null,
-	snmp_oid varchar(255) null,
-	description varchar(255) null,
-	PRIMARY KEY(trap_id,parameter)
+  trap_id integer not null,
+  parameter integer not null,
+  flags integer not null,
+  snmp_oid varchar(255) null,
+  description varchar(255) null,
+  PRIMARY KEY(trap_id,parameter)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(snmp_trap_pmap, '')
+COMMENT_COLUMN(snmp_trap_pmap.trap_id, '')
+COMMENT_COLUMN(snmp_trap_pmap.parameter, '')
+COMMENT_COLUMN(snmp_trap_pmap.flags, '')
+COMMENT_COLUMN(snmp_trap_pmap.snmp_oid, '')
+COMMENT_COLUMN(snmp_trap_pmap.description, '')
 
 /*
 ** Agent packages
 */
 CREATE TABLE agent_pkg
 (
-	pkg_id integer not null,
-	pkg_name varchar(63),
-	version varchar(31),
-	platform varchar(63),
-	pkg_file varchar(255),
-	description varchar(255),
-	PRIMARY KEY(pkg_id)
+  pkg_id integer not null,
+  pkg_name varchar(63),
+  version varchar(31),
+  platform varchar(63),
+  pkg_file varchar(255),
+  description varchar(255),
+  PRIMARY KEY(pkg_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(agent_pkg, '')
+COMMENT_COLUMN(agent_pkg.pkg_id, '')
+COMMENT_COLUMN(agent_pkg.pkg_name, '')
+COMMENT_COLUMN(agent_pkg.version, '')
+COMMENT_COLUMN(agent_pkg.platform, '')
+COMMENT_COLUMN(agent_pkg.pkg_file, '')
+COMMENT_COLUMN(agent_pkg.description, '')
 
 /*
 ** Object tools
 */
 CREATE TABLE object_tools
 (
-	tool_id integer not null,
-   guid varchar(36) not null,
-	tool_name varchar(255) null,
-	tool_type integer not null,
-	tool_data SQL_TEXT null,
-	description varchar(255) null,
-	flags integer not null,
-	tool_filter SQL_TEXT null,
-	confirmation_text varchar(255) null,
-   command_name varchar(255) null,
-   command_short_name varchar(31) null,
-   icon SQL_TEXT null,
-	PRIMARY KEY(tool_id)
+  tool_id integer not null,
+  guid varchar(36) not null,
+  tool_name varchar(255) null,
+  tool_type integer not null,
+  tool_data SQL_TEXT null,
+  description varchar(255) null,
+  flags integer not null,
+  tool_filter SQL_TEXT null,
+  confirmation_text varchar(255) null,
+  command_name varchar(255) null,
+  command_short_name varchar(31) null,
+  icon SQL_TEXT null,
+  PRIMARY KEY(tool_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(object_tools, '')
+COMMENT_COLUMN(object_tools.tool_id, '')
+COMMENT_COLUMN(object_tools.guid, '')
+COMMENT_COLUMN(object_tools.tool_name, '')
+COMMENT_COLUMN(object_tools.tool_type, '')
+COMMENT_COLUMN(object_tools.tool_data, '')
+COMMENT_COLUMN(object_tools.description, '')
+COMMENT_COLUMN(object_tools.flags, '')
+COMMENT_COLUMN(object_tools.tool_filter, '')
+COMMENT_COLUMN(object_tools.confirmation_text, '')
+COMMENT_COLUMN(object_tools.command_name, '')
+COMMENT_COLUMN(object_tools.command_short_name, '')
+COMMENT_COLUMN(object_tools.icon, '')
 
 /*
 ** Access list for object tools
 */
 CREATE TABLE object_tools_acl
 (
-	tool_id integer not null,
-	user_id integer not null,
-	PRIMARY KEY(tool_id,user_id)
+  tool_id integer not null,
+  user_id integer not null,
+  PRIMARY KEY(tool_id,user_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(object_tools_acl, '')
+COMMENT_COLUMN(object_tools_acl.tool_id, '')
+COMMENT_COLUMN(object_tools_acl.user_id, '')
 
 /*
 ** Configuration of columns for SNMP_TABLE and AGENT_TABLE type of object tools
 */
 CREATE TABLE object_tools_table_columns
 (
-	tool_id integer not null,
-	col_number integer not null,
-	col_name varchar(255) null,
-	col_oid varchar(255) null,
-	col_format integer,	// Column format (integer, string, etc.)
-	col_substr integer,	// Number of matching substring in regexp
-	PRIMARY KEY(tool_id,col_number)
+  tool_id integer not null,
+  col_number integer not null,
+  col_name varchar(255) null,
+  col_oid varchar(255) null,
+  col_format integer, // Column format (integer, string, etc.)
+  col_substr integer, // Number of matching substring in regexp
+  PRIMARY KEY(tool_id,col_number)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(object_tools_table_columns, '')
+COMMENT_COLUMN(object_tools_table_columns.tool_id, '')
+COMMENT_COLUMN(object_tools_table_columns.col_number, '')
+COMMENT_COLUMN(object_tools_table_columns.col_name, '')
+COMMENT_COLUMN(object_tools_table_columns.col_oid, '')
+COMMENT_COLUMN(object_tools_table_columns.col_format, '')
+COMMENT_COLUMN(object_tools_table_columns.col_substr, '')
 
 /**
  * Input fields for object tools
  */
 CREATE TABLE object_tools_input_fields
 (
-	tool_id integer not null,
-   name varchar(31) not null,
-   input_type char(1) not null,
-   display_name varchar(127) null,
-   sequence_num integer not null,
-   config SQL_TEXT null,
-   PRIMARY KEY(tool_id,name)
+  tool_id integer not null,
+  name varchar(31) not null,
+  input_type char(1) not null,
+  display_name varchar(127) null,
+  sequence_num integer not null,
+  config SQL_TEXT null,
+  PRIMARY KEY(tool_id,name)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(object_tools_input_fields, '')
+COMMENT_COLUMN(object_tools_input_fields.tool_id, '')
+COMMENT_COLUMN(object_tools_input_fields.name, '')
+COMMENT_COLUMN(object_tools_input_fields.input_type, '')
+COMMENT_COLUMN(object_tools_input_fields.display_name, '')
+COMMENT_COLUMN(object_tools_input_fields.sequence_num, '')
+COMMENT_COLUMN(object_tools_input_fields.config, '')
 
 /*
 ** Stored syslog messages
 */
 CREATE TABLE syslog
 (
-	msg_id SQL_INT64 not null,
-	msg_timestamp integer not null,
-	facility integer not null,
-	severity integer not null,
-	source_object_id integer not null,
-	hostname varchar(127) null,
-	msg_tag varchar(32) null,
-	msg_text SQL_TEXT null,
-	PRIMARY KEY(msg_id)
+  msg_id SQL_INT64 not null,
+  msg_timestamp integer not null,
+  facility integer not null,
+  severity integer not null,
+  source_object_id integer not null,
+  hostname varchar(127) null,
+  msg_tag varchar(32) null,
+  msg_text SQL_TEXT null,
+  PRIMARY KEY(msg_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_syslog_msg_timestamp ON syslog(msg_timestamp);
 
+COMMENT_TABLE(syslog, '')
+COMMENT_COLUMN(syslog.msg_id, '')
+COMMENT_COLUMN(syslog.msg_timestamp, '')
+COMMENT_COLUMN(syslog.facility, '')
+COMMENT_COLUMN(syslog.severity, '')
+COMMENT_COLUMN(syslog.source_object_id, '')
+COMMENT_COLUMN(syslog.hostname, '')
+COMMENT_COLUMN(syslog.msg_tag, '')
+COMMENT_COLUMN(syslog.msg_text, '')
 
 /*
 ** Script library
 */
-
 CREATE TABLE script_library
 (
-	script_id integer not null,
-	script_name varchar(255) not null,
-	script_code SQL_TEXT null,
-	PRIMARY KEY(script_id)
+  script_id integer not null,
+  script_name varchar(255) not null,
+  script_code SQL_TEXT null,
+  PRIMARY KEY(script_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(script_library, '')
+COMMENT_COLUMN(script_library.script_id, '')
+COMMENT_COLUMN(script_library.script_name, '')
+COMMENT_COLUMN(script_library.script_code, '')
 
 /*
 ** Extended SNMP trap log
@@ -1105,70 +1690,104 @@ CREATE TABLE script_library
 
 CREATE TABLE snmp_trap_log
 (
-	trap_id SQL_INT64 not null,
-	trap_timestamp integer not null,
-	ip_addr varchar(48) not null,
-	object_id integer not null,
-	trap_oid varchar(255) not null,
-	trap_varlist SQL_TEXT null,
-	PRIMARY KEY(trap_id)
+  trap_id SQL_INT64 not null,
+  trap_timestamp integer not null,
+  ip_addr varchar(48) not null,
+  object_id integer not null,
+  trap_oid varchar(255) not null,
+  trap_varlist SQL_TEXT null,
+  PRIMARY KEY(trap_id)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_snmp_trap_log_tt ON snmp_trap_log(trap_timestamp);
+
+COMMENT_TABLE(snmp_trap_log, '')
+COMMENT_COLUMN(snmp_trap_log.trap_id, '')
+COMMENT_COLUMN(snmp_trap_log.trap_timestamp, '')
+COMMENT_COLUMN(snmp_trap_log.ip_addr, '')
+COMMENT_COLUMN(snmp_trap_log.object_id, '')
+COMMENT_COLUMN(snmp_trap_log.trap_oid, '')
+COMMENT_COLUMN(snmp_trap_log.trap_varlist, '')
 
 /*
 ** Agent configurations
 */
 CREATE TABLE agent_configs
 (
-	config_id integer not null,
-	config_name varchar(255) not null,
-	config_file SQL_TEXT not null,
-	config_filter SQL_TEXT not null,
-	sequence_number integer not null,
-	PRIMARY KEY(config_id)
+  config_id integer not null,
+  config_name varchar(255) not null,
+  config_file SQL_TEXT not null,
+  config_filter SQL_TEXT not null,
+  sequence_number integer not null,
+  PRIMARY KEY(config_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(agent_configs, '')
+COMMENT_COLUMN(agent_configs.config_id, '')
+COMMENT_COLUMN(agent_configs.config_name, '')
+COMMENT_COLUMN(agent_configs.config_file, '')
+COMMENT_COLUMN(agent_configs.config_filter, '')
+COMMENT_COLUMN(agent_configs.sequence_number, '')
 
 /*
 ** Address lists
 */
 CREATE TABLE address_lists
 (
-	list_type integer not null, // discovery filter, etc.
-	community_id integer not null, // community id for snmp community addr list, otherwise 0
-	addr_type integer not null, // 0 - addr/mask, 1 - address range
-	addr1 varchar(48) not null,
-	addr2 varchar(48) not null,
-	PRIMARY KEY(list_type,community_id,addr_type,addr1,addr2)
+  list_type integer not null, // discovery filter, etc.
+  community_id integer not null, // community id for snmp community addr list, otherwise 0
+  addr_type integer not null, // 0 - addr/mask, 1 - address range
+  addr1 varchar(48) not null,
+  addr2 varchar(48) not null,
+  PRIMARY KEY(list_type,community_id,addr_type,addr1,addr2)
 ) TABLE_TYPE;
 
 CREATE INDEX idx_address_lists_list_type ON address_lists(list_type);
+
+COMMENT_TABLE(address_lists, '')
+COMMENT_COLUMN(address_lists.list_type, '')
+COMMENT_COLUMN(address_lists.community_id, '')
+COMMENT_COLUMN(address_lists.addr_type, '')
+COMMENT_COLUMN(address_lists.addr1, '')
+COMMENT_COLUMN(address_lists.addr2, '')
 
 /*
 ** Graphs
 */
 CREATE TABLE graphs
 (
-	graph_id integer not null,
-	owner_id integer not null,
-	flags integer not null,
-	name varchar(255) not null,
-	config SQL_TEXT not null,
-	filters SQL_TEXT not null,
-	PRIMARY KEY(graph_id)
+  graph_id integer not null,
+  owner_id integer not null,
+  flags integer not null,
+  name varchar(255) not null,
+  config SQL_TEXT not null,
+  filters SQL_TEXT not null,
+  PRIMARY KEY(graph_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(graphs, '')
+COMMENT_COLUMN(graphs.graph_id, '')
+COMMENT_COLUMN(graphs.owner_id, '')
+COMMENT_COLUMN(graphs.flags, '')
+COMMENT_COLUMN(graphs.name, '')
+COMMENT_COLUMN(graphs.config, '')
+COMMENT_COLUMN(graphs.filters, '')
 
 /*
 ** Graph access lists
 */
 CREATE TABLE graph_acl
 (
-	graph_id integer not null,
-	user_id integer not null,
-	user_rights integer not null,
-	PRIMARY KEY(graph_id,user_id)
+  graph_id integer not null,
+  user_id integer not null,
+  user_rights integer not null,
+  PRIMARY KEY(graph_id,user_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(graph_acl, '')
+COMMENT_COLUMN(graph_acl.graph_id, '')
+COMMENT_COLUMN(graph_acl.user_id, '')
+COMMENT_COLUMN(graph_acl.user_rights, '')
 
 /*
 ** Certificates
@@ -1176,54 +1795,78 @@ CREATE TABLE graph_acl
 
 CREATE TABLE certificates
 (
-	cert_id integer not null,
-	cert_type integer not null,
-	cert_data SQL_TEXT not null,	// Certificate in PEM format
-	subject SQL_TEXT not null,
-	comments SQL_TEXT not null,
-	PRIMARY KEY(cert_id)
+  cert_id integer not null,
+  cert_type integer not null,
+  cert_data SQL_TEXT not null,  // Certificate in PEM format
+  subject SQL_TEXT not null,
+  comments SQL_TEXT not null,
+  PRIMARY KEY(cert_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(certificates, '')
+COMMENT_COLUMN(certificates.cert_id, '')
+COMMENT_COLUMN(certificates.cert_type, '')
+COMMENT_COLUMN(certificates.cert_data, '')
+COMMENT_COLUMN(certificates.subject, '')
+COMMENT_COLUMN(certificates.comments, '')
 
 /*
 ** Audit log
 */
 CREATE TABLE audit_log
 (
-	record_id integer not null,
-	timestamp integer not null,
-	subsystem varchar(32) not null,
-	success integer not null,
-	user_id integer not null,	// 0x7FFFFFFF for system
-	workstation varchar(63) not null,
-   session_id integer not null,
-	object_id integer not null,
-	message SQL_TEXT null,
-	PRIMARY KEY(record_id)
+  record_id integer not null,
+  timestamp integer not null,
+  subsystem varchar(32) not null,
+  success integer not null,
+  user_id integer not null, // 0x7FFFFFFF for system
+  workstation varchar(63) not null,
+  session_id integer not null,
+  object_id integer not null,
+  message SQL_TEXT null,
+  PRIMARY KEY(record_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(audit_log, '')
+COMMENT_COLUMN(audit_log.record_id, '')
+COMMENT_COLUMN(audit_log.timestamp, '')
+COMMENT_COLUMN(audit_log.subsystem, '')
+COMMENT_COLUMN(audit_log.success, '')
+COMMENT_COLUMN(audit_log.user_id, '')
+COMMENT_COLUMN(audit_log.workstation, '')
+COMMENT_COLUMN(audit_log.session_id, '')
+COMMENT_COLUMN(audit_log.object_id, '')
+COMMENT_COLUMN(audit_log.message, '')
 
 /*
 ** Situations
 */
 CREATE TABLE situations
 (
-	id integer not null,
-	name varchar(127) not null,
-	comments SQL_TEXT not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  name varchar(127) not null,
+  comments SQL_TEXT not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(situations, '')
+COMMENT_COLUMN(situations.id, '')
+COMMENT_COLUMN(situations.name, '')
+COMMENT_COLUMN(situations.comments, '')
 
 /*
 ** List of possible community strings
 */
-
 CREATE TABLE snmp_communities
 (
-	id integer not null,
-	community varchar(255) null,
-	PRIMARY KEY(id)
+  id integer not null,
+  community varchar(255) null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(snmp_communities, '')
+COMMENT_COLUMN(snmp_communities.id, '')
+COMMENT_COLUMN(snmp_communities.community, '')
 
 /*
 ** Agent policies - common attributes
@@ -1231,198 +1874,302 @@ CREATE TABLE snmp_communities
 
 CREATE TABLE ap_common
 (
-	id integer not null,
-	policy_type integer not null,
-	version integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  policy_type integer not null,
+  version integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(ap_common, '')
+COMMENT_COLUMN(ap_common.id, '')
+COMMENT_COLUMN(ap_common.policy_type, '')
+COMMENT_COLUMN(ap_common.version, '')
 
 /*
 ** Agent policies - node binding
 */
 CREATE TABLE ap_bindings
 (
-	policy_id integer not null,
-	node_id integer not null,
-	PRIMARY KEY(policy_id,node_id)
+  policy_id integer not null,
+  node_id integer not null,
+  PRIMARY KEY(policy_id,node_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(ap_bindings, '')
+COMMENT_COLUMN(ap_bindings.policy_id, '')
+COMMENT_COLUMN(ap_bindings.node_id, '')
 
 /*
 ** Agent policies - configuration files
 */
 CREATE TABLE ap_config_files
 (
-	policy_id integer not null,
-	file_content SQL_TEXT null,
-	PRIMARY KEY(policy_id)
+  policy_id integer not null,
+  file_content SQL_TEXT null,
+  PRIMARY KEY(policy_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(ap_config_files, '')
+COMMENT_COLUMN(ap_config_files.policy_id, '')
+COMMENT_COLUMN(ap_config_files.file_content, '')
 
 /*
 ** Default SNMP v3 USM credentials
 */
 CREATE TABLE usm_credentials
 (
-	id integer not null,
-	user_name varchar(255) not null,
-	auth_method integer not null,
-	priv_method integer not null,
-	auth_password varchar(255),
-	priv_password varchar(255),
-	PRIMARY KEY(id)
+  id integer not null,
+  user_name varchar(255) not null,
+  auth_method integer not null,
+  priv_method integer not null,
+  auth_password varchar(255),
+  priv_password varchar(255),
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(usm_credentials, '')
+COMMENT_COLUMN(usm_credentials.id, '')
+COMMENT_COLUMN(usm_credentials.user_name, '')
+COMMENT_COLUMN(usm_credentials.auth_method, '')
+COMMENT_COLUMN(usm_credentials.priv_method, '')
+COMMENT_COLUMN(usm_credentials.auth_password, '')
+COMMENT_COLUMN(usm_credentials.priv_password, '')
 
 /*
 ** Network maps
 */
 CREATE TABLE network_maps
 (
-	id integer not null,
-	map_type integer not null,
-	layout integer not null,
-	seed integer not null,
-	radius integer not null,
-	background varchar(36) null,
-	bg_latitude varchar(20) null,
-	bg_longitude varchar(20) null,
-	bg_zoom integer null,
-	flags integer not null,
-	bg_color integer not null,
-	link_color integer not null,
-	link_routing integer not null,
-   object_display_mode integer not null,
-	filter SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  map_type integer not null,
+  layout integer not null,
+  seed integer not null,
+  radius integer not null,
+  background varchar(36) null,
+  bg_latitude varchar(20) null,
+  bg_longitude varchar(20) null,
+  bg_zoom integer null,
+  flags integer not null,
+  bg_color integer not null,
+  link_color integer not null,
+  link_routing integer not null,
+  object_display_mode integer not null,
+  filter SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(network_maps, '')
+COMMENT_COLUMN(network_maps.id, '')
+COMMENT_COLUMN(network_maps.map_type, '')
+COMMENT_COLUMN(network_maps.layout, '')
+COMMENT_COLUMN(network_maps.seed, '')
+COMMENT_COLUMN(network_maps.radius, '')
+COMMENT_COLUMN(network_maps.background, '')
+COMMENT_COLUMN(network_maps.bg_latitude, '')
+COMMENT_COLUMN(network_maps.bg_longitude, '')
+COMMENT_COLUMN(network_maps.bg_zoom, '')
+COMMENT_COLUMN(network_maps.flags, '')
+COMMENT_COLUMN(network_maps.bg_color, '')
+COMMENT_COLUMN(network_maps.link_color, '')
+COMMENT_COLUMN(network_maps.link_routing, '')
+COMMENT_COLUMN(network_maps.object_display_mode, '')
+COMMENT_COLUMN(network_maps.filter, '')
 
 /**
  * Elements of network maps
  */
 CREATE TABLE network_map_elements
 (
-	map_id integer not null,
-	element_id integer not null,
-	element_type integer not null,
-	element_data SQL_TEXT not null,
-	flags integer not null,
-	PRIMARY KEY(map_id,element_id)
+  map_id integer not null,
+  element_id integer not null,
+  element_type integer not null,
+  element_data SQL_TEXT not null,
+  flags integer not null,
+  PRIMARY KEY(map_id,element_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(network_map_elements, '')
+COMMENT_COLUMN(network_map_elements.map_id, '')
+COMMENT_COLUMN(network_map_elements.element_id, '')
+COMMENT_COLUMN(network_map_elements.element_type, '')
+COMMENT_COLUMN(network_map_elements.element_data, '')
+COMMENT_COLUMN(network_map_elements.flags, '')
 
 /**
  * Links on network maps
  */
 CREATE TABLE network_map_links
 (
-	map_id integer not null,
-	element1 integer not null,
-	element2 integer not null,
-	link_type integer not null,
-	link_name varchar(255) null,
-	connector_name1 varchar(255) null,
-	connector_name2 varchar(255) null,
-	element_data SQL_TEXT null,
-	flags integer not null
+  map_id integer not null,
+  element1 integer not null,
+  element2 integer not null,
+  link_type integer not null,
+  link_name varchar(255) null,
+  connector_name1 varchar(255) null,
+  connector_name2 varchar(255) null,
+  element_data SQL_TEXT null,
+  flags integer not null
 ) TABLE_TYPE;
 
 CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id);
+
+COMMENT_TABLE(network_map_links, '')
+COMMENT_COLUMN(network_map_links.map_id, '')
+COMMENT_COLUMN(network_map_links.element1, '')
+COMMENT_COLUMN(network_map_links.element2, '')
+COMMENT_COLUMN(network_map_links.link_type, '')
+COMMENT_COLUMN(network_map_links.link_name, '')
+COMMENT_COLUMN(network_map_links.connector_name1, '')
+COMMENT_COLUMN(network_map_links.connector_name2, '')
+COMMENT_COLUMN(network_map_links.element_data, '')
+COMMENT_COLUMN(network_map_links.flags, '')
 
 /**
  * Image Library
  */
 CREATE TABLE images
 (
-   guid varchar(36) not null,
-   name varchar(63) not null,
-   category varchar(63) not null,
-   mimetype varchar(32) not null,
-   protected integer default 0,
-   PRIMARY KEY(guid),
-   UNIQUE(name, category)
+  guid varchar(36) not null,
+  name varchar(63) not null,
+  category varchar(63) not null,
+  mimetype varchar(32) not null,
+  protected integer default 0,
+  PRIMARY KEY(guid),
+  UNIQUE(name, category)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(images, '')
+COMMENT_COLUMN(images.guid, '')
+COMMENT_COLUMN(images.name, '')
+COMMENT_COLUMN(images.category, '')
+COMMENT_COLUMN(images.mimetype, '')
+COMMENT_COLUMN(images.protected, '')
 
 /**
  * Dashboards
  */
 CREATE TABLE dashboards
 (
-	id integer not null,
-	num_columns integer not null,
-	options integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  num_columns integer not null,
+  options integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(dashboards, '')
+COMMENT_COLUMN(dashboards.id, '')
+COMMENT_COLUMN(dashboards.num_columns, '')
+COMMENT_COLUMN(dashboards.options, '')
 
 /**
  * Dashboard elements
  */
 CREATE TABLE dashboard_elements
 (
-	dashboard_id integer not null,
-	element_id integer not null,
-	element_type integer not null,
-	element_data SQL_TEXT null,
-	layout_data SQL_TEXT null,
-	PRIMARY KEY(dashboard_id,element_id)
+  dashboard_id integer not null,
+  element_id integer not null,
+  element_type integer not null,
+  element_data SQL_TEXT null,
+  layout_data SQL_TEXT null,
+  PRIMARY KEY(dashboard_id,element_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(dashboard_elements, '')
+COMMENT_COLUMN(dashboard_elements.dashboard_id, '')
+COMMENT_COLUMN(dashboard_elements.element_id, '')
+COMMENT_COLUMN(dashboard_elements.element_type, '')
+COMMENT_COLUMN(dashboard_elements.element_data, '')
+COMMENT_COLUMN(dashboard_elements.layout_data, '')
 
 /**
  * Associations between dashboards and other objects
  */
 CREATE TABLE dashboard_associations
 (
-   object_id integer not null,
-   dashboard_id integer not null,
-   PRIMARY KEY(object_id,dashboard_id)
+  object_id integer not null,
+  dashboard_id integer not null,
+  PRIMARY KEY(object_id,dashboard_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(dashboard_associations, '')
+COMMENT_COLUMN(dashboard_associations.object_id, '')
+COMMENT_COLUMN(dashboard_associations.dashboard_id, '')
 
 /**
  * SLA business services
  */
 CREATE TABLE business_services
 (
-     service_id integer not null,
-     PRIMARY KEY(service_id)
+  service_id integer not null,
+  PRIMARY KEY(service_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(business_services, '')
+COMMENT_COLUMN(business_services.service_id, '')
 
 /**
  * SLA service checks
  */
 CREATE TABLE slm_checks
 (
-     id integer not null,
-     type integer not null, // 1 - threshold, 2 - script
-     content SQL_TEXT null, // if type == 2
-     threshold_id integer not null, // if type == 1; refers to thresholds.id
-     reason varchar(255) null,
-     is_template integer not null,
-     template_id integer not null,  // template check ID
-     current_ticket integer not null,
-     PRIMARY KEY(id)
+  id integer not null,
+  type integer not null, // 1 - threshold, 2 - script
+  content SQL_TEXT null, // if type == 2
+  threshold_id integer not null, // if type == 1; refers to thresholds.id
+  reason varchar(255) null,
+  is_template integer not null,
+  template_id integer not null,  // template check ID
+  current_ticket integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(slm_checks, '')
+COMMENT_COLUMN(slm_checks.id, '')
+COMMENT_COLUMN(slm_checks.type, '')
+COMMENT_COLUMN(slm_checks.content, '')
+COMMENT_COLUMN(slm_checks.threshold_id, '')
+COMMENT_COLUMN(slm_checks.reason, '')
+COMMENT_COLUMN(slm_checks.is_template, '')
+COMMENT_COLUMN(slm_checks.template_id, '')
+COMMENT_COLUMN(slm_checks.current_ticket, '')
 
 /*
 ** SLA node links
 */
 CREATE TABLE node_links
 (
-     nodelink_id integer not null,
-     node_id integer not null, // refers to node.id
-     PRIMARY KEY(nodelink_id)
+  nodelink_id integer not null,
+  node_id integer not null, // refers to node.id
+  PRIMARY KEY(nodelink_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(node_links, '')
+COMMENT_COLUMN(node_links.nodelink_id, '')
+COMMENT_COLUMN(node_links.node_id, '')
 
 /*
 ** SLA - agreements
 */
 CREATE TABLE slm_agreements
 (
-     agreement_id integer not null,
-     service_id integer not null,
-     org_id integer not null,
-     uptime varchar(63) not null, // required uptime, numeric(10,2) ?
-     period integer not null, // 1 - day, 2 - month
-     start_date integer not null, // date in YYYYMMDD format
-     notes varchar(255),
-     PRIMARY KEY(agreement_id)
+  agreement_id integer not null,
+  service_id integer not null,
+  org_id integer not null,
+  uptime varchar(63) not null, // required uptime, numeric(10,2) ?
+  period integer not null, // 1 - day, 2 - month
+  start_date integer not null, // date in YYYYMMDD format
+  notes varchar(255),
+  PRIMARY KEY(agreement_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(slm_agreements, '')
+COMMENT_COLUMN(slm_agreements.agreement_id, '')
+COMMENT_COLUMN(slm_agreements.service_id, '')
+COMMENT_COLUMN(slm_agreements.org_id, '')
+COMMENT_COLUMN(slm_agreements.uptime, '')
+COMMENT_COLUMN(slm_agreements.period, '')
+COMMENT_COLUMN(slm_agreements.start_date, '')
+COMMENT_COLUMN(slm_agreements.notes, '')
 
 /*
 ** SLA tickets
@@ -1430,15 +2177,22 @@ CREATE TABLE slm_agreements
 
 CREATE TABLE slm_tickets
 (
-     ticket_id integer not null,
-     service_id integer not null,
-     check_id integer not null,
-     create_timestamp integer not null,
-     close_timestamp integer not null,
-     reason varchar(255) null,
-     PRIMARY KEY(ticket_id)
+  ticket_id integer not null,
+  service_id integer not null,
+  check_id integer not null,
+  create_timestamp integer not null,
+  close_timestamp integer not null,
+  reason varchar(255) null,
+  PRIMARY KEY(ticket_id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(slm_tickets, '')
+COMMENT_COLUMN(slm_tickets.ticket_id, '')
+COMMENT_COLUMN(slm_tickets.service_id, '')
+COMMENT_COLUMN(slm_tickets.check_id, '')
+COMMENT_COLUMN(slm_tickets.create_timestamp, '')
+COMMENT_COLUMN(slm_tickets.close_timestamp, '')
+COMMENT_COLUMN(slm_tickets.reason, '')
 
 /*
 ** SLA service change log
@@ -1446,12 +2200,18 @@ CREATE TABLE slm_tickets
 
 CREATE TABLE slm_service_history
 (
-     record_id integer not null,
-     service_id integer not null,
-     change_timestamp integer not null,
-     new_status integer not null,
-	 PRIMARY KEY(record_id)
+  record_id integer not null,
+  service_id integer not null,
+  change_timestamp integer not null,
+  new_status integer not null,
+  PRIMARY KEY(record_id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(slm_service_history, '')
+COMMENT_COLUMN(slm_service_history.record_id, '')
+COMMENT_COLUMN(slm_service_history.service_id, '')
+COMMENT_COLUMN(slm_service_history.change_timestamp, '')
+COMMENT_COLUMN(slm_service_history.new_status, '')
 
 
 /*
@@ -1460,15 +2220,22 @@ CREATE TABLE slm_service_history
 
 CREATE TABLE organizations
 (
-     id integer not null,
-	  parent_id integer not null,
-	  org_type integer not null,
-     name varchar(63) not null,
-     description varchar(255),
-	  manager integer not null,	// manager - id from "persons" table
-     PRIMARY KEY(id)
+  id integer not null,
+  parent_id integer not null,
+  org_type integer not null,
+  name varchar(63) not null,
+  description varchar(255),
+  manager integer not null, // manager - id from "persons" table
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
 
+COMMENT_TABLE(organizations, '')
+COMMENT_COLUMN(organizations.id, '')
+COMMENT_COLUMN(organizations.parent_id, '')
+COMMENT_COLUMN(organizations.org_type, '')
+COMMENT_COLUMN(organizations.name, '')
+COMMENT_COLUMN(organizations.description, '')
+COMMENT_COLUMN(organizations.manager, '')
 
 /*
 ** Persons
@@ -1476,108 +2243,171 @@ CREATE TABLE organizations
 
 CREATE TABLE persons
 (
-	id integer not null,
-	org_id integer not null,
-	first_name varchar(63),
-	last_name varchar(63),
-	title varchar(255),
-	status integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  org_id integer not null,
+  first_name varchar(63),
+  last_name varchar(63),
+  title varchar(255),
+  status integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(persons, '')
+COMMENT_COLUMN(persons.id, '')
+COMMENT_COLUMN(persons.org_id, '')
+COMMENT_COLUMN(persons.first_name, '')
+COMMENT_COLUMN(persons.last_name, '')
+COMMENT_COLUMN(persons.title, '')
+COMMENT_COLUMN(persons.status, '')
 
 /*
 ** Job history
 */
 CREATE TABLE job_history
 (
-	id integer not null,
-	time_created integer not null,
-	time_started integer not null,
-	time_finished integer not null,
-	job_type varchar(127) null,
-	description varchar(255) null,
-	additional_info varchar(255) null,
-	node_id integer not null,
-	user_id integer not null,
-	status integer not null,
-	failure_message varchar(255) null,
-	PRIMARY KEY(id)
+  id integer not null,
+  time_created integer not null,
+  time_started integer not null,
+  time_finished integer not null,
+  job_type varchar(127) null,
+  description varchar(255) null,
+  additional_info varchar(255) null,
+  node_id integer not null,
+  user_id integer not null,
+  status integer not null,
+  failure_message varchar(255) null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(job_history, '')
+COMMENT_COLUMN(job_history.id, '')
+COMMENT_COLUMN(job_history.time_created, '')
+COMMENT_COLUMN(job_history.time_started, '')
+COMMENT_COLUMN(job_history.time_finished, '')
+COMMENT_COLUMN(job_history.job_type, '')
+COMMENT_COLUMN(job_history.description, '')
+COMMENT_COLUMN(job_history.additional_info, '')
+COMMENT_COLUMN(job_history.node_id, '')
+COMMENT_COLUMN(job_history.user_id, '')
+COMMENT_COLUMN(job_history.status, '')
+COMMENT_COLUMN(job_history.failure_message, '')
 
 /*
 ** License repository
 */
 CREATE TABLE licenses
 (
-	id integer not null,
-	content SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  content SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(licenses, '')
+COMMENT_COLUMN(licenses.id, '')
+COMMENT_COLUMN(licenses.content, '')
 
 /*
 ** Mapping tables
 */
 CREATE TABLE mapping_tables
 (
-	id integer not null,
-	name varchar(63) not null,
-	flags integer not null,
-	description SQL_TEXT4K null,
-	PRIMARY KEY(id)
+  id integer not null,
+  name varchar(63) not null,
+  flags integer not null,
+  description SQL_TEXT4K null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(mapping_tables, '')
+COMMENT_COLUMN(mapping_tables.id, '')
+COMMENT_COLUMN(mapping_tables.name, '')
+COMMENT_COLUMN(mapping_tables.flags, '')
+COMMENT_COLUMN(mapping_tables.description, '')
 
 /*
 ** Mapping tables content
 */
 CREATE TABLE mapping_data
 (
-	table_id integer not null,
-	md_key varchar(63) not null,
-	md_value varchar(255) null,
-	description SQL_TEXT4K null,
-	PRIMARY KEY(table_id,md_key)
+  table_id integer not null,
+  md_key varchar(63) not null,
+  md_value varchar(255) null,
+  description SQL_TEXT4K null,
+  PRIMARY KEY(table_id,md_key)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(mapping_data, '')
+COMMENT_COLUMN(mapping_data.table_id, '')
+COMMENT_COLUMN(mapping_data.md_key, '')
+COMMENT_COLUMN(mapping_data.md_value, '')
+COMMENT_COLUMN(mapping_data.description, '')
 
 /*
 ** DCI summary tables
 */
 CREATE TABLE dci_summary_tables
 (
-	id integer not null,
-   guid varchar(36) not null,
-	menu_path varchar(255) not null,
-	title varchar(127) null,
-	node_filter SQL_TEXT null,
-	flags integer not null,
-	columns SQL_TEXT null,
-	PRIMARY KEY(id)
+  id integer not null,
+  guid varchar(36) not null,
+  menu_path varchar(255) not null,
+  title varchar(127) null,
+  node_filter SQL_TEXT null,
+  flags integer not null,
+  columns SQL_TEXT null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(dci_summary_tables, '')
+COMMENT_COLUMN(dci_summary_tables.id, '')
+COMMENT_COLUMN(dci_summary_tables.guid, '')
+COMMENT_COLUMN(dci_summary_tables.menu_path, '')
+COMMENT_COLUMN(dci_summary_tables.title, '')
+COMMENT_COLUMN(dci_summary_tables.node_filter, '')
+COMMENT_COLUMN(dci_summary_tables.flags, '')
+COMMENT_COLUMN(dci_summary_tables.columns, '')
 
 /*
 ** Scheduled tasks
 */
 CREATE TABLE scheduled_tasks
 (
-	id integer not null,
-	taskId varchar(255) null,
-	schedule varchar(127) null,
-	params varchar(1023) null,
-	execution_time integer not null,
-	last_execution_time integer not null,
-	flags integer not null,
-	owner integer not null,
-	object_id integer not null,
-	PRIMARY KEY(id)
+  id integer not null,
+  taskId varchar(255) null,
+  schedule varchar(127) null,
+  params varchar(1023) null,
+  execution_time integer not null,
+  last_execution_time integer not null,
+  flags integer not null,
+  owner integer not null,
+  object_id integer not null,
+  PRIMARY KEY(id)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(scheduled_tasks, '')
+COMMENT_COLUMN(scheduled_tasks.id, '')
+COMMENT_COLUMN(scheduled_tasks.taskId, '')
+COMMENT_COLUMN(scheduled_tasks.schedule, '')
+COMMENT_COLUMN(scheduled_tasks.params, '')
+COMMENT_COLUMN(scheduled_tasks.execution_time, '')
+COMMENT_COLUMN(scheduled_tasks.last_execution_time, '')
+COMMENT_COLUMN(scheduled_tasks.flags, '')
+COMMENT_COLUMN(scheduled_tasks.owner, '')
+COMMENT_COLUMN(scheduled_tasks.object_id, '')
 
 /*
 ** ZMQ Subscriptions
 */
 CREATE TABLE zmq_subscription
 (
-	object_id integer not null,
-   subscription_type char(1) not null,
-   ignore_items integer not null,
-   items SQL_TEXT,
-	PRIMARY KEY(object_id, subscription_type)
+  object_id integer not null,
+  subscription_type char(1) not null,
+  ignore_items integer not null,
+  items SQL_TEXT,
+  PRIMARY KEY(object_id, subscription_type)
 ) TABLE_TYPE;
+
+COMMENT_TABLE(zmq_subscription, '')
+COMMENT_COLUMN(zmq_subscription.object_id, '')
+COMMENT_COLUMN(zmq_subscription.subscription_type, '')
+COMMENT_COLUMN(zmq_subscription.ignore_items, '')
+COMMENT_COLUMN(zmq_subscription.items, '')

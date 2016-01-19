@@ -36,20 +36,31 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
+import org.eclipse.jface.viewers.ICellEditorListener;
+import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.TreeViewerEditor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IMemento;
@@ -117,6 +128,7 @@ public class ObjectBrowser extends ViewPart
 	private Action actionMoveMap;
 	private Action actionMovePolicy;
 	private Action actionRefresh;
+	private Action actionRenameObject;
 	private boolean initHideUnmanaged = false;
 	private boolean initHideTemplateChecks = false;
 	private boolean initShowFilter = true;
@@ -226,6 +238,94 @@ public class ObjectBrowser extends ViewPart
 			}
 		});
 		objectTree.setFilterCloseAction(actionShowFilter);
+		
+		final TreeViewer tree = objectTree.getTreeViewer();		
+		TreeViewerEditor.create(tree, new ColumnViewerEditorActivationStrategy(tree) {
+         @Override
+         protected boolean isEditorActivationEvent(ColumnViewerEditorActivationEvent event)
+         {
+            return event.eventType == ColumnViewerEditorActivationEvent.PROGRAMMATIC;
+         }
+      }, ColumnViewerEditor.DEFAULT);
+		
+		TextCellEditor editor =  new TextCellEditor(tree.getTree(), SWT.BORDER);		
+		editor.addListener(new ICellEditorListener() {
+         
+         @Override
+         public void editorValueChanged(boolean oldValidState, boolean newValidState)
+         {
+         }
+         
+         @Override
+         public void cancelEditor()
+         {
+            objectTree.enableRefresh();
+         }
+         
+         @Override
+         public void applyEditorValue()
+         {
+         }
+      });
+		
+		//TODO: override editor method that creates control to disable refresh
+		
+		tree.setCellEditors(new CellEditor[] { editor });
+		tree.setColumnProperties(new String[] { "name" }); //$NON-NLS-1$
+		tree.setCellModifier(new ICellModifier() {
+         @Override
+         public void modify(Object element, String property, Object value)
+         {
+            final Object data = (element instanceof Item) ? ((Item)element).getData() : element;
+
+            if (property.equals("name")) //$NON-NLS-1$
+            {
+               if (data instanceof AbstractObject)
+               {
+                  final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+                  final String newName = value.toString();
+                  new ConsoleJob("Update object name", null, Activator.PLUGIN_ID, null) {
+                     @Override
+                     protected void runInternal(IProgressMonitor monitor) throws Exception
+                     {
+                        session.setObjectName(((AbstractObject)data).getObjectId(), newName);
+                     }
+            
+                     @Override
+                     protected String getErrorMessage()
+                     {
+                        return "Error updating name: " + ((AbstractObject)data).getObjectName();
+                     }
+                  }.start();
+               }
+            }
+            objectTree.enableRefresh();
+         }
+
+         @Override
+         public Object getValue(Object element, String property)
+         {
+            if (property.equals("name")) //$NON-NLS-1$
+            {
+               if (element instanceof AbstractObject)
+               {
+                  return ((AbstractObject)element).getObjectName();
+               }
+            }
+            return null;
+         }
+
+         @Override
+         public boolean canModify(Object element, String property)
+         {
+            if(property.equals("name"))
+            {
+               objectTree.disableRefresh();               
+               return true;
+            }
+            return false; //$NON-NLS-1$
+         }
+      });
 		
 		activateContext();
 		restoreSelection();
@@ -445,6 +545,22 @@ public class ObjectBrowser extends ViewPart
       actionShowStatusIndicator.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.show_status_indicator"); //$NON-NLS-1$
 		final ActionHandler showStatusIndicatorHandler = new ActionHandler(actionShowStatusIndicator);
 		handlerService.activateHandler(actionShowStatusIndicator.getActionDefinitionId(), showStatusIndicatorHandler);
+		
+		actionRenameObject = new Action("Rename")
+		{
+		   @Override
+		   public void run()
+		   {
+		      TreeItem[] selection = objectTree.getTreeControl().getSelection();
+		      if(selection.length != 1)
+		         return;
+		      objectTree.getTreeViewer().editElement(selection[0].getData(), 0);
+		   }
+		};
+		actionRenameObject.setId("org.netxms.ui.eclipse.objectbrowser.actions.rename"); //$NON-NLS-1$
+		actionRenameObject.setActionDefinitionId("org.netxms.ui.eclipse.objectbrowser.commands.rename_object"); //$NON-NLS-1$
+      final ActionHandler renameObjectHandler = new ActionHandler(actionRenameObject);
+      handlerService.activateHandler(actionRenameObject.getActionDefinitionId(), renameObjectHandler);
 	}
 
 	/**

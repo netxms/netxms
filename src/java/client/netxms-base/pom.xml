@@ -5,7 +5,7 @@
   <groupId>org.netxms</groupId>
   <artifactId>netxms-base</artifactId>
   <packaging>bundle</packaging>
-  <version>2.0</version>
+  <version>2.0.1</version>
   <name>netxms-base</name>
   <description>NetXMS base classes and commonly used utility code</description>
   <url>http://www.netxms.org</url>
@@ -62,6 +62,19 @@
           </instructions>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.3</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -79,15 +92,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </reporting>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -231,7 +231,7 @@ NXCPMessage::~NXCPMessage()
 /**
  * Find field by ID
  */
-NXCP_MESSAGE_FIELD *NXCPMessage::find(UINT32 fieldId)
+NXCP_MESSAGE_FIELD *NXCPMessage::find(UINT32 fieldId) const
 {
    MessageField *entry;
    HASH_FIND_INT(m_fields, &fieldId, entry);
@@ -342,7 +342,7 @@ void *NXCPMessage::set(UINT32 fieldId, BYTE type, const void *value, bool isSign
 /**
  * Get field value
  */
-void *NXCPMessage::get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType)
+void *NXCPMessage::get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType) const
 {
    NXCP_MESSAGE_FIELD *field = find(fieldId);
    if (field == NULL)
@@ -366,7 +366,7 @@ void *NXCPMessage::get(UINT32 fieldId, BYTE requiredType, BYTE *fieldType)
 /**
  * Get 16 bit field as boolean
  */
-bool NXCPMessage::getFieldAsBoolean(UINT32 fieldId)
+bool NXCPMessage::getFieldAsBoolean(UINT32 fieldId) const
 {
    BYTE type;
    void *value = (void *)get(fieldId, 0xFF, &type);
@@ -391,7 +391,7 @@ bool NXCPMessage::getFieldAsBoolean(UINT32 fieldId)
  *
  * @return field type or -1 if field with given ID does not exist
  */
-int NXCPMessage::getFieldType(UINT32 fieldId)
+int NXCPMessage::getFieldType(UINT32 fieldId) const
 {
    NXCP_MESSAGE_FIELD *field = find(fieldId);
    return (field != NULL) ? (int)field->type : -1;
@@ -400,7 +400,7 @@ int NXCPMessage::getFieldType(UINT32 fieldId)
 /**
  * get signed integer field
  */
-INT32 NXCPMessage::getFieldAsInt32(UINT32 fieldId)
+INT32 NXCPMessage::getFieldAsInt32(UINT32 fieldId) const
 {
    char *value = (char *)get(fieldId, NXCP_DT_INT32);
    return (value != NULL) ? *((INT32 *)value) : 0;
@@ -409,7 +409,7 @@ INT32 NXCPMessage::getFieldAsInt32(UINT32 fieldId)
 /**
  * get unsigned integer field
  */
-UINT32 NXCPMessage::getFieldAsUInt32(UINT32 fieldId)
+UINT32 NXCPMessage::getFieldAsUInt32(UINT32 fieldId) const
 {
    void *value = get(fieldId, NXCP_DT_INT32);
    return (value != NULL) ? *((UINT32 *)value) : 0;
@@ -418,7 +418,7 @@ UINT32 NXCPMessage::getFieldAsUInt32(UINT32 fieldId)
 /**
  * get signed 16-bit integer field
  */
-INT16 NXCPMessage::getFieldAsInt16(UINT32 fieldId)
+INT16 NXCPMessage::getFieldAsInt16(UINT32 fieldId) const
 {
    void *value = get(fieldId, NXCP_DT_INT16);
    return (value != NULL) ? *((INT16 *)value) : 0;
@@ -427,7 +427,7 @@ INT16 NXCPMessage::getFieldAsInt16(UINT32 fieldId)
 /**
  * get unsigned 16-bit integer variable
  */
-UINT16 NXCPMessage::getFieldAsUInt16(UINT32 fieldId)
+UINT16 NXCPMessage::getFieldAsUInt16(UINT32 fieldId) const
 {
    void *value = get(fieldId, NXCP_DT_INT16);
    return value ? *((WORD *)value) : 0;
@@ -436,7 +436,7 @@ UINT16 NXCPMessage::getFieldAsUInt16(UINT32 fieldId)
 /**
  * get signed 64-bit integer field
  */
-INT64 NXCPMessage::getFieldAsInt64(UINT32 fieldId)
+INT64 NXCPMessage::getFieldAsInt64(UINT32 fieldId) const
 {
    void *value = get(fieldId, NXCP_DT_INT64);
    return (value != NULL) ? *((INT64 *)value) : 0;
@@ -445,7 +445,7 @@ INT64 NXCPMessage::getFieldAsInt64(UINT32 fieldId)
 /**
  * get unsigned 64-bit integer field
  */
-UINT64 NXCPMessage::getFieldAsUInt64(UINT32 fieldId)
+UINT64 NXCPMessage::getFieldAsUInt64(UINT32 fieldId) const
 {
    void *value = get(fieldId, NXCP_DT_INT64);
    return value ? *((UINT64 *)value) : 0;
@@ -454,7 +454,7 @@ UINT64 NXCPMessage::getFieldAsUInt64(UINT32 fieldId)
 /**
  * get 64-bit floating point variable
  */
-double NXCPMessage::getFieldAsDouble(UINT32 fieldId)
+double NXCPMessage::getFieldAsDouble(UINT32 fieldId) const
 {
    void *value = get(fieldId, NXCP_DT_FLOAT);
    return (value != NULL) ? *((double *)value) : 0;
@@ -463,7 +463,7 @@ double NXCPMessage::getFieldAsDouble(UINT32 fieldId)
 /**
  * get time_t field
  */
-time_t NXCPMessage::getFieldAsTime(UINT32 fieldId)
+time_t NXCPMessage::getFieldAsTime(UINT32 fieldId) const
 {
    BYTE type;
    void *value = (void *)get(fieldId, 0xFF, &type);
@@ -484,7 +484,7 @@ time_t NXCPMessage::getFieldAsTime(UINT32 fieldId)
 /**
  * Get field as inet address
  */
-InetAddress NXCPMessage::getFieldAsInetAddress(UINT32 fieldId)
+InetAddress NXCPMessage::getFieldAsInetAddress(UINT32 fieldId) const
 {
    NXCP_MESSAGE_FIELD *f = find(fieldId);
    if (f == NULL)
@@ -513,7 +513,7 @@ InetAddress NXCPMessage::getFieldAsInetAddress(UINT32 fieldId)
  * be placed to buffer and pointer to buffer will be returned.
  * Note: bufferSize is buffer size in characters, not bytes!
  */
-TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, TCHAR *buffer, size_t bufferSize)
+TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, TCHAR *buffer, size_t bufferSize) const
 {
    if ((buffer != NULL) && (bufferSize == 0))
       return NULL;   // non-sense combination
@@ -563,7 +563,7 @@ TCHAR *NXCPMessage::getFieldAsString(UINT32 fieldId, TCHAR *buffer, size_t buffe
 /**
  * get variable as multibyte string
  */
-char *NXCPMessage::getFieldAsMBString(UINT32 fieldId, char *buffer, size_t bufferSize)
+char *NXCPMessage::getFieldAsMBString(UINT32 fieldId, char *buffer, size_t bufferSize) const
 {
    if ((buffer != NULL) && (bufferSize == 0))
       return NULL;   // non-sense combination
@@ -601,7 +601,7 @@ char *NXCPMessage::getFieldAsMBString(UINT32 fieldId, char *buffer, size_t buffe
 /**
  * get field as multibyte string
  */
-char *NXCPMessage::getFieldAsMBString(UINT32 fieldId, char *buffer, size_t bufferSize)
+char *NXCPMessage::getFieldAsMBString(UINT32 fieldId, char *buffer, size_t bufferSize) const
 {
 	return getFieldAsString(fieldId, buffer, bufferSize);
 }
@@ -611,7 +611,7 @@ char *NXCPMessage::getFieldAsMBString(UINT32 fieldId, char *buffer, size_t buffe
 /**
  * get field as UTF-8 string
  */
-char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t bufferSize)
+char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t bufferSize) const
 {
    if ((buffer != NULL) && (bufferSize == 0))
       return NULL;   // non-sense combination
@@ -658,7 +658,7 @@ char *NXCPMessage::getFieldAsUtf8String(UINT32 fieldId, char *buffer, size_t buf
  * and actual size of data will be returned
  * If pBuffer is NULL, just actual data length is returned
  */
-UINT32 NXCPMessage::getFieldAsBinary(UINT32 fieldId, BYTE *pBuffer, size_t bufferSize)
+UINT32 NXCPMessage::getFieldAsBinary(UINT32 fieldId, BYTE *pBuffer, size_t bufferSize) const
 {
    UINT32 size;
    void *value = get(fieldId, NXCP_DT_BINARY);
@@ -680,7 +680,7 @@ UINT32 NXCPMessage::getFieldAsBinary(UINT32 fieldId, BYTE *pBuffer, size_t buffe
  * Returns pointer to internal buffer or NULL if field not found
  * Data length set in size parameter.
  */
-BYTE *NXCPMessage::getBinaryFieldPtr(UINT32 fieldId, size_t *size)
+const BYTE *NXCPMessage::getBinaryFieldPtr(UINT32 fieldId, size_t *size) const
 {
    BYTE *data;
    void *value = get(fieldId, NXCP_DT_BINARY);
@@ -701,7 +701,7 @@ BYTE *NXCPMessage::getBinaryFieldPtr(UINT32 fieldId, size_t *size)
  * Get field as GUID
  * Returns NULL GUID on error
  */
-uuid NXCPMessage::getFieldAsGUID(UINT32 fieldId)
+uuid NXCPMessage::getFieldAsGUID(UINT32 fieldId) const
 {
    NXCP_MESSAGE_FIELD *f = find(fieldId);
    if (f == NULL)
@@ -880,7 +880,7 @@ void NXCPMessage::setFieldFromInt32Array(UINT32 fieldId, IntegerArray<UINT32> *d
 /**
  * get binary field as an array of 32 bit unsigned integers
  */
-UINT32 NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer)
+UINT32 NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UINT32 *buffer) const
 {
    UINT32 size = getFieldAsBinary(fieldId, (BYTE *)buffer, numElements * sizeof(UINT32));
    size /= sizeof(UINT32);   // Convert bytes to elements
@@ -892,7 +892,7 @@ UINT32 NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, UINT32 numElements, UIN
 /**
  * get binary field as an array of 32 bit unsigned integers
  */
-UINT32 NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data)
+UINT32 NXCPMessage::getFieldAsInt32Array(UINT32 fieldId, IntegerArray<UINT32> *data) const
 {
    data->clear();
 
@@ -962,7 +962,7 @@ static TCHAR *GetStringFromField(void *df)
 /**
  * Dump NXCP message
  */
-String NXCPMessage::dump(NXCP_MESSAGE *msg, int version)
+String NXCPMessage::dump(const NXCP_MESSAGE *msg, int version)
 {
    String out;
    int i;

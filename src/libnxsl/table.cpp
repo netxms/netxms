@@ -33,7 +33,7 @@ NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
 /**
  * addRow() method
  */
-NXSL_METHOD_DEFINITION(addRow)
+NXSL_METHOD_DEFINITION(Table, addRow)
 {
    *result = new NXSL_Value((INT32)((Table *)object->getData())->addRow());
    return 0;
@@ -42,7 +42,7 @@ NXSL_METHOD_DEFINITION(addRow)
 /**
  * addColumn(name) method
  */
-NXSL_METHOD_DEFINITION(addColumn)
+NXSL_METHOD_DEFINITION(Table, addColumn)
 {
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
@@ -54,7 +54,7 @@ NXSL_METHOD_DEFINITION(addColumn)
 /**
  * deleteRow(index) method
  */
-NXSL_METHOD_DEFINITION(deleteRow)
+NXSL_METHOD_DEFINITION(Table, deleteRow)
 {
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
@@ -67,7 +67,7 @@ NXSL_METHOD_DEFINITION(deleteRow)
 /**
  * deleteColumn(index) method
  */
-NXSL_METHOD_DEFINITION(deleteColumn)
+NXSL_METHOD_DEFINITION(Table, deleteColumn)
 {
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
@@ -80,7 +80,7 @@ NXSL_METHOD_DEFINITION(deleteColumn)
 /**
  * get(row, column) method
  */
-NXSL_METHOD_DEFINITION(get)
+NXSL_METHOD_DEFINITION(Table, get)
 {
    if (!argv[0]->isInteger() || !argv[1]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
@@ -93,7 +93,7 @@ NXSL_METHOD_DEFINITION(get)
 /**
  * getColumnIndex(name) method
  */
-NXSL_METHOD_DEFINITION(getColumnIndex)
+NXSL_METHOD_DEFINITION(Table, getColumnIndex)
 {
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
@@ -105,7 +105,7 @@ NXSL_METHOD_DEFINITION(getColumnIndex)
 /**
  * getColumnName(column) method
  */
-NXSL_METHOD_DEFINITION(getColumnName)
+NXSL_METHOD_DEFINITION(Table, getColumnName)
 {
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
@@ -118,7 +118,7 @@ NXSL_METHOD_DEFINITION(getColumnName)
 /**
  * set(row, column, value) method
  */
-NXSL_METHOD_DEFINITION(set)
+NXSL_METHOD_DEFINITION(Table, set)
 {
    if (!argv[0]->isInteger() || !argv[1]->isInteger())
       return NXSL_ERR_NOT_INTEGER;
@@ -137,14 +137,14 @@ NXSL_TableClass::NXSL_TableClass() : NXSL_Class()
 {
    _tcscpy(m_name, _T("Table"));
 
-   NXSL_REGISTER_METHOD(addColumn, 1);
-   NXSL_REGISTER_METHOD(addRow, 0);
-   NXSL_REGISTER_METHOD(deleteColumn, 1);
-   NXSL_REGISTER_METHOD(deleteRow, 1);
-   NXSL_REGISTER_METHOD(get, 2);
-   NXSL_REGISTER_METHOD(getColumnIndex, 1);
-   NXSL_REGISTER_METHOD(getColumnName, 1);
-   NXSL_REGISTER_METHOD(set, 3);
+   NXSL_REGISTER_METHOD(Table, addColumn, 1);
+   NXSL_REGISTER_METHOD(Table, addRow, 0);
+   NXSL_REGISTER_METHOD(Table, deleteColumn, 1);
+   NXSL_REGISTER_METHOD(Table, deleteRow, 1);
+   NXSL_REGISTER_METHOD(Table, get, 2);
+   NXSL_REGISTER_METHOD(Table, getColumnIndex, 1);
+   NXSL_REGISTER_METHOD(Table, getColumnName, 1);
+   NXSL_REGISTER_METHOD(Table, set, 3);
 }
 
 /**

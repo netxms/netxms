@@ -11,10 +11,11 @@ d none /opt/netxms/lib/netxms/ndd 0755 root other
 d none /opt/netxms/share 0755 root other
 d none /opt/netxms/share/netxms 0755 root other
 d none /opt/netxms/share/netxms/backgrounds 0755 root other
+d none /opt/netxms/share/netxms/files 0755 root other
 d none /opt/netxms/share/netxms/images 0755 root other
 d none /opt/netxms/share/netxms/mibs 0755 root other
-d none /opt/netxms/share/netxms/files 0755 root other
 d none /opt/netxms/share/netxms/sql 0755 root other
+d none /opt/netxms/share/netxms/templates 0755 root other
 d none /opt/netxms/svc 0755 root other
 f none /opt/netxms/bin/netxmsd 0755 root other
 f none /opt/netxms/bin/nxaction 0755 root other
@@ -519,6 +520,7 @@ f none /opt/netxms/share/netxms/sql/dbschema_mysql.sql 0644 root other
 f none /opt/netxms/share/netxms/sql/dbschema_oracle.sql 0644 root other
 f none /opt/netxms/share/netxms/sql/dbschema_pgsql.sql 0644 root other
 f none /opt/netxms/share/netxms/sql/dbschema_sqlite.sql 0644 root other
+f none /opt/netxms/share/netxms/templates/netxms_server.xml 0644 root other
 s none /opt/netxms/lib/libappagent.so.2=libappagent.so.2.0.0
 s none /opt/netxms/lib/libappagent.so=libappagent.so.2.0.0
 s none /opt/netxms/lib/libnetxms.so.2=libnetxms.so.2.0.0

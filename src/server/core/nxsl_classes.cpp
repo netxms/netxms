@@ -23,9 +23,37 @@
 #include "nxcore.h"
 
 /**
+ * clearGeoLocation()
+ */
+NXSL_METHOD_DEFINITION(NetObj, clearGeoLocation)
+{
+   ((NetObj *)object->getData())->setGeoLocation(GeoLocation());
+   *result = new NXSL_Value;
+   return 0;
+}
+
+/**
+ * setGeoLocation(loc)
+ */
+NXSL_METHOD_DEFINITION(NetObj, setGeoLocation)
+{
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
+
+   NXSL_Object *o = argv[0]->getValueAsObject();
+   if (_tcscmp(o->getClass()->getName(), g_nxslGeoLocationClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
+
+   GeoLocation *gl = (GeoLocation *)o->getData();
+   ((NetObj *)object->getData())->setGeoLocation(*gl);
+   *result = new NXSL_Value;
+   return 0;
+}
+
+/**
  * setStatusCalculation(type, ...)
  */
-NXSL_METHOD_DEFINITION(setStatusCalculation)
+NXSL_METHOD_DEFINITION(NetObj, setStatusCalculation)
 {
    if (argc < 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -70,7 +98,7 @@ NXSL_METHOD_DEFINITION(setStatusCalculation)
 /**
  * setStatusPropagation(type, ...)
  */
-NXSL_METHOD_DEFINITION(setStatusPropagation)
+NXSL_METHOD_DEFINITION(NetObj, setStatusPropagation)
 {
    if (argc < 1)
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
@@ -120,8 +148,10 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
 {
    _tcscpy(m_name, _T("NetObj"));
 
-   NXSL_REGISTER_METHOD(setStatusCalculation, -1);
-   NXSL_REGISTER_METHOD(setStatusPropagation, -1);
+   NXSL_REGISTER_METHOD(NetObj, clearGeoLocation, 0);
+   NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
+   NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);
+   NXSL_REGISTER_METHOD(NetObj, setStatusPropagation, -1);
 }
 
 /**
@@ -170,6 +200,10 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr
    {
       pValue = new NXSL_Value(object->getPostalAddress()->getCity());
    }
+   else if (!_tcscmp(pszAttr, _T("geolocation")))
+   {
+      pValue = new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, new GeoLocation(object->getGeoLocation())));
+   }
    else if (!_tcscmp(pszAttr, _T("streetAddress")))
    {
       pValue = new NXSL_Value(object->getPostalAddress()->getStreetAddress());
@@ -196,8 +230,10 @@ NXSL_ZoneClass::NXSL_ZoneClass() : NXSL_Class()
 {
    _tcscpy(m_name, _T("Zone"));
 
-   NXSL_REGISTER_METHOD(setStatusCalculation, -1);
-   NXSL_REGISTER_METHOD(setStatusPropagation, -1);
+   NXSL_REGISTER_METHOD(NetObj, clearGeoLocation, 0);
+   NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
+   NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);
+   NXSL_REGISTER_METHOD(NetObj, setStatusPropagation, -1);
 }
 
 /**
@@ -222,6 +258,10 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    else if (!_tcscmp(pszAttr, _T("country")))
    {
       pValue = new NXSL_Value(zone->getPostalAddress()->getCountry());
+   }
+   else if (!_tcscmp(pszAttr, _T("geolocation")))
+   {
+      pValue = new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, new GeoLocation(zone->getGeoLocation())));
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
@@ -292,7 +332,7 @@ static int ChangeFlagMethod(NXSL_Object *object, NXSL_Value *arg, NXSL_Value **r
 /**
  * enableAgent(enabled) method
  */
-NXSL_METHOD_DEFINITION(enableAgent)
+NXSL_METHOD_DEFINITION(Node, enableAgent)
 {
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_NXCP);
 }
@@ -300,7 +340,7 @@ NXSL_METHOD_DEFINITION(enableAgent)
 /**
  * enableConfigurationPolling(enabled) method
  */
-NXSL_METHOD_DEFINITION(enableConfigurationPolling)
+NXSL_METHOD_DEFINITION(Node, enableConfigurationPolling)
 {
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_CONF_POLL);
 }
@@ -308,7 +348,7 @@ NXSL_METHOD_DEFINITION(enableConfigurationPolling)
 /**
  * enableIcmp(enabled) method
  */
-NXSL_METHOD_DEFINITION(enableIcmp)
+NXSL_METHOD_DEFINITION(Node, enableIcmp)
 {
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_ICMP);
 }
@@ -316,7 +356,7 @@ NXSL_METHOD_DEFINITION(enableIcmp)
 /**
  * enableSnmp(enabled) method
  */
-NXSL_METHOD_DEFINITION(enableSnmp)
+NXSL_METHOD_DEFINITION(Node, enableSnmp)
 {
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_SNMP);
 }
@@ -324,7 +364,7 @@ NXSL_METHOD_DEFINITION(enableSnmp)
 /**
  * enableStatusPolling(enabled) method
  */
-NXSL_METHOD_DEFINITION(enableStatusPolling)
+NXSL_METHOD_DEFINITION(Node, enableStatusPolling)
 {
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_STATUS_POLL);
 }
@@ -332,7 +372,7 @@ NXSL_METHOD_DEFINITION(enableStatusPolling)
 /**
  * enableTopologyPolling(enabled) method
  */
-NXSL_METHOD_DEFINITION(enableTopologyPolling)
+NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 {
    return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_TOPOLOGY_POLL);
 }
@@ -344,14 +384,17 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_Class()
 {
    _tcscpy(m_name, _T("Node"));
 
-   NXSL_REGISTER_METHOD(enableAgent, 1);
-   NXSL_REGISTER_METHOD(enableConfigurationPolling, 1);
-   NXSL_REGISTER_METHOD(enableIcmp, 1);
-   NXSL_REGISTER_METHOD(enableSnmp, 1);
-   NXSL_REGISTER_METHOD(enableStatusPolling, 1);
-   NXSL_REGISTER_METHOD(enableTopologyPolling, 1);
-   NXSL_REGISTER_METHOD(setStatusCalculation, -1);
-   NXSL_REGISTER_METHOD(setStatusPropagation, -1);
+   NXSL_REGISTER_METHOD(Node, enableAgent, 1);
+   NXSL_REGISTER_METHOD(Node, enableConfigurationPolling, 1);
+   NXSL_REGISTER_METHOD(Node, enableIcmp, 1);
+   NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
+   NXSL_REGISTER_METHOD(Node, enableStatusPolling, 1);
+   NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
+
+   NXSL_REGISTER_METHOD(NetObj, clearGeoLocation, 0);
+   NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
+   NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);
+   NXSL_REGISTER_METHOD(NetObj, setStatusPropagation, -1);
 }
 
 /**
@@ -395,6 +438,10 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    else if (!_tcscmp(pszAttr, _T("flags")))
    {
 		pValue = new NXSL_Value(pNode->getFlags());
+   }
+   else if (!_tcscmp(pszAttr, _T("geolocation")))
+   {
+      pValue = new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, new GeoLocation(pNode->getGeoLocation())));
    }
    else if (!_tcscmp(pszAttr, _T("guid")))
    {
@@ -544,8 +591,8 @@ NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_Class()
 {
    _tcscpy(m_name, _T("Interface"));
 
-   NXSL_REGISTER_METHOD(setStatusCalculation, -1);
-   NXSL_REGISTER_METHOD(setStatusPropagation, -1);
+   NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);
+   NXSL_REGISTER_METHOD(NetObj, setStatusPropagation, -1);
 }
 
 /**
@@ -787,7 +834,7 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 /**
  * Event::setMessage() method
  */
-NXSL_METHOD_DEFINITION(setMessage)
+NXSL_METHOD_DEFINITION(Event, setMessage)
 {
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
@@ -801,7 +848,7 @@ NXSL_METHOD_DEFINITION(setMessage)
 /**
  * Event::setSeverity() method
  */
-NXSL_METHOD_DEFINITION(setSeverity)
+NXSL_METHOD_DEFINITION(Event, setSeverity)
 {
    if (!argv[0]->isInteger())
       return NXSL_ERR_NOT_STRING;
@@ -819,7 +866,7 @@ NXSL_METHOD_DEFINITION(setSeverity)
 /**
  * Event::setUserTag() method
  */
-NXSL_METHOD_DEFINITION(setUserTag)
+NXSL_METHOD_DEFINITION(Event, setUserTag)
 {
    if (!argv[0]->isString())
       return NXSL_ERR_NOT_STRING;
@@ -837,9 +884,9 @@ NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 {
    _tcscpy(m_name, _T("Event"));
 
-   NXSL_REGISTER_METHOD(setMessage, 1);
-   NXSL_REGISTER_METHOD(setSeverity, 1);
-   NXSL_REGISTER_METHOD(setUserTag, 1);
+   NXSL_REGISTER_METHOD(Event, setMessage, 1);
+   NXSL_REGISTER_METHOD(Event, setSeverity, 1);
+   NXSL_REGISTER_METHOD(Event, setUserTag, 1);
 }
 
 /**
@@ -897,7 +944,7 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
 /**
  * Alarm::acknowledge() method
  */
-NXSL_METHOD_DEFINITION(acknowledge)
+NXSL_METHOD_DEFINITION(Alarm, acknowledge)
 {
    NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
    *result = new NXSL_Value(AckAlarmById(alarm->alarmId, NULL, false, 0));
@@ -907,7 +954,7 @@ NXSL_METHOD_DEFINITION(acknowledge)
 /**
  * Alarm::resolve() method
  */
-NXSL_METHOD_DEFINITION(resolve)
+NXSL_METHOD_DEFINITION(Alarm, resolve)
 {
    NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
    *result = new NXSL_Value(ResolveAlarmById(alarm->alarmId, NULL, false));
@@ -917,7 +964,7 @@ NXSL_METHOD_DEFINITION(resolve)
 /**
  * Alarm::terminate() method
  */
-NXSL_METHOD_DEFINITION(terminate)
+NXSL_METHOD_DEFINITION(Alarm, terminate)
 {
    NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
    *result = new NXSL_Value(ResolveAlarmById(alarm->alarmId, NULL, true));
@@ -931,9 +978,9 @@ NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
 {
    _tcscpy(m_name, _T("Alarm"));
 
-   NXSL_REGISTER_METHOD(acknowledge, 0);
-   NXSL_REGISTER_METHOD(resolve, 0);
-   NXSL_REGISTER_METHOD(terminate, 0);
+   NXSL_REGISTER_METHOD(Alarm, acknowledge, 0);
+   NXSL_REGISTER_METHOD(Alarm, resolve, 0);
+   NXSL_REGISTER_METHOD(Alarm, terminate, 0);
 }
 
 /**

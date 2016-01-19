@@ -37,6 +37,7 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nxconfig.h>
+#include <nxdbapi.h>
 
 /**
  * Initialization function declaration macro
@@ -638,5 +639,7 @@ Config LIBNXAGENT_EXPORTABLE *AgentOpenRegistry();
 void LIBNXAGENT_EXPORTABLE AgentCloseRegistry(bool modified);
 
 const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory();
+
+DB_HANDLE LIBNXAGENT_EXPORTABLE AgentGetLocalDatabaseHandle();
 
 #endif   /* _nms_agent_h_ */

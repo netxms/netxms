@@ -56,7 +56,7 @@ public:
    TCHAR* m_loginName;
    TCHAR* m_fullName;
    TCHAR* m_description;
-   StringList *m_memberList;
+   StringSet *m_memberList;
 
    Entry();
    ~Entry();
@@ -134,7 +134,7 @@ private:
    int readInPages(StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList, LDAP_CHAR *base);
    void fillLists(LDAPMessage *searchResult, StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList);
    TCHAR *ldap_internal_get_dn(LDAP *conn, LDAPMessage *entry);
-   void updateMembers(StringList *memberList, const char *firstAttr, LDAPMessage *forstEntry, const LDAP_CHAR *dn);
+   void updateMembers(StringSet *memberList, const char *firstAttr, LDAPMessage *firstEntry, const LDAP_CHAR *dn);
 #endif // WITH_LDAP
 
 public:
@@ -203,19 +203,20 @@ public:
 	virtual void modifyFromMessage(NXCPMessage *msg);
 	void detachLdapUser();
 
-	UINT32 getId() { return m_id; }
-	const TCHAR *getName() { return m_name; }
-	const TCHAR *getDescription() { return m_description; }
-	UINT64 getSystemRights() { return m_systemRights; }
-	UINT32 getFlags() { return m_flags; }
-   TCHAR *getGuidAsText(TCHAR *buffer) { return m_guid.toString(buffer); }
-   const TCHAR *getDn() { return m_userDn; }
+	UINT32 getId() const { return m_id; }
+	const TCHAR *getName() const { return m_name; }
+	const TCHAR *getDescription() const { return m_description; }
+	UINT64 getSystemRights() const { return m_systemRights; }
+	UINT32 getFlags() const { return m_flags; }
+   TCHAR *getGuidAsText(TCHAR *buffer) const { return m_guid.toString(buffer); }
+   const TCHAR *getDn() const { return m_userDn; }
 
-	bool isDeleted() { return (m_flags & UF_DELETED) ? true : false; }
-	bool isDisabled() { return (m_flags & UF_DISABLED) ? true : false; }
-	bool isModified() { return (m_flags & UF_MODIFIED) ? true : false; }
-	bool isLDAPUser() { return (m_flags & UF_LDAP_USER) ? true : false; }
-	bool hasSyncException() { return (m_flags & UF_SYNC_EXCEPTION) ? true : false; }
+   bool isGroup() const { return (m_id & GROUP_FLAG) != 0; }
+	bool isDeleted() const { return (m_flags & UF_DELETED) ? true : false; }
+	bool isDisabled() const { return (m_flags & UF_DISABLED) ? true : false; }
+	bool isModified() const { return (m_flags & UF_MODIFIED) ? true : false; }
+	bool isLDAPUser() const { return (m_flags & UF_LDAP_USER) ? true : false; }
+	bool hasSyncException() const { return (m_flags & UF_SYNC_EXCEPTION) ? true : false; }
 
 	void setDeleted() { m_flags |= UF_DELETED; }
 	void enable();
@@ -358,12 +359,9 @@ typedef struct
 class AccessList
 {
 private:
-   UINT32 m_dwNumElements;
-   ACL_ELEMENT *m_pElements;
-   MUTEX m_hMutex;
-
-   void lock() { MutexLock(m_hMutex); }
-   void unlock() { MutexUnlock(m_hMutex); }
+   int m_size;
+   int m_allocated;
+   ACL_ELEMENT *m_elements;
 
 public:
    AccessList();
@@ -394,26 +392,21 @@ bool AuthenticateUserForXMPPSubscription(const char *xmppId);
 
 UINT32 NXCORE_EXPORTABLE ValidateUserPassword(UINT32 userId, const TCHAR *login, const TCHAR *password, bool *isValid);
 UINT32 NXCORE_EXPORTABLE SetUserPassword(UINT32 id, const TCHAR *newPassword, const TCHAR *oldPassword, bool changeOwnPassword);
-bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 dwUserId, UINT32 dwGroupId);
+bool NXCORE_EXPORTABLE CheckUserMembership(UINT32 userId, UINT32 groupId);
 UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id, bool alreadyLocked = false);
-UINT32 NXCORE_EXPORTABLE CreateNewUser(TCHAR *pszName, BOOL bIsGroup, UINT32 *pdwId);
+UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *id);
 UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg);
 UINT32 NXCORE_EXPORTABLE DetachLdapUser(UINT32 id);
-UserDatabaseObject NXCORE_EXPORTABLE **OpenUserDatabase(int *count);
-void NXCORE_EXPORTABLE CloseUserDatabase();
+Iterator<UserDatabaseObject> NXCORE_EXPORTABLE *OpenUserDatabase();
+void NXCORE_EXPORTABLE CloseUserDatabase(Iterator<UserDatabaseObject> *it);
 const TCHAR NXCORE_EXPORTABLE *GetUserDbObjectAttr(UINT32 id, const TCHAR *name);
 UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name);
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value);
 bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize);
-void NXCORE_EXPORTABLE UpdateLDAPUser(const TCHAR* dn, Entry *obj);
-void RemoveDeletedLDAPEntry(StringObjectMap<Entry>* userEntryList, UINT32 m_action, bool isUser);
-void NXCORE_EXPORTABLE UpdateLDAPGroup(const TCHAR* dn, Entry *obj);
-void SyncGroupMembers(Group* group, Entry *obj);
-UserDatabaseObject* GetUser(UINT32 userID);
-UserDatabaseObject* GetUser(const TCHAR* dn);
+void UpdateLDAPUser(const TCHAR* dn, Entry *obj);
+void RemoveDeletedLDAPEntries(StringObjectMap<Entry>* userEntryList, UINT32 m_action, bool isUser);
+void UpdateLDAPGroup(const TCHAR* dn, Entry *obj);
 THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg);
-bool UserNameIsUnique(const TCHAR *name, UINT32 id);
-bool GroupNameIsUnique(const TCHAR *name, UINT32 id);
 void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId);
 void UpdateGroupMembership(UINT32 userId, int numGroups, UINT32 *groups);
 void DumpUsers(CONSOLE_CTX pCtx);

@@ -31,7 +31,7 @@ NXSL_ConnectorClass LIBNXSL_EXPORTABLE g_nxslConnectorClass;
 /**
  * read() method
  */
-NXSL_METHOD_DEFINITION(read)
+NXSL_METHOD_DEFINITION(Connector, read)
 {
    *result = new NXSL_Value;
    return 0;
@@ -44,7 +44,7 @@ NXSL_ConnectorClass::NXSL_ConnectorClass() : NXSL_Class()
 {
    _tcscpy(m_name, _T("Connector"));
 
-   NXSL_REGISTER_METHOD(read, 0);
+   NXSL_REGISTER_METHOD(Connector, read, 0);
 }
 
 /**

@@ -1824,7 +1824,7 @@ UINT32 AgentConnection::takeScreenshot(const TCHAR *sessionName, BYTE **data, si
          UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc == ERR_SUCCESS)
          {
-            BYTE *p = response->getBinaryFieldPtr(VID_FILE_DATA, size);
+            const BYTE *p = response->getBinaryFieldPtr(VID_FILE_DATA, size);
             if (p != NULL)
             {
                *data = (BYTE *)malloc(*size);

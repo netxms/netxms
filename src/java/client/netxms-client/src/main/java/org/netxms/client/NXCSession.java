@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -54,7 +55,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.netxms.base.CompatTools;
 import org.netxms.base.EncryptionContext;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.InetAddressEx;
@@ -181,14 +181,14 @@ public class NXCSession
    // Various public constants
    public static final int DEFAULT_CONN_PORT = 4701;
 
-   // Notification channels
-   public static final int CHANNEL_EVENTS = 0x0001;
-   public static final int CHANNEL_SYSLOG = 0x0002;
-   public static final int CHANNEL_ALARMS = 0x0004;
-   public static final int CHANNEL_OBJECTS = 0x0008;
-   public static final int CHANNEL_SNMP_TRAPS = 0x0010;
-   public static final int CHANNEL_AUDIT_LOG = 0x0020;
-   public static final int CHANNEL_SITUATIONS = 0x0040;
+   // Core notification channels
+   public static final String CHANNEL_EVENTS = "Core.Events";
+   public static final String CHANNEL_SYSLOG = "Core.Syslog";
+   public static final String CHANNEL_ALARMS = "Core.Alarms";
+   public static final String CHANNEL_OBJECTS = "Core.Objects";
+   public static final String CHANNEL_SNMP_TRAPS = "Core.SNMP.Traps";
+   public static final String CHANNEL_AUDIT_LOG = "Core.Audit";
+   public static final String CHANNEL_SITUATIONS = "Core.Situations";
 
    // Object sync options
    public static final int OBJECT_SYNC_NOTIFY = 0x0001;
@@ -1424,7 +1424,7 @@ public class NXCSession
             msg.setEndOfFile(true);
          }
 
-         msg.setBinaryData(bytesRead  == -1 ? new byte[0] : CompatTools.arrayCopy(buffer, bytesRead));
+         msg.setBinaryData(bytesRead  == -1 ? new byte[0] : Arrays.copyOf(buffer, bytesRead));
          sendMessage(msg);
 
          bytesSent += bytesRead == -1 ? 0 : bytesRead;
@@ -2310,7 +2310,7 @@ public class NXCSession
     */
    public void syncMissingObjects(long[] objects, boolean syncComments, int options) throws IOException, NXCException
    {
-      final long[] syncList = CompatTools.arrayCopy(objects, objects.length);
+      final long[] syncList = Arrays.copyOf(objects, objects.length);
       int count = syncList.length;
       synchronized(objectList)
       {
@@ -3174,36 +3174,36 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-
+   
    /**
-    * Subscribe to notification channel(s)
+    * Subscribe to notification channel. Each subscribe call should be matched by unsubscribe call.
+    * Calling subscribe on already subscribed channel will increase internal counter, and subscription
+    * will be cancelled when this counter returns back to 0.
     *
-    * @param channels Notification channels to subscribe to. Multiple channels can be
-    *                 specified by combining them with OR operation.
+    * @param channel Notification channel to subscribe to.
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void subscribe(int channels) throws IOException, NXCException
+   public void subscribe(String channel) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_SUBSCRIPTION);
-      msg.setFieldInt32(NXCPCodes.VID_FLAGS, channels);
+      msg.setField(NXCPCodes.VID_NAME, channel);
       msg.setFieldInt16(NXCPCodes.VID_OPERATION, 1);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
 
    /**
-    * Unsubscribe from notification channel(s)
+    * Unsubscribe from notification channel.
     *
-    * @param channels Notification channels to unsubscribe from. Multiple channels can
-    *                 be specified by combining them with OR operation.
+    * @param channel Notification channel to unsubscribe from.
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void unsubscribe(int channels) throws IOException, NXCException
+   public void unsubscribe(String channel) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_SUBSCRIPTION);
-      msg.setFieldInt32(NXCPCodes.VID_FLAGS, channels);
+      msg.setField(NXCPCodes.VID_NAME, channel);
       msg.setFieldInt16(NXCPCodes.VID_OPERATION, 0);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());

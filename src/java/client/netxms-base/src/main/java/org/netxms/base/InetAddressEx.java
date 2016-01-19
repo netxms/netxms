@@ -94,11 +94,9 @@ public class InetAddressEx
       }
       return bits;
    }
-   
+
    /**
     * Convert bit count into mask
-    * 
-    * @param bits
     * @return
     */
    public InetAddress maskFromBits()
