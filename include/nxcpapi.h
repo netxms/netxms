@@ -283,7 +283,8 @@ enum MessageReceiverResult
    MSGRECV_CLOSED = 1,
    MSGRECV_TIMEOUT = 2,
    MSGRECV_COMM_FAILURE = 3,
-   MSGRECV_DECRYPTION_FAILURE = 4
+   MSGRECV_DECRYPTION_FAILURE = 4,
+   MSGRECV_PROTOCOL_ERROR = 5
 };
 
 /**
@@ -301,7 +302,7 @@ private:
    size_t m_dataSize;
    size_t m_bytesToSkip;
 
-   NXCPMessage *getMessageFromBuffer();
+   NXCPMessage *getMessageFromBuffer(bool *protocolError);
 
 protected:
    virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) = 0;

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -50,7 +50,7 @@ AbstractMessageReceiver::~AbstractMessageReceiver()
 /**
  * Get message from buffer
  */
-NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer()
+NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
 {
    NXCPMessage *msg = NULL;
 
@@ -89,6 +89,11 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer()
             m_buffer = (BYTE *)realloc(m_buffer, m_size);
             safe_free_and_null(m_decryptionBuffer);
          }
+         else if (msgSize > (size_t)0x3FFFFFFF)
+         {
+            // too large value in message size field, assuming garbage on input
+            *protocolError = true;
+         }
          else
          {
             m_bytesToSkip = msgSize - m_dataSize;
@@ -106,12 +111,18 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer()
 NXCPMessage *AbstractMessageReceiver::readMessage(UINT32 timeout, MessageReceiverResult *result)
 {
    NXCPMessage *msg;
+   bool protocolError = false;
    while(true)
    {
-      msg = getMessageFromBuffer();
+      msg = getMessageFromBuffer(&protocolError);
       if (msg != NULL)
       {
          *result = MSGRECV_SUCCESS;
+         break;
+      }
+      if (protocolError)
+      {
+         *result = MSGRECV_PROTOCOL_ERROR;
          break;
       }
       int bytes = readBytes(&m_buffer[m_dataSize], m_size - m_dataSize, timeout);
@@ -122,9 +133,9 @@ NXCPMessage *AbstractMessageReceiver::readMessage(UINT32 timeout, MessageReceive
       }
       if (m_bytesToSkip > 0)
       {
-         if (bytes <= (int)m_bytesToSkip)
+         if ((size_t)bytes <= m_bytesToSkip)
          {
-            m_bytesToSkip -= bytes;
+            m_bytesToSkip -= (size_t)bytes;
          }
          else
          {
@@ -135,7 +146,7 @@ NXCPMessage *AbstractMessageReceiver::readMessage(UINT32 timeout, MessageReceive
       }
       else
       {
-         m_dataSize += bytes;
+         m_dataSize += (size_t)bytes;
       }
    }
    return msg;
@@ -151,9 +162,10 @@ const TCHAR *AbstractMessageReceiver::resultToText(MessageReceiverResult result)
       _T("MSGRECV_CLOSED"), 
       _T("MSGRECV_TIMEOUT"), 
       _T("MSGRECV_COMM_FAILURE"), 
-      _T("MSGRECV_DECRYPTION_FAILURE") 
+      _T("MSGRECV_DECRYPTION_FAILURE"),
+      _T("MSGRECV_PROTOCOL_ERROR")
    };
-   return ((result >= MSGRECV_SUCCESS) && (result <= MSGRECV_DECRYPTION_FAILURE)) ? text[result] : _T("UNKNOWN");
+   return ((result >= MSGRECV_SUCCESS) && (result <= MSGRECV_PROTOCOL_ERROR)) ? text[result] : _T("UNKNOWN");
 }
 
 /**
