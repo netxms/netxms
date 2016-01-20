@@ -286,6 +286,8 @@ bool NXSL_VM::run(ObjectArray<NXSL_Value> *args,
 		m_constants->merge(pConstants);
 	}
 
+	m_env->configureVM(this);
+
    // Locate entry point and run
    UINT32 entryAddr = INVALID_ADDRESS;
 	if (entryPoint != NULL)

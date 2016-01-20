@@ -283,3 +283,10 @@ void NXSL_Environment::print(NXSL_Value *value)
       WriteToTerminal(_T("(null)"));
 	}
 }
+
+/**
+ * Additional VM configuration
+ */
+void NXSL_Environment::configureVM(NXSL_VM *vm)
+{
+}

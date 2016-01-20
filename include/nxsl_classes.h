@@ -481,6 +481,8 @@ public:
 	virtual void print(NXSL_Value *value);
 	virtual void trace(int level, const TCHAR *text);
 
+	virtual void configureVM(NXSL_VM *vm);
+
    void setLibrary(NXSL_Library *lib) { m_library = lib; }
 
    NXSL_ExtFunction *findFunction(const TCHAR *name);
