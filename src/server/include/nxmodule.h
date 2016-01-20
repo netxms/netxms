@@ -35,6 +35,7 @@ class Event;
 class NetObj;
 class PollerInfo;
 class NXSL_Environment;
+class NXSL_VM;
 struct NXCORE_LOG;
 
 /**
@@ -90,6 +91,7 @@ typedef struct
    UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, NXCPMessage *request);
    void (* pfClientSessionClose)(ClientSession *session);
    void (* pfNXSLServerEnvConfig)(NXSL_Environment *env);
+   void (* pfNXSLServerVMConfig)(NXSL_VM *vm);
    void (* pfOnConnectToAgent)(Node *node, AgentConnection *conn);
    BOOL (* pfOnAgentMessage)(NXCPMessage *msg, UINT32 nodeId);
    NXCORE_LOG *logs;

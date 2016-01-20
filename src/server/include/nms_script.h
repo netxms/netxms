@@ -139,6 +139,8 @@ public:
 	virtual void print(NXSL_Value *value);
 	virtual void trace(int level, const TCHAR *text);
 
+	virtual void configureVM(NXSL_VM *vm);
+
 	void setConsole(CONSOLE_CTX console) { m_console = console; }
 };
 
