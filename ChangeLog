@@ -10,7 +10,7 @@
 	- Fixed bug in action bar commands: disconnect and exit sometimes wasn't working
 - Android Agent:
 	- Updated ACRA library: now crash reports are sent via e-mail (will use the app installed on device to send mail)
-- Fixed issues: #1042, #1049, #1117, #1125, #1133
+- Fixed issues: #1042, #1049, #1117, #1125, #1133, #1139
 
 
 *
