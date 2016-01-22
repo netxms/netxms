@@ -101,6 +101,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	private Action actionLangChinese;
    private Action actionLangCzech;
 	private Action actionLangEnglish;
+   private Action actionLangFrench;
 	private Action actionLangRussian;
 	private Action actionLangSpanish;
 	private IContributionItem contribItemShowView;
@@ -264,6 +265,12 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 				setLanguage("en"); //$NON-NLS-1$
 			}
 		};
+      actionLangFrench = new Action("&French", Activator.getImageDescriptor("icons/lang/fr.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+         public void run()
+         {
+            setLanguage("fr"); //$NON-NLS-1$
+         }
+      };
 		actionLangRussian = new Action("&Russian", Activator.getImageDescriptor("icons/lang/ru.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
@@ -309,6 +316,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		langMenu.add(actionLangChinese);
       langMenu.add(actionLangCzech);
 		langMenu.add(actionLangEnglish);
+      langMenu.add(actionLangFrench);
 		langMenu.add(actionLangRussian);
 		langMenu.add(actionLangSpanish);
 
