@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -2217,9 +2217,17 @@ void NXSL_VM::getArrayAttribute(NXSL_Array *a, const TCHAR *attribute, bool safe
  */
 void NXSL_VM::getHashMapAttribute(NXSL_HashMap *m, const TCHAR *attribute, bool safe)
 {
-   if (!_tcscmp(attribute, _T("size")))
+   if (!_tcscmp(attribute, _T("keys")))
+   {
+      m_dataStack->push(m->getKeys());
+   }
+   else if (!_tcscmp(attribute, _T("size")))
    {
       m_dataStack->push(new NXSL_Value((INT32)m->size()));
+   }
+   else if (!_tcscmp(attribute, _T("values")))
+   {
+      m_dataStack->push(m->getValues());
    }
    else
    {

@@ -194,15 +194,17 @@ public:
    NXSL_Array(const StringList *values);
 	~NXSL_Array();
 
-	void set(int index, NXSL_Value *value);
-	NXSL_Value *get(int index) const;
-	NXSL_Value *getByPosition(int position) const;
-
-	int size() const { return m_size; }
-	int getMinIndex() const { return (m_size > 0) ? m_data[0].index : 0; }
+   int size() const { return m_size; }
+   int getMinIndex() const { return (m_size > 0) ? m_data[0].index : 0; }
    int getMaxIndex() const { return (m_size > 0) ? m_data[m_size - 1].index : 0; }
 
-	StringList *toStringList() const;
+   StringList *toStringList() const;
+
+   NXSL_Value *get(int index) const;
+   NXSL_Value *getByPosition(int position) const;
+
+   void set(int index, NXSL_Value *value);
+	void add(NXSL_Value *value) { if (m_size == 0) { set(0, value); } else { set(getMaxIndex() + 1, value); } }
 };
 
 /**
@@ -220,6 +222,8 @@ public:
 
    void set(const TCHAR *key, NXSL_Value *value) { m_values->set(key, value); }
    NXSL_Value *get(const TCHAR *key) const { return m_values->get(key); }
+   NXSL_Value *getKeys() const;
+   NXSL_Value *getValues() const;
 
 	int size() const { return m_values->size(); }
 };
