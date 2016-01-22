@@ -2048,3 +2048,21 @@ void NetObj::enterMaintenanceMode()
 void NetObj::leaveMaintenanceMode()
 {
 }
+
+/**
+ * Get all custom attributes as NXSL hash map
+ */
+NXSL_Value *NetObj::getCustomAttributesForNXSL() const
+{
+   NXSL_HashMap *map = new NXSL_HashMap();
+   lockProperties();
+   StructArray<KeyValuePair> *attributes = m_customAttributes.toArray();
+   for(int i = 0; i < attributes->size(); i++)
+   {
+      KeyValuePair *p = attributes->get(i);
+      map->set(p->key, new NXSL_Value((const TCHAR *)p->value));
+   }
+   unlockProperties();
+   delete attributes;
+   return new NXSL_Value(map);
+}

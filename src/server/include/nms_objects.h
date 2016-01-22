@@ -483,8 +483,8 @@ protected:
 	StringMap m_customAttributes;
    StringObjectMap<ModuleData> *m_moduleData;
 
-   void lockProperties() { MutexLock(m_mutexProperties); }
-   void unlockProperties() { MutexUnlock(m_mutexProperties); }
+   void lockProperties() const { MutexLock(m_mutexProperties); }
+   void unlockProperties() const { MutexUnlock(m_mutexProperties); }
    void lockACL() { MutexLock(m_mutexACL); }
    void unlockACL() { MutexUnlock(m_mutexACL); }
    void LockParentList(BOOL bWrite)
@@ -609,6 +609,7 @@ public:
    void setCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); setModified(); }
    void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); setModified(); }
    void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); setModified(); }
+   NXSL_Value *getCustomAttributesForNXSL() const;
 
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);
@@ -2386,6 +2387,8 @@ inline const InetAddress& GetObjectIpAddress(NetObj *object)
       return ((Subnet *)object)->getIpAddress();
    if (object->getObjectClass() == OBJECT_ACCESSPOINT)
       return ((AccessPoint *)object)->getIpAddress();
+   if (object->getObjectClass() == OBJECT_INTERFACE)
+      return ((Interface *)object)->getIpAddressList()->getFirstUnicastAddress();
    return InetAddress::INVALID;
 }
 
