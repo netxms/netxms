@@ -714,7 +714,7 @@ public class NXCSession
                file = new NXCReceivedFile(id);
                receivedFiles.put(id, file);
             }
-            file.close();
+            file.abortTransfer();
             receivedFiles.notifyAll();
          }
       }

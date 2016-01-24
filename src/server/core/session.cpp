@@ -10925,7 +10925,15 @@ void ClientSession::getAgentFile(NXCPMessage *request)
             bool follow = request->getFieldAsUInt16(VID_FILE_FOLLOW) ? true : false;
 				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile, request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
 				msg.setField(VID_NAME, job->getLocalFileName());
-				msg.setField(VID_RCC, AddJob(job) ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
+				if (AddJob(job))
+				{
+	            msg.setField(VID_RCC, RCC_SUCCESS);
+				}
+				else
+				{
+				   delete job;
+	            msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+				}
 			}
 			else
 			{

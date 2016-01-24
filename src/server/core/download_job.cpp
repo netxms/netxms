@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -154,7 +154,7 @@ bool FileDownloadJob::run()
             {
                msg.setField(VID_FILE_OFFSET, 0);
             }
-            msg.setField(VID_FILE_FOLLOW, (INT16)(m_follow ? 1 : 0));
+            msg.setField(VID_FILE_FOLLOW, m_follow);
             msg.setField(VID_NAME, m_localFile);
 
 				response = conn->customRequest(&msg, m_localFile, false, progressCallback, fileResendCallback, this);
@@ -212,7 +212,7 @@ bool FileDownloadJob::run()
 	{
 	   response.setField(VID_RCC, RCC_SUCCESS);
 		m_session->sendMessage(&response);
-		if(m_follow)
+		if (m_follow)
 		{
          g_monitoringList.addMonitoringFile(newFile, m_node, conn);
 		}
@@ -223,6 +223,12 @@ bool FileDownloadJob::run()
 	}
 	else
 	{
+	   // Send "abort file transfer" command to client
+	   NXCPMessage abortCmd;
+	   abortCmd.setCode(CMD_ABORT_FILE_TRANSFER);
+	   abortCmd.setId(m_requestId);
+	   m_session->sendMessage(&abortCmd);
+
       switch(rcc)
       {
          case ERR_ACCESS_DENIED:
@@ -244,32 +250,26 @@ bool FileDownloadJob::run()
 	return success;
 }
 
-
-//
-// Job cancellation handler
-//
-
+/**
+ * Job cancellation handler
+ */
 bool FileDownloadJob::onCancel()
 {
 	shutdown(m_socket, SHUT_RDWR);
 	return true;
 }
 
-
-//
-// Get additional info for logging
-//
-
+/**
+ * Get additional info for logging
+ */
 const TCHAR *FileDownloadJob::getAdditionalInfo()
 {
 	return m_info;
 }
 
-
 /**
  * Build file ID
- **/
-
+ */
 TCHAR *FileDownloadJob::buildServerFileName(UINT32 nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize)
 {
 	BYTE hash[MD5_DIGEST_SIZE];
