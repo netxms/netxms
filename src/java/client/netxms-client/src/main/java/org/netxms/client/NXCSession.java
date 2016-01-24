@@ -1570,7 +1570,8 @@ public class NXCSession
             {
                if (rf.getStatus() != NXCReceivedFile.OPEN)
                {
-                  if (rf.getStatus() == NXCReceivedFile.RECEIVED) file = rf.getFile();
+                  if (rf.getStatus() == NXCReceivedFile.RECEIVED) 
+                     file = rf.getFile();
                   break;
                }
             }

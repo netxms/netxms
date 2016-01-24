@@ -426,4 +426,12 @@ public abstract class AbstractTraceWidget extends Composite
 	{
 	   return viewPart;
 	}
+
+   /**
+    * @return the viewer
+    */
+   public TableViewer getViewer()
+   {
+      return viewer;
+   }
 }
