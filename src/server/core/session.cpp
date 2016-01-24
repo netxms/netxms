@@ -227,7 +227,7 @@ THREAD_RESULT THREAD_CALL ClientSession::updateThreadStarter(void *pArg)
 /**
  * Client session class constructor
  */
-ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr) : m_subscriptions(true)
+ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -250,6 +250,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr) : m_subscrip
    m_mutexSendSituations = MutexCreate();
    m_mutexPollerInit = MutexCreate();
    m_subscriptionLock = MutexCreate();
+   m_subscriptions = new StringObjectMap<UINT32>(true);
    m_dwFlags = 0;
 	m_clientType = CLIENT_TYPE_DESKTOP;
 	m_clientAddr = (struct sockaddr *)nx_memdup(addr, (addr->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6));
@@ -307,7 +308,8 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexSendSituations);
    MutexDestroy(m_mutexPollerInit);
    MutexDestroy(m_subscriptionLock);
-   safe_free(m_pOpenDCIList);
+   delete m_subscriptions;
+   free(m_pOpenDCIList);
    if (m_ppEPPRuleList != NULL)
    {
       UINT32 i;
@@ -368,7 +370,7 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
 bool ClientSession::isSubscribedTo(const TCHAR *channel) const
 {
    MutexLock(m_subscriptionLock);
-   bool subscribed = m_subscriptions.contains(channel);
+   bool subscribed = m_subscriptions->contains(channel);
    MutexUnlock(m_subscriptionLock);
    return subscribed;
 }
@@ -2927,19 +2929,18 @@ void ClientSession::createUser(NXCPMessage *pRequest)
    else
    {
       UINT32 dwResult, dwUserId;
-      BOOL bIsGroup;
       TCHAR szUserName[MAX_USER_NAME];
 
       pRequest->getFieldAsString(VID_USER_NAME, szUserName, MAX_USER_NAME);
       if (IsValidObjectName(szUserName))
       {
-         bIsGroup = pRequest->getFieldAsUInt16(VID_IS_GROUP);
-         dwResult = CreateNewUser(szUserName, bIsGroup, &dwUserId);
+         bool isGroup = pRequest->getFieldAsBoolean(VID_IS_GROUP);
+         dwResult = CreateNewUser(szUserName, isGroup, &dwUserId);
          msg.setField(VID_RCC, dwResult);
          if (dwResult == RCC_SUCCESS)
          {
             msg.setField(VID_USER_ID, dwUserId);   // Send id of new user to client
-            WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, dwUserId, _T("%s %s created"), bIsGroup ? _T("Group") : _T("User"), szUserName);
+            WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, dwUserId, _T("%s %s created"), isGroup ? _T("Group") : _T("User"), szUserName);
          }
       }
       else
@@ -4225,7 +4226,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 
       // Fill memory block with records
       pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
-      pCurr->timeStamp = dci->getLastPollTime();
+      pCurr->timeStamp = (UINT32)dci->getLastPollTime();
       switch(dataType)
       {
          case DCI_DT_INT:
@@ -8072,7 +8073,7 @@ void ClientSession::changeSubscription(NXCPMessage *request)
    if (channel[0] != 0)
    {
       MutexLock(m_subscriptionLock);
-      UINT32 *count = m_subscriptions.get(channel);
+      UINT32 *count = m_subscriptions->get(channel);
       if (request->getFieldAsBoolean(VID_OPERATION))
       {
          // Subscribe
@@ -8080,7 +8081,7 @@ void ClientSession::changeSubscription(NXCPMessage *request)
          {
             count = new UINT32;
             *count = 1;
-            m_subscriptions.set(channel, count);
+            m_subscriptions->set(channel, count);
          }
          else
          {
@@ -8096,7 +8097,7 @@ void ClientSession::changeSubscription(NXCPMessage *request)
             (*count)--;
             debugPrintf(5, _T("Subscription removed: %s (%d)"), channel, *count);
             if (*count == 0)
-               m_subscriptions.remove(channel);
+               m_subscriptions->remove(channel);
          }
       }
       MutexUnlock(m_subscriptionLock);

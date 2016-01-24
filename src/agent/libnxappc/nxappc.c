@@ -38,6 +38,7 @@
 
 #include <winsock2.h>
 #include <windows.h>
+#include <malloc.h>
 
 #define SELECT_NFDS(f) (0)
 
@@ -116,7 +117,7 @@ int LIBNXAPPC_EXPORTABLE nxappc_open_channel(void)
 	
 	addrLocal.sin_family = AF_INET;
    addrLocal.sin_addr.s_addr = inet_addr("127.0.0.1");
-   addrLocal.sin_port = htons(atoi(s_name));
+   addrLocal.sin_port = htons(atoi(s_channel));
 	if (connect(s_socket, (struct sockaddr *)&addrLocal, sizeof(addrLocal)) == -1)
    {
       closesocket(s_socket);
@@ -184,12 +185,14 @@ int LIBNXAPPC_EXPORTABLE nxappc_send_event(int code, const char *name, const cha
  */
 int LIBNXAPPC_EXPORTABLE nxappc_send_data(void *data, int size)
 {
+   char *msg;
+
    if ((size < 0) || (size > 65532))
       return NXAPPC_FAIL;
 
    CHECK_CHANNEL;
 
-   char *msg = alloca(size + 4);
+   msg = alloca(size + 4);
    msg[0] = NXAPPC_CMD_SEND_DATA;
    msg[1] = 0; // reserved
    *((unsigned short *)&msg[2]) = (unsigned short)size;

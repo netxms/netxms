@@ -113,7 +113,7 @@ int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
       }
    }
 
-   GeoLocation *gl = new GeoLocation(argv[0]->getValueAsReal(), argv[1]->getValueAsReal(), type);
+   GeoLocation *gl = new GeoLocation(type, argv[0]->getValueAsReal(), argv[1]->getValueAsReal());
    *result = new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, gl));
    return 0;
 }

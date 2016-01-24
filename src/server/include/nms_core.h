@@ -387,10 +387,13 @@ public:
 };
 
 /**
- * Client (user) session
+ * Processing thread starter declaration for client session
  */
 #define DECLARE_THREAD_STARTER(func) static void ThreadStarter_##func(void *);
 
+/**
+ * Client (user) session
+ */
 class NXCORE_EXPORTABLE ClientSession
 {
 private:
@@ -446,7 +449,7 @@ private:
 	CONSOLE_CTX m_console;			// Server console context
 	StringList m_musicTypeList;
 	ObjectIndex m_agentConn;
-	StringObjectMap<UINT32> m_subscriptions;
+	StringObjectMap<UINT32> *m_subscriptions;
 	MUTEX m_subscriptionLock;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
