@@ -1447,7 +1447,7 @@ restart_agent_check:
 			for(i = 0; i < m_dwChildCount; i++)
 				if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
                 (((Interface *)m_pChildList[i])->getAdminState() != IF_ADMIN_STATE_DOWN) &&
-					 (((Interface *)m_pChildList[i])->getOperState() == IF_OPER_STATE_UP) &&
+					 (((Interface *)m_pChildList[i])->getConfirmedOperState() == IF_OPER_STATE_UP) &&
 					 (m_pChildList[i]->Status() != STATUS_UNMANAGED))
 				{
 					allDown = false;

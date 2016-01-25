@@ -778,19 +778,22 @@ protected:
    UINT32 m_type;
    UINT32 m_mtu;
    UINT64 m_speed;
-	UINT32 m_bridgePortNumber;		// 802.1D port number
-	UINT32 m_slotNumber;				// Vendor/device specific slot number
-	UINT32 m_portNumber;				// Vendor/device specific port number
-	UINT32 m_peerNodeId;				// ID of peer node object, or 0 if unknown
-	UINT32 m_peerInterfaceId;		// ID of peer interface object, or 0 if unknown
+	UINT32 m_bridgePortNumber;		 // 802.1D port number
+	UINT32 m_slotNumber;				 // Vendor/device specific slot number
+	UINT32 m_portNumber;				 // Vendor/device specific port number
+	UINT32 m_peerNodeId;				 // ID of peer node object, or 0 if unknown
+	UINT32 m_peerInterfaceId;		 // ID of peer interface object, or 0 if unknown
    LinkLayerProtocol m_peerDiscoveryProtocol;  // Protocol used to discover peer node
-	WORD m_adminState;				// interface administrative state
-	WORD m_operState;					// interface operational state
-	WORD m_dot1xPaeAuthState;		// 802.1x port auth state
-	WORD m_dot1xBackendAuthState;	// 802.1x backend auth state
+	INT16 m_adminState;				 // interface administrative state
+	INT16 m_operState;				 // interface operational state
+   INT16 m_pendingOperState;
+	INT16 m_confirmedOperState;
+	INT16 m_dot1xPaeAuthState;		 // 802.1x port auth state
+	INT16 m_dot1xBackendAuthState; // 802.1x backend auth state
    UINT64 m_lastDownEventId;
 	int m_pendingStatus;
-	int m_pollCount;
+	int m_statusPollCount;
+	int m_operStatePollCount;
 	int m_requiredPollCount;
    UINT32 m_zoneId;
    UINT32 m_pingTime;
@@ -837,6 +840,7 @@ public:
 	UINT32 getFlags() { return m_flags; }
 	int getAdminState() { return (int)m_adminState; }
 	int getOperState() { return (int)m_operState; }
+   int getConfirmedOperState() { return (int)m_confirmedOperState; }
 	int getDot1xPaeAuthState() { return (int)m_dot1xPaeAuthState; }
 	int getDot1xBackendAuthState() { return (int)m_dot1xBackendAuthState; }
 	const TCHAR *getDescription() { return m_description; }
