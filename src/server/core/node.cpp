@@ -6312,7 +6312,7 @@ Subnet *Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
       while(FindSubnetByIP(m_zoneId, addr) != NULL)
       {
          baseAddr.setMaskBits(baseAddr.getMaskBits() + 1);
-         InetAddress addr = baseAddr.getSubnetAddress();
+         addr = baseAddr.getSubnetAddress();
       }
 
       // Do not create subnet if there are no address space for it
