@@ -83,7 +83,7 @@ public class SplashHandler extends BasicSplashHandler
 		final Color versionColor = new Color(Display.getCurrent(), 224, 224, 224);
 		final Font versionFont = new Font(Display.getCurrent(), "Verdana", 9, SWT.NONE); //$NON-NLS-1$
 		final String versionText = Messages.get().SplashHandler_Version + NXCommon.VERSION + " (" + BuildNumber.TEXT + ")";
-		final String copyrightText = "\u00A9 2003-2015 Raden Solutions";
+		final String copyrightText = "\u00A9 2003-2016 Raden Solutions";
 		Composite content = getContent();
 		content.addPaintListener(new PaintListener() {
 			@Override
