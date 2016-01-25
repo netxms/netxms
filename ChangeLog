@@ -9,12 +9,13 @@
 - Object custom attributes can be accessed as hash map in NXSL
 - Management console:
 	- Improved file transfer error handling
+	- Double click on geo map zoom in and center map on point under cursor
 - Android Console:
 	- Updated ACRA library: now crash reports are sent via e-mail (will use the app installed on device to send mail)
 	- Fixed bug in action bar commands: disconnect and exit sometimes wasn't working
 - Android Agent:
 	- Updated ACRA library: now crash reports are sent via e-mail (will use the app installed on device to send mail)
-- Fixed issues: #1042, #1049, #1117, #1125, #1133, #1139
+- Fixed issues: #1042, #1049, #1117, #1125, #1133, #1134, #1139
 
 
 *

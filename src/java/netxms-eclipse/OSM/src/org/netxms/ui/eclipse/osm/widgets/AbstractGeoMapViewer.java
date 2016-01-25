@@ -577,6 +577,20 @@ public abstract class AbstractGeoMapViewer extends Canvas implements PaintListen
 	@Override
 	public void mouseDoubleClick(MouseEvent e)
 	{
+      int zoom = accessor.getZoom();
+      if (zoom < 18)
+      {
+         int step = ((e.stateMask & SWT.SHIFT) != 0) ? 4 : 1;
+         zoom = (zoom + step > 18) ? 18 : zoom + step;
+         
+         final GeoLocation geoLocation = getLocationAtPoint(new Point(e.x, e.y));
+         accessor.setZoom(zoom);
+         accessor.setLatitude(geoLocation.getLatitude());
+         accessor.setLongitude(geoLocation.getLongitude());
+         reloadMap();
+         notifyOnZoomChange();
+         notifyOnPositionChange();
+      }
 	}
 
 	/* (non-Javadoc)
