@@ -343,6 +343,8 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
       {
          TCHAR secret[MAX_SECRET_LENGTH];
          ConfigReadStr(_T("AgentDefaultSharedSecret"), secret, MAX_SECRET_LENGTH, _T("netxms"));
+         DecryptPassword(_T("netxms"), secret, secret, MAX_SECRET_LENGTH);
+
          pAgentConn->setAuthData(AUTH_SHA1_HASH, secret);
          pAgentConn->connect(g_pServerKey, FALSE, &rcc);
       }

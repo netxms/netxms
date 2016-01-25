@@ -2151,6 +2151,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
       {
          TCHAR secret[MAX_SECRET_LENGTH];
          ConfigReadStr(_T("AgentDefaultSharedSecret"), secret, MAX_SECRET_LENGTH, _T("netxms"));
+         DecryptPassword(_T("netxms"), secret, secret, MAX_SECRET_LENGTH);
          pAgentConn->setAuthData(AUTH_SHA1_HASH, secret);
          if (pAgentConn->connect(g_pServerKey, FALSE, &rcc))
          {
