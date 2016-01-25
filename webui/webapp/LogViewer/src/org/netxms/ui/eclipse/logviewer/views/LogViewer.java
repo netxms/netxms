@@ -44,6 +44,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
@@ -217,7 +218,7 @@ public class LogViewer extends ViewPart
 	/**
 	 * Activate context
 	 */
-	private void activateContext()
+	protected void activateContext()
 	{
 		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
 		if (contextService != null)
@@ -293,7 +294,7 @@ public class LogViewer extends ViewPart
 	 * @param manager
 	 *           Menu manager for pull-down menu
 	 */
-	private void fillLocalPullDown(IMenuManager manager)
+	protected void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionExecute);
 		manager.add(actionClearFilter);
@@ -312,7 +313,7 @@ public class LogViewer extends ViewPart
 	 * @param manager
 	 *           Menu manager for local toolbar
 	 */
-	private void fillLocalToolBar(IToolBarManager manager)
+	protected void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionExecute);
 		manager.add(actionClearFilter);
@@ -362,7 +363,7 @@ public class LogViewer extends ViewPart
 	/**
 	 * Create actions
 	 */
-	private void createActions()
+	protected void createActions()
 	{
 		final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
 		
@@ -556,7 +557,7 @@ public class LogViewer extends ViewPart
 	/**
 	 * @param show
 	 */
-	private void showFilter(boolean show)
+	protected void showFilter(boolean show)
 	{
 		filterBuilder.setVisible(show);
 		FormData fd = (FormData)viewer.getTable().getLayoutData();
@@ -564,5 +565,32 @@ public class LogViewer extends ViewPart
 		viewer.getTable().getParent().layout();
 		if (show)
 			filterBuilder.setFocus();
+	}
+	
+	/**
+	 * @return
+	 */
+	protected TableViewer getViewer()
+	{
+	   return viewer;
+	}
+	
+	/**
+	 * @return
+	 */
+	protected Table getResultSet()
+	{
+	   return resultSet;
+	}
+	
+	/**
+	 * @param columnName
+	 * @return
+	 */
+	protected int getColumnIndex(String columnName)
+	{
+	   if (resultSet == null)
+	      return -1;
+	   return resultSet.getColumnIndex(columnName);
 	}
 }

@@ -210,10 +210,10 @@ public class TextViewWidget extends CompositeWithMessageBar
       fileID = id;
       offset = maxFileSize;
       setContent(loadFile(currentFile));
-      textViewer.setTopIndex(textViewer.getLineCount());
       this.follow = follow;
       if (follow)
       {
+         textViewer.setTopIndex(textViewer.getLineCount());
          monitorJob = new ConsoleJob(Messages.get().FileViewer_Download_File_Updates, null, Activator.PLUGIN_ID, null) {
             private boolean continueWork = true;
 

@@ -121,10 +121,11 @@ public class FileViewer extends ViewPart
 	public static boolean createView(IWorkbenchWindow window, Shell shell, final AgentFileData file, boolean tail, int offset, String secondaryId, final long nodeId) throws PartInitException
 	{
 	   boolean exceedSize = file.getFile().length() > TextViewWidget.MAX_FILE_SIZE;
-	   if(exceedSize && !MessageDialogHelper.openConfirm(shell, "File is too large",
+	   if (exceedSize && 
+	         !MessageDialogHelper.openConfirm(shell, "File is too large",
                   "File is too large to be fully shown. Click OK to see beginning of the file."))
       {
-	      if(tail)
+	      if (tail)
 	      {
 	         final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 
