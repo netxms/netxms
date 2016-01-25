@@ -842,6 +842,7 @@ UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id, bool alreadyLocked)
                ((Group *)group)->deleteUser(id);
             }
          }
+         delete it;
       }
 	}
 
