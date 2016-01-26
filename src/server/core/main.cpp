@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1096,6 +1096,19 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 	// Get command
 	pArg = ExtractWord(pszCmdLine, szBuffer);
 
+   if (IsCommand(_T("AT"), szBuffer, 2))
+   {
+      pArg = ExtractWord(pArg, szBuffer);
+      if (szBuffer[0] == _T('+'))
+      {
+         int offset = _tcstoul(&szBuffer[1], NULL, 0);
+         AddOneTimeScheduledTask(_T("Execute.Script"), time(NULL) + offset, pArg, 0, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
+      }
+      else
+      {
+         AddScheduledTask(_T("Execute.Script"), szBuffer, pArg, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
+      }
+   }
 	if (IsCommand(_T("DEBUG"), szBuffer, 2))
 	{
 		// Get argument
@@ -1146,6 +1159,22 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
    {
       ConsoleWrite(pCtx, _T("Starting housekeeper\n"));
       RunHouseKeeper();
+   }
+   else if (IsCommand(_T("LDAPSYNC"), szBuffer, 4))
+   {
+      LDAPConnection conn;
+      conn.syncUsers();
+   }
+   else if (IsCommand(_T("LOG"), szBuffer, 3))
+   {
+      while(_istspace(*pArg))
+         pArg++;
+      if (*pArg != 0)
+         DbgPrintf(0, _T("%s"), pArg);
+   }
+   else if (IsCommand(_T("LOGMARK"), szBuffer, 4))
+   {
+      DbgPrintf(0, _T("******* MARK *******"));
    }
 	else if (IsCommand(_T("RAISE"), szBuffer, 5))
 	{
@@ -1928,24 +1957,6 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 			ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node id(s)\n\n"));
 		}
 	}
-   else if (IsCommand(_T("LDAPSYNC"), szBuffer, 4))
-   {
-      LDAPConnection conn;
-      conn.syncUsers();
-   }
-   else if (IsCommand(_T("AT"), szBuffer, 2))
-   {
-      pArg = ExtractWord(pArg, szBuffer);
-      if (szBuffer[0] == _T('+'))
-      {
-         int offset = _tcstoul(&szBuffer[1], NULL, 0);
-         AddOneTimeScheduledTask(_T("Execute.Script"), time(NULL) + offset, pArg, 0, 0, SYSTEM_ACCESS_FULL);//TODO: change to correct user
-      }
-      else
-      {
-         AddScheduledTask(_T("Execute.Script"), szBuffer, pArg, 0, 0, SYSTEM_ACCESS_FULL); //TODO: change to correct user
-      }
-   }
 	else if (IsCommand(_T("HELP"), szBuffer, 2) || IsCommand(_T("?"), szBuffer, 1))
 	{
 		ConsoleWrite(pCtx,
@@ -1961,6 +1972,8 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 				_T("   help                      - Display this help\n")
             _T("   hkrun                     - Run housekeeper immediately\n")
 				_T("   ldapsync                  - Synchronize ldap users with local user database\n")
+				_T("   log <text>                - Write given text to server log file\n")
+            _T("   logmark                   - Write marker ******* MARK ******* to server log file\n")
             _T("   ping <address>            - Send ICMP echo request to given IP address\n")
             _T("   poll <type> <node>        - Initiate node poll\n")
 				_T("   raise <exception>         - Raise exception\n")

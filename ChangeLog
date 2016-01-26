@@ -7,6 +7,7 @@
 - Fixed bug that allows to crash server remotely by sending garbage to client connector port
 - NXSL: new hash map attributes "keys" and "values"
 - Object custom attributes can be accessed as hash map in NXSL
+- New server debug console commands "log" and "logmark"
 - Management console:
 	- Improved file transfer error handling
 	- Double click on geo map zoom in and center map on point under cursor
