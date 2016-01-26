@@ -2314,12 +2314,12 @@ bool Node::confPollAgent(UINT32 dwRqId)
 }
 
 /**
- * SNMP walker callback which just counts number of varbinds
+ * SNMP walker callback which sets indicator to true after first varbind and aborts walk
  */
-static UINT32 CountingSnmpWalkerCallback(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 IndicatorSnmpWalkerCallback(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
-	(*((int *)arg))++;
-	return SNMP_ERR_SUCCESS;
+   (*((bool *)arg)) = true;
+   return SNMP_ERR_COMM;
 }
 
 /**
@@ -2461,9 +2461,9 @@ bool Node::confPollSnmp(UINT32 dwRqId)
    }
 
    // Check for printer MIB support
-   int count = 0;
-   SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43.5.1.1.17"), CountingSnmpWalkerCallback, &count, FALSE);
-   if (count > 0)
+   bool present = false;
+   SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43"), IndicatorSnmpWalkerCallback, &present, FALSE);
+   if (present)
    {
       lockProperties();
       m_dwFlags |= NF_IS_PRINTER;
@@ -2740,9 +2740,9 @@ void Node::checkBridgeMib(SNMP_Transport *pTransport)
  */
 void Node::checkIfXTable(SNMP_Transport *pTransport)
 {
-	int count = 0;
-	SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), CountingSnmpWalkerCallback, &count, FALSE);
-   if (count > 0)
+	bool present = false;
+	SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), IndicatorSnmpWalkerCallback, &present, FALSE);
+   if (present)
    {
 		lockProperties();
       m_dwFlags |= NF_HAS_IFXTABLE;
