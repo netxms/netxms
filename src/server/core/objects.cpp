@@ -52,18 +52,6 @@ ObjectIndex g_idxConditionById;
 ObjectIndex g_idxServiceCheckById;
 ObjectIndex g_idxNetMapById;
 
-const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"),
-                               _T("Network"), _T("Container"), _T("Zone"), _T("ServiceRoot"),
-                               _T("Template"), _T("TemplateGroup"), _T("TemplateRoot"),
-                               _T("NetworkService"), _T("VPNConnector"), _T("Condition"),
-                               _T("Cluster"), _T("PolicyGroup"), _T("PolicyRoot"),
-                               _T("AgentPolicy"), _T("AgentPolicyConfig"), _T("NetworkMapRoot"),
-                               _T("NetworkMapGroup"), _T("NetworkMap"), _T("DashboardRoot"), 
-                               _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report"),
-                               _T("BusinessServiceRoot"), _T("BusinessService"), _T("NodeLink"),
-                               _T("ServiceCheck"), _T("MobileDevice"), _T("Rack"), _T("AccessPoint")
-};
-
 /**
  * Static data
  */
@@ -1829,7 +1817,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
 
 	ConsolePrintf(pCtx, _T("Object ID %d \"%s\"\n")
                        _T("   Class: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
-					  object->getId(), object->getName(), (object->getObjectClass() < OBJECT_CUSTOM) ? g_szClassName[object->getObjectClass()] : _T("Custom"),
+					  object->getId(), object->getName(), object->getObjectClassName(),
                  GetStatusAsText(object->Status(), true),
                  object->isModified(), object->isDeleted());
    ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 

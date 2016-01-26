@@ -530,6 +530,7 @@ public:
    virtual ~NetObj();
 
    virtual int getObjectClass() const { return OBJECT_GENERIC; }
+   virtual const TCHAR *getObjectClassName() const;
 
    UINT32 getId() const { return m_id; }
    const TCHAR *getName() const { return m_name; }
@@ -1787,9 +1788,6 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   virtual void enterMaintenanceMode();
-   virtual void leaveMaintenanceMode();
-
    void linkChildObjects();
    void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
 
@@ -2464,7 +2462,6 @@ extern DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot;
 extern BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot;
 
 extern UINT32 NXCORE_EXPORTABLE g_dwMgmtNode;
-extern const TCHAR *g_szClassName[];
 extern BOOL g_bModificationsLocked;
 extern Queue *g_pTemplateUpdateQueue;
 
