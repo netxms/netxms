@@ -1902,7 +1902,7 @@ void NetObj::addLocationToHistory()
 	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_ORACLE:
-			query = _T("SELECT * FROM (latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC) WHERE ROWNUM<=1");
+			query = _T("SELECT * FROM (SELECT latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC) WHERE ROWNUM<=1");
 			break;
 		case DB_SYNTAX_MSSQL:
 			query = _T("SELECT TOP 1 latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC");
