@@ -41,7 +41,7 @@
     </issueManagement>
 
     <properties>
-        <spring.version>4.2.1.RELEASE</spring.version>
+        <spring.version>4.2.4.RELEASE</spring.version>
         <slf4j.version>1.7.12</slf4j.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -93,7 +93,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
-            <version>5.0.1.Final</version>
+            <version>5.0.7.Final</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
