@@ -30,6 +30,11 @@ DB_DRIVER g_driverHandle = NULL;
  */
 DatabaseQuery g_queries[] =
 {
+   { _T("ASM_DISKGROUP"), MAKE_ORACLE_VERSION(11, 1), 1,
+       _T("SELECT name,state,type,(total_mb * 1024 * 1024) AS total,(free_mb * 1024 * 1024) AS free,")
+         _T("round(100 * free_mb / total_mb, 2) AS freepct,round(100 * (total_mb - free_mb) / total_mb, 2) AS usedpct,")
+         _T("((total_mb - free_mb) * 1024 * 1024) AS used,offline_disks FROM v$asm_diskgroup")
+   },
    { _T("DATAFILE"), MAKE_ORACLE_VERSION(10, 2), 1,
       _T("SELECT regexp_substr(regexp_substr(f.name, '[/\\][^/\\]+$'), '[^/\\]+') AS name,")
          _T("f.name AS full_name, (SELECT name FROM v$tablespace ts WHERE ts.ts#=d.ts#) AS tablespace,")
@@ -67,6 +72,8 @@ DatabaseQuery g_queries[] =
             _T("(SELECT count(*) FROM dba_jobs WHERE nvl(failures,0) <> 0) FailedJobs,")
       		_T("(SELECT sum(a.value) FROM v$sesstat a, v$statname b, v$session s WHERE a.statistic#=b.statistic# AND s.sid=a.sid AND b.name='opened cursors current') OpenCursors,")
             _T("(SELECT count(*) FROM dba_objects WHERE status!='VALID') InvalidObjects,")
+            _T("(SELECT coalesce(sum(bytes),0) FROM v$log) RedoTotal,")
+            _T("(SELECT coalesce(sum(blocks * block_size),0) FROM v$archived_log WHERE deleted='NO') ArchivedTotal,")
             _T("(SELECT /*+ cardinality(l.s 3000) cardinality(l.r 13000) */ count(*) FROM v$lock l) Locks,")
             _T("(SELECT count(*) FROM v$session) SessionCount ")
          _T("FROM dual")
@@ -415,6 +422,14 @@ static void SubAgentShutdown()
  */
 static NETXMS_SUBAGENT_PARAM s_parameters[] =
 {
+   { _T("Oracle.ASM.DiskGroup.Free(*)"), H_InstanceParameter, _T("ASM_DISKGROUP/FREE"), DCI_DT_STRING, _T("Oracle/ASM/Disk group: {instance} free space") },
+   { _T("Oracle.ASM.DiskGroup.FreePerc(*)"), H_InstanceParameter, _T("ASM_DISKGROUP/FREEPCT"), DCI_DT_STRING, _T("Oracle/ASM/Disk group: {instance} free space (%)") },
+   { _T("Oracle.ASM.DiskGroup.OfflineDisks(*)"), H_InstanceParameter, _T("ASM_DISKGROUP/OFFLINE_DISKS"), DCI_DT_STRING, _T("Oracle/ASM/Disk group: {instance} offline disks") },
+   { _T("Oracle.ASM.DiskGroup.State(*)"), H_InstanceParameter, _T("ASM_DISKGROUP/STATE"), DCI_DT_STRING, _T("Oracle/ASM/Disk group: {instance} state") },
+   { _T("Oracle.ASM.DiskGroup.Total(*)"), H_InstanceParameter, _T("ASM_DISKGROUP/TOTAL"), DCI_DT_STRING, _T("Oracle/ASM/Disk group: {instance} total space") },
+   { _T("Oracle.ASM.DiskGroup.Type(*)"), H_InstanceParameter, _T("ASM_DISKGROUP/TYPE"), DCI_DT_STRING, _T("Oracle/ASM/Disk group: {instance} type") },
+   { _T("Oracle.ASM.DiskGroup.Used(*)"), H_InstanceParameter, _T("ASM_DISKGROUP/USED"), DCI_DT_STRING, _T("Oracle/ASM/Disk group: {instance} used space") },
+   { _T("Oracle.ASM.DiskGroup.UsedPerc(*)"), H_InstanceParameter, _T("ASM_DISKGROUP/USEDPCT"), DCI_DT_STRING, _T("Oracle/ASM/Disk group: {instance} used space (%)") },
 	{ _T("Oracle.CriticalStats.AutoArchivingOff(*)"), H_GlobalParameter, _T("GLOBALSTATS/AAOFF"), DCI_DT_STRING, _T("Oracle/CriticalStats: Archive logs enabled but auto archiving off ") },
 	{ _T("Oracle.CriticalStats.DatafilesNeedMediaRecovery(*)"), H_GlobalParameter, _T("GLOBALSTATS/DFNEEDREC"), DCI_DT_INT64, _T("Oracle/CriticalStats: Number of datafiles that need media recovery") },
 	{ _T("Oracle.CriticalStats.Deadlocks(*)"), H_GlobalParameter, _T("GLOBALSTATS/DEADLOCKS"), DCI_DT_INT64, _T("Oracle/CriticalStats: Cumulative number of deadlocks") },
@@ -449,6 +464,8 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
 	{ _T("Oracle.Instance.Status(*)"), H_GlobalParameter, _T("INSTANCE/STATUS"), DCI_DT_STRING, _T("Oracle/Instance: Status") },
 	{ _T("Oracle.Instance.ShutdownPending(*)"), H_GlobalParameter, _T("INSTANCE/SHUTDOWN_PENDING"), DCI_DT_STRING, _T("Oracle/Instance: Is shutdown pending") },
 	{ _T("Oracle.Instance.Version(*)"), H_GlobalParameter, _T("INSTANCE/VERSION"), DCI_DT_STRING, _T("Oracle/Instance: DBMS Version") },
+   { _T("Oracle.Logs.ArchivedSize(*)"), H_GlobalParameter, _T("GLOBALSTATS/ARCHIVEDTOTAL"), DCI_DT_INT64, _T("Oracle/Logs: Total size of archived logs") },
+   { _T("Oracle.Logs.RedoSize(*)"), H_GlobalParameter, _T("GLOBALSTATS/REDOTOTAL"), DCI_DT_INT64, _T("Oracle/Logs: Total size of redo logs") },
 	{ _T("Oracle.Objects.InvalidCount(*)"), H_GlobalParameter, _T("GLOBALSTATS/INVALIDOBJECTS"), DCI_DT_INT64, _T("Oracle/Objects: Number of invalid objects in DB") },
 	{ _T("Oracle.Performance.CacheHitRatio(*)"), H_GlobalParameter, _T("GLOBALSTATS/CACHEHITRATIO"), DCI_DT_STRING, _T("Oracle/Performance: Data buffer cache hit ratio") },
 	{ _T("Oracle.Performance.DictCacheHitRatio(*)"), H_GlobalParameter, _T("GLOBALSTATS/DICTCACHEHITRATIO"), DCI_DT_STRING, _T("Oracle/Performance: Dictionary cache hit ratio") },
@@ -482,6 +499,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
+   { _T("Oracle.ASM.DiskGroups(*)"), H_TagList, _T("^ASM_DISKGROUP/STATUS@(.*)$") },
    { _T("Oracle.DataFiles(*)"), H_TagList, _T("^DATAFILE/STATUS@(.*)$") },
    { _T("Oracle.DataTags(*)"), H_TagList, _T("^(.*)$") },
    { _T("Oracle.TableSpaces(*)"), H_TagList, _T("^TABLESPACE/STATUS@(.*)$") }
