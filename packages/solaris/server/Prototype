@@ -11,12 +11,13 @@ d none /opt/netxms/lib/netxms/ndd 0755 root other
 d none /opt/netxms/share 0755 root other
 d none /opt/netxms/share/netxms 0755 root other
 d none /opt/netxms/share/netxms/backgrounds 0755 root other
-d none /opt/netxms/share/netxms/files 0755 root other
-d none /opt/netxms/share/netxms/images 0755 root other
 d none /opt/netxms/share/netxms/mibs 0755 root other
 d none /opt/netxms/share/netxms/sql 0755 root other
 d none /opt/netxms/share/netxms/templates 0755 root other
 d none /opt/netxms/svc 0755 root other
+d none /var/lib/netxms 0755 root other
+d none /var/lib/netxms/files 0755 root other
+d none /var/lib/netxms/images 0755 root other
 f none /opt/netxms/bin/netxmsd 0755 root other
 f none /opt/netxms/bin/nxaction 0755 root other
 f none /opt/netxms/bin/nxadm 0755 root other
@@ -90,15 +91,6 @@ f none /opt/netxms/lib/netxms/sms.nsm 0755 root other
 f none /opt/netxms/lib/netxms/sunos.nsm 0755 root other
 f none /opt/netxms/lib/netxms/tuxedo.nsm 0755 root other
 f none /opt/netxms/lib/netxms/ups.nsm 0755 root other
-f none /opt/netxms/share/netxms/images/092e4b35-4e7c-42df-b9b7-d5805bfac64e 0644 root other
-f none /opt/netxms/share/netxms/images/1ddb76a3-a05f-4a42-acda-22021768feaf 0644 root other
-f none /opt/netxms/share/netxms/images/7cd999e9-fbe0-45c3-a695-f84523b3a50c 0644 root other
-f none /opt/netxms/share/netxms/images/904e7291-ee3f-41b7-8132-2bd29288ecc8 0644 root other
-f none /opt/netxms/share/netxms/images/b314cf44-b2aa-478e-b23a-73bc5bb9a624 0644 root other
-f none /opt/netxms/share/netxms/images/ba6ab507-f62d-4b8f-824c-ca9d46f22375 0644 root other
-f none /opt/netxms/share/netxms/images/bacde727-b183-4e6c-8dca-ab024c88b999 0644 root other
-f none /opt/netxms/share/netxms/images/f5214d16-1ab1-4577-bb21-063cfd45d7af 0644 root other
-f none /opt/netxms/share/netxms/images/f9105c54-8dcf-483a-b387-b4587dfd3cba 0644 root other
 f none /opt/netxms/share/netxms/mibs/AAC-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/ACLMGMT-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/AGENT-GENERAL-MIB.txt 0644 root other
@@ -365,8 +357,8 @@ f none /opt/netxms/share/netxms/mibs/PowerNet-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/POWERSUPPLY-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/Printer-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/Q-BRIDGE-MIB.txt 0644 root other
-f none /opt/netxms/share/netxms/mibs/RADIUS-ACCT-CLIENT-MIB.txt 0644 root other
-f none /opt/netxms/share/netxms/mibs/RADIUS-ACCT-SERVER-MIB.txt 0644 root other
+f none /opt/netxms/share/netxms/mibs/RADIUS-ACC-CLIENT-MIB.txt 0644 root other
+f none /opt/netxms/share/netxms/mibs/RADIUS-ACC-SERVER-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/RADIUS-AUTH-CLIENT-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/RADIUS-AUTH-SERVER-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/RADLAN-HWENVIROMENT.txt 0644 root other
@@ -496,18 +488,6 @@ f none /opt/netxms/share/netxms/mibs/WS-USER-MGMT-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/WWW-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/XPPC-MIB.txt 0644 root other
 f none /opt/netxms/share/netxms/mibs/ZONE-DEFENSE-MGMT-MIB.txt 0644 root other
-f none /opt/netxms/share/netxms/mibs/netxms.mib 0644 root other
-f none /opt/netxms/share/netxms/files/Warning-A.wav 0644 root other
-f none /opt/netxms/share/netxms/files/Warning-B.wav 0644 root other
-f none /opt/netxms/share/netxms/files/Warning-C.wav 0644 root other
-f none /opt/netxms/share/netxms/files/Warning-D.wav 0644 root other
-f none /opt/netxms/share/netxms/files/Warning-E.wav 0644 root other
-f none /opt/netxms/share/netxms/files/Warning-F.wav 0644 root other
-f none /opt/netxms/share/netxms/files/Warning-Notification-A.wav 0644 root other
-f none /opt/netxms/share/netxms/files/Warning-Notification-B.wav 0644 root other
-f none /opt/netxms/share/netxms/files/Warning-Notification-C.wav 0644 root other
-f none /opt/netxms/share/netxms/files/Warning-Notification-D.wav 0644 root other
-f none /opt/netxms/share/netxms/files/Warning-Notification-F.wav 0644 root other
 f none /opt/netxms/share/netxms/sql/dbinit_db2.sql 0644 root other
 f none /opt/netxms/share/netxms/sql/dbinit_mssql.sql 0644 root other
 f none /opt/netxms/share/netxms/sql/dbinit_mysql.sql 0644 root other
@@ -521,7 +501,6 @@ f none /opt/netxms/share/netxms/sql/dbschema_oracle.sql 0644 root other
 f none /opt/netxms/share/netxms/sql/dbschema_pgsql.sql 0644 root other
 f none /opt/netxms/share/netxms/sql/dbschema_sqlite.sql 0644 root other
 f none /opt/netxms/share/netxms/templates/netxms_server.xml 0644 root other
-s none /opt/netxms/lib/libappagent.so.2=libappagent.so.2.0.0
 s none /opt/netxms/lib/libappagent.so=libappagent.so.2.0.0
 s none /opt/netxms/lib/libnetxms.so.2=libnetxms.so.2.0.0
 s none /opt/netxms/lib/libnetxms.so=libnetxms.so.2.0.0
@@ -574,7 +553,29 @@ s none /opt/netxms/lib/libnxtre.so.5=libnxtre.so.5.0.0
 s none /opt/netxms/lib/libnxtre.so=libnxtre.so.5.0.0
 s none /opt/netxms/lib/libstrophe.so.2=libstrophe.so.2.0.0
 s none /opt/netxms/lib/libstrophe.so=libstrophe.so.2.0.0
+s none /opt/netxms/lib/libappagent.so.2=libappagent.so.2.0.0
 f none /opt/netxms/svc/nxagentd 0555 root root
 f none /opt/netxms/svc/netxmsd 0555 root root
+f none /var/lib/netxms/netxms.mib 0644 root other
+f none /var/lib/netxms/images/092e4b35-4e7c-42df-b9b7-d5805bfac64e 0644 root other
+f none /var/lib/netxms/images/1ddb76a3-a05f-4a42-acda-22021768feaf 0644 root other
+f none /var/lib/netxms/images/7cd999e9-fbe0-45c3-a695-f84523b3a50c 0644 root other
+f none /var/lib/netxms/images/904e7291-ee3f-41b7-8132-2bd29288ecc8 0644 root other
+f none /var/lib/netxms/images/b314cf44-b2aa-478e-b23a-73bc5bb9a624 0644 root other
+f none /var/lib/netxms/images/ba6ab507-f62d-4b8f-824c-ca9d46f22375 0644 root other
+f none /var/lib/netxms/images/bacde727-b183-4e6c-8dca-ab024c88b999 0644 root other
+f none /var/lib/netxms/images/f5214d16-1ab1-4577-bb21-063cfd45d7af 0644 root other
+f none /var/lib/netxms/images/f9105c54-8dcf-483a-b387-b4587dfd3cba 0644 root other
+f none /var/lib/netxms/files/Warning-A.wav 0644 root other
+f none /var/lib/netxms/files/Warning-B.wav 0644 root other
+f none /var/lib/netxms/files/Warning-C.wav 0644 root other
+f none /var/lib/netxms/files/Warning-D.wav 0644 root other
+f none /var/lib/netxms/files/Warning-E.wav 0644 root other
+f none /var/lib/netxms/files/Warning-F.wav 0644 root other
+f none /var/lib/netxms/files/Warning-Notification-A.wav 0644 root other
+f none /var/lib/netxms/files/Warning-Notification-B.wav 0644 root other
+f none /var/lib/netxms/files/Warning-Notification-C.wav 0644 root other
+f none /var/lib/netxms/files/Warning-Notification-D.wav 0644 root other
+f none /var/lib/netxms/files/Warning-Notification-F.wav 0644 root other
 f none /var/svc/manifest/application/management/nxagentd.xml 0444 root root
 f none /var/svc/manifest/application/management/netxmsd.xml 0444 root root

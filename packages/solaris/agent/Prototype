@@ -8,6 +8,7 @@ d none /opt/netxms/lib 0755 root root
 d none /opt/netxms/lib/netxms 0755 root root
 d none /opt/netxms/lib/netxms/dbdrv 0755 root root
 d none /opt/netxms/svc 0755 root root
+d none /var/lib/netxms 0755 root root
 f none /opt/netxms/bin/nxagentd 0755 root root
 f none /opt/netxms/bin/nxappget 0755 root root
 f none /opt/netxms/bin/nxapush 0755 root root
