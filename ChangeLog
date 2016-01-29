@@ -3,6 +3,7 @@
 *
 
 - Additional parameters in Oracle subagent for redo logs and ASM monitoring
+- NXSL: variable $errormsg iholding error description set in catch block
 
 
 *

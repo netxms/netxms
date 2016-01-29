@@ -78,6 +78,14 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
 };
 
 /**
+ * Get error message for given error code
+ */
+static const TCHAR *GetErrorMessage(int error)
+{
+   return ((error > 0) && (error <= MAX_ERROR_NUMBER)) ? s_runtimeErrorMessage[error - 1] : _T("Unknown error code");
+}
+
+/**
  * Determine operation data type
  */
 static int SelectResultType(int nType1, int nType2, int nOp)
@@ -321,6 +329,7 @@ resume:
          {
             setGlobalVariable(_T("$errorcode"), new NXSL_Value(m_errorCode));
             setGlobalVariable(_T("$errorline"), new NXSL_Value(m_errorLine));
+            setGlobalVariable(_T("$errormsg"), new NXSL_Value(GetErrorMessage(m_errorCode)));
             setGlobalVariable(_T("$errortext"), new NXSL_Value(m_errorText));
             goto resume;
          }
@@ -2163,8 +2172,7 @@ void NXSL_VM::error(int nError)
    m_errorCode = nError;
    m_errorLine = (m_cp == INVALID_ADDRESS) ? 0 : m_instructionSet->get(m_cp)->m_nSourceLine;
    safe_free(m_errorText);
-   _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), nError, m_errorLine,
-              ((nError > 0) && (nError <= MAX_ERROR_NUMBER)) ? s_runtimeErrorMessage[nError - 1] : _T("Unknown error code"));
+   _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), nError, m_errorLine, GetErrorMessage(nError));
    m_errorText = _tcsdup(szBuffer);
    m_cp = INVALID_ADDRESS;
 }
