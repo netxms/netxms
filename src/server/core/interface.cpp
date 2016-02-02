@@ -544,9 +544,21 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 			switch(operState)
 			{
 				case IF_OPER_STATE_UP:
+		         if (expectedState == IF_EXPECTED_STATE_AUTO)
+		         {
+		            DbgPrintf(5, _T("Interface::StatusPoll(%d,%s): auto expected state changed to UP"), m_id, m_name);
+		            expectedState = IF_EXPECTED_STATE_UP;
+		            setExpectedState(expectedState);
+		         }
 					newStatus = ((expectedState == IF_EXPECTED_STATE_DOWN) ? STATUS_CRITICAL : STATUS_NORMAL);
 					break;
 				case IF_OPER_STATE_DOWN:
+               if (expectedState == IF_EXPECTED_STATE_AUTO)
+               {
+                  DbgPrintf(5, _T("Interface::StatusPoll(%d,%s): auto expected state changed to DOWN"), m_id, m_name);
+                  expectedState = IF_EXPECTED_STATE_DOWN;
+                  setExpectedState(expectedState);
+               }
 					newStatus = ((expectedState == IF_EXPECTED_STATE_UP) ? STATUS_CRITICAL : STATUS_NORMAL);
 					break;
 				case IF_OPER_STATE_TESTING:
@@ -558,6 +570,12 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 			}
 			break;
 		case IF_ADMIN_STATE_DOWN:
+         if (expectedState == IF_EXPECTED_STATE_AUTO)
+         {
+            DbgPrintf(5, _T("Interface::StatusPoll(%d,%s): auto expected state changed to DOWN"), m_id, m_name);
+            expectedState = IF_EXPECTED_STATE_DOWN;
+            setExpectedState(expectedState);
+         }
 			newStatus = STATUS_DISABLED;
 			break;
 		case IF_ADMIN_STATE_TESTING:

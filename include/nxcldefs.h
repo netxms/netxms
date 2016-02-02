@@ -238,6 +238,14 @@
 #define IF_EXPECTED_STATE_UP     0
 #define IF_EXPECTED_STATE_DOWN   1
 #define IF_EXPECTED_STATE_IGNORE 2
+#define IF_EXPECTED_STATE_AUTO   3
+
+/**
+ * Default expected state for new interface creation
+ */
+#define IF_DEFAULT_EXPECTED_STATE_UP      0
+#define IF_DEFAULT_EXPECTED_STATE_AUTO    1
+#define IF_DEFAULT_EXPECTED_STATE_IGNORE  2
 
 /**
  * Interface administrative states

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1110,6 +1110,20 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
    pInterface->setMTU(info->mtu);
    pInterface->setSpeed(info->speed);
    pInterface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
+
+   int defaultExpectedState = ConfigReadInt(_T("DefaultInterfaceExpectedState"), IF_DEFAULT_EXPECTED_STATE_UP);
+   switch(defaultExpectedState)
+   {
+      case IF_DEFAULT_EXPECTED_STATE_AUTO:
+         pInterface->setExpectedState(IF_EXPECTED_STATE_AUTO);
+         break;
+      case IF_DEFAULT_EXPECTED_STATE_IGNORE:
+         pInterface->setExpectedState(IF_EXPECTED_STATE_IGNORE);
+         break;
+      default:
+         pInterface->setExpectedState(IF_EXPECTED_STATE_UP);
+         break;
+   }
 
    // Insert to objects' list and generate event
    NetObjInsert(pInterface, true, false);
