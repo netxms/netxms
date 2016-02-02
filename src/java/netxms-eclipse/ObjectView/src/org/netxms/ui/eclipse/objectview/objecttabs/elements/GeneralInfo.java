@@ -45,6 +45,8 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class GeneralInfo extends TableElement
 {
+   private static final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore, "AUTO" };
+   
 	/**
 	 * @param parent
 	 * @param anchor
@@ -106,6 +108,7 @@ public class GeneralInfo extends TableElement
 				}
             addPair(Messages.get().GeneralInfo_AdmState, iface.getAdminStateAsText());
             addPair(Messages.get().GeneralInfo_OperState, iface.getOperStateAsText());
+            addPair("Expected state", ifaceExpectedState[iface.getExpectedState()]);
 				break;
 			case AbstractObject.OBJECT_NODE:
 				AbstractNode node = (AbstractNode)object;

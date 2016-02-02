@@ -37,7 +37,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class InterfaceListLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-	private static final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore };
+	private static final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore, "AUTO" };
 	
 	private AbstractNode node = null;
 	private NXCSession session = ConsoleSharedData.getSession();
@@ -78,14 +78,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 			case InterfacesTab.COLUMN_DESCRIPTION:
 				return iface.getDescription();
 			case InterfacesTab.COLUMN_EXPECTED_STATE:
-				try
-				{
-					return ifaceExpectedState[iface.getExpectedState()];
-				}
-				catch(ArrayIndexOutOfBoundsException e)
-				{
-					return null;
-				}
+				return ifaceExpectedState[iface.getExpectedState()];
 			case InterfacesTab.COLUMN_ID:
 				return Long.toString(iface.getObjectId());
 			case InterfacesTab.COLUMN_INDEX:
