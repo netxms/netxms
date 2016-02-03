@@ -403,6 +403,17 @@ bool NXSL_VM::unwind()
 }
 
 /**
+ * Add constant to VM
+ */
+bool NXSL_VM::addConstant(const TCHAR *name, NXSL_Value *value)
+{
+   if (m_constants->find(name) != NULL)
+      return false;  // not added
+   m_constants->create(name, value);
+   return true;
+}
+
+/**
  * Set global variale
  */
 void NXSL_VM::setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue)

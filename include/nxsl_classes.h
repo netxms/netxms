@@ -757,6 +757,8 @@ public:
 	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
 	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_globals->find(pszName); }
 
+	bool addConstant(const TCHAR *name, NXSL_Value *value);
+
 	void setStorage(NXSL_Storage *storage);
 
 	void storageWrite(const TCHAR *name, NXSL_Value *value) { m_storage->write(name, value); }
