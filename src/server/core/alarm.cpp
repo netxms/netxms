@@ -267,6 +267,7 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int state,
    TCHAR szQuery[2048];
    UINT32 alarmId = 0;
    BOOL bNewAlarm = TRUE;
+   bool updateRelatedEvent = false;
 
    // Expand alarm's message and key
    TCHAR *pszExpMsg = pEvent->expandText(pszMsg);
@@ -297,7 +298,12 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int state,
             NotifyClients(NX_NOTIFY_ALARM_CHANGED, alarm);
             UpdateAlarmInDB(alarm);
 
-				alarmId = alarm->alarmId;		// needed for correct update of related events
+            if(!alarm->connectedEvents.contains(pEvent->getId()))
+            {
+               alarmId = alarm->alarmId;		// needed for correct update of related events
+               updateRelatedEvent = true;
+               alarm->connectedEvents.add(pEvent->getId());
+            }
 
             bNewAlarm = FALSE;
             break;
@@ -328,6 +334,7 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int state,
 		alarm->timeoutEvent = timeoutEvent;
 		alarm->noteCount = 0;
 		alarm->ackTimeout = 0;
+		alarm->connectedEvents.add(pEvent->getId());
       nx_strncpy(alarm->message, pszExpMsg, MAX_EVENT_MSG_LENGTH);
       nx_strncpy(alarm->key, pszExpKey, MAX_DB_STRING);
 
@@ -359,6 +366,7 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int state,
 				  alarm->timeoutEvent, alarm->sourceEventId, alarm->ackTimeout,
 				  alarm->dciId);
       QueueSQLRequest(szQuery);
+      updateRelatedEvent = true;
 
       // Notify connected clients about new alarm
       NotifyClients(NX_NOTIFY_NEW_ALARM, alarm);
@@ -368,18 +376,21 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *pszMsg, TCHAR *pszKey, int state,
    if ((state & ALARM_STATE_MASK) != ALARM_STATE_TERMINATED)
 		UpdateObjectStatus(pEvent->getSourceId());
 
-	// Add record to alarm_events table
-	TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
-	const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, pEvent->getName(), valSeverity, valSource, valTimestamp, pEvent->getMessage() };
-	_sntprintf(valAlarmId, 16, _T("%d"), (int)alarmId);
-	_sntprintf(valEventId, 32, UINT64_FMT, pEvent->getId());
-	_sntprintf(valEventCode, 16, _T("%d"), (int)pEvent->getCode());
-	_sntprintf(valSeverity, 16, _T("%d"), (int)pEvent->getSeverity());
-	_sntprintf(valSource, 16, _T("%d"), pEvent->getSourceId());
-	_sntprintf(valTimestamp, 16, _T("%u"), (UINT32)pEvent->getTimeStamp());
-	static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
-	QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"),
-	                8, sqlTypes, values);
+   if(updateRelatedEvent)
+   {
+      // Add record to alarm_events table
+      TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
+      const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, pEvent->getName(), valSeverity, valSource, valTimestamp, pEvent->getMessage() };
+      _sntprintf(valAlarmId, 16, _T("%d"), (int)alarmId);
+      _sntprintf(valEventId, 32, UINT64_FMT, pEvent->getId());
+      _sntprintf(valEventCode, 16, _T("%d"), (int)pEvent->getCode());
+      _sntprintf(valSeverity, 16, _T("%d"), (int)pEvent->getSeverity());
+      _sntprintf(valSource, 16, _T("%d"), pEvent->getSourceId());
+      _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)pEvent->getTimeStamp());
+      static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
+      QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"),
+                      8, sqlTypes, values);
+   }
 
 	free(pszExpMsg);
    free(pszExpKey);
@@ -561,18 +572,22 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
 			}
          else
          {
-	         // Add record to alarm_events table if alarm is resolved
-	         TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
-	         const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, pEvent->getName(), valSeverity, valSource, valTimestamp, pEvent->getMessage() };
-	         _sntprintf(valAlarmId, 16, _T("%d"), (int)alarm->alarmId);
-	         _sntprintf(valEventId, 32, UINT64_FMT, pEvent->getId());
-	         _sntprintf(valEventCode, 16, _T("%d"), (int)pEvent->getCode());
-	         _sntprintf(valSeverity, 16, _T("%d"), (int)pEvent->getSeverity());
-	         _sntprintf(valSource, 16, _T("%d"), pEvent->getSourceId());
-	         _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)pEvent->getTimeStamp());
-	         static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
-	         QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"),
-	                         8, sqlTypes, values);
+            if(!alarm->connectedEvents.contains(pEvent->getId()))
+            {
+               alarm->connectedEvents.add(pEvent->getId());
+               // Add record to alarm_events table if alarm is resolved
+               TCHAR valAlarmId[16], valEventId[32], valEventCode[16], valSeverity[16], valSource[16], valTimestamp[16];
+               const TCHAR *values[8] = { valAlarmId, valEventId, valEventCode, pEvent->getName(), valSeverity, valSource, valTimestamp, pEvent->getMessage() };
+               _sntprintf(valAlarmId, 16, _T("%d"), (int)alarm->alarmId);
+               _sntprintf(valEventId, 32, UINT64_FMT, pEvent->getId());
+               _sntprintf(valEventCode, 16, _T("%d"), (int)pEvent->getCode());
+               _sntprintf(valSeverity, 16, _T("%d"), (int)pEvent->getSeverity());
+               _sntprintf(valSource, 16, _T("%d"), pEvent->getSourceId());
+               _sntprintf(valTimestamp, 16, _T("%u"), (UINT32)pEvent->getTimeStamp());
+               static int sqlTypes[8] = { DB_SQLTYPE_INTEGER, DB_SQLTYPE_BIGINT, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_INTEGER, DB_SQLTYPE_VARCHAR };
+               QueueSQLRequest(_T("INSERT INTO alarm_events (alarm_id,event_id,event_code,event_name,severity,source_object_id,event_timestamp,message) VALUES (?,?,?,?,?,?,?,?)"),
+                               8, sqlTypes, values);
+            }
          }
       }
    }
@@ -736,7 +751,7 @@ UINT32 UnlinkHelpdeskIssueById(UINT32 alarmId, ClientSession *session)
       {
          if (session != NULL)
          {
-            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), 
+            WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(),
                alarm->sourceObject, _T("Helpdesk issue %s unlinked from alarm %d (%s) on object %s"),
                alarm->helpDeskRef, alarm->alarmId, alarm->message,
                GetObjectName(alarm->sourceObject, _T("")));
@@ -1308,7 +1323,7 @@ UINT32 GetAlarmComments(UINT32 alarmId, NXCPMessage *msg)
 				msg->setField(varId++, DBGetFieldULong(hResult, i, 1));
             UINT32 userId = DBGetFieldULong(hResult, i, 2);
 				msg->setField(varId++, userId);
-				
+
             TCHAR *text = DBGetField(hResult, i, 3, NULL, 0);
 				msg->setField(varId++, CHECK_NULL_EX(text));
 				safe_free(text);
@@ -1322,7 +1337,7 @@ UINT32 GetAlarmComments(UINT32 alarmId, NXCPMessage *msg)
             {
                varId++;
             }
-				
+
             varId += 4;
 			}
 			DBFreeResult(hResult);
@@ -1465,6 +1480,21 @@ bool InitAlarmManager()
          alarm->resolvedByUser = DBGetFieldULong(hResult, i, 17);
          alarm->ackTimeout = DBGetFieldULong(hResult, i, 18);
          alarm->dciId = DBGetFieldULong(hResult, i, 19);
+
+         TCHAR query[256];
+         _sntprintf(query, 256, _T("SELECT event_id FROM alarm_events WHERE alarm_id=%d"), (int)alarm->alarmId);
+         DB_RESULT eventResult = DBSelect(hdb, query);
+         if (eventResult == NULL)
+         {
+            DBFreeResult(hResult);
+            return false;
+         }
+         int eventCount = DBGetNumRows(eventResult);
+         for(int j = 0; j < eventCount; j++)
+         {
+            alarm->connectedEvents.add(DBGetFieldUInt64(eventResult, j, 0));
+         }
+         DBFreeResult(eventResult);
          m_alarmList->add(alarm);
       }
    }

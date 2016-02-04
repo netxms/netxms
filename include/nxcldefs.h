@@ -1053,6 +1053,7 @@ typedef struct
    void *userData;         // Can be freely used by client application
 	UINT32 noteCount;       // Number of notes added to alarm
    UINT32 ackTimeout;      // Sticky acknowledgment end time. If acknowladgmant without timeout put 0
+   IntegerArray<UINT64> connectedEvents;
 } NXC_ALARM;
 
 /**

@@ -5,6 +5,7 @@
 - Additional parameters in Oracle subagent for redo logs and ASM monitoring
 - NXSL: variable $errormsg iholding error description set in catch block
 - Default interface expected state can be configured
+- Fixed error while event alarm linking multiple times
 - Fixed issues: #988, #1124
 
 
