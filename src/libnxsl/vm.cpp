@@ -288,11 +288,9 @@ bool NXSL_VM::run(ObjectArray<NXSL_Value> *args,
 
    // Preserve original global variables and constants
    pSavedGlobals = new NXSL_VariableSystem(m_globals);
-	if (pConstants != NULL)
-	{
-		pSavedConstants = new NXSL_VariableSystem(m_constants);
-		m_constants->merge(pConstants);
-	}
+   pSavedConstants = new NXSL_VariableSystem(m_constants);
+   if (pConstants != NULL)
+      m_constants->merge(pConstants);
 
 	m_env->configureVM(this);
 
@@ -408,7 +406,10 @@ bool NXSL_VM::unwind()
 bool NXSL_VM::addConstant(const TCHAR *name, NXSL_Value *value)
 {
    if (m_constants->find(name) != NULL)
+   {
+      delete value;
       return false;  // not added
+   }
    m_constants->create(name, value);
    return true;
 }
