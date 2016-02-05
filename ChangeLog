@@ -6,7 +6,7 @@
 - NXSL: variable $errormsg iholding error description set in catch block
 - Default interface expected state can be configured
 - Fixed error while event alarm linking multiple times
-- Fixed issues: #962, #988, #1124
+- Fixed issues: #962, #988, #1048, #1124
 
 
 *

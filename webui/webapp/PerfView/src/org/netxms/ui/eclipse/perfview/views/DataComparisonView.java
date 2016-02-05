@@ -88,7 +88,7 @@ public class DataComparisonView extends ViewPart
 	private int chartType = DataComparisonChart.BAR_CHART;
 	private boolean transposed = false;
 	private boolean showLegend = true;
-	private int legendPosition = GraphSettings.POSITION_RIGHT;
+	private int legendPosition = GraphSettings.POSITION_BOTTOM;
 	private boolean translucent = false;
 	private Image[] titleImages = new Image[5];
 
