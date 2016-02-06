@@ -31,6 +31,11 @@
 static TCHAR s_device[MAX_PATH];
 
 /**
+ * UERE (User Equivalent Range Error)
+ */
+static INT32 s_uere = 32;
+
+/**
  * NMEA info
  */
 static nmeaINFO s_nmeaInfo;
@@ -219,7 +224,8 @@ static THREAD_RESULT THREAD_CALL PollerThread(void *arg)
             int count = nmea_parse(&parser, buffer, (int)strlen(buffer), &s_nmeaInfo);
             if (count > 0)
             {
-               s_geolocation = GeoLocation(GL_GPS, NMEA_TO_DEG(s_nmeaInfo.lat), NMEA_TO_DEG(s_nmeaInfo.lon), 0, time(NULL));
+               s_geolocation = GeoLocation(GL_GPS, NMEA_TO_DEG(s_nmeaInfo.lat), NMEA_TO_DEG(s_nmeaInfo.lon),
+                                           (int)(s_nmeaInfo.HDOP * s_uere), time(NULL));
             }
             MutexUnlock(s_nmeaInfoLock);
          }
@@ -242,6 +248,7 @@ static THREAD s_pollerThread = INVALID_THREAD_HANDLE;
 static BOOL SubAgentInit(Config *config)
 {
 	// Parse configuration
+   s_uere = config->getValueAsInt(_T("/GPS/UERE"), s_uere);
 	const TCHAR *value = config->getValue(_T("/GPS/Device"));
 	if (value != NULL)
 	{
@@ -291,10 +298,25 @@ static LONG H_LocationInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
          ret_double(value, s_geolocation.getLatitude());
          break;
       case 'D': // direction
-         ret_int(value, s_nmeaInfo.direction);
+         ret_double(value, s_nmeaInfo.direction);
+         break;
+      case 'E': // elevation
+         ret_double(value, s_nmeaInfo.elv);
+         break;
+      case 'F': // Fix
+         ret_int(value, s_nmeaInfo.fix);
+         break;
+      case 'H': // HDOP
+         ret_double(value, s_nmeaInfo.HDOP);
          break;
       case 'L': // location as text
          _sntprintf(value, MAX_RESULT_LENGTH, _T("%s %s"), s_geolocation.getLatitudeAsString(), s_geolocation.getLongitudeAsString());
+         break;
+      case 'l': // full location data
+         _sntprintf(value, MAX_RESULT_LENGTH, _T("%d,%d,%f,%f,%d,%f,%f,%f,%f,") INT64_FMT,
+                    s_nmeaInfo.sig, s_nmeaInfo.fix, s_geolocation.getLatitude(), s_geolocation.getLongitude(),
+                    s_geolocation.getAccuracy(), s_nmeaInfo.elv, s_nmeaInfo.speed, s_nmeaInfo.direction,
+                    s_nmeaInfo.HDOP, (INT64)s_geolocation.getTimestamp());
          break;
       case 'O': // longitude as text
          ret_string(value, s_geolocation.getLongitudeAsString());
@@ -302,11 +324,17 @@ static LONG H_LocationInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
       case 'o': // longitude
          ret_double(value, s_geolocation.getLongitude());
          break;
+      case 'Q': // quality indicator
+         ret_int(value, s_nmeaInfo.sig);
+         break;
       case 's': // number of satellites in view
          ret_int(value, s_nmeaInfo.satinfo.inview);
          break;
       case 'S': // number of satellites in use
          ret_int(value, s_nmeaInfo.satinfo.inuse);
+         break;
+      case 'V': // VDOP
+         ret_double(value, s_nmeaInfo.VDOP);
          break;
       case 'X': // speed
          ret_int(value, s_nmeaInfo.speed);
@@ -325,15 +353,21 @@ static LONG H_LocationInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("GPS.Direction"), H_LocationInfo, _T("D"), DCI_DT_FLOAT, _T("GPS: direction") },
+   { _T("GPS.Elevation"), H_LocationInfo, _T("E"), DCI_DT_FLOAT, _T("GPS: elevation") },
+   { _T("GPS.Fix"), H_LocationInfo, _T("F"), DCI_DT_INT, _T("GPS: fix (operating mode)") },
+   { _T("GPS.HDOP"), H_LocationInfo, _T("H"), DCI_DT_FLOAT, _T("GPS: horizontal delusion of precision") },
 	{ _T("GPS.Latitude"), H_LocationInfo, _T("a"), DCI_DT_FLOAT, _T("GPS: latitude") },
    { _T("GPS.LatitudeText"), H_LocationInfo, _T("A"), DCI_DT_STRING, _T("GPS: latitude (as text)") },
    { _T("GPS.Location"), H_LocationInfo, _T("L"), DCI_DT_STRING, _T("GPS: location") },
+   { _T("GPS.LocationData"), H_LocationInfo, _T("l"), DCI_DT_STRING, _T("GPS: full location data") },
    { _T("GPS.Longitude"), H_LocationInfo, _T("o"), DCI_DT_FLOAT, _T("GPS: longitude") },
    { _T("GPS.LongitudeText"), H_LocationInfo, _T("O"), DCI_DT_STRING, _T("GPS: longitude (as text)") },
+   { _T("GPS.QualityIndicator"), H_LocationInfo, _T("Q"), DCI_DT_INT, _T("GPS: position quality indicator") },
    { _T("GPS.Satellites.InUse"), H_LocationInfo, _T("S"), DCI_DT_INT, _T("GPS: satellites in use") },
    { _T("GPS.Satellites.InView"), H_LocationInfo, _T("s"), DCI_DT_INT, _T("GPS: satellites in view") },
    { _T("GPS.Speed"), H_LocationInfo, _T("X"), DCI_DT_FLOAT, _T("GPS: ground speed") },
-	{ _T("GPS.SerialConfig"), H_Config, NULL, DCI_DT_STRING, _T("GPS: serial port configuration") }
+	{ _T("GPS.SerialConfig"), H_Config, NULL, DCI_DT_STRING, _T("GPS: serial port configuration") },
+   { _T("GPS.VDOP"), H_LocationInfo, _T("V"), DCI_DT_FLOAT, _T("GPS: vertical delusion of precision") }
 };
 
 /**

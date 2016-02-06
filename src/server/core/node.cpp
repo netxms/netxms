@@ -1573,7 +1573,7 @@ restart_agent_check:
       {
          time_t oldAgentuptime = m_agentUpTime;
          m_agentUpTime = _tcstol(buffer, NULL, 0);
-         if((UINT32)oldAgentuptime > (UINT32)m_agentUpTime)
+         if ((UINT32)oldAgentuptime > (UINT32)m_agentUpTime)
          {
             //cancel file monitoring locally(on agent it is canceled if agent have fallen)
             g_monitoringList.removeDisconectedNode(m_id);
@@ -1590,6 +1590,28 @@ restart_agent_check:
    {
       g_monitoringList.removeDisconectedNode(m_id);
       m_agentUpTime = 0;
+   }
+
+   // Get geolocation
+   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
+   {
+      TCHAR buffer[MAX_RESULT_LENGTH];
+      if (getItemFromAgent(_T("GPS.LocationData"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      {
+         GeoLocation loc = GeoLocation::parseAgentData(buffer);
+         if (loc.getType() != GL_UNSET)
+         {
+            DbgPrintf(5, _T("StatusPoll(%s [%d]): location set to %s, %s from agent"), m_name, m_id, loc.getLatitudeAsString(), loc.getLongitudeAsString());
+            lockProperties();
+            m_geoLocation = loc;
+            setModified();
+            unlockProperties();
+         }
+      }
+      else
+      {
+         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get system location"), m_name, m_id);
+      }
    }
 
    // Send delayed events and destroy delayed event queue
