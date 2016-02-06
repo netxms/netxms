@@ -136,6 +136,11 @@ bool OpenLocalDatabase()
 	if (dbFile[_tcslen(dbFile) - 1] != FS_PATH_SEPARATOR_CHAR)
 		_tcscat(dbFile, FS_PATH_SEPARATOR);
 	_tcscat(dbFile, _T("nxagentd.db"));
+	if (g_dwFlags & AF_SUBAGENT_LOADER)
+	{
+	   _tcscat(dbFile, _T("."));
+      _tcscat(dbFile, g_masterAgent);
+	}
 
    TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    s_db = DBConnect(s_driver, NULL, dbFile, NULL, NULL, NULL, errorText);
@@ -153,7 +158,7 @@ bool OpenLocalDatabase()
    }
 
    DBQuery(s_db, _T("VACUUM"));
-   DebugPrintf(INVALID_INDEX, 1, _T("Local database opened sucecssfully"));
+   DebugPrintf(INVALID_INDEX, 1, _T("Local database opened successfully"));
    return true;
 }
 

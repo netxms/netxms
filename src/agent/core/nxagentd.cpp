@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -777,6 +777,11 @@ BOOL Initialize()
 	DBSetDebugPrintCallback(DebugPrintfCallback);
 	DBInit(MSG_DB_LIBRARY, MSG_SQL_ERROR);
 
+   if (!OpenLocalDatabase())
+   {
+      nxlog_write(MSG_LOCAL_DB_OPEN_FAILED, NXLOG_ERROR, NULL);
+   }
+
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
 	   if (g_dwFlags & AF_ENABLE_SNMP_PROXY)
@@ -799,11 +804,6 @@ BOOL Initialize()
 
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
-
-      if (!OpenLocalDatabase())
-      {
-         nxlog_write(MSG_LOCAL_DB_OPEN_FAILED, NXLOG_ERROR, NULL);
-      }
 
 	   // Load platform subagents
 #if !defined(_WIN32)
