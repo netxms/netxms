@@ -103,6 +103,8 @@ MONGODB_LIBS=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
 INSTALL_LIBPATH=""
+OPENSSL_LIBSSL="ssl"
+OPENSSL_LIBCRYPTO="crypto"
 
 
 #--------------------------------------------------------------------
@@ -456,6 +458,13 @@ AC_ARG_WITH(openssl,
 			CPPFLAGS="$CPPFLAGS -I/opt/openssl/include"
 		fi
 	fi
+])
+
+AC_ARG_WITH(bundled-openssl,
+[AS_HELP_STRING(--with-bundled-openssl,use bundled OpenSSL libraries with product-specific prefix)],
+[
+	OPENSSL_LIBSSL="nxssl"
+	OPENSSL_LIBCRYPTO="nxcrypto"
 ])
 
 AC_ARG_WITH(jemalloc,
@@ -1463,31 +1472,31 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
-	AC_CHECK_LIB(crypto, RSA_new,
+	AC_CHECK_LIB($OPENSSL_LIBCRYPTO, RSA_new,
 		[
 			AC_DEFINE(WITH_OPENSSL, 1, Define to 1 if you have OpenSSL library and headers)
-			AC_CHECK_LIB(crypto, EVP_aes_256_cbc,
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_aes_256_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
-			AC_CHECK_LIB(crypto, EVP_bf_cbc,
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_bf_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
-			AC_CHECK_LIB(crypto, EVP_idea_cbc,
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_idea_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
-			AC_CHECK_LIB(crypto, EVP_des_ede3_cbc,
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_des_ede3_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
-			SERVER_LIBS="$SERVER_LIBS -lssl"
+			SERVER_LIBS="$SERVER_LIBS -l$OPENSSL_LIBSSL"
 			if test "x$HAVE_LIBCRYPTO" = "xyes"; then
 				if test "x$BUILD_STATIC_AGENT" = "xyes"; then
 #					LIBS="$LIBS -Wl,-Bstatic -lcrypto -Wl,-Bdynamic"
-					LIBS="$LIBS -lcrypto"
+					LIBS="$LIBS -l$OPENSSL_LIBCRYPTO"
 				else
-					LIBS="$LIBS -lcrypto"
+					LIBS="$LIBS -l$OPENSSL_LIBCRYPTO"
 				fi	
 			else
-				AC_MSG_ERROR(libcrypto does not provide any suitable encryption algorithm)
+				AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO does not provide any suitable encryption algorithm)
 			fi
 		],
 		[
-			AC_MSG_ERROR(libcrypto is required for encryption support)
+			AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO is required for encryption support)
 		])
 fi
 
