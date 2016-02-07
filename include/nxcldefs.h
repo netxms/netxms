@@ -1030,7 +1030,7 @@ typedef struct
  */
 typedef struct
 {
-   QWORD sourceEventId;    // Originating event ID
+   UINT64 sourceEventId;   // Originating event ID
    UINT32 alarmId;         // Unique alarm ID
    UINT32 creationTime;    // Alarm creation time in UNIX time format
    UINT32 lastChangeTime;  // Alarm's last change time in UNIX time format
@@ -1053,7 +1053,6 @@ typedef struct
    void *userData;         // Can be freely used by client application
 	UINT32 noteCount;       // Number of notes added to alarm
    UINT32 ackTimeout;      // Sticky acknowledgment end time. If acknowladgmant without timeout put 0
-   IntegerArray<UINT64> connectedEvents;
 } NXC_ALARM;
 
 /**

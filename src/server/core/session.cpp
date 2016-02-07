@@ -687,11 +687,11 @@ void ClientSession::updateThread()
             MutexLock(m_mutexSendAlarms);
             msg.setCode(CMD_ALARM_UPDATE);
             msg.setField(VID_NOTIFICATION_CODE, pUpdate->dwCode);
-            FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
+            ((Alarm *)pUpdate->pData)->fillMessage(&msg);
             sendMessage(&msg);
             MutexUnlock(m_mutexSendAlarms);
             msg.deleteAllFields();
-            free(pUpdate->pData);
+            delete (Alarm *)pUpdate->pData;
             break;
          case INFO_CAT_ACTION:
             MutexLock(m_mutexSendActions);
@@ -5461,21 +5461,21 @@ void ClientSession::deleteObject(NXCPMessage *pRequest)
 /**
  * Process changes in alarms
  */
-void ClientSession::onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm)
+void ClientSession::onAlarmUpdate(UINT32 dwCode, const Alarm *alarm)
 {
    UPDATE_INFO *pUpdate;
    NetObj *object;
 
    if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_ALARMS))
    {
-      object = FindObjectById(pAlarm->sourceObject);
+      object = FindObjectById(alarm->getSourceObject());
       if (object != NULL)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
          {
             pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
             pUpdate->dwCategory = INFO_CAT_ALARM;
             pUpdate->dwCode = dwCode;
-            pUpdate->pData = nx_memdup(pAlarm, sizeof(NXC_ALARM));
+            pUpdate->pData = new Alarm(alarm, false);
             m_pUpdateQueue->put(pUpdate);
          }
    }

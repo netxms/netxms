@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -781,7 +781,7 @@ public:
    void onNewSNMPTrap(NXCPMessage *pMsg);
    void onObjectChange(NetObj *pObject);
    void onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *user);
-   void onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm);
+   void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction);
    void onSituationChange(NXCPMessage *msg);
    void onLibraryImageChange(uuid_t *guid, bool removed = false);

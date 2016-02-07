@@ -32,6 +32,7 @@ class ClientSession;
 class MobileDeviceSession;
 class Node;
 class Event;
+class Alarm;
 class NetObj;
 class PollerInfo;
 class NXSL_Environment;
@@ -74,7 +75,7 @@ typedef struct
    int (* pfMobileDeviceCommandHandler)(UINT32 dwCommand, NXCPMessage *pMsg, MobileDeviceSession *pSession);
    BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
    BOOL (* pfEventHandler)(Event *event);
-   void (* pfAlarmChangeHook)(UINT32 changeCode, NXC_ALARM *alarm);
+   void (* pfAlarmChangeHook)(UINT32 changeCode, const Alarm *alarm);
 	void (* pfStatusPollHook)(Node *node, ClientSession *session, UINT32 rqId, PollerInfo *poller);
 	bool (* pfConfPollHook)(Node *node, ClientSession *session, UINT32 rqId, PollerInfo *poller);
 	void (* pfTopologyPollHook)(Node *node, ClientSession *session, UINT32 rqId, PollerInfo *poller);

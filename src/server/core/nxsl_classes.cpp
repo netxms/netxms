@@ -803,8 +803,8 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *attr)
  */
 NXSL_METHOD_DEFINITION(Alarm, acknowledge)
 {
-   NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
-   *result = new NXSL_Value(AckAlarmById(alarm->alarmId, NULL, false, 0));
+   Alarm *alarm = (Alarm *)object->getData();
+   *result = new NXSL_Value(AckAlarmById(alarm->getAlarmId(), NULL, false, 0));
    return 0;
 }
 
@@ -813,8 +813,8 @@ NXSL_METHOD_DEFINITION(Alarm, acknowledge)
  */
 NXSL_METHOD_DEFINITION(Alarm, resolve)
 {
-   NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
-   *result = new NXSL_Value(ResolveAlarmById(alarm->alarmId, NULL, false));
+   Alarm *alarm = (Alarm *)object->getData();
+   *result = new NXSL_Value(ResolveAlarmById(alarm->getAlarmId(), NULL, false));
    return 0;
 }
 
@@ -823,8 +823,8 @@ NXSL_METHOD_DEFINITION(Alarm, resolve)
  */
 NXSL_METHOD_DEFINITION(Alarm, terminate)
 {
-   NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
-   *result = new NXSL_Value(ResolveAlarmById(alarm->alarmId, NULL, true));
+   Alarm *alarm = (Alarm *)object->getData();
+   *result = new NXSL_Value(ResolveAlarmById(alarm->getAlarmId(), NULL, true));
    return 0;
 }
 
@@ -845,7 +845,7 @@ NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
  */
 void NXSL_AlarmClass::onObjectDelete(NXSL_Object *object)
 {
-   free(object->getData());
+   delete (Alarm *)object->getData();
 }
 
 /**
@@ -854,75 +854,75 @@ void NXSL_AlarmClass::onObjectDelete(NXSL_Object *object)
 NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const TCHAR *attr)
 {
    NXSL_Value *value = NULL;
-   NXC_ALARM *alarm = (NXC_ALARM *)pObject->getData();
+   Alarm *alarm = (Alarm *)pObject->getData();
 
    if (!_tcscmp(attr, _T("ackBy")))
    {
-      value = new NXSL_Value(alarm->ackByUser);
+      value = new NXSL_Value(alarm->getAckByUser());
    }
    else if (!_tcscmp(attr, _T("creationTime")))
    {
-      value = new NXSL_Value(alarm->creationTime);
+      value = new NXSL_Value((INT64)alarm->getCreationTime());
    }
    else if (!_tcscmp(attr, _T("dciId")))
    {
-      value = new NXSL_Value(alarm->dciId);
+      value = new NXSL_Value(alarm->getDciId());
    }
    else if (!_tcscmp(attr, _T("eventCode")))
    {
-      value = new NXSL_Value(alarm->sourceEventCode);
+      value = new NXSL_Value(alarm->getSourceEventCode());
    }
    else if (!_tcscmp(attr, _T("eventId")))
    {
-      value = new NXSL_Value(alarm->sourceEventId);
+      value = new NXSL_Value(alarm->getSourceEventId());
    }
    else if (!_tcscmp(attr, _T("helpdeskReference")))
    {
-      value = new NXSL_Value(alarm->helpDeskRef);
+      value = new NXSL_Value(alarm->getHelpDeskRef());
    }
    else if (!_tcscmp(attr, _T("helpdeskState")))
    {
-      value = new NXSL_Value(alarm->helpDeskState);
+      value = new NXSL_Value(alarm->getHelpDeskState());
    }
    else if (!_tcscmp(attr, _T("id")))
    {
-      value = new NXSL_Value(alarm->alarmId);
+      value = new NXSL_Value(alarm->getAlarmId());
    }
    else if (!_tcscmp(attr, _T("key")))
    {
-      value = new NXSL_Value(alarm->key);
+      value = new NXSL_Value(alarm->getKey());
    }
    else if (!_tcscmp(attr, _T("lastChangeTime")))
    {
-      value = new NXSL_Value(alarm->lastChangeTime);
+      value = new NXSL_Value((INT64)alarm->getLastChangeTime());
    }
    else if (!_tcscmp(attr, _T("message")))
    {
-      value = new NXSL_Value(alarm->message);
+      value = new NXSL_Value(alarm->getMessage());
    }
    else if (!_tcscmp(attr, _T("originalSeverity")))
    {
-      value = new NXSL_Value(alarm->originalSeverity);
+      value = new NXSL_Value(alarm->getOriginalSeverity());
    }
    else if (!_tcscmp(attr, _T("repeatCount")))
    {
-      value = new NXSL_Value(alarm->repeatCount);
+      value = new NXSL_Value(alarm->getRepeatCount());
    }
    else if (!_tcscmp(attr, _T("resolvedBy")))
    {
-      value = new NXSL_Value(alarm->resolvedByUser);
+      value = new NXSL_Value(alarm->getResolvedByUser());
    }
    else if (!_tcscmp(attr, _T("severity")))
    {
-      value = new NXSL_Value(alarm->currentSeverity);
+      value = new NXSL_Value(alarm->getCurrentSeverity());
    }
    else if (!_tcscmp(attr, _T("sourceObject")))
    {
-      value = new NXSL_Value(alarm->sourceObject);
+      value = new NXSL_Value(alarm->getSourceObject());
    }
    else if (!_tcscmp(attr, _T("state")))
    {
-      value = new NXSL_Value(alarm->state);
+      value = new NXSL_Value(alarm->getState());
    }
    return value;
 }
