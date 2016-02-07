@@ -328,6 +328,7 @@ static LONG H_TableQuery(const TCHAR *param, const TCHAR *arg, Table *value, Abs
 static DatabaseInfo s_dbInfo;
 static NX_CFG_TEMPLATE s_configTemplate[] =
 {
+   { _T("ConnectionTTL"),     CT_LONG,   0, 0, 0,             0, &s_dbInfo.connectionTTL },
 	{ _T("Id"),					   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.id },
 	{ _T("Name"),				   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.name },
 	{ _T("TnsName"),			   CT_STRING, 0, 0, MAX_STR,       0, s_dbInfo.name },
@@ -357,6 +358,7 @@ static BOOL SubAgentInit(Config *config)
 	// Load configuration from "oracle" section to allow simple configuration
 	// of one database without XML includes
 	memset(&s_dbInfo, 0, sizeof(s_dbInfo));
+	s_dbInfo.connectionTTL = 3600;
 	if (config->parseTemplate(_T("ORACLE"), s_configTemplate))
 	{
 		if (s_dbInfo.name[0] != 0)
@@ -373,7 +375,8 @@ static BOOL SubAgentInit(Config *config)
 	for(i = 1; i <= 64; i++)
 	{
 		TCHAR section[MAX_STR];
-		memset((void*)&s_dbInfo, 0, sizeof(s_dbInfo));
+		memset(&s_dbInfo, 0, sizeof(s_dbInfo));
+		s_dbInfo.connectionTTL = 3600;
 		_sntprintf(section, MAX_STR, _T("oracle/databases/database#%d"), i);
 
 		if (!config->parseTemplate(section, s_configTemplate))
