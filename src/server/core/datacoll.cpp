@@ -260,13 +260,16 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
                   if (!((DataCollectionTarget *)pItem->getTarget())->processNewDCValue(pItem, currTime, data))
                   {
                      // value processing failed, convert to data collection error
-                     pItem->processNewError();
+                     pItem->processNewError(false);
                   }
                   break;
                case DCE_COMM_ERROR:
                   if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                      pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-                  pItem->processNewError();
+                  pItem->processNewError(false);
+                  break;
+               case DCE_NO_SUCH_INSTANCE:
+                  pItem->processNewError(true);
                   break;
                case DCE_NOT_SUPPORTED:
                   // Change item's status

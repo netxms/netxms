@@ -478,7 +478,7 @@ enum SessionState
 #define RCC_SNMP_FAILURE             ((UINT32)75)
 #define RCC_NO_L2_TOPOLOGY_SUPPORT	 ((UINT32)76)
 #define RCC_INVALID_SITUATION_ID     ((UINT32)77)
-#define RCC_INSTANCE_NOT_FOUND       ((UINT32)78)
+#define RCC_NO_SUCH_INSTANCE         ((UINT32)78)
 #define RCC_INVALID_EVENT_ID         ((UINT32)79)
 #define RCC_AGENT_ERROR              ((UINT32)80)
 #define RCC_UNKNOWN_VARIABLE         ((UINT32)81)

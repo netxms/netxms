@@ -10765,7 +10765,7 @@ void ClientSession::deleteSituationInstance(NXCPMessage *pRequest)
 			TCHAR instance[MAX_DB_STRING];
 
 			pRequest->getFieldAsString(VID_SITUATION_INSTANCE, instance, MAX_DB_STRING);
-			msg.setField(VID_RCC, st->DeleteInstance(instance) ? RCC_SUCCESS : RCC_INSTANCE_NOT_FOUND);
+			msg.setField(VID_RCC, st->DeleteInstance(instance) ? RCC_SUCCESS : RCC_NO_SUCH_INSTANCE);
 		}
 		else
 		{

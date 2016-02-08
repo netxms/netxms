@@ -772,7 +772,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
 /**
  * Process new data collection error
  */
-void DCItem::processNewError()
+void DCItem::processNewError(bool noInstance)
 {
    lock();
 

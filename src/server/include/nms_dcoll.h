@@ -28,10 +28,11 @@
 // Data collection errors
 //
 
-#define DCE_SUCCESS        0
-#define DCE_COMM_ERROR     1
-#define DCE_NOT_SUPPORTED  2
-#define DCE_IGNORE         3
+#define DCE_SUCCESS           0
+#define DCE_COMM_ERROR        1
+#define DCE_NOT_SUPPORTED     2
+#define DCE_IGNORE            3
+#define DCE_NO_SUCH_INSTANCE  4
 
 /**
  * Threshold check results
@@ -239,7 +240,7 @@ public:
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
-   virtual void processNewError();
+   virtual void processNewError(bool noInstance);
 
 	virtual bool hasValue();
 
@@ -377,7 +378,7 @@ public:
 	void expandInstance();
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
-   virtual void processNewError();
+   virtual void processNewError(bool noInstance);
 
 	virtual bool hasValue();
 
@@ -572,7 +573,7 @@ public:
    virtual void deleteFromDatabase();
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
-   virtual void processNewError();
+   virtual void processNewError(bool noInstance);
 
    virtual bool hasValue();
 

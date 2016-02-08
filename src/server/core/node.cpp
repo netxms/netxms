@@ -3937,6 +3937,10 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
             dwResult = DCE_NOT_SUPPORTED;
             setLastAgentCommTime();
             goto end_loop;
+         case ERR_NO_SUCH_INSTANCE:
+            dwResult = DCE_NO_SUCH_INSTANCE;
+            setLastAgentCommTime();
+            goto end_loop;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
             if (!connectToAgent())
@@ -3994,6 +3998,10 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
             dwResult = DCE_NOT_SUPPORTED;
+            setLastAgentCommTime();
+            goto end_loop;
+         case ERR_NO_SUCH_INSTANCE:
+            dwResult = DCE_NO_SUCH_INSTANCE;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_NOT_CONNECTED:
@@ -4056,6 +4064,10 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
             dwResult = DCE_NOT_SUPPORTED;
+            setLastAgentCommTime();
+            goto end_loop;
+         case ERR_NO_SUCH_INSTANCE:
+            dwResult = DCE_NO_SUCH_INSTANCE;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_NOT_CONNECTED:
@@ -4424,6 +4436,8 @@ static UINT32 RCCFromDCIError(UINT32 error)
          return RCC_SUCCESS;
       case DCE_COMM_ERROR:
          return RCC_COMM_FAILURE;
+      case DCE_NO_SUCH_INSTANCE:
+         return RCC_NO_SUCH_INSTANCE;
       case DCE_NOT_SUPPORTED:
          return RCC_DCI_NOT_SUPPORTED;
       default:

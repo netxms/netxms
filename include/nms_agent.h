@@ -106,6 +106,7 @@
 #define ERR_FILE_DELETE_FAILED      ((UINT32)918)
 #define ERR_NO_SESSION_AGENT        ((UINT32)919)
 #define ERR_SERVER_ID_UNSET         ((UINT32)920)
+#define ERR_NO_SUCH_INSTANCE        ((UINT32)921)
 
 /**
  * Bulk data reconciliation DCI processing status codes
@@ -122,9 +123,10 @@
 /**
  * Parameter handler return codes
  */
-#define SYSINFO_RC_SUCCESS       0
-#define SYSINFO_RC_UNSUPPORTED   1
-#define SYSINFO_RC_ERROR         2
+#define SYSINFO_RC_SUCCESS             0
+#define SYSINFO_RC_UNSUPPORTED         1
+#define SYSINFO_RC_ERROR               2
+#define SYSINFO_RC_NO_SUCH_INSTANCE    3
 
 /**
  * WinPerf features

@@ -175,7 +175,7 @@ const TCHAR LIBNXCLIENT_EXPORTABLE *NXCGetErrorText(UINT32 error)
 		_T("SNMP failure"),
 		_T("Node has no support for layer 2 topology discovery"),
 		_T("Invalid situation ID"),
-		_T("Named instance not found"),
+		_T("No such instance"),
 		_T("Invalid event ID"),
 		_T("Operation cannot be completed due to agent error"),
 		_T("Unknown variable"),
