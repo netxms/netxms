@@ -69,6 +69,7 @@ Alarm::Alarm(Event *event, const TCHAR *message, const TCHAR *key, int state, in
    m_currentSeverity = severity;
    m_repeatCount = 1;
    m_helpDeskState = ALARM_HELPDESK_IGNORED;
+   m_helpDeskRef[0] = 0;
    m_timeout = timeout;
    m_timeoutEvent = timeoutEvent;
    m_commentCount = 0;
