@@ -8,6 +8,8 @@
 - GPS subagent (provides location data from NMEA compatible GPS receivers)
 - Server can update node location using GPS subagent
 - Fixed error while event alarm linking multiple times
+- Management console:
+	- Fixed grid issues in network maps
 - Fixed issues: #962, #988, #1048, #1124
 
 

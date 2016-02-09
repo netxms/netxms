@@ -139,7 +139,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		
 		indicatorLayer = new FreeformLayer();
 		rootLayer.add(indicatorLayer, null, 2);
-		
+
       controlLayer = new FreeformLayer();
       rootLayer.add(controlLayer, null);
 		
@@ -160,7 +160,7 @@ public class ExtendedGraphViewer extends GraphViewer
 					reloadMapBackground();
 				
 				if (gridFigure != null)
-					gridFigure.setSize(graph.getRootLayer().getSize());
+					gridFigure.setSize(zestRootLayer.getSize());
 			}
 		};
 		
@@ -517,7 +517,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		getZoomManager().zoomOut();
 	}
 	
-	/**
+   /**
     * Zoom to fit available screen area
     */
    public void zoomFit()
@@ -647,7 +647,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			{
 				gridFigure = new GridFigure();
 				backgroundLayer.add(gridFigure, null, 1);
-				gridFigure.setSize(graph.getRootLayer().getSize());
+				gridFigure.setSize(zestRootLayer.getSize());
 				gridFigure.addMouseListener(new MouseListener() {
 					@Override
 					public void mousePressed(MouseEvent me)
