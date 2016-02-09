@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -241,7 +241,7 @@ LONG H_ServiceInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
       }
       else
       {
-         rc = SYSINFO_RC_UNSUPPORTED;
+         rc = SYSINFO_RC_NO_SUCH_INSTANCE;
       }
    }
    else

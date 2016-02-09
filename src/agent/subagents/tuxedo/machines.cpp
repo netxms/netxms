@@ -346,7 +346,7 @@ LONG H_MachineInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
       }
       else
       {
-         rc = SYSINFO_RC_UNSUPPORTED;
+         rc = SYSINFO_RC_NO_SUCH_INSTANCE;
       }
    }
    else
