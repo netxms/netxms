@@ -102,7 +102,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	private boolean showStatusBackground = false;
 	private boolean showStatusFrame = false;
 	private boolean enableLongObjectName = false;
-	private boolean hideLinkLabel = false;
+	private boolean connectionLabelsVisible = true;
+	private boolean connectionsVisible = true;
 	private ILabelProvider workbenchLabelProvider;
 	private MapObjectDisplayMode objectFigureType = MapObjectDisplayMode.ICON;
 	private ColorCache colors;
@@ -426,6 +427,8 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 	@Override
 	public void selfStyleConnection(Object element, GraphConnection connection)
 	{
+      connection.setVisible(connectionsVisible);
+      
 		NetworkMapLink link = (NetworkMapLink)connection.getData();
 
 		if (link.getType() == NetworkMapLink.VPN)
@@ -433,7 +436,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		   connection.setLineStyle(Graphics.LINE_DOT);
 		}
 		
-		if (link.hasConnectorName1() && !hideLinkLabel)
+		if (link.hasConnectorName1() && connectionLabelsVisible)
 		{
 			ConnectionEndpointLocator sourceEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), false);
 			sourceEndpointLocator.setVDistance(0);
@@ -441,7 +444,7 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 			label.setFont(fontLabel);
 			connection.getConnectionFigure().add(label, sourceEndpointLocator);
 		}
-		if (link.hasConnectorName2() && !hideLinkLabel)
+		if (link.hasConnectorName2() && connectionLabelsVisible)
 		{
 			ConnectionEndpointLocator targetEndpointLocator = new ConnectionEndpointLocator(connection.getConnectionFigure(), true);
 			targetEndpointLocator.setVDistance(0);
@@ -453,19 +456,19 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		boolean hasDciData = link.hasDciData();
       boolean hasName = link.hasName();
       
-      if ((hasName || hasDciData) && !hideLinkLabel)
+      if ((hasName || hasDciData) && connectionLabelsVisible)
       {
          ConnectionLocator nameLocator = new ConnectionLocator(connection.getConnectionFigure());
          nameLocator.setRelativePosition(PositionConstants.CENTER);
          
          String labelString = ""; //$NON-NLS-1$
-         if(hasName)
+         if (hasName)
             labelString += link.getName();
          
-         if(hasName && hasDciData)
+         if (hasName && hasDciData)
             labelString +="\n"; //$NON-NLS-1$
          
-         if(hasDciData)
+         if (hasDciData)
          {
             labelString += dciValueProvider.getDciDataAsString(link);
          }
@@ -635,13 +638,43 @@ public class MapLabelProvider extends LabelProvider implements IFigureProvider, 
 		return ((MapContentProvider)viewer.getContentProvider()).getNodeLastValues(nodeId);
 	}
 
+   /**
+    * @return
+    */
    public boolean isLongObjectNameEnabled()
    {
       return enableLongObjectName;
    }
 
-   public void setLabelHideStatus(boolean checked)
+   /**
+    * @return the connectionLabelsVisible
+    */
+   public boolean isConnectionLabelsVisible()
    {
-     hideLinkLabel = checked;
+      return connectionLabelsVisible;
+   }
+
+   /**
+    * @param connectionLabelsVisible the connectionLabelsVisible to set
+    */
+   public void setConnectionLabelsVisible(boolean connectionLabelsVisible)
+   {
+      this.connectionLabelsVisible = connectionLabelsVisible;
+   }
+
+   /**
+    * @return the connectionsVisible
+    */
+   public boolean isConnectionsVisible()
+   {
+      return connectionsVisible;
+   }
+
+   /**
+    * @param connectionsVisible the connectionsVisible to set
+    */
+   public void setConnectionsVisible(boolean connectionsVisible)
+   {
+      this.connectionsVisible = connectionsVisible;
    }
 }
