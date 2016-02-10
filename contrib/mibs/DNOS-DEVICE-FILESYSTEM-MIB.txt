@@ -1,0 +1,253 @@
+DNOS-DEVICE-FILESYSTEM-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE,Integer32,
+    Unsigned32                             FROM SNMPv2-SMI
+    DateAndTime                            FROM SNMPv2-TC
+    dnOS                               FROM DELL-REF-MIB
+    DisplayString                          FROM RFC1213-MIB;
+
+fastpathDeviceFileSystem MODULE-IDENTITY
+           LAST-UPDATED "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
+           ORGANIZATION "Dell, Inc."
+           CONTACT-INFO ""
+
+     DESCRIPTION
+          "The Broadcom Private MIB for DNOS DeviceFileSystem"
+
+      -- Revision history.
+      REVISION
+          "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
+      DESCRIPTION
+          "Postal address updated."
+
+     ::= { dnOS 44 }
+
+--**************************************************************************************
+--    DeviceFileSystem
+--
+--    This group provides status of DeviceFileSystem and the content or information stored in DeviceFileSystem.
+--
+--**************************************************************************************
+
+        agentDeviceFileSystemGroup               OBJECT IDENTIFIER ::= {  fastpathDeviceFileSystem 1 }
+
+--**************************************************************************************
+
+    agentDeviceFileSystemTable OBJECT-TYPE
+         SYNTAX     SEQUENCE OF AgentDeviceFileSystemEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "DeviceFileSystem Table"
+         ::= { agentDeviceFileSystemGroup 1 }
+
+    agentDeviceFileSystemEntry OBJECT-TYPE
+         SYNTAX      AgentDeviceFileSystemEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "DeviceFileSystem entry"
+         INDEX { agentDeviceFileSystemIndex }
+         ::= { agentDeviceFileSystemTable 1 }
+
+    AgentDeviceFileSystemEntry ::= SEQUENCE {
+        agentDeviceFileSystemIndex              INTEGER,
+        agentDeviceFileSystemStatus             INTEGER,
+        agentDeviceFileSystemVendorID           DisplayString,
+        agentDeviceFileSystemProductID          DisplayString,
+        agentDeviceFileSystemManufacturer       DisplayString,
+        agentDeviceFileSystemSerialNumber       DisplayString,
+        agentDeviceFileSystemVersion            DisplayString,
+        agentDeviceFileSystemProtocol           DisplayString,
+        agentDeviceFileSystemClass              DisplayString,
+        agentDeviceFileSystemSubclass           DisplayString,
+        agentDeviceFileSystemTotalSize          DisplayString,
+        agentDeviceFileSystemBytesUsed          DisplayString,
+        agentDeviceFileSystemBytesFree          DisplayString,
+        agentDeviceFileSystemUnmount            INTEGER
+    }
+
+    agentDeviceFileSystemIndex OBJECT-TYPE
+         SYNTAX      INTEGER(1..9)
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Describes the index of FileSystem device plugged into the switch."
+         ::= {agentDeviceFileSystemEntry 1}
+
+
+    agentDeviceFileSystemStatus OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     active(1),
+                     inactive(2),
+                     invalid(3)
+               }
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Describes the current status of FileSystem device plugged into the switch."
+         DEFVAL      { invalid }
+         ::= {agentDeviceFileSystemEntry 2}
+
+    agentDeviceFileSystemVendorID OBJECT-TYPE
+         SYNTAX      DisplayString
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "DeviceFileSystem vendor ID."
+         ::= {agentDeviceFileSystemEntry 3}
+
+    agentDeviceFileSystemProductID OBJECT-TYPE
+         SYNTAX      DisplayString
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "DeviceFileSystem Product ID."
+         ::= {agentDeviceFileSystemEntry 4}
+
+     agentDeviceFileSystemManufacturer OBJECT-TYPE
+         SYNTAX      DisplayString
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "DeviceFileSystem Manufacturer."
+         ::= {agentDeviceFileSystemEntry 5}
+
+     agentDeviceFileSystemSerialNumber OBJECT-TYPE
+         SYNTAX      DisplayString
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "DeviceFileSystem Serial Number."
+         ::= {agentDeviceFileSystemEntry 6}
+
+     agentDeviceFileSystemVersion OBJECT-TYPE
+         SYNTAX      DisplayString
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "DeviceFileSystem Version."
+         ::= {agentDeviceFileSystemEntry 7}
+
+     agentDeviceFileSystemProtocol OBJECT-TYPE
+         SYNTAX      DisplayString
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "DeviceFileSystem Protocol"
+         ::= {agentDeviceFileSystemEntry 8}
+
+     agentDeviceFileSystemClass OBJECT-TYPE
+         SYNTAX      DisplayString
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "DeviceFileSystem Class."
+         ::= {agentDeviceFileSystemEntry 9}
+
+     agentDeviceFileSystemSubclass OBJECT-TYPE
+         SYNTAX      DisplayString
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "DeviceFileSystem SubClass."
+         ::= {agentDeviceFileSystemEntry 10}
+
+     agentDeviceFileSystemTotalSize OBJECT-TYPE
+         SYNTAX      DisplayString
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "DeviceFileSystem storage size"
+         ::= {agentDeviceFileSystemEntry 11}
+
+     agentDeviceFileSystemBytesUsed OBJECT-TYPE
+         SYNTAX      DisplayString
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Indicates size of memory used on the DeviceFileSystem."
+         ::= {agentDeviceFileSystemEntry 12}
+
+     agentDeviceFileSystemBytesFree OBJECT-TYPE
+         SYNTAX      DisplayString
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Indicates size of memory free on the USB flash drive device."
+         ::= {agentDeviceFileSystemEntry 13}
+
+   agentDeviceFileSystemUnmount OBJECT-TYPE
+        SYNTAX       INTEGER {
+                     none(0),
+                     unmount(1)
+                     }
+        MAX-ACCESS   read-write
+        STATUS       current
+        DESCRIPTION
+             "Used to make the DeviceFileSystem Inactive by sending unmount(1). Get operation is invalid for this object. It just returns none(0)"
+         DEFVAL      { 0 }
+        ::= { agentDeviceFileSystemEntry  14 }
+
+   --**************************************************************************************
+   -- agentDeviceFileSystemContentTable
+   --**************************************************************************************
+
+    agentDeviceFileSystemContentTable OBJECT-TYPE
+         SYNTAX SEQUENCE OF  AgentDeviceFileSystemContentEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "Table display DeviceFileSystem contents"
+         ::= { agentDeviceFileSystemGroup  2}
+
+    agentDeviceFileSystemContentEntry OBJECT-TYPE
+         SYNTAX      AgentDeviceFileSystemContentEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "DeviceFileSystem Content, Refers to each File"
+         INDEX       {agentDevFileSystemIndex, agentDeviceFileSystemContentFileName}
+         ::= { agentDeviceFileSystemContentTable 1 }
+
+    AgentDeviceFileSystemContentEntry ::= SEQUENCE {
+              agentDevFileSystemIndex                                    INTEGER,
+              agentDeviceFileSystemContentFileName                       DisplayString,
+              agentDeviceFileSystemContentFileSize                       Unsigned32,
+              agentDeviceFileSystemContentFileModificationTime           DateAndTime
+          }
+
+    agentDevFileSystemIndex OBJECT-TYPE
+         SYNTAX      INTEGER(1..9)
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Describes the index of FileSystem device plugged into the switch."
+         ::= {agentDeviceFileSystemContentEntry 1}
+
+    agentDeviceFileSystemContentFileName OBJECT-TYPE
+         SYNTAX      DisplayString
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " Name of the file stored in DeviceFileSystem "
+         ::= { agentDeviceFileSystemContentEntry 2 }
+
+    agentDeviceFileSystemContentFileSize OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " Size of the file stored in DeviceFileSystem "
+         ::= { agentDeviceFileSystemContentEntry 3 }
+
+    agentDeviceFileSystemContentFileModificationTime  OBJECT-TYPE
+         SYNTAX      DateAndTime
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " Last modification time of the file stored in DeviceFileSystem "
+         ::= { agentDeviceFileSystemContentEntry 4 }
+
+END

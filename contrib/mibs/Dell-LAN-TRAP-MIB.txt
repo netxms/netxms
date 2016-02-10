@@ -1,0 +1,876 @@
+Dell-LAN-TRAP-MIB DEFINITIONS ::= BEGIN
+
+-- Dell Networking OS Radius Authentication Client MIB
+-- Copyright Dell (2003-2015) All rights reserved.
+
+-- This SNMP Management Information Specification
+-- embodies Dell's confidential and proprietary
+-- intellectual property.  Dell retains all title
+-- and ownership in the Specification including any revisions.
+
+-- This Specification is supplied "AS IS", Dell
+-- makes no warranty, either expressed or implied,
+-- as to the use, operation, condition, or performance of the
+-- Specification.
+
+IMPORTS
+    OBJECT-TYPE, NOTIFICATION-TYPE
+        FROM SNMPv2-SMI 
+    DisplayString, DateAndTime
+	FROM SNMPv2-TC
+    dellLan, dellLanCommon
+        FROM Dell-Vendor-MIB;
+
+-- Dell alarms specific global parameters are defined in this group. 
+dellAlarmGroup MODULE-IDENTITY
+        LAST-UPDATED "200504260000Z" -- 26 Apr 2005 12:00:00 GMT
+        ORGANIZATION "Dell, Inc."
+        CONTACT-INFO ""
+        DESCRIPTION
+          " "
+
+    ::= { dellLanCommon 1 }
+
+-- dellAlarmGroup OBJECT IDENTIFIER ::= { dellLanCommon 1  }
+
+----------------------------------------------
+-- Variable binding list parameters for traps:
+----------------------------------------------
+
+dellTrapInfo OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+       "This text string may be used to provide additional information
+        regarding the trap being sent.  Any specific formatting information
+        is given in the trap definition."
+    ::= { dellAlarmGroup 1 }
+
+dellTrapSeverity OBJECT-TYPE
+    SYNTAX INTEGER  {
+         clear(0),
+         info(1),
+         minor(2),
+         major(3),
+         critical(4)
+    }
+    MAX-ACCESS  read-only
+    STATUS  current
+    DESCRIPTION
+      "The severity type of the enterprise-specific trap sent to the
+      Network Management Station by the Dell managed device.  The
+      Severity level are defined as follows:
+      Critical - service affecting event.
+      Major    - a major error which is not service affecting but does
+                 require immediate user attention to prevent further
+                 degredation of the system, which may lead to a critical
+                 error.  For example, if a redundant port failure would
+                 be considered a major event whereas the failure of an
+                 unprotected port is a critical event.
+      Minor    - a minor event which is not service affecting and is
+                 unlikely to lead to a major or critical event.  The user
+                 does not need to take immediate actions but some action
+                 is required to clear the event.
+      Info     - a notification to the user of some event that does not
+                 require any user action.  For example, a security 
+                 notification is useful information but does not require
+                 the user to take any specific immediate action.  This
+                 event is not cleared.
+      Clear    - this special trap is sent to clear some previously sent
+                 trap.  Note that if the sequence number sent with the
+                 clear event is 0 then the clear event is used to indicate
+                 that all outstanding event of this particular type on a
+                 given source (dellTrapSource) has been cleared.  If the
+                 event sequence number (dellTrapSeqNum) is sent with a 
+                 non-zero value, then the clear event is sent to clear only
+                 the specific trap instance designated by the sequence
+                 number in question."
+    ::= { dellAlarmGroup 2 }
+
+dellTrapSource OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION
+    "The trap source is a string identifying the component of the device 
+     generating the trap.  The source identifies the component associated 
+     with the fault.  This may for example, identify the unit, slot, port, 
+     and possibly logical ports (VLAN, LAG) from which the fault occurs.  
+     The format of the source string is: 'TYPE=#:TYPE=#:...' where the
+     TYPE may be one of 'unit' or 'slot' or 'port' or 'VLAN' or 'LAG'.
+     For example: 
+     'unit=3:slot=1:port=2' - indicates the trap comes from port 2 in slot 1
+                              of the switch #3 in the stack.
+     'unit=2:VLAN=10'       - indicates the trap comes from VLAN=10 in unit 2.
+     'unit=1'               - indicates the trap comes from unit 1."
+::= { dellAlarmGroup 3 }
+
+dellTrapSeqNum OBJECT-TYPE
+     SYNTAX Unsigned32
+     MAX-ACCESS read-only
+     STATUS current
+     DESCRIPTION
+     "Since SNMP traps are transported using UDP, there is a possibility 
+      for the trap to be lost in transit.  To allow the NMS the ability 
+      to detect this possibility, all traps will include a trap sequence 
+      number as part of its variable binding list.  The trap sequence number 
+      may be reset each time the system reboots and will increment for each 
+      trap sent from the device.  When a missing trap sequence number is 
+      detected the NMS may be able to refresh its state of the switch to 
+      determine what event it may have missed."
+::= { dellAlarmGroup 4 }
+
+dellTrapTimeStamp OBJECT-TYPE
+     SYNTAX DateAndTime
+     MAX-ACCESS read-only
+     STATUS current
+     DESCRIPTION
+     "The trap header includes the system up time which mark when the trap 
+      was generated, but often it is important to know the absolute time 
+      when the trap was generated.  This time stamp is based on GMT 
+      (universal time) time zone.  This will allow the timestamps to be 
+      correlated consistently across a large network."
+::= { dellAlarmGroup 5 }
+
+---------------------------------------------------------------------------
+-- Trap definitions:
+-- All traps must have at least the following VAR-BIND:
+-- dellTrapTimeStamp, dellTrapSeqNum, dellTrapSource, dellTrapSeverity,
+-- dellTrapInfo.
+--
+-- The trap may include additional variables which may be defined in the
+-- object list following these objects for proprietary traps.
+--
+-- For standard traps, this rule does not apply.
+--------------------------------------------------------------------------- 
+
+hwResourceOverflow NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that a switch hardware resource overflowed.  The
+         dellTrapSource should indicate the unit number whereas dellTrapInfo
+         should identify the resource that overflowed."
+    ::= { dellLan 500 }
+
+swResourceOverflow NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that a switch software resource overflowed.  The
+         dellTrapSource should indicate the unit number whereas dellTrapInfo
+         should identify the resource that overflowed (e.g. maximum 
+         VLAN/LAG/MACs/IPs exceeded)."
+    ::= { dellLan 510 }
+
+configChanged NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that the switch configuration has changed.  The 
+         dellTrapSource should indicate the source of the change such
+         as the unit, slot, port, VLAN, LAG, etc.  The dellTrapInfo
+         may indicate additional information regarding the change."
+    ::= { dellLan 520 }
+
+-- This trap may be implementation dependent. If it does not apply to a
+-- particular implementation then it may be safely ignored.
+resetRequired NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "This trap indicates that in order to perform the last SET request, 
+         a reset operation of the router/bridge is required. This may occur 
+         for any number of reasons such as if the change affects the routing
+         protocols to be switched from SPF to STP.  This trap warns the user
+         to manually reset the switch using either physical or software reset." 
+    ::= { dellLan 530 }
+
+endTftp NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "This trap indicates that the device finished a TFTP
+         transaction with the management station. The dellTrapInfo field
+         will provide TFTP exit code and name/type of the file being
+         transferred." 
+    ::= { dellLan 540 }
+
+abortTftp NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+       "This trap indicates that in the device aborted a TFTP session with
+        the management station. The dellTrapInfo field will provide TFTP 
+        exit code and name/type of the file being transferred."
+    ::= { dellLan 550 }
+
+startTftp NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Informational trap indicating that the device has intiated a
+         TFTP session. dellTrapInfo will contain the name/type of the file 
+         being transferred."
+    ::= { dellLan 560 }
+
+linkFailure NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Link failure detected, no backup available. The dellTrapSource
+         should indicate the fail link."
+    ::= { dellLan 570 }
+
+linkFailureSwitchBackUp NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Automantic switchover to backup link because of main link fault.
+         The dellTrapSource indicates the backup link coming on, and the
+         dellTrapInfo indicates the failed link."
+    ::= { dellLan 580 }
+
+mainLinkUp NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Communication returned to main link. The dellTrapSource indicates
+         the main link coming up, and the dellTrapInfo indicates the backup
+         link."
+    ::= { dellLan 590 }
+
+errorsDuringInit  NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "This trap indicates that the an error occured during initialization
+         phase of the switch.  Additional information is provided in the
+         dellTrapInfo field." 
+    ::= { dellLan 600 }
+
+vlanDynPortAdded  NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+         "Indicates that a port was dynamically added to the VLAN.  The
+          dellTrapSource will indicate the VLAN, and the dellTrapInfo will
+          indicate the port being added."
+    ::= { dellLan 610 }
+
+vlanDynPortRemoved  NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+         "Indicates that a port was dynamically removed from a VLAN.  The
+          dellTrapSource will indicate the VLAN, and the dellTrapInfo will
+          indicate the port being removed."
+    ::= { dellLan 620 }
+
+-- === Begin Zero-Hop Edge Routing ===
+-- The following traps are related to routing.  These traps may be software 
+-- implementation dependent.  If these are not appropriate they may be
+-- ignored.
+ipZhrReqStaticConnNotAccepted NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+         "The requested static connection was not accepted because there is
+          no available IP virtual address to allocate to it."
+    ::= { dellLan 630 }
+
+ipZhrVirtualIpAsSource NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+         "The virtual IP address appeared as a source IP. All the connections 
+          using it will be deleted and it will not be further allocated to 
+          new connections."
+    ::= { dellLan 640 }
+
+ipZhrNotAllocVirtualIp NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+         "The source IP address sent an ARP specifying a virtual IP which 
+          was not allocated for this source.  This virtual IP will not be 
+          allocated to connections of this specific source IP."
+    ::= { dellLan 650 }
+-- === End Zero-Hop Edge Routing ===
+
+-- === Start Stacking specific Traps ===
+-- The following traps are related to stacking.  If the switch does not
+-- support stacking, these may safely be ignored.
+--
+-- Note that these traps define a set of conditions based upon a particular
+-- operational paradigm of stacking.  If these traps do not quite match
+-- a given implementation then new traps may be defined for the feature in the
+-- vendor specific section of the mibs.
+
+stackMasterFailed NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum, 
+                  dellTrapSource, dellTrapSeverity, 
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that the stack master unit has failed.  This trap is
+         generated by the new master when it takes over the stack.  The
+         dellTrapSource should be the new master unit #, and the
+         dellTrapInfo should identify the old master unit #." 
+    ::= { dellLan  660 }
+
+stackNewMasterElected NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates when a new master has been elected.  This is different
+         from a stack failure in that the master has not failed but for
+         some reason a new master has been elected (e.g. the user requested
+         a new master.  The trap should be generated by the new master.
+         the dellTrapSource should identify the new master, and the
+         dellTrapInfo should identify the old master."
+    ::= { dellLan  670 }
+
+stackMemberUnitFailed NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that a member of the stack has failed.  This condition
+         is detected by the master unit so the dellTrapSource should indicate
+         the master unit ID and the dellTrapInfo should indicate the
+         member unit that failed." 
+    ::= { dellLan  680 }
+
+stackNewMemberUnitAdded NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that a new member unit has been added to the stack.
+         This trap is generated by the master unit so the dellTrapSource
+         should indicate the master unit ID, and the dellTrapInfo should
+         identify the new unit ID." 
+    ::= { dellLan  690 }
+
+stackMemberUnitRemoved NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that a member unit has been removed from the stack.
+         The dellTrapSource indicates the master unit ID and the
+         dellTrapInfo indicates the unit ID being removed."
+    ::= { dellLan  700 }
+
+stackSplitMasterReport NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that the stack has split into two distinct stacks which
+         means that each stack may end up with its own master temporarily
+         until the stack is rejoined.  This is possibly different from the 
+         stackMemberUnitFailed trap, which indicates only a single unit
+         failure.  This trap indicates that the master has lost track of
+         part of the stack membership so that the other units may elect 
+         their own master.  The dellTrapSource should indicate the master
+         unit ID and the dellTrapInfo should identify the units that are
+         split from the main stack."
+    ::= { dellLan  710 }
+
+stackSplitNewMasterReport NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that the stack has split into two distinct stacks which
+         means that each stack may end up with its own master temporarily
+         until the stack is rejoined. This trap is generated by the new
+         master unit elected in the split sub-stack.  The dellTrapSource
+         should identify the new master unit ID, and the dellTrapInfo should
+         identify the old master unit ID before the split occured."  
+    ::= { dellLan  720 }
+
+stackRejoined NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that previously split stack has rejoined. The rejoined
+         stack will elect a master and this trap should be generated by the
+         elected master.  The dellTrapSource should indicate the master unit
+         ID and the dellTrapInfo should list the unit IDs of the members."
+    ::= { dellLan  730 }
+
+stackLinkFailed NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates a failure in one of the stacking link.  If this stack
+         was connected in a ring, then the failure of a stacking link
+         results in a chain stack instead of a ring.  Another failure
+         in the chain topology would result in a split stack.  If the
+         stack is connected in a meshed or star topology then multiple
+         link failure may be tolerated.  This trap may be generated by
+         any unit within the stack and must indicate the source of the
+         failure.  The dellTrapSource should identify one end of the link
+         where the failure is detected.  The dellTrapInfo may provide
+         additional information about the failure." 
+    ::= { dellLan  740 }
+
+-- === End Stacking specific Traps ===
+
+dhcpAllocationFailure NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "DHCP failed to allocate an IP address to a requesting host
+         because of memory shortage or inadequate configuration of
+         available IP addresses."
+    ::= { dellLan  750 }
+
+dot1dStpPortStateForwarding NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "The trap is sent by a bridge when any of its configured ports
+         transitions from the Learning state to the Forwarding state."
+    ::= { dellLan  760 }
+
+dot1dStpPortStateNotForwarding NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "The trap is sent by a bridge when any of its configured ports
+         transitions from the Forwarding state to the Blocking state."
+    ::= { dellLan  770 }
+
+policyDropPacketTrap NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that the packet drop due to the policy.  This trap
+         may result in a huge number of trap packets and should be used
+         only for debugging purposes.  The number of traps sent per
+         time period is user configurable and the user may enable/disable 
+         generation of this trap."
+    ::= { dellLan  780 }
+
+policyForwardPacketTrap NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that the packet has forward based on policy. The number 
+         of traps sent per time period is user configurable and the user 
+         may enable/disable generation of this trap."
+    ::= { dellLan  790 }
+
+igmpV1MsgReceived NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "An IGMP Message of v1 received on a given interface. The
+         dellTrapSource should indicate the interface."
+    ::= { dellLan  800 }
+
+vrrpEntriesDeleted NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "One or more VRRP entries deleted due to IP interface deletion or 
+         transition. "
+    ::= { dellLan  810 }
+
+trunkPortAddedTrap NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Informational trap indicating that a port is added to a trunk.  
+         The dellTrapSource should indicate the trunk to which the port
+         is added.  The dellTrapInfo should indicate the port being added."
+    ::= { dellLan  820 }
+
+trunkPortRemovedTrap NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "This warning is generated when a port removed from a trunk.
+         The dellTrapSource should indicate the trunk from which the port
+         is removed.  The dellTrapInfo should indicate the port being
+         removed."
+    ::= { dellLan  830 }
+
+-- trunkPortNotCapableTrap is a duplicate OID as above. we may end up on no using the following trap. So commenting for time being
+--trunkPortNotCapableTrap NOTIFICATION-TYPE
+--    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+--                 dellTrapSource, dellTrapSeverity,
+--                  dellTrapInfo }
+--    STATUS   current
+--
+--    DESCRIPTION
+--        "Informational trap indicating that a port can not be added to
+--         a trunk because of device limitations or different swIfType.
+--         The dellTrapSource should identify the trunk whereas the
+--         dellTrapInfo should indicate the port being added and any additional
+--         information."
+--    ::= { dellLan  830 }
+
+lockPortTrap NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Informational trap indicating that a port that is blocked from 
+         MAC learning has receive a frame with new source Mac Address.
+         The dellTrapSource should identify the port and the dellTrapInfo
+         should specify the new MAC address received."
+    ::= { dellLan  840 }
+
+vlanDynVlanAdded  NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+         "Indicates that a dynamic VLAN has been added via GVRP.  The
+          dellTrapSource should identify the VLAN being added."
+    ::= { dellLan  850 }
+
+vlanDynVlanRemoved  NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+         "Indicates that a dynamic VLAN has been removed via GVRP.  The
+          dellTrapSource should identify the VLAN being removed."
+    ::= { dellLan  860 }
+
+vlanDynamicToStatic  NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+         "Indicates that a dynamic VLAN has been made static.  The 
+          dellTrapSource should identify the VLAN."
+    ::= { dellLan  870 }
+
+vlanStaticToDynamic  NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+         "Indicates that a static VLAN has been made dynamic.  The
+          dellTrapSource should identify the VLAN."
+    ::= { dellLan  880 }
+
+envMonFanStateChange NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Trap indicating the fan state.  The dellTrapSource should identify
+         the exact fan index if there are multiple fans.  The dellTrapInfo
+         may provide additional info relating to the fan new state."
+    ::= { dellLan  890 }
+
+envMonPowerSupplyStateChange NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Trap indicating the power supply state.  The dellTrapSource should
+         identify the exact power supply.  The dellTrapInfo may provide
+         additional info regarding the power state."
+    ::= { dellLan  900 }
+
+envMonTemperatureRisingAlarm NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Trap indicating that the temperature in the device has exceeded the
+         device specific safe temperature threshold."
+    ::= { dellLan  910 }
+
+copyFinished NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Informational trap indicating that the device has finished
+         a copy operation successfully."
+    ::= { dellLan  920 }
+
+copyFailed NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Informational trap indicating that the copy operation has failed."
+    ::= { dellLan  930 }
+
+dot1xPortStatusAuthorizedTrap NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Informational trap indicating that port 802.1x status is authorized."
+    ::= { dellLan  940 }
+
+dot1xPortStatusUnauthorizedTrap NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Warning trap is indicating that port 802.1x status is unAuthorized."
+    ::= { dellLan  950 }
+
+broadcastStormDetected NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that a broadcast storm has been detected.  The 
+         dellTrapSource should indicate the port on which the broadcast
+         storm is detected."
+    ::= { dellLan  960 }
+
+stpElectedAsRoot NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that the switch has been elected as the new STP root."
+    ::= { dellLan  970 }
+
+stpNewRootElected NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that a new root has been elected.  The dellTrapSource
+         should indicate the member unit number and the dellTrapInfo should
+         provide information on the new root."
+    ::= { dellLan  980 }
+
+igmpElectedAsQuerier NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that this switch has been elected as the new IGMP
+         snooping querier."
+    ::= { dellLan  990 }
+
+invalidUserLoginAttempted NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that an invalid user tries to login to the CLI or Web.
+         The dellTrapSource should indicate the unit member ID and the
+         dellTrapInfo should indicate whether the login attempt is on the
+         CLI or Web and the IP address from which the attempt was made." 
+    ::= { dellLan  1000 }
+
+managementACLViolation NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that an SNMP request or CLI/Web access request was
+         received but does not meet the management ACL rules.  For example,
+         if the request comes from an invalid IP address or has the wrong 
+         SNMP community string (for V1/2c) or is not authenticated for
+         SNMPv3, etc.  The dellTrapSource should indicate the unit # and
+         the dellTrapInfo should indicate which interface (web, cli, snmp)
+         is violated and the source IP address of the request." 
+    ::= { dellLan  1010 }
+
+sfpInserted NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that an SFP was inserted into the system.
+         The dellTrapSource should indicate the unit # and
+         the dellTrapInfo should indicate on which interface 
+         was the SFP inserted." 
+    ::= { dellLan  1020 }
+
+
+sfpRemoved NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that an SFP was removed from the system.
+         The dellTrapSource should indicate the unit # and
+         the dellTrapInfo should indicate from which interface 
+         was the SFP removed." 
+    ::= { dellLan  1030 }
+
+
+xfpInserted NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that an XFP was inserted into the system.
+         The dellTrapSource should indicate the unit # and
+         the dellTrapInfo should indicate on which interface 
+         was the XFP inserted." 
+    ::= { dellLan  1040 }
+
+
+xfpRemoved NOTIFICATION-TYPE
+    OBJECTS   { dellTrapTimeStamp, dellTrapSeqNum,
+                  dellTrapSource, dellTrapSeverity,
+                  dellTrapInfo }
+    STATUS   current
+
+    DESCRIPTION
+        "Indicates that an XFP was removed from the system.
+         The dellTrapSource should indicate the unit # and
+         the dellTrapInfo should indicate from which interface 
+         was the XFP removed." 
+    ::= { dellLan  1050 }
+
+END
