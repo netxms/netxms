@@ -2143,7 +2143,11 @@ THREAD_RESULT NXCORE_EXPORTABLE THREAD_CALL Main(void *pArg)
 			   if (ptr != NULL)
 			   {
 #ifdef UNICODE
+#if HAVE_MBSTOWCS
+			      mbstowcs(wcCommand, ptr, 255);
+#else
 				   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, ptr, -1, wcCommand, 256);
+#endif
 				   wcCommand[255] = 0;
 				   StrStrip(wcCommand);
 				   if (wcCommand[0] != 0)

@@ -213,8 +213,10 @@ inline TCHAR *_tcsdup_ex(const TCHAR *s)
 extern "C" {
 #endif
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString);
+WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBStringSysLocale(const char *pszString);
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString);
 char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString);
+char LIBNETXMS_EXPORTABLE *MBStringFromWideStringSysLocale(const WCHAR *pwszString);
 char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
 #ifdef __cplusplus
 }
@@ -1459,6 +1461,8 @@ SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, 
 extern "C"
 {
 #endif
+
+void LIBNETXMS_EXPORTABLE InitNetXMSProcess();
 
 #if !defined(_WIN32) && !defined(_NETWARE)
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)

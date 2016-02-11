@@ -106,6 +106,8 @@ int main(int argc, char *argv[])
    int ch, rcc = RCC_INVALID_ARGUMENT;
    BOOL bStart = TRUE, bEncrypt = FALSE;
 
+   InitNetXMSProcess();
+
    // Parse command line
    opterr = 1;
    while((ch = getopt(argc, argv, CMDLINE_OPTIONS)) != -1)

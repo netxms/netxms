@@ -47,6 +47,8 @@ int main(int argc, char *argv[])
 	DWORD rcc, timeout = 3;
 	int ch;
 
+   InitNetXMSProcess();
+
    // Parse command line
    opterr = 1;
    while((ch = getopt(argc, argv, CMDLINE_OPTIONS)) != -1)

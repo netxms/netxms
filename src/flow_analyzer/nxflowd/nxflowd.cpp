@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
 	TCHAR moduleName[MAX_PATH];
 #endif
 
-   InitThreadLibrary();
+   InitNetXMSProcess();
 
 	// Parse command line
 	opterr = 1;

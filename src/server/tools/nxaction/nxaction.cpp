@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
    TCHAR szKeyFile[MAX_PATH];
    RSA *pServerKey = NULL;
 
-   InitThreadLibrary();
+   InitNetXMSProcess();
 
    GetNetXMSDirectory(nxDirData, szKeyFile);
    _tcscat(szKeyFile, DFILE_KEYS);

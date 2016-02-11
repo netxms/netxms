@@ -315,9 +315,7 @@ int main(int argc, char *argv[])
    TCHAR *pszEnv;
 #endif
 
-#ifdef _WIN32
-	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
-#endif
+   InitNetXMSProcess();
 
 #if defined(__sun) || defined(_AIX) || defined(__hpux)
    signal(SIGPIPE, SIG_IGN);
@@ -328,12 +326,6 @@ int main(int argc, char *argv[])
    signal(SIGUSR2, SIG_IGN);
 #endif
 
-   InitThreadLibrary();
-
-#ifdef NETXMS_MEMORY_DEBUG
-	InitMemoryDebugger();
-#endif
-   
    // Check for alternate config file location
 #ifdef _WIN32
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\ClientProxy"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)

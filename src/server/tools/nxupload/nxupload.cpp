@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
    RSA *pServerKey = NULL;
    NXCPCompressionMethod compression = NXCP_COMPRESSION_NONE;
 
-   InitThreadLibrary();
+   InitNetXMSProcess();
 
    GetNetXMSDirectory(nxDirData, szKeyFile);
    _tcscat(szKeyFile, DFILE_KEYS);

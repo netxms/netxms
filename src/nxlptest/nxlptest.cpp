@@ -85,6 +85,8 @@ int main(int argc, char *argv[])
 	TCHAR *inputFile = NULL;
 	LogParser *parser;
 
+   InitNetXMSProcess();
+
    // Parse command line
    opterr = 1;
 	while((ch = getopt(argc, argv, "f:hit:v")) != -1)

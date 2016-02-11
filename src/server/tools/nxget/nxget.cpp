@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
 	WCHAR *wcValue;
 #endif
 
-   InitThreadLibrary();
+   InitNetXMSProcess();
 #ifdef _WIN32
 	SetExceptionHandler(SEHDefaultConsoleHandler, NULL, NULL, _T("nxget"), 0, FALSE, FALSE);
 #endif

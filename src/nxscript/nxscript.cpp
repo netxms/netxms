@@ -64,6 +64,8 @@ int main(int argc, char *argv[])
    bool dump = false, printResult = false, compileOnly = false, binary = false;
    int runCount = 1;
 
+   InitNetXMSProcess();
+
    func.m_iNumArgs = 0;
    func.m_pfHandler = F_new;
    _tcscpy(func.m_name, _T("new"));
