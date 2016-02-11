@@ -9,6 +9,7 @@
 - Server can update node location using GPS subagent
 - Fixed error while event alarm linking multiple times
 - NetXMS processes uses LC_CTYPE from environment for terminal I/O
+- Fixed bug in saving service checks
 - Management console:
 	- Fixed grid issues in network maps
 	- Added "hide links" option on network maps

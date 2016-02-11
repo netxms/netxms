@@ -182,7 +182,7 @@ bool SlmCheck::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 	{
 		DBFreeResult(hResult);
 		DBFreeStatement(hStmt);
-		DbgPrintf(4, _T("Cannot load check object %ld - record missing"), (long)m_id);
+		DbgPrintf(4, _T("Cannot load service check object %d - record missing"), (int)m_id);
 		return false;
 	}
 
@@ -221,37 +221,35 @@ BOOL SlmCheck::saveToDatabase(DB_HANDLE hdb)
 
 	saveCommonProperties(hdb);
 
-	bool newObject = IsDatabaseRecordExist(hdb, _T("slm_checks"), _T("id"), m_id);
-	DB_STATEMENT hStmt = DBPrepare(hdb, newObject ?
-		_T("INSERT INTO slm_checks (id,type,content,threshold_id,reason,is_template,template_id,current_ticket) VALUES (?,?,?,?,?,?,?,?)") :
-		_T("UPDATE slm_checks SET id=?,type=?,content=?,threshold_id=?,reason=?,is_template=?,template_id=?,current_ticket=? WHERE id=?"));
-	if (hStmt == NULL)
-		goto finish;
-	DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, UINT32(m_type));
-	DBBind(hStmt, 3, DB_SQLTYPE_TEXT, CHECK_NULL_EX(m_script), DB_BIND_STATIC);
-	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_threshold ? m_threshold->getId() : 0);
-	DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)(m_isTemplate ? 1 : 0));
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_templateId);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_currentTicketId);
-	if (!newObject)
-		DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, m_id);
-
-	if (!DBExecute(hStmt))
+	DB_STATEMENT hStmt;
+	if (IsDatabaseRecordExist(hdb, _T("slm_checks"), _T("id"), m_id))
 	{
-		DBFreeStatement(hStmt);
-		goto finish;
+	   hStmt = DBPrepare(hdb, _T("UPDATE slm_checks SET type=?,content=?,threshold_id=?,reason=?,is_template=?,template_id=?,current_ticket=? WHERE id=?"));
+	}
+	else
+	{
+      hStmt = DBPrepare(hdb, _T("INSERT INTO slm_checks (type,content,threshold_id,reason,is_template,template_id,current_ticket,id) VALUES (?,?,?,?,?,?,?,?)"));
 	}
 
-	DBFreeStatement(hStmt);
+	if (hStmt != NULL)
+	{
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (UINT32)m_type);
+      DBBind(hStmt, 2, DB_SQLTYPE_TEXT, m_script, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_threshold ? m_threshold->getId() : 0);
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_reason, DB_BIND_STATIC);
+      DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)(m_isTemplate ? 1 : 0));
+      DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_templateId);
+      DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_currentTicketId);
+      DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
 
-	saveACLToDB(hdb);
-	ret = true;
+      ret = DBExecute(hStmt);
+      DBFreeStatement(hStmt);
 
-finish:
-	// Unlock object and clear modification flag
-	m_isModified = false;
+      if (ret)
+         ret = saveACLToDB(hdb);
+	}
+
+   m_isModified = false;
 	unlockProperties();
 	return ret;
 }
