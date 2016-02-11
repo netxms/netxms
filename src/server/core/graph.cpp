@@ -337,13 +337,13 @@ void SaveGraph(NXCPMessage *pRequest, UINT32 userId, NXCPMessage *msg)
 				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM graph_acl WHERE graph_id=%d"), graphId);
 				sucess = DBQuery(hdb, szQuery);
 
-            hStmt = DBPrepare(hdb, _T("UPDATE graphs SET flags=?,name=?,config=?,filters=?  WHERE graph_id=?"));
+            hStmt = DBPrepare(hdb, _T("UPDATE graphs SET flags=?,name=?,config=?,filters=? WHERE graph_id=?"));
 			}
 
 			if(hStmt != NULL && sucess)
 			{
             DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, flags);
-            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, 255);
+            DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
             DBBind(hStmt, 3, DB_SQLTYPE_TEXT, config, DB_BIND_STATIC);
             DBBind(hStmt, 4, DB_SQLTYPE_TEXT, filters, DB_BIND_STATIC);
             DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, graphId);
