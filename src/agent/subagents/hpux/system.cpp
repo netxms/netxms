@@ -27,6 +27,8 @@
 #include <sys/statvfs.h>
 #include <sys/pstat.h>
 #include <sys/dk.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
 #include <utmpx.h>
 #include <utmp.h>
 
@@ -466,4 +468,59 @@ LONG H_CpuUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 	ret_double(pValue, usage);
 
 	return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for System.MsgQueue.* parameters
+ */
+LONG H_SysMsgQueue(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   TCHAR buffer[64];
+   if (!AgentGetParameterArg(param, 1, buffer, 64))
+      return SYSINFO_RC_UNSUPPORTED;
+
+   int queueId = -1;
+   if (buffer[0] == _T('@'))  // queue identified by ID
+   {
+      TCHAR *eptr;
+      queueId = (int)_tcstol(&buffer[1], &eptr, 0);
+      if ((queueId < 0) || (*eptr != 0))
+         return SYSINFO_RC_UNSUPPORTED;   // Invalid queue ID
+   }
+   else  // queue identified by key
+   {
+      TCHAR *eptr;
+      key_t key = (key_t)_tcstoul(buffer, &eptr, 0);
+      if (*eptr != 0)
+         return SYSINFO_RC_UNSUPPORTED;   // Invalid key
+      queueId = msgget(key, 0);
+      if (queueId < 0)
+         return (errno == ENOENT) ? SYSINFO_RC_NO_SUCH_INSTANCE : SYSINFO_RC_ERROR;
+   }
+
+   struct msqid_ds data;
+   if (msgctl(queueId, IPC_STAT, &data) != 0)
+      return ((errno == EIDRM) || (errno == EINVAL)) ? SYSINFO_RC_NO_SUCH_INSTANCE : SYSINFO_RC_ERROR;
+
+   switch((char)*arg)
+   {
+      case 'B':
+         ret_uint64(value, (UINT64)data.msg_qbytes);
+         break;
+      case 'c':
+         ret_uint64(value, (UINT64)data.msg_ctime);
+         break;
+      case 'm':
+         ret_uint64(value, (UINT64)data.msg_qnum);
+         break;
+      case 'r':
+         ret_uint64(value, (UINT64)data.msg_rtime);
+         break;
+      case 's':
+         ret_uint64(value, (UINT64)data.msg_stime);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   return SYSINFO_RC_SUCCESS;
 }
