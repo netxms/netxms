@@ -1,4 +1,9 @@
 #!/bin/sh
 
-svccfg import /var/svc/manifest/application/management/nxagentd.xml
+ver=`uname -r | cut -d . -f 2`
+if test "x$ver" = "x10"; then
+	svccfg import /var/svc/manifest/application/management/nxagentd.xml
+else
+	svcadm restart manifest-import
+fi
 svcadm enable nxagentd || true
