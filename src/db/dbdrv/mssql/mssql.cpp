@@ -485,14 +485,14 @@ static WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
       }
       else if (dataSize == SQL_NO_TOTAL)
       {
-         size_t tempSize = sizeof(buffer) * 4;
+         size_t tempSize = sizeof(buffer) * 4;  // temporary buffer size in bytes
          WCHAR *temp = (WCHAR *)malloc(tempSize);
          memcpy(temp, buffer, sizeof(buffer));
-         size_t offset = sizeof(buffer) - 1;
+         size_t offset = sizeof(buffer) - sizeof(WCHAR); // offset in buffer in bytes
          while(true)
          {
             SQLLEN readSize = tempSize - offset;
-            rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, &temp[offset], readSize, &dataSize);
+            rc = SQLGetData(sqlStatement, column, SQL_C_WCHAR, (char *)temp + offset, readSize, &dataSize);
             if ((rc == SQL_SUCCESS) || (rc == SQL_NO_DATA))
                break;
             if (dataSize == SQL_NO_TOTAL)
@@ -504,7 +504,7 @@ static WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
                tempSize += dataSize - readSize;
             }
             temp = (WCHAR *)realloc(temp, tempSize);
-            offset += readSize - 1;
+            offset += readSize - sizeof(WCHAR);
          }
          result = temp;
       }
