@@ -597,7 +597,11 @@ public:
    void addAll(StringMap *src);
 
 	const TCHAR *get(const TCHAR *key) const { return (const TCHAR *)getObject(key); }
-	UINT32 getULong(const TCHAR *key, UINT32 defaultValue) const;
+   INT32 getInt32(const TCHAR *key, INT32 defaultValue) const;
+	UINT32 getUInt32(const TCHAR *key, UINT32 defaultValue) const;
+   INT64 getInt64(const TCHAR *key, INT64 defaultValue) const;
+   UINT64 getUInt64(const TCHAR *key, UINT64 defaultValue) const;
+   double getDouble(const TCHAR *key, double defaultValue) const;
 	bool getBoolean(const TCHAR *key, bool defaultValue) const;
 
    void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;

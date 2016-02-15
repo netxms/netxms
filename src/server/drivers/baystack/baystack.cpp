@@ -114,7 +114,7 @@ void BayStackDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Strin
  */
 UINT32 BayStackDriver::getSlotSize(StringMap *attributes)
 {
-	return attributes->getULong(_T(".baystack.slotSize"), 64);
+	return attributes->getUInt32(_T(".baystack.slotSize"), 64);
 }
 
 /**
@@ -163,7 +163,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
    }
 	
 	// Calculate slot/port pair from ifIndex
-	UINT32 slotSize = attributes->getULong(_T(".baystack.slotSize"), 64);
+	UINT32 slotSize = attributes->getUInt32(_T(".baystack.slotSize"), 64);
 	for(int i = 0; i < ifList->size(); i++)
 	{
 		UINT32 slot = ifList->get(i)->index / slotSize + 1;
@@ -175,7 +175,7 @@ InterfaceList *BayStackDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		}
 	}
 
-	if (attributes->getULong(_T(".baystack.rapidCity.vlan"), 0) > 0)
+	if (attributes->getUInt32(_T(".baystack.rapidCity.vlan"), 0) > 0)
 		getVlanInterfaces(snmp, ifList);
 
 	UINT32 mgmtIpAddr, mgmtNetMask;

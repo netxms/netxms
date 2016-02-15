@@ -107,7 +107,7 @@ InterfaceList *PassportDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 	if (ifList == NULL)
 		return NULL;
 
-	UINT32 maxSlot = attributes->getULong(_T(".rapidCity.maxSlot"), 10);
+	UINT32 maxSlot = attributes->getUInt32(_T(".rapidCity.maxSlot"), 10);
 	bool is1600Series = attributes->getBoolean(_T(".rapidCity.is1600"), false);
 	
 	// Calculate slot/port pair from ifIndex
