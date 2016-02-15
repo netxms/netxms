@@ -5,7 +5,7 @@
    <extension
          point="org.eclipse.ui.menus">
       <menuContribution
-            locationURI="popup:org.eclipse.ui.popup.any?after=objectmgmt">
+            locationURI="popup:org.eclipse.ui.popup.any?after=objecttools">
          <dynamic
                class="org.netxms.ui.eclipse.objecttools.ObjectToolsDynamicMenu"
                id="org.netxms.ui.eclipse.objecttools.objectToolsDynamicMenu">

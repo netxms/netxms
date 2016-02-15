@@ -29,6 +29,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -48,10 +49,12 @@ import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.views.helpers.ObjectSelectionProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.TableContentProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.TableItemComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.TableLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -73,6 +76,7 @@ public class SummaryTableWidget extends Composite
    private ViewRefreshController refreshController;
    private boolean useMultipliers = true;
    private TableColumn currentColumn = null;
+   private ObjectSelectionProvider objectSelectionProvider;
 
    /**
     * Create summary table widget
@@ -98,6 +102,8 @@ public class SummaryTableWidget extends Composite
       labelProvider = new TableLabelProvider();
       labelProvider.setUseMultipliers(useMultipliers);
       viewer.setLabelProvider(labelProvider);
+      
+      objectSelectionProvider = new ObjectSelectionProvider(viewer);
       
       createActions();
       createPopupMenu();
@@ -129,7 +135,8 @@ public class SummaryTableWidget extends Composite
          @Override
          public void mouseDown(MouseEvent e)
          {
-            currentColumn = viewer.getColumnAtPoint(new Point(e.x, e.y));
+            if (e.button == 3)
+               currentColumn = viewer.getColumnAtPoint(new Point(e.x, e.y));
          }
          
          @Override
@@ -169,34 +176,55 @@ public class SummaryTableWidget extends Composite
     */
    private void createPopupMenu()
    {
-      // Create menu manager.
-      MenuManager menuMgr = new MenuManager();
-      menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
+      // Create menu manager for underlying node object
+      final MenuManager nodeMenuManager = new MenuManager() {
+         @Override
+         public String getMenuText()
+         {
+            return "&Node";
+         }
+         
+      };
+      nodeMenuManager.setRemoveAllWhenShown(true);
+      nodeMenuManager.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
          {
-            fillContextMenu(mgr);
+            ObjectContextMenu.fill(mgr, viewPart.getSite(), objectSelectionProvider);
+         }
+      });
+      
+      // Create menu manager for rows
+      MenuManager rowMenuManager = new MenuManager();
+      rowMenuManager.setRemoveAllWhenShown(true);
+      rowMenuManager.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr, nodeMenuManager);
          }
       });
 
       // Create menu.
-      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      Menu menu = rowMenuManager.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
       
       // Register menu for extension.
       if (viewPart != null)
-         viewPart.getSite().registerContextMenu(menuMgr, viewer);
+      {
+         viewPart.getSite().registerContextMenu(viewPart.getSite().getId() + ".data", rowMenuManager, viewer);
+         viewPart.getSite().registerContextMenu(viewPart.getSite().getId() + ".node", nodeMenuManager, objectSelectionProvider);
+      }
    }
 
    /**
     * Fill context menu
     * @param mgr Menu manager
     */
-   protected void fillContextMenu(IMenuManager manager)
+   protected void fillContextMenu(IMenuManager manager, MenuManager nodeMenuManager)
    {
       manager.add(actionUseMultipliers);
       manager.add(new Separator());
-      manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
+      manager.add(nodeMenuManager);
+      manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_TOOLS));
       manager.add(new Separator());
       if ((currentColumn != null) && ((Integer)currentColumn.getData("ID") > 0))
       {
@@ -280,6 +308,14 @@ public class SummaryTableWidget extends Composite
    public SortableTableViewer getViewer()
    {
       return viewer;
+   }
+   
+   /**
+    * @return
+    */
+   public ISelectionProvider getObjectSelectionProvider()
+   {
+      return objectSelectionProvider;
    }
    
    /**

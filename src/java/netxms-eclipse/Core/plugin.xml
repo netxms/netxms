@@ -285,5 +285,15 @@
             name="NetXMS Console Presentation Factory">
       </factory>
    </extension>
+   <extension
+         point="org.eclipse.core.runtime.adapters">
+      <factory
+            adaptableType="org.netxms.ui.eclipse.objects.ObjectWrapper"
+            class="org.netxms.ui.eclipse.objects.ObjectWrapperAdapterFactory">
+         <adapter
+               type="org.netxms.client.objects.AbstractObject">
+         </adapter>
+      </factory>
+   </extension>
 
 </plugin>

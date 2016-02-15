@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2016 Raden Solutions
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,24 +18,39 @@
  */
 package org.netxms.ui.eclipse.objects;
 
+import org.eclipse.core.runtime.IAdapterFactory;
 import org.netxms.client.objects.AbstractObject;
 
 /**
- * Selection wrapper for objects 
+ * Adapter for object wrappers
  */
-public interface ObjectWrapper
+public class ObjectWrapperAdapterFactory implements IAdapterFactory
 {
-   /**
-    * Get NetXMS object for selection
-    * 
-    * @return
+   private static final Class<?>[] supportedClasses = 
+   {
+      AbstractObject.class
+   };
+
+   /* (non-Javadoc)
+    * @see org.eclipse.core.runtime.IAdapterFactory#getAdapter(java.lang.Object, java.lang.Class)
     */
-   public AbstractObject getObject();
-   
-   /**
-    * Get ID of wrapped NetXMS object
-    * 
-    * @return
+   @SuppressWarnings("rawtypes")
+   @Override
+   public Object getAdapter(Object adaptableObject, Class adapterType)
+   {
+      if (adapterType == AbstractObject.class)
+      {
+         return ((ObjectWrapper)adaptableObject).getObject();
+      }
+      return null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.core.runtime.IAdapterFactory#getAdapterList()
     */
-   public long getObjectId();
+   @Override
+   public Class<?>[] getAdapterList()
+   {
+      return supportedClasses;
+   }
 }
