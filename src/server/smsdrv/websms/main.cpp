@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMS driver for websms.ru service
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -52,6 +52,7 @@ struct RequestData
  */
 static char s_login[128] = "user";
 static char s_password[128] = "password";
+static char s_fromPhone[64] = "";
 
 /**
  * Init driver
@@ -87,9 +88,13 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *initArgs)
 
    ExtractNamedOptionValue(initArgs, _T("password"), buffer, 128);
    WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_password, 128, NULL, NULL);
+
+   ExtractNamedOptionValue(initArgs, _T("fromPhone"), buffer, 128);
+   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, buffer, -1, s_fromPhone, 64, NULL, NULL);
 #else
    ExtractNamedOptionValue(initArgs, _T("login"), s_login, 128);
    ExtractNamedOptionValue(initArgs, _T("password"), s_password, 128);
+   ExtractNamedOptionValue(initArgs, _T("fromPhone"), s_fromPhone, 64);
 #endif
 
 	return TRUE;
@@ -156,7 +161,8 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
 #endif
 
       char url[4096];
-      snprintf(url, 4096, "https://websms.ru/http_in5.asp?http_username=%s&http_password=%s&phone_list=%s&format=xml&message=%s", s_login, s_password, phone, msg);
+      snprintf(url, 4096, "https://websms.ru/http_in5.asp?http_username=%s&http_password=%s&phone_list=%s%s%s&format=xml&message=%s",
+               s_login, s_password, phone, (s_fromPhone[0] != 0) ? "&fromPhone=" : "", (s_fromPhone[0] != 0) ? s_fromPhone : "", msg);
       DbgPrintf(4, _T("WebSMS: URL set to \"%hs\""), url);
 
       curl_free(phone);
