@@ -103,10 +103,10 @@ bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
          nodeConnectionCount++;
    }
 
-   if(deleted && nodeConnectionCount == 1)
+   if (deleted && nodeConnectionCount == 1)
    {
       Node *object = (Node *)FindObjectById(fileForRemove->nodeID, OBJECT_NODE);
-      if(object != NULL)
+      if (object != NULL)
          object->setFileUpdateConn(NULL);
    }
    unlock();

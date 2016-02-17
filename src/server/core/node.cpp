@@ -2347,7 +2347,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
 	{
       DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (error %d)"), m_name, rcc);
 	}
-   delete pAgentConn;
+   pAgentConn->decRefCount();
    DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_name);
 	return hasChanges;
 }
@@ -3624,8 +3624,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
 	}
    else
    {
-      delete m_agentConnection;
-      m_agentConnection = NULL;
+      deleteAgentConnection();
       m_lastAgentConnectAttempt = time(NULL);
    }
    return success;
