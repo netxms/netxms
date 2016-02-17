@@ -254,6 +254,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
             autoConnect = false; // only do auto connect first time
          }
 
+         ConsoleSharedData.setProperty("SlowLink", settings.getBoolean("Connect.SlowLink"));
          LoginJob job = new LoginJob(display, 
          		settings.get("Connect.Server"), //$NON-NLS-1$ 
                settings.get("Connect.Login"), //$NON-NLS-1$
