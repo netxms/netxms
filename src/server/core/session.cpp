@@ -161,6 +161,7 @@ DEFINE_THREAD_STARTER(findNodeConnection)
 DEFINE_THREAD_STARTER(forceDCIPoll)
 DEFINE_THREAD_STARTER(forwardToReportingServer)
 DEFINE_THREAD_STARTER(getAgentFile)
+DEFINE_THREAD_STARTER(getAlarms)
 DEFINE_THREAD_STARTER(getAlarmEvents)
 DEFINE_THREAD_STARTER(getCollectedData)
 DEFINE_THREAD_STARTER(getLocationHistory)
@@ -920,7 +921,7 @@ void ClientSession::processingThread()
             addClusterNode(pMsg);
             break;
          case CMD_GET_ALL_ALARMS:
-            sendAllAlarms(pMsg->getId());
+            CALL_IN_NEW_THREAD(getAlarms, pMsg);
             break;
          case CMD_GET_ALARM_COMMENTS:
 				getAlarmComments(pMsg);
@@ -5484,10 +5485,10 @@ void ClientSession::onAlarmUpdate(UINT32 dwCode, const Alarm *alarm)
 /**
  * Send all alarms to client
  */
-void ClientSession::sendAllAlarms(UINT32 dwRqId)
+void ClientSession::getAlarms(NXCPMessage *request)
 {
    MutexLock(m_mutexSendAlarms);
-   SendAlarmsToClient(dwRqId, this);
+   SendAlarmsToClient(request->getId(), this);
    MutexUnlock(m_mutexSendAlarms);
 }
 

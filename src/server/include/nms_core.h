@@ -471,6 +471,7 @@ private:
    DECLARE_THREAD_STARTER(forwardToReportingServer)
    DECLARE_THREAD_STARTER(getAgentFile)
    DECLARE_THREAD_STARTER(getAlarmEvents)
+   DECLARE_THREAD_STARTER(getAlarms)
    DECLARE_THREAD_STARTER(getCollectedData)
    DECLARE_THREAD_STARTER(getLocationHistory)
    DECLARE_THREAD_STARTER(getNetworkPath)
@@ -511,7 +512,6 @@ private:
    void setConfigurationVariable(NXCPMessage *pRequest);
    void deleteConfigurationVariable(NXCPMessage *pRequest);
    void sendUserDB(UINT32 dwRqId);
-   void sendAllAlarms(UINT32 dwRqId);
    void createUser(NXCPMessage *pRequest);
    void updateUser(NXCPMessage *pRequest);
    void detachLdapUser(NXCPMessage *pRequest);
@@ -551,6 +551,7 @@ private:
    void createObject(NXCPMessage *request);
    void changeObjectBinding(NXCPMessage *request, BOOL bBind);
    void deleteObject(NXCPMessage *request);
+   void getAlarms(NXCPMessage *request);
    void getAlarm(NXCPMessage *request);
    void getAlarmEvents(NXCPMessage *request);
    void acknowledgeAlarm(NXCPMessage *request);
