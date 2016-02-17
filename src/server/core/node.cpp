@@ -81,6 +81,7 @@ Node::Node() : DataCollectionTarget()
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
    m_lastAgentCommTime = 0;
+   m_lastAgentConnectAttempt = 0;
 	m_linkLayerNeighbors = NULL;
 	m_vrrpInfo = NULL;
 	m_pTopology = NULL;
@@ -169,6 +170,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
    m_lastAgentCommTime = 0;
+   m_lastAgentConnectAttempt = 0;
 	m_linkLayerNeighbors = NULL;
 	m_vrrpInfo = NULL;
 	m_pTopology = NULL;
@@ -1337,8 +1339,9 @@ restart_agent_check:
       sendPollerMsg(dwRqId, _T("Checking NetXMS agent connectivity\r\n"));
 
 		UINT32 error, socketError;
+      bool newConnection;
 		agentLock();
-      if (connectToAgent(&error, &socketError))
+      if (connectToAgent(&error, &socketError, &newConnection, true))
       {
          DbgPrintf(7, _T("StatusPoll(%s): connected to agent"), m_name);
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
@@ -3554,10 +3557,20 @@ bool Node::connectToSMCLP()
 /**
  * Connect to native agent. Assumes that access to agent connection is already locked.
  */
-bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnection)
+bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnection, bool forceConnect)
 {
    if (g_flags & AF_SHUTDOWN)
       return false;
+
+   if (!forceConnect && (m_agentConnection == NULL) && (time(NULL) - m_lastAgentConnectAttempt < 30))
+   {
+		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): agent is unreachable, will not retry connection"), m_name, m_id);
+      if (error != NULL)
+         *error = ERR_CONNECT_FAILED;
+      if (socketError != NULL)
+         *socketError = 0;
+      return false;
+   }
 
    // Create new agent connection object if needed
    if (m_agentConnection == NULL)
@@ -3609,6 +3622,12 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       setLastAgentCommTime();
       CALL_ALL_MODULES(pfOnConnectToAgent, (this, m_agentConnection));
 	}
+   else
+   {
+      delete m_agentConnection;
+      m_agentConnection = NULL;
+      m_lastAgentConnectAttempt = time(NULL);
+   }
    return success;
 }
 

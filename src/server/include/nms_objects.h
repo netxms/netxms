@@ -1235,6 +1235,7 @@ protected:
    time_t m_bootTime;
    time_t m_agentUpTime;
    time_t m_lastAgentCommTime;
+   time_t m_lastAgentConnectAttempt;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_hSmclpAccessMutex;
@@ -1464,7 +1465,7 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL);
+   bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL, bool forceConnect = false);
 	bool checkAgentTrapId(UINT64 id);
 	bool checkSNMPTrapId(UINT32 id);
    bool checkAgentPushRequestId(UINT64 id);

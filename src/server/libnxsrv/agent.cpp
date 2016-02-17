@@ -97,8 +97,8 @@ AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, co
    m_ppDataLines = NULL;
    m_pMsgWaitQueue = new MsgWaitQueue;
    m_requestId = 0;
-	m_connectionTimeout = 30000;	// 30 seconds
-   m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
+	m_connectionTimeout = 5000;	// 5 seconds
+   m_dwCommandTimeout = 5000;   // Default timeout 5 seconds
    m_isConnected = false;
    m_mutexDataLock = MutexCreate();
 	m_mutexSocketWrite = MutexCreate();
