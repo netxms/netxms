@@ -42,9 +42,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableRow;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.datacollection.Activator;
@@ -55,7 +58,10 @@ import org.netxms.ui.eclipse.datacollection.widgets.internal.TableItemComparator
 import org.netxms.ui.eclipse.datacollection.widgets.internal.TableLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
+import org.netxms.ui.eclipse.objects.ObjectWrapper;
+import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -73,6 +79,7 @@ public class SummaryTableWidget extends Composite
    private Action actionExportToCsv;
    private Action actionUseMultipliers;
    private Action actionForcePollAll;
+   private Action actionShowObjectDetails;
    private ViewRefreshController refreshController;
    private boolean useMultipliers = true;
    private TableColumn currentColumn = null;
@@ -169,6 +176,15 @@ public class SummaryTableWidget extends Composite
             forcePoll(true);
          }
       };
+      
+      actionShowObjectDetails = new Action("Show &object details") {
+         @Override
+         public void run()
+         {
+            showObjectDetails();
+         }
+      };
+      actionShowObjectDetails.setId("org.netxms.ui.eclipse.datacollection.popupActions.ShowObjectDetails"); //$NON-NLS-1$
    }
 
    /**
@@ -225,6 +241,8 @@ public class SummaryTableWidget extends Composite
       manager.add(new Separator());
       manager.add(nodeMenuManager);
       manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_TOOLS));
+      manager.add(new Separator());
+      manager.add(actionShowObjectDetails);
       manager.add(new Separator());
       if ((currentColumn != null) && ((Integer)currentColumn.getData("ID") > 0))
       {
@@ -356,6 +374,30 @@ public class SummaryTableWidget extends Composite
    public Action getActionUseMultipliers()
    {
       return actionUseMultipliers;
+   }
+   
+   /**
+    * Show details for selected object
+    */
+   private void showObjectDetails()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      AbstractObject object = ((ObjectWrapper)selection.getFirstElement()).getObject();
+      if (object != null)
+      {
+         try
+         {
+            TabbedObjectView view = (TabbedObjectView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(TabbedObjectView.ID);
+            view.setObject(object);
+         }
+         catch(PartInitException e)
+         {
+            MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot open object details view: %s", e.getLocalizedMessage()));
+         }
+      }
    }
    
    /**
