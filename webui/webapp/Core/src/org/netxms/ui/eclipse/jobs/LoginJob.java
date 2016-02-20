@@ -37,6 +37,7 @@ import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.console.SourceProvider;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 import org.netxms.ui.eclipse.console.api.SessionProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -107,7 +108,7 @@ public class LoginJob implements IRunnableWithProgress
             hostName = server;
          }
 
-         NXCSession session = createSession(hostName, port);
+         final NXCSession session = createSession(hostName, port);
          session.setClientLanguage(language);
                   
          session.setClientInfo("nxweb/" + NXCommon.VERSION); //$NON-NLS-1$
@@ -145,6 +146,14 @@ public class LoginJob implements IRunnableWithProgress
          monitor.worked(5);
 
          RWT.getUISession(display).setAttribute(ConsoleSharedData.ATTRIBUTE_SESSION, session);
+
+         display.syncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               SourceProvider.getInstance().updateAccessRights(session.getUserSystemRights());
+            }
+         });
 
          monitor.setTaskName(Messages.get(display).LoginJob_init_extensions);
          callLoginListeners(session);

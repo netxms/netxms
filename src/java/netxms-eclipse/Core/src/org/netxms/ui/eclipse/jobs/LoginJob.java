@@ -37,6 +37,7 @@ import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.Activator;
 import org.netxms.ui.eclipse.console.Messages;
+import org.netxms.ui.eclipse.console.SourceProvider;
 import org.netxms.ui.eclipse.console.TweakletManager;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 import org.netxms.ui.eclipse.console.api.SessionProvider;
@@ -104,7 +105,7 @@ public class LoginJob implements IRunnableWithProgress
             hostName = server;
          }
 
-         NXCSession session = createSession(hostName, port);
+         final NXCSession session = createSession(hostName, port);
          session.setClientLanguage(Locale.getDefault().getLanguage());
          
          session.setClientInfo("nxmc/" + NXCommon.VERSION); //$NON-NLS-1$
@@ -142,6 +143,14 @@ public class LoginJob implements IRunnableWithProgress
          monitor.worked(1);
 
          ConsoleSharedData.setSession(session);
+         
+         display.syncExec(new Runnable() {
+            @Override
+            public void run()
+            {
+               SourceProvider.getInstance().updateAccessRights(session.getUserSystemRights());
+            }
+         });
 
          monitor.setTaskName(Messages.get().LoginJob_init_extensions);
          TweakletManager.postLogin(session);

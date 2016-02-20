@@ -31,7 +31,7 @@ public class SourceProvider extends AbstractSourceProvider
 {
 	public static final String ACTIVE_TAB = "org.netxms.ui.eclipse.objectview.ActiveTab"; //$NON-NLS-1$
 	
-	private static final String[] PROVIDED_SOURCE_NAMES = new String[] { ACTIVE_TAB };
+	private static final String[] PROVIDED_SOURCE_NAMES = { ACTIVE_TAB };
 	private static final Map<String, Object> stateMap = new HashMap<String, Object>(1);
 
 	private static SourceProvider instance = null;

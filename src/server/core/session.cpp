@@ -10870,7 +10870,7 @@ void ClientSession::getServerFile(NXCPMessage *pRequest)
       }
    }
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES) || musicFile)
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_SERVER_FILES) || musicFile)
 	{
       _tcscpy(fname, g_netxmsdDataDir);
       _tcscat(fname, DDIR_FILES);
@@ -12382,7 +12382,7 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
       }
    }
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES) || musicFiles)
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_SERVER_FILES) || musicFiles)
 	{
       _tcscpy(path, g_netxmsdDataDir);
       _tcscat(path, DDIR_FILES);
@@ -12612,7 +12612,7 @@ void ClientSession::receiveFile(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_FILES)
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
 
@@ -12668,7 +12668,7 @@ void ClientSession::deleteFile(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_FILES)
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
 
