@@ -172,4 +172,41 @@
         </description>
      </decorator>
   </extension>
+  <extension
+        point="org.eclipse.ui.activities">
+     <activity
+           id="org.netxms.ui.eclipse.usermanager.activity.UserManagement"
+           name="User Management">
+        <enabledWhen>
+           <with
+                 variable="org.netxms.access.ManageUsers">
+              <equals
+                    value="true">
+              </equals>
+           </with>
+        </enabledWhen>
+     </activity>
+     <activityPatternBinding
+           activityId="org.netxms.ui.eclipse.usermanager.activity.UserManagement"
+           isEqualityPattern="true"
+           pattern="org.netxms.ui.eclipse.usermanager/org.netxms.ui.eclipse.usermanager.actions.open">
+     </activityPatternBinding>
+     <activity
+           id="org.netxms.ui.eclipse.usermanager.activity.CertificateManagement"
+           name="Certificate Management">
+        <enabledWhen>
+           <with
+                 variable="org.netxms.access.ServerConfig">
+              <equals
+                    value="true">
+              </equals>
+           </with>
+        </enabledWhen>
+     </activity>
+     <activityPatternBinding
+           activityId="org.netxms.ui.eclipse.usermanager.activity.CertificateManagement"
+           isEqualityPattern="true"
+           pattern="org.netxms.ui.eclipse.usermanager/org.netxms.ui.eclipse.usermanager.actions.certificate_manager">
+     </activityPatternBinding>
+  </extension>
 </plugin>

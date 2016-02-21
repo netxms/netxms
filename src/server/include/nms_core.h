@@ -634,9 +634,9 @@ private:
 	void sendGraphList(NXCPMessage *request);
 	void saveGraph(NXCPMessage *pRequest);
 	void deleteGraph(NXCPMessage *pRequest);
-	void AddCACertificate(NXCPMessage *pRequest);
-	void DeleteCertificate(NXCPMessage *pRequest);
-	void UpdateCertificateComments(NXCPMessage *pRequest);
+	void addCACertificate(NXCPMessage *pRequest);
+	void deleteCertificate(NXCPMessage *pRequest);
+	void updateCertificateComments(NXCPMessage *pRequest);
 	void getCertificateList(UINT32 dwRqId);
 	void queryL2Topology(NXCPMessage *pRequest);
 	void sendSMS(NXCPMessage *pRequest);

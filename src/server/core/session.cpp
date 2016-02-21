@@ -1194,13 +1194,13 @@ void ClientSession::processingThread()
 				deleteGraph(pMsg);
 				break;
 			case CMD_ADD_CA_CERTIFICATE:
-				AddCACertificate(pMsg);
+				addCACertificate(pMsg);
 				break;
 			case CMD_DELETE_CERTIFICATE:
-				DeleteCertificate(pMsg);
+				deleteCertificate(pMsg);
 				break;
 			case CMD_UPDATE_CERT_COMMENTS:
-				UpdateCertificateComments(pMsg);
+				updateCertificateComments(pMsg);
 				break;
 			case CMD_GET_CERT_LIST:
 				getCertificateList(pMsg->getId());
@@ -10179,12 +10179,10 @@ void ClientSession::sendPerfTabDCIList(NXCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Add CA certificate
-//
-
-void ClientSession::AddCACertificate(NXCPMessage *pRequest)
+/**
+ * Add CA certificate
+ */
+void ClientSession::addCACertificate(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
 #ifdef _WITH_ENCRYPTION
@@ -10198,8 +10196,7 @@ void ClientSession::AddCACertificate(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 #ifdef _WITH_ENCRYPTION
 		dwLen = pRequest->getFieldAsBinary(VID_CERTIFICATE, NULL, 0);
@@ -10269,12 +10266,10 @@ void ClientSession::AddCACertificate(NXCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Delete certificate
-//
-
-void ClientSession::DeleteCertificate(NXCPMessage *pRequest)
+/**
+ * Delete certificate
+ */
+void ClientSession::deleteCertificate(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
 #ifdef _WITH_ENCRYPTION
@@ -10285,8 +10280,7 @@ void ClientSession::DeleteCertificate(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 #ifdef _WITH_ENCRYPTION
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -10315,12 +10309,10 @@ void ClientSession::DeleteCertificate(NXCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Update certificate's comments
-//
-
-void ClientSession::UpdateCertificateComments(NXCPMessage *pRequest)
+/**
+ * Update certificate's comments
+ */
+void ClientSession::updateCertificateComments(NXCPMessage *pRequest)
 {
 	UINT32 dwCertId, qlen;
 	TCHAR *pszQuery, *pszComments, *pszEscComments;
@@ -10330,8 +10322,7 @@ void ClientSession::UpdateCertificateComments(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 		dwCertId = pRequest->getFieldAsUInt32(VID_CERTIFICATE_ID);
 		pszComments= pRequest->getFieldAsString(VID_COMMENTS);
@@ -10400,8 +10391,7 @@ void ClientSession::getCertificateList(UINT32 dwRqId)
 	msg.setId(dwRqId);
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		hResult = DBSelect(hdb, _T("SELECT cert_id,cert_type,comments,subject FROM certificates"));
