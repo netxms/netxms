@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
@@ -242,7 +243,7 @@ public class NXCSession
    private boolean passwordExpired;
 
    // Internal communication data
-   private Socket connSocket = null;
+   private Socket socket = null;
    private NXCPMsgWaitQueue msgWaitQueue = null;
    private ReceiverThread recvThread = null;
    private HousekeeperThread housekeeperThread = null;
@@ -255,7 +256,8 @@ public class NXCSession
    // Communication parameters
    private int defaultRecvBufferSize = 4194304; // Default is 4MB
    private int maxRecvBufferSize = 33554432;    // Max is 32MB
-   private int commandTimeout = 30000; // Default is 30 sec
+   private int connectTimeout = 10000; // Default is 10 seconds  
+   private int commandTimeout = 30000; // Default is 30 seconds
    private int serverCommandOutputTimeout = 60000;
 
    // Notification listeners and queue
@@ -376,14 +378,14 @@ public class NXCSession
 
          try
          {
-            in = connSocket.getInputStream();
+            in = socket.getInputStream();
          }
          catch(IOException e)
          {
             return; // Stop receiver thread if input stream cannot be obtained
          }
 
-         while(connSocket.isConnected())
+         while(socket.isConnected())
          {
             try
             {
@@ -1340,11 +1342,11 @@ public class NXCSession
     */
    public synchronized void sendMessage(final NXCPMessage msg) throws IOException, NXCException
    {
-      if (connSocket == null)
+      if (socket == null)
       {
          throw new IllegalStateException("Not connected to the server. Did you forgot to call connect() first?");
       }
-      final OutputStream outputStream = connSocket.getOutputStream();
+      final OutputStream outputStream = socket.getOutputStream();
       byte[] message;
       if ((encryptionContext != null) && !msg.isEncryptionDisabled())
       {
@@ -1699,7 +1701,8 @@ public class NXCSession
       Logger.info("NXCSession.connect", "Connecting to " + connAddress + ":" + connPort);
       try
       {
-         connSocket = new Socket(connAddress, connPort);
+         socket = new Socket();
+         socket.connect(new InetSocketAddress(connAddress, connPort), connectTimeout);
          msgWaitQueue = new NXCPMsgWaitQueue(commandTimeout);
          recvThread = new ReceiverThread();
          housekeeperThread = new HousekeeperThread();
@@ -1906,12 +1909,12 @@ public class NXCSession
     */
    public void disconnect()
    {
-      if (connSocket != null)
+      if (socket != null)
       {
          try
          {
-            connSocket.shutdownInput();
-            connSocket.shutdownOutput();
+            socket.shutdownInput();
+            socket.shutdownOutput();
          }
          catch(IOException e)
          {
@@ -1919,7 +1922,7 @@ public class NXCSession
 
          try
          {
-            connSocket.close();
+            socket.close();
          }
          catch(IOException e)
          {
@@ -1961,7 +1964,7 @@ public class NXCSession
          housekeeperThread = null;
       }
 
-      connSocket = null;
+      socket = null;
 
       if (msgWaitQueue != null)
       {
@@ -2173,6 +2176,16 @@ public class NXCSession
    public void setCommandTimeout(final int commandTimeout)
    {
       this.commandTimeout = commandTimeout;
+   }
+
+   /**
+    * Set connect call timeout (must be set before connect call)
+    * 
+    * @param connectTimeout connect timeout in milliseconds
+    */
+   public void setConnectTimeout(int connectTimeout)
+   {
+      this.connectTimeout = connectTimeout;
    }
 
    /**
