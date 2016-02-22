@@ -12,6 +12,7 @@
 - Fixed bug in saving service checks
 - Fixed server crash caused by heap corruption in MS SQL and DB/2 database drivers
 - Agent parameters for monitoring System V message queues
+- New action User.ChangePassword in WINNT subagent
 - Management console:
 	- Fixed grid issues in network maps
 	- Added "hide links" option on network maps
