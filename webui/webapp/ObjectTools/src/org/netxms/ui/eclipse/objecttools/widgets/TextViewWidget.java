@@ -14,6 +14,8 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -62,7 +64,16 @@ public class TextViewWidget extends CompositeWithMessageBar
       textViewer = new Text(getContent(), SWT.H_SCROLL | SWT.V_SCROLL);
       textViewer.setEditable(false);
       textViewer.setData(RWT.CUSTOM_VARIANT, "monospace");
-      
+
+      addDisposeListener(new DisposeListener() {
+         
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            closeTail();
+         }
+      });
+
       createActions();
       contributeToActionBars();
       createPopupMenu();
@@ -74,7 +85,7 @@ public class TextViewWidget extends CompositeWithMessageBar
    private void createActions()
    {
       final IHandlerService handlerService = (IHandlerService)viewPart.getSite().getService(IHandlerService.class);
-      
+
       actionClear = new Action(Messages.get().FileViewer_ClearOutput, SharedIcons.CLEAR_LOG) {
          @Override
          public void run()
@@ -96,7 +107,7 @@ public class TextViewWidget extends CompositeWithMessageBar
       actionScrollLock.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.scroll_lock"); //$NON-NLS-1$
       handlerService.activateHandler(actionScrollLock.getActionDefinitionId(), new ActionHandler(actionScrollLock));
    }
-   
+
    /**
     * Contribute actions to action bar
     */
@@ -318,15 +329,9 @@ public class TextViewWidget extends CompositeWithMessageBar
       tryToRestartMonitoring.start();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-   @Override
-   public void dispose()
+   public void closeTail()
    {
-      if (follow)
+      if(follow)
       {
          monitorJob.cancel();
          if (tryToRestartMonitoring != null)
@@ -339,7 +344,7 @@ public class TextViewWidget extends CompositeWithMessageBar
                {
                   session.cancelFileMonitoring(nodeId, fileID);
                }
-
+   
                @Override
                protected String getErrorMessage()
                {
@@ -350,9 +355,8 @@ public class TextViewWidget extends CompositeWithMessageBar
             job.setSystem(true);
             job.start();
          }
+         session.removeListener(listener);
       }
-      session.removeListener(listener);
-      super.dispose();
    }
 
    /**
