@@ -172,7 +172,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 			goto cleanup;
 		}
 		msg = (WCHAR *)malloc(sizeof(WCHAR) * reqSize);
-		success = _EvtFormatMessage(NULL, event, 0, 0, NULL, EvtFormatMessageEvent, reqSize, msg, &reqSize);
+		success = _EvtFormatMessage(pubMetadata, event, 0, 0, NULL, EvtFormatMessageEvent, reqSize, msg, &reqSize);
 		if (!success)
 		{
 			LogParserTrace(5, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
