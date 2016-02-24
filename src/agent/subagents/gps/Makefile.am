@@ -6,7 +6,7 @@ gps_la_CPPFLAGS=-I@top_srcdir@/include
 gps_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym
 gps_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la
 
-EXTRA_DIST = gps.h gps.vcproj
+EXTRA_DIST = gps.vcproj nmea.h
 
 if !STATIC_BUILD
 install-exec-hook:
