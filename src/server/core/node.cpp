@@ -5119,7 +5119,7 @@ AgentConnectionEx *Node::createAgentConnection()
    setAgentProxy(conn);
    if (!conn->connect(g_pServerKey))
    {
-      delete conn;
+      conn->decRefCount();
       conn = NULL;
    }
    else
@@ -5291,7 +5291,8 @@ void Node::changeZone(UINT32 newZone)
  */
 void Node::setFileUpdateConn(AgentConnection *conn)
 {
-   delete m_fileUpdateConn;
+   if (m_fileUpdateConn != NULL)
+      m_fileUpdateConn->decRefCount();
    m_fileUpdateConn = conn;
 }
 

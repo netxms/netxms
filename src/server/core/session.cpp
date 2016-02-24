@@ -107,7 +107,7 @@ typedef struct
  */
 static void DeleteCallback(NetObj* obj, void *data)
 {
-   delete (AgentConnection *)obj;
+   ((AgentConnection *)obj)->decRefCount();
 }
 
 /**
@@ -481,7 +481,7 @@ void ClientSession::readThread()
                            debugPrintf(6, _T("Got end of file marker"));
                            //get response with specific ID if ok< then send ok, else send error
                            m_agentConn.remove(msg->getId());
-                           delete conn;
+                           conn->decRefCount();
 
                            NXCPMessage response;
                            response.setCode(CMD_REQUEST_COMPLETED);
@@ -495,7 +495,7 @@ void ClientSession::readThread()
                         debugPrintf(6, _T("Error while sending to agent"));
                         // I/O error
                         m_agentConn.remove(msg->getId());
-                        delete conn;
+                        conn->decRefCount();
 
                         NXCPMessage response;
                         response.setCode(CMD_REQUEST_COMPLETED);
@@ -509,7 +509,7 @@ void ClientSession::readThread()
                      // Resend abort message
                      conn->sendMessage(msg);
                      m_agentConn.remove(msg->getId());
-                     delete conn;
+                     conn->decRefCount();
                   }
                }
                else

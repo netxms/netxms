@@ -638,14 +638,14 @@ int main(int argc, char *argv[])
          }
          else
          {
-            AgentConnection conn(addr, agentPort, authMethod, szSecret);
+            AgentConnection *conn = new AgentConnection(addr, agentPort, authMethod, szSecret);
 
-				conn.setConnectionTimeout(dwConnTimeout);
-            conn.setCommandTimeout(dwTimeout);
-            conn.setEncryptionPolicy(iEncryptionPolicy);
+            conn->setConnectionTimeout(dwConnTimeout);
+            conn->setCommandTimeout(dwTimeout);
+            conn->setEncryptionPolicy(iEncryptionPolicy);
             if (useProxy)
-               conn.setProxy(proxyAddr, proxyPort, proxyAuth, szProxySecret);
-            if (conn.connect(pServerKey, s_verbose, &dwError))
+               conn->setProxy(proxyAddr, proxyPort, proxyAuth, szProxySecret);
+            if (conn->connect(pServerKey, s_verbose, &dwError))
             {
                do
                {
@@ -657,43 +657,43 @@ int main(int argc, char *argv[])
                         {
 #ifdef UNICODE
 									wcValue = WideStringFromMBString(argv[iPos++]);
-                           iExitCode = Get(&conn, wcValue, showNames);
+                           iExitCode = Get(conn, wcValue, showNames);
 									free(wcValue);
 #else
-                           iExitCode = Get(&conn, argv[iPos++], showNames);
+                           iExitCode = Get(conn, argv[iPos++], showNames);
 #endif
                         } while((iExitCode == 0) && (batchMode) && (iPos < argc));
                         break;
                      case CMD_LIST:
 #ifdef UNICODE
 								wcValue = WideStringFromMBString(argv[optind + 1]);
-                        iExitCode = List(&conn, wcValue);
+                        iExitCode = List(conn, wcValue);
 								free(wcValue);
 #else
-                        iExitCode = List(&conn, argv[optind + 1]);
+                        iExitCode = List(conn, argv[optind + 1]);
 #endif
                         break;
                      case CMD_TABLE:
 #ifdef UNICODE
 								wcValue = WideStringFromMBString(argv[optind + 1]);
-                        iExitCode = GetTable(&conn, wcValue);
+                        iExitCode = GetTable(conn, wcValue);
 								free(wcValue);
 #else
-                        iExitCode = GetTable(&conn, argv[optind + 1]);
+                        iExitCode = GetTable(conn, argv[optind + 1]);
 #endif
                         break;
                      case CMD_CHECK_SERVICE:
-                        iExitCode = CheckService(&conn, serviceType, dwServiceAddr,
+                        iExitCode = CheckService(conn, serviceType, dwServiceAddr,
                                                  wServiceProto, wServicePort, szRequest, szResponse);
                         break;
                      case CMD_GET_PARAMS:
-                        iExitCode = ListParameters(&conn);
+                        iExitCode = ListParameters(conn);
                         break;
                      case CMD_GET_CONFIG:
-                        iExitCode = GetConfig(&conn);
+                        iExitCode = GetConfig(conn);
                         break;
                      case CMD_GET_SCREENSHOT:
-                        iExitCode = GetScreenshot(&conn, (argc > optind + 2) ? argv[optind + 2] : "Console", argv[optind + 1]);
+                        iExitCode = GetScreenshot(conn, (argc > optind + 2) ? argv[optind + 2] : "Console", argv[optind + 1]);
                         break;
                      default:
                         break;
@@ -701,13 +701,13 @@ int main(int argc, char *argv[])
                   ThreadSleep(iInterval);
                }
                while(iInterval > 0);
-               conn.disconnect();
             }
             else
             {
                _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
                iExitCode = 2;
             }
+            conn->decRefCount();
          }
       }
    }

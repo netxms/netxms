@@ -197,7 +197,7 @@ bool FileDownloadJob::run()
 
       if (!m_follow || m_node->getFileUpdateConn() != NULL)
       {
-         delete conn;
+         conn->decRefCount();
       }
 	}
 	else

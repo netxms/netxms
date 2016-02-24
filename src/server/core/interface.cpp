@@ -756,8 +756,7 @@ void Interface::updatePingData()
                DbgPrintf(7, _T("Interface::updatePingData: incorrect value or error while parsing"));
             }
             m_pingLastTimeStamp = time(NULL);
-            conn->disconnect();
-            delete conn;
+            conn->decRefCount();
          }
          else
          {
@@ -855,8 +854,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 					}
 				}
             m_pingLastTimeStamp = time(NULL);
-				conn->disconnect();
-				delete conn;
+				conn->decRefCount();
 			}
 			else
 			{

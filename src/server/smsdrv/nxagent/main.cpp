@@ -83,19 +83,18 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
    InetAddress addr = InetAddress::resolveHostName(m_hostName);
    if (addr.isValid())
 	{
-      AgentConnection conn(addr, m_port, (m_secret[0] != 0) ? AUTH_SHA1_HASH : AUTH_NONE, m_secret);
-
-		conn.setCommandTimeout(m_timeout);
-      if (conn.connect())
+      AgentConnection *conn = new AgentConnection(addr, m_port, (m_secret[0] != 0) ? AUTH_SHA1_HASH : AUTH_NONE, m_secret);
+		conn->setCommandTimeout(m_timeout);
+      if (conn->connect())
       {
 			TCHAR *argv[2];
 
 			argv[0] = (TCHAR *)pszPhoneNumber;
 			argv[1] = (TCHAR *)pszText;
-         if (conn.execAction(_T("SMS.Send"), 2, argv) == ERR_SUCCESS)
+         if (conn->execAction(_T("SMS.Send"), 2, argv) == ERR_SUCCESS)
 				bSuccess = TRUE;
-			conn.disconnect();
 		}
+      conn->decRefCount();
 	}
 	return bSuccess;
 }

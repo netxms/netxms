@@ -134,10 +134,11 @@ protected:
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *msg);
 
+   virtual ~AgentConnectionEx();
+
 public:
    AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
             AgentConnection(ipAddr, port, authMethod, secret) { m_nodeId = nodeId; }
-   virtual ~AgentConnectionEx();
 
    UINT32 deployPolicy(AgentPolicy *policy);
    UINT32 uninstallPolicy(AgentPolicy *policy);

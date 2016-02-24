@@ -2008,7 +2008,7 @@ UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
 /**
  * Uninstall policy by GUID
  */
-UINT32 AgentConnection::uninstallPolicy(uuid_t guid)
+UINT32 AgentConnection::uninstallPolicy(const uuid& guid)
 {
 	UINT32 rqId, rcc;
 	NXCPMessage msg(m_nProtocolVersion);
@@ -2016,7 +2016,7 @@ UINT32 AgentConnection::uninstallPolicy(uuid_t guid)
    rqId = generateRequestId();
    msg.setId(rqId);
 	msg.setCode(CMD_UNINSTALL_AGENT_POLICY);
-	msg.setField(VID_GUID, guid, UUID_LENGTH);
+	msg.setField(VID_GUID, guid);
 	if (sendMessage(&msg))
 	{
 		rcc = waitForRCC(rqId, m_dwCommandTimeout);

@@ -358,7 +358,8 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
 		}
 		reachable = true;
    }
-	delete pAgentConn;
+   if (pAgentConn != NULL)
+      pAgentConn->decRefCount();
 
 	if (reachable && !fullCheck)
 		return true;
@@ -595,7 +596,8 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
    }
 
    // Cleanup
-   delete pAgentConn;
+   if (pAgentConn != NULL)
+      pAgentConn->decRefCount();
 	delete pTransport;
 
    // Check if we use simple filter instead of script

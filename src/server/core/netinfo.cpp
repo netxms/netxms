@@ -429,13 +429,12 @@ ARP_CACHE *GetLocalArpCache()
    // Try to get ARP cache from agent via loopback address
    if (pArpCache == NULL)
    {
-      AgentConnection conn(inet_addr("127.0.0.1"));
-
-      if (conn.connect(g_pServerKey))
+      AgentConnection *conn = new AgentConnection(InetAddress::LOOPBACK);
+      if (conn->connect(g_pServerKey))
       {
-         pArpCache = conn.getArpCache();
-         conn.disconnect();
+         pArpCache = conn->getArpCache();
       }
+      conn->decRefCount();
    }
 
    return pArpCache;
@@ -454,13 +453,12 @@ InterfaceList *GetLocalInterfaceList()
    // Try to get local interface list from agent via loopback address
    if (pIfList == NULL)
    {
-      AgentConnection conn(inet_addr("127.0.0.1"));
-
-      if (conn.connect(g_pServerKey))
+      AgentConnection *conn = new AgentConnection(InetAddress::LOOPBACK);
+      if (conn->connect(g_pServerKey))
       {
-         pIfList = conn.getInterfaceList();
-         conn.disconnect();
+         pIfList = conn->getInterfaceList();
       }
+      conn->decRefCount();
    }
    return pIfList;
 }

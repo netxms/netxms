@@ -883,12 +883,14 @@ class LIBNETXMS_EXPORTABLE RefCountObject
 private:
 	VolatileCounter m_refCount;
 
+protected:
+   virtual ~RefCountObject();
+
 public:
 	RefCountObject()
    {
       m_refCount = 1;
    }
-   virtual ~RefCountObject();
 
 	void incRefCount()
    {
