@@ -91,10 +91,7 @@ public class NodeBrowser extends AbstractClientActivity
 			public void onItemClick(AdapterView parent, View v, int position, long id)
 			{
 				AbstractObject obj = (AbstractObject)adapter.getItem(position);
-				if ((obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER) ||
-						(obj.getObjectClass() == AbstractObject.OBJECT_SUBNET) ||
-						(obj.getObjectClass() == AbstractObject.OBJECT_CLUSTER) ||
-						(obj.getObjectClass() == AbstractObject.OBJECT_ZONE))
+				if ((obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER) || (obj.getObjectClass() == AbstractObject.OBJECT_SUBNET) || (obj.getObjectClass() == AbstractObject.OBJECT_CLUSTER) || (obj.getObjectClass() == AbstractObject.OBJECT_ZONE))
 				{
 					containerPath.push(currentParent);
 					currentParent = obj;
@@ -278,8 +275,7 @@ public class NodeBrowser extends AbstractClientActivity
 				break;
 			case R.id.navigate_to:
 				GeoLocation gl = selectedObject.getGeolocation();
-				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q=" + gl.getLatitude() + ","
-						+ gl.getLongitude()));
+				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q=" + gl.getLatitude() + "," + gl.getLongitude()));
 				intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
 				try
 				{
@@ -301,24 +297,15 @@ public class NodeBrowser extends AbstractClientActivity
 						{
 							if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
 							{
-								String message = tool.getConfirmationText()
-										.replaceAll("%OBJECT_NAME%", selectedObject.getObjectName())
-										.replaceAll("%OBJECT_IP_ADDR%", ((Node)selectedObject).getPrimaryIP().getHostAddress());
-								new AlertDialog.Builder(this)
-										.setIcon(android.R.drawable.ic_dialog_alert)
-										.setTitle(R.string.confirm_tool_execution)
-										.setMessage(message)
-										.setCancelable(true)
-										.setPositiveButton(R.string.yes, new OnClickListener()
-										{
-											@Override
-											public void onClick(DialogInterface dialog, int which)
-											{
-												service.executeAction(selectedObject.getObjectId(), tool.getData());
-											}
-										})
-										.setNegativeButton(R.string.no, null)
-										.show();
+								String message = tool.getConfirmationText().replaceAll("%OBJECT_NAME%", selectedObject.getObjectName()).replaceAll("%OBJECT_IP_ADDR%", ((Node)selectedObject).getPrimaryIP().getHostAddress());
+								new AlertDialog.Builder(this).setIcon(android.R.drawable.ic_dialog_alert).setTitle(R.string.confirm_tool_execution).setMessage(message).setCancelable(true).setPositiveButton(R.string.yes, new OnClickListener()
+								{
+									@Override
+									public void onClick(DialogInterface dialog, int which)
+									{
+										service.executeAction(selectedObject.getObjectId(), tool.getData());
+									}
+								}).setNegativeButton(R.string.no, null).show();
 								break;
 							}
 							service.executeAction(selectedObject.getObjectId(), tool.getData());
@@ -499,10 +486,13 @@ public class NodeBrowser extends AbstractClientActivity
 		@Override
 		protected void onPreExecute()
 		{
-			dialog.setMessage(getString(R.string.progress_gathering_data));
-			dialog.setIndeterminate(true);
-			dialog.setCancelable(false);
-			dialog.show();
+			if (dialog != null)
+			{
+				dialog.setMessage(getString(R.string.progress_gathering_data));
+				dialog.setIndeterminate(true);
+				dialog.setCancelable(false);
+				dialog.show();
+			}
 		}
 
 		@Override
@@ -523,7 +513,8 @@ public class NodeBrowser extends AbstractClientActivity
 		@Override
 		protected void onPostExecute(AbstractObject[] result)
 		{
-			dialog.cancel();
+			if (dialog != null)
+				dialog.cancel();
 			if ((result != null) && (currentParent.getObjectId() == currentRoot))
 			{
 				adapter.setNodes(result);
@@ -547,10 +538,13 @@ public class NodeBrowser extends AbstractClientActivity
 		@Override
 		protected void onPreExecute()
 		{
-			dialog.setMessage(getString(R.string.progress_gathering_data));
-			dialog.setIndeterminate(true);
-			dialog.setCancelable(false);
-			dialog.show();
+			if (dialog != null)
+			{
+				dialog.setMessage(getString(R.string.progress_gathering_data));
+				dialog.setIndeterminate(true);
+				dialog.setCancelable(false);
+				dialog.show();
+			}
 		}
 
 		protected void getChildsList(long[] list)
@@ -559,8 +553,7 @@ public class NodeBrowser extends AbstractClientActivity
 			{
 				childIdList.add((int)list[i]);
 				AbstractObject obj = service.findObjectById(list[i]);
-				if (obj != null && (obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER ||
-						obj.getObjectClass() == AbstractObject.OBJECT_CLUSTER))
+				if (obj != null && (obj.getObjectClass() == AbstractObject.OBJECT_CONTAINER || obj.getObjectClass() == AbstractObject.OBJECT_CLUSTER))
 				{
 					try
 					{
@@ -588,7 +581,8 @@ public class NodeBrowser extends AbstractClientActivity
 		@Override
 		protected void onPostExecute(Integer result)
 		{
-			dialog.cancel();
+			if (dialog != null)
+				dialog.cancel();
 			viewAlarms(childIdList);
 		}
 	}

@@ -175,12 +175,9 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 
 		if (item.getItemId() == R.id.connection_point_delete_one)
 		{
-			new AlertDialog.Builder(this)
-					.setIcon(android.R.drawable.ic_dialog_alert)
-					.setTitle(R.string.confirm_tool_execution)
-					.setMessage(r.getString(R.string.connection_point_confirm_delete_one))
-					.setCancelable(true)
-					.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener()
+			new AlertDialog.Builder(this).setIcon(android.R.drawable.ic_dialog_alert).setTitle(R.string.confirm_tool_execution).setMessage(r.getString(R.string.connection_point_confirm_delete_one)).setCancelable(true).setPositiveButton(
+					R.string.yes,
+					new DialogInterface.OnClickListener()
 					{
 						@Override
 						public void onClick(DialogInterface dialog, int which)
@@ -188,18 +185,13 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 							cpList.remove(position);
 							refreshList();
 						}
-					})
-					.setNegativeButton(R.string.no, null)
-					.show();
+					}).setNegativeButton(R.string.no, null).show();
 		}
 		else if (item.getItemId() == R.id.connection_point_delete_all)
 		{
-			new AlertDialog.Builder(this)
-					.setIcon(android.R.drawable.ic_dialog_alert)
-					.setTitle(R.string.confirm_tool_execution)
-					.setMessage(r.getString(R.string.connection_point_confirm_delete_all))
-					.setCancelable(true)
-					.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener()
+			new AlertDialog.Builder(this).setIcon(android.R.drawable.ic_dialog_alert).setTitle(R.string.confirm_tool_execution).setMessage(r.getString(R.string.connection_point_confirm_delete_all)).setCancelable(true).setPositiveButton(
+					R.string.yes,
+					new DialogInterface.OnClickListener()
 					{
 						@Override
 						public void onClick(DialogInterface dialog, int which)
@@ -207,9 +199,7 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 							cpList.clear();
 							refreshList();
 						}
-					})
-					.setNegativeButton(R.string.no, null)
-					.show();
+					}).setNegativeButton(R.string.no, null).show();
 		}
 		else
 		{
@@ -311,10 +301,13 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 		@Override
 		protected void onPreExecute()
 		{
-			dialog.setMessage(getString(R.string.progress_gathering_data));
-			dialog.setIndeterminate(true);
-			dialog.setCancelable(false);
-			dialog.show();
+			if (dialog != null)
+			{
+				dialog.setMessage(getString(R.string.progress_gathering_data));
+				dialog.setIndeterminate(true);
+				dialog.setCancelable(false);
+				dialog.show();
+			}
 		}
 
 		/* (non-Javadoc)
@@ -373,7 +366,8 @@ public class ConnectionPointBrowser extends AbstractClientActivity
 		@Override
 		protected void onPostExecute(String result)
 		{
-			dialog.cancel();
+			if (dialog != null)
+				dialog.cancel();
 			if (result != null)
 			{
 				cpList.add(0, result);

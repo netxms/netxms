@@ -355,15 +355,13 @@ public class AlarmListAdapter extends BaseAdapter
 
 	private int getAlarmIconSeverity(Alarm alarm)
 	{
-		final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning,
-				R.drawable.status_minor, R.drawable.status_major, R.drawable.status_critical };
+		final int[] severityImageId = { R.drawable.status_normal, R.drawable.status_warning, R.drawable.status_minor, R.drawable.status_major, R.drawable.status_critical };
 		return severityImageId[alarm.getCurrentSeverity().getValue()];
 
 	}
 	private int getAlarmIconState(Alarm alarm)
 	{
-		final int[] stateImageId = { R.drawable.alarm_outstanding, R.drawable.alarm_acknowledged,
-				R.drawable.alarm_resolved, R.drawable.alarm_terminated };
+		final int[] stateImageId = { R.drawable.alarm_outstanding, R.drawable.alarm_acknowledged, R.drawable.alarm_resolved, R.drawable.alarm_terminated };
 		return alarm.isSticky() ? R.drawable.alarm_sticky_acknowledged : stateImageId[alarm.getState()];
 	}
 
@@ -382,10 +380,13 @@ public class AlarmListAdapter extends BaseAdapter
 		@Override
 		protected void onPreExecute()
 		{
-			dialog.setMessage(r.getString(R.string.progress_processing_data));
-			dialog.setIndeterminate(true);
-			dialog.setCancelable(false);
-			dialog.show();
+			if (dialog != null)
+			{
+				dialog.setMessage(r.getString(R.string.progress_processing_data));
+				dialog.setIndeterminate(true);
+				dialog.setCancelable(false);
+				dialog.show();
+			}
 		}
 
 		@Override
@@ -418,7 +419,8 @@ public class AlarmListAdapter extends BaseAdapter
 				setValues(service.getAlarms());
 				notifyDataSetChanged();
 			}
-			dialog.cancel();
+			if (dialog != null)
+				dialog.cancel();
 		}
 	}
 }

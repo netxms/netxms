@@ -196,10 +196,13 @@ public class GraphBrowser extends AbstractClientActivity
 		@Override
 		protected void onPreExecute()
 		{
-			dialog.setMessage(getString(R.string.progress_gathering_data));
-			dialog.setIndeterminate(true);
-			dialog.setCancelable(false);
-			dialog.show();
+			if (dialog != null)
+			{
+				dialog.setMessage(getString(R.string.progress_gathering_data));
+				dialog.setIndeterminate(true);
+				dialog.setCancelable(false);
+				dialog.show();
+			}
 		}
 
 		@Override
@@ -228,7 +231,8 @@ public class GraphBrowser extends AbstractClientActivity
 		@Override
 		protected void onPostExecute(List<GraphSettings> result)
 		{
-			dialog.cancel();
+			if (dialog != null)
+				dialog.cancel();
 			if (result != null)
 			{
 				adapter.setGraphs(result);
