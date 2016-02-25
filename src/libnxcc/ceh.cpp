@@ -66,9 +66,12 @@ void ClusterEventHandler::onShutdown()
 
 /**
  * Incoming message handler
- * Should return true if message was processed
+ * Possible return values:
+ *    CLUSTER_MSG_PROCESSED - message is processed and should be deleted
+ *    CLUSTER_MSG_QUEUED - message is queued for deferred processing and should not be deleted by caller
+ *    CLUSTER_MSG_IGNORED - message is ignored and should be placed into wait queue
  */
-bool ClusterEventHandler::onMessage(NXCPMessage *msg, UINT32 sourceNodeId)
+ClusterMessageProcessingResult ClusterEventHandler::onMessage(NXCPMessage *msg, UINT32 sourceNodeId)
 {
-   return false;
+   return CLUSTER_MSG_IGNORED;
 }

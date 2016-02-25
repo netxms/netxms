@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Local administration tool
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 
 #include "nxadm.h"
 
-#if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE
+#if !defined(_WIN32) && HAVE_READLINE_READLINE_H && HAVE_READLINE && !defined(UNICODE)
 #include <readline/readline.h>
 #include <readline/history.h>
 #define USE_READLINE 1
@@ -34,74 +34,55 @@
  */
 static void Help()
 {
-   printf("NetXMS Administartor Tool  Version " NETXMS_VERSION_STRING_A "\n"
-          "Copyright (c) 2004, 2005, 2006, 2007 Victor Kirhenshtein\n\n"
-          "Usage: nxadm -c <command>\n"
-          "       nxadm -i\n"
-          "       nxadm -h\n\n"
-          "Options:\n"
-          "   -c  Execute given command and disconnect\n"
-          "   -i  Go to interactive mode\n"
-          "   -h  Dispaly help and exit\n\n");
+   _tprintf(_T("NetXMS Server Administration Tool  Version ") NETXMS_VERSION_STRING _T("\n")
+            _T("Copyright (c) 2004-2016 Raden Solutions\n\n")
+            _T("Usage: nxadm -c <command>\n")
+            _T("       nxadm -i\n")
+            _T("       nxadm -h\n\n")
+            _T("Options:\n")
+            _T("   -c  Execute given command at server debug console and disconnect\n")
+            _T("   -i  Connect to server debug console in interactive mode\n")
+            _T("   -h  Display help and exit\n\n"));
 }
 
 /**
  * Execute command
  */
-static BOOL ExecCommand(char *pszCmd)
+static bool ExecCommand(const TCHAR *command)
 {
-   NXCPMessage msg, *pResponse;
-   BOOL bConnClosed = FALSE;
-   WORD wCode;
-   TCHAR *pszText;
+   bool connClosed = false;
 
+   NXCPMessage msg;
    msg.setCode(CMD_ADM_REQUEST);
    msg.setId(g_dwRqId++);
-#ifdef UNICODE
-   WCHAR *wcmd = WideStringFromMBString(pszCmd);
-   msg.setField(VID_COMMAND, wcmd);
-   free(wcmd);
-#else
-   msg.setField(VID_COMMAND, pszCmd);
-#endif
+   msg.setField(VID_COMMAND, command);
    SendMsg(&msg);
 
-   while(1)
+   while(true)
    {
-      pResponse = RecvMsg();
-      if (pResponse == NULL)
+      NXCPMessage *response = RecvMsg();
+      if (response == NULL)
       {
-         printf("Connection closed\n");
-         bConnClosed = TRUE;
+         _tprintf(_T("Connection closed\n"));
+         connClosed = true;
          break;
       }
 
-      wCode = pResponse->getCode();
-      switch(wCode)
+      UINT16 code = response->getCode();
+      if(code == CMD_ADM_MESSAGE)
       {
-         case CMD_ADM_MESSAGE:
-            pszText = pResponse->getFieldAsString(VID_MESSAGE);
-            if (pszText != NULL)
-            {
-#if defined(_WIN32) || !defined(UNICODE)
-               WriteToTerminal(pszText);
-#else
-	       char *mbText = MBStringFromWideString(pszText);
-	       fputs(mbText, stdout);
-	       free(mbText);
-#endif
-               free(pszText);
-            }
-            break;
-         default:
-            break;
+         TCHAR *text = response->getFieldAsString(VID_MESSAGE);
+         if (text != NULL)
+         {
+            WriteToTerminal(text);
+         }
       }
-      delete pResponse;
-      if (wCode == CMD_REQUEST_COMPLETED)
+      delete response;
+      if (code == CMD_REQUEST_COMPLETED)
          break;
    }
 
-   return bConnClosed;
+   return connClosed;
 }
 
 /**
@@ -111,8 +92,8 @@ static void Shell()
 {
    char *ptr;
 
-   printf("\nNetXMS Server Remote Console V" NETXMS_VERSION_STRING_A " Ready\n"
-          "Enter \"help\" for command list\n\n");
+   _tprintf(_T("\nNetXMS Server Remote Console V") NETXMS_VERSION_STRING _T(" Ready\n")
+            _T("Enter \"help\" for command list\n\n"));
 
 #if USE_READLINE
    // Initialize readline library if we use it
@@ -124,11 +105,7 @@ static void Shell()
 #if USE_READLINE
       ptr = readline("\x1b[33mnetxmsd:\x1b[0m ");
 #else
-#ifdef _WIN32
       WriteToTerminal(_T("\x1b[33mnetxmsd:\x1b[0m "));
-#else
-      fputs("\x1b[33mnetxmsd:\x1b[0m ", stdout);
-#endif
       fflush(stdout);
       char szCommand[256];
       if (fgets(szCommand, 255, stdin) == NULL)
@@ -141,10 +118,24 @@ static void Shell()
 
       if (ptr != NULL)
       {
-         StrStripA(ptr);
+#ifdef UNICODE
+         WCHAR wcCommand[256];
+#if HAVE_MBSTOWCS
+         mbstowcs(wcCommand, ptr, 255);
+#else
+         MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, ptr, -1, wcCommand, 256);
+#endif
+         wcCommand[255] = 0;
+         StrStrip(wcCommand);
+         if (wcCommand[0] != 0)
+         {
+            if (ExecCommand(wcCommand))
+#else
+         StrStrip(ptr);
          if (*ptr != 0)
          {
             if (ExecCommand(ptr))
+#endif
                break;
 #if USE_READLINE
             add_history(ptr);
@@ -156,7 +147,7 @@ static void Shell()
       }
       else
       {
-         printf("\n");
+         _tprintf(_T("\n"));
       }
    }
 
@@ -172,11 +163,12 @@ int main(int argc, char *argv[])
 {
    int iError, ch;
    BOOL bStart = TRUE, bCmdLineOK = FALSE;
-   char *pszCmd;
+   TCHAR *command = NULL;
+
+   InitNetXMSProcess();
 
 #ifdef _WIN32
    WSADATA wsaData;
-
    WSAStartup(0x0002, &wsaData);
 #endif
 
@@ -193,11 +185,15 @@ int main(int argc, char *argv[])
                bStart = FALSE;
                break;
             case 'c':
-               pszCmd = optarg;
+#ifdef UNICODE
+               command = WideStringFromMBStringSysLocale(optarg);
+#else
+               command = optarg;
+#endif
                bCmdLineOK = TRUE;
                break;
             case 'i':
-               pszCmd = NULL;
+               command = NULL;
                bCmdLineOK = TRUE;
                break;
             case '?':
@@ -213,13 +209,13 @@ int main(int argc, char *argv[])
       {
          if (Connect())
          {
-            if (pszCmd == NULL)
+            if (command == NULL)
             {
                Shell();
             }
             else
             {
-               ExecCommand(pszCmd);
+               ExecCommand(command);
             }
             Disconnect();
             iError = 0;
@@ -240,5 +236,8 @@ int main(int argc, char *argv[])
       Help();
       iError = 1;
    }
+#ifdef UNICODE
+   free(command);
+#endif
    return iError;
 }

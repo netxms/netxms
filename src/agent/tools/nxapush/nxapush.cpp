@@ -1,7 +1,7 @@
 /* 
 ** nxapush - command line tool used to push DCI values to NetXMS server
 **           via local NetXMS agent
-** Copyright (C) 2006-2014 Raden Solutions
+** Copyright (C) 2006-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
 	int ret = 0;
 	int c;
 
-	InitThreadLibrary();
+	InitNetXMSProcess();
 
 	opterr = 0;
 #if HAVE_DECL_GETOPT_LONG

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,11 @@
 **/
 
 #include "nxcore.h"
+
+/**
+ * Server config
+ */
+extern Config g_serverConfig;
 
 /**
  * List of loaded modules
@@ -65,20 +70,19 @@ static bool LoadNetXMSModule(const TCHAR *name)
 
    if (hModule != NULL)
    {
-      BOOL (* ModuleInit)(NXMODULE *);
+      bool (* ModuleInit)(NXMODULE *, Config *);
 
-      ModuleInit = (BOOL (*)(NXMODULE *))DLGetSymbolAddr(hModule, "NetXMSModuleInit", szErrorText);
+      ModuleInit = (bool (*)(NXMODULE *, Config *))DLGetSymbolAddr(hModule, "NetXMSModuleInit", szErrorText);
       if (ModuleInit != NULL)
       {
          NXMODULE module;
          memset(&module, 0, sizeof(NXMODULE));
-         if (ModuleInit(&module))
+         if (ModuleInit(&module, &g_serverConfig))
          {
             if (module.dwSize == sizeof(NXMODULE))
             {
                // Add module to module's list
-               g_pModuleList = (NXMODULE *)realloc(g_pModuleList, 
-                                                   sizeof(NXMODULE) * (g_dwNumModules + 1));
+               g_pModuleList = (NXMODULE *)realloc(g_pModuleList, sizeof(NXMODULE) * (g_dwNumModules + 1));
                memcpy(&g_pModuleList[g_dwNumModules], &module, sizeof(NXMODULE));
                g_pModuleList[g_dwNumModules].hModule = hModule;
 

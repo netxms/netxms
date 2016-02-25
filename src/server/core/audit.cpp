@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -127,7 +127,7 @@ static void SendNewRecord(ClientSession *pSession, void *pArg)
 {
    UPDATE_INFO *pUpdate;
 
-   if (pSession->isAuthenticated() && pSession->isSubscribed(NXC_CHANNEL_AUDIT_LOG))
+   if (pSession->isAuthenticated() && pSession->isSubscribedTo(NXC_CHANNEL_AUDIT_LOG))
 	{
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_AUDIT_RECORD;

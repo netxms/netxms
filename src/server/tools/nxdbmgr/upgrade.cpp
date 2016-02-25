@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -641,7 +641,17 @@ static int NextFreeEPPruleID()
 	return ruleId;
 }
 
-/*
+/**
+ * Upgrade from V392 to V393
+ */
+static BOOL H_UpgradeFromV392(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("DefaultInterfaceExpectedState"), _T("0"), _T("Default expected state for new interface objects"), 'C', true, false, false, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='393' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V391 to V392
  */
 static BOOL H_UpgradeFromV391(int currVersion, int newVersion)
@@ -651,7 +661,7 @@ static BOOL H_UpgradeFromV391(int currVersion, int newVersion)
    return TRUE;
 }
 
-/*
+/**
  * Upgrade from V390 to V391
  */
 static BOOL H_UpgradeFromV390(int currVersion, int newVersion)
@@ -9449,6 +9459,7 @@ static struct
    { 389, 390, H_UpgradeFromV389 },
    { 390, 391, H_UpgradeFromV390 },
    { 391, 392, H_UpgradeFromV391 },
+   { 392, 393, H_UpgradeFromV392 },
    { 0, 0, NULL }
 };
 

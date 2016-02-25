@@ -51,7 +51,7 @@ static void ScheduledMaintenance(const ScheduledTaskParameters *params, bool ent
    }
    else
    {
-      DbgPrintf(4, _T("MaintenanceJob: object %d not found"), object->getId());
+      DbgPrintf(4, _T("MaintenanceJob: object %d not found"), params->m_objectId);
    }
 }
 

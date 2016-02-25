@@ -23,13 +23,13 @@
 
 #include "nxscript.h"
 
-NXSL_METHOD_DEFINITION(debug)
+NXSL_METHOD_DEFINITION(Test, debug)
 {
    *result = new NXSL_Value(_T("Sample debug output"));
    return 0;
 }
 
-NXSL_METHOD_DEFINITION(quote)
+NXSL_METHOD_DEFINITION(Test, quote)
 {
    TCHAR buffer[4096];
    _sntprintf(buffer, 4096, _T("\"%s\""), argv[0]->getValueAsCString());
@@ -39,9 +39,9 @@ NXSL_METHOD_DEFINITION(quote)
 
 NXSL_TestClass::NXSL_TestClass() : NXSL_Class()
 {
-   _tcscpy(m_name, _T("TEST"));
-   NXSL_REGISTER_METHOD(debug, 0);
-   NXSL_REGISTER_METHOD(quote, 1);
+   _tcscpy(m_name, _T("Test"));
+   NXSL_REGISTER_METHOD(Test, debug, 0);
+   NXSL_REGISTER_METHOD(Test, quote, 1);
 }
 
 NXSL_Value *NXSL_TestClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
@@ -59,7 +59,7 @@ NXSL_Value *NXSL_TestClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    return pValue;
 }
 
-BOOL NXSL_TestClass::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue)
+bool NXSL_TestClass::setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue)
 {
    if (!_tcscmp(pszAttr, _T("value")))
    {

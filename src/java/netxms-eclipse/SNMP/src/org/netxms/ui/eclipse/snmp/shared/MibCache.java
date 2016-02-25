@@ -36,6 +36,7 @@ import org.netxms.client.snmp.SnmpObjectId;
 import org.netxms.client.snmp.SnmpObjectIdFormatException;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 
@@ -52,6 +53,10 @@ public final class MibCache implements ConsoleLoginListener
 	@Override
 	public void afterLogin(final NXCSession session, Display display)
 	{
+	   Boolean slowLink = (Boolean)ConsoleSharedData.getProperty("SlowLink");
+	   if ((slowLink != null) && slowLink.booleanValue())
+	      return;
+	   
 		ConsoleJob job = new ConsoleJob(Messages.get().LoginListener_JobTitle, null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -52,4 +52,36 @@ NXSL_HashMap::NXSL_HashMap(const NXSL_HashMap *src) : NXSL_HandleCountObject()
 NXSL_HashMap::~NXSL_HashMap()
 {
    delete m_values;
+}
+
+/**
+ * Get keys as array
+ */
+NXSL_Value *NXSL_HashMap::getKeys() const
+{
+   NXSL_Array *array = new NXSL_Array();
+   StructArray<KeyValuePair> *values = m_values->toArray();
+   for(int i = 0; i < values->size(); i++)
+   {
+      KeyValuePair *p = values->get(i);
+      array->add(new NXSL_Value(p->key));
+   }
+   delete values;
+   return new NXSL_Value(array);
+}
+
+/**
+ * Get values as array
+ */
+NXSL_Value *NXSL_HashMap::getValues() const
+{
+   NXSL_Array *array = new NXSL_Array();
+   StructArray<KeyValuePair> *values = m_values->toArray();
+   for(int i = 0; i < values->size(); i++)
+   {
+      KeyValuePair *p = values->get(i);
+      array->add(new NXSL_Value((const NXSL_Value *)p->value));
+   }
+   delete values;
+   return new NXSL_Value(array);
 }

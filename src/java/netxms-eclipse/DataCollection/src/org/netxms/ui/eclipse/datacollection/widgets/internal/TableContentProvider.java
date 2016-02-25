@@ -83,9 +83,9 @@ public class TableContentProvider implements IStructuredContentProvider
 	/**
 	 * Row wrapper for selection provider
 	 */
-	class RowWrapper extends TableRow implements ObjectWrapper
+	private class RowWrapper extends TableRow implements ObjectWrapper
 	{
-      public RowWrapper(TableRow src)
+      protected RowWrapper(TableRow src)
       {
          super(src);
       }

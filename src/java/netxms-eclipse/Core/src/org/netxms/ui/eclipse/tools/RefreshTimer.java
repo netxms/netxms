@@ -35,6 +35,8 @@ public class RefreshTimer
    private long interval;
    private long lastRun = 0;
    private boolean scheduled = false;
+   private boolean refreshDisabled = false;
+   private boolean updateMissed = false;
    
    /**
     * Create new refresh timer
@@ -57,6 +59,12 @@ public class RefreshTimer
     */
    public synchronized void execute()
    {
+      if(refreshDisabled)
+      {
+         updateMissed = true;
+         return;
+      }
+      
       if (control.isDisposed())
          return;
       
@@ -74,6 +82,13 @@ public class RefreshTimer
             @Override
             public void run()
             {
+
+               if(refreshDisabled)
+               {
+                  updateMissed = true;
+                  return;
+               }
+               
                control.getDisplay().asyncExec(new Runnable() {
                   @Override
                   public void run()
@@ -95,5 +110,23 @@ public class RefreshTimer
    {
       lastRun = System.currentTimeMillis();
       scheduled = false;
+   }
+   
+   /**
+    * Disables refresh 
+    */
+   public synchronized void disableRefresh()
+   {
+      refreshDisabled = true;
+   }
+   
+   /**
+    * Enables refresh
+    */
+   public synchronized void enableRefresh()
+   {
+      refreshDisabled = false;
+      if(updateMissed)
+         execute();
    }
 }

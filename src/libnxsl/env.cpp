@@ -74,6 +74,7 @@ int F_x2d(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_AddrInRange(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_AddrInSubnet(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
@@ -132,6 +133,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("AddrInRange"), F_AddrInRange, 3 },
    { _T("AddrInSubnet"), F_AddrInSubnet, 3 },
    { _T("ArrayToString"), F_ArrayToString, 2 },
+   { _T("GeoLocation"), F_GeoLocation, -1 },
    { _T("ReadPersistentStorage"), F_ReadPersistentStorage, 1 },
 	{ _T("SecondsToUptime"), F_SecondsToUptime, 1 },
 	{ _T("TCPConnector"), F_tcpConnector, 2 },
@@ -280,4 +282,11 @@ void NXSL_Environment::print(NXSL_Value *value)
 	{
       WriteToTerminal(_T("(null)"));
 	}
+}
+
+/**
+ * Additional VM configuration
+ */
+void NXSL_Environment::configureVM(NXSL_VM *vm)
+{
 }

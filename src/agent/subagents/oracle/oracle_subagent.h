@@ -48,6 +48,7 @@ struct DatabaseInfo
 	TCHAR server[MAX_STR];
 	TCHAR username[MAX_USERNAME];
 	TCHAR password[MAX_PASSWORD];
+	UINT32 connectionTTL;
 };
 
 /**

@@ -50,7 +50,7 @@ Entry::Entry()
    m_loginName = NULL;
    m_fullName = NULL;
    m_description = NULL;
-   m_memberList = new StringList();
+   m_memberList = new StringSet();
 }
 
 /**
@@ -58,9 +58,9 @@ Entry::Entry()
  */
 Entry::~Entry()
 {
-   safe_free(m_loginName);
-   safe_free(m_fullName);
-   safe_free(m_description);
+   free(m_loginName);
+   free(m_fullName);
+   free(m_description);
    delete m_memberList;
 }
 
@@ -650,14 +650,17 @@ static void ParseRange(const char *attr, int *start, int *end)
    safe_free(tmpAttr);
 }
 
-void LDAPConnection::updateMembers(StringList *memberList, const char *firstAttr, LDAPMessage *firstEntry, const LDAP_CHAR *dn)
+/**
+ * Update group members
+ */
+void LDAPConnection::updateMembers(StringSet *memberList, const char *firstAttr, LDAPMessage *firstEntry, const LDAP_CHAR *dn)
 {
    int start, end;
 
    // get start, end member count
    ParseRange(firstAttr, &start, &end);
 
-   // add recieved members
+   // add received members
    int i = 0;
    TCHAR *value = getAttrValue(firstEntry, firstAttr, i);
    while(value != NULL)
@@ -762,7 +765,7 @@ static EnumerationCallbackResult UpdateUserCallback(const TCHAR *key, const void
 void LDAPConnection::compareUserLists(StringObjectMap<Entry> *userEntryList)
 {
    userEntryList->forEach(UpdateUserCallback, NULL);
-   RemoveDeletedLDAPEntry(userEntryList, m_action, true);
+   RemoveDeletedLDAPEntries(userEntryList, m_action, true);
 }
 
 /**
@@ -780,7 +783,7 @@ static EnumerationCallbackResult UpdateGroupCallback(const TCHAR *key, const voi
 void LDAPConnection::compareGroupList(StringObjectMap<Entry> *groupEntryList)
 {
    groupEntryList->forEach(UpdateGroupCallback, NULL);
-   RemoveDeletedLDAPEntry(groupEntryList, m_action, false);
+   RemoveDeletedLDAPEntries(groupEntryList, m_action, false);
 }
 
 /**

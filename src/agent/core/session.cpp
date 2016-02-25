@@ -222,7 +222,7 @@ void CommSession::readThread()
                   int dataSize;
                   if (msg->isCompressed())
                   {
-                     BYTE *in = msg->getBinaryData();
+                     const BYTE *in = msg->getBinaryData();
                      if (m_compressor == NULL)
                      {
                         NXCPCompressionMethod method = (NXCPCompressionMethod)(*in);

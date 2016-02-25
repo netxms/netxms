@@ -56,6 +56,7 @@ LONG H_MemoryInfo(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_SourcePkgSupport(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_ConnectedUsers(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_OpenFiles(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
+LONG H_SysMsgQueue(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 
 void StartCpuUsageCollector();
 void ShutdownCpuUsageCollector();

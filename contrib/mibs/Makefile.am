@@ -43,6 +43,7 @@ mibs_DATA = \
 	AtiL2-MIB.txt \
 	ATM-TC-MIB.txt \
 	AUTH-MIB.txt \
+	BASP-Config-MIB.txt \
 	BAY-STACK-ADAC-MIB.txt \
 	BAY-STACK-ARP-INSPECTION-MIB.txt \
 	BAY-STACK-DHCP-SNOOPING-MIB.txt \
@@ -62,6 +63,8 @@ mibs_DATA = \
 	BN-IF-EXTENSIONS-MIB.txt \
 	BPDU-PROTECTION-MIB.txt \
 	BPDU-TUNNELING-MIB.txt \
+	Brcm-adapterInfo-MIB.txt \
+	Brcm-BSAPTrap-MIB.txt \
 	BRIDGE-MIB.txt \
 	CABLE-DIAG-MIB.txt \
 	CDX-6500-COMMON-MIB.txt \
@@ -235,6 +238,7 @@ mibs_DATA = \
 	H3C-SYS-MAN-MIB.txt \
 	H3C-SYSLOG-MIB.txt \
 	H3C-TRAP-MIB.txt \
+	HC-RMON-MIB.txt \
 	HCNUM-TC.txt \
 	HH3C-CFCARD-MIB.txt \
 	HH3C-COMMON-SYSTEM-MIB.txt \
@@ -629,4 +633,4 @@ mibs_DATA = \
 EXTRA_DIST=$(mibs_DATA)
 
 install-data-hook:
-	if test "x@BUILD_SERVER@" = "xyes"; then LD_LIBRARY_PATH="$(DESTDIR)$(libdir):@INSTALL_LIBPATH@:${LD_LIBRARY_PATH}" $(DESTDIR)$(bindir)/nxmibc -d $(DESTDIR)$(pkgdatadir)/mibs -o $(DESTDIR)$(localstatedir)/lib/netxms/netxms.mib; fi
+	if test "x@BUILD_SERVER@" = "xyes"; then $(INSTALL) -d $(DESTDIR)$(localstatedir)/lib/netxms; LD_LIBRARY_PATH="$(DESTDIR)$(libdir):@INSTALL_LIBPATH@:${LD_LIBRARY_PATH}" $(DESTDIR)$(bindir)/nxmibc -d $(DESTDIR)$(pkgdatadir)/mibs -o $(DESTDIR)$(localstatedir)/lib/netxms/netxms.mib; fi

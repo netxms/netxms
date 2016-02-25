@@ -22,6 +22,16 @@
 #include "nxcore.h"
 
 /**
+ * Compare user IDs (for qsort)
+ */
+static int CompareUserId(const void *e1, const void *e2)
+{
+   UINT32 id1 = *((UINT32 *)e1);
+   UINT32 id2 = *((UINT32 *)e2);
+   return (id1 < id2) ? -1 : ((id1 > id2) ? 1 : 0);
+}
+
+/**
  * Generate hash for password
  */
 static void CalculatePasswordHash(const TCHAR *password, PasswordHashType type, PasswordHash *ph, const BYTE *salt = NULL)
@@ -295,8 +305,8 @@ void UserDatabaseObject::setName(const TCHAR *name)
 
 void UserDatabaseObject::setDn(const TCHAR *dn)
 {
-   safe_free(m_userDn);
-   m_userDn = (dn != NULL) ? _tcsdup(dn) : NULL;
+   free(m_userDn);
+   m_userDn = _tcsdup_ex(dn);
    m_flags |= UF_MODIFIED;
 }
 
@@ -724,6 +734,7 @@ Group::Group(DB_HANDLE hdb, DB_RESULT hr, int row) : UserDatabaseObject(hdb, hr,
 			m_members = (UINT32 *)malloc(sizeof(UINT32) * m_memberCount);
 			for(int i = 0; i < m_memberCount; i++)
 				m_members[i] = DBGetFieldULong(hResult, i, 0);
+			qsort(m_members, m_memberCount, sizeof(UINT32), CompareUserId);
 		}
 		else
 		{
@@ -884,19 +895,14 @@ bool Group::deleteFromDatabase(DB_HANDLE hdb)
  */
 bool Group::isMember(UINT32 userId)
 {
-	int i;
-
 	if (m_id == GROUP_EVERYONE)
 		return true;
 
-   //This is done not to assign disabled group rights on a enabled user
+   // This is to avoid applying disabled group rights on enabled user
    if ((m_flags & UF_SYNC_EXCEPTION) || (m_flags & UF_DISABLED))
       return false;
 
-	for(i = 0; i < m_memberCount; i++)
-		if (m_members[i] == userId)
-			return true;
-	return false;
+   return bsearch(&userId, m_members, m_memberCount, sizeof(UINT32), CompareUserId) != NULL;
 }
 
 /**
@@ -904,17 +910,14 @@ bool Group::isMember(UINT32 userId)
  */
 void Group::addUser(UINT32 userId)
 {
-	int i;
-
-   // Check if user already in group
-   for(i = 0; i < m_memberCount; i++)
-      if (m_members[i] == userId)
-         return;
+   if (bsearch(&userId, m_members, m_memberCount, sizeof(UINT32), CompareUserId) != NULL)
+      return;  // already added
 
    // Not in group, add it
 	m_memberCount++;
    m_members = (UINT32 *)realloc(m_members, sizeof(UINT32) * m_memberCount);
-   m_members[i] = userId;
+   m_members[m_memberCount - 1] = userId;
+   qsort(m_members, m_memberCount, sizeof(UINT32), CompareUserId);
 
 	m_flags |= UF_MODIFIED;
 
@@ -926,17 +929,15 @@ void Group::addUser(UINT32 userId)
  */
 void Group::deleteUser(UINT32 userId)
 {
-   int i;
+   UINT32 *e = (UINT32 *)bsearch(&userId, m_members, m_memberCount, sizeof(UINT32), CompareUserId);
+   if (e == NULL)
+      return;  // not a member
 
-   for(i = 0; i < m_memberCount; i++)
-      if (m_members[i] == userId)
-      {
-         m_memberCount--;
-         memmove(&m_members[i], &m_members[i + 1], sizeof(UINT32) * (m_memberCount - i));
-      	m_flags |= UF_MODIFIED;
-         SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
-         break;
-      }
+   int index = (int)((char *)e - (char *)m_members) / sizeof(UINT32);
+   m_memberCount--;
+   memmove(&m_members[index], &m_members[index + 1], sizeof(UINT32) * (m_memberCount - index));
+   m_flags |= UF_MODIFIED;
+   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
 }
 
 /**
@@ -987,23 +988,20 @@ void Group::modifyFromMessage(NXCPMessage *msg)
 				m_members[i] = msg->getFieldAsUInt32(varId);
 
             // check if new member
-            bool found = false;
-   			for(int j = 0; j < count; j++)
-            {
-               if (members[j] == m_members[i])
-               {
-                  members[j] = 0xFFFFFFFF;    // mark as found
-                  found = true;
-                  break;
-               }
-            }
-
-            if (!found)
+			   UINT32 *e = (UINT32 *)bsearch(&m_members[i], members, count, sizeof(UINT32), CompareUserId);
+			   if (e != NULL)
+			   {
+			      *((UINT32 *)e) = 0xFFFFFFFF;    // mark as found
+			   }
+			   else
+			   {
                SendUserDBUpdate(USER_DB_MODIFY, m_members[i]);  // new member added
+			   }
          }
 			for(i = 0; i < count; i++)
             if (members[i] != 0xFFFFFFFF)  // not present in new list
                SendUserDBUpdate(USER_DB_MODIFY, members[i]);
+		   qsort(m_members, m_memberCount, sizeof(UINT32), CompareUserId);
 		}
 		else
 		{
@@ -1013,6 +1011,6 @@ void Group::modifyFromMessage(NXCPMessage *msg)
 			for(i = 0; i < count; i++)
             SendUserDBUpdate(USER_DB_MODIFY, members[i]);
 		}
-		safe_free(members);
+		free(members);
 	}
 }

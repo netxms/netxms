@@ -35,13 +35,14 @@ public:
       _tprintf(_T("** cluster shutdown\n"));
    }
 
-   virtual bool onMessage(NXCPMessage *msg, UINT32 sourceNodeId)
+   virtual ClusterMessageProcessingResult onMessage(NXCPMessage *msg, UINT32 sourceNodeId)
    {
       if (msg->getCode() == 111)
       {
          ClusterSendResponse(sourceNodeId, msg->getId(), NXCC_RCC_SUCCESS);
+         return CLUSTER_MSG_PROCESSED;
       }
-      return false;
+      return CLUSTER_MSG_IGNORED;
    }
 };
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Generic SMS driver
-** Copyright (C) 2003-2014 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -97,7 +97,7 @@ static bool InitModem(Serial *serial)
  *
  * pszInitArgs format: portname,speed,databits,parity,stopbits
  */
-extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
+extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 {
 	TCHAR *portName;
 	
@@ -235,25 +235,25 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 cleanup:
 	safe_free(portName);
    s_serial.close();
-	return TRUE;   // return TRUE always to keep driver in memory
+	return true;   // return TRUE always to keep driver in memory
 }
 
 /**
  * Send SMS
  */
-extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	if ((pszPhoneNumber == NULL) || (pszText == NULL))
-      return FALSE;
+      return false;
 
    DbgPrintf(3, _T("SMS: send to {%s}: {%s}"), pszPhoneNumber, pszText);
    if (!s_serial.restart())
    {
    	DbgPrintf(5, _T("SMS: failed to open port"));
-      return FALSE;
+      return false;
    }
 
-   BOOL success = FALSE;
+   bool success = false;
    if (!InitModem(&s_serial))
       goto cleanup;
 	
@@ -346,7 +346,7 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
       goto cleanup;
 
    DbgPrintf(5, _T("SMS: AT+CMGS + message body sent, got OK"));
-   success = TRUE;
+   success = true;
 
 cleanup:
    s_serial.setTimeout(2000);

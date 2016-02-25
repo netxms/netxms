@@ -803,7 +803,7 @@ bool DCObject::processNewValue(time_t nTimeStamp, const void *value, bool *updat
 /**
  * Process new data collection error
  */
-void DCObject::processNewError()
+void DCObject::processNewError(bool noInstance)
 {
 }
 

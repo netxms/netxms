@@ -134,10 +134,11 @@ protected:
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *msg);
 
+   virtual ~AgentConnectionEx();
+
 public:
    AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
             AgentConnection(ipAddr, port, authMethod, secret) { m_nodeId = nodeId; }
-   virtual ~AgentConnectionEx();
 
    UINT32 deployPolicy(AgentPolicy *policy);
    UINT32 uninstallPolicy(AgentPolicy *policy);
@@ -483,8 +484,8 @@ protected:
 	StringMap m_customAttributes;
    StringObjectMap<ModuleData> *m_moduleData;
 
-   void lockProperties() { MutexLock(m_mutexProperties); }
-   void unlockProperties() { MutexUnlock(m_mutexProperties); }
+   void lockProperties() const { MutexLock(m_mutexProperties); }
+   void unlockProperties() const { MutexUnlock(m_mutexProperties); }
    void lockACL() { MutexLock(m_mutexACL); }
    void unlockACL() { MutexUnlock(m_mutexACL); }
    void LockParentList(BOOL bWrite)
@@ -530,6 +531,7 @@ public:
    virtual ~NetObj();
 
    virtual int getObjectClass() const { return OBJECT_GENERIC; }
+   virtual const TCHAR *getObjectClassName() const;
 
    UINT32 getId() const { return m_id; }
    const TCHAR *getName() const { return m_name; }
@@ -537,16 +539,20 @@ public:
    int getPropagatedStatus();
    UINT32 getTimeStamp() const { return m_dwTimeStamp; }
 	const uuid& getGuid() const { return m_guid; }
-	const TCHAR *getComments() { return CHECK_NULL_EX(m_pszComments); }
-   PostalAddress *getPostalAddress() { return m_postalAddress; }
+	const TCHAR *getComments() const { return CHECK_NULL_EX(m_pszComments); }
+
+	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
+	void setGeoLocation(const GeoLocation& geoLocation) { m_geoLocation = geoLocation; markAsModified(); }
+
+   const PostalAddress *getPostalAddress() const { return m_postalAddress; }
    void setPostalAddress(PostalAddress * addr) { delete m_postalAddress; m_postalAddress = addr; markAsModified();}
 
-   bool isModified() { return m_isModified; }
-   bool isDeleted() { return m_isDeleted; }
-   bool isOrphaned() { return m_dwParentCount == 0; }
-   bool isEmpty() { return m_dwChildCount == 0; }
+   bool isModified() const { return m_isModified; }
+   bool isDeleted() const { return m_isDeleted; }
+   bool isOrphaned() const { return m_dwParentCount == 0; }
+   bool isEmpty() const { return m_dwChildCount == 0; }
 
-	bool isSystem() { return m_isSystem; }
+	bool isSystem() const { return m_isSystem; }
 	void setSystemFlag(bool flag) { m_isSystem = flag; }
 
    UINT32 getRefCount();
@@ -567,7 +573,7 @@ public:
    bool isHidden() { return m_isHidden; }
    void hide();
    void unhide();
-   void markAsModified() { lockProperties(); setModified(); unlockProperties(); }  // external API to mar object as modified
+   void markAsModified() { lockProperties(); setModified(); unlockProperties(); }  // external API to mark object as modified
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -605,6 +611,7 @@ public:
    void setCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); setModified(); }
    void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); setModified(); }
    void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); setModified(); }
+   NXSL_Value *getCustomAttributesForNXSL() const;
 
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);
@@ -773,19 +780,22 @@ protected:
    UINT32 m_type;
    UINT32 m_mtu;
    UINT64 m_speed;
-	UINT32 m_bridgePortNumber;		// 802.1D port number
-	UINT32 m_slotNumber;				// Vendor/device specific slot number
-	UINT32 m_portNumber;				// Vendor/device specific port number
-	UINT32 m_peerNodeId;				// ID of peer node object, or 0 if unknown
-	UINT32 m_peerInterfaceId;		// ID of peer interface object, or 0 if unknown
+	UINT32 m_bridgePortNumber;		 // 802.1D port number
+	UINT32 m_slotNumber;				 // Vendor/device specific slot number
+	UINT32 m_portNumber;				 // Vendor/device specific port number
+	UINT32 m_peerNodeId;				 // ID of peer node object, or 0 if unknown
+	UINT32 m_peerInterfaceId;		 // ID of peer interface object, or 0 if unknown
    LinkLayerProtocol m_peerDiscoveryProtocol;  // Protocol used to discover peer node
-	WORD m_adminState;				// interface administrative state
-	WORD m_operState;					// interface operational state
-	WORD m_dot1xPaeAuthState;		// 802.1x port auth state
-	WORD m_dot1xBackendAuthState;	// 802.1x backend auth state
+	INT16 m_adminState;				 // interface administrative state
+	INT16 m_operState;				 // interface operational state
+   INT16 m_pendingOperState;
+	INT16 m_confirmedOperState;
+	INT16 m_dot1xPaeAuthState;		 // 802.1x port auth state
+	INT16 m_dot1xBackendAuthState; // 802.1x backend auth state
    UINT64 m_lastDownEventId;
 	int m_pendingStatus;
-	int m_pollCount;
+	int m_statusPollCount;
+	int m_operStatePollCount;
 	int m_requiredPollCount;
    UINT32 m_zoneId;
    UINT32 m_pingTime;
@@ -832,6 +842,7 @@ public:
 	UINT32 getFlags() { return m_flags; }
 	int getAdminState() { return (int)m_adminState; }
 	int getOperState() { return (int)m_operState; }
+   int getConfirmedOperState() { return (int)m_confirmedOperState; }
 	int getDot1xPaeAuthState() { return (int)m_dot1xPaeAuthState; }
 	int getDot1xBackendAuthState() { return (int)m_dot1xBackendAuthState; }
 	const TCHAR *getDescription() { return m_description; }
@@ -1225,6 +1236,7 @@ protected:
    time_t m_bootTime;
    time_t m_agentUpTime;
    time_t m_lastAgentCommTime;
+   time_t m_lastAgentConnectAttempt;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_hSmclpAccessMutex;
@@ -1286,7 +1298,7 @@ protected:
 
    void checkInterfaceNames(InterfaceList *pIfList);
    bool filterInterface(InterfaceInfo *info);
-   Subnet *createSubnet(const InetAddress& baseAddr, bool syntheticMask);
+   Subnet *createSubnet(InetAddress& baseAddr, bool syntheticMask);
 	void checkAgentPolicyBinding(AgentConnection *conn);
 	void updatePrimaryIpAddr();
 	bool confPollAgent(UINT32 dwRqId);
@@ -1454,7 +1466,7 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL);
+   bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL, bool forceConnect = false);
 	bool checkAgentTrapId(UINT64 id);
 	bool checkSNMPTrapId(UINT32 id);
    bool checkAgentPushRequestId(UINT64 id);
@@ -1777,9 +1789,6 @@ public:
 	virtual bool showThresholdSummary();
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
-
-   virtual void enterMaintenanceMode();
-   virtual void leaveMaintenanceMode();
 
    void linkChildObjects();
    void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
@@ -2382,6 +2391,8 @@ inline const InetAddress& GetObjectIpAddress(NetObj *object)
       return ((Subnet *)object)->getIpAddress();
    if (object->getObjectClass() == OBJECT_ACCESSPOINT)
       return ((AccessPoint *)object)->getIpAddress();
+   if (object->getObjectClass() == OBJECT_INTERFACE)
+      return ((Interface *)object)->getIpAddressList()->getFirstUnicastAddress();
    return InetAddress::INVALID;
 }
 
@@ -2453,7 +2464,6 @@ extern DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot;
 extern BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot;
 
 extern UINT32 NXCORE_EXPORTABLE g_dwMgmtNode;
-extern const TCHAR *g_szClassName[];
 extern BOOL g_bModificationsLocked;
 extern Queue *g_pTemplateUpdateQueue;
 

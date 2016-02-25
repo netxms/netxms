@@ -18,19 +18,24 @@
  */
 package org.netxms.ui.eclipse.datacollection.views.helpers;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
-
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.datacollection.DataCollectionObject;
+import org.netxms.client.datacollection.DataCollectionTable;
+import org.netxms.client.datacollection.TableThreshold;
+import org.netxms.client.datacollection.Threshold;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.ThresholdLabelProvider;
 import org.netxms.ui.eclipse.datacollection.views.DataCollectionEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
@@ -126,6 +131,48 @@ public class DciLabelProvider implements ITableLabelProvider
 				return Integer.toString(days) + ((days == 1) ? Messages.get().DciLabelProvider_Day : Messages.get().DciLabelProvider_Days);
 			case DataCollectionEditor.COLUMN_STATUS:
 				return statusTexts.get(dci.getStatus());
+			case DataCollectionEditor.COLUMN_THRESHOLD:
+			   StringBuilder thresholds = new StringBuilder();
+			   if((dci instanceof DataCollectionItem))
+			   {
+			      ArrayList<Threshold> list = ((DataCollectionItem)dci).getThresholds();
+               for(int i = 0; i < list.size(); i++)
+               {
+                  Threshold tr = list.get(i);
+                  int f = tr.getFunction();
+                  StringBuilder text = new StringBuilder(ThresholdLabelProvider.FUNCTIONS[f]);
+                  if (f != Threshold.F_DIFF)
+                  {
+                     text.append(tr.getSampleCount());
+                     text.append(") "); //$NON-NLS-1$
+                  }
+                  else
+                  {
+                     text.append(' ');
+                  }
+                  if (f != Threshold.F_SCRIPT)
+                  {
+                     text.append(ThresholdLabelProvider.OPERATIONS[tr.getOperation()]);
+                     text.append(' ');
+                     text.append(tr.getValue());
+                  }
+                  thresholds.append(text);
+                  if( i+1 != list.size() )
+                     thresholds.append(", ");
+               }
+   			   
+			   }
+			   if((dci instanceof DataCollectionTable))
+			   {
+			      List<TableThreshold> list = ((DataCollectionTable)dci).getThresholds();
+               for(int i = 0; i < list.size(); i++)
+               {
+                  thresholds.append(list.get(i).getConditionAsText());
+                  if( i+1 != list.size() )
+                     thresholds.append(", ");
+               }
+			   }
+			   return thresholds.toString();
 			case DataCollectionEditor.COLUMN_TEMPLATE:
 				if (dci.getTemplateId() == 0)
 					return null;

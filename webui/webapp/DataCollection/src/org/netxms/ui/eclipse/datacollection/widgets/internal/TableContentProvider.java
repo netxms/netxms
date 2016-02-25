@@ -1,7 +1,7 @@
 /**
  * NetXMS - open source network management system
  * Copyright (C) 2013-2015 Raden Solutions
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -83,9 +83,9 @@ public class TableContentProvider implements IStructuredContentProvider
 	/**
 	 * Row wrapper for selection provider
 	 */
-	class RowWrapper extends TableRow implements ObjectWrapper
+	private class RowWrapper extends TableRow implements ObjectWrapper
 	{
-      public RowWrapper(TableRow src)
+      protected RowWrapper(TableRow src)
       {
          super(src);
       }

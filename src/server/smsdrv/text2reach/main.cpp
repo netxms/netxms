@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMS driver for Text2Reach.com service
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -56,12 +56,12 @@ static char s_from[128] = "from";
 /**
  * Init driver
  */
-extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *initArgs)
+extern "C" bool EXPORT SMSDriverInit(const TCHAR *initArgs, Config *config)
 {
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
    {
       DbgPrintf(1, _T("Text2Reach: cURL initialization failed"));
-      return FALSE;
+      return false;
    }
 
    DbgPrintf(1, _T("Text2Reach: driver loaded"));
@@ -92,7 +92,7 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *initArgs)
    ExtractNamedOptionValue(initArgs, _T("from"), s_from, 128);
 #endif
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -121,9 +121,9 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
 /**
  * Send SMS
  */
-extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text)
+extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text)
 {
-   BOOL success = FALSE;
+   bool success = false;
 
    DbgPrintf(4, _T("Text2Reach: phone=\"%s\", text=\"%s\""), phoneNumber, text);
 	
@@ -168,7 +168,7 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
 			if (response == 200)
 			{
 				DbgPrintf(4, _T("Text2Reach: SMS successfully sent"));
-				success = TRUE;
+				success = true;
 			}
 			else
 			{

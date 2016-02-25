@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -103,11 +103,11 @@ typedef struct
 } LIBRARY_IMAGE_UPDATE_INFO;
 
 /**
- * Callback to delete agent connections for loading files in distructor
+ * Callback to delete agent connections for loading files in destructor
  */
 static void DeleteCallback(NetObj* obj, void *data)
 {
-   delete (AgentConnection *)obj;
+   ((AgentConnection *)obj)->decRefCount();
 }
 
 /**
@@ -135,7 +135,7 @@ static void ImageLibraryDeleteCallback(ClientSession *pSession, void *pArg)
 	pData->pSession = this; \
 	pData->pMsg = msg; \
 	msg = NULL; /* prevent deletion by main processing thread*/ \
-	m_dwRefCount++; \
+	InterlockedIncrement(&m_refCount); \
 	ThreadPoolExecute(g_mainThreadPool, ThreadStarter_##func, pData); \
 }
 
@@ -144,7 +144,7 @@ void ClientSession::ThreadStarter_##func(void *pArg) \
 { \
    ((PROCTHREAD_START_DATA *)pArg)->pSession->debugPrintf(6, _T("Method ") _T(#func) _T(" called on background thread")); \
    ((PROCTHREAD_START_DATA *)pArg)->pSession->func(((PROCTHREAD_START_DATA *)pArg)->pMsg); \
-	((PROCTHREAD_START_DATA *)pArg)->pSession->m_dwRefCount--; \
+	InterlockedDecrement(&((PROCTHREAD_START_DATA *)pArg)->pSession->m_refCount); \
 	delete ((PROCTHREAD_START_DATA *)pArg)->pMsg; \
 	free(pArg); \
 }
@@ -161,6 +161,7 @@ DEFINE_THREAD_STARTER(findNodeConnection)
 DEFINE_THREAD_STARTER(forceDCIPoll)
 DEFINE_THREAD_STARTER(forwardToReportingServer)
 DEFINE_THREAD_STARTER(getAgentFile)
+DEFINE_THREAD_STARTER(getAlarms)
 DEFINE_THREAD_STARTER(getAlarmEvents)
 DEFINE_THREAD_STARTER(getCollectedData)
 DEFINE_THREAD_STARTER(getLocationHistory)
@@ -249,6 +250,8 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    m_mutexSendAuditLog = MutexCreate();
    m_mutexSendSituations = MutexCreate();
    m_mutexPollerInit = MutexCreate();
+   m_subscriptionLock = MutexCreate();
+   m_subscriptions = new StringObjectMap<UINT32>(true);
    m_dwFlags = 0;
 	m_clientType = CLIENT_TYPE_DESKTOP;
 	m_clientAddr = (struct sockaddr *)nx_memdup(addr, (addr->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6));
@@ -263,15 +266,21 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
    _tcscpy(m_sessionName, _T("<not logged in>"));
 	_tcscpy(m_clientInfo, _T("n/a"));
    m_dwUserId = INVALID_INDEX;
+   m_dwSystemAccess = 0;
    m_dwOpenDCIListSize = 0;
    m_pOpenDCIList = NULL;
    m_ppEPPRuleList = NULL;
+   m_wCurrentCmd = 0;
    m_hCurrFile = -1;
    m_dwFileRqId = 0;
-   m_dwRefCount = 0;
+   m_dwUploadCommand = 0;
+   m_dwNumRecordsToUpload = 0;
+   m_dwRecordsUploaded = 0;
+   m_refCount = 0;
    m_dwEncryptionRqId = 0;
+   m_dwEncryptionResult = 0;
+   m_dwUploadData = 0;
    m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
-   m_dwActiveChannels = 0;
 	m_console = NULL;
    m_loginTime = time(NULL);
    m_musicTypeList.add(_T("wav"));
@@ -299,7 +308,9 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexSendAuditLog);
    MutexDestroy(m_mutexSendSituations);
    MutexDestroy(m_mutexPollerInit);
-   safe_free(m_pOpenDCIList);
+   MutexDestroy(m_subscriptionLock);
+   delete m_subscriptions;
+   free(m_pOpenDCIList);
    if (m_ppEPPRuleList != NULL)
    {
       UINT32 i;
@@ -352,6 +363,17 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
       va_end(args);
 		DbgPrintf(level, _T("[CLSN-%d] %s"), m_id, buffer);
    }
+}
+
+/**
+ * Check channel subscription
+ */
+bool ClientSession::isSubscribedTo(const TCHAR *channel) const
+{
+   MutexLock(m_subscriptionLock);
+   bool subscribed = m_subscriptions->contains(channel);
+   MutexUnlock(m_subscriptionLock);
+   return subscribed;
 }
 
 /**
@@ -459,7 +481,7 @@ void ClientSession::readThread()
                            debugPrintf(6, _T("Got end of file marker"));
                            //get response with specific ID if ok< then send ok, else send error
                            m_agentConn.remove(msg->getId());
-                           delete conn;
+                           conn->decRefCount();
 
                            NXCPMessage response;
                            response.setCode(CMD_REQUEST_COMPLETED);
@@ -473,7 +495,7 @@ void ClientSession::readThread()
                         debugPrintf(6, _T("Error while sending to agent"));
                         // I/O error
                         m_agentConn.remove(msg->getId());
-                        delete conn;
+                        conn->decRefCount();
 
                         NXCPMessage response;
                         response.setCode(CMD_REQUEST_COMPLETED);
@@ -487,7 +509,7 @@ void ClientSession::readThread()
                      // Resend abort message
                      conn->sendMessage(msg);
                      m_agentConn.remove(msg->getId());
-                     delete conn;
+                     conn->decRefCount();
                   }
                }
                else
@@ -568,13 +590,13 @@ void ClientSession::readThread()
    }
 
    // Waiting while reference count becomes 0
-   if (m_dwRefCount > 0)
+   if (m_refCount > 0)
    {
       debugPrintf(3, _T("Waiting for pending requests..."));
       do
       {
          ThreadSleep(1);
-      } while(m_dwRefCount > 0);
+      } while(m_refCount > 0);
    }
 
    if (m_dwFlags & CSF_AUTHENTICATED)
@@ -666,11 +688,11 @@ void ClientSession::updateThread()
             MutexLock(m_mutexSendAlarms);
             msg.setCode(CMD_ALARM_UPDATE);
             msg.setField(VID_NOTIFICATION_CODE, pUpdate->dwCode);
-            FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
+            ((Alarm *)pUpdate->pData)->fillMessage(&msg);
             sendMessage(&msg);
             MutexUnlock(m_mutexSendAlarms);
             msg.deleteAllFields();
-            free(pUpdate->pData);
+            delete (Alarm *)pUpdate->pData;
             break;
          case INFO_CAT_ACTION:
             MutexLock(m_mutexSendActions);
@@ -899,7 +921,7 @@ void ClientSession::processingThread()
             addClusterNode(pMsg);
             break;
          case CMD_GET_ALL_ALARMS:
-            sendAllAlarms(pMsg->getId());
+            CALL_IN_NEW_THREAD(getAlarms, pMsg);
             break;
          case CMD_GET_ALARM_COMMENTS:
 				getAlarmComments(pMsg);
@@ -1172,13 +1194,13 @@ void ClientSession::processingThread()
 				deleteGraph(pMsg);
 				break;
 			case CMD_ADD_CA_CERTIFICATE:
-				AddCACertificate(pMsg);
+				addCACertificate(pMsg);
 				break;
 			case CMD_DELETE_CERTIFICATE:
-				DeleteCertificate(pMsg);
+				deleteCertificate(pMsg);
 				break;
 			case CMD_UPDATE_CERT_COMMENTS:
-				UpdateCertificateComments(pMsg);
+				updateCertificateComments(pMsg);
 				break;
 			case CMD_GET_CERT_LIST:
 				getCertificateList(pMsg->getId());
@@ -1456,7 +1478,7 @@ void ClientSession::processingThread()
 							if (status == NXMOD_COMMAND_ACCEPTED_ASYNC)
 							{
 								pMsg = NULL;	// Prevent deletion
-								m_dwRefCount++;
+								InterlockedIncrement(&m_refCount);
 							}
 							break;   // Message was processed by the module
 						}
@@ -2694,7 +2716,7 @@ void ClientSession::onNewEvent(Event *pEvent)
 {
    UPDATE_INFO *pUpdate;
    NXCPMessage *msg;
-   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_EVENTS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_EVENTS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG))
    {
       NetObj *object = FindObjectById(pEvent->getSourceId());
       //If can't find object - just send to all events, if object found send to thous who have rights
@@ -2718,7 +2740,7 @@ void ClientSession::onObjectChange(NetObj *object)
 {
    UPDATE_INFO *pUpdate;
 
-   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_OBJECTS))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_OBJECTS))
       if (object->isDeleted() || object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
          pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
@@ -2860,10 +2882,6 @@ void ClientSession::modifyObject(NXCPMessage *pRequest)
 void ClientSession::sendUserDB(UINT32 dwRqId)
 {
    NXCPMessage msg;
-	UserDatabaseObject **users;
-   int i, userCount;
-
-   // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(dwRqId);
    msg.setField(VID_RCC, RCC_SUCCESS);
@@ -2871,15 +2889,16 @@ void ClientSession::sendUserDB(UINT32 dwRqId)
 	msg.deleteAllFields();
 
    // Send user database
-	users = OpenUserDatabase(&userCount);
-   for(i = 0; i < userCount; i++)
+	Iterator<UserDatabaseObject> *users = OpenUserDatabase();
+	while(users->hasNext())
    {
-		msg.setCode((users[i]->getId() & GROUP_FLAG) ? CMD_GROUP_DATA : CMD_USER_DATA);
-		users[i]->fillMessage(&msg);
+	   UserDatabaseObject *object = users->next();
+		msg.setCode(object->isGroup() ? CMD_GROUP_DATA : CMD_USER_DATA);
+		object->fillMessage(&msg);
       sendMessage(&msg);
       msg.deleteAllFields();
    }
-	CloseUserDatabase();
+	CloseUserDatabase(users);
 
    // Send end-of-database notification
    msg.setCode(CMD_USER_DB_EOF);
@@ -2911,19 +2930,18 @@ void ClientSession::createUser(NXCPMessage *pRequest)
    else
    {
       UINT32 dwResult, dwUserId;
-      BOOL bIsGroup;
       TCHAR szUserName[MAX_USER_NAME];
 
       pRequest->getFieldAsString(VID_USER_NAME, szUserName, MAX_USER_NAME);
       if (IsValidObjectName(szUserName))
       {
-         bIsGroup = pRequest->getFieldAsUInt16(VID_IS_GROUP);
-         dwResult = CreateNewUser(szUserName, bIsGroup, &dwUserId);
+         bool isGroup = pRequest->getFieldAsBoolean(VID_IS_GROUP);
+         dwResult = CreateNewUser(szUserName, isGroup, &dwUserId);
          msg.setField(VID_RCC, dwResult);
          if (dwResult == RCC_SUCCESS)
          {
             msg.setField(VID_USER_ID, dwUserId);   // Send id of new user to client
-            WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, dwUserId, _T("%s %s created"), bIsGroup ? _T("Group") : _T("User"), szUserName);
+            WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, dwUserId, _T("%s %s created"), isGroup ? _T("Group") : _T("User"), szUserName);
          }
       }
       else
@@ -4209,7 +4227,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 
       // Fill memory block with records
       pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
-      pCurr->timeStamp = dci->getLastPollTime();
+      pCurr->timeStamp = (UINT32)dci->getLastPollTime();
       switch(dataType)
       {
          case DCI_DT_INT:
@@ -5444,21 +5462,21 @@ void ClientSession::deleteObject(NXCPMessage *pRequest)
 /**
  * Process changes in alarms
  */
-void ClientSession::onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm)
+void ClientSession::onAlarmUpdate(UINT32 dwCode, const Alarm *alarm)
 {
    UPDATE_INFO *pUpdate;
    NetObj *object;
 
-   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_ALARMS))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_ALARMS))
    {
-      object = FindObjectById(pAlarm->sourceObject);
+      object = FindObjectById(alarm->getSourceObject());
       if (object != NULL)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
          {
             pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
             pUpdate->dwCategory = INFO_CAT_ALARM;
             pUpdate->dwCode = dwCode;
-            pUpdate->pData = nx_memdup(pAlarm, sizeof(NXC_ALARM));
+            pUpdate->pData = new Alarm(alarm, false);
             m_pUpdateQueue->put(pUpdate);
          }
    }
@@ -5467,10 +5485,10 @@ void ClientSession::onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm)
 /**
  * Send all alarms to client
  */
-void ClientSession::sendAllAlarms(UINT32 dwRqId)
+void ClientSession::getAlarms(NXCPMessage *request)
 {
    MutexLock(m_mutexSendAlarms);
-   SendAlarmsToClient(dwRqId, this);
+   SendAlarmsToClient(request->getId(), this);
    MutexUnlock(m_mutexSendAlarms);
 }
 
@@ -6176,7 +6194,7 @@ void ClientSession::forcedNodePoll(NXCPMessage *pRequest)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_MODIFY))
          {
             ((Node *)object)->incRefCount();
-            m_dwRefCount++;
+            InterlockedIncrement(&m_refCount);
 
             pData->pNode = (Node *)object;
             ThreadPoolExecute(g_mainThreadPool, pollerThreadStarter, pData);
@@ -7040,7 +7058,7 @@ void ClientSession::DeployPackage(NXCPMessage *pRequest)
          _tcscpy(pInfo->szPlatform, szPlatform);
          _tcscpy(pInfo->szVersion, szVersion);
 
-         m_dwRefCount++;
+         InterlockedIncrement(&m_refCount);
          ThreadCreate(DeploymentManager, 0, pInfo);
          msg.setField(VID_RCC, RCC_SUCCESS);
       }
@@ -8044,26 +8062,53 @@ void ClientSession::execTableTool(NXCPMessage *pRequest)
 /**
  * Change current subscription
  */
-void ClientSession::changeSubscription(NXCPMessage *pRequest)
+void ClientSession::changeSubscription(NXCPMessage *request)
 {
    NXCPMessage msg;
-   UINT32 dwFlags;
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
 
-   dwFlags = pRequest->getFieldAsUInt32(VID_FLAGS);
-
-   if (pRequest->getFieldAsUInt16(VID_OPERATION) != 0)
+   TCHAR channel[64];
+   request->getFieldAsString(VID_NAME, channel, 64);
+   Trim(channel);
+   if (channel[0] != 0)
    {
-      m_dwActiveChannels |= dwFlags;   // Subscribe
+      MutexLock(m_subscriptionLock);
+      UINT32 *count = m_subscriptions->get(channel);
+      if (request->getFieldAsBoolean(VID_OPERATION))
+      {
+         // Subscribe
+         if (count == NULL)
+         {
+            count = new UINT32;
+            *count = 1;
+            m_subscriptions->set(channel, count);
+         }
+         else
+         {
+            (*count)++;
+         }
+         debugPrintf(5, _T("Subscription added: %s (%d)"), channel, *count);
+      }
+      else
+      {
+         // Unsubscribe
+         if (count != NULL)
+         {
+            (*count)--;
+            debugPrintf(5, _T("Subscription removed: %s (%d)"), channel, *count);
+            if (*count == 0)
+               m_subscriptions->remove(channel);
+         }
+      }
+      MutexUnlock(m_subscriptionLock);
+      msg.setField(VID_RCC, RCC_SUCCESS);
    }
    else
    {
-      m_dwActiveChannels &= ~dwFlags;   // Unsubscribe
+      msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
    }
 
-   // Send response message
-   msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
-   msg.setField(VID_RCC, RCC_SUCCESS);
    sendMessage(&msg);
 }
 
@@ -8456,7 +8501,7 @@ void ClientSession::KillSession(NXCPMessage *pRequest)
 void ClientSession::onSyslogMessage(NX_SYSLOG_RECORD *pRec)
 {
    UPDATE_INFO *pUpdate;
-   if (isAuthenticated() && isSubscribed(NXC_CHANNEL_SYSLOG) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_SYSLOG))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SYSLOG) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_SYSLOG))
    {
       NetObj *object = FindObjectById(pRec->dwSourceObject);
       //If can't find object - just send to all events, if object found send to thous who have rights
@@ -8589,7 +8634,7 @@ void ClientSession::sendSyslog(NXCPMessage *pRequest)
 void ClientSession::onNewSNMPTrap(NXCPMessage *pMsg)
 {
    UPDATE_INFO *pUpdate;
-   if (isAuthenticated() && isSubscribed(NXC_CHANNEL_SNMP_TRAPS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_TRAP_LOG))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SNMP_TRAPS) && (m_dwSystemAccess & SYSTEM_ACCESS_VIEW_TRAP_LOG))
    {
       NetObj *object = FindObjectById(pMsg->getFieldAsUInt32(VID_TRAP_LOG_MSG_BASE + 3));
       //If can't find object - just send to all events, if object found send to thous who have rights
@@ -8809,7 +8854,7 @@ void ClientSession::StartSnmpWalk(NXCPMessage *pRequest)
             msg.setField(VID_RCC, RCC_SUCCESS);
 
             object->incRefCount();
-            m_dwRefCount++;
+            InterlockedIncrement(&m_refCount);
 
             pArg = (WALKER_THREAD_ARGS *)malloc(sizeof(WALKER_THREAD_ARGS));
             pArg->pSession = this;
@@ -10134,12 +10179,10 @@ void ClientSession::sendPerfTabDCIList(NXCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Add CA certificate
-//
-
-void ClientSession::AddCACertificate(NXCPMessage *pRequest)
+/**
+ * Add CA certificate
+ */
+void ClientSession::addCACertificate(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
 #ifdef _WITH_ENCRYPTION
@@ -10153,8 +10196,7 @@ void ClientSession::AddCACertificate(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 #ifdef _WITH_ENCRYPTION
 		dwLen = pRequest->getFieldAsBinary(VID_CERTIFICATE, NULL, 0);
@@ -10224,12 +10266,10 @@ void ClientSession::AddCACertificate(NXCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Delete certificate
-//
-
-void ClientSession::DeleteCertificate(NXCPMessage *pRequest)
+/**
+ * Delete certificate
+ */
+void ClientSession::deleteCertificate(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
 #ifdef _WITH_ENCRYPTION
@@ -10240,8 +10280,7 @@ void ClientSession::DeleteCertificate(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 #ifdef _WITH_ENCRYPTION
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -10270,12 +10309,10 @@ void ClientSession::DeleteCertificate(NXCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Update certificate's comments
-//
-
-void ClientSession::UpdateCertificateComments(NXCPMessage *pRequest)
+/**
+ * Update certificate's comments
+ */
+void ClientSession::updateCertificateComments(NXCPMessage *pRequest)
 {
 	UINT32 dwCertId, qlen;
 	TCHAR *pszQuery, *pszComments, *pszEscComments;
@@ -10285,8 +10322,7 @@ void ClientSession::UpdateCertificateComments(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 		dwCertId = pRequest->getFieldAsUInt32(VID_CERTIFICATE_ID);
 		pszComments= pRequest->getFieldAsString(VID_COMMENTS);
@@ -10355,8 +10391,7 @@ void ClientSession::getCertificateList(UINT32 dwRqId)
 	msg.setId(dwRqId);
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		hResult = DBSelect(hdb, _T("SELECT cert_id,cert_type,comments,subject FROM certificates"));
@@ -10721,7 +10756,7 @@ void ClientSession::deleteSituationInstance(NXCPMessage *pRequest)
 			TCHAR instance[MAX_DB_STRING];
 
 			pRequest->getFieldAsString(VID_SITUATION_INSTANCE, instance, MAX_DB_STRING);
-			msg.setField(VID_RCC, st->DeleteInstance(instance) ? RCC_SUCCESS : RCC_INSTANCE_NOT_FOUND);
+			msg.setField(VID_RCC, st->DeleteInstance(instance) ? RCC_SUCCESS : RCC_NO_SUCH_INSTANCE);
 		}
 		else
 		{
@@ -10743,7 +10778,7 @@ void ClientSession::onSituationChange(NXCPMessage *msg)
 {
    UPDATE_INFO *pUpdate;
 
-   if (isAuthenticated() && (m_dwActiveChannels & NXC_CHANNEL_SITUATIONS))
+   if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_SITUATIONS))
    {
       pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
       pUpdate->dwCategory = INFO_CAT_SITUATION;
@@ -10825,7 +10860,7 @@ void ClientSession::getServerFile(NXCPMessage *pRequest)
       }
    }
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES) || musicFile)
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_SERVER_FILES) || musicFile)
 	{
       _tcscpy(fname, g_netxmsdDataDir);
       _tcscat(fname, DDIR_FILES);
@@ -10882,7 +10917,15 @@ void ClientSession::getAgentFile(NXCPMessage *request)
             bool follow = request->getFieldAsUInt16(VID_FILE_FOLLOW) ? true : false;
 				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile, request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
 				msg.setField(VID_NAME, job->getLocalFileName());
-				msg.setField(VID_RCC, AddJob(job) ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
+				if (AddJob(job))
+				{
+	            msg.setField(VID_RCC, RCC_SUCCESS);
+				}
+				else
+				{
+				   delete job;
+	            msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+				}
 			}
 			else
 			{
@@ -12329,7 +12372,7 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
       }
    }
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES) || musicFiles)
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_SERVER_FILES) || musicFiles)
 	{
       _tcscpy(path, g_netxmsdDataDir);
       _tcscat(path, DDIR_FILES);
@@ -12559,7 +12602,7 @@ void ClientSession::receiveFile(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_FILES)
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
 
@@ -12615,7 +12658,7 @@ void ClientSession::deleteFile(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_FILES)
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
 

@@ -1,0 +1,282 @@
+DNOS-MGMT-SECURITY-MIB DEFINITIONS ::= BEGIN
+
+-- Dell Networking OS Mgmt Security MIB
+-- Copyright Dell (2003-2015) All rights reserved.
+
+-- This SNMP Management Information Specification
+-- embodies Dell's confidential and proprietary
+-- intellectual property.  Dell retains all title
+-- and ownership in the Specification including any revisions.
+
+-- This Specification is supplied "AS IS", Dell
+-- makes no warranty, either expressed or implied,
+-- as to the use, operation, condition, or performance of the
+-- Specification.
+
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
+    IpAddress, Integer32                FROM SNMPv2-SMI
+    dnOS                            FROM DELL-REF-MIB
+    DisplayString                       FROM RFC1213-MIB
+    TruthValue                          FROM SNMPv2-TC;
+
+    fastPathMgmtSecurity MODULE-IDENTITY
+        LAST-UPDATED "200705230000Z" -- 23 May 2007 12:00:00 GMT
+        ORGANIZATION "Dell, Inc."
+        CONTACT-INFO ""
+        DESCRIPTION
+          "The Dell Networking Private MIB for Security"
+
+        -- Revision history.
+        REVISION
+          "200705230000Z" -- 23 May 2007 12:00:00 GMT
+        DESCRIPTION
+          "Dell branding related changes."
+        REVISION
+          "200311210000Z" -- 21 Nov 2003 12:00:00 GMT
+        DESCRIPTION
+          "Initial revision."
+
+    ::= { dnOS 11 }
+
+
+    --**************************************************************************************
+    -- agentSSLConfigGroup
+    --
+    --**************************************************************************************
+
+    agentSSLConfigGroup                        OBJECT IDENTIFIER ::= { fastPathMgmtSecurity 1 }
+
+    agentSSLAdminMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures whether the SSL service is enabled on this switch.  The
+                      default value is disable(2)."
+         ::= { agentSSLConfigGroup 1 }
+
+    agentSSLSecurePort OBJECT-TYPE
+         SYNTAX      Integer32 (443|1025..65535)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures a layer 4 port number in the range 1025-65535 for secure HTTP 
+                      connections. The default port is 443."
+         ::= { agentSSLConfigGroup 2 }
+
+    agentSSLProtocolLevel OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     ssl30(1), -- SSL 3.0
+                     tls10(2), -- TSL 1.0
+                     both(3)
+                     }
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Displays which protocol versions of SSL are enabled on this
+                     switch.  The default value is both(3)."
+         ::= { agentSSLConfigGroup 3 }
+
+    agentSSLMaxSessions OBJECT-TYPE
+         SYNTAX      Integer32 (0..16)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures the maximum number of allowable SSL sessions.  The default
+                      value is 16."
+         ::= { agentSSLConfigGroup 4 }
+
+    agentSSLHardTimeout OBJECT-TYPE
+         SYNTAX      Integer32 (1..168)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures the hard timeout for SSL sessions in hours.  The default
+                      value is 24 hours."
+         ::= { agentSSLConfigGroup 5 }
+
+    agentSSLSoftTimeout OBJECT-TYPE
+         SYNTAX      Integer32 (1..60)
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures the soft (activity) timeout for SSL sessions in minutes.
+                      The default value is 5 minutes."
+         ::= { agentSSLConfigGroup 6 }
+
+    agentSSLCertificatePresent OBJECT-TYPE
+         SYNTAX      TruthValue
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Boolean value indicating whether SSL certificate files exist on the device."
+         ::= { agentSSLConfigGroup 7 }
+
+    agentSSLCertificateControl OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     noop(1),
+                     generate(2),
+                     delete(3)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Controls certificate generation and deletion. Always returns noop(1)."
+         ::= { agentSSLConfigGroup 8 }
+
+    agentSSLCertificateGenerationStatus OBJECT-TYPE
+         SYNTAX      TruthValue
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Indicates whether certificate files are currently being generated."
+         ::= { agentSSLConfigGroup 9 }
+
+    --**************************************************************************************
+    -- agentSSHConfigGroup
+    --
+    --**************************************************************************************
+
+    agentSSHConfigGroup                        OBJECT IDENTIFIER ::= { fastPathMgmtSecurity 2 }
+
+    agentSSHAdminMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     enable(1),
+                     disable(2)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Configures whether the SSH service is enabled on this switch.  The
+                      default value is disable(2)."
+         ::= { agentSSHConfigGroup 1 }
+
+    agentSSHProtocolLevel OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     ssh10(1), -- SSH 1.0
+                     ssh20(2), -- SSH 2.0
+                     both(3)
+                     }
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Displays which protocol versions of SSH are enabled on this
+                     switch.  The default value is both(3)."
+         ::= { agentSSHConfigGroup 2 }
+
+    agentSSHSessionsCount OBJECT-TYPE
+         SYNTAX      Integer32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Current number of active SSH sessions on this switch."
+         ::= { agentSSHConfigGroup 3 }
+
+   agentSSHMaxSessionsCount OBJECT-TYPE
+         SYNTAX       Integer32 (0..5)
+         MAX-ACCESS   read-write
+         STATUS       current
+         DESCRIPTION
+                     "Max number of SSH sessions permitted on this switch."
+         ::= { agentSSHConfigGroup 4 }
+
+   agentSSHSessionTimeout OBJECT-TYPE
+         SYNTAX       Integer32 (1..3932159)
+         MAX-ACCESS   read-write
+         STATUS       current
+         DESCRIPTION
+                     "SSH idle timeout value for this switch in seconds.  The
+                     upper limit represents 65535 minutes and 59 seconds."
+         ::= { agentSSHConfigGroup 5 }
+
+    agentSSHKeysPresent OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     dsa(1),
+                     rsa(2),
+                     both(3),
+                     none(4)
+                     }
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Indicates what key files are present on the device, if any."
+         ::= { agentSSHConfigGroup 6 }
+
+    agentSSHKeyGenerationStatus OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     dsa(1),
+                     rsa(2),
+                     both(3),
+                     none(4)
+                     }
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "Indicates what key files are currently being generated, if any."
+         ::= { agentSSHConfigGroup 7 }
+
+    agentSSHRSAKeyControl OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     noop(1),
+                     generate(2),
+                     delete(3)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Controls RSA key generation and deletion.  Always returns noop(1)."
+         ::= { agentSSHConfigGroup 8 }
+
+    agentSSHDSAKeyControl OBJECT-TYPE
+         SYNTAX      INTEGER {
+                     noop(1),
+                     generate(2),
+                     delete(3)
+                     }
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                     "Controls DSA key generation and deletion.  Always returns noop(1)."
+         ::= { agentSSHConfigGroup 9 }
+
+    agentSSHExecBannerState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                    enable(1),
+                    disable(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION 
+                    "Shows/Changes EXEC banner state on SSH session."
+        DEFVAL      { enable }
+        ::= { agentSSHConfigGroup 10 }
+
+    agentSSHLoginBannerState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                    enable(1),
+                    disable(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION 
+                    "Shows/Changes login banner state on SSH session."
+        DEFVAL      { enable }
+        ::= { agentSSHConfigGroup 11 }
+
+    agentSSHMotdBannerState OBJECT-TYPE
+        SYNTAX      INTEGER {
+                    enable(1),
+                    disable(2)
+                    }
+        MAX-ACCESS  read-write
+        STATUS      current
+        DESCRIPTION "Shows/Changes MOTD banner state on SSH session."
+        DEFVAL      { enable }
+        ::= { agentSSHConfigGroup 12 }
+
+END

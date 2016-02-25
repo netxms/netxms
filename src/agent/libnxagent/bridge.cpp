@@ -36,6 +36,7 @@ static CONDITION s_agentShutdownCondition = INVALID_CONDITION_HANDLE;
 static Config *s_registry = NULL;
 static void (* s_fpSaveRegistry)() = NULL;
 static const TCHAR *s_dataDirectory = NULL;
+static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = NULL;
 
 /**
  * Initialize subagent API
@@ -47,7 +48,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            AbstractCommSession *(* findServerSession)(UINT64),
                                            bool (* sendFile)(void *, UINT32, const TCHAR *, long),
                                            bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
-                                           void (* saveRegistry)(),
+                                           void (* saveRegistry)(), DB_HANDLE (* getLocalDatabaseHandle)(),
                                            CONDITION shutdownCondition, Config *registry, const TCHAR *dataDirectory)
 {
    s_fpWriteLog = writeLog;
@@ -61,6 +62,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
    s_agentShutdownCondition = shutdownCondition;
    s_registry = registry;
    s_dataDirectory = dataDirectory;
+   s_fpGetLocalDatabaseHandle = getLocalDatabaseHandle;
 }
 
 /**
@@ -294,4 +296,14 @@ const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory()
 AbstractCommSession LIBNXAGENT_EXPORTABLE *AgentFindServerSession(UINT64 serverId)
 {
    return (s_fpFindServerSession != NULL) ? s_fpFindServerSession(serverId) : NULL;
+}
+
+/**
+ * Get handle to local database.
+ *
+ * @return database handle or NULL if not available
+ */
+DB_HANDLE LIBNXAGENT_EXPORTABLE AgentGetLocalDatabaseHandle()
+{
+   return (s_fpGetLocalDatabaseHandle != NULL) ? s_fpGetLocalDatabaseHandle() : NULL;
 }

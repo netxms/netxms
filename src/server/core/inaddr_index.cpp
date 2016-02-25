@@ -77,13 +77,13 @@ bool InetAddressIndex::put(const InetAddress& addr, NetObj *object)
    RWLockWriteLock(m_lock, INFINITE);
 
    InetAddressIndexEntry *entry;
-   HASH_FIND(hh, m_root, key, 18, entry);
+   HASH_FIND(hh, m_root, key, sizeof(key), entry);
    if (entry == NULL)
    {
       entry = (InetAddressIndexEntry *)malloc(sizeof(InetAddressIndexEntry));
-      memcpy(entry->key, key, 18);
+      memcpy(entry->key, key, sizeof(key));
       entry->addr = addr;
-      HASH_ADD_KEYPTR(hh, m_root, entry->key, 18, entry);
+      HASH_ADD_KEYPTR(hh, m_root, entry->key, sizeof(key), entry);
       replace = false;
    }
    entry->object = object;
@@ -124,7 +124,7 @@ void InetAddressIndex::remove(const InetAddress& addr)
    RWLockWriteLock(m_lock, INFINITE);
 
    InetAddressIndexEntry *entry;
-   HASH_FIND(hh, m_root, key, 18, entry);
+   HASH_FIND(hh, m_root, key, sizeof(key), entry);
    if (entry != NULL)
    {
       HASH_DEL(m_root, entry);
@@ -149,7 +149,7 @@ NetObj *InetAddressIndex::get(const InetAddress& addr)
    RWLockReadLock(m_lock, INFINITE);
 
    InetAddressIndexEntry *entry;
-   HASH_FIND(hh, m_root, key, 18, entry);
+   HASH_FIND(hh, m_root, key, sizeof(key), entry);
    if (entry != NULL)
    {
       object = entry->object;

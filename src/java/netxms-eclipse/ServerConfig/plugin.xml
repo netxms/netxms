@@ -258,6 +258,89 @@
             sequence="M1+N">
       </key>
    </extension>
+   <extension
+         point="org.eclipse.ui.activities">
+      <activity
+            id="org.netxms.ui.eclipse.serverconfig.activity.ServerConfiguration"
+            name="Server Configuration">
+         <enabledWhen>
+            <with
+                  variable="org.netxms.access.ServerConfig">
+               <equals
+                     value="true">
+               </equals>
+            </with>
+         </enabledWhen>
+      </activity>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconfig.activity.ServerConfiguration"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconfig/org.netxms.ui.eclipse.serverconfig.actions.open">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconfig.activity.ServerConfiguration"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconfig/org.netxms.ui.eclipse.serverconfig.actions.open_netdisco_config">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconfig.activity.ServerConfiguration"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconfig/org.netxms.ui.eclipse.serverconfig.actions.open_syslog_config">
+      </activityPatternBinding>
+      <activity
+            id="org.netxms.ui.eclipse.serverconfig.activity.MappingTables"
+            name="Mapping Tables">
+         <enabledWhen>
+            <with
+                  variable="org.netxms.access.ManageMappingTables">
+               <equals
+                     value="true">
+               </equals>
+            </with>
+         </enabledWhen>
+      </activity>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconfig.activity.MappingTables"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconfig/org.netxms.ui.eclipse.serverconfig.actions.open_mapping_tables">
+      </activityPatternBinding>
+      <activity
+            id="org.netxms.ui.eclipse.serverconfig.activity.ExportImport"
+            name="Export/Import">
+         <enabledWhen>
+            <and>
+               <with
+                     variable="org.netxms.access.ConfigureTraps">
+                  <equals
+                        value="true">
+                  </equals>
+               </with>
+               <with
+                     variable="org.netxms.access.EventProcessingPolicy">
+                  <equals
+                        value="true">
+                  </equals>
+               </with>
+               <with
+                     variable="org.netxms.access.ViewEventConfiguration">
+                  <equals
+                        value="true">
+                  </equals>
+               </with>
+            </and>
+         </enabledWhen>
+      </activity>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconfig.activity.ExportImport"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconfig/org.netxms.ui.eclipse.serverconfig.actions.export_configuration">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconfig.activity.ExportImport"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconfig/org.netxms.ui.eclipse.serverconfig.actions.import_configuration">
+      </activityPatternBinding>
+   </extension>
 
 
 </plugin>

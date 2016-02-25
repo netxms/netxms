@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            AbstractCommSession *(* findServerSession)(UINT64),
                                            bool (* sendFile)(void *, UINT32, const TCHAR *, long),
                                            bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
-                                           void (* saveRegistry)(),
+                                           void (* saveRegistry)(), DB_HANDLE (* getLocalDatabaseHandle)(),
                                            CONDITION shutdownCondition, Config *registry, const TCHAR *dataDirectory);
 
 /**
@@ -756,7 +756,7 @@ BOOL Initialize()
    // Initialize API for subagents
    s_subAgentsStopCondition = ConditionCreate(TRUE);
    InitSubAgentAPI(WriteSubAgentMsg, SendTrap, SendTrap, EnumerateSessions, FindServerSession,
-      SendFileToServer, PushData, SaveRegistry, s_subAgentsStopCondition, s_registry, g_szDataDirectory);
+      SendFileToServer, PushData, SaveRegistry, GetLocalDatabaseHandle, s_subAgentsStopCondition, s_registry, g_szDataDirectory);
    DebugPrintf(INVALID_INDEX, 1, _T("Subagent API initialized"));
 
    // Initialize cryptografy
@@ -776,6 +776,11 @@ BOOL Initialize()
 
 	DBSetDebugPrintCallback(DebugPrintfCallback);
 	DBInit(MSG_DB_LIBRARY, MSG_SQL_ERROR);
+
+   if (!OpenLocalDatabase())
+   {
+      nxlog_write(MSG_LOCAL_DB_OPEN_FAILED, NXLOG_ERROR, NULL);
+   }
 
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
@@ -799,11 +804,6 @@ BOOL Initialize()
 
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
-
-      if (!OpenLocalDatabase())
-      {
-         nxlog_write(MSG_LOCAL_DB_OPEN_FAILED, NXLOG_ERROR, NULL);
-      }
 
 	   // Load platform subagents
 #if !defined(_WIN32)
@@ -1319,9 +1319,7 @@ int main(int argc, char *argv[])
 	int uid = 0, gid = 0;
 #endif
 
-#ifdef _WIN32
-	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
-#endif
+   InitNetXMSProcess();
 
 #if defined(__sun) || defined(_AIX) || defined(__hpux)
    signal(SIGPIPE, SIG_IGN);
@@ -1329,20 +1327,6 @@ int main(int argc, char *argv[])
    signal(SIGQUIT, SIG_IGN);
    signal(SIGUSR1, SIG_IGN);
    signal(SIGUSR2, SIG_IGN);
-#endif
-
-   InitThreadLibrary();
-
-#ifdef NETXMS_MEMORY_DEBUG
-	InitMemoryDebugger();
-#endif
-
-   // Set locale to C. It shouldn't be needed, according to
-   // documentation, but I've seen the cases when agent formats
-   // floating point numbers by sprintf inserting comma in place
-   // of a dot, as set by system's regional settings.
-#if HAVE_SETLOCALE
-   setlocale(LC_NUMERIC, "C");
 #endif
 
    // Check for alternate config file location

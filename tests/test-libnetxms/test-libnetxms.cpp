@@ -174,6 +174,27 @@ static void TestStringSet()
    AssertTrue(s->contains(_T("key-888 lorem ipsum")));
    EndTest(GetCurrentTimeMs() - start);
 
+   StartTest(_T("String set - iterator"));
+   Iterator<const TCHAR> *it = s->iterator();
+   AssertTrue(it->hasNext());
+   bool found = false;
+   while(it->hasNext())
+   {
+      const TCHAR *v = it->next();
+      AssertNotNull(v);
+      if (!_tcscmp(v, _T("key-42 lorem ipsum")))
+      {
+         found = true;
+         break;
+      }
+   }
+   AssertTrue(found);
+   it->remove();
+   AssertEquals(s->size(), 9999);
+   AssertFalse(s->contains(_T("key-42 lorem ipsum")));
+   delete it;
+   EndTest();
+
    StartTest(_T("String set - clear"));
    start = GetCurrentTimeMs();
    s->clear();
@@ -458,6 +479,23 @@ static void TestHashMap()
    AssertNull(it->next());
    AssertFalse(it->hasNext());
    delete it;
+   EndTest();
+
+   StartTest(_T("HashMap: iterator remove"));
+   it = hashMap->iterator();
+   AssertTrue(it->hasNext());
+   AssertNotNull(it->next());
+   s = it->next();
+   AssertNotNull(s);
+   it->remove();
+   AssertTrue(it->hasNext());
+   AssertNotNull(it->next());
+   AssertFalse(it->hasNext());
+   AssertNull(it->next());
+   delete it;
+   AssertNotNull(hashMap->get(k1));
+   AssertNull(hashMap->get(k2));
+   AssertNotNull(hashMap->get(k3));
    EndTest();
 
    StartTest(_T("HashMap: remove"));

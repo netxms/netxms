@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -410,7 +410,7 @@ LONG H_FileTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSe
 		return SYSINFO_RC_UNSUPPORTED;
 
 	if (CALL_STAT(szRealFilePath, &fileInfo) == -1)
-		return SYSINFO_RC_ERROR;
+		return (errno == ENOENT) ? SYSINFO_RC_NO_SUCH_INSTANCE : SYSINFO_RC_ERROR;
 
 	switch(CAST_FROM_POINTER(arg, int))
 	{

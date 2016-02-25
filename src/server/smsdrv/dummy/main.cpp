@@ -34,19 +34,19 @@
 /**
  * Init driver
  */
-extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
+extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 {
 	DbgPrintf(1, _T("Dummy SMS Driver loaded, set debug=6 or higher to see actual messages"));
-	return TRUE;
+	return true;
 }
 
 /**
  * Send SMS
  */
-extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
-	DbgPrintf(6, _T("DummySMS: phone=\"%s\", text=\"%s\""), pszPhoneNumber, pszText);
-   return TRUE;
+   DbgPrintf(6, _T("DummySMS: phone=\"%s\", text=\"%s\""), pszPhoneNumber, pszText);
+   return true;
 }
 
 /**

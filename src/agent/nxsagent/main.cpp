@@ -322,6 +322,8 @@ static HWND GetConsoleHWND()
  */
 int main(int argc, char *argv[])
 {
+   InitNetXMSProcess();
+
    bool hideConsole = false;
 
    int ch;

@@ -129,6 +129,8 @@ int main(int argc, char *argv[])
    char *eptr;
    BOOL bStart = TRUE;
 
+   InitNetXMSProcess();
+
    // Parse command line
    opterr = 1;
 	while((ch = getopt(argc, argv, "a:A:c:e:E:hp:t:u:v:w:")) != -1)

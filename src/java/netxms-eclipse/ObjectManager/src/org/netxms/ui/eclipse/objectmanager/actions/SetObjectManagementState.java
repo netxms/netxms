@@ -31,6 +31,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.imagelibrary.Activator;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectmanager.Messages;
+import org.netxms.ui.eclipse.objects.ObjectWrapper;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -70,6 +71,8 @@ class SetObjectManagementState extends AbstractHandler
             {
                if (o instanceof AbstractObject)
                   session.setObjectManaged(((AbstractObject)o).getObjectId(), managed);
+               else if (o instanceof ObjectWrapper)
+                  session.setObjectManaged(((ObjectWrapper)o).getObjectId(), managed);
             }
          }
          

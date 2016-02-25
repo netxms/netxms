@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
@@ -181,14 +182,14 @@ public class NXCSession
    // Various public constants
    public static final int DEFAULT_CONN_PORT = 4701;
 
-   // Notification channels
-   public static final int CHANNEL_EVENTS = 0x0001;
-   public static final int CHANNEL_SYSLOG = 0x0002;
-   public static final int CHANNEL_ALARMS = 0x0004;
-   public static final int CHANNEL_OBJECTS = 0x0008;
-   public static final int CHANNEL_SNMP_TRAPS = 0x0010;
-   public static final int CHANNEL_AUDIT_LOG = 0x0020;
-   public static final int CHANNEL_SITUATIONS = 0x0040;
+   // Core notification channels
+   public static final String CHANNEL_EVENTS = "Core.Events";
+   public static final String CHANNEL_SYSLOG = "Core.Syslog";
+   public static final String CHANNEL_ALARMS = "Core.Alarms";
+   public static final String CHANNEL_OBJECTS = "Core.Objects";
+   public static final String CHANNEL_SNMP_TRAPS = "Core.SNMP.Traps";
+   public static final String CHANNEL_AUDIT_LOG = "Core.Audit";
+   public static final String CHANNEL_SITUATIONS = "Core.Situations";
 
    // Object sync options
    public static final int OBJECT_SYNC_NOTIFY = 0x0001;
@@ -242,7 +243,7 @@ public class NXCSession
    private boolean passwordExpired;
 
    // Internal communication data
-   private Socket connSocket = null;
+   private Socket socket = null;
    private NXCPMsgWaitQueue msgWaitQueue = null;
    private ReceiverThread recvThread = null;
    private HousekeeperThread housekeeperThread = null;
@@ -255,7 +256,8 @@ public class NXCSession
    // Communication parameters
    private int defaultRecvBufferSize = 4194304; // Default is 4MB
    private int maxRecvBufferSize = 33554432;    // Max is 32MB
-   private int commandTimeout = 30000; // Default is 30 sec
+   private int connectTimeout = 10000; // Default is 10 seconds  
+   private int commandTimeout = 30000; // Default is 30 seconds
    private int serverCommandOutputTimeout = 60000;
 
    // Notification listeners and queue
@@ -376,14 +378,14 @@ public class NXCSession
 
          try
          {
-            in = connSocket.getInputStream();
+            in = socket.getInputStream();
          }
          catch(IOException e)
          {
             return; // Stop receiver thread if input stream cannot be obtained
          }
 
-         while(connSocket.isConnected())
+         while(socket.isConnected())
          {
             try
             {
@@ -714,7 +716,7 @@ public class NXCSession
                file = new NXCReceivedFile(id);
                receivedFiles.put(id, file);
             }
-            file.close();
+            file.abortTransfer();
             receivedFiles.notifyAll();
          }
       }
@@ -1340,11 +1342,11 @@ public class NXCSession
     */
    public synchronized void sendMessage(final NXCPMessage msg) throws IOException, NXCException
    {
-      if (connSocket == null)
+      if (socket == null)
       {
          throw new IllegalStateException("Not connected to the server. Did you forgot to call connect() first?");
       }
-      final OutputStream outputStream = connSocket.getOutputStream();
+      final OutputStream outputStream = socket.getOutputStream();
       byte[] message;
       if ((encryptionContext != null) && !msg.isEncryptionDisabled())
       {
@@ -1570,7 +1572,8 @@ public class NXCSession
             {
                if (rf.getStatus() != NXCReceivedFile.OPEN)
                {
-                  if (rf.getStatus() == NXCReceivedFile.RECEIVED) file = rf.getFile();
+                  if (rf.getStatus() == NXCReceivedFile.RECEIVED) 
+                     file = rf.getFile();
                   break;
                }
             }
@@ -1698,7 +1701,8 @@ public class NXCSession
       Logger.info("NXCSession.connect", "Connecting to " + connAddress + ":" + connPort);
       try
       {
-         connSocket = new Socket(connAddress, connPort);
+         socket = new Socket();
+         socket.connect(new InetSocketAddress(connAddress, connPort), connectTimeout);
          msgWaitQueue = new NXCPMsgWaitQueue(commandTimeout);
          recvThread = new ReceiverThread();
          housekeeperThread = new HousekeeperThread();
@@ -1905,12 +1909,12 @@ public class NXCSession
     */
    public void disconnect()
    {
-      if (connSocket != null)
+      if (socket != null)
       {
          try
          {
-            connSocket.shutdownInput();
-            connSocket.shutdownOutput();
+            socket.shutdownInput();
+            socket.shutdownOutput();
          }
          catch(IOException e)
          {
@@ -1918,7 +1922,7 @@ public class NXCSession
 
          try
          {
-            connSocket.close();
+            socket.close();
          }
          catch(IOException e)
          {
@@ -1960,7 +1964,7 @@ public class NXCSession
          housekeeperThread = null;
       }
 
-      connSocket = null;
+      socket = null;
 
       if (msgWaitQueue != null)
       {
@@ -2172,6 +2176,16 @@ public class NXCSession
    public void setCommandTimeout(final int commandTimeout)
    {
       this.commandTimeout = commandTimeout;
+   }
+
+   /**
+    * Set connect call timeout (must be set before connect call)
+    * 
+    * @param connectTimeout connect timeout in milliseconds
+    */
+   public void setConnectTimeout(int connectTimeout)
+   {
+      this.connectTimeout = connectTimeout;
    }
 
    /**
@@ -3174,36 +3188,36 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
-
+   
    /**
-    * Subscribe to notification channel(s)
+    * Subscribe to notification channel. Each subscribe call should be matched by unsubscribe call.
+    * Calling subscribe on already subscribed channel will increase internal counter, and subscription
+    * will be cancelled when this counter returns back to 0.
     *
-    * @param channels Notification channels to subscribe to. Multiple channels can be
-    *                 specified by combining them with OR operation.
+    * @param channel Notification channel to subscribe to.
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void subscribe(int channels) throws IOException, NXCException
+   public void subscribe(String channel) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_SUBSCRIPTION);
-      msg.setFieldInt32(NXCPCodes.VID_FLAGS, channels);
+      msg.setField(NXCPCodes.VID_NAME, channel);
       msg.setFieldInt16(NXCPCodes.VID_OPERATION, 1);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
    }
 
    /**
-    * Unsubscribe from notification channel(s)
+    * Unsubscribe from notification channel.
     *
-    * @param channels Notification channels to unsubscribe from. Multiple channels can
-    *                 be specified by combining them with OR operation.
+    * @param channel Notification channel to unsubscribe from.
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void unsubscribe(int channels) throws IOException, NXCException
+   public void unsubscribe(String channel) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_CHANGE_SUBSCRIPTION);
-      msg.setFieldInt32(NXCPCodes.VID_FLAGS, channels);
+      msg.setField(NXCPCodes.VID_NAME, channel);
       msg.setFieldInt16(NXCPCodes.VID_OPERATION, 0);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());

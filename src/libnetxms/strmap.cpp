@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -90,14 +90,58 @@ void StringMap::set(const TCHAR *key, UINT32 value)
 }
 
 /**
- * Get value by key as UINT32
+ * Get value by key as INT32
  */
-UINT32 StringMap::getULong(const TCHAR *key, UINT32 defaultValue) const
+INT32 StringMap::getInt32(const TCHAR *key, INT32 defaultValue) const
 {
 	const TCHAR *value = get(key);
 	if (value == NULL)
 		return defaultValue;
-	return _tcstoul(value, NULL, 0);
+	return _tcstol(value, NULL, 0);
+}
+
+/**
+ * Get value by key as UINT32
+ */
+UINT32 StringMap::getUInt32(const TCHAR *key, UINT32 defaultValue) const
+{
+   const TCHAR *value = get(key);
+   if (value == NULL)
+      return defaultValue;
+   return _tcstoul(value, NULL, 0);
+}
+
+/**
+ * Get value by key as INT64
+ */
+INT64 StringMap::getInt64(const TCHAR *key, INT64 defaultValue) const
+{
+   const TCHAR *value = get(key);
+   if (value == NULL)
+      return defaultValue;
+   return _tcstoll(value, NULL, 0);
+}
+
+/**
+ * Get value by key as UINT64
+ */
+UINT64 StringMap::getUInt64(const TCHAR *key, UINT64 defaultValue) const
+{
+   const TCHAR *value = get(key);
+   if (value == NULL)
+      return defaultValue;
+   return _tcstoull(value, NULL, 0);
+}
+
+/**
+ * Get value by key as double
+ */
+double StringMap::getDouble(const TCHAR *key, double defaultValue) const
+{
+   const TCHAR *value = get(key);
+   if (value == NULL)
+      return defaultValue;
+   return _tcstod(value, NULL);
 }
 
 /**
@@ -127,5 +171,20 @@ void StringMap::fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFie
    {
       msg->setField(id++, m_ignoreCase ? entry->originalKey : entry->key);
       msg->setField(id++, (TCHAR *)entry->value);
+   }
+}
+
+/**
+ * Load data from NXCP message
+ */
+void StringMap::loadMessage(const NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId)
+{
+   int count = msg->getFieldAsInt32(sizeFieldId);
+   UINT32 id = baseFieldId;
+   for(int i = 0; i < count; i++)
+   {
+      TCHAR *key = msg->getFieldAsString(id++);
+      TCHAR *value = msg->getFieldAsString(id++);
+      setPreallocated(key, value);
    }
 }

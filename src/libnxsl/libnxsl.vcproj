@@ -401,6 +401,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\geolocation.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\hashmap.cpp"
 				>
 			</File>

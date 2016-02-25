@@ -16,6 +16,8 @@ import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -72,6 +74,15 @@ public class TextViewWidget extends CompositeWithMessageBar
          public void widgetSelected(SelectionEvent e)
          {
             actionCopy.setEnabled(textViewer.getSelectionCount() > 0);
+         }
+      });      
+
+      addDisposeListener(new DisposeListener() {
+         
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            closeTail();
          }
       });
 
@@ -210,10 +221,10 @@ public class TextViewWidget extends CompositeWithMessageBar
       fileID = id;
       offset = maxFileSize;
       setContent(loadFile(currentFile));
-      textViewer.setTopIndex(textViewer.getLineCount());
       this.follow = follow;
       if (follow)
       {
+         textViewer.setTopIndex(textViewer.getLineCount());
          monitorJob = new ConsoleJob(Messages.get().FileViewer_Download_File_Updates, null, Activator.PLUGIN_ID, null) {
             private boolean continueWork = true;
 
@@ -368,15 +379,9 @@ public class TextViewWidget extends CompositeWithMessageBar
       tryToRestartMonitoring.start();
    }
 
-   /*
-    * (non-Javadoc)
-    * 
-    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
-    */
-   @Override
-   public void dispose()
+   public void closeTail()
    {
-      if (follow)
+      if(follow)
       {
          monitorJob.cancel();
          if (tryToRestartMonitoring != null)
@@ -389,7 +394,7 @@ public class TextViewWidget extends CompositeWithMessageBar
                {
                   session.cancelFileMonitoring(nodeId, fileID);
                }
-
+   
                @Override
                protected String getErrorMessage()
                {
@@ -400,9 +405,8 @@ public class TextViewWidget extends CompositeWithMessageBar
             job.setSystem(true);
             job.start();
          }
+         session.removeListener(listener);
       }
-      session.removeListener(listener);
-      super.dispose();
    }
 
    /**

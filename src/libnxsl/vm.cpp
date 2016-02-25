@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -76,6 +76,14 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
    _T("Hash map key is not a string"),
    _T("Selector not found")
 };
+
+/**
+ * Get error message for given error code
+ */
+static const TCHAR *GetErrorMessage(int error)
+{
+   return ((error > 0) && (error <= MAX_ERROR_NUMBER)) ? s_runtimeErrorMessage[error - 1] : _T("Unknown error code");
+}
 
 /**
  * Determine operation data type
@@ -280,11 +288,11 @@ bool NXSL_VM::run(ObjectArray<NXSL_Value> *args,
 
    // Preserve original global variables and constants
    pSavedGlobals = new NXSL_VariableSystem(m_globals);
-	if (pConstants != NULL)
-	{
-		pSavedConstants = new NXSL_VariableSystem(m_constants);
-		m_constants->merge(pConstants);
-	}
+   pSavedConstants = new NXSL_VariableSystem(m_constants);
+   if (pConstants != NULL)
+      m_constants->merge(pConstants);
+
+	m_env->configureVM(this);
 
    // Locate entry point and run
    UINT32 entryAddr = INVALID_ADDRESS;
@@ -319,6 +327,7 @@ resume:
          {
             setGlobalVariable(_T("$errorcode"), new NXSL_Value(m_errorCode));
             setGlobalVariable(_T("$errorline"), new NXSL_Value(m_errorLine));
+            setGlobalVariable(_T("$errormsg"), new NXSL_Value(GetErrorMessage(m_errorCode)));
             setGlobalVariable(_T("$errortext"), new NXSL_Value(m_errorText));
             goto resume;
          }
@@ -388,6 +397,20 @@ bool NXSL_VM::unwind()
 
    m_cp = p->addr;
    delete p;
+   return true;
+}
+
+/**
+ * Add constant to VM
+ */
+bool NXSL_VM::addConstant(const TCHAR *name, NXSL_Value *value)
+{
+   if (m_constants->find(name) != NULL)
+   {
+      delete value;
+      return false;  // not added
+   }
+   m_constants->create(name, value);
    return true;
 }
 
@@ -2161,8 +2184,7 @@ void NXSL_VM::error(int nError)
    m_errorCode = nError;
    m_errorLine = (m_cp == INVALID_ADDRESS) ? 0 : m_instructionSet->get(m_cp)->m_nSourceLine;
    safe_free(m_errorText);
-   _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), nError, m_errorLine,
-              ((nError > 0) && (nError <= MAX_ERROR_NUMBER)) ? s_runtimeErrorMessage[nError - 1] : _T("Unknown error code"));
+   _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), nError, m_errorLine, GetErrorMessage(nError));
    m_errorText = _tcsdup(szBuffer);
    m_cp = INVALID_ADDRESS;
 }
@@ -2215,9 +2237,17 @@ void NXSL_VM::getArrayAttribute(NXSL_Array *a, const TCHAR *attribute, bool safe
  */
 void NXSL_VM::getHashMapAttribute(NXSL_HashMap *m, const TCHAR *attribute, bool safe)
 {
-   if (!_tcscmp(attribute, _T("size")))
+   if (!_tcscmp(attribute, _T("keys")))
+   {
+      m_dataStack->push(m->getKeys());
+   }
+   else if (!_tcscmp(attribute, _T("size")))
    {
       m_dataStack->push(new NXSL_Value((INT32)m->size()));
+   }
+   else if (!_tcscmp(attribute, _T("values")))
+   {
+      m_dataStack->push(m->getValues());
    }
    else
    {

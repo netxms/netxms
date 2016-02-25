@@ -1,13 +1,43 @@
 *
+* 2.0.3
+*
+
+- Additional parameters in Oracle subagent for redo logs and ASM monitoring
+- NXSL: variable $errormsg iholding error description set in catch block
+- Default interface expected state can be configured
+- GPS subagent (provides location data from NMEA compatible GPS receivers)
+- Server can update node location using GPS subagent
+- Fixed error while event alarm linking multiple times
+- NetXMS processes uses LC_CTYPE from environment for terminal I/O
+- Fixed bug in saving service checks
+- Fixed server crash caused by heap corruption in MS SQL and DB/2 database drivers
+- Agent parameters for monitoring System V message queues
+- New action User.ChangePassword in WINNT subagent
+- Management console:
+	- Fixed grid issues in network maps
+	- Added "hide links" option on network maps
+- Fixed issues: #950, #962, #988, #1048, #1102, #1124, #1135, #1163, #1170
+
+
+*
 * 2.0.2
 *
 
+- Optimized LDAP synchronization for large directories
+- Added NXSL API for manipulating object geolocation
+- Fixed bug that allows to crash server remotely by sending garbage to client connector port
+- NXSL: new hash map attributes "keys" and "values"
+- Object custom attributes can be accessed as hash map in NXSL
+- New server debug console commands "log" and "logmark"
+- Management console:
+	- Improved file transfer error handling
+	- Double click on geo map zoom in and center map on point under cursor
 - Android Console:
 	- Updated ACRA library: now crash reports are sent via e-mail (will use the app installed on device to send mail)
 	- Fixed bug in action bar commands: disconnect and exit sometimes wasn't working
 - Android Agent:
 	- Updated ACRA library: now crash reports are sent via e-mail (will use the app installed on device to send mail)
-- Fixed issues: #1042, #1049, #1117
+- Fixed issues: #1042, #1049, #1093, #1111, #1117, #1125, #1128, #1133, #1134, #1139
 
 
 *

@@ -324,7 +324,7 @@ LONG H_ClientInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
       }
       else
       {
-         rc = SYSINFO_RC_UNSUPPORTED;
+         rc = SYSINFO_RC_NO_SUCH_INSTANCE;
       }
    }
    else

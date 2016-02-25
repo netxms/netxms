@@ -76,13 +76,17 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 };
 
 /**
+ * Loaded server config
+ */
+Config g_serverConfig;
+
+/**
  * Load and parse configuration file
  * Returns TRUE on success and FALSE on failure
  */
 bool NXCORE_EXPORTABLE LoadConfig()
 {
    bool bSuccess = false;
-	Config *config;
 
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
@@ -130,8 +134,7 @@ stop_search:
    if (IsStandalone())
       _tprintf(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
 
-	config = new Config();
-	if (config->loadConfig(g_szConfigFile, _T("server")) && config->parseTemplate(_T("server"), m_cfgTemplate))
+	if (g_serverConfig.loadConfig(g_szConfigFile, _T("server")) && g_serverConfig.parseTemplate(_T("server"), m_cfgTemplate))
    {
       if ((!_tcsicmp(g_szLogFile, _T("{EventLog}"))) ||
           (!_tcsicmp(g_szLogFile, _T("{syslog}"))))
@@ -144,11 +147,9 @@ stop_search:
       }
       bSuccess = true;
    }
-	delete config;
 
 	// Decrypt password
    DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
-
    return bSuccess;
 }
 

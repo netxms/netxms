@@ -772,7 +772,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
 /**
  * Process new data collection error
  */
-void DCItem::processNewError()
+void DCItem::processNewError(bool noInstance)
 {
    lock();
 
@@ -1552,8 +1552,6 @@ void DCItem::getEventList(UINT32 **ppdwList, UINT32 *pdwSize)
  */
 void DCItem::createExportRecord(String &str)
 {
-	UINT32 i;
-
    lock();
 
    str.appendFormattedString(_T("\t\t\t\t<dci id=\"%d\">\n")
@@ -1591,7 +1589,7 @@ void DCItem::createExportRecord(String &str)
 	if ((m_schedules != NULL) && (m_schedules->size() > 0))
    {
       str += _T("\t\t\t\t\t<schedules>\n");
-      for(i = 0; i < m_schedules->size(); i++)
+      for(int i = 0; i < m_schedules->size(); i++)
          str.appendFormattedString(_T("\t\t\t\t\t\t<schedule>%s</schedule>\n"), (const TCHAR *)EscapeStringForXML2(m_schedules->get(i)));
       str += _T("\t\t\t\t\t</schedules>\n");
    }
@@ -1599,7 +1597,7 @@ void DCItem::createExportRecord(String &str)
 	if (m_thresholds != NULL)
 	{
 	   str += _T("\t\t\t\t\t<thresholds>\n");
-		for(i = 0; i < (UINT32)m_thresholds->size(); i++)
+		for(int i = 0; i < m_thresholds->size(); i++)
 		{
 			m_thresholds->get(i)->createNXMPRecord(str, i + 1);
 		}

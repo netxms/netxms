@@ -23,6 +23,23 @@
 #include "nxcore.h"
 
 /**
+ * Class names
+ */
+static const TCHAR *s_className[]=
+   {
+      _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"),
+      _T("Network"), _T("Container"), _T("Zone"), _T("ServiceRoot"),
+      _T("Template"), _T("TemplateGroup"), _T("TemplateRoot"),
+      _T("NetworkService"), _T("VPNConnector"), _T("Condition"),
+      _T("Cluster"), _T("PolicyGroup"), _T("PolicyRoot"),
+      _T("AgentPolicy"), _T("AgentPolicyConfig"), _T("NetworkMapRoot"),
+      _T("NetworkMapGroup"), _T("NetworkMap"), _T("DashboardRoot"),
+      _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report"),
+      _T("BusinessServiceRoot"), _T("BusinessService"), _T("NodeLink"),
+      _T("ServiceCheck"), _T("MobileDevice"), _T("Rack"), _T("AccessPoint")
+   };
+
+/**
  * Default constructor
  */
 NetObj::NetObj()
@@ -89,6 +106,15 @@ NetObj::~NetObj()
    delete m_moduleData;
    delete m_postalAddress;
    delete m_dashboards;
+}
+
+/**
+ * Get class name for this object
+ */
+const TCHAR *NetObj::getObjectClassName() const
+{
+   int c = getObjectClass();
+   return ((c >= 0) && (c < sizeof(s_className) / sizeof(const TCHAR *))) ? s_className[c] : _T("Custom");
 }
 
 /**
@@ -1876,7 +1902,7 @@ void NetObj::addLocationToHistory()
 	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_ORACLE:
-			query = _T("SELECT * FROM (latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC) WHERE ROWNUM<=1");
+			query = _T("SELECT * FROM (SELECT latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC) WHERE ROWNUM<=1");
 			break;
 		case DB_SYNTAX_MSSQL:
 			query = _T("SELECT TOP 1 latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC");
@@ -2040,6 +2066,15 @@ void NetObj::setStatusPropagation(int method, int arg1, int arg2, int arg3, int 
  */
 void NetObj::enterMaintenanceMode()
 {
+   DbgPrintf(4, _T("Entering maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
+
+   LockChildList(FALSE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   {
+      if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
+         m_pChildList[i]->enterMaintenanceMode();
+   }
+   UnlockChildList();
 }
 
 /**
@@ -2047,4 +2082,31 @@ void NetObj::enterMaintenanceMode()
  */
 void NetObj::leaveMaintenanceMode()
 {
+   DbgPrintf(4, _T("Leaving maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
+
+   LockChildList(FALSE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   {
+      if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
+         m_pChildList[i]->leaveMaintenanceMode();
+   }
+   UnlockChildList();
+}
+
+/**
+ * Get all custom attributes as NXSL hash map
+ */
+NXSL_Value *NetObj::getCustomAttributesForNXSL() const
+{
+   NXSL_HashMap *map = new NXSL_HashMap();
+   lockProperties();
+   StructArray<KeyValuePair> *attributes = m_customAttributes.toArray();
+   for(int i = 0; i < attributes->size(); i++)
+   {
+      KeyValuePair *p = attributes->get(i);
+      map->set(p->key, new NXSL_Value((const TCHAR *)p->value));
+   }
+   unlockProperties();
+   delete attributes;
+   return new NXSL_Value(map);
 }

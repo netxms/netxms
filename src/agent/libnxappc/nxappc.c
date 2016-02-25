@@ -1,6 +1,6 @@
 /*
 ** NetXMS Application Connector Library
-** Copyright (C) 2015 Raden Solutions
+** Copyright (C) 2015-2016 Raden Solutions
 **
 ** Permission is hereby granted, free of charge, to any person obtaining
 ** a copy of this software and associated documentation files
@@ -24,6 +24,12 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#else
+#define HAVE_ALLOCA_H   1
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -32,6 +38,7 @@
 
 #include <winsock2.h>
 #include <windows.h>
+#include <malloc.h>
 
 #define SELECT_NFDS(f) (0)
 
@@ -43,11 +50,12 @@
 #include <sys/un.h>
 #include <fcntl.h>
 
+#if HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
+
 #define SOCKET int
 #define closesocket(x) close(x)
-#define WSAGetLastError() (errno)
-#define WSAEWOULDBLOCK EWOULDBLOCK
-#define WSAEINPROGRESS EINPROGRESS
 
 #define SELECT_NFDS(f) ((f) + 1)
 
@@ -60,181 +68,34 @@
 #include "nxappc.h"
 #include <nxappc_internal.h>
 
-static char s_name[128] = "";
+static char s_channel[128] = "";
 static SOCKET s_socket = -1;
-static int s_timeout = 200;   // default timeout 200 ms
-
-#define CHECK_CONNECTION do { if ((s_socket == -1) && (s_name[0] != 0)) { if (nxappc_reconnect() == NXAPPC_FAIL) return NXAPPC_FAIL; } } while(0)
 
 /**
- * Set timeout
+ * Check if channel is ready
  */
-void LIBNXAPPC_EXPORTABLE nxappc_set_timeout(int t)
-{
-   if (t > 0)
-      s_timeout = t;
-}
+#define CHECK_CHANNEL do { if (s_socket == -1) { nxappc_open_channel(); if (s_socket == -1) return NXAPPC_FAIL; } } while(0)
 
 /**
- * Time difference in ms between two timeval structures
+ * Set channel name
  */
-static int time_diff(struct timeval *t1, struct timeval *t2)
+int LIBNXAPPC_EXPORTABLE nxappc_set_channel_name(const char *channel)
 {
-   long long usec1 = (long long)t1->tv_sec * 1000000L + (long long)t1->tv_usec;
-   long long usec2 = (long long)t2->tv_sec * 1000000L + (long long)t2->tv_usec;
-   return (int)((usec1 - usec2) / 1000);
-} 
-
-/**
- * Connect with timeout
- */
-static int connect_ex(SOCKET s, struct sockaddr *addr, int len)
-{
-	int rc = connect(s, addr, len);
-	if (rc == -1)
-	{
-		if ((WSAGetLastError() == WSAEWOULDBLOCK) || (WSAGetLastError() == WSAEINPROGRESS))
-		{
-			struct timeval tv;
-			fd_set wrfs, exfs;
-
-			FD_ZERO(&wrfs);
-			FD_SET(s, &wrfs);
-
-			FD_ZERO(&exfs);
-			FD_SET(s, &exfs);
-
-#ifdef _WIN32
-			tv.tv_sec = s_timeout / 1000;
-			tv.tv_usec = (s_timeout % 1000) * 1000;
-			rc = select(0, NULL, &wrfs, &exfs, &tv);
-#else
-         int timeout = s_timeout;
-			do
-			{
-            struct timeval start, stop;
-            
-				tv.tv_sec = s_timeout / 1000;
-				tv.tv_usec = (s_timeout % 1000) * 1000;
-            
-            gettimeofday(&start, NULL);
-				rc = select(s + 1, NULL, &wrfs, &exfs, &tv);
-				if ((rc != -1) || (errno != EINTR))
-					break;
-            gettimeofday(&stop, NULL);
-            
-            timeout -= time_diff(&stop, &start);
-			} while(timeout > 0);
-#endif
-			if (rc > 0)
-			{
-				if (FD_ISSET(s, &exfs))
-				{
-#ifdef _WIN32
-					int err, len = sizeof(int);
-					if (getsockopt(s, SOL_SOCKET, SO_ERROR, (char *)&err, &len) == 0)
-						WSASetLastError(err);
-#endif
-					rc = -1;
-				}
-				else
-				{
-					rc = 0;
-				}
-			}
-			else if (rc == 0)	// timeout, return error
-			{
-				rc = -1;
-#ifdef _WIN32
-				WSASetLastError(WSAETIMEDOUT);
-#endif
-			}
-		}
-	}
-	return rc;
-}
-
-/**
- * Extended send() - send all data even if single call to send()
- * cannot handle them all
- */
-static int send_ex(void *data, int len)
-{
-	int nLeft = (int)len;
-	int nRet;
-
-   if (s_socket == -1)
-      return -1;
-
-	do
-	{
-retry:
-#ifdef MSG_NOSIGNAL
-		nRet = send(s_socket, ((char *)data) + (len - nLeft), nLeft, MSG_NOSIGNAL);
-#else
-		nRet = send(s_socket, ((char *)data) + (len - nLeft), nLeft, 0);
-#endif
-		if (nRet <= 0)
-		{
-			if ((WSAGetLastError() == WSAEWOULDBLOCK)
-#ifndef _WIN32
-			    || (errno == EAGAIN)
-#endif
-			   )
-			{
-				// Wait until socket becomes available for writing
-				struct timeval tv;
-				fd_set wfds;
-
-				tv.tv_sec = s_timeout / 1000;
-				tv.tv_usec = (s_timeout % 1000) * 1000;
-				FD_ZERO(&wfds);
-				FD_SET(s_socket, &wfds);
-				nRet = select(SELECT_NFDS(s_socket + 1), NULL, &wfds, NULL, &tv);
-				if ((nRet > 0) || ((nRet == -1) && (errno == EINTR)))
-					goto retry;
-			}
-			break;
-		}
-		nLeft -= nRet;
-	} while (nLeft > 0);
-
-   if (nRet <= 0)
+   if (!strcmp(channel, s_channel))
+      return NXAPPC_SUCCESS;  // already connected
+   strncpy(s_channel, channel, 128);
+   if (s_socket != -1)
    {
       closesocket(s_socket);
       s_socket = -1;
    }
-
-	return nLeft == 0 ? (int)len : nRet;
+   return NXAPPC_SUCCESS;
 }
 
 /**
- * Establish connection
+ * Open channel for communication
  */
-int LIBNXAPPC_EXPORTABLE nxappc_connect(void)
-{
-#ifdef _WIN32
-   return nxappc_connect_ex("33717");
-#else
-   return nxappc_connect_ex("default");
-#endif
-}
-
-/**
- * Establish connection
- */
-int LIBNXAPPC_EXPORTABLE nxappc_connect_ex(const char *name)
-{
-   if ((s_socket != -1) && !strcmp(name, s_name))
-      return NXAPPC_SUCCESS;  // already connected
-   strncpy(s_name, name, 128);
-   return nxappc_reconnect();
-}
-
-/**
- * Re-establish connection
- */
-int LIBNXAPPC_EXPORTABLE nxappc_reconnect(void)
+int LIBNXAPPC_EXPORTABLE nxappc_open_channel(void)
 {
 #ifdef _WIN32
 	struct sockaddr_in addrLocal;
@@ -250,17 +111,14 @@ int LIBNXAPPC_EXPORTABLE nxappc_reconnect(void)
    }
 
 #ifdef _WIN32
-   s_socket = socket(AF_INET, SOCK_STREAM, 0);
+   s_socket = socket(AF_INET, SOCK_DGRAM, 0);
 	if (s_socket == -1)
 		return NXAPPC_FAIL;
 	
-   // set socket non-blocking
-	ioctlsocket(s_socket, FIONBIO, &one);
-   
 	addrLocal.sin_family = AF_INET;
    addrLocal.sin_addr.s_addr = inet_addr("127.0.0.1");
-   addrLocal.sin_port = htons(atoi(s_name));
-	if (connect_ex(s_socket, (struct sockaddr *)&addrLocal, sizeof(addrLocal)) == -1)
+   addrLocal.sin_port = htons(atoi(s_channel));
+	if (connect(s_socket, (struct sockaddr *)&addrLocal, sizeof(addrLocal)) == -1)
    {
       closesocket(s_socket);
       s_socket = -1;
@@ -268,18 +126,13 @@ int LIBNXAPPC_EXPORTABLE nxappc_reconnect(void)
    }
 
 #else
-	s_socket = socket(AF_UNIX, SOCK_STREAM, 0);
+	s_socket = socket(AF_UNIX, SOCK_DGRAM, 0);
 	if (s_socket == -1)
 		return NXAPPC_FAIL;
 	
-   // set socket non-blocking
-   f = fcntl(s_socket, F_GETFL);
-   if (f != -1) 
-      fcntl(s_socket, F_SETFL, f | O_NONBLOCK);
-   
 	addrLocal.sun_family = AF_UNIX;
-   sprintf(addrLocal.sun_path, "/tmp/.nxappc.%s", s_name);
-	if (connect_ex(s_socket, (struct sockaddr *)&addrLocal, SUN_LEN(&addrLocal)) == -1)
+   sprintf(addrLocal.sun_path, "/tmp/.nxappc.%s", s_channel);
+	if (connect(s_socket, (struct sockaddr *)&addrLocal, SUN_LEN(&addrLocal)) == -1)
    {
       closesocket(s_socket);
       s_socket = -1;
@@ -292,27 +145,30 @@ int LIBNXAPPC_EXPORTABLE nxappc_reconnect(void)
 }
 
 /**
- * Disconnect
+ * Reset channel
  */
-void LIBNXAPPC_EXPORTABLE nxappc_disconnect(void)
+int LIBNXAPPC_EXPORTABLE nxappc_reset_channel(void)
 {
    if (s_socket != -1)
    {
-      shutdown(s_socket, 2);
       closesocket(s_socket);
       s_socket = -1;
    }
+   return nxappc_open_channel();
 }
 
 /**
- * Send message start indicator
+ * Send with retry
  */
-static int SendStartIndicator(char command)
+static int send_data(void *data, int size)
 {
-   char buffer[NXAPPC_MSG_START_INDICATOR_LEN + 1];
-   memcpy(buffer, NXAPPC_MSG_START_INDICATOR, NXAPPC_MSG_START_INDICATOR_LEN);
-   buffer[NXAPPC_MSG_START_INDICATOR_LEN] = command;
-   return send_ex(buffer, NXAPPC_MSG_START_INDICATOR_LEN + 1);
+   int rc = send(s_socket, data, size, 0);
+   if (rc >= 0)
+      return rc;
+   rc = nxappc_reset_channel();
+   if (rc < 0)
+      return rc;
+   return send(s_socket, data, size, 0);
 }
 
 /**
@@ -320,8 +176,7 @@ static int SendStartIndicator(char command)
  */
 int LIBNXAPPC_EXPORTABLE nxappc_send_event(int code, const char *name, const char *format, ...)
 {
-   CHECK_CONNECTION;
-
+   CHECK_CHANNEL;
    return NXAPPC_FAIL;
 }
 
@@ -330,15 +185,19 @@ int LIBNXAPPC_EXPORTABLE nxappc_send_event(int code, const char *name, const cha
  */
 int LIBNXAPPC_EXPORTABLE nxappc_send_data(void *data, int size)
 {
-   CHECK_CONNECTION;
+   char *msg;
 
-   if (SendStartIndicator(NXAPPC_CMD_SEND_DATA) <= 0)
+   if ((size < 0) || (size > 65532))
       return NXAPPC_FAIL;
 
-   if (send_ex(&size, sizeof(int)) <= 0)
-      return NXAPPC_FAIL;
+   CHECK_CHANNEL;
 
-   return (send_ex(data, size) > 0) ? NXAPPC_SUCCESS : NXAPPC_FAIL;
+   msg = alloca(size + 4);
+   msg[0] = NXAPPC_CMD_SEND_DATA;
+   msg[1] = 0; // reserved
+   *((unsigned short *)&msg[2]) = (unsigned short)size;
+   memcpy(&msg[4], data, size);
+   return (send_data(msg, size + 4) == size + 4) ? NXAPPC_SUCCESS : NXAPPC_FAIL;
 }
 
 /**
@@ -346,8 +205,7 @@ int LIBNXAPPC_EXPORTABLE nxappc_send_data(void *data, int size)
  */
 int LIBNXAPPC_EXPORTABLE nxappc_register_counter(const char *counter, const char *instance)
 {
-   CHECK_CONNECTION;
-
+   CHECK_CHANNEL;
    return NXAPPC_FAIL;
 }
 
@@ -356,8 +214,7 @@ int LIBNXAPPC_EXPORTABLE nxappc_register_counter(const char *counter, const char
  */
 int LIBNXAPPC_EXPORTABLE nxappc_update_counter_long(const char *counter, const char *instance, long diff)
 {
-   CHECK_CONNECTION;
-
+   CHECK_CHANNEL;
    return NXAPPC_FAIL;
 }
 
@@ -366,8 +223,7 @@ int LIBNXAPPC_EXPORTABLE nxappc_update_counter_long(const char *counter, const c
  */
 int LIBNXAPPC_EXPORTABLE nxappc_update_counter_double(const char *counter, const char *instance, double diff)
 {
-   CHECK_CONNECTION;
-
+   CHECK_CHANNEL;
    return NXAPPC_FAIL;
 }
 
@@ -376,8 +232,7 @@ int LIBNXAPPC_EXPORTABLE nxappc_update_counter_double(const char *counter, const
  */
 int LIBNXAPPC_EXPORTABLE nxappc_reset_counter(const char *counter, const char *instance)
 {
-   CHECK_CONNECTION;
-
+   CHECK_CHANNEL;
    return NXAPPC_FAIL;
 }
 
@@ -386,7 +241,7 @@ int LIBNXAPPC_EXPORTABLE nxappc_reset_counter(const char *counter, const char *i
  */
 int LIBNXAPPC_EXPORTABLE nxappc_set_counter_long(const char *counter, const char *instance, long value)
 {
-   CHECK_CONNECTION;
+   CHECK_CHANNEL;
 
    return NXAPPC_FAIL;
 }
@@ -396,7 +251,6 @@ int LIBNXAPPC_EXPORTABLE nxappc_set_counter_long(const char *counter, const char
  */
 int LIBNXAPPC_EXPORTABLE nxappc_set_counter_double(const char *counter, const char *instance, double value)
 {
-   CHECK_CONNECTION;
-
+   CHECK_CHANNEL;
    return NXAPPC_FAIL;
 }

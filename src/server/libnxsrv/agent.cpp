@@ -97,8 +97,8 @@ AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, co
    m_ppDataLines = NULL;
    m_pMsgWaitQueue = new MsgWaitQueue;
    m_requestId = 0;
-	m_connectionTimeout = 30000;	// 30 seconds
-   m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
+	m_connectionTimeout = 5000;	// 5 seconds
+   m_dwCommandTimeout = 5000;   // Default timeout 5 seconds
    m_isConnected = false;
    m_mutexDataLock = MutexCreate();
 	m_mutexSocketWrite = MutexCreate();
@@ -1824,7 +1824,7 @@ UINT32 AgentConnection::takeScreenshot(const TCHAR *sessionName, BYTE **data, si
          UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
          if (rcc == ERR_SUCCESS)
          {
-            BYTE *p = response->getBinaryFieldPtr(VID_FILE_DATA, size);
+            const BYTE *p = response->getBinaryFieldPtr(VID_FILE_DATA, size);
             if (p != NULL)
             {
                *data = (BYTE *)malloc(*size);
@@ -2008,7 +2008,7 @@ UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
 /**
  * Uninstall policy by GUID
  */
-UINT32 AgentConnection::uninstallPolicy(uuid_t guid)
+UINT32 AgentConnection::uninstallPolicy(const uuid& guid)
 {
 	UINT32 rqId, rcc;
 	NXCPMessage msg(m_nProtocolVersion);
@@ -2016,7 +2016,7 @@ UINT32 AgentConnection::uninstallPolicy(uuid_t guid)
    rqId = generateRequestId();
    msg.setId(rqId);
 	msg.setCode(CMD_UNINSTALL_AGENT_POLICY);
-	msg.setField(VID_GUID, guid, UUID_LENGTH);
+	msg.setField(VID_GUID, guid);
 	if (sendMessage(&msg))
 	{
 		rcc = waitForRCC(rqId, m_dwCommandTimeout);

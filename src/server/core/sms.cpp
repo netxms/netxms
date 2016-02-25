@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,11 @@
 #include "nxcore.h"
 
 /**
+ * Server config
+ */
+extern Config g_serverConfig;
+
+/**
  * SMS structure
  */
 typedef struct
@@ -34,10 +39,10 @@ typedef struct
 /**
  * Static data
  */
-static Queue *m_pMsgQueue = NULL;
-static BOOL (* m_DrvSendMsg)(const TCHAR *, const TCHAR *);
-static void (* m_DrvUnload)();
-static THREAD m_hThread = INVALID_THREAD_HANDLE;
+static Queue s_smsQueue;
+static bool (* s_fpDrvSendMsg)(const TCHAR *, const TCHAR *);
+static void (* s_fpDrvUnload)();
+static THREAD s_senderThread = INVALID_THREAD_HANDLE;
 
 /**
  * Sender thread
@@ -48,7 +53,7 @@ static THREAD_RESULT THREAD_CALL SenderThread(void *pArg)
 
    while(1)
    {
-      pMsg = (SMS *)m_pMsgQueue->getOrBlock();
+      pMsg = (SMS *)s_smsQueue.getOrBlock();
       if (pMsg == INVALID_POINTER_VALUE)
          break;
 
@@ -56,7 +61,7 @@ static THREAD_RESULT THREAD_CALL SenderThread(void *pArg)
 		int tries = 3;
 		do
 		{
-			if (m_DrvSendMsg(pMsg->szRcpt, pMsg->szText))
+			if (s_fpDrvSendMsg(pMsg->szRcpt, pMsg->szText))
 				break;
 			DbgPrintf(3, _T("Failed to send SMS (will%s retry)"), (tries > 1) ? _T("") : _T(" not"));
 		}
@@ -90,18 +95,16 @@ void InitSMSSender()
       hModule = DLOpen(szDriver, szErrorText);
       if (hModule != NULL)
       {
-         BOOL (* DrvInit)(const TCHAR *);
+         bool (* DrvInit)(const TCHAR *, Config *);
 
-         DrvInit = (BOOL (*)(const TCHAR *))DLGetSymbolAddr(hModule, "SMSDriverInit", szErrorText);
-         m_DrvSendMsg = (BOOL (*)(const TCHAR *, const TCHAR *))DLGetSymbolAddr(hModule, "SMSDriverSend", szErrorText);
-         m_DrvUnload = (void (*)())DLGetSymbolAddr(hModule, "SMSDriverUnload", szErrorText);
-         if ((DrvInit != NULL) && (m_DrvSendMsg != NULL) && (m_DrvUnload != NULL))
+         DrvInit = (bool (*)(const TCHAR *, Config *))DLGetSymbolAddr(hModule, "SMSDriverInit", szErrorText);
+         s_fpDrvSendMsg = (bool (*)(const TCHAR *, const TCHAR *))DLGetSymbolAddr(hModule, "SMSDriverSend", szErrorText);
+         s_fpDrvUnload = (void (*)())DLGetSymbolAddr(hModule, "SMSDriverUnload", szErrorText);
+         if ((DrvInit != NULL) && (s_fpDrvSendMsg != NULL) && (s_fpDrvUnload != NULL))
          {
-            if (DrvInit(szDrvConfig))
+            if (DrvInit(szDrvConfig, &g_serverConfig))
             {
-               m_pMsgQueue = new Queue;
-
-               m_hThread = ThreadCreateEx(SenderThread, 0, NULL);
+               s_senderThread = ThreadCreateEx(SenderThread, 0, NULL);
             }
             else
             {
@@ -127,14 +130,10 @@ void InitSMSSender()
  */
 void ShutdownSMSSender()
 {
-   if (m_pMsgQueue != NULL)
-   {
-      m_pMsgQueue->clear();
-      m_pMsgQueue->put(INVALID_POINTER_VALUE);
-      if (m_hThread != INVALID_THREAD_HANDLE)
-         ThreadJoin(m_hThread);
-      delete m_pMsgQueue;
-   }
+   s_smsQueue.clear();
+   s_smsQueue.put(INVALID_POINTER_VALUE);
+   if (s_senderThread != INVALID_THREAD_HANDLE)
+      ThreadJoin(s_senderThread);
 }
 
 /**
@@ -142,11 +141,8 @@ void ShutdownSMSSender()
  */
 void NXCORE_EXPORTABLE PostSMS(const TCHAR *pszRcpt, const TCHAR *pszText)
 {
-	if (m_pMsgQueue == NULL)
-      return;
-
 	SMS *pMsg = (SMS *)malloc(sizeof(SMS));
 	nx_strncpy(pMsg->szRcpt, pszRcpt, MAX_RCPT_ADDR_LEN);
 	nx_strncpy(pMsg->szText, pszText, 160);
-	m_pMsgQueue->put(pMsg);
+	s_smsQueue.put(pMsg);
 }

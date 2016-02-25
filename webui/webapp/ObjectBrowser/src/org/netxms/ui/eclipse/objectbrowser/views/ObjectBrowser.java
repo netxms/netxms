@@ -40,6 +40,7 @@ import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
 import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
+import org.eclipse.jface.viewers.ICellEditorListener;
 import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -245,7 +246,30 @@ public class ObjectBrowser extends ViewPart
             return event.eventType == ColumnViewerEditorActivationEvent.PROGRAMMATIC;
          }
       }, ColumnViewerEditor.DEFAULT);
-		tree.setCellEditors(new CellEditor[] { new TextCellEditor(tree.getTree()) });
+		
+		TextCellEditor editor =  new TextCellEditor(tree.getTree(), SWT.BORDER);		
+		editor.addListener(new ICellEditorListener() {
+         
+         @Override
+         public void editorValueChanged(boolean oldValidState, boolean newValidState)
+         {
+         }
+         
+         @Override
+         public void cancelEditor()
+         {
+            objectTree.enableRefresh();
+         }
+         
+         @Override
+         public void applyEditorValue()
+         {
+         }
+      });
+		
+		//TODO: override editor method that creates control to disable refresh
+		
+		tree.setCellEditors(new CellEditor[] { editor });
 		tree.setColumnProperties(new String[] { "name" }); //$NON-NLS-1$
 		tree.setCellModifier(new ICellModifier() {
          @Override
@@ -274,6 +298,7 @@ public class ObjectBrowser extends ViewPart
                   }.start();
                }
             }
+            objectTree.enableRefresh();
          }
 
          @Override
@@ -292,7 +317,12 @@ public class ObjectBrowser extends ViewPart
          @Override
          public boolean canModify(Object element, String property)
          {
-            return property.equals("name"); //$NON-NLS-1$
+            if(property.equals("name"))
+            {
+               objectTree.disableRefresh();               
+               return true;
+            }
+            return false; //$NON-NLS-1$
          }
       });
 		

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004-2015 Raden Solutions
+** Copyright (C) 2004-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -130,6 +130,8 @@ LONG H_PhysicalDiskInfo(const TCHAR *pszParam, const TCHAR *pszArg, TCHAR *pValu
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
+   { _T("Agent.SourcePackageSupport"), H_SourcePkgSupport, NULL, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
+
 	{ _T("Disk.Avail(*)"),                H_DiskInfo,        (TCHAR *)DISK_AVAIL,
 		DCI_DT_DEPRECATED,	DCIDESC_DEPRECATED },
 	{ _T("Disk.AvailPerc(*)"),            H_DiskInfo,        (TCHAR *)DISK_AVAIL_PERC,
@@ -425,12 +427,16 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 		DCI_DT_UINT64,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_AVAILABLE },
 	{ _T("System.Memory.Virtual.AvailablePerc"), H_MemoryInfo,    (TCHAR *)VIRTUAL_AVAILABLE_PCT,
 		DCI_DT_UINT,	DCIDESC_SYSTEM_MEMORY_VIRTUAL_AVAILABLE_PCT },
-	{ _T("System.Uname"),                 H_Uname,           NULL,
-		DCI_DT_STRING,	DCIDESC_SYSTEM_UNAME },
-	{ _T("System.Uptime"),                H_Uptime,          NULL,
-		DCI_DT_UINT,	DCIDESC_SYSTEM_UPTIME },
 
-	{ _T("Agent.SourcePackageSupport"), H_SourcePkgSupport, NULL, DCI_DT_INT, DCIDESC_AGENT_SOURCEPACKAGESUPPORT },
+   { _T("System.MsgQueue.Bytes(*)"), H_SysMsgQueue, _T("b"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_BYTES },
+   { _T("System.MsgQueue.BytesMax(*)"), H_SysMsgQueue, _T("B"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_BYTES_MAX },
+   { _T("System.MsgQueue.ChangeTime(*)"), H_SysMsgQueue, _T("c"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_CHANGE_TIME },
+   { _T("System.MsgQueue.Messages(*)"), H_SysMsgQueue, _T("m"), DCI_DT_UINT, DCIDESC_SYSTEM_MSGQUEUE_MESSAGES },
+   { _T("System.MsgQueue.RecvTime(*)"), H_SysMsgQueue, _T("r"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_RECV_TIME },
+   { _T("System.MsgQueue.SendTime(*)"), H_SysMsgQueue, _T("s"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_SEND_TIME },
+
+	{ _T("System.Uname"), H_Uname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
+	{ _T("System.Uptime"), H_Uptime, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_UPTIME },
 
 	/* iostat */
 	{ _T("System.IO.ReadRate"),           H_IoStatsTotal, (const TCHAR *)IOSTAT_NUM_READS,

@@ -133,14 +133,15 @@ static THREAD_RESULT THREAD_CALL ClusterReceiverThread(void *arg)
          if (msg->getCode() != CMD_KEEPALIVE)
          {
             TCHAR buffer[128];
-            ClusterDebug(7, _T("ClusterReceiverThread: message %s from node %d [%s]"),
-               NXCPMessageCodeName(msg->getCode(), buffer), node->m_id, (const TCHAR *)node->m_addr->toString());
+            ClusterDebug(7, _T("ClusterReceiverThread: message %s (%d) from node %d [%s]"),
+               NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(), node->m_id, (const TCHAR *)node->m_addr->toString());
          }
 
          switch(msg->getCode())
          {
             case CMD_CLUSTER_NOTIFY:
                ProcessClusterNotification(node, (ClusterNotificationCode)msg->getFieldAsInt16(VID_NOTIFICATION_CODE));
+               delete msg;
                break;
             case CMD_JOIN_CLUSTER:
                ProcessClusterJoinRequest(node, msg);
@@ -153,10 +154,11 @@ static THREAD_RESULT THREAD_CALL ClusterReceiverThread(void *arg)
                node->m_msgWaitQueue->put(msg);
                break;
             default:
-               if (g_nxccEventHandler->onMessage(msg, node->m_id))
-                  delete msg;
-               else
+               ClusterMessageProcessingResult r = g_nxccEventHandler->onMessage(msg, node->m_id);
+               if (r == CLUSTER_MSG_IGNORED)
                   node->m_msgWaitQueue->put(msg);
+               else if (r == CLUSTER_MSG_PROCESSED)
+                  delete msg;
                break;
          }
       }
@@ -396,17 +398,26 @@ static THREAD_RESULT THREAD_CALL ClusterKeepaliveThread(void *arg)
  */
 void ClusterSendMessage(ClusterNodeInfo *node, NXCPMessage *msg)
 {
+   TCHAR buffer[64];
+   ClusterDebug(7, _T("ClusterSendMessage: sending message %s (%d) to peer %d [%s]"),
+                NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(),
+                node->m_id, (const TCHAR *)node->m_addr->toString());
+
    NXCP_MESSAGE *rawMsg = msg->createMessage();
    MutexLock(node->m_mutex);
    if (node->m_socket != INVALID_SOCKET)
    {
       if (SendEx(node->m_socket, rawMsg, ntohl(rawMsg->size), 0, NULL) <= 0)
       {
-         ClusterDebug(5, _T("ClusterSendResponse: send failed for peer %d [%s]"), node->m_id, (const TCHAR *)node->m_addr->toString());
+         ClusterDebug(5, _T("ClusterSendMessage: send failed for peer %d [%s]"), node->m_id, (const TCHAR *)node->m_addr->toString());
          shutdown(node->m_socket, SHUT_RDWR);
          node->m_socket = INVALID_SOCKET; // current socket will be closed by receiver
          ChangeClusterNodeState(node, CLUSTER_NODE_DOWN);
       }
+   }
+   else
+   {
+      ClusterDebug(5, _T("ClusterSendMessage: send failed for peer %d [%s]"), node->m_id, (const TCHAR *)node->m_addr->toString());
    }
    MutexUnlock(node->m_mutex);
    free(rawMsg);
@@ -559,12 +570,15 @@ UINT32 LIBNXCC_EXPORTABLE ClusterSendDirectCommand(UINT32 nodeId, NXCPMessage *m
 {
    NXCPMessage *response = ClusterSendDirectCommandEx(nodeId, msg);
    if (response == NULL)
+   {
+      ClusterDebug(5, _T("ClusterDirectCommand: request timeout to peer %d (requestId=%d)"), nodeId, msg->getId());
       return NXCC_RCC_TIMEOUT;
+   }
 
    UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
    if (rcc != 0)
    {
-      ClusterDebug(5, _T("ClusterDirectCommand: failed request to peer %d: rcc=%d"), nodeId, rcc);
+      ClusterDebug(5, _T("ClusterDirectCommand: failed request to peer %d (rcc=%d, requestId=%d)"), nodeId, rcc, msg->getId());
    }
    delete response;
    return rcc;
@@ -591,6 +605,11 @@ NXCPMessage LIBNXCC_EXPORTABLE *ClusterSendDirectCommandEx(UINT32 nodeId, NXCPMe
    msg->setId(requestId);
    NXCP_MESSAGE *rawMsg = msg->createMessage();
 
+   TCHAR buffer[64];
+   ClusterDebug(7, _T("ClusterSendDirectCommandEx: sending message %s (%d) to peer %d [%s]"),
+                NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(),
+                node->m_id, (const TCHAR *)node->m_addr->toString());
+
    bool sent = false;
    MutexLock(node->m_mutex);
    if (node->m_socket != INVALID_SOCKET)
@@ -606,6 +625,10 @@ NXCPMessage LIBNXCC_EXPORTABLE *ClusterSendDirectCommandEx(UINT32 nodeId, NXCPMe
          node->m_socket = INVALID_SOCKET; // current socket will be closed by receiver
          ChangeClusterNodeState(node, CLUSTER_NODE_DOWN);
       }
+   }
+   else
+   {
+      ClusterDebug(5, _T("ClusterDirectCommand: send failed for peer %d [%s]"), nodeId, (const TCHAR *)node->m_addr->toString());
    }
    MutexUnlock(node->m_mutex);
 
@@ -633,7 +656,10 @@ void LIBNXCC_EXPORTABLE ClusterSendResponse(UINT32 nodeId, UINT32 requestId, UIN
 {
    int index = FindClusterNode(nodeId);
    if (index == -1)
+   {
+      ClusterDebug(5, _T("ClusterSendResponse: peer node with ID %d not found (requestId=%d)"), nodeId, requestId);
       return;
+   }
 
    ClusterNodeInfo *node = &g_nxccNodes[index];
 
@@ -651,7 +677,10 @@ void LIBNXCC_EXPORTABLE ClusterSendResponseEx(UINT32 nodeId, UINT32 requestId, N
 {
    int index = FindClusterNode(nodeId);
    if (index == -1)
+   {
+      ClusterDebug(5, _T("ClusterSendResponseEx: peer node with ID %d not found (requestId=%d)"), nodeId, requestId);
       return;
+   }
 
    ClusterNodeInfo *node = &g_nxccNodes[index];
 

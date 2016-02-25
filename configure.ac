@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0.1], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0.2], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -103,6 +103,8 @@ MONGODB_LIBS=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
 INSTALL_LIBPATH=""
+OPENSSL_LIBSSL="ssl"
+OPENSSL_LIBCRYPTO="crypto"
 
 
 #--------------------------------------------------------------------
@@ -458,6 +460,13 @@ AC_ARG_WITH(openssl,
 	fi
 ])
 
+AC_ARG_WITH(bundled-openssl,
+[AS_HELP_STRING(--with-bundled-openssl,use bundled OpenSSL libraries with product-specific prefix)],
+[
+	OPENSSL_LIBSSL="nxssl"
+	OPENSSL_LIBCRYPTO="nxcrypto"
+])
+
 AC_ARG_WITH(jemalloc,
 [AS_HELP_STRING(--with-jemalloc,specify libjemalloc location)],
 [
@@ -525,6 +534,7 @@ AC_ARG_ENABLE(unicode,
 	BUILD_UNICODE="yes"
 	CPPFLAGS="$CPPFLAGS -DUNICODE"
 	FORCE_INTERNAL_LIBTRE="yes"
+	DISABLE_READLINE="yes"
 ])
 
 AC_ARG_ENABLE(debug,
@@ -1462,31 +1472,30 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
-	AC_CHECK_LIB(crypto, RSA_new,
+	AC_CHECK_LIB($OPENSSL_LIBCRYPTO, RSA_new,
 		[
 			AC_DEFINE(WITH_OPENSSL, 1, Define to 1 if you have OpenSSL library and headers)
-			AC_CHECK_LIB(crypto, EVP_aes_256_cbc,
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_aes_256_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
-			AC_CHECK_LIB(crypto, EVP_bf_cbc,
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_bf_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
-			AC_CHECK_LIB(crypto, EVP_idea_cbc,
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_idea_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
-			AC_CHECK_LIB(crypto, EVP_des_ede3_cbc,
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_des_ede3_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
-			SERVER_LIBS="$SERVER_LIBS -lssl"
 			if test "x$HAVE_LIBCRYPTO" = "xyes"; then
 				if test "x$BUILD_STATIC_AGENT" = "xyes"; then
 #					LIBS="$LIBS -Wl,-Bstatic -lcrypto -Wl,-Bdynamic"
-					LIBS="$LIBS -lcrypto"
+					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
 				else
-					LIBS="$LIBS -lcrypto"
+					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
 				fi	
 			else
-				AC_MSG_ERROR(libcrypto does not provide any suitable encryption algorithm)
+				AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO does not provide any suitable encryption algorithm)
 			fi
 		],
 		[
-			AC_MSG_ERROR(libcrypto is required for encryption support)
+			AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO is required for encryption support)
 		])
 fi
 
@@ -2184,7 +2193,7 @@ AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws])
 AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
 AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
-AC_CHECK_FUNCS([itow _itow wcsftime])
+AC_CHECK_FUNCS([mbstowcs mbsrtowcs itow _itow wcsftime])
 
 AC_CHECK_DECLS([putws],,,[
 #if HAVE_WCHAR_H
@@ -3102,6 +3111,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/filemgr/Makefile
 	src/agent/subagents/freebsd/Makefile
+	src/agent/subagents/gps/Makefile
 	src/agent/subagents/hpux/Makefile
 	src/agent/subagents/informix/Makefile
 	src/agent/subagents/ipso/Makefile

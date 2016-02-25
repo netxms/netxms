@@ -416,4 +416,22 @@ public abstract class AbstractTraceWidget extends Composite
 	{
 		return actionCopy;
 	}
+	
+	/**
+	 * Get associated view part
+	 * 
+	 * @return
+	 */
+	protected IViewPart getViewPart()
+	{
+	   return viewPart;
+	}
+
+   /**
+    * @return the viewer
+    */
+   public TableViewer getViewer()
+   {
+      return viewer;
+   }
 }

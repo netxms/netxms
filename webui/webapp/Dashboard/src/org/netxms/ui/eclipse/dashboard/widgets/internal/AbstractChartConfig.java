@@ -38,7 +38,7 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 	private String title = ""; //$NON-NLS-1$
 	
 	@Element(required = false)
-	private int legendPosition = GraphSettings.POSITION_RIGHT;
+	private int legendPosition = GraphSettings.POSITION_BOTTOM;
 	
 	@Element(required = false)
 	private boolean showLegend = true;

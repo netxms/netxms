@@ -89,12 +89,12 @@ struct NXSL_ExtMethod
    int numArgs;   // Number of arguments or -1 for variable number
 };
 
-#define NXSL_METHOD_DEFINITION(name) \
-   static int M_##name (NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+#define NXSL_METHOD_DEFINITION(clazz, name) \
+   static int M_##clazz##_##name (NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
 
-#define NXSL_REGISTER_METHOD(name, argc) { \
+#define NXSL_REGISTER_METHOD(clazz, name, argc) { \
       NXSL_ExtMethod *m = new NXSL_ExtMethod; \
-      m->handler = M_##name; \
+      m->handler = M_##clazz##_##name; \
       m->numArgs = argc; \
       m_methods->set(_T(#name), m); \
    }
@@ -112,8 +112,8 @@ public:
    NXSL_Class();
    virtual ~NXSL_Class();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
-   virtual BOOL setAttr(NXSL_Object *pObject, const TCHAR *pszAttr, NXSL_Value *pValue);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual bool setAttr(NXSL_Object *object, const TCHAR *attr, NXSL_Value *value);
 
    virtual int callMethod(const TCHAR *name, NXSL_Object *object, int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
@@ -194,15 +194,17 @@ public:
    NXSL_Array(const StringList *values);
 	~NXSL_Array();
 
-	void set(int index, NXSL_Value *value);
-	NXSL_Value *get(int index) const;
-	NXSL_Value *getByPosition(int position) const;
-
-	int size() const { return m_size; }
-	int getMinIndex() const { return (m_size > 0) ? m_data[0].index : 0; }
+   int size() const { return m_size; }
+   int getMinIndex() const { return (m_size > 0) ? m_data[0].index : 0; }
    int getMaxIndex() const { return (m_size > 0) ? m_data[m_size - 1].index : 0; }
 
-	StringList *toStringList() const;
+   StringList *toStringList() const;
+
+   NXSL_Value *get(int index) const;
+   NXSL_Value *getByPosition(int position) const;
+
+   void set(int index, NXSL_Value *value);
+	void add(NXSL_Value *value) { if (m_size == 0) { set(0, value); } else { set(getMaxIndex() + 1, value); } }
 };
 
 /**
@@ -220,6 +222,8 @@ public:
 
    void set(const TCHAR *key, NXSL_Value *value) { m_values->set(key, value); }
    NXSL_Value *get(const TCHAR *key) const { return m_values->get(key); }
+   NXSL_Value *getKeys() const;
+   NXSL_Value *getValues() const;
 
 	int size() const { return m_values->size(); }
 };
@@ -480,6 +484,8 @@ public:
 
 	virtual void print(NXSL_Value *value);
 	virtual void trace(int level, const TCHAR *text);
+
+	virtual void configureVM(NXSL_VM *vm);
 
    void setLibrary(NXSL_Library *lib) { m_library = lib; }
 
@@ -751,6 +757,8 @@ public:
 	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
 	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_globals->find(pszName); }
 
+	bool addConstant(const TCHAR *name, NXSL_Value *value);
+
 	void setStorage(NXSL_Storage *storage);
 
 	void storageWrite(const TCHAR *name, NXSL_Value *value) { m_storage->write(name, value); }
@@ -836,11 +844,25 @@ public:
 };
 
 /**
+ * NXSL "Connector" class
+ */
+class LIBNXSL_EXPORTABLE NXSL_GeoLocationClass : public NXSL_Class
+{
+public:
+   NXSL_GeoLocationClass();
+   virtual ~NXSL_GeoLocationClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual void onObjectDelete(NXSL_Object *object);
+};
+
+/**
  * Class definition instances
  */
 extern NXSL_TableClass LIBNXSL_EXPORTABLE g_nxslTableClass;
 extern NXSL_StaticTableClass LIBNXSL_EXPORTABLE g_nxslStaticTableClass;
 extern NXSL_TableColumnClass LIBNXSL_EXPORTABLE g_nxslTableColumnClass;
 extern NXSL_ConnectorClass LIBNXSL_EXPORTABLE g_nxslConnectorClass;
+extern NXSL_GeoLocationClass LIBNXSL_EXPORTABLE g_nxslGeoLocationClass;
 
 #endif

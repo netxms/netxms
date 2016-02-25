@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMS driver for Portech MV-37x VoIP GSM gateways
-** Copyright (C) 2011-2013 Victor Kirhenshtein
+** Copyright (C) 2011-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -44,7 +44,7 @@ static enum { OM_TEXT, OM_PDU } s_mode = OM_PDU;
  * option string format: option1=value1;option2=value2;...
  * Valid options are: host, login, password, mode
  */
-extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *options)
+extern "C" bool EXPORT SMSDriverInit(const TCHAR *options, Config *config)
 {
 	DbgPrintf(1, _T("Loading Portech MV-72x SMS Driver (configuration: %s)"), options);
 
@@ -77,11 +77,11 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *options)
 		else
 		{
 			nxlog_write(MSG_SMSDRV_INVALID_OPTION, NXLOG_ERROR, "s", _T("mode"));
-			return FALSE;
+			return false;
 		}
 	}
 	
-	return TRUE;
+	return true;
 }
 
 /**
@@ -128,12 +128,12 @@ static void DoLogout(SocketConnection *conn)
 /**
  * Return immediately if given operation failed
  */
-#define __chk(x) if (!(x)) { return FALSE; }
+#define __chk(x) if (!(x)) { return false; }
 
 /**
  * Send SMS in text mode
  */
-static BOOL SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+static bool SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	char szTmp[128];
 	
@@ -177,13 +177,13 @@ static BOOL SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const 
 	__chk(conn->waitForText("OK", 5000));
 	DbgPrintf(4, _T("SMS sent successfully"));
 
-	return TRUE;
+	return true;
 }
 
 /**
  * Send SMS in PDU mode
  */
-static BOOL SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+static bool SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	const int bufferSize = 512;
 	char szTmp[bufferSize];
@@ -196,7 +196,7 @@ static BOOL SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 	    WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, -1, text, bufferSize, NULL, NULL) == 0)
 	{
 		DbgPrintf(2, _T("SMS: Failed to convert phone number or text to multibyte string"));
-		return FALSE;
+		return false;
 	}
 #else
 	nx_strncpy(phoneNumber, pszPhoneNumber, bufferSize);
@@ -231,19 +231,19 @@ static BOOL SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 	__chk(conn->waitForText("OK", 2000));
 	DbgPrintf(4, _T("SMS sent successfully"));
 
-	return TRUE;
+	return true;
 }
 
 /**
  * Send SMS
  */
-extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
 	SocketConnection *conn;
-	BOOL success = FALSE;
+	bool success = false;
 
 	if ((pszPhoneNumber == NULL) || (pszText == NULL))
-		return FALSE;
+		return false;
 
    bool canRetry = true;
 

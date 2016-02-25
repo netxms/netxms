@@ -33,9 +33,9 @@ static TCHAR s_sqlTemplate[1024];
 static DB_DRIVER s_driver;
 static DB_HANDLE s_dbh;
 
-extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
+extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 {
-	BOOL bRet = false;
+	bool bRet = false;
 	static NX_CFG_TEMPLATE configTemplate[] = 
 	{
 		{ _T("DBDriver"), CT_STRING, 0, 0, sizeof(s_dbDriver) / sizeof(TCHAR), 0, s_dbDriver },	
@@ -48,22 +48,7 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
 		{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 	};
 
-	const TCHAR *configFile;
-	if (pszInitArgs == NULL || *pszInitArgs == 0)
-	{
-#ifdef _WIN32
-		configFile = _T("C:\\smsdbemu.conf");
-#else
-		configFile = _T("/etc/smsdbemu.conf");
-#endif
-	}
-	else
-	{
-		configFile = pszInitArgs;
-	}
-
-	Config *config = new Config();
-	if (config->loadIniConfig(configFile, _T("SMSDbEmu")) && config->parseTemplate(_T("SMSDbEmu"), configTemplate))
+	if (config->parseTemplate(_T("SMSDbEmu"), configTemplate))
 	{
 		s_driver = DBLoadDriver(s_dbDriver, NULL, TRUE, NULL, NULL);
 		if (s_driver == NULL)
@@ -87,9 +72,9 @@ finish:
 	return bRet;
 }
 
-extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
-	BOOL bRet = false;
+	bool bRet = false;
 
 	if (s_dbh == NULL)
 	{

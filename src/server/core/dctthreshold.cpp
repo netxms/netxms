@@ -470,6 +470,7 @@ bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq)
          DBExecute(hStmt);
       }
    }
+   DBFreeStatement(hStmt);
    return true;
 }
 

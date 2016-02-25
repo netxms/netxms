@@ -32,16 +32,16 @@
 /**
  * Do agent upgrade
  */
-static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose, RSA *pServerKey)
+static int UpgradeAgent(AgentConnection *conn, TCHAR *pszPkgName, BOOL bVerbose, RSA *pServerKey)
 {
    UINT32 dwError;
    int i;
    BOOL bConnected = FALSE;
 
-   dwError = conn.startUpgrade(pszPkgName);
+   dwError = conn->startUpgrade(pszPkgName);
    if (dwError == ERR_SUCCESS)
    {
-      conn.disconnect();
+      conn->disconnect();
 
       if (bVerbose)
       {
@@ -55,7 +55,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
             fflush(stdout);
             if ((i % 20 == 0) && (i > 30))
             {
-               if (conn.connect(pServerKey, FALSE))
+               if (conn->connect(pServerKey, FALSE))
                {
                   bConnected = TRUE;
                   break;   // Connected successfully
@@ -70,7 +70,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
          for(i = 20; i < 120; i += 20)
          {
             ThreadSleep(20);
-            if (conn.connect(pServerKey, FALSE))
+            if (conn->connect(pServerKey, FALSE))
             {
                bConnected = TRUE;
                break;   // Connected successfully
@@ -80,7 +80,7 @@ static int UpgradeAgent(AgentConnection &conn, TCHAR *pszPkgName, BOOL bVerbose,
 
       // Last attempt to reconnect
       if (!bConnected)
-         bConnected = conn.connect(pServerKey, FALSE);
+         bConnected = conn->connect(pServerKey, FALSE);
 
       if (bConnected && bVerbose)
       {
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
    RSA *pServerKey = NULL;
    NXCPCompressionMethod compression = NXCP_COMPRESSION_NONE;
 
-   InitThreadLibrary();
+   InitNetXMSProcess();
 
    GetNetXMSDirectory(nxDirData, szKeyFile);
    _tcscat(szKeyFile, DFILE_KEYS);
@@ -352,12 +352,11 @@ int main(int argc, char *argv[])
          }
          else
          {
-            AgentConnection conn(addr, wPort, iAuthMethod, szSecret);
-
-				conn.setConnectionTimeout(dwConnTimeout);
-            conn.setCommandTimeout(dwTimeout);
-            conn.setEncryptionPolicy(iEncryptionPolicy);
-            if (conn.connect(pServerKey, bVerbose, &dwError))
+            AgentConnection *conn = new AgentConnection(addr, wPort, iAuthMethod, szSecret);
+				conn->setConnectionTimeout(dwConnTimeout);
+            conn->setCommandTimeout(dwTimeout);
+            conn->setEncryptionPolicy(iEncryptionPolicy);
+            if (conn->connect(pServerKey, bVerbose, &dwError))
             {
                UINT32 dwError;
 
@@ -371,7 +370,7 @@ int main(int argc, char *argv[])
                nElapsedTime = GetCurrentTimeMs();
 					if (bVerbose)
 						_tprintf(_T("Upload:                 "));
-					dwError = conn.uploadFile(fname, szDestinationFile[0] != 0 ? szDestinationFile : NULL, bVerbose ? ProgressCallback : NULL, NULL, compression);
+					dwError = conn->uploadFile(fname, szDestinationFile[0] != 0 ? szDestinationFile : NULL, bVerbose ? ProgressCallback : NULL, NULL, compression);
 					if (bVerbose)
 						_tprintf(_T("\r                        \r"));
                nElapsedTime = GetCurrentTimeMs() - nElapsedTime;
@@ -401,7 +400,6 @@ int main(int argc, char *argv[])
                {
                   iExitCode = (dwError == ERR_SUCCESS) ? 0 : 1;
                }
-               conn.disconnect();
             }
             else
             {
@@ -409,6 +407,7 @@ int main(int argc, char *argv[])
                   _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
                iExitCode = 2;
             }
+            conn->decRefCount();
          }
       }
    }

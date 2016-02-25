@@ -12,6 +12,7 @@ public class Messages extends NLS
    public static String AbstractNetworkMapView_EnableAutoLayout;
    public static String AbstractNetworkMapView_Error;
    public static String AbstractNetworkMapView_HideLinkLabels;
+   public static String AbstractNetworkMapView_HideLinks;
    public static String AbstractNetworkMapView_Icons;
    public static String AbstractNetworkMapView_LargeLabels;
    public static String AbstractNetworkMapView_LayoutHorzTree;

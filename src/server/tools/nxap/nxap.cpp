@@ -32,10 +32,10 @@
 /**
  * Get policy list
  */
-static int GetPolicyInventory(AgentConnection &conn)
+static int GetPolicyInventory(AgentConnection *conn)
 {
 	AgentPolicyInfo *ap;
-	UINT32 rcc = conn.getPolicyInventory(&ap);
+	UINT32 rcc = conn->getPolicyInventory(&ap);
 	if (rcc == ERR_SUCCESS)
 	{
 		_tprintf(_T("GUID                                 Type Server\n")
@@ -59,9 +59,9 @@ static int GetPolicyInventory(AgentConnection &conn)
 // Uninstall policy
 //
 
-static int UninstallPolicy(AgentConnection &conn, uuid_t guid)
+static int UninstallPolicy(AgentConnection *conn, const uuid& guid)
 {
-	UINT32 rcc = conn.uninstallPolicy(guid);
+	UINT32 rcc = conn->uninstallPolicy(guid);
 	if (rcc == ERR_SUCCESS)
 	{
 		_tprintf(_T("Policy successfully uninstalled from agent\n"));
@@ -94,9 +94,9 @@ int main(int argc, char *argv[])
    TCHAR szSecret[MAX_SECRET_LENGTH] = _T("");
    TCHAR szKeyFile[MAX_PATH];
    RSA *pServerKey = NULL;
-	uuid_t guid;
+   uuid guid;
 
-   InitThreadLibrary();
+   InitNetXMSProcess();
 
    GetNetXMSDirectory(nxDirData, szKeyFile);
    _tcscat(szKeyFile, DFILE_KEYS);
@@ -239,9 +239,9 @@ int main(int argc, char *argv[])
 				WCHAR wguid[256];
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, optarg, -1, wguid, 256);
 				wguid[255] = 0;
-				_uuid_parse(wguid, guid);
+            guid = uuid::parse(wguid);
 #else
-				_uuid_parse(optarg, guid);
+            guid = uuid::parse(optarg);
 #endif
 				break;
          case '?':
@@ -311,12 +311,11 @@ int main(int argc, char *argv[])
          }
          else
          {
-            AgentConnection conn(addr, wPort, iAuthMethod, szSecret);
-
-				conn.setConnectionTimeout(dwConnTimeout);
-            conn.setCommandTimeout(dwTimeout);
-            conn.setEncryptionPolicy(iEncryptionPolicy);
-            if (conn.connect(pServerKey, bVerbose, &dwError))
+            AgentConnection *conn = new AgentConnection(addr, wPort, iAuthMethod, szSecret);
+            conn->setConnectionTimeout(dwConnTimeout);
+            conn->setCommandTimeout(dwTimeout);
+            conn->setEncryptionPolicy(iEncryptionPolicy);
+            if (conn->connect(pServerKey, bVerbose, &dwError))
             {
 					if (action == 0)
 					{
@@ -326,13 +325,13 @@ int main(int argc, char *argv[])
 					{
 						iExitCode = UninstallPolicy(conn, guid);
 					}
-               conn.disconnect();
             }
             else
             {
                _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
                iExitCode = 2;
             }
+            conn->decRefCount();
          }
       }
    }

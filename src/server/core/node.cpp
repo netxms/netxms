@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -81,6 +81,7 @@ Node::Node() : DataCollectionTarget()
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
    m_lastAgentCommTime = 0;
+   m_lastAgentConnectAttempt = 0;
 	m_linkLayerNeighbors = NULL;
 	m_vrrpInfo = NULL;
 	m_pTopology = NULL;
@@ -169,6 +170,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
    m_lastAgentCommTime = 0;
+   m_lastAgentConnectAttempt = 0;
 	m_linkLayerNeighbors = NULL;
 	m_vrrpInfo = NULL;
 	m_pTopology = NULL;
@@ -1056,7 +1058,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
 			   if (pSubnet == NULL)
 			   {
 				   // Check if netmask is 0 (detect), and if yes, create
-				   // new subnet with class mask
+				   // new subnet with default mask
                if (addr.getMaskBits() == 0)
 				   {
 					   bSyntheticMask = true;
@@ -1068,11 +1070,16 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
                if (addr.getHostBits() >= 2)
 				   {
 					   pSubnet = createSubnet(addr, bSyntheticMask);
+					   if (bSyntheticMask)
+					   {
+					      // createSubnet may adjust address mask bits
+	                  info->ipAddrList.replace(addr);
+					   }
 				   }
 			   }
 			   else
 			   {
-				   // Set correct netmask if we was asked for it
+				   // Set correct netmask if we were asked for it
                if (addr.getMaskBits() == 0)
 				   {
 					   bSyntheticMask = pSubnet->isSyntheticMask();
@@ -1105,6 +1112,20 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
    pInterface->setMTU(info->mtu);
    pInterface->setSpeed(info->speed);
    pInterface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
+
+   int defaultExpectedState = ConfigReadInt(_T("DefaultInterfaceExpectedState"), IF_DEFAULT_EXPECTED_STATE_UP);
+   switch(defaultExpectedState)
+   {
+      case IF_DEFAULT_EXPECTED_STATE_AUTO:
+         pInterface->setExpectedState(IF_EXPECTED_STATE_AUTO);
+         break;
+      case IF_DEFAULT_EXPECTED_STATE_IGNORE:
+         pInterface->setExpectedState(IF_EXPECTED_STATE_IGNORE);
+         break;
+      default:
+         pInterface->setExpectedState(IF_EXPECTED_STATE_UP);
+         break;
+   }
 
    // Insert to objects' list and generate event
    NetObjInsert(pInterface, true, false);
@@ -1318,8 +1339,9 @@ restart_agent_check:
       sendPollerMsg(dwRqId, _T("Checking NetXMS agent connectivity\r\n"));
 
 		UINT32 error, socketError;
+      bool newConnection;
 		agentLock();
-      if (connectToAgent(&error, &socketError))
+      if (connectToAgent(&error, &socketError, &newConnection, true))
       {
          DbgPrintf(7, _T("StatusPoll(%s): connected to agent"), m_name);
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
@@ -1442,7 +1464,7 @@ restart_agent_check:
 			for(i = 0; i < m_dwChildCount; i++)
 				if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
                 (((Interface *)m_pChildList[i])->getAdminState() != IF_ADMIN_STATE_DOWN) &&
-					 (((Interface *)m_pChildList[i])->getOperState() == IF_OPER_STATE_UP) &&
+					 (((Interface *)m_pChildList[i])->getConfirmedOperState() == IF_OPER_STATE_UP) &&
 					 (m_pChildList[i]->Status() != STATUS_UNMANAGED))
 				{
 					allDown = false;
@@ -1554,7 +1576,7 @@ restart_agent_check:
       {
          time_t oldAgentuptime = m_agentUpTime;
          m_agentUpTime = _tcstol(buffer, NULL, 0);
-         if((UINT32)oldAgentuptime > (UINT32)m_agentUpTime)
+         if ((UINT32)oldAgentuptime > (UINT32)m_agentUpTime)
          {
             //cancel file monitoring locally(on agent it is canceled if agent have fallen)
             g_monitoringList.removeDisconectedNode(m_id);
@@ -1571,6 +1593,28 @@ restart_agent_check:
    {
       g_monitoringList.removeDisconectedNode(m_id);
       m_agentUpTime = 0;
+   }
+
+   // Get geolocation
+   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
+   {
+      TCHAR buffer[MAX_RESULT_LENGTH];
+      if (getItemFromAgent(_T("GPS.LocationData"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      {
+         GeoLocation loc = GeoLocation::parseAgentData(buffer);
+         if (loc.getType() != GL_UNSET)
+         {
+            DbgPrintf(5, _T("StatusPoll(%s [%d]): location set to %s, %s from agent"), m_name, m_id, loc.getLatitudeAsString(), loc.getLongitudeAsString());
+            lockProperties();
+            m_geoLocation = loc;
+            setModified();
+            unlockProperties();
+         }
+      }
+      else
+      {
+         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get system location"), m_name, m_id);
+      }
    }
 
    // Send delayed events and destroy delayed event queue
@@ -2146,6 +2190,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
       {
          TCHAR secret[MAX_SECRET_LENGTH];
          ConfigReadStr(_T("AgentDefaultSharedSecret"), secret, MAX_SECRET_LENGTH, _T("netxms"));
+         DecryptPassword(_T("netxms"), secret, secret, MAX_SECRET_LENGTH);
          pAgentConn->setAuthData(AUTH_SHA1_HASH, secret);
          if (pAgentConn->connect(g_pServerKey, FALSE, &rcc))
          {
@@ -2302,18 +2347,18 @@ bool Node::confPollAgent(UINT32 dwRqId)
 	{
       DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (error %d)"), m_name, rcc);
 	}
-   delete pAgentConn;
+   pAgentConn->decRefCount();
    DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_name);
 	return hasChanges;
 }
 
 /**
- * SNMP walker callback which just counts number of varbinds
+ * SNMP walker callback which sets indicator to true after first varbind and aborts walk
  */
-static UINT32 CountingSnmpWalkerCallback(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 IndicatorSnmpWalkerCallback(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
-	(*((int *)arg))++;
-	return SNMP_ERR_SUCCESS;
+   (*((bool *)arg)) = true;
+   return SNMP_ERR_COMM;
 }
 
 /**
@@ -2455,9 +2500,9 @@ bool Node::confPollSnmp(UINT32 dwRqId)
    }
 
    // Check for printer MIB support
-   int count = 0;
-   SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43.5.1.1.17"), CountingSnmpWalkerCallback, &count, FALSE);
-   if (count > 0)
+   bool present = false;
+   SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43"), IndicatorSnmpWalkerCallback, &present, FALSE);
+   if (present)
    {
       lockProperties();
       m_dwFlags |= NF_IS_PRINTER;
@@ -2734,9 +2779,9 @@ void Node::checkBridgeMib(SNMP_Transport *pTransport)
  */
 void Node::checkIfXTable(SNMP_Transport *pTransport)
 {
-	int count = 0;
-	SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), CountingSnmpWalkerCallback, &count, FALSE);
-   if (count > 0)
+	bool present = false;
+	SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), IndicatorSnmpWalkerCallback, &present, FALSE);
+   if (present)
    {
 		lockProperties();
       m_dwFlags |= NF_HAS_IFXTABLE;
@@ -3512,10 +3557,20 @@ bool Node::connectToSMCLP()
 /**
  * Connect to native agent. Assumes that access to agent connection is already locked.
  */
-bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnection)
+bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnection, bool forceConnect)
 {
    if (g_flags & AF_SHUTDOWN)
       return false;
+
+   if (!forceConnect && (m_agentConnection == NULL) && (time(NULL) - m_lastAgentConnectAttempt < 30))
+   {
+		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): agent is unreachable, will not retry connection"), m_name, m_id);
+      if (error != NULL)
+         *error = ERR_CONNECT_FAILED;
+      if (socketError != NULL)
+         *socketError = 0;
+      return false;
+   }
 
    // Create new agent connection object if needed
    if (m_agentConnection == NULL)
@@ -3567,6 +3622,11 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
       setLastAgentCommTime();
       CALL_ALL_MODULES(pfOnConnectToAgent, (this, m_agentConnection));
 	}
+   else
+   {
+      deleteAgentConnection();
+      m_lastAgentConnectAttempt = time(NULL);
+   }
    return success;
 }
 
@@ -3895,6 +3955,10 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
             dwResult = DCE_NOT_SUPPORTED;
             setLastAgentCommTime();
             goto end_loop;
+         case ERR_NO_SUCH_INSTANCE:
+            dwResult = DCE_NO_SUCH_INSTANCE;
+            setLastAgentCommTime();
+            goto end_loop;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
             if (!connectToAgent())
@@ -3952,6 +4016,10 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
             dwResult = DCE_NOT_SUPPORTED;
+            setLastAgentCommTime();
+            goto end_loop;
+         case ERR_NO_SUCH_INSTANCE:
+            dwResult = DCE_NO_SUCH_INSTANCE;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_NOT_CONNECTED:
@@ -4014,6 +4082,10 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
             dwResult = DCE_NOT_SUPPORTED;
+            setLastAgentCommTime();
+            goto end_loop;
+         case ERR_NO_SUCH_INSTANCE:
+            dwResult = DCE_NO_SUCH_INSTANCE;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_NOT_CONNECTED:
@@ -4382,6 +4454,8 @@ static UINT32 RCCFromDCIError(UINT32 error)
          return RCC_SUCCESS;
       case DCE_COMM_ERROR:
          return RCC_COMM_FAILURE;
+      case DCE_NO_SUCH_INSTANCE:
+         return RCC_NO_SUCH_INSTANCE;
       case DCE_NOT_SUPPORTED:
          return RCC_DCI_NOT_SUPPORTED;
       default:
@@ -5045,7 +5119,7 @@ AgentConnectionEx *Node::createAgentConnection()
    setAgentProxy(conn);
    if (!conn->connect(g_pServerKey))
    {
-      delete conn;
+      conn->decRefCount();
       conn = NULL;
    }
    else
@@ -5217,7 +5291,8 @@ void Node::changeZone(UINT32 newZone)
  */
 void Node::setFileUpdateConn(AgentConnection *conn)
 {
-   delete m_fileUpdateConn;
+   if (m_fileUpdateConn != NULL)
+      m_fileUpdateConn->decRefCount();
    m_fileUpdateConn = conn;
 }
 
@@ -6299,16 +6374,22 @@ void Node::resolveVlanPorts(VlanList *vlanList)
 /**
  * Create new subnet and binds to this node
  */
-Subnet *Node::createSubnet(const InetAddress& baseAddr, bool syntheticMask)
+Subnet *Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
 {
    InetAddress addr = baseAddr.getSubnetAddress();
    if (syntheticMask)
    {
       while(FindSubnetByIP(m_zoneId, addr) != NULL)
       {
-         addr.setMaskBits(addr.getMaskBits() + 1);
+         baseAddr.setMaskBits(baseAddr.getMaskBits() + 1);
+         addr = baseAddr.getSubnetAddress();
       }
+
+      // Do not create subnet if there are no address space for it
+      if (baseAddr.getHostBits() < 2)
+         return NULL;
    }
+
    Subnet *s = new Subnet(addr, m_zoneId, syntheticMask);
    NetObjInsert(s, true, false);
    if (g_flags & AF_ENABLE_ZONING)

@@ -516,9 +516,10 @@ protected:
    void unlock() { MutexUnlock(m_mutexDataLock); }
 	NXCPEncryptionContext *acquireEncryptionContext();
 
+   virtual ~AgentConnection();
+
 public:
    AgentConnection(InetAddress addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
-   virtual ~AgentConnection();
 
    bool connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL);
    void disconnect();
@@ -550,7 +551,7 @@ public:
    UINT32 enableTraps();
    UINT32 enableFileUpdates();
 	UINT32 getPolicyInventory(AgentPolicyInfo **info);
-	UINT32 uninstallPolicy(uuid_t guid);
+	UINT32 uninstallPolicy(const uuid& guid);
    UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
 
 	UINT32 generateRequestId() { return (UINT32)InterlockedIncrement(&m_requestId); }

@@ -47,6 +47,7 @@ public final class ObjectContextMenu
       manager.add(new GroupMarker(GroupMarkers.MB_NXVS));
       manager.add(new Separator());
       manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
+      manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_TOOLS));
       manager.add(new Separator());
       manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_BINDING));
       manager.add(new Separator());

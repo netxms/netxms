@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,12 +43,15 @@ Interface::Interface() : NetObj()
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
    m_adminState = IF_ADMIN_STATE_UNKNOWN;
    m_operState = IF_OPER_STATE_UNKNOWN;
+   m_pendingOperState = IF_OPER_STATE_UNKNOWN;
+   m_confirmedOperState = IF_OPER_STATE_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
    memset(m_macAddr, 0, MAC_ADDR_LENGTH);
    m_lastDownEventId = 0;
 	m_pendingStatus = -1;
-	m_pollCount = 0;
+	m_statusPollCount = 0;
+   m_operStatePollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneId = 0;
 	m_pingTime = PING_TIME_TIMEOUT;
@@ -82,12 +85,15 @@ Interface::Interface(const InetAddressList& addrList, UINT32 zoneId, bool bSynth
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
    m_adminState = IF_ADMIN_STATE_UNKNOWN;
    m_operState = IF_OPER_STATE_UNKNOWN;
+   m_pendingOperState = IF_OPER_STATE_UNKNOWN;
+   m_confirmedOperState = IF_OPER_STATE_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
    memset(m_macAddr, 0, MAC_ADDR_LENGTH);
    m_lastDownEventId = 0;
 	m_pendingStatus = -1;
-	m_pollCount = 0;
+   m_statusPollCount = 0;
+   m_operStatePollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneId = zoneId;
    m_isHidden = true;
@@ -123,13 +129,16 @@ Interface::Interface(const TCHAR *name, const TCHAR *descr, UINT32 index, const 
 	m_peerInterfaceId = 0;
    m_adminState = IF_ADMIN_STATE_UNKNOWN;
    m_operState = IF_OPER_STATE_UNKNOWN;
+   m_pendingOperState = IF_OPER_STATE_UNKNOWN;
+   m_confirmedOperState = IF_OPER_STATE_UNKNOWN;
    m_peerDiscoveryProtocol = LL_PROTO_UNKNOWN;
 	m_dot1xPaeAuthState = PAE_STATE_UNKNOWN;
 	m_dot1xBackendAuthState = BACKEND_STATE_UNKNOWN;
    memset(m_macAddr, 0, MAC_ADDR_LENGTH);
    m_lastDownEventId = 0;
 	m_pendingStatus = -1;
-	m_pollCount = 0;
+   m_statusPollCount = 0;
+   m_operStatePollCount = 0;
 	m_requiredPollCount = 0;	// Use system default
 	m_zoneId = zoneId;
    m_isHidden = true;
@@ -207,6 +216,7 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 		m_dot1xBackendAuthState = (WORD)DBGetFieldLong(hResult, 0, 13);
 		m_adminState = (WORD)DBGetFieldLong(hResult, 0, 14);
 		m_operState = (WORD)DBGetFieldLong(hResult, 0, 15);
+		m_confirmedOperState = m_operState;
 		m_peerDiscoveryProtocol = (LinkLayerProtocol)DBGetFieldLong(hResult, 0, 16);
 		DBGetField(hResult, 0, 17, m_alias, MAX_DB_STRING);
 		m_mtu = DBGetFieldULong(hResult, 0, 18);
@@ -510,7 +520,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 
    if (bNeedPoll)
    {
-		// Pings cannot be used for cluster sync interfaces
+		// Ping cannot be used for cluster sync interfaces
       if ((pNode->getFlags() & NF_DISABLE_ICMP) || isLoopback() || !m_ipAddressList.hasValidUnicastAddress())
       {
 			// Interface doesn't have an IP address, so we can't ping it
@@ -534,9 +544,21 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 			switch(operState)
 			{
 				case IF_OPER_STATE_UP:
+		         if (expectedState == IF_EXPECTED_STATE_AUTO)
+		         {
+		            DbgPrintf(5, _T("Interface::StatusPoll(%d,%s): auto expected state changed to UP"), m_id, m_name);
+		            expectedState = IF_EXPECTED_STATE_UP;
+		            setExpectedState(expectedState);
+		         }
 					newStatus = ((expectedState == IF_EXPECTED_STATE_DOWN) ? STATUS_CRITICAL : STATUS_NORMAL);
 					break;
 				case IF_OPER_STATE_DOWN:
+               if (expectedState == IF_EXPECTED_STATE_AUTO)
+               {
+                  DbgPrintf(5, _T("Interface::StatusPoll(%d,%s): auto expected state changed to DOWN"), m_id, m_name);
+                  expectedState = IF_EXPECTED_STATE_DOWN;
+                  setExpectedState(expectedState);
+               }
 					newStatus = ((expectedState == IF_EXPECTED_STATE_UP) ? STATUS_CRITICAL : STATUS_NORMAL);
 					break;
 				case IF_OPER_STATE_TESTING:
@@ -548,6 +570,12 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 			}
 			break;
 		case IF_ADMIN_STATE_DOWN:
+         if (expectedState == IF_EXPECTED_STATE_AUTO)
+         {
+            DbgPrintf(5, _T("Interface::StatusPoll(%d,%s): auto expected state changed to DOWN"), m_id, m_name);
+            expectedState = IF_EXPECTED_STATE_DOWN;
+            setExpectedState(expectedState);
+         }
 			newStatus = STATUS_DISABLED;
 			break;
 		case IF_ADMIN_STATE_TESTING:
@@ -576,22 +604,39 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 
 	if (newStatus == m_pendingStatus)
 	{
-		m_pollCount++;
+		m_statusPollCount++;
 	}
 	else
 	{
 		m_pendingStatus = newStatus;
-		m_pollCount = 1;
+		m_statusPollCount = 1;
+	}
+
+	if (operState == m_pendingOperState)
+	{
+	   m_operStatePollCount++;
+	}
+	else
+	{
+	   m_pendingOperState = operState;
+	   m_operStatePollCount = 1;
 	}
 
 	int requiredPolls = (m_requiredPollCount > 0) ? m_requiredPollCount : g_requiredPolls;
 	sendPollerMsg(rqId, _T("      Interface is %s for %d poll%s (%d poll%s required for status change)\r\n"),
-	              GetStatusAsText(newStatus, true), m_pollCount, (m_pollCount == 1) ? _T("") : _T("s"),
+	              GetStatusAsText(newStatus, true), m_statusPollCount, (m_statusPollCount == 1) ? _T("") : _T("s"),
 	              requiredPolls, (requiredPolls == 1) ? _T("") : _T("s"));
 	DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): newStatus=%d oldStatus=%d pollCount=%d requiredPolls=%d"),
-	          m_id, m_name, newStatus, oldStatus, m_pollCount, requiredPolls);
+	          m_id, m_name, newStatus, oldStatus, m_statusPollCount, requiredPolls);
 
-   if ((newStatus != oldStatus) && (m_pollCount >= requiredPolls) && (expectedState != IF_EXPECTED_STATE_IGNORE))
+   if ((operState != m_confirmedOperState) && (m_operStatePollCount >= requiredPolls))
+   {
+      DbgPrintf(6, _T("Interface::StatusPoll(%d,%s): confirmedOperState=%d pollCount=%d requiredPolls=%d"),
+                m_id, m_name, (int)operState, m_operStatePollCount, requiredPolls);
+      m_confirmedOperState = operState;
+   }
+
+   if ((newStatus != oldStatus) && (m_statusPollCount >= requiredPolls) && (expectedState != IF_EXPECTED_STATE_IGNORE))
    {
 		static UINT32 statusToEvent[] =
 		{
@@ -711,8 +756,7 @@ void Interface::updatePingData()
                DbgPrintf(7, _T("Interface::updatePingData: incorrect value or error while parsing"));
             }
             m_pingLastTimeStamp = time(NULL);
-            conn->disconnect();
-            delete conn;
+            conn->decRefCount();
          }
          else
          {
@@ -810,8 +854,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 					}
 				}
             m_pingLastTimeStamp = time(NULL);
-				conn->disconnect();
-				delete conn;
+				conn->decRefCount();
 			}
 			else
 			{

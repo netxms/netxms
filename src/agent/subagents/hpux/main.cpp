@@ -161,6 +161,12 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("System.Memory.Virtual.Total"), H_MemoryInfo, (const TCHAR *)VIRTUAL_TOTAL, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_TOTAL },
 	{ _T("System.Memory.Virtual.Used"), H_MemoryInfo, (const TCHAR *)VIRTUAL_USED, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED },
 	{ _T("System.Memory.Virtual.UsedPerc"), H_MemoryInfo, (const TCHAR *)VIRTUAL_USED_PCT, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
+
+   { _T("System.MsgQueue.BytesMax(*)"), H_SysMsgQueue, _T("B"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_BYTES_MAX },
+   { _T("System.MsgQueue.ChangeTime(*)"), H_SysMsgQueue, _T("c"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_CHANGE_TIME },
+   { _T("System.MsgQueue.Messages(*)"), H_SysMsgQueue, _T("m"), DCI_DT_UINT, DCIDESC_SYSTEM_MSGQUEUE_MESSAGES },
+   { _T("System.MsgQueue.RecvTime(*)"), H_SysMsgQueue, _T("r"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_RECV_TIME },
+   { _T("System.MsgQueue.SendTime(*)"), H_SysMsgQueue, _T("s"), DCI_DT_UINT64, DCIDESC_SYSTEM_MSGQUEUE_SEND_TIME },
 		
 	{ _T("System.ProcessCount"), H_SysProcessCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
 	{ _T("System.ThreadCount"), H_SysThreadCount, NULL, DCI_DT_INT, DCIDESC_SYSTEM_THREADCOUNT },

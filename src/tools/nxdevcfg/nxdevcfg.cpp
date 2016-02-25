@@ -129,6 +129,8 @@ int main(int argc, char *argv[])
 #endif
 	int ch;
 
+   InitNetXMSProcess();
+
 	if (argc < 2)
 	{
 		ShowHelp();

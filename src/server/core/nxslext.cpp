@@ -1419,6 +1419,14 @@ void NXSL_ServerEnv::print(NXSL_Value *value)
 }
 
 /**
+ * Additional VM configuration
+ */
+void NXSL_ServerEnv::configureVM(NXSL_VM *vm)
+{
+   CALL_ALL_MODULES(pfNXSLServerVMConfig, (vm));
+}
+
+/**
  * Constructor for environment intended for passing script's output to client
  */
 NXSL_ClientSessionEnv::NXSL_ClientSessionEnv(ClientSession *session, NXCPMessage *response) : NXSL_ServerEnv()

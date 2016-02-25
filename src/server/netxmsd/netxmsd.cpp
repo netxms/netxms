@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server startup module
-** Copyright (C) 2003-2015 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,10 +22,6 @@
 **/
 
 #include "netxmsd.h"
-
-#if HAVE_LOCALE_H
-#include <locale.h>
-#endif
 
 #if HAVE_GETOPT_H
 #include <getopt.h>
@@ -329,12 +325,7 @@ static BOOL ParseCommandLine(int argc, char *argv[])
  */
 int main(int argc, char* argv[])
 {
-#ifdef _WIN32
-   HKEY hKey;
-   DWORD dwSize;
-#else
-   FILE *fp;
-#endif
+   InitNetXMSProcess();
 
 #ifndef _WIN32
    signal(SIGPIPE, SIG_IGN);
@@ -344,25 +335,12 @@ int main(int argc, char* argv[])
    signal(SIGUSR2, SIG_IGN);
 #endif
 
-   InitThreadLibrary();
-
-#ifdef NETXMS_MEMORY_DEBUG
-   InitMemoryDebugger();
-#endif
-
-   // Set locale to C. It shouldn't be needed, according to
-   // documentation, but I've seen the cases when agent formats
-   // floating point numbers by sprintf inserting comma in place
-   // of a dot, as set by system's regional settings.
-#if HAVE_SETLOCALE
-   setlocale(LC_NUMERIC, "C");
-#endif
-
    // Check for alternate config file location
 #ifdef _WIN32
+   HKEY hKey;
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\Server"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
    {
-      dwSize = MAX_PATH * sizeof(TCHAR);
+      DWORD dwSize = MAX_PATH * sizeof(TCHAR);
       RegQueryValueEx(hKey, _T("ConfigFile"), NULL, NULL, (BYTE *)g_szConfigFile, &dwSize);
       RegCloseKey(hKey);
    }
@@ -448,7 +426,7 @@ int main(int argc, char* argv[])
    }
 
    // Write PID file
-   fp = _tfopen(g_szPIDFile, _T("w"));
+   FILE *fp = _tfopen(g_szPIDFile, _T("w"));
    if (fp != NULL)
    {
       _ftprintf(fp, _T("%d"), getpid());

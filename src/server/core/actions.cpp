@@ -198,7 +198,7 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
       pConn = new AgentConnection(addr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
       if (!pConn->connect(g_pServerKey))
       {
-         delete pConn;
+         pConn->decRefCount();
          return FALSE;
       }
    }

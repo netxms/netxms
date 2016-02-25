@@ -71,6 +71,7 @@ static struct
    { ERR_FILE_DELETE_FAILED, _T("File delete failed") },
    { ERR_NO_SESSION_AGENT, _T("Session agent not available") },
    { ERR_SERVER_ID_UNSET, _T("Server ID is not set") },
+   { ERR_NO_SUCH_INSTANCE, _T("No such instance") },
    { -1, NULL }
 };
 
@@ -102,6 +103,8 @@ UINT32 LIBNXSRV_EXPORTABLE AgentErrorToRCC(UINT32 err)
       case ERR_AUTH_FAILED:
       case ERR_AUTH_NOT_REQUIRED:
          return RCC_COMM_FAILURE;
+      case ERR_NO_SUCH_INSTANCE:
+         return RCC_NO_SUCH_INSTANCE;
    }
    return RCC_AGENT_ERROR;
 }

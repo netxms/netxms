@@ -1,6 +1,6 @@
 /*
 ** Windows platform subagent
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 **/
 
 #include "winnt_subagent.h"
+#include "lm.h"
 
 /**
  * Externlals
@@ -124,16 +125,32 @@ static BOOL SetCurrentPrivilege(LPCTSTR pszPrivilege, BOOL bEnablePrivilege)
 /**
  * Shutdown system
  */
-static LONG H_ActionShutdown(const TCHAR *pszAction, StringList *pArgList, const TCHAR *pData, AbstractCommSession *session)
+static LONG H_ActionShutdown(const TCHAR *action, StringList *args, const TCHAR *data, AbstractCommSession *session)
 {
 	LONG nRet = ERR_INTERNAL_ERROR;
 
 	if (SetCurrentPrivilege(SE_SHUTDOWN_NAME, TRUE))
 	{
-		if (InitiateSystemShutdown(NULL, NULL, 0, TRUE, (*pData == _T('R')) ? TRUE : FALSE))
+		if (InitiateSystemShutdown(NULL, NULL, 0, TRUE, (*data == _T('R')) ? TRUE : FALSE))
 			nRet = ERR_SUCCESS;
 	}
 	return nRet;
+}
+
+/**
+ * Change user's password
+ * Parameters: user new_password
+ */
+static LONG H_ChangeUserPassword(const TCHAR *action, StringList *args, const TCHAR *data, AbstractCommSession *session)
+{
+   if (args->size() < 2)
+	   return ERR_INTERNAL_ERROR;
+
+   USER_INFO_1003 ui;
+   ui.usri1003_password = (TCHAR *)args->get(1);
+   NET_API_STATUS status = NetUserSetInfo(NULL, args->get(0), 1003, (LPBYTE)&ui, NULL);
+   AgentWriteDebugLog(2, _T("WINNT: change password for user %s status=%d"), args->get(0), status);
+   return (status == NERR_Success) ? ERR_SUCCESS : ERR_INTERNAL_ERROR; 
 }
 
 /**
@@ -222,7 +239,8 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
 static NETXMS_SUBAGENT_ACTION m_actions[] =
 {
 	{ _T("System.Restart"), H_ActionShutdown, _T("R"), _T("Restart system") },
-	{ _T("System.Shutdown"), H_ActionShutdown, _T("S"), _T("Shutdown system") }
+	{ _T("System.Shutdown"), H_ActionShutdown, _T("S"), _T("Shutdown system") },
+	{ _T("User.ChangePassword"), H_ChangeUserPassword, NULL, _T("Change password for given user") }
 };
 
 /**
