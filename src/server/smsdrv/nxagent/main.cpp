@@ -1,6 +1,6 @@
 /* 
 ** SMS Driver for sending SMS via NetXMS agent
-** Copyright (C) 2007-2015 Victor Kirhenshtein
+** Copyright (C) 2007-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ static UINT32 m_timeout = 30000;	// Default timeout is 30 seconds
  * Initialize driver
  * pszInitArgs format: hostname,port,timeout,secret
  */
-extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
+extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 {
 	TCHAR *temp, *ptr, *eptr;
 	int field;
@@ -70,15 +70,15 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *pszInitArgs)
       }
    }
 	free(temp);
-	return TRUE;
+	return true;
 }
 
 /**
  * Send SMS
  */
-extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
+extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *pszText)
 {
-	BOOL bSuccess = FALSE;
+	bool bSuccess = false;
 
    InetAddress addr = InetAddress::resolveHostName(m_hostName);
    if (addr.isValid())
@@ -92,7 +92,7 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 			argv[0] = (TCHAR *)pszPhoneNumber;
 			argv[1] = (TCHAR *)pszText;
          if (conn->execAction(_T("SMS.Send"), 2, argv) == ERR_SUCCESS)
-				bSuccess = TRUE;
+				bSuccess = true;
 		}
       conn->decRefCount();
 	}

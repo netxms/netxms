@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMS driver for slack.com service
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -57,12 +57,12 @@ static char s_url[1024] = "";
 /**
  * Init driver
  */
-extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *initArgs)
+extern "C" bool EXPORT SMSDriverInit(const TCHAR *initArgs, Config *config)
 {
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
    {
       DbgPrintf(1, _T("Slack: cURL initialization failed"));
-      return FALSE;
+      return false;
    }
 
    DbgPrintf(1, _T("Slack: driver loaded"));
@@ -93,7 +93,7 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *initArgs)
    ExtractNamedOptionValue(initArgs, _T("username"), s_username, 64);
 #endif
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -122,9 +122,9 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
 /**
  * Send SMS
  */
-extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *channel, const TCHAR *text)
+extern "C" bool EXPORT SMSDriverSend(const TCHAR *channel, const TCHAR *text)
 {
-   BOOL success = FALSE;
+   bool success = false;
 
 	DbgPrintf(4, _T("Slack: channel=\"%s\", text=\"%s\""), channel, text);
 
@@ -185,7 +185,7 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *channel, const TCHAR *text)
                if (!strcmp(data->data, "ok"))
                {
                   DbgPrintf(4, _T("Slack: message successfully sent"));
-                  success = TRUE;
+                  success = true;
                }
                else
                {

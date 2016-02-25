@@ -57,12 +57,12 @@ static char s_fromPhone[64] = "";
 /**
  * Init driver
  */
-extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *initArgs)
+extern "C" bool EXPORT SMSDriverInit(const TCHAR *initArgs, Config *config)
 {
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
    {
       DbgPrintf(1, _T("WebSMS: cURL initialization failed"));
-      return FALSE;
+      return false;
    }
 
    DbgPrintf(1, _T("WebSMS: driver loaded"));
@@ -97,7 +97,7 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *initArgs)
    ExtractNamedOptionValue(initArgs, _T("fromPhone"), s_fromPhone, 64);
 #endif
 
-	return TRUE;
+	return true;
 }
 
 /**
@@ -126,9 +126,9 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
 /**
  * Send SMS
  */
-extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text)
+extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text)
 {
-   BOOL success = FALSE;
+   bool success = false;
 
 	DbgPrintf(4, _T("WebSMS: phone=\"%s\", text=\"%s\""), phoneNumber, text);
 

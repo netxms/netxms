@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SMS driver for Kannel gateway
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -58,12 +58,12 @@ static char s_password[128] = "password";
 /**
  * Init driver
  */
-extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *initArgs)
+extern "C" bool EXPORT SMSDriverInit(const TCHAR *initArgs, Config *config)
 {
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
    {
       DbgPrintf(1, _T("Kannel: cURL initialization failed"));
-      return FALSE;
+      return false;
    }
 
    DbgPrintf(1, _T("Kannel: driver loaded"));
@@ -94,7 +94,7 @@ extern "C" BOOL EXPORT SMSDriverInit(const TCHAR *initArgs)
    ExtractNamedOptionValueA(realInitArgs, "login", s_login, 128);
    ExtractNamedOptionValueA(realInitArgs, "password", s_password, 128);
 
-	return TRUE;
+   return true;
 }
 
 /**
@@ -123,11 +123,11 @@ static size_t OnCurlDataReceived(char *ptr, size_t size, size_t nmemb, void *use
 /**
  * Send SMS
  */
-extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text)
+extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text)
 {
-   BOOL success = FALSE;
+   bool success = false;
 
-	DbgPrintf(4, _T("Kannel: phone=\"%s\", text=\"%s\""), phoneNumber, text);
+   DbgPrintf(4, _T("Kannel: phone=\"%s\", text=\"%s\""), phoneNumber, text);
 
    CURL *curl = curl_easy_init();
    if (curl != NULL)
@@ -176,7 +176,7 @@ extern "C" BOOL EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
             DbgPrintf(4, _T("Kannel: response code %03d"), (int)response);
             if (response == 202)
             {
-               success = TRUE;
+               success = true;
             }
          }
          else
