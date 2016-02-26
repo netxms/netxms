@@ -1,22 +1,23 @@
+CREATE TABLE reporting_results (
+    id integer NOT NULL,
+    executiontime timestamp without time zone,
+    jobid char(36),
+    reportid char(36),
+    userid integer
+);
 
-    -- drop table if exists report_notifications cascade;
+ALTER TABLE ONLY reporting_results
+    ADD CONSTRAINT reporting_results_pkey PRIMARY KEY (id);
 
-    -- drop table if exists report_results cascade;
+CREATE TABLE report_notification (
+    id integer NOT NULL,
+    attach_format_code integer,
+    jobid char(36),
+    mail character varying(255),
+    report_name character varying(255)
+);
 
-    create table report_notifications (
-        id int4 not null,
-        attach_format_code int4,
-        jobid varchar(255),
-        mail varchar(255),
-        report_name varchar(255),
-        primary key (id)
-    );
+ALTER TABLE ONLY report_notification
+    ADD CONSTRAINT report_notification_pkey PRIMARY KEY (id);
 
-    create table report_results (
-        id int4 not null,
-        executionTime timestamp,
-        jobId varchar(255),
-        reportId varchar(255),
-        userId int4,
-        primary key (id)
-    );
+CREATE SEQUENCE HIBERNATE_SEQUENCE INCREMENT BY 1 MINVALUE 1;

@@ -1,22 +1,22 @@
+CREATE TABLE REPORTING_RESULTS
+(
+  ID decimal(10) PRIMARY KEY NOT NULL,
+  EXECUTIONTIME datetime,
+  REPORTID char(36),
+  JOBID char(36),
+  USERID decimal(10)
+);
 
-    -- drop table report_notifications;
+CREATE TABLE REPORT_NOTIFICATION
+(
+  ID decimal(10) PRIMARY KEY not null,
+  jobid char(36) not null,
+  mail varchar(255) not null,
+  report_name varchar(255),
+  attach_report integer default 0 not null
+);
 
-    -- drop table report_results;
-
-    create table report_notifications (
-        id int not null,
-        attach_format_code int,
-        jobid varchar(255),
-        mail varchar(255),
-        report_name varchar(255),
-        primary key (id)
-    );
-
-    create table report_results (
-        id int not null,
-        executionTime datetime,
-        jobId varchar(255),
-        reportId varchar(255),
-        userId int,
-        primary key (id)
-    );
+CREATE SEQUENCE HIBERNATE_SEQUENCE
+  INCREMENT BY 1
+  MINVALUE 1
+  CACHE 20;

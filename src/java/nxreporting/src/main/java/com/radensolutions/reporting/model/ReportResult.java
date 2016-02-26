@@ -1,6 +1,5 @@
 package com.radensolutions.reporting.model;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -9,15 +8,14 @@ import java.util.Date;
 import java.util.UUID;
 
 @Entity
-@Table(name = "report_results")
+@Table(name = "reporting_results")
 public class ReportResult implements Serializable {
 
     private static final long serialVersionUID = -3946455080023055986L;
 
     @Id
     @Column(name = "id")
-    @GenericGenerator(name = "report_results_pk_gen", strategy = "increment")
-    @GeneratedValue(generator = "report_results_pk_gen")
+    @GeneratedValue
     private Integer id;
 
     @Column(name = "executionTime")
