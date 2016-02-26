@@ -1,5 +1,6 @@
 package com.radensolutions.reporting.model;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -7,17 +8,18 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @Entity
-@Table(name = "report_notification")
+@Table(name = "report_notifications")
 public class Notification implements Serializable {
-   private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-   @Id
+    @Id
     @Column(name = "id")
-    @GeneratedValue
+    @GenericGenerator(name = "report_notifications_pk_gen", strategy = "increment")
+    @GeneratedValue(generator = "report_notifications_pk_gen")
     private Integer id;
 
     @Column(name = "jobid")
-    @Type(type="uuid-char")
+    @Type(type = "uuid-char")
     private UUID jobId;
 
     @Column(name = "mail")
