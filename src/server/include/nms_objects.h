@@ -1323,6 +1323,8 @@ protected:
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
    void updateRackBinding();
+
+   bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL, bool forceConnect = false);
    void setLastAgentCommTime() { time_t now = time(NULL); if (m_lastAgentCommTime < now - 60) { m_lastAgentCommTime = now; setModified(); } }
 
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
@@ -1466,7 +1468,6 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL, bool forceConnect = false);
 	bool checkAgentTrapId(UINT64 id);
 	bool checkSNMPTrapId(UINT32 id);
    bool checkAgentPushRequestId(UINT64 id);
