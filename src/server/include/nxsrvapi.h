@@ -446,9 +446,11 @@ public:
 /**
  * Agent connection
  */
-class LIBNXSRV_EXPORTABLE AgentConnection : public RefCountObject
+class LIBNXSRV_EXPORTABLE AgentConnection
 {
 private:
+   VolatileCounter m_userRefCount;
+   VolatileCounter m_internalRefCount;
    InetAddress m_addr;
    int m_nProtocolVersion;
    int m_iAuthMethod;
@@ -516,10 +518,16 @@ protected:
    void unlock() { MutexUnlock(m_mutexDataLock); }
 	NXCPEncryptionContext *acquireEncryptionContext();
 
+   void incInternalRefCount() { InterlockedIncrement(&m_internalRefCount); }
+   void decInternalRefCount() { if (InterlockedDecrement(&m_internalRefCount) == 0) delete this; }
+
    virtual ~AgentConnection();
 
 public:
    AgentConnection(InetAddress addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
+
+   void incRefCount() { InterlockedIncrement(&m_userRefCount); }
+   void decRefCount() { if (InterlockedDecrement(&m_userRefCount) == 0) { disconnect(); decInternalRefCount(); } }
 
    bool connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL);
    void disconnect();

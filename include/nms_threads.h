@@ -172,6 +172,15 @@ inline void ThreadJoin(THREAD thread)
    }
 }
 
+inline void ThreadDetach(THREAD thread)
+{
+   if (thread != INVALID_THREAD_HANDLE)
+   {
+      CloseHandle(thread->handle);
+      free(thread);
+   }
+}
+
 inline THREAD_ID ThreadId(THREAD thread)
 {
    return (thread != INVALID_THREAD_HANDLE) ? thread->id : 0;
@@ -338,6 +347,12 @@ inline void ThreadJoin(THREAD hThread)
 {
    if (hThread != INVALID_THREAD_HANDLE)
       pth_join(hThread, NULL);
+}
+
+inline void ThreadDetach(THREAD hThread)
+{
+   if (hThread != INVALID_THREAD_HANDLE)
+      pth_detach(hThread);
 }
 
 inline MUTEX MutexCreate(void)
@@ -668,6 +683,12 @@ inline void ThreadJoin(THREAD hThread)
 {
    if (hThread != INVALID_THREAD_HANDLE)
       pthread_join(hThread, NULL);
+}
+
+inline void ThreadDetach(THREAD hThread)
+{
+   if (hThread != INVALID_THREAD_HANDLE)
+      pthread_detach(hThread);
 }
 
 inline MUTEX MutexCreate()
