@@ -674,13 +674,8 @@ void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...)
 #endif
 ;
 
-void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
-#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
-   __attribute__ ((format(printf, 2, 3)))
-#endif
-;
-
-void LIBNXSRV_EXPORTABLE DbgPrintf2(int level, const TCHAR *format, va_list args);
+// for compatibility - new code should use nxlog_debug
+#define DbgPrintf nxlog_debug
 
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 
@@ -690,7 +685,6 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code);
  * Variables
  */
 extern UINT64 LIBNXSRV_EXPORTABLE g_flags;
-extern UINT32 LIBNXSRV_EXPORTABLE g_debugLevel;
 extern ThreadPool LIBNXSRV_EXPORTABLE *g_agentConnectionThreadPool;
 
 /**

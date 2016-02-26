@@ -70,7 +70,7 @@ void StartWatchdog()
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-              g_debugLevel, szPlatformSuffixOption,
+				  nxlog_get_debug_level(), szPlatformSuffixOption,
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
 	DebugPrintf(INVALID_INDEX, 1, _T("Starting agent watchdog with command line '%s'"), szCmdLine);
 
@@ -98,7 +98,7 @@ void StartWatchdog()
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-				  g_debugLevel, szPlatformSuffixOption,
+				  nxlog_get_debug_level(), szPlatformSuffixOption,
               (unsigned long)getpid());
    if (ExecuteCommand(szCmdLine, NULL, &m_pidWatchdogProcess) == ERR_SUCCESS)
 	{
@@ -179,7 +179,7 @@ int WatchdogMain(DWORD pid)
 	           (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-				  g_debugLevel, szPlatformSuffixOption);
+				  nxlog_get_debug_level(), szPlatformSuffixOption);
 #ifdef UNICODE
 	syslog(LOG_INFO, "command line: %ls", cmdLine);
 #else

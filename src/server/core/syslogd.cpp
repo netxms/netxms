@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -685,7 +685,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
       nxlog_write(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, port);
 #endif
 
-   SetLogParserTraceCallback(DbgPrintf2);
+   SetLogParserTraceCallback(nxlog_debug2);
    InitLogParserLibrary();
 
 	// Create message parser

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -146,7 +146,7 @@ void MobileDeviceSession::run()
  */
 void MobileDeviceSession::debugPrintf(int level, const TCHAR *format, ...)
 {
-   if (level <= (int)g_debugLevel)
+   if (level <= nxlog_get_debug_level())
    {
       va_list args;
 		TCHAR buffer[4096];
@@ -183,7 +183,7 @@ void MobileDeviceSession::readThread()
          break;
       }
 
-      if (g_debugLevel >= 8)
+      if (nxlog_get_debug_level() >= 8)
       {
          String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
          debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -392,7 +392,7 @@ void MobileDeviceSession::sendMessage(NXCPMessage *msg)
 
 	debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
 	NXCP_MESSAGE *pRawMsg = msg->createMessage();
-   if (g_debugLevel >= 8)
+   if (nxlog_get_debug_level() >= 8)
    {
       String msgDump = NXCPMessage::dump(pRawMsg, NXCP_VERSION);
       debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);

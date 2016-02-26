@@ -138,8 +138,6 @@ struct db_unbuffered_result_t
  * Internal functions
  */
 void __DBWriteLog(WORD level, const TCHAR *format, ...);
-void __DBDbgPrintf(int level, const TCHAR *format, ...);
-void *__DBGetDebugPrintCallback();
 
 /**
  * Global variables

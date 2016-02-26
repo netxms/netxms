@@ -46,24 +46,11 @@ void DebugPrintf(const TCHAR *format, ...)
 }
 
 /**
- * Debug callback for crypto lib
- */
-static void CryptoLibDebugCallback(int level, const TCHAR *format, va_list args)
-{
-   if (s_debugCallback == NULL)
-      return;
-
-   TCHAR buffer[4096];
-   _vsntprintf(buffer, 4096, format, args);
-   s_debugCallback(buffer);
-}
-
-/**
  * Initialization function
  */
 bool LIBNXCLIENT_EXPORTABLE NXCInitialize()
 {
-   return InitCryptoLib(0xFFFF, CryptoLibDebugCallback);
+   return InitCryptoLib(0xFFFF);
 }
 
 /**

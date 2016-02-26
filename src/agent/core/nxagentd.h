@@ -503,8 +503,6 @@ void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
 #endif
 ;
 
-void DebugPrintfCallback(int level, const TCHAR *pszFormat, va_list args);
-
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 
 BOOL DownloadConfig(TCHAR *pszServer);
@@ -642,7 +640,6 @@ extern UINT32 g_dwIdleTimeout;
 extern UINT32 g_dwMaxSessions;
 extern UINT32 g_dwExecTimeout;
 extern UINT32 g_dwSNMPTimeout;
-extern UINT32 g_debugLevel;
 extern UINT32 g_dwSNMPTrapPort;
 extern UINT16 g_sessionAgentPort;
 

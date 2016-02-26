@@ -360,9 +360,9 @@ static BOOL InitCryptografy()
 	UINT32 dwLen;
 	BYTE *pBufPos, *pKeyBuffer, hash[SHA1_DIGEST_SIZE];
 
-   if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x7F), DbgPrintf2))
+   if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x7F)))
 		return FALSE;
-   DbgPrintf(4, _T("Supported ciphers: %s"), (const TCHAR *)NXCPGetSupportedCiphersAsText());
+   nxlog_debug(4, _T("Supported ciphers: %s"), (const TCHAR *)NXCPGetSupportedCiphersAsText());
 
    SSL_library_init();
    SSL_load_error_strings();
@@ -373,7 +373,7 @@ static BOOL InitCryptografy()
 	g_pServerKey = LoadRSAKeys(szKeyFile);
 	if (g_pServerKey == NULL)
 	{
-		DbgPrintf(1, _T("Generating RSA key pair..."));
+	   nxlog_debug(1, _T("Generating RSA key pair..."));
 		g_pServerKey = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, 0);
 		if (g_pServerKey != NULL)
 		{
@@ -397,15 +397,15 @@ static BOOL InitCryptografy()
 				free(pKeyBuffer);
 				bResult = TRUE;
 			}
+         else
+         {
+            nxlog_debug(0, _T("Failed to open %s for writing"), szKeyFile);
+         }
+		}
       else
       {
-        DbgPrintf(0, _T("Failed to open %s for writing"), szKeyFile);
+         nxlog_debug(0, _T("Failed to generate RSA key"));
       }
-		}
-    else
-    {
-      DbgPrintf(0, _T("Failed to generate RSA key"));
-    }
 	}
 	else
 	{
@@ -534,12 +534,6 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	g_serverStartTime = time(NULL);
 	srand((unsigned int)g_serverStartTime);
 
-   if (g_netxmsdLibDir[0] == 0)
-   {
-      GetNetXMSDirectory(nxDirLib, g_netxmsdLibDir);
-      DbgPrintf(1, _T("Lib directory set to %s"), g_netxmsdLibDir);
-   }
-
 	if (!(g_flags & AF_USE_SYSLOG))
 	{
 		if (!nxlog_set_rotation_policy((int)g_dwLogRotationMode, (int)g_dwMaxLogSize, (int)g_dwLogHistorySize, g_szDailyLogFileSuffix))
@@ -552,15 +546,21 @@ BOOL NXCORE_EXPORTABLE Initialize()
                    ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
                    _T("LIBNXSRV.DLL"),
 #ifdef _WIN32
-				       0, NULL))
+				       0, NULL, MSG_DEBUG))
 #else
-				       g_dwNumMessages, g_szMessages))
+				       g_dwNumMessages, g_szMessages, MSG_DEBUG))
 #endif
    {
 		_ftprintf(stderr, _T("FATAL ERROR: Cannot open log file\n"));
       return FALSE;
    }
 	nxlog_set_console_writer(LogConsoleWriter);
+
+   if (g_netxmsdLibDir[0] == 0)
+   {
+      GetNetXMSDirectory(nxDirLib, g_netxmsdLibDir);
+      nxlog_debug(1, _T("LIB directory set to %s"), g_netxmsdLibDir);
+   }
 
 	// Set code page
 #ifndef _WIN32
@@ -579,7 +579,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	{
 #ifdef _WIN32
 		if (SetProcessAffinityMask(GetCurrentProcess(), g_processAffinityMask))
-			DbgPrintf(1, _T("Process affinity mask set to 0x%08X"), g_processAffinityMask);
+		   nxlog_debug(1, _T("Process affinity mask set to 0x%08X"), g_processAffinityMask);
 #else
 		nxlog_write(MSG_SET_PROCESS_AFFINITY_NOT_SUPPORTED, EVENTLOG_WARNING_TYPE, NULL);
 #endif
@@ -604,10 +604,9 @@ BOOL NXCORE_EXPORTABLE Initialize()
 	g_dciRawDataWriterQueue = new Queue(1024, 1024);
 
 	// Initialize database driver and connect to database
-	DBSetDebugPrintCallback(DbgPrintf2);
 	if (!DBInit(MSG_OTHER, (g_flags & AF_LOG_SQL_ERRORS) ? MSG_SQL_ERROR : 0))
 		return FALSE;
-	g_dbDriver = DBLoadDriver(g_szDbDriver, g_szDbDrvParams, (g_debugLevel >= 9), DBEventHandler, NULL);
+	g_dbDriver = DBLoadDriver(g_szDbDriver, g_szDbDrvParams, (nxlog_get_debug_level() >= 9), DBEventHandler, NULL);
 	if (g_dbDriver == NULL)
 		return FALSE;
 
@@ -626,7 +625,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 		nxlog_write(MSG_DB_CONNFAIL, EVENTLOG_ERROR_TYPE, "s", errorText);
 		return FALSE;
 	}
-	DbgPrintf(1, _T("Successfully connected to database %s@%s"), g_szDbName, g_szDbServer);
+	nxlog_debug(1, _T("Successfully connected to database %s@%s"), g_szDbName, g_szDbServer);
 
 	// Check database version
 	iDBVersion = DBGetSchemaVersion(hdbBootstrap);
@@ -675,7 +674,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
       _sntprintf(szInfo, 256, UINT64X_FMT(_T("016")), g_serverId);
 		MetaDataWriteStr(_T("ServerID"), szInfo);
 	}
-   DbgPrintf(1, _T("Server ID ") UINT64X_FMT(_T("016")), g_serverId);
+	nxlog_debug(1, _T("Server ID ") UINT64X_FMT(_T("016")), g_serverId);
 
 	// Initialize locks
 retry_db_lock:
@@ -710,7 +709,7 @@ retry_db_lock:
 	// Load global configuration parameters
 	LoadGlobalConfig();
    CASReadSettings();
-	DbgPrintf(1, _T("Global configuration loaded"));
+   nxlog_debug(1, _T("Global configuration loaded"));
 
 	// Check data directory
 	if (!CheckDataDir())
@@ -730,15 +729,14 @@ retry_db_lock:
 	m_condShutdown = ConditionCreate(TRUE);
 
    // Create thread pools
-   DbgPrintf(2, _T("Creating thread pools"));
-   ThreadPoolSetDebugCallback(DbgPrintf2);
+	nxlog_debug(2, _T("Creating thread pools"));
    g_mainThreadPool = ThreadPoolCreate(8, 256, _T("MAIN"));
    g_agentConnectionThreadPool = ThreadPoolCreate(4, 256, _T("AGENT"));
 
 	// Setup unique identifiers table
 	if (!InitIdTable())
 		return FALSE;
-	DbgPrintf(2, _T("ID table created"));
+	nxlog_debug(2, _T("ID table created"));
 
 	// Update status for unfinished jobs in job history
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -766,7 +764,7 @@ retry_db_lock:
 		nxlog_write(MSG_ERROR_LOADING_USERS, EVENTLOG_ERROR_TYPE, NULL);
 		return FALSE;
 	}
-	DbgPrintf(2, _T("User accounts loaded"));
+	nxlog_debug(2, _T("User accounts loaded"));
 
 	// Initialize audit
 	InitAuditLog();
@@ -784,12 +782,12 @@ retry_db_lock:
 	ObjectsInit();
 	if (!LoadObjects())
 		return FALSE;
-	DbgPrintf(1, _T("Objects loaded and initialized"));
+	nxlog_debug(1, _T("Objects loaded and initialized"));
 
 	// Initialize situations
 	if (!SituationsInit())
 		return FALSE;
-	DbgPrintf(1, _T("Situations loaded and initialized"));
+	nxlog_debug(1, _T("Situations loaded and initialized"));
 
 	// Initialize and load event actions
 	if (!InitActions())
@@ -887,7 +885,7 @@ retry_db_lock:
 	// Start uptime calculator for SLM
 	ThreadCreate(UptimeCalculator, 0, NULL);
 
-	DbgPrintf(2, _T("LIBDIR: %s"), g_netxmsdLibDir);
+	nxlog_debug(2, _T("LIBDIR: %s"), g_netxmsdLibDir);
 
 	// Call startup functions for the modules
    CALL_ALL_MODULES(pfServerStarted, ());
@@ -904,7 +902,7 @@ retry_db_lock:
 #endif
 
 	g_flags |= AF_SERVER_INITIALIZED;
-	DbgPrintf(1, _T("Server initialization completed"));
+	nxlog_debug(1, _T("Server initialization completed"));
 	return TRUE;
 }
 
@@ -940,7 +938,7 @@ void NXCORE_EXPORTABLE Shutdown()
 	ShutdownSMSSender();
 
 	ThreadSleep(1);     // Give other threads a chance to terminate in a safe way
-	DbgPrintf(2, _T("All threads was notified, continue with shutdown"));
+	nxlog_debug(2, _T("All threads was notified, continue with shutdown"));
 
 	StopSyslogServer();
 	StopHouseKeeper();
@@ -959,13 +957,13 @@ void NXCORE_EXPORTABLE Shutdown()
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 	SaveObjects(hdb);
-	DbgPrintf(2, _T("All objects saved to database"));
+	nxlog_debug(2, _T("All objects saved to database"));
 	SaveUsers(hdb);
-	DbgPrintf(2, _T("All users saved to database"));
+	nxlog_debug(2, _T("All users saved to database"));
 	DBConnectionPoolReleaseConnection(hdb);
 
 	StopDBWriter();
-	DbgPrintf(1, _T("Database writer stopped"));
+	nxlog_debug(1, _T("Database writer stopped"));
 
 	CleanupUsers();
 
@@ -974,12 +972,12 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	DBConnectionPoolShutdown();
 	DBUnloadDriver(g_dbDriver);
-	DbgPrintf(1, _T("Database driver unloaded"));
+	nxlog_debug(1, _T("Database driver unloaded"));
 
 	CleanupActions();
 	ShutdownEventSubsystem();
    ShutdownAlarmManager();
-	DbgPrintf(1, _T("Event processing stopped"));
+   nxlog_debug(1, _T("Event processing stopped"));
 
 	ThreadPoolDestroy(g_agentConnectionThreadPool);
    ThreadPoolDestroy(g_mainThreadPool);
@@ -987,7 +985,7 @@ void NXCORE_EXPORTABLE Shutdown()
 
 	delete g_pScriptLibrary;
 
-   DbgPrintf(1, _T("Server shutdown complete"));
+	nxlog_debug(1, _T("Server shutdown complete"));
 	nxlog_close();
 
 	// Remove PID file
@@ -1116,12 +1114,12 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 		int level = (int)_tcstol(szBuffer, &eptr, 0);
 		if ((*eptr == 0) && (level >= 0) && (level <= 9))
 		{
-			g_debugLevel = (UINT32)level;
+			nxlog_set_debug_level(level);
 			ConsolePrintf(pCtx, (level == 0) ? _T("Debug mode turned off\n") : _T("Debug level set to %d\n"), level);
 		}
 		else if (IsCommand(_T("OFF"), szBuffer, 2))
 		{
-			g_debugLevel = 0;
+		   nxlog_set_debug_level(0);
 			ConsoleWrite(pCtx, _T("Debug mode turned off\n"));
 		}
 		else

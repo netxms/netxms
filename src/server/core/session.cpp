@@ -353,7 +353,7 @@ void ClientSession::run()
  */
 void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
 {
-   if (level <= (int)g_debugLevel)
+   if (level <= nxlog_get_debug_level())
    {
       va_list args;
 		TCHAR buffer[8192];
@@ -405,7 +405,7 @@ void ClientSession::readThread()
          break;
       }
 
-      if (g_debugLevel >= 8)
+      if (nxlog_get_debug_level() >= 8)
       {
          String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
          debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -1558,7 +1558,7 @@ bool ClientSession::sendMessage(NXCPMessage *msg)
    }
 
 	NXCP_MESSAGE *rawMsg = msg->createMessage();
-   if ((g_debugLevel >= 8) && (msg->getCode() != CMD_ADM_MESSAGE))
+   if ((nxlog_get_debug_level() >= 8) && (msg->getCode() != CMD_ADM_MESSAGE))
    {
       String msgDump = NXCPMessage::dump(rawMsg, NXCP_VERSION);
       debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -1607,7 +1607,7 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
 	   debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(msg->code), buffer));
    }
 
-   if ((g_debugLevel >= 8) && (code != CMD_ADM_MESSAGE))
+   if ((code != CMD_ADM_MESSAGE) && (nxlog_get_debug_level() >= 8))
    {
       String msgDump = NXCPMessage::dump(msg, NXCP_VERSION);
       debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);

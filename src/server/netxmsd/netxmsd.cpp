@@ -45,6 +45,11 @@
 BOOL g_bCheckDB = FALSE;
 
 /**
+ * Debug level
+ */
+static int s_debugLevel = NXCONFIG_UNINITIALIZED_VALUE;
+
+/**
  * Help text
  */
 static TCHAR help_text[] = _T("NetXMS Server Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" (") NETXMS_BUILD_TAG _T(")") IS_UNICODE_BUILD_STRING _T("\n")
@@ -221,17 +226,17 @@ static BOOL ParseCommandLine(int argc, char *argv[])
 			case 'C':	// Check config
 				g_flags &= ~AF_DAEMON;
 				_tprintf(_T("Checking configuration file (%s):\n\n"), g_szConfigFile);
-				LoadConfig();
+				LoadConfig(&s_debugLevel);
 				return FALSE;
 			case 'd':
 				g_flags |= AF_DAEMON;
 				break;
 			case 'D':	// Debug level
-				g_debugLevel = strtoul(optarg, &eptr, 0);
-				if ((*eptr != 0) || (g_debugLevel > 9))
+			   s_debugLevel = strtoul(optarg, &eptr, 0);
+				if ((*eptr != 0) || (s_debugLevel > 9))
 				{
 					_tprintf(_T("Invalid debug level \"%hs\" - should be in range 0..9\n"), optarg);
-					g_debugLevel = 0;
+					s_debugLevel = 0;
 				}
 				break;
 			case 'q': // disable interactive console
@@ -355,15 +360,16 @@ int main(int argc, char* argv[])
    if (!ParseCommandLine(argc, argv))
       return 1;
 
-   if (!LoadConfig())
+   if (!LoadConfig(&s_debugLevel))
    {
       if (IsStandalone())
          _tprintf(_T("Error loading configuration file\n"));
       return 1;
    }
 
-   if (g_debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
-      g_debugLevel = 0;
+   if (s_debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
+      s_debugLevel = 0;
+   nxlog_set_debug_level(s_debugLevel);
 
 	// Set exception handler
 #ifdef _WIN32

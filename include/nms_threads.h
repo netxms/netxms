@@ -932,7 +932,6 @@ void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay
 void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info);
 bool LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(const TCHAR *name, ThreadPoolInfo *info);
 StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools();
-void LIBNETXMS_EXPORTABLE ThreadPoolSetDebugCallback(void (*cb)(int, const TCHAR *, va_list));
 
 /**
  * Wrapper data for ThreadPoolExecute

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -194,16 +194,16 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
       EnumerateClientSessions(BroadcastEvent, pEvent);
 
       // Write event information to debug
-      if (g_debugLevel >= 5)
+      if (nxlog_get_debug_level() >= 5)
       {
          NetObj *pObject = FindObjectById(pEvent->getSourceId());
          if (pObject == NULL)
             pObject = g_pEntireNet;
-			DbgPrintf(5, _T("EVENT %s [%d] (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAG:\"%s\"%s) FROM %s: %s"), 
-                   pEvent->getName(), pEvent->getCode(), pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
-						 CHECK_NULL_EX(pEvent->getUserTag()),
-                   (pEvent->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
-                   pObject->getName(), pEvent->getMessage());
+			nxlog_debug(5, _T("EVENT %s [%d] (ID:") UINT64_FMT _T(" F:0x%04X S:%d TAG:\"%s\"%s) FROM %s: %s"),
+                     pEvent->getName(), pEvent->getCode(), pEvent->getId(), pEvent->getFlags(), pEvent->getSeverity(),
+						   CHECK_NULL_EX(pEvent->getUserTag()),
+                     (pEvent->getRootId() == 0) ? _T("") : _T(" CORRELATED"),
+                     pObject->getName(), pEvent->getMessage());
       }
 
       // Pass event through event processing policy if it is not correlated
@@ -214,7 +214,7 @@ THREAD_RESULT THREAD_CALL EventProcessor(void *arg)
 #endif
 
          g_pEventPolicy->processEvent(pEvent);
-			DbgPrintf(7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), pEvent->getId(), pEvent->getCode());
+         nxlog_debug(7, _T("Event ") UINT64_FMT _T(" with code %d passed event processing policy"), pEvent->getId(), pEvent->getCode());
 		}
 
       // Write event to log if required, otherwise destroy it

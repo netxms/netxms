@@ -43,7 +43,7 @@ void ConsolePrintf(const TCHAR *pszFormat, ...)
  */
 void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
 {
-   if (level <= (int)g_debugLevel)
+   if (level <= nxlog_get_debug_level())
    {
       va_list args;
       TCHAR szBuffer[4096];
@@ -56,19 +56,6 @@ void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
          nxlog_write(MSG_DEBUG_SESSION, EVENTLOG_DEBUG_TYPE, "ds", dwSessionId, szBuffer);
       else
          nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", szBuffer);
-   }
-}
-
-/**
- * Print debug messages - callback for libraries
- */
-void DebugPrintfCallback(int level, const TCHAR *pszFormat, va_list args)
-{
-   if (level <= (int)g_debugLevel)
-   {
-      TCHAR szBuffer[4096];
-      _vsntprintf(szBuffer, 4096, pszFormat, args);
-      nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", szBuffer);
    }
 }
 

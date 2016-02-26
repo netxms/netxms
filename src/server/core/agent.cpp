@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -210,9 +210,8 @@ void AgentConnectionEx::onDataPush(NXCPMessage *msg)
 void AgentConnectionEx::printMsg(const TCHAR *format, ...)
 {
    va_list args;
-
    va_start(args, format);
-   DbgPrintf2(6, format, args);
+   nxlog_debug2(6, format, args);
    va_end(args);
 }
 

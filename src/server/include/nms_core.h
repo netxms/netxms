@@ -904,7 +904,7 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int 
 INT32 NXCORE_EXPORTABLE MetaDataReadInt(const TCHAR *var, UINT32 defaultValue);
 bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *varName, const TCHAR *value);
 
-bool NXCORE_EXPORTABLE LoadConfig();
+bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);
 
 void NXCORE_EXPORTABLE Shutdown();
 void NXCORE_EXPORTABLE FastShutdown();

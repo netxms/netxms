@@ -203,7 +203,7 @@ void CommSession::readThread()
          // Update activity timestamp
          m_ts = time(NULL);
 
-         if (g_debugLevel >= 8)
+         if (nxlog_get_debug_level() >= 8)
          {
             String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
             DebugPrintf(m_dwIndex, 8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);

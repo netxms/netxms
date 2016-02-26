@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -27,7 +27,6 @@
  * Global variables
  */
 UINT64 LIBNXSRV_EXPORTABLE g_flags = AF_USE_SYSLOG | AF_CATCH_EXCEPTIONS | AF_LOG_SQL_ERRORS;
-UINT32 LIBNXSRV_EXPORTABLE g_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
 
 /**
  * Agent error codes
@@ -148,37 +147,6 @@ static int CompareRoutes(const void *p1, const void *p2)
 void LIBNXSRV_EXPORTABLE SortRoutingTable(ROUTING_TABLE *pRT)
 {
    qsort(pRT->pRoutes, pRT->iNumEntries, sizeof(ROUTE), CompareRoutes);
-}
-
-/**
- * Debug printf - write debug record to log if level is less or equal current debug level
- */
-void LIBNXSRV_EXPORTABLE DbgPrintf2(int level, const TCHAR *format, va_list args)
-{
-   TCHAR buffer[4096];
-
-	if (level > (int)g_debugLevel)
-      return;     // Required application flag(s) not set
-
-	_vsntprintf(buffer, 4096, format, args);
-   nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", buffer);
-}
-
-/**
- * Debug printf - write debug record to log if level is less or equal current debug level
- */
-void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
-{
-   va_list args;
-   TCHAR buffer[8192];
-
-   if (level > (int)g_debugLevel)
-      return;     // Required application flag(s) not set
-
-   va_start(args, format);
-   _vsntprintf(buffer, 8192, format, args);
-   va_end(args);
-   nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", buffer);
 }
 
 /**

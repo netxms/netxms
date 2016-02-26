@@ -101,7 +101,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine, void (*dbgPrintCb)(int, const TCHAR *, va_list))
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
 	return true;
 }
@@ -230,6 +230,18 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 
                // Setup session
                DrvQueryInternal(pConn, L"ALTER SESSION SET NLS_LANGUAGE='AMERICAN' NLS_NUMERIC_CHARACTERS='.,'", NULL);
+
+               UCS2CHAR version[1024];
+               if (OCIServerVersion(pConn->handleService, pConn->handleError, (OraText *)version, sizeof(version), OCI_HTYPE_SVCCTX) == OCI_SUCCESS)
+               {
+#if UNICODE_UCS4
+                  WCHAR *wver = UCS4StringFromUCS2String(version);
+                  nxlog_debug(5, _T("ORACLE: connected to %s"), wver);
+                  free(wver);
+#else
+                  nxlog_debug(5, _T("ORACLE: connected to %s"), version);
+#endif
+               }
 				}
 				else
 				{

@@ -55,7 +55,6 @@ static UINT32 s_supportedCiphers =
 /**
  * Static data
  */
-static void (*s_debugCallback)(int, const TCHAR *, va_list args) = NULL;
 static WORD s_noEncryptionFlag = 0;
 
 #ifdef _WITH_ENCRYPTION
@@ -129,25 +128,10 @@ static unsigned long CryptoIdCallback()
 #endif   /* _WITH_ENCRYPTION */
 
 /**
- * Debug output
- */
-static void CryptoDbgPrintf(int level, const TCHAR *format, ...)
-{
-   if (s_debugCallback == NULL)
-      return;
-
-   va_list args;
-   va_start(args, format);
-   s_debugCallback(level, format, args);
-   va_end(args);
-}
-
-/**
  * Initialize OpenSSL library
  */
-bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args))
+bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers)
 {
-   s_debugCallback = debugCallback;
    s_noEncryptionFlag = htons(MF_DONT_ENCRYPT);
 
 #ifdef _WITH_ENCRYPTION
@@ -167,33 +151,33 @@ bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCal
 #endif   /* _WIN32 */
 
    // validate supported ciphers
-   CryptoDbgPrintf(1, _T("Validating ciphers"));
+   nxlog_debug(1, _T("Validating ciphers"));
    s_supportedCiphers &= dwEnabledCiphers;
    UINT32 cipherBit = 1;
    for(i = 0; i < NETXMS_MAX_CIPHERS; i++, cipherBit = cipherBit << 1)
    {
       if ((s_supportedCiphers & cipherBit) == 0)
       {
-         CryptoDbgPrintf(1, _T("   %s disabled (config)"), s_cipherNames[i]);
+         nxlog_debug(1, _T("   %s disabled (config)"), s_cipherNames[i]);
          continue;
       }
       NXCPEncryptionContext *ctx = NXCPEncryptionContext::create(cipherBit);
       if (ctx != NULL)
       {
          delete ctx;
-         CryptoDbgPrintf(1, _T("   %s enabled"), s_cipherNames[i]);
+         nxlog_debug(1, _T("   %s enabled"), s_cipherNames[i]);
       }
       else
       {
          s_supportedCiphers &= ~cipherBit;
-         CryptoDbgPrintf(1, _T("   %s disabled (validation failed)"), s_cipherNames[i]);
+         nxlog_debug(1, _T("   %s disabled (validation failed)"), s_cipherNames[i]);
       }
    }
 
-   CryptoDbgPrintf(1, _T("Crypto library initialized"));
+   nxlog_debug(1, _T("Crypto library initialized"));
 
 #else
-   CryptoDbgPrintf(1, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
+   nxlog_debug(1, _T("Crypto library will not be initialized because libnetxms was built without encryption support"));
 #endif   /* _WITH_ENCRYPTION */
    return true;
 }
@@ -594,25 +578,25 @@ NXCPEncryptionContext *NXCPEncryptionContext::create(NXCPMessage *msg, RSA *priv
             }
             else
             {
-               CryptoDbgPrintf(6, _T("NXCPEncryptionContext::create: IV decryption failed"));
+               nxlog_debug(6, _T("NXCPEncryptionContext::create: IV decryption failed"));
                delete_and_null(ctx);
             }
          }
          else
          {
-            CryptoDbgPrintf(6, _T("NXCPEncryptionContext::create: session key decryption failed"));
+            nxlog_debug(6, _T("NXCPEncryptionContext::create: session key decryption failed"));
             delete_and_null(ctx);
          }
       }
       else
       {
-         CryptoDbgPrintf(6, _T("NXCPEncryptionContext::create: key length mismatch (remote: %d local: %d)"), (int)msg->getFieldAsUInt16(VID_KEY_LENGTH), ctx->m_keyLength);
+         nxlog_debug(6, _T("NXCPEncryptionContext::create: key length mismatch (remote: %d local: %d)"), (int)msg->getFieldAsUInt16(VID_KEY_LENGTH), ctx->m_keyLength);
          delete_and_null(ctx);
       }
    }
    else
    {
-      CryptoDbgPrintf(6, _T("NXCPEncryptionContext::create: initCipher(%d) call failed"), cipher);
+      nxlog_debug(6, _T("NXCPEncryptionContext::create: initCipher(%d) call failed"), cipher);
       delete_and_null(ctx);
    }
 	return ctx;

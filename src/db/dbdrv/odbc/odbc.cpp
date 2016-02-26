@@ -172,7 +172,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine, void (*dbgPrintCb)(int, const TCHAR *, va_list))
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
    m_useUnicode = ExtractNamedOptionValueAsBoolA(cmdLine, "unicode", true);
    return true;

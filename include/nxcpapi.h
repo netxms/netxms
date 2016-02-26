@@ -487,7 +487,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
 														 MUTEX mutex, NXCPCompressionMethod compressionMethod = NXCP_COMPRESSION_NONE);
 BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex);
 
-bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args));
+bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers);
 UINT32 LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphers();
 String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText();
 NXCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *NXCPEncryptMessage(NXCPEncryptionContext *pCtx, NXCP_MESSAGE *pMsg);
