@@ -92,7 +92,6 @@ import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileFilter;
 import org.netxms.ui.eclipse.filemanager.views.helpers.AgentFileLabelProvider;
 import org.netxms.ui.eclipse.filemanager.views.helpers.ViewAgentFilesProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
-import org.netxms.ui.eclipse.objecttools.views.FileViewer;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
@@ -507,7 +506,7 @@ public class AgentFileManager extends ViewPart
          @Override
          public void run()
          {
-            tailFile(true, 500);
+            tailFile(true, 1024);
          }
       };
       
@@ -900,7 +899,7 @@ public class AgentFileManager extends ViewPart
    /**
     * Starts file tail view&messages
     */
-   private void tailFile(final boolean tail, final int offset)
+   private void tailFile(final boolean followChanges, final int offset)
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
       if (selection.isEmpty())
@@ -923,19 +922,19 @@ public class AgentFileManager extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final AgentFileData file = session.downloadFileFromAgent(objectId, sf.getFullName(), offset, tail);
+            final AgentFileData file = session.downloadFileFromAgent(objectId, sf.getFullName(), offset, followChanges);
             runInUIThread(new Runnable() {
                @Override
                public void run()
                {                  
-                  final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                   try
                   {
                      String secondaryId = Long.toString(objectId) + "&" + URLEncoder.encode(sf.getName(), "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
-                     FileViewer.createView(window, getSite().getShell(), file, tail, offset, secondaryId, objectId);
+                     AgentFileViewer.createView(secondaryId, objectId, file, followChanges);
                   }
                   catch(Exception e)
                   {
+                     final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                      MessageDialogHelper.openError(window.getShell(), Messages.get().AgentFileManager_Error,
                            String.format(Messages.get().AgentFileManager_OpenViewError, e.getLocalizedMessage()));
                   }

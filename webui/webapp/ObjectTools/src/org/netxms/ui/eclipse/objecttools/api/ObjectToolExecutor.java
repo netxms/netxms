@@ -1,7 +1,7 @@
 /**
  * NetXMS - open source network management system
  * Copyright (C) 2003-2015 Victor Kirhenshtein
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -39,12 +39,12 @@ import org.netxms.client.objecttools.InputField;
 import org.netxms.client.objecttools.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.filemanager.views.AgentFileViewer;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.dialogs.ObjectToolInputDialog;
 import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
-import org.netxms.ui.eclipse.objecttools.views.FileViewer;
 import org.netxms.ui.eclipse.objecttools.views.ServerCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -56,7 +56,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public final class ObjectToolExecutor
 {
    /**
-    * Private constructor to forbid instantiation
+    * Private constructor to forbid instantiation 
     */
    private ObjectToolExecutor()
    {
@@ -374,7 +374,7 @@ public final class ObjectToolExecutor
          }
       }
    }
-
+   
    /**
     * @param node
     * @param tool
@@ -385,7 +385,7 @@ public final class ObjectToolExecutor
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       String[] parameters = tool.getData().split("\u007F"); //$NON-NLS-1$
-
+      
       final String fileName = substituteMacros(parameters[0], node, inputValues);
       final int maxFileSize = Integer.parseInt(parameters[1]);
       final boolean follow = parameters[2].equals("true") ? true : false; //$NON-NLS-1$
@@ -405,14 +405,14 @@ public final class ObjectToolExecutor
                @Override
                public void run()
                {
-                  final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                   try
                   {
                      String secondaryId = Long.toString(node.object.getObjectId()) + "&" + URLEncoder.encode(fileName, "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
-                     FileViewer.createView(window, window.getShell(), file, follow, maxFileSize, secondaryId, node.object.getObjectId());
+                     AgentFileViewer.createView(secondaryId, node.object.getObjectId(), file, follow);
                   }
                   catch(Exception e)
                   {
+                     final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                      MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
                   }
                }

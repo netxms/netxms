@@ -7270,8 +7270,7 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException,
-         NXCException
+   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
@@ -7283,7 +7282,7 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
       final String id = response.getFieldAsString(NXCPCodes.VID_NAME);
       
-      AgentFileData file =  new AgentFileData(id, waitForFile(msg.getMessageId(), 36000000));
+      AgentFileData file =  new AgentFileData(id, remoteFileName, waitForFile(msg.getMessageId(), 36000000));
       waitForRCC(msg.getMessageId()); // second confirmation - file transfered from agent to console
       return file;
    }

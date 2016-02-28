@@ -36,6 +36,14 @@ public class Messages extends NLS
    public static String AgentFileManager_UploadFolderJobTitle;
    public static String CreateFolderDialog_Label;
    public static String CreateFolderDialog_Title;
+   public static String FileViewer_Cannot_Stop_File_Monitoring;
+   public static String FileViewer_ClearOutput;
+   public static String FileViewer_Download_File_Updates;
+   public static String FileViewer_InvalidObjectID;
+   public static String FileViewer_NotifyFollowConnectionEnabed;
+   public static String FileViewer_NotifyFollowConnectionLost;
+   public static String FileViewer_ScrollLock;
+   public static String FileViewer_Stop_File_Monitoring;
    public static String GetServerFileList_ErrorMessageFileView;
    public static String GetServerFileList_ErrorMessageFileViewTitle;
    public static String LocalFileSelector_AllFiles;

@@ -39,13 +39,13 @@ import org.netxms.client.objecttools.InputField;
 import org.netxms.client.objecttools.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.filemanager.views.AgentFileViewer;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.dialogs.ObjectToolInputDialog;
 import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
 import org.netxms.ui.eclipse.objecttools.views.BrowserView;
-import org.netxms.ui.eclipse.objecttools.views.FileViewer;
 import org.netxms.ui.eclipse.objecttools.views.LocalCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.ServerCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
@@ -458,14 +458,14 @@ public final class ObjectToolExecutor
                @Override
                public void run()
                {
-                  final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                   try
                   {
                      String secondaryId = Long.toString(node.object.getObjectId()) + "&" + URLEncoder.encode(fileName, "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
-                     FileViewer.createView(window, window.getShell(), file, follow, maxFileSize, secondaryId, node.object.getObjectId());
+                     AgentFileViewer.createView(secondaryId, node.object.getObjectId(), file, follow);
                   }
                   catch(Exception e)
                   {
+                     final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                      MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
                   }
                }

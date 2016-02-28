@@ -27,6 +27,7 @@ public class AgentFileData
 {
    private String id;
    private File file;
+   private String remoteName;
 
    /**
     * Create new agent file object
@@ -34,9 +35,10 @@ public class AgentFileData
     * @param id
     * @param file
     */
-   public AgentFileData(String id, File file)
+   public AgentFileData(String id, String remoteName, File file)
    {
       this.id = id;
+      this.remoteName = remoteName;
       this.file = file;
    }
 
@@ -46,6 +48,14 @@ public class AgentFileData
    public String getId()
    {
       return id;
+   }
+
+   /**
+    * @return the remoteName
+    */
+   public String getRemoteName()
+   {
+      return remoteName;
    }
 
    /**

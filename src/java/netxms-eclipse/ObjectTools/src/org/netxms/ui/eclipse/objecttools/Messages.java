@@ -37,15 +37,6 @@ public class Messages extends NLS
    public static String EditColumnDialog_SNMP_OID;
    public static String EditColumnDialog_SubstrIndex;
    public static String EditColumnDialog_Warning;
-   public static String FileViewer_Cannot_Stop_File_Monitoring;
-   public static String FileViewer_ClearOutput;
-   public static String FileViewer_Download_File_Updates;
-   public static String FileViewer_InvalidObjectID;
-   public static String FileViewer_NotifyFollowConnectionEnabed;
-   public static String FileViewer_NotifyFollowConnectionLost;
-   public static String FileViewer_RestartFollowingJob;
-   public static String FileViewer_ScrollLock;
-   public static String FileViewer_Stop_File_Monitoring;
    public static String Filter_AgentNeeded;
    public static String Filter_OIDShouldMatch;
    public static String Filter_SNMPNeeded;

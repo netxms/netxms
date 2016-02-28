@@ -34,7 +34,6 @@ import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.widgets.ServerFileSelector;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.DateTimeSelector;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.ScheduleSelector;
 
