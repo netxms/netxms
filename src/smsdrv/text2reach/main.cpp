@@ -22,8 +22,8 @@
 **/
 
 #include <nms_common.h>
-#include <nxsrvapi.h>
 #include <nms_util.h>
+#include <nxconfig.h>
 #include <curl/curl.h>
 
 #ifdef _WIN32
@@ -60,12 +60,12 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *initArgs, Config *config)
 {
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
    {
-      DbgPrintf(1, _T("Text2Reach: cURL initialization failed"));
+      nxlog_debug(1, _T("Text2Reach: cURL initialization failed"));
       return false;
    }
 
-   DbgPrintf(1, _T("Text2Reach: driver loaded"));
-   DbgPrintf(3, _T("cURL version: %hs"), curl_version());
+   nxlog_debug(1, _T("Text2Reach: driver loaded"));
+   nxlog_debug(3, _T("cURL version: %hs"), curl_version());
 #if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
    curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
    char protocols[1024] = {0};
@@ -76,7 +76,7 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *initArgs, Config *config)
       strncat(protocols, " ", strlen(protocols) - 1);
       p++;
    }
-   DbgPrintf(3, _T("cURL supported protocols: %hs"), protocols);
+   nxlog_debug(3, _T("cURL supported protocols: %hs"), protocols);
 #endif
 
 #ifdef UNICODE
@@ -125,7 +125,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
 {
    bool success = false;
 
-   DbgPrintf(4, _T("Text2Reach: phone=\"%s\", text=\"%s\""), phoneNumber, text);
+   nxlog_debug(4, _T("Text2Reach: phone=\"%s\", text=\"%s\""), phoneNumber, text);
 	
    char errorBuffer[CURL_ERROR_SIZE];
    CURL *curl = curl_easy_init();
@@ -154,7 +154,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
 
       char url[4096];
       snprintf(url, 4096, "http://www.text2reach.com/api/1.1/sms/bulk/?api_key=%s&phone=%s&from=%s&message=%s", s_apikey, phone, s_from, msg);
-      DbgPrintf(4, _T("Text2Reach: URL set to \"%hs\""), url);
+      nxlog_debug(4, _T("Text2Reach: URL set to \"%hs\""), url);
 
       curl_free(phone);
       curl_free(msg);
@@ -167,22 +167,22 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
 			if (response == 200)
 			{
-				DbgPrintf(4, _T("Text2Reach: SMS successfully sent"));
+				nxlog_debug(4, _T("Text2Reach: SMS successfully sent"));
 				success = true;
 			}
 			else
 			{
-				DbgPrintf(4, _T("Text2Reach: request cannot be fulfilled, HTTP response code %03d"), response);
+				nxlog_debug(4, _T("Text2Reach: request cannot be fulfilled, HTTP response code %03d"), response);
 			}
          }
          else
          {
-			DbgPrintf(4, _T("Text2Reach: call to curl_easy_perform() failed"));
+			nxlog_debug(4, _T("Text2Reach: call to curl_easy_perform() failed"));
          }
       }
       else
       {
-      	DbgPrintf(4, _T("Text2Reach: call to curl_easy_setopt(CURLOPT_URL) failed: %s"), errorBuffer);
+      	nxlog_debug(4, _T("Text2Reach: call to curl_easy_setopt(CURLOPT_URL) failed: %s"), errorBuffer);
       }
       safe_free(data->data);
       free(data);
@@ -190,7 +190,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
    }
    else
    {
-   	DbgPrintf(4, _T("Text2Reach: call to curl_easy_init() failed"));
+   	nxlog_debug(4, _T("Text2Reach: call to curl_easy_init() failed"));
    }
 
    return success;

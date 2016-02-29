@@ -26,7 +26,8 @@
 
 #define INCLUDE_LIBNXSRV_MESSAGES
 
-#include <nxsrvapi.h>
+#include <nms_util.h>
+#include <nxconfig.h>
 
 
 //

@@ -88,7 +88,7 @@ bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduB
 	}
 	strcat(phoneNumberFormatted, "F");
 
-	DbgPrintf(7, _T("SMSCreatePDUString: Formatted phone before: %hs,%d"), phoneNumberFormatted, phoneLength);
+	nxlog_debug(7, _T("SMSCreatePDUString: Formatted phone before: %hs,%d"), phoneNumberFormatted, phoneLength);
 	for (i = 0; i <= phoneLength; i += 2)
 	{
 		char tmp = phoneNumberFormatted[i+1];
@@ -96,9 +96,9 @@ bool SMSCreatePDUString(const char* phoneNumber, const char* message, char* pduB
 		phoneNumberFormatted[i] = tmp;
 	}
 	phoneNumberFormatted[phoneLength + (phoneLength % 2)] = '\0';
-	DbgPrintf(7, _T("SMSCreatePDUString: Formatted phone: %hs"), phoneNumberFormatted);
+	nxlog_debug(7, _T("SMSCreatePDUString: Formatted phone: %hs"), phoneNumberFormatted);
 	SMSPack7BitChars(message, payload, &payloadSize, bufferSize);
-	DbgPrintf(7, _T("SMSCreatePDUString: Got payload size: %d"), payloadSize);
+	nxlog_debug(7, _T("SMSCreatePDUString: Got payload size: %d"), payloadSize);
 
 	for (i = 0; i < payloadSize; i++)
 	{

@@ -22,8 +22,8 @@
 **/
 
 #include <nms_common.h>
-#include <nxsrvapi.h>
 #include <nms_util.h>
+#include <nxconfig.h>
 #include <curl/curl.h>
 
 #ifdef _WIN32
@@ -61,12 +61,12 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *initArgs, Config *config)
 {
    if (curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
    {
-      DbgPrintf(1, _T("WebSMS: cURL initialization failed"));
+      nxlog_debug(1, _T("WebSMS: cURL initialization failed"));
       return false;
    }
 
-   DbgPrintf(1, _T("WebSMS: driver loaded"));
-   DbgPrintf(3, _T("cURL version: %hs"), curl_version());
+   nxlog_debug(1, _T("WebSMS: driver loaded"));
+   nxlog_debug(3, _T("cURL version: %hs"), curl_version());
 #if defined(_WIN32) || HAVE_DECL_CURL_VERSION_INFO
    curl_version_info_data *version = curl_version_info(CURLVERSION_NOW);
    char protocols[1024] = {0};
@@ -77,7 +77,7 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *initArgs, Config *config)
       strncat(protocols, " ", strlen(protocols) - 1);
       p++;
    }
-   DbgPrintf(3, _T("cURL supported protocols: %hs"), protocols);
+   nxlog_debug(3, _T("cURL supported protocols: %hs"), protocols);
 #endif
 
 #ifdef UNICODE
@@ -130,7 +130,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
 {
    bool success = false;
 
-	DbgPrintf(4, _T("WebSMS: phone=\"%s\", text=\"%s\""), phoneNumber, text);
+	nxlog_debug(4, _T("WebSMS: phone=\"%s\", text=\"%s\""), phoneNumber, text);
 
    CURL *curl = curl_easy_init();
    if (curl != NULL)
@@ -163,7 +163,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
       char url[4096];
       snprintf(url, 4096, "https://websms.ru/http_in5.asp?http_username=%s&http_password=%s&phone_list=%s%s%s&format=xml&message=%s",
                s_login, s_password, phone, (s_fromPhone[0] != 0) ? "&fromPhone=" : "", (s_fromPhone[0] != 0) ? s_fromPhone : "", msg);
-      DbgPrintf(4, _T("WebSMS: URL set to \"%hs\""), url);
+      nxlog_debug(4, _T("WebSMS: URL set to \"%hs\""), url);
 
       curl_free(phone);
       curl_free(msg);
@@ -172,7 +172,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
       {
          if (curl_easy_perform(curl) == CURLE_OK)
          {
-            DbgPrintf(4, _T("WebSMS: %d bytes received"), data->size);
+            nxlog_debug(4, _T("WebSMS: %d bytes received"), data->size);
             if (data->allocated > 0)
             {
                data->data[data->size] = 0;
@@ -185,28 +185,28 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
                   int status = e->getAttributeAsInt(_T("error_num"), -1);
                   if (status == 0)
                   {
-                     DbgPrintf(4, _T("WebSMS: SMS successfully sent"));
+                     nxlog_debug(4, _T("WebSMS: SMS successfully sent"));
                      success = TRUE;
                   }
                   else
                   {
-                     DbgPrintf(4, _T("WebSMS: send error %d"), status);
+                     nxlog_debug(4, _T("WebSMS: send error %d"), status);
                   }
                }
                else
                {
-                  DbgPrintf(4, _T("WebSMS: malformed response\n%hs"), data->data);
+                  nxlog_debug(4, _T("WebSMS: malformed response\n%hs"), data->data);
                }
             }
          }
          else
          {
-         	DbgPrintf(4, _T("WebSMS: call to curl_easy_perform() failed"));
+         	nxlog_debug(4, _T("WebSMS: call to curl_easy_perform() failed"));
          }
       }
       else
       {
-      	DbgPrintf(4, _T("WebSMS: call to curl_easy_setopt(CURLOPT_URL) failed"));
+      	nxlog_debug(4, _T("WebSMS: call to curl_easy_setopt(CURLOPT_URL) failed"));
       }
       safe_free(data->data);
       free(data);
@@ -214,7 +214,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
    }
    else
    {
-   	DbgPrintf(4, _T("WebSMS: call to curl_easy_init() failed"));
+   	nxlog_debug(4, _T("WebSMS: call to curl_easy_init() failed"));
    }
 
    return success;

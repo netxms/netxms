@@ -46,7 +46,7 @@ static bool ReadToOK(Serial *serial, char *data = NULL)
       int rc = serial->readToMark(buffer, 1024, s_eosMarks, &mark);
       if (rc <= 0)
       {
-         DbgPrintf(5, _T("SMS: ReadToOK: readToMark returned %d"), rc);
+         nxlog_debug(5, _T("SMS: ReadToOK: readToMark returned %d"), rc);
          return false;
       }
       if (mark != NULL) 
@@ -62,9 +62,9 @@ static bool ReadToOK(Serial *serial, char *data = NULL)
             return true;
  
 #ifdef UNICODE
-      	DbgPrintf(5, _T("SMS: non-OK response (%hs)"), mark);
+      	nxlog_debug(5, _T("SMS: non-OK response (%hs)"), mark);
 #else
-      	DbgPrintf(5, _T("SMS: non-OK response (%s)"), mark);
+      	nxlog_debug(5, _T("SMS: non-OK response (%s)"), mark);
 #endif
          return false;
       }
@@ -82,12 +82,12 @@ static bool InitModem(Serial *serial)
 	serial->write("ATZ\r\n", 5); // init modem
    if (!ReadToOK(serial))
       return false;
-	DbgPrintf(5, _T("SMS: ATZ sent, got OK"));
+	nxlog_debug(5, _T("SMS: ATZ sent, got OK"));
 
    serial->write("ATE0\r\n", 6); // disable echo
    if (!ReadToOK(serial))
       return false;
-	DbgPrintf(5, _T("SMS: ATE0 sent, got OK"));
+	nxlog_debug(5, _T("SMS: ATE0 sent, got OK"));
    
    return true;
 }
@@ -114,7 +114,7 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 		portName = _tcsdup(pszInitArgs);
 	}
 	
-	DbgPrintf(1, _T("Loading Generic SMS Driver (configuration: %s)"), pszInitArgs);
+	nxlog_debug(1, _T("Loading Generic SMS Driver (configuration: %s)"), pszInitArgs);
 	
 	TCHAR *p;
 	const TCHAR *parityAsText;
@@ -194,18 +194,18 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 			parityAsText = _T("NONE");
 			break;
 	}
-	DbgPrintf(2, _T("SMS init: port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d, pduMode=%s"),
+	nxlog_debug(2, _T("SMS init: port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d, pduMode=%s"),
 	          portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1, 
              (s_operationMode == OM_PDU) ? _T("true") : _T("false"));
 	
 	if (s_serial.open(portName))
 	{
-		DbgPrintf(5, _T("SMS: port opened"));
+		nxlog_debug(5, _T("SMS: port opened"));
 		s_serial.setTimeout(2000);
 		
       if (!s_serial.set(portSpeed, dataBits, parity, stopBits))
       {
-         nxlog_write(MSG_SERIAL_PORT_SET_FAILED, NXLOG_ERROR, "s", pszInitArgs);
+         nxlog_debug(0, _T("SMS: cannot configure serial port %s"), pszInitArgs);
          goto cleanup;
       }
 		
@@ -219,17 +219,17 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 		char vendorId[1024];
       if (!ReadToOK(&s_serial, vendorId))
          goto cleanup;
-		DbgPrintf(5, _T("SMS init: ATI3 sent, got OK"));
+		nxlog_debug(5, _T("SMS init: ATI3 sent, got OK"));
 		
 		char *sptr, *eptr;	
 		for(sptr = vendorId; (*sptr != 0) && ((*sptr == '\r') || (*sptr == '\n') || (*sptr == ' ') || (*sptr == '\t')); sptr++);
 		for(eptr = sptr; (*eptr != 0) && (*eptr != '\r') && (*eptr != '\n'); eptr++);
 		*eptr = 0;
-      nxlog_write(MSG_GSM_MODEM_INFO, NXLOG_INFO, "sm", pszInitArgs, sptr);
+      nxlog_debug(0, _T("SMS: GSM modem found on %s: %hs"), pszInitArgs, sptr);
 	}
 	else
 	{
-      nxlog_write(MSG_SERIAL_PORT_OPEN_FAILED, NXLOG_ERROR, "s", pszInitArgs);
+      nxlog_debug(0, _T("SMS: cannot open serial port %s"), pszInitArgs);
 	}
 
 cleanup:
@@ -246,10 +246,10 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 	if ((pszPhoneNumber == NULL) || (pszText == NULL))
       return false;
 
-   DbgPrintf(3, _T("SMS: send to {%s}: {%s}"), pszPhoneNumber, pszText);
+   nxlog_debug(3, _T("SMS: send to {%s}: {%s}"), pszPhoneNumber, pszText);
    if (!s_serial.restart())
    {
-   	DbgPrintf(5, _T("SMS: failed to open port"));
+   	nxlog_debug(5, _T("SMS: failed to open port"));
       return false;
    }
 
@@ -262,7 +262,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 	   s_serial.write("AT+CMGF=0\r\n", 11); // =0 - PDU message
       if (!ReadToOK(&s_serial))
          goto cleanup;
-	   DbgPrintf(5, _T("SMS: AT+CMGF=0 sent, got OK"));
+	   nxlog_debug(5, _T("SMS: AT+CMGF=0 sent, got OK"));
 
 		char pduBuffer[PDU_BUFFER_SIZE];
 #ifdef UNICODE
@@ -288,7 +288,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
          goto cleanup;
       if ((mark == NULL) || (*mark != '>'))
       {
-   	   DbgPrintf(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
+   	   nxlog_debug(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
          goto cleanup;
       }
 
@@ -300,7 +300,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 	   s_serial.write("AT+CMGF=1\r\n", 11); // =1 - text message
       if (!ReadToOK(&s_serial))
          goto cleanup;
-	   DbgPrintf(5, _T("SMS: AT+CMGF=1 sent, got OK"));
+	   nxlog_debug(5, _T("SMS: AT+CMGF=1 sent, got OK"));
 
       char buffer[256];
 #ifdef UNICODE
@@ -318,7 +318,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
          goto cleanup;
       if ((mark == NULL) || (*mark != '>'))
       {
-   	   DbgPrintf(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
+   	   nxlog_debug(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
          goto cleanup;
       }
    	
@@ -345,7 +345,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
    if (!ReadToOK(&s_serial))
       goto cleanup;
 
-   DbgPrintf(5, _T("SMS: AT+CMGS + message body sent, got OK"));
+   nxlog_debug(5, _T("SMS: AT+CMGS + message body sent, got OK"));
    success = true;
 
 cleanup:

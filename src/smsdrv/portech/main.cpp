@@ -46,7 +46,7 @@ static enum { OM_TEXT, OM_PDU } s_mode = OM_PDU;
  */
 extern "C" bool EXPORT SMSDriverInit(const TCHAR *options, Config *config)
 {
-	DbgPrintf(1, _T("Loading Portech MV-72x SMS Driver (configuration: %s)"), options);
+	nxlog_debug(1, _T("Loading Portech MV-72x SMS Driver (configuration: %s)"), options);
 
 	// Parse arguments
 	ExtractNamedOptionValue(options, _T("host"), s_primaryHostName, MAX_PATH);
@@ -76,7 +76,7 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *options, Config *config)
 			s_mode = OM_TEXT;
 		else
 		{
-			nxlog_write(MSG_SMSDRV_INVALID_OPTION, NXLOG_ERROR, "s", _T("mode"));
+			nxlog_debug(0, _T("PORTECH: Invalid sending mode \"%s\""), mode);
 			return false;
 		}
 	}
@@ -137,21 +137,21 @@ static bool SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const 
 {
 	char szTmp[128];
 	
-	DbgPrintf(3, _T("Sending SMS (text mode): rcpt=\"%s\" text=\"%s\""), pszPhoneNumber, pszText);
+	nxlog_debug(3, _T("Sending SMS (text mode): rcpt=\"%s\" text=\"%s\""), pszPhoneNumber, pszText);
 	
 	__chk(conn->writeLine("ATZ"));	// init modem
 	__chk(conn->waitForText("OK", 10000));
-	DbgPrintf(4, _T("SMS: ATZ sent"));
+	nxlog_debug(4, _T("SMS: ATZ sent"));
 
 	ThreadSleep(1);
 	__chk(conn->writeLine("ATE0"));	// disable echo
 	__chk(conn->waitForText("OK", 10000));
-	DbgPrintf(4, _T("SMS: ATE0 sent"));
+	nxlog_debug(4, _T("SMS: ATE0 sent"));
 
 	ThreadSleep(1);
 	__chk(conn->writeLine("AT+CMGF=1"));	// text mode
 	__chk(conn->waitForText("OK", 5000));
-	DbgPrintf(4, _T("SMS: AT+CMGF=1 sent"));
+	nxlog_debug(4, _T("SMS: AT+CMGF=1 sent"));
 
 #ifdef UNICODE
 	char mbPhoneNumber[256];
@@ -175,7 +175,7 @@ static bool SendText(SocketConnection *conn, const TCHAR *pszPhoneNumber, const 
 	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0); // send text, end with ^Z
 	__chk(conn->waitForText("+CMGS", 45000));
 	__chk(conn->waitForText("OK", 5000));
-	DbgPrintf(4, _T("SMS sent successfully"));
+	nxlog_debug(4, _T("SMS sent successfully"));
 
 	return true;
 }
@@ -189,13 +189,13 @@ static bool SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 	char szTmp[bufferSize];
 	char phoneNumber[bufferSize], text[bufferSize];
 
-	DbgPrintf(3, _T("Sending SMS (PDU mode): rcpt=\"%s\" text=\"%s\""), pszPhoneNumber, pszText);
+	nxlog_debug(3, _T("Sending SMS (PDU mode): rcpt=\"%s\" text=\"%s\""), pszPhoneNumber, pszText);
 
 #ifdef UNICODE
 	if (WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszPhoneNumber, -1, phoneNumber, bufferSize, NULL, NULL) == 0 ||
 	    WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, -1, text, bufferSize, NULL, NULL) == 0)
 	{
-		DbgPrintf(2, _T("SMS: Failed to convert phone number or text to multibyte string"));
+		nxlog_debug(2, _T("SMS: Failed to convert phone number or text to multibyte string"));
 		return false;
 	}
 #else
@@ -205,17 +205,17 @@ static bool SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 
 	__chk(conn->writeLine("ATZ"));	// init modem
 	__chk(conn->waitForText("OK", 10000));
-	DbgPrintf(4, _T("SMS: ATZ sent"));
+	nxlog_debug(4, _T("SMS: ATZ sent"));
 
 	ThreadSleep(1);
 	__chk(conn->writeLine("ATE0"));	// disable echo
 	__chk(conn->waitForText("OK", 10000));
-	DbgPrintf(4, _T("SMS: ATE0 sent"));
+	nxlog_debug(4, _T("SMS: ATE0 sent"));
 
 	ThreadSleep(1);
 	__chk(conn->writeLine("AT+CMGF=0"));	// PDU mode
 	__chk(conn->waitForText("OK", 10000));
-	DbgPrintf(4, _T("SMS: AT+CMGF=0 sent"));
+	nxlog_debug(4, _T("SMS: AT+CMGF=0 sent"));
 
 	char pduBuffer[bufferSize];
 	SMSCreatePDUString(phoneNumber, text, pduBuffer, bufferSize);
@@ -223,13 +223,13 @@ static bool SendPDU(SocketConnection *conn, const TCHAR *pszPhoneNumber, const T
 	snprintf(szTmp, sizeof(szTmp), "AT+CMGS=%d\r\n", (int)strlen(pduBuffer) / 2 - 1);
 	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0);
 	__chk(conn->waitForText(">", 10000));
-	DbgPrintf(4, _T("SMS: %hs sent"), szTmp);
+	nxlog_debug(4, _T("SMS: %hs sent"), szTmp);
 
 	snprintf(szTmp, sizeof(szTmp), "%s%c\r\n", pduBuffer, 0x1A);
 	__chk(conn->write(szTmp, (int)strlen(szTmp)) > 0);
 	__chk(conn->waitForText("+CMGS", 45000));
 	__chk(conn->waitForText("OK", 2000));
-	DbgPrintf(4, _T("SMS sent successfully"));
+	nxlog_debug(4, _T("SMS sent successfully"));
 
 	return true;
 }
@@ -267,7 +267,7 @@ retry:
       if (newName[0] != 0)
       {
          s_hostName = newName;
-         DbgPrintf(4, _T("Portech SMS driver: switched to host %s"), s_hostName);
+         nxlog_debug(4, _T("Portech SMS driver: switched to host %s"), s_hostName);
          canRetry = false;
          goto retry;
       }

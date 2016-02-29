@@ -558,9 +558,9 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server agent libnxmap client nxscript nxcproxy nxlptest tools"
+	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent libnxmap client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
-	SMSDRV_DIRS="kannel slack text2reach websms"
+	SMSDRV_DIRS="kannel nxagent slack text2reach websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
@@ -762,9 +762,10 @@ if test $? = 0; then
 		AC_MSG_ERROR(You must select at least one database driver when building server.)
 	fi
 	BUILD_SERVER="yes"
-	MODULES="$MODULES libnxmap libnxsl libnxcc server nxscript"
+	MODULES="$MODULES libnxmap libnxsl libnxcc server smsdrv nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
+	SMSDRV_DIRS="$SMSDRV_DIRS nxagent"
 	if test "x$XMPP_SUPPORT" = "xyes"; then
 		MODULES="libstrophe $MODULES"
 		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
@@ -845,7 +846,7 @@ fi
 
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
-	MODULES="$MODULES appagent libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript"
+	MODULES="$MODULES appagent libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript smsdrv"
 fi
 
 
@@ -3226,15 +3227,6 @@ AC_CONFIG_FILES([
 	src/server/netxmsd/Makefile
 	src/server/pdsdrv/Makefile
 	src/server/pdsdrv/rrdtool/Makefile
-	src/server/smsdrv/Makefile
-	src/server/smsdrv/dummy/Makefile
-	src/server/smsdrv/generic/Makefile
-	src/server/smsdrv/kannel/Makefile
-	src/server/smsdrv/nxagent/Makefile
-	src/server/smsdrv/portech/Makefile
-	src/server/smsdrv/slack/Makefile
-	src/server/smsdrv/text2reach/Makefile
-	src/server/smsdrv/websms/Makefile
 	src/server/tools/Makefile
 	src/server/tools/nxaction/Makefile
 	src/server/tools/nxadm/Makefile
@@ -3244,6 +3236,15 @@ AC_CONFIG_FILES([
 	src/server/tools/nxdbmgr/Makefile
 	src/server/tools/nxget/Makefile
 	src/server/tools/nxupload/Makefile
+	src/smsdrv/Makefile
+	src/smsdrv/dummy/Makefile
+	src/smsdrv/generic/Makefile
+	src/smsdrv/kannel/Makefile
+	src/smsdrv/nxagent/Makefile
+	src/smsdrv/portech/Makefile
+	src/smsdrv/slack/Makefile
+	src/smsdrv/text2reach/Makefile
+	src/smsdrv/websms/Makefile
 	src/snmp/Makefile
 	src/snmp/libnxsnmp/Makefile
 	src/snmp/nxmibc/Makefile
