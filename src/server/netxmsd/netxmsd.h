@@ -31,8 +31,7 @@
 #ifdef _WIN32
 
 void InitService();
-void InstallService(const TCHAR *pszExecName, const TCHAR *pszDllName,
-                    const TCHAR *pszLogin, const TCHAR *pszPassword);
+void InstallService(const TCHAR *execName, const TCHAR *dllName, const TCHAR *login, const TCHAR *password);
 void RemoveService();
 void CheckServiceConfig();
 void StartCoreService();

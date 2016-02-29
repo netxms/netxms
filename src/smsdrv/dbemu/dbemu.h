@@ -24,7 +24,8 @@
 #define __DBEMU_H__
 
 #include <nms_common.h>
-#include <nxsrvapi.h>
+#include <nms_util.h>
+#include <nxconfig.h>
 #include <nxdbapi.h>
 
 #ifdef _WIN32

@@ -211,9 +211,9 @@ bool Initialize()
 	                   ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
 	                _T("NXCPROXY.EXE"),
 #ifdef _WIN32
-	                0, NULL))
+                   0, NULL, MSG_DEBUG))
 #else
-	                g_dwNumMessages, g_szMessages))
+	                g_dwNumMessages, g_szMessages, MSG_DEBUG))
 #endif
 	{
 		_ftprintf(stderr, _T("FATAL ERROR: Cannot open log file\n"));
@@ -232,7 +232,7 @@ bool Initialize()
 #endif
 
    // Initialize cryptografy
-   if (!InitCryptoLib(0xFFFF, DebugPrintf2))
+   if (!InitCryptoLib(0xFFFF))
    {
       nxlog_write(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       return false;

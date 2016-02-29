@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="nxagent"
-	ProjectGUID="{C317231C-B984-4423-ACF2-C19DE8B6AA3F}"
+	ProjectGUID="{A2F8F27A-8E23-4DF5-BE32-C3C0BC898CF7}"
 	RootNamespace="nxagent"
 	Keyword="Win32Proj"
 	>
@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\include;..\..\include"
+				AdditionalIncludeDirectories="..\..\..\include;..\..\server\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;NXAGENT_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -121,7 +121,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\..\..\include;..\..\include"
+				AdditionalIncludeDirectories="..\..\..\include;..\..\server\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;NXAGENT_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -198,7 +198,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\include;..\..\include"
+				AdditionalIncludeDirectories="..\..\..\include;..\..\server\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;NXAGENT_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
@@ -276,7 +276,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\include;..\..\include"
+				AdditionalIncludeDirectories="..\..\..\include;..\..\server\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;NXAGENT_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"

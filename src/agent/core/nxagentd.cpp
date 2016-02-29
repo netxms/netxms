@@ -1826,7 +1826,7 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
       case ACTION_INSTALL_SERVICE:
          GetModuleFileName(GetModuleHandle(NULL), szModuleName, MAX_PATH);
-         InstallService(szModuleName, g_szConfigFile);
+         InstallService(szModuleName, g_szConfigFile, s_debugLevel);
          break;
       case ACTION_REMOVE_SERVICE:
          RemoveService();

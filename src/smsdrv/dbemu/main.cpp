@@ -53,14 +53,14 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 		s_driver = DBLoadDriver(s_dbDriver, NULL, TRUE, NULL, NULL);
 		if (s_driver == NULL)
 		{
-			DbgPrintf(1, _T("%s: Unable to load and initialize database driver \"%s\""), MYNAMESTR, s_dbDriver);
+			nxlog_debug(1, _T("%s: Unable to load and initialize database driver \"%s\""), MYNAMESTR, s_dbDriver);
 			goto finish;
 		}
 
 		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 		s_dbh = DBConnect(s_driver, s_dbServer, s_dbName, s_dbUsername, s_dbPassword, s_dbSchema, errorText);
 		if (s_dbh == NULL) // Do not fail, just report
-			DbgPrintf(1, _T("%s: Unable to connect to database %s@%s as %s: %s"), MYNAMESTR, s_dbName, s_dbServer, s_dbUsername, errorText);
+			nxlog_debug(1, _T("%s: Unable to connect to database %s@%s as %s: %s"), MYNAMESTR, s_dbName, s_dbServer, s_dbUsername, errorText);
 
 		bRet = true;
 	}
@@ -81,7 +81,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 		TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
 		s_dbh = DBConnect(s_driver, s_dbServer, s_dbName, s_dbUsername, s_dbPassword, s_dbSchema, errorText);
 		if (s_dbh == NULL)
-			DbgPrintf(1, _T("%s: Unable to connect to database %s@%s as %s: %s"), MYNAMESTR, s_dbName, s_dbServer, s_dbUsername, errorText);
+			nxlog_debug(1, _T("%s: Unable to connect to database %s@%s as %s: %s"), MYNAMESTR, s_dbName, s_dbServer, s_dbUsername, errorText);
 	}
 
 	if (s_dbh != NULL)
@@ -92,9 +92,9 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 			DBBind(dbs, 1, DB_SQLTYPE_VARCHAR, pszPhoneNumber, DB_BIND_STATIC);
 			DBBind(dbs, 2, DB_SQLTYPE_VARCHAR, pszText, DB_BIND_STATIC);
 			if (!(bRet = DBExecute(dbs)))
-				DbgPrintf(1, _T("%s: Cannot execute"), MYNAMESTR);
+				nxlog_debug(1, _T("%s: Cannot execute"), MYNAMESTR);
 			else
-				DbgPrintf(8, _T("%s: sent sms '%s' to %s"), MYNAMESTR, pszText, pszPhoneNumber);
+				nxlog_debug(8, _T("%s: sent sms '%s' to %s"), MYNAMESTR, pszText, pszPhoneNumber);
 			DBFreeStatement(dbs);
 		}
 	}

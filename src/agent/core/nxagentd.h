@@ -602,7 +602,7 @@ AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *,
 #ifdef _WIN32
 
 void InitService();
-void InstallService(TCHAR *execName, TCHAR *confFile);
+void InstallService(TCHAR *execName, TCHAR *confFile, int debugLevel);
 void RemoveService();
 void StartAgentService();
 void StopAgentService();
