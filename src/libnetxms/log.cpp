@@ -54,13 +54,15 @@ static NxLogConsoleWriter m_consoleWriter = (NxLogConsoleWriter)_tprintf;
 static String s_logBuffer;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static CONDITION s_writerStopCondition = INVALID_CONDITION_HANDLE;
+static void (* s_debugWriter)(const TCHAR *) = NULL;
 
 /**
  * Set debug level
  */
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
 {
-   s_debugLevel = level;
+   if ((level >= 0) && (level <= 9))
+      s_debugLevel = level;
 }
 
 /**
@@ -69,6 +71,14 @@ void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level()
 {
    return s_debugLevel;
+}
+
+/**
+ * Set additional debug writer callback. It will be called for each line written with nxlog_debug.
+ */
+void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(void (* writer)(const TCHAR *))
+{
+   s_debugWriter = writer;
 }
 
 /**
@@ -775,6 +785,9 @@ void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...)
    _vsntprintf(buffer, 8192, format, args);
    va_end(args);
    nxlog_write(s_debugMsg, NXLOG_DEBUG, "s", buffer);
+
+   if (s_debugWriter != NULL)
+      s_debugWriter(buffer);
 }
 
 /**
@@ -788,4 +801,7 @@ void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list a
    TCHAR buffer[8192];
    _vsntprintf(buffer, 8192, format, args);
    nxlog_write(s_debugMsg, NXLOG_DEBUG, "s", buffer);
+
+   if (s_debugWriter != NULL)
+      s_debugWriter(buffer);
 }
