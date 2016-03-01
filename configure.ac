@@ -846,7 +846,11 @@ fi
 
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
-	MODULES="$MODULES appagent libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript smsdrv"
+	if test "x$STATIC_BUILD" = "xyes"; then
+		MODULES="$MODULES appagent libnxmap client libnxmb"
+	else
+		MODULES="$MODULES appagent libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript smsdrv"
+	fi
 fi
 
 
