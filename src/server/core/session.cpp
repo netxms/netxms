@@ -11110,10 +11110,24 @@ void ClientSession::executeScript(NXCPMessage *request)
                vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &msg));
                if (vm != NULL)
                {
-                  vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
-                  if (object->getObjectClass() == OBJECT_NODE)
+                  switch(object->getObjectClass())
                   {
-                     vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
+                     case OBJECT_NODE:
+                        vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
+                        vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
+                        break;
+                     case OBJECT_CLUSTER:
+                        vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslClusterClass, object)));
+                        break;
+                     case OBJECT_MOBILEDEVICE:
+                        vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslMobileDeviceClass, object)));
+                        break;
+                     case OBJECT_ZONE:
+                        vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, object)));
+                        break;
+                     default:
+                        vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
+                        break;
                   }
                   msg.setField(VID_RCC, RCC_SUCCESS);
                   sendMessage(&msg);

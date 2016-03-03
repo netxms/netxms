@@ -57,6 +57,28 @@ public:
 };
 
 /**
+ * NXSL "MobileDevice" class
+ */
+class NXSL_MobileDeviceClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_MobileDeviceClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+};
+
+/**
+ * NXSL "Cluster" class
+ */
+class NXSL_ClusetClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_ClusetClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+};
+
+/**
  * NXSL "Zone" class
  */
 class NXSL_ZoneClass : public NXSL_NetObjClass
@@ -183,6 +205,8 @@ extern NXSL_AlarmClass g_nxslAlarmClass;
 extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_InterfaceClass g_nxslInterfaceClass;
+extern NXSL_ClusetClass g_nxslClusterClass;
+extern NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;

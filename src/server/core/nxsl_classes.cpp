@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
@@ -689,6 +689,50 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 }
 
 /**
+ * NXSL class Mobile Device: constructor
+ */
+NXSL_MobileDeviceClass::NXSL_MobileDeviceClass() : NXSL_NetObjClass()
+{
+   _tcscpy(m_name, _T("MobileDevice"));
+}
+
+/**
+ * NXSL class Mobile Device: get attribute
+ */
+NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
+   Interface *iface = (Interface *)object->getData();
+   // TODO: Declare possible attrs
+   return value;
+}
+
+/**
+ * NXSL class Cluster: constructor
+ */
+NXSL_ClusetClass::NXSL_ClusetClass() : NXSL_NetObjClass()
+{
+   _tcscpy(m_name, _T("Cluster"));
+}
+
+/**
+ * NXSL class Cluster: get attribute
+ */
+NXSL_Value *NXSL_ClusetClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
+   Cluster *cluster = (Cluster *)object->getData();
+   // TODO: Declare possible attrs
+   return value;
+}
+
+/**
  * Event::setMessage() method
  */
 NXSL_METHOD_DEFINITION(Event, setMessage)
@@ -1095,6 +1139,8 @@ NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_InterfaceClass g_nxslInterfaceClass;
+NXSL_ClusetClass g_nxslClusterClass;
+NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NodeClass g_nxslNodeClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;
