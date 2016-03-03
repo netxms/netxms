@@ -183,8 +183,8 @@ bool AgentPolicy::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             {
                if (object->getObjectClass() == OBJECT_NODE)
                {
-                  AddChild(object);
-                  object->AddParent(this);
+                  addChild(object);
+                  object->addParent(this);
                }
                else
                {

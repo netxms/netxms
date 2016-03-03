@@ -562,11 +562,11 @@ public:
    bool isChild(UINT32 id);
 	bool isTrustedNode(UINT32 id);
 
-   void AddChild(NetObj *pObject);     // Add reference to child object
-   void AddParent(NetObj *pObject);    // Add reference to parent object
+   void addChild(NetObj *object);     // Add reference to child object
+   void addParent(NetObj *object);    // Add reference to parent object
 
-   void DeleteChild(NetObj *pObject);  // Delete reference to child object
-   void DeleteParent(NetObj *pObject); // Delete reference to parent object
+   void deleteChild(NetObj *object);  // Delete reference to child object
+   void deleteParent(NetObj *object); // Delete reference to parent object
 
    void deleteObject(NetObj *initiator = NULL);     // Prepare object for deletion
 
@@ -1396,7 +1396,7 @@ public:
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
 
-   void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
+   void addInterface(Interface *pInterface) { addChild(pInterface); pInterface->addParent(this); }
    Interface *createNewInterface(InterfaceInfo *ifInfo, bool manuallyCreated);
    Interface *createNewInterface(const InetAddress& ipAddr, BYTE *macAddr);
    void deleteInterface(Interface *iface);
@@ -1511,7 +1511,7 @@ public:
 
    UINT32 wakeUp();
 
-   void addService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
+   void addService(NetworkService *pNetSrv) { addChild(pNetSrv); pNetSrv->addParent(this); }
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
 
@@ -1699,7 +1699,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
-   void addNode(Node *node) { AddChild(node); node->AddParent(this); calculateCompoundStatus(TRUE); }
+   void addNode(Node *node) { addChild(node); node->addParent(this); calculateCompoundStatus(TRUE); }
 
 	virtual bool showThresholdSummary();
 
@@ -1729,7 +1729,7 @@ public:
    void loadFromDatabase(DB_HANDLE hdb);
 
    void linkChildObjects();
-   void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+   void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 };
 
 /**
@@ -1792,7 +1792,7 @@ public:
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
    void linkChildObjects();
-   void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+   void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 
    AutoBindDecision isSuitableForNode(Node *node);
 	bool isAutoBindEnabled() { return (m_flags & CF_AUTO_BIND) ? true : false; }
@@ -1876,7 +1876,7 @@ public:
 	UINT32 getSnmpProxy() { return m_snmpProxy; }
 	UINT32 getIcmpProxy() { return m_icmpProxy; }
 
-   void addSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
+   void addSubnet(Subnet *pSubnet) { addChild(pSubnet); pSubnet->addParent(this); }
 
 	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->getIpAddress(), subnet); }
    void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->getIpAddressList(), iface); }
@@ -1913,8 +1913,8 @@ public:
 
 	virtual bool showThresholdSummary();
 
-   void AddSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
-   void AddZone(Zone *pZone) { AddChild(pZone); pZone->AddParent(this); }
+   void AddSubnet(Subnet *pSubnet) { addChild(pSubnet); pSubnet->addParent(this); }
+   void AddZone(Zone *pZone) { addChild(pZone); pZone->addParent(this); }
    void loadFromDatabase(DB_HANDLE hdb);
 };
 
@@ -1992,8 +1992,8 @@ public:
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
 
-	void linkNode(Node *node) { AddChild(node); node->AddParent(this); }
-	void unlinkNode(Node *node) { DeleteChild(node); node->DeleteParent(this); }
+	void linkNode(Node *node) { addChild(node); node->addParent(this); }
+	void unlinkNode(Node *node) { deleteChild(node); node->deleteParent(this); }
 };
 
 /**
@@ -2311,7 +2311,7 @@ public:
    void loadFromDatabase(DB_HANDLE hdb);
 
    void linkChildObjects();
-   void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+   void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 };
 
 /**

@@ -121,8 +121,8 @@ static void CreateManagementNode(const InetAddress& addr)
    PostEvent(EVENT_NODE_ADDED, node->getId(), NULL);
 
 	// Bind to the root of service tree
-	g_pServiceRoot->AddChild(node);
-	node->AddParent(g_pServiceRoot);
+	g_pServiceRoot->addChild(node);
+	node->addParent(g_pServiceRoot);
 }
 
 /**

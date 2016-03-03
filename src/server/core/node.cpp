@@ -387,8 +387,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          }
          else
          {
-            pObject->AddChild(this);
-            AddParent(pObject);
+            pObject->addChild(this);
+            addParent(pObject);
          }
       }
 
@@ -1174,8 +1174,8 @@ void Node::deleteInterface(Interface *iface)
             Subnet *pSubnet = FindSubnetByIP(m_zoneId, addr->getSubnetAddress());
             if (pSubnet != NULL)
             {
-               DeleteParent(pSubnet);
-               pSubnet->DeleteChild(this);
+               deleteParent(pSubnet);
+               pSubnet->deleteChild(this);
             }
 			   DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d]): unlinked from subnet %s [%d]"),
 			             m_name, m_id, iface->getName(), iface->getId(),
@@ -1830,8 +1830,8 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 			NetObj *object = FindObjectByGUID(guid, -1);
 			if ((object != NULL) && (!object->isChild(m_id)))
 			{
-				object->AddChild(this);
-				AddParent(object);
+				object->addChild(this);
+				addParent(object);
 				DbgPrintf(5, _T("ConfPoll(%s): bound to policy object %s [%d]"), m_name, object->getName(), object->getId());
 			}
 		}
@@ -1859,8 +1859,8 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 
 		for(int i = 0; i < unbindListSize; i++)
 		{
-			unbindList[i]->DeleteChild(this);
-			DeleteParent(unbindList[i]);
+			unbindList[i]->deleteChild(this);
+			deleteParent(unbindList[i]);
 			DbgPrintf(5, _T("ConfPoll(%s): unbound from policy object %s [%d]"), m_name, unbindList[i]->getName(), unbindList[i]->getId());
 		}
 		safe_free(unbindList);
@@ -3173,8 +3173,8 @@ void Node::applyUserTemplates()
          {
             DbgPrintf(4, _T("Node::ApplyUserTemplates(): removing template %d \"%s\" from node %d \"%s\""),
                       pTemplate->getId(), pTemplate->getName(), m_id, m_name);
-            pTemplate->DeleteChild(this);
-            DeleteParent(pTemplate);
+            pTemplate->deleteChild(this);
+            deleteParent(pTemplate);
             pTemplate->queueRemoveFromTarget(m_id, true);
             PostEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
          }
@@ -3211,8 +3211,8 @@ void Node::updateContainerMembership()
 			{
 				DbgPrintf(4, _T("Node::updateContainerMembership(): binding node %d \"%s\" to container %d \"%s\""),
 				          m_id, m_name, pContainer->getId(), pContainer->getName());
-				pContainer->AddChild(this);
-				AddParent(pContainer);
+				pContainer->addChild(this);
+				addParent(pContainer);
 				PostEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
             pContainer->calculateCompoundStatus();
 			}
@@ -3223,8 +3223,8 @@ void Node::updateContainerMembership()
 			{
 				DbgPrintf(4, _T("Node::updateContainerMembership(): removing node %d \"%s\" from container %d \"%s\""),
 				          m_id, m_name, pContainer->getId(), pContainer->getName());
-				pContainer->DeleteChild(this);
-				DeleteParent(pContainer);
+				pContainer->deleteChild(this);
+				deleteParent(pContainer);
 				PostEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
             pContainer->calculateCompoundStatus();
 			}
@@ -5264,8 +5264,8 @@ void Node::changeZone(UINT32 newZone)
 
 	for(i = 0; i < count; i++)
 	{
-		DeleteParent(subnets[i]);
-		subnets[i]->DeleteChild(this);
+		deleteParent(subnets[i]);
+		subnets[i]->deleteChild(this);
 	}
 	safe_free(subnets);
 
@@ -6600,8 +6600,8 @@ void Node::checkSubnetBinding()
    for(int n = 0; n < unlinkList.size(); n++)
 	{
       NetObj *o = unlinkList.get(n);
-      o->DeleteChild(this);
-		DeleteParent(o);
+      o->deleteChild(this);
+		deleteParent(o);
       o->calculateCompoundStatus();
 	}
 }
@@ -7505,8 +7505,8 @@ void Node::updateRackBinding()
    {
       NetObj *rack = deleteList.get(n);
       DbgPrintf(5, _T("Node::updateRackBinding(%s [%d]): delete incorrect rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
-      rack->DeleteChild(this);
-      DeleteParent(rack);
+      rack->deleteChild(this);
+      deleteParent(rack);
       rack->decRefCount();
    }
 
@@ -7516,8 +7516,8 @@ void Node::updateRackBinding()
       if (rack != NULL)
       {
          DbgPrintf(5, _T("Node::updateRackBinding(%s [%d]): add rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
-         rack->AddChild(this);
-         AddParent(rack);
+         rack->addChild(this);
+         addParent(rack);
       }
       else
       {

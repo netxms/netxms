@@ -30,6 +30,7 @@ import org.eclipse.draw2d.FreeformLayer;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Layer;
+import org.eclipse.draw2d.LayeredPane;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.SWTGraphics;
@@ -129,27 +130,34 @@ public class ExtendedGraphViewer extends GraphViewer
 			}
 		});
 		
+      for(Object f : rootLayer.getChildren())
+         if (f.getClass().getName().equals("org.eclipse.gef4.zest.core.widgets.internal.ZestRootLayer")) //$NON-NLS-1$
+            zestRootLayer = (IFigure)f;
+      zestRootLayer.setOpaque(false);
+
 		backgroundLayer = new FreeformLayer();
-		rootLayer.add(backgroundLayer, null, 0);
+//		((LayeredPane)rootLayer).addLayerAfter(backgroundLayer, "Background", zestRootLayer);
+//		rootLayer.add(backgroundLayer, null, 0);
 		backgroundFigure = new BackgroundFigure();
 		backgroundFigure.setSize(10, 10);
 		backgroundLayer.add(backgroundFigure);
 		
 		decorationLayer = new FreeformLayer();
-		rootLayer.add(decorationLayer, null, 1);
+		decorationLayer.setOpaque(false);
+      ((LayeredPane)rootLayer).addLayerAfter(decorationLayer, "Decoration", zestRootLayer);
+//		rootLayer.add(decorationLayer, null, 1);
 		
 		indicatorLayer = new FreeformLayer();
-		rootLayer.add(indicatorLayer, null, 2);
+		//rootLayer.add(indicatorLayer, null, 2);
 
       controlLayer = new FreeformLayer();
-      rootLayer.add(controlLayer, null);
-		
+      //rootLayer.add(controlLayer, null);
+
+      for(Object f : rootLayer.getChildren())
+         System.out.println("f="+f);
+      
 		getZoomManager().setZoomLevels(zoomLevels);
 		
-		for(Object f : rootLayer.getChildren())
-			if (f.getClass().getName().equals("org.eclipse.gef4.zest.core.widgets.internal.ZestRootLayer")) //$NON-NLS-1$
-				zestRootLayer = (IFigure)f;
-
 		final Runnable timer = new Runnable() {
 			@Override
 			public void run()
@@ -219,6 +227,7 @@ public class ExtendedGraphViewer extends GraphViewer
 				org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
 				graph.getRootLayer().translateToRelative(mousePoint);
 				IFigure figureUnderMouse = graph.getFigureAt(mousePoint.x, mousePoint.y);
+System.out.println("FIGURE IS " + figureUnderMouse);				
 				if ((figureUnderMouse == null) || (figureUnderMouse == zestRootLayer) || (figureUnderMouse == graph.getRootLayer()))
 				{
 					if ((me.getState() & SWT.MOD1) == 0) 

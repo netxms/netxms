@@ -253,8 +253,8 @@ bool Interface::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          }
          else
          {
-            object->AddChild(this);
-            AddParent(object);
+            object->addChild(this);
+            addParent(object);
 				m_zoneId = ((Node *)object)->getZoneId();
             bResult = true;
          }

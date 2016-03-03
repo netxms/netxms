@@ -178,8 +178,8 @@ bool NetworkService::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          else
          {
             m_hostNode = (Node *)pObject;
-            pObject->AddChild(this);
-            AddParent(pObject);
+            pObject->addChild(this);
+            addParent(pObject);
             bResult = true;
          }
 

@@ -503,55 +503,53 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 /**
  * Add reference to the new child object
  */
-void NetObj::AddChild(NetObj *pObject)
+void NetObj::addChild(NetObj *object)
 {
-   UINT32 i;
-
    LockChildList(TRUE);
-   for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i] == pObject)
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i] == object)
       {
          UnlockChildList();
          return;     // Already in the child list
       }
    m_pChildList = (NetObj **)realloc(m_pChildList, sizeof(NetObj *) * (m_dwChildCount + 1));
-   m_pChildList[m_dwChildCount++] = pObject;
+   m_pChildList[m_dwChildCount++] = object;
    UnlockChildList();
 	incRefCount();
    setModified();
+   DbgPrintf(7, _T("NetObj::addChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
 }
 
 /**
  * Add reference to parent object
  */
-void NetObj::AddParent(NetObj *pObject)
+void NetObj::addParent(NetObj *object)
 {
-   UINT32 i;
-
    LockParentList(TRUE);
-   for(i = 0; i < m_dwParentCount; i++)
-      if (m_pParentList[i] == pObject)
+   for(UINT32 i = 0; i < m_dwParentCount; i++)
+      if (m_pParentList[i] == object)
       {
          UnlockParentList();
          return;     // Already in the parents list
       }
    m_pParentList = (NetObj **)realloc(m_pParentList, sizeof(NetObj *) * (m_dwParentCount + 1));
-   m_pParentList[m_dwParentCount++] = pObject;
+   m_pParentList[m_dwParentCount++] = object;
    UnlockParentList();
 	incRefCount();
    setModified();
+   DbgPrintf(7, _T("NetObj::addParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
 }
 
 /**
  * Delete reference to child object
  */
-void NetObj::DeleteChild(NetObj *pObject)
+void NetObj::deleteChild(NetObj *object)
 {
    UINT32 i;
 
    LockChildList(TRUE);
    for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i] == pObject)
+      if (m_pChildList[i] == object)
          break;
 
    if (i == m_dwChildCount)   // No such object
@@ -559,6 +557,9 @@ void NetObj::DeleteChild(NetObj *pObject)
       UnlockChildList();
       return;
    }
+
+   DbgPrintf(7, _T("NetObj::deleteChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
+
    m_dwChildCount--;
    if (m_dwChildCount > 0)
    {
@@ -578,19 +579,22 @@ void NetObj::DeleteChild(NetObj *pObject)
 /**
  * Delete reference to parent object
  */
-void NetObj::DeleteParent(NetObj *pObject)
+void NetObj::deleteParent(NetObj *object)
 {
    UINT32 i;
 
    LockParentList(TRUE);
    for(i = 0; i < m_dwParentCount; i++)
-      if (m_pParentList[i] == pObject)
+      if (m_pParentList[i] == object)
          break;
    if (i == m_dwParentCount)   // No such object
    {
       UnlockParentList();
       return;
    }
+
+   DbgPrintf(7, _T("NetObj::deleteParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
+
    m_dwParentCount--;
    if (m_dwParentCount > 0)
    {
@@ -655,7 +659,7 @@ void NetObj::deleteObject(NetObj *initiator)
       }
       else
       {
-         m_pChildList[i]->DeleteParent(this);
+         m_pChildList[i]->deleteParent(this);
       }
 		decRefCount();
    }
@@ -685,7 +689,7 @@ void NetObj::deleteObject(NetObj *initiator)
       // removed from parent's list
       if (m_pParentList[i] != initiator)
       {
-         m_pParentList[i]->DeleteChild(this);
+         m_pParentList[i]->deleteChild(this);
          m_pParentList[i]->calculateCompoundStatus();
       }
 		decRefCount();

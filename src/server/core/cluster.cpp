@@ -111,8 +111,8 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 				{
 					if (pObject->getObjectClass() == OBJECT_NODE)
 					{
-                  AddChild(pObject);
-                  pObject->AddParent(this);
+                  addChild(pObject);
+                  pObject->addParent(this);
 					}
 					else
 					{

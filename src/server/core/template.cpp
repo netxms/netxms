@@ -232,8 +232,8 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             {
                if ((pObject->getObjectClass() == OBJECT_NODE) || (pObject->getObjectClass() == OBJECT_CLUSTER) || (pObject->getObjectClass() == OBJECT_MOBILEDEVICE))
                {
-                  AddChild(pObject);
-                  pObject->AddParent(this);
+                  addChild(pObject);
+                  pObject->addParent(this);
                }
                else
                {
@@ -915,8 +915,8 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
    // Link node to template
    if (!isChild(target->getId()))
    {
-      AddChild(target);
-      target->AddParent(this);
+      addChild(target);
+      target->addParent(this);
    }
 
    pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());

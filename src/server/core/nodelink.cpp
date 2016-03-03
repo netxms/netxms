@@ -221,8 +221,8 @@ void NodeLink::applyTemplate(SlmCheck *tmpl)
 	if (check == NULL)
 	{
 		check = new SlmCheck(tmpl);
-		check->AddParent(this);
-		AddChild(check);
+		check->addParent(this);
+		addChild(check);
 		NetObjInsert(check, true, false);
 		check->unhide();
 	}

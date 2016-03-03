@@ -588,8 +588,8 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	if (node != NULL)
 	{
 		node->setPrimaryName(pname);
-		parent->AddChild(node);
-		node->AddParent(parent);
+		parent->addChild(node);
+		node->addParent(parent);
 		node->unhide();
 		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node));
 	}
@@ -630,8 +630,8 @@ static int F_CreateContainer(int argc, NXSL_Value **argv, NXSL_Value **ppResult,
 
 	Container *container = new Container(name, 0);
 	NetObjInsert(container, true, false);
-	parent->AddChild(container);
-	container->AddParent(parent);
+	parent->addChild(container);
+	container->addParent(parent);
 	container->unhide();
 
 	*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, container));
@@ -701,8 +701,8 @@ static int F_BindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	if (child->isChild(netobj->getId())) // prevent loops
 		return NXSL_ERR_INVALID_OBJECT_OPERATION;
 
-	netobj->AddChild(child);
-	child->AddParent(netobj);
+	netobj->addChild(child);
+	child->addParent(netobj);
 	netobj->calculateCompoundStatus();
 
 	*ppResult = new NXSL_Value;
@@ -742,8 +742,8 @@ static int F_UnbindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	if (child->getObjectClass() != OBJECT_CONTAINER && child->getObjectClass() != OBJECT_SUBNET && child->getObjectClass() != OBJECT_NODE)
 		return NXSL_ERR_BAD_CLASS;
 
-	netobj->DeleteChild(child);
-	child->DeleteParent(netobj);
+	netobj->deleteChild(child);
+	child->deleteParent(netobj);
 
 	*ppResult = new NXSL_Value;
 

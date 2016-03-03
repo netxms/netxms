@@ -5150,8 +5150,8 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 							   if ((pParent != NULL) &&          // parent can be NULL for nodes
 							       (iClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
 							   {
-								   pParent->AddChild(object);
-								   object->AddParent(pParent);
+								   pParent->addChild(object);
+								   object->addParent(pParent);
 								   pParent->calculateCompoundStatus();
 								   if (pParent->getObjectClass() == OBJECT_CLUSTER)
 								   {
@@ -5334,8 +5334,8 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
                if (!pChild->isChild(pParent->getId()))
                {
                   ObjectTransactionStart();
-                  pParent->AddChild(pChild);
-                  pChild->AddParent(pParent);
+                  pParent->addChild(pChild);
+                  pChild->addParent(pParent);
                   ObjectTransactionEnd();
                   pParent->calculateCompoundStatus();
                   msg.setField(VID_RCC, RCC_SUCCESS);
@@ -5353,8 +5353,8 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
             else
             {
                ObjectTransactionStart();
-               pParent->DeleteChild(pChild);
-               pChild->DeleteParent(pParent);
+               pParent->deleteChild(pChild);
+               pChild->deleteParent(pParent);
                ObjectTransactionEnd();
                pParent->calculateCompoundStatus();
                if ((pParent->getObjectClass() == OBJECT_TEMPLATE) &&

@@ -352,8 +352,8 @@ NetObj *FindTemplateRoot(ConfigEntry *config)
       {
          o = new TemplateGroup(name);
          NetObjInsert(o, true, false);
-         o->AddParent(parent);
-         parent->AddChild(o);
+         o->addParent(parent);
+         parent->addChild(o);
          o->unhide();
          o->calculateCompoundStatus();	// Force status change to NORMAL
       }
@@ -432,8 +432,8 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
             NetObj *parent = FindTemplateRoot(tc);
             object = new Template(tc);
             NetObjInsert(object, true, true);
-            object->AddParent(parent);
-            parent->AddChild(object);
+            object->addParent(parent);
+            parent->addChild(object);
             object->unhide();
 		   }
 		}
