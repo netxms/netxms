@@ -200,6 +200,22 @@ BOOL InitIdTable()
                                                    DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM vpn_connectors"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_NETWORK_OBJECT] = max(s_freeIdTable[IDG_NETWORK_OBJECT],
+                                                   DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+   hResult = DBSelect(hdb, _T("SELECT max(object_id) FROM object_properties"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_NETWORK_OBJECT] = max(s_freeIdTable[IDG_NETWORK_OBJECT],
+                                                   DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
 
    // Get first available event code
    hResult = DBSelect(hdb, _T("SELECT max(event_code) FROM event_cfg"));
