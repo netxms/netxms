@@ -30,7 +30,6 @@ import org.eclipse.draw2d.FreeformLayer;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Layer;
-import org.eclipse.draw2d.LayeredPane;
 import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.SWTGraphics;
@@ -40,6 +39,7 @@ import org.eclipse.gef4.zest.core.viewers.GraphViewer;
 import org.eclipse.gef4.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
 import org.eclipse.gef4.zest.core.viewers.internal.IStylingGraphModelFactory;
 import org.eclipse.gef4.zest.core.widgets.GraphConnection;
+import org.eclipse.gef4.zest.core.widgets.IDecorationLayer;
 import org.eclipse.gef4.zest.core.widgets.custom.CGraphNode;
 import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
 import org.eclipse.jface.action.Action;
@@ -85,7 +85,6 @@ public class ExtendedGraphViewer extends GraphViewer
 	private Image backgroundImage = null;
 	private GeoLocation backgroundLocation = null;
 	private int backgroundZoom;
-	private IFigure zestRootLayer;
 	private MapLoader mapLoader;
 	private Layer backgroundLayer;
 	private Layer decorationLayer;
@@ -101,7 +100,6 @@ public class ExtendedGraphViewer extends GraphViewer
 	private List<NetworkMapElement> mapDecorations;
 	private Set<NetworkMapElement> selectedDecorations = new HashSet<NetworkMapElement>();
 	private Map<Long, DecorationLayerAbstractFigure> decorationFigures = new HashMap<Long, DecorationLayerAbstractFigure>();
-	private MouseListener backgroundMouseListener;
 	private ColorCache colors;
 	private Image iconBack;
 	private OverlayButton backButton = null;
@@ -130,11 +128,6 @@ public class ExtendedGraphViewer extends GraphViewer
 			}
 		});
 		
-      for(Object f : rootLayer.getChildren())
-         if (f.getClass().getName().equals("org.eclipse.gef4.zest.core.widgets.internal.ZestRootLayer")) //$NON-NLS-1$
-            zestRootLayer = (IFigure)f;
-      zestRootLayer.setOpaque(false);
-
 		backgroundLayer = new FreeformLayer();
 		rootLayer.add(backgroundLayer, null, 0);
 		backgroundFigure = new BackgroundFigure();
@@ -151,9 +144,6 @@ public class ExtendedGraphViewer extends GraphViewer
       controlLayer = new FreeformLayer();
       rootLayer.add(controlLayer, null);
 
-      for(Object f : rootLayer.getChildren())
-         System.out.println("f="+f);
-      
 		getZoomManager().setZoomLevels(zoomLevels);
 		
 		final Runnable timer = new Runnable() {
@@ -167,11 +157,11 @@ public class ExtendedGraphViewer extends GraphViewer
 					reloadMapBackground();
 				
 				if (gridFigure != null)
-					gridFigure.setSize(zestRootLayer.getSize());
+					gridFigure.setSize(graph.getZestRootLayer().getSize());
 			}
 		};
 		
-		zestRootLayer.addFigureListener(new FigureListener() {
+		graph.getZestRootLayer().addFigureListener(new FigureListener() {
 			@Override
 			public void figureMoved(IFigure source)
 			{
@@ -179,25 +169,6 @@ public class ExtendedGraphViewer extends GraphViewer
 				graph.getDisplay().timerExec(1000, timer);
 			}
 		});
-		
-		backgroundMouseListener = new MouseListener() {
-			@Override
-			public void mouseReleased(MouseEvent me)
-			{
-			}
-			
-			@Override
-			public void mousePressed(MouseEvent me)
-			{
-				clearDecorationSelection(true);
-			}
-			
-			@Override
-			public void mouseDoubleClicked(MouseEvent me)
-			{
-			}
-		};
-		backgroundFigure.addMouseListener(backgroundMouseListener);
 		
 		graph.addSelectionListener(new SelectionListener() {
 			@Override
@@ -213,7 +184,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			}
 		});
 		
-		graph.getLightweightSystem().getRootFigure().addMouseListener(new MouseListener() {
+		MouseListener backgroundMouseListener = new MouseListener() {
 			@Override
 			public void mouseReleased(MouseEvent me)
 			{
@@ -225,7 +196,8 @@ public class ExtendedGraphViewer extends GraphViewer
 				org.eclipse.draw2d.geometry.Point mousePoint = new org.eclipse.draw2d.geometry.Point(me.x, me.y);
 				graph.getRootLayer().translateToRelative(mousePoint);
 				IFigure figureUnderMouse = graph.getFigureAt(mousePoint.x, mousePoint.y);
-				if ((figureUnderMouse == null) || (figureUnderMouse == zestRootLayer) || (figureUnderMouse == graph.getRootLayer()))
+				if ((figureUnderMouse == null) || 
+				    !(figureUnderMouse instanceof DecorationLayerAbstractFigure))
 				{
 					if ((me.getState() & SWT.MOD1) == 0) 
 					{
@@ -239,7 +211,9 @@ public class ExtendedGraphViewer extends GraphViewer
 			public void mouseDoubleClicked(MouseEvent me)
 			{
 			}
-		});
+		};
+      graph.getLightweightSystem().getRootFigure().addMouseListener(backgroundMouseListener);
+      graph.getZestRootLayer().addMouseListener(backgroundMouseListener);
 		
 		snapToGridListener = new MouseListener() {
 			@Override
@@ -448,7 +422,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	private void reloadMapBackground()
 	{
 		final Rectangle controlSize = graph.getClientArea();
-		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = zestRootLayer.getClientArea();
+		final org.eclipse.draw2d.geometry.Rectangle rootLayerSize = graph.getZestRootLayer().getClientArea();
 		final Point mapSize = new Point(Math.min(controlSize.width, rootLayerSize.width), Math.max(controlSize.height, rootLayerSize.height)); 
 		ConsoleJob job = new ConsoleJob(Messages.get().ExtendedGraphViewer_DownloadTilesJob, null, Activator.PLUGIN_ID, null) {
 			@Override
@@ -684,7 +658,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			{
 				gridFigure = new GridFigure();
 				backgroundLayer.add(gridFigure, null, 1);
-				gridFigure.setSize(zestRootLayer.getSize());
+				gridFigure.setSize(graph.getZestRootLayer().getSize());
 				gridFigure.addMouseListener(new MouseListener() {
 					@Override
 					public void mousePressed(MouseEvent me)
@@ -828,7 +802,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	/**
 	 * Additional figure used to display custom background for graph.
 	 */
-	private class BackgroundFigure extends Figure
+	private class BackgroundFigure extends Figure implements IDecorationLayer
 	{
 		/* (non-Javadoc)
 		 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
@@ -870,7 +844,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	/**
 	 * Grid
 	 */
-	private class GridFigure extends Figure
+	private class GridFigure extends Figure implements IDecorationLayer
 	{
 		/**
 		 * Create new grid figure
@@ -878,7 +852,6 @@ public class ExtendedGraphViewer extends GraphViewer
 		public GridFigure()
 		{
 			setOpaque(false);
-			addMouseListener(backgroundMouseListener);
 		}
 		
 		/* (non-Javadoc)
