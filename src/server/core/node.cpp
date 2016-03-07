@@ -1372,11 +1372,25 @@ restart_agent_check:
             PostEventEx(pQueue, EVENT_AGENT_FAIL, m_id, NULL);
             m_failTimeAgent = tNow;
             //cancel file monitoring locally(on agent it is canceled if agent have fallen)
-            g_monitoringList.removeDisconectedNode(m_id);
+            g_monitoringList.removeDisconnectedNode(m_id);
          }
       }
 		agentUnlock();
       DbgPrintf(7, _T("StatusPoll(%s): agent check finished"), m_name);
+
+      // If file update connection is active, send NOP command to prevent disconnection by idle timeout
+      AgentConnection *fileUpdateConnection;
+      lockProperties();
+      fileUpdateConnection = m_fileUpdateConn;
+      if (fileUpdateConnection != NULL)
+         fileUpdateConnection->incRefCount();
+      unlockProperties();
+      if (fileUpdateConnection != NULL)
+      {
+         nxlog_debug(6, _T("StatusPoll(%s): sending keepalive command on file monitoring connection"), m_name);
+         fileUpdateConnection->nop();
+         fileUpdateConnection->decRefCount();
+      }
    }
 
    poller->setStatus(_T("prepare polling list"));
@@ -1579,19 +1593,19 @@ restart_agent_check:
          if ((UINT32)oldAgentuptime > (UINT32)m_agentUpTime)
          {
             //cancel file monitoring locally(on agent it is canceled if agent have fallen)
-            g_monitoringList.removeDisconectedNode(m_id);
+            g_monitoringList.removeDisconnectedNode(m_id);
          }
       }
       else
       {
          DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get agent uptime"), m_name, m_id);
-         g_monitoringList.removeDisconectedNode(m_id);
+         g_monitoringList.removeDisconnectedNode(m_id);
          m_agentUpTime = 0;
       }
    }
    else
    {
-      g_monitoringList.removeDisconectedNode(m_id);
+      g_monitoringList.removeDisconnectedNode(m_id);
       m_agentUpTime = 0;
    }
 
@@ -3618,7 +3632,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
          }
       }
       m_agentConnection->enableTraps();
-      setFileUpdateConn(NULL);
+      setFileUpdateConnection(NULL);
       setLastAgentCommTime();
       CALL_ALL_MODULES(pfOnConnectToAgent, (this, m_agentConnection));
 	}
@@ -5289,11 +5303,15 @@ void Node::changeZone(UINT32 newZone)
 /**
  * Set connection for file update messages
  */
-void Node::setFileUpdateConn(AgentConnection *conn)
+void Node::setFileUpdateConnection(AgentConnection *conn)
 {
+   lockProperties();
    if (m_fileUpdateConn != NULL)
       m_fileUpdateConn->decRefCount();
    m_fileUpdateConn = conn;
+   if (m_fileUpdateConn != NULL)
+      m_fileUpdateConn->incRefCount();
+   unlockProperties();
 }
 
 /**

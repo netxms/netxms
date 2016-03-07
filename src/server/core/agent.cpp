@@ -273,7 +273,7 @@ void AgentConnectionEx::onFileMonitoringData(NXCPMessage *pMsg)
 	}
 	else
 	{
-		g_monitoringList.removeDisconectedNode(m_nodeId);
+		g_monitoringList.removeDisconnectedNode(m_nodeId);
       DbgPrintf(6, _T("AgentConnectionEx::onFileMonitoringData: node object not found"));
 	}
 }

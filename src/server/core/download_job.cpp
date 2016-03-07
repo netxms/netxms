@@ -103,7 +103,6 @@ void FileDownloadJob::progressCallback(size_t size, void *arg)
  */
 bool FileDownloadJob::run()
 {
-	AgentConnection *conn;
 	UINT32 rcc = 0xFFFFFFFF;
 	bool success = false;
 
@@ -118,7 +117,7 @@ bool FileDownloadJob::run()
       m_follow = false;
    }
 
-	conn = m_node->createAgentConnection();
+   AgentConnection *conn = m_node->createAgentConnection();
 	if (conn != NULL)
 	{
 		NXCPMessage msg, *response;
@@ -194,11 +193,6 @@ bool FileDownloadJob::run()
 		{
 			setFailureMessage(_T("Request timed out"));
 		}
-
-      if (!m_follow || m_node->getFileUpdateConn() != NULL)
-      {
-         conn->decRefCount();
-      }
 	}
 	else
 	{
@@ -247,6 +241,9 @@ bool FileDownloadJob::run()
       }
 		m_session->sendMessage(&response);
 	}
+
+	if (conn != NULL)
+	   conn->decRefCount();
 	return success;
 }
 

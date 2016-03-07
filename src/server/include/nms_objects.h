@@ -1391,7 +1391,7 @@ public:
 	INT16 getAgentAuthMethod() { return m_agentAuthMethod; }
    INT16 getAgentCacheMode() { return (m_dwDynamicFlags & NDF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }
 	const TCHAR *getSharedSecret() { return m_szSharedSecret; }
-	AgentConnection *getFileUpdateConn() { return m_fileUpdateConn; }
+	bool hasFileUpdateConnection() { lockProperties(); bool result = (m_fileUpdateConn != NULL); unlockProperties(); return result; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
@@ -1406,7 +1406,7 @@ public:
 	void setSnmpPort(WORD port) { m_snmpPort = port; }
    void changeIPAddress(const InetAddress& ipAddr);
 	void changeZone(UINT32 newZone);
-	void setFileUpdateConn(AgentConnection *conn);
+	void setFileUpdateConnection(AgentConnection *conn);
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
    void forceSyncDataCollectionConfig(Node *node);
 

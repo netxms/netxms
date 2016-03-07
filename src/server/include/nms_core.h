@@ -1092,7 +1092,7 @@ public:
    bool checkDuplicate(MONITORED_FILE *fileForAdd);
    ObjectArray<ClientSession>* findClientByFNameAndNodeID(const TCHAR *fileName, UINT32 nodeID);
    bool removeMonitoringFile(MONITORED_FILE *fileForRemove);
-   void removeDisconectedNode(UINT32 nodeId);
+   void removeDisconnectedNode(UINT32 nodeId);
 
 private:
    void lock();
