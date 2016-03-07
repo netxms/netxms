@@ -872,7 +872,7 @@ bool NetworkMap::isAllowedOnMap(NetObj *object)
 	lockProperties();
 	if (m_filter != NULL)
 	{
-      m_filter->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
+      m_filter->setGlobalVariable(_T("$object"), CreateCorrectObject(object));
       if (object->getObjectClass() == OBJECT_NODE)
       {
 		   m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));

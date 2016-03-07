@@ -705,8 +705,40 @@ NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const TCHAR *at
    if (value != NULL)
       return value;
 
-   Interface *iface = (Interface *)object->getData();
-   // TODO: Declare possible attrs
+   MobileDevice *mobDevice = (MobileDevice *)object->getData();
+   if (!_tcscmp(attr, _T("deviceId")))
+   {
+		value = new NXSL_Value(mobDevice->getDeviceId());
+   }
+   else if (!_tcscmp(attr, _T("vendor")))
+   {
+      value = new NXSL_Value(mobDevice->getVendor());
+   }
+   else if (!_tcscmp(attr, _T("model")))
+   {
+      value = new NXSL_Value(mobDevice->getModel());
+   }
+   else if (!_tcscmp(attr, _T("serialNumber")))
+   {
+      value = new NXSL_Value(mobDevice->getSerialNumber());
+   }
+   else if (!_tcscmp(attr, _T("osName")))
+   {
+      value = new NXSL_Value(mobDevice->getOsName());
+   }
+   else if (!_tcscmp(attr, _T("osVersion")))
+   {
+      value = new NXSL_Value(mobDevice->getOsVersion());
+   }
+   else if (!_tcscmp(attr, _T("userId")))
+   {
+      value = new NXSL_Value(mobDevice->getUserId());
+   }
+   else if (!_tcscmp(attr, _T("batteryLevel")))
+   {
+      value = new NXSL_Value(mobDevice->getBatteryLevel());
+   }
+
    return value;
 }
 

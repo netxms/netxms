@@ -915,7 +915,7 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
    if (m_transformationScript != NULL)
    {
       NXSL_Value *pValue = new NXSL_Value((const TCHAR *)value);
-      m_transformationScript->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pNode)));
+      m_transformationScript->setGlobalVariable(_T("$object"), CreateCorrectObject(m_pNode));
       if (m_pNode->getObjectClass() == OBJECT_NODE)
       {
          m_transformationScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));
@@ -1672,7 +1672,7 @@ bool DCItem::testTransformation(DataCollectionTarget *object, const TCHAR *scrip
    if (vm != NULL)
    {
       NXSL_Value *pValue = new NXSL_Value(value);
-      vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
+      vm->setGlobalVariable(_T("$object"),CreateCorrectObject(object));
       if (object->getObjectClass() == OBJECT_NODE)
       {
          vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));

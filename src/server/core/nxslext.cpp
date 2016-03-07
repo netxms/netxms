@@ -1479,3 +1479,23 @@ NXSL_VM *FindHookScript(const TCHAR *hookName)
 		DbgPrintf(7, _T("FindHookScript: hook script \"%s\" not found"), scriptName);
    return vm;
 }
+
+/**
+ * Create NXSL_Value with correct object class inside
+ */
+NXSL_Value *CreateCorrectObject(NetObj *object)
+{
+   switch(object->getObjectClass())
+   {
+      case OBJECT_NODE:
+         return new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object));
+      case OBJECT_CLUSTER:
+         return new NXSL_Value(new NXSL_Object(&g_nxslClusterClass, object));
+      case OBJECT_MOBILEDEVICE:
+         return new NXSL_Value(new NXSL_Object(&g_nxslMobileDeviceClass, object));
+      case OBJECT_ZONE:
+         return new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, object));
+      default:
+         return new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object));
+   }
+}

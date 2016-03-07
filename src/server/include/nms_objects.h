@@ -1059,6 +1059,13 @@ public:
 	void updateStatus(NXCPMessage *msg);
 
 	const TCHAR *getDeviceId() { return CHECK_NULL_EX(m_deviceId); }
+	const TCHAR *getVendor() { return CHECK_NULL_EX(m_vendor); }
+	const TCHAR *getModel() { return CHECK_NULL_EX(m_model); }
+	const TCHAR *getSerialNumber() { return CHECK_NULL_EX(m_serialNumber); }
+	const TCHAR *getOsName() { return CHECK_NULL_EX(m_osName); }
+	const TCHAR *getOsVersion() { return CHECK_NULL_EX(m_osVersion); }
+	const TCHAR *getUserId() { return CHECK_NULL_EX(m_userId); }
+	const LONG getBatteryLevel() { return m_batteryLevel; }
 
 	virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 };

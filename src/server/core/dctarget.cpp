@@ -635,7 +635,7 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
    NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
    if (vm != NULL)
    {
-      vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, this)));
+      vm->setGlobalVariable(_T("$object"), CreateCorrectObject(this));
       if (getObjectClass() == OBJECT_NODE)
       {
          vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
@@ -695,7 +695,7 @@ UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **
    NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
    if (vm != NULL)
    {
-      vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, this)));
+      vm->setGlobalVariable(_T("$object"), CreateCorrectObject(this));
       if (getObjectClass() == OBJECT_NODE)
       {
          vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
