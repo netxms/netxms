@@ -78,6 +78,7 @@ void SNMP_Transport::setSecurityContext(SNMP_SecurityContext *ctx)
 	m_securityContext = ctx;
    delete m_authoritativeEngine;
    m_authoritativeEngine = ((m_securityContext != NULL) && (m_securityContext->getAuthoritativeEngine().getIdLen() > 0)) ? new SNMP_Engine(&m_securityContext->getAuthoritativeEngine()) : NULL;
+   delete_and_null(m_contextEngine);
 }
 
 /**
