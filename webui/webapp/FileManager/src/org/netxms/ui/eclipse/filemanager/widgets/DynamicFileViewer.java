@@ -115,7 +115,7 @@ public class DynamicFileViewer extends BaseFileViewer
          {
             while(tracking)
             {
-               final String s = session.waitForFileTail(DynamicFileViewer.this.fileId, 3000);
+               final String s = session.waitForFileTail(fileId, 3000);
                if (s != null)
                {
                   runInUIThread(new Runnable() {
@@ -134,7 +134,7 @@ public class DynamicFileViewer extends BaseFileViewer
                   });
                }
             }
-            session.cancelFileMonitoring(nodeId, remoteFileName);
+            session.cancelFileMonitoring(nodeId, fileId);
          }
          
          @Override
