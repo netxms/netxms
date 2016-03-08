@@ -449,7 +449,7 @@ bool DCTable::transform(Table *value)
       return true;
 
    NXSL_Value *nxslValue = new NXSL_Value(new NXSL_Object(&g_nxslStaticTableClass, value));
-   m_transformationScript->setGlobalVariable(_T("$object"), CreateCorrectObject(m_pNode));
+   m_transformationScript->setGlobalVariable(_T("$object"), m_pNode->createNXSLObject());
    if (m_pNode->getObjectClass() == OBJECT_NODE)
    {
       m_transformationScript->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pNode)));

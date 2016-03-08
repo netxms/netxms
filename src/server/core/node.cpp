@@ -7543,3 +7543,11 @@ void Node::updateRackBinding()
       }
    }
 }
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *Node::createNXSLObject()
+{
+   return new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this));
+}

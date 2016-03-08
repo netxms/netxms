@@ -613,6 +613,8 @@ public:
    void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); setModified(); }
    NXSL_Value *getCustomAttributesForNXSL() const;
 
+   virtual NXSL_Value *createNXSLObject();
+
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);
 
@@ -1055,6 +1057,8 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
+   virtual NXSL_Value *createNXSLObject();
+
 	void updateSystemInfo(NXCPMessage *msg);
 	void updateStatus(NXCPMessage *msg);
 
@@ -1152,6 +1156,8 @@ public:
    virtual bool showThresholdSummary();
 
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
+
+   virtual NXSL_Value *createNXSLObject();
 
 	bool isSyncAddr(const InetAddress& addr);
 	bool isVirtualAddr(const InetAddress& addr);
@@ -1359,6 +1365,8 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+
+   virtual NXSL_Value *createNXSLObject();
 
 	TCHAR *expandText(const TCHAR *textTemplate, StringMap *inputFields, const TCHAR *userName);
 
@@ -1877,6 +1885,8 @@ public:
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
 	virtual bool showThresholdSummary();
+
+   virtual NXSL_Value *createNXSLObject();
 
    UINT32 getZoneId() { return m_zoneId; }
 	UINT32 getAgentProxy() { return m_agentProxy; }

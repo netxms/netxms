@@ -292,7 +292,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          NXSL_Value *parameters[2];
          parameters[0] = new NXSL_Value(value.getString());
          parameters[1] = new NXSL_Value(m_value.getString());
-         m_script->setGlobalVariable(_T("$object"), CreateCorrectObject(target));
+         m_script->setGlobalVariable(_T("$object"), target->createNXSLObject());
          if (target->getObjectClass() == OBJECT_NODE)
          {
             m_script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, target)));

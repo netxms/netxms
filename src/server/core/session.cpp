@@ -11110,7 +11110,7 @@ void ClientSession::executeScript(NXCPMessage *request)
                vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &msg));
                if (vm != NULL)
                {
-                  vm->setGlobalVariable(_T("$object"), CreateCorrectObject(object));
+                  vm->setGlobalVariable(_T("$object"), object->createNXSLObject());
                   if(object->getObjectClass() == OBJECT_NODE)
                   {
                      vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));

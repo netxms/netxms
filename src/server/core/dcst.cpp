@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -306,7 +306,7 @@ bool SummaryTable::filter(DataCollectionTarget *object)
       return true;   // no filtering
 
    bool result = true;
-   m_filter->setGlobalVariable(_T("$object"), CreateCorrectObject(object));
+   m_filter->setGlobalVariable(_T("$object"), object->createNXSLObject());
    if (object->getObjectClass() == OBJECT_NODE)
       m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
    if (m_filter->run())

@@ -2114,3 +2114,11 @@ NXSL_Value *NetObj::getCustomAttributesForNXSL() const
    delete attributes;
    return new NXSL_Value(map);
 }
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *NetObj::createNXSLObject()
+{
+   return new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, this));
+}
