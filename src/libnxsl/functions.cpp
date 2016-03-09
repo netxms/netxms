@@ -1335,6 +1335,29 @@ int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *v
 }
 
 /**
+ * Convert array to string
+ */
+int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString() || !argv[1]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   int count = 0;
+   TCHAR **strings = SplitString(argv[0]->getValueAsCString(), argv[1]->getValueAsCString()[0], &count);
+
+   NXSL_Array *a = new NXSL_Array();
+   for(int i = 0; i < count; i++)
+   {
+      a->add(new NXSL_Value(strings[i]));
+      free(strings[i]);
+   }
+   free(strings);
+
+   *result = new NXSL_Value(a);
+   return 0;
+}
+
+/**
  * Read persistent storage
  */
 int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)

@@ -3,7 +3,8 @@
 *
 
 - Additional parameters in Oracle subagent for redo logs and ASM monitoring
-- NXSL: variable $errormsg iholding error description set in catch block
+- NXSL: variable $errormsg holding error description set in catch block
+- New NXSL function SplitString
 - Default interface expected state can be configured
 - GPS subagent (provides location data from NMEA compatible GPS receivers)
 - Server can update node location using GPS subagent
