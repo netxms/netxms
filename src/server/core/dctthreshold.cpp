@@ -451,26 +451,29 @@ bool DCTableThreshold::saveToDatabase(DB_HANDLE hdb, UINT32 tableId, int seq)
    DBExecute(hStmt);
    DBFreeStatement(hStmt);
 
-   hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_conditions (threshold_id,group_id,sequence_number,column_name,check_operation,check_value) VALUES (?,?,?,?,?,?)"));
-   if (hStmt == NULL)
-      return false;
-   for(int i = 0; i < m_groups->size(); i++)
+   if (m_groups->size() > 0)
    {
-      DCTableConditionGroup *group = m_groups->get(i);
-      ObjectArray<DCTableCondition> *conditions = group->getConditions();
-      for(int j = 0; j < conditions->size(); j++)
+      hStmt = DBPrepare(hdb, _T("INSERT INTO dct_threshold_conditions (threshold_id,group_id,sequence_number,column_name,check_operation,check_value) VALUES (?,?,?,?,?,?)"));
+      if (hStmt == NULL)
+         return false;
+      for(int i = 0; i < m_groups->size(); i++)
       {
-         DCTableCondition *c = conditions->get(j);
-         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)i);
-         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)j);
-         DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, c->getColumn(), DB_BIND_STATIC);
-         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)c->getOperation());
-         DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, c->getValue(), DB_BIND_STATIC);
-         DBExecute(hStmt);
+         DCTableConditionGroup *group = m_groups->get(i);
+         ObjectArray<DCTableCondition> *conditions = group->getConditions();
+         for(int j = 0; j < conditions->size(); j++)
+         {
+            DCTableCondition *c = conditions->get(j);
+            DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)i);
+            DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (INT32)j);
+            DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, c->getColumn(), DB_BIND_STATIC);
+            DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (INT32)c->getOperation());
+            DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, c->getValue(), DB_BIND_STATIC);
+            DBExecute(hStmt);
+         }
       }
+      DBFreeStatement(hStmt);
    }
-   DBFreeStatement(hStmt);
    return true;
 }
 

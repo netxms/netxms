@@ -18,6 +18,7 @@
 	- Fixed grid issues in network maps
 	- Fixed object selection issues in network maps
 	- Added "hide links" option on network maps
+	- Added support for MAC addresses in format xxx.xxx.xxx.xxx
 - Fixed issues: #950, #962, #988, #1048, #1102, #1124, #1135, #1163, #1170
 
 

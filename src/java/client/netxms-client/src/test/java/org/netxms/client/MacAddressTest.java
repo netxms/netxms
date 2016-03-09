@@ -37,6 +37,10 @@ public class MacAddressTest extends TestCase
 		MacAddress a3 = MacAddress.parseMacAddress("02:0C:D4:55:22:1A");
 		assertEquals(a2, a3);
 		
+      MacAddress a4 = MacAddress.parseMacAddress("020.CD4.552.21A");
+      assertEquals(a2, a4);
+      assertEquals("02:0C:D4:55:22:1A", a4.toString());
+      
 		try
 		{
 			MacAddress.parseMacAddress("bad mac string");
