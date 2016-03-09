@@ -63,6 +63,7 @@ NXSL_Program::NXSL_Program()
    m_instructionSet = new ObjectArray<NXSL_Instruction>(32, 32, true);
    m_constants = new StringObjectMap<NXSL_Value>(true);
    m_functions = new ObjectArray<NXSL_Function>(16, 16, true);
+   m_requiredModules = new ObjectArray<NXSL_ModuleImport>(4, 4, true);
 }
 
 /**
@@ -73,6 +74,7 @@ NXSL_Program::~NXSL_Program()
    delete m_instructionSet;
    delete m_constants;
    delete m_functions;
+   delete m_requiredModules;
 }
 
 /**
@@ -167,14 +169,16 @@ bool NXSL_Program::addFunction(const char *pszName, UINT32 dwAddr, char *pszErro
 /**
  * Add required module name (must be dynamically allocated).
  */
-void NXSL_Program::addRequiredModule(char *name)
+void NXSL_Program::addRequiredModule(const char *name, int lineNumber)
 {
+   NXSL_ModuleImport *module = new NXSL_ModuleImport();
 #ifdef UNICODE
-   m_requiredModules.addPreallocated(WideStringFromUTF8String(name));
-	free(name);
+   MultiByteToWideChar(CP_UTF8, 0, name, -1, module->name, MAX_PATH - 1);
 #else
-   m_requiredModules.addPreallocated(name);
+   nx_strncpy(module->name, name, MAX_PATH);
 #endif
+   module->lineNumber = lineNumber;
+   m_requiredModules->add(module);
 }
 
 /**
@@ -475,9 +479,11 @@ void NXSL_Program::serialize(ByteStream& s)
 
    // write required modules list
    header.moduleSectionOffset = htonl((UINT32)s.pos());
-   for(i = 0; i < m_requiredModules.size(); i++)
+   for(i = 0; i < m_requiredModules->size(); i++)
    {
-      s.writeString(m_requiredModules.get(i));
+      NXSL_ModuleImport *module = m_requiredModules->get(i);
+      s.writeString(module->name);
+      s.write((INT32)module->lineNumber);
    }
 
    // write function list
@@ -602,7 +608,13 @@ NXSL_Program *NXSL_Program::load(ByteStream& s, TCHAR *errMsg, size_t errMsgSize
          nx_strncpy(errMsg, _T("Binary file read error (modules section)"), errMsgSize);
          goto failure;
       }
-      p->m_requiredModules.addPreallocated(name);
+
+      NXSL_ModuleImport *module = new NXSL_ModuleImport();
+      nx_strncpy(module->name, name, MAX_PATH);
+      free(name);
+      module->lineNumber = s.readInt32();
+
+      p->m_requiredModules->add(module);
    }
 
    // Load function list

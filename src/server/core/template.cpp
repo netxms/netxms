@@ -1169,6 +1169,10 @@ AutoBindDecision Template::isApplicable(Node *node)
 	   filter = new NXSL_VM(new NXSL_ServerEnv());
 	   if (!filter->load(m_applyFilter))
 	   {
+	      TCHAR buffer[1024];
+	      _sntprintf(buffer, 1024, _T("Template::%s::%d"), m_name, m_id);
+	      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, filter->getErrorText(), m_id);
+	      nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, filter->getErrorText());
 	      delete_and_null(filter);
 	   }
 	}

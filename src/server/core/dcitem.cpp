@@ -1901,7 +1901,6 @@ static EnumerationCallbackResult FilterCallback(const TCHAR *key, const void *va
    else
    {
       TCHAR szBuffer[1024];
-
 		_sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"),
                  (dci->getNode() != NULL) ? dci->getNode()->getName() : _T("(null)"), dci->getId());
       PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, dci->getId(), "ssd", szBuffer, instanceFilter->getErrorText(), dci->getId());
@@ -1924,7 +1923,13 @@ void DCItem::filterInstanceList(StringMap *instances)
 
    FilterCallbackData data;
    data.instanceFilter = new NXSL_VM(new NXSL_ServerEnv());
-   data.instanceFilter->load(m_instanceFilter);
+   if (!data.instanceFilter->load(m_instanceFilter))
+   {
+      TCHAR szBuffer[1024];
+      _sntprintf(szBuffer, 1024, _T("DCI::%s::%d::InstanceFilter"),
+                 (m_pNode != NULL) ? m_pNode->getName() : _T("(null)"), m_id);
+      PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", szBuffer, data.instanceFilter->getErrorText(), m_id);
+   }
    unlock();
 
    StringMap filteredInstances;

@@ -198,8 +198,8 @@ ConstDefinition:
 UseStatement:
 	T_USE AnyIdentifier ';'
 {
-	pScript->addRequiredModule($2);
-	$2 = NULL;
+	pScript->addRequiredModule($2, pLexer->getCurrLine());
+	safe_free_and_null($2);
 }
 ;
 

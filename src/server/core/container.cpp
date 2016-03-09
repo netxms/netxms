@@ -313,6 +313,10 @@ AutoBindDecision Container::isSuitableForNode(Node *node)
 	   filter = new NXSL_VM(new NXSL_ServerEnv());
 	   if (!filter->load(m_bindFilter))
 	   {
+	      TCHAR buffer[1024];
+	      _sntprintf(buffer, 1024, _T("Container::%s::%d"), m_name, m_id);
+	      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, filter->getErrorText(), m_id);
+	      nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, filter->getErrorText());
 	      delete_and_null(filter);
 	   }
 	}

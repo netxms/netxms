@@ -229,11 +229,12 @@ bool NXSL_VM::load(NXSL_Program *program)
 
    // Load modules
    m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
-   for(i = 0; i < program->m_requiredModules.size(); i++)
+   for(i = 0; i < program->m_requiredModules->size(); i++)
    {
-      if (!m_env->loadModule(this, program->m_requiredModules.get(i)))
+      const NXSL_ModuleImport *importInfo = program->m_requiredModules->get(i);
+      if (!m_env->loadModule(this, importInfo))
       {
-         error(NXSL_ERR_MODULE_NOT_FOUND);
+         error(NXSL_ERR_MODULE_NOT_FOUND, importInfo->lineNumber);
          success = false;
          break;
       }
@@ -1870,13 +1871,13 @@ void NXSL_VM::relocateCode(UINT32 dwStart, UINT32 dwLen, UINT32 dwShift)
 /**
  * Use external module
  */
-void NXSL_VM::loadModule(NXSL_Program *module, const TCHAR *name)
+void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo)
 {
    int i;
 
    // Check if module already loaded
    for(i = 0; i < m_modules->size(); i++)
-      if (!_tcsicmp(name, m_modules->get(i)->m_name))
+      if (!_tcsicmp(importInfo->name, m_modules->get(i)->m_name))
          return;  // Already loaded
 
    // Add code from module
@@ -1898,7 +1899,7 @@ void NXSL_VM::loadModule(NXSL_Program *module, const TCHAR *name)
 
    // Register module as loaded
    NXSL_Module *m = new NXSL_Module;
-   nx_strncpy(m->m_name, name, MAX_PATH);
+   nx_strncpy(m->m_name, importInfo->name, MAX_PATH);
    m->m_codeStart = (UINT32)start;
    m->m_codeSize = module->m_instructionSet->size();
    m->m_functionStart = m_functions->size() - module->m_functions->size();
@@ -2177,14 +2178,14 @@ void NXSL_VM::dump(FILE *pFile)
 /**
  * Report error
  */
-void NXSL_VM::error(int nError)
+void NXSL_VM::error(int errorCode, int sourceLine)
 {
    TCHAR szBuffer[1024];
 
-   m_errorCode = nError;
-   m_errorLine = (m_cp == INVALID_ADDRESS) ? 0 : m_instructionSet->get(m_cp)->m_nSourceLine;
+   m_errorCode = errorCode;
+   m_errorLine = (sourceLine == -1) ? ((m_cp == INVALID_ADDRESS) ? 0 : m_instructionSet->get(m_cp)->m_nSourceLine) : sourceLine;
    safe_free(m_errorText);
-   _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), nError, m_errorLine, GetErrorMessage(nError));
+   _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), errorCode, m_errorLine, GetErrorMessage(errorCode));
    m_errorText = _tcsdup(szBuffer);
    m_cp = INVALID_ADDRESS;
 }

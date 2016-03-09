@@ -227,6 +227,10 @@ int main(int argc, char *argv[])
 		         safe_free(ppArgs);
             }
          }
+         else
+         {
+            WriteToTerminalEx(_T("%s\n"), vm->getErrorText());
+         }
          delete vm;
       }
       delete pScript;
