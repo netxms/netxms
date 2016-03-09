@@ -1890,7 +1890,9 @@ bool LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLog
 bool LIBNETXMS_EXPORTABLE nxlog_rotate();
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level);
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level();
-void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(void (* writer)(const TCHAR *));
+
+typedef void (*NxLogDebugWriter)(const TCHAR *);
+void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer);
 
 typedef void (*NxLogConsoleWriter)(const TCHAR *, ...);
 void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(NxLogConsoleWriter writer);

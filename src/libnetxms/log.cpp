@@ -54,7 +54,7 @@ static NxLogConsoleWriter m_consoleWriter = (NxLogConsoleWriter)_tprintf;
 static String s_logBuffer;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static CONDITION s_writerStopCondition = INVALID_CONDITION_HANDLE;
-static void (* s_debugWriter)(const TCHAR *) = NULL;
+static NxLogDebugWriter s_debugWriter = NULL;
 
 /**
  * Set debug level
@@ -76,7 +76,7 @@ int LIBNETXMS_EXPORTABLE nxlog_get_debug_level()
 /**
  * Set additional debug writer callback. It will be called for each line written with nxlog_debug.
  */
-void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(void (* writer)(const TCHAR *))
+extern "C" void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer)
 {
    s_debugWriter = writer;
 }
