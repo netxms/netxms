@@ -463,7 +463,6 @@ void Alarm::updateFromEvent(Event *event, int state, int severity, UINT32 timeou
 void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int severity, UINT32 timeout,
 									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout)
 {
-   TCHAR szQuery[2048];
    UINT32 alarmId = 0;
    bool newAlarm = true;
    bool updateRelatedEvent = false;
