@@ -46,33 +46,6 @@ ClusterNodeInfo g_nxccNodes[CLUSTER_MAX_NODE_ID];
 ThreadPool *g_nxccThreadPool;
 
 /**
- * Debug callback
- */
-static void (*s_debugCallback)(int, const TCHAR *, va_list) = NULL;
-
-/**
- * Set debug callback
- */
-void LIBNXCC_EXPORTABLE ClusterSetDebugCallback(void (*cb)(int, const TCHAR *, va_list))
-{
-   s_debugCallback = cb;
-}
-
-/**
- * Debug output
- */
-void ClusterDebug(int level, const TCHAR *format, ...)
-{
-   if (s_debugCallback == NULL)
-      return;
-
-   va_list args;
-   va_start(args, format);
-   s_debugCallback(level, format, args);
-   va_end(args);
-}
-
-/**
  * Add cluster peer node from config
  */
 static bool AddPeerNode(TCHAR *cfg)

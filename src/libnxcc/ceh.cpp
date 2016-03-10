@@ -65,6 +65,13 @@ void ClusterEventHandler::onShutdown()
 }
 
 /**
+ * Split brain condition handler
+ */
+void ClusterEventHandler::onSplitBrain()
+{
+}
+
+/**
  * Incoming message handler
  * Possible return values:
  *    CLUSTER_MSG_PROCESSED - message is processed and should be deleted

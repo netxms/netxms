@@ -72,11 +72,11 @@ enum ClusterNotificationCode
    CN_NODE_RUNNING = 2
 };
 
+#define ClusterDebug nxlog_debug
+
 /**
  * Internal functions
  */
-void ClusterDebug(int level, const TCHAR *format, ...);
-
 void ClusterDisconnect();
 void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state);
 void ClusterSendMessage(ClusterNodeInfo *node, NXCPMessage *msg);

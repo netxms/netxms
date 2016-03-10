@@ -61,6 +61,7 @@ public:
    virtual void onNodeUp(UINT32 nodeId);
    virtual void onNodeDisconnect(UINT32 nodeId);
    virtual void onShutdown();
+   virtual void onSplitBrain();
    
    virtual ClusterMessageProcessingResult onMessage(NXCPMessage *msg, UINT32 sourceNodeId);
 };
@@ -72,8 +73,6 @@ bool LIBNXCC_EXPORTABLE ClusterInit(Config *config, const TCHAR *section, Cluste
 bool LIBNXCC_EXPORTABLE ClusterJoin();
 void LIBNXCC_EXPORTABLE ClusterSetRunning();
 void LIBNXCC_EXPORTABLE ClusterShutdown();
-
-void LIBNXCC_EXPORTABLE ClusterSetDebugCallback(void (*cb)(int, const TCHAR *, va_list));
 
 UINT32 LIBNXCC_EXPORTABLE ClusterGetLocalNodeId();
 UINT32 LIBNXCC_EXPORTABLE ClusterGetMasterNodeId();
