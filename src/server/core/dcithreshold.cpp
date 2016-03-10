@@ -29,7 +29,7 @@ Threshold::Threshold(DCItem *pRelatedItem)
 {
    m_id = 0;
    m_itemId = pRelatedItem->getId();
-   m_targetId = pRelatedItem->getTarget()->getId();
+   m_targetId = pRelatedItem->getOwnerId();
    m_eventCode = EVENT_THRESHOLD_REACHED;
    m_rearmEventCode = EVENT_THRESHOLD_REARMED;
    m_function = F_LAST;
@@ -106,7 +106,7 @@ Threshold::Threshold(DB_RESULT hResult, int iRow, DCItem *pRelatedItem)
 
    m_id = DBGetFieldULong(hResult, iRow, 0);
    m_itemId = pRelatedItem->getId();
-   m_targetId = pRelatedItem->getTarget()->getId();
+   m_targetId = pRelatedItem->getOwnerId();
    m_eventCode = DBGetFieldULong(hResult, iRow, 7);
    m_rearmEventCode = DBGetFieldULong(hResult, iRow, 9);
    DBGetField(hResult, iRow, 1, szBuffer, MAX_DB_STRING);
@@ -134,7 +134,7 @@ Threshold::Threshold(ConfigEntry *config, DCItem *parentItem)
 {
    createId();
    m_itemId = parentItem->getId();
-   m_targetId = parentItem->getTarget()->getId();
+   m_targetId = parentItem->getOwnerId();
    m_eventCode = EventCodeFromName(config->getSubEntryValue(_T("activationEvent"), 0, _T("SYS_THRESHOLD_REACHED")));
    m_rearmEventCode = EventCodeFromName(config->getSubEntryValue(_T("deactivationEvent"), 0, _T("SYS_THRESHOLD_REARMED")));
    m_function = (BYTE)config->getSubEntryValueAsInt(_T("function"), 0, F_LAST);
@@ -297,7 +297,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
          {
             m_script->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, target)));
          }
-         m_script->setGlobalVariable(_T("$dci"), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci)));
+         m_script->setGlobalVariable(_T("$dci"), dci->createNXSLObject());
          m_script->setGlobalVariable(_T("$isCluster"), new NXSL_Value((target->getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
          if (m_script->run(2, parameters))
          {
@@ -798,7 +798,7 @@ void Threshold::createNXMPRecord(String &str, int index)
 void Threshold::associate(DCItem *pItem)
 {
    m_itemId = pItem->getId();
-   m_targetId = pItem->getTarget()->getId();
+   m_targetId = pItem->getOwnerId();
    m_dataType = pItem->getDataType();
 }
 

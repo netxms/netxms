@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ static int F_GetDCIObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	DCObject *dci = node->getDCObjectById(argv[1]->getValueAsUInt32());
 	if (dci != NULL)
 	{
-		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci));
+		*ppResult = dci->createNXSLObject();
 	}
 	else
 	{
@@ -457,7 +457,7 @@ static int F_CreateDCI(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_
 		DCItem *dci = new DCItem(CreateUniqueId(IDG_ITEM), argv[2]->getValueAsCString(),
 			origin, dataType, pollingInterval, retentionTime, node, argv[3]->getValueAsCString());
 		node->addDCObject(dci);
-		*ppResult = new NXSL_Value(new NXSL_Object(&g_nxslDciClass, dci));
+		*ppResult = dci->createNXSLObject();
 	}
 	else
 	{

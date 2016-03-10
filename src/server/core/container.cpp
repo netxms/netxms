@@ -93,7 +93,7 @@ bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       TCHAR error[256];
       m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, NULL);
       if (m_bindFilter == NULL)
-         nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+         nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, error);
    }
    DBFreeResult(hResult);
 

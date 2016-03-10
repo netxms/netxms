@@ -12,6 +12,7 @@
 - NetXMS processes uses LC_CTYPE from environment for terminal I/O
 - Fixed bug in saving service checks
 - Fixed server crash caused by heap corruption in MS SQL and DB/2 database drivers
+- Fixed server deadlock caused by simultaneous use of instance discovery and transformation scripts
 - Agent parameters for monitoring System V message queues
 - New action User.ChangePassword in WINNT subagent
 - Text2reach SMS driver improved

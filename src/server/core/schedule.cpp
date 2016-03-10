@@ -821,8 +821,8 @@ void InitializeTaskScheduler()
 void CloseTaskScheduler()
 {
    ConditionSet(s_cond);
-   s_cond = INVALID_CONDITION_HANDLE;
    ConditionDestroy(s_cond);
+   s_cond = INVALID_CONDITION_HANDLE;
    ThreadPoolDestroy(g_schedulerThreadPool);
    MutexDestroy(s_cronScheduleLock);
    MutexDestroy(s_oneTimeScheduleLock);

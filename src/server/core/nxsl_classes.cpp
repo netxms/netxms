@@ -1012,14 +1012,22 @@ NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
 }
 
 /**
+ * Object destructor
+ */
+void NXSL_DciClass::onObjectDelete(NXSL_Object *object)
+{
+   delete (DCObjectInfo *)object->getData();
+}
+
+/**
  * Implementation of "DCI" class: get attribute
  */
 NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
-   DCObject *dci;
+   DCObjectInfo *dci;
    NXSL_Value *value = NULL;
 
-   dci = (DCObject *)object->getData();
+   dci = (DCObjectInfo *)object->getData();
    if (!_tcscmp(attr, _T("comments")))
    {
 		value = new NXSL_Value(dci->getComments());
@@ -1054,7 +1062,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    }
    else if (!_tcscmp(attr, _T("origin")))
    {
-		value = new NXSL_Value((LONG)dci->getDataSource());
+		value = new NXSL_Value((LONG)dci->getOrigin());
    }
    else if (!_tcscmp(attr, _T("status")))
    {

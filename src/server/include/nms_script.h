@@ -121,6 +121,7 @@ public:
    NXSL_DciClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual void onObjectDelete(NXSL_Object *object);
 };
 
 /**

@@ -842,7 +842,7 @@ NXSL_Value *Template::getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *des
       if (((name == NULL) || MatchString(name, curr->getName(), false)) &&
           ((description == NULL) || MatchString(description, curr->getDescription(), false)))
 		{
-         list->set(list->size(), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, curr)));
+         list->set(list->size(), curr->createNXSLObject());
 		}
 	}
 	unlockDciAccess();

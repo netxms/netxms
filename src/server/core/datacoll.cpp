@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -186,7 +186,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
    while(!IsShutdownInProgress())
    {
       DCObject *pItem = (DCObject *)g_dataCollectionQueue.getOrBlock();
-		DataCollectionTarget *target = (DataCollectionTarget *)pItem->getTarget();
+		DataCollectionTarget *target = (DataCollectionTarget *)pItem->getOwner();
 
 		if (pItem->isScheduledForDeletion())
 		{
@@ -257,7 +257,7 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
                case DCE_SUCCESS:
                   if (pItem->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
                      pItem->setStatus(ITEM_STATUS_ACTIVE, true);
-                  if (!((DataCollectionTarget *)pItem->getTarget())->processNewDCValue(pItem, currTime, data))
+                  if (!((DataCollectionTarget *)pItem->getOwner())->processNewDCValue(pItem, currTime, data))
                   {
                      // value processing failed, convert to data collection error
                      pItem->processNewError(false);
@@ -280,14 +280,14 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
          // Decrement node's usage counter
          target->decRefCount();
-			if ((pItem->getSourceNode() != 0) && (pItem->getTarget() != NULL))
+			if ((pItem->getSourceNode() != 0) && (pItem->getOwner() != NULL))
 			{
-				pItem->getTarget()->decRefCount();
+				pItem->getOwner()->decRefCount();
 			}
       }
       else     /* target == NULL */
       {
-			Template *n = pItem->getTarget();
+			Template *n = pItem->getOwner();
          DbgPrintf(3, _T("*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" target=%d sourceNode=%d)"),
 			          pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, pItem->getSourceNode());
       }
@@ -433,9 +433,9 @@ THREAD_RESULT THREAD_CALL CacheLoader(void *arg)
          break;
 
       DbgPrintf(6, _T("Loading cache for DCI %s [%d] on %s [%d]"), 
-         dci->getName(), dci->getId(), dci->getNode()->getName(), dci->getNode()->getId());
+                dci->getName(), dci->getId(), dci->getOwnerName(), dci->getOwnerId());
       dci->reloadCache();
-      dci->getNode()->decRefCount();
+      dci->getOwner()->decRefCount();
    }
    DbgPrintf(2, _T("DCI cache loader thread stopped"));
    return THREAD_OK;

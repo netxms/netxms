@@ -998,4 +998,16 @@ Language=English
 Failed to compile instance filter script for DCI %3 "%4" on %1 "%2": %5
 .
 
+MessageId=
+SymbolicName=MSG_TRANSFORMATION_SCRIPT_COMPILATION_ERROR
+Language=English
+Failed to compile transformation script for object %1 "%2" DCI %3 "%4": %5
+.
+
+MessageId=
+SymbolicName=MSG_TRANSFORMATION_SCRIPT_EXECUTION_ERROR
+Language=English
+Failed to execute transformation script for object %1 "%2" DCI %3 "%4": %5
+.
+
 ;#endif
