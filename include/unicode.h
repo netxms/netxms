@@ -314,7 +314,7 @@
 #define _tcscat_s strcat_s
 #define _tcsncat  strncat
 #define _tcspbrk  strpbrk
-#define _tcstok_r srttok_r
+#define _tcstok_r strtok_r
 #define _topen    open
 #define _taccess  access
 #define _tstat    stat
