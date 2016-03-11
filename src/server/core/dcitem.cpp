@@ -962,13 +962,11 @@ bool DCItem::transform(ItemValue &value, time_t nElapsedTime)
          }
          else if (vm->getErrorCode() == NXSL_ERR_EXECUTION_ABORTED)
          {
-            lock();
             DbgPrintf(6, _T("Transformation script for DCI \"%s\" [%d] on node %s [%d] aborted"),
                       m_description, m_id, getOwnerName(), getOwnerId());
          }
          else
          {
-            lock();
             TCHAR buffer[1024];
             _sntprintf(buffer, 1024, _T("DCI::%s::%d::TransformationScript"), getOwnerName(), m_id);
             PostDciEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, m_id, "ssd", buffer, vm->getErrorText(), m_id);
