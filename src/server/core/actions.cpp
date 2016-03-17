@@ -180,26 +180,39 @@ static BOOL ExecuteRemoteAction(TCHAR *pszTarget, TCHAR *pszAction)
    int i, nLen, nState, nCount = 0;
    TCHAR *pCmd[128], *pTmp;
 
-   // Resolve hostname
-   InetAddress addr = InetAddress::resolveHostName(pszTarget);
-   if (!addr.isValid())
-      return FALSE;
-
-   Node *node = FindNodeByIP(0, addr.getAddressV4());	/* TODO: add possibility to specify action target by object id */
-   if (node != NULL)
+   if(pszTarget[0] == '@')
    {
+      //Resolve name of node to connection to it. Name shuld be in @name format.
+      Node *node = (Node *)FindObjectByName(pszTarget+1, OBJECT_NODE);
+      if(node == NULL)
+         return FALSE;
       pConn = node->createAgentConnection();
       if (pConn == NULL)
          return FALSE;
    }
    else
    {
-      // Target node is not in our database, try default communication settings
-      pConn = new AgentConnection(addr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
-      if (!pConn->connect(g_pServerKey))
-      {
-         pConn->decRefCount();
+      // Resolve hostname
+      InetAddress addr = InetAddress::resolveHostName(pszTarget);
+      if (!addr.isValid())
          return FALSE;
+
+      Node *node = FindNodeByIP(0, addr.getAddressV4());	/* TODO: add possibility to specify action target by object id */
+      if (node != NULL)
+      {
+         pConn = node->createAgentConnection();
+         if (pConn == NULL)
+            return FALSE;
+      }
+      else
+      {
+         // Target node is not in our database, try default communication settings
+         pConn = new AgentConnection(addr, AGENT_LISTEN_PORT, AUTH_NONE, _T(""));
+         if (!pConn->connect(g_pServerKey))
+         {
+            pConn->decRefCount();
+            return FALSE;
+         }
       }
    }
 
