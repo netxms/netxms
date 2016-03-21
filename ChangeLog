@@ -16,6 +16,7 @@
 - Agent parameters for monitoring System V message queues
 - New action User.ChangePassword in WINNT subagent
 - Text2reach SMS driver improved
+- Port check subagent can be configured to return negative value as response time in case of error
 - Management console:
 	- Fixed grid issues in network maps
 	- Fixed object selection issues in network maps

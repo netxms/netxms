@@ -6496,8 +6496,8 @@ void Node::checkSubnetBinding()
                if ((addr.getHostBits() < 2) && (getParentCount() > 1))
                {
                   /* Delete subnet object if we try to change it's netmask to 255.255.255.255 or 255.255.255.254 and
-                   node has more than one parent. hasIfaceForPrimaryIp paramteter should prevent us from going in
-                   loop(creating and deleting all the time subnet). */
+                   node has more than one parent. hasIfaceForPrimaryIp parameter should prevent us from going in
+                   loop (creating and deleting all the time subnet). */
                   pSubnet->deleteObject();
                   pSubnet = NULL;   // prevent binding to deleted subnet
                }
