@@ -644,10 +644,10 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
    DbgPrintf(7, _T("OneTimeEventThread: started"));
    while(true)
    {
-      if(!ConditionWait(s_cond, sleepTime) && (g_flags & AF_SHUTDOWN))
+      ConditionWait(s_cond, sleepTime);
+      if(g_flags & AF_SHUTDOWN)
          break;
 
-      //ConditionReset(s_cond);
       time_t now = time(NULL);
       struct tm currLocal;
       memcpy(&currLocal, localtime(&now), sizeof(struct tm));
