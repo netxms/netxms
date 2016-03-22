@@ -833,6 +833,59 @@ static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 }
 
 /**
+ * EnterMaintenance object (set to unmanaged state)
+ * Syntax:
+ *    EnterMaintenance(object)
+ * where:
+ *     object - NetXMS object (Node, Interface, or NetObj)
+ * Return value:
+ *     null
+ */
+static int F_EnterMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	((NetObj *)object->getData())->enterMaintenanceMode();
+
+	*ppResult = new NXSL_Value;
+	return 0;
+}
+
+/**
+ * LeaveMaintenance object (set to unmanaged state)
+ * Syntax:
+ *    LeaveMaintenance(object)
+ * where:
+ *     object - NetXMS object (Node, Interface, or NetObj)
+ * Return value:
+ *     null
+ */
+static int F_LeaveMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+	if (!argv[0]->isObject())
+		return NXSL_ERR_NOT_OBJECT;
+
+	NXSL_Object *object = argv[0]->getValueAsObject();
+	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
+		return NXSL_ERR_BAD_CLASS;
+
+	((NetObj *)object->getData())->leaveMaintenanceMode();
+
+	*ppResult = new NXSL_Value;
+	return 0;
+}
+
+
+/**
  * Set interface expected state
  * Syntax:
  *    SetInterfaceExpectedState(interface, state)
@@ -1358,7 +1411,9 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
 	{ _T("SNMPGetValue"), F_SNMPGetValue, 2 },
 	{ _T("SNMPSet"), F_SNMPSet, -1 /* 3 or 4 */ },
 	{ _T("SNMPWalk"), F_SNMPWalk, 2 },
-   { _T("UnmanageObject"), F_UnmanageObject, 1 }
+   { _T("UnmanageObject"), F_UnmanageObject, 1 },
+   { _T("EnterMaintenance"), F_EnterMaintenance, 1 },
+   { _T("LeaveMaintenance"), F_LeaveMaintenance, 1 }
 };
 
 /**
