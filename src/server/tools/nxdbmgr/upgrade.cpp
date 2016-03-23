@@ -642,6 +642,16 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V394 to V395
+ */
+static BOOL H_UpgradeFromV394(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET need_server_restart='1' WHERE var_name='OffileDataRelevanceTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='395' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V393 to V394
  */
 static BOOL H_UpgradeFromV393(int currVersion, int newVersion)
@@ -9471,6 +9481,7 @@ static struct
    { 391, 392, H_UpgradeFromV391 },
    { 392, 393, H_UpgradeFromV392 },
    { 393, 394, H_UpgradeFromV393 },
+   { 394, 395, H_UpgradeFromV394 },
    { 0, 0, NULL }
 };
 
