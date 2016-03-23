@@ -642,6 +642,16 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V393 to V394
+ */
+static BOOL H_UpgradeFromV393(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("OffileDataRelevanceTime"), _T("86400"), _T("Time period in seconds within which received offline data still relevant for threshold validation"), 'I', true, false, false, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='394' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V392 to V393
  */
 static BOOL H_UpgradeFromV392(int currVersion, int newVersion)
@@ -9460,6 +9470,7 @@ static struct
    { 390, 391, H_UpgradeFromV390 },
    { 391, 392, H_UpgradeFromV391 },
    { 392, 393, H_UpgradeFromV392 },
+   { 393, 394, H_UpgradeFromV393 },
    { 0, 0, NULL }
 };
 

@@ -744,7 +744,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
       PerfDataStorageRequest(this, tmTimeStamp, pValue->getString());
 
    // Check thresholds and add value to cache
-   if (m_bCacheLoaded && (tmTimeStamp >= m_tPrevValueTimeStamp))
+   if (m_bCacheLoaded && (tmTimeStamp >= m_tPrevValueTimeStamp) && (g_offileDataRelevanceTime <= 0 || tmTimeStamp > (time(NULL) - g_offileDataRelevanceTime)))
    {
       checkThresholds(*pValue);
    }

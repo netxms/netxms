@@ -432,7 +432,8 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
 
 	   DBConnectionPoolReleaseConnection(hdb);
    }
-   checkThresholds((Table *)value);
+   if(g_offileDataRelevanceTime <= 0 || timestamp > (time(NULL) - g_offileDataRelevanceTime))
+      checkThresholds((Table *)value);
 
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       PerfDataStorageRequest(this, timestamp, (Table *)value);

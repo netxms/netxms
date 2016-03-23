@@ -1127,6 +1127,7 @@ extern UINT32 g_agentCommandTimeout;
 extern UINT32 g_thresholdRepeatInterval;
 extern int g_requiredPolls;
 extern UINT32 g_slmPollingInterval;
+extern UINT32 g_offileDataRelevanceTime;
 
 extern TCHAR g_szDbDriver[];
 extern TCHAR g_szDbDrvParams[];
