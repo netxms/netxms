@@ -53,7 +53,9 @@ static int F_GetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
 	    _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
-		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()))
+		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netxmsObject = (NetObj *)object->getData();
@@ -89,7 +91,9 @@ static int F_SetCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppResu
 	object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
 	    _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
-		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()))
+		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netxmsObject = (NetObj *)object->getData();
@@ -125,7 +129,9 @@ static int F_DeleteCustomAttribute(int argc, NXSL_Value **argv, NXSL_Value **ppR
 	object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
 	    _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
-		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()))
+		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netxmsObject = (NetObj *)object->getData();
@@ -304,7 +310,7 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 			}
 			if ((currNode != NULL) && (object->isTrustedNode(currNode->getId())))
 			{
-				*ppResult = new NXSL_Value(new NXSL_Object((object->getObjectClass() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
+				*ppResult = object->createNXSLObject();
 			}
 			else
 			{
@@ -318,7 +324,7 @@ static int F_FindObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 		}
 		else
 		{
-			*ppResult = new NXSL_Value(new NXSL_Object((object->getObjectClass() == OBJECT_NODE) ? (NXSL_Class *)&g_nxslNodeClass : (NXSL_Class *)&g_nxslNetObjClass, object));
+			*ppResult = object->createNXSLObject();;
 		}
 	}
 	else
@@ -381,7 +387,9 @@ static int F_GetObjectParents(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
 	    _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
-		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()))
+		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netobj = (NetObj *)object->getData();
@@ -402,7 +410,9 @@ static int F_GetObjectChildren(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
 	    _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
-		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()))
+		 _tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netobj = (NetObj *)object->getData();
@@ -656,7 +666,9 @@ static int F_DeleteObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	NXSL_Object *obj = argv[0]->getValueAsObject();
 	if (_tcscmp(obj->getClass()->getName(), g_nxslNetObjClass.getName()) &&
        _tcscmp(obj->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
-       _tcscmp(obj->getClass()->getName(), g_nxslNodeClass.getName()))
+       _tcscmp(obj->getClass()->getName(), g_nxslNodeClass.getName()) &&
+		 _tcscmp(obj->getClass()->getName(), g_nxslMobileDeviceClass.getName()) &&
+		 _tcscmp(obj->getClass()->getName(), g_nxslClusterClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	NetObj *netobj = (NetObj*)obj->getData();
@@ -771,7 +783,9 @@ static int F_RenameObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
-		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
+		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	((NetObj *)object->getData())->setName(argv[1]->getValueAsCString());
@@ -797,7 +811,9 @@ static int F_ManageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NX
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
-		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
+		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	((NetObj *)object->getData())->setMgmtStatus(TRUE);
@@ -823,7 +839,9 @@ static int F_UnmanageObject(int argc, NXSL_Value **argv, NXSL_Value **ppResult, 
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
-		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
+		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	((NetObj *)object->getData())->setMgmtStatus(FALSE);
@@ -849,7 +867,9 @@ static int F_EnterMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
-		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
+		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	((NetObj *)object->getData())->enterMaintenanceMode();
@@ -875,7 +895,9 @@ static int F_LeaveMaintenance(int argc, NXSL_Value **argv, NXSL_Value **ppResult
 	NXSL_Object *object = argv[0]->getValueAsObject();
 	if (_tcscmp(object->getClass()->getName(), g_nxslNetObjClass.getName()) &&
 		 _tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()) &&
-		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()))
+		 _tcscmp(object->getClass()->getName(), g_nxslInterfaceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslMobileDeviceClass.getName()) &&
+		 _tcscmp(object->getClass()->getName(), g_nxslClusterClass.getName()))
 		return NXSL_ERR_BAD_CLASS;
 
 	((NetObj *)object->getData())->leaveMaintenanceMode();
