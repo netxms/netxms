@@ -723,10 +723,10 @@
 	- Horizontal scrollable tabs for node info activity (tabs are no more compressed to show all together)
 	- Fixed bad format for DCI value in last values tab
 	- Scheduler for "passive" connection", parameters:
-		- Enable scheduler: enables the scheduler, if \91off\92 program exposes the previous behaviour
+		- Enable scheduler: enables the scheduler, if off program exposes the previous behaviour
 		- Interval: how many minutes have to elapse before trying to connect to server
 		- Duration: how many minutes connections has to be kept on
-		- Enable daily scheduler: if \91off\92, the above values are applied to the whole day. If \91on\92 they will be applied only to the specified interval (for the whole week).
+		- Enable daily scheduler: if off, the above values are applied to the whole day. If on they will be applied only to the specified interval (for the whole week).
 		- Daily on: start daily time to apply scheduler values
 		- Daily off: stop daily time to apply scheduler values
 - Fixed issues: #53, #120, #128, #139, #144, #171
