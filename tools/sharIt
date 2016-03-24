@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/bin/bash
 #
 # vim:ts=3 sw=3
 
@@ -55,8 +55,8 @@ fi
 sed "s,__SKIP__,$skip,g" < $stub |
 	sed "s,__SKIP1__,$skip1,g" |
 	sed "s,__COMMAND__,$2,g" > tmp
-hash1=`tail -n +5 tmp | $md5`
-hash2=`cat $1 | $md5`
+hash1=`tail -n +5 tmp | eval $md5`
+hash2=`cat $1 | eval $md5`
 sed "s,__HASH1__,$hash1,g" < tmp | sed "s,__HASH2__,$hash2,g" > $3
 
 cat $1 >> $3

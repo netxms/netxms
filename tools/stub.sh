@@ -7,17 +7,21 @@ skip1=__SKIP1__
 command=__COMMAND__
 log=/tmp/nxagentupdate.log
 
-trap '
-	echo "Upgrade script finished" >> $log
-	cd $wd
-	[ "x"$temp != "x" ] && rm -rf $temp
-	exit
-' INT EXIT
+# trap '
+# 	echo "Upgrade script finished" >> $log
+# 	cd $wd
+# 	[ "x"$temp != "x" ] && rm -rf $temp
+# 	exit
+# ' INT EXIT
 
-echo "$0 started: $*" > $log
+SCRIPT_DIR=`dirname $0`
+if [[ "$SCRIPT_DIR" = /* ]]; then
+   SELF=$0
+else
+   SELF=`pwd -P`/$0
+fi
 
-wd=`pwd -P`
-echo "Working directory: $wd" >> $log
+echo "$SELF started: $*" > $log
 
 _mktemp() {
 	d=/tmp/nxupdate.$$.UniQ
@@ -64,18 +68,16 @@ else
 fi
 
 if [ "x$md5" != "x" ]; then
-	if [ "X"`head -n $skip $0 |
-		$tail +5 |
-		$md5` != "X"$hash1 ];
-	then
-		echo "Script MD5 mismach; upgrade aborted" >> $log
+   h1=`head -n $skip $SELF | $tail +5 | eval $md5`
+	h2=`$tail +$skip1 $SELF | eval $md5`
+
+   if [ "x$h1" != "x$hash1" ]; then
+      echo "Script MD5 mismach (calculated: $h1, expected: $hash1); upgrade aborted" >> $log
 		exit
 	fi
 
-	if [ "X"`$tail +$skip1 $0 |
-		$md5` != "X"$hash2 ];
-	then
-		echo "Payload MD5 mismach; upgrade aborted" >> $log
+   if [ "x$h2" != "x$hash2" ]; then
+      echo "Payload MD5 mismach (calculated: $h2, expected: $hash2); upgrade aborted" >> $log
 		exit
 	fi
 else
@@ -88,7 +90,7 @@ if [ $? != 0 ]; then
 	exit
 fi
 cd $temp
-$tail +$skip1 $wd/$0 | gzip -dc 2>/dev/null | tar xf -
+$tail +$skip1 $SELF | gzip -dc 2>/dev/null | tar xf -
 if [ $? != 0 ]; then
 	echo "Can't unpack" >> $log
 	exit;
