@@ -235,7 +235,7 @@ void EPRule::createNXMPRecord(String &str)
    str.append(m_id);
    str.append(_T("\">\n\t\t\t<guid>"));
    str.append(m_guid.toString());
-   str.append(_T("\"</guid>\n\t\t\t<flags>"));
+   str.append(_T("</guid>\n\t\t\t<flags>"));
    str.append(m_dwFlags);
    str.append(_T("</flags>\n\t\t\t<alarmMessage>"));
    str.append(EscapeStringForXML2(m_szAlarmMessage));
