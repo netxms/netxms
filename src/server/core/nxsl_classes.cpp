@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -479,11 +479,59 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 }
 
 /**
+ * Interface::setExcludeFromTopology(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Interface, setExcludeFromTopology)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   Interface *iface = (Interface *)object->getData();
+   iface->setExcludeFromTopology(argv[0]->getValueAsInt32() != 0);
+   *result = new NXSL_Value;
+   return 0;
+}
+
+/**
+ * Interface::setExpectedState(state) method
+ */
+NXSL_METHOD_DEFINITION(Interface, setExpectedState)
+{
+   int state;
+   if (argv[1]->isInteger())
+   {
+      state = argv[1]->getValueAsInt32();
+   }
+   else if (argv[1]->isString())
+   {
+      static const TCHAR *stateNames[] = { _T("UP"), _T("DOWN"), _T("IGNORE"), NULL };
+      const TCHAR *name = argv[1]->getValueAsCString();
+      for(state = 0; stateNames[state] != NULL; state++)
+         if (!_tcsicmp(stateNames[state], name))
+            break;
+   }
+   else
+   {
+      return NXSL_ERR_NOT_STRING;
+   }
+
+
+   if ((state >= 0) && (state <= 2))
+      ((Interface *)object->getData())->setExpectedState(state);
+
+   *result = new NXSL_Value;
+   return 0;
+}
+
+/**
  * NXSL class Interface: constructor
  */
 NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
 {
    _tcscpy(m_name, _T("Interface"));
+
+   NXSL_REGISTER_METHOD(Interface, setExcludeFromTopology, 1);
+   NXSL_REGISTER_METHOD(Interface, setExpectedState, 1);
 }
 
 /**

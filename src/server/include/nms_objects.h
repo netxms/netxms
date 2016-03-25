@@ -890,6 +890,7 @@ public:
 
    UINT32 wakeUp();
 	void setExpectedState(int state);
+   void setExcludeFromTopology(bool excluded);
 	void updatePingData();
 };
 

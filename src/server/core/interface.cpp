@@ -1063,6 +1063,20 @@ void Interface::setExpectedState(int state)
 }
 
 /**
+ * Set "exclude from topology" flag
+ */
+void Interface::setExcludeFromTopology(bool excluded)
+{
+   lockProperties();
+   if (excluded)
+      m_flags |= IF_EXCLUDE_FROM_TOPOLOGY;
+   else
+      m_flags &= ~IF_EXCLUDE_FROM_TOPOLOGY;
+   setModified();
+   unlockProperties();
+}
+
+/**
  * Wake up node bound to this interface by sending magic packet
  */
 UINT32 Interface::wakeUp()
