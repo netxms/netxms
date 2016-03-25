@@ -154,7 +154,7 @@ UINT32 g_icmpPingSize;
 UINT32 g_icmpPingTimeout = 1500;    // ICMP ping timeout (milliseconds)
 UINT32 g_auditFlags;
 UINT32 g_slmPollingInterval;
-UINT32 g_offileDataRelevanceTime;
+UINT32 g_offlineDataRelevanceTime = 86400;
 TCHAR NXCORE_EXPORTABLE g_netxmsdDataDir[MAX_PATH] = _T("");
 TCHAR NXCORE_EXPORTABLE g_netxmsdLibDir[MAX_PATH] = _T("");
 int g_dbSyntax = DB_SYNTAX_UNKNOWN;
@@ -344,7 +344,7 @@ static void LoadGlobalConfig()
 	g_agentCommandTimeout = ConfigReadInt(_T("AgentCommandTimeout"), 4000);
 	g_thresholdRepeatInterval = ConfigReadInt(_T("ThresholdRepeatInterval"), 0);
 	g_requiredPolls = ConfigReadInt(_T("PollCountForStatusChange"), 1);
-	g_offileDataRelevanceTime = ConfigReadInt(_T("OffileDataRelevanceTime"), 86400);
+	g_offlineDataRelevanceTime = ConfigReadInt(_T("OfflineDataRelevanceTime"), 86400);
 
 	UINT32 snmpTimeout = ConfigReadInt(_T("SNMPRequestTimeout"), 1500);
    SnmpSetDefaultTimeout(snmpTimeout);

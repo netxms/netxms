@@ -646,7 +646,7 @@ static int NextFreeEPPruleID()
  */
 static BOOL H_UpgradeFromV394(int currVersion, int newVersion)
 {
-   CHK_EXEC(SQLQuery(_T("UPDATE config SET need_server_restart='1' WHERE var_name='OffileDataRelevanceTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET need_server_restart='1' WHERE var_name='OfflineDataRelevanceTime'")));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='395' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
