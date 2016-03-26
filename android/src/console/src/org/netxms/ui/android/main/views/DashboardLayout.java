@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import android.content.Context;
 import android.graphics.Point;
 import android.util.AttributeSet;
@@ -151,7 +152,7 @@ public class DashboardLayout extends ViewGroup
 	{
 		super(context, attrs);
 	}
-	
+
 	/**
 	 * Create logical grid
 	 */
@@ -164,7 +165,7 @@ public class DashboardLayout extends ViewGroup
 		int currentColumn = 0;
 		int currentRow = 0;
 		rowCount = 0;
-		for(int i = 0; i < childrenCount; i++)
+		for (int i = 0; i < childrenCount; i++)
 		{
 			final View child = getChildAt(i);
 			if (child.getVisibility() == GONE)
@@ -176,11 +177,11 @@ public class DashboardLayout extends ViewGroup
 			int columnSpan = layoutParams.getColumnSpan();
 			if (columnSpan > columnCount)
 			{
-				throw new IllegalArgumentException("colSpan > number of columns");
+				throw new IllegalArgumentException("colSpan (" + columnSpan + ") > number of columns (" + columnCount + ")");
 			}
 
 			int freeSpace = 0;
-			for(int j = currentColumn; j < columnCount && freeSpace < columnSpan; j++)
+			for (int j = currentColumn; j < columnCount && freeSpace < columnSpan; j++)
 			{
 				if (!cellUsed[currentRow][j])
 				{
@@ -198,15 +199,15 @@ public class DashboardLayout extends ViewGroup
 				currentRow++;
 				currentColumn = 0;
 			}
-			for(int _c = 0; _c < columnSpan; _c++)
+			for (int _c = 0; _c < columnSpan; _c++)
 			{
-				for(int _r = 0; _r < layoutParams.getRowSpan(); _r++)
+				for (int _r = 0; _r < layoutParams.getRowSpan(); _r++)
 				{
 					cellUsed[currentRow + _r][currentColumn + _c] = true;
 				}
 			}
 			coordinates.put(child, new Point(currentColumn, currentRow));
-			
+
 			rowCount = Math.max(currentRow + layoutParams.getRowSpan(), rowCount);
 
 			currentColumn += columnSpan;
@@ -230,17 +231,17 @@ public class DashboardLayout extends ViewGroup
 			setMeasuredDimension(widthMeasureSpec, heightMeasureSpec);
 			return;
 		}
-		
+
 		int width = MeasureSpec.getSize(widthMeasureSpec) - getPaddingLeft() - getPaddingRight();
 		int height = MeasureSpec.getSize(heightMeasureSpec) - getPaddingTop() - getPaddingBottom();
-		
+
 		// Calculate size for each row
 		int[] rowSize = new int[rowCount];
 		Arrays.fill(rowSize, 0);
 		boolean[] rowFill = new boolean[rowCount];
 		Arrays.fill(rowFill, false);
-		
-		for(Entry<View, Point> e : coordinates.entrySet())
+
+		for (Entry<View, Point> e : coordinates.entrySet())
 		{
 			LayoutParams layoutParams = getLayoutParams(e.getKey());
 			if ((layoutParams.gravity & Gravity.VERTICAL_GRAVITY_MASK) == Gravity.FILL_VERTICAL)
@@ -256,22 +257,22 @@ public class DashboardLayout extends ViewGroup
 				rowSize[e.getValue().y] = Math.max(rowSize[e.getValue().y], e.getKey().getMeasuredHeight());
 			}
 		}
-		
+
 		int usedSpace = 0;
 		int fillRows = 0;
-		for(int i = 0; i < rowCount; i++)
+		for (int i = 0; i < rowCount; i++)
 		{
 			if (rowFill[i])
 				fillRows++;
 			usedSpace += rowSize[i];
 		}
-		
+
 		// If children requires too much space, reduce biggest
 		if (usedSpace > height)
 		{
 			int extraSpace = usedSpace - height;
 			int maxRowSize = height / rowCount;
-			for(int i = 0; i < rowCount; i++)
+			for (int i = 0; i < rowCount; i++)
 			{
 				if (rowSize[i] > maxRowSize)
 				{
@@ -282,12 +283,12 @@ public class DashboardLayout extends ViewGroup
 				}
 			}
 		}
-		
+
 		// distribute space evenly between fill rows
 		if (fillRows > 0)
 		{
 			int size = (height - usedSpace) / fillRows;
-			for(int i = 0; i < rowCount; i++)
+			for (int i = 0; i < rowCount; i++)
 			{
 				if (rowFill[i])
 					rowSize[i] += size;
@@ -297,13 +298,13 @@ public class DashboardLayout extends ViewGroup
 		// calculate row starts
 		rowStart = new int[rowCount];
 		rowStart[0] = 0;
-		for(int i = 1; i < rowCount; i++)
+		for (int i = 1; i < rowCount; i++)
 			rowStart[i] = rowStart[i - 1] + rowSize[i - 1];
-		
+
 		int columnSize = width / columnCount;
 
 		int count = getChildCount();
-		for(int i = 0; i < count; i++)
+		for (int i = 0; i < count; i++)
 		{
 			final View view = getChildAt(i);
 			if (view.getVisibility() == GONE)
@@ -313,10 +314,10 @@ public class DashboardLayout extends ViewGroup
 				continue;
 			LayoutParams layoutParams = getLayoutParams(view);
 			int cw = layoutParams.getColumnSpan() * columnSize;
-			
-			Point p = coordinates.get(view);	
+
+			Point p = coordinates.get(view);
 			int ch = rowSize[p.y];
-			for(int j = 1; j < layoutParams.getRowSpan(); j++)
+			for (int j = 1; j < layoutParams.getRowSpan(); j++)
 				ch += rowSize[p.y + j];
 			view.measure(MeasureSpec.makeMeasureSpec(cw, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(ch, MeasureSpec.EXACTLY));
 		}
@@ -332,15 +333,15 @@ public class DashboardLayout extends ViewGroup
 	{
 		if (rowCount == 0)
 			return;
-		
-		int viewLeft  = l + getPaddingLeft();
+
+		int viewLeft = l + getPaddingLeft();
 		int viewRight = r - getPaddingRight();
 		int viewTop = t + getPaddingTop();
 		int width = viewRight - viewLeft;
 		int columnSize = width / columnCount;
-		
+
 		Iterator<Entry<View, Point>> iterator = coordinates.entrySet().iterator();
-		while(iterator.hasNext())
+		while (iterator.hasNext())
 		{
 			Entry<View, Point> entry = iterator.next();
 			View view = entry.getKey();
