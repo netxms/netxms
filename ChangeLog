@@ -24,7 +24,7 @@
 	- Fixed object selection issues in network maps
 	- Added "hide links" option on network maps
 	- Added support for MAC addresses in format xxx.xxx.xxx.xxx
-- Fixed issues: #950, #962, #988, #1048, #1102, #1124, #1131, #1135, #1149, #1154, #1163, #1166, #1170, #1174
+- Fixed issues: #950, #962, #988, #1048, #1102, #1124, #1131, #1135, #1147, #1149, #1154, #1163, #1166, #1170, #1174
 
 
 *
