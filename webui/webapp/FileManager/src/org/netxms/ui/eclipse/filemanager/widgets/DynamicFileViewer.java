@@ -100,7 +100,7 @@ public class DynamicFileViewer extends BaseFileViewer
       this.nodeId = nodeId;
       this.remoteFileName = remoteFileName;
       
-      text.setTopIndex(text.getLineCount() - 1);
+      //text.setTopIndex(text.getLineCount() - 1);
       monitoringJob = new ConsoleJob("Track file changes", null, Activator.PLUGIN_ID, null) {
          private boolean tracking = true;
 
