@@ -656,7 +656,7 @@ static BOOL H_UpgradeFromV394(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV393(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateConfigParam(_T("OffileDataRelevanceTime"), _T("86400"), _T("Time period in seconds within which received offline data still relevant for threshold validation"), 'I', true, false, false, false));
+   CHK_EXEC(CreateConfigParam(_T("OfflineDataRelevanceTime"), _T("86400"), _T("Time period in seconds within which received offline data still relevant for threshold validation"), 'I', true, false, false, false));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='394' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
