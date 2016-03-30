@@ -8,6 +8,7 @@ d none /opt/netxms/lib 0755 root other
 d none /opt/netxms/lib/netxms 0755 root other
 d none /opt/netxms/lib/netxms/dbdrv 0755 root other
 d none /opt/netxms/lib/netxms/ndd 0755 root other
+d none /opt/netxms/lib/netxms/smsdrv 0755 root other
 d none /opt/netxms/share 0755 root other
 d none /opt/netxms/share/netxms 0755 root other
 d none /opt/netxms/share/netxms/backgrounds 0755 root other
@@ -49,10 +50,6 @@ f none /opt/netxms/lib/libnxlp.so.2.0.0 0755 root other
 f none /opt/netxms/lib/libnxmap.so.2.0.0 0755 root other
 f none /opt/netxms/lib/libnxsd.so.2.0.0 0755 root other
 f none /opt/netxms/lib/libnxsl.so.2.0.0 0755 root other
-f none /opt/netxms/lib/libnxsms_dummy.so.2.0.0 0755 root other
-f none /opt/netxms/lib/libnxsms_generic.so.2.0.0 0755 root other
-f none /opt/netxms/lib/libnxsms_nxagent.so.2.0.0 0755 root other
-f none /opt/netxms/lib/libnxsms_portech.so.2.0.0 0755 root other
 f none /opt/netxms/lib/libnxsnmp.so.2.0.0 0755 root other
 f none /opt/netxms/lib/libnxsqlite.so.2.0.0 0755 root other
 f none /opt/netxms/lib/libnxsrv.so.2.0.0 0755 root other
@@ -88,6 +85,10 @@ f none /opt/netxms/lib/netxms/oracle.nsm 0755 root other
 f none /opt/netxms/lib/netxms/ping.nsm 0755 root other
 f none /opt/netxms/lib/netxms/portcheck.nsm 0755 root other
 f none /opt/netxms/lib/netxms/sms.nsm 0755 root other
+f none /opt/netxms/lib/netxms/smsdrv/dummy.sms 0755 root other
+f none /opt/netxms/lib/netxms/smsdrv/generic.sms 0755 root other
+f none /opt/netxms/lib/netxms/smsdrv/nxagent.sms 0755 root other
+f none /opt/netxms/lib/netxms/smsdrv/portech.sms 0755 root other
 f none /opt/netxms/lib/netxms/sunos.nsm 0755 root other
 f none /opt/netxms/lib/netxms/tuxedo.nsm 0755 root other
 f none /opt/netxms/lib/netxms/ups.nsm 0755 root other
@@ -535,14 +536,10 @@ s none /opt/netxms/lib/libnxsd.so.2=libnxsd.so.2.0.0
 s none /opt/netxms/lib/libnxsd.so=libnxsd.so.2.0.0
 s none /opt/netxms/lib/libnxsl.so.2=libnxsl.so.2.0.0
 s none /opt/netxms/lib/libnxsl.so=libnxsl.so.2.0.0
-s none /opt/netxms/lib/libnxsms_dummy.so.2=libnxsms_dummy.so.2.0.0
-s none /opt/netxms/lib/libnxsms_dummy.so=libnxsms_dummy.so.2.0.0
-s none /opt/netxms/lib/libnxsms_generic.so.2=libnxsms_generic.so.2.0.0
-s none /opt/netxms/lib/libnxsms_generic.so=libnxsms_generic.so.2.0.0
-s none /opt/netxms/lib/libnxsms_nxagent.so.2=libnxsms_nxagent.so.2.0.0
-s none /opt/netxms/lib/libnxsms_nxagent.so=libnxsms_nxagent.so.2.0.0
-s none /opt/netxms/lib/libnxsms_portech.so.2=libnxsms_portech.so.2.0.0
-s none /opt/netxms/lib/libnxsms_portech.so=libnxsms_portech.so.2.0.0
+s none /opt/netxms/lib/libnxsms_dummy.so=/opt/netxms/lib/netxms/smsdrv/dummy.sms
+s none /opt/netxms/lib/libnxsms_generic.so=/opt/netxms/lib/netxms/smsdrv/generic.sms
+s none /opt/netxms/lib/libnxsms_nxagent.so=/opt/netxms/lib/netxms/smsdrv/nxagent.sms
+s none /opt/netxms/lib/libnxsms_portech.so=/opt/netxms/lib/netxms/smsdrv/portech.sms
 s none /opt/netxms/lib/libnxsnmp.so.2=libnxsnmp.so.2.0.0
 s none /opt/netxms/lib/libnxsnmp.so=libnxsnmp.so.2.0.0
 s none /opt/netxms/lib/libnxsqlite.so.2=libnxsqlite.so.2.0.0
