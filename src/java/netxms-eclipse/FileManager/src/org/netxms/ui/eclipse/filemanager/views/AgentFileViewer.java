@@ -295,13 +295,23 @@ public class AgentFileViewer extends ViewPart
    {
       viewer.setFocus();
    }
-	
+
+   /**
+    * Create new file viewer view. Checks that file does not exceed allowed size.
+    * In case if file is too large asks if it should be opened partly. 
+    * @throws PartInitException 
+    */
+   public static boolean createView(String secondaryId, final long nodeId, final AgentFileData file, boolean followChanges) throws PartInitException
+   {
+      return createView(secondaryId, nodeId, file, followChanges, null);
+   }
+   
 	/**
-	 * Method that checks that file does not exceed allowed size.
+    * Create new file viewer view with custom line styler. Checks that file does not exceed allowed size.
 	 * In case if file is too large asks if it should be opened partly. 
 	 * @throws PartInitException 
 	 */
-	public static boolean createView(String secondaryId, final long nodeId, final AgentFileData file, boolean followChanges) throws PartInitException
+	public static boolean createView(String secondaryId, final long nodeId, final AgentFileData file, boolean followChanges, BaseFileViewer.LineStyler lineStyler) throws PartInitException
 	{
       final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 	   boolean exceedSize = file.getFile().length() > BaseFileViewer.MAX_FILE_SIZE;
@@ -333,6 +343,7 @@ public class AgentFileViewer extends ViewPart
          return false;
       }
 	   AgentFileViewer view = (AgentFileViewer)window.getActivePage().showView(AgentFileViewer.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+	   view.viewer.setLineStyler(lineStyler);
 	   view.followChanges = followChanges;
 	   view.viewer.showFile(file.getFile());
 	   if (followChanges)
@@ -340,5 +351,5 @@ public class AgentFileViewer extends ViewPart
 	      view.viewer.startTracking(nodeId, file.getId(), file.getRemoteName());
 	   }
 	   return true;
-	}	 
+	}
 }

@@ -71,6 +71,7 @@ public class BaseFileViewer extends Composite
    protected boolean scrollLock = false;
    protected StringBuilder content = new StringBuilder();
    protected int searchPosition = 0;
+   protected LineStyler lineStyler = null;
 
    /**
     * Create file viewer
@@ -451,6 +452,33 @@ public class BaseFileViewer extends Composite
    }
    
    /**
+    * Style line. Default implementation calls registered line styler if any.
+    * 
+    * @param line line text
+    * @return array of style ranges or null
+    */
+   protected StyleRange[] styleLine(String line)
+   {
+      return (lineStyler != null) ? lineStyler.styleLine(line) : null;
+   }
+   
+   /**
+    * @return the lineStyler
+    */
+   public LineStyler getLineStyler()
+   {
+      return lineStyler;
+   }
+
+   /**
+    * @param lineStyler the lineStyler to set
+    */
+   public void setLineStyler(LineStyler lineStyler)
+   {
+      this.lineStyler = lineStyler;
+   }
+
+   /**
     * Do search
     */
    private void doSearch()
@@ -562,5 +590,18 @@ public class BaseFileViewer extends Composite
          }
       }
       return content.toString();
+   }
+
+   /**
+    * Line styler interface
+    */
+   public interface LineStyler
+   {
+      public StyleRange[] styleLine(String line);
+   }
+
+   // FIXME: temporary workaround
+   public interface StyleRange
+   {
    }
 }
