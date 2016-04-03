@@ -125,6 +125,16 @@ public class ClientConnectorService extends Service implements SessionListener
 	private boolean notifyAlarmBySound = false;
 	private boolean notifyAlarmByLed = false;
 	private boolean notifyAlarmByVibration = false;
+	private boolean notifyAlarmCritical = false;
+	private boolean notifyAlarmCriticalInStatusBar = false;
+	private boolean notifyAlarmMajor = false;
+	private boolean notifyAlarmMajorInStatusBar = false;
+	private boolean notifyAlarmMinor = false;
+	private boolean notifyAlarmMinorInStatusBar = false;
+	private boolean notifyAlarmWarning = false;
+	private boolean notifyAlarmWarningInStatusBar = false;
+	private boolean notifyAlarmNormal = false;
+	private boolean notifyAlarmNormalInStatusBar = false;
 	private int notificationType = NOTIFY_STATUS_NEVER;
 	private boolean notifyIcon = false;
 	private boolean notifyToast = false;
@@ -294,7 +304,7 @@ public class ClientConnectorService extends Service implements SessionListener
 	public void alarmNotification(Alarm alarm, String text)
 	{
 		Severity severity = alarm.getCurrentSeverity();
-		if (notifyAlarm)
+		if (NotifyAlarm(severity))
 		{
 			NotificationCompat.Builder nb = new NotificationCompat.Builder(getApplicationContext());
 			final String sound = GetAlarmSound(severity);
@@ -305,7 +315,7 @@ public class ClientConnectorService extends Service implements SessionListener
 				nb.setLights(color, GetAlarmColorTimeOn(), GetAlarmColorTimeOff());
 			nb.setVibrate(GetAlarmVibrationPattern());
 			Notification notification;
-			if (notifyAlarmInStatusBar)
+			if (NotifyAlarmInStatusBar(severity))
 			{
 				Intent notifyIntent = new Intent(getApplicationContext(), AlarmBrowserFragment.class);
 				PendingIntent intent = PendingIntent.getActivity(getApplicationContext(), 0, notifyIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -437,6 +447,16 @@ public class ClientConnectorService extends Service implements SessionListener
 		needsToReconnect |= notifyAlarmBySound != sp.getBoolean("global.sound.alarm", false);
 		needsToReconnect |= notifyAlarmByLed != sp.getBoolean("global.led.alarm", false);
 		needsToReconnect |= notifyAlarmByVibration != sp.getBoolean("global.vibration.alarm", false);
+		needsToReconnect |= notifyAlarmCritical != sp.getBoolean("alarm.notification.critical", true);
+		needsToReconnect |= notifyAlarmCriticalInStatusBar != sp.getBoolean("alarm.statusbar.critical", true);
+		needsToReconnect |= notifyAlarmMajor != sp.getBoolean("alarm.notification.major", true);
+		needsToReconnect |= notifyAlarmMajorInStatusBar != sp.getBoolean("alarm.statusbar.major", true);
+		needsToReconnect |= notifyAlarmMinor != sp.getBoolean("alarm.notification.minor", true);
+		needsToReconnect |= notifyAlarmMinorInStatusBar != sp.getBoolean("alarm.statusbar.minor", true);
+		needsToReconnect |= notifyAlarmWarning != sp.getBoolean("alarm.notification.warning", true);
+		needsToReconnect |= notifyAlarmWarningInStatusBar != sp.getBoolean("alarm.statusbar.warning", true);
+		needsToReconnect |= notifyAlarmNormal != sp.getBoolean("alarm.notification.normal", true);
+		needsToReconnect |= notifyAlarmNormalInStatusBar != sp.getBoolean("alarm.statusbar.normal", true);
 		needsToReconnect |= notificationType != Integer.parseInt(sp.getString("global.notification.status", "0"));
 		needsToReconnect |= notifyIcon != sp.getBoolean("global.notification.icon", false);
 		needsToReconnect |= notifyToast != sp.getBoolean("global.notification.toast", true);
@@ -458,6 +478,16 @@ public class ClientConnectorService extends Service implements SessionListener
 		notifyAlarmBySound = sp.getBoolean("global.sound.alarm", false);
 		notifyAlarmByLed = sp.getBoolean("global.led.alarm", false);
 		notifyAlarmByVibration = sp.getBoolean("global.vibration.alarm", false);
+		notifyAlarmCritical = sp.getBoolean("alarm.notification.critical", true);
+		notifyAlarmCriticalInStatusBar = sp.getBoolean("alarm.statusbar.critical", true);
+		notifyAlarmMajor = sp.getBoolean("alarm.notification.major", true);
+		notifyAlarmMajorInStatusBar = sp.getBoolean("alarm.statusbar.major", true);
+		notifyAlarmMinor = sp.getBoolean("alarm.notification.minor", true);
+		notifyAlarmMinorInStatusBar = sp.getBoolean("alarm.statusbar.minor", true);
+		notifyAlarmWarning = sp.getBoolean("alarm.notification.warning", true);
+		notifyAlarmWarningInStatusBar = sp.getBoolean("alarm.statusbar.warning", true);
+		notifyAlarmNormal = sp.getBoolean("alarm.notification.normal", true);
+		notifyAlarmNormalInStatusBar = sp.getBoolean("alarm.statusbar.normal", true);
 		notificationType = Integer.parseInt(sp.getString("global.notification.status", "0"));
 		notifyIcon = sp.getBoolean("global.notification.icon", false);
 		notifyToast = sp.getBoolean("global.notification.toast", true);
@@ -930,6 +960,69 @@ public class ClientConnectorService extends Service implements SessionListener
 		}
 	}
 
+	/**
+	 * Determine the notification of alarm based on alarm severity
+	 * 
+	 * @param severity
+	 */
+	private boolean NotifyAlarm(Severity severity)
+	{
+		if (notifyAlarm)
+			switch (severity)
+			{
+				case NORMAL:// Normal
+					return notifyAlarmNormal;
+				case WARNING:// Warning
+					return notifyAlarmWarning;
+				case MINOR:// Minor
+					return notifyAlarmMinor;
+				case MAJOR:// Major
+					return notifyAlarmMajor;
+				case CRITICAL:// Critical
+					return notifyAlarmCritical;
+//				case UNKNOWN:// Unknown
+//				case TERMINATE:// Terminate
+//				case RESOLVE:// Resolve
+				default:
+					break;
+			}
+		return false;
+	}
+
+	/**
+	 * Determine the notification in status bar based on alarm severity
+	 * 
+	 * @param severity
+	 */
+	private boolean NotifyAlarmInStatusBar(Severity severity)
+	{
+		if (notifyAlarmInStatusBar)
+			switch (severity)
+			{
+				case NORMAL:// Normal
+					return notifyAlarmNormalInStatusBar;
+				case WARNING:// Warning
+					return notifyAlarmWarningInStatusBar;
+				case MINOR:// Minor
+					return notifyAlarmMinorInStatusBar;
+				case MAJOR:// Major
+					return notifyAlarmMajorInStatusBar;
+				case CRITICAL:// Critical
+					return notifyAlarmCriticalInStatusBar;
+//				case UNKNOWN:// Unknown
+//				case TERMINATE:// Terminate
+//				case RESOLVE:// Resolve
+				default:
+					break;
+			}
+		return false;
+	}
+
+	/**
+	 * Get alarm color based on alarm severity
+	 * 
+	 * @param severity
+	 */
 	int GetAlarmColor(Severity severity)
 	{
 		if (sp.getBoolean("global.led.alarm", false))

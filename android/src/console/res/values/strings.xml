@@ -88,6 +88,9 @@
 	<string name="pref_global_alarm_vibration_disabled">Notifications by vibration are disabled</string>
 	<string name="pref_alarm_sound">Sound</string>
 	<string name="pref_alarm_led">LED color</string>
+	
+	<string name="pref_global_alarms_settings">Global alarms settings</string>
+	<string name="pref_customize_alarms_severity">Customize alarms by severity</string>
 	<string name="pref_critical_alarms">Critical alarms</string>
 	<string name="pref_major_alarms">Major alarms</string>
 	<string name="pref_minor_alarms">Minor alarms</string>
