@@ -5,7 +5,7 @@
 	<key>CFBundleExecutable</key>
 	<string>nxmc</string>
 	<key>CFBundleGetInfoString</key>
-	<string>NetXMS Management Console, Copyright Raden Solutions 2015. All rights reserved.</string>
+	<string>NetXMS Management Console, Copyright Raden Solutions 2016. All rights reserved.</string>
 	<key>CFBundleIconFile</key>
 	<string>nxmc.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -64,5 +64,7 @@
 		<string>-showlocation</string>
 		<string>$APP_PACKAGE/Contents/Resources/Java</string>
 	</array>
+  <key>NSHighResolutionCapable</key>
+  <true/>
 </dict>
 </plist>
