@@ -520,6 +520,8 @@ void LIBNETXMS_EXPORTABLE ICEDecryptData(const BYTE *in, int inLen, BYTE *out, c
 NXCPEncryptionContext::NXCPEncryptionContext()
 {
    m_sessionKey = NULL;
+   m_keyLength = 0;
+   m_cipher = -1;
 #ifdef _WITH_ENCRYPTION
    EVP_CIPHER_CTX_init(&m_encryptor);
    EVP_CIPHER_CTX_init(&m_decryptor);

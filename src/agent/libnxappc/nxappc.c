@@ -66,7 +66,6 @@
 #endif /* _WIN32 */
 
 #include "nxappc.h"
-#include <nxappc_internal.h>
 
 static char s_channel[128] = "";
 static SOCKET s_socket = -1;
