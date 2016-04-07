@@ -3141,34 +3141,6 @@ void ClientSession::lockUserDB(UINT32 dwRqId, BOOL bLock)
 }
 
 /**
- * Notify client on user database update
- */
-void ClientSession::onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
-{
-   NXCPMessage msg;
-
-   if (isAuthenticated())
-   {
-      msg.setCode(CMD_USER_DB_UPDATE);
-      msg.setId(0);
-      msg.setField(VID_UPDATE_TYPE, (WORD)code);
-
-      switch(code)
-      {
-         case USER_DB_CREATE:
-         case USER_DB_MODIFY:
-				object->fillMessage(&msg);
-            break;
-         default:
-            msg.setField(VID_USER_ID, id);
-            break;
-      }
-
-      sendMessage(&msg);
-   }
-}
-
-/**
  * Change management status for the object
  */
 void ClientSession::changeObjectMgmtStatus(NXCPMessage *pRequest)

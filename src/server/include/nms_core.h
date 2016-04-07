@@ -781,7 +781,6 @@ public:
    void onSyslogMessage(NX_SYSLOG_RECORD *pRec);
    void onNewSNMPTrap(NXCPMessage *pMsg);
    void onObjectChange(NetObj *pObject);
-   void onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *user);
    void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction);
    void onSituationChange(NXCPMessage *msg);

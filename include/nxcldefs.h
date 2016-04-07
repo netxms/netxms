@@ -941,6 +941,7 @@ enum AggregationFunction
 #define NXC_CHANNEL_SNMP_TRAPS   _T("Core.SNMP.Traps")
 #define NXC_CHANNEL_AUDIT_LOG    _T("Core.Audit")
 #define NXC_CHANNEL_SITUATIONS   _T("Core.Situations")
+#define NXC_CHANNEL_USERDB       _T("Core.UserDB")
 
 /**
  * Node creation flags

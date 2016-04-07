@@ -190,6 +190,7 @@ public class NXCSession
    public static final String CHANNEL_SNMP_TRAPS = "Core.SNMP.Traps";
    public static final String CHANNEL_AUDIT_LOG = "Core.Audit";
    public static final String CHANNEL_SITUATIONS = "Core.Situations";
+   public static final String CHANNEL_USERDB = "Core.UserDB";
 
    // Object sync options
    public static final int OBJECT_SYNC_NOTIFY = 0x0001;
@@ -756,7 +757,8 @@ public class NXCSession
 
          // Send notification if changed object was found in local database copy
          // or added to it and notification code was known
-         if (object != null) sendNotification(new SessionNotification(SessionNotification.USER_DB_CHANGED, code, object));
+         if (object != null) 
+            sendNotification(new SessionNotification(SessionNotification.USER_DB_CHANGED, code, object));
       }
 
       /**
@@ -3224,7 +3226,7 @@ public class NXCSession
    }
 
    /**
-    * Synchronize user database
+    * Synchronize user database and subscribe to user change notifications
     * 
     * @throws IOException
     *            if socket I/O error occurs
@@ -3238,6 +3240,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
       waitForSync(syncUserDB, commandTimeout * 10);
+      subscribe(CHANNEL_USERDB);
    }
 
    /**
