@@ -34,8 +34,10 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -45,6 +47,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.ToolBar;
+import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.IViewPart;
 import org.netxms.client.constants.Severity;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
@@ -74,7 +78,6 @@ public class BaseFileViewer extends Composite
    protected Label searchCloseButton;
    protected boolean scrollLock = false;
    protected StringBuilder content = new StringBuilder();
-   protected int searchPosition = 0;
    protected LineStyler lineStyler = null;
 
    /**
@@ -215,7 +218,21 @@ public class BaseFileViewer extends Composite
       gd.horizontalIndent = 5;
       searchBarLabel.setLayoutData(gd);
       
-      searchBarText = new Text(searchBar, SWT.BORDER | SWT.SEARCH);
+      Composite searchBarTextContainer = new Composite(searchBar, SWT.BORDER);
+      layout = new GridLayout();
+      layout.marginHeight = 0;
+      layout.marginWidth = 0;
+      layout.numColumns = 3;
+      layout.horizontalSpacing = 0;
+      searchBarTextContainer.setLayout(layout);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.CENTER;
+      gd.horizontalAlignment = SWT.LEFT;
+      gd.widthHint = 400;
+      searchBarTextContainer.setLayoutData(gd);
+      
+      searchBarText = new Text(searchBarTextContainer, SWT.NONE);
+      searchBarText.setMessage("Find in file");
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.CENTER;
@@ -225,7 +242,7 @@ public class BaseFileViewer extends Composite
          @Override
          public void modifyText(ModifyEvent e)
          {
-            doSearch();
+            doSearch(true);
          }
       });
       searchBarText.addSelectionListener(new SelectionListener() {
@@ -237,8 +254,35 @@ public class BaseFileViewer extends Composite
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
          {
-            searchPosition++;
-            doSearch();
+            doSearch(false);
+         }
+      });
+      
+      searchBarTextContainer.setBackground(searchBarText.getBackground());
+
+      ToolBar searchButtons = new ToolBar(searchBarTextContainer, SWT.FLAT);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.FILL;
+      gd.horizontalAlignment = SWT.LEFT;
+      searchButtons.setLayoutData(gd);
+      
+      ToolItem item = new ToolItem(searchButtons, SWT.PUSH);
+      item.setImage(SharedIcons.IMG_UP);
+      item.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            doReverseSearch();
+         }
+      });
+
+      item = new ToolItem(searchButtons, SWT.PUSH);
+      item.setImage(SharedIcons.IMG_DOWN);
+      item.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            doSearch(false);
          }
       });
       
@@ -249,7 +293,7 @@ public class BaseFileViewer extends Composite
       searchCloseButton.setToolTipText("Close");
       gd = new GridData();
       gd.verticalAlignment = SWT.CENTER;
-      gd.horizontalAlignment = SWT.LEFT;
+      gd.horizontalAlignment = SWT.RIGHT;
       gd.widthHint = 20;
       searchCloseButton.setLayoutData(gd);
       searchCloseButton.addMouseListener(new MouseListener() {
@@ -356,7 +400,6 @@ public class BaseFileViewer extends Composite
     */
    public void showSearchBar()
    {
-      searchPosition = 0;
       searchBarText.setText("");
       searchBar.setVisible(true);
       ((FormData)text.getLayoutData()).bottom = new FormAttachment(searchBar, 0, SWT.TOP);
@@ -506,11 +549,18 @@ public class BaseFileViewer extends Composite
    /**
     * Do search
     */
-   private void doSearch()
+   private void doSearch(boolean typing)
    {
       String searchString = searchBarText.getText().toLowerCase();
       if (searchString.length() == 0)
          return;
+      
+      int searchPosition = text.getCaretOffset();
+      if (typing && (text.getSelectionCount() > 0))
+      {
+         Point p = text.getSelectionRange();
+         searchPosition = p.x;
+      }
       
       if (content.length() - searchPosition < searchString.length())
          return;
@@ -519,7 +569,37 @@ public class BaseFileViewer extends Composite
       if (index > -1)
       {
          text.setSelection(index, index + searchString.length());
-         searchPosition = index;
+         searchBarText.setBackground(null);
+      }
+      else
+      {
+         searchBarText.setBackground(SharedColors.getColor(SharedColors.ERROR_BACKGROUND, text.getDisplay()));
+      }
+   }
+   
+   /**
+    * Do search backwards
+    */
+   private void doReverseSearch()
+   {
+      String searchString = searchBarText.getText().toLowerCase();
+      if (searchString.length() == 0)
+         return;
+      
+      int searchPosition = text.getCaretOffset();
+      if ((text.getSelectionCount() > 0) && text.getSelectionText().toLowerCase().equals(searchString))
+      {
+         Point p = text.getSelectionRange();
+         searchPosition = p.x - 1;
+      }
+
+      if (searchPosition < searchString.length())
+         return;
+      
+      int index = content.lastIndexOf(searchString, searchPosition);
+      if (index > -1)
+      {
+         text.setSelection(index, index + searchString.length());
          searchBarText.setBackground(null);
       }
       else
