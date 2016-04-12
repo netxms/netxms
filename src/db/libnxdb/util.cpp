@@ -81,7 +81,7 @@ bool LIBNXDB_EXPORTABLE IsDatabaseRecordExist(DB_HANDLE hdb, const TCHAR *table,
 	bool exist = false;
 
 	TCHAR query[1256];
-	_sntprintf(query, sizeof(query), _T("SELECT %s FROM %s WHERE %s='?'"), idColumn, table, idColumn);
+	_sntprintf(query, sizeof(query), _T("SELECT %s FROM %s WHERE %s=?"), idColumn, table, idColumn);
 
 	DB_STATEMENT hStmt = DBPrepare(hdb, query);
 	if (hStmt != NULL)
