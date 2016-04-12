@@ -107,6 +107,8 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 
 	_sntprintf(buffer, 1024, _T("Local file: %s; Remote file: %s"), m_localFile, CHECK_NULL(m_remoteFile));
 	m_info = _tcsdup(buffer);
+
+	m_fileSize = 0;
 }
 
 /**

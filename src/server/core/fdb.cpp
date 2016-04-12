@@ -35,6 +35,7 @@ ForwardingDatabase::ForwardingDatabase(UINT32 nodeId)
 	m_pmSize = 0;
 	m_pmAllocated = 0;
 	m_timestamp = time(NULL);
+	m_currentVlanId = 0;
 }
 
 /**

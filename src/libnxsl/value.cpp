@@ -85,6 +85,7 @@ NXSL_Value::NXSL_Value()
 {
    m_nDataType = NXSL_DT_NULL;
    m_pszValStr = NULL;
+   m_dwStrLen = 0;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
 #endif
@@ -154,6 +155,7 @@ NXSL_Value::NXSL_Value(NXSL_Object *object)
    m_nDataType = NXSL_DT_OBJECT;
    m_value.object = object;
    m_pszValStr = NULL;
+   m_dwStrLen = 0;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
 #endif
@@ -170,6 +172,7 @@ NXSL_Value::NXSL_Value(NXSL_Array *array)
    m_value.arrayHandle = new NXSL_Handle<NXSL_Array>(array);
 	m_value.arrayHandle->incRefCount();
    m_pszValStr = NULL;
+   m_dwStrLen = 0;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
 #endif
@@ -186,6 +189,7 @@ NXSL_Value::NXSL_Value(NXSL_HashMap *hashMap)
    m_value.hashMapHandle = new NXSL_Handle<NXSL_HashMap>(hashMap);
 	m_value.hashMapHandle->incRefCount();
    m_pszValStr = NULL;
+   m_dwStrLen = 0;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
 #endif
@@ -202,6 +206,7 @@ NXSL_Value::NXSL_Value(NXSL_Iterator *iterator)
    m_value.iterator = iterator;
 	iterator->incRefCount();
    m_pszValStr = NULL;
+   m_dwStrLen = 0;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
 #endif
@@ -216,6 +221,7 @@ NXSL_Value::NXSL_Value(INT32 nValue)
 {
    m_nDataType = NXSL_DT_INT32;
    m_pszValStr = NULL;
+   m_dwStrLen = 0;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
 #endif
@@ -231,6 +237,7 @@ NXSL_Value::NXSL_Value(UINT32 uValue)
 {
    m_nDataType = NXSL_DT_UINT32;
    m_pszValStr = NULL;
+   m_dwStrLen = 0;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
 #endif
@@ -246,6 +253,7 @@ NXSL_Value::NXSL_Value(INT64 nValue)
 {
    m_nDataType = NXSL_DT_INT64;
    m_pszValStr = NULL;
+   m_dwStrLen = 0;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
 #endif
@@ -261,6 +269,7 @@ NXSL_Value::NXSL_Value(UINT64 uValue)
 {
    m_nDataType = NXSL_DT_UINT64;
    m_pszValStr = NULL;
+   m_dwStrLen = 0;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
 #endif
@@ -276,6 +285,7 @@ NXSL_Value::NXSL_Value(double dValue)
 {
    m_nDataType = NXSL_DT_REAL;
    m_pszValStr = NULL;
+   m_dwStrLen = 0;
 #ifdef UNICODE
 	m_valueMBStr = NULL;
 #endif

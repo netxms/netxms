@@ -30,7 +30,7 @@
 static const TCHAR *s_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
 
 /**
- * XML parser state for creating LogParser object from XML
+ * XML parser state codes
  */
 #define XML_STATE_INIT        -1
 #define XML_STATE_END         -2
@@ -49,6 +49,9 @@ static const TCHAR *s_states[] = { _T("MANUAL"), _T("AUTO"), _T("INACTIVE") };
 #define XML_STATE_MACRO       11
 #define XML_STATE_DESCRIPTION 12
 
+/**
+ * XML parser state for creating LogParser object from XML
+ */
 struct XML_PARSER_STATE
 {
 	LogParser *parser;
@@ -72,7 +75,15 @@ struct XML_PARSER_STATE
 	bool invertedRule;
 	bool breakFlag;
 
-	XML_PARSER_STATE() : encodings(1, 1, true) { }
+	XML_PARSER_STATE() : encodings(1, 1, true)
+	{
+      state = -1;
+      parser = NULL;
+	   invertedRule = false;
+	   breakFlag = false;
+	   contextAction = CONTEXT_SET_AUTOMATIC;
+	   numEventParams = 0;
+	}
 };
 
 /**
@@ -697,7 +708,6 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 	XML_PARSER_STATE state;
 	state.parser = new LogParser;
 	state.parser->setEventNameResolver(eventResolver);
-	state.state = -1;
 	XML_SetUserData(parser, &state);
 	XML_SetElementHandler(parser, StartElement, EndElement);
 	XML_SetCharacterDataHandler(parser, CharData);

@@ -111,6 +111,8 @@ MobileDeviceSession::MobileDeviceSession(SOCKET hSocket, struct sockaddr *addr)
    m_condEncryptionSetup = INVALID_CONDITION_HANDLE;
    m_dwRefCount = 0;
 	m_isAuthenticated = false;
+	m_wCurrentCmd = 0;
+	m_dwEncryptionResult = 0;
 }
 
 /**
