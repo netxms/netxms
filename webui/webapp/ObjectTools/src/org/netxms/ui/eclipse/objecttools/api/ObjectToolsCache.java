@@ -160,7 +160,7 @@ public class ObjectToolsCache
                }
                catch(Exception e)
                {
-                  Activator.logError("Exception in ObjectToolsCache.reload()", e); //$NON-NLS-1$
+                  Activator.logError(String.format("Exception in ObjectToolsCache.reload(): toolId=%d, toolName=%s", tool.getId(), tool.getName()), e); //$NON-NLS-1$
                }
             }
          }
