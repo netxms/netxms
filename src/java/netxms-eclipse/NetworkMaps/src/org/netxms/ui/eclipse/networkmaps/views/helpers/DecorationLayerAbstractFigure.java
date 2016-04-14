@@ -24,15 +24,15 @@ import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.MouseMotionListener;
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef4.zest.core.widgets.IDecorationFigure;
 import org.eclipse.swt.SWT;
 import org.netxms.client.maps.elements.NetworkMapElement;
 
 /**
  * Map decoration figure
  */
-public abstract class DecorationLayerAbstractFigure extends Figure implements MouseListener, MouseMotionListener
+public abstract class DecorationLayerAbstractFigure extends Figure implements MouseListener, MouseMotionListener, IDecorationFigure
 {
-	
 	private NetworkMapElement decoration;
 	private ExtendedGraphViewer viewer;
 	private boolean drag = false;
@@ -51,7 +51,6 @@ public abstract class DecorationLayerAbstractFigure extends Figure implements Mo
 		
 		addMouseListener(this);
 	}
-	
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
@@ -59,7 +58,6 @@ public abstract class DecorationLayerAbstractFigure extends Figure implements Mo
 	@Override
 	protected abstract void paintFigure(Graphics gc);
 	
-
 	/**
 	 * Stop dragging
 	 */

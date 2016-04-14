@@ -38,6 +38,7 @@ import org.eclipse.gef4.zest.core.viewers.GraphViewer;
 import org.eclipse.gef4.zest.core.viewers.internal.GraphModelEntityRelationshipFactory;
 import org.eclipse.gef4.zest.core.viewers.internal.IStylingGraphModelFactory;
 import org.eclipse.gef4.zest.core.widgets.GraphConnection;
+import org.eclipse.gef4.zest.core.widgets.IDecorationFigure;
 import org.eclipse.gef4.zest.core.widgets.IDecorationLayer;
 import org.eclipse.gef4.zest.core.widgets.custom.CGraphNode;
 import org.eclipse.gef4.zest.core.widgets.zooming.ZoomManager;
@@ -827,7 +828,7 @@ public class ExtendedGraphViewer extends GraphViewer
 	/**
 	 * Grid
 	 */
-	private class GridFigure extends Figure implements IDecorationLayer
+	private class GridFigure extends Figure implements IDecorationLayer, IDecorationFigure
 	{
 		/**
 		 * Create new grid figure
