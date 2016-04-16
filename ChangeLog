@@ -2,8 +2,10 @@
 * 2.0.4
 *
 
+- New parameters in Linux platform subagent to get additional CPU information (frequency, model, etc.)
 - Android console
-	- Issue #1194 (reorganized alarm notification section)
+	- Reorganized alarm notification section (issue #1194)
+- Fixed issues: #1194, #1200
 
 
 *
