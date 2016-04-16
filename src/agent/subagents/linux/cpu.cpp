@@ -481,7 +481,7 @@ static int ReadCpuInfo(CPU_INFO *info, int size)
    }
 
    fclose(f);
-   return count;
+   return count + 1;
 }
 
 /**
