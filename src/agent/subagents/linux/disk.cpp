@@ -117,7 +117,7 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
    }
    else
    {
-      if (nRet == ENOENT)
+      if (errno == ENOENT)
          nRet = SYSINFO_RC_NO_SUCH_INSTANCE;
    }
 	return nRet;
