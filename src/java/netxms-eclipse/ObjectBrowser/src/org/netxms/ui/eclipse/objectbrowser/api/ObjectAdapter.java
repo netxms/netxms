@@ -92,6 +92,7 @@ public class ObjectAdapter implements IWorkbenchAdapter
 				return Activator.getImageDescriptor("icons/policy_group.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_AGENTPOLICY:
 			case AbstractObject.OBJECT_AGENTPOLICY_CONFIG:
+			case AbstractObject.OBJECT_AGENTPOLICY_LOGPARSER:
 				return Activator.getImageDescriptor("icons/policy.png"); //$NON-NLS-1$
 			case AbstractObject.OBJECT_NETWORKMAP:
 				return Activator.getImageDescriptor("icons/netmap.png"); //$NON-NLS-1$

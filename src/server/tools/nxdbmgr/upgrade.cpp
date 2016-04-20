@@ -642,6 +642,21 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V395 to V396
+ */
+static BOOL H_UpgradeFromV395(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE ap_log_parser (")
+      _T("   policy_id integer not null,")
+      _T("   file_content $SQL:TEXT null,")
+      _T("   PRIMARY KEY(policy_id))")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='396' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V394 to V395
  */
 static BOOL H_UpgradeFromV394(int currVersion, int newVersion)
@@ -9482,6 +9497,7 @@ static struct
    { 392, 393, H_UpgradeFromV392 },
    { 393, 394, H_UpgradeFromV393 },
    { 394, 395, H_UpgradeFromV394 },
+   { 395, 396, H_UpgradeFromV395 },
    { 0, 0, NULL }
 };
 

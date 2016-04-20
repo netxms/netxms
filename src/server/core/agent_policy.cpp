@@ -218,9 +218,6 @@ void AgentPolicy::fillMessageInternal(NXCPMessage *msg)
  */
 UINT32 AgentPolicy::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
-	if (pRequest->isFieldExist(VID_VERSION))
-		m_version = pRequest->getFieldAsUInt32(VID_VERSION);
-
    return NetObj::modifyFromMessageInternal(pRequest);
 }
 
