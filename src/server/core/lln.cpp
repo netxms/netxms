@@ -38,7 +38,7 @@ LinkLayerNeighbors::LinkLayerNeighbors()
  */
 LinkLayerNeighbors::~LinkLayerNeighbors()
 {
-	safe_free(m_connections);
+	free(m_connections);
 }
 
 /**
@@ -47,10 +47,19 @@ LinkLayerNeighbors::~LinkLayerNeighbors()
 bool LinkLayerNeighbors::isDuplicate(LL_NEIGHBOR_INFO *info)
 {
 	for(int i = 0; i < m_count; i++)
-		if ((m_connections[i].ifLocal == info->ifLocal) &&
-		    (m_connections[i].ifRemote == info->ifRemote) &&
-		    (m_connections[i].objectId == info->objectId))
-		return true;
+	{
+		if (m_connections[i].ifLocal == info->ifLocal)
+		{
+		   if ((m_connections[i].ifRemote != info->ifRemote) ||
+		       (m_connections[i].objectId != info->objectId))
+		   {
+		      nxlog_debug(5, _T("LinkLayerNeighbors::isDuplicate: inconsistent data: %s(ifLocal=%d remote=%d/%d) %s(ifLocal=%d remote=%d/%d)"),
+		                  GetLinkLayerProtocolName(m_connections[i].protocol), m_connections[i].ifLocal, m_connections[i].objectId, m_connections[i].ifRemote,
+                        GetLinkLayerProtocolName(info->protocol), info->ifLocal, info->objectId, info->ifRemote);
+		   }
+         return true;
+		}
+	}
 	return false;
 }
 
