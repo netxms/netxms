@@ -203,7 +203,7 @@ DCItem::DCItem(UINT32 dwId, const TCHAR *szName, int iSource, int iDataType,
 	m_instanceFilterSource = NULL;
 	m_instanceFilter = NULL;
 
-   updateCacheSize();
+   updateCacheSizeInternal();
 }
 
 /**
@@ -253,7 +253,7 @@ DCItem::DCItem(ConfigEntry *config, Template *owner) : DCObject(config, owner)
 		m_thresholds = NULL;
 	}
 
-   updateCacheSize();
+	updateCacheSizeInternal();
 }
 
 /**
@@ -677,7 +677,7 @@ void DCItem::updateFromMessage(NXCPMessage *pMsg, UINT32 *pdwNumMaps, UINT32 **p
 
 	safe_free(ppNewList);
    safe_free(newThresholds);
-   updateCacheSize();
+   updateCacheSizeInternal();
    unlock();
 }
 
@@ -1007,7 +1007,7 @@ void DCItem::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExpan
 		expandMacros(m_instance, m_instance, MAX_DB_STRING);
 
    clearCache();
-   updateCacheSize();
+   updateCacheSizeInternal();
    unlock();
 }
 
@@ -1017,7 +1017,7 @@ void DCItem::changeBinding(UINT32 dwNewId, Template *pNewNode, BOOL doMacroExpan
  * GetCacheSizeForDCI should be called with bNoLock == TRUE for appropriate
  * condition object
  */
-void DCItem::updateCacheSize(UINT32 dwCondId)
+void DCItem::updateCacheSizeInternal(UINT32 conditionId)
 {
    UINT32 dwSize, dwRequiredSize;
 
@@ -1045,7 +1045,7 @@ void DCItem::updateCacheSize(UINT32 dwCondId)
 		for(int i = 0; i < conditions->size(); i++)
       {
 			Condition *c = (Condition *)conditions->get(i);
-			dwSize = c->getCacheSizeForDCI(m_id, dwCondId == c->getId());
+			dwSize = c->getCacheSizeForDCI(m_id, conditionId == c->getId());
          if (dwSize > dwRequiredSize)
             dwRequiredSize = dwSize;
          c->decRefCount();
@@ -1263,10 +1263,10 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
    {
       case F_LAST:
          // cache placeholders will have timestamp 1
-         pValue = ((m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? new NXSL_Value(m_ppValueCache[0]->getString()) : new NXSL_Value;
+         pValue = (m_bCacheLoaded && (m_cacheSize > 0) && (m_ppValueCache[0]->getTimeStamp() != 1)) ? new NXSL_Value(m_ppValueCache[0]->getString()) : new NXSL_Value;
          break;
       case F_DIFF:
-         if (m_cacheSize >= 2)
+         if (m_bCacheLoaded && (m_cacheSize >= 2))
          {
             ItemValue result;
 
@@ -1279,7 +1279,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          }
          break;
       case F_AVERAGE:
-         if (m_cacheSize > 0)
+         if (m_bCacheLoaded && (m_cacheSize > 0))
          {
             ItemValue result;
 
@@ -1293,7 +1293,7 @@ NXSL_Value *DCItem::getValueForNXSL(int nFunction, int nPolls)
          }
          break;
       case F_DEVIATION:
-         if (m_cacheSize > 0)
+         if (m_bCacheLoaded && (m_cacheSize > 0))
          {
             ItemValue result;
 
@@ -1429,7 +1429,7 @@ bool DCItem::deleteAllData()
 	success = DBQuery(hdb, szQuery) ? true : false;
    DBConnectionPoolReleaseConnection(hdb);
 	clearCache();
-	updateCacheSize();
+	updateCacheSizeInternal();
    unlock();
 	return success;
 }
@@ -1503,7 +1503,7 @@ void DCItem::updateFromTemplate(DCObject *src)
       setInstanceFilter(item->m_instanceFilterSource);
    }
 
-   updateCacheSize();
+   updateCacheSizeInternal();
    unlock();
 }
 
@@ -1963,6 +1963,7 @@ void DCItem::updateFromImport(ConfigEntry *config)
 {
    DCObject::updateFromImport(config);
 
+   lock();
    nx_strncpy(m_instance, config->getSubEntryValue(_T("instance"), 0, _T("")), MAX_DB_STRING);
    m_dataType = (BYTE)config->getSubEntryValueAsInt(_T("dataType"));
    m_deltaCalculation = (BYTE)config->getSubEntryValueAsInt(_T("delta"));
@@ -1993,5 +1994,6 @@ void DCItem::updateFromImport(ConfigEntry *config)
       delete_and_null(m_thresholds);
    }
 
-   updateCacheSize();
+   updateCacheSizeInternal();
+   unlock();
 }

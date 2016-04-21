@@ -339,13 +339,11 @@ UINT32 Condition::modifyFromMessageInternal(NXCPMessage *pRequest)
             pObject = FindObjectById(m_dciList[i].nodeId);
             if (pObject != NULL)
             {
-               if (pObject->getObjectClass() == OBJECT_NODE)
+               if ((pObject->getObjectClass() == OBJECT_NODE) ||
+                   (pObject->getObjectClass() == OBJECT_CLUSTER) ||
+                   (pObject->getObjectClass() == OBJECT_MOBILEDEVICE))
                {
-                  DCObject *pItem = ((Node *)pObject)->getDCObjectById(m_dciList[i].id);
-                  if ((pItem != NULL) && (pItem->getType() == DCO_TYPE_ITEM))
-                  {
-                     ((DCItem *)pItem)->updateCacheSize(m_id);
-                  }
+                  ((DataCollectionTarget *)pObject)->updateDCItemCacheSize(m_dciList[i].id, m_id);
                }
             }
          }

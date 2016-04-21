@@ -1098,6 +1098,7 @@ void DCTable::updateFromImport(ConfigEntry *config)
 {
    DCObject::updateFromImport(config);
 
+   lock();
    m_columns->clear();
    ConfigEntry *columnsRoot = config->findEntry(_T("columns"));
    if (columnsRoot != NULL)
@@ -1121,6 +1122,7 @@ void DCTable::updateFromImport(ConfigEntry *config)
       }
       delete thresholds;
    }
+   unlock();
 }
 
 /**
