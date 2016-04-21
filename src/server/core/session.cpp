@@ -5016,6 +5016,11 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 								   NetObjInsert(object, true, false);
 								   object->calculateCompoundStatus();	// Force status change to NORMAL
 								   break;
+                        case OBJECT_AGENTPOLICY_LOGPARSER:
+								   object = new AgentPolicyLogParser(szObjectName);
+								   NetObjInsert(object, true, false);
+								   object->calculateCompoundStatus();	// Force status change to NORMAL
+								   break;
 							   case OBJECT_CLUSTER:
 								   object = new Cluster(szObjectName, zoneId);
 								   NetObjInsert(object, true, false);

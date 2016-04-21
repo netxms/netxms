@@ -2042,6 +2042,31 @@ public:
 };
 
 /**
+ * Log parser configuration policy object
+ */
+class NXCORE_EXPORTABLE AgentPolicyLogParser : public AgentPolicy
+{
+ protected:
+   TCHAR *m_fileContent;
+
+   virtual void fillMessageInternal(NXCPMessage *pMsg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+ public:
+   AgentPolicyLogParser();
+   AgentPolicyLogParser(const TCHAR *name);
+   virtual ~AgentPolicyLogParser();
+
+   virtual int getObjectClass() const { return OBJECT_AGENTPOLICY_LOGPARSER; }
+
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+
+	virtual bool createDeploymentMessage(NXCPMessage *msg);
+	virtual bool createUninstallMessage(NXCPMessage *msg);
+};
+
+/**
  * Policy group object
  */
 class NXCORE_EXPORTABLE PolicyGroup : public Container

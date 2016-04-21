@@ -71,6 +71,11 @@
 #define AGENT_POLICY_LOG_PARSER  2
 
 /**
+ * Agent log parser policy folder
+ */
+#define LOGPARSER_AP_FOLDER _T("logparser_ap")
+
+/**
  * Error codes
  */
 #define ERR_SUCCESS                 ((UINT32)0)

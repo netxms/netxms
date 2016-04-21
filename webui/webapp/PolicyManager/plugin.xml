@@ -15,6 +15,16 @@
              </instanceof>
           </enabledWhen>
         </page>
+        <page
+              class="org.netxms.ui.eclipse.policymanager.propertypages.ParserFile"
+              id="org.netxms.ui.eclipse.policymanager.propertypages.ParserFile"
+              name="Log Parser File">
+           <enabledWhen>
+              <instanceof
+                    value="org.netxms.client.objects.AgentPolicyLogParser">
+              </instanceof>
+           </enabledWhen>
+        </page>
   </extension>
 
    <extension
@@ -42,6 +52,13 @@
                label="%action.label.CreatePolicyGrp"
                menubarPath="objectcreation">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.policymanager.actions.CreateAgentPolicyLogParser"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.policymanager.popupActions.CreateAgentPolicyLogParser_PolicyRoot"
+               label="Create log parser policy(xml file)..."
+               menubarPath="objectcreation">
+         </action>
       </objectContribution>
       <objectContribution
             adaptable="false"
@@ -59,6 +76,13 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.policymanager.popupActions.CreatePolicyGroup_PolicyGroup"
                label="%action.label.CreatePolicyGrp"
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.policymanager.actions.CreateAgentPolicyLogParser"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.policymanager.popupActions.CreateAgentPolicyLogParser_PolicyGroup"
+               label="Create log parser policy(xml file)..."
                menubarPath="objectcreation">
          </action>
       </objectContribution>

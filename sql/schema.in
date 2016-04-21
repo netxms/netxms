@@ -771,7 +771,7 @@ COMMENT_COLUMN(dct_node_map.template_id, '')
 COMMENT_COLUMN(dct_node_map.node_id, '')
 
 /**
- * Nodes to subnets mapping 
+ * Nodes to subnets mapping
  */
 CREATE TABLE nsmap
 (
@@ -785,7 +785,7 @@ COMMENT_COLUMN(nsmap.subnet_id, '')
 COMMENT_COLUMN(nsmap.node_id, '')
 
 /**
- * Container members 
+ * Container members
  */
 CREATE TABLE container_members
 (
@@ -1871,7 +1871,6 @@ COMMENT_COLUMN(snmp_communities.community, '')
 /*
 ** Agent policies - common attributes
 */
-
 CREATE TABLE ap_common
 (
   id integer not null,
@@ -1880,10 +1879,10 @@ CREATE TABLE ap_common
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(ap_common, '')
-COMMENT_COLUMN(ap_common.id, '')
-COMMENT_COLUMN(ap_common.policy_type, '')
-COMMENT_COLUMN(ap_common.version, '')
+COMMENT_TABLE(ap_common, 'Agent policies common attributes')
+COMMENT_COLUMN(ap_common.id, 'Unique policy identifier')
+COMMENT_COLUMN(ap_common.policy_type, 'Policy type')
+COMMENT_COLUMN(ap_common.version, 'Policy version')
 
 /*
 ** Agent policies - node binding
@@ -1895,9 +1894,9 @@ CREATE TABLE ap_bindings
   PRIMARY KEY(policy_id,node_id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(ap_bindings, '')
-COMMENT_COLUMN(ap_bindings.policy_id, '')
-COMMENT_COLUMN(ap_bindings.node_id, '')
+COMMENT_TABLE(ap_bindings, 'Agent policies to node binding')
+COMMENT_COLUMN(ap_bindings.policy_id, 'Unique policy identifier')
+COMMENT_COLUMN(ap_bindings.node_id, 'Unique node identifier')
 
 /*
 ** Agent policies - configuration files
@@ -1909,9 +1908,23 @@ CREATE TABLE ap_config_files
   PRIMARY KEY(policy_id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(ap_config_files, '')
-COMMENT_COLUMN(ap_config_files.policy_id, '')
-COMMENT_COLUMN(ap_config_files.file_content, '')
+COMMENT_TABLE(ap_config_files, 'Agent policies configuration files')
+COMMENT_COLUMN(ap_config_files.policy_id, 'Unique policy identifier')
+COMMENT_COLUMN(ap_config_files.file_content, 'Policy file content')
+
+/**
+** Agent policies - log parser files
+*/
+CREATE TABLE ap_log_parser
+(
+  policy_id integer not null,
+  file_content SQL_TEXT null,
+  PRIMARY KEY(policy_id)
+) TABLE_TYPE;
+
+COMMENT_TABLE(ap_log_parser, 'Agent policies log parser files')
+COMMENT_COLUMN(ap_log_parser.policy_id, 'Unique policy identifier')
+COMMENT_COLUMN(ap_log_parser.file_content, 'Log parser policy file content')
 
 /*
 ** Default SNMP v3 USM credentials
@@ -1927,13 +1940,13 @@ CREATE TABLE usm_credentials
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(usm_credentials, '')
-COMMENT_COLUMN(usm_credentials.id, '')
-COMMENT_COLUMN(usm_credentials.user_name, '')
-COMMENT_COLUMN(usm_credentials.auth_method, '')
-COMMENT_COLUMN(usm_credentials.priv_method, '')
-COMMENT_COLUMN(usm_credentials.auth_password, '')
-COMMENT_COLUMN(usm_credentials.priv_password, '')
+COMMENT_TABLE(usm_credentials, 'Default SNMP v3 USM credentials')
+COMMENT_COLUMN(usm_credentials.id, 'SNMP v3 USM credential unique identifier')
+COMMENT_COLUMN(usm_credentials.user_name, 'SNMP v3 USM username')
+COMMENT_COLUMN(usm_credentials.auth_method, 'SNMP v3 USM authentication method')
+COMMENT_COLUMN(usm_credentials.priv_method, 'SNMP v3 USM encryption method')
+COMMENT_COLUMN(usm_credentials.auth_password, 'SNMP v3 USM authentication password')
+COMMENT_COLUMN(usm_credentials.priv_password, 'SNMP v3 USM encryption password')
 
 /*
 ** Network maps

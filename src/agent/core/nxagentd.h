@@ -627,6 +627,7 @@ extern TCHAR g_szConfigServer[];
 extern TCHAR g_szRegistrar[];
 extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
+extern TCHAR g_szLogParserDirectory[];
 extern TCHAR g_szDataDirectory[];
 extern TCHAR g_masterAgent[];
 extern TCHAR g_szSNMPTrapListenAddress[];

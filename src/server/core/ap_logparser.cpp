@@ -22,12 +22,11 @@
 
 #include "nxcore.h"
 
-
 /**
  * Agent policy default constructor
  */
-AgentPolicyConfig::AgentPolicyConfig()
-                  : AgentPolicy(AGENT_POLICY_CONFIG)
+AgentPolicyLogParser::AgentPolicyLogParser()
+                  : AgentPolicy(AGENT_POLICY_LOG_PARSER)
 {
 	m_fileContent = NULL;
 }
@@ -36,8 +35,8 @@ AgentPolicyConfig::AgentPolicyConfig()
 /**
  * Constructor for user-initiated object creation
  */
-AgentPolicyConfig::AgentPolicyConfig(const TCHAR *name)
-                  : AgentPolicy(name, AGENT_POLICY_CONFIG)
+AgentPolicyLogParser::AgentPolicyLogParser(const TCHAR *name)
+                  : AgentPolicy(name, AGENT_POLICY_LOG_PARSER)
 {
 	m_fileContent = NULL;
 }
@@ -46,7 +45,7 @@ AgentPolicyConfig::AgentPolicyConfig(const TCHAR *name)
 /**
  * Destructor
  */
-AgentPolicyConfig::~AgentPolicyConfig()
+AgentPolicyLogParser::~AgentPolicyLogParser()
 {
 	safe_free(m_fileContent);
 }
@@ -55,7 +54,7 @@ AgentPolicyConfig::~AgentPolicyConfig()
 /**
  * Save to database
  */
-BOOL AgentPolicyConfig::saveToDatabase(DB_HANDLE hdb)
+BOOL AgentPolicyLogParser::saveToDatabase(DB_HANDLE hdb)
 {
 	lockProperties();
 
@@ -66,7 +65,7 @@ BOOL AgentPolicyConfig::saveToDatabase(DB_HANDLE hdb)
 		size_t len = data.length() + 256;
 		TCHAR *query = (TCHAR *)malloc(len * sizeof(TCHAR));
 
-		_sntprintf(query, len, _T("SELECT policy_id FROM ap_config_files WHERE policy_id=%d"), m_id);
+		_sntprintf(query, len, _T("SELECT policy_id FROM ap_log_parser WHERE policy_id=%d"), m_id);
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult != NULL)
 		{
@@ -74,10 +73,10 @@ BOOL AgentPolicyConfig::saveToDatabase(DB_HANDLE hdb)
 			DBFreeResult(hResult);
 
 			if (isNew)
-				_sntprintf(query, len, _T("INSERT INTO ap_config_files (policy_id,file_content) VALUES (%d,%s)"),
+				_sntprintf(query, len, _T("INSERT INTO ap_log_parser (policy_id,file_content) VALUES (%d,%s)"),
 				           m_id, (const TCHAR *)data);
 			else
-				_sntprintf(query, len, _T("UPDATE ap_config_files SET file_content=%s WHERE policy_id=%d"),
+				_sntprintf(query, len, _T("UPDATE ap_log_parser SET file_content=%s WHERE policy_id=%d"),
 				           (const TCHAR *)data, m_id);
 			success = DBQuery(hdb, query);
 		}
@@ -95,12 +94,12 @@ BOOL AgentPolicyConfig::saveToDatabase(DB_HANDLE hdb)
 /**
  * Delete from database
  */
-bool AgentPolicyConfig::deleteFromDatabase(DB_HANDLE hdb)
+bool AgentPolicyLogParser::deleteFromDatabase(DB_HANDLE hdb)
 {
 	bool success = AgentPolicy::deleteFromDatabase(hdb);
    if (success)
    {
-      success = executeQueryOnObject(hdb, _T("DELETE FROM ap_config_files WHERE policy_id=?"));
+      success = executeQueryOnObject(hdb, _T("DELETE FROM ap_log_parser WHERE policy_id=?"));
    }
    return success;
 }
@@ -108,7 +107,7 @@ bool AgentPolicyConfig::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Load from database
  */
-bool AgentPolicyConfig::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
+bool AgentPolicyLogParser::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 {
 	bool success = false;
 
@@ -116,7 +115,7 @@ bool AgentPolicyConfig::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	{
 		TCHAR query[256];
 
-		_sntprintf(query, 256, _T("SELECT file_content FROM ap_config_files WHERE policy_id=%d"), dwId);
+		_sntprintf(query, 256, _T("SELECT file_content FROM ap_log_parser WHERE policy_id=%d"), dwId);
 		DB_RESULT hResult = DBSelect(hdb, query);
 		if (hResult != NULL)
 		{
@@ -134,7 +133,7 @@ bool AgentPolicyConfig::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 /**
  * Create NXCP message with policy data
  */
-void AgentPolicyConfig::fillMessageInternal(NXCPMessage *msg)
+void AgentPolicyLogParser::fillMessageInternal(NXCPMessage *msg)
 {
    AgentPolicy::fillMessageInternal(msg);
 	msg->setField(VID_CONFIG_FILE_DATA, CHECK_NULL_EX(m_fileContent));
@@ -143,7 +142,7 @@ void AgentPolicyConfig::fillMessageInternal(NXCPMessage *msg)
 /**
  * Modify policy from message
  */
-UINT32 AgentPolicyConfig::modifyFromMessageInternal(NXCPMessage *pRequest)
+UINT32 AgentPolicyLogParser::modifyFromMessageInternal(NXCPMessage *pRequest)
 {
 	if (pRequest->isFieldExist(VID_CONFIG_FILE_DATA))
 	{
@@ -157,7 +156,7 @@ UINT32 AgentPolicyConfig::modifyFromMessageInternal(NXCPMessage *pRequest)
 /**
  * Create deployment message
  */
-bool AgentPolicyConfig::createDeploymentMessage(NXCPMessage *msg)
+bool AgentPolicyLogParser::createDeploymentMessage(NXCPMessage *msg)
 {
 	if (!AgentPolicy::createDeploymentMessage(msg))
 		return false;
@@ -179,7 +178,7 @@ bool AgentPolicyConfig::createDeploymentMessage(NXCPMessage *msg)
 /**
  * Create uninstall message
  */
-bool AgentPolicyConfig::createUninstallMessage(NXCPMessage *msg)
+bool AgentPolicyLogParser::createUninstallMessage(NXCPMessage *msg)
 {
 	return AgentPolicy::createUninstallMessage(msg);
 }

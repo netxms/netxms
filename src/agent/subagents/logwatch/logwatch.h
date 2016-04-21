@@ -27,5 +27,6 @@
 #include <nms_util.h>
 #include <nms_agent.h>
 #include <nxlpapi.h>
+#include <nxstat.h>
 
 #endif

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
@@ -223,19 +223,19 @@ void ObjectsInit()
 	// Create "Policy Root" object
    g_pPolicyRoot = new PolicyRoot;
    NetObjInsert(g_pPolicyRoot, false, false);
-   
+
 	// Create "Network Maps Root" object
    g_pMapRoot = new NetworkMapRoot;
    NetObjInsert(g_pMapRoot, false, false);
-   
+
 	// Create "Dashboard Root" object
    g_pDashboardRoot = new DashboardRoot;
    NetObjInsert(g_pDashboardRoot, false, false);
-   
+
    // Create "Business Service Root" object
    g_pBusinessServiceRoot = new BusinessServiceRoot;
    NetObjInsert(g_pBusinessServiceRoot, false, false);
-   
+
 	DbgPrintf(1, _T("Built-in objects created"));
 
 	// Initialize service checks
@@ -255,9 +255,9 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
          pObject->generateGuid();
 
       // Create tables for storing data collection values
-      if ((pObject->getObjectClass() == OBJECT_NODE) || 
-          (pObject->getObjectClass() == OBJECT_MOBILEDEVICE) || 
-          (pObject->getObjectClass() == OBJECT_CLUSTER) || 
+      if ((pObject->getObjectClass() == OBJECT_NODE) ||
+          (pObject->getObjectClass() == OBJECT_MOBILEDEVICE) ||
+          (pObject->getObjectClass() == OBJECT_CLUSTER) ||
           (pObject->getObjectClass() == OBJECT_ACCESSPOINT))
       {
          TCHAR szQuery[256], szQueryTemplate[256];
@@ -388,7 +388,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 					}
                if (newObject)
                {
-                  PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", pObject->getId(), pObject->getName(), 
+                  PostEvent(EVENT_SUBNET_ADDED, g_dwMgmtNode, "isAd", pObject->getId(), pObject->getName(),
                      &((Subnet *)pObject)->getIpAddress(), ((Subnet *)pObject)->getIpAddress().getMaskBits());
                }
             }
@@ -1489,6 +1489,9 @@ BOOL LoadObjects()
 				case AGENT_POLICY_CONFIG:
 					policy = new AgentPolicyConfig();
 					break;
+				case AGENT_POLICY_LOG_PARSER:
+					policy = new AgentPolicyLogParser();
+					break;
 				default:
 					policy = new AgentPolicy(type);
 					break;
@@ -1820,7 +1823,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
 					  object->getId(), object->getName(), object->getObjectClassName(),
                  GetStatusAsText(object->Status(), true),
                  object->isModified(), object->isDeleted());
-   ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 
+   ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"),
                  object->dbgGetParentList(dd->buffer), object->dbgGetChildList(&dd->buffer[4096]));
 	time_t t = object->getTimeStamp();
 	struct tm *ltm = localtime(&t);
@@ -1851,7 +1854,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
          }
          break;
       case OBJECT_TEMPLATE:
-         ConsolePrintf(pCtx, _T("   Version: %d.%d\n"), 
+         ConsolePrintf(pCtx, _T("   Version: %d.%d\n"),
                        ((Template *)(object))->getVersionMajor(),
                        ((Template *)(object))->getVersionMinor());
          break;
@@ -1887,7 +1890,7 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
 			break;
       case OBJECT_SERVICEROOT:
       case OBJECT_CONTAINER:
-         if ((iChildClass == OBJECT_CONTAINER) || 
+         if ((iChildClass == OBJECT_CONTAINER) ||
              (iChildClass == OBJECT_RACK) ||
              (iChildClass == OBJECT_NODE) ||
              (iChildClass == OBJECT_CLUSTER) ||
@@ -1902,19 +1905,19 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
          break;
       case OBJECT_TEMPLATEROOT:
       case OBJECT_TEMPLATEGROUP:
-         if ((iChildClass == OBJECT_TEMPLATEGROUP) || 
+         if ((iChildClass == OBJECT_TEMPLATEGROUP) ||
              (iChildClass == OBJECT_TEMPLATE))
             return true;
          break;
       case OBJECT_TEMPLATE:
-         if ((iChildClass == OBJECT_NODE) || 
+         if ((iChildClass == OBJECT_NODE) ||
              (iChildClass == OBJECT_CLUSTER) ||
              (iChildClass == OBJECT_MOBILEDEVICE))
             return true;
          break;
       case OBJECT_NETWORKMAPROOT:
       case OBJECT_NETWORKMAPGROUP:
-         if ((iChildClass == OBJECT_NETWORKMAPGROUP) || 
+         if ((iChildClass == OBJECT_NETWORKMAPGROUP) ||
              (iChildClass == OBJECT_NETWORKMAP))
             return true;
          break;
@@ -1925,9 +1928,10 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
          break;
       case OBJECT_POLICYROOT:
       case OBJECT_POLICYGROUP:
-         if ((iChildClass == OBJECT_POLICYGROUP) || 
+         if ((iChildClass == OBJECT_POLICYGROUP) ||
              (iChildClass == OBJECT_AGENTPOLICY) ||
-             (iChildClass == OBJECT_AGENTPOLICY_CONFIG))
+             (iChildClass == OBJECT_AGENTPOLICY_CONFIG) ||
+             (iChildClass == OBJECT_AGENTPOLICY_LOGPARSER))
             return true;
          break;
       case OBJECT_NODE:
@@ -1941,12 +1945,12 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
             return true;
          break;
 		case OBJECT_BUSINESSSERVICEROOT:
-			if ((iChildClass == OBJECT_BUSINESSSERVICE) || 
+			if ((iChildClass == OBJECT_BUSINESSSERVICE) ||
 			    (iChildClass == OBJECT_NODELINK))
             return true;
          break;
 		case OBJECT_BUSINESSSERVICE:
-			if ((iChildClass == OBJECT_BUSINESSSERVICE) || 
+			if ((iChildClass == OBJECT_BUSINESSSERVICE) ||
 			    (iChildClass == OBJECT_NODELINK) ||
 			    (iChildClass == OBJECT_SLMCHECK))
             return true;
@@ -2102,8 +2106,8 @@ bool IsAgentPolicyObject(NetObj *object)
  */
 bool IsEventSource(int objectClass)
 {
-	return (objectClass == OBJECT_NODE) || 
-	       (objectClass == OBJECT_CONTAINER) || 
-	       (objectClass == OBJECT_CLUSTER) || 
+	return (objectClass == OBJECT_NODE) ||
+	       (objectClass == OBJECT_CONTAINER) ||
+	       (objectClass == OBJECT_CLUSTER) ||
 			 (objectClass == OBJECT_MOBILEDEVICE);
 }

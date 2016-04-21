@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS multiplatform core agent
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -132,7 +132,45 @@ static UINT32 DeployConfig(UINT32 session, const uuid& guid, NXCPMessage *msg)
  */
 static UINT32 DeployLogParser(UINT32 session, const uuid& guid, NXCPMessage *msg)
 {
-	return ERR_NOT_IMPLEMENTED;
+   TCHAR path[MAX_PATH], name[64];
+	int fh;
+	UINT32 rcc;
+
+	_sntprintf(path, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory
+               ,guid.toString(name));
+
+	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
+	if (fh != -1)
+	{
+		UINT32 size = msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, NULL, 0);
+		BYTE *data = (BYTE *)malloc(size);
+		if (data != NULL)
+		{
+			msg->getFieldAsBinary(VID_CONFIG_FILE_DATA, data, size);
+			if (write(fh, data, size) == size)
+			{
+		      DebugPrintf(session, 3, _T("Log parser file %s saved successfully"), path);
+				rcc = ERR_SUCCESS;
+			}
+			else
+			{
+				rcc = ERR_IO_FAILURE;
+			}
+			free(data);
+		}
+		else
+		{
+			rcc = ERR_MEM_ALLOC_FAILED;
+		}
+		close(fh);
+	}
+	else
+	{
+		DebugPrintf(session, 2, _T("DeployLogParser(): Error opening file %s for writing (%s)"), path, _tcserror(errno));
+		rcc = ERR_FILE_OPEN_ERROR;
+	}
+
+	return rcc;
 }
 
 /**
@@ -194,13 +232,11 @@ static UINT32 RemoveConfig(UINT32 session, const uuid& guid, NXCPMessage *msg)
  */
 static UINT32 RemoveLogParser(UINT32 session, const uuid& guid,  NXCPMessage *msg)
 {
-	TCHAR path[MAX_PATH], name[64], tail;
+	TCHAR path[MAX_PATH], name[64];
 	UINT32 rcc;
 
-	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
-	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
-	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-              guid.toString(name));
+	_sntprintf(path, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory
+               ,guid.toString(name));
 
 	if (_tremove(path) != 0)
 	{
@@ -276,7 +312,7 @@ UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg)
 	{
 		msg->setField(VID_NUM_ELEMENTS, (UINT32)0);
 	}
-	
+
 	AgentCloseRegistry(false);
 	return RCC_SUCCESS;
 }
