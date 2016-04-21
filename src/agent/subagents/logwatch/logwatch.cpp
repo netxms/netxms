@@ -217,6 +217,49 @@ static void AddParserFromConfig(const TCHAR *file)
 }
 
 /**
+ * Add to logwatch everything inside logwatch policy folder
+ */
+static void AddLogwatchPolicyFiles()
+{
+   const TCHAR *dataDir = AgentGetDataDirectory();
+   TCHAR policyFolder[MAX_PATH];
+   TCHAR tail = dataDir[_tcslen(dataDir) - 1];
+	_sntprintf(policyFolder, MAX_PATH, _T("%s%s%s"), dataDir,
+	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+              LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR);
+
+   AgentWriteDebugLog(1, _T("AddLogwatchPolicyFiles(): Log parser policy directory: %s"), policyFolder);
+
+   _TDIR *dir = _topendir(policyFolder);
+   if (dir != NULL)
+   {
+      struct _tdirent *d;
+      while((d = _treaddir(dir)) != NULL)
+      {
+         if (!_tcscmp(d->d_name, _T(".")) || !_tcscmp(d->d_name, _T("..")))
+         {
+            continue;
+         }
+
+         TCHAR fullName[MAX_PATH];
+         _tcscpy(fullName, policyFolder);
+         _tcscat(fullName, FS_PATH_SEPARATOR);
+         _tcscat(fullName, d->d_name);
+
+         NX_STAT_STRUCT st;
+         if (CALL_STAT(fullName, &st) == 0)
+         {
+            if(S_ISREG(st.st_mode))
+            {
+               AddParserFromConfig(fullName);
+            }
+         }
+      }
+      _tclosedir(dir);
+   }
+}
+
+/**
  * Subagent initialization
  */
 static BOOL SubagentInit(Config *config)
@@ -231,6 +274,7 @@ static BOOL SubagentInit(Config *config)
 		for(int i = 0; i < parsers->getValueCount(); i++)
 			AddParserFromConfig(parsers->getValue(i));
 	}
+   AddLogwatchPolicyFiles();
 
 	// Create shutdown condition and start parsing threads
 	s_shutdownCondition = ConditionCreate(TRUE);

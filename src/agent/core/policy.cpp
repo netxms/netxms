@@ -136,7 +136,7 @@ static UINT32 DeployLogParser(UINT32 session, const uuid& guid, NXCPMessage *msg
 	int fh;
 	UINT32 rcc;
 
-	_sntprintf(path, MAX_PATH, _T("%s.xml"), g_szLogParserDirectory
+	_sntprintf(path, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory
                ,guid.toString(name));
 
 	fh = _topen(path, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IRUSR | S_IWUSR);
@@ -232,13 +232,11 @@ static UINT32 RemoveConfig(UINT32 session, const uuid& guid, NXCPMessage *msg)
  */
 static UINT32 RemoveLogParser(UINT32 session, const uuid& guid,  NXCPMessage *msg)
 {
-	TCHAR path[MAX_PATH], name[64], tail;
+	TCHAR path[MAX_PATH], name[64];
 	UINT32 rcc;
 
-	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
-	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
-	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-              guid.toString(name));
+	_sntprintf(path, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory
+               ,guid.toString(name));
 
 	if (_tremove(path) != 0)
 	{

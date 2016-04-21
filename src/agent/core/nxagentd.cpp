@@ -146,7 +146,7 @@ TCHAR g_szConfigServer[MAX_DB_STRING] = _T("not_set");
 TCHAR g_szRegistrar[MAX_DB_STRING] = _T("not_set");
 TCHAR g_szListenAddress[MAX_PATH] = _T("*");
 TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
-TCHAR g_szLogParserDirectory = "";
+TCHAR g_szLogParserDirectory[MAX_PATH] = _T("");
 TCHAR g_masterAgent[MAX_PATH] = _T("not_set");
 TCHAR g_szSNMPTrapListenAddress[MAX_PATH] = _T("*");
 UINT16 g_wListenPort = AGENT_LISTEN_PORT;
@@ -732,7 +732,7 @@ BOOL Initialize()
    TCHAR tail = g_szDataDirectory[_tcslen(g_szDataDirectory) - 1];
 	_sntprintf(g_szLogParserDirectory, MAX_PATH, _T("%s%s%s"), g_szDataDirectory,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
-              _T("logparser_ap") FS_PATH_SEPARATOR);
+              LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR);
    DebugPrintf(INVALID_INDEX, 6, _T("Log parser policy directory: %s"), g_szLogParserDirectory);
 	CreateFolder(g_szLogParserDirectory);
 
