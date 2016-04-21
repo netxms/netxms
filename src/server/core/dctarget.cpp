@@ -904,3 +904,17 @@ void DataCollectionTarget::leaveMaintenanceMode()
    setModified();
    unlockProperties();
 }
+
+/**
+ * Update cache size for given data collection item
+ */
+void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId)
+{
+   lockDciAccess(false);
+   DCObject *dci = getDCObjectById(dciId, false);
+   if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
+   {
+      ((DCItem *)dci)->updateCacheSize(conditionId);
+   }
+   unlockDciAccess();
+}

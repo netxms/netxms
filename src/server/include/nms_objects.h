@@ -1010,6 +1010,7 @@ public:
    void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
 
    void updateDciCache();
+   void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);
    void cleanDCIData(DB_HANDLE hdb);
    void queueItemsForPolling(Queue *pPollerQueue);
 	bool processNewDCValue(DCObject *dco, time_t currTime, const void *value);

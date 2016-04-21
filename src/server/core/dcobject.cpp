@@ -881,6 +881,7 @@ INT16 DCObject::getAgentCacheMode()
  */
 void DCObject::updateFromImport(ConfigEntry *config)
 {
+   lock();
    nx_strncpy(m_name, config->getSubEntryValue(_T("name"), 0, _T("unnamed")), MAX_ITEM_NAME);
    nx_strncpy(m_description, config->getSubEntryValue(_T("description"), 0, m_name), MAX_DB_STRING);
    nx_strncpy(m_systemTag, config->getSubEntryValue(_T("systemTag"), 0, _T("")), MAX_DB_STRING);
@@ -915,6 +916,7 @@ void DCObject::updateFromImport(ConfigEntry *config)
    {
       delete_and_null(m_schedules);
    }
+   unlock();
 }
 
 /**

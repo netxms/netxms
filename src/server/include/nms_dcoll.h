@@ -338,6 +338,7 @@ protected:
 
    bool transform(ItemValue &value, time_t nElapsedTime);
    void checkThresholds(ItemValue &value);
+   void updateCacheSizeInternal(UINT32 conditionId = 0);
    void clearCache();
 
 	virtual bool isCacheLoaded();
@@ -363,7 +364,7 @@ public:
    virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
-   void updateCacheSize(UINT32 dwCondId = 0);
+   void updateCacheSize(UINT32 conditionId = 0) { lock(); updateCacheSizeInternal(conditionId); unlock(); }
    void reloadCache();
 
    int getDataType() { return m_dataType; }

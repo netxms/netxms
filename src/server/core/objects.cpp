@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -240,9 +240,6 @@ void ObjectsInit()
 
 	// Initialize service checks
 	SlmCheck::init();
-
-   // Start template update applying thread
-   ThreadCreate(ApplyTemplateThread, 0, NULL);
 }
 
 /**
@@ -1738,11 +1735,11 @@ BOOL LoadObjects()
 	// Load custom object classes provided by modules
    CALL_ALL_MODULES(pfLoadObjects, ());
 
-   // Link childs to container and template group objects
+   // Link children to container and template group objects
    DbgPrintf(2, _T("Linking objects..."));
 	g_idxObjectById.forEach(LinkChildObjectsCallback, NULL);
 
-   // Link childs to root objects
+   // Link children to root objects
    g_pServiceRoot->linkChildObjects();
    g_pTemplateRoot->linkChildObjects();
    g_pPolicyRoot->linkChildObjects();
@@ -1772,6 +1769,9 @@ BOOL LoadObjects()
 
    // Start map update thread
    ThreadCreate(MapUpdateThread, 0, NULL);
+
+   // Start template update applying thread
+   ThreadCreate(ApplyTemplateThread, 0, NULL);
 
    return TRUE;
 }
