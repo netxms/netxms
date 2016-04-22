@@ -26,7 +26,9 @@ import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.Gauge;
+import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Dial chart element
@@ -77,6 +79,8 @@ public class GaugeElement extends ComparisonChartElement
 		((Gauge)chart).setRightYellowZone(config.getRightYellowZone());
 		((Gauge)chart).setRightRedZone(config.getRightRedZone());
 		((Gauge)chart).setFontName(config.getFontName());
+		((Gauge)chart).setColorMode(GaugeColorMode.getByValue(config.getColorMode()));
+		((Gauge)chart).setCustomColor(ColorConverter.rgbFromInt(config.getCustomColor()));
 		
 		int index = 0;
 		for(ChartDciConfig dci : config.getDciList())

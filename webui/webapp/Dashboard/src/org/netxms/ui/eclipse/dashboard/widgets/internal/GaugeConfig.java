@@ -3,6 +3,7 @@
  */
 package org.netxms.ui.eclipse.dashboard.widgets.internal;
 
+import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Serializer;
 import org.simpleframework.xml.core.Persister;
@@ -50,6 +51,12 @@ public class GaugeConfig extends AbstractChartConfig
 	@Element(required=false)
 	private boolean elementBordersVisible = false;
 	
+   @Element(required=false)
+   private int colorMode = GaugeColorMode.ZONE.getValue();
+   
+   @Element(required=false)
+   private int customColor = 0;
+   
 	/**
 	 * Create dial chart settings object from XML document
 	 * 
@@ -237,5 +244,37 @@ public class GaugeConfig extends AbstractChartConfig
    public void setElementBordersVisible(boolean elementBordersVisible)
    {
       this.elementBordersVisible = elementBordersVisible;
+   }
+
+   /**
+    * @return the colorMode
+    */
+   public int getColorMode()
+   {
+      return colorMode;
+   }
+
+   /**
+    * @param colorMode the colorMode to set
+    */
+   public void setColorMode(int colorMode)
+   {
+      this.colorMode = colorMode;
+   }
+
+   /**
+    * @return the customColor
+    */
+   public int getCustomColor()
+   {
+      return customColor;
+   }
+
+   /**
+    * @param customColor the customColor to set
+    */
+   public void setCustomColor(int customColor)
+   {
+      this.customColor = customColor;
    }
 }
