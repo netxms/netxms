@@ -49,6 +49,10 @@ public class AgentFileFilter extends ViewerFilter
       return pass;
 	}
 	
+	/**
+	 * @param children
+	 * @return
+	 */
 	private boolean containString(AgentFile[] children)
 	{
 	   if (children != null)

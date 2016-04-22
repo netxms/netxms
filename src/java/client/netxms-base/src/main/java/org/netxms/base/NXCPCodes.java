@@ -346,13 +346,18 @@ public class NXCPCodes
    public static final int CMD_REMOVE_SCHEDULE = 0x0144;
    public static final int CMD_ENTER_MAINT_MODE = 0x0145;
    public static final int CMD_LEAVE_MAINT_MODE = 0x0146;   
-
+   public static final int CMD_JOIN_CLUSTER = 0x0147;   
+   public static final int CMD_CLUSTER_NOTIFY = 0x0148;   
    public static final int CMD_ZMQ_SUBSCRIBE_EVENT = 0x0149;
-   public static final int CMD_ZMQ_UNSUBSCRIBE_EVENT = 0x014a;
-   public static final int CMD_ZMQ_SUBSCRIBE_DATA = 0x014b;
-   public static final int CMD_ZMQ_UNSUBSCRIBE_DATA = 0x014c;
-   public static final int CMD_ZMQ_LIST_EVENT_SUBSCRIPTIONS = 0x014d;
-   public static final int CMD_ZMQ_LIST_DATA_SUBSCRIPTIONS = 0x014e;
+   public static final int CMD_ZMQ_UNSUBSCRIBE_EVENT = 0x014A;
+   public static final int CMD_ZMQ_SUBSCRIBE_DATA = 0x014B;
+   public static final int CMD_ZMQ_UNSUBSCRIBE_DATA = 0x014C;
+   public static final int CMD_ZMQ_GET_EVT_SUBSCRIPTIONS = 0x014D;
+   public static final int CMD_ZMQ_GET_DATA_SUBSCRIPTIONS = 0x014E;
+   public static final int CMD_GET_REPOSITORIES = 0x014F;
+   public static final int CMD_ADD_REPOSITORY = 0x0150;
+   public static final int CMD_MODIFY_REPOSITORY = 0x0151;
+   public static final int CMD_DELETE_REPOSITORY = 0x0152;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -906,6 +911,8 @@ public class NXCPCodes
    public static final long VID_STATUS = 537;
    public static final long VID_FLAGS_MASK = 538;
    public static final long VID_TOP_BOTTOM = 539;
+   public static final long VID_AUTH_TOKEN = 540;
+   public static final long VID_REPOSITORY_ID = 541;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

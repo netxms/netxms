@@ -8755,7 +8755,7 @@ public class NXCSession
    
    public List<ZmqSubscription> getZmqSubscriptions(ZmqSubscriptionType type) throws IOException, NXCException
    {
-       final NXCPMessage msg = newMessage(type == ZmqSubscriptionType.EVENT ? NXCPCodes.CMD_ZMQ_LIST_EVENT_SUBSCRIPTIONS : NXCPCodes.CMD_ZMQ_LIST_DATA_SUBSCRIPTIONS);
+       final NXCPMessage msg = newMessage(type == ZmqSubscriptionType.EVENT ? NXCPCodes.CMD_ZMQ_GET_EVT_SUBSCRIPTIONS : NXCPCodes.CMD_ZMQ_GET_DATA_SUBSCRIPTIONS);
        sendMessage(msg);
        final NXCPMessage response = waitForRCC(msg.getMessageId());
 
