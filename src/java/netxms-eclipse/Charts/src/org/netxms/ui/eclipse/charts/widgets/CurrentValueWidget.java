@@ -26,6 +26,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
+import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
@@ -113,6 +114,9 @@ public class CurrentValueWidget extends GaugeWidget
 		   case CUSTOM:
    		   gc.setForeground(colors.create(customColor));
    		   break;
+		   case THRESHOLD:
+		      gc.setForeground(StatusDisplayInfo.getStatusColor(dci.getActiveThresholdSeverity()));
+		      break;
          default:
             gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_BLACK));
             break;

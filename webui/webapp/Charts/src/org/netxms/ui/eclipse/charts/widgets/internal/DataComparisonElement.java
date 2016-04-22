@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.charts.widgets.internal;
 
 import org.eclipse.birt.chart.model.component.Series;
+import org.netxms.client.constants.Severity;
 import org.netxms.client.datacollection.GraphItem;
 import org.netxms.client.datacollection.Threshold;
 
@@ -181,5 +182,24 @@ public class DataComparisonElement
 			}
 		}
 		return (value < Double.MAX_VALUE) ? value : defval;
+	}
+	
+	/**
+	 * Get severity of most critical active threshold
+	 * 
+	 * @return severity of most critical active threshold (NORMAL if no active thresholds) 
+	 */
+	public Severity getActiveThresholdSeverity()
+	{
+	   Severity s = Severity.NORMAL;
+      for(Threshold t : thresholds)
+      {
+         if (!t.isActive())
+            continue;
+         
+         if (s.getValue() < t.getCurrentSeverity().getValue())
+            s = t.getCurrentSeverity();
+      }
+      return s;
 	}
 }
