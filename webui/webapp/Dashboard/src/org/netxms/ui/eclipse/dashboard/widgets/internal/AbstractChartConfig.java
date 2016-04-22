@@ -49,6 +49,9 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
    @Element(required = false)
    private boolean autoScale = true;
 
+   @Element(required = false)
+   private boolean translucent = false;
+
 	@Element(required = false)
 	private int refreshRate = 30;
    
@@ -196,7 +199,23 @@ public abstract class AbstractChartConfig extends DashboardElementConfig
 		this.showTitle = showTitle;
 	}
 	
-	/**
+   /**
+    * @return the translucent
+    */
+   public boolean isTranslucent()
+   {
+      return translucent;
+   }
+
+   /**
+    * @param translucent the translucent to set
+    */
+   public void setTranslucent(boolean translucent)
+   {
+      this.translucent = translucent;
+   }
+
+   /**
     * @return the minYScaleValue
     */
    public int getMinYScaleValue()
