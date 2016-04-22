@@ -41,6 +41,7 @@ import org.netxms.client.datacollection.Threshold;
 import org.netxms.ui.eclipse.charts.Activator;
 import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.Gauge;
+import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
 import org.netxms.ui.eclipse.charts.widgets.internal.DataComparisonElement;
 import org.netxms.ui.eclipse.tools.ColorCache;
 
@@ -72,6 +73,8 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
    protected boolean gridVisible = true;
    protected boolean elementBordersVisible = false;
    protected String fontName = "Verdana"; //$NON-NLS-1$
+   protected GaugeColorMode colorMode = GaugeColorMode.ZONE;
+   protected RGB customColor = new RGB(0, 0, 0);
 
    private boolean fontsCreated = false;
 
@@ -411,7 +414,8 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
       {
          int w = (size.x - OUTER_MARGIN_WIDTH * 2);
          int h = (size.y - OUTER_MARGIN_HEIGHT - top) / parameters.size();
-         if ((w > 40) && (h > 40 * parameters.size()))
+         Point minSize = getMinElementSize();
+         if ((w >= minSize.x) && (h >= minSize.x))
          {
             for(int i = 0; i < parameters.size(); i++)
             {
@@ -423,7 +427,8 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
       {
          int w = (size.x - OUTER_MARGIN_WIDTH * 2) / parameters.size();
          int h = size.y - OUTER_MARGIN_HEIGHT - top;
-         if ((w > 40 * parameters.size()) && (h > 40))
+         Point minSize = getMinElementSize();
+         if ((w >= minSize.x) && (h >= minSize.x))
          {
             for(int i = 0; i < parameters.size(); i++)
             {
@@ -433,6 +438,16 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
       }
 
       gc.dispose();
+   }
+   
+   /**
+    * Get minimal element size
+    * 
+    * @return
+    */
+   protected Point getMinElementSize()
+   {
+      return new Point(10, 10);
    }
 
    /**
@@ -726,8 +741,47 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
       }
    }
 
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.DataChart#setYAxisRange(int, int)
+    */
    @Override
    public void setYAxisRange(int from, int to)
    {
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.Gauge#getColorMode()
+    */
+   @Override
+   public GaugeColorMode getColorMode()
+   {
+      return colorMode;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.Gauge#setGaugeColorMode(org.netxms.ui.eclipse.charts.api.GaugeColorMode)
+    */
+   @Override
+   public void setColorMode(GaugeColorMode mode)
+   {
+      colorMode = mode;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.Gauge#getCustomColor()
+    */
+   @Override
+   public RGB getCustomColor()
+   {
+      return customColor;
+   }
+
+   /* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.charts.api.Gauge#setCustomColor(org.eclipse.swt.graphics.RGB)
+    */
+   @Override
+   public void setCustomColor(RGB color)
+   {
+      customColor = color;
    }
 }

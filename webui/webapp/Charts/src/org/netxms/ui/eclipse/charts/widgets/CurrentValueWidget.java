@@ -93,17 +93,28 @@ public class CurrentValueWidget extends GaugeWidget
 		final String value = getValueAsDisplayString(dci);
 		final Font font = WidgetHelper.getBestFittingFont(gc, valueFonts, value, rect.width, rect.height); //$NON-NLS-1$
 		gc.setFont(font);
-		if ((dci.getValue() <= leftRedZone) || (dci.getValue() >= rightRedZone))
+		switch(colorMode)
 		{
-			gc.setForeground(colors.create(RED_ZONE_COLOR));
-		}
-		else if ((dci.getValue() <= leftYellowZone) || (dci.getValue() >= rightYellowZone))
-		{
-			gc.setForeground(colors.create(YELLOW_ZONE_COLOR));
-		}
-		else
-		{
-			gc.setForeground(colors.create(GREEN_ZONE_COLOR));
+		   case ZONE:
+      		if ((dci.getValue() <= leftRedZone) || (dci.getValue() >= rightRedZone))
+      		{
+      			gc.setForeground(colors.create(RED_ZONE_COLOR));
+      		}
+      		else if ((dci.getValue() <= leftYellowZone) || (dci.getValue() >= rightYellowZone))
+      		{
+      			gc.setForeground(colors.create(YELLOW_ZONE_COLOR));
+      		}
+      		else
+      		{
+      			gc.setForeground(colors.create(GREEN_ZONE_COLOR));
+      		}
+      		break;
+		   case CUSTOM:
+   		   gc.setForeground(colors.create(customColor));
+   		   break;
+         default:
+            gc.setForeground(getDisplay().getSystemColor(SWT.COLOR_BLACK));
+            break;
 		}
 		Point ext = gc.textExtent(value);
 		gc.drawText(value, rect.x + rect.width / 2 - ext.x / 2, rect.y + rect.height / 2 - ext.y / 2);

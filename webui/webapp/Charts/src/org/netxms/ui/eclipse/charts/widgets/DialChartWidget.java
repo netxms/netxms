@@ -121,12 +121,22 @@ public class DialChartWidget extends GaugeWidget
 		gc.fillArc(rect.x, rect.y, rect.width, rect.height, 0, 360);
 		
 		// Draw zones
-		int startAngle = 225;
-		startAngle = drawZone(gc, rect, cx, cy, startAngle, minValue, leftRedZone, angleValue, RED_ZONE_COLOR);
-		startAngle = drawZone(gc, rect, cx, cy, startAngle, leftRedZone, leftYellowZone, angleValue, YELLOW_ZONE_COLOR);
-		startAngle = drawZone(gc, rect, cx, cy, startAngle, leftYellowZone, rightYellowZone, angleValue, GREEN_ZONE_COLOR);
-		startAngle = drawZone(gc, rect, cx, cy, startAngle, rightYellowZone, rightRedZone, angleValue, YELLOW_ZONE_COLOR);
-		startAngle = drawZone(gc, rect, cx, cy, startAngle, rightRedZone, maxValue, angleValue, RED_ZONE_COLOR);
+		switch(colorMode)
+		{
+		   case ZONE:
+		      int startAngle = 225;
+		      startAngle = drawZone(gc, rect, cx, cy, startAngle, minValue, leftRedZone, angleValue, RED_ZONE_COLOR);
+		      startAngle = drawZone(gc, rect, cx, cy, startAngle, leftRedZone, leftYellowZone, angleValue, YELLOW_ZONE_COLOR);
+		      startAngle = drawZone(gc, rect, cx, cy, startAngle, leftYellowZone, rightYellowZone, angleValue, GREEN_ZONE_COLOR);
+		      startAngle = drawZone(gc, rect, cx, cy, startAngle, rightYellowZone, rightRedZone, angleValue, YELLOW_ZONE_COLOR);
+		      startAngle = drawZone(gc, rect, cx, cy, startAngle, rightRedZone, maxValue, angleValue, RED_ZONE_COLOR);
+		      break;
+		   case CUSTOM:
+            drawZone(gc, rect, cx, cy, 225, minValue, maxValue, angleValue, customColor);
+		      break;
+		   default:
+		      break;
+		}
 		
 		// Draw center part and border
 		gc.setBackground(getColorFromPreferences("Chart.Colors.PlotArea")); //$NON-NLS-1$
