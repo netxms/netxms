@@ -28,9 +28,6 @@ public abstract class ComparisonChartConfig extends AbstractChartConfig
 	@Element(required = false)
 	private boolean showIn3D = false;
 	
-	@Element(required = false)
-	private boolean translucent = false;
-
 	/**
 	 * @return the showIn3D
 	 */
@@ -45,21 +42,5 @@ public abstract class ComparisonChartConfig extends AbstractChartConfig
 	public void setShowIn3D(boolean showIn3D)
 	{
 		this.showIn3D = showIn3D;
-	}
-
-	/**
-	 * @return the translucent
-	 */
-	public boolean isTranslucent()
-	{
-		return translucent;
-	}
-
-	/**
-	 * @param translucent the translucent to set
-	 */
-	public void setTranslucent(boolean translucent)
-	{
-		this.translucent = translucent;
 	}
 }

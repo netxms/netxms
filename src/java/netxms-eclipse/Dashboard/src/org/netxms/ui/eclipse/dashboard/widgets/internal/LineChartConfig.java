@@ -49,6 +49,15 @@ public class LineChartConfig extends AbstractChartConfig
    @Element(required = false)
    private int lineWidth = 2;
 
+   /**
+    * Default constructor
+    */
+   public LineChartConfig()
+   {
+      // for compatibility with older versions
+      setTranslucent(true);
+   }
+   
 	/**
 	 * Create line chart settings object from XML document
 	 * 
