@@ -1,6 +1,14 @@
 #!/usr/bin/perl
 
-@skipnames = ("Queue::getOrBlock", "ConditionWait", "poll", "select", "accept");
+@skipnames = (
+	"Queue::getOrBlock",
+	"__1cFQdDueueKgetOrBlock6MI_pv_",
+	"ConditionWait",
+	"__1cNConditionWait6FpnSnetxms_condition_t_I_b_",
+	"poll",
+	"select",
+	"accept"
+);
 
 my %skiplist;
 @skiplist{@skipnames} = ();
@@ -13,7 +21,7 @@ while(<STDIN>)
    chomp;
    $line = $_;
 
-   if ($line =~ /^(Thread .*)/)
+   if (($line =~ /^Thread .*/) || ($line =~ /^-----------------  lwp# [0-9]+.*/))
    {
       if ($ignore == 0)
       {
@@ -32,6 +40,10 @@ while(<STDIN>)
       $func = $1;
    }
    elsif ($line =~ /^#[0-9]+\s+([^ ]+)\s.*/)
+   {
+      $func = $1;
+   }
+   elsif ($line =~ /^ [0-9a-f]+ ([^ ]+)\s.*/)
    {
       $func = $1;
    }
