@@ -1082,6 +1082,7 @@ CREATE TABLE event_cfg
 (
   event_code integer not null,
   event_name varchar(63) not null,  // Short event name
+  guid varchar(36) not null,
   severity integer not null,
   flags integer not null,
   message varchar(2000) null,   /* Message template */
@@ -1089,13 +1090,14 @@ CREATE TABLE event_cfg
   PRIMARY KEY(event_code)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(event_cfg, '')
-COMMENT_COLUMN(event_cfg.event_code, '')
-COMMENT_COLUMN(event_cfg.event_name, '')
-COMMENT_COLUMN(event_cfg.severity, '')
-COMMENT_COLUMN(event_cfg.flags, '')
-COMMENT_COLUMN(event_cfg.message, '')
-COMMENT_COLUMN(event_cfg.description, '')
+COMMENT_TABLE(event_cfg, 'Event templates')
+COMMENT_COLUMN(event_cfg.event_code, 'Event code (unique within system)')
+COMMENT_COLUMN(event_cfg.event_name, 'Event name')
+COMMENT_COLUMN(event_cfg.guid, 'Event template GUID')
+COMMENT_COLUMN(event_cfg.severity, 'Severity')
+COMMENT_COLUMN(event_cfg.flags, 'Flags')
+COMMENT_COLUMN(event_cfg.message, 'Message template')
+COMMENT_COLUMN(event_cfg.description, 'Event description')
 
 /*
 ** Event log

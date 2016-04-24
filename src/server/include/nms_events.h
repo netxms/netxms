@@ -36,14 +36,30 @@
 /**
  * Event template
  */
-struct EVENT_TEMPLATE
+class EventTemplate : public RefCountObject
 {
-   UINT32 dwCode;
-   UINT32 dwSeverity;
-   UINT32 dwFlags;
-   TCHAR *pszMessageTemplate;
-   TCHAR *pszDescription;
-   TCHAR szName[MAX_EVENT_NAME];
+private:
+   UINT32 m_code;
+   int m_severity;
+   uuid m_guid;
+   TCHAR m_name[MAX_EVENT_NAME];
+   UINT32 m_flags;
+   TCHAR *m_messageTemplate;
+   TCHAR *m_description;
+
+protected:
+   virtual ~EventTemplate();
+
+public:
+   EventTemplate(DB_RESULT hResult, int row);
+
+   UINT32 getCode() const { return m_code; }
+   int getSeverity() const { return m_severity; }
+   const uuid& getGuid() const { return m_guid; }
+   const TCHAR *getName() const { return m_name; }
+   UINT32 getFlags() const { return m_flags; }
+   const TCHAR *getMessageTemplate() const { return m_messageTemplate; }
+   const TCHAR *getDescription() const { return m_description; }
 };
 
 /**
@@ -71,7 +87,7 @@ private:
 public:
    Event();
    Event(const Event *src);
-   Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *userTag, const char *format, const TCHAR **names, va_list args);
+   Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *userTag, const char *format, const TCHAR **names, va_list args);
    ~Event();
 
    UINT64 getId() const { return m_id; }
@@ -211,10 +227,10 @@ void DeleteEventTemplateFromList(UINT32 eventCode);
 void CorrelateEvent(Event *pEvent);
 void CreateNXMPEventRecord(String &str, UINT32 eventCode);
 
-BOOL EventNameFromCode(UINT32 eventCode, TCHAR *pszBuffer);
+bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer);
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue = 0);
-EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 eventCode);
-EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *pszName);
+EventTemplate *FindEventTemplateByCode(UINT32 eventCode);
+EventTemplate *FindEventTemplateByName(const TCHAR *pszName);
 
 bool NXCORE_EXPORTABLE PostEvent(UINT32 eventCode, UINT32 sourceId, const char *format, ...);
 bool NXCORE_EXPORTABLE PostDciEvent(UINT32 eventCode, UINT32 sourceId, UINT32 dciId, const char *format, ...);

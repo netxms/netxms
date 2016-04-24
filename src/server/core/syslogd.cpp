@@ -499,13 +499,12 @@ static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const
  */
 static bool EventNameResolver(const TCHAR *name, UINT32 *code)
 {
-	EVENT_TEMPLATE *event;
 	bool success = false;
-
-	event = FindEventTemplateByName(name);
+	EventTemplate *event = FindEventTemplateByName(name);
 	if (event != NULL)
 	{
-		*code = event->dwCode;
+		*code = event->getCode();
+		event->decRefCount();
 		success = true;
 	}
 	return success;

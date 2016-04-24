@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -71,10 +71,11 @@ EPRule::EPRule(ConfigEntry *config)
       m_pdwEventList = (UINT32 *)malloc(sizeof(UINT32) * events->size());
       for(int i = 0; i < events->size(); i++)
       {
-         EVENT_TEMPLATE *e = FindEventTemplateByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
+         EventTemplate *e = FindEventTemplateByName(events->get(i)->getSubEntryValue(_T("name"), 0, _T("<unknown>")));
          if (e != NULL)
          {
-            m_pdwEventList[m_dwNumEvents++] = e->dwCode;
+            m_pdwEventList[m_dwNumEvents++] = e->getCode();
+            e->decRefCount();
          }
       }
    }
