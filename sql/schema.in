@@ -1913,6 +1913,20 @@ COMMENT_TABLE(ap_config_files, '')
 COMMENT_COLUMN(ap_config_files.policy_id, '')
 COMMENT_COLUMN(ap_config_files.file_content, '')
 
+/**
+** Agent policies - log parser files
+*/
+CREATE TABLE ap_log_parser
+(
+  policy_id integer not null,
+  file_content SQL_TEXT null,
+  PRIMARY KEY(policy_id)
+) TABLE_TYPE;
+
+COMMENT_TABLE(ap_log_parser, 'Agent policies log parser files')
+COMMENT_COLUMN(ap_log_parser.policy_id, 'Unique policy identifier')
+COMMENT_COLUMN(ap_log_parser.file_content, 'Log parser policy file content')
+
 /*
 ** Default SNMP v3 USM credentials
 */
