@@ -29,9 +29,18 @@
 BOOL MigrateMaps();
 
 /**
+ * Pre-defined GUID mapping for GenerateGUID
+ */
+struct GUID_MAPPING
+{
+   UINT32 id;
+   const TCHAR *guid;
+};
+
+/**
  * Generate GUIDs
  */
-static bool GenerateGUID(const TCHAR *table, const TCHAR *idColumn, const TCHAR *guidColumn)
+static bool GenerateGUID(const TCHAR *table, const TCHAR *idColumn, const TCHAR *guidColumn, const GUID_MAPPING *mapping)
 {
    TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT %s FROM %s"), idColumn, table);
@@ -39,15 +48,29 @@ static bool GenerateGUID(const TCHAR *table, const TCHAR *idColumn, const TCHAR 
 	if (hResult == NULL)
       return false;
 
+   uuid_t guid;
+   TCHAR buffer[64];
+
 	int count = DBGetNumRows(hResult);
 	for(int i = 0; i < count; i++)
 	{
-		uuid_t guid;
-		TCHAR buffer[64];
-
-		_uuid_generate(guid);
-		_sntprintf(query, 256, _T("UPDATE %s SET %s='%s' WHERE %s=%d"),
-		           table, guidColumn, _uuid_to_string(guid, buffer), idColumn, DBGetFieldULong(hResult, i, 0));
+		const TCHAR *guidText = NULL;
+		UINT32 id = DBGetFieldULong(hResult, i, 0);
+		if (mapping != NULL)
+		{
+		   for(int j = 0; mapping[j].guid != NULL; j++)
+		      if (mapping[j].id == id)
+		      {
+		         guidText = mapping[j].guid;
+		         break;
+		      }
+		}
+		if (guidText == NULL)
+		{
+		   _uuid_generate(guid);
+		   guidText = _uuid_to_string(guid, buffer);
+		}
+		_sntprintf(query, 256, _T("UPDATE %s SET %s='%s' WHERE %s=%d"), table, guidColumn, guidText, idColumn, id);
 		if (!SQLQuery(query))
       {
       	DBFreeResult(hResult);
@@ -642,6 +665,102 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V396 to V397
+ */
+static BOOL H_UpgradeFromV396(int currVersion, int newVersion)
+{
+   static GUID_MAPPING eventGuidMapping[] = {
+      { EVENT_NODE_ADDED, _T("8d34acfd-dad6-4f6e-b6a8-1189683591ef") },
+      { EVENT_SUBNET_ADDED, _T("75fc3f8b-768f-46b4-bf44-72949436a679") },
+      { EVENT_INTERFACE_ADDED, _T("33cb8f9c-9427-459c-8a71-45c73f5cc183") },
+      { EVENT_INTERFACE_UP, _T("09ee209a-0e75-434f-b8c8-399d93305d7b") },
+      { EVENT_INTERFACE_DOWN, _T("d9a6d46d-97f8-48eb-a86a-2c0f6b150d0d") },
+      { EVENT_INTERFACE_UNKNOWN, _T("ecb47be1-f911-4c1f-9b00-d0d21694071d") },
+      { EVENT_INTERFACE_DISABLED, _T("2f3123a2-425f-47db-9c6b-9bc05a7fba2d") },
+      { EVENT_INTERFACE_TESTING, _T("eb500e5c-3560-4394-8f5f-80aa67036f13") },
+      { EVENT_INTERFACE_UNEXPECTED_UP, _T("ff21a165-9253-4ecc-929a-ffd1e388d504") },
+      { EVENT_INTERFACE_EXPECTED_DOWN, _T("911358f4-d2a1-4465-94d7-ce4bc5c38860") },
+      { EVENT_NODE_NORMAL, _T("03bc11c0-ec20-43be-be45-e60846f744dc") },
+      { EVENT_NODE_WARNING, _T("1c80deab-aafb-43a7-93a7-1330dd563b47") },
+      { EVENT_NODE_MINOR, _T("84eaea00-4ed7-41eb-9079-b783e5c60651") },
+      { EVENT_NODE_MAJOR, _T("27035c88-c27a-4c16-97b3-4658d34a5f63") },
+      { EVENT_NODE_CRITICAL, _T("8f2e98f8-1cd4-4e12-b41f-48b5c60ebe8e") },
+      { EVENT_NODE_UNKNOWN, _T("6933cce0-fe1f-4123-817f-af1fb9f0eab4") },
+      { EVENT_NODE_UNMANAGED, _T("a8356ba7-51b7-4487-b74e-d12132db233c") },
+      { EVENT_NODE_FLAGS_CHANGED, _T("b04e39f5-d3a7-4d9a-b594-37132f5eaf34") },
+      { EVENT_SNMP_FAIL, _T("d2fc3b0c-1215-4a92-b8f3-47df5d753602") },
+      { EVENT_AGENT_FAIL, _T("ba484457-3594-418e-a72a-65336055d025") },
+      { EVENT_INTERFACE_DELETED, _T("ad7e9856-e361-4095-9361-ccc462d93624") },
+      { EVENT_THRESHOLD_REACHED, _T("05161c3d-7ceb-406f-af0a-af5c77f324a5") },
+      { EVENT_THRESHOLD_REARMED, _T("25eef3a7-6158-4c5e-b4e3-8a7aa7ade73c") },
+      { EVENT_SUBNET_DELETED, _T("af188eb3-e84f-4fd9-aecf-f1ba934a9f1a") },
+      { EVENT_THREAD_HANGS, _T("df247d13-a63a-43fe-bb02-cb41718ee387") },
+      { EVENT_THREAD_RUNNING, _T("5589f6ce-7133-44db-8e7a-e1452d636a9a") },
+      { EVENT_SMTP_FAILURE, _T("1e376009-0d26-4b86-87a2-f4715a02fb38") },
+      { EVENT_MAC_ADDR_CHANGED, _T("61916ef0-1eee-4df7-a95b-150928d47962") },
+      { EVENT_INCORRECT_NETMASK, _T("86c08c55-416e-4ac4-bf2b-302b5fddbd68") },
+      { EVENT_NODE_DOWN, _T("ce34f0d0-5b21-48c2-8788-8ed5ee547023") },
+      { EVENT_NODE_UP, _T("05f180b6-62e7-4bc4-8a8d-34540214254b") },
+      { EVENT_SERVICE_DOWN, _T("89caacb5-d2cf-493b-862f-cddbfecac5b6") },
+      { EVENT_SERVICE_UP, _T("ab35e7c7-2428-44db-ad43-57fe551bb8cc") },
+      { EVENT_SERVICE_UNKNOWN, _T("d891adae-49fe-4442-a8f3-0ca37ca8820a") },
+      { EVENT_SMS_FAILURE, _T("c349bf75-458a-4d43-9c27-f71ea4bb06e2") },
+      { EVENT_SNMP_OK, _T("a821086b-1595-40db-9148-8d770d30a54b") },
+      { EVENT_AGENT_OK, _T("9c15299a-f2e3-4440-84c5-b17dea87ae2a") },
+      { EVENT_SCRIPT_ERROR, _T("2cc78efe-357a-4278-932f-91e36754c775") },
+      { EVENT_CONDITION_ACTIVATED, _T("16a86780-b73a-4601-929c-0c503bd06401") },
+      { EVENT_CONDITION_DEACTIVATED, _T("926d15d2-9761-4bb6-a1ce-64175303796f") },
+      { EVENT_DB_CONNECTION_LOST, _T("0311e9c8-8dcf-4a5b-9036-8cff034409ff") },
+      { EVENT_DB_CONNECTION_RESTORED, _T("d36259a7-5f6b-4e3c-bb6f-17d1f8ac950d") },
+      { EVENT_CLUSTER_RESOURCE_MOVED, _T("44abe5f3-a7c9-4fbd-8d10-53be172eae83") },
+      { EVENT_CLUSTER_RESOURCE_DOWN, _T("c3b1d4b5-2e41-4a2f-b379-9d74ebba3a25") },
+      { EVENT_CLUSTER_RESOURCE_UP, _T("ef6fff96-0cbb-4030-aeba-2473a80c6568") },
+      { EVENT_CLUSTER_DOWN, _T("8f14d0f7-08d4-4422-92f4-469e5eef93ef") },
+      { EVENT_CLUSTER_UP, _T("4a9cdb65-aa44-42f2-99b0-1e302aec10f6") },
+      { EVENT_ALARM_TIMEOUT, _T("4ae4f601-327b-4ef8-9740-8600a1ba2acd") },
+      { EVENT_LOG_RECORD_MATCHED, _T("d9326159-5c60-410f-990e-fae88df7fdd4") },
+      { EVENT_EVENT_STORM_DETECTED, _T("c98d8575-d134-4044-ba67-75c5f5d0f6e0") },
+      { EVENT_EVENT_STORM_ENDED, _T("dfd5e3ba-3182-4deb-bc32-9e6b8c1c6546") },
+      { EVENT_NETWORK_CONNECTION_LOST, _T("3cb0921a-87a1-46e4-8be1-82ad2dda0015") },
+      { EVENT_NETWORK_CONNECTION_RESTORED, _T("1c61b3e0-389a-47ac-8469-932a907392bc") },
+      { EVENT_DB_QUERY_FAILED, _T("5f35d646-63b6-4dcd-b94a-e2ccd060686a") },
+      { EVENT_DCI_UNSUPPORTED, _T("28367b5b-1541-4526-8cbe-91a17ed31ba4") },
+      { EVENT_DCI_DISABLED, _T("50196042-0619-4420-9471-16b7c25c0213") },
+      { EVENT_DCI_ACTIVE, _T("740b6810-b355-46f4-a921-65118504af18") },
+      { EVENT_IP_ADDRESS_CHANGED, _T("517b6d2a-f5c6-46aa-969d-48e62e05e3bf") },
+      { EVENT_CONTAINER_AUTOBIND, _T("611133e2-1f76-446f-b278-9d500a823611") },
+      { EVENT_CONTAINER_AUTOUNBIND, _T("e57603be-0d81-41aa-b07c-12d08640561c") },
+      { EVENT_TEMPLATE_AUTOAPPLY, _T("bf084945-f928-4428-8c6c-d2965addc832") },
+      { EVENT_TEMPLATE_AUTOREMOVE, _T("8f7a4b4a-d0a2-4404-9b66-fdbc029f42cf") },
+      { EVENT_NODE_UNREACHABLE, _T("47bba2ce-c795-4e56-ad44-cbf05741e1ff") },
+      { EVENT_TABLE_THRESHOLD_ACTIVATED, _T("c08a1cfe-3128-40c2-99cc-378e7ef91f79") },
+      { EVENT_TABLE_THRESHOLD_DEACTIVATED, _T("479085e7-e1d1-4f2a-9d96-1d522f51b26a") },
+      { EVENT_IF_PEER_CHANGED, _T("a3a5c1df-9d96-4e98-9e06-b3157dbf39f0") },
+      { EVENT_AP_ADOPTED, _T("5aaee261-0c5d-44e0-b2f0-223bbba5297d") },
+      { EVENT_AP_UNADOPTED, _T("846a3581-aad1-4e17-9c55-9bd2e6b1247b") },
+      { EVENT_AP_DOWN, _T("2c8c6208-d3ab-4b8c-926a-872f4d8abcee") },
+      { EVENT_IF_MASK_CHANGED, _T("f800e593-057e-4aec-9e47-be0f7718c5c4") },
+      { EVENT_IF_IPADDR_ADDED, _T("475bdca6-543e-410b-9aff-c217599e0fe6") },
+      { EVENT_IF_IPADDR_DELETED, _T("ef477387-eb50-4a1a-bf90-717502b9873c") },
+      { EVENT_MAINTENANCE_MODE_ENTERED, _T("5f6c8b1c-f162-413e-8028-80e7ad2c362d") },
+      { EVENT_MAINTENANCE_MODE_LEFT, _T("cab06848-a622-430d-8b4c-addeea732657") },
+      { EVENT_SNMP_UNMATCHED_TRAP, _T("fc3613f7-d151-4221-9acd-d28b6f804335") },
+      { EVENT_SNMP_COLD_START, _T("39920e99-97bd-4d61-a462-43f89ba6fbdf") },
+      { EVENT_SNMP_WARM_START, _T("0aa888c1-eba6-4fe7-a37a-b85f2b373bdc") },
+      { EVENT_SNMP_LINK_DOWN, _T("b71338cc-137d-473c-a0f1-6b131086af56") },
+      { EVENT_SNMP_LINK_UP, _T("03da14a7-e39c-4a46-a7cb-4bf77ec7936c") },
+      { EVENT_SNMP_AUTH_FAILURE, _T("37020cb0-dde7-487b-9cfb-0d5ee771aa13") },
+      { EVENT_SNMP_EGP_NL, _T("aecf5fa4-390c-4125-be10-df8b0e669fe1") },
+      { 0, NULL }
+   };
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE event_cfg ADD guid varchar(36)")));
+   CHK_EXEC(GenerateGUID(_T("event_cfg"), _T("event_code"), _T("guid"), eventGuidMapping));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='397' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V395 to V396
  */
 static BOOL H_UpgradeFromV395(int currVersion, int newVersion)
@@ -964,8 +1083,8 @@ static BOOL H_UpgradeFromV380(int currVersion, int newVersion)
       _T("ALTER TABLE dc_tables ADD guid varchar(36)\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(GenerateGUID(_T("items"), _T("item_id"), _T("guid")));
-   CHK_EXEC(GenerateGUID(_T("dc_tables"), _T("item_id"), _T("guid")));
+   CHK_EXEC(GenerateGUID(_T("items"), _T("item_id"), _T("guid"), NULL));
+   CHK_EXEC(GenerateGUID(_T("dc_tables"), _T("item_id"), _T("guid"), NULL));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='381' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -1444,7 +1563,7 @@ static BOOL H_UpgradeFromV353(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV352(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE dci_summary_tables ADD guid varchar(36)")));
-   CHK_EXEC(GenerateGUID(_T("dci_summary_tables"), _T("id"), _T("guid")));
+   CHK_EXEC(GenerateGUID(_T("dci_summary_tables"), _T("id"), _T("guid"), NULL));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='353' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -1455,7 +1574,7 @@ static BOOL H_UpgradeFromV352(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV351(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE object_tools ADD guid varchar(36)")));
-   CHK_EXEC(GenerateGUID(_T("object_tools"), _T("tool_id"), _T("guid")));
+   CHK_EXEC(GenerateGUID(_T("object_tools"), _T("tool_id"), _T("guid"), NULL));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='352' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -2700,7 +2819,7 @@ static BOOL H_UpgradeFromV292(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV291(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy ADD rule_guid varchar(36)")));
-   CHK_EXEC(GenerateGUID(_T("event_policy"), _T("rule_id"), _T("rule_guid")));
+   CHK_EXEC(GenerateGUID(_T("event_policy"), _T("rule_id"), _T("rule_guid"), NULL));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='292' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -9498,6 +9617,7 @@ static struct
    { 393, 394, H_UpgradeFromV393 },
    { 394, 395, H_UpgradeFromV394 },
    { 395, 396, H_UpgradeFromV395 },
+   { 396, 397, H_UpgradeFromV396 },
    { 0, 0, NULL }
 };
 

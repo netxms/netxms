@@ -2074,7 +2074,7 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
             }
             else
             {
-               hStmt = DBPrepare(hdb, _T("INSERT INTO event_cfg (event_name,severity,flags,message,description,event_code) VALUES (?,?,?,?,?,?)"));
+               hStmt = DBPrepare(hdb, _T("INSERT INTO event_cfg (event_name,severity,flags,message,description,event_code,guid) VALUES (?,?,?,?,?,?,?)"));
             }
 
             if (hStmt != NULL)
@@ -2085,6 +2085,10 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
                DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_MESSAGE), DB_BIND_DYNAMIC, MAX_EVENT_MSG_LENGTH - 1);
                DBBind(hStmt, 5, DB_SQLTYPE_TEXT, pRequest->getFieldAsString(VID_DESCRIPTION), DB_BIND_DYNAMIC);
                DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, dwEventCode);
+               if (!bEventExist)
+               {
+                  DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, uuid::generate());
+               }
 
                if (DBExecute(hStmt))
                {
