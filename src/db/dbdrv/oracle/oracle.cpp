@@ -1514,7 +1514,7 @@ extern "C" void EXPORT DrvFreeUnbufferedResult(ORACLE_UNBUFFERED_RESULT *result)
 
 	for(i = 0; i < result->nCols; i++)
    {
-		safe_free(result->pBuffers[i].pData);
+		free(result->pBuffers[i].pData);
       if (result->pBuffers[i].lobLocator != NULL)
       {
          OCIDescriptorFree(result->pBuffers[i].lobLocator, OCI_DTYPE_LOB);
@@ -1527,6 +1527,7 @@ extern "C" void EXPORT DrvFreeUnbufferedResult(ORACLE_UNBUFFERED_RESULT *result)
 	free(result->columnNames);
 
 	MutexUnlock(result->connection->mutexQueryLock);
+	free(result);
 }
 
 /**
