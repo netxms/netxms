@@ -202,4 +202,14 @@ public class DataComparisonElement
       }
       return s;
 	}
+	
+	/**
+	 * Get display format
+	 * 
+	 * @return
+	 */
+	public String getDisplayFormat()
+	{
+	   return dci.getDisplayFormat();
+	}
 }

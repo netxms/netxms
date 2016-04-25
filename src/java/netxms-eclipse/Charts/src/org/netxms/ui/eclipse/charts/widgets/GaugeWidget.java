@@ -466,15 +466,15 @@ public abstract class GaugeWidget extends GenericChart implements Gauge, PaintLi
       switch(dci.getObject().getDataType())
       {
          case DataCollectionItem.DT_INT:
-            return Integer.toString((int)dci.getValue());
+            return String.format(dci.getDisplayFormat(), (int)dci.getValue());
          case DataCollectionItem.DT_UINT:
          case DataCollectionItem.DT_INT64:
          case DataCollectionItem.DT_UINT64:
-            return Long.toString((long)dci.getValue());
+            return String.format(dci.getDisplayFormat(), (long)dci.getValue());
          case DataCollectionItem.DT_STRING:
-            return dci.getRawValue();
+            return String.format(dci.getDisplayFormat(), dci.getRawValue());
          default:
-            return Double.toString(dci.getValue());
+            return String.format(dci.getDisplayFormat(), dci.getValue());
       }
    }
 

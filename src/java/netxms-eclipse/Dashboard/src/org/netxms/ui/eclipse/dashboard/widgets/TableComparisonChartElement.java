@@ -179,7 +179,7 @@ public abstract class TableComparisonChartElement extends ElementWidget
 				if ((instanceMap.size() >= DataChart.MAX_CHART_ITEMS) ||
 				    ((value == 0) && config.isIgnoreZeroValues()))
 					continue;
-				index = chart.addParameter(new GraphItem(config.getNodeId(), config.getDciId(), 0, 0, Long.toString(config.getDciId()), instance), 0.0);
+				index = chart.addParameter(new GraphItem(config.getNodeId(), config.getDciId(), 0, 0, Long.toString(config.getDciId()), instance, "%s"), 0.0);
 				instanceMap.put(instance, index);
 				rebuild = true;
 			}
