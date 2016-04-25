@@ -137,8 +137,8 @@ public class AvailabilityChart extends OverviewPageElement
 		chart.setLabelsVisible(false);
 		chart.setRotation(225.0);
 		
-		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().AvailabilityChart_Up, Messages.get().AvailabilityChart_Up), 100);
-		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().AvailabilityChart_Down, Messages.get().AvailabilityChart_Down), 0);
+		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().AvailabilityChart_Up, Messages.get().AvailabilityChart_Up, "%s"), 100); //$NON-NLS-1$
+		chart.addParameter(new GraphItem(0, 0, 0, 0, Messages.get().AvailabilityChart_Down, Messages.get().AvailabilityChart_Down, "%s"), 0); //$NON-NLS-1$
 		chart.setPaletteEntry(0, new ChartColor(127, 154, 72));
 		chart.setPaletteEntry(1, new ChartColor(158, 65, 62));
 		chart.initializationComplete();

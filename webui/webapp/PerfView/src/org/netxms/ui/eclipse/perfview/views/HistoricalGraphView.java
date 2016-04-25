@@ -322,7 +322,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       for(ChartDciConfig dci : config.getDciList())
       {
          final String name = config.isShowHostNames() ? (session.getObjectName(dci.nodeId) + " - " + dci.getName()) : dci.getName(); //$NON-NLS-1$
-         chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), name));
+         chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), name, dci.getDisplayFormat()));
          int color = dci.getColorAsInt();
          if (color == -1)
             color = ChartColor.getDefaultColor(index).getRGB();

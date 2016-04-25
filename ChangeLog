@@ -6,6 +6,7 @@
 - Management console
 	- Improved dashboard gauge widget
 	- Added translucence option for dashboard line charts
+	- Configurable display format for dashboard elements data sources
 - Android console
 	- Reorganized alarm notification section (issue #1194)
 - Fixed issues: #1194, #1200

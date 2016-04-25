@@ -68,6 +68,9 @@ public class ChartDciConfig
 	@Element(required=false)
 	public String column;
 	
+   @Element(required=false)
+   public String displayFormat;
+   
 	/**
 	 * Default constructor
 	 */
@@ -84,6 +87,7 @@ public class ChartDciConfig
 		invertValues = false;
 		instance = ""; //$NON-NLS-1$
 		column = ""; //$NON-NLS-1$
+      displayFormat = "%s"; //$NON-NLS-1$
 	}
 
 	/**
@@ -104,6 +108,7 @@ public class ChartDciConfig
 		this.invertValues = src.invertValues;
 		this.instance = src.instance;
 		this.column = src.column;
+		this.displayFormat = src.displayFormat;
 	}
 
 	/**
@@ -124,6 +129,7 @@ public class ChartDciConfig
 		invertValues = false;
 		instance = ""; //$NON-NLS-1$
 		column = ""; //$NON-NLS-1$
+      displayFormat = "%s"; //$NON-NLS-1$
 	}
 
 	/**
@@ -153,5 +159,15 @@ public class ChartDciConfig
 	public String getName()
 	{
 		return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	/**
+	 * Get display format
+	 * 
+	 * @return
+	 */
+	public String getDisplayFormat()
+	{
+	   return ((displayFormat != null) && !displayFormat.isEmpty()) ? displayFormat : "%s"; //$NON-NLS-1$
 	}
 }

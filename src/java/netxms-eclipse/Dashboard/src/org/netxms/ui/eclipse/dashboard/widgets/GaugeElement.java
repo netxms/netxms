@@ -85,7 +85,7 @@ public class GaugeElement extends ComparisonChartElement
 		int index = 0;
 		for(ChartDciConfig dci : config.getDciList())
 		{
-			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName()), 0.0);
+			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName(), dci.getDisplayFormat()), 0.0);
 			int color = dci.getColorAsInt();
 			if (color != -1)
 				chart.setPaletteEntry(index, new ChartColor(color));

@@ -45,6 +45,7 @@ public class DataSourceEditDlg extends Dialog
 	private ChartDciConfig dci;
 	private DciSelector dciSelector;
 	private LabeledText name;
+   private LabeledText displayFormat;
 	private Button colorAuto;
 	private Button colorCustom;
 	private ColorSelector colorSelector;
@@ -108,6 +109,15 @@ public class DataSourceEditDlg extends Dialog
 		gd.horizontalSpan = 2;
 		name.setLayoutData(gd);
 		
+      displayFormat = new LabeledText(dialogArea, SWT.NONE);
+      displayFormat.setLabel("Display format");
+      displayFormat.setText(dci.displayFormat);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      displayFormat.setLayoutData(gd);
+      
 		if (dci.type == ChartDciConfig.TABLE)
 		{
 			Group tableGroup = new Group(dialogArea, SWT.NONE);
@@ -230,6 +240,7 @@ public class DataSourceEditDlg extends Dialog
 		dci.nodeId = dciSelector.getNodeId();
 		dci.dciId = dciSelector.getDciId();
 		dci.name = name.getText();
+		dci.displayFormat = displayFormat.getText();
 		if (colorAuto.getSelection())
 		{
 			dci.color = ChartDciConfig.UNSET_COLOR;

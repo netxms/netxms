@@ -179,7 +179,7 @@ public class TabbedObjectView extends ViewPart
 		selectionProvider = new IntermediateSelectionProvider();
 		getSite().setSelectionProvider(selectionProvider);
 		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		final NXCSession session = ConsoleSharedData.getSession();
 		sessionListener = new SessionListener() {
 			@Override
 			public void notificationHandler(SessionNotification n)
@@ -456,6 +456,7 @@ public class TabbedObjectView extends ViewPart
 	@Override
 	public void dispose()
 	{
+	   ConsoleSharedData.getSession().removeListener(sessionListener);
 		CommandBridge.getInstance().unregisterCommand("TabbedObjectView/selectTab"); //$NON-NLS-1$
       CommandBridge.getInstance().unregisterCommand("TabbedObjectView/changeObject"); //$NON-NLS-1$
 		ConsoleSharedData.getSession().removeListener(sessionListener);
