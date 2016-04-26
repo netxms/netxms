@@ -401,7 +401,10 @@ void ClientSession::readThread()
       // Receive error
       if (msg == NULL)
       {
-         debugPrintf(5, _T("readThread: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
+         if (result == MSGRECV_CLOSED)
+            debugPrintf(5, _T("readThread: connection closed"));
+         else
+            debugPrintf(5, _T("readThread: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
          break;
       }
 
