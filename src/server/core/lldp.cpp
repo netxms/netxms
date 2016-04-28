@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,12 +39,19 @@ static UINT32 PortLocalInfoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_
 	newOid[oid->getLength() - 2] = 4;	// lldpLocPortDescr
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
 
+   newOid[oid->getLength() - 2] = 2;   // lldpLocPortIdSubtype
+   pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
+
 	SNMP_PDU *pRespPDU = NULL;
    UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
 	delete pRqPDU;
 	if (rcc == SNMP_ERR_SUCCESS)
    {
-		pRespPDU->getVariable(0)->getValueAsString(port->ifDescr, 192);
+	   if (pRespPDU->getNumVariables() >= 2)
+	   {
+	      pRespPDU->getVariable(0)->getValueAsString(port->ifDescr, 192);
+	      port->localIdSubtype = pRespPDU->getVariable(1)->getValueAsUInt();
+	   }
 		delete pRespPDU;
 	}
 	else
@@ -85,6 +92,19 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
 	TCHAR ifName[130];
 	Interface *ifc;
 
+	// Try local LLDP port info first
+   if (node->getLldpLocalPortInfo(idType, id, idLen, &port))
+   {
+      if (node->isBridge())
+         ifc = node->findBridgePort(port.portNumber);
+      else
+         ifc = node->findInterfaceByIndex(port.portNumber);
+      if (ifc == NULL)  // unable to find interface by bridge port number or interface index, try description
+         ifc = node->findInterfaceByName(port.ifDescr);  /* TODO: find by cached ifName value */
+      if (ifc != NULL)
+         return ifc;
+   }
+
 	switch(idType)
 	{
 		case 3:	// MAC address
@@ -120,20 +140,7 @@ static Interface *FindRemoteInterface(Node *node, UINT32 idType, BYTE *id, size_
 			}
 			return ifc;
 		case 7:	// local identifier
-			if (node->getLldpLocalPortInfo(id, idLen, &port))
-			{
-            if (node->isBridge())
-               ifc = node->findBridgePort(port.portNumber);
-            else
-               ifc = node->findInterfaceByIndex(port.portNumber);
-            if (ifc == NULL)  // unable to find interface by bridge port number or interface index, try description
-               ifc = node->findInterfaceByName(port.ifDescr);	/* TODO: find by cached ifName value */
-			}
-			else
-			{
-				ifc = NULL;
-			}
-			return ifc;
+			return NULL;   // already tried to find port using local info
 		default:
 			return NULL;
 	}
