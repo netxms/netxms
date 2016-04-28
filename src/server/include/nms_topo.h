@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ class Interface;
 struct LLDP_LOCAL_PORT_INFO
 {
    UINT32 portNumber;
+   UINT32 localIdSubtype;
 	BYTE localId[256];
 	size_t localIdLen;
 	TCHAR ifDescr[192];

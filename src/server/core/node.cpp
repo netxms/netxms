@@ -7104,11 +7104,12 @@ bool Node::isDataCollectionDisabled()
 /**
  * Get LLDP local port info by LLDP local ID
  *
+ * @param idType port ID type (value of lldpLocPortIdSubtype)
  * @param id port ID
  * @param idLen port ID length in bytes
  * @param buffer buffer for storing port information
  */
-bool Node::getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *buffer)
+bool Node::getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *buffer)
 {
 	bool result = false;
 	lockProperties();
@@ -7117,7 +7118,7 @@ bool Node::getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *bu
 		for(int i = 0; i < m_lldpLocalPortInfo->size(); i++)
 		{
 			LLDP_LOCAL_PORT_INFO *port = m_lldpLocalPortInfo->get(i);
-			if ((idLen == port->localIdLen) && !memcmp(id, port->localId, idLen))
+			if ((idType == port->localIdSubtype) && (idLen == port->localIdLen) && !memcmp(id, port->localId, idLen))
 			{
             memcpy(buffer, port, sizeof(LLDP_LOCAL_PORT_INFO));
 				result = true;
