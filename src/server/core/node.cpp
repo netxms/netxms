@@ -740,11 +740,13 @@ Interface *Node::findInterfaceByIndex(UINT32 ifIndex)
  */
 Interface *Node::findInterfaceByName(const TCHAR *name)
 {
-   UINT32 i;
+   if ((name == NULL) || (name[0] == 0))
+      return NULL;
+
    Interface *pInterface;
 
    LockChildList(FALSE);
-   for(i = 0; i < m_dwChildCount; i++)
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
@@ -7128,6 +7130,35 @@ bool Node::getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCA
 	}
 	unlockProperties();
 	return result;
+}
+
+/**
+ * Show node LLDP information
+ */
+void Node::showLLDPInfo(CONSOLE_CTX console)
+{
+   TCHAR buffer[256];
+
+   lockProperties();
+   ConsolePrintf(console, _T("\x1b[1m*\x1b[0m Node LLDP ID: %s\n\n"), m_lldpNodeId);
+   ConsolePrintf(console, _T("\x1b[1m*\x1b[0m Local LLDP ports\n"));
+   if (m_lldpLocalPortInfo != NULL)
+   {
+      ConsolePrintf(console, _T("   Port | ST | Len | Local ID                 | Description\n")
+                             _T("   -----+----+-----+--------------------------+--------------------------------------\n"));
+      for(int i = 0; i < m_lldpLocalPortInfo->size(); i++)
+      {
+         LLDP_LOCAL_PORT_INFO *port = m_lldpLocalPortInfo->get(i);
+         ConsolePrintf(console, _T("   %4d | %2d | %3d | %-24s | %s\n"),
+                       port->portNumber, port->localIdSubtype, (int)port->localIdLen,
+                       BinToStr(port->localId, port->localIdLen, buffer), port->ifDescr);
+      }
+   }
+   else
+   {
+      ConsolePrintf(console, _T("   No local LLDP port info\n"));
+   }
+   unlockProperties();
 }
 
 /**

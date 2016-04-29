@@ -1575,6 +1575,35 @@ int ProcessConsoleCommand(const TCHAR *pszCmdLine, CONSOLE_CTX pCtx)
 					ConsoleWrite(pCtx, _T("ERROR: Invalid index name\n\n"));
 			}
 		}
+		else if (IsCommand(_T("LLDP"), szBuffer, 4))
+      {
+         // Get argument
+         pArg = ExtractWord(pArg, szBuffer);
+         UINT32 dwNode = _tcstoul(szBuffer, NULL, 0);
+         if (dwNode != 0)
+         {
+            NetObj *pObject = FindObjectById(dwNode);
+            if (pObject != NULL)
+            {
+               if (pObject->getObjectClass() == OBJECT_NODE)
+               {
+                  ((Node *)pObject)->showLLDPInfo(pCtx);
+               }
+               else
+               {
+                  ConsoleWrite(pCtx, _T("ERROR: Object is not a node\n\n"));
+               }
+            }
+            else
+            {
+               ConsolePrintf(pCtx, _T("ERROR: Object with ID %d does not exist\n\n"), dwNode);
+            }
+         }
+         else
+         {
+            ConsoleWrite(pCtx, _T("ERROR: Invalid or missing node ID\n\n"));
+         }
+      }
 		else if (IsCommand(_T("MODULES"), szBuffer, 3))
 		{
          ConsoleWrite(pCtx, _T("Loaded server modules:\n"));
