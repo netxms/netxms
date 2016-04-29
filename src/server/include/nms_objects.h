@@ -1450,6 +1450,7 @@ public:
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, UINT32 *srcIfIndex);
 	ComponentTree *getComponents();
    bool getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
+   void showLLDPInfo(CONSOLE_CTX console);
 
 	void setRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
    void setDiscoveryPollTimeStamp();

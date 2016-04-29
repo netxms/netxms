@@ -3,6 +3,7 @@
 *
 
 - New parameters in Linux platform subagent to get additional CPU information (frequency, model, etc.)
+- Fixed bugs in LLDP based network topology discovery
 - Management console
 	- Improved dashboard gauge widget
 	- Added translucence option for dashboard line charts

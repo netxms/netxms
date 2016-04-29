@@ -832,6 +832,8 @@ static bool SysNameComparator(NetObj *object, void *sysName)
  */
 Node NXCORE_EXPORTABLE *FindNodeBySysName(const TCHAR *sysName)
 {
+   if ((sysName == NULL) || (sysName[0] == 0))
+      return NULL;
    return (Node *)g_idxNodeById.find(SysNameComparator, (void *)sysName);
 }
 
