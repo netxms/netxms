@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for TelcoBridges gateways
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -73,7 +73,7 @@ bool TelcoBridgesDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oi
 /**
  * Handler for enumerating indexes
  */
-static UINT32 HandlerIndex(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static UINT32 HandlerIndex(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    if (var->getName()->getLength() == 12)
    {
@@ -92,7 +92,7 @@ static UINT32 HandlerIndex(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transpor
 /**
  * Handler for enumerating IP addresses via ipAddrTable
  */
-static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerIpAddr(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    UINT32 index, dwNetMask, dwResult;
    UINT32 oidName[MAX_OID_LEN];
@@ -100,7 +100,7 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
    size_t nameLen = pVar->getName()->getLength();
    memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
    oidName[nameLen - 5] = 3;  // Retrieve network mask for this IP
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &dwNetMask, sizeof(UINT32), 0);
+   dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &dwNetMask, sizeof(UINT32), 0, NULL);
    if (dwResult != SNMP_ERR_SUCCESS)
 	{
 		TCHAR buffer[1024];
@@ -113,7 +113,7 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
 	}
 
    oidName[nameLen - 5] = 2;  // Retrieve interface index for this IP
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &index, sizeof(UINT32), 0);
+   dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &index, sizeof(UINT32), 0, NULL);
    if (dwResult == SNMP_ERR_SUCCESS)
    {
 		InterfaceList *ifList = (InterfaceList *)pArg;
@@ -152,7 +152,7 @@ InterfaceList *TelcoBridgesDriver::getInterfaces(SNMP_Transport *snmp, StringMap
 	DbgPrintf(6, _T("TelcoBridgesDriver::getInterfaces(%p)"), snmp);
 
    // Gather interface indexes
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.2.1.1"), HandlerIndex, ifList, FALSE) == SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.2.2.1.1"), HandlerIndex, ifList) == SNMP_ERR_SUCCESS)
    {
       // Enumerate interfaces
 		for(int i = 0; i < ifList->size(); i++)
@@ -211,7 +211,7 @@ InterfaceList *TelcoBridgesDriver::getInterfaces(SNMP_Transport *snmp, StringMap
       }
 
       // Interface IP address'es and netmasks
-		UINT32 error = SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, ifList, FALSE);
+		UINT32 error = SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, ifList);
       if (error == SNMP_ERR_SUCCESS)
       {
          success = true;

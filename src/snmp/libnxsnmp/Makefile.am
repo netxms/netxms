@@ -1,5 +1,6 @@
 SOURCES = ber.cpp engine.cpp main.cpp mib.cpp oid.cpp pdu.cpp \
-          security.cpp transport.cpp util.cpp variable.cpp zfile.cpp
+          security.cpp snapshot.cpp transport.cpp util.cpp \
+          variable.cpp zfile.cpp
 
 lib_LTLIBRARIES = libnxsnmp.la
 

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Ubiquity Networks access points
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -128,7 +128,7 @@ static bool ParseMACAddress(const TCHAR *text, BYTE *mac)
 /**
  * Handler for access point enumeration
  */
-static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
@@ -192,8 +192,8 @@ static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Tr
 ObjectArray<AccessPointInfo> *UbiquityNetworksDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.2.840.10036.1.1.1.1"),   // dot11StationID
-            HandlerAccessPointList, apList, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.2.840.10036.1.1.1.1"),   // dot11StationID
+                HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)
    {
       delete apList;
       return NULL;
@@ -204,7 +204,7 @@ ObjectArray<AccessPointInfo> *UbiquityNetworksDriver::getAccessPoints(SNMP_Trans
 /**
  * Handler for mobile units enumeration
  */
-static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
 
@@ -242,8 +242,8 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
 ObjectArray<WirelessStationInfo> *UbiquityNetworksDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.14988.1.1.1.2.1.3"), // mtxrWlRtabStrength
-            HandlerWirelessStationList, wsList, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.2.1.3"), // mtxrWlRtabStrength
+                HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
    {
       delete wsList;
       wsList = NULL;

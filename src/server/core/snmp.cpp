@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 /**
  * Handler for ARP enumeration
  */
-static UINT32 HandlerArp(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerArp(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    UINT32 oidName[MAX_OID_LEN], dwIndex = 0;
    BYTE bMac[64];
@@ -35,12 +35,12 @@ static UINT32 HandlerArp(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
    memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
 
    oidName[nameLen - 6] = 1;  // Retrieve interface index
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &dwIndex, sizeof(UINT32), 0);
+   dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &dwIndex, sizeof(UINT32), 0, NULL);
    if (dwResult != SNMP_ERR_SUCCESS)
       return dwResult;
 
    oidName[nameLen - 6] = 2;  // Retrieve MAC address for this IP
-	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, bMac, 64, SG_RAW_RESULT);
+	dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, bMac, 64, SG_RAW_RESULT, NULL);
    if (dwResult == SNMP_ERR_SUCCESS)
    {
       ((ARP_CACHE *)pArg)->dwNumEntries++;
@@ -67,7 +67,7 @@ ARP_CACHE *SnmpGetArpCache(UINT32 dwVersion, SNMP_Transport *pTransport)
    pArpCache->dwNumEntries = 0;
    pArpCache->pEntries = NULL;
 
-   if (SnmpWalk(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.22.1.3"), HandlerArp, pArpCache, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(pTransport, _T(".1.3.6.1.2.1.4.22.1.3"), HandlerArp, pArpCache) != SNMP_ERR_SUCCESS)
    {
       DestroyArpCache(pArpCache);
       pArpCache = NULL;
@@ -78,7 +78,7 @@ ARP_CACHE *SnmpGetArpCache(UINT32 dwVersion, SNMP_Transport *pTransport)
 /**
  * Handler for route enumeration
  */
-static UINT32 HandlerRoute(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerRoute(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    UINT32 oidName[MAX_OID_LEN], dwResult;
    ROUTE route;
@@ -94,23 +94,23 @@ static UINT32 HandlerRoute(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport
    route.dwDestAddr = ntohl(pVar->getValueAsUInt());
 
    oidName[nameLen - 5] = 2;  // Interface index
-   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen,
-                           &route.dwIfIndex, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
+   if ((dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen,
+                             &route.dwIfIndex, sizeof(UINT32), 0, NULL)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
    oidName[nameLen - 5] = 7;  // Next hop
-   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen,
-                           &route.dwNextHop, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
+   if ((dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen,
+                             &route.dwNextHop, sizeof(UINT32), 0, NULL)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
    oidName[nameLen - 5] = 8;  // Route type
-   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen,
-                           &route.dwRouteType, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
+   if ((dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen,
+                             &route.dwRouteType, sizeof(UINT32), 0, NULL)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
    oidName[nameLen - 5] = 11;  // Destination mask
-   if ((dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen,
-                           &route.dwDestMask, sizeof(UINT32), 0)) != SNMP_ERR_SUCCESS)
+   if ((dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen,
+                             &route.dwDestMask, sizeof(UINT32), 0, NULL)) != SNMP_ERR_SUCCESS)
       return dwResult;
 
    rt->iNumEntries++;
@@ -133,7 +133,7 @@ ROUTING_TABLE *SnmpGetRoutingTable(UINT32 dwVersion, SNMP_Transport *pTransport)
    pRT->iNumEntries = 0;
    pRT->pRoutes = NULL;
 
-   if (SnmpWalk(dwVersion, pTransport, _T(".1.3.6.1.2.1.4.21.1.1"), HandlerRoute, pRT, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(pTransport, _T(".1.3.6.1.2.1.4.21.1.1"), HandlerRoute, pRT) != SNMP_ERR_SUCCESS)
    {
       DestroyRoutingTable(pRT);
       pRT = NULL;

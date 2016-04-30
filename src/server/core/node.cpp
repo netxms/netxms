@@ -626,7 +626,7 @@ InterfaceList *Node::getInterfaceList()
 
 			if ((pIfList != NULL) && (m_dwFlags & NF_IS_BRIDGE))
 			{
-				BridgeMapPorts(m_snmpVersion, pTransport, pIfList);
+				BridgeMapPorts(pTransport, pIfList);
 			}
 			delete pTransport;
 		}
@@ -2371,7 +2371,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
 /**
  * SNMP walker callback which sets indicator to true after first varbind and aborts walk
  */
-static UINT32 IndicatorSnmpWalkerCallback(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 IndicatorSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    (*((bool *)arg)) = true;
    return SNMP_ERR_COMM;
@@ -2517,7 +2517,7 @@ bool Node::confPollSnmp(UINT32 dwRqId)
 
    // Check for printer MIB support
    bool present = false;
-   SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43"), IndicatorSnmpWalkerCallback, &present, FALSE);
+   SnmpWalk(pTransport, _T(".1.3.6.1.2.1.43"), IndicatorSnmpWalkerCallback, &present);
    if (present)
    {
       lockProperties();
@@ -2796,7 +2796,7 @@ void Node::checkBridgeMib(SNMP_Transport *pTransport)
 void Node::checkIfXTable(SNMP_Transport *pTransport)
 {
 	bool present = false;
-	SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), IndicatorSnmpWalkerCallback, &present, FALSE);
+	SnmpWalk(pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), IndicatorSnmpWalkerCallback, &present);
    if (present)
    {
 		lockProperties();
@@ -3774,7 +3774,7 @@ static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, SNMP_ObjectId *rowOid, size
 /**
  * Callback for SnmpWalk in Node::getTableFromSNMP
  */
-static UINT32 SNMPGetTableCallback(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
+static UINT32 SNMPGetTableCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
 {
    ((ObjectArray<SNMP_ObjectId> *)arg)->add(new SNMP_ObjectId(varbind->getName()));
    return SNMP_ERR_SUCCESS;
@@ -3792,7 +3792,7 @@ UINT32 Node::getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableCo
       return DCE_COMM_ERROR;
 
    ObjectArray<SNMP_ObjectId> oidList(64, 64, true);
-   UINT32 rc = SnmpWalk(snmp->getSnmpVersion(), snmp, oid, SNMPGetTableCallback, &oidList, FALSE);
+   UINT32 rc = SnmpWalk(snmp, oid, SNMPGetTableCallback, &oidList, FALSE);
    if (rc == SNMP_ERR_SUCCESS)
    {
       *table = new Table;
@@ -3818,7 +3818,7 @@ UINT32 Node::getTableFromSNMP(WORD port, const TCHAR *oid, ObjectArray<DCTableCo
 /**
  * Callback for SnmpWalk in Node::getListFromSNMP
  */
-static UINT32 SNMPGetListCallback(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
+static UINT32 SNMPGetListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
 {
    bool convert = false;
    TCHAR buffer[256];
@@ -3837,7 +3837,7 @@ UINT32 Node::getListFromSNMP(WORD port, const TCHAR *oid, StringList **list)
       return DCE_COMM_ERROR;
 
    *list = new StringList;
-   UINT32 rc = SnmpWalk(snmp->getSnmpVersion(), snmp, oid, SNMPGetListCallback, *list, FALSE);
+   UINT32 rc = SnmpWalk(snmp, oid, SNMPGetListCallback, *list);
    delete snmp;
    if (rc != SNMP_ERR_SUCCESS)
    {
@@ -3859,7 +3859,7 @@ struct SNMPOIDSuffixListCallback_Data
 /**
  * Callback for SnmpWalk in Node::getOIDSuffixListFromSNMP
  */
-static UINT32 SNMPOIDSuffixListCallback(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
+static UINT32 SNMPOIDSuffixListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
 {
    SNMPOIDSuffixListCallback_Data *data = (SNMPOIDSuffixListCallback_Data *)arg;
    SNMP_ObjectId *oid = varbind->getName();
@@ -3897,7 +3897,7 @@ UINT32 Node::getOIDSuffixListFromSNMP(WORD port, const TCHAR *oid, StringMap **v
    }
 
    data.values = new StringMap;
-   UINT32 rc = SnmpWalk(snmp->getSnmpVersion(), snmp, oid, SNMPOIDSuffixListCallback, &data, FALSE);
+   UINT32 rc = SnmpWalk(snmp, oid, SNMPOIDSuffixListCallback, &data);
    delete snmp;
    if (rc == SNMP_ERR_SUCCESS)
    {
@@ -5540,7 +5540,7 @@ void Node::updateRoutingTable()
  * Call SNMP Enumerate with node's SNMP parameters
  */
 UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
-                              UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *),
+                              UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *),
                               void *pArg, const TCHAR *context)
 {
    if ((m_dwFlags & NF_IS_SNMP) &&
@@ -5553,7 +5553,7 @@ UINT32 Node::callSnmpEnumerate(const TCHAR *pszRootOid,
 		pTransport = createSnmpTransport(0, context);
 		if (pTransport != NULL)
 		{
-			dwResult = SnmpWalk(m_snmpVersion, pTransport, pszRootOid, pHandler, pArg, FALSE);
+			dwResult = SnmpWalk(pTransport, pszRootOid, pHandler, pArg);
 			delete pTransport;
 		}
 		else

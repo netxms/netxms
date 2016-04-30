@@ -80,7 +80,7 @@ bool QtechOLTDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 /**
  * Handler for enumerating indexes
  */
-static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
     UINT32 oid[128];
     size_t oidLen = pVar->getName()->getLength();
@@ -102,11 +102,10 @@ static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport
  */
 InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData, int useAliases, bool useIfXTable)
 {
-   TCHAR szOid[128];
    UINT32 oid[MAX_OID_LEN];
 
    InterfaceList *pIfList = NetworkDeviceDriver::getInterfaces(snmp, attributes, driverData, 0, false);
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.27514.1.11.4.1.1.1"), HandlerIndex, pIfList, FALSE) == SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.27514.1.11.4.1.1.1"), HandlerIndex, pIfList) == SNMP_ERR_SUCCESS)
    {
       for(int i = 0; i < pIfList->size(); i++)
       {
@@ -118,20 +117,17 @@ InterfaceList *QtechOLTDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
             oid[14] = iface->slot;
             oid[15] = iface->index - iface->slot * 1000;
             iface->type = IFTYPE_GPON;
-            SNMPConvertOIDToText(16, oid, szOid, 128);
-            if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->alias, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
+            if (SnmpGetEx(snmp, NULL, oid, 16, iface->alias, MAX_DB_STRING * sizeof(TCHAR), 0, NULL) != SNMP_ERR_SUCCESS)
             {
                StrStrip(iface->alias);
             }
             oid[12] = 13;
-            SNMPConvertOIDToText(16, oid, szOid, 128);
-            if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
+            if (SnmpGetEx(snmp, NULL, oid, 16, iface->description, MAX_DB_STRING * sizeof(TCHAR), 0, NULL) != SNMP_ERR_SUCCESS)
             {
                StrStrip(iface->description);
             }
             oid[12] = 2;
-            SNMPConvertOIDToText(16, oid, szOid, 128);
-            if (SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, iface->name, MAX_DB_STRING * sizeof(TCHAR), 0) != SNMP_ERR_SUCCESS)
+            if (SnmpGetEx(snmp, NULL, oid, 16, iface->name, MAX_DB_STRING * sizeof(TCHAR), 0, NULL) != SNMP_ERR_SUCCESS)
             {
                iface->type = IFTYPE_OTHER;
             }
@@ -155,7 +151,6 @@ void QtechOLTDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attribut
                                        int ifTableSuffixLen, UINT32 *ifTableSuffix, InterfaceAdminState *adminState, InterfaceOperState *operState)
 {
    UINT32 dwOperStatus = 0;
-   TCHAR szOid[256];
    UINT32 oid[MAX_OID_LEN];
 
    *adminState = IF_ADMIN_STATE_UP;
@@ -165,8 +160,7 @@ void QtechOLTDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *attribut
       SNMPParseOID(_T(".1.3.6.1.4.1.27514.1.11.4.1.1.3.0.0.0"), oid, MAX_OID_LEN);
       oid[14] = ifIndex / 1000;
       oid[15] = ifIndex - oid[14] * 1000;
-      SNMPConvertOIDToText(16, oid, szOid, 128);
-      SnmpGet(snmp->getSnmpVersion(), snmp, szOid, NULL, 0, &dwOperStatus, sizeof(UINT32), 0);
+      SnmpGetEx(snmp, NULL, oid, 16, &dwOperStatus, sizeof(UINT32), 0, NULL);
       switch(dwOperStatus)
       {
          case 1:

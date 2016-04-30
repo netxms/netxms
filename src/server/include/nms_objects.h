@@ -1537,7 +1537,7 @@ public:
    void setLastEventId(int nIndex, QWORD qwId) { if ((nIndex >= 0) && (nIndex < MAX_LAST_EVENTS)) m_qwLastEvents[nIndex] = qwId; }
 
    UINT32 callSnmpEnumerate(const TCHAR *pszRootOid,
-      UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *), void *pArg, const TCHAR *context = NULL);
+      UINT32 (* pHandler)(SNMP_Variable *, SNMP_Transport *, void *), void *pArg, const TCHAR *context = NULL);
 
 	nxmap_ObjList *getL2Topology();
 	nxmap_ObjList *buildL2Topology(UINT32 *pdwStatus, int radius, bool includeEndNodes);

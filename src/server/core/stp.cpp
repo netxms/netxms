@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 /**
  * STP port table walker's callback
  */
-static UINT32 STPPortListHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	int state = var->getValueAsInt();
 	if ((state != 2) && (state != 5))
@@ -36,7 +36,7 @@ static UINT32 STPPortListHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Tr
    memcpy(oid, var->getName()->getValue(), var->getName()->getLength() * sizeof(UINT32));
 
    // Get designated bridge and designated port for this port
-   SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
+   SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
 
    oid[10] = 8;   // dot1dStpPortDesignatedBridge
    request->bindVariable(new SNMP_Variable(oid, var->getName()->getLength()));

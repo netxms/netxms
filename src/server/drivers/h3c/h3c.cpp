@@ -84,7 +84,7 @@ void H3CDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, StringMap 
 /**
  * Handler for port walk
  */
-static UINT32 PortWalkHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static UINT32 PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    InterfaceList *ifList = (InterfaceList *)arg;
    UINT32 ifIndex = var->getValueAsUInt();
@@ -116,7 +116,7 @@ InterfaceList *H3CDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attribu
 		return NULL;
 
 	// Find physical ports
-   SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.43.45.1.2.23.1.18.4.5.1.3"), PortWalkHandler, ifList, FALSE);
+   SnmpWalk(snmp, _T(".1.3.6.1.4.1.43.45.1.2.23.1.18.4.5.1.3"), PortWalkHandler, ifList);
 	return ifList;
 }
 

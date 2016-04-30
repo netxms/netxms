@@ -46,7 +46,7 @@ struct VLAN_LIST
 /**
  * Handler for VLAN enumeration on Avaya ERS
  */
-static UINT32 HandlerVlanIfList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerVlanIfList(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    UINT32 dwIndex, oidName[MAX_OID_LEN], dwResult;
    VLAN_LIST *pVlanList = (VLAN_LIST *)pArg;
@@ -63,15 +63,15 @@ static UINT32 HandlerVlanIfList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Tran
    // Get VLAN name
    memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
    oidName[nameLen - 2] = 2;
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, 
-                      pVlanList->pList[dwIndex].szName, MAX_OBJECT_NAME * sizeof(TCHAR), 0);
+   dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, 
+                        pVlanList->pList[dwIndex].szName, MAX_OBJECT_NAME * sizeof(TCHAR), 0, NULL);
    if (dwResult != SNMP_ERR_SUCCESS)
       return dwResult;
 
    // Get VLAN interface index
    oidName[nameLen - 2] = 6;
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, 
-                      &pVlanList->pList[dwIndex].dwIfIndex, sizeof(UINT32), 0);
+   dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, 
+                        &pVlanList->pList[dwIndex].dwIfIndex, sizeof(UINT32), 0, NULL);
    if (dwResult != SNMP_ERR_SUCCESS)
       return dwResult;
 
@@ -79,7 +79,7 @@ static UINT32 HandlerVlanIfList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Tran
    oidName[nameLen - 2] = 19;
    memset(pVlanList->pList[dwIndex].bMacAddr, 0, MAC_ADDR_LENGTH);
    memset(szBuffer, 0, MAC_ADDR_LENGTH);
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, szBuffer, 256, SG_RAW_RESULT);
+   dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, szBuffer, 256, SG_RAW_RESULT, NULL);
    if (dwResult == SNMP_ERR_SUCCESS)
       memcpy(pVlanList->pList[dwIndex].bMacAddr, szBuffer, MAC_ADDR_LENGTH);
    return dwResult;
@@ -88,7 +88,7 @@ static UINT32 HandlerVlanIfList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Tran
 /**
  * Handler for VLAN enumeration
  */
-static UINT32 HandlerRapidCityIfList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerRapidCityIfList(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    InterfaceList *pIfList = (InterfaceList *)pArg;
    VLAN_LIST *pVlanList = (VLAN_LIST *)pIfList->getData();
@@ -114,13 +114,13 @@ static UINT32 HandlerRapidCityIfList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP
 
       memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
       oidName[nameLen - 6] = 2;
-      dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &ipAddr, sizeof(UINT32), 0);
+      dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &ipAddr, sizeof(UINT32), 0, NULL);
 
       if (dwResult == SNMP_ERR_SUCCESS)
       {
          // Get netmask
          oidName[nameLen - 6] = 3;
-         dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &ipNetMask, sizeof(UINT32), 0);
+         dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &ipNetMask, sizeof(UINT32), 0, NULL);
       }
 
       if (dwResult == SNMP_ERR_SUCCESS)
@@ -149,10 +149,10 @@ void AvayaERSDriver::getVlanInterfaces(SNMP_Transport *pTransport, InterfaceList
 
    // Get VLAN list
    memset(&vlanList, 0, sizeof(VLAN_LIST));
-   SnmpWalk(pTransport->getSnmpVersion(), pTransport, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanIfList, &vlanList, FALSE);
+   SnmpWalk(pTransport, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanIfList, &vlanList);
 
    // Get interfaces
    pIfList->setData(&vlanList);
-   SnmpWalk(pTransport->getSnmpVersion(), pTransport, _T(".1.3.6.1.4.1.2272.1.8.2.1.1"), HandlerRapidCityIfList, pIfList, FALSE);
-   safe_free(vlanList.pList);
+   SnmpWalk(pTransport, _T(".1.3.6.1.4.1.2272.1.8.2.1.1"), HandlerRapidCityIfList, pIfList);
+   free(vlanList.pList);
 }

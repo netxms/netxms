@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -80,7 +80,7 @@ void VrrpRouter::addVirtualIP(SNMP_Variable *var)
 /**
  * VRRP walker callback
  */
-UINT32 VrrpRouter::walkerCallback(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+UINT32 VrrpRouter::walkerCallback(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	((VrrpRouter *)arg)->addVirtualIP(var);
 	return SNMP_ERR_SUCCESS;
@@ -89,17 +89,17 @@ UINT32 VrrpRouter::walkerCallback(UINT32 snmpVersion, SNMP_Variable *var, SNMP_T
 /**
  * Read VRs virtual IPs
  */
-bool VrrpRouter::readVirtualIP(UINT32 snmpVersion, SNMP_Transport *transport)
+bool VrrpRouter::readVirtualIP(SNMP_Transport *transport)
 {
 	TCHAR oid[256];
 	_sntprintf(oid, 256, _T(".1.3.6.1.2.1.68.1.4.1.2.%u.%u"), m_ifIndex, m_id);
-	return SnmpWalk(snmpVersion, transport, oid, VrrpRouter::walkerCallback, this, false) == SNMP_ERR_SUCCESS;
+	return SnmpWalk(transport, oid, VrrpRouter::walkerCallback, this) == SNMP_ERR_SUCCESS;
 }
 
 /**
  * VRRP virtual router table walker's callback
  */
-UINT32 VRRPHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+UINT32 VRRPHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	SNMP_ObjectId *oid = var->getName();
 
@@ -112,10 +112,10 @@ UINT32 VRRPHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *trans
 	memcpy(oidMac, oid->getValue(), oid->getLength() * sizeof(UINT32));
 	oidMac[10] = 2;	// .1.3.6.1.2.1.68.1.3.1.2.ifIndex.vrid = virtual MAC
 	BYTE macAddr[MAC_ADDR_LENGTH];
-	if (SnmpGet(snmpVersion, transport, NULL, oidMac, 13, &macAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+	if (SnmpGetEx(transport, NULL, oidMac, 13, &macAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT, NULL) == SNMP_ERR_SUCCESS)
 	{
 		VrrpRouter *router = new VrrpRouter(vrid, ifIndex, state, macAddr);
-		if (router->readVirtualIP(snmpVersion, transport))
+		if (router->readVirtualIP(transport))
 			((VrrpInfo *)arg)->addRouter(router);
 		else
 			delete router;
@@ -137,14 +137,14 @@ VrrpInfo *GetVRRPInfo(Node *node)
 		return NULL;
 
 	LONG version;
-	if (SnmpGet(node->getSNMPVersion(), transport, _T(".1.3.6.1.2.1.68.1.1.0"), NULL, 0, &version, sizeof(LONG), 0) != SNMP_ERR_SUCCESS)
+	if (SnmpGetEx(transport, _T(".1.3.6.1.2.1.68.1.1.0"), NULL, 0, &version, sizeof(LONG), 0, NULL) != SNMP_ERR_SUCCESS)
 	{
 		delete transport;
 		return NULL;
 	}
 
 	VrrpInfo *info = new VrrpInfo(version);
-	if (SnmpWalk(node->getSNMPVersion(), transport, _T(".1.3.6.1.2.1.68.1.3.1.3"), VRRPHandler, info, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(transport, _T(".1.3.6.1.2.1.68.1.3.1.3"), VRRPHandler, info) != SNMP_ERR_SUCCESS)
 	{
 		delete info;
 		info = NULL;

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -182,7 +182,7 @@ UINT32 Component::fillMessage(NXCPMessage *msg, UINT32 baseId)
 /**
  * Physical entity tree walk callback
  */
-static UINT32 EntityWalker(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 EntityWalker(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	TCHAR buffer[256];
 	Component *element = new Component(var->getName()->getValue()[12], var->getValueAsString(buffer, 256));
@@ -204,7 +204,7 @@ ComponentTree *BuildComponentTree(Node *node, SNMP_Transport *snmp)
 	DbgPrintf(5, _T("Building component tree for node %s [%d]"), node->getName(), (int)node->getId());
 	ObjectArray<Component> elements(16, 16);
 	ComponentTree *tree = NULL;
-	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.47.1.1.1.1.7"), EntityWalker, &elements, FALSE) == SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.47.1.1.1.1.7"), EntityWalker, &elements) == SNMP_ERR_SUCCESS)
 	{
 		DbgPrintf(6, _T("BuildComponentTree(%s [%d]): %d elements found"), node->getName(), (int)node->getId(), elements.size());
 

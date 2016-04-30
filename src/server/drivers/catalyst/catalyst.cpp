@@ -73,7 +73,7 @@ bool CatalystDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 /**
  * Handler for switch port enumeration
  */
-static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	InterfaceList *ifList = (InterfaceList *)arg;
 
@@ -86,7 +86,7 @@ static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport
 		UINT32 oid[] = { 1, 3, 6, 1, 4, 1, 9, 5, 1, 3, 1, 1, 25, 0 };
 		oid[13] = moduleIndex;
 		UINT32 slot;
-		if (SnmpGet(version, transport, NULL, oid, 14, &slot, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+		if (SnmpGetEx(transport, NULL, oid, 14, &slot, sizeof(UINT32), 0, NULL) != SNMP_ERR_SUCCESS)
 			slot = moduleIndex;	// Assume slot # equal to module index if it cannot be read
 
 		iface->slot = slot;
@@ -110,7 +110,7 @@ InterfaceList *CatalystDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		return NULL;
 	
 	// Set slot and port number for physical interfaces
-	SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.5.1.4.1.1.11"), HandlerPortList, ifList, FALSE);
+	SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.5.1.4.1.1.11"), HandlerPortList, ifList);
 
 	return ifList;
 }

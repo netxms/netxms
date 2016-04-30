@@ -101,7 +101,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
  * Get value for SNMP variable
  * If szOidStr is not NULL, string representation of OID is used, otherwise -
  * binary representation from oidBinary and dwOidLen
- * If SG_RAW_RESULT flag given and dataLen is not NULL actial data length will be stored there
+ * If SG_RAW_RESULT flag given and dataLen is not NULL actual data length will be stored there
  * Note: buffer size is in bytes
  */
 UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
@@ -231,27 +231,42 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
 /**
  * Enumerate multiple values by walking through MIB, starting at given root
  */
-UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
-                                     UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *),
-                                     void *pUserArg, BOOL bVerbose)
+UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,
+                                     UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
+                                     void *userArg, bool logErrors)
 {
-	if (pTransport == NULL)
-		return SNMP_ERR_COMM;
+   if (transport == NULL)
+      return SNMP_ERR_COMM;
 
-   // Get root
-	UINT32 pdwRootName[MAX_OID_LEN];
-   size_t dwRootLen = SNMPParseOID(szRootOid, pdwRootName, MAX_OID_LEN);
-   if (dwRootLen == 0)
+   UINT32 rootOidBin[MAX_OID_LEN];
+   size_t rootOidLen = SNMPParseOID(rootOid, rootOidBin, MAX_OID_LEN);
+   if (rootOidLen == 0)
    {
-      InetAddress a = pTransport->getPeerIpAddress();
-      nxlog_write(s_msgParseError, NXLOG_WARNING, "ssA", szRootOid, _T("SnmpWalk"), &a);
+      if (logErrors)
+      {
+         InetAddress a = transport->getPeerIpAddress();
+         nxlog_write(s_msgParseError, NXLOG_WARNING, "ssA", rootOid, _T("SnmpWalk"), &a);
+      }
       return SNMP_ERR_BAD_OID;
    }
 
+   return SnmpWalk(transport, rootOidBin, rootOidLen, handler, userArg, logErrors);
+}
+
+/**
+ * Enumerate multiple values by walking through MIB, starting at given root
+ */
+UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen,
+                                     UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
+                                     void *userArg, bool logErrors)
+{
+	if (transport == NULL)
+		return SNMP_ERR_COMM;
+
 	// First OID to request
    UINT32 pdwName[MAX_OID_LEN];
-   memcpy(pdwName, pdwRootName, dwRootLen * sizeof(UINT32));
-   size_t nameLength = dwRootLen;
+   memcpy(pdwName, rootOid, rootOidLen * sizeof(UINT32));
+   size_t nameLength = rootOidLen;
 
    // Walk the MIB
    UINT32 dwResult;
@@ -260,10 +275,10 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTranspor
    size_t firstObjectNameLen = 0;
    while(bRunning)
    {
-      SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, (UINT32)InterlockedIncrement(&s_requestId), dwVersion);
+      SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, (UINT32)InterlockedIncrement(&s_requestId), transport->getSnmpVersion());
       pRqPDU->bindVariable(new SNMP_Variable(pdwName, nameLength));
 	   SNMP_PDU *pRespPDU;
-      dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, s_snmpTimeout, 3);
+      dwResult = transport->doRequest(pRqPDU, &pRespPDU, s_snmpTimeout, 3);
 
       // Analyze response
       if (dwResult == SNMP_ERR_SUCCESS)
@@ -279,8 +294,8 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTranspor
                // Should we stop walking?
 					// Some buggy SNMP agents may return first value after last one
 					// (Toshiba Strata CTX do that for example), so last check is here
-               if ((pVar->getName()->getLength() < dwRootLen) ||
-                   (memcmp(pdwRootName, pVar->getName()->getValue(), dwRootLen * sizeof(UINT32))) ||
+               if ((pVar->getName()->getLength() < rootOidLen) ||
+                   (memcmp(rootOid, pVar->getName()->getValue(), rootOidLen * sizeof(UINT32))) ||
 						 (pVar->getName()->compare(pdwName, nameLength) == OID_EQUAL) ||
 						 (pVar->getName()->compare(firstObjectName, firstObjectNameLen) == OID_EQUAL))
                {
@@ -298,7 +313,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTranspor
 					}
 
                // Call user's callback function for processing
-               dwResult = pHandler(dwVersion, pVar, pTransport, pUserArg);
+               dwResult = handler(pVar, transport, userArg);
                if (dwResult != SNMP_ERR_SUCCESS)
                {
                   bRunning = FALSE;
@@ -321,7 +336,7 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTranspor
       }
       else
       {
-         if (bVerbose)
+         if (logErrors)
             nxlog_write(s_msgGetError, EVENTLOG_ERROR_TYPE, "d", dwResult);
          bRunning = FALSE;
       }

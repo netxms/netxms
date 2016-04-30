@@ -27,7 +27,7 @@
 /**
  * Handler for VLAN enumeration on Cisco device
  */
-static UINT32 HandlerVlanList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
 
@@ -82,7 +82,7 @@ static void ParseVlanMap(VlanList *vlanList, UINT32 ifIndex, BYTE *map, int offs
 /**
  * Handler for trunk port enumeration on Cisco device
  */
-static UINT32 HandlerTrunkPorts(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerTrunkPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
    size_t nameLen = var->getName()->getLength();
@@ -92,7 +92,7 @@ static UINT32 HandlerTrunkPorts(UINT32 version, SNMP_Variable *var, SNMP_Transpo
 	UINT32 oidName[256], value;
    memcpy(oidName, var->getName()->getValue(), nameLen * sizeof(UINT32));
    oidName[nameLen - 2] = 14;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.14
-	if (SnmpGet(version, transport, NULL, oidName, nameLen, &value, sizeof(UINT32), 0) != SNMP_ERR_SUCCESS)
+	if (SnmpGetEx(transport, NULL, oidName, nameLen, &value, sizeof(UINT32), 0, NULL) != SNMP_ERR_SUCCESS)
 	   return SNMP_ERR_SUCCESS;	// Cannot get trunk state, ignore port
 	if (value != 1)
 	   return SNMP_ERR_SUCCESS;	// Not a trunk port, ignore
@@ -106,25 +106,25 @@ static UINT32 HandlerTrunkPorts(UINT32 version, SNMP_Variable *var, SNMP_Transpo
    oidName[nameLen - 2] = 4;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.4
 	BYTE map[128];
 	memset(map, 0, 128);
-	if (SnmpGet(version, transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+	if (SnmpGetEx(transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT, NULL) == SNMP_ERR_SUCCESS)
 		ParseVlanMap(vlanList, ifIndex, map, 0);
 
 	// VLAN map for VLAN IDs 1024..2047
    oidName[nameLen - 2] = 17;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.17
 	memset(map, 0, 128);
-	if (SnmpGet(version, transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+	if (SnmpGetEx(transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT, NULL) == SNMP_ERR_SUCCESS)
 		ParseVlanMap(vlanList, ifIndex, map, 1024);
 
 	// VLAN map for VLAN IDs 2048..3071
    oidName[nameLen - 2] = 18;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.18
 	memset(map, 0, 128);
-	if (SnmpGet(version, transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+	if (SnmpGetEx(transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT, NULL) == SNMP_ERR_SUCCESS)
 		ParseVlanMap(vlanList, ifIndex, map, 2048);
 
 	// VLAN map for VLAN IDs 3072..4095
    oidName[nameLen - 2] = 19;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.19
 	memset(map, 0, 128);
-	if (SnmpGet(version, transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+	if (SnmpGetEx(transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT, NULL) == SNMP_ERR_SUCCESS)
 		ParseVlanMap(vlanList, ifIndex, map, 3072);
 
    return SNMP_ERR_SUCCESS;
@@ -134,7 +134,7 @@ static UINT32 HandlerTrunkPorts(UINT32 version, SNMP_Variable *var, SNMP_Transpo
 /**
  * Handler for access port enumeration on Cisco device
  */
-static UINT32 HandlerAccessPorts(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerAccessPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
    size_t nameLen = var->getName()->getLength();
@@ -150,25 +150,25 @@ static UINT32 HandlerAccessPorts(UINT32 version, SNMP_Variable *var, SNMP_Transp
 
 		oidName[nameLen - 2] = 4;	// .1.3.6.1.4.1.9.9.68.1.2.2.1.4
 		memset(map, 0, 128);
-		if (SnmpGet(version, transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+		if (SnmpGetEx(transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT, NULL) == SNMP_ERR_SUCCESS)
 			ParseVlanMap(vlanList, ifIndex, map, 0);
 
 		// VLAN map for VLAN IDs 1024..2047
 		oidName[nameLen - 2] = 5;	// .1.3.6.1.4.1.9.9.68.1.2.2.1.5
 		memset(map, 0, 128);
-		if (SnmpGet(version, transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+		if (SnmpGetEx(transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT, NULL) == SNMP_ERR_SUCCESS)
 			ParseVlanMap(vlanList, ifIndex, map, 1024);
 
 		// VLAN map for VLAN IDs 2048..3071
 		oidName[nameLen - 2] = 6;	// .1.3.6.1.4.1.9.9.68.1.2.2.1.6
 		memset(map, 0, 128);
-		if (SnmpGet(version, transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+		if (SnmpGetEx(transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT, NULL) == SNMP_ERR_SUCCESS)
 			ParseVlanMap(vlanList, ifIndex, map, 2048);
 
 		// VLAN map for VLAN IDs 3072..4095
 		oidName[nameLen - 2] = 7;	// .1.3.6.1.4.1.9.9.68.1.2.2.1.7
 		memset(map, 0, 128);
-		if (SnmpGet(version, transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT) == SNMP_ERR_SUCCESS)
+		if (SnmpGetEx(transport, NULL, oidName, nameLen, map, 128, SG_RAW_RESULT, NULL) == SNMP_ERR_SUCCESS)
 			ParseVlanMap(vlanList, ifIndex, map, 3072);
 	}
 	else
@@ -176,7 +176,7 @@ static UINT32 HandlerAccessPorts(UINT32 version, SNMP_Variable *var, SNMP_Transp
 		// Port is in just one VLAN, it's ID must be in vmVlan
 	   oidName[nameLen - 2] = 2;	// .1.3.6.1.4.1.9.9.68.1.2.2.1.2
 		UINT32 vlanId = 0;
-		if (SnmpGet(version, transport, NULL, oidName, nameLen, &vlanId, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS)
+		if (SnmpGetEx(transport, NULL, oidName, nameLen, &vlanId, sizeof(UINT32), 0, NULL) == SNMP_ERR_SUCCESS)
 		{
 			if (vlanId != 0)
 				vlanList->addMemberPort((int)vlanId, ifIndex);
@@ -194,15 +194,15 @@ VlanList *CiscoDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attribute
 	VlanList *list = new VlanList();
 	
 	// Vlan list
-	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.3.1.1.4"), HandlerVlanList, list) != SNMP_ERR_SUCCESS)
 		goto failure;
 
 	// Trunk ports
-	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.5"), HandlerTrunkPorts, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.46.1.6.1.1.5"), HandlerTrunkPorts, list) != SNMP_ERR_SUCCESS)
 		goto failure;
 
 	// Access ports
-	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.68.1.2.2.1.1"), HandlerAccessPorts, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.68.1.2.2.1.1"), HandlerAccessPorts, list) != SNMP_ERR_SUCCESS)
 		goto failure;
 
 	return list;

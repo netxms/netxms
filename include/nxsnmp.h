@@ -73,9 +73,10 @@
 
 #define OID_ERROR          -1
 #define OID_EQUAL          0
-#define OID_NOT_EQUAL      1
-#define OID_SHORTER        2
-#define OID_LONGER         3
+#define OID_PRECEDING      1
+#define OID_FOLLOWING      2
+#define OID_SHORTER        3
+#define OID_LONGER         4
 
 /**
  * libnxsnmp error codes
@@ -403,25 +404,25 @@ public:
    SNMP_Variable();
    SNMP_Variable(const TCHAR *name);
    SNMP_Variable(UINT32 *name, size_t nameLen);
-   SNMP_Variable(SNMP_Variable *src);
+   SNMP_Variable(const SNMP_Variable *src);
    ~SNMP_Variable();
 
    bool parse(BYTE *data, size_t varLength);
    size_t encode(BYTE *buffer, size_t bufferSize);
 
-   SNMP_ObjectId *getName() { return m_name; }
-   UINT32 getType() { return m_type; }
-   size_t getValueLength() { return m_valueLength; }
-   const BYTE *getValue() { return m_value; }
+   SNMP_ObjectId *getName() const { return m_name; }
+   UINT32 getType() const { return m_type; }
+   size_t getValueLength() const { return m_valueLength; }
+   const BYTE *getValue() const { return m_value; }
 
-	size_t getRawValue(BYTE *buffer, size_t bufSize);
-   UINT32 getValueAsUInt();
-   LONG getValueAsInt();
-   TCHAR *getValueAsString(TCHAR *buffer, size_t bufferSize);
-   TCHAR *getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex);
-   SNMP_ObjectId *getValueAsObjectId();
-   TCHAR *getValueAsMACAddr(TCHAR *buffer);
-   TCHAR *getValueAsIPAddr(TCHAR *buffer);
+	size_t getRawValue(BYTE *buffer, size_t bufSize) const;
+   UINT32 getValueAsUInt() const;
+   LONG getValueAsInt() const;
+   TCHAR *getValueAsString(TCHAR *buffer, size_t bufferSize) const;
+   TCHAR *getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex) const;
+   SNMP_ObjectId *getValueAsObjectId() const;
+   TCHAR *getValueAsMACAddr(TCHAR *buffer) const;
+   TCHAR *getValueAsIPAddr(TCHAR *buffer) const;
 
    void setValueFromString(UINT32 type, const TCHAR *value);
 };
@@ -696,6 +697,45 @@ public:
    UINT16 getPort() { return m_port; }
 };
 
+struct SNMP_SnapshotIndexEntry;
+
+/**
+ * SNMP snapshot
+ */
+class LIBNXSNMP_EXPORTABLE SNMP_Snapshot
+{
+private:
+   ObjectArray<SNMP_Variable> *m_values;
+   SNMP_SnapshotIndexEntry *m_index;
+
+   static UINT32 callback(SNMP_Variable *var, SNMP_Transport *transport, void *arg);
+
+   void buildIndex();
+   SNMP_SnapshotIndexEntry *find(const UINT32 *oid, size_t oidLen) const;
+   SNMP_SnapshotIndexEntry *find(const TCHAR *oid) const;
+
+public:
+   SNMP_Snapshot();
+   virtual ~SNMP_Snapshot();
+
+   static SNMP_Snapshot *create(SNMP_Transport *transport, const TCHAR *baseOid);
+   static SNMP_Snapshot *create(SNMP_Transport *transport, const UINT32 *baseOid, size_t oidLen);
+
+   Iterator<SNMP_Variable> *iterator() { return m_values->iterator(); }
+   EnumerationCallbackResult walk(const TCHAR *baseOid, EnumerationCallbackResult (*handler)(const SNMP_Variable *, const SNMP_Snapshot *, void *), void *userArg) const;
+   EnumerationCallbackResult walk(const UINT32 *baseOid, size_t baseOidLen, EnumerationCallbackResult (*handler)(const SNMP_Variable *, const SNMP_Snapshot *, void *), void *userArg) const;
+
+   SNMP_Variable *get(const TCHAR *oid) const;
+   SNMP_Variable *get(const UINT32 *oid, size_t oidLen) const;
+   SNMP_Variable *getNext(const TCHAR *oid) const;
+   SNMP_Variable *getNext(const UINT32 *oid, size_t oidLen) const;
+   SNMP_Variable *first() const { return m_values->get(0); }
+   SNMP_Variable *last() const { return m_values->get(m_values->size() - 1); }
+
+   int size() const { return m_values->size(); }
+   bool isEmpty() const { return m_values->size() == 0; }
+};
+
 /**
  * Functions
  */
@@ -720,9 +760,12 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpGet(int version, SNMP_Transport *transport,
 UINT32 LIBNXSNMP_EXPORTABLE SnmpGetEx(SNMP_Transport *pTransport,
                                       const TCHAR *szOidStr, const UINT32 *oidBinary, size_t oidLen, void *pValue,
                                       size_t bufferSize, UINT32 dwFlags, UINT32 *dataLen);
-UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(UINT32 dwVersion, SNMP_Transport *pTransport, const TCHAR *szRootOid,
-						                   UINT32 (* pHandler)(UINT32, SNMP_Variable *, SNMP_Transport *, void *),
-                                     void *pUserArg, BOOL bVerbose);
+UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const TCHAR *rootOid,
+						                   UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
+                                     void *userArg, bool logErrors = false);
+UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *rootOid, size_t rootOidLen,
+                                     UINT32 (* handler)(SNMP_Variable *, SNMP_Transport *, void *),
+                                     void *userArg, bool logErrors = false);
 
 #endif   /* __cplusplus */
 

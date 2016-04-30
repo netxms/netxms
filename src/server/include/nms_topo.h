@@ -212,7 +212,7 @@ public:
 
 class VrrpRouter
 {
-	friend UINT32 VRRPHandler(UINT32, SNMP_Variable *, SNMP_Transport *, void *);
+	friend UINT32 VRRPHandler(SNMP_Variable *, SNMP_Transport *, void *);
 
 private:
 	UINT32 m_id;
@@ -223,10 +223,10 @@ private:
 	UINT32 *m_ipAddrList;
 
 	void addVirtualIP(SNMP_Variable *var);
-	static UINT32 walkerCallback(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg);
+	static UINT32 walkerCallback(SNMP_Variable *var, SNMP_Transport *transport, void *arg);
 
 protected:
-	bool readVirtualIP(UINT32 snmpVersion, SNMP_Transport *transport);
+	bool readVirtualIP(SNMP_Transport *transport);
 
 public:
 	VrrpRouter(UINT32 id, UINT32 ifIndex, int state, BYTE *macAddr);
@@ -242,7 +242,7 @@ public:
 
 class VrrpInfo
 {
-	friend UINT32 VRRPHandler(UINT32, SNMP_Variable *, SNMP_Transport *, void *);
+	friend UINT32 VRRPHandler(SNMP_Variable *, SNMP_Transport *, void *);
 
 private:
 	int m_version;
@@ -279,7 +279,7 @@ void AddCDPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void AddSTPNeighbors(Node *node, LinkLayerNeighbors *nbs);
 void BuildLldpId(int type, const BYTE *data, int length, TCHAR *id, int idLen);
 
-void BridgeMapPorts(int snmpVersion, SNMP_Transport *transport, InterfaceList *ifList);
+void BridgeMapPorts(SNMP_Transport *transport, InterfaceList *ifList);
 
 VrrpInfo *GetVRRPInfo(Node *node);
 

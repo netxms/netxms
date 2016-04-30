@@ -8770,7 +8770,7 @@ typedef struct
 /**
  * SNMP walker enumeration callback
  */
-static UINT32 WalkerCallback(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 WalkerCallback(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    NXCPMessage *pMsg = ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->pMsg;
    TCHAR szBuffer[4096];

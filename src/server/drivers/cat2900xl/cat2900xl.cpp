@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco catalyst 2900XL, 2950, and 3500XL switches
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -84,7 +84,7 @@ bool Cat2900Driver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 /**
  * Handler for switch port enumeration
  */
-static UINT32 HandlerPortList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	InterfaceList *ifList = (InterfaceList *)arg;
 	InterfaceInfo *iface = ifList->findByIfIndex(var->getValueAsUInt());
@@ -112,7 +112,7 @@ InterfaceList *Cat2900Driver::getInterfaces(SNMP_Transport *snmp, StringMap *att
 		return NULL;
 	
 	// Set slot and port number for physical interfaces
-	SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.9.87.1.4.1.1.25"), HandlerPortList, ifList, FALSE);
+	SnmpWalk(snmp, _T(".1.3.6.1.4.1.9.9.87.1.4.1.1.25"), HandlerPortList, ifList);
 
 	return ifList;
 }

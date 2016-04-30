@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 /**
  * Topology table walker's callback for CDP topology table
  */
-static UINT32 CDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
 	SNMP_ObjectId *oid = var->getName();
@@ -47,7 +47,7 @@ static UINT32 CDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transp
 	// Get additional info for current record
 	UINT32 newOid[128];
 	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(UINT32));
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
+   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
 
 	newOid[13] = 7;	// cdpCacheDevicePort
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));

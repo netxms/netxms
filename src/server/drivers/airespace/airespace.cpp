@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco 4400 (former Airespace) wireless switches
-** Copyright (C) 2013-2014 Raden Solutions
+** Copyright (C) 2013-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -68,7 +68,7 @@ bool AirespaceDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
    // read agentInventoryMachineModel
    TCHAR buffer[1024];
-   if (SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.14179.1.1.1.3.0"), NULL, 0, buffer, sizeof(buffer), 0) != SNMP_ERR_SUCCESS)
+   if (SnmpGetEx(snmp, _T(".1.3.6.1.4.1.14179.1.1.1.3.0"), NULL, 0, buffer, sizeof(buffer), 0, NULL) != SNMP_ERR_SUCCESS)
       return false;
 
    // model must start with AIR-WLC44, like AIR-WLC4402-50-K9
@@ -103,7 +103,7 @@ bool AirespaceDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attr
 /**
  * Handler for access point enumeration
  */
-static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
@@ -201,8 +201,8 @@ ObjectArray<AccessPointInfo> *AirespaceDriver::getAccessPoints(SNMP_Transport *s
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
 
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.14179.2.2.1.1.33"),  // bsnAPEthernetMacAddress
-            HandlerAccessPointList, apList, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14179.2.2.1.1.33"),  // bsnAPEthernetMacAddress
+                HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)
    {
       delete apList;
       return NULL;
@@ -214,7 +214,7 @@ ObjectArray<AccessPointInfo> *AirespaceDriver::getAccessPoints(SNMP_Transport *s
 /**
  * Handler for mobile units enumeration
  */
-static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
 
@@ -277,8 +277,8 @@ ObjectArray<WirelessStationInfo> *AirespaceDriver::getWirelessStations(SNMP_Tran
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
 
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.14179.2.1.4.1.1"), // bsnMobileStationMacAddress
-            HandlerWirelessStationList, wsList, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14179.2.1.4.1.1"), // bsnMobileStationMacAddress
+                HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
    {
       delete wsList;
       wsList = NULL;

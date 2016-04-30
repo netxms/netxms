@@ -160,7 +160,7 @@ InterfaceList *AlliedTelesisDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 /**
  * Handler for VLAN enumeration
  */
-static UINT32 HandlerVlanList(UINT32 version, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
 
@@ -223,7 +223,7 @@ VlanList *AlliedTelesisDriver::getVlans(SNMP_Transport *snmp, StringMap *attribu
    if (list == NULL)
       list = new VlanList();
 
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.207.8.33.8.1.1.2"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.207.8.33.8.1.1.2"), HandlerVlanList, list) != SNMP_ERR_SUCCESS)
 		goto failure;
 
    for(int i = 0; i < list->size(); i++)

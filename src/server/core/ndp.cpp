@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 /**
  * Read remote slot and port from s5EnMsTopNmmEosTable
  */
-static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, UINT32 snmpVersion, SNMP_Transport *transport)
+static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, SNMP_Transport *transport)
 {
 	// Read data from appropriate entry in s5EnMsTopNmmEosTable
 	UINT32 eosEntryOID[64];
@@ -34,7 +34,7 @@ static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, UINT32 snmpVer
 	eosEntryOID[12] = 1;
 	eosEntryOID[13] = 1;
 
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
+   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
 	pRqPDU->bindVariable(new SNMP_Variable(eosEntryOID, oid->getLength()));
 
 	WORD result = 0;
@@ -54,7 +54,7 @@ static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, UINT32 snmpVer
 /**
  * Topology table walker's callback for NDP topology table
  */
-static UINT32 NDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 NDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
 	SNMP_ObjectId *oid = var->getName();
@@ -85,7 +85,7 @@ static UINT32 NDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transp
 	          remoteNode->getName(), remoteNode->getId(), (ifLocal != NULL) ? ifLocal->getName() : _T("(null)"));
 	if (ifLocal != NULL)
 	{
-		WORD rport = ReadRemoteSlotAndPort(node, oid, snmpVersion, transport);
+		WORD rport = ReadRemoteSlotAndPort(node, oid, transport);
 		DbgPrintf(6, _T("NDP(%s [%d]): remote slot/port is %04X"), node->getName(), node->getId(), rport);
 		if (rport != 0)
 		{

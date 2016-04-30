@@ -104,7 +104,7 @@ bool NtwsDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attribute
 /**
  * Handler for access point enumeration - unadopted
  */
-static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerAccessPointListUnadopted(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
@@ -118,7 +118,7 @@ static UINT32 HandlerAccessPointListUnadopted(UINT32 version, SNMP_Variable *var
 /**
  * Handler for access point enumeration - adopted
  */
-static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    int ret = SNMP_ERR_SUCCESS;
 
@@ -137,7 +137,7 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
       serial[i] = oid[i + 17];
    serial[slen] = 0;
 
-   SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), version);
+   SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
    
    oid[15] = 6;  // ntwsApStatApStatusModel
    request->bindVariable(new SNMP_Variable(oid, nameLen));
@@ -182,7 +182,7 @@ static UINT32 HandlerAccessPointListAdopted(UINT32 version, SNMP_Variable *var, 
 /**
  * Handler for radios enumeration
  */
-static UINT32 HandlerRadioList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerRadioList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    AccessPointInfo *ap = (AccessPointInfo *)arg;
 
@@ -197,7 +197,7 @@ static UINT32 HandlerRadioList(UINT32 version, SNMP_Variable *var, SNMP_Transpor
    rif.index = (int)oid[nameLen - 1];
    _sntprintf(rif.name, sizeof(rif.name) / sizeof(TCHAR), _T("Radio%d"), rif.index);
    
-   SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), version);
+   SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
    
    oid[15] = 6;  // ntwsApStatRadioStatusCurrentPowerLevel
    request->bindVariable(new SNMP_Variable(oid, nameLen));
@@ -233,8 +233,8 @@ ObjectArray<AccessPointInfo> *NtwsDriver::getAccessPoints(SNMP_Transport *snmp, 
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
 
    // Adopted
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.6.1.4.5.1.1.2.1.2"),
-            HandlerAccessPointListAdopted, apList, FALSE) == SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.45.6.1.4.5.1.1.2.1.2"),
+                HandlerAccessPointListAdopted, apList) == SNMP_ERR_SUCCESS)
    {
       // Read radios by walking .1.3.6.1.4.1.45.6.1.4.5.1.1.4.1.3.<ap serial> (ntwsApStatRadioStatusBaseMac)
       for(int i = 0; i < apList->size(); i++)
@@ -246,9 +246,7 @@ ObjectArray<AccessPointInfo> *NtwsDriver::getAccessPoints(SNMP_Transport *snmp, 
          oid[16] = (UINT32)_tcslen(serial);
          for(UINT32 i = 0; i < oid[16]; i++)
             oid[i + 17] = (UINT32)serial[i];
-         TCHAR rootOid[1024];
-         SNMPConvertOIDToText(oid[16] + 17, oid, rootOid, 1024);
-         SnmpWalk(snmp->getSnmpVersion(), snmp, rootOid, HandlerRadioList, ap, FALSE);
+         SnmpWalk(snmp, oid, oid[16] + 17, HandlerRadioList, ap);
       }
    }
    else
@@ -258,8 +256,8 @@ ObjectArray<AccessPointInfo> *NtwsDriver::getAccessPoints(SNMP_Transport *snmp, 
    }
 
    // Unadopted
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.45.6.1.4.15.1.2.1.2"),
-            HandlerAccessPointListUnadopted, apList, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.45.6.1.4.15.1.2.1.2"),
+                HandlerAccessPointListUnadopted, apList) != SNMP_ERR_SUCCESS)
    {
       delete apList;
       return NULL;
@@ -271,7 +269,7 @@ ObjectArray<AccessPointInfo> *NtwsDriver::getAccessPoints(SNMP_Transport *snmp, 
 /**
  * Handler for mobile units enumeration
  */
-static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    int ret = SNMP_ERR_SUCCESS;
 
@@ -286,26 +284,26 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
 
    UINT32 ipAddr;
    oid[14] = 6; // wsCcRfMuIpAddr
-   ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &ipAddr, sizeof(ipAddr), 0);
+   ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &ipAddr, sizeof(ipAddr), 0, NULL);
    UINT32 vlanInfex;
    if (ret == SNMP_ERR_SUCCESS)
    {
       oid[14] = 4; // wsCcRfMuVlanIndex
-      ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &vlanInfex, sizeof(vlanInfex), 0);
+      ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &vlanInfex, sizeof(vlanInfex), 0, NULL);
    }
 
    UINT32 wlanInfex;
    if (ret == SNMP_ERR_SUCCESS)
    {
       oid[14] = 2; // wsCcRfMuWlanIndex
-      ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &wlanInfex, sizeof(vlanInfex), 0);
+      ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &wlanInfex, sizeof(vlanInfex), 0, NULL);
    }
 
    UINT32 rfIndex;
    if (ret == SNMP_ERR_SUCCESS)
    {
       oid[14] = 3; // wsCcRfMuRadioIndex
-      ret = SnmpGet(version, transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &rfIndex, sizeof(rfIndex), 0);
+      ret = SnmpGetEx(transport, NULL, oid, sizeof(oid) / sizeof(oid[0]), &rfIndex, sizeof(rfIndex), 0, NULL);
    }
 
    TCHAR ssid[MAX_OBJECT_NAME];
@@ -314,7 +312,7 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
       UINT32 wlanOid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 14, 1, 1, 4, 0 };
       wlanOid[(sizeof(wlanOid) / sizeof(wlanOid[0])) - 1] = wlanInfex;
 
-      ret = SnmpGet(version, transport, NULL, wlanOid, sizeof(wlanOid) / sizeof(wlanOid[0]), ssid, sizeof(ssid), 0);
+      ret = SnmpGetEx(transport, NULL, wlanOid, sizeof(wlanOid) / sizeof(wlanOid[0]), ssid, sizeof(ssid), 0, NULL);
    }
 
    if (ret == SNMP_ERR_SUCCESS)
@@ -345,8 +343,8 @@ ObjectArray<WirelessStationInfo> *NtwsDriver::getWirelessStations(SNMP_Transport
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
 
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.12.3.1.1"), // wsCcRfMuMac
-            HandlerWirelessStationList, wsList, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.388.14.3.2.1.12.3.1.1"), // wsCcRfMuMac
+                HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
    {
       delete wsList;
       wsList = NULL;

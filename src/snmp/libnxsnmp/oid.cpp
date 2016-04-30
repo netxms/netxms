@@ -93,15 +93,24 @@ int SNMP_ObjectId::compare(const TCHAR *pszOid)
 }
 
 /**
- * Compare this OID to another
+ * Compare this OID to another. Possible return values are:
+ *    OID_EQUAL     both OIDs are equal
+ *    OID_SHORTER   this OID is shorter than given, but common parts are equal
+ *    OID_LONGER    this OID is longer than given, but common parts are equal
+ *    OID_PRECEDING this OID preceding given OID (less than given OID)
+ *    OID_FOLLOWING this OID following given OID (greater than given OID)
  */
 int SNMP_ObjectId::compare(const UINT32 *oid, size_t length)
 {
    if ((oid == NULL) || (length == 0) || (m_value == NULL))
       return OID_ERROR;
 
-   if (memcmp(m_value, oid, min(length, m_length) * sizeof(UINT32)))
-      return OID_NOT_EQUAL;
+   size_t stop = min(length, m_length);
+   for(size_t i = 0; i < stop; i++)
+   {
+      if (m_value[i] != oid[i])
+         return (m_value[i] < oid[i]) ? OID_PRECEDING : OID_FOLLOWING;
+   }
 
    return (length == m_length) ? OID_EQUAL : 
             ((length < m_length) ? OID_SHORTER : OID_LONGER);

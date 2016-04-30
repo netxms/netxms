@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -217,7 +217,7 @@ void ForwardingDatabase::sort()
 /**
  * FDB walker's callback
  */
-static UINT32 FDBHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
+static UINT32 FDBHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
    SNMP_ObjectId *pOid = pVar->getName();
 	size_t oidLen = pOid->getLength();
@@ -225,7 +225,7 @@ static UINT32 FDBHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
 	memcpy(oid, pOid->getValue(), oidLen * sizeof(UINT32));
 
 	// Get port number and status
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
+   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
 
 	oid[10] = 2;	// .1.3.6.1.2.1.17.4.3.1.2 - port number
 	pRqPDU->bindVariable(new SNMP_Variable(oid, oidLen));
@@ -268,7 +268,7 @@ static UINT32 FDBHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *
 /**
  * dot1qTpFdbEntry walker's callback
  */
-static UINT32 Dot1qTpFdbHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
+static UINT32 Dot1qTpFdbHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
 	int port = pVar->getValueAsInt();
 	if (port == 0)
@@ -280,7 +280,7 @@ static UINT32 Dot1qTpFdbHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Tran
 	memcpy(oid, pOid->getValue(), oidLen * sizeof(UINT32));
 
 	// Get port number and status
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
+   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
 
 	oid[12] = 3;	// .1.3.6.1.2.1.17.7.1.2.2.1.3 - status
 	pRqPDU->bindVariable(new SNMP_Variable(oid, oidLen));
@@ -315,7 +315,7 @@ static UINT32 Dot1qTpFdbHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Tran
 /**
  * dot1dBasePortTable walker's callback
  */
-static UINT32 Dot1dPortTableHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
+static UINT32 Dot1dPortTableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *arg)
 {
    SNMP_ObjectId *pOid = pVar->getName();
 	PORT_MAPPING_ENTRY pm;

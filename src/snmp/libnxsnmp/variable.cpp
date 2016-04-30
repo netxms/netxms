@@ -66,7 +66,7 @@ SNMP_Variable::SNMP_Variable(UINT32 *name, size_t nameLen)
 /**
  * Copy constructor
  */
-SNMP_Variable::SNMP_Variable(SNMP_Variable *src)
+SNMP_Variable::SNMP_Variable(const SNMP_Variable *src)
 {
    m_valueLength = src->m_valueLength;
    m_value = (src->m_value != NULL) ? (BYTE *)nx_memdup(src->m_value, src->m_valueLength) : NULL;
@@ -164,7 +164,7 @@ bool SNMP_Variable::parse(BYTE *data, size_t varLength)
  * Get raw value
  * Returns actual data length
  */
-size_t SNMP_Variable::getRawValue(BYTE *buffer, size_t bufSize)
+size_t SNMP_Variable::getRawValue(BYTE *buffer, size_t bufSize) const
 {
 	size_t len = min(bufSize, (size_t)m_valueLength);
    memcpy(buffer, m_value, len);
@@ -174,7 +174,7 @@ size_t SNMP_Variable::getRawValue(BYTE *buffer, size_t bufSize)
 /**
  * Get value as unsigned integer
  */
-UINT32 SNMP_Variable::getValueAsUInt()
+UINT32 SNMP_Variable::getValueAsUInt() const
 {
    UINT32 dwValue;
 
@@ -202,7 +202,7 @@ UINT32 SNMP_Variable::getValueAsUInt()
 /**
  * Get value as signed integer
  */
-LONG SNMP_Variable::getValueAsInt()
+LONG SNMP_Variable::getValueAsInt() const
 {
    LONG iValue;
 
@@ -231,7 +231,7 @@ LONG SNMP_Variable::getValueAsInt()
  * Get value as string
  * Note: buffer size is in characters
  */
-TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize)
+TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize) const
 {
    size_t length;
 
@@ -289,7 +289,7 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize)
  * Get value as printable string, doing bin to hex conversion if necessary
  * Note: buffer size is in characters
  */
-TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex)
+TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex) const
 {
    size_t length;
 	bool convertToHexAllowed = *convertToHex;
@@ -361,9 +361,9 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
 }
 
 /**
- * Get value as object id
+ * Get value as object id. Returned object must be destroyed by caller
  */
-SNMP_ObjectId *SNMP_Variable::getValueAsObjectId()
+SNMP_ObjectId *SNMP_Variable::getValueAsObjectId() const
 {
    SNMP_ObjectId *oid = NULL;
 
@@ -377,7 +377,7 @@ SNMP_ObjectId *SNMP_Variable::getValueAsObjectId()
 /**
  * Get value as MAC address
  */
-TCHAR *SNMP_Variable::getValueAsMACAddr(TCHAR *buffer)
+TCHAR *SNMP_Variable::getValueAsMACAddr(TCHAR *buffer) const
 {
    int i;
    TCHAR *pszPos;
@@ -399,7 +399,7 @@ TCHAR *SNMP_Variable::getValueAsMACAddr(TCHAR *buffer)
 /**
  * Get value as IP address
  */
-TCHAR *SNMP_Variable::getValueAsIPAddr(TCHAR *buffer)
+TCHAR *SNMP_Variable::getValueAsIPAddr(TCHAR *buffer) const
 {
    // Ignore type and check only length
    if (m_valueLength >= 4)

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -156,7 +156,7 @@ void NetworkDeviceDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, 
 /**
  * Handler for enumerating indexes
  */
-static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
 	((InterfaceList *)pArg)->add(new InterfaceInfo(pVar->getValueAsUInt()));
    return SNMP_ERR_SUCCESS;
@@ -165,7 +165,7 @@ static UINT32 HandlerIndex(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport
 /**
  * Handler for enumerating indexes via ifXTable
  */
-static UINT32 HandlerIndexIfXTable(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerIndexIfXTable(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    SNMP_ObjectId *name = pVar->getName();
    UINT32 index = name->getValue()[name->getLength() - 1];
@@ -179,7 +179,7 @@ static UINT32 HandlerIndexIfXTable(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_T
 /**
  * Handler for enumerating IP addresses via ipAddrTable
  */
-static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerIpAddr(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    UINT32 index, dwNetMask, dwResult;
    UINT32 oidName[MAX_OID_LEN];
@@ -187,7 +187,7 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
    size_t nameLen = pVar->getName()->getLength();
    memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
    oidName[nameLen - 5] = 3;  // Retrieve network mask for this IP
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &dwNetMask, sizeof(UINT32), 0);
+   dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &dwNetMask, sizeof(UINT32), 0, NULL);
    if (dwResult != SNMP_ERR_SUCCESS)
 	{
 		TCHAR buffer[1024];
@@ -200,7 +200,7 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
 	}
 
    oidName[nameLen - 5] = 2;  // Retrieve interface index for this IP
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, &index, sizeof(UINT32), 0);
+   dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &index, sizeof(UINT32), 0, NULL);
    if (dwResult == SNMP_ERR_SUCCESS)
    {
 		InterfaceList *ifList = (InterfaceList *)pArg;
@@ -223,7 +223,7 @@ static UINT32 HandlerIpAddr(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transpor
 /**
  * Handler for enumerating IP addresses via ipAddressTable
  */
-static UINT32 HandlerIpAddressTable(UINT32 version, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static UINT32 HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    InterfaceList *ifList = (InterfaceList *)arg;
 
@@ -289,7 +289,7 @@ static UINT32 HandlerIpAddressTable(UINT32 version, SNMP_Variable *var, SNMP_Tra
 /**
  * Handler for enumerating IP address prefixes via ipAddressPrefixTable
  */
-static UINT32 HandlerIpAddressPrefixTable(UINT32 version, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static UINT32 HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    InterfaceList *ifList = (InterfaceList *)arg;
    const UINT32 *oid = var->getName()->getValue();
@@ -365,10 +365,10 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
    pIfList = new InterfaceList(iNumIf);
 
    // Gather interface indexes
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.2.2.1.1"), HandlerIndex, pIfList, FALSE) == SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.2.2.1.1"), HandlerIndex, pIfList) == SNMP_ERR_SUCCESS)
    {
       // Gather additional interfaces from ifXTable
-      SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.31.1.1.1.1"), HandlerIndexIfXTable, pIfList, FALSE);
+      SnmpWalk(snmp, _T(".1.3.6.1.2.1.31.1.1.1.1"), HandlerIndexIfXTable, pIfList);
 
       // Enumerate interfaces
 		for(i = 0; i < pIfList->size(); i++)
@@ -506,7 +506,7 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
       }
 
       // Interface IP address'es and netmasks
-		error = SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, pIfList, FALSE);
+		error = SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.20.1.1"), HandlerIpAddr, pIfList);
       if (error == SNMP_ERR_SUCCESS)
       {
          bSuccess = TRUE;
@@ -517,10 +517,10 @@ InterfaceList *NetworkDeviceDriver::getInterfaces(SNMP_Transport *snmp, StringMa
 		}
 
       // Get IP addresses from ipAddressTable if available
-		SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.4.34.1.3"), HandlerIpAddressTable, pIfList, FALSE);
+		SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.34.1.3"), HandlerIpAddressTable, pIfList);
       if (pIfList->isPrefixWalkNeeded())
       {
-   		SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.4.32.1.5"), HandlerIpAddressPrefixTable, pIfList, FALSE);
+   		SnmpWalk(snmp, _T(".1.3.6.1.2.1.4.32.1.5"), HandlerIpAddressPrefixTable, pIfList);
       }
    }
 	else
@@ -601,7 +601,7 @@ void NetworkDeviceDriver::getInterfaceState(SNMP_Transport *snmp, StringMap *att
 /**
  * Handler for VLAN enumeration
  */
-static UINT32 HandlerVlanList(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
 
@@ -653,7 +653,7 @@ static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int off
 /**
  * Handler for VLAN egress port enumeration
  */
-static UINT32 HandlerVlanEgressPorts(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
 	UINT32 vlanId = var->getName()->getValue()[var->getName()->getLength() - 1];
@@ -684,18 +684,18 @@ VlanList *NetworkDeviceDriver::getVlans(SNMP_Transport *snmp, StringMap *attribu
 	VlanList *list = new VlanList();
 	
    // dot1qVlanStaticName
-	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.1"), HandlerVlanList, list) != SNMP_ERR_SUCCESS)
 		goto failure;
 
    // dot1qVlanCurrentEgressPorts
-	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.17.7.1.4.2.1.4"), HandlerVlanEgressPorts, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.2.1.4"), HandlerVlanEgressPorts, list) != SNMP_ERR_SUCCESS)
 		goto failure;
 
    if (list->getData() == NULL)
    {
       // Some devices does not return anything under dot1qVlanCurrentEgressPorts.
       // In that case we use dot1qVlanStaticEgressPorts
-	   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.2"), HandlerVlanEgressPorts, list, FALSE) != SNMP_ERR_SUCCESS)
+	   if (SnmpWalk(snmp, _T(".1.3.6.1.2.1.17.7.1.4.3.1.2"), HandlerVlanEgressPorts, list) != SNMP_ERR_SUCCESS)
 		   goto failure;
    }
 

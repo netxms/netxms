@@ -25,7 +25,7 @@
 /**
  * Handler for walking local port table
  */
-static UINT32 PortLocalInfoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	LLDP_LOCAL_PORT_INFO *port = new LLDP_LOCAL_PORT_INFO;
    port->portNumber = var->getName()->getValue()[11];
@@ -34,7 +34,7 @@ static UINT32 PortLocalInfoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_
 	SNMP_ObjectId *oid = var->getName();
 	UINT32 newOid[128];
 	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(UINT32));
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmpVersion);
+   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
 
 	newOid[oid->getLength() - 2] = 4;	// lldpLocPortDescr
 	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
@@ -69,7 +69,7 @@ static UINT32 PortLocalInfoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_
 ObjectArray<LLDP_LOCAL_PORT_INFO> *GetLLDPLocalPortInfo(SNMP_Transport *snmp)
 {
 	ObjectArray<LLDP_LOCAL_PORT_INFO> *ports = new ObjectArray<LLDP_LOCAL_PORT_INFO>(64, 64, true);
-	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.0.8802.1.1.2.1.3.7.1.3"), PortLocalInfoHandler, ports, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.0.8802.1.1.2.1.3.7.1.3"), PortLocalInfoHandler, ports) != SNMP_ERR_SUCCESS)
 	{
 		delete ports;
 		return NULL;
@@ -272,7 +272,7 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
 /**
  * Topology table walker's callback for LLDP topology table
  */
-static UINT32 LLDPTopoHandler(UINT32 snmpVersion, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 LLDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    ((StringObjectMap<SNMP_Variable> *)arg)->set(var->getName()->getValueAsText(), new SNMP_Variable(var));
    return SNMP_ERR_SUCCESS;

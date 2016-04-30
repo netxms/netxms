@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Netscreen firewalls
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -84,7 +84,7 @@ void NetscreenDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Stri
 /**
  * Handler for interface enumeration
  */
-static UINT32 HandlerIfList(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Transport *transport, void *arg)
+static UINT32 HandlerIfList(SNMP_Variable *varbind, SNMP_Transport *transport, void *arg)
 {
 	InterfaceList *ifList = (InterfaceList *)arg;
 
@@ -95,7 +95,7 @@ static UINT32 HandlerIfList(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Tra
 	InterfaceInfo *iface = new InterfaceInfo(varbind->getValueAsUInt());
 
 	oidName[10] = 2;	// nsIfName
-	UINT32 rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface->name, MAX_DB_STRING * sizeof(TCHAR), SG_STRING_RESULT);
+	UINT32 rc = SnmpGetEx(transport, NULL, oidName, nameLen, iface->name, MAX_DB_STRING * sizeof(TCHAR), SG_STRING_RESULT, NULL);
 	if (rc != SNMP_ERR_SUCCESS)
    {
       delete iface;
@@ -104,7 +104,7 @@ static UINT32 HandlerIfList(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Tra
 	nx_strncpy(iface->description, iface->name, MAX_DB_STRING);
 
 	oidName[10] = 11;	// nsIfMAC
-	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, iface->macAddr, 6, SG_RAW_RESULT);
+	rc = SnmpGetEx(transport, NULL, oidName, nameLen, iface->macAddr, 6, SG_RAW_RESULT, NULL);
 	if (rc != SNMP_ERR_SUCCESS)
    {
       delete iface;
@@ -113,7 +113,7 @@ static UINT32 HandlerIfList(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Tra
 
 	oidName[10] = 6;	// nsIfIp
    UINT32 ipAddr;
-	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &ipAddr, sizeof(UINT32), 0);
+	rc = SnmpGetEx(transport, NULL, oidName, nameLen, &ipAddr, sizeof(UINT32), 0, NULL);
 	if (rc != SNMP_ERR_SUCCESS)
    {
       delete iface;
@@ -122,7 +122,7 @@ static UINT32 HandlerIfList(UINT32 snmpVersion, SNMP_Variable *varbind, SNMP_Tra
 
 	oidName[10] = 7;	// nsIfNetmask
    UINT32 ipNetMask;
-	rc = SnmpGet(snmpVersion, transport, NULL, oidName, nameLen, &ipNetMask, sizeof(UINT32), 0);
+	rc = SnmpGetEx(transport, NULL, oidName, nameLen, &ipNetMask, sizeof(UINT32), 0, NULL);
 	if (rc != SNMP_ERR_SUCCESS)
    {
       delete iface;
@@ -148,7 +148,7 @@ InterfaceList *NetscreenDriver::getInterfaces(SNMP_Transport *snmp, StringMap *a
 		return NULL;
 
 	InterfaceList *ifList = new InterfaceList;
-	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.3224.9.1.1.1"), HandlerIfList, ifList, FALSE) == SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.3224.9.1.1.1"), HandlerIfList, ifList) == SNMP_ERR_SUCCESS)
 	{
 		// Fix interface indexes
 		for(int i = 0; i < ifList->size(); i++)

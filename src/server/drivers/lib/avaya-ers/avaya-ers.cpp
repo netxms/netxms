@@ -38,7 +38,7 @@ UINT32 AvayaERSDriver::getSlotSize(StringMap *attributes)
 /**
  * Handler for VLAN enumeration on Avaya ERS
  */
-static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 HandlerVlanList(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    UINT32 oidName[MAX_OID_LEN], dwResult;
    VlanList *vlanList = (VlanList *)pArg;
@@ -50,7 +50,7 @@ static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transp
    memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
    oidName[nameLen - 2] = 2;
    TCHAR buffer[256];
-	dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, buffer, sizeof(buffer), SG_STRING_RESULT);
+	dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, buffer, sizeof(buffer), SG_STRING_RESULT, NULL);
    if (dwResult != SNMP_ERR_SUCCESS)
 	{
 		delete vlan;
@@ -71,7 +71,7 @@ static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transp
    oidName[nameLen - 2] = 12;
 	BYTE portMask[256];
 	memset(portMask, 0, sizeof(portMask));
-   dwResult = SnmpGet(dwVersion, pTransport, NULL, oidName, nameLen, portMask, sizeof(portMask), SG_RAW_RESULT);
+   dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, portMask, sizeof(portMask), SG_RAW_RESULT, NULL);
    if (dwResult != SNMP_ERR_SUCCESS)
 	{
 		delete vlan;
@@ -103,7 +103,7 @@ static UINT32 HandlerVlanList(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transp
 VlanList *AvayaERSDriver::getVlans(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
 	VlanList *list = new VlanList();
-	if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
+	if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.2272.1.3.2.1.1"), HandlerVlanList, list, FALSE) != SNMP_ERR_SUCCESS)
 	{
 		delete_and_null(list);
 	}

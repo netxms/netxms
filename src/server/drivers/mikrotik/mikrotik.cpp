@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Mikrotik routers
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -98,7 +98,7 @@ InterfaceList *MikrotikDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 /**
  * SNMP walker callback which just counts number of varbinds
  */
-static UINT32 CountingSnmpWalkerCallback(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 CountingSnmpWalkerCallback(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	(*((int *)arg))++;
 	return SNMP_ERR_SUCCESS;
@@ -114,7 +114,7 @@ static UINT32 CountingSnmpWalkerCallback(UINT32 version, SNMP_Variable *var, SNM
 bool MikrotikDriver::isWirelessController(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    int count = 0;
-   SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"), CountingSnmpWalkerCallback, &count, FALSE);
+   SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"), CountingSnmpWalkerCallback, &count);
    return count > 0;
 }
 
@@ -126,7 +126,7 @@ static int s_frequencyMap[14] = { 2412, 2417, 2422, 2427, 2432, 2437, 2442, 2447
 /**
  * Handler for access point enumeration - adopted
  */
-static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
@@ -204,8 +204,8 @@ static UINT32 HandlerAccessPointList(UINT32 version, SNMP_Variable *var, SNMP_Tr
 ObjectArray<AccessPointInfo> *MikrotikDriver::getAccessPoints(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<AccessPointInfo> *apList = new ObjectArray<AccessPointInfo>(0, 16, true);
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"),
-            HandlerAccessPointList, apList, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.3.1.4"),
+                HandlerAccessPointList, apList) != SNMP_ERR_SUCCESS)
    {
       delete apList;
       return NULL;
@@ -233,7 +233,7 @@ AccessPointState MikrotikDriver::getAccessPointState(SNMP_Transport *snmp, Strin
 /**
  * Handler for mobile units enumeration
  */
-static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
+static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
 
@@ -269,8 +269,8 @@ static UINT32 HandlerWirelessStationList(UINT32 version, SNMP_Variable *var, SNM
 ObjectArray<WirelessStationInfo> *MikrotikDriver::getWirelessStations(SNMP_Transport *snmp, StringMap *attributes, DriverData *driverData)
 {
    ObjectArray<WirelessStationInfo> *wsList = new ObjectArray<WirelessStationInfo>(0, 16, true);
-   if (SnmpWalk(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.14988.1.1.1.2.1.1"), // mtxrWlRtabAddr
-            HandlerWirelessStationList, wsList, FALSE) != SNMP_ERR_SUCCESS)
+   if (SnmpWalk(snmp, _T(".1.3.6.1.4.1.14988.1.1.1.2.1.1"), // mtxrWlRtabAddr
+                HandlerWirelessStationList, wsList) != SNMP_ERR_SUCCESS)
    {
       delete wsList;
       wsList = NULL;

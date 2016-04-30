@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -344,7 +344,7 @@ static void AddSNMPResult(Table *table, int column, SNMP_Variable *pVar, LONG nF
 /**
  * Handler for SNMP table enumeration
  */
-static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
+static UINT32 TableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
    TCHAR szOid[MAX_OID_LEN * 4], szSuffix[MAX_OID_LEN * 4];
    SNMP_PDU *pRqPDU, *pRespPDU;
@@ -367,7 +367,7 @@ static UINT32 TableHandler(UINT32 dwVersion, SNMP_Variable *pVar, SNMP_Transport
    }
 
    // Get values for other columns
-   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), dwVersion);
+   pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), pTransport->getSnmpVersion());
    for(i = 1; i < ((SNMP_ENUM_ARGS *)pArg)->dwNumCols; i++)
    {
       _tcscpy(szOid, ((SNMP_ENUM_ARGS *)pArg)->ppszOidList[i]);
