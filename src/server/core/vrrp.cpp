@@ -69,7 +69,7 @@ void VrrpRouter::addVirtualIP(SNMP_Variable *var)
 		return;	// Ignore non-active VIPs
 
 	// IP is encoded in last 4 elements of the OID
-	const UINT32 *oid = var->getName()->getValue();
+	const UINT32 *oid = var->getName().value();
 	UINT32 vip = (oid[13] << 24) | (oid[14] << 16) | (oid[15] << 8) | oid[16];
 
 	if (m_ipAddrCount % 16 == 0)
@@ -101,15 +101,15 @@ bool VrrpRouter::readVirtualIP(SNMP_Transport *transport)
  */
 UINT32 VRRPHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
-	SNMP_ObjectId *oid = var->getName();
+	const SNMP_ObjectId& oid = var->getName();
 
 	// Entries indexed by ifIndex and VRID
-	UINT32 ifIndex = oid->getValue()[11];
-	UINT32 vrid = oid->getValue()[12];
+	UINT32 ifIndex = oid.value()[11];
+	UINT32 vrid = oid.value()[12];
 	int state = var->getValueAsInt();
 
 	UINT32 oidMac[64];
-	memcpy(oidMac, oid->getValue(), oid->getLength() * sizeof(UINT32));
+	memcpy(oidMac, oid.value(), oid.length() * sizeof(UINT32));
 	oidMac[10] = 2;	// .1.3.6.1.2.1.68.1.3.1.2.ifIndex.vrid = virtual MAC
 	BYTE macAddr[MAC_ADDR_LENGTH];
 	if (SnmpGetEx(transport, NULL, oidMac, 13, &macAddr, MAC_ADDR_LENGTH, SG_RAW_RESULT, NULL) == SNMP_ERR_SUCCESS)

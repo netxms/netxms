@@ -90,9 +90,9 @@ static UINT32 HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, voi
 	InterfaceInfo *iface = ifList->findByIfIndex(var->getValueAsUInt());
 	if (iface != NULL)
 	{
-		size_t nameLen = var->getName()->getLength();
-		iface->slot = var->getName()->getValue()[nameLen - 2];
-		iface->port = var->getName()->getValue()[nameLen - 1];
+		size_t nameLen = var->getName().length();
+		iface->slot = var->getName().getElement(nameLen - 2);
+		iface->port = var->getName().getElement(nameLen - 1);
 		iface->isPhysicalPort = true;
 	}
 	return SNMP_ERR_SUCCESS;

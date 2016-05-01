@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpwalk - command line tool used to retrieve parameters from SNMP agent
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,19 +40,24 @@ static UINT32 m_snmpVersion = SNMP_VERSION_2C;
 static UINT32 m_timeout = 3000;
 
 /**
+ * Walk callback
+ */
+static UINT32 WalkCallback(SNMP_Variable *var, SNMP_Transport *transport, void *userArg)
+{
+   TCHAR buffer[1024], typeName[256];
+   bool convert = true;
+   var->getValueAsPrintableString(buffer, 1024, &convert);
+   _tprintf(_T("%s [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
+            convert ? _T("Hex-STRING") : SNMPDataTypeName(var->getType(), typeName, 256),
+            buffer);
+   return SNMP_ERR_SUCCESS;
+}
+
+/**
  * Get data
  */
-int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
+static int DoWalk(TCHAR *pszHost, TCHAR *pszRootOid)
 {
-   SNMP_UDPTransport *pTransport;
-   SNMP_PDU *pRqPDU, *pRespPDU;
-   UINT32 dwResult;
-   size_t dwRootLen, dwNameLen;
-   UINT32 pdwRootName[MAX_OID_LEN], pdwName[MAX_OID_LEN];
-   TCHAR szBuffer[1024], typeName[256];
-   int iExit = 0;
-   BOOL bRunning = TRUE;
-
    // Initialize WinSock
 #ifdef _WIN32
    WSADATA wsaData;
@@ -60,110 +65,35 @@ int GetData(TCHAR *pszHost, TCHAR *pszRootOid)
 #endif
 
    // Create SNMP transport
-   pTransport = new SNMP_UDPTransport;
-   dwResult = pTransport->createUDPTransport(pszHost, m_port);
+   SNMP_UDPTransport *transport = new SNMP_UDPTransport();
+   UINT32 dwResult = transport->createUDPTransport(pszHost, m_port);
    if (dwResult != SNMP_ERR_SUCCESS)
    {
       _tprintf(_T("Unable to create UDP transport: %s\n"), SNMPGetErrorText(dwResult));
-      iExit = 2;
+      return 2;
+   }
+
+   if (m_snmpVersion == SNMP_VERSION_3)
+   {
+      SNMP_SecurityContext *context = new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod);
+      if (m_contextName[0] != 0)
+         context->setContextNameA(m_contextName);
+      transport->setSecurityContext(context);
    }
    else
    {
-		if (m_snmpVersion == SNMP_VERSION_3)
-		{
-			SNMP_SecurityContext *context = new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod);
-			if (m_contextName[0] != 0)
-				context->setContextNameA(m_contextName);
-			pTransport->setSecurityContext(context);
-		}
-		else
-		{
-			pTransport->setSecurityContext(new SNMP_SecurityContext(m_community));
-		}
-
-      // Get root
-      dwRootLen = SNMPParseOID(pszRootOid, pdwRootName, MAX_OID_LEN);
-      if (dwRootLen == 0)
-      {
-         dwResult = SNMP_ERR_BAD_OID;
-      }
-      else
-      {
-         memcpy(pdwName, pdwRootName, dwRootLen * sizeof(UINT32));
-         dwNameLen = dwRootLen;
-
-         // Walk the MIB
-         UINT32 requestId = 1;
-         while(bRunning)
-         {
-				pRqPDU = new SNMP_PDU(SNMP_GET_NEXT_REQUEST, requestId++, m_snmpVersion);
-            pRqPDU->bindVariable(new SNMP_Variable(pdwName, dwNameLen));
-            dwResult = pTransport->doRequest(pRqPDU, &pRespPDU, m_timeout, 3);
-
-            // Analyze response
-            if (dwResult == SNMP_ERR_SUCCESS)
-            {
-               if ((pRespPDU->getNumVariables() > 0) &&
-                   (pRespPDU->getErrorCode() == 0))
-               {
-                  SNMP_Variable *pVar = pRespPDU->getVariable(0);
-
-                  if ((pVar->getType() != ASN_NO_SUCH_OBJECT) &&
-                      (pVar->getType() != ASN_NO_SUCH_INSTANCE))
-                  {
-                     // Should we stop walking?
-                     if ((pVar->getName()->getLength() < dwRootLen) ||
-                         (memcmp(pdwRootName, pVar->getName()->getValue(), dwRootLen * sizeof(UINT32))) ||
-                         ((pVar->getName()->getLength() == dwNameLen) &&
-                          (!memcmp(pVar->getName()->getValue(), pdwName, pVar->getName()->getLength() * sizeof(UINT32)))))
-                     {
-                        bRunning = FALSE;
-                        delete pRespPDU;
-                        delete pRqPDU;
-                        break;
-                     }
-                     memcpy(pdwName, pVar->getName()->getValue(), 
-                            pVar->getName()->getLength() * sizeof(UINT32));
-                     dwNameLen = pVar->getName()->getLength();
-
-                     // Print OID and value
-							bool convert = true;
-							pVar->getValueAsPrintableString(szBuffer, 1024, &convert);
-							_tprintf(_T("%s [%s]: %s\n"), pVar->getName()->getValueAsText(),
-										convert ? _T("Hex-STRING") : SNMPDataTypeName(pVar->getType(), typeName, 256),
-										szBuffer);
-                  }
-                  else
-                  {
-                     // Consider no object/no instance as end of walk signal instead of failure
-                     bRunning = FALSE;
-                  }
-               }
-               else
-               {
-                  // Some SNMP agents sends NO_SUCH_NAME PDU error after last element in MIB
-                  if (pRespPDU->getErrorCode() != SNMP_PDU_ERR_NO_SUCH_NAME)
-                     dwResult = SNMP_ERR_AGENT;
-                  bRunning = FALSE;
-               }
-               delete pRespPDU;
-            }
-            else
-            {
-               bRunning = FALSE;
-            }
-            delete pRqPDU;
-         }
-      }
-
-      if (dwResult != SNMP_ERR_SUCCESS)
-      {
-         _tprintf(_T("SNMP Error: %s\n"), SNMPGetErrorText(dwResult));
-         iExit = 3;
-      }
+      transport->setSecurityContext(new SNMP_SecurityContext(m_community));
    }
 
-   delete pTransport;
+   int iExit = 0;
+   dwResult = SnmpWalk(transport, pszRootOid, WalkCallback, NULL);
+   if (dwResult != SNMP_ERR_SUCCESS)
+   {
+      _tprintf(_T("SNMP Error: %s\n"), SNMPGetErrorText(dwResult));
+      iExit = 3;
+   }
+
+   delete transport;
    return iExit;
 }
 
@@ -331,13 +261,13 @@ int main(int argc, char *argv[])
       else
       {
 #ifdef UNICODE
-			WCHAR *host = WideStringFromMBString(argv[optind]);
-			WCHAR *rootOid = WideStringFromMBString(argv[optind + 1]);
-         iExit = GetData(host, rootOid);
+			WCHAR *host = WideStringFromMBStringSysLocale(argv[optind]);
+			WCHAR *rootOid = WideStringFromMBStringSysLocale(argv[optind + 1]);
+         iExit = DoWalk(host, rootOid);
 			free(host);
 			free(rootOid);
 #else
-         iExit = GetData(argv[optind], argv[optind + 1]);
+         iExit = DoWalk(argv[optind], argv[optind + 1]);
 #endif
       }
    }

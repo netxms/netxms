@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -168,14 +168,14 @@ void InitTraps()
 static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, int sourcePort)
 {
    TCHAR *argList[32], szBuffer[256];
-   const TCHAR *names[33];
+   TCHAR names[33][512];
    char szFormat[] = "sssssssssssssssssssssssssssssssss";
    UINT32 i;
    int iResult;
 
    memset(argList, 0, sizeof(argList));
    memset(names, 0, sizeof(names));
-   names[0] = _T("oid");
+   _tcscpy(names[0], _T("oid"));
 
 	// Extract varbinds from trap and add them as event's parameters
    for(i = 0; i < m_pTrapCfg[dwIndex].dwNumMaps; i++)
@@ -191,7 +191,7 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
                (s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ?
                   varbind->getValueAsPrintableString(szBuffer, 256, &convertToHex) :
                   varbind->getValueAsString(szBuffer, 256));
-            names[i + 1] = varbind->getName()->getValueAsText();
+            varbind->getName().toString(names[i + 1], 512);
          }
       }
       else
@@ -200,17 +200,17 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
          for(int j = 0; j < pdu->getNumVariables(); j++)
          {
             SNMP_Variable *varbind = pdu->getVariable(j);
-            iResult = varbind->getName()->compare(
+            iResult = varbind->getName().compare(
                   m_pTrapCfg[dwIndex].pMaps[i].pdwObjectId,
                   m_pTrapCfg[dwIndex].pMaps[i].dwOidLen);
-            if ((iResult == OID_EQUAL) || (iResult == OID_SHORTER))
+            if ((iResult == OID_EQUAL) || (iResult == OID_LONGER))
             {
 					bool convertToHex = true;
 					argList[i] = _tcsdup(
                   (s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ?
                      varbind->getValueAsPrintableString(szBuffer, 256, &convertToHex) :
                      varbind->getValueAsString(szBuffer, 256));
-               names[i] = varbind->getName()->getValueAsText();
+	            varbind->getName().toString(names[i + 1], 512);
                break;
             }
          }
@@ -219,12 +219,12 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
 
    argList[m_pTrapCfg[dwIndex].dwNumMaps] = (TCHAR *)malloc(16 * sizeof(TCHAR));
    _sntprintf(argList[m_pTrapCfg[dwIndex].dwNumMaps], 16, _T("%d"), sourcePort);
-   names[m_pTrapCfg[dwIndex].dwNumMaps + 1] = _T("sourcePort");
+   _tcscpy(names[m_pTrapCfg[dwIndex].dwNumMaps + 1], _T("sourcePort"));
    szFormat[m_pTrapCfg[dwIndex].dwNumMaps + 2] = 0;
    PostEventWithTagAndNames(
       m_pTrapCfg[dwIndex].dwEventCode, dwObjectId,
-	   m_pTrapCfg[dwIndex].szUserTag, szFormat, names,
-      pdu->getTrapId()->getValueAsText(),
+	   m_pTrapCfg[dwIndex].szUserTag, szFormat, (const TCHAR **)names,
+      (const TCHAR *)pdu->getTrapId()->toString(),
       argList[0], argList[1], argList[2], argList[3],
       argList[4], argList[5], argList[6], argList[7],
       argList[8], argList[9], argList[10], argList[11],
@@ -259,7 +259,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
    int iResult;
 
    DbgPrintf(4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
-             pdu->getTrapId()->getValueAsText(), srcAddr.toString(szBuffer));
+             pdu->getTrapId()->toString(&szBuffer[96], 4000), srcAddr.toString(szBuffer));
 	if (isInformRq)
 	{
 		SNMP_PDU *response = new SNMP_PDU(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
@@ -280,7 +280,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
    if (m_bLogAllTraps || (pNode != NULL))
    {
       NXCPMessage msg;
-      TCHAR szQuery[8192];
+      TCHAR szQuery[8192], oidText[1024];
       UINT32 dwTimeStamp = (UINT32)time(NULL);
 
       dwBufSize = pdu->getNumVariables() * 4096 + 16;
@@ -293,7 +293,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 			bool convertToHex = true;
          dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
                                 (dwBufPos == 0) ? _T("") : _T("; "),
-                                pVar->getName()->getValueAsText(),
+                                pVar->getName().toString(oidText, 1024),
 										  s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 3000, &convertToHex) : pVar->getValueAsString(szBuffer, 3000));
       }
 
@@ -302,7 +302,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
                                 _T("ip_addr,object_id,trap_oid,trap_varlist) VALUES ")
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,'%s',%s)"),
                  m_qnTrapId, dwTimeStamp, srcAddr.toString(szBuffer),
-                 (pNode != NULL) ? pNode->getId() : (UINT32)0, pdu->getTrapId()->getValueAsText(),
+                 (pNode != NULL) ? pNode->getId() : (UINT32)0, pdu->getTrapId()->toString(oidText, 1024),
                  (const TCHAR *)DBPrepareString(g_dbDriver, pszTrapArgs));
       QueueSQLRequest(szQuery);
 
@@ -314,7 +314,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
       msg.setField(VID_TRAP_LOG_MSG_BASE + 1, dwTimeStamp);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 2, srcAddr);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 3, (pNode != NULL) ? pNode->getId() : (UINT32)0);
-      msg.setField(VID_TRAP_LOG_MSG_BASE + 4, (TCHAR *)pdu->getTrapId()->getValueAsText());
+      msg.setField(VID_TRAP_LOG_MSG_BASE + 4, pdu->getTrapId()->toString(oidText, 1024));
       msg.setField(VID_TRAP_LOG_MSG_BASE + 5, pszTrapArgs);
       EnumerateClientSessions(BroadcastNewTrap, &msg);
       free(pszTrapArgs);
@@ -361,7 +361,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
                   dwMatchIdx = i;
                   break;   // Find exact match
                }
-               else if (iResult == OID_SHORTER)
+               else if (iResult == OID_LONGER)
                {
                   if (m_pTrapCfg[i].dwOidLen > dwMatchLen)
                   {
@@ -381,6 +381,8 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
             // Handle unprocessed traps
             if (!processed)
             {
+               TCHAR oidText[1024];
+
                // Build trap's parameters string
                dwBufSize = pdu->getNumVariables() * 4096 + 16;
                pszTrapArgs = (TCHAR *)malloc(sizeof(TCHAR) * dwBufSize);
@@ -391,14 +393,14 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 					   bool convertToHex = true;
                   dwBufPos += _sntprintf(&pszTrapArgs[dwBufPos], dwBufSize - dwBufPos, _T("%s%s == '%s'"),
                                          (dwBufPos == 0) ? _T("") : _T("; "),
-                                         pVar->getName()->getValueAsText(),
+                                         pVar->getName().toString(oidText, 1024),
 												     s_allowVarbindConversion ? pVar->getValueAsPrintableString(szBuffer, 512, &convertToHex) : pVar->getValueAsString(szBuffer, 512));
                }
 
                // Generate default event for unmatched traps
                const TCHAR *names[3] = { _T("oid"), NULL, _T("sourcePort") };
                PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, pNode->getId(), "ssd", names,
-                  pdu->getTrapId()->getValueAsText(), pszTrapArgs, srcPort);
+                  pdu->getTrapId()->toString(oidText, 1024), pszTrapArgs, srcPort);
                free(pszTrapArgs);
             }
          }
@@ -683,7 +685,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 			   }
 			   else if (pdu->getCommand() == SNMP_REPORT)
 			   {
-				   DbgPrintf(6, _T("SNMPTrapReceiver: REPORT PDU with error %s"), pdu->getVariable(0)->getName()->getValueAsText());
+				   DbgPrintf(6, _T("SNMPTrapReceiver: REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
 			   }
             delete pdu;
          }

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -121,7 +121,7 @@ SNMP_PDU::SNMP_PDU(SNMP_PDU *src) : m_authoritativeEngine(&src->m_authoritativeE
    m_variables = new ObjectArray<SNMP_Variable>(src->m_variables->size(), 16, true);
    for(int i = 0; i < src->m_variables->size(); i++)
       m_variables->add(new SNMP_Variable(src->m_variables->get(i)));
-   m_pEnterprise = (src->m_pEnterprise != NULL) ? new SNMP_ObjectId(src->m_pEnterprise) : NULL;
+   m_pEnterprise = (src->m_pEnterprise != NULL) ? new SNMP_ObjectId(*src->m_pEnterprise) : NULL;
    m_dwErrorCode = src->m_dwErrorCode;
    m_dwErrorIndex = src->m_dwErrorIndex;
    m_dwRqId = src->m_dwRqId;
@@ -285,7 +285,7 @@ bool SNMP_PDU::parseTrapPDU(BYTE *pData, size_t pduLength)
          memset(oid, 0, sizeof(SNMP_OID));
          if (BER_DecodeContent(dwType, pbCurrPos, dwLength, (BYTE *)oid))
          {
-            m_pEnterprise = new SNMP_ObjectId(oid->length, oid->value);
+            m_pEnterprise = new SNMP_ObjectId(oid->value, oid->length);
             pduLength -= dwLength + idLength;
             pbCurrPos += dwLength;
 
@@ -409,7 +409,7 @@ bool SNMP_PDU::parseTrap2PDU(BYTE *pData, size_t pduLength)
          SNMP_Variable *var = m_variables->get(1);
          if (var->getType() == ASN_OBJECT_ID)
          {
-            m_pEnterprise = new SNMP_ObjectId(var->getValueLength() / sizeof(UINT32), (UINT32 *)var->getValue());
+            m_pEnterprise = new SNMP_ObjectId((UINT32 *)var->getValue(), var->getValueLength() / sizeof(UINT32));
             bResult = true;
          }
       }
@@ -417,16 +417,16 @@ bool SNMP_PDU::parseTrap2PDU(BYTE *pData, size_t pduLength)
       // Set V1 trap type and specific trap type fields
       if (bResult)
       {
-         if ((m_pEnterprise->compare(pdwStdTrapPrefix, 9) == OID_SHORTER) &&
-             (m_pEnterprise->getLength() == 10))
+         if ((m_pEnterprise->compare(pdwStdTrapPrefix, 9) == OID_LONGER) &&
+             (m_pEnterprise->length() == 10))
          {
-            m_trapType = m_pEnterprise->getValue()[9];
+            m_trapType = m_pEnterprise->value()[9];
             m_specificTrap = 0;
          }
          else
          {
             m_trapType = 6;
-            m_specificTrap = m_pEnterprise->getValue()[m_pEnterprise->getLength() - 1];
+            m_specificTrap = m_pEnterprise->value()[m_pEnterprise->length() - 1];
          }
       }
    }
@@ -942,7 +942,7 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
    for(dwBufferSize = 1024, i = 0; i < m_variables->size(); i++)
    {
       SNMP_Variable *var = m_variables->get(i);
-      dwBufferSize += var->getValueLength() + var->getName()->getLength() * 4 + 16;
+      dwBufferSize += var->getValueLength() + var->getName().length() * 4 + 16;
    }
    pBlock = (BYTE *)malloc(dwBufferSize);
    pVarBinds = (BYTE *)malloc(dwBufferSize);
@@ -976,8 +976,8 @@ size_t SNMP_PDU::encode(BYTE **ppBuffer, SNMP_SecurityContext *securityContext)
       switch(pduType)
       {
          case ASN_TRAP_V1_PDU:
-            dwBytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_pEnterprise->getValue(),
-                                 m_pEnterprise->getLength() * sizeof(UINT32),
+            dwBytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_pEnterprise->value(),
+                                 m_pEnterprise->length() * sizeof(UINT32),
                                  pbCurrPos, dwBufferSize - dwPDUSize);
             dwPDUSize += dwBytes;
             pbCurrPos += dwBytes;

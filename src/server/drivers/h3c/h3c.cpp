@@ -94,8 +94,8 @@ static UINT32 PortWalkHandler(SNMP_Variable *var, SNMP_Transport *snmp, void *ar
       if (iface->index == ifIndex)
       {
          iface->isPhysicalPort = true;
-         iface->slot = var->getName()->getValue()[18];
-         iface->port = var->getName()->getValue()[20];
+         iface->slot = var->getName().getElement(18);
+         iface->port = var->getName().getElement(20);
          break;
       }
    }

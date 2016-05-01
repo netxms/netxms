@@ -52,7 +52,7 @@ static UINT32 HandlerVlanIfList(SNMP_Variable *pVar, SNMP_Transport *pTransport,
    VLAN_LIST *pVlanList = (VLAN_LIST *)pArg;
    BYTE szBuffer[256];
 
-   size_t nameLen = pVar->getName()->getLength();
+   size_t nameLen = pVar->getName().length();
 
    // Extend VLAN list and set ID of new VLAN
    dwIndex = pVlanList->dwNumVlans;
@@ -61,7 +61,7 @@ static UINT32 HandlerVlanIfList(SNMP_Variable *pVar, SNMP_Transport *pTransport,
    pVlanList->pList[dwIndex].dwVlanId = pVar->getValueAsUInt();
 
    // Get VLAN name
-   memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
+   memcpy(oidName, pVar->getName().value(), nameLen * sizeof(UINT32));
    oidName[nameLen - 2] = 2;
    dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, 
                         pVlanList->pList[dwIndex].szName, MAX_OBJECT_NAME * sizeof(TCHAR), 0, NULL);
@@ -107,12 +107,12 @@ static UINT32 HandlerRapidCityIfList(SNMP_Variable *pVar, SNMP_Transport *pTrans
       iface->type = IFTYPE_L2VLAN;
       memcpy(iface->macAddr, pVlanList->pList[dwVlanIndex].bMacAddr, MAC_ADDR_LENGTH);
       
-      size_t nameLen = pVar->getName()->getLength();
+      size_t nameLen = pVar->getName().length();
 
       // Get IP address
       UINT32 ipAddr, ipNetMask;
 
-      memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
+      memcpy(oidName, pVar->getName().value(), nameLen * sizeof(UINT32));
       oidName[nameLen - 6] = 2;
       dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &ipAddr, sizeof(UINT32), 0, NULL);
 

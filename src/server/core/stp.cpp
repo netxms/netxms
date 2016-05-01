@@ -33,16 +33,16 @@ static UINT32 STPPortListHandler(SNMP_Variable *var, SNMP_Transport *transport, 
 
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
 	UINT32 oid[64];
-   memcpy(oid, var->getName()->getValue(), var->getName()->getLength() * sizeof(UINT32));
+   memcpy(oid, var->getName().value(), var->getName().length() * sizeof(UINT32));
 
    // Get designated bridge and designated port for this port
    SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
 
    oid[10] = 8;   // dot1dStpPortDesignatedBridge
-   request->bindVariable(new SNMP_Variable(oid, var->getName()->getLength()));
+   request->bindVariable(new SNMP_Variable(oid, var->getName().length()));
 
    oid[10] = 9;   // dot1dStpPortDesignatedPort
-   request->bindVariable(new SNMP_Variable(oid, var->getName()->getLength()));
+   request->bindVariable(new SNMP_Variable(oid, var->getName().length()));
 
 	SNMP_PDU *response = NULL;
    UINT32 rcc = transport->doRequest(request, &response, SnmpGetDefaultTimeout(), 3);

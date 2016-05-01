@@ -31,7 +31,7 @@ static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, voi
 {
    VlanList *vlanList = (VlanList *)arg;
 
-	VlanInfo *vlan = new VlanInfo(var->getName()->getValue()[var->getName()->getLength() - 1], VLAN_PRM_IFINDEX);
+	VlanInfo *vlan = new VlanInfo(var->getName().getElement(var->getName().length() - 1), VLAN_PRM_IFINDEX);
 
 	TCHAR buffer[256];
 	vlan->setName(var->getValueAsString(buffer, 256));
@@ -85,12 +85,12 @@ static void ParseVlanMap(VlanList *vlanList, UINT32 ifIndex, BYTE *map, int offs
 static UINT32 HandlerTrunkPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
-   size_t nameLen = var->getName()->getLength();
-	UINT32 ifIndex = var->getName()->getValue()[nameLen - 1];
+   size_t nameLen = var->getName().length();
+   UINT32 ifIndex = var->getName().getElement(nameLen - 1);
 
-	// Check if port is acting as trunk
-	UINT32 oidName[256], value;
-   memcpy(oidName, var->getName()->getValue(), nameLen * sizeof(UINT32));
+   // Check if port is acting as trunk
+   UINT32 oidName[256], value;
+   memcpy(oidName, var->getName().value(), nameLen * sizeof(UINT32));
    oidName[nameLen - 2] = 14;	// .1.3.6.1.4.1.9.9.46.1.6.1.1.14
 	if (SnmpGetEx(transport, NULL, oidName, nameLen, &value, sizeof(UINT32), 0, NULL) != SNMP_ERR_SUCCESS)
 	   return SNMP_ERR_SUCCESS;	// Cannot get trunk state, ignore port
@@ -137,11 +137,11 @@ static UINT32 HandlerTrunkPorts(SNMP_Variable *var, SNMP_Transport *transport, v
 static UINT32 HandlerAccessPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
-   size_t nameLen = var->getName()->getLength();
-	UINT32 ifIndex = var->getName()->getValue()[nameLen - 1];
+   size_t nameLen = var->getName().length();
+   UINT32 ifIndex = var->getName().getElement(nameLen - 1);
 
-	UINT32 oidName[256];
-   memcpy(oidName, var->getName()->getValue(), nameLen * sizeof(UINT32));
+   UINT32 oidName[256];
+   memcpy(oidName, var->getName().value(), nameLen * sizeof(UINT32));
 
 	// Entry type: 3=multi-vlan
 	if (var->getValueAsInt() == 3)

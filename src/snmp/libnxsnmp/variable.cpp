@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -28,7 +28,6 @@
  */
 SNMP_Variable::SNMP_Variable()
 {
-   m_name = NULL;
    m_value = NULL;
    m_type = ASN_NULL;
    m_valueLength = 0;
@@ -39,28 +38,30 @@ SNMP_Variable::SNMP_Variable()
  */
 SNMP_Variable::SNMP_Variable(const TCHAR *name)
 {
-   size_t length;
-   UINT32 *pdwOid;
-
+   m_name = SNMP_ObjectId::parse(name);
    m_value = NULL;
    m_type = ASN_NULL;
    m_valueLength = 0;
-
-   pdwOid = (UINT32 *)malloc(sizeof(UINT32) * MAX_OID_LEN);
-   length = SNMPParseOID(name, pdwOid, MAX_OID_LEN);
-   m_name = new SNMP_ObjectId(length, pdwOid);
-   free(pdwOid);
 }
 
 /**
  * Create variable of ASN_NULL type
  */
-SNMP_Variable::SNMP_Variable(UINT32 *name, size_t nameLen)
+SNMP_Variable::SNMP_Variable(const UINT32 *name, size_t nameLen) : m_name(name, nameLen)
 {
    m_value = NULL;
    m_type = ASN_NULL;
    m_valueLength = 0;
-   m_name = new SNMP_ObjectId(nameLen, name);
+}
+
+/**
+ * Create variable of ASN_NULL type
+ */
+SNMP_Variable::SNMP_Variable(const SNMP_ObjectId &name) : m_name(name)
+{
+   m_value = NULL;
+   m_type = ASN_NULL;
+   m_valueLength = 0;
 }
 
 /**
@@ -71,7 +72,7 @@ SNMP_Variable::SNMP_Variable(const SNMP_Variable *src)
    m_valueLength = src->m_valueLength;
    m_value = (src->m_value != NULL) ? (BYTE *)nx_memdup(src->m_value, src->m_valueLength) : NULL;
    m_type = src->m_type;
-   m_name = new SNMP_ObjectId(src->m_name);
+   m_name = src->m_name;
 }
 
 /**
@@ -79,8 +80,7 @@ SNMP_Variable::SNMP_Variable(const SNMP_Variable *src)
  */
 SNMP_Variable::~SNMP_Variable()
 {
-   delete m_name;
-   safe_free(m_value);
+   free(m_value);
 }
 
 /**
@@ -104,7 +104,7 @@ bool SNMP_Variable::parse(BYTE *data, size_t varLength)
    memset(oid, 0, sizeof(SNMP_OID));
    if (BER_DecodeContent(type, pbCurrPos, length, (BYTE *)oid))
    {
-      m_name = new SNMP_ObjectId(oid->length, oid->value);
+      m_name.setValue(oid->value, (size_t)oid->length);
       varLength -= length + dwIdLength;
       pbCurrPos += length;
       bResult = TRUE;
@@ -363,15 +363,11 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
 /**
  * Get value as object id. Returned object must be destroyed by caller
  */
-SNMP_ObjectId *SNMP_Variable::getValueAsObjectId() const
+SNMP_ObjectId SNMP_Variable::getValueAsObjectId() const
 {
-   SNMP_ObjectId *oid = NULL;
-
-   if (m_type == ASN_OBJECT_ID)
-   {
-      oid = new SNMP_ObjectId(m_valueLength / sizeof(UINT32), (UINT32 *)m_value);
-   }
-   return oid;
+   if (m_type != ASN_OBJECT_ID)
+      return SNMP_ObjectId();
+   return SNMP_ObjectId((UINT32 *)m_value, m_valueLength / sizeof(UINT32));
 }
 
 /**
@@ -423,10 +419,10 @@ size_t SNMP_Variable::encode(BYTE *pBuffer, size_t bufferSize)
    size_t bytes, dwWorkBufSize;
    BYTE *pWorkBuf;
 
-   dwWorkBufSize = (UINT32)(m_valueLength + m_name->getLength() * 4 + 16);
+   dwWorkBufSize = (UINT32)(m_valueLength + m_name.length() * 4 + 16);
    pWorkBuf = (BYTE *)malloc(dwWorkBufSize);
-   bytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_name->getValue(), 
-                        m_name->getLength() * sizeof(UINT32), 
+   bytes = BER_Encode(ASN_OBJECT_ID, (BYTE *)m_name.value(),
+                        m_name.length() * sizeof(UINT32),
                         pWorkBuf, dwWorkBufSize);
    bytes += BER_Encode(m_type, m_value, m_valueLength, 
                          pWorkBuf + bytes, dwWorkBufSize - bytes);

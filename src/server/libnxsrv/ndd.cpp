@@ -167,8 +167,8 @@ static UINT32 HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, void
  */
 static UINT32 HandlerIndexIfXTable(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-   SNMP_ObjectId *name = pVar->getName();
-   UINT32 index = name->getValue()[name->getLength() - 1];
+   const SNMP_ObjectId& name = pVar->getName();
+   UINT32 index = name.value()[name.length() - 1];
    if (((InterfaceList *)pArg)->findByIfIndex(index) == NULL)
    {
 	   ((InterfaceList *)pArg)->add(new InterfaceInfo(index));
@@ -184,8 +184,8 @@ static UINT32 HandlerIpAddr(SNMP_Variable *pVar, SNMP_Transport *pTransport, voi
    UINT32 index, dwNetMask, dwResult;
    UINT32 oidName[MAX_OID_LEN];
 
-   size_t nameLen = pVar->getName()->getLength();
-   memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
+   size_t nameLen = pVar->getName().length();
+   memcpy(oidName, pVar->getName().value(), nameLen * sizeof(UINT32));
    oidName[nameLen - 5] = 3;  // Retrieve network mask for this IP
    dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &dwNetMask, sizeof(UINT32), 0, NULL);
    if (dwResult != SNMP_ERR_SUCCESS)
@@ -228,8 +228,8 @@ static UINT32 HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *snmp, vo
    InterfaceList *ifList = (InterfaceList *)arg;
 
    UINT32 oid[128];
-   size_t oidLen = var->getName()->getLength();
-   memcpy(oid, var->getName()->getValue(), oidLen * sizeof(UINT32));
+   size_t oidLen = var->getName().length();
+   memcpy(oid, var->getName().value(), oidLen * sizeof(UINT32));
 
    // Check address family (1 = ipv4, 2 = ipv6)
    if ((oid[10] != 1) && (oid[10] != 2))
@@ -268,17 +268,16 @@ static UINT32 HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *snmp, vo
       // check number of varbinds and address type (1 = unicast)
       if ((response->getNumVariables() == 2) && (response->getVariable(0)->getValueAsInt() == 1))
       {
-         SNMP_ObjectId *prefix = response->getVariable(1)->getValueAsObjectId();
-         if ((prefix != NULL) && !prefix->isZeroDotZero())
+         SNMP_ObjectId prefix = response->getVariable(1)->getValueAsObjectId();
+         if (prefix.isValid() && !prefix.isZeroDotZero())
          {
             // Last element in ipAddressPrefixTable index is prefix length
-            addr.setMaskBits((int)prefix->getValue()[prefix->getLength() - 1]);
+            addr.setMaskBits((int)prefix.value()[prefix.length() - 1]);
          }
          else
          {
             ifList->setPrefixWalkNeeded();
          }
-         delete prefix;
          iface->ipAddrList.add(addr);
       }
       delete response;
@@ -292,7 +291,7 @@ static UINT32 HandlerIpAddressTable(SNMP_Variable *var, SNMP_Transport *snmp, vo
 static UINT32 HandlerIpAddressPrefixTable(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
    InterfaceList *ifList = (InterfaceList *)arg;
-   const UINT32 *oid = var->getName()->getValue();
+   const UINT32 *oid = var->getName().value();
    
    // Check address family (1 = ipv4, 2 = ipv6)
    if ((oid[10] != 1) && (oid[10] != 2))
@@ -605,7 +604,7 @@ static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *transport, voi
 {
    VlanList *vlanList = (VlanList *)arg;
 
-	VlanInfo *vlan = new VlanInfo(var->getName()->getValue()[var->getName()->getLength() - 1], VLAN_PRM_BPORT);
+	VlanInfo *vlan = new VlanInfo(var->getName().value()[var->getName().length() - 1], VLAN_PRM_BPORT);
 
 	TCHAR buffer[256];
 	vlan->setName(var->getValueAsString(buffer, 256));
@@ -656,7 +655,7 @@ static void ParseVlanPorts(VlanList *vlanList, VlanInfo *vlan, BYTE map, int off
 static UINT32 HandlerVlanEgressPorts(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
    VlanList *vlanList = (VlanList *)arg;
-	UINT32 vlanId = var->getName()->getValue()[var->getName()->getLength() - 1];
+	UINT32 vlanId = var->getName().value()[var->getName().length() - 1];
 	VlanInfo *vlan = vlanList->findById(vlanId);
 	if (vlan != NULL)
 	{

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,32 +27,14 @@
  */
 static UINT32 PortMapCallback(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
-   TCHAR oid[MAX_OID_LEN * 4], suffix[MAX_OID_LEN * 4];
-   SNMP_ObjectId *pOid = var->getName();
-   SNMPConvertOIDToText(pOid->getLength() - 11, (UINT32 *)&(pOid->getValue())[11], suffix, MAX_OID_LEN * 4);
-
-	// Get interface index
-   SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
-	_tcscpy(oid, _T(".1.3.6.1.2.1.17.1.4.1.2"));
-   _tcscat(oid, suffix);
-	pRqPDU->bindVariable(new SNMP_Variable(oid));
-
-	SNMP_PDU *pRespPDU;
-   UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
-	delete pRqPDU;
-
-	if (rcc == SNMP_ERR_SUCCESS)
-   {
-		UINT32 ifIndex = pRespPDU->getVariable(0)->getValueAsUInt();
-		InterfaceList *ifList = (InterfaceList *)arg;
-		for(int i = 0; i < ifList->size(); i++)
-			if (ifList->get(i)->index == ifIndex)
-			{
-				ifList->get(i)->bridgePort = var->getValueAsUInt();
-				break;
-			}
-      delete pRespPDU;
-	}
+   UINT32 ifIndex = var->getValueAsUInt();
+   InterfaceList *ifList = (InterfaceList *)arg;
+   for(int i = 0; i < ifList->size(); i++)
+      if (ifList->get(i)->index == ifIndex)
+      {
+         ifList->get(i)->bridgePort = var->getName().getElement(11);
+         break;
+      }
 	return SNMP_ERR_SUCCESS;
 }
 
@@ -61,5 +43,5 @@ static UINT32 PortMapCallback(SNMP_Variable *var, SNMP_Transport *transport, voi
  */
 void BridgeMapPorts(SNMP_Transport *transport, InterfaceList *ifList)
 {
-	SnmpWalk(transport, _T(".1.3.6.1.2.1.17.1.4.1.1"), PortMapCallback, ifList);
+	SnmpWalk(transport, _T(".1.3.6.1.2.1.17.1.4.1.2"), PortMapCallback, ifList);
 }

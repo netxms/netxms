@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -30,36 +30,24 @@ SNMP_ObjectId::SNMP_ObjectId()
 {
    m_length = 0;
    m_value = NULL;
-   m_textValue = NULL;
 }
 
 /**
  * Copy constructor
  */
-SNMP_ObjectId::SNMP_ObjectId(SNMP_ObjectId *src)
+SNMP_ObjectId::SNMP_ObjectId(const SNMP_ObjectId &src)
 {
-   m_length = src->m_length;
-   m_value = (UINT32 *)nx_memdup(src->m_value, sizeof(UINT32) * m_length);
-   if (src->m_textValue != NULL)
-   {
-      m_textValue = _tcsdup(src->m_textValue);
-   }
-   else
-   {
-      m_textValue = NULL;
-      convertToText();
-   }
+   m_length = src.m_length;
+   m_value = (UINT32 *)nx_memdup(src.m_value, sizeof(UINT32) * m_length);
 }
 
 /**
  * Create OID from existing binary value
  */
-SNMP_ObjectId::SNMP_ObjectId(size_t length, const UINT32 *value)
+SNMP_ObjectId::SNMP_ObjectId(const UINT32 *value, size_t length)
 {
    m_length = (UINT32)length;
    m_value = (UINT32 *)nx_memdup(value, sizeof(UINT32) * length);
-   m_textValue = NULL;
-   convertToText();
 }
 
 /**
@@ -67,23 +55,43 @@ SNMP_ObjectId::SNMP_ObjectId(size_t length, const UINT32 *value)
  */
 SNMP_ObjectId::~SNMP_ObjectId()
 {
-   safe_free(m_value);
-   safe_free(m_textValue);
+   free(m_value);
 }
 
 /**
- * Convert binary representation to text
+ * Operator =
  */
-void SNMP_ObjectId::convertToText()
+SNMP_ObjectId& SNMP_ObjectId::operator =(const SNMP_ObjectId &src)
 {
-   m_textValue = (TCHAR *)realloc(m_textValue, sizeof(TCHAR) * (m_length * 6 + 1));
-   SNMPConvertOIDToText(m_length, m_value, m_textValue, m_length * 6 + 1);
+   free(m_value);
+   m_length = src.m_length;
+   m_value = (UINT32 *)nx_memdup(src.m_value, sizeof(UINT32) * m_length);
+   return *this;
+}
+
+/**
+ * Get OID value as text
+ */
+String SNMP_ObjectId::toString() const
+{
+   TCHAR buffer[MAX_OID_LEN * 5];
+   SNMPConvertOIDToText(m_length, m_value, buffer, MAX_OID_LEN * 5);
+   return String(buffer);
+}
+
+/**
+ * Get OID value as text
+ */
+TCHAR *SNMP_ObjectId::toString(TCHAR *buffer, size_t bufferSize) const
+{
+   SNMPConvertOIDToText(m_length, m_value, buffer, bufferSize);
+   return buffer;
 }
 
 /**
  * Compare this OID with another
  */
-int SNMP_ObjectId::compare(const TCHAR *pszOid)
+int SNMP_ObjectId::compare(const TCHAR *pszOid) const
 {
    UINT32 dwBuffer[MAX_OID_LEN];
    size_t length = SNMPParseOID(pszOid, dwBuffer, MAX_OID_LEN);
@@ -100,7 +108,7 @@ int SNMP_ObjectId::compare(const TCHAR *pszOid)
  *    OID_PRECEDING this OID preceding given OID (less than given OID)
  *    OID_FOLLOWING this OID following given OID (greater than given OID)
  */
-int SNMP_ObjectId::compare(const UINT32 *oid, size_t length)
+int SNMP_ObjectId::compare(const UINT32 *oid, size_t length) const
 {
    if ((oid == NULL) || (length == 0) || (m_value == NULL))
       return OID_ERROR;
@@ -112,29 +120,25 @@ int SNMP_ObjectId::compare(const UINT32 *oid, size_t length)
          return (m_value[i] < oid[i]) ? OID_PRECEDING : OID_FOLLOWING;
    }
 
-   return (length == m_length) ? OID_EQUAL : 
-            ((length < m_length) ? OID_SHORTER : OID_LONGER);
+   return (length == m_length) ? OID_EQUAL : ((length < m_length) ? OID_LONGER : OID_SHORTER);
 }
 
 /**
  * Compare this OID to another
  */
-int SNMP_ObjectId::compare(SNMP_ObjectId *oid)
+int SNMP_ObjectId::compare(const SNMP_ObjectId& oid) const
 {
-	if (oid == NULL)
-      return OID_ERROR;
-	return compare(oid->getValue(), oid->getLength());
+	return compare(oid.value(), oid.length());
 }
 
 /**
  * Set new value
  */
-void SNMP_ObjectId::setValue(UINT32 *value, size_t length)
+void SNMP_ObjectId::setValue(const UINT32 *value, size_t length)
 {
-   safe_free(m_value);
+   free(m_value);
    m_length = (UINT32)length;
    m_value = (UINT32 *)nx_memdup(value, sizeof(UINT32) * length);
-   convertToText();
 }
 
 /**
@@ -146,5 +150,40 @@ void SNMP_ObjectId::extend(UINT32 subId)
 {
    m_value = (UINT32 *)realloc(m_value, sizeof(UINT32) * (m_length + 1));
    m_value[m_length++] = subId;
-   convertToText();
+}
+
+/**
+ * Extend value by multiple subids
+ *
+ * @param subId sub-identifier to add
+ * @param length length of sub-identifier to add
+ */
+void SNMP_ObjectId::extend(const UINT32 *subId, size_t length)
+{
+   m_value = (UINT32 *)realloc(m_value, sizeof(UINT32) * (m_length + length));
+   memcpy(&m_value[m_length], subId, length * sizeof(UINT32));
+   m_length += length;
+}
+
+/**
+ * Truncate value by given number of sub-identifiers
+ *
+ * @param count number of sub-identifiers to remove
+ */
+void SNMP_ObjectId::truncate(size_t count)
+{
+   if (count < m_length)
+      m_length -= count;
+   else
+      m_length = 0;
+}
+
+/**
+ * Parse OID
+ */
+SNMP_ObjectId SNMP_ObjectId::parse(const TCHAR *oid)
+{
+   UINT32 buffer[MAX_OID_LEN];
+   size_t length = SNMPParseOID(oid, buffer, MAX_OID_LEN);
+   return SNMP_ObjectId(buffer, length);
 }

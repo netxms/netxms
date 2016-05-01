@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpget - command line tool used to retrieve parameters from SNMP agent
-** Copyright (C) 2004-2009 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -105,11 +105,11 @@ int GetData(int argc, TCHAR *argv[])
                var = response->getVariable(i);
                if (var->getType() == ASN_NO_SUCH_OBJECT)
                {
-                  _tprintf(_T("No such object: %s\n"), var->getName()->getValueAsText());
+                  _tprintf(_T("No such object: %s\n"), (const TCHAR *)var->getName().toString());
                }
                else if (var->getType() == ASN_NO_SUCH_INSTANCE)
                {
-                  _tprintf(_T("No such instance: %s\n"), var->getName()->getValueAsText());
+                  _tprintf(_T("No such instance: %s\n"), (const TCHAR *)var->getName().toString());
                }
                else
                {
@@ -117,7 +117,7 @@ int GetData(int argc, TCHAR *argv[])
 						TCHAR typeName[256];
 
 						var->getValueAsPrintableString(szBuffer, 1024, &convert);
-						_tprintf(_T("%s [%s]: %s\n"), var->getName()->getValueAsText(),
+						_tprintf(_T("%s [%s]: %s\n"), (const TCHAR *)var->getName().toString(),
 						         convert ? _T("Hex-STRING") : SNMPDataTypeName(var->getType(), typeName, 256),
                            szBuffer);
                }

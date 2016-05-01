@@ -364,29 +364,36 @@ public:
 class LIBNXSNMP_EXPORTABLE SNMP_ObjectId
 {
 private:
-   UINT32 m_length;
+   size_t m_length;
    UINT32 *m_value;
-   TCHAR *m_textValue;
-
-   void convertToText();
 
 public:
    SNMP_ObjectId();
-   SNMP_ObjectId(SNMP_ObjectId *src);
-   SNMP_ObjectId(size_t length, const UINT32 *value);
+   SNMP_ObjectId(const SNMP_ObjectId &src);
+   SNMP_ObjectId(const UINT32 *value, size_t length);
    ~SNMP_ObjectId();
 
-   size_t getLength() { return (size_t)m_length; }
-   const UINT32 *getValue() { return m_value; }
-   const TCHAR *getValueAsText() { return CHECK_NULL(m_textValue); }
-   void setValue(UINT32 *value, size_t length);
+   SNMP_ObjectId& operator =(const SNMP_ObjectId &src);
+
+   size_t length() const { return m_length; }
+   const UINT32 *value() const { return m_value; }
+   String toString() const;
+   TCHAR *toString(TCHAR *buffer, size_t bufferSize) const;
+   bool isValid() const { return (m_length > 0) && (m_value != NULL); }
+   bool isZeroDotZero() const { return (m_length == 2) && (m_value[0] == 0) && (m_value[1] == 0); }
+   UINT32 getElement(size_t index) const { return (index < m_length) ? m_value[index] : 0; }
+
+   int compare(const TCHAR *oid) const;
+   int compare(const UINT32 *oid, size_t length) const;
+	int compare(const SNMP_ObjectId& oid) const;
+
+   void setValue(const UINT32 *value, size_t length);
    void extend(UINT32 subId);
+   void extend(const UINT32 *subId, size_t length);
+   void truncate(size_t count);
+   void changeElement(size_t pos, UINT32 value) { if (pos < m_length) m_value[pos] = value; }
 
-   int compare(const TCHAR *oid);
-   int compare(const UINT32 *oid, size_t length);
-	int compare(SNMP_ObjectId *oid);
-
-   bool isZeroDotZero() { return (m_length == 2) && (m_value[0] == 0) && (m_value[1] == 0); }
+   static SNMP_ObjectId parse(const TCHAR *oid);
 };
 
 /**
@@ -395,7 +402,7 @@ public:
 class LIBNXSNMP_EXPORTABLE SNMP_Variable
 {
 private:
-   SNMP_ObjectId *m_name;
+   SNMP_ObjectId m_name;
    UINT32 m_type;
    size_t m_valueLength;
    BYTE *m_value;
@@ -403,14 +410,15 @@ private:
 public:
    SNMP_Variable();
    SNMP_Variable(const TCHAR *name);
-   SNMP_Variable(UINT32 *name, size_t nameLen);
+   SNMP_Variable(const UINT32 *name, size_t nameLen);
+   SNMP_Variable(const SNMP_ObjectId &name);
    SNMP_Variable(const SNMP_Variable *src);
    ~SNMP_Variable();
 
    bool parse(BYTE *data, size_t varLength);
    size_t encode(BYTE *buffer, size_t bufferSize);
 
-   SNMP_ObjectId *getName() const { return m_name; }
+   const SNMP_ObjectId& getName() const { return m_name; }
    UINT32 getType() const { return m_type; }
    size_t getValueLength() const { return m_valueLength; }
    const BYTE *getValue() const { return m_value; }
@@ -420,7 +428,7 @@ public:
    LONG getValueAsInt() const;
    TCHAR *getValueAsString(TCHAR *buffer, size_t bufferSize) const;
    TCHAR *getValueAsPrintableString(TCHAR *buffer, size_t bufferSize, bool *convertToHex) const;
-   SNMP_ObjectId *getValueAsObjectId() const;
+   SNMP_ObjectId getValueAsObjectId() const;
    TCHAR *getValueAsMACAddr(TCHAR *buffer) const;
    TCHAR *getValueAsIPAddr(TCHAR *buffer) const;
 

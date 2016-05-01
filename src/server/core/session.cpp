@@ -8776,9 +8776,9 @@ static UINT32 WalkerCallback(SNMP_Variable *pVar, SNMP_Transport *pTransport, vo
    TCHAR szBuffer[4096];
 	bool convertToHex = true;
 
-	pVar->getValueAsPrintableString(szBuffer, 4096, &convertToHex);
-   pMsg->setField(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, (TCHAR *)pVar->getName()->getValueAsText());
+   pMsg->setField(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, pVar->getName().toString(szBuffer, 4096));
 	pMsg->setField(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, convertToHex ? (UINT32)0xFFFF : pVar->getType());
+   pVar->getValueAsPrintableString(szBuffer, 4096, &convertToHex);
    pMsg->setField(((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwId++, szBuffer);
    ((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars++;
    if (((WALKER_ENUM_CALLBACK_ARGS *)pArg)->dwNumVars == 50)

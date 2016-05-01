@@ -401,13 +401,13 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                }
                else if (pdu->getCommand() == SNMP_REPORT)
                {
-                  DbgPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), pdu->getVariable(0)->getName()->getValueAsText());
+                  DbgPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
                }
                delete pdu;
             }
             else if (pdu->getCommand() == SNMP_REPORT)
             {
-               DbgPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), pdu->getVariable(0)->getName()->getValueAsText());
+               DbgPrintf(6, _T("AgentConnectionEx::onSnmpTrap(): REPORT PDU with error %s"), (const TCHAR *)pdu->getVariable(0)->getName().toString());
             }
          }
          else

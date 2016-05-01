@@ -132,9 +132,9 @@ static UINT32 HandlerAccessPointListUnadopted(SNMP_Variable *var, SNMP_Transport
 {
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
-   SNMP_ObjectId *name = var->getName();
-   size_t nameLen = name->getLength();
-   UINT32 apIndex = name->getValue()[nameLen - 1];
+   const SNMP_ObjectId& name = var->getName();
+   size_t nameLen = name.length();
+   UINT32 apIndex = name.getElement(nameLen - 1);
 
    UINT32 oid[] = { 1, 3, 6, 1, 4, 1, 388, 14, 3, 2, 1, 9, 4, 1, 3, 0 };
    oid[(sizeof(oid) / sizeof(oid[0])) - 1] = apIndex;
@@ -179,9 +179,9 @@ static UINT32 HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport *
 
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
-   SNMP_ObjectId *name = var->getName();
-   size_t nameLen = name->getLength();
-   UINT32 apIndex = name->getValue()[nameLen - 1];
+   const SNMP_ObjectId& name = var->getName();
+   size_t nameLen = name.length();
+   UINT32 apIndex = name.getElement(nameLen - 1);
 
    UINT32 numberOfRadios = 0;
    TCHAR serial[128];
@@ -420,9 +420,9 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *tra
 
    ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
 
-   SNMP_ObjectId *name = var->getName();
-   size_t nameLen = name->getLength();
-   const UINT32 *value = name->getValue();
+   const SNMP_ObjectId& name = var->getName();
+   size_t nameLen = name.length();
+   const UINT32 *value = name.value();
 
    UINT32 oid[32];
    memcpy(oid, value, nameLen * sizeof(value[0]));

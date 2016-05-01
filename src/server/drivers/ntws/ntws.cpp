@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Nortel WLAN Security Switch series
-** Copyright (C) 2013 Raden Solutions
+** Copyright (C) 2013-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -124,11 +124,11 @@ static UINT32 HandlerAccessPointListAdopted(SNMP_Variable *var, SNMP_Transport *
 
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
-   SNMP_ObjectId *name = var->getName();
-   size_t nameLen = name->getLength();
+   const SNMP_ObjectId& name = var->getName();
+   size_t nameLen = name.length();
 
    UINT32 oid[128];
-   memcpy(oid, name->getValue(), nameLen * sizeof(UINT32));
+   memcpy(oid, name.value(), nameLen * sizeof(UINT32));
 
    // get serial number - it's encoded in OID as <length>.<serial>
    TCHAR serial[128];
@@ -186,11 +186,11 @@ static UINT32 HandlerRadioList(SNMP_Variable *var, SNMP_Transport *transport, vo
 {
    AccessPointInfo *ap = (AccessPointInfo *)arg;
 
-   SNMP_ObjectId *name = var->getName();
-   size_t nameLen = name->getLength();
+   const SNMP_ObjectId& name = var->getName();
+   size_t nameLen = name.length();
 
    UINT32 oid[128];
-   memcpy(oid, name->getValue(), nameLen * sizeof(UINT32));
+   memcpy(oid, name.value(), nameLen * sizeof(UINT32));
 
    RadioInterfaceInfo rif;
    memcpy(rif.macAddr, var->getValue(), MAC_ADDR_LENGTH);
@@ -275,9 +275,9 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *tra
 
    ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
 
-   SNMP_ObjectId *name = var->getName();
-   size_t nameLen = name->getLength();
-   const UINT32 *value = name->getValue();
+   const SNMP_ObjectId& name = var->getName();
+   size_t nameLen = name.length();
+   const UINT32 *value = name.value();
 
    UINT32 oid[32];
    memcpy(oid, value, nameLen * sizeof(value[0]));

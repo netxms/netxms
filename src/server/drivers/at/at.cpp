@@ -164,7 +164,7 @@ static UINT32 HandlerVlanList(SNMP_Variable *var, SNMP_Transport *snmp, void *ar
 {
    VlanList *vlanList = (VlanList *)arg;
 
-	VlanInfo *vlan = new VlanInfo(var->getName()->getValue()[var->getName()->getLength() - 1], VLAN_PRM_SLOTPORT);
+	VlanInfo *vlan = new VlanInfo(var->getName().getElement(var->getName().length() - 1), VLAN_PRM_SLOTPORT);
 
 	TCHAR buffer[256];
 	vlan->setName(var->getValueAsString(buffer, 256));

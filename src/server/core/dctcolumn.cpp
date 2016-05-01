@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ DCTableColumn::DCTableColumn(const DCTableColumn *src)
 {
 	nx_strncpy(m_name, src->m_name, MAX_COLUMN_NAME);
 	m_flags = src->m_flags;
-	m_snmpOid = (src->m_snmpOid != NULL) ? new SNMP_ObjectId(src->m_snmpOid->getLength(), src->m_snmpOid->getValue()) : NULL;
+	m_snmpOid = (src->m_snmpOid != NULL) ? new SNMP_ObjectId(*src->m_snmpOid) : NULL;
    m_displayName = (src->m_displayName != NULL) ? _tcsdup(src->m_displayName) : NULL;
 }
 
@@ -48,7 +48,7 @@ DCTableColumn::DCTableColumn(NXCPMessage *msg, UINT32 baseId)
 		UINT32 len = msg->getFieldAsInt32Array(baseId + 2, 256, oid);
 		if (len > 0)
 		{
-			m_snmpOid = new SNMP_ObjectId(len, oid);
+			m_snmpOid = new SNMP_ObjectId(oid, len);
 		}
 		else
 		{
@@ -82,7 +82,7 @@ DCTableColumn::DCTableColumn(DB_RESULT hResult, int row)
 		size_t len = SNMPParseOID(oid, oidBin, 256);
 		if (len > 0)
 		{
-			m_snmpOid = new SNMP_ObjectId(len, oidBin);
+			m_snmpOid = new SNMP_ObjectId(oidBin, len);
 		}
 		else
 		{
@@ -111,7 +111,7 @@ DCTableColumn::DCTableColumn(ConfigEntry *e)
 		size_t len = SNMPParseOID(oid, oidBin, 256);
 		if (len > 0)
 		{
-			m_snmpOid = new SNMP_ObjectId(len, oidBin);
+			m_snmpOid = new SNMP_ObjectId(oidBin, len);
 		}
 		else
 		{
@@ -146,5 +146,5 @@ void DCTableColumn::createNXMPRecord(String &str, int id)
                           _T("\t\t\t\t\t\t</column>\n"),
 								  id, (const TCHAR *)EscapeStringForXML2(m_name),
 								  (const TCHAR *)EscapeStringForXML2(CHECK_NULL_EX(m_displayName)),
-                          (m_snmpOid != NULL) ? m_snmpOid->getValueAsText() : _T(""), (int)m_flags);
+                          (m_snmpOid != NULL) ? (const TCHAR *)m_snmpOid->toString() : _T(""), (int)m_flags);
 }

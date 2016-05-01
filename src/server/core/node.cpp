@@ -3721,7 +3721,7 @@ UINT32 Node::getItemFromSNMP(WORD port, const TCHAR *param, size_t bufSize, TCHA
 /**
  * Read one row for SNMP table
  */
-static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, SNMP_ObjectId *rowOid, size_t baseOidLen, UINT32 index,
+static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, const SNMP_ObjectId *rowOid, size_t baseOidLen, UINT32 index,
                                ObjectArray<DCTableColumn> *columns, Table *table)
 {
    SNMP_PDU request(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
@@ -3731,12 +3731,12 @@ static UINT32 ReadSNMPTableRow(SNMP_Transport *snmp, SNMP_ObjectId *rowOid, size
       if (c->getSnmpOid() != NULL)
       {
          UINT32 oid[MAX_OID_LEN];
-         size_t oidLen = c->getSnmpOid()->getLength();
-         memcpy(oid, c->getSnmpOid()->getValue(), oidLen * sizeof(UINT32));
+         size_t oidLen = c->getSnmpOid()->length();
+         memcpy(oid, c->getSnmpOid()->value(), oidLen * sizeof(UINT32));
          if (rowOid != NULL)
          {
-            size_t suffixLen = rowOid->getLength() - baseOidLen;
-            memcpy(&oid[oidLen], rowOid->getValue() + baseOidLen, suffixLen * sizeof(UINT32));
+            size_t suffixLen = rowOid->length() - baseOidLen;
+            memcpy(&oid[oidLen], rowOid->value() + baseOidLen, suffixLen * sizeof(UINT32));
             oidLen += suffixLen;
          }
          else
@@ -3862,11 +3862,11 @@ struct SNMPOIDSuffixListCallback_Data
 static UINT32 SNMPOIDSuffixListCallback(SNMP_Variable *varbind, SNMP_Transport *snmp, void *arg)
 {
    SNMPOIDSuffixListCallback_Data *data = (SNMPOIDSuffixListCallback_Data *)arg;
-   SNMP_ObjectId *oid = varbind->getName();
-   if (oid->getLength() <= data->oidLen)
+   const SNMP_ObjectId& oid = varbind->getName();
+   if (oid.length() <= data->oidLen)
       return SNMP_ERR_SUCCESS;
    TCHAR buffer[256];
-   SNMPConvertOIDToText(oid->getLength() - data->oidLen, &(oid->getValue()[data->oidLen]), buffer, 256);
+   SNMPConvertOIDToText(oid.length() - data->oidLen, &(oid.value()[data->oidLen]), buffer, 256);
 
    const TCHAR *key = (buffer[0] == _T('.')) ? &buffer[1] : buffer;
 

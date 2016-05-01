@@ -69,7 +69,7 @@ void SNMP_Snapshot::buildIndex()
       SNMP_SnapshotIndexEntry *entry = (SNMP_SnapshotIndexEntry *)malloc(sizeof(SNMP_SnapshotIndexEntry));
       entry->var = v;
       entry->pos = i;
-      HASH_ADD_KEYPTR(hh, m_index, entry->var->getName()->getValue(), entry->var->getName()->getLength() * sizeof(UINT32), entry);
+      HASH_ADD_KEYPTR(hh, m_index, entry->var->getName().value(), entry->var->getName().length() * sizeof(UINT32), entry);
    }
 }
 
@@ -172,7 +172,7 @@ SNMP_Variable *SNMP_Snapshot::getNext(const UINT32 *oid, size_t oidLen) const
    for(int i = 0; i < m_values->size(); i++)
    {
       SNMP_Variable *v = m_values->get(i);
-      int c = v->getName()->compare(oid, oidLen);
+      int c = v->getName().compare(oid, oidLen);
       if ((c == OID_FOLLOWING) || (c == OID_LONGER))
          return v;
    }
@@ -198,12 +198,12 @@ EnumerationCallbackResult SNMP_Snapshot::walk(const UINT32 *baseOid, size_t base
 {
    EnumerationCallbackResult result = _CONTINUE;
    SNMP_Variable *curr = getNext(baseOid, baseOidLen);
-   while(curr->getName()->compare(baseOid, baseOidLen) == OID_LONGER)
+   while(curr->getName().compare(baseOid, baseOidLen) == OID_LONGER)
    {
       result = handler(curr, this, userArg);
       if (result == _STOP)
          break;
-      curr = getNext(curr->getName()->getValue(), curr->getName()->getLength());
+      curr = getNext(curr->getName().value(), curr->getName().length());
    }
    return result;
 }

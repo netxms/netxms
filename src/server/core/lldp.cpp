@@ -28,19 +28,19 @@
 static UINT32 PortLocalInfoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	LLDP_LOCAL_PORT_INFO *port = new LLDP_LOCAL_PORT_INFO;
-   port->portNumber = var->getName()->getValue()[11];
+   port->portNumber = var->getName().getElement(11);
 	port->localIdLen = var->getRawValue(port->localId, 256);
 
-	SNMP_ObjectId *oid = var->getName();
+	const SNMP_ObjectId& oid = var->getName();
 	UINT32 newOid[128];
-	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(UINT32));
+	memcpy(newOid, oid.value(), oid.length() * sizeof(UINT32));
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
 
-	newOid[oid->getLength() - 2] = 4;	// lldpLocPortDescr
-	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
+	newOid[oid.length() - 2] = 4;	// lldpLocPortDescr
+	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid.length()));
 
-   newOid[oid->getLength() - 2] = 2;   // lldpLocPortIdSubtype
-   pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
+   newOid[oid.length() - 2] = 2;   // lldpLocPortIdSubtype
+   pRqPDU->bindVariable(new SNMP_Variable(newOid, oid.length()));
 
 	SNMP_PDU *pRespPDU = NULL;
    UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
@@ -164,26 +164,26 @@ static SNMP_Variable *GetVariableFromCache(UINT32 *oid, size_t oidLen, StringObj
  */
 static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable> *connections, SNMP_Variable *var, LinkLayerNeighbors *nbs)
 {
-	SNMP_ObjectId *oid = var->getName();
+	const SNMP_ObjectId& oid = var->getName();
 
 	// Get additional info for current record
 	UINT32 newOid[128];
-	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(UINT32));
+	memcpy(newOid, oid.value(), oid.length() * sizeof(UINT32));
 
-	newOid[oid->getLength() - 4] = 4;	// lldpRemChassisIdSubtype
-	SNMP_Variable *lldpRemChassisIdSubtype = GetVariableFromCache(newOid, oid->getLength(), connections);
+	newOid[oid.length() - 4] = 4;	// lldpRemChassisIdSubtype
+	SNMP_Variable *lldpRemChassisIdSubtype = GetVariableFromCache(newOid, oid.length(), connections);
 
-	newOid[oid->getLength() - 4] = 7;	// lldpRemPortId
-   SNMP_Variable *lldpRemPortId = GetVariableFromCache(newOid, oid->getLength(), connections);
+	newOid[oid.length() - 4] = 7;	// lldpRemPortId
+   SNMP_Variable *lldpRemPortId = GetVariableFromCache(newOid, oid.length(), connections);
 
-	newOid[oid->getLength() - 4] = 6;	// lldpRemPortIdSubtype
-   SNMP_Variable *lldpRemPortIdSubtype = GetVariableFromCache(newOid, oid->getLength(), connections);
+	newOid[oid.length() - 4] = 6;	// lldpRemPortIdSubtype
+   SNMP_Variable *lldpRemPortIdSubtype = GetVariableFromCache(newOid, oid.length(), connections);
 
-	newOid[oid->getLength() - 4] = 8;	// lldpRemPortDesc
-   SNMP_Variable *lldpRemPortDesc = GetVariableFromCache(newOid, oid->getLength(), connections);
+	newOid[oid.length() - 4] = 8;	// lldpRemPortDesc
+   SNMP_Variable *lldpRemPortDesc = GetVariableFromCache(newOid, oid.length(), connections);
 
-   newOid[oid->getLength() - 4] = 9;   // lldpRemSysName
-   SNMP_Variable *lldpRemSysName = GetVariableFromCache(newOid, oid->getLength(), connections);
+   newOid[oid.length() - 4] = 9;   // lldpRemSysName
+   SNMP_Variable *lldpRemSysName = GetVariableFromCache(newOid, oid.length(), connections);
 
 	if ((lldpRemChassisIdSubtype != NULL) && (lldpRemPortId != NULL) && (lldpRemPortIdSubtype != NULL) && (lldpRemPortDesc != NULL) && (lldpRemSysName != NULL))
    {
@@ -228,7 +228,7 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
          info.isCached = false;
 
 			// Index to lldpRemTable is lldpRemTimeMark, lldpRemLocalPortNum, lldpRemIndex
-			UINT32 localPort = oid->getValue()[oid->getLength() - 2];
+			UINT32 localPort = oid.getElement(oid.length() - 2);
 
 			// Determine interface index from local port number. It can be
 			// either ifIndex or dot1dBasePort, as described in LLDP MIB:
@@ -274,7 +274,8 @@ static void ProcessLLDPConnectionEntry(Node *node, StringObjectMap<SNMP_Variable
  */
 static UINT32 LLDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
-   ((StringObjectMap<SNMP_Variable> *)arg)->set(var->getName()->getValueAsText(), new SNMP_Variable(var));
+   TCHAR buffer[1024];
+   ((StringObjectMap<SNMP_Variable> *)arg)->set(var->getName().toString(buffer, 1024), new SNMP_Variable(var));
    return SNMP_ERR_SUCCESS;
 }
 

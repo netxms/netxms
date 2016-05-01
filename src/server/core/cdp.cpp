@@ -28,7 +28,7 @@
 static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
-	SNMP_ObjectId *oid = var->getName();
+	const SNMP_ObjectId& oid = var->getName();
 
 	UINT32 remoteIp;
 	var->getRawValue((BYTE *)&remoteIp, sizeof(UINT32));
@@ -45,12 +45,11 @@ static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 	DbgPrintf(6, _T("CDP(%s [%d]): remote node is %s [%d]"), node->getName(), node->getId(), remoteNode->getName(), remoteNode->getId());
 
 	// Get additional info for current record
-	UINT32 newOid[128];
-	memcpy(newOid, oid->getValue(), oid->getLength() * sizeof(UINT32));
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
 
-	newOid[13] = 7;	// cdpCacheDevicePort
-	pRqPDU->bindVariable(new SNMP_Variable(newOid, oid->getLength()));
+   SNMP_ObjectId newOid(oid);
+	newOid.changeElement(13, 7);	// cdpCacheDevicePort
+	pRqPDU->bindVariable(new SNMP_Variable(newOid));
 
    SNMP_PDU *pRespPDU = NULL;
    UINT32 rcc = transport->doRequest(pRqPDU, &pRespPDU, SnmpGetDefaultTimeout(), 3);
@@ -71,7 +70,7 @@ static UINT32 CDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void
 				LL_NEIGHBOR_INFO info;
 
 				// Index for cdpCacheTable is cdpCacheIfIndex, cdpCacheDeviceIndex
-				info.ifLocal = oid->getValue()[oid->getLength() - 2];
+				info.ifLocal = oid.value()[oid.length() - 2];
 				info.ifRemote = ifRemote->getIfIndex();
 				info.objectId = remoteNode->getId();
 				info.isPtToPt = true;

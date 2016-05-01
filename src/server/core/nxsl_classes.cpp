@@ -1182,7 +1182,7 @@ NXSL_Value *NXSL_SNMPVarBindClass::getAttr(NXSL_Object *object, const TCHAR *att
 	}
 	else if (!_tcscmp(attr, _T("name")))
 	{
-		value = new NXSL_Value(t->getName()->getValueAsText());
+		value = new NXSL_Value(t->getName().toString());
 	}
 	else if (!_tcscmp(attr, _T("value")))
 	{

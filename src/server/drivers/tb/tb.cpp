@@ -75,9 +75,9 @@ bool TelcoBridgesDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oi
  */
 static UINT32 HandlerIndex(SNMP_Variable *var, SNMP_Transport *snmp, void *arg)
 {
-   if (var->getName()->getLength() == 12)
+   if (var->getName().length() == 12)
    {
-      const UINT32 *oid = var->getName()->getValue();
+      const UINT32 *oid = var->getName().value();
       UINT32 ifIndex = (oid[10] << 12) | (oid[11] & 0x0FFF);
       ((InterfaceList *)arg)->add(new InterfaceInfo(ifIndex, 2, &oid[10]));
    }
@@ -97,8 +97,8 @@ static UINT32 HandlerIpAddr(SNMP_Variable *pVar, SNMP_Transport *pTransport, voi
    UINT32 index, dwNetMask, dwResult;
    UINT32 oidName[MAX_OID_LEN];
 
-   size_t nameLen = pVar->getName()->getLength();
-   memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
+   size_t nameLen = pVar->getName().length();
+   memcpy(oidName, pVar->getName().value(), nameLen * sizeof(UINT32));
    oidName[nameLen - 5] = 3;  // Retrieve network mask for this IP
    dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &dwNetMask, sizeof(UINT32), 0, NULL);
    if (dwResult != SNMP_ERR_SUCCESS)

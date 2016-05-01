@@ -358,12 +358,9 @@ static UINT32 TableHandler(SNMP_Variable *pVar, SNMP_Transport *pTransport, void
    }
    else
    {
-      SNMP_ObjectId *pOid;
-
       nameLen = SNMPParseOID(((SNMP_ENUM_ARGS *)pArg)->ppszOidList[0], pdwVarName, MAX_OID_LEN);
-      pOid = pVar->getName();
-      SNMPConvertOIDToText(pOid->getLength() - nameLen,
-         (UINT32 *)&(pOid->getValue())[nameLen], szSuffix, MAX_OID_LEN * 4);
+      const SNMP_ObjectId& oid = pVar->getName();
+      SNMPConvertOIDToText(oid.length() - nameLen, (UINT32 *)&(oid.value())[nameLen], szSuffix, MAX_OID_LEN * 4);
    }
 
    // Get values for other columns

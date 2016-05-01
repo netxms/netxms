@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -28,19 +28,20 @@
  */
 static struct
 {
-	const TCHAR *oid;
+	const UINT32 oid[12];
+	size_t oidLen;
 	UINT32 errorCode;
 } s_oidToErrorMap[] =
 {
-	{ _T(".1.3.6.1.6.3.11.2.1.3"), SNMP_ERR_ENGINE_ID },
-	{ _T(".1.3.6.1.6.3.11.2.1.3.0"), SNMP_ERR_ENGINE_ID },
-	{ _T(".1.3.6.1.6.3.15.1.1.1.0"), SNMP_ERR_UNSUPP_SEC_LEVEL },
-	{ _T(".1.3.6.1.6.3.15.1.1.2.0"), SNMP_ERR_TIME_WINDOW },
-	{ _T(".1.3.6.1.6.3.15.1.1.3.0"), SNMP_ERR_SEC_NAME },
-	{ _T(".1.3.6.1.6.3.15.1.1.4.0"), SNMP_ERR_ENGINE_ID },
-	{ _T(".1.3.6.1.6.3.15.1.1.5.0"), SNMP_ERR_AUTH_FAILURE },
-	{ _T(".1.3.6.1.6.3.15.1.1.6.0"), SNMP_ERR_DECRYPTION },
-	{ NULL, 0 }
+	{ { 1, 3, 6, 1, 6, 3, 11, 2, 1, 3 }, 10, SNMP_ERR_ENGINE_ID },
+	{ { 1, 3, 6, 1, 6, 3, 11, 2, 1, 3, 0 }, 11, SNMP_ERR_ENGINE_ID },
+	{ { 1, 3, 6, 1, 6, 3, 15, 1, 1, 1, 0 }, 11, SNMP_ERR_UNSUPP_SEC_LEVEL },
+	{ { 1, 3, 6, 1, 6, 3, 15, 1, 1, 2, 0 }, 11, SNMP_ERR_TIME_WINDOW },
+	{ { 1, 3, 6, 1, 6, 3, 15, 1, 1, 3, 0 }, 11, SNMP_ERR_SEC_NAME },
+	{ { 1, 3, 6, 1, 6, 3, 15, 1, 1, 4, 0 }, 11, SNMP_ERR_ENGINE_ID },
+	{ { 1, 3, 6, 1, 6, 3, 15, 1, 1, 5, 0 }, 11, SNMP_ERR_AUTH_FAILURE },
+	{ { 1, 3, 6, 1, 6, 3, 15, 1, 1, 6, 0 }, 11, SNMP_ERR_DECRYPTION },
+	{ { 0 }, 0, 0 }
 };
 
 /**
@@ -149,11 +150,11 @@ retry:
 						if ((*response)->getCommand() == SNMP_REPORT)
 						{
 		               SNMP_Variable *var = (*response)->getVariable(0);
-							const TCHAR *oid = var->getName()->getValueAsText();
 							rc = SNMP_ERR_AGENT;
-							for(int i = 0; s_oidToErrorMap[i].oid != NULL; i++)
+							const SNMP_ObjectId& oid = var->getName();
+							for(int i = 0; s_oidToErrorMap[i].oidLen != 0; i++)
 							{
-								if (!_tcscmp(oid, s_oidToErrorMap[i].oid))
+								if (oid.compare(s_oidToErrorMap[i].oid, s_oidToErrorMap[i].oidLen) == OID_EQUAL)
 								{
 									rc = s_oidToErrorMap[i].errorCode;
 									break;

@@ -8,4 +8,13 @@
 # WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-SUBDIRS = include test-libnetxms test-libnxdb test-libnxcc test-libnxsnmp
+bin_PROGRAMS = test-libnxsnmp
+test_libnxsnmp_SOURCES = test-libnxsnmp.cpp
+test_libnxsnmp_CPPFLAGS = -I@top_srcdir@/include -I../include
+test_libnxsnmp_LDADD = @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la
+
+if USE_INTERNAL_LIBTRE
+test_libnxsnmp_LDADD += @top_srcdir@/src/libtre/libnxtre.la
+endif
+
+EXTRA_DIST = test-libnxsnmp.vcproj

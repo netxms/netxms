@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Driver for Cisco Catalyst switches
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -67,7 +67,7 @@ int CatalystDriver::isPotentialDevice(const TCHAR *oid)
 bool CatalystDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
 {
 	UINT32 value = 0;
-	return SnmpGet(snmp->getSnmpVersion(), snmp, _T(".1.3.6.1.4.1.9.5.1.2.14.0"), NULL, 0, &value, sizeof(UINT32), 0) == SNMP_ERR_SUCCESS;
+	return SnmpGetEx(snmp, _T(".1.3.6.1.4.1.9.5.1.2.14.0"), NULL, 0, &value, sizeof(UINT32), 0, NULL) == SNMP_ERR_SUCCESS;
 }
 
 /**
@@ -80,9 +80,9 @@ static UINT32 HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, voi
 	InterfaceInfo *iface = ifList->findByIfIndex(var->getValueAsUInt());
 	if (iface != NULL)
 	{
-		size_t nameLen = var->getName()->getLength();
+		size_t nameLen = var->getName().length();
 		
-		UINT32 moduleIndex = var->getName()->getValue()[nameLen - 2];
+		UINT32 moduleIndex = var->getName().getElement(nameLen - 2);
 		UINT32 oid[] = { 1, 3, 6, 1, 4, 1, 9, 5, 1, 3, 1, 1, 25, 0 };
 		oid[13] = moduleIndex;
 		UINT32 slot;
@@ -90,7 +90,7 @@ static UINT32 HandlerPortList(SNMP_Variable *var, SNMP_Transport *transport, voi
 			slot = moduleIndex;	// Assume slot # equal to module index if it cannot be read
 
 		iface->slot = slot;
-		iface->port = var->getName()->getValue()[nameLen - 1];
+		iface->port = var->getName().getElement(nameLen - 1);
 		iface->isPhysicalPort = true;
 	}
 	return SNMP_ERR_SUCCESS;

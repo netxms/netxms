@@ -25,17 +25,17 @@
 /**
  * Read remote slot and port from s5EnMsTopNmmEosTable
  */
-static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, SNMP_Transport *transport)
+static WORD ReadRemoteSlotAndPort(Node *node, const SNMP_ObjectId& oid, SNMP_Transport *transport)
 {
 	// Read data from appropriate entry in s5EnMsTopNmmEosTable
 	UINT32 eosEntryOID[64];
-	memcpy(eosEntryOID, oid->getValue(), oid->getLength() * sizeof(UINT32));
+	memcpy(eosEntryOID, oid.value(), oid.length() * sizeof(UINT32));
 	eosEntryOID[11] = 3;
 	eosEntryOID[12] = 1;
 	eosEntryOID[13] = 1;
 
    SNMP_PDU *pRqPDU = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), transport->getSnmpVersion());
-	pRqPDU->bindVariable(new SNMP_Variable(eosEntryOID, oid->getLength()));
+	pRqPDU->bindVariable(new SNMP_Variable(eosEntryOID, oid.length()));
 
 	WORD result = 0;
 	SNMP_PDU *pRespPDU = NULL;
@@ -57,11 +57,11 @@ static WORD ReadRemoteSlotAndPort(Node *node, SNMP_ObjectId *oid, SNMP_Transport
 static UINT32 NDPTopoHandler(SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
 	Node *node = (Node *)((LinkLayerNeighbors *)arg)->getData();
-	SNMP_ObjectId *oid = var->getName();
+	const SNMP_ObjectId& oid = var->getName();
 
 	// Entries indexed by slot, port, IP address, and segment ID
-	UINT32 slot = oid->getValue()[14];
-	UINT32 port = oid->getValue()[15];
+	UINT32 slot = oid.getElement(14);
+	UINT32 port = oid.getElement(15);
 
 	// Table always contains record with slot=0 and port=0 which
 	// represents local chassis. We should ignore this record.

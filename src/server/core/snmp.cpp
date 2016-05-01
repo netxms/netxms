@@ -31,8 +31,8 @@ static UINT32 HandlerArp(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *
    BYTE bMac[64];
    UINT32 dwResult;
 
-   size_t nameLen = pVar->getName()->getLength();
-   memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
+   size_t nameLen = pVar->getName().length();
+   memcpy(oidName, pVar->getName().value(), nameLen * sizeof(UINT32));
 
    oidName[nameLen - 6] = 1;  // Retrieve interface index
    dwResult = SnmpGetEx(pTransport, NULL, oidName, nameLen, &dwIndex, sizeof(UINT32), 0, NULL);
@@ -84,13 +84,13 @@ static UINT32 HandlerRoute(SNMP_Variable *pVar, SNMP_Transport *pTransport, void
    ROUTE route;
 	ROUTING_TABLE *rt = (ROUTING_TABLE *)pArg;
 
-   size_t nameLen = pVar->getName()->getLength();
+   size_t nameLen = pVar->getName().length();
 	if ((nameLen < 5) || (nameLen > MAX_OID_LEN))
 	{
-		DbgPrintf(4, _T("HandlerRoute(): strange nameLen %d (name=%s)"), nameLen, pVar->getName()->getValueAsText());
+		DbgPrintf(4, _T("HandlerRoute(): strange nameLen %d (name=%s)"), nameLen, (const TCHAR *)pVar->getName().toString());
 		return SNMP_ERR_SUCCESS;
 	}
-   memcpy(oidName, pVar->getName()->getValue(), nameLen * sizeof(UINT32));
+   memcpy(oidName, pVar->getName().value(), nameLen * sizeof(UINT32));
    route.dwDestAddr = ntohl(pVar->getValueAsUInt());
 
    oidName[nameLen - 5] = 2;  // Interface index

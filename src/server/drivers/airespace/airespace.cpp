@@ -107,10 +107,10 @@ static UINT32 HandlerAccessPointList(SNMP_Variable *var, SNMP_Transport *snmp, v
 {
    ObjectArray<AccessPointInfo> *apList = (ObjectArray<AccessPointInfo> *)arg;
 
-   SNMP_ObjectId *name = var->getName();
-   size_t nameLen = name->getLength();
+   const SNMP_ObjectId& name = var->getName();
+   size_t nameLen = name.length();
    UINT32 oid[MAX_OID_LEN];
-   memcpy(oid, name->getValue(), nameLen * sizeof(UINT32));
+   memcpy(oid, name.value(), nameLen * sizeof(UINT32));
 
    SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
    
@@ -218,10 +218,10 @@ static UINT32 HandlerWirelessStationList(SNMP_Variable *var, SNMP_Transport *snm
 {
    ObjectArray<WirelessStationInfo> *wsList = (ObjectArray<WirelessStationInfo> *)arg;
 
-   SNMP_ObjectId *name = var->getName();
-   size_t nameLen = name->getLength();
+   const SNMP_ObjectId& name = var->getName();
+   size_t nameLen = name.length();
    UINT32 oid[MAX_OID_LEN];
-   memcpy(oid, name->getValue(), nameLen * sizeof(UINT32));
+   memcpy(oid, name.value(), nameLen * sizeof(UINT32));
 
    SNMP_PDU *request = new SNMP_PDU(SNMP_GET_REQUEST, SnmpNewRequestId(), snmp->getSnmpVersion());
 

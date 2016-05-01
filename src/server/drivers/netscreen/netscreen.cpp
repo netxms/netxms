@@ -86,11 +86,11 @@ void NetscreenDriver::analyzeDevice(SNMP_Transport *snmp, const TCHAR *oid, Stri
  */
 static UINT32 HandlerIfList(SNMP_Variable *varbind, SNMP_Transport *transport, void *arg)
 {
-	InterfaceList *ifList = (InterfaceList *)arg;
+   InterfaceList *ifList = (InterfaceList *)arg;
 
-   size_t nameLen = varbind->getName()->getLength();
-	UINT32 oidName[MAX_OID_LEN];
-	memcpy(oidName, varbind->getName()->getValue(), nameLen * sizeof(UINT32));
+   size_t nameLen = varbind->getName().length();
+   UINT32 oidName[MAX_OID_LEN];
+   memcpy(oidName, varbind->getName().value(), nameLen * sizeof(UINT32));
 
 	InterfaceInfo *iface = new InterfaceInfo(varbind->getValueAsUInt());
 

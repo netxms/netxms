@@ -82,12 +82,9 @@ bool QtechOLTDriver::isDeviceSupported(SNMP_Transport *snmp, const TCHAR *oid)
  */
 static UINT32 HandlerIndex(SNMP_Variable *pVar, SNMP_Transport *pTransport, void *pArg)
 {
-    UINT32 oid[128];
-    size_t oidLen = pVar->getName()->getLength();
-    memcpy(oid, pVar->getName()->getValue(), oidLen * sizeof(UINT32));
-
-    InterfaceInfo *info = new InterfaceInfo(pVar->getValueAsUInt() + oid[14] * 1000);
-    info->slot = oid[14];
+    UINT32 slot = pVar->getName().getElement(14);
+    InterfaceInfo *info = new InterfaceInfo(pVar->getValueAsUInt() + slot * 1000);
+    info->slot = slot;
     info->port = info->index - info->slot * 1000;
     info->isPhysicalPort = true;
     ((InterfaceList *)pArg)->add(info);

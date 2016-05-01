@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -294,18 +294,18 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *ro
                // Should we stop walking?
 					// Some buggy SNMP agents may return first value after last one
 					// (Toshiba Strata CTX do that for example), so last check is here
-               if ((pVar->getName()->getLength() < rootOidLen) ||
-                   (memcmp(rootOid, pVar->getName()->getValue(), rootOidLen * sizeof(UINT32))) ||
-						 (pVar->getName()->compare(pdwName, nameLength) == OID_EQUAL) ||
-						 (pVar->getName()->compare(firstObjectName, firstObjectNameLen) == OID_EQUAL))
+               if ((pVar->getName().length() < rootOidLen) ||
+                   (memcmp(rootOid, pVar->getName().value(), rootOidLen * sizeof(UINT32))) ||
+						 (pVar->getName().compare(pdwName, nameLength) == OID_EQUAL) ||
+						 (pVar->getName().compare(firstObjectName, firstObjectNameLen) == OID_EQUAL))
                {
                   bRunning = FALSE;
                   delete pRespPDU;
                   delete pRqPDU;
                   break;
                }
-               nameLength = pVar->getName()->getLength();
-               memcpy(pdwName, pVar->getName()->getValue(), nameLength * sizeof(UINT32));
+               nameLength = pVar->getName().length();
+               memcpy(pdwName, pVar->getName().value(), nameLength * sizeof(UINT32));
 					if (firstObjectNameLen == 0)
 					{
 						firstObjectNameLen = nameLength;
