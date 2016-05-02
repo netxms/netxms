@@ -1082,7 +1082,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    }
    else if (!_tcscmp(attr, _T("dataType")) && (dci->getType() == DCO_TYPE_ITEM))
    {
-		value = new NXSL_Value((LONG)((DCItem *)dci)->getDataType());
+		value = new NXSL_Value(dci->getDataType());
    }
    else if (!_tcscmp(attr, _T("description")))
    {
@@ -1098,7 +1098,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    }
    else if ((dci->getType() == DCO_TYPE_ITEM) && !_tcscmp(attr, _T("instance")))
    {
-		value = new NXSL_Value(((DCItem *)dci)->getInstance());
+		value = new NXSL_Value(dci->getInstance());
    }
    else if (!_tcscmp(attr, _T("lastPollTime")))
    {
