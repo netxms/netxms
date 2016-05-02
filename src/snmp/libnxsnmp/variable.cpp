@@ -269,8 +269,11 @@ TCHAR *SNMP_Variable::getValueAsString(TCHAR *buffer, size_t bufferSize) const
             if (MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_value, (int)length, buffer, (int)bufferSize) == 0)
             {
                // fallback if conversion fails
-		         for(UINT32 i = 0; i < length; i++)
-			         buffer[i] = ((char *)m_value)[i];
+		         for(size_t i = 0; i < length; i++)
+		         {
+		            char c = ((char *)m_value)[i];
+			         buffer[i] = ((c > 0) && (c < 128)) ? c : '?';
+		         }
             }
 #else
             memcpy(buffer, m_value, length);
@@ -303,54 +306,71 @@ TCHAR *SNMP_Variable::getValueAsPrintableString(TCHAR *buffer, size_t bufferSize
       length = min(bufferSize - 1, m_valueLength);
       if (length > 0)
       {
-#ifdef UNICODE
-         if (MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_value, (int)length, buffer, (int)bufferSize) == 0)
+         bool conversionNeeded = false;
+         if (convertToHexAllowed)
          {
-            // fallback if conversion fails
-		      for(UINT32 i = 0; i < length; i++)
-			      buffer[i] = ((char *)m_value)[i];
+            for(UINT32 i = 0; i < length; i++)
+               if ((m_value[i] < 0x1F) && (m_value[i] != 0x0D) && (m_value[i] != 0x0A))
+               {
+                  if ((i == length - 1) && (m_value[i] == 0))
+                     break;   // 0 at the end is OK
+                  conversionNeeded = true;
+                  break;
+               }
          }
+
+         if (!conversionNeeded)
+         {
+#ifdef UNICODE
+            if (MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)m_value, (int)length, buffer, (int)bufferSize) < length)
+            {
+               if (convertToHexAllowed)
+               {
+                  conversionNeeded = true;
+               }
+               else
+               {
+                  // fallback if conversion fails
+                  for(size_t i = 0; i < length; i++)
+                  {
+                     char c = ((char *)m_value)[i];
+                     buffer[i] = ((c > 0) && (c < 128)) ? c : '?';
+                  }
+               }
+            }
 #else
-         memcpy(buffer, m_value, length);
+            memcpy(buffer, m_value, length);
 #endif
+            buffer[length] = 0;
+         }
+
+         if (conversionNeeded)
+         {
+            TCHAR *hexString = (TCHAR *)malloc((length * 3 + 1) * sizeof(TCHAR));
+            UINT32 i, j;
+            for(i = 0, j = 0; i < length; i++)
+            {
+               hexString[j++] = bin2hex(m_value[i] >> 4);
+               hexString[j++] = bin2hex(m_value[i] & 15);
+               hexString[j++] = _T(' ');
+            }
+            hexString[j] = 0;
+            nx_strncpy(buffer, hexString, bufferSize);
+            free(hexString);
+            *convertToHex = true;
+         }
+         else
+         {
+            // Replace non-printable characters with question marks
+            for(UINT32 i = 0; i < length; i++)
+               if ((buffer[i] < 0x1F) && (buffer[i] != 0x0D) && (buffer[i] != 0x0A))
+                  buffer[i] = _T('?');
+         }
       }
-      buffer[length] = 0;
-
-		if (convertToHexAllowed)
-		{
-			bool conversionNeeded = false;
-			for(UINT32 i = 0; i < length; i++)
-				if ((m_value[i] < 0x1F) && (m_value[i] != 0x0D) && (m_value[i] != 0x0A))
-				{
-               if ((i == length - 1) && (m_value[i] == 0))
-                  break;   // 0 at the end is OK
-					conversionNeeded = true;
-					break;
-				}
-
-			if (conversionNeeded)
-			{
-				TCHAR *hexString = (TCHAR *)malloc((length * 3 + 1) * sizeof(TCHAR));
-				UINT32 i, j;
-				for(i = 0, j = 0; i < length; i++)
-				{
-					hexString[j++] = bin2hex(m_value[i] >> 4);
-					hexString[j++] = bin2hex(m_value[i] & 15);
-					hexString[j++] = _T(' ');
-				}
-				hexString[j] = 0;
-				nx_strncpy(buffer, hexString, bufferSize);
-				free(hexString);
-				*convertToHex = true;
-			}
-		}
-		else
-		{
-			// Replace non-printable characters with question marks
-			for(UINT32 i = 0; i < length; i++)
-				if ((buffer[i] < 0x1F) && (buffer[i] != 0x0D) && (buffer[i] != 0x0A))
-					buffer[i] = _T('?');
-		}
+      else
+      {
+         buffer[0] = 0;
+      }
 	}
 	else
 	{
