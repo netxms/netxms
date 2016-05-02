@@ -192,7 +192,7 @@ static int WideCharToMultiByteSimpleCopy(int iCodePage, DWORD dwFlags, const WCH
    if (iSize >= cchByteChar)
       iSize = cchByteChar - 1;
    for(pSrc = pWideCharStr, iPos = 0, pDest = pByteStr; iPos < iSize; iPos++, pSrc++, pDest++)
-      *pDest = (*pSrc < 256) ? (char)(*pSrc) : '?';
+      *pDest = (*pSrc < 128) ? (char)(*pSrc) : '?';
    *pDest = 0;
 
    return iSize;
@@ -294,7 +294,7 @@ static int MultiByteToWideCharSimpleCopy(int iCodePage, DWORD dwFlags, const cha
    if (iSize >= cchWideChar)
       iSize = cchWideChar - 1;
    for(pSrc = pByteStr, iPos = 0, pDest = pWideCharStr; iPos < iSize; iPos++, pSrc++, pDest++)
-      *pDest = (WCHAR) (*pSrc);
+      *pDest = ((*pSrc) < 128) ? (WCHAR)(*pSrc) : L'?';
    *pDest = 0;
 
    return iSize;
