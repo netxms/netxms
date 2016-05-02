@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -156,7 +156,12 @@ void Template::setAutoApplyFilter(const TCHAR *filter)
 		m_applyFilterSource = _tcsdup(filter);
 		m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256, NULL);
 		if (m_applyFilter == NULL)
-			nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+		{
+         TCHAR buffer[1024];
+         _sntprintf(buffer, 1024, _T("Template::%s::%d"), m_name, m_id);
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
+			nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, error);
+		}
 	}
 	else
 	{
@@ -205,7 +210,12 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       TCHAR error[256];
       m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256, NULL);
       if (m_applyFilter == NULL)
+      {
+         TCHAR buffer[1024];
+         _sntprintf(buffer, 1024, _T("Template::%s::%d"), m_name, m_id);
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
          nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+      }
    }
    DBFreeResult(hResult);
 
@@ -893,7 +903,12 @@ UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
 
 			m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256, NULL);
 			if (m_applyFilter == NULL)
+			{
+	         TCHAR buffer[1024];
+	         _sntprintf(buffer, 1024, _T("Template::%s::%d"), m_name, m_id);
+	         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
 				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+			}
 		}
 		else
 		{
