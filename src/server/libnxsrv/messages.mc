@@ -1010,4 +1010,16 @@ Language=English
 Failed to execute transformation script for object %1 "%2" DCI %3 "%4": %5
 .
 
+MessageId=
+SymbolicName=MSG_THRESHOLD_SCRIPT_COMPILATION_ERROR
+Language=English
+Failed to compile threshold script for node "%1" DCI %2 threshold %3: %4
+.
+
+MessageId=
+SymbolicName=MSG_THRESHOLD_SCRIPT_EXECUTION_ERROR
+Language=English
+Failed to execute threshold script for node "%1" DCI %2 threshold %3: %4
+.
+
 ;#endif

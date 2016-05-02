@@ -93,7 +93,12 @@ bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       TCHAR error[256];
       m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, NULL);
       if (m_bindFilter == NULL)
+      {
+         TCHAR buffer[1024];
+         _sntprintf(buffer, 1024, _T("Container::%s::%d"), m_name, m_id);
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
          nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, error);
+      }
    }
    DBFreeResult(hResult);
 
@@ -284,7 +289,12 @@ void Container::setAutoBindFilter(const TCHAR *script)
 
 			m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, NULL);
 			if (m_bindFilter == NULL)
+			{
+	         TCHAR buffer[1024];
+	         _sntprintf(buffer, 1024, _T("Container::%s::%d"), m_name, m_id);
+	         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
 				nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+			}
 		}
 		else
 		{

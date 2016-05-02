@@ -113,7 +113,7 @@ private:
 	BYTE m_currentSeverity;   // Current everity (NORMAL if threshold is inactive)
    int m_sampleCount;        // Number of samples to calculate function on
    TCHAR *m_scriptSource;
-   NXSL_VM *m_script;
+   NXSL_Program *m_script;
    BOOL m_isReached;
 	int m_numMatches;			// Number of consecutive matches
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
