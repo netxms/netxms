@@ -69,7 +69,7 @@ void SNMP_Snapshot::buildIndex()
       SNMP_SnapshotIndexEntry *entry = (SNMP_SnapshotIndexEntry *)malloc(sizeof(SNMP_SnapshotIndexEntry));
       entry->var = v;
       entry->pos = i;
-      HASH_ADD_KEYPTR(hh, m_index, entry->var->getName().value(), entry->var->getName().length() * sizeof(UINT32), entry);
+      HASH_ADD_KEYPTR(hh, m_index, entry->var->getName().value(), (unsigned int)(entry->var->getName().length() * sizeof(UINT32)), entry);
    }
 }
 
@@ -79,7 +79,7 @@ void SNMP_Snapshot::buildIndex()
 SNMP_SnapshotIndexEntry *SNMP_Snapshot::find(const UINT32 *oid, size_t oidLen) const
 {
    SNMP_SnapshotIndexEntry *entry;
-   HASH_FIND(hh, m_index, oid, oidLen * sizeof(UINT32), entry);
+   HASH_FIND(hh, m_index, oid, (unsigned int)(oidLen * sizeof(UINT32)), entry);
    return entry;
 }
 
