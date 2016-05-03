@@ -498,14 +498,14 @@ NXSL_METHOD_DEFINITION(Interface, setExcludeFromTopology)
 NXSL_METHOD_DEFINITION(Interface, setExpectedState)
 {
    int state;
-   if (argv[1]->isInteger())
+   if (argv[0]->isInteger())
    {
-      state = argv[1]->getValueAsInt32();
+      state = argv[0]->getValueAsInt32();
    }
-   else if (argv[1]->isString())
+   else if (argv[0]->isString())
    {
       static const TCHAR *stateNames[] = { _T("UP"), _T("DOWN"), _T("IGNORE"), NULL };
-      const TCHAR *name = argv[1]->getValueAsCString();
+      const TCHAR *name = argv[0]->getValueAsCString();
       for(state = 0; stateNames[state] != NULL; state++)
          if (!_tcsicmp(stateNames[state], name))
             break;
@@ -514,7 +514,6 @@ NXSL_METHOD_DEFINITION(Interface, setExpectedState)
    {
       return NXSL_ERR_NOT_STRING;
    }
-
 
    if ((state >= 0) && (state <= 2))
       ((Interface *)object->getData())->setExpectedState(state);
