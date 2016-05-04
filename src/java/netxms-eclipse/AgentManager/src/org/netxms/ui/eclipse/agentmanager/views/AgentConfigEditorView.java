@@ -18,10 +18,6 @@
  */
 package org.netxms.ui.eclipse.agentmanager.views;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.PropertyResourceBundle;
-import java.util.ResourceBundle;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -37,8 +33,6 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISaveablePart2;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.commands.ActionHandler;
-import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.client.NXCSession;
@@ -50,6 +44,7 @@ import org.netxms.ui.eclipse.agentmanager.widgets.AgentConfigEditor;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.NXFindAndReplaceAction;
 
 /**
  * Agent's master config editor
@@ -139,16 +134,7 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	 */
 	private void createActions()
 	{
-		try
-		{
-			actionFindReplace = new FindReplaceAction(getResourceBundle(), "actions.find_and_replace.", this); //$NON-NLS-1$
-			IHandlerService hs = (IHandlerService)getSite().getService(IHandlerService.class);
-			hs.activateHandler("org.eclipse.ui.edit.findReplace", new ActionHandler(actionFindReplace)); 		 //$NON-NLS-1$
-		}
-		catch(IOException e)
-		{
-			e.printStackTrace();
-		}
+      actionFindReplace = NXFindAndReplaceAction.getFindReplaceAction(this);
 		
 		actionRefresh = new RefreshAction()
 		{
@@ -262,28 +248,6 @@ public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 	public boolean isSaveOnCloseNeeded()
 	{
 		return modified;
-	}
-
-	/**
-	 * Get resource bundle
-	 * @return
-	 * @throws IOException
-	 */
-	private ResourceBundle getResourceBundle() throws IOException
-	{
-		InputStream in = null;
-		String resource = "resource.properties"; //$NON-NLS-1$
-		ClassLoader loader = this.getClass().getClassLoader();
-		if (loader != null)
-		{
-			in = loader.getResourceAsStream(resource);
-		}
-		else
-		{
-			in = ClassLoader.getSystemResourceAsStream(resource);
-		}
-		
-		return new PropertyResourceBundle(in);
 	}
 
 	/* (non-Javadoc)

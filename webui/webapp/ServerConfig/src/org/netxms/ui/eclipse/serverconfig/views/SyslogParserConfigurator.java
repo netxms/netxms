@@ -73,7 +73,7 @@ public class SyslogParserConfigurator extends ViewPart implements ISaveablePart
 	@Override
 	public void createPartControl(Composite parent)
 	{
-		editor = new LogParserEditor(parent, SWT.NONE);
+		editor = new LogParserEditor(parent, SWT.NONE, true);
 		editor.addModifyListener(new LogParserModifyListener() {
 			@Override
 			public void modifyParser()

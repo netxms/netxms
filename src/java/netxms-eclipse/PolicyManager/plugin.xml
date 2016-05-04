@@ -2,30 +2,6 @@
 <?eclipse version="3.2"?>
 <plugin>
 
-  <extension
-     point = "org.eclipse.ui.propertyPages">
-
-        <page
-           id="org.netxms.ui.eclipse.policymanager.propertypages.ConfigFile"
-           name="%page.name.ConfigFile"
-	       class="org.netxms.ui.eclipse.policymanager.propertypages.ConfigFile">
-          <enabledWhen>
-             <instanceof
-                  value="org.netxms.client.objects.AgentPolicyConfig">
-             </instanceof>
-          </enabledWhen>
-        </page>
-        <page
-              class="org.netxms.ui.eclipse.policymanager.propertypages.ParserFile"
-              id="org.netxms.ui.eclipse.policymanager.propertypages.ParserFile"
-              name="Log Parser File">
-           <enabledWhen>
-              <instanceof
-                    value="org.netxms.client.objects.AgentPolicyLogParser">
-              </instanceof>
-           </enabledWhen>
-        </page>
-  </extension>
 
    <extension
          point="org.eclipse.ui.popupMenus">
@@ -104,7 +80,29 @@
                label="%action.label.Install"
                menubarPath="objectmgmt">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.policymanager.actions.EditPolicy"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.policymanager.popupActions.EditPolicy"
+               label="Edit Policy..."
+               menubarPath="objectmgmt">
+         </action>
       </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            class="org.netxms.ui.eclipse.policymanager.views.ConfigPolicyEditor"
+            id="org.netxms.ui.eclipse.policymanager.views.ConfigPolicyEditor"
+            name="Agent Policy Config Editor"
+            restorable="true">
+      </view>
+      <view
+            class="org.netxms.ui.eclipse.policymanager.views.LogParserPolicyEditor"
+            id="org.netxms.ui.eclipse.policymanager.views.LogParserPolicyEditor"
+            name="Agent Policy Log Parser Editor"
+            restorable="true">
+      </view>
    </extension>
 
 </plugin>

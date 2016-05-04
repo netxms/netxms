@@ -34,13 +34,17 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.Text;
@@ -60,7 +64,9 @@ import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserModifyListene
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserRule;
 import org.netxms.ui.eclipse.serverconfig.widgets.helpers.LogParserRuleEditor;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledText;
 
 /**
  * Log parser editor
@@ -81,16 +87,24 @@ public class LogParserEditor extends Composite
 	private Composite rulesArea;
 	private ImageHyperlink addColumnLink;
 	private TableViewer macroList;
+	private boolean isSyslogParser;
+	
+	/* General section */
+   private LabeledText labelFileName;
+   private Spinner spinerTrace;
+   private Button checkProcessAll;
 
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public LogParserEditor(Composite parent, int style)
+	public LogParserEditor(Composite parent, int style, boolean isSyslogParser)
 	{
 		super(parent, style);
 		
 		setLayout(new FillLayout());
+		
+		this.isSyslogParser = isSyslogParser;
 		
 		tabFolder = new CTabFolder(this, SWT.BOTTOM | SWT.FLAT | SWT.MULTI);
 		tabFolder.setUnselectedImageVisible(true);
@@ -159,11 +173,24 @@ public class LogParserEditor extends Composite
 		TableWrapLayout layout = new TableWrapLayout();
 		layout.numColumns = 2;
 		form.getBody().setLayout(layout);
+		
+		/* General section */
+		Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR);
+      section.setText("General");
+      TableWrapData td = new TableWrapData();
+      td.align = TableWrapData.FILL;
+      td.grabHorizontal = true;
+      td.colspan = 2;
+      section.setLayoutData(td);
+      
+      final Composite generalArea = toolkit.createComposite(section);
+      createGeneralArea(generalArea);      
+      section.setClient(generalArea);
 
 		/* Rules section */
-		Section section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.COMPACT | Section.TWISTIE | Section.EXPANDED);
+		section = toolkit.createSection(form.getBody(), Section.TITLE_BAR | Section.COMPACT | Section.TWISTIE | Section.EXPANDED);
 		section.setText(Messages.get().LogParserEditor_Rules);
-		TableWrapData td = new TableWrapData();
+		td = new TableWrapData();
 		td.align = TableWrapData.FILL;
 		td.grabHorizontal = true;
 		section.setLayoutData(td);
@@ -203,7 +230,70 @@ public class LogParserEditor extends Composite
 		form.reflow(true);
 	}
 	
-	/**
+	private void createGeneralArea(Composite generalArea)
+   {
+	   GridLayout layout = new GridLayout();
+	   layout.makeColumnsEqualWidth = false;
+      layout.numColumns = 3;
+      generalArea.setLayout(layout);
+      
+      if(!isSyslogParser)
+      {
+         labelFileName = new LabeledText(generalArea, SWT.NONE);
+         labelFileName.setLabel("Parsing file path");
+         labelFileName.setText((parser.getFile() != null) ? parser.getFile() : ""); //$NON-NLS-1$
+         GridData gd = new GridData();
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalAlignment = SWT.FILL;
+         labelFileName.setLayoutData(gd);
+         labelFileName.setText(parser.getFile());
+         labelFileName.getTextControl().addModifyListener(new ModifyListener() {
+            @Override
+            public void modifyText(ModifyEvent e)
+            {
+               fireModifyListeners();
+               for(LogParserRule rule : parser.getRules())
+               {                  
+                  if(rule.getEditor() != null)
+                     rule.getEditor().updateWindowsEventLogFields();
+               }
+            }
+         });
+      }
+      
+      final WidgetFactory factory = new WidgetFactory() {
+         @Override
+         public Control createControl(Composite parent, int style)
+         {
+            return new Spinner(parent, style);
+         }
+      };
+      
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      spinerTrace = (Spinner)WidgetHelper.createLabeledControl(generalArea, SWT.BORDER, factory, "Trace level", gd);
+      spinerTrace.setMinimum(0);
+      spinerTrace.setMaximum(9);
+      spinerTrace.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            fireModifyListeners();
+         }
+      });
+      spinerTrace.setSelection(parser.getTrace() != null ? parser.getTrace() : 0);
+      
+      checkProcessAll = toolkit.createButton(generalArea, "Process all", SWT.CHECK);
+      checkProcessAll.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            fireModifyListeners();
+         }
+      });          
+   }
+
+   /**
 	 * Create text editor for direct XML edit
 	 */
 	private void createTextEditor()
@@ -358,6 +448,10 @@ public class LogParserEditor extends Composite
 	 */
 	private String buildParserXml()
 	{
+	   parser.setFile(labelFileName.getText());
+	   parser.setProcessALL(checkProcessAll.getSelection());
+	   parser.setTrace(spinerTrace.getSelection());
+	   
 		for(LogParserRule rule : parser.getRules())
 			rule.getEditor().save();
 		try
@@ -405,6 +499,13 @@ public class LogParserEditor extends Composite
 			MessageDialogHelper.openError(getShell(), Messages.get().LogParserEditor_Error, Messages.get().LogParserEditor_InvalidDefinition);
 			parser = new LogParser();
 		}
+		parser.setSyslogParser(isSyslogParser);
+		
+		/* general */
+		if(!isSyslogParser)
+		   labelFileName.setText(parser.getFile());
+		spinerTrace.setSelection(parser.getTrace() != null ? parser.getTrace() : 0);
+		checkProcessAll.setSelection(parser.getProcessALL());
 		
 		/* rules */
 		for(LogParserRule rule : parser.getRules())
@@ -546,4 +647,22 @@ public class LogParserEditor extends Composite
 		getParent().layout(true, true);
 		fireModifyListeners();
 	}
+
+   /**
+    * @return the isSyslogParser
+    */
+   public boolean isSyslogParser()
+   {
+      return isSyslogParser;
+   }
+   
+   /**
+    * Checks if file name starts with "*" and is not null, then it it Windows Event Log parser.
+    * 
+    * @return isWindowsEventLogParser
+    */
+   public boolean isWindowsEventLogParser()
+   {
+      return labelFileName.getText().startsWith("*");
+   }
 }

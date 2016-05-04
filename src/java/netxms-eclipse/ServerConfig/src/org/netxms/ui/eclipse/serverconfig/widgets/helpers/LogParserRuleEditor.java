@@ -21,12 +21,14 @@ package org.netxms.ui.eclipse.serverconfig.widgets.helpers;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -62,15 +64,18 @@ public class LogParserRuleEditor extends DashboardComposite
 	private LogParserRule rule;
 	private LogParserEditor editor;
 	private LabeledText regexp;
+	private Button checkboxInvert;
 	private LabeledText severity;
 	private LabeledText facility;
 	private LabeledText tag;
 	private LabeledText activeContext;
+	private LabeledText description;
 	private EventSelector event;
 	private Spinner eventParamCount;
 	private LabeledText context;
 	private Combo contextAction;
 	private Combo contextResetMode;
+	private Button checkboxBreak;
 
 	/**
 	 * @param parent
@@ -189,20 +194,41 @@ public class LogParserRuleEditor extends DashboardComposite
 			}
 		};
 		
-		regexp = new LabeledText(area, SWT.NONE);
-		toolkit.adapt(regexp);
+		Composite matcher = new Composite(area, SWT.NONE);
+      toolkit.adapt(matcher);
+      GridData gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      matcher.setLayoutData(gd);
+      
+      layout = new GridLayout();
+      layout.numColumns = 2;
+      layout.marginWidth = 0;
+      matcher.setLayout(layout);
+		
+		regexp = new LabeledText(matcher, SWT.NONE);
 		regexp.setLabel(Messages.get().LogParserRuleEditor_MatchingRegExp);
-		regexp.setText(rule.getMatch());
-		GridData gd = new GridData();
+		regexp.setText(rule.getMatch().getMatch());
+		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		regexp.setLayoutData(gd);
 		regexp.getTextControl().addModifyListener(listener);
+		
+		checkboxInvert = toolkit.createButton(matcher, "Invert", SWT.CHECK);
+		checkboxInvert.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            editor.fireModifyListeners();
+         }
+      });          
+		checkboxInvert.setSelection(rule.getMatch().getInvert());
 
 		severity = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(severity);
-		severity.setLabel(Messages.get().LogParserRuleEditor_Severity);
-		severity.setText((rule.getSeverity() != null) ? Integer.toString(rule.getSeverity()) : ""); //$NON-NLS-1$
+		severity.setLabel(editor.isSyslogParser() ? Messages.get().LogParserRuleEditor_Severity : "Level");
+		severity.setText(rule.getSeverityOrLevel(editor.isSyslogParser())); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -211,8 +237,8 @@ public class LogParserRuleEditor extends DashboardComposite
 		
 		facility = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(facility);
-		facility.setLabel(Messages.get().LogParserRuleEditor_Facility);
-		facility.setText((rule.getFacility() != null) ? Integer.toString(rule.getFacility()) : ""); //$NON-NLS-1$
+		facility.setLabel(editor.isSyslogParser() ? Messages.get().LogParserRuleEditor_Facility : "Id");
+		facility.setText(rule.getFacilityOrId(editor.isSyslogParser())); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -221,13 +247,13 @@ public class LogParserRuleEditor extends DashboardComposite
 
 		tag = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(tag);
-		tag.setLabel(Messages.get().LogParserRuleEditor_SyslogTag);
-		tag.setText((rule.getTag() != null) ? rule.getTag() : ""); //$NON-NLS-1$
+		tag.setLabel(editor.isSyslogParser() ? Messages.get().LogParserRuleEditor_SyslogTag : "Source");
+		tag.setText(rule.getTagOrSource(editor.isSyslogParser())); //$NON-NLS-1$
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		tag.setLayoutData(gd);
-		tag.getTextControl().addModifyListener(listener);
+		tag.getTextControl().addModifyListener(listener);		
 		
 		activeContext = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(activeContext);
@@ -239,7 +265,40 @@ public class LogParserRuleEditor extends DashboardComposite
 		activeContext.setLayoutData(gd);
 		activeContext.getTextControl().addModifyListener(listener);
 		
+		description = new LabeledText(area, SWT.NONE);
+      toolkit.adapt(description);
+      description.setLabel("Description");
+      description.setText((rule.getDescription() != null) ? rule.getDescription() : ""); //$NON-NLS-1$
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      description.setLayoutData(gd);
+      description.getTextControl().addModifyListener(listener);
+		
+		updateWindowsEventLogFields();		
 		return area;
+	}
+	
+	/**
+	 * Enables or disables Windows syslog fields depending on filename field
+	 */
+	public void updateWindowsEventLogFields()
+	{
+	   if(editor.isSyslogParser())
+	      return;
+	      
+	   if(editor.isWindowsEventLogParser())
+	   {
+	      severity.setEnabled(true);
+	      facility.setEnabled(true);
+	      tag.setEnabled(true);
+	   }
+	   else
+	   {
+         severity.setEnabled(false);
+         facility.setEnabled(false);
+         tag.setEnabled(false);	      
+	   }
 	}
 	
 	/**
@@ -412,6 +471,10 @@ public class LogParserRuleEditor extends DashboardComposite
 			}
 		});
 		
+		checkboxBreak = toolkit.createButton(area, "Process all", SWT.CHECK);
+		checkboxBreak.setText("Break");
+		checkboxBreak.setSelection(rule.isBreakProcessing());
+		
 		return area;
 	}
 	
@@ -420,11 +483,13 @@ public class LogParserRuleEditor extends DashboardComposite
 	 */
 	public void save()
 	{
-		rule.setMatch(regexp.getText());
-		rule.setFacility(intOrNull(facility.getText()));
-		rule.setSeverity(intOrNull(severity.getText()));
-		rule.setTag(tag.getText().trim().isEmpty() ? null : tag.getText());
+		rule.setMatch(new LogParserMatch(regexp.getText(), checkboxInvert.getSelection()));
+      rule.setFacilityOrId(intOrNull(facility.getText()));
+      rule.setSeverityOrLevel(intOrNull(severity.getText()));
+      rule.setTagOrSource(tag.getText());
 		rule.setContext(activeContext.getText().trim().isEmpty() ? null : activeContext.getText());
+		rule.setBreakProcessing(checkboxBreak.getSelection());
+		rule.setDescription(description.getText());
 		if (event.getEventCode() != 0)
 		{
 			rule.setEvent(new LogParserEvent(Long.toString(event.getEventCode()), eventParamCount.getSelection()));
@@ -467,4 +532,9 @@ public class LogParserRuleEditor extends DashboardComposite
 			return null;
 		}
 	}
+
+   public boolean isSyslogParser()
+   {
+      return editor.isSyslogParser();
+   }
 }

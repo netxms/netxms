@@ -68,6 +68,7 @@ import org.netxms.ui.eclipse.nxsl.Messages;
 import org.netxms.ui.eclipse.nxsl.widgets.ScriptEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.NXFindAndReplaceAction;
 import org.netxms.ui.eclipse.widgets.CompositeWithMessageBar;
 
 /**
@@ -186,28 +187,6 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
 		editor.setFocus();
 	}
-	
-	/**
-	 * Get resource bundle
-	 * @return
-	 * @throws IOException
-	 */
-	private ResourceBundle getResourceBundle() throws IOException
-	{
-		InputStream in = null;
-		String resource = "resource.properties"; //$NON-NLS-1$
-		ClassLoader loader = this.getClass().getClassLoader();
-		if (loader != null)
-		{
-			in = loader.getResourceAsStream(resource);
-		}
-		else
-		{
-			in = ClassLoader.getSystemResourceAsStream(resource);
-		}
-		
-		return new PropertyResourceBundle(in);
-	}
 
 	/**
 	 * Create actions
@@ -216,15 +195,8 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
       
-		try
-		{
-			actionFindReplace = new FindReplaceAction(getResourceBundle(), "actions.find_and_replace.", this); //$NON-NLS-1$
-			handlerService.activateHandler("org.eclipse.ui.edit.findReplace", new ActionHandler(actionFindReplace)); 		 //$NON-NLS-1$
-		}
-		catch(IOException e)
-		{
-		   Activator.logError("Cannot create find/replace action", e);
-		}
+
+      actionFindReplace = NXFindAndReplaceAction.getFindReplaceAction(this);
 		
 		actionRefresh = new RefreshAction(this) {
 			@Override

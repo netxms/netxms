@@ -32,19 +32,32 @@ public class LogParserRule
 	private String context = null;
 
 	@Attribute(name="break", required=false)
-	private Boolean breakProcessing = null;
+	private String breakProcessing = null;
 	
-	@Element(required=false)
-	private String match = ".*"; //$NON-NLS-1$
+	@Element(required=true)
+	private LogParserMatch match = new LogParserMatch();
 	
 	@Element(required=false)
 	private LogParserEvent event = null;
-	
+   
+   //severity == level
+   //severity in syslog\level for other logs	
 	@Element(required=false)
 	private Integer severity = null;
 	
+   @Element(required=false)
+   private Integer level = null;
+	
+	//facility == id
+   //facility in syslog\id for other logs
 	@Element(required=false)
 	private Integer facility = null;
+	
+	@Element(required=false)
+	private Integer id = null;
+	
+	@Element(required = false)
+	private String source = null;
 	
 	@Element(required=false)
 	private String tag = null;
@@ -78,7 +91,7 @@ public class LogParserRule
 	 */
 	public boolean isBreakProcessing()
 	{
-		return (breakProcessing != null) ? breakProcessing : false;
+		return LogParser.stringToBoolean(breakProcessing);
 	}
 
 	/**
@@ -86,26 +99,26 @@ public class LogParserRule
 	 */
 	public void setBreakProcessing(boolean breakProcessing)
 	{
-		this.breakProcessing = breakProcessing ? Boolean.TRUE : null;
+		this.breakProcessing = LogParser.booleanToString(breakProcessing);
 	}
 
 	/**
-	 * @return the match
-	 */
-	public String getMatch()
-	{
-		return match;
-	}
+    * @return the matcher
+    */
+   public LogParserMatch getMatch()
+   {
+      return match;
+   }
 
-	/**
-	 * @param match the match to set
-	 */
-	public void setMatch(String match)
-	{
-		this.match = match;
-	}
+   /**
+    * @param matcher the matcher to set
+    */
+   public void setMatch(LogParserMatch matcher)
+   {
+      this.match = matcher;
+   }
 
-	/**
+   /**
 	 * @return the event
 	 */
 	public LogParserEvent getEvent()
@@ -124,49 +137,91 @@ public class LogParserRule
 	/**
 	 * @return the severity
 	 */
-	public Integer getSeverity()
+	public String getSeverityOrLevel(boolean isSyslogParser)
 	{
-		return severity;
+	   if(isSyslogParser)
+      {
+	      return LogParser.integerToString(severity);
+      }
+	   else
+	      return LogParser.integerToString(level);
 	}
 
 	/**
 	 * @param severity the severity to set
 	 */
-	public void setSeverity(Integer severity)
+	public void setSeverityOrLevel(Integer severity)
 	{
-		this.severity = severity;
+      if(editor.isSyslogParser())
+      {
+         this.severity = severity;
+         this.level = null;
+      }
+      else
+      {
+         this.level = severity;
+         this.severity = null;
+      }
 	}
 
 	/**
 	 * @return the facility
 	 */
-	public Integer getFacility()
+	public String getFacilityOrId(boolean isSyslogParser)
 	{
-		return facility;
+	   if(isSyslogParser)
+	   {
+	      return LogParser.integerToString(facility);
+	   }
+	   else
+	      return LogParser.integerToString(id);
 	}
 
 	/**
 	 * @param facility the facility to set
 	 */
-	public void setFacility(Integer facility)
+	public void setFacilityOrId(Integer facility)
 	{
-		this.facility = facility;
+	   if(editor.isSyslogParser())
+      {
+	      this.facility = facility;
+	      this.id = null;
+      }
+	   else
+	   {
+	      this.id = facility;
+	      this.facility = null;
+	   }
 	}
 
 	/**
 	 * @return the tag
 	 */
-	public String getTag()
+	public String getTagOrSource(boolean isSyslogParser)
 	{
-		return tag;
+      if(isSyslogParser)
+      {
+         return tag == null ? "" : tag;
+      }
+      else
+         return source == null ? "" : source;
 	}
 
 	/**
 	 * @param tag the tag to set
 	 */
-	public void setTag(String tag)
+	public void setTagOrSource(String tag)
 	{
-		this.tag = tag;
+      if(editor.isSyslogParser())
+      {
+         this.tag = tag;
+         this.source = null;
+      }
+      else
+      {
+         this.tag = null;
+         this.source = tag;
+      }
 	}
 
 	/**
@@ -182,7 +237,7 @@ public class LogParserRule
 	 */
 	public void setDescription(String description)
 	{
-		this.description = description;
+		this.description = description == null || description.trim().isEmpty() ? null : description;
 	}
 
 	/**
@@ -216,4 +271,27 @@ public class LogParserRule
 	{
 		this.editor = editor;
 	}
+
+   public void updateFieldsCorrectly(boolean isSyslogParser)
+   {
+      if(isSyslogParser)
+      {
+         if(facility == null || facility == 0)
+            facility = id;
+         if(tag == null || tag.isEmpty())
+            tag = source;
+         if(severity == null || severity == 0)
+            severity = level;         
+      }
+      else
+      {
+         if(id == null || id == 0)
+            id = facility;
+         if(source == null || source.isEmpty())
+            source = tag;
+         if(level == null || level == 0)
+            level = severity;          
+      }
+      
+   }
 }

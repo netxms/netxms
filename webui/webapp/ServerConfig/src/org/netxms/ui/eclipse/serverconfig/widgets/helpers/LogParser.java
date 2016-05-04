@@ -38,8 +38,11 @@ import org.simpleframework.xml.core.Persister;
 @Root(name="parser", strict=false)
 public class LogParser
 {
+   public static int PARSER_SYSLOG = 0;
+   public static int PARSER_OTHER = 1;
+   
 	@Attribute(required=false)
-	private String name = null;
+	private String processALL = null;
 	
 	@Attribute(required=false)
 	private Integer trace = null;
@@ -52,8 +55,10 @@ public class LogParser
 	
 	@ElementMap(entry="macro", key="name", attribute=true, required=false)
 	private HashMap<String, String> macros = new HashMap<String, String>(0);
+	
+	private boolean isSyslogParser;
 
-	/**
+   /**
 	 * Create log parser object from XML document
 	 * 
 	 * @param xml XML document
@@ -81,25 +86,34 @@ public class LogParser
 	}
 	
 	/**
+    * @return the isSyslogParser
+    */
+   public boolean isSyslogParser()
+   {
+      return isSyslogParser;
+   }
+
+   /**
+    * @param isSyslogParser the isSyslogParser to set
+    */
+   public void setSyslogParser(boolean isSyslogParser)
+   {
+      this.isSyslogParser = isSyslogParser;
+      if(isSyslogParser)
+      {
+         setFile(null);
+      }
+
+      for(LogParserRule rule : rules)
+      {
+         rule.updateFieldsCorrectly(isSyslogParser);
+      }
+   }
+
+   /**
 	 * @return
 	 */
-	public String getName()
-	{
-		return name;
-	}
-
-	/**
-	 * @param name
-	 */
-	public void setName(String name)
-	{
-		this.name = name;
-	}
-
-	/**
-	 * @return
-	 */
-	public int getTrace()
+	public Integer getTrace()
 	{
 		return trace;
 	}
@@ -107,7 +121,7 @@ public class LogParser
 	/**
 	 * @param trace
 	 */
-	public void setTrace(int trace)
+	public void setTrace(Integer trace)
 	{
 		this.trace = trace;
 	}
@@ -121,6 +135,22 @@ public class LogParser
 	}
 
 	/**
+    * @return the processALL
+    */
+   public boolean getProcessALL()
+   {
+      return stringToBoolean(processALL);
+   }
+
+   /**
+    * @param processALL the processALL to set
+    */
+   public void setProcessALL(boolean processALL)
+   {
+      this.processALL = booleanToString(processALL);
+   }
+
+   /**
 	 * @param file
 	 */
 	public void setFile(String file)
@@ -142,5 +172,37 @@ public class LogParser
 	public Map<String, String> getMacros()
 	{
 		return macros;
+	}
+	
+	public static boolean stringToBoolean(final String value)
+	{
+	   if(value != null)
+      {
+	      try
+	      {
+	         if(Integer.parseInt(value) > 0)
+	         {
+	            return true;
+	         }
+	      }
+         catch(Exception ex)
+         {
+            {
+               if(value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes"))
+                  return true;
+            }
+         }
+      }
+      return false;
+	}
+	
+	public static String booleanToString(boolean value)
+	{
+	   return value ? "true" : null;
+	}
+	
+	public static String integerToString(Integer value)
+	{
+	   return value == null ? "" : Integer.toString(value);
 	}
 }

@@ -28,7 +28,7 @@ import org.simpleframework.xml.Text;
 @Root(name="context", strict=false)
 public class LogParserContext
 {
-	@Attribute
+	@Attribute(required=false)
 	private String action = null;
 	
 	@Attribute(required=false)
