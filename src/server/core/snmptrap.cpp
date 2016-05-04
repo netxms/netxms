@@ -168,14 +168,14 @@ void InitTraps()
 static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, int sourcePort)
 {
    TCHAR *argList[32], szBuffer[256];
-   TCHAR names[33][512];
+   TCHAR *names[33];
    char szFormat[] = "sssssssssssssssssssssssssssssssss";
    UINT32 i;
    int iResult;
 
    memset(argList, 0, sizeof(argList));
    memset(names, 0, sizeof(names));
-   _tcscpy(names[0], _T("oid"));
+   names[0] = (TCHAR *)_T("oid");
 
 	// Extract varbinds from trap and add them as event's parameters
    for(i = 0; i < m_pTrapCfg[dwIndex].dwNumMaps; i++)
@@ -191,7 +191,7 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
                (s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ?
                   varbind->getValueAsPrintableString(szBuffer, 256, &convertToHex) :
                   varbind->getValueAsString(szBuffer, 256));
-            varbind->getName().toString(names[i + 1], 512);
+				names[i + 1] = _tcsdup(varbind->getName().toString());
          }
       }
       else
@@ -210,7 +210,7 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
                   (s_allowVarbindConversion && !(m_pTrapCfg[dwIndex].pMaps[i].dwFlags & TRAP_VARBIND_FORCE_TEXT)) ?
                      varbind->getValueAsPrintableString(szBuffer, 256, &convertToHex) :
                      varbind->getValueAsString(szBuffer, 256));
-	            varbind->getName().toString(names[i + 1], 512);
+	            names[i + 1] = _tcsdup(varbind->getName().toString());
                break;
             }
          }
@@ -219,7 +219,7 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
 
    argList[m_pTrapCfg[dwIndex].dwNumMaps] = (TCHAR *)malloc(16 * sizeof(TCHAR));
    _sntprintf(argList[m_pTrapCfg[dwIndex].dwNumMaps], 16, _T("%d"), sourcePort);
-   _tcscpy(names[m_pTrapCfg[dwIndex].dwNumMaps + 1], _T("sourcePort"));
+   names[m_pTrapCfg[dwIndex].dwNumMaps + 1] = (TCHAR *)_T("sourcePort");
    szFormat[m_pTrapCfg[dwIndex].dwNumMaps + 2] = 0;
    PostEventWithTagAndNames(
       m_pTrapCfg[dwIndex].dwEventCode, dwObjectId,
@@ -234,8 +234,12 @@ static void GenerateTrapEvent(UINT32 dwObjectId, UINT32 dwIndex, SNMP_PDU *pdu, 
       argList[24], argList[25], argList[26], argList[27],
       argList[28], argList[29], argList[30], argList[31]);
 
-   for(i = 0; i <= m_pTrapCfg[dwIndex].dwNumMaps; i++)
+   for(i = 0; i < m_pTrapCfg[dwIndex].dwNumMaps; i++)
+   {
       free(argList[i]);
+      free(names[i + 1]);
+   }
+   free(argList[m_pTrapCfg[dwIndex].dwNumMaps]);
 }
 
 /**
