@@ -418,6 +418,7 @@ public class SeriesSet implements ISeriesSet
       int stackRiserPosition = -1;
       double[] stackBarSeries = null;
       double[] stackLineSeries = null;
+      double[] invertedStackLineSeries = null;
 
       if (((Axis)xAxis).isValidCategoryAxis())
       {
@@ -427,6 +428,7 @@ public class SeriesSet implements ISeriesSet
             int size = categorySeries.length;
             stackBarSeries = new double[size];
             stackLineSeries = new double[size];
+            invertedStackLineSeries = new double[size];
          }
       }
       else
@@ -498,6 +500,7 @@ public class SeriesSet implements ISeriesSet
          }            
          
          stackLineSeries = new double[combinedTimeSeries.size()];
+         invertedStackLineSeries = new double[combinedTimeSeries.size()];
       }
          
       for(ISeries series : getSeries())
@@ -521,7 +524,7 @@ public class SeriesSet implements ISeriesSet
             }
             else if (series.getType() == SeriesType.LINE)
             {
-               setStackSeries(stackLineSeries, series);
+               setStackSeries(series.isInverted() ? invertedStackLineSeries : stackLineSeries, series);
             }
          }
          else

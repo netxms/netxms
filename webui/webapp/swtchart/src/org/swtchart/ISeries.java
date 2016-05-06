@@ -97,6 +97,20 @@ public interface ISeries
     * @return the state indicating if stack is enabled
     */
    boolean isStackEnabled();
+   
+   /**
+    * Set inverted mode
+    * 
+    * @param inverted
+    */
+   void setInverted(boolean inverted);
+   
+   /**
+    * Get inverted mode state
+    * 
+    * @return
+    */
+   boolean isInverted();
 
    /**
     * Sets the X series.

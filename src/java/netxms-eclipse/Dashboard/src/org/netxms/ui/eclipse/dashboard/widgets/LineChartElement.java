@@ -103,7 +103,7 @@ public class LineChartElement extends ElementWidget
 			int color = dci.getColorAsInt();
 			if (color == -1)
 				color = ChartColor.getDefaultColor(index).getRGB();
-			styles.add(new GraphItemStyle(dci.area ? GraphItemStyle.AREA : GraphItemStyle.LINE, color, 2, 0));
+			styles.add(new GraphItemStyle(dci.area ? GraphItemStyle.AREA : GraphItemStyle.LINE, color, 2, dci.invertValues ? GraphItemStyle.INVERTED : 0));
 			index++;
 		}
 		chart.setItemStyles(styles);
@@ -156,8 +156,6 @@ public class LineChartElement extends ElementWidget
 						data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0);
 					else
 						data[i] = session.getCollectedTableData(currentDci.nodeId, currentDci.dciId, currentDci.instance, currentDci.column, from, to, 0);
-					if (currentDci.invertValues)
-					   data[i].invert();
 				}
 				runInUIThread(new Runnable() {
 					@Override

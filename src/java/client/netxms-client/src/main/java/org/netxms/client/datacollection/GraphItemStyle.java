@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ public class GraphItemStyle
 	public static final int SHOW_AVERAGE = 0x0001;
 	public static final int SHOW_THRESHOLDS = 0x0002;
 	public static final int SHOW_TREND = 0x0004;
+   public static final int INVERTED = 0x0008;
 	
 	private int type;
 	private int color;
@@ -168,4 +169,14 @@ public class GraphItemStyle
 	{
 		return (flags & SHOW_TREND) != 0;
 	}
+   
+   /**
+    * Convenient method for checking INVERTED flag
+    * 
+    * @return true if INVERTED is set
+    */
+   public boolean isInverted()
+   {
+      return (flags & INVERTED) != 0;
+   }
 }
