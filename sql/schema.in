@@ -2426,3 +2426,39 @@ COMMENT_COLUMN(zmq_subscription.object_id, '')
 COMMENT_COLUMN(zmq_subscription.subscription_type, '')
 COMMENT_COLUMN(zmq_subscription.ignore_items, '')
 COMMENT_COLUMN(zmq_subscription.items, '')
+
+/*
+** Currency codes
+*/
+CREATE TABLE currency_codes
+(
+	numeric_code char(3) not null,
+	alpha_code char(3) not null,
+	description varchar2(127 char) not null,
+	exponent integer not null,
+	PRIMARY KEY(numeric_code)
+) TABLE_TYPE;
+
+COMMENT_TABLE(currency_codes, 'List of currency codes')
+COMMENT_COLUMN(currency_codes.numeric_code, 'Numeric ISO code')
+COMMENT_COLUMN(currency_codes.alpha_code, 'Alphabetical ISO code')
+COMMENT_COLUMN(currency_codes.description, 'Description')
+COMMENT_COLUMN(currency_codes.exponent, 'Exponent for minor units')
+
+/*
+** Country codes
+*/
+CREATE TABLE country_codes
+(
+	numeric_code char(3) not null,
+	alpha_code char(2) not null,
+	alpha3_code char(3) not null,
+	name varchar2(127 char) not null,
+	PRIMARY KEY(numeric_code)
+) TABLE_TYPE;
+
+COMMENT_TABLE(country_codes, 'List of country codes')
+COMMENT_COLUMN(country_codes.numeric_code, 'Numeric ISO code')
+COMMENT_COLUMN(country_codes.alpha_code, 'Alphabetical 2 character ISO code')
+COMMENT_COLUMN(country_codes.alpha3_code, 'Alphabetical 3 character ISO code')
+COMMENT_COLUMN(country_codes.name, 'Country name')

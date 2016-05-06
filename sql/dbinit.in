@@ -32,6 +32,8 @@ BEGIN TRANSACTION;
 #include "objtools.in"
 #include "scripts.in"
 #include "images.in"
+#include "country_codes.in"
+#include "currency_codes.in"
 #endif
 
 // End transaction
