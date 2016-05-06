@@ -242,28 +242,79 @@ static UINT32 ImportEvent(ConfigEntry *event)
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-	UINT32 code = event->getSubEntryValueAsUInt(_T("code"), 0, 0);
-	if ((code == 0) || (code >= FIRST_USER_EVENT_ID))
-		code = CreateUniqueId(IDG_EVENT);
+	UINT32 code = 0;
+	uuid guid = event->getSubEntryValueAsUUID(_T("guid"));
+	if (!guid.isNull())
+	{
+	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM event_cfg WHERE guid=?"));
+	   if (hStmt == NULL)
+	   {
+	      DBConnectionPoolReleaseConnection(hdb);
+	      return RCC_DB_FAILURE;
+	   }
+	   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+	   DB_RESULT hResult = DBSelectPrepared(hStmt);
+	   if (hResult != NULL)
+	   {
+	      code = DBGetFieldULong(hResult, 0, 0);
+	      DBFreeResult(hResult);
+	   }
+	   DBFreeStatement(hStmt);
+	   if (code != 0)
+	   {
+         nxlog_debug(4, _T("ImportEvent: found existing event with GUID %s (code=%d)"), (const TCHAR *)guid.toString(), code);
+	   }
+	   else
+	   {
+         nxlog_debug(4, _T("ImportEvent: event with GUID %s not found"), (const TCHAR *)guid.toString());
+	   }
+	}
+	else
+	{
+	   code = event->getSubEntryValueAsUInt(_T("code"), 0, 0);
+	   if (code >= FIRST_USER_EVENT_ID)
+	   {
+	      code = 0;
+         nxlog_debug(4, _T("ImportEvent: event without GUID and code not in system range"));
+	   }
+	   else
+	   {
+         nxlog_debug(4, _T("ImportEvent: using provided event code %d"), code);
+	   }
+	}
 
 	// Create or update event template in database
    const TCHAR *msg = event->getSubEntryValue(_T("message"), 0, name);
    const TCHAR *descr = event->getSubEntryValue(_T("description"));
 	TCHAR query[8192];
-   if (IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), code))
+   if ((code != 0) && IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), code))
    {
+      nxlog_debug(4, _T("ImportEvent: found existing event with code %d"), code);
       _sntprintf(query, 8192, _T("UPDATE event_cfg SET event_name=%s,severity=%d,flags=%d,message=%s,description=%s WHERE event_code=%d"),
                  (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
 					  event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
 					  (const TCHAR *)DBPrepareString(hdb, descr), code);
    }
+   else if (IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_name"), name))
+   {
+      nxlog_debug(4, _T("ImportEvent: found existing event with name %s"), name);
+      _sntprintf(query, 8192, _T("UPDATE event_cfg SET severity=%d,flags=%d,message=%s,description=%s WHERE event_name=%s"),
+                 event->getSubEntryValueAsInt(_T("severity")),
+                 event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
+                 (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)DBPrepareString(hdb, name));
+   }
    else
    {
+      if (guid.isNull())
+         guid = uuid::generate();
+      if (code == 0)
+         code = CreateUniqueId(IDG_EVENT);
       _sntprintf(query, 8192, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,")
                               _T("message,description,guid) VALUES (%d,%s,%d,%d,%s,%s,'%s')"),
                  code, (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
 					  event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
-					  (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)uuid::generate().toString());
+					  (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)guid.toString());
+      nxlog_debug(4, _T("ImportEvent: added new event: code=%d, name=%s, guid=%s"), code, name, (const TCHAR *)guid.toString());
    }
 	UINT32 rcc = DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE;
 
