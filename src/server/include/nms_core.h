@@ -1068,6 +1068,12 @@ UINT32 DeleteGraph(UINT32 graphId, UINT32 userId);
 void SendXMPPMessage(const TCHAR *rcpt, const TCHAR *text);
 #endif
 
+const TCHAR NXCORE_EXPORTABLE *CountryAlphaCode(const TCHAR *code);
+const TCHAR NXCORE_EXPORTABLE *CountryName(const TCHAR *code);
+const TCHAR NXCORE_EXPORTABLE *CurrencyAlphaCode(const TCHAR *numericCode);
+int NXCORE_EXPORTABLE CurrencyExponent(const TCHAR *code);
+const TCHAR NXCORE_EXPORTABLE *CurrencyName(const TCHAR *code);
+
 /**
  * File monitoring
  */

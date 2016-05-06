@@ -90,6 +90,9 @@ void ExecuteScheduledScript(const ScheduledTaskParameters *param);
 void MaintenanceModeEnter(const ScheduledTaskParameters *params);
 void MaintenanceModeLeave(const ScheduledTaskParameters *params);
 
+void InitCountryList();
+void InitCurrencyList();
+
 #if XMPP_SUPPORTED
 void StartXMPPConnector();
 void StopXMPPConnector();
@@ -739,6 +742,9 @@ retry_db_lock:
 	if (!InitIdTable())
 		return FALSE;
 	nxlog_debug(2, _T("ID table created"));
+
+	InitCountryList();
+	InitCurrencyList();
 
 	// Update status for unfinished jobs in job history
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
