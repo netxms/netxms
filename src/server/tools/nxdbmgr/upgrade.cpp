@@ -673,7 +673,7 @@ static BOOL H_UpgradeFromV397(int currVersion, int newVersion)
             _T("CREATE TABLE currency_codes (")
             _T("   numeric_code char(3) not null,")
             _T("   alpha_code char(3) not null,")
-            _T("   description varchar2(127 char) not null,")
+            _T("   description varchar(127) not null,")
             _T("   exponent integer not null,")
             _T("   PRIMARY KEY(numeric_code))")
          ));
@@ -683,7 +683,7 @@ static BOOL H_UpgradeFromV397(int currVersion, int newVersion)
             _T("   numeric_code char(3) not null,")
             _T("   alpha_code char(2) not null,")
             _T("   alpha3_code char(3) not null,")
-            _T("   name varchar2(127 char) not null,")
+            _T("   name varchar(127) not null,")
             _T("   PRIMARY KEY(numeric_code))")
          ));
 
