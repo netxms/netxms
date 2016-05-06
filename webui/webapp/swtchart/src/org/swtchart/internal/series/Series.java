@@ -91,6 +91,9 @@ abstract public class Series implements ISeries
 
 	/** the state indicating if the series is a stacked type */
 	protected boolean stackEnabled;
+	
+   /** the state indicating if the series is inverted */
+	protected boolean inverted;
 
 	/** the stack series */
 	protected double[] stackSeries;
@@ -120,6 +123,7 @@ abstract public class Series implements ISeries
 		visible = true;
 		type = DEFAULT_SERIES_TYPE;
 		stackEnabled = false;
+		inverted = false;
 		isXMonotoneIncreasing = true;
 		seriesLabel = new SeriesLabel();
 		xErrorBar = new ErrorBar();
@@ -161,6 +165,7 @@ abstract public class Series implements ISeries
 	/*
 	 * @see ISeries#getType()
 	 */
+	@Override
 	public SeriesType getType()
 	{
 		return type;
@@ -169,12 +174,31 @@ abstract public class Series implements ISeries
 	/*
 	 * @see ISeries#isStackEnabled()
 	 */
+	@Override
 	public boolean isStackEnabled()
 	{
 		return stackEnabled;
 	}
-
+	
 	/* (non-Javadoc)
+    * @see org.swtchart.ISeries#setInverted(boolean)
+    */
+   @Override
+   public void setInverted(boolean inverted)
+   {
+      this.inverted = inverted;
+   }
+
+   /* (non-Javadoc)
+    * @see org.swtchart.ISeries#isInverted()
+    */
+   @Override
+   public boolean isInverted()
+   {
+      return inverted;
+   }
+
+   /* (non-Javadoc)
 	 * @see org.swtchart.ISeries#enableStack(boolean, boolean)
 	 */
 	@Override
@@ -460,7 +484,7 @@ abstract public class Series implements ISeries
 				}
 			}
 		}
-		return new Range(min, max);
+		return inverted ? new Range(-max, -min) : new Range(min, max);
 	}
 
 	/**

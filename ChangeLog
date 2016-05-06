@@ -9,9 +9,10 @@
 	- Improved dashboard gauge widget
 	- Added translucence option for dashboard line charts
 	- Configurable display format for dashboard elements data sources
+	- Improved inverted line chart support
 - Android console
 	- Reorganized alarm notification section (issue #1194)
-- Fixed issues: #1194, #1197, #1200
+- Fixed issues: #859, #1194, #1197, #1200
 
 
 *

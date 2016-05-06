@@ -391,13 +391,12 @@ public class LineSeries extends Series implements ILineSeries
 	 */
 	private int[] getLinePoints(double[] xseries, double[] yseries, int[] indexes, int index, Axis xAxis, Axis yAxis)
 	{
-
 		int x1 = xAxis.getPixelCoordinate(xseries[index]);
 		int x2 = xAxis.getPixelCoordinate(xseries[index + 1]);
 		int x3 = x2;
 		int x4 = x1;
-		int y1 = yAxis.getPixelCoordinate(yseries[index]);
-		int y2 = yAxis.getPixelCoordinate(yseries[index + 1]);
+		int y1 = yAxis.getPixelCoordinate(inverted ? -yseries[index] : yseries[index]);
+		int y2 = yAxis.getPixelCoordinate(inverted ? -yseries[index + 1] : yseries[index + 1]);
 		int y3, y4;
 
 		double baseYCoordinate = yAxis.getRange().lower > 0 ? yAxis.getRange().lower : 0;
@@ -409,14 +408,26 @@ public class LineSeries extends Series implements ILineSeries
 		}
 		else if (isValidStackSeries())
 		{
-			y1 = yAxis.getPixelCoordinate(stackSeries[indexes[index]]);
-			y2 = yAxis.getPixelCoordinate(stackSeries[indexes[index + 1]]);
-			y3 = yAxis.getPixelCoordinate(stackSeries[indexes[index + 1]])
-					+ Math.abs(yAxis.getPixelCoordinate(yseries[index + 1]) - yAxis.getPixelCoordinate(0))
-					* (xAxis.isHorizontalAxis() ? 1 : -1);
-			y4 = yAxis.getPixelCoordinate(stackSeries[indexes[index]])
-					+ Math.abs(yAxis.getPixelCoordinate(yseries[index]) - yAxis.getPixelCoordinate(0))
-					* (xAxis.isHorizontalAxis() ? 1 : -1);
+			y1 = yAxis.getPixelCoordinate(inverted ? -stackSeries[indexes[index]] : stackSeries[indexes[index]]);
+			y2 = yAxis.getPixelCoordinate(inverted ? -stackSeries[indexes[index + 1]] : stackSeries[indexes[index + 1]]);
+			if (inverted)
+			{
+            y3 = yAxis.getPixelCoordinate(-stackSeries[indexes[index + 1]])
+                  - Math.abs(yAxis.getPixelCoordinate(-yseries[index + 1]) - yAxis.getPixelCoordinate(0))
+                  * (xAxis.isHorizontalAxis() ? 1 : -1);
+            y4 = yAxis.getPixelCoordinate(-stackSeries[indexes[index]])
+                  - Math.abs(yAxis.getPixelCoordinate(-yseries[index]) - yAxis.getPixelCoordinate(0))
+                  * (xAxis.isHorizontalAxis() ? 1 : -1);
+			}
+			else
+			{
+            y3 = yAxis.getPixelCoordinate(stackSeries[indexes[index + 1]])
+                  + Math.abs(yAxis.getPixelCoordinate(yseries[index + 1]) - yAxis.getPixelCoordinate(0))
+                  * (xAxis.isHorizontalAxis() ? 1 : -1);
+            y4 = yAxis.getPixelCoordinate(stackSeries[indexes[index]])
+                  + Math.abs(yAxis.getPixelCoordinate(yseries[index]) - yAxis.getPixelCoordinate(0))
+                  * (xAxis.isHorizontalAxis() ? 1 : -1);
+			}
 		}
 		else
 		{
