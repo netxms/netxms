@@ -162,7 +162,7 @@ int NXCORE_EXPORTABLE CurrencyExponent(const TCHAR *code)
       if (!_tcsicmp(s_currencyList[i].alphaCode, code) || !_tcscmp(s_currencyList[i].numericCode, code))
          return s_currencyList[i].exponent;
    }
-   return NULL;
+   return 0;
 }
 
 /**

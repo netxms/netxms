@@ -2462,3 +2462,15 @@ COMMENT_COLUMN(country_codes.numeric_code, 'Numeric ISO code')
 COMMENT_COLUMN(country_codes.alpha_code, 'Alphabetical 2 character ISO code')
 COMMENT_COLUMN(country_codes.alpha3_code, 'Alphabetical 3 character ISO code')
 COMMENT_COLUMN(country_codes.name, 'Country name')
+
+/*
+** Config repositories
+*/
+CREATE TABLE config_repositories
+(
+	id integer not null,
+	url varchar(1023) not null,
+	auth_token varchar(63) null,
+	description varchar(1023) null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;
