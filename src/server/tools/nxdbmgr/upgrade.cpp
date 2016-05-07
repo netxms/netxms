@@ -667,6 +667,24 @@ static int NextFreeEPPruleID()
 /**
  * Upgrade from V397 to V398
  */
+static BOOL H_UpgradeFromV398(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE config_repositories (")
+         _T("   id integer not null,")
+         _T("   url varchar(1023) not null,")
+         _T("   auth_token varchar(63) null,")
+         _T("   description varchar(1023) null,")
+         _T("   PRIMARY KEY(id))")
+       ));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='399' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V397 to V398
+ */
 static BOOL H_UpgradeFromV397(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateTable(
@@ -10081,6 +10099,7 @@ static struct
    { 395, 396, H_UpgradeFromV395 },
    { 396, 397, H_UpgradeFromV396 },
    { 397, 398, H_UpgradeFromV397 },
+   { 398, 399, H_UpgradeFromV398 },
    { 0, 0, NULL }
 };
 
