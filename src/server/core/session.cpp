@@ -1442,6 +1442,7 @@ void ClientSession::processingThread()
             break;
          case CMD_REMOVE_SCHEDULE:
             removeScheduledTask(pMsg);
+            break;
 #ifdef WITH_ZMQ
          case CMD_ZMQ_SUBSCRIBE_EVENT:
             zmqManageSubscription(pMsg, zmq::EVENT, true);
