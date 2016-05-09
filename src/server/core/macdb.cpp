@@ -48,7 +48,13 @@ static RWLOCK s_lock = RWLockCreate();
  */
 void NXCORE_EXPORTABLE MacDbAddObject(const BYTE *macAddr, NetObj *object)
 {
-   if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6))
+   // Ignore non-unique addresses
+   if (!memcmp(macAddr, "\x00\x00\x00\x00\x00\x00", 6) ||
+       !memcmp(macAddr, "\x00\x00\x5E\x00\x01", 5) || // VRRP
+       !memcmp(macAddr, "\x00\x00\x0C\x07\xAC", 5) || // HSRP
+       (!memcmp(macAddr, "\x00\x00\x0C\x9F", 4) && ((macAddr[4] & 0xF0) == 0xF0)) || // HSRP
+       (!memcmp(macAddr, "\x00\x05\x73\xA0", 4) && ((macAddr[4] & 0xF0) == 0x00)) || // HSRP IPv6
+       ((macAddr[0] & 0x01) != 0))  // multicast
       return;
 
    object->incRefCount();
