@@ -936,7 +936,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	}
 
 	/**
-	 * Save settings
+	 * Save exported configuration to file
 	 */
 	private void save()
 	{

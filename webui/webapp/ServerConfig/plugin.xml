@@ -126,6 +126,10 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.open_scheduled_tasks"
             name="Scheduled tasks">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.publish_config"
+            name="Publish configuration">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -256,6 +260,12 @@
             contextId="org.netxms.ui.eclipse.serverconfig.context.ServerConfigurationEditor"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+N">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.serverconfig.commands.publish_config"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.ExportFileBuilder"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+P">
       </key>
    </extension>
    <extension
