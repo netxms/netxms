@@ -363,10 +363,20 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_ENTER_MAINT_MODE"),
       _T("CMD_LEAVE_MAINT_MODE"),
       _T("CMD_JOIN_CLUSTER"),
-      _T("CMD_CLUSTER_NOTIFY")
+      _T("CMD_CLUSTER_NOTIFY"),
+      _T("CMD_ZMQ_SUBSCRIBE_EVENT"),
+      _T("CMD_ZMQ_UNSUBSCRIBE_EVENT"),
+      _T("CMD_ZMQ_SUBSCRIBE_DATA"),
+      _T("CMD_ZMQ_UNSUBSCRIBE_DATA"),
+      _T("CMD_ZMQ_GET_EVT_SUBSCRIPTIONS"),
+      _T("CMD_ZMQ_GET_DATA_SUBSCRIPTIONS"),
+      _T("CMD_GET_REPOSITORIES"),
+      _T("CMD_ADD_REPOSITORY"),
+      _T("CMD_MODIFY_REPOSITORY"),
+      _T("CMD_DELETE_REPOSITORY")
    };
 
-   if ((code >= CMD_LOGIN) && (code <= CMD_CLUSTER_NOTIFY))
+   if ((code >= CMD_LOGIN) && (code <= CMD_DELETE_REPOSITORY))
       _tcscpy(pszBuffer, pszMsgNames[code - CMD_LOGIN]);
    else
       _sntprintf(pszBuffer, 64, _T("CMD_0x%04X"), code);

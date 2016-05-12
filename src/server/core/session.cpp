@@ -182,6 +182,10 @@ DEFINE_THREAD_STARTER(sendEventLog)
 DEFINE_THREAD_STARTER(sendMib)
 DEFINE_THREAD_STARTER(sendSyslog)
 DEFINE_THREAD_STARTER(uploadUserFileToAgent)
+DEFINE_THREAD_STARTER(getRepositories)
+DEFINE_THREAD_STARTER(addRepository)
+DEFINE_THREAD_STARTER(modifyRepository)
+DEFINE_THREAD_STARTER(deleteRepository)
 
 /**
  * Client communication read thread starter
@@ -363,6 +367,17 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
       va_end(args);
 		DbgPrintf(level, _T("[CLSN-%d] %s"), m_id, buffer);
    }
+}
+
+/**
+ * Write audit log
+ */
+void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   WriteAuditLog2(subsys, success, m_dwUserId, m_workstation, m_id, objectId, format, args);
+   va_end(args);
 }
 
 /**
@@ -1442,6 +1457,18 @@ void ClientSession::processingThread()
             break;
          case CMD_REMOVE_SCHEDULE:
             removeScheduledTask(pMsg);
+            break;
+         case CMD_GET_REPOSITORIES:
+            CALL_IN_NEW_THREAD(getRepositories, pMsg);
+            break;
+         case CMD_ADD_REPOSITORY:
+            CALL_IN_NEW_THREAD(addRepository, pMsg);
+            break;
+         case CMD_MODIFY_REPOSITORY:
+            CALL_IN_NEW_THREAD(modifyRepository, pMsg);
+            break;
+         case CMD_DELETE_REPOSITORY:
+            CALL_IN_NEW_THREAD(deleteRepository, pMsg);
             break;
 #ifdef WITH_ZMQ
          case CMD_ZMQ_SUBSCRIBE_EVENT:

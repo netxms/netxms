@@ -106,6 +106,7 @@ import org.netxms.client.maps.NetworkMapLink;
 import org.netxms.client.maps.NetworkMapPage;
 import org.netxms.client.maps.elements.NetworkMapElement;
 import org.netxms.client.maps.elements.NetworkMapObject;
+import org.netxms.client.market.Repository;
 import org.netxms.client.mt.MappingTable;
 import org.netxms.client.mt.MappingTableDescriptor;
 import org.netxms.client.objects.AbstractObject;
@@ -8753,30 +8754,107 @@ public class NXCSession
        waitForRCC(msg.getMessageId());
    }
    
+   /**
+    * @param type
+    * @return
+    * @throws IOException
+    * @throws NXCException
+    */
    public List<ZmqSubscription> getZmqSubscriptions(ZmqSubscriptionType type) throws IOException, NXCException
    {
-       final NXCPMessage msg = newMessage(type == ZmqSubscriptionType.EVENT ? NXCPCodes.CMD_ZMQ_GET_EVT_SUBSCRIPTIONS : NXCPCodes.CMD_ZMQ_GET_DATA_SUBSCRIPTIONS);
-       sendMessage(msg);
-       final NXCPMessage response = waitForRCC(msg.getMessageId());
+      final NXCPMessage msg = newMessage(type == ZmqSubscriptionType.EVENT ? NXCPCodes.CMD_ZMQ_GET_EVT_SUBSCRIPTIONS
+            : NXCPCodes.CMD_ZMQ_GET_DATA_SUBSCRIPTIONS);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
 
-       final List<ZmqSubscription> subscriptions = new ArrayList<ZmqSubscription>();
-       
-       long baseId = NXCPCodes.VID_ZMQ_SUBSCRIPTION_BASE;
-       while (true)
-       {
-	   long objectId = response.getFieldAsInt32(baseId);
-	   if (objectId == 0)
-	   {
-	       break;
-	   }
-	   boolean ignoreItems = response.getFieldAsBoolean(baseId + 1);
-	   long[] dciElements = response.getFieldAsUInt32Array(baseId + 2);
-	   
-	   subscriptions.add(new ZmqSubscription(objectId, ignoreItems, dciElements));
-	   
-	   baseId += 10;
-       }
-       
-       return subscriptions;
+      final List<ZmqSubscription> subscriptions = new ArrayList<ZmqSubscription>();
+
+      long baseId = NXCPCodes.VID_ZMQ_SUBSCRIPTION_BASE;
+      while(true)
+      {
+         long objectId = response.getFieldAsInt32(baseId);
+         if (objectId == 0)
+         {
+            break;
+         }
+         boolean ignoreItems = response.getFieldAsBoolean(baseId + 1);
+         long[] dciElements = response.getFieldAsUInt32Array(baseId + 2);
+
+         subscriptions.add(new ZmqSubscription(objectId, ignoreItems, dciElements));
+
+         baseId += 10;
+      }
+
+      return subscriptions;
+   }
+
+   /**
+    * Get list of configured repositories
+    * 
+    * @return list of configured repositories
+    * @throws IOException
+    * @throws NXCException
+    */
+   public List<Repository> getRepositories() throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_REPOSITORIES);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      
+      int count = response.getFieldAsInt32(NXCPCodes.VID_NUM_ELEMENTS);
+      List<Repository> list = new ArrayList<Repository>(count);
+      long fieldId = NXCPCodes.VID_ELEMENT_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         list.add(new Repository(response, fieldId));
+         fieldId += 10;
+      }
+      return list;
+   }
+   
+   /**
+    * Add repository. Will update given repository object with assigned ID.
+    * 
+    * @param r
+    * @throws IOException
+    * @throws NXCException
+    */
+   public void addRepository(Repository r) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_ADD_REPOSITORY);
+      r.fillMessage(msg);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      r.setId(response.getFieldAsInt32(NXCPCodes.VID_OBJECT_ID));
+   }
+
+   /**
+    * Modify repository.
+    * 
+    * @param r
+    * @throws IOException
+    * @throws NXCException
+    */
+   public void modifyRepository(Repository r) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_MODIFY_REPOSITORY);
+      r.fillMessage(msg);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+
+   /**
+    * Delete repository.
+    * 
+    * @param id
+    * @throws IOException
+    * @throws NXCException
+    */
+   public void deleteRepository(int id) throws IOException, NXCException
+   {
+      final NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_REPOSITORY);
+      msg.setFieldInt32(NXCPCodes.VID_REPOSITORY_ID, id);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
    }
 }

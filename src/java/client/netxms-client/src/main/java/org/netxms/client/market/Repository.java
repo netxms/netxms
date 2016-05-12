@@ -26,6 +26,7 @@ import org.netxms.base.NXCPMessage;
  */
 public class Repository
 {
+   private int id;
    private String url;
    private String authToken;
    private String description;
@@ -39,6 +40,7 @@ public class Repository
     */
    public Repository(String url, String authToken, String description)
    {
+      this.id = 0;
       this.url = url;
       this.authToken = authToken;
       this.description = description;
@@ -52,9 +54,10 @@ public class Repository
     */
    public Repository(NXCPMessage msg, long baseId)
    {
-      url = msg.getFieldAsString(baseId);
-      authToken = msg.getFieldAsString(baseId + 1);
-      description = msg.getFieldAsString(baseId + 2);
+      id = msg.getFieldAsInt32(baseId);
+      url = msg.getFieldAsString(baseId + 1);
+      authToken = msg.getFieldAsString(baseId + 2);
+      description = msg.getFieldAsString(baseId + 3);
    }
    
    /**
@@ -64,9 +67,26 @@ public class Repository
     */
    public void fillMessage(NXCPMessage msg)
    {
+      msg.setFieldInt32(NXCPCodes.VID_REPOSITORY_ID, id);
       msg.setField(NXCPCodes.VID_URL, url);
       msg.setField(NXCPCodes.VID_AUTH_TOKEN, authToken);
       msg.setField(NXCPCodes.VID_DESCRIPTION, description);
+   }
+
+   /**
+    * @return the id
+    */
+   public int getId()
+   {
+      return id;
+   }
+
+   /**
+    * @param id the id to set
+    */
+   public void setId(int id)
+   {
+      this.id = id;
    }
 
    /**

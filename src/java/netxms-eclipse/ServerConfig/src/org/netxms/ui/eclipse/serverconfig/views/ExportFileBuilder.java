@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,11 @@
 package org.netxms.ui.eclipse.serverconfig.views;
 
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -56,11 +60,13 @@ import org.eclipse.ui.forms.widgets.TableWrapLayout;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.part.ViewPart;
+import org.netxms.base.NXCommon;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Script;
 import org.netxms.client.datacollection.DciSummaryTableDescriptor;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
+import org.netxms.client.market.Repository;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Template;
 import org.netxms.client.objecttools.ObjectTool;
@@ -74,6 +80,7 @@ import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.Activator;
 import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.ObjectToolSelectionDialog;
+import org.netxms.ui.eclipse.serverconfig.dialogs.RepositorySelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.SelectSnmpTrapDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.SummaryTableSelectionDialog;
 import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.TrapListLabelProvider;
@@ -108,6 +115,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
    private TableViewer toolsViewer;
    private TableViewer summaryTableViewer;
 	private Action actionSave;
+	private Action actionPublish;
 	private Map<Long, EventTemplate> events = new HashMap<Long, EventTemplate>();
 	private Map<Long, Template> templates = new HashMap<Long, Template>();
 	private Map<Long, SnmpTrap> traps = new HashMap<Long, SnmpTrap>();
@@ -705,6 +713,16 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 		};
 		actionSave.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.save_exported_config"); //$NON-NLS-1$
       handlerService.activateHandler(actionSave.getActionDefinitionId(), new ActionHandler(actionSave));
+      
+      actionPublish = new Action("&Publish...", Activator.getImageDescriptor("icons/publish.gif")) {
+         @Override
+         public void run()
+         {
+            publish();
+         }
+      };
+      actionPublish.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.publish_config"); //$NON-NLS-1$
+      handlerService.activateHandler(actionPublish.getActionDefinitionId(), new ActionHandler(actionPublish));
 	}
 	
 	/**
@@ -726,6 +744,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionSave);
+		manager.add(actionPublish);
 	}
 
 	/**
@@ -737,6 +756,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	private void fillLocalToolBar(IToolBarManager manager)
 	{
 		manager.add(actionSave);
+      manager.add(actionPublish);
 	}
 
 	/* (non-Javadoc)
@@ -759,32 +779,123 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 			firePropertyChange(PROP_DIRTY);
 		}
 	}
-
+	
 	/**
-	 * Save settings
+	 * Publish configuration
 	 */
-	private void save()
+	private void publish()
 	{
-		final long[] eventList = new long[events.size()];
-		int i = 0;
-		for(EventTemplate t : events.values())
-			eventList[i++] = t.getCode();
-		
-		final long[] templateList = new long[templates.size()];
-		i = 0;
-		for(Template t : templates.values())
-			templateList[i++] = t.getObjectId();
-		
-		final long[] trapList = new long[traps.size()];
-		i = 0;
-		for(SnmpTrap t : traps.values())
-			trapList[i++] = t.getId();
-		
-		final UUID[] ruleList = new UUID[rules.size()];
-		i = 0;
-		for(EventProcessingPolicyRule r : rules.values())
-			ruleList[i++] = r.getGuid();
-		
+	   new ConsoleJob("Get list of configured repositories", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final List<Repository> repositories = session.getRepositories();
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  publishStage2(repositories);
+               }
+            });
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Cannot get list of configured repositories";
+         }
+      }.start();
+	}
+	
+	/**
+	 * Publish configuration - stage 2
+	 * 
+	 * @param repositories
+	 */
+	private void publishStage2(List<Repository> repositories)
+	{
+	   RepositorySelectionDialog dlg = new RepositorySelectionDialog(getSite().getShell(), repositories);
+	   if (dlg.open() != Window.OK)
+	      return;
+	   
+	   final Repository repository = dlg.getSelection();
+	   doExport(new ExportCompletionHandler() {
+         @Override
+         public void exportCompleted(final String xml)
+         {
+            new ConsoleJob("Publish configuration", ExportFileBuilder.this, Activator.PLUGIN_ID, null) {
+               @Override
+               protected void runInternal(IProgressMonitor monitor) throws Exception
+               {
+                  URL url = new URL(repository.getUrl() + "/rest-api/push-export?accessToken=" + repository.getAuthToken());
+                  URLConnection conn = url.openConnection();
+                  if (!(conn instanceof HttpURLConnection))
+                  {
+                     throw new Exception("Unsupported URL type");
+                  }
+                  ((HttpURLConnection)conn).setRequestMethod("POST");
+                  ((HttpURLConnection)conn).setRequestProperty("User-Agent", "NetXMS Console/" + NXCommon.VERSION);
+                  ((HttpURLConnection)conn).setRequestProperty("Content-Type", "application/xml; charset=utf-8");
+                  ((HttpURLConnection)conn).setDoOutput(true);
+                  ((HttpURLConnection)conn).setAllowUserInteraction(false);
+                  ((HttpURLConnection)conn).setUseCaches(false);
+                  
+                  OutputStream out = conn.getOutputStream();
+                  try
+                  {
+                     out.write(xml.getBytes("UTF-8"));
+                     out.flush();
+                     
+                     int responseCode = ((HttpURLConnection)conn).getResponseCode();
+                     Activator.logInfo("Publish config: url=" + url.toString() + " response=" + responseCode);
+                     if (responseCode != 200)
+                     {
+                        throw new Exception(String.format("HTTP error %d", responseCode));
+                     }
+                  }
+                  finally
+                  {
+                     out.close();
+                  }
+               }
+               
+               @Override
+               protected String getErrorMessage()
+               {
+                  return "Cannot publish configuration to repository";
+               }
+            }.start();
+         }
+      });
+	}
+	
+	/**
+	 * Do export operation and call completion handler when done
+	 * 
+	 * @param completionHandler
+	 */
+	private void doExport(final ExportCompletionHandler completionHandler)
+	{
+      final long[] eventList = new long[events.size()];
+      int i = 0;
+      for(EventTemplate t : events.values())
+         eventList[i++] = t.getCode();
+      
+      final long[] templateList = new long[templates.size()];
+      i = 0;
+      for(Template t : templates.values())
+         templateList[i++] = t.getObjectId();
+      
+      final long[] trapList = new long[traps.size()];
+      i = 0;
+      for(SnmpTrap t : traps.values())
+         trapList[i++] = t.getId();
+      
+      final UUID[] ruleList = new UUID[rules.size()];
+      i = 0;
+      for(EventProcessingPolicyRule r : rules.values())
+         ruleList[i++] = r.getGuid();
+      
       final long[] scriptList = new long[scripts.size()];
       i = 0;
       for(Script s : scripts.values())
@@ -800,66 +911,80 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
       for(DciSummaryTableDescriptor t : summaryTables.values())
          summaryTableList[i++] = t.getId();
       
-		final String descriptionText = description.getText();
-		
-		new ConsoleJob(Messages.get().ExportFileBuilder_ExportJobName, this, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList);
-				runInUIThread(new Runnable() {
+      final String descriptionText = description.getText();
+      
+      new ConsoleJob(Messages.get().ExportFileBuilder_ExportJobName, this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final String xml = session.exportConfiguration(descriptionText, eventList, trapList, templateList, ruleList, scriptList, toolList, summaryTableList);
+            runInUIThread(new Runnable() {
                @Override
                public void run()
                {
-                  FileDialog dlg = new FileDialog(getSite().getShell(), SWT.SAVE);
-                  dlg.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
-                  dlg.setFilterNames(new String[] { Messages.get().ConfigurationImportDialog_FileTypeXML, Messages.get().ConfigurationImportDialog_FileTypeAll });
-                  dlg.setOverwrite(true);
-                  dlg.setFileName(exportFileName);
-                  final String fileName = dlg.open();
-                  if (fileName != null)
-                  {
-                     exportFileName = fileName;
-                     new ConsoleJob("Save exported configuration", ExportFileBuilder.this, Activator.PLUGIN_ID, null) {
-                        @Override
-                        protected void runInternal(IProgressMonitor monitor) throws Exception
-                        {
-                           OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8"); //$NON-NLS-1$
-                           try
-                           {
-                              out.write(xml);
-                           }
-                           finally
-                           {
-                              out.close();
-                           }
-                           runInUIThread(new Runnable() {
-                              @Override
-                              public void run()
-                              {
-                                 modified = false;
-                                 firePropertyChange(PROP_DIRTY);
-                              }
-                           });
-                        }
-                        
-                        @Override
-                        protected String getErrorMessage()
-                        {
-                           return "Cannot save exported configuration to file";
-                        }
-                     }.start();
-                  }
+                  completionHandler.exportCompleted(xml);
                }
             });
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().ExportFileBuilder_ExportJobError;
-			}
-		}.start();
+         }
+         
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().ExportFileBuilder_ExportJobError;
+         }
+      }.start();
+	}
+
+	/**
+	 * Save settings
+	 */
+	private void save()
+	{
+	   doExport(new ExportCompletionHandler() {
+         @Override
+         public void exportCompleted(final String xml)
+         {
+            FileDialog dlg = new FileDialog(getSite().getShell(), SWT.SAVE);
+            dlg.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+            dlg.setFilterNames(new String[] { Messages.get().ConfigurationImportDialog_FileTypeXML, Messages.get().ConfigurationImportDialog_FileTypeAll });
+            dlg.setOverwrite(true);
+            dlg.setFileName(exportFileName);
+            final String fileName = dlg.open();
+            if (fileName != null)
+            {
+               exportFileName = fileName;
+               new ConsoleJob("Save exported configuration", ExportFileBuilder.this, Activator.PLUGIN_ID, null) {
+                  @Override
+                  protected void runInternal(IProgressMonitor monitor) throws Exception
+                  {
+                     OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8"); //$NON-NLS-1$
+                     try
+                     {
+                        out.write(xml);
+                     }
+                     finally
+                     {
+                        out.close();
+                     }
+                     runInUIThread(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                           modified = false;
+                           firePropertyChange(PROP_DIRTY);
+                        }
+                     });
+                  }
+                  
+                  @Override
+                  protected String getErrorMessage()
+                  {
+                     return "Cannot save exported configuration to file";
+                  }
+               }.start();
+            }
+         }
+      });
 	}
 
 	/* (non-Javadoc)
@@ -1136,5 +1261,18 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
          summaryTableViewer.setInput(summaryTables.values().toArray());
          setModified();
       }
+   }
+   
+   /**
+    * Export completion handler
+    */
+   private interface ExportCompletionHandler
+   {
+      /**
+       * Called when export is complete
+       * 
+       * @param xml resulting XML document
+       */
+      public void exportCompleted(final String xml);
    }
 }

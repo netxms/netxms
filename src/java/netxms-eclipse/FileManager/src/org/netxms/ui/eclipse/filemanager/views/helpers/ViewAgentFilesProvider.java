@@ -54,7 +54,7 @@ public class ViewAgentFilesProvider implements ITreeContentProvider
 	@Override
 	public Object[] getChildren(final Object parentElement)
 	{
-	   if(((AgentFile)parentElement).getChildren() == null)
+	   if (((AgentFile)parentElement).getChildren() == null)
 	   {
          ConsoleJob job = new ConsoleJob(Messages.get().ViewAgentFilesProvider_JobTitle, null, Activator.PLUGIN_ID, null) {
             @Override

@@ -46,6 +46,7 @@ public class UserAccessRights
    public static final long SYSTEM_ACCESS_SCHEDULE_SCRIPT       = 0x0200000000L;
    public static final long SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD  = 0x0400000000L;
    public static final long SYSTEM_ACCESS_SCHEDULE_MAINTENANCE  = 0x0800000000L;
+   public static final long SYSTEM_ACCESS_MANAGE_REPOSITORIES   = 0x1000000000L;
 
 	// Object access rights
 	public static final int OBJECT_ACCESS_READ          = 0x00000001;
