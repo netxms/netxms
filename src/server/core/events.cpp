@@ -45,6 +45,7 @@ EventTemplate::EventTemplate(DB_RESULT hResult, int row)
    m_messageTemplate = DBGetField(hResult, row, 3, NULL, 0);
    m_description = DBGetField(hResult, row, 4, NULL, 0);
    DBGetField(hResult, row, 5, m_name, MAX_EVENT_NAME);
+   m_guid = DBGetFieldGUID(hResult, row, 6);
 }
 
 /**
@@ -706,7 +707,7 @@ static bool LoadEvents()
 {
    bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT event_code,severity,flags,message,description,event_name FROM event_cfg"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT event_code,severity,flags,message,description,event_name,guid FROM event_cfg"));
    if (hResult != NULL)
    {
       int count = DBGetNumRows(hResult);
