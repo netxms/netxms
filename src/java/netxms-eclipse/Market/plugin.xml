@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            class="org.netxms.ui.eclipse.market.views.RepositoryManager"
+            id="org.netxms.ui.eclipse.market.views.RepositoryManager"
+            name="Repository Manager"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.market.context.RepositoryManager"
+            name="Repository Manager"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            id="org.netxms.ui.eclipse.market.commands.showFilter"
+            name="Show filter">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.market.commands.openRepositoryManager"
+            name="Repository Manager">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.market.commands.showFilter"
+            contextId="org.netxms.ui.eclipse.market.context.RepositoryManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            id="org.netxms.ui.eclipse.market.actionSet"
+            label="Market"
+            visible="true">
+         <action
+               class="org.netxms.ui.eclipse.market.actions.OpenRepositoryManager"
+               definitionId="org.netxms.ui.eclipse.market.commands.openRepositoryManager"
+               id="org.netxms.ui.eclipse.market.actions.OpenRepositoryManager"
+               label="Market"
+               menubarPath="config/additions"
+               style="push">
+         </action>
+      </actionSet>
+   </extension>
+
+</plugin>
