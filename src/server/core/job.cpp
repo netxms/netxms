@@ -21,7 +21,7 @@
 **/
 
 #include "nxcore.h"
-
+#include <math.h>
 
 /**
  * Externals
@@ -32,7 +32,7 @@ void UnregisterJob(UINT32 jobId);
 /**
  * Constructor
  */
-ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, UINT32 userId, bool createOnHold)
+ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, UINT32 userId, bool createOnHold, int retryCount)
 {
 	m_id = CreateUniqueId(IDG_JOB);
 	m_userId = userId;
@@ -50,6 +50,36 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, U
 	m_lastNotification = 0;
 	m_notificationLock = MutexCreate();
 	m_blockNextJobsOnFailure = false;
+	m_retryCount = retryCount == -1 ? ConfigReadInt(_T("JobRetryCount"), 5) : retryCount;
+	m_isValid = (m_resolvedObject != NULL) && (m_resolvedObject->getObjectClass() == OBJECT_NODE);
+
+	createHistoryRecord();
+}
+
+/**
+ * Constructor that creates class from serialized string
+ */
+ServerJob::ServerJob(const TCHAR* params, UINT32 node, UINT32 userId)
+{
+	m_id = CreateUniqueId(IDG_JOB);
+	m_userId = userId;
+	m_type = _tcsdup(_T(""));
+	m_status = JOB_PENDING;
+	m_description = _tcsdup(_T(""));
+	m_lastStatusChange = time(NULL);
+	m_autoCancelDelay = 0;
+	m_remoteNode = node;
+	m_resolvedObject = FindObjectById(m_remoteNode);
+	m_progress = 0;
+	m_failureMessage = NULL;
+	m_owningQueue = NULL;
+	m_workerThread = INVALID_THREAD_HANDLE;
+	m_lastNotification = 0;
+	m_notificationLock = MutexCreate();
+	m_blockNextJobsOnFailure = false;
+	m_retryCount = ConfigReadInt(_T("JobRetryCount"), 5);
+	m_isValid = (m_resolvedObject != NULL) && (m_resolvedObject->getObjectClass() == OBJECT_NODE);
+
 	createHistoryRecord();
 }
 
@@ -142,17 +172,23 @@ THREAD_RESULT THREAD_CALL ServerJob::WorkerThreadStarter(void *arg)
 	ServerJob *job = (ServerJob *)arg;
 	DbgPrintf(4, _T("Job %d started"), job->m_id);
 	job->updateHistoryRecord(true);
+	ServerJobResult result = job->run();
 
-	if (job->run())
+	switch(result)
 	{
-		job->changeStatus(JOB_COMPLETED);
-	}
-	else
-	{
-		if (job->m_status == JOB_CANCEL_PENDING)
-			job->changeStatus(JOB_CANCELLED);
-		else
-			job->changeStatus(JOB_FAILED);
+      case JOB_RESULT_SUCCESS:
+         job->changeStatus(JOB_COMPLETED);
+         break;
+      case JOB_RESULT_FAILED:
+         if (job->m_status == JOB_CANCEL_PENDING)
+            job->changeStatus(JOB_CANCELLED);
+         else
+            job->changeStatus(JOB_FAILED);
+         break;
+      case JOB_RESULT_RESCHEDULE:
+         job->rescheduleExecution();
+         job->changeStatus(JOB_FAILED);
+         break;
 	}
 	job->m_workerThread = INVALID_THREAD_HANDLE;
 
@@ -226,9 +262,9 @@ bool ServerJob::unhold()
 /**
  * Default run (empty)
  */
-bool ServerJob::run()
+ServerJobResult ServerJob::run()
 {
-	return true;
+	return JOB_RESULT_SUCCESS;
 }
 
 
@@ -343,4 +379,30 @@ void ServerJob::updateHistoryRecord(bool onStart)
 const TCHAR *ServerJob::getAdditionalInfo()
 {
 	return _T("");
+}
+
+/**
+ * Serializes job parameters into TCHAR line separated by ';'
+ */
+const TCHAR *ServerJob::serializeParameters()
+{
+   return _tcsdup(_T(""));
+}
+
+/**
+ * Schedules execution in 10 minutes
+ */
+void ServerJob::rescheduleExecution()
+{
+}
+
+
+
+/**
+ * Returns next job execution interval in minutes
+ * Each next execution time will be twce bigger than the previous one
+ */
+int ServerJob::getNextJobExecutionTime()
+{
+   return pow(2, (4 - m_retryCount)) * JOB_RESCHEDULE_OFSET;
 }

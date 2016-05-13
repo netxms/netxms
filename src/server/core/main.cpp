@@ -89,6 +89,8 @@ void ImportLocalConfiguration();
 void ExecuteScheduledScript(const ScheduledTaskParameters *param);
 void MaintenanceModeEnter(const ScheduledTaskParameters *params);
 void MaintenanceModeLeave(const ScheduledTaskParameters *params);
+void ScheduleDeployPolicy(const ScheduledTaskParameters *params);
+void ScheduleUninstallPolicy(const ScheduledTaskParameters * params);
 
 void InitCountryList();
 void InitCurrencyList();
@@ -875,6 +877,8 @@ retry_db_lock:
    RegisterSchedulerTaskHandler(_T("Execute.Script"), ExecuteScheduledScript, SYSTEM_ACCESS_SCHEDULE_SCRIPT);
    RegisterSchedulerTaskHandler(_T("Maintenance.Enter"), MaintenanceModeEnter, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
    RegisterSchedulerTaskHandler(_T("Maintenance.Leave"), MaintenanceModeLeave, SYSTEM_ACCESS_SCHEDULE_MAINTENANCE);
+	RegisterSchedulerTaskHandler(_T("Policy.Deploy"), ScheduleDeployPolicy, 0); //No access right beacause it will be used only by server
+	RegisterSchedulerTaskHandler(_T("Policy.Uninstall"), ScheduleUninstallPolicy, 0); //No access right beacause it will be used only by server
    InitializeTaskScheduler();
 
 	// Allow clients to connect

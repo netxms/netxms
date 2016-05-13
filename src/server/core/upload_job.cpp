@@ -34,42 +34,17 @@ MUTEX FileUploadJob::m_sharedDataMutex = INVALID_MUTEX_HANDLE;
  */
 void ScheduledFileUpload(const ScheduledTaskParameters *params)
 {
-   //get parameters - node id or name, server file name, agent file name
-   TCHAR serverFile[MAX_PATH];
-   TCHAR agentFile[MAX_PATH];
-   AgentGetParameterArg(params->m_params, 1, serverFile, MAX_PATH, false);
-   AgentGetParameterArg(params->m_params, 2, agentFile, MAX_PATH, false);
-
-   if(params->m_objectId == 0 || serverFile[0] == 0 || agentFile[0] == 0)
-   {
-      DbgPrintf(4, _T("UploadFile: Input parameters are invalid. nodeId=%d, serverFile='%s', agentFile='%s'"),
-            params->m_userId, serverFile, agentFile);
-      return;
-   }
-
    Node *object = (Node *)FindObjectById(params->m_objectId, OBJECT_NODE);
    if (object != NULL)
    {
       if (object->checkAccessRights(params->m_userId, OBJECT_ACCESS_CONTROL))
       {
-         TCHAR fullPath[MAX_PATH];
 
-         // Create full path to the file store
-         _tcscpy(fullPath, g_netxmsdDataDir);
-         _tcscat(fullPath, DDIR_FILES);
-         _tcscat(fullPath, FS_PATH_SEPARATOR);
-         int len = (int)_tcslen(fullPath);
-         nx_strncpy(&fullPath[len], GetCleanFileName(serverFile), MAX_PATH - len);
-
-         ServerJob *job = new FileUploadJob((Node *)object, fullPath, agentFile, params->m_userId, false);
-         if (AddJob(job))
-         {
-            DbgPrintf(4, _T("ScheduledUploadFile: File(%s) uploaded to %s node, to %s "), serverFile, object->getName(), agentFile);
-            //auditlog?
-         }
-         else
+         ServerJob *job = new FileUploadJob(params->m_params, params->m_objectId, params->m_userId);
+         if (!AddJob(job))
          {
             delete job;
+            DbgPrintf(4, _T("ScheduledUploadFile: Failed to add job(incorrect parameters or no such object)."));
          }
       }
       else
@@ -111,6 +86,37 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 	m_fileSize = 0;
 }
 
+FileUploadJob::FileUploadJob(TCHAR* params, UINT32 node, UINT32 userId)
+              : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node, userId, false)
+{
+	m_node = (Node *)FindObjectById(node, OBJECT_NODE);
+	if(m_node != NULL)
+      m_node->incRefCount();
+
+
+   StringList fileList(params, _T(","));
+   if(fileList.size() < 2)
+   {
+      setIsValid(false);
+      return;
+   }
+
+   if(fileList.size() == 3)
+      m_retryCount = _tcstol(fileList.get(2), NULL, 0);
+
+	TCHAR buffer[1024];
+	_sntprintf(buffer, 1024, _T("Upload file %s"), GetCleanFileName(fileList.get(0)));
+	setDescription(buffer);
+
+	m_localFile = _tcsdup(fileList.get(0));
+	m_remoteFile = (fileList.size() == 3) ? _tcsdup(fileList.get(1)) : NULL;
+
+	_sntprintf(buffer, 1024, _T("Local file: %s; Remote file: %s"), m_localFile, CHECK_NULL(fileList.get(1)));
+	m_info = _tcsdup(buffer);
+
+	m_fileSize = 0;
+}
+
 /**
  *  Destructor
  */
@@ -125,9 +131,9 @@ FileUploadJob::~FileUploadJob()
 /**
  * Run job
  */
-bool FileUploadJob::run()
+ServerJobResult FileUploadJob::run()
 {
-	bool success = false;
+	ServerJobResult success = JOB_RESULT_FAILED;
 
 	while(true)
 	{
@@ -149,7 +155,7 @@ bool FileUploadJob::run()
 		UINT32 rcc = conn->uploadFile(m_localFile, m_remoteFile, uploadCallback, this);
 		if (rcc == ERR_SUCCESS)
 		{
-			success = true;
+			success = JOB_RESULT_SUCCESS;
 		}
 		else
 		{
@@ -165,6 +171,14 @@ bool FileUploadJob::run()
 	MutexLock(m_sharedDataMutex);
 	m_activeJobs--;
 	MutexUnlock(m_sharedDataMutex);
+
+   if(success == JOB_RESULT_FAILED && m_retryCount-- > 0)
+   {
+      TCHAR description[256];
+      _sntprintf(description, 256, _T("File upload failed. Wainting %d minutes to restart job."), getNextJobExecutionTime()/60);
+      setDescription(description);
+      success = JOB_RESULT_RESCHEDULE;
+   }
 
 	return success;
 }
@@ -187,3 +201,26 @@ const TCHAR *FileUploadJob::getAdditionalInfo()
 {
 	return m_info;
 }
+
+/**
+ * Serializes job parameters into TCHAR line separated by ';'
+ */
+const TCHAR *FileUploadJob::serializeParameters()
+{
+   String params;
+   params.append(m_localFile);
+   params.append(_T(','));
+   params.append(CHECK_NULL_EX(m_remoteFile));
+   params.append(_T(','));
+   params.append(m_retryCount);
+   return _tcsdup(params.getBuffer());
+}
+
+/**
+ * Schedules execution in 10 minutes
+ */
+void FileUploadJob::rescheduleExecution()
+{
+   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getNextJobExecutionTime(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+}
+

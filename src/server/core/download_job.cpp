@@ -101,10 +101,10 @@ void FileDownloadJob::progressCallback(size_t size, void *arg)
 /**
  * Job implementation
  */
-bool FileDownloadJob::run()
+ServerJobResult FileDownloadJob::run()
 {
 	UINT32 rcc = 0xFFFFFFFF;
-	bool success = false;
+	ServerJobResult success = JOB_RESULT_FAILED;
 
    MONITORED_FILE * newFile = new MONITORED_FILE();
    _tcscpy(newFile->fileName, m_localFile);
@@ -163,7 +163,7 @@ bool FileDownloadJob::run()
 					DbgPrintf(5, _T("FileDownloadJob: Download request for file %s@%s RCC=%d"), m_remoteFile, m_node->getName(), rcc);
 					if (rcc == ERR_SUCCESS)
 					{
-						success = true;
+						success = JOB_RESULT_SUCCESS;
 					}
 					else
 					{
@@ -202,7 +202,7 @@ bool FileDownloadJob::run()
 	NXCPMessage response;
 	response.setCode(CMD_REQUEST_COMPLETED);
 	response.setId(m_requestId);
-	if (success)
+	if (success == JOB_RESULT_SUCCESS)
 	{
 	   response.setField(VID_RCC, RCC_SUCCESS);
 		m_session->sendMessage(&response);

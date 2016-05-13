@@ -23,6 +23,10 @@
 #ifndef _nxcore_jobs_h_
 #define _nxcore_jobs_h_
 
+#include "nxcore_schedule.h"
+
+#define JOB_RESCHEDULE_OFSET 600
+
 /**
  * Job status
  */
@@ -35,6 +39,17 @@ enum ServerJobStatus
 	JOB_FAILED,
 	JOB_CANCELLED,
 	JOB_CANCEL_PENDING
+};
+
+
+/**
+ * Job status
+ */
+enum ServerJobResult
+{
+	JOB_RESULT_SUCCESS = 0,
+	JOB_RESULT_FAILED,
+	JOB_RESULT_RESCHEDULE
 };
 
 /**
@@ -63,6 +78,7 @@ private:
 	MUTEX m_notificationLock;
 	NXCPMessage m_notificationMessage;
 	bool m_blockNextJobsOnFailure;
+	bool m_isValid;
 
 	static THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *);
 	static void sendNotification(ClientSession *session, void *arg);
@@ -71,7 +87,9 @@ private:
 	void updateHistoryRecord(bool onStart);
 
 protected:
-	virtual bool run();
+	int m_retryCount;
+
+	virtual ServerJobResult run();
 	virtual bool onCancel();
 	virtual const TCHAR *getAdditionalInfo();
 
@@ -83,7 +101,8 @@ protected:
 	void setDescription(const TCHAR *description);
 
 public:
-	ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, UINT32 userId, bool createOnHold);
+	ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, UINT32 userId, bool createOnHold, int retryCount = -1);
+	ServerJob(const TCHAR* params, UINT32 node, UINT32 userId);
 	virtual ~ServerJob();
 
 	void start();
@@ -96,6 +115,8 @@ public:
 
 	void setBlockNextJobsOnFailure(bool flag) { m_blockNextJobsOnFailure = flag; }
 	bool isBlockNextJobsOnFailure() { return m_blockNextJobsOnFailure; }
+	void setIsValid(bool valid) { m_isValid = valid; }
+	bool isValid() { return m_isValid; }
 
 	UINT32 getId() { return m_id; }
 	UINT32 getUserId() { return m_userId; }
@@ -110,6 +131,9 @@ public:
 	void setOwningQueue(ServerJobQueue *queue);
 
 	void fillMessage(NXCPMessage *msg);
+	virtual const TCHAR *serializeParameters();
+	virtual void rescheduleExecution();
+	int getNextJobExecutionTime();
 };
 
 /**
@@ -166,7 +190,7 @@ protected:
 	TCHAR *m_info;
 	INT64 m_fileSize;
 
-	virtual bool run();
+	virtual ServerJobResult run();
 	virtual const TCHAR *getAdditionalInfo();
 	static void uploadCallback(INT64 size, void *arg);
 
@@ -174,7 +198,11 @@ public:
 	static void init();
 
 	FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, UINT32 userId, bool createOnHold);
+	FileUploadJob(TCHAR* params, UINT32 node, UINT32 userId);
 	virtual ~FileUploadJob();
+
+	virtual const TCHAR *serializeParameters();
+	virtual void rescheduleExecution();
 };
 
 /**
@@ -196,7 +224,7 @@ private:
 	bool m_follow;
 
 protected:
-	virtual bool run();
+	virtual ServerJobResult run();
 	virtual bool onCancel();
 	virtual const TCHAR *getAdditionalInfo();
 
@@ -222,11 +250,15 @@ protected:
 	Node *m_node;
 	AgentPolicy *m_policy;
 
-	virtual bool run();
+	virtual ServerJobResult run();
 
 public:
 	PolicyDeploymentJob(Node *node, AgentPolicy *policy, UINT32 userId);
+   PolicyDeploymentJob(const TCHAR* params, UINT32 node, UINT32 userId);
 	virtual ~PolicyDeploymentJob();
+
+	virtual const TCHAR *serializeParameters();
+	virtual void rescheduleExecution();
 };
 
 
@@ -239,11 +271,15 @@ protected:
 	Node *m_node;
 	AgentPolicy *m_policy;
 
-	virtual bool run();
+	virtual ServerJobResult run();
 
 public:
 	PolicyUninstallJob(Node *node, AgentPolicy *policy, UINT32 userId);
+   PolicyUninstallJob(const TCHAR* params, UINT32 node, UINT32 userId);
 	virtual ~PolicyUninstallJob();
+
+	virtual const TCHAR *serializeParameters();
+	virtual void rescheduleExecution();
 };
 
 

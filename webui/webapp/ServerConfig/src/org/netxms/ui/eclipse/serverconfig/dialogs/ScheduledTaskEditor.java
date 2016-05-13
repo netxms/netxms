@@ -116,6 +116,15 @@ public class ScheduledTaskEditor extends Dialog
       textParameters.setLayoutData(gd);
       textParameters.setText(scheduledTask.getParameters());
       
+      if((scheduledTask.getFlags() & ScheduledTask.INTERNAL) != 0)
+      {
+         scheduleType.add(scheduledTask.getScheduledTaskId());
+         scheduleType.select(scheduleTypeList.size());
+         scheduleType.setEnabled(false);
+         selector.setEnabled(false);
+         textParameters.setEnabled(false);
+      }
+      
       scheduleSelector = new ScheduleSelector(dialogArea, SWT.NONE);
       scheduleSelector.setSchedule(scheduledTask);
       
@@ -131,9 +140,12 @@ public class ScheduledTaskEditor extends Dialog
       ScheduledTask task = scheduleSelector.getSchedule();
       scheduledTask.setSchedule(task.getSchedule());
       scheduledTask.setExecutionTime(task.getExecutionTime());
-      scheduledTask.setScheduledTaskId(scheduleTypeList.get(scheduleType.getSelectionIndex()));
-      scheduledTask.setParameters(textParameters.getText());
-      scheduledTask.setObjectId(selector.getObjectId());
+      if((scheduledTask.getFlags() & ScheduledTask.INTERNAL) == 0)
+      {
+         scheduledTask.setScheduledTaskId(scheduleTypeList.get(scheduleType.getSelectionIndex()));
+         scheduledTask.setParameters(textParameters.getText());
+         scheduledTask.setObjectId(selector.getObjectId());
+      }
       super.okPressed();
    }
    

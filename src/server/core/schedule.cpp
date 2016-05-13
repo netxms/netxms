@@ -90,9 +90,9 @@ ScheduledTask::ScheduledTask(DB_RESULT hResult, int row)
  */
 ScheduledTask::~ScheduledTask()
 {
-   free(m_taskHandlerId);
-   free(m_schedule);
-   free(m_params);
+   safe_free(m_taskHandlerId);
+   safe_free(m_schedule);
+   safe_free(m_params);
 }
 
 /**
@@ -100,11 +100,11 @@ ScheduledTask::~ScheduledTask()
  */
 void ScheduledTask::update(const TCHAR *taskHandlerId, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags)
 {
-   free(m_taskHandlerId);
+   safe_free(m_taskHandlerId);
    m_taskHandlerId = _tcsdup(CHECK_NULL_EX(taskHandlerId));
-   free(m_schedule);
+   safe_free(m_schedule);
    m_schedule = _tcsdup(CHECK_NULL_EX(schedule));
-   free(m_params);
+   safe_free(m_params);
    m_params = _tcsdup(CHECK_NULL_EX(params));
    m_owner = owner;
    m_objectId = objectId;
@@ -117,10 +117,10 @@ void ScheduledTask::update(const TCHAR *taskHandlerId, const TCHAR *schedule, co
 void ScheduledTask::update(const TCHAR *taskHandlerId, time_t nextExecution, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT32 flags)
 {
    free(m_taskHandlerId);
-   taskHandlerId = _tcsdup(CHECK_NULL_EX(taskHandlerId));
+   m_taskHandlerId = _tcsdup(CHECK_NULL_EX(taskHandlerId));
    free(m_schedule);
    m_schedule = _tcsdup(_T(""));
-   safe_free(m_params);
+   free(m_params);
    m_params = _tcsdup(CHECK_NULL_EX(params));
    m_executionTime = nextExecution;
    m_owner  = owner;
