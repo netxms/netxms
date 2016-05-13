@@ -664,8 +664,20 @@ static int NextFreeEPPruleID()
 	return ruleId;
 }
 
+
+
 /**
- * Upgrade from V397 to V398
+ * Upgrade from V399 to V400
+ */
+static BOOL H_UpgradeFromV399(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("JobRetryCount"), _T("5"), _T("Maximum mumber of job execution retrys"), 'I', true, false, false, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='400' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V398 to V399
  */
 static BOOL H_UpgradeFromV398(int currVersion, int newVersion)
 {
@@ -10100,6 +10112,7 @@ static struct
    { 396, 397, H_UpgradeFromV396 },
    { 397, 398, H_UpgradeFromV397 },
    { 398, 399, H_UpgradeFromV398 },
+   { 399, 400, H_UpgradeFromV399 },
    { 0, 0, NULL }
 };
 
