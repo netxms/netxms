@@ -404,5 +404,5 @@ void ServerJob::rescheduleExecution()
  */
 int ServerJob::getNextJobExecutionTime()
 {
-   return pow(2, (4 - m_retryCount)) * JOB_RESCHEDULE_OFSET;
+   return pow(2.0f, (4 - m_retryCount)) * JOB_RESCHEDULE_OFSET;
 }
