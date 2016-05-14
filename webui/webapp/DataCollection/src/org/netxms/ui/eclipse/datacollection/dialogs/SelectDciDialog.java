@@ -188,6 +188,8 @@ public class SelectDciDialog extends Dialog
 					}
 				}
 			});
+			
+			objectTree.setFocus();
 		}
 		else
 		{
