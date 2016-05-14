@@ -16,9 +16,7 @@
 static void SaveResponse(char *host, UINT32 ip, char *buffer)
 {
    if (g_szFailedDir[0] == 0)
-   {
       return;
-   }
 
    time_t now = time(NULL);
    char fileName[2048];
@@ -146,7 +144,6 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHos
 						else 
                   {
 							safe_free_and_null(buff);
-							buffSize = 0;
                      break;
 						}
 					}
@@ -171,7 +168,7 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHos
             }
 			}
 
-         safe_free(buff);
+         free(buff);
 		}
 		NetClose(nSd);
 	}
@@ -181,7 +178,6 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHos
 	}
 
 	regfree(&preg);
-
 	return nRet;
 }
 
@@ -280,7 +276,7 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
 
                      int i;
                      int offset = 0;
-                     while (true)
+                     while(offset < BUFSIZE - 1)
                      {
                         i = BIO_read(out, buffer + offset, BUFSIZE - offset - 1);
                         if (i == 0)
@@ -293,7 +289,8 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
                            {
                               continue;
                            }
-                           AgentWriteDebugLog(7, _T("PortCheck: BIO_read failed"));
+                           AgentWriteDebugLog(7, _T("PortCheck: BIO_read failed (offset=%d)"), offset);
+                           buffer[0] = 0;  // do not check incomplete buffer
                            break;
                         }
                         offset += i;
@@ -311,7 +308,7 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
                         }
                      }
 
-                     safe_free(buffer);
+                     free(buffer);
                   }
                }
                BIO_free_all(out);
@@ -334,7 +331,6 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
    }
 
    regfree(&preg);
-
    return ret;
 
 #else
