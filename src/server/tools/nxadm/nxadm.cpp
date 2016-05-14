@@ -183,6 +183,7 @@ int main(int argc, char *argv[])
             case 'h':
                Help();
                bStart = FALSE;
+               iError = 0;
                break;
             case 'c':
 #ifdef UNICODE

@@ -1,6 +1,6 @@
 /*
 ** NetXMS DS18x20 sensor subagent
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -114,7 +114,7 @@ static BOOL SubagentInit(Config *config)
 		{
 			TCHAR *pItem, *pEnd;
 
-			for(pItem = s_sensorList; *pItem != 0; pItem = pEnd + 1)
+			for(pItem = pEnd = s_sensorList; pEnd != NULL; pItem = pEnd + 1)
 			{
 				pEnd = _tcschr(pItem, _T('\n'));
 				if (pEnd != NULL)

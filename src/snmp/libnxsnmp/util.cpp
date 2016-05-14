@@ -299,7 +299,6 @@ UINT32 LIBNXSNMP_EXPORTABLE SnmpWalk(SNMP_Transport *transport, const UINT32 *ro
 						 (pVar->getName().compare(pdwName, nameLength) == OID_EQUAL) ||
 						 (pVar->getName().compare(firstObjectName, firstObjectNameLen) == OID_EQUAL))
                {
-                  bRunning = FALSE;
                   delete pRespPDU;
                   delete pRqPDU;
                   break;

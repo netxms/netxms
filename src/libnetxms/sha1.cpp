@@ -230,7 +230,6 @@ unsigned char finalcount[8];
          ((context->state[i>>2] >> ((3-(i & 3)) * 8) ) & 255);
     }
     /* Wipe variables */
-    i = 0;	/* JHB */
 #ifdef _WIN32
     SecureZeroMemory(context->buffer, 64);
     SecureZeroMemory(context->state, 20);

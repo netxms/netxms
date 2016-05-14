@@ -240,11 +240,6 @@ static void CheckZones()
                      m_iNumFixes++;
                }
             }
-            else
-            {
-               DBGetField(hResult2, 0, 0, szName, MAX_OBJECT_NAME);
-               bIsDeleted = DBGetFieldLong(hResult2, 0, 1) ? TRUE : FALSE;
-            }
             DBFreeResult(hResult2);
          }
       }
@@ -261,7 +256,7 @@ static void CheckNodes()
    DB_RESULT hResult, hResult2;
    DWORD i, dwNumObjects, dwId;
    TCHAR szQuery[1024], szName[MAX_OBJECT_NAME];
-   BOOL bResult, bIsDeleted;
+   BOOL bResult, bIsDeleted = FALSE;
 
    StartStage(_T("Checking node objects..."));
    hResult = SQLSelect(_T("SELECT id,primary_ip FROM nodes"));
@@ -349,7 +344,6 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
    DB_RESULT hResult, hResult2;
    DWORD i, dwNumObjects, dwId;
    TCHAR szQuery[1024], szName[MAX_OBJECT_NAME];
-   BOOL bIsDeleted;
 
    _sntprintf(szQuery, 1024, _T("Checking %s objects..."), pszDisplayName);
    StartStage(szQuery);
@@ -395,7 +389,6 @@ static void CheckComponents(const TCHAR *pszDisplayName, const TCHAR *pszTable)
             else
             {
                DBGetField(hResult2, 0, 0, szName, MAX_OBJECT_NAME);
-               bIsDeleted = DBGetFieldLong(hResult2, 0, 1) ? TRUE : FALSE;
             }
             DBFreeResult(hResult2);
          }

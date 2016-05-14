@@ -1024,7 +1024,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(ODBCDRV_CO
       pResult->numColumns = wNumCols;
       pResult->pConn = pConn;
       pResult->noMoreRows = false;
-		pResult->values = (NETXMS_WCHAR **)malloc(sizeof(WCHAR *) * pResult->numColumns);
+		pResult->values = (NETXMS_WCHAR **)malloc(sizeof(NETXMS_WCHAR *) * pResult->numColumns);
       memset(pResult->values, 0, sizeof(NETXMS_WCHAR *) * pResult->numColumns);
 
 		// Get column names

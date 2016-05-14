@@ -70,10 +70,10 @@ public:
 /**
  * NXSL "Cluster" class
  */
-class NXSL_ClusetClass : public NXSL_NetObjClass
+class NXSL_ClusterClass : public NXSL_NetObjClass
 {
 public:
-   NXSL_ClusetClass();
+   NXSL_ClusterClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
 };
@@ -206,7 +206,7 @@ extern NXSL_AlarmClass g_nxslAlarmClass;
 extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_InterfaceClass g_nxslInterfaceClass;
-extern NXSL_ClusetClass g_nxslClusterClass;
+extern NXSL_ClusterClass g_nxslClusterClass;
 extern NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NodeClass g_nxslNodeClass;

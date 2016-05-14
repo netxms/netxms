@@ -790,24 +790,46 @@ NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const TCHAR *at
 }
 
 /**
- * NXSL class Cluster: constructor
+ * NXSL class "Cluster" constructor
  */
-NXSL_ClusetClass::NXSL_ClusetClass() : NXSL_NetObjClass()
+NXSL_ClusterClass::NXSL_ClusterClass() : NXSL_NetObjClass()
 {
    _tcscpy(m_name, _T("Cluster"));
 }
 
 /**
- * NXSL class Cluster: get attribute
+ * NXSL class "Cluster" attributes
  */
-NXSL_Value *NXSL_ClusetClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
    NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
    if (value != NULL)
       return value;
 
    Cluster *cluster = (Cluster *)object->getData();
-   // TODO: Declare possible attrs
+   if (!_tcscmp(attr, _T("zone")))
+   {
+      if (g_flags & AF_ENABLE_ZONING)
+      {
+         Zone *zone = FindZoneByGUID(cluster->getZoneId());
+         if (zone != NULL)
+         {
+            value = new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, zone));
+         }
+         else
+         {
+            value = new NXSL_Value;
+         }
+      }
+      else
+      {
+         value = new NXSL_Value;
+      }
+   }
+   else if (!_tcscmp(attr, _T("zoneId")))
+   {
+      value = new NXSL_Value(cluster->getZoneId());
+   }
    return value;
 }
 
@@ -1226,7 +1248,7 @@ NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_InterfaceClass g_nxslInterfaceClass;
-NXSL_ClusetClass g_nxslClusterClass;
+NXSL_ClusterClass g_nxslClusterClass;
 NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NodeClass g_nxslNodeClass;
