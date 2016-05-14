@@ -1075,6 +1075,13 @@ int NXCORE_EXPORTABLE CurrencyExponent(const TCHAR *code);
 const TCHAR NXCORE_EXPORTABLE *CurrencyName(const TCHAR *code);
 
 /**
+ * Housekeeper control
+ */
+void StartHouseKeeper();
+void StopHouseKeeper();
+void RunHouseKeeper();
+
+/**
  * File monitoring
  */
 struct MONITORED_FILE
