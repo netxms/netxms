@@ -417,6 +417,7 @@ int main(int argc, char* argv[])
             UnlockDB();
             ShutdownDB();
          }
+         nxlog_close();
          return 3;
       }
       Main(NULL);
@@ -448,6 +449,7 @@ int main(int argc, char* argv[])
          UnlockDB();
          ShutdownDB();
       }
+      nxlog_close();
       return 3;
    }
 
