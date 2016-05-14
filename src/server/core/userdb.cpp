@@ -433,9 +433,13 @@ result:
             {
                *pbChangePasswd = false;
             }
-            *pdwSystemRights = GetEffectiveSystemRights(user);
-            user->updateLastLogin();
-            dwResult = RCC_SUCCESS;
+
+            if (dwResult != RCC_NO_GRACE_LOGINS)
+            {
+               *pdwSystemRights = GetEffectiveSystemRights(user);
+               user->updateLastLogin();
+               dwResult = RCC_SUCCESS;
+            }
          }
          else
          {
