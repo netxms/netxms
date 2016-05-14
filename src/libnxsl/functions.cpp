@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -705,11 +705,6 @@ int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
  */
 int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	const TCHAR *str;
-	TCHAR *newStr, pad;
-	LONG newLen;
-	UINT32 i, len;
-
    if ((argc < 2) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
@@ -720,46 +715,45 @@ int F_left(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		 ((argc == 3) && (!argv[2]->isString())))
 		return NXSL_ERR_NOT_STRING;
 
-	if (argc == 3)
+	int newLen = argv[1]->getValueAsInt32();
+	if (newLen > 0)
 	{
-		pad = *(argv[2]->getValueAsCString());
-		if (pad == 0)
-			pad = _T(' ');
+	   TCHAR pad;
+	   if (argc == 3)
+	   {
+	      pad = *(argv[2]->getValueAsCString());
+	      if (pad == 0)
+	         pad = _T(' ');
+	   }
+	   else
+	   {
+	      pad = _T(' ');
+	   }
+
+	   UINT32 len;
+      const TCHAR *str = argv[0]->getValueAsString(&len);
+      if (len > (UINT32)newLen)
+         len = (UINT32)newLen;
+      TCHAR *newStr = (TCHAR *)malloc(newLen * sizeof(TCHAR));
+      memcpy(newStr, str, len * sizeof(TCHAR));
+      for(UINT32 i = len; i < (UINT32)newLen; i++)
+         newStr[i] = pad;
+      *ppResult = new NXSL_Value(newStr, newLen);
+      free(newStr);
 	}
 	else
 	{
-		pad = _T(' ');
+	   *ppResult = new NXSL_Value(_T(""));
 	}
-
-	newLen = argv[1]->getValueAsInt32();
-	if (newLen < 0)
-		newLen = 0;
-
-   str = argv[0]->getValueAsString(&len);
-	if (len > (UINT32)newLen)
-		len = (UINT32)newLen;
-	newStr = (TCHAR *)malloc(newLen * sizeof(TCHAR));
-	memcpy(newStr, str, len * sizeof(TCHAR));
-   for(i = len; i < (UINT32)newLen; i++)
-      newStr[i] = pad;
-   *ppResult = new NXSL_Value(newStr, newLen);
-	free(newStr);
 	return NXSL_ERR_SUCCESS;
 }
 
-
-//
-// right() - take rightmost part of a string and pad or truncate it as necessary
-// Format: right(string, len, [pad])
-//
-
+/**
+ * right() - take rightmost part of a string and pad or truncate it as necessary
+ * Format: right(string, len, [pad])
+ */
 int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
-	const TCHAR *str;
-	TCHAR *newStr, pad;
-	LONG newLen;
-	UINT32 i, len, shift;
-
    if ((argc < 2) || (argc > 3))
       return NXSL_ERR_INVALID_ARGUMENT_COUNT;
 
@@ -770,37 +764,43 @@ int F_right(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 		 ((argc == 3) && (!argv[2]->isString())))
 		return NXSL_ERR_NOT_STRING;
 
-	if (argc == 3)
-	{
-		pad = *(argv[2]->getValueAsCString());
-		if (pad == 0)
-			pad = _T(' ');
-	}
-	else
-	{
-		pad = _T(' ');
-	}
+   int newLen = argv[1]->getValueAsInt32();
+   if (newLen > 0)
+   {
+      TCHAR pad;
+      if (argc == 3)
+      {
+         pad = *(argv[2]->getValueAsCString());
+         if (pad == 0)
+            pad = _T(' ');
+      }
+      else
+      {
+         pad = _T(' ');
+      }
 
-	newLen = argv[1]->getValueAsInt32();
-	if (newLen < 0)
-		newLen = 0;
-
-   str = argv[0]->getValueAsString(&len);
-	if (len > (UINT32)newLen)
-	{
-		shift = len - (UINT32)newLen;
-		len = (UINT32)newLen;
-	}
-	else
-	{
-		shift = 0;
-	}
-	newStr = (TCHAR *)malloc(newLen * sizeof(TCHAR));
-	memcpy(&newStr[(UINT32)newLen - len], &str[shift], len * sizeof(TCHAR));
-   for(i = 0; i < (UINT32)newLen - len; i++)
-      newStr[i] = pad;
-   *ppResult = new NXSL_Value(newStr, newLen);
-	free(newStr);
+      UINT32 len, shift;
+      const TCHAR *str = argv[0]->getValueAsString(&len);
+      if (len > (UINT32)newLen)
+      {
+         shift = len - (UINT32)newLen;
+         len = (UINT32)newLen;
+      }
+      else
+      {
+         shift = 0;
+      }
+      TCHAR *newStr = (TCHAR *)malloc(newLen * sizeof(TCHAR));
+      memcpy(&newStr[(UINT32)newLen - len], &str[shift], len * sizeof(TCHAR));
+      for(UINT32 i = 0; i < (UINT32)newLen - len; i++)
+         newStr[i] = pad;
+      *ppResult = new NXSL_Value(newStr, newLen);
+      free(newStr);
+   }
+   else
+   {
+      *ppResult = new NXSL_Value(_T(""));
+   }
 	return 0;
 }
 

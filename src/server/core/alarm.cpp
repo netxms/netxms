@@ -710,7 +710,6 @@ void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bo
    UINT32 *pdwObjectList = (UINT32 *)malloc(sizeof(UINT32) * m_alarmList->size());
 
    MutexLock(m_mutex);
-   DWORD dwCurrTime = (UINT32)time(NULL);
    int numObjects = 0;
    for(int i = 0; i < m_alarmList->size(); i++)
    {

@@ -2619,7 +2619,7 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
          }
          _tcscat(newConfig, _T("</config>"));
 
-         safe_free(config);
+         free(config);
          DB_STATEMENT statment = DBPrepare(g_hCoreDB, _T("UPDATE network_map_links SET element_data=? WHERE map_id=? AND element1=? AND element2=?"));
          if (statment != NULL)
          {
@@ -2633,9 +2633,9 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
          else
          {
             if (!g_bIgnoreErrors)
-               return FALSE;
+               return false;
          }
-         safe_free(newConfig);
+         free(newConfig);
       }
       DBFreeResult(hResult);
    }

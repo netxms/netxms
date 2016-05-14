@@ -355,7 +355,7 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
    }
    MutexUnlock(s_cronScheduleLock);
 
-   if(!found)
+   if (!found)
    {
       //check in different que and if exists - remove from one and add to another
       MutexLock(s_oneTimeScheduleLock);
@@ -378,7 +378,6 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
             s_cronSchedules.add(st);
             MutexUnlock(s_cronScheduleLock);
 
-            found = true;
             break;
          }
       }
@@ -735,7 +734,7 @@ static bool IsTimeToRun(struct tm *currTime, const TCHAR *schedule, time_t currT
       return false;
 
    // Day of week
-   curr = ExtractWord(curr, value);
+   ExtractWord(curr, value);
    for(int i = 0; value[i] != 0; i++)
       if (value[i] == _T('7'))
          value[i] = _T('0');

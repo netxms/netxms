@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,18 +51,21 @@ void ShutdownSNMPTrapSender()
  */
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 {
-   SOCKET hSocket = (g_dwFlags & AF_DISABLE_IPV4) ? INVALID_SOCKET : socket(AF_INET, SOCK_DGRAM, 0);
-   if ((hSocket == INVALID_SOCKET) && !(g_dwFlags & AF_DISABLE_IPV4))
+   if (g_dwFlags & AF_DISABLE_IPV4)
+   {
+      nxlog_debug(1, _T("SNMPTrapReceiver: IPv4 disabled, exiting"));
+      return THREAD_OK;
+   }
+
+   SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+   if (hSocket == INVALID_SOCKET)
    {
       DebugPrintf(INVALID_INDEX, 1, _T("SNMPTrapReceiver: cannot create socket (%s)"), _tcserror(errno));
       return THREAD_OK;
    }
 
-   if (!(g_dwFlags & AF_DISABLE_IPV4))
-   {
-      SetSocketExclusiveAddrUse(hSocket);
-      SetSocketReuseFlag(hSocket);
-   }
+   SetSocketExclusiveAddrUse(hSocket);
+   SetSocketReuseFlag(hSocket);
 
    // Fill in local address structure
    struct sockaddr_in addr;
@@ -90,17 +93,10 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    addr.sin_port = htons(g_dwSNMPTrapPort);
 
    // Bind socket
-   if (!(g_dwFlags & AF_DISABLE_IPV4))
+   if (bind(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
    {
-      if (bind(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
-      {
-         DebugPrintf(INVALID_INDEX, 1, _T("SNMPTrapReceiver: cannot bind socket (%s)"), _tcserror(errno));
-         closesocket(hSocket);
-         return THREAD_OK;
-      }
-   }
-   else
-   {
+      DebugPrintf(INVALID_INDEX, 1, _T("SNMPTrapReceiver: cannot bind socket (%s)"), _tcserror(errno));
+      closesocket(hSocket);
       return THREAD_OK;
    }
 
@@ -108,14 +104,9 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    DebugPrintf(INVALID_INDEX, 3, _T("SNMPTrapReceiver: listening on %s:%d"),
       IpToStr(ntohl(addr.sin_addr.s_addr), ipAddrStr), (int)ntohs(addr.sin_port));
 
-   SNMP_TrapProxyTransport *pTransport; //rewrite class to support
-
-   if (!(g_dwFlags & AF_DISABLE_IPV4))
-   {
-      pTransport = new SNMP_TrapProxyTransport(hSocket);
-      pTransport->enableEngineIdAutoupdate(true);
-      pTransport->setPeerUpdatedOnRecv(true);
-   }
+   SNMP_TrapProxyTransport *pTransport = new SNMP_TrapProxyTransport(hSocket);
+   pTransport->enableEngineIdAutoupdate(true);
+   pTransport->setPeerUpdatedOnRecv(true);
 
    // Wait for packets
    while(!(g_dwFlags & AF_SHUTDOWN))

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -348,14 +348,13 @@ void ServiceContainer::updateUptimeStats(time_t currentTime, BOOL updateChilds)
 INT32 ServiceContainer::getSecondsSinceBeginningOf(Period period, time_t *beginTime)
 {
 	time_t curTime = time(NULL);
-	struct tm *tms;
 	struct tm tmBuffer;
 
 #if HAVE_LOCALTIME_R
-	tms = localtime_r(&curTime, &tmBuffer);
+	localtime_r(&curTime, &tmBuffer);
 #else
-	tms = localtime(&curTime);
-	memcpy((void*)&tmBuffer, (void*)tms, sizeof(struct tm));
+	struct tm *tms = localtime(&curTime);
+	memcpy(&tmBuffer, tms, sizeof(struct tm));
 #endif
 
 	tmBuffer.tm_hour = 0;
