@@ -361,11 +361,7 @@ static void LoadGlobalConfig()
 static BOOL InitCryptografy()
 {
 #ifdef _WITH_ENCRYPTION
-	TCHAR szKeyFile[MAX_PATH];
 	BOOL bResult = FALSE;
-	int fd, iPolicy;
-	UINT32 dwLen;
-	BYTE *pBufPos, *pKeyBuffer, hash[SHA1_DIGEST_SIZE];
 
    if (!InitCryptoLib(ConfigReadULong(_T("AllowedCiphers"), 0x7F)))
 		return FALSE;
@@ -374,9 +370,9 @@ static BOOL InitCryptografy()
    SSL_library_init();
    SSL_load_error_strings();
 
+   TCHAR szKeyFile[MAX_PATH];
 	_tcscpy(szKeyFile, g_netxmsdDataDir);
 	_tcscat(szKeyFile, DFILE_KEYS);
-	fd = _topen(szKeyFile, O_RDONLY | O_BINARY);
 	g_pServerKey = LoadRSAKeys(szKeyFile);
 	if (g_pServerKey == NULL)
 	{
@@ -384,19 +380,20 @@ static BOOL InitCryptografy()
 		g_pServerKey = RSA_generate_key(NETXMS_RSA_KEYLEN, 17, NULL, 0);
 		if (g_pServerKey != NULL)
 		{
-			fd = _topen(szKeyFile, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
+			int fd = _topen(szKeyFile, O_WRONLY | O_BINARY | O_CREAT | O_TRUNC, 0600);
 			if (fd != -1)
 			{
-				dwLen = i2d_RSAPublicKey(g_pServerKey, NULL);
+				UINT32 dwLen = i2d_RSAPublicKey(g_pServerKey, NULL);
 				dwLen += i2d_RSAPrivateKey(g_pServerKey, NULL);
-				pKeyBuffer = (BYTE *)malloc(dwLen);
+				BYTE *pKeyBuffer = (BYTE *)malloc(dwLen);
 
-				pBufPos = pKeyBuffer;
+				BYTE *pBufPos = pKeyBuffer;
 				i2d_RSAPublicKey(g_pServerKey, &pBufPos);
 				i2d_RSAPrivateKey(g_pServerKey, &pBufPos);
 				write(fd, &dwLen, sizeof(UINT32));
 				write(fd, pKeyBuffer, dwLen);
 
+			   BYTE hash[SHA1_DIGEST_SIZE];
 				CalculateSHA1Hash(pKeyBuffer, dwLen, hash);
 				write(fd, hash, SHA1_DIGEST_SIZE);
 
@@ -419,7 +416,7 @@ static BOOL InitCryptografy()
 		bResult = TRUE;
 	}
 
-	iPolicy = ConfigReadInt(_T("DefaultEncryptionPolicy"), 1);
+	int iPolicy = ConfigReadInt(_T("DefaultEncryptionPolicy"), 1);
 	if ((iPolicy < 0) || (iPolicy > 3))
 		iPolicy = 1;
 	SetAgentDEP(iPolicy);
