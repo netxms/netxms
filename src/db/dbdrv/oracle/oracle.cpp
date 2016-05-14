@@ -912,9 +912,8 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 	if (pResult->nCols > 0)
 	{
 		// Prepare receive buffers and fetch column names
-		pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->nCols);
-		pBuffers = (ORACLE_FETCH_BUFFER *)malloc(sizeof(ORACLE_FETCH_BUFFER) * pResult->nCols);
-		memset(pBuffers, 0, sizeof(ORACLE_FETCH_BUFFER) * pResult->nCols);
+		pResult->columnNames = (char **)calloc(pResult->nCols, sizeof(char *));
+		pBuffers = (ORACLE_FETCH_BUFFER *)calloc(pResult->nCols, sizeof(ORACLE_FETCH_BUFFER));
 		for(int i = 0; i < pResult->nCols; i++)
 		{
 			if ((nStatus = OCIParamGet(handleStmt, OCI_HTYPE_STMT, pConn->handleError,
