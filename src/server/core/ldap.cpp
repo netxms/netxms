@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -624,30 +624,33 @@ TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, UINT32
    return result;
 }
 
+/**
+ * Parse range information from attribute
+ */
 static void ParseRange(const char *attr, int *start, int *end)
 {
    *end  = -1;
    *start = -1;
-   //read from ';' till '-' and till end
-   char *tmpAttr = strdup(attr);
-   char *tmpS = strchr(tmpAttr,'=');
-   char *tmpE = strchr(tmpAttr,'-');
-   if(tmpS == NULL || tmpE == NULL)
+
+   char *tmpS = strchr(attr, '=');
+   if (tmpS == NULL)
       return;
+
+   char *tmpAttr = strdup(tmpS + 1);
+   char *tmpE = strchr(tmpAttr, '-');
+   if (tmpE == NULL)
+   {
+      free(tmpAttr);
+      return;
+   }
    *tmpE = 0;
-   *start = atoi(tmpS);
-   tmpS = tmpE + 1;
-   if(tmpS == NULL)
-      return;
-   if(tmpS[0] == '*')
+   tmpE++;
+   *start = atoi(tmpAttr);
+   if (tmpE[0] != '*')
    {
-      *end  = -1;
+      *end = atoi(tmpE);
    }
-   else
-   {
-      *end = atoi(tmpS);
-   }
-   safe_free(tmpAttr);
+   free(tmpAttr);
 }
 
 /**
