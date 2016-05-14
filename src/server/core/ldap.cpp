@@ -632,7 +632,7 @@ static void ParseRange(const char *attr, int *start, int *end)
    *end  = -1;
    *start = -1;
 
-   char *tmpS = strchr(attr, '=');
+   const char *tmpS = strchr(attr, '=');
    if (tmpS == NULL)
       return;
 
