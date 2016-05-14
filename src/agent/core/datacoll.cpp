@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -626,27 +626,24 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
             }
             else
             {
-               bool sent = false;
                MutexLock(s_serverSyncStatusLock);
                ServerSyncStatus *status = s_serverSyncStatus.get(e->getServerId());
                if (status != NULL)
                {
-                  sent = e->sendToServer(true);
+                  if (e->sendToServer(true))
+                  {
+                     status->queueSize--;
+                     deleteList.add(e);
+                  }
+                  else
+                  {
+                     delete e;
+                  }
                }
                else
                {
                   DebugPrintf(INVALID_INDEX, 5, _T("INTERNAL ERROR: cached DCI value without server sync status object"));
-                  sent = true;  // record should be deleted
-               }
-
-               if (sent)
-               {
-                  status->queueSize--;
-                  deleteList.add(e);
-               }
-               else
-               {
-                  delete e;
+                  deleteList.add(e);  // record should be deleted
                }
                MutexUnlock(s_serverSyncStatusLock);
             }
