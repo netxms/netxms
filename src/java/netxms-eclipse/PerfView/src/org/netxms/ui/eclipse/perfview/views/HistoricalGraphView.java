@@ -314,6 +314,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       chart.setGridVisible(config.isShowGrid());
       chart.setLegendVisible(config.isShowLegend());
       chart.setLegendPosition(config.getLegendPosition());
+      chart.setExtendedLegend(config.isExtendedLegend());
       chart.setStacked(config.isStacked());
       chart.setTranslucent(config.isTranslucent());
       chart.setLineWidth(config.getLineWidth());
