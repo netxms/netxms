@@ -11,9 +11,10 @@
 	- Configurable display format for dashboard elements data sources
 	- Improved inverted line chart support
 	- DCI filter in DCI selection dialog
+	- Configurable line width on ad-hoc line charts
 - Android console
 	- Reorganized alarm notification section (issue #1194)
-- Fixed issues: #859, #1086, #1194, #1195, #1196, #1197, #1200
+- Fixed issues: #859, #1086, #1194, #1195, #1196, #1197, #1200, #1214
 
 
 *
