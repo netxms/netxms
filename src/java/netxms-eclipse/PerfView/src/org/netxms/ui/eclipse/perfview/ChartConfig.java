@@ -76,10 +76,13 @@ public class ChartConfig
    private boolean translucent = true;
    
    @Element(required = false)
+   private int lineWidth = 2;
+   
+   @Element(required = false)
    private boolean autoScale = true;
    
    @Element(required = false)
-   private int minYScaleValue = 1;
+   private int minYScaleValue = 0;
 
    @Element(required = false)
    private int maxYScaleValue = 100;
@@ -698,41 +701,81 @@ public class ChartConfig
       this.extendedLegend = extendedLegend;
    }
 
+   /**
+    * @return the lineWidth
+    */
+   public int getLineWidth()
+   {
+      return lineWidth;
+   }
+
+   /**
+    * @param lineWidth the lineWidth to set
+    */
+   public void setLineWidth(int lineWidth)
+   {
+      this.lineWidth = lineWidth;
+   }
+
+   /**
+    * @return
+    */
    public boolean isAutoScale()
    {
       return autoScale;
    }
 
+   /**
+    * @param autoScale
+    */
    public void setAutoScale(boolean autoScale)
    {
       this.autoScale = autoScale;
    }
 
+   /**
+    * @return
+    */
    public int getMinYScaleValue()
    {
       return minYScaleValue;
    }
 
+   /**
+    * @param minYScaleValue
+    */
    public void setMinYScaleValue(int minYScaleValue)
    {
       this.minYScaleValue = minYScaleValue;
    }
 
+   /**
+    * @return
+    */
    public int getMaxYScaleValue()
    {
       return maxYScaleValue;
    }
 
+   /**
+    * @param maxYScaleValue
+    */
    public void setMaxYScaleValue(int maxYScaleValue)
    {
       this.maxYScaleValue = maxYScaleValue;
    }
 
+   /**
+    * @return
+    */
    public TimePeriod timePeriod()
    {
       return new TimePeriod(timeFrameType, timeRange, timeUnits, timeFrom, timeTo);
    }
    
+   /**
+    * @param tp
+    */
    public void setTimePeriod(TimePeriod tp)
    {
       timeFrameType = tp.getTimeFrameType();
