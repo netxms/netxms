@@ -77,7 +77,7 @@ public class ObjectDecorator extends BaseLabelProvider implements ILightweightLa
 		if (((AbstractObject)element).isInMaintenanceMode())
 		{
 	      decoration.addOverlay(maintModeImage, IDecoration.TOP_RIGHT);
-	      decoration.addSuffix(" [Maintenance]");
+	      decoration.addSuffix(Messages.get().ObjectDecorator_MaintenanceSuffix);
 	      decoration.setForegroundColor(maintColor);
 		}
 		if (element instanceof Interface)

@@ -21,7 +21,7 @@ public class Messages extends NLS
 	public String IPAddressSelectionDialog_Warning;
 	public String IPAddressSelectionDialog_WarningText;
 	public String IPAddressSelector_None;
-	public String ObjectBrowser_HideCheckTemplates;
+   public String ObjectBrowser_HideCheckTemplates;
 	public String ObjectBrowser_HideUnmanaged;
 	public String ObjectBrowser_MoveJob_Error;
 	public String ObjectBrowser_MoveJob_Title;
@@ -48,6 +48,10 @@ public class Messages extends NLS
    public String ObjectBrowser_MoveDashboard;
    public String ObjectBrowser_MoveMap;
    public String ObjectBrowser_MovePolicy;
+   public String ObjectBrowser_Rename;
+   public String ObjectBrowser_RenameJobError;
+   public String ObjectBrowser_RenameJobName;
+   public String ObjectDecorator_MaintenanceSuffix;
 	static
 	{
 		// initialize resource bundle
