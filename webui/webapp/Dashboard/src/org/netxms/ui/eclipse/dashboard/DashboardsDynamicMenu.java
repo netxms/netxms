@@ -140,7 +140,7 @@ public class DashboardsDynamicMenu extends ContributionItem implements IWorkbenc
          });
 		}
    	MenuItem dashboardsMenuItem = new MenuItem(menu, SWT.CASCADE, index);
-   	dashboardsMenuItem.setText("&Dashboards");
+   	dashboardsMenuItem.setText(Messages.get().DashboardsDynamicMenu_Dashboards);
    	dashboardsMenuItem.setMenu(dashboardsMenu);
 	}
 }

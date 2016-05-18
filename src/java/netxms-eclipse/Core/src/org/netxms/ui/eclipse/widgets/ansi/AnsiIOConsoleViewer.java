@@ -38,7 +38,7 @@ public class AnsiIOConsoleViewer extends IOConsoleViewer
 {
    private AnsiConsoleAttributes lastAttributes = new AnsiConsoleAttributes();
    private AnsiConsoleAttributes currentAttributes = new AnsiConsoleAttributes();
-   private final static Pattern pattern = Pattern.compile("\\x1b\\[[^\\x40-\\x7e]*.");
+   private final static Pattern pattern = Pattern.compile("\\x1b\\[[^\\x40-\\x7e]*."); //$NON-NLS-1$
    private final static char ESCAPE_SGR = 'm';
    private int lastRangeEnd = 0;
 
@@ -217,7 +217,7 @@ public class AnsiIOConsoleViewer extends IOConsoleViewer
          {
             // Select Graphic Rendition (SGR) escape sequence
             List<Integer> nCommands = new ArrayList<Integer>();
-            for(String cmd : theEscape.split(";"))
+            for(String cmd : theEscape.split(";")) //$NON-NLS-1$
             {
                int nCmd = tryParseInteger(cmd);
                if (nCmd != -1)
@@ -248,7 +248,7 @@ public class AnsiIOConsoleViewer extends IOConsoleViewer
     */
    private static int tryParseInteger(String text)
    {
-      if ("".equals(text))
+      if ("".equals(text)) //$NON-NLS-1$
          return -1;
 
       try

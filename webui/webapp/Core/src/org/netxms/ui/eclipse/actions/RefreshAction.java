@@ -30,7 +30,7 @@ import org.netxms.ui.eclipse.console.Messages;
  */
 public class RefreshAction extends Action
 {
-   public static final String ID = "org.netxms.ui.eclipse.library.actions.refresh";
+   public static final String ID = "org.netxms.ui.eclipse.library.actions.refresh"; //$NON-NLS-1$
 
 	/**
 	 * Create default refresh action

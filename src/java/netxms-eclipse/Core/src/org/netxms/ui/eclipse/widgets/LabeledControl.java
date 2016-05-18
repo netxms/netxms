@@ -219,6 +219,6 @@ public abstract class LabeledControl extends Composite
    @Override
    public String toString()
    {
-      return getClass().getName() + " [label=" + label.getText() + ", control=" + control + "]";
+      return getClass().getName() + " [label=" + label.getText() + ", control=" + control + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
    }
 }

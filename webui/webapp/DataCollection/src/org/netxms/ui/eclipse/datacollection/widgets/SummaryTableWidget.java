@@ -169,7 +169,7 @@ public class SummaryTableWidget extends Composite
       };
       actionUseMultipliers.setChecked(useMultipliers);
       
-      actionForcePollAll = new Action("Force poll for all columns") {
+      actionForcePollAll = new Action(Messages.get().SummaryTableWidget_ForcePollForAllColumns) {
          @Override
          public void run()
          {
@@ -177,7 +177,7 @@ public class SummaryTableWidget extends Composite
          }
       };
       
-      actionShowObjectDetails = new Action("Show &object details") {
+      actionShowObjectDetails = new Action(Messages.get().SummaryTableWidget_ShowObjectDetails) {
          @Override
          public void run()
          {
@@ -197,7 +197,7 @@ public class SummaryTableWidget extends Composite
          @Override
          public String getMenuText()
          {
-            return "&Node";
+            return Messages.get().SummaryTableWidget_Node;
          }
          
       };
@@ -226,8 +226,8 @@ public class SummaryTableWidget extends Composite
       // Register menu for extension.
       if (viewPart != null)
       {
-         viewPart.getSite().registerContextMenu(viewPart.getSite().getId() + ".data", rowMenuManager, viewer);
-         viewPart.getSite().registerContextMenu(viewPart.getSite().getId() + ".node", nodeMenuManager, objectSelectionProvider);
+         viewPart.getSite().registerContextMenu(viewPart.getSite().getId() + ".data", rowMenuManager, viewer); //$NON-NLS-1$
+         viewPart.getSite().registerContextMenu(viewPart.getSite().getId() + ".node", nodeMenuManager, objectSelectionProvider); //$NON-NLS-1$
       }
    }
 
@@ -244,9 +244,9 @@ public class SummaryTableWidget extends Composite
       manager.add(new Separator());
       manager.add(actionShowObjectDetails);
       manager.add(new Separator());
-      if ((currentColumn != null) && ((Integer)currentColumn.getData("ID") > 0))
+      if ((currentColumn != null) && ((Integer)currentColumn.getData("ID") > 0)) //$NON-NLS-1$
       {
-         manager.add(new Action(String.format("Force poll for \"%s\"", currentColumn.getText())) {
+         manager.add(new Action(String.format(Messages.get().SummaryTableWidget_ForcePollForNode, currentColumn.getText())) {
             @Override
             public void run()
             {
@@ -303,7 +303,7 @@ public class SummaryTableWidget extends Composite
          final IDialogSettings settings = Activator.getDefault().getDialogSettings();
          final String key = viewPart.getViewSite().getId() + ".SummaryTable." + Integer.toString(tableId); //$NON-NLS-1$
          WidgetHelper.restoreTableViewerSettings(viewer, settings, key);
-         String value = settings.get(key + ".useMultipliers");
+         String value = settings.get(key + ".useMultipliers"); //$NON-NLS-1$
          if (value != null)
             useMultipliers = Boolean.parseBoolean(value);
          labelProvider.setUseMultipliers(useMultipliers);
@@ -312,7 +312,7 @@ public class SummaryTableWidget extends Composite
             public void widgetDisposed(DisposeEvent e)
             {
                WidgetHelper.saveTableViewerSettings(viewer, settings, key);
-               settings.put(key + ".useMultipliers", useMultipliers);
+               settings.put(key + ".useMultipliers", useMultipliers); //$NON-NLS-1$
             }
          });
          viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
@@ -395,7 +395,7 @@ public class SummaryTableWidget extends Composite
          }
          catch(PartInitException e)
          {
-            MessageDialogHelper.openError(getShell(), "Error", String.format("Cannot open object details view: %s", e.getLocalizedMessage()));
+            MessageDialogHelper.openError(getShell(), Messages.get().SummaryTableWidget_Error, String.format(Messages.get().SummaryTableWidget_CannotOpenObjectDetails, e.getLocalizedMessage()));
          }
       }
    }
@@ -441,11 +441,11 @@ public class SummaryTableWidget extends Composite
          return;
       
       final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob("Force DCI poll", viewPart, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().SummaryTableWidget_ForceDciPoll, viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            monitor.beginTask("DCI poll", requests.size());
+            monitor.beginTask(Messages.get().SummaryTableWidget_DciPoll, requests.size());
             for(PollRequest r : requests)
             {
                session.forceDCIPoll(r.nodeId, r.dciId);
@@ -464,7 +464,7 @@ public class SummaryTableWidget extends Composite
          @Override
          protected String getErrorMessage()
          {
-            return "Forced DCI poll failed";
+            return Messages.get().SummaryTableWidget_13;
          }
       }.start();
    }

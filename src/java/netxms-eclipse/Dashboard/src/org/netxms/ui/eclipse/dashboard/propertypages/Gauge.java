@@ -142,10 +142,10 @@ public class Gauge extends PropertyPage
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      colorMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Color mode", gd);
-      colorMode.add("Zone color");
-      colorMode.add("Fixed custom color");
-      colorMode.add("Active threshold color");
+      colorMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().Gauge_ColorMode, gd);
+      colorMode.add(Messages.get().Gauge_ZoneColor);
+      colorMode.add(Messages.get().Gauge_FixedCustomColor);
+      colorMode.add(Messages.get().Gauge_ActiveThresholdColor);
       colorMode.select(config.getColorMode());
       colorMode.addSelectionListener(new SelectionListener() {
          @Override
@@ -163,7 +163,7 @@ public class Gauge extends PropertyPage
       
       gd = new GridData();
       gd.horizontalAlignment = SWT.LEFT;
-      customColor = WidgetHelper.createLabeledColorSelector(dialogArea, "Custom color", gd); 
+      customColor = WidgetHelper.createLabeledColorSelector(dialogArea, Messages.get().Gauge_CustomColor, gd); 
       customColor.setColorValue(ColorConverter.rgbFromInt(config.getCustomColor()));
 		
 		checkLegendInside = new Button(dialogArea, SWT.CHECK);

@@ -67,7 +67,7 @@ public enum GaugeColorMode
       final GaugeColorMode element = lookupTable.get(value);
       if (element == null)
       {
-         Logger.warning(GaugeColorMode.class.getName(), "Unknown element " + value);
+         Logger.warning(GaugeColorMode.class.getName(), "Unknown element " + value); //$NON-NLS-1$
          return ZONE; // fallback
       }
       return element;

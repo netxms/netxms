@@ -147,7 +147,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
 					a.setChecked(true);
 				}
 			}
-         else if (s.startsWith("-dashboard="))
+         else if (s.startsWith("-dashboard=")) //$NON-NLS-1$
          {
             showDashboard(s.substring(11));
          }
@@ -173,7 +173,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
          AbstractObject object = session.findObjectByName(dashboardId);
          if ((object == null) || !(object instanceof Dashboard))
          {
-            MessageDialogHelper.openError(null, "Error", String.format("Cannot open dashboard %s (invalid dashboard ID)", dashboardId));
+            MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_CannotOpenDashboard, dashboardId));
             return;
          }
          objectId = object.getObjectId();
@@ -182,7 +182,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       Dashboard dashboard = (Dashboard)session.findObjectById(objectId, Dashboard.class);
       if (dashboard == null)
       {
-         MessageDialogHelper.openError(null, "Error", String.format("Cannot open dashboard %s (invalid dashboard ID)", dashboardId));
+         MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_CannotOpenDashboard, dashboardId));
          return;
       }
       
@@ -194,7 +194,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
       }
       catch(PartInitException e)
       {
-         MessageDialogHelper.openError(null, "Error", String.format("Cannot open dashboard %s (%s)", dashboardId, e.getLocalizedMessage()));
+         MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_CannotOpenDashboardType2, dashboardId, e.getLocalizedMessage()));
       }
    }
 	
@@ -254,7 +254,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
             autoConnect = false; // only do auto connect first time
          }
 
-         ConsoleSharedData.setProperty("SlowLink", settings.getBoolean("Connect.SlowLink"));
+         ConsoleSharedData.setProperty("SlowLink", settings.getBoolean("Connect.SlowLink")); //$NON-NLS-1$ //$NON-NLS-2$
          LoginJob job = new LoginJob(display, 
          		settings.get("Connect.Server"), //$NON-NLS-1$ 
                settings.get("Connect.Login"), //$NON-NLS-1$

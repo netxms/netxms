@@ -12,6 +12,7 @@ public class Messages extends NLS
 	public static String AbstractChart_Hours;
 	public static String AbstractChart_Left;
 	public static String AbstractChart_LegendPosition;
+   public static String AbstractChart_LineWidth;
    public static String AbstractChart_LogartithmicScale;
 	public static String AbstractChart_Minutes;
 	public static String AbstractChart_Options;
@@ -20,6 +21,7 @@ public class Messages extends NLS
 	public static String AbstractChart_ShowGrid;
 	public static String AbstractChart_ShowLegend;
 	public static String AbstractChart_ShowTitle;
+   public static String AbstractChart_Stacked;
 	public static String AbstractChart_TimeInterval;
 	public static String AbstractChart_TimeUnits;
 	public static String AbstractChart_Title;
@@ -125,7 +127,9 @@ public class Messages extends NLS
 	public static String DashboardElementsLabelProvider_TypeTubeChart;
 	public static String DashboardElementsLabelProvider_TypeWebPage;
 	public static String DashboardElementsLabelProvider_Unknown;
-	public static String DashboardView_AddAlarmBrowser;
+   public static String DashboardsDynamicMenu_Dashboards;
+	public static String DashboardView_8;
+   public static String DashboardView_AddAlarmBrowser;
 	public static String DashboardView_AddAvailChart;
 	public static String DashboardView_AddBarChart;
 	public static String DashboardView_AddDashboard;
@@ -136,6 +140,8 @@ public class Messages extends NLS
 	public static String DashboardView_AddTubeChart;
 	public static String DashboardView_Confirmation;
 	public static String DashboardView_EditMode;
+   public static String DashboardView_ExportLineChartData;
+   public static String DashboardView_ExportLineChartValues;
    public static String DashboardView_GetEffectiveRights;
    public static String DashboardView_GetEffectiveRightsError;
 	public static String DashboardView_InitError;
@@ -184,13 +190,18 @@ public class Messages extends NLS
 	public static String ExportDashboard_JobTitle;
 	public static String ExportDashboard_SelectFile;
 	public static String ExportDashboard_XMLFiles;
-	public static String Gauge_Bar;
+	public static String Gauge_ActiveThresholdColor;
+   public static String Gauge_Bar;
+   public static String Gauge_ColorMode;
+   public static String Gauge_CustomColor;
    public static String Gauge_Dial;
+   public static String Gauge_FixedCustomColor;
    public static String Gauge_FontName;
    public static String Gauge_ShowBorder;
    public static String Gauge_Text;
    public static String Gauge_Type;
    public static String Gauge_Vertical;
+   public static String Gauge_ZoneColor;
    public static String GeoMap_Error;
 	public static String GeoMap_ErrorText;
 	public static String GeoMap_Latitude;
@@ -241,7 +252,8 @@ public class Messages extends NLS
 	public static String Layout_WHint;
 	public static String LineChartElement_JobError;
 	public static String LineChartElement_JobTitle;
-	public static String NetworkMap_NetworkMap;
+	public static String NetworkMap_EnableDoubleClickAction;
+   public static String NetworkMap_NetworkMap;
 	public static String NetworkMap_Title;
    public static String NetworkMap_ZoomLevel;
 	public static String ObjectStatusChart_3DView;

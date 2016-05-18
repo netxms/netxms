@@ -189,7 +189,7 @@ public abstract class AbstractTraceView extends ViewPart
 	 */
 	protected void subscribe(final String channel)
 	{
-      new ConsoleJob(String.format("Subscribing to channel %s", channel), this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(String.format(Messages.get().AbstractTraceView_Subscribing, channel), this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -199,7 +199,7 @@ public abstract class AbstractTraceView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot subscribe to channel %s", channel);
+            return String.format(Messages.get().AbstractTraceView_CannotSubscribe, channel);
          }
       }.start();
 	}
@@ -211,7 +211,7 @@ public abstract class AbstractTraceView extends ViewPart
 	 */
 	protected void unsubscribe(final String channel)
 	{
-      ConsoleJob job = new ConsoleJob(String.format("Unsubscribing from channel %s", channel), null, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(String.format(Messages.get().AbstractTraceView_Unsubscribing, channel), null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -221,7 +221,7 @@ public abstract class AbstractTraceView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot unsubscribe from channel %s", channel);
+            return String.format(Messages.get().AbstractTraceView_CannotUnsubscribe, channel);
          }
       };
       job.setUser(false);

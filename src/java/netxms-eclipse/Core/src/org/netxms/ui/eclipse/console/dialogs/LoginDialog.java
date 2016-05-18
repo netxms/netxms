@@ -185,7 +185,7 @@ public class LoginDialog extends Dialog
       comboServer = WidgetHelper.createLabeledCombo(fields, SWT.DROP_DOWN, Messages.get().LoginDialog_server, gd, toolkit);
 
       checkSlowLink = new Button(fields, SWT.CHECK);
-      checkSlowLink.setText("Connection over &slow link");
+      checkSlowLink.setText(Messages.get().LoginDialog_SlowLinkConnection);
       gd = new GridData();
       gd.horizontalIndent = 8;
       checkSlowLink.setLayoutData(gd);
@@ -241,7 +241,7 @@ public class LoginDialog extends Dialog
       if (text != null)
          textLogin.setText(text);
       
-      checkSlowLink.setSelection(settings.getBoolean("Connect.SlowLink"));
+      checkSlowLink.setSelection(settings.getBoolean("Connect.SlowLink")); //$NON-NLS-1$
 
       try
       {
@@ -325,9 +325,9 @@ public class LoginDialog extends Dialog
       settings.put("Connect.ServerHistory", items.toArray(new String[items.size()])); //$NON-NLS-1$
       settings.put("Connect.Login", textLogin.getText()); //$NON-NLS-1$
       settings.put("Connect.AuthMethod", authMethod.getValue()); //$NON-NLS-1$
-      settings.put("Connect.SlowLink", checkSlowLink.getSelection());
+      settings.put("Connect.SlowLink", checkSlowLink.getSelection()); //$NON-NLS-1$
       if (certificate != null)
-         settings.put("Connect.Certificate", ((X509Certificate)certificate).getSubjectDN().toString());
+         settings.put("Connect.Certificate", ((X509Certificate)certificate).getSubjectDN().toString()); //$NON-NLS-1$
 
       password = textPassword.getText();
       super.okPressed();
@@ -400,7 +400,7 @@ public class LoginDialog extends Dialog
       String[] subjectStrings = new String[certs.length];
       
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      String lastSelected = settings.get("Connect.Certificate");
+      String lastSelected = settings.get("Connect.Certificate"); //$NON-NLS-1$
       int selectionIndex = 0;
 
       for(int i = 0; i < certs.length; i++)

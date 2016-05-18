@@ -157,7 +157,7 @@ public class LoginJob implements IRunnableWithProgress
          callLoginListeners(session);
          monitor.worked(1);
 
-         final Thread thread = new Thread(null, new KeepAliveTimer(), "KeepAliveTimer");
+         final Thread thread = new Thread(null, new KeepAliveTimer(), "KeepAliveTimer"); //$NON-NLS-1$
          thread.setDaemon(true);
          thread.start();
       }
@@ -244,7 +244,7 @@ public class LoginJob implements IRunnableWithProgress
          }
          catch(CoreException e)
          {
-            Activator.logError("Exception in login listener", e);
+            Activator.logError("Exception in login listener", e); //$NON-NLS-1$
          }
       }
    }

@@ -139,7 +139,7 @@ public class AbstractChart extends PropertyPage
          checkLogScale.setLayoutData(gd);
          
          checkStacked = new Button(optionsGroup, SWT.CHECK);
-         checkStacked.setText("&Stacked");
+         checkStacked.setText(Messages.get().AbstractChart_Stacked);
          checkStacked.setSelection(((LineChartConfig)config).isStacked());
          gd = new GridData();
          gd.horizontalSpan = layout.numColumns;
@@ -235,7 +235,7 @@ public class AbstractChart extends PropertyPage
 		if (config instanceof LineChartConfig)
 		{
          lineWidth = new LabeledSpinner(rateAndWidthArea, SWT.NONE);
-         lineWidth.setLabel("Line width");
+         lineWidth.setLabel(Messages.get().AbstractChart_LineWidth);
          lineWidth.setRange(1, 32);
          lineWidth.setSelection(((LineChartConfig)config).getLineWidth());
          gd = new GridData();

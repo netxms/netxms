@@ -24,11 +24,11 @@ import org.eclipse.swt.graphics.RGB;
  */
 public class AnsiConsoleColorPalette
 {
-   public static final String PALETTE_VGA = "paletteVGA";
-   public static final String PALETTE_WINXP = "paletteXP";
-   public static final String PALETTE_MAC = "paletteMac";
-   public static final String PALETTE_PUTTY = "palettePuTTY";
-   public static final String PALETTE_XTERM = "paletteXTerm";
+   public static final String PALETTE_VGA = "paletteVGA"; //$NON-NLS-1$
+   public static final String PALETTE_WINXP = "paletteXP"; //$NON-NLS-1$
+   public static final String PALETTE_MAC = "paletteMac"; //$NON-NLS-1$
+   public static final String PALETTE_PUTTY = "palettePuTTY"; //$NON-NLS-1$
+   public static final String PALETTE_XTERM = "paletteXTerm"; //$NON-NLS-1$
 
    private final static RGB[] paletteVGA = { new RGB(0, 0, 0), // black
          new RGB(170, 0, 0), // red
@@ -172,10 +172,10 @@ public class AnsiConsoleColorPalette
          palette = paletteXTerm;
       else
       {
-         String os = System.getProperty("os.name");
-         if (os == null || os.startsWith("Windows"))
+         String os = System.getProperty("os.name"); //$NON-NLS-1$
+         if (os == null || os.startsWith("Windows")) //$NON-NLS-1$
             setPalette(PALETTE_WINXP);
-         else if (os.startsWith("Mac"))
+         else if (os.startsWith("Mac")) //$NON-NLS-1$
             setPalette(PALETTE_MAC);
          else
             setPalette(PALETTE_XTERM);

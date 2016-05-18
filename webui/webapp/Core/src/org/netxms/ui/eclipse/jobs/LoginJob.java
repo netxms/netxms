@@ -183,7 +183,7 @@ public class LoginJob implements IRunnableWithProgress
     * @return
     */
    private NXCSession createSession(String hostName, int port)
-   {
+   {   
       // Read all registered extensions and create provider with minimal priority
       IConfigurationElement currentElement = null;
       int currentPriotity = 65536;
@@ -247,7 +247,7 @@ public class LoginJob implements IRunnableWithProgress
          }
          catch(CoreException e)
          {
-            Activator.logError("Exception in login listener", e);
+            Activator.logError("Exception in login listener", e); //$NON-NLS-1$
          }
       }
    }

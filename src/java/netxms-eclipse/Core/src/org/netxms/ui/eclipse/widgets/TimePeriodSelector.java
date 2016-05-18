@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Spinner;
 import org.netxms.client.TimePeriod;
 import org.netxms.client.datacollection.GraphSettings;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -53,7 +54,7 @@ public class TimePeriodSelector extends Composite
       setLayout(new FillLayout());
       
       Group timeGroup = new Group(parent, SWT.NONE);
-      timeGroup.setText("Time Period");
+      timeGroup.setText(Messages.get().TimePeriodSelector_TimePeriod);
       GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.OUTER_SPACING;
       layout.marginHeight = WidgetHelper.OUTER_SPACING;
@@ -80,12 +81,12 @@ public class TimePeriodSelector extends Composite
       };
 
       radioBackFromNow = new Button(timeGroup, SWT.RADIO);
-      radioBackFromNow.setText("Back from now");
+      radioBackFromNow.setText(Messages.get().TimePeriodSelector_BackFromNow);
       radioBackFromNow.setSelection(period.getTimeFrameType() == GraphSettings.TIME_FRAME_BACK_FROM_NOW);
       radioBackFromNow.addSelectionListener(listener);
       
       radioFixedInterval = new Button(timeGroup, SWT.RADIO);
-      radioFixedInterval.setText("Fixed time frame");
+      radioFixedInterval.setText(Messages.get().TimePeriodSelector_FixedTimeFrame);
       radioFixedInterval.setSelection(period.getTimeFrameType() == GraphSettings.TIME_FRAME_FIXED);
       radioFixedInterval.addSelectionListener(listener);
       
@@ -102,14 +103,14 @@ public class TimePeriodSelector extends Composite
       gd.verticalAlignment = SWT.TOP;
       timeBackGroup.setLayoutData(gd);
       
-      timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, "Time interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, Messages.get().TimePeriodSelector_TimeInterval, 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeRange.setSelection(period.getTimeRangeValue());
       timeRange.setEnabled(radioBackFromNow.getSelection());
       
-      timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, "Time units", WidgetHelper.DEFAULT_LAYOUT_DATA);
-      timeUnits.add("Minutes");
-      timeUnits.add("Hours");
-      timeUnits.add("Days");
+      timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, Messages.get().TimePeriodSelector_TimeUnits, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeUnits.add(Messages.get().TimePeriodSelector_Minutes);
+      timeUnits.add(Messages.get().TimePeriodSelector_Hours);
+      timeUnits.add(Messages.get().TimePeriodSelector_Days);
       timeUnits.select(period.getTimeUnitValue());
       timeUnits.setEnabled(radioBackFromNow.getSelection());
 
@@ -133,11 +134,11 @@ public class TimePeriodSelector extends Composite
          }
       };
       
-      timeFrom = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, "Time from", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeFrom = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, Messages.get().TimePeriodSelector_8, WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeFrom.setValue(period.getTimeFromValue());
       timeFrom.setEnabled(radioFixedInterval.getSelection());
 
-      timeTo = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, "Time to", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeTo = (DateTimeSelector)WidgetHelper.createLabeledControl(timeFixedGroup, SWT.NONE, factory, Messages.get().TimePeriodSelector_9, WidgetHelper.DEFAULT_LAYOUT_DATA);
       timeTo.setValue(period.getTimeToValue());
       timeTo.setEnabled(radioFixedInterval.getSelection());
    }

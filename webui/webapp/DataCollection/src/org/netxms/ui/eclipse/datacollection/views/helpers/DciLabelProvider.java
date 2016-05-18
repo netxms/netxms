@@ -120,14 +120,14 @@ public class DciLabelProvider implements ITableLabelProvider
 				if (dci.isUseAdvancedSchedule())
 					return Messages.get().DciLabelProvider_CustomSchedule;
 				if (dci.getPollingInterval() <= 0)
-				   return "default";
+				   return Messages.get().DciLabelProvider_Default;
 				return Integer.toString(dci.getPollingInterval());
 			case DataCollectionEditor.COLUMN_RETENTION:
 			   if ((dci.getFlags() & DataCollectionItem.DCF_NO_STORAGE) != 0)
-			      return "none";
+			      return Messages.get().DciLabelProvider_None;
 				int days = dci.getRetentionTime();
 				if (days <= 0)
-				   return "default";
+				   return Messages.get().DciLabelProvider_Default;
 				return Integer.toString(days) + ((days == 1) ? Messages.get().DciLabelProvider_Day : Messages.get().DciLabelProvider_Days);
 			case DataCollectionEditor.COLUMN_STATUS:
 				return statusTexts.get(dci.getStatus());
@@ -158,7 +158,7 @@ public class DciLabelProvider implements ITableLabelProvider
                   }
                   thresholds.append(text);
                   if( i+1 != list.size() )
-                     thresholds.append(", ");
+                     thresholds.append(", "); //$NON-NLS-1$
                }
    			   
 			   }
@@ -169,7 +169,7 @@ public class DciLabelProvider implements ITableLabelProvider
                {
                   thresholds.append(list.get(i).getConditionAsText());
                   if( i+1 != list.size() )
-                     thresholds.append(", ");
+                     thresholds.append(", "); //$NON-NLS-1$
                }
 			   }
 			   return thresholds.toString();
@@ -186,7 +186,7 @@ public class DciLabelProvider implements ITableLabelProvider
 				for(AbstractObject parent : parents)
 				{
 				   sb.append(parent.getObjectName());
-				   sb.append("/");
+				   sb.append("/"); //$NON-NLS-1$
 				}
 				sb.append(object.getObjectName());
 				return sb.toString();

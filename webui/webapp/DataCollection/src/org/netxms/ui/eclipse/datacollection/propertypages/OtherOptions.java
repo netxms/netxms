@@ -63,7 +63,7 @@ public class OtherOptions extends PropertyPage
       checkShowOnTooltip.setSelection(dci.isShowOnObjectTooltip());
 
       checkShowInOverview = new Button(dialogArea, SWT.CHECK);
-      checkShowInOverview.setText("Show last value in object overview");
+      checkShowInOverview.setText(Messages.get().OtherOptions_ShowlastValueInObjectOverview);
       checkShowInOverview.setSelection(dci.isShowInObjectOverview());
 
       checkCalculateStatus = new Button(dialogArea, SWT.CHECK);

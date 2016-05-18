@@ -171,7 +171,7 @@ public class AgentFileViewer extends ViewPart
       actionScrollLock.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.scroll_lock"); //$NON-NLS-1$
       handlerService.activateHandler(actionScrollLock.getActionDefinitionId(), new ActionHandler(actionScrollLock));
 
-      actionCopy = new Action("&Copy") {
+      actionCopy = new Action(Messages.get().AgentFileViewer_Copy) {
          @Override
          public void run()
          {
@@ -182,7 +182,7 @@ public class AgentFileViewer extends ViewPart
       actionCopy.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.copy"); //$NON-NLS-1$
       handlerService.activateHandler(actionCopy.getActionDefinitionId(), new ActionHandler(actionCopy));
 
-      actionSelectAll = new Action("Select &all") {
+      actionSelectAll = new Action(Messages.get().AgentFileViewer_SelectAll) {
          @Override
          public void run()
          {
@@ -192,7 +192,7 @@ public class AgentFileViewer extends ViewPart
       actionSelectAll.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.select_all"); //$NON-NLS-1$
       handlerService.activateHandler(actionSelectAll.getActionDefinitionId(), new ActionHandler(actionSelectAll));
       
-      actionFind = new Action("&Find", SharedIcons.FIND) {
+      actionFind = new Action(Messages.get().AgentFileViewer_Find, SharedIcons.FIND) {
          @Override
          public void run()
          {
@@ -316,8 +316,8 @@ public class AgentFileViewer extends ViewPart
       final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 	   boolean exceedSize = file.getFile().length() > BaseFileViewer.MAX_FILE_SIZE;
 	   if (exceedSize && 
-	         !MessageDialogHelper.openConfirm(window.getShell(), "File is too large",
-                  "File is too large to be displayed in full. Click OK to see beginning of the file."))
+	         !MessageDialogHelper.openConfirm(window.getShell(), Messages.get().AgentFileViewer_FileIsTooLarge,
+                  Messages.get().AgentFileViewer_FileIsTooLargeMessageText))
       {
 	      if (followChanges)
 	      {
