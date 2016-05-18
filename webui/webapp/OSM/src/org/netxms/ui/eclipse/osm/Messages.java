@@ -32,7 +32,13 @@ public class Messages extends NLS
    public String LocationMap_InitError1;
 	public String LocationMap_InitError2;
 	public String LocationMap_PartNamePrefix;
-	public String OpenHistoryMap_CannotOpenView;
+	public String ObjectGeoLocationViewer_BatteryLevel;
+   public String ObjectGeoLocationViewer_GPS;
+   public String ObjectGeoLocationViewer_LastReport;
+   public String ObjectGeoLocationViewer_Network;
+   public String ObjectGeoLocationViewer_Never;
+   public String ObjectGeoLocationViewer_ObtainedFrom;
+   public String OpenHistoryMap_CannotOpenView;
    public String OpenHistoryMap_Error;
    public String OpenLocationMap_Error;
 	public String OpenLocationMap_ErrorText;
