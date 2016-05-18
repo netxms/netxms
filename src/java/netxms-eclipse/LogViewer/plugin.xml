@@ -212,7 +212,7 @@
             locationURI="popup:org.eclipse.ui.popup.any?after=eventsAndLogs">
          <command
                commandId="org.netxms.ui.eclipse.logviewer.commands.eventHistory"
-               label="Event log"
+               label="%command.name.EventLog"
                style="push">
             <visibleWhen
                   checkEnabled="false">
@@ -233,7 +233,7 @@
          </command>
          <command
                commandId="org.netxms.ui.eclipse.logviewer.commands.objectSyslog"
-               label="Syslog"
+               label="%command.name.Syslog"
                style="push">
             <visibleWhen
                   checkEnabled="false">
@@ -254,7 +254,7 @@
          </command>
          <command
                commandId="org.netxms.ui.eclipse.logviewer.commands.objectTrapLog"
-               label="SNMP trap log"
+               label="%command.name.TrapLog"
                style="push">
             <visibleWhen
                   checkEnabled="false">
