@@ -52,20 +52,20 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 		String msg = getConfirmation();
 		if (msg != null)
 		{
-		   if (!MessageDialogHelper.openQuestion(window.getShell(), "Warning", msg))
+		   if (!MessageDialogHelper.openQuestion(window.getShell(), Messages.get().AbstractNodePoll_Warning, msg))
 		      return;
 		}
 		
-			try
-			{
+		try
+		{
 			NodePollerView view = (NodePollerView)window.getActivePage().showView(NodePollerView.ID, Long.toString(node.getObjectId()) + "&" + getPollType(), IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
-				view.startPoll();
-			}
-			catch(PartInitException e)
-			{
-				MessageDialogHelper.openError(window.getShell(), Messages.get().AbstractNodePoll_Error, String.format(Messages.get().AbstractNodePoll_ErrorText, e.getLocalizedMessage()));
-			}
+			view.startPoll();
 		}
+		catch(PartInitException e)
+		{
+			MessageDialogHelper.openError(window.getShell(), Messages.get().AbstractNodePoll_Error, String.format(Messages.get().AbstractNodePoll_ErrorText, e.getLocalizedMessage()));
+		}
+	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction, org.eclipse.jface.viewers.ISelection)

@@ -212,7 +212,7 @@ public class CreateNodeDialog extends Dialog
 		}
 		
 		checkCreateAnother = new Button(dialogArea, SWT.CHECK);
-		checkCreateAnother.setText("Show this dialog again to &create another node");
+		checkCreateAnother.setText(Messages.get().CreateNodeDialog_ShowAgain);
 		checkCreateAnother.setSelection(showAgain);
 		
 		return dialogArea;

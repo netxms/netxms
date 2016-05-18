@@ -52,7 +52,7 @@ public abstract class AbstractNodePoll implements IObjectActionDelegate
 		String msg = getConfirmation();
 		if (msg != null)
 		{
-		   if (!MessageDialogHelper.openQuestion(window.getShell(), "Warning", msg))
+		   if (!MessageDialogHelper.openQuestion(window.getShell(), Messages.get().AbstractNodePoll_Warning, msg))
 		      return;
 		}
 		

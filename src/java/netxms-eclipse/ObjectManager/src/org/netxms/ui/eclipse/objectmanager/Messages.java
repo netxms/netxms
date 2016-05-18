@@ -7,6 +7,7 @@ public class Messages extends NLS
    private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.objectmanager.messages"; //$NON-NLS-1$
    public static String AbstractNodePoll_Error;
    public static String AbstractNodePoll_ErrorText;
+   public static String AbstractNodePoll_Warning;
    public static String AccessControl_AccessAccessControl;
    public static String AccessControl_AccessControl;
    public static String AccessControl_AccessCreate;
@@ -38,6 +39,7 @@ public class Messages extends NLS
    public static String AddAddressListElementDialog_Warning;
    public static String AddClusterNode_JobError;
    public static String AddClusterNode_JobTitle;
+   public static String AddSubnetDialog_Title;
    public static String AttributeEditDialog_AddAttr;
    public static String AttributeEditDialog_ModifyAttr;
    public static String AttributeEditDialog_Name;
@@ -208,6 +210,7 @@ public class Messages extends NLS
    public static String CreateNodeDialog_Resolve;
    public static String CreateNodeDialog_ResolveJobError;
    public static String CreateNodeDialog_ResolveJobName;
+   public static String CreateNodeDialog_ShowAgain;
    public static String CreateNodeDialog_SNMPPort;
    public static String CreateNodeDialog_SNMPProxy;
    public static String CreateNodeDialog_Title;
@@ -237,6 +240,7 @@ public class Messages extends NLS
    public static String CustomAttributes_Value;
    public static String CustomAttributes_Warning;
    public static String CustomAttributes_WarningAlreadyExist;
+   public static String Dashboards_Dashboard;
    public static String DciListLabelProvider_JobError;
    public static String DciListLabelProvider_JobName;
    public static String DciListLabelProvider_Unresolved;
@@ -252,6 +256,7 @@ public class Messages extends NLS
    public static String EditClusterResourceDialog_Warning;
    public static String EditClusterResourceDialog_WarningEmptyName;
    public static String EditClusterResourceDialog_WarningInvalidIP;
+   public static String FullConfigurationPoll_FullConfigPollConfirmation;
    public static String General_JobError;
    public static String General_JobName;
    public static String General_ObjectClass;
@@ -279,6 +284,11 @@ public class Messages extends NLS
    public static String Location_Postcode;
    public static String Location_StreetAddress;
    public static String Location_Undefined;
+   public static String MaintanenceScheduleDialog_EndDate;
+   public static String MaintanenceScheduleDialog_StartDate;
+   public static String MaintanenceScheduleDialog_Title;
+   public static String MaintanenceScheduleDialog_Warning;
+   public static String MaintanenceScheduleDialog_WarningText;
    public static String Manage_JobDescription;
    public static String Manage_JobError;
    public static String MapAppearance_Image;
@@ -307,11 +317,14 @@ public class Messages extends NLS
    public static String NodePollerView_ActionClear;
    public static String NodePollerView_ActionRestart;
    public static String NodePollerView_ConfigPoll;
+   public static String NodePollerView_FullConfigPoll;
+   public static String NodePollerView_InstanceDiscovery;
    public static String NodePollerView_InterfacePoll;
    public static String NodePollerView_InvalidObjectID;
    public static String NodePollerView_JobName;
    public static String NodePollerView_StatusPoll;
    public static String NodePollerView_TopologyPoll;
+   public static String NodePolling_AgentCacheMode;
    public static String NodePolling_Default;
    public static String NodePolling_Disable;
    public static String NodePolling_EmptySelectionServer;
@@ -321,6 +334,8 @@ public class Messages extends NLS
    public static String NodePolling_GroupOptions;
    public static String NodePolling_JobError;
    public static String NodePolling_JobName;
+   public static String NodePolling_Off;
+   public static String NodePolling_On;
    public static String NodePolling_OptDisableAgent;
    public static String NodePolling_OptDisableConfigPoll;
    public static String NodePolling_OptDisableDataCollection;
@@ -332,6 +347,16 @@ public class Messages extends NLS
    public static String NodePolling_OptDisableTopoPoll;
    public static String NodePolling_PollerNode;
    public static String NodePolling_PollerNodeDescription;
+   public static String RackPlacement_Height;
+   public static String RackPlacement_Position;
+   public static String RackPlacement_Rack;
+   public static String RackPlacement_RackImage;
+   public static String RackPlacement_UpdatingRackPlacement;
+   public static String RackProperties_BottomTop;
+   public static String RackProperties_Height;
+   public static String RackProperties_Numbering;
+   public static String RackProperties_TopBottom;
+   public static String RackProperties_UpdatingRackProperties;
    public static String RemoveClusterNode_JobError;
    public static String RemoveClusterNode_JobTitle;
    public static String SetInterfaceExpStateDlg_Label;

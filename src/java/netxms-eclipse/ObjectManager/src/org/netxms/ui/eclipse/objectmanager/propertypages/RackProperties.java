@@ -63,7 +63,7 @@ public class RackProperties extends PropertyPage
       dialogArea.setLayout(layout);
 
       rackHeight = new LabeledSpinner(dialogArea, SWT.NONE);
-      rackHeight.setLabel("Height");
+      rackHeight.setLabel(Messages.get().RackProperties_Height);
       rackHeight.setRange(1, 50);
       rackHeight.setSelection(rack.getHeight());
       GridData gd = new GridData();
@@ -74,9 +74,9 @@ public class RackProperties extends PropertyPage
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      numberingScheme = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY | SWT.DROP_DOWN, "Numbering", gd);
-      numberingScheme.add("Bottom to top");
-      numberingScheme.add("Top to bottom");
+      numberingScheme = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY | SWT.DROP_DOWN, Messages.get().RackProperties_Numbering, gd);
+      numberingScheme.add(Messages.get().RackProperties_BottomTop);
+      numberingScheme.add(Messages.get().RackProperties_TopBottom);
       numberingScheme.select(rack.isTopBottomNumbering() ? 1 : 0);
       
 		return dialogArea;
@@ -97,7 +97,7 @@ public class RackProperties extends PropertyPage
 		md.setRackNumberingTopBottom(numberingScheme.getSelectionIndex() == 1);
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format("Updating rack %s properties", rack.getObjectName()), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().RackProperties_UpdatingRackProperties, rack.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

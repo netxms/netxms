@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.objecttools.InputField;
 import org.netxms.client.objecttools.InputFieldOptions;
 import org.netxms.client.objecttools.InputFieldType;
+import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 
@@ -40,7 +41,7 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
  */
 public class EditInputFieldDialog extends Dialog
 {
-	private final String[] typeNames = { "Text", "Password", "Number" };
+	private final String[] typeNames = { Messages.get().EditInputFieldDialog_Text, Messages.get().EditInputFieldDialog_Password, Messages.get().EditInputFieldDialog_Number };
 
 	private boolean create;
 	private InputField field;
@@ -69,7 +70,7 @@ public class EditInputFieldDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText(create ? "Add Input Field" : "Edit Input Field");
+		newShell.setText(create ? Messages.get().EditInputFieldDialog_AddInputField : Messages.get().EditInputFieldDialog_EditInputField);
 	}
 
 	/* (non-Javadoc)
@@ -87,7 +88,7 @@ public class EditInputFieldDialog extends Dialog
 		dialogArea.setLayout(layout);
 		
 		name = new LabeledText(dialogArea, SWT.NONE);
-		name.setLabel("Name");
+		name.setLabel(Messages.get().EditInputFieldDialog_Name);
 		name.setText(field.getName());
       name.setEditable(create);
 		GridData gd = new GridData();
@@ -96,7 +97,7 @@ public class EditInputFieldDialog extends Dialog
 		gd.widthHint = 350;
 		name.setLayoutData(gd);
 		
-		type = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, "Type", WidgetHelper.DEFAULT_LAYOUT_DATA);
+		type = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().EditInputFieldDialog_Type, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		for(int i = 0; i < typeNames.length; i++)
 			type.add(typeNames[i]);
 		type.select(field.getType().getValue());
@@ -115,7 +116,7 @@ public class EditInputFieldDialog extends Dialog
       });
 		
 		displayName = new LabeledText(dialogArea, SWT.NONE);
-		displayName.setLabel("Display name");
+		displayName.setLabel(Messages.get().EditInputFieldDialog_DisplayName);
 		displayName.setText(field.getDisplayName());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
@@ -124,7 +125,7 @@ public class EditInputFieldDialog extends Dialog
 		displayName.setLayoutData(gd);
 		
 		checkValidatePassword = new Button(dialogArea, SWT.CHECK);
-		checkValidatePassword.setText("Validate password after entry");
+		checkValidatePassword.setText(Messages.get().EditInputFieldDialog_ValidatePassword);
 		checkValidatePassword.setVisible(field.getType() == InputFieldType.PASSWORD);
 		checkValidatePassword.setSelection(field.getOptions().validatePassword);
 		
@@ -140,7 +141,7 @@ public class EditInputFieldDialog extends Dialog
 	   if (create)
 	      field.setName(name.getText());    
       field.setType(InputFieldType.getByValue(type.getSelectionIndex()));
-	   field.setDisplayName(displayName.getText());		
+	   field.setDisplayName(displayName.getText());
 	   
 	   if (field.getType() == InputFieldType.PASSWORD)
 	   {

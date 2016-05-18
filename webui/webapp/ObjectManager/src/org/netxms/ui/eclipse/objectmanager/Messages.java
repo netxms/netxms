@@ -10,6 +10,7 @@ public class Messages extends NLS
    private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.objectmanager.messages"; //$NON-NLS-1$
    public String AbstractNodePoll_Error;
    public String AbstractNodePoll_ErrorText;
+   public String AbstractNodePoll_Warning;
    public String AccessControl_AccessAccessControl;
    public String AccessControl_AccessControl;
    public String AccessControl_AccessCreate;
@@ -41,6 +42,7 @@ public class Messages extends NLS
    public String AddAddressListElementDialog_Warning;
    public String AddClusterNode_JobError;
    public String AddClusterNode_JobTitle;
+   public String AddSubnetDialog_Title;
    public String AttributeEditDialog_AddAttr;
    public String AttributeEditDialog_ModifyAttr;
    public String AttributeEditDialog_Name;
@@ -211,6 +213,7 @@ public class Messages extends NLS
    public String CreateNodeDialog_Resolve;
    public String CreateNodeDialog_ResolveJobError;
    public String CreateNodeDialog_ResolveJobName;
+   public String CreateNodeDialog_ShowAgain;
    public String CreateNodeDialog_SNMPPort;
    public String CreateNodeDialog_SNMPProxy;
    public String CreateNodeDialog_Title;
@@ -240,6 +243,7 @@ public class Messages extends NLS
    public String CustomAttributes_Value;
    public String CustomAttributes_Warning;
    public String CustomAttributes_WarningAlreadyExist;
+   public String Dashboards_Dashboard;
    public String DciListLabelProvider_JobError;
    public String DciListLabelProvider_JobName;
    public String DciListLabelProvider_Unresolved;
@@ -255,6 +259,7 @@ public class Messages extends NLS
    public String EditClusterResourceDialog_Warning;
    public String EditClusterResourceDialog_WarningEmptyName;
    public String EditClusterResourceDialog_WarningInvalidIP;
+   public String FullConfigurationPoll_FullConfigPollConfirmation;
    public String General_JobError;
    public String General_JobName;
    public String General_ObjectClass;
@@ -282,6 +287,11 @@ public class Messages extends NLS
    public String Location_Postcode;
    public String Location_StreetAddress;
    public String Location_Undefined;
+   public String MaintanenceScheduleDialog_EndDate;
+   public String MaintanenceScheduleDialog_StartDate;
+   public String MaintanenceScheduleDialog_Title;
+   public String MaintanenceScheduleDialog_Warning;
+   public String MaintanenceScheduleDialog_WarningText;
    public String Manage_JobDescription;
    public String Manage_JobError;
    public String MapAppearance_Image;
@@ -310,11 +320,14 @@ public class Messages extends NLS
    public String NodePollerView_ActionClear;
    public String NodePollerView_ActionRestart;
    public String NodePollerView_ConfigPoll;
+   public String NodePollerView_FullConfigPoll;
+   public String NodePollerView_InstanceDiscovery;
    public String NodePollerView_InterfacePoll;
    public String NodePollerView_InvalidObjectID;
    public String NodePollerView_JobName;
    public String NodePollerView_StatusPoll;
    public String NodePollerView_TopologyPoll;
+   public String NodePolling_AgentCacheMode;
    public String NodePolling_Default;
    public String NodePolling_Disable;
    public String NodePolling_EmptySelectionServer;
@@ -324,6 +337,8 @@ public class Messages extends NLS
    public String NodePolling_GroupOptions;
    public String NodePolling_JobError;
    public String NodePolling_JobName;
+   public String NodePolling_Off;
+   public String NodePolling_On;
    public String NodePolling_OptDisableAgent;
    public String NodePolling_OptDisableConfigPoll;
    public String NodePolling_OptDisableDataCollection;
@@ -335,6 +350,16 @@ public class Messages extends NLS
    public String NodePolling_OptDisableTopoPoll;
    public String NodePolling_PollerNode;
    public String NodePolling_PollerNodeDescription;
+   public String RackPlacement_Height;
+   public String RackPlacement_Position;
+   public String RackPlacement_Rack;
+   public String RackPlacement_RackImage;
+   public String RackPlacement_UpdatingRackPlacement;
+   public String RackProperties_BottomTop;
+   public String RackProperties_Height;
+   public String RackProperties_Numbering;
+   public String RackProperties_TopBottom;
+   public String RackProperties_UpdatingRackProperties;
    public String RemoveClusterNode_JobError;
    public String RemoveClusterNode_JobTitle;
    public String SetInterfaceExpStateDlg_Label;
