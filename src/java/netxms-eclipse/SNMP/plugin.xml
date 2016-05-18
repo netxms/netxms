@@ -106,7 +106,7 @@
             label="SNMP Credentials"
             visible="true">
          <action
-               class="org.netxms.ui.eclipse.snmp.actions.SnmpConfigrationAction"
+               class="org.netxms.ui.eclipse.snmp.actions.OpenSnmpCredentialsEditor"
                definitionId="org.netxms.ui.eclipse.snmp.commands.open_snmp_configuration"
                id="org.netxms.ui.eclipse.snmp.actions.open_snmp_configuration"
                label="%action.label.SNMPCredentials"

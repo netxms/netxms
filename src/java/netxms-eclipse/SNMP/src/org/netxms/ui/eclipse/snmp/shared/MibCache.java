@@ -53,7 +53,7 @@ public final class MibCache implements ConsoleLoginListener
 	@Override
 	public void afterLogin(final NXCSession session, Display display)
 	{
-	   Boolean slowLink = (Boolean)ConsoleSharedData.getProperty("SlowLink");
+	   Boolean slowLink = (Boolean)ConsoleSharedData.getProperty("SlowLink"); //$NON-NLS-1$
 	   if ((slowLink != null) && slowLink.booleanValue())
 	      return;
 	   
