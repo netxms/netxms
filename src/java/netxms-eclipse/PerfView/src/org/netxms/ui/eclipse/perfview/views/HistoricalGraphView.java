@@ -535,7 +535,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             {
                MessageDialogHelper.openError(getSite().getShell(), Messages.get().HistoricalGraphView_Error,
                      String.format(Messages.get().HistoricalGraphView_LogScaleSwitchError, e.getLocalizedMessage()));
-               Activator.logError("Cannot change log scale mode", e);
+               Activator.logError("Cannot change log scale mode", e); //$NON-NLS-1$
             }
             setChecked(config.isLogScale());
          }

@@ -272,7 +272,7 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 			}
 		};
 
-      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action(Messages.get().PredefinedGraphTree_ShowFilter, Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
