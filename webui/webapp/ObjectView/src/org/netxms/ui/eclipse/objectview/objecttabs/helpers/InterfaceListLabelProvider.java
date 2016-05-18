@@ -37,7 +37,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class InterfaceListLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
-	private final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore, "AUTO" };
+	private final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore, Messages.get().InterfaceListLabelProvider_Auto };
 	
 	private AbstractNode node = null;
 	private NXCSession session = ConsoleSharedData.getSession();
@@ -101,7 +101,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
 				return StatusDisplayInfo.getStatusText(iface.getStatus());
 			case InterfacesTab.COLUMN_TYPE:
             String typeName = iface.getIfTypeName();
-				return (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType());
+				return (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType()); //$NON-NLS-1$
 			case InterfacesTab.COLUMN_MAC_ADDRESS:
 				return iface.getMacAddress().toString();
 			case InterfacesTab.COLUMN_IP_ADDRESS:
@@ -115,7 +115,7 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
          case InterfacesTab.COLUMN_PEER_PROTOCOL:
             return getPeerProtocol(iface);
          case InterfacesTab.COLUMN_SPEED:
-            return (iface.getSpeed() > 0) ? ifSpeedTotext(iface.getSpeed()) : "";
+            return (iface.getSpeed() > 0) ? ifSpeedTotext(iface.getSpeed()) : ""; //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -250,17 +250,17 @@ public class InterfaceListLabelProvider extends LabelProvider implements ITableL
    public static String ifSpeedTotext(long speed)
    {
       if (speed < 1000)
-         return Long.toString(speed) + " bps";
+         return Long.toString(speed) + Messages.get().InterfaceListLabelProvider_bps;
       
       if (speed < 1000000)
-         return divideSpeed(speed, 3) + " Kbps";
+         return divideSpeed(speed, 3) + Messages.get().InterfaceListLabelProvider_Kbps;
       
       if (speed < 1000000000)
-         return divideSpeed(speed, 6) + " Mbps";
+         return divideSpeed(speed, 6) + Messages.get().InterfaceListLabelProvider_Mbps;
       
       if (speed < 1000000000000L)
-         return divideSpeed(speed, 9) + " Gbps";
+         return divideSpeed(speed, 9) + Messages.get().InterfaceListLabelProvider_Gbps;
       
-      return divideSpeed(speed, 12) + " Tbps";
+      return divideSpeed(speed, 12) + Messages.get().InterfaceListLabelProvider_Tbps;
    }
 }

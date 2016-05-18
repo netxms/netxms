@@ -46,7 +46,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
  */
 public class GeneralInfo extends TableElement
 {
-   private static final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore, "AUTO" };
+   private static final String[] ifaceExpectedState = { Messages.get().InterfaceListLabelProvider_StateUp, Messages.get().InterfaceListLabelProvider_StateDown, Messages.get().InterfaceListLabelProvider_StateIgnore, Messages.get().GeneralInfo_Auto };
    
 	/**
 	 * @param parent
@@ -72,7 +72,7 @@ public class GeneralInfo extends TableElement
 			addPair(Messages.get().GeneralInfo_GUID, object.getGuid().toString());
 		addPair(Messages.get().GeneralInfo_Class, object.getObjectClassName());
 		if (object.isInMaintenanceMode())
-         addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()) + " (maintenance)");
+         addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()) + Messages.get().GeneralInfo_Maintenance);
 		else
 		   addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()));
 		switch(object.getObjectClass())
@@ -81,13 +81,13 @@ public class GeneralInfo extends TableElement
 				Interface iface = (Interface)object;
 				addPair(Messages.get().GeneralInfo_IfIndex, Integer.toString(iface.getIfIndex()));
 				String typeName = iface.getIfTypeName();
-				addPair(Messages.get().GeneralInfo_IfType, (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType()));
+				addPair(Messages.get().GeneralInfo_IfType, (typeName != null) ? String.format("%d (%s)", iface.getIfType(), typeName) : Integer.toString(iface.getIfType())); //$NON-NLS-1$
 				addPair(Messages.get().GeneralInfo_Description, iface.getDescription(), false);
-            addPair("Alias", iface.getAlias(), false);
+            addPair(Messages.get().GeneralInfo_Alias, iface.getAlias(), false);
             if (iface.getMtu() > 0)
-               addPair("MTU", Integer.toString(iface.getMtu()));
+               addPair(Messages.get().GeneralInfo_MTU, Integer.toString(iface.getMtu()));
             if (iface.getSpeed() > 0)
-               addPair("Speed", InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
+               addPair(Messages.get().GeneralInfo_Speed, InterfaceListLabelProvider.ifSpeedTotext(iface.getSpeed()));
             addPair(Messages.get().GeneralInfo_MACAddr, iface.getMacAddress().toString());
 				if ((iface.getFlags() & Interface.IF_PHYSICAL_PORT) != 0)
 				{
@@ -105,11 +105,11 @@ public class GeneralInfo extends TableElement
 						addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(iface.getZoneId()));
 					addPair(Messages.get().GeneralInfo_IPAddr, iface.getIpAddressList().get(0).toString());
 					for(int i = 1; i < iface.getIpAddressList().size(); i++)
-	               addPair("", iface.getIpAddressList().get(i).toString());
+	               addPair("", iface.getIpAddressList().get(i).toString()); //$NON-NLS-1$
 				}
             addPair(Messages.get().GeneralInfo_AdmState, iface.getAdminStateAsText());
             addPair(Messages.get().GeneralInfo_OperState, iface.getOperStateAsText());
-            addPair("Expected state", ifaceExpectedState[iface.getExpectedState()]);
+            addPair(Messages.get().GeneralInfo_ExpectedState, ifaceExpectedState[iface.getExpectedState()]);
 				break;
 			case AbstractObject.OBJECT_NODE:
 				AbstractNode node = (AbstractNode)object;
@@ -123,23 +123,23 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_PlatformName, node.getPlatformName(), false);
 				addPair(Messages.get().GeneralInfo_SysName, node.getSnmpSysName(), false);
 				addPair(Messages.get().GeneralInfo_SysOID, node.getSnmpOID(), false);
-            addPair("SNMP sysLocation", node.getSnmpSysLocation(), false);
-            addPair("SNMP sysContact", node.getSnmpSysContact(), false);
+            addPair(Messages.get().GeneralInfo_SNMPsysLocation, node.getSnmpSysLocation(), false);
+            addPair(Messages.get().GeneralInfo_SNMPsysContact, node.getSnmpSysContact(), false);
 				if ((node.getFlags() & AbstractNode.NF_IS_BRIDGE) != 0)
 					addPair(Messages.get().GeneralInfo_BridgeBaseAddress, node.getBridgeBaseAddress().toString());
 				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);
             if (node.getBootTime() != null)
                addPair(Messages.get().GeneralInfo_BootTime, RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
             if (node.hasAgent())
-               addPair("Agent status", (node.getFlags() & Node.NDF_AGENT_UNREACHABLE) != 0 ? "Unreachable" : "Connected");
+               addPair(Messages.get().GeneralInfo_AgentStatus, (node.getFlags() & Node.NDF_AGENT_UNREACHABLE) != 0 ? Messages.get().GeneralInfo_Unreachable : Messages.get().GeneralInfo_Connected);
             if (node.getLastAgentCommTime() != null)
-               addPair("Last agent contact", RegionalSettings.getDateTimeFormat().format(node.getLastAgentCommTime()), false);
+               addPair(Messages.get().GeneralInfo_LastAgentContact, RegionalSettings.getDateTimeFormat().format(node.getLastAgentCommTime()), false);
             if (node.getRackId() != 0)
             {
                Rack rack = session.findObjectById(node.getRackId(), Rack.class);
                if (rack != null)
                {
-                  addPair("Rack", String.format("%s (units %d-%d)", rack.getObjectName(),
+                  addPair(Messages.get().GeneralInfo_Rack, String.format(Messages.get().GeneralInfo_Units, rack.getObjectName(),
                           rack.isTopBottomNumbering() ? node.getRackPosition() : node.getRackPosition() - node.getRackHeight() + 1,
                           rack.isTopBottomNumbering() ? node.getRackPosition() + node.getRackHeight() - 1 : node.getRackPosition()));
                }
@@ -173,7 +173,7 @@ public class GeneralInfo extends TableElement
 				Subnet subnet = (Subnet)object;
 				if (session.isZoningEnabled())
 					addPair(Messages.get().GeneralInfo_ZoneId, Long.toString(subnet.getZoneId()));
-            addPair("IP Address", subnet.getNetworkAddress().toString());
+            addPair(Messages.get().GeneralInfo_IPAddress, subnet.getNetworkAddress().toString());
 				break;
 			case AbstractObject.OBJECT_ZONE:
 				Zone zone = (Zone)object;

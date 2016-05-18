@@ -43,6 +43,7 @@ import org.netxms.ui.eclipse.console.resources.RegionalSettings;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.osm.GeoLocationCache;
+import org.netxms.ui.eclipse.osm.Messages;
 import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.FontTools;
 
@@ -298,9 +299,9 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       if ((currentObject.getGeolocation().getTimestamp().getTime() > 0) &&
           currentObject.getGeolocation().isAutomatic())
       {
-         locationDetails = String.format("Obtained at %s from %s", 
+         locationDetails = String.format(Messages.get().ObjectGeoLocationViewer_ObtainedFrom, 
                RegionalSettings.getDateTimeFormat().format(currentObject.getGeolocation().getTimestamp()),
-               (currentObject.getGeolocation().getType() == GeoLocation.GPS) ? "GPS" : "network");
+               (currentObject.getGeolocation().getType() == GeoLocation.GPS) ? Messages.get().ObjectGeoLocationViewer_GPS : Messages.get().ObjectGeoLocationViewer_Network);
          pt = gc.textExtent(locationDetails);
          if (width < pt.x)
             width = pt.x;
@@ -323,10 +324,10 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       String lastReport, batteryLevel;
       if (currentObject instanceof MobileDevice)
       {
-         lastReport = String.format("Last report: %s",
+         lastReport = String.format(Messages.get().ObjectGeoLocationViewer_LastReport,
                ((MobileDevice)currentObject).getLastReportTime().getTime() > 0 ?
                      RegionalSettings.getDateTimeFormat().format(((MobileDevice)currentObject).getLastReportTime()) :
-                     "never");
+                     Messages.get().ObjectGeoLocationViewer_Never);
          pt = gc.textExtent(lastReport);
          if (width < pt.x)
             width = pt.x;
@@ -334,7 +335,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
          
          if (((MobileDevice)currentObject).getBatteryLevel() >= 0)
          {
-            batteryLevel = String.format("Battery level: %d%%", ((MobileDevice)currentObject).getBatteryLevel());
+            batteryLevel = String.format(Messages.get().ObjectGeoLocationViewer_BatteryLevel, ((MobileDevice)currentObject).getBatteryLevel());
             pt = gc.textExtent(batteryLevel);
             if (width < pt.x)
                width = pt.x;
@@ -392,7 +393,7 @@ public class ObjectGeoLocationViewer extends AbstractGeoMapViewer implements Mou
       gc.drawText(currentObject.getObjectName(), rect.x + OBJECT_TOOLTIP_X_MARGIN + 12, rect.y + OBJECT_TOOLTIP_Y_MARGIN, true);
       
       gc.setFont(JFaceResources.getDefaultFont());
-      int textLineHeight = gc.textExtent("M").y;
+      int textLineHeight = gc.textExtent("M").y; //$NON-NLS-1$
       y = rect.y + OBJECT_TOOLTIP_Y_MARGIN + titleSize.y + OBJECT_TOOLTIP_SPACING + 2;
       gc.drawText(location, rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
       if (locationDetails != null)
