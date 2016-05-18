@@ -25,7 +25,7 @@
             class="org.netxms.ui.eclipse.nxsl.views.ScriptExecutor"
             icon="icons/script_exec.gif"
             id="org.netxms.ui.eclipse.nxsl.views.ScriptExecutor"
-            name="Script Executor"
+            name="%view.name.ScriptExecutor"
             restorable="false">
       </view>
    </extension>
@@ -39,35 +39,35 @@
       </command>
       <command
             id="org.netxms.ui.eclipse.nxsl.popupActions.ExecuteServerScript"
-            name="Execute server script">
+            name="%command.name.ExecuteServerScript">
       </command>
       <command
             id="org.netxms.ui.eclipse.nxsl.commands.execute_script"
-            name="Execute">
+            name="%command.name.Execute">
       </command>
       <command
             id="org.netxms.ui.eclipse.nxsl.commands.save"
-            name="Save">
+            name="%command.name.Save">
       </command>
       <command
             id="org.netxms.ui.eclipse.nxsl.commands.save_as"
-            name="Save as">
+            name="%command.name.SaveAs">
       </command>
       <command
             id="org.netxms.ui.eclipse.nxsl.commands.clear_output"
-            name="Clear output">
+            name="%command.name.ClearOutput">
       </command>
       <command
             id="org.netxms.ui.eclipse.nxsl.commands.compile"
-            name="Compile">
+            name="%command.name.Compile">
       </command>
       <command
             id="org.netxms.ui.eclipse.nxsl.commands.showLineNumbers"
-            name="Show line numbers">
+            name="%command.name.ShowLineNumbers">
       </command>
       <command
             id="org.netxms.ui.eclipse.nxsl.commands.goToLine"
-            name="Go to line">
+            name="%command.name.GoToLine">
       </command>
       <command
             id="org.netxms.ui.eclipse.nxsl.commands.cut"
@@ -113,7 +113,7 @@
          <command
                commandId="org.netxms.ui.eclipse.nxsl.popupActions.ExecuteServerScript"
                icon="icons/script_exec.gif"
-               label="Execute server script"
+               label="%command.name.ExecuteServerScript"
                style="push">
             <visibleWhen
                   checkEnabled="false">
