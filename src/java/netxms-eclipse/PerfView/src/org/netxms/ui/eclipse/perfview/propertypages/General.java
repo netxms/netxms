@@ -115,7 +115,7 @@ public class General extends PropertyPage
       checkLogScale.setSelection(config.isLogScale());
 
       lineWidth = new LabeledSpinner(optionsGroup, SWT.NONE);
-      lineWidth.setLabel("Line width");
+      lineWidth.setLabel(Messages.get().General_LineWidth);
       lineWidth.setRange(1, 99);
       lineWidth.setSelection(config.getLineWidth());
       gd = new GridData();
@@ -124,11 +124,11 @@ public class General extends PropertyPage
       lineWidth.setLayoutData(gd);
             
       checkStacked = new Button(optionsGroup, SWT.CHECK);
-      checkStacked.setText("Stacked");
+      checkStacked.setText(Messages.get().General_Stacked);
       checkStacked.setSelection(config.isStacked());
       
       checkTranslucent= new Button(optionsGroup, SWT.CHECK);
-      checkTranslucent.setText("Translucent");
+      checkTranslucent.setText(Messages.get().General_Translucent);
       checkTranslucent.setSelection(config.isTranslucent());
       
       checkShowLegend = new Button(optionsGroup, SWT.CHECK);
@@ -160,16 +160,16 @@ public class General extends PropertyPage
       gd.grabExcessHorizontalSpace = true;
       gd.verticalSpan = 2;
       gd.verticalAlignment = SWT.TOP;
-      legendLocation = WidgetHelper.createLabeledCombo(optionsGroup, SWT.READ_ONLY, "Legend location", gd);
-      legendLocation.add("left");
-      legendLocation.add("right");
-      legendLocation.add("top");
-      legendLocation.add("bottom");
+      legendLocation = WidgetHelper.createLabeledCombo(optionsGroup, SWT.READ_ONLY, Messages.get().General_LegendPosition, gd);
+      legendLocation.add(Messages.get().General_Left);
+      legendLocation.add(Messages.get().General_Right);
+      legendLocation.add(Messages.get().General_Top);
+      legendLocation.add(Messages.get().General_Bottom);
       legendLocation.select(31 - Integer.numberOfLeadingZeros(config.getLegendPosition()));      
       legendLocation.setEnabled(config.isShowLegend()); 
       
       checkExtendedLegend = new Button(optionsGroup, SWT.CHECK);
-      checkExtendedLegend.setText("Show extended legend");
+      checkExtendedLegend.setText(Messages.get().General_8);
       checkExtendedLegend.setSelection(config.isExtendedLegend());         
       checkExtendedLegend.setEnabled(config.isShowLegend());   
       
