@@ -59,7 +59,7 @@
             class="org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView"
             icon="icons/clock.png"
             id="org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView"
-            name="Scheduled Tasks">
+            name="%view.name.ScheduledTasks">
       </view>
    </extension>
    <extension
@@ -177,11 +177,11 @@
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_scheduled_tasks"
            icon="icons/clock.png"
            id="org.netxms.ui.eclipse.serverconfig.actions.open_scheduled_tasks"
-           label="Scheduled Tasks"
+           label="%action.label.ScheduledTasks"
            menubarPath="config/additions"
            style="push"
            toolbarPath="config/additions"
-           tooltip="Scheduled Tasks">
+           tooltip="%action.tooltip.ScheduledTasks">
      </action>
 	   </actionSet>
 	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"

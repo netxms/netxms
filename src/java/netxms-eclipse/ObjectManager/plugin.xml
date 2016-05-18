@@ -267,7 +267,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.VPNSubnets"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.VPNSubnets"
-              name="Subnets">
+              name="%page.name.Subnets">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.VPNConnector">
@@ -277,7 +277,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.RackPlacement"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.RackPlacement"
-              name="Rack">
+              name="%page.name.Rack">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.AbstractNode">
@@ -323,7 +323,7 @@
         <page
               class="org.netxms.ui.eclipse.objectmanager.propertypages.RackProperties"
               id="org.netxms.ui.eclipse.objectmanager.propertypages.RackProperties#1"
-              name="Rack">
+              name="%page.name.Rack">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.objects.Rack">
@@ -804,10 +804,10 @@
          </command>
          <menu
                id="maintenance"
-               label="&amp;Maintenance">
+               label="%menu.label.Maintenance">
             <command
                   commandId="org.netxms.ui.eclipse.objectmanager.popupActions.EnterMaintenance"
-                  label="Enter maintenance mode"
+                  label="%action.label.EnterMaintMode"
                   style="push">
                <visibleWhen
                      checkEnabled="false">
@@ -855,7 +855,7 @@
             </command>
             <command
                   commandId="org.netxms.ui.eclipse.objectmanager.popupActions.LeaveMaintenance"
-                  label="Leave maintenance mode"
+                  label="%action.label.LeaveMaintMode"
                   style="push">
                <visibleWhen
                      checkEnabled="false">
@@ -906,7 +906,7 @@
             </separator>
             <command
                   commandId="org.netxms.ui.eclipse.objectmanager.popupActions.ScheduleMaintenance"
-                  label="Schedule maintenance"
+                  label="%action.label.ScheduleMaintenance"
                   style="push">
                <visibleWhen
                      checkEnabled="false">
@@ -971,15 +971,15 @@
       </command>
       <command
             id="org.netxms.ui.eclipse.objectmanager.popupActions.EnterMaintenance"
-            name="Enter Maintenance">
+            name="%action.label.EnterMaintMode">
       </command>
       <command
             id="org.netxms.ui.eclipse.objectmanager.popupActions.LeaveMaintenance"
-            name="Leave Maintenance">
+            name="%action.label.LeaveMaintMode">
       </command>
       <command
             id="org.netxms.ui.eclipse.objectmanager.popupActions.ScheduleMaintenance"
-            name="Schedule Maintenance">
+            name="%action.label.ScheduleMaintenance">
       </command>
    </extension>
    <extension

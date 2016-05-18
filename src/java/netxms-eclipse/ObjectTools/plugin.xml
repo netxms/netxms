@@ -83,7 +83,7 @@
             class="org.netxms.ui.eclipse.objecttools.views.AgentActionResults"
             icon="icons/console.png"
             id="org.netxms.ui.eclipse.objecttools.views.AgentActionResults"
-            name="Agent Action"
+            name="%view.name.AgentAction"
             restorable="false">
       </view>
       <view
@@ -91,7 +91,7 @@
             class="org.netxms.ui.eclipse.objecttools.views.ServerCommandResults"
             icon="icons/console.png"
             id="org.netxms.ui.eclipse.objecttools.views.ServerCommandResults"
-            name="Server Command"
+            name="%view.name.ServerCommand"
             restorable="false">
       </view>
    </extension>
