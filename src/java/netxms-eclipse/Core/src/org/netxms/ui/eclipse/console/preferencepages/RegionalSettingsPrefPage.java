@@ -172,13 +172,13 @@ public class RegionalSettingsPrefPage extends PreferencePage implements IWorkben
       shortTimeExample.setLayoutData(gd);
       
       checkServerTimeZone = new Button(dialogArea, SWT.CHECK);
-      checkServerTimeZone.setText("Use server time &zone");
+      checkServerTimeZone.setText(Messages.get().RegionalSettingsPrefPage_UseServerTimeZone);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalSpan = layout.numColumns;
       checkServerTimeZone.setLayoutData(gd);
-      checkServerTimeZone.setSelection(getPreferenceStore().getBoolean("USE_SERVER_TIMEZONE"));
+      checkServerTimeZone.setSelection(getPreferenceStore().getBoolean("USE_SERVER_TIMEZONE")); //$NON-NLS-1$
 		
 		updateExample(null);
       updateShortTimeExample(null);

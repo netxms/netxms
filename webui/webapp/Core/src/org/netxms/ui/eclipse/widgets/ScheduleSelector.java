@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.client.ScheduledTask;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.tools.WidgetFactory;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
@@ -56,7 +57,7 @@ public class ScheduleSelector extends Composite
       setLayout(new FillLayout());
 		
 		scheduleGroup = new Group(parent, SWT.NONE);
-		scheduleGroup.setText("Schedule");
+		scheduleGroup.setText(Messages.get().ScheduleSelector_Schedule);
       
 		GridLayout layout = new GridLayout();
       layout.marginWidth = WidgetHelper.OUTER_SPACING;
@@ -82,7 +83,7 @@ public class ScheduleSelector extends Composite
       };
 
       radioOneTimeSchedule = new Button(scheduleGroup, SWT.RADIO);
-      radioOneTimeSchedule.setText("One time execution");
+      radioOneTimeSchedule.setText(Messages.get().ScheduleSelector_OneTimeExecution);
       radioOneTimeSchedule.setSelection(true);
       radioOneTimeSchedule.addSelectionListener(listener);
       
@@ -94,17 +95,17 @@ public class ScheduleSelector extends Composite
          }
       };
       
-      execDateSelector = (DateTimeSelector)WidgetHelper.createLabeledControl(scheduleGroup, SWT.NONE, factory, "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      execDateSelector = (DateTimeSelector)WidgetHelper.createLabeledControl(scheduleGroup, SWT.NONE, factory, "", WidgetHelper.DEFAULT_LAYOUT_DATA); //$NON-NLS-1$
       execDateSelector.setValue(new Date());
       
       radioCronSchedule = new Button(scheduleGroup, SWT.RADIO);
-      radioCronSchedule.setText("Cron schedule");
+      radioCronSchedule.setText(Messages.get().ScheduleSelector_CronSchedule);
       radioCronSchedule.setSelection(false);
       radioCronSchedule.addSelectionListener(listener);
       
       textSchedule = new Text(scheduleGroup, SWT.BORDER);
       textSchedule.setTextLimit(255);
-      textSchedule.setText("");
+      textSchedule.setText(""); //$NON-NLS-1$
       GridData gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
@@ -145,7 +146,7 @@ public class ScheduleSelector extends Composite
 
    public ScheduledTask getSchedule()
    {
-      return new ScheduledTask("Upload.File", textSchedule.getText(), "", execDateSelector.getValue(), 0, 0);
+      return new ScheduledTask("Upload.File", radioCronSchedule.getSelection() ? textSchedule.getText() : "","", execDateSelector.getValue(), 0, 0); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
    }
 
    public void setSchedule(ScheduledTask scheduledTask)
@@ -159,6 +160,7 @@ public class ScheduleSelector extends Composite
       }
       else
       {
+         radioOneTimeSchedule.setSelection(false);
          radioCronSchedule.setSelection(true);
          textSchedule.setEnabled(true);
          execDateSelector.setEnabled(false);

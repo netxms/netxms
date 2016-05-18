@@ -15,6 +15,7 @@ public class Messages extends NLS
 	public String AbstractChart_Hours;
 	public String AbstractChart_Left;
 	public String AbstractChart_LegendPosition;
+   public String AbstractChart_LineWidth;
    public String AbstractChart_LogartithmicScale;
 	public String AbstractChart_Minutes;
 	public String AbstractChart_Options;
@@ -23,6 +24,7 @@ public class Messages extends NLS
 	public String AbstractChart_ShowGrid;
 	public String AbstractChart_ShowLegend;
 	public String AbstractChart_ShowTitle;
+   public String AbstractChart_Stacked;
 	public String AbstractChart_TimeInterval;
 	public String AbstractChart_TimeUnits;
 	public String AbstractChart_Title;
@@ -128,7 +130,9 @@ public class Messages extends NLS
 	public String DashboardElementsLabelProvider_TypeTubeChart;
 	public String DashboardElementsLabelProvider_TypeWebPage;
 	public String DashboardElementsLabelProvider_Unknown;
-	public String DashboardView_AddAlarmBrowser;
+   public String DashboardsDynamicMenu_Dashboards;
+	public String DashboardView_8;
+   public String DashboardView_AddAlarmBrowser;
 	public String DashboardView_AddAvailChart;
 	public String DashboardView_AddBarChart;
 	public String DashboardView_AddDashboard;
@@ -139,6 +143,8 @@ public class Messages extends NLS
 	public String DashboardView_AddTubeChart;
 	public String DashboardView_Confirmation;
 	public String DashboardView_EditMode;
+   public String DashboardView_ExportLineChartData;
+   public String DashboardView_ExportLineChartValues;
    public String DashboardView_GetEffectiveRights;
    public String DashboardView_GetEffectiveRightsError;
 	public String DashboardView_InitError;
@@ -187,13 +193,18 @@ public class Messages extends NLS
 	public String ExportDashboard_JobTitle;
 	public String ExportDashboard_SelectFile;
 	public String ExportDashboard_XMLFiles;
-	public String Gauge_Bar;
+	public String Gauge_ActiveThresholdColor;
+   public String Gauge_Bar;
+   public String Gauge_ColorMode;
+   public String Gauge_CustomColor;
    public String Gauge_Dial;
+   public String Gauge_FixedCustomColor;
    public String Gauge_FontName;
    public String Gauge_ShowBorder;
    public String Gauge_Text;
    public String Gauge_Type;
    public String Gauge_Vertical;
+   public String Gauge_ZoneColor;
    public String GeoMap_Error;
 	public String GeoMap_ErrorText;
 	public String GeoMap_Latitude;
@@ -244,7 +255,8 @@ public class Messages extends NLS
 	public String Layout_WHint;
 	public String LineChartElement_JobError;
 	public String LineChartElement_JobTitle;
-	public String NetworkMap_NetworkMap;
+	public String NetworkMap_EnableDoubleClickAction;
+   public String NetworkMap_NetworkMap;
 	public String NetworkMap_Title;
    public String NetworkMap_ZoomLevel;
 	public String ObjectStatusChart_3DView;

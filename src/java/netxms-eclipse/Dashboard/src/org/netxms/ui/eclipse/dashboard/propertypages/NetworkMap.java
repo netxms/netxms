@@ -127,7 +127,7 @@ public class NetworkMap extends PropertyPage
 		});
 		
 		enableObjectDoubleClick = new Button(dialogArea, SWT.CHECK);
-		enableObjectDoubleClick.setText("Enable double click action on objects");
+		enableObjectDoubleClick.setText(Messages.get().NetworkMap_EnableDoubleClickAction);
 		enableObjectDoubleClick.setSelection(config.isObjectDoubleClickEnabled());
 
 		return dialogArea;

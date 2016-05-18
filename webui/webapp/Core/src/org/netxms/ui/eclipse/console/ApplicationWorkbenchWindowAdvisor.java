@@ -151,7 +151,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
          AbstractObject object = session.findObjectByName(dashboardId);
          if ((object == null) || !(object instanceof Dashboard))
          {
-            MessageDialogHelper.openError(null, "Error", String.format("Cannot open dashboard %s (invalid dashboard ID)", dashboardId));
+            MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_CannotOpenDashboard, dashboardId));
             return;
          }
          objectId = object.getObjectId();
@@ -160,7 +160,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       Dashboard dashboard = (Dashboard)session.findObjectById(objectId, Dashboard.class);
       if (dashboard == null)
       {
-         MessageDialogHelper.openError(null, "Error", String.format("Cannot open dashboard %s (invalid dashboard ID)", dashboardId));
+         MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_CannotOpenDashboard, dashboardId));
          return;
       }
       
@@ -172,7 +172,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       }
       catch(PartInitException e)
       {
-         MessageDialogHelper.openError(null, "Error", String.format("Cannot open dashboard %s (%s)", dashboardId, e.getLocalizedMessage()));
+         MessageDialogHelper.openError(null, Messages.get().ApplicationWorkbenchWindowAdvisor_Error, String.format(Messages.get().ApplicationWorkbenchWindowAdvisor_CannotOpenDashboardType2, dashboardId, e.getLocalizedMessage()));
       }
    }
 

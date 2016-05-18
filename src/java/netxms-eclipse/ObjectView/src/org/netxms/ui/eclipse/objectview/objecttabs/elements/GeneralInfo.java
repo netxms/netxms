@@ -27,6 +27,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.Node;
 import org.netxms.client.objects.NodeLink;
 import org.netxms.client.objects.Rack;
 import org.netxms.client.objects.ServiceCheck;
@@ -129,6 +130,8 @@ public class GeneralInfo extends TableElement
 				addPair(Messages.get().GeneralInfo_Driver, node.getDriverName(), false);
             if (node.getBootTime() != null)
                addPair(Messages.get().GeneralInfo_BootTime, RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
+            if (node.hasAgent())
+               addPair("Agent status", (node.getFlags() & Node.NDF_AGENT_UNREACHABLE) != 0 ? "Unreachable" : "Connected");
             if (node.getLastAgentCommTime() != null)
                addPair("Last agent contact", RegionalSettings.getDateTimeFormat().format(node.getLastAgentCommTime()), false);
             if (node.getRackId() != 0)

@@ -258,7 +258,7 @@ public class CreateInterfraceDci implements IObjectActionDelegate
 	 */
 	private static String getInterfaceInstance(Interface iface)
 	{
-	   return (iface.getIfTableSuffix().getLength() > 0) ? iface.getIfTableSuffix().toString() : "." + iface.getIfIndex();
+	   return (iface.getIfTableSuffix().getLength() > 0) ? iface.getIfTableSuffix().toString() : "." + iface.getIfIndex(); //$NON-NLS-1$
 	}
 	
 	/**

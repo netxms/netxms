@@ -79,7 +79,7 @@ public class Activator extends AbstractUIPlugin
                   s = Status.OK;
                   break;
             }
-            log(s, tag + ": " + message, t);
+            log(s, tag + ": " + message, t); //$NON-NLS-1$
          }
       });
 	}

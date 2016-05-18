@@ -101,7 +101,7 @@ public class DynamicFileViewer extends BaseFileViewer
       this.remoteFileName = remoteFileName;
       
       //text.setTopIndex(text.getLineCount() - 1);
-      monitoringJob = new ConsoleJob("Track file changes", null, Activator.PLUGIN_ID, null) {
+      monitoringJob = new ConsoleJob(Messages.get().DynamicFileViewer_TrackFileChanges, null, Activator.PLUGIN_ID, null) {
          private boolean tracking = true;
 
          @Override
@@ -140,7 +140,7 @@ public class DynamicFileViewer extends BaseFileViewer
          @Override
          protected String getErrorMessage()
          {
-            return "File tracking failed";
+            return Messages.get().DynamicFileViewer_FileTrackingFailed;
          }
       };
       monitoringJob.setUser(false);
@@ -188,7 +188,7 @@ public class DynamicFileViewer extends BaseFileViewer
                   "\n----------------------------------------------------------------------\n"); //$NON-NLS-1$
       showMessage(ERROR, Messages.get().FileViewer_NotifyFollowConnectionLost);
       
-      restartJob = new ConsoleJob("Restart file tracking", null, Activator.PLUGIN_ID, null) {
+      restartJob = new ConsoleJob(Messages.get().DynamicFileViewer_RestartFileTracking, null, Activator.PLUGIN_ID, null) {
          private boolean running = true;
 
          @Override
@@ -239,7 +239,7 @@ public class DynamicFileViewer extends BaseFileViewer
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot restart file change tracking";
+            return Messages.get().DynamicFileViewer_CannotRestartFileTracking;
          }
       };
       restartJob.setUser(false);

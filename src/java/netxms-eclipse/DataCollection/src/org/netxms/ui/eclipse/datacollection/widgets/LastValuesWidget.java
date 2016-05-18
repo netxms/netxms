@@ -305,7 +305,7 @@ public class LastValuesWidget extends Composite
 		
 		actionExportToCsv = new ExportToCsvAction(viewPart, dataViewer, true);
 		
-		actionCopyToClipboard = new Action("&Copy to clipboard", SharedIcons.COPY) {
+		actionCopyToClipboard = new Action(Messages.get().LastValuesWidget_CopyToClipboard, SharedIcons.COPY) {
          @Override
          public void run()
          {
@@ -681,7 +681,7 @@ public class LastValuesWidget extends Composite
 	   if (selection.isEmpty())
 	      return;
 	   
-	   final String nl = System.getProperty("line.separator");
+	   final String nl = System.getProperty("line.separator"); //$NON-NLS-1$
 	   StringBuilder sb = new StringBuilder();
 	   for(Object o : selection.toList())
 	   {
@@ -689,7 +689,7 @@ public class LastValuesWidget extends Composite
 	         sb.append(nl);
 	      DciValue v = (DciValue)o;
 	      sb.append(v.getDescription());
-	      sb.append(" = ");
+	      sb.append(" = "); //$NON-NLS-1$
 	      sb.append(v.getValue());
 	   }
 	   if (selection.size() > 1)

@@ -66,7 +66,7 @@ public class ForceDciPoll implements IObjectActionDelegate
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask("Forece DCI Poll", dciToPoll.size());
+				monitor.beginTask(Messages.get().ForceDciPoll_TaskName, dciToPoll.size());
 				for(DCI d : dciToPoll)
 				{
 					session.forceDCIPoll(d.nodeId, d.dciId);

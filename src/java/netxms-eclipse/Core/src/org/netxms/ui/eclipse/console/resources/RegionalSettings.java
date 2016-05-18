@@ -25,6 +25,7 @@ import java.util.TimeZone;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -51,7 +52,7 @@ public class RegionalSettings
 		dateFormatString = ps.getString("DATE_FORMAT_STRING"); //$NON-NLS-1$
 		timeFormatString = ps.getString("TIME_FORMAT_STRING"); //$NON-NLS-1$
       shortTimeFormatString = ps.getString("SHORT_TIME_FORMAT_STRING"); //$NON-NLS-1$
-      if (ps.getBoolean("USE_SERVER_TIMEZONE"))
+      if (ps.getBoolean("USE_SERVER_TIMEZONE")) //$NON-NLS-1$
          ConsoleSharedData.setServerTimeZone();
       else
          ConsoleSharedData.resetTimeZone();
@@ -209,7 +210,7 @@ public class RegionalSettings
       if (days > 0)
       {
          sb.append(days);
-         sb.append(" days, ");
+         sb.append(Messages.get().RegionalSettings_Days);
          seconds -= days * 86400;
       }
       

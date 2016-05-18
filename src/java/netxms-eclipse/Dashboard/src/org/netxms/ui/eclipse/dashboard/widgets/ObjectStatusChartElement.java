@@ -69,7 +69,7 @@ public class ObjectStatusChartElement extends ComparisonChartElement
 
 		for(int i = 0; i <= ObjectStatus.UNKNOWN.getValue(); i++)
 		{
-			chart.addParameter(new GraphItem(0, 0, 0, 0, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i), "%s"), 0.0);
+			chart.addParameter(new GraphItem(0, 0, 0, 0, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i), "%s"), 0.0); //$NON-NLS-1$
 			chart.setPaletteEntry(i, new ChartColor(StatusDisplayInfo.getStatusColor(i).getRGB()));
 		}
 		chart.initializationComplete();

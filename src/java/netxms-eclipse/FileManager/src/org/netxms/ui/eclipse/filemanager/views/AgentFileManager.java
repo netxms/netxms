@@ -182,15 +182,15 @@ public class AgentFileManager extends ViewPart
       
       String os = ((Node)session.findObjectById(objectId)).getSystemDescription(); //$NON-NLS-1$
 
-      if(os.contains("Windows"))//if OS is windows don't show group and access rights columns
+      if(os.contains("Windows"))//if OS is windows don't show group and access rights columns //$NON-NLS-1$
       {
-         final String[] columnNames = { Messages.get().AgentFileManager_ColName, Messages.get().AgentFileManager_ColType, Messages.get().AgentFileManager_ColSize, Messages.get().AgentFileManager_ColDate, "Owner" };
+         final String[] columnNames = { Messages.get().AgentFileManager_ColName, Messages.get().AgentFileManager_ColType, Messages.get().AgentFileManager_ColSize, Messages.get().AgentFileManager_ColDate, Messages.get().AgentFileManager_ColOwner };
          final int[] columnWidths = { 300, 120, 150, 150, 150 };  
          viewer = new SortableTreeViewer(content, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
       }
       else
       {
-         final String[] columnNames = { Messages.get().AgentFileManager_ColName, Messages.get().AgentFileManager_ColType, Messages.get().AgentFileManager_ColSize, Messages.get().AgentFileManager_ColDate, "Owner", "Group", "Access Rights" };
+         final String[] columnNames = { Messages.get().AgentFileManager_ColName, Messages.get().AgentFileManager_ColType, Messages.get().AgentFileManager_ColSize, Messages.get().AgentFileManager_ColDate, Messages.get().AgentFileManager_ColOwner, Messages.get().AgentFileManager_ColGroup, Messages.get().AgentFileManager_ColAccessRights };
          final int[] columnWidths = { 300, 120, 150, 150, 150, 150, 200 };         
          viewer = new SortableTreeViewer(content, columnNames, columnWidths, 0, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
       }
@@ -509,7 +509,7 @@ public class AgentFileManager extends ViewPart
       actionDownloadFile.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.download"); //$NON-NLS-1$
       handlerService.activateHandler(actionDownloadFile.getActionDefinitionId(), new ActionHandler(actionDownloadFile));
 
-      actionTailFile = new Action("Tail") {
+      actionTailFile = new Action(Messages.get().AgentFileManager_FollowChanges) {
          @Override
          public void run()
          {

@@ -378,7 +378,7 @@ public class EventConfigurator extends ViewPart implements SessionListener
 		};
 		actionDelete.setEnabled(false);
 
-      actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+      actionShowFilter = new Action(Messages.get().EventConfigurator_ShowFilter, Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {

@@ -31,6 +31,7 @@ public class Messages extends NLS
 	public static String EventConfigurator_OpenJob_Error;
 	public static String EventConfigurator_OpenJob_Title;
 	public static String EventConfigurator_Properties;
+   public static String EventConfigurator_ShowFilter;
 	public static String EventConfigurator_UpdateJob_Error;
 	public static String EventConfigurator_UpdateJob_Title;
 	public static String EventLabelProvider_Unknown;

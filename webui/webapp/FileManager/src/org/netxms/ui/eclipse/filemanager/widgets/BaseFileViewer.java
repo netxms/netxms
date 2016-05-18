@@ -51,6 +51,7 @@ import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.filemanager.Activator;
+import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 
 /**
@@ -113,7 +114,7 @@ public class BaseFileViewer extends Composite
       messageCloseButton.setBackground(messageBar.getBackground());
       messageCloseButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
       messageCloseButton.setImage(SharedIcons.IMG_CLOSE);
-      messageCloseButton.setToolTipText("Hide message");
+      messageCloseButton.setToolTipText(Messages.get().BaseFileViewer_HideMessage);
       gd = new GridData();
       gd.verticalAlignment = SWT.CENTER;
       messageCloseButton.setLayoutData(gd);
@@ -185,7 +186,7 @@ public class BaseFileViewer extends Composite
       separator.setLayoutData(gd);
       
       Label searchBarLabel = new Label(searchBar, SWT.LEFT);
-      searchBarLabel.setText("Find:");
+      searchBarLabel.setText(Messages.get().BaseFileViewer_Find);
       searchBarLabel.setBackground(searchBar.getBackground());
       searchBarLabel.setForeground(searchBar.getForeground());
       gd = new GridData();
@@ -208,7 +209,7 @@ public class BaseFileViewer extends Composite
       searchBarTextContainer.setLayoutData(gd);
       
       searchBarText = new Text(searchBarTextContainer, SWT.NONE);
-      searchBarText.setMessage("Find in file");
+      searchBarText.setMessage(Messages.get().BaseFileViewer_FindInFile);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.verticalAlignment = SWT.CENTER;
@@ -266,7 +267,7 @@ public class BaseFileViewer extends Composite
       searchCloseButton.setBackground(searchBar.getBackground());
       searchCloseButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
       searchCloseButton.setImage(SharedIcons.IMG_CLOSE);
-      searchCloseButton.setToolTipText("Close");
+      searchCloseButton.setToolTipText(Messages.get().BaseFileViewer_Close);
       gd = new GridData();
       gd.verticalAlignment = SWT.CENTER;
       gd.horizontalAlignment = SWT.RIGHT;
@@ -311,7 +312,7 @@ public class BaseFileViewer extends Composite
     */
    public void showFile(final File file)
    {
-      ConsoleJob job = new ConsoleJob("Load file into viewer", viewPart, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(Messages.get().BaseFileViewer_LoadJobName, viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -328,7 +329,7 @@ public class BaseFileViewer extends Composite
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot load file %s", file.getAbsolutePath());
+            return String.format(Messages.get().BaseFileViewer_LoadJobError, file.getAbsolutePath());
          }
       };
       job.setUser(false);
@@ -376,7 +377,7 @@ public class BaseFileViewer extends Composite
     */
    public void showSearchBar()
    {
-      searchBarText.setText("");
+      searchBarText.setText(""); //$NON-NLS-1$
       searchBar.setVisible(true);
       ((FormData)text.getLayoutData()).bottom = new FormAttachment(searchBar, 0, SWT.TOP);
       layout(true, true);
@@ -399,7 +400,7 @@ public class BaseFileViewer extends Composite
    public void clear()
    {
       content = new StringBuilder();
-      text.setText("");
+      text.setText(""); //$NON-NLS-1$
    }
    
    /**

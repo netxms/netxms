@@ -264,10 +264,10 @@ public class GeneralTable extends PropertyPage
       fd = new FormData();
       fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
       fd.right = new FormAttachment(100, 0);
-      agentCacheMode = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, "Agent cache mode", fd);
-      agentCacheMode.add("Default");
-      agentCacheMode.add("On");
-      agentCacheMode.add("Off");
+      agentCacheMode = WidgetHelper.createLabeledCombo(groupData, SWT.READ_ONLY, Messages.get().GeneralTable_AgentCacheMode, fd);
+      agentCacheMode.add(Messages.get().GeneralTable_Default);
+      agentCacheMode.add(Messages.get().GeneralTable_On);
+      agentCacheMode.add(Messages.get().GeneralTable_Off);
       agentCacheMode.select(dci.getCacheMode().getValue());
       agentCacheMode.setEnabled((dci.getOrigin() == DataCollectionItem.AGENT) || (dci.getOrigin() == DataCollectionItem.SNMP));
 
@@ -395,9 +395,9 @@ public class GeneralTable extends PropertyPage
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
-      retentionMode = WidgetHelper.createLabeledCombo(groupStorage, SWT.READ_ONLY, "Retention mode", gd);
-      retentionMode.add("Use default retention time");
-      retentionMode.add("Use custom retention time");
+      retentionMode = WidgetHelper.createLabeledCombo(groupStorage, SWT.READ_ONLY, Messages.get().GeneralTable_RetentionMode, gd);
+      retentionMode.add(Messages.get().GeneralTable_UseDefaultRetention);
+      retentionMode.add(Messages.get().GeneralTable_UseCustomRetention);
       retentionMode.add(Messages.get().GeneralTable_NoStorage);
       retentionMode.select(((dci.getFlags() & DataCollectionObject.DCF_NO_STORAGE) != 0) ? 2 : ((dci.getRetentionTime() > 0) ? 1 : 0));
       retentionMode.addSelectionListener(new SelectionListener() {

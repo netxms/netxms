@@ -31,6 +31,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.netxms.client.constants.Severity;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -84,7 +85,7 @@ public class CompositeWithMessageBar extends Composite
       closeButton.setBackground(messageBar.getBackground());
       closeButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
       closeButton.setImage(SharedIcons.IMG_CLOSE);
-      closeButton.setToolTipText("Hide message");
+      closeButton.setToolTipText(Messages.get().CompositeWithMessageBar_HideMessage);
       gd = new GridData();
       gd.verticalAlignment = SWT.CENTER;
       closeButton.setLayoutData(gd);

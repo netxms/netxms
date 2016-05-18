@@ -110,7 +110,7 @@ public class DataSourceEditDlg extends Dialog
 		name.setLayoutData(gd);
 		
       displayFormat = new LabeledText(dialogArea, SWT.NONE);
-      displayFormat.setLabel("Display format");
+      displayFormat.setLabel(Messages.get().DataSourceEditDlg_DisplayFormat);
       displayFormat.setText(dci.displayFormat);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -225,7 +225,7 @@ public class DataSourceEditDlg extends Dialog
 		checkShowThresholds.setSelection(dci.showThresholds);
 		
       checkInvertValues = new Button(optionsGroup, SWT.CHECK);
-      checkInvertValues.setText("Invert values");
+      checkInvertValues.setText(Messages.get().DataSourceEditDlg_InvertValues);
       checkInvertValues.setSelection(dci.invertValues);
       
 		return dialogArea;
