@@ -23,6 +23,9 @@ public class Messages extends NLS
    public String EnterMacAddressDlg_IncorrectMacAddress;
    public String EnterMacAddressDlg_MacAddress;
    public String EnterMacAddressDlg_Title;
+   public String FDBLabelProvider_Dynamic;
+   public String FDBLabelProvider_Static;
+   public String FDBLabelProvider_Unknown;
    public String FindConnectionPoint_JobError;
    public String FindConnectionPoint_JobTitle;
    public String FindIpAddress_JobError;
@@ -92,6 +95,7 @@ public class Messages extends NLS
    public String SwitchForwardingDatabaseView_ColMacAddr;
    public String SwitchForwardingDatabaseView_ColNode;
    public String SwitchForwardingDatabaseView_ColPort;
+   public String SwitchForwardingDatabaseView_ColType;
    public String SwitchForwardingDatabaseView_ColVlan;
    public String SwitchForwardingDatabaseView_ConIface;
    public String SwitchForwardingDatabaseView_JobError;

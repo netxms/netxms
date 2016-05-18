@@ -104,7 +104,7 @@ public class SwitchForwardingDatabaseView extends ViewPart
 		      Messages.get().SwitchForwardingDatabaseView_ConIface, 
 		      Messages.get().SwitchForwardingDatabaseView_ColVlan, 
 		      Messages.get().SwitchForwardingDatabaseView_ColNode,
-		      "Type"
+		      Messages.get().SwitchForwardingDatabaseView_ColType
 		   };
 		final int[] widths = { 180, 100, 200, 100, 250, 110 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_MAC_ADDRESS, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);

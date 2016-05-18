@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Image;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.FdbEntry;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.SwitchForwardingDatabaseView;
 
 /**
@@ -68,7 +69,7 @@ public class FDBLabelProvider extends LabelProvider implements ITableLabelProvid
                return ""; //$NON-NLS-1$
             return Integer.toString(e.getVlanId());
          case SwitchForwardingDatabaseView.COLUMN_TYPE:
-            return (e.getType() == 3) ? "dynamic" : ((e.getType() == 5) ? "static" : "unknown");
+            return (e.getType() == 3) ? Messages.get().FDBLabelProvider_Dynamic : ((e.getType() == 5) ? Messages.get().FDBLabelProvider_Static : Messages.get().FDBLabelProvider_Unknown);
       }
       return null;
    }
