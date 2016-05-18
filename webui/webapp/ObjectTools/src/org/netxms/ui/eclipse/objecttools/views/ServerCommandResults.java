@@ -161,7 +161,7 @@ public class ServerCommandResults extends AbstractCommandResults implements Text
       try
       {
          if (out != null)
-            out.write(text.replace("\r", ""));
+            out.write(text.replace("\r", "")); //$NON-NLS-1$ //$NON-NLS-2$
       }
       catch(IOException e)
       {

@@ -19,6 +19,7 @@
 package org.netxms.ui.eclipse.objectmanager.actions;
 
 import org.netxms.client.constants.NodePollType;
+import org.netxms.ui.eclipse.objectmanager.Messages;
 
 /**
  * Start configuration poll
@@ -40,6 +41,6 @@ public class FullConfigurationPoll extends AbstractNodePoll
    @Override
    protected String getConfirmation()
    {
-      return "Full configuration poll will reset node capabilities and can possibly change container and template binding. Continue?";
+      return Messages.get().FullConfigurationPoll_FullConfigPollConfirmation;
    }
 }

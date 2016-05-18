@@ -68,7 +68,7 @@ public class RackPlacement extends PropertyPage
       dialogArea.setLayout(layout);
 
       rackSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
-      rackSelector.setLabel("Rack");
+      rackSelector.setLabel(Messages.get().RackPlacement_Rack);
       rackSelector.setObjectClass(Rack.class);
       rackSelector.setObjectId(node.getRackId());
 		GridData gd = new GridData();
@@ -78,7 +78,7 @@ public class RackPlacement extends PropertyPage
 		rackSelector.setLayoutData(gd);
 		
 		rackImageSelector = new ImageSelector(dialogArea, SWT.NONE);
-		rackImageSelector.setLabel("Rack image");
+		rackImageSelector.setLabel(Messages.get().RackPlacement_RackImage);
 		rackImageSelector.setImageGuid(node.getRackImage(), false);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
@@ -87,7 +87,7 @@ public class RackPlacement extends PropertyPage
       rackImageSelector.setLayoutData(gd);
       
       rackPosition = new LabeledSpinner(dialogArea, SWT.NONE);
-      rackPosition.setLabel("Position");
+      rackPosition.setLabel(Messages.get().RackPlacement_Position);
       rackPosition.setRange(1, 50);
       rackPosition.setSelection(node.getRackPosition());
       gd = new GridData();
@@ -96,7 +96,7 @@ public class RackPlacement extends PropertyPage
       rackPosition.setLayoutData(gd);
 		
       rackHeight = new LabeledSpinner(dialogArea, SWT.NONE);
-      rackHeight.setLabel("Height");
+      rackHeight.setLabel(Messages.get().RackPlacement_Height);
       rackHeight.setRange(1, 50);
       rackHeight.setSelection(node.getRackHeight());
       gd = new GridData();
@@ -121,7 +121,7 @@ public class RackPlacement extends PropertyPage
 		md.setRackPlacement(rackSelector.getObjectId(), rackImageSelector.getImageGuid(), (short)rackPosition.getSelection(), (short)rackHeight.getSelection());
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format("Updating rack placement for node %s", node.getObjectName()), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().RackPlacement_UpdatingRackPlacement, node.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

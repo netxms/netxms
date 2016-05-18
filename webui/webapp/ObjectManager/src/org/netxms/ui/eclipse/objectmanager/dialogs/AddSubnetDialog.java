@@ -58,7 +58,7 @@ public class AddSubnetDialog extends Dialog
 	protected void configureShell(Shell newShell)
 	{
 		super.configureShell(newShell);
-		newShell.setText("Add Subnet");
+		newShell.setText(Messages.get().AddSubnetDialog_Title);
 	}
 
 	/* (non-Javadoc)

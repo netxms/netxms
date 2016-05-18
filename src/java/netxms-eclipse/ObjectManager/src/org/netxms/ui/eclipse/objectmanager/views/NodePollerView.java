@@ -62,11 +62,11 @@ public class NodePollerView extends ViewPart
 	   { 
 	      "", //$NON-NLS-1$ 
 	      Messages.get().NodePollerView_StatusPoll, 
-	      "Configuration Poll (Full)", 
+	      Messages.get().NodePollerView_FullConfigPoll, 
 	      Messages.get().NodePollerView_InterfacePoll, 
 	      Messages.get().NodePollerView_TopologyPoll,
          Messages.get().NodePollerView_ConfigPoll,
-         "Instance Discovery"
+         Messages.get().NodePollerView_InstanceDiscovery
 	   };
 	private static final Color COLOR_ERROR = new Color(Display.getCurrent(), 192, 0, 0);
 	private static final Color COLOR_WARNING = new Color(Display.getCurrent(), 255, 128, 0);

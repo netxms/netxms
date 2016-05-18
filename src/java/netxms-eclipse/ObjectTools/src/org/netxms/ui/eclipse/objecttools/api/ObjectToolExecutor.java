@@ -161,7 +161,7 @@ public final class ObjectToolExecutor
       if (validationNeeded)
       {
          final NXCSession session = ConsoleSharedData.getSession();
-         new ConsoleJob("Validate passwords", null, Activator.PLUGIN_ID, null) {
+         new ConsoleJob(Messages.get().ObjectToolExecutor_JobName, null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -177,8 +177,8 @@ public final class ObjectToolExecutor
                            @Override
                            public void run()
                            {
-                              MessageDialogHelper.openError(null, "Password Validation Failed", 
-                                    String.format("Password entered in input field \"%s\" is not valid", fieldName));
+                              MessageDialogHelper.openError(null, Messages.get().ObjectToolExecutor_ErrorTitle, 
+                                    String.format(Messages.get().ObjectToolExecutor_ErrorText, fieldName));
                            }
                         });
                         return;
@@ -199,7 +199,7 @@ public final class ObjectToolExecutor
             @Override
             protected String getErrorMessage()
             {
-               return "Password validation failed";
+               return Messages.get().ObjectToolExecutor_PasswordValidationFailed;
             }
          }.start();
       }
@@ -552,7 +552,7 @@ public final class ObjectToolExecutor
                   sb.append((node.object != null) ? node.object.getGuid().toString() : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
                   break;
                case 'i':
-                  sb.append((node.object != null) ? String.format("0x%08X", node.object.getObjectId()) : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
+                  sb.append((node.object != null) ? String.format("0x%08X", node.object.getObjectId()) : Messages.get().ObjectToolsDynamicMenu_MultipleNodes); //$NON-NLS-1$
                   break;
                case 'I':
                   sb.append((node.object != null) ? Long.toString(node.object.getObjectId()) : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);

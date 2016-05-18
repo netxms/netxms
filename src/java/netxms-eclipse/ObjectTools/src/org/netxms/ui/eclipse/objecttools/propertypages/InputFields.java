@@ -146,7 +146,7 @@ public class InputFields extends PropertyPage
       buttonsLeft.setLayoutData(gd);
 		
       buttonUp = new Button(buttonsLeft, SWT.PUSH);
-      buttonUp.setText("&Up");
+      buttonUp.setText(Messages.get().InputFields_Up);
       buttonUp.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
@@ -166,7 +166,7 @@ public class InputFields extends PropertyPage
       buttonUp.setEnabled(false);
       
       buttonDown = new Button(buttonsLeft, SWT.PUSH);
-      buttonDown.setText("&Down");
+      buttonDown.setText(Messages.get().InputFields_Down);
       buttonDown.addSelectionListener(new SelectionListener() {
          @Override
          public void widgetDefaultSelected(SelectionEvent e)
@@ -264,15 +264,15 @@ public class InputFields extends PropertyPage
 	private void setupTableColumns()
 	{
 		TableColumn column = new TableColumn(viewer.getTable(), SWT.LEFT);
-		column.setText("Name");
+		column.setText(Messages.get().InputFields_Name);
 		column.setWidth(200);
 		
 		column = new TableColumn(viewer.getTable(), SWT.LEFT);
-		column.setText("Type");
+		column.setText(Messages.get().InputFields_Type);
 		column.setWidth(90);
 		
 		column = new TableColumn(viewer.getTable(), SWT.LEFT);
-		column.setText("Display name");
+		column.setText(Messages.get().InputFields_DisplayName);
 		column.setWidth(200);
 		
 		viewer.getTable().setHeaderVisible(true);
@@ -285,7 +285,7 @@ public class InputFields extends PropertyPage
 	 */
 	private void addField()
 	{
-		InputField f = new InputField("Field" + Integer.toString(fields.size() + 1));
+		InputField f = new InputField("Field" + Integer.toString(fields.size() + 1)); //$NON-NLS-1$
 		EditInputFieldDialog dlg = new EditInputFieldDialog(getShell(), true, f);
 		if (dlg.open() == Window.OK)
 		{
