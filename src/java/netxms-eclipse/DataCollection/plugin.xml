@@ -261,7 +261,7 @@
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.Comments"
               id="org.netxms.ui.eclipse.datacollection.propertypages.Comments"
-              name="Comments">
+              name="%page.name.Comments">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DataCollectionObject">
@@ -321,7 +321,7 @@
         <page
               class="org.netxms.ui.eclipse.datacollection.propertypages.OtherOptions"
               id="org.netxms.ui.eclipse.datacollection.propertypages.NetworkMaps#110"
-              name="Other options">
+              name="%page.name.OtherOptions">
            <enabledWhen>
               <instanceof
                     value="org.netxms.client.datacollection.DataCollectionItem">
