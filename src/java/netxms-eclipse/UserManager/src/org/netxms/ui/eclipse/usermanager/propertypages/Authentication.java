@@ -146,7 +146,7 @@ public class Authentication extends PropertyPage
          checkChangePassword.setEnabled(false);
          checkFixedPassword.setEnabled(false);
          comboAuthMethod.setEnabled(false);
-         comboAuthMethod.add("LDAP password");
+         comboAuthMethod.add(Messages.get().Authentication_LDAPPassword);
          comboAuthMethod.select(5);
          comboMappingMethod.setEnabled(false);
          textMappingData.setEnabled(false);
