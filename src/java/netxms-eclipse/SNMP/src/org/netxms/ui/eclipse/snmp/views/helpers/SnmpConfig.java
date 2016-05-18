@@ -39,8 +39,8 @@ public class SnmpConfig
       config.communities = session.getSnmpCommunities();
       config.usmCredentials = session.getSnmpUsmCredentials();
       Map<String, ServerVariable> variables = session.getServerVariables();
-      ServerVariable v = variables.get("SNMPPorts");
-      config.ports = parsePorts(v != null ? v.getValue() : "" );
+      ServerVariable v = variables.get("SNMPPorts"); //$NON-NLS-1$
+      config.ports = parsePorts(v != null ? v.getValue() : "" ); //$NON-NLS-1$
 
       return config;
    }
@@ -51,7 +51,7 @@ public class SnmpConfig
     */
    public static List<String> parsePorts(String portList)
    {
-      String[] arr = portList.split(",");
+      String[] arr = portList.split(","); //$NON-NLS-1$
       List<String> list = new ArrayList<String>(Arrays.asList(arr));
       return list;      
    }
@@ -64,7 +64,7 @@ public class SnmpConfig
          str.append(ports.get(i));
          if(i != ports.size() - 1)
          {
-            str.append(",");            
+            str.append(",");             //$NON-NLS-1$
          }
       }
       return str.toString();
@@ -81,7 +81,7 @@ public class SnmpConfig
    {
       session.updateSnmpCommunities(communities);
       session.updateSnmpUsmCredentials(usmCredentials);
-      session.setServerVariable("SNMPPorts", parsePorts());
+      session.setServerVariable("SNMPPorts", parsePorts()); //$NON-NLS-1$
    }
    
    /**
