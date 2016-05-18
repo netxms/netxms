@@ -129,7 +129,7 @@ ServerJobResult PolicyDeploymentJob::run()
    _sntprintf(jobName, 1024, _T("Deploy policy %s"), m_policy->getName());
 
    setDescription(jobName);
-   AgentConnectionEx *conn = m_node->createAgentConnection();
+   AgentConnectionEx *conn = m_node->createAgentConnection(true);
    if (conn != NULL)
    {
       UINT32 rcc = conn->deployPolicy(m_policy);

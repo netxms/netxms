@@ -3616,7 +3616,7 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
    m_agentConnection->setAuthData(m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(m_agentConnection);
 	DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): calling connect on port %d"), m_name, m_id, (int)m_agentPort);
-   bool success = m_agentConnection->connect(g_pServerKey, FALSE, error, socketError);
+   bool success = m_agentConnection->connect(g_pServerKey, FALSE, error, socketError, g_serverId);
    if (success)
 	{
 		m_agentConnection->setCommandTimeout(g_agentCommandTimeout);
@@ -5121,7 +5121,7 @@ void Node::checkOSPFSupport(SNMP_Transport *pTransport)
 /**
  * Create ready to use agent connection
  */
-AgentConnectionEx *Node::createAgentConnection()
+AgentConnectionEx *Node::createAgentConnection(bool sendServerId)
 {
    AgentConnectionEx *conn;
 
@@ -5133,7 +5133,7 @@ AgentConnectionEx *Node::createAgentConnection()
 
    conn = new AgentConnectionEx(m_id, m_ipAddress, m_agentPort, m_agentAuthMethod, m_szSharedSecret);
    setAgentProxy(conn);
-   if (!conn->connect(g_pServerKey))
+   if (!conn->connect(g_pServerKey, FALSE, NULL, NULL, sendServerId ? g_serverId : 0))
    {
       conn->decRefCount();
       conn = NULL;

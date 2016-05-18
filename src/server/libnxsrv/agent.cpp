@@ -433,7 +433,7 @@ void AgentConnection::receiverThread()
 /**
  * Connect to agent
  */
-bool AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, UINT32 *pdwSocketError)
+bool AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, UINT32 *pdwSocketError, UINT64 serverId)
 {
    TCHAR szBuffer[256];
    bool success = false;
@@ -563,6 +563,9 @@ setup_encryption:
       forceEncryption = false;
       goto setup_encryption;
    }
+
+   if(serverId != 0)
+      setServerId(serverId);
 
    success = true;
    dwError = ERR_SUCCESS;

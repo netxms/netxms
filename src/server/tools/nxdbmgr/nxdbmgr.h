@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxdbmgr - NetXMS database manager
 ** Copyright (C) 2004-2016 Victor Kirhenshtein
 **

@@ -652,10 +652,6 @@ bool LIBNXAGENT_EXPORTABLE AgentPushParameterDataDouble(const TCHAR *parameter, 
 
 CONDITION LIBNXAGENT_EXPORTABLE AgentGetShutdownCondition();
 bool LIBNXAGENT_EXPORTABLE AgentSleepAndCheckForShutdown(UINT32 sleepTime);
-
-Config LIBNXAGENT_EXPORTABLE *AgentOpenRegistry();
-void LIBNXAGENT_EXPORTABLE AgentCloseRegistry(bool modified);
-
 const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory();
 
 DB_HANDLE LIBNXAGENT_EXPORTABLE AgentGetLocalDatabaseHandle();

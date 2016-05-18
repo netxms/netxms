@@ -34,21 +34,49 @@
  */
 static void RegisterPolicy(CommSession *session, UINT32 type, const uuid& guid)
 {
-	TCHAR path[256], buffer[64];
-	int tail;
+   bool isNew = true;
+   TCHAR buffer[64];
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+	if(hdb != NULL)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT * FROM agent_policy WHERE guid=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
+         {
+            isNew = DBGetNumRows(hResult) <= 0;
+            DBFreeResult(hResult);
+         }
+         DBFreeStatement(hStmt);
+      }
 
-   _sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s/"), guid.toString(buffer));
-	tail = (int)_tcslen(path);
+      if(isNew)
+      {
+         hStmt = DBPrepare(hdb,
+                       _T("INSERT INTO agent_policy (type,server_info,server_id,version, guid)")
+                       _T(" VALUES (?,?,?,0,?)"));
+      }
+      else
+      {
+         hStmt = DBPrepare(hdb,
+                       _T("UPDATE agent_policy SET type=?,server_info=?,server_id=?,version=0")
+                       _T(" WHERE guid=?"));
+      }
 
-	Config *registry = AgentOpenRegistry();
+      if (hStmt == NULL)
+         return;
 
-	_tcscpy(&path[tail], _T("type"));
-	registry->setValue(path, type);
+      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (LONG)type);
+      session->getServerAddress().toString(buffer);
+      DBBind(hStmt, 2, DB_SQLTYPE_VARCHAR, buffer, DB_BIND_STATIC);
+      DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, session->getServerId());
+      DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, guid);
 
-	_tcscpy(&path[tail], _T("server"));
-   registry->setValue(path, session->getServerAddress().toString(buffer));
-
-	AgentCloseRegistry(true);
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
 }
 
 /**
@@ -56,12 +84,20 @@ static void RegisterPolicy(CommSession *session, UINT32 type, const uuid& guid)
  */
 static void UnregisterPolicy(const uuid& guid)
 {
-	TCHAR path[256], buffer[64];
+   DB_HANDLE hdb = GetLocalDatabaseHandle();
+	if(hdb != NULL)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb,
+                    _T("DELETE FROM agent_policy WHERE guid=?"));
 
-   _sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s"), guid.toString(buffer));
-	Config *registry = AgentOpenRegistry();
-	registry->deleteEntry(path);
-	AgentCloseRegistry(true);
+      if (hStmt == NULL)
+         return;
+
+      DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+
+      DBExecute(hStmt);
+      DBFreeStatement(hStmt);
+   }
 }
 
 /**
@@ -69,13 +105,23 @@ static void UnregisterPolicy(const uuid& guid)
  */
 static int GetPolicyType(const uuid& guid)
 {
-	TCHAR path[256], buffer[64];
-	int type;
-
-   _sntprintf(path, 256, POLICY_REGISTRY_PATH _T("/policy-%s/type"), guid.toString(buffer));
-	Config *registry = AgentOpenRegistry();
-	type = registry->getValueAsInt(path, -1);
-	AgentCloseRegistry(false);
+   int type = -1;
+	DB_HANDLE hdb = GetLocalDatabaseHandle();
+	if(hdb != NULL)
+   {
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT type FROM agent_policy WHERE guid=?"));
+	   if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
+         {
+            type = DBGetNumRows(hResult) > 0 ? DBGetFieldULong(hResult, 0, 0) : -1;
+            DBFreeResult(hResult);
+         }
+         DBFreeStatement(hStmt);
+	   }
+   }
 	return type;
 }
 
@@ -286,33 +332,37 @@ UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request)
  */
 UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg)
 {
-	Config *registry = AgentOpenRegistry();
+   UINT32 success = RCC_DB_FAILURE;
+	DB_HANDLE hdb = GetLocalDatabaseHandle();
+	if(hdb != NULL)
+   {
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT guid,type,server_info,server_id,version FROM agent_policy"));
+      if (hResult != NULL)
+      {
+         int count = DBGetNumRows(hResult);
+         if(count > 0 )
+         {
+            msg->setField(VID_NUM_ELEMENTS, (UINT32)count);
+         }
+         else
+            msg->setField(VID_NUM_ELEMENTS, (UINT32)0);
 
-	ObjectArray<ConfigEntry> *list = registry->getSubEntries(_T("/policyRegistry"), NULL);
-	if (list != NULL)
-	{
-		msg->setField(VID_NUM_ELEMENTS, (UINT32)list->size());
-		UINT32 varId = VID_ELEMENT_LIST_BASE;
-		for(int i = 0; i < list->size(); i++, varId += 7)
-		{
-			ConfigEntry *e = list->get(i);
-			uuid_t guid;
+         UINT32 varId = VID_ELEMENT_LIST_BASE;
+         for(int row = 0; row < count; row++, varId += 5)
+         {
+				msg->setField(varId++, DBGetFieldGUID(hResult, row, 0));
+				msg->setField(varId++, DBGetFieldULong(hResult, row, 1));
+				TCHAR *text = DBGetField(hResult, row, 2, NULL, 0);
+				msg->setField(varId++, CHECK_NULL_EX(text));
+				free(text);
+				msg->setField(varId++, DBGetFieldInt64(hResult, row, 3));
+				msg->setField(varId++, DBGetFieldULong(hResult, row, 4));
 
-			if (MatchString(_T("policy-*"), e->getName(), TRUE))
-			{
-				_uuid_parse(&(e->getName()[7]), guid);
-				msg->setField(varId++, guid, UUID_LENGTH);
-				msg->setField(varId++, (WORD)e->getSubEntryValueAsInt(_T("type")));
-				msg->setField(varId++, e->getSubEntryValue(_T("server")));
-			}
-		}
-		delete list;
-	}
-	else
-	{
-		msg->setField(VID_NUM_ELEMENTS, (UINT32)0);
-	}
+         }
+         DBFreeResult(hResult);
+      }
+      success = RCC_SUCCESS;
+   }
 
-	AgentCloseRegistry(false);
-	return RCC_SUCCESS;
+	return success;
 }

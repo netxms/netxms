@@ -23,11 +23,6 @@
 #include "nxagentd.h"
 
 /**
- * Database schema version
- */
-#define DB_SCHEMA_VERSION     1
-
-/**
  * Database driver
  */
 static DB_DRIVER s_driver = NULL;
@@ -150,7 +145,7 @@ bool OpenLocalDatabase()
       return false;
    }
 
-   if (!CheckDatabaseStructure())
+   if (!CheckDatabaseStructure() || !UpgradeDatabase())
    {
       DBDisconnect(s_db);
       s_db = NULL;

@@ -1516,7 +1516,7 @@ public:
    void openTableList(ObjectArray<AgentTableDefinition> **tableList);
    void closeTableList() { unlockProperties(); }
 
-   AgentConnectionEx *createAgentConnection();
+   AgentConnectionEx *createAgentConnection(bool sendServerId = false);
    AgentConnectionEx *acquireSnmpProxyConnection();
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
 	SNMP_SecurityContext *getSnmpSecurityContext();

@@ -33,8 +33,6 @@ static bool (* s_fpEnumerateSessions)(EnumerationCallbackResult (*)(AbstractComm
 static bool (* s_fpSendFile)(void *, UINT32, const TCHAR *, long) = NULL;
 static bool (* s_fpPushData)(const TCHAR *, const TCHAR *, UINT32, time_t) = NULL;
 static CONDITION s_agentShutdownCondition = INVALID_CONDITION_HANDLE;
-static Config *s_registry = NULL;
-static void (* s_fpSaveRegistry)() = NULL;
 static const TCHAR *s_dataDirectory = NULL;
 static DB_HANDLE (*s_fpGetLocalDatabaseHandle)() = NULL;
 
@@ -48,8 +46,8 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
                                            AbstractCommSession *(* findServerSession)(UINT64),
                                            bool (* sendFile)(void *, UINT32, const TCHAR *, long),
                                            bool (* pushData)(const TCHAR *, const TCHAR *, UINT32, time_t),
-                                           void (* saveRegistry)(), DB_HANDLE (* getLocalDatabaseHandle)(),
-                                           CONDITION shutdownCondition, Config *registry, const TCHAR *dataDirectory)
+                                           DB_HANDLE (* getLocalDatabaseHandle)(),
+                                           CONDITION shutdownCondition, const TCHAR *dataDirectory)
 {
    s_fpWriteLog = writeLog;
 	s_fpSendTrap1 = sendTrap1;
@@ -58,9 +56,7 @@ void LIBNXAGENT_EXPORTABLE InitSubAgentAPI(void (* writeLog)(int, int, const TCH
    s_fpFindServerSession = findServerSession;
 	s_fpSendFile = sendFile;
 	s_fpPushData = pushData;
-   s_fpSaveRegistry = saveRegistry;
    s_agentShutdownCondition = shutdownCondition;
-   s_registry = registry;
    s_dataDirectory = dataDirectory;
    s_fpGetLocalDatabaseHandle = getLocalDatabaseHandle;
 }
@@ -255,28 +251,6 @@ CONDITION LIBNXAGENT_EXPORTABLE AgentGetShutdownCondition()
 bool LIBNXAGENT_EXPORTABLE AgentSleepAndCheckForShutdown(UINT32 sleepTime)
 {
    return ConditionWait(s_agentShutdownCondition, sleepTime);
-}
-
-/**
- * Open registry
- */
-Config LIBNXAGENT_EXPORTABLE *AgentOpenRegistry()
-{
-	s_registry->lock();
-	return s_registry;
-}
-
-/**
- * Close registry
- */
-void LIBNXAGENT_EXPORTABLE AgentCloseRegistry(bool modified)
-{
-	if (modified)
-   {
-      if (s_fpSaveRegistry != NULL)
-		   s_fpSaveRegistry();
-   }
-	s_registry->unlock();
 }
 
 /**

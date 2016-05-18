@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxap - command line tool used to manage agent policies
 ** Copyright (C) 2010-2015 Victor Kirhenshtein
 **
@@ -38,12 +38,12 @@ static int GetPolicyInventory(AgentConnection *conn)
 	UINT32 rcc = conn->getPolicyInventory(&ap);
 	if (rcc == ERR_SUCCESS)
 	{
-		_tprintf(_T("GUID                                 Type Server\n")
-		         _T("----------------------------------------------------------\n"));
+		_tprintf(_T("GUID                                 Type ServerInfo                                                       ServerId         Version\n")
+		         _T("-----------------------------------------------------------------------------------------------------------------------------------\n"));
 		for(int i = 0; i < ap->size(); i++)
 		{
 		   TCHAR buffer[64];
-			_tprintf(_T("%-16s %-4d %s\n"), ap->getGuid(i).toString(buffer), ap->getType(i), ap->getServer(i));
+			_tprintf(_T("%-16s %-4d %-64s ") UINT64X_FMT(_T("016")) _T(" %-3d\n"), ap->getGuid(i).toString(buffer), ap->getType(i), ap->getServerInfo(i), ap->getServerId(i), ap->getVersion(i));
 		}
 		delete ap;
 	}
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
                      _T("   -v           : Display version and exit.\n")
                      _T("   -w <seconds> : Set command timeout (default is 5 seconds)\n")
                      _T("   -W <seconds> : Set connection timeout (default is 30 seconds)\n")
-                     _T("\n"), 
+                     _T("\n"),
 #ifdef _WITH_ENCRYPTION
                      szKeyFile,
 #endif

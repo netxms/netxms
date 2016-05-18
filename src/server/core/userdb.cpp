@@ -660,7 +660,7 @@ void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryList, UINT32 m_action
             }
             else if (m_action == USER_DISABLE)
             {
-               DbgPrintf(4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was unlinked form user database"), isUser ? _T("user") : _T("group"), object->getDn());
+               DbgPrintf(4, _T("RemoveDeletedLDAPEntry(): LDAP %s object %s was disabled"), isUser ? _T("user") : _T("group"), object->getDn());
                object->disable();
                object->setDescription(_T("LDAP entry was deleted."));
             }

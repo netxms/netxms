@@ -34,6 +34,7 @@
 #include <nxdbapi.h>
 #include "messages.h"
 #include "nxsnmp.h"
+#include "localdb.h"
 
 #ifdef _NETWARE
 #undef SEVERITY_CRITICAL
@@ -83,8 +84,6 @@
 #define AGENT_DEFAULT_FILE_STORE _T("/tmp")
 #define AGENT_DEFAULT_DATA_DIR   _T("{default}")
 #endif
-
-#define REGISTRY_FILE_NAME       _T("registry.dat")
 
 
 /**
@@ -583,15 +582,6 @@ void StartSessionAgentConnector();
 SessionAgentConnector *AcquireSessionAgentConnector(const TCHAR *sessionName);
 
 UINT32 GenerateMessageId();
-
-bool OpenLocalDatabase();
-void CloseLocalDatabase();
-DB_HANDLE GetLocalDatabaseHandle();
-
-TCHAR *ReadMetadata(const TCHAR *attr, TCHAR *buffer);
-INT32 ReadMetadataAsInt(const TCHAR *attr);
-bool WriteMetadata(const TCHAR *name, const TCHAR *value);
-bool WriteMetadata(const TCHAR *name, INT32 value);
 
 void ConfigureDataCollection(UINT64 serverId, NXCPMessage *msg);
 

@@ -29,11 +29,6 @@ void UpdateSnmpTarget(SNMPTarget *target);
 bool GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue);
 
 /**
- * Database schema version
- */
-#define DATACOLL_SCHEMA_VERSION     3
-
-/**
  * Data collector start indicator
  */
 static bool s_dataCollectorStarted = false;
@@ -1119,48 +1114,6 @@ static void LoadState()
 }
 
 /**
- * SQL script array
- */
-static const TCHAR *s_upgradeQueries[] =
-{
-   _T("CREATE TABLE dc_queue (")
-   _T("  server_id number(20) not null,")
-   _T("  dci_id integer not null,")
-   _T("  dci_type integer not null,")
-   _T("  dci_origin integer not null,")
-   _T("  snmp_target_guid varchar(36) not null,")
-   _T("  timestamp integer not null,")
-   _T("  value varchar not null,")
-   _T("  PRIMARY KEY(server_id,dci_id,timestamp))"),
-
-   _T("CREATE TABLE dc_config (")
-   _T("  server_id number(20) not null,")
-   _T("  dci_id integer not null,")
-   _T("  type integer not null,")
-   _T("  origin integer not null,")
-   _T("  name varchar(1023) null,")
-   _T("  polling_interval integer not null,")
-   _T("  last_poll integer not null,")
-   _T("  snmp_port integer not null,")
-   _T("  snmp_target_guid varchar(36) not null,")
-   _T("  snmp_raw_type integer not null,")
-   _T("  PRIMARY KEY(server_id,dci_id))"),
-
-   _T("CREATE TABLE dc_snmp_targets (")
-   _T("  guid varchar(36) not null,")
-   _T("  server_id number(20) not null,")
-   _T("  ip_address varchar(48) not null,")
-   _T("  snmp_version integer not null,")
-   _T("  port integer not null,")
-   _T("  auth_type integer not null,")
-   _T("  enc_type integer not null,")
-   _T("  auth_name varchar(63),")
-   _T("  auth_pass varchar(63),")
-   _T("  enc_pass varchar(63),")
-   _T("  PRIMARY KEY(guid))")
-};
-
-/**
  * Data collector and sender thread handles
  */
 static THREAD s_dataCollectionSchedulerThread = INVALID_THREAD_HANDLE;
@@ -1178,18 +1131,6 @@ void StartLocalDataCollector()
    {
       DebugPrintf(INVALID_INDEX, 5, _T("StartLocalDataCollector: local database unavailable"));
       return;
-   }
-
-   INT32 dbVersion = ReadMetadataAsInt(_T("DataCollectionSchemaVersion"));
-   while(dbVersion < DATACOLL_SCHEMA_VERSION)
-   {
-      if (!DBQuery(db, s_upgradeQueries[dbVersion]))
-      {
-         nxlog_write(MSG_DC_DBSCHEMA_UPGRADE_FAILED, NXLOG_ERROR, NULL);
-         return;
-      }
-      dbVersion++;
-      WriteMetadata(_T("DataCollectionSchemaVersion"), dbVersion);
    }
 
    s_itemLock = MutexCreate();

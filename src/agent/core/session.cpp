@@ -917,9 +917,13 @@ UINT32 CommSession::upgrade(NXCPMessage *pRequest)
       BuildFullPath(szPkgName, szFullPath);
 
       //Create line in registry file with upgrade file name to delete it after system start
-      Config *registry = AgentOpenRegistry();
-      registry->setValue(_T("/upgrade/file"), szFullPath);
-      AgentCloseRegistry(true);
+      DB_HANDLE hdb = GetLocalDatabaseHandle();
+      if(hdb != NULL)
+      {
+         TCHAR upgradeFileInsert[256];
+         _sntprintf(upgradeFileInsert, 256, _T("INSERT INTO registry (attribute,value) VALUES ('upgrade.file',%s)"), szPkgName);
+         DBQuery(hdb, upgradeFileInsert);
+      }
 
       return UpgradeAgent(szFullPath);
    }

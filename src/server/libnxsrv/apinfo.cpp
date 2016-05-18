@@ -32,21 +32,27 @@ AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
 	{
 		m_guidList = (BYTE *)malloc(UUID_LENGTH * m_size);
 		m_typeList = (int *)malloc(sizeof(int) * m_size);
-		m_serverList = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
+		m_serverIdList = (UINT64*)malloc(sizeof(UINT64) * m_size);
+		m_serverInfoList = (TCHAR **)malloc(sizeof(TCHAR *) * m_size);
+		m_version = (int *)malloc(sizeof(int) * m_size);
 
 		UINT32 varId = VID_ELEMENT_LIST_BASE;
-		for(int i = 0; i < m_size; i++, varId += 7)
+		for(int i = 0; i < m_size; i++, varId += 5)
 		{
 			msg->getFieldAsBinary(varId++, &m_guidList[i * UUID_LENGTH], UUID_LENGTH);
-			m_typeList[i] = (int)msg->getFieldAsUInt16(varId++);
-			m_serverList[i] = msg->getFieldAsString(varId++);
+			m_typeList[i] = (int)msg->getFieldAsUInt32(varId++);
+			m_serverInfoList[i] = msg->getFieldAsString(varId++);
+			m_serverIdList[i] = msg->getFieldAsUInt64(varId++);
+			m_version[i] = (int)msg->getFieldAsUInt32(varId++);
 		}
 	}
 	else
 	{
 		m_guidList = NULL;
 		m_typeList = NULL;
-		m_serverList = NULL;
+		m_serverInfoList = NULL;
+		m_serverIdList = NULL;
+		m_version = NULL;
 	}
 }
 
@@ -55,11 +61,12 @@ AgentPolicyInfo::AgentPolicyInfo(NXCPMessage *msg)
  */
 AgentPolicyInfo::~AgentPolicyInfo()
 {
-	for(int i = 0; i < m_size; i++)
-		safe_free(m_serverList[i]);
-	safe_free(m_serverList);
-	safe_free(m_typeList);
-	safe_free(m_guidList);
+   for(int i = 0; i < m_size; i++)
+		free(m_serverInfoList[i]);
+	free(m_serverIdList);
+	free(m_typeList);
+	free(m_guidList);
+	free(m_version);
 }
 
 /**
