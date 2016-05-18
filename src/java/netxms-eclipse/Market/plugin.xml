@@ -5,6 +5,7 @@
          point="org.eclipse.ui.views">
       <view
             class="org.netxms.ui.eclipse.market.views.RepositoryManager"
+            icon="icons/repository_mgr.gif"
             id="org.netxms.ui.eclipse.market.views.RepositoryManager"
             name="Repository Manager"
             restorable="true">
@@ -47,6 +48,7 @@
          <action
                class="org.netxms.ui.eclipse.market.actions.OpenRepositoryManager"
                definitionId="org.netxms.ui.eclipse.market.commands.openRepositoryManager"
+               icon="icons/repository_mgr.gif"
                id="org.netxms.ui.eclipse.market.actions.OpenRepositoryManager"
                label="Market"
                menubarPath="config/additions"

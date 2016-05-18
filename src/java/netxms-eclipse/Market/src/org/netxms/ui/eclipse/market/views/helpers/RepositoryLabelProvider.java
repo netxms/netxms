@@ -22,19 +22,39 @@ import java.util.UUID;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.ui.eclipse.market.Activator;
+import org.netxms.ui.eclipse.market.objects.EventReference;
 import org.netxms.ui.eclipse.market.objects.MarketObject;
+import org.netxms.ui.eclipse.market.objects.RepositoryRuntimeInfo;
+import org.netxms.ui.eclipse.market.objects.TemplateReference;
 
 /**
  * Label provider for repository manager
  */
 public class RepositoryLabelProvider extends LabelProvider implements ITableLabelProvider
 {
+   private Image imageEvent = Activator.getImageDescriptor("icons/event.gif").createImage();
+   private Image imageRepository = Activator.getImageDescriptor("icons/repository.gif").createImage();
+   private Image imageTemplate = Activator.getImageDescriptor("icons/template.png").createImage();
+   
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
     */
    @Override
    public Image getColumnImage(Object element, int columnIndex)
    {
+      if (columnIndex != 0)
+         return null;
+      
+      if (element instanceof EventReference)
+         return imageEvent;
+      
+      if (element instanceof TemplateReference)
+         return imageTemplate;
+      
+      if (element instanceof RepositoryRuntimeInfo)
+         return imageRepository;
+      
       return null;
    }
 
@@ -54,5 +74,15 @@ public class RepositoryLabelProvider extends LabelProvider implements ITableLabe
             return (guid != null) ? guid.toString() : ""; 
       }
       return null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.BaseLabelProvider#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      imageRepository.dispose();
+      super.dispose();
    }
 }
