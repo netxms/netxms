@@ -81,8 +81,8 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		scriptId = Long.parseLong(site.getSecondaryId());
 		
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		if (settings.get("ScriptEditor.showLineNumbers") != null)
-		   showLineNumbers = settings.getBoolean("ScriptEditor.showLineNumbers");
+		if (settings.get("ScriptEditor.showLineNumbers") != null) //$NON-NLS-1$
+		   showLineNumbers = settings.getBoolean("ScriptEditor.showLineNumbers"); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -129,7 +129,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
       }
    }
 
-	/* (non-Javadoc)
+   /* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
@@ -137,11 +137,11 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
 		editor.setFocus();
 	}
-	
+
 	/**
 	 * Create actions
 	 */
-   private void createActions()
+	private void createActions()
 	{
       final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
       
@@ -163,7 +163,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
       actionSave.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.save"); //$NON-NLS-1$
       handlerService.activateHandler(actionSave.getActionDefinitionId(), new ActionHandler(actionSave));
 		
-		actionCompile = new Action("&Compile", Activator.getImageDescriptor("icons/compile.gif")) {
+		actionCompile = new Action(Messages.get().ScriptEditorView_Compile, Activator.getImageDescriptor("icons/compile.gif")) { //$NON-NLS-2$
          @Override
          public void run()
          {
@@ -251,11 +251,11 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
       final String source = editor.getText();
       editor.getTextWidget().setEditable(false);
-      new ConsoleJob("Compile script", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ScriptEditorView_CompileScript, this, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot compile script";
+            return Messages.get().ScriptEditorView_CannotCompileScript;
          }
 
          @Override
@@ -268,7 +268,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
                {
                   if (result.success)
                   {
-                     editorMessageBar.showMessage(CompositeWithMessageBar.INFORMATION, "Script compiled successfully");
+                     editorMessageBar.showMessage(CompositeWithMessageBar.INFORMATION, Messages.get().ScriptEditorView_ScriptCompiledSuccessfully);
                   }
                   else
                   {
@@ -280,7 +280,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
          }
       }.start();
 	}
-
+	
 	/**
 	 * Save script
 	 */
@@ -315,8 +315,8 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
                   @Override
                   public void run()
                   {
-                     if (MessageDialogHelper.openQuestion(getSite().getShell(), "Compilation Errors", 
-                           String.format("Script compilation failed (%s)\r\nSave changes anyway?", result.errorMessage)))
+                     if (MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().ScriptEditorView_CompilationErrors, 
+                           String.format(Messages.get().ScriptEditorView_ScriptCompilationFailed, result.errorMessage)))
                         result.success = true;
                      editorMessageBar.showMessage(CompositeWithMessageBar.WARNING, result.errorMessage);
                   }
@@ -324,8 +324,8 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
             }
             if (result.success)
             {
-				doScriptSave(source, monitor);
-			}
+               doScriptSave(source, monitor);
+            }
             else
             {
                runInUIThread(new Runnable() {
@@ -440,7 +440,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
    public void dispose()
    {
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      settings.put("ScriptEditor.showLineNumbers", showLineNumbers);
+      settings.put("ScriptEditor.showLineNumbers", showLineNumbers); //$NON-NLS-1$
       super.dispose();
    }
 }
