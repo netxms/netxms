@@ -32,6 +32,7 @@ public class Messages extends NLS
    public String AbstractNetworkMapView_RouterManhattan;
    public String AbstractNetworkMapView_Routing;
    public String AbstractNetworkMapView_SaveLayout;
+   public String AbstractNetworkMapView_SelectAllObjects;
    public String AbstractNetworkMapView_ShowGrid;
    public String AbstractNetworkMapView_ShowObjDetails;
    public String AbstractNetworkMapView_ShowStatusBkgnd;
@@ -49,6 +50,7 @@ public class Messages extends NLS
 	public String AddGroupBoxDialog_Height;
 	public String AddGroupBoxDialog_Title;
 	public String AddGroupBoxDialog_Width;
+   public String CloneNetworkMap_NetworkMap;
    public String ClusterResourceListLabelProvider_None;
    public String ClusterTab_Owner;
    public String ClusterTab_Resource;
@@ -187,14 +189,19 @@ public class Messages extends NLS
    public String MapOptions_DefaultDispOptions;
    public String MapOptions_DefColor;
    public String MapOptions_Direct;
+   public String MapOptions_DisplayObjectsAs;
+   public String MapOptions_Icons;
    public String MapOptions_IncludeEndNodes;
    public String MapOptions_JobError;
    public String MapOptions_JobTitle;
+   public String MapOptions_LargeLabels;
    public String MapOptions_Manhattan;
    public String MapOptions_RoutingAlg;
    public String MapOptions_ShowStatusBkgnd;
    public String MapOptions_ShowStatusFrame;
    public String MapOptions_ShowStatusIcon;
+   public String MapOptions_SmallLabels;
+   public String MapOptions_StatusIcons;
    public String MapOptions_TopoDiscoRadius;
    public String MapOptions_TopologyOptions;
    public String NetworkMapOpenHandler_Error;

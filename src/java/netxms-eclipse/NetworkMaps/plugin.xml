@@ -229,7 +229,7 @@
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.CloneNetworkMap"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.Clone"
-               label="Clone..."
+               label="%action.label.Clone"
                menubarPath="additions">
          </action>
       </objectContribution>
@@ -297,7 +297,7 @@
       <page
             class="org.netxms.ui.eclipse.networkmaps.propertypages.DCIContainerDataSources"
             id="org.netxms.ui.eclipse.networkmaps.propertypages.MapDCIContainerDataSource"
-            name="Data Source">
+            name="%page.name.DataSource">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.maps.elements.NetworkMapDCIContainer">
@@ -307,7 +307,7 @@
       <page
             class="org.netxms.ui.eclipse.networkmaps.propertypages.GeneralDCIContainerPropertyPage"
             id="org.netxms.ui.eclipse.networkmaps.propertypages.MapDCIContainerGeneral#0"
-            name="General">
+            name="%page.name.General">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.maps.elements.NetworkMapDCIContainer">
@@ -317,7 +317,7 @@
       <page
             class="org.netxms.ui.eclipse.networkmaps.propertypages.GeneralDCIImagePropertyPage"
             id="org.netxms.ui.eclipse.networkmaps.propertypages.MapDCIImageGeneral#0"
-            name="General">
+            name="%page.name.General">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.maps.elements.NetworkMapDCIImage">
@@ -327,7 +327,7 @@
       <page
             class="org.netxms.ui.eclipse.networkmaps.propertypages.DCIImageRuleList"
             id="org.netxms.ui.eclipse.networkmaps.propertypages.DCIImageRuleList"
-            name="Rules">
+            name="%page.name.Rules">
          <enabledWhen>
             <instanceof
                   value="org.netxms.client.maps.elements.NetworkMapDCIImage">
@@ -428,42 +428,40 @@
             name="%command.name.Remove">
       </command>
       <command
-            description="Add new DCI container on Map"
             id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIContainer"
-            name="Add DCI Container">
+            name="%command.name.AddDCIContainer">
       </command>
       <command
-            description="Add new DCI image on Map"
             id="org.netxms.ui.eclipse.networkmaps.localCommands.PredefinedMap.AddDCIImage"
-            name="Add DCI Image">
+            name="%command.name.AddDCIImage">
       </command>
       <command
             id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomIn"
-            name="Zoom in">
+            name="%command.name.ZoomIn">
       </command>
       <command
             id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomOut"
-            name="Zoom out">
+            name="%command.name.ZoomOut">
       </command>
       <command
             id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.Zoom100Pct"
-            name="Zoom 100%">
+            name="%command.name.Zoom100Pct">
       </command>
       <command
             id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomToFit"
-            name="Zoom to fit">
+            name="%command.name.ZoomToFit">
       </command>
       <command
             id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.AlignToGrid"
-            name="Align to grid">
+            name="%command.name.AlignToGrid">
       </command>
       <command
             id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ShowGrid"
-            name="Show grid">
+            name="%command.name.ShowGrid">
       </command>
       <command
             id="org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.SelectAllObjects"
-            name="Select all objects">
+            name="%command.name.SelectAll">
       </command>
    </extension>
    <extension

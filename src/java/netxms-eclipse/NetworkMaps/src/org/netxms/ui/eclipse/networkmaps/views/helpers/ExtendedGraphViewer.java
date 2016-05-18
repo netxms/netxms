@@ -117,7 +117,7 @@ public class ExtendedGraphViewer extends GraphViewer
 		
 		final ScalableFigure rootLayer = graph.getRootLayer();
 		
-		iconBack = Activator.getImageDescriptor("icons/back.png").createImage();
+		iconBack = Activator.getImageDescriptor("icons/back.png").createImage(); //$NON-NLS-1$
 		
 		mapLoader = new MapLoader(composite.getDisplay());
 		graph.addDisposeListener(new DisposeListener() {
@@ -577,7 +577,7 @@ public class ExtendedGraphViewer extends GraphViewer
 			{
 				actions[i].setChecked(true);
 				actions[i].setId("org.netxms.ui.eclipse.networkmaps.localActions.AbstractMap.Zoom100Pct"); //$NON-NLS-1$
-				actions[i].setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.Zoom100Pct");
+				actions[i].setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.Zoom100Pct"); //$NON-NLS-1$
             handlerService.activateHandler(actions[i].getActionDefinitionId(), new ActionHandler(actions[i]));
 			}
 		}
