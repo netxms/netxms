@@ -858,7 +858,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       };
       actionHideLinks.setImageDescriptor(Activator.getImageDescriptor("icons/hide_net_link.png")); //$NON-NLS-1$
 
-      actionSelectAllObjects = new Action("Select &all objects") {
+      actionSelectAllObjects = new Action(Messages.get().AbstractNetworkMapView_SelectAllObjects) {
          @Override
          public void run()
          {
