@@ -78,7 +78,16 @@ public class Messages extends NLS
 	public static String SeverityConditionEditor_Below;
 	public static String SeverityConditionEditor_Is;
 	public static String SeverityConditionEditor_IsNot;
-	public static String TextConditionEditor_Like;
+	public static String ShowObjectEvents_CannotOpenLogViewer;
+   public static String ShowObjectEvents_Error;
+   public static String ShowObjectEvents_Time;
+   public static String ShowObjectSnmpTrapLog_Error;
+   public static String ShowObjectSnmpTrapLog_ErrorOpenLogViewer;
+   public static String ShowObjectSnmpTrapLog_Time;
+   public static String ShowObjectSyslog_Error;
+   public static String ShowObjectSyslog_ErrorOpenLogViewer;
+   public static String ShowObjectSyslog_Time;
+   public static String TextConditionEditor_Like;
 	public static String TextConditionEditor_NotLike;
 	public static String TimestampConditionEditor_After;
 	public static String TimestampConditionEditor_And;

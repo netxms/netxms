@@ -34,6 +34,7 @@ import org.netxms.client.log.LogFilter;
 import org.netxms.client.log.OrderingColumn;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.ui.eclipse.logviewer.Messages;
 import org.netxms.ui.eclipse.logviewer.views.LogViewer;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -67,16 +68,16 @@ public class ShowObjectEvents extends AbstractHandler
          LogViewer view = (LogViewer)window.getActivePage().showView(LogViewer.ID, "EventLog", IWorkbenchPage.VIEW_ACTIVATE); //$NON-NLS-1$
 
          LogFilter filter = new LogFilter();
-         filter.setColumnFilter("event_source", cf);
+         filter.setColumnFilter("event_source", cf); //$NON-NLS-1$
          List<OrderingColumn> orderingColumns = new ArrayList<OrderingColumn>(1);
-         orderingColumns.add(new OrderingColumn("event_timestamp", "Time", true));
+         orderingColumns.add(new OrderingColumn("event_timestamp", Messages.get().ShowObjectEvents_Time, true)); //$NON-NLS-1$
          filter.setOrderingColumns(orderingColumns);
          
          view.queryWithFilter(filter);
       }
       catch(PartInitException e)
       {
-         MessageDialogHelper.openError(window.getShell(), "Error", String.format("Cannot open log viewer: %s", e.getMessage()));
+         MessageDialogHelper.openError(window.getShell(), Messages.get().ShowObjectEvents_Error, String.format(Messages.get().ShowObjectEvents_CannotOpenLogViewer, e.getMessage()));
       }
       
       return null;
