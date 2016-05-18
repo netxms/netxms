@@ -49,7 +49,6 @@ import org.netxms.ui.eclipse.tools.NXFindAndReplaceAction;
 /**
  * Agent's master config editor
  */
-@SuppressWarnings("deprecation")
 public class AgentConfigEditorView extends ViewPart implements ISaveablePart2
 {
 	public static final String ID = "org.netxms.ui.eclipse.agentmanager.views.AgentConfigEditorView"; //$NON-NLS-1$

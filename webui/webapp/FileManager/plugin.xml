@@ -8,7 +8,7 @@
             class="org.netxms.ui.eclipse.filemanager.views.ServerFileManager"
             icon="icons/types/unknown.png"
             id="org.netxms.ui.eclipse.usermanager.view.server_files"
-            name="%view.ServerFileList.name"
+            name="%view.name.ServerFileList"
             restorable="true">
       </view>
       <view
@@ -17,7 +17,7 @@
             class="org.netxms.ui.eclipse.filemanager.views.AgentFileManager"
             icon="icons/filemgr.png"
             id="org.netxms.ui.eclipse.filemanager.views.AgentFileManager"
-            name="File Manager"
+            name="%view.name.FileManager"
             restorable="true">
       </view>
       <view
@@ -25,7 +25,7 @@
             class="org.netxms.ui.eclipse.filemanager.views.AgentFileViewer"
             icon="icons/file_viewer.png"
             id="org.netxms.ui.eclipse.filemanager.views.AgentFileViewer"
-            name="File Viewer"
+            name="%view.name.FileViewer"
             restorable="false">
       </view>
    </extension>
@@ -65,7 +65,7 @@
                enablesFor="1"
                icon="icons/filemgr.png"
                id="org.netxms.ui.eclipse.filemanager.popupActions.FileManager_Node"
-               label="&amp;File manager"
+               label="%action.label.FileManager"
                menubarPath="objectmgmt"
                style="push">
          </action>

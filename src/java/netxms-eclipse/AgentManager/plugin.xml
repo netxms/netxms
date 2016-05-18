@@ -33,7 +33,7 @@
             class="org.netxms.ui.eclipse.agentmanager.views.ServerStoredAgentConfigEditorView"
             icon="icons/config_manager.gif"
             id="org.netxms.ui.eclipse.agentmanager.views.ServerStoredAgentConfigEditorView"
-            name="Agent Config Manager"
+            name="%view.AgentConfigManager"
             restorable="true">
       </view>
       <view
@@ -42,7 +42,7 @@
             class="org.netxms.ui.eclipse.agentmanager.views.ScreenshotView"
             icon="icons/image_obj.gif"
             id="org.netxms.ui.eclipse.agentmanager.views.ScreenshotView"
-            name="Screenshot"
+            name="%view.Screenshot"
             restorable="false">
       </view>
    </extension>
