@@ -294,7 +294,7 @@ TCHAR LIBNXAGENT_EXPORTABLE *ReadRegistryAsString(const TCHAR *attr, TCHAR *buff
 	DB_HANDLE hdb = AgentGetLocalDatabaseHandle();
 	if(hdb != NULL && attr != NULL)
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT value FROM registry WHERE attribute='?'"));
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT value FROM registry WHERE attribute=?"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, attr, DB_BIND_STATIC);
@@ -371,7 +371,7 @@ bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, const TCHAR *value)
       return false;
 
    // Check for variable existence
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT value FROM registry WHERE attribute='?'"));
+	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT value FROM registry WHERE attribute=?"));
 	if (hStmt == NULL)
    {
 		return false;
@@ -390,7 +390,7 @@ bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, const TCHAR *value)
    // Create or update variable value
    if (varExist)
 	{
-		hStmt = DBPrepare(hdb, _T("UPDATE registry SET value=? WHERE attribute='?'"));
+		hStmt = DBPrepare(hdb, _T("UPDATE registry SET value=? WHERE attribute=?"));
 		if (hStmt == NULL)
       {
 			return false;
@@ -400,7 +400,7 @@ bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, const TCHAR *value)
 	}
    else
 	{
-		hStmt = DBPrepare(hdb, _T("INSERT INTO metadata (attribute,value) VALUES (?,?)"));
+		hStmt = DBPrepare(hdb, _T("INSERT INTO registry (attribute,value) VALUES (?,?)"));
 		if (hStmt == NULL)
       {
 			return false;
@@ -451,7 +451,7 @@ bool LIBNXAGENT_EXPORTABLE DeleteRegistryEntry(const TCHAR *attr)
 	if(hdb == NULL || attr == NULL)
       return false;
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM registry WHERE attribute='?'"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM registry WHERE attribute=?"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, attr, DB_BIND_STATIC);
