@@ -1852,10 +1852,11 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 			}
 		}
 
-		// Check for bound but not installed policies
+		// Check for bound but not installed policies and schedule it's installation again
+		//Job will be unbound if it was not possible to add job
 		LockParentList(FALSE);
 		NetObj **unbindList = (NetObj **)malloc(sizeof(NetObj *) * m_dwParentCount);
-		int unbindListSize = 0;
+ 		int unbindListSize = 0;
 		for(UINT32 i = 0; i < m_dwParentCount; i++)
 		{
 			if (IsAgentPolicyObject(m_pParentList[i]))
@@ -1868,7 +1869,19 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 						break;
 				}
 				if (j == ap->size())
-					unbindList[unbindListSize++] = m_pParentList[i];
+            {
+               ServerJob *job = new PolicyDeploymentJob(this, (AgentPolicy *)m_pParentList[i], 0); //TODO: change to system user
+					if (AddJob(job))
+					{
+                  DbgPrintf(5, _T("ConfPoll(%s): \"%s\" policy deploy scheduled for \"%s\" node"), m_pParentList[i]->getName(), m_name);
+					}
+					else
+					{
+                  DbgPrintf(5, _T("ConfPoll(%s): \"%s\" policy deploy is not possible to scheduled for \"%s\" node"), m_pParentList[i]->getName(), m_name);
+						delete job;
+                  unbindList[unbindListSize++] = m_pParentList[i];
+					}
+            }
 			}
 		}
 		UnlockParentList();

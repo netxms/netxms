@@ -306,6 +306,8 @@ UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request)
 
 	uuid guid = request->getFieldAsGUID(VID_GUID);
 	type = GetPolicyType(guid);
+	if(type == -1)
+      return RCC_SUCCESS;
 
 	switch(type)
 	{

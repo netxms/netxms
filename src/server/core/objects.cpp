@@ -2100,7 +2100,7 @@ int GetDefaultStatusCalculation(int *pnSingleThreshold, int **ppnThresholds)
  */
 bool IsAgentPolicyObject(NetObj *object)
 {
-	return (object->getObjectClass() == OBJECT_AGENTPOLICY) || (object->getObjectClass() == OBJECT_AGENTPOLICY_CONFIG);
+	return (object->getObjectClass() == OBJECT_AGENTPOLICY) || (object->getObjectClass() == OBJECT_AGENTPOLICY_CONFIG) || (object->getObjectClass() == OBJECT_AGENTPOLICY_LOGPARSER);
 }
 
 /**
