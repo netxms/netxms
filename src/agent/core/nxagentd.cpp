@@ -991,22 +991,13 @@ BOOL Initialize()
 	}
 
 	// Delete file used for upgrade if exists
-	DB_HANDLE hdb = GetLocalDatabaseHandle();
-	if(hdb != NULL)
-   {
-      DB_RESULT hResult = DBSelect(hdb, _T("SELECT value FROM registry WHERE attribute='upgrade.file'"));
-      if (hResult != NULL && DBGetNumRows(hResult) > 0)
-      {
-         TCHAR upgradeFileAnme[MAX_PATH];
-         DBGetField(hResult, 0, 0, upgradeFileAnme, MAX_PATH);
-         if(upgradeFileAnme != NULL)
-         {
-            _tremove(upgradeFileAnme);
-         }
-         DBQuery(hdb, _T("DELETE FROM registry WHERE attribute='upgrade.file'"));
-         DBFreeResult(hResult);
-      }
-   }
+   TCHAR upgradeFileName[MAX_PATH];
+	ReadRegistryAsString(_T("upgrade.file"), upgradeFileName, MAX_PATH, _T(""));
+	if(upgradeFileName[0] != 0)
+	{
+      _tremove(upgradeFileName);
+      DeleteRegistryEntry(_T("upgrade.file"));
+	}
 
    return TRUE;
 }

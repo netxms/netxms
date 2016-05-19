@@ -655,5 +655,12 @@ bool LIBNXAGENT_EXPORTABLE AgentSleepAndCheckForShutdown(UINT32 sleepTime);
 const TCHAR LIBNXAGENT_EXPORTABLE *AgentGetDataDirectory();
 
 DB_HANDLE LIBNXAGENT_EXPORTABLE AgentGetLocalDatabaseHandle();
+TCHAR LIBNXAGENT_EXPORTABLE *ReadRegistryAsString(const TCHAR *attr, TCHAR *buffer = NULL, int bufSize = 0, const TCHAR *defaultValue = NULL);
+INT32 LIBNXAGENT_EXPORTABLE ReadRegistryAsInt32(const TCHAR *attr, INT32 defaultValue);
+INT64 LIBNXAGENT_EXPORTABLE ReadRegistryAsInt64(const TCHAR *attr, INT64 defaultValue);
+bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, const TCHAR *value);
+bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, const TCHAR *value);
+bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, INT64 defaultValue);
+bool LIBNXAGENT_EXPORTABLE DeleteRegistryEntry(const TCHAR *attr);
 
 #endif   /* _nms_agent_h_ */
