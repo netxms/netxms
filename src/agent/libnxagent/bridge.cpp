@@ -410,7 +410,6 @@ bool LIBNXAGENT_EXPORTABLE WriteRegistry(const TCHAR *attr, const TCHAR *value)
 	}
    bool success = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
-   DBConnectionPoolReleaseConnection(hdb);
 	return success;
 }
 
