@@ -41,16 +41,17 @@ static DB_HANDLE s_db = NULL;
  */
 static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
 {
-   //This upgrade contains: \
-     1. check that version and depending on version of DATACOLL_SCHEMA_VERSION apply second or both patchs \
-        move upgrade of data collection database to this function \
-     2. remove DATACOLL_SCHEMA_VERSION from metadata \
-     3. create policy table (guid, type, server, version) unique giud \
-     4. Move policy information from registry to database \
-     5. Create table registry that will store (key, value) unique key \
-     6. Move upgrade file storage pleace from registry to db \
+   /*
+   This upgrade contains:
+     1. check that version and depending on version of DATACOLL_SCHEMA_VERSION apply second or both patchs
+        move upgrade of data collection database to this function
+     2. remove DATACOLL_SCHEMA_VERSION from metadata
+     3. create policy table (guid, type, server, version) unique giud
+     4. Move policy information from registry to database
+     5. Create table registry that will store (key, value) unique key
+     6. Move upgrade file storage pleace from registry to db
      7. Delete registry file (remove unused functions for registry)
-
+   */
 
    //Data collection upgrade procedure
    const TCHAR *s_upgradeQueries[] =
@@ -148,7 +149,6 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
          {
             ConfigEntry *e = list->get(i);
             uuid_t guid;
-            TCHAR tmp[512];
 
             if (MatchString(_T("policy-*"), e->getName(), TRUE))
             {
