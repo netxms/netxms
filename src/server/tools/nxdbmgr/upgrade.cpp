@@ -717,7 +717,7 @@ static BOOL H_UpgradeFromV397(int currVersion, int newVersion)
             _T("   PRIMARY KEY(numeric_code))")
          ));
 
-   static const TCHAR *batch =
+   static const TCHAR *batch1 =
       _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('008', 'ALL', 'Lek', 2)\n")
       _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('012', 'DZD', 'Algerian Dinar', 2)\n")
       _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('031', 'AZM', 'Azerbaijanian Manat', 0)\n")
@@ -899,6 +899,8 @@ static BOOL H_UpgradeFromV397(int currVersion, int newVersion)
       _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('997', 'USN', 'US dollar (next day funds code)', 2)\n")
       _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('998', 'USS', 'US dollar (same day funds code)', 2)\n")
       _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('999', 'XXX', 'No currency', 0)\n")
+      _T("<END>");
+   static const TCHAR *batch2 =
       _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AD','AND','020','Andorra')\n")
       _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AE','ARE','784','United Arab Emirates')\n")
       _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AF','AFG','004','Afghanistan')\n")
@@ -1150,7 +1152,8 @@ static BOOL H_UpgradeFromV397(int currVersion, int newVersion)
       _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('ZM','ZMB','894','Zambia')\n")
       _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('ZW','ZWE','716','Zimbabwe')\n")
       _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLBatch(batch1));
+   CHK_EXEC(SQLBatch(batch2));
 
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='398' WHERE var_name='SchemaVersion'")));
    return TRUE;

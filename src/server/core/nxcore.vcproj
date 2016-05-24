@@ -445,6 +445,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ccy.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\cdp.cpp"
 				>
 			</File>
@@ -474,6 +478,10 @@
 			</File>
 			<File
 				RelativePath=".\config.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\console.cpp"
 				>
 			</File>
 			<File
