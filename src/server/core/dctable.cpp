@@ -339,6 +339,8 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
 	UINT32 nodeId = m_owner->getId();
    bool save = (m_flags & DCF_NO_STORAGE) == 0;
 
+   ((Table *)value)->incRefCount();
+
    unlock();
 
 	// Save data to database
@@ -438,6 +440,7 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
    if (g_flags & AF_PERFDATA_STORAGE_DRIVER_LOADED)
       PerfDataStorageRequest(this, timestamp, (Table *)value);
 
+   ((Table *)value)->decRefCount();
    return true;
 }
 
