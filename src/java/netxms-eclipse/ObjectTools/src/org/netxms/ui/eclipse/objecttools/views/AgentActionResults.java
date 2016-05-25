@@ -42,6 +42,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
 
    private IOConsoleOutputStream out;
    private String lastAction = null;
+   private String[] lastArgs = null;
    private Action actionRestart;
    
    /**
@@ -55,7 +56,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
          @Override
          public void run()
          {
-            executeAction(lastAction);
+            executeAction(lastAction, lastArgs);
          }
       };
       actionRestart.setEnabled(false);
@@ -100,12 +101,13 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
    /**
     * @param action
     */
-   public void executeAction(final String action)
+   public void executeAction(final String action, final String[] args)
    {
       actionRestart.setEnabled(false);
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       out = console.newOutputStream();
       lastAction = action;
+      lastArgs = args;
       ConsoleJob job = new ConsoleJob(String.format(Messages.get().ObjectToolsDynamicMenu_ExecuteOnNode, session.getObjectName(nodeId)), null, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
@@ -118,7 +120,7 @@ public class AgentActionResults extends AbstractCommandResults implements TextOu
          {
             try
             {
-               session.executeAction(nodeId, action, true, AgentActionResults.this, null);
+               session.executeAction(nodeId, action, args, true, AgentActionResults.this, null);
                out.write(Messages.get().LocalCommandResults_Terminated);
             }
             finally

@@ -4890,12 +4890,13 @@ public class NXCSession
     *
     * @param nodeId Node object ID
     * @param action Action name
+    * @param args Action arguments
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeAction(long nodeId, String action) throws IOException, NXCException
+   public void executeAction(long nodeId, String action, String[] args) throws IOException, NXCException
    {
-      executeAction(nodeId, action, false, null, null);
+      executeAction(nodeId, action, args, false, null, null);
    }
 
    /**
@@ -4903,18 +4904,31 @@ public class NXCSession
     *
     * @param nodeId Node object ID
     * @param action Action name
+    * @param args Action arguments
     * @param receiveOutput true if action's output has to be read
     * @param listener listener for action's output or null
     * @param writer writer for action's output or null
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeAction(long nodeId, String action, boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
+   public void executeAction(long nodeId, String action, String[] args, boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_ACTION_NAME, action);
       msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, receiveOutput);
+      
+      if (args != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_NUM_ARGS, args.length);
+         long fieldId = NXCPCodes.VID_ACTION_ARG_BASE;
+         for(String a : args)
+            msg.setField(fieldId++, a);
+      }
+      else
+      {
+         msg.setFieldInt16(NXCPCodes.VID_NUM_ARGS, 0);
+      }
       
       MessageHandler handler = receiveOutput ? new MessageHandler() {
          @Override

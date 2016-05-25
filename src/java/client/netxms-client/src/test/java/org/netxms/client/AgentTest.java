@@ -27,7 +27,7 @@ public class AgentTest extends AbstractSessionTest
    {
       final NXCSession session = connect();
       
-      session.executeAction(TestConstants.LOCAL_NODE_ID, TestConstants.ACTION, true, new TextOutputListener() {
+      session.executeAction(TestConstants.LOCAL_NODE_ID, TestConstants.ACTION, null, true, new TextOutputListener() {
          @Override
          public void messageReceived(String text)
          {
