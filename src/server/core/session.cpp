@@ -7778,6 +7778,9 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
+         TCHAR action[MAX_PARAM_NAME];
+         pRequest->getFieldAsString(VID_ACTION_NAME, action, MAX_PARAM_NAME);
+
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
             AgentConnection *pConn;
@@ -7785,25 +7788,37 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
             pConn = ((Node *)object)->createAgentConnection();
             if (pConn != NULL)
             {
-               TCHAR action[MAX_PARAM_NAME];
-               pRequest->getFieldAsString(VID_ACTION_NAME, action, MAX_PARAM_NAME);
+               TCHAR *argv[64];
+               int argc = pRequest->getFieldAsInt16(VID_NUM_ARGS);
+               if (argc > 64)
+               {
+                  debugPrintf(4, _T("executeAction: too many arguments (%d)"), argc);
+                  argc = 64;
+               }
+               UINT32 fieldId = VID_ACTION_ARG_BASE;
+               for(int i = 0; i < argc; i++)
+                  argv[i] = pRequest->getFieldAsString(fieldId++);
 
                UINT32 rcc;
                bool withOutput = pRequest->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
                if (withOutput)
                {
                   ActionExecutionData data(this, pRequest->getId());
-                  rcc = pConn->execAction(action, 0, NULL, true, ActionExecuteCallback, &data);
+                  rcc = pConn->execAction(action, argc, argv, true, ActionExecuteCallback, &data);
                }
                else
                {
-                  rcc = pConn->execAction(action, 0, NULL);
+                  rcc = pConn->execAction(action, argc, argv);
                }
+
+               for(int i = 0; i < argc; i++)
+                  free(argv[i]);
 
                switch(rcc)
                {
                   case ERR_SUCCESS:
                      msg.setField(VID_RCC, RCC_SUCCESS);
+                     writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Executed agent action %s"), action);
                      break;
                   case ERR_ACCESS_DENIED:
                      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
@@ -7828,6 +7843,7 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
          else
          {
             msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on executing agent action %s"), action);
          }
       }
       else

@@ -20,9 +20,11 @@ package org.netxms.ui.eclipse.objecttools.api;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -281,6 +283,89 @@ public final class ObjectToolExecutor
          MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
       }
    }
+   
+   /**
+    * Split command line into tokens
+    *  
+    * @param input
+    * @return
+    */
+   private static String[] splitCommandLine(String input)
+   {
+      char[] in = input.toCharArray();
+      List<String> args = new ArrayList<String>();
+      
+      StringBuilder sb = new StringBuilder();
+      int state = 0;
+      for(char c : in)
+      {
+         switch(state)
+         {
+            case 0: // normal
+               if (Character.isSpaceChar(c))
+               {
+                  args.add(sb.toString());
+                  sb = new StringBuilder();
+                  state = 3;
+               }
+               else if (c == '"')
+               {
+                  state = 1;
+               }
+               else if (c == '\'')
+               {
+                  state = 2;
+               }
+               else
+               {
+                  sb.append(c);
+               }
+               break;
+            case 1: // double quoted string
+               if (c == '"')
+               {
+                  state = 0;
+               }
+               else
+               {
+                  sb.append(c);
+               }
+               break;
+            case 2: // single quoted string
+               if (c == '\'')
+               {
+                  state = 0;
+               }
+               else
+               {
+                  sb.append(c);
+               }
+               break;
+            case 3: // skip
+               if (!Character.isSpaceChar(c))
+               {
+                  if (c == '"')
+                  {
+                     state = 1;
+                  }
+                  else if (c == '\'')
+                  {
+                     state = 2;
+                  }
+                  else
+                  {
+                     sb.append(c);
+                     state = 0;
+                  }
+               }
+               break;
+         }
+      }
+      if (state != 3)
+         args.add(sb.toString());
+      
+      return args.toArray(new String[args.size()]);
+   }
 
    /**
     * @param node
@@ -290,7 +375,9 @@ public final class ObjectToolExecutor
    private static void executeAgentAction(final NodeInfo node, final ObjectTool tool, Map<String, String> inputValues)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      final String action = substituteMacros(tool.getData(), node, inputValues);
+      String[] parts = splitCommandLine(substituteMacros(tool.getData(), node, inputValues));
+      final String action = parts[0];
+      final String[] args = Arrays.copyOfRange(parts, 1, parts.length);
       
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {      
@@ -304,7 +391,7 @@ public final class ObjectToolExecutor
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.executeAction(node.object.getObjectId(), action);
+               session.executeAction(node.object.getObjectId(), action, args);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -322,7 +409,7 @@ public final class ObjectToolExecutor
          try
          {
             AgentActionResults view = (AgentActionResults)window.getActivePage().showView(AgentActionResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeAction(action);
+            view.executeAction(action, args);
          }
          catch(Exception e)
          {
