@@ -10,6 +10,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.texteditor.FindReplaceAction;
 import org.netxms.ui.eclipse.console.Activator;
 
+@SuppressWarnings("deprecation")
 public class NXFindAndReplaceAction
 {
    public static FindReplaceAction getFindReplaceAction(ViewPart wp)
