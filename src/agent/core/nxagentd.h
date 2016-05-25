@@ -330,6 +330,7 @@ private:
    bool m_masterServer;
    bool m_controlServer;
    bool m_proxyConnection;
+   bool m_acceptData;
    bool m_acceptTraps;
    bool m_acceptFileUpdates;
    bool m_ipv6Aware;
@@ -394,6 +395,7 @@ public:
    time_t getTimeStamp() { return m_ts; }
 	void updateTimeStamp() { m_ts = time(NULL); }
 
+   bool canAcceptData() { return m_acceptData; }
    bool canAcceptTraps() { return m_acceptTraps; }
    bool canAcceptFileUpdates() { return m_acceptFileUpdates; }
    bool isBulkReconciliationSupported() { return m_bulkReconciliationSupported; }

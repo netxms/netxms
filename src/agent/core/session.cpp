@@ -634,6 +634,7 @@ void CommSession::processingThread()
                if (m_serverId != 0)
                {
                   ConfigureDataCollection(m_serverId, pMsg);
+                  m_acceptData = true;
                   msg.setField(VID_RCC, ERR_SUCCESS);
                }
                else
