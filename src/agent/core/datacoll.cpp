@@ -403,6 +403,14 @@ void DataElement::saveToDatabase(DB_STATEMENT hStmt)
 }
 
 /**
+ * Session comparator
+ */
+static bool SessionComparator_Sender(AbstractCommSession *session, void *data)
+{
+   return (session->getServerId() == *((INT64 *)data)) && session->canAcceptData();
+}
+
+/**
  * Send collected data to server
  */
 bool DataElement::sendToServer(bool reconciliation)
@@ -412,7 +420,7 @@ bool DataElement::sendToServer(bool reconciliation)
    if ((m_type == DCO_TYPE_TABLE) && (m_value.table == NULL))
       return true;
 
-   CommSession *session = (CommSession *)FindServerSession(m_serverId);
+   CommSession *session = (CommSession *)FindServerSession(SessionComparator_Sender, &m_serverId);
    if (session == NULL)
       return false;
 
@@ -536,9 +544,9 @@ static MUTEX s_itemLock = INVALID_MUTEX_HANDLE;
 /**
  * Session comparator
  */
-static bool SessionComparator(AbstractCommSession *session, void *data)
+static bool SessionComparator_Reconciliation(AbstractCommSession *session, void *data)
 {
-   if ((session->getServerId() == 0) || !session->canAcceptTraps())
+   if ((session->getServerId() == 0) || !session->canAcceptData())
       return false;
    ServerSyncStatus *s = s_serverSyncStatus.get(session->getServerId());
    if ((s != NULL) && (s->queueSize > 0))
@@ -562,7 +570,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
    {
       // Check if there is something to sync
       MutexLock(s_serverSyncStatusLock);
-      CommSession *session = (CommSession *)FindServerSession(SessionComparator, NULL);
+      CommSession *session = (CommSession *)FindServerSession(SessionComparator_Reconciliation, NULL);
       MutexUnlock(s_serverSyncStatusLock);
       if (session == NULL)
       {
@@ -789,6 +797,7 @@ public:
 
    virtual bool isMasterServer() { return false; }
    virtual bool isControlServer() { return false; }
+   virtual bool canAcceptData() { return true; }
    virtual bool canAcceptTraps() { return true; }
    virtual bool canAcceptFileUpdates() { return false; }
    virtual UINT64 getServerId() { return m_serverId; };

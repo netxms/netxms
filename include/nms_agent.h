@@ -426,6 +426,7 @@ class AbstractCommSession : public RefCountObject
 public:
    virtual bool isMasterServer() = 0;
    virtual bool isControlServer() = 0;
+   virtual bool canAcceptData() = 0;
    virtual bool canAcceptTraps() = 0;
    virtual bool canAcceptFileUpdates() = 0;
    virtual UINT64 getServerId() = 0;

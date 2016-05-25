@@ -152,7 +152,7 @@ AbstractCommSession *FindServerSession(UINT64 serverId)
    MutexLock(g_hSessionListAccess);
    for(UINT32 i = 0; i < g_dwMaxSessions; i++)
    {
-      if ((g_pSessionList[i] != NULL) && (g_pSessionList[i]->getServerId() == serverId) && g_pSessionList[i]->canAcceptTraps())
+      if ((g_pSessionList[i] != NULL) && (g_pSessionList[i]->getServerId() == serverId))
       {
          session = g_pSessionList[i];
          session->incRefCount();
