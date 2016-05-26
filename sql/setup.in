@@ -91,6 +91,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('JobRetryCount','5',1,0,'I','Maximum mumber of job execution retrys');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('KeepAliveInterval','60',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapGroupClass','',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapGroupUniqueId','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapConnectionString','ldap://localhost:389',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapMappingDescription','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapMappingFullName','displayName',1,0);
@@ -103,6 +104,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapSyncUserPassword','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapUserClass','displayName',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapUserDeleteAction','1',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapUserUniqueId','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LockTimeout','60000',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LogAllSNMPTraps','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MailEncoding','iso-8859-1',1,0);
