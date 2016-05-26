@@ -190,6 +190,7 @@ public class Messages extends NLS
    public String NodesTab_ColName;
    public String NodesTab_ColPlatform;
    public String NodesTab_ColPrimaryIP;
+   public String NodesTab_ColRack;
    public String NodesTab_ColStatus;
    public String NodesTab_ColSysDescr;
    public String ObjectStatusMapView_ActionGroupNodes;

@@ -23,15 +23,21 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.NodesTab;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Label provider for node list
  */
 public class NodeListLabelProvider extends LabelProvider implements ITableLabelProvider, ITableColorProvider
 {
+   private NXCSession session = ConsoleSharedData.getSession();
+   
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
 	 */
@@ -64,6 +70,18 @@ public class NodeListLabelProvider extends LabelProvider implements ITableLabelP
             return node.getPlatformName();
          case NodesTab.COLUMN_AGENT_VERSION:
             return node.getAgentVersion();
+         case NodesTab.COLUMN_RACK:
+            if (node.getRackId() != 0)
+            {
+               Rack rack = session.findObjectById(node.getRackId(), Rack.class);
+               if (rack != null)
+               {
+                  return String.format(Messages.get().GeneralInfo_Units, rack.getObjectName(),
+                          rack.isTopBottomNumbering() ? node.getRackPosition() : node.getRackPosition() - node.getRackHeight() + 1,
+                          rack.isTopBottomNumbering() ? node.getRackPosition() + node.getRackHeight() - 1 : node.getRackPosition());
+               }
+            }
+            return "";
 		}
 		return null;
 	}

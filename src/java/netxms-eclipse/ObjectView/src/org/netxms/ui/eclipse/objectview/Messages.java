@@ -187,6 +187,7 @@ public class Messages extends NLS
    public static String NodesTab_ColName;
    public static String NodesTab_ColPlatform;
    public static String NodesTab_ColPrimaryIP;
+   public static String NodesTab_ColRack;
    public static String NodesTab_ColStatus;
    public static String NodesTab_ColSysDescr;
    public static String ObjectStatusMapView_ActionGroupNodes;
