@@ -46,6 +46,11 @@ public class ScheduledTaskEditor extends Dialog
    private ScheduleSelector scheduleSelector;
    private ObjectSelector selector;
 
+   /**
+    * @param shell
+    * @param task
+    * @param scheduleType
+    */
    public ScheduledTaskEditor(Shell shell, ScheduledTask task, List<String> scheduleType)
    {
       super(shell);
@@ -64,7 +69,7 @@ public class ScheduledTaskEditor extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Edit scheduled task");
+      newShell.setText("Edit Scheduled Task");
    }
 
 
