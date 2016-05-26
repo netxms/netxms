@@ -723,6 +723,7 @@ enum SessionState
 #define DCF_CALCULATE_NODE_STATUS   ((UINT16)0x0400)
 #define DCF_SHOW_IN_OBJECT_OVERVIEW ((UINT16)0x0800)
 #define DCF_CACHE_MODE_MASK         ((UINT16)0x3000)
+#define DCF_AGGREGATE_WITH_ERRORS   ((UINT16)0x4000)
 
 /**
  * Get cluster aggregation function from DCI flags

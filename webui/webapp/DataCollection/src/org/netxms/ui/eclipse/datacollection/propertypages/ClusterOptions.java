@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2013 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ public class ClusterOptions extends PropertyPage
 	private Combo clusterResource;
 	private Map<Integer, Long> clusterResourceMap;
 	private Button checkAggregate;
+   private Button checkAggregateWithErrors;
 	private Button checkRunScript;
 	private Combo aggregationFunction;
 
@@ -131,6 +132,10 @@ public class ClusterOptions extends PropertyPage
    	checkAggregate.setText(Messages.get().ClusterOptions_AggregateFromNodes);
    	checkAggregate.setSelection(editor.getObject().isAggregateOnCluster());
       	
+      checkAggregateWithErrors = new Button(aggregationGroup, SWT.CHECK);
+      checkAggregateWithErrors.setText("Use last known value for aggregation in case of data collection error");
+      checkAggregateWithErrors.setSelection(editor.getObject().isAggregateWithErrors());
+         
       checkRunScript = new Button(aggregationGroup, SWT.CHECK);
       checkRunScript.setText(Messages.get().ClusterOptions_RunScriptOnAggregatedData);
       checkRunScript.setSelection(editor.getObject().isTransformAggregated());
@@ -175,6 +180,7 @@ public class ClusterOptions extends PropertyPage
 			editor.getObject().setResourceId(clusterResourceMap.get(clusterResource.getSelectionIndex()));
 		}
 		editor.getObject().setAggregateOnCluster(checkAggregate.getSelection());
+      editor.getObject().setAggregateWithErrors(checkAggregateWithErrors.getSelection());
       editor.getObject().setTransformAggregated(checkRunScript.getSelection());
 		if (editor.getObject() instanceof DataCollectionItem)
 		{

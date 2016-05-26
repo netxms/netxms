@@ -674,7 +674,7 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_ITEM) &&
           (dco->getStatus() == ITEM_STATUS_ACTIVE) &&
-          (dco->getErrorCount() == 0) &&
+          ((dco->getErrorCount() == 0) || dco->isAggregateWithErrors()) &&
           dco->matchClusterResource())
       {
          ItemValue *v = ((DCItem *)dco)->getInternalLastValue();
@@ -738,7 +738,7 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_TABLE) &&
           (dco->getStatus() == ITEM_STATUS_ACTIVE) &&
-          (dco->getErrorCount() == 0) &&
+          ((dco->getErrorCount() == 0) || dco->isAggregateWithErrors()) &&
           dco->matchClusterResource())
       {
          Table *v = ((DCTable *)dco)->getLastValue();
