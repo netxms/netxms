@@ -909,6 +909,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   4) Network mask' CONCAT CRLF CONCAT
       '   5) Interface index'
    );
+
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
       EVENT_MAINTENANCE_MODE_ENTERED, 'SYS_MAINTENANCE_MODE_ENTERED', '5f6c8b1c-f162-413e-8028-80e7ad2c362d',
@@ -916,12 +917,27 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       'Entered maintenance mode',
       'Generated when node, cluster, or mobile device entered maintenance mode.'
    );
+
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
       EVENT_MAINTENANCE_MODE_LEFT, 'SYS_MAINTENANCE_MODE_LEFT', 'cab06848-a622-430d-8b4c-addeea732657',
       EVENT_SEVERITY_NORMAL, 1,
       'Left maintenance mode',
       'Generated when node, cluster, or mobile device left maintenance mode.'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_LDAP_SYNC_ERROR, 'SYS_LDAP_SYNC_ERROR', 'f7e8508d-1503-4736-854b-1e5b8b0ad1f2',
+      EVENT_SEVERITY_MAJOR, 1,
+      'LDAP sync error: %5',
+      'Generated when LDAP synchronization error occurs.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) User ID' CONCAT CRLF CONCAT
+      '   2) User GUID' CONCAT CRLF CONCAT
+      '   3) User LDAP DN' CONCAT CRLF CONCAT
+      '   4) User name' CONCAT CRLF CONCAT
+      '   5) Problem description'
    );
 
 /*

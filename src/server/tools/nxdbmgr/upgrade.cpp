@@ -386,13 +386,22 @@ static BOOL ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize, b
 /**
  * Create new event template
  */
-static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *message, const TCHAR *description)
+static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *guid, const TCHAR *message, const TCHAR *description)
 {
 	TCHAR query[4096];
 
-	_sntprintf(query, 4096, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES (%d,'%s',%d,%d,%s,%s)"),
-	           code, name, severity, flags, (const TCHAR *)DBPrepareString(g_hCoreDB, message),
-				  (const TCHAR *)DBPrepareString(g_hCoreDB, description));
+	if (guid != NULL)
+	{
+      _sntprintf(query, 4096, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description,guid) VALUES (%d,'%s',%d,%d,%s,%s,'%s')"),
+                 code, name, severity, flags, (const TCHAR *)DBPrepareString(g_hCoreDB, message),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, description), guid);
+	}
+	else
+	{
+      _sntprintf(query, 4096, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES (%d,'%s',%d,%d,%s,%s)"),
+                 code, name, severity, flags, (const TCHAR *)DBPrepareString(g_hCoreDB, message),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, description));
+	}
 	return SQLQuery(query);
 }
 
@@ -669,8 +678,9 @@ static int NextFreeEPPruleID()
  */
 static BOOL H_UpgradeFromV400(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_LDAP_SYNC_ERROR, _T("SYS_LDAP_SYNC_ERROR"), SEVERITY_MAJOR, EF_LOG,
-      _T("%5"),
+   CHK_EXEC(CreateEventTemplate(EVENT_LDAP_SYNC_ERROR, _T("SYS_LDAP_SYNC_ERROR"),
+            SEVERITY_MAJOR, EF_LOG, _T("f7e8508d-1503-4736-854b-1e5b8b0ad1f2"),
+      _T("LDAP sync error: %5"),
       _T("Generated when LDAP synchronization error occurs.\r\n")
       _T("Parameters:\r\n")
       _T("    1) User ID\r\n")
@@ -678,17 +688,10 @@ static BOOL H_UpgradeFromV400(int currVersion, int newVersion)
       _T("    3) User LDAP DN\r\n")
       _T("    4) User name\r\n")
       _T("    5) Problem description")));
-   // Create rule pair in event processing policy
-	int ruleId = 0;
-	DB_RESULT hResult = SQLSelect(_T("SELECT max(rule_id) FROM event_policy"));
-	if (hResult != NULL)
-	{
-		ruleId = DBGetFieldLong(hResult, 0, 0) + 1;
-		DBFreeResult(hResult);
-	}
 
+	int ruleId = NextFreeEPPruleID();
    TCHAR query[1024];
-	_sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'417648af-5361-49a5-9471-6ef31e857b2d',7944,'Generate an alarm when error occurred while LDAP sync','%%m',5,'SYS_LDAP_SYCN_ERROR_%%1','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+	_sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'417648af-5361-49a5-9471-6ef31e857b2d',7944,'Generate an alarm when error occurred during LDAP synchronization','%%m',5,'SYS_LDAP_SYNC_ERROR_%%2','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
    CHK_EXEC(SQLQuery(query));
    _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_LDAP_SYNC_ERROR);
    CHK_EXEC(SQLQuery(query));
@@ -1713,11 +1716,11 @@ static BOOL H_UpgradeFromV373(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_MAINTENANCE_MODE_ENTERED, _T("SYS_MAINTENANCE_MODE_ENTERED"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_MAINTENANCE_MODE_ENTERED, _T("SYS_MAINTENANCE_MODE_ENTERED"), SEVERITY_NORMAL, EF_LOG, NULL,
          _T("Entered maintenance mode"),
          _T("Generated when node, cluster, or mobile device enters maintenance mode.")));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_MAINTENANCE_MODE_LEFT, _T("SYS_MAINTENANCE_MODE_LEFT"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_MAINTENANCE_MODE_LEFT, _T("SYS_MAINTENANCE_MODE_LEFT"), SEVERITY_NORMAL, EF_LOG, NULL,
          _T("Left maintenance mode"),
          _T("Generated when node, cluster, or mobile device leaves maintenance mode.")));
 
@@ -2175,7 +2178,7 @@ static BOOL H_UpgradeFromV348(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV347(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_IF_IPADDR_ADDED, _T("SYS_IF_IPADDR_ADDED"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_IPADDR_ADDED, _T("SYS_IF_IPADDR_ADDED"), SEVERITY_NORMAL, EF_LOG, NULL,
          _T("IP address %3/%4 added to interface \"%2\""),
          _T("Generated when IP address added to interface.\r\n")
          _T("Parameters:\r\n")
@@ -2185,7 +2188,7 @@ static BOOL H_UpgradeFromV347(int currVersion, int newVersion)
          _T("    4) Network mask\r\n")
          _T("    5) Interface index")));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_IF_IPADDR_DELETED, _T("SYS_IF_IPADDR_DELETED"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_IPADDR_DELETED, _T("SYS_IF_IPADDR_DELETED"), SEVERITY_NORMAL, EF_LOG, NULL,
          _T("IP address %3/%4 deleted from interface \"%2\""),
          _T("Generated when IP address deleted from interface.\r\n")
          _T("Parameters:\r\n")
@@ -2470,7 +2473,7 @@ static BOOL H_UpgradeFromV335(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV334(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_IF_MASK_CHANGED, _T("SYS_IF_MASK_CHANGED"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_MASK_CHANGED, _T("SYS_IF_MASK_CHANGED"), SEVERITY_NORMAL, EF_LOG, NULL,
          _T("Interface \"%2\" changed mask from %6 to %4 (IP Addr: %3/%4, IfIndex: %5)"),
          _T("Generated when when network mask on interface is changed.\r\n")
          _T("Parameters:\r\n")
@@ -2840,7 +2843,7 @@ static BOOL H_UpgradeFromV318(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV317(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_AP_DOWN, _T("SYS_AP_DOWN"), SEVERITY_CRITICAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_DOWN, _T("SYS_AP_DOWN"), SEVERITY_CRITICAL, EF_LOG, NULL,
       _T("Access point %2 changed state to DOWN"),
 		_T("Generated when access point state changes to DOWN.\r\n")
 		_T("Parameters:\r\n")
@@ -2877,7 +2880,7 @@ static BOOL H_UpgradeFromV315(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_AP_ADOPTED, _T("SYS_AP_ADOPTED"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_ADOPTED, _T("SYS_AP_ADOPTED"), SEVERITY_NORMAL, EF_LOG, NULL,
       _T("Access point %2 changed state to ADOPTED"),
 		_T("Generated when access point state changes to ADOPTED.\r\n")
 		_T("Parameters:\r\n")
@@ -2889,7 +2892,7 @@ static BOOL H_UpgradeFromV315(int currVersion, int newVersion)
 		_T("    6) Access point model\r\n")
 		_T("    7) Access point serial number")));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_AP_UNADOPTED, _T("SYS_AP_UNADOPTED"), SEVERITY_MAJOR, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_UNADOPTED, _T("SYS_AP_UNADOPTED"), SEVERITY_MAJOR, EF_LOG, NULL,
       _T("Access point %2 changed state to UNADOPTED"),
 		_T("Generated when access point state changes to UNADOPTED.\r\n")
 		_T("Parameters:\r\n")
@@ -3130,7 +3133,7 @@ static BOOL H_UpgradeFromV305(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV304(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_IF_PEER_CHANGED, _T("SYS_IF_PEER_CHANGED"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_PEER_CHANGED, _T("SYS_IF_PEER_CHANGED"), SEVERITY_NORMAL, EF_LOG, NULL,
       _T("New peer for interface %3 is %7 interface %10 (%12)"),
 		_T("Generated when peer information for interface changes.\r\n")
 		_T("Parameters:\r\n")
@@ -3393,7 +3396,7 @@ static BOOL H_UpgradeFromV288(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV287(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_TABLE_THRESHOLD_ACTIVATED, _T("SYS_TABLE_THRESHOLD_ACTIVATED"), EVENT_SEVERITY_MINOR, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_TABLE_THRESHOLD_ACTIVATED, _T("SYS_TABLE_THRESHOLD_ACTIVATED"), EVENT_SEVERITY_MINOR, EF_LOG, NULL,
       _T("Threshold activated on table \"%2\" row %4 (%5)"),
       _T("Generated when table threshold is activated.\r\n")
       _T("Parameters:\r\n")
@@ -3403,7 +3406,7 @@ static BOOL H_UpgradeFromV287(int currVersion, int newVersion)
       _T("   4) Table row\r\n")
       _T("   5) Instance")));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_TABLE_THRESHOLD_DEACTIVATED, _T("SYS_TABLE_THRESHOLD_DEACTIVATED"), EVENT_SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_TABLE_THRESHOLD_DEACTIVATED, _T("SYS_TABLE_THRESHOLD_DEACTIVATED"), EVENT_SEVERITY_NORMAL, EF_LOG, NULL,
       _T("Threshold deactivated on table \"%2\" row %4 (%5)"),
       _T("Generated when table threshold is deactivated.\r\n")
       _T("Parameters:\r\n")
@@ -3877,7 +3880,7 @@ static BOOL H_UpgradeFromV267(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV266(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateEventTemplate(EVENT_NODE_UNREACHABLE, _T("SYS_NODE_UNREACHABLE"), EVENT_SEVERITY_CRITICAL,
-	                             EF_LOG, _T("Node unreachable because of network failure"),
+	                             EF_LOG, NULL, _T("Node unreachable because of network failure"),
 										  _T("Generated when node is unreachable by management server because of network failure.\r\nParameters:\r\n   No event-specific parameters")));
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='267' WHERE var_name='SchemaVersion'")));
 	return TRUE;
@@ -4143,7 +4146,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 		_T("<END>");
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOBIND, _T("SYS_CONTAINER_AUTOBIND"), EVENT_SEVERITY_NORMAL, 1,
+	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOBIND, _T("SYS_CONTAINER_AUTOBIND"), EVENT_SEVERITY_NORMAL, EF_LOG, NULL,
 	                             _T("Node %2 automatically bound to container %4"),
 										  _T("Generated when node bound to container object by autobind rule.\r\n")
 	                             _T("Parameters:#\r\n")
@@ -4153,7 +4156,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 										  _T("   4) Container name")
 										  ));
 
-	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOUNBIND, _T("SYS_CONTAINER_AUTOUNBIND"), EVENT_SEVERITY_NORMAL, 1,
+	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOUNBIND, _T("SYS_CONTAINER_AUTOUNBIND"), EVENT_SEVERITY_NORMAL, EF_LOG, NULL,
 	                             _T("Node %2 automatically unbound from container %4"),
 										  _T("Generated when node unbound from container object by autobind rule.\r\n")
 	                             _T("Parameters:#\r\n")
@@ -4163,7 +4166,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 										  _T("   4) Container name")
 										  ));
 
-	CHK_EXEC(CreateEventTemplate(EVENT_TEMPLATE_AUTOAPPLY, _T("SYS_TEMPLATE_AUTOAPPLY"), EVENT_SEVERITY_NORMAL, 1,
+	CHK_EXEC(CreateEventTemplate(EVENT_TEMPLATE_AUTOAPPLY, _T("SYS_TEMPLATE_AUTOAPPLY"), EVENT_SEVERITY_NORMAL, EF_LOG, NULL,
 	                             _T("Template %4 automatically applied to node %2"),
 										  _T("Generated when template applied to node by autoapply rule.\r\n")
 	                             _T("Parameters:#\r\n")
@@ -4173,7 +4176,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 										  _T("   4) Template name")
 										  ));
 
-	CHK_EXEC(CreateEventTemplate(EVENT_TEMPLATE_AUTOREMOVE, _T("SYS_TEMPLATE_AUTOREMOVE"), EVENT_SEVERITY_NORMAL, 1,
+	CHK_EXEC(CreateEventTemplate(EVENT_TEMPLATE_AUTOREMOVE, _T("SYS_TEMPLATE_AUTOREMOVE"), EVENT_SEVERITY_NORMAL, EF_LOG, NULL,
 	                             _T("Template %4 automatically removed from node %2"),
 										  _T("Generated when template removed from node by autoapply rule.\r\n")
 	                             _T("Parameters:#\r\n")
@@ -4204,7 +4207,7 @@ static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_UNEXPECTED_UP, _T("SYS_IF_UNEXPECTED_UP"), EVENT_SEVERITY_MAJOR, 1,
+	CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_UNEXPECTED_UP, _T("SYS_IF_UNEXPECTED_UP"), EVENT_SEVERITY_MAJOR, EF_LOG, NULL,
 	                             _T("Interface \"%2\" unexpectedly changed state to UP (IP Addr: %3/%4, IfIndex: %5)"),
 										  _T("Generated when interface goes up but it's expected state set to DOWN.\r\n")
 										  _T("Please note that source of event is node, not an interface itself.\r\n")
@@ -4216,7 +4219,7 @@ static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
 										  _T("   5) Interface index")
 										  ));
 
-	CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_EXPECTED_DOWN, _T("SYS_IF_EXPECTED_DOWN"), EVENT_SEVERITY_NORMAL, 1,
+	CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_EXPECTED_DOWN, _T("SYS_IF_EXPECTED_DOWN"), EVENT_SEVERITY_NORMAL, EF_LOG, NULL,
 	                             _T("Interface \"%2\" with expected state DOWN changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)"),
 										  _T("Generated when interface goes down and it's expected state is DOWN.\r\n")
 										  _T("Please note that source of event is node, not an interface itself.\r\n")
@@ -4562,7 +4565,7 @@ static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 	CHK_EXEC(SQLBatch(batch));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_PAE_STATE_CHANGED, _T("SYS_8021X_PAE_STATE_CHANGED"),
-		EVENT_SEVERITY_NORMAL, 1, _T("Port %6 PAE state changed from %4 to %2"),
+		EVENT_SEVERITY_NORMAL, 1, NULL, _T("Port %6 PAE state changed from %4 to %2"),
 		_T("Generated when switch port PAE state changed.\r\nParameters:\r\n")
 		_T("   1) New PAE state code\r\n")
 		_T("   2) New PAE state as text\r\n")
@@ -4572,7 +4575,7 @@ static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 		_T("   6) Interface name")));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_BACKEND_STATE_CHANGED, _T("SYS_8021X_BACKEND_STATE_CHANGED"),
-		EVENT_SEVERITY_NORMAL, 1, _T("Port %6 backend authentication state changed from %4 to %2"),
+		EVENT_SEVERITY_NORMAL, 1, NULL, _T("Port %6 backend authentication state changed from %4 to %2"),
 		_T("Generated when switch port backend authentication state changed.\r\nParameters:\r\n")
 		_T("   1) New backend state code\r\n")
 		_T("   2) New backend state as text\r\n")
@@ -4582,19 +4585,19 @@ static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 		_T("   6) Interface name")));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_PAE_FORCE_UNAUTH, _T("SYS_8021X_PAE_FORCE_UNAUTH"),
-		EVENT_SEVERITY_MAJOR, 1, _T("Port %2 switched to force unauthorize state"),
+		EVENT_SEVERITY_MAJOR, 1, NULL, _T("Port %2 switched to force unauthorize state"),
 		_T("Generated when switch port PAE state changed to FORCE UNAUTHORIZE.\r\nParameters:\r\n")
 		_T("   1) Interface index\r\n")
 		_T("   2) Interface name")));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_AUTH_FAILED, _T("SYS_8021X_AUTH_FAILED"),
-		EVENT_SEVERITY_MAJOR, 1, _T("802.1x authentication failed on port %2"),
+		EVENT_SEVERITY_MAJOR, 1, NULL, _T("802.1x authentication failed on port %2"),
 		_T("Generated when switch port backend authentication state changed to FAIL.\r\nParameters:\r\n")
 		_T("   1) Interface index\r\n")
 		_T("   2) Interface name")));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_AUTH_TIMEOUT, _T("SYS_8021X_AUTH_TIMEOUT"),
-		EVENT_SEVERITY_MAJOR, 1, _T("802.1x authentication time out on port %2"),
+		EVENT_SEVERITY_MAJOR, 1, NULL, _T("802.1x authentication time out on port %2"),
 		_T("Generated when switch port backend authentication state changed to TIMEOUT.\r\nParameters:\r\n")
 		_T("   1) Interface index\r\n")
 		_T("   2) Interface name")));
