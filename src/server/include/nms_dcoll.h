@@ -268,6 +268,7 @@ public:
    bool isShowInObjectOverview() const { return (m_flags & DCF_SHOW_IN_OBJECT_OVERVIEW) ? true : false; }
    bool isAggregateOnCluster() const { return (m_flags & DCF_AGGREGATE_ON_CLUSTER) ? true : false; }
 	bool isStatusDCO() const { return (m_flags & DCF_CALCULATE_NODE_STATUS) ? true : false; }
+   bool isAggregateWithErrors() const { return (m_flags & DCF_AGGREGATE_WITH_ERRORS) ? true : false; }
    int getAggregationFunction() const { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
    int getRetentionTime() const { return m_iRetentionTime; }
    int getEffectiveRetentionTime() const { return (m_iRetentionTime > 0) ? m_iRetentionTime : m_defaultRetentionTime; }
