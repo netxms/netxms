@@ -327,15 +327,6 @@ void UserDatabaseObject::setLdapId(const TCHAR *id)
    m_flags |= UF_MODIFIED;
 }
 
-/**
- * Disable user account because of sync exception
- */
-void UserDatabaseObject::setSyncException()
-{
-   m_flags |= UF_SYNC_EXCEPTION | UF_MODIFIED;
-   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
-}
-
 void UserDatabaseObject::removeSyncException()
 {
    if((m_flags & UF_SYNC_EXCEPTION)> 0)
@@ -542,8 +533,8 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (UINT32)m_lastLogin);
    DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_xmppId, DB_BIND_STATIC);
    DBBind(hStmt, 18, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
-   DBBind(hStmt, 18, DB_SQLTYPE_TEXT, m_ldapId, DB_BIND_STATIC);
-   DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 19, DB_SQLTYPE_TEXT, m_ldapId, DB_BIND_STATIC);
+   DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
 	if (success)
@@ -821,8 +812,8 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
    DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
-   DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_ldapId, DB_BIND_STATIC);
-   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_ldapId, DB_BIND_STATIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
 	if (success)
@@ -918,7 +909,7 @@ bool Group::isMember(UINT32 userId)
 		return true;
 
    // This is to avoid applying disabled group rights on enabled user
-   if ((m_flags & UF_SYNC_EXCEPTION) || (m_flags & UF_DISABLED))
+   if ((m_flags & UF_DISABLED))
       return false;
 
    return bsearch(&userId, m_members, m_memberCount, sizeof(UINT32), CompareUserId) != NULL;
