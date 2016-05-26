@@ -674,6 +674,16 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V401 to V402
+ */
+static BOOL H_UpgradeFromV401(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_event_log_source ON event_log(event_source)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='402' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V400 to V401
  */
 static BOOL H_UpgradeFromV400(int currVersion, int newVersion)
@@ -10156,6 +10166,7 @@ static struct
    { 398, 399, H_UpgradeFromV398 },
    { 399, 400, H_UpgradeFromV399 },
    { 400, 401, H_UpgradeFromV400 },
+   { 401, 402, H_UpgradeFromV401 },
    { 0, 0, NULL }
 };
 
