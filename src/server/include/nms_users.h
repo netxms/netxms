@@ -222,14 +222,12 @@ public:
 	bool isDisabled() const { return (m_flags & UF_DISABLED) ? true : false; }
 	bool isModified() const { return (m_flags & UF_MODIFIED) ? true : false; }
 	bool isLDAPUser() const { return (m_flags & UF_LDAP_USER) ? true : false; }
-	bool hasSyncException() const { return (m_flags & UF_SYNC_EXCEPTION) ? true : false; }
 
 	void setDeleted() { m_flags |= UF_DELETED; }
 	void enable();
 	void disable();
 	void setFlags(UINT32 flags) { m_flags = flags; }
 	void removeSyncException();
-	void setSyncException();
 
 	const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.get(name); }
 	UINT32 getAttributeAsULong(const TCHAR *name);

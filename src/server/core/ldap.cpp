@@ -575,7 +575,7 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult)
          }
          if (m_ldapUsreIdAttr[0] != 0 && !strcmp(attribute, m_ldapUsreIdAttr) && newObj->m_type == LDAP_USER)
          {
-            //newObj->m_id = getIdAttrValue(entry, attribute);
+            newObj->m_id = getIdAttrValue(entry, attribute);
          }
          if (m_ldapGroupIdAttr[0] != 0 && !strcmp(attribute, m_ldapGroupIdAttr) && newObj->m_type == LDAP_GROUP)
          {
@@ -674,7 +674,7 @@ TCHAR *LDAPConnection::getIdAttrValue(LDAPMessage *entry, const char *attr)
       return _tcsdup(_T(""));
 
    CalculateSHA256Hash(tmp, pos, hash);
-   TCHAR *result = (TCHAR *)malloc(SHA256_DIGEST_SIZE * 2 + 1);
+   TCHAR *result = (TCHAR *)malloc(sizeof(TCHAR) * (SHA256_DIGEST_SIZE * 2 + 1));
    BinToStr(hash, SHA256_DIGEST_SIZE, result);
    return result;
 }

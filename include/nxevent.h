@@ -134,7 +134,7 @@
 #define EVENT_IF_IPADDR_DELETED           77
 #define EVENT_MAINTENANCE_MODE_ENTERED    78
 #define EVENT_MAINTENANCE_MODE_LEFT       79
-#define EVENT_LDAP_SYCN_ERROR             80
+#define EVENT_LDAP_SYNC_ERROR             80
 
 #define EVENT_SNMP_UNMATCHED_TRAP         500
 #define EVENT_SNMP_COLD_START             501
