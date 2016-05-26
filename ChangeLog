@@ -16,6 +16,7 @@
 - New parameters in Linux platform subagent to get additional CPU information (frequency, model, etc.)
 - Fixed bugs in LLDP based network topology discovery
 - Correct notifications on threshold script errors
+- Option to use last known value for cluster data aggregation in case of data collecion failure
 - Management console
 	- Improved dashboard gauge widget
 	- Added translucence option for dashboard line charts
