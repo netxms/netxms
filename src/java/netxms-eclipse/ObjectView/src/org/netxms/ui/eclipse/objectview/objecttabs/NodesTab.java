@@ -55,10 +55,11 @@ public class NodesTab extends ObjectTab
 	public static final int COLUMN_ID = 0;
 	public static final int COLUMN_NAME = 1;
 	public static final int COLUMN_IP_ADDRESS = 2;
-   public static final int COLUMN_PLATFORM = 3;
-   public static final int COLUMN_AGENT_VERSION = 4;
-   public static final int COLUMN_SYS_DESCRIPTION = 5;
-   public static final int COLUMN_STATUS = 6;
+   public static final int COLUMN_RACK = 3;
+   public static final int COLUMN_PLATFORM = 4;
+   public static final int COLUMN_AGENT_VERSION = 5;
+   public static final int COLUMN_SYS_DESCRIPTION = 6;
+   public static final int COLUMN_STATUS = 7;
 	
 	private SortableTableViewer viewer;
 	private Action actionExportToCsv;
@@ -73,24 +74,25 @@ public class NodesTab extends ObjectTab
 		      Messages.get().NodesTab_ColId,
 		      Messages.get().NodesTab_ColName,
 		      Messages.get().NodesTab_ColPrimaryIP,
+            Messages.get().NodesTab_ColRack,
 		      Messages.get().NodesTab_ColPlatform,
 		      Messages.get().NodesTab_ColAgentVersion,
 		      Messages.get().NodesTab_ColSysDescr,
 		      Messages.get().NodesTab_ColStatus
 		};
-		final int[] widths = { 60, 150, 100, 150, 100, 300, 100 };
+		final int[] widths = { 60, 150, 100, 150, 150, 100, 300, 100 };
 		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setLabelProvider(new NodeListLabelProvider());
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setComparator(new NodeListComparator());
 		viewer.getTable().setHeaderVisible(true);
 		viewer.getTable().setLinesVisible(true);
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "NodeTable"); //$NON-NLS-1$
+		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "NodeTable.V2"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "NodeTable"); //$NON-NLS-1$
+				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "NodeTable.V2"); //$NON-NLS-1$
 			}
 		});
 		createActions();
