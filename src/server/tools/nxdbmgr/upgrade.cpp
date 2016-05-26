@@ -664,7 +664,43 @@ static int NextFreeEPPruleID()
 	return ruleId;
 }
 
+/**
+ * Upgrade from V400 to V401
+ */
+static BOOL H_UpgradeFromV400(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_LDAP_SYCN_ERROR, _T("SYS_LDAP_SYCN_ERROR"), SEVERITY_MAJOR, EF_LOG,
+      _T("%5"),
+      _T("Generated when LDAP synchronization error occurs.\r\n")
+      _T("Parameters:\r\n")
+      _T("    1) User ID\r\n")
+      _T("    2) User GUID\r\n")
+      _T("    3) User LDAP DN\r\n")
+      _T("    4) User name\r\n")
+      _T("    5) Problem description")));
+   // Create rule pair in event processing policy
+	int ruleId = 0;
+	DB_RESULT hResult = SQLSelect(_T("SELECT max(rule_id) FROM event_policy"));
+	if (hResult != NULL)
+	{
+		ruleId = DBGetFieldLong(hResult, 0, 0) + 1;
+		DBFreeResult(hResult);
+	}
 
+   TCHAR query[1024];
+	_sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'417648af-5361-49a5-9471-6ef31e857b2d',7944,'Generate an alarm when error occurred while LDAP sync','%%m',5,'SYS_LDAP_SYCN_ERROR_%%1','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_LDAP_SYCN_ERROR);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE users ADD ldap_unique_id varchar(64)")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE user_groups ADD ldap_unique_id varchar(64)")));
+   CHK_EXEC(CreateConfigParam(_T("LdapUserUniqueId"), _T(""), true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("LdapGroupUniqueId"), _T(""), true, false, false));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='401' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
 
 /**
  * Upgrade from V399 to V400
@@ -10116,6 +10152,7 @@ static struct
    { 397, 398, H_UpgradeFromV397 },
    { 398, 399, H_UpgradeFromV398 },
    { 399, 400, H_UpgradeFromV399 },
+   { 400, 401, H_UpgradeFromV400 },
    { 0, 0, NULL }
 };
 

@@ -90,6 +90,7 @@ CREATE TABLE users
   password_history SQL_TEXT null,
   xmpp_id varchar(127) null,
   ldap_dn SQL_TEXT null,
+  ldap_unique_id varchar(64) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -128,6 +129,7 @@ CREATE TABLE user_groups
   flags integer not null,
   description varchar(255),
   ldap_dn SQL_TEXT null,
+  ldap_unique_id varchar(63) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
