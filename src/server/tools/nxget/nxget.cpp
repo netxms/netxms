@@ -1,4 +1,4 @@
-/* 
+/*
 ** nxget - command line tool used to retrieve parameters from NetXMS agent
 ** Copyright (C) 2004-2015 Victor Kirhenshtein
 **
@@ -132,6 +132,7 @@ static int GetTable(AgentConnection *pConn, const TCHAR *pszParam)
 			_puttc(_T('\n'), stdout);
 		}
 		delete table;
+		free(widths);
    }
    else
    {
@@ -337,7 +338,7 @@ int main(int argc, char *argv[])
                      _T("   -W <seconds> : Set connection timeout (default is 30 seconds).\n")
                      _T("   -X <addr>    : Use proxy agent at given address.\n")
                      _T("   -Z <secret>  : Shared secret for proxy agent authentication.\n")
-                     _T("\n"), 
+                     _T("\n"),
 #ifdef _WITH_ENCRYPTION
                      keyFile,
 #endif

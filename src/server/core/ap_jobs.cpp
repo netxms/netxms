@@ -92,6 +92,7 @@ PolicyDeploymentJob::PolicyDeploymentJob(const TCHAR* params, UINT32 node, UINT3
    else
    {
       setIsValid(false);
+      return;
    }
 
    if(paramList.size() >= 2)
@@ -249,6 +250,7 @@ PolicyUninstallJob::PolicyUninstallJob(const TCHAR* params, UINT32 node, UINT32 
    else
    {
       setIsValid(false);
+      return;
    }
 
    if(paramList.size() >= 2)
