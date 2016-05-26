@@ -637,7 +637,7 @@ void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
             if(_tcscmp(user->getName(), userName))
             {
                user->setName(userName);
-               _sntprintf(description, 1024, _T("LDAP user update error: User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), obj->m_loginName, userName);
+               _sntprintf(description, 1024, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), obj->m_loginName, userName);
                object->getGuidAsText(guid);
                PostEvent(EVENT_LDAP_SYNC_ERROR ,g_dwMgmtNode, "issss", object->getId(), guid, object->getDn(), object->getName(), description);
                DbgPrintf(4,  _T("UpdateLDAPUser(): %s"), description);
@@ -692,7 +692,7 @@ void UpdateLDAPUser(const TCHAR *dn, Entry *obj)
       {
          UINT32 userId = CreateUniqueId(IDG_USER);
          TCHAR *userName = GenerateUniqueName(obj->m_loginName, userId);
-         _sntprintf(description, MAX_USER_DESCR, _T("LDAP user update error: User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), obj->m_loginName, userName);
+         _sntprintf(description, MAX_USER_DESCR, _T("User with name \"%s\" already exists. Unique user name have been generated: \"%s\""), obj->m_loginName, userName);
          DbgPrintf(4,  _T("UpdateLDAPUser(): %s"), description);
          User *user = new User(userId, userName);
          user->setFullName(obj->m_fullName);
