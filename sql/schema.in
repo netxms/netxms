@@ -1120,6 +1120,8 @@ CREATE TABLE event_log
 
 CREATE INDEX idx_event_log_event_timestamp ON event_log(event_timestamp);
 
+CREATE INDEX idx_event_log_source ON event_log(event_source);
+
 #if defined(DB_POSTGRESQL)
 CREATE INDEX idx_event_log_root_id ON event_log(root_event_id) WHERE root_event_id > 0;
 #elif defined(DB_ORACLE)
