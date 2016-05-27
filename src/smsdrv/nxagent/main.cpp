@@ -91,7 +91,9 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 
 			argv[0] = (TCHAR *)pszPhoneNumber;
 			argv[1] = (TCHAR *)pszText;
-         if (conn->execAction(_T("SMS.Send"), 2, argv) == ERR_SUCCESS)
+			UINT32 rcc = conn->execAction(_T("SMS.Send"), 2, argv);
+			nxlog_debug(4, _T("nxagent.sms: agent action execution result: %d (%s)"), rcc, AgentErrorCodeToText(rcc));
+         if (rcc == ERR_SUCCESS)
 				bSuccess = true;
 		}
       conn->decRefCount();
