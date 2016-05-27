@@ -1303,6 +1303,14 @@ restart_agent_check:
                unlockProperties();
             }
          }
+         else if ((dwResult == SNMP_ERR_ENGINE_ID) && (m_snmpVersion == SNMP_VERSION_3))
+         {
+            // Reset authoritative engine data
+            lockProperties();
+            m_snmpSecurity->setAuthoritativeEngine(SNMP_Engine());
+            unlockProperties();
+            goto restart_agent_check;
+         }
          else
          {
             sendPollerMsg(dwRqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
