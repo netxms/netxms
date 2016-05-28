@@ -906,6 +906,9 @@ public class NXCPCodes
    public static final long VID_STATUS = 537;
    public static final long VID_FLAGS_MASK = 538;
    public static final long VID_TOP_BOTTOM = 539;
+   public static final long VID_AUTH_TOKEN = 540;
+   public static final long VID_REPOSITORY_ID = 541;
+   public static final long VID_TOOLTIP_DCI_COUNT = 542;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -934,6 +937,7 @@ public class NXCPCodes
 	public static final long VID_CUSTOM_ATTRIBUTES_BASE = 0x70000000L;
    public static final long VID_MODULE_DATA_BASE = 0x71000000L;
    public static final long VID_OVERVIEW_DCI_LIST_BASE = 0x72000000L;
+   public static final long VID_TOOLTIP_DCI_LIST_BASE = 0x73000000L;
 	public static final long VID_RESOURCE_LIST_BASE = 0x20000000L;
 	public static final long VID_IP_ADDRESS_LIST_BASE = 0x7F000000L;
    public static final long VID_SYNC_SUBNETS_BASE = 0x28000000L;
