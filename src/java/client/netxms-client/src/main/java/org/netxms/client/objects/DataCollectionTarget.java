@@ -31,6 +31,7 @@ import org.netxms.client.datacollection.DciValue;
 public class DataCollectionTarget extends GenericObject
 {
    protected List<DciValue> overviewDciData;
+   protected List<DciValue> tooltipDciData;
 
    /**
     * Create new object.
@@ -42,6 +43,7 @@ public class DataCollectionTarget extends GenericObject
    {
       super(id, session);
       overviewDciData = new ArrayList<DciValue>(0);
+      tooltipDciData = new ArrayList<DciValue>(0);
    }
 
    /**
@@ -62,6 +64,15 @@ public class DataCollectionTarget extends GenericObject
          overviewDciData.add(DciValue.createFromMessage(objectId, msg, fieldId));
          fieldId += 50;
       }
+
+      count = msg.getFieldAsInt32(NXCPCodes.VID_TOOLTIP_DCI_COUNT);
+      tooltipDciData = new ArrayList<DciValue>(count);
+      fieldId = NXCPCodes.VID_TOOLTIP_DCI_LIST_BASE;
+      for(int i = 0; i < count; i++)
+      {
+         tooltipDciData.add(DciValue.createFromMessage(objectId, msg, fieldId));
+         fieldId += 50;
+      }
    }
 
    /**
@@ -70,5 +81,13 @@ public class DataCollectionTarget extends GenericObject
    public List<DciValue> getOverviewDciData()
    {
       return overviewDciData;
+   }
+
+   /**
+    * @return the tooltipDciData
+    */
+   public List<DciValue> getTooltipDciData()
+   {
+      return tooltipDciData;
    }
 }

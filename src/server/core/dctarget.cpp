@@ -99,22 +99,36 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg)
 {
    Template::fillMessageInternalStage2(msg);
 
-   // Sent all DCIs marked for display on overview page
-   UINT32 fieldId = VID_OVERVIEW_DCI_LIST_BASE;
-   UINT32 count = 0;
+   // Sent all DCIs marked for display on overview page or in tooltips
+   UINT32 fieldIdOverview = VID_OVERVIEW_DCI_LIST_BASE;
+   UINT32 countOverview = 0;
+   UINT32 fieldIdTooltip = VID_TOOLTIP_DCI_LIST_BASE;
+   UINT32 countTooltip = 0;
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
       DCObject *dci = m_dcObjects->get(i);
-      if ((dci->getType() == DCO_TYPE_ITEM) && dci->isShowInObjectOverview() && (dci->getStatus() == ITEM_STATUS_ACTIVE))
+      if ((dci->getType() == DCO_TYPE_ITEM) &&
+          (dci->getStatus() == ITEM_STATUS_ACTIVE) &&
+          (((DCItem *)dci)->getInstanceDiscoveryMethod() == IDM_NONE))
 		{
-         count++;
-         ((DCItem *)dci)->fillLastValueMessage(msg, fieldId);
-         fieldId += 50;
+         if  (dci->isShowInObjectOverview())
+         {
+            countOverview++;
+            ((DCItem *)dci)->fillLastValueMessage(msg, fieldIdOverview);
+            fieldIdOverview += 50;
+         }
+         if  (dci->isShowOnObjectTooltip())
+         {
+            countTooltip++;
+            ((DCItem *)dci)->fillLastValueMessage(msg, fieldIdTooltip);
+            fieldIdTooltip += 50;
+         }
 		}
 	}
    unlockDciAccess();
-   msg->setField(VID_OVERVIEW_DCI_COUNT, count);
+   msg->setField(VID_OVERVIEW_DCI_COUNT, countOverview);
+   msg->setField(VID_TOOLTIP_DCI_COUNT, countTooltip);
 }
 
 /**

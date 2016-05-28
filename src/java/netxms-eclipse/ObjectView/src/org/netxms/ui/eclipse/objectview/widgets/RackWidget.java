@@ -327,7 +327,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          height += pt.y;
       }
       
-      List<DciValue> values = ((AbstractNode)tooltipObject).getOverviewDciData();
+      List<DciValue> values = ((AbstractNode)tooltipObject).getTooltipDciData();
       if (!values.isEmpty())
       {
          for(DciValue v : values)
