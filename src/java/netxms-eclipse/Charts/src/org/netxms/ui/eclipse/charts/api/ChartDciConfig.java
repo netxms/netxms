@@ -35,6 +35,11 @@ public class ChartDciConfig
 	public static final int ITEM = DataCollectionObject.DCO_TYPE_ITEM;
 	public static final int TABLE = DataCollectionObject.DCO_TYPE_TABLE;
 	
+	// display types
+	public static final int DEFAULT = 0;
+   public static final int LINE = 1;
+   public static final int AREA = 2;
+	
 	@Attribute
 	public long nodeId;
 	
@@ -52,6 +57,9 @@ public class ChartDciConfig
 	
 	@Element(required=false)
 	public int lineWidth;
+	
+	@Element(required=false)
+	public int displayType;
 	
 	@Element(required=false)
 	public boolean area;
@@ -82,6 +90,7 @@ public class ChartDciConfig
 		color = UNSET_COLOR;
 		name = ""; //$NON-NLS-1$
 		lineWidth = 2;
+		displayType = DEFAULT;
 		area = false;
 		showThresholds = false;
 		invertValues = false;
@@ -103,6 +112,7 @@ public class ChartDciConfig
 		this.color = src.color;
 		this.name = src.name;
 		this.lineWidth = src.lineWidth;
+		this.displayType = src.displayType;
 		this.area = src.area;
 		this.showThresholds = src.showThresholds;
 		this.invertValues = src.invertValues;
@@ -169,5 +179,15 @@ public class ChartDciConfig
 	public String getDisplayFormat()
 	{
 	   return ((displayFormat != null) && !displayFormat.isEmpty()) ? displayFormat : "%s"; //$NON-NLS-1$
+	}
+	
+	/**
+	 * Get display type
+	 * 
+	 * @return
+	 */
+	public int getDisplayType()
+	{
+	   return ((displayType == DEFAULT) && area) ? AREA : displayType;
 	}
 }

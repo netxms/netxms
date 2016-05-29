@@ -61,6 +61,7 @@ public class General extends PropertyPage
 	private Button checkStacked;
 	private Button checkExtendedLegend;
    private Button checkTranslucent;
+   private Button checkAreaChart;
    private LabeledSpinner lineWidth;
 	private Combo legendLocation;
 	private Scale refreshIntervalScale;
@@ -172,6 +173,10 @@ public class General extends PropertyPage
       checkExtendedLegend.setText(Messages.get().General_8);
       checkExtendedLegend.setSelection(config.isExtendedLegend());         
       checkExtendedLegend.setEnabled(config.isShowLegend());   
+      
+      checkAreaChart = new Button(optionsGroup, SWT.CHECK);
+      checkAreaChart.setText("Area chart");
+      checkAreaChart.setSelection(config.isArea());         
       
       Composite refreshGroup = new Composite(optionsGroup, SWT.NONE);
       layout = new GridLayout();
@@ -298,7 +303,8 @@ public class General extends PropertyPage
 		checkAutoRefresh.setSelection(true);
 		checkLogScale.setSelection(false);
 		checkStacked.setSelection(false);
-		checkExtendedLegend.setSelection(false);		
+		checkExtendedLegend.setSelection(false);
+		checkAreaChart.setSelection(false);
 		legendLocation.select(3);
 		lineWidth.setSelection(2);
 		
@@ -327,6 +333,7 @@ public class General extends PropertyPage
 		config.setRefreshRate(refreshIntervalSpinner.getSelection());
       config.setStacked(checkStacked.getSelection());
       config.setExtendedLegend(checkExtendedLegend.getSelection());
+      config.setArea(checkAreaChart.getSelection());
       config.setLegendPosition((int)Math.pow(2,legendLocation.getSelectionIndex()));
       config.setTranslucent(checkTranslucent.getSelection());
       config.setLineWidth(lineWidth.getSelection());
