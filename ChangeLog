@@ -7,6 +7,7 @@
 - Correct notifications on threshold script errors
 - Option to use last known value for cluster data aggregation in case of data collecion failure
 - NXSL: implemented compound assignment operators and prefix increment/decrement for array elements
+- NXSL: can access event parameters as event object attributes (like $event->$1 or $event->instance)
 - Management console
 	- Improved dashboard gauge widget
 	- Added translucence option for dashboard line charts
@@ -17,7 +18,7 @@
 	- Object tooltips in rack view
 - Android console
 	- Reorganized alarm notification section (issue #1194)
-- Fixed issues: #405, #859, #984, #1086, #1186, #1194, #1195, #1196, #1197, #1200, #1209, #1210, #1214, #1223, #1227, #1231
+- Fixed issues: #405, #775, #859, #984, #1086, #1186, #1194, #1195, #1196, #1197, #1200, #1209, #1210, #1214, #1223, #1227, #1231
 
 
 *

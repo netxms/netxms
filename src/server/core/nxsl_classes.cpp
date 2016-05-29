@@ -934,11 +934,36 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *attr)
    else if (!_tcscmp(attr, _T("parameters")))
    {
 		NXSL_Array *array = new NXSL_Array;
-		UINT32 i;
-
-		for(i = 0; i < event->getParametersCount(); i++)
-			array->set((int)(i + 1), new NXSL_Value(event->getParameter(i)));
+		for(int i = 0; i < event->getParametersCount(); i++)
+			array->set(i + 1, new NXSL_Value(event->getParameter(i)));
       value = new NXSL_Value(array);
+   }
+   else
+   {
+      if (attr[0] == _T('$'))
+      {
+         // Try to find parameter with given index
+         TCHAR *eptr;
+         int index = _tcstol(&attr[1], &eptr, 10);
+         if ((index > 0) && (*eptr == 0))
+         {
+            const TCHAR *s = event->getParameter(index - 1);
+            if (s != NULL)
+            {
+               value = new NXSL_Value(s);
+            }
+         }
+      }
+
+      // Try to find named parameter with given name
+      if (value == NULL)
+      {
+         const TCHAR *s = event->getNamedParameter(attr);
+         if (s != NULL)
+         {
+            value = new NXSL_Value(s);
+         }
+      }
    }
    return value;
 }
