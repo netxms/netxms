@@ -6,6 +6,7 @@
 - Fixed bugs in LLDP based network topology discovery
 - Correct notifications on threshold script errors
 - Option to use last known value for cluster data aggregation in case of data collecion failure
+- Added server configuration parameter to ignore syslog message timestamps and always use server time
 - NXSL: implemented compound assignment operators and prefix increment/decrement for array elements
 - NXSL: can access event parameters as event object attributes (like $event->$1 or $event->instance)
 - Management console
