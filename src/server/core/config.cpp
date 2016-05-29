@@ -305,6 +305,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    {
       NotifyClientSessions(NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED, _tcstol(value, NULL, 0));
    }
+   else if (!_tcsncmp(name, _T("Syslog"), 6))
+   {
+      OnSyslogConfigurationChange(name, value);
+   }
 }
 
 /**

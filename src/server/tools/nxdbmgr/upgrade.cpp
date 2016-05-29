@@ -674,6 +674,18 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V403 to V404
+ */
+static BOOL H_UpgradeFromV403(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("SyslogIgnoreMessageTimestamp"), _T("0"),
+            _T("Ignore timestamp received in syslog messages and always use server time"),
+            'B', true, false, false, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='404' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V402 to V403
  */
 static BOOL H_UpgradeFromV402(int currVersion, int newVersion)
@@ -10179,6 +10191,7 @@ static struct
    { 400, 401, H_UpgradeFromV400 },
    { 401, 402, H_UpgradeFromV401 },
    { 402, 403, H_UpgradeFromV402 },
+   { 403, 404, H_UpgradeFromV403 },
    { 0, 0, NULL }
 };
 

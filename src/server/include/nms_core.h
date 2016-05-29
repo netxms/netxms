@@ -1032,6 +1032,7 @@ bool ImportSummaryTable(ConfigEntry *config);
 
 void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();
+void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);
 
 void EscapeString(String &str);
 
