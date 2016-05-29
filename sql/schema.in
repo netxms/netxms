@@ -1295,20 +1295,6 @@ COMMENT_COLUMN(policy_action_list.action_id, '')
 /**
  *
  */
-CREATE TABLE policy_time_range_list
-(
-  rule_id integer not null,
-  time_range_id integer not null,
-  PRIMARY KEY(rule_id,time_range_id)
-) TABLE_TYPE;
-
-COMMENT_TABLE(policy_time_range_list, '')
-COMMENT_COLUMN(policy_time_range_list.rule_id, '')
-COMMENT_COLUMN(policy_time_range_list.time_range_id, '')
-
-/**
- *
- */
 CREATE TABLE policy_situation_attr_list
 (
   rule_id integer not null,
@@ -1323,26 +1309,6 @@ COMMENT_COLUMN(policy_situation_attr_list.rule_id, '')
 COMMENT_COLUMN(policy_situation_attr_list.situation_id, '')
 COMMENT_COLUMN(policy_situation_attr_list.attr_name, '')
 COMMENT_COLUMN(policy_situation_attr_list.attr_value, '')
-
-/*
-** Time range objects
-*/
-CREATE TABLE time_ranges
-(
-  time_range_id integer not null,
-  wday_mask integer not null, // Bits 0 .. 6 for each day of week
-  mday_mask integer not null, // Bits 0 .. 30 for each day of month
-  month_mask integer not null,  // Bits 0 .. 11 for each month
-  time_range varchar(255) not null, // In format HHMMHHMM[,HHMMHHMM[,...]]
-  PRIMARY KEY(time_range_id)
-) TABLE_TYPE;
-
-COMMENT_TABLE(time_ranges, '')
-COMMENT_COLUMN(time_ranges.time_range_id, '')
-COMMENT_COLUMN(time_ranges.wday_mask, '')
-COMMENT_COLUMN(time_ranges.mday_mask, '')
-COMMENT_COLUMN(time_ranges.month_mask, '')
-COMMENT_COLUMN(time_ranges.time_range, '')
 
 /*
 ** Threshold checking rules

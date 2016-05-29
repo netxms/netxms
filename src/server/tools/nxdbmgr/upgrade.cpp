@@ -674,6 +674,17 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V402 to V403
+ */
+static BOOL H_UpgradeFromV402(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("DROP TABLE policy_time_range_list")));
+   CHK_EXEC(SQLQuery(_T("DROP TABLE time_ranges")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='403' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V401 to V402
  */
 static BOOL H_UpgradeFromV401(int currVersion, int newVersion)
@@ -10167,6 +10178,7 @@ static struct
    { 399, 400, H_UpgradeFromV399 },
    { 400, 401, H_UpgradeFromV400 },
    { 401, 402, H_UpgradeFromV401 },
+   { 402, 403, H_UpgradeFromV402 },
    { 0, 0, NULL }
 };
 
