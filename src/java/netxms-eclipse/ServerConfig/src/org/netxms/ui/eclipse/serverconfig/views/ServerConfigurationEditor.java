@@ -417,7 +417,13 @@ public class ServerConfigurationEditor extends ViewPart
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					session.setServerVariable(dlg.getVarName(), dlg.getVarValue());
-					refresh();
+					runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     refresh();
+                  }
+               });
 				}
 			}.start();
 		}
@@ -448,7 +454,13 @@ public class ServerConfigurationEditor extends ViewPart
 				protected void runInternal(IProgressMonitor monitor) throws Exception
 				{
 					session.setServerVariable(dlg.getVarName(), dlg.getVarValue());
-					refresh();
+					runInUIThread(new Runnable() {
+						@Override
+						public void run()
+						{
+							refresh();
+						}
+					});
 				}
 			}.start();
 		}
