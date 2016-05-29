@@ -114,7 +114,7 @@ public:
    void setMessage(const TCHAR *text) { free(m_messageText); m_messageText = _tcsdup_ex(text); }
    void setUserTag(const TCHAR *text) { free(m_userTag); m_userTag = _tcsdup_ex(text); }
 
-   UINT32 getParametersCount() const { return m_parameters.size(); }
+   int getParametersCount() const { return m_parameters.size(); }
    const TCHAR *getParameter(int index) const { return (TCHAR *)m_parameters.get(index); }
    UINT32 getParameterAsULong(int index) const { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoul(v, NULL, 0) : 0; }
    UINT64 getParameterAsUInt64(int index) const { const TCHAR *v = (TCHAR *)m_parameters.get(index); return (v != NULL) ? _tcstoull(v, NULL, 0) : 0; }
