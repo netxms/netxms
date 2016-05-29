@@ -689,6 +689,36 @@ void NXSL_VM::execute()
             error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
 			break;
+      case OPCODE_PEEK_ELEMENT:   // Get array or map element keeping array and index on stack; stack should contain: array index (top) (or hashmap key (top))
+         pValue = (NXSL_Value *)m_dataStack->peek();
+         if (pValue != NULL)
+         {
+            NXSL_Value *container = (NXSL_Value *)m_dataStack->peekAt(2);
+            if (container != NULL)
+            {
+               if (container->isArray())
+               {
+                  getOrUpdateArrayElement(cp->m_nOpCode, container, pValue);
+               }
+               else if (container->isHashMap())
+               {
+                  getOrUpdateHashMapElement(cp->m_nOpCode, container, pValue);
+               }
+               else
+               {
+                  error(NXSL_ERR_NOT_CONTAINER);
+               }
+            }
+            else
+            {
+               error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+            }
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
 		case OPCODE_ADD_TO_ARRAY:  // add element on stack top to array; stack should contain: array new_value (top)
          pValue = (NXSL_Value *)m_dataStack->pop();
          if (pValue != NULL)
@@ -1389,7 +1419,7 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
 {
 	if (index->isInteger())
 	{
-      if (opcode != OPCODE_GET_ELEMENT)
+      if ((opcode != OPCODE_GET_ELEMENT) && (opcode != OPCODE_PEEK_ELEMENT))
          array->copyOnWrite();
 		NXSL_Value *element = array->getValueAsArray()->get(index->getValueAsInt32());
 
@@ -1474,7 +1504,7 @@ void NXSL_VM::getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Va
 {
 	if (key->isString())
 	{
-      if (opcode != OPCODE_GET_ELEMENT)
+      if ((opcode != OPCODE_GET_ELEMENT) && (opcode != OPCODE_PEEK_ELEMENT))
          hashMap->copyOnWrite();
 		NXSL_Value *element = hashMap->getValueAsHashMap()->get(key->getValueAsCString());
 
