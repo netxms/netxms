@@ -498,10 +498,12 @@ private:
    void updateThread();
    void pollerThread(Node *pNode, int iPollType, UINT32 dwRqId);
 
+   void writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...);
+   void debugPrintf(int level, const TCHAR *format, ...);
+
    void setupEncryption(NXCPMessage *request);
    void respondToKeepalive(UINT32 dwRqId);
    void onFileUpload(BOOL bSuccess);
-   void debugPrintf(int level, const TCHAR *format, ...);
    void sendServerInfo(UINT32 dwRqId);
    void login(NXCPMessage *pRequest);
    void sendAllObjects(NXCPMessage *pRequest);
@@ -1027,9 +1029,12 @@ void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);
 void EscapeString(String &str);
 
 void InitAuditLog();
-void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32 userId,
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, UINT32 userId,
                                      const TCHAR *workstation, int sessionId, UINT32 objectId,
                                      const TCHAR *format, ...);
+void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
+                                      const TCHAR *workstation, int sessionId, UINT32 objectId,
+                                      const TCHAR *format, va_list args);
 
 bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTextLen);
 UINT32 ImportConfig(Config *config, UINT32 flags);

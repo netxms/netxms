@@ -366,6 +366,17 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
 }
 
 /**
+ * Write audit log
+ */
+void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   WriteAuditLog2(subsys, success, m_dwUserId, m_workstation, m_id, objectId, format, args);
+   va_end(args);
+}
+
+/**
  * Check channel subscription
  */
 bool ClientSession::isSubscribedTo(const TCHAR *channel) const
