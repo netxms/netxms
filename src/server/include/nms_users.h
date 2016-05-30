@@ -391,7 +391,7 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
 void SendUserDBUpdate(int code, UINT32 id);
 UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert,
                         BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights,
-							   bool *pbChangePasswd, bool *pbIntruderLockout, bool ssoAuth);
+							   bool *pbChangePasswd, bool *pbIntruderLockout, bool *closeOtherSessions, bool ssoAuth);
 bool AuthenticateUserForXMPPCommands(const char *xmppId);
 bool AuthenticateUserForXMPPSubscription(const char *xmppId);
 

@@ -1858,6 +1858,7 @@ void ClientSession::login(NXCPMessage *pRequest)
 
    if (!(m_dwFlags & CSF_AUTHENTICATED))
    {
+      bool closeOtherSessions = false;
       pRequest->getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
 		nAuthType = (int)pRequest->getFieldAsUInt16(VID_AUTH_TYPE);
       debugPrintf(6, _T("authentication type %d"), nAuthType);
@@ -1870,7 +1871,8 @@ void ClientSession::login(NXCPMessage *pRequest)
 				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
-													 &m_dwSystemAccess, &changePasswd, &intruderLockout, false);
+													 &m_dwSystemAccess, &changePasswd, &intruderLockout,
+													 &closeOtherSessions, false);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
 #ifdef _WITH_ENCRYPTION
@@ -1883,7 +1885,8 @@ void ClientSession::login(NXCPMessage *pRequest)
 					dwSigLen = pRequest->getFieldAsBinary(VID_SIGNATURE, signature, 256);
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
 														 m_challenge, &m_dwUserId, &m_dwSystemAccess,
-														 &changePasswd, &intruderLockout, false);
+														 &changePasswd, &intruderLockout,
+														 &closeOtherSessions, false);
 					X509_free(pCert);
 				}
 				else
@@ -1901,7 +1904,8 @@ void ClientSession::login(NXCPMessage *pRequest)
             {
                debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, szLogin);
 				   dwResult = AuthenticateUser(szLogin, NULL, 0, NULL, NULL, &m_dwUserId,
-													    &m_dwSystemAccess, &changePasswd, &intruderLockout, true);
+													    &m_dwSystemAccess, &changePasswd, &intruderLockout,
+													    &closeOtherSessions, true);
             }
             else
             {
@@ -1955,6 +1959,12 @@ void ClientSession::login(NXCPMessage *pRequest)
          debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0,
             _T("User \"%s\" logged in (language: %s; client info: %s)"), szLogin, m_language, m_clientInfo);
+
+			if (closeOtherSessions)
+			{
+			   debugPrintf(5, _T("Closing other sessions for user %s"), m_loginName);
+			   CloseOtherSessions(m_dwUserId, m_id);
+			}
       }
       else
       {

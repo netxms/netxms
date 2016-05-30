@@ -195,13 +195,13 @@ void UserDatabaseObject::modifyFromMessage(NXCPMessage *msg)
 	if (fields & USER_MODIFY_FLAGS)
 	{
 	   flags = msg->getFieldAsUInt16(VID_USER_FLAGS);
-		// Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_LDAP_USER flags from message
+		// Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_CLOSE_OTHER_SESSIONS flags from message
 		// Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
-		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD);
+		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
 		if ((m_id == 0) || (m_id == GROUP_EVERYONE))
 			m_flags |= flags & UF_CHANGE_PASSWORD;
 		else
-			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD);
+			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
 
 	}
 

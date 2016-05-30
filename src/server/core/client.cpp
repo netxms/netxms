@@ -457,3 +457,22 @@ bool IsLoggedIn(UINT32 dwUserId)
    RWLockUnlock(m_rwlockSessionListAccess);
    return result;
 }
+
+/**
+ * Close all user's sessions except given one
+ */
+void CloseOtherSessions(UINT32 userId, UINT32 thisSession)
+{
+   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   {
+      if ((m_pSessionList[i] != NULL) &&
+          (m_pSessionList[i]->getUserId() == userId) &&
+          (m_pSessionList[i]->getId() != thisSession))
+      {
+         nxlog_debug(4, _T("CloseOtherSessions(%d,%d): disconnecting session %d"), userId, thisSession, m_pSessionList[i]->getId());
+         m_pSessionList[i]->kill();
+      }
+   }
+   RWLockUnlock(m_rwlockSessionListAccess);
+}

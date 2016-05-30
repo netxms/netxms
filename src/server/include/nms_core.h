@@ -973,6 +973,7 @@ void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graph
 int GetSessionCount(bool includeSystemAccount);
 bool IsLoggedIn(UINT32 dwUserId);
 bool NXCORE_EXPORTABLE KillClientSession(int id);
+void CloseOtherSessions(UINT32 userId, UINT32 thisSession);
 
 void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
 InetAddress GetLocalIpAddr();
