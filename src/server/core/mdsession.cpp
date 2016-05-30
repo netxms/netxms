@@ -462,7 +462,7 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
    NXCPMessage msg;
    TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
 	int nAuthType;
-   bool changePasswd = false, intruderLockout = false;
+   bool changePasswd = false, intruderLockout = false, closeOtherSessions = false;
    UINT32 dwResult;
 #ifdef _WITH_ENCRYPTION
 	X509 *pCert;
@@ -498,7 +498,8 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
 				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
-													 &userRights, &changePasswd, &intruderLockout, false);
+													 &userRights, &changePasswd, &intruderLockout,
+													 &closeOtherSessions, false);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
 #ifdef _WITH_ENCRYPTION
@@ -511,7 +512,8 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
 					dwSigLen = pRequest->getFieldAsBinary(VID_SIGNATURE, signature, 256);
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
 														 m_challenge, &m_dwUserId, &userRights,
-														 &changePasswd, &intruderLockout, false);
+														 &changePasswd, &intruderLockout,
+														 &closeOtherSessions, false);
 					X509_free(pCert);
 				}
 				else

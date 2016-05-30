@@ -297,12 +297,13 @@ void SaveUsers(DB_HANDLE hdb)
  */
 UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert,
                         BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights,
-							   bool *pbChangePasswd, bool *pbIntruderLockout, bool ssoAuth)
+							   bool *pbChangePasswd, bool *pbIntruderLockout, bool *closeOtherSessions, bool ssoAuth)
 {
    int i, j;
    UINT32 dwResult = RCC_ACCESS_DENIED;
    BOOL bPasswordValid = FALSE;
 
+   *closeOtherSessions = false;
    RWLockWriteLock(s_userDatabaseLock, INFINITE);
    User *user = s_users.get(login);
    if ((user != NULL) && !user->isDeleted())
@@ -457,6 +458,7 @@ result:
             if (dwResult != RCC_NO_GRACE_LOGINS)
             {
                *pdwSystemRights = GetEffectiveSystemRights(user);
+               *closeOtherSessions = (user->getFlags() & UF_CLOSE_OTHER_SESSIONS) != 0;
                user->updateLastLogin();
                dwResult = RCC_SUCCESS;
             }

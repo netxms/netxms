@@ -43,6 +43,7 @@ public abstract class AbstractUserObject
 	public static final int PASSWORD_NEVER_EXPIRES = 0x0040;
    public static final int LDAP_USER = 0x0080;
    public static final int SYNC_EXCEPTION = 0x0100;
+   public static final int CLOSE_OTHER_SESSIONS = 0x0200;
 	
    // User object fields
    public static final int MODIFY_LOGIN_NAME        = 0x00000001;
