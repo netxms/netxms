@@ -160,17 +160,17 @@ public class Notifications extends PropertyPage
 	 */
 	private void addMail()
 	{
-		InputDialog dlg = new InputDialog(emailGroup.getShell(), "Add mail", "Enter mail", "", new IInputValidator() //$NON-NLS-1$
-		{
-			@Override
-			public String isValid(String newText)
-			{
-				String emailreg = "^[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$"; //$NON-NLS-1$
-                if (!newText.matches(emailreg))
-                	return "Invalid mail";
-				return null;
-			}
-		});
+      InputDialog dlg = new InputDialog(emailGroup.getShell(), "Add mail", "Enter mail", "", new IInputValidator() { //$NON-NLS-1$
+         private static final String VALIDATOR_REGEXP = "^[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$"; //$NON-NLS-1$
+         
+         @Override
+         public String isValid(String newText)
+         {
+            if (!newText.matches(VALIDATOR_REGEXP))
+               return "Invalid email address";
+            return null;
+         }
+      });
 		if (dlg.open() == Window.OK)
 		{
 			job.getEmailRecipients().add(dlg.getValue());
