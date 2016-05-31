@@ -502,7 +502,6 @@ private:
    void updateThread();
    void pollerThread(Node *pNode, int iPollType, UINT32 dwRqId);
 
-   void writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...);
    void debugPrintf(int level, const TCHAR *format, ...);
 
    void setupEncryption(NXCPMessage *request);
@@ -747,6 +746,8 @@ public:
    void sendRawMessage(NXCP_MESSAGE *pMsg);
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
 	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long offset);
+
+   void writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...);
 
    int getId() const { return m_id; }
    void setId(int id) { if (m_id == -1) m_id = id; }
