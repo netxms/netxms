@@ -3660,13 +3660,15 @@ public class NXCSession
    }
 
    /**
-    * Parse data from raw message CMD_DCI_DATA
+    * Parse data from raw message CMD_DCI_DATA.
+    * This method is intended for calling by client internal methods only. It made public to
+    * allow access from client extensions.
     *
     * @param input Raw data
     * @param data  Data object to add rows to
     * @return number of received data rows
     */
-   private int parseDataRows(final byte[] input, DciData data)
+   public int parseDataRows(final byte[] input, DciData data)
    {
       final NXCPDataInputStream inputStream = new NXCPDataInputStream(input);
       int rows = 0;
@@ -3776,7 +3778,8 @@ public class NXCSession
          waitForRCC(msg.getMessageId());
 
          NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
-         if (!response.isBinaryMessage()) throw new NXCException(RCC.INTERNAL_ERROR);
+         if (!response.isBinaryMessage()) 
+            throw new NXCException(RCC.INTERNAL_ERROR);
 
          rowsReceived = parseDataRows(response.getBinaryData(), data);
          if (((rowsRemaining == 0) || (rowsRemaining > MAX_DCI_DATA_ROWS)) && (rowsReceived == MAX_DCI_DATA_ROWS))
