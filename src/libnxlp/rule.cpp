@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Log Parsing Library
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
@@ -27,7 +27,8 @@
  * Constructor
  */
 LogParserRule::LogParserRule(LogParser *parser, const TCHAR *regexp, UINT32 eventCode, const TCHAR *eventName,
-									  int numParams, const TCHAR *source, UINT32 level, UINT32 idStart, UINT32 idEnd)
+									  int numParams, int repeatInterval, int repeatCount, bool resetRepeat, const TCHAR *source,
+									  UINT32 level, UINT32 idStart, UINT32 idEnd)
 {
 	String expandedRegexp;
 
@@ -49,6 +50,10 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *regexp, UINT32 even
 	m_isInverted = FALSE;
 	m_breakOnMatch = FALSE;
 	m_description = NULL;
+   m_repeatInterval = repeatInterval;
+	m_repeatCount = repeatCount;
+	m_matchArray = new IntegerArray<time_t>();
+	m_resetRepeat = resetRepeat;
 }
 
 /**
@@ -69,10 +74,23 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
 	m_idEnd = src->m_idEnd;
 	m_context = (src->m_context != NULL) ? _tcsdup(src->m_context) : NULL;
 	m_contextAction = src->m_contextAction;
-	m_contextToChange = (src->m_contextToChange != NULL) ? _tcsdup(src->m_contextToChange) : NULL;;
+	m_contextToChange = (src->m_contextToChange != NULL) ? _tcsdup(src->m_contextToChange) : NULL;
 	m_isInverted = src->m_isInverted;
 	m_breakOnMatch = src->m_breakOnMatch;
-	m_description = (src->m_description != NULL) ? _tcsdup(src->m_description) : NULL;;
+	m_description = (src->m_description != NULL) ? _tcsdup(src->m_description) : NULL;
+   m_repeatInterval = src->m_repeatInterval;
+	m_repeatCount = src->m_repeatCount;
+	m_resetRepeat = src->m_resetRepeat;
+   if (src->m_matchArray != NULL)
+   {
+      m_matchArray = new IntegerArray<time_t>(src->m_matchArray->size(), 16);
+      for(int i = 0; i < src->m_matchArray->size(); i++)
+         m_matchArray->add(src->m_matchArray->get(i));
+   }
+   else
+   {
+      m_matchArray = new IntegerArray<time_t>();
+   }
 }
 
 /**
@@ -89,6 +107,7 @@ LogParserRule::~LogParserRule()
 	safe_free(m_eventName);
 	safe_free(m_context);
 	safe_free(m_contextToChange);
+	delete m_matchArray;
 }
 
 /**
@@ -97,6 +116,7 @@ LogParserRule::~LogParserRule()
 bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
 								          const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg)
 {
+   matchArrayHousekeeper();
    if (extMode)
    {
 	   if (m_source != NULL)
@@ -131,7 +151,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	if (m_isInverted)
 	{
 		m_parser->trace(6, _T("  negated matching against regexp %s"), m_regexp);
-		if (_tregexec(&m_preg, line, 0, NULL, 0) != 0)
+		if (_tregexec(&m_preg, line, 0, NULL, 0) != 0 && processMatch())
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
@@ -142,7 +162,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	else
 	{
 		m_parser->trace(6, _T("  matching against regexp %s"), m_regexp);
-		if (_tregexec(&m_preg, line, (m_numParams > 0) ? m_numParams + 1 : 0, m_pmatch, 0) == 0)
+		if (_tregexec(&m_preg, line, (m_numParams > 0) ? m_numParams + 1 : 0, m_pmatch, 0) == 0 && processMatch())
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
@@ -174,13 +194,13 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 				}
 
 				cb(m_eventCode, m_eventName, line, source, eventId, level, m_numParams, params, objectId, userArg);
-				
+
 				for(i = 0; i < m_numParams; i++)
 					free(params[i]);
 #if !HAVE_ALLOCA
             free(params);
 #endif
-			}		
+			}
 			return true;
 		}
 	}
@@ -247,4 +267,30 @@ void LogParserRule::expandMacros(const TCHAR *regexp, String &out)
 		}
 	}
 	out.append(prev, (size_t)(curr - prev));
+}
+
+void LogParserRule::matchArrayHousekeeper()
+{
+   if(m_matchArray->size() == 0 || m_repeatCount == 0 || m_repeatInterval == 0)
+      return;
+
+   time_t now = time(NULL);
+   for(int i = 0; i < m_matchArray->size(); i++)
+   {
+      if(m_matchArray->get(i) < (now - m_repeatInterval))
+         m_matchArray->remove(i);
+      else
+         break;
+   }
+}
+
+bool LogParserRule::processMatch()
+{
+   if(m_repeatCount == 0 || m_repeatInterval == 0)
+      return true;
+
+   m_matchArray->add(time(NULL));
+   bool match = m_matchArray->size() >= m_repeatCount;
+   if(m_resetRepeat && match) m_matchArray->clear();
+   return match;
 }

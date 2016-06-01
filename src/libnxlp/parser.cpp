@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Log Parsing Library
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
@@ -74,6 +74,9 @@ struct XML_PARSER_STATE
 	String macro;
 	bool invertedRule;
 	bool breakFlag;
+	int repeatCount;
+	int repeatInterval;
+	bool resetRepeat;
 
 	XML_PARSER_STATE() : encodings(1, 1, true)
 	{
@@ -83,6 +86,9 @@ struct XML_PARSER_STATE
 	   breakFlag = false;
 	   contextAction = CONTEXT_SET_AUTOMATIC;
 	   numEventParams = 0;
+	   repeatCount = 0;
+	   repeatInterval = 0;
+	   resetRepeat = true;
 	}
 };
 
@@ -207,9 +213,9 @@ bool LogParser::addRule(LogParserRule *rule)
 /**
  * Create and add rule
  */
-bool LogParser::addRule(const TCHAR *regexp, UINT32 eventCode, const TCHAR *eventName, int numParams)
+bool LogParser::addRule(const TCHAR *regexp, UINT32 eventCode, const TCHAR *eventName, int numParams, int repeatInterval, int repeatCount, bool resetRepeat)
 {
-	return addRule(new LogParserRule(this, regexp, eventCode, eventName, numParams));
+	return addRule(new LogParserRule(this, regexp, eventCode, eventName, numParams, repeatInterval, repeatCount, resetRepeat));
 }
 
 /**
@@ -218,20 +224,20 @@ bool LogParser::addRule(const TCHAR *regexp, UINT32 eventCode, const TCHAR *even
 const TCHAR *LogParser::checkContext(LogParserRule *rule)
 {
 	const TCHAR *state;
-	
+
 	if (rule->getContext() == NULL)
 	{
 		trace(5, _T("  rule has no context"));
 		return s_states[CONTEXT_SET_MANUAL];
 	}
-		
+
 	state = m_contexts.get(rule->getContext());
 	if (state == NULL)
 	{
 		trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->getContext());
-		return NULL;	// Context inactive, don't use this rule		
+		return NULL;	// Context inactive, don't use this rule
 	}
-	
+
 	if (!_tcscmp(state, s_states[CONTEXT_CLEAR]))
 	{
 		trace(5, _T("  context '%s' inactive, rule should be skipped"), rule->getContext());
@@ -266,21 +272,21 @@ bool LogParser::matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 e
 		if ((state = checkContext(m_rules[i])) != NULL)
 		{
 			bool ruleMatched = hasAttributes ?
-				m_rules[i]->matchEx(source, eventId, level, line, m_cb, objectId, m_userArg) : 
+				m_rules[i]->matchEx(source, eventId, level, line, m_cb, objectId, m_userArg) :
 				m_rules[i]->match(line, m_cb, objectId, m_userArg);
 			if (ruleMatched)
 			{
 				trace(5, _T("rule %d \"%s\" matched"), i + 1, m_rules[i]->getDescription());
 				if (!matched)
 					m_recordsMatched++;
-				
+
 				// Update context
 				if (m_rules[i]->getContextToChange() != NULL)
 				{
 					m_contexts.set(m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
 					trace(5, _T("rule %d \"%s\": context %s set to %s"), i + 1, m_rules[i]->getDescription(), m_rules[i]->getContextToChange(), s_states[m_rules[i]->getContextAction()]);
 				}
-				
+
 				// Set context of this rule to inactive if rule context mode is "automatic reset"
 				if (!_tcscmp(state, s_states[CONTEXT_SET_AUTOMATIC]))
 				{
@@ -463,6 +469,9 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
 		ps->state = XML_STATE_MATCH;
 		ps->invertedRule = XMLGetAttrBoolean(attrs, "invert", false);
+		ps->resetRepeat = XMLGetAttrBoolean(attrs, "reset", true);
+		ps->repeatCount = XMLGetAttrInt(attrs, "repeatCount", 0);
+		ps->repeatInterval = XMLGetAttrInt(attrs, "repeatInterval", 0);
 	}
 	else if (!strcmp(name, "id") || !strcmp(name, "facility"))
 	{
@@ -484,13 +493,13 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	else if (!strcmp(name, "context"))
 	{
 		const char *action;
-		
+
 		ps->state = XML_STATE_CONTEXT;
-		
+
 		action = XMLGetAttr(attrs, "action");
 		if (action == NULL)
 			action = "set";
-			
+
 		if (!strcmp(action, "set"))
 		{
 			const char *mode;
@@ -502,11 +511,11 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 			if (!strcmp(mode, "auto"))
 			{
 				ps->contextAction = CONTEXT_SET_AUTOMATIC;
-			}			
+			}
 			else if (!strcmp(mode, "manual"))
 			{
 				ps->contextAction = CONTEXT_SET_MANUAL;
-			}			
+			}
 			else
 			{
 				ps->errorText = _T("Invalid context reset mode");
@@ -580,9 +589,10 @@ static void EndElement(void *userData, const char *name)
 				eventName = (const TCHAR *)ps->event;
 			}
 		}
+
 		if (ps->regexp.isEmpty())
 			ps->regexp = _T(".*");
-		rule = new LogParserRule(ps->parser, (const TCHAR *)ps->regexp, eventCode, eventName, ps->numEventParams);
+		rule = new LogParserRule(ps->parser, (const TCHAR *)ps->regexp, eventCode, eventName, ps->numEventParams, ps->repeatInterval, ps->repeatCount, ps->resetRepeat);
 		if (!ps->ruleContext.isEmpty())
 			rule->setContext(ps->ruleContext);
 		if (!ps->context.isEmpty())
@@ -593,7 +603,7 @@ static void EndElement(void *userData, const char *name)
 
 		if (!ps->description.isEmpty())
 			rule->setDescription(ps->description);
-		
+
 		if (!ps->source.isEmpty())
 			rule->setSource(ps->source);
 
@@ -725,7 +735,7 @@ ObjectArray<LogParser> *LogParser::createFromXml(const char *xml, int xmlLen, TC
 			nx_strncpy(errorText, state.errorText, errBufSize);
 	}
 	else if (success)
-	{ 
+	{
 		parsers = new ObjectArray<LogParser>;
 		if (state.files.size() > 0)
 		{

@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Log Parsing Library
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
@@ -73,7 +73,7 @@
 /**
  * Log parser callback
  * Parameters:
- *    NetXMS event code, NetXMS event name, original text, source, 
+ *    NetXMS event code, NetXMS event name, original text, source,
  *    original event ID (facility), original severity,
  *    number of capture groups, list of capture groups,
  *    object id, user arg
@@ -108,15 +108,20 @@ private:
 	bool m_isInverted;
 	bool m_breakOnMatch;
 	TCHAR *m_description;
+	int m_repeatInterval;
+	int m_repeatCount;
+   IntegerArray<time_t> *m_matchArray;
+	bool m_resetRepeat;
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
-	                   const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg); 
+	                   const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
    void expandMacros(const TCHAR *regexp, String &out);
 
 public:
 	LogParserRule(LogParser *parser,
 	              const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL,
-					  int numParams = 0, const TCHAR *source = NULL, UINT32 level = 0xFFFFFFFF,
+					  int numParams = 0, int repeatInterval = 0, int repeatCount = 0,
+					  bool resetRepeat = true, const TCHAR *source = NULL, UINT32 level = 0xFFFFFFFF,
 					  UINT32 idStart = 0, UINT32 idEnd = 0xFFFFFFFF);
 	LogParserRule(LogParserRule *src, LogParser *parser);
 	~LogParserRule();
@@ -124,8 +129,8 @@ public:
 	bool isValid() { return m_isValid; }
 	bool match(const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
 	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level,
-	             const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg); 
-	
+	             const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
+
 	void setContext(const TCHAR *context) { safe_free(m_context); m_context = (context != NULL) ? _tcsdup(context) : NULL; }
 	void setContextToChange(const TCHAR *context) { safe_free(m_contextToChange); m_contextToChange = (context != NULL) ? _tcsdup(context) : NULL; }
 	void setContextAction(int action) { m_contextAction = action; }
@@ -152,7 +157,19 @@ public:
 	void setIdRange(UINT32 start, UINT32 end) { m_idStart = start; m_idEnd = end; }
 	QWORD getIdRange() { return ((QWORD)m_idStart << 32) | (QWORD)m_idEnd; }
 
+   void setRepeatInterval(int repeatInterval) { m_repeatInterval = repeatInterval; }
+   int getRepeatInterval() { return m_repeatInterval; }
+
+   void setRepeatCount(int repeatCount) { m_repeatCount = repeatCount; }
+   int getRepeatCount() { return m_repeatCount; }
+
+   void setRepeatReset(bool resetRepeat) { m_resetRepeat = resetRepeat; }
+   bool isRepeatReset() { return m_resetRepeat; }
+
+   int getAppearanceCount() { return m_matchArray->size(); }
 	const TCHAR *getRegexpSource() { return CHECK_NULL(m_regexp); }
+	void matchArrayHousekeeper();
+	bool processMatch();
 };
 
 /**
@@ -184,7 +201,7 @@ private:
 #ifdef _WIN32
    TCHAR *m_marker;
 #endif
-	
+
 	const TCHAR *checkContext(LogParserRule *rule);
 	void trace(int level, const TCHAR *format, ...);
 	bool matchLogRecord(bool hasAttributes, const TCHAR *source, UINT32 eventId, UINT32 level, const TCHAR *line, UINT32 objectId);
@@ -202,8 +219,8 @@ public:
 	LogParser();
 	LogParser(LogParser *src);
 	~LogParser();
-	
-	static ObjectArray<LogParser> *createFromXml(const char *xml, int xmlLen = -1, 
+
+	static ObjectArray<LogParser> *createFromXml(const char *xml, int xmlLen = -1,
 		TCHAR *errorText = NULL, int errBufSize = 0, bool (*eventResolver)(const TCHAR *, UINT32 *) = NULL);
 
 	void setFileName(const TCHAR *name);
@@ -224,7 +241,7 @@ public:
 	void setProcessAllFlag(bool flag) { m_processAllRules = flag; }
 	bool getProcessAllFlag() { return m_processAllRules; }
 
-	bool addRule(const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL, int numParams = 0);
+	bool addRule(const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL, int numParams = 0, int repeatInterval = 0, int repeatCount = 0, bool resetRepeat = true);
 	bool addRule(LogParserRule *rule);
 	void setCallback(LogParserCallback cb) { m_cb = cb; }
 	void setUserArg(void *arg) { m_userArg = arg; }

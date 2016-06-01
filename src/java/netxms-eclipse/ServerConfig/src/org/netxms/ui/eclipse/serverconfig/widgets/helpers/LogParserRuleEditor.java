@@ -39,6 +39,7 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.NXCSession;
+import org.netxms.client.TimePeriod;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;
@@ -65,6 +66,10 @@ public class LogParserRuleEditor extends DashboardComposite
 	private LogParserEditor editor;
 	private LabeledText regexp;
 	private Button checkboxInvert;
+   private Button checkboxReset;
+   private Spinner repeatCount;
+   private Spinner timeRange;
+   private Combo timeUnits;
 	private LabeledText severity;
 	private LabeledText facility;
 	private LabeledText tag;
@@ -224,6 +229,78 @@ public class LogParserRuleEditor extends DashboardComposite
          }
       });          
 		checkboxInvert.setSelection(rule.getMatch().getInvert());
+		
+      Composite matcherRepeatConf = new Composite(matcher, SWT.NONE);
+      toolkit.adapt(matcherRepeatConf);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;      
+      matcherRepeatConf.setLayoutData(gd);
+      
+      layout = new GridLayout();
+      layout.numColumns = 3;
+      layout.marginWidth = 0;
+      matcherRepeatConf.setLayout(layout);      
+
+      final WidgetFactory factory = new WidgetFactory() {
+         @Override
+         public Control createControl(Composite parent, int style)
+         {
+            return new Spinner(parent, style);
+         }
+      };
+      
+      repeatCount = (Spinner)WidgetHelper.createLabeledControl(matcherRepeatConf, SWT.BORDER, factory, "Repeat count", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      toolkit.adapt(repeatCount);
+      repeatCount.setMinimum(0);
+      repeatCount.setSelection(rule.getMatch().getRepeatCount());
+      repeatCount.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            editor.fireModifyListeners();
+         }
+      });
+      
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      repeatCount.setLayoutData(gd); 
+      Composite timeBackGroup = new Composite(matcherRepeatConf, SWT.NONE);
+      toolkit.adapt(timeBackGroup);
+      layout = new GridLayout();
+      layout.marginWidth = 0;
+      layout.marginHeight = 0;
+      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
+      layout.numColumns = 2;
+      timeBackGroup.setLayout(layout);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      timeBackGroup.setLayoutData(gd);
+      
+      timeRange = WidgetHelper.createLabeledSpinner(timeBackGroup, SWT.BORDER, "Repeat interval", 1, 10000, WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeRange.setSelection(rule.getMatch().getTimeRagne()); 
+      toolkit.adapt(timeRange);
+      
+      timeUnits = WidgetHelper.createLabeledCombo(timeBackGroup, SWT.READ_ONLY, "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      timeUnits.add("Seconds");
+      timeUnits.add("Minutes");
+      timeUnits.add("Hours");
+      timeUnits.select(rule.getMatch().getTimeUnit()); 
+      toolkit.adapt(timeUnits);
+      //time range
+
+      checkboxReset = toolkit.createButton(matcherRepeatConf, "Reset repeat count", SWT.CHECK);
+      checkboxReset.addSelectionListener(new SelectionAdapter() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            editor.fireModifyListeners();
+         }
+      });          
+      checkboxReset.setSelection(rule.getMatch().getReset());
 
 		severity = new LabeledText(area, SWT.NONE);
 		toolkit.adapt(severity);
@@ -483,7 +560,9 @@ public class LogParserRuleEditor extends DashboardComposite
 	 */
 	public void save()
 	{
-		rule.setMatch(new LogParserMatch(regexp.getText(), checkboxInvert.getSelection()));
+		rule.setMatch(new LogParserMatch(regexp.getText(), checkboxInvert.getSelection(), intOrNull(repeatCount.getText()), 
+		                                 Integer.parseInt(timeRange.getText()) *(timeUnits.getSelectionIndex() * 60), 
+		                                 checkboxReset.getSelection()));
       rule.setFacilityOrId(intOrNull(facility.getText()));
       rule.setSeverityOrLevel(intOrNull(severity.getText()));
       rule.setTagOrSource(tag.getText());

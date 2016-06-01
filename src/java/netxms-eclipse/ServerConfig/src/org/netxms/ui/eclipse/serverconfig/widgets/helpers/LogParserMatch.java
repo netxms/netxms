@@ -33,6 +33,15 @@ public class LogParserMatch
 
 	@Attribute(required=false)
 	private String invert = null;
+
+   @Attribute(required=false)
+   private Integer repeatCount = null;
+
+   @Attribute(required=false)
+   private Integer repeatInterval = null;
+
+   @Attribute(required=false)
+   private String reset = null;
 	
 	/**
 	 * Protected constructor for XML parser
@@ -45,11 +54,62 @@ public class LogParserMatch
 	 * @param event
 	 * @param parameterCount
 	 */
-	public LogParserMatch(String match, boolean invert)
+	public LogParserMatch(String match, boolean invert, Integer repeatCount, Integer repeatInterval, boolean reset)
 	{
 		this.match = match;
 		setInvert(invert);
+		this.repeatCount = repeatCount;
+		this.repeatInterval = repeatInterval;
+		setReset(reset);
 	}
+
+   /**
+    * @return the repeatCount
+    */
+   public Integer getRepeatCount()
+   {
+      return repeatCount == null ? 0 : repeatCount;
+   }
+
+   /**
+    * @param repeatCount the repeatCount to set
+    */
+   public void setRepeatCount(Integer repeatCount)
+   {
+      this.repeatCount = repeatCount;
+   }
+
+   /**
+    * @return the repeatInterval
+    */
+   public Integer getRepeatInterval()
+   {
+      return repeatInterval == null ? 0 : repeatInterval;
+   }
+
+   /**
+    * @param repeatInterval the repeatInterval to set
+    */
+   public void setRepeatInterval(Integer repeatInterval)
+   {
+      this.repeatInterval = repeatInterval;
+   }
+
+   /**
+    * @return the reset
+    */
+   public boolean getReset()
+   {
+      return reset == null ? true : LogParser.stringToBoolean(reset);
+   }
+
+   /**
+    * @param reset the reset to set
+    */
+   public void setReset(boolean reset)
+   {
+      this.reset = reset ? null : "false";
+   }
 
    /**
     * @return the match
@@ -82,4 +142,36 @@ public class LogParserMatch
    {
       this.invert = LogParser.booleanToString(invert);
    }
+   
+   public int getTimeRagne()
+   {
+      if(repeatInterval == null)
+         return 0;
+      int interval = repeatInterval;
+      if((interval % 60) == 0)
+      {
+         interval = interval/60;
+         if((interval % 60) == 0)
+         {
+            interval = interval/60;
+         }
+      }
+      return interval;
+   }
+   
+   public int getTimeUnit()
+   {
+      if (repeatInterval == null)
+         return 0;
+      int unit = 0;
+      if((repeatInterval % 60) == 0)
+      {
+         unit++;
+         if((repeatInterval % 3600) == 0)
+         {
+            unit++;
+         }
+      }      
+      return unit;
+   }   
 }
