@@ -669,7 +669,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                fieldId += 10;
             }
 
-            NXCPMessage *response = session->doRequestEx(&msg, 2000);
+            NXCPMessage *response = session->doRequestEx(&msg, 15000);
             if (response != NULL)
             {
                UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
