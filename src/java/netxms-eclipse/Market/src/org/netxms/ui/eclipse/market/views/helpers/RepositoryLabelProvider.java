@@ -19,23 +19,45 @@
 package org.netxms.ui.eclipse.market.views.helpers;
 
 import java.util.UUID;
+import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.viewers.IColorProvider;
+import org.eclipse.jface.viewers.IFontProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.ui.eclipse.market.Activator;
 import org.netxms.ui.eclipse.market.objects.EventReference;
 import org.netxms.ui.eclipse.market.objects.MarketObject;
+import org.netxms.ui.eclipse.market.objects.RepositoryElement;
 import org.netxms.ui.eclipse.market.objects.RepositoryRuntimeInfo;
 import org.netxms.ui.eclipse.market.objects.TemplateReference;
 
 /**
  * Label provider for repository manager
  */
-public class RepositoryLabelProvider extends LabelProvider implements ITableLabelProvider
+public class RepositoryLabelProvider extends LabelProvider implements ITableLabelProvider, IFontProvider, IColorProvider
 {
    private Image imageEvent = Activator.getImageDescriptor("icons/event.gif").createImage();
    private Image imageRepository = Activator.getImageDescriptor("icons/repository.gif").createImage();
    private Image imageTemplate = Activator.getImageDescriptor("icons/template.png").createImage();
+   private Font markFont;
+   private Color markColor;
+   
+   /**
+    * Constructor
+    */
+   public RepositoryLabelProvider()
+   {
+      FontData fd = JFaceResources.getDefaultFont().getFontData()[0];
+      fd.style = SWT.BOLD;
+      markFont = new Font(Display.getCurrent(), fd);
+      markColor = new Color(Display.getCurrent(), 0, 148, 255);
+   }
    
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -69,6 +91,10 @@ public class RepositoryLabelProvider extends LabelProvider implements ITableLabe
       {
          case 0:
             return object.getName();
+         case 1:
+            if (object instanceof RepositoryElement)
+               return Integer.toString(((RepositoryElement)object).getActualVersion());
+            return "";
          case 2:
             UUID guid = object.getGuid();
             return (guid != null) ? guid.toString() : ""; 
@@ -82,7 +108,42 @@ public class RepositoryLabelProvider extends LabelProvider implements ITableLabe
    @Override
    public void dispose()
    {
+      imageEvent.dispose();
       imageRepository.dispose();
+      imageTemplate.dispose();
+      markFont.dispose();
+      markColor.dispose();
       super.dispose();
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IFontProvider#getFont(java.lang.Object)
+    */
+   @Override
+   public Font getFont(Object element)
+   {
+      if ((element instanceof RepositoryElement) && ((RepositoryElement)element).isMarked())
+         return markFont;
+      return null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getForeground(java.lang.Object)
+    */
+   @Override
+   public Color getForeground(Object element)
+   {
+      if ((element instanceof RepositoryElement) && ((RepositoryElement)element).isMarked())
+         return markColor;
+      return null;
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.jface.viewers.IColorProvider#getBackground(java.lang.Object)
+    */
+   @Override
+   public Color getBackground(Object element)
+   {
+      return null;
    }
 }

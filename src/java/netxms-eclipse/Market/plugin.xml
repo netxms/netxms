@@ -29,6 +29,18 @@
             id="org.netxms.ui.eclipse.market.commands.openRepositoryManager"
             name="Repository Manager">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.market.commands.mark"
+            name="Mark for installation">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.market.commands.unmark"
+            name="Unmark for installation">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.market.commands.install"
+            name="Install">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -37,6 +49,24 @@
             contextId="org.netxms.ui.eclipse.market.context.RepositoryManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.market.commands.mark"
+            contextId="org.netxms.ui.eclipse.market.context.RepositoryManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+M">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.market.commands.unmark"
+            contextId="org.netxms.ui.eclipse.market.context.RepositoryManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+U">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.market.commands.install"
+            contextId="org.netxms.ui.eclipse.market.context.RepositoryManager"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="F2">
       </key>
    </extension>
    <extension

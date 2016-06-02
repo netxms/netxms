@@ -53,6 +53,7 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.market.Activator;
 import org.netxms.ui.eclipse.market.dialogs.RepositoryPropertiesDlg;
+import org.netxms.ui.eclipse.market.objects.RepositoryElement;
 import org.netxms.ui.eclipse.market.objects.RepositoryRuntimeInfo;
 import org.netxms.ui.eclipse.market.views.helpers.RepositoryContentProvider;
 import org.netxms.ui.eclipse.market.views.helpers.RepositoryFilter;
@@ -83,6 +84,9 @@ public class RepositoryManager extends ViewPart
    private Action actionShowFilter;
    private Action actionAddRepository;
    private Action actionDelete;
+   private Action actionMark;
+   private Action actionUnmark;
+   private Action actionInstall;
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -232,6 +236,36 @@ public class RepositoryManager extends ViewPart
             deleteRepository();
          }
       };
+      
+      actionMark = new Action("&Mark for installation") {
+         @Override
+         public void run()
+         {
+            markForInstallation(true);
+         }
+      };
+      actionMark.setActionDefinitionId("org.netxms.ui.eclipse.market.commands.mark"); //$NON-NLS-1$
+      handlerService.activateHandler(actionMark.getActionDefinitionId(), new ActionHandler(actionMark));
+      
+      actionUnmark = new Action("&Unmark for installation") {
+         @Override
+         public void run()
+         {
+            markForInstallation(false);
+         }
+      };
+      actionUnmark.setActionDefinitionId("org.netxms.ui.eclipse.market.commands.unmark"); //$NON-NLS-1$
+      handlerService.activateHandler(actionUnmark.getActionDefinitionId(), new ActionHandler(actionUnmark));
+      
+      actionInstall = new Action("&Install", Activator.getImageDescriptor("icons/install.gif")) {
+         @Override
+         public void run()
+         {
+            install();
+         }
+      };
+      actionInstall.setActionDefinitionId("org.netxms.ui.eclipse.market.commands.install"); //$NON-NLS-1$
+      handlerService.activateHandler(actionInstall.getActionDefinitionId(), new ActionHandler(actionInstall));
    }
    
    /**
@@ -251,6 +285,8 @@ public class RepositoryManager extends ViewPart
     */
    private void fillLocalPullDown(IMenuManager manager)
    {
+      manager.add(actionInstall);
+      manager.add(new Separator());
       manager.add(actionAddRepository);
       manager.add(new Separator());
       manager.add(actionShowFilter);
@@ -265,6 +301,8 @@ public class RepositoryManager extends ViewPart
     */
    private void fillLocalToolBar(IToolBarManager manager)
    {
+      manager.add(actionInstall);
+      manager.add(new Separator());
       manager.add(actionAddRepository);
       manager.add(new Separator());
       manager.add(actionRefresh);
@@ -308,6 +346,23 @@ public class RepositoryManager extends ViewPart
       {
          mgr.add(actionDelete);
       }
+      else if (selectionContainsRepositoryElements(selection))
+      {
+         mgr.add(actionMark);
+         mgr.add(actionUnmark);
+      }
+   }
+   
+   /**
+    * @param selection
+    * @return
+    */
+   private static boolean selectionContainsRepositoryElements(IStructuredSelection selection)
+   {
+      for(Object o : selection.toList())
+         if (o instanceof RepositoryElement)
+            return true;
+      return false;
    }
    
    /**
@@ -445,5 +500,121 @@ public class RepositoryManager extends ViewPart
             return "Cannot delete repository";
          }
       }.start();
+   }
+   
+   /**
+    * Mark selected elements for installation
+    */
+   private void markForInstallation(boolean marked)
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      for(Object o : selection.toList())
+      {
+         if (o instanceof RepositoryElement)
+            ((RepositoryElement)o).setMarked(marked);
+      }
+      viewer.refresh();
+   }
+   
+   /**
+    * Install selected elements
+    */
+   @SuppressWarnings("unchecked")
+   private void install()
+   {     
+      final List<InstallData> installData = new ArrayList<InstallData>();
+      ArrayList<RepositoryRuntimeInfo> repositories = (ArrayList<RepositoryRuntimeInfo>)viewer.getInput();
+      for(RepositoryRuntimeInfo r : repositories)
+      {
+         List<RepositoryElement> markedElements = r.getMarkedElements();
+         if (markedElements.isEmpty())
+            continue;
+
+         StringBuilder sb = new StringBuilder();
+         for(RepositoryElement e : markedElements)
+         {
+            if (sb.length() == 0)
+               sb.append("{ \"get-items\":[ ");
+            else
+               sb.append(", ");
+            sb.append("{ \"guid\":\"");
+            sb.append(e.getGuid().toString());
+            sb.append("\", \"version\":");
+            sb.append(e.getActualVersion());
+            sb.append(" }");
+         }
+         sb.append(" ] }");
+         installData.add(new InstallData(r, sb.toString()));
+      }
+      
+      if (installData.isEmpty())
+         return;
+      
+      actionInstall.setEnabled(false);
+      new ConsoleJob("Install items from repository", this, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            for(final InstallData d : installData)
+            {
+               importFromRepository(d.repository, d.request);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     d.repository.setAllMarked(false);
+                     viewer.refresh();
+                  }
+               });
+            }
+         }
+         
+         @Override
+         protected void jobFinalize()
+         {
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  actionInstall.setEnabled(true);
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return "Import failed";
+         }
+      }.start();
+   }
+   
+   /**
+    * Import configuration elements from repository
+    * 
+    * @param repository
+    * @param request
+    * @throws Exception
+    */
+   private void importFromRepository(RepositoryRuntimeInfo repository, String request) throws Exception
+   {
+      String importFile = repository.loadImportFile(request);
+      Activator.logInfo("Import XML received from repository " + repository.getName() + ": " + importFile);
+      session.importConfiguration(importFile, 0);
+   }
+   
+   /**
+    * Install data
+    */
+   private class InstallData
+   {
+      public RepositoryRuntimeInfo repository;
+      public String request;
+
+      public InstallData(RepositoryRuntimeInfo repository, String request)
+      {
+         this.repository = repository;
+         this.request = request;
+      }
    }
 }

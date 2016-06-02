@@ -18,7 +18,14 @@
  */
 package org.netxms.ui.eclipse.market.objects;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -28,7 +35,9 @@ public abstract class RepositoryElement implements MarketObject
 {
    private UUID guid;
    private String name;
-   private MarketObject parent; 
+   private MarketObject parent;
+   private List<Instance> instances;
+   private boolean marked;
    
    /**
     * Create element from JSON object
@@ -41,6 +50,28 @@ public abstract class RepositoryElement implements MarketObject
       this.guid = guid;
       name = json.getString("name");
       parent = null;
+      marked = false;
+      
+      JSONArray a = json.getJSONArray("instances");
+      if (a != null)
+      {
+         instances = new ArrayList<Instance>(a.length());
+         for(int i = 0; i < a.length(); i++)
+         {
+            instances.add(new Instance(a.getJSONObject(i)));
+         }
+         Collections.sort(instances, new Comparator<Instance>() {
+            @Override
+            public int compare(Instance o1, Instance o2)
+            {
+               return o2.getVersion() - o1.getVersion();
+            }
+         });
+      }
+      else
+      {
+         instances = new ArrayList<Instance>(0);
+      }
    }   
    
    /* (non-Javadoc)
@@ -49,7 +80,7 @@ public abstract class RepositoryElement implements MarketObject
    @Override
    public String getName()
    {
-      return name;
+      return marked ? name + " *" : name;
    }
 
    /* (non-Javadoc)
@@ -96,5 +127,104 @@ public abstract class RepositoryElement implements MarketObject
    public void setParent(Category parent)
    {
       this.parent = parent;
+   }
+
+   /**
+    * @return the marked
+    */
+   public boolean isMarked()
+   {
+      return marked;
+   }
+
+   /**
+    * @param marked the marked to set
+    */
+   public void setMarked(boolean marked)
+   {
+      this.marked = marked;
+   }
+   
+   /**
+    * Get all instances of this element
+    * 
+    * @return
+    */
+   public List<Instance> getInstances()
+   {
+      return instances;
+   }
+   
+   /**
+    * Get most actual instance of this element
+    * 
+    * @return
+    */
+   public Instance getActualInstance()
+   {
+      return instances.isEmpty() ? null : instances.get(0);
+   }
+   
+   /**
+    * Get version of most actual instance
+    * 
+    * @return
+    */
+   public int getActualVersion()
+   {
+      return instances.isEmpty() ? 0 : instances.get(0).getVersion();
+   }
+   
+   /**
+    * Repository element's instance
+    */
+   public class Instance
+   {
+      private Date timestamp;
+      private int version;
+      private String comments;
+      
+      /**
+       * Create instance from JSON object
+       * 
+       * @param json
+       */
+      protected Instance(JSONObject json)
+      {
+         timestamp = new Date(json.getLong("timestamp") * 1000L);
+         version = json.getInt("version");
+         try
+         {
+            comments = json.getString("comment");
+         }
+         catch(JSONException e)
+         {
+            comments = "";
+         }
+      }
+
+      /**
+       * @return the timestamp
+       */
+      public Date getTimestamp()
+      {
+         return timestamp;
+      }
+
+      /**
+       * @return the version
+       */
+      public int getVersion()
+      {
+         return version;
+      }
+
+      /**
+       * @return the comments
+       */
+      public String getComments()
+      {
+         return comments;
+      }
    }
 }

@@ -17,6 +17,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */package org.netxms.ui.eclipse.market;
 
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -81,5 +82,36 @@ public class Activator extends AbstractUIPlugin
    public static ImageDescriptor getImageDescriptor(String path)
    {
       return imageDescriptorFromPlugin(PLUGIN_ID, path);
+   }
+
+   /**
+    * Log via platform logging facilities
+    * 
+    * @param msg
+    */
+   public static void logInfo(String msg)
+   {
+      log(Status.INFO, msg, null);
+   }
+
+   /**
+    * Log via platform logging facilities
+    * 
+    * @param msg
+    */
+   public static void logError(String msg, Exception e)
+   {
+      log(Status.ERROR, msg, e);
+   }
+
+   /**
+    * Log via platform logging facilities
+    * 
+    * @param msg
+    * @param e
+    */
+   public static void log(int status, String msg, Exception e)
+   {
+      getDefault().getLog().log(new Status(status, PLUGIN_ID, Status.OK, msg, e));
    }
 }
