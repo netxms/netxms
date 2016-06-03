@@ -78,7 +78,7 @@
  *    number of capture groups, list of capture groups,
  *    object id, user arg
  */
-typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *, UINT32, UINT32, int, TCHAR **, UINT32, void *);
+typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *, UINT32, UINT32, int, TCHAR **, UINT32, void *, int matchRepeatCount);
 
 class LIBNXLP_EXPORTABLE LogParser;
 

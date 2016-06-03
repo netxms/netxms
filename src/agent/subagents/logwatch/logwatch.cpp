@@ -134,29 +134,34 @@ static void SubagentShutdown()
  */
 static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *text,
                            const TCHAR *source, UINT32 eventId, UINT32 severity,
-                           int cgCount, TCHAR **cgList, UINT32 objectId, void *userArg)
+                           int cgCount, TCHAR **cgList, UINT32 objectId, void *userArg,
+                           int matchRepeatCount)
 {
+   int count = cgCount + 1;
+   TCHAR eventIdText[16], severityText[16], repeatCount[16];
+   _sntprintf(repeatCount, 16, _T("%d"), matchRepeatCount);
    if (source != NULL)
    {
-      TCHAR eventIdText[16], severityText[16];
       _sntprintf(eventIdText, 16, _T("%u"), eventId);
       _sntprintf(severityText, 16, _T("%u"), severity);
+      count += 4;
+   }
 
-      int count = cgCount + 3;
-      TCHAR **list = (TCHAR **)malloc(sizeof(TCHAR *) * count);
-      int i;
-      for(i = 0; i < cgCount; i++)
-         list[i] = cgList[i];
+   TCHAR **list = (TCHAR **)malloc(sizeof(TCHAR *) * count);
+   int i;
+   for(i = 0; i < cgCount; i++)
+      list[i] = cgList[i];
+
+   if (source != NULL)
+   {
       list[i++] = (TCHAR *)source;
       list[i++] = eventIdText;
       list[i++] = severityText;
-	   AgentSendTrap2(eventCode, eventName, count, list);
-      free(list);
    }
-   else
-   {
-	   AgentSendTrap2(eventCode, eventName, cgCount, cgList);
-   }
+   list[i++] = repeatCount;
+
+   AgentSendTrap2(eventCode, eventName, count, list);
+   free(list);
 }
 
 /**

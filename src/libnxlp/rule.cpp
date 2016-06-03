@@ -155,7 +155,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
-				cb(m_eventCode, m_eventName, line, source, eventId, level, 0, NULL, objectId, userArg);
+				cb(m_eventCode, m_eventName, line, source, eventId, level, 0, NULL, objectId, userArg, getAppearanceCount());
 			return true;
 		}
 	}
@@ -193,7 +193,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 					}
 				}
 
-				cb(m_eventCode, m_eventName, line, source, eventId, level, m_numParams, params, objectId, userArg);
+				cb(m_eventCode, m_eventName, line, source, eventId, level, m_numParams, params, objectId, userArg, getAppearanceCount());
 
 				for(i = 0; i < m_numParams; i++)
 					free(params[i]);

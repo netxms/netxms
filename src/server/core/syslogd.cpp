@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
@@ -113,7 +113,7 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
    {
       timestamp.tm_mday = *pCurr - '0';
    }
-   else 
+   else
    {
       if (*pCurr != ' ')
          return FALSE;  // Invalid day of month
@@ -481,18 +481,26 @@ static void QueueSyslogMessage(char *msg, int msgLen, const InetAddress& sourceA
 /**
  * Callback for syslog parser
  */
-static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *line, 
+static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *line,
                                  const TCHAR *source, UINT32 facility, UINT32 severity,
-                                 int paramCount, TCHAR **params, UINT32 objectId, void *userArg)
+                                 int paramCount, TCHAR **params, UINT32 objectId, void *userArg,
+                                 int matchRepeatCount)
 {
 	char format[] = "ssssssssssssssssssssssssssssssss";
 	TCHAR *plist[32];
 	int i, count;
+	TCHAR repeatCount[16];
 
 	count = min(paramCount, 32);
 	format[count] = 0;
 	for(i = 0; i < count; i++)
 		plist[i] = params[i];
+   if(count < 32)
+   {
+      _sntprintf(repeatCount, 16, _T("%d"), matchRepeatCount);
+      plist[count] = repeatCount;
+      count++;
+   }
 	PostEvent(eventCode, objectId, format,
 	          plist[0], plist[1], plist[2], plist[3],
 	          plist[4], plist[5], plist[6], plist[7],
