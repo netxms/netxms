@@ -248,7 +248,6 @@ static void AddLogwatchPolicyFiles()
 
          TCHAR fullName[MAX_PATH];
          _tcscpy(fullName, policyFolder);
-         _tcscat(fullName, FS_PATH_SEPARATOR);
          _tcscat(fullName, d->d_name);
 
          NX_STAT_STRUCT st;

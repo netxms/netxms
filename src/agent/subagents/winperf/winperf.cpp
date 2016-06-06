@@ -608,7 +608,7 @@ DECLARE_SUBAGENT_ENTRY_POINT(WINPERF)
    {
       AgentWriteDebugLog(4, _T("WinPerf: \"\\Memory\\Free & Zero Page List Bytes\" is supported"));
       AddParameter(_T("System.Memory.Physical.Free"), H_CounterAlias, (TCHAR *)counter, DCI_DT_UINT64, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE);
-      AddParameter(_T("System.Memory.Physical.FreePerc"), H_FreeMemoryPct, (TCHAR *)counter, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT);
+      AddParameter(_T("System.Memory.Physical.FreePerc"), H_FreeMemoryPct, (TCHAR *)counter, DCI_DT_INT, DCIDESC_SYSTEM_MEMORY_PHYSICAL_FREE_PCT);
    }
    else
    {

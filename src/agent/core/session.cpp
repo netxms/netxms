@@ -34,6 +34,7 @@ void UnregisterSession(UINT32 dwIndex);
 UINT32 DeployPolicy(CommSession *session, NXCPMessage *request);
 UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request);
 UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg);
+void UpdatePolicyInventory();
 void ClearDataCollectionConfiguration();
 
 /**

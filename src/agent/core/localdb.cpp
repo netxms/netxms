@@ -142,11 +142,13 @@ bool OpenLocalDatabase()
    if (s_db == NULL)
    {
       DebugPrintf(INVALID_INDEX, 1, _T("Local database open error: %s"), errorText);
+	   g_failFlags = FAIL_OPEN_DATABASE;
       return false;
    }
 
    if (!CheckDatabaseStructure() || !UpgradeDatabase())
    {
+	   g_failFlags = FIAL_UPGRADE_DATABASE;
       DBDisconnect(s_db);
       s_db = NULL;
       return false;

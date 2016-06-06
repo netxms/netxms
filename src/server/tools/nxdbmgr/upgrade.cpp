@@ -674,6 +674,46 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V404 to V405
+ */
+static BOOL H_UpgradeFromV404(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_AGENT_LOG_FAIL, _T("SYS_AGENT_LOG_FAIL"),
+            SEVERITY_MAJOR, EF_LOG, _T("262057ca-357a-4a4d-9b78-42ae96e490a1"),
+      _T("Problem with agent log: %2"),
+      _T("Generated on status poll if agent reposts log open problem.\r\n")
+      _T("Parameters:\r\n")
+      _T("    1) Status\r\n")
+      _T("    2) Description")));
+   CHK_EXEC(CreateEventTemplate(EVENT_AGENT_LOCAL_DATABASE_FAIL, _T("SYS_AGENT_LOCAL_DATABASE_FAIL"),
+            SEVERITY_MAJOR, EF_LOG, _T("d02b63f1-1151-429e-adb9-1dfbb3a31b32"),
+      _T("Problem with agent local database: %2"),
+      _T("Generated on status poll if agent reposts local database problem.\r\n")
+      _T("Parameters:\r\n")
+      _T("    1) Status\r\n")
+      _T("    2) Description")));
+
+	int ruleId = NextFreeEPPruleID();
+   TCHAR query[1024];
+	_sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) ")
+                           _T("VALUES (%d,'19bd89ba-8bb2-4915-8546-a1ecc650dedd',7944,'Generate an alarm when there is problem with log on agent','%%m',5,'SYS_AGENT_LOG_FAIL_%%1','',0,%d,0,'')"),
+                           ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_AGENT_LOG_FAIL);
+   CHK_EXEC(SQLQuery(query));
+	ruleId = NextFreeEPPruleID();
+	_sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) ")
+                           _T("VALUES (%d,'cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04',7944,'Generate an alarm when  there is problem with local database on agent','%%m',5,'SYS_AGENT_LOCAL_DATABASE_FAIL_%%1','',0,%d,0,'')"),
+                           ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_AGENT_LOCAL_DATABASE_FAIL);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='405' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V403 to V404
  */
 static BOOL H_UpgradeFromV403(int currVersion, int newVersion)
@@ -10192,6 +10232,7 @@ static struct
    { 401, 402, H_UpgradeFromV401 },
    { 402, 403, H_UpgradeFromV402 },
    { 403, 404, H_UpgradeFromV403 },
+   { 404, 405, H_UpgradeFromV404 },
    { 0, 0, NULL }
 };
 

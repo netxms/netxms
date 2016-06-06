@@ -1641,6 +1641,38 @@ restart_agent_check:
       }
    }
 
+   //Get Agent log and agent localDatabase statuses
+   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
+   {
+      TCHAR buffer[MAX_RESULT_LENGTH];
+      if (getItemFromAgent(_T("Agent.LogFile"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      {
+         UINT32 status = _tcstol(buffer, NULL, 0);
+         if(status != 0)
+            PostEvent(EVENT_AGENT_LOG_FAIL, m_id, "ds", status, _T("could not open"));
+      }
+      else
+      {
+         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get agent log status"), m_name, m_id);
+      }
+
+      if (getItemFromAgent(_T("Agent.LocalDatabase"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      {
+         UINT32 status = _tcstol(buffer, NULL, 0);
+         const TCHAR *statusDescription[3]= {
+                                       _T("normal"),
+                                       _T("could not open database"),
+                                       _T("could not update database"),
+                                       };
+         if(status != 0)
+            PostEvent(EVENT_AGENT_LOCAL_DATABASE_FAIL, m_id, "ds", status, statusDescription[status]);
+      }
+      else
+      {
+         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get agent local database status"), m_name, m_id);
+      }
+   }
+
    // Send delayed events and destroy delayed event queue
 	if (pQueue != NULL)
 	{
@@ -1881,11 +1913,11 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
                ServerJob *job = new PolicyDeploymentJob(this, (AgentPolicy *)m_pParentList[i], 0); //TODO: change to system user
 					if (AddJob(job))
 					{
-                  DbgPrintf(5, _T("ConfPoll(%s): \"%s\" policy deploy scheduled for \"%s\" node"), m_pParentList[i]->getName(), m_name);
+                  DbgPrintf(5, _T("ConfPoll(%s): \"%s\" policy deploy scheduled for \"%s\" node"), m_name, m_pParentList[i]->getName(), m_name );
 					}
 					else
 					{
-                  DbgPrintf(5, _T("ConfPoll(%s): \"%s\" policy deploy is not possible to scheduled for \"%s\" node"), m_pParentList[i]->getName(), m_name);
+                  DbgPrintf(5, _T("ConfPoll(%s): \"%s\" policy deploy is not possible to scheduled for \"%s\" node"), m_name, m_pParentList[i]->getName(), m_name);
 						delete job;
                   unbindList[unbindListSize++] = m_pParentList[i];
 					}

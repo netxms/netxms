@@ -125,6 +125,10 @@
 #define AF_ENABLE_SNMP_TRAP_PROXY   0x00200000
 #define AF_BACKGROUND_LOG_WRITER    0x00400000
 
+//Flags for errors while loading
+#define FAIL_OPEN_LOG               0x00000001
+#define FAIL_OPEN_DATABASE          0x00000002
+#define FIAL_UPGRADE_DATABASE       0x00000003
 
 #ifdef _WIN32
 
@@ -611,6 +615,7 @@ TCHAR *GetPdhErrorText(UINT32 dwError, TCHAR *pszBuffer, int iBufSize);
  * Global variables
  */
 extern UINT32 g_dwFlags;
+extern UINT32 g_failFlags;
 extern TCHAR g_szLogFile[];
 extern TCHAR g_szSharedSecret[];
 extern TCHAR g_szConfigFile[];
@@ -619,6 +624,7 @@ extern TCHAR g_szConfigServer[];
 extern TCHAR g_szRegistrar[];
 extern TCHAR g_szListenAddress[];
 extern TCHAR g_szConfigIncludeDir[];
+extern TCHAR g_szConfigPolicyDir[];
 extern TCHAR g_szLogParserDirectory[];
 extern TCHAR g_szDataDirectory[];
 extern TCHAR g_masterAgent[];

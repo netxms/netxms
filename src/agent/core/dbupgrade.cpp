@@ -21,6 +21,7 @@
 **/
 
 #include "nxagentd.h"
+#include <nxstat.h>
 
 /**
  * Execute with error check
@@ -35,6 +36,81 @@ bool g_ignoreAgentDbErrors = FALSE;
  * Database handle
  */
 static DB_HANDLE s_db = NULL;
+
+/**
+ * Upgrade from V2 to V3
+ */
+static BOOL H_UpgradeFromV2(int currVersion, int newVersion)
+{
+   //This upgrade procedure moves config policy from old folder to a new one that is specially created form this purposes
+   DB_RESULT hResult = DBSelect(s_db, _T("SELECT guid FROM agent_policy WHERE type=1"));
+   if (hResult != NULL)
+   {
+      for(int row = 0; row < DBGetNumRows(hResult); row++)
+      {
+         uuid guid = DBGetFieldGUID(hResult, row, 0);
+         TCHAR oldPath[MAX_PATH], newPath[MAX_PATH], name[64], tail;
+
+         tail = g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1];
+         _sntprintf(newPath, MAX_PATH, _T("%s%s%s.conf"), g_szConfigPolicyDir,
+                    ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+                    guid.toString(name));
+         tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
+         _sntprintf(oldPath, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
+ 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+               guid.toString(name));
+
+         //check that file exists and move it to other folder
+         NX_STAT_STRUCT st;
+
+         if (CALL_STAT(oldPath, &st) != 0)
+         {
+            continue;
+         }
+
+#ifdef _WIN32
+         MoveFileEx(oldPath, newPath, MOVEFILE_COPY_ALLOWED);
+#else
+         if (_trename(oldPath, newPath) != 0)
+         {
+            int oldFile = _topen(oldPath, O_RDONLY | O_BINARY);
+            bool success = true;
+            if (oldFile == -1)
+               continue;
+
+            int newFile = _topen(newPath, O_CREAT | O_BINARY | O_WRONLY, st.st_mode); // should be copied with the same acess rights
+            if (newFile == -1)
+            {
+               close(oldFile);
+               continue;
+            }
+
+            int size = 16384, in, out;
+            BYTE *bytes = (BYTE *)malloc(size);
+
+            while((in = read(oldFile, bytes, size)) > 0)
+            {
+               out = write(newFile, bytes, (ssize_t)in);
+               if (out != in)
+               {
+                  break;
+               }
+            }
+
+            close(oldFile);
+            close(newFile);
+            free(bytes);
+            if(success)
+               _tremove(oldPath);
+         }
+#endif /* _WIN32 */
+      }
+      DBFreeResult(hResult);
+   }
+
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 3));
+   return TRUE;
+}
 
 /**
  * Upgrade from V1 to V2
@@ -192,6 +268,7 @@ static struct
 } m_dbUpgradeMap[] =
 {
    { 1, 2, H_UpgradeFromV1 },
+   { 2, 3, H_UpgradeFromV2 },
    { 0, 0, NULL }
 };
 

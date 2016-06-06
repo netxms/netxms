@@ -79,6 +79,8 @@ void DestroySessionList();
 
 BOOL RegisterOnServer(const TCHAR *pszServer);
 
+void UpdatePolicyInventory();
+
 #if !defined(_WIN32)
 void InitStaticSubagents();
 #endif
@@ -136,6 +138,7 @@ extern const TCHAR *g_szMessages[];
  * Global variables
  */
 UINT32 g_dwFlags = AF_ENABLE_ACTIONS | AF_ENABLE_AUTOLOAD;
+UINT32 g_failFlags = 0;
 TCHAR g_szLogFile[MAX_PATH] = AGENT_DEFAULT_LOG;
 TCHAR g_szSharedSecret[MAX_SECRET_LENGTH] = _T("admin");
 TCHAR g_szConfigFile[MAX_PATH] = AGENT_DEFAULT_CONFIG;
@@ -146,6 +149,7 @@ TCHAR g_szConfigServer[MAX_DB_STRING] = _T("not_set");
 TCHAR g_szRegistrar[MAX_DB_STRING] = _T("not_set");
 TCHAR g_szListenAddress[MAX_PATH] = _T("*");
 TCHAR g_szConfigIncludeDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
+TCHAR g_szConfigPolicyDir[MAX_PATH] = AGENT_DEFAULT_CONFIG_D;
 TCHAR g_szLogParserDirectory[MAX_PATH] = _T("");
 TCHAR g_masterAgent[MAX_PATH] = _T("not_set");
 TCHAR g_szSNMPTrapListenAddress[MAX_PATH] = _T("*");
@@ -523,6 +527,27 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 #endif
 }
 
+static LONG H_FailStatusProvider(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+{
+   UINT32 result = 0;
+   switch(*pArg)
+   {
+      case 'D':
+         if((g_failFlags & FAIL_OPEN_DATABASE) > 0)
+            result++;
+         if((g_failFlags & FIAL_UPGRADE_DATABASE) > 0)
+            result++;
+         break;
+      case 'L':
+         if((g_failFlags & FAIL_OPEN_LOG) > 0)
+            result++;
+         break;
+   }
+
+   ret_int(pValue, result);
+   return SYSINFO_RC_SUCCESS;
+}
+
 /**
  * This function writes message from subagent to agent's log
  */
@@ -663,13 +688,17 @@ BOOL Initialize()
       GetNetXMSDirectory(nxDirData, g_szDataDirectory);
    }
 
+   //Initialize config policy folder
+   TCHAR tail = g_szDataDirectory[_tcslen(g_szDataDirectory) - 1];
+	_sntprintf(g_szConfigPolicyDir, MAX_PATH, _T("%s%s%s"), g_szDataDirectory,
+	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+              CONFIG_AP_FOLDER FS_PATH_SEPARATOR);
+	CreateFolder(g_szConfigPolicyDir);
+	//load configuration
+   g_config->loadConfigDirectory(g_szConfigPolicyDir, _T("agent"));
+	g_config->parseTemplate(_T("agent"), m_cfgTemplate);
+
    // Open log file
-	if (!(g_dwFlags & AF_USE_SYSLOG))
-	{
-		if (!nxlog_set_rotation_policy((int)s_logRotationMode, (int)s_maxLogSize, (int)s_logHistorySize, s_dailyLogFileSuffix))
-			if (!(g_dwFlags & AF_DAEMON))
-				_tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
-	}
    if (!nxlog_open((g_dwFlags & AF_USE_SYSLOG) ? NXAGENTD_SYSLOG_NAME : g_szLogFile,
 	                ((g_dwFlags & AF_USE_SYSLOG) ? NXLOG_USE_SYSLOG : 0) |
 	                ((g_dwFlags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
@@ -681,9 +710,30 @@ BOOL Initialize()
 	                g_dwNumMessages, g_szMessages, MSG_DEBUG))
 #endif
 	{
-		_ftprintf(stderr, _T("FATAL ERROR: Cannot open log file\n"));
-		return FALSE;
+	   //TODO: set flag that log have been opened with errors
+	   s_debugLevel = 1;
+	   g_failFlags = FAIL_OPEN_LOG;
+      nxlog_open(NXAGENTD_SYSLOG_NAME, NXLOG_USE_SYSLOG |
+	               ((g_dwFlags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
+                  ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
+	               _T("NXAGENTD.EXE"),
+#ifdef _WIN32
+	               0, NULL, MSG_DEBUG);
+#else
+	               g_dwNumMessages, g_szMessages, MSG_DEBUG);
+#endif
+		_ftprintf(stderr, _T("ERROR: Cannot open log file, logs will be written to syslog with debug level 1\n"));
+
 	}
+	else
+   {
+      if (!(g_dwFlags & AF_USE_SYSLOG))
+      {
+         if (!nxlog_set_rotation_policy((int)s_logRotationMode, (int)s_maxLogSize, (int)s_logHistorySize, s_dailyLogFileSuffix))
+            if (!(g_dwFlags & AF_DAEMON))
+               _tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
+      }
+   }
 	nxlog_write(MSG_USE_CONFIG_D, NXLOG_INFO, "s", g_szConfigIncludeDir);
 	nxlog_write(MSG_DEBUG_LEVEL, NXLOG_INFO, "d", s_debugLevel);
 	nxlog_set_debug_level(s_debugLevel);
@@ -698,12 +748,13 @@ BOOL Initialize()
    CreateFolder(g_szDataDirectory);
 
    //Initialize log parser policy folder
-   TCHAR tail = g_szDataDirectory[_tcslen(g_szDataDirectory) - 1];
+   tail = g_szDataDirectory[_tcslen(g_szDataDirectory) - 1];
 	_sntprintf(g_szLogParserDirectory, MAX_PATH, _T("%s%s%s"), g_szDataDirectory,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               LOGPARSER_AP_FOLDER FS_PATH_SEPARATOR);
    DebugPrintf(INVALID_INDEX, 6, _T("Log parser policy directory: %s"), g_szLogParserDirectory);
 	CreateFolder(g_szLogParserDirectory);
+   DebugPrintf(INVALID_INDEX, 6, _T("Configuration policy directory: %s"), g_szConfigPolicyDir);
    CreateFolder(g_szFileStore);
 
 #ifdef _WIN32
@@ -766,6 +817,9 @@ BOOL Initialize()
 
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
+		//Add build-in DCIs
+      AddParameter(_T("Agent.LogFile"), H_FailStatusProvider, _T("L"), DCI_DT_UINT, _T("Get log status"));
+      AddParameter(_T("Agent.LocalDatabase"), H_FailStatusProvider, _T("D"), DCI_DT_UINT, _T("Get database status"));
 
 	   // Load platform subagents
 #if !defined(_WIN32)
@@ -998,6 +1052,9 @@ BOOL Initialize()
       _tremove(upgradeFileName);
       DeleteRegistryEntry(_T("upgrade.file"));
 	}
+
+	//Update policy inventory according to files that exist on file system
+   UpdatePolicyInventory();
 
    return TRUE;
 }

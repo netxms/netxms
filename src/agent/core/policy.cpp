@@ -27,7 +27,7 @@
 #define close _close
 #endif
 
-#define POLICY_REGISTRY_PATH _T("/policyRegistry")
+#include <nxstat.h>
 
 /**
  * Register policy in persistent storage
@@ -134,8 +134,8 @@ static UINT32 DeployConfig(UINT32 session, const uuid& guid, NXCPMessage *msg)
 	int fh;
 	UINT32 rcc;
 
-	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
-	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
+	tail = g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1];
+	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigPolicyDir,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               guid.toString(name));
 
@@ -257,8 +257,8 @@ static UINT32 RemoveConfig(UINT32 session, const uuid& guid, NXCPMessage *msg)
 	TCHAR path[MAX_PATH], name[64], tail;
 	UINT32 rcc;
 
-	tail = g_szConfigIncludeDir[_tcslen(g_szConfigIncludeDir) - 1];
-	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigIncludeDir,
+	tail = g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1];
+	_sntprintf(path, MAX_PATH, _T("%s%s%s.conf"), g_szConfigPolicyDir,
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               guid.toString(name));
 
@@ -367,4 +367,45 @@ UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg)
    }
 
 	return success;
+}
+
+void UpdatePolicyInventory()
+{
+	DB_HANDLE hdb = GetLocalDatabaseHandle();
+	if(hdb != NULL)
+   {
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT guid,type FROM agent_policy"));
+      if (hResult != NULL)
+      {
+         for(int row = 0; row < DBGetNumRows(hResult); row++)
+         {
+            uuid guid = DBGetFieldGUID(hResult, row, 0);
+            int type = DBGetFieldULong(hResult, row, 1);
+            TCHAR filePath[MAX_PATH], name[64], tail;
+
+            switch(type)
+            {
+               case AGENT_POLICY_CONFIG:
+                  tail = g_szConfigPolicyDir[_tcslen(g_szConfigPolicyDir) - 1];
+                  _sntprintf(filePath, MAX_PATH, _T("%s%s%s.conf"), g_szConfigPolicyDir,
+                             ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
+                             guid.toString(name));
+                  break;
+               case AGENT_POLICY_LOG_PARSER:
+                  _sntprintf(filePath, MAX_PATH, _T("%s%s.xml"), g_szLogParserDirectory, guid.toString(name));
+                  break;
+               default:
+                  continue;
+                  break;
+            }
+
+            NX_STAT_STRUCT st;
+            if (CALL_STAT(filePath, &st) == 0)
+            {
+               continue;
+            }
+            UnregisterPolicy(guid);
+         }
+      }
+   }
 }
