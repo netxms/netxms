@@ -703,7 +703,7 @@ static BOOL H_UpgradeFromV404(int currVersion, int newVersion)
    CHK_EXEC(SQLQuery(query));
 	ruleId = NextFreeEPPruleID();
 	_sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) ")
-                           _T("VALUES (%d,'cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04',7944,'Generate an alarm when  there is problem with local database on agent','%%m',5,'SYS_AGENT_LOCAL_DATABASE_FAIL_%%1','',0,%d,0,'')"),
+                           _T("VALUES (%d,'cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04',7944,'Generate an alarm when there is problem with local database on agent','%%m',5,'SYS_AGENT_LOCAL_DATABASE_FAIL_%%1','',0,%d,0,'')"),
                            ruleId, EVENT_ALARM_TIMEOUT);
    CHK_EXEC(SQLQuery(query));
    _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_AGENT_LOCAL_DATABASE_FAIL);

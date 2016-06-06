@@ -895,7 +895,7 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   4) Network mask' CONCAT CRLF CONCAT
       '   5) Interface index'
    );
-   
+
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
       EVENT_IF_IPADDR_DELETED, 'SYS_IF_IPADDR_DELETED', 'ef477387-eb50-4a1a-bf90-717502b9873c',
@@ -938,6 +938,28 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
       '   3) User LDAP DN' CONCAT CRLF CONCAT
       '   4) User name' CONCAT CRLF CONCAT
       '   5) Problem description'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_AGENT_LOG_FAIL, 'SYS_AGENT_LOG_FAIL', '262057ca-357a-4a4d-9b78-42ae96e490a1',
+      EVENT_SEVERITY_MAJOR, 1,
+      'Problem with agent log: %2',
+      'Generated on status poll if agent reposts log open problem.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Status' CONCAT CRLF CONCAT
+      '   2) Description'
+   );
+
+INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
+   (
+      EVENT_AGENT_LOCAL_DATABASE_FAIL, 'SYS_AGENT_LOCAL_DATABASE_FAIL', 'd02b63f1-1151-429e-adb9-1dfbb3a31b32',
+      EVENT_SEVERITY_MAJOR, 1,
+      'Problem with agent local database: %2',
+      'Generated on status poll if agent reposts local database problem.' CONCAT CRLF CONCAT
+      'Parameters:' CONCAT CRLF CONCAT
+      '   1) Status' CONCAT CRLF CONCAT
+      '   2) Description'
    );
 
 /*
