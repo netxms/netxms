@@ -1,6 +1,6 @@
-/* 
+/*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ UINT32 ModifySummaryTable(NXCPMessage *msg, LONG *newId)
    *newId = id;
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   
+
    bool isNew = !IsDatabaseRecordExist(hdb, _T("dci_summary_tables"), _T("id"), (UINT32)id);
    DB_STATEMENT hStmt;
    if (isNew)
@@ -176,7 +176,7 @@ SummaryTable::SummaryTable(NXCPMessage *msg)
 
    int count = msg->getFieldAsInt32(VID_NUM_COLUMNS);
    m_columns = new ObjectArray<SummaryTableColumn>(count, 16, true);
-   
+
    UINT32 id = VID_COLUMN_INFO_BASE;
    for(int i = 0; i < count; i++)
    {
@@ -306,7 +306,7 @@ bool SummaryTable::filter(DataCollectionTarget *object)
       return true;   // no filtering
 
    bool result = true;
-   m_filter->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
+   m_filter->setGlobalVariable(_T("$object"), object->createNXSLObject());
    if (object->getObjectClass() == OBJECT_NODE)
       m_filter->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
    if (m_filter->run())
@@ -403,7 +403,7 @@ Table *QuerySummaryTable(LONG tableId, SummaryTable *adHocDefinition, UINT32 bas
    for(int i = 0; i < childObjects->size(); i++)
    {
       NetObj *obj = childObjects->get(i);
-      if (((obj->getObjectClass() != OBJECT_NODE) && (obj->getObjectClass() != OBJECT_MOBILEDEVICE)) || 
+      if (((obj->getObjectClass() != OBJECT_NODE) && (obj->getObjectClass() != OBJECT_MOBILEDEVICE)) ||
           !obj->checkAccessRights(userId, OBJECT_ACCESS_READ))
       {
          obj->decRefCount();

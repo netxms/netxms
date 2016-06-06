@@ -139,13 +139,21 @@ public class AbstractChart extends PropertyPage
          checkLogScale.setLayoutData(gd);
          
          checkStacked = new Button(optionsGroup, SWT.CHECK);
-         checkStacked.setText("&Stacked");
+         checkStacked.setText(Messages.get().AbstractChart_Stacked);
          checkStacked.setSelection(((LineChartConfig)config).isStacked());
          gd = new GridData();
          gd.horizontalSpan = layout.numColumns;
          checkStacked.setLayoutData(gd);
       }
       
+      checkTranslucent = new Button(optionsGroup, SWT.CHECK);
+      checkTranslucent.setText(Messages.get().AbstractChart_Translucent);
+      checkTranslucent.setSelection(config.isTranslucent());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      checkTranslucent.setLayoutData(gd);
+
 		if (config instanceof ComparisonChartConfig)
 		{
 			checkShowIn3D = new Button(optionsGroup, SWT.CHECK);
@@ -156,14 +164,6 @@ public class AbstractChart extends PropertyPage
 			gd.grabExcessHorizontalSpace = true;
 			checkShowIn3D.setLayoutData(gd);
 			
-			checkTranslucent = new Button(optionsGroup, SWT.CHECK);
-			checkTranslucent.setText(Messages.get().AbstractChart_Translucent);
-			checkTranslucent.setSelection(((ComparisonChartConfig)config).isTranslucent());
-			gd = new GridData();
-			gd.horizontalAlignment = SWT.FILL;
-			gd.grabExcessHorizontalSpace = true;
-			checkTranslucent.setLayoutData(gd);
-
 			if ((config instanceof BarChartConfig) || (config instanceof TubeChartConfig))
 			{
 				checkTransposed = new Button(optionsGroup, SWT.CHECK);
@@ -235,7 +235,7 @@ public class AbstractChart extends PropertyPage
 		if (config instanceof LineChartConfig)
 		{
          lineWidth = new LabeledSpinner(rateAndWidthArea, SWT.NONE);
-         lineWidth.setLabel("Line width");
+         lineWidth.setLabel(Messages.get().AbstractChart_LineWidth);
          lineWidth.setRange(1, 32);
          lineWidth.setSelection(((LineChartConfig)config).getLineWidth());
          gd = new GridData();
@@ -290,6 +290,7 @@ public class AbstractChart extends PropertyPage
 		config.setShowTitle(checkShowTitle.getSelection());
 		config.setShowLegend(checkShowLegend.getSelection());
 		config.setRefreshRate(refreshRate.getSelection());
+      config.setTranslucent(checkTranslucent.getSelection());
 		if(!(config instanceof PieChartConfig))
       {
    		config.setAutoScale(yAxisRange.isAuto());
@@ -299,7 +300,6 @@ public class AbstractChart extends PropertyPage
 		if (config instanceof ComparisonChartConfig)
 		{
 			((ComparisonChartConfig)config).setShowIn3D(checkShowIn3D.getSelection());
-			((ComparisonChartConfig)config).setTranslucent(checkTranslucent.getSelection());
 			if (config instanceof BarChartConfig)
 			{
 				((BarChartConfig)config).setTransposed(checkTransposed.getSelection());

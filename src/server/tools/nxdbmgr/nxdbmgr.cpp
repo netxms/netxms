@@ -553,7 +553,7 @@ int main(int argc, char *argv[])
    bool replaceValue = true;
    int ch;
 
-   InitThreadLibrary();
+   InitNetXMSProcess();
 
    TCHAR configFile[MAX_PATH] = _T("");
 

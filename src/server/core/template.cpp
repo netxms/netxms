@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -156,7 +156,12 @@ void Template::setAutoApplyFilter(const TCHAR *filter)
 		m_applyFilterSource = _tcsdup(filter);
 		m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256, NULL);
 		if (m_applyFilter == NULL)
-			nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+		{
+         TCHAR buffer[1024];
+         _sntprintf(buffer, 1024, _T("Template::%s::%d"), m_name, m_id);
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
+			nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, error);
+		}
 	}
 	else
 	{
@@ -205,7 +210,12 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       TCHAR error[256];
       m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256, NULL);
       if (m_applyFilter == NULL)
+      {
+         TCHAR buffer[1024];
+         _sntprintf(buffer, 1024, _T("Template::%s::%d"), m_name, m_id);
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
          nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+      }
    }
    DBFreeResult(hResult);
 
@@ -232,8 +242,8 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
             {
                if ((pObject->getObjectClass() == OBJECT_NODE) || (pObject->getObjectClass() == OBJECT_CLUSTER) || (pObject->getObjectClass() == OBJECT_MOBILEDEVICE))
                {
-                  AddChild(pObject);
-                  pObject->AddParent(this);
+                  addChild(pObject);
+                  pObject->addParent(this);
                }
                else
                {
@@ -842,7 +852,7 @@ NXSL_Value *Template::getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *des
       if (((name == NULL) || MatchString(name, curr->getName(), false)) &&
           ((description == NULL) || MatchString(description, curr->getDescription(), false)))
 		{
-         list->set(list->size(), new NXSL_Value(new NXSL_Object(&g_nxslDciClass, curr)));
+         list->set(list->size(), curr->createNXSLObject());
 		}
 	}
 	unlockDciAccess();
@@ -893,7 +903,12 @@ UINT32 Template::modifyFromMessageInternal(NXCPMessage *pRequest)
 
 			m_applyFilter = NXSLCompile(m_applyFilterSource, error, 256, NULL);
 			if (m_applyFilter == NULL)
+			{
+	         TCHAR buffer[1024];
+	         _sntprintf(buffer, 1024, _T("Template::%s::%d"), m_name, m_id);
+	         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
 				nxlog_write(MSG_TEMPLATE_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+			}
 		}
 		else
 		{
@@ -915,8 +930,8 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
    // Link node to template
    if (!isChild(target->getId()))
    {
-      AddChild(target);
-      target->AddParent(this);
+      addChild(target);
+      target->addParent(this);
    }
 
    pdwItemList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
@@ -1169,6 +1184,10 @@ AutoBindDecision Template::isApplicable(Node *node)
 	   filter = new NXSL_VM(new NXSL_ServerEnv());
 	   if (!filter->load(m_applyFilter))
 	   {
+	      TCHAR buffer[1024];
+	      _sntprintf(buffer, 1024, _T("Template::%s::%d"), m_name, m_id);
+	      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, filter->getErrorText(), m_id);
+	      nxlog_write(MSG_TEMPLATE_SCRIPT_EXECUTION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, filter->getErrorText());
 	      delete_and_null(filter);
 	   }
 	}

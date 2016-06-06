@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Database Abstraction Library
-** Copyright (C) 2003-2010 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -24,11 +24,6 @@
 #include "libnxdb.h"
 
 /**
- * Debug log callback
- */
-static void (*s_dbgPrintCb)(int, const TCHAR *, va_list) = NULL;
-
-/**
  * Write log
  */
 void __DBWriteLog(WORD level, const TCHAR *format, ...)
@@ -43,44 +38,12 @@ void __DBWriteLog(WORD level, const TCHAR *format, ...)
 }
 
 /**
- * Debug output
- */
-void __DBDbgPrintf(int level, const TCHAR *format, ...)
-{
-	if (s_dbgPrintCb != NULL)
-	{
-		va_list args;
-
-		va_start(args, format);
-		s_dbgPrintCb(level, format, args);
-		va_end(args);
-	}
-}
-
-/**
- * Set debug print callback
- */
-void LIBNXDB_EXPORTABLE DBSetDebugPrintCallback(void (*cb)(int, const TCHAR *, va_list))
-{
-	s_dbgPrintCb = cb;
-	__DBDbgPrintf(1, _T("Debug callback set for DB library"));
-}
-
-/**
- * Set debug print callback
- */
-void *__DBGetDebugPrintCallback()
-{
-   return (void *)s_dbgPrintCb;
-}
-
-/**
  * Set long running query threshold (milliseconds)
  */
 void LIBNXDB_EXPORTABLE DBSetLongRunningThreshold(UINT32 threshold)
 {
 	g_sqlQueryExecTimeThreshold = threshold;
-   __DBDbgPrintf(3, _T("DB Library: long running query threshold set to %u"), threshold);
+   nxlog_debug(3, _T("DB Library: long running query threshold set to %u"), threshold);
 }
 
 #ifdef _WIN32

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** Utility Library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published
@@ -43,6 +43,8 @@ static TCHAR m_logFileName[MAX_PATH] = _T("");
 static FILE *m_logFileHandle = NULL;
 static MUTEX m_mutexLogAccess = INVALID_MUTEX_HANDLE;
 static UINT32 m_flags = 0;
+static int s_debugLevel = 0;
+static DWORD s_debugMsg = 0;
 static int m_rotationMode = NXLOG_ROTATION_BY_SIZE;
 static int m_maxLogSize = 4096 * 1024;	// 4 MB
 static int m_logHistorySize = 4;		// Keep up 4 previous log files
@@ -52,6 +54,32 @@ static NxLogConsoleWriter m_consoleWriter = (NxLogConsoleWriter)_tprintf;
 static String s_logBuffer;
 static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static CONDITION s_writerStopCondition = INVALID_CONDITION_HANDLE;
+static NxLogDebugWriter s_debugWriter = NULL;
+
+/**
+ * Set debug level
+ */
+void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level)
+{
+   if ((level >= 0) && (level <= 9))
+      s_debugLevel = level;
+}
+
+/**
+ * Get current debug level
+ */
+int LIBNETXMS_EXPORTABLE nxlog_get_debug_level()
+{
+   return s_debugLevel;
+}
+
+/**
+ * Set additional debug writer callback. It will be called for each line written with nxlog_debug.
+ */
+extern "C" void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer)
+{
+   s_debugWriter = writer;
+}
 
 /**
  * Format current time for output
@@ -94,9 +122,9 @@ static void SetDayStart()
  * Set log rotation policy
  * Setting log size to 0 or mode to NXLOG_ROTATION_DISABLED disables log rotation
  */
-BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLogSize, int historySize, const TCHAR *dailySuffix)
+bool LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLogSize, int historySize, const TCHAR *dailySuffix)
 {
-	BOOL isValid = TRUE;
+	bool isValid = true;
 
 	if ((rotationMode >= 0) || (rotationMode <= 2))
 	{
@@ -110,7 +138,7 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLog
 			else
 			{
 				m_maxLogSize = 1024;
-				isValid = FALSE;
+				isValid = false;
 			}
 
 			if ((historySize >= 0) && (historySize <= MAX_LOG_HISTORY_SIZE))
@@ -121,7 +149,7 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLog
 			{
 				if (historySize > MAX_LOG_HISTORY_SIZE)
 					m_logHistorySize = MAX_LOG_HISTORY_SIZE;
-				isValid = FALSE;
+				isValid = false;
 			}
 		}
 		else if (rotationMode == NXLOG_ROTATION_DAILY)
@@ -133,7 +161,7 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLog
 	}
 	else
 	{
-		isValid = FALSE;
+		isValid = false;
 	}
 
 	return isValid;
@@ -150,7 +178,7 @@ void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(NxLogConsoleWriter writer)
 /**
  * Rotate log
  */
-static BOOL RotateLog(BOOL needLock)
+static bool RotateLog(bool needLock)
 {
 	int i;
 	TCHAR oldName[MAX_PATH], newName[MAX_PATH];
@@ -223,15 +251,15 @@ static BOOL RotateLog(BOOL needLock)
 	if (needLock)
 		MutexUnlock(m_mutexLogAccess);
 
-	return (m_flags & NXLOG_IS_OPEN) ? TRUE : FALSE;
+	return (m_flags & NXLOG_IS_OPEN) ? true : false;
 }
 
 /**
  * API for application to force log rotation
  */
-BOOL LIBNETXMS_EXPORTABLE nxlog_rotate()
+bool LIBNETXMS_EXPORTABLE nxlog_rotate()
 {
-	return RotateLog(TRUE);
+	return RotateLog(true);
 }
 
 /**
@@ -300,8 +328,8 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
 /**
  * Initialize log
  */
-BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
-                                     const TCHAR *msgModule, unsigned int msgCount, const TCHAR **messages)
+bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
+                                     const TCHAR *msgModule, unsigned int msgCount, const TCHAR **messages, DWORD debugMsg)
 {
 	m_flags = flags & 0x7FFFFFFF;
 #ifdef _WIN32
@@ -310,6 +338,7 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
 	m_numMessages = msgCount;
 	m_messages = messages;
 #endif
+	s_debugMsg = debugMsg;
 
    if (m_flags & NXLOG_USE_SYSLOG)
    {
@@ -356,7 +385,7 @@ BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
       m_mutexLogAccess = MutexCreate();
 		SetDayStart();
    }
-	return (m_flags & NXLOG_IS_OPEN) ? TRUE : FALSE;
+	return (m_flags & NXLOG_IS_OPEN) ? true : false;
 }
 
 /**
@@ -740,4 +769,39 @@ void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format,
 
    while(--numStrings >= 0)
       free(strings[numStrings]);
+}
+
+/**
+ * Write debug message
+ */
+void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...)
+{
+   if (level > s_debugLevel)
+      return;
+
+   va_list args;
+   va_start(args, format);
+   TCHAR buffer[8192];
+   _vsntprintf(buffer, 8192, format, args);
+   va_end(args);
+   nxlog_write(s_debugMsg, NXLOG_DEBUG, "s", buffer);
+
+   if (s_debugWriter != NULL)
+      s_debugWriter(buffer);
+}
+
+/**
+ * Write debug message
+ */
+void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list args)
+{
+   if (level > s_debugLevel)
+      return;
+
+   TCHAR buffer[8192];
+   _vsntprintf(buffer, 8192, format, args);
+   nxlog_write(s_debugMsg, NXLOG_DEBUG, "s", buffer);
+
+   if (s_debugWriter != NULL)
+      s_debugWriter(buffer);
 }

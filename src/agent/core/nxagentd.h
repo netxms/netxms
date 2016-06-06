@@ -330,6 +330,7 @@ private:
    bool m_masterServer;
    bool m_controlServer;
    bool m_proxyConnection;
+   bool m_acceptData;
    bool m_acceptTraps;
    bool m_acceptFileUpdates;
    bool m_ipv6Aware;
@@ -394,6 +395,7 @@ public:
    time_t getTimeStamp() { return m_ts; }
 	void updateTimeStamp() { m_ts = time(NULL); }
 
+   bool canAcceptData() { return m_acceptData; }
    bool canAcceptTraps() { return m_acceptTraps; }
    bool canAcceptFileUpdates() { return m_acceptFileUpdates; }
    bool isBulkReconciliationSupported() { return m_bulkReconciliationSupported; }
@@ -503,8 +505,6 @@ void DebugPrintf(UINT32 dwSessionId, int level, const TCHAR *pszFormat, ...)
 #endif
 ;
 
-void DebugPrintfCallback(int level, const TCHAR *pszFormat, va_list args);
-
 void BuildFullPath(TCHAR *pszFileName, TCHAR *pszFullPath);
 
 BOOL DownloadConfig(TCHAR *pszServer);
@@ -604,7 +604,7 @@ AbstractCommSession *FindServerSession(bool (*comparator)(AbstractCommSession *,
 #ifdef _WIN32
 
 void InitService();
-void InstallService(TCHAR *execName, TCHAR *confFile);
+void InstallService(TCHAR *execName, TCHAR *confFile, int debugLevel);
 void RemoveService();
 void StartAgentService();
 void StopAgentService();
@@ -642,7 +642,6 @@ extern UINT32 g_dwIdleTimeout;
 extern UINT32 g_dwMaxSessions;
 extern UINT32 g_dwExecTimeout;
 extern UINT32 g_dwSNMPTimeout;
-extern UINT32 g_debugLevel;
 extern UINT32 g_dwSNMPTrapPort;
 extern UINT16 g_sessionAgentPort;
 

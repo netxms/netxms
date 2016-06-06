@@ -66,7 +66,7 @@ public class CloneNetworkMap implements IObjectActionDelegate
 	   if (source == null)
 	      return;
 	   
-      final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), "Network map");
+      final CreateObjectDialog dlg = new CreateObjectDialog(window.getShell(), Messages.get().CloneNetworkMap_NetworkMap);
 		if (dlg.open() != Window.OK)
 			return;
 		

@@ -93,7 +93,12 @@ bool Container::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       TCHAR error[256];
       m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, NULL);
       if (m_bindFilter == NULL)
-         nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+      {
+         TCHAR buffer[1024];
+         _sntprintf(buffer, 1024, _T("Container::%s::%d"), m_name, m_id);
+         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
+         nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, error);
+      }
    }
    DBFreeResult(hResult);
 
@@ -284,7 +289,12 @@ void Container::setAutoBindFilter(const TCHAR *script)
 
 			m_bindFilter = NXSLCompile(m_bindFilterSource, error, 256, NULL);
 			if (m_bindFilter == NULL)
+			{
+	         TCHAR buffer[1024];
+	         _sntprintf(buffer, 1024, _T("Container::%s::%d"), m_name, m_id);
+	         PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, error, m_id);
 				nxlog_write(MSG_CONTAINER_SCRIPT_COMPILATION_ERROR, EVENTLOG_WARNING_TYPE, "dss", m_id, m_name, error);
+			}
 		}
 		else
 		{
@@ -313,6 +323,10 @@ AutoBindDecision Container::isSuitableForNode(Node *node)
 	   filter = new NXSL_VM(new NXSL_ServerEnv());
 	   if (!filter->load(m_bindFilter))
 	   {
+	      TCHAR buffer[1024];
+	      _sntprintf(buffer, 1024, _T("Container::%s::%d"), m_name, m_id);
+	      PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, filter->getErrorText(), m_id);
+	      nxlog_write(MSG_CONTAINER_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, filter->getErrorText());
 	      delete_and_null(filter);
 	   }
 	}
@@ -346,36 +360,4 @@ AutoBindDecision Container::isSuitableForNode(Node *node)
 bool Container::showThresholdSummary()
 {
 	return true;
-}
-
-/**
- * Enter maintenance mode
- */
-void Container::enterMaintenanceMode()
-{
-   DbgPrintf(4, _T("Entering maintenance mode for container %s [%d]"), m_name, m_id);
-
-   LockChildList(FALSE);
-   for(UINT32 i = 0; i < m_dwChildCount; i++)
-   {
-      if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
-         m_pChildList[i]->enterMaintenanceMode();
-   }
-   UnlockChildList();
-}
-
-/**
- * Leave maintenance mode
- */
-void Container::leaveMaintenanceMode()
-{
-   DbgPrintf(4, _T("Leaving maintenance mode for container %s [%d]"), m_name, m_id);
-
-   LockChildList(FALSE);
-   for(UINT32 i = 0; i < m_dwChildCount; i++)
-   {
-      if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
-         m_pChildList[i]->leaveMaintenanceMode();
-   }
-   UnlockChildList();
 }

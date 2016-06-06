@@ -50,73 +50,76 @@ LONG H_DiskInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 	char szArg[512] = {0};
 
 	AgentGetParameterArgA(pszParam, 1, szArg, sizeof(szArg));
+	if (szArg[0] == 0)
+	   return SYSINFO_RC_UNSUPPORTED;
 
-	if (szArg[0] != 0)
-	{
-		FindMountpointByDevice(szArg, sizeof(szArg));
+   FindMountpointByDevice(szArg, sizeof(szArg));
 
-	   struct statfs s;
-		if (statfs(szArg, &s) == 0)
-		{
-			nRet = SYSINFO_RC_SUCCESS;
-			
-			QWORD usedBlocks = (QWORD)(s.f_blocks - s.f_bfree);
-			QWORD totalBlocks = (QWORD)s.f_blocks;
-			QWORD blockSize = (QWORD)s.f_bsize;
-			QWORD freeBlocks = (QWORD)s.f_bfree;
-			QWORD availableBlocks = (QWORD)s.f_bavail;
-			
-			switch((long)pArg)
-			{
-				case DISK_TOTAL:
-					ret_uint64(pValue, totalBlocks * blockSize);
-					break;
-				case DISK_USED:
-					ret_uint64(pValue, usedBlocks * blockSize);
-					break;
-				case DISK_FREE:
-					ret_uint64(pValue, freeBlocks * blockSize);
-					break;
-				case DISK_AVAIL:
-					ret_uint64(pValue, availableBlocks * blockSize);
-					break;
-				case DISK_USED_PERC:
-               if (totalBlocks > 0)
-               {
-                  ret_double(pValue, (usedBlocks * 100.0) / totalBlocks);
-               }
-               else
-               {
-                  ret_double(pValue, 0.0);
-               }
-					break;
-				case DISK_AVAIL_PERC:
-               if (totalBlocks > 0)
-               {
-                  ret_double(pValue, (availableBlocks * 100.0) / totalBlocks);
-               }
-               else
-               {
-                  ret_double(pValue, 0.0);
-               }
-					break;
-				case DISK_FREE_PERC:
-               if (totalBlocks > 0)
-               {
-                  ret_double(pValue, (freeBlocks * 100.0) / totalBlocks);
-               }
-               else
-               {
-                  ret_double(pValue, 0.0);
-               }
-					break;
-				default:
-					nRet = SYSINFO_RC_ERROR;
-					break;
-			}
-		}
-	}
+   struct statfs s;
+   if (statfs(szArg, &s) == 0)
+   {
+      nRet = SYSINFO_RC_SUCCESS;
 
+      QWORD usedBlocks = (QWORD)(s.f_blocks - s.f_bfree);
+      QWORD totalBlocks = (QWORD)s.f_blocks;
+      QWORD blockSize = (QWORD)s.f_bsize;
+      QWORD freeBlocks = (QWORD)s.f_bfree;
+      QWORD availableBlocks = (QWORD)s.f_bavail;
+
+      switch((long)pArg)
+      {
+         case DISK_TOTAL:
+            ret_uint64(pValue, totalBlocks * blockSize);
+            break;
+         case DISK_USED:
+            ret_uint64(pValue, usedBlocks * blockSize);
+            break;
+         case DISK_FREE:
+            ret_uint64(pValue, freeBlocks * blockSize);
+            break;
+         case DISK_AVAIL:
+            ret_uint64(pValue, availableBlocks * blockSize);
+            break;
+         case DISK_USED_PERC:
+            if (totalBlocks > 0)
+            {
+               ret_double(pValue, (usedBlocks * 100.0) / totalBlocks);
+            }
+            else
+            {
+               ret_double(pValue, 0.0);
+            }
+            break;
+         case DISK_AVAIL_PERC:
+            if (totalBlocks > 0)
+            {
+               ret_double(pValue, (availableBlocks * 100.0) / totalBlocks);
+            }
+            else
+            {
+               ret_double(pValue, 0.0);
+            }
+            break;
+         case DISK_FREE_PERC:
+            if (totalBlocks > 0)
+            {
+               ret_double(pValue, (freeBlocks * 100.0) / totalBlocks);
+            }
+            else
+            {
+               ret_double(pValue, 0.0);
+            }
+            break;
+         default:
+            nRet = SYSINFO_RC_UNSUPPORTED;
+            break;
+      }
+   }
+   else
+   {
+      if (errno == ENOENT)
+         nRet = SYSINFO_RC_NO_SUCH_INSTANCE;
+   }
 	return nRet;
 }
 
@@ -259,7 +262,7 @@ LONG H_FileSystemType(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abstract
    if (!AgentGetParameterArgA(cmd, 1, path, MAX_PATH))
       return SYSINFO_RC_UNSUPPORTED;
    
-   LONG rc = SYSINFO_RC_UNSUPPORTED;
+   LONG rc = SYSINFO_RC_NO_SUCH_INSTANCE;
 
 	FILE *f = setmntent(_PATH_MOUNTED, "r");
 	if (f != NULL) 

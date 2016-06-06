@@ -90,6 +90,7 @@ CREATE TABLE users
   password_history SQL_TEXT null,
   xmpp_id varchar(127) null,
   ldap_dn SQL_TEXT null,
+  ldap_unique_id varchar(64) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -128,6 +129,7 @@ CREATE TABLE user_groups
   flags integer not null,
   description varchar(255),
   ldap_dn SQL_TEXT null,
+  ldap_unique_id varchar(63) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -1082,6 +1084,7 @@ CREATE TABLE event_cfg
 (
   event_code integer not null,
   event_name varchar(63) not null,  // Short event name
+  guid varchar(36) not null,
   severity integer not null,
   flags integer not null,
   message varchar(2000) null,   /* Message template */
@@ -1089,13 +1092,14 @@ CREATE TABLE event_cfg
   PRIMARY KEY(event_code)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(event_cfg, '')
-COMMENT_COLUMN(event_cfg.event_code, '')
-COMMENT_COLUMN(event_cfg.event_name, '')
-COMMENT_COLUMN(event_cfg.severity, '')
-COMMENT_COLUMN(event_cfg.flags, '')
-COMMENT_COLUMN(event_cfg.message, '')
-COMMENT_COLUMN(event_cfg.description, '')
+COMMENT_TABLE(event_cfg, 'Event templates')
+COMMENT_COLUMN(event_cfg.event_code, 'Event code (unique within system)')
+COMMENT_COLUMN(event_cfg.event_name, 'Event name')
+COMMENT_COLUMN(event_cfg.guid, 'Event template GUID')
+COMMENT_COLUMN(event_cfg.severity, 'Severity')
+COMMENT_COLUMN(event_cfg.flags, 'Flags')
+COMMENT_COLUMN(event_cfg.message, 'Message template')
+COMMENT_COLUMN(event_cfg.description, 'Event description')
 
 /*
 ** Event log
@@ -1115,6 +1119,8 @@ CREATE TABLE event_log
 ) TABLE_TYPE;
 
 CREATE INDEX idx_event_log_event_timestamp ON event_log(event_timestamp);
+
+CREATE INDEX idx_event_log_source ON event_log(event_source);
 
 #if defined(DB_POSTGRESQL)
 CREATE INDEX idx_event_log_root_id ON event_log(root_event_id) WHERE root_event_id > 0;
@@ -1289,20 +1295,6 @@ COMMENT_COLUMN(policy_action_list.action_id, '')
 /**
  *
  */
-CREATE TABLE policy_time_range_list
-(
-  rule_id integer not null,
-  time_range_id integer not null,
-  PRIMARY KEY(rule_id,time_range_id)
-) TABLE_TYPE;
-
-COMMENT_TABLE(policy_time_range_list, '')
-COMMENT_COLUMN(policy_time_range_list.rule_id, '')
-COMMENT_COLUMN(policy_time_range_list.time_range_id, '')
-
-/**
- *
- */
 CREATE TABLE policy_situation_attr_list
 (
   rule_id integer not null,
@@ -1317,26 +1309,6 @@ COMMENT_COLUMN(policy_situation_attr_list.rule_id, '')
 COMMENT_COLUMN(policy_situation_attr_list.situation_id, '')
 COMMENT_COLUMN(policy_situation_attr_list.attr_name, '')
 COMMENT_COLUMN(policy_situation_attr_list.attr_value, '')
-
-/*
-** Time range objects
-*/
-CREATE TABLE time_ranges
-(
-  time_range_id integer not null,
-  wday_mask integer not null, // Bits 0 .. 6 for each day of week
-  mday_mask integer not null, // Bits 0 .. 30 for each day of month
-  month_mask integer not null,  // Bits 0 .. 11 for each month
-  time_range varchar(255) not null, // In format HHMMHHMM[,HHMMHHMM[,...]]
-  PRIMARY KEY(time_range_id)
-) TABLE_TYPE;
-
-COMMENT_TABLE(time_ranges, '')
-COMMENT_COLUMN(time_ranges.time_range_id, '')
-COMMENT_COLUMN(time_ranges.wday_mask, '')
-COMMENT_COLUMN(time_ranges.mday_mask, '')
-COMMENT_COLUMN(time_ranges.month_mask, '')
-COMMENT_COLUMN(time_ranges.time_range, '')
 
 /*
 ** Threshold checking rules
@@ -1913,6 +1885,20 @@ COMMENT_TABLE(ap_config_files, '')
 COMMENT_COLUMN(ap_config_files.policy_id, '')
 COMMENT_COLUMN(ap_config_files.file_content, '')
 
+/**
+** Agent policies - log parser files
+*/
+CREATE TABLE ap_log_parser
+(
+  policy_id integer not null,
+  file_content SQL_TEXT null,
+  PRIMARY KEY(policy_id)
+) TABLE_TYPE;
+
+COMMENT_TABLE(ap_log_parser, 'Agent policies log parser files')
+COMMENT_COLUMN(ap_log_parser.policy_id, 'Unique policy identifier')
+COMMENT_COLUMN(ap_log_parser.file_content, 'Log parser policy file content')
+
 /*
 ** Default SNMP v3 USM credentials
 */
@@ -2411,3 +2397,51 @@ COMMENT_COLUMN(zmq_subscription.object_id, '')
 COMMENT_COLUMN(zmq_subscription.subscription_type, '')
 COMMENT_COLUMN(zmq_subscription.ignore_items, '')
 COMMENT_COLUMN(zmq_subscription.items, '')
+
+/*
+** Currency codes
+*/
+CREATE TABLE currency_codes
+(
+	numeric_code char(3) not null,
+	alpha_code char(3) not null,
+	description varchar(127) not null,
+	exponent integer not null,
+	PRIMARY KEY(numeric_code)
+) TABLE_TYPE;
+
+COMMENT_TABLE(currency_codes, 'List of currency codes')
+COMMENT_COLUMN(currency_codes.numeric_code, 'Numeric ISO code')
+COMMENT_COLUMN(currency_codes.alpha_code, 'Alphabetical ISO code')
+COMMENT_COLUMN(currency_codes.description, 'Description')
+COMMENT_COLUMN(currency_codes.exponent, 'Exponent for minor units')
+
+/*
+** Country codes
+*/
+CREATE TABLE country_codes
+(
+	numeric_code char(3) not null,
+	alpha_code char(2) not null,
+	alpha3_code char(3) not null,
+	name varchar(127) not null,
+	PRIMARY KEY(numeric_code)
+) TABLE_TYPE;
+
+COMMENT_TABLE(country_codes, 'List of country codes')
+COMMENT_COLUMN(country_codes.numeric_code, 'Numeric ISO code')
+COMMENT_COLUMN(country_codes.alpha_code, 'Alphabetical 2 character ISO code')
+COMMENT_COLUMN(country_codes.alpha3_code, 'Alphabetical 3 character ISO code')
+COMMENT_COLUMN(country_codes.name, 'Country name')
+
+/*
+** Config repositories
+*/
+CREATE TABLE config_repositories
+(
+	id integer not null,
+	url varchar(1023) not null,
+	auth_token varchar(63) null,
+	description varchar(1023) null,
+	PRIMARY KEY(id)
+) TABLE_TYPE;

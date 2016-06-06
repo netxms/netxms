@@ -26,6 +26,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -45,10 +46,11 @@ public class DataSourceEditDlg extends Dialog
 	private ChartDciConfig dci;
 	private DciSelector dciSelector;
 	private LabeledText name;
+   private LabeledText displayFormat;
 	private Button colorAuto;
 	private Button colorCustom;
 	private ColorSelector colorSelector;
-	private Button checkAreaChart;
+	private Combo displayType;
 	private Button checkShowThresholds;
 	private Button checkInvertValues;
 	private LabeledText instance;
@@ -108,6 +110,15 @@ public class DataSourceEditDlg extends Dialog
 		gd.horizontalSpan = 2;
 		name.setLayoutData(gd);
 		
+      displayFormat = new LabeledText(dialogArea, SWT.NONE);
+      displayFormat.setLabel(Messages.get().DataSourceEditDlg_DisplayFormat);
+      displayFormat.setText(dci.displayFormat);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalSpan = 2;
+      displayFormat.setLayoutData(gd);
+      
 		if (dci.type == ChartDciConfig.TABLE)
 		{
 			Group tableGroup = new Group(dialogArea, SWT.NONE);
@@ -138,6 +149,38 @@ public class DataSourceEditDlg extends Dialog
 			instance.setLayoutData(gd);
 		}
 		
+      /*** Display type ***/
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.verticalAlignment = SWT.TOP;
+      displayType = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY | SWT.BORDER, "Display type", gd);
+      displayType.add("Default");
+      displayType.add("Line");
+      displayType.add("Area");
+      displayType.select(dci.getDisplayType());
+            
+      /*** Options group ***/
+      Group optionsGroup = new Group(dialogArea, SWT.NONE);
+      optionsGroup.setText(Messages.get().DataSourceEditDlg_Options);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.TOP;
+      gd.verticalSpan = 2;
+      optionsGroup.setLayoutData(gd);
+      
+      layout = new GridLayout();
+      optionsGroup.setLayout(layout);
+
+      checkShowThresholds = new Button(optionsGroup, SWT.CHECK);
+      checkShowThresholds.setText(Messages.get().DataSourceEditDlg_ShowThresholds);
+      checkShowThresholds.setSelection(dci.showThresholds);
+      
+      checkInvertValues = new Button(optionsGroup, SWT.CHECK);
+      checkInvertValues.setText(Messages.get().DataSourceEditDlg_InvertValues);
+      checkInvertValues.setSelection(dci.invertValues);
+
+      /*** Color group ***/
 		Group colorGroup = new Group(dialogArea, SWT.NONE);
 		colorGroup.setText(Messages.get().DataSourceEditDlg_Color);
 		gd = new GridData();
@@ -195,29 +238,6 @@ public class DataSourceEditDlg extends Dialog
 		colorSelector.getButton().setLayoutData(gd);
 		colorSelector.setEnabled(!dci.color.equalsIgnoreCase(ChartDciConfig.UNSET_COLOR));
 		
-		Group optionsGroup = new Group(dialogArea, SWT.NONE);
-		optionsGroup.setText(Messages.get().DataSourceEditDlg_Options);
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		gd.verticalAlignment = SWT.FILL;
-		optionsGroup.setLayoutData(gd);
-		
-		layout = new GridLayout();
-		optionsGroup.setLayout(layout);
-		
-		checkAreaChart = new Button(optionsGroup, SWT.CHECK);
-		checkAreaChart.setText(Messages.get().DataSourceEditDlg_AreaChart);
-		checkAreaChart.setSelection(dci.area);
-		
-		checkShowThresholds = new Button(optionsGroup, SWT.CHECK);
-		checkShowThresholds.setText(Messages.get().DataSourceEditDlg_ShowThresholds);
-		checkShowThresholds.setSelection(dci.showThresholds);
-		
-      checkInvertValues = new Button(optionsGroup, SWT.CHECK);
-      checkInvertValues.setText("Invert values");
-      checkInvertValues.setSelection(dci.invertValues);
-      
 		return dialogArea;
 	}
 
@@ -230,6 +250,7 @@ public class DataSourceEditDlg extends Dialog
 		dci.nodeId = dciSelector.getNodeId();
 		dci.dciId = dciSelector.getDciId();
 		dci.name = name.getText();
+		dci.displayFormat = displayFormat.getText();
 		if (colorAuto.getSelection())
 		{
 			dci.color = ChartDciConfig.UNSET_COLOR;
@@ -238,7 +259,8 @@ public class DataSourceEditDlg extends Dialog
 		{
 			dci.color = "0x" + Integer.toHexString(ColorConverter.rgbToInt(colorSelector.getColorValue())); //$NON-NLS-1$
 		}
-		dci.area = checkAreaChart.getSelection();
+		dci.area = false;
+		dci.displayType = displayType.getSelectionIndex();
 		dci.showThresholds = checkShowThresholds.getSelection();
 		dci.invertValues = checkInvertValues.getSelection();
 		if (dci.type == ChartDciConfig.TABLE)

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,9 +31,31 @@ EventPolicy *g_pEventPolicy = NULL;
 /**
  * Static data
  */
-static UINT32 m_dwNumTemplates = 0;
-static EVENT_TEMPLATE *m_pEventTemplates = NULL;
+static RefCountHashMap<UINT32, EventTemplate> m_eventTemplates(true);
 static RWLOCK m_rwlockTemplateAccess;
+
+/**
+ * Create event template from DB record
+ */
+EventTemplate::EventTemplate(DB_RESULT hResult, int row)
+{
+   m_code = DBGetFieldULong(hResult, row, 0);
+   m_severity = DBGetFieldLong(hResult, row, 1);
+   m_flags = DBGetFieldLong(hResult, row, 2);
+   m_messageTemplate = DBGetField(hResult, row, 3, NULL, 0);
+   m_description = DBGetField(hResult, row, 4, NULL, 0);
+   DBGetField(hResult, row, 5, m_name, MAX_EVENT_NAME);
+   m_guid = DBGetFieldGUID(hResult, row, 6);
+}
+
+/**
+ * Event template destructor
+ */
+EventTemplate::~EventTemplate()
+{
+   free(m_messageTemplate);
+   free(m_description);
+}
 
 /**
  * Default constructor for event
@@ -85,15 +107,15 @@ Event::Event(const Event *src)
 /**
  * Construct event from template
  */
-Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *userTag, const char *szFormat, const TCHAR **names, va_list args)
+Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, const TCHAR *userTag, const char *szFormat, const TCHAR **names, va_list args)
 {
-	_tcscpy(m_name, pTemplate->szName);
+	_tcscpy(m_name, eventTemplate->getName());
    m_timeStamp = time(NULL);
    m_id = CreateUniqueEventId();
    m_rootId = 0;
-   m_code = pTemplate->dwCode;
-   m_severity = pTemplate->dwSeverity;
-   m_flags = pTemplate->dwFlags;
+   m_code = eventTemplate->getCode();
+   m_severity = eventTemplate->getSeverity();
+   m_flags = eventTemplate->getFlags();
    m_sourceId = sourceId;
    m_dciId = dciId;
    m_messageText = NULL;
@@ -185,7 +207,7 @@ Event::Event(EVENT_TEMPLATE *pTemplate, UINT32 sourceId, UINT32 dciId, const TCH
       }
    }
 
-   m_messageTemplate = _tcsdup(pTemplate->pszMessageTemplate);
+   m_messageTemplate = _tcsdup(eventTemplate->getMessageTemplate());
 }
 
 /**
@@ -685,19 +707,15 @@ static bool LoadEvents()
 {
    bool success = false;
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_RESULT hResult = DBSelect(hdb, _T("SELECT event_code,severity,flags,message,description,event_name FROM event_cfg ORDER BY event_code"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT event_code,severity,flags,message,description,event_name,guid FROM event_cfg"));
    if (hResult != NULL)
    {
-      m_dwNumTemplates = DBGetNumRows(hResult);
-      m_pEventTemplates = (EVENT_TEMPLATE *)malloc(sizeof(EVENT_TEMPLATE) * m_dwNumTemplates);
-      for(UINT32 i = 0; i < m_dwNumTemplates; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         m_pEventTemplates[i].dwCode = DBGetFieldULong(hResult, i, 0);
-         m_pEventTemplates[i].dwSeverity = DBGetFieldLong(hResult, i, 1);
-         m_pEventTemplates[i].dwFlags = DBGetFieldLong(hResult, i, 2);
-         m_pEventTemplates[i].pszMessageTemplate = DBGetField(hResult, i, 3, NULL, 0);
-         m_pEventTemplates[i].pszDescription = DBGetField(hResult, i, 4, NULL, 0);
-         DBGetField(hResult, i, 5, m_pEventTemplates[i].szName, MAX_EVENT_NAME);
+         EventTemplate *t = new EventTemplate(hResult, i);
+         m_eventTemplates.set(t->getCode(), t);
+         t->decRefCount();
       }
 
       DBFreeResult(hResult);
@@ -750,20 +768,6 @@ void ShutdownEventSubsystem()
 {
    delete g_pEventQueue;
    delete g_pEventPolicy;
-
-   if (m_pEventTemplates != NULL)
-   {
-      UINT32 i;
-      for(i = 0; i < m_dwNumTemplates; i++)
-      {
-         safe_free(m_pEventTemplates[i].pszDescription);
-         safe_free(m_pEventTemplates[i].pszMessageTemplate);
-      }
-      free(m_pEventTemplates);
-   }
-   m_dwNumTemplates = 0;
-   m_pEventTemplates = NULL;
-
    RWLockDestroy(m_rwlockTemplateAccess);
 }
 
@@ -772,20 +776,8 @@ void ShutdownEventSubsystem()
  */
 void ReloadEvents()
 {
-   UINT32 i;
-
    RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
-   if (m_pEventTemplates != NULL)
-   {
-      for(i = 0; i < m_dwNumTemplates; i++)
-      {
-         safe_free(m_pEventTemplates[i].pszDescription);
-         safe_free(m_pEventTemplates[i].pszMessageTemplate);
-      }
-      free(m_pEventTemplates);
-   }
-   m_dwNumTemplates = 0;
-   m_pEventTemplates = NULL;
+   m_eventTemplates.clear();
    LoadEvents();
    RWLockUnlock(m_rwlockTemplateAccess);
 }
@@ -795,53 +787,9 @@ void ReloadEvents()
  */
 void DeleteEventTemplateFromList(UINT32 eventCode)
 {
-   UINT32 i;
-
    RWLockWriteLock(m_rwlockTemplateAccess, INFINITE);
-   for(i = 0; i < m_dwNumTemplates; i++)
-   {
-      if (m_pEventTemplates[i].dwCode == eventCode)
-      {
-         m_dwNumTemplates--;
-         safe_free(m_pEventTemplates[i].pszDescription);
-         safe_free(m_pEventTemplates[i].pszMessageTemplate);
-         memmove(&m_pEventTemplates[i], &m_pEventTemplates[i + 1],
-                 sizeof(EVENT_TEMPLATE) * (m_dwNumTemplates - i));
-         break;
-      }
-   }
+   m_eventTemplates.remove(eventCode);
    RWLockUnlock(m_rwlockTemplateAccess);
-}
-
-/**
- * Perform binary search on event template by id
- * Returns INULL if key not found or pointer to appropriate template
- */
-static EVENT_TEMPLATE *FindEventTemplate(UINT32 eventCode)
-{
-   UINT32 dwFirst, dwLast, dwMid;
-
-   dwFirst = 0;
-   dwLast = m_dwNumTemplates - 1;
-
-   if ((eventCode < m_pEventTemplates[0].dwCode) || (eventCode > m_pEventTemplates[dwLast].dwCode))
-      return NULL;
-
-   while(dwFirst < dwLast)
-   {
-      dwMid = (dwFirst + dwLast) / 2;
-      if (eventCode == m_pEventTemplates[dwMid].dwCode)
-         return &m_pEventTemplates[dwMid];
-      if (eventCode < m_pEventTemplates[dwMid].dwCode)
-         dwLast = dwMid - 1;
-      else
-         dwFirst = dwMid + 1;
-   }
-
-   if (eventCode == m_pEventTemplates[dwLast].dwCode)
-      return &m_pEventTemplates[dwLast];
-
-   return NULL;
 }
 
 /**
@@ -869,27 +817,24 @@ static EVENT_TEMPLATE *FindEventTemplate(UINT32 eventCode)
 static bool RealPostEvent(Queue *queue, UINT64 *eventId, UINT32 eventCode, UINT32 sourceId, UINT32 dciId,
                           const TCHAR *userTag, const char *format, const TCHAR **names, va_list args)
 {
-   EVENT_TEMPLATE *eventTemplate = NULL;
+   EventTemplate *eventTemplate = NULL;
    bool success = false;
 
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
 
-   // Find event template
-   if (m_dwNumTemplates > 0)    // Is there any templates?
+   eventTemplate = m_eventTemplates.get(eventCode);
+   if (eventTemplate != NULL)
    {
-      eventTemplate = FindEventTemplate(eventCode);
-      if (eventTemplate != NULL)
-      {
-         // Template found, create new event
-         Event *evt = new Event(eventTemplate, sourceId, dciId, userTag, format, names, args);
-         if (eventId != NULL)
-            *eventId = evt->getId();
+      // Template found, create new event
+      Event *evt = new Event(eventTemplate, sourceId, dciId, userTag, format, names, args);
+      if (eventId != NULL)
+         *eventId = evt->getId();
 
-         // Add new event to queue
-         queue->put(evt);
+      // Add new event to queue
+      queue->put(evt);
 
-         success = true;
-      }
+      eventTemplate->decRefCount();
+      success = true;
    }
 
    RWLockUnlock(m_rwlockTemplateAccess);
@@ -1212,29 +1157,28 @@ void NXCORE_EXPORTABLE ResendEvents(Queue *queue)
  */
 void CreateNXMPEventRecord(String &str, UINT32 eventCode)
 {
-   EVENT_TEMPLATE *p;
    String strText, strDescr;
 
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
 
    // Find event template
-   if (m_dwNumTemplates > 0)    // Is there any templates?
+   EventTemplate *p = m_eventTemplates.get(eventCode);
+   if (p != NULL)
    {
-      p = FindEventTemplate(eventCode);
-      if (p != NULL)
-      {
-         str.appendFormattedString(_T("\t\t<event id=\"%d\">\n")
-			                       _T("\t\t\t<name>%s</name>\n")
-                                _T("\t\t\t<code>%d</code>\n")
-                                _T("\t\t\t<severity>%d</severity>\n")
-                                _T("\t\t\t<flags>%d</flags>\n")
-                                _T("\t\t\t<message>%s</message>\n")
-                                _T("\t\t\t<description>%s</description>\n")
-                                _T("\t\t</event>\n"),
-										  p->dwCode, (const TCHAR *)EscapeStringForXML2(p->szName), p->dwCode, p->dwSeverity,
-                                p->dwFlags, (const TCHAR *)EscapeStringForXML2(p->pszMessageTemplate),
-										  (const TCHAR *)EscapeStringForXML2(p->pszDescription));
-      }
+      str.appendFormattedString(_T("\t\t<event id=\"%d\">\n")
+                             _T("\t\t\t<name>%s</name>\n")
+                             _T("\t\t\t<guid>%s</guid>\n")
+                             _T("\t\t\t<code>%d</code>\n")
+                             _T("\t\t\t<severity>%d</severity>\n")
+                             _T("\t\t\t<flags>%d</flags>\n")
+                             _T("\t\t\t<message>%s</message>\n")
+                             _T("\t\t\t<description>%s</description>\n")
+                             _T("\t\t</event>\n"),
+                             p->getCode(), (const TCHAR *)EscapeStringForXML2(p->getName()),
+                             (const TCHAR *)p->getGuid().toString(), p->getCode(), p->getSeverity(),
+                             p->getFlags(), (const TCHAR *)EscapeStringForXML2(p->getMessageTemplate()),
+                             (const TCHAR *)EscapeStringForXML2(p->getDescription()));
+      p->decRefCount();
    }
 
    RWLockUnlock(m_rwlockTemplateAccess);
@@ -1243,30 +1187,22 @@ void CreateNXMPEventRecord(String &str, UINT32 eventCode)
 /**
  * Resolve event name
  */
-BOOL EventNameFromCode(UINT32 eventCode, TCHAR *pszBuffer)
+bool EventNameFromCode(UINT32 eventCode, TCHAR *buffer)
 {
-   EVENT_TEMPLATE *p;
-   BOOL bRet = FALSE;
+   bool bRet = false;
 
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
 
-   // Find event template
-   if (m_dwNumTemplates > 0)    // Is there any templates?
+   EventTemplate *p = m_eventTemplates.get(eventCode);
+   if (p != NULL)
    {
-      p = FindEventTemplate(eventCode);
-      if (p != NULL)
-      {
-         _tcscpy(pszBuffer, p->szName);
-         bRet = TRUE;
-      }
-      else
-      {
-         _tcscpy(pszBuffer, _T("UNKNOWN_EVENT"));
-      }
+      _tcscpy(buffer, p->getName());
+      p->decRefCount();
+      bRet = true;
    }
    else
    {
-      _tcscpy(pszBuffer, _T("UNKNOWN_EVENT"));
+      _tcscpy(buffer, _T("UNKNOWN_EVENT"));
    }
 
    RWLockUnlock(m_rwlockTemplateAccess);
@@ -1276,12 +1212,10 @@ BOOL EventNameFromCode(UINT32 eventCode, TCHAR *pszBuffer)
 /**
  * Find event template by code - suitable for external call
  */
-EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 eventCode)
+EventTemplate *FindEventTemplateByCode(UINT32 eventCode)
 {
-   EVENT_TEMPLATE *p = NULL;
-
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
-   p = FindEventTemplate(eventCode);
+   EventTemplate *p = m_eventTemplates.get(eventCode);
    RWLockUnlock(m_rwlockTemplateAccess);
    return p;
 }
@@ -1289,22 +1223,26 @@ EVENT_TEMPLATE *FindEventTemplateByCode(UINT32 eventCode)
 /**
  * Find event template by name - suitable for external call
  */
-EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *name)
+EventTemplate *FindEventTemplateByName(const TCHAR *name)
 {
-   EVENT_TEMPLATE *p = NULL;
+   EventTemplate *result = NULL;
    UINT32 i;
 
    RWLockReadLock(m_rwlockTemplateAccess, INFINITE);
-   for(i = 0; i < m_dwNumTemplates; i++)
+   Iterator<EventTemplate> *it = m_eventTemplates.iterator();
+   while(it->hasNext())
    {
-      if (!_tcscmp(m_pEventTemplates[i].szName, name))
+      EventTemplate *t = it->next();
+      if (!_tcscmp(t->getName(), name))
       {
-         p = &m_pEventTemplates[i];
+         result = t;
+         result->incRefCount();
          break;
       }
    }
+   delete it;
    RWLockUnlock(m_rwlockTemplateAccess);
-   return p;
+   return result;
 }
 
 /**
@@ -1313,8 +1251,12 @@ EVENT_TEMPLATE *FindEventTemplateByName(const TCHAR *name)
  */
 UINT32 NXCORE_EXPORTABLE EventCodeFromName(const TCHAR *name, UINT32 defaultValue)
 {
-	EVENT_TEMPLATE *p = FindEventTemplateByName(name);
-	return (p != NULL) ? p->dwCode : defaultValue;
+	EventTemplate *p = FindEventTemplateByName(name);
+	if (p == NULL)
+	   return defaultValue;
+	UINT32 code = p->getCode();
+	p->decRefCount();
+	return code;
 }
 
 /**

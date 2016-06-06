@@ -54,8 +54,7 @@ public class InterfacesFragment extends ExpandableListFragment implements Loader
 	private static final String TAG = "nxclient/InterfacesFragment";
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState)
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
 	{
 		View v = inflater.inflate(R.layout.interfaces_fragment, container, false);
 		createProgress(v);
@@ -202,9 +201,12 @@ public class InterfacesFragment extends ExpandableListFragment implements Loader
 				return modifyExpectedState(IF_EXPECTED_STATE_IGNORE);
 			case R.id.find_switch_port:
 				Intent fspIntent = new Intent(getActivity(), ConnectionPointBrowser.class);
-				fspIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
-				startActivity(fspIntent);
-				return true;
+				if (fspIntent != null && selectedObject != null)
+				{
+					fspIntent.putExtra("nodeId", (int)selectedObject.getObjectId());
+					startActivity(fspIntent);
+					return true;
+				}
 		}
 		return false;
 	}

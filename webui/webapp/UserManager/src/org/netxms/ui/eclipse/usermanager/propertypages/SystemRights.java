@@ -77,11 +77,11 @@ public class SystemRights extends PropertyPage
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_LOG, Messages.get().SystemRights_ViewEventLog);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_AUDIT_LOG, Messages.get().SystemRights_ViewAuditLog);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_TRAP_LOG, Messages.get().SystemRights_ViewTrapLog);
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, "View syslog");
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_SYSLOG, Messages.get().SystemRights_ViewSyslog);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_MAPPING_TBLS, Messages.get().SystemRights_ManageMappingTables);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONFIG, Messages.get().SystemRights_EditServerConfig);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_READ_FILES, Messages.get().SystemRights_ReadFiles);
-		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_FILES, Messages.get().SystemRights_ManageFiles);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_READ_SERVER_FILES, Messages.get().SystemRights_ReadFiles);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SERVER_FILES, Messages.get().SystemRights_ManageFiles);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SERVER_CONSOLE, Messages.get().SystemRights_AccessConsole);
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_XMPP_COMMANDS, Messages.get().SystemRights_ExecuteXMPPCommands);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SESSIONS, Messages.get().SystemRights_ControlSessions);
@@ -91,12 +91,12 @@ public class SystemRights extends PropertyPage
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN, Messages.get().SystemRights_LoginAsMobile);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_IMAGE_LIB, Messages.get().SystemRights_ManageImageLibrary);
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_REPORTING_SERVER, Messages.get().SystemRights_ReportingServerAccess);
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_USERS_SCHEDULED_TASKS, "Manage users scheduled tasks");
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, "Manage own scheduled tasks");
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, "Manage all scheduled tasks");
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, "Schedule script task");
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, "Schedule file upload task"); 
-      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, "Schedule object maintenance time interval"); 
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_USER_SCHEDULED_TASKS, Messages.get().SystemRights_ManageUserScheduledTasks);
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_OWN_SCHEDULED_TASKS, Messages.get().SystemRights_ManageOwnScheduledTasks);
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_ALL_SCHEDULED_TASKS, Messages.get().SystemRights_ManageAllScheduledTasks);
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_SCRIPT, Messages.get().SystemRights_ScheduleScriptTask);
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_FILE_UPLOAD, Messages.get().SystemRights_ScheduleFileUploadTask); 
+      addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_SCHEDULE_MAINTENANCE, Messages.get().SystemRights_ScheduleObjectMaint); 
 		
 		return dialogArea;
 	}

@@ -20,10 +20,13 @@ package org.netxms.ui.eclipse.views;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.part.ViewPart;
@@ -55,6 +58,7 @@ public abstract class AbstractTraceView extends ViewPart
 		
 		createActions();
 		contributeToActionBars();
+		createPopupMenu();
 		
 		activateContext();
 	}
@@ -137,6 +141,38 @@ public abstract class AbstractTraceView extends ViewPart
 		manager.add(actionClear);
 	}
 
+   /**
+    * Create pop-up menu for user list
+    */
+   private void createPopupMenu()
+   {
+      // Create menu manager
+      MenuManager menuMgr = new MenuManager();
+      menuMgr.setRemoveAllWhenShown(true);
+      menuMgr.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr);
+         }
+      });
+
+      // Create menu
+      Menu menu = menuMgr.createContextMenu(traceWidget.getViewer().getControl());
+      traceWidget.getViewer().getControl().setMenu(menu);
+
+      // Register menu for extension.
+      getSite().registerContextMenu(menuMgr, traceWidget.getViewer());
+   }
+
+   /**
+    * Fill context menu
+    * 
+    * @param mgr Menu manager
+    */
+   protected void fillContextMenu(final IMenuManager manager)
+   {   
+   }
+   
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
@@ -153,7 +189,7 @@ public abstract class AbstractTraceView extends ViewPart
 	 */
 	protected void subscribe(final String channel)
 	{
-      new ConsoleJob(String.format("Subscribing to channel %s", channel), this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(String.format(Messages.get().AbstractTraceView_Subscribing, channel), this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -163,7 +199,7 @@ public abstract class AbstractTraceView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot subscribe to channel %s", channel);
+            return String.format(Messages.get().AbstractTraceView_CannotSubscribe, channel);
          }
       }.start();
 	}
@@ -175,7 +211,7 @@ public abstract class AbstractTraceView extends ViewPart
 	 */
 	protected void unsubscribe(final String channel)
 	{
-      ConsoleJob job = new ConsoleJob(String.format("Unsubscribing from channel %s", channel), null, Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(String.format(Messages.get().AbstractTraceView_Unsubscribing, channel), null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -185,7 +221,7 @@ public abstract class AbstractTraceView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return String.format("Cannot unsubscribe from channel %s", channel);
+            return String.format(Messages.get().AbstractTraceView_CannotUnsubscribe, channel);
          }
       };
       job.setUser(false);

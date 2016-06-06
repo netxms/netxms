@@ -35,6 +35,8 @@ int main(int argc, char *argv[])
    bool isAgentSecret = false;
    bool decrypt = false;
 
+   InitNetXMSProcess();
+
    // Parse command line
    opterr = 1;
    while((ch = getopt(argc, argv, "hK:vaz")) != -1)

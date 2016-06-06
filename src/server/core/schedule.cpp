@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -277,7 +277,7 @@ bool ScheduledTask::canAccess(UINT32 user, UINT64 systemAccess)
    if (systemAccess & SYSTEM_ACCESS_ALL_SCHEDULED_TASKS)
       return true;
 
-   if(systemAccess & SYSTEM_ACCESS_USERS_SCHEDULED_TASKS)
+   if(systemAccess & SYSTEM_ACCESS_USER_SCHEDULED_TASKS)
       return !checkFlag(SCHEDULED_TASK_SYSTEM);
 
    if (systemAccess & SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)
@@ -300,7 +300,7 @@ void RegisterSchedulerTaskHandler(const TCHAR *id, scheduled_action_executor exe
  */
 UINT32 AddScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemRights, UINT32 flags)
 {
-   if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USERS_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
+   if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USER_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
    DbgPrintf(7, _T("AddSchedule: Add cron schedule %s, %s, %s"), task, schedule, params);
    MutexLock(s_cronScheduleLock);
@@ -316,7 +316,7 @@ UINT32 AddScheduledTask(const TCHAR *task, const TCHAR *schedule, const TCHAR *p
  */
 UINT32 AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemRights, UINT32 flags)
 {
-   if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USERS_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
+   if ((systemRights & (SYSTEM_ACCESS_ALL_SCHEDULED_TASKS | SYSTEM_ACCESS_USER_SCHEDULED_TASKS | SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)) == 0)
       return RCC_ACCESS_DENIED;
    DbgPrintf(7, _T("AddOneTimeAction: Add one time schedule %s, %d, %s"), task, nextExecutionTime, params);
    MutexLock(s_oneTimeScheduleLock);
@@ -355,7 +355,7 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
    }
    MutexUnlock(s_cronScheduleLock);
 
-   if(!found)
+   if (!found)
    {
       //check in different que and if exists - remove from one and add to another
       MutexLock(s_oneTimeScheduleLock);
@@ -378,7 +378,6 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
             s_cronSchedules.add(st);
             MutexUnlock(s_cronScheduleLock);
 
-            found = true;
             break;
          }
       }
@@ -644,10 +643,10 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
    DbgPrintf(7, _T("OneTimeEventThread: started"));
    while(true)
    {
-      if(!ConditionWait(s_cond, sleepTime) && (g_flags & AF_SHUTDOWN))
+      ConditionWait(s_cond, sleepTime);
+      if(g_flags & AF_SHUTDOWN)
          break;
 
-      //ConditionReset(s_cond);
       time_t now = time(NULL);
       struct tm currLocal;
       memcpy(&currLocal, localtime(&now), sizeof(struct tm));
@@ -735,7 +734,7 @@ static bool IsTimeToRun(struct tm *currTime, const TCHAR *schedule, time_t currT
       return false;
 
    // Day of week
-   curr = ExtractWord(curr, value);
+   ExtractWord(curr, value);
    for(int i = 0; value[i] != 0; i++)
       if (value[i] == _T('7'))
          value[i] = _T('0');
@@ -821,8 +820,8 @@ void InitializeTaskScheduler()
 void CloseTaskScheduler()
 {
    ConditionSet(s_cond);
-   s_cond = INVALID_CONDITION_HANDLE;
    ConditionDestroy(s_cond);
+   s_cond = INVALID_CONDITION_HANDLE;
    ThreadPoolDestroy(g_schedulerThreadPool);
    MutexDestroy(s_cronScheduleLock);
    MutexDestroy(s_oneTimeScheduleLock);

@@ -30,7 +30,6 @@ include_HEADERS = \
 	nms_cscp.h \
 	nms_threads.h \
 	nms_util.h \
-	nxappc_internal.h \
 	nxcc.h \
 	nxcldefs.h \
 	nxclient.h \

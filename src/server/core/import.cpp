@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -154,9 +154,10 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 				ConfigEntry *e = event->findEntry(_T("name"));
 				if (e != NULL)
 				{
-					EVENT_TEMPLATE *pEvent = FindEventTemplateByName(e->getValue());
+				   EventTemplate *pEvent = FindEventTemplateByName(e->getValue());
 					if (pEvent != NULL)
 					{
+					   pEvent->decRefCount();
 						if (!(flags & CFG_IMPORT_REPLACE_EVENT_BY_NAME))
 						{
 							_sntprintf(errorText, errorTextLen, _T("Event with name %s already exist"), e->getValue());
@@ -172,15 +173,17 @@ bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTex
 			}
 			else
 			{
-				EVENT_TEMPLATE *pEvent = FindEventTemplateByCode(code);
+			   EventTemplate *pEvent = FindEventTemplateByCode(code);
 				if (pEvent != NULL)
 				{
 					if (!(flags & CFG_IMPORT_REPLACE_EVENT_BY_CODE))
 					{
 						_sntprintf(errorText, errorTextLen, _T("Event with code %d already exist (existing event name: %s; new event name: %s)"),
-						           pEvent->dwCode, pEvent->szName, event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
+						           pEvent->getCode(), pEvent->getName(), event->getSubEntryValue(_T("name"), 0, _T("<unnamed>")));
+						pEvent->decRefCount();
 						goto stop_processing;
 					}
+               pEvent->decRefCount();
 				}
 			}
 		}
@@ -239,28 +242,79 @@ static UINT32 ImportEvent(ConfigEntry *event)
 
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
-	UINT32 code = event->getSubEntryValueAsUInt(_T("code"), 0, 0);
-	if ((code == 0) || (code >= FIRST_USER_EVENT_ID))
-		code = CreateUniqueId(IDG_EVENT);
+	UINT32 code = 0;
+	uuid guid = event->getSubEntryValueAsUUID(_T("guid"));
+	if (!guid.isNull())
+	{
+	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM event_cfg WHERE guid=?"));
+	   if (hStmt == NULL)
+	   {
+	      DBConnectionPoolReleaseConnection(hdb);
+	      return RCC_DB_FAILURE;
+	   }
+	   DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, guid);
+	   DB_RESULT hResult = DBSelectPrepared(hStmt);
+	   if (hResult != NULL)
+	   {
+	      code = DBGetFieldULong(hResult, 0, 0);
+	      DBFreeResult(hResult);
+	   }
+	   DBFreeStatement(hStmt);
+	   if (code != 0)
+	   {
+         nxlog_debug(4, _T("ImportEvent: found existing event with GUID %s (code=%d)"), (const TCHAR *)guid.toString(), code);
+	   }
+	   else
+	   {
+         nxlog_debug(4, _T("ImportEvent: event with GUID %s not found"), (const TCHAR *)guid.toString());
+	   }
+	}
+	else
+	{
+	   code = event->getSubEntryValueAsUInt(_T("code"), 0, 0);
+	   if (code >= FIRST_USER_EVENT_ID)
+	   {
+	      code = 0;
+         nxlog_debug(4, _T("ImportEvent: event without GUID and code not in system range"));
+	   }
+	   else
+	   {
+         nxlog_debug(4, _T("ImportEvent: using provided event code %d"), code);
+	   }
+	}
 
 	// Create or update event template in database
    const TCHAR *msg = event->getSubEntryValue(_T("message"), 0, name);
    const TCHAR *descr = event->getSubEntryValue(_T("description"));
 	TCHAR query[8192];
-   if (IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), code))
+   if ((code != 0) && IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_code"), code))
    {
+      nxlog_debug(4, _T("ImportEvent: found existing event with code %d"), code);
       _sntprintf(query, 8192, _T("UPDATE event_cfg SET event_name=%s,severity=%d,flags=%d,message=%s,description=%s WHERE event_code=%d"),
                  (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
 					  event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
 					  (const TCHAR *)DBPrepareString(hdb, descr), code);
    }
+   else if (IsDatabaseRecordExist(hdb, _T("event_cfg"), _T("event_name"), name))
+   {
+      nxlog_debug(4, _T("ImportEvent: found existing event with name %s"), name);
+      _sntprintf(query, 8192, _T("UPDATE event_cfg SET severity=%d,flags=%d,message=%s,description=%s WHERE event_name=%s"),
+                 event->getSubEntryValueAsInt(_T("severity")),
+                 event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
+                 (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)DBPrepareString(hdb, name));
+   }
    else
    {
+      if (guid.isNull())
+         guid = uuid::generate();
+      if (code == 0)
+         code = CreateUniqueId(IDG_EVENT);
       _sntprintf(query, 8192, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,")
-                              _T("message,description) VALUES (%d,%s,%d,%d,%s,%s)"),
+                              _T("message,description,guid) VALUES (%d,%s,%d,%d,%s,%s,'%s')"),
                  code, (const TCHAR *)DBPrepareString(hdb, name), event->getSubEntryValueAsInt(_T("severity")),
 					  event->getSubEntryValueAsInt(_T("flags")), (const TCHAR *)DBPrepareString(hdb, msg),
-					  (const TCHAR *)DBPrepareString(hdb, descr));
+					  (const TCHAR *)DBPrepareString(hdb, descr), (const TCHAR *)guid.toString());
+      nxlog_debug(4, _T("ImportEvent: added new event: code=%d, name=%s, guid=%s"), code, name, (const TCHAR *)guid.toString());
    }
 	UINT32 rcc = DBQuery(hdb, query) ? RCC_SUCCESS : RCC_DB_FAILURE;
 
@@ -273,17 +327,17 @@ static UINT32 ImportEvent(ConfigEntry *event)
  */
 static UINT32 ImportTrap(ConfigEntry *trap)
 {
-	NXC_TRAP_CFG_ENTRY tc;
-	EVENT_TEMPLATE *event;
-
-	event = FindEventTemplateByName(trap->getSubEntryValue(_T("event"), 0, _T("")));
+	EventTemplate *event = FindEventTemplateByName(trap->getSubEntryValue(_T("event"), 0, _T("")));
 	if (event == NULL)
 		return RCC_INTERNAL_ERROR;
 
+   NXC_TRAP_CFG_ENTRY tc;
 	memset(&tc, 0, sizeof(NXC_TRAP_CFG_ENTRY));
-	tc.dwEventCode = event->dwCode;
+	tc.dwEventCode = event->getCode();
 	nx_strncpy(tc.szDescription, trap->getSubEntryValue(_T("description"), 0, _T("")), MAX_DB_STRING);
 	nx_strncpy(tc.szUserTag, trap->getSubEntryValue(_T("userTag"), 0, _T("")), MAX_USERTAG_LENGTH);
+
+	event->decRefCount();
 
 	UINT32 oid[256];
 	tc.dwOidLen = (UINT32)SNMPParseOID(trap->getSubEntryValue(_T("oid"), 0, _T("")), oid, 256);
@@ -352,8 +406,8 @@ NetObj *FindTemplateRoot(ConfigEntry *config)
       {
          o = new TemplateGroup(name);
          NetObjInsert(o, true, false);
-         o->AddParent(parent);
-         parent->AddChild(o);
+         o->addParent(parent);
+         parent->addChild(o);
          o->unhide();
          o->calculateCompoundStatus();	// Force status change to NORMAL
       }
@@ -432,8 +486,8 @@ UINT32 ImportConfig(Config *config, UINT32 flags)
             NetObj *parent = FindTemplateRoot(tc);
             object = new Template(tc);
             NetObjInsert(object, true, true);
-            object->AddParent(parent);
-            parent->AddChild(object);
+            object->addParent(parent);
+            parent->addChild(object);
             object->unhide();
 		   }
 		}

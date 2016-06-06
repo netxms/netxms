@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -523,6 +523,10 @@ UINT32 GetParameterValue(UINT32 sessionId, const TCHAR *param, TCHAR *value, Abs
                dwErrorCode = ERR_INTERNAL_ERROR;
                m_dwFailedRequests++;
                break;
+            case SYSINFO_RC_NO_SUCH_INSTANCE:
+               dwErrorCode = ERR_NO_SUCH_INSTANCE;
+               m_dwFailedRequests++;
+               break;
             case SYSINFO_RC_UNSUPPORTED:
                dwErrorCode = ERR_UNKNOWN_PARAMETER;
                m_dwUnsupportedRequests++;
@@ -610,6 +614,10 @@ UINT32 GetListValue(UINT32 sessionId, const TCHAR *param, StringList *value, Abs
                dwErrorCode = ERR_INTERNAL_ERROR;
                m_dwFailedRequests++;
                break;
+            case SYSINFO_RC_NO_SUCH_INSTANCE:
+               dwErrorCode = ERR_NO_SUCH_INSTANCE;
+               m_dwFailedRequests++;
+               break;
             case SYSINFO_RC_UNSUPPORTED:
                dwErrorCode = ERR_UNKNOWN_PARAMETER;
                m_dwUnsupportedRequests++;
@@ -678,6 +686,10 @@ UINT32 GetTableValue(UINT32 sessionId, const TCHAR *param, Table *value, Abstrac
                break;
             case SYSINFO_RC_ERROR:
                dwErrorCode = ERR_INTERNAL_ERROR;
+               m_dwFailedRequests++;
+               break;
+            case SYSINFO_RC_NO_SUCH_INSTANCE:
+               dwErrorCode = ERR_NO_SUCH_INSTANCE;
                m_dwFailedRequests++;
                break;
             case SYSINFO_RC_UNSUPPORTED:

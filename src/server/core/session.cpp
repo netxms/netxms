@@ -107,7 +107,7 @@ typedef struct
  */
 static void DeleteCallback(NetObj* obj, void *data)
 {
-   delete (AgentConnection *)obj;
+   ((AgentConnection *)obj)->decRefCount();
 }
 
 /**
@@ -161,6 +161,7 @@ DEFINE_THREAD_STARTER(findNodeConnection)
 DEFINE_THREAD_STARTER(forceDCIPoll)
 DEFINE_THREAD_STARTER(forwardToReportingServer)
 DEFINE_THREAD_STARTER(getAgentFile)
+DEFINE_THREAD_STARTER(getAlarms)
 DEFINE_THREAD_STARTER(getAlarmEvents)
 DEFINE_THREAD_STARTER(getCollectedData)
 DEFINE_THREAD_STARTER(getLocationHistory)
@@ -227,7 +228,7 @@ THREAD_RESULT THREAD_CALL ClientSession::updateThreadStarter(void *pArg)
 /**
  * Client session class constructor
  */
-ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr) : m_subscriptions(true)
+ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr)
 {
    m_pSendQueue = new Queue;
    m_pMessageQueue = new Queue;
@@ -250,6 +251,7 @@ ClientSession::ClientSession(SOCKET hSocket, struct sockaddr *addr) : m_subscrip
    m_mutexSendSituations = MutexCreate();
    m_mutexPollerInit = MutexCreate();
    m_subscriptionLock = MutexCreate();
+   m_subscriptions = new StringObjectMap<UINT32>(true);
    m_dwFlags = 0;
 	m_clientType = CLIENT_TYPE_DESKTOP;
 	m_clientAddr = (struct sockaddr *)nx_memdup(addr, (addr->sa_family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6));
@@ -307,7 +309,8 @@ ClientSession::~ClientSession()
    MutexDestroy(m_mutexSendSituations);
    MutexDestroy(m_mutexPollerInit);
    MutexDestroy(m_subscriptionLock);
-   safe_free(m_pOpenDCIList);
+   delete m_subscriptions;
+   free(m_pOpenDCIList);
    if (m_ppEPPRuleList != NULL)
    {
       UINT32 i;
@@ -350,7 +353,7 @@ void ClientSession::run()
  */
 void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
 {
-   if (level <= (int)g_debugLevel)
+   if (level <= nxlog_get_debug_level())
    {
       va_list args;
 		TCHAR buffer[8192];
@@ -363,12 +366,23 @@ void ClientSession::debugPrintf(int level, const TCHAR *format, ...)
 }
 
 /**
+ * Write audit log
+ */
+void ClientSession::writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...)
+{
+   va_list args;
+   va_start(args, format);
+   WriteAuditLog2(subsys, success, m_dwUserId, m_workstation, m_id, objectId, format, args);
+   va_end(args);
+}
+
+/**
  * Check channel subscription
  */
 bool ClientSession::isSubscribedTo(const TCHAR *channel) const
 {
    MutexLock(m_subscriptionLock);
-   bool subscribed = m_subscriptions.contains(channel);
+   bool subscribed = m_subscriptions->contains(channel);
    MutexUnlock(m_subscriptionLock);
    return subscribed;
 }
@@ -398,11 +412,14 @@ void ClientSession::readThread()
       // Receive error
       if (msg == NULL)
       {
-         debugPrintf(5, _T("readThread: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
+         if (result == MSGRECV_CLOSED)
+            debugPrintf(5, _T("readThread: connection closed"));
+         else
+            debugPrintf(5, _T("readThread: message receiving error (%s)"), AbstractMessageReceiver::resultToText(result));
          break;
       }
 
-      if (g_debugLevel >= 8)
+      if (nxlog_get_debug_level() >= 8)
       {
          String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
          debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -478,7 +495,7 @@ void ClientSession::readThread()
                            debugPrintf(6, _T("Got end of file marker"));
                            //get response with specific ID if ok< then send ok, else send error
                            m_agentConn.remove(msg->getId());
-                           delete conn;
+                           conn->decRefCount();
 
                            NXCPMessage response;
                            response.setCode(CMD_REQUEST_COMPLETED);
@@ -492,7 +509,7 @@ void ClientSession::readThread()
                         debugPrintf(6, _T("Error while sending to agent"));
                         // I/O error
                         m_agentConn.remove(msg->getId());
-                        delete conn;
+                        conn->decRefCount();
 
                         NXCPMessage response;
                         response.setCode(CMD_REQUEST_COMPLETED);
@@ -506,7 +523,7 @@ void ClientSession::readThread()
                      // Resend abort message
                      conn->sendMessage(msg);
                      m_agentConn.remove(msg->getId());
-                     delete conn;
+                     conn->decRefCount();
                   }
                }
                else
@@ -685,11 +702,11 @@ void ClientSession::updateThread()
             MutexLock(m_mutexSendAlarms);
             msg.setCode(CMD_ALARM_UPDATE);
             msg.setField(VID_NOTIFICATION_CODE, pUpdate->dwCode);
-            FillAlarmInfoMessage(&msg, (NXC_ALARM *)pUpdate->pData);
+            ((Alarm *)pUpdate->pData)->fillMessage(&msg);
             sendMessage(&msg);
             MutexUnlock(m_mutexSendAlarms);
             msg.deleteAllFields();
-            free(pUpdate->pData);
+            delete (Alarm *)pUpdate->pData;
             break;
          case INFO_CAT_ACTION:
             MutexLock(m_mutexSendActions);
@@ -918,7 +935,7 @@ void ClientSession::processingThread()
             addClusterNode(pMsg);
             break;
          case CMD_GET_ALL_ALARMS:
-            sendAllAlarms(pMsg->getId());
+            CALL_IN_NEW_THREAD(getAlarms, pMsg);
             break;
          case CMD_GET_ALARM_COMMENTS:
 				getAlarmComments(pMsg);
@@ -1191,13 +1208,13 @@ void ClientSession::processingThread()
 				deleteGraph(pMsg);
 				break;
 			case CMD_ADD_CA_CERTIFICATE:
-				AddCACertificate(pMsg);
+				addCACertificate(pMsg);
 				break;
 			case CMD_DELETE_CERTIFICATE:
-				DeleteCertificate(pMsg);
+				deleteCertificate(pMsg);
 				break;
 			case CMD_UPDATE_CERT_COMMENTS:
-				UpdateCertificateComments(pMsg);
+				updateCertificateComments(pMsg);
 				break;
 			case CMD_GET_CERT_LIST:
 				getCertificateList(pMsg->getId());
@@ -1436,6 +1453,7 @@ void ClientSession::processingThread()
             break;
          case CMD_REMOVE_SCHEDULE:
             removeScheduledTask(pMsg);
+            break;
 #ifdef WITH_ZMQ
          case CMD_ZMQ_SUBSCRIBE_EVENT:
             zmqManageSubscription(pMsg, zmq::EVENT, true);
@@ -1555,7 +1573,7 @@ bool ClientSession::sendMessage(NXCPMessage *msg)
    }
 
 	NXCP_MESSAGE *rawMsg = msg->createMessage();
-   if ((g_debugLevel >= 8) && (msg->getCode() != CMD_ADM_MESSAGE))
+   if ((nxlog_get_debug_level() >= 8) && (msg->getCode() != CMD_ADM_MESSAGE))
    {
       String msgDump = NXCPMessage::dump(rawMsg, NXCP_VERSION);
       debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -1604,7 +1622,7 @@ void ClientSession::sendRawMessage(NXCP_MESSAGE *msg)
 	   debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(ntohs(msg->code), buffer));
    }
 
-   if ((g_debugLevel >= 8) && (code != CMD_ADM_MESSAGE))
+   if ((code != CMD_ADM_MESSAGE) && (nxlog_get_debug_level() >= 8))
    {
       String msgDump = NXCPMessage::dump(msg, NXCP_VERSION);
       debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -1840,6 +1858,7 @@ void ClientSession::login(NXCPMessage *pRequest)
 
    if (!(m_dwFlags & CSF_AUTHENTICATED))
    {
+      bool closeOtherSessions = false;
       pRequest->getFieldAsString(VID_LOGIN_NAME, szLogin, MAX_USER_NAME);
 		nAuthType = (int)pRequest->getFieldAsUInt16(VID_AUTH_TYPE);
       debugPrintf(6, _T("authentication type %d"), nAuthType);
@@ -1852,7 +1871,8 @@ void ClientSession::login(NXCPMessage *pRequest)
 				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
-													 &m_dwSystemAccess, &changePasswd, &intruderLockout, false);
+													 &m_dwSystemAccess, &changePasswd, &intruderLockout,
+													 &closeOtherSessions, false);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
 #ifdef _WITH_ENCRYPTION
@@ -1865,7 +1885,8 @@ void ClientSession::login(NXCPMessage *pRequest)
 					dwSigLen = pRequest->getFieldAsBinary(VID_SIGNATURE, signature, 256);
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
 														 m_challenge, &m_dwUserId, &m_dwSystemAccess,
-														 &changePasswd, &intruderLockout, false);
+														 &changePasswd, &intruderLockout,
+														 &closeOtherSessions, false);
 					X509_free(pCert);
 				}
 				else
@@ -1883,7 +1904,8 @@ void ClientSession::login(NXCPMessage *pRequest)
             {
                debugPrintf(5, _T("SSO ticket %hs is valid, login name %s"), ticket, szLogin);
 				   dwResult = AuthenticateUser(szLogin, NULL, 0, NULL, NULL, &m_dwUserId,
-													    &m_dwSystemAccess, &changePasswd, &intruderLockout, true);
+													    &m_dwSystemAccess, &changePasswd, &intruderLockout,
+													    &closeOtherSessions, true);
             }
             else
             {
@@ -1937,6 +1959,12 @@ void ClientSession::login(NXCPMessage *pRequest)
          debugPrintf(3, _T("User %s authenticated (language=%s clientInfo=\"%s\")"), m_sessionName, m_language, m_clientInfo);
 			WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, 0,
             _T("User \"%s\" logged in (language: %s; client info: %s)"), szLogin, m_language, m_clientInfo);
+
+			if (closeOtherSessions)
+			{
+			   debugPrintf(5, _T("Closing other sessions for user %s"), m_loginName);
+			   CloseOtherSessions(m_dwUserId, m_id);
+			}
       }
       else
       {
@@ -2071,7 +2099,7 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
             }
             else
             {
-               hStmt = DBPrepare(hdb, _T("INSERT INTO event_cfg (event_name,severity,flags,message,description,event_code) VALUES (?,?,?,?,?,?)"));
+               hStmt = DBPrepare(hdb, _T("INSERT INTO event_cfg (event_name,severity,flags,message,description,event_code,guid) VALUES (?,?,?,?,?,?,?)"));
             }
 
             if (hStmt != NULL)
@@ -2082,6 +2110,10 @@ void ClientSession::modifyEventTemplate(NXCPMessage *pRequest)
                DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, pRequest->getFieldAsString(VID_MESSAGE), DB_BIND_DYNAMIC, MAX_EVENT_MSG_LENGTH - 1);
                DBBind(hStmt, 5, DB_SQLTYPE_TEXT, pRequest->getFieldAsString(VID_DESCRIPTION), DB_BIND_DYNAMIC);
                DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, dwEventCode);
+               if (!bEventExist)
+               {
+                  DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, uuid::generate());
+               }
 
                if (DBExecute(hStmt))
                {
@@ -2927,19 +2959,18 @@ void ClientSession::createUser(NXCPMessage *pRequest)
    else
    {
       UINT32 dwResult, dwUserId;
-      BOOL bIsGroup;
       TCHAR szUserName[MAX_USER_NAME];
 
       pRequest->getFieldAsString(VID_USER_NAME, szUserName, MAX_USER_NAME);
       if (IsValidObjectName(szUserName))
       {
-         bIsGroup = pRequest->getFieldAsUInt16(VID_IS_GROUP);
-         dwResult = CreateNewUser(szUserName, bIsGroup, &dwUserId);
+         bool isGroup = pRequest->getFieldAsBoolean(VID_IS_GROUP);
+         dwResult = CreateNewUser(szUserName, isGroup, &dwUserId);
          msg.setField(VID_RCC, dwResult);
          if (dwResult == RCC_SUCCESS)
          {
             msg.setField(VID_USER_ID, dwUserId);   // Send id of new user to client
-            WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, dwUserId, _T("%s %s created"), bIsGroup ? _T("Group") : _T("User"), szUserName);
+            WriteAuditLog(AUDIT_SECURITY, TRUE, m_dwUserId, m_workstation, m_id, dwUserId, _T("%s %s created"), isGroup ? _T("Group") : _T("User"), szUserName);
          }
       }
       else
@@ -3136,34 +3167,6 @@ void ClientSession::lockUserDB(UINT32 dwRqId, BOOL bLock)
 
    // Send response
    sendMessage(&msg);
-}
-
-/**
- * Notify client on user database update
- */
-void ClientSession::onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
-{
-   NXCPMessage msg;
-
-   if (isAuthenticated())
-   {
-      msg.setCode(CMD_USER_DB_UPDATE);
-      msg.setId(0);
-      msg.setField(VID_UPDATE_TYPE, (WORD)code);
-
-      switch(code)
-      {
-         case USER_DB_CREATE:
-         case USER_DB_MODIFY:
-				object->fillMessage(&msg);
-            break;
-         default:
-            msg.setField(VID_USER_ID, id);
-            break;
-      }
-
-      sendMessage(&msg);
-   }
 }
 
 /**
@@ -4225,7 +4228,7 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
 
       // Fill memory block with records
       pCurr = (DCI_DATA_ROW *)(((char *)pData) + sizeof(DCI_DATA_HEADER));
-      pCurr->timeStamp = dci->getLastPollTime();
+      pCurr->timeStamp = (UINT32)dci->getLastPollTime();
       switch(dataType)
       {
          case DCI_DT_INT:
@@ -5148,8 +5151,8 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 							   if ((pParent != NULL) &&          // parent can be NULL for nodes
 							       (iClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
 							   {
-								   pParent->AddChild(object);
-								   object->AddParent(pParent);
+								   pParent->addChild(object);
+								   object->addParent(pParent);
 								   pParent->calculateCompoundStatus();
 								   if (pParent->getObjectClass() == OBJECT_CLUSTER)
 								   {
@@ -5332,8 +5335,8 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
                if (!pChild->isChild(pParent->getId()))
                {
                   ObjectTransactionStart();
-                  pParent->AddChild(pChild);
-                  pChild->AddParent(pParent);
+                  pParent->addChild(pChild);
+                  pChild->addParent(pParent);
                   ObjectTransactionEnd();
                   pParent->calculateCompoundStatus();
                   msg.setField(VID_RCC, RCC_SUCCESS);
@@ -5351,8 +5354,8 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
             else
             {
                ObjectTransactionStart();
-               pParent->DeleteChild(pChild);
-               pChild->DeleteParent(pParent);
+               pParent->deleteChild(pChild);
+               pChild->deleteParent(pParent);
                ObjectTransactionEnd();
                pParent->calculateCompoundStatus();
                if ((pParent->getObjectClass() == OBJECT_TEMPLATE) &&
@@ -5460,21 +5463,21 @@ void ClientSession::deleteObject(NXCPMessage *pRequest)
 /**
  * Process changes in alarms
  */
-void ClientSession::onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm)
+void ClientSession::onAlarmUpdate(UINT32 dwCode, const Alarm *alarm)
 {
    UPDATE_INFO *pUpdate;
    NetObj *object;
 
    if (isAuthenticated() && isSubscribedTo(NXC_CHANNEL_ALARMS))
    {
-      object = FindObjectById(pAlarm->sourceObject);
+      object = FindObjectById(alarm->getSourceObject());
       if (object != NULL)
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
          {
             pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
             pUpdate->dwCategory = INFO_CAT_ALARM;
             pUpdate->dwCode = dwCode;
-            pUpdate->pData = nx_memdup(pAlarm, sizeof(NXC_ALARM));
+            pUpdate->pData = new Alarm(alarm, false);
             m_pUpdateQueue->put(pUpdate);
          }
    }
@@ -5483,10 +5486,10 @@ void ClientSession::onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm)
 /**
  * Send all alarms to client
  */
-void ClientSession::sendAllAlarms(UINT32 dwRqId)
+void ClientSession::getAlarms(NXCPMessage *request)
 {
    MutexLock(m_mutexSendAlarms);
-   SendAlarmsToClient(dwRqId, this);
+   SendAlarmsToClient(request->getId(), this);
    MutexUnlock(m_mutexSendAlarms);
 }
 
@@ -7796,6 +7799,9 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
    {
       if (object->getObjectClass() == OBJECT_NODE)
       {
+         TCHAR action[MAX_PARAM_NAME];
+         pRequest->getFieldAsString(VID_ACTION_NAME, action, MAX_PARAM_NAME);
+
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
          {
             AgentConnection *pConn;
@@ -7803,25 +7809,37 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
             pConn = ((Node *)object)->createAgentConnection();
             if (pConn != NULL)
             {
-               TCHAR action[MAX_PARAM_NAME];
-               pRequest->getFieldAsString(VID_ACTION_NAME, action, MAX_PARAM_NAME);
+               TCHAR *argv[64];
+               int argc = pRequest->getFieldAsInt16(VID_NUM_ARGS);
+               if (argc > 64)
+               {
+                  debugPrintf(4, _T("executeAction: too many arguments (%d)"), argc);
+                  argc = 64;
+               }
+               UINT32 fieldId = VID_ACTION_ARG_BASE;
+               for(int i = 0; i < argc; i++)
+                  argv[i] = pRequest->getFieldAsString(fieldId++);
 
                UINT32 rcc;
                bool withOutput = pRequest->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
                if (withOutput)
                {
                   ActionExecutionData data(this, pRequest->getId());
-                  rcc = pConn->execAction(action, 0, NULL, true, ActionExecuteCallback, &data);
+                  rcc = pConn->execAction(action, argc, argv, true, ActionExecuteCallback, &data);
                }
                else
                {
-                  rcc = pConn->execAction(action, 0, NULL);
+                  rcc = pConn->execAction(action, argc, argv);
                }
+
+               for(int i = 0; i < argc; i++)
+                  free(argv[i]);
 
                switch(rcc)
                {
                   case ERR_SUCCESS:
                      msg.setField(VID_RCC, RCC_SUCCESS);
+                     writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Executed agent action %s"), action);
                      break;
                   case ERR_ACCESS_DENIED:
                      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
@@ -7846,6 +7864,7 @@ void ClientSession::executeAction(NXCPMessage *pRequest)
          else
          {
             msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+            writeAuditLog(AUDIT_OBJECTS, false, object->getId(), _T("Access denied on executing agent action %s"), action);
          }
       }
       else
@@ -8072,7 +8091,7 @@ void ClientSession::changeSubscription(NXCPMessage *request)
    if (channel[0] != 0)
    {
       MutexLock(m_subscriptionLock);
-      UINT32 *count = m_subscriptions.get(channel);
+      UINT32 *count = m_subscriptions->get(channel);
       if (request->getFieldAsBoolean(VID_OPERATION))
       {
          // Subscribe
@@ -8080,7 +8099,7 @@ void ClientSession::changeSubscription(NXCPMessage *request)
          {
             count = new UINT32;
             *count = 1;
-            m_subscriptions.set(channel, count);
+            m_subscriptions->set(channel, count);
          }
          else
          {
@@ -8096,7 +8115,7 @@ void ClientSession::changeSubscription(NXCPMessage *request)
             (*count)--;
             debugPrintf(5, _T("Subscription removed: %s (%d)"), channel, *count);
             if (*count == 0)
-               m_subscriptions.remove(channel);
+               m_subscriptions->remove(channel);
          }
       }
       MutexUnlock(m_subscriptionLock);
@@ -10177,12 +10196,10 @@ void ClientSession::sendPerfTabDCIList(NXCPMessage *pRequest)
    sendMessage(&msg);
 }
 
-
-//
-// Add CA certificate
-//
-
-void ClientSession::AddCACertificate(NXCPMessage *pRequest)
+/**
+ * Add CA certificate
+ */
+void ClientSession::addCACertificate(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
 #ifdef _WITH_ENCRYPTION
@@ -10196,8 +10213,7 @@ void ClientSession::AddCACertificate(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 #ifdef _WITH_ENCRYPTION
 		dwLen = pRequest->getFieldAsBinary(VID_CERTIFICATE, NULL, 0);
@@ -10267,12 +10283,10 @@ void ClientSession::AddCACertificate(NXCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Delete certificate
-//
-
-void ClientSession::DeleteCertificate(NXCPMessage *pRequest)
+/**
+ * Delete certificate
+ */
+void ClientSession::deleteCertificate(NXCPMessage *pRequest)
 {
    NXCPMessage msg;
 #ifdef _WITH_ENCRYPTION
@@ -10283,8 +10297,7 @@ void ClientSession::DeleteCertificate(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 #ifdef _WITH_ENCRYPTION
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -10313,12 +10326,10 @@ void ClientSession::DeleteCertificate(NXCPMessage *pRequest)
 	sendMessage(&msg);
 }
 
-
-//
-// Update certificate's comments
-//
-
-void ClientSession::UpdateCertificateComments(NXCPMessage *pRequest)
+/**
+ * Update certificate's comments
+ */
+void ClientSession::updateCertificateComments(NXCPMessage *pRequest)
 {
 	UINT32 dwCertId, qlen;
 	TCHAR *pszQuery, *pszComments, *pszEscComments;
@@ -10328,8 +10339,7 @@ void ClientSession::UpdateCertificateComments(NXCPMessage *pRequest)
 	msg.setId(pRequest->getId());
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 		dwCertId = pRequest->getFieldAsUInt32(VID_CERTIFICATE_ID);
 		pszComments= pRequest->getFieldAsString(VID_COMMENTS);
@@ -10398,8 +10408,7 @@ void ClientSession::getCertificateList(UINT32 dwRqId)
 	msg.setId(dwRqId);
 	msg.setCode(CMD_REQUEST_COMPLETED);
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_USERS) &&
-	    (m_dwSystemAccess & SYSTEM_ACCESS_SERVER_CONFIG))
+	if (checkSysAccessRights(SYSTEM_ACCESS_SERVER_CONFIG))
 	{
 	   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		hResult = DBSelect(hdb, _T("SELECT cert_id,cert_type,comments,subject FROM certificates"));
@@ -10764,7 +10773,7 @@ void ClientSession::deleteSituationInstance(NXCPMessage *pRequest)
 			TCHAR instance[MAX_DB_STRING];
 
 			pRequest->getFieldAsString(VID_SITUATION_INSTANCE, instance, MAX_DB_STRING);
-			msg.setField(VID_RCC, st->DeleteInstance(instance) ? RCC_SUCCESS : RCC_INSTANCE_NOT_FOUND);
+			msg.setField(VID_RCC, st->DeleteInstance(instance) ? RCC_SUCCESS : RCC_NO_SUCH_INSTANCE);
 		}
 		else
 		{
@@ -10868,7 +10877,7 @@ void ClientSession::getServerFile(NXCPMessage *pRequest)
       }
    }
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES) || musicFile)
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_SERVER_FILES) || musicFile)
 	{
       _tcscpy(fname, g_netxmsdDataDir);
       _tcscat(fname, DDIR_FILES);
@@ -10925,7 +10934,15 @@ void ClientSession::getAgentFile(NXCPMessage *request)
             bool follow = request->getFieldAsUInt16(VID_FILE_FOLLOW) ? true : false;
 				FileDownloadJob *job = new FileDownloadJob((Node *)object, remoteFile, request->getFieldAsUInt32(VID_FILE_SIZE_LIMIT), follow, this, request->getId());
 				msg.setField(VID_NAME, job->getLocalFileName());
-				msg.setField(VID_RCC, AddJob(job) ? RCC_SUCCESS : RCC_INTERNAL_ERROR);
+				if (AddJob(job))
+				{
+	            msg.setField(VID_RCC, RCC_SUCCESS);
+				}
+				else
+				{
+				   delete job;
+	            msg.setField(VID_RCC, RCC_INTERNAL_ERROR);
+				}
 			}
 			else
 			{
@@ -11110,8 +11127,8 @@ void ClientSession::executeScript(NXCPMessage *request)
                vm = NXSLCompileAndCreateVM(script, errorMessage, 256, new NXSL_ClientSessionEnv(this, &msg));
                if (vm != NULL)
                {
-                  vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, object)));
-                  if (object->getObjectClass() == OBJECT_NODE)
+                  vm->setGlobalVariable(_T("$object"), object->createNXSLObject());
+                  if(object->getObjectClass() == OBJECT_NODE)
                   {
                      vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
                   }
@@ -12372,7 +12389,7 @@ void ClientSession::listServerFileStore(NXCPMessage *request)
       }
    }
 
-	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_FILES) || musicFiles)
+	if ((m_dwSystemAccess & SYSTEM_ACCESS_READ_SERVER_FILES) || musicFiles)
 	{
       _tcscpy(path, g_netxmsdDataDir);
       _tcscat(path, DDIR_FILES);
@@ -12602,7 +12619,7 @@ void ClientSession::receiveFile(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_FILES)
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
 
@@ -12658,7 +12675,7 @@ void ClientSession::deleteFile(NXCPMessage *request)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(request->getId());
 
-	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_FILES)
+	if (m_dwSystemAccess & SYSTEM_ACCESS_MANAGE_SERVER_FILES)
    {
 		TCHAR fileName[MAX_PATH];
 

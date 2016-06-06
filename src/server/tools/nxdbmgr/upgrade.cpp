@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,9 +29,18 @@
 BOOL MigrateMaps();
 
 /**
+ * Pre-defined GUID mapping for GenerateGUID
+ */
+struct GUID_MAPPING
+{
+   UINT32 id;
+   const TCHAR *guid;
+};
+
+/**
  * Generate GUIDs
  */
-static bool GenerateGUID(const TCHAR *table, const TCHAR *idColumn, const TCHAR *guidColumn)
+static bool GenerateGUID(const TCHAR *table, const TCHAR *idColumn, const TCHAR *guidColumn, const GUID_MAPPING *mapping)
 {
    TCHAR query[256];
    _sntprintf(query, 256, _T("SELECT %s FROM %s"), idColumn, table);
@@ -39,15 +48,29 @@ static bool GenerateGUID(const TCHAR *table, const TCHAR *idColumn, const TCHAR 
 	if (hResult == NULL)
       return false;
 
+   uuid_t guid;
+   TCHAR buffer[64];
+
 	int count = DBGetNumRows(hResult);
 	for(int i = 0; i < count; i++)
 	{
-		uuid_t guid;
-		TCHAR buffer[64];
-
-		_uuid_generate(guid);
-		_sntprintf(query, 256, _T("UPDATE %s SET %s='%s' WHERE %s=%d"),
-		           table, guidColumn, _uuid_to_string(guid, buffer), idColumn, DBGetFieldULong(hResult, i, 0));
+		const TCHAR *guidText = NULL;
+		UINT32 id = DBGetFieldULong(hResult, i, 0);
+		if (mapping != NULL)
+		{
+		   for(int j = 0; mapping[j].guid != NULL; j++)
+		      if (mapping[j].id == id)
+		      {
+		         guidText = mapping[j].guid;
+		         break;
+		      }
+		}
+		if (guidText == NULL)
+		{
+		   _uuid_generate(guid);
+		   guidText = _uuid_to_string(guid, buffer);
+		}
+		_sntprintf(query, 256, _T("UPDATE %s SET %s='%s' WHERE %s=%d"), table, guidColumn, guidText, idColumn, id);
 		if (!SQLQuery(query))
       {
       	DBFreeResult(hResult);
@@ -363,13 +386,22 @@ static BOOL ResizeColumn(const TCHAR *table, const TCHAR *column, int newSize, b
 /**
  * Create new event template
  */
-static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *message, const TCHAR *description)
+static BOOL CreateEventTemplate(int code, const TCHAR *name, int severity, int flags, const TCHAR *guid, const TCHAR *message, const TCHAR *description)
 {
 	TCHAR query[4096];
 
-	_sntprintf(query, 4096, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES (%d,'%s',%d,%d,%s,%s)"),
-	           code, name, severity, flags, (const TCHAR *)DBPrepareString(g_hCoreDB, message),
-				  (const TCHAR *)DBPrepareString(g_hCoreDB, description));
+	if (guid != NULL)
+	{
+      _sntprintf(query, 4096, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description,guid) VALUES (%d,'%s',%d,%d,%s,%s,'%s')"),
+                 code, name, severity, flags, (const TCHAR *)DBPrepareString(g_hCoreDB, message),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, description), guid);
+	}
+	else
+	{
+      _sntprintf(query, 4096, _T("INSERT INTO event_cfg (event_code,event_name,severity,flags,message,description) VALUES (%d,'%s',%d,%d,%s,%s)"),
+                 code, name, severity, flags, (const TCHAR *)DBPrepareString(g_hCoreDB, message),
+                 (const TCHAR *)DBPrepareString(g_hCoreDB, description));
+	}
 	return SQLQuery(query);
 }
 
@@ -641,7 +673,706 @@ static int NextFreeEPPruleID()
 	return ruleId;
 }
 
-/*
+/**
+ * Upgrade from V403 to V404
+ */
+static BOOL H_UpgradeFromV403(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("SyslogIgnoreMessageTimestamp"), _T("0"),
+            _T("Ignore timestamp received in syslog messages and always use server time"),
+            'B', true, false, false, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='404' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V402 to V403
+ */
+static BOOL H_UpgradeFromV402(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("DROP TABLE policy_time_range_list")));
+   CHK_EXEC(SQLQuery(_T("DROP TABLE time_ranges")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='403' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V401 to V402
+ */
+static BOOL H_UpgradeFromV401(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_event_log_source ON event_log(event_source)")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='402' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V400 to V401
+ */
+static BOOL H_UpgradeFromV400(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateEventTemplate(EVENT_LDAP_SYNC_ERROR, _T("SYS_LDAP_SYNC_ERROR"),
+            SEVERITY_MAJOR, EF_LOG, _T("f7e8508d-1503-4736-854b-1e5b8b0ad1f2"),
+      _T("LDAP sync error: %5"),
+      _T("Generated when LDAP synchronization error occurs.\r\n")
+      _T("Parameters:\r\n")
+      _T("    1) User ID\r\n")
+      _T("    2) User GUID\r\n")
+      _T("    3) User LDAP DN\r\n")
+      _T("    4) User name\r\n")
+      _T("    5) Problem description")));
+
+	int ruleId = NextFreeEPPruleID();
+   TCHAR query[1024];
+	_sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) VALUES (%d,'417648af-5361-49a5-9471-6ef31e857b2d',7944,'Generate an alarm when error occurred during LDAP synchronization','%%m',5,'SYS_LDAP_SYNC_ERROR_%%2','',0,%d,0,'')"), ruleId, EVENT_ALARM_TIMEOUT);
+   CHK_EXEC(SQLQuery(query));
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_LDAP_SYNC_ERROR);
+   CHK_EXEC(SQLQuery(query));
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE users ADD ldap_unique_id varchar(64)")));
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE user_groups ADD ldap_unique_id varchar(64)")));
+   CHK_EXEC(CreateConfigParam(_T("LdapUserUniqueId"), _T(""), true, false, false));
+   CHK_EXEC(CreateConfigParam(_T("LdapGroupUniqueId"), _T(""), true, false, false));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='401' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V399 to V400
+ */
+static BOOL H_UpgradeFromV399(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("JobRetryCount"), _T("5"), _T("Maximum mumber of job execution retrys"), 'I', true, false, false, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='400' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V398 to V399
+ */
+static BOOL H_UpgradeFromV398(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE config_repositories (")
+         _T("   id integer not null,")
+         _T("   url varchar(1023) not null,")
+         _T("   auth_token varchar(63) null,")
+         _T("   description varchar(1023) null,")
+         _T("   PRIMARY KEY(id))")
+       ));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='399' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V397 to V398
+ */
+static BOOL H_UpgradeFromV397(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+            _T("CREATE TABLE currency_codes (")
+            _T("   numeric_code char(3) not null,")
+            _T("   alpha_code char(3) not null,")
+            _T("   description varchar(127) not null,")
+            _T("   exponent integer not null,")
+            _T("   PRIMARY KEY(numeric_code))")
+         ));
+
+   CHK_EXEC(CreateTable(
+            _T("CREATE TABLE country_codes (")
+            _T("   numeric_code char(3) not null,")
+            _T("   alpha_code char(2) not null,")
+            _T("   alpha3_code char(3) not null,")
+            _T("   name varchar(127) not null,")
+            _T("   PRIMARY KEY(numeric_code))")
+         ));
+
+   static const TCHAR *batch1 =
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('008', 'ALL', 'Lek', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('012', 'DZD', 'Algerian Dinar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('031', 'AZM', 'Azerbaijanian Manat', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('032', 'ARS', 'Argentine Peso', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('036', 'AUD', 'Australian Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('044', 'BSD', 'Bahamian Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('048', 'BHD', 'Bahraini Dinar', 3)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('050', 'BDT', 'Taka', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('051', 'AMD', 'Armenian Dram', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('052', 'BBD', 'Barbados Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('060', 'BMD', 'Bermudian Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('064', 'BTN', 'Ngultrum', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('068', 'BOB', 'Boliviano', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('072', 'BWP', 'Pula', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('084', 'BZD', 'Belize Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('090', 'SBD', 'Solomon Islands Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('096', 'BND', 'Brunei Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('100', 'BGL', 'Lev', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('104', 'MMK', 'Kyat', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('108', 'BIF', 'Burundi Franc', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('116', 'KHR', 'Riel', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('124', 'CAD', 'Canadian Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('132', 'CVE', 'Cape Verde Escudo', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('136', 'KYD', 'Cayman Islands Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('144', 'LKR', 'Sri Lanka Rupee', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('152', 'CLP', 'Chilean Peso', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('156', 'CNY', 'Yuan Renminbi', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('170', 'COP', 'Colombian Peso', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('174', 'KMF', 'Comoro Franc', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('188', 'CRC', 'Costa Rican Colon', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('191', 'HRK', 'Croatian Kuna', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('192', 'CUP', 'Cuban Peso', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('196', 'CYP', 'Cyprus Pound', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('203', 'CZK', 'Czech Koruna', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('208', 'DKK', 'Danish Krone', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('214', 'DOP', 'Dominican Peso', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('222', 'SVC', 'El Salvador Colon', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('230', 'ETB', 'Ethiopian Birr', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('232', 'ERN', 'Nakfa', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('233', 'EEK', 'Estonian Kroon', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('238', 'FKP', 'Falkland Islands Pound', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('242', 'FJD', 'Fiji Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('262', 'DJF', 'Djibouti Franc', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('270', 'GMD', 'Dalasi', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('288', 'GHC', 'Cedi', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('292', 'GIP', 'Gibraltar Pound', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('320', 'GTQ', 'Quetzal', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('324', 'GNF', 'Guinea Franc', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('328', 'GYD', 'Guyana Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('332', 'HTG', 'Gourde', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('340', 'HNL', 'Lempira', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('344', 'HKD', 'Hong Kong Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('348', 'HUF', 'Forint', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('352', 'ISK', 'Iceland Krona', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('356', 'INR', 'Indian Rupee', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('360', 'IDR', 'Rupiah', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('364', 'IRR', 'Iranian Rial', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('368', 'IQD', 'Iraqi Dinar', 3)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('376', 'ILS', 'New Israeli Sheqel', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('388', 'JMD', 'Jamaican Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('392', 'JPY', 'Yen', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('398', 'KZT', 'Tenge', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('400', 'JOD', 'Jordanian Dinar', 3)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('404', 'KES', 'Kenyan Shilling', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('408', 'KPW', 'North Korean Won', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('410', 'KRW', 'Won', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('414', 'KWD', 'Kuwaiti Dinar', 3)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('417', 'KGS', 'Som', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('418', 'LAK', 'Kip', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('422', 'LBP', 'Lebanese Pound', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('426', 'LSL', 'Lesotho Loti', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('428', 'LVL', 'Latvian Lats', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('430', 'LRD', 'Liberian Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('434', 'LYD', 'Lybian Dinar', 3)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('440', 'LTL', 'Lithuanian Litas', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('446', 'MOP', 'Pataca', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('450', 'MGF', 'Malagasy Franc', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('454', 'MWK', 'Kwacha', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('458', 'MYR', 'Malaysian Ringgit', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('462', 'MVR', 'Rufiyaa', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('470', 'MTL', 'Maltese Lira', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('478', 'MRO', 'Ouguiya', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('480', 'MUR', 'Mauritius Rupee', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('484', 'MXN', 'Mexican Peso', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('496', 'MNT', 'Tugrik', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('498', 'MDL', 'Moldovan Leu', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('504', 'MAD', 'Moroccan Dirham', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('508', 'MZM', 'Metical', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('512', 'OMR', 'Rial Omani', 3)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('516', 'NAD', 'Namibia Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('524', 'NPR', 'Nepalese Rupee', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('532', 'ANG', 'Netherlands Antillan Guilder', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('533', 'AWG', 'Aruban Guilder', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('548', 'VUV', 'Vatu', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('554', 'NZD', 'New Zealand Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('558', 'NIO', 'Cordoba Oro', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('566', 'NGN', 'Naira', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('578', 'NOK', 'Norvegian Krone', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('586', 'PKR', 'Pakistan Rupee', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('590', 'PAB', 'Balboa', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('598', 'PGK', 'Kina', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('600', 'PYG', 'Guarani', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('604', 'PEN', 'Nuevo Sol', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('608', 'PHP', 'Philippine Peso', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('624', 'GWP', 'Guinea-Bissau Peso', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('634', 'QAR', 'Qatari Rial', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('642', 'ROL', 'Leu', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('643', 'RUB', 'Russian Ruble', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('646', 'RWF', 'Rwanda Franc', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('654', 'SHP', 'Saint Helena Pound', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('678', 'STD', 'Dobra', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('682', 'SAR', 'Saudi Riyal', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('690', 'SCR', 'Seychelles Rupee', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('694', 'SLL', 'Leone', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('702', 'SGD', 'Singapore Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('703', 'SKK', 'Slovak Koruna', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('704', 'VND', 'Dong', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('706', 'SOS', 'Somali Shilling', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('710', 'ZAR', 'Rand', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('716', 'ZWD', 'Zimbabwe Dollar', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('728', 'SSP', 'South Sudanese pound', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('740', 'SRG', 'Suriname Guilder', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('748', 'SZL', 'Lilangeni', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('752', 'SEK', 'Swedish Krona', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('756', 'CHF', 'Swiss Franc', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('760', 'SYP', 'Syrian Pound', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('764', 'THB', 'Baht', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('776', 'TOP', 'Paanga', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('780', 'TTD', 'Trinidad and Tobago Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('784', 'AED', 'UAE Dirham', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('788', 'TND', 'Tunisian Dinar', 3)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('795', 'TMM', 'Manat', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('800', 'UGX', 'Uganda Shilling', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('807', 'MKD', 'Denar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('810', 'RUR', 'Russian Ruble', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('818', 'EGP', 'Egyptian Pound', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('826', 'GBP', 'Pound Sterling', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('834', 'TZS', 'Tanzanian Shilling', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('840', 'USD', 'US Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('858', 'UYU', 'Peso Uruguayo', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('860', 'UZS', 'Uzbekistan Sum', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('862', 'VEB', 'Bolivar', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('882', 'WST', 'Tala', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('886', 'YER', 'Yemeni Rial', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('891', 'CSD', 'Serbian Dinar', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('894', 'ZMK', 'Kwacha', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('901', 'TWD', 'New Taiwan Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('933', 'BYN', 'Belarussian New Ruble', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('934', 'TMT', 'Turkmenistani Manat', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('937', 'VEF', 'Venezuelan Bolivar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('938', 'SDG', 'Sudanese Pound', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('941', 'RSD', 'Serbian Dinar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('943', 'MZN', 'Mozambican Metical', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('944', 'AZN', 'Azerbaijani Manat', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('946', 'RON', 'New Romanian Leu', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('949', 'TRY', 'New Turkish Lira', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('950', 'XAF', 'CFA Franc BEAC', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('951', 'XCD', 'East Carribbean Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('952', 'XOF', 'CFA Franc BCEAO', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('953', 'XPF', 'CFP Franc', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('967', 'ZMW', 'Zambian Kwacha', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('968', 'SRD', 'Surinamese Dollar', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('969', 'MGA', 'Malagasy Ariary', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('971', 'AFN', 'Afghani', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('972', 'TJS', 'Somoni', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('973', 'AOA', 'Kwanza', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('974', 'BYR', 'Belarussian Ruble', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('975', 'BGN', 'Bulgarian Lev', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('976', 'CDF', 'Franc Congolais', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('977', 'BAM', 'Convertible Marks', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('978', 'EUR', 'Euro', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('979', 'MXV', 'Mexican Unidad de Inversion (UDI)', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('980', 'UAH', 'Hryvnia', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('981', 'GEL', 'Lari', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('984', 'BOV', 'Mvdol', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('985', 'PLN', 'Zloty', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('986', 'BRL', 'Brazilian Real', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('990', 'CLF', 'Unidades de Fomento', 0)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('997', 'USN', 'US dollar (next day funds code)', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('998', 'USS', 'US dollar (same day funds code)', 2)\n")
+      _T("INSERT INTO currency_codes (numeric_code, alpha_code, description, exponent) VALUES ('999', 'XXX', 'No currency', 0)\n")
+      _T("<END>");
+   static const TCHAR *batch2 =
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AD','AND','020','Andorra')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AE','ARE','784','United Arab Emirates')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AF','AFG','004','Afghanistan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AG','ATG','028','Antigua and Barbuda')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AI','AIA','660','Anguilla')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AL','ALB','008','Albania')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AM','ARM','051','Armenia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AN','ANT','530','Netherlands Antilles')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AO','AGO','024','Angola')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AQ','ATA','010','Antarctica')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AR','ARG','032','Argentina')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AS','ASM','016','American Samoa')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AT','AUT','040','Austria')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AU','AUS','036','Australia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AW','ABW','533','Aruba')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AX','ALA','248','Aland Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('AZ','AZE','031','Azerbaijan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BA','BIH','070','Bosnia and Herzegovina')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BB','BRB','052','Barbados')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BD','BGD','050','Bangladesh')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BE','BEL','056','Belgium')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BF','BFA','854','Burkina Faso')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BG','BGR','100','Bulgaria')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BH','BHR','048','Bahrain')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BI','BDI','108','Burundi')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BJ','BEN','204','Benin')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BL','BLM','652','Saint-Barthelemy')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BM','BMU','060','Bermuda')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BN','BRN','096','Brunei Darussalam')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BO','BOL','068','Bolivia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BQ','BES','535','Bonaire, Sint Eustatius and Saba')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BR','BRA','076','Brazil')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BS','BHS','044','Bahamas')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BT','BTN','064','Bhutan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BV','BVT','074','Bouvet Island')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BW','BWA','072','Botswana')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BY','BLR','112','Belarus')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('BZ','BLZ','084','Belize')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CA','CAN','124','Canada')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CC','CCK','166','Cocos (Keeling) Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CD','COD','180','Congo, Democratic Republic of the')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CF','CAF','140','Central African Republic')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CG','COG','178','Congo (Brazzaville)')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CH','CHE','756','Switzerland')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CI','CIV','384','Cote d''Ivoire')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CK','COK','184','Cook Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CL','CHL','152','Chile')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CM','CMR','120','Cameroon')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CN','CHN','156','China')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CO','COL','170','Colombia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CR','CRI','188','Costa Rica')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CU','CUB','192','Cuba')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CV','CPV','132','Cape Verde')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CW','CUW','531','Curacao')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CX','CXR','162','Christmas Island')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CY','CYP','196','Cyprus')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('CZ','CZE','203','Czech Republic')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('DE','DEU','276','Germany')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('DJ','DJI','262','Djibouti')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('DK','DNK','208','Denmark')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('DM','DMA','212','Dominica')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('DO','DOM','214','Dominican Republic')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('DZ','DZA','012','Algeria')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('EC','ECU','218','Ecuador')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('EE','EST','233','Estonia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('EG','EGY','818','Egypt')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('EH','ESH','732','Western Sahara')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('ER','ERI','232','Eritrea')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('ES','ESP','724','Spain')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('ET','ETH','231','Ethiopia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('FI','FIN','246','Finland')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('FJ','FJI','242','Fiji')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('FK','FLK','238','Falkland Islands (Malvinas)')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('FM','FSM','583','Micronesia, Federated States of')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('FO','FRO','234','Faroe Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('FR','FRA','250','France')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GA','GAB','266','Gabon')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GB','GBR','826','United Kingdom')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GD','GRD','308','Grenada')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GE','GEO','268','Georgia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GF','GUF','254','French Guiana')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GG','GGY','831','Guernsey')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GH','GHA','288','Ghana')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GI','GIB','292','Gibraltar')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GL','GRL','304','Greenland')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GM','GMB','270','Gambia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GN','GIN','324','Guinea')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GP','GLP','312','Guadeloupe')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GQ','GNQ','226','Equatorial Guinea')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GR','GRC','300','Greece')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GS','SGS','239','South Georgia and the South Sandwich Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GT','GTM','320','Guatemala')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GU','GUM','316','Guam')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GW','GNB','624','Guinea-Bissau')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('GY','GUY','328','Guyana')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('HK','HKG','344','Hong Kong, Special Administrative Region of China')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('HM','HMD','334','Heard Island and Mcdonald Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('HN','HND','340','Honduras')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('HR','HRV','191','Croatia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('HT','HTI','332','Haiti')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('HU','HUN','348','Hungary')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('ID','IDN','360','Indonesia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('IE','IRL','372','Ireland')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('IL','ISR','376','Israel')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('IM','IMN','833','Isle of Man')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('IN','IND','356','India')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('IO','IOT','086','British Indian Ocean Territory')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('IQ','IRQ','368','Iraq')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('IR','IRN','364','Iran, Islamic Republic of')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('IS','ISL','352','Iceland')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('IT','ITA','380','Italy')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('JE','JEY','832','Jersey')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('JM','JAM','388','Jamaica')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('JO','JOR','400','Jordan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('JP','JPN','392','Japan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('KE','KEN','404','Kenya')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('KG','KGZ','417','Kyrgyzstan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('KH','KHM','116','Cambodia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('KI','KIR','296','Kiribati')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('KM','COM','174','Comoros')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('KN','KNA','659','Saint Kitts and Nevis')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('KP','PRK','408','Korea, Democratic People''s Republic of')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('KR','KOR','410','Korea, Republic of')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('KW','KWT','414','Kuwait')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('KY','CYM','136','Cayman Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('KZ','KAZ','398','Kazakhstan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('LA','LAO','418','Lao PDR')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('LB','LBN','422','Lebanon')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('LC','LCA','662','Saint Lucia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('LI','LIE','438','Liechtenstein')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('LK','LKA','144','Sri Lanka')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('LR','LBR','430','Liberia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('LS','LSO','426','Lesotho')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('LT','LTU','440','Lithuania')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('LU','LUX','442','Luxembourg')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('LV','LVA','428','Latvia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('LY','LBY','434','Libya')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MA','MAR','504','Morocco')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MC','MCO','492','Monaco')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MD','MDA','498','Moldova')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('ME','MNE','499','Montenegro')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MF','MAF','663','Saint-Martin (French part)')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MG','MDG','450','Madagascar')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MH','MHL','584','Marshall Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MK','MKD','807','Macedonia, Republic of')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('ML','MLI','466','Mali')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MM','MMR','104','Myanmar')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MN','MNG','496','Mongolia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MO','MAC','446','Macao, Special Administrative Region of China')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MP','MNP','580','Northern Mariana Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MQ','MTQ','474','Martinique')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MR','MRT','478','Mauritania')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MS','MSR','500','Montserrat')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MT','MLT','470','Malta')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MU','MUS','480','Mauritius')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MV','MDV','462','Maldives')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MW','MWI','454','Malawi')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MX','MEX','484','Mexico')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MY','MYS','458','Malaysia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('MZ','MOZ','508','Mozambique')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('NA','NAM','516','Namibia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('NC','NCL','540','New Caledonia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('NE','NER','562','Niger')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('NF','NFK','574','Norfolk Island')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('NG','NGA','566','Nigeria')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('NI','NIC','558','Nicaragua')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('NL','NLD','528','Netherlands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('NO','NOR','578','Norway')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('NP','NPL','524','Nepal')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('NR','NRU','520','Nauru')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('NU','NIU','570','Niue')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('NZ','NZL','554','New Zealand')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('OM','OMN','512','Oman')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PA','PAN','591','Panama')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PE','PER','604','Peru')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PF','PYF','258','French Polynesia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PG','PNG','598','Papua New Guinea')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PH','PHL','608','Philippines')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PK','PAK','586','Pakistan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PL','POL','616','Poland')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PM','SPM','666','Saint Pierre and Miquelon')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PN','PCN','612','Pitcairn')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PR','PRI','630','Puerto Rico')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PS','PSE','275','Palestinian Territory, Occupied')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PT','PRT','620','Portugal')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PW','PLW','585','Palau')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('PY','PRY','600','Paraguay')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('QA','QAT','634','Qatar')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('RE','REU','638','Reunion')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('RO','ROU','642','Romania')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('RS','SRB','688','Serbia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('RU','RUS','643','Russian Federation')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('RW','RWA','646','Rwanda')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SA','SAU','682','Saudi Arabia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SB','SLB','090','Solomon Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SC','SYC','690','Seychelles')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SD','SDN','729','Sudan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SE','SWE','752','Sweden')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SG','SGP','702','Singapore')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SH','SHN','654','Saint Helena')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SI','SVN','705','Slovenia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SJ','SJM','744','Svalbard and Jan Mayen Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SK','SVK','703','Slovakia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SL','SLE','694','Sierra Leone')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SM','SMR','674','San Marino')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SN','SEN','686','Senegal')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SO','SOM','706','Somalia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SR','SUR','740','Suriname')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SS','SSD','728','South Sudan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('ST','STP','678','Sao Tome and Principe')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SV','SLV','222','El Salvador')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SX','SXM','534','Sint Maarten (Dutch part)')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SY','SYR','760','Syrian Arab Republic (Syria)')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('SZ','SWZ','748','Swaziland')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TC','TCA','796','Turks and Caicos Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TD','TCD','148','Chad')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TF','ATF','260','French Southern Territories')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TG','TGO','768','Togo')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TH','THA','764','Thailand')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TJ','TJK','762','Tajikistan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TK','TKL','772','Tokelau')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TL','TLS','626','Timor-Leste')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TM','TKM','795','Turkmenistan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TN','TUN','788','Tunisia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TO','TON','776','Tonga')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TR','TUR','792','Turkey')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TT','TTO','780','Trinidad and Tobago')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TV','TUV','798','Tuvalu')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TW','TWN','158','Taiwan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('TZ','TZA','834','Tanzania')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('UA','UKR','804','Ukraine')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('UG','UGA','800','Uganda')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('UM','UMI','581','United States Minor Outlying Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('US','USA','840','United States of America')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('UY','URY','858','Uruguay')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('UZ','UZB','860','Uzbekistan')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('VA','VAT','336','Holy See (Vatican City State)')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('VC','VCT','670','Saint Vincent and Grenadines')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('VE','VEN','862','Venezuela')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('VG','VGB','092','British Virgin Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('VI','VIR','850','Virgin Islands, US')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('VN','VNM','704','Viet Nam')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('VU','VUT','548','Vanuatu')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('WF','WLF','876','Wallis and Futuna Islands')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('WS','WSM','882','Samoa')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('YE','YEM','887','Yemen')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('YT','MYT','175','Mayotte')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('ZA','ZAF','710','South Africa')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('ZM','ZMB','894','Zambia')\n")
+      _T("INSERT INTO country_codes (alpha_code,alpha3_code,numeric_code,name) VALUES ('ZW','ZWE','716','Zimbabwe')\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch1));
+   CHK_EXEC(SQLBatch(batch2));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='398' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V396 to V397
+ */
+static BOOL H_UpgradeFromV396(int currVersion, int newVersion)
+{
+   static GUID_MAPPING eventGuidMapping[] = {
+      { EVENT_NODE_ADDED, _T("8d34acfd-dad6-4f6e-b6a8-1189683591ef") },
+      { EVENT_SUBNET_ADDED, _T("75fc3f8b-768f-46b4-bf44-72949436a679") },
+      { EVENT_INTERFACE_ADDED, _T("33cb8f9c-9427-459c-8a71-45c73f5cc183") },
+      { EVENT_INTERFACE_UP, _T("09ee209a-0e75-434f-b8c8-399d93305d7b") },
+      { EVENT_INTERFACE_DOWN, _T("d9a6d46d-97f8-48eb-a86a-2c0f6b150d0d") },
+      { EVENT_INTERFACE_UNKNOWN, _T("ecb47be1-f911-4c1f-9b00-d0d21694071d") },
+      { EVENT_INTERFACE_DISABLED, _T("2f3123a2-425f-47db-9c6b-9bc05a7fba2d") },
+      { EVENT_INTERFACE_TESTING, _T("eb500e5c-3560-4394-8f5f-80aa67036f13") },
+      { EVENT_INTERFACE_UNEXPECTED_UP, _T("ff21a165-9253-4ecc-929a-ffd1e388d504") },
+      { EVENT_INTERFACE_EXPECTED_DOWN, _T("911358f4-d2a1-4465-94d7-ce4bc5c38860") },
+      { EVENT_NODE_NORMAL, _T("03bc11c0-ec20-43be-be45-e60846f744dc") },
+      { EVENT_NODE_WARNING, _T("1c80deab-aafb-43a7-93a7-1330dd563b47") },
+      { EVENT_NODE_MINOR, _T("84eaea00-4ed7-41eb-9079-b783e5c60651") },
+      { EVENT_NODE_MAJOR, _T("27035c88-c27a-4c16-97b3-4658d34a5f63") },
+      { EVENT_NODE_CRITICAL, _T("8f2e98f8-1cd4-4e12-b41f-48b5c60ebe8e") },
+      { EVENT_NODE_UNKNOWN, _T("6933cce0-fe1f-4123-817f-af1fb9f0eab4") },
+      { EVENT_NODE_UNMANAGED, _T("a8356ba7-51b7-4487-b74e-d12132db233c") },
+      { EVENT_NODE_FLAGS_CHANGED, _T("b04e39f5-d3a7-4d9a-b594-37132f5eaf34") },
+      { EVENT_SNMP_FAIL, _T("d2fc3b0c-1215-4a92-b8f3-47df5d753602") },
+      { EVENT_AGENT_FAIL, _T("ba484457-3594-418e-a72a-65336055d025") },
+      { EVENT_INTERFACE_DELETED, _T("ad7e9856-e361-4095-9361-ccc462d93624") },
+      { EVENT_THRESHOLD_REACHED, _T("05161c3d-7ceb-406f-af0a-af5c77f324a5") },
+      { EVENT_THRESHOLD_REARMED, _T("25eef3a7-6158-4c5e-b4e3-8a7aa7ade73c") },
+      { EVENT_SUBNET_DELETED, _T("af188eb3-e84f-4fd9-aecf-f1ba934a9f1a") },
+      { EVENT_THREAD_HANGS, _T("df247d13-a63a-43fe-bb02-cb41718ee387") },
+      { EVENT_THREAD_RUNNING, _T("5589f6ce-7133-44db-8e7a-e1452d636a9a") },
+      { EVENT_SMTP_FAILURE, _T("1e376009-0d26-4b86-87a2-f4715a02fb38") },
+      { EVENT_MAC_ADDR_CHANGED, _T("61916ef0-1eee-4df7-a95b-150928d47962") },
+      { EVENT_INCORRECT_NETMASK, _T("86c08c55-416e-4ac4-bf2b-302b5fddbd68") },
+      { EVENT_NODE_DOWN, _T("ce34f0d0-5b21-48c2-8788-8ed5ee547023") },
+      { EVENT_NODE_UP, _T("05f180b6-62e7-4bc4-8a8d-34540214254b") },
+      { EVENT_SERVICE_DOWN, _T("89caacb5-d2cf-493b-862f-cddbfecac5b6") },
+      { EVENT_SERVICE_UP, _T("ab35e7c7-2428-44db-ad43-57fe551bb8cc") },
+      { EVENT_SERVICE_UNKNOWN, _T("d891adae-49fe-4442-a8f3-0ca37ca8820a") },
+      { EVENT_SMS_FAILURE, _T("c349bf75-458a-4d43-9c27-f71ea4bb06e2") },
+      { EVENT_SNMP_OK, _T("a821086b-1595-40db-9148-8d770d30a54b") },
+      { EVENT_AGENT_OK, _T("9c15299a-f2e3-4440-84c5-b17dea87ae2a") },
+      { EVENT_SCRIPT_ERROR, _T("2cc78efe-357a-4278-932f-91e36754c775") },
+      { EVENT_CONDITION_ACTIVATED, _T("16a86780-b73a-4601-929c-0c503bd06401") },
+      { EVENT_CONDITION_DEACTIVATED, _T("926d15d2-9761-4bb6-a1ce-64175303796f") },
+      { EVENT_DB_CONNECTION_LOST, _T("0311e9c8-8dcf-4a5b-9036-8cff034409ff") },
+      { EVENT_DB_CONNECTION_RESTORED, _T("d36259a7-5f6b-4e3c-bb6f-17d1f8ac950d") },
+      { EVENT_CLUSTER_RESOURCE_MOVED, _T("44abe5f3-a7c9-4fbd-8d10-53be172eae83") },
+      { EVENT_CLUSTER_RESOURCE_DOWN, _T("c3b1d4b5-2e41-4a2f-b379-9d74ebba3a25") },
+      { EVENT_CLUSTER_RESOURCE_UP, _T("ef6fff96-0cbb-4030-aeba-2473a80c6568") },
+      { EVENT_CLUSTER_DOWN, _T("8f14d0f7-08d4-4422-92f4-469e5eef93ef") },
+      { EVENT_CLUSTER_UP, _T("4a9cdb65-aa44-42f2-99b0-1e302aec10f6") },
+      { EVENT_ALARM_TIMEOUT, _T("4ae4f601-327b-4ef8-9740-8600a1ba2acd") },
+      { EVENT_LOG_RECORD_MATCHED, _T("d9326159-5c60-410f-990e-fae88df7fdd4") },
+      { EVENT_EVENT_STORM_DETECTED, _T("c98d8575-d134-4044-ba67-75c5f5d0f6e0") },
+      { EVENT_EVENT_STORM_ENDED, _T("dfd5e3ba-3182-4deb-bc32-9e6b8c1c6546") },
+      { EVENT_NETWORK_CONNECTION_LOST, _T("3cb0921a-87a1-46e4-8be1-82ad2dda0015") },
+      { EVENT_NETWORK_CONNECTION_RESTORED, _T("1c61b3e0-389a-47ac-8469-932a907392bc") },
+      { EVENT_DB_QUERY_FAILED, _T("5f35d646-63b6-4dcd-b94a-e2ccd060686a") },
+      { EVENT_DCI_UNSUPPORTED, _T("28367b5b-1541-4526-8cbe-91a17ed31ba4") },
+      { EVENT_DCI_DISABLED, _T("50196042-0619-4420-9471-16b7c25c0213") },
+      { EVENT_DCI_ACTIVE, _T("740b6810-b355-46f4-a921-65118504af18") },
+      { EVENT_IP_ADDRESS_CHANGED, _T("517b6d2a-f5c6-46aa-969d-48e62e05e3bf") },
+      { EVENT_CONTAINER_AUTOBIND, _T("611133e2-1f76-446f-b278-9d500a823611") },
+      { EVENT_CONTAINER_AUTOUNBIND, _T("e57603be-0d81-41aa-b07c-12d08640561c") },
+      { EVENT_TEMPLATE_AUTOAPPLY, _T("bf084945-f928-4428-8c6c-d2965addc832") },
+      { EVENT_TEMPLATE_AUTOREMOVE, _T("8f7a4b4a-d0a2-4404-9b66-fdbc029f42cf") },
+      { EVENT_NODE_UNREACHABLE, _T("47bba2ce-c795-4e56-ad44-cbf05741e1ff") },
+      { EVENT_TABLE_THRESHOLD_ACTIVATED, _T("c08a1cfe-3128-40c2-99cc-378e7ef91f79") },
+      { EVENT_TABLE_THRESHOLD_DEACTIVATED, _T("479085e7-e1d1-4f2a-9d96-1d522f51b26a") },
+      { EVENT_IF_PEER_CHANGED, _T("a3a5c1df-9d96-4e98-9e06-b3157dbf39f0") },
+      { EVENT_AP_ADOPTED, _T("5aaee261-0c5d-44e0-b2f0-223bbba5297d") },
+      { EVENT_AP_UNADOPTED, _T("846a3581-aad1-4e17-9c55-9bd2e6b1247b") },
+      { EVENT_AP_DOWN, _T("2c8c6208-d3ab-4b8c-926a-872f4d8abcee") },
+      { EVENT_IF_MASK_CHANGED, _T("f800e593-057e-4aec-9e47-be0f7718c5c4") },
+      { EVENT_IF_IPADDR_ADDED, _T("475bdca6-543e-410b-9aff-c217599e0fe6") },
+      { EVENT_IF_IPADDR_DELETED, _T("ef477387-eb50-4a1a-bf90-717502b9873c") },
+      { EVENT_MAINTENANCE_MODE_ENTERED, _T("5f6c8b1c-f162-413e-8028-80e7ad2c362d") },
+      { EVENT_MAINTENANCE_MODE_LEFT, _T("cab06848-a622-430d-8b4c-addeea732657") },
+      { EVENT_SNMP_UNMATCHED_TRAP, _T("fc3613f7-d151-4221-9acd-d28b6f804335") },
+      { EVENT_SNMP_COLD_START, _T("39920e99-97bd-4d61-a462-43f89ba6fbdf") },
+      { EVENT_SNMP_WARM_START, _T("0aa888c1-eba6-4fe7-a37a-b85f2b373bdc") },
+      { EVENT_SNMP_LINK_DOWN, _T("b71338cc-137d-473c-a0f1-6b131086af56") },
+      { EVENT_SNMP_LINK_UP, _T("03da14a7-e39c-4a46-a7cb-4bf77ec7936c") },
+      { EVENT_SNMP_AUTH_FAILURE, _T("37020cb0-dde7-487b-9cfb-0d5ee771aa13") },
+      { EVENT_SNMP_EGP_NL, _T("aecf5fa4-390c-4125-be10-df8b0e669fe1") },
+      { 0, NULL }
+   };
+
+   CHK_EXEC(SQLQuery(_T("ALTER TABLE event_cfg ADD guid varchar(36)")));
+   CHK_EXEC(GenerateGUID(_T("event_cfg"), _T("event_code"), _T("guid"), eventGuidMapping));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='397' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V395 to V396
+ */
+static BOOL H_UpgradeFromV395(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+      _T("CREATE TABLE ap_log_parser (")
+      _T("   policy_id integer not null,")
+      _T("   file_content $SQL:TEXT null,")
+      _T("   PRIMARY KEY(policy_id))")));
+
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='396' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V394 to V395
+ */
+static BOOL H_UpgradeFromV394(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET need_server_restart='1' WHERE var_name='OfflineDataRelevanceTime'")));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='395' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V393 to V394
+ */
+static BOOL H_UpgradeFromV393(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("OfflineDataRelevanceTime"), _T("86400"), _T("Time period in seconds within which received offline data still relevant for threshold validation"), 'I', true, false, false, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='394' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
+ * Upgrade from V392 to V393
+ */
+static BOOL H_UpgradeFromV392(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateConfigParam(_T("DefaultInterfaceExpectedState"), _T("0"), _T("Default expected state for new interface objects"), 'C', true, false, false, false));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='393' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V391 to V392
  */
 static BOOL H_UpgradeFromV391(int currVersion, int newVersion)
@@ -651,7 +1382,7 @@ static BOOL H_UpgradeFromV391(int currVersion, int newVersion)
    return TRUE;
 }
 
-/*
+/**
  * Upgrade from V390 to V391
  */
 static BOOL H_UpgradeFromV390(int currVersion, int newVersion)
@@ -919,8 +1650,8 @@ static BOOL H_UpgradeFromV380(int currVersion, int newVersion)
       _T("ALTER TABLE dc_tables ADD guid varchar(36)\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(GenerateGUID(_T("items"), _T("item_id"), _T("guid")));
-   CHK_EXEC(GenerateGUID(_T("dc_tables"), _T("item_id"), _T("guid")));
+   CHK_EXEC(GenerateGUID(_T("items"), _T("item_id"), _T("guid"), NULL));
+   CHK_EXEC(GenerateGUID(_T("dc_tables"), _T("item_id"), _T("guid"), NULL));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='381' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -1018,11 +1749,11 @@ static BOOL H_UpgradeFromV373(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_MAINTENANCE_MODE_ENTERED, _T("SYS_MAINTENANCE_MODE_ENTERED"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_MAINTENANCE_MODE_ENTERED, _T("SYS_MAINTENANCE_MODE_ENTERED"), SEVERITY_NORMAL, EF_LOG, NULL,
          _T("Entered maintenance mode"),
          _T("Generated when node, cluster, or mobile device enters maintenance mode.")));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_MAINTENANCE_MODE_LEFT, _T("SYS_MAINTENANCE_MODE_LEFT"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_MAINTENANCE_MODE_LEFT, _T("SYS_MAINTENANCE_MODE_LEFT"), SEVERITY_NORMAL, EF_LOG, NULL,
          _T("Left maintenance mode"),
          _T("Generated when node, cluster, or mobile device leaves maintenance mode.")));
 
@@ -1399,7 +2130,7 @@ static BOOL H_UpgradeFromV353(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV352(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE dci_summary_tables ADD guid varchar(36)")));
-   CHK_EXEC(GenerateGUID(_T("dci_summary_tables"), _T("id"), _T("guid")));
+   CHK_EXEC(GenerateGUID(_T("dci_summary_tables"), _T("id"), _T("guid"), NULL));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='353' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -1410,7 +2141,7 @@ static BOOL H_UpgradeFromV352(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV351(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE object_tools ADD guid varchar(36)")));
-   CHK_EXEC(GenerateGUID(_T("object_tools"), _T("tool_id"), _T("guid")));
+   CHK_EXEC(GenerateGUID(_T("object_tools"), _T("tool_id"), _T("guid"), NULL));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='352' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -1480,7 +2211,7 @@ static BOOL H_UpgradeFromV348(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV347(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_IF_IPADDR_ADDED, _T("SYS_IF_IPADDR_ADDED"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_IPADDR_ADDED, _T("SYS_IF_IPADDR_ADDED"), SEVERITY_NORMAL, EF_LOG, NULL,
          _T("IP address %3/%4 added to interface \"%2\""),
          _T("Generated when IP address added to interface.\r\n")
          _T("Parameters:\r\n")
@@ -1490,7 +2221,7 @@ static BOOL H_UpgradeFromV347(int currVersion, int newVersion)
          _T("    4) Network mask\r\n")
          _T("    5) Interface index")));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_IF_IPADDR_DELETED, _T("SYS_IF_IPADDR_DELETED"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_IPADDR_DELETED, _T("SYS_IF_IPADDR_DELETED"), SEVERITY_NORMAL, EF_LOG, NULL,
          _T("IP address %3/%4 deleted from interface \"%2\""),
          _T("Generated when IP address deleted from interface.\r\n")
          _T("Parameters:\r\n")
@@ -1775,7 +2506,7 @@ static BOOL H_UpgradeFromV335(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV334(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_IF_MASK_CHANGED, _T("SYS_IF_MASK_CHANGED"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_MASK_CHANGED, _T("SYS_IF_MASK_CHANGED"), SEVERITY_NORMAL, EF_LOG, NULL,
          _T("Interface \"%2\" changed mask from %6 to %4 (IP Addr: %3/%4, IfIndex: %5)"),
          _T("Generated when when network mask on interface is changed.\r\n")
          _T("Parameters:\r\n")
@@ -1963,7 +2694,7 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
          }
          _tcscat(newConfig, _T("</config>"));
 
-         safe_free(config);
+         free(config);
          DB_STATEMENT statment = DBPrepare(g_hCoreDB, _T("UPDATE network_map_links SET element_data=? WHERE map_id=? AND element1=? AND element2=?"));
          if (statment != NULL)
          {
@@ -1977,9 +2708,9 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
          else
          {
             if (!g_bIgnoreErrors)
-               return FALSE;
+               return false;
          }
-         safe_free(newConfig);
+         free(newConfig);
       }
       DBFreeResult(hResult);
    }
@@ -2145,7 +2876,7 @@ static BOOL H_UpgradeFromV318(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV317(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_AP_DOWN, _T("SYS_AP_DOWN"), SEVERITY_CRITICAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_DOWN, _T("SYS_AP_DOWN"), SEVERITY_CRITICAL, EF_LOG, NULL,
       _T("Access point %2 changed state to DOWN"),
 		_T("Generated when access point state changes to DOWN.\r\n")
 		_T("Parameters:\r\n")
@@ -2182,7 +2913,7 @@ static BOOL H_UpgradeFromV315(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_AP_ADOPTED, _T("SYS_AP_ADOPTED"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_ADOPTED, _T("SYS_AP_ADOPTED"), SEVERITY_NORMAL, EF_LOG, NULL,
       _T("Access point %2 changed state to ADOPTED"),
 		_T("Generated when access point state changes to ADOPTED.\r\n")
 		_T("Parameters:\r\n")
@@ -2194,7 +2925,7 @@ static BOOL H_UpgradeFromV315(int currVersion, int newVersion)
 		_T("    6) Access point model\r\n")
 		_T("    7) Access point serial number")));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_AP_UNADOPTED, _T("SYS_AP_UNADOPTED"), SEVERITY_MAJOR, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_AP_UNADOPTED, _T("SYS_AP_UNADOPTED"), SEVERITY_MAJOR, EF_LOG, NULL,
       _T("Access point %2 changed state to UNADOPTED"),
 		_T("Generated when access point state changes to UNADOPTED.\r\n")
 		_T("Parameters:\r\n")
@@ -2435,7 +3166,7 @@ static BOOL H_UpgradeFromV305(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV304(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_IF_PEER_CHANGED, _T("SYS_IF_PEER_CHANGED"), SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_IF_PEER_CHANGED, _T("SYS_IF_PEER_CHANGED"), SEVERITY_NORMAL, EF_LOG, NULL,
       _T("New peer for interface %3 is %7 interface %10 (%12)"),
 		_T("Generated when peer information for interface changes.\r\n")
 		_T("Parameters:\r\n")
@@ -2655,7 +3386,7 @@ static BOOL H_UpgradeFromV292(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV291(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy ADD rule_guid varchar(36)")));
-   CHK_EXEC(GenerateGUID(_T("event_policy"), _T("rule_id"), _T("rule_guid")));
+   CHK_EXEC(GenerateGUID(_T("event_policy"), _T("rule_id"), _T("rule_guid"), NULL));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='292' WHERE var_name='SchemaVersion'")));
    return TRUE;
 }
@@ -2698,7 +3429,7 @@ static BOOL H_UpgradeFromV288(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV287(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_TABLE_THRESHOLD_ACTIVATED, _T("SYS_TABLE_THRESHOLD_ACTIVATED"), EVENT_SEVERITY_MINOR, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_TABLE_THRESHOLD_ACTIVATED, _T("SYS_TABLE_THRESHOLD_ACTIVATED"), EVENT_SEVERITY_MINOR, EF_LOG, NULL,
       _T("Threshold activated on table \"%2\" row %4 (%5)"),
       _T("Generated when table threshold is activated.\r\n")
       _T("Parameters:\r\n")
@@ -2708,7 +3439,7 @@ static BOOL H_UpgradeFromV287(int currVersion, int newVersion)
       _T("   4) Table row\r\n")
       _T("   5) Instance")));
 
-   CHK_EXEC(CreateEventTemplate(EVENT_TABLE_THRESHOLD_DEACTIVATED, _T("SYS_TABLE_THRESHOLD_DEACTIVATED"), EVENT_SEVERITY_NORMAL, EF_LOG,
+   CHK_EXEC(CreateEventTemplate(EVENT_TABLE_THRESHOLD_DEACTIVATED, _T("SYS_TABLE_THRESHOLD_DEACTIVATED"), EVENT_SEVERITY_NORMAL, EF_LOG, NULL,
       _T("Threshold deactivated on table \"%2\" row %4 (%5)"),
       _T("Generated when table threshold is deactivated.\r\n")
       _T("Parameters:\r\n")
@@ -3182,7 +3913,7 @@ static BOOL H_UpgradeFromV267(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV266(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateEventTemplate(EVENT_NODE_UNREACHABLE, _T("SYS_NODE_UNREACHABLE"), EVENT_SEVERITY_CRITICAL,
-	                             EF_LOG, _T("Node unreachable because of network failure"),
+	                             EF_LOG, NULL, _T("Node unreachable because of network failure"),
 										  _T("Generated when node is unreachable by management server because of network failure.\r\nParameters:\r\n   No event-specific parameters")));
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='267' WHERE var_name='SchemaVersion'")));
 	return TRUE;
@@ -3448,7 +4179,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 		_T("<END>");
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOBIND, _T("SYS_CONTAINER_AUTOBIND"), EVENT_SEVERITY_NORMAL, 1,
+	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOBIND, _T("SYS_CONTAINER_AUTOBIND"), EVENT_SEVERITY_NORMAL, EF_LOG, NULL,
 	                             _T("Node %2 automatically bound to container %4"),
 										  _T("Generated when node bound to container object by autobind rule.\r\n")
 	                             _T("Parameters:#\r\n")
@@ -3458,7 +4189,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 										  _T("   4) Container name")
 										  ));
 
-	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOUNBIND, _T("SYS_CONTAINER_AUTOUNBIND"), EVENT_SEVERITY_NORMAL, 1,
+	CHK_EXEC(CreateEventTemplate(EVENT_CONTAINER_AUTOUNBIND, _T("SYS_CONTAINER_AUTOUNBIND"), EVENT_SEVERITY_NORMAL, EF_LOG, NULL,
 	                             _T("Node %2 automatically unbound from container %4"),
 										  _T("Generated when node unbound from container object by autobind rule.\r\n")
 	                             _T("Parameters:#\r\n")
@@ -3468,7 +4199,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 										  _T("   4) Container name")
 										  ));
 
-	CHK_EXEC(CreateEventTemplate(EVENT_TEMPLATE_AUTOAPPLY, _T("SYS_TEMPLATE_AUTOAPPLY"), EVENT_SEVERITY_NORMAL, 1,
+	CHK_EXEC(CreateEventTemplate(EVENT_TEMPLATE_AUTOAPPLY, _T("SYS_TEMPLATE_AUTOAPPLY"), EVENT_SEVERITY_NORMAL, EF_LOG, NULL,
 	                             _T("Template %4 automatically applied to node %2"),
 										  _T("Generated when template applied to node by autoapply rule.\r\n")
 	                             _T("Parameters:#\r\n")
@@ -3478,7 +4209,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 										  _T("   4) Template name")
 										  ));
 
-	CHK_EXEC(CreateEventTemplate(EVENT_TEMPLATE_AUTOREMOVE, _T("SYS_TEMPLATE_AUTOREMOVE"), EVENT_SEVERITY_NORMAL, 1,
+	CHK_EXEC(CreateEventTemplate(EVENT_TEMPLATE_AUTOREMOVE, _T("SYS_TEMPLATE_AUTOREMOVE"), EVENT_SEVERITY_NORMAL, EF_LOG, NULL,
 	                             _T("Template %4 automatically removed from node %2"),
 										  _T("Generated when template removed from node by autoapply rule.\r\n")
 	                             _T("Parameters:#\r\n")
@@ -3509,7 +4240,7 @@ static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_UNEXPECTED_UP, _T("SYS_IF_UNEXPECTED_UP"), EVENT_SEVERITY_MAJOR, 1,
+	CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_UNEXPECTED_UP, _T("SYS_IF_UNEXPECTED_UP"), EVENT_SEVERITY_MAJOR, EF_LOG, NULL,
 	                             _T("Interface \"%2\" unexpectedly changed state to UP (IP Addr: %3/%4, IfIndex: %5)"),
 										  _T("Generated when interface goes up but it's expected state set to DOWN.\r\n")
 										  _T("Please note that source of event is node, not an interface itself.\r\n")
@@ -3521,7 +4252,7 @@ static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
 										  _T("   5) Interface index")
 										  ));
 
-	CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_EXPECTED_DOWN, _T("SYS_IF_EXPECTED_DOWN"), EVENT_SEVERITY_NORMAL, 1,
+	CHK_EXEC(CreateEventTemplate(EVENT_INTERFACE_EXPECTED_DOWN, _T("SYS_IF_EXPECTED_DOWN"), EVENT_SEVERITY_NORMAL, EF_LOG, NULL,
 	                             _T("Interface \"%2\" with expected state DOWN changed state to DOWN (IP Addr: %3/%4, IfIndex: %5)"),
 										  _T("Generated when interface goes down and it's expected state is DOWN.\r\n")
 										  _T("Please note that source of event is node, not an interface itself.\r\n")
@@ -3867,7 +4598,7 @@ static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 	CHK_EXEC(SQLBatch(batch));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_PAE_STATE_CHANGED, _T("SYS_8021X_PAE_STATE_CHANGED"),
-		EVENT_SEVERITY_NORMAL, 1, _T("Port %6 PAE state changed from %4 to %2"),
+		EVENT_SEVERITY_NORMAL, 1, NULL, _T("Port %6 PAE state changed from %4 to %2"),
 		_T("Generated when switch port PAE state changed.\r\nParameters:\r\n")
 		_T("   1) New PAE state code\r\n")
 		_T("   2) New PAE state as text\r\n")
@@ -3877,7 +4608,7 @@ static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 		_T("   6) Interface name")));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_BACKEND_STATE_CHANGED, _T("SYS_8021X_BACKEND_STATE_CHANGED"),
-		EVENT_SEVERITY_NORMAL, 1, _T("Port %6 backend authentication state changed from %4 to %2"),
+		EVENT_SEVERITY_NORMAL, 1, NULL, _T("Port %6 backend authentication state changed from %4 to %2"),
 		_T("Generated when switch port backend authentication state changed.\r\nParameters:\r\n")
 		_T("   1) New backend state code\r\n")
 		_T("   2) New backend state as text\r\n")
@@ -3887,19 +4618,19 @@ static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 		_T("   6) Interface name")));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_PAE_FORCE_UNAUTH, _T("SYS_8021X_PAE_FORCE_UNAUTH"),
-		EVENT_SEVERITY_MAJOR, 1, _T("Port %2 switched to force unauthorize state"),
+		EVENT_SEVERITY_MAJOR, 1, NULL, _T("Port %2 switched to force unauthorize state"),
 		_T("Generated when switch port PAE state changed to FORCE UNAUTHORIZE.\r\nParameters:\r\n")
 		_T("   1) Interface index\r\n")
 		_T("   2) Interface name")));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_AUTH_FAILED, _T("SYS_8021X_AUTH_FAILED"),
-		EVENT_SEVERITY_MAJOR, 1, _T("802.1x authentication failed on port %2"),
+		EVENT_SEVERITY_MAJOR, 1, NULL, _T("802.1x authentication failed on port %2"),
 		_T("Generated when switch port backend authentication state changed to FAIL.\r\nParameters:\r\n")
 		_T("   1) Interface index\r\n")
 		_T("   2) Interface name")));
 
 	CHK_EXEC(CreateEventTemplate(EVENT_8021X_AUTH_TIMEOUT, _T("SYS_8021X_AUTH_TIMEOUT"),
-		EVENT_SEVERITY_MAJOR, 1, _T("802.1x authentication time out on port %2"),
+		EVENT_SEVERITY_MAJOR, 1, NULL, _T("802.1x authentication time out on port %2"),
 		_T("Generated when switch port backend authentication state changed to TIMEOUT.\r\nParameters:\r\n")
 		_T("   1) Interface index\r\n")
 		_T("   2) Interface name")));
@@ -9449,6 +10180,18 @@ static struct
    { 389, 390, H_UpgradeFromV389 },
    { 390, 391, H_UpgradeFromV390 },
    { 391, 392, H_UpgradeFromV391 },
+   { 392, 393, H_UpgradeFromV392 },
+   { 393, 394, H_UpgradeFromV393 },
+   { 394, 395, H_UpgradeFromV394 },
+   { 395, 396, H_UpgradeFromV395 },
+   { 396, 397, H_UpgradeFromV396 },
+   { 397, 398, H_UpgradeFromV397 },
+   { 398, 399, H_UpgradeFromV398 },
+   { 399, 400, H_UpgradeFromV399 },
+   { 400, 401, H_UpgradeFromV400 },
+   { 401, 402, H_UpgradeFromV401 },
+   { 402, 403, H_UpgradeFromV402 },
+   { 403, 404, H_UpgradeFromV403 },
    { 0, 0, NULL }
 };
 

@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0.1], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0.4], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -103,6 +103,8 @@ MONGODB_LIBS=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
 INSTALL_LIBPATH=""
+OPENSSL_LIBSSL="ssl"
+OPENSSL_LIBCRYPTO="crypto"
 
 
 #--------------------------------------------------------------------
@@ -458,6 +460,13 @@ AC_ARG_WITH(openssl,
 	fi
 ])
 
+AC_ARG_WITH(bundled-openssl,
+[AS_HELP_STRING(--with-bundled-openssl,use bundled OpenSSL libraries with product-specific prefix)],
+[
+	OPENSSL_LIBSSL="nxssl"
+	OPENSSL_LIBCRYPTO="nxcrypto"
+])
+
 AC_ARG_WITH(jemalloc,
 [AS_HELP_STRING(--with-jemalloc,specify libjemalloc location)],
 [
@@ -549,9 +558,9 @@ AC_ARG_ENABLE(64bit,
 AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
-	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server agent libnxmap client nxscript nxcproxy nxlptest tools"
+	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent libnxmap client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
-	SMSDRV_DIRS="kannel slack text2reach websms"
+	SMSDRV_DIRS="kannel nxagent slack text2reach websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
 	NXCONFIG="nxconfig"
@@ -753,9 +762,10 @@ if test $? = 0; then
 		AC_MSG_ERROR(You must select at least one database driver when building server.)
 	fi
 	BUILD_SERVER="yes"
-	MODULES="$MODULES libnxmap libnxsl libnxcc server nxscript"
+	MODULES="$MODULES libnxmap libnxsl libnxcc server smsdrv nxscript"
 	TOP_LEVEL_MODULES="$TOP_LEVEL_MODULES sql images"
 	CONTRIB_MODULES="$CONTRIB_MODULES mibs backgrounds music templates"
+	SMSDRV_DIRS="$SMSDRV_DIRS nxagent"
 	if test "x$XMPP_SUPPORT" = "xyes"; then
 		MODULES="libstrophe $MODULES"
 		AC_DEFINE(XMPP_SUPPORTED, 1, Define to 1 if XMPP is supported)
@@ -836,7 +846,11 @@ fi
 
 check_substr "$COMPONENTS" "sdk"
 if test $? = 0; then
-	MODULES="$MODULES appagent libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript"
+	if test "x$STATIC_BUILD" = "xyes"; then
+		MODULES="$MODULES appagent libnxmap client libnxmb"
+	else
+		MODULES="$MODULES appagent libnxmap client libnxsl libnxmb libnxlp libnxcc db nxscript smsdrv"
+	fi
 fi
 
 
@@ -1463,31 +1477,30 @@ fi
 #--------------------------------------------------------------------
 
 if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
-	AC_CHECK_LIB(crypto, RSA_new,
+	AC_CHECK_LIB($OPENSSL_LIBCRYPTO, RSA_new,
 		[
 			AC_DEFINE(WITH_OPENSSL, 1, Define to 1 if you have OpenSSL library and headers)
-			AC_CHECK_LIB(crypto, EVP_aes_256_cbc,
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_aes_256_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_AES,,[desc])])
-			AC_CHECK_LIB(crypto, EVP_bf_cbc,
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_bf_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_BF,,[desc])])
-			AC_CHECK_LIB(crypto, EVP_idea_cbc,
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_idea_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_IDEA,,[desc])])
-			AC_CHECK_LIB(crypto, EVP_des_ede3_cbc,
+			AC_CHECK_LIB($OPENSSL_LIBCRYPTO, EVP_des_ede3_cbc,
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
-			SERVER_LIBS="$SERVER_LIBS -lssl"
 			if test "x$HAVE_LIBCRYPTO" = "xyes"; then
 				if test "x$BUILD_STATIC_AGENT" = "xyes"; then
 #					LIBS="$LIBS -Wl,-Bstatic -lcrypto -Wl,-Bdynamic"
-					LIBS="$LIBS -lcrypto"
+					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
 				else
-					LIBS="$LIBS -lcrypto"
+					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
 				fi	
 			else
-				AC_MSG_ERROR(libcrypto does not provide any suitable encryption algorithm)
+				AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO does not provide any suitable encryption algorithm)
 			fi
 		],
 		[
-			AC_MSG_ERROR(libcrypto is required for encryption support)
+			AC_MSG_ERROR(lib$OPENSSL_LIBCRYPTO is required for encryption support)
 		])
 fi
 
@@ -1829,7 +1842,7 @@ AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
 
 AC_CHECK_FUNCS([gettimeofday memmove memset bcopy strchr strcspn strdup strerror])
-AC_CHECK_FUNCS([strrchr strlwr strtol strtoul strtoll strtoull setlocale])
+AC_CHECK_FUNCS([strrchr strlwr strtok_r strtol strtoul strtoll strtoull setlocale])
 AC_CHECK_FUNCS([if_nametoindex daemon mmap strerror_r scandir uname poll])
 AC_CHECK_FUNCS([usleep nanosleep gmtime_r localtime_r stat64 fstat64 lstat64])
 AC_CHECK_FUNCS([fopen64 strptime timegm gethostbyname2_r getaddrinfo])
@@ -2185,7 +2198,7 @@ AC_CHECK_FUNCS([wcslwr wcserror wcserror_r wfopen wfopen64 fputws putws])
 AC_CHECK_FUNCS([wopen wstat waccess wgetenv wrename wunlink wremove wchdir])
 AC_CHECK_FUNCS([wmkdir wrmdir wsystem wmkstemp wpopen wctime wchmod vwscanf])
 AC_CHECK_FUNCS([vswscanf vfwscanf wcscasecmp wcsncasecmp wcstombs wcsrtombs])
-AC_CHECK_FUNCS([itow _itow wcsftime])
+AC_CHECK_FUNCS([mbstowcs mbsrtowcs itow _itow wcsftime wcstok])
 
 AC_CHECK_DECLS([putws],,,[
 #if HAVE_WCHAR_H
@@ -3103,6 +3116,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/ecs/Makefile
 	src/agent/subagents/filemgr/Makefile
 	src/agent/subagents/freebsd/Makefile
+	src/agent/subagents/gps/Makefile
 	src/agent/subagents/hpux/Makefile
 	src/agent/subagents/informix/Makefile
 	src/agent/subagents/ipso/Makefile
@@ -3217,15 +3231,6 @@ AC_CONFIG_FILES([
 	src/server/netxmsd/Makefile
 	src/server/pdsdrv/Makefile
 	src/server/pdsdrv/rrdtool/Makefile
-	src/server/smsdrv/Makefile
-	src/server/smsdrv/dummy/Makefile
-	src/server/smsdrv/generic/Makefile
-	src/server/smsdrv/kannel/Makefile
-	src/server/smsdrv/nxagent/Makefile
-	src/server/smsdrv/portech/Makefile
-	src/server/smsdrv/slack/Makefile
-	src/server/smsdrv/text2reach/Makefile
-	src/server/smsdrv/websms/Makefile
 	src/server/tools/Makefile
 	src/server/tools/nxaction/Makefile
 	src/server/tools/nxadm/Makefile
@@ -3235,6 +3240,15 @@ AC_CONFIG_FILES([
 	src/server/tools/nxdbmgr/Makefile
 	src/server/tools/nxget/Makefile
 	src/server/tools/nxupload/Makefile
+	src/smsdrv/Makefile
+	src/smsdrv/dummy/Makefile
+	src/smsdrv/generic/Makefile
+	src/smsdrv/kannel/Makefile
+	src/smsdrv/nxagent/Makefile
+	src/smsdrv/portech/Makefile
+	src/smsdrv/slack/Makefile
+	src/smsdrv/text2reach/Makefile
+	src/smsdrv/websms/Makefile
 	src/snmp/Makefile
 	src/snmp/libnxsnmp/Makefile
 	src/snmp/nxmibc/Makefile

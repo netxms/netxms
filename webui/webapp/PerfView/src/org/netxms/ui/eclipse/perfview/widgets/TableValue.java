@@ -288,7 +288,7 @@ public class TableValue extends Composite
          Arrays.fill(widths, 150);
          viewer.createColumns(names, widths, 0, SWT.UP);
          
-         StringBuilder sb = new StringBuilder("TableLastValues.");
+         StringBuilder sb = new StringBuilder("TableLastValues."); //$NON-NLS-1$
          sb.append(dciId);
          if (configId != null)
          {

@@ -4,10 +4,10 @@ lib_LTLIBRARIES = libnxcore.la
 libnxcore_la_SOURCES =  accesspoint.cpp acl.cpp actions.cpp addrlist.cpp \
 			admin.cpp agent.cpp agent_policy.cpp alarm.cpp audit.cpp \
 			ap_config.cpp ap_jobs.cpp beacon.cpp bizservice.cpp \
-			bizsvcroot.cpp bridge.cpp cas_validator.cpp cdp.cpp \
+			bizsvcroot.cpp bridge.cpp cas_validator.cpp ccy.cpp cdp.cpp \
 			cert.cpp client.cpp cluster.cpp columnfilter.cpp \
-			components.cpp condition.cpp config.cpp container.cpp \
-			correlate.cpp dashboard.cpp datacoll.cpp dbwrite.cpp \
+			components.cpp condition.cpp config.cpp console.cpp \
+			container.cpp correlate.cpp dashboard.cpp datacoll.cpp dbwrite.cpp \
 			dc_nxsl.cpp dcitem.cpp dcithreshold.cpp dcivalue.cpp \
 			dcobject.cpp dcst.cpp dctable.cpp dctarget.cpp \
 			dctcolumn.cpp dctthreshold.cpp debug.cpp \

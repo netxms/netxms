@@ -1,7 +1,7 @@
 /*
  ** NetXMS - Network Management System
  ** Subagent for Oracle monitoring
- ** Copyright (C) 2009-2014 Raden Solutions
+ ** Copyright (C) 2009-2016 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -107,8 +107,10 @@ THREAD_RESULT THREAD_CALL DatabaseInstance::pollerThreadStarter(void *arg)
 void DatabaseInstance::pollerThread()
 {
    AgentWriteDebugLog(3, _T("ORACLE: poller thread for database %s started"), m_info.id);
+   INT64 connectionTTL = (INT64)m_info.connectionTTL * _LL(1000);
    do
    {
+reconnect:
       MutexLock(m_sessionLock);
 
       TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
@@ -123,11 +125,12 @@ void DatabaseInstance::pollerThread()
       m_connected = true;
 		DBEnableReconnect(m_session, false);
       m_version = getOracleVersion();
-      AgentWriteLog(NXLOG_INFO, _T("ORACLE: connection with database %s restored (version %d.%d)"), 
-         m_info.id, m_version >> 8, m_version &0xFF);
+      AgentWriteLog(NXLOG_INFO, _T("ORACLE: connection with database %s restored (version %d.%d, connection TTL %d)"),
+         m_info.id, m_version >> 8, m_version &0xFF, m_info.connectionTTL);
 
       MutexUnlock(m_sessionLock);
 
+      INT64 pollerLoopStartTime = GetCurrentTimeMs();
       UINT32 sleepTime;
       do
       {
@@ -137,7 +140,18 @@ void DatabaseInstance::pollerThread()
             AgentWriteLog(NXLOG_WARNING, _T("ORACLE: connection with database %s lost"), m_info.id);
             break;
          }
-         INT64 elapsedTime = GetCurrentTimeMs() - startTime;
+         INT64 currTime = GetCurrentTimeMs();
+         if (currTime - pollerLoopStartTime > connectionTTL)
+         {
+            AgentWriteDebugLog(4, _T("ORACLE: planned connection reset"));
+            MutexLock(m_sessionLock);
+            m_connected = false;
+            DBDisconnect(m_session);
+            m_session = NULL;
+            MutexUnlock(m_sessionLock);
+            goto reconnect;
+         }
+         INT64 elapsedTime = currTime - startTime;
          sleepTime = (UINT32)((elapsedTime >= 60000) ? 60000 : (60000 - elapsedTime));
       }
       while(!ConditionWait(m_stopCondition, sleepTime));

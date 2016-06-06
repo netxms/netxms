@@ -99,22 +99,36 @@ void DataCollectionTarget::fillMessageInternalStage2(NXCPMessage *msg)
 {
    Template::fillMessageInternalStage2(msg);
 
-   // Sent all DCIs marked for display on overview page
-   UINT32 fieldId = VID_OVERVIEW_DCI_LIST_BASE;
-   UINT32 count = 0;
+   // Sent all DCIs marked for display on overview page or in tooltips
+   UINT32 fieldIdOverview = VID_OVERVIEW_DCI_LIST_BASE;
+   UINT32 countOverview = 0;
+   UINT32 fieldIdTooltip = VID_TOOLTIP_DCI_LIST_BASE;
+   UINT32 countTooltip = 0;
    lockDciAccess(false);
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
       DCObject *dci = m_dcObjects->get(i);
-      if ((dci->getType() == DCO_TYPE_ITEM) && dci->isShowInObjectOverview() && (dci->getStatus() == ITEM_STATUS_ACTIVE))
+      if ((dci->getType() == DCO_TYPE_ITEM) &&
+          (dci->getStatus() == ITEM_STATUS_ACTIVE) &&
+          (((DCItem *)dci)->getInstanceDiscoveryMethod() == IDM_NONE))
 		{
-         count++;
-         ((DCItem *)dci)->fillLastValueMessage(msg, fieldId);
-         fieldId += 50;
+         if  (dci->isShowInObjectOverview())
+         {
+            countOverview++;
+            ((DCItem *)dci)->fillLastValueMessage(msg, fieldIdOverview);
+            fieldIdOverview += 50;
+         }
+         if  (dci->isShowOnObjectTooltip())
+         {
+            countTooltip++;
+            ((DCItem *)dci)->fillLastValueMessage(msg, fieldIdTooltip);
+            fieldIdTooltip += 50;
+         }
 		}
 	}
    unlockDciAccess();
-   msg->setField(VID_OVERVIEW_DCI_COUNT, count);
+   msg->setField(VID_OVERVIEW_DCI_COUNT, countOverview);
+   msg->setField(VID_TOOLTIP_DCI_COUNT, countTooltip);
 }
 
 /**
@@ -635,7 +649,7 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
    NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
    if (vm != NULL)
    {
-      vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, this)));
+      vm->setGlobalVariable(_T("$object"), createNXSLObject());
       if (getObjectClass() == OBJECT_NODE)
       {
          vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
@@ -695,7 +709,7 @@ UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **
    NXSL_VM *vm = g_pScriptLibrary->createVM(name, new NXSL_ServerEnv);
    if (vm != NULL)
    {
-      vm->setGlobalVariable(_T("$object"), new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, this)));
+      vm->setGlobalVariable(_T("$object"), createNXSLObject());
       if (getObjectClass() == OBJECT_NODE)
       {
          vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this)));
@@ -903,4 +917,18 @@ void DataCollectionTarget::leaveMaintenanceMode()
    m_maintenanceEventId = 0;
    setModified();
    unlockProperties();
+}
+
+/**
+ * Update cache size for given data collection item
+ */
+void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId)
+{
+   lockDciAccess(false);
+   DCObject *dci = getDCObjectById(dciId, false);
+   if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
+   {
+      ((DCItem *)dci)->updateCacheSize(conditionId);
+   }
+   unlockDciAccess();
 }

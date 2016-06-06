@@ -148,7 +148,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
                            ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? 
                                  String.format(Messages.get().ApplicationWorkbenchAdvisor_ConnectionLostMessage, productName)
                                  : ((n.getCode() == SessionNotification.SESSION_KILLED) ? 
-                                       "Communication session was terminated by system administrator"
+                                       Messages.get().ApplicationWorkbenchAdvisor_SessionTerminated
                                        : String.format(Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage, productName)))
                                  + Messages.get().ApplicationWorkbenchAdvisor_OKToCloseMessage);
 							PlatformUI.getWorkbench().getActiveWorkbenchWindow().close();

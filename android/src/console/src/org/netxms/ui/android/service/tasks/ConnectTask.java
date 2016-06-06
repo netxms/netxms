@@ -110,7 +110,8 @@ public class ConnectTask extends Thread
 						Log.d(TAG, "calling session.login()");
 						session.login(login, password);
 						Log.d(TAG, "calling session.subscribe()");
-						session.subscribe(NXCSession.CHANNEL_ALARMS | NXCSession.CHANNEL_OBJECTS);
+						session.subscribe(NXCSession.CHANNEL_ALARMS);
+						session.subscribe(NXCSession.CHANNEL_OBJECTS);
 						service.onConnect(session, session.getAlarms());
 						service.loadTools();
 					}

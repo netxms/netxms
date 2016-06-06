@@ -238,6 +238,14 @@
 #define IF_EXPECTED_STATE_UP     0
 #define IF_EXPECTED_STATE_DOWN   1
 #define IF_EXPECTED_STATE_IGNORE 2
+#define IF_EXPECTED_STATE_AUTO   3
+
+/**
+ * Default expected state for new interface creation
+ */
+#define IF_DEFAULT_EXPECTED_STATE_UP      0
+#define IF_DEFAULT_EXPECTED_STATE_AUTO    1
+#define IF_DEFAULT_EXPECTED_STATE_IGNORE  2
 
 /**
  * Interface administrative states
@@ -470,7 +478,7 @@ enum SessionState
 #define RCC_SNMP_FAILURE             ((UINT32)75)
 #define RCC_NO_L2_TOPOLOGY_SUPPORT	 ((UINT32)76)
 #define RCC_INVALID_SITUATION_ID     ((UINT32)77)
-#define RCC_INSTANCE_NOT_FOUND       ((UINT32)78)
+#define RCC_NO_SUCH_INSTANCE         ((UINT32)78)
 #define RCC_INVALID_EVENT_ID         ((UINT32)79)
 #define RCC_AGENT_ERROR              ((UINT32)80)
 #define RCC_UNKNOWN_VARIABLE         ((UINT32)81)
@@ -591,9 +599,9 @@ enum SessionState
 #define SYSTEM_ACCESS_SEND_SMS              _ULL(0x000020000)
 #define SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN   _ULL(0x000040000)
 #define SYSTEM_ACCESS_REGISTER_AGENTS       _ULL(0x000080000)
-#define SYSTEM_ACCESS_READ_FILES            _ULL(0x000100000)
+#define SYSTEM_ACCESS_READ_SERVER_FILES     _ULL(0x000100000)
 #define SYSTEM_ACCESS_SERVER_CONSOLE        _ULL(0x000200000)
-#define SYSTEM_ACCESS_MANAGE_FILES          _ULL(0x000400000)
+#define SYSTEM_ACCESS_MANAGE_SERVER_FILES   _ULL(0x000400000)
 #define SYSTEM_ACCESS_MANAGE_MAPPING_TBLS   _ULL(0x000800000)
 #define SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS   _ULL(0x001000000)
 #define SYSTEM_ACCESS_REPORTING_SERVER      _ULL(0x002000000)
@@ -601,7 +609,7 @@ enum SessionState
 #define SYSTEM_ACCESS_MANAGE_IMAGE_LIB      _ULL(0x008000000)
 #define SYSTEM_ACCESS_UNLINK_ISSUES         _ULL(0x010000000)
 #define SYSTEM_ACCESS_VIEW_SYSLOG           _ULL(0x020000000)
-#define SYSTEM_ACCESS_USERS_SCHEDULED_TASKS _ULL(0x040000000)
+#define SYSTEM_ACCESS_USER_SCHEDULED_TASKS  _ULL(0x040000000)
 #define SYSTEM_ACCESS_OWN_SCHEDULED_TASKS   _ULL(0x080000000)
 #define SYSTEM_ACCESS_ALL_SCHEDULED_TASKS   _ULL(0x100000000)
 #define SYSTEM_ACCESS_SCHEDULE_SCRIPT       _ULL(0x200000000)
@@ -649,6 +657,7 @@ enum SessionState
 #define UF_PASSWORD_NEVER_EXPIRES   0x0040
 #define UF_LDAP_USER                0x0080
 #define UF_SYNC_EXCEPTION           0x0100
+#define UF_CLOSE_OTHER_SESSIONS     0x0200
 
 /**
  * Fields for NXCModifyUserEx
@@ -712,6 +721,7 @@ enum SessionState
 #define DCF_CALCULATE_NODE_STATUS   ((UINT16)0x0400)
 #define DCF_SHOW_IN_OBJECT_OVERVIEW ((UINT16)0x0800)
 #define DCF_CACHE_MODE_MASK         ((UINT16)0x3000)
+#define DCF_AGGREGATE_WITH_ERRORS   ((UINT16)0x4000)
 
 /**
  * Get cluster aggregation function from DCI flags
@@ -933,6 +943,7 @@ enum AggregationFunction
 #define NXC_CHANNEL_SNMP_TRAPS   _T("Core.SNMP.Traps")
 #define NXC_CHANNEL_AUDIT_LOG    _T("Core.Audit")
 #define NXC_CHANNEL_SITUATIONS   _T("Core.Situations")
+#define NXC_CHANNEL_USERDB       _T("Core.UserDB")
 
 /**
  * Node creation flags
@@ -1022,7 +1033,7 @@ typedef struct
  */
 typedef struct
 {
-   QWORD sourceEventId;    // Originating event ID
+   UINT64 sourceEventId;   // Originating event ID
    UINT32 alarmId;         // Unique alarm ID
    UINT32 creationTime;    // Alarm creation time in UNIX time format
    UINT32 lastChangeTime;  // Alarm's last change time in UNIX time format

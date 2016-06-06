@@ -35,6 +35,11 @@ public class ChartDciConfig
 	public static final int ITEM = DataCollectionObject.DCO_TYPE_ITEM;
 	public static final int TABLE = DataCollectionObject.DCO_TYPE_TABLE;
 	
+	// display types
+	public static final int DEFAULT = 0;
+   public static final int LINE = 1;
+   public static final int AREA = 2;
+	
 	@Attribute
 	public long nodeId;
 	
@@ -54,6 +59,9 @@ public class ChartDciConfig
 	public int lineWidth;
 	
 	@Element(required=false)
+	public int displayType;
+	
+	@Element(required=false)
 	public boolean area;
 	
 	@Element(required=false)
@@ -68,6 +76,9 @@ public class ChartDciConfig
 	@Element(required=false)
 	public String column;
 	
+   @Element(required=false)
+   public String displayFormat;
+   
 	/**
 	 * Default constructor
 	 */
@@ -79,11 +90,13 @@ public class ChartDciConfig
 		color = UNSET_COLOR;
 		name = ""; //$NON-NLS-1$
 		lineWidth = 2;
+		displayType = DEFAULT;
 		area = false;
 		showThresholds = false;
 		invertValues = false;
 		instance = ""; //$NON-NLS-1$
 		column = ""; //$NON-NLS-1$
+      displayFormat = "%s"; //$NON-NLS-1$
 	}
 
 	/**
@@ -99,11 +112,13 @@ public class ChartDciConfig
 		this.color = src.color;
 		this.name = src.name;
 		this.lineWidth = src.lineWidth;
+		this.displayType = src.displayType;
 		this.area = src.area;
 		this.showThresholds = src.showThresholds;
 		this.invertValues = src.invertValues;
 		this.instance = src.instance;
 		this.column = src.column;
+		this.displayFormat = src.displayFormat;
 	}
 
 	/**
@@ -124,6 +139,7 @@ public class ChartDciConfig
 		invertValues = false;
 		instance = ""; //$NON-NLS-1$
 		column = ""; //$NON-NLS-1$
+      displayFormat = "%s"; //$NON-NLS-1$
 	}
 
 	/**
@@ -153,5 +169,25 @@ public class ChartDciConfig
 	public String getName()
 	{
 		return ((name != null) && !name.isEmpty()) ? name : ("[" + Long.toString(dciId) + "]"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	/**
+	 * Get display format
+	 * 
+	 * @return
+	 */
+	public String getDisplayFormat()
+	{
+	   return ((displayFormat != null) && !displayFormat.isEmpty()) ? displayFormat : "%s"; //$NON-NLS-1$
+	}
+	
+	/**
+	 * Get display type
+	 * 
+	 * @return
+	 */
+	public int getDisplayType()
+	{
+	   return ((displayType == DEFAULT) && area) ? AREA : displayType;
 	}
 }

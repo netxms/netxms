@@ -187,7 +187,7 @@ public class ObjectTooltip extends Figure
 
 		for(int i = 0; i <= ObjectStatus.UNKNOWN.getValue(); i++)
 		{
-			chart.addParameter(new GraphItem(0, 0, 0, 0, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i)),
+			chart.addParameter(new GraphItem(0, 0, 0, 0, StatusDisplayInfo.getStatusText(i), StatusDisplayInfo.getStatusText(i), "%s"), //$NON-NLS-1$
 					objectCount[i]);
 			chart.setPaletteEntry(i, new ChartColor(StatusDisplayInfo.getStatusColor(i).getRGB()));
 		}

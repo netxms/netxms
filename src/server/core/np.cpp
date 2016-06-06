@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -343,6 +343,8 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
       {
          TCHAR secret[MAX_SECRET_LENGTH];
          ConfigReadStr(_T("AgentDefaultSharedSecret"), secret, MAX_SECRET_LENGTH, _T("netxms"));
+         DecryptPassword(_T("netxms"), secret, secret, MAX_SECRET_LENGTH);
+
          pAgentConn->setAuthData(AUTH_SHA1_HASH, secret);
          pAgentConn->connect(g_pServerKey, FALSE, &rcc);
       }
@@ -356,7 +358,8 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
 		}
 		reachable = true;
    }
-	delete pAgentConn;
+   if (pAgentConn != NULL)
+      pAgentConn->decRefCount();
 
 	if (reachable && !fullCheck)
 		return true;
@@ -593,7 +596,8 @@ static BOOL AcceptNewNode(const InetAddress& addr, UINT32 zoneId, BYTE *macAddr)
    }
 
    // Cleanup
-   delete pAgentConn;
+   if (pAgentConn != NULL)
+      pAgentConn->decRefCount();
 	delete pTransport;
 
    // Check if we use simple filter instead of script

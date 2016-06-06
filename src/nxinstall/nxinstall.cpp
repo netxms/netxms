@@ -42,6 +42,8 @@ int main(int argc, char *argv[])
    int i, ch;
    bool dump = false, printResult = false, quiet = false;
 
+   InitNetXMSProcess();
+
    // Parse command line
    opterr = 1;
 	while((ch = getopt(argc, argv, "drt:q")) != -1)

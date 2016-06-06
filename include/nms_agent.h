@@ -106,6 +106,7 @@
 #define ERR_FILE_DELETE_FAILED      ((UINT32)918)
 #define ERR_NO_SESSION_AGENT        ((UINT32)919)
 #define ERR_SERVER_ID_UNSET         ((UINT32)920)
+#define ERR_NO_SUCH_INSTANCE        ((UINT32)921)
 
 /**
  * Bulk data reconciliation DCI processing status codes
@@ -122,9 +123,10 @@
 /**
  * Parameter handler return codes
  */
-#define SYSINFO_RC_SUCCESS       0
-#define SYSINFO_RC_UNSUPPORTED   1
-#define SYSINFO_RC_ERROR         2
+#define SYSINFO_RC_SUCCESS             0
+#define SYSINFO_RC_UNSUPPORTED         1
+#define SYSINFO_RC_ERROR               2
+#define SYSINFO_RC_NO_SUCH_INSTANCE    3
 
 /**
  * WinPerf features
@@ -175,7 +177,12 @@
 #define DCIDESC_PHYSICALDISK_SMARTATTR            _T("")
 #define DCIDESC_PHYSICALDISK_SMARTSTATUS          _T("Status of hard disk {instance} reported by SMART")
 #define DCIDESC_PHYSICALDISK_TEMPERATURE          _T("Temperature of hard disk {instance}")
+#define DCIDESC_SYSTEM_CPU_CACHE_SIZE             _T("CPU {instance}: cache size (KB)")
+#define DCIDESC_SYSTEM_CPU_CORE_ID                _T("CPU {instance}: core ID")
 #define DCIDESC_SYSTEM_CPU_COUNT                  _T("Number of CPU in the system")
+#define DCIDESC_SYSTEM_CPU_FREQUENCY              _T("CPU {instance}: frequency")
+#define DCIDESC_SYSTEM_CPU_MODEL                  _T("CPU {instance}: model")
+#define DCIDESC_SYSTEM_CPU_PHYSICAL_ID            _T("CPU {instance}: physical ID")
 #define DCIDESC_SYSTEM_HOSTNAME                   _T("Host name")
 #define DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE  _T("Available physical memory")
 #define DCIDESC_SYSTEM_MEMORY_PHYSICAL_AVAILABLE_PCT _T("Percentage of available physical memory")
@@ -202,6 +209,12 @@
 #define DCIDESC_SYSTEM_MEMORY_SWAP_TOTAL          _T("Total amount of swap space")
 #define DCIDESC_SYSTEM_MEMORY_SWAP_USED           _T("Used swap space")
 #define DCIDESC_SYSTEM_MEMORY_SWAP_USED_PCT       _T("Percentage of used swap space")
+#define DCIDESC_SYSTEM_MSGQUEUE_BYTES             _T("Message queue {instance}: bytes in queue")
+#define DCIDESC_SYSTEM_MSGQUEUE_BYTES_MAX         _T("Message queue {instance}: maximum allowed bytes in queue")
+#define DCIDESC_SYSTEM_MSGQUEUE_CHANGE_TIME       _T("Message queue {instance}: last change time")
+#define DCIDESC_SYSTEM_MSGQUEUE_MESSAGES          _T("Message queue {instance}: number of messages")
+#define DCIDESC_SYSTEM_MSGQUEUE_RECV_TIME         _T("Message queue {instance}: last receive time")
+#define DCIDESC_SYSTEM_MSGQUEUE_SEND_TIME         _T("Message queue {instance}: last send time")
 #define DCIDESC_SYSTEM_UNAME                      _T("System uname")
 #define DCIDESC_AGENT_ACCEPTEDCONNECTIONS         _T("Number of connections accepted by agent")
 #define DCIDESC_AGENT_ACCEPTERRORS                _T("Number of accept() call errors")
@@ -408,6 +421,7 @@ class AbstractCommSession : public RefCountObject
 public:
    virtual bool isMasterServer() = 0;
    virtual bool isControlServer() = 0;
+   virtual bool canAcceptData() = 0;
    virtual bool canAcceptTraps() = 0;
    virtual bool canAcceptFileUpdates() = 0;
    virtual UINT64 getServerId() = 0;

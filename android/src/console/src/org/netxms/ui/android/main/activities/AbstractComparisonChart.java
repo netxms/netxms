@@ -125,10 +125,13 @@ public abstract class AbstractComparisonChart extends AbstractClientActivity
 		@Override
 		protected void onPreExecute()
 		{
-			dialog.setMessage(getString(R.string.progress_gathering_data));
-			dialog.setIndeterminate(true);
-			dialog.setCancelable(false);
-			dialog.show();
+			if (dialog != null)
+			{
+				dialog.setMessage(getString(R.string.progress_gathering_data));
+				dialog.setIndeterminate(true);
+				dialog.setCancelable(false);
+				dialog.show();
+			}
 		}
 
 		/* (non-Javadoc)
@@ -181,7 +184,8 @@ public abstract class AbstractComparisonChart extends AbstractClientActivity
 					layout.addView(graphView);
 				}
 			}
-			dialog.cancel();
+			if (dialog != null)
+				dialog.cancel();
 		}
 	}
 }

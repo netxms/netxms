@@ -131,7 +131,7 @@ public class EventConditionEditor extends ConditionEditor
          else
          {
             objectName.setImage(StatusDisplayInfo.getStatusImage(Severity.UNKNOWN));
-            objectName.setText("[" + eventCode + "]");
+            objectName.setText("[" + eventCode + "]"); //$NON-NLS-1$ //$NON-NLS-2$
          }
       }
 	}

@@ -23,6 +23,23 @@
 #include "nxcore.h"
 
 /**
+ * Class names
+ */
+static const TCHAR *s_className[]=
+   {
+      _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"),
+      _T("Network"), _T("Container"), _T("Zone"), _T("ServiceRoot"),
+      _T("Template"), _T("TemplateGroup"), _T("TemplateRoot"),
+      _T("NetworkService"), _T("VPNConnector"), _T("Condition"),
+      _T("Cluster"), _T("PolicyGroup"), _T("PolicyRoot"),
+      _T("AgentPolicy"), _T("AgentPolicyConfig"), _T("NetworkMapRoot"),
+      _T("NetworkMapGroup"), _T("NetworkMap"), _T("DashboardRoot"),
+      _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report"),
+      _T("BusinessServiceRoot"), _T("BusinessService"), _T("NodeLink"),
+      _T("ServiceCheck"), _T("MobileDevice"), _T("Rack"), _T("AccessPoint")
+   };
+
+/**
  * Default constructor
  */
 NetObj::NetObj()
@@ -89,6 +106,15 @@ NetObj::~NetObj()
    delete m_moduleData;
    delete m_postalAddress;
    delete m_dashboards;
+}
+
+/**
+ * Get class name for this object
+ */
+const TCHAR *NetObj::getObjectClassName() const
+{
+   int c = getObjectClass();
+   return ((c >= 0) && (c < sizeof(s_className) / sizeof(const TCHAR *))) ? s_className[c] : _T("Custom");
 }
 
 /**
@@ -477,55 +503,53 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
 /**
  * Add reference to the new child object
  */
-void NetObj::AddChild(NetObj *pObject)
+void NetObj::addChild(NetObj *object)
 {
-   UINT32 i;
-
    LockChildList(TRUE);
-   for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i] == pObject)
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+      if (m_pChildList[i] == object)
       {
          UnlockChildList();
          return;     // Already in the child list
       }
    m_pChildList = (NetObj **)realloc(m_pChildList, sizeof(NetObj *) * (m_dwChildCount + 1));
-   m_pChildList[m_dwChildCount++] = pObject;
+   m_pChildList[m_dwChildCount++] = object;
    UnlockChildList();
 	incRefCount();
    setModified();
+   DbgPrintf(7, _T("NetObj::addChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
 }
 
 /**
  * Add reference to parent object
  */
-void NetObj::AddParent(NetObj *pObject)
+void NetObj::addParent(NetObj *object)
 {
-   UINT32 i;
-
    LockParentList(TRUE);
-   for(i = 0; i < m_dwParentCount; i++)
-      if (m_pParentList[i] == pObject)
+   for(UINT32 i = 0; i < m_dwParentCount; i++)
+      if (m_pParentList[i] == object)
       {
          UnlockParentList();
          return;     // Already in the parents list
       }
    m_pParentList = (NetObj **)realloc(m_pParentList, sizeof(NetObj *) * (m_dwParentCount + 1));
-   m_pParentList[m_dwParentCount++] = pObject;
+   m_pParentList[m_dwParentCount++] = object;
    UnlockParentList();
 	incRefCount();
    setModified();
+   DbgPrintf(7, _T("NetObj::addParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
 }
 
 /**
  * Delete reference to child object
  */
-void NetObj::DeleteChild(NetObj *pObject)
+void NetObj::deleteChild(NetObj *object)
 {
    UINT32 i;
 
    LockChildList(TRUE);
    for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i] == pObject)
+      if (m_pChildList[i] == object)
          break;
 
    if (i == m_dwChildCount)   // No such object
@@ -533,6 +557,9 @@ void NetObj::DeleteChild(NetObj *pObject)
       UnlockChildList();
       return;
    }
+
+   DbgPrintf(7, _T("NetObj::deleteChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
+
    m_dwChildCount--;
    if (m_dwChildCount > 0)
    {
@@ -552,19 +579,22 @@ void NetObj::DeleteChild(NetObj *pObject)
 /**
  * Delete reference to parent object
  */
-void NetObj::DeleteParent(NetObj *pObject)
+void NetObj::deleteParent(NetObj *object)
 {
    UINT32 i;
 
    LockParentList(TRUE);
    for(i = 0; i < m_dwParentCount; i++)
-      if (m_pParentList[i] == pObject)
+      if (m_pParentList[i] == object)
          break;
    if (i == m_dwParentCount)   // No such object
    {
       UnlockParentList();
       return;
    }
+
+   DbgPrintf(7, _T("NetObj::deleteParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
+
    m_dwParentCount--;
    if (m_dwParentCount > 0)
    {
@@ -629,7 +659,7 @@ void NetObj::deleteObject(NetObj *initiator)
       }
       else
       {
-         m_pChildList[i]->DeleteParent(this);
+         m_pChildList[i]->deleteParent(this);
       }
 		decRefCount();
    }
@@ -659,7 +689,7 @@ void NetObj::deleteObject(NetObj *initiator)
       // removed from parent's list
       if (m_pParentList[i] != initiator)
       {
-         m_pParentList[i]->DeleteChild(this);
+         m_pParentList[i]->deleteChild(this);
          m_pParentList[i]->calculateCompoundStatus();
       }
 		decRefCount();
@@ -1876,7 +1906,7 @@ void NetObj::addLocationToHistory()
 	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_ORACLE:
-			query = _T("SELECT * FROM (latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC) WHERE ROWNUM<=1");
+			query = _T("SELECT * FROM (SELECT latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC) WHERE ROWNUM<=1");
 			break;
 		case DB_SYNTAX_MSSQL:
 			query = _T("SELECT TOP 1 latitude,longitude,accuracy,start_timestamp FROM gps_history_%d ORDER BY start_timestamp DESC");
@@ -2040,6 +2070,15 @@ void NetObj::setStatusPropagation(int method, int arg1, int arg2, int arg3, int 
  */
 void NetObj::enterMaintenanceMode()
 {
+   DbgPrintf(4, _T("Entering maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
+
+   LockChildList(FALSE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   {
+      if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
+         m_pChildList[i]->enterMaintenanceMode();
+   }
+   UnlockChildList();
 }
 
 /**
@@ -2047,4 +2086,39 @@ void NetObj::enterMaintenanceMode()
  */
 void NetObj::leaveMaintenanceMode()
 {
+   DbgPrintf(4, _T("Leaving maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
+
+   LockChildList(FALSE);
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   {
+      if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
+         m_pChildList[i]->leaveMaintenanceMode();
+   }
+   UnlockChildList();
+}
+
+/**
+ * Get all custom attributes as NXSL hash map
+ */
+NXSL_Value *NetObj::getCustomAttributesForNXSL() const
+{
+   NXSL_HashMap *map = new NXSL_HashMap();
+   lockProperties();
+   StructArray<KeyValuePair> *attributes = m_customAttributes.toArray();
+   for(int i = 0; i < attributes->size(); i++)
+   {
+      KeyValuePair *p = attributes->get(i);
+      map->set(p->key, new NXSL_Value((const TCHAR *)p->value));
+   }
+   unlockProperties();
+   delete attributes;
+   return new NXSL_Value(map);
+}
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *NetObj::createNXSLObject()
+{
+   return new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, this));
 }

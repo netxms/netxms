@@ -30,9 +30,9 @@ public class UserAccessRights
 	public static final long SYSTEM_ACCESS_SEND_SMS              = 0x0000020000L;
 	public static final long SYSTEM_ACCESS_MOBILE_DEVICE_LOGIN   = 0x0000040000L;
 	public static final long SYSTEM_ACCESS_REGISTER_AGENTS       = 0x0000080000L;
-	public static final long SYSTEM_ACCESS_READ_FILES            = 0x0000100000L;
+	public static final long SYSTEM_ACCESS_READ_SERVER_FILES     = 0x0000100000L;
 	public static final long SYSTEM_ACCESS_SERVER_CONSOLE        = 0x0000200000L;
-	public static final long SYSTEM_ACCESS_MANAGE_FILES          = 0x0000400000L;
+	public static final long SYSTEM_ACCESS_MANAGE_SERVER_FILES   = 0x0000400000L;
 	public static final long SYSTEM_ACCESS_MANAGE_MAPPING_TBLS   = 0x0000800000L;
    public static final long SYSTEM_ACCESS_MANAGE_SUMMARY_TBLS   = 0x0001000000L;
    public static final long SYSTEM_ACCESS_REPORTING_SERVER      = 0x0002000000L;
@@ -40,7 +40,7 @@ public class UserAccessRights
    public static final long SYSTEM_ACCESS_MANAGE_IMAGE_LIB      = 0x0008000000L;
    public static final long SYSTEM_ACCESS_UNLINK_ISSUES         = 0x0010000000L;
    public static final long SYSTEM_ACCESS_VIEW_SYSLOG           = 0x0020000000L;
-   public static final long SYSTEM_ACCESS_USERS_SCHEDULED_TASKS = 0x0040000000L;
+   public static final long SYSTEM_ACCESS_USER_SCHEDULED_TASKS  = 0x0040000000L;
    public static final long SYSTEM_ACCESS_OWN_SCHEDULED_TASKS   = 0x0080000000L;
    public static final long SYSTEM_ACCESS_ALL_SCHEDULED_TASKS   = 0x0100000000L;
    public static final long SYSTEM_ACCESS_SCHEDULE_SCRIPT       = 0x0200000000L;

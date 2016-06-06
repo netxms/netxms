@@ -446,9 +446,11 @@ public:
 /**
  * Agent connection
  */
-class LIBNXSRV_EXPORTABLE AgentConnection : public RefCountObject
+class LIBNXSRV_EXPORTABLE AgentConnection
 {
 private:
+   VolatileCounter m_userRefCount;
+   VolatileCounter m_internalRefCount;
    InetAddress m_addr;
    int m_nProtocolVersion;
    int m_iAuthMethod;
@@ -516,9 +518,16 @@ protected:
    void unlock() { MutexUnlock(m_mutexDataLock); }
 	NXCPEncryptionContext *acquireEncryptionContext();
 
+   void incInternalRefCount() { InterlockedIncrement(&m_internalRefCount); }
+   void decInternalRefCount() { if (InterlockedDecrement(&m_internalRefCount) == 0) delete this; }
+
+   virtual ~AgentConnection();
+
 public:
    AgentConnection(InetAddress addr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL);
-   virtual ~AgentConnection();
+
+   void incRefCount() { InterlockedIncrement(&m_userRefCount); }
+   void decRefCount() { if (InterlockedDecrement(&m_userRefCount) == 0) { disconnect(); decInternalRefCount(); } }
 
    bool connect(RSA *pServerKey = NULL, BOOL bVerbose = FALSE, UINT32 *pdwError = NULL, UINT32 *pdwSocketError = NULL);
    void disconnect();
@@ -550,7 +559,7 @@ public:
    UINT32 enableTraps();
    UINT32 enableFileUpdates();
 	UINT32 getPolicyInventory(AgentPolicyInfo **info);
-	UINT32 uninstallPolicy(uuid_t guid);
+	UINT32 uninstallPolicy(const uuid& guid);
    UINT32 takeScreenshot(const TCHAR *sessionName, BYTE **data, size_t *size);
 
 	UINT32 generateRequestId() { return (UINT32)InterlockedIncrement(&m_requestId); }
@@ -673,13 +682,8 @@ void LIBNXSRV_EXPORTABLE WriteLogOther(WORD wType, const TCHAR *format, ...)
 #endif
 ;
 
-void LIBNXSRV_EXPORTABLE DbgPrintf(int level, const TCHAR *format, ...)
-#if !defined(UNICODE) && (defined(__GNUC__) || defined(__clang__))
-   __attribute__ ((format(printf, 2, 3)))
-#endif
-;
-
-void LIBNXSRV_EXPORTABLE DbgPrintf2(int level, const TCHAR *format, va_list args);
+// for compatibility - new code should use nxlog_debug
+#define DbgPrintf nxlog_debug
 
 void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy);
 
@@ -689,7 +693,6 @@ const TCHAR LIBNXSRV_EXPORTABLE *ISCErrorCodeToText(UINT32 code);
  * Variables
  */
 extern UINT64 LIBNXSRV_EXPORTABLE g_flags;
-extern UINT32 LIBNXSRV_EXPORTABLE g_debugLevel;
 extern ThreadPool LIBNXSRV_EXPORTABLE *g_agentConnectionThreadPool;
 
 /**

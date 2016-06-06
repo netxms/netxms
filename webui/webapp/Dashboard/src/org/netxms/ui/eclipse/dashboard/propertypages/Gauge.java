@@ -18,7 +18,10 @@
  */
 package org.netxms.ui.eclipse.dashboard.propertypages;
 
+import org.eclipse.jface.preference.ColorSelector;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -26,8 +29,10 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.dialogs.PropertyPage;
+import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
 import org.netxms.ui.eclipse.dashboard.Messages;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.LabeledText;
@@ -49,6 +54,8 @@ public class Gauge extends PropertyPage
 	private LabeledText leftRedZone;
 	private LabeledText rightYellowZone;
 	private LabeledText rightRedZone;
+	private Combo colorMode;
+	private ColorSelector customColor;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -131,6 +138,33 @@ public class Gauge extends PropertyPage
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		rightRedZone.setLayoutData(gd);
+
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      colorMode = WidgetHelper.createLabeledCombo(dialogArea, SWT.READ_ONLY, Messages.get().Gauge_ColorMode, gd);
+      colorMode.add(Messages.get().Gauge_ZoneColor);
+      colorMode.add(Messages.get().Gauge_FixedCustomColor);
+      colorMode.add(Messages.get().Gauge_ActiveThresholdColor);
+      colorMode.select(config.getColorMode());
+      colorMode.addSelectionListener(new SelectionListener() {
+         @Override
+         public void widgetSelected(SelectionEvent e)
+         {
+            onColorModeChange(colorMode.getSelectionIndex());
+         }
+         
+         @Override
+         public void widgetDefaultSelected(SelectionEvent e)
+         {
+            widgetSelected(e);
+         }
+      });
+      
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.LEFT;
+      customColor = WidgetHelper.createLabeledColorSelector(dialogArea, Messages.get().Gauge_CustomColor, gd); 
+      customColor.setColorValue(ColorConverter.rgbFromInt(config.getCustomColor()));
 		
 		checkLegendInside = new Button(dialogArea, SWT.CHECK);
 		checkLegendInside.setText(Messages.get().DialChart_LegendInside);
@@ -159,6 +193,7 @@ public class Gauge extends PropertyPage
       gd.horizontalSpan = 2;
       checkElementBorders.setLayoutData(gd);
       
+      onColorModeChange(config.getColorMode());
 		return dialogArea;
 	}
 
@@ -195,6 +230,22 @@ public class Gauge extends PropertyPage
 		config.setLegendInside(checkLegendInside.getSelection());
 		config.setVertical(checkVertical.getSelection());
 		config.setElementBordersVisible(checkElementBorders.getSelection());
+		config.setColorMode(colorMode.getSelectionIndex());
+		config.setCustomColor(ColorConverter.rgbToInt(customColor.getColorValue()));
 		return true;
+	}
+	
+	/**
+	 * Handle color mode change
+	 * 
+	 * @param newMode
+	 */
+	private void onColorModeChange(int newMode)
+	{
+	   leftYellowZone.setEnabled(newMode == GaugeColorMode.ZONE.getValue());
+	   leftRedZone.setEnabled(newMode == GaugeColorMode.ZONE.getValue());
+      rightYellowZone.setEnabled(newMode == GaugeColorMode.ZONE.getValue());
+      rightRedZone.setEnabled(newMode == GaugeColorMode.ZONE.getValue());
+	   customColor.setEnabled(newMode == GaugeColorMode.CUSTOM.getValue());
 	}
 }

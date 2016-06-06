@@ -134,10 +134,11 @@ protected:
    virtual UINT32 processBulkCollectedData(NXCPMessage *request, NXCPMessage *response);
    virtual bool processCustomMessage(NXCPMessage *msg);
 
+   virtual ~AgentConnectionEx();
+
 public:
    AgentConnectionEx(UINT32 nodeId, InetAddress ipAddr, WORD port = AGENT_LISTEN_PORT, int authMethod = AUTH_NONE, const TCHAR *secret = NULL) :
             AgentConnection(ipAddr, port, authMethod, secret) { m_nodeId = nodeId; }
-   virtual ~AgentConnectionEx();
 
    UINT32 deployPolicy(AgentPolicy *policy);
    UINT32 uninstallPolicy(AgentPolicy *policy);
@@ -483,8 +484,8 @@ protected:
 	StringMap m_customAttributes;
    StringObjectMap<ModuleData> *m_moduleData;
 
-   void lockProperties() { MutexLock(m_mutexProperties); }
-   void unlockProperties() { MutexUnlock(m_mutexProperties); }
+   void lockProperties() const { MutexLock(m_mutexProperties); }
+   void unlockProperties() const { MutexUnlock(m_mutexProperties); }
    void lockACL() { MutexLock(m_mutexACL); }
    void unlockACL() { MutexUnlock(m_mutexACL); }
    void LockParentList(BOOL bWrite)
@@ -530,6 +531,7 @@ public:
    virtual ~NetObj();
 
    virtual int getObjectClass() const { return OBJECT_GENERIC; }
+   virtual const TCHAR *getObjectClassName() const;
 
    UINT32 getId() const { return m_id; }
    const TCHAR *getName() const { return m_name; }
@@ -560,18 +562,18 @@ public:
    bool isChild(UINT32 id);
 	bool isTrustedNode(UINT32 id);
 
-   void AddChild(NetObj *pObject);     // Add reference to child object
-   void AddParent(NetObj *pObject);    // Add reference to parent object
+   void addChild(NetObj *object);     // Add reference to child object
+   void addParent(NetObj *object);    // Add reference to parent object
 
-   void DeleteChild(NetObj *pObject);  // Delete reference to child object
-   void DeleteParent(NetObj *pObject); // Delete reference to parent object
+   void deleteChild(NetObj *object);  // Delete reference to child object
+   void deleteParent(NetObj *object); // Delete reference to parent object
 
    void deleteObject(NetObj *initiator = NULL);     // Prepare object for deletion
 
    bool isHidden() { return m_isHidden; }
    void hide();
    void unhide();
-   void markAsModified() { lockProperties(); setModified(); unlockProperties(); }  // external API to mar object as modified
+   void markAsModified() { lockProperties(); setModified(); unlockProperties(); }  // external API to mark object as modified
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -609,6 +611,9 @@ public:
    void setCustomAttribute(const TCHAR *name, const TCHAR *value) { m_customAttributes.set(name, value); setModified(); }
    void setCustomAttributePV(const TCHAR *name, TCHAR *value) { m_customAttributes.setPreallocated(_tcsdup(name), value); setModified(); }
    void deleteCustomAttribute(const TCHAR *name) { m_customAttributes.remove(name); setModified(); }
+   NXSL_Value *getCustomAttributesForNXSL() const;
+
+   virtual NXSL_Value *createNXSLObject();
 
    ModuleData *getModuleData(const TCHAR *module);
    void setModuleData(const TCHAR *module, ModuleData *data);
@@ -777,19 +782,22 @@ protected:
    UINT32 m_type;
    UINT32 m_mtu;
    UINT64 m_speed;
-	UINT32 m_bridgePortNumber;		// 802.1D port number
-	UINT32 m_slotNumber;				// Vendor/device specific slot number
-	UINT32 m_portNumber;				// Vendor/device specific port number
-	UINT32 m_peerNodeId;				// ID of peer node object, or 0 if unknown
-	UINT32 m_peerInterfaceId;		// ID of peer interface object, or 0 if unknown
+	UINT32 m_bridgePortNumber;		 // 802.1D port number
+	UINT32 m_slotNumber;				 // Vendor/device specific slot number
+	UINT32 m_portNumber;				 // Vendor/device specific port number
+	UINT32 m_peerNodeId;				 // ID of peer node object, or 0 if unknown
+	UINT32 m_peerInterfaceId;		 // ID of peer interface object, or 0 if unknown
    LinkLayerProtocol m_peerDiscoveryProtocol;  // Protocol used to discover peer node
-	WORD m_adminState;				// interface administrative state
-	WORD m_operState;					// interface operational state
-	WORD m_dot1xPaeAuthState;		// 802.1x port auth state
-	WORD m_dot1xBackendAuthState;	// 802.1x backend auth state
+	INT16 m_adminState;				 // interface administrative state
+	INT16 m_operState;				 // interface operational state
+   INT16 m_pendingOperState;
+	INT16 m_confirmedOperState;
+	INT16 m_dot1xPaeAuthState;		 // 802.1x port auth state
+	INT16 m_dot1xBackendAuthState; // 802.1x backend auth state
    UINT64 m_lastDownEventId;
 	int m_pendingStatus;
-	int m_pollCount;
+	int m_statusPollCount;
+	int m_operStatePollCount;
 	int m_requiredPollCount;
    UINT32 m_zoneId;
    UINT32 m_pingTime;
@@ -836,6 +844,7 @@ public:
 	UINT32 getFlags() { return m_flags; }
 	int getAdminState() { return (int)m_adminState; }
 	int getOperState() { return (int)m_operState; }
+   int getConfirmedOperState() { return (int)m_confirmedOperState; }
 	int getDot1xPaeAuthState() { return (int)m_dot1xPaeAuthState; }
 	int getDot1xBackendAuthState() { return (int)m_dot1xBackendAuthState; }
 	const TCHAR *getDescription() { return m_description; }
@@ -881,6 +890,7 @@ public:
 
    UINT32 wakeUp();
 	void setExpectedState(int state);
+   void setExcludeFromTopology(bool excluded);
 	void updatePingData();
 };
 
@@ -1000,6 +1010,7 @@ public:
    void getDciValuesSummary(SummaryTable *tableDefinition, Table *tableData);
 
    void updateDciCache();
+   void updateDCItemCacheSize(UINT32 dciId, UINT32 conditionId = 0);
    void cleanDCIData(DB_HANDLE hdb);
    void queueItemsForPolling(Queue *pPollerQueue);
 	bool processNewDCValue(DCObject *dco, time_t currTime, const void *value);
@@ -1048,10 +1059,19 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
+   virtual NXSL_Value *createNXSLObject();
+
 	void updateSystemInfo(NXCPMessage *msg);
 	void updateStatus(NXCPMessage *msg);
 
 	const TCHAR *getDeviceId() { return CHECK_NULL_EX(m_deviceId); }
+	const TCHAR *getVendor() { return CHECK_NULL_EX(m_vendor); }
+	const TCHAR *getModel() { return CHECK_NULL_EX(m_model); }
+	const TCHAR *getSerialNumber() { return CHECK_NULL_EX(m_serialNumber); }
+	const TCHAR *getOsName() { return CHECK_NULL_EX(m_osName); }
+	const TCHAR *getOsVersion() { return CHECK_NULL_EX(m_osVersion); }
+	const TCHAR *getUserId() { return CHECK_NULL_EX(m_userId); }
+	const LONG getBatteryLevel() { return m_batteryLevel; }
 
 	virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
 };
@@ -1138,6 +1158,8 @@ public:
    virtual bool showThresholdSummary();
 
    virtual void unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI);
+
+   virtual NXSL_Value *createNXSLObject();
 
 	bool isSyncAddr(const InetAddress& addr);
 	bool isVirtualAddr(const InetAddress& addr);
@@ -1229,6 +1251,7 @@ protected:
    time_t m_bootTime;
    time_t m_agentUpTime;
    time_t m_lastAgentCommTime;
+   time_t m_lastAgentConnectAttempt;
    MUTEX m_hPollerMutex;
    MUTEX m_hAgentAccessMutex;
    MUTEX m_hSmclpAccessMutex;
@@ -1315,6 +1338,8 @@ protected:
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
    void updateRackBinding();
+
+   bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL, bool forceConnect = false);
    void setLastAgentCommTime() { time_t now = time(NULL); if (m_lastAgentCommTime < now - 60) { m_lastAgentCommTime = now; setModified(); } }
 
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
@@ -1342,6 +1367,8 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+
+   virtual NXSL_Value *createNXSLObject();
 
 	TCHAR *expandText(const TCHAR *textTemplate, StringMap *inputFields, const TCHAR *userName);
 
@@ -1381,12 +1408,12 @@ public:
 	INT16 getAgentAuthMethod() { return m_agentAuthMethod; }
    INT16 getAgentCacheMode() { return (m_dwDynamicFlags & NDF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }
 	const TCHAR *getSharedSecret() { return m_szSharedSecret; }
-	AgentConnection *getFileUpdateConn() { return m_fileUpdateConn; }
+	bool hasFileUpdateConnection() { lockProperties(); bool result = (m_fileUpdateConn != NULL); unlockProperties(); return result; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
 
-   void addInterface(Interface *pInterface) { AddChild(pInterface); pInterface->AddParent(this); }
+   void addInterface(Interface *pInterface) { addChild(pInterface); pInterface->addParent(this); }
    Interface *createNewInterface(InterfaceInfo *ifInfo, bool manuallyCreated);
    Interface *createNewInterface(const InetAddress& ipAddr, BYTE *macAddr);
    void deleteInterface(Interface *iface);
@@ -1396,7 +1423,7 @@ public:
 	void setSnmpPort(WORD port) { m_snmpPort = port; }
    void changeIPAddress(const InetAddress& ipAddr);
 	void changeZone(UINT32 newZone);
-	void setFileUpdateConn(AgentConnection *conn);
+	void setFileUpdateConnection(AgentConnection *conn);
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
    void forceSyncDataCollectionConfig(Node *node);
 
@@ -1422,7 +1449,8 @@ public:
    bool getNextHop(const InetAddress& srcAddr, const InetAddress& destAddr, InetAddress *nextHop, UINT32 *ifIndex, bool *isVpn, TCHAR *name);
    bool getOutwardInterface(const InetAddress& destAddr, InetAddress *srcAddr, UINT32 *srcIfIndex);
 	ComponentTree *getComponents();
-   bool getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
+   bool getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *port);
+   void showLLDPInfo(CONSOLE_CTX console);
 
 	void setRecheckCapsFlag() { m_dwDynamicFlags |= NDF_RECHECK_CAPABILITIES; }
    void setDiscoveryPollTimeStamp();
@@ -1458,7 +1486,6 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL);
 	bool checkAgentTrapId(UINT64 id);
 	bool checkSNMPTrapId(UINT32 id);
    bool checkAgentPushRequestId(UINT64 id);
@@ -1502,7 +1529,7 @@ public:
 
    UINT32 wakeUp();
 
-   void addService(NetworkService *pNetSrv) { AddChild(pNetSrv); pNetSrv->AddParent(this); }
+   void addService(NetworkService *pNetSrv) { addChild(pNetSrv); pNetSrv->addParent(this); }
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& ipAddr, int iServiceType, WORD wPort = 0,
                               WORD wProto = 0, TCHAR *pszRequest = NULL, TCHAR *pszResponse = NULL, UINT32 *responseTime = NULL);
 
@@ -1690,7 +1717,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
-   void addNode(Node *node) { AddChild(node); node->AddParent(this); calculateCompoundStatus(TRUE); }
+   void addNode(Node *node) { addChild(node); node->addParent(this); calculateCompoundStatus(TRUE); }
 
 	virtual bool showThresholdSummary();
 
@@ -1720,7 +1747,7 @@ public:
    void loadFromDatabase(DB_HANDLE hdb);
 
    void linkChildObjects();
-   void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+   void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 };
 
 /**
@@ -1782,11 +1809,8 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   virtual void enterMaintenanceMode();
-   virtual void leaveMaintenanceMode();
-
    void linkChildObjects();
-   void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+   void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 
    AutoBindDecision isSuitableForNode(Node *node);
 	bool isAutoBindEnabled() { return (m_flags & CF_AUTO_BIND) ? true : false; }
@@ -1865,12 +1889,14 @@ public:
 
 	virtual bool showThresholdSummary();
 
+   virtual NXSL_Value *createNXSLObject();
+
    UINT32 getZoneId() { return m_zoneId; }
 	UINT32 getAgentProxy() { return m_agentProxy; }
 	UINT32 getSnmpProxy() { return m_snmpProxy; }
 	UINT32 getIcmpProxy() { return m_icmpProxy; }
 
-   void addSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
+   void addSubnet(Subnet *pSubnet) { addChild(pSubnet); pSubnet->addParent(this); }
 
 	void addToIndex(Subnet *subnet) { m_idxSubnetByAddr->put(subnet->getIpAddress(), subnet); }
    void addToIndex(Interface *iface) { m_idxInterfaceByAddr->put(iface->getIpAddressList(), iface); }
@@ -1907,8 +1933,8 @@ public:
 
 	virtual bool showThresholdSummary();
 
-   void AddSubnet(Subnet *pSubnet) { AddChild(pSubnet); pSubnet->AddParent(this); }
-   void AddZone(Zone *pZone) { AddChild(pZone); pZone->AddParent(this); }
+   void AddSubnet(Subnet *pSubnet) { addChild(pSubnet); pSubnet->addParent(this); }
+   void AddZone(Zone *pZone) { addChild(pZone); pZone->addParent(this); }
    void loadFromDatabase(DB_HANDLE hdb);
 };
 
@@ -1986,8 +2012,8 @@ public:
 	virtual bool createDeploymentMessage(NXCPMessage *msg);
 	virtual bool createUninstallMessage(NXCPMessage *msg);
 
-	void linkNode(Node *node) { AddChild(node); node->AddParent(this); }
-	void unlinkNode(Node *node) { DeleteChild(node); node->DeleteParent(this); }
+	void linkNode(Node *node) { addChild(node); node->addParent(this); }
+	void unlinkNode(Node *node) { deleteChild(node); node->deleteParent(this); }
 };
 
 /**
@@ -2305,7 +2331,7 @@ public:
    void loadFromDatabase(DB_HANDLE hdb);
 
    void linkChildObjects();
-   void linkObject(NetObj *pObject) { AddChild(pObject); pObject->AddParent(this); }
+   void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 };
 
 /**
@@ -2386,6 +2412,8 @@ inline const InetAddress& GetObjectIpAddress(NetObj *object)
       return ((Subnet *)object)->getIpAddress();
    if (object->getObjectClass() == OBJECT_ACCESSPOINT)
       return ((AccessPoint *)object)->getIpAddress();
+   if (object->getObjectClass() == OBJECT_INTERFACE)
+      return ((Interface *)object)->getIpAddressList()->getFirstUnicastAddress();
    return InetAddress::INVALID;
 }
 
@@ -2457,7 +2485,6 @@ extern DashboardRoot NXCORE_EXPORTABLE *g_pDashboardRoot;
 extern BusinessServiceRoot NXCORE_EXPORTABLE *g_pBusinessServiceRoot;
 
 extern UINT32 NXCORE_EXPORTABLE g_dwMgmtNode;
-extern const TCHAR *g_szClassName[];
 extern BOOL g_bModificationsLocked;
 extern Queue *g_pTemplateUpdateQueue;
 

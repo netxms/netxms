@@ -172,7 +172,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine, void (*dbgPrintCb)(int, const TCHAR *, va_list))
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
    m_useUnicode = ExtractNamedOptionValueAsBoolA(cmdLine, "unicode", true);
    return true;
@@ -1024,7 +1024,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectPreparedUnbuffered(ODBCDRV_CO
       pResult->numColumns = wNumCols;
       pResult->pConn = pConn;
       pResult->noMoreRows = false;
-		pResult->values = (NETXMS_WCHAR **)malloc(sizeof(WCHAR *) * pResult->numColumns);
+		pResult->values = (NETXMS_WCHAR **)malloc(sizeof(NETXMS_WCHAR *) * pResult->numColumns);
       memset(pResult->values, 0, sizeof(NETXMS_WCHAR *) * pResult->numColumns);
 
 		// Get column names

@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Server Library
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -67,6 +67,7 @@ void LIBNXSRV_EXPORTABLE SetAgentDEP(int iPolicy)
 THREAD_RESULT THREAD_CALL AgentConnection::receiverThreadStarter(void *pArg)
 {
    ((AgentConnection *)pArg)->receiverThread();
+   ((AgentConnection *)pArg)->decInternalRefCount();
    return THREAD_OK;
 }
 
@@ -75,6 +76,8 @@ THREAD_RESULT THREAD_CALL AgentConnection::receiverThreadStarter(void *pArg)
  */
 AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, const TCHAR *secret)
 {
+   m_internalRefCount = 1;
+   m_userRefCount = 1;
    m_addr = addr;
    m_wPort = port;
    m_iAuthMethod = authMethod;
@@ -97,8 +100,8 @@ AgentConnection::AgentConnection(InetAddress addr, WORD port, int authMethod, co
    m_ppDataLines = NULL;
    m_pMsgWaitQueue = new MsgWaitQueue;
    m_requestId = 0;
-	m_connectionTimeout = 30000;	// 30 seconds
-   m_dwCommandTimeout = 10000;   // Default timeout 10 seconds
+	m_connectionTimeout = 5000;	// 5 seconds
+   m_dwCommandTimeout = 5000;   // Default timeout 5 seconds
    m_isConnected = false;
    m_mutexDataLock = MutexCreate();
 	m_mutexSocketWrite = MutexCreate();
@@ -128,20 +131,7 @@ AgentConnection::~AgentConnection()
 {
    DbgPrintf(7, _T("AgentConnection destructor called (this=%p, thread=%p)"), this, (void *)m_hReceiverThread);
 
-   // Disconnect from peer
-   disconnect();
-
-   // Wait for receiver thread termination
-   ThreadJoin(m_hReceiverThread);
-
-	// Close socket if active
-	lock();
-   if (m_hSocket != -1)
-	{
-      closesocket(m_hSocket);
-		m_hSocket = -1;
-	}
-	unlock();
+   ThreadDetach(m_hReceiverThread);
 
    lock();
    destroyResultData();
@@ -352,7 +342,7 @@ void AgentConnection::receiverThread()
 				case CMD_TRAP:
                if (g_agentConnectionThreadPool != NULL)
                {
-                  incRefCount();
+                  incInternalRefCount();
                   ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onTrapCallback, pMsg);
                }
                else
@@ -363,7 +353,7 @@ void AgentConnection::receiverThread()
 				case CMD_PUSH_DCI_DATA:
 				   if (g_agentConnectionThreadPool != NULL)
 				   {
-                  incRefCount();
+				      incInternalRefCount();
                   ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onDataPushCallback, pMsg);
 				   }
 				   else
@@ -374,7 +364,7 @@ void AgentConnection::receiverThread()
 				case CMD_DCI_DATA:
                if (g_agentConnectionThreadPool != NULL)
                {
-                  incRefCount();
+                  incInternalRefCount();
                   ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::processCollectedDataCallback, pMsg);
                }
                else
@@ -394,7 +384,7 @@ void AgentConnection::receiverThread()
             case CMD_SNMP_TRAP:
                if (g_agentConnectionThreadPool != NULL)
                {
-                  incRefCount();
+                  incInternalRefCount();
                   ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSnmpTrapCallback, pMsg);
                }
                else
@@ -501,6 +491,7 @@ bool AgentConnection::connect(RSA *pServerKey, BOOL bVerbose, UINT32 *pdwError, 
    }
 
    // Start receiver thread
+   incInternalRefCount();
    m_hReceiverThread = ThreadCreateEx(receiverThreadStarter, 0, this);
 
    // Setup encryption
@@ -1011,7 +1002,7 @@ void AgentConnection::onTrapCallback(NXCPMessage *msg)
 {
    onTrap(msg);
    delete msg;
-   decRefCount();
+   decInternalRefCount();
 }
 
 /**
@@ -1029,7 +1020,7 @@ void AgentConnection::onDataPushCallback(NXCPMessage *msg)
 {
    onDataPush(msg);
    delete msg;
-   decRefCount();
+   decInternalRefCount();
 }
 
 /**
@@ -1055,7 +1046,7 @@ void AgentConnection::onSnmpTrapCallback(NXCPMessage *msg)
 {
    onSnmpTrap(msg);
    delete msg;
-   decRefCount();
+   decInternalRefCount();
 }
 
 /**
@@ -2008,7 +1999,7 @@ UINT32 AgentConnection::getPolicyInventory(AgentPolicyInfo **info)
 /**
  * Uninstall policy by GUID
  */
-UINT32 AgentConnection::uninstallPolicy(uuid_t guid)
+UINT32 AgentConnection::uninstallPolicy(const uuid& guid)
 {
 	UINT32 rqId, rcc;
 	NXCPMessage msg(m_nProtocolVersion);
@@ -2016,7 +2007,7 @@ UINT32 AgentConnection::uninstallPolicy(uuid_t guid)
    rqId = generateRequestId();
    msg.setId(rqId);
 	msg.setCode(CMD_UNINSTALL_AGENT_POLICY);
-	msg.setField(VID_GUID, guid, UUID_LENGTH);
+	msg.setField(VID_GUID, guid);
 	if (sendMessage(&msg))
 	{
 		rcc = waitForRCC(rqId, m_dwCommandTimeout);
@@ -2063,7 +2054,7 @@ void AgentConnection::processCollectedDataCallback(NXCPMessage *msg)
 
    sendMessage(&response);
    delete msg;
-   decRefCount();
+   decInternalRefCount();
 }
 
 /**

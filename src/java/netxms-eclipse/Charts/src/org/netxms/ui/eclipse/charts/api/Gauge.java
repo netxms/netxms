@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.charts.api;
 
+import org.eclipse.swt.graphics.RGB;
+
 /**
  * Gauge interface
  */
@@ -126,4 +128,32 @@ public interface Gauge extends DataComparisonChart
 	 * @param fontName
 	 */
 	public void setFontName(String fontName);
+	
+	/**
+	 * Get color mode
+	 * 
+	 * @return
+	 */
+	public GaugeColorMode getColorMode();
+	
+	/**
+	 * Set color mode
+	 * 
+	 * @param mode
+	 */
+	public void setColorMode(GaugeColorMode mode);
+	
+	/**
+	 * Get custom color
+	 * 
+	 * @return
+	 */
+	public RGB getCustomColor();
+	
+	/**
+	 * Set custom color
+	 * 
+	 * @param color
+	 */
+	public void setCustomColor(RGB color);
 }

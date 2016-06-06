@@ -125,11 +125,12 @@
         point="org.eclipse.ui.menus">
      <menuContribution
            allPopups="false"
-           locationURI="popup:org.eclipse.ui.popup.any?before=objectmgmt">
+           locationURI="popup:org.netxms.ui.eclipse.view.navigation.objectbrowser?before=objectmgmt">
         <command
               commandId="org.netxms.ui.eclipse.objectbrowser.commands.rename_object"
-              label="Rename"
-              style="push">
+              label="%command.Rename.name"
+              style="push"
+              tooltip="%command.Rename.tooltip">
         </command>
      </menuContribution>
   </extension>

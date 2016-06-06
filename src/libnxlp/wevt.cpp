@@ -153,8 +153,7 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	pubMetadata = _EvtOpenPublisherMetadata(NULL, values[0].StringVal, NULL, MAKELCID(MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), SORT_DEFAULT), 0);
 	if (pubMetadata == NULL)
 	{
-		LogParserTrace(5, _T("LogWatch: Call to EvtOpenPublisherMetadata failed: %s"),
-							    GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
+		LogParserTrace(5, _T("LogWatch: Call to EvtOpenPublisherMetadata failed: %s"), GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
 		goto cleanup;
 	}
 
@@ -162,26 +161,29 @@ static DWORD WINAPI SubscribeCallback(EVT_SUBSCRIBE_NOTIFY_ACTION action, PVOID 
 	success = _EvtFormatMessage(pubMetadata, event, 0, 0, NULL, EvtFormatMessageEvent, 4096, buffer, &reqSize);
 	if (!success)
 	{
-		if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+      DWORD error = GetLastError();
+		if ((error != ERROR_INSUFFICIENT_BUFFER) && (error != ERROR_EVT_UNRESOLVED_VALUE_INSERT))
 		{
-			LogParserTrace(5, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
-								    GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
+			LogParserTrace(5, _T("LogWatch: Call to EvtFormatMessage failed: error %u (%s)"), error, GetSystemErrorText(error, (TCHAR *)buffer, 4096));
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
 			LogMetadataProperty(pubMetadata, EvtPublisherMetadataResourceFilePath, _T("resource file"));
 			goto cleanup;
 		}
-		msg = (WCHAR *)malloc(sizeof(WCHAR) * reqSize);
-		success = _EvtFormatMessage(NULL, event, 0, 0, NULL, EvtFormatMessageEvent, reqSize, msg, &reqSize);
-		if (!success)
-		{
-			LogParserTrace(5, _T("LogWatch: Call to EvtFormatMessage failed: %s"),
-								    GetSystemErrorText(GetLastError(), (TCHAR *)buffer, 4096));
-			LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
-			LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
-			LogMetadataProperty(pubMetadata, EvtPublisherMetadataResourceFilePath, _T("resource file"));
-			goto cleanup;
-		}
+      if (error == ERROR_INSUFFICIENT_BUFFER)
+      {
+		   msg = (WCHAR *)malloc(sizeof(WCHAR) * reqSize);
+		   success = _EvtFormatMessage(pubMetadata, event, 0, 0, NULL, EvtFormatMessageEvent, reqSize, msg, &reqSize);
+		   if (!success)
+		   {
+            error = GetLastError();
+			   LogParserTrace(5, _T("LogWatch: Retry call to EvtFormatMessage failed: error %u (%s)"), error, GetSystemErrorText(error, (TCHAR *)buffer, 4096));
+			   LogMetadataProperty(pubMetadata, EvtPublisherMetadataMessageFilePath, _T("message file"));
+			   LogMetadataProperty(pubMetadata, EvtPublisherMetadataParameterFilePath, _T("parameter file"));
+			   LogMetadataProperty(pubMetadata, EvtPublisherMetadataResourceFilePath, _T("resource file"));
+			   goto cleanup;
+		   }
+      }
 	}
 
 #ifdef UNICODE

@@ -30,6 +30,7 @@ public class GraphItem
 	private int dataType;
 	private String name;
 	private String description;
+   private String displayFormat;
 	private String dataColumn;
 	private String instance;
 
@@ -45,6 +46,7 @@ public class GraphItem
 		dataType = DataCollectionItem.DT_STRING;
 		name = "<noname>";
 		description = "<noname>";
+      displayFormat = "%s";
 		dataColumn = "";
 		instance = "";
 	}
@@ -58,8 +60,9 @@ public class GraphItem
 	 * @param dataType
 	 * @param name
 	 * @param description
+	 * @param displayFormat
 	 */
-	public GraphItem(long nodeId, long dciId, int source, int dataType, String name, String description)
+	public GraphItem(long nodeId, long dciId, int source, int dataType, String name, String description, String displayFormat)
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
@@ -68,6 +71,7 @@ public class GraphItem
 		this.dataType = dataType;
 		this.name = name;
 		this.description = description;
+      this.displayFormat = displayFormat;
 		this.dataColumn = "";
 		this.instance = "";
 	}
@@ -82,7 +86,7 @@ public class GraphItem
 	 * @param name
 	 * @param description
 	 */
-	public GraphItem(long nodeId, long dciId, int source, int dataType, String name, String description, String instance, String dataColumn)
+	public GraphItem(long nodeId, long dciId, int source, int dataType, String name, String description, String displayFormat, String instance, String dataColumn)
 	{
 		this.nodeId = nodeId;
 		this.dciId = dciId;
@@ -91,6 +95,7 @@ public class GraphItem
 		this.dataType = dataType;
 		this.name = name;
 		this.description = description;
+      this.displayFormat = displayFormat;
 		this.dataColumn = dataColumn;
 		this.instance = instance;
 	}
@@ -238,4 +243,20 @@ public class GraphItem
 	{
 		this.instance = instance;
 	}
+
+   /**
+    * @return the displayFormat
+    */
+   public String getDisplayFormat()
+   {
+      return displayFormat;
+   }
+
+   /**
+    * @param displayFormat the displayFormat to set
+    */
+   public void setDisplayFormat(String displayFormat)
+   {
+      this.displayFormat = displayFormat;
+   }
 }

@@ -375,3 +375,56 @@ bool GeoLocation::sameLocation(double lat, double lon, int oldAccuracy) const
    double distance = R * c;
    return distance <= min(oldAccuracy, m_accuracy);
 }
+
+/**
+ * Parse data sent by agent (signal,fix,lat,lon,accuracy,elevation,speed,direction,HDOP,time)
+ */
+GeoLocation GeoLocation::parseAgentData(const TCHAR *data)
+{
+   double lat, lon;
+   int acc, signal, fix;
+   time_t timestamp;
+
+   TCHAR buffer[256];
+   nx_strncpy(buffer, data, 256);
+
+   int pos = 0;
+   TCHAR *curr = buffer;
+   TCHAR *next;
+   do
+   {
+      next = _tcschr(curr, _T(','));
+      if (next != NULL)
+         *next = 0;
+      switch(pos)
+      {
+         case 0:
+            signal = _tcstol(curr, NULL, 10);
+            break;
+         case 1:
+            fix = _tcstol(curr, NULL, 10);
+            break;
+         case 2:
+            lat = _tcstod(curr, NULL);
+            break;
+         case 3:
+            lon = _tcstod(curr, NULL);
+            break;
+         case 4:
+            acc = _tcstol(curr, NULL, 10);
+            break;
+         case 9:
+            timestamp = (time_t)_tcstoll(curr, NULL, 10);
+            break;
+         default: // ignore the rest
+            break;
+      }
+      pos++;
+      curr = next + 1;
+   }
+   while(next != NULL);
+
+   if ((pos < 10) || (signal == 0) || (fix == 0))
+      return GeoLocation();   // parsing error or location is unknown
+   return GeoLocation(GL_GPS, lat, lon, acc, timestamp);
+}

@@ -21,8 +21,11 @@ package org.netxms.ui.eclipse.objectview.objecttabs.helpers;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
+import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
+import org.netxms.client.objects.Rack;
 import org.netxms.ui.eclipse.objectview.objecttabs.NodesTab;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.ComparatorHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
@@ -31,6 +34,8 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
  */
 public class NodeListComparator extends ViewerComparator
 {
+   private NXCSession session = ConsoleSharedData.getSession();
+   
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ViewerComparator#compare(org.eclipse.jface.viewers.Viewer, java.lang.Object, java.lang.Object)
 	 */
@@ -65,6 +70,22 @@ public class NodeListComparator extends ViewerComparator
 			case NodesTab.COLUMN_IP_ADDRESS:
 				result = ComparatorHelper.compareInetAddresses(node1.getPrimaryIP(), node2.getPrimaryIP());
 				break;
+         case NodesTab.COLUMN_RACK:
+            Rack rack1 = session.findObjectById(node1.getRackId(), Rack.class);
+            Rack rack2 = session.findObjectById(node2.getRackId(), Rack.class);
+            if ((rack1 != null) && (rack2 != null))
+            {
+               result = rack1.getObjectName().compareToIgnoreCase(rack2.getObjectName());
+               if (result == 0)
+               {
+                  result = node1.getRackPosition() - node2.getRackPosition();
+               }
+            }
+            else
+            {
+               result = Long.signum(node1.getRackId() - node2.getRackId());
+            }
+            break;
 			default:
 				result = 0;
 				break;

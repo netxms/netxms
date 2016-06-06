@@ -300,7 +300,7 @@ LONG H_QueueInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
       }
       else
       {
-         rc = SYSINFO_RC_UNSUPPORTED;
+         rc = SYSINFO_RC_NO_SUCH_INSTANCE;
       }
    }
    else

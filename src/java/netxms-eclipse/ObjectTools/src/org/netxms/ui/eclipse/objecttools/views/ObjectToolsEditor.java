@@ -262,7 +262,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
          }
       };
       
-      actionClone = new Action("Clone") {
+      actionClone = new Action(Messages.get().ObjectToolsEditor_Clone) {
          @Override
          public void run()
          {
@@ -561,10 +561,10 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
        if (selection.isEmpty())
           return;
        
-       final CreateObjectDialog dlg = new CreateObjectDialog(getSite().getShell(), "Object tool");
+       final CreateObjectDialog dlg = new CreateObjectDialog(getSite().getShell(), Messages.get().ObjectToolsEditor_ObjectTool);
        if (dlg.open() == Window.OK)
        {
-          new ConsoleJob("Clone object tool", this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
+          new ConsoleJob(Messages.get().ObjectToolsEditor_CloneObjectTool, this, Activator.PLUGIN_ID, Activator.PLUGIN_ID) {
              @Override
              protected void runInternal(IProgressMonitor monitor) throws Exception
              {
@@ -579,7 +579,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
              @Override
              protected String getErrorMessage()
              {
-                return "Cannot clone object tool";
+                return Messages.get().ObjectToolsEditor_CloneError;
              }
           }.start();
        }

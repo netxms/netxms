@@ -58,7 +58,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Menu;
@@ -284,7 +283,7 @@ public class ObjectBrowser extends ViewPart
                {
                   final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
                   final String newName = value.toString();
-                  new ConsoleJob("Update object name", null, Activator.PLUGIN_ID, null) {
+                  new ConsoleJob(Messages.get().ObjectBrowser_RenameJobName, null, Activator.PLUGIN_ID, null) {
                      @Override
                      protected void runInternal(IProgressMonitor monitor) throws Exception
                      {
@@ -294,7 +293,7 @@ public class ObjectBrowser extends ViewPart
                      @Override
                      protected String getErrorMessage()
                      {
-                        return "Error updating name: " + ((AbstractObject)data).getObjectName();
+                        return String.format(Messages.get().ObjectBrowser_RenameJobError, ((AbstractObject)data).getObjectName());
                      }
                   }.start();
                }
@@ -318,7 +317,7 @@ public class ObjectBrowser extends ViewPart
          @Override
          public boolean canModify(Object element, String property)
          {
-            if(property.equals("name"))
+            if (property.equals("name")) //$NON-NLS-1$
             {
                objectTree.disableRefresh();               
                return true;
@@ -546,7 +545,7 @@ public class ObjectBrowser extends ViewPart
 		final ActionHandler showStatusIndicatorHandler = new ActionHandler(actionShowStatusIndicator);
 		handlerService.activateHandler(actionShowStatusIndicator.getActionDefinitionId(), showStatusIndicatorHandler);
 		
-		actionRenameObject = new Action("Rename")
+		actionRenameObject = new Action(Messages.get().ObjectBrowser_Rename)
 		{
 		   @Override
 		   public void run()

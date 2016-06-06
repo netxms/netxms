@@ -85,33 +85,6 @@ struct WorkRequest
 };
 
 /**
- * Debug callback
- */
-static void (*s_debugCallback)(int, const TCHAR *, va_list) = NULL;
-
-/**
- * Debug print
- */
-inline void dprint(int level, const TCHAR *format, ...)
-{
-   if (s_debugCallback == NULL)
-      return;
-
-   va_list args;
-   va_start(args, format);
-   s_debugCallback(level, format, args);
-   va_end(args);
-}
-
-/**
- * Set debug callback
- */
-void LIBNETXMS_EXPORTABLE ThreadPoolSetDebugCallback(void (*cb)(int, const TCHAR *, va_list))
-{
-   s_debugCallback = cb;
-}
-
-/**
  * Worker function to join stopped thread
  */
 static void JoinWorkerThread(void *arg)
@@ -139,7 +112,7 @@ static THREAD_RESULT THREAD_CALL WorkerThread(void *arg)
             p->threads->remove(CAST_FROM_POINTER(arg, UINT64));
             MutexUnlock(p->mutex);
 
-            dprint(3, _T("Stopping worker thread in thread pool %s due to inactivity"), p->name);
+            nxlog_debug(3, _T("Stopping worker thread in thread pool %s due to inactivity"), p->name);
 
             free(rq);
             rq = (WorkRequest *)malloc(sizeof(WorkRequest));
@@ -189,7 +162,7 @@ static THREAD_RESULT THREAD_CALL MaintenanceThread(void *arg)
          count = 0;
       }
    }
-   dprint(3, _T("Maintenance thread for thread pool %s stopped"), p->name);
+   nxlog_debug(3, _T("Maintenance thread for thread pool %s stopped"), p->name);
    return THREAD_OK;
 }
 
@@ -229,7 +202,7 @@ ThreadPool LIBNETXMS_EXPORTABLE *ThreadPoolCreate(int minThreads, int maxThreads
    s_registry.set(p->name, p);
    MutexUnlock(s_registryLock);
 
-   dprint(1, _T("Thread pool %s initialized (min=%d, max=%d)"), p->name, p->minThreads, p->maxThreads);
+   nxlog_debug(1, _T("Thread pool %s initialized (min=%d, max=%d)"), p->name, p->minThreads, p->maxThreads);
    return p;
 }
 
@@ -247,7 +220,7 @@ static EnumerationCallbackResult ThreadPoolDestroyCallback(const void *key, cons
  */
 void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
 {
-   dprint(3, _T("Stopping threads in thread pool %s"), p->name);
+   nxlog_debug(3, _T("Stopping threads in thread pool %s"), p->name);
 
    MutexLock(s_registryLock);
    s_registry.remove(p->name);
@@ -267,7 +240,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
       p->queue->put(&rq);
    p->threads->forEach(ThreadPoolDestroyCallback, NULL);
 
-   dprint(1, _T("Thread pool %s destroyed"), p->name);
+   nxlog_debug(1, _T("Thread pool %s destroyed"), p->name);
    p->threads->setOwner(true);
    delete p->threads;
    delete p->queue;
@@ -297,7 +270,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolExecute(ThreadPool *p, ThreadPoolWorkerFunct
       }
       MutexUnlock(p->mutex);
       if (started)
-         dprint(3, _T("New thread started in thread pool %s"), p->name);
+         nxlog_debug(3, _T("New thread started in thread pool %s"), p->name);
    }
 
    WorkRequest *rq = (WorkRequest *)malloc(sizeof(WorkRequest));

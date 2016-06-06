@@ -40,6 +40,8 @@ LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
    {
       if (result == PC_ERR_NONE)
          ret_int64(value, GetCurrentTimeMs() - start);
+      else if (g_serviceCheckFlags & SCF_NEGATIVE_TIME_ON_ERROR)
+         ret_int(value, -result);
       else
          nRet = SYSINFO_RC_ERROR;
    }

@@ -56,6 +56,7 @@ public:
    TCHAR* m_loginName;
    TCHAR* m_fullName;
    TCHAR* m_description;
+   TCHAR* m_id;
    StringSet *m_memberList;
 
    Entry();
@@ -116,6 +117,8 @@ private:
    char m_ldapFullNameAttr[MAX_CONFIG_VALUE];
    char m_ldapLoginNameAttr[MAX_CONFIG_VALUE];
    char m_ldapDescriptionAttr[MAX_CONFIG_VALUE];
+   char m_ldapUsreIdAttr[MAX_CONFIG_VALUE];
+   char m_ldapGroupIdAttr[MAX_CONFIG_VALUE];
    TCHAR m_userClass[MAX_CONFIG_VALUE];
    TCHAR m_groupClass[MAX_CONFIG_VALUE];
    int m_action;
@@ -127,12 +130,13 @@ private:
    UINT32 loginLDAP();
    TCHAR *getErrorString(int code);
    void getAllSyncParameters();
-   void compareGroupList(StringObjectMap<Entry>* groupEntryList);
-   void compareUserLists(StringObjectMap<Entry>* userEntryList);
+   void compareGroupList();
+   void compareUserLists();
    TCHAR *getAttrValue(LDAPMessage *entry, const char *attr, UINT32 i = 0);
+   TCHAR *getIdAttrValue(LDAPMessage *entry, const char *attr);
    void prepareStringForInit(LDAP_CHAR *connectionLine);
-   int readInPages(StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList, LDAP_CHAR *base);
-   void fillLists(LDAPMessage *searchResult, StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList);
+   int readInPages(LDAP_CHAR *base);
+   void fillLists(LDAPMessage *searchResult);
    TCHAR *ldap_internal_get_dn(LDAP *conn, LDAPMessage *entry);
    void updateMembers(StringSet *memberList, const char *firstAttr, LDAPMessage *firstEntry, const LDAP_CHAR *dn);
 #endif // WITH_LDAP
@@ -186,6 +190,7 @@ protected:
 	UINT32 m_flags;
 	StringMap m_attributes;		// Custom attributes
    TCHAR *m_userDn;
+   TCHAR *m_ldapId;
 
 	bool loadCustomAttributes(DB_HANDLE hdb);
 	bool saveCustomAttributes(DB_HANDLE hdb);
@@ -210,20 +215,19 @@ public:
 	UINT32 getFlags() const { return m_flags; }
    TCHAR *getGuidAsText(TCHAR *buffer) const { return m_guid.toString(buffer); }
    const TCHAR *getDn() const { return m_userDn; }
+   const TCHAR *getLdapId() const { return m_ldapId; }
 
    bool isGroup() const { return (m_id & GROUP_FLAG) != 0; }
 	bool isDeleted() const { return (m_flags & UF_DELETED) ? true : false; }
 	bool isDisabled() const { return (m_flags & UF_DISABLED) ? true : false; }
 	bool isModified() const { return (m_flags & UF_MODIFIED) ? true : false; }
 	bool isLDAPUser() const { return (m_flags & UF_LDAP_USER) ? true : false; }
-	bool hasSyncException() const { return (m_flags & UF_SYNC_EXCEPTION) ? true : false; }
 
 	void setDeleted() { m_flags |= UF_DELETED; }
 	void enable();
 	void disable();
 	void setFlags(UINT32 flags) { m_flags = flags; }
 	void removeSyncException();
-	void setSyncException();
 
 	const TCHAR *getAttribute(const TCHAR *name) { return m_attributes.get(name); }
 	UINT32 getAttributeAsULong(const TCHAR *name);
@@ -231,6 +235,7 @@ public:
 	void setName(const TCHAR *name);
 	void setDescription(const TCHAR *description);
 	void setDn(const TCHAR *dn);
+	void setLdapId(const TCHAR *id);
 };
 
 /**
@@ -386,7 +391,7 @@ void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object);
 void SendUserDBUpdate(int code, UINT32 id);
 UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigLen, void *pCert,
                         BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights,
-							   bool *pbChangePasswd, bool *pbIntruderLockout, bool ssoAuth);
+							   bool *pbChangePasswd, bool *pbIntruderLockout, bool *closeOtherSessions, bool ssoAuth);
 bool AuthenticateUserForXMPPCommands(const char *xmppId);
 bool AuthenticateUserForXMPPSubscription(const char *xmppId);
 
@@ -404,7 +409,7 @@ UINT32 NXCORE_EXPORTABLE GetUserDbObjectAttrAsULong(UINT32 id, const TCHAR *name
 void NXCORE_EXPORTABLE SetUserDbObjectAttr(UINT32 id, const TCHAR *name, const TCHAR *value);
 bool NXCORE_EXPORTABLE ResolveUserId(UINT32 id, TCHAR *buffer, int bufSize);
 void UpdateLDAPUser(const TCHAR* dn, Entry *obj);
-void RemoveDeletedLDAPEntries(StringObjectMap<Entry>* userEntryList, UINT32 m_action, bool isUser);
+void RemoveDeletedLDAPEntries(StringObjectMap<Entry> *entryListDn, StringObjectMap<Entry> *entryListId, UINT32 m_action, bool isUser);
 void UpdateLDAPGroup(const TCHAR* dn, Entry *obj);
 THREAD_RESULT THREAD_CALL SyncLDAPUsers(void *arg);
 void FillGroupMembershipInfo(NXCPMessage *msg, UINT32 userId);

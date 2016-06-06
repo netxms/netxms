@@ -1,5 +1,24 @@
+/**
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2016 Raden Solutions
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 package org.netxms.ui.eclipse.serverconfig.views;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.Action;
@@ -8,16 +27,24 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ScheduledTask;
@@ -33,8 +60,13 @@ import org.netxms.ui.eclipse.serverconfig.dialogs.ScheduledTaskEditor;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ScheduleTableEntryComparator;
 import org.netxms.ui.eclipse.serverconfig.views.helpers.ScheduleTableEntryLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
+/**
+ * Scheduled task manager
+ */
 public class ScheduledTaskView extends ViewPart
 {
    public static final String ID = "org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView"; //$NON-NLS-1$
@@ -48,19 +80,16 @@ public class ScheduledTaskView extends ViewPart
    public static final int STATUS = 6;   
    public static final int OWNER = 7;
    
-
    private NXCSession session;
    private SessionListener listener;
    private SortableTableViewer viewer;
    private Action actionRefresh;
-   private Action actionNewScheduledTask;
-   private Action actionEditScheduledTask;
-   private Action actionDeleteScheduledTask;
-   private Action actionDisbaleScheduledTask;
-   private Action actionEnableScheduledTask;
-   private Action actionReRun;
-   
-   
+   private Action actionCreate;
+   private Action actionEdit;
+   private Action actionDelete;
+   private Action actionDisable;
+   private Action actionEnable;
+   private Action actionReschedule;
    
    /* (non-Javadoc)
     * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -72,6 +101,9 @@ public class ScheduledTaskView extends ViewPart
       session = ConsoleSharedData.getSession();
    }
 
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
+    */
    @Override
    public void createPartControl(Composite parent)
    {      
@@ -80,8 +112,24 @@ public class ScheduledTaskView extends ViewPart
       viewer = new SortableTableViewer(parent, names, widths, SCHEDULE_ID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new ArrayContentProvider());
       viewer.setLabelProvider(new ScheduleTableEntryLabelProvider());
-      viewer.setComparator(new ScheduleTableEntryComparator());      
+      viewer.setComparator(new ScheduleTableEntryComparator());    
+      viewer.addDoubleClickListener(new IDoubleClickListener() {
+         @Override
+         public void doubleClick(DoubleClickEvent event)
+         {
+            actionEdit.run();
+         }
+      });
+      WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "ScheduledTasks");
+      viewer.getControl().addDisposeListener(new DisposeListener() {
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "ScheduledTasks");
+         }
+      });
 
+      activateContext();
       createActions();
       contributeToActionBars();
       createPopupMenu();
@@ -107,8 +155,25 @@ public class ScheduledTaskView extends ViewPart
       session.addListener(listener);
    }
 
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.serverconfig.context.ScheduledTaskView"); //$NON-NLS-1$
+      }
+   }
+   
+   /**
+    * Create actions
+    */
    private void createActions()
    {
+      final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+      
       actionRefresh = new RefreshAction(this) {
          @Override
          public void run()
@@ -117,57 +182,69 @@ public class ScheduledTaskView extends ViewPart
          }
       };
       
-      actionNewScheduledTask = new Action("New scheduled task...", SharedIcons.ADD_OBJECT) {
+      actionCreate = new Action("New scheduled task...", SharedIcons.ADD_OBJECT) {
          @Override
          public void run()
          {
-            createNewScheduledTask();
+            createTask();
          }
       };
+      actionCreate.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.new_task"); //$NON-NLS-1$
+      handlerService.activateHandler(actionCreate.getActionDefinitionId(), new ActionHandler(actionCreate));
       
-      actionEditScheduledTask = new Action("Edit", SharedIcons.EDIT) {
+      actionEdit = new Action("Edit...", SharedIcons.EDIT) {
          @Override
          public void run()
          {
-            editScheduledTask();
+            editTask();
          }
       };
+      actionEdit.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.edit_task"); //$NON-NLS-1$
+      handlerService.activateHandler(actionEdit.getActionDefinitionId(), new ActionHandler(actionEdit));
       
-      actionDeleteScheduledTask = new Action("Delete", SharedIcons.DELETE_OBJECT) {
+      actionDelete = new Action("Delete", SharedIcons.DELETE_OBJECT) {
          @Override
          public void run()
          {
-            deleteScheduledTask();
+            deleteTask();
          }
       };
       
-      actionDisbaleScheduledTask = new Action("Disable") {
+      actionDisable = new Action("Disable") {
          @Override
          public void run()
          {
             setScheduledTaskEnabled(false);
          }
       };
+      actionDisable.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.disable_task"); //$NON-NLS-1$
+      handlerService.activateHandler(actionDisable.getActionDefinitionId(), new ActionHandler(actionDisable));
       
-      actionEnableScheduledTask = new Action("Enable") {
+      actionEnable = new Action("Enable") {
          @Override
          public void run()
          {
             setScheduledTaskEnabled(true);
          }
       };
+      actionEnable.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.enable_task"); //$NON-NLS-1$
+      handlerService.activateHandler(actionEnable.getActionDefinitionId(), new ActionHandler(actionEnable));
       
-      actionReRun = new Action("Rerun", SharedIcons.EXECUTE) 
-      {
+      actionReschedule = new Action("Reschedule...", SharedIcons.EXECUTE) {
          @Override
          public void run()
          {
-            rerun();
+            rescheduleTask();
          }
       };
+      actionReschedule.setActionDefinitionId("org.netxms.ui.eclipse.serverconfig.commands.reschedule_task"); //$NON-NLS-1$
+      handlerService.activateHandler(actionReschedule.getActionDefinitionId(), new ActionHandler(actionReschedule));
    }
 
-   protected void rerun()
+   /**
+    * Reschedule task
+    */
+   protected void rescheduleTask()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();      
       if (selection.size() != 1)
@@ -180,7 +257,7 @@ public class ScheduledTaskView extends ViewPart
       if (dialog.open() != Window.OK)
          return;
       
-      new ConsoleJob("Rerun scheduled task", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob("Reschedule task", null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -192,17 +269,22 @@ public class ScheduledTaskView extends ViewPart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot rerun scheduled tasks";
+            return "Cannot reschedule tasks";
          }
-      }.start();
-      
-}
+      }.start();   
+   }
 
-   protected void deleteScheduledTask()
+   /**
+    * Delete task
+    */
+   protected void deleteTask()
    {
       final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      
       if (selection.size() == 0)
+         return;
+      
+      if (!MessageDialogHelper.openQuestion(getSite().getShell(), "Confirm Task Delete", 
+            (selection.size() == 1) ? "Selected task will be deleted. Are you sure?" : "Selected tasks will be deleted. Are you sure?"))
          return;
       
       new ConsoleJob("Delete scheduled task", null, Activator.PLUGIN_ID, null) {
@@ -223,7 +305,10 @@ public class ScheduledTaskView extends ViewPart
       }.start();
    }
 
-   protected void editScheduledTask()
+   /**
+    * Edit selected task
+    */
+   protected void editTask()
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();      
       if (selection.size() != 1)
@@ -249,7 +334,7 @@ public class ScheduledTaskView extends ViewPart
                   }
                }
             });
-            if(task != null)
+            if (task != null)
                session.updateSchedule(task);
          }
 
@@ -261,6 +346,9 @@ public class ScheduledTaskView extends ViewPart
       }.start();
    }
 
+   /**
+    * @param enabled
+    */
    protected void setScheduledTaskEnabled(final boolean enabled)
    {
       final IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();      
@@ -287,7 +375,10 @@ public class ScheduledTaskView extends ViewPart
       }.start();
    }
 
-   private void createNewScheduledTask()
+   /**
+    * Create task
+    */
+   private void createTask()
    {     
       new ConsoleJob("Create scheduled task", null, Activator.PLUGIN_ID, null) {
          private ScheduledTask task = null;
@@ -318,8 +409,6 @@ public class ScheduledTaskView extends ViewPart
          }
       }.start();
    }
-   
-   
 
    /**
     * Fill action bars
@@ -336,7 +425,7 @@ public class ScheduledTaskView extends ViewPart
     */
    private void fillLocalPullDown(IMenuManager manager)
    {
-      manager.add(actionNewScheduledTask);
+      manager.add(actionCreate);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
@@ -346,7 +435,7 @@ public class ScheduledTaskView extends ViewPart
     */
    private void fillLocalToolBar(IToolBarManager manager)
    {
-      manager.add(actionNewScheduledTask);
+      manager.add(actionCreate);
       manager.add(new Separator());
       manager.add(actionRefresh);
    }
@@ -381,19 +470,14 @@ public class ScheduledTaskView extends ViewPart
    protected void fillContextMenu(IMenuManager mgr)
    {
       IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-      mgr.add(actionNewScheduledTask);
-      
       if (selection.size() == 1) 
       {         
-         mgr.add(actionEditScheduledTask);
+         mgr.add(actionEdit);
          ScheduledTask origin = (ScheduledTask)selection.toList().get(0);
-         if(origin.getSchedule().isEmpty())
-            mgr.add(actionReRun);
+         if (origin.getSchedule().isEmpty())
+            mgr.add(actionReschedule);
       }
 
-      if (selection.size() > 0)
-         mgr.add(actionDeleteScheduledTask);
-      
       boolean containDisabled = false;
       boolean containEnabled = false;
       for(Object o : selection.toList())
@@ -406,12 +490,21 @@ public class ScheduledTaskView extends ViewPart
             break;
       }
          
-      if(containDisabled)
-         mgr.add(actionEnableScheduledTask);
-      if(containEnabled)
-         mgr.add(actionDisbaleScheduledTask);
+      if (containDisabled)
+         mgr.add(actionEnable);
+      if (containEnabled)
+         mgr.add(actionDisable);
+
+      if (selection.size() > 0)
+         mgr.add(actionDelete);
+
+      mgr.add(new Separator());
+      mgr.add(actionCreate);
    }
 
+   /**
+    * Refresh list
+    */
    private void refresh()
    {
       new ConsoleJob(Messages.get().MappingTables_ReloadJobName, this, Activator.PLUGIN_ID, null) {
@@ -423,7 +516,26 @@ public class ScheduledTaskView extends ViewPart
                @Override
                public void run()
                {
+                  IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
                   viewer.setInput(schedules.toArray());
+                  if (!selection.isEmpty())
+                  {
+                     List<ScheduledTask> newSelection = new ArrayList<ScheduledTask>();
+                     for(Object o : selection.toList())
+                     {
+                        long id = ((ScheduledTask)o).getId();
+                        for(ScheduledTask s : schedules)
+                        {
+                           if (s.getId() == id)
+                           {
+                              newSelection.add(s);
+                              break;
+                           }
+                        }
+                     }
+                     if (!newSelection.isEmpty())
+                        viewer.setSelection(new StructuredSelection(newSelection));
+                  }
                }
             });
          }

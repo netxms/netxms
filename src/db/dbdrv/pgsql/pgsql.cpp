@@ -1,6 +1,6 @@
 /* 
 ** PostgreSQL Database Driver
-** Copyright (C) 2003 - 2014 Victor Kirhenshtein and Alex Kirhenshtein
+** Copyright (C) 2003 - 2016 Victor Kirhenshtein and Alex Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,25 +43,6 @@ static int (*s_PQsetSingleRowMode)(PGconn *) = NULL;
 #if !HAVE_DECL_PGRES_SINGLE_TUPLE
 #define PGRES_SINGLE_TUPLE    9
 #endif
-
-/**
- * Debug log callback
- */
-static void (*s_dbgPrintCb)(int, const TCHAR *, va_list) = NULL;
-
-/**
- * Debug output
- */
-static void __DbgPrintf(int level, const TCHAR *format, ...)
-{
-   if (s_dbgPrintCb != NULL)
-   {
-      va_list args;
-      va_start(args, format);
-      s_dbgPrintCb(level, format, args);
-      va_end(args);
-   }
-}
 
 /**
  * Statement ID
@@ -195,14 +176,13 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine, void (*dbgPrintCb)(int, const TCHAR *, va_list))
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
-   s_dbgPrintCb = dbgPrintCb;
 #ifndef _WIN32
    s_libpq = dlopen("libpq.so.5", RTLD_NOW);
    if (s_libpq != NULL)
       s_PQsetSingleRowMode = (int (*)(PGconn *))dlsym(s_libpq, "PQsetSingleRowMode");
-   __DbgPrintf(2, _T("PostgreSQL driver: single row mode %s"), (s_PQsetSingleRowMode != NULL) ? _T("enabled") : _T("disabled"));
+   nxlog_debug(2, _T("PostgreSQL driver: single row mode %s"), (s_PQsetSingleRowMode != NULL) ? _T("enabled") : _T("disabled"));
 #endif
 	return true;
 }

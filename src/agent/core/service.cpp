@@ -124,7 +124,7 @@ void InitService()
 /**
  * Create service
  */
-void InstallService(TCHAR *execName, TCHAR *confFile)
+void InstallService(TCHAR *execName, TCHAR *confFile, int debugLevel)
 {
    SC_HANDLE mgr, service;
    TCHAR cmdLine[8192], szErrorText[256];
@@ -139,10 +139,10 @@ void InstallService(TCHAR *execName, TCHAR *confFile)
 
    _sntprintf(cmdLine, 8192, _T("\"%s\" -d -c \"%s\" -n \"%s\" -e \"%s\""),
 	           execName, confFile, g_windowsServiceName, g_windowsEventSourceName);
-   if (g_debugLevel != (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
+   if (debugLevel != NXCONFIG_UNINITIALIZED_VALUE)
    {
       size_t len = _tcslen(cmdLine);
-      _sntprintf(&cmdLine[len], 8192 - len, _T(" -D %d"), g_debugLevel);
+      _sntprintf(&cmdLine[len], 8192 - len, _T(" -D %d"), debugLevel);
    }
 	
 	if (g_szPlatformSuffix[0] != 0)

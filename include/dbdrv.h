@@ -28,7 +28,7 @@
 /**
  * API version
  */
-#define DBDRV_API_VERSION           17
+#define DBDRV_API_VERSION           18
 
 
 //

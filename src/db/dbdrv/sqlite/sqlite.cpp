@@ -1,6 +1,6 @@
 /* 
 ** SQLite Database Driver
-** Copyright (C) 2005-2014 Victor Kirhenshtein
+** Copyright (C) 2005-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -116,12 +116,13 @@ extern "C" WCHAR EXPORT *DrvPrepareStringW(const WCHAR *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine, void (*dbgPrintCb)(int, const TCHAR *, va_list))
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
    if (!sqlite3_threadsafe() ||	// Fail if SQLite compiled without threading support
 		 (sqlite3_initialize() != SQLITE_OK))
       return false;
    sqlite3_enable_shared_cache(1);
+   nxlog_debug(1, _T("SQLite version %hs"), sqlite3_libversion());
    return true;
 }
 

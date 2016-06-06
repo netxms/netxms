@@ -1,6 +1,6 @@
 /* 
 ** Oracle Database Driver
-** Copyright (C) 2007-2015 Victor Kirhenshtein
+** Copyright (C) 2007-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -101,7 +101,7 @@ extern "C" char EXPORT *DrvPrepareStringA(const char *str)
 /**
  * Initialize driver
  */
-extern "C" bool EXPORT DrvInit(const char *cmdLine, void (*dbgPrintCb)(int, const TCHAR *, va_list))
+extern "C" bool EXPORT DrvInit(const char *cmdLine)
 {
 	return true;
 }
@@ -160,12 +160,12 @@ static void DestroyQueryResult(ORACLE_RESULT *pResult)
 
 	nCount = pResult->nCols * pResult->nRows;
 	for(i = 0; i < nCount; i++)
-		safe_free(pResult->pData[i]);
-	safe_free(pResult->pData);
+		free(pResult->pData[i]);
+	free(pResult->pData);
 
 	for(i = 0; i < pResult->nCols; i++)
-		safe_free(pResult->columnNames[i]);
-	safe_free(pResult->columnNames);
+		free(pResult->columnNames[i]);
+	free(pResult->columnNames);
 
 	free(pResult);
 }
@@ -230,6 +230,18 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 
                // Setup session
                DrvQueryInternal(pConn, L"ALTER SESSION SET NLS_LANGUAGE='AMERICAN' NLS_NUMERIC_CHARACTERS='.,'", NULL);
+
+               UCS2CHAR version[1024];
+               if (OCIServerVersion(pConn->handleService, pConn->handleError, (OraText *)version, sizeof(version), OCI_HTYPE_SVCCTX) == OCI_SUCCESS)
+               {
+#if UNICODE_UCS4
+                  WCHAR *wver = UCS4StringFromUCS2String(version);
+                  nxlog_debug(5, _T("ORACLE: connected to %s"), wver);
+                  free(wver);
+#else
+                  nxlog_debug(5, _T("ORACLE: connected to %s"), version);
+#endif
+               }
 				}
 				else
 				{
@@ -900,9 +912,8 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 	if (pResult->nCols > 0)
 	{
 		// Prepare receive buffers and fetch column names
-		pResult->columnNames = (char **)malloc(sizeof(char *) * pResult->nCols);
-		pBuffers = (ORACLE_FETCH_BUFFER *)malloc(sizeof(ORACLE_FETCH_BUFFER) * pResult->nCols);
-		memset(pBuffers, 0, sizeof(ORACLE_FETCH_BUFFER) * pResult->nCols);
+		pResult->columnNames = (char **)calloc(pResult->nCols, sizeof(char *));
+		pBuffers = (ORACLE_FETCH_BUFFER *)calloc(pResult->nCols, sizeof(ORACLE_FETCH_BUFFER));
 		for(int i = 0; i < pResult->nCols; i++)
 		{
 			if ((nStatus = OCIParamGet(handleStmt, OCI_HTYPE_STMT, pConn->handleError,
@@ -1193,6 +1204,33 @@ extern "C" void EXPORT DrvFreeResult(ORACLE_RESULT *pResult)
 }
 
 /**
+ * Destroy unbuffered query result
+ */
+static void DestroyUnbufferedQueryResult(ORACLE_UNBUFFERED_RESULT *result, bool freeStatement)
+{
+   int i;
+
+   if (freeStatement)
+      OCIStmtRelease(result->handleStmt, result->connection->handleError, NULL, 0, OCI_DEFAULT);
+
+   for(i = 0; i < result->nCols; i++)
+   {
+      free(result->pBuffers[i].pData);
+      if (result->pBuffers[i].lobLocator != NULL)
+      {
+         OCIDescriptorFree(result->pBuffers[i].lobLocator, OCI_DTYPE_LOB);
+      }
+   }
+   free(result->pBuffers);
+
+   for(i = 0; i < result->nCols; i++)
+      free(result->columnNames[i]);
+   free(result->columnNames);
+
+   free(result);
+}
+
+/**
  * Process results of unbuffered query execution (prepare for fetching results)
  */
 static ORACLE_UNBUFFERED_RESULT *ProcessUnbufferedQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStmt, DWORD *pdwError)
@@ -1207,9 +1245,8 @@ static ORACLE_UNBUFFERED_RESULT *ProcessUnbufferedQueryResults(ORACLE_CONN *pCon
    if (result->nCols > 0)
    {
       // Prepare receive buffers and fetch column names
-      result->columnNames = (char **)malloc(sizeof(char *) * result->nCols);
-      result->pBuffers = (ORACLE_FETCH_BUFFER *)malloc(sizeof(ORACLE_FETCH_BUFFER) * result->nCols);
-      memset(result->pBuffers, 0, sizeof(ORACLE_FETCH_BUFFER) * result->nCols);
+      result->columnNames = (char **)calloc(result->nCols, sizeof(char *));
+      result->pBuffers = (ORACLE_FETCH_BUFFER *)calloc(result->nCols, sizeof(ORACLE_FETCH_BUFFER));
       for(int i = 0; i < result->nCols; i++)
       {
          OCIParam *handleParam;
@@ -1256,6 +1293,7 @@ static ORACLE_UNBUFFERED_RESULT *ProcessUnbufferedQueryResults(ORACLE_CONN *pCon
                                         SQLT_CHR, &result->pBuffers[i].isNull, &result->pBuffers[i].nLength,
                                         &result->pBuffers[i].nCode, OCI_DEFAULT);
             }
+            OCIDescriptorFree(handleParam, OCI_DTYPE_PARAM);
             if (nStatus == OCI_SUCCESS)
             {
                *pdwError = DBERR_SUCCESS;
@@ -1264,14 +1302,16 @@ static ORACLE_UNBUFFERED_RESULT *ProcessUnbufferedQueryResults(ORACLE_CONN *pCon
             {
                SetLastError(pConn);
                *pdwError = IsConnectionError(pConn);
+               DestroyUnbufferedQueryResult(result, false);
+               result = NULL;
+               break;
             }
-            OCIDescriptorFree(handleParam, OCI_DTYPE_PARAM);
          }
          else
          {
             SetLastError(pConn);
             *pdwError = IsConnectionError(pConn);
-            free(result);
+            DestroyUnbufferedQueryResult(result, false);
             result = NULL;
             break;
          }
@@ -1493,28 +1533,12 @@ extern "C" const char EXPORT *DrvGetColumnNameUnbuffered(ORACLE_UNBUFFERED_RESUL
  */
 extern "C" void EXPORT DrvFreeUnbufferedResult(ORACLE_UNBUFFERED_RESULT *result)
 {
-	int i;
-
 	if (result == NULL)
 		return;
 
-	OCIStmtRelease(result->handleStmt, result->connection->handleError, NULL, 0, OCI_DEFAULT);
-
-	for(i = 0; i < result->nCols; i++)
-   {
-		safe_free(result->pBuffers[i].pData);
-      if (result->pBuffers[i].lobLocator != NULL)
-      {
-         OCIDescriptorFree(result->pBuffers[i].lobLocator, OCI_DTYPE_LOB);
-      }
-   }
-	free(result->pBuffers);
-
-	for(i = 0; i < result->nCols; i++)
-		free(result->columnNames[i]);
-	free(result->columnNames);
-
-	MutexUnlock(result->connection->mutexQueryLock);
+	MUTEX mutex = result->connection->mutexQueryLock;
+	DestroyUnbufferedQueryResult(result, true);
+	MutexUnlock(mutex);
 }
 
 /**

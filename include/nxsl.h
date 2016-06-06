@@ -115,7 +115,7 @@ struct NXSL_FileHeader
 /**
  * Binary format version
  */
-#define NXSL_BIN_FORMAT_VERSION     1
+#define NXSL_BIN_FORMAT_VERSION     2
 
 /**
  * Exportable classes

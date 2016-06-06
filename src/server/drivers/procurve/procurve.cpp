@@ -103,7 +103,7 @@ InterfaceList *ProCurveDriver::getInterfaces(SNMP_Transport *snmp, StringMap *at
 		return NULL;
 
 	bool isModular = attributes->getBoolean(_T(".procurve.isModular"), false);
-	UINT32 slotSize = attributes->getULong(_T(".procurve.slotSize"), 24);
+	UINT32 slotSize = attributes->getUInt32(_T(".procurve.slotSize"), 24);
 
 	// Find physical ports
 	for(int i = 0; i < ifList->size(); i++)

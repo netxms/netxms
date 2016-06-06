@@ -293,7 +293,7 @@ static THREAD_RESULT THREAD_CALL DeploymentThread(void *pArg)
                pszErrorMsg = _T("Package is not compatible with target machine");
             }
 
-            delete pAgentConn;
+            pAgentConn->decRefCount();
          }
          else
          {

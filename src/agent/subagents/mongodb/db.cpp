@@ -71,6 +71,7 @@ bool AddMongoDBFromConfig(const TCHAR *config)
    else
    {
       AgentWriteDebugLog(NXLOG_WARNING, _T("MONGODB: Could not connect to database: %s"), info.id);
+      delete db;
    }
    return sucess;
 }

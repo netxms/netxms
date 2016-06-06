@@ -124,7 +124,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		if(canScheduleFileUpload)
 		{
    		checkIsSchedule = new Button(dialogArea, SWT.CHECK);
-   		checkIsSchedule.setText("Schedule task");
+   		checkIsSchedule.setText(Messages.get().StartServerToAgentFileUploadDialog_ScheduleTask);
          checkIsSchedule.addSelectionListener(new SelectionListener() {
             
             @Override

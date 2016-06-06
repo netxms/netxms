@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.nxsl.Messages;
 
 /**
  * NXSL script editor
@@ -98,11 +99,11 @@ public class ScriptEditor extends Composite
 		editor.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 	}
 	
-   /**
-    * Create hints area
-    */
-   private void createHintsArea()
-   {
+	/**
+	 * Create hints area
+	 */
+	private void createHintsArea()
+	{
       hintArea = new Composite(this, SWT.NONE);
       GridLayout layout = new GridLayout();
       layout.marginWidth = 0;
@@ -117,7 +118,7 @@ public class ScriptEditor extends Composite
       hintsTitle.setBackground(SharedColors.getColor(SharedColors.MESSAGE_BAR_BACKGROUND, getDisplay()));
       hintsTitle.setForeground(SharedColors.getColor(SharedColors.MESSAGE_BAR_TEXT, getDisplay()));
       hintsTitle.setImage(SharedIcons.IMG_INFORMATION);
-      hintsTitle.setText("Hints");
+      hintsTitle.setText(Messages.get().ScriptEditor_Hints);
       hintsTitle.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
       hintsTitle.addMouseListener(new MouseAdapter() {
          @Override
@@ -132,7 +133,7 @@ public class ScriptEditor extends Composite
       hintsExpandButton.setBackground(hintArea.getBackground());
       hintsExpandButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
       hintsExpandButton.setImage(SharedIcons.IMG_EXPAND);
-      hintsExpandButton.setToolTipText("Hide message");
+      hintsExpandButton.setToolTipText(Messages.get().ScriptEditor_HideMessage);
       GridData gd = new GridData();
       gd.verticalAlignment = SWT.CENTER;
       hintsExpandButton.setLayoutData(gd);

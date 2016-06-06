@@ -23,11 +23,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Font;
@@ -38,6 +41,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.netxms.base.NXCommon;
+import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Rack;
@@ -47,13 +51,14 @@ import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageUpdateListener;
 import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.widgets.helpers.RackSelectionListener;
+import org.netxms.ui.eclipse.tools.ColorCache;
 import org.netxms.ui.eclipse.tools.FontTools;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 
 /**
  * Rack display widget
  */
-public class RackWidget extends Canvas implements PaintListener, DisposeListener, ImageUpdateListener, MouseListener
+public class RackWidget extends Canvas implements PaintListener, DisposeListener, ImageUpdateListener, MouseListener, MouseTrackListener, MouseMoveListener
 {
    private static final double UNIT_WH_RATIO = 10.85;
    private static final int BORDER_WIDTH_RATIO = 15;
@@ -62,7 +67,10 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private static final int MARGIN_HEIGHT = 10;
    private static final int MARGIN_WIDTH = 10;
    private static final int UNIT_NUMBER_WIDTH = 30;
-   private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "Verdana", "Arial" };
+   private static final int OBJECT_TOOLTIP_X_MARGIN = 6;
+   private static final int OBJECT_TOOLTIP_Y_MARGIN = 6;
+   private static final int OBJECT_TOOLTIP_SPACING = 6;
+   private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
    
    private Rack rack;
    private Font[] labelFonts;
@@ -70,8 +78,13 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private Image imageDefaultMiddle;
    private Image imageDefaultBottom;
    private List<ObjectImage> objects = new ArrayList<ObjectImage>();
-   private AbstractObject currentObject = null;
+   private AbstractObject selectedObject = null;
    private Set<RackSelectionListener> selectionListeners = new HashSet<RackSelectionListener>(0);
+   private Point objectToolTipLocation = null;
+   private Rectangle objectTooltipRectangle = null;
+   private Font objectToolTipHeaderFont;
+   private AbstractObject tooltipObject = null;
+   private ColorCache colorCache;
    
    /**
     * @param parent
@@ -81,6 +94,10 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    {
       super(parent, style | SWT.DOUBLE_BUFFERED);
       this.rack = rack;
+      
+      colorCache = new ColorCache(this);
+      
+      objectToolTipHeaderFont = FontTools.createFont(FONT_NAMES, 1, SWT.BOLD);
       
       setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, getDisplay()));
       
@@ -95,6 +112,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       
       addPaintListener(this);
       addMouseListener(this);
+      addMouseTrackListener(this);
+      addMouseMoveListener(this);
       addDisposeListener(this);
       ImageProvider.getInstance().addUpdateListener(this);
    }
@@ -104,7 +123,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     */
    public AbstractObject getCurrentObject()
    {
-      return currentObject;
+      return selectedObject;
    }
 
    /* (non-Javadoc)
@@ -267,6 +286,141 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
             }
          }
       }
+
+      if (objectToolTipLocation != null)
+         drawObjectToolTip(gc);
+   }
+   
+   /**
+    * Draw tooltip for current object
+    * 
+    * @param gc
+    */
+   private void drawObjectToolTip(GC gc)
+   {
+      gc.setFont(objectToolTipHeaderFont);
+      Point titleSize = gc.textExtent(tooltipObject.getObjectName());
+      gc.setFont(JFaceResources.getDefaultFont());
+      
+      // Calculate width and height
+      int width = Math.max(titleSize.x + 12, 128);
+      int height = OBJECT_TOOLTIP_Y_MARGIN * 2 + titleSize.y + 2 + OBJECT_TOOLTIP_SPACING;
+      
+      List<String> texts = new ArrayList<String>();
+      texts.add(((AbstractNode)tooltipObject).getPrimaryIP().getHostAddress());
+      texts.add(((AbstractNode)tooltipObject).getPlatformName());
+      String sd = ((AbstractNode)tooltipObject).getSystemDescription();
+      if (sd.length() > 127)
+         sd = sd.substring(0, 127) + "...";
+      texts.add(sd);
+      texts.add(((AbstractNode)tooltipObject).getSnmpSysName());
+      texts.add(((AbstractNode)tooltipObject).getSnmpSysContact());
+      
+      for(String s : texts)
+      {
+         if ((s == null) || s.isEmpty())
+            continue;
+
+         Point pt = gc.textExtent(s);
+         if (width < pt.x)
+            width = pt.x;
+         height += pt.y;
+      }
+      
+      List<DciValue> values = ((AbstractNode)tooltipObject).getTooltipDciData();
+      if (!values.isEmpty())
+      {
+         for(DciValue v : values)
+         {
+            Point pt = gc.textExtent(v.getName() + "  " + v.getValue());
+            if (width < pt.x)
+               width = pt.x;
+            height += pt.y;
+         }
+         height += OBJECT_TOOLTIP_SPACING * 2 + 1;
+      }
+      
+      if ((tooltipObject.getComments() != null) && !tooltipObject.getComments().isEmpty())
+      {
+         Point pt = gc.textExtent(tooltipObject.getComments());
+         if (width < pt.x)
+            width = pt.x;
+         height += pt.y + OBJECT_TOOLTIP_SPACING * 2 + 1;
+      }
+      
+      width += OBJECT_TOOLTIP_X_MARGIN * 2;
+      
+      Rectangle ca = getClientArea();
+      Rectangle rect = new Rectangle(objectToolTipLocation.x - width / 2, objectToolTipLocation.y - height / 2, width, height);
+      if (rect.x < 0)
+         rect.x = 0;
+      else if (rect.x + rect.width >= ca.width)
+         rect.x = ca.width - rect.width - 1;
+      if (rect.y < 0)
+         rect.y = 0;
+      else if (rect.y + rect.height  >= ca.height)
+         rect.y = ca.height - rect.height - 1;
+      
+      gc.setBackground(colorCache.create(239, 225, 160));
+      gc.setAlpha(240);
+      gc.fillRoundRectangle(rect.x, rect.y, rect.width, rect.height, 3, 3);
+      
+      gc.setForeground(colorCache.create(92, 92, 92));
+      gc.setAlpha(255);
+      gc.setLineWidth(3);
+      gc.drawRoundRectangle(rect.x, rect.y, rect.width, rect.height, 3, 3);
+      gc.setLineWidth(1);
+      int y = rect.y + OBJECT_TOOLTIP_Y_MARGIN + titleSize.y + 2;
+      gc.drawLine(rect.x + 1, y, rect.x + rect.width - 1, y);
+      
+      gc.setBackground(StatusDisplayInfo.getStatusColor(tooltipObject.getStatus()));
+      gc.fillOval(rect.x + OBJECT_TOOLTIP_X_MARGIN, rect.y + OBJECT_TOOLTIP_Y_MARGIN + titleSize.y / 2 - 4, 8, 8);
+      
+      gc.setForeground(colorCache.create(0, 0, 0));
+      gc.setFont(objectToolTipHeaderFont);
+      gc.drawText(tooltipObject.getObjectName(), rect.x + OBJECT_TOOLTIP_X_MARGIN + 12, rect.y + OBJECT_TOOLTIP_Y_MARGIN, true);
+      
+      gc.setFont(JFaceResources.getDefaultFont());
+      int textLineHeight = gc.textExtent("M").y; //$NON-NLS-1$
+      y = rect.y + OBJECT_TOOLTIP_Y_MARGIN + titleSize.y + OBJECT_TOOLTIP_SPACING + 2 - textLineHeight;
+      for(String s : texts)
+      {
+         if ((s == null) || s.isEmpty())
+            continue;
+         
+         y += textLineHeight;
+         gc.drawText(s, rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
+      }
+
+      if (!values.isEmpty())
+      {
+         y += textLineHeight + OBJECT_TOOLTIP_SPACING;
+         gc.setForeground(colorCache.create(92, 92, 92));
+         gc.drawLine(rect.x + 1, y, rect.x + rect.width - 1, y);
+         y += OBJECT_TOOLTIP_SPACING;
+         gc.setForeground(colorCache.create(0, 0, 0));
+
+         for(DciValue v : values)
+         {
+            gc.drawText(v.getName(), rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
+            Point pt = gc.textExtent(v.getValue());
+            gc.drawText(v.getValue(), rect.x + rect.width - OBJECT_TOOLTIP_X_MARGIN - pt.x, y, true);
+            y += textLineHeight;
+         }
+         y -= textLineHeight;
+      }
+      
+      if ((tooltipObject.getComments() != null) && !tooltipObject.getComments().isEmpty())
+      {
+         y += textLineHeight + OBJECT_TOOLTIP_SPACING;
+         gc.setForeground(colorCache.create(92, 92, 92));
+         gc.drawLine(rect.x + 1, y, rect.x + rect.width - 1, y);
+         y += OBJECT_TOOLTIP_SPACING;
+         gc.setForeground(colorCache.create(0, 0, 0));
+         gc.drawText(tooltipObject.getComments(), rect.x + OBJECT_TOOLTIP_X_MARGIN, y, true);
+      }
+      
+      objectTooltipRectangle = rect;
    }
 
    /* (non-Javadoc)
@@ -299,6 +453,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    {
       for(int i = 0; i < labelFonts.length; i++)
          labelFonts[i].dispose();
+      
+      objectToolTipHeaderFont.dispose();
       
       imageDefaultTop.dispose();
       imageDefaultMiddle.dispose();
@@ -334,6 +490,22 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          });
       }
    }
+   
+   /**
+    * Get object at given point
+    * 
+    * @param p
+    * @return
+    */
+   private AbstractObject getObjectAtPoint(Point p)
+   {
+      for(ObjectImage i : objects)
+         if (i.contains(p))
+         {
+            return i.getObject();
+         }
+      return null;
+   }
 
    /* (non-Javadoc)
     * @see org.eclipse.swt.events.MouseListener#mouseDoubleClick(org.eclipse.swt.events.MouseEvent)
@@ -349,15 +521,14 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    @Override
    public void mouseDown(MouseEvent e)
    {  
-      AbstractObject o = null;
-      Point p = new Point(e.x, e.y);
-      for(ObjectImage i : objects)
-         if (i.contains(p))
-         {
-            o = i.getObject();
-            break;
-         }
-      setCurrentObject(o);
+      if (objectTooltipRectangle != null)
+      {
+         objectToolTipLocation = null;
+         objectTooltipRectangle = null;
+         tooltipObject = null;
+         redraw();
+      }
+      setCurrentObject(getObjectAtPoint(new Point(e.x, e.y)));
    }
 
    /* (non-Javadoc)
@@ -368,6 +539,59 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    {
    }
    
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.events.MouseTrackListener#mouseEnter(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseEnter(MouseEvent e)
+   {
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.events.MouseTrackListener#mouseExit(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseExit(MouseEvent e)
+   {
+      objectToolTipLocation = null;
+      objectTooltipRectangle = null;
+      tooltipObject = null;
+      redraw();
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.events.MouseTrackListener#mouseHover(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseHover(MouseEvent e)
+   {
+      if (objectTooltipRectangle != null) // ignore hover if tooltip already open
+         return;
+      
+      AbstractObject object = getObjectAtPoint(new Point(e.x, e.y));
+      if (object != selectedObject)
+      {
+         objectToolTipLocation = (object != null) ? new Point(e.x, e.y) : null;
+         tooltipObject = object;
+         redraw();
+      }
+   }
+
+   /* (non-Javadoc)
+    * @see org.eclipse.swt.events.MouseMoveListener#mouseMove(org.eclipse.swt.events.MouseEvent)
+    */
+   @Override
+   public void mouseMove(MouseEvent e)
+   {
+      if ((objectTooltipRectangle != null) && !objectTooltipRectangle.contains(e.x, e.y))
+      {
+         objectTooltipRectangle = null;
+         objectToolTipLocation = null;
+         tooltipObject = null;
+         redraw();
+      }
+   }
+
    /**
     * Add selection listener
     * 
@@ -395,9 +619,9 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     */
    private void setCurrentObject(AbstractObject o)
    {
-      currentObject = o;
+      selectedObject = o;
       for(RackSelectionListener l : selectionListeners)
-         l.objectSelected(currentObject);
+         l.objectSelected(selectedObject);
    }
    
    /**

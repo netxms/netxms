@@ -28,10 +28,11 @@
 // Data collection errors
 //
 
-#define DCE_SUCCESS        0
-#define DCE_COMM_ERROR     1
-#define DCE_NOT_SUPPORTED  2
-#define DCE_IGNORE         3
+#define DCE_SUCCESS           0
+#define DCE_COMM_ERROR        1
+#define DCE_NOT_SUPPORTED     2
+#define DCE_IGNORE            3
+#define DCE_NO_SUCH_INSTANCE  4
 
 /**
  * Threshold check results
@@ -112,7 +113,7 @@ private:
 	BYTE m_currentSeverity;   // Current everity (NORMAL if threshold is inactive)
    int m_sampleCount;        // Number of samples to calculate function on
    TCHAR *m_scriptSource;
-   NXSL_VM *m_script;
+   NXSL_Program *m_script;
    BOOL m_isReached;
 	int m_numMatches;			// Number of consecutive matches
 	int m_repeatInterval;		// -1 = default, 0 = off, >0 = seconds between repeats
@@ -184,7 +185,7 @@ protected:
    UINT32 m_id;
    uuid m_guid;
    TCHAR m_name[MAX_ITEM_NAME];
-   TCHAR m_szDescription[MAX_DB_STRING];
+   TCHAR m_description[MAX_DB_STRING];
 	TCHAR m_systemTag[MAX_DB_STRING];
    time_t m_tLastPoll;           // Last poll time
    int m_iPollingInterval;       // Polling interval in seconds
@@ -196,7 +197,7 @@ protected:
 	UINT16 m_flags;
    UINT32 m_dwTemplateId;         // Related template's id
    UINT32 m_dwTemplateItemId;     // Related template item's id
-   Template *m_pNode;             // Pointer to node or template object this item related to
+   Template *m_owner;             // Pointer to node or template object this item related to
    MUTEX m_hMutex;
    StringList *m_schedules;
    time_t m_tLastCheck;          // Last schedule checking time
@@ -206,7 +207,7 @@ protected:
 	WORD m_snmpPort;					// Custom SNMP port or 0 for node default
 	TCHAR *m_pszPerfTabSettings;
    TCHAR *m_transformationScriptSource;   // Transformation script (source code)
-   NXSL_VM *m_transformationScript;  // Compiled transformation script
+   NXSL_Program *m_transformationScript;  // Compiled transformation script
 	TCHAR *m_comments;
 
    void lock() { MutexLock(m_hMutex); }
@@ -239,37 +240,39 @@ public:
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
-   virtual void processNewError();
+   virtual void processNewError(bool noInstance);
 
 	virtual bool hasValue();
 
-	UINT32 getId() { return m_id; }
-	const uuid& getGuid() { return m_guid; }
-   int getDataSource() { return m_source; }
-   int getStatus() { return m_status; }
-   const TCHAR *getName() { return m_name; }
-   const TCHAR *getDescription() { return m_szDescription; }
-	const TCHAR *getSystemTag() { return m_systemTag; }
-	const TCHAR *getPerfTabSettings() { return m_pszPerfTabSettings; }
-   int getPollingInterval() { return m_iPollingInterval; }
-   int getEffectivePollingInterval() { return (m_iPollingInterval > 0) ? m_iPollingInterval : m_defaultPollingInterval; }
-   Template *getTarget() { return m_pNode; }
-   UINT32 getTemplateId() { return m_dwTemplateId; }
-   UINT32 getTemplateItemId() { return m_dwTemplateItemId; }
-	UINT32 getResourceId() { return m_dwResourceId; }
-	UINT32 getSourceNode() { return m_sourceNode; }
-	time_t getLastPollTime() { return m_tLastPoll; }
-	UINT32 getErrorCount() { return m_dwErrorCount; }
-	WORD getSnmpPort() { return m_snmpPort; }
-   bool isShowOnObjectTooltip() { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
-   bool isShowInObjectOverview() { return (m_flags & DCF_SHOW_IN_OBJECT_OVERVIEW) ? true : false; }
-   bool isAggregateOnCluster() { return (m_flags & DCF_AGGREGATE_ON_CLUSTER) ? true : false; }
-	bool isStatusDCO() {return (m_flags & DCF_CALCULATE_NODE_STATUS) ? true : false; }
-   int getAggregationFunction() { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
-   Template *getNode() { return m_pNode; }
-   int getRetentionTime() { return m_iRetentionTime; }
-   int getEffectiveRetentionTime() { return (m_iRetentionTime > 0) ? m_iRetentionTime : m_defaultRetentionTime; }
-   const TCHAR *getComments() { return m_comments; }
+	UINT32 getId() const { return m_id; }
+	const uuid& getGuid() const { return m_guid; }
+   int getDataSource() const { return m_source; }
+   int getStatus() const { return m_status; }
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDescription() const { return m_description; }
+	const TCHAR *getSystemTag() const { return m_systemTag; }
+	const TCHAR *getPerfTabSettings() const { return m_pszPerfTabSettings; }
+   int getPollingInterval() const { return m_iPollingInterval; }
+   int getEffectivePollingInterval() const { return (m_iPollingInterval > 0) ? m_iPollingInterval : m_defaultPollingInterval; }
+   Template *getOwner() const { return m_owner; }
+   UINT32 getOwnerId() const;
+   const TCHAR *getOwnerName() const;
+   UINT32 getTemplateId() const { return m_dwTemplateId; }
+   UINT32 getTemplateItemId() const { return m_dwTemplateItemId; }
+	UINT32 getResourceId() const { return m_dwResourceId; }
+	UINT32 getSourceNode() const { return m_sourceNode; }
+	time_t getLastPollTime() const { return m_tLastPoll; }
+	UINT32 getErrorCount() const { return m_dwErrorCount; }
+	WORD getSnmpPort() const { return m_snmpPort; }
+   bool isShowOnObjectTooltip() const { return (m_flags & DCF_SHOW_ON_OBJECT_TOOLTIP) ? true : false; }
+   bool isShowInObjectOverview() const { return (m_flags & DCF_SHOW_IN_OBJECT_OVERVIEW) ? true : false; }
+   bool isAggregateOnCluster() const { return (m_flags & DCF_AGGREGATE_ON_CLUSTER) ? true : false; }
+	bool isStatusDCO() const { return (m_flags & DCF_CALCULATE_NODE_STATUS) ? true : false; }
+   bool isAggregateWithErrors() const { return (m_flags & DCF_AGGREGATE_WITH_ERRORS) ? true : false; }
+   int getAggregationFunction() const { return DCF_GET_AGGREGATION_FUNCTION(m_flags); }
+   int getRetentionTime() const { return m_iRetentionTime; }
+   int getEffectiveRetentionTime() const { return (m_iRetentionTime > 0) ? m_iRetentionTime : m_defaultRetentionTime; }
+   const TCHAR *getComments() const { return m_comments; }
    INT16 getAgentCacheMode();
 
 	bool matchClusterResource();
@@ -278,13 +281,12 @@ public:
    void setLastPollTime(time_t tLastPoll) { m_tLastPoll = tLastPoll; }
    void setStatus(int status, bool generateEvent);
    void setBusyFlag(BOOL busy) { m_busy = (BYTE)busy; }
-   void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId)
-         { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
+   void setTemplateId(UINT32 dwTemplateId, UINT32 dwItemId) { m_dwTemplateId = dwTemplateId; m_dwTemplateItemId = dwItemId; }
 
    virtual void createMessage(NXCPMessage *pMsg);
    virtual void updateFromMessage(NXCPMessage *pMsg);
 
-   virtual void changeBinding(UINT32 dwNewId, Template *pNode, BOOL doMacroExpansion);
+   virtual void changeBinding(UINT32 dwNewId, Template *newOwner, BOOL doMacroExpansion);
 
 	virtual void deleteExpiredData();
 	virtual bool deleteAllData();
@@ -292,14 +294,16 @@ public:
    virtual void getEventList(UINT32 **ppdwList, UINT32 *pdwSize);
    virtual void createExportRecord(String &str);
 
-	void setName(const TCHAR *pszName) { nx_strncpy(m_name, pszName, MAX_ITEM_NAME); }
-	void setDescription(const TCHAR *pszDescr) { nx_strncpy(m_szDescription, pszDescr, MAX_DB_STRING); }
+   NXSL_Value *createNXSLObject();
+
+	void setName(const TCHAR *name) { nx_strncpy(m_name, name, MAX_ITEM_NAME); }
+	void setDescription(const TCHAR *description) { nx_strncpy(m_description, description, MAX_DB_STRING); }
 	void setOrigin(int origin) { m_source = origin; }
 	void setRetentionTime(int nTime) { m_iRetentionTime = nTime; }
 	void setInterval(int nInt) { m_iPollingInterval = nInt; }
 	void setAdvScheduleFlag(BOOL bFlag) { if (bFlag) m_flags |= DCF_ADVANCED_SCHEDULE; else m_flags &= ~DCF_ADVANCED_SCHEDULE; }
 	void addSchedule(const TCHAR *pszSchedule);
-   void setTransformationScript(const TCHAR *pszScript);
+   void setTransformationScript(const TCHAR *source);
 
 	bool prepareForDeletion();
 
@@ -335,6 +339,7 @@ protected:
 
    bool transform(ItemValue &value, time_t nElapsedTime);
    void checkThresholds(ItemValue &value);
+   void updateCacheSizeInternal(UINT32 conditionId = 0);
    void clearCache();
 
 	virtual bool isCacheLoaded();
@@ -360,7 +365,7 @@ public:
    virtual void deleteFromDatabase();
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
-   void updateCacheSize(UINT32 dwCondId = 0);
+   void updateCacheSize(UINT32 conditionId = 0) { lock(); updateCacheSizeInternal(conditionId); unlock(); }
    void reloadCache();
 
    int getDataType() { return m_dataType; }
@@ -377,7 +382,7 @@ public:
 	void expandInstance();
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
-   virtual void processNewError();
+   virtual void processNewError(bool noInstance);
 
 	virtual bool hasValue();
 
@@ -572,7 +577,7 @@ public:
    virtual void deleteFromDatabase();
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
-   virtual void processNewError();
+   virtual void processNewError(bool noInstance);
 
    virtual bool hasValue();
 
@@ -596,6 +601,43 @@ public:
    void updateResultColumns(Table *t);
 
 	static INT32 columnIdFromName(const TCHAR *name);
+};
+
+/**
+ * Data collection object information (for NXSL)
+ */
+class DCObjectInfo
+{
+private:
+   UINT32 m_id;
+   int m_type;
+   TCHAR m_name[MAX_ITEM_NAME];
+   TCHAR m_description[MAX_DB_STRING];
+   TCHAR m_systemTag[MAX_DB_STRING];
+   TCHAR m_instance[MAX_DB_STRING];
+   TCHAR *m_comments;
+   int m_dataType;
+   int m_origin;
+   int m_status;
+   UINT32 m_errorCount;
+   time_t m_lastPollTime;
+
+public:
+   DCObjectInfo(DCObject *object);
+   ~DCObjectInfo();
+
+   UINT32 getId() const { return m_id; }
+   int getType() const { return m_type; }
+   const TCHAR *getName() const { return m_name; }
+   const TCHAR *getDescription() const { return m_description; }
+   const TCHAR *getSystemTag() const { return m_systemTag; }
+   const TCHAR *getInstance() const { return m_instance; }
+   const TCHAR *getComments() const { return m_comments; }
+   int getDataType() const { return m_dataType; }
+   int getOrigin() const { return m_origin; }
+   int getStatus() const { return m_status; }
+   UINT32 getErrorCount() const { return m_errorCount; }
+   time_t getLastPollTime() const { return m_lastPollTime; }
 };
 
 /**

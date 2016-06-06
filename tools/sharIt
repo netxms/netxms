@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/bin/bash
 #
 # vim:ts=3 sw=3
 
@@ -22,18 +22,25 @@ if [ ! -r $stub ]; then
 	exit
 fi
 
-md5=`which md5 2>/dev/null`
-if [ $? != 0 ]; then
-	md5=`which md5sum 2>/dev/null`
-	if [ $? != 0 ]; then
-		md5=`which openssl 2>/dev/null`
-		if [ $? != 0 ]; then
-			echo "Can't calculate MD5, exiting"
-			exit
-		else
-			md5="$md5 md5"
-		fi
-	fi
+if [ "x`echo test | md5 2>/dev/null | tr A-Z a-z | cut -b1-32`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
+   md5="md5 | tr A-Z a-z | cut -b1-32"
+fi
+if [ "x$md5" = "x" ] && [ "x`echo test | md5sum 2>/dev/null | tr A-Z a-z | cut -b1-32`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
+   md5="md5sum | tr A-Z a-z | cut -b1-32"
+fi
+if [ "x$md5" = "x" ] && [ "x`echo test | csum -h MD5 - 2>/dev/null | tr A-Z a-z | cut -b1-32`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
+   md5="csum -h MD5 - | tr A-Z a-z | cut -b1-32"
+fi
+if [ "x$md5" = "x" ] && [ "x`echo test | openssl md5 2>/dev/null | tr A-Z a-z`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
+   md5="openssl md5 | tr A-Z a-z"
+fi
+if [ "x$md5" = "x" ] && [ "x`echo test | openssl md5 2>/dev/null | tr A-Z a-z | rev | cut -b1-32 | rev`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
+   md5="openssl md5 | tr A-Z a-z | rev | cut -b1-32 | rev"
+fi
+
+if [ -z "$md5" ]; then
+   echo "Can't calculate MD5, exiting"
+   exit
 fi
 
 skip=`echo \`wc -l $stub|awk '{ print $1 }'\``
@@ -48,8 +55,8 @@ fi
 sed "s,__SKIP__,$skip,g" < $stub |
 	sed "s,__SKIP1__,$skip1,g" |
 	sed "s,__COMMAND__,$2,g" > tmp
-hash1=`tail -n +5 tmp | $md5 | cut -c1-32 | tr A-Z a-z`
-hash2=`cat $1 | $md5 | cut -c1-32 | tr A-Z a-z`
+hash1=`tail -n +5 tmp | eval $md5`
+hash2=`cat $1 | eval $md5`
 sed "s,__HASH1__,$hash1,g" < tmp | sed "s,__HASH2__,$hash2,g" > $3
 
 cat $1 >> $3

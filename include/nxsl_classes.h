@@ -194,15 +194,17 @@ public:
    NXSL_Array(const StringList *values);
 	~NXSL_Array();
 
-	void set(int index, NXSL_Value *value);
-	NXSL_Value *get(int index) const;
-	NXSL_Value *getByPosition(int position) const;
-
-	int size() const { return m_size; }
-	int getMinIndex() const { return (m_size > 0) ? m_data[0].index : 0; }
+   int size() const { return m_size; }
+   int getMinIndex() const { return (m_size > 0) ? m_data[0].index : 0; }
    int getMaxIndex() const { return (m_size > 0) ? m_data[m_size - 1].index : 0; }
 
-	StringList *toStringList() const;
+   StringList *toStringList() const;
+
+   NXSL_Value *get(int index) const;
+   NXSL_Value *getByPosition(int position) const;
+
+   void set(int index, NXSL_Value *value);
+	void add(NXSL_Value *value) { if (m_size == 0) { set(0, value); } else { set(getMaxIndex() + 1, value); } }
 };
 
 /**
@@ -220,6 +222,8 @@ public:
 
    void set(const TCHAR *key, NXSL_Value *value) { m_values->set(key, value); }
    NXSL_Value *get(const TCHAR *key) const { return m_values->get(key); }
+   NXSL_Value *getKeys() const;
+   NXSL_Value *getValues() const;
 
 	int size() const { return m_values->size(); }
 };
@@ -458,6 +462,15 @@ struct NXSL_ExtSelector
    int (* m_handler)(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
 };
 
+/**
+ * NXSL module import information
+ */
+struct NXSL_ModuleImport
+{
+   TCHAR name[MAX_PATH];
+   int lineNumber;   // line number in source code where module was referenced
+};
+
 class NXSL_Library;
 
 /**
@@ -481,6 +494,8 @@ public:
 	virtual void print(NXSL_Value *value);
 	virtual void trace(int level, const TCHAR *text);
 
+	virtual void configureVM(NXSL_VM *vm);
+
    void setLibrary(NXSL_Library *lib) { m_library = lib; }
 
    NXSL_ExtFunction *findFunction(const TCHAR *name);
@@ -489,7 +504,7 @@ public:
    NXSL_ExtSelector *findSelector(const TCHAR *name);
    void registerSelectorSet(UINT32 count, NXSL_ExtSelector *list);
 
-   bool loadModule(NXSL_VM *vm, const TCHAR *name);
+   bool loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importInfo);
 };
 
 /**
@@ -600,7 +615,7 @@ class LIBNXSL_EXPORTABLE NXSL_Program
 
 protected:
    ObjectArray<NXSL_Instruction> *m_instructionSet;
-   StringList m_requiredModules;
+   ObjectArray<NXSL_ModuleImport> *m_requiredModules;
    StringObjectMap<NXSL_Value> *m_constants;
    ObjectArray<NXSL_Function> *m_functions;
 
@@ -615,7 +630,7 @@ public:
    void addInstruction(NXSL_Instruction *pInstruction) { m_instructionSet->add(pInstruction); }
    void resolveLastJump(int opcode, int offset = 0);
 	void createJumpAt(UINT32 dwOpAddr, UINT32 dwJumpAddr);
-   void addRequiredModule(char *pszName);
+   void addRequiredModule(const char *name, int lineNumber);
 	void optimize();
 	void removeInstructions(UINT32 start, int count);
    bool addConstant(const char *name, NXSL_Value *value);
@@ -732,7 +747,7 @@ protected:
    void getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Value *key);
    bool setHashMapElement(NXSL_Value *hashMap, NXSL_Value *key, NXSL_Value *value);
    void getHashMapAttribute(NXSL_HashMap *m, const TCHAR *attribute, bool safe);
-   void error(int nError);
+   void error(int errorCode, int sourceLine = -1);
    NXSL_Value *matchRegexp(NXSL_Value *pValue, NXSL_Value *pRegexp, BOOL bIgnoreCase);
 
    NXSL_Variable *findVariable(const TCHAR *pszName);
@@ -746,10 +761,12 @@ public:
    NXSL_VM(NXSL_Environment *env = NULL, NXSL_Storage *storage = NULL);
    ~NXSL_VM();
 
-   void loadModule(NXSL_Program *module, const TCHAR *name);
+   void loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo);
 
 	void setGlobalVariable(const TCHAR *pszName, NXSL_Value *pValue);
 	NXSL_Variable *findGlobalVariable(const TCHAR *pszName) { return m_globals->find(pszName); }
+
+	bool addConstant(const TCHAR *name, NXSL_Value *value);
 
 	void setStorage(NXSL_Storage *storage);
 

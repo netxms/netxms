@@ -105,8 +105,8 @@ public class UserManagementView extends ViewPart
 		      Messages.get().UserManagementView_Type, 
 		      Messages.get().UserManagementView_FullName, 
 		      Messages.get().UserManagementView_Description, 
-		      "Source", 
-		      "Authentication", 
+		      Messages.get().UserManagementView_Source, 
+		      Messages.get().UserManagementView_Authentication, 
 		      Messages.get().UserManagementView_GUID 
 		   };
 		final int[] widths = { 100, 80, 180, 250, 80, 170, 250 };

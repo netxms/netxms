@@ -106,8 +106,8 @@ bool VPNConnector::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          }
          else
          {
-            pObject->AddChild(this);
-            AddParent(pObject);
+            pObject->addChild(this);
+            addParent(pObject);
             success = true;
          }
       }

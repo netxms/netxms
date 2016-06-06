@@ -283,7 +283,8 @@ enum MessageReceiverResult
    MSGRECV_CLOSED = 1,
    MSGRECV_TIMEOUT = 2,
    MSGRECV_COMM_FAILURE = 3,
-   MSGRECV_DECRYPTION_FAILURE = 4
+   MSGRECV_DECRYPTION_FAILURE = 4,
+   MSGRECV_PROTOCOL_ERROR = 5
 };
 
 /**
@@ -301,7 +302,7 @@ private:
    size_t m_dataSize;
    size_t m_bytesToSkip;
 
-   NXCPMessage *getMessageFromBuffer();
+   NXCPMessage *getMessageFromBuffer(bool *protocolError);
 
 protected:
    virtual int readBytes(BYTE *buffer, size_t size, UINT32 timeout) = 0;
@@ -486,7 +487,7 @@ BOOL LIBNETXMS_EXPORTABLE SendFileOverNXCP(SOCKET hSocket, UINT32 dwId, const TC
 														 MUTEX mutex, NXCPCompressionMethod compressionMethod = NXCP_COMPRESSION_NONE);
 BOOL LIBNETXMS_EXPORTABLE NXCPGetPeerProtocolVersion(SOCKET hSocket, int *pnVersion, MUTEX mutex);
 
-bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers, void (*debugCallback)(int, const TCHAR *, va_list args));
+bool LIBNETXMS_EXPORTABLE InitCryptoLib(UINT32 dwEnabledCiphers);
 UINT32 LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphers();
 String LIBNETXMS_EXPORTABLE NXCPGetSupportedCiphersAsText();
 NXCP_ENCRYPTED_MESSAGE LIBNETXMS_EXPORTABLE *NXCPEncryptMessage(NXCPEncryptionContext *pCtx, NXCP_MESSAGE *pMsg);

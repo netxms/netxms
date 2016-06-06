@@ -173,6 +173,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 	protected Action actionSnapToGrid;
 	protected Action actionShowObjectDetails;
    protected Action actionHideLinkLabels;
+   protected Action actionHideLinks;
    protected Action actionSelectAllObjects;
 
 	private String viewId;
@@ -245,7 +246,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		try
 		{
-			alwaysFitLayout = settings.getBoolean(viewId + ".alwaysFitLayout");
+			alwaysFitLayout = settings.getBoolean(viewId + ".alwaysFitLayout"); //$NON-NLS-1$
 			labelProvider.setObjectFigureType(MapObjectDisplayMode.getByValue(settings.getInt(viewId + ".objectFigureType"))); //$NON-NLS-1$
 		}
 		catch(Exception e)
@@ -255,7 +256,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		// Zoom level restore and save
 		try
 		{
-		   viewer.zoomTo(settings.getDouble(viewId + ".zoom"));
+		   viewer.zoomTo(settings.getDouble(viewId + ".zoom")); //$NON-NLS-1$
 		}
 		catch(NumberFormatException e)
 		{
@@ -265,7 +266,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
          public void widgetDisposed(DisposeEvent e)
          {
             IDialogSettings settings = Activator.getDefault().getDialogSettings();
-            settings.put(viewId + ".zoom", viewer.getZoom());
+            settings.put(viewId + ".zoom", viewer.getZoom()); //$NON-NLS-1$
          }
       });
 
@@ -666,7 +667,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		actionZoomOut.setActionDefinitionId("org.netxms.ui.eclipse.networkmaps.localCommands.AbstractMap.ZoomOut"); //$NON-NLS-1$
       handlerService.activateHandler(actionZoomOut.getActionDefinitionId(), new ActionHandler(actionZoomOut));
 
-      actionZoomFit = new Action(Messages.get().AbstractNetworkMapView_ZoomFit, Activator.getImageDescriptor("icons/fit.png")) {
+      actionZoomFit = new Action(Messages.get().AbstractNetworkMapView_ZoomFit, Activator.getImageDescriptor("icons/fit.png")) { //$NON-NLS-1$
          @Override
          public void run()
          {
@@ -702,7 +703,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
             alwaysFitLayout = actionAlwaysFitLayout.isChecked();
             setLayoutAlgorithm(layoutAlgorithm, true);
             IDialogSettings settings = Activator.getDefault().getDialogSettings();
-            settings.put(viewId + ".alwaysFitLayout", alwaysFitLayout);
+            settings.put(viewId + ".alwaysFitLayout", alwaysFitLayout); //$NON-NLS-1$
          }
       };
       actionAlwaysFitLayout.setChecked(alwaysFitLayout);
@@ -841,13 +842,23 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
          @Override
          public void run()
          {         
-            labelProvider.setLabelHideStatus(actionHideLinkLabels.isChecked());
+            labelProvider.setConnectionLabelsVisible(!actionHideLinkLabels.isChecked());
             viewer.refresh(true);
          }
       };
       actionHideLinkLabels.setImageDescriptor(Activator.getImageDescriptor("icons/hide_link.png")); //$NON-NLS-1$
       
-      actionSelectAllObjects = new Action("Select &all objects") {
+      actionHideLinks = new Action(Messages.get().AbstractNetworkMapView_HideLinks, Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            labelProvider.setConnectionsVisible(!actionHideLinks.isChecked());
+            viewer.refresh(true);
+         }
+      };
+      actionHideLinks.setImageDescriptor(Activator.getImageDescriptor("icons/hide_net_link.png")); //$NON-NLS-1$
+
+      actionSelectAllObjects = new Action(Messages.get().AbstractNetworkMapView_SelectAllObjects) {
          @Override
          public void run()
          {
@@ -940,7 +951,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionSnapToGrid);
 		manager.add(actionShowGrid);
       manager.add(new Separator()); 
-      manager.add(actionHideLinkLabels);    
+      manager.add(actionHideLinkLabels); 
+      manager.add(actionHideLinks);
 		manager.add(new Separator());
       manager.add(actionSelectAllObjects);
       manager.add(new Separator());
@@ -963,6 +975,7 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionShowGrid);
       manager.add(new Separator()); 
       manager.add(actionHideLinkLabels);  
+      manager.add(actionHideLinks);
 		manager.add(new Separator());
 		if (allowManualLayout)
 		{
@@ -1077,7 +1090,8 @@ public abstract class AbstractNetworkMapView extends ViewPart implements ISelect
 		manager.add(actionSnapToGrid);
 		manager.add(actionShowGrid);
       manager.add(new Separator()); 
-      manager.add(actionHideLinkLabels);  
+      manager.add(actionHideLinkLabels);
+      manager.add(actionHideLinks);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       manager.add(new Separator()); 

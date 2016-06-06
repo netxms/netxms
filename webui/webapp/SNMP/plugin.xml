@@ -33,7 +33,7 @@
             category="org.netxms.ui.eclipse.viewcategory.config"
             class="org.netxms.ui.eclipse.snmp.views.SnmpCredentials"
             id="org.netxms.ui.eclipse.snmp.views.SnmpCredentials"
-            name="SNMP Credentials"
+            name="%view.name.SNMPCredentials"
             restorable="true">
       </view>
    </extension>
@@ -106,13 +106,13 @@
             label="SNMP Credentials"
             visible="true">
          <action
-               class="org.netxms.ui.eclipse.snmp.actions.SnmpConfigrationAction"
+               class="org.netxms.ui.eclipse.snmp.actions.OpenSnmpCredentialsEditor"
                definitionId="org.netxms.ui.eclipse.snmp.commands.open_snmp_configuration"
                id="org.netxms.ui.eclipse.snmp.actions.open_snmp_configuration"
-               label="SNMP Credentials"
+               label="%action.label.SNMPCredentials"
                menubarPath="config/additions"
                style="push"
-               tooltip="Open SNMP Credentials">
+               tooltip="%action.tooltip.SNMPCredentials">
          </action>
       </actionSet>
    </extension>

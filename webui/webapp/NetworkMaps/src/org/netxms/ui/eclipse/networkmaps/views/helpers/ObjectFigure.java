@@ -69,7 +69,7 @@ public abstract class ObjectFigure extends Figure
 		});
 	}
 	
-	/* (non-Javadoc)
+   /* (non-Javadoc)
 	 * @see org.eclipse.draw2d.Figure#setToolTip(org.eclipse.draw2d.IFigure)
 	 */
 	@Override

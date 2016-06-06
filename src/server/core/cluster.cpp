@@ -111,8 +111,8 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 				{
 					if (pObject->getObjectClass() == OBJECT_NODE)
 					{
-                  AddChild(pObject);
-                  pObject->AddParent(this);
+                  addChild(pObject);
+                  pObject->addParent(this);
 					}
 					else
 					{
@@ -674,7 +674,7 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_ITEM) &&
           (dco->getStatus() == ITEM_STATUS_ACTIVE) &&
-          (dco->getErrorCount() == 0) &&
+          ((dco->getErrorCount() == 0) || dco->isAggregateWithErrors()) &&
           dco->matchClusterResource())
       {
          ItemValue *v = ((DCItem *)dco)->getInternalLastValue();
@@ -738,7 +738,7 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_TABLE) &&
           (dco->getStatus() == ITEM_STATUS_ACTIVE) &&
-          (dco->getErrorCount() == 0) &&
+          ((dco->getErrorCount() == 0) || dco->isAggregateWithErrors()) &&
           dco->matchClusterResource())
       {
          Table *v = ((DCTable *)dco)->getLastValue();
@@ -782,4 +782,12 @@ void Cluster::unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI)
 void Cluster::onDataCollectionChange()
 {
    queueUpdate();
+}
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *Cluster::createNXSLObject()
+{
+   return new NXSL_Value(new NXSL_Object(&g_nxslClusterClass, this));
 }

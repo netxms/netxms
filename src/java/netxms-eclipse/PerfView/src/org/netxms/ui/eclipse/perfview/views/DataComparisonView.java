@@ -92,7 +92,7 @@ public class DataComparisonView extends ViewPart
 	private int chartType = DataComparisonChart.BAR_CHART;
 	private boolean transposed = false;
 	private boolean showLegend = true;
-	private int legendPosition = GraphSettings.POSITION_RIGHT;
+	private int legendPosition = GraphSettings.POSITION_BOTTOM;
 	private boolean translucent = false;
 	private Image[] titleImages = new Image[5];
 
@@ -157,7 +157,8 @@ public class DataComparisonView extends ViewPart
 								Integer.parseInt(subfields[2], 10), // source
 								Integer.parseInt(subfields[3], 10), // data type
 								URLDecoder.decode(subfields[4], "UTF-8"), // name //$NON-NLS-1$
-								URLDecoder.decode(subfields[5], "UTF-8"))); // description //$NON-NLS-1$
+								URLDecoder.decode(subfields[5], "UTF-8"), // description //$NON-NLS-1$
+								"%s")); // format //$NON-NLS-1$
 					}
 					catch(NumberFormatException e)
 					{
@@ -179,7 +180,8 @@ public class DataComparisonView extends ViewPart
 								URLDecoder.decode(subfields[4], "UTF-8"), // name //$NON-NLS-1$
 								URLDecoder.decode(subfields[5], "UTF-8"), //$NON-NLS-1$
 								URLDecoder.decode(subfields[6], "UTF-8"), //$NON-NLS-1$
-								URLDecoder.decode(subfields[7], "UTF-8"))); // description //$NON-NLS-1$
+								URLDecoder.decode(subfields[7], "UTF-8"), // description //$NON-NLS-1$
+								"%s"));  // format //$NON-NLS-1$
 					}
 					catch(NumberFormatException e)
 					{

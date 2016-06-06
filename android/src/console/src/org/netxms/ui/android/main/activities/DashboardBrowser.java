@@ -321,10 +321,13 @@ public class DashboardBrowser extends AbstractClientActivity
 		@Override
 		protected void onPreExecute()
 		{
-			dialog.setMessage(getString(R.string.progress_gathering_data));
-			dialog.setIndeterminate(true);
-			dialog.setCancelable(false);
-			dialog.show();
+			if (dialog != null)
+			{
+				dialog.setMessage(getString(R.string.progress_gathering_data));
+				dialog.setIndeterminate(true);
+				dialog.setCancelable(false);
+				dialog.show();
+			}
 		}
 
 		@Override
@@ -345,7 +348,8 @@ public class DashboardBrowser extends AbstractClientActivity
 		@Override
 		protected void onPostExecute(Exception result)
 		{
-			dialog.cancel();
+			if (dialog != null)
+				dialog.cancel();
 			if ((result == null) && (DashboardBrowser.this.currentParent.getObjectId() == currentRoot))
 			{
 				adapter.setNodes(currentParent.getChildsAsArray());

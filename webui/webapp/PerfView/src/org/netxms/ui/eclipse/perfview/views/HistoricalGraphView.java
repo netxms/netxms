@@ -106,6 +106,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
    private Action actionAdjustBoth;
    private Action actionLogScale;
    private Action actionStacked;
+   private Action actionAreaChart;
    private Action actionTranslucent;
    private Action actionShowLegend;
    private Action actionExtendedLegend;
@@ -309,8 +310,10 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       chart.setGridVisible(config.isShowGrid());
       chart.setLegendVisible(config.isShowLegend());
       chart.setLegendPosition(config.getLegendPosition());
+      chart.setExtendedLegend(config.isExtendedLegend());
       chart.setStacked(config.isStacked());
       chart.setTranslucent(config.isTranslucent());
+      chart.setLineWidth(config.getLineWidth());
       if(!config.isAutoScale())
       {
          chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());
@@ -322,11 +325,11 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       for(ChartDciConfig dci : config.getDciList())
       {
          final String name = config.isShowHostNames() ? (session.getObjectName(dci.nodeId) + " - " + dci.getName()) : dci.getName(); //$NON-NLS-1$
-         chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), name));
+         chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), name, dci.getDisplayFormat()));
          int color = dci.getColorAsInt();
          if (color == -1)
             color = ChartColor.getDefaultColor(index).getRGB();
-         styles.add(new GraphItemStyle(dci.area ? GraphItemStyle.AREA : GraphItemStyle.LINE, color, 2, 0));
+         styles.add(new GraphItemStyle(getDisplayType(dci), color, 2, dci.invertValues ? GraphItemStyle.INVERTED : 0));
          index++;
       }
       chart.setItemStyles(styles);
@@ -343,6 +346,24 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       actionAutoRefresh.setChecked(config.isAutoRefresh());
       refreshMenuSelection();
       refreshController.setInterval(config.isAutoRefresh() ? config.getRefreshRate() : -1);
+   }
+   
+   /**
+    * @param dci
+    * @return
+    */
+   private int getDisplayType(ChartDciConfig dci)
+   {
+      int type = dci.getDisplayType();
+      switch(type)
+      {
+         case ChartDciConfig.AREA:
+            return GraphItemStyle.AREA;
+         case ChartDciConfig.LINE:
+            return GraphItemStyle.LINE;
+         default:
+            return config.isArea() ? GraphItemStyle.AREA : GraphItemStyle.LINE;
+      } 
    }
 
    /*
@@ -418,8 +439,6 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
                         currentItem.column, config.getTimeFrom(), config.getTimeTo(), 0);
                   thresholds[i] = null;
                }
-               if (currentItem.invertValues)
-                  data[i].invert();
                monitor.worked(1);
             }
 
@@ -530,7 +549,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
             {
                MessageDialogHelper.openError(getSite().getShell(), Messages.get().HistoricalGraphView_Error,
                      String.format(Messages.get().HistoricalGraphView_LogScaleSwitchError, e.getLocalizedMessage()));
-               Activator.logError("Cannot change log scale mode", e);
+               Activator.logError("Cannot change log scale mode", e); //$NON-NLS-1$
             }
             setChecked(config.isLogScale());
          }
@@ -674,6 +693,16 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          }
       };
       actionTranslucent.setChecked(config.isTranslucent());
+      
+      actionAreaChart = new Action("Area chart", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            config.setArea(actionAreaChart.isChecked());
+            configureGraphFromSettings();
+         }
+      };
+      actionAreaChart.setChecked(config.isArea());
 
       presetActions = new Action[presetRanges.length];
       for(int i = 0; i < presetRanges.length; i++)
@@ -702,6 +731,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       actionExtendedLegend.setChecked(config.isExtendedLegend());
       actionStacked.setChecked(config.isStacked());
       actionTranslucent.setChecked(config.isTranslucent());
+      actionAreaChart.setChecked(config.isArea());
 
       actionLegendLeft.setChecked(config.getLegendPosition() == GraphSettings.POSITION_LEFT);
       actionLegendRight.setChecked(config.getLegendPosition() == GraphSettings.POSITION_RIGHT);
@@ -748,6 +778,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(new Separator());
+      manager.add(actionAreaChart);
       manager.add(actionStacked);
       manager.add(actionLogScale);
       manager.add(actionTranslucent);
@@ -789,6 +820,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       manager.add(actionZoomIn);
       manager.add(actionZoomOut);
       manager.add(new Separator());
+      manager.add(actionAreaChart);
       manager.add(actionStacked);
       manager.add(actionLogScale);
       manager.add(actionTranslucent);

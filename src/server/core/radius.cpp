@@ -547,7 +547,6 @@ static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 			*ptr++ = PW_REPLY_MESSAGE;
 			*ptr++ = len + 2;
 			memcpy(ptr, msg, len);
-			ptr += len;
 			total_length += len + 2;
 		}
 	}

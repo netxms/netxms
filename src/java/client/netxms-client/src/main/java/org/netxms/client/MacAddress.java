@@ -101,11 +101,12 @@ public class MacAddress
 
 	/**
 	 * Parse MAC address string representation. Supported representations are 6 groups of
-	 * two hex digits, separated by spaces, minuses, or colons, or unseparated. Examples of valid 
-	 * MAC address strings:
+	 * two hex digits, separated by spaces, minuses, or colons; or 4 groups of three hex digits 
+	 * separated by dots; or 12 non-separated digits. Examples of valid MAC address strings:
 	 * 00:10:FA:23:11:7A
 	 * 01 02 fa c4 10 dc
 	 * 00-90-0b-11-01-29
+	 * 009.00b.110.129
 	 * 0203fcd456c1
 	 * 
 	 * @param str MAC address string
@@ -132,7 +133,34 @@ public class MacAddress
 		}
 		else
 		{
-			throw new MacAddressFormatException();
+		   // Try xxx.xxx.xxx.xxx format (Brocade/Foundry)
+	      pattern = Pattern.compile("^([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})\\.([0-9a-fA-F]{3})$");
+	      matcher = pattern.matcher(str.trim());
+	      if (matcher.matches())
+	      {
+	         byte[] bytes = new byte[6];
+	         try
+	         {
+	            int j = 0;
+	            for(int i = 1; i <= 4; i += 2)
+	            {
+	               int left = Integer.parseInt(matcher.group(i), 16);
+                  int right = Integer.parseInt(matcher.group(i + 1), 16);
+                  bytes[j++] = (byte)(left >> 4);
+                  bytes[j++] = (byte)(((left & 0x00F) << 4) | (right >> 8));
+                  bytes[j++] = (byte)(right & 0x0FF);
+	            }
+	         }
+	         catch(NumberFormatException e)
+	         {
+	            throw new MacAddressFormatException();
+	         }
+	         return new MacAddress(bytes);
+	      }
+	      else
+	      {
+            throw new MacAddressFormatException();
+	      }
 		}
 	}
 

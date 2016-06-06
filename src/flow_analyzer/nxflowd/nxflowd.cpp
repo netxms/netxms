@@ -108,11 +108,9 @@ static bool LoadConfig()
    return success;
 }
 
-
-//
-// Initialization
-//
-
+/**
+ * Initialization
+ */
 bool Initialize()
 {
    // Open log file
@@ -121,9 +119,9 @@ bool Initialize()
 				  ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
               _T("NXFLOWD.EXE"),
 #ifdef _WIN32
-				  0, NULL);
+              0, NULL, MSG_DEBUG);
 #else
-				  g_dwNumMessages, g_szMessages);
+				  g_dwNumMessages, g_szMessages, MSG_DEBUG);
 #endif
 
 #ifdef _WIN32
@@ -143,7 +141,6 @@ bool Initialize()
 	}
 
 	// Initialize database driver and connect to database
-	DBSetDebugPrintCallback(DbgPrintf2);
 	if (!DBInit(MSG_OTHER, (g_flags & AF_LOG_SQL_ERRORS) ? MSG_SQL_ERROR : 0))
 		return FALSE;
 	g_dbDriverHandle = DBLoadDriver(s_dbDriver, s_dbDrvParams, (g_debugLevel >= 9), NULL, NULL);
@@ -278,7 +275,7 @@ int main(int argc, char *argv[])
 	TCHAR moduleName[MAX_PATH];
 #endif
 
-   InitThreadLibrary();
+   InitNetXMSProcess();
 
 	// Parse command line
 	opterr = 1;

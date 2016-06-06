@@ -34,6 +34,7 @@ using namespace zmq;
 
 static void *m_context = NULL;
 static void *m_socket = NULL;
+static MUTEX m_socketLock = MutexCreate();
 static HashMap<UINT32, Subscription> m_eventSubscription(true);
 static HashMap<UINT32, Subscription> m_dataSubscription(true);
 static MUTEX m_eventSubscriptionLock = MutexCreate();
@@ -416,6 +417,7 @@ void StartZMQConnector()
       m_socket = zmq_socket(m_context, ZMQ_PUSH);
       if (m_socket != NULL)
       {
+         MutexLock(m_socketLock);
          if (zmq_connect(m_socket, endpoint) == 0)
          {
             LoadSubscriptions();
@@ -429,6 +431,7 @@ void StartZMQConnector()
             zmq_close(m_socket);
             m_socket = NULL;
          }
+         MutexUnlock(m_socketLock);
       }
       else
       {
@@ -452,8 +455,10 @@ void StopZMQConnector()
    DbgPrintf(6, _T("ZeroMQ: shutdown initiated"));
    if (m_socket != NULL)
    {
+      MutexLock(m_socketLock);
       zmq_close(m_socket);
       m_socket = NULL;
+      MutexUnlock(m_socketLock);
    }
    DbgPrintf(6, _T("ZeroMQ: socket closed"));
    if (m_context != NULL)
@@ -498,7 +503,9 @@ void ZmqPublishEvent(const Event *event)
       char *message = EventToJson(event, object);
       if (message != NULL)
       {
+         MutexLock(m_socketLock);
          (void)zmq_send(m_socket, message, strlen(message), ZMQ_DONTWAIT);
+         MutexUnlock(m_socketLock);
          free(message);
       }
    }
@@ -537,7 +544,9 @@ void ZmqPublishData(UINT32 objectId, UINT32 dciId, const TCHAR *dciName, const T
       char *message = DataToJson(object, dciId, dciName, value);
       if (message != NULL)
       {
+         MutexLock(m_socketLock);
          (void)zmq_send(m_socket, message, strlen(message), ZMQ_DONTWAIT);
+         MutexUnlock(m_socketLock);
          free(message);
       }
    }

@@ -213,8 +213,10 @@ inline TCHAR *_tcsdup_ex(const TCHAR *s)
 extern "C" {
 #endif
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBString(const char *pszString);
+WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBStringSysLocale(const char *pszString);
 WCHAR LIBNETXMS_EXPORTABLE *WideStringFromUTF8String(const char *pszString);
 char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString);
+char LIBNETXMS_EXPORTABLE *MBStringFromWideStringSysLocale(const WCHAR *pwszString);
 char LIBNETXMS_EXPORTABLE *UTF8StringFromWideString(const WCHAR *pwszString);
 #ifdef __cplusplus
 }
@@ -595,7 +597,11 @@ public:
    void addAll(StringMap *src);
 
 	const TCHAR *get(const TCHAR *key) const { return (const TCHAR *)getObject(key); }
-	UINT32 getULong(const TCHAR *key, UINT32 defaultValue) const;
+   INT32 getInt32(const TCHAR *key, INT32 defaultValue) const;
+	UINT32 getUInt32(const TCHAR *key, UINT32 defaultValue) const;
+   INT64 getInt64(const TCHAR *key, INT64 defaultValue) const;
+   UINT64 getUInt64(const TCHAR *key, UINT64 defaultValue) const;
+   double getDouble(const TCHAR *key, double defaultValue) const;
 	bool getBoolean(const TCHAR *key, bool defaultValue) const;
 
    void fillMessage(NXCPMessage *msg, UINT32 sizeFieldId, UINT32 baseFieldId) const;
@@ -814,6 +820,25 @@ public:
 };
 
 /**
+ * Hash map template for holding reference counting objects as values
+ */
+template <class K, class V> class RefCountHashMap : public HashMapBase
+{
+private:
+   static void destructor(void *object) { if (object != NULL) ((V*)object)->decRefCount(); }
+
+public:
+   RefCountHashMap(bool objectOwner = false) : HashMapBase(objectOwner, sizeof(K)) { m_objectDestructor = destructor; }
+
+   V *get(const K& key) { V *v = (V*)_get(&key); if (v != NULL) v->incRefCount(); return v; }
+   void set(const K& key, V *value) { if (value != NULL) value->incRefCount(); _set(&key, (void *)value); }
+   void remove(const K& key) { _remove(&key); }
+   bool contains(const K& key) { return _contains(&key); }
+
+   Iterator<V> *iterator() { return new Iterator<V>(new HashMapIterator(this)); }
+};
+
+/**
  * Byte stream
  */
 class LIBNETXMS_EXPORTABLE ByteStream
@@ -877,12 +902,14 @@ class LIBNETXMS_EXPORTABLE RefCountObject
 private:
 	VolatileCounter m_refCount;
 
+protected:
+   virtual ~RefCountObject();
+
 public:
 	RefCountObject()
    {
       m_refCount = 1;
    }
-   virtual ~RefCountObject();
 
 	void incRefCount()
    {
@@ -1460,6 +1487,8 @@ extern "C"
 {
 #endif
 
+void LIBNETXMS_EXPORTABLE InitNetXMSProcess();
+
 #if !defined(_WIN32) && !defined(_NETWARE)
 #if defined(UNICODE_UCS2) || defined(UNICODE_UCS4)
 void LIBNETXMS_EXPORTABLE __wcsupr(WCHAR *in);
@@ -1870,12 +1899,19 @@ int LIBNETXMS_EXPORTABLE alphasort(const struct dirent **a, const struct dirent 
 
 TCHAR LIBNETXMS_EXPORTABLE *safe_fgetts(TCHAR *buffer, int len, FILE *f);
 
-BOOL LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags, const TCHAR *msgModule,
-                                     unsigned int msgCount, const TCHAR **messages);
+bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags, const TCHAR *msgModule,
+                                     unsigned int msgCount, const TCHAR **messages, DWORD debugMsg);
 void LIBNETXMS_EXPORTABLE nxlog_close(void);
 void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...);
-BOOL LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLogSize, int historySize, const TCHAR *dailySuffix);
-BOOL LIBNETXMS_EXPORTABLE nxlog_rotate();
+void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...);
+void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list args);
+bool LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLogSize, int historySize, const TCHAR *dailySuffix);
+bool LIBNETXMS_EXPORTABLE nxlog_rotate();
+void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level);
+int LIBNETXMS_EXPORTABLE nxlog_get_debug_level();
+
+typedef void (*NxLogDebugWriter)(const TCHAR *);
+void LIBNETXMS_EXPORTABLE nxlog_set_debug_writer(NxLogDebugWriter writer);
 
 typedef void (*NxLogConsoleWriter)(const TCHAR *, ...);
 void LIBNETXMS_EXPORTABLE nxlog_set_console_writer(NxLogConsoleWriter writer);

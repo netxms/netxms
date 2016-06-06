@@ -27,9 +27,10 @@
  * Static data
  */
 static Queue *s_trapQueue = NULL;
-static QWORD s_genTrapCount = 0;	// Number of generated traps
-static QWORD s_sentTrapCount = 0;	// Number of sent traps
-static QWORD s_trapId = 0;
+static UINT64 s_genTrapCount = 0;	// Number of generated traps
+static UINT64 s_sentTrapCount = 0;	// Number of sent traps
+static UINT64 s_trapIdBase = 0;
+static VolatileCounter s_trapIdCounter = 0;
 static time_t s_lastTrapTime = 0;
 
 /**
@@ -42,7 +43,7 @@ THREAD_RESULT THREAD_CALL TrapSender(void *pArg)
    bool trapSent;
 
    s_trapQueue = new Queue;
-	s_trapId = (QWORD)time(NULL) << 32;
+	s_trapIdBase = (QWORD)time(NULL) << 32;
    while(1)
    {
       pMsg = (NXCP_MESSAGE *)s_trapQueue->getOrBlock();
@@ -109,7 +110,7 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **
 
    msg.setCode(CMD_TRAP);
    msg.setId(0);
-	msg.setField(VID_TRAP_ID, s_trapId++);
+	msg.setField(VID_TRAP_ID, s_trapIdBase | (UINT64)InterlockedIncrement(&s_trapIdCounter));
    msg.setField(VID_EVENT_CODE, dwEventCode);
 	if (eventName != NULL)
 		msg.setField(VID_EVENT_NAME, eventName);
@@ -211,7 +212,7 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
  */
 void ForwardTrap(NXCPMessage *msg)
 {
-	msg->setField(VID_TRAP_ID, s_trapId++);
+	msg->setField(VID_TRAP_ID, s_trapIdBase | (UINT64)InterlockedIncrement(&s_trapIdCounter));
    if (s_trapQueue != NULL)
 	{
 		s_genTrapCount++;

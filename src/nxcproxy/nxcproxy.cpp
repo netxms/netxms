@@ -211,9 +211,9 @@ bool Initialize()
 	                   ((g_flags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
 	                _T("NXCPROXY.EXE"),
 #ifdef _WIN32
-	                0, NULL))
+                   0, NULL, MSG_DEBUG))
 #else
-	                g_dwNumMessages, g_szMessages))
+	                g_dwNumMessages, g_szMessages, MSG_DEBUG))
 #endif
 	{
 		_ftprintf(stderr, _T("FATAL ERROR: Cannot open log file\n"));
@@ -232,7 +232,7 @@ bool Initialize()
 #endif
 
    // Initialize cryptografy
-   if (!InitCryptoLib(0xFFFF, DebugPrintf2))
+   if (!InitCryptoLib(0xFFFF))
    {
       nxlog_write(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       return false;
@@ -315,9 +315,7 @@ int main(int argc, char *argv[])
    TCHAR *pszEnv;
 #endif
 
-#ifdef _WIN32
-	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
-#endif
+   InitNetXMSProcess();
 
 #if defined(__sun) || defined(_AIX) || defined(__hpux)
    signal(SIGPIPE, SIG_IGN);
@@ -328,12 +326,6 @@ int main(int argc, char *argv[])
    signal(SIGUSR2, SIG_IGN);
 #endif
 
-   InitThreadLibrary();
-
-#ifdef NETXMS_MEMORY_DEBUG
-	InitMemoryDebugger();
-#endif
-   
    // Check for alternate config file location
 #ifdef _WIN32
    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\NetXMS\\ClientProxy"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)

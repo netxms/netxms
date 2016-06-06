@@ -42,6 +42,7 @@ import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectview.Activator;
+import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.OverviewDciLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -85,7 +86,7 @@ public class LastValues extends OverviewPageElement
    @Override
    protected String getTitle()
    {
-      return "Last Values";
+      return Messages.get().LastValues_Title;
    }
 
    /* (non-Javadoc)
@@ -136,11 +137,11 @@ public class LastValues extends OverviewPageElement
    private void setupTable()
    {
       TableColumn tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-      tc.setText("Description");
+      tc.setText(Messages.get().LastValues_Description);
       tc.setWidth(300);
 
       tc = new TableColumn(viewer.getTable(), SWT.LEFT);
-      tc.setText("Value");
+      tc.setText(Messages.get().LastValues_Value);
       tc.setWidth(100);
 
       viewer.getTable().setHeaderVisible(false);
@@ -200,7 +201,7 @@ public class LastValues extends OverviewPageElement
    {
       final NXCSession session = ConsoleSharedData.getSession();
       final long nodeId = getObject().getObjectId();
-      ConsoleJob job = new ConsoleJob("Read last DCI values", getObjectTab().getViewPart(), Activator.PLUGIN_ID, null) {
+      ConsoleJob job = new ConsoleJob(Messages.get().LastValues_JobName, getObjectTab().getViewPart(), Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -221,14 +222,14 @@ public class LastValues extends OverviewPageElement
             }
             catch(Exception e)
             {
-               Activator.log("Exception in last values overview element", e);
+               Activator.log("Exception in last values overview element", e); //$NON-NLS-1$
             }
          }
          
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot read last DCI values";
+            return Messages.get().LastValues_JobErrorMsg;
          }
       };
       job.setUser(false);

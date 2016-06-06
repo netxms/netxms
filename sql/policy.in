@@ -120,6 +120,10 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
     VALUES (28,'33f6193a-e103-4f5f-8bee-870bbcc08066',7944,'Terminate the alarm if the SNMP agent on the node start responding again',
         '%m',6,'SNMP_UNREACHABLE_%i','',0,EVENT_ALARM_TIMEOUT,0,'');
 
+INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
+    VALUES (29,'417648af-5361-49a5-9471-6ef31e857b2d',7944,'Generate an alarm when error occurred during LDAP synchronization',
+        '%m',5,'SYS_LDAP_SYNC_ERROR_%2','',0,EVENT_ALARM_TIMEOUT,0,'');
+
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (2,EVENT_SERVICE_DOWN);
@@ -151,3 +155,4 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (25,EVENT_AGENT_FAIL);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (26,EVENT_AGENT_OK);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (27,EVENT_SNMP_FAIL);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (28,EVENT_SNMP_OK);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (29,EVENT_LDAP_SYNC_ERROR);

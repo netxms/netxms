@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -50,6 +50,7 @@ Entry::Entry()
    m_loginName = NULL;
    m_fullName = NULL;
    m_description = NULL;
+   m_id = NULL;
    m_memberList = new StringSet();
 }
 
@@ -61,6 +62,7 @@ Entry::~Entry()
    free(m_loginName);
    free(m_fullName);
    free(m_description);
+   free(m_id);
    delete m_memberList;
 }
 
@@ -142,6 +144,14 @@ int ldap_parse_page_control(LDAP *ldap, LDAPControl **controls,
 	return LDAP_CONTROL_NOT_FOUND;
 }
 #endif /* HAVE_LDAP_PARSE_PAGE_CONTROL */
+
+/**
+ * Lists
+ */
+StringObjectMap<Entry> *userIdEntryList;
+StringObjectMap<Entry> *userDnEntryList;
+StringObjectMap<Entry> *groupIdEntryList;
+StringObjectMap<Entry> *groupDnEntryList;
 
 /**
  * Correctly formats ldap connection string (according to OS)
@@ -276,6 +286,8 @@ void LDAPConnection::getAllSyncParameters()
    ConfigReadStrUTF8(_T("LdapMappingName"), m_ldapLoginNameAttr, MAX_CONFIG_VALUE, "");
    ConfigReadStrUTF8(_T("LdapMappingFullName"), m_ldapFullNameAttr, MAX_CONFIG_VALUE, "");
    ConfigReadStrUTF8(_T("LdapMappingDescription"), m_ldapDescriptionAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LdapUserUniqueId"), m_ldapUsreIdAttr, MAX_CONFIG_VALUE, "");
+   ConfigReadStrUTF8(_T("LdapGroupUniqueId"), m_ldapGroupIdAttr, MAX_CONFIG_VALUE, "");
    ConfigReadStr(_T("LdapGroupClass"), m_groupClass, MAX_CONFIG_VALUE, _T(""));
    ConfigReadStr(_T("LdapUserClass"), m_userClass, MAX_CONFIG_VALUE, _T(""));
    m_action = ConfigReadInt(_T("LdapUserDeleteAction"), 1); //default value - to disable user(value=1)
@@ -299,8 +311,10 @@ void LDAPConnection::syncUsers()
 
    struct ldap_timeval timeOut = { 10, 0 }; // 10 second connecion/search timeout
    LDAPMessage *searchResult;
-   StringObjectMap<Entry> *userEntryList = new StringObjectMap<Entry>(true); //as unique string ID is used dn
-   StringObjectMap<Entry> *groupEntryList= new StringObjectMap<Entry>(true); //as unique string ID is used dn
+   userDnEntryList = new StringObjectMap<Entry>(true); //as unique string ID is used dn
+   userIdEntryList = new StringObjectMap<Entry>(false); //as unique string ID is used id
+   groupDnEntryList= new StringObjectMap<Entry>(true); //as unique string ID is used dn
+   groupIdEntryList= new StringObjectMap<Entry>(false); //as unique string ID is used id
 
    //Parse search base string. As separater is used ';' if this symbol is not escaped
    LDAP_CHAR *tmp  = ldap_strdup(m_searchBase);
@@ -356,7 +370,7 @@ void LDAPConnection::syncUsers()
       {
          if (rc == LDAP_SIZELIMIT_EXCEEDED)
          {
-            rc = readInPages(userEntryList, groupEntryList, base);
+            rc = readInPages(base);
          }
          else
          {
@@ -367,7 +381,7 @@ void LDAPConnection::syncUsers()
       }
       else
       {
-         fillLists(searchResult, userEntryList, groupEntryList);
+         fillLists(searchResult);
       }
 
       ldap_msgfree(searchResult);
@@ -387,18 +401,20 @@ void LDAPConnection::syncUsers()
    if(rc == LDAP_SUCCESS)
    {
       //compare new LDAP list with old users
-      compareUserLists(userEntryList);
-      compareGroupList(groupEntryList);
+      compareUserLists();
+      compareGroupList();
    }
 
-   delete userEntryList;
-   delete groupEntryList;
+   delete userDnEntryList;
+   delete userIdEntryList;
+   delete groupDnEntryList;
+   delete groupIdEntryList;
 }
 
 /**
  * Reads and process each page
  */
-int LDAPConnection::readInPages(StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList, LDAP_CHAR *base)
+int LDAPConnection::readInPages(LDAP_CHAR *base)
 {
    DbgPrintf(7, _T("LDAPConnection::readInPages(): Getting LDAP results as a pages."));
    LDAPControl *pageControl=NULL, *controls[2] = { NULL, NULL };
@@ -432,7 +448,7 @@ int LDAPConnection::readInPages(StringObjectMap<Entry> *userEntryList, StringObj
       /* Insert the control into a list to be passed to the search. */
       controls[0] = pageControl;
 
-      DbgPrintf(6, _T("LDAPConnection::syncUsers(): Search Base DN: %s"), base);
+      DbgPrintf(6, _T("LDAPConnection::syncUsers(): Search Base DN: ") LDAP_TFMT, base);
       /* Search for entries in the directory using the parmeters. */
       rc = ldap_search_ext_s(
                m_ldapConn,		// LDAP session handle
@@ -456,7 +472,7 @@ int LDAPConnection::readInPages(StringObjectMap<Entry> *userEntryList, StringObj
 
       /* Parse the results to retrieve the contols being returned. */
       rc = ldap_parse_result(m_ldapConn, searchResult, NULL, NULL, NULL, NULL, &returnedControls, FALSE);
-      fillLists(searchResult, userEntryList, groupEntryList);
+      fillLists(searchResult);
       ldap_msgfree(searchResult);
 
       /* Clear cookie */
@@ -504,7 +520,7 @@ TCHAR *LDAPConnection::ldap_internal_get_dn(LDAP *conn, LDAPMessage *entry)
 /**
  * Fills lists of users and groups from search results
  */
-void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry> *userEntryList, StringObjectMap<Entry> *groupEntryList)
+void LDAPConnection::fillLists(LDAPMessage *searchResult)
 {
    LDAPMessage *entry;
    char *attribute;
@@ -557,6 +573,14 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry>
          {
             newObj->m_description = getAttrValue(entry, attribute);
          }
+         if (m_ldapUsreIdAttr[0] != 0 && !strcmp(attribute, m_ldapUsreIdAttr) && newObj->m_type == LDAP_USER)
+         {
+            newObj->m_id = getIdAttrValue(entry, attribute);
+         }
+         if (m_ldapGroupIdAttr[0] != 0 && !strcmp(attribute, m_ldapGroupIdAttr) && newObj->m_type == LDAP_GROUP)
+         {
+            newObj->m_id = getIdAttrValue(entry, attribute);
+         }
          if (!strcmp(attribute, "member"))
          {
             i = 0;
@@ -589,12 +613,16 @@ void LDAPConnection::fillLists(LDAPMessage *searchResult, StringObjectMap<Entry>
       if (newObj->m_type == LDAP_USER && newObj->m_loginName != NULL)
       {
          DbgPrintf(4, _T("LDAPConnection::fillLists(): User added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
-         userEntryList->set(dn, newObj);
+         userDnEntryList->set(dn, newObj);
+         if(m_ldapUsreIdAttr[0] != 0 && newObj->m_id != NULL)
+            userIdEntryList->set(newObj->m_id, newObj);
       }
       else if (newObj->m_type == LDAP_GROUP && newObj->m_loginName != NULL)
       {
          DbgPrintf(4, _T("LDAPConnection::fillLists(): Group added: dn: %s, login name: %s, full name: %s, description: %s"), dn, newObj->m_loginName, CHECK_NULL(newObj->m_fullName), CHECK_NULL(newObj->m_description));
-         groupEntryList->set(dn, newObj);
+         groupDnEntryList->set(dn, newObj);
+         if(m_ldapGroupIdAttr[0] != 0 && newObj->m_id != NULL)
+            groupIdEntryList->set(newObj->m_id, newObj);
       }
       else
       {
@@ -624,30 +652,60 @@ TCHAR *LDAPConnection::getAttrValue(LDAPMessage *entry, const char *attr, UINT32
    return result;
 }
 
+/**
+ * Get attribute's value
+ */
+TCHAR *LDAPConnection::getIdAttrValue(LDAPMessage *entry, const char *attr)
+{
+   BYTE hash[SHA256_DIGEST_SIZE];
+   BYTE tmp[1024];
+   memset(tmp, 0, 1024);
+   berval **values = ldap_get_values_lenA(m_ldapConn, entry, (char *)attr);   // cast needed for Windows LDAP library
+   int i,pos;
+   for(i = 0, pos = 0; i < ldap_count_values_len(values); i++)
+   {
+      if(pos+values[i]->bv_len > 1024)
+         break;
+      memcpy(tmp+pos,values[i]->bv_val,values[i]->bv_len);
+      pos += values[i]->bv_len;
+   }
+   ldap_value_free_len(values);
+   if(i == 0)
+      return _tcsdup(_T(""));
+
+   CalculateSHA256Hash(tmp, pos, hash);
+   TCHAR *result = (TCHAR *)malloc(sizeof(TCHAR) * (SHA256_DIGEST_SIZE * 2 + 1));
+   BinToStr(hash, SHA256_DIGEST_SIZE, result);
+   return result;
+}
+
+/**
+ * Parse range information from attribute
+ */
 static void ParseRange(const char *attr, int *start, int *end)
 {
    *end  = -1;
    *start = -1;
-   //read from ';' till '-' and till end
-   char *tmpAttr = strdup(attr);
-   char *tmpS = strchr(tmpAttr,'=');
-   char *tmpE = strchr(tmpAttr,'-');
-   if(tmpS == NULL || tmpE == NULL)
+
+   const char *tmpS = strchr(attr, '=');
+   if (tmpS == NULL)
       return;
+
+   char *tmpAttr = strdup(tmpS + 1);
+   char *tmpE = strchr(tmpAttr, '-');
+   if (tmpE == NULL)
+   {
+      free(tmpAttr);
+      return;
+   }
    *tmpE = 0;
-   *start = atoi(tmpS);
-   tmpS = tmpE + 1;
-   if(tmpS == NULL)
-      return;
-   if(tmpS[0] == '*')
+   tmpE++;
+   *start = atoi(tmpAttr);
+   if (tmpE[0] != '*')
    {
-      *end  = -1;
+      *end = atoi(tmpE);
    }
-   else
-   {
-      *end = atoi(tmpS);
-   }
-   safe_free(tmpAttr);
+   free(tmpAttr);
 }
 
 /**
@@ -762,10 +820,10 @@ static EnumerationCallbackResult UpdateUserCallback(const TCHAR *key, const void
 /**
  * Updates user list according to newly recievd user list
  */
-void LDAPConnection::compareUserLists(StringObjectMap<Entry> *userEntryList)
+void LDAPConnection::compareUserLists()
 {
-   userEntryList->forEach(UpdateUserCallback, NULL);
-   RemoveDeletedLDAPEntries(userEntryList, m_action, true);
+   userDnEntryList->forEach(UpdateUserCallback, NULL);
+   RemoveDeletedLDAPEntries(userDnEntryList, userIdEntryList, m_action, true);
 }
 
 /**
@@ -780,10 +838,10 @@ static EnumerationCallbackResult UpdateGroupCallback(const TCHAR *key, const voi
 /**
  * Updates group list according to newly recievd user list
  */
-void LDAPConnection::compareGroupList(StringObjectMap<Entry> *groupEntryList)
+void LDAPConnection::compareGroupList()
 {
-   groupEntryList->forEach(UpdateGroupCallback, NULL);
-   RemoveDeletedLDAPEntries(groupEntryList, m_action, false);
+   groupDnEntryList->forEach(UpdateGroupCallback, NULL);
+   RemoveDeletedLDAPEntries(groupDnEntryList, groupIdEntryList, m_action, false);
 }
 
 /**

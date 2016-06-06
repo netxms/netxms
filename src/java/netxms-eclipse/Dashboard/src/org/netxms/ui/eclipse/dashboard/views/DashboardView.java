@@ -203,7 +203,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		};
 		actionSave.setEnabled(false);
 		
-		actionExportValues = new Action("E&xport line chart values", SharedIcons.CSV) {
+		actionExportValues = new Action(Messages.get().DashboardView_ExportLineChartValues, SharedIcons.CSV) {
          @Override
          public void run()
          {
@@ -463,7 +463,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private void exportLineChartValues()
 	{
 	   FileDialog fd = new FileDialog(getSite().getShell(), SWT.SAVE);
-	   fd.setFileName(dashboard.getObjectName() + ".csv");
+	   fd.setFileName(dashboard.getObjectName() + ".csv"); //$NON-NLS-1$
 	   final String fileName = fd.open();
 	   if (fileName == null)
 	      return;
@@ -484,11 +484,11 @@ public class DashboardView extends ViewPart implements ISaveablePart
       final DateFormat dfTime = RegionalSettings.getTimeFormat();
       final DateFormat dfDateTime = RegionalSettings.getDateTimeFormat();
 	   
-	   new ConsoleJob("Export line chart data", this, Activator.PLUGIN_ID, null) {
+	   new ConsoleJob(Messages.get().DashboardView_ExportLineChartData, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            boolean doInterpolation = session.getPublicServerVariableAsBoolean("DashboardDataExportEnableInterpolation");
+            boolean doInterpolation = session.getPublicServerVariableAsBoolean("DashboardDataExportEnableInterpolation"); //$NON-NLS-1$
             
             // Build combined time series
             // Time stamps in series are reversed - latest value first
@@ -552,9 +552,9 @@ public class DashboardView extends ViewPart implements ISaveablePart
             BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
             try
             {
-               writer.write("# " + dashboard.getObjectName() + " " + dfDateTime.format(new Date()));
+               writer.write("# " + dashboard.getObjectName() + " " + dfDateTime.format(new Date())); //$NON-NLS-1$ //$NON-NLS-2$
                writer.newLine();
-               writer.write("DATE,TIME");
+               writer.write("DATE,TIME"); //$NON-NLS-1$
                for(DataCacheElement d : data)
                {
                   writer.write(',');
@@ -575,7 +575,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
                      {
                         double v = values[i];
                         if (Math.abs(v) > 0.001)
-                           writer.write(String.format("%.3f", v));
+                           writer.write(String.format("%.3f", v)); //$NON-NLS-1$
                         else
                            writer.write(Double.toString(v));
                      }
@@ -592,7 +592,7 @@ public class DashboardView extends ViewPart implements ISaveablePart
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot export line chart data";
+            return Messages.get().DashboardView_8;
          }
       }.start();
 	}

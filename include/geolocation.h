@@ -81,6 +81,8 @@ public:
    bool sameLocation(double lat, double lon, int oldAccurasy) const;
 
 	void fillMessage(NXCPMessage &msg) const;
+
+	static GeoLocation parseAgentData(const TCHAR *data);
 };
 
 

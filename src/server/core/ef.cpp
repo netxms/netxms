@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -64,14 +64,13 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 			name = request->getFieldAsString(VID_EVENT_NAME);
 			if (name != NULL)
 			{
-				EVENT_TEMPLATE *pt;
-
 				DbgPrintf(5, _T("Event specified by name (%s)"), name);
-				pt = FindEventTemplateByName(name);
+				EventTemplate *pt = FindEventTemplateByName(name);
 				if (pt != NULL)
 				{
-					code = pt->dwCode;
+					code = pt->getCode();
 					DbgPrintf(5, _T("Event name %s resolved to event code %d"), name, code);
+					pt->decRefCount();
 				}
 				else
 				{

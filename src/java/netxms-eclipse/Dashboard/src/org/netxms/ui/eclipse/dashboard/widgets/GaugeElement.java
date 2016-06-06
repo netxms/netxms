@@ -26,7 +26,9 @@ import org.netxms.ui.eclipse.charts.api.ChartColor;
 import org.netxms.ui.eclipse.charts.api.ChartDciConfig;
 import org.netxms.ui.eclipse.charts.api.ChartFactory;
 import org.netxms.ui.eclipse.charts.api.Gauge;
+import org.netxms.ui.eclipse.charts.api.GaugeColorMode;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
+import org.netxms.ui.eclipse.tools.ColorConverter;
 
 /**
  * Dial chart element
@@ -77,11 +79,13 @@ public class GaugeElement extends ComparisonChartElement
 		((Gauge)chart).setRightYellowZone(config.getRightYellowZone());
 		((Gauge)chart).setRightRedZone(config.getRightRedZone());
 		((Gauge)chart).setFontName(config.getFontName());
+		((Gauge)chart).setColorMode(GaugeColorMode.getByValue(config.getColorMode()));
+		((Gauge)chart).setCustomColor(ColorConverter.rgbFromInt(config.getCustomColor()));
 		
 		int index = 0;
 		for(ChartDciConfig dci : config.getDciList())
 		{
-			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName()), 0.0);
+			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName(), dci.getDisplayFormat()), 0.0);
 			int color = dci.getColorAsInt();
 			if (color != -1)
 				chart.setPaletteEntry(index, new ChartColor(color));

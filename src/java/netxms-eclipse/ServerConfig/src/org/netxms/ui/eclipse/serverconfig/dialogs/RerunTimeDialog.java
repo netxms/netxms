@@ -69,7 +69,7 @@ public class RerunTimeDialog extends Dialog
          }
       };
       
-      dateSelector = (DateTimeSelector)WidgetHelper.createLabeledControl(dialogArea, SWT.NONE, factory, "", WidgetHelper.DEFAULT_LAYOUT_DATA);
+      dateSelector = (DateTimeSelector)WidgetHelper.createLabeledControl(dialogArea, SWT.NONE, factory, "New execution time", WidgetHelper.DEFAULT_LAYOUT_DATA);
       dateSelector.setValue(new Date());
 
       return dialogArea;
@@ -82,7 +82,7 @@ public class RerunTimeDialog extends Dialog
    protected void configureShell(Shell newShell)
    {
       super.configureShell(newShell);
-      newShell.setText("Execution date");
+      newShell.setText("Reschedule Task");
    }
    
    /* (non-Javadoc)

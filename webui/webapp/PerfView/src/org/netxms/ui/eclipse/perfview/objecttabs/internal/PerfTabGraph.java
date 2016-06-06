@@ -97,7 +97,7 @@ public class PerfTabGraph extends DashboardComposite
       {
 		   chart.setYAxisRange(settings.getMinYScaleValue(), settings.getMaxYScaleValue());
       }
-		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getRuntimeName())); //$NON-NLS-1$
+		chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getRuntimeName(), "%s")); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		addDisposeListener(new DisposeListener() {
          @Override
@@ -128,7 +128,7 @@ public class PerfTabGraph extends DashboardComposite
 			else
 				styles.set(items.size() - 1, style);
 			chart.setItemStyles(styles);
-			chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getRuntimeName())); //$NON-NLS-1$
+			chart.addParameter(new GraphItem(nodeId, dci.getId(), 0, 0, "", settings.getRuntimeName(), "%s")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 	

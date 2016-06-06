@@ -30,7 +30,7 @@ void ClusterNodeJoin(void *arg)
    static const TCHAR *rspNames[] = { _T("ACCEPTED AS SECONDARY"), _T("ACCEPTED AS MASTER"), _T("WAIT FOR MASTER"), _T("SPLIT BRAIN") };
 
    ClusterNodeInfo *node = (ClusterNodeInfo *)arg;
-   ClusterDebug(4, _T("ClusterNodeJoin: requesting join from from node %d [%s]"), node->m_id, (const TCHAR *)node->m_addr->toString());
+   ClusterDebug(4, _T("ClusterNodeJoin: requesting join from node %d [%s]"), node->m_id, (const TCHAR *)node->m_addr->toString());
 
    NXCPMessage msg;
    msg.setCode(CMD_JOIN_CLUSTER);
@@ -53,6 +53,9 @@ void ClusterNodeJoin(void *arg)
          case CJR_ACCEPTED_AS_MASTER:
             ChangeClusterNodeState(node, CLUSTER_NODE_SYNC);
             SetJoinCondition();
+            break;
+         case CJR_SPLIT_BRAIN:
+            g_nxccEventHandler->onSplitBrain();
             break;
       }
       delete response;

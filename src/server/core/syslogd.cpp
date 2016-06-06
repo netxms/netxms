@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -75,6 +75,7 @@ static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
 static NodeMatchingPolicy s_nodeMatchingPolicy = SOURCE_IP_THEN_HOSTNAME;
 static THREAD s_receiverThread = INVALID_THREAD_HANDLE;
 static bool s_running = true;
+static bool s_alwaysUseServerTime = false;
 
 /**
  * Parse timestamp field
@@ -209,20 +210,29 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
    // Parse HEADER part
    if (ParseTimeStamp(&pCurr, nMsgLen, &nPos, &pRec->tmTimeStamp))
    {
-      // Hostname
-      for(i = 0; (*pCurr >= 33) && (*pCurr <= 126) && (i < MAX_SYSLOG_HOSTNAME_LEN - 1) && (nPos < nMsgLen); i++, nPos++, pCurr++)
-         pRec->szHostName[i] = *pCurr;
-      if ((nPos >= nMsgLen) || (*pCurr != ' '))
+      // Use server time if configured
+      // We still had to parse timestamp to get correct start position for MSG part
+      if (!s_alwaysUseServerTime)
       {
-         // Not a valid hostname, assuming to be a part of message
-         pCurr -= i;
-         nPos -= i;
-			pRec->szHostName[0] = 0;
+         // Hostname
+         for(i = 0; (*pCurr >= 33) && (*pCurr <= 126) && (i < MAX_SYSLOG_HOSTNAME_LEN - 1) && (nPos < nMsgLen); i++, nPos++, pCurr++)
+            pRec->szHostName[i] = *pCurr;
+         if ((nPos >= nMsgLen) || (*pCurr != ' '))
+         {
+            // Not a valid hostname, assuming to be a part of message
+            pCurr -= i;
+            nPos -= i;
+            pRec->szHostName[0] = 0;
+         }
+         else
+         {
+            pCurr++;
+            nPos++;
+         }
       }
       else
       {
-         pCurr++;
-         nPos++;
+         pRec->tmTimeStamp = time(NULL);
       }
    }
    else
@@ -499,13 +509,12 @@ static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const
  */
 static bool EventNameResolver(const TCHAR *name, UINT32 *code)
 {
-	EVENT_TEMPLATE *event;
 	bool success = false;
-
-	event = FindEventTemplateByName(name);
+	EventTemplate *event = FindEventTemplateByName(name);
 	if (event != NULL)
 	{
-		*code = event->dwCode;
+		*code = event->getCode();
+		event->decRefCount();
 		success = true;
 	}
 	return success;
@@ -685,7 +694,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
       nxlog_write(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, port);
 #endif
 
-   SetLogParserTraceCallback(DbgPrintf2);
+   SetLogParserTraceCallback(nxlog_debug2);
    InitLogParserLibrary();
 
 	// Create message parser
@@ -774,6 +783,7 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
 void StartSyslogServer()
 {
    s_nodeMatchingPolicy = (NodeMatchingPolicy)ConfigReadInt(_T("SyslogNodeMatchingPolicy"), SOURCE_IP_THEN_HOSTNAME);
+   s_alwaysUseServerTime = ConfigReadInt(_T("SyslogIgnoreMessageTimestamp"), 0) ? true : false;
 
    // Determine first available message id
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
@@ -826,4 +836,16 @@ void ReinitializeSyslogParser()
 	if (s_parserLock == INVALID_MUTEX_HANDLE)
 		return;	// Syslog daemon not initialized
 	CreateParserFromConfig();
+}
+
+/**
+ * Handler for syslog related configuration changes
+ */
+void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
+{
+   if (!_tcscmp(name, _T("SyslogIgnoreMessageTimestamp")))
+   {
+      s_alwaysUseServerTime = _tcstol(value, NULL, 0) ? true : false;
+      nxlog_debug(4, _T("Syslog: ignore message timestamp option set to %s"), s_alwaysUseServerTime ? _T("ON") : _T("OFF"));
+   }
 }

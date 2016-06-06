@@ -59,7 +59,7 @@
             class="org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView"
             icon="icons/clock.png"
             id="org.netxms.ui.eclipse.serverconfig.views.ScheduledTaskView"
-            name="Scheduled Tasks">
+            name="%view.name.ScheduledTasks">
       </view>
    </extension>
    <extension
@@ -126,6 +126,26 @@
             id="org.netxms.ui.eclipse.serverconfig.commands.open_scheduled_tasks"
             name="Scheduled tasks">
       </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.new_task"
+            name="New scheduled task">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.edit_task"
+            name="Edit scheduled task">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.reschedule_task"
+            name="Reschedule task">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.enable_task"
+            name="Enable task">
+      </command>
+      <command
+            id="org.netxms.ui.eclipse.serverconfig.commands.disable_task"
+            name="Disable task">
+      </command>
    </extension>
 
    <extension point = "org.eclipse.ui.actionSets">
@@ -177,11 +197,11 @@
            definitionId="org.netxms.ui.eclipse.serverconfig.commands.open_scheduled_tasks"
            icon="icons/clock.png"
            id="org.netxms.ui.eclipse.serverconfig.actions.open_scheduled_tasks"
-           label="Scheduled Tasks"
+           label="%action.label.ScheduledTasks"
            menubarPath="config/additions"
            style="push"
            toolbarPath="config/additions"
-           tooltip="Scheduled Tasks">
+           tooltip="%action.tooltip.ScheduledTasks">
      </action>
 	   </actionSet>
 	   <actionSet id="org.netxms.ui.eclipse.action_set.export_import_configuration"
@@ -224,6 +244,11 @@
             name="Server Configuration Editor"
             parentId="org.eclipse.ui.contexts.window">
       </context>
+      <context
+            id="org.netxms.ui.eclipse.serverconfig.context.ScheduledTaskView"
+            name="Scheduled Tasks"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
    <extension
          point="org.eclipse.ui.bindings">
@@ -257,6 +282,119 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+N">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.serverconfig.commands.new_task"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.ScheduledTaskView"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+N">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.serverconfig.commands.edit_task"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.ScheduledTaskView"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M3+ENTER">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.serverconfig.commands.reschedule_task"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.ScheduledTaskView"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+R">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.serverconfig.commands.disable_task"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.ScheduledTaskView"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+D">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.serverconfig.commands.enable_task"
+            contextId="org.netxms.ui.eclipse.serverconfig.context.ScheduledTaskView"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+E">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.activities">
+      <activity
+            id="org.netxms.ui.eclipse.serverconfig.activity.ServerConfiguration"
+            name="Server Configuration">
+         <enabledWhen>
+            <with
+                  variable="org.netxms.access.ServerConfig">
+               <equals
+                     value="true">
+               </equals>
+            </with>
+         </enabledWhen>
+      </activity>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconfig.activity.ServerConfiguration"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconfig/org.netxms.ui.eclipse.serverconfig.actions.open">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconfig.activity.ServerConfiguration"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconfig/org.netxms.ui.eclipse.serverconfig.actions.open_netdisco_config">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconfig.activity.ServerConfiguration"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconfig/org.netxms.ui.eclipse.serverconfig.actions.open_syslog_config">
+      </activityPatternBinding>
+      <activity
+            id="org.netxms.ui.eclipse.serverconfig.activity.MappingTables"
+            name="Mapping Tables">
+         <enabledWhen>
+            <with
+                  variable="org.netxms.access.ManageMappingTables">
+               <equals
+                     value="true">
+               </equals>
+            </with>
+         </enabledWhen>
+      </activity>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconfig.activity.MappingTables"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconfig/org.netxms.ui.eclipse.serverconfig.actions.open_mapping_tables">
+      </activityPatternBinding>
+      <activity
+            id="org.netxms.ui.eclipse.serverconfig.activity.ExportImport"
+            name="Export/Import">
+         <enabledWhen>
+            <and>
+               <with
+                     variable="org.netxms.access.ConfigureTraps">
+                  <equals
+                        value="true">
+                  </equals>
+               </with>
+               <with
+                     variable="org.netxms.access.EventProcessingPolicy">
+                  <equals
+                        value="true">
+                  </equals>
+               </with>
+               <with
+                     variable="org.netxms.access.ViewEventConfiguration">
+                  <equals
+                        value="true">
+                  </equals>
+               </with>
+            </and>
+         </enabledWhen>
+      </activity>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconfig.activity.ExportImport"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconfig/org.netxms.ui.eclipse.serverconfig.actions.export_configuration">
+      </activityPatternBinding>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconfig.activity.ExportImport"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconfig/org.netxms.ui.eclipse.serverconfig.actions.import_configuration">
+      </activityPatternBinding>
    </extension>
 
 

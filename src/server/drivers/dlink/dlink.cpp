@@ -90,7 +90,7 @@ InterfaceList *DLinkDriver::getInterfaces(SNMP_Transport *snmp, StringMap *attri
 	if (ifList == NULL)
 		return NULL;
 
-	UINT32 slotSize = attributes->getULong(_T(".dlink.slotSize"), 48);
+	UINT32 slotSize = attributes->getUInt32(_T(".dlink.slotSize"), 48);
 
 	// Find physical ports
 	for(int i = 0; i < ifList->size(); i++)

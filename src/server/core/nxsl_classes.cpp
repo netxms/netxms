@@ -1,6 +1,6 @@
-/* 
+/*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -157,158 +157,111 @@ NXSL_NetObjClass::NXSL_NetObjClass() : NXSL_Class()
 /**
  * NXSL class NetObj: get attribute
  */
-NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const TCHAR *attr)
 {
-   NXSL_Value *pValue = NULL;
-   NetObj *object = (NetObj *)pObject->getData();
-   if (!_tcscmp(pszAttr, _T("name")))
+   NXSL_Value *value = NULL;
+   NetObj *object = (NetObj *)_object->getData();
+   if (!_tcscmp(attr, _T("name")))
    {
-      pValue = new NXSL_Value(object->getName());
+      value = new NXSL_Value(object->getName());
    }
-   else if (!_tcscmp(pszAttr, _T("id")))
+   else if (!_tcscmp(attr, _T("id")))
    {
-      pValue = new NXSL_Value(object->getId());
+      value = new NXSL_Value(object->getId());
    }
-   else if (!_tcscmp(pszAttr, _T("guid")))
+   else if (!_tcscmp(attr, _T("guid")))
    {
 		TCHAR buffer[64];
-      pValue = new NXSL_Value(object->getGuid().toString(buffer));
+      value = new NXSL_Value(object->getGuid().toString(buffer));
    }
-   else if (!_tcscmp(pszAttr, _T("status")))
+   else if (!_tcscmp(attr, _T("status")))
    {
-      pValue = new NXSL_Value((LONG)object->Status());
+      value = new NXSL_Value((LONG)object->Status());
    }
-   else if (!_tcscmp(pszAttr, _T("ipAddr")))
+   else if (!_tcscmp(attr, _T("ipAddr")))
    {
       TCHAR buffer[64];
       GetObjectIpAddress(object).toString(buffer);
-      pValue = new NXSL_Value(buffer);
+      value = new NXSL_Value(buffer);
    }
-   else if (!_tcscmp(pszAttr, _T("type")))
+   else if (!_tcscmp(attr, _T("type")))
    {
-      pValue = new NXSL_Value((LONG)object->getObjectClass());
+      value = new NXSL_Value((LONG)object->getObjectClass());
    }
-   else if (!_tcscmp(pszAttr, _T("comments")))
+   else if (!_tcscmp(attr, _T("comments")))
    {
-      pValue = new NXSL_Value(object->getComments());
+      value = new NXSL_Value(object->getComments());
    }
-   else if (!_tcscmp(pszAttr, _T("country")))
+   else if (!_tcscmp(attr, _T("customAttributes")))
    {
-      pValue = new NXSL_Value(object->getPostalAddress()->getCountry());
+      value = object->getCustomAttributesForNXSL();
    }
-   else if (!_tcscmp(pszAttr, _T("city")))
+   else if (!_tcscmp(attr, _T("country")))
    {
-      pValue = new NXSL_Value(object->getPostalAddress()->getCity());
+      value = new NXSL_Value(object->getPostalAddress()->getCountry());
    }
-   else if (!_tcscmp(pszAttr, _T("geolocation")))
+   else if (!_tcscmp(attr, _T("city")))
    {
-      pValue = new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, new GeoLocation(object->getGeoLocation())));
+      value = new NXSL_Value(object->getPostalAddress()->getCity());
    }
-   else if (!_tcscmp(pszAttr, _T("streetAddress")))
+   else if (!_tcscmp(attr, _T("geolocation")))
    {
-      pValue = new NXSL_Value(object->getPostalAddress()->getStreetAddress());
+      value = new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, new GeoLocation(object->getGeoLocation())));
    }
-   else if (!_tcscmp(pszAttr, _T("postcode")))
+   else if (!_tcscmp(attr, _T("streetAddress")))
    {
-      pValue = new NXSL_Value(object->getPostalAddress()->getPostCode());
+      value = new NXSL_Value(object->getPostalAddress()->getStreetAddress());
+   }
+   else if (!_tcscmp(attr, _T("postcode")))
+   {
+      value = new NXSL_Value(object->getPostalAddress()->getPostCode());
    }
 	else
 	{
-		const TCHAR *attrValue = object->getCustomAttribute(pszAttr);
+		const TCHAR *attrValue = object->getCustomAttribute(attr);
 		if (attrValue != NULL)
 		{
-			pValue = new NXSL_Value(attrValue);
+			value = new NXSL_Value(attrValue);
 		}
 	}
-   return pValue;
+   return value;
 }
 
 /**
  * NXSL class Zone: constructor
  */
-NXSL_ZoneClass::NXSL_ZoneClass() : NXSL_Class()
+NXSL_ZoneClass::NXSL_ZoneClass() : NXSL_NetObjClass()
 {
    _tcscpy(m_name, _T("Zone"));
-
-   NXSL_REGISTER_METHOD(NetObj, clearGeoLocation, 0);
-   NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
-   NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);
-   NXSL_REGISTER_METHOD(NetObj, setStatusPropagation, -1);
 }
 
 /**
  * NXSL class Zone: get attribute
  */
-NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
-   NXSL_Value *pValue = NULL;
-   Zone *zone = (Zone *)pObject->getData();
-   if (!_tcscmp(pszAttr, _T("agentProxy")))
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
+   Zone *zone = (Zone *)object->getData();
+   if (!_tcscmp(attr, _T("agentProxy")))
    {
-      pValue = new NXSL_Value(zone->getAgentProxy());
+      value = new NXSL_Value(zone->getAgentProxy());
    }
-   else if (!_tcscmp(pszAttr, _T("city")))
+   else if (!_tcscmp(attr, _T("icmpProxy")))
    {
-      pValue = new NXSL_Value(zone->getPostalAddress()->getCity());
+      value = new NXSL_Value(zone->getIcmpProxy());
    }
-   else if (!_tcscmp(pszAttr, _T("comments")))
+   else if (!_tcscmp(attr, _T("snmpProxy")))
    {
-      pValue = new NXSL_Value(zone->getComments());
+      value = new NXSL_Value(zone->getSnmpProxy());
    }
-   else if (!_tcscmp(pszAttr, _T("country")))
+   else if (!_tcscmp(attr, _T("zoneId")))
    {
-      pValue = new NXSL_Value(zone->getPostalAddress()->getCountry());
+      value = new NXSL_Value(zone->getZoneId());
    }
-   else if (!_tcscmp(pszAttr, _T("geolocation")))
-   {
-      pValue = new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, new GeoLocation(zone->getGeoLocation())));
-   }
-   else if (!_tcscmp(pszAttr, _T("guid")))
-   {
-		TCHAR buffer[64];
-      pValue = new NXSL_Value(zone->getGuid().toString(buffer));
-   }
-   else if (!_tcscmp(pszAttr, _T("icmpProxy")))
-   {
-      pValue = new NXSL_Value(zone->getIcmpProxy());
-   }
-   else if (!_tcscmp(pszAttr, _T("id")))
-   {
-      pValue = new NXSL_Value(zone->getId());
-   }
-   else if (!_tcscmp(pszAttr, _T("name")))
-   {
-      pValue = new NXSL_Value(zone->getName());
-   }
-   else if (!_tcscmp(pszAttr, _T("postcode")))
-   {
-      pValue = new NXSL_Value(zone->getPostalAddress()->getPostCode());
-   }
-   else if (!_tcscmp(pszAttr, _T("snmpProxy")))
-   {
-      pValue = new NXSL_Value(zone->getSnmpProxy());
-   }
-   else if (!_tcscmp(pszAttr, _T("status")))
-   {
-      pValue = new NXSL_Value((LONG)zone->Status());
-   }
-   else if (!_tcscmp(pszAttr, _T("streetAddress")))
-   {
-      pValue = new NXSL_Value(zone->getPostalAddress()->getStreetAddress());
-   }
-   else if (!_tcscmp(pszAttr, _T("zoneId")))
-   {
-      pValue = new NXSL_Value(zone->getZoneId());
-   }
-	else
-	{
-		const TCHAR *attrValue = zone->getCustomAttribute(pszAttr);
-		if (attrValue != NULL)
-		{
-			pValue = new NXSL_Value(attrValue);
-		}
-	}
-   return pValue;
+   return value;
 }
 
 /**
@@ -380,7 +333,7 @@ NXSL_METHOD_DEFINITION(Node, enableTopologyPolling)
 /**
  * NXSL class Node: constructor
  */
-NXSL_NodeClass::NXSL_NodeClass() : NXSL_Class()
+NXSL_NodeClass::NXSL_NodeClass() : NXSL_NetObjClass()
 {
    _tcscpy(m_name, _T("Node"));
 
@@ -390,329 +343,292 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
    NXSL_REGISTER_METHOD(Node, enableStatusPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableTopologyPolling, 1);
-
-   NXSL_REGISTER_METHOD(NetObj, clearGeoLocation, 0);
-   NXSL_REGISTER_METHOD(NetObj, setGeoLocation, 1);
-   NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);
-   NXSL_REGISTER_METHOD(NetObj, setStatusPropagation, -1);
 }
 
 /**
  * NXSL class Node: get attribute
  */
-NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
-   Node *pNode;
-   NXSL_Value *pValue = NULL;
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
 
-   pNode = (Node *)pObject->getData();
-   if (!_tcscmp(pszAttr, _T("agentVersion")))
+   Node *node = (Node *)object->getData();
+   if (!_tcscmp(attr, _T("agentVersion")))
    {
-      pValue = new NXSL_Value(pNode->getAgentVersion());
+      value = new NXSL_Value(node->getAgentVersion());
    }
-   else if (!_tcscmp(pszAttr, _T("bootTime")))
+   else if (!_tcscmp(attr, _T("bootTime")))
    {
-      pValue = new NXSL_Value((INT64)pNode->getBootTime());
+      value = new NXSL_Value((INT64)node->getBootTime());
    }
-   else if (!_tcscmp(pszAttr, _T("bridgeBaseAddress")))
-   {
-      TCHAR buffer[64];
-      pValue = new NXSL_Value(BinToStr(pNode->getBridgeId(), MAC_ADDR_LENGTH, buffer));
-   }
-   else if (!_tcscmp(pszAttr, _T("city")))
-   {
-      pValue = new NXSL_Value(pNode->getPostalAddress()->getCity());
-   }
-   else if (!_tcscmp(pszAttr, _T("comments")))
-   {
-      pValue = new NXSL_Value(pNode->getComments());
-   }
-   else if (!_tcscmp(pszAttr, _T("country")))
-   {
-      pValue = new NXSL_Value(pNode->getPostalAddress()->getCountry());
-   }
-   else if (!_tcscmp(pszAttr, _T("driver")))
-   {
-      pValue = new NXSL_Value(pNode->getDriverName());
-   }
-   else if (!_tcscmp(pszAttr, _T("flags")))
-   {
-		pValue = new NXSL_Value(pNode->getFlags());
-   }
-   else if (!_tcscmp(pszAttr, _T("geolocation")))
-   {
-      pValue = new NXSL_Value(new NXSL_Object(&g_nxslGeoLocationClass, new GeoLocation(pNode->getGeoLocation())));
-   }
-   else if (!_tcscmp(pszAttr, _T("guid")))
-   {
-		TCHAR buffer[64];
-      pValue = new NXSL_Value(pNode->getGuid().toString(buffer));
-   }
-   else if (!_tcscmp(pszAttr, _T("id")))
-   {
-      pValue = new NXSL_Value(pNode->getId());
-   }
-   else if (!_tcscmp(pszAttr, _T("ipAddr")))
+   else if (!_tcscmp(attr, _T("bridgeBaseAddress")))
    {
       TCHAR buffer[64];
-      pNode->getIpAddress().toString(buffer);
-      pValue = new NXSL_Value(buffer);
+      value = new NXSL_Value(BinToStr(node->getBridgeId(), MAC_ADDR_LENGTH, buffer));
    }
-   else if (!_tcscmp(pszAttr, _T("isAgent")))
+   else if (!_tcscmp(attr, _T("driver")))
    {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_NATIVE_AGENT) ? 1 : 0));
+      value = new NXSL_Value(node->getDriverName());
    }
-   else if (!_tcscmp(pszAttr, _T("isBridge")))
+   else if (!_tcscmp(attr, _T("flags")))
    {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_BRIDGE) ? 1 : 0));
+		value = new NXSL_Value(node->getFlags());
    }
-   else if (!_tcscmp(pszAttr, _T("isCDP")))
+   else if (!_tcscmp(attr, _T("isAgent")))
    {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_CDP) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_NATIVE_AGENT) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isLLDP")))
+   else if (!_tcscmp(attr, _T("isBridge")))
    {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_LLDP) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_BRIDGE) ? 1 : 0));
    }
-	else if (!_tcscmp(pszAttr, _T("isLocalMgmt")) || !_tcscmp(pszAttr, _T("isLocalManagement")))
+   else if (!_tcscmp(attr, _T("isCDP")))
+   {
+      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_CDP) ? 1 : 0));
+   }
+   else if (!_tcscmp(attr, _T("isLLDP")))
+   {
+      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_LLDP) ? 1 : 0));
+   }
+	else if (!_tcscmp(attr, _T("isLocalMgmt")) || !_tcscmp(attr, _T("isLocalManagement")))
 	{
-		pValue = new NXSL_Value((LONG)((pNode->isLocalManagement()) ? 1 : 0));
+		value = new NXSL_Value((LONG)((node->isLocalManagement()) ? 1 : 0));
 	}
-   else if (!_tcscmp(pszAttr, _T("isPAE")) || !_tcscmp(pszAttr, _T("is802_1x")))
+   else if (!_tcscmp(attr, _T("isPAE")) || !_tcscmp(attr, _T("is802_1x")))
    {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_8021X) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_8021X) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isPrinter")))
+   else if (!_tcscmp(attr, _T("isPrinter")))
    {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_PRINTER) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_PRINTER) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isRouter")))
+   else if (!_tcscmp(attr, _T("isRouter")))
    {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_ROUTER) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_ROUTER) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isSMCLP")))
+   else if (!_tcscmp(attr, _T("isSMCLP")))
    {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_SMCLP) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_SMCLP) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isSNMP")))
+   else if (!_tcscmp(attr, _T("isSNMP")))
    {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_SNMP) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_SNMP) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isSONMP")))
+   else if (!_tcscmp(attr, _T("isSONMP")))
    {
-      pValue = new NXSL_Value((LONG)((pNode->getFlags() & NF_IS_SONMP) ? 1 : 0));
+      value = new NXSL_Value((LONG)((node->getFlags() & NF_IS_SONMP) ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("name")))
+   else if (!_tcscmp(attr, _T("platformName")))
    {
-      pValue = new NXSL_Value(pNode->getName());
+      value = new NXSL_Value(node->getPlatformName());
    }
-   else if (!_tcscmp(pszAttr, _T("platformName")))
+   else if (!_tcscmp(attr, _T("runtimeFlags")))
    {
-      pValue = new NXSL_Value(pNode->getPlatformName());
+      value = new NXSL_Value(node->getRuntimeFlags());
    }
-   else if (!_tcscmp(pszAttr, _T("postcode")))
+   else if (!_tcscmp(attr, _T("snmpOID")))
    {
-      pValue = new NXSL_Value(pNode->getPostalAddress()->getPostCode());
+      value = new NXSL_Value(node->getSNMPObjectId());
    }
-   else if (!_tcscmp(pszAttr, _T("runtimeFlags")))
+   else if (!_tcscmp(attr, _T("snmpSysContact")))
    {
-      pValue = new NXSL_Value(pNode->getRuntimeFlags());
+      value = new NXSL_Value(node->getSysContact());
    }
-   else if (!_tcscmp(pszAttr, _T("snmpOID")))
+   else if (!_tcscmp(attr, _T("snmpSysLocation")))
    {
-      pValue = new NXSL_Value(pNode->getSNMPObjectId());
+      value = new NXSL_Value(node->getSysLocation());
    }
-   else if (!_tcscmp(pszAttr, _T("snmpSysContact")))
+   else if (!_tcscmp(attr, _T("snmpSysName")))
    {
-      pValue = new NXSL_Value(pNode->getSysContact());
+      value = new NXSL_Value(node->getSysName());
    }
-   else if (!_tcscmp(pszAttr, _T("snmpSysLocation")))
+   else if (!_tcscmp(attr, _T("snmpVersion")))
    {
-      pValue = new NXSL_Value(pNode->getSysLocation());
+      value = new NXSL_Value((LONG)node->getSNMPVersion());
    }
-   else if (!_tcscmp(pszAttr, _T("snmpSysName")))
+   else if (!_tcscmp(attr, _T("sysDescription")))
    {
-      pValue = new NXSL_Value(pNode->getSysName());
+      value = new NXSL_Value(node->getSysDescription());
    }
-   else if (!_tcscmp(pszAttr, _T("snmpVersion")))
-   {
-      pValue = new NXSL_Value((LONG)pNode->getSNMPVersion());
-   }
-   else if (!_tcscmp(pszAttr, _T("status")))
-   {
-      pValue = new NXSL_Value((LONG)pNode->Status());
-   }
-   else if (!_tcscmp(pszAttr, _T("streetAddress")))
-   {
-      pValue = new NXSL_Value(pNode->getPostalAddress()->getStreetAddress());
-   }
-   else if (!_tcscmp(pszAttr, _T("sysDescription")))
-   {
-      pValue = new NXSL_Value(pNode->getSysDescription());
-   }
-   else if (!_tcscmp(pszAttr, _T("zone")))
+   else if (!_tcscmp(attr, _T("zone")))
 	{
       if (g_flags & AF_ENABLE_ZONING)
       {
-         Zone *zone = FindZoneByGUID(pNode->getZoneId());
+         Zone *zone = FindZoneByGUID(node->getZoneId());
 		   if (zone != NULL)
 		   {
-			   pValue = new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, zone));
+			   value = new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, zone));
 		   }
 		   else
 		   {
-			   pValue = new NXSL_Value;
+			   value = new NXSL_Value;
 		   }
 	   }
 	   else
 	   {
-		   pValue = new NXSL_Value;
+		   value = new NXSL_Value;
 	   }
 	}
-   else if (!_tcscmp(pszAttr, _T("zoneId")))
+   else if (!_tcscmp(attr, _T("zoneId")))
 	{
-      pValue = new NXSL_Value(pNode->getZoneId());
+      value = new NXSL_Value(node->getZoneId());
    }
-	else
-	{
-		const TCHAR *attrValue = pNode->getCustomAttribute(pszAttr);
-		if (attrValue != NULL)
-		{
-			pValue = new NXSL_Value(attrValue);
-		}
-	}
-   return pValue;
+   return value;
+}
+
+/**
+ * Interface::setExcludeFromTopology(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Interface, setExcludeFromTopology)
+{
+   if (!argv[0]->isInteger())
+      return NXSL_ERR_NOT_INTEGER;
+
+   Interface *iface = (Interface *)object->getData();
+   iface->setExcludeFromTopology(argv[0]->getValueAsInt32() != 0);
+   *result = new NXSL_Value;
+   return 0;
+}
+
+/**
+ * Interface::setExpectedState(state) method
+ */
+NXSL_METHOD_DEFINITION(Interface, setExpectedState)
+{
+   int state;
+   if (argv[0]->isInteger())
+   {
+      state = argv[0]->getValueAsInt32();
+   }
+   else if (argv[0]->isString())
+   {
+      static const TCHAR *stateNames[] = { _T("UP"), _T("DOWN"), _T("IGNORE"), NULL };
+      const TCHAR *name = argv[0]->getValueAsCString();
+      for(state = 0; stateNames[state] != NULL; state++)
+         if (!_tcsicmp(stateNames[state], name))
+            break;
+   }
+   else
+   {
+      return NXSL_ERR_NOT_STRING;
+   }
+
+   if ((state >= 0) && (state <= 2))
+      ((Interface *)object->getData())->setExpectedState(state);
+
+   *result = new NXSL_Value;
+   return 0;
 }
 
 /**
  * NXSL class Interface: constructor
  */
-NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_Class()
+NXSL_InterfaceClass::NXSL_InterfaceClass() : NXSL_NetObjClass()
 {
    _tcscpy(m_name, _T("Interface"));
 
-   NXSL_REGISTER_METHOD(NetObj, setStatusCalculation, -1);
-   NXSL_REGISTER_METHOD(NetObj, setStatusPropagation, -1);
+   NXSL_REGISTER_METHOD(Interface, setExcludeFromTopology, 1);
+   NXSL_REGISTER_METHOD(Interface, setExpectedState, 1);
 }
 
 /**
  * NXSL class Interface: get attribute
  */
-NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
-   Interface *iface;
-   NXSL_Value *pValue = NULL;
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
 
-   iface = (Interface *)pObject->getData();
-   if (!_tcscmp(pszAttr, _T("adminState")))
+   Interface *iface = (Interface *)object->getData();
+   if (!_tcscmp(attr, _T("adminState")))
    {
-		pValue = new NXSL_Value((LONG)iface->getAdminState());
+		value = new NXSL_Value((LONG)iface->getAdminState());
    }
-   else if (!_tcscmp(pszAttr, _T("alias")))
+   else if (!_tcscmp(attr, _T("alias")))
    {
-      pValue = new NXSL_Value(iface->getAlias());
+      value = new NXSL_Value(iface->getAlias());
    }
-   else if (!_tcscmp(pszAttr, _T("bridgePortNumber")))
+   else if (!_tcscmp(attr, _T("bridgePortNumber")))
    {
-		pValue = new NXSL_Value(iface->getBridgePortNumber());
+		value = new NXSL_Value(iface->getBridgePortNumber());
    }
-   else if (!_tcscmp(pszAttr, _T("comments")))
+   else if (!_tcscmp(attr, _T("description")))
    {
-      pValue = new NXSL_Value(iface->getComments());
+      value = new NXSL_Value(iface->getDescription());
    }
-   else if (!_tcscmp(pszAttr, _T("description")))
+   else if (!_tcscmp(attr, _T("dot1xBackendAuthState")))
    {
-      pValue = new NXSL_Value(iface->getDescription());
+		value = new NXSL_Value((LONG)iface->getDot1xBackendAuthState());
    }
-   else if (!_tcscmp(pszAttr, _T("dot1xBackendAuthState")))
+   else if (!_tcscmp(attr, _T("dot1xPaeAuthState")))
    {
-		pValue = new NXSL_Value((LONG)iface->getDot1xBackendAuthState());
+		value = new NXSL_Value((LONG)iface->getDot1xPaeAuthState());
    }
-   else if (!_tcscmp(pszAttr, _T("dot1xPaeAuthState")))
+   else if (!_tcscmp(attr, _T("expectedState")))
    {
-		pValue = new NXSL_Value((LONG)iface->getDot1xPaeAuthState());
+		value = new NXSL_Value((iface->getFlags() & IF_EXPECTED_STATE_MASK) >> 28);
    }
-   else if (!_tcscmp(pszAttr, _T("expectedState")))
+   else if (!_tcscmp(attr, _T("flags")))
    {
-		pValue = new NXSL_Value((iface->getFlags() & IF_EXPECTED_STATE_MASK) >> 28);
+		value = new NXSL_Value(iface->getFlags());
    }
-   else if (!_tcscmp(pszAttr, _T("flags")))
+   else if (!_tcscmp(attr, _T("ifIndex")))
    {
-		pValue = new NXSL_Value(iface->getFlags());
+		value = new NXSL_Value(iface->getIfIndex());
    }
-   else if (!_tcscmp(pszAttr, _T("guid")))
+   else if (!_tcscmp(attr, _T("ifType")))
    {
-		TCHAR buffer[64];
-      pValue = new NXSL_Value(iface->getGuid().toString(buffer));
+		value = new NXSL_Value(iface->getIfType());
    }
-   else if (!_tcscmp(pszAttr, _T("id")))
+   else if (!_tcscmp(attr, _T("ipNetMask")))
    {
-      pValue = new NXSL_Value(iface->getId());
+      value = new NXSL_Value(iface->getIpAddressList()->getFirstUnicastAddress().getMaskBits());
    }
-   else if (!_tcscmp(pszAttr, _T("ifIndex")))
+   else if (!_tcscmp(attr, _T("isExcludedFromTopology")))
    {
-		pValue = new NXSL_Value(iface->getIfIndex());
+      value = new NXSL_Value((LONG)(iface->isExcludedFromTopology() ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("ifType")))
+   else if (!_tcscmp(attr, _T("isLoopback")))
    {
-		pValue = new NXSL_Value(iface->getIfType());
+		value = new NXSL_Value((LONG)(iface->isLoopback() ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("ipAddr")))
+   else if (!_tcscmp(attr, _T("isManuallyCreated")))
    {
-      TCHAR buffer[64];
-      iface->getIpAddressList()->getFirstUnicastAddress().toString(buffer);
-      pValue = new NXSL_Value(buffer);
+		value = new NXSL_Value((LONG)(iface->isManuallyCreated() ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("ipNetMask")))
+   else if (!_tcscmp(attr, _T("isPhysicalPort")))
    {
-      pValue = new NXSL_Value(iface->getIpAddressList()->getFirstUnicastAddress().getMaskBits());
+		value = new NXSL_Value((LONG)(iface->isPhysicalPort() ? 1 : 0));
    }
-   else if (!_tcscmp(pszAttr, _T("isExcludedFromTopology")))
-   {
-      pValue = new NXSL_Value((LONG)(iface->isExcludedFromTopology() ? 1 : 0));
-   }
-   else if (!_tcscmp(pszAttr, _T("isLoopback")))
-   {
-		pValue = new NXSL_Value((LONG)(iface->isLoopback() ? 1 : 0));
-   }
-   else if (!_tcscmp(pszAttr, _T("isManuallyCreated")))
-   {
-		pValue = new NXSL_Value((LONG)(iface->isManuallyCreated() ? 1 : 0));
-   }
-   else if (!_tcscmp(pszAttr, _T("isPhysicalPort")))
-   {
-		pValue = new NXSL_Value((LONG)(iface->isPhysicalPort() ? 1 : 0));
-   }
-   else if (!_tcscmp(pszAttr, _T("macAddr")))
+   else if (!_tcscmp(attr, _T("macAddr")))
    {
 		TCHAR buffer[256];
-		pValue = new NXSL_Value(BinToStr(iface->getMacAddr(), MAC_ADDR_LENGTH, buffer));
+		value = new NXSL_Value(BinToStr(iface->getMacAddr(), MAC_ADDR_LENGTH, buffer));
    }
-   else if (!_tcscmp(pszAttr, _T("mtu")))
+   else if (!_tcscmp(attr, _T("mtu")))
    {
-      pValue = new NXSL_Value(iface->getMTU());
+      value = new NXSL_Value(iface->getMTU());
    }
-   else if (!_tcscmp(pszAttr, _T("name")))
-   {
-      pValue = new NXSL_Value(iface->getName());
-   }
-   else if (!_tcscmp(pszAttr, _T("node")))
+   else if (!_tcscmp(attr, _T("node")))
 	{
 		Node *parentNode = iface->getParentNode();
 		if (parentNode != NULL)
 		{
-			pValue = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, parentNode));
+			value = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, parentNode));
 		}
 		else
 		{
-			pValue = new NXSL_Value;
+			value = new NXSL_Value;
 		}
 	}
-   else if (!_tcscmp(pszAttr, _T("operState")))
+   else if (!_tcscmp(attr, _T("operState")))
    {
-		pValue = new NXSL_Value((LONG)iface->getOperState());
+		value = new NXSL_Value((LONG)iface->getOperState());
    }
-   else if (!_tcscmp(pszAttr, _T("peerInterface")))
+   else if (!_tcscmp(attr, _T("peerInterface")))
    {
 		Interface *peerIface = (Interface *)FindObjectById(iface->getPeerInterfaceId(), OBJECT_INTERFACE);
 		if (peerIface != NULL)
@@ -725,33 +641,33 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 				{
 					if (peerNode->isTrustedNode(parentNode->getId()))
 					{
-						pValue = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, peerIface));
+						value = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, peerIface));
 					}
 					else
 					{
 						// No access, return null
-						pValue = new NXSL_Value;
+						value = new NXSL_Value;
 						DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): access denied for node %s [%d]"),
 									 iface->getName(), iface->getId(), peerNode->getName(), peerNode->getId());
 					}
 				}
 				else
 				{
-					pValue = new NXSL_Value;
+					value = new NXSL_Value;
 					DbgPrintf(4, _T("NXSL::Interface::peerInterface(%s [%d]): parentNode=%p peerNode=%p"), iface->getName(), iface->getId(), parentNode, peerNode);
 				}
 			}
 			else
 			{
-				pValue = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, peerIface));
+				value = new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, peerIface));
 			}
 		}
 		else
 		{
-			pValue = new NXSL_Value;
+			value = new NXSL_Value;
 		}
    }
-   else if (!_tcscmp(pszAttr, _T("peerNode")))
+   else if (!_tcscmp(attr, _T("peerNode")))
    {
 		Node *peerNode = (Node *)FindObjectById(iface->getPeerNodeId(), OBJECT_NODE);
 		if (peerNode != NULL)
@@ -761,74 +677,160 @@ NXSL_Value *NXSL_InterfaceClass::getAttr(NXSL_Object *pObject, const TCHAR *pszA
 				Node *parentNode = iface->getParentNode();
 				if ((parentNode != NULL) && (peerNode->isTrustedNode(parentNode->getId())))
 				{
-					pValue = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, peerNode));
+					value = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, peerNode));
 				}
 				else
 				{
 					// No access, return null
-					pValue = new NXSL_Value;
+					value = new NXSL_Value;
 					DbgPrintf(4, _T("NXSL::Interface::peerNode(%s [%d]): access denied for node %s [%d]"),
 					          iface->getName(), iface->getId(), peerNode->getName(), peerNode->getId());
 				}
 			}
 			else
 			{
-				pValue = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, peerNode));
+				value = new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, peerNode));
 			}
 		}
 		else
 		{
-			pValue = new NXSL_Value;
+			value = new NXSL_Value;
 		}
    }
-   else if (!_tcscmp(pszAttr, _T("port")))
+   else if (!_tcscmp(attr, _T("port")))
    {
-      pValue = new NXSL_Value(iface->getPortNumber());
+      value = new NXSL_Value(iface->getPortNumber());
    }
-   else if (!_tcscmp(pszAttr, _T("slot")))
+   else if (!_tcscmp(attr, _T("slot")))
    {
-      pValue = new NXSL_Value(iface->getSlotNumber());
+      value = new NXSL_Value(iface->getSlotNumber());
    }
-   else if (!_tcscmp(pszAttr, _T("speed")))
+   else if (!_tcscmp(attr, _T("speed")))
    {
-      pValue = new NXSL_Value(iface->getSpeed());
+      value = new NXSL_Value(iface->getSpeed());
    }
-   else if (!_tcscmp(pszAttr, _T("status")))
-   {
-      pValue = new NXSL_Value((LONG)iface->Status());
-   }
-   else if (!_tcscmp(pszAttr, _T("zone")))
+   else if (!_tcscmp(attr, _T("zone")))
 	{
       if (g_flags & AF_ENABLE_ZONING)
       {
          Zone *zone = FindZoneByGUID(iface->getZoneId());
 		   if (zone != NULL)
 		   {
-			   pValue = new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, zone));
+			   value = new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, zone));
 		   }
 		   else
 		   {
-			   pValue = new NXSL_Value;
+			   value = new NXSL_Value;
 		   }
 	   }
 	   else
 	   {
-		   pValue = new NXSL_Value;
+		   value = new NXSL_Value;
 	   }
 	}
-   else if (!_tcscmp(pszAttr, _T("zoneId")))
+   else if (!_tcscmp(attr, _T("zoneId")))
 	{
-      pValue = new NXSL_Value(iface->getZoneId());
+      value = new NXSL_Value(iface->getZoneId());
    }
-	else
-	{
-		const TCHAR *attrValue = iface->getCustomAttribute(pszAttr);
-		if (attrValue != NULL)
-		{
-			pValue = new NXSL_Value(attrValue);
-		}
-	}
-   return pValue;
+   return value;
+}
+
+/**
+ * NXSL class Mobile Device: constructor
+ */
+NXSL_MobileDeviceClass::NXSL_MobileDeviceClass() : NXSL_NetObjClass()
+{
+   _tcscpy(m_name, _T("MobileDevice"));
+}
+
+/**
+ * NXSL class Mobile Device: get attribute
+ */
+NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
+   MobileDevice *mobDevice = (MobileDevice *)object->getData();
+   if (!_tcscmp(attr, _T("deviceId")))
+   {
+		value = new NXSL_Value(mobDevice->getDeviceId());
+   }
+   else if (!_tcscmp(attr, _T("vendor")))
+   {
+      value = new NXSL_Value(mobDevice->getVendor());
+   }
+   else if (!_tcscmp(attr, _T("model")))
+   {
+      value = new NXSL_Value(mobDevice->getModel());
+   }
+   else if (!_tcscmp(attr, _T("serialNumber")))
+   {
+      value = new NXSL_Value(mobDevice->getSerialNumber());
+   }
+   else if (!_tcscmp(attr, _T("osName")))
+   {
+      value = new NXSL_Value(mobDevice->getOsName());
+   }
+   else if (!_tcscmp(attr, _T("osVersion")))
+   {
+      value = new NXSL_Value(mobDevice->getOsVersion());
+   }
+   else if (!_tcscmp(attr, _T("userId")))
+   {
+      value = new NXSL_Value(mobDevice->getUserId());
+   }
+   else if (!_tcscmp(attr, _T("batteryLevel")))
+   {
+      value = new NXSL_Value(mobDevice->getBatteryLevel());
+   }
+
+   return value;
+}
+
+/**
+ * NXSL class "Cluster" constructor
+ */
+NXSL_ClusterClass::NXSL_ClusterClass() : NXSL_NetObjClass()
+{
+   _tcscpy(m_name, _T("Cluster"));
+}
+
+/**
+ * NXSL class "Cluster" attributes
+ */
+NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
+   Cluster *cluster = (Cluster *)object->getData();
+   if (!_tcscmp(attr, _T("zone")))
+   {
+      if (g_flags & AF_ENABLE_ZONING)
+      {
+         Zone *zone = FindZoneByGUID(cluster->getZoneId());
+         if (zone != NULL)
+         {
+            value = new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, zone));
+         }
+         else
+         {
+            value = new NXSL_Value;
+         }
+      }
+      else
+      {
+         value = new NXSL_Value;
+      }
+   }
+   else if (!_tcscmp(attr, _T("zoneId")))
+   {
+      value = new NXSL_Value(cluster->getZoneId());
+   }
+   return value;
 }
 
 /**
@@ -892,51 +894,76 @@ NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
 /**
  * NXSL class Event: get attribute
  */
-NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *attr)
 {
    NXSL_Value *value = NULL;
 
    Event *event = (Event *)pObject->getData();
-   if (!_tcscmp(pszAttr, _T("code")))
+   if (!_tcscmp(attr, _T("code")))
    {
       value = new NXSL_Value(event->getCode());
    }
-   else if (!_tcscmp(pszAttr, _T("name")))
+   else if (!_tcscmp(attr, _T("name")))
    {
 		value = new NXSL_Value(event->getName());
    }
-   else if (!_tcscmp(pszAttr, _T("id")))
+   else if (!_tcscmp(attr, _T("id")))
    {
       value = new NXSL_Value(event->getId());
    }
-   else if (!_tcscmp(pszAttr, _T("severity")))
+   else if (!_tcscmp(attr, _T("severity")))
    {
       value = new NXSL_Value(event->getSeverity());
    }
-   else if (!_tcscmp(pszAttr, _T("timestamp")))
+   else if (!_tcscmp(attr, _T("timestamp")))
    {
       value = new NXSL_Value((INT64)event->getTimeStamp());
    }
-   else if (!_tcscmp(pszAttr, _T("message")))
+   else if (!_tcscmp(attr, _T("message")))
    {
       value = new NXSL_Value(event->getMessage());
    }
-   else if (!_tcscmp(pszAttr, _T("customMessage")))
+   else if (!_tcscmp(attr, _T("customMessage")))
    {
 		value = new NXSL_Value(event->getCustomMessage());
    }
-   else if (!_tcscmp(pszAttr, _T("userTag")))
+   else if (!_tcscmp(attr, _T("userTag")))
    {
       value = new NXSL_Value(event->getUserTag());
    }
-   else if (!_tcscmp(pszAttr, _T("parameters")))
+   else if (!_tcscmp(attr, _T("parameters")))
    {
 		NXSL_Array *array = new NXSL_Array;
-		UINT32 i;
-
-		for(i = 0; i < event->getParametersCount(); i++)
-			array->set((int)(i + 1), new NXSL_Value(event->getParameter(i)));
+		for(int i = 0; i < event->getParametersCount(); i++)
+			array->set(i + 1, new NXSL_Value(event->getParameter(i)));
       value = new NXSL_Value(array);
+   }
+   else
+   {
+      if (attr[0] == _T('$'))
+      {
+         // Try to find parameter with given index
+         TCHAR *eptr;
+         int index = _tcstol(&attr[1], &eptr, 10);
+         if ((index > 0) && (*eptr == 0))
+         {
+            const TCHAR *s = event->getParameter(index - 1);
+            if (s != NULL)
+            {
+               value = new NXSL_Value(s);
+            }
+         }
+      }
+
+      // Try to find named parameter with given name
+      if (value == NULL)
+      {
+         const TCHAR *s = event->getNamedParameter(attr);
+         if (s != NULL)
+         {
+            value = new NXSL_Value(s);
+         }
+      }
    }
    return value;
 }
@@ -946,8 +973,8 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
  */
 NXSL_METHOD_DEFINITION(Alarm, acknowledge)
 {
-   NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
-   *result = new NXSL_Value(AckAlarmById(alarm->alarmId, NULL, false, 0));
+   Alarm *alarm = (Alarm *)object->getData();
+   *result = new NXSL_Value(AckAlarmById(alarm->getAlarmId(), NULL, false, 0));
    return 0;
 }
 
@@ -956,8 +983,8 @@ NXSL_METHOD_DEFINITION(Alarm, acknowledge)
  */
 NXSL_METHOD_DEFINITION(Alarm, resolve)
 {
-   NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
-   *result = new NXSL_Value(ResolveAlarmById(alarm->alarmId, NULL, false));
+   Alarm *alarm = (Alarm *)object->getData();
+   *result = new NXSL_Value(ResolveAlarmById(alarm->getAlarmId(), NULL, false));
    return 0;
 }
 
@@ -966,8 +993,8 @@ NXSL_METHOD_DEFINITION(Alarm, resolve)
  */
 NXSL_METHOD_DEFINITION(Alarm, terminate)
 {
-   NXC_ALARM *alarm = (NXC_ALARM *)object->getData();
-   *result = new NXSL_Value(ResolveAlarmById(alarm->alarmId, NULL, true));
+   Alarm *alarm = (Alarm *)object->getData();
+   *result = new NXSL_Value(ResolveAlarmById(alarm->getAlarmId(), NULL, true));
    return 0;
 }
 
@@ -988,84 +1015,84 @@ NXSL_AlarmClass::NXSL_AlarmClass() : NXSL_Class()
  */
 void NXSL_AlarmClass::onObjectDelete(NXSL_Object *object)
 {
-   free(object->getData());
+   delete (Alarm *)object->getData();
 }
 
 /**
  * NXSL class Alarm: get attribute
  */
-NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+NXSL_Value *NXSL_AlarmClass::getAttr(NXSL_Object *pObject, const TCHAR *attr)
 {
    NXSL_Value *value = NULL;
-   NXC_ALARM *alarm = (NXC_ALARM *)pObject->getData();
+   Alarm *alarm = (Alarm *)pObject->getData();
 
-   if (!_tcscmp(pszAttr, _T("ackBy")))
+   if (!_tcscmp(attr, _T("ackBy")))
    {
-      value = new NXSL_Value(alarm->ackByUser);
+      value = new NXSL_Value(alarm->getAckByUser());
    }
-   else if (!_tcscmp(pszAttr, _T("creationTime")))
+   else if (!_tcscmp(attr, _T("creationTime")))
    {
-      value = new NXSL_Value(alarm->creationTime);
+      value = new NXSL_Value((INT64)alarm->getCreationTime());
    }
-   else if (!_tcscmp(pszAttr, _T("dciId")))
+   else if (!_tcscmp(attr, _T("dciId")))
    {
-      value = new NXSL_Value(alarm->dciId);
+      value = new NXSL_Value(alarm->getDciId());
    }
-   else if (!_tcscmp(pszAttr, _T("eventCode")))
+   else if (!_tcscmp(attr, _T("eventCode")))
    {
-      value = new NXSL_Value(alarm->sourceEventCode);
+      value = new NXSL_Value(alarm->getSourceEventCode());
    }
-   else if (!_tcscmp(pszAttr, _T("eventId")))
+   else if (!_tcscmp(attr, _T("eventId")))
    {
-      value = new NXSL_Value(alarm->sourceEventId);
+      value = new NXSL_Value(alarm->getSourceEventId());
    }
-   else if (!_tcscmp(pszAttr, _T("helpdeskReference")))
+   else if (!_tcscmp(attr, _T("helpdeskReference")))
    {
-      value = new NXSL_Value(alarm->helpDeskRef);
+      value = new NXSL_Value(alarm->getHelpDeskRef());
    }
-   else if (!_tcscmp(pszAttr, _T("helpdeskState")))
+   else if (!_tcscmp(attr, _T("helpdeskState")))
    {
-      value = new NXSL_Value(alarm->helpDeskState);
+      value = new NXSL_Value(alarm->getHelpDeskState());
    }
-   else if (!_tcscmp(pszAttr, _T("id")))
+   else if (!_tcscmp(attr, _T("id")))
    {
-      value = new NXSL_Value(alarm->alarmId);
+      value = new NXSL_Value(alarm->getAlarmId());
    }
-   else if (!_tcscmp(pszAttr, _T("key")))
+   else if (!_tcscmp(attr, _T("key")))
    {
-      value = new NXSL_Value(alarm->key);
+      value = new NXSL_Value(alarm->getKey());
    }
-   else if (!_tcscmp(pszAttr, _T("lastChangeTime")))
+   else if (!_tcscmp(attr, _T("lastChangeTime")))
    {
-      value = new NXSL_Value(alarm->lastChangeTime);
+      value = new NXSL_Value((INT64)alarm->getLastChangeTime());
    }
-   else if (!_tcscmp(pszAttr, _T("message")))
+   else if (!_tcscmp(attr, _T("message")))
    {
-      value = new NXSL_Value(alarm->message);
+      value = new NXSL_Value(alarm->getMessage());
    }
-   else if (!_tcscmp(pszAttr, _T("originalSeverity")))
+   else if (!_tcscmp(attr, _T("originalSeverity")))
    {
-      value = new NXSL_Value(alarm->originalSeverity);
+      value = new NXSL_Value(alarm->getOriginalSeverity());
    }
-   else if (!_tcscmp(pszAttr, _T("repeatCount")))
+   else if (!_tcscmp(attr, _T("repeatCount")))
    {
-      value = new NXSL_Value(alarm->repeatCount);
+      value = new NXSL_Value(alarm->getRepeatCount());
    }
-   else if (!_tcscmp(pszAttr, _T("resolvedBy")))
+   else if (!_tcscmp(attr, _T("resolvedBy")))
    {
-      value = new NXSL_Value(alarm->resolvedByUser);
+      value = new NXSL_Value(alarm->getResolvedByUser());
    }
-   else if (!_tcscmp(pszAttr, _T("severity")))
+   else if (!_tcscmp(attr, _T("severity")))
    {
-      value = new NXSL_Value(alarm->currentSeverity);
+      value = new NXSL_Value(alarm->getCurrentSeverity());
    }
-   else if (!_tcscmp(pszAttr, _T("sourceObject")))
+   else if (!_tcscmp(attr, _T("sourceObject")))
    {
-      value = new NXSL_Value(alarm->sourceObject);
+      value = new NXSL_Value(alarm->getSourceObject());
    }
-   else if (!_tcscmp(pszAttr, _T("state")))
+   else if (!_tcscmp(attr, _T("state")))
    {
-      value = new NXSL_Value(alarm->state);
+      value = new NXSL_Value(alarm->getState());
    }
    return value;
 }
@@ -1079,21 +1106,29 @@ NXSL_DciClass::NXSL_DciClass() : NXSL_Class()
 }
 
 /**
+ * Object destructor
+ */
+void NXSL_DciClass::onObjectDelete(NXSL_Object *object)
+{
+   delete (DCObjectInfo *)object->getData();
+}
+
+/**
  * Implementation of "DCI" class: get attribute
  */
 NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
-   DCObject *dci;
+   DCObjectInfo *dci;
    NXSL_Value *value = NULL;
 
-   dci = (DCObject *)object->getData();
+   dci = (DCObjectInfo *)object->getData();
    if (!_tcscmp(attr, _T("comments")))
    {
 		value = new NXSL_Value(dci->getComments());
    }
    else if (!_tcscmp(attr, _T("dataType")) && (dci->getType() == DCO_TYPE_ITEM))
    {
-		value = new NXSL_Value((LONG)((DCItem *)dci)->getDataType());
+		value = new NXSL_Value(dci->getDataType());
    }
    else if (!_tcscmp(attr, _T("description")))
    {
@@ -1109,7 +1144,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    }
    else if ((dci->getType() == DCO_TYPE_ITEM) && !_tcscmp(attr, _T("instance")))
    {
-		value = new NXSL_Value(((DCItem *)dci)->getInstance());
+		value = new NXSL_Value(dci->getInstance());
    }
    else if (!_tcscmp(attr, _T("lastPollTime")))
    {
@@ -1121,7 +1156,7 @@ NXSL_Value *NXSL_DciClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    }
    else if (!_tcscmp(attr, _T("origin")))
    {
-		value = new NXSL_Value((LONG)dci->getDataSource());
+		value = new NXSL_Value((LONG)dci->getOrigin());
    }
    else if (!_tcscmp(attr, _T("status")))
    {
@@ -1238,6 +1273,8 @@ NXSL_AlarmClass g_nxslAlarmClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_InterfaceClass g_nxslInterfaceClass;
+NXSL_ClusterClass g_nxslClusterClass;
+NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NodeClass g_nxslNodeClass;
 NXSL_SNMPTransportClass g_nxslSnmpTransportClass;

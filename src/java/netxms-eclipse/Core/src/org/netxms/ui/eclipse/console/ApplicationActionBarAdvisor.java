@@ -101,6 +101,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	private Action actionLangChinese;
    private Action actionLangCzech;
 	private Action actionLangEnglish;
+   private Action actionLangFrench;
 	private Action actionLangRussian;
 	private Action actionLangSpanish;
 	private IContributionItem contribItemShowView;
@@ -230,7 +231,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		getActionBarConfigurer().registerGlobalAction(actionFullScreen);
 		ConsoleSharedData.setProperty("FullScreenAction", actionFullScreen); //$NON-NLS-1$
 		
-		actionExportPerspective = new Action("&Export perspective...") {
+		actionExportPerspective = new Action(Messages.get().ApplicationActionBarAdvisor_ActionExportPerspective) {
          @Override
          public void run()
          {
@@ -238,7 +239,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
          }
       };
 		
-      actionImportPerspective = new Action("&Import perspective...") {
+      actionImportPerspective = new Action(Messages.get().ApplicationActionBarAdvisor_ActionImportPerspective) {
          @Override
          public void run()
          {
@@ -264,6 +265,12 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 				setLanguage("en"); //$NON-NLS-1$
 			}
 		};
+      actionLangFrench = new Action("&French", Activator.getImageDescriptor("icons/lang/fr.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+         public void run()
+         {
+            setLanguage("fr"); //$NON-NLS-1$
+         }
+      };
 		actionLangRussian = new Action("&Russian", Activator.getImageDescriptor("icons/lang/ru.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
@@ -309,6 +316,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		langMenu.add(actionLangChinese);
       langMenu.add(actionLangCzech);
 		langMenu.add(actionLangEnglish);
+      langMenu.add(actionLangFrench);
 		langMenu.add(actionLangRussian);
 		langMenu.add(actionLangSpanish);
 
@@ -510,18 +518,18 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
          {
             WorkbenchPage page = (WorkbenchPage)window.getActivePage();
             Perspective p = page.findPerspective(dlg.getSelection());
-            final XMLMemento memento = XMLMemento.createWriteRoot("perspective");
+            final XMLMemento memento = XMLMemento.createWriteRoot("perspective"); //$NON-NLS-1$
             p.saveState(memento);
             
             FileDialog fd = new FileDialog(window.getShell());
-            fd.setFilterExtensions(new String[] { "*.xml", "*.*" });
-            fd.setFilterNames(new String[] { "XML Files", "All Files" });
+            fd.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+            fd.setFilterNames(new String[] { Messages.get().ApplicationActionBarAdvisor_XMLFiles, Messages.get().ApplicationActionBarAdvisor_AllFiles });
             fd.setOverwrite(true);
-            fd.setText("Export perspective");
+            fd.setText(Messages.get().ApplicationActionBarAdvisor_ExportPerspective);
             final String fileName = fd.open();
             if (fileName != null)
             {
-               new ConsoleJob("Export perspective", null, Activator.PLUGIN_ID, null) {
+               new ConsoleJob(Messages.get().ApplicationActionBarAdvisor_ExportPerspective, null, Activator.PLUGIN_ID, null) {
                   @Override
                   protected void runInternal(IProgressMonitor monitor) throws Exception
                   {
@@ -541,7 +549,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
                   @Override
                   protected String getErrorMessage()
                   {
-                     return "Perspective export failed";
+                     return Messages.get().ApplicationActionBarAdvisor_PerspectiveExportFailed;
                   }
                }.start();
             }
@@ -549,8 +557,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	   }
 	   catch(Exception e)
 	   {
-	      Activator.logError("Exception in exportPerspective", e);
-	      MessageDialogHelper.openError(window.getShell(), "Error", "Perspective export failed");
+	      Activator.logError("Exception in exportPerspective", e); //$NON-NLS-1$
+	      MessageDialogHelper.openError(window.getShell(), Messages.get().ApplicationActionBarAdvisor_Error, Messages.get().ApplicationActionBarAdvisor_PerspectiveExportFailed);
 	   }
 	}
 	
@@ -561,17 +569,17 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	private void importPerspective(final IWorkbenchWindow window)
 	{
       FileDialog fd = new FileDialog(window.getShell());
-      fd.setFilterExtensions(new String[] { "*.xml", "*.*" });
-      fd.setFilterNames(new String[] { "XML Files", "All Files" });
-      fd.setText("Import perspective");
+      fd.setFilterExtensions(new String[] { "*.xml", "*.*" }); //$NON-NLS-1$ //$NON-NLS-2$
+      fd.setFilterNames(new String[] { Messages.get().ApplicationActionBarAdvisor_XMLFiles, Messages.get().ApplicationActionBarAdvisor_AllFiles });
+      fd.setText(Messages.get().ApplicationActionBarAdvisor_ImportPerspective);
       final String fileName = fd.open();
       if (fileName == null)
          return;
       
-      if (!MessageDialogHelper.openConfirm(window.getShell(), "Confirm Restart", "Perspective import will require management console restart. Continue?"))
+      if (!MessageDialogHelper.openConfirm(window.getShell(), Messages.get().ApplicationActionBarAdvisor_ConfirmRestart, Messages.get().ApplicationActionBarAdvisor_RestartConfirmationMessage))
          return;
       
-      new ConsoleJob("Import perspective", null, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ApplicationActionBarAdvisor_ImportPerspective, null, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -604,8 +612,8 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
                      }
                      catch(Exception e)
                      {
-                        Activator.logError("Exception in importPerspective", e);
-                        MessageDialogHelper.openError(window.getShell(), "Error", "Perspective import failed");
+                        Activator.logError("Exception in importPerspective", e); //$NON-NLS-1$
+                        MessageDialogHelper.openError(window.getShell(), Messages.get().ApplicationActionBarAdvisor_Error, Messages.get().ApplicationActionBarAdvisor_PerspectiveImportFailed);
                      }
                   }
                });
@@ -620,7 +628,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
          @Override
          protected String getErrorMessage()
          {
-            return "Perspective import failed";
+            return Messages.get().ApplicationActionBarAdvisor_PerspectiveImportFailed;
          }
       }.start();
 	}

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -81,6 +81,7 @@ Node::Node() : DataCollectionTarget()
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
    m_lastAgentCommTime = 0;
+   m_lastAgentConnectAttempt = 0;
 	m_linkLayerNeighbors = NULL;
 	m_vrrpInfo = NULL;
 	m_pTopology = NULL;
@@ -169,6 +170,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_failTimeSNMP = 0;
    m_failTimeAgent = 0;
    m_lastAgentCommTime = 0;
+   m_lastAgentConnectAttempt = 0;
 	m_linkLayerNeighbors = NULL;
 	m_vrrpInfo = NULL;
 	m_pTopology = NULL;
@@ -385,8 +387,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          }
          else
          {
-            pObject->AddChild(this);
-            AddParent(pObject);
+            pObject->addChild(this);
+            addParent(pObject);
          }
       }
 
@@ -738,11 +740,13 @@ Interface *Node::findInterfaceByIndex(UINT32 ifIndex)
  */
 Interface *Node::findInterfaceByName(const TCHAR *name)
 {
-   UINT32 i;
+   if ((name == NULL) || (name[0] == 0))
+      return NULL;
+
    Interface *pInterface;
 
    LockChildList(FALSE);
-   for(i = 0; i < m_dwChildCount; i++)
+   for(UINT32 i = 0; i < m_dwChildCount; i++)
       if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_pChildList[i];
@@ -1111,6 +1115,20 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
    pInterface->setSpeed(info->speed);
    pInterface->setIfTableSuffix(info->ifTableSuffixLength, info->ifTableSuffix);
 
+   int defaultExpectedState = ConfigReadInt(_T("DefaultInterfaceExpectedState"), IF_DEFAULT_EXPECTED_STATE_UP);
+   switch(defaultExpectedState)
+   {
+      case IF_DEFAULT_EXPECTED_STATE_AUTO:
+         pInterface->setExpectedState(IF_EXPECTED_STATE_AUTO);
+         break;
+      case IF_DEFAULT_EXPECTED_STATE_IGNORE:
+         pInterface->setExpectedState(IF_EXPECTED_STATE_IGNORE);
+         break;
+      default:
+         pInterface->setExpectedState(IF_EXPECTED_STATE_UP);
+         break;
+   }
+
    // Insert to objects' list and generate event
    NetObjInsert(pInterface, true, false);
    addInterface(pInterface);
@@ -1158,8 +1176,8 @@ void Node::deleteInterface(Interface *iface)
             Subnet *pSubnet = FindSubnetByIP(m_zoneId, addr->getSubnetAddress());
             if (pSubnet != NULL)
             {
-               DeleteParent(pSubnet);
-               pSubnet->DeleteChild(this);
+               deleteParent(pSubnet);
+               pSubnet->deleteChild(this);
             }
 			   DbgPrintf(5, _T("Node::deleteInterface(node=%s [%d], interface=%s [%d]): unlinked from subnet %s [%d]"),
 			             m_name, m_id, iface->getName(), iface->getId(),
@@ -1285,6 +1303,14 @@ restart_agent_check:
                unlockProperties();
             }
          }
+         else if ((dwResult == SNMP_ERR_ENGINE_ID) && (m_snmpVersion == SNMP_VERSION_3))
+         {
+            // Reset authoritative engine data
+            lockProperties();
+            m_snmpSecurity->setAuthoritativeEngine(SNMP_Engine());
+            unlockProperties();
+            goto restart_agent_check;
+         }
          else
          {
             sendPollerMsg(dwRqId, POLLER_ERROR _T("SNMP agent unreachable\r\n"));
@@ -1323,8 +1349,9 @@ restart_agent_check:
       sendPollerMsg(dwRqId, _T("Checking NetXMS agent connectivity\r\n"));
 
 		UINT32 error, socketError;
+      bool newConnection;
 		agentLock();
-      if (connectToAgent(&error, &socketError))
+      if (connectToAgent(&error, &socketError, &newConnection, true))
       {
          DbgPrintf(7, _T("StatusPoll(%s): connected to agent"), m_name);
          if (m_dwDynamicFlags & NDF_AGENT_UNREACHABLE)
@@ -1355,11 +1382,25 @@ restart_agent_check:
             PostEventEx(pQueue, EVENT_AGENT_FAIL, m_id, NULL);
             m_failTimeAgent = tNow;
             //cancel file monitoring locally(on agent it is canceled if agent have fallen)
-            g_monitoringList.removeDisconectedNode(m_id);
+            g_monitoringList.removeDisconnectedNode(m_id);
          }
       }
 		agentUnlock();
       DbgPrintf(7, _T("StatusPoll(%s): agent check finished"), m_name);
+
+      // If file update connection is active, send NOP command to prevent disconnection by idle timeout
+      AgentConnection *fileUpdateConnection;
+      lockProperties();
+      fileUpdateConnection = m_fileUpdateConn;
+      if (fileUpdateConnection != NULL)
+         fileUpdateConnection->incRefCount();
+      unlockProperties();
+      if (fileUpdateConnection != NULL)
+      {
+         nxlog_debug(6, _T("StatusPoll(%s): sending keepalive command on file monitoring connection"), m_name);
+         fileUpdateConnection->nop();
+         fileUpdateConnection->decRefCount();
+      }
    }
 
    poller->setStatus(_T("prepare polling list"));
@@ -1447,7 +1488,7 @@ restart_agent_check:
 			for(i = 0; i < m_dwChildCount; i++)
 				if ((m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE) &&
                 (((Interface *)m_pChildList[i])->getAdminState() != IF_ADMIN_STATE_DOWN) &&
-					 (((Interface *)m_pChildList[i])->getOperState() == IF_OPER_STATE_UP) &&
+					 (((Interface *)m_pChildList[i])->getConfirmedOperState() == IF_OPER_STATE_UP) &&
 					 (m_pChildList[i]->Status() != STATUS_UNMANAGED))
 				{
 					allDown = false;
@@ -1559,23 +1600,45 @@ restart_agent_check:
       {
          time_t oldAgentuptime = m_agentUpTime;
          m_agentUpTime = _tcstol(buffer, NULL, 0);
-         if((UINT32)oldAgentuptime > (UINT32)m_agentUpTime)
+         if ((UINT32)oldAgentuptime > (UINT32)m_agentUpTime)
          {
             //cancel file monitoring locally(on agent it is canceled if agent have fallen)
-            g_monitoringList.removeDisconectedNode(m_id);
+            g_monitoringList.removeDisconnectedNode(m_id);
          }
       }
       else
       {
          DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get agent uptime"), m_name, m_id);
-         g_monitoringList.removeDisconectedNode(m_id);
+         g_monitoringList.removeDisconnectedNode(m_id);
          m_agentUpTime = 0;
       }
    }
    else
    {
-      g_monitoringList.removeDisconectedNode(m_id);
+      g_monitoringList.removeDisconnectedNode(m_id);
       m_agentUpTime = 0;
+   }
+
+   // Get geolocation
+   if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
+   {
+      TCHAR buffer[MAX_RESULT_LENGTH];
+      if (getItemFromAgent(_T("GPS.LocationData"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      {
+         GeoLocation loc = GeoLocation::parseAgentData(buffer);
+         if (loc.getType() != GL_UNSET)
+         {
+            DbgPrintf(5, _T("StatusPoll(%s [%d]): location set to %s, %s from agent"), m_name, m_id, loc.getLatitudeAsString(), loc.getLongitudeAsString());
+            lockProperties();
+            m_geoLocation = loc;
+            setModified();
+            unlockProperties();
+         }
+      }
+      else
+      {
+         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get system location"), m_name, m_id);
+      }
    }
 
    // Send delayed events and destroy delayed event queue
@@ -1791,8 +1854,8 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 			NetObj *object = FindObjectByGUID(guid, -1);
 			if ((object != NULL) && (!object->isChild(m_id)))
 			{
-				object->AddChild(this);
-				AddParent(object);
+				object->addChild(this);
+				addParent(object);
 				DbgPrintf(5, _T("ConfPoll(%s): bound to policy object %s [%d]"), m_name, object->getName(), object->getId());
 			}
 		}
@@ -1820,8 +1883,8 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 
 		for(int i = 0; i < unbindListSize; i++)
 		{
-			unbindList[i]->DeleteChild(this);
-			DeleteParent(unbindList[i]);
+			unbindList[i]->deleteChild(this);
+			deleteParent(unbindList[i]);
 			DbgPrintf(5, _T("ConfPoll(%s): unbound from policy object %s [%d]"), m_name, unbindList[i]->getName(), unbindList[i]->getId());
 		}
 		safe_free(unbindList);
@@ -2151,6 +2214,7 @@ bool Node::confPollAgent(UINT32 dwRqId)
       {
          TCHAR secret[MAX_SECRET_LENGTH];
          ConfigReadStr(_T("AgentDefaultSharedSecret"), secret, MAX_SECRET_LENGTH, _T("netxms"));
+         DecryptPassword(_T("netxms"), secret, secret, MAX_SECRET_LENGTH);
          pAgentConn->setAuthData(AUTH_SHA1_HASH, secret);
          if (pAgentConn->connect(g_pServerKey, FALSE, &rcc))
          {
@@ -2307,18 +2371,18 @@ bool Node::confPollAgent(UINT32 dwRqId)
 	{
       DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - failed to connect (error %d)"), m_name, rcc);
 	}
-   delete pAgentConn;
+   pAgentConn->decRefCount();
    DbgPrintf(5, _T("ConfPoll(%s): checking for NetXMS agent - finished"), m_name);
 	return hasChanges;
 }
 
 /**
- * SNMP walker callback which just counts number of varbinds
+ * SNMP walker callback which sets indicator to true after first varbind and aborts walk
  */
-static UINT32 CountingSnmpWalkerCallback(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
+static UINT32 IndicatorSnmpWalkerCallback(UINT32 version, SNMP_Variable *var, SNMP_Transport *transport, void *arg)
 {
-	(*((int *)arg))++;
-	return SNMP_ERR_SUCCESS;
+   (*((bool *)arg)) = true;
+   return SNMP_ERR_COMM;
 }
 
 /**
@@ -2460,9 +2524,9 @@ bool Node::confPollSnmp(UINT32 dwRqId)
    }
 
    // Check for printer MIB support
-   int count = 0;
-   SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43.5.1.1.17"), CountingSnmpWalkerCallback, &count, FALSE);
-   if (count > 0)
+   bool present = false;
+   SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.43"), IndicatorSnmpWalkerCallback, &present, FALSE);
+   if (present)
    {
       lockProperties();
       m_dwFlags |= NF_IS_PRINTER;
@@ -2739,9 +2803,9 @@ void Node::checkBridgeMib(SNMP_Transport *pTransport)
  */
 void Node::checkIfXTable(SNMP_Transport *pTransport)
 {
-	int count = 0;
-	SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), CountingSnmpWalkerCallback, &count, FALSE);
-   if (count > 0)
+	bool present = false;
+	SnmpWalk(m_snmpVersion, pTransport, _T(".1.3.6.1.2.1.31.1.1.1.1"), IndicatorSnmpWalkerCallback, &present, FALSE);
+   if (present)
    {
 		lockProperties();
       m_dwFlags |= NF_HAS_IFXTABLE;
@@ -3133,8 +3197,8 @@ void Node::applyUserTemplates()
          {
             DbgPrintf(4, _T("Node::ApplyUserTemplates(): removing template %d \"%s\" from node %d \"%s\""),
                       pTemplate->getId(), pTemplate->getName(), m_id, m_name);
-            pTemplate->DeleteChild(this);
-            DeleteParent(pTemplate);
+            pTemplate->deleteChild(this);
+            deleteParent(pTemplate);
             pTemplate->queueRemoveFromTarget(m_id, true);
             PostEvent(EVENT_TEMPLATE_AUTOREMOVE, g_dwMgmtNode, "isis", m_id, m_name, pTemplate->getId(), pTemplate->getName());
          }
@@ -3171,8 +3235,8 @@ void Node::updateContainerMembership()
 			{
 				DbgPrintf(4, _T("Node::updateContainerMembership(): binding node %d \"%s\" to container %d \"%s\""),
 				          m_id, m_name, pContainer->getId(), pContainer->getName());
-				pContainer->AddChild(this);
-				AddParent(pContainer);
+				pContainer->addChild(this);
+				addParent(pContainer);
 				PostEvent(EVENT_CONTAINER_AUTOBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
             pContainer->calculateCompoundStatus();
 			}
@@ -3183,8 +3247,8 @@ void Node::updateContainerMembership()
 			{
 				DbgPrintf(4, _T("Node::updateContainerMembership(): removing node %d \"%s\" from container %d \"%s\""),
 				          m_id, m_name, pContainer->getId(), pContainer->getName());
-				pContainer->DeleteChild(this);
-				DeleteParent(pContainer);
+				pContainer->deleteChild(this);
+				deleteParent(pContainer);
 				PostEvent(EVENT_CONTAINER_AUTOUNBIND, g_dwMgmtNode, "isis", m_id, m_name, pContainer->getId(), pContainer->getName());
             pContainer->calculateCompoundStatus();
 			}
@@ -3517,10 +3581,20 @@ bool Node::connectToSMCLP()
 /**
  * Connect to native agent. Assumes that access to agent connection is already locked.
  */
-bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnection)
+bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnection, bool forceConnect)
 {
    if (g_flags & AF_SHUTDOWN)
       return false;
+
+   if (!forceConnect && (m_agentConnection == NULL) && (time(NULL) - m_lastAgentConnectAttempt < 30))
+   {
+		DbgPrintf(7, _T("Node::connectToAgent(%s [%d]): agent is unreachable, will not retry connection"), m_name, m_id);
+      if (error != NULL)
+         *error = ERR_CONNECT_FAILED;
+      if (socketError != NULL)
+         *socketError = 0;
+      return false;
+   }
 
    // Create new agent connection object if needed
    if (m_agentConnection == NULL)
@@ -3568,10 +3642,15 @@ bool Node::connectToAgent(UINT32 *error, UINT32 *socketError, bool *newConnectio
          }
       }
       m_agentConnection->enableTraps();
-      setFileUpdateConn(NULL);
+      setFileUpdateConnection(NULL);
       setLastAgentCommTime();
       CALL_ALL_MODULES(pfOnConnectToAgent, (this, m_agentConnection));
 	}
+   else
+   {
+      deleteAgentConnection();
+      m_lastAgentConnectAttempt = time(NULL);
+   }
    return success;
 }
 
@@ -3900,6 +3979,10 @@ UINT32 Node::getItemFromAgent(const TCHAR *szParam, UINT32 dwBufSize, TCHAR *szB
             dwResult = DCE_NOT_SUPPORTED;
             setLastAgentCommTime();
             goto end_loop;
+         case ERR_NO_SUCH_INSTANCE:
+            dwResult = DCE_NO_SUCH_INSTANCE;
+            setLastAgentCommTime();
+            goto end_loop;
          case ERR_NOT_CONNECTED:
          case ERR_CONNECTION_BROKEN:
             if (!connectToAgent())
@@ -3957,6 +4040,10 @@ UINT32 Node::getTableFromAgent(const TCHAR *name, Table **table)
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
             dwResult = DCE_NOT_SUPPORTED;
+            setLastAgentCommTime();
+            goto end_loop;
+         case ERR_NO_SUCH_INSTANCE:
+            dwResult = DCE_NO_SUCH_INSTANCE;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_NOT_CONNECTED:
@@ -4019,6 +4106,10 @@ UINT32 Node::getListFromAgent(const TCHAR *name, StringList **list)
             goto end_loop;
          case ERR_UNKNOWN_PARAMETER:
             dwResult = DCE_NOT_SUPPORTED;
+            setLastAgentCommTime();
+            goto end_loop;
+         case ERR_NO_SUCH_INSTANCE:
+            dwResult = DCE_NO_SUCH_INSTANCE;
             setLastAgentCommTime();
             goto end_loop;
          case ERR_NOT_CONNECTED:
@@ -4387,6 +4478,8 @@ static UINT32 RCCFromDCIError(UINT32 error)
          return RCC_SUCCESS;
       case DCE_COMM_ERROR:
          return RCC_COMM_FAILURE;
+      case DCE_NO_SUCH_INSTANCE:
+         return RCC_NO_SUCH_INSTANCE;
       case DCE_NOT_SUPPORTED:
          return RCC_DCI_NOT_SUPPORTED;
       default:
@@ -5050,7 +5143,7 @@ AgentConnectionEx *Node::createAgentConnection()
    setAgentProxy(conn);
    if (!conn->connect(g_pServerKey))
    {
-      delete conn;
+      conn->decRefCount();
       conn = NULL;
    }
    else
@@ -5195,8 +5288,8 @@ void Node::changeZone(UINT32 newZone)
 
 	for(i = 0; i < count; i++)
 	{
-		DeleteParent(subnets[i]);
-		subnets[i]->DeleteChild(this);
+		deleteParent(subnets[i]);
+		subnets[i]->deleteChild(this);
 	}
 	safe_free(subnets);
 
@@ -5220,10 +5313,15 @@ void Node::changeZone(UINT32 newZone)
 /**
  * Set connection for file update messages
  */
-void Node::setFileUpdateConn(AgentConnection *conn)
+void Node::setFileUpdateConnection(AgentConnection *conn)
 {
-   delete m_fileUpdateConn;
+   lockProperties();
+   if (m_fileUpdateConn != NULL)
+      m_fileUpdateConn->decRefCount();
    m_fileUpdateConn = conn;
+   if (m_fileUpdateConn != NULL)
+      m_fileUpdateConn->incRefCount();
+   unlockProperties();
 }
 
 /**
@@ -6312,7 +6410,7 @@ Subnet *Node::createSubnet(InetAddress& baseAddr, bool syntheticMask)
       while(FindSubnetByIP(m_zoneId, addr) != NULL)
       {
          baseAddr.setMaskBits(baseAddr.getMaskBits() + 1);
-         InetAddress addr = baseAddr.getSubnetAddress();
+         addr = baseAddr.getSubnetAddress();
       }
 
       // Do not create subnet if there are no address space for it
@@ -6408,8 +6506,8 @@ void Node::checkSubnetBinding()
                if ((addr.getHostBits() < 2) && (getParentCount() > 1))
                {
                   /* Delete subnet object if we try to change it's netmask to 255.255.255.255 or 255.255.255.254 and
-                   node has more than one parent. hasIfaceForPrimaryIp paramteter should prevent us from going in
-                   loop(creating and deleting all the time subnet). */
+                   node has more than one parent. hasIfaceForPrimaryIp parameter should prevent us from going in
+                   loop (creating and deleting all the time subnet). */
                   pSubnet->deleteObject();
                   pSubnet = NULL;   // prevent binding to deleted subnet
                }
@@ -6530,8 +6628,8 @@ void Node::checkSubnetBinding()
    for(int n = 0; n < unlinkList.size(); n++)
 	{
       NetObj *o = unlinkList.get(n);
-      o->DeleteChild(this);
-		DeleteParent(o);
+      o->deleteChild(this);
+		deleteParent(o);
       o->calculateCompoundStatus();
 	}
 }
@@ -7016,11 +7114,12 @@ bool Node::isDataCollectionDisabled()
 /**
  * Get LLDP local port info by LLDP local ID
  *
+ * @param idType port ID type (value of lldpLocPortIdSubtype)
  * @param id port ID
  * @param idLen port ID length in bytes
  * @param buffer buffer for storing port information
  */
-bool Node::getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *buffer)
+bool Node::getLldpLocalPortInfo(UINT32 idType, BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *buffer)
 {
 	bool result = false;
 	lockProperties();
@@ -7029,7 +7128,7 @@ bool Node::getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *bu
 		for(int i = 0; i < m_lldpLocalPortInfo->size(); i++)
 		{
 			LLDP_LOCAL_PORT_INFO *port = m_lldpLocalPortInfo->get(i);
-			if ((idLen == port->localIdLen) && !memcmp(id, port->localId, idLen))
+			if ((idType == port->localIdSubtype) && (idLen == port->localIdLen) && !memcmp(id, port->localId, idLen))
 			{
             memcpy(buffer, port, sizeof(LLDP_LOCAL_PORT_INFO));
 				result = true;
@@ -7039,6 +7138,35 @@ bool Node::getLldpLocalPortInfo(BYTE *id, size_t idLen, LLDP_LOCAL_PORT_INFO *bu
 	}
 	unlockProperties();
 	return result;
+}
+
+/**
+ * Show node LLDP information
+ */
+void Node::showLLDPInfo(CONSOLE_CTX console)
+{
+   TCHAR buffer[256];
+
+   lockProperties();
+   ConsolePrintf(console, _T("\x1b[1m*\x1b[0m Node LLDP ID: %s\n\n"), m_lldpNodeId);
+   ConsolePrintf(console, _T("\x1b[1m*\x1b[0m Local LLDP ports\n"));
+   if (m_lldpLocalPortInfo != NULL)
+   {
+      ConsolePrintf(console, _T("   Port | ST | Len | Local ID                 | Description\n")
+                             _T("   -----+----+-----+--------------------------+--------------------------------------\n"));
+      for(int i = 0; i < m_lldpLocalPortInfo->size(); i++)
+      {
+         LLDP_LOCAL_PORT_INFO *port = m_lldpLocalPortInfo->get(i);
+         ConsolePrintf(console, _T("   %4d | %2d | %3d | %-24s | %s\n"),
+                       port->portNumber, port->localIdSubtype, (int)port->localIdLen,
+                       BinToStr(port->localId, port->localIdLen, buffer), port->ifDescr);
+      }
+   }
+   else
+   {
+      ConsolePrintf(console, _T("   No local LLDP port info\n"));
+   }
+   unlockProperties();
 }
 
 /**
@@ -7435,8 +7563,8 @@ void Node::updateRackBinding()
    {
       NetObj *rack = deleteList.get(n);
       DbgPrintf(5, _T("Node::updateRackBinding(%s [%d]): delete incorrect rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
-      rack->DeleteChild(this);
-      DeleteParent(rack);
+      rack->deleteChild(this);
+      deleteParent(rack);
       rack->decRefCount();
    }
 
@@ -7446,12 +7574,20 @@ void Node::updateRackBinding()
       if (rack != NULL)
       {
          DbgPrintf(5, _T("Node::updateRackBinding(%s [%d]): add rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
-         rack->AddChild(this);
-         AddParent(rack);
+         rack->addChild(this);
+         addParent(rack);
       }
       else
       {
          DbgPrintf(5, _T("Node::updateRackBinding(%s [%d]): rack object [%d] not found"), m_name, m_id, m_rackId);
       }
    }
+}
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *Node::createNXSLObject()
+{
+   return new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this));
 }

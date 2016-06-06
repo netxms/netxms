@@ -1,15 +1,77 @@
 *
+* 2.0.4
+*
+
+- New parameters in Linux platform subagent to get additional CPU information (frequency, model, etc.)
+- Fixed bugs in LLDP based network topology discovery
+- Correct notifications on threshold script errors
+- Option to use last known value for cluster data aggregation in case of data collecion failure
+- Added server configuration parameter to ignore syslog message timestamps and always use server time
+- Added option to disconnect existing sessions of same user on login
+- NXSL: implemented compound assignment operators and prefix increment/decrement for array elements
+- NXSL: can access event parameters as event object attributes (like $event->$1 or $event->instance)
+- Management console
+	- Improved dashboard gauge widget
+	- Added translucence option for dashboard line charts
+	- Configurable display format for dashboard elements data sources
+	- Improved inverted line chart support
+	- DCI filter in DCI selection dialog
+	- Configurable line width on ad-hoc line charts
+	- Object tooltips in rack view
+	- Line/area switch for all DCIs on chart level
+- Android console
+	- Reorganized alarm notification section (issue #1194)
+- Fixed issues: #405, #775, #859, #984, #1086, #1112, #1186, #1194, #1195, #1196, #1197, #1200, #1209, #1210, #1214, #1223, #1227, #1231
+
+
+*
+* 2.0.3
+*
+
+- Additional parameters in Oracle subagent for redo logs and ASM monitoring
+- NXSL: variable $errormsg holding error description set in catch block
+- New NXSL function SplitString
+- NXSL: new methods setExpectedState and setExcludeFromTopology in Interface class
+- Default interface expected state can be configured
+- GPS subagent (provides location data from NMEA compatible GPS receivers)
+- Server can update node location using GPS subagent
+- Fixed error while event alarm linking multiple times
+- Fixed server hang on shutdown
+- NetXMS processes uses LC_CTYPE from environment for terminal I/O
+- Fixed bug in saving service checks
+- Fixed server crash caused by heap corruption in MS SQL and DB/2 database drivers
+- Fixed server deadlock caused by simultaneous use of instance discovery and transformation scripts
+- Agent parameters for monitoring System V message queues
+- New action User.ChangePassword in WINNT subagent
+- Text2reach SMS driver improved
+- Port check subagent can be configured to return negative value as response time in case of error
+- Management console:
+	- Fixed grid issues in network maps
+	- Fixed object selection issues in network maps
+	- Added "hide links" option on network maps
+	- Added support for MAC addresses in format xxx.xxx.xxx.xxx
+- Fixed issues: #950, #962, #988, #1048, #1102, #1124, #1131, #1135, #1147, #1149, #1154, #1163, #1166, #1170, #1174
+
+
+*
 * 2.0.2
 *
 
 - Optimized LDAP synchronization for large directories
 - Added NXSL API for manipulating object geolocation
+- Fixed bug that allows to crash server remotely by sending garbage to client connector port
+- NXSL: new hash map attributes "keys" and "values"
+- Object custom attributes can be accessed as hash map in NXSL
+- New server debug console commands "log" and "logmark"
+- Management console:
+	- Improved file transfer error handling
+	- Double click on geo map zoom in and center map on point under cursor
 - Android Console:
 	- Updated ACRA library: now crash reports are sent via e-mail (will use the app installed on device to send mail)
 	- Fixed bug in action bar commands: disconnect and exit sometimes wasn't working
 - Android Agent:
 	- Updated ACRA library: now crash reports are sent via e-mail (will use the app installed on device to send mail)
-- Fixed issues: #1042, #1049, #1117, #1125, #1133
+- Fixed issues: #1042, #1049, #1093, #1111, #1117, #1125, #1128, #1133, #1134, #1139
 
 
 *
@@ -688,10 +750,10 @@
 	- Horizontal scrollable tabs for node info activity (tabs are no more compressed to show all together)
 	- Fixed bad format for DCI value in last values tab
 	- Scheduler for "passive" connection", parameters:
-		- Enable scheduler: enables the scheduler, if ‘off’ program exposes the previous behaviour
+		- Enable scheduler: enables the scheduler, if off program exposes the previous behaviour
 		- Interval: how many minutes have to elapse before trying to connect to server
 		- Duration: how many minutes connections has to be kept on
-		- Enable daily scheduler: if ‘off’, the above values are applied to the whole day. If ‘on’ they will be applied only to the specified interval (for the whole week).
+		- Enable daily scheduler: if off, the above values are applied to the whole day. If on they will be applied only to the specified interval (for the whole week).
 		- Daily on: start daily time to apply scheduler values
 		- Daily off: stop daily time to apply scheduler values
 - Fixed issues: #53, #120, #128, #139, #144, #171

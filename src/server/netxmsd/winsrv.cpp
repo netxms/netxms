@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -126,7 +126,7 @@ void InitService()
 /**
  * Create service
  */
-void InstallService(const TCHAR *pszExecName, const TCHAR *pszDllName, const TCHAR *pszLogin, const TCHAR *pszPassword)
+void InstallService(const TCHAR *execName, const TCHAR *dllName, const TCHAR *login, const TCHAR *password)
 {
    SC_HANDLE hMgr, hService;
    TCHAR szCmdLine[MAX_PATH * 2], errorText[1024];
@@ -139,12 +139,11 @@ void InstallService(const TCHAR *pszExecName, const TCHAR *pszDllName, const TCH
       return;
    }
 
-   _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\" -d --config \"%s\"%s"), pszExecName, g_szConfigFile,
-              g_bCheckDB ? _T(" --check-db") : _T(""));
+   _sntprintf(szCmdLine, MAX_PATH * 2, _T("\"%s\" -d --config \"%s\"%s"), execName, g_szConfigFile, g_bCheckDB ? _T(" --check-db") : _T(""));
    hService = CreateService(hMgr, CORE_SERVICE_NAME, _T("NetXMS Core"),
                             GENERIC_READ, SERVICE_WIN32_OWN_PROCESS,
                             SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
-                            szCmdLine, NULL, NULL, NULL, pszLogin, pszPassword);
+                            szCmdLine, NULL, NULL, NULL, login, password);
    if (hService == NULL)
    {
       DWORD code = GetLastError();
@@ -162,7 +161,7 @@ void InstallService(const TCHAR *pszExecName, const TCHAR *pszDllName, const TCH
 
    CloseServiceHandle(hMgr);
 
-   InstallEventSource(pszDllName);
+   InstallEventSource(dllName);
 }
 
 /**

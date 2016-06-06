@@ -50,6 +50,7 @@ public class Authentication extends PropertyPage
 	private Button checkDisabled;
 	private Button checkChangePassword;
 	private Button checkFixedPassword;
+   private Button checkCloseSessions;
 	private Combo comboAuthMethod;
 	private Combo comboMappingMethod;
 	private Text textMappingData;
@@ -96,7 +97,11 @@ public class Authentication extends PropertyPage
       checkFixedPassword = new Button(groupFlags, SWT.CHECK);
       checkFixedPassword.setText(Messages.get().Authentication_CannotChangePassword);
       checkFixedPassword.setSelection(object.isPasswordChangeForbidden());
-		
+
+      checkCloseSessions = new Button(groupFlags, SWT.CHECK);
+      checkCloseSessions.setText("&Close other sessions after login");
+      checkCloseSessions.setSelection((object.getFlags() & User.CLOSE_OTHER_SESSIONS) != 0);
+      
       Group groupMethod = new Group(dialogArea, SWT.NONE);
       groupMethod.setText(Messages.get().Authentication_AuthMethod_Group);
       GridLayout groupMethodLayout = new GridLayout();
@@ -146,7 +151,7 @@ public class Authentication extends PropertyPage
          checkChangePassword.setEnabled(false);
          checkFixedPassword.setEnabled(false);
          comboAuthMethod.setEnabled(false);
-         comboAuthMethod.add("LDAP password");
+         comboAuthMethod.add(Messages.get().Authentication_LDAPPassword);
          comboAuthMethod.select(5);
          comboMappingMethod.setEnabled(false);
          textMappingData.setEnabled(false);
@@ -170,6 +175,8 @@ public class Authentication extends PropertyPage
 			flags |= AbstractUserObject.CHANGE_PASSWORD;
 		if (checkFixedPassword.getSelection())
 			flags |= AbstractUserObject.CANNOT_CHANGE_PASSWORD;
+		if (checkCloseSessions.getSelection())
+         flags |= AbstractUserObject.CLOSE_OTHER_SESSIONS;
 		flags |= object.getFlags() & AbstractUserObject.LDAP_USER;
 		object.setFlags(flags);
 		

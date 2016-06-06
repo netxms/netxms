@@ -62,7 +62,7 @@ public class ExportToCsvAction extends Action
 	{
 		super(selectionOnly ? Messages.get().ExportToCsvAction_ExportToCsv : Messages.get().ExportToCsvAction_ExportAllToCsv, SharedIcons.CSV);
 		
-		setId(selectionOnly ? "org.netxms.ui.eclipse.popupActions.ExportToCSV" : "org.netxms.ui.eclipse.actions.ExportToCSV");
+		setId(selectionOnly ? "org.netxms.ui.eclipse.popupActions.ExportToCSV" : "org.netxms.ui.eclipse.actions.ExportToCSV"); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		this.viewPart = viewPart;
 		this.viewer = viewer;

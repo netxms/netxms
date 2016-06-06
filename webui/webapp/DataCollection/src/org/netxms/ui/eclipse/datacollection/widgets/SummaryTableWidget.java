@@ -29,6 +29,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -41,18 +42,26 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.netxms.client.NXCSession;
 import org.netxms.client.Table;
 import org.netxms.client.TableRow;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
+import org.netxms.ui.eclipse.datacollection.views.helpers.ObjectSelectionProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.TableContentProvider;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.TableItemComparator;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.TableLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectContextMenu;
+import org.netxms.ui.eclipse.objects.ObjectWrapper;
+import org.netxms.ui.eclipse.objectview.views.TabbedObjectView;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
+import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.ViewRefreshController;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
@@ -70,9 +79,11 @@ public class SummaryTableWidget extends Composite
    private Action actionExportToCsv;
    private Action actionUseMultipliers;
    private Action actionForcePollAll;
+   private Action actionShowObjectDetails;
    private ViewRefreshController refreshController;
    private boolean useMultipliers = true;
    private TableColumn currentColumn = null;
+   private ObjectSelectionProvider objectSelectionProvider;
 
    /**
     * Create summary table widget
@@ -98,6 +109,8 @@ public class SummaryTableWidget extends Composite
       labelProvider = new TableLabelProvider();
       labelProvider.setUseMultipliers(useMultipliers);
       viewer.setLabelProvider(labelProvider);
+      
+      objectSelectionProvider = new ObjectSelectionProvider(viewer);
       
       createActions();
       createPopupMenu();
@@ -129,7 +142,8 @@ public class SummaryTableWidget extends Composite
          @Override
          public void mouseDown(MouseEvent e)
          {
-            currentColumn = viewer.getColumnAtPoint(new Point(e.x, e.y));
+            if (e.button == 3)
+               currentColumn = viewer.getColumnAtPoint(new Point(e.x, e.y));
          }
          
          @Override
@@ -155,13 +169,22 @@ public class SummaryTableWidget extends Composite
       };
       actionUseMultipliers.setChecked(useMultipliers);
       
-      actionForcePollAll = new Action("Force poll for all columns") {
+      actionForcePollAll = new Action(Messages.get().SummaryTableWidget_ForcePollForAllColumns) {
          @Override
          public void run()
          {
             forcePoll(true);
          }
       };
+      
+      actionShowObjectDetails = new Action(Messages.get().SummaryTableWidget_ShowObjectDetails) {
+         @Override
+         public void run()
+         {
+            showObjectDetails();
+         }
+      };
+      actionShowObjectDetails.setId("org.netxms.ui.eclipse.datacollection.popupActions.ShowObjectDetails"); //$NON-NLS-1$
    }
 
    /**
@@ -169,38 +192,61 @@ public class SummaryTableWidget extends Composite
     */
    private void createPopupMenu()
    {
-      // Create menu manager.
-      MenuManager menuMgr = new MenuManager();
-      menuMgr.setRemoveAllWhenShown(true);
-      menuMgr.addMenuListener(new IMenuListener() {
+      // Create menu manager for underlying node object
+      final MenuManager nodeMenuManager = new MenuManager() {
+         @Override
+         public String getMenuText()
+         {
+            return Messages.get().SummaryTableWidget_Node;
+         }
+         
+      };
+      nodeMenuManager.setRemoveAllWhenShown(true);
+      nodeMenuManager.addMenuListener(new IMenuListener() {
          public void menuAboutToShow(IMenuManager mgr)
          {
-            fillContextMenu(mgr);
+            ObjectContextMenu.fill(mgr, viewPart.getSite(), objectSelectionProvider);
+         }
+      });
+      
+      // Create menu manager for rows
+      MenuManager rowMenuManager = new MenuManager();
+      rowMenuManager.setRemoveAllWhenShown(true);
+      rowMenuManager.addMenuListener(new IMenuListener() {
+         public void menuAboutToShow(IMenuManager mgr)
+         {
+            fillContextMenu(mgr, nodeMenuManager);
          }
       });
 
       // Create menu.
-      Menu menu = menuMgr.createContextMenu(viewer.getControl());
+      Menu menu = rowMenuManager.createContextMenu(viewer.getControl());
       viewer.getControl().setMenu(menu);
       
       // Register menu for extension.
       if (viewPart != null)
-         viewPart.getSite().registerContextMenu(menuMgr, viewer);
+      {
+         viewPart.getSite().registerContextMenu(viewPart.getSite().getId() + ".data", rowMenuManager, viewer); //$NON-NLS-1$
+         viewPart.getSite().registerContextMenu(viewPart.getSite().getId() + ".node", nodeMenuManager, objectSelectionProvider); //$NON-NLS-1$
+      }
    }
 
    /**
     * Fill context menu
     * @param mgr Menu manager
     */
-   protected void fillContextMenu(IMenuManager manager)
+   protected void fillContextMenu(IMenuManager manager, MenuManager nodeMenuManager)
    {
       manager.add(actionUseMultipliers);
       manager.add(new Separator());
-      manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_MANAGEMENT));
+      manager.add(nodeMenuManager);
+      manager.add(new GroupMarker(GroupMarkers.MB_OBJECT_TOOLS));
       manager.add(new Separator());
-      if ((currentColumn != null) && ((Integer)currentColumn.getData("ID") > 0))
+      manager.add(actionShowObjectDetails);
+      manager.add(new Separator());
+      if ((currentColumn != null) && ((Integer)currentColumn.getData("ID") > 0)) //$NON-NLS-1$
       {
-         manager.add(new Action(String.format("Force poll for \"%s\"", currentColumn.getText())) {
+         manager.add(new Action(String.format(Messages.get().SummaryTableWidget_ForcePollForNode, currentColumn.getText())) {
             @Override
             public void run()
             {
@@ -257,7 +303,7 @@ public class SummaryTableWidget extends Composite
          final IDialogSettings settings = Activator.getDefault().getDialogSettings();
          final String key = viewPart.getViewSite().getId() + ".SummaryTable." + Integer.toString(tableId); //$NON-NLS-1$
          WidgetHelper.restoreTableViewerSettings(viewer, settings, key);
-         String value = settings.get(key + ".useMultipliers");
+         String value = settings.get(key + ".useMultipliers"); //$NON-NLS-1$
          if (value != null)
             useMultipliers = Boolean.parseBoolean(value);
          labelProvider.setUseMultipliers(useMultipliers);
@@ -266,7 +312,7 @@ public class SummaryTableWidget extends Composite
             public void widgetDisposed(DisposeEvent e)
             {
                WidgetHelper.saveTableViewerSettings(viewer, settings, key);
-               settings.put(key + ".useMultipliers", useMultipliers);
+               settings.put(key + ".useMultipliers", useMultipliers); //$NON-NLS-1$
             }
          });
          viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
@@ -280,6 +326,14 @@ public class SummaryTableWidget extends Composite
    public SortableTableViewer getViewer()
    {
       return viewer;
+   }
+   
+   /**
+    * @return
+    */
+   public ISelectionProvider getObjectSelectionProvider()
+   {
+      return objectSelectionProvider;
    }
    
    /**
@@ -323,6 +377,30 @@ public class SummaryTableWidget extends Composite
    }
    
    /**
+    * Show details for selected object
+    */
+   private void showObjectDetails()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      AbstractObject object = ((ObjectWrapper)selection.getFirstElement()).getObject();
+      if (object != null)
+      {
+         try
+         {
+            TabbedObjectView view = (TabbedObjectView)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(TabbedObjectView.ID);
+            view.setObject(object);
+         }
+         catch(PartInitException e)
+         {
+            MessageDialogHelper.openError(getShell(), Messages.get().SummaryTableWidget_Error, String.format(Messages.get().SummaryTableWidget_CannotOpenObjectDetails, e.getLocalizedMessage()));
+         }
+      }
+   }
+   
+   /**
     * @param pollAll
     */
    private void forcePoll(boolean pollAll)
@@ -363,11 +441,11 @@ public class SummaryTableWidget extends Composite
          return;
       
       final NXCSession session = ConsoleSharedData.getSession();
-      new ConsoleJob("Force DCI poll", viewPart, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().SummaryTableWidget_ForceDciPoll, viewPart, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            monitor.beginTask("DCI poll", requests.size());
+            monitor.beginTask(Messages.get().SummaryTableWidget_DciPoll, requests.size());
             for(PollRequest r : requests)
             {
                session.forceDCIPoll(r.nodeId, r.dciId);
@@ -386,7 +464,7 @@ public class SummaryTableWidget extends Composite
          @Override
          protected String getErrorMessage()
          {
-            return "Forced DCI poll failed";
+            return Messages.get().SummaryTableWidget_13;
          }
       }.start();
    }

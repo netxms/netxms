@@ -42,6 +42,11 @@ TCHAR g_szDbName[MAX_DB_NAME] = _T("netxms_db");
 TCHAR g_szDbSchema[MAX_DB_NAME] = _T("");
 
 /**
+ * Debug level from config
+ */
+static UINT32 s_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
+
+/**
  * Config file template
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
@@ -59,7 +64,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("DBEncryptedPassword"), CT_STRING, 0, 0, MAX_PASSWORD, 0, g_szDbPassword, NULL },
    { _T("DBSchema"), CT_STRING, 0, 0, MAX_DB_NAME, 0, g_szDbSchema, NULL },
    { _T("DBServer"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDbServer, NULL },
-   { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel, &g_debugLevel },
+   { _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDumpDir, NULL },
    { _T("FullCrashDumps"), CT_BOOLEAN64, 0, 0, AF_WRITE_FULL_DUMP, 0, &g_flags, NULL },
    { _T("LibraryDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_netxmsdLibDir, NULL },
@@ -76,13 +81,17 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
 };
 
 /**
+ * Loaded server config
+ */
+Config g_serverConfig;
+
+/**
  * Load and parse configuration file
  * Returns TRUE on success and FALSE on failure
  */
-bool NXCORE_EXPORTABLE LoadConfig()
+bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel)
 {
    bool bSuccess = false;
-	Config *config;
 
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
@@ -130,8 +139,7 @@ stop_search:
    if (IsStandalone())
       _tprintf(_T("Using configuration file \"%s\"\n"), g_szConfigFile);
 
-	config = new Config();
-	if (config->loadConfig(g_szConfigFile, _T("server")) && config->parseTemplate(_T("server"), m_cfgTemplate))
+	if (g_serverConfig.loadConfig(g_szConfigFile, _T("server")) && g_serverConfig.parseTemplate(_T("server"), m_cfgTemplate))
    {
       if ((!_tcsicmp(g_szLogFile, _T("{EventLog}"))) ||
           (!_tcsicmp(g_szLogFile, _T("{syslog}"))))
@@ -144,11 +152,12 @@ stop_search:
       }
       bSuccess = true;
    }
-	delete config;
+
+	if (*debugLevel == NXCONFIG_UNINITIALIZED_VALUE)
+	   *debugLevel = (int)s_debugLevel;
 
 	// Decrypt password
    DecryptPassword(g_szDbLogin, g_szDbPassword, g_szDbPassword, MAX_PASSWORD);
-
    return bSuccess;
 }
 
@@ -295,6 +304,10 @@ static void OnConfigVariableChange(bool isCLOB, const TCHAR *name, const TCHAR *
    else if (!_tcscmp(name, _T("StrictAlarmStatusFlow")))
    {
       NotifyClientSessions(NX_NOTIFY_ALARM_STATUS_FLOW_CHANGED, _tcstol(value, NULL, 0));
+   }
+   else if (!_tcsncmp(name, _T("Syslog"), 6))
+   {
+      OnSyslogConfigurationChange(name, value);
    }
 }
 

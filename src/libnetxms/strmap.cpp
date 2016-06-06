@@ -90,14 +90,58 @@ void StringMap::set(const TCHAR *key, UINT32 value)
 }
 
 /**
- * Get value by key as UINT32
+ * Get value by key as INT32
  */
-UINT32 StringMap::getULong(const TCHAR *key, UINT32 defaultValue) const
+INT32 StringMap::getInt32(const TCHAR *key, INT32 defaultValue) const
 {
 	const TCHAR *value = get(key);
 	if (value == NULL)
 		return defaultValue;
-	return _tcstoul(value, NULL, 0);
+	return _tcstol(value, NULL, 0);
+}
+
+/**
+ * Get value by key as UINT32
+ */
+UINT32 StringMap::getUInt32(const TCHAR *key, UINT32 defaultValue) const
+{
+   const TCHAR *value = get(key);
+   if (value == NULL)
+      return defaultValue;
+   return _tcstoul(value, NULL, 0);
+}
+
+/**
+ * Get value by key as INT64
+ */
+INT64 StringMap::getInt64(const TCHAR *key, INT64 defaultValue) const
+{
+   const TCHAR *value = get(key);
+   if (value == NULL)
+      return defaultValue;
+   return _tcstoll(value, NULL, 0);
+}
+
+/**
+ * Get value by key as UINT64
+ */
+UINT64 StringMap::getUInt64(const TCHAR *key, UINT64 defaultValue) const
+{
+   const TCHAR *value = get(key);
+   if (value == NULL)
+      return defaultValue;
+   return _tcstoull(value, NULL, 0);
+}
+
+/**
+ * Get value by key as double
+ */
+double StringMap::getDouble(const TCHAR *key, double defaultValue) const
+{
+   const TCHAR *value = get(key);
+   if (value == NULL)
+      return defaultValue;
+   return _tcstod(value, NULL);
 }
 
 /**

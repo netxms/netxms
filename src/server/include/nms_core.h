@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -387,10 +387,13 @@ public:
 };
 
 /**
- * Client (user) session
+ * Processing thread starter declaration for client session
  */
 #define DECLARE_THREAD_STARTER(func) static void ThreadStarter_##func(void *);
 
+/**
+ * Client (user) session
+ */
 class NXCORE_EXPORTABLE ClientSession
 {
 private:
@@ -446,7 +449,7 @@ private:
 	CONSOLE_CTX m_console;			// Server console context
 	StringList m_musicTypeList;
 	ObjectIndex m_agentConn;
-	StringObjectMap<UINT32> m_subscriptions;
+	StringObjectMap<UINT32> *m_subscriptions;
 	MUTEX m_subscriptionLock;
 
    static THREAD_RESULT THREAD_CALL readThreadStarter(void *);
@@ -468,6 +471,7 @@ private:
    DECLARE_THREAD_STARTER(forwardToReportingServer)
    DECLARE_THREAD_STARTER(getAgentFile)
    DECLARE_THREAD_STARTER(getAlarmEvents)
+   DECLARE_THREAD_STARTER(getAlarms)
    DECLARE_THREAD_STARTER(getCollectedData)
    DECLARE_THREAD_STARTER(getLocationHistory)
    DECLARE_THREAD_STARTER(getNetworkPath)
@@ -494,10 +498,11 @@ private:
    void updateThread();
    void pollerThread(Node *pNode, int iPollType, UINT32 dwRqId);
 
+   void debugPrintf(int level, const TCHAR *format, ...);
+
    void setupEncryption(NXCPMessage *request);
    void respondToKeepalive(UINT32 dwRqId);
    void onFileUpload(BOOL bSuccess);
-   void debugPrintf(int level, const TCHAR *format, ...);
    void sendServerInfo(UINT32 dwRqId);
    void login(NXCPMessage *pRequest);
    void sendAllObjects(NXCPMessage *pRequest);
@@ -508,7 +513,6 @@ private:
    void setConfigurationVariable(NXCPMessage *pRequest);
    void deleteConfigurationVariable(NXCPMessage *pRequest);
    void sendUserDB(UINT32 dwRqId);
-   void sendAllAlarms(UINT32 dwRqId);
    void createUser(NXCPMessage *pRequest);
    void updateUser(NXCPMessage *pRequest);
    void detachLdapUser(NXCPMessage *pRequest);
@@ -548,6 +552,7 @@ private:
    void createObject(NXCPMessage *request);
    void changeObjectBinding(NXCPMessage *request, BOOL bBind);
    void deleteObject(NXCPMessage *request);
+   void getAlarms(NXCPMessage *request);
    void getAlarm(NXCPMessage *request);
    void getAlarmEvents(NXCPMessage *request);
    void acknowledgeAlarm(NXCPMessage *request);
@@ -630,9 +635,9 @@ private:
 	void sendGraphList(NXCPMessage *request);
 	void saveGraph(NXCPMessage *pRequest);
 	void deleteGraph(NXCPMessage *pRequest);
-	void AddCACertificate(NXCPMessage *pRequest);
-	void DeleteCertificate(NXCPMessage *pRequest);
-	void UpdateCertificateComments(NXCPMessage *pRequest);
+	void addCACertificate(NXCPMessage *pRequest);
+	void deleteCertificate(NXCPMessage *pRequest);
+	void updateCertificateComments(NXCPMessage *pRequest);
 	void getCertificateList(UINT32 dwRqId);
 	void queryL2Topology(NXCPMessage *pRequest);
 	void sendSMS(NXCPMessage *pRequest);
@@ -734,6 +739,8 @@ public:
    void sendPollerMsg(UINT32 dwRqId, const TCHAR *pszMsg);
 	BOOL sendFile(const TCHAR *file, UINT32 dwRqId, long offset);
 
+   void writeAuditLog(const TCHAR *subsys, bool success, UINT32 objectId, const TCHAR *format, ...);
+
    int getId() const { return m_id; }
    void setId(int id) { if (m_id == -1) m_id = id; }
 
@@ -777,8 +784,7 @@ public:
    void onSyslogMessage(NX_SYSLOG_RECORD *pRec);
    void onNewSNMPTrap(NXCPMessage *pMsg);
    void onObjectChange(NetObj *pObject);
-   void onUserDBUpdate(int code, UINT32 id, UserDatabaseObject *user);
-   void onAlarmUpdate(UINT32 dwCode, NXC_ALARM *pAlarm);
+   void onAlarmUpdate(UINT32 dwCode, const Alarm *alarm);
    void onActionDBUpdate(UINT32 dwCode, NXC_ACTION *pAction);
    void onSituationChange(NXCPMessage *msg);
    void onLibraryImageChange(uuid_t *guid, bool removed = false);
@@ -900,7 +906,7 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int 
 INT32 NXCORE_EXPORTABLE MetaDataReadInt(const TCHAR *var, UINT32 defaultValue);
 bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *varName, const TCHAR *value);
 
-bool NXCORE_EXPORTABLE LoadConfig();
+bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);
 
 void NXCORE_EXPORTABLE Shutdown();
 void NXCORE_EXPORTABLE FastShutdown();
@@ -968,6 +974,7 @@ void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graph
 int GetSessionCount(bool includeSystemAccount);
 bool IsLoggedIn(UINT32 dwUserId);
 bool NXCORE_EXPORTABLE KillClientSession(int id);
+void CloseOtherSessions(UINT32 userId, UINT32 thisSession);
 
 void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
 InetAddress GetLocalIpAddr();
@@ -1019,13 +1026,17 @@ bool ImportSummaryTable(ConfigEntry *config);
 
 void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec);
 void ReinitializeSyslogParser();
+void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value);
 
 void EscapeString(String &str);
 
 void InitAuditLog();
-void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32 userId,
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, UINT32 userId,
                                      const TCHAR *workstation, int sessionId, UINT32 objectId,
                                      const TCHAR *format, ...);
+void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
+                                      const TCHAR *workstation, int sessionId, UINT32 objectId,
+                                      const TCHAR *format, va_list args);
 
 bool ValidateConfig(Config *config, UINT32 flags, TCHAR *errorText, int errorTextLen);
 UINT32 ImportConfig(Config *config, UINT32 flags);
@@ -1065,6 +1076,19 @@ UINT32 DeleteGraph(UINT32 graphId, UINT32 userId);
 void SendXMPPMessage(const TCHAR *rcpt, const TCHAR *text);
 #endif
 
+const TCHAR NXCORE_EXPORTABLE *CountryAlphaCode(const TCHAR *code);
+const TCHAR NXCORE_EXPORTABLE *CountryName(const TCHAR *code);
+const TCHAR NXCORE_EXPORTABLE *CurrencyAlphaCode(const TCHAR *numericCode);
+int NXCORE_EXPORTABLE CurrencyExponent(const TCHAR *code);
+const TCHAR NXCORE_EXPORTABLE *CurrencyName(const TCHAR *code);
+
+/**
+ * Housekeeper control
+ */
+void StartHouseKeeper();
+void StopHouseKeeper();
+void RunHouseKeeper();
+
 /**
  * File monitoring
  */
@@ -1088,7 +1112,7 @@ public:
    bool checkDuplicate(MONITORED_FILE *fileForAdd);
    ObjectArray<ClientSession>* findClientByFNameAndNodeID(const TCHAR *fileName, UINT32 nodeID);
    bool removeMonitoringFile(MONITORED_FILE *fileForRemove);
-   void removeDisconectedNode(UINT32 nodeId);
+   void removeDisconnectedNode(UINT32 nodeId);
 
 private:
    void lock();
@@ -1123,6 +1147,7 @@ extern UINT32 g_agentCommandTimeout;
 extern UINT32 g_thresholdRepeatInterval;
 extern int g_requiredPolls;
 extern UINT32 g_slmPollingInterval;
+extern UINT32 g_offlineDataRelevanceTime;
 
 extern TCHAR g_szDbDriver[];
 extern TCHAR g_szDbDrvParams[];

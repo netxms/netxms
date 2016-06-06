@@ -160,7 +160,7 @@ void SessionAgentConnector::readThread()
          continue;   // Bad packet, wait for next
       }
 
-      if (g_debugLevel >= 8)
+      if (nxlog_get_debug_level() >= 8)
       {
          String msgDump = NXCPMessage::dump(rawMsg, NXCP_VERSION);
          DebugPrintf(INVALID_INDEX, 8, _T("SA-%d: Message dump:\n%s"), m_id, (const TCHAR *)msgDump);

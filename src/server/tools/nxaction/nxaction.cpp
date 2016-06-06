@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
    TCHAR szKeyFile[MAX_PATH];
    RSA *pServerKey = NULL;
 
-   InitThreadLibrary();
+   InitNetXMSProcess();
 
    GetNetXMSDirectory(nxDirData, szKeyFile);
    _tcscat(szKeyFile, DFILE_KEYS);
@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
 #ifdef _WITH_ENCRYPTION
       if ((iEncryptionPolicy != ENCRYPTION_DISABLED) && bStart)
       {
-         if (InitCryptoLib(0xFFFF, NULL))
+         if (InitCryptoLib(0xFFFF))
          {
             pServerKey = LoadRSAKeys(szKeyFile);
             if (pServerKey == NULL)
@@ -259,12 +259,11 @@ int main(int argc, char *argv[])
          }
          else
          {
-            AgentConnection conn(addr, wPort, iAuthMethod, szSecret);
-
-				conn.setConnectionTimeout(dwConnTimeout);
-            conn.setCommandTimeout(dwTimeout);
-            conn.setEncryptionPolicy(iEncryptionPolicy);
-            if (conn.connect(pServerKey, bVerbose, &dwError))
+            AgentConnection *conn = new AgentConnection(addr, wPort, iAuthMethod, szSecret);
+            conn->setConnectionTimeout(dwConnTimeout);
+            conn->setCommandTimeout(dwTimeout);
+            conn->setEncryptionPolicy(iEncryptionPolicy);
+            if (conn->connect(pServerKey, bVerbose, &dwError))
             {
                UINT32 dwError;
 
@@ -278,11 +277,11 @@ int main(int argc, char *argv[])
 					int count = min(argc - optind - 2, 256);
 					for(i = 0, k = optind + 2; i < count; i++, k++)
 						args[i] = WideStringFromMBString(argv[k]);
-               dwError = conn.execAction(action, count, args, showOutput, OutputCallback);
+               dwError = conn->execAction(action, count, args, showOutput, OutputCallback);
 					for(i = 0; i < count; i++)
 						free(args[i]);
 #else
-               dwError = conn.execAction(argv[optind + 1], argc - optind - 2, &argv[optind + 2], showOutput, OutputCallback);
+               dwError = conn->execAction(argv[optind + 1], argc - optind - 2, &argv[optind + 2], showOutput, OutputCallback);
 #endif
                if (bVerbose)
                {
@@ -292,13 +291,13 @@ int main(int argc, char *argv[])
                      _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
                }
                iExitCode = (dwError == ERR_SUCCESS) ? 0 : 1;
-               conn.disconnect();
             }
             else
             {
                _tprintf(_T("%d: %s\n"), dwError, AgentErrorCodeToText(dwError));
                iExitCode = 2;
             }
+            conn->decRefCount();
          }
       }
    }

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
 ** NetXMS Scripting Language Interpreter
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -76,6 +76,14 @@ static const TCHAR *s_runtimeErrorMessage[MAX_ERROR_NUMBER] =
    _T("Hash map key is not a string"),
    _T("Selector not found")
 };
+
+/**
+ * Get error message for given error code
+ */
+static const TCHAR *GetErrorMessage(int error)
+{
+   return ((error > 0) && (error <= MAX_ERROR_NUMBER)) ? s_runtimeErrorMessage[error - 1] : _T("Unknown error code");
+}
 
 /**
  * Determine operation data type
@@ -221,11 +229,12 @@ bool NXSL_VM::load(NXSL_Program *program)
 
    // Load modules
    m_modules = new ObjectArray<NXSL_Module>(4, 4, true);
-   for(i = 0; i < program->m_requiredModules.size(); i++)
+   for(i = 0; i < program->m_requiredModules->size(); i++)
    {
-      if (!m_env->loadModule(this, program->m_requiredModules.get(i)))
+      const NXSL_ModuleImport *importInfo = program->m_requiredModules->get(i);
+      if (!m_env->loadModule(this, importInfo))
       {
-         error(NXSL_ERR_MODULE_NOT_FOUND);
+         error(NXSL_ERR_MODULE_NOT_FOUND, importInfo->lineNumber);
          success = false;
          break;
       }
@@ -280,11 +289,11 @@ bool NXSL_VM::run(ObjectArray<NXSL_Value> *args,
 
    // Preserve original global variables and constants
    pSavedGlobals = new NXSL_VariableSystem(m_globals);
-	if (pConstants != NULL)
-	{
-		pSavedConstants = new NXSL_VariableSystem(m_constants);
-		m_constants->merge(pConstants);
-	}
+   pSavedConstants = new NXSL_VariableSystem(m_constants);
+   if (pConstants != NULL)
+      m_constants->merge(pConstants);
+
+	m_env->configureVM(this);
 
    // Locate entry point and run
    UINT32 entryAddr = INVALID_ADDRESS;
@@ -319,6 +328,7 @@ resume:
          {
             setGlobalVariable(_T("$errorcode"), new NXSL_Value(m_errorCode));
             setGlobalVariable(_T("$errorline"), new NXSL_Value(m_errorLine));
+            setGlobalVariable(_T("$errormsg"), new NXSL_Value(GetErrorMessage(m_errorCode)));
             setGlobalVariable(_T("$errortext"), new NXSL_Value(m_errorText));
             goto resume;
          }
@@ -388,6 +398,20 @@ bool NXSL_VM::unwind()
 
    m_cp = p->addr;
    delete p;
+   return true;
+}
+
+/**
+ * Add constant to VM
+ */
+bool NXSL_VM::addConstant(const TCHAR *name, NXSL_Value *value)
+{
+   if (m_constants->find(name) != NULL)
+   {
+      delete value;
+      return false;  // not added
+   }
+   m_constants->create(name, value);
    return true;
 }
 
@@ -665,6 +689,36 @@ void NXSL_VM::execute()
             error(NXSL_ERR_DATA_STACK_UNDERFLOW);
          }
 			break;
+      case OPCODE_PEEK_ELEMENT:   // Get array or map element keeping array and index on stack; stack should contain: array index (top) (or hashmap key (top))
+         pValue = (NXSL_Value *)m_dataStack->peek();
+         if (pValue != NULL)
+         {
+            NXSL_Value *container = (NXSL_Value *)m_dataStack->peekAt(2);
+            if (container != NULL)
+            {
+               if (container->isArray())
+               {
+                  getOrUpdateArrayElement(cp->m_nOpCode, container, pValue);
+               }
+               else if (container->isHashMap())
+               {
+                  getOrUpdateHashMapElement(cp->m_nOpCode, container, pValue);
+               }
+               else
+               {
+                  error(NXSL_ERR_NOT_CONTAINER);
+               }
+            }
+            else
+            {
+               error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+            }
+         }
+         else
+         {
+            error(NXSL_ERR_DATA_STACK_UNDERFLOW);
+         }
+         break;
 		case OPCODE_ADD_TO_ARRAY:  // add element on stack top to array; stack should contain: array new_value (top)
          pValue = (NXSL_Value *)m_dataStack->pop();
          if (pValue != NULL)
@@ -1365,7 +1419,7 @@ void NXSL_VM::getOrUpdateArrayElement(int opcode, NXSL_Value *array, NXSL_Value 
 {
 	if (index->isInteger())
 	{
-      if (opcode != OPCODE_GET_ELEMENT)
+      if ((opcode != OPCODE_GET_ELEMENT) && (opcode != OPCODE_PEEK_ELEMENT))
          array->copyOnWrite();
 		NXSL_Value *element = array->getValueAsArray()->get(index->getValueAsInt32());
 
@@ -1450,7 +1504,7 @@ void NXSL_VM::getOrUpdateHashMapElement(int opcode, NXSL_Value *hashMap, NXSL_Va
 {
 	if (key->isString())
 	{
-      if (opcode != OPCODE_GET_ELEMENT)
+      if ((opcode != OPCODE_GET_ELEMENT) && (opcode != OPCODE_PEEK_ELEMENT))
          hashMap->copyOnWrite();
 		NXSL_Value *element = hashMap->getValueAsHashMap()->get(key->getValueAsCString());
 
@@ -1847,13 +1901,13 @@ void NXSL_VM::relocateCode(UINT32 dwStart, UINT32 dwLen, UINT32 dwShift)
 /**
  * Use external module
  */
-void NXSL_VM::loadModule(NXSL_Program *module, const TCHAR *name)
+void NXSL_VM::loadModule(NXSL_Program *module, const NXSL_ModuleImport *importInfo)
 {
    int i;
 
    // Check if module already loaded
    for(i = 0; i < m_modules->size(); i++)
-      if (!_tcsicmp(name, m_modules->get(i)->m_name))
+      if (!_tcsicmp(importInfo->name, m_modules->get(i)->m_name))
          return;  // Already loaded
 
    // Add code from module
@@ -1875,7 +1929,7 @@ void NXSL_VM::loadModule(NXSL_Program *module, const TCHAR *name)
 
    // Register module as loaded
    NXSL_Module *m = new NXSL_Module;
-   nx_strncpy(m->m_name, name, MAX_PATH);
+   nx_strncpy(m->m_name, importInfo->name, MAX_PATH);
    m->m_codeStart = (UINT32)start;
    m->m_codeSize = module->m_instructionSet->size();
    m->m_functionStart = m_functions->size() - module->m_functions->size();
@@ -2154,15 +2208,14 @@ void NXSL_VM::dump(FILE *pFile)
 /**
  * Report error
  */
-void NXSL_VM::error(int nError)
+void NXSL_VM::error(int errorCode, int sourceLine)
 {
    TCHAR szBuffer[1024];
 
-   m_errorCode = nError;
-   m_errorLine = (m_cp == INVALID_ADDRESS) ? 0 : m_instructionSet->get(m_cp)->m_nSourceLine;
+   m_errorCode = errorCode;
+   m_errorLine = (sourceLine == -1) ? ((m_cp == INVALID_ADDRESS) ? 0 : m_instructionSet->get(m_cp)->m_nSourceLine) : sourceLine;
    safe_free(m_errorText);
-   _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), nError, m_errorLine,
-              ((nError > 0) && (nError <= MAX_ERROR_NUMBER)) ? s_runtimeErrorMessage[nError - 1] : _T("Unknown error code"));
+   _sntprintf(szBuffer, 1024, _T("Error %d in line %d: %s"), errorCode, m_errorLine, GetErrorMessage(errorCode));
    m_errorText = _tcsdup(szBuffer);
    m_cp = INVALID_ADDRESS;
 }
@@ -2215,9 +2268,17 @@ void NXSL_VM::getArrayAttribute(NXSL_Array *a, const TCHAR *attribute, bool safe
  */
 void NXSL_VM::getHashMapAttribute(NXSL_HashMap *m, const TCHAR *attribute, bool safe)
 {
-   if (!_tcscmp(attribute, _T("size")))
+   if (!_tcscmp(attribute, _T("keys")))
+   {
+      m_dataStack->push(m->getKeys());
+   }
+   else if (!_tcscmp(attribute, _T("size")))
    {
       m_dataStack->push(new NXSL_Value((INT32)m->size()));
+   }
+   else if (!_tcscmp(attribute, _T("values")))
+   {
+      m_dataStack->push(m->getValues());
    }
    else
    {

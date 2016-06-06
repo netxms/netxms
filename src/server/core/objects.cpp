@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,18 +51,6 @@ ObjectIndex g_idxAccessPointById;
 ObjectIndex g_idxConditionById;
 ObjectIndex g_idxServiceCheckById;
 ObjectIndex g_idxNetMapById;
-
-const TCHAR *g_szClassName[]={ _T("Generic"), _T("Subnet"), _T("Node"), _T("Interface"),
-                               _T("Network"), _T("Container"), _T("Zone"), _T("ServiceRoot"),
-                               _T("Template"), _T("TemplateGroup"), _T("TemplateRoot"),
-                               _T("NetworkService"), _T("VPNConnector"), _T("Condition"),
-                               _T("Cluster"), _T("PolicyGroup"), _T("PolicyRoot"),
-                               _T("AgentPolicy"), _T("AgentPolicyConfig"), _T("NetworkMapRoot"),
-                               _T("NetworkMapGroup"), _T("NetworkMap"), _T("DashboardRoot"), 
-                               _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report"),
-                               _T("BusinessServiceRoot"), _T("BusinessService"), _T("NodeLink"),
-                               _T("ServiceCheck"), _T("MobileDevice"), _T("Rack"), _T("AccessPoint")
-};
 
 /**
  * Static data
@@ -252,9 +240,6 @@ void ObjectsInit()
 
 	// Initialize service checks
 	SlmCheck::init();
-
-   // Start template update applying thread
-   ThreadCreate(ApplyTemplateThread, 0, NULL);
 }
 
 /**
@@ -847,6 +832,8 @@ static bool SysNameComparator(NetObj *object, void *sysName)
  */
 Node NXCORE_EXPORTABLE *FindNodeBySysName(const TCHAR *sysName)
 {
+   if ((sysName == NULL) || (sysName[0] == 0))
+      return NULL;
    return (Node *)g_idxNodeById.find(SysNameComparator, (void *)sysName);
 }
 
@@ -1750,11 +1737,11 @@ BOOL LoadObjects()
 	// Load custom object classes provided by modules
    CALL_ALL_MODULES(pfLoadObjects, ());
 
-   // Link childs to container and template group objects
+   // Link children to container and template group objects
    DbgPrintf(2, _T("Linking objects..."));
 	g_idxObjectById.forEach(LinkChildObjectsCallback, NULL);
 
-   // Link childs to root objects
+   // Link children to root objects
    g_pServiceRoot->linkChildObjects();
    g_pTemplateRoot->linkChildObjects();
    g_pPolicyRoot->linkChildObjects();
@@ -1784,6 +1771,9 @@ BOOL LoadObjects()
 
    // Start map update thread
    ThreadCreate(MapUpdateThread, 0, NULL);
+
+   // Start template update applying thread
+   ThreadCreate(ApplyTemplateThread, 0, NULL);
 
    return TRUE;
 }
@@ -1829,7 +1819,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
 
 	ConsolePrintf(pCtx, _T("Object ID %d \"%s\"\n")
                        _T("   Class: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
-					  object->getId(), object->getName(), (object->getObjectClass() < OBJECT_CUSTOM) ? g_szClassName[object->getObjectClass()] : _T("Custom"),
+					  object->getId(), object->getName(), object->getObjectClassName(),
                  GetStatusAsText(object->Status(), true),
                  object->isModified(), object->isDeleted());
    ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"), 

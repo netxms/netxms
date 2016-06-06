@@ -373,24 +373,37 @@ void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *,
  */
 void SendUserDBUpdate(int code, UINT32 id, UserDatabaseObject *object)
 {
-   int i;
+   NXCPMessage msg;
+   msg.setCode(CMD_USER_DB_UPDATE);
+   msg.setId(0);
+   msg.setField(VID_UPDATE_TYPE, (WORD)code);
+   switch(code)
+   {
+      case USER_DB_CREATE:
+      case USER_DB_MODIFY:
+         object->fillMessage(&msg);
+         break;
+      default:
+         msg.setField(VID_USER_ID, id);
+         break;
+   }
 
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
-   for(i = 0; i < MAX_CLIENT_SESSIONS; i++)
-      if (m_pSessionList[i] != NULL)
-         m_pSessionList[i]->onUserDBUpdate(code, id, object);
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
+      if ((m_pSessionList[i] != NULL) && m_pSessionList[i]->isAuthenticated() && m_pSessionList[i]->isSubscribedTo(NXC_CHANNEL_USERDB))
+         m_pSessionList[i]->postMessage(&msg);
    RWLockUnlock(m_rwlockSessionListAccess);
 }
 
 /**
- * Send greph update to all active sessions
+ * Send graph update to all active sessions
  */
 void NXCORE_EXPORTABLE NotifyClientGraphUpdate(NXCPMessage *update, UINT32 graphId)
 {
    RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
    for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
       if ((m_pSessionList[i] != NULL) && (GetGraphAccessCheckResult(graphId, m_pSessionList[i]->getUserId()) == RCC_SUCCESS))
-         m_pSessionList[i]->sendMessage(update);
+         m_pSessionList[i]->postMessage(update);
    RWLockUnlock(m_rwlockSessionListAccess);
 }
 
@@ -443,4 +456,23 @@ bool IsLoggedIn(UINT32 dwUserId)
       }
    RWLockUnlock(m_rwlockSessionListAccess);
    return result;
+}
+
+/**
+ * Close all user's sessions except given one
+ */
+void CloseOtherSessions(UINT32 userId, UINT32 thisSession)
+{
+   RWLockReadLock(m_rwlockSessionListAccess, INFINITE);
+   for(int i = 0; i < MAX_CLIENT_SESSIONS; i++)
+   {
+      if ((m_pSessionList[i] != NULL) &&
+          (m_pSessionList[i]->getUserId() == userId) &&
+          (m_pSessionList[i]->getId() != thisSession))
+      {
+         nxlog_debug(4, _T("CloseOtherSessions(%d,%d): disconnecting session %d"), userId, thisSession, m_pSessionList[i]->getId());
+         m_pSessionList[i]->kill();
+      }
+   }
+   RWLockUnlock(m_rwlockSessionListAccess);
 }

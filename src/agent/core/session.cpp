@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -130,8 +130,18 @@ CommSession::~CommSession()
    closesocket(m_hSocket);
    if (m_hProxySocket != INVALID_SOCKET)
       closesocket(m_hProxySocket);
+
+   void *p;
+   while((p = m_sendQueue->get()) != NULL)
+      if (p != INVALID_POINTER_VALUE)
+         free(p);
    delete m_sendQueue;
+
+   while((p = m_processingQueue->get()) != NULL)
+      if (p != INVALID_POINTER_VALUE)
+         delete (NXCPMessage *)p;
    delete m_processingQueue;
+
    if (m_hCurrFile != -1)
       close(m_hCurrFile);
    delete m_compressor;
@@ -203,7 +213,7 @@ void CommSession::readThread()
          // Update activity timestamp
          m_ts = time(NULL);
 
-         if (g_debugLevel >= 8)
+         if (nxlog_get_debug_level() >= 8)
          {
             String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
             DebugPrintf(m_dwIndex, 8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -455,7 +465,6 @@ void CommSession::writeThread()
       if (!sendRawMessage(pMsg, m_pCtx))
          break;
    }
-   m_sendQueue->clear();
 }
 
 /**
@@ -625,6 +634,7 @@ void CommSession::processingThread()
                if (m_serverId != 0)
                {
                   ConfigureDataCollection(m_serverId, pMsg);
+                  m_acceptData = true;
                   msg.setField(VID_RCC, ERR_SUCCESS);
                }
                else

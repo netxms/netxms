@@ -42,6 +42,7 @@ import org.netxms.ui.eclipse.perfview.PredefinedChartConfig;
 import org.netxms.ui.eclipse.perfview.widgets.YAxisRangeEditor;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.LabeledSpinner;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.TimePeriodSelector;
 
@@ -60,7 +61,9 @@ public class General extends PropertyPage
 	private Button checkStacked;
 	private Button checkExtendedLegend;
    private Button checkTranslucent;
-	private Combo legendPleace;
+   private Button checkAreaChart;
+   private LabeledSpinner lineWidth;
+	private Combo legendLocation;
 	private Scale refreshIntervalScale;
 	private Spinner refreshIntervalSpinner;
 	private TimePeriodSelector timeSelector;
@@ -97,7 +100,7 @@ public class General extends PropertyPage
       layout.marginHeight = WidgetHelper.OUTER_SPACING;
       layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
       layout.makeColumnsEqualWidth = true;
-      layout.numColumns = 2;
+      layout.numColumns = 3;
       optionsGroup.setLayout(layout);
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
@@ -111,31 +114,25 @@ public class General extends PropertyPage
       checkLogScale = new Button(optionsGroup, SWT.CHECK);
       checkLogScale.setText(Messages.get().General_LogScale);
       checkLogScale.setSelection(config.isLogScale());
-      
+
+      lineWidth = new LabeledSpinner(optionsGroup, SWT.NONE);
+      lineWidth.setLabel(Messages.get().General_LineWidth);
+      lineWidth.setRange(1, 99);
+      lineWidth.setSelection(config.getLineWidth());
+      gd = new GridData();
+      gd.verticalAlignment = SWT.TOP;
+      gd.verticalSpan = 2;
+      lineWidth.setLayoutData(gd);
+            
       checkStacked = new Button(optionsGroup, SWT.CHECK);
-      checkStacked.setText("Stacked");
+      checkStacked.setText(Messages.get().General_Stacked);
       checkStacked.setSelection(config.isStacked());
       
       checkTranslucent= new Button(optionsGroup, SWT.CHECK);
-      checkTranslucent.setText("Translucent");
+      checkTranslucent.setText(Messages.get().General_Translucent);
       checkTranslucent.setSelection(config.isTranslucent());
       
-      Composite legendGroup = new Composite(optionsGroup, SWT.NONE);
-      layout = new GridLayout();
-      layout.numColumns = 2;
-      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
-      layout.makeColumnsEqualWidth = true;
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      layout.marginTop = WidgetHelper.OUTER_SPACING;
-      legendGroup.setLayout(layout);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
-      legendGroup.setLayoutData(gd);
-      
-      checkShowLegend = new Button(legendGroup, SWT.CHECK);
+      checkShowLegend = new Button(optionsGroup, SWT.CHECK);
       checkShowLegend.setText(Messages.get().General_ShowLegend);
       checkShowLegend.setSelection(config.isShowLegend());
       checkShowLegend.addSelectionListener(new SelectionListener() {
@@ -143,7 +140,7 @@ public class General extends PropertyPage
          public void widgetSelected(SelectionEvent e)
          {
             checkExtendedLegend.setEnabled(checkShowLegend.getSelection());
-            legendPleace.setEnabled(checkShowLegend.getSelection());
+            legendLocation.setEnabled(checkShowLegend.getSelection());
             checkShowHostNames.setEnabled(checkShowLegend.getSelection());
          }
 
@@ -153,52 +150,33 @@ public class General extends PropertyPage
             widgetSelected(e);
          }
       });
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
-      checkShowLegend.setLayoutData(gd);
       
-
-      checkShowHostNames = new Button(legendGroup, SWT.CHECK);
+      checkShowHostNames = new Button(optionsGroup, SWT.CHECK);
       checkShowHostNames.setText(Messages.get().General_ShowHostNames);
       checkShowHostNames.setSelection(config.isShowHostNames());
       checkShowHostNames.setEnabled(config.isShowLegend());
       
-      checkExtendedLegend = new Button(legendGroup, SWT.CHECK);
-      checkExtendedLegend.setText("Show extended legend");
+      gd = new GridData();
+      gd.horizontalAlignment = GridData.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalSpan = 2;
+      gd.verticalAlignment = SWT.TOP;
+      legendLocation = WidgetHelper.createLabeledCombo(optionsGroup, SWT.READ_ONLY, Messages.get().General_LegendPosition, gd);
+      legendLocation.add(Messages.get().General_Left);
+      legendLocation.add(Messages.get().General_Right);
+      legendLocation.add(Messages.get().General_Top);
+      legendLocation.add(Messages.get().General_Bottom);
+      legendLocation.select(31 - Integer.numberOfLeadingZeros(config.getLegendPosition()));      
+      legendLocation.setEnabled(config.isShowLegend()); 
+      
+      checkExtendedLegend = new Button(optionsGroup, SWT.CHECK);
+      checkExtendedLegend.setText(Messages.get().General_8);
       checkExtendedLegend.setSelection(config.isExtendedLegend());         
       checkExtendedLegend.setEnabled(config.isShowLegend());   
       
-      Composite placeGroup = new Composite(optionsGroup, SWT.NONE);
-      layout = new GridLayout();
-      layout.numColumns = 2;
-      layout.horizontalSpacing = WidgetHelper.OUTER_SPACING;
-      layout.marginHeight = 0;
-      layout.marginWidth = 0;
-      layout.marginTop = WidgetHelper.OUTER_SPACING;
-      placeGroup.setLayout(layout);
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
-      placeGroup.setLayoutData(gd);
-      
-      Label comboLabel = new Label(placeGroup, SWT.NONE);
-      comboLabel.setText("Place on ");
-
-      legendPleace = new Combo(placeGroup, SWT.READ_ONLY);
-      GridData gridData = new GridData();
-      gridData.horizontalAlignment = GridData.FILL;
-      gridData.grabExcessHorizontalSpace = true;
-      legendPleace.setLayoutData(gridData);
-      
-      legendPleace.add("left");
-      legendPleace.add("right");
-      legendPleace.add("top");
-      legendPleace.add("bottom");
-      legendPleace.select(31 - Integer.numberOfLeadingZeros(config.getLegendPosition()));      
-      legendPleace.setEnabled(config.isShowLegend()); 
+      checkAreaChart = new Button(optionsGroup, SWT.CHECK);
+      checkAreaChart.setText("Area chart");
+      checkAreaChart.setSelection(config.isArea());         
       
       Composite refreshGroup = new Composite(optionsGroup, SWT.NONE);
       layout = new GridLayout();
@@ -210,7 +188,7 @@ public class General extends PropertyPage
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      gd.horizontalSpan = 2;
+      gd.horizontalSpan = 3;
       refreshGroup.setLayoutData(gd);
 
       checkAutoRefresh = new Button(refreshGroup, SWT.CHECK);
@@ -325,8 +303,10 @@ public class General extends PropertyPage
 		checkAutoRefresh.setSelection(true);
 		checkLogScale.setSelection(false);
 		checkStacked.setSelection(false);
-		checkExtendedLegend.setSelection(false);		
-		legendPleace.select(3);
+		checkExtendedLegend.setSelection(false);
+		checkAreaChart.setSelection(false);
+		legendLocation.select(3);
+		lineWidth.setSelection(2);
 		
 		yAxisRange.setSelection(true, 0, 100);
 		
@@ -353,8 +333,10 @@ public class General extends PropertyPage
 		config.setRefreshRate(refreshIntervalSpinner.getSelection());
       config.setStacked(checkStacked.getSelection());
       config.setExtendedLegend(checkExtendedLegend.getSelection());
-      config.setLegendPosition((int)Math.pow(2,legendPleace.getSelectionIndex()));
+      config.setArea(checkAreaChart.getSelection());
+      config.setLegendPosition((int)Math.pow(2,legendLocation.getSelectionIndex()));
       config.setTranslucent(checkTranslucent.getSelection());
+      config.setLineWidth(lineWidth.getSelection());
 		config.setTimeFrameType(timeSelector.getTimeFrameType());
 		config.setTimeUnits(timeSelector.getTimeUnitValue());
 		config.setTimeRange(timeSelector.getTimeRangeValue());

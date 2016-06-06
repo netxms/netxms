@@ -149,7 +149,7 @@ public class NodePolling extends PropertyPage
 
       /* agent cache */
       Group agentCacheGroup = new Group(dialogArea, SWT.NONE);
-      agentCacheGroup.setText("Agent cache mode");
+      agentCacheGroup.setText(Messages.get().NodePolling_AgentCacheMode);
       layout = new GridLayout();
       layout.horizontalSpacing = WidgetHelper.DIALOG_SPACING;
       layout.numColumns = 3;
@@ -165,11 +165,11 @@ public class NodePolling extends PropertyPage
       radioAgentCacheDefault.setSelection(object.getAgentCacheMode() == AgentCacheMode.DEFAULT);
 
       radioAgentCacheOn = new Button(agentCacheGroup, SWT.RADIO);
-      radioAgentCacheOn.setText("On");
+      radioAgentCacheOn.setText(Messages.get().NodePolling_On);
       radioAgentCacheOn.setSelection(object.getAgentCacheMode() == AgentCacheMode.ON);
 
       radioAgentCacheOff = new Button(agentCacheGroup, SWT.RADIO);
-      radioAgentCacheOff.setText("Off");
+      radioAgentCacheOff.setText(Messages.get().NodePolling_Off);
       radioAgentCacheOff.setSelection(object.getAgentCacheMode() == AgentCacheMode.OFF);
 
       return dialogArea;

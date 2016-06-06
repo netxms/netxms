@@ -8,7 +8,7 @@
             class="org.netxms.ui.eclipse.filemanager.views.ServerFileManager"
             icon="icons/types/unknown.png"
             id="org.netxms.ui.eclipse.usermanager.view.server_files"
-            name="%view.ServerFileList.name"
+            name="%view.name.ServerFileList"
             restorable="true">
       </view>
       <view
@@ -17,8 +17,16 @@
             class="org.netxms.ui.eclipse.filemanager.views.AgentFileManager"
             icon="icons/filemgr.png"
             id="org.netxms.ui.eclipse.filemanager.views.AgentFileManager"
-            name="File Manager"
+            name="%view.name.FileManager"
             restorable="true">
+      </view>
+      <view
+            allowMultiple="true"
+            class="org.netxms.ui.eclipse.filemanager.views.AgentFileViewer"
+            icon="icons/file_viewer.png"
+            id="org.netxms.ui.eclipse.filemanager.views.AgentFileViewer"
+            name="%view.name.FileViewer"
+            restorable="false">
       </view>
    </extension>
    <extension
@@ -57,7 +65,7 @@
                enablesFor="1"
                icon="icons/filemgr.png"
                id="org.netxms.ui.eclipse.filemanager.popupActions.FileManager_Node"
-               label="&amp;File manager"
+               label="%action.label.FileManager"
                menubarPath="objectmgmt"
                style="push">
          </action>
@@ -155,6 +163,31 @@
             id="org.netxms.ui.eclipse.filemanager.commands.uploadFile"
             name="Upload file">
       </command>
+      <command
+            description="%command.description.SelectAll"
+            id="org.netxms.ui.eclipse.filemanager.commands.select_all"
+            name="%command.name.SelectAll">
+      </command>
+      <command
+            description="%command.description.Copy"
+            id="org.netxms.ui.eclipse.filemanager.commands.copy"
+            name="%command.name.Copy">
+      </command>
+      <command
+            description="Scroll lock"
+            id="org.netxms.ui.eclipse.filemanager.commands.scroll_lock"
+            name="Scroll lock">
+      </command>
+      <command
+            description="Clear output"
+            id="org.netxms.ui.eclipse.filemanager.commands.clear_output"
+            name="Clear output">
+      </command>
+      <command
+            description="Find"
+            id="org.netxms.ui.eclipse.filemanager.commands.find"
+            name="Find">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -232,12 +265,47 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+U">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.select_all"
+            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+A">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.copy"
+            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+C">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.clear_output"
+            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+L">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.scroll_lock"
+            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="PAUSE">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.filemanager.commands.find"
+            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">
       <context
             id="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
             name="File Manager"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            id="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
+            name="Agent File Viewer"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>

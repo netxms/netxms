@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Raden Solutions
+ * Copyright (C) 2003-2016 Raden Solutions
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,5 +30,12 @@ public interface ObjectWrapper
     * 
     * @return
     */
-   AbstractObject getObject(); 
+   public AbstractObject getObject();
+   
+   /**
+    * Get ID of wrapped NetXMS object
+    * 
+    * @return
+    */
+   public long getObjectId();
 }

@@ -85,6 +85,7 @@ UserDatabaseObject::UserDatabaseObject(DB_HANDLE hdb, DB_RESULT hResult, int row
 	DBGetField(hResult, row, 4, m_description, MAX_USER_DESCR);
 	m_guid = DBGetFieldGUID(hResult, row, 5);
 	m_userDn = DBGetField(hResult, row, 6, NULL, 0);
+	m_ldapId = DBGetField(hResult, row, 7, NULL, 0);
 }
 
 /**
@@ -96,6 +97,7 @@ UserDatabaseObject::UserDatabaseObject()
    m_guid = uuid::generate();
    m_name[0] = 0;
    m_userDn = NULL;
+   m_ldapId = NULL;
 	m_systemRights = 0;
 	m_description[0] = 0;
 	m_flags = 0;
@@ -113,6 +115,7 @@ UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 	m_description[0] = 0;
 	m_flags = UF_MODIFIED;
 	m_userDn = NULL;
+	m_ldapId= NULL;
 }
 
 /**
@@ -121,6 +124,7 @@ UserDatabaseObject::UserDatabaseObject(UINT32 id, const TCHAR *name)
 UserDatabaseObject::~UserDatabaseObject()
 {
    safe_free(m_userDn);
+   safe_free(m_ldapId);
 }
 
 /**
@@ -191,13 +195,13 @@ void UserDatabaseObject::modifyFromMessage(NXCPMessage *msg)
 	if (fields & USER_MODIFY_FLAGS)
 	{
 	   flags = msg->getFieldAsUInt16(VID_USER_FLAGS);
-		// Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_LDAP_USER flags from message
+		// Modify only UF_DISABLED, UF_CHANGE_PASSWORD, UF_CANNOT_CHANGE_PASSWORD and UF_CLOSE_OTHER_SESSIONS flags from message
 		// Ignore all but CHANGE_PASSWORD flag for superuser and "everyone" group
-		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD);
+		m_flags &= ~(UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
 		if ((m_id == 0) || (m_id == GROUP_EVERYONE))
 			m_flags |= flags & UF_CHANGE_PASSWORD;
 		else
-			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD);
+			m_flags |= flags & (UF_DISABLED | UF_CHANGE_PASSWORD | UF_CANNOT_CHANGE_PASSWORD | UF_CLOSE_OTHER_SESSIONS);
 
 	}
 
@@ -305,18 +309,22 @@ void UserDatabaseObject::setName(const TCHAR *name)
 
 void UserDatabaseObject::setDn(const TCHAR *dn)
 {
+   if(dn == NULL)
+      return;
+   if(m_userDn != NULL && !_tcscmp(m_userDn, dn))
+      return;
    free(m_userDn);
    m_userDn = _tcsdup_ex(dn);
    m_flags |= UF_MODIFIED;
 }
 
-/**
- * Disable user account because of sync exception
- */
-void UserDatabaseObject::setSyncException()
+void UserDatabaseObject::setLdapId(const TCHAR *id)
 {
-   m_flags |= UF_SYNC_EXCEPTION | UF_MODIFIED;
-   SendUserDBUpdate(USER_DB_MODIFY, m_id, this);
+   if(m_ldapId != NULL && !_tcscmp(m_ldapId, id))
+      return;
+   free(m_ldapId);
+   m_ldapId = _tcsdup_ex(id);
+   m_flags |= UF_MODIFIED;
 }
 
 void UserDatabaseObject::removeSyncException()
@@ -364,7 +372,7 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
 	TCHAR buffer[256];
 
    bool validHash = false;
-   DBGetField(hResult, row, 7, buffer, 256);
+   DBGetField(hResult, row, 8, buffer, 256);
    if (buffer[0] == _T('$'))
    {
       // new format - with hash type indicator
@@ -393,17 +401,17 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
       m_flags |= UF_MODIFIED | UF_CHANGE_PASSWORD;
    }
 
-	DBGetField(hResult, row, 8, m_fullName, MAX_USER_FULLNAME);
-	m_graceLogins = DBGetFieldLong(hResult, row, 9);
-	m_authMethod = DBGetFieldLong(hResult, row, 10);
-	m_certMappingMethod = DBGetFieldLong(hResult, row, 11);
-	m_certMappingData = DBGetField(hResult, row, 12, NULL, 0);
-	m_authFailures = DBGetFieldLong(hResult, row, 13);
-	m_lastPasswordChange = (time_t)DBGetFieldLong(hResult, row, 14);
-	m_minPasswordLength = DBGetFieldLong(hResult, row, 15);
-	m_disabledUntil = (time_t)DBGetFieldLong(hResult, row, 16);
-	m_lastLogin = (time_t)DBGetFieldLong(hResult, row, 17);
-   DBGetField(hResult, row, 18, m_xmppId, MAX_XMPP_ID_LEN);
+	DBGetField(hResult, row, 9, m_fullName, MAX_USER_FULLNAME);
+	m_graceLogins = DBGetFieldLong(hResult, row, 10);
+	m_authMethod = DBGetFieldLong(hResult, row, 11);
+	m_certMappingMethod = DBGetFieldLong(hResult, row, 12);
+	m_certMappingData = DBGetField(hResult, row, 13, NULL, 0);
+	m_authFailures = DBGetFieldLong(hResult, row, 14);
+	m_lastPasswordChange = (time_t)DBGetFieldLong(hResult, row, 15);
+	m_minPasswordLength = DBGetFieldLong(hResult, row, 16);
+	m_disabledUntil = (time_t)DBGetFieldLong(hResult, row, 17);
+	m_lastLogin = (time_t)DBGetFieldLong(hResult, row, 18);
+   DBGetField(hResult, row, 19, m_xmppId, MAX_XMPP_ID_LEN);
 
 	// Set full system access for superuser
 	if (m_id == 0)
@@ -495,14 +503,14 @@ bool User::saveToDatabase(DB_HANDLE hdb)
       hStmt = DBPrepare(hdb,
          _T("UPDATE users SET name=?,password=?,system_access=?,flags=?,full_name=?,description=?,grace_logins=?,guid=?,")
 			_T("  auth_method=?,cert_mapping_method=?,cert_mapping_data=?,auth_failures=?,last_passwd_change=?,")
-         _T("  min_passwd_length=?,disabled_until=?,last_login=?,xmpp_id=?,ldap_dn=? WHERE id=?"));
+         _T("  min_passwd_length=?,disabled_until=?,last_login=?,xmpp_id=?,ldap_dn=?,ldap_unique_id=? WHERE id=?"));
    }
    else
    {
       hStmt = DBPrepare(hdb,
          _T("INSERT INTO users (name,password,system_access,flags,full_name,description,grace_logins,guid,auth_method,")
          _T("  cert_mapping_method,cert_mapping_data,password_history,auth_failures,last_passwd_change,min_passwd_length,")
-         _T("  disabled_until,last_login,xmpp_id,ldap_dn,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,'',?,?,?,?,?,?,?,?)"));
+         _T("  disabled_until,last_login,xmpp_id,ldap_dn,ldap_unique_id,id) VALUES (?,?,?,?,?,?,?,?,?,?,?,'',?,?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == NULL)
       return false;
@@ -525,7 +533,8 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (UINT32)m_lastLogin);
    DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_xmppId, DB_BIND_STATIC);
    DBBind(hStmt, 18, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
-   DBBind(hStmt, 19, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 19, DB_SQLTYPE_TEXT, m_ldapId, DB_BIND_STATIC);
+   DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
 	if (success)
@@ -788,11 +797,11 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DB_STATEMENT hStmt;
    if (IsDatabaseRecordExist(hdb, _T("user_groups"), _T("id"), m_id))
    {
-      hStmt = DBPrepare(hdb, _T("UPDATE user_groups SET name=?,system_access=?,flags=?,description=?,guid=?,ldap_dn=? WHERE id=?"));
+      hStmt = DBPrepare(hdb, _T("UPDATE user_groups SET name=?,system_access=?,flags=?,description=?,guid=?,ldap_dn=?,ldap_unique_id=? WHERE id=?"));
    }
    else
    {
-      hStmt = DBPrepare(hdb, _T("INSERT INTO user_groups (name,system_access,flags,description,guid,ldap_dn,id) VALUES (?,?,?,?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO user_groups (name,system_access,flags,description,guid,ldap_dn,ldap_unique_id,id) VALUES (?,?,?,?,?,?,?,?)"));
    }
    if (hStmt == NULL)
       return false;
@@ -803,7 +812,8 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
    DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
-   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_ldapId, DB_BIND_STATIC);
+   DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
 	if (success)
@@ -899,7 +909,7 @@ bool Group::isMember(UINT32 userId)
 		return true;
 
    // This is to avoid applying disabled group rights on enabled user
-   if ((m_flags & UF_SYNC_EXCEPTION) || (m_flags & UF_DISABLED))
+   if ((m_flags & UF_DISABLED))
       return false;
 
    return bsearch(&userId, m_members, m_memberCount, sizeof(UINT32), CompareUserId) != NULL;

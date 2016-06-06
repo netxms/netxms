@@ -116,8 +116,8 @@ bool AccessPoint::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
       else
       {
-         object->AddChild(this);
-         AddParent(object);
+         object->addChild(this);
+         addParent(object);
          success = true;
       }
    }
@@ -255,16 +255,16 @@ void AccessPoint::attachToNode(UINT32 nodeId)
 		Node *currNode = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
 		if (currNode != NULL)
 		{
-			currNode->DeleteChild(this);
-			DeleteParent(currNode);
+			currNode->deleteChild(this);
+			deleteParent(currNode);
 		}
 	}
 
 	Node *newNode = (Node *)FindObjectById(nodeId, OBJECT_NODE);
 	if (newNode != NULL)
 	{
-		newNode->AddChild(this);
-		AddParent(newNode);
+		newNode->addChild(this);
+		addParent(newNode);
 	}
 
 	lockProperties();

@@ -34,7 +34,6 @@ import org.netxms.ui.eclipse.filemanager.Messages;
 import org.netxms.ui.eclipse.filemanager.widgets.ServerFileSelector;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
-import org.netxms.ui.eclipse.widgets.DateTimeSelector;
 import org.netxms.ui.eclipse.widgets.LabeledText;
 import org.netxms.ui.eclipse.widgets.ScheduleSelector;
 
@@ -125,7 +124,7 @@ public class StartServerToAgentFileUploadDialog extends Dialog
 		if(canScheduleFileUpload)
 		{
    		checkIsSchedule = new Button(dialogArea, SWT.CHECK);
-   		checkIsSchedule.setText("Schedule task");
+   		checkIsSchedule.setText(Messages.get().StartServerToAgentFileUploadDialog_ScheduleTask);
          checkIsSchedule.addSelectionListener(new SelectionListener() {
             
             @Override

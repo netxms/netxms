@@ -1,6 +1,6 @@
 /*
 ** NetXMS subagent for SunOS/Solaris
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,34 +41,40 @@ static DWORD m_dwUsage[MAX_CPU_COUNT + 1];
 static DWORD m_dwUsage5[MAX_CPU_COUNT + 1];
 static DWORD m_dwUsage15[MAX_CPU_COUNT + 1];
 
-
-//
-// Read CPU times
-//
-
-static void ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues)
+/**
+ * Read CPU times
+ */
+static bool ReadCPUTimes(kstat_ctl_t *kc, uint_t *pValues, BYTE *success)
 {
-   kstat_t *kp;
-   int i;
-   uint_t *pData;
+   uint_t *pData = pValues;
+   memset(success, 0, m_nCPUCount);
+   bool hasFailures = false;
 
    kstat_lock();
-   for(i = 0, pData = pValues; i < m_nCPUCount; i++, pData += CPU_STATES)
+   for(int i = 0; i < m_nCPUCount; i++, pData += CPU_STATES)
    {
-      kp = kstat_lookup(kc, (char *)"cpu_stat", m_nInstanceMap[i], NULL);
+      kstat_t *kp = kstat_lookup(kc, (char *)"cpu_stat", m_nInstanceMap[i], NULL);
       if (kp != NULL)
       {
          if (kstat_read(kc, kp, NULL) != -1)
          {
             memcpy(pData, ((cpu_stat_t *)kp->ks_data)->cpu_sysinfo.cpu, sizeof(uint_t) * CPU_STATES);
+            success[i] = 1;
          }
          else
          {
-            AgentWriteDebugLog(6, _T("SunOS: kstat_read failed in ReadCPUTimes"));
+            nxlog_debug(8, _T("SunOS: kstat_read failed in ReadCPUTimes (instance=%d errno=%d)"), m_nInstanceMap[i], errno);
+            hasFailures = true;
          }
+      }
+      else
+      {
+         nxlog_debug(8, _T("SunOS: kstat_lookup failed in ReadCPUTimes (instance=%d errno=%d)"), m_nInstanceMap[i], errno);
+         hasFailures = true;
       }
    }
    kstat_unlock();
+   return hasFailures;
 }
 
 /**
@@ -82,6 +88,7 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
    int i, j, iIdleTime, iLimit;
    DWORD *pdwHistory, dwHistoryPos, dwCurrPos, dwIndex;
    DWORD dwSum[MAX_CPU_COUNT + 1];
+   BYTE readSuccess[MAX_CPU_COUNT];
    uint_t *pnLastTimes, *pnCurrTimes, *pnTemp;
    uint_t nSum, nSysSum, nSysCurrIdle, nSysLastIdle;
 
@@ -91,7 +98,7 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
    if (kc == NULL)
    {
       kstat_unlock();
-      AgentWriteLog(EVENTLOG_ERROR_TYPE,
+      AgentWriteLog(NXLOG_ERROR,
             _T("SunOS: Unable to open kstat() context (%s), CPU statistics will not be collected"), 
             _tcserror(errno));
       return THREAD_OK;
@@ -101,7 +108,7 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
    kp = kstat_lookup(kc, (char *)"unix", 0, (char *)"system_misc");
    if (kp != NULL)
    {
-      if(kstat_read(kc, kp, 0) != -1)
+      if (kstat_read(kc, kp, 0) != -1)
       {
          kn = (kstat_named_t *)kstat_data_lookup(kp, (char *)"ncpus");
          if (kn != NULL)
@@ -113,10 +120,17 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
 
    // Read CPU instance numbers
    memset(m_nInstanceMap, 0xFF, sizeof(int) * MAX_CPU_COUNT);
-   for(i = 0, j = 0; i < m_nCPUCount; i++)
+   for(i = 0, j = 0; (i < m_nCPUCount) && (j < MAX_CPU_COUNT); i++)
    {
-      while(kstat_lookup(kc, (char *)"cpu_stat", j, NULL) == NULL)
+      while(kstat_lookup(kc, (char *)"cpu_info", j, NULL) == NULL)
+      {
          j++;
+         if (j == MAX_CPU_COUNT)
+         {
+            nxlog_debug(1, _T("SunOS: cannot determine instance for CPU #%d"), i);
+            break;
+         }
+      }
       m_nInstanceMap[i] = j++;
    }
 
@@ -134,28 +148,54 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
    AgentWriteDebugLog(1, _T("CPU stat collector thread started"));
 
    // Do first read
-   ReadCPUTimes(kc, pnLastTimes);
-   ThreadSleepMs(1000);
+   bool readFailures = ReadCPUTimes(kc, pnLastTimes, readSuccess);
 
    // Collection loop
-   while(!g_bShutdown)
+   int counter = 0;
+   while(!AgentSleepAndCheckForShutdown(1000))
    {
-      ReadCPUTimes(kc, pnCurrTimes);
+      counter++;
+      if (counter == 60)
+         counter = 0;
+      
+      // Re-open kstat handle if some processor data cannot be read
+      if (readFailures && (counter == 0))
+      {
+         kstat_lock();
+         kstat_close(kc);
+         kc = kstat_open();
+         if (kc == NULL)
+         {
+            kstat_unlock();
+            AgentWriteLog(NXLOG_ERROR,
+                          _T("SunOS: Unable to re-open kstat() context (%s), CPU statistics collection aborted"), 
+                          _tcserror(errno));
+            return THREAD_OK;
+         }
+         kstat_unlock();
+      }
+      readFailures = ReadCPUTimes(kc, pnCurrTimes, readSuccess);
 
       // Calculate utilization for last second for each CPU
       dwIndex = dwHistoryPos * (m_nCPUCount + 1);
-      for(i = 0, j = 0, nSysSum = 0, nSysCurrIdle = 0, nSysLastIdle = 0;
-            i < m_nCPUCount; i++)
+      for(i = 0, j = 0, nSysSum = 0, nSysCurrIdle = 0, nSysLastIdle = 0; i < m_nCPUCount; i++)
       {
-         iIdleTime = j + CPU_IDLE;
-         iLimit = j + CPU_STATES;
-         for(nSum = 0; j < iLimit; j++)
-            nSum += pnCurrTimes[j] - pnLastTimes[j];
-         nSysSum += nSum;
-         nSysCurrIdle += pnCurrTimes[iIdleTime];
-         nSysLastIdle += pnLastTimes[iIdleTime];
-         pdwHistory[dwIndex++] = 
-            1000 - ((pnCurrTimes[iIdleTime] - pnLastTimes[iIdleTime]) * 1000 / nSum);
+         if (readSuccess[i])
+         {
+            iIdleTime = j + CPU_IDLE;
+            iLimit = j + CPU_STATES;
+            for(nSum = 0; j < iLimit; j++)
+               nSum += pnCurrTimes[j] - pnLastTimes[j];
+            nSysSum += nSum;
+            nSysCurrIdle += pnCurrTimes[iIdleTime];
+            nSysLastIdle += pnLastTimes[iIdleTime];
+            pdwHistory[dwIndex++] = 1000 - ((pnCurrTimes[iIdleTime] - pnLastTimes[iIdleTime]) * 1000 / nSum);
+         }
+         else
+         {
+            pdwHistory[dwIndex++] = 0;
+            j += CPU_STATES;  // skip states for offline CPU
+         }
       }
 
       // Average utilization for last second for all CPUs
@@ -207,8 +247,6 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
       dwHistoryPos++;
       if (dwHistoryPos == 900)
          dwHistoryPos = 0;
-
-      ThreadSleepMs(1000);
    }
 
    // Cleanup

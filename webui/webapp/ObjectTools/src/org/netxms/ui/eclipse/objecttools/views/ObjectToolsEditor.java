@@ -262,7 +262,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
          }
       };
       
-      actionClone = new Action("Clone") {
+      actionClone = new Action(Messages.get().ObjectToolsEditor_Clone) {
          @Override
          public void run()
          {

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ public:
    {
       va_list args;
       va_start(args, format);
-      DbgPrintf2(7, format, args);
+      nxlog_debug2(7, format, args);
       va_end(args);
    }
 };

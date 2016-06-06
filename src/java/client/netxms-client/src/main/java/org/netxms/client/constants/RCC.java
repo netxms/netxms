@@ -75,7 +75,7 @@ public final class RCC extends CommonRCC
 	public static final int SNMP_FAILURE = 75;
 	public static final int NO_L2_TOPOLOGY_SUPPORT = 76;
 	public static final int INVALID_SITUATION_ID = 77;
-	public static final int INSTANCE_NOT_FOUND = 78;
+	public static final int NO_SUCH_INSTANCE = 78;
 	public static final int INVALID_EVENT_ID = 79;
 	public static final int AGENT_ERROR = 80;
 	public static final int UNKNOWN_VARIABLE = 81;

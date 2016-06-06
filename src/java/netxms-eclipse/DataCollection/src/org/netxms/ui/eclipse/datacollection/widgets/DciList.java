@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -30,6 +31,11 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -41,10 +47,12 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.DciListComparator;
+import org.netxms.ui.eclipse.datacollection.widgets.internal.DciListFilter;
 import org.netxms.ui.eclipse.datacollection.widgets.internal.DciListLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -57,6 +65,9 @@ public class DciList extends Composite
 	public static final int COLUMN_PARAMETER = 1;
 	public static final int COLUMN_DESCRIPTION = 2;
 	
+   private boolean filterEnabled = true;
+   private DciListFilter filter;
+	private FilterText filterText;
 	private final ViewPart viewPart;
 	private AbstractObject node;
 	private NXCSession session;
@@ -82,6 +93,26 @@ public class DciList extends Composite
 		this.dcObjectType = dcObjectType;
 		this.allowNoValueObjects = allowNoValueObjects;
 		
+      FormLayout formLayout = new FormLayout();
+      setLayout(formLayout);
+      
+      // Create filter area
+      filterText = new FilterText(this, SWT.NONE);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+         }
+      });
+		
 		final IDialogSettings ds = Activator.getDefault().getDialogSettings();
 		
 		// Setup table columns
@@ -92,6 +123,8 @@ public class DciList extends Composite
 		viewer.setLabelProvider(new DciListLabelProvider());
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setComparator(new DciListComparator());
+		filter = new DciListFilter();
+		viewer.addFilter(filter);
 		WidgetHelper.restoreTableViewerSettings(viewer, ds, configPrefix);
 		
 		addListener(SWT.Resize, new Listener() {
@@ -108,7 +141,27 @@ public class DciList extends Composite
 				WidgetHelper.saveTableViewerSettings(viewer, ds, configPrefix);
 			}
 		});
+		
+      // Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterText);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      viewer.getControl().setLayoutData(fd);
+      
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
 
+      // Set initial focus to filter input line
+      if (filterEnabled)
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
+      
 		getDataFromServer();
 	}
 	
@@ -217,4 +270,61 @@ public class DciList extends Composite
 	{
 		viewer.addDoubleClickListener(listener);
 	}
+
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   public void enableFilter(boolean enable)
+   {
+      filterEnabled = enable;
+      filterText.setVisible(filterEnabled);
+      FormData fd = (FormData)viewer.getControl().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
+      layout();
+      if (enable)
+         filterText.setFocus();
+      else
+         setFilter(""); //$NON-NLS-1$
+   }
+
+   /**
+    * @return the filterEnabled
+    */
+   public boolean isFilterEnabled()
+   {
+      return filterEnabled;
+   }
+   
+   /**
+    * Set filter text
+    * 
+    * @param text New filter text
+    */
+   public void setFilter(final String text)
+   {
+      filterText.setText(text);
+      onFilterModify();
+   }
+
+   /**
+    * Get filter text
+    * 
+    * @return Current filter text
+    */
+   public String getFilter()
+   {
+      return filterText.getText();
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   private void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+   }
 }

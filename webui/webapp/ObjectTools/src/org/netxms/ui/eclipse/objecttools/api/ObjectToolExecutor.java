@@ -1,7 +1,7 @@
 /**
  * NetXMS - open source network management system
  * Copyright (C) 2003-2015 Victor Kirhenshtein
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -19,9 +19,11 @@
 package org.netxms.ui.eclipse.objecttools.api;
 
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -39,12 +41,12 @@ import org.netxms.client.objecttools.InputField;
 import org.netxms.client.objecttools.InputFieldType;
 import org.netxms.client.objecttools.ObjectTool;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
+import org.netxms.ui.eclipse.filemanager.views.AgentFileViewer;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objecttools.Activator;
 import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.dialogs.ObjectToolInputDialog;
 import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
-import org.netxms.ui.eclipse.objecttools.views.FileViewer;
 import org.netxms.ui.eclipse.objecttools.views.ServerCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -56,7 +58,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public final class ObjectToolExecutor
 {
    /**
-    * Private constructor to forbid instantiation
+    * Private constructor to forbid instantiation 
     */
    private ObjectToolExecutor()
    {
@@ -159,7 +161,7 @@ public final class ObjectToolExecutor
       if (validationNeeded)
       {
          final NXCSession session = ConsoleSharedData.getSession();
-         new ConsoleJob("Validate passwords", null, Activator.PLUGIN_ID, null) {
+         new ConsoleJob(Messages.get().ObjectToolExecutor_JobName, null, Activator.PLUGIN_ID, null) {
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
@@ -175,8 +177,8 @@ public final class ObjectToolExecutor
                            @Override
                            public void run()
                            {
-                              MessageDialogHelper.openError(null, "Password Validation Failed", 
-                                    String.format("Password entered in input field \"%s\" is not valid", fieldName));
+                              MessageDialogHelper.openError(null, Messages.get().ObjectToolExecutor_ErrorTitle, 
+                                    String.format(Messages.get().ObjectToolExecutor_ErrorText, fieldName));
                            }
                         });
                         return;
@@ -197,7 +199,7 @@ public final class ObjectToolExecutor
             @Override
             protected String getErrorMessage()
             {
-               return "Password validation failed";
+               return Messages.get().ObjectToolExecutor_PasswordValidationFailed;
             }
          }.start();
       }
@@ -278,6 +280,89 @@ public final class ObjectToolExecutor
    }
 
    /**
+    * Split command line into tokens
+    *  
+    * @param input
+    * @return
+    */
+   private static String[] splitCommandLine(String input)
+   {
+      char[] in = input.toCharArray();
+      List<String> args = new ArrayList<String>();
+      
+      StringBuilder sb = new StringBuilder();
+      int state = 0;
+      for(char c : in)
+      {
+         switch(state)
+         {
+            case 0: // normal
+               if (Character.isSpaceChar(c))
+               {
+                  args.add(sb.toString());
+                  sb = new StringBuilder();
+                  state = 3;
+               }
+               else if (c == '"')
+               {
+                  state = 1;
+               }
+               else if (c == '\'')
+               {
+                  state = 2;
+               }
+               else
+               {
+                  sb.append(c);
+               }
+               break;
+            case 1: // double quoted string
+               if (c == '"')
+               {
+                  state = 0;
+               }
+               else
+               {
+                  sb.append(c);
+               }
+               break;
+            case 2: // single quoted string
+               if (c == '\'')
+               {
+                  state = 0;
+               }
+               else
+               {
+                  sb.append(c);
+               }
+               break;
+            case 3: // skip
+               if (!Character.isSpaceChar(c))
+               {
+                  if (c == '"')
+                  {
+                     state = 1;
+                  }
+                  else if (c == '\'')
+                  {
+                     state = 2;
+                  }
+                  else
+                  {
+                     sb.append(c);
+                     state = 0;
+                  }
+               }
+               break;
+         }
+      }
+      if (state != 3)
+         args.add(sb.toString());
+      
+      return args.toArray(new String[args.size()]);
+   }
+   
+   /**
     * @param node
     * @param tool
     * @param inputValues 
@@ -285,7 +370,9 @@ public final class ObjectToolExecutor
    private static void executeAgentAction(final NodeInfo node, final ObjectTool tool, Map<String, String> inputValues)
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-      final String action = substituteMacros(tool.getData(), node, inputValues);
+      String[] parts = splitCommandLine(substituteMacros(tool.getData(), node, inputValues));
+      final String action = parts[0];
+      final String[] args = Arrays.copyOfRange(parts, 1, parts.length);
       
       if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
       {      
@@ -299,7 +386,7 @@ public final class ObjectToolExecutor
             @Override
             protected void runInternal(IProgressMonitor monitor) throws Exception
             {
-               session.executeAction(node.object.getObjectId(), action);
+               session.executeAction(node.object.getObjectId(), action, args);
                runInUIThread(new Runnable() {
                   @Override
                   public void run()
@@ -317,7 +404,7 @@ public final class ObjectToolExecutor
          try
          {
             AgentActionResults view = (AgentActionResults)window.getActivePage().showView(AgentActionResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
-            view.executeAction(action);
+            view.executeAction(action, args);
          }
          catch(Exception e)
          {
@@ -374,7 +461,7 @@ public final class ObjectToolExecutor
          }
       }
    }
-
+   
    /**
     * @param node
     * @param tool
@@ -385,7 +472,7 @@ public final class ObjectToolExecutor
    {
       final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
       String[] parameters = tool.getData().split("\u007F"); //$NON-NLS-1$
-
+      
       final String fileName = substituteMacros(parameters[0], node, inputValues);
       final int maxFileSize = Integer.parseInt(parameters[1]);
       final boolean follow = parameters[2].equals("true") ? true : false; //$NON-NLS-1$
@@ -405,14 +492,14 @@ public final class ObjectToolExecutor
                @Override
                public void run()
                {
-                  final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                   try
                   {
                      String secondaryId = Long.toString(node.object.getObjectId()) + "&" + URLEncoder.encode(fileName, "UTF-8"); //$NON-NLS-1$ //$NON-NLS-2$
-                     FileViewer.createView(window, window.getShell(), file, follow, maxFileSize, secondaryId, node.object.getObjectId());
+                     AgentFileViewer.createView(secondaryId, node.object.getObjectId(), file, follow);
                   }
                   catch(Exception e)
                   {
+                     final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
                      MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
                   }
                }

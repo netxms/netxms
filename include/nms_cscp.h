@@ -1120,6 +1120,9 @@ typedef struct
 #define VID_STATUS                  ((UINT32)537)
 #define VID_FLAGS_MASK              ((UINT32)538)
 #define VID_TOP_BOTTOM              ((UINT32)539)
+#define VID_AUTH_TOKEN              ((UINT32)540)
+#define VID_REPOSITORY_ID           ((UINT32)541)
+#define VID_TOOLTIP_DCI_COUNT       ((UINT32)542)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1176,6 +1179,9 @@ typedef struct
 
 // Base value for overview DCI list
 #define VID_OVERVIEW_DCI_LIST_BASE  ((UINT32)0x72000000)
+
+// Base value for tooltip DCI list
+#define VID_TOOLTIP_DCI_LIST_BASE   ((UINT32)0x73000000)
 
 // IP address list base
 #define VID_IP_ADDRESS_LIST_BASE    ((UINT32)0x7F000000)

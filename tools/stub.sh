@@ -6,58 +6,42 @@ skip=__SKIP__
 skip1=__SKIP1__
 command=__COMMAND__
 log=/tmp/nxagentupdate.log
-md5found=no
-postproc1="cut -b1-32"
-postproc2="cat"
 
-trap '
-	echo "Upgrade script finished" >> $log
-	cd $wd
-	[ "x"$temp != "x" ] && rm -rf $temp
-	exit
-' INT EXIT
+# trap '
+# 	echo "Upgrade script finished" >> $log
+# 	cd $wd
+# 	[ "x"$temp != "x" ] && rm -rf $temp
+# 	exit
+# ' INT EXIT
 
-echo "$0 started: $*" > $log
+SCRIPT_DIR=`dirname $0`
+if [[ "$SCRIPT_DIR" = /* ]]; then
+   SELF=$0
+else
+   SELF=`pwd -P`/$0
+fi
 
-wd=`pwd -P`
-echo "Working directory: $wd" >> $log
+echo "$SELF started: $*" > $log
 
 _mktemp() {
 	d=/tmp/nxupdate.$$.UniQ
 	mkdir $d && echo $d || false
 }
 
-for app in openssl md5sum md5; do
-	tmp=`which $app 2>/dev/null`
-	if [ $? = 0 ]; then
-		echo $tmp | grep "no $app in " >/dev/null 2>&1
-		if [ $? != 0 ]; then
-			md5=$tmp
-			md5found=yes
-			break
-		fi
-	fi
-done
-
-if [ -z "$md5" ]; then
-	for dir in /bin /sbin /usr/bin /usr/local/bin /opt/openssl*/bin /opt/freeware/bin; do
-		if [ -d $dir ]; then
-			for app in openssl md5sum md5; do
-				if [ -x "$dir/$app" ]; then
-					md5="$dir/$app"
-					md5found=yes
-					break
-				fi
-			done
-			[ "x" != "x$md5" ] && break
-		fi
-	done
+if [ "x`echo test | md5 2>/dev/null | tr A-Z a-z | cut -b1-32`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
+   md5="md5 | tr A-Z a-z | cut -b1-32"
 fi
-
-if [ "`basename $md5`" = "openssl" ]; then
-	md5="$md5 md5"
-	postproc1="cut -d = -f 2"
-	postproc2="cut -b2-33"
+if [ "x$md5" = "x" ] && [ "x`echo test | md5sum 2>/dev/null | tr A-Z a-z | cut -b1-32`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
+   md5="md5sum | tr A-Z a-z | cut -b1-32"
+fi
+if [ "x$md5" = "x" ] && [ "x`echo test | csum -h MD5 - 2>/dev/null | tr A-Z a-z | cut -b1-32`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
+   md5="csum -h MD5 - | tr A-Z a-z | cut -b1-32"
+fi
+if [ "x$md5" = "x" ] && [ "x`echo test | openssl md5 2>/dev/null | tr A-Z a-z`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
+   md5="openssl md5 | tr A-Z a-z"
+fi
+if [ "x$md5" = "x" ] && [ "x`echo test | openssl md5 2>/dev/null | tr A-Z a-z | rev | cut -b1-32 | rev`" = 'xd8e8fca2dc0f896fd7cb4cb0031ba249' ]; then
+   md5="openssl md5 | tr A-Z a-z | rev | cut -b1-32 | rev"
 fi
 
 tail="tail -n"
@@ -83,29 +67,21 @@ else
 	alias mktemp=_mktemp
 fi
 
-if [ "$md5found" = "yes" ]; then
-	if [ "X"`head -n $skip $0 |
-		$tail +5 |
-		$md5 |
-		$postproc1 |
-		$postproc2 |
-		tr A-Z a-z` != "X"$hash1 ];
-	then
-		echo "Script MD5 mismach; upgrade aborted" >> $log
+if [ "x$md5" != "x" ]; then
+   h1=`head -n $skip $SELF | $tail +5 | eval $md5`
+	h2=`$tail +$skip1 $SELF | eval $md5`
+
+   if [ "x$h1" != "x$hash1" ]; then
+      echo "Script MD5 mismach (calculated: $h1, expected: $hash1); upgrade aborted" >> $log
 		exit
 	fi
 
-	if [ "X"`$tail +$skip1 $0 |
-		$md5 |
-		$postproc1 |
-		$postproc2 |
-		tr A-Z a-z` != "X"$hash2 ];
-	then
-		echo "Payload MD5 mismach; upgrade aborted" >> $log
+   if [ "x$h2" != "x$hash2" ]; then
+      echo "Payload MD5 mismach (calculated: $h2, expected: $hash2); upgrade aborted" >> $log
 		exit
 	fi
 else
-	echo "No md5/md5sum/openssl found, can't check integrity" >> $log
+	echo "No md5/md5sum/csum/openssl found, can't check integrity" >> $log
 fi
 
 temp=`mktemp -d /tmp/nxinst.XXXXXX 2>/dev/null`
@@ -114,7 +90,7 @@ if [ $? != 0 ]; then
 	exit
 fi
 cd $temp
-$tail +$skip1 $wd/$0 | gzip -dc 2>/dev/null | tar xf -
+$tail +$skip1 $SELF | gzip -dc 2>/dev/null | tar xf -
 if [ $? != 0 ]; then
 	echo "Can't unpack" >> $log
 	exit;

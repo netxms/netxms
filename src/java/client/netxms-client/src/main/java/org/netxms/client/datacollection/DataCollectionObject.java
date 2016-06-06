@@ -59,11 +59,12 @@ public abstract class DataCollectionObject
 	public static final int DT_NULL = 6;
 	
 	// common data collection flags
-	public static final int DCF_ADVANCED_SCHEDULE    = 0x0001;
-	public static final int DCF_AGGREGATE_ON_CLUSTER = 0x0080;
-   public static final int DCF_TRANSFORM_AGGREGATED = 0x0100;
-   public static final int DCF_NO_STORAGE           = 0x0200;
-   public static final int DCF_CACHE_MODE_MASK      = 0x3000;
+	public static final int DCF_ADVANCED_SCHEDULE     = 0x0001;
+	public static final int DCF_AGGREGATE_ON_CLUSTER  = 0x0080;
+   public static final int DCF_TRANSFORM_AGGREGATED  = 0x0100;
+   public static final int DCF_NO_STORAGE            = 0x0200;
+   public static final int DCF_CACHE_MODE_MASK       = 0x3000;
+   public static final int DCF_AGGREGATE_WITH_ERRORS = 0x4000;
 	
 	protected DataCollectionConfiguration owner;
 	protected long id;
@@ -539,6 +540,31 @@ public abstract class DataCollectionObject
 		else
 			flags &= ~DCF_AGGREGATE_ON_CLUSTER;
 	}
+
+   /**
+    * Include node DCI value into aggregated value even in case of 
+    * data collection error (system will use last known value in that case)
+    * 
+    * @return true if enabled
+    */
+   public boolean isAggregateWithErrors()
+   {
+      return (flags & DCF_AGGREGATE_WITH_ERRORS) != 0;
+   }
+
+   /**
+    * Enable or disable inclusion of node DCI value into aggregated value even
+    * in case of data collection error (system will use last known value in that case)
+    * 
+    * @param enable true to enable
+    */
+   public void setAggregateWithErrors(boolean enable)
+   {
+      if (enable)
+         flags |= DCF_AGGREGATE_WITH_ERRORS;
+      else
+         flags &= ~DCF_AGGREGATE_WITH_ERRORS;
+   }
 
    /**
     * @return 

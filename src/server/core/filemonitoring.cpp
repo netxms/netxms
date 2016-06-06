@@ -40,10 +40,10 @@ void FileMonitoringList::addMonitoringFile(MONITORED_FILE *fileForAdd, Node *obj
    lock();
    fileForAdd->session->incRefCount();
    m_monitoredFiles.add(fileForAdd);
-   if(obj->getFileUpdateConn() == NULL)
+   if (!obj->hasFileUpdateConnection())
    {
       conn->enableFileUpdates();
-      obj->setFileUpdateConn(conn);
+      obj->setFileUpdateConnection(conn);
    }
    unlock();
 }
@@ -103,17 +103,17 @@ bool FileMonitoringList::removeMonitoringFile(MONITORED_FILE *fileForRemove)
          nodeConnectionCount++;
    }
 
-   if(deleted && nodeConnectionCount == 1)
+   if (deleted && nodeConnectionCount == 1)
    {
       Node *object = (Node *)FindObjectById(fileForRemove->nodeID, OBJECT_NODE);
-      if(object != NULL)
-         object->setFileUpdateConn(NULL);
+      if (object != NULL)
+         object->setFileUpdateConnection(NULL);
    }
    unlock();
    return deleted;
 }
 
-void FileMonitoringList::removeDisconectedNode(UINT32 nodeId)
+void FileMonitoringList::removeDisconnectedNode(UINT32 nodeId)
 {
    lock();
    for(int i = 0; i < m_monitoredFiles.size(); i++)

@@ -57,6 +57,7 @@
 
 #define _tcstoll  wcstoll
 #define _tcstoull wcstoull
+#define _tcstok_r wcstok_s
 
 #define _ERR_error_tstring		ERR_error_string_W
 
@@ -64,6 +65,7 @@
 
 #define _tcstoll  strtoll
 #define _tcstoull strtoull
+#define _tcstok_r strtok_s
 
 #define _ERR_error_tstring		ERR_error_string
 
@@ -216,6 +218,7 @@
 #define _tcstod   wcstod
 #define _tcsdup   wcsdup
 #define _tcsupr   wcsupr
+#define _tcslwr   wcslwr
 #define _tcsspn   wcsspn
 #define _tcscspn  wcscspn
 #define _tcsstr   wcsstr
@@ -223,7 +226,7 @@
 #define _tcscat_s wcscat_s
 #define _tcsncat  wcsncat
 #define _tcspbrk  wcspbrk
-#define _tcstok   wcstok
+#define _tcstok_r wcstok
 #define _topen    wopen
 #define _taccess  waccess
 #define _tstat    wstat
@@ -303,6 +306,7 @@
 #define _tcstod   strtod
 #define _tcsdup   strdup
 #define _tcsupr   strupr
+#define _tcslwr   strlwr
 #define _tcsspn   strspn
 #define _tcscspn  strcspn
 #define _tcsstr   strstr
@@ -310,7 +314,7 @@
 #define _tcscat_s strcat_s
 #define _tcsncat  strncat
 #define _tcspbrk  strpbrk
-#define _tcstok   strtok
+#define _tcstok_r strtok_r
 #define _topen    open
 #define _taccess  access
 #define _tstat    stat

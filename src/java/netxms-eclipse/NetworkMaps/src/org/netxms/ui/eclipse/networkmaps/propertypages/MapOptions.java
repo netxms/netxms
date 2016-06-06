@@ -78,11 +78,11 @@ public class MapOptions extends PropertyPage
       gd = new GridData();
       gd.horizontalAlignment = SWT.FILL;
       gd.grabExcessHorizontalSpace = true;
-      objectDisplayMode = WidgetHelper.createLabeledCombo(objectDisplayGroup, SWT.READ_ONLY, "Display objects as", gd);
-      objectDisplayMode.add("Icons");
-      objectDisplayMode.add("Small labels");
-      objectDisplayMode.add("Large labels");
-      objectDisplayMode.add("Status icons");
+      objectDisplayMode = WidgetHelper.createLabeledCombo(objectDisplayGroup, SWT.READ_ONLY, Messages.get().MapOptions_DisplayObjectsAs, gd);
+      objectDisplayMode.add(Messages.get().MapOptions_Icons);
+      objectDisplayMode.add(Messages.get().MapOptions_SmallLabels);
+      objectDisplayMode.add(Messages.get().MapOptions_LargeLabels);
+      objectDisplayMode.add(Messages.get().MapOptions_StatusIcons);
       objectDisplayMode.select(object.getObjectDisplayMode().getValue());
       
       checkShowStatusIcon = new Button(objectDisplayGroup, SWT.CHECK);

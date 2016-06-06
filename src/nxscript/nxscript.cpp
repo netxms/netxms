@@ -28,6 +28,16 @@
 
 static NXSL_TestClass m_testClass;
 
+class NXSL_TestEnv : public NXSL_Environment
+{
+public:
+   virtual void configureVM(NXSL_VM *vm);
+};
+
+void NXSL_TestEnv::configureVM(NXSL_VM *vm)
+{
+   vm->setGlobalVariable(_T("$nxscript"), new NXSL_Value(NETXMS_VERSION_STRING));
+}
 
 int F_new(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
@@ -53,6 +63,8 @@ int main(int argc, char *argv[])
    int i, ch;
    bool dump = false, printResult = false, compileOnly = false, binary = false;
    int runCount = 1;
+
+   InitNetXMSProcess();
 
    func.m_iNumArgs = 0;
    func.m_pfHandler = F_new;
@@ -181,7 +193,7 @@ int main(int argc, char *argv[])
 
       if (!compileOnly)
       {
-		   pEnv = new NXSL_Environment;
+		   pEnv = new NXSL_TestEnv;
 		   pEnv->registerFunctionSet(1, &func);
 
          // Create VM
@@ -214,6 +226,10 @@ int main(int argc, char *argv[])
 		         }
 		         safe_free(ppArgs);
             }
+         }
+         else
+         {
+            WriteToTerminalEx(_T("%s\n"), vm->getErrorText());
          }
          delete vm;
       }

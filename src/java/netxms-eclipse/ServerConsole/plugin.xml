@@ -37,5 +37,25 @@
          </action>
       </actionSet>
    </extension>
+   <extension
+         point="org.eclipse.ui.activities">
+      <activity
+            id="org.netxms.ui.eclipse.serverconsole.activity.ServerConsole"
+            name="Server Console">
+         <enabledWhen>
+            <with
+                  variable="org.netxms.access.ServerConsole">
+               <equals
+                     value="true">
+               </equals>
+            </with>
+         </enabledWhen>
+      </activity>
+      <activityPatternBinding
+            activityId="org.netxms.ui.eclipse.serverconsole.activity.ServerConsole"
+            isEqualityPattern="true"
+            pattern="org.netxms.ui.eclipse.serverconsole/org.netxms.ui.eclipse.serverconsole.actions.open_server_console">
+      </activityPatternBinding>
+   </extension>
 
 </plugin>

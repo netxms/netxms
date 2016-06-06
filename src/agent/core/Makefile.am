@@ -12,9 +12,6 @@ nxagentd_LDADD = ../../appagent/libappagent.la ../libnxagent/libnxagent.la @top_
 else
 nxagentd_LDADD = ../../appagent/libappagent.la ../libnxagent/libnxagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @SUBAGENT_LIBS@ 
 endif
-if USE_ENCRYPTION
-nxagentd_LDADD += -lssl
-endif
 if STATIC_BUILD
 if ALL_STATIC
 nxagentd_LDFLAGS = -all-static

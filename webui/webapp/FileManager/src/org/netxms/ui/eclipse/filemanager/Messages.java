@@ -9,8 +9,11 @@ public class Messages extends NLS
 {
 	private static final String BUNDLE_NAME = "org.netxms.ui.eclipse.filemanager.messages"; //$NON-NLS-1$
 	public String AgentFileManager_AllFiles;
+   public String AgentFileManager_ColAccessRights;
    public String AgentFileManager_ColDate;
+   public String AgentFileManager_ColGroup;
    public String AgentFileManager_ColName;
+   public String AgentFileManager_ColOwner;
    public String AgentFileManager_ColSize;
    public String AgentFileManager_ColType;
    public String AgentFileManager_CreateFolder;
@@ -24,6 +27,7 @@ public class Messages extends NLS
    public String AgentFileManager_Error;
    public String AgentFileManager_FileDownloadError;
    public String AgentFileManager_FolderCreationError;
+   public String AgentFileManager_FollowChanges;
    public String AgentFileManager_MoveError;
    public String AgentFileManager_MoveFile;
    public String AgentFileManager_OpenViewError;
@@ -37,8 +41,31 @@ public class Messages extends NLS
    public String AgentFileManager_UploadFileJobTitle;
    public String AgentFileManager_UploadFolder;
    public String AgentFileManager_UploadFolderJobTitle;
+   public String AgentFileViewer_Copy;
+   public String AgentFileViewer_FileIsTooLarge;
+   public String AgentFileViewer_FileIsTooLargeMessageText;
+   public String AgentFileViewer_Find;
+   public String AgentFileViewer_SelectAll;
+   public String BaseFileViewer_Close;
+   public String BaseFileViewer_Find;
+   public String BaseFileViewer_FindInFile;
+   public String BaseFileViewer_HideMessage;
+   public String BaseFileViewer_LoadJobError;
+   public String BaseFileViewer_LoadJobName;
    public String CreateFolderDialog_Label;
    public String CreateFolderDialog_Title;
+   public String DynamicFileViewer_CannotRestartFileTracking;
+   public String DynamicFileViewer_FileTrackingFailed;
+   public String DynamicFileViewer_RestartFileTracking;
+   public String DynamicFileViewer_TrackFileChanges;
+   public String FileViewer_Cannot_Stop_File_Monitoring;
+   public String FileViewer_ClearOutput;
+   public String FileViewer_Download_File_Updates;
+   public String FileViewer_InvalidObjectID;
+   public String FileViewer_NotifyFollowConnectionEnabed;
+   public String FileViewer_NotifyFollowConnectionLost;
+   public String FileViewer_ScrollLock;
+   public String FileViewer_Stop_File_Monitoring;
    public String GetServerFileList_ErrorMessageFileView;
    public String GetServerFileList_ErrorMessageFileViewTitle;
    public String LocalFileSelector_AllFiles;
@@ -70,7 +97,8 @@ public class Messages extends NLS
 	public String StartClientToServerFileUploadDialog_WarningText;
 	public String StartServerToAgentFileUploadDialog_CreateJobOnHold;
 	public String StartServerToAgentFileUploadDialog_RemoteFileName;
-	public String StartServerToAgentFileUploadDialog_ServerFile;
+	public String StartServerToAgentFileUploadDialog_ScheduleTask;
+   public String StartServerToAgentFileUploadDialog_ServerFile;
 	public String StartServerToAgentFileUploadDialog_Title;
 	public String StartServerToAgentFileUploadDialog_Warning;
 	public String StartServerToAgentFileUploadDialog_WarningText;

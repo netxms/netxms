@@ -175,7 +175,7 @@
             class="org.netxms.ui.eclipse.topology.views.RoutingTableView"
             icon="icons/routing_table.gif"
             id="org.netxms.ui.eclipse.topology.views.RoutingTableView"
-            name="Routing Table"
+            name="%view.name.RoutingTable"
             restorable="true">
       </view>
       <view
@@ -184,7 +184,7 @@
             class="org.netxms.ui.eclipse.topology.views.SwitchForwardingDatabaseView"
             icon="icons/routing_table.gif"
             id="org.netxms.ui.eclipse.topology.views.SwitchForwardingDatabaseView"
-            name="MAC Address Table"
+            name="%view.name.MACAddressTable"
             restorable="true">
       </view>
    </extension>

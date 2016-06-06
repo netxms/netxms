@@ -12,6 +12,7 @@ public class Messages extends NLS
    public static String AbstractNetworkMapView_EnableAutoLayout;
    public static String AbstractNetworkMapView_Error;
    public static String AbstractNetworkMapView_HideLinkLabels;
+   public static String AbstractNetworkMapView_HideLinks;
    public static String AbstractNetworkMapView_Icons;
    public static String AbstractNetworkMapView_LargeLabels;
    public static String AbstractNetworkMapView_LayoutHorzTree;
@@ -28,6 +29,7 @@ public class Messages extends NLS
    public static String AbstractNetworkMapView_RouterManhattan;
    public static String AbstractNetworkMapView_Routing;
    public static String AbstractNetworkMapView_SaveLayout;
+   public static String AbstractNetworkMapView_SelectAllObjects;
    public static String AbstractNetworkMapView_ShowGrid;
    public static String AbstractNetworkMapView_ShowObjDetails;
    public static String AbstractNetworkMapView_ShowStatusBkgnd;
@@ -45,6 +47,7 @@ public class Messages extends NLS
 	public static String AddGroupBoxDialog_Height;
 	public static String AddGroupBoxDialog_Title;
 	public static String AddGroupBoxDialog_Width;
+   public static String CloneNetworkMap_NetworkMap;
    public static String ClusterResourceListLabelProvider_None;
    public static String ClusterTab_Owner;
    public static String ClusterTab_Resource;
@@ -183,14 +186,19 @@ public class Messages extends NLS
    public static String MapOptions_DefaultDispOptions;
    public static String MapOptions_DefColor;
    public static String MapOptions_Direct;
+   public static String MapOptions_DisplayObjectsAs;
+   public static String MapOptions_Icons;
    public static String MapOptions_IncludeEndNodes;
    public static String MapOptions_JobError;
    public static String MapOptions_JobTitle;
+   public static String MapOptions_LargeLabels;
    public static String MapOptions_Manhattan;
    public static String MapOptions_RoutingAlg;
    public static String MapOptions_ShowStatusBkgnd;
    public static String MapOptions_ShowStatusFrame;
    public static String MapOptions_ShowStatusIcon;
+   public static String MapOptions_SmallLabels;
+   public static String MapOptions_StatusIcons;
    public static String MapOptions_TopoDiscoRadius;
    public static String MapOptions_TopologyOptions;
    public static String NetworkMapOpenHandler_Error;

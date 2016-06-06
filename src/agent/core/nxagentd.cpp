@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -157,7 +157,6 @@ time_t g_tmAgentStartTime;
 UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 32;
 UINT32 g_dwSNMPTrapPort = 162;
-UINT32 g_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
 #ifdef _WIN32
 UINT16 g_sessionAgentPort = 28180;
 #else
@@ -204,6 +203,7 @@ static UINT32 s_logRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR s_dailyLogFileSuffix[64] = _T("");
 static Config *s_registry = NULL;
 static TCHAR s_executableName[MAX_PATH];
+static UINT32 s_debugLevel = (UINT32)NXCONFIG_UNINITIALIZED_VALUE;
 
 static CONDITION s_subAgentsStopCondition = INVALID_CONDITION_HANDLE;
 #if defined(_WIN32)
@@ -227,7 +227,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags, NULL },
 	{ _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDirectory, NULL },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, s_dailyLogFileSuffix, NULL },
-	{ _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &g_debugLevel, &g_debugLevel },
+	{ _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
    { _T("DisableIPv4"), CT_BOOLEAN, 0, 0, AF_DISABLE_IPV4, 0, &g_dwFlags, NULL },
    { _T("DisableIPv6"), CT_BOOLEAN, 0, 0, AF_DISABLE_IPV6, 0, &g_dwFlags, NULL },
    { _T("DumpDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, s_dumpDir, NULL },
@@ -501,7 +501,7 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-				  g_debugLevel, szPlatformSuffixOption,
+				  s_debugLevel, szPlatformSuffixOption,
               (g_dwFlags & AF_DAEMON) ? 0 : GetCurrentProcessId());
 	DebugPrintf(INVALID_INDEX, 1, _T("Restarting agent with command line '%s'"), szCmdLine);
 
@@ -546,7 +546,7 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T("-M ") : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? g_szConfigServer : _T(""),
 				  (g_dwFlags & AF_CENTRAL_CONFIG) ? _T(" ") : _T(""),
-				  (int)g_debugLevel, szPlatformSuffixOption,
+				  (int)s_debugLevel, szPlatformSuffixOption,
               (unsigned long)s_pid);
 	DebugPrintf(INVALID_INDEX, 1, _T("Restarting agent with command line '%s'"), szCmdLine);
    return ExecuteCommand(szCmdLine, NULL, NULL);
@@ -560,7 +560,7 @@ static void WriteSubAgentMsg(int logLevel, int debugLevel, const TCHAR *pszMsg)
 {
 	if (logLevel == EVENTLOG_DEBUG_TYPE)
 	{
-		if (debugLevel <= (int)g_debugLevel)
+		if (debugLevel <= (int)s_debugLevel)
 			nxlog_write(MSG_DEBUG, EVENTLOG_DEBUG_TYPE, "s", pszMsg);
 	}
 	else
@@ -685,8 +685,8 @@ BOOL Initialize()
    TCHAR *pItem, *pEnd;
 	TCHAR regPath[MAX_PATH];
 
-   if (g_debugLevel == (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
-      g_debugLevel = 0;
+   if (s_debugLevel == (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
+      s_debugLevel = 0;
 
    if (!_tcscmp(g_szDataDirectory, _T("{default}")))
    {
@@ -706,18 +706,17 @@ BOOL Initialize()
                    ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),
 	                _T("NXAGENTD.EXE"),
 #ifdef _WIN32
-	                0, NULL))
+	                0, NULL, MSG_DEBUG))
 #else
-	                g_dwNumMessages, g_szMessages))
+	                g_dwNumMessages, g_szMessages, MSG_DEBUG))
 #endif
 	{
 		_ftprintf(stderr, _T("FATAL ERROR: Cannot open log file\n"));
 		return FALSE;
 	}
 	nxlog_write(MSG_USE_CONFIG_D, NXLOG_INFO, "s", g_szConfigIncludeDir);
-	nxlog_write(MSG_DEBUG_LEVEL, NXLOG_INFO, "d", g_debugLevel);
-
-   ThreadPoolSetDebugCallback(DebugPrintfCallback);
+	nxlog_write(MSG_DEBUG_LEVEL, NXLOG_INFO, "d", s_debugLevel);
+	nxlog_set_debug_level(s_debugLevel);
 
 	if (_tcscmp(g_masterAgent, _T("not_set")))
 	{
@@ -760,7 +759,7 @@ BOOL Initialize()
    DebugPrintf(INVALID_INDEX, 1, _T("Subagent API initialized"));
 
    // Initialize cryptografy
-   if (!InitCryptoLib(s_enabledCiphers, DebugPrintfCallback))
+   if (!InitCryptoLib(s_enabledCiphers))
    {
       nxlog_write(MSG_INIT_CRYPTO_FAILED, EVENTLOG_ERROR_TYPE, "e", WSAGetLastError());
       return FALSE;
@@ -774,8 +773,12 @@ BOOL Initialize()
    SSL_load_error_strings();
 #endif
 
-	DBSetDebugPrintCallback(DebugPrintfCallback);
 	DBInit(MSG_DB_LIBRARY, MSG_SQL_ERROR);
+
+   if (!OpenLocalDatabase())
+   {
+      nxlog_write(MSG_LOCAL_DB_OPEN_FAILED, NXLOG_ERROR, NULL);
+   }
 
 	if (!(g_dwFlags & AF_SUBAGENT_LOADER))
 	{
@@ -799,11 +802,6 @@ BOOL Initialize()
 
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
-
-      if (!OpenLocalDatabase())
-      {
-         nxlog_write(MSG_LOCAL_DB_OPEN_FAILED, NXLOG_ERROR, NULL);
-      }
 
 	   // Load platform subagents
 #if !defined(_WIN32)
@@ -1319,9 +1317,7 @@ int main(int argc, char *argv[])
 	int uid = 0, gid = 0;
 #endif
 
-#ifdef _WIN32
-	SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
-#endif
+   InitNetXMSProcess();
 
 #if defined(__sun) || defined(_AIX) || defined(__hpux)
    signal(SIGPIPE, SIG_IGN);
@@ -1329,20 +1325,6 @@ int main(int argc, char *argv[])
    signal(SIGQUIT, SIG_IGN);
    signal(SIGUSR1, SIG_IGN);
    signal(SIGUSR2, SIG_IGN);
-#endif
-
-   InitThreadLibrary();
-
-#ifdef NETXMS_MEMORY_DEBUG
-	InitMemoryDebugger();
-#endif
-
-   // Set locale to C. It shouldn't be needed, according to
-   // documentation, but I've seen the cases when agent formats
-   // floating point numbers by sprintf inserting comma in place
-   // of a dot, as set by system's regional settings.
-#if HAVE_SETLOCALE
-   setlocale(LC_NUMERIC, "C");
 #endif
 
    // Check for alternate config file location
@@ -1388,8 +1370,8 @@ int main(int argc, char *argv[])
             g_dwFlags |= AF_DAEMON;
             break;
          case 'D':   // Turn on debug output
-				g_debugLevel = strtoul(optarg, &eptr, 0);
-				if ((*eptr != 0) || (g_debugLevel > 9))
+				s_debugLevel = strtoul(optarg, &eptr, 0);
+				if ((*eptr != 0) || (s_debugLevel > 9))
 				{
 					fprintf(stderr, "Invalid debug level: %s\n", optarg);
 					iAction = -1;
@@ -1660,16 +1642,16 @@ int main(int argc, char *argv[])
 
          if (g_dwFlags & AF_CENTRAL_CONFIG)
          {
-            if (g_debugLevel > 0)
+            if (s_debugLevel > 0)
                _tprintf(_T("Downloading configuration from %s...\n"), g_szConfigServer);
             if (DownloadConfig(g_szConfigServer))
             {
-               if (g_debugLevel > 0)
+               if (s_debugLevel > 0)
                   _tprintf(_T("Configuration downloaded successfully\n"));
             }
             else
             {
-               if (g_debugLevel > 0)
+               if (s_debugLevel > 0)
                   _tprintf(_T("Configuration download failed\n"));
             }
          }
@@ -1844,7 +1826,7 @@ int main(int argc, char *argv[])
 #ifdef _WIN32
       case ACTION_INSTALL_SERVICE:
          GetModuleFileName(GetModuleHandle(NULL), szModuleName, MAX_PATH);
-         InstallService(szModuleName, g_szConfigFile);
+         InstallService(szModuleName, g_szConfigFile, s_debugLevel);
          break;
       case ACTION_REMOVE_SERVICE:
          RemoveService();

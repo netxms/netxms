@@ -370,9 +370,17 @@ int Serial::read(char *pBuff, int nSize)
 	tv.tv_usec = 0;
 	nRet = select(m_hPort + 1, &rdfs, NULL, NULL, &tv);
 	if (nRet > 0)
-		nRet = ::read(m_hPort, pBuff, nSize);
+	{
+	   do
+	   {
+	      nRet = ::read(m_hPort, pBuff, nSize);
+	   }
+	   while((nRet == -1) && (errno == EAGAIN));
+	}
 	else
+	{
 		nRet = -1;  // Timeout is an error
+	}
 	
 #endif // _WIN32
 	

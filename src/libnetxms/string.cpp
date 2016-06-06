@@ -489,6 +489,6 @@ char *String::getUTF8String()
 #ifdef UNICODE
 	return UTF8StringFromWideString(m_buffer);
 #else
-	return strdup(m_buffer);
+	return UTF8StringFromMBString(m_buffer);
 #endif
 }

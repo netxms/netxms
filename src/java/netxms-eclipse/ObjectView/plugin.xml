@@ -89,7 +89,7 @@
             class="org.netxms.ui.eclipse.objectview.objecttabs.RackTab"
             icon="icons/rack.gif"
             id="org.netxms.ui.eclipse.objectview.objecttabs.RackTab"
-            name="Rack"
+            name="%tab.name.Rack"
             order="15">
       </tab>
    </extension>

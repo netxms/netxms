@@ -1,6 +1,6 @@
 /*
  ** NetXMS - Network Management System
- ** Copyright (C) 2003-2014 RAden Solutions
+ ** Copyright (C) 2003-2016 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU Lesser General Public License as published
@@ -192,7 +192,7 @@ static int WideCharToMultiByteSimpleCopy(int iCodePage, DWORD dwFlags, const WCH
    if (iSize >= cchByteChar)
       iSize = cchByteChar - 1;
    for(pSrc = pWideCharStr, iPos = 0, pDest = pByteStr; iPos < iSize; iPos++, pSrc++, pDest++)
-      *pDest = (*pSrc < 256) ? (char)(*pSrc) : '?';
+      *pDest = (*pSrc < 128) ? (char)(*pSrc) : '?';
    *pDest = 0;
 
    return iSize;
@@ -294,7 +294,7 @@ static int MultiByteToWideCharSimpleCopy(int iCodePage, DWORD dwFlags, const cha
    if (iSize >= cchWideChar)
       iSize = cchWideChar - 1;
    for(pSrc = pByteStr, iPos = 0, pDest = pWideCharStr; iPos < iSize; iPos++, pSrc++, pDest++)
-      *pDest = (WCHAR) (*pSrc);
+      *pDest = ((*pSrc) < 128) ? (WCHAR)(*pSrc) : L'?';
    *pDest = 0;
 
    return iSize;
@@ -388,6 +388,28 @@ UINT32 LIBNETXMS_EXPORTABLE inet_addr_w(const WCHAR *pszAddr)
 }
 
 /**
+ * Convert multibyte string to wide string using current LC_CTYPE setting and
+ * allocating wide string dynamically
+ */
+WCHAR LIBNETXMS_EXPORTABLE *WideStringFromMBStringSysLocale(const char *pszString)
+{
+#ifdef _WIN32
+   return WideStringFromMBString(pszString);
+#else
+   if (pszString == NULL)
+      return NULL;
+   int nLen = (int)strlen(pszString) + 1;
+   WCHAR *pwszOut = (WCHAR *) malloc(nLen * sizeof(WCHAR));
+#if HAVE_MBSTOWCS
+   mbstowcs(pwszOut, pszString, nLen);
+#else
+   MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, pszString, -1, pwszOut, nLen);
+#endif
+   return pwszOut;
+#endif
+}
+
+/**
  * Convert multibyte string to wide string using current codepage and
  * allocating wide string dynamically
  */
@@ -426,6 +448,28 @@ char LIBNETXMS_EXPORTABLE *MBStringFromWideString(const WCHAR *pwszString)
    char *pszOut = (char *)malloc(nLen);
    WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszString, -1, pszOut, nLen, NULL, NULL);
    return pszOut;
+}
+
+/**
+ * Convert wide string to multibyte string using current LC_CTYPE setting and
+ * allocating multibyte string dynamically
+ */
+char LIBNETXMS_EXPORTABLE *MBStringFromWideStringSysLocale(const WCHAR *pwszString)
+{
+#ifdef _WIN32
+   return MBStringFromWideString(pwszString);
+#else
+   if (pwszString == NULL)
+      return NULL;
+   int nLen = (int)wcslen(pwszString) + 1;
+   char *pszOut = (char *)malloc(nLen);
+#if HAVE_WCSTOMBS
+   wcstombs(pszOut, pwszString, nLen);
+#else
+   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, pwszString, -1, pszOut, nLen, NULL, NULL);
+#endif
+   return pszOut;
+#endif
 }
 
 /**

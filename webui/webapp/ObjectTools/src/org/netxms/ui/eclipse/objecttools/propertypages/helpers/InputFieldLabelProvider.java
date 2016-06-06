@@ -22,13 +22,14 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 import org.netxms.client.objecttools.InputField;
+import org.netxms.ui.eclipse.objecttools.Messages;
 
 /**
  * Label provider for input field list
  */
 public class InputFieldLabelProvider extends LabelProvider implements ITableLabelProvider
 {
-   private final String[] typeNames = { "Text", "Password", "Number" };
+   private final String[] typeNames = { Messages.get().InputFieldLabelProvider_Text, Messages.get().InputFieldLabelProvider_Password, Messages.get().InputFieldLabelProvider_Number };
    
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)

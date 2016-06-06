@@ -32,9 +32,11 @@ class ClientSession;
 class MobileDeviceSession;
 class Node;
 class Event;
+class Alarm;
 class NetObj;
 class PollerInfo;
 class NXSL_Environment;
+class NXSL_VM;
 struct NXCORE_LOG;
 
 /**
@@ -73,7 +75,7 @@ typedef struct
    int (* pfMobileDeviceCommandHandler)(UINT32 dwCommand, NXCPMessage *pMsg, MobileDeviceSession *pSession);
    BOOL (* pfTrapHandler)(SNMP_PDU *pdu, Node *pNode);
    BOOL (* pfEventHandler)(Event *event);
-   void (* pfAlarmChangeHook)(UINT32 changeCode, NXC_ALARM *alarm);
+   void (* pfAlarmChangeHook)(UINT32 changeCode, const Alarm *alarm);
 	void (* pfStatusPollHook)(Node *node, ClientSession *session, UINT32 rqId, PollerInfo *poller);
 	bool (* pfConfPollHook)(Node *node, ClientSession *session, UINT32 rqId, PollerInfo *poller);
 	void (* pfTopologyPollHook)(Node *node, ClientSession *session, UINT32 rqId, PollerInfo *poller);
@@ -90,6 +92,7 @@ typedef struct
    UINT32 (* pfAdditionalLoginCheck)(UINT32 userId, NXCPMessage *request);
    void (* pfClientSessionClose)(ClientSession *session);
    void (* pfNXSLServerEnvConfig)(NXSL_Environment *env);
+   void (* pfNXSLServerVMConfig)(NXSL_VM *vm);
    void (* pfOnConnectToAgent)(Node *node, AgentConnection *conn);
    BOOL (* pfOnAgentMessage)(NXCPMessage *msg, UINT32 nodeId);
    NXCORE_LOG *logs;

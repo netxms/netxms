@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: NetXMS Log Viewer
 Bundle-SymbolicName: org.netxms.ui.eclipse.logviewer;singleton:=true
-Bundle-Version: 2.0.7
+Bundle-Version: 2.0.8
 Bundle-Activator: org.netxms.ui.eclipse.logviewer.Activator
 Bundle-Vendor: netxms.org
 Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.2",

@@ -6,11 +6,10 @@
 static MUTEX cbLock = MutexCreate();
 static UINT32 s_nodeId;
 
-static void DebugCallback(int level, const TCHAR *format, va_list args)
+static void DebugCallback(const TCHAR *message)
 {
    MutexLock(cbLock);
-   _vtprintf(format, args);
-   _tprintf(_T("\n"));
+   _tprintf(_T("%s\n"), message);
    MutexUnlock(cbLock);
 }
 
@@ -84,7 +83,7 @@ int main(int argc, char *argv[])
    config->setValue(_T("/CLUSTER/NodeId"), s_nodeId);
    config->setValue(_T("/CLUSTER/PeerNode"), (s_nodeId == 1) ? _T("2:127.0.0.1") : _T("1:127.0.0.1"));
 
-   ClusterSetDebugCallback(DebugCallback);
+   nxlog_set_debug_writer(DebugCallback);
    AssertTrue(ClusterInit(config, _T("CLUSTER"), new EventHandler()));
 
    AssertTrue(ClusterJoin());

@@ -25,6 +25,7 @@ import java.util.TimeZone;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
@@ -237,7 +238,7 @@ public class RegionalSettings
       if (days > 0)
       {
          sb.append(days);
-         sb.append(" days, ");
+         sb.append(Messages.get().RegionalSettings_Days);
          seconds -= days * 86400;
       }
       

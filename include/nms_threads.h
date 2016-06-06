@@ -172,6 +172,15 @@ inline void ThreadJoin(THREAD thread)
    }
 }
 
+inline void ThreadDetach(THREAD thread)
+{
+   if (thread != INVALID_THREAD_HANDLE)
+   {
+      CloseHandle(thread->handle);
+      free(thread);
+   }
+}
+
 inline THREAD_ID ThreadId(THREAD thread)
 {
    return (thread != INVALID_THREAD_HANDLE) ? thread->id : 0;
@@ -338,6 +347,12 @@ inline void ThreadJoin(THREAD hThread)
 {
    if (hThread != INVALID_THREAD_HANDLE)
       pth_join(hThread, NULL);
+}
+
+inline void ThreadDetach(THREAD hThread)
+{
+   if (hThread != INVALID_THREAD_HANDLE)
+      pth_detach(hThread);
 }
 
 inline MUTEX MutexCreate(void)
@@ -670,6 +685,12 @@ inline void ThreadJoin(THREAD hThread)
       pthread_join(hThread, NULL);
 }
 
+inline void ThreadDetach(THREAD hThread)
+{
+   if (hThread != INVALID_THREAD_HANDLE)
+      pthread_detach(hThread);
+}
+
 inline MUTEX MutexCreate()
 {
    MUTEX mutex;
@@ -932,7 +953,6 @@ void LIBNETXMS_EXPORTABLE ThreadPoolScheduleRelative(ThreadPool *p, UINT32 delay
 void LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(ThreadPool *p, ThreadPoolInfo *info);
 bool LIBNETXMS_EXPORTABLE ThreadPoolGetInfo(const TCHAR *name, ThreadPoolInfo *info);
 StringList LIBNETXMS_EXPORTABLE *ThreadPoolGetAllPools();
-void LIBNETXMS_EXPORTABLE ThreadPoolSetDebugCallback(void (*cb)(int, const TCHAR *, va_list));
 
 /**
  * Wrapper data for ThreadPoolExecute

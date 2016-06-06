@@ -282,9 +282,9 @@ static UINT32 WaitForReply(int sock, UINT32 addr, UINT16 sequence, UINT32 dwTime
                break;
 				}
 
-				// Check for "destination unreacheable" error
+				// Check for "destination unreachable" error
 				if ((reply.m_icmpHdr.m_cType == 3) &&
-					 (reply.m_icmpHdr.m_cCode == 1))    // code 1 is "host unreacheable"
+					 (reply.m_icmpHdr.m_cCode == 1))    // code 1 is "host unreachable"
 				{
 					if (((IPHDR *)reply.m_cData)->m_iaDst.s_addr == addr)
 					{

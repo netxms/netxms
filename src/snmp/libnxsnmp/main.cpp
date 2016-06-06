@@ -31,7 +31,7 @@ TCHAR LIBNXSNMP_EXPORTABLE *SNMPConvertOIDToText(size_t length, const UINT32 *va
    buffer[0] = 0;
    for(size_t i = 0, bufPos = 0; (i < length) && (bufPos < bufferSize); i++)
    {
-      size_t numChars = _sntprintf(&buffer[bufPos], bufferSize - bufPos, _T(".%d"), value[i]);
+      size_t numChars = _sntprintf(&buffer[bufPos], bufferSize - bufPos, _T(".%u"), value[i]);
       bufPos += numChars;
    }
 	return buffer;

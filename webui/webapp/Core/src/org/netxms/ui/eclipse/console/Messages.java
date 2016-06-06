@@ -12,12 +12,22 @@ public class Messages extends NLS
 	public String AbstractSelector_ClearSelection;
 	public String AbstractSelector_CopyToClipboard;
 	public String AbstractSelector_Select;
-	public String AbstractTraceView_Clear;
+	public String AbstractTraceView_CannotSubscribe;
+
+   public String AbstractTraceView_CannotUnsubscribe;
+
+   public String AbstractTraceView_Clear;
 	public String AbstractTraceView_CopyToClipboard;
 	public String AbstractTraceView_Pause;
 	public String AbstractTraceView_ShowFilter;
+
+   public String AbstractTraceView_Subscribing;
+
+   public String AbstractTraceView_Unsubscribing;
 	public String BrandingManager_ProductName;
-	public String ConsoleJob_ErrorDialogTitle;
+	public String CompositeWithMessageBar_HideMessage;
+
+   public String ConsoleJob_ErrorDialogTitle;
 	public String ExportToCsvAction_ExportToCsv;
 	public String ExportToCsvAction_ExportAllToCsv;
 	public String ExportToCsvAction_SaveError;
@@ -59,6 +69,8 @@ public class Messages extends NLS
    public String LoginDialog_NoCertSelected;
    public String LoginDialog_Passwd;
 	public String LoginDialog_server;
+
+   public String LoginDialog_SlowLinkConnection;
 	public String LoginDialog_title;
    public String LoginDialog_Warning;
    public String LoginDialog_WrongKeyStorePasswd;
@@ -73,25 +85,48 @@ public class Messages extends NLS
    public String ApplicationActionBarAdvisor_AboutProductName;
 	public String ApplicationActionBarAdvisor_AboutTitle;
 	public String ApplicationActionBarAdvisor_AboutText;
+   public String ApplicationActionBarAdvisor_ActionExportPerspective;
+   public String ApplicationActionBarAdvisor_ActionImportPerspective;
+   public String ApplicationActionBarAdvisor_AllFiles;
 	public String ApplicationActionBarAdvisor_ConfirmRestart;
 	public String ApplicationActionBarAdvisor_FullScreen;
 	public String ApplicationActionBarAdvisor_Configuration;
-	public String ApplicationActionBarAdvisor_File;
+	public String ApplicationActionBarAdvisor_Error;
+
+   public String ApplicationActionBarAdvisor_ExportPerspective;
+
+   public String ApplicationActionBarAdvisor_File;
 	public String ApplicationActionBarAdvisor_Help;
+
+   public String ApplicationActionBarAdvisor_ImportPerspective;
 	public String ApplicationActionBarAdvisor_Monitor;
 	public String ApplicationActionBarAdvisor_Tools;
 	public String ApplicationActionBarAdvisor_View;
 	public String ApplicationActionBarAdvisor_Navigation;
 	public String ApplicationActionBarAdvisor_OpenPerspective;
-	public String ApplicationActionBarAdvisor_Progress;
-	public String ApplicationActionBarAdvisor_RestartConsoleMessage;
+	public String ApplicationActionBarAdvisor_PerspectiveExportFailed;
+
+   public String ApplicationActionBarAdvisor_PerspectiveImportFailed;
+
+   public String ApplicationActionBarAdvisor_Progress;
+	public String ApplicationActionBarAdvisor_RestartConfirmationMessage;
+
+   public String ApplicationActionBarAdvisor_RestartConsoleMessage;
 	public String ApplicationActionBarAdvisor_ShowView;
 	public String ApplicationActionBarAdvisor_Window;
+
+   public String ApplicationActionBarAdvisor_XMLFiles;
 	public String ApplicationWorkbenchAdvisor_CommunicationError;
 	public String ApplicationWorkbenchAdvisor_ConnectionLostMessage;
 	public String ApplicationWorkbenchAdvisor_OKToCloseMessage;
 	public String ApplicationWorkbenchAdvisor_ServerShutdownMessage;
+
+   public String ApplicationWorkbenchAdvisor_SessionTerminated;
 	public String ApplicationWorkbenchWindowAdvisor_CannotChangePswd;
+
+   public String ApplicationWorkbenchWindowAdvisor_CannotOpenDashboard;
+
+   public String ApplicationWorkbenchWindowAdvisor_CannotOpenDashboardType2;
 	public String ApplicationWorkbenchWindowAdvisor_CertDialogTitle;
    public String ApplicationWorkbenchWindowAdvisor_CertPassword;
    public String ApplicationWorkbenchWindowAdvisor_CertPasswordMsg;
@@ -104,7 +139,7 @@ public class Messages extends NLS
    public String ApplicationWorkbenchWindowAdvisor_NoEncryptionSupportDetails;
 	public String ApplicationWorkbenchWindowAdvisor_PasswordChanged;
    public String ApplicationWorkbenchWindowAdvisor_PkcsFiles;
-	public String ApplicationWorkbenchWindowAdvisor_Error;
+   public String ApplicationWorkbenchWindowAdvisor_Error;
 	public String ApplicationWorkbenchWindowAdvisor_Information;
 	public String ObjectNameValidator_ErrorMessage1;
    public String ObjectNameValidator_ErrorMessage2;
@@ -115,7 +150,9 @@ public class Messages extends NLS
 	public String PreferenceInitializer_DefaultDateFormat;
    public String PreferenceInitializer_DefaultShortTimeFormat;
 	public String PreferenceInitializer_DefaultTimeFormat;
-	public String RegionalSettingsPrefPage_DateFormatString;
+	public String RegionalSettings_Days;
+
+   public String RegionalSettingsPrefPage_DateFormatString;
 	public String RegionalSettingsPrefPage_DateTimeFormat;
 	public String RegionalSettingsPrefPage_Example;
 	public String RegionalSettingsPrefPage_FmtCustom;
@@ -124,7 +161,15 @@ public class Messages extends NLS
 	public String RegionalSettingsPrefPage_ShortTimeExample;
    public String RegionalSettingsPrefPage_ShortTimeFormatString;
    public String RegionalSettingsPrefPage_TimeFormatString;
-	public String SecurityWarningDialog_DontAskAgain;
+
+   public String RegionalSettingsPrefPage_UseServerTimeZone;
+	public String ScheduleSelector_CronSchedule;
+
+   public String ScheduleSelector_OneTimeExecution;
+
+   public String ScheduleSelector_Schedule;
+
+   public String SecurityWarningDialog_DontAskAgain;
    public String SecurityWarningDialog_Title;
    public String SendSMS_DialogTextPrefix;
 	public String SendSMS_DialogTextSuffix;
@@ -154,7 +199,27 @@ public class Messages extends NLS
    public String WorkbenchGeneralPrefs_ShowServerClock;	
 	public String SplashHandler_Version;
 	
-	static
+	public String TimePeriodSelector_8;
+
+   public String TimePeriodSelector_9;
+
+   public String TimePeriodSelector_BackFromNow;
+
+   public String TimePeriodSelector_Days;
+
+   public String TimePeriodSelector_FixedTimeFrame;
+
+   public String TimePeriodSelector_Hours;
+
+   public String TimePeriodSelector_Minutes;
+
+   public String TimePeriodSelector_TimeInterval;
+
+   public String TimePeriodSelector_TimePeriod;
+
+   public String TimePeriodSelector_TimeUnits;
+
+   static
 	{
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

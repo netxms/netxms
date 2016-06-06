@@ -13,6 +13,13 @@ import org.netxms.client.datacollection.GraphItemStyle;
 import org.netxms.ui.android.R;
 import org.netxms.ui.android.helpers.CustomLabel;
 
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GraphView.GraphViewData;
+import com.jjoe64.graphview.GraphView.LegendAlign;
+import com.jjoe64.graphview.GraphViewSeries;
+import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
+import com.jjoe64.graphview.LineGraphView;
+
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.SharedPreferences;
@@ -25,13 +32,6 @@ import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.GraphView.GraphViewData;
-import com.jjoe64.graphview.GraphView.LegendAlign;
-import com.jjoe64.graphview.GraphViewSeries;
-import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
-import com.jjoe64.graphview.LineGraphView;
 
 /**
  * Draw graph activity
@@ -156,10 +156,13 @@ public class DrawGraph extends AbstractClientActivity
 		@Override
 		protected void onPreExecute()
 		{
-			dialog.setMessage(getString(R.string.progress_gathering_data));
-			dialog.setIndeterminate(true);
-			dialog.setCancelable(false);
-			dialog.show();
+			if (dialog != null)
+			{
+				dialog.setMessage(getString(R.string.progress_gathering_data));
+				dialog.setIndeterminate(true);
+				dialog.setCancelable(false);
+				dialog.show();
+			}
 		}
 		@Override
 		protected DciData[] doInBackground(Object... params)
@@ -201,10 +204,7 @@ public class DrawGraph extends AbstractClientActivity
 						// dciData are reversed!
 						for (int j = dciDataRow.length - 1, k = 0; j >= 0; j--, k++)
 							gwData[k] = new GraphViewData(dciDataRow[j].getTimestamp().getTime(), dciDataRow[j].getValueAsDouble());
-						GraphViewSeries gwSeries = new GraphViewSeries(
-								items[i].getDescription(),
-								new GraphViewSeriesStyle(itemStyles[i].getColor(), itemStyles[i].getLineWidth()),
-								gwData);
+						GraphViewSeries gwSeries = new GraphViewSeries(items[i].getDescription(), new GraphViewSeriesStyle(itemStyles[i].getColor(), itemStyles[i].getLineWidth()), gwData);
 						graphView.addSeries(gwSeries);
 						addedSeries++;
 						start = dciDataRow[dciDataRow.length - 1].getTimestamp().getTime();
@@ -224,7 +224,8 @@ public class DrawGraph extends AbstractClientActivity
 					layout.addView(graphView);
 				}
 			}
-			dialog.cancel();
+			if (dialog != null)
+				dialog.cancel();
 			if (addedSeries == 0)
 				Toast.makeText(getApplicationContext(), getString(R.string.notify_no_data), Toast.LENGTH_SHORT).show();
 		}

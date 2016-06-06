@@ -50,6 +50,10 @@
 #include <malloc.h>
 #endif
 
+#if HAVE_LOCALE_H
+#include <locale.h>
+#endif
+
 #ifdef _WIN32
 # ifndef __GNUC__
 #  define EPOCHFILETIME (116444736000000000i64)
@@ -57,6 +61,39 @@
 #  define EPOCHFILETIME (116444736000000000LL)
 # endif
 #endif
+
+/**
+ * Common initialization for any NetXMS process
+ */
+void LIBNETXMS_EXPORTABLE InitNetXMSProcess()
+{
+   InitThreadLibrary();
+
+   // Set locale to C. It shouldn't be needed, according to
+   // documentation, but I've seen the cases when agent formats
+   // floating point numbers by sprintf inserting comma in place
+   // of a dot, as set by system's regional settings.
+#if HAVE_SETLOCALE
+   setlocale(LC_NUMERIC, "C");
+#if defined(UNICODE) && !defined(_WIN32)
+   const char *locale = getenv("LC_CTYPE");
+   if (locale == NULL)
+      locale = getenv("LC_ALL");
+   if (locale == NULL)
+      locale = getenv("LANG");
+   if (locale != NULL)
+      setlocale(LC_CTYPE, locale);
+#endif
+#endif
+
+#ifdef NETXMS_MEMORY_DEBUG
+   InitMemoryDebugger();
+#endif
+
+#ifdef _WIN32
+   SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX);
+#endif
+}
 
 /**
  * Calculate number of bits in netmask (in host byte order)
@@ -2178,7 +2215,7 @@ void LIBNETXMS_EXPORTABLE WriteToTerminal(const TCHAR *text)
 #if HAVE_FPUTWS
 	fputws(text, stdout);
 #else
-	char *mbtext = MBStringFromWideString(text);
+	char *mbtext = MBStringFromWideStringSysLocale(text);
 	fputs(mbtext, stdout);
 	free(mbtext);
 #endif

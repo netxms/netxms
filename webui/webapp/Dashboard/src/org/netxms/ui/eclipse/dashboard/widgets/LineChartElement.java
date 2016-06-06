@@ -91,6 +91,7 @@ public class LineChartElement extends ElementWidget
 		chart.setLogScaleEnabled(config.isLogScaleEnabled());
 		chart.setStacked(config.isStacked());
 		chart.setLineWidth(config.getLineWidth());
+		chart.setTranslucent(config.isTranslucent());
 		if (!config.isAutoScale())
 		   chart.setYAxisRange(config.getMinYScaleValue(), config.getMaxYScaleValue());
 		
@@ -98,11 +99,11 @@ public class LineChartElement extends ElementWidget
 		int index = 0;
 		for(ChartDciConfig dci : config.getDciList())
 		{
-			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName()));
+			chart.addParameter(new GraphItem(dci.nodeId, dci.dciId, 0, 0, Long.toString(dci.dciId), dci.getName(), dci.getDisplayFormat()));
 			int color = dci.getColorAsInt();
 			if (color == -1)
 				color = ChartColor.getDefaultColor(index).getRGB();
-			styles.add(new GraphItemStyle(dci.area ? GraphItemStyle.AREA : GraphItemStyle.LINE, color, 2, 0));
+			styles.add(new GraphItemStyle(dci.area ? GraphItemStyle.AREA : GraphItemStyle.LINE, color, 2, dci.invertValues ? GraphItemStyle.INVERTED : 0));
 			index++;
 		}
 		chart.setItemStyles(styles);
@@ -155,8 +156,6 @@ public class LineChartElement extends ElementWidget
 						data[i] = session.getCollectedData(currentDci.nodeId, currentDci.dciId, from, to, 0);
 					else
 						data[i] = session.getCollectedTableData(currentDci.nodeId, currentDci.dciId, currentDci.instance, currentDci.column, from, to, 0);
-					if (currentDci.invertValues)
-					   data[i].invert();
 				}
 				runInUIThread(new Runnable() {
 					@Override

@@ -94,7 +94,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	{
 		toolkit = new FormToolkit(getSite().getShell().getDisplay());
 		form = toolkit.createScrolledForm(parent);
-		form.setText("SNMP Configuration");
+		form.setText(Messages.get().SnmpCredentials_FormTitle);
 
 		TableWrapLayout layout = new TableWrapLayout();
 		layout.numColumns = 2;
@@ -108,7 +108,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		contributeToActionBars();
 
       // Load config
-      new ConsoleJob("Loading SNMP configuration", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().SnmpCredentials_LoadingConfig, this, Activator.PLUGIN_ID, null) {
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
@@ -125,7 +125,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
          @Override
          protected String getErrorMessage()
          {
-            return "Error while loading SNMP configuration";
+            return Messages.get().SnmpCredentials_ErrorLoadingConfig;
          }
       }.start();
 	}
@@ -306,8 +306,8 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
    private void createSnmpPortList()
    {
       Section section = toolkit.createSection(form.getBody(), Section.DESCRIPTION | Section.TITLE_BAR);
-      section.setText("SNMP Ports");
-      section.setDescription("SNMP ports used in the network");
+      section.setText(Messages.get().SnmpCredentials_Ports);
+      section.setDescription(Messages.get().SnmpCredentials_PortsDescription);
       TableWrapData td = new TableWrapData();
       td.align = TableWrapData.FILL;
       td.grabHorizontal = true;
@@ -410,7 +410,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 		catch(Exception e)
 		{
 			MessageDialogHelper.openError(getSite().getShell(), Messages.get().SnmpConfigurator_Error, 
-			      String.format("Cannot save SNMP configuration: %s", e.getLocalizedMessage()));
+			      String.format(Messages.get().SnmpCredentials_CannotSaveConfig, e.getLocalizedMessage()));
 		}
 	}
 
@@ -454,7 +454,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 	 */
 	private void save()
 	{
-		new ConsoleJob("Save SNMP Configuration", this, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().SnmpCredentials_SaveConfig, this, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
@@ -472,7 +472,7 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
 			@Override
 			protected String getErrorMessage()
 			{
-				return "Error while saving SNMP configuration";
+				return Messages.get().SnmpCredentials_ErrorSavingConfig;
 			}
 		}.start();
 	}
@@ -557,8 +557,8 @@ public class SnmpCredentials extends ViewPart implements ISaveablePart
     */
    private void addSnmpPort()
    {
-      InputDialog dlg = new InputDialog(getSite().getShell(), "Add SNMP Port", 
-            "Please enter SNMP Port", "", null); //$NON-NLS-1$
+      InputDialog dlg = new InputDialog(getSite().getShell(), Messages.get().SnmpCredentials_AddPort, 
+            Messages.get().SnmpCredentials_PleaseEnterPort, "", null); //$NON-NLS-1$
       if (dlg.open() == Window.OK)
       {
          String value = dlg.getValue();

@@ -38,6 +38,15 @@
 #define NXAPPC_SUCCESS  (0)
 #define NXAPPC_FAIL     (-1)
 
+#define NXAPPC_CMD_REGISTER_COUNTER       0x00
+#define NXAPPC_CMD_RESET_COUNTER          0x01
+#define NXAPPC_CMD_SET_COUNTER_LONG       0x02
+#define NXAPPC_CMD_SET_COUNTER_DOUBLE     0x03
+#define NXAPPC_CMD_UPDATE_COUNTER_LONG    0x04
+#define NXAPPC_CMD_UPDATE_COUNTER_DOUBLE  0x05
+#define NXAPPC_CMD_SEND_EVENT             0x06
+#define NXAPPC_CMD_SEND_DATA              0x07
+
 #ifdef __cplusplus
 extern "C" {
 #endif

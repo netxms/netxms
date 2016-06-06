@@ -446,7 +446,7 @@ int main(int argc, char *argv[])
 	int ret = 0;
 	int c;
 
-	InitThreadLibrary();
+	InitNetXMSProcess();
 
 	opterr = 0;
 #if HAVE_DECL_GETOPT_LONG

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,40 +31,62 @@ class NXSL_NetObjClass : public NXSL_Class
 public:
    NXSL_NetObjClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
 };
 
 /**
  * NXSL "Node" class
  */
-class NXSL_NodeClass : public NXSL_Class
+class NXSL_NodeClass : public NXSL_NetObjClass
 {
 public:
    NXSL_NodeClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
 };
 
 /**
  * NXSL "Interface" class
  */
-class NXSL_InterfaceClass : public NXSL_Class
+class NXSL_InterfaceClass : public NXSL_NetObjClass
 {
 public:
    NXSL_InterfaceClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+};
+
+/**
+ * NXSL "MobileDevice" class
+ */
+class NXSL_MobileDeviceClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_MobileDeviceClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+};
+
+/**
+ * NXSL "Cluster" class
+ */
+class NXSL_ClusterClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_ClusterClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
 };
 
 /**
  * NXSL "Zone" class
  */
-class NXSL_ZoneClass : public NXSL_Class
+class NXSL_ZoneClass : public NXSL_NetObjClass
 {
 public:
    NXSL_ZoneClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
 };
 
 /**
@@ -75,7 +97,7 @@ class NXSL_EventClass : public NXSL_Class
 public:
    NXSL_EventClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
 };
 
 /**
@@ -86,7 +108,7 @@ class NXSL_AlarmClass : public NXSL_Class
 public:
    NXSL_AlarmClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
@@ -99,6 +121,7 @@ public:
    NXSL_DciClass();
 
    virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+   virtual void onObjectDelete(NXSL_Object *object);
 };
 
 /**
@@ -138,6 +161,8 @@ public:
 
 	virtual void print(NXSL_Value *value);
 	virtual void trace(int level, const TCHAR *text);
+
+	virtual void configureVM(NXSL_VM *vm);
 
 	void setConsole(CONSOLE_CTX console) { m_console = console; }
 };
@@ -181,6 +206,8 @@ extern NXSL_AlarmClass g_nxslAlarmClass;
 extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_InterfaceClass g_nxslInterfaceClass;
+extern NXSL_ClusterClass g_nxslClusterClass;
+extern NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NodeClass g_nxslNodeClass;
 extern NXSL_SNMPTransportClass g_nxslSnmpTransportClass;

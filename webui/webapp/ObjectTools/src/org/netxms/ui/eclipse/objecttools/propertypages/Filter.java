@@ -111,7 +111,7 @@ public class Filter extends PropertyPage
 		textOID.setEnabled(checkMatchOID.getSelection());
 		
 		checkMatchOS = new Button(dialogArea, SWT.CHECK);
-		checkMatchOS.setText("System OS name should match this template(coma separated regular expression list):");
+		checkMatchOS.setText(Messages.get().Filter_OSShouldMatch);
 		checkMatchOS.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_OS_MATCH) != 0);
 		checkMatchOS.addSelectionListener(new SelectionListener() {
 			@Override
@@ -139,7 +139,7 @@ public class Filter extends PropertyPage
 		textOS.setEnabled(checkMatchOS.getSelection());
 		
 		checkMatchTemplate = new Button(dialogArea, SWT.CHECK);
-		checkMatchTemplate.setText("Parent template name should match this template(coma separated regular expression list):");
+		checkMatchTemplate.setText(Messages.get().Filter_TemplateShouldMatch);
 		checkMatchTemplate.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_TEMPLATE_MATCH) != 0);
 		checkMatchTemplate.addSelectionListener(new SelectionListener() {
          @Override

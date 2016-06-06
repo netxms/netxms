@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
@@ -189,6 +190,7 @@ public class NXCSession
    public static final String CHANNEL_SNMP_TRAPS = "Core.SNMP.Traps";
    public static final String CHANNEL_AUDIT_LOG = "Core.Audit";
    public static final String CHANNEL_SITUATIONS = "Core.Situations";
+   public static final String CHANNEL_USERDB = "Core.UserDB";
 
    // Object sync options
    public static final int OBJECT_SYNC_NOTIFY = 0x0001;
@@ -242,7 +244,7 @@ public class NXCSession
    private boolean passwordExpired;
 
    // Internal communication data
-   private Socket connSocket = null;
+   private Socket socket = null;
    private NXCPMsgWaitQueue msgWaitQueue = null;
    private ReceiverThread recvThread = null;
    private HousekeeperThread housekeeperThread = null;
@@ -255,7 +257,8 @@ public class NXCSession
    // Communication parameters
    private int defaultRecvBufferSize = 4194304; // Default is 4MB
    private int maxRecvBufferSize = 33554432;    // Max is 32MB
-   private int commandTimeout = 30000; // Default is 30 sec
+   private int connectTimeout = 10000; // Default is 10 seconds  
+   private int commandTimeout = 30000; // Default is 30 seconds
    private int serverCommandOutputTimeout = 60000;
 
    // Notification listeners and queue
@@ -376,14 +379,14 @@ public class NXCSession
 
          try
          {
-            in = connSocket.getInputStream();
+            in = socket.getInputStream();
          }
          catch(IOException e)
          {
             return; // Stop receiver thread if input stream cannot be obtained
          }
 
-         while(connSocket.isConnected())
+         while(socket.isConnected())
          {
             try
             {
@@ -714,7 +717,7 @@ public class NXCSession
                file = new NXCReceivedFile(id);
                receivedFiles.put(id, file);
             }
-            file.close();
+            file.abortTransfer();
             receivedFiles.notifyAll();
          }
       }
@@ -754,7 +757,8 @@ public class NXCSession
 
          // Send notification if changed object was found in local database copy
          // or added to it and notification code was known
-         if (object != null) sendNotification(new SessionNotification(SessionNotification.USER_DB_CHANGED, code, object));
+         if (object != null) 
+            sendNotification(new SessionNotification(SessionNotification.USER_DB_CHANGED, code, object));
       }
 
       /**
@@ -1340,11 +1344,11 @@ public class NXCSession
     */
    public synchronized void sendMessage(final NXCPMessage msg) throws IOException, NXCException
    {
-      if (connSocket == null)
+      if (socket == null)
       {
          throw new IllegalStateException("Not connected to the server. Did you forgot to call connect() first?");
       }
-      final OutputStream outputStream = connSocket.getOutputStream();
+      final OutputStream outputStream = socket.getOutputStream();
       byte[] message;
       if ((encryptionContext != null) && !msg.isEncryptionDisabled())
       {
@@ -1570,7 +1574,8 @@ public class NXCSession
             {
                if (rf.getStatus() != NXCReceivedFile.OPEN)
                {
-                  if (rf.getStatus() == NXCReceivedFile.RECEIVED) file = rf.getFile();
+                  if (rf.getStatus() == NXCReceivedFile.RECEIVED) 
+                     file = rf.getFile();
                   break;
                }
             }
@@ -1698,7 +1703,8 @@ public class NXCSession
       Logger.info("NXCSession.connect", "Connecting to " + connAddress + ":" + connPort);
       try
       {
-         connSocket = new Socket(connAddress, connPort);
+         socket = new Socket();
+         socket.connect(new InetSocketAddress(connAddress, connPort), connectTimeout);
          msgWaitQueue = new NXCPMsgWaitQueue(commandTimeout);
          recvThread = new ReceiverThread();
          housekeeperThread = new HousekeeperThread();
@@ -1905,12 +1911,12 @@ public class NXCSession
     */
    public void disconnect()
    {
-      if (connSocket != null)
+      if (socket != null)
       {
          try
          {
-            connSocket.shutdownInput();
-            connSocket.shutdownOutput();
+            socket.shutdownInput();
+            socket.shutdownOutput();
          }
          catch(IOException e)
          {
@@ -1918,7 +1924,7 @@ public class NXCSession
 
          try
          {
-            connSocket.close();
+            socket.close();
          }
          catch(IOException e)
          {
@@ -1960,7 +1966,7 @@ public class NXCSession
          housekeeperThread = null;
       }
 
-      connSocket = null;
+      socket = null;
 
       if (msgWaitQueue != null)
       {
@@ -2172,6 +2178,16 @@ public class NXCSession
    public void setCommandTimeout(final int commandTimeout)
    {
       this.commandTimeout = commandTimeout;
+   }
+
+   /**
+    * Set connect call timeout (must be set before connect call)
+    * 
+    * @param connectTimeout connect timeout in milliseconds
+    */
+   public void setConnectTimeout(int connectTimeout)
+   {
+      this.connectTimeout = connectTimeout;
    }
 
    /**
@@ -3210,7 +3226,7 @@ public class NXCSession
    }
 
    /**
-    * Synchronize user database
+    * Synchronize user database and subscribe to user change notifications
     * 
     * @throws IOException
     *            if socket I/O error occurs
@@ -3224,6 +3240,7 @@ public class NXCSession
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
       waitForSync(syncUserDB, commandTimeout * 10);
+      subscribe(CHANNEL_USERDB);
    }
 
    /**
@@ -3638,13 +3655,15 @@ public class NXCSession
    }
 
    /**
-    * Parse data from raw message CMD_DCI_DATA
+    * Parse data from raw message CMD_DCI_DATA.
+    * This method is intended for calling by client internal methods only. It made public to
+    * allow access from client extensions.
     *
     * @param input Raw data
     * @param data  Data object to add rows to
     * @return number of received data rows
     */
-   private int parseDataRows(final byte[] input, DciData data)
+   public int parseDataRows(final byte[] input, DciData data)
    {
       final NXCPDataInputStream inputStream = new NXCPDataInputStream(input);
       int rows = 0;
@@ -3754,7 +3773,8 @@ public class NXCSession
          waitForRCC(msg.getMessageId());
 
          NXCPMessage response = waitForMessage(NXCPCodes.CMD_DCI_DATA, msg.getMessageId());
-         if (!response.isBinaryMessage()) throw new NXCException(RCC.INTERNAL_ERROR);
+         if (!response.isBinaryMessage()) 
+            throw new NXCException(RCC.INTERNAL_ERROR);
 
          rowsReceived = parseDataRows(response.getBinaryData(), data);
          if (((rowsRemaining == 0) || (rowsRemaining > MAX_DCI_DATA_ROWS)) && (rowsReceived == MAX_DCI_DATA_ROWS))
@@ -4868,12 +4888,13 @@ public class NXCSession
     *
     * @param nodeId Node object ID
     * @param action Action name
+    * @param args Action arguments
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeAction(long nodeId, String action) throws IOException, NXCException
+   public void executeAction(long nodeId, String action, String[] args) throws IOException, NXCException
    {
-      executeAction(nodeId, action, false, null, null);
+      executeAction(nodeId, action, args, false, null, null);
    }
 
    /**
@@ -4881,18 +4902,31 @@ public class NXCSession
     *
     * @param nodeId Node object ID
     * @param action Action name
+    * @param args Action arguments
     * @param receiveOutput true if action's output has to be read
     * @param listener listener for action's output or null
     * @param writer writer for action's output or null
     * @throws IOException  if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public void executeAction(long nodeId, String action, boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
+   public void executeAction(long nodeId, String action, String[] args, boolean receiveOutput, final TextOutputListener listener, final Writer writer) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_ACTION);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
       msg.setField(NXCPCodes.VID_ACTION_NAME, action);
       msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, receiveOutput);
+      
+      if (args != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_NUM_ARGS, args.length);
+         long fieldId = NXCPCodes.VID_ACTION_ARG_BASE;
+         for(String a : args)
+            msg.setField(fieldId++, a);
+      }
+      else
+      {
+         msg.setFieldInt16(NXCPCodes.VID_NUM_ARGS, 0);
+      }
       
       MessageHandler handler = receiveOutput ? new MessageHandler() {
          @Override
@@ -7256,8 +7290,7 @@ public class NXCSession
     * @throws IOException  if socket or file I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
-   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException,
-         NXCException
+   public AgentFileData downloadFileFromAgent(long nodeId, String remoteFileName, long maxFileSize, boolean follow) throws IOException, NXCException
    {
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_GET_AGENT_FILE);
       msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
@@ -7269,7 +7302,7 @@ public class NXCSession
       final NXCPMessage response = waitForRCC(msg.getMessageId()); // first confirmation - server job started
       final String id = response.getFieldAsString(NXCPCodes.VID_NAME);
       
-      AgentFileData file =  new AgentFileData(id, waitForFile(msg.getMessageId(), 36000000));
+      AgentFileData file =  new AgentFileData(id, remoteFileName, waitForFile(msg.getMessageId(), 36000000));
       waitForRCC(msg.getMessageId()); // second confirmation - file transfered from agent to console
       return file;
    }

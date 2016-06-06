@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,8 +110,8 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 		scriptId = Long.parseLong(site.getSecondaryId());
 		
 		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		if (settings.get("ScriptEditor.showLineNumbers") != null)
-		   showLineNumbers = settings.getBoolean("ScriptEditor.showLineNumbers");
+		if (settings.get("ScriptEditor.showLineNumbers") != null) //$NON-NLS-1$
+		   showLineNumbers = settings.getBoolean("ScriptEditor.showLineNumbers"); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
@@ -244,7 +244,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
       actionSave.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.save"); //$NON-NLS-1$
       handlerService.activateHandler(actionSave.getActionDefinitionId(), new ActionHandler(actionSave));
 		
-		actionCompile = new Action("&Compile", Activator.getImageDescriptor("icons/compile.gif")) {
+		actionCompile = new Action(Messages.get().ScriptEditorView_Compile, Activator.getImageDescriptor("icons/compile.gif")) { //$NON-NLS-2$
          @Override
          public void run()
          {
@@ -254,7 +254,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
       actionCompile.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.compile"); //$NON-NLS-1$
       handlerService.activateHandler(actionCompile.getActionDefinitionId(), new ActionHandler(actionCompile));
       
-      actionShowLineNumbers = new Action("Show line &numbers", Action.AS_CHECK_BOX) {
+      actionShowLineNumbers = new Action(Messages.get().ScriptEditorView_ShowLineNumbers, Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -266,7 +266,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
       actionShowLineNumbers.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.showLineNumbers"); //$NON-NLS-1$
       handlerService.activateHandler(actionShowLineNumbers.getActionDefinitionId(), new ActionHandler(actionShowLineNumbers));
       
-      actionGoToLine = new Action("&Go to line...") {
+      actionGoToLine = new Action(Messages.get().ScriptEditorView_GoToLine) {
          @Override
          public void run()
          {
@@ -276,7 +276,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
       actionGoToLine.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.goToLine"); //$NON-NLS-1$
       handlerService.activateHandler(actionGoToLine.getActionDefinitionId(), new ActionHandler(actionGoToLine));
       
-      actionSelectAll = new Action("Select &all") {
+      actionSelectAll = new Action(Messages.get().ScriptEditorView_SelectAll) {
          @Override
          public void run()
          {
@@ -286,7 +286,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
       actionSelectAll.setActionDefinitionId("org.netxms.ui.eclipse.nxsl.commands.selectAll"); //$NON-NLS-1$
       handlerService.activateHandler(actionSelectAll.getActionDefinitionId(), new ActionHandler(actionSelectAll));
 
-      actionCut = new Action("C&ut", SharedIcons.CUT) {
+      actionCut = new Action(Messages.get().ScriptEditorView_Cut, SharedIcons.CUT) {
          @Override
          public void run()
          {
@@ -297,7 +297,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
       handlerService.activateHandler(actionCut.getActionDefinitionId(), new ActionHandler(actionCut));
       actionCut.setEnabled(false);
 
-      actionCopy = new Action("&Copy", SharedIcons.COPY) {
+      actionCopy = new Action(Messages.get().ScriptEditorView_Copy, SharedIcons.COPY) {
          @Override
          public void run()
          {
@@ -308,7 +308,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
       handlerService.activateHandler(actionCopy.getActionDefinitionId(), new ActionHandler(actionCopy));
       actionCopy.setEnabled(false);
 
-      actionPaste = new Action("&Paste", SharedIcons.PASTE) {
+      actionPaste = new Action(Messages.get().ScriptEditorView_Paste, SharedIcons.PASTE) {
          @Override
          public void run()
          {
@@ -441,8 +441,8 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	   StyledText textControl = editor.getTextWidget();
 	   final int maxLine = textControl.getLineCount();
 	   
-	   InputDialog dlg = new InputDialog(getSite().getShell(), "Go to Line", 
-	         String.format("Enter line number (1..%d)", maxLine), 
+	   InputDialog dlg = new InputDialog(getSite().getShell(), Messages.get().ScriptEditorView_GoToLine_DlgTitle, 
+	         String.format(Messages.get().ScriptEditorView_EnterLineNumber, maxLine), 
 	         Integer.toString(textControl.getLineAtOffset(textControl.getCaretOffset()) + 1), 
 	         new IInputValidator() {
                @Override
@@ -452,12 +452,12 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
                   {
                      int n = Integer.parseInt(newText);
                      if ((n < 1) || (n > maxLine))
-                        return "Number out of range";
+                        return Messages.get().ScriptEditorView_NumberOutOfRange;
                      return null;
                   }
                   catch(NumberFormatException e)
                   {
-                     return "Invalid number";
+                     return Messages.get().ScriptEditorView_InvalidNumber;
                   }
                }
             });
@@ -508,11 +508,11 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
 	{
       final String source = editor.getText();
       editor.getTextWidget().setEditable(false);
-      new ConsoleJob("Compile script", this, Activator.PLUGIN_ID, null) {
+      new ConsoleJob(Messages.get().ScriptEditorView_CompileScript, this, Activator.PLUGIN_ID, null) {
          @Override
          protected String getErrorMessage()
          {
-            return "Cannot compile script";
+            return Messages.get().ScriptEditorView_CannotCompileScript;
          }
 
          @Override
@@ -527,7 +527,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
                   s.setLineBackground(0, s.getLineCount(), null);
                   if (result.success)
                   {
-                     editorMessageBar.showMessage(CompositeWithMessageBar.INFORMATION, "Script compiled successfully");
+                     editorMessageBar.showMessage(CompositeWithMessageBar.INFORMATION, Messages.get().ScriptEditorView_ScriptCompiledSuccessfully);
                   }
                   else
                   {
@@ -577,8 +577,8 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
                   @Override
                   public void run()
                   {
-                     if (MessageDialogHelper.openQuestion(getSite().getShell(), "Compilation Errors", 
-                           String.format("Script compilation failed (%s)\r\nSave changes anyway?", result.errorMessage)))
+                     if (MessageDialogHelper.openQuestion(getSite().getShell(), Messages.get().ScriptEditorView_CompilationErrors, 
+                           String.format(Messages.get().ScriptEditorView_ScriptCompilationFailed, result.errorMessage)))
                         result.success = true;
                      editorMessageBar.showMessage(CompositeWithMessageBar.WARNING, result.errorMessage);
                      StyledText s = editor.getTextWidget();
@@ -709,7 +709,7 @@ public class ScriptEditorView extends ViewPart implements ISaveablePart
    public void dispose()
    {
       IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      settings.put("ScriptEditor.showLineNumbers", showLineNumbers);
+      settings.put("ScriptEditor.showLineNumbers", showLineNumbers); //$NON-NLS-1$
       super.dispose();
    }
 }

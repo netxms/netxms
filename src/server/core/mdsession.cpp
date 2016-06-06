@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -146,7 +146,7 @@ void MobileDeviceSession::run()
  */
 void MobileDeviceSession::debugPrintf(int level, const TCHAR *format, ...)
 {
-   if (level <= (int)g_debugLevel)
+   if (level <= nxlog_get_debug_level())
    {
       va_list args;
 		TCHAR buffer[4096];
@@ -183,7 +183,7 @@ void MobileDeviceSession::readThread()
          break;
       }
 
-      if (g_debugLevel >= 8)
+      if (nxlog_get_debug_level() >= 8)
       {
          String msgDump = NXCPMessage::dump(receiver.getRawMessageBuffer(), NXCP_VERSION);
          debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -392,7 +392,7 @@ void MobileDeviceSession::sendMessage(NXCPMessage *msg)
 
 	debugPrintf(6, _T("Sending message %s"), NXCPMessageCodeName(msg->getCode(), szBuffer));
 	NXCP_MESSAGE *pRawMsg = msg->createMessage();
-   if (g_debugLevel >= 8)
+   if (nxlog_get_debug_level() >= 8)
    {
       String msgDump = NXCPMessage::dump(pRawMsg, NXCP_VERSION);
       debugPrintf(8, _T("Message dump:\n%s"), (const TCHAR *)msgDump);
@@ -460,7 +460,7 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
    NXCPMessage msg;
    TCHAR szLogin[MAX_USER_NAME], szPassword[1024];
 	int nAuthType;
-   bool changePasswd = false, intruderLockout = false;
+   bool changePasswd = false, intruderLockout = false, closeOtherSessions = false;
    UINT32 dwResult;
 #ifdef _WITH_ENCRYPTION
 	X509 *pCert;
@@ -496,7 +496,8 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
 				pRequest->getFieldAsUtf8String(VID_PASSWORD, szPassword, 1024);
 #endif
 				dwResult = AuthenticateUser(szLogin, szPassword, 0, NULL, NULL, &m_dwUserId,
-													 &userRights, &changePasswd, &intruderLockout, false);
+													 &userRights, &changePasswd, &intruderLockout,
+													 &closeOtherSessions, false);
 				break;
 			case NETXMS_AUTH_TYPE_CERTIFICATE:
 #ifdef _WITH_ENCRYPTION
@@ -509,7 +510,8 @@ void MobileDeviceSession::login(NXCPMessage *pRequest)
 					dwSigLen = pRequest->getFieldAsBinary(VID_SIGNATURE, signature, 256);
 					dwResult = AuthenticateUser(szLogin, (TCHAR *)signature, dwSigLen, pCert,
 														 m_challenge, &m_dwUserId, &userRights,
-														 &changePasswd, &intruderLockout, false);
+														 &changePasswd, &intruderLockout,
+														 &closeOtherSessions, false);
 					X509_free(pCert);
 				}
 				else

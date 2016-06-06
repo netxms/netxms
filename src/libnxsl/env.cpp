@@ -77,6 +77,7 @@ int F_ArrayToString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *v
 int F_GeoLocation(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_ReadPersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_SplitString(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_WritePersistentStorage(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
 int S_max(const TCHAR *name, NXSL_Value *options, int argc, NXSL_Value **argv, int *selection, NXSL_VM *vm);
@@ -136,6 +137,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("GeoLocation"), F_GeoLocation, -1 },
    { _T("ReadPersistentStorage"), F_ReadPersistentStorage, 1 },
 	{ _T("SecondsToUptime"), F_SecondsToUptime, 1 },
+   { _T("SplitString"), F_SplitString, 2 },
 	{ _T("TCPConnector"), F_tcpConnector, 2 },
 	{ _T("UDPConnector"), F_udpConnector, 2 },
    { _T("WritePersistentStorage"), F_WritePersistentStorage, 2 }
@@ -220,7 +222,7 @@ void NXSL_Environment::registerSelectorSet(UINT32 count, NXSL_ExtSelector *list)
 /**
  * Load module into VM
  */
-bool NXSL_Environment::loadModule(NXSL_VM *vm, const TCHAR *pszName)
+bool NXSL_Environment::loadModule(NXSL_VM *vm, const NXSL_ModuleImport *importInfo)
 {
    TCHAR *pData, szBuffer[MAX_PATH];
    UINT32 dwSize;
@@ -230,10 +232,10 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const TCHAR *pszName)
    // First, try to find module in library
    if (m_library != NULL)
    {
-      pScript = m_library->findScript(pszName);
+      pScript = m_library->findScript(importInfo->name);
       if (pScript != NULL)
       {
-         vm->loadModule(pScript, pszName);
+         vm->loadModule(pScript, importInfo);
          bRet = true;
       }
    }
@@ -241,14 +243,14 @@ bool NXSL_Environment::loadModule(NXSL_VM *vm, const TCHAR *pszName)
    // If failed, try to load it from file
    if (!bRet)
    {
-      _sntprintf(szBuffer, MAX_PATH, _T("%s.nxsl"), pszName);
+      _sntprintf(szBuffer, MAX_PATH, _T("%s.nxsl"), importInfo->name);
       pData = NXSLLoadFile(szBuffer, &dwSize);
       if (pData != NULL)
       {
          pScript = (NXSL_Program *)NXSLCompile(pData, NULL, 0, NULL);
          if (pScript != NULL)
          {
-            vm->loadModule(pScript, pszName);
+            vm->loadModule(pScript, importInfo);
             delete pScript;
             bRet = true;
          }
@@ -282,4 +284,11 @@ void NXSL_Environment::print(NXSL_Value *value)
 	{
       WriteToTerminal(_T("(null)"));
 	}
+}
+
+/**
+ * Additional VM configuration
+ */
+void NXSL_Environment::configureVM(NXSL_VM *vm)
+{
 }

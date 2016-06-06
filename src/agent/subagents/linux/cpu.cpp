@@ -20,7 +20,6 @@
 
 #include "linux_subagent.h"
 
-
 #define CPU_USAGE_SLOTS			900 // 60 sec * 15 min => 900 sec
 // 64 + 1 for overal
 #define MAX_CPU					(64 + 1)
@@ -50,13 +49,16 @@ static float *m_cpuUsageGuest;
 static int m_currentSlot = 0;
 static int m_maxCPU = 0;
 
+/**
+ * CPU usage collector
+ */
 static void CpuUsageCollector()
 {
 	FILE *hStat = fopen("/proc/stat", "r");
 
 	if (hStat == NULL)
 	{
-		// TODO: logging
+		AgentWriteDebugLog(2, _T("Cannot open /proc/stat"));
 		return;
 	}
 
@@ -171,6 +173,9 @@ static void CpuUsageCollector()
 	m_maxCPU = maxCpu;
 }
 
+/**
+ * CPU usage collector thread
+ */
 static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
 {
 	while(m_stopCollectorThread == false)
@@ -178,11 +183,13 @@ static THREAD_RESULT THREAD_CALL CpuUsageCollectorThread(void *pArg)
 		CpuUsageCollector();
 		ThreadSleepMs(1000); // sleep 1 second
 	}
-
 	return THREAD_OK;
 }
 
-void StartCpuUsageCollector(void)
+/**
+ * Start CPU usage collector
+ */
+void StartCpuUsageCollector()
 {
 	int i, j;
 
@@ -246,7 +253,10 @@ void StartCpuUsageCollector(void)
 	m_cpuUsageCollector = ThreadCreateEx(CpuUsageCollectorThread, 0, NULL);
 }
 
-void ShutdownCpuUsageCollector(void)
+/**
+ * Shutdown CPU usage collector
+ */
+void ShutdownCpuUsageCollector()
 {
 	m_stopCollectorThread = true;
 	ThreadJoin(m_cpuUsageCollector);
@@ -378,8 +388,148 @@ LONG H_CpuUsageEx(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstr
 	return SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Handler for System.CPU.Count parameter
+ */
 LONG H_CpuCount(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	ret_uint(pValue, m_maxCPU);
 	return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * CPU info structure
+ */
+struct CPU_INFO
+{
+   int id;
+   int coreId;
+   int physicalId;
+   char model[64];
+   long frequency;
+   int cacheSize;
+};
+
+/**
+ * Read /proc/cpuinfo
+ */
+static int ReadCpuInfo(CPU_INFO *info, int size)
+{
+   FILE *f = fopen("/proc/cpuinfo", "r");
+   if (f == NULL)
+   {
+      AgentWriteDebugLog(2, _T("Cannot open /proc/cpuinfo"));
+      return -1;
+   }
+
+   int count = -1;
+   char buffer[256];
+   while(!feof(f))
+   {
+      if (fgets(buffer, sizeof(buffer), f) == NULL)
+         break;
+      char *s = strchr(buffer, '\n');
+      if (s != NULL)
+         *s = 0;
+
+      s = strchr(buffer, ':');
+      if (s == NULL)
+         continue;
+
+      *s = 0;
+      s++;
+      StrStripA(buffer);
+      StrStripA(s);
+
+      if (!strcmp(buffer, "processor"))
+      {
+         count++;
+         memset(&info[count], 0, sizeof(CPU_INFO));
+         info[count].id = (int)strtol(s, NULL, 10);
+         continue;
+      }
+
+      if (count == -1)
+         continue;
+
+      if (!strcmp(buffer, "model name"))
+      {
+         strncpy(info[count].model, s, 63);
+      }
+      else if (!strcmp(buffer, "cpu MHz"))
+      {
+         char *eptr;
+         info[count].frequency = strtol(s, &eptr, 10) * 1000;
+         if (*eptr == '.')
+         {
+            eptr[4] = 0;
+            info[count].frequency += strtol(eptr + 1, NULL, 10);
+         }
+      }
+      else if (!strcmp(buffer, "cache size"))
+      {
+         info[count].cacheSize = (int)strtol(s, NULL, 10);
+      }
+      else if (!strcmp(buffer, "physical id"))
+      {
+         info[count].physicalId = (int)strtol(s, NULL, 10);
+      }
+      else if (!strcmp(buffer, "core id"))
+      {
+         info[count].coreId = (int)strtol(s, NULL, 10);
+      }
+   }
+
+   fclose(f);
+   return count + 1;
+}
+
+/**
+ * Handler for CPU info parameters
+ */
+LONG H_CpuInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   CPU_INFO cpuInfo[256];
+   int count = ReadCpuInfo(cpuInfo, 256);
+   if (count <= 0)
+      return SYSINFO_RC_ERROR;
+
+   TCHAR buffer[32];
+   AgentGetParameterArg(param, 1, buffer, 32);
+   int cpuId = (int)_tcstol(buffer, NULL, 0);
+
+   CPU_INFO *cpu = NULL;
+   for(int i = 0; i < count; i++)
+   {
+      if (cpuInfo[i].id == cpuId)
+      {
+         cpu = &cpuInfo[i];
+         break;
+      }
+   }
+   if (cpu == NULL)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   switch(*arg)
+   {
+      case 'C':   // Core ID
+         ret_int(value, cpu->coreId);
+         break;
+      case 'F':   // Frequency
+         _sntprintf(value, MAX_RESULT_LENGTH, _T("%d.%03d"), cpu->frequency / 1000, cpu->frequency % 1000);
+         break;
+      case 'M':   // Model
+         ret_mbstring(value, cpu->model);
+         break;
+      case 'P':   // Physical ID
+         ret_int(value, cpu->physicalId);
+         break;
+      case 'S':   // Cache size
+         ret_int(value, cpu->cacheSize);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+
+   return SYSINFO_RC_SUCCESS;
 }

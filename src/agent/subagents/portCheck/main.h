@@ -5,6 +5,9 @@
 #include <openssl/ssl.h>
 #endif
 
+/**
+ * Service check return codes
+ */
 enum
 {
 	PC_ERR_NONE,
@@ -13,6 +16,11 @@ enum
 	PC_ERR_HANDSHAKE,
 	PC_ERR_INTERNAL
 };
+
+/**
+ * Flags
+ */
+#define SCF_NEGATIVE_TIME_ON_ERROR  0x0001
 
 LONG H_CheckPOP3(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 int CheckPOP3(char *, UINT32, short, char *, char *, UINT32);
@@ -30,5 +38,6 @@ int CheckTelnet(char *, UINT32, short, char *, char *, UINT32);
 
 extern char g_szDomainName[];
 extern char g_szFailedDir[];
+extern UINT32 g_serviceCheckFlags;
 
 #endif // __MAIN__H__

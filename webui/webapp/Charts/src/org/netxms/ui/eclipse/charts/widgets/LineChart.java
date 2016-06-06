@@ -741,6 +741,7 @@ public class LineChart extends Chart implements HistoricalDataChart
 		GraphItemStyle style = itemStyles.get(index);
 		series.setLineColor(ColorConverter.colorFromInt(style.getColor(), colors));
 		series.enableArea(style.getType() == GraphItemStyle.AREA);
+		series.setInverted(style.isInverted());
 	}
 
 	/* (non-Javadoc)
@@ -858,6 +859,8 @@ public class LineChart extends Chart implements HistoricalDataChart
 		final Range range = yAxis.getRange();
 		if (range.lower > 0)
 			range.lower = 0;
+		else if (range.lower < 0)
+		   range.lower = - adjustRange(Math.abs(range.lower));
 		range.upper = adjustRange(range.upper);
 		yAxis.setRange(range);
 

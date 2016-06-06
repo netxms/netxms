@@ -42,6 +42,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DefaultDCIPollingInterval','60',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DefaultDCIRetentionTime','30',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DefaultEncryptionPolicy','1',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultInterfaceExpectedState','1',1,0,'C','Default expected state for new interface objects');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('DefaultMapBackgroundColor','0xffffff',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultSubnetMaskIPv4','24',1,0,'I','Default mask for synthetic IPv4 subnets');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('DefaultSubnetMaskIPv6','64',1,0,'I','Default mask for synthetic IPv6 subnets');
@@ -87,8 +88,10 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('IntruderLockoutThreshold','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('IntruderLockoutTime','30',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('JobHistoryRetentionTime','90',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('JobRetryCount','5',1,0,'I','Maximum mumber of job execution retrys');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('KeepAliveInterval','60',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapGroupClass','',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapGroupUniqueId','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapConnectionString','ldap://localhost:389',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapMappingDescription','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapMappingFullName','displayName',1,0);
@@ -101,6 +104,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapSyncUserPassword','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapUserClass','displayName',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapUserDeleteAction','1',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapUserUniqueId','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LockTimeout','60000',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LogAllSNMPTraps','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MailEncoding','iso-8859-1',1,0);
@@ -109,6 +113,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MobileDeviceListenerPort','4747',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('NumberOfDataCollectors','25',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('NumberOfUpgradeThreads','10',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('OfflineDataRelevanceTime','86400',1,1,'I','Time period in seconds within which received offline data still relevant for threshold validation');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('PasswordComplexity','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('PasswordExpiration','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('PasswordHistoryLength','0',1,0);
@@ -149,6 +154,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('StrictAlarmStatusFlow','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyncInterval','60',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyncNodeNamesWithDNS','0',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('SyslogIgnoreMessageTimestamp','0',1,0,'B','Ignore timestamp received in syslog messages and always use server time');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyslogListenPort','514',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyslogNodeMatchingPolicy','0',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('SyslogRetentionTime','90',1,0);

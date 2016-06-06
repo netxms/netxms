@@ -139,17 +139,27 @@ static void SendNewRecord(ClientSession *pSession, void *pArg)
 /**
  * Write audit record
  */
-void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, BOOL isSuccess, UINT32 userId,
+void NXCORE_EXPORTABLE WriteAuditLog(const TCHAR *subsys, bool isSuccess, UINT32 userId,
                                      const TCHAR *workstation, int sessionId, UINT32 objectId,
                                      const TCHAR *format, ...)
 {
+   va_list args;
+   va_start(args, format);
+   WriteAuditLog2(subsys, isSuccess, userId, workstation, sessionId, objectId, format, args);
+   va_end(args);
+}
+
+/**
+ * Write audit record
+ */
+void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, UINT32 userId,
+                                      const TCHAR *workstation, int sessionId, UINT32 objectId,
+                                      const TCHAR *format, va_list args)
+{
 	String text, query;
-	va_list args;
 	NXCPMessage msg;
 
-	va_start(args, format);
 	text.appendFormattedStringV(format, args);
-	va_end(args);
 
 	query.appendFormattedString(_T("INSERT INTO audit_log (record_id,timestamp,subsystem,success,user_id,workstation,session_id,object_id,message) VALUES(%d,") TIME_T_FMT _T(",%s,%d,%d,%s,%d,%d,%s)"),
       InterlockedIncrement(&m_recordId), time(NULL), (const TCHAR *)DBPrepareString(g_dbDriver, subsys), isSuccess ? 1 : 0,

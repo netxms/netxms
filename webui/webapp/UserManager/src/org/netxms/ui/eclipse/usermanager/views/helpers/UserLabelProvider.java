@@ -33,12 +33,12 @@ import org.netxms.ui.eclipse.usermanager.views.UserManagementView;
  */
 public class UserLabelProvider extends DecoratingLabelProvider implements ITableLabelProvider
 {
-   private static final String[] AUTH_METHOD = { 
-      "Password", 
-      "RADIUS", 
-      "Certificate", 
-      "Certificate or password", 
-      "Certificate or RADIUS" 
+   private final String[] AUTH_METHOD = { 
+      Messages.get().UserLabelProvider_Password, 
+      Messages.get().UserLabelProvider_RADIUS, 
+      Messages.get().UserLabelProvider_Certificate, 
+      Messages.get().UserLabelProvider_CertificateOrPassword, 
+      Messages.get().UserLabelProvider_CertificateOrRADIUS 
    };
    
    /**

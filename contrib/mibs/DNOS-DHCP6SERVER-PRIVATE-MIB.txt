@@ -1,0 +1,1184 @@
+-- DHCPv6 Server MIB overview:
+-- DHCPv6 Server MIB falls under dnOS MIB node of the private subtree.
+
+
+DNOS-DHCP6SERVER-PRIVATE-MIB DEFINITIONS ::= BEGIN
+
+-- Dell DNOS DHCPv6 Server MIB
+-- Copyright Dell (2002-2007) All rights reserved.
+
+-- This SNMP Management Information Specification
+-- embodies Dell's confidential and proprietary
+-- intellectual property.  Dell retains all title
+-- and ownership in the Specification including any revisions.
+
+-- This Specification is supplied "AS IS", Dell
+-- makes no warranty, either expressed or implied,
+-- as to the use, operation, condition, or performance of the
+-- Specification.
+
+
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, IpAddress,
+    Integer32, Unsigned32, TimeTicks, Counter32
+                                        FROM SNMPv2-SMI
+    TEXTUAL-CONVENTION, RowStatus, RowPointer, MacAddress,
+    StorageType, TruthValue             FROM SNMPv2-TC
+
+    DisplayString, PhysAddress          FROM RFC1213-MIB
+    Ipv6IfIndex, Ipv6Address, Ipv6AddressPrefix,
+    Ipv6AddressIfIdentifier, Ipv6IfIndexOrZero
+                                        FROM IPV6-TC
+    dnOS                            FROM DELL-REF-MIB;
+
+    fastPathDHCP6ServerPrivate MODULE-IDENTITY
+           LAST-UPDATED "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
+           ORGANIZATION "Dell, Inc."
+           CONTACT-INFO ""
+      DESCRIPTION
+          "The Broadcom Private MIB for DNOS DHCPv6 Server/Relay"
+
+      -- Revision history.
+      REVISION
+          "201101260000Z" -- 26 Jan 2011 12:00:00 GMT
+      DESCRIPTION
+          "Postal address updated."
+      REVISION
+          "200705230000Z" -- 23 May 2007 12:00:00 GMT
+      DESCRIPTION
+          "Dell branding related changes."
+
+      ::= { dnOS 25 }
+
+
+    --**************************************************************************************
+    -- agentDhcp6ServerGroup -> contains MIB objects displaying various properties
+    --                          of a DHCPv6 server.
+    --
+    --**************************************************************************************
+
+    agentDhcp6ServerGroup       OBJECT IDENTIFIER ::= { fastPathDHCP6ServerPrivate 1 }
+
+    agentDhcp6ServerAdminMode OBJECT-TYPE
+      SYNTAX      INTEGER {
+                  enable(1),
+                  disable(2)
+                  }
+      MAX-ACCESS read-write
+      STATUS     current
+      DESCRIPTION
+       " Admin-mode of the DHCPv6 Server/Relay."
+      DEFVAL { disable }
+    ::= { agentDhcp6ServerGroup 1 }
+
+    agentDhcp6ServerRelayOptParm OBJECT-TYPE
+      SYNTAX     Integer32 (54..65535)
+      MAX-ACCESS read-write
+      STATUS     obsolete
+      DESCRIPTION
+       " The numeric value for the Relay Agent Information Option to be used by DHCPv6 
+       Server/Relay. Note : The configuration is no longer valid as this is upgraded with 
+       RFC 4649."
+      DEFVAL { 54 }
+    ::= { agentDhcp6ServerGroup 2 }
+
+    agentDhcp6ServerRelayOptRemoteIdSuboptParm OBJECT-TYPE
+      SYNTAX     Integer32 (1..65535)
+      MAX-ACCESS read-write
+      STATUS     obsolete
+      DESCRIPTION
+       " The numeric value for the Relay Agent Information Option Remote-ID Sub-option to 
+       be used by DHCPv6 Server/Relay. Note : The configuration is no longer valid as this is upgraded with
+       RFC 4649."
+      DEFVAL { 1 }
+    ::= { agentDhcp6ServerGroup 3 }
+
+    agentDhcp6ServerDuid OBJECT-TYPE
+      SYNTAX      DisplayString (SIZE(1..255))
+      MAX-ACCESS  read-only
+      STATUS      current
+      DESCRIPTION
+       " The DHCPv6 Server unique DUID. This value cannot be modified"
+    ::= { agentDhcp6ServerGroup 4 }  
+
+    agentDhcp6ServerMalformedMessagesReceived OBJECT-TYPE
+      SYNTAX     Counter32
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of malformed(truncated or corrupt) messages that have been received by the 
+       DHCPv6 server." 
+    ::= { agentDhcp6ServerGroup 5 }
+    
+    agentDhcp6ServerDiscardedMessages OBJECT-TYPE
+      SYNTAX     Counter32
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of discarded messages that have been received by the DHCPv6 server." 
+    ::= { agentDhcp6ServerGroup 6 }
+    
+    agentDhcp6ServerSOLICITMessagesReceived OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type SOLICIT that have been received by the DHCPv6 
+       server."     
+    ::= { agentDhcp6ServerGroup 7 } 
+    
+    agentDhcp6ServerREQUESTMessagesReceived OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type REQUEST that have been received by the DHCPv6 
+       server."     
+    ::= { agentDhcp6ServerGroup 8 } 
+    
+    agentDhcp6ServerCONFIRMMessagesReceived OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type CONFIRM that have been received by the DHCPv6 
+       server."     
+    ::= { agentDhcp6ServerGroup 9 } 
+    
+    agentDhcp6ServerRENEWMessagesReceived OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type RENEW that have been received by the DHCPv6 
+       server."     
+    ::= { agentDhcp6ServerGroup 10 } 
+    
+    agentDhcp6ServerREBINDMessagesReceived OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type REBIND that have been received by the DHCPv6 
+       server."     
+    ::= { agentDhcp6ServerGroup 11 } 
+    
+    agentDhcp6ServerRELEASEMessagesReceived OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type RELEASE that have been received by the DHCPv6 
+       server."     
+    ::= { agentDhcp6ServerGroup 12 } 
+    
+    agentDhcp6ServerDECLINEMessagesReceived OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type DECLINE that have been received by the DHCPv6 
+       server."     
+    ::= { agentDhcp6ServerGroup 13 } 
+    
+    agentDhcp6ServerINFORMREQMessagesReceived OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type INFORMATION-REQUEST that have been received by 
+       the DHCPv6 server."     
+    ::= { agentDhcp6ServerGroup 14 } 
+    
+    agentDhcp6ServerRELAYREPLYMessagesReceived OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type RELAY-REPLY that have been received by the 
+       DHCPv6 server."     
+    ::= { agentDhcp6ServerGroup 15 } 
+    
+    agentDhcp6ServerRELAYFORWMessagesReceived OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type RELAY-FORWARD that have been received by the 
+       DHCPv6 server."     
+    ::= { agentDhcp6ServerGroup 16 } 
+    
+    agentDhcp6ServerADVERTISEMessagesSent OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type ADVERTISE that have been sent by the DHCPv6 
+       server."     
+    ::= { agentDhcp6ServerGroup 17 } 
+    
+    agentDhcp6ServerREPLYMessagesSent OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type REPLY that have been sent by the DHCPv6 server."     
+    ::= { agentDhcp6ServerGroup 18 } 
+    
+    agentDhcp6ServerRECONFIGUREMessagesSent OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type RECONFIGURE that have been sent by the DHCPv6 
+       server."     
+    ::= { agentDhcp6ServerGroup 19 } 
+    
+    agentDhcp6ServerRELAYREPLYMessagesSent OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type RELAY-REPLY that have been sent by the DHCPv6 
+       server."     
+    ::= { agentDhcp6ServerGroup 20 } 
+    
+    agentDhcp6ServerRELAYFORWMessagesSent OBJECT-TYPE
+      SYNTAX     Counter32 
+      MAX-ACCESS read-only
+      STATUS     current
+      DESCRIPTION
+       " The no. of DHCPv6 messages of type RELAY-FORWARD that have been sent by the DHCPv6 
+       server."     
+    ::= { agentDhcp6ServerGroup 21 } 
+    
+    agentDhcp6ServerClearStatistics OBJECT-TYPE
+           SYNTAX      INTEGER {
+                       enable(1),
+                       disable(2)
+                       }
+      MAX-ACCESS read-write
+      STATUS     current
+      DESCRIPTION
+       " Clears the DHCPv6 server statistics."
+      DEFVAL { disable }
+    ::= { agentDhcp6ServerGroup 22 } 
+    
+--**********************************************************************************
+-- agentDhcp6ServerPoolConfigGroup
+--  This group contains four tables :  agentDhcp6ServerPoolConfigTable,
+--                                     agentDhcp6ServerPoolDnsDomainTable,
+--                                     agentDhcp6ServerPoolDnsServerTable,
+--                                     agentDhcp6ServerPoolAddressTable
+--
+--  agentDhcp6ServerPoolConfigTable -> This table is used to configure a
+--                                     new DHCPv6 pool on a DHCPv6 server. This table
+--                                     is also used to delete a configured DHCPv6 pool.
+--
+--  agentDhcp6ServerPoolDnsDomainTable -> This table is used to configure DNS domain names
+--                                     for DHCPv6 "stateless" information requests.
+--  agentDhcp6ServerPoolDnsServerTable -> This table is used to configure DNS IPv6 server 
+--                                     addresses for DHCPv6 "stateless" information requests.
+--  agentDhcp6ServerPoolAllocationTable -> This table is used to configure IPv6 prefixes
+--                                     for DHCPv6 Server prefix delegation to DHCPv6 clients.
+--
+--**********************************************************************************
+
+    agentDhcp6ServerPoolConfigGroup    OBJECT IDENTIFIER ::= { fastPathDHCP6ServerPrivate 2 }
+
+    agentDhcp6ServerPoolNameCreate OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE(0|1..31))
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                      "A pool is created by applying write operation
+                      on this MIB object and providing a new pool-name.
+                      Get operation on this MIB object returns a
+                      null-value, as for the purpose of viewing the
+                      pool name, the user should perform the
+                      traversal of agentDhcp6ServerPoolConfigTable.
+                      For this reason the get operation on object
+                      agentDhcp6ServerPoolNameCreate becomes insignificant."
+         ::= { agentDhcp6ServerPoolConfigGroup 1 }
+
+    agentDhcp6ServerPoolConfigTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF AgentDhcp6ServerPoolConfigEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "A table of the DHCPv6 Server Pool configuration entries."
+         ::= { agentDhcp6ServerPoolConfigGroup 2 }
+
+    agentDhcp6ServerPoolConfigEntry OBJECT-TYPE
+         SYNTAX      AgentDhcp6ServerPoolConfigEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "Represents entry for a DHCPv6 server pool."
+         INDEX       { agentDhcp6ServerPoolIndex }
+         ::= { agentDhcp6ServerPoolConfigTable 1 }
+
+    AgentDhcp6ServerPoolConfigEntry ::= SEQUENCE {
+          agentDhcp6ServerPoolIndex
+              Unsigned32,
+          agentDhcp6ServerPoolName
+              DisplayString,
+          agentDhcp6ServerPoolType
+              INTEGER,
+          agentDhcp6ServerPoolDnsDomainCreate
+              DisplayString,
+          agentDhcp6ServerPoolDnsServerCreate
+              Ipv6Address,
+          agentDhcp6ServerPoolRowStatus
+              RowStatus
+          }
+
+    agentDhcp6ServerPoolIndex OBJECT-TYPE
+         SYNTAX      Unsigned32 (1..512)
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The Pool Index, which 'll be used as index for the PoolConfig Table."
+         ::= { agentDhcp6ServerPoolConfigEntry 1 }
+
+     agentDhcp6ServerPoolName OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE(1..31))
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The name of the DHCPv6 pool. This value cannot be modified"
+         ::= { agentDhcp6ServerPoolConfigEntry 2 }
+
+     agentDhcp6ServerPoolType OBJECT-TYPE
+         SYNTAX      INTEGER{
+                     un-allocated(0),
+                     dynamic(1),
+                     manual(2)
+                     }
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the type of the binding that is associated with this pool."
+         ::= { agentDhcp6ServerPoolConfigEntry 3 } 
+         
+    agentDhcp6ServerPoolDnsDomainCreate OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE(1..255))
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                      "A DNS domain for a pool is created by applying write operation
+                      on this MIB object and providing a new DNS domain name.
+                      Get operation on this MIB object returns a
+                      null-value, as for the purpose of viewing the
+                      DNS domain name, the user should perform the
+                      traversal of agentDhcp6ServerPoolDnsDomainTable.
+                      For this reason the get operation on object
+                      agentDhcp6ServerDnsDomainCreate becomes insignificant."
+         ::= { agentDhcp6ServerPoolConfigEntry 4 }
+
+    agentDhcp6ServerPoolDnsServerCreate OBJECT-TYPE
+         SYNTAX      Ipv6Address
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+                      "A DNS server for a pool is created by applying write operation
+                      on this MIB object and providing a new DNS server address.
+                      Get operation on this MIB object returns a
+                      null-value, as for the purpose of viewing the
+                      DNS server address, the user should perform the
+                      traversal of agentDhcp6ServerPoolDnsServerTable.
+                      For this reason the get operation on object
+                      agentDhcp6ServerDnsServerCreate becomes insignificant."
+         ::= { agentDhcp6ServerPoolConfigEntry 5 }
+
+     agentDhcp6ServerPoolRowStatus OBJECT-TYPE
+         SYNTAX      RowStatus
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+         "The row status variable is used according to installation
+          and removal conventions for conceptual rows. When a pool is created by applying write
+          operation on 'agentDhcp6ServerPoolCreateName',row-status becomes 'active'. If 
+          row-status for a poolEntry is set to 'destroy', the corresponding pool gets deleted. "
+
+         ::= { agentDhcp6ServerPoolConfigEntry 6 }
+
+--**********************************************************************************
+
+    agentDhcp6ServerPoolDnsDomainTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF AgentDhcp6ServerPoolDnsDomainEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "A table of the DHCPv6 Server Pool's DNS domain entries."
+         ::= { agentDhcp6ServerPoolConfigGroup 4 }
+
+    agentDhcp6ServerPoolDnsDomainEntry OBJECT-TYPE
+         SYNTAX      AgentDhcp6ServerPoolDnsDomainEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "Represents entry for a DHCPv6 server pool's DNS domains."
+         INDEX { agentDhcp6ServerPoolIndex,
+                 agentDhcp6ServerPoolDnsDomainIndex }
+         ::= { agentDhcp6ServerPoolDnsDomainTable 1 }
+
+    -- All objects are of type read-write
+    AgentDhcp6ServerPoolDnsDomainEntry ::= SEQUENCE {
+          agentDhcp6ServerPoolDnsDomainIndex
+              Unsigned32,
+          agentDhcp6ServerPoolDnsDomainName
+              DisplayString,
+          agentDhcp6ServerPoolDnsDomainRowStatus
+              RowStatus
+          }
+
+    agentDhcp6ServerPoolDnsDomainIndex OBJECT-TYPE
+         SYNTAX      Unsigned32 (1..6)
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The DNS Domain Index, which will be used as index for the DnsDomain Table."
+         ::= { agentDhcp6ServerPoolDnsDomainEntry 1 }
+
+     agentDhcp6ServerPoolDnsDomainName OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE(1..255))
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                      "This specifies a DNS domain name for distribution to a DHCPv6 client." 
+         ::= { agentDhcp6ServerPoolDnsDomainEntry 2 }
+         
+     agentDhcp6ServerPoolDnsDomainRowStatus OBJECT-TYPE
+         SYNTAX      RowStatus
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+         "The row status variable is used according to installation
+          and removal conventions for conceptual rows. When a DNS domain is created by applying 
+          write operation on 'agentDhcp6ServerDnsDomainCreate', row-status becomes 'active'. 
+          If row-status for a DnsDomainEntry is set to 'destroy', the corresponding DNS domain 
+          gets deleted. "
+
+         ::= { agentDhcp6ServerPoolDnsDomainEntry 3 }
+
+--**********************************************************************************
+
+    agentDhcp6ServerPoolDnsServerTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF AgentDhcp6ServerPoolDnsServerEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "A table of the DHCPv6 Server Pool's DNS server address entries."
+         ::= { agentDhcp6ServerPoolConfigGroup 6 }
+
+    agentDhcp6ServerPoolDnsServerEntry OBJECT-TYPE
+         SYNTAX      AgentDhcp6ServerPoolDnsServerEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "Represents entry for a DHCPv6 server pool's DNS server addresses."
+         INDEX { agentDhcp6ServerPoolIndex,
+                 agentDhcp6ServerPoolDnsServerIndex }
+         ::= { agentDhcp6ServerPoolDnsServerTable 1 }
+
+    -- All objects are of type read-write
+    AgentDhcp6ServerPoolDnsServerEntry ::= SEQUENCE {
+          agentDhcp6ServerPoolDnsServerIndex
+              Unsigned32,
+          agentDhcp6ServerPoolDnsServerAddress
+              Ipv6Address,
+          agentDhcp6ServerPoolDnsServerRowStatus
+              RowStatus
+          }
+
+    agentDhcp6ServerPoolDnsServerIndex OBJECT-TYPE
+         SYNTAX      Unsigned32 (1..6)
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The DNS Server Index, which will be used as index for the DNS Server Table."
+         ::= { agentDhcp6ServerPoolDnsServerEntry 1 }
+         
+     agentDhcp6ServerPoolDnsServerAddress OBJECT-TYPE
+         SYNTAX      Ipv6Address
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                      "This specifies a DNS server address for distribution to a DHCPv6 client." 
+         ::= { agentDhcp6ServerPoolDnsServerEntry 2 }
+         
+     agentDhcp6ServerPoolDnsServerRowStatus OBJECT-TYPE
+         SYNTAX      RowStatus
+         MAX-ACCESS  read-write
+         STATUS      current
+         DESCRIPTION
+         "The row status variable is used according to installation
+          and removal conventions for conceptual rows. When a DNS server is created by applying 
+          write operation on 'agentDhcp6ServerDnsServerCreate', row-status becomes 'active'. 
+          If row-status for a DnsServerEntry is set to 'destroy', the corresponding DNS server 
+          gets deleted. "
+
+         ::= { agentDhcp6ServerPoolDnsServerEntry 3 }
+
+--**********************************************************************************
+    agentDhcp6ServerPoolAllocationTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF AgentDhcp6ServerPoolAllocationEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "A table of the DHCPv6 Server pool's allocation entries, showing prefix 
+                     delegation specific parameters."
+         ::= { agentDhcp6ServerPoolConfigGroup 7 }
+
+    agentDhcp6ServerPoolAllocationEntry OBJECT-TYPE
+         SYNTAX      AgentDhcp6ServerPoolAllocationEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "Represents entry for a DHCPv6 server pool's prefix delegation 
+                     information."
+         INDEX { agentDhcp6ServerPoolIndex,
+                 agentDhcp6ServerPoolAllocationIndex }
+         ::= { agentDhcp6ServerPoolAllocationTable 1 }
+
+    -- All objects are of type read-write
+    AgentDhcp6ServerPoolAllocationEntry ::= SEQUENCE {
+          agentDhcp6ServerPoolAllocationIndex
+              Unsigned32,
+          agentDhcp6ServerPoolAllocationClientIdentifier
+              DisplayString,
+          agentDhcp6ServerPoolAllocationPrefix
+              Ipv6AddressPrefix,
+          agentDhcp6ServerPoolAllocationPrefixLength
+              Integer32,
+          agentDhcp6ServerPoolAllocationClientName
+              DisplayString,
+          agentDhcp6ServerPoolAllocationIaid
+              Unsigned32,
+          agentDhcp6ServerPoolAllocationValidLifetime
+              Unsigned32,
+          agentDhcp6ServerPoolAllocationPreferLifetime
+              Unsigned32,
+          agentDhcp6ServerPoolAllocationRowStatus
+              RowStatus
+          }
+
+     agentDhcp6ServerPoolAllocationIndex OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The DNS Server Pool Allocation Index, which will be used as index 
+                     for the DNS Server Pool Allocation Table."
+         ::= { agentDhcp6ServerPoolAllocationEntry 1 }
+         
+     agentDhcp6ServerPoolAllocationClientIdentifier OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE(1..255))
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "It specifies the unique identifier, a.k.a. DUID,
+                      (in colon-separated hexadecimal format) of a DHCPv6 client. "
+         ::= { agentDhcp6ServerPoolAllocationEntry 2 }
+
+     agentDhcp6ServerPoolAllocationPrefix OBJECT-TYPE
+         SYNTAX      Ipv6AddressPrefix
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "The IPv6 address prefix for delegation to DHCPv6 clients."
+         ::= { agentDhcp6ServerPoolAllocationEntry 3 }
+
+     agentDhcp6ServerPoolAllocationPrefixLength OBJECT-TYPE
+         SYNTAX      Integer32 (0..128)
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the no. of bits that comprise the address-prefix mask 
+                     length."
+         ::= { agentDhcp6ServerPoolAllocationEntry 4 }
+
+     agentDhcp6ServerPoolAllocationClientName OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE(1..31))
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "It specifies a name for a DHCPv6 client.
+                     This name is purely used for internal use, and can be a NULL string."
+         ::= { agentDhcp6ServerPoolAllocationEntry 5 }
+
+     agentDhcp6ServerPoolAllocationIaid OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "This specifies a identity association ID (IAID) associated with the
+                      allocation.  It can be set to 0."
+         ::= { agentDhcp6ServerPoolAllocationEntry 6 }
+
+     agentDhcp6ServerPoolAllocationValidLifetime OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the valid lifetime timer interval (in seconds) for the
+                      associated allocation.  If set to 0, the timer is set to 'infinity'."
+         ::= { agentDhcp6ServerPoolAllocationEntry 7 }
+
+     agentDhcp6ServerPoolAllocationPreferLifetime OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the preferred lifetime timer interval (in seconds) for 
+                     the associated allocation.  If set to 0, the timer is set to 'infinity'.
+                     Also, the preferred lifetime value must be less than or equal to the 
+                     valid lifetime value."
+         ::= { agentDhcp6ServerPoolAllocationEntry 8 }
+
+     agentDhcp6ServerPoolAllocationRowStatus OBJECT-TYPE
+         SYNTAX      RowStatus
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+         "The row status variable is used according to installation
+          and removal conventions for conceptual rows. When an allocation is created, 
+          row-status becomes 'active'. If row-status for an allocation is set to 'invalid',
+          the corresponding allocation gets deleted. "
+
+         ::= { agentDhcp6ServerPoolAllocationEntry 9 }
+
+    --**************************************************************************************
+    -- agentDhcp6InterfaceGroup -> contains MIB objects for configuring and displaying
+    --                             interfaces in DHCPv6 server/relay mode.
+    --
+    --**************************************************************************************
+
+     agentDhcp6InterfaceGroup        OBJECT IDENTIFIER ::= { fastPathDHCP6ServerPrivate 3 }
+
+     agentDhcp6InterfaceTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF AgentDhcp6InterfaceEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "A table of the DHCPv6 Server/Relay interface entries."
+         ::= { agentDhcp6InterfaceGroup 1 }
+
+     agentDhcp6InterfaceEntry OBJECT-TYPE
+         SYNTAX      AgentDhcp6InterfaceEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "Represents entry for DHCPv6 server or relay functionality on an 
+                     interface."
+         INDEX       { agentDhcp6InterfaceIndex }
+         ::= { agentDhcp6InterfaceTable 1 }
+
+    AgentDhcp6InterfaceEntry ::= SEQUENCE {
+          agentDhcp6InterfaceIndex
+              Ipv6IfIndex,
+          agentDhcp6InterfaceMode
+              INTEGER,
+          agentDhcp6InterfaceServerPoolName
+              DisplayString,
+          agentDhcp6InterfaceServerPreference
+              Unsigned32,
+          agentDhcp6InterfaceRelayAddress
+              Ipv6Address,
+          agentDhcp6InterfaceRelayInterface
+              Ipv6IfIndexOrZero,
+          agentDhcp6InterfaceRemoteIdentifier
+              DisplayString,
+          agentDhcp6InterfaceOptionFlags
+              BITS
+          }
+
+    agentDhcp6InterfaceIndex OBJECT-TYPE
+         SYNTAX      Ipv6IfIndex
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the ifindex of the DHCPv6 interface"
+         ::= { agentDhcp6InterfaceEntry 1 }
+
+    agentDhcp6InterfaceMode OBJECT-TYPE
+         SYNTAX      INTEGER {
+                       disable(0),
+                       server(1),
+                       relay(2)
+                     }
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "This specifies whether an interface is in DHCPv6 Server or Relay mode.
+                      Setting the mode to 'disable' (0) effectively un-configures the 
+                      interface."
+         ::= { agentDhcp6InterfaceEntry 2 }
+
+    agentDhcp6InterfaceServerPoolName OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE(1..31))
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "This specifies a DHCPv6 Server pool name, which exists within
+                      the agentDhcp6ServerPoolConfigTable.  This parameter is only
+                      meaningful when the interface is in DHCPv6 server mode."
+         ::= { agentDhcp6InterfaceEntry 3 }
+
+    agentDhcp6InterfaceServerPreference OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "This specifies a DHCPv6 Server preference value, which is used
+                      by DHCPv6 clients to choose betweeen servers.  This parameter is only
+                      meaningful when the interface is in DHCPv6 server mode."
+         ::= { agentDhcp6InterfaceEntry 4 }
+
+    agentDhcp6InterfaceRelayAddress OBJECT-TYPE
+         SYNTAX      Ipv6Address
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the IPv6 address of a DHCPv6 relay server,
+                      to which DHCPv6 messages receivd on this interface will
+                      be relayed.  If this is specified as global IPv6 address,
+                      then agentDhcp6ServerInterfaceRelayInterface is not
+                      required to be configured.  However, if the address is
+                      specified as a link-local or multicast address, then
+                      agentDhcp6ServerInterfaceRelayInterface is required.
+                      This parameter is only meaningful when the interface is
+                      in DHCPv6 relay mode."
+         ::= { agentDhcp6InterfaceEntry 5 }
+
+    agentDhcp6InterfaceRelayInterface OBJECT-TYPE
+         SYNTAX      Ipv6IfIndexOrZero
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the IPv6 ifindex of a interface to reach
+                      a DHCPv6 relay server, to which DHCPv6 messages received
+                      on this interface will be relayed.
+                      This parameter is only meaningful when the interface is
+                      in DHCPv6 relay mode."
+         ::= { agentDhcp6InterfaceEntry 6 }
+
+    agentDhcp6InterfaceRemoteIdentifier OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE(1..31))
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the Relay Agent Information Option
+                      'remote-id' sub-option to be attached to DHCPv6
+                      messages being relayed on this interface.  There exists
+                      a special reserved value of 'duid-ifid', which causes
+                      the remote-id value to be derived from the local DHCPv6
+                      Server DUID and the interface ifindex.  Otherwise, the
+                      string defined here is used as the remote-id value.
+                      This parameter is only meaningful when the interface is
+                      in DHCPv6 relay mode."
+         ::= { agentDhcp6InterfaceEntry 7 }
+
+    agentDhcp6InterfaceOptionFlags OBJECT-TYPE
+         SYNTAX      BITS {
+                       rapid-commit(0),
+                       allow-unicast(1)
+                     }
+         MAX-ACCESS  read-create
+         STATUS      current
+         DESCRIPTION
+                     "This specifies a bitmask field for various DHCPv6 options.
+                      Currently, only the 'rapid-commit' option is available,
+                      which is only meaningful when the interface is in DHCPv6
+                      Server mode.  Setting this parameter to 0 effectively
+                      clears any configured option flags on the interface."
+         ::= { agentDhcp6InterfaceEntry 8 }
+
+     agentDhcp6InterfaceStatsTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF AgentDhcp6InterfaceStatsEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "A table of the DHCPv6 Server/Relay interface statistics"
+         ::= { agentDhcp6InterfaceGroup 2 }
+
+     agentDhcp6InterfaceStatsEntry OBJECT-TYPE
+         SYNTAX      AgentDhcp6InterfaceStatsEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "Represents entry for DHCPv6 server or relay statistics on an interface."
+         INDEX       { agentDhcp6InterfaceStatsIndex }
+         ::= { agentDhcp6InterfaceStatsTable 1 }
+
+    AgentDhcp6InterfaceStatsEntry ::= SEQUENCE {
+          agentDhcp6InterfaceStatsIndex
+              Ipv6IfIndex,
+          agentDhcp6InterfaceMalformedMessagesReceived
+              Counter32,
+          agentDhcp6InterfaceDiscardedMessages
+              Counter32,
+          agentDhcp6InterfaceSOLICITMessagesReceived
+              Counter32,
+          agentDhcp6InterfaceREQUESTMessagesReceived
+              Counter32,
+          agentDhcp6InterfaceCONFIRMMessagesReceived
+              Counter32,
+          agentDhcp6InterfaceRENEWMessagesReceived
+              Counter32,
+          agentDhcp6InterfaceREBINDMessagesReceived
+              Counter32,
+          agentDhcp6InterfaceRELEASEMessagesReceived
+              Counter32,
+          agentDhcp6InterfaceDECLINEMessagesReceived
+              Counter32,
+          agentDhcp6InterfaceINFORMREQMessagesReceived
+              Counter32,
+          agentDhcp6InterfaceRELAYREPLYMessagesReceived
+              Counter32,
+          agentDhcp6InterfaceRELAYFORWMessagesReceived
+              Counter32,
+          agentDhcp6InterfaceADVERTISEMessagesSent
+              Counter32,
+          agentDhcp6InterfaceREPLYMessagesSent
+              Counter32,
+          agentDhcp6InterfaceRECONFIGUREMessagesSent
+              Counter32,
+          agentDhcp6InterfaceRELAYREPLYMessagesSent
+              Counter32,
+          agentDhcp6InterfaceRELAYFORWMessagesSent
+              Counter32,
+          agentDhcp6InterfaceClearStatistics
+              INTEGER
+    }
+
+
+    agentDhcp6InterfaceStatsIndex OBJECT-TYPE
+         SYNTAX      Ipv6IfIndex
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the ifindex of the DHCPv6 interface"
+         ::= { agentDhcp6InterfaceStatsEntry 1 }
+
+    agentDhcp6InterfaceMalformedMessagesReceived OBJECT-TYPE
+         SYNTAX      Counter32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The number of malformed (truncated or corrupt) messages
+                       that have been received on the interface" 
+         ::= { agentDhcp6InterfaceStatsEntry 2 }
+    
+    agentDhcp6InterfaceDiscardedMessages OBJECT-TYPE
+         SYNTAX      Counter32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of discarded messages on the interface." 
+         ::= { agentDhcp6InterfaceStatsEntry 3 }
+         
+    agentDhcp6InterfaceSOLICITMessagesReceived OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type SOLICIT that have been
+                       received on the interface."     
+         ::= { agentDhcp6InterfaceStatsEntry 4 } 
+         
+    agentDhcp6InterfaceREQUESTMessagesReceived OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type REQUEST that have been
+                       received on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 5 } 
+    
+    agentDhcp6InterfaceCONFIRMMessagesReceived OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type CONFIRM that have been
+                       received on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 6 } 
+    
+    agentDhcp6InterfaceRENEWMessagesReceived OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type RENEW that have been
+                       received on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 7 } 
+    
+    agentDhcp6InterfaceREBINDMessagesReceived OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type REBIND that have been
+                       received on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 8 } 
+    
+    agentDhcp6InterfaceRELEASEMessagesReceived OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type RELEASE that have been
+                       received on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 9 } 
+    
+    agentDhcp6InterfaceDECLINEMessagesReceived OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type DECLINE that have been
+                       received on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 10 } 
+    
+    agentDhcp6InterfaceINFORMREQMessagesReceived OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type INFORMATION-REQUEST that have been
+                       received on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 11 } 
+    
+    agentDhcp6InterfaceRELAYREPLYMessagesReceived OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type RELAY-REPLY that have been
+                       received on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 12 } 
+    
+    agentDhcp6InterfaceRELAYFORWMessagesReceived OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type RELAY-FORWARD that have been
+                       received on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 13 } 
+    
+    agentDhcp6InterfaceADVERTISEMessagesSent OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type ADVERTISE that have been
+                       sent on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 14 } 
+    
+    agentDhcp6InterfaceREPLYMessagesSent OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type REPLY that have been
+                       sent on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 15 } 
+    
+    agentDhcp6InterfaceRECONFIGUREMessagesSent OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type RECONFIGURE that have been
+                       sent on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 16 } 
+    
+    agentDhcp6InterfaceRELAYREPLYMessagesSent OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type RELAY-REPLY that have been
+                       sent on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 17 } 
+    
+    agentDhcp6InterfaceRELAYFORWMessagesSent OBJECT-TYPE
+         SYNTAX      Counter32 
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     " The no. of DHCPv6 messages of type RELAY-FORWARD that have been
+                       sent on the interface."
+         ::= { agentDhcp6InterfaceStatsEntry 18 } 
+    
+    agentDhcp6InterfaceClearStatistics OBJECT-TYPE
+         SYNTAX      INTEGER {
+                      enable(1),
+                      disable(2)
+                     }
+         MAX-ACCESS read-create
+         STATUS     current
+         DESCRIPTION
+                    " Clears the DHCPv6 statistics on the interface."
+         DEFVAL { disable }
+         ::= { agentDhcp6InterfaceStatsEntry 19 } 
+         
+    --**************************************************************************************
+    -- agentDhcp6ServerBindingGroup -> contains MIB objects displaying active bindings for
+    --                                 the DHCPv6 server.
+    --
+    --**************************************************************************************
+
+      agentDhcp6ServerBindingGroup     OBJECT IDENTIFIER ::= { fastPathDHCP6ServerPrivate 4 }
+
+       agentDhcp6ServerBindingTable OBJECT-TYPE
+         SYNTAX      SEQUENCE OF AgentDhcp6ServerBindingEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "A table of the DHCPv6 Server's active binding entries."
+         ::= { agentDhcp6ServerBindingGroup 1 }
+
+      agentDhcp6ServerBindingEntry OBJECT-TYPE
+         SYNTAX      AgentDhcp6ServerBindingEntry
+         MAX-ACCESS  not-accessible
+         STATUS      current
+         DESCRIPTION
+                     "Represents entry for a DHCPv6 server's active bindings."
+         INDEX       { agentDhcp6ServerBindingIndex }
+
+         ::= { agentDhcp6ServerBindingTable 1 }
+
+    -- All objects are of type read-only
+     AgentDhcp6ServerBindingEntry ::= SEQUENCE {
+          agentDhcp6ServerBindingIndex
+              Unsigned32,
+          agentDhcp6ServerBindingPrefix
+              Ipv6AddressPrefix,
+          agentDhcp6ServerBindingPrefixLength
+              Integer32,
+          agentDhcp6ServerBindingPrefixType
+              INTEGER,
+          agentDhcp6ServerBindingClientIdentifier
+              DisplayString,
+          agentDhcp6ServerBindingClientAddress
+              Ipv6Address,
+          agentDhcp6ServerBindingClientInterface
+              Ipv6IfIndex,
+          agentDhcp6ServerBindingIaid
+              Unsigned32,
+          agentDhcp6ServerBindingValidLifetime
+              Unsigned32,
+          agentDhcp6ServerBindingPreferLifetime
+              Unsigned32,
+          agentDhcp6ServerBindingExpiration
+              Unsigned32
+          }
+
+     agentDhcp6ServerBindingIndex OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The index of the entry in the list of the DHCPv6 server's active 
+                     bindings."
+                     
+         ::= { agentDhcp6ServerBindingEntry 1 }
+         
+     agentDhcp6ServerBindingPrefix OBJECT-TYPE
+         SYNTAX      Ipv6AddressPrefix
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "The IPv6 address prefix delegated to a DHCPv6 client."
+         ::= { agentDhcp6ServerBindingEntry 2 }
+
+     agentDhcp6ServerBindingPrefixLength OBJECT-TYPE
+         SYNTAX      Integer32 (0..128)
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the no. of bits that comprise the 
+                      address-prefix mask length for the delegated prefix."
+         ::= { agentDhcp6ServerBindingEntry 3 }
+
+     agentDhcp6ServerBindingPrefixType OBJECT-TYPE
+         SYNTAX      INTEGER {
+                        iapd(0)
+                     }
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the type of prefix associated with the
+                      binding.  Currently, only IA_PD type (prefix delegation)
+                      is supported."
+         ::= { agentDhcp6ServerBindingEntry 4 }
+
+     agentDhcp6ServerBindingClientIdentifier OBJECT-TYPE
+         SYNTAX      DisplayString (SIZE(1..255))
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "It specifies the unique identifier, a.k.a. DUID,
+                      (in colon-separated hexadecimal format) of a DHCPv6 client. "
+         ::= { agentDhcp6ServerBindingEntry 5 }
+
+     agentDhcp6ServerBindingClientAddress OBJECT-TYPE
+         SYNTAX      Ipv6Address
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "It specifies the address for a DHCPv6 client."
+         ::= { agentDhcp6ServerBindingEntry 6 }
+
+     agentDhcp6ServerBindingClientInterface OBJECT-TYPE
+         SYNTAX      Ipv6IfIndex
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "It specifies the interface for a DHCPv6 client."
+         ::= { agentDhcp6ServerBindingEntry 7 }
+
+     agentDhcp6ServerBindingIaid OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "This specifies a identity association ID (IAID) associated
+                      with the binding."
+         ::= { agentDhcp6ServerBindingEntry 8 }
+
+     agentDhcp6ServerBindingValidLifetime OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the valid lifetime timer interval (in seconds) for the
+                      associated allocation.  If set to 0, the timer is set to 'infinity'."
+         ::= { agentDhcp6ServerBindingEntry 9 }
+
+     agentDhcp6ServerBindingPreferLifetime OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the preferred lifetime timer interval (in seconds) for 
+                     the associated allocation.  If set to 0, the timer is set to 'infinity'.
+                     Also, the preferred lifetime value must be less than or equal to the 
+                     valid lifetime value."
+         ::= { agentDhcp6ServerBindingEntry 10 }
+
+     agentDhcp6ServerBindingExpiration OBJECT-TYPE
+         SYNTAX      Unsigned32
+         MAX-ACCESS  read-only
+         STATUS      current
+         DESCRIPTION
+                     "This specifies the amount of time (in seconds) for the
+                      associated binding to expire."
+         ::= { agentDhcp6ServerBindingEntry 11 }
+         
+END

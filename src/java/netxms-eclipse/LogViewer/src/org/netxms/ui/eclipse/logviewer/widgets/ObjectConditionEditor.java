@@ -140,7 +140,7 @@ public class ObjectConditionEditor extends ConditionEditor
             }
             else
             {
-               objectName.setText("[" + objectId + "]");
+               objectName.setText("[" + objectId + "]"); //$NON-NLS-1$ //$NON-NLS-2$
             }
          }
       }
