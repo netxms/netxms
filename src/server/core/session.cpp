@@ -12329,17 +12329,7 @@ void ClientSession::uploadFileToAgent(NXCPMessage *request)
 				TCHAR *remoteFile = request->getFieldAsString(VID_DESTINATION_FILE_NAME);
 				if (localFile != NULL)
 				{
-					int nLen;
-					TCHAR fullPath[MAX_PATH];
-
-					// Create full path to the file store
-					_tcscpy(fullPath, g_netxmsdDataDir);
-					_tcscat(fullPath, DDIR_FILES);
-					_tcscat(fullPath, FS_PATH_SEPARATOR);
-					nLen = (int)_tcslen(fullPath);
-					nx_strncpy(&fullPath[nLen], GetCleanFileName(localFile), MAX_PATH - nLen);
-
-					ServerJob *job = new FileUploadJob((Node *)object, fullPath, remoteFile, m_dwUserId,
+					ServerJob *job = new FileUploadJob((Node *)object, localFile, remoteFile, m_dwUserId,
 					                                   request->getFieldAsUInt16(VID_CREATE_JOB_ON_HOLD) ? true : false);
 					if (AddJob(job))
 					{

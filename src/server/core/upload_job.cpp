@@ -78,6 +78,7 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 	setDescription(buffer);
 
 	m_localFile = _tcsdup(localFile);
+	setLocalFileFullPath();
 	m_remoteFile = (remoteFile != NULL) ? _tcsdup(remoteFile) : NULL;
 
 	_sntprintf(buffer, 1024, _T("Local file: %s; Remote file: %s"), m_localFile, CHECK_NULL(m_remoteFile));
@@ -92,7 +93,6 @@ FileUploadJob::FileUploadJob(TCHAR* params, UINT32 node, UINT32 userId)
 	m_node = (Node *)FindObjectById(node, OBJECT_NODE);
 	if(m_node != NULL)
       m_node->incRefCount();
-
 
    StringList fileList(params, _T(","));
    if(fileList.size() < 2)
@@ -109,12 +109,27 @@ FileUploadJob::FileUploadJob(TCHAR* params, UINT32 node, UINT32 userId)
 	setDescription(buffer);
 
 	m_localFile = _tcsdup(fileList.get(0));
-	m_remoteFile = (fileList.size() == 3) ? _tcsdup(fileList.get(1)) : NULL;
+	setLocalFileFullPath();
+	m_remoteFile = fileList.get(1)[0] != 0 ? _tcsdup(fileList.get(1)) : NULL;
 
 	_sntprintf(buffer, 1024, _T("Local file: %s; Remote file: %s"), m_localFile, CHECK_NULL(fileList.get(1)));
 	m_info = _tcsdup(buffer);
 
 	m_fileSize = 0;
+}
+
+void FileUploadJob::setLocalFileFullPath()
+{
+   int nLen;
+   TCHAR fullPath[MAX_PATH];
+
+   // Create full path to the file store
+   _tcscpy(fullPath, g_netxmsdDataDir);
+   _tcscat(fullPath, DDIR_FILES);
+   _tcscat(fullPath, FS_PATH_SEPARATOR);
+   nLen = (int)_tcslen(fullPath);
+   nx_strncpy(&fullPath[nLen], GetCleanFileName(m_localFile), MAX_PATH - nLen);
+   m_localFileFullPath = _tcsdup(fullPath);
 }
 
 /**
@@ -124,6 +139,7 @@ FileUploadJob::~FileUploadJob()
 {
 	m_node->decRefCount();
 	safe_free(m_localFile);
+	safe_free(m_localFileFullPath);
 	safe_free(m_remoteFile);
 	safe_free(m_info);
 }
@@ -151,8 +167,8 @@ ServerJobResult FileUploadJob::run()
 	AgentConnectionEx *conn = m_node->createAgentConnection();
 	if (conn != NULL)
 	{
-		m_fileSize = (INT64)FileSize(m_localFile);
-		UINT32 rcc = conn->uploadFile(m_localFile, m_remoteFile, uploadCallback, this);
+		m_fileSize = (INT64)FileSize(m_localFileFullPath);
+		UINT32 rcc = conn->uploadFile(m_localFileFullPath, m_remoteFile, uploadCallback, this);
 		if (rcc == ERR_SUCCESS)
 		{
 			success = JOB_RESULT_SUCCESS;
@@ -205,7 +221,7 @@ const TCHAR *FileUploadJob::getAdditionalInfo()
 /**
  * Serializes job parameters into TCHAR line separated by ';'
  */
-const TCHAR *FileUploadJob::serializeParameters()
+TCHAR *FileUploadJob::serializeParameters()
 {
    String params;
    params.append(m_localFile);
@@ -221,6 +237,8 @@ const TCHAR *FileUploadJob::serializeParameters()
  */
 void FileUploadJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getNextJobExecutionTime(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+   TCHAR *param = serializeParameters();
+   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getNextJobExecutionTime(), param, 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+   free(param);
 }
 

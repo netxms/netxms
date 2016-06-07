@@ -384,7 +384,7 @@ const TCHAR *ServerJob::getAdditionalInfo()
 /**
  * Serializes job parameters into TCHAR line separated by ';'
  */
-const TCHAR *ServerJob::serializeParameters()
+TCHAR *ServerJob::serializeParameters()
 {
    return _tcsdup(_T(""));
 }

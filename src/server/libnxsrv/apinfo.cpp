@@ -63,6 +63,7 @@ AgentPolicyInfo::~AgentPolicyInfo()
 {
    for(int i = 0; i < m_size; i++)
 		free(m_serverInfoList[i]);
+   free(m_serverInfoList);
 	free(m_serverIdList);
 	free(m_typeList);
 	free(m_guidList);
