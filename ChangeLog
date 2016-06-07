@@ -8,7 +8,7 @@
 - Added configuration option to logparser to generate event only if regular expression have been matched exact count of the times in a predefined time period
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
-- Fixed issues: #1230
+- Fixed issues: #1096, #1187, #1230
 
 
 *

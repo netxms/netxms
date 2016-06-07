@@ -162,6 +162,7 @@ time_t g_tmAgentStartTime;
 UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 32;
 UINT32 g_dwSNMPTrapPort = 162;
+UINT32 g_longRunningQueryThreshold = 250;
 #ifdef _WIN32
 UINT16 g_sessionAgentPort = 28180;
 #else
@@ -259,6 +260,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("LogHistorySize"), CT_LONG, 0, 0, 0, 0, &s_logHistorySize, NULL },
    { _T("LogRotationMode"), CT_LONG, 0, 0, 0, 0, &s_logRotationMode, NULL },
    { _T("LogUnresolvedSymbols"), CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags, NULL },
+   { _T("LongRunningQueryThreshold"), CT_LONG, 0, 0, 0, 0, &g_longRunningQueryThreshold, NULL },
    { _T("MasterServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList, NULL },
    { _T("MaxLogSize"), CT_LONG, 0, 0, 0, 0, &s_maxLogSize, NULL },
    { _T("MaxSessions"), CT_LONG, 0, 0, 0, 0, &g_dwMaxSessions, NULL },
@@ -548,6 +550,22 @@ static LONG H_FailStatusProvider(const TCHAR *pszParam, const TCHAR *pArg, TCHAR
    return SYSINFO_RC_SUCCESS;
 }
 
+static LONG H_DbCountersProvider(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+{
+   LIBNXDB_PERF_COUNTERS counters;
+   DBGetPerfCounters(&counters);
+   switch(*pArg)
+   {
+      case 'F':
+         ret_int64(pValue, counters.failedQueries);
+         break;
+      case 'L':
+         ret_int64(pValue, counters.longRunningQueries);
+         break;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
 /**
  * This function writes message from subagent to agent's log
  */
@@ -820,6 +838,8 @@ BOOL Initialize()
 		//Add build-in DCIs
       AddParameter(_T("Agent.LogFile"), H_FailStatusProvider, _T("L"), DCI_DT_UINT, _T("Get log status"));
       AddParameter(_T("Agent.LocalDatabase"), H_FailStatusProvider, _T("D"), DCI_DT_UINT, _T("Get database status"));
+      AddParameter(_T("Agent.LocalDatabase.LongRunningQueries"), H_DbCountersProvider, _T("L"), DCI_DT_UINT, _T("Get database long running query count"));
+      AddParameter(_T("Agent.LocalDatabase.FailedQueries"), H_DbCountersProvider, _T("F"), DCI_DT_UINT, _T("Get database failed query count"));
 
 	   // Load platform subagents
 #if !defined(_WIN32)

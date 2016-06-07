@@ -640,6 +640,7 @@ extern UINT32 g_dwMaxSessions;
 extern UINT32 g_dwExecTimeout;
 extern UINT32 g_dwSNMPTimeout;
 extern UINT32 g_dwSNMPTrapPort;
+extern UINT32 g_longRunningQueryThreshold;
 extern UINT16 g_sessionAgentPort;
 
 extern Config *g_config;

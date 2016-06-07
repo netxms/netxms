@@ -154,6 +154,9 @@ bool OpenLocalDatabase()
       return false;
    }
 
+   if (g_longRunningQueryThreshold != 0)
+      DBSetLongRunningThreshold(g_longRunningQueryThreshold);
+
    DBQuery(s_db, _T("VACUUM"));
    DebugPrintf(INVALID_INDEX, 1, _T("Local database opened successfully"));
    return true;
