@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2012 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,9 +30,9 @@ public class DciPushData
 	public String value;
 	
 	/**
-	 * @param nodeId
-	 * @param dciId
-	 * @param value
+	 * @param nodeId node object ID
+	 * @param dciId DCI ID
+	 * @param value value to push
 	 */
 	public DciPushData(long nodeId, long dciId, String value)
 	{
@@ -44,9 +44,9 @@ public class DciPushData
 	}
 
 	/**
-	 * @param nodeName
-	 * @param dciName
-	 * @param value
+	 * @param nodeName node object name
+	 * @param dciName DCI name
+	 * @param value value to push
 	 */
 	public DciPushData(String nodeName, String dciName, String value)
 	{
