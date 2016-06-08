@@ -133,9 +133,9 @@ retry_wait:
       {
          if (*response != NULL)
          {
-            if ((*response)->getRequestId() == request->getRequestId())
+            if (request->getVersion() == SNMP_VERSION_3)
             {
-               if (request->getVersion() == SNMP_VERSION_3)
+               if ((*response)->getMessageId() == request->getMessageId())
                {
                   // Cache authoritative engine ID
                   if ((m_authoritativeEngine == NULL) && ((*response)->getAuthoritativeEngine().getIdLen() != 0))
@@ -208,11 +208,24 @@ retry_wait:
                   {
                      rc = SNMP_ERR_BAD_RESPONSE;
                   }
+                  break;
                }
-               break;
+               else  // message ID do not match
+               {
+                  INT32 elapsedTime = (INT32)(GetCurrentTimeMs() - startTime);
+                  if (elapsedTime < remainingWaitTime)
+                  {
+                     remainingWaitTime -= elapsedTime;
+                     goto retry_wait;
+                  }
+                  rc = SNMP_ERR_TIMEOUT;
+               }
             }
-            else
+            else  // not SNMPv3
             {
+               if ((*response)->getRequestId() == request->getRequestId())
+                  break;
+
                INT32 elapsedTime = (INT32)(GetCurrentTimeMs() - startTime);
                if (elapsedTime < remainingWaitTime)
                {
