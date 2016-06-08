@@ -246,7 +246,7 @@ static UINT32 ImportEvent(ConfigEntry *event)
 	uuid guid = event->getSubEntryValueAsUUID(_T("guid"));
 	if (!guid.isNull())
 	{
-	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT id FROM event_cfg WHERE guid=?"));
+	   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT event_code FROM event_cfg WHERE guid=?"));
 	   if (hStmt == NULL)
 	   {
 	      DBConnectionPoolReleaseConnection(hdb);
