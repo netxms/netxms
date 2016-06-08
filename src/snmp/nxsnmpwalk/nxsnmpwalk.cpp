@@ -73,6 +73,7 @@ static int DoWalk(TCHAR *pszHost, TCHAR *pszRootOid)
       return 2;
    }
 
+   transport->setSnmpVersion(m_snmpVersion);
    if (m_snmpVersion == SNMP_VERSION_3)
    {
       SNMP_SecurityContext *context = new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod);

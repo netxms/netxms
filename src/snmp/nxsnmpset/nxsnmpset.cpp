@@ -70,6 +70,7 @@ static int SetVariables(int argc, TCHAR *argv[])
    }
    else
    {
+      pTransport->setSnmpVersion(m_snmpVersion);
 		if (m_snmpVersion == SNMP_VERSION_3)
 			pTransport->setSecurityContext(new SNMP_SecurityContext(m_user, m_authPassword, m_encryptionPassword, m_authMethod, m_encryptionMethod));
 		else
