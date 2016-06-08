@@ -131,7 +131,7 @@ public:
 	void setOwningQueue(ServerJobQueue *queue);
 
 	void fillMessage(NXCPMessage *msg);
-	virtual TCHAR *serializeParameters();
+	virtual const String serializeParameters();
 	virtual void rescheduleExecution();
 	int getNextJobExecutionTime();
 };
@@ -202,7 +202,7 @@ public:
 	FileUploadJob(TCHAR* params, UINT32 node, UINT32 userId);
 	virtual ~FileUploadJob();
 
-	virtual TCHAR *serializeParameters();
+	virtual const String serializeParameters();
 	virtual void rescheduleExecution();
 	void setLocalFileFullPath();
 };
@@ -259,7 +259,7 @@ public:
    PolicyDeploymentJob(const TCHAR* params, UINT32 node, UINT32 userId);
 	virtual ~PolicyDeploymentJob();
 
-	virtual TCHAR *serializeParameters();
+	virtual const String serializeParameters();
 	virtual void rescheduleExecution();
 };
 
@@ -280,7 +280,7 @@ public:
    PolicyUninstallJob(const TCHAR* params, UINT32 node, UINT32 userId);
 	virtual ~PolicyUninstallJob();
 
-	virtual TCHAR *serializeParameters();
+	virtual const String serializeParameters();
 	virtual void rescheduleExecution();
 };
 

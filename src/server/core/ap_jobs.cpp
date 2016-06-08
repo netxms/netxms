@@ -163,13 +163,13 @@ ServerJobResult PolicyDeploymentJob::run()
 /**
  * Serializes job parameters into TCHAR line separated by ';'
  */
-TCHAR *PolicyDeploymentJob::serializeParameters()
+const String PolicyDeploymentJob::serializeParameters()
 {
    String params;
    params.append(m_policy->getId());
    params.append(_T(','));
    params.append(m_retryCount);
-   return _tcsdup(params.getBuffer());
+   return params;
 }
 
 /**
@@ -177,9 +177,7 @@ TCHAR *PolicyDeploymentJob::serializeParameters()
  */
 void PolicyDeploymentJob::rescheduleExecution()
 {
-   TCHAR *params = serializeParameters();
-   AddOneTimeScheduledTask(_T("Policy.Deploy"), time(NULL) + getNextJobExecutionTime(), params, 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
-   free(params);
+   AddOneTimeScheduledTask(_T("Policy.Deploy"), time(NULL) + getNextJobExecutionTime(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
 }
 
 
@@ -320,13 +318,13 @@ ServerJobResult PolicyUninstallJob::run()
 /**
  * Serializes job parameters into TCHAR line separated by ';'
  */
-TCHAR *PolicyUninstallJob::serializeParameters()
+const String PolicyUninstallJob::serializeParameters()
 {
    String params;
    params.append(m_policy->getId());
    params.append(_T(','));
    params.append(m_retryCount);
-   return _tcsdup(params.getBuffer());
+   return params;
 }
 
 /**
@@ -334,7 +332,5 @@ TCHAR *PolicyUninstallJob::serializeParameters()
  */
 void PolicyUninstallJob::rescheduleExecution()
 {
-   TCHAR *params = serializeParameters();
-   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getNextJobExecutionTime(), params, 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
-   free(params);
+   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getNextJobExecutionTime(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
 }

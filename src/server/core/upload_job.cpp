@@ -221,7 +221,7 @@ const TCHAR *FileUploadJob::getAdditionalInfo()
 /**
  * Serializes job parameters into TCHAR line separated by ';'
  */
-TCHAR *FileUploadJob::serializeParameters()
+const String FileUploadJob::serializeParameters()
 {
    String params;
    params.append(m_localFile);
@@ -229,7 +229,7 @@ TCHAR *FileUploadJob::serializeParameters()
    params.append(CHECK_NULL_EX(m_remoteFile));
    params.append(_T(','));
    params.append(m_retryCount);
-   return _tcsdup(params.getBuffer());
+   return params;
 }
 
 /**
@@ -237,8 +237,6 @@ TCHAR *FileUploadJob::serializeParameters()
  */
 void FileUploadJob::rescheduleExecution()
 {
-   TCHAR *param = serializeParameters();
-   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getNextJobExecutionTime(), param, 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
-   free(param);
+   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getNextJobExecutionTime(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
 }
 
