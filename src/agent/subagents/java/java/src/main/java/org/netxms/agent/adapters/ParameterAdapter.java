@@ -32,9 +32,9 @@ public abstract class ParameterAdapter implements Parameter
    private ParameterType type;
 
    /**
-    * @param name
-    * @param description
-    * @param type
+    * @param name parameter name
+    * @param description parameter description
+    * @param type parameter type
     */
    public ParameterAdapter(String name, String description, ParameterType type)
    {

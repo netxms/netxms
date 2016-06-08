@@ -26,7 +26,7 @@ public abstract class Plugin
    /**
     * Constructor used by PluginManager
     * 
-    * @param config
+    * @param config agent configuration
     */
    public Plugin(Config config)
    {
@@ -35,21 +35,21 @@ public abstract class Plugin
    /**
     * Get plugin name
     * 
-    * @return
+    * @return plugin name
     */
    public abstract String getName();
 
    /**
     * Get plugin version
     * 
-    * @return
+    * @return plugin version
     */
    public abstract String getVersion();
 
    /**
     * Initialize plugin
     * 
-    * @param config
+    * @param config agent configuration
     */
    public void init(Config config)
    {
@@ -67,7 +67,7 @@ public abstract class Plugin
    /**
     * Get list of supported parameters
     * 
-    * @return
+    * @return list of supported parameters
     */
    public Parameter[] getParameters()
    {
@@ -77,7 +77,7 @@ public abstract class Plugin
    /**
     * Get list of supported push parameters
     * 
-    * @return
+    * @return list of supported push parameters
     */
    public PushParameter[] getPushParameters()
    {
@@ -87,7 +87,7 @@ public abstract class Plugin
    /**
     * Get list of supported lists
     * 
-    * @return
+    * @return list of supported lists
     */
    public ListParameter[] getListParameters()
    {
@@ -97,7 +97,7 @@ public abstract class Plugin
    /**
     * Get list of supported tables
     * 
-    * @return
+    * @return list of supported tables
     */
    public TableParameter[] getTableParameters()
    {
@@ -107,7 +107,7 @@ public abstract class Plugin
    /**
     * Get list of supported actions
     * 
-    * @return
+    * @return list of supported actions
     */
    public Action[] getActions()
    {

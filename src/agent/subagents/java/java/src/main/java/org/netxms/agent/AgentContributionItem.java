@@ -8,14 +8,14 @@ public interface AgentContributionItem
    /**
     * Get contribution item's name
     * 
-    * @return
+    * @return contribution item's name
     */
    public String getName();
 
    /**
     * Get contribution item's description
     * 
-    * @return
+    * @return contribution item's description
     */
    public String getDescription();
 

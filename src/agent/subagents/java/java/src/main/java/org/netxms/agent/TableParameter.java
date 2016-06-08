@@ -26,16 +26,16 @@ public interface TableParameter extends AgentContributionItem
    /**
     * Get table columns
     * 
-    * @return
+    * @return table columns
     */
    TableColumn[] getColumns();
 
    /**
     * Get value
     * 
-    * @param param
-    * @return
-    * @throws Exception
+    * @param param table name
+    * @return table values
+    * @throws Exception can throw exception to indicate data collection error
     */
    String[][] getValue(final String param) throws Exception;
 }
