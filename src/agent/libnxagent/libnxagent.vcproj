@@ -342,10 +342,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\registry.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\tools.cpp"
 				>
 			</File>
