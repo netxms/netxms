@@ -1167,6 +1167,6 @@ extern UINT64 g_otherWriteRequests;
 extern int NXCORE_EXPORTABLE g_dbSyntax;
 extern FileMonitoringList g_monitoringList;
 
-extern ThreadPool *g_mainThreadPool;
+extern ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool;
 
 #endif   /* _nms_core_h_ */
