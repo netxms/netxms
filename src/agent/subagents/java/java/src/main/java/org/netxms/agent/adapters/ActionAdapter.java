@@ -30,8 +30,8 @@ public abstract class ActionAdapter implements Action
    private String description;
 
    /**
-    * @param name
-    * @param description
+    * @param name action name
+    * @param description action description
     */
    public ActionAdapter(String name, String description)
    {

@@ -26,8 +26,9 @@ public interface ListParameter extends AgentContributionItem
    /**
     * Get value
     * 
-    * @param param
-    * @return
+    * @param param parameter name
+    * @return values for requested list
+    * @throws Exception can throw exception to indicate data collection error
     */
    public String[] getValue(final String param) throws Exception;
 }

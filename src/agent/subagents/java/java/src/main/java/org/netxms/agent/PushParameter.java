@@ -26,7 +26,9 @@ import org.netxms.agent.ParameterType;
 public interface PushParameter extends AgentContributionItem
 {
    /**
-    * @return
+    * Get parameter's data type
+    * 
+    * @return parameter's data type
     */
    public ParameterType getType();
 }
