@@ -151,7 +151,7 @@ void UpdateSnmpTarget(SNMPTarget *target)
 /**
  * Get value from SNMP node
  */
-bool GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue)
+UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue)
 {
    MutexLock(s_snmpTargetsLock);
    SNMPTarget *t = s_snmpTargets.get(target.getValue());
@@ -212,5 +212,6 @@ bool GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *valu
    }
 
    t->decRefCount();
-   return (rcc == SNMP_ERR_SUCCESS);
+   return (rcc == SNMP_ERR_SUCCESS) ? ERR_SUCCESS :
+      ((rcc == SNMP_ERR_NO_OBJECT) ? ERR_UNKNOWN_PARAMETER : ERR_INTERNAL_ERROR);
 }

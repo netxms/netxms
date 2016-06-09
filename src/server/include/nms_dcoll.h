@@ -240,7 +240,8 @@ public:
    virtual bool loadThresholdsFromDB(DB_HANDLE hdb);
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
-   virtual void processNewError(bool noInstance);
+   void processNewError(bool noInstance);
+   virtual void processNewError(bool noInstance, time_t now);
 
 	virtual bool hasValue();
 
@@ -382,7 +383,7 @@ public:
 	void expandInstance();
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
-   virtual void processNewError(bool noInstance);
+   virtual void processNewError(bool noInstance, time_t now);
 
 	virtual bool hasValue();
 
@@ -577,7 +578,7 @@ public:
    virtual void deleteFromDatabase();
 
    virtual bool processNewValue(time_t nTimeStamp, const void *value, bool *updateStatus);
-   virtual void processNewError(bool noInstance);
+   virtual void processNewError(bool noInstance, time_t now);
 
    virtual bool hasValue();
 

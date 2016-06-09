@@ -26,7 +26,7 @@
  * Externals
  */
 void UpdateSnmpTarget(SNMPTarget *target);
-bool GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue);
+UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue);
 
 /**
  * Data collector start indicator
@@ -259,6 +259,7 @@ private:
    time_t m_timestamp;
    int m_origin;
    int m_type;
+   UINT32 m_statusCode;
    uuid m_snmpNode;
    union
    {
@@ -268,60 +269,64 @@ private:
    } m_value;
 
 public:
-   DataElement(DataCollectionItem *dci, const TCHAR *value)
+   DataElement(DataCollectionItem *dci, const TCHAR *value, UINT32 status)
    {
       m_serverId = dci->getServerId();
       m_dciId = dci->getId();
       m_timestamp = time(NULL);
       m_origin = dci->getOrigin();
       m_type = DCO_TYPE_ITEM;
+      m_statusCode = status;
       m_snmpNode = dci->getSnmpTargetGuid();
       m_value.item = _tcsdup(value);
    }
 
-   DataElement(DataCollectionItem *dci, StringList *value)
+   DataElement(DataCollectionItem *dci, StringList *value, UINT32 status)
    {
       m_serverId = dci->getServerId();
       m_dciId = dci->getId();
       m_timestamp = time(NULL);
       m_origin = dci->getOrigin();
       m_type = DCO_TYPE_LIST;
+      m_statusCode = status;
       m_snmpNode = dci->getSnmpTargetGuid();
       m_value.list = value;
    }
 
-   DataElement(DataCollectionItem *dci, Table *value)
+   DataElement(DataCollectionItem *dci, Table *value, UINT32 status)
    {
       m_serverId = dci->getServerId();
       m_dciId = dci->getId();
       m_timestamp = time(NULL);
       m_origin = dci->getOrigin();
       m_type = DCO_TYPE_TABLE;
+      m_statusCode = status;
       m_snmpNode = dci->getSnmpTargetGuid();
       m_value.table = value;
    }
 
    /**
     * Create data element from database record
-    * Expected field order: server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value
+    * Expected field order: server_id,dci_id,dci_type,dci_origin,status_code,snmp_target_guid,timestamp,value
     */
    DataElement(DB_RESULT hResult, int row)
    {
       m_serverId = DBGetFieldUInt64(hResult, row, 0);
       m_dciId = DBGetFieldULong(hResult, row, 1);
-      m_timestamp = (time_t)DBGetFieldInt64(hResult, row, 5);
+      m_timestamp = (time_t)DBGetFieldInt64(hResult, row, 6);
       m_origin = DBGetFieldLong(hResult, row, 3);
       m_type = DBGetFieldLong(hResult, row, 2);
-      m_snmpNode = DBGetFieldGUID(hResult, row, 4);
+      m_statusCode = DBGetFieldLong(hResult, row, 4);
+      m_snmpNode = DBGetFieldGUID(hResult, row, 5);
       switch(m_type)
       {
          case DCO_TYPE_ITEM:
-            m_value.item = DBGetField(hResult, row, 6, NULL, 0);
+            m_value.item = DBGetField(hResult, row, 7, NULL, 0);
             break;
          case DCO_TYPE_LIST:
             {
                m_value.list = new StringList();
-               TCHAR *text = DBGetField(hResult, row, 6, NULL, 0);
+               TCHAR *text = DBGetField(hResult, row, 7, NULL, 0);
                if (text != NULL)
                {
                   m_value.list->splitAndAdd(text, _T("\n"));
@@ -331,7 +336,7 @@ public:
             break;
          case DCO_TYPE_TABLE:
             {
-               char *xml = DBGetFieldUTF8(hResult, row, 6, NULL, 0);
+               char *xml = DBGetFieldUTF8(hResult, row, 7, NULL, 0);
                if (xml != NULL)
                {
                   m_value.table = Table::createFromXML(xml);
@@ -370,6 +375,7 @@ public:
    UINT64 getServerId() { return m_serverId; }
    UINT32 getDciId() { return m_dciId; }
    int getType() { return m_type; }
+   UINT32 getStatusCode() { return m_statusCode; }
 
    void saveToDatabase(DB_STATEMENT hStmt);
    bool sendToServer(bool reconcillation);
@@ -385,18 +391,19 @@ void DataElement::saveToDatabase(DB_STATEMENT hStmt)
    DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_dciId);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)m_type);
    DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)m_origin);
-   DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_snmpNode);
-   DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
+   DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_statusCode);
+   DBBind(hStmt, 6, DB_SQLTYPE_VARCHAR, m_snmpNode);
+   DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_timestamp);
    switch(m_type)
    {
       case DCO_TYPE_ITEM:
-         DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_value.item, DB_BIND_STATIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_TEXT, m_value.item, DB_BIND_STATIC);
          break;
       case DCO_TYPE_LIST:
-         DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_value.list->join(_T("\n")), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_TEXT, m_value.list->join(_T("\n")), DB_BIND_DYNAMIC);
          break;
       case DCO_TYPE_TABLE:
-         DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_value.table->createXML(), DB_BIND_DYNAMIC);
+         DBBind(hStmt, 8, DB_SQLTYPE_TEXT, m_value.table->createXML(), DB_BIND_DYNAMIC);
          break;
    }
    DBExecute(hStmt);
@@ -430,6 +437,7 @@ bool DataElement::sendToServer(bool reconciliation)
    msg.setField(VID_DCI_ID, m_dciId);
    msg.setField(VID_DCI_SOURCE_TYPE, (INT16)m_origin);
    msg.setField(VID_DCOBJECT_TYPE, (INT16)m_type);
+   msg.setField(VID_STATUS, m_statusCode);
    msg.setField(VID_NODE_ID, m_snmpNode);
    msg.setFieldFromTime(VID_TIMESTAMP, m_timestamp);
    msg.setField(VID_RECONCILIATION, (INT16)(reconciliation ? 1 : 0));
@@ -465,6 +473,7 @@ void DataElement::fillReconciliationMessage(NXCPMessage *msg, UINT32 baseId)
    msg->setField(baseId + 3, m_snmpNode);
    msg->setFieldFromTime(baseId + 4, m_timestamp);
    msg->setField(baseId + 5, m_value.item);
+   msg->setField(baseId + 6, m_statusCode);
 }
 
 /**
@@ -505,7 +514,7 @@ static THREAD_RESULT THREAD_CALL DatabaseWriter(void *arg)
       if (e == INVALID_POINTER_VALUE)
          break;
 
-      DB_STATEMENT hStmt= DBPrepare(hdb, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value) VALUES (?,?,?,?,?,?,?)"));
+      DB_STATEMENT hStmt= DBPrepare(hdb, _T("INSERT INTO dc_queue (server_id,dci_id,dci_type,dci_origin,status_code,snmp_target_guid,timestamp,value) VALUES (?,?,?,?,?,?,?,?)"));
       if (hStmt == NULL)
       {
          delete e;
@@ -603,7 +612,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       }
 
       TCHAR query[1024];
-      _sntprintf(query, 1024, _T("SELECT server_id,dci_id,dci_type,dci_origin,snmp_target_guid,timestamp,value FROM dc_queue WHERE server_id=") UINT64_FMT _T(" ORDER BY timestamp LIMIT %d"), session->getServerId(), BULK_DATA_BLOCK_SIZE);
+      _sntprintf(query, 1024, _T("SELECT server_id,dci_id,dci_type,dci_origin,status_code,snmp_target_guid,timestamp,value FROM dc_queue WHERE server_id=") UINT64_FMT _T(" ORDER BY timestamp LIMIT %d"), session->getServerId(), BULK_DATA_BLOCK_SIZE);
 
       TCHAR sqlError[DBDRV_MAX_ERROR_TEXT];
       DB_RESULT hResult = DBSelectEx(hdb, query, sqlError);
@@ -822,23 +831,24 @@ static DataElement *CollectDataFromAgent(DataCollectionItem *dci)
    VirtualSession session(dci->getServerId());
 
    DataElement *e = NULL;
+   UINT32 status;
    if (dci->getType() == DCO_TYPE_ITEM)
    {
       TCHAR value[MAX_RESULT_LENGTH];
-      if (GetParameterValue(INVALID_INDEX, dci->getName(), value, &session) == ERR_SUCCESS)
-         e = new DataElement(dci, value);
+      status = GetParameterValue(INVALID_INDEX, dci->getName(), value, &session);
+      e = new DataElement(dci, (status == ERR_SUCCESS) ? value : _T(""), status);
    }
    else if (dci->getType() == DCO_TYPE_LIST)
    {
-      StringList *value = new StringList;
-      if (GetListValue(INVALID_INDEX, dci->getName(), value, &session) == ERR_SUCCESS)
-         e = new DataElement(dci, value);
+      StringList *value = new StringList();
+      status = GetListValue(INVALID_INDEX, dci->getName(), value, &session);
+      e = new DataElement(dci, value, status);
    }
    else if (dci->getType() == DCO_TYPE_TABLE)
    {
-      Table *value = new Table;
-      if (GetTableValue(INVALID_INDEX, dci->getName(), value, &session) == ERR_SUCCESS)
-         e = new DataElement(dci, value);
+      Table *value = new Table();
+      status = GetTableValue(INVALID_INDEX, dci->getName(), value, &session);
+      e = new DataElement(dci, value, status);
    }
 
    return e;
@@ -855,8 +865,8 @@ static DataElement *CollectDataFromSNMP(DataCollectionItem *dci)
       DebugPrintf(INVALID_INDEX, 8, _T("Read SNMP parameter %s"), dci->getName());
 
       TCHAR value[MAX_RESULT_LENGTH];
-      if (GetSnmpValue(dci->getSnmpTargetGuid(), dci->getSnmpPort(), dci->getName(), value, dci->getSnmpRawValueType()))
-         e = new DataElement(dci, value);
+      UINT32 status = GetSnmpValue(dci->getSnmpTargetGuid(), dci->getSnmpPort(), dci->getName(), value, dci->getSnmpRawValueType());
+      e = new DataElement(dci, status == ERR_SUCCESS ? value : _T(""), status);
    }
    return e;
 }

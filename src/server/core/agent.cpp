@@ -536,6 +536,10 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
       return ERR_INTERNAL_ERROR;
    }
 
+   time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
+   UINT32 status = msg->getFieldAsUInt32(VID_STATUS);
+   bool success = true;
+
    void *value;
    switch(type)
    {
@@ -552,12 +556,31 @@ UINT32 AgentConnectionEx::processCollectedData(NXCPMessage *msg)
          DbgPrintf(5, _T("AgentConnectionEx::processCollectedData: invalid type %d of DCI %s [%d] on node %s [%d]"), type, dcObject->getName(), dciId, node->getName(), node->getId());
          return ERR_INTERNAL_ERROR;
    }
+   DbgPrintf(7, _T("AgentConnectionEx::processCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on node %s [%d]"), dcObject->getName(), dciId, type, status, node->getName(), node->getId());
 
-   DbgPrintf(7, _T("AgentConnectionEx::processCollectedData: processing DCI %s [%d] (type=%d) on node %s [%d]"), dcObject->getName(), dciId, type, node->getName(), node->getId());
-   time_t t = msg->getFieldAsTime(VID_TIMESTAMP);
-   bool success = node->processNewDCValue(dcObject, t, value);
-   if (t > dcObject->getLastPollTime())
-      dcObject->setLastPollTime(t);
+   switch(status)
+   {
+      case ERR_SUCCESS:
+      {
+         if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+            dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
+         success = node->processNewDCValue(dcObject, t, value);
+         if (t > dcObject->getLastPollTime())
+            dcObject->setLastPollTime(t);
+         break;
+      }
+      case ERR_UNKNOWN_PARAMETER:
+         if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+            dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
+         dcObject->processNewError(false, t);
+         break;
+      case ERR_NO_SUCH_INSTANCE:
+         dcObject->processNewError(true, t);
+         break;
+      case ERR_INTERNAL_ERROR:
+         dcObject->processNewError(true, t);
+         break;
+   }
 
    switch(type)
    {
@@ -643,14 +666,37 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       }
 
       void *value = request->getFieldAsString(fieldId + 5);
-
-      DbgPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%d] (type=%d) on node %s [%d] (element %d)"), dcObject->getName(), dciId, type, node->getName(), node->getId(), i);
+      UINT32 status_code = request->getFieldAsUInt32(fieldId + 6);
+      DbgPrintf(7, _T("AgentConnectionEx::processBulkCollectedData: processing DCI %s [%d] (type=%d) (status=%d) on node %s [%d] (element %d)"), dcObject->getName(), dciId, type, status, node->getName(), node->getId(), i);
       time_t t = request->getFieldAsTime(fieldId + 4);
-      bool success = node->processNewDCValue(dcObject, t, value);
-      if (t > dcObject->getLastPollTime())
-         dcObject->setLastPollTime(t);
-      status[i] = success ? BULK_DATA_REC_SUCCESS : BULK_DATA_REC_FAILURE;
+      bool success = true;
 
+      switch(status_code)
+      {
+         case ERR_SUCCESS:
+         {
+            if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+               dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
+            success = node->processNewDCValue(dcObject, t, value);
+            if (t > dcObject->getLastPollTime())
+               dcObject->setLastPollTime(t);
+            break;
+         }
+         case ERR_UNKNOWN_PARAMETER:
+            if (dcObject->getStatus() == ITEM_STATUS_NOT_SUPPORTED)
+               dcObject->setStatus(ITEM_STATUS_ACTIVE, true);
+            dcObject->processNewError(false, t);
+            break;
+         case ERR_NO_SUCH_INSTANCE:
+            dcObject->processNewError(true, t);
+            break;
+         case ERR_INTERNAL_ERROR:
+            dcObject->processNewError(true, t);
+            break;
+      }
+
+
+      status[i] = success ? BULK_DATA_REC_SUCCESS : BULK_DATA_REC_FAILURE;
       free(value);
    }
 

@@ -37,6 +37,18 @@ bool g_ignoreAgentDbErrors = FALSE;
  */
 static DB_HANDLE s_db = NULL;
 
+
+/**
+ * Upgrade from V2 to V3
+ */
+static BOOL H_UpgradeFromV3(int currVersion, int newVersion)
+{
+   CHK_EXEC(Query(_T("ALTER TABLE dc_queue ADD status_code integer")));
+
+   CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 4));
+   return TRUE;
+}
+
 /**
  * Upgrade from V2 to V3
  */
@@ -269,6 +281,7 @@ static struct
 {
    { 1, 2, H_UpgradeFromV1 },
    { 2, 3, H_UpgradeFromV2 },
+   { 3, 4, H_UpgradeFromV3 },
    { 0, 0, NULL }
 };
 

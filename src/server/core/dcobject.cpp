@@ -805,6 +805,15 @@ bool DCObject::processNewValue(time_t nTimeStamp, const void *value, bool *updat
  */
 void DCObject::processNewError(bool noInstance)
 {
+   time_t now = time(NULL);
+   processNewError(noInstance, now);
+}
+
+/**
+ * Process new data collection error
+ */
+void DCObject::processNewError(bool noInstance, time_t now)
+{
 }
 
 /**

@@ -538,7 +538,7 @@ void DCTable::checkThresholds(Table *value)
 /**
  * Process new data collection error
  */
-void DCTable::processNewError(bool noInstance)
+void DCTable::processNewError(bool noInstance, time_t now)
 {
 	m_dwErrorCount++;
 }

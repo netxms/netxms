@@ -779,7 +779,7 @@ bool DCItem::processNewValue(time_t tmTimeStamp, const void *originalValue, bool
 /**
  * Process new data collection error
  */
-void DCItem::processNewError(bool noInstance)
+void DCItem::processNewError(bool noInstance, time_t now)
 {
    lock();
 
@@ -822,7 +822,6 @@ void DCItem::processNewError(bool noInstance)
          case ALREADY_ACTIVE:
             {
    				// Check if we need to re-sent threshold violation event
-            	time_t now = time(NULL);
                UINT32 repeatInterval = (t->getRepeatInterval() == -1) ? g_thresholdRepeatInterval : (UINT32)t->getRepeatInterval();
 				   if ((repeatInterval != 0) && (t->getLastEventTimestamp() + (time_t)repeatInterval < now))
 				   {
