@@ -285,9 +285,22 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
          if (m_flags & NXLOG_PRINT_TO_STDOUT)
             m_consoleWriter(_T("%s"), s_logBuffer.getBuffer());
 
+         size_t buflen = s_logBuffer.length();
          char *data = s_logBuffer.getUTF8String();
          s_logBuffer.clear();
          MutexUnlock(m_mutexLogAccess);
+
+         if (m_flags & NXLOG_DEBUG_MODE)
+         {
+            char marker[64];
+            sprintf(marker, "##(" INT64_FMTA ")" INT64_FMTA " @" INT64_FMTA "\n",
+                    (INT64)buflen, (INT64)strlen(data), GetCurrentTimeMs());
+#ifdef _WIN32
+            fwrite(marker, 1, strlen(marker), m_logFileHandle);
+#else
+            write(fileno(m_logFileHandle), marker, strlen(marker));
+#endif
+         }
 
 #ifdef _WIN32
 			fwrite(data, 1, strlen(data), m_logFileHandle);
