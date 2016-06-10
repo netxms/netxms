@@ -425,6 +425,11 @@ BOOL CommSession::sendRawMessage(NXCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx
    TCHAR szBuffer[128];
 
    DebugPrintf(m_dwIndex, 6, _T("Sending message %s (size %d)"), NXCPMessageCodeName(ntohs(pMsg->code), szBuffer), ntohl(pMsg->size));
+   if (nxlog_get_debug_level() >= 8)
+   {
+      String msgDump = NXCPMessage::dump(pMsg, NXCP_VERSION);
+      DebugPrintf(m_dwIndex, 8, _T("Outgoing message dump:\n%s"), (const TCHAR *)msgDump);
+   }
    if ((pCtx != NULL) && (pCtx != PROXY_ENCRYPTION_CTX))
    {
       NXCP_ENCRYPTED_MESSAGE *enMsg = pCtx->encryptMessage(pMsg);
