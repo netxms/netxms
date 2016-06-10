@@ -1641,7 +1641,7 @@ restart_agent_check:
       }
    }
 
-   //Get Agent log and agent localDatabase statuses
+   // Get agent log and agent local database status
    if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
