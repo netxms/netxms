@@ -235,7 +235,7 @@ COMMENT_TABLE(object_properties, 'Object properties of NetObj and everything tha
 COMMENT_COLUMN(object_properties.object_id, 'Object id')
 COMMENT_COLUMN(object_properties.guid, 'Object GUID')
 COMMENT_COLUMN(object_properties.name, 'Object name')
-COMMENT_COLUMN(object_properties.status, 'Object status(Unknown, Normal, Warning, Minor, Major, Error)')
+COMMENT_COLUMN(object_properties.status, 'Object status(Unknown, Normal, Warning, Minor ...)')
 COMMENT_COLUMN(object_properties.is_deleted, 'Flag that defines if this object is scheduled for deletion')
 COMMENT_COLUMN(object_properties.is_system, 'Flag that defines if this object is the system object(DashboardRoot, ServiceRoot...)')
 COMMENT_COLUMN(object_properties.last_modified, 'Timestamp when this object was last modified')
