@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2015 Victor Kirhenshtein
 **
@@ -199,8 +199,8 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
          break;
 
       DbgPrintf(4, _T("Housekeeper: wakeup"));
-		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
+		DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 		CleanAlarmHistory(hdb);
 
       time_t currTime = time(NULL);
@@ -255,6 +255,16 @@ static THREAD_RESULT THREAD_CALL HouseKeeper(void *pArg)
 		g_idxMobileDeviceById.forEach(CleanDciData, hdb);
 
 		DBConnectionPoolReleaseConnection(hdb);
+
+      // Call hooks in loaded modules
+      for(UINT32 i = 0; i < g_dwNumModules; i++)
+      {
+         if (g_pModuleList[i].pfStatusPollHook != NULL)
+         {
+            DbgPrintf(5, _T("Housekeeper: calling hook in module %s"), g_pModuleList[i].szName);
+            g_pModuleList[i].pfHousekeeperHook();
+         }
+      }
 
 		SaveCurrentFreeId();
 
