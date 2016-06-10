@@ -114,7 +114,8 @@ COMMENT_COLUMN(users.disabled_until, '')
 COMMENT_COLUMN(users.last_login, '')
 COMMENT_COLUMN(users.password_history, '')
 COMMENT_COLUMN(users.xmpp_id, '')
-COMMENT_COLUMN(users.ldap_dn, '')
+COMMENT_COLUMN(users.ldap_dn, 'LDAP dn')
+COMMENT_COLUMN(users.ldap_unique_id, 'LDAP unique id if field set')
 
 /*
 ** User groups
@@ -134,13 +135,14 @@ CREATE TABLE user_groups
 ) TABLE_TYPE;
 
 COMMENT_TABLE(user_groups, 'System user groups')
-COMMENT_COLUMN(user_groups.id, '')
-COMMENT_COLUMN(user_groups.guid, '')
-COMMENT_COLUMN(user_groups.name, '')
-COMMENT_COLUMN(user_groups.system_access, '')
+COMMENT_COLUMN(user_groups.id, 'Group id')
+COMMENT_COLUMN(user_groups.guid, 'Group GUID')
+COMMENT_COLUMN(user_groups.name, 'Group name')
+COMMENT_COLUMN(user_groups.system_access, 'Bit-mask of system access rights')
 COMMENT_COLUMN(user_groups.flags, '')
-COMMENT_COLUMN(user_groups.description, '')
-COMMENT_COLUMN(user_groups.ldap_dn, '')
+COMMENT_COLUMN(user_groups.description, 'Description')
+COMMENT_COLUMN(user_groups.ldap_dn, 'LDAP dn')
+COMMENT_COLUMN(users.ldap_unique_id, 'LDAP unique id if field set')
 
 /*
 ** Users to groups mapping
@@ -154,8 +156,8 @@ CREATE TABLE user_group_members
 ) TABLE_TYPE;
 
 COMMENT_TABLE(user_group_members, 'Users and group relationships')
-COMMENT_COLUMN(user_group_members.group_id, '')
-COMMENT_COLUMN(user_group_members.user_id, '')
+COMMENT_COLUMN(user_group_members.group_id, 'Group id from user_groups table')
+COMMENT_COLUMN(user_group_members.user_id, 'User id from users table')
 
 /*
 ** User profiles
@@ -229,13 +231,13 @@ CREATE TABLE object_properties
   PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(object_properties, '')
-COMMENT_COLUMN(object_properties.object_id, '')
-COMMENT_COLUMN(object_properties.guid, '')
-COMMENT_COLUMN(object_properties.name, '')
-COMMENT_COLUMN(object_properties.status, '')
-COMMENT_COLUMN(object_properties.is_deleted, '')
-COMMENT_COLUMN(object_properties.is_system, '')
+COMMENT_TABLE(object_properties, 'Object properties of NetObj and everything that is inherited from it(Dashboard, Interface, Node...)')
+COMMENT_COLUMN(object_properties.object_id, 'Object id')
+COMMENT_COLUMN(object_properties.guid, 'Object GUID')
+COMMENT_COLUMN(object_properties.name, 'Object name')
+COMMENT_COLUMN(object_properties.status, 'Object status(Unknown, Normal, Warning, Minor, Major, Error)')
+COMMENT_COLUMN(object_properties.is_deleted, 'Flag that defines if this object is scheduled for deletion')
+COMMENT_COLUMN(object_properties.is_system, 'Flag that defines if this object is the system object(DashboardRoot, ServiceRoot...)')
 COMMENT_COLUMN(object_properties.last_modified, '')
 COMMENT_COLUMN(object_properties.inherit_access_rights, '')
 COMMENT_COLUMN(object_properties.status_calc_alg, '')

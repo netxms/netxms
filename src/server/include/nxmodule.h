@@ -95,6 +95,7 @@ typedef struct
    void (* pfNXSLServerVMConfig)(NXSL_VM *vm);
    void (* pfOnConnectToAgent)(Node *node, AgentConnection *conn);
    BOOL (* pfOnAgentMessage)(NXCPMessage *msg, UINT32 nodeId);
+   void (* pfHousekeeperHook) ();
    NXCORE_LOG *logs;
    HMODULE hModule;
 } NXMODULE;
