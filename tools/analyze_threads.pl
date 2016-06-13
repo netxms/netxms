@@ -5,6 +5,7 @@
 	"__1cFQdDueueKgetOrBlock6MI_pv_",
 	"ConditionWait",
 	"__1cNConditionWait6FpnSnetxms_condition_t_I_b_",
+        "SleepAndCheckForShutdown",
 	"poll",
 	"select",
 	"accept"
@@ -47,6 +48,12 @@ while(<STDIN>)
    {
       $func = $1;
    }
+   
+   if ($func =~ /^([^@(]+)[@(].*$/)
+   {
+      $func = $1;
+   }
+
    $data[$index++] = $line;
    if (exists $skiplist{$func})
    {
