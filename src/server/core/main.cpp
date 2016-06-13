@@ -646,6 +646,8 @@ BOOL NXCORE_EXPORTABLE Initialize()
    if (lrt != 0)
       DBSetLongRunningThreshold(lrt);
 
+   MetaDataPreLoad();
+
 	// Read server ID
 	MetaDataReadStr(_T("ServerID"), szInfo, 256, _T(""));
 	StrStrip(szInfo);

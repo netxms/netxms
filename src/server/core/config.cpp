@@ -162,35 +162,77 @@ stop_search:
 }
 
 /**
+ * Metadata cache
+ */
+static StringMap s_metadataCache;
+static RWLOCK s_metadataCacheLock = RWLockCreate();
+
+/**
+ * Pre-load metadata
+ */
+void MetaDataPreLoad()
+{
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT var_name,var_value FROM metadata"));
+   if (hResult != NULL)
+   {
+      RWLockWriteLock(s_metadataCacheLock, INFINITE);
+      s_metadataCache.clear();
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         s_metadataCache.setPreallocated(DBGetField(hResult, i, 0, NULL, 0), DBGetField(hResult, i, 1, NULL, 0));
+      }
+      RWLockUnlock(s_metadataCacheLock);
+      DBFreeResult(hResult);
+   }
+   DBConnectionPoolReleaseConnection(hdb);
+}
+
+/**
  * Read string value from metadata table
  */
-bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault)
+bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *name, TCHAR *buffer, int bufSize, const TCHAR *defaultValue)
 {
-   DB_RESULT hResult;
    bool bSuccess = false;
 
-   nx_strncpy(szBuffer, szDefault, iBufSize);
-   if (_tcslen(szVar) > 127)
+   nx_strncpy(buffer, defaultValue, bufSize);
+   if (_tcslen(name) > 127)
       return false;
 
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM metadata WHERE var_name=?"));
-	if (hStmt != NULL)
-	{
-		DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, szVar, DB_BIND_STATIC);
-		hResult = DBSelectPrepared(hStmt);
-		if (hResult != NULL)
-		{
-			if (DBGetNumRows(hResult) > 0)
-			{
-				DBGetField(hResult, 0, 0, szBuffer, iBufSize);
-				bSuccess = true;
-			}
-			DBFreeResult(hResult);
-		}
-		DBFreeStatement(hStmt);
-	}
-	DBConnectionPoolReleaseConnection(hdb);
+   RWLockReadLock(s_metadataCacheLock, INFINITE);
+   const TCHAR *value = s_metadataCache.get(name);
+   if (value != NULL)
+   {
+      nx_strncpy(buffer, value, bufSize);
+      bSuccess = true;
+   }
+   RWLockUnlock(s_metadataCacheLock);
+
+   if (!bSuccess)
+   {
+      DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT var_value FROM metadata WHERE var_name=?"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, name, DB_BIND_STATIC);
+         DB_RESULT hResult = DBSelectPrepared(hStmt);
+         if (hResult != NULL)
+         {
+            if (DBGetNumRows(hResult) > 0)
+            {
+               DBGetField(hResult, 0, 0, buffer, bufSize);
+               RWLockWriteLock(s_metadataCacheLock, INFINITE);
+               s_metadataCache.setPreallocated(_tcsdup(name), DBGetField(hResult, 0, 0, NULL, 0));
+               RWLockUnlock(s_metadataCacheLock);
+               bSuccess = true;
+            }
+            DBFreeResult(hResult);
+         }
+         DBFreeStatement(hStmt);
+      }
+      DBConnectionPoolReleaseConnection(hdb);
+   }
    return bSuccess;
 }
 
@@ -219,6 +261,10 @@ bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *varName, const TCHAR *value
 {
    if (_tcslen(varName) > 63)
       return false;
+
+   RWLockWriteLock(s_metadataCacheLock, INFINITE);
+   s_metadataCache.set(varName, value);
+   RWLockUnlock(s_metadataCacheLock);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 

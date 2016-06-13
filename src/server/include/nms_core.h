@@ -910,6 +910,7 @@ TCHAR NXCORE_EXPORTABLE *ConfigReadCLOB(const TCHAR *var, const TCHAR *defValue)
 bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, bool bCreate);
 bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *name);
 
+void MetaDataPreLoad();
 bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
 INT32 NXCORE_EXPORTABLE MetaDataReadInt(const TCHAR *var, UINT32 defaultValue);
 bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *varName, const TCHAR *value);
