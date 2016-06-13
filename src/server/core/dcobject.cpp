@@ -64,6 +64,7 @@ DCObject::DCObject()
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
    m_comments = NULL;
+   m_forcePoll = false;
 }
 
 /**
@@ -95,6 +96,7 @@ DCObject::DCObject(const DCObject *pSrc)
 	m_pszPerfTabSettings = (pSrc->m_pszPerfTabSettings != NULL) ? _tcsdup(pSrc->m_pszPerfTabSettings) : NULL;
 	m_snmpPort = pSrc->m_snmpPort;
 	m_comments = (pSrc->m_comments != NULL) ? _tcsdup(pSrc->m_comments) : NULL;
+   m_forcePoll = false;
 
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
@@ -140,6 +142,7 @@ DCObject::DCObject(UINT32 dwId, const TCHAR *szName, int iSource,
    m_transformationScriptSource = NULL;
    m_transformationScript = NULL;
    m_comments = NULL;
+   m_forcePoll = false;
 }
 
 /**
@@ -178,6 +181,7 @@ DCObject::DCObject(ConfigEntry *config, Template *owner)
 	m_transformationScriptSource = NULL;
 	m_transformationScript = NULL;
 	m_comments = NULL;
+   m_forcePoll = false;
 	setTransformationScript(config->getSubEntryValue(_T("transformation")));
 
    // for compatibility with old format
@@ -526,6 +530,12 @@ bool DCObject::isReadyForPolling(time_t currTime)
    bool result;
 
    lock();
+   if(m_forcePoll)
+   {
+      m_forcePoll = false;
+      unlock();
+      return true;
+   }
    if ((m_status != ITEM_STATUS_DISABLED) && (!m_busy) &&
        isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
        matchClusterResource() && hasValue() && (getAgentCacheMode() == AGENT_CACHE_OFF))
