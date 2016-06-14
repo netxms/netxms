@@ -228,7 +228,7 @@ void GeoLocation::posToString(bool isLat, double pos)
 	buffer++;
 	*buffer++ = _T(' ');
 
-	_sntprintf(buffer, 18, _T("%02d") DEGREE_SIGN_STR _T(" %02d' %02.3f\""), getIntegerDegree(pos), getIntegerMinutes(pos), getDecimalSeconds(pos));
+	_sntprintf(buffer, 18, _T("%02d") DEGREE_SIGN_STR _T(" %02d' %06.3f\""), getIntegerDegree(pos), getIntegerMinutes(pos), getDecimalSeconds(pos));
 }
 
 /**

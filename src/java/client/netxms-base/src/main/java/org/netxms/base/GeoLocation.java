@@ -373,6 +373,9 @@ public class GeoLocation
       return endTimestamp;
    }
 
+   /**
+    * @param endTimestamp
+    */
    public void setEndTimestamp(Date endTimestamp)
    {
       this.endTimestamp = endTimestamp;
