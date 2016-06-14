@@ -616,4 +616,14 @@ public abstract class DataCollectionObject
    {
       flags = (flags & ~DCF_CACHE_MODE_MASK) | ((mode.getValue() & 0x03) << 12);
    }
+   
+   public boolean isNewItem()
+   {
+      return id == 0;
+   }
+   
+   public void setId(long id)
+   {
+      this.id = id;
+   }
 }

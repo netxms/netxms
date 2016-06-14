@@ -65,8 +65,16 @@ public class DataCollectionObjectEditor
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
+				final boolean isNewObj = object.isNewItem();
 				synchronized(DataCollectionObjectEditor.this)
 				{
+				   if(isNewObj)
+				   {
+				      if(object instanceof DataCollectionItem)
+				         object.getOwner().createItem(object);
+				      if(object instanceof DataCollectionTable)
+				         object.getOwner().createTable(object);
+				   }
 					object.getOwner().modifyObject(object);
 				}
 				runInUIThread(new Runnable() {
@@ -75,7 +83,13 @@ public class DataCollectionObjectEditor
 					{
 						Object data = object.getOwner().getUserData();
 						if ((data != null) && (data instanceof TableViewer))
+						{
+	                  if(isNewObj)
+	                  {
+	                     ((TableViewer)data).setInput(object.getOwner().getItems());
+	                  }
 							((TableViewer)data).update(object, null);
+						}
 					}
 				});
 			}

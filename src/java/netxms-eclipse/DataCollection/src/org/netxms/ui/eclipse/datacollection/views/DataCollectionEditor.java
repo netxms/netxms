@@ -641,59 +641,21 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void createItem()
 	{
-		new ConsoleJob(Messages.get().DataCollectionEditor_CreateJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				final long id = dciConfig.createItem();
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						viewer.setInput(dciConfig.getItems());
-						DataCollectionItem dci = (DataCollectionItem)dciConfig.findItem(id, DataCollectionItem.class);
-						viewer.setSelection(new StructuredSelection(dci), true);
-						actionEdit.run();
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().DataCollectionEditor_CreateJob_Error + object.getObjectName();
-			}
-		}.start();
+      DataCollectionItem dci = new DataCollectionItem(dciConfig, 0);
+      viewer.add(dci);
+      viewer.setSelection(new StructuredSelection(dci), true);
+      actionEdit.run();
 	}
 	
 	/**
 	 * Create new data collection table
 	 */
 	private void createTable()
-	{
-		new ConsoleJob(Messages.get().DataCollectionEditor_TableCreateJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				final long id = dciConfig.createTable();
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						viewer.setInput(dciConfig.getItems());
-						DataCollectionTable dci = (DataCollectionTable)dciConfig.findItem(id, DataCollectionTable.class);
-						viewer.setSelection(new StructuredSelection(dci), true);
-						actionEdit.run();
-					}
-				});
-			}
-
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().DataCollectionEditor_TableCreateJob_Error + object.getObjectName();
-			}
-		}.start();
+	{		
+		DataCollectionTable dci = new DataCollectionTable(dciConfig, 0);
+      viewer.add(dci);
+		viewer.setSelection(new StructuredSelection(dci), true);
+		actionEdit.run();
 	}
 	
 	/**
@@ -707,7 +669,11 @@ public class DataCollectionEditor extends ViewPart
 		
 		ExtendedPropertyDialog dlg = ExtendedPropertyDialog.createDialogOn(getSite().getShell(), null, selection.getFirstElement(), ""); //$NON-NLS-1$
 		dlg.createAllPages();
-		dlg.open();
+		int result = dlg.open();
+	   if(((DataCollectionObject)selection.getFirstElement()).isNewItem() && result != SWT.OK)
+	   {
+         viewer.remove(selection.getFirstElement());
+	   }		
 	}
 	
 	/**

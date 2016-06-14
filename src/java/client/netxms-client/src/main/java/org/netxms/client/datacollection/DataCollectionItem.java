@@ -116,7 +116,7 @@ public class DataCollectionItem extends DataCollectionObject
 	 * @param owner Owning configuration object
 	 * @param id Identifier assigned to new item
 	 */
-	protected DataCollectionItem(final DataCollectionConfiguration owner, long id)
+	public DataCollectionItem(final DataCollectionConfiguration owner, long id)
 	{
 		super(owner, id);
 		
