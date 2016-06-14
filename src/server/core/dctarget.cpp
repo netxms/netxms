@@ -658,9 +658,17 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
       if (vm->run(&args))
       {
          NXSL_Value *value = vm->getResult();
-         const TCHAR *dciValue = value->getValueAsCString();
-         nx_strncpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
-         rc = DCE_SUCCESS;
+         if (value->isNull())
+         {
+            // NULL value is an error indicator
+            rc = DCE_COMM_ERROR;
+         }
+         else
+         {
+            const TCHAR *dciValue = value->getValueAsCString();
+            nx_strncpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
+            rc = DCE_SUCCESS;
+         }
       }
       else
       {
@@ -717,6 +725,7 @@ UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **
       vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
       if (vm->run(&args))
       {
+         rc = DCE_SUCCESS;
          NXSL_Value *value = vm->getResult();
          if (value->isArray())
          {
@@ -727,11 +736,14 @@ UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **
             *list = new StringList;
             (*list)->add(value->getValueAsCString());
          }
+         else if (value->isNull())
+         {
+            rc = DCE_COMM_ERROR;
+         }
          else
          {
             *list = new StringList;
          }
-         rc = DCE_SUCCESS;
       }
       else
       {
