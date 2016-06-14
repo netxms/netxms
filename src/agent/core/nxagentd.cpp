@@ -163,6 +163,8 @@ UINT32 g_dwStartupDelay = 0;
 UINT32 g_dwMaxSessions = 32;
 UINT32 g_dwSNMPTrapPort = 162;
 UINT32 g_longRunningQueryThreshold = 250;
+UINT32 g_dcReconciliationBlockSize = 1024;
+UINT32 g_dcReconciliationTimeout = 15000;
 #ifdef _WIN32
 UINT16 g_sessionAgentPort = 28180;
 #else
@@ -231,6 +233,8 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("ControlServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList, NULL },
    { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags, NULL },
 	{ _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDirectory, NULL },
+   { _T("DataReconciliationBlockSize"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationBlockSize, NULL },
+   { _T("DataReconciliationTimeout"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationTimeout, NULL },
    { _T("DailyLogFileSuffix"), CT_STRING, 0, 0, 64, 0, s_dailyLogFileSuffix, NULL },
 	{ _T("DebugLevel"), CT_LONG, 0, 0, 0, 0, &s_debugLevel, &s_debugLevel },
    { _T("DisableIPv4"), CT_BOOLEAN, 0, 0, AF_DISABLE_IPV4, 0, &g_dwFlags, NULL },
@@ -712,7 +716,8 @@ BOOL Initialize()
 	           ((tail != '\\') && (tail != '/')) ? FS_PATH_SEPARATOR : _T(""),
               CONFIG_AP_FOLDER FS_PATH_SEPARATOR);
 	CreateFolder(g_szConfigPolicyDir);
-	//load configuration
+
+	// Load configuration
    g_config->loadConfigDirectory(g_szConfigPolicyDir, _T("agent"));
 	g_config->parseTemplate(_T("agent"), m_cfgTemplate);
 
@@ -835,6 +840,7 @@ BOOL Initialize()
 
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
+
 		//Add build-in DCIs
       AddParameter(_T("Agent.LogFile"), H_FailStatusProvider, _T("L"), DCI_DT_UINT, _T("Get log status"));
       AddParameter(_T("Agent.LocalDatabase"), H_FailStatusProvider, _T("D"), DCI_DT_UINT, _T("Get database status"));

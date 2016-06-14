@@ -28,6 +28,9 @@
 void UpdateSnmpTarget(SNMPTarget *target);
 UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *value, int interpretRawValue);
 
+extern UINT32 g_dcReconciliationBlockSize;
+extern UINT32 g_dcReconciliationTimeout;
+
 /**
  * Data collector start indicator
  */
@@ -572,7 +575,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
 {
    DB_HANDLE hdb = GetLocalDatabaseHandle();
    UINT32 sleepTime = 30000;
-   DebugPrintf(INVALID_INDEX, 1, _T("Data reconciliation thread started"));
+   nxlog_debug(1, _T("Data reconciliation thread started (block size %d, timeout %d ms)"), g_dcReconciliationBlockSize, g_dcReconciliationTimeout);
 
    bool vacuumNeeded = false;
    while(!AgentSleepAndCheckForShutdown(sleepTime))
@@ -612,7 +615,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       }
 
       TCHAR query[1024];
-      _sntprintf(query, 1024, _T("SELECT server_id,dci_id,dci_type,dci_origin,status_code,snmp_target_guid,timestamp,value FROM dc_queue WHERE server_id=") UINT64_FMT _T(" ORDER BY timestamp LIMIT %d"), session->getServerId(), BULK_DATA_BLOCK_SIZE);
+      _sntprintf(query, 1024, _T("SELECT server_id,dci_id,dci_type,dci_origin,status_code,snmp_target_guid,timestamp,value FROM dc_queue WHERE server_id=") UINT64_FMT _T(" ORDER BY timestamp LIMIT %d"), session->getServerId(), g_dcReconciliationBlockSize);
 
       TCHAR sqlError[DBDRV_MAX_ERROR_TEXT];
       DB_RESULT hResult = DBSelectEx(hdb, query, sqlError);
@@ -678,7 +681,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                fieldId += 10;
             }
 
-            NXCPMessage *response = session->doRequestEx(&msg, 15000);
+            NXCPMessage *response = session->doRequestEx(&msg, g_dcReconciliationTimeout);
             if (response != NULL)
             {
                UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
@@ -688,9 +691,9 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                   ServerSyncStatus *serverSyncStatus = s_serverSyncStatus.get(session->getServerId());
 
                   // Check status for each data element
-                  BYTE status[BULK_DATA_BLOCK_SIZE];
-                  memset(status, 0, BULK_DATA_BLOCK_SIZE);
-                  response->getFieldAsBinary(VID_STATUS, status, BULK_DATA_BLOCK_SIZE);
+                  BYTE status[MAX_BULK_DATA_BLOCK_SIZE];
+                  memset(status, 0, MAX_BULK_DATA_BLOCK_SIZE);
+                  response->getFieldAsBinary(VID_STATUS, status, MAX_BULK_DATA_BLOCK_SIZE);
                   bulkSendList.setOwner(false);
                   for(int i = 0; i < bulkSendList.size(); i++)
                   {
@@ -731,7 +734,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
                DBQuery(hdb, query);
             }
             DBCommit(hdb);
-            DebugPrintf(INVALID_INDEX, 4, _T("ReconciliationThread: %d records sent"), deleteList.size());
+            nxlog_debug(4, _T("ReconciliationThread: %d records sent"), deleteList.size());
             vacuumNeeded = true;
          }
       }
@@ -741,7 +744,7 @@ static THREAD_RESULT THREAD_CALL ReconciliationThread(void *arg)
       sleepTime = (count > 0) ? 50 : 30000;
    }
 
-   DebugPrintf(INVALID_INDEX, 1, _T("Data reconciliation thread stopped"));
+   nxlog_debug(1, _T("Data reconciliation thread stopped"));
    return THREAD_OK;
 }
 
@@ -1150,6 +1153,28 @@ void StartLocalDataCollector()
    {
       DebugPrintf(INVALID_INDEX, 5, _T("StartLocalDataCollector: local database unavailable"));
       return;
+   }
+
+   if (g_dcReconciliationBlockSize < 16)
+   {
+      nxlog_debug(1, _T("Invalid data reconciliation block size %d, resetting to 16"), g_dcReconciliationBlockSize);
+      g_dcReconciliationBlockSize = 16;
+   }
+   else if (g_dcReconciliationBlockSize > MAX_BULK_DATA_BLOCK_SIZE)
+   {
+      nxlog_debug(1, _T("Invalid data reconciliation block size %d, resetting to %d"), g_dcReconciliationBlockSize, MAX_BULK_DATA_BLOCK_SIZE);
+      g_dcReconciliationBlockSize = MAX_BULK_DATA_BLOCK_SIZE;
+   }
+
+   if (g_dcReconciliationTimeout < 1000)
+   {
+      nxlog_debug(1, _T("Invalid data reconciliation timeout %d, resetting to 1000"), g_dcReconciliationTimeout);
+      g_dcReconciliationTimeout = 1000;
+   }
+   else if (g_dcReconciliationTimeout > 600000)
+   {
+      nxlog_debug(1, _T("Invalid data reconciliation timeout %d, resetting to 600000"), g_dcReconciliationTimeout);
+      g_dcReconciliationTimeout = 600000;
    }
 
    s_itemLock = MutexCreate();

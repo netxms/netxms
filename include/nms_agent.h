@@ -124,7 +124,7 @@
 /**
  * Max bulk data block size
  */
-#define BULK_DATA_BLOCK_SIZE     1024
+#define MAX_BULK_DATA_BLOCK_SIZE 8192
 
 /**
  * Parameter handler return codes

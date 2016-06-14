@@ -617,12 +617,12 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
    }
 
    int count = request->getFieldAsInt16(VID_NUM_ELEMENTS);
-   if (count > BULK_DATA_BLOCK_SIZE)
-      count = BULK_DATA_BLOCK_SIZE;
+   if (count > MAX_BULK_DATA_BLOCK_SIZE)
+      count = MAX_BULK_DATA_BLOCK_SIZE;
    DbgPrintf(5, _T("AgentConnectionEx::processBulkCollectedData: %d elements from node %s [%d]"), count, node->getName(), node->getId());
 
-   BYTE status[BULK_DATA_BLOCK_SIZE];
-   memset(status, 0, BULK_DATA_BLOCK_SIZE);
+   BYTE status[MAX_BULK_DATA_BLOCK_SIZE];
+   memset(status, 0, MAX_BULK_DATA_BLOCK_SIZE);
    UINT32 fieldId = VID_ELEMENT_LIST_BASE;
    for(int i = 0; i < count; i++, fieldId += 10)
    {
@@ -700,6 +700,6 @@ UINT32 AgentConnectionEx::processBulkCollectedData(NXCPMessage *request, NXCPMes
       free(value);
    }
 
-   response->setField(VID_STATUS, status, BULK_DATA_BLOCK_SIZE);
+   response->setField(VID_STATUS, status, count);
    return ERR_SUCCESS;
 }
