@@ -87,6 +87,81 @@ bool WriteMetadata(const TCHAR *name, INT32 value)
 }
 
 /**
+ * DB init queries
+ */
+static const TCHAR *s_dbInitQueries[] =
+{
+   _T("CREATE TABLE agent_policy (")
+   _T("  guid varchar(36) not null,")
+   _T("  type integer not null,")
+   _T("  server_info varchar(64) null,")
+   _T("  server_id number(20) not null,")
+   _T("  version integer not null,")
+   _T("  PRIMARY KEY(guid))"),
+
+   _T("CREATE TABLE dc_config (")
+   _T("  server_id number(20) not null,")
+   _T("  dci_id integer not null,")
+   _T("  type integer not null,")
+   _T("  origin integer not null,")
+   _T("  name varchar(1023) null,")
+   _T("  polling_interval integer not null,")
+   _T("  last_poll integer not null,")
+   _T("  snmp_port integer not null,")
+   _T("  snmp_target_guid varchar(36) not null,")
+   _T("  snmp_raw_type integer not null,")
+   _T("  PRIMARY KEY(server_id,dci_id))"),
+
+   _T("CREATE TABLE dc_queue (")
+   _T("  server_id number(20) not null,")
+   _T("  dci_id integer not null,")
+   _T("  dci_type integer not null,")
+   _T("  dci_origin integer not null,")
+   _T("  snmp_target_guid varchar(36) not null,")
+   _T("  timestamp integer not null,")
+   _T("  value varchar not null,")
+   _T("  status_code integer not null,")
+   _T("  PRIMARY KEY(server_id,dci_id,timestamp))"),
+
+   _T("CREATE TABLE dc_snmp_targets (")
+   _T("  guid varchar(36) not null,")
+   _T("  server_id number(20) not null,")
+   _T("  ip_address varchar(48) not null,")
+   _T("  snmp_version integer not null,")
+   _T("  port integer not null,")
+   _T("  auth_type integer not null,")
+   _T("  enc_type integer not null,")
+   _T("  auth_name varchar(63),")
+   _T("  auth_pass varchar(63),")
+   _T("  enc_pass varchar(63),")
+   _T("  PRIMARY KEY(guid))"),
+
+   _T("CREATE TABLE registry (")
+   _T("  attribute varchar(63) null,")
+   _T("  value varchar null,")
+   _T("  PRIMARY KEY(attribute))"),
+
+   NULL
+};
+
+/**
+ * Initialize new database
+ */
+static bool InitDatabase()
+{
+   for(int i = 0; s_dbInitQueries[i] != NULL; i++)
+      if (!DBQuery(s_db, s_dbInitQueries[i]))
+         return false;
+   nxlog_debug(1, _T("Empty local database initialized successfully"));
+   return true;
+}
+
+/**
+ * Database tables
+ */
+static const TCHAR *s_dbTables[] = { _T("agent_policy"), _T("dc_config"), _T("dc_queue"), _T("dc_snmp_targets"), _T("registry"), NULL };
+
+/**
  * Check database structure
  */
 static bool CheckDatabaseStructure()
@@ -95,6 +170,13 @@ static bool CheckDatabaseStructure()
    if (!DBIsTableExist(s_db, _T("metadata")))
    {
       DBQuery(s_db, _T("CREATE TABLE metadata (attribute varchar(63), value varchar(255), PRIMARY KEY(attribute))"));
+
+      // assume empty database, create tables
+      if (!InitDatabase())
+      {
+         nxlog_write(MSG_LOCAL_DB_CORRUPTED, NXLOG_ERROR, NULL);
+         return false;
+      }
 
       TCHAR query[256];
       _sntprintf(query, 256, _T("INSERT INTO metadata (attribute, value) VALUES ('SchemaVersion', '%d')"), DB_SCHEMA_VERSION);
@@ -112,6 +194,22 @@ static bool CheckDatabaseStructure()
       nxlog_write(MSG_LOCAL_DB_CORRUPTED, NXLOG_ERROR, NULL);
       return false;
    }
+
+   bool success = true;
+   for(int i = 0; s_dbTables[i] != NULL; i++)
+   {
+      if (!DBIsTableExist(s_db, s_dbTables[i]))
+      {
+         nxlog_debug(1, _T("Local database table %s does not exist"), s_dbTables[i]);
+         success = false;
+      }
+   }
+   if (!success)
+   {
+      nxlog_write(MSG_LOCAL_DB_CORRUPTED, NXLOG_ERROR, NULL);
+      return false;
+   }
+
    return true;
 }
 
@@ -141,7 +239,7 @@ bool OpenLocalDatabase()
    s_db = DBConnect(s_driver, NULL, dbFile, NULL, NULL, NULL, errorText);
    if (s_db == NULL)
    {
-      DebugPrintf(INVALID_INDEX, 1, _T("Local database open error: %s"), errorText);
+      nxlog_debug(1, _T("Local database open error: %s"), errorText);
 	   g_failFlags = FAIL_OPEN_DATABASE;
       return false;
    }

@@ -37,14 +37,12 @@ bool g_ignoreAgentDbErrors = FALSE;
  */
 static DB_HANDLE s_db = NULL;
 
-
 /**
  * Upgrade from V2 to V3
  */
 static BOOL H_UpgradeFromV3(int currVersion, int newVersion)
 {
    CHK_EXEC(Query(_T("ALTER TABLE dc_queue ADD status_code integer")));
-
    CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 4));
    return TRUE;
 }
@@ -131,7 +129,7 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
 {
    /*
    This upgrade contains:
-     1. check that version and depending on version of DATACOLL_SCHEMA_VERSION apply second or both patchs
+     1. check that version and depending on version of DATACOLL_SCHEMA_VERSION apply second or both patches
         move upgrade of data collection database to this function
      2. remove DATACOLL_SCHEMA_VERSION from metadata
      3. create policy table (guid, type, server, version) unique giud
@@ -141,7 +139,7 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
      7. Delete registry file (remove unused functions for registry)
    */
 
-   //Data collection upgrade procedure
+   // Data collection upgrade procedure
    const TCHAR *s_upgradeQueries[] =
    {
       _T("CREATE TABLE dc_queue (")
@@ -217,7 +215,7 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
 		_tcscat(regPath, FS_PATH_SEPARATOR);
 	_tcscat(regPath, _T("registry.dat"));
 	registryExists = registry->loadXmlConfig(regPath, "registry");
-	if(!registryExists)
+	if (!registryExists)
    {
       DebugPrintf(INVALID_INDEX, 1, _T("Registry file doesn't exist. No data will be moved from registry to database\n"));
       CHK_EXEC(WriteMetadata(_T("SchemaVersion"), 2));
@@ -253,12 +251,12 @@ static BOOL H_UpgradeFromV1(int currVersion, int newVersion)
       DBFreeStatement(hStmt);
 	}
 
-   //Move upgrade file url variable to database
-   const TCHAR* szFullPath = registry->getValue(_T("/upgrade/file"));
-   if(szFullPath != NULL)
+   // Move upgrade file url variable to database
+   const TCHAR *fullPath = registry->getValue(_T("/upgrade/file"));
+   if (fullPath != NULL)
    {
       TCHAR upgradeFileInsert[256];
-      _sntprintf(upgradeFileInsert, 256, _T("INSERT INTO registry (attribute,value) VALUES ('upgrade.file','%s')"), szFullPath);
+      _sntprintf(upgradeFileInsert, 256, _T("INSERT INTO registry (attribute,value) VALUES ('upgrade.file','%s')"), fullPath);
       CHK_EXEC(Query(upgradeFileInsert));
    }
    delete registry;

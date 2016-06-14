@@ -317,7 +317,7 @@ Unable to open local database
 MessageId=
 SymbolicName=MSG_LOCAL_DB_CORRUPTED
 Language=English
-Local database corrupted and cannot be used
+Local database is corrupted and cannot be used
 .
 
 MessageId=
