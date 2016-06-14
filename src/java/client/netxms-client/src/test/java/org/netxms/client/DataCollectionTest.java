@@ -83,7 +83,7 @@ public class DataCollectionTest extends AbstractSessionTest
 		final NXCSession session = connect();
 		
 		DataCollectionConfiguration dc = session.openDataCollectionConfiguration(TestConstants.NODE_ID);
-		final long dciId = dc.createItem();
+		final long dciId = dc.createItem(null);
 		DataCollectionItem dci = (DataCollectionItem)dc.findItem(dciId, DataCollectionItem.class);
 		dci.setName("TEST");
 		dci.getThresholds().add(new Threshold());
