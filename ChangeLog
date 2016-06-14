@@ -2,6 +2,7 @@
 * 2.0.5
 *
 
+- Data collection script can return null to indicate data collection error
 - Fixed issues: #1039, #1293
 
 
