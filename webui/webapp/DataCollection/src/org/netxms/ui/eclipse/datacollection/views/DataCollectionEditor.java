@@ -642,6 +642,17 @@ public class DataCollectionEditor extends ViewPart
 	private void createItem()
 	{
       DataCollectionItem dci = new DataCollectionItem(dciConfig, 0);
+      if((object instanceof AbstractNode) && !((AbstractNode)object).hasAgent())
+      {
+         if(((AbstractNode)object).hasSnmpAgent())
+         {
+            dci.setOrigin(DataCollectionObject.SNMP);
+         }
+         else
+         {
+            dci.setOrigin(DataCollectionObject.INTERNAL);
+         }
+      }
       viewer.add(dci);
       viewer.setSelection(new StructuredSelection(dci), true);
       actionEdit.run();
@@ -653,6 +664,17 @@ public class DataCollectionEditor extends ViewPart
 	private void createTable()
 	{		
 		DataCollectionTable dci = new DataCollectionTable(dciConfig, 0);
+      if((object instanceof AbstractNode) && !((AbstractNode)object).hasAgent())
+      {
+         if(((AbstractNode)object).hasSnmpAgent())
+         {
+            dci.setOrigin(DataCollectionObject.SNMP);
+         }
+         else
+         {
+            dci.setOrigin(DataCollectionObject.INTERNAL);
+         }
+      }
       viewer.add(dci);
 		viewer.setSelection(new StructuredSelection(dci), true);
 		actionEdit.run();
