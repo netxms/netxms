@@ -9,7 +9,7 @@
 - Data collection script can return null to indicate data collection error
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
-- Fixed issues: #1039, #1096, #1187, #1230, #1237, #1239
+- Fixed issues: #906, #1039, #1096, #1187, #1230, #1237, #1239
 
 
 *
