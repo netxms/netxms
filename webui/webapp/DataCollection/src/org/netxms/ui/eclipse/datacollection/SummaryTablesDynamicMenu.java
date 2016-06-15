@@ -122,6 +122,9 @@ public class SummaryTablesDynamicMenu extends ContributionItem implements IWorkb
 		int added = 0;
 		for(int i = 0; i < tables.length; i++)
 		{
+		   if (tables[i].getMenuPath().isEmpty())
+		      continue;
+		   
 			String[] path = tables[i].getMenuPath().split("\\-\\>"); //$NON-NLS-1$
 		
 			Menu rootMenu = tablesMenu;

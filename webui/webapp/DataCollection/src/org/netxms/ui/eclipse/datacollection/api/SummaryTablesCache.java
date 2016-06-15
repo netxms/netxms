@@ -163,10 +163,17 @@ public class SummaryTablesCache
 	/**
 	 * @return
 	 */
-	public boolean isEmpty()
+	public boolean isEmpty(boolean menuOnly)
 	{
       synchronized(tables)
       {
+         if (menuOnly)
+         {
+            for(DciSummaryTableDescriptor d : tables.values())
+               if (!d.getMenuPath().isEmpty())
+                  return false;
+            return true;
+         }
          return tables.isEmpty();
       }
 	}

@@ -92,7 +92,7 @@ public class SourceProvider extends AbstractSourceProvider
          @Override
          public void run()
          {
-            stateMap.put(SUMMARY_TABLES_EXIST, !SummaryTablesCache.isEmpty());
+            stateMap.put(SUMMARY_TABLES_EXIST, !SummaryTablesCache.isEmpty(true));
             fireSourceChanged(ISources.WORKBENCH, getCurrentState());
          }
       });
