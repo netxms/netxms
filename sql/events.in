@@ -942,23 +942,23 @@ INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,descrip
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
-      EVENT_AGENT_LOG_FAIL, 'SYS_AGENT_LOG_FAIL', '262057ca-357a-4a4d-9b78-42ae96e490a1',
+      EVENT_AGENT_LOG_PROBLEM, 'SYS_AGENT_LOG_PROBLEM', '262057ca-357a-4a4d-9b78-42ae96e490a1',
       EVENT_SEVERITY_MAJOR, 1,
       'Problem with agent log: %2',
-      'Generated on status poll if agent reposts log open problem.' CONCAT CRLF CONCAT
+      'Generated on status poll if agent reports problem with log file.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Status' CONCAT CRLF CONCAT
+      '   1) Status code' CONCAT CRLF CONCAT
       '   2) Description'
    );
 
 INSERT INTO event_cfg (event_code,event_name,guid,severity,flags,message,description) VALUES
    (
-      EVENT_AGENT_LOCAL_DATABASE_FAIL, 'SYS_AGENT_LOCAL_DATABASE_FAIL', 'd02b63f1-1151-429e-adb9-1dfbb3a31b32',
+      EVENT_AGENT_LOCAL_DATABASE_PROBLEM, 'SYS_AGENT_LOCAL_DATABASE_PROBLEM', 'd02b63f1-1151-429e-adb9-1dfbb3a31b32',
       EVENT_SEVERITY_MAJOR, 1,
       'Problem with agent local database: %2',
-      'Generated on status poll if agent reposts local database problem.' CONCAT CRLF CONCAT
+      'Generated on status poll if agent reports local database problem.' CONCAT CRLF CONCAT
       'Parameters:' CONCAT CRLF CONCAT
-      '   1) Status' CONCAT CRLF CONCAT
+      '   1) Status code' CONCAT CRLF CONCAT
       '   2) Description'
    );
 

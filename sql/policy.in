@@ -125,12 +125,12 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
         '%m',5,'SYS_LDAP_SYNC_ERROR_%2','',0,EVENT_ALARM_TIMEOUT,0,'');
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-    VALUES (30,'19bd89ba-8bb2-4915-8546-a1ecc650dedd',7944,'Generate an alarm when there is problem with log on agent',
-        '%m',5,'SYS_AGENT_LOG_FAIL_%1','',0,EVENT_ALARM_TIMEOUT,0,'');
+    VALUES (30,'19bd89ba-8bb2-4915-8546-a1ecc650dedd',7944,'Generate an alarm when there is problem with agent log',
+        '%m',5,'SYS_AGENT_LOG_PROBLEM_%i','',0,EVENT_ALARM_TIMEOUT,0,'');
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
-    VALUES (31,'cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04',7944,'Generate an alarm when there is problem with local database on agent',
-        '%m',5,'SYS_AGENT_LOCAL_DATABASE_FAIL_%1','',0,EVENT_ALARM_TIMEOUT,0,'');
+    VALUES (31,'cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04',7944,'Generate an alarm when there is problem with agent local database',
+        '%m',5,'SYS_AGENT_LOCAL_DATABASE_PROBLEM_%i','',0,EVENT_ALARM_TIMEOUT,0,'');
 
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (0,EVENT_NODE_DOWN);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (1,EVENT_NODE_UP);
@@ -164,5 +164,5 @@ INSERT INTO policy_event_list (rule_id,event_code) VALUES (26,EVENT_AGENT_OK);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (27,EVENT_SNMP_FAIL);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (28,EVENT_SNMP_OK);
 INSERT INTO policy_event_list (rule_id,event_code) VALUES (29,EVENT_LDAP_SYNC_ERROR);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (30,EVENT_AGENT_LOG_FAIL);
-INSERT INTO policy_event_list (rule_id,event_code) VALUES (31,EVENT_AGENT_LOCAL_DATABASE_FAIL);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (30,EVENT_AGENT_LOG_PROBLEM);
+INSERT INTO policy_event_list (rule_id,event_code) VALUES (31,EVENT_AGENT_LOCAL_DATABASE_PROBLEM);

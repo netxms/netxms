@@ -181,6 +181,54 @@ static LONG H_TableList(const TCHAR *cmd, const TCHAR *arg, StringList *value, A
 }
 
 /**
+ * Handler for component statuses based on failure flags
+ */
+static LONG H_ComponentStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+{
+   UINT32 result = 0;
+   switch(*pArg)
+   {
+      case 'D':
+         if ((g_failFlags & FAIL_OPEN_DATABASE) != 0)
+            result++;
+         if ((g_failFlags & FIAL_UPGRADE_DATABASE) != 0)
+            result++;
+         break;
+      case 'L':
+         if ((g_failFlags & FAIL_OPEN_LOG) != 0)
+            result++;
+         break;
+   }
+
+   ret_uint(pValue, result);
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for local database counters
+ */
+static LONG H_LocalDatabaseCounters(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+{
+   LIBNXDB_PERF_COUNTERS counters;
+   DBGetPerfCounters(&counters);
+   switch(*pArg)
+   {
+      case 'F':
+         ret_int64(pValue, counters.failedQueries);
+         break;
+      case 'L':
+         ret_int64(pValue, counters.longRunningQueries);
+         break;
+      case 'T':
+         ret_int64(pValue, counters.totalQueries);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Standard agent's parameters
  */
 static NETXMS_SUBAGENT_PARAM m_stdParams[] =
@@ -219,6 +267,7 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("System.Memory.Virtual.UsedPerc"), H_MemoryInfo, (TCHAR *)MEMINFO_VIRTUAL_USED_PCT, DCI_DT_UINT, DCIDESC_SYSTEM_MEMORY_VIRTUAL_USED_PCT },
    { _T("System.Uname"), H_SystemUname, NULL, DCI_DT_STRING, DCIDESC_SYSTEM_UNAME },
 #endif
+
    { _T("Agent.AcceptedConnections"), H_UIntPtr, (TCHAR *)&g_dwAcceptedConnections, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTEDCONNECTIONS },
    { _T("Agent.AcceptErrors"), H_UIntPtr, (TCHAR *)&g_dwAcceptErrors, DCI_DT_UINT, DCIDESC_AGENT_ACCEPTERRORS },
    { _T("Agent.ActiveConnections"), H_ActiveConnections, NULL, DCI_DT_UINT, DCIDESC_AGENT_ACTIVECONNECTIONS },
@@ -229,6 +278,11 @@ static NETXMS_SUBAGENT_PARAM m_stdParams[] =
    { _T("Agent.GeneratedTraps"), H_AgentTraps, _T("G"), DCI_DT_UINT64, DCIDESC_AGENT_GENERATED_TRAPS },
    { _T("Agent.IsSubagentLoaded(*)"), H_IsSubagentLoaded, NULL, DCI_DT_INT, DCIDESC_AGENT_IS_SUBAGENT_LOADED },
    { _T("Agent.LastTrapTime"), H_AgentTraps, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_LAST_TRAP_TIME },
+   { _T("Agent.LocalDatabase.FailedQueries"), H_LocalDatabaseCounters, _T("F"), DCI_DT_UINT64, DCIDESC_AGENT_LOCALDB_FAILED_QUERIES },
+   { _T("Agent.LocalDatabase.LongRunningQueries"), H_LocalDatabaseCounters, _T("L"), DCI_DT_UINT64, DCIDESC_AGENT_LOCALDB_SLOW_QUERIES },
+   { _T("Agent.LocalDatabase.Status"), H_ComponentStatus, _T("D"), DCI_DT_UINT, DCIDESC_AGENT_LOCALDB_STATUS },
+   { _T("Agent.LocalDatabase.TotalQueries"), H_LocalDatabaseCounters, _T("T"), DCI_DT_UINT64, DCIDESC_AGENT_LOCALDB_TOTAL_QUERIES },
+   { _T("Agent.LogFile.Status"), H_ComponentStatus, _T("L"), DCI_DT_UINT, DCIDESC_AGENT_LOG_STATUS },
    { _T("Agent.ProcessedRequests"), H_UIntPtr, (TCHAR *)&m_dwProcessedRequests, DCI_DT_UINT, DCIDESC_AGENT_PROCESSEDREQUESTS },
    { _T("Agent.Registrar"), H_StringConstant, g_szRegistrar, DCI_DT_STRING, DCIDESC_AGENT_REGISTRAR },
    { _T("Agent.RejectedConnections"), H_UIntPtr, (TCHAR *)&g_dwRejectedConnections, DCI_DT_UINT, DCIDESC_AGENT_REJECTEDCONNECTIONS },

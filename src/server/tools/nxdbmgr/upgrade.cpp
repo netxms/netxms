@@ -678,35 +678,36 @@ static int NextFreeEPPruleID()
  */
 static BOOL H_UpgradeFromV404(int currVersion, int newVersion)
 {
-   CHK_EXEC(CreateEventTemplate(EVENT_AGENT_LOG_FAIL, _T("SYS_AGENT_LOG_FAIL"),
+   CHK_EXEC(CreateEventTemplate(EVENT_AGENT_LOG_PROBLEM, _T("SYS_AGENT_LOG_PROBLEM"),
             SEVERITY_MAJOR, EF_LOG, _T("262057ca-357a-4a4d-9b78-42ae96e490a1"),
       _T("Problem with agent log: %2"),
-      _T("Generated on status poll if agent reposts log open problem.\r\n")
+      _T("Generated on status poll if agent reports problem with log file.\r\n")
       _T("Parameters:\r\n")
-      _T("    1) Status\r\n")
+      _T("    1) Status code\r\n")
       _T("    2) Description")));
-   CHK_EXEC(CreateEventTemplate(EVENT_AGENT_LOCAL_DATABASE_FAIL, _T("SYS_AGENT_LOCAL_DATABASE_FAIL"),
+   CHK_EXEC(CreateEventTemplate(EVENT_AGENT_LOCAL_DATABASE_PROBLEM, _T("SYS_AGENT_LOCAL_DATABASE_PROBLEM"),
             SEVERITY_MAJOR, EF_LOG, _T("d02b63f1-1151-429e-adb9-1dfbb3a31b32"),
       _T("Problem with agent local database: %2"),
-      _T("Generated on status poll if agent reposts local database problem.\r\n")
+      _T("Generated on status poll if agent reports local database problem.\r\n")
       _T("Parameters:\r\n")
-      _T("    1) Status\r\n")
+      _T("    1) Status code\r\n")
       _T("    2) Description")));
 
 	int ruleId = NextFreeEPPruleID();
    TCHAR query[1024];
 	_sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) ")
-                           _T("VALUES (%d,'19bd89ba-8bb2-4915-8546-a1ecc650dedd',7944,'Generate an alarm when there is problem with log on agent','%%m',5,'SYS_AGENT_LOG_FAIL_%%1','',0,%d,0,'')"),
+                           _T("VALUES (%d,'19bd89ba-8bb2-4915-8546-a1ecc650dedd',7944,'Generate an alarm when there is problem with agent log','%%m',5,'SYS_AGENT_LOG_PROBLEM_%%i','',0,%d,0,'')"),
                            ruleId, EVENT_ALARM_TIMEOUT);
    CHK_EXEC(SQLQuery(query));
-   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_AGENT_LOG_FAIL);
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_AGENT_LOG_PROBLEM);
    CHK_EXEC(SQLQuery(query));
-	ruleId = NextFreeEPPruleID();
+
+   ruleId = NextFreeEPPruleID();
 	_sntprintf(query, 1024, _T("INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance) ")
-                           _T("VALUES (%d,'cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04',7944,'Generate an alarm when there is problem with local database on agent','%%m',5,'SYS_AGENT_LOCAL_DATABASE_FAIL_%%1','',0,%d,0,'')"),
+                           _T("VALUES (%d,'cff7fe6b-2ad1-4c18-8a8f-4d397d44fe04',7944,'Generate an alarm when there is problem with agent local database','%%m',5,'SYS_AGENT_LOCAL_DATABASE_PROBLEM_%%i','',0,%d,0,'')"),
                            ruleId, EVENT_ALARM_TIMEOUT);
    CHK_EXEC(SQLQuery(query));
-   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_AGENT_LOCAL_DATABASE_FAIL);
+   _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_AGENT_LOCAL_DATABASE_PROBLEM);
    CHK_EXEC(SQLQuery(query));
 
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='405' WHERE var_name='SchemaVersion'")));

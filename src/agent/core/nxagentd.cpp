@@ -533,43 +533,6 @@ static LONG H_RestartAgent(const TCHAR *action, StringList *args, const TCHAR *d
 #endif
 }
 
-static LONG H_FailStatusProvider(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
-{
-   UINT32 result = 0;
-   switch(*pArg)
-   {
-      case 'D':
-         if((g_failFlags & FAIL_OPEN_DATABASE) > 0)
-            result++;
-         if((g_failFlags & FIAL_UPGRADE_DATABASE) > 0)
-            result++;
-         break;
-      case 'L':
-         if((g_failFlags & FAIL_OPEN_LOG) > 0)
-            result++;
-         break;
-   }
-
-   ret_int(pValue, result);
-   return SYSINFO_RC_SUCCESS;
-}
-
-static LONG H_DbCountersProvider(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
-{
-   LIBNXDB_PERF_COUNTERS counters;
-   DBGetPerfCounters(&counters);
-   switch(*pArg)
-   {
-      case 'F':
-         ret_int64(pValue, counters.failedQueries);
-         break;
-      case 'L':
-         ret_int64(pValue, counters.longRunningQueries);
-         break;
-   }
-   return SYSINFO_RC_SUCCESS;
-}
-
 /**
  * This function writes message from subagent to agent's log
  */
@@ -840,12 +803,6 @@ BOOL Initialize()
 
 		// Add built-in actions
 		AddAction(_T("Agent.Restart"), AGENT_ACTION_SUBAGENT, NULL, H_RestartAgent, _T("CORE"), _T("Restart agent"));
-
-		//Add build-in DCIs
-      AddParameter(_T("Agent.LogFile"), H_FailStatusProvider, _T("L"), DCI_DT_UINT, _T("Get log status"));
-      AddParameter(_T("Agent.LocalDatabase"), H_FailStatusProvider, _T("D"), DCI_DT_UINT, _T("Get database status"));
-      AddParameter(_T("Agent.LocalDatabase.LongRunningQueries"), H_DbCountersProvider, _T("L"), DCI_DT_UINT, _T("Get database long running query count"));
-      AddParameter(_T("Agent.LocalDatabase.FailedQueries"), H_DbCountersProvider, _T("F"), DCI_DT_UINT, _T("Get database failed query count"));
 
 	   // Load platform subagents
 #if !defined(_WIN32)

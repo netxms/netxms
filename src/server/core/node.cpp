@@ -1645,18 +1645,18 @@ restart_agent_check:
    if (!(m_dwDynamicFlags & NDF_UNREACHABLE))
    {
       TCHAR buffer[MAX_RESULT_LENGTH];
-      if (getItemFromAgent(_T("Agent.LogFile"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getItemFromAgent(_T("Agent.LogFile.Status"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          UINT32 status = _tcstol(buffer, NULL, 0);
-         if(status != 0)
-            PostEvent(EVENT_AGENT_LOG_FAIL, m_id, "ds", status, _T("could not open"));
+         if (status != 0)
+            PostEvent(EVENT_AGENT_LOG_PROBLEM, m_id, "ds", status, _T("could not open"));
       }
       else
       {
-         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get agent log status"), m_name, m_id);
+         nxlog_debug(5, _T("StatusPoll(%s [%d]): unable to get agent log status"), m_name, m_id);
       }
 
-      if (getItemFromAgent(_T("Agent.LocalDatabase"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
+      if (getItemFromAgent(_T("Agent.LocalDatabase.Status"), MAX_RESULT_LENGTH, buffer) == DCE_SUCCESS)
       {
          UINT32 status = _tcstol(buffer, NULL, 0);
          const TCHAR *statusDescription[3]= {
@@ -1664,12 +1664,12 @@ restart_agent_check:
                                        _T("could not open database"),
                                        _T("could not update database"),
                                        };
-         if(status != 0)
-            PostEvent(EVENT_AGENT_LOCAL_DATABASE_FAIL, m_id, "ds", status, statusDescription[status]);
+         if (status != 0)
+            PostEvent(EVENT_AGENT_LOCAL_DATABASE_PROBLEM, m_id, "ds", status, statusDescription[status]);
       }
       else
       {
-         DbgPrintf(5, _T("StatusPoll(%s [%d]): unable to get agent local database status"), m_name, m_id);
+         nxlog_debug(5, _T("StatusPoll(%s [%d]): unable to get agent local database status"), m_name, m_id);
       }
    }
 
