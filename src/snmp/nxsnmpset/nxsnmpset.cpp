@@ -1,6 +1,6 @@
 /* 
 ** nxsnmpset - command line tool used to set parameters on SNMP agent
-** Copyright (C) 2004-2009 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,16 +36,14 @@ static char m_authPassword[256] = "";
 static char m_encryptionPassword[256] = "";
 static int m_authMethod = SNMP_AUTH_NONE;
 static int m_encryptionMethod = SNMP_ENCRYPT_NONE;
-static WORD m_port = 161;
-static DWORD m_snmpVersion = SNMP_VERSION_2C;
-static DWORD m_timeout = 3000;
-static DWORD m_type = ASN_OCTET_STRING;
+static UINT16 m_port = 161;
+static UINT32 m_snmpVersion = SNMP_VERSION_2C;
+static UINT32 m_timeout = 3000;
+static UINT32 m_type = ASN_OCTET_STRING;
 
-
-//
-// Get data
-//
-
+/**
+ * Set variables
+ */
 static int SetVariables(int argc, TCHAR *argv[])
 {
    SNMP_UDPTransport *pTransport;
@@ -80,10 +78,23 @@ static int SetVariables(int argc, TCHAR *argv[])
 		request = new SNMP_PDU(SNMP_SET_REQUEST, getpid(), m_snmpVersion);
       for(i = 1; i < argc; i += 2)
       {
+         TCHAR *p = _tcschr(argv[i], _T('@'));
+         UINT32 type = m_type;
+         if (p != NULL)
+         {
+            *p = 0;
+            p++;
+            type = SNMPResolveDataType(p);
+            if (type == ASN_NULL)
+            {
+               _tprintf(_T("Invalid data type: %s\n"), p);
+               iExit = 5;
+            }
+         }
          if (SNMPIsCorrectOID(argv[i]))
          {
             pVar = new SNMP_Variable(argv[i]);
-            pVar->setValueFromString(m_type, argv[i + 1]);
+            pVar->setValueFromString(type, argv[i + 1]);
             request->bindVariable(pVar);
          }
          else
@@ -118,11 +129,9 @@ static int SetVariables(int argc, TCHAR *argv[])
    return iExit;
 }
 
-
-//
-// Startup
-//
-
+/**
+ * Startup
+ */
 int main(int argc, char *argv[])
 {
    int ch, iExit = 1;
@@ -139,7 +148,7 @@ int main(int argc, char *argv[])
       switch(ch)
       {
          case 'h':   // Display help and exit
-            _tprintf(_T("Usage: nxsnmpset [<options>] <host> <variable> <value>\n")
+            _tprintf(_T("Usage: nxsnmpset [<options>] <host> <variable>[@<type>] <value>\n")
                      _T("Valid options are:\n")
 						   _T("   -a <method>  : Authentication method for SNMP v3 USM. Valid methods are MD5 and SHA1\n")
                      _T("   -A <passwd>  : User's authentication password for SNMP v3 USM\n")
