@@ -191,7 +191,7 @@ static LONG H_ComponentStatus(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *p
       case 'D':
          if ((g_failFlags & FAIL_OPEN_DATABASE) != 0)
             result++;
-         if ((g_failFlags & FIAL_UPGRADE_DATABASE) != 0)
+         if ((g_failFlags & FAIL_UPGRADE_DATABASE) != 0)
             result++;
          break;
       case 'L':

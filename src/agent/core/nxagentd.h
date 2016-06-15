@@ -125,10 +125,10 @@
 #define AF_ENABLE_SNMP_TRAP_PROXY   0x00200000
 #define AF_BACKGROUND_LOG_WRITER    0x00400000
 
-//Flags for errors while loading
+// Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001
 #define FAIL_OPEN_DATABASE          0x00000002
-#define FIAL_UPGRADE_DATABASE       0x00000004
+#define FAIL_UPGRADE_DATABASE       0x00000004
 
 #ifdef _WIN32
 

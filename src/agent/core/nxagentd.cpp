@@ -698,7 +698,7 @@ BOOL Initialize()
 	{
 	   //TODO: set flag that log have been opened with errors
 	   s_debugLevel = 1;
-	   g_failFlags = FAIL_OPEN_LOG;
+	   g_failFlags |= FAIL_OPEN_LOG;
       nxlog_open(NXAGENTD_SYSLOG_NAME, NXLOG_USE_SYSLOG |
 	               ((g_dwFlags & AF_BACKGROUND_LOG_WRITER) ? NXLOG_BACKGROUND_WRITER : 0) |
                   ((g_dwFlags & AF_DAEMON) ? 0 : NXLOG_PRINT_TO_STDOUT),

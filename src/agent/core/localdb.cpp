@@ -240,13 +240,13 @@ bool OpenLocalDatabase()
    if (s_db == NULL)
    {
       nxlog_debug(1, _T("Local database open error: %s"), errorText);
-	   g_failFlags = FAIL_OPEN_DATABASE;
+	   g_failFlags |= FAIL_OPEN_DATABASE;
       return false;
    }
 
    if (!CheckDatabaseStructure() || !UpgradeDatabase())
    {
-	   g_failFlags = FIAL_UPGRADE_DATABASE;
+	   g_failFlags |= FAIL_UPGRADE_DATABASE;
       DBDisconnect(s_db);
       s_db = NULL;
       return false;
