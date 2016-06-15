@@ -7,6 +7,7 @@
 - If policy is known as installed on the node by the server and agent reposts that it is not installed it is being reinstalled.
 - Added configuration option to logparser to generate event only if regular expression have been matched exact count of the times in a predefined time period
 - Data collection script can return null to indicate data collection error
+- Added option to set type of each varbind in nxsnmpset
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 - Fixed issues: #906, #1039, #1096, #1187, #1230, #1237, #1239
