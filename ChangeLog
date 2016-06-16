@@ -4,6 +4,8 @@
 
 - Data collection script can return null to indicate data collection error
 - Added option to set type of each varbind in nxsnmpset
+- Management console
+	- Fixed possible deadlock when executing server script
 - Fixed issues: #1039, #1293
 
 
