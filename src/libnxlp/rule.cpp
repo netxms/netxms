@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** Log Parsing Library
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -116,7 +116,6 @@ LogParserRule::~LogParserRule()
 bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
 								          const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg)
 {
-   matchArrayHousekeeper();
    if (extMode)
    {
 	   if (m_source != NULL)
@@ -151,18 +150,19 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 	if (m_isInverted)
 	{
 		m_parser->trace(6, _T("  negated matching against regexp %s"), m_regexp);
-		if (_tregexec(&m_preg, line, 0, NULL, 0) != 0 && processMatch())
+		if ((_tregexec(&m_preg, line, 0, NULL, 0) != 0) && matchRepeatCount())
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
-				cb(m_eventCode, m_eventName, line, source, eventId, level, 0, NULL, objectId, userArg, getAppearanceCount());
+				cb(m_eventCode, m_eventName, line, source, eventId, level, 0, NULL, objectId, 
+               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, userArg);
 			return true;
 		}
 	}
 	else
 	{
 		m_parser->trace(6, _T("  matching against regexp %s"), m_regexp);
-		if (_tregexec(&m_preg, line, (m_numParams > 0) ? m_numParams + 1 : 0, m_pmatch, 0) == 0 && processMatch())
+		if ((_tregexec(&m_preg, line, (m_numParams > 0) ? m_numParams + 1 : 0, m_pmatch, 0) == 0) && matchRepeatCount())
 		{
 			m_parser->trace(6, _T("  matched"));
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
@@ -193,7 +193,8 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 					}
 				}
 
-				cb(m_eventCode, m_eventName, line, source, eventId, level, m_numParams, params, objectId, userArg, getAppearanceCount());
+				cb(m_eventCode, m_eventName, line, source, eventId, level, m_numParams, params, objectId, 
+               ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, userArg);
 
 				for(i = 0; i < m_numParams; i++)
 					free(params[i]);
@@ -269,28 +270,27 @@ void LogParserRule::expandMacros(const TCHAR *regexp, String &out)
 	out.append(prev, (size_t)(curr - prev));
 }
 
-void LogParserRule::matchArrayHousekeeper()
+/**
+ * Match repeat count
+ */
+bool LogParserRule::matchRepeatCount()
 {
-   if(m_matchArray->size() == 0 || m_repeatCount == 0 || m_repeatInterval == 0)
-      return;
+   if ((m_repeatCount == 0) || (m_repeatInterval == 0))
+      return true;
 
+   // remove expired matches
    time_t now = time(NULL);
    for(int i = 0; i < m_matchArray->size(); i++)
    {
-      if(m_matchArray->get(i) < (now - m_repeatInterval))
-         m_matchArray->remove(i);
-      else
+      if (m_matchArray->get(i) >= (now - m_repeatInterval))
          break;
+      m_matchArray->remove(i);
+      i--;
    }
-}
 
-bool LogParserRule::processMatch()
-{
-   if(m_repeatCount == 0 || m_repeatInterval == 0)
-      return true;
-
-   m_matchArray->add(time(NULL));
+   m_matchArray->add(now);
    bool match = m_matchArray->size() >= m_repeatCount;
-   if(m_resetRepeat && match) m_matchArray->clear();
+   if (m_resetRepeat && match)
+      m_matchArray->clear();
    return match;
 }

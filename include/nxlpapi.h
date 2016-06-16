@@ -78,7 +78,7 @@
  *    number of capture groups, list of capture groups,
  *    object id, user arg
  */
-typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *, UINT32, UINT32, int, TCHAR **, UINT32, void *, int matchRepeatCount);
+typedef void (* LogParserCallback)(UINT32, const TCHAR *, const TCHAR *, const TCHAR *, UINT32, UINT32, int, TCHAR **, UINT32, int, void *);
 
 class LIBNXLP_EXPORTABLE LogParser;
 
@@ -115,6 +115,7 @@ private:
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
 	                   const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
+	bool matchRepeatCount();
    void expandMacros(const TCHAR *regexp, String &out);
 
 public:
@@ -166,10 +167,7 @@ public:
    void setRepeatReset(bool resetRepeat) { m_resetRepeat = resetRepeat; }
    bool isRepeatReset() { return m_resetRepeat; }
 
-   int getAppearanceCount() { return m_matchArray->size(); }
 	const TCHAR *getRegexpSource() { return CHECK_NULL(m_regexp); }
-	void matchArrayHousekeeper();
-	bool processMatch();
 };
 
 /**

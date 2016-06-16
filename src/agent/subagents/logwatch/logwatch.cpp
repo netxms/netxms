@@ -134,12 +134,12 @@ static void SubagentShutdown()
  */
 static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR *text,
                            const TCHAR *source, UINT32 eventId, UINT32 severity,
-                           int cgCount, TCHAR **cgList, UINT32 objectId, void *userArg,
-                           int matchRepeatCount)
+                           int cgCount, TCHAR **cgList, UINT32 objectId, int repeatCount,
+                           void *userArg)
 {
    int count = cgCount + 1;
-   TCHAR eventIdText[16], severityText[16], repeatCount[16];
-   _sntprintf(repeatCount, 16, _T("%d"), matchRepeatCount);
+   TCHAR eventIdText[16], severityText[16], repeatCountText[16];
+   _sntprintf(repeatCountText, 16, _T("%d"), repeatCount);
    if (source != NULL)
    {
       _sntprintf(eventIdText, 16, _T("%u"), eventId);
@@ -158,7 +158,7 @@ static void LogParserMatch(UINT32 eventCode, const TCHAR *eventName, const TCHAR
       list[i++] = eventIdText;
       list[i++] = severityText;
    }
-   list[i++] = repeatCount;
+   list[i++] = repeatCountText;
 
    AgentSendTrap2(eventCode, eventName, count, list);
    free(list);

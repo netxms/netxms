@@ -481,24 +481,19 @@ static void QueueSyslogMessage(char *msg, int msgLen, const InetAddress& sourceA
  */
 static void SyslogParserCallback(UINT32 eventCode, const TCHAR *eventName, const TCHAR *line,
                                  const TCHAR *source, UINT32 facility, UINT32 severity,
-                                 int paramCount, TCHAR **params, UINT32 objectId, void *userArg,
-                                 int matchRepeatCount)
+                                 int paramCount, TCHAR **params, UINT32 objectId, int repeatCount,
+                                 void *userArg)
 {
-	char format[] = "ssssssssssssssssssssssssssssssss";
-	TCHAR *plist[32];
-	int i, count;
-	TCHAR repeatCount[16];
+	char format[] = "sssssssssssssssssssssssssssssssss";
+	TCHAR *plist[33];
+	TCHAR repeatCountText[16];
 
-	count = min(paramCount, 32);
-	format[count] = 0;
-	for(i = 0; i < count; i++)
+	int count = min(paramCount, 32);
+	format[count + 1] = 0;
+	for(int i = 0; i < count; i++)
 		plist[i] = params[i];
-   if(count < 32)
-   {
-      _sntprintf(repeatCount, 16, _T("%d"), matchRepeatCount);
-      plist[count] = repeatCount;
-      count++;
-   }
+   _sntprintf(repeatCountText, 16, _T("%d"), repeatCount);
+   plist[count] = repeatCountText;
 	PostEvent(eventCode, objectId, format,
 	          plist[0], plist[1], plist[2], plist[3],
 	          plist[4], plist[5], plist[6], plist[7],
