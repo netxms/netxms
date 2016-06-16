@@ -197,7 +197,7 @@ bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int 
 /**
  * Read integer value from metadata table
  */
-INT32 NXCORE_EXPORTABLE MetaDataReadInt(const TCHAR *var, UINT32 defaultValue)
+INT32 NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *var, INT32 defaultValue)
 {
    TCHAR buffer[256];
    if (MetaDataReadStr(var, buffer, 256, _T("")))
@@ -267,6 +267,16 @@ bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *varName, const TCHAR *value
 	DBFreeStatement(hStmt);
    DBConnectionPoolReleaseConnection(hdb);
 	return success;
+}
+
+/**
+ * Write integer value to metadata table
+ */
+bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *name, INT32 value)
+{
+   TCHAR buffer[32];
+   _sntprintf(buffer, 32, _T("%d"), value);
+   return MetaDataWriteStr(name, buffer);
 }
 
 /**
