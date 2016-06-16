@@ -5379,12 +5379,15 @@ public class NXCSession
       waitForRCC(msg.getMessageId());
       synchronized(handler)
       {
-         try
+         if (!handler.isComplete())
          {
-            handler.wait();
-         }
-         catch(InterruptedException e)
-         {
+            try
+            {
+               handler.wait();
+            }
+            catch(InterruptedException e)
+            {
+            }
          }
       }
       if (handler.isTimeout())
