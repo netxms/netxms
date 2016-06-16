@@ -263,8 +263,6 @@ BOOL LoadUsers()
  */
 void SaveUsers(DB_HANDLE hdb)
 {
-   int i;
-
    // Save users
    RWLockWriteLock(s_userDatabaseLock, INFINITE);
    Iterator<UserDatabaseObject> *it = s_userDatabase.iterator();
@@ -299,7 +297,6 @@ UINT32 AuthenticateUser(const TCHAR *login, const TCHAR *password, UINT32 dwSigL
                         BYTE *pChallenge, UINT32 *pdwId, UINT64 *pdwSystemRights,
 							   bool *pbChangePasswd, bool *pbIntruderLockout, bool *closeOtherSessions, bool ssoAuth)
 {
-   int i, j;
    UINT32 dwResult = RCC_ACCESS_DENIED;
    BOOL bPasswordValid = FALSE;
 
@@ -949,8 +946,6 @@ void DumpUsers(CONSOLE_CTX pCtx)
  */
 UINT32 NXCORE_EXPORTABLE DeleteUserDatabaseObject(UINT32 id, bool alreadyLocked)
 {
-   int i, j;
-
    DeleteUserFromAllObjects(id);
 
    if (!alreadyLocked)
@@ -1022,10 +1017,9 @@ UINT32 NXCORE_EXPORTABLE CreateNewUser(const TCHAR *name, bool isGroup, UINT32 *
  */
 UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg)
 {
-   UINT32 id, fields, dwResult = RCC_INVALID_USER_ID;
-	int i;
+   UINT32 dwResult = RCC_INVALID_USER_ID;
 
-	id = msg->getFieldAsUInt32(VID_USER_ID);
+	UINT32 id = msg->getFieldAsUInt32(VID_USER_ID);
 
    RWLockWriteLock(s_userDatabaseLock, INFINITE);
 
@@ -1034,7 +1028,7 @@ UINT32 NXCORE_EXPORTABLE ModifyUserDatabaseObject(NXCPMessage *msg)
    {
       TCHAR name[MAX_USER_NAME];
 
-      fields = msg->getFieldAsUInt32(VID_FIELDS);
+      UINT32 fields = msg->getFieldAsUInt32(VID_FIELDS);
       if (fields & USER_MODIFY_LOGIN_NAME)
       {
          msg->getFieldAsString(VID_USER_NAME, name, MAX_USER_NAME);

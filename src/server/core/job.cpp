@@ -396,13 +396,11 @@ void ServerJob::rescheduleExecution()
 {
 }
 
-
-
 /**
- * Returns next job execution interval in minutes
- * Each next execution time will be twce bigger than the previous one
+ * Returns delay before retry in seconds
+ * Each next interval will be twice as bigger as previous one
  */
-int ServerJob::getNextJobExecutionTime()
+int ServerJob::getRetryDelay()
 {
-   return pow(2.0f, (4 - m_retryCount)) * JOB_RESCHEDULE_OFSET;
+   return (int)(pow(2.0f, (4 - m_retryCount)) * JOB_RESCHEDULE_OFSET);
 }

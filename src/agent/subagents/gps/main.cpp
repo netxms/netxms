@@ -337,7 +337,7 @@ static LONG H_LocationInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, A
          ret_double(value, s_nmeaInfo.VDOP);
          break;
       case 'X': // speed
-         ret_int(value, s_nmeaInfo.speed);
+         ret_double(value, s_nmeaInfo.speed);
          break;
       default:
          rc = SYSINFO_RC_UNSUPPORTED;

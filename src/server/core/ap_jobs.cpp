@@ -153,7 +153,7 @@ ServerJobResult PolicyDeploymentJob::run()
    if(success == JOB_RESULT_FAILED && m_retryCount-- > 0)
    {
       TCHAR description[256];
-      _sntprintf(description, 256, _T("Policy deploy failed. Wainting %d minutes to restart job."), getNextJobExecutionTime()/60);
+      _sntprintf(description, 256, _T("Policy deploy failed. Wainting %d minutes to restart job."), getRetryDelay() / 60);
       setDescription(description);
       success = JOB_RESULT_RESCHEDULE;
    }
@@ -177,7 +177,7 @@ const String PolicyDeploymentJob::serializeParameters()
  */
 void PolicyDeploymentJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Deploy"), time(NULL) + getNextJobExecutionTime(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+   AddOneTimeScheduledTask(_T("Policy.Deploy"), time(NULL) + getRetryDelay(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
 }
 
 
@@ -307,7 +307,7 @@ ServerJobResult PolicyUninstallJob::run()
    if(success == JOB_RESULT_FAILED && m_retryCount-- > 0)
    {
       TCHAR description[256];
-      _sntprintf(description, 256, _T("Policy uninstall failed. Wainting %d minutes to restart job."), getNextJobExecutionTime()/60);
+      _sntprintf(description, 256, _T("Policy uninstall failed. Wainting %d minutes to restart job."), getRetryDelay() / 60);
       setDescription(description);
       success = JOB_RESULT_RESCHEDULE;
    }
@@ -332,5 +332,5 @@ const String PolicyUninstallJob::serializeParameters()
  */
 void PolicyUninstallJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getNextJobExecutionTime(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
 }

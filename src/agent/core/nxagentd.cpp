@@ -663,7 +663,6 @@ static void ParseServerList(TCHAR *serverList, bool isControl, bool isMaster)
 BOOL Initialize()
 {
    TCHAR *pItem, *pEnd;
-	TCHAR regPath[MAX_PATH];
 
    if (s_debugLevel == (UINT32)NXCONFIG_UNINITIALIZED_VALUE)
       s_debugLevel = 0;

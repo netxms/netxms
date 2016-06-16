@@ -92,13 +92,15 @@ protected:
 	virtual ServerJobResult run();
 	virtual bool onCancel();
 	virtual const TCHAR *getAdditionalInfo();
+	virtual const String serializeParameters();
 
 	void notifyClients(bool isStatusChange);
 	void changeStatus(ServerJobStatus newStatus);
 	void markProgress(int pctCompleted);
 	void setFailureMessage(const TCHAR *msg);
-
 	void setDescription(const TCHAR *description);
+
+	int getRetryDelay();
 
 public:
 	ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, UINT32 userId, bool createOnHold, int retryCount = -1);
@@ -131,9 +133,8 @@ public:
 	void setOwningQueue(ServerJobQueue *queue);
 
 	void fillMessage(NXCPMessage *msg);
-	virtual const String serializeParameters();
+
 	virtual void rescheduleExecution();
-	int getNextJobExecutionTime();
 };
 
 /**
@@ -193,7 +194,9 @@ protected:
 
 	virtual ServerJobResult run();
 	virtual const TCHAR *getAdditionalInfo();
-	static void uploadCallback(INT64 size, void *arg);
+	virtual const String serializeParameters();
+
+   static void uploadCallback(INT64 size, void *arg);
 
 public:
 	static void init();
@@ -202,7 +205,6 @@ public:
 	FileUploadJob(TCHAR* params, UINT32 node, UINT32 userId);
 	virtual ~FileUploadJob();
 
-	virtual const String serializeParameters();
 	virtual void rescheduleExecution();
 	void setLocalFileFullPath();
 };
@@ -232,20 +234,20 @@ protected:
 
 	static void progressCallback(size_t size, void *arg);
 	static void fileResendCallback(NXCP_MESSAGE *msg, void *arg);
+	static TCHAR *buildServerFileName(UINT32 nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
 
 public:
 	FileDownloadJob(Node *node, const TCHAR *remoteName, UINT32 maxFileSize, bool follow, ClientSession *session, UINT32 requestId);
 	virtual ~FileDownloadJob();
 
-	static TCHAR *buildServerFileName(UINT32 nodeId, const TCHAR *remoteFile, TCHAR *buffer, size_t bufferSize);
-	TCHAR *getLocalFileName();
+	const TCHAR *getLocalFileName();
 };
+
+class AgentPolicy;
 
 /**
  * Agent policy deployment job
  */
-class AgentPolicy;
-
 class PolicyDeploymentJob : public ServerJob
 {
 protected:
@@ -253,16 +255,15 @@ protected:
 	AgentPolicy *m_policy;
 
 	virtual ServerJobResult run();
+	virtual const String serializeParameters();
 
 public:
 	PolicyDeploymentJob(Node *node, AgentPolicy *policy, UINT32 userId);
    PolicyDeploymentJob(const TCHAR* params, UINT32 node, UINT32 userId);
 	virtual ~PolicyDeploymentJob();
 
-	virtual const String serializeParameters();
 	virtual void rescheduleExecution();
 };
-
 
 /**
  * Agent policy uninstall job
@@ -274,13 +275,13 @@ protected:
 	AgentPolicy *m_policy;
 
 	virtual ServerJobResult run();
+	virtual const String serializeParameters();
 
 public:
 	PolicyUninstallJob(Node *node, AgentPolicy *policy, UINT32 userId);
    PolicyUninstallJob(const TCHAR* params, UINT32 node, UINT32 userId);
 	virtual ~PolicyUninstallJob();
 
-	virtual const String serializeParameters();
 	virtual void rescheduleExecution();
 };
 

@@ -421,6 +421,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ap_logparser.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\audit.cpp"
 				>
 			</File>
@@ -674,6 +678,10 @@
 			</File>
 			<File
 				RelativePath=".\maint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\market.cpp"
 				>
 			</File>
 			<File

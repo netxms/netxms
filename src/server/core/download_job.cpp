@@ -60,7 +60,7 @@ FileDownloadJob::FileDownloadJob(Node *node, const TCHAR *remoteFile, UINT32 max
 /**
  * Returns localFileName
  */
-TCHAR* FileDownloadJob::getLocalFileName()
+const TCHAR *FileDownloadJob::getLocalFileName()
 {
    return m_localFile;
 }

@@ -661,16 +661,17 @@ TCHAR *LDAPConnection::getIdAttrValue(LDAPMessage *entry, const char *attr)
    BYTE tmp[1024];
    memset(tmp, 0, 1024);
    berval **values = ldap_get_values_lenA(m_ldapConn, entry, (char *)attr);   // cast needed for Windows LDAP library
+   int count = (int)ldap_count_values_len(values);
    int i,pos;
-   for(i = 0, pos = 0; i < ldap_count_values_len(values); i++)
+   for(i = 0, pos = 0; i < count; i++)
    {
-      if(pos+values[i]->bv_len > 1024)
+      if (pos + values[i]->bv_len > 1024)
          break;
       memcpy(tmp+pos,values[i]->bv_val,values[i]->bv_len);
       pos += values[i]->bv_len;
    }
    ldap_value_free_len(values);
-   if(i == 0)
+   if (i == 0)
       return _tcsdup(_T(""));
 
    CalculateSHA256Hash(tmp, pos, hash);

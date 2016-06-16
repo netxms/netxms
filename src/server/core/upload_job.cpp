@@ -191,7 +191,7 @@ ServerJobResult FileUploadJob::run()
    if(success == JOB_RESULT_FAILED && m_retryCount-- > 0)
    {
       TCHAR description[256];
-      _sntprintf(description, 256, _T("File upload failed. Wainting %d minutes to restart job."), getNextJobExecutionTime()/60);
+      _sntprintf(description, 256, _T("File upload failed. Wainting %d minutes to restart job."), getRetryDelay() / 60);
       setDescription(description);
       success = JOB_RESULT_RESCHEDULE;
    }
@@ -233,10 +233,9 @@ const String FileUploadJob::serializeParameters()
 }
 
 /**
- * Schedules execution in 10 minutes
+ * Schedules repeated execution
  */
 void FileUploadJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getNextJobExecutionTime(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
 }
-

@@ -212,7 +212,7 @@ retry_wait:
                }
                else  // message ID do not match
                {
-                  INT32 elapsedTime = (INT32)(GetCurrentTimeMs() - startTime);
+                  UINT32 elapsedTime = (UINT32)(GetCurrentTimeMs() - startTime);
                   if (elapsedTime < remainingWaitTime)
                   {
                      remainingWaitTime -= elapsedTime;
@@ -226,7 +226,7 @@ retry_wait:
                if ((*response)->getRequestId() == request->getRequestId())
                   break;
 
-               INT32 elapsedTime = (INT32)(GetCurrentTimeMs() - startTime);
+               UINT32 elapsedTime = (UINT32)(GetCurrentTimeMs() - startTime);
                if (elapsedTime < remainingWaitTime)
                {
                   remainingWaitTime -= elapsedTime;

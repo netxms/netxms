@@ -387,30 +387,26 @@ bool EPRule::matchSeverity(UINT32 dwSeverity)
  */
 bool EPRule::matchScript(Event *pEvent)
 {
-   NXSL_Value **ppValueList, *pValue;
-   NXSL_VariableSystem *pLocals, *pGlobals = NULL;
    bool bRet = true;
-   UINT32 i;
-	NetObj *pObject;
 
    if (m_pScript == NULL)
       return true;
 
    // Pass event's parameters as arguments and
    // other information as variables
-   ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * pEvent->getParametersCount());
+   NXSL_Value **ppValueList = (NXSL_Value **)malloc(sizeof(NXSL_Value *) * pEvent->getParametersCount());
    memset(ppValueList, 0, sizeof(NXSL_Value *) * pEvent->getParametersCount());
-   for(i = 0; i < pEvent->getParametersCount(); i++)
+   for(int i = 0; i < pEvent->getParametersCount(); i++)
       ppValueList[i] = new NXSL_Value(pEvent->getParameter(i));
 
-   pLocals = new NXSL_VariableSystem;
+   NXSL_VariableSystem *pLocals = new NXSL_VariableSystem;
    pLocals->create(_T("EVENT_CODE"), new NXSL_Value(pEvent->getCode()));
    pLocals->create(_T("SEVERITY"), new NXSL_Value(pEvent->getSeverity()));
    pLocals->create(_T("SEVERITY_TEXT"), new NXSL_Value(GetStatusAsText(pEvent->getSeverity(), true)));
    pLocals->create(_T("OBJECT_ID"), new NXSL_Value(pEvent->getSourceId()));
    pLocals->create(_T("EVENT_TEXT"), new NXSL_Value((TCHAR *)pEvent->getMessage()));
    pLocals->create(_T("USER_TAG"), new NXSL_Value((TCHAR *)pEvent->getUserTag()));
-	pObject = FindObjectById(pEvent->getSourceId());
+	NetObj *pObject = FindObjectById(pEvent->getSourceId());
 	if (pObject != NULL)
 	{
 		if (pObject->getObjectClass() == OBJECT_NODE)
@@ -420,17 +416,16 @@ bool EPRule::matchScript(Event *pEvent)
 	m_pScript->setGlobalVariable(_T("CUSTOM_MESSAGE"), new NXSL_Value);
 
    // Run script
-   if (m_pScript->run(pEvent->getParametersCount(), ppValueList, pLocals, &pGlobals))
+   NXSL_VariableSystem *globals = NULL;
+   if (m_pScript->run(pEvent->getParametersCount(), ppValueList, pLocals, &globals))
    {
-      pValue = m_pScript->getResult();
-      if (pValue != NULL)
+      NXSL_Value *value = m_pScript->getResult();
+      if (value != NULL)
       {
-         bRet = pValue->getValueAsInt32() ? true : false;
+         bRet = value->getValueAsInt32() ? true : false;
          if (bRet)
          {
-         	NXSL_Variable *var;
-
-         	var = pGlobals->find(_T("CUSTOM_MESSAGE"));
+         	NXSL_Variable *var = globals->find(_T("CUSTOM_MESSAGE"));
          	if (var != NULL)
          	{
          		// Update custom message in event
@@ -444,7 +439,7 @@ bool EPRule::matchScript(Event *pEvent)
       nxlog_write(MSG_EPRULE_SCRIPT_EXECUTION_ERROR, EVENTLOG_ERROR_TYPE, "ds", m_id + 1, m_pScript->getErrorText());
    }
    free(ppValueList);
-   delete pGlobals;
+   delete globals;
 
    return bRet;
 }
