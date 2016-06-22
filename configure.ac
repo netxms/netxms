@@ -1490,7 +1490,6 @@ if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
 			if test "x$HAVE_LIBCRYPTO" = "xyes"; then
 				if test "x$BUILD_STATIC_AGENT" = "xyes"; then
-#					LIBS="$LIBS -Wl,-Bstatic -lcrypto -Wl,-Bdynamic"
 					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
 				else
 					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
@@ -2969,7 +2968,7 @@ AM_CONDITIONAL([USE_INTERNAL_SQLITE], [test "x$HAVE_SQLITE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$NEED_ZLIB/$HAVE_ZLIB" = "yes/no"])
 AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
-AM_CONDITIONAL([USE_ENCRYPTION], [test "x${ac_cv_lib_crypto_RSA_new}" = "xyes"])
+AM_CONDITIONAL([USE_ENCRYPTION], [test "x${HAVE_LIBCRYPTO}" = "xyes"])
 AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
 AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
 AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
@@ -3330,7 +3329,7 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 else
 	echo "Build Server            : NO"
 fi
-if test "x${ac_cv_lib_crypto_RSA_new}" = "xyes"; then
+if test "x${HAVE_LIBCRYPTO}" = "xyes"; then
 	echo "Encryption enabled      : YES"
 else
 	echo "Encryption enabled      : NO"
