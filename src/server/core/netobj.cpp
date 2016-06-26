@@ -53,34 +53,32 @@ NetObj::NetObj()
    m_mutexACL = MutexCreate();
    m_rwlockParentList = RWLockCreate();
    m_rwlockChildList = RWLockCreate();
-   m_iStatus = STATUS_UNKNOWN;
+   m_status = STATUS_UNKNOWN;
    m_name[0] = 0;
-   m_pszComments = NULL;
+   m_comments = NULL;
    m_isModified = false;
    m_isDeleted = false;
    m_isHidden = false;
 	m_isSystem = false;
 	m_maintenanceMode = false;
 	m_maintenanceEventId = 0;
-   m_dwChildCount = 0;
-   m_pChildList = NULL;
-   m_dwParentCount = 0;
-   m_pParentList = NULL;
+   m_childList = new ObjectArray<NetObj>(0, 16, false);
+   m_parentList = new ObjectArray<NetObj>(4, 4, false);
    m_accessList = new AccessList();
    m_inheritAccessRights = true;
 	m_dwNumTrustedNodes = 0;
 	m_pdwTrustedNodes = NULL;
    m_pollRequestor = NULL;
-   m_iStatusCalcAlg = SA_CALCULATE_DEFAULT;
-   m_iStatusPropAlg = SA_PROPAGATE_DEFAULT;
-   m_iFixedStatus = STATUS_WARNING;
-   m_iStatusShift = 0;
-   m_iStatusSingleThreshold = 75;
+   m_statusCalcAlg = SA_CALCULATE_DEFAULT;
+   m_statusPropAlg = SA_PROPAGATE_DEFAULT;
+   m_fixedStatus = STATUS_WARNING;
+   m_statusShift = 0;
+   m_statusSingleThreshold = 75;
    m_dwTimeStamp = 0;
    for(i = 0; i < 4; i++)
    {
-      m_iStatusTranslation[i] = i + 1;
-      m_iStatusThresholds[i] = 80 - i * 20;
+      m_statusTranslation[i] = i + 1;
+      m_statusThresholds[i] = 80 - i * 20;
    }
 	m_submapId = 0;
    m_moduleData = NULL;
@@ -98,11 +96,11 @@ NetObj::~NetObj()
    MutexDestroy(m_mutexACL);
    RWLockDestroy(m_rwlockParentList);
    RWLockDestroy(m_rwlockChildList);
-   safe_free(m_pChildList);
-   safe_free(m_pParentList);
+   delete m_childList;
+   delete m_parentList;
    delete m_accessList;
 	safe_free(m_pdwTrustedNodes);
-   safe_free(m_pszComments);
+   safe_free(m_comments);
    delete m_moduleData;
    delete m_postalAddress;
    delete m_dashboards;
@@ -213,19 +211,19 @@ bool NetObj::loadCommonProperties(DB_HANDLE hdb)
 			if (DBGetNumRows(hResult) > 0)
 			{
 				DBGetField(hResult, 0, 0, m_name, MAX_OBJECT_NAME);
-				m_iStatus = DBGetFieldLong(hResult, 0, 1);
+				m_status = DBGetFieldLong(hResult, 0, 1);
 				m_isDeleted = DBGetFieldLong(hResult, 0, 2) ? true : false;
 				m_inheritAccessRights = DBGetFieldLong(hResult, 0, 3) ? true : false;
 				m_dwTimeStamp = DBGetFieldULong(hResult, 0, 4);
-				m_iStatusCalcAlg = DBGetFieldLong(hResult, 0, 5);
-				m_iStatusPropAlg = DBGetFieldLong(hResult, 0, 6);
-				m_iFixedStatus = DBGetFieldLong(hResult, 0, 7);
-				m_iStatusShift = DBGetFieldLong(hResult, 0, 8);
-				DBGetFieldByteArray(hResult, 0, 9, m_iStatusTranslation, 4, STATUS_WARNING);
-				m_iStatusSingleThreshold = DBGetFieldLong(hResult, 0, 10);
-				DBGetFieldByteArray(hResult, 0, 11, m_iStatusThresholds, 4, 50);
-				safe_free(m_pszComments);
-				m_pszComments = DBGetField(hResult, 0, 12, NULL, 0);
+				m_statusCalcAlg = DBGetFieldLong(hResult, 0, 5);
+				m_statusPropAlg = DBGetFieldLong(hResult, 0, 6);
+				m_fixedStatus = DBGetFieldLong(hResult, 0, 7);
+				m_statusShift = DBGetFieldLong(hResult, 0, 8);
+				DBGetFieldByteArray(hResult, 0, 9, m_statusTranslation, 4, STATUS_WARNING);
+				m_statusSingleThreshold = DBGetFieldLong(hResult, 0, 10);
+				DBGetFieldByteArray(hResult, 0, 11, m_statusThresholds, 4, 50);
+				safe_free(m_comments);
+				m_comments = DBGetField(hResult, 0, 12, NULL, 0);
 				m_isSystem = DBGetFieldLong(hResult, 0, 13) ? true : false;
 
 				int locType = DBGetFieldLong(hResult, 0, 14);
@@ -398,25 +396,25 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
    TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32];
    for(int i = 0, j = 0; i < 4; i++, j += 2)
    {
-      _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_iStatusTranslation[i]);
-      _sntprintf(&szThresholds[j], 16 - j, _T("%02X"), (BYTE)m_iStatusThresholds[i]);
+      _sntprintf(&szTranslation[j], 16 - j, _T("%02X"), (BYTE)m_statusTranslation[i]);
+      _sntprintf(&szThresholds[j], 16 - j, _T("%02X"), (BYTE)m_statusThresholds[i]);
    }
 	_sntprintf(lat, 32, _T("%f"), m_geoLocation.getLatitude());
 	_sntprintf(lon, 32, _T("%f"), m_geoLocation.getLongitude());
 
 	DBBind(hStmt, 1, DB_SQLTYPE_VARCHAR, m_name, DB_BIND_STATIC);
-	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_iStatus);
+	DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (LONG)m_status);
    DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, (LONG)(m_isDeleted ? 1 : 0));
 	DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, (LONG)(m_inheritAccessRights ? 1 : 0));
 	DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, (LONG)m_dwTimeStamp);
-	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_iStatusCalcAlg);
-	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_iStatusPropAlg);
-	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_iFixedStatus);
-	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_iStatusShift);
+	DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, (LONG)m_statusCalcAlg);
+	DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_statusPropAlg);
+	DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, (LONG)m_fixedStatus);
+	DBBind(hStmt, 9, DB_SQLTYPE_INTEGER, (LONG)m_statusShift);
 	DBBind(hStmt, 10, DB_SQLTYPE_VARCHAR, szTranslation, DB_BIND_STATIC);
-	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_iStatusSingleThreshold);
+	DBBind(hStmt, 11, DB_SQLTYPE_INTEGER, (LONG)m_statusSingleThreshold);
 	DBBind(hStmt, 12, DB_SQLTYPE_VARCHAR, szThresholds, DB_BIND_STATIC);
-	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_pszComments, DB_BIND_STATIC);
+	DBBind(hStmt, 13, DB_SQLTYPE_VARCHAR, m_comments, DB_BIND_STATIC);
    DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, (LONG)(m_isSystem ? 1 : 0));
 	DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, (LONG)m_geoLocation.getType());
 	DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, lat, DB_BIND_STATIC);
@@ -505,16 +503,11 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
  */
 void NetObj::addChild(NetObj *object)
 {
-   LockChildList(TRUE);
-   for(UINT32 i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i] == object)
-      {
-         UnlockChildList();
-         return;     // Already in the child list
-      }
-   m_pChildList = (NetObj **)realloc(m_pChildList, sizeof(NetObj *) * (m_dwChildCount + 1));
-   m_pChildList[m_dwChildCount++] = object;
-   UnlockChildList();
+   lockChildList(true);
+   if (m_childList->contains(object))
+      return;     // Already in the child list
+   m_childList->add(object);
+   unlockChildList();
 	incRefCount();
    setModified();
    DbgPrintf(7, _T("NetObj::addChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
@@ -525,16 +518,11 @@ void NetObj::addChild(NetObj *object)
  */
 void NetObj::addParent(NetObj *object)
 {
-   LockParentList(TRUE);
-   for(UINT32 i = 0; i < m_dwParentCount; i++)
-      if (m_pParentList[i] == object)
-      {
-         UnlockParentList();
-         return;     // Already in the parents list
-      }
-   m_pParentList = (NetObj **)realloc(m_pParentList, sizeof(NetObj *) * (m_dwParentCount + 1));
-   m_pParentList[m_dwParentCount++] = object;
-   UnlockParentList();
+   lockParentList(true);
+   if (m_parentList->contains(object))
+      return;     // Already in the parents list
+   m_parentList->add(object);
+   unlockParentList();
 	incRefCount();
    setModified();
    DbgPrintf(7, _T("NetObj::addParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
@@ -545,33 +533,22 @@ void NetObj::addParent(NetObj *object)
  */
 void NetObj::deleteChild(NetObj *object)
 {
-   UINT32 i;
+   int i;
 
-   LockChildList(TRUE);
-   for(i = 0; i < m_dwChildCount; i++)
-      if (m_pChildList[i] == object)
+   lockChildList(true);
+   for(i = 0; i < m_childList->size(); i++)
+      if (m_childList->get(i) == object)
          break;
 
-   if (i == m_dwChildCount)   // No such object
+   if (i == m_childList->size())   // No such object
    {
-      UnlockChildList();
+      unlockChildList();
       return;
    }
 
    DbgPrintf(7, _T("NetObj::deleteChild: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
-
-   m_dwChildCount--;
-   if (m_dwChildCount > 0)
-   {
-      memmove(&m_pChildList[i], &m_pChildList[i + 1], sizeof(NetObj *) * (m_dwChildCount - i));
-      m_pChildList = (NetObj **)realloc(m_pChildList, sizeof(NetObj *) * m_dwChildCount);
-   }
-   else
-   {
-      free(m_pChildList);
-      m_pChildList = NULL;
-   }
-   UnlockChildList();
+   m_childList->remove(i);
+   unlockChildList();
 	decRefCount();
    setModified();
 }
@@ -581,32 +558,22 @@ void NetObj::deleteChild(NetObj *object)
  */
 void NetObj::deleteParent(NetObj *object)
 {
-   UINT32 i;
+   int i;
 
-   LockParentList(TRUE);
-   for(i = 0; i < m_dwParentCount; i++)
-      if (m_pParentList[i] == object)
+   lockParentList(true);
+   for(i = 0; i < m_parentList->size(); i++)
+      if (m_parentList->get(i) == object)
          break;
-   if (i == m_dwParentCount)   // No such object
+   if (i == m_parentList->size())   // No such object
    {
-      UnlockParentList();
+      unlockParentList();
       return;
    }
 
    DbgPrintf(7, _T("NetObj::deleteParent: this=%s [%d]; object=%s [%d]"), m_name, m_id, object->m_name, object->m_id);
 
-   m_dwParentCount--;
-   if (m_dwParentCount > 0)
-   {
-      memmove(&m_pParentList[i], &m_pParentList[i + 1], sizeof(NetObj *) * (m_dwParentCount - i));
-      m_pParentList = (NetObj **)realloc(m_pParentList, sizeof(NetObj *) * m_dwParentCount);
-   }
-   else
-   {
-      free(m_pParentList);
-      m_pParentList = NULL;
-   }
-   UnlockParentList();
+   m_parentList->remove(i);
+   unlockParentList();
 	decRefCount();
    setModified();
 }
@@ -647,57 +614,55 @@ void NetObj::deleteObject(NetObj *initiator)
    // Delete references to this object from child objects
    DbgPrintf(5, _T("NetObj::deleteObject(): clearing child list for object %d"), m_id);
    ObjectArray<NetObj> *deleteList = NULL;
-   LockChildList(TRUE);
-   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   lockChildList(true);
+   for(UINT32 i = 0; i < m_childList->size(); i++)
    {
-      if (m_pChildList[i]->getParentCount() == 1)
+      NetObj *o = m_childList->get(i);
+      if (o->getParentCount() == 1)
       {
          // last parent, delete object
          if (deleteList == NULL)
             deleteList = new ObjectArray<NetObj>(16, 16, false);
-			deleteList->add(m_pChildList[i]);
+			deleteList->add(o);
       }
       else
       {
-         m_pChildList[i]->deleteParent(this);
+         o->deleteParent(this);
       }
 		decRefCount();
    }
-   free(m_pChildList);
-   m_pChildList = NULL;
-   m_dwChildCount = 0;
-   UnlockChildList();
+   m_childList->clear();
+   unlockChildList();
 
    // Delete orphaned child objects
    if (deleteList != NULL)
    {
       for(int i = 0; i < deleteList->size(); i++)
       {
-         NetObj *o = deleteList->get(i);
-         DbgPrintf(5, _T("NetObj::deleteObject(): calling deleteObject() on %s [%d]"), o->getName(), o->getId());
-         o->deleteObject(this);
+         NetObj *obj = deleteList->get(i);
+         DbgPrintf(5, _T("NetObj::deleteObject(): calling deleteObject() on %s [%d]"), obj->getName(), obj->getId());
+         obj->deleteObject(this);
       }
       delete deleteList;
    }
 
    // Remove references to this object from parent objects
    DbgPrintf(5, _T("NetObj::Delete(): clearing parent list for object %d"), m_id);
-   LockParentList(TRUE);
-   for(UINT32 i = 0; i < m_dwParentCount; i++)
+   lockParentList(true);
+   for(int i = 0; i < m_parentList->size(); i++)
    {
       // If parent is deletion initiator then this object already
       // removed from parent's list
-      if (m_pParentList[i] != initiator)
+      NetObj *obj = m_parentList->get(i);
+      if (obj != initiator)
       {
-         m_pParentList[i]->deleteChild(this);
-         m_pParentList[i]->calculateCompoundStatus();
+         obj->deleteChild(this);
+         obj->calculateCompoundStatus();
       }
 		decRefCount();
    }
-   free(m_pParentList);
-   m_pParentList = NULL;
-   m_dwParentCount = 0;
-   UnlockParentList();
+   m_parentList->clear();
+   unlockParentList();
 
    lockProperties();
    m_isHidden = false;
@@ -724,18 +689,16 @@ void NetObj::onObjectDelete(UINT32 dwObjectId)
  */
 const TCHAR *NetObj::dbgGetChildList(TCHAR *szBuffer)
 {
-   UINT32 i;
    TCHAR *pBuf = szBuffer;
-
    *pBuf = 0;
-   LockChildList(FALSE);
-   for(i = 0, pBuf = szBuffer; i < m_dwChildCount; i++)
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      _sntprintf(pBuf, 10, _T("%d "), m_pChildList[i]->getId());
+      _sntprintf(pBuf, 10, _T("%d "), m_childList->get(i)->getId());
       while(*pBuf)
          pBuf++;
    }
-   UnlockChildList();
+   unlockChildList();
    if (pBuf != szBuffer)
       *(pBuf - 1) = 0;
    return szBuffer;
@@ -746,18 +709,16 @@ const TCHAR *NetObj::dbgGetChildList(TCHAR *szBuffer)
  */
 const TCHAR *NetObj::dbgGetParentList(TCHAR *szBuffer)
 {
-   UINT32 i;
    TCHAR *pBuf = szBuffer;
-
    *pBuf = 0;
-   LockParentList(FALSE);
-   for(i = 0; i < m_dwParentCount; i++)
+   lockParentList(false);
+   for(int i = 0; i < m_parentList->size(); i++)
    {
-      _sntprintf(pBuf, 10, _T("%d "), m_pParentList[i]->getId());
+      _sntprintf(pBuf, 10, _T("%d "), m_parentList->get(i)->getId());
       while(*pBuf)
          pBuf++;
    }
-   UnlockParentList();
+   unlockParentList();
    if (pBuf != szBuffer)
       *(pBuf - 1) = 0;
    return szBuffer;
@@ -768,7 +729,7 @@ const TCHAR *NetObj::dbgGetParentList(TCHAR *szBuffer)
  */
 void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   if (m_iStatus == STATUS_UNMANAGED)
+   if (m_status == STATUS_UNMANAGED)
       return;
 
    int mostCriticalAlarm = GetMostCriticalStatusForObject(m_id);
@@ -776,22 +737,21 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       (getObjectClass() == OBJECT_NODE || getObjectClass() == OBJECT_MOBILEDEVICE || getObjectClass() == OBJECT_CLUSTER || getObjectClass() == OBJECT_ACCESSPOINT) ?
          ((DataCollectionTarget *)this)->getMostCriticalDCIStatus() : STATUS_UNKNOWN;
 
-   UINT32 i;
-   int oldStatus = m_iStatus;
-   int mostCriticalStatus, count, iStatusAlg;
+   int oldStatus = m_status;
+   int mostCriticalStatus, i, count, iStatusAlg;
    int nSingleThreshold, *pnThresholds;
    int nRating[5], iChildStatus, nThresholds[4];
 
    lockProperties();
-   if (m_iStatusCalcAlg == SA_CALCULATE_DEFAULT)
+   if (m_statusCalcAlg == SA_CALCULATE_DEFAULT)
    {
       iStatusAlg = GetDefaultStatusCalculation(&nSingleThreshold, &pnThresholds);
    }
    else
    {
-      iStatusAlg = m_iStatusCalcAlg;
-      nSingleThreshold = m_iStatusSingleThreshold;
-      pnThresholds = m_iStatusThresholds;
+      iStatusAlg = m_statusCalcAlg;
+      nSingleThreshold = m_statusSingleThreshold;
+      pnThresholds = m_statusThresholds;
    }
    if (iStatusAlg == SA_CALCULATE_SINGLE_THRESHOLD)
    {
@@ -803,10 +763,10 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
    switch(iStatusAlg)
    {
       case SA_CALCULATE_MOST_CRITICAL:
-         LockChildList(FALSE);
-         for(i = 0, count = 0, mostCriticalStatus = -1; i < m_dwChildCount; i++)
+         lockChildList(false);
+         for(i = 0, count = 0, mostCriticalStatus = -1; i < m_childList->size(); i++)
          {
-            iChildStatus = m_pChildList[i]->getPropagatedStatus();
+            iChildStatus = m_childList->get(i)->getPropagatedStatus();
             if ((iChildStatus < STATUS_UNKNOWN) &&
                 (iChildStatus > mostCriticalStatus))
             {
@@ -814,17 +774,17 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
                count++;
             }
          }
-         m_iStatus = (count > 0) ? mostCriticalStatus : STATUS_UNKNOWN;
-         UnlockChildList();
+         m_status = (count > 0) ? mostCriticalStatus : STATUS_UNKNOWN;
+         unlockChildList();
          break;
       case SA_CALCULATE_SINGLE_THRESHOLD:
       case SA_CALCULATE_MULTIPLE_THRESHOLDS:
          // Step 1: calculate severity raitings
          memset(nRating, 0, sizeof(int) * 5);
-         LockChildList(FALSE);
-         for(i = 0, count = 0; i < m_dwChildCount; i++)
+         lockChildList(false);
+         for(i = 0, count = 0; i < m_childList->size(); i++)
          {
-            iChildStatus = m_pChildList[i]->getPropagatedStatus();
+            iChildStatus = m_childList->get(i)->getPropagatedStatus();
             if (iChildStatus < STATUS_UNKNOWN)
             {
                while(iChildStatus >= 0)
@@ -832,7 +792,7 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
                count++;
             }
          }
-         UnlockChildList();
+         unlockChildList();
 
          // Step 2: check what severity rating is above threshold
          if (count > 0)
@@ -840,41 +800,41 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
             for(i = 4; i > 0; i--)
                if (nRating[i] * 100 / count >= pnThresholds[i - 1])
                   break;
-            m_iStatus = i;
+            m_status = i;
          }
          else
          {
-            m_iStatus = STATUS_UNKNOWN;
+            m_status = STATUS_UNKNOWN;
          }
          break;
       default:
-         m_iStatus = STATUS_UNKNOWN;
+         m_status = STATUS_UNKNOWN;
          break;
    }
 
    // If alarms exist for object, apply alarm severity to object's status
    if (mostCriticalAlarm != STATUS_UNKNOWN)
    {
-      if (m_iStatus == STATUS_UNKNOWN)
+      if (m_status == STATUS_UNKNOWN)
       {
-         m_iStatus = mostCriticalAlarm;
+         m_status = mostCriticalAlarm;
       }
       else
       {
-         m_iStatus = max(m_iStatus, mostCriticalAlarm);
+         m_status = max(m_status, mostCriticalAlarm);
       }
    }
 
    // If DCI status is calculated for object apply DCI object's statud
    if (mostCriticalDCI != STATUS_UNKNOWN)
    {
-      if (m_iStatus == STATUS_UNKNOWN)
+      if (m_status == STATUS_UNKNOWN)
       {
-         m_iStatus = mostCriticalDCI;
+         m_status = mostCriticalDCI;
       }
       else
       {
-         m_iStatus = max(m_iStatus, mostCriticalDCI);
+         m_status = max(m_status, mostCriticalDCI);
       }
    }
 
@@ -884,13 +844,13 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
       int moduleStatus = g_pModuleList[__i].pfCalculateObjectStatus(this);
       if (moduleStatus != STATUS_UNKNOWN)
       {
-         if (m_iStatus == STATUS_UNKNOWN)
+         if (m_status == STATUS_UNKNOWN)
          {
-            m_iStatus = moduleStatus;
+            m_status = moduleStatus;
          }
          else
          {
-            m_iStatus = max(m_iStatus, moduleStatus);
+            m_status = max(m_status, moduleStatus);
          }
       }
    }
@@ -898,12 +858,12 @@ void NetObj::calculateCompoundStatus(BOOL bForcedRecalc)
    unlockProperties();
 
    // Cause parent object(s) to recalculate it's status
-   if ((oldStatus != m_iStatus) || bForcedRecalc)
+   if ((oldStatus != m_status) || bForcedRecalc)
    {
-      LockParentList(FALSE);
-      for(i = 0; i < m_dwParentCount; i++)
-         m_pParentList[i]->calculateCompoundStatus();
-      UnlockParentList();
+      lockParentList(false);
+      for(i = 0; i < m_parentList->size(); i++)
+         m_parentList->get(i)->calculateCompoundStatus();
+      unlockParentList();
       lockProperties();
       setModified();
       unlockProperties();
@@ -1010,26 +970,26 @@ void NetObj::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_OBJECT_ID, m_id);
 	pMsg->setField(VID_GUID, m_guid);
    pMsg->setField(VID_OBJECT_NAME, m_name);
-   pMsg->setField(VID_OBJECT_STATUS, (WORD)m_iStatus);
+   pMsg->setField(VID_OBJECT_STATUS, (WORD)m_status);
    pMsg->setField(VID_IS_DELETED, (WORD)(m_isDeleted ? 1 : 0));
    pMsg->setField(VID_IS_SYSTEM, (INT16)(m_isSystem ? 1 : 0));
    pMsg->setField(VID_MAINTENANCE_MODE, (INT16)(m_maintenanceEventId ? 1 : 0));
 
    pMsg->setField(VID_INHERIT_RIGHTS, m_inheritAccessRights);
-   pMsg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_iStatusCalcAlg);
-   pMsg->setField(VID_STATUS_PROPAGATION_ALG, (WORD)m_iStatusPropAlg);
-   pMsg->setField(VID_FIXED_STATUS, (WORD)m_iFixedStatus);
-   pMsg->setField(VID_STATUS_SHIFT, (WORD)m_iStatusShift);
-   pMsg->setField(VID_STATUS_TRANSLATION_1, (WORD)m_iStatusTranslation[0]);
-   pMsg->setField(VID_STATUS_TRANSLATION_2, (WORD)m_iStatusTranslation[1]);
-   pMsg->setField(VID_STATUS_TRANSLATION_3, (WORD)m_iStatusTranslation[2]);
-   pMsg->setField(VID_STATUS_TRANSLATION_4, (WORD)m_iStatusTranslation[3]);
-   pMsg->setField(VID_STATUS_SINGLE_THRESHOLD, (WORD)m_iStatusSingleThreshold);
-   pMsg->setField(VID_STATUS_THRESHOLD_1, (WORD)m_iStatusThresholds[0]);
-   pMsg->setField(VID_STATUS_THRESHOLD_2, (WORD)m_iStatusThresholds[1]);
-   pMsg->setField(VID_STATUS_THRESHOLD_3, (WORD)m_iStatusThresholds[2]);
-   pMsg->setField(VID_STATUS_THRESHOLD_4, (WORD)m_iStatusThresholds[3]);
-   pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
+   pMsg->setField(VID_STATUS_CALCULATION_ALG, (WORD)m_statusCalcAlg);
+   pMsg->setField(VID_STATUS_PROPAGATION_ALG, (WORD)m_statusPropAlg);
+   pMsg->setField(VID_FIXED_STATUS, (WORD)m_fixedStatus);
+   pMsg->setField(VID_STATUS_SHIFT, (WORD)m_statusShift);
+   pMsg->setField(VID_STATUS_TRANSLATION_1, (WORD)m_statusTranslation[0]);
+   pMsg->setField(VID_STATUS_TRANSLATION_2, (WORD)m_statusTranslation[1]);
+   pMsg->setField(VID_STATUS_TRANSLATION_3, (WORD)m_statusTranslation[2]);
+   pMsg->setField(VID_STATUS_TRANSLATION_4, (WORD)m_statusTranslation[3]);
+   pMsg->setField(VID_STATUS_SINGLE_THRESHOLD, (WORD)m_statusSingleThreshold);
+   pMsg->setField(VID_STATUS_THRESHOLD_1, (WORD)m_statusThresholds[0]);
+   pMsg->setField(VID_STATUS_THRESHOLD_2, (WORD)m_statusThresholds[1]);
+   pMsg->setField(VID_STATUS_THRESHOLD_3, (WORD)m_statusThresholds[2]);
+   pMsg->setField(VID_STATUS_THRESHOLD_4, (WORD)m_statusThresholds[3]);
+   pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
 	pMsg->setField(VID_IMAGE, m_image);
 	pMsg->setField(VID_SUBMAP_ID, m_submapId);
 	pMsg->setField(VID_NUM_TRUSTED_NODES, m_dwNumTrustedNodes);
@@ -1084,19 +1044,20 @@ void NetObj::fillMessage(NXCPMessage *msg)
    m_accessList->fillMessage(msg);
    unlockACL();
 
-   UINT32 i, dwId;
+   UINT32 dwId;
+   int i;
 
-   LockParentList(FALSE);
-   msg->setField(VID_PARENT_CNT, m_dwParentCount);
-   for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_dwParentCount; i++, dwId++)
-      msg->setField(dwId, m_pParentList[i]->getId());
-   UnlockParentList();
+   lockParentList(false);
+   msg->setField(VID_PARENT_CNT, m_parentList->size());
+   for(i = 0, dwId = VID_PARENT_ID_BASE; i < m_parentList->size(); i++, dwId++)
+      msg->setField(dwId, m_parentList->get(i)->getId());
+   unlockParentList();
 
-   LockChildList(FALSE);
-   msg->setField(VID_CHILD_CNT, m_dwChildCount);
-   for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_dwChildCount; i++, dwId++)
-      msg->setField(dwId, m_pChildList[i]->getId());
-   UnlockChildList();
+   lockChildList(false);
+   msg->setField(VID_CHILD_CNT, m_childList->size());
+   for(i = 0, dwId = VID_CHILD_ID_BASE; i < m_childList->size(); i++, dwId++)
+      msg->setField(dwId, m_childList->get(i)->getId());
+   unlockChildList();
 }
 
 /**
@@ -1149,19 +1110,19 @@ UINT32 NetObj::modifyFromMessageInternal(NXCPMessage *pRequest)
    // Change object's status calculation/propagation algorithms
    if (pRequest->isFieldExist(VID_STATUS_CALCULATION_ALG))
    {
-      m_iStatusCalcAlg = pRequest->getFieldAsInt16(VID_STATUS_CALCULATION_ALG);
-      m_iStatusPropAlg = pRequest->getFieldAsInt16(VID_STATUS_PROPAGATION_ALG);
-      m_iFixedStatus = pRequest->getFieldAsInt16(VID_FIXED_STATUS);
-      m_iStatusShift = pRequest->getFieldAsInt16(VID_STATUS_SHIFT);
-      m_iStatusTranslation[0] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_1);
-      m_iStatusTranslation[1] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_2);
-      m_iStatusTranslation[2] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_3);
-      m_iStatusTranslation[3] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_4);
-      m_iStatusSingleThreshold = pRequest->getFieldAsInt16(VID_STATUS_SINGLE_THRESHOLD);
-      m_iStatusThresholds[0] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_1);
-      m_iStatusThresholds[1] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_2);
-      m_iStatusThresholds[2] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_3);
-      m_iStatusThresholds[3] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_4);
+      m_statusCalcAlg = pRequest->getFieldAsInt16(VID_STATUS_CALCULATION_ALG);
+      m_statusPropAlg = pRequest->getFieldAsInt16(VID_STATUS_PROPAGATION_ALG);
+      m_fixedStatus = pRequest->getFieldAsInt16(VID_FIXED_STATUS);
+      m_statusShift = pRequest->getFieldAsInt16(VID_STATUS_SHIFT);
+      m_statusTranslation[0] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_1);
+      m_statusTranslation[1] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_2);
+      m_statusTranslation[2] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_3);
+      m_statusTranslation[3] = pRequest->getFieldAsInt16(VID_STATUS_TRANSLATION_4);
+      m_statusSingleThreshold = pRequest->getFieldAsInt16(VID_STATUS_SINGLE_THRESHOLD);
+      m_statusThresholds[0] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_1);
+      m_statusThresholds[1] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_2);
+      m_statusThresholds[2] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_3);
+      m_statusThresholds[3] = pRequest->getFieldAsInt16(VID_STATUS_THRESHOLD_4);
    }
 
 	// Change image
@@ -1290,12 +1251,11 @@ UINT32 NetObj::getUserRights(UINT32 userId)
       // We don't. If this object inherit rights from parents, get them
       if (m_inheritAccessRights)
       {
-         UINT32 i;
-
-         LockParentList(FALSE);
-         for(i = 0, dwRights = 0; i < m_dwParentCount; i++)
-            dwRights |= m_pParentList[i]->getUserRights(userId);
-         UnlockParentList();
+         dwRights = 0;
+         lockParentList(false);
+         for(int i = 0; i < m_parentList->size(); i++)
+            dwRights |= m_parentList->get(i)->getUserRights(userId);
+         unlockParentList();
       }
    }
 
@@ -1336,20 +1296,19 @@ void NetObj::dropUserAccess(UINT32 dwUserId)
  */
 void NetObj::setMgmtStatus(BOOL bIsManaged)
 {
-   UINT32 i;
    int oldStatus;
 
    lockProperties();
 
-   if ((bIsManaged && (m_iStatus != STATUS_UNMANAGED)) ||
-       ((!bIsManaged) && (m_iStatus == STATUS_UNMANAGED)))
+   if ((bIsManaged && (m_status != STATUS_UNMANAGED)) ||
+       ((!bIsManaged) && (m_status == STATUS_UNMANAGED)))
    {
       unlockProperties();
       return;  // Status is already correct
    }
 
-   oldStatus = m_iStatus;
-   m_iStatus = (bIsManaged ? STATUS_UNKNOWN : STATUS_UNMANAGED);
+   oldStatus = m_status;
+   m_status = (bIsManaged ? STATUS_UNKNOWN : STATUS_UNMANAGED);
 
    // Generate event if current object is a node
    if (getObjectClass() == OBJECT_NODE)
@@ -1359,16 +1318,16 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
    unlockProperties();
 
    // Change status for child objects also
-   LockChildList(FALSE);
-   for(i = 0; i < m_dwChildCount; i++)
-      m_pChildList[i]->setMgmtStatus(bIsManaged);
-   UnlockChildList();
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
+      m_childList->get(i)->setMgmtStatus(bIsManaged);
+   unlockChildList();
 
    // Cause parent object(s) to recalculate it's status
-   LockParentList(FALSE);
-   for(i = 0; i < m_dwParentCount; i++)
-      m_pParentList[i]->calculateCompoundStatus();
-   UnlockParentList();
+   lockParentList(false);
+   for(int i = 0; i < m_parentList->size(); i++)
+      m_parentList->get(i)->calculateCompoundStatus();
+   unlockParentList();
 }
 
 /**
@@ -1378,7 +1337,6 @@ void NetObj::setMgmtStatus(BOOL bIsManaged)
  */
 bool NetObj::isChild(UINT32 id)
 {
-   UINT32 i;
    bool bResult = false;
 
    // Check for our own ID (object ID should never change, so we may not lock object's data)
@@ -1388,27 +1346,27 @@ bool NetObj::isChild(UINT32 id)
    // First, walk through our own child list
    if (!bResult)
    {
-      LockChildList(FALSE);
-      for(i = 0; i < m_dwChildCount; i++)
-         if (m_pChildList[i]->getId() == id)
+      lockChildList(false);
+      for(int i = 0; i < m_childList->size(); i++)
+         if (m_childList->get(i)->getId() == id)
          {
             bResult = true;
             break;
          }
-      UnlockChildList();
+      unlockChildList();
    }
 
    // If given object is not in child list, check if it is indirect child
    if (!bResult)
    {
-      LockChildList(FALSE);
-      for(i = 0; i < m_dwChildCount; i++)
-         if (m_pChildList[i]->isChild(id))
+      lockChildList(false);
+      for(int i = 0; i < m_childList->size(); i++)
+         if (m_childList->get(i)->isChild(id))
          {
             bResult = true;
             break;
          }
-      UnlockChildList();
+      unlockChildList();
    }
 
    return bResult;
@@ -1437,34 +1395,33 @@ void NetObj::sendPollerMsg(UINT32 dwRqId, const TCHAR *pszFormat, ...)
  */
 void NetObj::addChildNodesToList(ObjectArray<Node> *nodeList, UINT32 dwUserId)
 {
-   UINT32 i;
-
-   LockChildList(FALSE);
+   lockChildList(false);
 
    // Walk through our own child list
-   for(i = 0; i < m_dwChildCount; i++)
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      if (m_pChildList[i]->getObjectClass() == OBJECT_NODE)
+      NetObj *object = m_childList->get(i);
+      if (object->getObjectClass() == OBJECT_NODE)
       {
          // Check if this node already in the list
 			int j;
 			for(j = 0; j < nodeList->size(); j++)
-				if (nodeList->get(j)->getId() == m_pChildList[i]->getId())
+				if (nodeList->get(j)->getId() == object->getId())
                break;
          if (j == nodeList->size())
          {
-            m_pChildList[i]->incRefCount();
-				nodeList->add((Node *)m_pChildList[i]);
+            object->incRefCount();
+				nodeList->add((Node *)object);
          }
       }
       else
       {
-         if (m_pChildList[i]->checkAccessRights(dwUserId, OBJECT_ACCESS_READ))
-            m_pChildList[i]->addChildNodesToList(nodeList, dwUserId);
+         if (object->checkAccessRights(dwUserId, OBJECT_ACCESS_READ))
+            object->addChildNodesToList(nodeList, dwUserId);
       }
    }
 
-   UnlockChildList();
+   unlockChildList();
 }
 
 /**
@@ -1472,34 +1429,32 @@ void NetObj::addChildNodesToList(ObjectArray<Node> *nodeList, UINT32 dwUserId)
  */
 void NetObj::addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList, UINT32 dwUserId)
 {
-   UINT32 i;
-
-   LockChildList(FALSE);
+   lockChildList(false);
 
    // Walk through our own child list
-   for(i = 0; i < m_dwChildCount; i++)
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
+      NetObj *object = m_childList->get(i);
+      if (!object->checkAccessRights(dwUserId, OBJECT_ACCESS_READ))
+         continue;
+
+      if (object->isDataCollectionTarget())
       {
          // Check if this objects already in the list
 			int j;
 			for(j = 0; j < dctList->size(); j++)
-				if (dctList->get(j)->getId() == m_pChildList[i]->getId())
+				if (dctList->get(j)->getId() == object->getId())
                break;
          if (j == dctList->size())
          {
-            m_pChildList[i]->incRefCount();
-				dctList->add((DataCollectionTarget *)m_pChildList[i]);
+            object->incRefCount();
+				dctList->add((DataCollectionTarget *)object);
          }
       }
-      else
-      {
-         if (m_pChildList[i]->checkAccessRights(dwUserId, OBJECT_ACCESS_READ))
-            m_pChildList[i]->addChildDCTargetsToList(dctList, dwUserId);
-      }
+      object->addChildDCTargetsToList(dctList, dwUserId);
    }
 
-   UnlockChildList();
+   unlockChildList();
 }
 
 /**
@@ -1507,12 +1462,10 @@ void NetObj::addChildDCTargetsToList(ObjectArray<DataCollectionTarget> *dctList,
  */
 void NetObj::hide()
 {
-   UINT32 i;
-
-   LockChildList(FALSE);
-   for(i = 0; i < m_dwChildCount; i++)
-      m_pChildList[i]->hide();
-   UnlockChildList();
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
+      m_childList->get(i)->hide();
+   unlockChildList();
 
 	lockProperties();
    m_isHidden = true;
@@ -1524,18 +1477,16 @@ void NetObj::hide()
  */
 void NetObj::unhide()
 {
-   UINT32 i;
-
    lockProperties();
    m_isHidden = false;
    if (!m_isSystem)
       EnumerateClientSessions(BroadcastObjectChange, this);
    unlockProperties();
 
-   LockChildList(FALSE);
-   for(i = 0; i < m_dwChildCount; i++)
-      m_pChildList[i]->unhide();
-   UnlockChildList();
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
+      m_childList->get(i)->unhide();
+   unlockChildList();
 }
 
 /**
@@ -1545,24 +1496,24 @@ int NetObj::getPropagatedStatus()
 {
    int iStatus;
 
-   if (m_iStatusPropAlg == SA_PROPAGATE_DEFAULT)
+   if (m_statusPropAlg == SA_PROPAGATE_DEFAULT)
    {
-      iStatus = DefaultPropagatedStatus(m_iStatus);
+      iStatus = DefaultPropagatedStatus(m_status);
    }
    else
    {
-      switch(m_iStatusPropAlg)
+      switch(m_statusPropAlg)
       {
          case SA_PROPAGATE_UNCHANGED:
-            iStatus = m_iStatus;
+            iStatus = m_status;
             break;
          case SA_PROPAGATE_FIXED:
-            iStatus = ((m_iStatus > STATUS_NORMAL) && (m_iStatus < STATUS_UNKNOWN)) ? m_iFixedStatus : m_iStatus;
+            iStatus = ((m_status > STATUS_NORMAL) && (m_status < STATUS_UNKNOWN)) ? m_fixedStatus : m_status;
             break;
          case SA_PROPAGATE_RELATIVE:
-            if ((m_iStatus > STATUS_NORMAL) && (m_iStatus < STATUS_UNKNOWN))
+            if ((m_status > STATUS_NORMAL) && (m_status < STATUS_UNKNOWN))
             {
-               iStatus = m_iStatus + m_iStatusShift;
+               iStatus = m_status + m_statusShift;
                if (iStatus < 0)
                   iStatus = 0;
                if (iStatus > STATUS_CRITICAL)
@@ -1570,17 +1521,17 @@ int NetObj::getPropagatedStatus()
             }
             else
             {
-               iStatus = m_iStatus;
+               iStatus = m_status;
             }
             break;
          case SA_PROPAGATE_TRANSLATED:
-            if ((m_iStatus > STATUS_NORMAL) && (m_iStatus < STATUS_UNKNOWN))
+            if ((m_status > STATUS_NORMAL) && (m_status < STATUS_UNKNOWN))
             {
-               iStatus = m_iStatusTranslation[m_iStatus - 1];
+               iStatus = m_statusTranslation[m_status - 1];
             }
             else
             {
-               iStatus = m_iStatus;
+               iStatus = m_status;
             }
             break;
          default:
@@ -1606,8 +1557,8 @@ void NetObj::prepareForDeletion()
 void NetObj::setComments(TCHAR *text)
 {
    lockProperties();
-   safe_free(m_pszComments);
-   m_pszComments = text;
+   safe_free(m_comments);
+   m_comments = text;
    setModified();
    unlockProperties();
 }
@@ -1618,7 +1569,7 @@ void NetObj::setComments(TCHAR *text)
 void NetObj::commentsToMessage(NXCPMessage *pMsg)
 {
    lockProperties();
-   pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_pszComments));
+   pMsg->setField(VID_COMMENTS, CHECK_NULL_EX(m_comments));
    unlockProperties();
 }
 
@@ -1713,17 +1664,18 @@ NXSL_Array *NetObj::getParentsForNXSL()
 	NXSL_Array *parents = new NXSL_Array;
 	int index = 0;
 
-	LockParentList(FALSE);
-	for(UINT32 i = 0; i < m_dwParentCount; i++)
+	lockParentList(false);
+	for(int i = 0; i < m_parentList->size(); i++)
 	{
-		if ((m_pParentList[i]->getObjectClass() == OBJECT_CONTAINER) ||
-			 (m_pParentList[i]->getObjectClass() == OBJECT_SERVICEROOT) ||
-			 (m_pParentList[i]->getObjectClass() == OBJECT_NETWORK))
+	   NetObj *obj = m_parentList->get(i);
+		if ((obj->getObjectClass() == OBJECT_CONTAINER) ||
+			 (obj->getObjectClass() == OBJECT_SERVICEROOT) ||
+			 (obj->getObjectClass() == OBJECT_NETWORK))
 		{
-			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pParentList[i])));
+			parents->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, obj)));
 		}
 	}
-	UnlockParentList();
+	unlockParentList();
 
 	return parents;
 }
@@ -1736,23 +1688,24 @@ NXSL_Array *NetObj::getChildrenForNXSL()
 	NXSL_Array *children = new NXSL_Array;
 	int index = 0;
 
-	LockChildList(FALSE);
-	for(UINT32 i = 0; i < m_dwChildCount; i++)
+	lockChildList(false);
+	for(int i = 0; i < m_childList->size(); i++)
 	{
-		if (m_pChildList[i]->getObjectClass() == OBJECT_NODE)
+	   NetObj *obj = m_childList->get(i);
+		if (obj->getObjectClass() == OBJECT_NODE)
 		{
-			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_pChildList[i])));
+			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, obj)));
 		}
-		else if (m_pChildList[i]->getObjectClass() == OBJECT_INTERFACE)
+		else if (obj->getObjectClass() == OBJECT_INTERFACE)
 		{
-			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, m_pChildList[i])));
+			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, obj)));
 		}
 		else
 		{
-			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, m_pChildList[i])));
+			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, obj)));
 		}
 	}
-	UnlockChildList();
+	unlockChildList();
 
 	return children;
 }
@@ -1762,14 +1715,15 @@ NXSL_Array *NetObj::getChildrenForNXSL()
  */
 void NetObj::getFullChildListInternal(ObjectIndex *list, bool eventSourceOnly)
 {
-	LockChildList(FALSE);
-	for(UINT32 i = 0; i < m_dwChildCount; i++)
+	lockChildList(false);
+	for(int i = 0; i < m_childList->size(); i++)
 	{
-		if (!eventSourceOnly || IsEventSource(m_pChildList[i]->getObjectClass()))
-			list->put(m_pChildList[i]->getId(), m_pChildList[i]);
-		m_pChildList[i]->getFullChildListInternal(list, eventSourceOnly);
+      NetObj *obj = m_childList->get(i);
+		if (!eventSourceOnly || IsEventSource(obj->getObjectClass()))
+			list->put(obj->getId(), obj);
+		obj->getFullChildListInternal(list, eventSourceOnly);
 	}
-	UnlockChildList();
+	unlockChildList();
 }
 
 /**
@@ -1794,14 +1748,14 @@ ObjectArray<NetObj> *NetObj::getFullChildList(bool eventSourceOnly, bool updateR
  */
 ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)
 {
-	LockChildList(FALSE);
-	ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)m_dwChildCount, 16, false);
-	for(UINT32 i = 0; i < m_dwChildCount; i++)
+	lockChildList(false);
+	ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)m_childList->size(), 16, false);
+	for(int i = 0; i < m_childList->size(); i++)
 	{
-		if ((typeFilter == -1) || (typeFilter == m_pChildList[i]->getObjectClass()))
-			list->add(m_pChildList[i]);
+		if ((typeFilter == -1) || (typeFilter == m_childList->get(i)->getObjectClass()))
+			list->add(m_childList->get(i));
 	}
-	UnlockChildList();
+	unlockChildList();
 	return list;
 }
 
@@ -1814,14 +1768,14 @@ ObjectArray<NetObj> *NetObj::getChildList(int typeFilter)
  */
 ObjectArray<NetObj> *NetObj::getParentList(int typeFilter)
 {
-    LockParentList(FALSE);
-    ObjectArray<NetObj> *list = new ObjectArray<NetObj>((int)m_dwParentCount, 16, false);
-    for(UINT32 i = 0; i < m_dwParentCount; i++)
+    lockParentList(false);
+    ObjectArray<NetObj> *list = new ObjectArray<NetObj>(m_parentList->size(), 16, false);
+    for(int i = 0; i < m_parentList->size(); i++)
     {
-        if ((typeFilter == -1) || (typeFilter == m_pParentList[i]->getObjectClass()))
-            list->add(m_pParentList[i]);
+        if ((typeFilter == -1) || (typeFilter == m_parentList->get(i)->getObjectClass()))
+            list->add(m_parentList->get(i));
     }
-    UnlockParentList();
+    unlockParentList();
     return list;
 }
 
@@ -1831,16 +1785,17 @@ ObjectArray<NetObj> *NetObj::getParentList(int typeFilter)
 NetObj *NetObj::findChildObject(const TCHAR *name, int typeFilter)
 {
    NetObj *object = NULL;
-	LockChildList(FALSE);
-	for(UINT32 i = 0; i < m_dwChildCount; i++)
+	lockChildList(false);
+	for(int i = 0; i < m_childList->size(); i++)
 	{
-      if (((typeFilter == -1) || (typeFilter == m_pChildList[i]->getObjectClass())) && !_tcsicmp(name, m_pChildList[i]->getName()))
+	   NetObj *o = m_childList->get(i);
+      if (((typeFilter == -1) || (typeFilter == o->getObjectClass())) && !_tcsicmp(name, o->getName()))
       {
-         object = m_pChildList[i];
+         object = o;
          break;
       }
 	}
-	UnlockChildList();
+	unlockChildList();
 	return object;
 }
 
@@ -1857,6 +1812,14 @@ bool NetObj::showThresholdSummary()
  * Must return true if object is a possible event source
  */
 bool NetObj::isEventSource()
+{
+   return false;
+}
+
+/**
+ * Must return true if object is a possible data collection target
+ */
+bool NetObj::isDataCollectionTarget()
 {
    return false;
 }
@@ -2018,17 +1981,17 @@ bool NetObj::createLocationHistoryTable(DB_HANDLE hdb)
 void NetObj::setStatusCalculation(int method, int arg1, int arg2, int arg3, int arg4)
 {
    lockProperties();
-   m_iStatusCalcAlg = method;
+   m_statusCalcAlg = method;
    switch(method)
    {
       case SA_CALCULATE_SINGLE_THRESHOLD:
-         m_iStatusSingleThreshold = arg1;
+         m_statusSingleThreshold = arg1;
          break;
       case SA_CALCULATE_MULTIPLE_THRESHOLDS:
-         m_iStatusThresholds[0] = arg1;
-         m_iStatusThresholds[1] = arg2;
-         m_iStatusThresholds[2] = arg3;
-         m_iStatusThresholds[3] = arg4;
+         m_statusThresholds[0] = arg1;
+         m_statusThresholds[1] = arg2;
+         m_statusThresholds[2] = arg3;
+         m_statusThresholds[3] = arg4;
          break;
       default:
          break;
@@ -2043,20 +2006,20 @@ void NetObj::setStatusCalculation(int method, int arg1, int arg2, int arg3, int 
 void NetObj::setStatusPropagation(int method, int arg1, int arg2, int arg3, int arg4)
 {
    lockProperties();
-   m_iStatusPropAlg = method;
+   m_statusPropAlg = method;
    switch(method)
    {
       case SA_PROPAGATE_FIXED:
-         m_iFixedStatus = arg1;
+         m_fixedStatus = arg1;
          break;
       case SA_PROPAGATE_RELATIVE:
-         m_iStatusShift = arg1;
+         m_statusShift = arg1;
          break;
       case SA_PROPAGATE_TRANSLATED:
-         m_iStatusTranslation[0] = arg1;
-         m_iStatusTranslation[1] = arg2;
-         m_iStatusTranslation[2] = arg3;
-         m_iStatusTranslation[3] = arg4;
+         m_statusTranslation[0] = arg1;
+         m_statusTranslation[1] = arg2;
+         m_statusTranslation[2] = arg3;
+         m_statusTranslation[3] = arg4;
          break;
       default:
          break;
@@ -2072,13 +2035,14 @@ void NetObj::enterMaintenanceMode()
 {
    DbgPrintf(4, _T("Entering maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
 
-   LockChildList(FALSE);
-   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
-         m_pChildList[i]->enterMaintenanceMode();
+      NetObj *object = m_childList->get(i);
+      if (object->getStatus() != STATUS_UNMANAGED)
+         object->enterMaintenanceMode();
    }
-   UnlockChildList();
+   unlockChildList();
 }
 
 /**
@@ -2088,13 +2052,14 @@ void NetObj::leaveMaintenanceMode()
 {
    DbgPrintf(4, _T("Leaving maintenance mode for object %s [%d] (%s)"), m_name, m_id, getObjectClassName());
 
-   LockChildList(FALSE);
-   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      if (m_pChildList[i]->Status() != STATUS_UNMANAGED)
-         m_pChildList[i]->leaveMaintenanceMode();
+      NetObj *object = m_childList->get(i);
+      if (object->getStatus() != STATUS_UNMANAGED)
+         object->leaveMaintenanceMode();
    }
-   UnlockChildList();
+   unlockChildList();
 }
 
 /**

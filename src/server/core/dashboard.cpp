@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ Dashboard::Dashboard() : Container()
 	m_elements->setOwner(true);
 	m_numColumns = 1;
 	m_options = 0;
-	m_iStatus = STATUS_NORMAL;
+	m_status = STATUS_NORMAL;
 }
 
 /**
@@ -44,7 +44,7 @@ Dashboard::Dashboard(const TCHAR *name) : Container(name, 0)
 	m_elements->setOwner(true);
 	m_numColumns = 1;
 	m_options = 0;
-	m_iStatus = STATUS_NORMAL;
+	m_status = STATUS_NORMAL;
 }
 
 /**
@@ -60,7 +60,7 @@ Dashboard::~Dashboard()
  */
 void Dashboard::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   m_iStatus = STATUS_NORMAL;
+   m_status = STATUS_NORMAL;
 }
 
 /**
@@ -71,7 +71,7 @@ bool Dashboard::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	if (!Container::loadFromDatabase(hdb, dwId))
 		return false;
 
-	m_iStatus = STATUS_NORMAL;
+	m_status = STATUS_NORMAL;
 
 	TCHAR query[256];
 	_sntprintf(query, 256, _T("SELECT num_columns,options FROM dashboards WHERE id=%d"), (int)dwId);

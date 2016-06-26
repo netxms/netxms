@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -322,18 +322,18 @@ UINT32 NetworkService::modifyFromMessageInternal(NXCPMessage *pRequest)
  */
 void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *pollerNode, Queue *eventQueue)
 {
-   int oldStatus = m_iStatus, newStatus;
+   int oldStatus = m_status, newStatus;
    Node *pNode;
 
    m_pollRequestor = session;
    if (m_hostNode == NULL)
    {
-      m_iStatus = STATUS_UNKNOWN;
+      m_status = STATUS_UNKNOWN;
       return;     // Service without host node, which is VERY strange
    }
 
    sendPollerMsg(rqId, _T("   Starting status poll on network service %s\r\n"), m_name);
-   sendPollerMsg(rqId, _T("      Current service status is %s\r\n"), GetStatusAsText(m_iStatus, true));
+   sendPollerMsg(rqId, _T("      Current service status is %s\r\n"), GetStatusAsText(m_status, true));
 
    if (m_pollerNode != 0)
    {
@@ -399,11 +399,11 @@ void NetworkService::statusPoll(ClientSession *session, UINT32 rqId, Node *polle
 
 		if (m_pollCount >= ((m_requiredPollCount > 0) ? m_requiredPollCount : g_requiredPolls))
 		{
-			m_iStatus = newStatus;
+			m_status = newStatus;
 			m_pendingStatus = -1;	// Invalidate pending status
-			sendPollerMsg(rqId, _T("      Service status changed to %s\r\n"), GetStatusAsText(m_iStatus, true));
-			PostEventEx(eventQueue, m_iStatus == STATUS_NORMAL ? EVENT_SERVICE_UP :
-							(m_iStatus == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
+			sendPollerMsg(rqId, _T("      Service status changed to %s\r\n"), GetStatusAsText(m_status, true));
+			PostEventEx(eventQueue, m_status == STATUS_NORMAL ? EVENT_SERVICE_UP :
+							(m_status == STATUS_CRITICAL ? EVENT_SERVICE_DOWN : EVENT_SERVICE_UNKNOWN),
 							m_hostNode->getId(), "sdd", m_name, m_id, m_serviceType);
 			lockProperties();
 			setModified();

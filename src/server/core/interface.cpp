@@ -471,12 +471,12 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
    Node *pNode = getParentNode();
    if (pNode == NULL)
    {
-      m_iStatus = STATUS_UNKNOWN;
+      m_status = STATUS_UNKNOWN;
       return;     // Cannot find parent node, which is VERY strange
    }
 
    sendPollerMsg(rqId, _T("   Starting status poll on interface %s\r\n"), m_name);
-   sendPollerMsg(rqId, _T("      Current interface status is %s\r\n"), GetStatusAsText(m_iStatus, true));
+   sendPollerMsg(rqId, _T("      Current interface status is %s\r\n"), GetStatusAsText(m_status, true));
 
 	InterfaceAdminState adminState = IF_ADMIN_STATE_UNKNOWN;
 	InterfaceOperState operState = IF_OPER_STATE_UNKNOWN;
@@ -534,7 +534,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
    }
 
 	// Calculate interface object status based on admin state, oper state, and expected state
-   int oldStatus = m_iStatus;
+   int oldStatus = m_status;
 	int newStatus;
 	int expectedState = (m_flags & IF_EXPECTED_STATE_MASK) >> 28;
 	switch(adminState)
@@ -663,27 +663,27 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 			EVENT_INTERFACE_TESTING   // Testing
 		};
 
-		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_id, m_name, m_iStatus, newStatus);
-		m_iStatus = newStatus;
+		DbgPrintf(7, _T("Interface::StatusPoll(%d,%s): status changed from %d to %d"), m_id, m_name, m_status, newStatus);
+		m_status = newStatus;
 		m_pendingStatus = -1;	// Invalidate pending status
       if (!m_isSystem)
       {
-		   sendPollerMsg(rqId, _T("      Interface status changed to %s\r\n"), GetStatusAsText(m_iStatus, true));
+		   sendPollerMsg(rqId, _T("      Interface status changed to %s\r\n"), GetStatusAsText(m_status, true));
          const InetAddress& addr = m_ipAddressList.getFirstUnicastAddress();
 		   PostEventEx(eventQueue,
-		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_iStatus] : statusToEvent[m_iStatus],
+		               (expectedState == IF_EXPECTED_STATE_DOWN) ? statusToEventInverted[m_status] : statusToEvent[m_status],
                      pNode->getId(), "dsAdd", m_id, m_name, &addr, addr.getMaskBits(), m_index);
       }
    }
 	else if (expectedState == IF_EXPECTED_STATE_IGNORE)
 	{
-		m_iStatus = (newStatus <= STATUS_CRITICAL) ? STATUS_NORMAL : newStatus;
-		if (m_iStatus != oldStatus)
+		m_status = (newStatus <= STATUS_CRITICAL) ? STATUS_NORMAL : newStatus;
+		if (m_status != oldStatus)
 			m_pendingStatus = -1;	// Invalidate pending status
 	}
 
 	lockProperties();
-	if ((m_iStatus != oldStatus) || (adminState != (int)m_adminState) || (operState != (int)m_operState))
+	if ((m_status != oldStatus) || (adminState != (int)m_adminState) || (operState != (int)m_operState))
 	{
 		m_adminState = (WORD)adminState;
 		m_operState = (WORD)operState;
@@ -691,7 +691,7 @@ void Interface::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQueu
 	}
 	unlockProperties();
 
-	sendPollerMsg(rqId, _T("      Interface status after poll is %s\r\n"), GetStatusAsText(m_iStatus, true));
+	sendPollerMsg(rqId, _T("      Interface status after poll is %s\r\n"), GetStatusAsText(m_status, true));
 	sendPollerMsg(rqId, _T("   Finished status poll on interface %s\r\n"), m_name);
 }
 
@@ -1103,17 +1103,16 @@ UINT32 Interface::wakeUp()
  */
 Node *Interface::getParentNode()
 {
-   UINT32 i;
    Node *pNode = NULL;
 
-   LockParentList(FALSE);
-   for(i = 0; i < m_dwParentCount; i++)
-      if (m_pParentList[i]->getObjectClass() == OBJECT_NODE)
+   lockParentList(false);
+   for(int i = 0; i < m_parentList->size(); i++)
+      if (m_parentList->get(i)->getObjectClass() == OBJECT_NODE)
       {
-         pNode = (Node *)m_pParentList[i];
+         pNode = (Node *)m_parentList->get(i);
          break;
       }
-   UnlockParentList();
+   unlockParentList();
    return pNode;
 }
 

@@ -330,7 +330,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
    if (pNode != NULL)
    {
       DbgPrintf(4, _T("ProcessTrap: trap matched to node %s [%d]"), pNode->getName(), pNode->getId());
-      if ((pNode->Status() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
+      if ((pNode->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
       {
          UINT32 i;
 

@@ -454,7 +454,7 @@ UINT32 DataCollectionTarget::getThresholdSummary(NXCPMessage *msg, UINT32 baseId
    for(int i = 0; i < m_dcObjects->size(); i++)
 	{
 		DCObject *object = m_dcObjects->get(i);
-		if (object->hasValue() && (object->getType() == DCO_TYPE_ITEM) && object->getStatus() == ITEM_STATUS_ACTIVE)
+		if (object->hasValue() && (object->getType() == DCO_TYPE_ITEM) && (object->getStatus() == ITEM_STATUS_ACTIVE))
 		{
 			if (((DCItem *)object)->hasActiveThreshold())
 			{
@@ -496,7 +496,7 @@ bool DataCollectionTarget::isDataCollectionDisabled()
  */
 void DataCollectionTarget::queueItemsForPolling(Queue *pPollerQueue)
 {
-   if ((m_iStatus == STATUS_UNMANAGED) || isDataCollectionDisabled() || m_isDeleted)
+   if ((m_status == STATUS_UNMANAGED) || isDataCollectionDisabled() || m_isDeleted)
       return;  // Do not collect data for unmanaged objects or if data collection is disabled
 
    time_t currTime = time(NULL);
@@ -532,17 +532,18 @@ NetObj *DataCollectionTarget::objectFromParameter(const TCHAR *param)
 
    // Find child object with requested ID or name
    NetObj *object = NULL;
-   LockChildList(FALSE);
-   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      if (((objectId == 0) && (!_tcsicmp(m_pChildList[i]->getName(), arg))) ||
-          (objectId == m_pChildList[i]->getId()))
+      NetObj *curr = m_childList->get(i);
+      if (((objectId == 0) && (!_tcsicmp(curr->getName(), arg))) ||
+          (objectId == curr->getId()))
       {
-         object = m_pChildList[i];
+         object = curr;
          break;
       }
    }
-   UnlockChildList();
+   unlockChildList();
    return object;
 }
 
@@ -555,7 +556,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
 
    if (!_tcsicmp(param, _T("Status")))
    {
-      _sntprintf(buffer, bufSize, _T("%d"), m_iStatus);
+      _sntprintf(buffer, bufSize, _T("%d"), m_status);
    }
    else if (!_tcsicmp(param, _T("Dummy")) || MatchString(_T("Dummy(*)"), param, FALSE))
    {
@@ -566,7 +567,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
       NetObj *object = objectFromParameter(param);
       if (object != NULL)
       {
-         _sntprintf(buffer, bufSize, _T("%d"), object->Status());
+         _sntprintf(buffer, bufSize, _T("%d"), object->getStatus());
       }
       else
       {
@@ -598,7 +599,7 @@ UINT32 DataCollectionTarget::getInternalItem(const TCHAR *param, size_t bufSize,
       {
 			if (pObject->isTrustedNode(m_id))
 			{
-				_sntprintf(buffer, bufSize, _T("%d"), pObject->Status());
+				_sntprintf(buffer, bufSize, _T("%d"), pObject->getStatus());
 			}
 			else
 			{
@@ -943,4 +944,12 @@ void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionI
       ((DCItem *)dci)->updateCacheSize(conditionId);
    }
    unlockDciAccess();
+}
+
+/**
+ * Returns true if object is data collection target
+ */
+bool DataCollectionTarget::isDataCollectionTarget()
+{
+   return true;
 }

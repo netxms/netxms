@@ -12,7 +12,7 @@
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu
 	- Fixed possible deadlock when executing server script
-- Fixed issues: #906, #1039, #1096, #1187, #1191, #1230, #1237, #1239
+- Fixed issues: #92, #906, #1039, #1096, #1187, #1191, #1230, #1237, #1239
 
 
 *

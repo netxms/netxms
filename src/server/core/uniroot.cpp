@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -73,7 +73,6 @@ void UniversalRoot::linkChildObjects()
 BOOL UniversalRoot::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024];
-   UINT32 i;
 
    lockProperties();
 
@@ -82,13 +81,13 @@ BOOL UniversalRoot::saveToDatabase(DB_HANDLE hdb)
    // Update members list
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
    DBQuery(hdb, szQuery);
-   LockChildList(FALSE);
-   for(i = 0; i < m_dwChildCount; i++)
+   lockChildList(FALSE);
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_pChildList[i]->getId());
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
       DBQuery(hdb, szQuery);
    }
-   UnlockChildList();
+   unlockChildList();
 
    // Save access list
    saveACLToDB(hdb);

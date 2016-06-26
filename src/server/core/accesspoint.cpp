@@ -396,21 +396,21 @@ void AccessPoint::updateState(AccessPointState state)
    if (state == AP_DOWN)
       m_prevState = m_state;
    m_state = state;
-   if (m_iStatus != STATUS_UNMANAGED)
+   if (m_status != STATUS_UNMANAGED)
    {
       switch(state)
       {
          case AP_ADOPTED:
-            m_iStatus = STATUS_NORMAL;
+            m_status = STATUS_NORMAL;
             break;
          case AP_UNADOPTED:
-            m_iStatus = STATUS_MAJOR;
+            m_status = STATUS_MAJOR;
             break;
          case AP_DOWN:
-            m_iStatus = STATUS_CRITICAL;
+            m_status = STATUS_CRITICAL;
             break;
          default:
-            m_iStatus = STATUS_UNKNOWN;
+            m_status = STATUS_UNKNOWN;
             break;
       }
    }
@@ -435,7 +435,7 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
    m_pollRequestor = session;
 
    sendPollerMsg(rqId, _T("   Starting status poll on access point %s\r\n"), m_name);
-   sendPollerMsg(rqId, _T("      Current access point status is %s\r\n"), GetStatusAsText(m_iStatus, true));
+   sendPollerMsg(rqId, _T("      Current access point status is %s\r\n"), GetStatusAsText(m_status, true));
 
    AccessPointState state = controller->getAccessPointState(this, snmpTransport);
    if ((state == AP_UNKNOWN) && m_ipAddress.isValid())
@@ -530,7 +530,7 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 
    updateState(state);
 
-   sendPollerMsg(rqId, _T("      Access point status after poll is %s\r\n"), GetStatusAsText(m_iStatus, true));
+   sendPollerMsg(rqId, _T("      Access point status after poll is %s\r\n"), GetStatusAsText(m_status, true));
 	sendPollerMsg(rqId, _T("   Finished status poll on access point %s\r\n"), m_name);
 }
 

@@ -27,7 +27,7 @@
  */
 void NetworkMapGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   m_iStatus = STATUS_NORMAL;
+   m_status = STATUS_NORMAL;
 }
 
 /**
@@ -48,7 +48,7 @@ NetworkMap::NetworkMap() : NetObj()
 	m_discoveryRadius = -1;
 	m_flags = MF_SHOW_STATUS_ICON;
 	m_layout = MAP_LAYOUT_MANUAL;
-	m_iStatus = STATUS_NORMAL;
+	m_status = STATUS_NORMAL;
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
 	m_backgroundZoom = 1;
@@ -73,7 +73,7 @@ NetworkMap::NetworkMap(int type, UINT32 seed) : NetObj()
 	m_discoveryRadius = -1;
 	m_flags = MF_SHOW_STATUS_ICON;
    m_layout = (type == NETMAP_USER_DEFINED) ? MAP_LAYOUT_MANUAL : MAP_LAYOUT_SPRING;
-	m_iStatus = STATUS_NORMAL;
+	m_status = STATUS_NORMAL;
 	m_backgroundLatitude = 0;
 	m_backgroundLongitude = 0;
 	m_backgroundZoom = 1;
@@ -107,22 +107,22 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
 {
    if (m_flags & MF_CALCULATE_STATUS)
    {
-      if (m_iStatus != STATUS_UNMANAGED)
+      if (m_status != STATUS_UNMANAGED)
       {
          int iMostCriticalStatus, iCount, iStatusAlg;
-         int nSingleThreshold, *pnThresholds, iOldStatus = m_iStatus;
+         int nSingleThreshold, *pnThresholds, iOldStatus = m_status;
          int nRating[5], iChildStatus, nThresholds[4];
 
          lockProperties();
-         if (m_iStatusCalcAlg == SA_CALCULATE_DEFAULT)
+         if (m_statusCalcAlg == SA_CALCULATE_DEFAULT)
          {
             iStatusAlg = GetDefaultStatusCalculation(&nSingleThreshold, &pnThresholds);
          }
          else
          {
-            iStatusAlg = m_iStatusCalcAlg;
-            nSingleThreshold = m_iStatusSingleThreshold;
-            pnThresholds = m_iStatusThresholds;
+            iStatusAlg = m_statusCalcAlg;
+            nSingleThreshold = m_statusSingleThreshold;
+            pnThresholds = m_statusThresholds;
          }
          if (iStatusAlg == SA_CALCULATE_SINGLE_THRESHOLD)
          {
@@ -154,11 +154,11 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
                      iCount++;
                   }
                }
-               m_iStatus = (iCount > 0) ? iMostCriticalStatus : STATUS_NORMAL;
+               m_status = (iCount > 0) ? iMostCriticalStatus : STATUS_NORMAL;
                break;
             case SA_CALCULATE_SINGLE_THRESHOLD:
             case SA_CALCULATE_MULTIPLE_THRESHOLDS:
-               // Step 1: calculate severity raitings
+               // Step 1: calculate severity ratings
                memset(nRating, 0, sizeof(int) * 5);
                iCount = 0;
                for(int i = 0; i < m_elements->size(); i++)
@@ -179,7 +179,6 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
                      iCount++;
                   }
                }
-               UnlockChildList();
 
                // Step 2: check what severity rating is above threshold
                if (iCount > 0)
@@ -188,26 +187,26 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
                   for(i = 4; i > 0; i--)
                      if (nRating[i] * 100 / iCount >= pnThresholds[i - 1])
                         break;
-                  m_iStatus = i;
+                  m_status = i;
                }
                else
                {
-                  m_iStatus = STATUS_NORMAL;
+                  m_status = STATUS_NORMAL;
                }
                break;
             default:
-               m_iStatus = STATUS_NORMAL;
+               m_status = STATUS_NORMAL;
                break;
          }
          unlockProperties();
 
          // Cause parent object(s) to recalculate it's status
-         if ((iOldStatus != m_iStatus) || bForcedRecalc)
+         if ((iOldStatus != m_status) || bForcedRecalc)
          {
-            LockParentList(FALSE);
-            for(UINT32 i = 0; i < m_dwParentCount; i++)
-               m_pParentList[i]->calculateCompoundStatus();
-            UnlockParentList();
+            lockParentList(false);
+            for(UINT32 i = 0; i < m_parentList->size(); i++)
+               m_parentList->get(i)->calculateCompoundStatus();
+            unlockParentList();
             lockProperties();
             setModified();
             unlockProperties();
@@ -216,13 +215,13 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
    }
    else
    {
-      if (m_iStatus != STATUS_NORMAL)
+      if (m_status != STATUS_NORMAL)
       {
-         m_iStatus = STATUS_NORMAL;
-         LockParentList(FALSE);
-         for(UINT32 i = 0; i < m_dwParentCount; i++)
-            m_pParentList[i]->calculateCompoundStatus();
-         UnlockParentList();
+         m_status = STATUS_NORMAL;
+         lockParentList(false);
+         for(UINT32 i = 0; i < m_parentList->size(); i++)
+            m_parentList->get(i)->calculateCompoundStatus();
+         unlockParentList();
          lockProperties();
          setModified();
          unlockProperties();
@@ -466,7 +465,7 @@ bool NetworkMap::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
 	}
 
-	m_iStatus = STATUS_NORMAL;
+	m_status = STATUS_NORMAL;
 
 	return true;
 }

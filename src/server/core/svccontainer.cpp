@@ -113,15 +113,15 @@ UINT32 ServiceContainer::modifyFromMessageInternal(NXCPMessage *pRequest)
 void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 {
 	int i, iCount, iMostCriticalStatus;
-	int iOldStatus = m_iStatus;
+	int iOldStatus = m_status;
 
 	DbgPrintf(7, _T("ServiceContainer::calculateCompoundStatus() for %s [%d]"), m_name, m_id);
 
 	// Calculate own status by selecting the most critical status of the kids
-	LockChildList(FALSE);
-	for(i = 0, iCount = 0, iMostCriticalStatus = -1; i < int(m_dwChildCount); i++)
+	lockChildList(false);
+	for(i = 0, iCount = 0, iMostCriticalStatus = -1; i < m_childList->size(); i++)
 	{
-		int iChildStatus = m_pChildList[i]->Status();
+		int iChildStatus = m_childList->get(i)->getStatus();
 		if ((iChildStatus < STATUS_UNKNOWN) &&
 			(iChildStatus > iMostCriticalStatus))
 		{
@@ -131,21 +131,21 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
 	}
 	// Set status and update uptime counters
 	setStatus((iCount > 0) ? iMostCriticalStatus : STATUS_UNKNOWN);
-	UnlockChildList();
+	unlockChildList();
 
 	// Cause parent object(s) to recalculate it's status
-	if ((iOldStatus != m_iStatus) || bForcedRecalc)
+	if ((iOldStatus != m_status) || bForcedRecalc)
 	{
-		LockParentList(FALSE);
-		for(i = 0; i < int(m_dwParentCount); i++)
-			m_pParentList[i]->calculateCompoundStatus();
-		UnlockParentList();
+		lockParentList(false);
+		for(i = 0; i < m_parentList->size(); i++)
+			m_parentList->get(i)->calculateCompoundStatus();
+		unlockParentList();
 		setModified();   /* LOCK? */
 	}
 
-	DbgPrintf(6, _T("ServiceContainer::calculateCompoundStatus(%s [%d]): old_status=%d new_status=%d"), m_name, m_id, iOldStatus, m_iStatus);
+	DbgPrintf(6, _T("ServiceContainer::calculateCompoundStatus(%s [%d]): old_status=%d new_status=%d"), m_name, m_id, iOldStatus, m_status);
 
-	if (iOldStatus != STATUS_UNKNOWN && iOldStatus != m_iStatus)
+	if (iOldStatus != STATUS_UNKNOWN && iOldStatus != m_status)
 		addHistoryRecord();
 }
 
@@ -154,7 +154,7 @@ void ServiceContainer::calculateCompoundStatus(BOOL bForcedRecalc)
  */
 void ServiceContainer::setStatus(int newStatus)
 {
-	m_iStatus = newStatus;
+	m_status = newStatus;
 }
 
 /**
@@ -185,7 +185,7 @@ BOOL ServiceContainer::addHistoryRecord()
 		DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, ServiceContainer::logRecordId);
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_id);
 		DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, UINT32(time(NULL)));
-		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, UINT32(m_iStatus));
+		DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, UINT32(m_status));
 		if (!DBExecute(hStmt))
 		{
 			DBFreeStatement(hStmt);
@@ -209,7 +209,7 @@ BOOL ServiceContainer::addHistoryRecord()
 void ServiceContainer::initUptimeStats()
 {
 	lockProperties();
-	m_prevUptimeUpdateStatus = m_iStatus;
+	m_prevUptimeUpdateStatus = m_status;
 	m_uptimeDay = getUptimeFromDBFor(DAY, &m_downtimeDay);
 	m_uptimeWeek = getUptimeFromDBFor(WEEK, &m_downtimeWeek);
 	m_uptimeMonth = getUptimeFromDBFor(MONTH, &m_downtimeMonth);
@@ -259,7 +259,7 @@ double ServiceContainer::getUptimeFromDBFor(Period period, INT32 *downtime)
 		if (newStatus == STATUS_CRITICAL) // the service is still down, add period till now
 			*downtime += LONG(time(NULL) - prevChangeTimestamp);
 		// no rows for period && critical status -> downtime from beginning till now
-		if (realRows == 0 && m_iStatus == STATUS_CRITICAL)
+		if (realRows == 0 && m_status == STATUS_CRITICAL)
 			*downtime = timediffTillNow;
 		percentage = 100.0 - (double)(*downtime * 100) / (double)getSecondsInPeriod(period);
 		DbgPrintf(7, _T("++++ ServiceContainer::getUptimeFromDBFor(), downtime %ld"), *downtime);
@@ -289,7 +289,7 @@ void ServiceContainer::updateUptimeStats(time_t currentTime, BOOL updateChilds)
 	double prevUptimeWeek = m_uptimeWeek;
 	double prevUptimeMonth = m_uptimeMonth;
 
-	if (m_iStatus == STATUS_CRITICAL && m_prevUptimeUpdateStatus == STATUS_CRITICAL)
+	if (m_status == STATUS_CRITICAL && m_prevUptimeUpdateStatus == STATUS_CRITICAL)
 	{
 		downtimeBetweenPolls = LONG(currentTime - m_prevUptimeUpdateTime);
 		DbgPrintf(7, _T("++++ ServiceContainer::updateUptimeStats() both statuses critical"));
@@ -324,21 +324,21 @@ void ServiceContainer::updateUptimeStats(time_t currentTime, BOOL updateChilds)
 	}
 	unlockProperties();
 
-	m_prevUptimeUpdateStatus = m_iStatus;
+	m_prevUptimeUpdateStatus = m_status;
 	m_prevUptimeUpdateTime = currentTime;
 
 	DbgPrintf(7, _T("++++ ServiceContainer::updateUptimeStats() [%d] %lf %lf %lf"), int(m_id), m_uptimeDay, m_uptimeWeek, m_uptimeMonth);
 
 	if (updateChilds)
 	{
-		LockChildList(FALSE);
-		for (int i = 0; i < int(m_dwChildCount); i++)
+		lockChildList(false);
+		for(int i = 0; i < m_childList->size(); i++)
 		{
-			NetObj *child = m_pChildList[i];
+			NetObj *child = m_childList->get(i);
 			if (child->getObjectClass() == OBJECT_BUSINESSSERVICE || child->getObjectClass() == OBJECT_NODELINK)
 				((ServiceContainer*)child)->updateUptimeStats(currentTime, TRUE);
 		}
-		UnlockChildList();
+		unlockChildList();
 	}
 }
 

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -133,7 +133,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
          // Next hop is behind VPN tunnel
          VPNConnector *vpnConn = (VPNConnector *)FindObjectById(hop->ifIndex, OBJECT_VPNCONNECTOR);
          if ((vpnConn != NULL) &&
-             (vpnConn->Status() == STATUS_CRITICAL))
+             (vpnConn->getStatus() == STATUS_CRITICAL))
          {
             /* TODO: set root id */
          }
@@ -141,7 +141,7 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
       else
       {
          Interface *pInterface = ((Node *)hop->object)->findInterfaceByIndex(hop->ifIndex);
-         if ((pInterface != NULL) && ((pInterface->Status() == STATUS_CRITICAL) || (pInterface->Status() == STATUS_DISABLED)))
+         if ((pInterface != NULL) && ((pInterface->getStatus() == STATUS_CRITICAL) || (pInterface->getStatus() == STATUS_DISABLED)))
          {
 				DbgPrintf(5, _T("C_SysNodeDown: upstream interface %s [%d] on node %s [%d] for current node %s [%d] is down"),
 				          pInterface->getName(), pInterface->getId(), hop->object->getName(), hop->object->getId(), pNode->getName(), pNode->getId());

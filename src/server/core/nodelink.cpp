@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -186,13 +186,13 @@ void NodeLink::execute()
 {
 	DbgPrintf(6, _T("NodeLink::execute() started for %s [%ld]"), m_name, (long)m_id);
 
-   LockChildList(FALSE);
-	for (int i = 0; i < int(m_dwChildCount); i++)
+   lockChildList(false);
+	for (int i = 0; i < m_childList->size(); i++)
 	{
-		if (m_pChildList[i]->getObjectClass() == OBJECT_SLMCHECK)
-			((SlmCheck *)m_pChildList[i])->execute();
+		if (m_childList->get(i)->getObjectClass() == OBJECT_SLMCHECK)
+			((SlmCheck *)m_childList->get(i))->execute();
 	}
-   UnlockChildList();
+   unlockChildList();
 
 	calculateCompoundStatus();
 
@@ -206,17 +206,17 @@ void NodeLink::applyTemplate(SlmCheck *tmpl)
 {
 	// Check if we already have check created from this template
 	SlmCheck *check = NULL;
-	LockChildList(FALSE);
-	for(UINT32 i = 0; i < m_dwChildCount; i++)
+	lockChildList(false);
+	for(int i = 0; i < m_childList->size(); i++)
 	{
-		if ((m_pChildList[i]->getObjectClass() == OBJECT_SLMCHECK) &&
-		    (((SlmCheck *)m_pChildList[i])->getTemplateId() == tmpl->getId()))
+		if ((m_childList->get(i)->getObjectClass() == OBJECT_SLMCHECK) &&
+		    (((SlmCheck *)m_childList->get(i))->getTemplateId() == tmpl->getId()))
 		{
-			check = (SlmCheck *)m_pChildList[i];
+			check = (SlmCheck *)m_childList->get(i);
 			break;
 		}
 	}
-	UnlockChildList();
+	unlockChildList();
 
 	if (check == NULL)
 	{
@@ -239,16 +239,16 @@ void NodeLink::applyTemplates()
 {
 	ObjectArray<SlmCheck> templates;
 
-	LockParentList(FALSE);
-	for(UINT32 i = 0; i < m_dwParentCount; i++)
+	lockParentList(false);
+	for(int i = 0; i < m_parentList->size(); i++)
 	{
-		if (m_pParentList[i]->getObjectClass() != OBJECT_BUSINESSSERVICE)
+		if (m_parentList->get(i)->getObjectClass() != OBJECT_BUSINESSSERVICE)
 			continue;
 
-		BusinessService *parent = (BusinessService *)m_pParentList[i];
+		BusinessService *parent = (BusinessService *)m_parentList->get(i);
 		parent->getApplicableTemplates(this, &templates);
 	}
-	UnlockParentList();
+	unlockParentList();
 
 	for(int j = 0; j < templates.size(); j++)
 	{

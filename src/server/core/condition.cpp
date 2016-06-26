@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -387,9 +387,9 @@ void Condition::check()
    NXSL_Value **ppValueList, *pValue;
    NetObj *pObject;
    UINT32 i, dwNumValues;
-   int iOldStatus = m_iStatus;
+   int iOldStatus = m_status;
 
-   if ((m_script == NULL) || (m_iStatus == STATUS_UNMANAGED) || IsShutdownInProgress())
+   if ((m_script == NULL) || (m_status == STATUS_UNMANAGED) || IsShutdownInProgress())
       return;
 
    lockProperties();
@@ -444,14 +444,14 @@ void Condition::check()
          {
             // Deactivate condition
             lockProperties();
-            m_iStatus = m_inactiveStatus;
+            m_status = m_inactiveStatus;
             m_isActive = FALSE;
             setModified();
             unlockProperties();
 
             PostEvent(m_deactivationEventCode,
                       (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject,
-                      "dsdd", m_id, m_name, iOldStatus, m_iStatus);
+                      "dsdd", m_id, m_name, iOldStatus, m_status);
 
             DbgPrintf(6, _T("Condition %d \"%s\" deactivated"),
                       m_id, m_name);
@@ -461,9 +461,9 @@ void Condition::check()
             DbgPrintf(6, _T("Condition %d \"%s\" still inactive"),
                       m_id, m_name);
             lockProperties();
-            if (m_iStatus != m_inactiveStatus)
+            if (m_status != m_inactiveStatus)
             {
-               m_iStatus = m_inactiveStatus;
+               m_status = m_inactiveStatus;
                setModified();
             }
             unlockProperties();
@@ -475,14 +475,14 @@ void Condition::check()
          {
             // Activate condition
             lockProperties();
-            m_iStatus = m_activeStatus;
+            m_status = m_activeStatus;
             m_isActive = TRUE;
             setModified();
             unlockProperties();
 
             PostEvent(m_activationEventCode,
                       (m_sourceObject == 0) ? g_dwMgmtNode : m_sourceObject,
-                      "dsdd", m_id, m_name, iOldStatus, m_iStatus);
+                      "dsdd", m_id, m_name, iOldStatus, m_status);
 
             DbgPrintf(6, _T("Condition %d \"%s\" activated"),
                       m_id, m_name);
@@ -492,9 +492,9 @@ void Condition::check()
             DbgPrintf(6, _T("Condition %d \"%s\" still active"),
                       m_id, m_name);
             lockProperties();
-            if (m_iStatus != m_activeStatus)
+            if (m_status != m_activeStatus)
             {
-               m_iStatus = m_activeStatus;
+               m_status = m_activeStatus;
                setModified();
             }
             unlockProperties();
@@ -507,9 +507,9 @@ void Condition::check()
                "dss", m_id, m_name, m_script->getErrorText());
 
       lockProperties();
-      if (m_iStatus != STATUS_UNKNOWN)
+      if (m_status != STATUS_UNKNOWN)
       {
-         m_iStatus = STATUS_UNKNOWN;
+         m_status = STATUS_UNKNOWN;
          setModified();
       }
       unlockProperties();
@@ -517,12 +517,12 @@ void Condition::check()
    free(ppValueList);
 
    // Cause parent object(s) to recalculate it's status
-   if (iOldStatus != m_iStatus)
+   if (iOldStatus != m_status)
    {
-      LockParentList(FALSE);
-      for(i = 0; i < m_dwParentCount; i++)
-         m_pParentList[i]->calculateCompoundStatus();
-      UnlockParentList();
+      lockParentList(false);
+      for(int i = 0; i < m_parentList->size(); i++)
+         m_parentList->get(i)->calculateCompoundStatus();
+      unlockParentList();
    }
 }
 

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -167,13 +167,13 @@ BOOL Container::saveToDatabase(DB_HANDLE hdb)
 		// Update members list
 		_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
 		DBQuery(hdb, query);
-		LockChildList(FALSE);
-		for(UINT32 i = 0; i < m_dwChildCount; i++)
+		lockChildList(false);
+		for(int i = 0; i < m_childList->size(); i++)
 		{
-			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_pChildList[i]->getId());
+			_sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
 			DBQuery(hdb, query);
 		}
-		UnlockChildList();
+		unlockChildList();
 
 		// Save access list
 		saveACLToDB(hdb);
@@ -234,10 +234,10 @@ void Container::calculateCompoundStatus(BOOL bForcedRecalc)
 {
 	NetObj::calculateCompoundStatus(bForcedRecalc);
 
-	if ((m_iStatus == STATUS_UNKNOWN) && (m_dwChildIdListSize == 0))
+	if ((m_status == STATUS_UNKNOWN) && (m_dwChildIdListSize == 0))
    {
 		lockProperties();
-		m_iStatus = STATUS_NORMAL;
+		m_status = STATUS_NORMAL;
 		setModified();
 		unlockProperties();
 	}

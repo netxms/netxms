@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2009 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
  */
 void PolicyGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   m_iStatus = STATUS_NORMAL;
+   m_status = STATUS_NORMAL;
 }
 
 /**
@@ -98,13 +98,13 @@ BOOL AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
    // Update node bindings
    _sntprintf(query, 256, _T("DELETE FROM ap_bindings WHERE policy_id=%d"), m_id);
    DBQuery(hdb, query);
-   LockChildList(FALSE);
-   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   lockChildList(FALSE);
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      _sntprintf(query, 256, _T("INSERT INTO ap_bindings (policy_id,node_id) VALUES (%d,%d)"), m_id, m_pChildList[i]->getId());
+      _sntprintf(query, 256, _T("INSERT INTO ap_bindings (policy_id,node_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
       DBQuery(hdb, query);
    }
-   UnlockChildList();
+   unlockChildList();
 
 	return success;
 }

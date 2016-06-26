@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -328,10 +328,10 @@ void MobileDevice::calculateCompoundStatus(BOOL bForcedRecalc)
    NetObj::calculateCompoundStatus(bForcedRecalc);
 
    // Assume normal status by default for mobile device
-   if (m_iStatus == STATUS_UNKNOWN)
+   if (m_status == STATUS_UNKNOWN)
    {
       lockProperties();
-      m_iStatus = STATUS_NORMAL;
+      m_status = STATUS_NORMAL;
       setModified();
       unlockProperties();
    }

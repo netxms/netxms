@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -203,7 +203,6 @@ BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
 {
 	TCHAR szQuery[4096], szIpAddr[64];
    BOOL bResult;
-   UINT32 i;
 
    // Lock object's access
    lockProperties();
@@ -224,7 +223,7 @@ BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
    if (bResult)
    {
 		lockDciAccess(false);
-      for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
+      for(int i = 0; i < m_dcObjects->size(); i++)
          m_dcObjects->get(i)->saveToDatabase(hdb);
 		unlockDciAccess();
 
@@ -233,19 +232,19 @@ BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
 		{
 			_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_members WHERE cluster_id=%d"), m_id);
 			DBQuery(hdb, szQuery);
-			LockChildList(FALSE);
-			for(i = 0; i < m_dwChildCount; i++)
+			lockChildList(false);
+			for(int i = 0; i < m_childList->size(); i++)
 			{
-				if (m_pChildList[i]->getObjectClass() == OBJECT_NODE)
+				if (m_childList->get(i)->getObjectClass() == OBJECT_NODE)
 				{
 					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_members (cluster_id,node_id) VALUES (%d,%d)"),
-								 m_id, m_pChildList[i]->getId());
+								 m_id, m_childList->get(i)->getId());
 					bResult = DBQuery(hdb, szQuery);
 					if (!bResult)
 						break;
 				}
 			}
-			UnlockChildList();
+			unlockChildList();
 			if (bResult)
 				DBCommit(hdb);
 			else
@@ -290,7 +289,7 @@ BOOL Cluster::saveToDatabase(DB_HANDLE hdb)
 			{
 				_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM cluster_resources WHERE cluster_id=%d"), m_id);
 				DBQuery(hdb, szQuery);
-				for(i = 0; i < m_dwNumResources; i++)
+				for(UINT32 i = 0; i < m_dwNumResources; i++)
 				{
 					_sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO cluster_resources (cluster_id,resource_id,resource_name,ip_addr,current_owner) VALUES (%d,%d,%s,'%s',%d)"),
 					           m_id, m_pResourceList[i].dwId, (const TCHAR *)DBPrepareString(hdb, m_pResourceList[i].szName),
@@ -497,17 +496,20 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 	NetObj **ppPollList;
 
    // Create polling list
-   ppPollList = (NetObj **)malloc(sizeof(NetObj *) * m_dwChildCount);
-   LockChildList(FALSE);
-   for(i = 0, dwPollListSize = 0; i < m_dwChildCount; i++)
-      if ((m_pChildList[i]->Status() != STATUS_UNMANAGED) &&
-			 (m_pChildList[i]->getObjectClass() == OBJECT_NODE))
+   ppPollList = (NetObj **)malloc(sizeof(NetObj *) * m_childList->size());
+   lockChildList(false);
+   for(i = 0, dwPollListSize = 0; i < m_childList->size(); i++)
+   {
+      NetObj *object = m_childList->get(i);
+      if ((object->getStatus() != STATUS_UNMANAGED) &&
+			 (object->getObjectClass() == OBJECT_NODE))
       {
-         m_pChildList[i]->incRefCount();
-			((Node *)m_pChildList[i])->lockForStatusPoll();
-         ppPollList[dwPollListSize++] = m_pChildList[i];
+         object->incRefCount();
+			((Node *)object)->lockForStatusPoll();
+         ppPollList[dwPollListSize++] = object;
       }
-   UnlockChildList();
+   }
+   unlockChildList();
 
 	// Perform status poll on all member nodes
 	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Polling member nodes"), m_name);
@@ -661,15 +663,15 @@ bool Cluster::isResourceOnNode(UINT32 dwResource, UINT32 dwNode)
  */
 UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
 {
-   LockChildList(TRUE);
-   ItemValue **values = (ItemValue **)malloc(sizeof(ItemValue *) * m_dwChildCount);
+   lockChildList(true);
+   ItemValue **values = (ItemValue **)malloc(sizeof(ItemValue *) * m_childList->size());
    int valueCount = 0;
-   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   for(UINT32 i = 0; i < m_childList->size(); i++)
    {
-      if (m_pChildList[i]->getObjectClass() != OBJECT_NODE)
+      if (m_childList->get(i)->getObjectClass() != OBJECT_NODE)
          continue;
 
-      Node *node = (Node *)m_pChildList[i];
+      Node *node = (Node *)m_childList->get(i);
       DCObject *dco = node->getDCObjectByTemplateId(item->getId());
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_ITEM) &&
@@ -682,7 +684,7 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
             values[valueCount++] = v;
       }
    }
-   UnlockChildList();
+   unlockChildList();
 
    UINT32 rcc = DCE_SUCCESS;
    if (valueCount > 0)
@@ -725,15 +727,15 @@ UINT32 Cluster::collectAggregatedData(DCItem *item, TCHAR *buffer)
  */
 UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
 {
-   LockChildList(TRUE);
-   Table **values = (Table **)malloc(sizeof(Table *) * m_dwChildCount);
+   lockChildList(true);
+   Table **values = (Table **)malloc(sizeof(Table *) * m_childList->size());
    int valueCount = 0;
-   for(UINT32 i = 0; i < m_dwChildCount; i++)
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      if (m_pChildList[i]->getObjectClass() != OBJECT_NODE)
+      if (m_childList->get(i)->getObjectClass() != OBJECT_NODE)
          continue;
 
-      Node *node = (Node *)m_pChildList[i];
+      Node *node = (Node *)m_childList->get(i);
       DCObject *dco = node->getDCObjectByTemplateId(table->getId());
       if ((dco != NULL) &&
           (dco->getType() == DCO_TYPE_TABLE) &&
@@ -746,7 +748,7 @@ UINT32 Cluster::collectAggregatedData(DCTable *table, Table **result)
             values[valueCount++] = v;
       }
    }
-   UnlockChildList();
+   unlockChildList();
 
    UINT32 rcc = DCE_SUCCESS;
    if (valueCount > 0)

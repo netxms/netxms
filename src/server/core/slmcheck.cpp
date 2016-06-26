@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Raden Solutions
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,22 +29,18 @@
 
 NXSL_VariableSystem SlmCheck::m_nxslConstants;
 
-
-//
-// Initialize static members
-//
-
+/**
+ * Initialize static members
+ */
 void SlmCheck::init()
 {
 	m_nxslConstants.create(_T("OK"), new NXSL_Value((LONG)0));
 	m_nxslConstants.create(_T("FAIL"), new NXSL_Value((LONG)1));
 }
 
-
-//
-// SLM check default constructor
-//
-
+/**
+ * SLM check default constructor
+ */
 SlmCheck::SlmCheck() : NetObj()
 {
 	_tcscpy(m_name, _T("Default"));
@@ -365,7 +361,7 @@ void SlmCheck::execute()
 	if (m_isTemplate)
 		return;
 
-	UINT32 oldStatus = m_iStatus;
+	UINT32 oldStatus = m_status;
 
 	switch (m_type)
 	{
@@ -379,8 +375,8 @@ void SlmCheck::execute()
 				if (m_pCompiledScript->run(0, NULL, NULL, &pGlobals, &m_nxslConstants))
 				{
 					NXSL_Value *pValue = m_pCompiledScript->getResult();
-					m_iStatus = (pValue->getValueAsInt32() == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
-					if (m_iStatus == STATUS_CRITICAL)
+					m_status = (pValue->getValueAsInt32() == 0) ? STATUS_NORMAL : STATUS_CRITICAL;
+					if (m_status == STATUS_CRITICAL)
 					{
 						NXSL_Variable *reason = pGlobals->find(_T("$reason"));
 						setReason((reason != NULL) ? reason->getValue()->getValueAsCString() : _T("Check script returns error"));
@@ -394,26 +390,26 @@ void SlmCheck::execute()
 					_sntprintf(buffer, 1024, _T("ServiceCheck::%s::%d"), m_name, m_id);
 					PostEvent(EVENT_SCRIPT_ERROR, g_dwMgmtNode, "ssd", buffer, m_pCompiledScript->getErrorText(), m_id);
 					nxlog_write(MSG_SLMCHECK_SCRIPT_EXECUTION_ERROR, NXLOG_WARNING, "dss", m_id, m_name, m_pCompiledScript->getErrorText());
-					m_iStatus = STATUS_UNKNOWN;
+					m_status = STATUS_UNKNOWN;
 				}
 				delete pGlobals;
 			}
 			else
 			{
-				m_iStatus = STATUS_UNKNOWN;
+				m_status = STATUS_UNKNOWN;
 			}
 			break;
 		case check_threshold:
 		default:
 			DbgPrintf(4, _T("SlmCheck::execute() called for undefined check type, check %s/%ld"), m_name, (long)m_id);
-			m_iStatus = STATUS_UNKNOWN;
+			m_status = STATUS_UNKNOWN;
 			break;
 	}
 
 	lockProperties();
-	if (m_iStatus != oldStatus)
+	if (m_status != oldStatus)
 	{
-		if (m_iStatus == STATUS_CRITICAL)
+		if (m_status == STATUS_CRITICAL)
 			insertTicket();
 		else
 			closeTicket();
@@ -429,7 +425,7 @@ bool SlmCheck::insertTicket()
 {
 	DbgPrintf(4, _T("SlmCheck::insertTicket() called for %s [%d], reason='%s'"), m_name, (int)m_id, m_reason);
 
-	if (m_iStatus == STATUS_NORMAL)
+	if (m_status == STATUS_NORMAL)
 		return false;
 
 	m_currentTicketId = CreateUniqueId(IDG_SLM_TICKET);
@@ -477,17 +473,18 @@ UINT32 SlmCheck::getOwnerId()
 {
 	UINT32 ownerId = 0;
 
-	LockParentList(FALSE);
-	for(UINT32 i = 0; i < m_dwParentCount; i++)
+	lockParentList(false);
+	for(int i = 0; i < m_parentList->size(); i++)
 	{
-		if ((m_pParentList[i]->getObjectClass() == OBJECT_BUSINESSSERVICE) ||
-		    (m_pParentList[i]->getObjectClass() == OBJECT_NODELINK))
+      NetObj *object = m_parentList->get(i);
+		if ((object->getObjectClass() == OBJECT_BUSINESSSERVICE) ||
+		    (object->getObjectClass() == OBJECT_NODELINK))
 		{
-			ownerId = m_pParentList[i]->getId();
+			ownerId = object->getId();
 			break;
 		}
 	}
-	UnlockParentList();
+	unlockParentList();
 	return ownerId;
 }
 
@@ -500,16 +497,17 @@ NXSL_Value *SlmCheck::getNodeObjectForNXSL()
 	NXSL_Value *value = NULL;
 	UINT32 nodeId = 0;
 
-	LockParentList(FALSE);
-	for(UINT32 i = 0; i < m_dwParentCount; i++)
+	lockParentList(false);
+	for(int i = 0; i < m_parentList->size(); i++)
 	{
-		if (m_pParentList[i]->getObjectClass() == OBJECT_NODELINK)
+	   NetObj *object = m_parentList->get(i);
+		if (object->getObjectClass() == OBJECT_NODELINK)
 		{
-			nodeId = ((NodeLink *)m_pParentList[i])->getNodeId();
+			nodeId = ((NodeLink *)object)->getNodeId();
 			break;
 		}
 	}
-	UnlockParentList();
+	unlockParentList();
 
 	if (nodeId != 0)
 	{

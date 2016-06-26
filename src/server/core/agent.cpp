@@ -52,7 +52,7 @@ void AgentConnectionEx::onTrap(NXCPMessage *pMsg)
       pNode = FindNodeByIP(0, getIpAddr().getAddressV4());
    if (pNode != NULL)
    {
-      if (pNode->Status() != STATUS_UNMANAGED)
+      if (pNode->getStatus() != STATUS_UNMANAGED)
       {
 		   // Check for duplicate traps - only accept traps with ID
 		   // higher than last received

@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,7 +92,6 @@ bool Subnet::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 BOOL Subnet::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024], szIpAddr[64];
-   UINT32 i;
 
    // Lock object's access
    lockProperties();
@@ -113,13 +112,13 @@ BOOL Subnet::saveToDatabase(DB_HANDLE hdb)
    // Update node to subnet mapping
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM nsmap WHERE subnet_id=%d"), m_id);
    DBQuery(hdb, szQuery);
-   LockChildList(FALSE);
-   for(i = 0; i < m_dwChildCount; i++)
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), m_id, m_pChildList[i]->getId());
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO nsmap (subnet_id,node_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
       DBQuery(hdb, szQuery);
    }
-   UnlockChildList();
+   unlockChildList();
 
    // Save access list
    saveACLToDB(hdb);
@@ -201,14 +200,14 @@ bool Subnet::findMacAddress(const InetAddress& ipAddr, BYTE *macAddr)
 {
 	bool success = false;
 
-	LockChildList(FALSE);
+	lockChildList(false);
 
-   for(UINT32 i = 0; (i < m_dwChildCount) && !success; i++)
+   for(int i = 0; (i < m_childList->size()) && !success; i++)
    {
-      if (m_pChildList[i]->getObjectClass() != OBJECT_NODE)
+      if (m_childList->get(i)->getObjectClass() != OBJECT_NODE)
 			continue;
 
-		Node *node = (Node *)m_pChildList[i];
+		Node *node = (Node *)m_childList->get(i);
 		DbgPrintf(6, _T("Subnet[%s]::findMacAddress: reading ARP cache for node %s [%u]"), m_name, node->getName(), node->getId());
 		ARP_CACHE *arpCache = node->getArpCache();
 		if (arpCache == NULL)
@@ -227,7 +226,7 @@ bool Subnet::findMacAddress(const InetAddress& ipAddr, BYTE *macAddr)
 		DestroyArpCache(arpCache);
    }
 
-	UnlockChildList();
+	unlockChildList();
 
 	return success;
 }
@@ -238,17 +237,18 @@ bool Subnet::findMacAddress(const InetAddress& ipAddr, BYTE *macAddr)
 void Subnet::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedNode, bool includeEndNodes)
 {
 	ObjectArray<Node> nodes;
-	LockChildList(FALSE);
-	for(UINT32 i = 0; i < m_dwChildCount; i++)
+	lockChildList(false);
+	for(int i = 0; i < m_childList->size(); i++)
 	{
-		if ((m_pChildList[i]->getId() == seedNode) || (m_pChildList[i]->getObjectClass() != OBJECT_NODE))
+	   NetObj *object = m_childList->get(i);
+		if ((object->getId() == seedNode) || (object->getObjectClass() != OBJECT_NODE))
 			continue;
-		if (!includeEndNodes && !((Node *)m_pChildList[i])->isRouter())
+		if (!includeEndNodes && !((Node *)object)->isRouter())
 			continue;
-		m_pChildList[i]->incRefCount();
-		nodes.add((Node *)m_pChildList[i]);
+		object->incRefCount();
+		nodes.add((Node *)object);
 	}
-	UnlockChildList();
+	unlockChildList();
 
 	for(int j = 0; j < nodes.size(); j++)
 	{

@@ -176,7 +176,7 @@ NXSL_Value *NXSL_NetObjClass::getAttr(NXSL_Object *_object, const TCHAR *attr)
    }
    else if (!_tcscmp(attr, _T("status")))
    {
-      value = new NXSL_Value((LONG)object->Status());
+      value = new NXSL_Value((LONG)object->getStatus());
    }
    else if (!_tcscmp(attr, _T("ipAddr")))
    {

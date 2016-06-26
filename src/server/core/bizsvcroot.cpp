@@ -30,7 +30,7 @@ BusinessServiceRoot::BusinessServiceRoot() : ServiceContainer()
 	m_id = BUILTIN_OID_BUSINESSSERVICEROOT;
 	_tcscpy(m_name, _T("Business Services"));
    m_guid = uuid::generate();
-	m_iStatus = STATUS_NORMAL;
+	m_status = STATUS_NORMAL;
 }
 
 /**
@@ -46,7 +46,6 @@ BusinessServiceRoot::~BusinessServiceRoot()
 BOOL BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
 {
    TCHAR szQuery[1024];
-   UINT32 i;
 
    lockProperties();
 
@@ -55,13 +54,13 @@ BOOL BusinessServiceRoot::saveToDatabase(DB_HANDLE hdb)
    // Update members list
    _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("DELETE FROM container_members WHERE container_id=%d"), m_id);
    DBQuery(hdb, szQuery);
-   LockChildList(FALSE);
-   for(i = 0; i < m_dwChildCount; i++)
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
    {
-      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_pChildList[i]->getId());
+      _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("INSERT INTO container_members (container_id,object_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
       DBQuery(hdb, szQuery);
    }
-   UnlockChildList();
+   unlockChildList();
 
    // Save access list
    saveACLToDB(hdb);

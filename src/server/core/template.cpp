@@ -27,7 +27,7 @@
  */
 void TemplateGroup::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   m_iStatus = STATUS_NORMAL;
+   m_status = STATUS_NORMAL;
 }
 
 /**
@@ -49,7 +49,7 @@ Template::Template() : NetObj()
    m_dwVersion = 0x00010000;  // Initial version is 1.0
 	m_applyFilter = NULL;
 	m_applyFilterSource = NULL;
-   m_iStatus = STATUS_NORMAL;
+   m_status = STATUS_NORMAL;
    m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
 }
@@ -66,7 +66,7 @@ Template::Template(const TCHAR *pszName) : NetObj()
    m_dwVersion = 0x00010000;  // Initial version is 1.0
 	m_applyFilter = NULL;
 	m_applyFilterSource = NULL;
-   m_iStatus = STATUS_NORMAL;
+   m_status = STATUS_NORMAL;
    m_isHidden = true;
    m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
@@ -79,7 +79,7 @@ Template::Template(ConfigEntry *config) : NetObj()
 {
    m_isHidden = true;
    m_dciLockStatus = -1;
-   m_iStatus = STATUS_NORMAL;
+   m_status = STATUS_NORMAL;
    m_dciAccessLock = RWLockCreate();
    m_dciListModified = false;
 
@@ -259,7 +259,7 @@ bool Template::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       }
    }
 
-	m_iStatus = STATUS_NORMAL;
+	m_status = STATUS_NORMAL;
 
    return success;
 }
@@ -306,13 +306,13 @@ BOOL Template::saveToDatabase(DB_HANDLE hdb)
 		// Update members list
 		_sntprintf(query, 256, _T("DELETE FROM dct_node_map WHERE template_id=%d"), m_id);
 		DBQuery(hdb, query);
-		LockChildList(FALSE);
-		for(UINT32 i = 0; i < m_dwChildCount; i++)
+		lockChildList(false);
+		for(int i = 0; i < m_childList->size(); i++)
 		{
-			_sntprintf(query, 256, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (%d,%d)"), m_id, m_pChildList[i]->getId());
+			_sntprintf(query, 256, _T("INSERT INTO dct_node_map (template_id,node_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
 			DBQuery(hdb, query);
 		}
-		UnlockChildList();
+		unlockChildList();
 
 		// Save access list
 		saveACLToDB(hdb);
@@ -864,7 +864,7 @@ NXSL_Value *Template::getAllDCObjectsForNXSL(const TCHAR *name, const TCHAR *des
  */
 void Template::calculateCompoundStatus(BOOL bForcedRecalc)
 {
-   m_iStatus = STATUS_NORMAL;
+   m_status = STATUS_NORMAL;
 }
 
 /**
@@ -971,19 +971,22 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
  */
 void Template::queueUpdate()
 {
-   lockProperties();
-   for(UINT32 i = 0; i < m_dwChildCount; i++)
-      if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || (m_pChildList[i]->getObjectClass() == OBJECT_CLUSTER) || (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
+   {
+      NetObj *object = m_childList->get(i);
+      if (object->isDataCollectionTarget())
       {
          incRefCount();
          TEMPLATE_UPDATE_INFO *pInfo = (TEMPLATE_UPDATE_INFO *)malloc(sizeof(TEMPLATE_UPDATE_INFO));
          pInfo->updateType = APPLY_TEMPLATE;
          pInfo->pTemplate = this;
-         pInfo->targetId = m_pChildList[i]->getId();
+         pInfo->targetId = object->getId();
          pInfo->removeDCI = false;
          g_pTemplateUpdateQueue->put(pInfo);
       }
-   unlockProperties();
+   }
+   unlockChildList();
 }
 
 /**
@@ -1155,15 +1158,14 @@ void Template::prepareForDeletion()
 {
 	if (getObjectClass() == OBJECT_TEMPLATE)
 	{
-		UINT32 i;
-
-		LockChildList(FALSE);
-		for(i = 0; i < m_dwChildCount; i++)
+		lockChildList(false);
+		for(int i = 0; i < m_childList->size(); i++)
 		{
-			if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
-				queueRemoveFromTarget(m_pChildList[i]->getId(), TRUE);
+		   NetObj *object = m_childList->get(i);
+			if (object->isDataCollectionTarget())
+				queueRemoveFromTarget(object->getId(), true);
 		}
-		UnlockChildList();
+		unlockChildList();
 	}
 	NetObj::prepareForDeletion();
 }

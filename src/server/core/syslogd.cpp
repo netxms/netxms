@@ -429,7 +429,7 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, const InetAddress& so
 
 		MutexLock(s_parserLock);
 		if ((record.dwSourceObject != 0) && (s_parser != NULL) &&
-          ((node->Status() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES)))
+          ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES)))
 		{
 #ifdef UNICODE
 			WCHAR wtag[MAX_SYSLOG_TAG_LEN];

@@ -200,17 +200,19 @@ bool VPNConnector::deleteFromDatabase(DB_HANDLE hdb)
  */
 Node *VPNConnector::getParentNode()
 {
-   UINT32 i;
    Node *pNode = NULL;
 
-   LockParentList(FALSE);
-   for(i = 0; i < m_dwParentCount; i++)
-      if (m_pParentList[i]->getObjectClass() == OBJECT_NODE)
+   lockParentList(false);
+   for(int i = 0; i < m_parentList->size(); i++)
+   {
+      NetObj *object = m_parentList->get(i);
+      if (object->getObjectClass() == OBJECT_NODE)
       {
-         pNode = (Node *)m_pParentList[i];
+         pNode = (Node *)object;
          break;
       }
-   UnlockParentList();
+   }
+   unlockParentList();
    return pNode;
 }
 

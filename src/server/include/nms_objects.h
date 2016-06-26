@@ -442,15 +442,15 @@ protected:
    UINT32 m_dwTimeStamp;       // Last change time stamp
    UINT32 m_dwRefCount;        // Number of references. Object can be destroyed only when this counter is zero
    TCHAR m_name[MAX_OBJECT_NAME];
-   TCHAR *m_pszComments;      // User comments
-   int m_iStatus;
-   int m_iStatusCalcAlg;      // Status calculation algorithm
-   int m_iStatusPropAlg;      // Status propagation algorithm
-   int m_iFixedStatus;        // Status if propagation is "Fixed"
-   int m_iStatusShift;        // Shift value for "shifted" status propagation
-   int m_iStatusTranslation[4];
-   int m_iStatusSingleThreshold;
-   int m_iStatusThresholds[4];
+   TCHAR *m_comments;      // User comments
+   int m_status;
+   int m_statusCalcAlg;      // Status calculation algorithm
+   int m_statusPropAlg;      // Status propagation algorithm
+   int m_fixedStatus;        // Status if propagation is "Fixed"
+   int m_statusShift;        // Shift value for "shifted" status propagation
+   int m_statusTranslation[4];
+   int m_statusSingleThreshold;
+   int m_statusThresholds[4];
    bool m_isModified;
    bool m_isDeleted;
    bool m_isHidden;
@@ -468,11 +468,8 @@ protected:
 	UINT32 m_submapId;				// Map object which should be open on drill-down request
 	IntegerArray<UINT32> *m_dashboards; // Dashboards associated with this object
 
-   UINT32 m_dwChildCount;      // Number of child objects
-   NetObj **m_pChildList;     // Array of pointers to child objects
-
-   UINT32 m_dwParentCount;     // Number of parent objects
-   NetObj **m_pParentList;    // Array of pointers to parent objects
+   ObjectArray<NetObj> *m_childList;     // Array of pointers to child objects
+   ObjectArray<NetObj> *m_parentList;    // Array of pointers to parent objects
 
    AccessList *m_accessList;
    bool m_inheritAccessRights;
@@ -488,22 +485,22 @@ protected:
    void unlockProperties() const { MutexUnlock(m_mutexProperties); }
    void lockACL() { MutexLock(m_mutexACL); }
    void unlockACL() { MutexUnlock(m_mutexACL); }
-   void LockParentList(BOOL bWrite)
+   void lockParentList(bool writeLock)
    {
-      if (bWrite)
+      if (writeLock)
          RWLockWriteLock(m_rwlockParentList, INFINITE);
       else
          RWLockReadLock(m_rwlockParentList, INFINITE);
    }
-   void UnlockParentList() { RWLockUnlock(m_rwlockParentList); }
-   void LockChildList(BOOL bWrite)
+   void unlockParentList() { RWLockUnlock(m_rwlockParentList); }
+   void lockChildList(bool writeLock)
    {
-      if (bWrite)
+      if (writeLock)
          RWLockWriteLock(m_rwlockChildList, INFINITE);
       else
          RWLockReadLock(m_rwlockChildList, INFINITE);
    }
-   void UnlockChildList() { RWLockUnlock(m_rwlockChildList); }
+   void unlockChildList() { RWLockUnlock(m_rwlockChildList); }
 
    void setModified();                  // Used to mark object as modified
 
@@ -535,11 +532,11 @@ public:
 
    UINT32 getId() const { return m_id; }
    const TCHAR *getName() const { return m_name; }
-   int Status() const { return m_iStatus; }
+   int getStatus() const { return m_status; }
    int getPropagatedStatus();
    UINT32 getTimeStamp() const { return m_dwTimeStamp; }
 	const uuid& getGuid() const { return m_guid; }
-	const TCHAR *getComments() const { return CHECK_NULL_EX(m_pszComments); }
+	const TCHAR *getComments() const { return CHECK_NULL_EX(m_comments); }
 
 	const GeoLocation& getGeoLocation() const { return m_geoLocation; }
 	void setGeoLocation(const GeoLocation& geoLocation) { m_geoLocation = geoLocation; markAsModified(); }
@@ -549,8 +546,8 @@ public:
 
    bool isModified() const { return m_isModified; }
    bool isDeleted() const { return m_isDeleted; }
-   bool isOrphaned() const { return m_dwParentCount == 0; }
-   bool isEmpty() const { return m_dwChildCount == 0; }
+   bool isOrphaned() const { return m_parentList->size() == 0; }
+   bool isEmpty() const { return m_childList->size() == 0; }
 
 	bool isSystem() const { return m_isSystem; }
 	void setSystemFlag(bool flag) { m_isSystem = flag; }
@@ -582,7 +579,7 @@ public:
    void setId(UINT32 dwId) { m_id = dwId; setModified(); }
    void generateGuid() { m_guid = uuid::generate(); }
    void setName(const TCHAR *pszName) { nx_strncpy(m_name, pszName, MAX_OBJECT_NAME); setModified(); }
-   void resetStatus() { m_iStatus = STATUS_UNKNOWN; setModified(); }
+   void resetStatus() { m_status = STATUS_UNKNOWN; setModified(); }
    void setComments(TCHAR *text);	/* text must be dynamically allocated */
 
    bool isInMaintenanceMode() { return m_maintenanceMode; }
@@ -624,14 +621,15 @@ public:
 
    NetObj *findChildObject(const TCHAR *name, int typeFilter);
 
-   int getChildCount() { return (int)m_dwChildCount; }
-   int getParentCount() { return (int)m_dwParentCount; }
+   int getChildCount() { return m_childList->size(); }
+   int getParentCount() { return m_parentList->size(); }
 
 	virtual NXSL_Array *getParentsForNXSL();
 	virtual NXSL_Array *getChildrenForNXSL();
 
 	virtual bool showThresholdSummary();
    virtual bool isEventSource();
+   virtual bool isDataCollectionTarget();
 
    void setStatusCalculation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
    void setStatusPropagation(int method, int arg1 = 0, int arg2 = 0, int arg3 = 0, int arg4 = 0);
@@ -995,6 +993,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
+   virtual bool isDataCollectionTarget();
 
    virtual void enterMaintenanceMode();
    virtual void leaveMaintenanceMode();
@@ -1171,7 +1170,7 @@ public:
    void lockForStatusPoll() { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
    bool isReadyForStatusPoll()
    {
-      return ((m_iStatus != STATUS_UNMANAGED) && (!m_isDeleted) &&
+      return ((m_status != STATUS_UNMANAGED) && (!m_isDeleted) &&
               (!(m_dwFlags & CLF_QUEUED_FOR_STATUS_POLL)) &&
               ((UINT32)time(NULL) - (UINT32)m_tmLastPoll > g_dwStatusPollingInterval))
                   ? true : false;
@@ -1573,7 +1572,7 @@ inline bool Node::isReadyForStatusPoll()
       m_dwDynamicFlags &= ~NDF_FORCE_STATUS_POLL;
       return true;
    }
-   return (m_iStatus != STATUS_UNMANAGED) &&
+   return (m_status != STATUS_UNMANAGED) &&
 	       (!(m_dwFlags & NF_DISABLE_STATUS_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_STATUS_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
@@ -1590,7 +1589,7 @@ inline bool Node::isReadyForConfigurationPoll()
       m_dwDynamicFlags &= ~NDF_FORCE_CONFIGURATION_POLL;
       return true;
    }
-   return (m_iStatus != STATUS_UNMANAGED) &&
+   return (m_status != STATUS_UNMANAGED) &&
 	       (!(m_dwFlags & NF_DISABLE_CONF_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_CONFIG_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
@@ -1602,7 +1601,7 @@ inline bool Node::isReadyForDiscoveryPoll()
 	if (m_isDeleted)
 		return false;
    return (g_flags & AF_ENABLE_NETWORK_DISCOVERY) &&
-          (m_iStatus != STATUS_UNMANAGED) &&
+          (m_status != STATUS_UNMANAGED) &&
 			 (!(m_dwFlags & NF_DISABLE_DISCOVERY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
@@ -1614,7 +1613,7 @@ inline bool Node::isReadyForRoutePoll()
 {
 	if (m_isDeleted)
 		return false;
-   return (m_iStatus != STATUS_UNMANAGED) &&
+   return (m_status != STATUS_UNMANAGED) &&
 	       (!(m_dwFlags & NF_DISABLE_ROUTE_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
@@ -1626,7 +1625,7 @@ inline bool Node::isReadyForTopologyPoll()
 {
 	if (m_isDeleted)
 		return false;
-   return (m_iStatus != STATUS_UNMANAGED) &&
+   return (m_status != STATUS_UNMANAGED) &&
 	       (!(m_dwFlags & NF_DISABLE_TOPOLOGY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_TOPOLOGY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
@@ -1638,7 +1637,7 @@ inline bool Node::isReadyForInstancePoll()
 {
 	if (m_isDeleted)
 		return false;
-   return (m_iStatus != STATUS_UNMANAGED) &&
+   return (m_status != STATUS_UNMANAGED) &&
 	       (!(m_dwFlags & NF_DISABLE_CONF_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_INSTANCE_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
@@ -1826,7 +1825,7 @@ class NXCORE_EXPORTABLE TemplateGroup : public Container
 {
 public:
    TemplateGroup() : Container() { }
-   TemplateGroup(const TCHAR *pszName) : Container(pszName, 0) { m_iStatus = STATUS_NORMAL; }
+   TemplateGroup(const TCHAR *pszName) : Container(pszName, 0) { m_status = STATUS_NORMAL; }
    virtual ~TemplateGroup() { }
 
    virtual int getObjectClass() const { return OBJECT_TEMPLATEGROUP; }
@@ -1977,7 +1976,7 @@ public:
 
    bool isReadyForPoll()
    {
-      return ((m_iStatus != STATUS_UNMANAGED) &&
+      return ((m_status != STATUS_UNMANAGED) &&
               (!m_queuedForPolling) && (!m_isDeleted) &&
               ((UINT32)time(NULL) - (UINT32)m_lastPoll > g_dwConditionPollingInterval));
    }

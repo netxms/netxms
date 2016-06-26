@@ -1823,7 +1823,7 @@ static void DumpObjectCallback(NetObj *object, void *data)
 	ConsolePrintf(pCtx, _T("Object ID %d \"%s\"\n")
                        _T("   Class: %s  Status: %s  IsModified: %d  IsDeleted: %d\n"),
 					  object->getId(), object->getName(), object->getObjectClassName(),
-                 GetStatusAsText(object->Status(), true),
+                 GetStatusAsText(object->getStatus(), true),
                  object->isModified(), object->isDeleted());
    ConsolePrintf(pCtx, _T("   Parents: <%s>\n   Childs: <%s>\n"),
                  object->dbgGetParentList(dd->buffer), object->dbgGetChildList(&dd->buffer[4096]));

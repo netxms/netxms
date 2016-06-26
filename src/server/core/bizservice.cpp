@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 NetXMS Team
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -216,20 +216,21 @@ void BusinessService::poll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *p
 	m_lastPollTime = time(NULL);
 
 	// Loop through the kids and execute their either scripts or thresholds
-   LockChildList(FALSE);
-	for (UINT32 i = 0; i < m_dwChildCount; i++)
+   lockChildList(false);
+	for (int i = 0; i < m_childList->size(); i++)
 	{
-		if (m_pChildList[i]->getObjectClass() == OBJECT_SLMCHECK)
-			((SlmCheck *)m_pChildList[i])->execute();
-		else if (m_pChildList[i]->getObjectClass() == OBJECT_NODELINK)
-			((NodeLink*)m_pChildList[i])->execute();
+	   NetObj *object = m_childList->get(i);
+		if (object->getObjectClass() == OBJECT_SLMCHECK)
+			((SlmCheck *)object)->execute();
+		else if (object->getObjectClass() == OBJECT_NODELINK)
+			((NodeLink*)object)->execute();
 	}
-   UnlockChildList();
+   unlockChildList();
 
 	// Set the status based on what the kids' been up to
 	calculateCompoundStatus();
 
-	m_lastPollStatus = m_iStatus;
+	m_lastPollStatus = m_status;
 	DbgPrintf(5, _T("Finished polling of business service %s [%d]"), m_name, (int)m_id);
 	m_busy = false;
 }
@@ -239,27 +240,29 @@ void BusinessService::poll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *p
  */
 void BusinessService::getApplicableTemplates(ServiceContainer *target, ObjectArray<SlmCheck> *templates)
 {
-	LockChildList(FALSE);
-	for(UINT32 i = 0; i < m_dwChildCount; i++)
+	lockChildList(false);
+	for(int i = 0; i < m_childList->size(); i++)
 	{
-		if ((m_pChildList[i]->getObjectClass() == OBJECT_SLMCHECK) &&
-          ((SlmCheck *)m_pChildList[i])->isTemplate())
+      NetObj *object = m_childList->get(i);
+		if ((object->getObjectClass() == OBJECT_SLMCHECK) &&
+          ((SlmCheck *)object)->isTemplate())
 		{
-			m_pChildList[i]->incRefCount();
-			templates->add((SlmCheck *)m_pChildList[i]);
+		   object->incRefCount();
+			templates->add((SlmCheck *)object);
 		}
 	}
-	UnlockChildList();
+	unlockChildList();
 
-	LockParentList(FALSE);
-	for(UINT32 i = 0; i < m_dwParentCount; i++)
+	lockParentList(false);
+	for(int i = 0; i < m_parentList->size(); i++)
 	{
-		if (m_pParentList[i]->getObjectClass() == OBJECT_BUSINESSSERVICE)
+      NetObj *object = m_parentList->get(i);
+		if (object->getObjectClass() == OBJECT_BUSINESSSERVICE)
 		{
-			((BusinessService *)m_pParentList[i])->getApplicableTemplates(target, templates);
+			((BusinessService *)object)->getApplicableTemplates(target, templates);
 		}
 	}
-	UnlockParentList();
+	unlockParentList();
 }
 
 /**
