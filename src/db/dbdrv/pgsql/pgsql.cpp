@@ -924,6 +924,7 @@ extern "C" DBDRV_UNBUFFERED_RESULT EXPORT DrvSelectUnbuffered(PG_CONN *pConn, WC
       }
    }
    while(retry);
+   free(queryUTF8);
 
    if (!success)
    {
