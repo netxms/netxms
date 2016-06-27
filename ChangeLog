@@ -8,6 +8,7 @@
 - Added configuration option to logparser to generate event only if regular expression have been matched exact count of the times in a predefined time period
 - Data collection script can return null to indicate data collection error
 - Added option to set type of each varbind in nxsnmpset
+- Fixed memory leak in postgreSQL database driver
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu
