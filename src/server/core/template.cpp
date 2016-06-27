@@ -971,7 +971,7 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
  */
 void Template::queueUpdate()
 {
-   lockProperties();
+   LockChildList(FALSE);
    for(UINT32 i = 0; i < m_dwChildCount; i++)
       if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || (m_pChildList[i]->getObjectClass() == OBJECT_CLUSTER) || (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
       {
@@ -983,7 +983,7 @@ void Template::queueUpdate()
          pInfo->removeDCI = false;
          g_pTemplateUpdateQueue->put(pInfo);
       }
-   unlockProperties();
+   UnlockChildList();
 }
 
 /**
@@ -1155,12 +1155,13 @@ void Template::prepareForDeletion()
 {
 	if (getObjectClass() == OBJECT_TEMPLATE)
 	{
-		UINT32 i;
-
 		LockChildList(FALSE);
-		for(i = 0; i < m_dwChildCount; i++)
+		for(UINT32 i = 0; i < m_dwChildCount; i++)
 		{
-			if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
+			if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || 
+             (m_pChildList[i]->getObjectClass() == OBJECT_CLUSTER) ||
+             (m_pChildList[i]->getObjectClass() == OBJECT_ACCESSPOINT) ||
+             (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
 				queueRemoveFromTarget(m_pChildList[i]->getId(), TRUE);
 		}
 		UnlockChildList();
