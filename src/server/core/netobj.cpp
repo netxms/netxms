@@ -615,7 +615,7 @@ void NetObj::deleteObject(NetObj *initiator)
    DbgPrintf(5, _T("NetObj::deleteObject(): clearing child list for object %d"), m_id);
    ObjectArray<NetObj> *deleteList = NULL;
    lockChildList(true);
-   for(UINT32 i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < m_childList->size(); i++)
    {
       NetObj *o = m_childList->get(i);
       if (o->getParentCount() == 1)

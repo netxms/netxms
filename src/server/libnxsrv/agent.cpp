@@ -1546,9 +1546,6 @@ UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
 {
    UINT32 i, dwRqId, dwResult;
    NXCPMessage msg(m_nProtocolVersion), *pResponse;
-#ifdef UNICODE
-   BYTE *pBuffer;
-#endif
 
    *ppszConfig = NULL;
    *pdwSize = 0;

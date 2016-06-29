@@ -204,7 +204,7 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
          if ((iOldStatus != m_status) || bForcedRecalc)
          {
             lockParentList(false);
-            for(UINT32 i = 0; i < m_parentList->size(); i++)
+            for(int i = 0; i < m_parentList->size(); i++)
                m_parentList->get(i)->calculateCompoundStatus();
             unlockParentList();
             lockProperties();
@@ -219,7 +219,7 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
       {
          m_status = STATUS_NORMAL;
          lockParentList(false);
-         for(UINT32 i = 0; i < m_parentList->size(); i++)
+         for(int i = 0; i < m_parentList->size(); i++)
             m_parentList->get(i)->calculateCompoundStatus();
          unlockParentList();
          lockProperties();

@@ -716,14 +716,11 @@ void Node::addVrrpInterfaces(InterfaceList *ifList)
  */
 Interface *Node::findInterfaceByIndex(UINT32 ifIndex)
 {
-   UINT32 i;
-   Interface *pInterface;
-
    lockChildList(false);
-   for(i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < m_childList->size(); i++)
       if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
-         pInterface = (Interface *)m_childList->get(i);
+         Interface *pInterface = (Interface *)m_childList->get(i);
 			if (pInterface->getIfIndex() == ifIndex)
          {
             unlockChildList();
@@ -746,7 +743,7 @@ Interface *Node::findInterfaceByName(const TCHAR *name)
    Interface *pInterface;
 
    lockChildList(false);
-   for(UINT32 i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < m_childList->size(); i++)
       if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
          pInterface = (Interface *)m_childList->get(i);
@@ -766,14 +763,11 @@ Interface *Node::findInterfaceByName(const TCHAR *name)
  */
 Interface *Node::findInterfaceBySlotAndPort(UINT32 slot, UINT32 port)
 {
-   UINT32 i;
-   Interface *pInterface;
-
    lockChildList(false);
-   for(i = 0; i < m_childList->size(); i++)
+   for(int i = 0; i < m_childList->size(); i++)
       if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
-         pInterface = (Interface *)m_childList->get(i);
+         Interface *pInterface = (Interface *)m_childList->get(i);
 			if (pInterface->isPhysicalPort() && (pInterface->getSlotNumber() == slot) && (pInterface->getPortNumber() == port))
          {
             unlockChildList();
@@ -1244,7 +1238,7 @@ void Node::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller
 	if (IsShutdownInProgress())
 	   return;
 
-   UINT32 i, dwPollListSize, dwOldFlags = m_dwFlags;
+   UINT32 dwOldFlags = m_dwFlags;
    NetObj *pPollerNode = NULL, **ppPollList;
 	SNMP_Transport *pTransport;
 	Cluster *pCluster;
@@ -1445,13 +1439,14 @@ restart_agent_check:
    // Create polling list
    ppPollList = (NetObj **)malloc(sizeof(NetObj *) * m_childList->size());
    lockChildList(false);
-   for(i = 0, dwPollListSize = 0; i < m_childList->size(); i++)
+   int pollListSize = 0;
+   for(int i = 0; i < m_childList->size(); i++)
    {
       NetObj *curr = m_childList->get(i);
       if (curr->getStatus() != STATUS_UNMANAGED)
       {
          curr->incRefCount();
-         ppPollList[dwPollListSize++] = curr;
+         ppPollList[pollListSize++] = curr;
       }
    }
    unlockChildList();
@@ -1461,7 +1456,7 @@ restart_agent_check:
    DbgPrintf(7, _T("StatusPoll(%s): starting child object poll"), m_name);
 	pCluster = getMyCluster();
 	pTransport = createSnmpTransport();
-   for(i = 0; i < dwPollListSize; i++)
+   for(int i = 0; i < pollListSize; i++)
    {
       switch(ppPollList[i]->getObjectClass())
       {
@@ -1493,7 +1488,7 @@ restart_agent_check:
 	{
 	   bool allDown = true;
 		lockChildList(false);
-      for(i = 0; i < m_childList->size(); i++)
+      for(int i = 0; i < m_childList->size(); i++)
       {
          NetObj *curr = m_childList->get(i);
          if ((curr->getObjectClass() == OBJECT_INTERFACE) &&
@@ -1529,7 +1524,7 @@ restart_agent_check:
 
 					// Set interfaces and network services to UNKNOWN state
 					lockChildList(false);
-					for(i = 0; i < m_childList->size(); i++)
+					for(int i = 0; i < m_childList->size(); i++)
 					{
 			         NetObj *curr = m_childList->get(i);
 						if (((curr->getObjectClass() == OBJECT_INTERFACE) || (curr->getObjectClass() == OBJECT_NETWORKSERVICE)) &&
@@ -5396,17 +5391,16 @@ void Node::setFileUpdateConnection(AgentConnection *conn)
  */
 UINT32 Node::getInterfaceCount(Interface **ppInterface)
 {
-   UINT32 i, dwCount;
-
    lockChildList(false);
-   for(i = 0, dwCount = 0; i < m_childList->size(); i++)
+   UINT32 count = 0;
+   for(int i = 0; i < m_childList->size(); i++)
       if (m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE)
       {
-         dwCount++;
+         count++;
          *ppInterface = (Interface *)m_childList->get(i);
       }
    unlockChildList();
-   return dwCount;
+   return count;
 }
 
 /**
@@ -5731,11 +5725,10 @@ void Node::checkInterfaceNames(InterfaceList *pIfList)
  */
 Cluster *Node::getMyCluster()
 {
-	UINT32 i;
 	Cluster *pCluster = NULL;
 
 	lockParentList(false);
-	for(i = 0; i < m_parentList->size(); i++)
+	for(int i = 0; i < m_parentList->size(); i++)
 		if (m_parentList->get(i)->getObjectClass() == OBJECT_CLUSTER)
 		{
 			pCluster = (Cluster *)m_parentList->get(i);
@@ -6781,7 +6774,7 @@ NXSL_Array *Node::getParentsForNXSL()
 	int index = 0;
 
 	lockParentList(FALSE);
-	for(UINT32 i = 0; i < m_parentList->size(); i++)
+	for(int i = 0; i < m_parentList->size(); i++)
 	{
 	   NetObj *object = m_parentList->get(i);
 		if (((object->getObjectClass() == OBJECT_CONTAINER) ||
