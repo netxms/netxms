@@ -48,6 +48,9 @@ public class LineChartConfig extends AbstractChartConfig
    
    @Element(required = false)
    private int lineWidth = 2;
+   
+   @Element(required = false)
+   private boolean area = false;
 
    /**
     * Default constructor
@@ -200,5 +203,21 @@ public class LineChartConfig extends AbstractChartConfig
    public void setLineWidth(int lineWidth)
    {
       this.lineWidth = lineWidth;
+   }
+
+   /**
+    * @return the area
+    */
+   public boolean isArea()
+   {
+      return area;
+   }
+
+   /**
+    * @param area the area to set
+    */
+   public void setArea(boolean area)
+   {
+      this.area = area;
    }
 }
