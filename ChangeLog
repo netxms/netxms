@@ -8,7 +8,7 @@
 - Management console
 	- Fixed possible deadlock when executing server script
 	- Fixed area charts on dashboards
-- Fixed issues: #1039, #1293
+- Fixed issues: #1018, #1039, #1293
 
 
 *
