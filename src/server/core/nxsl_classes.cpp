@@ -903,40 +903,49 @@ NXSL_Value *NXSL_EventClass::getAttr(NXSL_Object *pObject, const TCHAR *attr)
    {
       value = new NXSL_Value(event->getCode());
    }
-   else if (!_tcscmp(attr, _T("name")))
+   else if (!_tcscmp(attr, _T("customMessage")))
    {
-		value = new NXSL_Value(event->getName());
+      value = new NXSL_Value(event->getCustomMessage());
    }
    else if (!_tcscmp(attr, _T("id")))
    {
       value = new NXSL_Value(event->getId());
    }
+   else if (!_tcscmp(attr, _T("message")))
+   {
+      value = new NXSL_Value(event->getMessage());
+   }
+   else if (!_tcscmp(attr, _T("name")))
+   {
+		value = new NXSL_Value(event->getName());
+   }
+   else if (!_tcscmp(attr, _T("parameters")))
+   {
+      NXSL_Array *array = new NXSL_Array;
+      for(int i = 0; i < event->getParametersCount(); i++)
+         array->set(i + 1, new NXSL_Value(event->getParameter(i)));
+      value = new NXSL_Value(array);
+   }
    else if (!_tcscmp(attr, _T("severity")))
    {
       value = new NXSL_Value(event->getSeverity());
+   }
+   else if (!_tcscmp(attr, _T("source")))
+   {
+      NetObj *object = FindObjectById(event->getSourceId());
+      value = (object != NULL) ? object->createNXSLObject() : new NXSL_Value();
+   }
+   else if (!_tcscmp(attr, _T("sourceId")))
+   {
+      value = new NXSL_Value(event->getSourceId());
    }
    else if (!_tcscmp(attr, _T("timestamp")))
    {
       value = new NXSL_Value((INT64)event->getTimeStamp());
    }
-   else if (!_tcscmp(attr, _T("message")))
-   {
-      value = new NXSL_Value(event->getMessage());
-   }
-   else if (!_tcscmp(attr, _T("customMessage")))
-   {
-		value = new NXSL_Value(event->getCustomMessage());
-   }
    else if (!_tcscmp(attr, _T("userTag")))
    {
       value = new NXSL_Value(event->getUserTag());
-   }
-   else if (!_tcscmp(attr, _T("parameters")))
-   {
-		NXSL_Array *array = new NXSL_Array;
-		for(int i = 0; i < event->getParametersCount(); i++)
-			array->set(i + 1, new NXSL_Value(event->getParameter(i)));
-      value = new NXSL_Value(array);
    }
    else
    {
