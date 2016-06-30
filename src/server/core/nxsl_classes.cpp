@@ -880,6 +880,16 @@ NXSL_METHOD_DEFINITION(Event, setUserTag)
 }
 
 /**
+ * Event::toJson() method
+ */
+NXSL_METHOD_DEFINITION(Event, toJson)
+{
+   Event *event = (Event *)object->getData();
+   *result = new NXSL_Value(event->createJson());
+   return 0;
+}
+
+/**
  * NXSL class Event: constructor
  */
 NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
@@ -889,6 +899,7 @@ NXSL_EventClass::NXSL_EventClass() : NXSL_Class()
    NXSL_REGISTER_METHOD(Event, setMessage, 1);
    NXSL_REGISTER_METHOD(Event, setSeverity, 1);
    NXSL_REGISTER_METHOD(Event, setUserTag, 1);
+   NXSL_REGISTER_METHOD(Event, toJson, 0);
 }
 
 /**
