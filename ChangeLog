@@ -9,6 +9,8 @@
 - Data collection script can return null to indicate data collection error
 - Added option to set type of each varbind in nxsnmpset
 - Fixed memory leak in postgreSQL database driver
+- New attributes "source" and "sourceId" in NXSL class "Event"
+- New method toJson() in NXSL class "Event"
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu
