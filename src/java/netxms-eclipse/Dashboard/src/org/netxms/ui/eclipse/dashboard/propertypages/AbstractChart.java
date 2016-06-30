@@ -62,6 +62,7 @@ public class AbstractChart extends PropertyPage
    private Button checkLogScale;
    private Button checkStacked;
    private Button checkAreaChart;
+   private Button checkInteractive;
    private LabeledSpinner lineWidth;
    private YAxisRangeEditor yAxisRange;   
 
@@ -193,6 +194,13 @@ public class AbstractChart extends PropertyPage
 			gd.horizontalAlignment = SWT.FILL;
 			gd.grabExcessHorizontalSpace = true;
 			checkShowGrid.setLayoutData(gd);
+         
+         checkInteractive = new Button(optionsGroup, SWT.CHECK);
+         checkInteractive.setText("&Interactive");
+         checkInteractive.setSelection(((LineChartConfig)config).isInteractive());
+         gd = new GridData();
+         gd.horizontalSpan = layout.numColumns;
+         checkInteractive.setLayoutData(gd);
 			
 			Composite timeRangeArea = new Composite(dialogArea, SWT.NONE);
 			layout = new GridLayout();
@@ -326,6 +334,7 @@ public class AbstractChart extends PropertyPage
          ((LineChartConfig)config).setLogScaleEnabled(checkLogScale.getSelection());
          ((LineChartConfig)config).setStacked(checkStacked.getSelection());
          ((LineChartConfig)config).setArea(checkAreaChart.getSelection());
+         ((LineChartConfig)config).setInteractive(checkInteractive.getSelection());
          ((LineChartConfig)config).setLineWidth(lineWidth.getSelection());
 		}
 		return true;
