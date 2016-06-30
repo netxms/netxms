@@ -1995,6 +1995,8 @@ int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int
 UINT32 LIBNETXMS_EXPORTABLE XMLGetAttrUINT32(const char **attrs, const char *name, UINT32 defVal);
 bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal);
 
+String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s);
+
 #if !defined(_WIN32) && !defined(_NETWARE) && defined(NMS_THREADS_H_INCLUDED)
 void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain);
 #endif

@@ -2734,3 +2734,20 @@ TCHAR LIBNETXMS_EXPORTABLE *GetHeapInfo()
 AbstractIterator::~AbstractIterator()
 {
 }
+
+/**
+ * Escape string for JSON
+ */
+String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s)
+{
+   String js;
+   if (s == NULL)
+      return js;
+   for(const TCHAR *p = s; *p != 0; p++)
+   {
+      if (*p == _T('"') || *p == _T('\\'))
+         js.append(_T('\\'));
+      js.append(*p);
+   }
+   return js;
+}

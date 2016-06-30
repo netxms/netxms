@@ -129,6 +129,8 @@ public:
 
    const TCHAR *getCustomMessage() const { return CHECK_NULL_EX(m_customMessage); }
    void setCustomMessage(const TCHAR *message) { free(m_customMessage); m_customMessage = _tcsdup_ex(message); }
+
+   String createJson();
 };
 
 /**

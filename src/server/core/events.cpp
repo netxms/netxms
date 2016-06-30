@@ -701,6 +701,50 @@ void Event::prepareMessage(NXCPMessage *msg) const
 }
 
 /**
+ * Create JSON object
+ */
+String Event::createJson()
+{
+   TCHAR buffer[64];
+
+   String json = _T("{ \"id\":");
+   json.append(m_id);
+   json.append(_T(", \"code\":"));
+   json.append(m_code);
+   if (EventNameFromCode(m_code, buffer))
+   {
+      json.append(_T(", \"name\":\""));
+      json.append(EscapeStringForJSON(buffer));
+      json.append(_T('"'));
+   }
+   json.append(_T(", \"timestamp\":"));
+   json.append((INT64)m_timeStamp);
+   json.append(_T(", \"source\":"));
+   json.append(m_sourceId);
+   json.append(_T(", \"dci\":"));
+   json.append(m_dciId);
+   json.append(_T(", \"severity\":"));
+   json.append(m_severity);
+   json.append(_T(", \"tag\":\""));
+   json.append(EscapeStringForJSON(m_userTag));
+   json.append(_T("\", \"message\":\""));
+   json.append(EscapeStringForJSON(m_messageText));
+   json.append(_T("\", \"parameters\":["));
+   for(int i = 0; i < m_parameters.size(); i++)
+   {
+      if (i > 0)
+         json.append(_T(','));
+      json.append(_T(" { \"name\":\""));
+      json.append(EscapeStringForJSON(m_parameterNames.get(i)));
+      json.append(_T("\", \"value\":\""));
+      json.append(EscapeStringForJSON((TCHAR *)m_parameters.get(i)));
+      json.append(_T("\" }"));
+   }
+   json.append(_T(" ] }"));
+   return json;
+}
+
+/**
  * Load event configuration from database
  */
 static bool LoadEvents()
