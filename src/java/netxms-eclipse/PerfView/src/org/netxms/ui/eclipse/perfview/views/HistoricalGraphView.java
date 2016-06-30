@@ -403,7 +403,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          }
       });
 
-      // Create menu.
+      // Create menu
       Menu menu = menuMgr.createContextMenu((Control)chart);
       ((Control)chart).setMenu(menu);
       for(Control ch : ((Composite)chart).getChildren())
@@ -579,36 +579,9 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       };
       actionZoomOut.setImageDescriptor(SharedIcons.ZOOM_OUT);
 
-      actionAdjustX = new Action() {
-         @Override
-         public void run()
-         {
-            chart.adjustXAxis(true);
-         }
-      };
-      actionAdjustX.setText(Messages.get().HistoricalGraphView_AdjustX);
-      actionAdjustX.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_x.png")); //$NON-NLS-1$
-
-      actionAdjustY = new Action() {
-         @Override
-         public void run()
-         {
-            chart.adjustYAxis(true);
-         }
-      };
-      actionAdjustY.setText(Messages.get().HistoricalGraphView_AdjustY);
-      actionAdjustY.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_y.png")); //$NON-NLS-1$
-
-      actionAdjustBoth = new Action() {
-         @Override
-         public void run()
-         {
-            chart.adjustXAxis(false);
-            chart.adjustYAxis(true);
-         }
-      };
-      actionAdjustBoth.setText(Messages.get().HistoricalGraphView_Adjust);
-      actionAdjustBoth.setImageDescriptor(Activator.getImageDescriptor("icons/adjust.png")); //$NON-NLS-1$
+      actionAdjustX = createAction(ActionType.ADJUST_X, chart);
+      actionAdjustY = createAction(ActionType.ADJUST_Y, chart);
+      actionAdjustBoth = createAction(ActionType.ADJUST_BOTH, chart);
 
       actionShowLegend = new Action(Messages.get().HistoricalGraphView_ShowLegend) {
          @Override
@@ -709,20 +682,15 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
       };
       actionAreaChart.setChecked(config.isArea());
 
-      presetActions = new Action[presetRanges.length];
-      for(int i = 0; i < presetRanges.length; i++)
-      {
-         final Integer presetIndex = i;
-         presetActions[i] = new Action(String.format(Messages.get().HistoricalGraphView_Last, presetNames[i])) {
-            @Override
-            public void run()
-            {
-               config.setTimeUnits(presetUnits[presetIndex]);
-               config.setTimeRange(presetRanges[presetIndex]);
-               updateChart();
-            }
-         };
-      }
+      presetActions = createPresetActions(new PresetHandler() {
+         @Override
+         public void onPresetSelected(int units, int range)
+         {
+            config.setTimeUnits(units);
+            config.setTimeRange(range);
+            updateChart();
+         }
+      });
       
       actionCopyImage = new Action(Messages.get().HistoricalGraphView_CopyToClipboard, SharedIcons.COPY) {
           @Override
@@ -735,7 +703,7 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
           }
        };
    }
-
+   
    /**
     * 
     */
@@ -1011,5 +979,100 @@ public class HistoricalGraphView extends ViewPart implements GraphSettingsChange
          }.start();
       }
       updateChart();
+   }
+
+   /**
+    * Create preset actions
+    * 
+    * @param handler
+    * @return
+    */
+   public static Action[] createPresetActions(final PresetHandler handler)
+   {
+      Action[] actions = new Action[presetRanges.length];
+      for(int i = 0; i < presetRanges.length; i++)
+      {
+         final Integer presetIndex = i;
+         actions[i] = new Action(String.format(Messages.get().HistoricalGraphView_Last, presetNames[i])) {
+            @Override
+            public void run()
+            {
+               handler.onPresetSelected(presetUnits[presetIndex], presetRanges[presetIndex]);
+            }
+         };
+      }
+      return actions;
+   }
+   
+   /**
+    * Create action for chart
+    * 
+    * @param type
+    * @param chart
+    * @return
+    */
+   public static Action createAction(ActionType type, final HistoricalDataChart chart)
+   {
+      Action action = null;
+      switch(type)
+      {
+         case ADJUST_BOTH:
+            action = new Action() {
+               @Override
+               public void run()
+               {
+                  chart.adjustXAxis(false);
+                  chart.adjustYAxis(true);
+               }
+            };
+            action.setText(Messages.get().HistoricalGraphView_Adjust);
+            action.setImageDescriptor(Activator.getImageDescriptor("icons/adjust.png")); //$NON-NLS-1$
+            break;
+         case ADJUST_X:
+            action = new Action() {
+               @Override
+               public void run()
+               {
+                  chart.adjustXAxis(true);
+               }
+            };
+            action.setText(Messages.get().HistoricalGraphView_AdjustX);
+            action.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_x.png")); //$NON-NLS-1$
+            break;
+         case ADJUST_Y:
+            action = new Action() {
+               @Override
+               public void run()
+               {
+                  chart.adjustYAxis(true);
+               }
+            };
+            action.setText(Messages.get().HistoricalGraphView_AdjustY);
+            action.setImageDescriptor(Activator.getImageDescriptor("icons/adjust_y.png")); //$NON-NLS-1$
+            break;
+      }
+      return action;
+   }
+   
+   /**
+    * Action types
+    */
+   public enum ActionType
+   {
+      ADJUST_X, ADJUST_Y, ADJUST_BOTH
+   }
+   
+   /**
+    * Preset handler
+    */
+   public interface PresetHandler
+   {
+      /**
+       * Called when new preset selected
+       * 
+       * @param units
+       * @param range
+       */
+      public void onPresetSelected(int units, int range);
    }
 }

@@ -15,5 +15,6 @@ Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.2",
  org.netxms.ui.eclipse.usermanager;bundle-version="2.0.8"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.netxms.ui.eclipse.perfview.views.helpers,
+Export-Package: org.netxms.ui.eclipse.perfview.views,
+ org.netxms.ui.eclipse.perfview.views.helpers,
  org.netxms.ui.eclipse.perfview.widgets

@@ -51,6 +51,9 @@ public class LineChartConfig extends AbstractChartConfig
    
    @Element(required = false)
    private boolean area = false;
+   
+   @Element(required = false)
+   private boolean interactive = false;
 
    /**
     * Default constructor
@@ -219,5 +222,21 @@ public class LineChartConfig extends AbstractChartConfig
    public void setArea(boolean area)
    {
       this.area = area;
+   }
+
+   /**
+    * @return the interactive
+    */
+   public boolean isInteractive()
+   {
+      return interactive;
+   }
+
+   /**
+    * @param interactive the interactive to set
+    */
+   public void setInteractive(boolean interactive)
+   {
+      this.interactive = interactive;
    }
 }
