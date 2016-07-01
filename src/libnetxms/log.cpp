@@ -38,6 +38,7 @@ static HMODULE m_msgModuleHandle = NULL;
 #else
 static unsigned int m_numMessages;
 static const TCHAR **m_messages;
+static char s_syslogName[64];
 #endif
 static TCHAR m_logFileName[MAX_PATH] = _T("");
 static FILE *m_logFileHandle = NULL;
@@ -361,14 +362,12 @@ bool LIBNETXMS_EXPORTABLE nxlog_open(const TCHAR *logName, UINT32 flags,
 			m_flags |= NXLOG_IS_OPEN;
 #else
 #ifdef UNICODE
-		char *mbBuffer;
-
-		mbBuffer = MBStringFromWideString(logName);
-      openlog(mbBuffer, LOG_PID, LOG_DAEMON);
-		free(mbBuffer);
+		WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, logName, -1, s_syslogName, 64, NULL, NULL);
+		s_syslogName[63] = 0;
 #else
-      openlog(logName, LOG_PID, LOG_DAEMON);
+		nx_strncpy(s_syslogName, logName, 64);
 #endif
+      openlog(s_syslogName, LOG_PID, LOG_DAEMON);
 		m_flags |= NXLOG_IS_OPEN;
 #endif
    }
