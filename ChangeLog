@@ -17,7 +17,7 @@
 	- Fixed possible deadlock when executing server script
 	- Fixed area charts on dashboards
 	- "Interactive" option for line chart dashboard elements
-- Fixed issues: #92, #906, #1018, #1039, #1096, #1187, #1191, #1230, #1237, #1239
+- Fixed issues: #92, #906, #1018, #1039, #1096, #1187, #1191, #1230, #1237, #1239, #1250
 
 
 *
