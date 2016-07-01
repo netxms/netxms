@@ -11,6 +11,7 @@
 - Fixed memory leak in postgreSQL database driver
 - New attributes "source" and "sourceId" in NXSL class "Event"
 - New method toJson() in NXSL class "Event"
+- New internal parameters: Server.ReceivedSNMPTraps, Server.ReceivedSyslogMessages, ReceivedSNMPTraps, ReceivedSyslogMessages
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu

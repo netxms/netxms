@@ -23,6 +23,12 @@
 #include "nxcore.h"
 
 /**
+ * Externals
+ */
+extern UINT64 g_syslogMessagesReceived;
+extern UINT64 g_snmpTrapsReceived;
+
+/**
  * Node class default constructor
  */
 Node::Node() : DataCollectionTarget()
@@ -106,6 +112,8 @@ Node::Node() : DataCollectionTarget()
 	m_rackId = 0;
 	m_rackPosition = 0;
 	m_rackHeight = 1;
+	m_syslogMessageCount = 0;
+	m_snmpTrapCount = 0;
 }
 
 /**
@@ -195,6 +203,8 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_rackId = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
+   m_syslogMessageCount = 0;
+   m_snmpTrapCount = 0;
 }
 
 /**
@@ -268,7 +278,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("runtime_flags,down_since,boot_time,driver_name,icmp_proxy,")
       _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,")
       _T("rack_id,rack_image,rack_position,rack_height,")
-      _T("last_agent_comm_time FROM nodes WHERE id=?"));
+      _T("last_agent_comm_time,syslog_msg_count,snmp_trap_count FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
 		return false;
 
@@ -351,6 +361,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_rackPosition = (INT16)DBGetFieldLong(hResult, 0, 35);
    m_rackHeight = (INT16)DBGetFieldLong(hResult, 0, 36);
    m_lastAgentCommTime = DBGetFieldLong(hResult, 0, 37);
+   m_syslogMessageCount = DBGetFieldInt64(hResult, 0, 38);
+   m_snmpTrapCount = DBGetFieldInt64(hResult, 0, 39);
 
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
@@ -445,7 +457,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 			_T("platform_name=?,poller_node_id=?,zone_guid=?,proxy_node=?,snmp_proxy=?,icmp_proxy=?,required_polls=?,")
 			_T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
 			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_height=?,rack_id=?,boot_time=?,")
-         _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=? WHERE id=?"));
+         _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=?,")
+         _T("syslog_msg_count=?,snmp_trap_count=? WHERE id=?"));
 	}
    else
 	{
@@ -454,8 +467,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 		  _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
 		  _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
 		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
-        _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,id) ")
-		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+        _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,id) ")
+		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -512,7 +525,9 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 36, DB_SQLTYPE_VARCHAR, m_sysContact, DB_BIND_STATIC);
    DBBind(hStmt, 37, DB_SQLTYPE_VARCHAR, m_sysLocation, DB_BIND_STATIC);
 	DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, (LONG)m_lastAgentCommTime);
-	DBBind(hStmt, 39, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 39, DB_SQLTYPE_BIGINT, m_syslogMessageCount);
+   DBBind(hStmt, 40, DB_SQLTYPE_BIGINT, m_snmpTrapCount);
+	DBBind(hStmt, 41, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -4362,6 +4377,18 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
          rc = DCE_NOT_SUPPORTED;
       }
    }
+   else if (!_tcsicmp(param, _T("ReceivedSNMPTraps")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_snmpTrapCount);
+      unlockProperties();
+   }
+   else if (!_tcsicmp(param, _T("ReceivedSyslogMessages")))
+   {
+      lockProperties();
+      _sntprintf(buffer, bufSize, INT64_FMT, m_syslogMessageCount);
+      unlockProperties();
+   }
    else if (!_tcsicmp(param, _T("WirelessController.AdoptedAPCount")))
    {
       if (m_dwFlags & NF_IS_WIFI_CONTROLLER)
@@ -4470,6 +4497,14 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
       else if (!_tcsicmp(param, _T("Server.DBWriter.Requests.RawData")))
       {
          _sntprintf(buffer, bufSize, UINT64_FMT, g_rawDataWriteRequests);
+      }
+      else if (!_tcsicmp(param, _T("Server.ReceivedSNMPTraps")))
+      {
+         _sntprintf(buffer, bufSize, UINT64_FMT, g_snmpTrapsReceived);
+      }
+      else if (!_tcsicmp(param, _T("Server.ReceivedSyslogMessages")))
+      {
+         _sntprintf(buffer, bufSize, UINT64_FMT, g_syslogMessagesReceived);
       }
       else if (MatchString(_T("Server.ThreadPool.ActiveRequests(*)"), param, FALSE))
       {
@@ -7653,4 +7688,26 @@ void Node::updateRackBinding()
 NXSL_Value *Node::createNXSLObject()
 {
    return new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, this));
+}
+
+/**
+ * Increase number of received syslog messages
+ */
+void Node::incSyslogMessageCount()
+{
+   lockProperties();
+   m_syslogMessageCount++;
+   setModified(false);
+   unlockProperties();
+}
+
+/**
+ * Increase number of received SNMP traps
+ */
+void Node::incSnmpTrapCount()
+{
+   lockProperties();
+   m_snmpTrapCount++;
+   setModified(false);
+   unlockProperties();
 }

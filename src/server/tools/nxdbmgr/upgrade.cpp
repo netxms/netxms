@@ -674,6 +674,21 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V405 to V406
+ */
+static BOOL H_UpgradeFromV405(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE nodes ADD syslog_msg_count $SQL:INT64\n")
+      _T("ALTER TABLE nodes ADD snmp_trap_count $SQL:INT64\n")
+      _T("UPDATE nodes SET syslog_msg_count=0,snmp_trap_count=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='406' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V404 to V405
  */
 static BOOL H_UpgradeFromV404(int currVersion, int newVersion)
@@ -10234,6 +10249,7 @@ static struct
    { 402, 403, H_UpgradeFromV402 },
    { 403, 404, H_UpgradeFromV403 },
    { 404, 405, H_UpgradeFromV404 },
+   { 405, 406, H_UpgradeFromV405 },
    { 0, 0, NULL }
 };
 

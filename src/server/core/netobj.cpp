@@ -1073,7 +1073,7 @@ static void BroadcastObjectChange(ClientSession *pSession, void *pArg)
  * Mark object as modified and put on client's notification queue
  * We assume that object is locked at the time of function call
  */
-void NetObj::setModified()
+void NetObj::setModified(bool notify)
 {
    if (g_bModificationsLocked)
       return;
@@ -1082,7 +1082,7 @@ void NetObj::setModified()
    m_dwTimeStamp = (UINT32)time(NULL);
 
    // Send event to all connected clients
-   if (!m_isHidden && !m_isSystem)
+   if (notify && !m_isHidden && !m_isSystem)
       EnumerateClientSessions(BroadcastObjectChange, this);
 }
 

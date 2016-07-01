@@ -29,6 +29,11 @@
 extern Queue g_nodePollerQueue;
 
 /**
+ * Total number of received SNMP traps
+ */
+UINT64 g_snmpTrapsReceived = 0;
+
+/**
  * Max SNMP packet length
  */
 #define MAX_PACKET_LENGTH     65536
@@ -264,6 +269,8 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 
    DbgPrintf(4, _T("Received SNMP %s %s from %s"), isInformRq ? _T("INFORM-REQUEST") : _T("TRAP"),
              pdu->getTrapId()->toString(&szBuffer[96], 4000), srcAddr.toString(szBuffer));
+   g_snmpTrapsReceived++;
+
 	if (isInformRq)
 	{
 		SNMP_PDU *response = new SNMP_PDU(SNMP_RESPONSE, pdu->getRequestId(), pdu->getVersion());
@@ -330,6 +337,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
    if (pNode != NULL)
    {
       DbgPrintf(4, _T("ProcessTrap: trap matched to node %s [%d]"), pNode->getName(), pNode->getId());
+      pNode->incSnmpTrapCount();
       if ((pNode->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
       {
          UINT32 i;

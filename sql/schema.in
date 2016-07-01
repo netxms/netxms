@@ -414,6 +414,8 @@ CREATE TABLE nodes
   rack_id integer not null,
   agent_cache_mode char(1) not null,
   last_agent_comm_time integer not null,
+  syslog_msg_count SQL_INT64 not null,
+  snmp_trap_count SQL_INT64 not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
@@ -457,6 +459,8 @@ COMMENT_COLUMN(nodes.rack_height, '')
 COMMENT_COLUMN(nodes.rack_id, '')
 COMMENT_COLUMN(nodes.agent_cache_mode, '')
 COMMENT_COLUMN(nodes.last_agent_comm_time, '')
+COMMENT_COLUMN(nodes.syslog_msg_count, 'Total number of received syslog messages')
+COMMENT_COLUMN(nodes.snmp_trap_count, 'Total number of received SNMP traps')
 
 /*
 ** Clusters information

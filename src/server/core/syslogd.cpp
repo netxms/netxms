@@ -58,6 +58,11 @@ Queue g_syslogProcessingQueue(1000, 100);
 Queue g_syslogWriteQueue(1000, 100);
 
 /**
+ * Total number of received syslog messages
+ */
+UINT64 g_syslogMessagesReceived = 0;
+
+/**
  * Node matching policy
  */
 enum NodeMatchingPolicy
@@ -310,6 +315,7 @@ static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr
 
 	if (node != NULL)
    {
+	   node->incSyslogMessageCount();
       pRec->dwSourceObject = node->getId();
       if (pRec->szHostName[0] == 0)
 		{
@@ -415,6 +421,8 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, const InetAddress& so
 	DbgPrintf(6, _T("ProcessSyslogMessage: Raw syslog message to process:\n%hs"), psMsg);
    if (ParseSyslogMessage(psMsg, nMsgLen, &record))
    {
+      g_syslogMessagesReceived++;
+
       record.qwMsgId = s_msgId++;
       Node *node = BindMsgToNode(&record, sourceAddr);
 

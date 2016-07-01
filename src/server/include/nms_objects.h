@@ -502,7 +502,7 @@ protected:
    }
    void unlockChildList() { RWLockUnlock(m_rwlockChildList); }
 
-   void setModified();                  // Used to mark object as modified
+   void setModified(bool notify = true);                  // Used to mark object as modified
 
    bool loadACLFromDB(DB_HANDLE hdb);
    bool saveACLToDB(DB_HANDLE hdb);
@@ -1288,6 +1288,8 @@ protected:
 	INT16 m_rackPosition;
 	UINT32 m_rackId;
 	uuid m_rackImage;
+	INT64 m_syslogMessageCount;
+	INT64 m_snmpTrapCount;
 
    void pollerLock() { MutexLock(m_hPollerMutex); }
    void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
@@ -1552,6 +1554,9 @@ public:
 
 	DriverData *getDriverData() { return m_driverData; }
 	void setDriverData(DriverData *data) { m_driverData = data; }
+
+	void incSyslogMessageCount();
+	void incSnmpTrapCount();
 };
 
 /**

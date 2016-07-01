@@ -56,6 +56,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
 		{
 			list.add(new AgentParameter("Net.IP.NextHop(*)", Messages.get().SelectInternalParamDlg_DCI_NextHop, DataCollectionItem.DT_STRING)); //$NON-NLS-1$
          list.add(new AgentParameter("NetSvc.ResponseTime(*)", "Network service {instance} response time", DataCollectionItem.DT_UINT)); //$NON-NLS-1$
+         list.add(new AgentParameter("ReceivedSNMPTraps", "Total SNMP traps received", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("ReceivedSyslogMessages", "Total syslog messages received", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
 		}
 		
 		if ((object instanceof Template) || ((object instanceof AbstractNode) && ((AbstractNode)object).hasAgent()))
@@ -81,6 +83,8 @@ public class SelectInternalParamDlg extends AbstractSelectParamDlg
          list.add(new AgentParameter("Server.DBWriter.Requests.IData", "DB writer requests (DCI data)", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.DBWriter.Requests.Other", "DB writer requests (other queries)", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.DBWriter.Requests.RawData", "DB writer requests (raw DCI data)", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ReceivedSNMPTraps", "SNMP traps received since server start", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
+         list.add(new AgentParameter("Server.ReceivedSyslogMessages", "Syslog messages received since server start", DataCollectionItem.DT_UINT64)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.ActiveRequests(*)", "Thread pool {instance}: active requests", DataCollectionItem.DT_INT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.CurrSize(*)", "Thread pool {instance}: current size", DataCollectionItem.DT_INT)); //$NON-NLS-1$
          list.add(new AgentParameter("Server.ThreadPool.Load(*)", "Thread pool {instance}: current load", DataCollectionItem.DT_INT)); //$NON-NLS-1$
