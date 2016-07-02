@@ -465,6 +465,10 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
          if ((object->getType() == DCO_TYPE_ITEM) && (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE))
          {
             deleteChildDCIs(dcObjectId);
+
+            // Index may be incorrect at this point
+            if (m_dcObjects->get(i) != object)
+               i = m_dcObjects->indexOf(object);
          }
          // Destroy item
 			DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d from object %d"), (int)dcObjectId, (int)m_id);
