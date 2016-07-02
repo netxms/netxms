@@ -351,27 +351,25 @@ void DataCollectionTarget::cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32
  */
 void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI)
 {
-   UINT32 i;
-
    if (removeDCI)
    {
       lockDciAccess(true);  // write lock
 
-		UINT32 *pdwDeleteList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
-		UINT32 dwNumDeleted = 0;
+		UINT32 *deleteList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
+		int numDeleted = 0;
 
-      for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
+		int i;
+      for(i = 0; i < m_dcObjects->size(); i++)
          if (m_dcObjects->get(i)->getTemplateId() == dwTemplateId)
          {
-            pdwDeleteList[dwNumDeleted++] = m_dcObjects->get(i)->getId();
+            deleteList[numDeleted++] = m_dcObjects->get(i)->getId();
          }
 
-		for(i = 0; i < dwNumDeleted; i++)
-			deleteDCObject(pdwDeleteList[i], false);
+		for(i = 0; i < numDeleted; i++)
+			deleteDCObject(deleteList[i], false);
 
       unlockDciAccess();
-
-		safe_free(pdwDeleteList);
+		free(deleteList);
    }
    else
    {
