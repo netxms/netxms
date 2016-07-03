@@ -331,6 +331,7 @@ mibs_DATA = \
 	IANA-RTPROTO-MIB.txt \
 	IANAifType-MIB.txt \
 	IBM-6611-APPN-MIB.txt \
+	IBM-CPS-MIB.txt \
 	IBM-MIB.txt \
 	IBMCPU-MIB.txt \
 	ICF-ETWIST.txt \
