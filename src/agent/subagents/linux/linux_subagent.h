@@ -204,6 +204,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCom
 LONG H_FileSystemType(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 
+LONG H_IoDevices(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_IoStats(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_IoStatsTotal(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_DiskQueue(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

@@ -1,6 +1,6 @@
 /* 
 ** NetXMS subagent for GNU/Linux
-** Copyright (C) 2004 - 2011 NetXMS Team
+** Copyright (C) 2004 - 2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,22 +22,18 @@
 
 #define SAMPLES_PER_MINUTE		60
 
-
-//
-// One sample structure
-//
-
+/**
+ * One sample structure
+ */
 struct IOSTAT_SAMPLE
 {
 	DWORD ioRequests;
 	DWORD stats[5];
 };
 
-
-//
-// Device structure
-//
-
+/**
+ * Device structure
+ */
 struct IOSTAT_DEVICE
 {
 	char name[64];
@@ -45,11 +41,9 @@ struct IOSTAT_DEVICE
 	IOSTAT_SAMPLE samples[SAMPLES_PER_MINUTE];
 };
 
-
-//
-// Static data
-//
-
+/**
+ * Static data
+ */
 static CONDITION m_condStop;
 static THREAD m_collectorThread;
 static const char *m_statFile = "/proc/diskstats";
@@ -59,11 +53,9 @@ static int m_currSample = 0;
 static MUTEX m_dataAccess;
 static bool m_isSysFsAvailable = false;
 
-
-//
-// Check if given disk is a device, not partition
-//
-
+/**
+ * Check if given disk is a device, not partition
+ */
 static bool IsRealDevice(const char *name)
 {
 	if (!m_isSysFsAvailable)
@@ -82,11 +74,9 @@ static bool IsRealDevice(const char *name)
 	return access(path, 0) == 0;
 }
 
-
-//
-// Parse single stat line
-//
-
+/**
+ * Parse single stat line
+ */
 static void ParseIoStat(char *line)
 {
 	char *p = line;
@@ -124,11 +114,9 @@ static void ParseIoStat(char *line)
 	       &s->stats[IOSTAT_NUM_WRITES], &s->stats[IOSTAT_NUM_SWRITES], &s->ioRequests, &s->stats[IOSTAT_IO_TIME]);
 }
 
-
-//
-// Collect I/O stats
-//
-
+/**
+ * Collect I/O stats
+ */
 static void Collect()
 {
 	MutexLock(m_dataAccess);
@@ -155,11 +143,9 @@ static void Collect()
 	MutexUnlock(m_dataAccess);
 }
 
-
-//
-// Collection thread
-//
-
+/**
+ * Collection thread
+ */
 static THREAD_RESULT THREAD_CALL IoCollectionThread(void *arg)
 {
 	// Get first sample for each device and fill all samples
@@ -182,11 +168,9 @@ static THREAD_RESULT THREAD_CALL IoCollectionThread(void *arg)
 	return THREAD_OK;
 }
 
-
-//
-// Start collector
-//
-
+/**
+ * Start collector
+ */
 void StartIoStatCollector()
 {
 	// Check if /sys/block is available
@@ -205,11 +189,9 @@ void StartIoStatCollector()
 	m_collectorThread = ThreadCreateEx(IoCollectionThread, 0, NULL);
 }
 
-
-//
-// Stop collector
-//
-
+/**
+ * Stop collector
+ */
 void ShutdownIoStatCollector()
 {
 	ConditionSet(m_condStop);
@@ -218,11 +200,9 @@ void ShutdownIoStatCollector()
 	MutexDestroy(m_dataAccess);
 }
 
-
-//
-// Get samples for given device
-//
-
+/**
+ * Get samples for given device
+ */
 static IOSTAT_SAMPLE *GetSamples(const TCHAR *param)
 {
 	char *devName, buffer[64];
@@ -239,11 +219,9 @@ static IOSTAT_SAMPLE *GetSamples(const TCHAR *param)
 	return NULL;
 }
 
-
-//
-// Get difference between oldest and newest samples
-//
-
+/**
+ * Get difference between oldest and newest samples
+ */
 static DWORD GetSampleDelta(IOSTAT_SAMPLE *samples, int metric)
 {
 	// m_currSample points to next sample, so it's oldest one
@@ -253,11 +231,9 @@ static DWORD GetSampleDelta(IOSTAT_SAMPLE *samples, int metric)
 	return samples[last].stats[metric] - samples[m_currSample].stats[metric];
 }
 
-
-//
-// Handlers for agent parameters
-//
-
+/**
+ * Handler for I/O stat parameters (per device)
+ */
 LONG H_IoStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_UNSUPPORTED;
@@ -291,6 +267,9 @@ LONG H_IoStats(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstract
 	return nRet;
 }
 
+/**
+ * Handler for I/O stat parameters (total)
+ */
 LONG H_IoStatsTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int metric = CAST_FROM_POINTER(pArg, int);
@@ -335,6 +314,9 @@ LONG H_IoStatsTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abs
 	return SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Handler for disk queue parameters (per device)
+ */
 LONG H_DiskQueue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	int nRet = SYSINFO_RC_UNSUPPORTED;
@@ -356,6 +338,9 @@ LONG H_DiskQueue(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstra
 	return nRet;
 }
 
+/**
+ * Handler for disk queue parameters (total)
+ */
 LONG H_DiskQueueTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
 {
 	MutexLock(m_dataAccess);
@@ -375,3 +360,17 @@ LONG H_DiskQueueTotal(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
 	return SYSINFO_RC_SUCCESS;
 }
 
+/**
+ * Handler for System.IO.Devices list
+ */
+LONG H_IoDevices(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   for(int i = 0; i < m_deviceCount; i++)
+   {
+      if (m_devices[i].isRealDevice)
+      {
+         value->addMBString(m_devices[i].name);
+      }
+   }
+   return SYSINFO_RC_SUCCESS;
+}
