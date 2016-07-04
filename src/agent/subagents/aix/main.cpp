@@ -36,6 +36,7 @@ LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_LvmVolumeGroups(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -263,6 +264,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
    { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
+   { _T("LVM.VolumeGroups"), H_LvmVolumeGroups, NULL },
    { _T("Net.InterfaceList"), H_NetInterfaceList, NULL },
    { _T("System.ProcessList"), H_ProcessList, NULL }
 };
@@ -290,7 +292,7 @@ static NETXMS_SUBAGENT_INFO m_info =
    sizeof(m_tables) / sizeof(NETXMS_SUBAGENT_TABLE),
    m_tables,
    0, NULL,	// actions
-	0, NULL	// push parameters
+   0, NULL	// push parameters
 };
 
 /**
