@@ -11,7 +11,7 @@ IMPORTS
         enterprises
                 FROM RFC1155-SMI
         TRAP-TYPE
-                FROM RFC1215
+                FROM RFC-1215
         DisplayString
                 FROM RFC1213-MIB;
 
