@@ -29,11 +29,9 @@
 #include <sys/var.h>
 #include <libperfstat.h>
 
-
-//
-// CPU stats
-//
-
+/**
+ * CPU stats
+ */
 enum 
 {
 	CPU_USAGE_OVERALL,
@@ -59,11 +57,9 @@ enum
 #define CPU_USAGE_PARAM_INTERVAL(p) ((CAST_FROM_POINTER((p), DWORD)) >> 16)
 #define CPU_USAGE_PARAM_SOURCE(p) ((CAST_FROM_POINTER((p), DWORD)) & 0x0000FFFF)
 
-
-//
-// Disk info types
-//
-
+/**
+ * Disk info types
+ */
 enum
 {
 	DISK_AVAIL,
@@ -76,11 +72,37 @@ enum
 	DISK_FSTYPE
 };
 
+/**
+ * LVM info types
+ */
+enum
+{
+	LVM_LV_SIZE,
+	LVM_LV_STATUS,
+	LVM_PV_FREE,
+	LVM_PV_FREE_PERC,
+	LVM_PV_RESYNC,
+	LVM_PV_STALE,
+	LVM_PV_STATUS,
+	LVM_PV_TOTAL,
+	LVM_PV_USED,
+	LVM_PV_USED_PERC,
+	LVM_VG_FREE,
+	LVM_VG_FREE_PERC,
+	LVM_VG_LVOL_TOTAL,
+	LVM_VG_PVOL_ACTIVE,
+	LVM_VG_PVOL_TOTAL,
+	LVM_VG_RESYNC,
+	LVM_VG_STALE,
+	LVM_VG_STATUS,
+	LVM_VG_TOTAL,
+	LVM_VG_USED,
+	LVM_VG_USED_PERC
+};
 
-//
-// Request types for H_MemoryInfo
-//
-
+/**
+ * Request types for H_MemoryInfo
+ */
 enum
 {
 	MEMINFO_PHYSICAL_FREE,

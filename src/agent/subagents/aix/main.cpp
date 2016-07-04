@@ -36,7 +36,15 @@ LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_LvmLogicalVolumeInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_LvmLogicalVolumes(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_LvmLogicalVolumesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_LvmPhysicalVolumeInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
+LONG H_LvmPhysicalVolumes(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_LvmPhysicalVolumesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_LvmVolumeGroupInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_LvmVolumeGroups(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_LvmVolumeGroupsTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_MemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_NetInterfaceStatus(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
@@ -52,11 +60,9 @@ LONG H_Uname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCo
 LONG H_Uptime(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_VirtualMemoryInfo(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 
-
-//
-// Global variables
-//
-
+/**
+ * Shutdown flag
+ */
 BOOL g_bShutdown = FALSE;
 
 /**
@@ -116,6 +122,27 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
    { _T("FileSystem.Type(*)"), H_DiskInfo, (TCHAR *)DISK_FSTYPE, DCI_DT_STRING, DCIDESC_FS_TYPE },
    { _T("FileSystem.Used(*)"), H_DiskInfo, (TCHAR *)DISK_USED, DCI_DT_UINT64, DCIDESC_FS_USED },
    { _T("FileSystem.UsedPerc(*)"), H_DiskInfo, (TCHAR *)DISK_USED_PERC, DCI_DT_FLOAT, DCIDESC_FS_USEDPERC },
+
+   { _T("LVM.LogicalVolume.Size(*)"), H_LvmLogicalVolumeInfo, (TCHAR *)LVM_LV_SIZE, DCI_DT_UINT64, DCIDESC_LVM_LV_SIZE },
+   { _T("LVM.LogicalVolume.Status(*)"), H_LvmLogicalVolumeInfo, (TCHAR *)LVM_LV_STATUS, DCI_DT_STRING, DCIDESC_LVM_LV_STATUS },
+   { _T("LVM.PhysicalVolume.Free(*)"), H_LvmPhysicalVolumeInfo, (TCHAR *)LVM_PV_FREE, DCI_DT_UINT64, DCIDESC_LVM_PV_FREE },
+   { _T("LVM.PhysicalVolume.FreePerc(*)"), H_LvmPhysicalVolumeInfo, (TCHAR *)LVM_PV_FREE_PERC, DCI_DT_FLOAT, DCIDESC_LVM_PV_FREEPERC },
+   { _T("LVM.PhysicalVolume.ResyncPartitions(*)"), H_LvmPhysicalVolumeInfo, (TCHAR *)LVM_PV_RESYNC, DCI_DT_UINT64, DCIDESC_LVM_PV_RESYNC_PART },
+   { _T("LVM.PhysicalVolume.StalePartitions(*)"), H_LvmPhysicalVolumeInfo, (TCHAR *)LVM_PV_STALE, DCI_DT_UINT64, DCIDESC_LVM_PV_STALE_PART },
+   { _T("LVM.PhysicalVolume.Status(*)"), H_LvmPhysicalVolumeInfo, (TCHAR *)LVM_PV_STATUS, DCI_DT_STRING, DCIDESC_LVM_PV_STATUS },
+   { _T("LVM.PhysicalVolume.Total(*)"), H_LvmPhysicalVolumeInfo, (TCHAR *)LVM_PV_TOTAL, DCI_DT_UINT64, DCIDESC_LVM_PV_TOTAL },
+   { _T("LVM.PhysicalVolume.Used(*)"), H_LvmPhysicalVolumeInfo, (TCHAR *)LVM_PV_USED, DCI_DT_UINT64, DCIDESC_LVM_PV_USED },
+   { _T("LVM.PhysicalVolume.UsedPerc(*)"), H_LvmPhysicalVolumeInfo, (TCHAR *)LVM_PV_USED_PERC, DCI_DT_FLOAT, DCIDESC_LVM_PV_USEDPERC },
+   { _T("LVM.VolumeGroup.ActivePhysicalVolumes(*)"), H_LvmVolumeGroupInfo, (TCHAR *)LVM_VG_PVOL_ACTIVE, DCI_DT_UINT, DCIDESC_LVM_VG_PVOL_ACTIVE },
+   { _T("LVM.VolumeGroup.Free(*)"), H_LvmVolumeGroupInfo, (TCHAR *)LVM_VG_FREE, DCI_DT_UINT64, DCIDESC_LVM_VG_FREE },
+   { _T("LVM.VolumeGroup.FreePerc(*)"), H_LvmVolumeGroupInfo, (TCHAR *)LVM_VG_FREE_PERC, DCI_DT_FLOAT, DCIDESC_LVM_VG_FREEPERC },
+   { _T("LVM.VolumeGroup.LogicalVolumes(*)"), H_LvmVolumeGroupInfo, (TCHAR *)LVM_VG_LVOL_TOTAL, DCI_DT_UINT, DCIDESC_LVM_VG_LVOL_TOTAL },
+   { _T("LVM.VolumeGroup.PhysicalVolumes(*)"), H_LvmVolumeGroupInfo, (TCHAR *)LVM_VG_PVOL_TOTAL, DCI_DT_UINT, DCIDESC_LVM_VG_PVOL_TOTAL },
+   { _T("LVM.VolumeGroup.ResyncPartitions(*)"), H_LvmVolumeGroupInfo, (TCHAR *)LVM_VG_RESYNC, DCI_DT_UINT64, DCIDESC_LVM_VG_RESYNC_PART },
+   { _T("LVM.VolumeGroup.StalePartitions(*)"), H_LvmVolumeGroupInfo, (TCHAR *)LVM_VG_STALE, DCI_DT_UINT64, DCIDESC_LVM_VG_STALE_PART },
+   { _T("LVM.VolumeGroup.Total(*)"), H_LvmVolumeGroupInfo, (TCHAR *)LVM_VG_TOTAL, DCI_DT_UINT64, DCIDESC_LVM_VG_TOTAL },
+   { _T("LVM.VolumeGroup.Used(*)"), H_LvmVolumeGroupInfo, (TCHAR *)LVM_VG_USED, DCI_DT_UINT64, DCIDESC_LVM_VG_USED },
+   { _T("LVM.VolumeGroup.UsedPerc(*)"), H_LvmVolumeGroupInfo, (TCHAR *)LVM_VG_USED_PERC, DCI_DT_FLOAT, DCIDESC_LVM_VG_USEDPERC },
 
 	{ _T("Net.Interface.AdminStatus(*)"), H_NetInterfaceStatus, (TCHAR *)IF_INFO_ADMIN_STATUS, DCI_DT_INT, DCIDESC_NET_INTERFACE_ADMINSTATUS },
 	{ _T("Net.Interface.BytesIn(*)"), H_NetInterfaceInfo, (TCHAR *)IF_INFO_BYTES_IN, DCI_DT_UINT, DCIDESC_NET_INTERFACE_BYTESIN },
@@ -264,6 +291,8 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
    { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
+   { _T("LVM.LogicalVolumes(*)"), H_LvmLogicalVolumes, NULL },
+   { _T("LVM.PhysicalVolumes(*)"), H_LvmPhysicalVolumes, NULL },
    { _T("LVM.VolumeGroups"), H_LvmVolumeGroups, NULL },
    { _T("Net.InterfaceList"), H_NetInterfaceList, NULL },
    { _T("System.ProcessList"), H_ProcessList, NULL }
@@ -274,7 +303,10 @@ static NETXMS_SUBAGENT_LIST m_lists[] =
  */
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
-   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES }
+   { _T("FileSystem.Volumes"), H_FileSystems, NULL, _T("MOUNTPOINT"), DCTDESC_FILESYSTEM_VOLUMES },
+   { _T("LVM.LogicalVolumes(*)"), H_LvmLogicalVolumesTable, NULL, _T("NAME"), DCTDESC_LVM_LOGICAL_VOLUMES },
+   { _T("LVM.PhysicalVolumes(*)"), H_LvmPhysicalVolumesTable, NULL, _T("NAME"), DCTDESC_LVM_PHYSICAL_VOLUMES },
+   { _T("LVM.VolumeGroups"), H_LvmVolumeGroupsTable, NULL, _T("NAME"), DCTDESC_LVM_VOLUME_GROUPS }
 };
 
 /**
