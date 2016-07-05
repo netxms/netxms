@@ -6,19 +6,28 @@
 - In case of Policy deploy, Policy uninstall or File upload jobs fail they are scheduled for reinstallation(scheduled tasks)  "JobRetryCount" times. First time job is rescheduled in 10 minutes. Each next wait time is twice more than the previous time. 
 - If policy is known as installed on the node by the server and agent reposts that it is not installed it is being reinstalled.
 - Added configuration option to logparser to generate event only if regular expression have been matched exact count of the times in a predefined time period
-- Data collection script can return null to indicate data collection error
-- Added option to set type of each varbind in nxsnmpset
-- Fixed memory leak in postgreSQL database driver
-- New attributes "source" and "sourceId" in NXSL class "Event"
-- New method toJson() in NXSL class "Event"
 - New internal parameters: Server.ReceivedSNMPTraps, Server.ReceivedSyslogMessages, ReceivedSNMPTraps, ReceivedSyslogMessages
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu
-	- Fixed possible deadlock when executing server script
-	- Fixed area charts on dashboards
-	- "Interactive" option for line chart dashboard elements
-- Fixed issues: #92, #906, #1018, #1039, #1096, #1187, #1191, #1230, #1237, #1239, #1250
+- Fixed issues: #92, #906, #1096, #1187, #1191, #1230, #1237
+
+
+*
+* 2.0.5
+*
+
+- Data collection script can return null to indicate data collection error
+- Added option to set type of each varbind in nxsnmpset
+- Fixed memory leak in PostgreSQL database driver
+- New attributes "source" and "sourceId" in NXSL class "Event"
+- New method toJson() in NXSL class "Event
+- LVM monitoring parameters on AIX
+- Management console
+        - Fixed possible deadlock when executing server script
+        - Fixed area charts on dashboards
+        - "Interactive" option for line chart dashboard elements
+- Fixed issues: #1018, #1039, #1239, #1250
 
 
 *
