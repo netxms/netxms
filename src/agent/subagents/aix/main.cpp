@@ -36,6 +36,8 @@ LONG H_Hostname(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
 LONG H_IOStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_IOStatsTotal(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_LoadAvg(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_LvmAllLogicalVolumes(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+LONG H_LvmAllPhysicalVolumes(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_LvmLogicalVolumeInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_LvmLogicalVolumes(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_LvmLogicalVolumesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
@@ -291,7 +293,9 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 static NETXMS_SUBAGENT_LIST m_lists[] =
 {
    { _T("FileSystem.MountPoints"), H_MountPoints, NULL },
+   { _T("LVM.LogicalVolumes"), H_LvmAllLogicalVolumes, NULL },
    { _T("LVM.LogicalVolumes(*)"), H_LvmLogicalVolumes, NULL },
+   { _T("LVM.PhysicalVolumes"), H_LvmAllPhysicalVolumes, NULL },
    { _T("LVM.PhysicalVolumes(*)"), H_LvmPhysicalVolumes, NULL },
    { _T("LVM.VolumeGroups"), H_LvmVolumeGroups, NULL },
    { _T("Net.InterfaceList"), H_NetInterfaceList, NULL },

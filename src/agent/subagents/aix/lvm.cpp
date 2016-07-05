@@ -571,6 +571,30 @@ LONG H_LvmLogicalVolumes(const TCHAR *param, const TCHAR *arg, StringList *value
 }
 
 /**
+ * Handler for LVM.LogicalVolumes list
+ */
+LONG H_LvmAllLogicalVolumes(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   ObjectArray<VolumeGroup> *vgs = AcquireLvmData();
+   for(int i = 0; i < vgs->size(); i++)
+   {
+      char name[LVM_NAMESIZ * 2];
+      VolumeGroup *vg = vgs->get(i);
+      strcpy(name, vg->getName());
+      strcat(name, "/");
+      int npos = strlen(name);
+      ObjectArray<LogicalVolume> *lvs = vg->getLogicalVolumes();      
+      for(int j = 0; j < lvs->size(); j++)
+      {
+         strcpy(&name[npos], lvs->get(j)->getName());
+         value->addMBString(name);
+      }
+   }   
+   ReleaseLvmData();
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Handler for LVM.LogicalVolumes(*) table
  */
 LONG H_LvmLogicalVolumesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session)
@@ -611,10 +635,26 @@ LONG H_LvmLogicalVolumesTable(const TCHAR *param, const TCHAR *arg, Table *value
  */
 LONG H_LvmLogicalVolumeInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   char vgName[LVM_NAMESIZ], lvName[LVM_NAMESIZ];
-   if (!AgentGetParameterArgA(param, 1, vgName, LVM_NAMESIZ) ||
+   char vgName[LVM_NAMESIZ * 2], lvName[LVM_NAMESIZ];
+   if (!AgentGetParameterArgA(param, 1, vgName, LVM_NAMESIZ * 2) ||
        !AgentGetParameterArgA(param, 2, lvName, LVM_NAMESIZ))
       return SYSINFO_RC_UNSUPPORTED;
+      
+   // check if volume name given in form vg/lv
+   if (lvName[0] == 0)
+   {
+      char *s = strchr(vgName, '/');
+      if (s != NULL)
+      {
+         *s = 0;
+         s++;
+         strcpy(lvName, s);
+      }
+      else
+      {
+         return SYSINFO_RC_NO_SUCH_INSTANCE;
+      }
+   }
       
    VolumeGroup *vg = AcquireVolumeGroup(vgName);
    if (vg == NULL)
@@ -661,6 +701,30 @@ LONG H_LvmPhysicalVolumes(const TCHAR *param, const TCHAR *arg, StringList *valu
    for(int i = 0; i < pvs->size(); i++)
       value->addMBString(pvs->get(i)->getName());
    
+   ReleaseLvmData();
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for LVM.PhysicalVolumes list
+ */
+LONG H_LvmAllPhysicalVolumes(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session)
+{
+   ObjectArray<VolumeGroup> *vgs = AcquireLvmData();
+   for(int i = 0; i < vgs->size(); i++)
+   {
+      char name[LVM_NAMESIZ * 2];
+      VolumeGroup *vg = vgs->get(i);
+      strcpy(name, vg->getName());
+      strcat(name, "/");
+      int npos = strlen(name);
+      ObjectArray<PhysicalVolume> *pvs = vg->getPhysicalVolumes();   
+      for(int j = 0; j < pvs->size(); j++)
+      {
+         strcpy(&name[npos], pvs->get(j)->getName());
+         value->addMBString(name);
+      }
+   }   
    ReleaseLvmData();
    return SYSINFO_RC_SUCCESS;
 }
@@ -724,10 +788,26 @@ LONG H_LvmPhysicalVolumesTable(const TCHAR *param, const TCHAR *arg, Table *valu
  */
 LONG H_LvmPhysicalVolumeInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   char vgName[LVM_NAMESIZ], pvName[LVM_NAMESIZ];
-   if (!AgentGetParameterArgA(param, 1, vgName, LVM_NAMESIZ) ||
+   char vgName[LVM_NAMESIZ * 2], pvName[LVM_NAMESIZ];
+   if (!AgentGetParameterArgA(param, 1, vgName, LVM_NAMESIZ * 2) ||
        !AgentGetParameterArgA(param, 2, pvName, LVM_NAMESIZ))
       return SYSINFO_RC_UNSUPPORTED;
+      
+   // check if volume name given in form vg/pv
+   if (pvName[0] == 0)
+   {
+      char *s = strchr(vgName, '/');
+      if (s != NULL)
+      {
+         *s = 0;
+         s++;
+         strcpy(pvName, s);
+      }
+      else
+      {
+         return SYSINFO_RC_NO_SUCH_INSTANCE;
+      }
+   }
       
    VolumeGroup *vg = AcquireVolumeGroup(vgName);
    if (vg == NULL)
