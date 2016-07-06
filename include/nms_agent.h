@@ -604,12 +604,12 @@ inline void ret_uint(TCHAR *rbuf, UINT32 value)
 #endif
 }
 
-inline void ret_double(TCHAR *rbuf, double value)
+inline void ret_double(TCHAR *rbuf, double value, int digits = 6)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300)
-   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%f"), value);
+   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%1.*f"), digits, value);
 #else
-   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%f"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%1.*f"), digits, value);
 #endif
 }
 

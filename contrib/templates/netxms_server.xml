@@ -5,6 +5,7 @@
 	<events>
 		<event id="100000">
 			<name>DC_SERVER_THREAD_POOL_TOO_BUSY</name>
+			<guid>cd143bac-10f2-4e09-a1f6-bba5e2369a71</guid>
 			<code>100000</code>
 			<severity>2</severity>
 			<flags>1</flags>
@@ -13,7 +14,7 @@
 		</event>
 	</events>
 	<templates>
-		<template id="188">
+		<template id="102">
 			<guid>989f562b-f3c6-452c-b3de-55107456d784</guid>
 			<name>Thread pools</name>
 			<flags>3</flags>
@@ -22,10 +23,106 @@
 				<element id="2">NetXMS Server</element>
 			</path>
 			<dataCollection>
-				<dci id="120">
-					<guid>6714a626-71d2-4113-956e-876ea7cd8e04</guid>
-					<name>Server.ThreadPool.Load(MAIN)</name>
-					<description>Server thread pool MAIN: current load</description>
+				<dci id="11">
+					<guid>873c9487-652d-499b-adf3-2689f6e5cc28</guid>
+					<name>Server.ThreadPool.LoadAverage(AGENT,1)</name>
+					<description>Server thread pool AGENT: normalized load average (1 minute)</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance>AGENT</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<thresholds>
+						<threshold id="1">
+							<function>0</function>
+							<condition>4</condition>
+							<value>1</value>
+							<activationEvent>DC_SERVER_THREAD_POOL_TOO_BUSY</activationEvent>
+							<deactivationEvent>SYS_THRESHOLD_REARMED</deactivationEvent>
+							<sampleCount>5</sampleCount>
+							<repeatInterval>-1</repeatInterval>
+							<script></script>
+						</threshold>
+					</thresholds>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="12">
+					<guid>22ceb0dc-fe66-44c2-9bcf-d2dbad642912</guid>
+					<name>Server.ThreadPool.Usage(AGENT)</name>
+					<description>Server thread pool AGENT: usage</description>
+					<dataType>0</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance>AGENT</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="10">
+					<guid>06ea9ad8-a237-445e-a782-bcb36e34b57e</guid>
+					<name>Server.ThreadPool.CurrSize(AGENT)</name>
+					<description>Server thread pool AGENT: current size</description>
+					<dataType>0</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance>AGENT</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="16">
+					<guid>0112f75b-b98f-40fb-ba30-8422538d6174</guid>
+					<name>Server.ThreadPool.Usage(SCHEDULER)</name>
+					<description>Server thread pool SCHEDULER: usage</description>
+					<dataType>0</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance>SCHEDULER</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="5">
+					<guid>ed84ee94-6eb3-46d3-bf4b-6eb64452eeb3</guid>
+					<name>Server.ThreadPool.Load(POLLERS)</name>
+					<description>Server thread pool POLLERS: current load</description>
 					<dataType>0</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -43,10 +140,31 @@
 					<instanceDiscoveryData></instanceDiscoveryData>
 					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="121">
-					<guid>1fefd164-b840-4ea3-855c-3fcb10ea8d65</guid>
-					<name>Server.ThreadPool.CurrSize(MAIN)</name>
-					<description>Server thread pool MAIN: current size</description>
+				<dci id="9">
+					<guid>be4e940c-4b1f-4d96-84b0-3a9a9fcad138</guid>
+					<name>Server.ThreadPool.Load(AGENT)</name>
+					<description>Server thread pool AGENT: current load</description>
+					<dataType>0</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance>AGENT</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="8">
+					<guid>ce453669-1588-47b5-b57c-23a514562d30</guid>
+					<name>Server.ThreadPool.Usage(POLLERS)</name>
+					<description>Server thread pool POLLERS: usage</description>
 					<dataType>0</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -64,10 +182,52 @@
 					<instanceDiscoveryData></instanceDiscoveryData>
 					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="122">
+				<dci id="6">
+					<guid>8d9e28a0-a528-4658-97fe-ce7388a073f1</guid>
+					<name>Server.ThreadPool.CurrSize(POLLERS)</name>
+					<description>Server thread pool POLLERS: current size</description>
+					<dataType>0</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="4">
+					<guid>8e90cf85-e0cd-4302-bdab-7cdd385b138b</guid>
+					<name>Server.ThreadPool.Usage(MAIN)</name>
+					<description>Server thread pool MAIN: usage</description>
+					<dataType>0</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="3">
 					<guid>d29153c1-9753-4bd1-8f99-82e149c75946</guid>
-					<name>Server.ThreadPool.LoadAverage(MAIN)</name>
-					<description>Server thread pool MAIN: load average (1 minute)</description>
+					<name>Server.ThreadPool.LoadAverage(MAIN,1)</name>
+					<description>Server thread pool MAIN: normalized load average (1 minute)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -97,10 +257,10 @@
 					<instanceDiscoveryData></instanceDiscoveryData>
 					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="123">
-					<guid>8e90cf85-e0cd-4302-bdab-7cdd385b138b</guid>
-					<name>Server.ThreadPool.Usage(MAIN)</name>
-					<description>Server thread pool MAIN: usage</description>
+				<dci id="1">
+					<guid>6714a626-71d2-4113-956e-876ea7cd8e04</guid>
+					<name>Server.ThreadPool.Load(MAIN)</name>
+					<description>Server thread pool MAIN: current load</description>
 					<dataType>0</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -118,10 +278,10 @@
 					<instanceDiscoveryData></instanceDiscoveryData>
 					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="124">
-					<guid>ed84ee94-6eb3-46d3-bf4b-6eb64452eeb3</guid>
-					<name>Server.ThreadPool.Load(POLLERS)</name>
-					<description>Server thread pool POLLERS: current load</description>
+				<dci id="2">
+					<guid>1fefd164-b840-4ea3-855c-3fcb10ea8d65</guid>
+					<name>Server.ThreadPool.CurrSize(MAIN)</name>
+					<description>Server thread pool MAIN: current size</description>
 					<dataType>0</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -139,16 +299,49 @@
 					<instanceDiscoveryData></instanceDiscoveryData>
 					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="125">
-					<guid>8d9e28a0-a528-4658-97fe-ce7388a073f1</guid>
-					<name>Server.ThreadPool.CurrSize(POLLERS)</name>
-					<description>Server thread pool POLLERS: current size</description>
+				<dci id="15">
+					<guid>3cc06a71-bf9c-476e-b392-dc4d672b33e4</guid>
+					<name>Server.ThreadPool.LoadAverage(SCHEDULER,1)</name>
+					<description>Server thread pool SCHEDULER: normalized load average (1 minute)</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance>SCHEDULER</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<thresholds>
+						<threshold id="1">
+							<function>0</function>
+							<condition>4</condition>
+							<value>1</value>
+							<activationEvent>DC_SERVER_THREAD_POOL_TOO_BUSY</activationEvent>
+							<deactivationEvent>SYS_THRESHOLD_REARMED</deactivationEvent>
+							<sampleCount>5</sampleCount>
+							<repeatInterval>-1</repeatInterval>
+							<script></script>
+						</threshold>
+					</thresholds>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="14">
+					<guid>fe30414f-b23a-4c97-8a74-6bd0bb4c3019</guid>
+					<name>Server.ThreadPool.CurrSize(SCHEDULER)</name>
+					<description>Server thread pool SCHEDULER: current size</description>
 					<dataType>0</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
 					<interval>0</interval>
 					<retention>0</retention>
-					<instance></instance>
+					<instance>SCHEDULER</instance>
 					<systemTag></systemTag>
 					<delta>0</delta>
 					<flags>0</flags>
@@ -160,10 +353,31 @@
 					<instanceDiscoveryData></instanceDiscoveryData>
 					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="126">
+				<dci id="13">
+					<guid>34da6cd0-917d-4b67-a35a-789ab8a3f0bb</guid>
+					<name>Server.ThreadPool.Load(SCHEDULER)</name>
+					<description>Server thread pool SCHEDULER: current load</description>
+					<dataType>0</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance>SCHEDULER</instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="7">
 					<guid>06a8d7f2-ad9c-490e-b3a2-032e936c8f87</guid>
-					<name>Server.ThreadPool.LoadAverage(POLLERS)</name>
-					<description>Server thread pool POLLERS: load average (1 minute)</description>
+					<name>Server.ThreadPool.LoadAverage(POLLERS,1)</name>
+					<description>Server thread pool POLLERS: normalized load average (1 minute)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -193,223 +407,10 @@
 					<instanceDiscoveryData></instanceDiscoveryData>
 					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="127">
-					<guid>ce453669-1588-47b5-b57c-23a514562d30</guid>
-					<name>Server.ThreadPool.Usage(POLLERS)</name>
-					<description>Server thread pool POLLERS: usage</description>
-					<dataType>0</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="128">
-					<guid>be4e940c-4b1f-4d96-84b0-3a9a9fcad138</guid>
-					<name>Server.ThreadPool.Load(AGENT)</name>
-					<description>Server thread pool AGENT: current load</description>
-					<dataType>0</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>AGENT</instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="129">
-					<guid>06ea9ad8-a237-445e-a782-bcb36e34b57e</guid>
-					<name>Server.ThreadPool.CurrSize(AGENT)</name>
-					<description>Server thread pool AGENT: current size</description>
-					<dataType>0</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>AGENT</instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="130">
-					<guid>873c9487-652d-499b-adf3-2689f6e5cc28</guid>
-					<name>Server.ThreadPool.LoadAverage(AGENT)</name>
-					<description>Server thread pool AGENT: load average (1 minute)</description>
-					<dataType>5</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>AGENT</instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<thresholds>
-						<threshold id="1">
-							<function>0</function>
-							<condition>4</condition>
-							<value>1</value>
-							<activationEvent>DC_SERVER_THREAD_POOL_TOO_BUSY</activationEvent>
-							<deactivationEvent>SYS_THRESHOLD_REARMED</deactivationEvent>
-							<sampleCount>5</sampleCount>
-							<repeatInterval>-1</repeatInterval>
-							<script></script>
-						</threshold>
-					</thresholds>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="131">
-					<guid>22ceb0dc-fe66-44c2-9bcf-d2dbad642912</guid>
-					<name>Server.ThreadPool.Usage(AGENT)</name>
-					<description>Server thread pool AGENT: usage</description>
-					<dataType>0</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>AGENT</instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="132">
-					<guid>34da6cd0-917d-4b67-a35a-789ab8a3f0bb</guid>
-					<name>Server.ThreadPool.Load(SCHEDULER)</name>
-					<description>Server thread pool SCHEDULER: current load</description>
-					<dataType>0</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>SCHEDULER</instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="133">
-					<guid>fe30414f-b23a-4c97-8a74-6bd0bb4c3019</guid>
-					<name>Server.ThreadPool.CurrSize(SCHEDULER)</name>
-					<description>Server thread pool SCHEDULER: current size</description>
-					<dataType>0</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>SCHEDULER</instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="134">
-					<guid>3cc06a71-bf9c-476e-b392-dc4d672b33e4</guid>
-					<name>Server.ThreadPool.LoadAverage(SCHEDULER)</name>
-					<description>Server thread pool SCHEDULER: load average (1 minute)</description>
-					<dataType>5</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>SCHEDULER</instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<thresholds>
-						<threshold id="1">
-							<function>0</function>
-							<condition>4</condition>
-							<value>1</value>
-							<activationEvent>DC_SERVER_THREAD_POOL_TOO_BUSY</activationEvent>
-							<deactivationEvent>SYS_THRESHOLD_REARMED</deactivationEvent>
-							<sampleCount>5</sampleCount>
-							<repeatInterval>-1</repeatInterval>
-							<script></script>
-						</threshold>
-					</thresholds>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="135">
-					<guid>0112f75b-b98f-40fb-ba30-8422538d6174</guid>
-					<name>Server.ThreadPool.Usage(SCHEDULER)</name>
-					<description>Server thread pool SCHEDULER: usage</description>
-					<dataType>0</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance>SCHEDULER</instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
 			</dataCollection>
 			<filter>return $node-&gt;isLocalMgmt;</filter>
 		</template>
-		<template id="159">
+		<template id="103">
 			<guid>3677cb73-d121-4d48-b529-37a276f592be</guid>
 			<name>Database writer</name>
 			<flags>3</flags>
@@ -418,10 +419,10 @@
 				<element id="2">NetXMS Server</element>
 			</path>
 			<dataCollection>
-				<dci id="12">
+				<dci id="17">
 					<guid>0016a2a8-e08b-4730-8506-6f587114d872</guid>
 					<name>Server.AverageDBWriterQueueSize.IData</name>
-					<description>Database writer&apos;s request queue (DCI data) for last minute</description>
+					<description>NetXMS server: satabase writer&apos;s request queue (DCI data)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -439,10 +440,10 @@
 					<instanceDiscoveryData></instanceDiscoveryData>
 					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="13">
+				<dci id="18">
 					<guid>7cebaa83-89e1-476d-bbae-8c371f30aec8</guid>
 					<name>Server.AverageDBWriterQueueSize.Other</name>
-					<description>Database writer&apos;s request queue (other queries) for last minute</description>
+					<description>NetXMS server: database writer&apos;s request queue (other queries)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -460,10 +461,10 @@
 					<instanceDiscoveryData></instanceDiscoveryData>
 					<instanceFilter></instanceFilter>
 				</dci>
-				<dci id="14">
+				<dci id="19">
 					<guid>ff31b82b-0dac-49da-bbd9-42205bc325d0</guid>
 					<name>Server.AverageDBWriterQueueSize</name>
-					<description>Database writer&apos;s request queue for last minute</description>
+					<description>NetXMS server: database writer&apos;s request queue</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
@@ -484,187 +485,7 @@
 			</dataCollection>
 			<filter>return $node-&gt;isLocalMgmt;</filter>
 		</template>
-		<template id="162">
-			<guid>22a93d86-a72b-47e7-8178-0040548a3a47</guid>
-			<name>Server Performance</name>
-			<flags>3</flags>
-			<path>
-				<element id="1">System</element>
-				<element id="2">NetXMS Server</element>
-			</path>
-			<dataCollection>
-				<dci id="17">
-					<guid>8e52fd9f-d7e6-4cfe-a0db-8671e7ee1bc7</guid>
-					<name>Server.AverageDCIQueuingTime</name>
-					<description>Average time to queue DCI for polling for last minute</description>
-					<dataType>1</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="18">
-					<guid>2588c71e-271c-4b74-86ea-c0043671d9c0</guid>
-					<name>Server.AverageDCPollerQueueSize</name>
-					<description>Data collection poller&apos;s request queue for last minute</description>
-					<dataType>5</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="19">
-					<guid>3ecedaff-f323-4d21-805b-28759dae53e6</guid>
-					<name>Server.TotalEventsProcessed</name>
-					<description>NetXMS server: events processed for last minute</description>
-					<dataType>1</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
-					<systemTag></systemTag>
-					<delta>3</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;Events Processed&lt;/title&gt;&#x0A;   &lt;name&gt;Events&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="20">
-					<guid>a7483837-7308-4063-aa4d-de9401fd9516</guid>
-					<name>Server.AverageSyslogProcessingQueueSize</name>
-					<description>NetXMS server: syslog processing queue for last minute</description>
-					<dataType>5</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="21">
-					<guid>21e751fd-3742-41f4-b61d-081aa21c6604</guid>
-					<name>Server.AverageSyslogWriterQueueSize</name>
-					<description>NetXMS server: syslog writer queue for last minute</description>
-					<dataType>5</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
-					<systemTag></systemTag>
-					<delta>0</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="209">
-					<guid>0c5a4ba7-f16d-4a8c-8ba0-c490eec1632b</guid>
-					<name>Server.DB.Queries.Total</name>
-					<description>NetXMS server: DB queries per minute</description>
-					<dataType>3</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
-					<systemTag></systemTag>
-					<delta>3</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16748574&lt;/color&gt;&#x0A;   &lt;title&gt;Database Queries&lt;/title&gt;&#x0A;   &lt;name&gt;Queries&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="210">
-					<guid>c21bff7e-2a8c-47db-9270-80e577d5b1d1</guid>
-					<name>Server.DB.Queries.Select</name>
-					<description>NetXMS server: DB SELECT queries per minute</description>
-					<dataType>3</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
-					<systemTag></systemTag>
-					<delta>3</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;32768&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;SELECT queries&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;209&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-				<dci id="211">
-					<guid>c3e938b2-2b43-4509-94f9-0f42c1c234a4</guid>
-					<name>Server.DB.Queries.NonSelect</name>
-					<description>NetXMS server: DB non-SELECT queries per minute</description>
-					<dataType>3</dataType>
-					<samples>0</samples>
-					<origin>0</origin>
-					<interval>0</interval>
-					<retention>0</retention>
-					<instance></instance>
-					<systemTag></systemTag>
-					<delta>3</delta>
-					<flags>0</flags>
-					<snmpRawValueType>0</snmpRawValueType>
-					<snmpPort>0</snmpPort>
-					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
-					<transformation></transformation>
-					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;42495&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;non-SELECT queries&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;209&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
-					<instanceDiscoveryData></instanceDiscoveryData>
-					<instanceFilter></instanceFilter>
-				</dci>
-			</dataCollection>
-			<filter>return $node-&gt;isLocalMgmt;</filter>
-		</template>
-		<template id="182">
+		<template id="106">
 			<guid>d00799c6-4dc3-4f4e-8d67-b7e0714ff4f5</guid>
 			<name>Windows</name>
 			<flags>3</flags>
@@ -674,7 +495,7 @@
 				<element id="3">Memory usage</element>
 			</path>
 			<dataCollection>
-				<dci id="115">
+				<dci id="28">
 					<guid>ac599231-aef9-46e7-9b59-a8e5716f6ba1</guid>
 					<name>Process.WkSet(&quot;netxmsd.exe&quot;)</name>
 					<description>NetXMS server: physical memory used by process</description>
@@ -698,7 +519,7 @@
 			</dataCollection>
 			<filter>return $node-&gt;isLocalMgmt &amp;&amp; ($node-&gt;platformName like &quot;windows-*&quot;);</filter>
 		</template>
-		<template id="183">
+		<template id="107">
 			<guid>2b34394a-bef7-4cec-9cb6-70de8c6b7ed6</guid>
 			<name>UNIX</name>
 			<flags>3</flags>
@@ -708,7 +529,7 @@
 				<element id="3">Memory usage</element>
 			</path>
 			<dataCollection>
-				<dci id="116">
+				<dci id="29">
 					<guid>d2f78d83-8820-42ef-bcd4-ed6729d4b7f7</guid>
 					<name>Process.WkSet(&quot;netxmsd&quot;)</name>
 					<description>NetXMS server: physical memory used by process</description>
@@ -731,6 +552,186 @@
 				</dci>
 			</dataCollection>
 			<filter>return $node-&gt;isLocalMgmt &amp;&amp; !($node-&gt;platformName like &quot;windows-*&quot;);</filter>
+		</template>
+		<template id="104">
+			<guid>22a93d86-a72b-47e7-8178-0040548a3a47</guid>
+			<name>Server Performance</name>
+			<flags>3</flags>
+			<path>
+				<element id="1">System</element>
+				<element id="2">NetXMS Server</element>
+			</path>
+			<dataCollection>
+				<dci id="21">
+					<guid>2588c71e-271c-4b74-86ea-c0043671d9c0</guid>
+					<name>Server.AverageDCPollerQueueSize</name>
+					<description>NetXMS server: data collection poller&apos;s request queue</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="22">
+					<guid>3ecedaff-f323-4d21-805b-28759dae53e6</guid>
+					<name>Server.TotalEventsProcessed</name>
+					<description>NetXMS server: events processed for last minute</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>3</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;Events Processed&lt;/title&gt;&#x0A;   &lt;name&gt;Events&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="23">
+					<guid>a7483837-7308-4063-aa4d-de9401fd9516</guid>
+					<name>Server.AverageSyslogProcessingQueueSize</name>
+					<description>NetXMS server: syslog processing queue</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="20">
+					<guid>8e52fd9f-d7e6-4cfe-a0db-8671e7ee1bc7</guid>
+					<name>Server.AverageDCIQueuingTime</name>
+					<description>NetXMS server: average time to queue DCI for polling</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="24">
+					<guid>21e751fd-3742-41f4-b61d-081aa21c6604</guid>
+					<name>Server.AverageSyslogWriterQueueSize</name>
+					<description>NetXMS server: syslog writer queue</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="26">
+					<guid>c21bff7e-2a8c-47db-9270-80e577d5b1d1</guid>
+					<name>Server.DB.Queries.Select</name>
+					<description>NetXMS server: DB SELECT queries per minute</description>
+					<dataType>3</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>3</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;32768&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;SELECT queries&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;209&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="25">
+					<guid>0c5a4ba7-f16d-4a8c-8ba0-c490eec1632b</guid>
+					<name>Server.DB.Queries.Total</name>
+					<description>NetXMS server: DB queries per minute</description>
+					<dataType>3</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>3</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16748574&lt;/color&gt;&#x0A;   &lt;title&gt;Database Queries&lt;/title&gt;&#x0A;   &lt;name&gt;Queries&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="27">
+					<guid>c3e938b2-2b43-4509-94f9-0f42c1c234a4</guid>
+					<name>Server.DB.Queries.NonSelect</name>
+					<description>NetXMS server: DB non-SELECT queries per minute</description>
+					<dataType>3</dataType>
+					<samples>0</samples>
+					<origin>0</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>3</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;42495&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;non-SELECT queries&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;209&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+			</dataCollection>
+			<filter>return $node-&gt;isLocalMgmt;</filter>
 		</template>
 	</templates>
 	<traps>

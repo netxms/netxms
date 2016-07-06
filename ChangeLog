@@ -8,6 +8,8 @@
 - New attributes "source" and "sourceId" in NXSL class "Event"
 - New method toJson() in NXSL class "Event
 - LVM monitoring parameters on AIX
+- Added option to get normalized server thread pool load average
+- Fixed bug in self-monitoring termplates
 - Management console
 	- Fixed possible deadlock when executing server script
 	- Fixed area charts on dashboards
