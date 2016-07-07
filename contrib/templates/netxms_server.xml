@@ -422,7 +422,7 @@
 				<dci id="17">
 					<guid>0016a2a8-e08b-4730-8506-6f587114d872</guid>
 					<name>Server.AverageDBWriterQueueSize.IData</name>
-					<description>NetXMS server: satabase writer&apos;s request queue (DCI data)</description>
+					<description>NetXMS server: database writer&apos;s request queue (DCI data)</description>
 					<dataType>5</dataType>
 					<samples>0</samples>
 					<origin>0</origin>
