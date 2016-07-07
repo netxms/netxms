@@ -825,6 +825,8 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
 
+   virtual NXSL_Value *createNXSLObject();
+
    Node *getParentNode();
    UINT32 getParentNodeId();
 
