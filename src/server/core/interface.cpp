@@ -1313,3 +1313,11 @@ void Interface::setNetMask(const InetAddress& addr)
    setModified();
    unlockProperties();
 }
+
+/**
+ * Create NXSL object for this object
+ */
+NXSL_Value *Interface::createNXSLObject()
+{
+   return new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, this));
+}
