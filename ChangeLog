@@ -7,6 +7,8 @@
 - If policy is known as installed on the node by the server and agent reposts that it is not installed it is being reinstalled.
 - Added configuration option to logparser to generate event only if regular expression have been matched exact count of the times in a predefined time period
 - New internal parameters: Server.ReceivedSNMPTraps, Server.ReceivedSyslogMessages, ReceivedSNMPTraps, ReceivedSyslogMessages
+- Max size of agent data collectiors pool can be configured
+- Agent data reconciliation block size and timeout can be configured
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu
@@ -25,7 +27,6 @@
 - LVM monitoring parameters on AIX
 - Added option to get normalized server thread pool load average
 - Fixed bug in self-monitoring termplates
-- Max size of agent data collectiors pool can be configured
 - Management console
         - Fixed possible deadlock when executing server script
         - Fixed area charts on dashboards
