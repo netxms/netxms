@@ -468,8 +468,9 @@ LONG H_ResolverNameByAddr(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, Abst
  */
 LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
 {
-   TCHAR poolName[64];
-   if (!AgentGetParameterArg(param, 1, poolName, 64))
+   TCHAR poolName[64], options[64];
+   if (!AgentGetParameterArg(param, 1, poolName, 64) ||
+       !AgentGetParameterArg(param, 2, options, 64))
       return SYSINFO_RC_UNSUPPORTED;
 
    ThreadPoolInfo info;
@@ -485,13 +486,22 @@ LONG H_ThreadPoolInfo(const TCHAR *param, const TCHAR *arg, TCHAR *value, Abstra
          ret_int(value, info.load);
          break;
       case THREAD_POOL_LOADAVG_1:
-         ret_double(value, info.loadAvg[0]);
+         if ((options[0] != 0) && _tcstol(options, NULL, 10))
+            ret_double(value, info.loadAvg[0] / info.maxThreads, 2);
+         else
+            ret_double(value, info.loadAvg[0], 2);
          break;
       case THREAD_POOL_LOADAVG_5:
-         ret_double(value, info.loadAvg[1]);
+         if ((options[0] != 0) && _tcstol(options, NULL, 10))
+            ret_double(value, info.loadAvg[1] / info.maxThreads, 2);
+         else
+            ret_double(value, info.loadAvg[1], 2);
          break;
       case THREAD_POOL_LOADAVG_15:
-         ret_double(value, info.loadAvg[2]);
+         if ((options[0] != 0) && _tcstol(options, NULL, 10))
+            ret_double(value, info.loadAvg[2] / info.maxThreads, 2);
+         else
+            ret_double(value, info.loadAvg[2], 2);
          break;
       case THREAD_POOL_MAX_SIZE:
          ret_int(value, info.maxThreads);

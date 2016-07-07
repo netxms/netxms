@@ -30,6 +30,7 @@ UINT32 GetSnmpValue(const uuid& target, UINT16 port, const TCHAR *oid, TCHAR *va
 
 extern UINT32 g_dcReconciliationBlockSize;
 extern UINT32 g_dcReconciliationTimeout;
+extern UINT32 g_dcMaxCollectorPoolSize;
 
 /**
  * Data collector start indicator
@@ -970,7 +971,7 @@ static UINT32 DataCollectionSchedulerRun()
 static THREAD_RESULT THREAD_CALL DataCollectionScheduler(void *arg)
 {
    DebugPrintf(INVALID_INDEX, 1, _T("Data collection scheduler thread started"));
-   s_dataCollectorPool = ThreadPoolCreate(1, 64, _T("DATACOLL"));
+   s_dataCollectorPool = ThreadPoolCreate(1, g_dcMaxCollectorPoolSize, _T("DATACOLL"));
 
    UINT32 sleepTime = DataCollectionSchedulerRun();
    while(!AgentSleepAndCheckForShutdown(sleepTime * 1000))

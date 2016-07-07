@@ -25,6 +25,7 @@
 - LVM monitoring parameters on AIX
 - Added option to get normalized server thread pool load average
 - Fixed bug in self-monitoring termplates
+- Max size of agent data collectiors pool can be configured
 - Management console
         - Fixed possible deadlock when executing server script
         - Fixed area charts on dashboards

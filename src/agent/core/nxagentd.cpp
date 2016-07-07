@@ -165,6 +165,7 @@ UINT32 g_dwSNMPTrapPort = 162;
 UINT32 g_longRunningQueryThreshold = 250;
 UINT32 g_dcReconciliationBlockSize = 1024;
 UINT32 g_dcReconciliationTimeout = 15000;
+UINT32 g_dcMaxCollectorPoolSize = 64;
 #ifdef _WIN32
 UINT16 g_sessionAgentPort = 28180;
 #else
@@ -232,6 +233,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("BackgroundLogWriter"), CT_BOOLEAN, 0, 0, AF_BACKGROUND_LOG_WRITER, 0, &g_dwFlags, NULL },
    { _T("ControlServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszControlServerList, NULL },
    { _T("CreateCrashDumps"), CT_BOOLEAN, 0, 0, AF_CATCH_EXCEPTIONS, 0, &g_dwFlags, NULL },
+   { _T("DataCollectionThreadPoolSize"), CT_LONG, 0, 0, 0, 0, &g_dcMaxCollectorPoolSize, NULL },
 	{ _T("DataDirectory"), CT_STRING, 0, 0, MAX_PATH, 0, g_szDataDirectory, NULL },
    { _T("DataReconciliationBlockSize"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationBlockSize, NULL },
    { _T("DataReconciliationTimeout"), CT_LONG, 0, 0, 0, 0, &g_dcReconciliationTimeout, NULL },
