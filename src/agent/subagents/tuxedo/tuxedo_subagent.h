@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,14 +26,7 @@
 #include <nms_common.h>
 #include <nms_util.h>
 #include <nms_agent.h>
-
-#undef getopt
-#include <atmi.h>
-#include <fml32.h> 
+#include <nxtux.h>
 #include <tpadm.h>
-
-bool TuxedoConnect();
-void TuxedoDisconnect();
-bool CFgetString(FBFR32 *fb, FLDID32 fieldid, FLDOCC32 oc, char *buf, size_t size);
 
 #endif

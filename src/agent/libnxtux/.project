@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>tuxedo</name>
+	<name>libnxtux</name>
 	<comment></comment>
 	<projects>
 		<project>libnetxms</project>
-		<project>libnxagent</project>
-		<project>libnxtux</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -29,7 +27,7 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1467963858975</id>
+			<id>1467975328355</id>
 			<name></name>
 			<type>6</type>
 			<matcher>
@@ -38,7 +36,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1467963858983</id>
+			<id>1467975328361</id>
 			<name></name>
 			<type>6</type>
 			<matcher>
@@ -47,7 +45,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1467963858989</id>
+			<id>1467975328367</id>
 			<name></name>
 			<type>6</type>
 			<matcher>

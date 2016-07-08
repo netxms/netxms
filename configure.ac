@@ -65,6 +65,7 @@ STATIC_SUBAGENT_LIST=""
 PROPOSED_STATIC_SUBAGENTS="default"
 SUBAGENT_DIRS=""
 SUBAGENT_LIBS=""
+AGENT_DIRS=""
 SERVER_LIBS=""
 SERVER_TOOLS=""
 SERVER_INCLUDE=""
@@ -99,6 +100,7 @@ ZEROMQ_LDFLAGS=""
 LDAP_SUPPORT="yes"
 DISABLE_READLINE="no"
 TUXEDO_LIBS=""
+TUXEDO_TPINIT=""
 MONGODB_LIBS=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
@@ -560,6 +562,7 @@ AC_ARG_WITH(dist,
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent libnxmap client nxscript nxcproxy nxlptest tools"
 	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
+	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="kannel nxagent slack text2reach websms"
    HDLINK_DIRS="jira"
    PDSDRV_DIRS="rrdtool"
@@ -836,6 +839,7 @@ fi
 
 check_substr "$COMPONENTS" "tuxedo"
 if test $? = 0; then
+	AGENT_DIRS="$AGENT_DIRS libnxtux"
 	SUBAGENT_DIRS="$SUBAGENT_DIRS tuxedo"
 fi
 
@@ -2839,7 +2843,7 @@ if test $? = 0; then
 
 	if test "x$PLATFORM" = "xAIX"; then
 		if test -e $TUXEDO_BASE/lib/tpinit.o; then
-			TUXEDO_LIBS="$TUXEDO_BASE/lib/tpinit.o $TUXEDO_LIBS"
+			TUXEDO_TPINIT="$TUXEDO_BASE/lib/tpinit.o"
 		fi
 	fi
 fi
@@ -2980,6 +2984,7 @@ AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
 
 AS_IF([test "x$with_dist" = "xyes"],
 [
+  AGENT_DIRS=`echo $AGENT_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
   SUBAGENT_DIRS=`echo $SUBAGENT_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
   MODULES=`echo $MODULES|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
   SMSDRV_DIRS=`echo $SMSDRV_DIRS|perl -nae 'my %seen; my @out; for (@F) {push(@out, $_) unless $seen{$_}++; }; print join(" ", @out)'`
@@ -2992,6 +2997,7 @@ AS_IF([test "x$with_dist" = "xyes"],
 
 AC_SUBST(DB_DRIVERS)
 AC_SUBST(MODULES)
+AC_SUBST(AGENT_DIRS)
 AC_SUBST(SUBAGENT_DIRS)
 AC_SUBST(SERVER_INCLUDE)
 AC_SUBST(SERVER_LIBS)
@@ -3030,6 +3036,7 @@ AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(TUXEDO_CPPFLAGS)
 AC_SUBST(TUXEDO_LDFLAGS)
 AC_SUBST(TUXEDO_LIBS)
+AC_SUBST(TUXEDO_TPINIT)
 AC_SUBST(MONGODB_CPPFLAGS)
 AC_SUBST(MONGODB_LDFLAGS)
 AC_SUBST(MONGODB_LIBS)
@@ -3105,6 +3112,7 @@ AC_CONFIG_FILES([
 	src/agent/libnxagent/Makefile
 	src/agent/libnxappc/Makefile
 	src/agent/libnxsd/Makefile
+	src/agent/libnxtux/Makefile
 	src/agent/subagents/Makefile
 	src/agent/subagents/aix/Makefile
 	src/agent/subagents/darwin/Makefile
@@ -3347,6 +3355,7 @@ else
 fi
 if test "x${BUILD_AGENT}" = "xyes"; then
 	echo "Build Agent             : YES"
+	echo "Agent extra components  : ${AGENT_DIRS}"
 	echo "Subagents list          : ${SUBAGENT_DIRS}"
 else
 	echo "Build Agent             : NO"
@@ -3503,3 +3512,6 @@ echo "const TCHAR *g_cxx = _T(\"${CXX}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_ld = _T(\"${LD}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_perl = _T(\"${PERL}\");" >> $FLAGS_CPP
 echo "const TCHAR *g_serverLibs = _T(\"${SERVER_LIBS}\");" >> $FLAGS_CPP
+echo "const TCHAR *g_tuxedoCppFlags = _T(\"${TUXEDO_CPPFLAGS}\");" >> $FLAGS_CPP
+echo "const TCHAR *g_tuxedoLdFlags = _T(\"${TUXEDO_LDFLAGS}\");" >> $FLAGS_CPP
+echo "const TCHAR *g_tuxedoLibs = _T(\"${TUXEDO_LIBS}\");" >> $FLAGS_CPP

@@ -1,7 +1,7 @@
 /* 
 ** NetXMS - Network Management System
-** Server startup module
-** Copyright (C) 2003-2013 NetXMS Team
+** Development configuration helper
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 #include <getopt.h>
 #endif
 
-#define VALID_OPTIONS "bcCdDilLoOpPSuX"
+#define VALID_OPTIONS "bcCdDilLoOpPStTuUX"
 
 /**
  * Externals
@@ -42,6 +42,9 @@ extern const TCHAR *g_cxx;
 extern const TCHAR *g_ld;
 extern const TCHAR *g_perl;
 extern const TCHAR *g_serverLibs;
+extern const TCHAR *g_tuxedoCppFlags;
+extern const TCHAR *g_tuxedoLdFlags;
+extern const TCHAR *g_tuxedoLibs;
 
 /**
  * Show help
@@ -50,21 +53,24 @@ static void ShowHelp()
 {
 	printf("Available options:\n");
 #if HAVE_DECL_GETOPT_LONG
-	printf("   -b, --bindir       Binary directory\n"
-	       "   -o, --cc           C compiler\n"
-	       "   -c, --cflags       C compiler flags\n"
-	       "   -C, --cppflags     C/C++ compiler flags\n"
-	       "   -u, --curl-libs    Linker flags for using cURL\n"
-	       "   -O, --cxx          C++ compiler\n"
-	       "   -X, --cxxflags     C++ compiler flags\n"
-	       "   -d, --datadir      Data directory\n"
-	       "   -D, --ld           Linker\n"
-	       "   -l, --ldflags      Linker flags (all except -l)\n"
-	       "   -L, --libdir       Library directory\n"
-	       "   -i, --libs         Linker flags (only -l)\n"
-	       "   -p, --perl         Perl interpreter\n"
-	       "   -P, --prefix       Installation prefix\n"
-	       "   -S, --server-libs  Linker flags for server binaries (only -l)\n"
+	printf("   -b, --bindir          Binary directory\n"
+	       "   -o, --cc              C compiler\n"
+	       "   -c, --cflags          C compiler flags\n"
+	       "   -C, --cppflags        C/C++ compiler flags\n"
+	       "   -u, --curl-libs       Linker flags for using cURL\n"
+	       "   -O, --cxx             C++ compiler\n"
+	       "   -X, --cxxflags        C++ compiler flags\n"
+	       "   -d, --datadir         Data directory\n"
+	       "   -D, --ld              Linker\n"
+	       "   -l, --ldflags         Linker flags (all except -l)\n"
+	       "   -L, --libdir          Library directory\n"
+	       "   -i, --libs            Linker flags (only -l)\n"
+	       "   -p, --perl            Perl interpreter\n"
+	       "   -P, --prefix          Installation prefix\n"
+	       "   -S, --server-libs     Linker flags for server binaries (only -l)\n"
+          "   -t, --tuxedo-cppflags Tuxedo related compiler flags\n"
+          "   -T, --tuxedo-ldflags  Tuxedo related linker flags (all except -l)\n"
+          "   -U, --tuxedo-libs     Tuxedo related linker flags (only -l)\n"
 	      );
 #else
 	printf("   -b  Binary directory\n"
@@ -80,7 +86,10 @@ static void ShowHelp()
 	       "   -p  Perl interpreter\n"
 	       "   -P  Installation prefix\n"
 	       "   -S  Linker flags for server binaries (only -l)\n"
+          "   -t  Tuxedo related compiler flags\n"
+          "   -T  Tuxedo related linker flags (all except -l)\n"
 	       "   -u  Linker flags for using cURL\n"
+          "   -U  Tuxedo related linker flags (only -l)\n"
 	       "   -X  C++ compiler flags\n"
 	      );
 #endif
@@ -124,6 +133,9 @@ int main(int argc, char *argv[])
 		{ (char *)"perl", 0, NULL, 'p' },
 		{ (char *)"prefix", 0, NULL, 'P' },
 		{ (char *)"server-libs", 0, NULL, 'S' },
+		{ (char *)"tuxedo-cppflags", 0, NULL, 't' },
+		{ (char *)"tuxedo-ldflags", 0, NULL, 'T' },
+		{ (char *)"tuxedo-libs", 0, NULL, 'U' },
 		{ NULL, 0, 0, 0 }
 	};
 #endif
@@ -184,6 +196,12 @@ int main(int argc, char *argv[])
 			case 'S':
 				_tprintf(_T("%s\n"), g_serverLibs);
 				return 0;
+			case 't':
+				_tprintf(_T("%s\n"), g_tuxedoCppFlags);
+				return 0;
+			case 'T':
+				_tprintf(_T("%s\n"), g_tuxedoLdFlags);
+				return 0;
          case 'u':
 #if HAVE_LIBCURL
 				_tprintf(_T("-lcurl\n"));
@@ -191,6 +209,9 @@ int main(int argc, char *argv[])
 				_tprintf(_T("\n"));
 #endif
             return 0;
+			case 'U':
+				_tprintf(_T("%s\n"), g_tuxedoLibs);
+				return 0;
          case 'X':
             PrintFlags(g_cxxFlags);
             return 0;

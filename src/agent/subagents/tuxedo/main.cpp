@@ -1,6 +1,6 @@
 /*
 ** NetXMS Tuxedo subagent
-** Copyright (C) 2014 Raden Solutions
+** Copyright (C) 2014-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,68 +46,6 @@ LONG H_ServicesList(const TCHAR *param, const TCHAR *arg, StringList *value, Abs
 LONG H_ServicesTable(const TCHAR *param, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
 /**
- * Connect count
- */
-static int s_connectCount = 0;
-static MUTEX s_connectLock = MutexCreate();
-
-/**
- * Connect to Tuxedo app
- */
-bool TuxedoConnect()
-{
-   bool success = true;
-   MutexLock(s_connectLock);
-   if (s_connectCount == 0)
-   {
-      if (tpinit(NULL) != -1)
-      {
-         s_connectCount++;
-      }
-      else
-      {
-         AgentWriteDebugLog(3, _T("Tuxedo: tpinit() call failed (%hs)"), tpstrerrordetail(tperrno, 0));
-         success = false;
-      }
-   }
-   else
-   {
-      s_connectCount++;
-   }
-   MutexUnlock(s_connectLock);
-   return success;
-}
-
-/**
- * Disconnect from Tuxedo app
- */
-void TuxedoDisconnect()
-{
-   MutexLock(s_connectLock);
-   if (s_connectCount > 0)
-   {
-      s_connectCount--;
-      if (s_connectCount == 0)
-         tpterm();
-   }
-   MutexUnlock(s_connectLock);
-}
-
-/**
- * Helper function to get string field
- */
-bool CFgetString(FBFR32 *fb, FLDID32 fieldid, FLDOCC32 oc, char *buf, size_t size)
-{
-   FLDLEN32 len = (FLDLEN32)size;
-   if (CFget32(fb, fieldid, oc, buf, &len, FLD_STRING) == -1)
-   {
-      buf[0] = 0;
-      return false;
-   }
-   return true;
-}
-
-/**
  * Subagent initialization
  */
 static BOOL SubAgentInit(Config *config)
@@ -127,7 +65,6 @@ static BOOL SubAgentInit(Config *config)
  */
 static void SubAgentShutdown()
 {
-   tpterm();
 }
 
 /**
