@@ -100,14 +100,14 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplateGroup#TemplateRoot"
                label="%action.label.CreateTemplateGroup"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplate"
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplate#TemplateRoot"
                label="%action.label.CreateTemplate"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
       <objectContribution
@@ -119,14 +119,14 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplateGroup#TemplateGroup"
                label="%action.label.CreateTemplateGroup"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.CreateTemplate"
                enablesFor="1"
                id="org.netxms.ui.eclipse.datacollection.popupActions.CreateTemplate#TemplateGroup"
                label="%action.label.CreateTemplate"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
       <objectContribution

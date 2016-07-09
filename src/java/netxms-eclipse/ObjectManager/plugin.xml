@@ -360,42 +360,43 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createCluster_Container"
                label="%action.label.CreateCluster"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions"
+               state="false">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateNode"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNode_Container"
                label="%action.label.CreateNode"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateMobileDevice"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createMobileDevice_Container"
                label="%action.label.CreateMobile"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_Container"
                label="%action.label.CreateContainer"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateRack"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createRack_Container"
                label="%action.label.CreateRack"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateCondition"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createCondition_Container"
                label="%action.label.CreateCond"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
 
@@ -421,42 +422,42 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createCluster_ServiceRoot"
                label="%action.label.CreateCluster"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateNode"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNode_ServiceRoot"
                label="%action.label.CreateNode"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateMobileDevice"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createMobileDevice_ServiceRoot"
                label="%action.label.CreateMobile"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateContainer"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createContainer_ServiceRoot"
                label="%action.label.CreateContainer"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateRack"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createRack_ServiceRoot"
                label="%action.label.CreateRack"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateCondition"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createCondition_ServiceRoot"
                label="%action.label.CreateCond"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
 
@@ -530,21 +531,21 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createVPNConnector_Node"
                label="%action.label.CreateVPNConnector"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateNetworkService"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNetworkService_Node"
                label="%action.label.CreateNetSrv"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateInterface"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createInterface_Node"
                label="%action.label.CreateIface"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
@@ -565,7 +566,7 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNode_Cluster"
                label="%action.label.CreateNode"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.RemoveClusterNode"
@@ -646,6 +647,16 @@
                label="%action.label.BindTo"
                menubarPath="objectbinding">
          </action>
+      </objectContribution>
+      <objectContribution
+            adaptable="false"
+            id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.AbstractObject"
+            objectClass="org.netxms.client.objects.AbstractObject">
+         <menu
+               id="CreateObjectSubmenu"
+               label="%menu.label.Create"
+               path="objectcreation">
+         </menu>
       </objectContribution>
    </extension>
    <extension

@@ -186,14 +186,14 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMapGroup#NetworkMapRoot"
                label="%action.label.CreateMapGroup"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.CreateNetworkMap"
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMap#NetworkMapRoot"
                label="%action.label.CreateMap"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
       <objectContribution
@@ -205,14 +205,14 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMapGroup#NetworkMapGroup"
                label="%action.label.CreateMapGroup"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.networkmaps.actions.CreateNetworkMap"
                enablesFor="1"
                id="org.netxms.ui.eclipse.networkmaps.popupActions.CreateMap#NetworkMapGroup"
                label="%action.label.CreateMap"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
       <objectContribution

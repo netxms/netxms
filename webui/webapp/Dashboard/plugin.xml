@@ -18,18 +18,18 @@
             id="org.netxms.ui.eclipse.dashboard.actions.popup.object.DashboardRoot"
             objectClass="org.netxms.client.objects.DashboardRoot">
          <action
-               class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboard"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboard#DashboardRoot"
-               label="%action.label.CreateDashboard"
-               menubarPath="objectcreation">
-         </action>
-         <action
                class="org.netxms.ui.eclipse.dashboard.actions.ImportDashboard"
                enablesFor="1"
                icon="icons/import.gif"
                id="org.netxms.ui.eclipse.dashboard.actions.ImportDashboard#DashboardRoot"
                label="%action.label.ImportDashboard"
+               menubarPath="objectcreation">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.dashboard.actions.CreateDashboard"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.dashboard.popupActions.CreateDashboard#DashboardRoot"
+               label="%action.label.CreateDashboard"
                menubarPath="objectcreation">
          </action>
       </objectContribution>

@@ -12,14 +12,14 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNodeLink_BusinessServiceRoot"
                label="%action.label.CreateNodeLink"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.slm.actions.CreateBusinessService"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessService_BusinessServiceRoot"
                label="%action.label.CreateBusinessService"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart"
@@ -39,28 +39,28 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheckTemplate_BusinessService"
                label="%action.label.CreateCheckTemplate"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.slm.actions.CreateServiceCheck"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheck_BusinessService"
                label="%action.label.CreateCheck"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.slm.actions.CreateNodeLink"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createNodeLink_BusinessService"
                label="%action.label.CreateNodeLink"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.slm.actions.CreateBusinessService"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createBusinessService_BusinessService"
                label="%action.label.CreateBusinessService"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart"
@@ -80,7 +80,7 @@
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createServiceCheck_NodeLink"
                label="%action.label.CreateCheck"
-               menubarPath="objectcreation">
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.slm.actions.ShowAvailabilityChart"
