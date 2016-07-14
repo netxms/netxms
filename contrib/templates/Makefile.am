@@ -11,6 +11,8 @@
 templatesdir=$(pkgdatadir)/templates
 
 templates_DATA = \
+	aix.xml \
+	generic_unix.xml \
 	netxms_server.xml
 
 EXTRA_DIST = $(templates_DATA)
