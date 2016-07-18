@@ -498,6 +498,8 @@ void ClusterDirectNotify(ClusterNodeInfo *node, INT16 code)
  */
 int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg)
 {
+   INT64 startTime = GetCurrentTimeMs();
+
    UINT32 requestId = (UINT32)InterlockedIncrement(&s_commandId);
    msg->setId(requestId);
    NXCP_MESSAGE *rawMsg = msg->createMessage();
@@ -520,7 +522,7 @@ int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg)
          }
          else
          {
-            ClusterDebug(5, _T("ClusterCommand: send failed for peer %d [%s]"),
+            nxlog_debug(5, _T("ClusterCommand: send failed for peer %d [%s]"),
                g_nxccNodes[i].m_id, (const TCHAR *)g_nxccNodes[i].m_addr->toString());
             shutdown(g_nxccNodes[i].m_socket, SHUT_RDWR);
             g_nxccNodes[i].m_socket = INVALID_SOCKET; // current socket will be closed by receiver
@@ -544,7 +546,7 @@ int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg)
          UINT32 rcc = response->getFieldAsInt32(VID_RCC);
          if (rcc != NXCC_RCC_SUCCESS)
          {
-            ClusterDebug(5, _T("ClusterCommand: failed request to peer %d [%s] RCC=%d"),
+            nxlog_debug(5, _T("ClusterCommand: failed request to peer %d [%s] RCC=%d"),
                g_nxccNodes[i].m_id, (const TCHAR *)g_nxccNodes[i].m_addr->toString(), rcc);
             errors++;
          }
@@ -552,12 +554,16 @@ int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg)
       }
       else
       {
-         ClusterDebug(5, _T("ClusterCommand: timed out request to peer %d [%s]"),
+         nxlog_debug(5, _T("ClusterCommand: timed out request to peer %d [%s]"),
             g_nxccNodes[i].m_id, (const TCHAR *)g_nxccNodes[i].m_addr->toString());
          errors++;
       }
    }
 
+   UINT32 elapsed = (UINT32)(GetCurrentTimeMs() - startTime);
+   TCHAR buffer[64];
+   nxlog_debug(6, _T("ClusterCommand: command %s [%u] processed in %u ms (errors=%d)"),
+               NXCPMessageCodeName(msg->getCode(), buffer), msg->getId(), elapsed, errors);
    return errors;
 }
 
@@ -571,14 +577,14 @@ UINT32 LIBNXCC_EXPORTABLE ClusterSendDirectCommand(UINT32 nodeId, NXCPMessage *m
    NXCPMessage *response = ClusterSendDirectCommandEx(nodeId, msg);
    if (response == NULL)
    {
-      ClusterDebug(5, _T("ClusterDirectCommand: request timeout to peer %d (requestId=%d)"), nodeId, msg->getId());
+      nxlog_debug(5, _T("ClusterDirectCommand: request timeout to peer %d (requestId=%d)"), nodeId, msg->getId());
       return NXCC_RCC_TIMEOUT;
    }
 
    UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
    if (rcc != 0)
    {
-      ClusterDebug(5, _T("ClusterDirectCommand: failed request to peer %d (rcc=%d, requestId=%d)"), nodeId, rcc, msg->getId());
+      nxlog_debug(5, _T("ClusterDirectCommand: failed request to peer %d (rcc=%d, requestId=%d)"), nodeId, rcc, msg->getId());
    }
    delete response;
    return rcc;
