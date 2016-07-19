@@ -278,7 +278,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SessionAgentPort"), CT_WORD, 0, 0, 0, 0, &g_sessionAgentPort, NULL },
    { _T("SharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
 	{ _T("SNMPTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTimeout, NULL },
-	{ _T("SNMPTrapListenAddress"), CT_STRING, 0, 0, 0, 0, &g_szSNMPTrapListenAddress, NULL },
+	{ _T("SNMPTrapListenAddress"), CT_STRING, 0, 0, MAX_PATH, 0, &g_szSNMPTrapListenAddress, NULL },
    { _T("SNMPTrapPort"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTrapPort, NULL },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, NULL },
    { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList, NULL },
