@@ -621,6 +621,7 @@ public:
 	StringObjectMap(bool objectOwner) : StringMapBase(objectOwner) { m_objectDestructor = destructor; }
 
 	void set(const TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, false); }
+	void setPreallocated(TCHAR *key, T *object) { setObject((TCHAR *)key, (void *)object, true); }
 	T *get(const TCHAR *key) const { return (T*)getObject(key); }
 };
 

@@ -102,6 +102,7 @@ DISABLE_READLINE="no"
 TUXEDO_LIBS=""
 TUXEDO_TPINIT=""
 MONGODB_LIBS=""
+VMGR_LIBS=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
 INSTALL_LIBPATH=""
@@ -299,6 +300,15 @@ AC_ARG_WITH(mongodb,
 		MONGODB_BASE="$withval"
 	fi
 	COMPONENTS="$COMPONENTS mongodb"
+fi ])
+
+AC_ARG_WITH(vmgr,
+[AS_HELP_STRING(--with-vmgr,build VirtualHost managmet subagent)],
+[ if test "x$withval" != "xno" ; then
+	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
+		VMGR_BASE="$withval"
+	fi
+	COMPONENTS="$COMPONENTS vmgr"
 fi ])
 
 AC_ARG_WITH(sqlite,
@@ -561,7 +571,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent libnxmap client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb vmgr"
 	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="kannel nxagent slack text2reach websms"
    HDLINK_DIRS="jira"
@@ -846,6 +856,11 @@ fi
 check_substr "$COMPONENTS" "mongodb"
 if test $? = 0; then
 	SUBAGENT_DIRS="$SUBAGENT_DIRS mongodb"
+fi
+
+check_substr "$COMPONENTS" "vmgr"
+if test $? = 0; then
+	SUBAGENT_DIRS="$SUBAGENT_DIRS vmgr"
 fi
 
 check_substr "$COMPONENTS" "sdk"
@@ -2909,13 +2924,44 @@ if test $? = 0; then
 		MONGODB_LDFLAGS="-L/usr/local/lib"
 		CPPFLAGS="$CPPFLAGS $MONGODB_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $MONGODB_LDFLAGS"
-    fi
+    	fi
 	
 	AC_CHECK_HEADER(mongoc.h,,AC_MSG_ERROR([*** Cannot find mongoc.h - check your MongoDB installation ***]))
 	AC_CHECK_LIB(mongoc-1.0, nanosleep, [ MONGODB_LIBS="$MONGODB_LIBS -lmongoc-1.0" ])
 	AC_CHECK_LIB(bson-1.0, nanosleep, [ MONGODB_LIBS="$MONGODB_LIBS -lbson-1.0" ])
 
 	LIBS="$LIBS $MONGODB_LIBS"
+
+	CPPFLAGS="$OLD_CPPFLAGS"
+	LDFLAGS="$OLD_LDFLAGS"
+	LIBS="$OLD_LIBS"
+fi
+
+#--------------------------------------------------------------------
+# VMGR
+#--------------------------------------------------------------------
+
+check_substr "$COMPONENTS" "vmgr"
+if test $? = 0; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_LDFLAGS="$LDFLAGS"
+	OLD_LIBS="$LIBS"
+
+	if test "x$VMGR_BASE" != "x"; then
+		VMGR_CPPFLAGS="-I$VMGR_BASE/include/libvirt/"
+		VMGR_LDFLAGS="-L$VMGR_BASE/lib"
+		CPPFLAGS="$CPPFLAGS $VMGR_CPPFLAGS"
+		LDFLAGS="$LDFLAGS $VMGR_LDFLAGS"
+	else
+        	VMGR_CPPFLAGS="-I/usr/include/libvirt/"
+		VMGR_LDFLAGS="-L/usr/lib"
+		CPPFLAGS="$CPPFLAGS $VMGR_CPPFLAGS"
+		LDFLAGS="$LDFLAGS $VMGR_LDFLAGS"
+    	fi
+	
+	AC_CHECK_HEADER(libvirt.h,,AC_MSG_ERROR([*** Cannot find libvirt.h - check your libvirt installation ***]))
+	AC_CHECK_LIB(virt, nanosleep, [ VMGR_LIBS="$VMGR_LIBS -lvirt" ])
+	LIBS="$LIBS $VMGR_LIBS"
 
 	CPPFLAGS="$OLD_CPPFLAGS"
 	LDFLAGS="$OLD_LDFLAGS"
@@ -3040,6 +3086,9 @@ AC_SUBST(TUXEDO_TPINIT)
 AC_SUBST(MONGODB_CPPFLAGS)
 AC_SUBST(MONGODB_LDFLAGS)
 AC_SUBST(MONGODB_LIBS)
+AC_SUBST(VMGR_CPPFLAGS)
+AC_SUBST(VMGR_LDFLAGS)
+AC_SUBST(VMGR_LIBS)
 AC_SUBST(INSTALL_LIBPATH)
 AC_SUBST(ZEROMQ_CPPFLAGS)
 AC_SUBST(ZEROMQ_LDFLAGS)
@@ -3162,6 +3211,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/mongodb/Makefile
 	src/agent/subagents/ubntlw/Makefile
 	src/agent/subagents/ups/Makefile
+	src/agent/subagents/vmgr/Makefile
 	src/agent/subagents/winnt/Makefile
 	src/agent/subagents/winperf/Makefile
 	src/agent/subagents/wmi/Makefile
@@ -3497,6 +3547,13 @@ if test "x${ZEROMQ_CPPFLAGS}" != "x"; then
 fi
 if test "x${ZEROMQ_LDFLAGS}" != "x"; then
 	echo "ZeroMQ LDFLAGS          : ${ZEROMQ_LDFLAGS}"
+fi
+
+if test "x${VMGR_CPPFLAGS}" != "x"; then
+       echo "Vmgr CPPFLAGS     : ${VMGR_CPPFLAGS}"
+fi
+if test "x${VMGR_LDFLAGS}" != "x"; then
+	echo "Vmgr LDFLAGS         : ${VMGR_LDFLAGS}"
 fi
 
 FLAGS_CPP="src/tools/nxdevcfg/flags.cpp"
