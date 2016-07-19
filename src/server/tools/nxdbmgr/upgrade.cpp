@@ -674,6 +674,16 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Upgrade from V406 to V407
+ */
+static BOOL H_UpgradeFromV406(int currVersion, int newVersion)
+{
+   ResizeColumn(_T("user_groups"), _T("ldap_unique_id"), 64, true);
+   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='407' WHERE var_name='SchemaVersion'")));
+   return TRUE;
+}
+
+/**
  * Upgrade from V405 to V406
  */
 static BOOL H_UpgradeFromV405(int currVersion, int newVersion)
@@ -10250,6 +10260,7 @@ static struct
    { 403, 404, H_UpgradeFromV403 },
    { 404, 405, H_UpgradeFromV404 },
    { 405, 406, H_UpgradeFromV405 },
+   { 406, 407, H_UpgradeFromV406 },
    { 0, 0, NULL }
 };
 
