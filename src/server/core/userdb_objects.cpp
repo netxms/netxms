@@ -533,7 +533,7 @@ bool User::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, (UINT32)m_lastLogin);
    DBBind(hStmt, 17, DB_SQLTYPE_VARCHAR, m_xmppId, DB_BIND_STATIC);
    DBBind(hStmt, 18, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
-   DBBind(hStmt, 19, DB_SQLTYPE_TEXT, m_ldapId, DB_BIND_STATIC);
+   DBBind(hStmt, 19, DB_SQLTYPE_VARCHAR, m_ldapId, DB_BIND_STATIC);
    DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
@@ -812,7 +812,7 @@ bool Group::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, m_description, DB_BIND_STATIC);
    DBBind(hStmt, 5, DB_SQLTYPE_VARCHAR, m_guid);
    DBBind(hStmt, 6, DB_SQLTYPE_TEXT, m_userDn, DB_BIND_STATIC);
-   DBBind(hStmt, 7, DB_SQLTYPE_TEXT, m_ldapId, DB_BIND_STATIC);
+   DBBind(hStmt, 7, DB_SQLTYPE_VARCHAR, m_ldapId, DB_BIND_STATIC);
    DBBind(hStmt, 8, DB_SQLTYPE_INTEGER, m_id);
 
    bool success = DBBegin(hdb);
