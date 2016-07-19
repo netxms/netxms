@@ -406,6 +406,7 @@ void UpdatePolicyInventory()
             }
             UnregisterPolicy(guid);
          }
+         DBFreeResult(hResult);
       }
    }
 }
