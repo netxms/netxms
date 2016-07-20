@@ -505,7 +505,10 @@ void NetObj::addChild(NetObj *object)
 {
    lockChildList(true);
    if (m_childList->contains(object))
+   {
+      unlockChildList();
       return;     // Already in the child list
+   }
    m_childList->add(object);
    unlockChildList();
 	incRefCount();
@@ -520,7 +523,10 @@ void NetObj::addParent(NetObj *object)
 {
    lockParentList(true);
    if (m_parentList->contains(object))
+   {
+      unlockParentList();
       return;     // Already in the parents list
+   }
    m_parentList->add(object);
    unlockParentList();
 	incRefCount();

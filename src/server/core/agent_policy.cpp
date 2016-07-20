@@ -98,7 +98,7 @@ BOOL AgentPolicy::savePolicyCommonProperties(DB_HANDLE hdb)
    // Update node bindings
    _sntprintf(query, 256, _T("DELETE FROM ap_bindings WHERE policy_id=%d"), m_id);
    DBQuery(hdb, query);
-   lockChildList(FALSE);
+   lockChildList(false);
    for(int i = 0; i < m_childList->size(); i++)
    {
       _sntprintf(query, 256, _T("INSERT INTO ap_bindings (policy_id,node_id) VALUES (%d,%d)"), m_id, m_childList->get(i)->getId());
