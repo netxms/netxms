@@ -178,6 +178,7 @@ public class SubAgent
     */
    public boolean init(Config config)
    {
+      writeDebugLog(2, "JAVA: subagent initialization started");
       for(Map.Entry<String, Plugin> entry : plugins.entrySet())
       {
          try
@@ -191,6 +192,7 @@ public class SubAgent
             writeDebugLog(6, "JAVA:   ", e);
          }
       }
+      writeDebugLog(2, "JAVA: subagent initialization completed");
       return true;
    }
 

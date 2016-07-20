@@ -408,9 +408,9 @@ LONG SubAgent::listHandler(const TCHAR *param, const TCHAR *id, StringList *valu
                jstring v = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(ret, i));
                value->addPreallocated(CStringFromJavaString(curEnv, v));
                curEnv->DeleteLocalRef(v);
-               rc = SYSINFO_RC_SUCCESS;
             }
             curEnv->DeleteLocalRef(ret);
+            rc = SYSINFO_RC_SUCCESS;
          }
          else
          {
