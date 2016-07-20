@@ -177,10 +177,20 @@ public class SubAgent
     */
    public boolean init(Config config)
    {
+      writeDebugLog(2, "JAVA: subagent initialization started");
       for(Map.Entry<String, Plugin> entry : plugins.entrySet())
       {
-         entry.getValue().init(config);
+         try
+         {
+            writeDebugLog(5, "JAVA: calling init() method for plugin " + entry.getKey());
+            entry.getValue().init(config);
+         }
+         catch(Throwable e)
+         {
+            writeDebugLog(2, "JAVA: exception in plugin " + entry.getKey() + " initialization handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         }
       }
+      writeDebugLog(2, "JAVA: subagent initialization completed");
       return true;
    }
 

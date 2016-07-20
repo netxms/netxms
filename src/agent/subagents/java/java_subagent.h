@@ -1,6 +1,7 @@
 /* 
  ** Java-Bridge NetXMS subagent
  ** Copyright (C) 2013 TEMPEST a.s.
+ ** Copyright (c) 2015-2016 Raden Solutions SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
