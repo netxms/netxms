@@ -181,6 +181,7 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 			try
 			{
 				File tmpFile = File.createTempFile("birt_" + hashCode(), "_" + clientArea.width + "_" + clientArea.height);
+				tmpFile.deleteOnExit();
 
 				deviceRenderer.setProperty(IDeviceRenderer.FILE_IDENTIFIER, tmpFile);
 				final Bounds bounds = BoundsImpl.create(0, 0, clientArea.width, clientArea.height);
