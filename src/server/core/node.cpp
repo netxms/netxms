@@ -3138,8 +3138,9 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
          int delCount = 0;
          for(int i = 0; i < m_childList->size(); i++)
          {
-				if ((m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE) && !((Interface *)m_childList->get(i))->isManuallyCreated())
-               ppDeleteList[delCount++] = (Interface *)m_childList->get(i);
+            NetObj *curr = m_childList->get(i);
+				if ((curr->getObjectClass() == OBJECT_INTERFACE) && !((Interface *)curr)->isManuallyCreated())
+               ppDeleteList[delCount++] = (Interface *)curr;
          }
          unlockChildList();
          for(int j = 0; j < delCount; j++)
@@ -4350,9 +4351,10 @@ UINT32 Node::getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer)
          lockChildList(false);
          for(int i = 0; i < m_childList->size(); i++)
          {
-            if ((m_childList->get(i)->getObjectClass() == OBJECT_INTERFACE) && ((Interface *)m_childList->get(i))->getIpAddressList()->hasAddress(m_ipAddress))
+            NetObj *curr = m_childList->get(i);
+            if ((curr->getObjectClass() == OBJECT_INTERFACE) && ((Interface *)curr)->getIpAddressList()->hasAddress(m_ipAddress))
             {
-               iface = (Interface *)m_childList->get(i);
+               iface = (Interface *)curr;
                break;
             }
          }
@@ -6071,7 +6073,7 @@ void Node::buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 s
 		lockChildList(false);
 		for(int i = 0; i < m_childList->size(); i++)
 		{
-         NetObj *object = m_parentList->get(i);
+         NetObj *object = m_childList->get(i);
 
 			if (object->getObjectClass() != OBJECT_VPNCONNECTOR)
 				continue;
