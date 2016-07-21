@@ -1,7 +1,7 @@
 /* 
  ** Java-Bridge NetXMS subagent
  ** Copyright (c) 2013 TEMPEST a.s.
- ** Copyright (c) 2015 Raden Solutions SIA
+ ** Copyright (c) 2015-2016 Raden Solutions SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -468,8 +468,11 @@ LONG SubAgent::tableHandler(const TCHAR *param, const TCHAR *id, Table *value)
                   for(jsize j = 0; j < columns; j++)
                   {
                      jstring s = reinterpret_cast<jstring>(curEnv->GetObjectArrayElement(row, j));
-                     value->setPreallocated(j, CStringFromJavaString(curEnv, s));
-                     curEnv->DeleteLocalRef(s);
+                     if (s != NULL)
+                     {
+                        value->setPreallocated(j, CStringFromJavaString(curEnv, s));
+                        curEnv->DeleteLocalRef(s);
+                     }
                   }
                   curEnv->DeleteLocalRef(row);
                }
