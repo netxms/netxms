@@ -978,7 +978,7 @@ public:
 
    const TCHAR *getValue() { return m_value; }
    void setValue(const TCHAR *value) { safe_free(m_value); m_value = _tcsdup_ex(value); }
-   void setPreallocatedValue(TCHAR *value) { safe_free(m_value); m_value = value; }
+   void setPreallocatedValue(TCHAR *value) { free(m_value); m_value = value; }
 
    int getStatus() { return m_status; }
    void setStatus(int status) { m_status = status; }
@@ -1008,7 +1008,7 @@ public:
    void setPreallocated(int index, TCHAR *value, int status, UINT32 objectId) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocated(value, status, objectId); }
 
    void setValue(int index, const TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setValue(value); }
-   void setPreallocatedValue(int index, TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocatedValue(value); }
+   void setPreallocatedValue(int index, TCHAR *value) { TableCell *c = m_cells->get(index); if (c != NULL) c->setPreallocatedValue(value); else free(value); }
 
    void setStatus(int index, int status) { TableCell *c = m_cells->get(index); if (c != NULL) c->setStatus(status); }
 

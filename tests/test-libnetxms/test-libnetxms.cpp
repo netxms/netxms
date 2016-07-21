@@ -566,6 +566,37 @@ static void TestObjectArray()
 }
 
 /**
+ * Table tests
+ */
+static void TestTable()
+{
+   StartTest(_T("Table: create"));
+   Table *table = new Table();
+   AssertEquals(table->getNumRows(), 0);
+   EndTest();
+
+   StartTest(_T("Table: set on empty table"));
+   table->set(0, 1.0);
+   table->set(1, _T("test"));
+   table->setPreallocated(1, _tcsdup(_T("test")));
+   AssertEquals(table->getNumRows(), 0);
+   EndTest();
+
+   StartTest(_T("Table: add row"));
+   table->addRow();
+   AssertEquals(table->getNumRows(), 1);
+   AssertEquals(table->getNumColumns(), 0);
+   EndTest();
+
+   StartTest(_T("Table: set on empty row"));
+   table->set(0, _T("test"));
+   table->setPreallocated(1, _tcsdup(_T("test")));
+   AssertEquals(table->getNumRows(), 1);
+   AssertEquals(table->getNumColumns(), 0);
+   EndTest();
+}
+
+/**
  * main()
  */
 int main(int argc, char *argv[])
@@ -586,5 +617,6 @@ int main(int argc, char *argv[])
    TestQueue();
    TestHashMap();
    TestObjectArray();
+   TestTable();
    return 0;
 }

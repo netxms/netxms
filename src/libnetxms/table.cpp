@@ -528,12 +528,16 @@ void Table::setAt(int nRow, int nCol, const TCHAR *pszData)
 /**
  * Set pre-allocated data at position
  */
-void Table::setPreallocatedAt(int nRow, int nCol, TCHAR *pszData)
+void Table::setPreallocatedAt(int nRow, int nCol, TCHAR *data)
 {
    TableRow *r = m_data->get(nRow);
    if (r != NULL)
    {
-      r->setPreallocatedValue(nCol, pszData);
+      r->setPreallocatedValue(nCol, data);
+   }
+   else
+   {
+      free(data);
    }
 }
 
