@@ -34,15 +34,6 @@
 #endif
 
 /**
- * Java table info
- */
-struct JavaTableInfo
-{
-   TCHAR *key;
-   NETXMS_SUBAGENT_TABLE *definition;
-};
-
-/**
  * JVM instance
  */
 static JavaVM *s_jvm = NULL;
@@ -121,21 +112,12 @@ static LONG ListHandler(const TCHAR *cmd, const TCHAR *id, StringList *value, Ab
 /**
  * Handler for table parameters
  */
-static LONG TableHandler(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+static LONG TableHandler(const TCHAR *cmd, const TCHAR *id, Table *value, AbstractCommSession *session)
 {
    if (s_subAgent == NULL)
       return SYSINFO_RC_ERROR;
 
-   // Prepare result table using column infor provided during initialization
-   const JavaTableInfo *info = (const JavaTableInfo *)arg;
-   NETXMS_SUBAGENT_TABLE_COLUMN *columns = info->definition->columns;
-   int count = info->definition->numColumns;
-   for(int i = 0; i < count; i++)
-   {
-      value->addColumn(columns[i].name, columns[i].dataType, columns[i].displayName, columns[i].isInstance);
-   }
-
-   LONG rc = s_subAgent->tableHandler(cmd, info->key, value);
+   LONG rc = s_subAgent->tableHandler(cmd, id, value);
    s_jvm->DetachCurrentThread();
    return rc;
 }
@@ -318,10 +300,7 @@ static void AddContributionItems()
       s_subagentInfo.tables = (NETXMS_SUBAGENT_TABLE *)calloc(s_subagentInfo.numTables, sizeof(NETXMS_SUBAGENT_TABLE));
       for(int i = 1, j = 0; j < (int)s_subagentInfo.numTables; j++)
       {
-         JavaTableInfo *tableInfo = new JavaTableInfo();
-         tableInfo->key = _tcsdup(tables->get(i++));
-         tableInfo->definition = &s_subagentInfo.tables[j];
-         s_subagentInfo.tables[j].arg = (const TCHAR *)tableInfo;
+         s_subagentInfo.tables[j].arg = _tcsdup(tables->get(i++));
          nx_strncpy(s_subagentInfo.tables[j].name, tables->get(i++), MAX_PARAM_NAME);
          nx_strncpy(s_subagentInfo.tables[j].description, tables->get(i++), MAX_DB_STRING);
          s_subagentInfo.tables[j].handler = TableHandler;
