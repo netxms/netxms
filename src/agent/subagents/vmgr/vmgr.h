@@ -58,24 +58,35 @@ public:
 /**
  * Data cashing class
  */
-template <class StoredData> class XmlCashe
+template <class StoredData> class Cashe
 {
 private:
    time_t m_lastCollectionTime;
    StoredData *m_data;
-   RWLOCK m_lock;
    bool isMallocAlloc;
 public:
-   XmlCashe() { m_lastCollectionTime = NEVER; m_data = NULL; m_lock = RWLockCreate(); isMallocAlloc = true;}
-   ~XmlCashe() { RWLockDestroy(m_lock); if(isMallocAlloc){ free(m_data); } else { delete(m_data); } }
+   Cashe() { m_lastCollectionTime = NEVER; m_data = NULL; isMallocAlloc = true;}
+   ~Cashe() { if(isMallocAlloc){ free(m_data); } else { delete(m_data); } }
    //XmlCashe(StoredData *data) { m_lastCollectionTime = time(NULL); m_data = data; }
    void setMalloc(bool value) { isMallocAlloc = value; }
-   const StoredData *getDataAndLock() { RWLockReadLock(m_lock, 10000); return m_data; }
+   const StoredData *getData() { return m_data; }
    const time_t getLastCollecitonTime() { return m_lastCollectionTime; }
-   void updateChaseAndUnlock(StoredData* data) { m_lastCollectionTime = time(NULL); if(isMallocAlloc){ free(m_data); } else { delete(m_data); } m_data = data; RWLockUnlock(m_lock); }
+   void update(StoredData* data) { m_lastCollectionTime = time(NULL); if(isMallocAlloc){ free(m_data); } else { delete(m_data); } m_data = data; }
    bool shouldUpdate() { return (time(NULL) - m_lastCollectionTime) > DATA_COLLECTION_CASHE_TIME; }
-   void setWriteLock() { RWLockWriteLock(m_lock, INFINITE); }
-   void unlock() { RWLockUnlock(m_lock); }
+};
+
+/**
+ * Data cashing class
+ */
+template <class StoredData> class CasheAndLock : public Cashe<StoredData>
+{
+private:
+   MUTEX m_mutex;
+public:
+   CasheAndLock() : Cashe<StoredData>() { m_mutex = MutexCreate(); }
+   ~CasheAndLock() { MutexDestroy(m_mutex); }
+   void lock() { MutexLock(m_mutex); }
+   void unlock() { MutexUnlock(m_mutex); }
 };
 
 /**
@@ -90,11 +101,13 @@ private:
    char *m_login;
    char *m_password;
 
-   XmlCashe<char> m_capabilities;
-   XmlCashe<virNodeInfo> m_nodeInfo;
-   XmlCashe<StringObjectMap<virDomain> > m_domains;
-   XmlCashe<StringList> m_iface;
+   CasheAndLock<char> m_capabilities;
+   CasheAndLock<virNodeInfo> m_nodeInfo;
+   CasheAndLock<StringObjectMap<virDomain> > m_domains;
+   CasheAndLock<StringList> m_iface;
    //XmlCashe m_storages;
+   MUTEX m_vmXMLMutex;
+   StringObjectMap<Cashe<char> > m_vmXMLs;
 
    static int authCb(virConnectCredentialPtr cred, unsigned int ncred, void *cbdata);
 
@@ -108,8 +121,12 @@ public:
    void unlockCapabilities();
    const virNodeInfo *getNodeInfoAndLock();
    void unlockNodeInfo();
+   //Domains
    const StringObjectMap<virDomain> *getDomainListAndLock();
    void unlockDomainList();
+   const char *getDomainDefenitionAndLock(const TCHAR *name, virDomainPtr vm = NULL);
+   void unlockDomainDefenition();
+   //Iface
    const StringList *getIfaceListAndLock();
    void unlockIfaceList();
    //void getStorages();

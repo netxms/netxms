@@ -273,25 +273,43 @@ static const TCHAR *vmOpStateDescMapping[] =
    _T("Error caused due to internal failure in libvirt")
 };
 
+struct VMDataStr
+{
+   Table *value;
+   HostConnections *conn;
+};
+
 EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *userData)
 {
    virDomainPtr vm = (virDomainPtr)obj;
-   Table *value = (Table *)userData;
+   Table *value = ((VMDataStr *)userData)->value;
+   HostConnections *conn = ((VMDataStr *)userData)->conn;
+
+   const char *xml = conn->getDomainDefenitionAndLock(key, vm);
+   Config conf;
+   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
+      AgentWriteLog(2, _T("VMGR.FillVMData(): Not possible to parse VM XML definition"));
+   conn->unlockDomainDefenition();
 
    value->addRow();
    value->set(0, virDomainGetID(vm));
    value->set(1, key);
-   char uuid[VIR_UUID_STRING_BUFLEN];
-   if(virDomainGetUUIDString(vm,uuid) == 0)
-      value->set(2, uuid);
-   else
-      value->set(2, _T(""));
+   value->set(2, conf.getValue(_T("/uuid"), _T("")));
+   String os(conf.getValue(_T("/os/type"), _T("Unkonown")));
+   ConfigEntry *entry = conf.getEntry(_T("/os/type"));
+   if(entry != NULL)
+   {
+      os.append(_T("/"));
+      os.append(entry->getAttribute(_T("arch")));
+   }
+   value->set(4, os.getBuffer());
+
    virDomainInfo info;
    if(virDomainGetInfo(vm, &info) == 0)
    {
       value->set(3, info.state < 8 ? vmStateMapping[info.state] :  _T("Unkonown"));
-      value->set(6, (UINT64)info.maxMem);
-      value->set(7, (UINT64)info.memory);
+      value->set(6, (UINT64)info.maxMem * 1024);
+      value->set(7, (UINT64)info.memory * 1024);
       value->set(8, info.nrVirtCpu);
       value->set(9, info.cpuTime);
    }
@@ -303,15 +321,6 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
       value->set(8, 0);
       value->set(9, 0);
    }
-
-   char *osType = virDomainGetOSType(vm);
-   if(osType != NULL)
-   {
-      value->set(4, osType);
-      free(osType);
-   }
-   else
-      value->set(4, _T("Unkonown"));
 
    int autostart;
    if(virDomainGetAutostart(vm, &autostart) == 0)
@@ -380,7 +389,11 @@ LONG H_GetVMTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractComm
 	value->addColumn(_T("TIME"), DCI_DT_UINT, _T("Current VM time")); // +DISPLAY NAME AND TYPE
 	value->addColumn(_T("IS_PERSISTENT"), DCI_DT_STRING, _T("VM is persistent"));
 
-   domains->forEach(FillVMData, value);
+   VMDataStr data;
+   data.value = value;
+   data.conn = conn;
+
+   domains->forEach(FillVMData, &data);
    conn->unlockDomainList();
    return SYSINFO_RC_SUCCESS;
 }

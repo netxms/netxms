@@ -23,7 +23,7 @@
 /**
  * Host connection constructor
  */
-HostConnections::HostConnections(const TCHAR *name, const char *url, const char *login, const char *password)
+HostConnections::HostConnections(const TCHAR *name, const char *url, const char *login, const char *password) : m_vmXMLs(true)
 {
    m_name = _tcsdup(name);
    m_url = strdup(url);
@@ -31,6 +31,7 @@ HostConnections::HostConnections(const TCHAR *name, const char *url, const char 
    m_password = strdup(password);
    m_domains.setMalloc(false);
    m_iface.setMalloc(false);
+   m_vmXMLMutex = MutexCreate();
 }
 
 /**
@@ -43,6 +44,7 @@ HostConnections::~HostConnections()
    free(m_name);
    free(m_login);
    free(m_password);
+   MutexDestroy(m_vmXMLMutex);
 }
 
 /**
@@ -104,9 +106,9 @@ void HostConnections::disconnect()
  */
 const char *HostConnections::getCapabilitiesAndLock()
 {
+   m_capabilities.lock();
    if(m_capabilities.shouldUpdate())
    {
-      m_capabilities.setWriteLock();
       char *caps = virConnectGetCapabilities(m_connection);
       if (caps == NULL)
       {
@@ -116,11 +118,11 @@ const char *HostConnections::getCapabilitiesAndLock()
          virResetError(&err);
          return NULL;
       }
-      m_capabilities.updateChaseAndUnlock(caps);
+      m_capabilities.update(caps);
       //AgentWriteLog(NXLOG_DEBUG, _T("VMGR: Capabilities of connection %hs: %hs"), m_url, caps);
    }
 
-   return m_capabilities.getDataAndLock();
+   return m_capabilities.getData();
 }
 
 void HostConnections::unlockCapabilities()
@@ -149,9 +151,9 @@ UINT64 HostConnections::getHostFreeMemory()
  */
 const virNodeInfo *HostConnections::getNodeInfoAndLock()
 {
+   m_nodeInfo.lock();
    if(m_nodeInfo.shouldUpdate())
    {
-      m_nodeInfo.setWriteLock();
       virNodeInfo *nodeInfo = (virNodeInfo *) malloc(sizeof(virNodeInfo));
       if (virNodeGetInfo(m_connection, nodeInfo) == -1)
       {
@@ -162,10 +164,10 @@ const virNodeInfo *HostConnections::getNodeInfoAndLock()
          free(nodeInfo);
          return NULL;
       }
-      m_nodeInfo.updateChaseAndUnlock(nodeInfo);
+      m_nodeInfo.update(nodeInfo);
    }
 
-   return m_nodeInfo.getDataAndLock();
+   return m_nodeInfo.getData();
 }
 
 void HostConnections::unlockNodeInfo()
@@ -214,33 +216,101 @@ UINT64 HostConnections::getLibraryVersion()
  */
 const StringObjectMap<virDomain> *HostConnections::getDomainListAndLock()
 {
+   m_domains.lock();
    if(m_domains.shouldUpdate())
    {
-      m_domains.setWriteLock();
-      virDomainPtr *vms;
-      int ret = virConnectListAllDomains(m_connection, &vms, 0);
-      if (ret < 0)
-         return NULL;
+      int numActiveDomains = virConnectNumOfDomains(m_connection);
+      int numInactiveDomains = virConnectNumOfDefinedDomains(m_connection);
+
+      char **inactiveDomains = (char **)malloc(sizeof(char *) * numInactiveDomains);
+      int *activeDomains = (int *)malloc(sizeof(int) * numActiveDomains);
+
+      numActiveDomains = virConnectListDomains(m_connection, activeDomains, numActiveDomains);
+      numInactiveDomains = virConnectListDefinedDomains(m_connection, inactiveDomains, numInactiveDomains);
 
       StringObjectMapC<virDomain> *allDomains = new StringObjectMapC<virDomain>(true);
 
-      for (int i = 0; i < ret; i++)
+      for (int i = 0 ; i < numActiveDomains ; i++)
       {
+         virDomainPtr vm = virDomainLookupByID(m_connection, activeDomains[i]);
 #ifdef UNICODE
-         allDomains->setPreallocated(WideStringFromMBString(virDomainGetName(vms[i])), vms[i]);
+         allDomains->setPreallocated(WideStringFromMBString(virDomainGetName(vm)), vm);
 #else
-         allDomains->set(virDomainGetName(vms[i]), vms[i]);
+         allDomains->set(virDomainGetName(vm), vm);
 #endif
       }
-      free(vms);
-      m_domains.updateChaseAndUnlock(allDomains);
+
+      for (int i = 0 ; i < numInactiveDomains ; i++)
+      {
+ #ifdef UNICODE
+         allDomains->setPreallocated(WideStringFromMBString(inactiveDomains[i]), virDomainLookupByName(m_connection, inactiveDomains[i]));
+         free(inactiveDomains[i]);
+#else
+         allDomains->setPreallocated(inactiveDomains[i], virDomainLookupByName(m_connection, inactiveDomains[i]));
+#endif
+      }
+
+      free(activeDomains);
+      free(inactiveDomains);
+
+      m_domains.update(allDomains);
    }
-   return m_domains.getDataAndLock();
+   return m_domains.getData();
 }
 
+/**
+ * Unlocks domain list
+ */
 void HostConnections::unlockDomainList()
 {
    m_domains.unlock();
+}
+
+/**
+ * Returns domain definition in XML format
+ */
+const char *HostConnections::getDomainDefenitionAndLock(const TCHAR *name, virDomainPtr vm)
+{
+   MutexLock(m_vmXMLMutex);
+   Cashe<char> *xmlChase = m_vmXMLs.get(name);
+   if (xmlChase == NULL || xmlChase->shouldUpdate())
+   {
+      if(vm == NULL)
+      {
+         const StringObjectMap<virDomain> *vmMap = getDomainListAndLock();
+         virDomainPtr vm = vmMap->get(name);
+      }
+      if(vm != NULL)
+      {
+         char *xml = virDomainGetXMLDesc(vm, VIR_DOMAIN_XML_SECURE | VIR_DOMAIN_XML_INACTIVE);
+         if(xmlChase == NULL)
+         {
+            xmlChase = new Cashe<char>();
+            m_vmXMLs.set(name, xmlChase);
+         }
+         xmlChase->update(xml);
+
+      }
+      else
+      {
+         m_vmXMLs.remove(name);
+      }
+   }
+/*
+   if(xmlChase != NULL)
+      AgentWriteLog(6, _T("VMGR: ******Domain defenition: %hs"), xmlChase->getData());
+   else
+      AgentWriteLog(6, _T("VMGR: ******Domain defenition: NULL"));
+*/
+   return xmlChase != NULL ? xmlChase->getData() : NULL;
+}
+
+/**
+ * Unlocks domain definition
+ */
+void HostConnections::unlockDomainDefenition()
+{
+   MutexUnlock(m_vmXMLMutex);
 }
 
 /**---------
@@ -252,10 +322,9 @@ void HostConnections::unlockDomainList()
  */
 const StringList *HostConnections::getIfaceListAndLock()
 {
+   m_iface.lock();
    if(m_iface.shouldUpdate())
    {
-      m_iface.setWriteLock();
-
       int activeCount = virConnectNumOfInterfaces(m_connection);
       int inactiveCount = virConnectNumOfDefinedInterfaces(m_connection);
       StringList *ifaceList = new StringList();
@@ -268,7 +337,7 @@ const StringList *HostConnections::getIfaceListAndLock()
          {
             virInterfacePtr iface = virInterfaceLookupByName(m_connection, active[i]);
             //AgentWriteLog(6, _T("VMGR: iface info!!!: %hs"), virInterfaceGetXMLDesc(iface, 0));
-
+            virInterfaceFree(iface);
             ifaceList->addMBString(active[i]);
             free(active[i]);
          }
@@ -283,15 +352,15 @@ const StringList *HostConnections::getIfaceListAndLock()
          {
             virInterfacePtr iface = virInterfaceLookupByName(m_connection, inactive[i]);
             //AgentWriteLog(6, _T("VMGR: iface info!!!: %hs"), virInterfaceGetXMLDesc(iface, 0));
-
+            virInterfaceFree(iface);
             ifaceList->addMBString(inactive[i]);
             free(inactive[i]);
          }
          free(inactive);
       }
-      m_iface.updateChaseAndUnlock(ifaceList);
+      m_iface.update(ifaceList);
    }
-   return m_iface.getDataAndLock();
+   return m_iface.getData();
 }
 
 void HostConnections::unlockIfaceList()

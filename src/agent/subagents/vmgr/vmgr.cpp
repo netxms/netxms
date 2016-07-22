@@ -1,5 +1,5 @@
 /*
- ** File management subagent
+ ** Vmgr management subagent
  ** Copyright (C) 2016 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -167,7 +167,7 @@ static void SubagentShutdown()
 }
 
 /**
- * Process commands like get files in folder, delete file/folder, copy file/folder, move file/folder
+ * Process commands like VM up/down
  */
 static BOOL ProcessCommands(UINT32 command, NXCPMessage *request, NXCPMessage *response, AbstractCommSession *session)
 {
@@ -233,7 +233,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 /**
  * Entry point for NetXMS agent
  */
-DECLARE_SUBAGENT_ENTRY_POINT(FILEMGR)
+DECLARE_SUBAGENT_ENTRY_POINT(VMGR)
 {
    *ppInfo = &m_info;
    return TRUE;

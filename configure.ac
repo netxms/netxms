@@ -2927,7 +2927,7 @@ if test $? = 0; then
     	fi
 	
 	AC_CHECK_HEADER(mongoc.h,,AC_MSG_ERROR([*** Cannot find mongoc.h - check your MongoDB installation ***]))
-	AC_CHECK_LIB(mongoc-1.0, nanosleep, [ MONGODB_LIBS="$MONGODB_LIBS -lmongoc-1.0" ])
+	AC_CHECK_LIB(mongoc-1.0, mongoc_client_get_database, [ MONGODB_LIBS="$MONGODB_LIBS -lmongoc-1.0" ])
 	AC_CHECK_LIB(bson-1.0, nanosleep, [ MONGODB_LIBS="$MONGODB_LIBS -lbson-1.0" ])
 
 	LIBS="$LIBS $MONGODB_LIBS"
@@ -2960,7 +2960,7 @@ if test $? = 0; then
     	fi
 	
 	AC_CHECK_HEADER(libvirt.h,,AC_MSG_ERROR([*** Cannot find libvirt.h - check your libvirt installation ***]))
-	AC_CHECK_LIB(virt, nanosleep, [ VMGR_LIBS="$VMGR_LIBS -lvirt" ])
+	AC_CHECK_LIB(virt, virConnectGetLibVersion, [ VMGR_LIBS="$VMGR_LIBS -lvirt" ])
 	LIBS="$LIBS $VMGR_LIBS"
 
 	CPPFLAGS="$OLD_CPPFLAGS"
