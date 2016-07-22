@@ -39,7 +39,6 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.netxms.client.NXCSession;
-import org.netxms.client.TimePeriod;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventSelector;

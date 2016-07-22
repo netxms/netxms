@@ -674,12 +674,48 @@ static int NextFreeEPPruleID()
 }
 
 /**
+ * Set schema version
+ */
+static bool SetSchemaVersion(int version)
+{
+   TCHAR query[256];
+   _sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='SchemaVersion'"), version);
+   return SQLQuery(query);
+}
+
+/**
+ * Upgrade from V407 to V408
+ */
+static BOOL H_UpgradeFromV407(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+         _T("CREATE TABLE chassis (")
+         _T("   id integer not null,")
+         _T("   controller_id integer not null,")
+         _T("   rack_id integer not null,")
+         _T("   rack_image varchar(36) null,")
+         _T("   rack_position integer not null,")
+         _T("   rack_height integer not null,")
+         _T("   PRIMARY KEY(id))")
+       ));
+
+   static const TCHAR *batch =
+      _T("ALTER TABLE nodes ADD chassis_id integer\n")
+      _T("UPDATE nodes SET chassis_id=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetSchemaVersion(408));
+   return TRUE;
+}
+
+/**
  * Upgrade from V406 to V407
  */
 static BOOL H_UpgradeFromV406(int currVersion, int newVersion)
 {
    ResizeColumn(_T("user_groups"), _T("ldap_unique_id"), 64, true);
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='407' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(407));
    return TRUE;
 }
 
@@ -694,7 +730,7 @@ static BOOL H_UpgradeFromV405(int currVersion, int newVersion)
       _T("UPDATE nodes SET syslog_msg_count=0,snmp_trap_count=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='406' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(406));
    return TRUE;
 }
 
@@ -735,7 +771,7 @@ static BOOL H_UpgradeFromV404(int currVersion, int newVersion)
    _sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_AGENT_LOCAL_DATABASE_PROBLEM);
    CHK_EXEC(SQLQuery(query));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='405' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(405));
    return TRUE;
 }
 
@@ -747,7 +783,7 @@ static BOOL H_UpgradeFromV403(int currVersion, int newVersion)
    CHK_EXEC(CreateConfigParam(_T("SyslogIgnoreMessageTimestamp"), _T("0"),
             _T("Ignore timestamp received in syslog messages and always use server time"),
             'B', true, false, false, false));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='404' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(404));
    return TRUE;
 }
 
@@ -758,7 +794,7 @@ static BOOL H_UpgradeFromV402(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("DROP TABLE policy_time_range_list")));
    CHK_EXEC(SQLQuery(_T("DROP TABLE time_ranges")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='403' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(403));
    return TRUE;
 }
 
@@ -768,7 +804,7 @@ static BOOL H_UpgradeFromV402(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV401(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_event_log_source ON event_log(event_source)")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='402' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(402));
    return TRUE;
 }
 
@@ -800,7 +836,7 @@ static BOOL H_UpgradeFromV400(int currVersion, int newVersion)
    CHK_EXEC(CreateConfigParam(_T("LdapUserUniqueId"), _T(""), true, false, false));
    CHK_EXEC(CreateConfigParam(_T("LdapGroupUniqueId"), _T(""), true, false, false));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='401' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(401));
    return TRUE;
 }
 
@@ -810,7 +846,7 @@ static BOOL H_UpgradeFromV400(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV399(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("JobRetryCount"), _T("5"), _T("Maximum mumber of job execution retrys"), 'I', true, false, false, false));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='400' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(400));
    return TRUE;
 }
 
@@ -828,7 +864,7 @@ static BOOL H_UpgradeFromV398(int currVersion, int newVersion)
          _T("   PRIMARY KEY(id))")
        ));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='399' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(399));
    return TRUE;
 }
 
@@ -1293,7 +1329,7 @@ static BOOL H_UpgradeFromV397(int currVersion, int newVersion)
    CHK_EXEC(SQLBatch(batch1));
    CHK_EXEC(SQLBatch(batch2));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='398' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(398));
    return TRUE;
 }
 
@@ -1389,7 +1425,7 @@ static BOOL H_UpgradeFromV396(int currVersion, int newVersion)
 
    CHK_EXEC(SQLQuery(_T("ALTER TABLE event_cfg ADD guid varchar(36)")));
    CHK_EXEC(GenerateGUID(_T("event_cfg"), _T("event_code"), _T("guid"), eventGuidMapping));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='397' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(397));
    return TRUE;
 }
 
@@ -1404,7 +1440,7 @@ static BOOL H_UpgradeFromV395(int currVersion, int newVersion)
       _T("   file_content $SQL:TEXT null,")
       _T("   PRIMARY KEY(policy_id))")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='396' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(396));
    return TRUE;
 }
 
@@ -1414,7 +1450,7 @@ static BOOL H_UpgradeFromV395(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV394(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("UPDATE config SET need_server_restart='1' WHERE var_name='OfflineDataRelevanceTime'")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='395' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(395));
    return TRUE;
 }
 
@@ -1424,7 +1460,7 @@ static BOOL H_UpgradeFromV394(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV393(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("OfflineDataRelevanceTime"), _T("86400"), _T("Time period in seconds within which received offline data still relevant for threshold validation"), 'I', true, false, false, false));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='394' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(394));
    return TRUE;
 }
 
@@ -1434,7 +1470,7 @@ static BOOL H_UpgradeFromV393(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV392(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("DefaultInterfaceExpectedState"), _T("0"), _T("Default expected state for new interface objects"), 'C', true, false, false, false));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='393' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(393));
    return TRUE;
 }
 
@@ -1444,7 +1480,7 @@ static BOOL H_UpgradeFromV392(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV391(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("ImportConfigurationOnStartup"), _T("0"), _T("Import configuration from local files on server startup"), 'B', true, true, false, false));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='392' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(392));
    return TRUE;
 }
 
@@ -1461,7 +1497,7 @@ static BOOL H_UpgradeFromV390(int currVersion, int newVersion)
       _T("   items $SQL:TEXT,")
       _T("   PRIMARY KEY(object_id, subscription_type))")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='391' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(391));
    return TRUE;
 }
 
@@ -1521,7 +1557,7 @@ static BOOL H_UpgradeFromV389(int currVersion, int newVersion)
 
    CHK_EXEC(SQLQuery(_T("DROP TABLE containers")));
    CHK_EXEC(SQLQuery(_T("DROP TABLE container_categories")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='390' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(390));
    return TRUE;
 }
 
@@ -1535,7 +1571,7 @@ static BOOL H_UpgradeFromV388(int currVersion, int newVersion)
       _T("UPDATE racks SET top_bottom_num='0'\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='389' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(389));
    return TRUE;
 }
 
@@ -1551,7 +1587,7 @@ static BOOL H_UpgradeFromV387(int currVersion, int newVersion)
       _T("UPDATE event_log SET dci_id=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='388' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(388));
    return TRUE;
 }
 
@@ -1583,7 +1619,7 @@ static BOOL H_UpgradeFromV386(int currVersion, int newVersion)
       if (!g_bIgnoreErrors)
          return FALSE;
    }
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='387' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(387));
    return TRUE;
 }
 
@@ -1652,7 +1688,7 @@ static BOOL H_UpgradeFromV385(int currVersion, int newVersion)
    }
 
    CHK_EXEC(SQLQuery(_T("UPDATE event_cfg SET severity='3' WHERE event_code=14 OR event_code=15")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='386' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(386));
    return TRUE;
 }
 
@@ -1662,7 +1698,7 @@ static BOOL H_UpgradeFromV385(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV384(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("UPDATE config SET is_visible=1,need_server_restart=0 WHERE var_name='SNMPPorts'")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='385' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(385));
    return TRUE;
 }
 
@@ -1677,7 +1713,7 @@ static BOOL H_UpgradeFromV383(int currVersion, int newVersion)
       _T("ALTER TABLE graphs ADD filters $SQL:TEXT\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='384' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(384));
    return TRUE;
 }
 
@@ -1687,7 +1723,7 @@ static BOOL H_UpgradeFromV383(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV382(int currVersion, int newVersion)
 {
    CHK_EXEC(ResizeColumn(_T("nodes"), _T("primary_ip"), 48, false));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='383' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(383));
    return TRUE;
 }
 
@@ -1702,7 +1738,7 @@ static BOOL H_UpgradeFromV381(int currVersion, int newVersion)
    CHK_EXEC(CreateLibraryScript(14, _T("Hook::TopologyPoll"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *\r\n * Expected return value:\r\n *  none - returned value is ignored\r\n */\r\n")));
    CHK_EXEC(CreateLibraryScript(15, _T("Hook::CreateInterface"), _T("/* Available global variables:\r\n *  $node - current node, object of 'Node' type\r\n *  $1 - current interface, object of 'Interface' type\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether interface should be created\r\n */\r\nreturn true;\r\n")));
    CHK_EXEC(CreateLibraryScript(16, _T("Hook::AcceptNewNode"), _T("/* Available global variables:\r\n *  $ipAddr - IP address of the node being processed\r\n *  $ipNetMask - netmask of the node being processed\r\n *  $macAddr - MAC address of the node being processed\r\n *  $zoneId - zone ID of the node being processed\r\n *\r\n * Expected return value:\r\n *  true/false - boolean - whether node should be created\r\n */\r\nreturn true;\r\n")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='382' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(382));
    return TRUE;
 }
 
@@ -1718,7 +1754,7 @@ static BOOL H_UpgradeFromV380(int currVersion, int newVersion)
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(GenerateGUID(_T("items"), _T("item_id"), _T("guid"), NULL));
    CHK_EXEC(GenerateGUID(_T("dc_tables"), _T("item_id"), _T("guid"), NULL));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='381' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(381));
    return TRUE;
 }
 
@@ -1732,7 +1768,7 @@ static BOOL H_UpgradeFromV379(int currVersion, int newVersion)
       _T("UPDATE nodes SET last_agent_comm_time=0 WHERE last_agent_comm_time IS NULL\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='380' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(380));
    return TRUE;
 }
 
@@ -1742,7 +1778,7 @@ static BOOL H_UpgradeFromV379(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV378(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='NumberOfDatabaseWriters'")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='379' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(379));
    return TRUE;
 }
 
@@ -1759,7 +1795,7 @@ static BOOL H_UpgradeFromV377(int currVersion, int newVersion)
       _T("UPDATE config SET var_name='DBConnectionPoolMaxLifetime' WHERE var_name='ConnectionPoolMaxLifetime'\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='378' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(378));
    return TRUE;
 }
 
@@ -1770,7 +1806,7 @@ static BOOL H_UpgradeFromV376(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("DefaultSubnetMaskIPv4"), _T("24"), _T("Default mask for synthetic IPv4 subnets"), 'I', true, false, false, false));
    CHK_EXEC(CreateConfigParam(_T("DefaultSubnetMaskIPv6"), _T("64"), _T("Default mask for synthetic IPv6 subnets"), 'I', true, false, false, false));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='377' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(377));
    return TRUE;
 }
 
@@ -1785,7 +1821,7 @@ static BOOL H_UpgradeFromV375(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='376' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(376));
    return TRUE;
 }
 
@@ -1800,7 +1836,7 @@ static BOOL H_UpgradeFromV374(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='375' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(375));
    return TRUE;
 }
 
@@ -1823,7 +1859,7 @@ static BOOL H_UpgradeFromV373(int currVersion, int newVersion)
          _T("Left maintenance mode"),
          _T("Generated when node, cluster, or mobile device leaves maintenance mode.")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='374' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(374));
    return TRUE;
 }
 
@@ -1833,7 +1869,7 @@ static BOOL H_UpgradeFromV373(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV372(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("ALTER TABLE scheduled_tasks ADD object_id integer")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='373' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(373));
    return TRUE;
 }
 
@@ -1847,7 +1883,7 @@ static BOOL H_UpgradeFromV371(int currVersion, int newVersion)
       _T("UPDATE object_properties SET maint_mode='0'\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='372' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(372));
    return TRUE;
 }
 
@@ -1872,7 +1908,7 @@ static BOOL H_UpgradeFromV370(int currVersion, int newVersion)
    _sntprintf(query, 256, _T("UPDATE dc_tables SET retention_time=0 WHERE retention_time=%d"), defaultRetentionTime);
    CHK_EXEC(SQLQuery(query));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='371' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(371));
    return TRUE;
 }
 
@@ -1886,7 +1922,7 @@ static BOOL H_UpgradeFromV369(int currVersion, int newVersion)
       _T("   object_id integer not null,")
       _T("   dashboard_id integer not null,")
       _T("   PRIMARY KEY(object_id,dashboard_id))")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='370' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(370));
    return TRUE;
 }
 
@@ -1906,7 +1942,7 @@ static BOOL H_UpgradeFromV368(int currVersion, int newVersion)
       _T("   flags integer not null,")
       _T("   owner integer not null,")
       _T("   PRIMARY KEY(id))")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='369' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(369));
    return TRUE;
 }
 
@@ -1920,7 +1956,7 @@ static BOOL H_UpgradeFromV367(int currVersion, int newVersion)
       _T("UPDATE nodes SET rack_height=1\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='368' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(368));
    return TRUE;
 }
 
@@ -1934,7 +1970,7 @@ static BOOL H_UpgradeFromV366(int currVersion, int newVersion)
    CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD snmp_sys_contact varchar(127)")));
    CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD snmp_sys_location varchar(127)")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='367' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(367));
    return TRUE;
 }
 
@@ -1945,7 +1981,7 @@ static BOOL H_UpgradeFromV365(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("ServerCommandOutputTimeout"), _T("60"), true, false));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='366' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(366));
    return TRUE;
 }
 
@@ -1955,7 +1991,7 @@ static BOOL H_UpgradeFromV365(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV364(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("SNMPPorts"), _T("161"), true, false));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='365' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(365));
    return TRUE;
 }
 
@@ -1971,7 +2007,7 @@ static BOOL H_UpgradeFromV363(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='364' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(364));
    return TRUE;
 }
 
@@ -1981,7 +2017,7 @@ static BOOL H_UpgradeFromV363(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV362(int currVersion, int newVersion)
 {
    ResizeColumn(_T("config"), _T("var_value"), 2000, true);
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='363' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(363));
    return TRUE;
 }
 
@@ -1991,7 +2027,7 @@ static BOOL H_UpgradeFromV362(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV361(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("CaseInsensitiveLoginNames"), _T("0"), _T("Enable/disable case insensitive login names"), 'B', true, true, false));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='362' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(362));
    return TRUE;
 }
 
@@ -2009,7 +2045,7 @@ static BOOL H_UpgradeFromV360(int currVersion, int newVersion)
       _T("   config $SQL:TEXT null,")
       _T("   PRIMARY KEY(tool_id,name))")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='361' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(361));
    return TRUE;
 }
 
@@ -2051,7 +2087,7 @@ static BOOL H_UpgradeFromV359(int currVersion, int newVersion)
       if (!g_bIgnoreErrors)
          return FALSE;
    }
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='360' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(360));
    return TRUE;
 }
 
@@ -2066,7 +2102,7 @@ static BOOL H_UpgradeFromV358(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='359' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(359));
    return TRUE;
 }
 
@@ -2091,7 +2127,7 @@ static BOOL H_UpgradeFromV357(int currVersion, int newVersion)
 
    CHK_EXEC(CreateConfigParam(_T("DashboardDataExportEnableInterpolation"), _T("1"), _T("Enable/disable data interpolation in dashboard data export"), 'B', true, false, true));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='358' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(358));
    return TRUE;
 }
 
@@ -2134,7 +2170,7 @@ static BOOL H_UpgradeFromV356(int currVersion, int newVersion)
 
    CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='DefaultCommunityString'")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='357' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(357));
    return TRUE;
 }
 
@@ -2158,7 +2194,7 @@ static BOOL H_UpgradeFromV355(int currVersion, int newVersion)
    CHK_EXEC(CreateConfigParam(_T("PollerThreadPoolBaseSize"), _T("10"), true, true));
    CHK_EXEC(CreateConfigParam(_T("PollerThreadPoolMaxSize"), _T("250"), true, true));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='356' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(356));
    return TRUE;
 }
 
@@ -2176,7 +2212,7 @@ static BOOL H_UpgradeFromV354(int currVersion, int newVersion)
 
    CHK_EXEC(CreateConfigParam(_T("DefaultAgentCacheMode"), _T("2"), true, true));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='355' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(355));
    return TRUE;
 }
 
@@ -2186,7 +2222,7 @@ static BOOL H_UpgradeFromV354(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV353(int currVersion, int newVersion)
 {
    CHK_EXEC(ResizeColumn(_T("users"), _T("password"), 127, false));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='354' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(354));
    return TRUE;
 }
 
@@ -2197,7 +2233,7 @@ static BOOL H_UpgradeFromV352(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE dci_summary_tables ADD guid varchar(36)")));
    CHK_EXEC(GenerateGUID(_T("dci_summary_tables"), _T("id"), _T("guid"), NULL));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='353' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(353));
    return TRUE;
 }
 
@@ -2208,7 +2244,7 @@ static BOOL H_UpgradeFromV351(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE object_tools ADD guid varchar(36)")));
    CHK_EXEC(GenerateGUID(_T("object_tools"), _T("tool_id"), _T("guid"), NULL));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='352' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(352));
    return TRUE;
 }
 
@@ -2223,7 +2259,7 @@ static BOOL H_UpgradeFromV350(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='351' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(351));
    return TRUE;
 }
 
@@ -2257,7 +2293,7 @@ static BOOL H_UpgradeFromV349(int currVersion, int newVersion)
 	}
 
    CHK_EXEC(SQLDropColumn(_T("ap_common"), _T("description")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='350' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(350));
    return TRUE;
 }
 
@@ -2268,7 +2304,7 @@ static BOOL H_UpgradeFromV348(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='HouseKeepingInterval'")));
    CHK_EXEC(CreateConfigParam(_T("HousekeeperStartTime"), _T("02:00"), true, true));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='349' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(349));
    return TRUE;
 }
 
@@ -2297,7 +2333,7 @@ static BOOL H_UpgradeFromV347(int currVersion, int newVersion)
          _T("    4) Network mask\r\n")
          _T("    5) Interface index")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='348' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(348));
    return TRUE;
 }
 
@@ -2338,7 +2374,7 @@ static BOOL H_UpgradeFromV346(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='347' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(347));
    return TRUE;
 }
 
@@ -2402,7 +2438,7 @@ static BOOL H_UpgradeFromV345(int currVersion, int newVersion)
       CHK_EXEC(SQLQuery(_T("ALTER TABLE vpn_connector_networks ADD CONSTRAINT pk_vpn_connector_networks PRIMARY KEY (vpn_id,ip_addr)")));
    }
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='346' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(346));
    return TRUE;
 }
 
@@ -2413,7 +2449,7 @@ static BOOL H_UpgradeFromV344(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("NumberOfInstancePollers"), _T("10"), 1, 1));
    CHK_EXEC(CreateConfigParam(_T("InstancePollingInterval"), _T("600"), 1, 1));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='345' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(345));
    return TRUE;
 }
 
@@ -2428,7 +2464,7 @@ static BOOL H_UpgradeFromV343(int currVersion, int newVersion)
       _T("UPDATE interfaces SET mtu=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='344' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(344));
    return TRUE;
 }
 
@@ -2444,7 +2480,7 @@ static BOOL H_UpgradeFromV342(int currVersion, int newVersion)
       ReindexIData();
       CHK_EXEC(DBBegin(g_hCoreDB));
    }
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='343' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(343));
    return TRUE;
 }
 
@@ -2491,7 +2527,7 @@ static BOOL H_UpgradeFromV341(int currVersion, int newVersion)
       }
    }
    CHK_EXEC(SQLDropColumn(_T("object_tools"), _T("matching_oid"))); //delete old column
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='342' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(342));
    return TRUE;
 }
 
@@ -2507,7 +2543,7 @@ static BOOL H_UpgradeFromV340(int currVersion, int newVersion)
       _T("ALTER TABLE object_properties ADD postcode varchar(31)\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='341' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(341));
    return TRUE;
 }
 
@@ -2518,7 +2554,7 @@ static BOOL H_UpgradeFromV339(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("LdapPageSize"), _T("1000"), 1, 0));
    CHK_EXEC(SQLQuery(_T("UPDATE config SET var_value='1' WHERE var_name='LdapUserDeleteAction'")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='340' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(340));
    return TRUE;
 }
 
@@ -2528,7 +2564,7 @@ static BOOL H_UpgradeFromV339(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV338(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("EscapeLocalCommands"), _T("0"), 1, 0));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='339' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(339));
    return TRUE;
 }
 
@@ -2542,7 +2578,7 @@ static BOOL H_UpgradeFromV337(int currVersion, int newVersion)
       _T("UPDATE nodes SET icmp_proxy=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='338' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(338));
    return TRUE;
 }
 
@@ -2552,7 +2588,7 @@ static BOOL H_UpgradeFromV337(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV336(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("SyslogNodeMatchingPolicy"), _T("0"), 1, 1));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='337' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(337));
    return TRUE;
 }
 
@@ -2563,7 +2599,7 @@ static BOOL H_UpgradeFromV335(int currVersion, int newVersion)
 {
    CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name1"), 255, true));
    CHK_EXEC(ResizeColumn(_T("network_map_links"), _T("connector_name2"), 255, true));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='336' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(336));
    return TRUE;
 }
 
@@ -2582,7 +2618,7 @@ static BOOL H_UpgradeFromV334(int currVersion, int newVersion)
          _T("    4) New network mask\r\n")
          _T("    5) Interface index\r\n")
          _T("    6) Old network mask")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='335' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(335));
    return TRUE;
 }
 
@@ -2592,7 +2628,7 @@ static BOOL H_UpgradeFromV334(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV333(int currVersion, int newVersion)
 {
    CHK_EXEC(SetColumnNullable(_T("user_groups"), _T("description")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='334' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(334));
    return TRUE;
 }
 
@@ -2606,7 +2642,7 @@ static BOOL H_UpgradeFromV332(int currVersion, int newVersion)
       _T("   VALUES ('LocationHistory','CREATE TABLE gps_history_%d (latitude varchar(20), longitude varchar(20), accuracy integer not null, start_timestamp integer not null, end_timestamp integer not null, PRIMARY KEY(start_timestamp))')\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='333' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(333));
    return TRUE;
 }
 
@@ -2616,7 +2652,7 @@ static BOOL H_UpgradeFromV332(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV331(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("UPDATE items SET instd_data=instance WHERE node_id=template_id AND instd_method=0")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='332' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(332));
    return TRUE;
 }
 
@@ -2633,7 +2669,7 @@ static BOOL H_UpgradeFromV330(int currVersion, int newVersion)
    {
       CHK_EXEC(SQLQuery(_T("ALTER TABLE audit_log ADD session_id integer NOT NULL DEFAULT 0")));
    }
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='331' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(331));
    return TRUE;
 }
 
@@ -2643,7 +2679,7 @@ static BOOL H_UpgradeFromV330(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV329(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("AlarmListDisplayLimit"), _T("4096"), 1, 0));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='330' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(330));
    return TRUE;
 }
 
@@ -2654,7 +2690,7 @@ static BOOL H_UpgradeFromV328(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE items ADD comments $SQL:TEXT")));
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE dc_tables ADD comments $SQL:TEXT")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='329' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(329));
    return TRUE;
 }
 
@@ -2664,7 +2700,7 @@ static BOOL H_UpgradeFromV328(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV327(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("ResolveDNSToIPOnStatusPoll"), _T("0"), 1, 1));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='328' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(328));
    return TRUE;
 }
 
@@ -2675,7 +2711,7 @@ static BOOL H_UpgradeFromV326(int currVersion, int newVersion)
 {
    CHK_EXEC(DropPrimaryKey(_T("network_map_links")));
    CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_network_map_links_map_id ON network_map_links(map_id)")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='327' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(327));
    return TRUE;
 }
 
@@ -2697,7 +2733,7 @@ static BOOL H_UpgradeFromV325(int currVersion, int newVersion)
       CHK_EXEC(SQLQuery(_T("CALL Sysproc.admin_cmd('REORG TABLE network_map_links')")));
    }
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='326' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(326));
    return TRUE;
 }
 
@@ -2781,7 +2817,7 @@ static BOOL H_UpgradeFromV324(int currVersion, int newVersion)
       DBFreeResult(hResult);
    }
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='325' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(325));
    return TRUE;
 }
 
@@ -2804,7 +2840,7 @@ static BOOL H_UpgradeFromV323(int currVersion, int newVersion)
    }
 
    CHK_EXEC(SQLQuery(_T("DELETE FROM metadata WHERE var_name='ValidTDataIndex'")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='324' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(324));
    return TRUE;
 }
 
@@ -2814,7 +2850,7 @@ static BOOL H_UpgradeFromV323(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV322(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("ProcessTrapsFromUnmanagedNodes"), _T("0"), 1, 1));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='323' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(323));
    return TRUE;
 }
 
@@ -2872,7 +2908,7 @@ static BOOL H_UpgradeFromV321(int currVersion, int newVersion)
 			break;
 	}
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='322' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(322));
    return TRUE;
 }
 
@@ -2888,7 +2924,7 @@ static BOOL H_UpgradeFromV320(int currVersion, int newVersion)
       _T("UPDATE object_tools SET command_short_name='Wakeup' WHERE tool_id=3\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='321' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(321));
    return TRUE;
 }
 
@@ -2916,7 +2952,7 @@ static BOOL H_UpgradeFromV319(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='320' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(320));
    return TRUE;
 }
 
@@ -2933,7 +2969,7 @@ static BOOL H_UpgradeFromV318(int currVersion, int newVersion)
       _T("UPDATE object_tools SET flags=64,command_name='Wakeup node using Wake-On-LAN',icon='89504e470d0a1a0a0000000d49484452000000100000001008060000001ff3ff610000000473424954080808087c086488000000097048597300000dd700000dd70142289b780000001974455874536f667477617265007777772e696e6b73636170652e6f72679bee3c1a0000023649444154388d8d924f48545114c67ff7bd37ff7cf9071bc70a4d47271ca15c848d448185b40a89204890362d8568eb2270d7a2762d5cb7711504d1ae10c195218895a488528e4e06a653d338de7bdfbcf75ac84ce38c901f9ccdb9e7fbce39f77c627ce6872df6dd71f01f781e1d9c00866003215efaf99de7d6763afb1078721262053a800908ed5a5aa9b1e3bb0802a600c0717d3cdf3fae6cccd24a25abb302a80b990c265a009859d941299763249296d6b2a6732468d25a1f24156f00e0cbd62e9b5a71a0dd9a490cad14a570b4266c780cf546797cab1b1317139747435ddcec69266c78385a53c9b1b45265b548d022d51563f45a9c778b69ce35850058de928c0cb4933fd04c7ffece812e9639e5158480865098ebc9181fbfeef07a6e9dc68805c0af8243f45480ab174e33bb9426e7484a9b942710020c3b40e24c236f3facb1bd9b634d3a00d8e100ab992cb7af7421bc225aa9b280a195a414524972054d5f679488e5a394442949d8f4b8d4d14caea09115f55a490cad155a2b9452ecfdcef37e619ddef6287706ba89c76ce2319be1fe4e926d51663e6d90cdeda3d42147ebaa4fcc161da6a61739df52cfe88d8b0ca712f8be871d0e31bb94666a7a916c2e8feb7aff3cd33ef2f4c8612dd3a0a5d1a6bfa78d544f1bbeef33bf9a617e65939fb902c50a328068bd3bb10c1c71a3210401cb24143cbc82d2459c62ad8980154b2b3909bca87e91c09fea642d26ad67f7fb32afe6bebd5958dd1c2c48ddf45f8a10d87591bdcb89b3b3f7063a337f01f30f1c1c580292640000000049454e44ae426082' WHERE tool_id=3\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='319' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(319));
    return TRUE;
 }
 
@@ -2954,7 +2990,7 @@ static BOOL H_UpgradeFromV317(int currVersion, int newVersion)
 		_T("    6) Access point model\r\n")
 		_T("    7) Access point serial number")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='318' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(318));
    return TRUE;
 }
 
@@ -2964,7 +3000,7 @@ static BOOL H_UpgradeFromV317(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV316(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("MinViewRefreshInterval"), _T("1000"), 1, 0));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='317' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(317));
    return TRUE;
 }
 
@@ -3003,7 +3039,7 @@ static BOOL H_UpgradeFromV315(int currVersion, int newVersion)
 		_T("    6) Access point model\r\n")
 		_T("    7) Access point serial number")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='316' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(316));
    return TRUE;
 }
 
@@ -3018,7 +3054,7 @@ static BOOL H_UpgradeFromV314(int currVersion, int newVersion)
       _T("UPDATE thresholds SET match_count=1 WHERE current_state<>0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='315' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(315));
    return TRUE;
 }
 
@@ -3049,7 +3085,7 @@ static BOOL H_UpgradeFromV313(int currVersion, int newVersion)
       DBFreeResult(hResult);
    }
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='314' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(314));
    return TRUE;
 }
 
@@ -3070,7 +3106,7 @@ static BOOL H_UpgradeFromV312(int currVersion, int newVersion)
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("confirmation_text")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("matching_oid")));
    CHK_EXEC(ConvertStrings(_T("object_tools_table_columns"), _T("tool_id"), _T("col_number"), _T("col_name"), false));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='313' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(313));
    return TRUE;
 }
 
@@ -3082,7 +3118,7 @@ static BOOL H_UpgradeFromV311(int currVersion, int newVersion)
    CHK_EXEC(CreateConfigParam(_T("EnableReportingServer"), _T("0"), 1, 1));
    CHK_EXEC(CreateConfigParam(_T("ReportingServerHostname"), _T("localhost"), 1, 1));
    CHK_EXEC(CreateConfigParam(_T("ReportingServerPort"), _T("4710"), 1, 1));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='312' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(312));
    return TRUE;
 }
 
@@ -3137,7 +3173,7 @@ static BOOL H_UpgradeFromV310(int currVersion, int newVersion)
       _T("DELETE FROM object_properties WHERE object_id=8\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='311' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(311));
    return TRUE;
 }
 
@@ -3151,7 +3187,7 @@ static BOOL H_UpgradeFromV309(int currVersion, int newVersion)
       _T("UPDATE interfaces SET peer_proto=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='310' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(310));
    return TRUE;
 }
 
@@ -3161,7 +3197,7 @@ static BOOL H_UpgradeFromV309(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV308(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("HelpDeskLink"), _T("none"), 1, 1));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='309' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(309));
    return TRUE;
 }
 
@@ -3200,7 +3236,7 @@ static BOOL H_UpgradeFromV307(int currVersion, int newVersion)
 		DBFreeResult(hResult);
 	}
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='308' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(308));
    return TRUE;
 }
 
@@ -3211,7 +3247,7 @@ static BOOL H_UpgradeFromV306(int currVersion, int newVersion)
 {
 	CHK_EXEC(SetColumnNullable(_T("config_clob"), _T("var_value")));
 	CHK_EXEC(ConvertStrings(_T("config_clob"), _T("var_name"), NULL, _T("var_value"), true));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='307' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(307));
    return TRUE;
 }
 
@@ -3223,7 +3259,7 @@ static BOOL H_UpgradeFromV305(int currVersion, int newVersion)
    CHK_EXEC(CreateConfigParam(_T("ExtendedLogQueryAccessControl"), _T("0"), 1, 0));
    CHK_EXEC(CreateConfigParam(_T("EnableTimedAlarmAck"), _T("1"), 1, 1));
    CHK_EXEC(CreateConfigParam(_T("EnableCheckPointSNMP"), _T("0"), 1, 0));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='306' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(306));
    return TRUE;
 }
 
@@ -3248,7 +3284,7 @@ static BOOL H_UpgradeFromV304(int currVersion, int newVersion)
 		_T("   10) Peer interface name\r\n")
 		_T("   11) Peer interface IP address\r\n")
 		_T("   12) Peer interface MAC address")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='305' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(305));
    return TRUE;
 }
 
@@ -3258,7 +3294,7 @@ static BOOL H_UpgradeFromV304(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV303(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("StrictAlarmStatusFlow"), _T("0"), 1, 0));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='304' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(304));
    return TRUE;
 }
 
@@ -3273,7 +3309,7 @@ static BOOL H_UpgradeFromV302(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='303' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(303));
    return TRUE;
 }
 
@@ -3287,7 +3323,7 @@ static BOOL H_UpgradeFromV301(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='302' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(302));
    return TRUE;
 }
 
@@ -3305,7 +3341,7 @@ static BOOL H_UpgradeFromV300(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='301' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(301));
    return TRUE;
 }
 
@@ -3335,7 +3371,7 @@ static BOOL H_UpgradeFromV299(int currVersion, int newVersion)
 
    CHK_EXEC(SQLQuery(_T("ALTER TABLE users ADD xmpp_id varchar(127)")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='300' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(300));
    return TRUE;
 }
 
@@ -3360,7 +3396,7 @@ static BOOL H_UpgradeFromV298(int currVersion, int newVersion)
       _T("   3) IP address\r\n")
       _T("   4) Network mask")
       _T("' WHERE event_code=19")));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='299' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(299));
    return TRUE;
 }
 
@@ -3370,7 +3406,7 @@ static BOOL H_UpgradeFromV298(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV297(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateConfigParam(_T("AgentDefaultSharedSecret"), _T("netxms"), 1, 0));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='298' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(298));
    return TRUE;
 }
 
@@ -3380,7 +3416,7 @@ static BOOL H_UpgradeFromV297(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV296(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateConfigParam(_T("UseSNMPTrapsForDiscovery"), _T("0"), 1, 1));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='297' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(297));
    return TRUE;
 }
 
@@ -3395,7 +3431,7 @@ static BOOL H_UpgradeFromV295(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='296' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(296));
    return TRUE;
 }
 
@@ -3405,7 +3441,7 @@ static BOOL H_UpgradeFromV295(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV294(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateConfigParam(_T("IcmpPingTimeout"), _T("1500"), 1, 1));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='295' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(295));
    return TRUE;
 }
 
@@ -3432,7 +3468,7 @@ static BOOL H_UpgradeFromV293(int currVersion, int newVersion)
    RecreateTData(_T("mobile_devices"), true, false);
 
    CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('ValidTDataIndex','1')")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='294' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(294));
    return TRUE;
 }
 
@@ -3442,7 +3478,7 @@ static BOOL H_UpgradeFromV293(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV292(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateConfigParam(_T("DefaultConsoleShortTimeFormat"), _T("HH:mm"), 1, 0));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='293' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(293));
    return TRUE;
 }
 
@@ -3453,7 +3489,7 @@ static BOOL H_UpgradeFromV291(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE event_policy ADD rule_guid varchar(36)")));
    CHK_EXEC(GenerateGUID(_T("event_policy"), _T("rule_id"), _T("rule_guid"), NULL));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='292' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(292));
    return TRUE;
 }
 
@@ -3463,7 +3499,7 @@ static BOOL H_UpgradeFromV291(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV290(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("UPDATE network_services SET service_type=7 WHERE service_type=6")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='291' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(291));
    return TRUE;
 }
 
@@ -3473,7 +3509,7 @@ static BOOL H_UpgradeFromV290(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV289(int currVersion, int newVersion)
 {
    CHK_EXEC(SQLQuery(_T("ALTER TABLE network_maps ADD filter $SQL:TEXT")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='290' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(290));
    return TRUE;
 }
 
@@ -3486,7 +3522,7 @@ static BOOL H_UpgradeFromV288(int currVersion, int newVersion)
    	_T("ALTER TABLE dct_thresholds DROP COLUMN current_state\n")
 	_T("<END>");
    CHK_EXEC(SQLBatch(batch));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='289' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(289));
    return TRUE;
 }
 
@@ -3515,7 +3551,7 @@ static BOOL H_UpgradeFromV287(int currVersion, int newVersion)
       _T("   4) Table row\r\n")
       _T("   5) Instance")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='288' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(288));
    return TRUE;
 }
 
@@ -3530,7 +3566,7 @@ static BOOL H_UpgradeFromV286(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='287' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(287));
    return TRUE;
 }
 
@@ -3559,7 +3595,7 @@ static BOOL H_UpgradeFromV285(int currVersion, int newVersion)
       _T("check_value varchar(255) null,")
       _T("PRIMARY KEY(threshold_id,group_id,sequence_number))")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='286' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(286));
    return TRUE;
 }
 
@@ -3571,7 +3607,7 @@ static BOOL H_UpgradeFromV284(int currVersion, int newVersion)
    CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_items_node_id ON items(node_id)")));
    CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_dc_tables_node_id ON dc_tables(node_id)")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='285' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(285));
    return TRUE;
 }
 
@@ -3582,7 +3618,7 @@ static BOOL H_UpgradeFromV283(int currVersion, int newVersion)
 {
    CHK_EXEC(CreateConfigParam(_T("SNMPTrapPort"), _T("162"), 1, 1));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='284' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(284));
    return TRUE;
 }
 
@@ -3597,7 +3633,7 @@ static BOOL H_UpgradeFromV282(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='283' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(283));
    return TRUE;
 }
 
@@ -3609,7 +3645,7 @@ static BOOL H_UpgradeFromV281(int currVersion, int newVersion)
    CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='WindowsConsoleUpgradeURL'")));
    CHK_EXEC(CreateConfigParam(_T("EnableObjectTransactions"), _T("0"), 1, 1));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='282' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(282));
    return TRUE;
 }
 
@@ -3635,7 +3671,7 @@ static BOOL H_UpgradeFromV280(int currVersion, int newVersion)
    RecreateTData(_T("clusters"), false, false);
    RecreateTData(_T("mobile_devices"), false, false);
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='281' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(281));
    return TRUE;
 }
 
@@ -3677,7 +3713,7 @@ static BOOL H_UpgradeFromV279(int currVersion, int newVersion)
 
    CHK_EXEC(SQLQuery(_T("ALTER TABLE dc_tables DROP COLUMN instance_column")));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='280' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(280));
    return TRUE;
 }
 
@@ -3689,7 +3725,7 @@ static BOOL H_UpgradeFromV278(int currVersion, int newVersion)
    CHK_EXEC(CreateConfigParam(_T("DeleteEventsOfDeletedObject"), _T("1"), 1, 0));
    CHK_EXEC(CreateConfigParam(_T("DeleteAlarmsOfDeletedObject"), _T("1"), 1, 0));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='279' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(279));
    return TRUE;
 }
 
@@ -3730,7 +3766,7 @@ static BOOL H_UpgradeFromV277(int currVersion, int newVersion)
          return FALSE;
    }
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='278' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(278));
    return TRUE;
 }
 
@@ -3750,7 +3786,7 @@ static BOOL H_UpgradeFromV276(int currVersion, int newVersion)
 
 	CHK_EXEC(CreateConfigParam(_T("DefaultMapBackgroundColor"), _T("0xffffff"), 1, 0));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='277' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(277));
    return TRUE;
 }
 
@@ -3765,7 +3801,7 @@ static BOOL H_UpgradeFromV275(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='276' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(276));
    return TRUE;
 }
 
@@ -3796,7 +3832,7 @@ static BOOL H_UpgradeFromV274(int currVersion, int newVersion)
 								_T("height integer not null,")
 	                     _T("PRIMARY KEY(id))")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='275' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(275));
    return TRUE;
 }
 
@@ -3811,7 +3847,7 @@ static BOOL H_UpgradeFromV273(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='274' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(274));
    return TRUE;
 }
 
@@ -3822,7 +3858,7 @@ static BOOL H_UpgradeFromV272(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateConfigParam(_T("DefaultDCIRetentionTime"), _T("30"), 1, 0));
 	CHK_EXEC(CreateConfigParam(_T("DefaultDCIPollingInterval"), _T("60"), 1, 0));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='273' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(273));
    return TRUE;
 }
 
@@ -3833,7 +3869,7 @@ static BOOL H_UpgradeFromV271(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateConfigParam(_T("SNMPTrapLogRetentionTime"), _T("90"), 1, 0));
    CHK_EXEC(SQLQuery(_T("ALTER TABLE nodes ADD driver_name varchar(32)\n")));
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='272' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(272));
    return TRUE;
 }
 
@@ -3849,7 +3885,7 @@ static BOOL H_UpgradeFromV270(int currVersion, int newVersion)
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
 
-   CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='271' WHERE var_name='SchemaVersion'")));
+   CHK_EXEC(SetSchemaVersion(271));
    return TRUE;
 }
 
@@ -3866,7 +3902,7 @@ static BOOL H_UpgradeFromV269(int currVersion, int newVersion)
 		_T("<END>");
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='270' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(270));
 	return TRUE;
 }
 
@@ -3949,7 +3985,7 @@ static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
 	CHK_EXEC(ConvertStrings(_T("event_cfg"), _T("event_code"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("event_cfg"), _T("event_code"), _T("message")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='269' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(269));
 	return TRUE;
 }
 
@@ -3969,7 +4005,7 @@ static BOOL H_UpgradeFromV267(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("dci_schedules"), _T("schedule")));
 	CHK_EXEC(ConvertStrings(_T("dci_schedules"), _T("schedule_id"), _T("item_id"), _T("schedule"), false));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='268' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(268));
 	return TRUE;
 }
 
@@ -3981,7 +4017,7 @@ static BOOL H_UpgradeFromV266(int currVersion, int newVersion)
 	CHK_EXEC(CreateEventTemplate(EVENT_NODE_UNREACHABLE, _T("SYS_NODE_UNREACHABLE"), EVENT_SEVERITY_CRITICAL,
 	                             EF_LOG, NULL, _T("Node unreachable because of network failure"),
 										  _T("Generated when node is unreachable by management server because of network failure.\r\nParameters:\r\n   No event-specific parameters")));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='267' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(267));
 	return TRUE;
 }
 
@@ -4033,7 +4069,7 @@ static BOOL H_UpgradeFromV265(int currVersion, int newVersion)
 
 	CHK_EXEC(CreateConfigParam(_T("FirstFreeObjectId"), _T("100"), 0, 1, FALSE));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='266' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(266));
 	return TRUE;
 }
 
@@ -4053,7 +4089,7 @@ static BOOL H_UpgradeFromV264(int currVersion, int newVersion)
 	                     _T("message varchar(255) null,")
 	                     _T("PRIMARY KEY(alarm_id,event_id))")));
 	CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_alarm_events_alarm_id ON alarm_events(alarm_id)")));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='265' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(265));
 	return TRUE;
 }
 
@@ -4074,7 +4110,7 @@ static BOOL H_UpgradeFromV263(int currVersion, int newVersion)
 								_T("battery_level integer not null,")
 	                     _T("PRIMARY KEY(id))")));
 	CHK_EXEC(CreateConfigParam(_T("MobileDeviceListenerPort"), _T("4747"), 1, 1));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='264' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(264));
 	return TRUE;
 }
 
@@ -4085,7 +4121,7 @@ static BOOL H_UpgradeFromV262(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE network_maps ADD radius integer")));
 	CHK_EXEC(SQLQuery(_T("UPDATE network_maps SET radius=-1")));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='263' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(263));
 	return TRUE;
 }
 
@@ -4095,7 +4131,7 @@ static BOOL H_UpgradeFromV262(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV261(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateConfigParam(_T("ApplyDCIFromTemplateToDisabledDCI"), _T("0"), 1, 1));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='262' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(262));
 	return TRUE;
 }
 
@@ -4106,7 +4142,7 @@ static BOOL H_UpgradeFromV260(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateConfigParam(_T("NumberOfBusinessServicePollers"), _T("10"), 1, 1));
 	CHK_EXEC(SQLQuery(_T("DELETE FROM config WHERE var_name='NumberOfEventProcessors'")));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='261' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(261));
 	return TRUE;
 }
 
@@ -4116,7 +4152,7 @@ static BOOL H_UpgradeFromV260(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV259(int currVersion, int newVersion)
 {
 	CHK_EXEC(CreateConfigParam(_T("UseFQDNForNodeNames"), _T("1"), 1, 1));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='260' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(260));
 	return TRUE;
 }
 
@@ -4131,7 +4167,7 @@ static BOOL H_UpgradeFromV258(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("templates"), _T("apply_filter")));
 	CHK_EXEC(SetColumnNullable(_T("containers"), _T("auto_bind_filter")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='259' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(259));
 	return TRUE;
 }
 
@@ -4149,7 +4185,7 @@ static BOOL H_UpgradeFromV257(int currVersion, int newVersion)
 
 	CHK_EXEC(CreateConfigParam(_T("DeleteUnreachableNodesPeriod"), _T("0"), 1, 1));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='258' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(258));
 	return TRUE;
 }
 
@@ -4169,7 +4205,7 @@ static BOOL H_UpgradeFromV256(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='257' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(257));
    return TRUE;
 }
 
@@ -4181,7 +4217,7 @@ static BOOL H_UpgradeFromV255(int currVersion, int newVersion)
 	CHK_EXEC(CreateConfigParam(_T("DefaultConsoleDateFormat"), _T("dd.MM.yyyy"), 1, 0));
 	CHK_EXEC(CreateConfigParam(_T("DefaultConsoleTimeFormat"), _T("HH:mm:ss"), 1, 0));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='256' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(256));
    return TRUE;
 }
 
@@ -4198,7 +4234,7 @@ static BOOL H_UpgradeFromV254(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='255' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(255));
    return TRUE;
 }
 
@@ -4218,7 +4254,7 @@ static BOOL H_UpgradeFromV253(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='254' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(254));
    return TRUE;
 }
 
@@ -4289,7 +4325,7 @@ static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 	_sntprintf(buffer, 64, _T("%d"), ConfigReadInt(_T("AllowedCiphers"), 15) + 16);
 	CreateConfigParam(_T("AllowedCiphers"), buffer, 1, 1, TRUE);
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='253' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(253));
    return TRUE;
 }
 
@@ -4359,7 +4395,7 @@ static BOOL H_UpgradeFromV251(int currVersion, int newVersion)
 	_sntprintf(query, 1024, _T("INSERT INTO policy_event_list (rule_id,event_code) VALUES (%d,%d)"), ruleId, EVENT_INTERFACE_EXPECTED_DOWN);
 	CHK_EXEC(SQLQuery(query));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='252' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(252));
    return TRUE;
 }
 
@@ -4385,7 +4421,7 @@ static BOOL H_UpgradeFromV250(int currVersion, int newVersion)
 	CHK_EXEC(CreateConfigParam(_T("UseDNSNameForDiscoveredNodes"), _T("0"), 1, 0));
 	CHK_EXEC(CreateConfigParam(_T("AllowTrapVarbindsConversion"), _T("1"), 1, 1));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='251' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(251));
    return TRUE;
 }
 
@@ -4399,7 +4435,7 @@ static BOOL H_UpgradeFromV249(int currVersion, int newVersion)
 								_T("content $SQL:TEXT null,")
 	                     _T("PRIMARY KEY(id))")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='250' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(250));
    return TRUE;
 }
 
@@ -4480,7 +4516,7 @@ static BOOL H_UpgradeFromV248(int currVersion, int newVersion)
 			return FALSE;
 	}
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='249' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(249));
    return TRUE;
 }
 
@@ -4517,7 +4553,7 @@ static BOOL H_UpgradeFromV247(int currVersion, int newVersion)
 								_T("transformation_script $SQL:TEXT null,")
 	                     _T("PRIMARY KEY(table_id,column_name))")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='248' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(248));
    return TRUE;
 }
 
@@ -4598,7 +4634,7 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
 	CHK_EXEC(SQLQuery(_T("CREATE INDEX idx_ocattr_oid ON object_custom_attributes(object_id)")));
 	CHK_EXEC(CreateConfigParam(_T("AlarmHistoryRetentionTime"), _T("180"), 1, 0));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='247' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(247));
    return TRUE;
 }
 
@@ -4620,7 +4656,7 @@ static BOOL H_UpgradeFromV245(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("cluster_resources"), _T("resource_name")));
 	CHK_EXEC(ConvertStrings(_T("cluster_resources"), _T("cluster_id"), _T("resource_id"), _T("resource_name"), false));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='246' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(246));
    return TRUE;
 }
 
@@ -4644,7 +4680,7 @@ static BOOL H_UpgradeFromV244(int currVersion, int newVersion)
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("email_subject")));
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("action_data")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='245' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(245));
    return TRUE;
 }
 
@@ -4701,7 +4737,7 @@ static BOOL H_UpgradeFromV243(int currVersion, int newVersion)
 		_T("   1) Interface index\r\n")
 		_T("   2) Interface name")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='244' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(244));
    return TRUE;
 }
 
@@ -4722,7 +4758,7 @@ static BOOL H_UpgradeFromV242(int currVersion, int newVersion)
 		_T("<END>");
 
 	CHK_EXEC(SQLBatch(batch));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='243' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(243));
    return TRUE;
 }
 
@@ -4740,7 +4776,7 @@ static BOOL H_UpgradeFromV241(int currVersion, int newVersion)
 		_T("<END>");
 
 	CHK_EXEC(SQLBatch(batch));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='242' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(242));
    return TRUE;
 }
 
@@ -4758,7 +4794,7 @@ static BOOL H_UpgradeFromV240(int currVersion, int newVersion)
 		_T("<END>");
 
 	CHK_EXEC(SQLBatch(batch));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='241' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(241));
    return TRUE;
 }
 
@@ -4770,7 +4806,7 @@ static BOOL H_UpgradeFromV240(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV239(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE raw_dci_values ADD transformed_value varchar(255)")));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='240' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(240));
    return TRUE;
 }
 
@@ -4787,7 +4823,7 @@ static BOOL H_UpgradeFromV238(int currVersion, int newVersion)
 		_T("'Generated when primary IP address changed (usually because of primary name change or DNS change).#0D#0A")
 		_T("Parameters:#0D#0A   1) New IP address#0D#0A   2) Old IP address#0D#0A   3) Primary host name')")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='239' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(239));
    return TRUE;
 }
 
@@ -4902,7 +4938,7 @@ static BOOL H_UpgradeFromV232toV238(int currVersion, int newVersion)
 	                  _T("   5) Threshold value#0D#0A")
 	                  _T("   6) Actual value' WHERE event_code=18")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='238' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(238));
    return TRUE;
 }
 
@@ -4947,7 +4983,7 @@ static BOOL H_UpgradeFromV237(int currVersion, int newVersion)
 	                     _T("new_status integer not null,")
 	                     _T("PRIMARY KEY(record_id))")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='238' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(238));
    return TRUE;
 }
 
@@ -4967,7 +5003,7 @@ static BOOL H_UpgradeFromV236(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='237' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(237));
    return TRUE;
 }
 
@@ -4984,7 +5020,7 @@ static BOOL H_UpgradeFromV235(int currVersion, int newVersion)
 	                     _T("job_id integer not null,")
 	                     _T("PRIMARY KEY(report_id,job_id))")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='236' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(236));
    return TRUE;
 }
 
@@ -5000,7 +5036,7 @@ static BOOL H_UpgradeFromV234(int currVersion, int newVersion)
 								_T("definition $SQL:TEXT null,")
 	                     _T("PRIMARY KEY(id))")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='235' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(235));
    return TRUE;
 }
 
@@ -5037,7 +5073,7 @@ static BOOL H_UpgradeFromV233(int currVersion, int newVersion)
 	                  _T("   5) Threshold value#0D#0A")
 	                  _T("   6) Actual value' WHERE event_code=18")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='234' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(234));
    return TRUE;
 }
 
@@ -5058,7 +5094,7 @@ static BOOL H_UpgradeFromV231(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='232' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(232));
    return TRUE;
 }
 
@@ -5074,7 +5110,7 @@ static BOOL H_UpgradeFromV230(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='231' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(231));
    return TRUE;
 }
 
@@ -5128,7 +5164,7 @@ static BOOL H_UpgradeFromV229(int currVersion, int newVersion)
 
 	CreateConfigParam(_T("TileServerURL"), _T("http://tile.openstreetmap.org/"), 1, 0);
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='230' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(230));
    return TRUE;
 }
 
@@ -5155,7 +5191,7 @@ static BOOL H_UpgradeFromV228(int currVersion, int newVersion)
 				_T("   vertical_alignment integer not null,")
 				_T("   PRIMARY KEY(dashboard_id,element_id))")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='229' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(229));
    return TRUE;
 }
 
@@ -5166,7 +5202,7 @@ static BOOL H_UpgradeFromV227(int currVersion, int newVersion)
 {
 	CHK_EXEC(SQLQuery(_T("DROP TABLE web_maps")));
 	CHK_EXEC(MigrateMaps());
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='228' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(228));
    return TRUE;
 }
 
@@ -5182,7 +5218,7 @@ static BOOL H_UpgradeFromV226(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='227' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(227));
    return TRUE;
 }
 
@@ -5202,7 +5238,7 @@ static BOOL H_UpgradeFromV225(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='226' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(226));
    return TRUE;
 }
 
@@ -5220,7 +5256,7 @@ static BOOL H_UpgradeFromV224(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='225' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(225));
    return TRUE;
 }
 
@@ -5241,7 +5277,7 @@ static BOOL H_UpgradeFromV223(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='224' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(224));
    return TRUE;
 }
 
@@ -5259,7 +5295,7 @@ static BOOL H_UpgradeFromV222(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='223' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(223));
    return TRUE;
 }
 
@@ -5277,7 +5313,7 @@ static BOOL H_UpgradeFromV221(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='222' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(222));
    return TRUE;
 }
 
@@ -5295,7 +5331,7 @@ static BOOL H_UpgradeFromV220(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='221' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(221));
    return TRUE;
 }
 
@@ -5319,7 +5355,7 @@ static BOOL H_UpgradeFromV219(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='220' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(220));
    return TRUE;
 }
 
@@ -5363,7 +5399,7 @@ static BOOL H_UpgradeFromV218(int currVersion, int newVersion)
 
    CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='219' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(219));
    return TRUE;
 }
 
@@ -5375,7 +5411,7 @@ static BOOL H_UpgradeFromV217(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("snmp_communities"), _T("community")));
 	CHK_EXEC(ConvertStrings(_T("snmp_communities"), _T("id"), _T("community")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='218' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(218));
    return TRUE;
 }
 
@@ -5429,7 +5465,7 @@ static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
 	CHK_EXEC(SetColumnNullable(_T("items"), _T("instance")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("instance")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='217' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(217));
    return TRUE;
 }
 
@@ -5467,7 +5503,7 @@ static BOOL H_UpgradeFromV215(int currVersion, int newVersion)
 		DBFreeResult(hResult);
 	}
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='216' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(216));
    return TRUE;
 }
 
@@ -5503,7 +5539,7 @@ static BOOL H_UpgradeFromV214(int currVersion, int newVersion)
 								_T("connector_name2 varchar(255) null,")
 	                     _T("PRIMARY KEY(map_id,element1,element2))")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='215' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(215));
    return TRUE;
 }
 
@@ -5573,7 +5609,7 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 		DBFreeResult(hResult);
 	}
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='214' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(214));
    return TRUE;
 }
 
@@ -5588,7 +5624,7 @@ static BOOL H_UpgradeFromV212(int currVersion, int newVersion)
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("custom_units_name")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("perftab_settings")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='213' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(213));
 
    return TRUE;
 }
@@ -5605,7 +5641,7 @@ static BOOL H_UpgradeFromV211(int currVersion, int newVersion)
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_cfg"), _T("trap_id"), _T("user_tag")));
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_cfg"), _T("trap_id"), _T("description")));
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='212' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(212));
 
    return TRUE;
 }
@@ -5631,7 +5667,7 @@ static BOOL H_UpgradeFromV210(int currVersion, int newVersion)
 		_T("<END>");
 
 	CHK_EXEC(SQLBatch(batch));
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='211' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(211));
 
    return TRUE;
 }
@@ -6079,24 +6115,17 @@ static BOOL H_UpgradeFromV9x(int currVersion, int newVersion)
 		if (!g_bIgnoreErrors)
 			return FALSE;
 
-	TCHAR query[256];
-	_sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='SchemaVersion'"), newVersion);
-	if (!SQLQuery(query))
-      if (!g_bIgnoreErrors)
-         return FALSE;
-
+	CHK_EXEC(SetSchemaVersion(newVersion));
    return TRUE;
 }
 
-
-//
-// Upgrade from V100 to V214
-//      or from V101 to V214
-//      or from V102 to V214
-//      or from V103 to V214
-//      or from V104 to V214
-//
-
+/**
+ * Upgrade from V100 to V214
+ *      or from V101 to V214
+ *      or from V102 to V214
+ *      or from V103 to V214
+ *      or from V104 to V214
+ */
 static BOOL H_UpgradeFromV10x(int currVersion, int newVersion)
 {
 	if (!H_UpgradeFromV9x(currVersion, 207))
@@ -6131,15 +6160,13 @@ static BOOL H_UpgradeFromV10x(int currVersion, int newVersion)
 		if (!H_UpgradeFromV213(213, 214))
 			return FALSE;
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='214' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(214));
    return TRUE;
 }
 
-
-//
-// Upgrade from V105 to V217
-//
-
+/**
+ * Upgrade from V105 to V217
+ */
 static BOOL H_UpgradeFromV105(int currVersion, int newVersion)
 {
 	if (!H_UpgradeFromV10x(currVersion, 214))
@@ -6152,15 +6179,13 @@ static BOOL H_UpgradeFromV105(int currVersion, int newVersion)
 	if (!H_UpgradeFromV215(215, 216))
 		return FALSE;
 
-	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='217' WHERE var_name='SchemaVersion'")));
+	CHK_EXEC(SetSchemaVersion(217));
    return TRUE;
 }
 
-
-//
-// Upgrade from V91 to V92
-//
-
+/**
+ * Upgrade from V91 to V92
+ */
 static BOOL H_UpgradeFromV91(int currVersion, int newVersion)
 {
 	static TCHAR batch[] =
@@ -6683,11 +6708,9 @@ static BOOL H_UpgradeFromV78(int currVersion, int newVersion)
    return TRUE;
 }
 
-
-//
-// Upgrade from V77 to V78
-//
-
+/**
+ * Upgrade from V77 to V78
+ */
 static BOOL H_UpgradeFromV77(int currVersion, int newVersion)
 {
 	if (!CreateTable(_T("CREATE TABLE trusted_nodes (")
@@ -10261,6 +10284,7 @@ static struct
    { 404, 405, H_UpgradeFromV404 },
    { 405, 406, H_UpgradeFromV405 },
    { 406, 407, H_UpgradeFromV406 },
+   { 407, 408, H_UpgradeFromV407 },
    { 0, 0, NULL }
 };
 

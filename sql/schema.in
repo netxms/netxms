@@ -371,6 +371,28 @@ COMMENT_COLUMN(racks.height, '')
 COMMENT_COLUMN(racks.top_bottom_num, '')
 
 /*
+** Chassis objects
+*/
+CREATE TABLE chassis
+(
+  id integer not null,
+  controller_id integer not null,
+  rack_id integer not null,
+  rack_image varchar(36) null,
+  rack_position integer not null,
+  rack_height integer not null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+COMMENT_TABLE(chassis, 'Chassis')
+COMMENT_COLUMN(chassis.id, 'Chassis id form object_properties')
+COMMENT_COLUMN(chassis.controller_id, 'Id of node object providing management capabilities for this chassis')
+COMMENT_COLUMN(chassis.rack_id, 'Related rack object ID')
+COMMENT_COLUMN(chassis.rack_image, 'Image to be used in rack view')
+COMMENT_COLUMN(chassis.rack_position, 'Position in rack (in rack units)')
+COMMENT_COLUMN(chassis.rack_height, 'Height in rack (in rack units)')
+
+/*
 ** Nodes information
 */
 CREATE TABLE nodes
@@ -412,6 +434,7 @@ CREATE TABLE nodes
   rack_position integer not null,
   rack_height integer not null,
   rack_id integer not null,
+  chassis_id integer not null,
   agent_cache_mode char(1) not null,
   last_agent_comm_time integer not null,
   syslog_msg_count SQL_INT64 not null,
@@ -457,6 +480,7 @@ COMMENT_COLUMN(nodes.rack_image, '')
 COMMENT_COLUMN(nodes.rack_position, '')
 COMMENT_COLUMN(nodes.rack_height, '')
 COMMENT_COLUMN(nodes.rack_id, '')
+COMMENT_COLUMN(nodes.chassis_id, 'ID of chassis object this node belongs to')
 COMMENT_COLUMN(nodes.agent_cache_mode, '')
 COMMENT_COLUMN(nodes.last_agent_comm_time, '')
 COMMENT_COLUMN(nodes.syslog_msg_count, 'Total number of received syslog messages')

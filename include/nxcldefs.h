@@ -123,9 +123,10 @@
 #define OBJECT_RACK                  32
 #define OBJECT_ACCESSPOINT           33
 #define OBJECT_AGENTPOLICY_LOGPARSER 34
+#define OBJECT_CHASSIS               35
 
 /** Base value for custom object classes */
-#define OBJECT_CUSTOM               10000
+#define OBJECT_CUSTOM                10000
 
 /**
  * Object's status

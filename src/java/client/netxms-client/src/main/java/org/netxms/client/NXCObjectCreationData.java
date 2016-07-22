@@ -66,6 +66,8 @@ public class NXCObjectCreationData
 	private String deviceId;
 	private int height;
 	private int flags;
+	private long controllerId;
+	private long chassisId;
 	
 	/**
 	 * Constructor.
@@ -609,5 +611,37 @@ public class NXCObjectCreationData
    public void setFlags(int flags)
    {
       this.flags = flags;
+   }
+
+   /**
+    * @return the controllerId
+    */
+   public long getControllerId()
+   {
+      return controllerId;
+   }
+
+   /**
+    * @param controllerId the controllerId to set
+    */
+   public void setControllerId(long controllerId)
+   {
+      this.controllerId = controllerId;
+   }
+
+   /**
+    * @return the chassisId
+    */
+   public long getChassisId()
+   {
+      return chassisId;
+   }
+
+   /**
+    * @param chassisId the chassisId to set
+    */
+   public void setChassisId(long chassisId)
+   {
+      this.chassisId = chassisId;
    }
 }

@@ -116,6 +116,7 @@ import org.netxms.client.objects.AgentPolicyConfig;
 import org.netxms.client.objects.AgentPolicyLogParser;
 import org.netxms.client.objects.BusinessService;
 import org.netxms.client.objects.BusinessServiceRoot;
+import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.ClusterResource;
 import org.netxms.client.objects.Condition;
@@ -1082,6 +1083,9 @@ public class NXCSession
             break;
          case AbstractObject.OBJECT_BUSINESSSERVICEROOT:
             object = new BusinessServiceRoot(msg, this);
+            break;
+         case AbstractObject.OBJECT_CHASSIS:
+            object = new Chassis(msg, this);
             break;
          case AbstractObject.OBJECT_CLUSTER:
             object = new Cluster(msg, this);
@@ -4043,14 +4047,30 @@ public class NXCSession
       // Class-specific attributes
       switch(data.getObjectClass())
       {
+         case AbstractObject.OBJECT_CHASSIS:
+            msg.setFieldInt32(NXCPCodes.VID_CONTROLLER_ID, (int)data.getControllerId());
+            break;
+         case AbstractObject.OBJECT_INTERFACE:
+            msg.setField(NXCPCodes.VID_MAC_ADDR, data.getMacAddress().getValue());
+            msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
+            msg.setFieldInt32(NXCPCodes.VID_IF_TYPE, data.getIfType());
+            msg.setFieldInt32(NXCPCodes.VID_IF_INDEX, data.getIfIndex());
+            msg.setFieldInt32(NXCPCodes.VID_IF_SLOT, data.getSlot());
+            msg.setFieldInt32(NXCPCodes.VID_IF_PORT, data.getPort());
+            msg.setFieldInt16(NXCPCodes.VID_IS_PHYS_PORT, data.isPhysicalPort() ? 1 : 0);
+            break;
+         case AbstractObject.OBJECT_MOBILEDEVICE:
+            msg.setField(NXCPCodes.VID_DEVICE_ID, data.getDeviceId());
+            break;
          case AbstractObject.OBJECT_NODE:
             if (data.getPrimaryName() != null) msg.setField(NXCPCodes.VID_PRIMARY_NAME, data.getPrimaryName());
             msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
             msg.setFieldInt16(NXCPCodes.VID_AGENT_PORT, data.getAgentPort());
             msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, data.getSnmpPort());
             msg.setFieldInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
-            msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int) data.getAgentProxyId());
-            msg.setFieldInt32(NXCPCodes.VID_SNMP_PROXY, (int) data.getSnmpProxyId());
+            msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)data.getAgentProxyId());
+            msg.setFieldInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxyId());
+            msg.setFieldInt32(NXCPCodes.VID_CHASSIS_ID, (int)data.getChassisId());
             break;
          case AbstractObject.OBJECT_NETWORKMAP:
             msg.setFieldInt16(NXCPCodes.VID_MAP_TYPE, data.getMapType());
@@ -4068,23 +4088,11 @@ public class NXCSession
          case AbstractObject.OBJECT_NODELINK:
             msg.setFieldInt32(NXCPCodes.VID_NODE_ID, (int) data.getLinkedNodeId());
             break;
-         case AbstractObject.OBJECT_SLMCHECK:
-            msg.setFieldInt16(NXCPCodes.VID_IS_TEMPLATE, data.isTemplate() ? 1 : 0);
-            break;
-         case AbstractObject.OBJECT_INTERFACE:
-            msg.setField(NXCPCodes.VID_MAC_ADDR, data.getMacAddress().getValue());
-            msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
-            msg.setFieldInt32(NXCPCodes.VID_IF_TYPE, data.getIfType());
-            msg.setFieldInt32(NXCPCodes.VID_IF_INDEX, data.getIfIndex());
-            msg.setFieldInt32(NXCPCodes.VID_IF_SLOT, data.getSlot());
-            msg.setFieldInt32(NXCPCodes.VID_IF_PORT, data.getPort());
-            msg.setFieldInt16(NXCPCodes.VID_IS_PHYS_PORT, data.isPhysicalPort() ? 1 : 0);
-            break;
-         case AbstractObject.OBJECT_MOBILEDEVICE:
-            msg.setField(NXCPCodes.VID_DEVICE_ID, data.getDeviceId());
-            break;
          case AbstractObject.OBJECT_RACK:
             msg.setFieldInt16(NXCPCodes.VID_HEIGHT, data.getHeight());
+            break;
+         case AbstractObject.OBJECT_SLMCHECK:
+            msg.setFieldInt16(NXCPCodes.VID_IS_TEMPLATE, data.isTemplate() ? 1 : 0);
             break;
       }
 
@@ -4600,6 +4608,16 @@ public class NXCSession
       if ((flags & NXCObjectModificationData.MODIFY_DASHBOARD_LIST) != 0)
       {
          msg.setField(NXCPCodes.VID_DASHBOARDS, data.getDashboards());
+      }
+      
+      if ((flags & NXCObjectModificationData.MODIFY_CHASSIS_ID) != 0)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_CHASSIS_ID, (int)data.getChassisId());
+      }
+      
+      if ((flags & NXCObjectModificationData.MODIFY_CONTROLLER_ID) != 0)
+      {
+         msg.setFieldInt32(NXCPCodes.VID_CONTROLLER_ID, (int)data.getControllerId());
       }
       
       modifyCustomObject(data, userData, msg);

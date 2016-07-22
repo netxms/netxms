@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.AccessPoint;
+import org.netxms.client.objects.Chassis;
 import org.netxms.client.objects.Interface;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Node;
@@ -77,6 +78,27 @@ public class GeneralInfo extends TableElement
 		   addPair(Messages.get().GeneralInfo_Status, StatusDisplayInfo.getStatusText(object.getStatus()));
 		switch(object.getObjectClass())
 		{
+         case AbstractObject.OBJECT_CHASSIS:
+            Chassis chassis = (Chassis)object;
+            if (chassis.getControllerId() != 0)
+            {
+               AbstractNode node = session.findObjectById(chassis.getControllerId(), AbstractNode.class);
+               if (node != null)
+               {
+                  addPair("Controller", node.getObjectName());
+               }
+            }
+            if (chassis.getRackId() != 0)
+            {
+               Rack rack = session.findObjectById(chassis.getRackId(), Rack.class);
+               if (rack != null)
+               {
+                  addPair(Messages.get().GeneralInfo_Rack, String.format(Messages.get().GeneralInfo_Units, rack.getObjectName(),
+                          rack.isTopBottomNumbering() ? chassis.getRackPosition() : chassis.getRackPosition() - chassis.getRackHeight() + 1,
+                          rack.isTopBottomNumbering() ? chassis.getRackPosition() + chassis.getRackHeight() - 1 : chassis.getRackPosition()));
+               }
+            }
+            break;
 			case AbstractObject.OBJECT_INTERFACE:
 				Interface iface = (Interface)object;
 				addPair(Messages.get().GeneralInfo_IfIndex, Integer.toString(iface.getIfIndex()));

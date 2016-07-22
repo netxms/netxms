@@ -68,8 +68,8 @@ NetworkService::NetworkService(int iServiceType, WORD wProto, WORD wPort,
  */
 NetworkService::~NetworkService()
 {
-   safe_free(m_request);
-   safe_free(m_response);
+   free(m_request);
+   free(m_response);
 }
 
 /**

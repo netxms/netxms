@@ -36,7 +36,8 @@ static const TCHAR *s_className[]=
       _T("NetworkMapGroup"), _T("NetworkMap"), _T("DashboardRoot"),
       _T("Dashboard"), _T("ReportRoot"), _T("ReportGroup"), _T("Report"),
       _T("BusinessServiceRoot"), _T("BusinessService"), _T("NodeLink"),
-      _T("ServiceCheck"), _T("MobileDevice"), _T("Rack"), _T("AccessPoint")
+      _T("ServiceCheck"), _T("MobileDevice"), _T("Rack"), _T("AccessPoint"),
+      _T("AgentPolicyLogParser"), _T("Chassis")
    };
 
 /**
@@ -113,6 +114,14 @@ const TCHAR *NetObj::getObjectClassName() const
 {
    int c = getObjectClass();
    return ((c >= 0) && (c < sizeof(s_className) / sizeof(const TCHAR *))) ? s_className[c] : _T("Custom");
+}
+
+/**
+ * Get class name for given class ID
+ */
+const TCHAR *NetObj::getObjectClassName(int objectClass)
+{
+   return ((objectClass >= 0) && (objectClass < sizeof(s_className) / sizeof(const TCHAR *))) ? s_className[objectClass] : _T("Custom");
 }
 
 /**
@@ -391,7 +400,7 @@ bool NetObj::saveCommonProperties(DB_HANDLE hdb)
                     _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
-		return FALSE;
+		return false;
 
    TCHAR szTranslation[16], szThresholds[16], lat[32], lon[32];
    for(int i = 0, j = 0; i < 4; i++, j += 2)
@@ -1563,7 +1572,7 @@ void NetObj::prepareForDeletion()
 void NetObj::setComments(TCHAR *text)
 {
    lockProperties();
-   safe_free(m_comments);
+   free(m_comments);
    m_comments = text;
    setModified();
    unlockProperties();

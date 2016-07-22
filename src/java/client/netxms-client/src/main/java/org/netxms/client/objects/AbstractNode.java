@@ -30,7 +30,7 @@ import org.netxms.client.constants.AgentCacheMode;
 /**
  * Abstract base class for node objects.
  */
-public abstract class AbstractNode extends DataCollectionTarget
+public abstract class AbstractNode extends DataCollectionTarget implements RackElement
 {
 	// SNMP versions
 	public static final int SNMP_VERSION_1 = 0;
@@ -129,6 +129,7 @@ public abstract class AbstractNode extends DataCollectionTarget
 	protected UUID rackImage;
 	protected short rackPosition;
 	protected short rackHeight;
+   protected long chassisId;
 	
 	/**
 	 * Create new node object.
@@ -191,6 +192,7 @@ public abstract class AbstractNode extends DataCollectionTarget
 		rackImage = msg.getFieldAsUUID(NXCPCodes.VID_RACK_IMAGE);
 		rackPosition = msg.getFieldAsInt16(NXCPCodes.VID_RACK_POSITION);
       rackHeight = msg.getFieldAsInt16(NXCPCodes.VID_RACK_HEIGHT);
+      chassisId = msg.getFieldAsInt64(NXCPCodes.VID_CHASSIS_ID);
 		
 		long bootTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_BOOT_TIME);
 		bootTime = (bootTimeSeconds > 0) ? new Date(bootTimeSeconds * 1000) : null;
@@ -617,40 +619,55 @@ public abstract class AbstractNode extends DataCollectionTarget
       return primaryIP;
    }
 
-   /**
-    * @return the rackId
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.RackElement#getRackId()
     */
+   @Override
    public long getRackId()
    {
       return rackId;
    }
 
-   /**
-    * @return the rackImage
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.RackElement#getRackImage()
     */
+   @Override
    public UUID getRackImage()
    {
       return rackImage;
    }
 
-   /**
-    * @return the rackPosition
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.RackElement#getRackPosition()
     */
+   @Override
    public short getRackPosition()
    {
       return rackPosition;
    }
 
-   /**
-    * @return the rackHeight
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.RackElement#getRackHeight()
     */
+   @Override
    public short getRackHeight()
    {
       return rackHeight;
    }
 
+   /**
+    * @return
+    */
    public Date getLastAgentCommTime()
    {
       return lastAgentCommTime;
+   }
+
+   /**
+    * @return the chassisId
+    */
+   public long getChassisId()
+   {
+      return chassisId;
    }
 }

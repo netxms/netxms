@@ -28,8 +28,8 @@ import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.base.NXCommon;
 import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.RackElement;
 import org.netxms.ui.eclipse.imagelibrary.widgets.ImageSelector;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
@@ -44,7 +44,7 @@ import org.netxms.ui.eclipse.widgets.LabeledSpinner;
  */
 public class RackPlacement extends PropertyPage
 {
-	private AbstractNode node;
+	private RackElement object;
 	private ObjectSelector rackSelector;
 	private ImageSelector rackImageSelector;
 	private LabeledSpinner rackHeight;
@@ -58,7 +58,7 @@ public class RackPlacement extends PropertyPage
 	{
 		Composite dialogArea = new Composite(parent, SWT.NONE);
 		
-		node = (AbstractNode)getElement().getAdapter(AbstractNode.class);
+		object = (RackElement)getElement().getAdapter(RackElement.class);
 
 		GridLayout layout = new GridLayout();
 		layout.verticalSpacing = WidgetHelper.OUTER_SPACING;
@@ -70,7 +70,7 @@ public class RackPlacement extends PropertyPage
       rackSelector = new ObjectSelector(dialogArea, SWT.NONE, true);
       rackSelector.setLabel(Messages.get().RackPlacement_Rack);
       rackSelector.setObjectClass(Rack.class);
-      rackSelector.setObjectId(node.getRackId());
+      rackSelector.setObjectId(object.getRackId());
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
@@ -79,7 +79,7 @@ public class RackPlacement extends PropertyPage
 		
 		rackImageSelector = new ImageSelector(dialogArea, SWT.NONE);
 		rackImageSelector.setLabel(Messages.get().RackPlacement_RackImage);
-		rackImageSelector.setImageGuid(node.getRackImage(), false);
+		rackImageSelector.setImageGuid(object.getRackImage(), false);
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -89,7 +89,7 @@ public class RackPlacement extends PropertyPage
       rackPosition = new LabeledSpinner(dialogArea, SWT.NONE);
       rackPosition.setLabel(Messages.get().RackPlacement_Position);
       rackPosition.setRange(1, 50);
-      rackPosition.setSelection(node.getRackPosition());
+      rackPosition.setSelection(object.getRackPosition());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -98,7 +98,7 @@ public class RackPlacement extends PropertyPage
       rackHeight = new LabeledSpinner(dialogArea, SWT.NONE);
       rackHeight.setLabel(Messages.get().RackPlacement_Height);
       rackHeight.setRange(1, 50);
-      rackHeight.setSelection(node.getRackHeight());
+      rackHeight.setSelection(object.getRackHeight());
       gd = new GridData();
       gd.grabExcessHorizontalSpace = true;
       gd.horizontalAlignment = SWT.FILL;
@@ -117,11 +117,11 @@ public class RackPlacement extends PropertyPage
 		if (isApply)
 			setValid(false);
 		
-		final NXCObjectModificationData md = new NXCObjectModificationData(node.getObjectId());
+		final NXCObjectModificationData md = new NXCObjectModificationData(object.getObjectId());
 		md.setRackPlacement(rackSelector.getObjectId(), rackImageSelector.getImageGuid(), (short)rackPosition.getSelection(), (short)rackHeight.getSelection());
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format(Messages.get().RackPlacement_UpdatingRackPlacement, node.getObjectName()), null, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(String.format(Messages.get().RackPlacement_UpdatingRackPlacement, object.getObjectName()), null, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{

@@ -323,6 +323,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 			case OBJECT_POLICYROOT:
 			case OBJECT_AGENTPOLICY:
 			case OBJECT_AGENTPOLICY_CONFIG:
+         case OBJECT_AGENTPOLICY_LOGPARSER:
 			case OBJECT_NETWORKMAPROOT:
 			case OBJECT_NETWORKMAPGROUP:
 			case OBJECT_DASHBOARDROOT:
@@ -331,6 +332,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 			case OBJECT_BUSINESSSERVICE:
 			case OBJECT_NODELINK:
 			case OBJECT_RACK:
+			case OBJECT_CHASSIS:
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->getId(), pObject);
@@ -1120,12 +1122,6 @@ static void LinkChildObjectsCallback(NetObj *object, void *data)
  */
 BOOL LoadObjects()
 {
-   DB_RESULT hResult;
-   UINT32 i, dwNumRows;
-   UINT32 dwId;
-   Template *pTemplate;
-   TCHAR szQuery[256];
-
    // Prevent objects to change it's modification flag
    g_bModificationsLocked = TRUE;
 
@@ -1155,15 +1151,15 @@ BOOL LoadObjects()
       NetObjInsert(pZone, false, false);
       g_pEntireNet->AddZone(pZone);
 
-      hResult = DBSelect(hdb, _T("SELECT id FROM zones WHERE id<>4"));
-      if (hResult != 0)
+      DB_RESULT hResult = DBSelect(hdb, _T("SELECT id FROM zones WHERE id<>4"));
+      if (hResult != NULL)
       {
-         dwNumRows = DBGetNumRows(hResult);
-         for(i = 0; i < dwNumRows; i++)
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
          {
-            dwId = DBGetFieldULong(hResult, i, 0);
+            UINT32 id = DBGetFieldULong(hResult, i, 0);
             pZone = new Zone;
-            if (pZone->loadFromDatabase(hdb, dwId))
+            if (pZone->loadFromDatabase(hdb, id))
             {
                if (!pZone->isDeleted())
                   g_pEntireNet->AddZone(pZone);
@@ -1172,7 +1168,7 @@ BOOL LoadObjects()
             else     // Object load failed
             {
                delete pZone;
-               nxlog_write(MSG_ZONE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+               nxlog_write(MSG_ZONE_LOAD_FAILED, NXLOG_ERROR, "d", id);
             }
          }
          DBFreeResult(hResult);
@@ -1183,24 +1179,22 @@ BOOL LoadObjects()
    // We should load conditions before nodes because
    // DCI cache size calculation uses information from condition objects
    DbgPrintf(2, _T("Loading conditions..."));
-   hResult = DBSelect(hdb, _T("SELECT id FROM conditions"));
+   DB_RESULT hResult = DBSelect(hdb, _T("SELECT id FROM conditions"));
    if (hResult != NULL)
    {
-      Condition *pCondition;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         pCondition = new Condition;
-         if (pCondition->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         Condition *condition = new Condition;
+         if (condition->loadFromDatabase(hdb, id))
          {
-            NetObjInsert(pCondition, false, false);  // Insert into indexes
+            NetObjInsert(condition, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            delete pCondition;
-            nxlog_write(MSG_CONDITION_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete condition;
+            nxlog_write(MSG_CONDITION_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1209,38 +1203,36 @@ BOOL LoadObjects()
    // Load subnets
    DbgPrintf(2, _T("Loading subnets..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM subnets"));
-   if (hResult != 0)
+   if (hResult != NULL)
    {
-      Subnet *pSubnet;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         pSubnet = new Subnet;
-         if (pSubnet->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         Subnet *subnet = new Subnet;
+         if (subnet->loadFromDatabase(hdb, id))
          {
-            if (!pSubnet->isDeleted())
+            if (!subnet->isDeleted())
             {
                if (g_flags & AF_ENABLE_ZONING)
                {
                   Zone *pZone;
 
-                  pZone = FindZoneByGUID(pSubnet->getZoneId());
+                  pZone = FindZoneByGUID(subnet->getZoneId());
                   if (pZone != NULL)
-                     pZone->addSubnet(pSubnet);
+                     pZone->addSubnet(subnet);
                }
                else
                {
-                  g_pEntireNet->AddSubnet(pSubnet);
+                  g_pEntireNet->AddSubnet(subnet);
                }
             }
-            NetObjInsert(pSubnet, false, false);  // Insert into indexes
+            NetObjInsert(subnet, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            delete pSubnet;
-            nxlog_write(MSG_SUBNET_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete subnet;
+            nxlog_write(MSG_SUBNET_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1249,23 +1241,44 @@ BOOL LoadObjects()
    // Load racks
    DbgPrintf(2, _T("Loading racks..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM racks"));
-   if (hResult != 0)
+   if (hResult != NULL)
    {
-      Rack *rack;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         rack = new Rack;
-         if (rack->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         Rack *rack = new Rack;
+         if (rack->loadFromDatabase(hdb, id))
          {
             NetObjInsert(rack, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            nxlog_write(MSG_RACK_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_RACK_LOAD_FAILED, NXLOG_ERROR, "d", id);
             delete rack;
+         }
+      }
+      DBFreeResult(hResult);
+   }
+
+   // Load chassis
+   DbgPrintf(2, _T("Loading chassis..."));
+   hResult = DBSelect(hdb, _T("SELECT id FROM chassis"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         Chassis *chassis = new Chassis;
+         if (chassis->loadFromDatabase(hdb, id))
+         {
+            NetObjInsert(chassis, false, false);  // Insert into indexes
+         }
+         else     // Object load failed
+         {
+            nxlog_write(MSG_CHASSIS_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            delete chassis;
          }
       }
       DBFreeResult(hResult);
@@ -1274,23 +1287,21 @@ BOOL LoadObjects()
    // Load mobile devices
    DbgPrintf(2, _T("Loading mobile devices..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM mobile_devices"));
-   if (hResult != 0)
+   if (hResult != NULL)
    {
-      MobileDevice *md;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         md = new MobileDevice;
-         if (md->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         MobileDevice *md = new MobileDevice;
+         if (md->loadFromDatabase(hdb, id))
          {
             NetObjInsert(md, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
             delete md;
-            nxlog_write(MSG_MOBILEDEVICE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_MOBILEDEVICE_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1301,21 +1312,19 @@ BOOL LoadObjects()
    hResult = DBSelect(hdb, _T("SELECT id FROM nodes"));
    if (hResult != NULL)
    {
-      Node *pNode;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         pNode = new Node;
-         if (pNode->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         Node *node = new Node;
+         if (node->loadFromDatabase(hdb, id))
          {
-            NetObjInsert(pNode, false, false);  // Insert into indexes
+            NetObjInsert(node, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            delete pNode;
-            nxlog_write(MSG_NODE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete node;
+            nxlog_write(MSG_NODE_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1326,20 +1335,18 @@ BOOL LoadObjects()
    hResult = DBSelect(hdb, _T("SELECT id FROM access_points"));
    if (hResult != NULL)
    {
-		AccessPoint *ap;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         ap = new AccessPoint;
-         if (ap->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         AccessPoint *ap = new AccessPoint;
+         if (ap->loadFromDatabase(hdb, id))
          {
             NetObjInsert(ap, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            nxlog_write(MSG_AP_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_AP_LOAD_FAILED, NXLOG_ERROR, "d", id);
             delete ap;
          }
       }
@@ -1349,23 +1356,21 @@ BOOL LoadObjects()
    // Load interfaces
    DbgPrintf(2, _T("Loading interfaces..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM interfaces"));
-   if (hResult != 0)
+   if (hResult != NULL)
    {
-      Interface *pInterface;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         pInterface = new Interface;
-         if (pInterface->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         Interface *iface = new Interface;
+         if (iface->loadFromDatabase(hdb, id))
          {
-            NetObjInsert(pInterface, false, false);  // Insert into indexes
+            NetObjInsert(iface, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            nxlog_write(MSG_INTERFACE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
-            delete pInterface;
+            nxlog_write(MSG_INTERFACE_LOAD_FAILED, NXLOG_ERROR, "d", id);
+            delete iface;
          }
       }
       DBFreeResult(hResult);
@@ -1374,23 +1379,21 @@ BOOL LoadObjects()
    // Load network services
    DbgPrintf(2, _T("Loading network services..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM network_services"));
-   if (hResult != 0)
+   if (hResult != NULL)
    {
-      NetworkService *pService;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         pService = new NetworkService;
-         if (pService->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         NetworkService *service = new NetworkService;
+         if (service->loadFromDatabase(hdb, id))
          {
-            NetObjInsert(pService, false, false);  // Insert into indexes
+            NetObjInsert(service, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            delete pService;
-            nxlog_write(MSG_NETSRV_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete service;
+            nxlog_write(MSG_NETSRV_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1401,21 +1404,19 @@ BOOL LoadObjects()
    hResult = DBSelect(hdb, _T("SELECT id FROM vpn_connectors"));
    if (hResult != NULL)
    {
-      VPNConnector *pConnector;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         pConnector = new VPNConnector;
-         if (pConnector->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         VPNConnector *connector = new VPNConnector;
+         if (connector->loadFromDatabase(hdb, id))
          {
-            NetObjInsert(pConnector, false, false);  // Insert into indexes
+            NetObjInsert(connector, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            delete pConnector;
-            nxlog_write(MSG_VPNC_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete connector;
+            nxlog_write(MSG_VPNC_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1426,21 +1427,19 @@ BOOL LoadObjects()
    hResult = DBSelect(hdb, _T("SELECT id FROM clusters"));
    if (hResult != NULL)
    {
-      Cluster *pCluster;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         pCluster = new Cluster;
-         if (pCluster->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         Cluster *cluster = new Cluster;
+         if (cluster->loadFromDatabase(hdb, id))
          {
-            NetObjInsert(pCluster, false, false);  // Insert into indexes
+            NetObjInsert(cluster, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            delete pCluster;
-            nxlog_write(MSG_CLUSTER_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete cluster;
+            nxlog_write(MSG_CLUSTER_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1455,20 +1454,20 @@ BOOL LoadObjects()
    hResult = DBSelect(hdb, _T("SELECT id FROM templates"));
    if (hResult != NULL)
    {
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         pTemplate = new Template;
-         if (pTemplate->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         Template *tmpl = new Template;
+         if (tmpl->loadFromDatabase(hdb, id))
          {
-            NetObjInsert(pTemplate, false, false);  // Insert into indexes
-				pTemplate->calculateCompoundStatus();	// Force status change to NORMAL
+            NetObjInsert(tmpl, false, false);  // Insert into indexes
+				tmpl->calculateCompoundStatus();	// Force status change to NORMAL
          }
          else     // Object load failed
          {
-            delete pTemplate;
-            nxlog_write(MSG_TEMPLATE_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete tmpl;
+            nxlog_write(MSG_TEMPLATE_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1479,12 +1478,12 @@ BOOL LoadObjects()
    hResult = DBSelect(hdb, _T("SELECT id,policy_type FROM ap_common"));
    if (hResult != NULL)
    {
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
          AgentPolicy *policy;
 
-			dwId = DBGetFieldULong(hResult, i, 0);
+			UINT32 id = DBGetFieldULong(hResult, i, 0);
 			int type = DBGetFieldLong(hResult, i, 1);
 			switch(type)
 			{
@@ -1498,7 +1497,7 @@ BOOL LoadObjects()
 					policy = new AgentPolicy(type);
 					break;
 			}
-         if (policy->loadFromDatabase(hdb, dwId))
+         if (policy->loadFromDatabase(hdb, id))
          {
             NetObjInsert(policy, false, false);  // Insert into indexes
 				policy->calculateCompoundStatus();	// Force status change to NORMAL
@@ -1506,7 +1505,7 @@ BOOL LoadObjects()
          else     // Object load failed
          {
             delete policy;
-            nxlog_write(MSG_AGENTPOLICY_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_AGENTPOLICY_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1517,19 +1516,19 @@ BOOL LoadObjects()
    hResult = DBSelect(hdb, _T("SELECT id FROM network_maps"));
    if (hResult != NULL)
    {
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
          NetworkMap *map = new NetworkMap;
-         if (map->loadFromDatabase(hdb, dwId))
+         if (map->loadFromDatabase(hdb, id))
          {
             NetObjInsert(map, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
             delete map;
-            nxlog_write(MSG_NETMAP_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_NETMAP_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1537,25 +1536,26 @@ BOOL LoadObjects()
 
    // Load container objects
    DbgPrintf(2, _T("Loading containers..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_CONTAINER);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
+   TCHAR query[256];
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_CONTAINER);
+   hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
    {
       Container *pContainer;
 
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
          pContainer = new Container;
-         if (pContainer->loadFromDatabase(hdb, dwId))
+         if (pContainer->loadFromDatabase(hdb, id))
          {
             NetObjInsert(pContainer, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
             delete pContainer;
-            nxlog_write(MSG_CONTAINER_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_CONTAINER_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1563,25 +1563,25 @@ BOOL LoadObjects()
 
    // Load template group objects
    DbgPrintf(2, _T("Loading template groups..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_TEMPLATEGROUP);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_TEMPLATEGROUP);
+   hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
    {
       TemplateGroup *pGroup;
 
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
          pGroup = new TemplateGroup;
-         if (pGroup->loadFromDatabase(hdb, dwId))
+         if (pGroup->loadFromDatabase(hdb, id))
          {
             NetObjInsert(pGroup, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
             delete pGroup;
-            nxlog_write(MSG_TG_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            nxlog_write(MSG_TG_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1589,25 +1589,23 @@ BOOL LoadObjects()
 
    // Load policy group objects
    DbgPrintf(2, _T("Loading policy groups..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_POLICYGROUP);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_POLICYGROUP);
+   hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
    {
-      PolicyGroup *pGroup;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         pGroup = new PolicyGroup;
-         if (pGroup->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         PolicyGroup *group = new PolicyGroup;
+         if (group->loadFromDatabase(hdb, id))
          {
-            NetObjInsert(pGroup, false, false);  // Insert into indexes
+            NetObjInsert(group, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            delete pGroup;
-            nxlog_write(MSG_PG_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete group;
+            nxlog_write(MSG_PG_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1615,25 +1613,23 @@ BOOL LoadObjects()
 
    // Load map group objects
    DbgPrintf(2, _T("Loading map groups..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_NETWORKMAPGROUP);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_NETWORKMAPGROUP);
+   hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
    {
-      NetworkMapGroup *pGroup;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         pGroup = new NetworkMapGroup;
-         if (pGroup->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         NetworkMapGroup *group = new NetworkMapGroup;
+         if (group->loadFromDatabase(hdb, id))
          {
-            NetObjInsert(pGroup, false, false);  // Insert into indexes
+            NetObjInsert(group, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            delete pGroup;
-            nxlog_write(MSG_MG_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete group;
+            nxlog_write(MSG_MG_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1642,23 +1638,21 @@ BOOL LoadObjects()
    // Load dashboard objects
    DbgPrintf(2, _T("Loading dashboards..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM dashboards"));
-   if (hResult != 0)
+   if (hResult != NULL)
    {
-      Dashboard *pd;
-
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
-         pd = new Dashboard;
-         if (pd->loadFromDatabase(hdb, dwId))
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
+         Dashboard *dashboard = new Dashboard;
+         if (dashboard->loadFromDatabase(hdb, id))
          {
-            NetObjInsert(pd, false, false);  // Insert into indexes
+            NetObjInsert(dashboard, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
-            delete pd;
-            nxlog_write(MSG_DASHBOARD_LOAD_FAILED, EVENTLOG_ERROR_TYPE, "d", dwId);
+            delete dashboard;
+            nxlog_write(MSG_DASHBOARD_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1666,23 +1660,23 @@ BOOL LoadObjects()
 
    // Loading business service objects
    DbgPrintf(2, _T("Loading business services..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_BUSINESSSERVICE);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_BUSINESSSERVICE);
+   hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
    {
-	   dwNumRows = DBGetNumRows(hResult);
-	   for(i = 0; i < dwNumRows; i++)
+	   int count = DBGetNumRows(hResult);
+	   for(int i = 0; i < count; i++)
 	   {
-		   dwId = DBGetFieldULong(hResult, i, 0);
+		   UINT32 id = DBGetFieldULong(hResult, i, 0);
 		   BusinessService *service = new BusinessService;
-		   if (service->loadFromDatabase(hdb, dwId))
+		   if (service->loadFromDatabase(hdb, id))
 		   {
 			   NetObjInsert(service, false, false);  // Insert into indexes
 		   }
 		   else     // Object load failed
 		   {
 			   delete service;
-			   nxlog_write(MSG_BUSINESS_SERVICE_LOAD_FAILED, NXLOG_ERROR, "d", dwId);
+			   nxlog_write(MSG_BUSINESS_SERVICE_LOAD_FAILED, NXLOG_ERROR, "d", id);
 		   }
 	   }
 	   DBFreeResult(hResult);
@@ -1690,23 +1684,23 @@ BOOL LoadObjects()
 
    // Loading business service objects
    DbgPrintf(2, _T("Loading node links..."));
-   _sntprintf(szQuery, sizeof(szQuery) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_NODELINK);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
+   _sntprintf(query, sizeof(query) / sizeof(TCHAR), _T("SELECT id FROM object_containers WHERE object_class=%d"), OBJECT_NODELINK);
+   hResult = DBSelect(hdb, query);
+   if (hResult != NULL)
    {
-	   dwNumRows = DBGetNumRows(hResult);
-	   for(i = 0; i < dwNumRows; i++)
+	   int count = DBGetNumRows(hResult);
+	   for(int i = 0; i < count; i++)
 	   {
-		   dwId = DBGetFieldULong(hResult, i, 0);
+		   UINT32 id = DBGetFieldULong(hResult, i, 0);
 		   NodeLink *nl = new NodeLink;
-		   if (nl->loadFromDatabase(hdb, dwId))
+		   if (nl->loadFromDatabase(hdb, id))
 		   {
 			   NetObjInsert(nl, false, false);  // Insert into indexes
 		   }
 		   else     // Object load failed
 		   {
 			   delete nl;
-			   nxlog_write(MSG_NODE_LINK_LOAD_FAILED, NXLOG_ERROR, "d", dwId);
+			   nxlog_write(MSG_NODE_LINK_LOAD_FAILED, NXLOG_ERROR, "d", id);
 		   }
 	   }
 	   DBFreeResult(hResult);
@@ -1715,21 +1709,21 @@ BOOL LoadObjects()
    // Load service check objects
    DbgPrintf(2, _T("Loading service checks..."));
    hResult = DBSelect(hdb, _T("SELECT id FROM slm_checks"));
-   if (hResult != 0)
+   if (hResult != NULL)
    {
-      dwNumRows = DBGetNumRows(hResult);
-      for(i = 0; i < dwNumRows; i++)
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
       {
-         dwId = DBGetFieldULong(hResult, i, 0);
+         UINT32 id = DBGetFieldULong(hResult, i, 0);
          SlmCheck *check = new SlmCheck;
-         if (check->loadFromDatabase(hdb, dwId))
+         if (check->loadFromDatabase(hdb, id))
          {
             NetObjInsert(check, false, false);  // Insert into indexes
          }
          else     // Object load failed
          {
             delete check;
-            nxlog_write(MSG_SERVICE_CHECK_LOAD_FAILED, NXLOG_ERROR, "d", dwId);
+            nxlog_write(MSG_SERVICE_CHECK_LOAD_FAILED, NXLOG_ERROR, "d", id);
          }
       }
       DBFreeResult(hResult);
@@ -1882,87 +1876,89 @@ void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter)
  * This function is used to check manually created bindings, so it won't
  * return TRUE for node -- subnet for example
  */
-bool IsValidParentClass(int iChildClass, int iParentClass)
+bool IsValidParentClass(int childClass, int parentClass)
 {
-   switch(iParentClass)
+   switch(parentClass)
    {
 		case OBJECT_NETWORK:
-			if ((iChildClass == OBJECT_ZONE) && (g_flags & AF_ENABLE_ZONING))
+			if ((childClass == OBJECT_ZONE) && (g_flags & AF_ENABLE_ZONING))
 				return true;
 			break;
       case OBJECT_SERVICEROOT:
       case OBJECT_CONTAINER:
-         if ((iChildClass == OBJECT_CONTAINER) ||
-             (iChildClass == OBJECT_RACK) ||
-             (iChildClass == OBJECT_NODE) ||
-             (iChildClass == OBJECT_CLUSTER) ||
-             (iChildClass == OBJECT_MOBILEDEVICE) ||
-             (iChildClass == OBJECT_CONDITION) ||
-             (iChildClass == OBJECT_SUBNET))
+         if ((childClass == OBJECT_CHASSIS) ||
+             (childClass == OBJECT_CLUSTER) ||
+             (childClass == OBJECT_CONDITION) ||
+             (childClass == OBJECT_CONTAINER) ||
+             (childClass == OBJECT_MOBILEDEVICE) ||
+             (childClass == OBJECT_NODE) ||
+             (childClass == OBJECT_RACK) ||
+             (childClass == OBJECT_SUBNET))
             return true;
          break;
+      case OBJECT_CHASSIS:
       case OBJECT_RACK:
-         if (iChildClass == OBJECT_NODE)
+         if (childClass == OBJECT_NODE)
             return true;
          break;
       case OBJECT_TEMPLATEROOT:
       case OBJECT_TEMPLATEGROUP:
-         if ((iChildClass == OBJECT_TEMPLATEGROUP) ||
-             (iChildClass == OBJECT_TEMPLATE))
+         if ((childClass == OBJECT_TEMPLATEGROUP) ||
+             (childClass == OBJECT_TEMPLATE))
             return true;
          break;
       case OBJECT_TEMPLATE:
-         if ((iChildClass == OBJECT_NODE) ||
-             (iChildClass == OBJECT_CLUSTER) ||
-             (iChildClass == OBJECT_MOBILEDEVICE))
+         if ((childClass == OBJECT_NODE) ||
+             (childClass == OBJECT_CLUSTER) ||
+             (childClass == OBJECT_MOBILEDEVICE))
             return true;
          break;
       case OBJECT_NETWORKMAPROOT:
       case OBJECT_NETWORKMAPGROUP:
-         if ((iChildClass == OBJECT_NETWORKMAPGROUP) ||
-             (iChildClass == OBJECT_NETWORKMAP))
+         if ((childClass == OBJECT_NETWORKMAPGROUP) ||
+             (childClass == OBJECT_NETWORKMAP))
             return true;
          break;
       case OBJECT_DASHBOARDROOT:
       case OBJECT_DASHBOARD:
-         if (iChildClass == OBJECT_DASHBOARD)
+         if (childClass == OBJECT_DASHBOARD)
             return true;
          break;
       case OBJECT_POLICYROOT:
       case OBJECT_POLICYGROUP:
-         if ((iChildClass == OBJECT_POLICYGROUP) ||
-             (iChildClass == OBJECT_AGENTPOLICY) ||
-             (iChildClass == OBJECT_AGENTPOLICY_CONFIG) ||
-             (iChildClass == OBJECT_AGENTPOLICY_LOGPARSER))
+         if ((childClass == OBJECT_POLICYGROUP) ||
+             (childClass == OBJECT_AGENTPOLICY) ||
+             (childClass == OBJECT_AGENTPOLICY_CONFIG) ||
+             (childClass == OBJECT_AGENTPOLICY_LOGPARSER))
             return true;
          break;
       case OBJECT_NODE:
-         if ((iChildClass == OBJECT_NETWORKSERVICE) ||
-             (iChildClass == OBJECT_VPNCONNECTOR) ||
-				 (iChildClass == OBJECT_INTERFACE))
+         if ((childClass == OBJECT_NETWORKSERVICE) ||
+             (childClass == OBJECT_VPNCONNECTOR) ||
+				 (childClass == OBJECT_INTERFACE))
             return true;
          break;
       case OBJECT_CLUSTER:
-         if (iChildClass == OBJECT_NODE)
+         if (childClass == OBJECT_NODE)
             return true;
          break;
 		case OBJECT_BUSINESSSERVICEROOT:
-			if ((iChildClass == OBJECT_BUSINESSSERVICE) ||
-			    (iChildClass == OBJECT_NODELINK))
+			if ((childClass == OBJECT_BUSINESSSERVICE) ||
+			    (childClass == OBJECT_NODELINK))
             return true;
          break;
 		case OBJECT_BUSINESSSERVICE:
-			if ((iChildClass == OBJECT_BUSINESSSERVICE) ||
-			    (iChildClass == OBJECT_NODELINK) ||
-			    (iChildClass == OBJECT_SLMCHECK))
+			if ((childClass == OBJECT_BUSINESSSERVICE) ||
+			    (childClass == OBJECT_NODELINK) ||
+			    (childClass == OBJECT_SLMCHECK))
             return true;
          break;
 		case OBJECT_NODELINK:
-			if (iChildClass == OBJECT_SLMCHECK)
+			if (childClass == OBJECT_SLMCHECK)
             return true;
          break;
       case -1:    // Creating object without parent
-         if (iChildClass == OBJECT_NODE)
+         if (childClass == OBJECT_NODE)
             return true;   // OK only for nodes, because parent subnet will be created automatically
          break;
    }
@@ -1972,7 +1968,7 @@ bool IsValidParentClass(int iChildClass, int iParentClass)
 	{
 		if (g_pModuleList[i].pfIsValidParentClass != NULL)
 		{
-			if (g_pModuleList[i].pfIsValidParentClass(iChildClass, iParentClass))
+			if (g_pModuleList[i].pfIsValidParentClass(childClass, parentClass))
 				return true;	// accepted by module
 		}
 	}

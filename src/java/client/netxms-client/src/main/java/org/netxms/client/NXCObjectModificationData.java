@@ -107,6 +107,8 @@ public class NXCObjectModificationData
    public static final long MODIFY_RACK_PLACEMENT     = 0x0400000000000000L;
    public static final long MODIFY_DASHBOARD_LIST     = 0x0800000000000000L;
    public static final long MODIFY_RACK_NUMB_SCHEME   = 0x1000000000000000L;
+   public static final long MODIFY_CONTROLLER_ID      = 0x2000000000000000L;
+   public static final long MODIFY_CHASSIS_ID         = 0x4000000000000000L;
 	
 	private long flags;		// Flags which indicates what object's data should be modified
 	private long objectId;
@@ -192,6 +194,8 @@ public class NXCObjectModificationData
 	private short rackHeight;
 	private Long[] dashboards;
 	private boolean rackNumberingTopBottom;
+	private long controllerId;
+	private long chassisId;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1579,5 +1583,39 @@ public class NXCObjectModificationData
    {
       this.rackNumberingTopBottom = rackNumberingTopBottom;
       flags |= MODIFY_RACK_NUMB_SCHEME;
+   }
+
+   /**
+    * @return the controllerId
+    */
+   public long getControllerId()
+   {
+      return controllerId;
+   }
+
+   /**
+    * @param controllerId the controllerId to set
+    */
+   public void setControllerId(long controllerId)
+   {
+      this.controllerId = controllerId;
+      flags |= MODIFY_CONTROLLER_ID;
+   }
+
+   /**
+    * @return the chassisId
+    */
+   public long getChassisId()
+   {
+      return chassisId;
+   }
+
+   /**
+    * @param chassisId the chassisId to set
+    */
+   public void setChassisId(long chassisId)
+   {
+      this.chassisId = chassisId;
+      flags |= MODIFY_CHASSIS_ID;
    }
 }

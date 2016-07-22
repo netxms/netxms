@@ -209,7 +209,12 @@ public class CreateInterfaceDialog extends Dialog
 			MessageDialogHelper.openError(getShell(), Messages.get().CreateInterfaceDialog_Error, String.format("Internal error: %s", e.getMessage())); //$NON-NLS-1$
 		}
 	}
-
+	
+	/**
+	 * @param mask
+	 * @param maxBits
+	 * @return
+	 */
 	private int getMaskBits(String mask, int maxBits)
 	{
 	   if (mask.isEmpty())

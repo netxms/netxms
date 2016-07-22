@@ -72,10 +72,9 @@ bool Cluster::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 	int i, nRows;
 
    m_id = dwId;
-
    if (!loadCommonProperties(hdb))
    {
-      DbgPrintf(2, _T("Cannot load common properties for cluster object %d"), dwId);
+      nxlog_debug(2, _T("Cannot load common properties for cluster object %d"), dwId);
       return false;
    }
 

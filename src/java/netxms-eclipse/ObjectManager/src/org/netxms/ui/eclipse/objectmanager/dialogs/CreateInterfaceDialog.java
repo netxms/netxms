@@ -210,6 +210,11 @@ public class CreateInterfaceDialog extends Dialog
 		}
 	}
 	
+	/**
+	 * @param mask
+	 * @param maxBits
+	 * @return
+	 */
 	private int getMaskBits(String mask, int maxBits)
 	{
 	   if (mask.isEmpty())

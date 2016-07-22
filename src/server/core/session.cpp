@@ -4925,58 +4925,54 @@ void ClientSession::sendMIBTimestamp(UINT32 dwRqId)
 /**
  * Create new object
  */
-void ClientSession::createObject(NXCPMessage *pRequest)
+void ClientSession::createObject(NXCPMessage *request)
 {
    NXCPMessage msg;
-   NetObj *object = NULL, *pParent;
-   int iClass, iServiceType;
-   TCHAR szObjectName[MAX_OBJECT_NAME], nodePrimaryName[MAX_DNS_NAME], deviceId[MAX_OBJECT_NAME];
-   TCHAR *pszRequest, *pszResponse, *pszComments;
-   UINT32 zoneId, nodeId;
-   WORD wIpProto, wIpPort;
-   InetAddress ipAddr;
-   BOOL bParentAlwaysValid = FALSE;
-
-   // Prepare response message
    msg.setCode(CMD_REQUEST_COMPLETED);
-   msg.setId(pRequest->getId());
+   msg.setId(request->getId());
 
-   iClass = pRequest->getFieldAsUInt16(VID_OBJECT_CLASS);
-	zoneId = pRequest->getFieldAsUInt32(VID_ZONE_ID);
+   int objectClass = request->getFieldAsUInt16(VID_OBJECT_CLASS);
+	UINT32 zoneId = request->getFieldAsUInt32(VID_ZONE_ID);
 
    // Find parent object
-   pParent = FindObjectById(pRequest->getFieldAsUInt32(VID_PARENT_ID));
-   if (iClass == OBJECT_NODE)
+   NetObj *parent = FindObjectById(request->getFieldAsUInt32(VID_PARENT_ID));
+
+   TCHAR nodePrimaryName[MAX_DNS_NAME];
+   InetAddress ipAddr;
+   bool parentAlwaysValid = false;
+
+   if (objectClass == OBJECT_NODE)
    {
-		if (pRequest->isFieldExist(VID_PRIMARY_NAME))
+		if (request->isFieldExist(VID_PRIMARY_NAME))
 		{
-			pRequest->getFieldAsString(VID_PRIMARY_NAME, nodePrimaryName, MAX_DNS_NAME);
+			request->getFieldAsString(VID_PRIMARY_NAME, nodePrimaryName, MAX_DNS_NAME);
          ipAddr = InetAddress::resolveHostName(nodePrimaryName);
 		}
 		else
 		{
-         ipAddr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
+         ipAddr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
          ipAddr.toString(nodePrimaryName);
 		}
-      if ((pParent == NULL) && ipAddr.isValidUnicast())
+      if ((parent == NULL) && ipAddr.isValidUnicast())
       {
-         pParent = FindSubnetForNode(zoneId, ipAddr);
-         bParentAlwaysValid = TRUE;
+         parent = FindSubnetForNode(zoneId, ipAddr);
+         parentAlwaysValid = true;
       }
    }
-   if ((pParent != NULL) || (iClass == OBJECT_NODE))
+
+   if ((parent != NULL) || (objectClass == OBJECT_NODE))
    {
       // User should have create access to parent object
-      if ((pParent != NULL) ?
-            pParent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE) :
+      if ((parent != NULL) ?
+            parent->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE) :
             g_pEntireNet->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CREATE))
       {
          // Parent object should be of valid type
-         if (bParentAlwaysValid || IsValidParentClass(iClass, (pParent != NULL) ? pParent->getObjectClass() : -1))
+         if (parentAlwaysValid || IsValidParentClass(objectClass, (parent != NULL) ? parent->getObjectClass() : -1))
          {
 				// Check zone
 				bool zoneIsValid;
-				if (IsZoningEnabled() && (zoneId != 0) && (iClass != OBJECT_ZONE))
+				if (IsZoningEnabled() && (zoneId != 0) && (objectClass != OBJECT_ZONE))
 				{
 					zoneIsValid = (g_idxZoneByGUID.get(zoneId) != NULL);
 				}
@@ -4984,10 +4980,13 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 				{
 					zoneIsValid = true;
 				}
+
 				if (zoneIsValid)
 				{
-					pRequest->getFieldAsString(VID_OBJECT_NAME, szObjectName, MAX_OBJECT_NAME);
-					if (IsValidObjectName(szObjectName, TRUE))
+				   TCHAR objectName[MAX_OBJECT_NAME];
+
+					request->getFieldAsString(VID_OBJECT_NAME, objectName, MAX_OBJECT_NAME);
+					if (IsValidObjectName(objectName, TRUE))
 					{
                   // Do additional validation by modules
                   UINT32 moduleRCC = RCC_SUCCESS;
@@ -4995,10 +4994,10 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 	               {
 		               if (g_pModuleList[i].pfValidateObjectCreation != NULL)
 		               {
-                        moduleRCC = g_pModuleList[i].pfValidateObjectCreation(iClass, szObjectName, ipAddr, zoneId, pRequest);
+                        moduleRCC = g_pModuleList[i].pfValidateObjectCreation(objectClass, objectName, ipAddr, zoneId, request);
 			               if (moduleRCC != RCC_SUCCESS)
                         {
-                           DbgPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%d)"), szObjectName, iClass, g_pModuleList[i].szName, moduleRCC);
+                           DbgPrintf(4, _T("Creation of object \"%s\" of class %d blocked by module %s (RCC=%d)"), objectName, objectClass, g_pModuleList[i].szName, moduleRCC);
                            break;
                         }
 		               }
@@ -5009,147 +5008,153 @@ void ClientSession::createObject(NXCPMessage *pRequest)
                      ObjectTransactionStart();
 
 						   // Create new object
-						   switch(iClass)
+                     NetObj *object = NULL;
+                     UINT32 nodeId;
+                     TCHAR deviceId[MAX_OBJECT_NAME];
+						   switch(objectClass)
 						   {
+                        case OBJECT_AGENTPOLICY_CONFIG:
+                           object = new AgentPolicyConfig(objectName);
+                           NetObjInsert(object, true, false);
+                           object->calculateCompoundStatus();  // Force status change to NORMAL
+                           break;
+                        case OBJECT_AGENTPOLICY_LOGPARSER:
+                           object = new AgentPolicyLogParser(objectName);
+                           NetObjInsert(object, true, false);
+                           object->calculateCompoundStatus();  // Force status change to NORMAL
+                           break;
+                        case OBJECT_BUSINESSSERVICE:
+                           object = new BusinessService(objectName);
+                           NetObjInsert(object, true, false);
+                           break;
+                        case OBJECT_CHASSIS:
+                           object = new Chassis(objectName, request->getFieldAsUInt32(VID_CONTROLLER_ID));
+                           NetObjInsert(object, true, false);
+                           break;
+                        case OBJECT_CLUSTER:
+                           object = new Cluster(objectName, zoneId);
+                           NetObjInsert(object, true, false);
+                           break;
+                        case OBJECT_CONDITION:
+                           object = new Condition(TRUE);
+                           object->setName(objectName);
+                           NetObjInsert(object, true, false);
+                           break;
+                        case OBJECT_CONTAINER:
+                           object = new Container(objectName, request->getFieldAsUInt32(VID_CATEGORY));
+                           NetObjInsert(object, true, false);
+                           object->calculateCompoundStatus();  // Force status change to NORMAL
+                           break;
+                        case OBJECT_DASHBOARD:
+                           object = new Dashboard(objectName);
+                           NetObjInsert(object, true, false);
+                           break;
+                        case OBJECT_INTERFACE:
+                           {
+                              InterfaceInfo ifInfo(request->getFieldAsUInt32(VID_IF_INDEX));
+                              nx_strncpy(ifInfo.name, objectName, MAX_DB_STRING);
+                              InetAddress addr = request->getFieldAsInetAddress(VID_IP_ADDRESS);
+                              if (addr.isValidUnicast())
+                                 ifInfo.ipAddrList.add(addr);
+                              ifInfo.type = request->getFieldAsUInt32(VID_IF_TYPE);
+                              request->getFieldAsBinary(VID_MAC_ADDR, ifInfo.macAddr, MAC_ADDR_LENGTH);
+                              ifInfo.slot = request->getFieldAsUInt32(VID_IF_SLOT);
+                              ifInfo.port = request->getFieldAsUInt32(VID_IF_PORT);
+                              ifInfo.isPhysicalPort = request->getFieldAsBoolean(VID_IS_PHYS_PORT);
+                              object = ((Node *)parent)->createNewInterface(&ifInfo, true);
+                           }
+                           break;
+                        case OBJECT_MOBILEDEVICE:
+                           request->getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
+                           object = new MobileDevice(objectName, deviceId);
+                           NetObjInsert(object, true, false);
+                           break;
+                        case OBJECT_NETWORKMAP:
+                           object = new NetworkMap((int)request->getFieldAsUInt16(VID_MAP_TYPE), request->getFieldAsUInt32(VID_SEED_OBJECT));
+                           object->setName(objectName);
+                           NetObjInsert(object, true, false);
+                           break;
+                        case OBJECT_NETWORKMAPGROUP:
+                           object = new NetworkMapGroup(objectName);
+                           NetObjInsert(object, true, false);
+                           object->calculateCompoundStatus();  // Force status change to NORMAL
+                           break;
+                        case OBJECT_NETWORKSERVICE:
+                           object = new NetworkService(request->getFieldAsInt16(VID_SERVICE_TYPE),
+                                                       request->getFieldAsUInt16(VID_IP_PROTO),
+                                                       request->getFieldAsUInt16(VID_IP_PORT),
+                                                       request->getFieldAsString(VID_SERVICE_REQUEST),
+                                                       request->getFieldAsString(VID_SERVICE_RESPONSE),
+                                                       (Node *)parent);
+                           object->setName(objectName);
+                           NetObjInsert(object, true, false);
+                           break;
 							   case OBJECT_NODE:
-                           ipAddr.setMaskBits(pRequest->getFieldAsInt32(VID_IP_NETMASK));
+                           ipAddr.setMaskBits(request->getFieldAsInt32(VID_IP_NETMASK));
 								   object = PollNewNode(ipAddr,
-															   pRequest->getFieldAsUInt32(VID_CREATION_FLAGS),
-															   pRequest->getFieldAsUInt16(VID_AGENT_PORT),
-															   pRequest->getFieldAsUInt16(VID_SNMP_PORT),
-															   szObjectName,
-															   pRequest->getFieldAsUInt32(VID_AGENT_PROXY),
-															   pRequest->getFieldAsUInt32(VID_SNMP_PROXY),
-															   (pParent != NULL) ? ((pParent->getObjectClass() == OBJECT_CLUSTER) ? (Cluster *)pParent : NULL) : NULL,
+															   request->getFieldAsUInt32(VID_CREATION_FLAGS),
+															   request->getFieldAsUInt16(VID_AGENT_PORT),
+															   request->getFieldAsUInt16(VID_SNMP_PORT),
+															   objectName,
+															   request->getFieldAsUInt32(VID_AGENT_PROXY),
+															   request->getFieldAsUInt32(VID_SNMP_PROXY),
+															   (parent != NULL) ? ((parent->getObjectClass() == OBJECT_CLUSTER) ? (Cluster *)parent : NULL) : NULL,
 															   zoneId, false, false);
 								   if (object != NULL)
 								   {
 									   ((Node *)object)->setPrimaryName(nodePrimaryName);
 								   }
 								   break;
-							   case OBJECT_MOBILEDEVICE:
-								   pRequest->getFieldAsString(VID_DEVICE_ID, deviceId, MAX_OBJECT_NAME);
-								   object = new MobileDevice(szObjectName, deviceId);
-								   NetObjInsert(object, true, false);
-								   break;
-							   case OBJECT_CONTAINER:
-								   object = new Container(szObjectName, pRequest->getFieldAsUInt32(VID_CATEGORY));
-								   NetObjInsert(object, true, false);
-								   object->calculateCompoundStatus();	// Force status change to NORMAL
-								   break;
+                        case OBJECT_NODELINK:
+                           nodeId = request->getFieldAsUInt32(VID_NODE_ID);
+                           if (nodeId > 0)
+                           {
+                              object = new NodeLink(objectName, nodeId);
+                              NetObjInsert(object, true, false);
+                           }
+                           else
+                           {
+                              object = NULL;
+                           }
+                           break;
+                        case OBJECT_POLICYGROUP:
+                           object = new PolicyGroup(objectName);
+                           NetObjInsert(object, true, false);
+                           object->calculateCompoundStatus();  // Force status change to NORMAL
+                           break;
 							   case OBJECT_RACK:
-								   object = new Rack(szObjectName, (int)pRequest->getFieldAsUInt16(VID_HEIGHT));
+								   object = new Rack(objectName, (int)request->getFieldAsUInt16(VID_HEIGHT));
 								   NetObjInsert(object, true, false);
 								   break;
+                        case OBJECT_SLMCHECK:
+                           object = new SlmCheck(objectName, request->getFieldAsBoolean(VID_IS_TEMPLATE));
+                           NetObjInsert(object, true, false);
+                           break;
+                        case OBJECT_TEMPLATE:
+                           object = new Template(objectName);
+                           NetObjInsert(object, true, false);
+                           object->calculateCompoundStatus();  // Force status change to NORMAL
+                           break;
 							   case OBJECT_TEMPLATEGROUP:
-								   object = new TemplateGroup(szObjectName);
+								   object = new TemplateGroup(objectName);
 								   NetObjInsert(object, true, false);
 								   object->calculateCompoundStatus();	// Force status change to NORMAL
-								   break;
-							   case OBJECT_TEMPLATE:
-								   object = new Template(szObjectName);
-								   NetObjInsert(object, true, false);
-								   object->calculateCompoundStatus();	// Force status change to NORMAL
-								   break;
-							   case OBJECT_POLICYGROUP:
-								   object = new PolicyGroup(szObjectName);
-								   NetObjInsert(object, true, false);
-								   object->calculateCompoundStatus();	// Force status change to NORMAL
-								   break;
-							   case OBJECT_AGENTPOLICY_CONFIG:
-								   object = new AgentPolicyConfig(szObjectName);
-								   NetObjInsert(object, true, false);
-								   object->calculateCompoundStatus();	// Force status change to NORMAL
-								   break;
-                        case OBJECT_AGENTPOLICY_LOGPARSER:
-								   object = new AgentPolicyLogParser(szObjectName);
-								   NetObjInsert(object, true, false);
-								   object->calculateCompoundStatus();	// Force status change to NORMAL
-								   break;
-							   case OBJECT_CLUSTER:
-								   object = new Cluster(szObjectName, zoneId);
-								   NetObjInsert(object, true, false);
-								   break;
-							   case OBJECT_NETWORKSERVICE:
-								   iServiceType = (int)pRequest->getFieldAsUInt16(VID_SERVICE_TYPE);
-								   wIpProto = pRequest->getFieldAsUInt16(VID_IP_PROTO);
-								   wIpPort = pRequest->getFieldAsUInt16(VID_IP_PORT);
-								   pszRequest = pRequest->getFieldAsString(VID_SERVICE_REQUEST);
-								   pszResponse = pRequest->getFieldAsString(VID_SERVICE_RESPONSE);
-								   object = new NetworkService(iServiceType, wIpProto, wIpPort,
-																	     pszRequest, pszResponse, (Node *)pParent);
-								   object->setName(szObjectName);
-								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_VPNCONNECTOR:
 								   object = new VPNConnector(TRUE);
-								   object->setName(szObjectName);
-								   NetObjInsert(object, true, false);
-								   break;
-							   case OBJECT_CONDITION:
-								   object = new Condition(TRUE);
-								   object->setName(szObjectName);
-								   NetObjInsert(object, true, false);
-								   break;
-							   case OBJECT_NETWORKMAPGROUP:
-								   object = new NetworkMapGroup(szObjectName);
-								   NetObjInsert(object, true, false);
-								   object->calculateCompoundStatus();	// Force status change to NORMAL
-								   break;
-							   case OBJECT_NETWORKMAP:
-								   object = new NetworkMap((int)pRequest->getFieldAsUInt16(VID_MAP_TYPE), pRequest->getFieldAsUInt32(VID_SEED_OBJECT));
-								   object->setName(szObjectName);
-								   NetObjInsert(object, true, false);
-								   break;
-							   case OBJECT_DASHBOARD:
-								   object = new Dashboard(szObjectName);
+								   object->setName(objectName);
 								   NetObjInsert(object, true, false);
 								   break;
 							   case OBJECT_ZONE:
 								   if ((zoneId > 0) && (zoneId != ALL_ZONES) && (g_idxZoneByGUID.get(zoneId) == NULL))
 								   {
-									   object = new Zone(zoneId, szObjectName);
+									   object = new Zone(zoneId, objectName);
 									   NetObjInsert(object, true, false);
 								   }
 								   else
 								   {
 									   object = NULL;
 								   }
-								   break;
-							   case OBJECT_BUSINESSSERVICE:
-								   object = new BusinessService(szObjectName);
-								   NetObjInsert(object, true, false);
-								   break;
-							   case OBJECT_NODELINK:
-								   nodeId = pRequest->getFieldAsUInt32(VID_NODE_ID);
-								   if (nodeId > 0)
-								   {
-									   object = new NodeLink(szObjectName, nodeId);
-									   NetObjInsert(object, true, false);
-								   }
-								   else
-								   {
-									   object = NULL;
-								   }
-								   break;
-							   case OBJECT_SLMCHECK:
-								   object = new SlmCheck(szObjectName, pRequest->getFieldAsBoolean(VID_IS_TEMPLATE));
-								   NetObjInsert(object, true, false);
-								   break;
-							   case OBJECT_INTERFACE:
-                           {
-                              InterfaceInfo ifInfo(pRequest->getFieldAsUInt32(VID_IF_INDEX));
-                              nx_strncpy(ifInfo.name, szObjectName, MAX_DB_STRING);
-                              InetAddress addr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
-                              if (addr.isValidUnicast())
-                                 ifInfo.ipAddrList.add(addr);
-                              ifInfo.type = pRequest->getFieldAsUInt32(VID_IF_TYPE);
-								      pRequest->getFieldAsBinary(VID_MAC_ADDR, ifInfo.macAddr, MAC_ADDR_LENGTH);
-                              ifInfo.slot = pRequest->getFieldAsUInt32(VID_IF_SLOT);
-                              ifInfo.port = pRequest->getFieldAsUInt32(VID_IF_PORT);
-                              ifInfo.isPhysicalPort = pRequest->getFieldAsBoolean(VID_IS_PHYS_PORT);
-								      object = ((Node *)pParent)->createNewInterface(&ifInfo, true);
-                           }
 								   break;
 							   default:
 								   // Try to create unknown classes by modules
@@ -5157,7 +5162,7 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 								   {
 									   if (g_pModuleList[i].pfCreateObject != NULL)
 									   {
-										   object = g_pModuleList[i].pfCreateObject(iClass, szObjectName, pParent, pRequest);
+										   object = g_pModuleList[i].pfCreateObject(objectClass, objectName, parent, request);
 										   if (object != NULL)
 											   break;
 									   }
@@ -5169,15 +5174,15 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 						   if (object != NULL)
 						   {
 							   WriteAuditLog(AUDIT_OBJECTS, TRUE, m_dwUserId, m_workstation, m_id, object->getId(), _T("Object %s created"), object->getName());
-							   if ((pParent != NULL) &&          // parent can be NULL for nodes
-							       (iClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
+							   if ((parent != NULL) &&          // parent can be NULL for nodes
+							       (objectClass != OBJECT_INTERFACE)) // interface already linked by Node::createNewInterface
 							   {
-								   pParent->addChild(object);
-								   object->addParent(pParent);
-								   pParent->calculateCompoundStatus();
-								   if (pParent->getObjectClass() == OBJECT_CLUSTER)
+								   parent->addChild(object);
+								   object->addParent(parent);
+								   parent->calculateCompoundStatus();
+								   if (parent->getObjectClass() == OBJECT_CLUSTER)
 								   {
-									   ((Cluster *)pParent)->applyToTarget((DataCollectionTarget *)object);
+									   ((Cluster *)parent)->applyToTarget((DataCollectionTarget *)object);
 								   }
 								   if (object->getObjectClass() == OBJECT_NODELINK)
 								   {
@@ -5185,22 +5190,22 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 								   }
 								   if (object->getObjectClass() == OBJECT_NETWORKSERVICE)
 								   {
-									   if (pRequest->getFieldAsUInt16(VID_CREATE_STATUS_DCI))
+									   if (request->getFieldAsUInt16(VID_CREATE_STATUS_DCI))
 									   {
 										   TCHAR dciName[MAX_DB_STRING], dciDescription[MAX_DB_STRING];
 
 										   _sntprintf(dciName, MAX_DB_STRING, _T("ChildStatus(%d)"), object->getId());
 										   _sntprintf(dciDescription, MAX_DB_STRING, _T("Status of network service %s"), object->getName());
-										   ((Node *)pParent)->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT,
+										   ((Node *)parent)->addDCObject(new DCItem(CreateUniqueId(IDG_ITEM), dciName, DS_INTERNAL, DCI_DT_INT,
 											   ConfigReadInt(_T("DefaultDCIPollingInterval"), 60),
-											   ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), (Node *)pParent, dciDescription));
+											   ConfigReadInt(_T("DefaultDCIRetentionTime"), 30), (Node *)parent, dciDescription));
 									   }
 								   }
 							   }
 
-							   pszComments = pRequest->getFieldAsString(VID_COMMENTS);
-							   if (pszComments != NULL)
-								   object->setComments(pszComments);
+							   TCHAR *comments = request->getFieldAsString(VID_COMMENTS);
+							   if (comments != NULL)
+								   object->setComments(comments);
 
 							   object->unhide();
 							   msg.setField(VID_RCC, RCC_SUCCESS);
@@ -5212,13 +5217,13 @@ void ClientSession::createObject(NXCPMessage *pRequest)
 							   // PollNewNode will return NULL only if IP already
 							   // in use. some new() can fail there too, but server will
 							   // crash in that case
-							   if (iClass == OBJECT_NODE)
+							   if (objectClass == OBJECT_NODE)
 							   {
                   		   msg.setField(VID_RCC, RCC_ALREADY_EXIST);
                   		   //Add to description IP of new created node and name of node with the same IP
                            SetNodesConflictString(&msg, zoneId, ipAddr);
 							   }
-							   else if (iClass == OBJECT_ZONE)
+							   else if (objectClass == OBJECT_ZONE)
 							   {
                   		   msg.setField(VID_RCC, RCC_ZONE_ID_ALREADY_IN_USE);
 							   }

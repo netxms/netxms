@@ -96,6 +96,7 @@ public abstract class AbstractObject
 	public static final int OBJECT_RACK = 32;
 	public static final int OBJECT_ACCESSPOINT = 33;
 	public static final int OBJECT_AGENTPOLICY_LOGPARSER = 34;
+   public static final int OBJECT_CHASSIS = 35;
 	public static final int OBJECT_CUSTOM = 10000;
 	
 	// Status calculation methods

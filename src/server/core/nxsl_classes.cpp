@@ -424,6 +424,30 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
       value = new NXSL_Value(node->getPlatformName());
    }
+   else if (!_tcscmp(attr, _T("rack")))
+   {
+      Rack *rack = (Rack *)FindObjectById(node->getRackId(), OBJECT_RACK);
+      if (rack != NULL)
+      {
+         value = rack->createNXSLObject();
+      }
+      else
+      {
+         value = new NXSL_Value;
+      }
+   }
+   else if (!_tcscmp(attr, _T("rackId")))
+   {
+      value = new NXSL_Value(node->getRackId());
+   }
+   else if (!_tcscmp(attr, _T("rackHeight")))
+   {
+      value = new NXSL_Value(node->getRackHeight());
+   }
+   else if (!_tcscmp(attr, _T("rackPosition")))
+   {
+      value = new NXSL_Value(node->getRackPosition());
+   }
    else if (!_tcscmp(attr, _T("runtimeFlags")))
    {
       value = new NXSL_Value(node->getRuntimeFlags());
@@ -790,6 +814,67 @@ NXSL_Value *NXSL_MobileDeviceClass::getAttr(NXSL_Object *object, const TCHAR *at
 }
 
 /**
+ * NXSL class "Chassis" constructor
+ */
+NXSL_ChassisClass::NXSL_ChassisClass() : NXSL_NetObjClass()
+{
+   _tcscpy(m_name, _T("Chassis"));
+}
+
+/**
+ * NXSL class "Cluster" attributes
+ */
+NXSL_Value *NXSL_ChassisClass::getAttr(NXSL_Object *object, const TCHAR *attr)
+{
+   NXSL_Value *value = NXSL_NetObjClass::getAttr(object, attr);
+   if (value != NULL)
+      return value;
+
+   Chassis *chassis = (Chassis *)object->getData();
+   if (!_tcscmp(attr, _T("controller")))
+   {
+      Node *node = (Node *)FindObjectById(chassis->getControllerId(), OBJECT_NODE);
+      if (node != NULL)
+      {
+         value = node->createNXSLObject();
+      }
+      else
+      {
+         value = new NXSL_Value;
+      }
+   }
+   else if (!_tcscmp(attr, _T("controllerId")))
+   {
+      value = new NXSL_Value(chassis->getControllerId());
+   }
+   else if (!_tcscmp(attr, _T("rack")))
+   {
+      Rack *rack = (Rack *)FindObjectById(chassis->getRackId(), OBJECT_RACK);
+      if (rack != NULL)
+      {
+         value = rack->createNXSLObject();
+      }
+      else
+      {
+         value = new NXSL_Value;
+      }
+   }
+   else if (!_tcscmp(attr, _T("rackId")))
+   {
+      value = new NXSL_Value(chassis->getRackId());
+   }
+   else if (!_tcscmp(attr, _T("rackHeight")))
+   {
+      value = new NXSL_Value(chassis->getRackHeight());
+   }
+   else if (!_tcscmp(attr, _T("rackPosition")))
+   {
+      value = new NXSL_Value(chassis->getRackPosition());
+   }
+   return value;
+}
+
+/**
  * NXSL class "Cluster" constructor
  */
 NXSL_ClusterClass::NXSL_ClusterClass() : NXSL_NetObjClass()
@@ -814,7 +899,7 @@ NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const TCHAR *attr)
          Zone *zone = FindZoneByGUID(cluster->getZoneId());
          if (zone != NULL)
          {
-            value = new NXSL_Value(new NXSL_Object(&g_nxslZoneClass, zone));
+            value = zone->createNXSLObject();
          }
          else
          {
@@ -1290,10 +1375,11 @@ void NXSL_SNMPVarBindClass::onObjectDelete(NXSL_Object *object)
  * Class objects
  */
 NXSL_AlarmClass g_nxslAlarmClass;
+NXSL_ChassisClass g_nxslChassisClass;
+NXSL_ClusterClass g_nxslClusterClass;
 NXSL_DciClass g_nxslDciClass;
 NXSL_EventClass g_nxslEventClass;
 NXSL_InterfaceClass g_nxslInterfaceClass;
-NXSL_ClusterClass g_nxslClusterClass;
 NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 NXSL_NetObjClass g_nxslNetObjClass;
 NXSL_NodeClass g_nxslNodeClass;

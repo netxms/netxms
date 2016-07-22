@@ -639,6 +639,8 @@ public:
    // Debug methods
    const TCHAR *dbgGetParentList(TCHAR *szBuffer);
    const TCHAR *dbgGetChildList(TCHAR *szBuffer);
+
+   static const TCHAR *getObjectClassName(int objectClass);
 };
 
 /**
@@ -1182,6 +1184,46 @@ public:
    UINT32 collectAggregatedData(DCTable *table, Table **result);
 };
 
+/**
+ * Chassis (represents physical chassis)
+ */
+class NXCORE_EXPORTABLE Chassis : public DataCollectionTarget
+{
+protected:
+   UINT32 m_controllerId;
+   INT16 m_rackHeight;
+   INT16 m_rackPosition;
+   UINT32 m_rackId;
+   uuid m_rackImage;
+
+   virtual void fillMessageInternal(NXCPMessage *msg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
+
+   virtual void onDataCollectionChange();
+
+   void updateRackBinding();
+
+public:
+   Chassis();
+   Chassis(const TCHAR *name, UINT32 controllerId);
+   virtual ~Chassis();
+
+   virtual int getObjectClass() const { return OBJECT_CHASSIS; }
+   virtual BOOL saveToDatabase(DB_HANDLE hdb);
+   virtual bool deleteFromDatabase(DB_HANDLE hdb);
+   virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual bool showThresholdSummary();
+
+   virtual void unbindFromTemplate(UINT32 templateId, bool removeDCI);
+
+   virtual NXSL_Value *createNXSLObject();
+
+   UINT32 getControllerId() const { return m_controllerId; }
+   UINT32 getRackId() const { return m_rackId; }
+   INT16 getRackHeight() const { return m_rackHeight; }
+   INT16 getRackPosition() const { return m_rackPosition; }
+};
+
 class Subnet;
 struct ProxyInfo;
 
@@ -1290,6 +1332,7 @@ protected:
 	INT16 m_rackPosition;
 	UINT32 m_rackId;
 	uuid m_rackImage;
+	UINT32 m_chassisId;
 	INT64 m_syslogMessageCount;
 	INT64 m_snmpTrapCount;
 
@@ -1340,7 +1383,7 @@ protected:
 	void updateContainerMembership();
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
-   void updateRackBinding();
+   void updatePhysicalContainerBinding(int containerClass, UINT32 containerId);
 
    bool connectToAgent(UINT32 *error = NULL, UINT32 *socketError = NULL, bool *newConnection = NULL, bool forceConnect = false);
    void setLastAgentCommTime() { time_t now = time(NULL); if (m_lastAgentCommTime < now - 60) { m_lastAgentCommTime = now; setModified(); } }
@@ -1394,23 +1437,26 @@ public:
 	bool isPerVlanFdbSupported() { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
 	bool isWirelessController() { return m_dwFlags & NF_IS_WIFI_CONTROLLER ? true : false; }
 
-	LONG getSNMPVersion() { return m_snmpVersion; }
-	const TCHAR *getSNMPObjectId() { return m_szObjectId; }
-	const TCHAR *getAgentVersion() { return m_szAgentVersion; }
-	const TCHAR *getPlatformName() { return m_szPlatformName; }
-   const TCHAR *getObjectId() { return m_szObjectId; }
-	const TCHAR *getSysName() { return CHECK_NULL_EX(m_sysName); }
-	const TCHAR *getSysDescription() { return CHECK_NULL_EX(m_sysDescription); }
-   const TCHAR *getSysContact() { return CHECK_NULL_EX(m_sysContact); }
-   const TCHAR *getSysLocation() { return CHECK_NULL_EX(m_sysLocation); }
-   time_t getBootTime() { return m_bootTime; }
-	const TCHAR *getLLDPNodeId() { return m_lldpNodeId; }
-   const BYTE *getBridgeId() { return m_baseBridgeAddress; }
-	const TCHAR *getDriverName() { return (m_driver != NULL) ? m_driver->getName() : _T("GENERIC"); }
-	UINT16 getAgentPort() { return m_agentPort; }
-	INT16 getAgentAuthMethod() { return m_agentAuthMethod; }
-   INT16 getAgentCacheMode() { return (m_dwDynamicFlags & NDF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }
-	const TCHAR *getSharedSecret() { return m_szSharedSecret; }
+	LONG getSNMPVersion() const { return m_snmpVersion; }
+	const TCHAR *getSNMPObjectId() const { return m_szObjectId; }
+	const TCHAR *getAgentVersion() const { return m_szAgentVersion; }
+	const TCHAR *getPlatformName() const { return m_szPlatformName; }
+   const TCHAR *getObjectId() const { return m_szObjectId; }
+	const TCHAR *getSysName() const { return CHECK_NULL_EX(m_sysName); }
+	const TCHAR *getSysDescription() const { return CHECK_NULL_EX(m_sysDescription); }
+   const TCHAR *getSysContact() const { return CHECK_NULL_EX(m_sysContact); }
+   const TCHAR *getSysLocation() const { return CHECK_NULL_EX(m_sysLocation); }
+   time_t getBootTime() const { return m_bootTime; }
+	const TCHAR *getLLDPNodeId() const { return m_lldpNodeId; }
+   const BYTE *getBridgeId() const { return m_baseBridgeAddress; }
+	const TCHAR *getDriverName() const { return (m_driver != NULL) ? m_driver->getName() : _T("GENERIC"); }
+	UINT16 getAgentPort() const { return m_agentPort; }
+	INT16 getAgentAuthMethod() const { return m_agentAuthMethod; }
+   INT16 getAgentCacheMode() const { return (m_dwDynamicFlags & NDF_CACHE_MODE_NOT_SUPPORTED) ? AGENT_CACHE_OFF : ((m_agentCacheMode == AGENT_CACHE_DEFAULT) ? g_defaultAgentCacheMode : m_agentCacheMode); }
+	const TCHAR *getSharedSecret() const { return m_szSharedSecret; }
+	UINT32 getRackId() const { return m_rackId; }
+   INT16 getRackHeight() const { return m_rackHeight; }
+   INT16 getRackPosition() const { return m_rackPosition; }
 	bool hasFileUpdateConnection() { lockProperties(); bool result = (m_fileUpdateConn != NULL); unlockProperties(); return result; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
@@ -2494,7 +2540,7 @@ void DumpObjects(CONSOLE_CTX pCtx, const TCHAR *filter);
 
 void DeleteUserFromAllObjects(UINT32 dwUserId);
 
-bool IsValidParentClass(int iChildClass, int iParentClass);
+bool IsValidParentClass(int childClass, int parentClass);
 bool IsAgentPolicyObject(NetObj *object);
 bool IsEventSource(int objectClass);
 

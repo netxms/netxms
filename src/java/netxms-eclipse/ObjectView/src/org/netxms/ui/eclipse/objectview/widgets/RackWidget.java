@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,7 +44,9 @@ import org.netxms.base.NXCommon;
 import org.netxms.client.datacollection.DciValue;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.Rack;
+import org.netxms.client.objects.RackElement;
 import org.netxms.ui.eclipse.console.resources.SharedColors;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.imagelibrary.shared.ImageProvider;
@@ -200,8 +202,8 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       
       // Draw units
       objects.clear();
-      List<AbstractNode> units = rack.getUnits();
-      for(AbstractNode n : units)
+      List<RackElement> units = rack.getUnits();
+      for(RackElement n : units)
       {
          if ((n.getRackPosition() < 1) || (n.getRackPosition() > rack.getHeight()) || 
              (rack.isTopBottomNumbering() && (n.getRackPosition() + n.getRackHeight() > rack.getHeight() + 1)) ||
@@ -307,14 +309,17 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       int height = OBJECT_TOOLTIP_Y_MARGIN * 2 + titleSize.y + 2 + OBJECT_TOOLTIP_SPACING;
       
       List<String> texts = new ArrayList<String>();
-      texts.add(((AbstractNode)tooltipObject).getPrimaryIP().getHostAddress());
-      texts.add(((AbstractNode)tooltipObject).getPlatformName());
-      String sd = ((AbstractNode)tooltipObject).getSystemDescription();
-      if (sd.length() > 127)
-         sd = sd.substring(0, 127) + "...";
-      texts.add(sd);
-      texts.add(((AbstractNode)tooltipObject).getSnmpSysName());
-      texts.add(((AbstractNode)tooltipObject).getSnmpSysContact());
+      if (tooltipObject instanceof AbstractNode)
+      {
+         texts.add(((AbstractNode)tooltipObject).getPrimaryIP().getHostAddress());
+         texts.add(((AbstractNode)tooltipObject).getPlatformName());
+         String sd = ((AbstractNode)tooltipObject).getSystemDescription();
+         if (sd.length() > 127)
+            sd = sd.substring(0, 127) + "...";
+         texts.add(sd);
+         texts.add(((AbstractNode)tooltipObject).getSnmpSysName());
+         texts.add(((AbstractNode)tooltipObject).getSnmpSysContact());
+      }
       
       for(String s : texts)
       {
@@ -327,7 +332,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          height += pt.y;
       }
       
-      List<DciValue> values = ((AbstractNode)tooltipObject).getTooltipDciData();
+      List<DciValue> values = ((DataCollectionTarget)tooltipObject).getTooltipDciData();
       if (!values.isEmpty())
       {
          for(DciValue v : values)
@@ -470,10 +475,10 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    public void imageUpdated(UUID guid)
    {
       boolean found = false;
-      List<AbstractNode> units = rack.getUnits();
-      for(AbstractNode n : units)
+      List<RackElement> units = rack.getUnits();
+      for(RackElement e : units)
       {
-         if (guid.equals(n.getRackImage()))
+         if (guid.equals(e.getRackImage()))
          {
             found = true;
             break;
@@ -502,7 +507,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       for(ObjectImage i : objects)
          if (i.contains(p))
          {
-            return i.getObject();
+            return (AbstractObject)i.getObject();
          }
       return null;
    }
@@ -629,10 +634,10 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
     */
    private class ObjectImage
    {
-      private AbstractObject object;
+      private RackElement object;
       private Rectangle rect;
 
-      public ObjectImage(AbstractObject object, Rectangle rect)
+      public ObjectImage(RackElement object, Rectangle rect)
       {
          this.object = object;
          this.rect = new Rectangle(rect.x, rect.y, rect.width, rect.height);
@@ -643,7 +648,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          return rect.contains(p);
       }
       
-      public AbstractObject getObject()
+      public RackElement getObject()
       {
          return object;
       }

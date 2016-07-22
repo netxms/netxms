@@ -68,6 +68,17 @@ public:
 };
 
 /**
+ * NXSL "Chassis" class
+ */
+class NXSL_ChassisClass : public NXSL_NetObjClass
+{
+public:
+   NXSL_ChassisClass();
+
+   virtual NXSL_Value *getAttr(NXSL_Object *object, const TCHAR *attr);
+};
+
+/**
  * NXSL "Cluster" class
  */
 class NXSL_ClusterClass : public NXSL_NetObjClass
@@ -203,10 +214,11 @@ bool ParseValueList(TCHAR **start, ObjectArray<NXSL_Value> &args);
 extern NXSL_Library *g_pScriptLibrary;
 
 extern NXSL_AlarmClass g_nxslAlarmClass;
+extern NXSL_ChassisClass g_nxslChassisClass;
+extern NXSL_ClusterClass g_nxslClusterClass;
 extern NXSL_DciClass g_nxslDciClass;
 extern NXSL_EventClass g_nxslEventClass;
 extern NXSL_InterfaceClass g_nxslInterfaceClass;
-extern NXSL_ClusterClass g_nxslClusterClass;
 extern NXSL_MobileDeviceClass g_nxslMobileDeviceClass;
 extern NXSL_NetObjClass g_nxslNetObjClass;
 extern NXSL_NodeClass g_nxslNodeClass;

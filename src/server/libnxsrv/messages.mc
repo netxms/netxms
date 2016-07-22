@@ -1022,4 +1022,10 @@ Language=English
 Failed to execute threshold script for node "%1" DCI %2 threshold %3: %4
 .
 
+MessageId=
+SymbolicName=MSG_CHASSIS_LOAD_FAILED
+Language=English
+Failed to load chassis object with id %1 from database
+.
+
 ;#endif

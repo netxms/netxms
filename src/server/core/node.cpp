@@ -112,6 +112,7 @@ Node::Node() : DataCollectionTarget()
 	m_rackId = 0;
 	m_rackPosition = 0;
 	m_rackHeight = 1;
+	m_chassisId = 0;
 	m_syslogMessageCount = 0;
 	m_snmpTrapCount = 0;
 }
@@ -203,6 +204,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_rackId = 0;
    m_rackPosition = 0;
    m_rackHeight = 1;
+   m_chassisId = 0;
    m_syslogMessageCount = 0;
    m_snmpTrapCount = 0;
 }
@@ -422,7 +424,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
          }
       }
 
-      updateRackBinding();
+      updatePhysicalContainerBinding(OBJECT_RACK, m_rackId);
+      updatePhysicalContainerBinding(OBJECT_CHASSIS, m_chassisId);
    }
    else
    {
@@ -4625,7 +4628,7 @@ UINT32 Node::getTableForClient(const TCHAR *name, Table **table)
 }
 
 /**
- * Create CSCP message with object's data
+ * Create NXCP message with object's data
  */
 void Node::fillMessageInternal(NXCPMessage *pMsg)
 {
@@ -4909,7 +4912,7 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
    if (pRequest->isFieldExist(VID_RACK_ID))
    {
       m_rackId = pRequest->getFieldAsUInt32(VID_RACK_ID);
-      updateRackBinding();
+      updatePhysicalContainerBinding(OBJECT_RACK, m_rackId);
    }
    if (pRequest->isFieldExist(VID_RACK_IMAGE))
       m_rackImage = pRequest->getFieldAsGUID(VID_RACK_IMAGE);
@@ -4917,6 +4920,13 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       m_rackPosition = pRequest->getFieldAsInt16(VID_RACK_POSITION);
    if (pRequest->isFieldExist(VID_RACK_HEIGHT))
       m_rackHeight = pRequest->getFieldAsInt16(VID_RACK_HEIGHT);
+
+   // Chassis
+   if (pRequest->isFieldExist(VID_CHASSIS_ID))
+   {
+      m_rackId = pRequest->getFieldAsUInt32(VID_CHASSIS_ID);
+      updatePhysicalContainerBinding(OBJECT_CHASSIS, m_chassisId);
+   }
 
    return DataCollectionTarget::modifyFromMessageInternal(pRequest);
 }
@@ -7636,22 +7646,22 @@ void Node::forceSyncDataCollectionConfig(Node *node)
 }
 
 /**
- * Update rack binding
+ * Update physical container (rack or chassis) binding
  */
-void Node::updateRackBinding()
+void Node::updatePhysicalContainerBinding(int containerClass, UINT32 containerId)
 {
-   bool rackFound = false;
+   bool containerFound = false;
    ObjectArray<NetObj> deleteList(16, 16, false);
 
    lockParentList(true);
    for(int i = 0; i < m_parentList->size(); i++)
    {
       NetObj *object = m_parentList->get(i);
-      if (object->getObjectClass() != OBJECT_RACK)
+      if (object->getObjectClass() != containerClass)
          continue;
-      if (object->getId() == m_rackId)
+      if (object->getId() == containerId)
       {
-         rackFound = true;
+         containerFound = true;
          continue;
       }
       object->incRefCount();
@@ -7661,25 +7671,26 @@ void Node::updateRackBinding()
 
    for(int n = 0; n < deleteList.size(); n++)
    {
-      NetObj *rack = deleteList.get(n);
-      DbgPrintf(5, _T("Node::updateRackBinding(%s [%d]): delete incorrect rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
-      rack->deleteChild(this);
-      deleteParent(rack);
-      rack->decRefCount();
+      NetObj *container = deleteList.get(n);
+      nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): delete incorrect binding %s [%d]"), m_name, m_id, container->getName(), container->getId());
+      container->deleteChild(this);
+      deleteParent(container);
+      container->decRefCount();
    }
 
-   if (!rackFound && (m_rackId != 0))
+   if (!containerFound && (containerId != 0))
    {
-      Rack *rack = (Rack *)FindObjectById(m_rackId, OBJECT_RACK);
-      if (rack != NULL)
+      NetObj *container = FindObjectById(containerId, containerClass);
+      if (container != NULL)
       {
-         DbgPrintf(5, _T("Node::updateRackBinding(%s [%d]): add rack binding %s [%d]"), m_name, m_id, rack->getName(), rack->getId());
-         rack->addChild(this);
-         addParent(rack);
+         nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): add binding %s [%d]"), m_name, m_id, container->getName(), container->getId());
+         container->addChild(this);
+         addParent(container);
       }
       else
       {
-         DbgPrintf(5, _T("Node::updateRackBinding(%s [%d]): rack object [%d] not found"), m_name, m_id, m_rackId);
+         nxlog_debug(5, _T("Node::updatePhysicalContainerBinding(%s [%d]): object [%d] of class %d (%s) not found"),
+                     m_name, m_id, containerId, containerClass, NetObj::getObjectClassName(containerClass));
       }
    }
 }

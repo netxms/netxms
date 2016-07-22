@@ -1126,6 +1126,8 @@ typedef struct
 #define VID_AUTH_TOKEN              ((UINT32)540)
 #define VID_REPOSITORY_ID           ((UINT32)541)
 #define VID_TOOLTIP_DCI_COUNT       ((UINT32)542)
+#define VID_CONTROLLER_ID           ((UINT32)543)
+#define VID_CHASSIS_ID              ((UINT32)544)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -283,7 +283,7 @@
               name="%page.name.Rack">
            <enabledWhen>
               <instanceof
-                    value="org.netxms.client.objects.AbstractNode">
+                    value="org.netxms.client.objects.RackElement">
               </instanceof>
            </enabledWhen>
         </page>
@@ -356,12 +356,11 @@
                menubarPath="objectbinding">
          </action>
          <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.CreateCluster"
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateRack"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.createCluster_Container"
-               label="%action.label.CreateCluster"
-               menubarPath="CreateObjectSubmenu/additions"
-               state="false">
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createRack_Container"
+               label="%action.label.CreateRack"
+               menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateNode"
@@ -385,18 +384,27 @@
                menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.CreateRack"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.createRack_Container"
-               label="%action.label.CreateRack"
-               menubarPath="CreateObjectSubmenu/additions">
-         </action>
-         <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateCondition"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createCondition_Container"
                label="%action.label.CreateCond"
                menubarPath="CreateObjectSubmenu/additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateCluster"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createCluster_Container"
+               label="%action.label.CreateCluster"
+               menubarPath="CreateObjectSubmenu/additions"
+               state="false">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateChassis"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createChassis_Container"
+               label="%action.label.CreateChassis"
+               menubarPath="CreateObjectSubmenu/additions"
+               state="false">
          </action>
       </objectContribution>
 
@@ -418,10 +426,10 @@
                menubarPath="objectbinding">
          </action>
          <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.CreateCluster"
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateRack"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.createCluster_ServiceRoot"
-               label="%action.label.CreateCluster"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createRack_ServiceRoot"
+               label="%action.label.CreateRack"
                menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
@@ -446,17 +454,24 @@
                menubarPath="CreateObjectSubmenu/additions">
          </action>
          <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.CreateRack"
-               enablesFor="1"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.createRack_ServiceRoot"
-               label="%action.label.CreateRack"
-               menubarPath="CreateObjectSubmenu/additions">
-         </action>
-         <action
                class="org.netxms.ui.eclipse.objectmanager.actions.CreateCondition"
                enablesFor="1"
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createCondition_ServiceRoot"
                label="%action.label.CreateCond"
+               menubarPath="CreateObjectSubmenu/additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateCluster"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createCluster_ServiceRoot"
+               label="%action.label.CreateCluster"
+               menubarPath="CreateObjectSubmenu/additions">
+         </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.CreateChassis"
+               enablesFor="1"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.createChassis_ServiceRoot"
+               label="%action.label.CreateChassis"
                menubarPath="CreateObjectSubmenu/additions">
          </action>
       </objectContribution>
@@ -466,6 +481,13 @@
       <objectContribution
             id="org.netxms.ui.eclipse.objectmanager.actions.popup.object.Node"
             objectClass="org.netxms.client.objects.Node">
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
+               enablesFor="+"
+               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Node"
+               label="%action.label.BindTo"
+               menubarPath="objectbinding">
+         </action>
          <action
                class="org.netxms.ui.eclipse.objectmanager.actions.ChangeZone"
                enablesFor="1"
@@ -546,13 +568,6 @@
                id="org.netxms.ui.eclipse.objectmanager.popupActions.createInterface_Node"
                label="%action.label.CreateIface"
                menubarPath="CreateObjectSubmenu/additions">
-         </action>
-         <action
-               class="org.netxms.ui.eclipse.objectmanager.actions.BindObjectTo"
-               enablesFor="+"
-               id="org.netxms.ui.eclipse.objectmanager.popupActions.BindObjectTo_Node"
-               label="%action.label.BindTo"
-               menubarPath="objectbinding">
          </action>
       </objectContribution>
 
