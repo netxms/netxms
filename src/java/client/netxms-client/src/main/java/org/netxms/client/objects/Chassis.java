@@ -57,6 +57,15 @@ public class Chassis extends DataCollectionTarget implements RackElement
       return "Chassis";
    }
    
+   /* (non-Javadoc)
+    * @see org.netxms.client.objects.AbstractObject#isAlarmsVisible()
+    */
+   @Override
+   public boolean isAlarmsVisible()
+   {
+      return true;
+   }
+
    /**
     * @return the controllerId
     */
