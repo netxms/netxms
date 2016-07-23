@@ -22,6 +22,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.graphics.Transform;
 import org.eclipse.swt.widgets.Display;
 import org.swtchart.Chart;
 import org.swtchart.IAxis.Position;
@@ -980,6 +981,16 @@ public class AxisTickLabels implements PaintListener
 	 */
 	private void drawRotatedText(GC gc, String text, float x, float y, int angle)
 	{
+      // set transform to rotate
+      Transform transform = new Transform(gc.getDevice());
+      transform.translate(x, y);
+      transform.rotate(360 - angle);
+      gc.setTransform(transform);
+
+      gc.drawText(text, 0, 0);
+
+      transform.dispose();
+      gc.setTransform(null);
 	}
 
 	/**
