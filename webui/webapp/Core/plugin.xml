@@ -196,9 +196,14 @@
    <extension
          point="org.eclipse.ui.presentationFactories">
       <factory
-            class="org.netxms.ui.eclipse.console.ApplicationPresentationFactory"
-            id="org.netxms.ui.eclipse.console.ApplicationPresentationFactory"
-            name="NetXMS Console Presentation Factory">
+            class="org.netxms.ui.eclipse.console.themes.classic.ClassicPresentationFactory"
+            id="org.netxms.ui.eclipse.console.factory.classic"
+            name="Classic Presentation Factory">
+      </factory>
+      <factory
+            class="org.netxms.ui.eclipse.console.themes.material.MaterialPresentationFactory"
+            id="org.netxms.ui.eclipse.console.factory.material"
+            name="Material Presentation Factory">
       </factory>
    </extension>
    <extension
@@ -388,7 +393,18 @@
             themeId="org.netxms.webui.design.theme.classic"
             title="NetXMS Management Console">
          <presentationFactory
-               id="org.netxms.ui.eclipse.console.ApplicationPresentationFactory"
+               id="org.netxms.ui.eclipse.console.factory.classic"
+               viewActionsVisible="true">
+         </presentationFactory>
+      </branding>
+      <branding
+            favicon="icons/favicon.png"
+            id="org.netxms.webui.design.branding.material"
+            themeId="org.netxms.webui.design.theme.material"
+            title="NetXMS Management Console">
+         <presentationFactory
+               defaultLayoutId="org.netxms.ui.eclipse.console.layouts.modern"
+               id="org.netxms.ui.eclipse.console.factory.material"
                viewActionsVisible="true">
          </presentationFactory>
       </branding>
@@ -400,6 +416,11 @@
             id="org.netxms.webui.design.theme.classic"
             name="Classic Theme">
       </theme>
+      <theme
+            file="theme/material.css"
+            id="org.netxms.webui.design.theme.material"
+            name="Material Theme">
+      </theme>
    </extension>
    <extension
          point="org.eclipse.rap.ui.entrypoint">
@@ -408,6 +429,12 @@
             brandingId="org.netxms.webui.design.branding.classic"
             id="org.netxms.webui.entrypoint"
             path="/nxmc">
+      </entrypoint>
+      <entrypoint
+            applicationId="org.netxms.webui.core.nxmc"
+            brandingId="org.netxms.webui.design.branding.material"
+            id="org.netxms.webui.entrypoint"
+            path="/nxmc2">
       </entrypoint>
    </extension>
    <extension
@@ -449,5 +476,17 @@
       <initializer
             class="org.netxms.ui.eclipse.console.PreferenceInitializer">
       </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.layouts">
+      <layout
+            id="org.netxms.ui.eclipse.console.layouts.material"
+            name="Material Layout">
+         <layoutSet
+               class="org.netxms.ui.eclipse.console.themes.material.layout.Header"
+               id="org.netxms.ui.eclipse.console.themes.material.layout.Header"
+               name="Header">
+         </layoutSet>
+      </layout>
    </extension>
 </plugin>

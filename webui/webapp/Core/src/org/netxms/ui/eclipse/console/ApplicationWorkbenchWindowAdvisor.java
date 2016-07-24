@@ -26,6 +26,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CBanner;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
@@ -74,7 +75,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
       RegionalSettings.updateFromPreferences();
       
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-		configurer.setShowCoolBar(true);
 		configurer.setShowPerspectiveBar(true);
 		configurer.setShowStatusLine(false);
 		configurer.setTitle(Messages.get().ApplicationWorkbenchWindowAdvisor_AppTitle);
@@ -118,7 +118,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 			}
 		}
 		
-		shell.getMenuBar().setData(RWT.CUSTOM_VARIANT, "menuBar"); //$NON-NLS-1$
+		Menu menuBar = shell.getMenuBar();
+		if (menuBar != null)
+		   menuBar.setData(RWT.CUSTOM_VARIANT, "menuBar"); //$NON-NLS-1$
 	}
 
 	/* (non-Javadoc)
