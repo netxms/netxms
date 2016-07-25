@@ -209,7 +209,10 @@ static NETXMS_SUBAGENT_LIST s_lists[] =
 static NETXMS_SUBAGENT_TABLE m_tables[] =
 {
 	{ _T("VMGR.VM(*)"), H_GetVMTable, NULL, _T("NAME"), _T("Connection VM table") },
-	{ _T("VMGR.InterfaceList(*)"), H_GetIfaceTable, NULL, _T("NAME"), _T("Connection interface list") }
+	{ _T("VMGR.InterfaceList(*)"), H_GetIfaceTable, NULL, _T("NAME"), _T("Connection interface list") },
+	{ _T("VMGR.VMDisks(*)"), H_GetVMDiskTable, NULL, _T("DNAME"), _T("VM Disks") },
+	{ _T("VMGR.VMController(*)"), H_GetVMControllerTable, NULL, _T("TYPE"), _T("VM Controllers") },
+	{ _T("VMGR.VMInterface(*)"), H_GetVMInterfaceTable, NULL, _T("MAC"), _T("VM Interfaces") }
 };
 
 /**

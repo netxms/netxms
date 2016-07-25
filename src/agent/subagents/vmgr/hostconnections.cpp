@@ -275,10 +275,11 @@ const char *HostConnections::getDomainDefenitionAndLock(const TCHAR *name, virDo
    Cashe<char> *xmlChase = m_vmXMLs.get(name);
    if (xmlChase == NULL || xmlChase->shouldUpdate())
    {
-      if(vm == NULL)
+      bool getDomain = vm == NULL;
+      if(getDomain)
       {
          const StringObjectMap<virDomain> *vmMap = getDomainListAndLock();
-         virDomainPtr vm = vmMap->get(name);
+         vm = vmMap->get(name);
       }
       if(vm != NULL)
       {
@@ -295,6 +296,9 @@ const char *HostConnections::getDomainDefenitionAndLock(const TCHAR *name, virDo
       {
          m_vmXMLs.remove(name);
       }
+
+      if(getDomain)
+         unlockDomainList();
    }
 /*
    if(xmlChase != NULL)

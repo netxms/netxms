@@ -279,6 +279,9 @@ struct VMDataStr
    HostConnections *conn;
 };
 
+/**
+ * Callback that fills table with VM information
+ */
 EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *userData)
 {
    virDomainPtr vm = (virDomainPtr)obj;
@@ -360,7 +363,7 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
 /**
  * Get domain(VM) table
  */
-LONG H_GetVMTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *)
+LONG H_GetVMTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    TCHAR name[256];
 
@@ -398,12 +401,10 @@ LONG H_GetVMTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractComm
    return SYSINFO_RC_SUCCESS;
 }
 
-
-
 /**
- * Get domain(VM) table
+ * Get interface table
  */
-LONG H_GetIfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *)
+LONG H_GetIfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
 {
    TCHAR name[256];
    if (!AgentGetParameterArg(cmd, 1, name, 256))
@@ -423,5 +424,168 @@ LONG H_GetIfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
    }
 
    conn->unlockIfaceList();
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Get table of disks for VM
+ */
+LONG H_GetVMDiskTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   TCHAR name[256];
+   TCHAR vmName[256];
+
+	if (!AgentGetParameterArg(cmd, 1, name, 256))
+		return SYSINFO_RC_UNSUPPORTED;
+
+	if (!AgentGetParameterArg(cmd, 2, vmName, 256))
+		return SYSINFO_RC_UNSUPPORTED;
+
+   _tcsupr(vmName);
+   HostConnections *conn = g_connectionList.get(name);
+   if(conn == NULL)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   const char *xml = conn->getDomainDefenitionAndLock(vmName);
+   if(xml == NULL)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   Config conf;
+   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
+		return SYSINFO_RC_UNSUPPORTED;
+   conn->unlockDomainDefenition();
+
+   value->addColumn(_T("SOURCE"), DCI_DT_STRING, _T("Source file"));
+	value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
+	value->addColumn(_T("DTYPE"), DCI_DT_STRING, _T("VM device type"));
+	value->addColumn(_T("DNAME"), DCI_DT_STRING, _T("VM device name"), true);
+	value->addColumn(_T("CTYPE"), DCI_DT_STRING, _T("VM controller type"));
+	value->addColumn(_T("ADDRESS"), DCI_DT_STRING, _T("Address"));
+
+   ObjectArray<ConfigEntry> *deviceList = conf.getSubEntries(_T("/devices"), _T("disk"));
+   for(int i = 0; i < deviceList->size(); i++)
+   {
+      value->addRow();
+      ConfigEntry *item = deviceList->get(i);
+      value->set(1, item->getAttribute(_T("type")));
+      value->set(2, item->getAttribute(_T("device")));
+      ConfigEntry *tmp = item->findEntry(_T("source"));
+      if(tmp != NULL)
+         value->set(0, tmp->getAttribute(_T("file")));
+      tmp = item->findEntry(_T("target"));
+      if(tmp != NULL)
+      {
+         value->set(3, tmp->getAttribute(_T("dev")));
+         value->set(4, tmp->getAttribute(_T("bus")));
+      }
+      //get data form address
+      tmp = item->findEntry(_T("address"));
+      if(tmp != NULL)
+      {
+         TCHAR address[16];
+         _sntprintf(address, 16, _T("%d/%d/%d/%d"), tmp->getAttributeAsInt(_T("controller")),
+                     tmp->getAttributeAsInt(_T("bus")), tmp->getAttributeAsInt(_T("target")), tmp->getAttributeAsInt(_T("unit")));
+         value->set(5, address);
+      }
+   }
+
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Get table of controller for VM
+ */
+LONG H_GetVMControllerTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   TCHAR name[256];
+   TCHAR vmName[256];
+
+	if (!AgentGetParameterArg(cmd, 1, name, 256))
+		return SYSINFO_RC_UNSUPPORTED;
+
+	if (!AgentGetParameterArg(cmd, 2, vmName, 256))
+		return SYSINFO_RC_UNSUPPORTED;
+
+   _tcsupr(vmName);
+   HostConnections *conn = g_connectionList.get(name);
+   if(conn == NULL)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   const char *xml = conn->getDomainDefenitionAndLock(vmName);
+   if(xml == NULL)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   Config conf;
+   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
+		return SYSINFO_RC_UNSUPPORTED;
+   conn->unlockDomainDefenition();
+
+	value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"), true);
+	value->addColumn(_T("INDEX"), DCI_DT_INT, _T("Index"));
+	value->addColumn(_T("MODEL"), DCI_DT_STRING, _T("Model"));
+
+   ObjectArray<ConfigEntry> *deviceList = conf.getSubEntries(_T("/devices"), _T("controller"));
+   for(int i = 0; i < deviceList->size(); i++)
+   {
+      value->addRow();
+      ConfigEntry *item = deviceList->get(i);
+      value->set(0, item->getAttribute(_T("type")));
+      value->set(1, item->getAttributeAsInt(_T("index"), 0));
+      value->set(2, item->getAttribute(_T("model")));
+   }
+
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Get table of interface for VM
+ */
+LONG H_GetVMInterfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session)
+{
+   TCHAR name[256];
+   TCHAR vmName[256];
+
+	if (!AgentGetParameterArg(cmd, 1, name, 256))
+		return SYSINFO_RC_UNSUPPORTED;
+
+	if (!AgentGetParameterArg(cmd, 2, vmName, 256))
+		return SYSINFO_RC_UNSUPPORTED;
+
+   _tcsupr(vmName);
+   HostConnections *conn = g_connectionList.get(name);
+   if(conn == NULL)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   const char *xml = conn->getDomainDefenitionAndLock(vmName);
+   if(xml == NULL)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   Config conf;
+   if(!conf.loadXmlConfigFromMemory(xml, strlen(xml), NULL, "domain", false))
+		return SYSINFO_RC_UNSUPPORTED;
+   conn->unlockDomainDefenition();
+
+   value->addColumn(_T("MAC"), DCI_DT_STRING, _T("MAC address"), true);
+	value->addColumn(_T("TYPE"), DCI_DT_STRING, _T("Type"));
+	value->addColumn(_T("SOURCE"), DCI_DT_STRING, _T("Source"));
+	value->addColumn(_T("MODEL"), DCI_DT_STRING, _T("Model"));
+
+   ObjectArray<ConfigEntry> *deviceList = conf.getSubEntries(_T("/devices"), _T("interface"));
+   for(int i = 0; i < deviceList->size(); i++)
+   {
+      value->addRow();
+      ConfigEntry *item = deviceList->get(i);
+      value->set(1, item->getAttribute(_T("type")));
+      ConfigEntry *tmp = item->findEntry(_T("mac"));
+      if(tmp != NULL)
+         value->set(0, tmp->getAttribute(_T("address")));
+      tmp = item->findEntry(_T("source"));
+      if(tmp != NULL)
+         value->set(2, tmp->getAttribute(_T("bridge")));
+      tmp = item->findEntry(_T("model"));
+      if(tmp != NULL)
+         value->set(3, tmp->getAttribute(_T("type")));
+   }
+
    return SYSINFO_RC_SUCCESS;
 }
