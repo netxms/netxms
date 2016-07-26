@@ -530,12 +530,13 @@ bool DCObject::isReadyForPolling(time_t currTime)
    bool result;
 
    lock();
-   if(m_forcePoll)
+   if (m_forcePoll)
    {
       m_forcePoll = false;
       unlock();
       return true;
    }
+
    if ((m_status != ITEM_STATUS_DISABLED) && (!m_busy) &&
        isCacheLoaded() && (m_source != DS_PUSH_AGENT) &&
        matchClusterResource() && hasValue() && (getAgentCacheMode() == AGENT_CACHE_OFF))
@@ -872,19 +873,27 @@ void DCObject::setTransformationScript(const TCHAR *source)
  */
 INT16 DCObject::getAgentCacheMode()
 {
-   if ((m_owner->getObjectClass() != OBJECT_NODE) ||
-       ((m_source != DS_NATIVE_AGENT) && (m_source != DS_SNMP_AGENT)))
+   if ((m_source != DS_NATIVE_AGENT) && (m_source != DS_SNMP_AGENT))
       return AGENT_CACHE_OFF;
 
-   Node *node = (Node *)m_owner;
+   Node *node = NULL;
    if (m_sourceNode != 0)
    {
       node = (Node *)FindObjectById(m_sourceNode, OBJECT_NODE);
-      if (node == NULL)
+   }
+   else
+   {
+      if (m_owner->getObjectClass() == OBJECT_NODE)
       {
-         return AGENT_CACHE_OFF;
+         node = (Node *)m_owner;
+      }
+      else if (m_owner->getObjectClass() == OBJECT_CHASSIS)
+      {
+         node = (Node *)FindObjectById(((Chassis *)m_owner)->getControllerId(), OBJECT_NODE);
       }
    }
+   if (node == NULL)
+      return AGENT_CACHE_OFF;
 
    if ((m_source == DS_SNMP_AGENT) && (node->getEffectiveSnmpProxy() == 0))
       return AGENT_CACHE_OFF;

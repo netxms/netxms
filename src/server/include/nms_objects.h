@@ -972,6 +972,19 @@ public:
 };
 
 /**
+ * Data collection proxy information structure
+ */
+struct ProxyInfo
+{
+   UINT32 proxyId;
+   NXCPMessage *msg;
+   UINT32 fieldId;
+   UINT32 count;
+   UINT32 nodeInfoFieldId;
+   UINT32 nodeInfoCount;
+};
+
+/**
  * Common base class for all objects capable of collecting data
  */
 class NXCORE_EXPORTABLE DataCollectionTarget : public Template
@@ -989,6 +1002,11 @@ protected:
 
    NetObj *objectFromParameter(const TCHAR *param);
 
+   void addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco);
+   void addProxySnmpTarget(ProxyInfo *info, const Node *node);
+   virtual void collectProxyInfo(ProxyInfo *info);
+   static void collectProxyInfoCallback(NetObj *object, void *data);
+
 public:
    DataCollectionTarget();
    DataCollectionTarget(const TCHAR *name);
@@ -1004,6 +1022,8 @@ public:
 
    virtual UINT32 getInternalItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
    virtual UINT32 getScriptItem(const TCHAR *param, size_t bufSize, TCHAR *buffer);
+
+   virtual UINT32 getEffectiveSourceNode(DCObject *dco);
 
    UINT32 getListFromScript(const TCHAR *param, StringList **list);
 
@@ -1200,6 +1220,7 @@ protected:
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
 
    virtual void onDataCollectionChange();
+   virtual void collectProxyInfo(ProxyInfo *info);
 
    void updateRackBinding();
 
@@ -1213,8 +1234,7 @@ public:
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
    virtual bool showThresholdSummary();
-
-   virtual void unbindFromTemplate(UINT32 templateId, bool removeDCI);
+   virtual UINT32 getEffectiveSourceNode(DCObject *dco);
 
    virtual NXSL_Value *createNXSLObject();
 
@@ -1377,9 +1397,6 @@ protected:
 	bool updateInstances(DCItem *root, StringMap *instances, UINT32 requestId);
    void syncDataCollectionWithAgent(AgentConnectionEx *conn);
 
-   void collectProxyInfo(ProxyInfo *info);
-   static void collectProxyInfoCallback(NetObj *node, void *data);
-
 	void updateContainerMembership();
 	bool updateInterfaceConfiguration(UINT32 rqid, int maskBits);
    bool deleteDuplicateInterfaces(UINT32 rqid);
@@ -1391,6 +1408,7 @@ protected:
 	void buildIPTopologyInternal(nxmap_ObjList &topology, int nDepth, UINT32 seedObject, bool vpnLink, bool includeEndNodes);
 
 	virtual bool isDataCollectionDisabled();
+   virtual void collectProxyInfo(ProxyInfo *info);
 
    virtual void prepareForDeletion();
    virtual void onObjectDelete(UINT32 dwObjectId);
@@ -1408,7 +1426,6 @@ public:
    virtual ~Node();
 
    virtual int getObjectClass() const { return OBJECT_NODE; }
-	UINT32 getIcmpProxy() { return m_icmpProxy; }
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
@@ -1420,24 +1437,25 @@ public:
 
 	Cluster *getMyCluster();
 
-   const InetAddress& getIpAddress() { return m_ipAddress; }
-   UINT32 getZoneId() { return m_zoneId; }
-   UINT32 getFlags() { return m_dwFlags; }
-   UINT32 getRuntimeFlags() { return m_dwDynamicFlags; }
+   const InetAddress& getIpAddress() const { return m_ipAddress; }
+   UINT32 getZoneId() const { return m_zoneId; }
+   UINT32 getFlags() const { return m_dwFlags; }
+   UINT32 getRuntimeFlags() const { return m_dwDynamicFlags; }
    void setFlag(UINT32 flag) { lockProperties(); m_dwFlags |= flag; setModified(); unlockProperties(); }
    void clearFlag(UINT32 flag) { lockProperties(); m_dwFlags &= ~flag; setModified(); unlockProperties(); }
    void setLocalMgmtFlag() { m_dwFlags |= NF_IS_LOCAL_MGMT; }
    void clearLocalMgmtFlag() { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
 
-   bool isSNMPSupported() { return m_dwFlags & NF_IS_SNMP ? true : false; }
-   bool isNativeAgent() { return m_dwFlags & NF_IS_NATIVE_AGENT ? true : false; }
-   bool isBridge() { return m_dwFlags & NF_IS_BRIDGE ? true : false; }
-   bool isRouter() { return m_dwFlags & NF_IS_ROUTER ? true : false; }
-   bool isLocalManagement() { return m_dwFlags & NF_IS_LOCAL_MGMT ? true : false; }
-	bool isPerVlanFdbSupported() { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
-	bool isWirelessController() { return m_dwFlags & NF_IS_WIFI_CONTROLLER ? true : false; }
+   bool isSNMPSupported() const { return m_dwFlags & NF_IS_SNMP ? true : false; }
+   bool isNativeAgent() const { return m_dwFlags & NF_IS_NATIVE_AGENT ? true : false; }
+   bool isBridge() const { return m_dwFlags & NF_IS_BRIDGE ? true : false; }
+   bool isRouter() const { return m_dwFlags & NF_IS_ROUTER ? true : false; }
+   bool isLocalManagement() const { return m_dwFlags & NF_IS_LOCAL_MGMT ? true : false; }
+	bool isPerVlanFdbSupported() const { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
+	bool isWirelessController() const { return m_dwFlags & NF_IS_WIFI_CONTROLLER ? true : false; }
 
 	LONG getSNMPVersion() const { return m_snmpVersion; }
+	UINT16 getSNMPPort() const { return m_snmpPort; }
 	const TCHAR *getSNMPObjectId() const { return m_szObjectId; }
 	const TCHAR *getAgentVersion() const { return m_szAgentVersion; }
 	const TCHAR *getPlatformName() const { return m_szPlatformName; }
@@ -1457,7 +1475,8 @@ public:
 	UINT32 getRackId() const { return m_rackId; }
    INT16 getRackHeight() const { return m_rackHeight; }
    INT16 getRackPosition() const { return m_rackPosition; }
-	bool hasFileUpdateConnection() { lockProperties(); bool result = (m_fileUpdateConn != NULL); unlockProperties(); return result; }
+	bool hasFileUpdateConnection() const { lockProperties(); bool result = (m_fileUpdateConn != NULL); unlockProperties(); return result; }
+   UINT32 getIcmpProxy() const { return m_icmpProxy; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
@@ -1474,7 +1493,8 @@ public:
 	void changeZone(UINT32 newZone);
 	void setFileUpdateConnection(AgentConnection *conn);
    void clearDataCollectionConfigFromAgent(AgentConnectionEx *conn);
-   void forceSyncDataCollectionConfig(Node *node);
+   void forceSyncDataCollectionConfig();
+   void relatedNodeDataCollectionChanged() { onDataCollectionChange(); }
 
    ARP_CACHE *getArpCache();
    InterfaceList *getInterfaceList();
@@ -1568,8 +1588,8 @@ public:
    AgentConnectionEx *createAgentConnection(bool sendServerId = false);
    AgentConnectionEx *acquireSnmpProxyConnection();
 	SNMP_Transport *createSnmpTransport(WORD port = 0, const TCHAR *context = NULL);
-	SNMP_SecurityContext *getSnmpSecurityContext();
-   UINT32 getEffectiveSnmpProxy();
+	SNMP_SecurityContext *getSnmpSecurityContext() const;
+   UINT32 getEffectiveSnmpProxy() const;
 
    void writeParamListToMessage(NXCPMessage *pMsg, WORD flags);
 	void writeWinPerfObjectsToMessage(NXCPMessage *msg);
@@ -2571,11 +2591,11 @@ extern InetAddressIndex NXCORE_EXPORTABLE g_idxInterfaceByAddr;
 extern InetAddressIndex NXCORE_EXPORTABLE g_idxNodeByAddr;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxZoneByGUID;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxNodeById;
+extern ObjectIndex NXCORE_EXPORTABLE g_idxChassisById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxClusterById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxMobileDeviceById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxAccessPointById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxConditionById;
 extern ObjectIndex NXCORE_EXPORTABLE g_idxServiceCheckById;
-
 
 #endif   /* _nms_objects_h_ */

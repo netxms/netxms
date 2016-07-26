@@ -26,10 +26,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
-import org.netxms.client.objects.AbstractNode;
-import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.LastValues;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -40,7 +37,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 public class ShowLastValues implements IObjectActionDelegate
 {
 	private IWorkbenchWindow window;
-	private AbstractObject object;
+	private DataCollectionTarget object;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -80,9 +77,9 @@ public class ShowLastValues implements IObjectActionDelegate
 		    (((IStructuredSelection)selection).size() == 1))
 		{
 			Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if ((obj instanceof AbstractNode) || (obj instanceof MobileDevice) || (obj instanceof Cluster))
+			if (obj instanceof DataCollectionTarget)
 			{
-				object = (AbstractObject)obj;
+				object = (DataCollectionTarget)obj;
 			}
 			else
 			{

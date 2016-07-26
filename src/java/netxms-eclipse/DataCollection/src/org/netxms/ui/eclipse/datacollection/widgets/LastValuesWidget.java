@@ -52,10 +52,8 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DciValue;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.console.resources.GroupMarkers;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -88,7 +86,7 @@ public class LastValuesWidget extends Composite
 	public static final int COLUMN_THRESHOLD = 4;
 	
 	private final ViewPart viewPart;
-	private AbstractObject dcTarget;
+	private DataCollectionTarget dcTarget;
 	private NXCSession session;
 	private boolean filterEnabled = false;
 	private FilterText filterText;
@@ -400,10 +398,7 @@ public class LastValuesWidget extends Composite
 	 */
 	public void setDataCollectionTarget(AbstractObject dcTarget)
 	{
-		if ((dcTarget instanceof AbstractNode) || (dcTarget instanceof MobileDevice) || (dcTarget instanceof Cluster))
-			this.dcTarget = dcTarget;
-		else
-			this.dcTarget = null;
+		this.dcTarget = (dcTarget instanceof DataCollectionTarget) ? (DataCollectionTarget)dcTarget : null;
 	}
 	
 	/**

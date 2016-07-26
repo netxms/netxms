@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -950,4 +950,83 @@ void DataCollectionTarget::updateDCItemCacheSize(UINT32 dciId, UINT32 conditionI
 bool DataCollectionTarget::isDataCollectionTarget()
 {
    return true;
+}
+
+/**
+ * Add data collection element to proxy info structure
+ */
+void DataCollectionTarget::addProxyDataCollectionElement(ProxyInfo *info, const DCObject *dco)
+{
+   info->msg->setField(info->fieldId++, dco->getId());
+   info->msg->setField(info->fieldId++, (INT16)dco->getType());
+   info->msg->setField(info->fieldId++, (INT16)dco->getDataSource());
+   info->msg->setField(info->fieldId++, dco->getName());
+   info->msg->setField(info->fieldId++, (INT32)dco->getEffectivePollingInterval());
+   info->msg->setFieldFromTime(info->fieldId++, dco->getLastPollTime());
+   info->msg->setField(info->fieldId++, m_guid);
+   info->msg->setField(info->fieldId++, dco->getSnmpPort());
+   if (dco->getType() == DCO_TYPE_ITEM)
+      info->msg->setField(info->fieldId++, ((DCItem *)dco)->getSnmpRawValueType());
+   else
+      info->msg->setField(info->fieldId++, (INT16)0);
+   info->fieldId += 1;
+   info->count++;
+}
+
+/**
+ * Add SNMP target to proxy info structure
+ */
+void DataCollectionTarget::addProxySnmpTarget(ProxyInfo *info, const Node *node)
+{
+   info->msg->setField(info->nodeInfoFieldId++, m_guid);
+   info->msg->setField(info->nodeInfoFieldId++, node->getIpAddress());
+   info->msg->setField(info->nodeInfoFieldId++, node->getSNMPVersion());
+   info->msg->setField(info->nodeInfoFieldId++, node->getSNMPPort());
+   SNMP_SecurityContext *snmpSecurity = node->getSnmpSecurityContext();
+   info->msg->setField(info->nodeInfoFieldId++, (INT16)snmpSecurity->getAuthMethod());
+   info->msg->setField(info->nodeInfoFieldId++, (INT16)snmpSecurity->getPrivMethod());
+   info->msg->setFieldFromMBString(info->nodeInfoFieldId++, snmpSecurity->getUser());
+   info->msg->setFieldFromMBString(info->nodeInfoFieldId++, snmpSecurity->getAuthPassword());
+   info->msg->setFieldFromMBString(info->nodeInfoFieldId++, snmpSecurity->getPrivPassword());
+   delete snmpSecurity;
+   info->nodeInfoFieldId += 41;
+   info->nodeInfoCount++;
+}
+
+/**
+ * Collect info for SNMP proxy and DCI source (proxy) nodes
+ * Default implementation adds only agent based DCIs with source node set to requesting node
+ */
+void DataCollectionTarget::collectProxyInfo(ProxyInfo *info)
+{
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *dco = m_dcObjects->get(i);
+      if (dco->getStatus() == ITEM_STATUS_DISABLED)
+         continue;
+
+      if ((dco->getDataSource() == DS_NATIVE_AGENT) && (dco->getSourceNode() == info->proxyId) &&
+          dco->hasValue() && (dco->getAgentCacheMode() == AGENT_CACHE_ON))
+      {
+         addProxyDataCollectionElement(info, dco);
+      }
+   }
+   unlockDciAccess();
+}
+
+/**
+ * Callback for colecting proxied SNMP DCIs
+ */
+void DataCollectionTarget::collectProxyInfoCallback(NetObj *object, void *data)
+{
+   ((DataCollectionTarget *)object)->collectProxyInfo((ProxyInfo *)data);
+}
+
+/**
+ * Get effective source node for given data collection object
+ */
+UINT32 DataCollectionTarget::getEffectiveSourceNode(DCObject *dco)
+{
+   return dco->getSourceNode();
 }

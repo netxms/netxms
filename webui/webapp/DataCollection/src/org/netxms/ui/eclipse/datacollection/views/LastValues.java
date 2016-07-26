@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,10 +35,8 @@ import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
-import org.netxms.client.objects.Cluster;
-import org.netxms.client.objects.MobileDevice;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Messages;
@@ -54,7 +52,7 @@ public class LastValues extends ViewPart
 	public static final String ID = "org.netxms.ui.eclipse.datacollection.view.last_values"; //$NON-NLS-1$
 	
 	private NXCSession session;
-	private AbstractObject dcTarget;
+	private DataCollectionTarget dcTarget;
 	private LastValuesWidget dataView;
 	private Action actionRefresh;
 	private Action actionAutoUpdate;
@@ -70,7 +68,7 @@ public class LastValues extends ViewPart
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		dcTarget = ((obj != null) && ((obj instanceof AbstractNode) || (obj instanceof MobileDevice) || (obj instanceof Cluster))) ? obj : null;
+		dcTarget = ((obj != null) && (obj instanceof DataCollectionTarget)) ? (DataCollectionTarget)obj : null;
 		setPartName(Messages.get().LastValues_PartNamePrefix + ((dcTarget != null) ? dcTarget.getObjectName() : Messages.get().LastValues_Error));
 	}
 

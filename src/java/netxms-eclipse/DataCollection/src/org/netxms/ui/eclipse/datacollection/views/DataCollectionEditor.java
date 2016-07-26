@@ -63,6 +63,7 @@ import org.netxms.client.datacollection.DataCollectionTable;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
+import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.client.objects.MobileDevice;
 import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.actions.RefreshAction;
@@ -137,7 +138,7 @@ public class DataCollectionEditor extends ViewPart
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		object = ((obj != null) && ((obj instanceof AbstractNode) || (obj instanceof Template) || (obj instanceof Cluster) || (obj instanceof MobileDevice))) ? obj : null;
+		object = ((obj != null) && ((obj instanceof DataCollectionTarget) || (obj instanceof Template))) ? obj : null;
 		setPartName(Messages.get().DataCollectionEditor_PartNamePrefix + ((object != null) ? object.getObjectName() : Messages.get().DataCollectionEditor_Error));
 	}
 

@@ -174,6 +174,19 @@ BOOL Chassis::saveToDatabase(DB_HANDLE hdb)
       }
    }
    unlockProperties();
+
+   if (success)
+   {
+      lockDciAccess(false);
+      for(int i = 0; (i < m_dcObjects->size()) && success; i++)
+         success = m_dcObjects->get(i)->saveToDatabase(hdb);
+      unlockDciAccess();
+   }
+
+   if (success)
+   {
+      success = saveACLToDB(hdb);
+   }
    return success;
 }
 
@@ -223,17 +236,14 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
 
+   loadACLFromDB(hdb);
+   loadItemsFromDB(hdb);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+      if (!m_dcObjects->get(i)->loadThresholdsFromDB(hdb))
+         return false;
+
    updateRackBinding();
    return true;
-}
-
-/**
- * Unbind cluster from template
- */
-void Chassis::unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI)
-{
-   DataCollectionTarget::unbindFromTemplate(dwTemplateId, removeDCI);
-   queueUpdate();
 }
 
 /**
@@ -241,7 +251,50 @@ void Chassis::unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI)
  */
 void Chassis::onDataCollectionChange()
 {
-   queueUpdate();
+   Node *controller = (Node *)FindObjectById(m_controllerId, OBJECT_NODE);
+   if (controller == NULL)
+   {
+      nxlog_debug(4, _T("Chassis::onDataCollectionChange(%s [%d]): cannot find controller node object with id %d"), m_name, m_id, m_controllerId);
+      return;
+   }
+   controller->relatedNodeDataCollectionChanged();
+}
+
+/**
+ * Collect info for SNMP proxy and DCI source (proxy) nodes
+ */
+void Chassis::collectProxyInfo(ProxyInfo *info)
+{
+   Node *controller = (Node *)FindObjectById(m_controllerId, OBJECT_NODE);
+   if (controller == NULL)
+   {
+      nxlog_debug(4, _T("Chassis::collectProxyInfo(%s [%d]): cannot find controller node object with id %d"), m_name, m_id, m_controllerId);
+      return;
+   }
+
+   bool snmpProxy = (controller->getEffectiveSnmpProxy() == info->proxyId);
+   bool isTarget = false;
+
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *dco = m_dcObjects->get(i);
+      if (dco->getStatus() == ITEM_STATUS_DISABLED)
+         continue;
+
+      if (((snmpProxy && (dco->getDataSource() == DS_SNMP_AGENT) && (dco->getSourceNode() == 0)) ||
+           ((dco->getDataSource() == DS_NATIVE_AGENT) && (dco->getSourceNode() == info->proxyId))) &&
+          dco->hasValue() && (dco->getAgentCacheMode() == AGENT_CACHE_ON))
+      {
+         addProxyDataCollectionElement(info, dco);
+         if (dco->getDataSource() == DS_SNMP_AGENT)
+            isTarget = true;
+      }
+   }
+   unlockDciAccess();
+
+   if (isTarget)
+      addProxySnmpTarget(info, controller);
 }
 
 /**
@@ -250,4 +303,21 @@ void Chassis::onDataCollectionChange()
 NXSL_Value *Chassis::createNXSLObject()
 {
    return new NXSL_Value(new NXSL_Object(&g_nxslChassisClass, this));
+}
+
+/**
+ * Get effective source node for given data collection object
+ */
+UINT32 Chassis::getEffectiveSourceNode(DCObject *dco)
+{
+   if (dco->getSourceNode() != 0)
+      return dco->getSourceNode();
+   if ((dco->getDataSource() == DS_NATIVE_AGENT) ||
+       (dco->getDataSource() == DS_SMCLP) ||
+       (dco->getDataSource() == DS_SNMP_AGENT) ||
+       (dco->getDataSource() == DS_WINPERF))
+   {
+      return m_controllerId;
+   }
+   return 0;
 }

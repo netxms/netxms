@@ -601,9 +601,7 @@ void ClientSession::readThread()
    {
       object = FindObjectById(m_pOpenDCIList[i]);
       if (object != NULL)
-         if ((object->getObjectClass() == OBJECT_NODE) ||
-             (object->getObjectClass() == OBJECT_CLUSTER) ||
-             (object->getObjectClass() == OBJECT_TEMPLATE))
+         if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
             ((Template *)object)->unlockDCIList(m_id);
    }
 
@@ -3254,6 +3252,7 @@ void ClientSession::enterMaintenanceMode(NXCPMessage *request)
              (object->getObjectClass() == OBJECT_NODE) ||
              (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
              (object->getObjectClass() == OBJECT_ACCESSPOINT) ||
+             (object->getObjectClass() == OBJECT_CHASSIS) ||
              (object->getObjectClass() == OBJECT_ZONE) ||
              (object->getObjectClass() == OBJECT_SUBNET) ||
              (object->getObjectClass() == OBJECT_NETWORK) ||
@@ -3304,6 +3303,7 @@ void ClientSession::leaveMaintenanceMode(NXCPMessage *request)
              (object->getObjectClass() == OBJECT_NODE) ||
              (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
              (object->getObjectClass() == OBJECT_ACCESSPOINT) ||
+             (object->getObjectClass() == OBJECT_CHASSIS) ||
              (object->getObjectClass() == OBJECT_ZONE) ||
              (object->getObjectClass() == OBJECT_SUBNET) ||
              (object->getObjectClass() == OBJECT_NETWORK) ||
@@ -3430,10 +3430,7 @@ void ClientSession::openNodeDCIList(NXCPMessage *request)
    object = FindObjectById(dwObjectId);
    if (object != NULL)
    {
-      if ((object->getObjectClass() == OBJECT_NODE) ||
-          (object->getObjectClass() == OBJECT_CLUSTER) ||
-          (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-          (object->getObjectClass() == OBJECT_TEMPLATE))
+      if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
@@ -3495,10 +3492,7 @@ void ClientSession::closeNodeDCIList(NXCPMessage *request)
    object = FindObjectById(dwObjectId);
    if (object != NULL)
    {
-      if ((object->getObjectClass() == OBJECT_NODE) ||
-          (object->getObjectClass() == OBJECT_CLUSTER) ||
-          (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-          (object->getObjectClass() == OBJECT_TEMPLATE))
+      if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
@@ -3559,10 +3553,7 @@ void ClientSession::modifyNodeDCI(NXCPMessage *request)
    object = FindObjectById(dwObjectId);
    if (object != NULL)
    {
-      if ((object->getObjectClass() == OBJECT_NODE) ||
-          (object->getObjectClass() == OBJECT_CLUSTER) ||
-          (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-          (object->getObjectClass() == OBJECT_TEMPLATE))
+      if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
       {
          if (((Template *)object)->isLockedBySession(m_id))
          {
@@ -3689,10 +3680,7 @@ void ClientSession::changeDCIStatus(NXCPMessage *request)
    object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
-      if ((object->getObjectClass() == OBJECT_NODE) ||
-          (object->getObjectClass() == OBJECT_CLUSTER) ||
-          (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-          (object->getObjectClass() == OBJECT_TEMPLATE))
+      if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
       {
          if (((Template *)object)->isLockedBySession(m_id))
          {
@@ -3752,7 +3740,7 @@ void ClientSession::clearDCIData(NXCPMessage *request)
    object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
-      if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_MOBILEDEVICE) || (object->getObjectClass() == OBJECT_CLUSTER))
+      if (object->isDataCollectionTarget())
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_DELETE))
          {
@@ -3806,7 +3794,7 @@ void ClientSession::forceDCIPoll(NXCPMessage *request)
    object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
-      if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_MOBILEDEVICE) || (object->getObjectClass() == OBJECT_CLUSTER))
+      if (object->isDataCollectionTarget())
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
@@ -3864,8 +3852,8 @@ void ClientSession::copyDCI(NXCPMessage *pRequest)
    if ((pSource != NULL) && (pDestination != NULL))
    {
       // Check object types
-      if (((pSource->getObjectClass() == OBJECT_NODE) || (pSource->getObjectClass() == OBJECT_MOBILEDEVICE) || (pSource->getObjectClass() == OBJECT_TEMPLATE) || (pSource->getObjectClass() == OBJECT_CLUSTER)) &&
-		    ((pDestination->getObjectClass() == OBJECT_NODE) || (pDestination->getObjectClass() == OBJECT_MOBILEDEVICE) || (pDestination->getObjectClass() == OBJECT_TEMPLATE) || (pDestination->getObjectClass() == OBJECT_CLUSTER)))
+      if ((pSource->isDataCollectionTarget() || (pSource->getObjectClass() == OBJECT_TEMPLATE)) &&
+		    (pDestination->isDataCollectionTarget() || (pDestination->getObjectClass() == OBJECT_TEMPLATE)))
       {
          if (((Template *)pSource)->isLockedBySession(m_id))
          {
@@ -3998,7 +3986,7 @@ void ClientSession::sendDCIThresholds(NXCPMessage *request)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-			if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_MOBILEDEVICE) || (object->getObjectClass() == OBJECT_CLUSTER))
+			if (object->isDataCollectionTarget())
 			{
 				DCObject *dci = ((Template *)object)->getDCObjectById(request->getFieldAsUInt32(VID_DCI_ID));
 				if ((dci != NULL) && (dci->getType() == DCO_TYPE_ITEM))
@@ -4449,7 +4437,7 @@ void ClientSession::getCollectedData(NXCPMessage *request)
    {
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
-			if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_MOBILEDEVICE) || (object->getObjectClass() == OBJECT_CLUSTER))
+			if (object->isDataCollectionTarget())
 			{
 				if (!(g_flags & AF_DB_CONNECTION_LOST))
 				{
@@ -4497,7 +4485,7 @@ void ClientSession::getTableCollectedData(NXCPMessage *request)
    {
 		if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 		{
-			if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_MOBILEDEVICE) || (object->getObjectClass() == OBJECT_CLUSTER))
+			if (object->isDataCollectionTarget())
 			{
 				if (!(g_flags & AF_DB_CONNECTION_LOST))
 				{
@@ -4545,8 +4533,8 @@ void ClientSession::getLastValues(NXCPMessage *pRequest)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-             (object->getObjectClass() == OBJECT_TEMPLATE) || (object->getObjectClass() == OBJECT_CLUSTER))
+         // Templates allowed here to allow simplified creation of DCI selection dialog in management console.
+         if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
             msg.setField(VID_RCC,
                ((Template *)object)->getLastValues(&msg,
@@ -4601,8 +4589,7 @@ void ClientSession::getLastValuesByDciId(NXCPMessage *pRequest)
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
-            if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-                (object->getObjectClass() == OBJECT_TEMPLATE) || (object->getObjectClass() == OBJECT_CLUSTER))
+            if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
             {
                UINT32 dciID = pRequest->getFieldAsUInt32(incomingIndex+1);
                dcoObj = ((DataCollectionTarget *)object)->getDCObjectById(dciID);
@@ -4677,7 +4664,7 @@ void ClientSession::getTableLastValues(NXCPMessage *pRequest)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_MOBILEDEVICE) || (object->getObjectClass() == OBJECT_CLUSTER))
+         if (object->isDataCollectionTarget())
          {
 				msg.setField(VID_RCC, ((DataCollectionTarget *)object)->getTableLastValues(pRequest->getFieldAsUInt32(VID_DCI_ID), &msg));
          }
@@ -5384,13 +5371,11 @@ void ClientSession::changeObjectBinding(NXCPMessage *pRequest, BOOL bBind)
                pChild->deleteParent(pParent);
                ObjectTransactionEnd();
                pParent->calculateCompoundStatus();
-               if ((pParent->getObjectClass() == OBJECT_TEMPLATE) &&
-                   ((pChild->getObjectClass() == OBJECT_NODE) || (pChild->getObjectClass() == OBJECT_CLUSTER) || (pChild->getObjectClass() == OBJECT_MOBILEDEVICE)))
+               if ((pParent->getObjectClass() == OBJECT_TEMPLATE) && pChild->isDataCollectionTarget())
                {
                   ((Template *)pParent)->queueRemoveFromTarget(pChild->getId(), pRequest->getFieldAsBoolean(VID_REMOVE_DCI));
                }
-               else if ((pParent->getObjectClass() == OBJECT_CLUSTER) &&
-                        (pChild->getObjectClass() == OBJECT_NODE))
+               else if ((pParent->getObjectClass() == OBJECT_CLUSTER) && (pChild->getObjectClass() == OBJECT_NODE))
                {
                   ((Cluster *)pParent)->queueRemoveFromTarget(pChild->getId(), TRUE);
 						((Node *)pChild)->setRecheckCapsFlag();
@@ -6948,6 +6933,14 @@ void ClientSession::getParametersList(NXCPMessage *pRequest)
             msg.setField(VID_RCC, RCC_SUCCESS);
             WriteFullParamListToMessage(&msg, pRequest->getFieldAsUInt16(VID_FLAGS));
             break;
+         case OBJECT_CHASSIS:
+            if (((Chassis *)object)->getControllerId() != 0)
+            {
+               Node *controller = (Node *)FindObjectById(((Chassis *)object)->getControllerId(), OBJECT_NODE);
+               if (controller != NULL)
+                  controller->writeParamListToMessage(&msg, pRequest->getFieldAsUInt16(VID_FLAGS));
+            }
+            break;
          default:
             msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
             break;
@@ -7131,8 +7124,7 @@ void ClientSession::applyTemplate(NXCPMessage *pRequest)
    if ((pSource != NULL) && (pDestination != NULL))
    {
       // Check object types
-      if ((pSource->getObjectClass() == OBJECT_TEMPLATE) &&
-          ((pDestination->getObjectClass() == OBJECT_NODE) || (pDestination->getObjectClass() == OBJECT_CLUSTER) || (pDestination->getObjectClass() == OBJECT_MOBILEDEVICE)))
+      if ((pSource->getObjectClass() == OBJECT_TEMPLATE) && pDestination->isDataCollectionTarget())
       {
          TCHAR szLockInfo[MAX_SESSION_NAME];
          BOOL bLockSucceed = FALSE;
@@ -8935,10 +8927,7 @@ UINT32 ClientSession::resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR **ppszN
    NetObj *object = FindObjectById(dwNode);
    if (object != NULL)
    {
-		if ((object->getObjectClass() == OBJECT_NODE) ||
-			 (object->getObjectClass() == OBJECT_CLUSTER) ||
-			 (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-			 (object->getObjectClass() == OBJECT_TEMPLATE))
+		if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
 		{
 			if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
 			{
@@ -9556,7 +9545,7 @@ void ClientSession::pushDCIData(NXCPMessage *pRequest)
          // Validate object
          if (object != NULL)
          {
-            if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_MOBILEDEVICE))
+            if (object->isDataCollectionTarget())
             {
                if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_PUSH_DATA))
                {
@@ -9770,9 +9759,7 @@ void ClientSession::getDCIEventList(NXCPMessage *request)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         if ((object->getObjectClass() == OBJECT_NODE) ||
-             (object->getObjectClass() == OBJECT_CLUSTER) ||
-             (object->getObjectClass() == OBJECT_TEMPLATE))
+         if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
             pdwEventList = ((Template *)object)->getDCIEventsList(&count);
             if (pdwEventList != NULL)
@@ -9840,9 +9827,7 @@ void ClientSession::getDCIScriptList(NXCPMessage *request)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         if ((object->getObjectClass() == OBJECT_NODE) ||
-             (object->getObjectClass() == OBJECT_CLUSTER) ||
-             (object->getObjectClass() == OBJECT_TEMPLATE))
+         if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
             StringSet *scripts = ((Template *)object)->getDCIScriptList();
             msg.setField(VID_NUM_SCRIPTS, (INT32)scripts->size());
@@ -10108,9 +10093,7 @@ void ClientSession::SendDCIInfo(NXCPMessage *pRequest)
    {
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
       {
-         if ((object->getObjectClass() == OBJECT_NODE) ||
-             (object->getObjectClass() == OBJECT_CLUSTER) ||
-             (object->getObjectClass() == OBJECT_TEMPLATE))
+         if (object->isDataCollectionTarget() || (object->getObjectClass() == OBJECT_TEMPLATE))
          {
 				DCObject *pItem = ((Template *)object)->getDCObjectById(pRequest->getFieldAsUInt32(VID_DCI_ID));
 				if ((pItem != NULL) && (pItem->getType() == DCO_TYPE_ITEM))
@@ -11079,7 +11062,7 @@ void ClientSession::testDCITransformation(NXCPMessage *pRequest)
    object = FindObjectById(pRequest->getFieldAsUInt32(VID_OBJECT_ID));
    if (object != NULL)
    {
-      if ((object->getObjectClass() == OBJECT_NODE) || (object->getObjectClass() == OBJECT_CLUSTER) || (object->getObjectClass() == OBJECT_MOBILEDEVICE))
+      if (object->isDataCollectionTarget())
       {
          if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ))
          {
@@ -11140,6 +11123,7 @@ void ClientSession::executeScript(NXCPMessage *request)
       if ((object->getObjectClass() == OBJECT_NODE) ||
           (object->getObjectClass() == OBJECT_CLUSTER) ||
           (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
+          (object->getObjectClass() == OBJECT_CHASSIS) ||
           (object->getObjectClass() == OBJECT_CONTAINER) ||
           (object->getObjectClass() == OBJECT_ZONE) ||
           (object->getObjectClass() == OBJECT_SUBNET))
@@ -13997,7 +13981,7 @@ void ClientSession::resyncAgentDciConfiguration(NXCPMessage *request)
 			if (object->getObjectClass() == OBJECT_NODE)
 			{
             Node *node = (Node *)object;
-            node->forceSyncDataCollectionConfig(node);
+            node->forceSyncDataCollectionConfig();
 				msg.setField(VID_RCC, RCC_SUCCESS);
 			}
 			else

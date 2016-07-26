@@ -5788,7 +5788,7 @@ Cluster *Node::getMyCluster()
 /**
  * Get effective SNMP proxy for this node
  */
-UINT32 Node::getEffectiveSnmpProxy()
+UINT32 Node::getEffectiveSnmpProxy() const
 {
 	UINT32 snmpProxy = m_snmpProxy;
 	if (IsZoningEnabled() && (snmpProxy == 0) && (m_zoneId != 0))
@@ -5872,7 +5872,7 @@ SNMP_Transport *Node::createSnmpTransport(WORD port, const TCHAR *context)
  * ATTENTION: This method returns new copy of security context
  * which must be destroyed by the caller
  */
-SNMP_SecurityContext *Node::getSnmpSecurityContext()
+SNMP_SecurityContext *Node::getSnmpSecurityContext() const
 {
 	lockProperties();
 	SNMP_SecurityContext *ctx = new SNMP_SecurityContext(m_snmpSecurity);
@@ -7435,82 +7435,6 @@ AccessPointState Node::getAccessPointState(AccessPoint *ap, SNMP_Transport *snmp
 }
 
 /**
- * SNMP proxy information structure
- */
-struct ProxyInfo
-{
-   UINT32 proxyId;
-   NXCPMessage *msg;
-   UINT32 fieldId;
-   UINT32 count;
-   UINT32 nodeInfoFieldId;
-   UINT32 nodeInfoCount;
-};
-
-/**
- * Collect info for SNMP proxy and DCI source (proxy) nodes
- */
-void Node::collectProxyInfo(ProxyInfo *info)
-{
-   bool snmpProxy = (getEffectiveSnmpProxy() == info->proxyId);
-   bool isTarget = false;
-
-   lockDciAccess(false);
-   for(int i = 0; i < m_dcObjects->size(); i++)
-   {
-      DCObject *dco = m_dcObjects->get(i);
-      if (dco->getStatus() == ITEM_STATUS_DISABLED)
-         continue;
-
-      if (((snmpProxy && (dco->getDataSource() == DS_SNMP_AGENT) && (dco->getSourceNode() == 0)) ||
-           ((dco->getDataSource() == DS_NATIVE_AGENT) && (dco->getSourceNode() == info->proxyId))) &&
-          dco->hasValue() && (dco->getAgentCacheMode() == AGENT_CACHE_ON))
-      {
-         info->msg->setField(info->fieldId++, dco->getId());
-         info->msg->setField(info->fieldId++, (INT16)dco->getType());
-         info->msg->setField(info->fieldId++, (INT16)dco->getDataSource());
-         info->msg->setField(info->fieldId++, dco->getName());
-         info->msg->setField(info->fieldId++, (INT32)dco->getEffectivePollingInterval());
-         info->msg->setFieldFromTime(info->fieldId++, dco->getLastPollTime());
-         info->msg->setField(info->fieldId++, m_guid);
-         info->msg->setField(info->fieldId++, dco->getSnmpPort());
-         if (dco->getType() == DCO_TYPE_ITEM)
-            info->msg->setField(info->fieldId++, ((DCItem *)dco)->getSnmpRawValueType());
-         else
-            info->msg->setField(info->fieldId++, (INT16)0);
-         info->fieldId += 1;
-         info->count++;
-         if (dco->getDataSource() == DS_SNMP_AGENT)
-            isTarget = true;
-      }
-   }
-   unlockDciAccess();
-
-   if (isTarget)
-   {
-      info->msg->setField(info->nodeInfoFieldId++, m_guid);
-      info->msg->setField(info->nodeInfoFieldId++, m_ipAddress);
-      info->msg->setField(info->nodeInfoFieldId++, m_snmpVersion);
-      info->msg->setField(info->nodeInfoFieldId++, m_snmpPort);
-      info->msg->setField(info->nodeInfoFieldId++, (INT16)m_snmpSecurity->getAuthMethod());
-      info->msg->setField(info->nodeInfoFieldId++, (INT16)m_snmpSecurity->getPrivMethod());
-      info->msg->setFieldFromMBString(info->nodeInfoFieldId++, m_snmpSecurity->getUser());
-      info->msg->setFieldFromMBString(info->nodeInfoFieldId++, m_snmpSecurity->getAuthPassword());
-      info->msg->setFieldFromMBString(info->nodeInfoFieldId++, m_snmpSecurity->getPrivPassword());
-      info->nodeInfoFieldId += 41;
-      info->nodeInfoCount++;
-   }
-}
-
-/**
- * Callback for colecting proxied SNMP DCIs
- */
-void Node::collectProxyInfoCallback(NetObj *node, void *data)
-{
-   ((Node *)node)->collectProxyInfo((ProxyInfo *)data);
-}
-
-/**
  * Synchronize data collection settings with agent
  */
 void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
@@ -7549,7 +7473,11 @@ void Node::syncDataCollectionWithAgent(AgentConnectionEx *conn)
    data.fieldId = fieldId;
    data.nodeInfoCount = 0;
    data.nodeInfoFieldId = VID_NODE_INFO_LIST_BASE;
-   g_idxNodeById.forEach(Node::collectProxyInfoCallback, &data);
+
+   g_idxAccessPointById.forEach(DataCollectionTarget::collectProxyInfoCallback, &data);
+   g_idxChassisById.forEach(DataCollectionTarget::collectProxyInfoCallback, &data);
+   g_idxNodeById.forEach(DataCollectionTarget::collectProxyInfoCallback, &data);
+
    msg.setField(VID_NUM_ELEMENTS, data.count);
    msg.setField(VID_NUM_NODES, data.nodeInfoCount);
 
@@ -7591,7 +7519,7 @@ void Node::clearDataCollectionConfigFromAgent(AgentConnectionEx *conn)
    NXCPMessage *response = conn->customRequest(&msg);
    if (response != NULL)
    {
-      DbgPrintf(4, _T("ClearDataCollectionConfigFromAgent: DCI configuration sucessfully removed from node %s [%d]"), m_name, (int)m_id);
+      DbgPrintf(4, _T("ClearDataCollectionConfigFromAgent: DCI configuration successfully removed from node %s [%d]"), m_name, (int)m_id);
       delete response;
    }
 }
@@ -7640,9 +7568,9 @@ void Node::onDataCollectionChange()
 /**
  * Force data collection configuration synchronization with agent
  */
-void Node::forceSyncDataCollectionConfig(Node *node)
+void Node::forceSyncDataCollectionConfig()
 {
-   ThreadPoolExecute(g_mainThreadPool, Node::onDataCollectionChangeAsyncCallback, node);
+   ThreadPoolExecute(g_mainThreadPool, Node::onDataCollectionChangeAsyncCallback, this);
 }
 
 /**
@@ -7723,4 +7651,34 @@ void Node::incSnmpTrapCount()
    m_snmpTrapCount++;
    setModified(false);
    unlockProperties();
+}
+
+/**
+ * Collect info for SNMP proxy and DCI source (proxy) nodes
+ */
+void Node::collectProxyInfo(ProxyInfo *info)
+{
+   bool snmpProxy = (getEffectiveSnmpProxy() == info->proxyId);
+   bool isTarget = false;
+
+   lockDciAccess(false);
+   for(int i = 0; i < m_dcObjects->size(); i++)
+   {
+      DCObject *dco = m_dcObjects->get(i);
+      if (dco->getStatus() == ITEM_STATUS_DISABLED)
+         continue;
+
+      if (((snmpProxy && (dco->getDataSource() == DS_SNMP_AGENT) && (dco->getSourceNode() == 0)) ||
+           ((dco->getDataSource() == DS_NATIVE_AGENT) && (dco->getSourceNode() == info->proxyId))) &&
+          dco->hasValue() && (dco->getAgentCacheMode() == AGENT_CACHE_ON))
+      {
+         addProxyDataCollectionElement(info, dco);
+         if (dco->getDataSource() == DS_SNMP_AGENT)
+            isTarget = true;
+      }
+   }
+   unlockDciAccess();
+
+   if (isTarget)
+      addProxySnmpTarget(info, this);
 }

@@ -1041,7 +1041,7 @@ void DCItem::updateCacheSizeInternal(UINT32 conditionId)
 
    // Minimum cache size is 1 for nodes (so GetLastValue can work)
    // and it is always 0 for templates
-   if (((m_owner->getObjectClass() == OBJECT_NODE) || (m_owner->getObjectClass() == OBJECT_MOBILEDEVICE) ||
+   if (((m_owner->isDataCollectionTarget() && (m_owner->getObjectClass() != OBJECT_CLUSTER)) ||
         ((m_owner->getObjectClass() == OBJECT_CLUSTER) && isAggregateOnCluster())) &&
        (m_instanceDiscoveryMethod == IDM_NONE))
    {

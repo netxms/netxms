@@ -42,12 +42,12 @@
    <extension
          point="org.eclipse.ui.popupMenus">
       <objectContribution
-            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.Node"
-            objectClass="org.netxms.client.objects.Node">
+            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.DataCollectionTarget"
+            objectClass="org.netxms.client.objects.DataCollectionTarget">
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
                enablesFor="1"
-               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#Node"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#DataCollectionTarget"
                label="%action.label.DataCollection"
                icon="icons/dc_editor.png"
                menubarPath="datacollection">
@@ -56,7 +56,7 @@
                class="org.netxms.ui.eclipse.datacollection.actions.ShowLastValues"
                enablesFor="1"
                icon="icons/last_values.png"
-               id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues#Node"
+               id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues#DataCollectionTarget"
                label="%action.label.LastValues"
                menubarPath="datacollection">
          </action>
@@ -143,27 +143,6 @@
       </objectContribution>
       <objectContribution
             adaptable="false"
-            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.Cluster"
-            objectClass="org.netxms.client.objects.Cluster">
-         <action
-               class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
-               enablesFor="1"
-               icon="icons/dc_editor.png"
-               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#Cluster"
-               label="%action.label.DataCollection"
-               menubarPath="datacollection">
-         </action>
-         <action
-               class="org.netxms.ui.eclipse.datacollection.actions.ShowLastValues"
-               enablesFor="1"
-               icon="icons/last_values.png"
-               id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues#Cluster"
-               label="%action.label.LastValues"
-               menubarPath="datacollection">
-         </action>
-      </objectContribution>
-      <objectContribution
-            adaptable="false"
             id="org.netxms.ui.eclipse.datacollection.actions.popup.object.DciValue"
             objectClass="org.netxms.client.datacollection.DciValue">
          <action
@@ -212,26 +191,6 @@
                id="org.netxms.ui.eclipse.datacollection.popupActions.CreateSnmpDci#SnmpValue"
                label="%action.label.CreateDCI"
                menubarPath="additions">
-         </action>
-      </objectContribution>
-      <objectContribution
-            id="org.netxms.ui.eclipse.datacollection.actions.popup.object.MobileDevice"
-            objectClass="org.netxms.client.objects.MobileDevice">
-         <action
-               class="org.netxms.ui.eclipse.datacollection.actions.OpenEditor"
-               enablesFor="1"
-               icon="icons/dc_editor.png"
-               id="org.netxms.ui.eclipse.datacollection.popupActions.OpenEditor#MobileDevice"
-               label="%action.label.DataCollection"
-               menubarPath="datacollection">
-         </action>
-         <action
-               class="org.netxms.ui.eclipse.datacollection.actions.ShowLastValues"
-               enablesFor="1"
-               icon="icons/last_values.png"
-               id="org.netxms.ui.eclipse.datacollection.popupActions.ShowLastValues#MobileDevice"
-               label="%action.label.LastValues"
-               menubarPath="datacollection">
          </action>
       </objectContribution>
    </extension>

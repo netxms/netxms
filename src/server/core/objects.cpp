@@ -51,6 +51,7 @@ ObjectIndex g_idxAccessPointById;
 ObjectIndex g_idxConditionById;
 ObjectIndex g_idxServiceCheckById;
 ObjectIndex g_idxNetMapById;
+ObjectIndex g_idxChassisById;
 
 /**
  * Static data
@@ -82,7 +83,7 @@ static THREAD_RESULT THREAD_CALL ApplyTemplateThread(void *pArg)
       NetObj *dcTarget = FindObjectById(pInfo->targetId);
       if (dcTarget != NULL)
       {
-         if ((dcTarget->getObjectClass() == OBJECT_NODE) || (dcTarget->getObjectClass() == OBJECT_CLUSTER) || (dcTarget->getObjectClass() == OBJECT_MOBILEDEVICE))
+         if (dcTarget->isDataCollectionTarget())
          {
             BOOL lock1, lock2;
 
@@ -160,6 +161,7 @@ static THREAD_RESULT THREAD_CALL CacheLoadingThread(void *pArg)
 	UpdateDataCollectionCache(&g_idxClusterById);
 	UpdateDataCollectionCache(&g_idxMobileDeviceById);
 	UpdateDataCollectionCache(&g_idxAccessPointById);
+   UpdateDataCollectionCache(&g_idxChassisById);
 
    DbgPrintf(1, _T("Finished caching of DCI values"));
    return THREAD_OK;
@@ -255,10 +257,7 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
          pObject->generateGuid();
 
       // Create tables for storing data collection values
-      if ((pObject->getObjectClass() == OBJECT_NODE) ||
-          (pObject->getObjectClass() == OBJECT_MOBILEDEVICE) ||
-          (pObject->getObjectClass() == OBJECT_CLUSTER) ||
-          (pObject->getObjectClass() == OBJECT_ACCESSPOINT))
+      if (pObject->isDataCollectionTarget())
       {
          TCHAR szQuery[256], szQueryTemplate[256];
          UINT32 i;
@@ -332,7 +331,6 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 			case OBJECT_BUSINESSSERVICE:
 			case OBJECT_NODELINK:
 			case OBJECT_RACK:
-			case OBJECT_CHASSIS:
             break;
          case OBJECT_NODE:
 				g_idxNodeById.put(pObject->getId(), pObject);
@@ -367,6 +365,9 @@ void NetObjInsert(NetObj *pObject, bool newObject, bool importedObject)
 			case OBJECT_ACCESSPOINT:
 				g_idxAccessPointById.put(pObject->getId(), pObject);
             MacDbAddAccessPoint((AccessPoint *)pObject);
+            break;
+         case OBJECT_CHASSIS:
+            g_idxChassisById.put(pObject->getId(), pObject);
             break;
          case OBJECT_SUBNET:
             if (((Subnet *)pObject)->getIpAddress().isValidUnicast())
@@ -524,6 +525,9 @@ void NetObjDeleteFromIndexes(NetObj *pObject)
 		case OBJECT_ACCESSPOINT:
 			g_idxAccessPointById.remove(pObject->getId());
          MacDbRemove(((AccessPoint *)pObject)->getMacAddr());
+         break;
+		case OBJECT_CHASSIS:
+         g_idxChassisById.remove(pObject->getId());
          break;
       case OBJECT_SUBNET:
          if (((Subnet *)pObject)->getIpAddress().isValidUnicast())

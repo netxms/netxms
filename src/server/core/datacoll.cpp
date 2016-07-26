@@ -190,44 +190,50 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
 
 		if (pItem->isScheduledForDeletion())
 		{
-	      DbgPrintf(7, _T("DataCollector(): about to destroy DC object %d \"%s\" owner=%d"),
-			          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1);
+	      nxlog_debug(7, _T("DataCollector(): about to destroy DC object %d \"%s\" owner=%d"),
+			            pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1);
 			pItem->deleteFromDatabase();
 			delete pItem;
 			continue;
 		}
 
+		if (target == NULL)
+		{
+         nxlog_debug(3, _T("DataCollector: attempt to collect information for non-existing node (DCI=%d \"%s\")"),
+                     pItem->getId(), pItem->getName());
+
+         // Update item's last poll time and clear busy flag so item can be polled again
+         pItem->setLastPollTime(time(NULL));
+         pItem->setBusyFlag(FALSE);
+		   continue;
+		}
+
       DbgPrintf(8, _T("DataCollector(): processing DC object %d \"%s\" owner=%d sourceNode=%d"),
 		          pItem->getId(), pItem->getName(), (target != NULL) ? (int)target->getId() : -1, pItem->getSourceNode());
-		if (pItem->getSourceNode() != 0)
+      UINT32 sourceNodeId = target->getEffectiveSourceNode(pItem);
+		if (sourceNodeId != 0)
 		{
-			NetObj *object = FindObjectById(pItem->getSourceNode(), OBJECT_NODE);
-			if (object != NULL)
+			Node *sourceNode = (Node *)FindObjectById(sourceNodeId, OBJECT_NODE);
+			if (sourceNode != NULL)
 			{
-				if (object->isTrustedNode((target != NULL) ? target->getId() : 0))
+				if (((target->getObjectClass() == OBJECT_CHASSIS) && (((Chassis *)target)->getControllerId() == sourceNodeId)) ||
+				    sourceNode->isTrustedNode(target->getId()))
 				{
-					target = (Node *)object;
+					target = sourceNode;
 					target->incRefCount();
 				}
 				else
 				{
                // Change item's status to _T("not supported")
                pItem->setStatus(ITEM_STATUS_NOT_SUPPORTED, true);
-
-					if (target != NULL)
-					{
-						target->decRefCount();
-						target = NULL;
-					}
+               target->decRefCount();
+               target = NULL;
 				}
 			}
 			else
 			{
-				if (target != NULL)
-				{
-					target->decRefCount();
-					target = NULL;
-				}
+            target->decRefCount();
+            target = NULL;
 			}
 		}
 
@@ -288,8 +294,8 @@ static THREAD_RESULT THREAD_CALL DataCollector(void *pArg)
       else     /* target == NULL */
       {
 			Template *n = pItem->getOwner();
-         DbgPrintf(3, _T("*** DataCollector: Attempt to collect information for non-existing node (DCI=%d \"%s\" target=%d sourceNode=%d)"),
-			          pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, pItem->getSourceNode());
+         nxlog_debug(5, _T("DataCollector: attempt to collect information for non-existing or inaccessible node (DCI=%d \"%s\" target=%d sourceNode=%d)"),
+			            pItem->getId(), pItem->getName(), (n != NULL) ? (int)n->getId() : -1, sourceNodeId);
       }
 
 		// Update item's last poll time and clear busy flag so item can be polled again
@@ -339,6 +345,7 @@ static THREAD_RESULT THREAD_CALL ItemPoller(void *pArg)
 		g_idxNodeById.forEach(QueueItems, NULL);
 		g_idxClusterById.forEach(QueueItems, NULL);
 		g_idxMobileDeviceById.forEach(QueueItems, NULL);
+      g_idxChassisById.forEach(QueueItems, NULL);
 
       // Save last poll time
       dwTimingHistory[currPos] = (UINT32)(GetCurrentTimeMs() - qwStart);
