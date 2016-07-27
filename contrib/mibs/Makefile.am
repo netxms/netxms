@@ -59,13 +59,18 @@ mibs_DATA = \
 	BAY-STACK-SOURCE-GUARD-MIB.txt \
 	BAY-STACK-STATS-MIB.txt \
 	BAY-STACK-VRRP-EXT-MIB.txt \
+	BD-MIB.txt \
 	BGP4-MIB.txt \
 	BN-IF-EXTENSIONS-MIB.txt \
 	BPDU-PROTECTION-MIB.txt \
 	BPDU-TUNNELING-MIB.txt \
+	BRCD-FCIP-EXT-MIB.txt \
 	Brcm-adapterInfo-MIB.txt \
 	Brcm-BSAPTrap-MIB.txt \
 	BRIDGE-MIB.txt \
+	BROCADE-MAPS-MIB.txt \
+	Brocade-REG-MIB.txt \
+	Brocade-TC.txt \
 	CABLE-DIAG-MIB.txt \
 	CDX-6500-COMMON-MIB.txt \
 	CFMEXTENSION-MIB.txt \
@@ -209,8 +214,10 @@ mibs_DATA = \
 	ERPS-MIB.txt \
 	ES-1000-MIB.txt \
 	EtherLike-MIB.txt \
+	FA-EXT-MIB.txt \
 	FAN-MIB.txt \
 	FC-MGMT-MIB.txt \
+	FCMGMT-MIB.txt \
 	FDDI-SMT73-MIB.txt \
 	FIBRE-CHANNEL-FE-MIB.txt \
 	FILE-SYSTEM-MIB.txt \
@@ -226,6 +233,7 @@ mibs_DATA = \
 	FOUNDRY-SN-VSRP-MIB.txt \
 	FROGFOOT-RESOURCES-MIB.txt \
 	FSC-RAID-MIB.txt \
+	HA-MIB.txt \
 	H3C-COMMON-SYSTEM-MIB.txt \
 	H3C-CONFIG-MAN-MIB.txt \
 	H3C-ENTITY-EXT-MIB.txt \
@@ -364,6 +372,7 @@ mibs_DATA = \
 	L2PROTOCOL-TUNNEL-MIB.txt \
 	LAG-MIB.txt \
 	LANNET-MIB.txt \
+	LINK-INCIDENT-MIB.txt \
 	LINKSYS-MODEL-MIB.txt \
 	LLDP-EXT-DOT1-MIB.txt \
 	LLDP-EXT-DOT3-MIB.txt \
