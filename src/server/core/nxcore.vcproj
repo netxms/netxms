@@ -461,6 +461,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\chassis.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\client.cpp"
 				>
 			</File>
