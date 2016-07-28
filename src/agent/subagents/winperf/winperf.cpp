@@ -1,6 +1,6 @@
 /*
 ** Windows Performance NetXMS subagent
-** Copyright (C) 2004-2013 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,9 +34,10 @@
  */
 static DWORD m_dwFlags = WPF_ENABLE_DEFAULT_COUNTERS;
 static DWORD m_dwNumCPU = 1;
-static WINPERF_COUNTER *m_pProcessorCounters[MAX_CPU_COUNT];
-static WINPERF_COUNTER *m_pProcessorCounters5[MAX_CPU_COUNT];
-static WINPERF_COUNTER *m_pProcessorCounters15[MAX_CPU_COUNT];
+static WINPERF_COUNTER *s_processorCounters0[MAX_CPU_COUNT];
+static WINPERF_COUNTER *s_processorCounters1[MAX_CPU_COUNT];
+static WINPERF_COUNTER *s_processorCounters5[MAX_CPU_COUNT];
+static WINPERF_COUNTER *s_processorCounters15[MAX_CPU_COUNT];
 static MUTEX s_autoCountersLock = MutexCreate();
 static StringObjectMap<WINPERF_COUNTER> *s_autoCounters = new StringObjectMap<WINPERF_COUNTER>(false);
 
@@ -57,6 +58,7 @@ static struct
    { _T("System.CPU.LoadAvg"), _T("\\System\\Processor Queue Length"), 0, 60, COUNTER_TYPE_FLOAT, _T("Average CPU load for last minute"), DCI_DT_FLOAT },
    { _T("System.CPU.LoadAvg5"), _T("\\System\\Processor Queue Length"), 0, 300, COUNTER_TYPE_FLOAT, _T("Average CPU load for last 5 minutes"), DCI_DT_FLOAT },
    { _T("System.CPU.LoadAvg15"), _T("\\System\\Processor Queue Length"), 0, 900, COUNTER_TYPE_FLOAT, _T("Average CPU load for last 15 minutes"), DCI_DT_FLOAT },
+   { _T("System.CPU.CurrentUsage"), _T("\\Processor(_Total)\\% Processor Time"), 0, 2, COUNTER_TYPE_INT32, DCIDESC_SYSTEM_CPU_USAGECURR, DCI_DT_INT },
    { _T("System.CPU.Usage"), _T("\\Processor(_Total)\\% Processor Time"), 0, 60, COUNTER_TYPE_INT32, DCIDESC_SYSTEM_CPU_USAGE, DCI_DT_INT },
    { _T("System.CPU.Usage5"), _T("\\Processor(_Total)\\% Processor Time"), 0, 300, COUNTER_TYPE_INT32, DCIDESC_SYSTEM_CPU_USAGE5, DCI_DT_INT },
    { _T("System.CPU.Usage15"), _T("\\Processor(_Total)\\% Processor Time"), 0, 900, COUNTER_TYPE_INT32, DCIDESC_SYSTEM_CPU_USAGE15, DCI_DT_INT },
@@ -104,21 +106,27 @@ static LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, 
 
    switch(pArg[0])
    {
+      case _T('0'):  // System.CPU.Usage(*)
+         if (s_processorCounters0[nProcessor] != NULL)
+            ret_int(pValue, s_processorCounters0[nProcessor]->value.iLong);
+         else
+            nRet = SYSINFO_RC_ERROR;
+         break;
       case _T('1'):  // System.CPU.Usage(*)
-         if (m_pProcessorCounters[nProcessor] != NULL)
-            ret_int(pValue, m_pProcessorCounters[nProcessor]->value.iLong);
+         if (s_processorCounters1[nProcessor] != NULL)
+            ret_int(pValue, s_processorCounters1[nProcessor]->value.iLong);
          else
             nRet = SYSINFO_RC_ERROR;
          break;
       case _T('2'):  // System.CPU.Usage5(*)
-         if (m_pProcessorCounters5[nProcessor] != NULL)
-            ret_int(pValue, m_pProcessorCounters5[nProcessor]->value.iLong);
+         if (s_processorCounters5[nProcessor] != NULL)
+            ret_int(pValue, s_processorCounters5[nProcessor]->value.iLong);
          else
             nRet = SYSINFO_RC_ERROR;
          break;
       case _T('3'):  // System.CPU.Usage15(*)
-         if (m_pProcessorCounters15[nProcessor] != NULL)
-            ret_int(pValue, m_pProcessorCounters15[nProcessor]->value.iLong);
+         if (s_processorCounters15[nProcessor] != NULL)
+            ret_int(pValue, s_processorCounters15[nProcessor]->value.iLong);
          else
             nRet = SYSINFO_RC_ERROR;
          break;
@@ -407,6 +415,7 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
    { _T("PDH.CounterValue(*)"), H_PdhCounterValue, NULL, DCI_DT_INT, _T("") },
    { _T("PDH.Version"), H_PdhVersion, NULL, DCI_DT_UINT, _T("Version of PDH.DLL") },
+	{ _T("System.CPU.CurrentUsage(*)"), H_CPUUsage, _T("0"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_USAGECURR_EX },
 	{ _T("System.CPU.Usage(*)"), H_CPUUsage, _T("1"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_USAGE_EX },
    { _T("System.CPU.Usage5(*)"), H_CPUUsage, _T("2"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
    { _T("System.CPU.Usage15(*)"), H_CPUUsage, _T("3"), DCI_DT_INT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
@@ -496,9 +505,10 @@ static void AddPredefinedCounters()
    for(i = 0; i < m_dwNumCPU; i++)
    {
       _sntprintf(szBuffer, MAX_PATH, _T("\\Processor(%d)\\%% Processor Time"), i);
-      m_pProcessorCounters[i] = AddCounter(szBuffer, 0, 60, COUNTER_TYPE_INT32);
-      m_pProcessorCounters5[i] = AddCounter(szBuffer, 0, 300, COUNTER_TYPE_INT32);
-      m_pProcessorCounters15[i] = AddCounter(szBuffer, 0, 900, COUNTER_TYPE_INT32);
+      s_processorCounters0[i] = AddCounter(szBuffer, 0, 2, COUNTER_TYPE_INT32);
+      s_processorCounters1[i] = AddCounter(szBuffer, 0, 60, COUNTER_TYPE_INT32);
+      s_processorCounters5[i] = AddCounter(szBuffer, 0, 300, COUNTER_TYPE_INT32);
+      s_processorCounters15[i] = AddCounter(szBuffer, 0, 900, COUNTER_TYPE_INT32);
    }
 }
 

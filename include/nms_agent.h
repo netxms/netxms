@@ -325,9 +325,11 @@
 #define DCIDESC_SYSTEM_CPU_USAGE_EX               _T("Average CPU {instance} utilization for last minute")
 #define DCIDESC_SYSTEM_CPU_USAGE5_EX              _T("Average CPU {instance} utilization for last 5 minutes")
 #define DCIDESC_SYSTEM_CPU_USAGE15_EX             _T("Average CPU {instance} utilization for last 15 minutes")
+#define DCIDESC_SYSTEM_CPU_USAGECURR_EX           _T("Current CPU {instance} utilization")
 #define DCIDESC_SYSTEM_CPU_USAGE                  _T("Average CPU utilization for last minute")
 #define DCIDESC_SYSTEM_CPU_USAGE5                 _T("Average CPU utilization for last 5 minutes")
 #define DCIDESC_SYSTEM_CPU_USAGE15                _T("Average CPU utilization for last 15 minutes")
+#define DCIDESC_SYSTEM_CPU_USAGECURR              _T("Current CPU utilization")
 
 #define DCIDESC_SYSTEM_CPU_USAGE_USER_EX          _T("Average CPU {instance} utilization (user) for last minute")
 #define DCIDESC_SYSTEM_CPU_USAGE5_USER_EX         _T("Average CPU {instance} utilization (user) for last 5 minutes")

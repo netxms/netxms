@@ -10,6 +10,7 @@
 - New internal parameters: Server.ReceivedSNMPTraps, Server.ReceivedSyslogMessages, ReceivedSNMPTraps, ReceivedSyslogMessages
 - Max size of agent data collectiors pool can be configured
 - Agent data reconciliation block size and timeout can be configured
+- New agent parameters System.CPU.CurrentUsage and System.CPU.CurrentUsage(*)
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu
