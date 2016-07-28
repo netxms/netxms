@@ -472,9 +472,17 @@ NXSL_Value *NXSL_NodeClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
       value = new NXSL_Value((LONG)node->getSNMPVersion());
    }
+   else if (!_tcscmp(attr, _T("subType")))
+   {
+      value = new NXSL_Value(node->getSubType());
+   }
    else if (!_tcscmp(attr, _T("sysDescription")))
    {
       value = new NXSL_Value(node->getSysDescription());
+   }
+   else if (!_tcscmp(attr, _T("type")))
+   {
+      value = new NXSL_Value((INT32)node->getType());
    }
    else if (!_tcscmp(attr, _T("zone")))
 	{

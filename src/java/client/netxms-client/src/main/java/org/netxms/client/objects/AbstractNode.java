@@ -26,6 +26,7 @@ import org.netxms.base.NXCPMessage;
 import org.netxms.client.MacAddress;
 import org.netxms.client.NXCSession;
 import org.netxms.client.constants.AgentCacheMode;
+import org.netxms.client.constants.NodeType;
 
 /**
  * Abstract base class for node objects.
@@ -92,7 +93,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	protected String primaryName;
 	protected int flags;
 	protected int runtimeFlags;
-	protected int nodeType;
+	protected NodeType nodeType;
+	protected String nodeSubType;
 	protected int requredPollCount;
 	protected long pollerNodeId;
 	protected long agentProxyId;
@@ -156,7 +158,8 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 		primaryName = msg.getFieldAsString(NXCPCodes.VID_PRIMARY_NAME);
 		flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
 		runtimeFlags = msg.getFieldAsInt32(NXCPCodes.VID_RUNTIME_FLAGS);
-		nodeType = msg.getFieldAsInt32(NXCPCodes.VID_NODE_TYPE);
+		nodeType = NodeType.getByValue(msg.getFieldAsInt16(NXCPCodes.VID_NODE_TYPE));
+		nodeSubType = msg.getFieldAsString(NXCPCodes.VID_NODE_SUBTYPE);
 		requredPollCount = msg.getFieldAsInt32(NXCPCodes.VID_REQUIRED_POLLS);
 		pollerNodeId = msg.getFieldAsInt64(NXCPCodes.VID_POLLER_NODE_ID);
 		agentProxyId = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
@@ -221,12 +224,20 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	/**
 	 * @return the nodeType
 	 */
-	public int getNodeType()
+	public NodeType getNodeType()
 	{
 		return nodeType;
 	}
 
 	/**
+    * @return the nodeSubType
+    */
+   public String getNodeSubType()
+   {
+      return nodeSubType;
+   }
+
+   /**
 	 * @return the requredPollCount
 	 */
 	public int getRequredPollCount()

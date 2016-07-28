@@ -35,6 +35,8 @@ Node::Node() : DataCollectionTarget()
 {
 	m_primaryName[0] = 0;
    m_status = STATUS_UNKNOWN;
+   m_type = NODE_TYPE_UNKNOWN;
+   m_subType[0] = 0;
    m_dwFlags = 0;
    m_dwDynamicFlags = 0;
    m_zoneId = 0;
@@ -124,6 +126,8 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
 {
    addr.toString(m_primaryName);
    m_status = STATUS_UNKNOWN;
+   m_type = NODE_TYPE_UNKNOWN;
+   m_subType[0] = 0;
    m_ipAddress = addr;
    m_dwFlags = dwFlags;
    m_dwDynamicFlags = 0;
@@ -280,7 +284,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("runtime_flags,down_since,boot_time,driver_name,icmp_proxy,")
       _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,")
       _T("rack_id,rack_image,rack_position,rack_height,")
-      _T("last_agent_comm_time,syslog_msg_count,snmp_trap_count FROM nodes WHERE id=?"));
+      _T("last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
+      _T("node_type,node_subtype FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
 		return false;
 
@@ -365,6 +370,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_lastAgentCommTime = DBGetFieldLong(hResult, 0, 37);
    m_syslogMessageCount = DBGetFieldInt64(hResult, 0, 38);
    m_snmpTrapCount = DBGetFieldInt64(hResult, 0, 39);
+   m_type = (NodeType)DBGetFieldLong(hResult, 0, 40);
+   DBGetField(hResult, 0, 41, m_subType, MAX_NODE_SUBTYPE_LENGTH);
 
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
@@ -461,7 +468,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 			_T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
 			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_height=?,rack_id=?,boot_time=?,")
          _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=?,")
-         _T("syslog_msg_count=?,snmp_trap_count=? WHERE id=?"));
+         _T("syslog_msg_count=?,snmp_trap_count=?,node_type=?,node_subtype=? WHERE id=?"));
 	}
    else
 	{
@@ -470,8 +477,9 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 		  _T("agent_port,auth_method,secret,snmp_oid,uname,agent_version,platform_name,poller_node_id,zone_guid,")
 		  _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
 		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
-        _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,id) ")
-		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+        _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
+        _T("node_type,node_subtype,id) ")
+		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -530,7 +538,9 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 	DBBind(hStmt, 38, DB_SQLTYPE_INTEGER, (LONG)m_lastAgentCommTime);
    DBBind(hStmt, 39, DB_SQLTYPE_BIGINT, m_syslogMessageCount);
    DBBind(hStmt, 40, DB_SQLTYPE_BIGINT, m_snmpTrapCount);
-	DBBind(hStmt, 41, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 41, DB_SQLTYPE_INTEGER, (INT32)m_type);
+   DBBind(hStmt, 42, DB_SQLTYPE_VARCHAR, m_subType, DB_BIND_STATIC);
+	DBBind(hStmt, 43, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -2233,6 +2243,19 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
          agentUnlock();
       }
 
+		// Update node type
+		NodeType type = detectNodeType();
+      nxlog_debug(5, _T("ConfPoll(%s): detected node type: %d (%s)"), m_name, type, typeName(type));
+		lockProperties();
+		if ((type != NODE_TYPE_UNKNOWN) && (type != m_type))
+		{
+		   m_type = type;
+		   hasChanges = true;
+		   nxlog_debug(5, _T("ConfPoll(%s): node type set to %d (%s)"), m_name, type, typeName(type));
+         sendPollerMsg(dwRqId, _T("   Node type changed to %s\r\n"), typeName(type));
+		}
+		unlockProperties();
+
 		// Execute hook script
 		poller->setStatus(_T("hook"));
 		executeHookScript(_T("ConfigurationPoll"));
@@ -2257,6 +2280,34 @@ void Node::configurationPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo 
       setModified();
       unlockProperties();
    }
+}
+
+/**
+ * Detect node type
+ */
+NodeType Node::detectNodeType()
+{
+   NodeType type = NODE_TYPE_UNKNOWN;
+   if (m_dwFlags & NF_IS_SNMP)
+   {
+      nxlog_debug(6, _T("Node::detectNodeType(%s [%d]): SNMP node, driver name is %s"), m_name, m_id, m_driver->getName());
+
+      // Assume physical device if it supports SNMP and driver is not "GENERIC"
+      // FIXME: add driver method to determine node type
+      if (_tcscmp(m_driver->getName(), _T("GENERIC")))
+      {
+         type = NODE_TYPE_PHYSICAL;
+      }
+      else
+      {
+         if (m_dwFlags & NF_IS_PRINTER)
+         {
+            // Assume that printers are physical devices
+            type = NODE_TYPE_PHYSICAL;
+         }
+      }
+   }
+   return type;
 }
 
 /**
@@ -4635,6 +4686,8 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
    DataCollectionTarget::fillMessageInternal(pMsg);
    pMsg->setField(VID_IP_ADDRESS, m_ipAddress);
 	pMsg->setField(VID_PRIMARY_NAME, m_primaryName);
+   pMsg->setField(VID_NODE_TYPE, (INT16)m_type);
+   pMsg->setField(VID_NODE_SUBTYPE, m_subType);
    pMsg->setField(VID_FLAGS, m_dwFlags);
    pMsg->setField(VID_RUNTIME_FLAGS, m_dwDynamicFlags);
    pMsg->setField(VID_AGENT_PORT, m_agentPort);
@@ -7681,4 +7734,13 @@ void Node::collectProxyInfo(ProxyInfo *info)
 
    if (isTarget)
       addProxySnmpTarget(info, this);
+}
+
+/**
+ * Get node type name from type
+ */
+const TCHAR *Node::typeName(NodeType type)
+{
+   static const TCHAR *names[] = { _T("Unknown"), _T("Physical"), _T("Virtual"), _T("Controller") };
+   return ((type >= 0) && (type < sizeof(names) / sizeof(const TCHAR *))) ? names[type] : names[0];
 }

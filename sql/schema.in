@@ -439,6 +439,8 @@ CREATE TABLE nodes
   last_agent_comm_time integer not null,
   syslog_msg_count SQL_INT64 not null,
   snmp_trap_count SQL_INT64 not null,
+  node_type integer not null,
+  node_subtype varchar(127) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 

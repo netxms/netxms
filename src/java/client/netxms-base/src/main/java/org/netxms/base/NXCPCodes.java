@@ -916,6 +916,7 @@ public class NXCPCodes
    public static final long VID_TOOLTIP_DCI_COUNT = 542;
    public static final long VID_CONTROLLER_ID = 543;
    public static final long VID_CHASSIS_ID = 544;
+   public static final long VID_NODE_SUBTYPE = 545;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

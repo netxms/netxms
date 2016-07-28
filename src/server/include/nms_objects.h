@@ -1248,6 +1248,17 @@ class Subnet;
 struct ProxyInfo;
 
 /**
+ * Node subtypes
+ */
+enum NodeType
+{
+   NODE_TYPE_UNKNOWN = 0,
+   NODE_TYPE_PHYSICAL = 1,
+   NODE_TYPE_VIRTUAL = 2,
+   NODE_TYPE_CONTROLLER = 3
+};
+
+/**
  * Node
  */
 class NXCORE_EXPORTABLE Node : public DataCollectionTarget
@@ -1276,6 +1287,8 @@ protected:
 	TCHAR m_primaryName[MAX_DNS_NAME];
    UINT32 m_dwFlags;
    UINT32 m_dwDynamicFlags;       // Flags used at runtime by server
+   NodeType m_type;
+   TCHAR m_subType[MAX_NODE_SUBTYPE_LENGTH];
 	int m_iPendingStatus;
 	int m_iPollCount;
 	int m_iRequiredPollCount;
@@ -1384,6 +1397,7 @@ protected:
 	void updatePrimaryIpAddr();
 	bool confPollAgent(UINT32 dwRqId);
 	bool confPollSnmp(UINT32 dwRqId);
+	NodeType detectNodeType();
 	bool querySnmpSysProperty(SNMP_Transport *snmp, const TCHAR *oid, const TCHAR *propName, UINT32 pollRqId, TCHAR **value);
 	void checkBridgeMib(SNMP_Transport *pTransport);
 	void checkIfXTable(SNMP_Transport *pTransport);
@@ -1439,6 +1453,8 @@ public:
 
    const InetAddress& getIpAddress() const { return m_ipAddress; }
    UINT32 getZoneId() const { return m_zoneId; }
+   NodeType getType() const { return m_type; }
+   const TCHAR *getSubType() const { return m_subType; }
    UINT32 getFlags() const { return m_dwFlags; }
    UINT32 getRuntimeFlags() const { return m_dwDynamicFlags; }
    void setFlag(UINT32 flag) { lockProperties(); m_dwFlags |= flag; setModified(); unlockProperties(); }
@@ -1625,6 +1641,8 @@ public:
 
 	void incSyslogMessageCount();
 	void incSnmpTrapCount();
+
+	static const TCHAR *typeName(NodeType type);
 };
 
 /**

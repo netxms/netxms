@@ -684,6 +684,22 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V408 to V409
+ */
+static BOOL H_UpgradeFromV408(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE nodes ADD node_type integer\n")
+      _T("ALTER TABLE nodes ADD node_subtype varchar(127)\n")
+      _T("UPDATE nodes SET node_type=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetSchemaVersion(409));
+   return TRUE;
+}
+
+/**
  * Upgrade from V407 to V408
  */
 static BOOL H_UpgradeFromV407(int currVersion, int newVersion)
@@ -10285,6 +10301,7 @@ static struct
    { 405, 406, H_UpgradeFromV405 },
    { 406, 407, H_UpgradeFromV406 },
    { 407, 408, H_UpgradeFromV407 },
+   { 408, 409, H_UpgradeFromV408 },
    { 0, 0, NULL }
 };
 
