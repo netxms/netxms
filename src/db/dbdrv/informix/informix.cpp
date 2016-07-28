@@ -227,7 +227,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *host, char *login, char *pas
 	SQLSMALLINT outLen;
 	char connectString[1024];
 	snprintf(connectString, 1024, "DSN=%s;UID=%s;PWD=%s", database, login, password);
-	iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
+	iResult = SQLDriverConnectA(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{
 		GetSQLErrorInfo(SQL_HANDLE_DBC, pConn->sqlConn, errorText);

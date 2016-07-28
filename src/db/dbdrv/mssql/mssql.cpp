@@ -30,7 +30,7 @@ DECLARE_DRIVER_HEADER("MSSQL")
 /**
  * Selected ODBC driver
  */
-static TCHAR s_driver[SQL_MAX_DSN_LENGTH + 1] = _T("SQL Native Client");
+static char s_driver[SQL_MAX_DSN_LENGTH + 1] = "SQL Native Client";
 
 /**
  * Convert ODBC state to NetXMS database error code and get error text
@@ -179,18 +179,18 @@ extern "C" bool EXPORT DrvInit(const char *cmdLine)
 
 	// Find correct driver
 	// Default is "SQL Native Client", but switch to "SQL Server Native Client 10.0" if found
-	TCHAR name[SQL_MAX_DSN_LENGTH + 1], attrs[1024];
+	char name[SQL_MAX_DSN_LENGTH + 1], attrs[1024];
 	SQLSMALLINT l1, l2;
-	rc = SQLDrivers(sqlEnv, SQL_FETCH_FIRST, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
+	rc = SQLDriversA(sqlEnv, SQL_FETCH_FIRST, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
 	while((rc == SQL_SUCCESS) || (rc == SQL_SUCCESS_WITH_INFO))
 	{
-		if (!_tcscmp(name, _T("SQL Server Native Client 10.0")) ||
-          !_tcscmp(name, _T("SQL Server Native Client 11.0")))
+		if (!strcmp(name, "SQL Server Native Client 10.0") ||
+          !strcmp(name, "SQL Server Native Client 11.0"))
 		{
-			_tcscpy(s_driver, name);
+			strcpy(s_driver, name);
 			break;
 		}
-		rc = SQLDrivers(sqlEnv, SQL_FETCH_NEXT, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
+		rc = SQLDriversA(sqlEnv, SQL_FETCH_NEXT, (SQLCHAR *)name, SQL_MAX_DSN_LENGTH + 1, &l1, (SQLCHAR *)attrs, 1024, &l2);
 	}
 
    SQLFreeHandle(SQL_HANDLE_ENV, sqlEnv);
@@ -248,15 +248,13 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
 
 	if (!strcmp(login, "*"))
 	{
-		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;Trusted_Connection=yes;Database=%s;APP=NetXMS",
-			      s_driver, host, database);
+		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;Trusted_Connection=yes;Database=%s;APP=NetXMS", s_driver, host, database);
 	}
 	else
 	{
-		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;UID=%s;PWD=%s;Database=%s;APP=NetXMS",
-		         s_driver, host, login, password, database);
+		snprintf(connectString, 1024, "DRIVER={%s};Server=%s;UID=%s;PWD=%s;Database=%s;APP=NetXMS", s_driver, host, login, password, database);
 	}
-	iResult = SQLDriverConnect(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
+	iResult = SQLDriverConnectA(pConn->sqlConn, NULL, (SQLCHAR *)connectString, SQL_NTS, NULL, 0, &outLen, SQL_DRIVER_NOPROMPT);
 
 	if ((iResult != SQL_SUCCESS) && (iResult != SQL_SUCCESS_WITH_INFO))
 	{

@@ -55,9 +55,10 @@
 
 /**
  * Fixes build failure
- * Allows to use SQLConnectA in unicode builds
+ * Allows to use SQLConnect and SQLSetEnvAttr in unicode builds
  */
 #undef SQLConnect
+#undef SQLSetEnvAttr
 
 /**
  * Driver connection handle structure
