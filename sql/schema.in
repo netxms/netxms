@@ -377,6 +377,7 @@ CREATE TABLE chassis
 (
   id integer not null,
   controller_id integer not null,
+  flags integer not null,
   rack_id integer not null,
   rack_image varchar(36) null,
   rack_position integer not null,
@@ -387,6 +388,7 @@ CREATE TABLE chassis
 COMMENT_TABLE(chassis, 'Chassis')
 COMMENT_COLUMN(chassis.id, 'Chassis id form object_properties')
 COMMENT_COLUMN(chassis.controller_id, 'Id of node object providing management capabilities for this chassis')
+COMMENT_COLUMN(chassis.flags, 'Chassis options as bit flags')
 COMMENT_COLUMN(chassis.rack_id, 'Related rack object ID')
 COMMENT_COLUMN(chassis.rack_image, 'Image to be used in rack view')
 COMMENT_COLUMN(chassis.rack_position, 'Position in rack (in rack units)')

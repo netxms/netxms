@@ -203,17 +203,15 @@ bool Container::deleteFromDatabase(DB_HANDLE hdb)
  * Link child objects after loading from database
  * This method is expected to be called only at startup, so we don't lock
  */
-void Container::linkChildObjects()
+void Container::linkObjects()
 {
-   NetObj *pObject;
-   UINT32 i;
-
+   NetObj::linkObjects();
    if (m_dwChildIdListSize > 0)
    {
       // Find and link child objects
-      for(i = 0; i < m_dwChildIdListSize; i++)
+      for(UINT32 i = 0; i < m_dwChildIdListSize; i++)
       {
-         pObject = FindObjectById(m_pdwChildIdList[i]);
+         NetObj *pObject = FindObjectById(m_pdwChildIdList[i]);
          if (pObject != NULL)
             linkObject(pObject);
          else

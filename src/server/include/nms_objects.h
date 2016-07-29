@@ -575,6 +575,7 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual void linkObjects();
 
    void setId(UINT32 dwId) { m_id = dwId; setModified(); }
    void generateGuid() { m_guid = uuid::generate(); }
@@ -1223,6 +1224,7 @@ protected:
    virtual void collectProxyInfo(ProxyInfo *info);
 
    void updateRackBinding();
+   void updateControllerBinding();
 
 public:
    Chassis();
@@ -1233,6 +1235,7 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual void linkObjects();
    virtual bool showThresholdSummary();
    virtual UINT32 getEffectiveSourceNode(DCObject *dco);
 
@@ -1242,6 +1245,9 @@ public:
    UINT32 getRackId() const { return m_rackId; }
    INT16 getRackHeight() const { return m_rackHeight; }
    INT16 getRackPosition() const { return m_rackPosition; }
+   bool bindUnderController() { return (m_flags & CHF_BIND_UNDER_CONTROLLER) ? true : false; }
+
+   void setBindUnderController(bool doBind);
 };
 
 class Subnet;
@@ -1838,8 +1844,7 @@ public:
 
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    void loadFromDatabase(DB_HANDLE hdb);
-
-   void linkChildObjects();
+   virtual void linkObjects();
    void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 };
 
@@ -1897,12 +1902,12 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+   virtual void linkObjects();
 
 	virtual bool showThresholdSummary();
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
-   void linkChildObjects();
    void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 
    AutoBindDecision isSuitableForNode(Node *node);
@@ -2448,7 +2453,8 @@ public:
 	virtual BOOL saveToDatabase(DB_HANDLE hdb);
    void loadFromDatabase(DB_HANDLE hdb);
 
-   void linkChildObjects();
+   virtual void linkObjects();
+
    void linkObject(NetObj *pObject) { addChild(pObject); pObject->addParent(this); }
 };
 

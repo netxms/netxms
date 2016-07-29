@@ -85,8 +85,10 @@ void BusinessServiceRoot::loadFromDatabase(DB_HANDLE hdb)
  * Link child objects
  * This method is expected to be called only at startup, so we don't lock
  */
-void BusinessServiceRoot::linkChildObjects()
+void BusinessServiceRoot::linkObjects()
 {
+   ServiceContainer::linkObjects();
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    TCHAR szQuery[256];

@@ -707,6 +707,7 @@ static BOOL H_UpgradeFromV407(int currVersion, int newVersion)
    CHK_EXEC(CreateTable(
          _T("CREATE TABLE chassis (")
          _T("   id integer not null,")
+         _T("   flags integer not null,")
          _T("   controller_id integer not null,")
          _T("   rack_id integer not null,")
          _T("   rack_image varchar(36) null,")

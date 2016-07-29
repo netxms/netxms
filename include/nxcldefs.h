@@ -224,6 +224,11 @@
 #define CF_AUTO_UNBIND           0x00000002
 
 /**
+ * Chassis flags
+ */
+#define CHF_BIND_UNDER_CONTROLLER   0x00000001
+
+/**
  * Interface flags
  */
 #define IF_SYNTHETIC_MASK        0x00000001

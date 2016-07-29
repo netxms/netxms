@@ -133,6 +133,13 @@ bool NetObj::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
 }
 
 /**
+ * Link related objects after loading from database
+ */
+void NetObj::linkObjects()
+{
+}
+
+/**
  * Save object to database
  */
 BOOL NetObj::saveToDatabase(DB_HANDLE hdb)

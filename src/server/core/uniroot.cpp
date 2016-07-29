@@ -41,8 +41,10 @@ UniversalRoot::~UniversalRoot()
  * Link child objects
  * This method is expected to be called only at startup, so we don't lock
  */
-void UniversalRoot::linkChildObjects()
+void UniversalRoot::linkObjects()
 {
+   NetObj::linkObjects();
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    TCHAR szQuery[256];

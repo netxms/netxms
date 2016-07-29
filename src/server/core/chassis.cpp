@@ -109,6 +109,49 @@ void Chassis::updateRackBinding()
 }
 
 /**
+ * Update controller binding
+ */
+void Chassis::updateControllerBinding()
+{
+   bool controllerFound = false;
+
+   lockParentList(true);
+   for(int i = 0; i < m_parentList->size(); i++)
+   {
+      NetObj *object = m_parentList->get(i);
+      if (object->getId() == m_controllerId)
+      {
+         controllerFound = true;
+         break;
+      }
+   }
+   unlockParentList();
+
+   if ((m_flags & CHF_BIND_UNDER_CONTROLLER) && !controllerFound)
+   {
+      NetObj *controller = FindObjectById(m_controllerId);
+      if (controller != NULL)
+      {
+         controller->addChild(this);
+         addParent(controller);
+      }
+      else
+      {
+         nxlog_debug(4, _T("Chassis::updateControllerBinding(%s [%d]): controller object with ID %d not found"), m_name, m_id, m_controllerId);
+      }
+   }
+   else if (!(m_flags & CHF_BIND_UNDER_CONTROLLER) && controllerFound)
+   {
+      NetObj *controller = FindObjectById(m_controllerId);
+      if (controller != NULL)
+      {
+         controller->deleteChild(this);
+         deleteParent(controller);
+      }
+   }
+}
+
+/**
  * Create NXCP message with object's data
  */
 void Chassis::fillMessageInternal(NXCPMessage *msg)
@@ -154,9 +197,9 @@ BOOL Chassis::saveToDatabase(DB_HANDLE hdb)
    {
       DB_STATEMENT hStmt;
       if (IsDatabaseRecordExist(hdb, _T("chassis"), _T("id"), m_id))
-         hStmt = DBPrepare(hdb, _T("UPDATE chassis SET controller_id=?,rack_id=?,rack_image=?,rack_position=?,rack_height=? WHERE id=?"));
+         hStmt = DBPrepare(hdb, _T("UPDATE chassis SET controller_id=?,rack_id=?,rack_image=?,rack_position=?,rack_height=?,flags=? WHERE id=?"));
       else
-         hStmt = DBPrepare(hdb, _T("INSERT INTO chassis (controller_id,rack_id,rack_image,rack_position,rack_height,id) VALUES (?,?,?,?,?,?)"));
+         hStmt = DBPrepare(hdb, _T("INSERT INTO chassis (controller_id,rack_id,rack_image,rack_position,rack_height,flags,id) VALUES (?,?,?,?,?,?,?)"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_controllerId);
@@ -164,7 +207,8 @@ BOOL Chassis::saveToDatabase(DB_HANDLE hdb)
          DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_rackImage);
          DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_rackPosition);
          DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_rackHeight);
-         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_flags);
+         DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, m_id);
          success = DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
@@ -215,7 +259,7 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
       return false;
    }
 
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image,rack_position,rack_height FROM chassis WHERE id=?"));
+   DB_STATEMENT hStmt = DBPrepare(hdb, _T("SELECT controller_id,rack_id,rack_image,rack_position,rack_height,flags FROM chassis WHERE id=?"));
    if (hStmt == NULL)
       return false;
 
@@ -232,6 +276,7 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
    m_rackImage = DBGetFieldGUID(hResult, 0, 2);
    m_rackPosition = DBGetFieldULong(hResult, 0, 3);
    m_rackHeight = DBGetFieldULong(hResult, 0, 4);
+   m_flags = DBGetFieldULong(hResult, 0, 5);
 
    DBFreeResult(hResult);
    DBFreeStatement(hStmt);
@@ -244,6 +289,16 @@ bool Chassis::loadFromDatabase(DB_HANDLE hdb, UINT32 id)
 
    updateRackBinding();
    return true;
+}
+
+
+/**
+ * Link related objects after loading from database
+ */
+void Chassis::linkObjects()
+{
+   DataCollectionTarget::linkObjects();
+   updateControllerBinding();
 }
 
 /**
@@ -320,4 +375,19 @@ UINT32 Chassis::getEffectiveSourceNode(DCObject *dco)
       return m_controllerId;
    }
    return 0;
+}
+
+/**
+ * Update controller binding flag
+ */
+void Chassis::setBindUnderController(bool doBind)
+{
+   lockProperties();
+   if (doBind)
+      m_flags |= CHF_BIND_UNDER_CONTROLLER;
+   else
+      m_flags &= ~CHF_BIND_UNDER_CONTROLLER;
+   setModified(false);
+   unlockProperties();
+   updateControllerBinding();
 }

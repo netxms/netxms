@@ -1104,21 +1104,11 @@ static void RecalcStatusCallback(NetObj *object, void *data)
 }
 
 /**
- * ObjectIndex::forEach callback which links container child objects
+ * ObjectIndex::forEach callback which links objects after loading
  */
-static void LinkChildObjectsCallback(NetObj *object, void *data)
+static void LinkObjects(NetObj *object, void *data)
 {
-	if ((object->getObjectClass() == OBJECT_CONTAINER) ||
-		 (object->getObjectClass() == OBJECT_RACK) ||
-		 (object->getObjectClass() == OBJECT_TEMPLATEGROUP) ||
-		 (object->getObjectClass() == OBJECT_POLICYGROUP) ||
-		 (object->getObjectClass() == OBJECT_NETWORKMAPGROUP) ||
-		 (object->getObjectClass() == OBJECT_DASHBOARD) ||
-		 (object->getObjectClass() == OBJECT_BUSINESSSERVICE) ||
-		 (object->getObjectClass() == OBJECT_NODELINK))
-	{
-		((Container *)object)->linkChildObjects();
-	}
+   object->linkObjects();
 }
 
 /**
@@ -1740,15 +1730,7 @@ BOOL LoadObjects()
 
    // Link children to container and template group objects
    DbgPrintf(2, _T("Linking objects..."));
-	g_idxObjectById.forEach(LinkChildObjectsCallback, NULL);
-
-   // Link children to root objects
-   g_pServiceRoot->linkChildObjects();
-   g_pTemplateRoot->linkChildObjects();
-   g_pPolicyRoot->linkChildObjects();
-   g_pMapRoot->linkChildObjects();
-	g_pDashboardRoot->linkChildObjects();
-	g_pBusinessServiceRoot->linkChildObjects();
+	g_idxObjectById.forEach(LinkObjects, NULL);
 
 	// Link custom object classes provided by modules
    CALL_ALL_MODULES(pfLinkObjects, ());
