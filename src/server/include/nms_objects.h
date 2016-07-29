@@ -725,6 +725,7 @@ public:
 
    virtual void calculateCompoundStatus(BOOL bForcedRecalc = FALSE);
 
+   UINT32 getFlags() const { return m_flags; }
    int getVersionMajor() { return m_dwVersion >> 16; }
    int getVersionMinor() { return m_dwVersion & 0xFFFF; }
 
@@ -833,40 +834,40 @@ public:
 
    const InetAddressList *getIpAddressList() { return &m_ipAddressList; }
    const InetAddress& getFirstIpAddress();
-   UINT32 getZoneId() { return m_zoneId; }
-   UINT32 getIfIndex() { return m_index; }
-   UINT32 getIfType() { return m_type; }
-   UINT32 getMTU() { return m_mtu; }
-   UINT64 getSpeed() { return m_speed; }
-	UINT32 getBridgePortNumber() { return m_bridgePortNumber; }
-	UINT32 getSlotNumber() { return m_slotNumber; }
-	UINT32 getPortNumber() { return m_portNumber; }
-	UINT32 getPeerNodeId() { return m_peerNodeId; }
-	UINT32 getPeerInterfaceId() { return m_peerInterfaceId; }
-   LinkLayerProtocol getPeerDiscoveryProtocol() { return m_peerDiscoveryProtocol; }
-	UINT32 getFlags() { return m_flags; }
-	int getAdminState() { return (int)m_adminState; }
-	int getOperState() { return (int)m_operState; }
-   int getConfirmedOperState() { return (int)m_confirmedOperState; }
-	int getDot1xPaeAuthState() { return (int)m_dot1xPaeAuthState; }
-	int getDot1xBackendAuthState() { return (int)m_dot1xBackendAuthState; }
-	const TCHAR *getDescription() { return m_description; }
-	const TCHAR *getAlias() { return m_alias; }
-   const BYTE *getMacAddr() { return m_macAddr; }
-   int getIfTableSuffixLen() { return m_ifTableSuffixLen; }
-   const UINT32 *getIfTableSuffix() { return m_ifTableSuffix; }
+   UINT32 getZoneId() const { return m_zoneId; }
+   UINT32 getIfIndex() const { return m_index; }
+   UINT32 getIfType() const { return m_type; }
+   UINT32 getMTU() const { return m_mtu; }
+   UINT64 getSpeed() const { return m_speed; }
+	UINT32 getBridgePortNumber() const { return m_bridgePortNumber; }
+	UINT32 getSlotNumber() const { return m_slotNumber; }
+	UINT32 getPortNumber() const { return m_portNumber; }
+	UINT32 getPeerNodeId() const { return m_peerNodeId; }
+	UINT32 getPeerInterfaceId() const { return m_peerInterfaceId; }
+   LinkLayerProtocol getPeerDiscoveryProtocol() const { return m_peerDiscoveryProtocol; }
+	UINT32 getFlags() const { return m_flags; }
+	int getAdminState() const { return (int)m_adminState; }
+	int getOperState() const { return (int)m_operState; }
+   int getConfirmedOperState() const { return (int)m_confirmedOperState; }
+	int getDot1xPaeAuthState() const { return (int)m_dot1xPaeAuthState; }
+	int getDot1xBackendAuthState() const { return (int)m_dot1xBackendAuthState; }
+	const TCHAR *getDescription() const { return m_description; }
+	const TCHAR *getAlias() const { return m_alias; }
+   const BYTE *getMacAddr() const { return m_macAddr; }
+   int getIfTableSuffixLen() const { return m_ifTableSuffixLen; }
+   const UINT32 *getIfTableSuffix() const { return m_ifTableSuffix; }
    UINT32 getPingTime();
-	bool isSyntheticMask() { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
-	bool isPhysicalPort() { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
-	bool isLoopback() { return (m_flags & IF_LOOPBACK) ? true : false; }
-	bool isManuallyCreated() { return (m_flags & IF_CREATED_MANUALLY) ? true : false; }
-	bool isExcludedFromTopology() { return (m_flags & (IF_EXCLUDE_FROM_TOPOLOGY | IF_LOOPBACK)) ? true : false; }
-   bool isFake() { return (m_index == 1) &&
-                          (m_type == IFTYPE_OTHER) &&
-                          (!_tcscmp(m_name, _T("lan0")) || !_tcscmp(m_name, _T("unknown"))) &&
-                          (!memcmp(m_macAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
+	bool isSyntheticMask() const { return (m_flags & IF_SYNTHETIC_MASK) ? true : false; }
+	bool isPhysicalPort() const { return (m_flags & IF_PHYSICAL_PORT) ? true : false; }
+	bool isLoopback() const { return (m_flags & IF_LOOPBACK) ? true : false; }
+	bool isManuallyCreated() const { return (m_flags & IF_CREATED_MANUALLY) ? true : false; }
+	bool isExcludedFromTopology() const { return (m_flags & (IF_EXCLUDE_FROM_TOPOLOGY | IF_LOOPBACK)) ? true : false; }
+   bool isFake() const { return (m_index == 1) &&
+                                (m_type == IFTYPE_OTHER) &&
+                                (!_tcscmp(m_name, _T("lan0")) || !_tcscmp(m_name, _T("unknown"))) &&
+                                (!memcmp(m_macAddr, "\x00\x00\x00\x00\x00\x00", 6)); }
 
-   UINT64 getLastDownEventId() { return m_lastDownEventId; }
+   UINT64 getLastDownEventId() const { return m_lastDownEventId; }
    void setLastDownEventId(QWORD id) { m_lastDownEventId = id; }
 
    void setMacAddr(const BYTE *macAddr, bool updateMacDB);
@@ -1161,7 +1162,6 @@ protected:
    ObjectArray<InetAddress> *m_syncNetworks;
 	UINT32 m_dwNumResources;
 	CLUSTER_RESOURCE *m_pResourceList;
-	UINT32 m_dwFlags;
 	time_t m_tmLastPoll;
 	UINT32 m_zoneId;
 
@@ -1192,11 +1192,11 @@ public:
 
    void statusPoll(PollerInfo *poller);
    void statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *poller);
-   void lockForStatusPoll() { m_dwFlags |= CLF_QUEUED_FOR_STATUS_POLL; }
+   void lockForStatusPoll() { m_flags |= CLF_QUEUED_FOR_STATUS_POLL; }
    bool isReadyForStatusPoll()
    {
       return ((m_status != STATUS_UNMANAGED) && (!m_isDeleted) &&
-              (!(m_dwFlags & CLF_QUEUED_FOR_STATUS_POLL)) &&
+              (!(m_flags & CLF_QUEUED_FOR_STATUS_POLL)) &&
               ((UINT32)time(NULL) - (UINT32)m_tmLastPoll > g_dwStatusPollingInterval))
                   ? true : false;
    }
@@ -1291,7 +1291,6 @@ private:
 protected:
    InetAddress m_ipAddress;
 	TCHAR m_primaryName[MAX_DNS_NAME];
-   UINT32 m_dwFlags;
    UINT32 m_dwDynamicFlags;       // Flags used at runtime by server
    NodeType m_type;
    TCHAR m_subType[MAX_NODE_SUBTYPE_LENGTH];
@@ -1461,23 +1460,22 @@ public:
    UINT32 getZoneId() const { return m_zoneId; }
    NodeType getType() const { return m_type; }
    const TCHAR *getSubType() const { return m_subType; }
-   UINT32 getFlags() const { return m_dwFlags; }
    UINT32 getRuntimeFlags() const { return m_dwDynamicFlags; }
 
-   void setFlag(UINT32 flag) { lockProperties(); m_dwFlags |= flag; setModified(); unlockProperties(); }
-   void clearFlag(UINT32 flag) { lockProperties(); m_dwFlags &= ~flag; setModified(); unlockProperties(); }
-   void setLocalMgmtFlag() { m_dwFlags |= NF_IS_LOCAL_MGMT; }
-   void clearLocalMgmtFlag() { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
+   void setFlag(UINT32 flag) { lockProperties(); m_flags |= flag; setModified(); unlockProperties(); }
+   void clearFlag(UINT32 flag) { lockProperties(); m_flags &= ~flag; setModified(); unlockProperties(); }
+   void setLocalMgmtFlag() { m_flags |= NF_IS_LOCAL_MGMT; }
+   void clearLocalMgmtFlag() { m_flags &= ~NF_IS_LOCAL_MGMT; }
 
    void setType(NodeType type, const TCHAR *subType) { lockProperties(); m_type = type; nx_strncpy(m_subType, subType, MAX_NODE_SUBTYPE_LENGTH); unlockProperties(); }
 
-   bool isSNMPSupported() const { return m_dwFlags & NF_IS_SNMP ? true : false; }
-   bool isNativeAgent() const { return m_dwFlags & NF_IS_NATIVE_AGENT ? true : false; }
-   bool isBridge() const { return m_dwFlags & NF_IS_BRIDGE ? true : false; }
-   bool isRouter() const { return m_dwFlags & NF_IS_ROUTER ? true : false; }
-   bool isLocalManagement() const { return m_dwFlags & NF_IS_LOCAL_MGMT ? true : false; }
+   bool isSNMPSupported() const { return m_flags & NF_IS_SNMP ? true : false; }
+   bool isNativeAgent() const { return m_flags & NF_IS_NATIVE_AGENT ? true : false; }
+   bool isBridge() const { return m_flags & NF_IS_BRIDGE ? true : false; }
+   bool isRouter() const { return m_flags & NF_IS_ROUTER ? true : false; }
+   bool isLocalManagement() const { return m_flags & NF_IS_LOCAL_MGMT ? true : false; }
 	bool isPerVlanFdbSupported() const { return (m_driver != NULL) ? m_driver->isPerVlanFdbSupported() : false; }
-	bool isWirelessController() const { return m_dwFlags & NF_IS_WIFI_CONTROLLER ? true : false; }
+	bool isWirelessController() const { return m_flags & NF_IS_WIFI_CONTROLLER ? true : false; }
 
 	LONG getSNMPVersion() const { return m_snmpVersion; }
 	UINT16 getSNMPPort() const { return m_snmpPort; }
@@ -1673,7 +1671,7 @@ inline bool Node::isReadyForStatusPoll()
       return true;
    }
    return (m_status != STATUS_UNMANAGED) &&
-	       (!(m_dwFlags & NF_DISABLE_STATUS_POLL)) &&
+	       (!(m_flags & NF_DISABLE_STATUS_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_STATUS_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
 			 (getMyCluster() == NULL) &&
@@ -1690,7 +1688,7 @@ inline bool Node::isReadyForConfigurationPoll()
       return true;
    }
    return (m_status != STATUS_UNMANAGED) &&
-	       (!(m_dwFlags & NF_DISABLE_CONF_POLL)) &&
+	       (!(m_flags & NF_DISABLE_CONF_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_CONFIG_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           ((UINT32)(time(NULL) - m_lastConfigurationPoll) > g_dwConfigurationPollingInterval);
@@ -1702,7 +1700,7 @@ inline bool Node::isReadyForDiscoveryPoll()
 		return false;
    return (g_flags & AF_ENABLE_NETWORK_DISCOVERY) &&
           (m_status != STATUS_UNMANAGED) &&
-			 (!(m_dwFlags & NF_DISABLE_DISCOVERY_POLL)) &&
+			 (!(m_flags & NF_DISABLE_DISCOVERY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_DISCOVERY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
@@ -1714,7 +1712,7 @@ inline bool Node::isReadyForRoutePoll()
 	if (m_isDeleted)
 		return false;
    return (m_status != STATUS_UNMANAGED) &&
-	       (!(m_dwFlags & NF_DISABLE_ROUTE_POLL)) &&
+	       (!(m_flags & NF_DISABLE_ROUTE_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_ROUTE_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
@@ -1726,7 +1724,7 @@ inline bool Node::isReadyForTopologyPoll()
 	if (m_isDeleted)
 		return false;
    return (m_status != STATUS_UNMANAGED) &&
-	       (!(m_dwFlags & NF_DISABLE_TOPOLOGY_POLL)) &&
+	       (!(m_flags & NF_DISABLE_TOPOLOGY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_TOPOLOGY_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&
@@ -1738,7 +1736,7 @@ inline bool Node::isReadyForInstancePoll()
 	if (m_isDeleted)
 		return false;
    return (m_status != STATUS_UNMANAGED) &&
-	       (!(m_dwFlags & NF_DISABLE_CONF_POLL)) &&
+	       (!(m_flags & NF_DISABLE_CONF_POLL)) &&
           (!(m_dwDynamicFlags & NDF_QUEUED_FOR_INSTANCE_POLL)) &&
           (!(m_dwDynamicFlags & NDF_POLLING_DISABLED)) &&
           (m_dwDynamicFlags & NDF_CONFIGURATION_POLL_PASSED) &&

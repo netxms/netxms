@@ -32,7 +32,6 @@ Cluster::Cluster() : DataCollectionTarget()
 	m_dwNumResources = 0;
 	m_pResourceList = NULL;
 	m_tmLastPoll = 0;
-	m_dwFlags = 0;
 	m_zoneId = 0;
 }
 
@@ -46,7 +45,6 @@ Cluster::Cluster(const TCHAR *pszName, UINT32 zoneId) : DataCollectionTarget(psz
 	m_dwNumResources = 0;
 	m_pResourceList = NULL;
 	m_tmLastPoll = 0;
-	m_dwFlags = 0;
 	m_zoneId = zoneId;
 }
 
@@ -521,17 +519,17 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 
 	if (bAllDown)
 	{
-		if (!(m_dwFlags & CLF_DOWN))
+		if (!(m_flags & CLF_DOWN))
 		{
-			m_dwFlags |= CLF_DOWN;
+		   m_flags |= CLF_DOWN;
 			PostEvent(EVENT_CLUSTER_DOWN, m_id, NULL);
 		}
 	}
 	else
 	{
-		if (m_dwFlags & CLF_DOWN)
+		if (m_flags & CLF_DOWN)
 		{
-			m_dwFlags &= ~CLF_DOWN;
+		   m_flags &= ~CLF_DOWN;
 			PostEvent(EVENT_CLUSTER_UP, m_id, NULL);
 		}
 	}
@@ -629,7 +627,7 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 	if (bModified)
 		setModified();
 	m_tmLastPoll = time(NULL);
-	m_dwFlags &= ~CLF_QUEUED_FOR_STATUS_POLL;
+	m_flags &= ~CLF_QUEUED_FOR_STATUS_POLL;
 	unlockProperties();
 
 	DbgPrintf(6, _T("CLUSTER STATUS POLL [%s]: Finished"), m_name);

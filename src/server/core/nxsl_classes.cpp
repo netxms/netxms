@@ -855,6 +855,10 @@ NXSL_Value *NXSL_ChassisClass::getAttr(NXSL_Object *object, const TCHAR *attr)
    {
       value = new NXSL_Value(chassis->getControllerId());
    }
+   else if (!_tcscmp(attr, _T("flags")))
+   {
+      value = new NXSL_Value(chassis->getFlags());
+   }
    else if (!_tcscmp(attr, _T("rack")))
    {
       Rack *rack = (Rack *)FindObjectById(chassis->getRackId(), OBJECT_RACK);
