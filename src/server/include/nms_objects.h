@@ -1457,10 +1457,13 @@ public:
    const TCHAR *getSubType() const { return m_subType; }
    UINT32 getFlags() const { return m_dwFlags; }
    UINT32 getRuntimeFlags() const { return m_dwDynamicFlags; }
+
    void setFlag(UINT32 flag) { lockProperties(); m_dwFlags |= flag; setModified(); unlockProperties(); }
    void clearFlag(UINT32 flag) { lockProperties(); m_dwFlags &= ~flag; setModified(); unlockProperties(); }
    void setLocalMgmtFlag() { m_dwFlags |= NF_IS_LOCAL_MGMT; }
    void clearLocalMgmtFlag() { m_dwFlags &= ~NF_IS_LOCAL_MGMT; }
+
+   void setType(NodeType type, const TCHAR *subType) { lockProperties(); m_type = type; nx_strncpy(m_subType, subType, MAX_NODE_SUBTYPE_LENGTH); unlockProperties(); }
 
    bool isSNMPSupported() const { return m_dwFlags & NF_IS_SNMP ? true : false; }
    bool isNativeAgent() const { return m_dwFlags & NF_IS_NATIVE_AGENT ? true : false; }
