@@ -2751,3 +2751,20 @@ String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s)
    }
    return js;
 }
+
+/**
+ * Escape string for agent parameter
+ */
+String LIBNETXMS_EXPORTABLE EscapeStringForAgent(const TCHAR *s)
+{
+   String out;
+   if (s == NULL)
+      return out;
+   for(const TCHAR *p = s; *p != 0; p++)
+   {
+      if (*p == _T('"'))
+         out.append(_T('"'));
+      out.append(*p);
+   }
+   return out;
+}

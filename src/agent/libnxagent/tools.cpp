@@ -53,7 +53,7 @@ static bool AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *a
                case _T('"'):
                   state = 1;     // String
                   break;
-               case _T('\''):        // String, type 2
+               case _T('\''):    // String, type 2
                   state = 2;
                   break;
                case _T(','):
@@ -69,7 +69,7 @@ static bool AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *a
                   break;
                case 0:
                   state = -1;       // Finish processing
-                  if(!inBrackets) //No error flag if parameters were given without braces
+                  if (!inBrackets) //No error flag if parameters were given without braces
                      success = false;  // Set error flag
                   break;
                default:
@@ -81,7 +81,16 @@ static bool AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *a
             switch(*ptr2)
             {
                case _T('"'):
-                  state = 0;     // Normal
+                  if (*(ptr2 + 1) != _T('"'))
+                  {
+                     state = 0;     // Normal
+                  }
+                  else
+                  {
+                     ptr2++;
+                     if ((currIndex == index) && (pos < maxSize - 1))
+                        arg[pos++] = *ptr2;
+                  }
                   break;
                case 0:
                   state = -1;       // Finish processing
@@ -96,7 +105,16 @@ static bool AgentGetParameterArgInternal(const TCHAR *param, int index, TCHAR *a
             switch(*ptr2)
             {
                case _T('\''):
-                  state = 0;     // Normal
+                  if (*(ptr2 + 1) != _T('\''))
+                  {
+                     state = 0;     // Normal
+                  }
+                  else
+                  {
+                     ptr2++;
+                     if ((currIndex == index) && (pos < maxSize - 1))
+                        arg[pos++] = *ptr2;
+                  }
                   break;
                case 0:
                   state = -1;       // Finish processing
