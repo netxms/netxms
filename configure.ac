@@ -1778,6 +1778,16 @@ if test "x$HAVE_LIBCURL" = "xyes"; then
   AC_DEFINE(HAVE_LIBCURL, 1, Define to 1 if libcurl is available)
 fi
 
+AC_CHECK_HEADER(libssh/libssh.h,HAVE_LIBSSH=yes,HAVE_LIBSSH=no)
+if test "x$HAVE_LIBSSH" = "xyes"; then
+  AC_CHECK_LIB(ssh, ssh_version, [ HAVE_LIBSSH=yes ], [ HAVE_LIBSSH=no ])
+fi
+
+if test "x$HAVE_LIBSSH" = "xyes"; then
+  SUBAGENT_DIRS="$SUBAGENT_DIRS ssh"
+  AC_DEFINE(HAVE_LIBSSH, 1, Define to 1 if libssh is available)
+fi
+
 if test "x$LDAP_SUPPORT" = "xyes"; then
 	AC_CHECK_HEADER(ldap.h,HAVE_LDAP=yes,HAVE_LDAP=no)
 	if test "x$HAVE_LDAP" = "xyes"; then
@@ -3206,6 +3216,7 @@ AC_CONFIG_FILES([
 	src/agent/subagents/portCheck/Makefile
 	src/agent/subagents/rpi/Makefile
 	src/agent/subagents/sms/Makefile
+	src/agent/subagents/ssh/Makefile
 	src/agent/subagents/sunos/Makefile
 	src/agent/subagents/tuxedo/Makefile
 	src/agent/subagents/mongodb/Makefile
@@ -3392,6 +3403,11 @@ if test "x${HAVE_LIBCRYPTO}" = "xyes"; then
 	echo "Encryption enabled      : YES"
 else
 	echo "Encryption enabled      : NO"
+fi
+if test "x${HAVE_LIBSSH}" = "xyes"; then
+	echo "SSH support enabled     : YES"
+else
+	echo "SSH support enabled     : NO"
 fi
 if test "x${DB_DRIVERS}" != "x"; then
 	echo "Build DB-Drivers        :${DB_DRIVERS}"
