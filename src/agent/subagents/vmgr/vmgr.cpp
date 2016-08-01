@@ -212,7 +212,10 @@ static NETXMS_SUBAGENT_TABLE m_tables[] =
 	{ _T("VMGR.InterfaceList(*)"), H_GetIfaceTable, NULL, _T("NAME"), _T("Connection interface list") },
 	{ _T("VMGR.VMDisks(*)"), H_GetVMDiskTable, NULL, _T("DNAME"), _T("VM Disks") },
 	{ _T("VMGR.VMController(*)"), H_GetVMControllerTable, NULL, _T("TYPE"), _T("VM Controllers") },
-	{ _T("VMGR.VMInterface(*)"), H_GetVMInterfaceTable, NULL, _T("MAC"), _T("VM Interfaces") }
+	{ _T("VMGR.VMInterface(*)"), H_GetVMInterfaceTable, NULL, _T("MAC"), _T("VM Interfaces") },
+	{ _T("VMGR.VMVideo(*)"), H_GetVMVideoTable, NULL, _T("TYPE"), _T("VM Video adapter settings") },
+	{ _T("VMGR.Networks(*)"), H_GetNetworksTable, NULL, _T("Name"), _T("Networks table") },
+	{ _T("VMGR.Storages(*)"), H_GetStoragesTable, NULL, _T("Name"), _T("Storages table") }
 };
 
 /**

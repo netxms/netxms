@@ -43,50 +43,81 @@ LONG H_GetIfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractC
 LONG H_GetVMDiskTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_GetVMControllerTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_GetVMInterfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
-
+LONG H_GetVMVideoTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_GetNetworksTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
+LONG H_GetStoragesTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 
 /**
  * String map template for holding objects as values
- */
 template <class T> class StringObjectMapC : public StringObjectMap<T>
 {
 private:
-	static void destructorC(void *object) { virDomainFree((virDomainPtr)object); }
+   int ( *memFreeCallback)(T *obj);
+	static void destructorC(void *object) { memFreeCallback((T *)object); }
 
 public:
-	StringObjectMapC(bool objectOwner) : StringObjectMap<T>(objectOwner) { StringMapBase::m_objectDestructor = destructorC; }
+	StringObjectMapC(bool objectOwner) : StringObjectMap<T>(objectOwner) { memFreeCallback = cb; StringMapBase::m_objectDestructor = destructorC; }
+};
+*/
+
+class NXvirDomain
+{
+private:
+   virDomainPtr vm;
+public:
+   NXvirDomain(virDomainPtr vm) { this->vm = vm; }
+   ~NXvirDomain() { virDomainFree(vm); }
+   operator virDomainPtr() const { return vm; }
 };
 
+class NXvirNetwork
+{
+private:
+   virNetworkPtr network;
+public:
+   NXvirNetwork(virNetworkPtr network) { this->network = network; }
+   ~NXvirNetwork() { virNetworkFree(network); }
+   operator virNetworkPtr() const { return network; }
+};
+
+class NXvirStoragePool
+{
+private:
+   virStoragePoolPtr storage;
+public:
+   NXvirStoragePool(virStoragePoolPtr storage) { this->storage = storage; }
+   ~NXvirStoragePool() {virStoragePoolFree(storage); }
+   operator virStoragePoolPtr() const { return storage; }
+};
 
 /**
  * Data cashing class
  */
-template <class StoredData> class Cashe
+template <class T> class Cashe
 {
 private:
    time_t m_lastCollectionTime;
-   StoredData *m_data;
-   bool isMallocAlloc;
+   T *m_data;
+   bool mallocObj;
+
 public:
-   Cashe() { m_lastCollectionTime = NEVER; m_data = NULL; isMallocAlloc = true;}
-   ~Cashe() { if(isMallocAlloc){ free(m_data); } else { delete(m_data); } }
-   //XmlCashe(StoredData *data) { m_lastCollectionTime = time(NULL); m_data = data; }
-   void setMalloc(bool value) { isMallocAlloc = value; }
-   const StoredData *getData() { return m_data; }
+   Cashe(bool mallocObj = true) { m_lastCollectionTime = NEVER; m_data = NULL; this->mallocObj = mallocObj;}
+   ~Cashe() { if(mallocObj){ free(m_data); } else { delete(m_data); } }
+   const T *getData() { return m_data; }
    const time_t getLastCollecitonTime() { return m_lastCollectionTime; }
-   void update(StoredData* data) { m_lastCollectionTime = time(NULL); if(isMallocAlloc){ free(m_data); } else { delete(m_data); } m_data = data; }
+   void update(T* data) { m_lastCollectionTime = time(NULL); if(mallocObj){ free(m_data); } else { delete(m_data); } m_data = data; }
    bool shouldUpdate() { return (time(NULL) - m_lastCollectionTime) > DATA_COLLECTION_CASHE_TIME; }
 };
 
 /**
  * Data cashing class
  */
-template <class StoredData> class CasheAndLock : public Cashe<StoredData>
+template <class T> class CasheAndLock : public Cashe<T>
 {
 private:
    MUTEX m_mutex;
 public:
-   CasheAndLock() : Cashe<StoredData>() { m_mutex = MutexCreate(); }
+   CasheAndLock(bool mallocObj = true) : Cashe<T>(mallocObj) { m_mutex = MutexCreate(); }
    ~CasheAndLock() { MutexDestroy(m_mutex); }
    void lock() { MutexLock(m_mutex); }
    void unlock() { MutexUnlock(m_mutex); }
@@ -106,11 +137,17 @@ private:
 
    CasheAndLock<char> m_capabilities;
    CasheAndLock<virNodeInfo> m_nodeInfo;
-   CasheAndLock<StringObjectMap<virDomain> > m_domains;
+   CasheAndLock<StringObjectMap<NXvirDomain> > m_domains;
    CasheAndLock<StringList> m_iface;
-   //XmlCashe m_storages;
+   CasheAndLock<StringObjectMap<NXvirNetwork> > m_networks;
+   CasheAndLock<StringObjectMap<NXvirStoragePool> > m_storages;
+
    MUTEX m_vmXMLMutex;
    StringObjectMap<Cashe<char> > m_vmXMLs;
+   MUTEX m_networkXMLMutex;
+   StringObjectMap<Cashe<char> > m_networkXMLs;
+   MUTEX m_storageInfoMutex;
+   StringObjectMap<Cashe<virStoragePoolInfo> > m_storageInfo;
 
    static int authCb(virConnectCredentialPtr cred, unsigned int ncred, void *cbdata);
 
@@ -125,15 +162,24 @@ public:
    const virNodeInfo *getNodeInfoAndLock();
    void unlockNodeInfo();
    //Domains
-   const StringObjectMap<virDomain> *getDomainListAndLock();
+   const StringObjectMap<NXvirDomain> *getDomainListAndLock();
    void unlockDomainList();
-   const char *getDomainDefenitionAndLock(const TCHAR *name, virDomainPtr vm = NULL);
+   const char *getDomainDefenitionAndLock(const TCHAR *name, NXvirDomain *vm = NULL);
    void unlockDomainDefenition();
    //Iface
    const StringList *getIfaceListAndLock();
    void unlockIfaceList();
-   //void getStorages();
-   //void getDomains();
+   //Networks
+   const StringObjectMap<NXvirNetwork> *getNetworkListAndLock();
+   void unlockNetworkList();
+   const char *getNetworkDefenitionAndLock(const TCHAR *name, NXvirNetwork *network = NULL);
+   void unlockNetworkDefenition();
+   //Storage
+   const StringObjectMap<NXvirStoragePool> *getStorageListAndLock();
+   void unlockStorageList();
+   const virStoragePoolInfo *getStorageInformationAndLock(const TCHAR *name, NXvirStoragePool *storage = NULL);
+   void unlockStorageInfo();
+
 
    UINT32 getMaxVCpuCount();
    UINT64 getHostFreeMemory();
@@ -142,6 +188,39 @@ public:
    UINT64 getLibraryVersion();
 
    const TCHAR *getName() { return m_name; }
+   /***
+   Functions that can be added:
+   virDomainScreenshot - get screenshot form VM
+
+   Under question:
+   virDomainShutdown
+   virDomainSuspend
+
+
+   Check whay not working:
+   virInterfaceLookupByName, when fixed use virInterfaceIsActive, virInterfaceGetXMLDesc to find more information
+
+
+   Storage information:
+   virConnectNumOfStoragePools
+   virConnectNumOfDefinedStoragePools
+   virConnectListStoragePools
+   virConnectListDefinedStoragePools
+   virStoragePoolGetInfo - more info
+   virStoragePoolGetXMLDesc - more info
+   virStoragePoolLookupByName - get pointer
+   Valume:
+   virStoragePoolListVolumes - volume information
+   virStoragePoolNumOfVolumes - num of volumes
+   virStorageVolGetInfo
+   virStorageVolGetPath
+   virStorageVolGetXMLDesc
+   virStorageVolLookupByName
+
+   Add callbacks that will generate nxevents on call(there are network and domain callbacks at least)
+
+   !!!!! Add free functions for object(vm, iface...) like: virStoragePoolFree
+   ****/
 };
 
 /**
