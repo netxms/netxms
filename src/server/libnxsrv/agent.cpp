@@ -35,7 +35,7 @@
 /**
  * Constants
  */
-#define MAX_MSG_SIZE    8388608
+#define MAX_MSG_SIZE    268435456
 
 /**
  * Agent connection thread pool
