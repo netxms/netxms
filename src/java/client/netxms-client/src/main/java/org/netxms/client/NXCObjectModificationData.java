@@ -24,8 +24,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.netxms.base.GeoLocation;
 import org.netxms.base.InetAddressEx;
@@ -46,71 +48,74 @@ import org.netxms.client.objects.ClusterResource;
 public class NXCObjectModificationData
 {
 	// Modification flags
-	public static final long MODIFY_NAME               = 0x0000000000000001L;
-	public static final long MODIFY_ACL                = 0x0000000000000002L;
-	public static final long MODIFY_CUSTOM_ATTRIBUTES  = 0x0000000000000004L;
-	public static final long MODIFY_AUTOBIND_FILTER    = 0x0000000000000008L;
-	public static final long MODIFY_LINK_COLOR         = 0x0000000000000010L;
-	public static final long MODIFY_POLICY_CONFIG      = 0x0000000000000020L;
-	public static final long MODIFY_VERSION            = 0x0000000000000040L;
-	public static final long MODIFY_DESCRIPTION        = 0x0000000000000080L;
-	public static final long MODIFY_AGENT_PORT         = 0x0000000000000100L;
-	public static final long MODIFY_AGENT_AUTH         = 0x0000000000000200L;
-	public static final long MODIFY_SNMP_VERSION       = 0x0000000000000400L;
-	public static final long MODIFY_SNMP_AUTH          = 0x0000000000000800L;
-	public static final long MODIFY_AGENT_PROXY        = 0x0000000000001000L;
-	public static final long MODIFY_SNMP_PROXY         = 0x0000000000002000L;
-	public static final long MODIFY_TRUSTED_NODES      = 0x0000000000004000L;
-	public static final long MODIFY_GEOLOCATION        = 0x0000000000008000L;
-	public static final long MODIFY_PRIMARY_IP         = 0x0000000000010000L;
-	public static final long MODIFY_SNMP_PORT          = 0x0000000000020000L;
-	public static final long MODIFY_MAP_LAYOUT         = 0x0000000000040000L;
-	public static final long MODIFY_MAP_BACKGROUND     = 0x0000000000080000L;
-	public static final long MODIFY_MAP_CONTENT        = 0x0000000000100000L;
-	public static final long MODIFY_IMAGE              = 0x0000000000200000L;
-	public static final long MODIFY_ICMP_PROXY         = 0x0000000000400000L;
-	public static final long MODIFY_COLUMN_COUNT       = 0x0000000000800000L;
-	public static final long MODIFY_DASHBOARD_ELEMENTS = 0x0000000001000000L;
-	public static final long MODIFY_SCRIPT             = 0x0000000002000000L;
-	public static final long MODIFY_ACTIVATION_EVENT   = 0x0000000004000000L;
-	public static final long MODIFY_DEACTIVATION_EVENT = 0x0000000008000000L;
-	public static final long MODIFY_SOURCE_OBJECT      = 0x0000000010000000L;
-	public static final long MODIFY_ACTIVE_STATUS      = 0x0000000020000000L;
-	public static final long MODIFY_INACTIVE_STATUS    = 0x0000000040000000L;
-	public static final long MODIFY_DCI_LIST           = 0x0000000080000000L;
-	public static final long MODIFY_SUBMAP_ID          = 0x0000000100000000L;
-	public static final long MODIFY_IP_ADDRESS         = 0x0000000200000000L;
-	public static final long MODIFY_IP_PROTOCOL        = 0x0000000400000000L;
-	public static final long MODIFY_IP_PORT            = 0x0000000800000000L;
-	public static final long MODIFY_SERVICE_TYPE       = 0x0000001000000000L;
-	public static final long MODIFY_POLLER_NODE        = 0x0000002000000000L;
-	public static final long MODIFY_REQUIRED_POLLS     = 0x0000004000000000L;
-	public static final long MODIFY_REQUEST            = 0x0000008000000000L;
-	public static final long MODIFY_RESPONSE           = 0x0000010000000000L;
-	public static final long MODIFY_OBJECT_FLAGS       = 0x0000020000000000L;
-	public static final long MODIFY_IFXTABLE_POLICY    = 0x0000040000000000L;
-	public static final long MODIFY_REPORT_DEFINITION  = 0x0000080000000000L;
-	public static final long MODIFY_CLUSTER_RESOURCES  = 0x0000100000000000L;
-	public static final long MODIFY_PRIMARY_NAME       = 0x0000200000000000L;
-	public static final long MODIFY_STATUS_CALCULATION = 0x0000400000000000L;
-	public static final long MODIFY_CLUSTER_NETWORKS   = 0x0000800000000000L;
-	public static final long MODIFY_EXPECTED_STATE     = 0x0001000000000000L;
-	public static final long MODIFY_CONNECTION_ROUTING = 0x0002000000000000L;
-	public static final long MODIFY_DISCOVERY_RADIUS   = 0x0004000000000000L;
-	public static final long MODIFY_HEIGHT             = 0x0008000000000000L;
-	public static final long MODIFY_FILTER             = 0x0010000000000000L;
-   public static final long MODIFY_PEER_GATEWAY       = 0x0020000000000000L;
-   public static final long MODIFY_VPN_NETWORKS       = 0x0040000000000000L;
-   public static final long MODIFY_POSTAL_ADDRESS     = 0x0080000000000000L;
-   public static final long MODIFY_AGENT_CACHE_MODE   = 0x0100000000000000L;
-   public static final long MODIFY_MAPOBJ_DISP_MODE   = 0x0200000000000000L;
-   public static final long MODIFY_RACK_PLACEMENT     = 0x0400000000000000L;
-   public static final long MODIFY_DASHBOARD_LIST     = 0x0800000000000000L;
-   public static final long MODIFY_RACK_NUMB_SCHEME   = 0x1000000000000000L;
-   public static final long MODIFY_CONTROLLER_ID      = 0x2000000000000000L;
-   public static final long MODIFY_CHASSIS_ID         = 0x4000000000000000L;
+	public static final int NAME               = 1;
+	public static final int ACL                = 2;
+	public static final int CUSTOM_ATTRIBUTES  = 3;
+	public static final int AUTOBIND_FILTER    = 4;
+	public static final int LINK_COLOR         = 5;
+	public static final int POLICY_CONFIG      = 6;
+	public static final int VERSION            = 7;
+	public static final int DESCRIPTION        = 8;
+	public static final int AGENT_PORT         = 9;
+	public static final int AGENT_AUTH         = 10;
+	public static final int SNMP_VERSION       = 11;
+	public static final int SNMP_AUTH          = 12;
+	public static final int AGENT_PROXY        = 13;
+	public static final int SNMP_PROXY         = 14;
+	public static final int TRUSTED_NODES      = 15;
+	public static final int GEOLOCATION        = 16;
+	public static final int PRIMARY_IP         = 17;
+	public static final int SNMP_PORT          = 18;
+	public static final int MAP_LAYOUT         = 19;
+	public static final int MAP_BACKGROUND     = 20;
+	public static final int MAP_CONTENT        = 21;
+	public static final int IMAGE              = 22;
+	public static final int ICMP_PROXY         = 23;
+	public static final int COLUMN_COUNT       = 24;
+	public static final int DASHBOARD_ELEMENTS = 25;
+	public static final int SCRIPT             = 26;
+	public static final int ACTIVATION_EVENT   = 27;
+	public static final int DEACTIVATION_EVENT = 28;
+	public static final int SOURCE_OBJECT      = 29;
+	public static final int ACTIVE_STATUS      = 30;
+	public static final int INACTIVE_STATUS    = 31;
+	public static final int DCI_LIST           = 32;
+	public static final int SUBMAP_ID          = 33;
+	public static final int IP_ADDRESS         = 34;
+	public static final int IP_PROTOCOL        = 35;
+	public static final int IP_PORT            = 36;
+	public static final int SERVICE_TYPE       = 37;
+	public static final int POLLER_NODE        = 38;
+	public static final int REQUIRED_POLLS     = 39;
+	public static final int REQUEST            = 40;
+	public static final int RESPONSE           = 41;
+	public static final int OBJECT_FLAGS       = 42;
+	public static final int IFXTABLE_POLICY    = 43;
+	public static final int REPORT_DEFINITION  = 44;
+	public static final int CLUSTER_RESOURCES  = 45;
+	public static final int PRIMARY_NAME       = 46;
+	public static final int STATUS_CALCULATION = 47;
+	public static final int CLUSTER_NETWORKS   = 48;
+	public static final int EXPECTED_STATE     = 49;
+	public static final int CONNECTION_ROUTING = 50;
+	public static final int DISCOVERY_RADIUS   = 51;
+	public static final int HEIGHT             = 52;
+	public static final int FILTER             = 53;
+   public static final int PEER_GATEWAY       = 54;
+   public static final int VPN_NETWORKS       = 55;
+   public static final int POSTAL_ADDRESS     = 56;
+   public static final int AGENT_CACHE_MODE   = 57;
+   public static final int MAPOBJ_DISP_MODE   = 58;
+   public static final int RACK_PLACEMENT     = 59;
+   public static final int DASHBOARD_LIST     = 60;
+   public static final int RACK_NUMB_SCHEME   = 61;
+   public static final int CONTROLLER_ID      = 62;
+   public static final int CHASSIS_ID         = 63;
+   public static final int SSH_PROXY          = 64;
+   public static final int SSH_LOGIN          = 65;
+   public static final int SSH_PASSWORD       = 66;
 	
-	private long flags;		// Flags which indicates what object's data should be modified
+	private Set<Integer> fieldSet;
 	private long objectId;
 	private String name;
 	private String primaryName;
@@ -196,6 +201,9 @@ public class NXCObjectModificationData
 	private boolean rackNumberingTopBottom;
 	private long controllerId;
 	private long chassisId;
+	private long sshProxy;
+	private String sshLogin;
+	private String sshPassword;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -203,7 +211,7 @@ public class NXCObjectModificationData
 	public NXCObjectModificationData(long objectId)
 	{
 		this.objectId = objectId;
-		flags = 0;
+		fieldSet = new HashSet<Integer>(128);
 	}
 
 	/**
@@ -236,15 +244,18 @@ public class NXCObjectModificationData
 	public void setName(final String name)
 	{
 		this.name = name;
-		flags |= MODIFY_NAME;
+		fieldSet.add(NAME);
 	}
 
 	/**
-	 * @return the flags
+	 * Check if given field is set for modification.
+	 * 
+	 * @param field field code
+	 * @return true if given field is set
 	 */
-	public long getFlags()
+	public boolean isFieldSet(int field)
 	{
-		return flags;
+		return fieldSet.contains(field);
 	}
 
 	/**
@@ -261,7 +272,7 @@ public class NXCObjectModificationData
 	public void setACL(AccessListElement[] acl)
 	{
 		this.acl = acl;
-		flags |= MODIFY_ACL;
+		fieldSet.add(ACL);
 	}
 
 	/**
@@ -278,7 +289,7 @@ public class NXCObjectModificationData
 	public void setInheritAccessRights(boolean inheritAccessRights)
 	{
 		this.inheritAccessRights = inheritAccessRights;
-		flags |= MODIFY_ACL;
+		fieldSet.add(ACL);
 	}
 
 	/**
@@ -295,7 +306,7 @@ public class NXCObjectModificationData
 	public void setCustomAttributes(Map<String, String> customAttributes)
 	{
 		this.customAttributes = customAttributes;
-		flags |= MODIFY_CUSTOM_ATTRIBUTES;
+		fieldSet.add(CUSTOM_ATTRIBUTES);
 	}
 
 	/**
@@ -312,7 +323,7 @@ public class NXCObjectModificationData
 	public void setAutoBindFilter(String autoBindFilter)
 	{
 		this.autoBindFilter = autoBindFilter;
-		flags |= MODIFY_AUTOBIND_FILTER;
+		fieldSet.add(AUTOBIND_FILTER);
 	}
 
 	/**
@@ -329,7 +340,7 @@ public class NXCObjectModificationData
 	public void setConfigFileContent(String configFileContent)
 	{
 		this.configFileContent = configFileContent;
-		flags |= MODIFY_POLICY_CONFIG;
+		fieldSet.add(POLICY_CONFIG);
 	}
 
 	/**
@@ -346,7 +357,7 @@ public class NXCObjectModificationData
 	public void setVersion(int version)
 	{
 		this.version = version;
-		flags |= MODIFY_VERSION;
+		fieldSet.add(VERSION);
 	}
 
 	/**
@@ -363,7 +374,7 @@ public class NXCObjectModificationData
 	public void setDescription(String description)
 	{
 		this.description = description;
-		flags |= MODIFY_DESCRIPTION;
+		fieldSet.add(DESCRIPTION);
 	}
 
 	public int getAgentPort()
@@ -374,7 +385,7 @@ public class NXCObjectModificationData
 	public void setAgentPort(int agentPort)
 	{
 		this.agentPort = agentPort;
-		flags |= MODIFY_AGENT_PORT;
+		fieldSet.add(AGENT_PORT);
 	}
 
 	/**
@@ -391,7 +402,7 @@ public class NXCObjectModificationData
 	public void setAgentAuthMethod(int agentAuthMethod)
 	{
 		this.agentAuthMethod = agentAuthMethod;
-		flags |= MODIFY_AGENT_AUTH;
+		fieldSet.add(AGENT_AUTH);
 	}
 
 	/**
@@ -408,7 +419,7 @@ public class NXCObjectModificationData
 	public void setAgentSecret(String agentSecret)
 	{
 		this.agentSecret = agentSecret;
-		flags |= MODIFY_AGENT_AUTH;
+		fieldSet.add(AGENT_AUTH);
 	}
 
 	/**
@@ -425,7 +436,7 @@ public class NXCObjectModificationData
 	public void setAgentProxy(long agentProxy)
 	{
 		this.agentProxy = agentProxy;
-		flags |= MODIFY_AGENT_PROXY;
+		fieldSet.add(AGENT_PROXY);
 	}
 
 	/**
@@ -442,7 +453,7 @@ public class NXCObjectModificationData
 	public void setSnmpVersion(int snmpVersion)
 	{
 		this.snmpVersion = snmpVersion;
-		flags |= MODIFY_SNMP_VERSION;
+		fieldSet.add(SNMP_VERSION);
 	}
 
 	/**
@@ -459,7 +470,7 @@ public class NXCObjectModificationData
 	public void setSnmpAuthMethod(int snmpAuthMethod)
 	{
 		this.snmpAuthMethod = snmpAuthMethod;
-		flags |= MODIFY_SNMP_AUTH;
+		fieldSet.add(SNMP_AUTH);
 	}
 
 	/**
@@ -476,7 +487,7 @@ public class NXCObjectModificationData
 	public void setSnmpPrivMethod(int snmpPrivMethod)
 	{
 		this.snmpPrivMethod = snmpPrivMethod;
-		flags |= MODIFY_SNMP_AUTH;
+		fieldSet.add(SNMP_AUTH);
 	}
 
 	/**
@@ -493,7 +504,7 @@ public class NXCObjectModificationData
 	public void setSnmpAuthName(String snmpAuthName)
 	{
 		this.snmpAuthName = snmpAuthName;
-		flags |= MODIFY_SNMP_AUTH;
+		fieldSet.add(SNMP_AUTH);
 	}
 
 	/**
@@ -510,7 +521,7 @@ public class NXCObjectModificationData
 	public void setSnmpAuthPassword(String snmpAuthPassword)
 	{
 		this.snmpAuthPassword = snmpAuthPassword;
-		flags |= MODIFY_SNMP_AUTH;
+		fieldSet.add(SNMP_AUTH);
 	}
 
 	/**
@@ -527,7 +538,7 @@ public class NXCObjectModificationData
 	public void setSnmpPrivPassword(String snmpPrivPassword)
 	{
 		this.snmpPrivPassword = snmpPrivPassword;
-		flags |= MODIFY_SNMP_AUTH;
+		fieldSet.add(SNMP_AUTH);
 	}
 
 	/**
@@ -544,7 +555,7 @@ public class NXCObjectModificationData
 	public void setSnmpProxy(long snmpProxy)
 	{
 		this.snmpProxy = snmpProxy;
-		flags |= MODIFY_SNMP_PROXY;
+		fieldSet.add(SNMP_PROXY);
 	}
 
 	/**
@@ -561,7 +572,7 @@ public class NXCObjectModificationData
 	public void setIcmpProxy(long icmpProxy)
 	{
 		this.icmpProxy = icmpProxy;
-		flags |= MODIFY_ICMP_PROXY;
+		fieldSet.add(ICMP_PROXY);
 	}
 
 	/**
@@ -578,7 +589,7 @@ public class NXCObjectModificationData
 	public void setTrustedNodes(long[] trustedNodes)
 	{
 		this.trustedNodes = trustedNodes;
-		flags |= MODIFY_TRUSTED_NODES;
+		fieldSet.add(TRUSTED_NODES);
 	}
 
 	/**
@@ -595,7 +606,7 @@ public class NXCObjectModificationData
 	public void setGeolocation(GeoLocation geolocation)
 	{
 		this.geolocation = geolocation;
-		flags |= MODIFY_GEOLOCATION;
+		fieldSet.add(GEOLOCATION);
 	}
 
 	/**
@@ -612,7 +623,7 @@ public class NXCObjectModificationData
 	public void setPrimaryIpAddress(InetAddress primaryIpAddress)
 	{
 		this.primaryIpAddress = primaryIpAddress;
-		flags |= MODIFY_PRIMARY_IP;
+		fieldSet.add(PRIMARY_IP);
 	}
 
 	/**
@@ -629,7 +640,7 @@ public class NXCObjectModificationData
 	public void setSnmpPort(int snmpPort)
 	{
 		this.snmpPort = snmpPort;
-		flags |= MODIFY_SNMP_PORT;
+		fieldSet.add(SNMP_PORT);
 	}
 
 	/**
@@ -646,7 +657,7 @@ public class NXCObjectModificationData
 	public void setMapLayout(MapLayoutAlgorithm mapLayout)
 	{
 		this.mapLayout = mapLayout;
-		flags |= MODIFY_MAP_LAYOUT;
+		fieldSet.add(MAP_LAYOUT);
 	}
 
 	/**
@@ -666,7 +677,7 @@ public class NXCObjectModificationData
 		this.mapBackgroundLocation = mapBackgroundLocation;
 		this.mapBackgroundZoom = mapBackgroundZoom;
 		this.mapBackgroundColor = mapBackgroundColor;
-		flags |= MODIFY_MAP_BACKGROUND;
+		fieldSet.add(MAP_BACKGROUND);
 	}
 
 	/**
@@ -695,7 +706,7 @@ public class NXCObjectModificationData
 	{
 		mapElements = elements;
 		mapLinks = links;
-		flags |= MODIFY_MAP_CONTENT;
+		fieldSet.add(MAP_CONTENT);
 	}
 
 	/**
@@ -712,7 +723,7 @@ public class NXCObjectModificationData
 	public void setImage(UUID image)
 	{
 		this.image = image;
-		flags |= MODIFY_IMAGE;
+		fieldSet.add(IMAGE);
 	}
 
 	/**
@@ -729,7 +740,7 @@ public class NXCObjectModificationData
 	public void setColumnCount(int columnCount)
 	{
 		this.columnCount = columnCount;
-		flags |= MODIFY_COLUMN_COUNT;
+		fieldSet.add(COLUMN_COUNT);
 	}
 
 	/**
@@ -746,7 +757,7 @@ public class NXCObjectModificationData
 	public void setDashboardElements(Collection<DashboardElement> dashboardElements)
 	{
 		this.dashboardElements = dashboardElements;
-		flags |= MODIFY_DASHBOARD_ELEMENTS;
+		fieldSet.add(DASHBOARD_ELEMENTS);
 	}
 
 	/**
@@ -763,7 +774,7 @@ public class NXCObjectModificationData
 	public void setScript(String script)
 	{
 		this.script = script;
-		flags |= MODIFY_SCRIPT;
+		fieldSet.add(SCRIPT);
 	}
 
 	/**
@@ -780,7 +791,7 @@ public class NXCObjectModificationData
 	public void setActivationEvent(int activationEvent)
 	{
 		this.activationEvent = activationEvent;
-		flags |= MODIFY_ACTIVATION_EVENT;
+		fieldSet.add(ACTIVATION_EVENT);
 	}
 
 	/**
@@ -797,7 +808,7 @@ public class NXCObjectModificationData
 	public void setDeactivationEvent(int deactivationEvent)
 	{
 		this.deactivationEvent = deactivationEvent;
-		flags |= MODIFY_DEACTIVATION_EVENT;
+		fieldSet.add(DEACTIVATION_EVENT);
 	}
 
 	/**
@@ -814,7 +825,7 @@ public class NXCObjectModificationData
 	public void setSourceObject(long sourceObject)
 	{
 		this.sourceObject = sourceObject;
-		flags |= MODIFY_SOURCE_OBJECT;
+		fieldSet.add(SOURCE_OBJECT);
 	}
 
 	/**
@@ -831,7 +842,7 @@ public class NXCObjectModificationData
 	public void setActiveStatus(int activeStatus)
 	{
 		this.activeStatus = activeStatus;
-		flags |= MODIFY_ACTIVE_STATUS;
+		fieldSet.add(ACTIVE_STATUS);
 	}
 
 	/**
@@ -848,7 +859,7 @@ public class NXCObjectModificationData
 	public void setInactiveStatus(int inactiveStatus)
 	{
 		this.inactiveStatus = inactiveStatus;
-		flags |= MODIFY_INACTIVE_STATUS;
+		fieldSet.add(INACTIVE_STATUS);
 	}
 
 	/**
@@ -865,7 +876,7 @@ public class NXCObjectModificationData
 	public void setDciList(List<ConditionDciInfo> dciList)
 	{
 		this.dciList = dciList;
-		flags |= MODIFY_DCI_LIST;
+		fieldSet.add(DCI_LIST);
 	}
 
 	/**
@@ -882,7 +893,7 @@ public class NXCObjectModificationData
 	public void setSubmapId(long submapId)
 	{
 		this.submapId = submapId;
-		flags |= MODIFY_SUBMAP_ID;
+		fieldSet.add(SUBMAP_ID);
 	}
 
 	/**
@@ -915,7 +926,7 @@ public class NXCObjectModificationData
 	public void setPollerNode(long pollerNode)
 	{
 		this.pollerNode = pollerNode;
-		flags |= MODIFY_POLLER_NODE;
+		fieldSet.add(POLLER_NODE);
 	}
 
 	/**
@@ -932,7 +943,7 @@ public class NXCObjectModificationData
 	public void setRequiredPolls(int requiredPolls)
 	{
 		this.requiredPolls = requiredPolls;
-		flags |= MODIFY_REQUIRED_POLLS;
+		fieldSet.add(REQUIRED_POLLS);
 	}
 
 	/**
@@ -949,7 +960,7 @@ public class NXCObjectModificationData
 	public void setServiceType(int serviceType)
 	{
 		this.serviceType = serviceType;
-		flags |= MODIFY_SERVICE_TYPE;
+		fieldSet.add(SERVICE_TYPE);
 	}
 
 	/**
@@ -966,7 +977,7 @@ public class NXCObjectModificationData
 	public void setIpProtocol(int ipProtocol)
 	{
 		this.ipProtocol = ipProtocol;
-		flags |= MODIFY_IP_PROTOCOL;
+		fieldSet.add(IP_PROTOCOL);
 	}
 
 	/**
@@ -983,7 +994,7 @@ public class NXCObjectModificationData
 	public void setIpPort(int ipPort)
 	{
 		this.ipPort = ipPort;
-		flags |= MODIFY_IP_PORT;
+		fieldSet.add(IP_PORT);
 	}
 
 	/**
@@ -1000,7 +1011,7 @@ public class NXCObjectModificationData
 	public void setIpAddress(int ipAddress)
 	{
 		this.ipAddress = ipAddress;
-		flags |= MODIFY_IP_ADDRESS;
+		fieldSet.add(IP_ADDRESS);
 	}
 
 	/**
@@ -1017,7 +1028,7 @@ public class NXCObjectModificationData
 	public void setRequest(String request)
 	{
 		this.request = request;
-		flags |= MODIFY_REQUEST;
+		fieldSet.add(REQUEST);
 	}
 
 	/**
@@ -1034,7 +1045,7 @@ public class NXCObjectModificationData
 	public void setResponse(String response)
 	{
 		this.response = response;
-		flags |= MODIFY_RESPONSE;
+		fieldSet.add(RESPONSE);
 	}
 
 	/**
@@ -1068,7 +1079,7 @@ public class NXCObjectModificationData
    {
       this.objectFlags = objectFlags;
       this.objectFlagsMask = objectFlagsMask;
-      flags |= MODIFY_OBJECT_FLAGS;
+      fieldSet.add(OBJECT_FLAGS);
    }
 
    /**
@@ -1085,7 +1096,7 @@ public class NXCObjectModificationData
 	public void setIfXTablePolicy(int ifXTablePolicy)
 	{
 		this.ifXTablePolicy = ifXTablePolicy;
-		flags |= MODIFY_IFXTABLE_POLICY;
+		fieldSet.add(IFXTABLE_POLICY);
 	}
 
 	/**
@@ -1102,7 +1113,7 @@ public class NXCObjectModificationData
 	public void setReportDefinition(String reportDefinition)
 	{
 		this.reportDefinition = reportDefinition;
-		flags |= MODIFY_REPORT_DEFINITION;
+		fieldSet.add(REPORT_DEFINITION);
 	}
 
 	/**
@@ -1142,7 +1153,7 @@ public class NXCObjectModificationData
 	public void setResourceList(List<ClusterResource> resourceList)
 	{
 		this.resourceList = resourceList;
-		flags |= MODIFY_CLUSTER_RESOURCES;
+		fieldSet.add(CLUSTER_RESOURCES);
 	}
 
 	/**
@@ -1159,7 +1170,7 @@ public class NXCObjectModificationData
 	public void setNetworkList(List<InetAddressEx> networkList)
 	{
 		this.networkList = networkList;
-		flags |= MODIFY_CLUSTER_NETWORKS;
+		fieldSet.add(CLUSTER_NETWORKS);
 	}
 
 	/**
@@ -1176,7 +1187,7 @@ public class NXCObjectModificationData
 	public void setPrimaryName(String primaryName)
 	{
 		this.primaryName = primaryName;
-		flags |= MODIFY_PRIMARY_NAME;
+		fieldSet.add(PRIMARY_NAME);
 	}
 
 	/**
@@ -1193,7 +1204,7 @@ public class NXCObjectModificationData
 	public void setStatusCalculationMethod(int statusCalculationMethod)
 	{
 		this.statusCalculationMethod = statusCalculationMethod;
-		flags |= MODIFY_STATUS_CALCULATION;
+		fieldSet.add(STATUS_CALCULATION);
 	}
 
 	/**
@@ -1210,7 +1221,7 @@ public class NXCObjectModificationData
 	public void setStatusPropagationMethod(int statusPropagationMethod)
 	{
 		this.statusPropagationMethod = statusPropagationMethod;
-		flags |= MODIFY_STATUS_CALCULATION;
+		fieldSet.add(STATUS_CALCULATION);
 	}
 
 	/**
@@ -1227,7 +1238,7 @@ public class NXCObjectModificationData
 	public void setFixedPropagatedStatus(ObjectStatus fixedPropagatedStatus)
 	{
 		this.fixedPropagatedStatus = fixedPropagatedStatus;
-		flags |= MODIFY_STATUS_CALCULATION;
+		fieldSet.add(STATUS_CALCULATION);
 	}
 
 	/**
@@ -1244,7 +1255,7 @@ public class NXCObjectModificationData
 	public void setStatusShift(int statusShift)
 	{
 		this.statusShift = statusShift;
-		flags |= MODIFY_STATUS_CALCULATION;
+		fieldSet.add(STATUS_CALCULATION);
 	}
 
 	/**
@@ -1261,7 +1272,7 @@ public class NXCObjectModificationData
 	public void setStatusTransformation(ObjectStatus[] statusTransformation)
 	{
 		this.statusTransformation = statusTransformation;
-		flags |= MODIFY_STATUS_CALCULATION;
+		fieldSet.add(STATUS_CALCULATION);
 	}
 
 	/**
@@ -1278,7 +1289,7 @@ public class NXCObjectModificationData
 	public void setStatusSingleThreshold(int statusSingleThreshold)
 	{
 		this.statusSingleThreshold = statusSingleThreshold;
-		flags |= MODIFY_STATUS_CALCULATION;
+		fieldSet.add(STATUS_CALCULATION);
 	}
 
 	/**
@@ -1295,7 +1306,7 @@ public class NXCObjectModificationData
 	public void setStatusThresholds(int[] statusThresholds)
 	{
 		this.statusThresholds = statusThresholds;
-		flags |= MODIFY_STATUS_CALCULATION;
+		fieldSet.add(STATUS_CALCULATION);
 	}
 
 	/**
@@ -1312,7 +1323,7 @@ public class NXCObjectModificationData
 	public void setExpectedState(int expectedState)
 	{
 		this.expectedState = expectedState;
-		flags |= MODIFY_EXPECTED_STATE;
+		fieldSet.add(EXPECTED_STATE);
 	}
 
 	/**
@@ -1329,7 +1340,7 @@ public class NXCObjectModificationData
 	public void setLinkColor(int linkColor)
 	{
 		this.linkColor = linkColor;
-		flags |= MODIFY_LINK_COLOR;
+		fieldSet.add(LINK_COLOR);
 	}
 
 	/**
@@ -1346,7 +1357,7 @@ public class NXCObjectModificationData
 	public void setConnectionRouting(int connectionRouting)
 	{
 		this.connectionRouting = connectionRouting;
-		flags |= MODIFY_CONNECTION_ROUTING;
+		fieldSet.add(CONNECTION_ROUTING);
 	}
 
 	/**
@@ -1371,7 +1382,7 @@ public class NXCObjectModificationData
 	public final void setDiscoveryRadius(int discoveryRadius)
 	{
 		this.discoveryRadius = discoveryRadius;
-		flags |= MODIFY_DISCOVERY_RADIUS;
+		fieldSet.add(DISCOVERY_RADIUS);
 	}
 
 	/**
@@ -1388,7 +1399,7 @@ public class NXCObjectModificationData
 	public void setHeight(int height)
 	{
 		this.height = height;
-		flags |= MODIFY_HEIGHT;
+		fieldSet.add(HEIGHT);
 	}
 
 	/**
@@ -1405,7 +1416,7 @@ public class NXCObjectModificationData
 	public void setFilter(String filter)
 	{
 		this.filter = filter;
-		flags |= MODIFY_FILTER;
+		fieldSet.add(FILTER);
 	}
 
    /**
@@ -1422,7 +1433,7 @@ public class NXCObjectModificationData
    public void setPeerGatewayId(long peerGatewayId)
    {
       this.peerGatewayId = peerGatewayId;
-      flags |= MODIFY_PEER_GATEWAY;
+      fieldSet.add(PEER_GATEWAY);
    }
 
    /**
@@ -1448,7 +1459,7 @@ public class NXCObjectModificationData
    {
       this.localNetworks = localNetworks;
       this.remoteNetworks = remoteNetworks;
-      flags |= MODIFY_VPN_NETWORKS;
+      fieldSet.add(VPN_NETWORKS);
    }
 
    /**
@@ -1465,7 +1476,7 @@ public class NXCObjectModificationData
    public void setPostalAddress(PostalAddress postalAddress)
    {
       this.postalAddress = postalAddress;
-      flags |= MODIFY_POSTAL_ADDRESS;
+      fieldSet.add(POSTAL_ADDRESS);
    }
 
    /**
@@ -1482,7 +1493,7 @@ public class NXCObjectModificationData
    public void setAgentCacheMode(AgentCacheMode agentCacheMode)
    {
       this.agentCacheMode = agentCacheMode;
-      flags |= MODIFY_AGENT_CACHE_MODE;
+      fieldSet.add(AGENT_CACHE_MODE);
    }
 
    /**
@@ -1499,7 +1510,7 @@ public class NXCObjectModificationData
    public void setMapObjectDisplayMode(MapObjectDisplayMode mapObjectDisplayMode)
    {
       this.mapObjectDisplayMode = mapObjectDisplayMode;
-      flags |= MODIFY_MAPOBJ_DISP_MODE;
+      fieldSet.add(MAPOBJ_DISP_MODE);
    }
 
    /**
@@ -1548,7 +1559,7 @@ public class NXCObjectModificationData
       this.rackImage = rackImage;
       this.rackPosition = rackPosition;
       this.rackHeight = rackHeight;
-      flags |= MODIFY_RACK_PLACEMENT;
+      fieldSet.add(RACK_PLACEMENT);
    }
 
    /**
@@ -1565,7 +1576,7 @@ public class NXCObjectModificationData
    public void setDashboards(Long[] dashboards)
    {
       this.dashboards = dashboards;
-      flags |= MODIFY_DASHBOARD_LIST;
+      fieldSet.add(DASHBOARD_LIST);
    }
 
    /**
@@ -1582,7 +1593,7 @@ public class NXCObjectModificationData
    public void setRackNumberingTopBottom(boolean rackNumberingTopBottom)
    {
       this.rackNumberingTopBottom = rackNumberingTopBottom;
-      flags |= MODIFY_RACK_NUMB_SCHEME;
+      fieldSet.add(RACK_NUMB_SCHEME);
    }
 
    /**
@@ -1599,7 +1610,7 @@ public class NXCObjectModificationData
    public void setControllerId(long controllerId)
    {
       this.controllerId = controllerId;
-      flags |= MODIFY_CONTROLLER_ID;
+      fieldSet.add(CONTROLLER_ID);
    }
 
    /**
@@ -1616,6 +1627,57 @@ public class NXCObjectModificationData
    public void setChassisId(long chassisId)
    {
       this.chassisId = chassisId;
-      flags |= MODIFY_CHASSIS_ID;
+      fieldSet.add(CHASSIS_ID);
+   }
+
+   /**
+    * @return the sshProxy
+    */
+   public long getSshProxy()
+   {
+      return sshProxy;
+   }
+
+   /**
+    * @param sshProxy the sshProxy to set
+    */
+   public void setSshProxy(long sshProxy)
+   {
+      this.sshProxy = sshProxy;
+      fieldSet.add(SSH_PROXY);
+   }
+
+   /**
+    * @return the sshLogin
+    */
+   public String getSshLogin()
+   {
+      return sshLogin;
+   }
+
+   /**
+    * @param sshLogin the sshLogin to set
+    */
+   public void setSshLogin(String sshLogin)
+   {
+      this.sshLogin = sshLogin;
+      fieldSet.add(SSH_LOGIN);
+   }
+
+   /**
+    * @return the sshPassword
+    */
+   public String getSshPassword()
+   {
+      return sshPassword;
+   }
+
+   /**
+    * @param sshPassword the sshPassword to set
+    */
+   public void setSshPassword(String sshPassword)
+   {
+      this.sshPassword = sshPassword;
+      fieldSet.add(SSH_PASSWORD);
    }
 }

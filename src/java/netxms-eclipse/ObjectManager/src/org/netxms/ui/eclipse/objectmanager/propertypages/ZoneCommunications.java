@@ -43,6 +43,7 @@ public class ZoneCommunications extends PropertyPage
 	private ObjectSelector agentProxy;
 	private ObjectSelector snmpProxy;
 	private ObjectSelector icmpProxy;
+   private ObjectSelector sshProxy;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -82,6 +83,14 @@ public class ZoneCommunications extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		icmpProxy.setLayoutData(gd);
 		
+      sshProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
+      sshProxy.setLabel(Messages.get().ZoneCommunications_DefaultSSHProxy);
+      sshProxy.setObjectId(zone.getSshProxy());
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      sshProxy.setLayoutData(gd);
+      
 		return dialogArea;
 	}
 
@@ -99,6 +108,7 @@ public class ZoneCommunications extends PropertyPage
 		md.setAgentProxy(agentProxy.getObjectId());
 		md.setSnmpProxy(snmpProxy.getObjectId());
 		md.setIcmpProxy(icmpProxy.getObjectId());
+      md.setSshProxy(sshProxy.getObjectId());
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(String.format(Messages.get().ZoneCommunications_JobName, zone.getObjectName()), null, Activator.PLUGIN_ID, null) {

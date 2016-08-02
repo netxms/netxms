@@ -33,6 +33,7 @@ Zone::Zone() : NetObj()
    m_agentProxy = 0;
    m_snmpProxy = 0;
 	m_icmpProxy = 0;
+   m_sshProxy = 0;
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
 	m_idxSubnetByAddr = new InetAddressIndex;
@@ -49,6 +50,7 @@ Zone::Zone(UINT32 zoneId, const TCHAR *name) : NetObj()
    m_agentProxy = 0;
    m_snmpProxy = 0;
 	m_icmpProxy = 0;
+   m_sshProxy = 0;
 	m_idxNodeByAddr = new InetAddressIndex;
 	m_idxInterfaceByAddr = new InetAddressIndex;
 	m_idxSubnetByAddr = new InetAddressIndex;
@@ -75,7 +77,7 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       return false;
 
    TCHAR szQuery[256];
-   _sntprintf(szQuery, 256, _T("SELECT zone_guid,agent_proxy,snmp_proxy,icmp_proxy FROM zones WHERE id=%d"), dwId);
+   _sntprintf(szQuery, 256, _T("SELECT zone_guid,agent_proxy,snmp_proxy,icmp_proxy,ssh_proxy FROM zones WHERE id=%d"), dwId);
    DB_RESULT hResult = DBSelect(hdb, szQuery);
    if (hResult == NULL)
       return false;     // Query failed
@@ -99,6 +101,7 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_agentProxy = DBGetFieldULong(hResult, 0, 1);
    m_snmpProxy = DBGetFieldULong(hResult, 0, 2);
    m_icmpProxy = DBGetFieldULong(hResult, 0, 3);
+   m_sshProxy = DBGetFieldULong(hResult, 0, 4);
 
    DBFreeResult(hResult);
 
@@ -113,41 +116,43 @@ bool Zone::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
  */
 BOOL Zone::saveToDatabase(DB_HANDLE hdb)
 {
-   BOOL bNewObject = TRUE;
-   TCHAR szQuery[8192];
-   DB_RESULT hResult;
-
    lockProperties();
 
-   saveCommonProperties(hdb);
-
-   // Check for object's existence in database
-   _sntprintf(szQuery, 8192, _T("SELECT id FROM zones WHERE id=%d"), m_id);
-   hResult = DBSelect(hdb, szQuery);
-   if (hResult != 0)
+   bool success = saveCommonProperties(hdb);
+   if (success)
    {
-      if (DBGetNumRows(hResult) > 0)
-         bNewObject = FALSE;
-      DBFreeResult(hResult);
+      DB_STATEMENT hStmt;
+      if (IsDatabaseRecordExist(hdb, _T("zones"), _T("id"), m_id))
+      {
+         hStmt = DBPrepare(hdb, _T("UPDATE zones SET zone_guid=?,agent_proxy=?,snmp_proxy=?,icmp_proxy=?,ssh_proxy=? WHERE id=?"));
+      }
+      else
+      {
+         hStmt = DBPrepare(hdb, _T("INSERT INTO zones (zone_guid,agent_proxy,snmp_proxy,icmp_proxy,ssh_proxy,id) VALUES (?,?,?,?,?,?)"));
+      }
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_zoneId);
+         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_agentProxy);
+         DBBind(hStmt, 3, DB_SQLTYPE_INTEGER, m_snmpProxy);
+         DBBind(hStmt, 4, DB_SQLTYPE_INTEGER, m_icmpProxy);
+         DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_sshProxy);
+         DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_id);
+         success = DBExecute(hStmt);
+         DBFreeStatement(hStmt);
+      }
+      else
+      {
+         success = false;
+      }
+
+      if (success)
+         success = saveACLToDB(hdb);
    }
-
-   // Form and execute INSERT or UPDATE query
-   if (bNewObject)
-      _sntprintf(szQuery, 8192, _T("INSERT INTO zones (id,zone_guid,agent_proxy,snmp_proxy,icmp_proxy)")
-                          _T(" VALUES (%d,%d,%d,%d,%d)"),
-                 m_id, m_zoneId, m_agentProxy, m_snmpProxy, m_icmpProxy);
-   else
-      _sntprintf(szQuery, 8192, _T("UPDATE zones SET zone_guid=%d,agent_proxy=%d,")
-                                _T("snmp_proxy=%d,icmp_proxy=%d WHERE id=%d"),
-                 m_zoneId, m_agentProxy, m_snmpProxy, m_icmpProxy, m_id);
-   DBQuery(hdb, szQuery);
-
-   saveACLToDB(hdb);
-
    // Unlock object and clear modification flag
    m_isModified = false;
    unlockProperties();
-   return TRUE;
+   return success;
 }
 
 /**
@@ -164,30 +169,34 @@ bool Zone::deleteFromDatabase(DB_HANDLE hdb)
 /**
  * Create NXCP message with object's data
  */
-void Zone::fillMessageInternal(NXCPMessage *pMsg)
+void Zone::fillMessageInternal(NXCPMessage *msg)
 {
-   NetObj::fillMessageInternal(pMsg);
-   pMsg->setField(VID_ZONE_ID, m_zoneId);
-   pMsg->setField(VID_AGENT_PROXY, m_agentProxy);
-   pMsg->setField(VID_SNMP_PROXY, m_snmpProxy);
-   pMsg->setField(VID_ICMP_PROXY, m_icmpProxy);
+   NetObj::fillMessageInternal(msg);
+   msg->setField(VID_ZONE_ID, m_zoneId);
+   msg->setField(VID_AGENT_PROXY, m_agentProxy);
+   msg->setField(VID_SNMP_PROXY, m_snmpProxy);
+   msg->setField(VID_ICMP_PROXY, m_icmpProxy);
+   msg->setField(VID_SSH_PROXY, m_sshProxy);
 }
 
 /**
  * Modify object from message
  */
-UINT32 Zone::modifyFromMessageInternal(NXCPMessage *pRequest)
+UINT32 Zone::modifyFromMessageInternal(NXCPMessage *request)
 {
-	if (pRequest->isFieldExist(VID_AGENT_PROXY))
-		m_agentProxy = pRequest->getFieldAsUInt32(VID_AGENT_PROXY);
+	if (request->isFieldExist(VID_AGENT_PROXY))
+		m_agentProxy = request->getFieldAsUInt32(VID_AGENT_PROXY);
 
-	if (pRequest->isFieldExist(VID_SNMP_PROXY))
-		m_snmpProxy = pRequest->getFieldAsUInt32(VID_SNMP_PROXY);
+	if (request->isFieldExist(VID_SNMP_PROXY))
+		m_snmpProxy = request->getFieldAsUInt32(VID_SNMP_PROXY);
 
-	if (pRequest->isFieldExist(VID_ICMP_PROXY))
-		m_icmpProxy = pRequest->getFieldAsUInt32(VID_ICMP_PROXY);
+	if (request->isFieldExist(VID_ICMP_PROXY))
+		m_icmpProxy = request->getFieldAsUInt32(VID_ICMP_PROXY);
 
-   return NetObj::modifyFromMessageInternal(pRequest);
+   if (request->isFieldExist(VID_SSH_PROXY))
+      m_sshProxy = request->getFieldAsUInt32(VID_SSH_PROXY);
+
+   return NetObj::modifyFromMessageInternal(request);
 }
 
 /**

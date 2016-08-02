@@ -31,6 +31,7 @@ public class Zone extends GenericObject
 	private long agentProxy;
 	private long snmpProxy;
 	private long icmpProxy;
+   private long sshProxy;
 	
 	/**
 	 * Create zone object from NXCP message
@@ -45,6 +46,7 @@ public class Zone extends GenericObject
 		agentProxy = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
 		snmpProxy = msg.getFieldAsInt64(NXCPCodes.VID_SNMP_PROXY);
 		icmpProxy = msg.getFieldAsInt64(NXCPCodes.VID_ICMP_PROXY);
+      sshProxy = msg.getFieldAsInt64(NXCPCodes.VID_SSH_PROXY);
 	}
 
 	/* (non-Javadoc)
@@ -97,7 +99,15 @@ public class Zone extends GenericObject
 		return icmpProxy;
 	}
 
-	/* (non-Javadoc)
+	/**
+    * @return the sshProxy
+    */
+   public long getSshProxy()
+   {
+      return sshProxy;
+   }
+
+   /* (non-Javadoc)
 	 * @see org.netxms.client.objects.GenericObject#getObjectClassName()
 	 */
 	@Override

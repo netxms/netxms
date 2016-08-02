@@ -191,6 +191,7 @@ public class General extends PropertyPage
       origin.add(Messages.get().General_WinPerf);
       origin.add(Messages.get().General_SMCLP);
       origin.add(Messages.get().General_Script);
+      origin.add(Messages.get().General_SourceSSH);
       origin.select(dci.getOrigin());
       origin.addSelectionListener(new SelectionListener() {
 			@Override
@@ -450,7 +451,8 @@ public class General extends PropertyPage
          mode = 1;
       retentionMode.select(mode);
       retentionTime.setEnabled(mode == 1);
-            
+      
+      onOriginChange();
       return dialogArea;
 	}
 
@@ -469,6 +471,13 @@ public class General extends PropertyPage
 		customSnmpPort.setEnabled((index == DataCollectionItem.SNMP) && checkUseCustomSnmpPort.getSelection());
 		sampleCount.setEnabled(index == DataCollectionItem.WINPERF);
 		agentCacheMode.setEnabled((index == DataCollectionItem.AGENT) || (index == DataCollectionItem.SNMP));
+		selectButton.setEnabled(
+		      (index == DataCollectionItem.AGENT) || 
+		      (index == DataCollectionItem.SNMP) || 
+		      (index == DataCollectionItem.INTERNAL) || 
+		      (index == DataCollectionItem.WINPERF) || 
+		      (index == DataCollectionItem.CHECKPOINT_SNMP) || 
+		      (index == DataCollectionItem.SCRIPT));
 	}
 	
 	/**

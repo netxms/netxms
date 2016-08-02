@@ -147,6 +147,9 @@ StringList *SSHSession::execute(const TCHAR *command)
             while(eol != NULL)
             {
                *eol = 0;
+               char *cr = strchr(curr, '\r');
+               if (cr != NULL)
+                  *cr = 0;
                output->addMBString(curr);
                curr = eol + 1;
                eol = strchr(curr, '\n');
@@ -161,6 +164,9 @@ StringList *SSHSession::execute(const TCHAR *command)
             if (offset > 0)
             {
                buffer[offset] = 0;
+               char *cr = strchr(buffer, '\r');
+               if (cr != NULL)
+                  *cr = 0;
                output->addMBString(buffer);
             }
             ssh_channel_send_eof(channel);

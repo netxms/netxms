@@ -157,6 +157,7 @@ public class Messages extends NLS
 	public static String DciLabelProvider_SourcePush;
    public static String DciLabelProvider_SourceScript;
 	public static String DciLabelProvider_SourceSNMP;
+   public static String DciLabelProvider_SourceSSH;
 	public static String DciLabelProvider_SourceILO;
 	public static String DciLabelProvider_SourceWinPerf;
 	public static String DciLabelProvider_Table;
@@ -273,6 +274,7 @@ public class Messages extends NLS
 	public static String General_SourceInternal;
 	public static String General_SourcePush;
 	public static String General_SourceSNMP;
+   public static String General_SourceSSH;
 	public static String General_Status;
 	public static String General_Storage;
 	public static String General_UseCustomPort;
@@ -309,6 +311,7 @@ public class Messages extends NLS
 	public static String GeneralTable_SourceInternal;
 	public static String GeneralTable_SourcePush;
 	public static String GeneralTable_SourceSNMP;
+   public static String GeneralTable_SourceSSH;
 	public static String GeneralTable_Status;
 	public static String GeneralTable_Storage;
 	public static String GeneralTable_UseCustomRetention;

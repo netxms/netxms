@@ -132,6 +132,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 	protected short rackPosition;
 	protected short rackHeight;
    protected long chassisId;
+   protected String sshLogin;
+   protected String sshPassword;
+   protected long sshProxyId;
 	
 	/**
 	 * Create new node object.
@@ -196,6 +199,9 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
 		rackPosition = msg.getFieldAsInt16(NXCPCodes.VID_RACK_POSITION);
       rackHeight = msg.getFieldAsInt16(NXCPCodes.VID_RACK_HEIGHT);
       chassisId = msg.getFieldAsInt64(NXCPCodes.VID_CHASSIS_ID);
+      sshLogin = msg.getFieldAsString(NXCPCodes.VID_SSH_LOGIN);
+      sshPassword = msg.getFieldAsString(NXCPCodes.VID_SSH_PASSWORD);
+      sshProxyId = msg.getFieldAsInt64(NXCPCodes.VID_SSH_PROXY);
 		
 		long bootTimeSeconds = msg.getFieldAsInt64(NXCPCodes.VID_BOOT_TIME);
 		bootTime = (bootTimeSeconds > 0) ? new Date(bootTimeSeconds * 1000) : null;
@@ -680,5 +686,29 @@ public abstract class AbstractNode extends DataCollectionTarget implements RackE
    public long getChassisId()
    {
       return chassisId;
+   }
+
+   /**
+    * @return the sshLogin
+    */
+   public String getSshLogin()
+   {
+      return sshLogin;
+   }
+
+   /**
+    * @return the sshPassword
+    */
+   public String getSshPassword()
+   {
+      return sshPassword;
+   }
+
+   /**
+    * @return the sshProxyId
+    */
+   public long getSshProxyId()
+   {
+      return sshProxyId;
    }
 }

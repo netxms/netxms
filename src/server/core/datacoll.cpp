@@ -101,6 +101,46 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
 				   *error = DCE_NOT_SUPPORTED;
 			   }
             break;
+         case DS_SSH:
+            if (dcTarget->getObjectClass() == OBJECT_NODE)
+            {
+               UINT32 proxyId = ((Node *)dcTarget)->getSshProxy();
+               if (proxyId == 0)
+               {
+                  if (IsZoningEnabled())
+                  {
+                     Zone *zone = (Zone *)FindZoneByGUID(((Node *)dcTarget)->getZoneId());
+                     if ((zone != NULL) && (zone->getSshProxy() != 0))
+                        proxyId = zone->getSshProxy();
+                     else
+                        proxyId = g_dwMgmtNode;
+                  }
+                  else
+                  {
+                     proxyId = g_dwMgmtNode;
+                  }
+               }
+               Node *proxy = (Node *)FindObjectById(proxyId, OBJECT_NODE);
+               if (proxy != NULL)
+               {
+                  TCHAR name[MAX_PARAM_NAME], ipAddr[64];
+                  _sntprintf(name, MAX_PARAM_NAME, _T("SSH.Command(%s,\"%s\",\"%s\",\"%s\")"),
+                             ((Node *)dcTarget)->getIpAddress().toString(ipAddr),
+                             (const TCHAR *)EscapeStringForAgent(((Node *)dcTarget)->getSshLogin()),
+                             (const TCHAR *)EscapeStringForAgent(((Node *)dcTarget)->getSshPassword()),
+                             (const TCHAR *)EscapeStringForAgent(pItem->getName()));
+                  *error = proxy->getItemFromAgent(name, MAX_LINE_SIZE, pBuffer);
+               }
+               else
+               {
+                  *error = DCE_COMM_ERROR;
+               }
+            }
+            else
+            {
+               *error = DCE_NOT_SUPPORTED;
+            }
+            break;
          case DS_SMCLP:
             if (dcTarget->getObjectClass() == OBJECT_NODE)
             {

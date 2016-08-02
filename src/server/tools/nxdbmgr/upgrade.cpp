@@ -329,9 +329,9 @@ static BOOL ConvertStrings(const TCHAR *table, const TCHAR *idColumn, const TCHA
 }
 
 /**
- * Set column nullable (currently only Oracle and PostgreSQL)
+ * Remove NOT NULL constraint from column
  */
-static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column)
+static bool RemoveNotNullConstraint(const TCHAR *table, const TCHAR *column)
 {
 	TCHAR query[1024] = _T("");
 
@@ -350,7 +350,32 @@ static BOOL SetColumnNullable(const TCHAR *table, const TCHAR *column)
 			break;
 	}
 
-	return (query[0] != 0) ? SQLQuery(query) : TRUE;
+	return (query[0] != 0) ? SQLQuery(query) : true;
+}
+
+/**
+ * Set NOT NULL constraint on column
+ */
+static bool SetNotNullConstraint(const TCHAR *table, const TCHAR *column)
+{
+   TCHAR query[1024] = _T("");
+
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_ORACLE:
+         _sntprintf(query, 1024, _T("DECLARE already_not_null EXCEPTION; ")
+                                 _T("PRAGMA EXCEPTION_INIT(already_not_null, -1442); ")
+                                 _T("BEGIN EXECUTE IMMEDIATE 'ALTER TABLE %s MODIFY %s NOT NULL'; ")
+                                 _T("EXCEPTION WHEN already_not_null THEN null; END;"), table, column);
+         break;
+      case DB_SYNTAX_PGSQL:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s ALTER COLUMN %s SET NOT NULL"), table, column);
+         break;
+      default:
+         break;
+   }
+
+   return (query[0] != 0) ? SQLQuery(query) : true;
 }
 
 /**
@@ -684,6 +709,28 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V409 to V410
+ */
+static BOOL H_UpgradeFromV409(int currVersion, int newVersion)
+{
+   static const TCHAR *batch =
+      _T("ALTER TABLE zones ADD ssh_proxy integer\n")
+      _T("UPDATE zones SET ssh_proxy=0\n")
+      _T("ALTER TABLE nodes ADD ssh_login varchar(63)\n")
+      _T("ALTER TABLE nodes ADD ssh_password varchar(63)\n")
+      _T("ALTER TABLE nodes ADD ssh_proxy integer\n")
+      _T("UPDATE nodes SET ssh_proxy=0\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetNotNullConstraint(_T("nodes"), _T("ssh_proxy")));
+   CHK_EXEC(SetNotNullConstraint(_T("zones"), _T("ssh_proxy")));
+
+   CHK_EXEC(SetSchemaVersion(410));
+   return TRUE;
+}
+
+/**
  * Upgrade from V408 to V409
  */
 static BOOL H_UpgradeFromV408(int currVersion, int newVersion)
@@ -694,6 +741,8 @@ static BOOL H_UpgradeFromV408(int currVersion, int newVersion)
       _T("UPDATE nodes SET node_type=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetNotNullConstraint(_T("nodes"), _T("node_type")));
 
    CHK_EXEC(SetSchemaVersion(409));
    return TRUE;
@@ -721,6 +770,8 @@ static BOOL H_UpgradeFromV407(int currVersion, int newVersion)
       _T("UPDATE nodes SET chassis_id=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
+
+   CHK_EXEC(SetNotNullConstraint(_T("nodes"), _T("chassis_id")));
 
    CHK_EXEC(SetSchemaVersion(408));
    return TRUE;
@@ -2644,7 +2695,7 @@ static BOOL H_UpgradeFromV334(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV333(int currVersion, int newVersion)
 {
-   CHK_EXEC(SetColumnNullable(_T("user_groups"), _T("description")));
+   CHK_EXEC(RemoveNotNullConstraint(_T("user_groups"), _T("description")));
    CHK_EXEC(SetSchemaVersion(334));
    return TRUE;
 }
@@ -3111,12 +3162,12 @@ static BOOL H_UpgradeFromV313(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV312(int currVersion, int newVersion)
 {
-   CHK_EXEC(SetColumnNullable(_T("object_tools"), _T("tool_name")));
-   CHK_EXEC(SetColumnNullable(_T("object_tools"), _T("tool_data")));
-   CHK_EXEC(SetColumnNullable(_T("object_tools"), _T("description")));
-   CHK_EXEC(SetColumnNullable(_T("object_tools"), _T("confirmation_text")));
-   CHK_EXEC(SetColumnNullable(_T("object_tools"), _T("matching_oid")));
-   CHK_EXEC(SetColumnNullable(_T("object_tools_table_columns"), _T("col_name")));
+   CHK_EXEC(RemoveNotNullConstraint(_T("object_tools"), _T("tool_name")));
+   CHK_EXEC(RemoveNotNullConstraint(_T("object_tools"), _T("tool_data")));
+   CHK_EXEC(RemoveNotNullConstraint(_T("object_tools"), _T("description")));
+   CHK_EXEC(RemoveNotNullConstraint(_T("object_tools"), _T("confirmation_text")));
+   CHK_EXEC(RemoveNotNullConstraint(_T("object_tools"), _T("matching_oid")));
+   CHK_EXEC(RemoveNotNullConstraint(_T("object_tools_table_columns"), _T("col_name")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("tool_name")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("tool_data")));
    CHK_EXEC(ConvertStrings(_T("object_tools"), _T("tool_id"), _T("description")));
@@ -3262,7 +3313,7 @@ static BOOL H_UpgradeFromV307(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV306(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("config_clob"), _T("var_value")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("config_clob"), _T("var_value")));
 	CHK_EXEC(ConvertStrings(_T("config_clob"), _T("var_name"), NULL, _T("var_value"), true));
    CHK_EXEC(SetSchemaVersion(307));
    return TRUE;
@@ -3373,11 +3424,11 @@ static BOOL H_UpgradeFromV299(int currVersion, int newVersion)
 	CHK_EXEC(CreateConfigParam(_T("XMPPServer"), _T("localhost"), 1, 1));
 	CHK_EXEC(CreateConfigParam(_T("XMPPPort"), _T("5222"), 1, 1));
 
-   SetColumnNullable(_T("users"), _T("full_name"));
-   SetColumnNullable(_T("users"), _T("description"));
-   SetColumnNullable(_T("users"), _T("cert_mapping_data"));
-   SetColumnNullable(_T("user_groups"), _T("description"));
-   SetColumnNullable(_T("userdb_custom_attributes"), _T("attr_value"));
+   RemoveNotNullConstraint(_T("users"), _T("full_name"));
+   RemoveNotNullConstraint(_T("users"), _T("description"));
+   RemoveNotNullConstraint(_T("users"), _T("cert_mapping_data"));
+   RemoveNotNullConstraint(_T("user_groups"), _T("description"));
+   RemoveNotNullConstraint(_T("userdb_custom_attributes"), _T("attr_value"));
 
    ConvertStrings(_T("users"), _T("id"), _T("full_name"));
    ConvertStrings(_T("users"), _T("id"), _T("description"));
@@ -3936,18 +3987,18 @@ static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
 	CHK_EXEC(ResizeColumn(_T("items"), _T("name"), 1024, true));
 	CHK_EXEC(ResizeColumn(_T("dc_tables"), _T("name"), 1024, true));
 
-	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("alarm_key")));
-	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("alarm_message")));
-	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("comments")));
-	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("situation_instance")));
-	CHK_EXEC(SetColumnNullable(_T("event_policy"), _T("script")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("event_policy"), _T("alarm_key")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("event_policy"), _T("alarm_message")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("event_policy"), _T("comments")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("event_policy"), _T("situation_instance")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("event_policy"), _T("script")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("alarm_key")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("alarm_message")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("comments")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("situation_instance")));
 	CHK_EXEC(ConvertStrings(_T("event_policy"), _T("rule_id"), _T("script")));
 
-	CHK_EXEC(SetColumnNullable(_T("policy_situation_attr_list"), _T("attr_value")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("policy_situation_attr_list"), _T("attr_value")));
 	// convert strings in policy_situation_attr_list
 	DB_RESULT hResult = SQLSelect(_T("SELECT rule_id,situation_id,attr_name,attr_value FROM policy_situation_attr_list"));
 	if (hResult != NULL)
@@ -3997,8 +4048,8 @@ static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
 			return FALSE;
 	}
 
-	CHK_EXEC(SetColumnNullable(_T("event_cfg"), _T("description")));
-	CHK_EXEC(SetColumnNullable(_T("event_cfg"), _T("message")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("event_cfg"), _T("description")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("event_cfg"), _T("message")));
 	CHK_EXEC(ConvertStrings(_T("event_cfg"), _T("event_code"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("event_cfg"), _T("event_code"), _T("message")));
 
@@ -4011,15 +4062,15 @@ static BOOL H_UpgradeFromV268(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV267(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("network_services"), _T("check_request")));
-	CHK_EXEC(SetColumnNullable(_T("network_services"), _T("check_responce")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("network_services"), _T("check_request")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("network_services"), _T("check_responce")));
 	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_request")));
 	CHK_EXEC(ConvertStrings(_T("network_services"), _T("id"), _T("check_responce")));
 
-	CHK_EXEC(SetColumnNullable(_T("config"), _T("var_value")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("config"), _T("var_value")));
 	CHK_EXEC(ConvertStrings(_T("config"), _T("var_name"), NULL, _T("var_value"), true));
 
-	CHK_EXEC(SetColumnNullable(_T("dci_schedules"), _T("schedule")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("dci_schedules"), _T("schedule")));
 	CHK_EXEC(ConvertStrings(_T("dci_schedules"), _T("schedule_id"), _T("item_id"), _T("schedule"), false));
 
 	CHK_EXEC(SetSchemaVersion(268));
@@ -4181,8 +4232,8 @@ static BOOL H_UpgradeFromV258(int currVersion, int newVersion)
 	// have to made these columns nullable again because
 	// because they was forgotten as NOT NULL in schema.in
 	// and so some databases can still have them as NOT NULL
-	CHK_EXEC(SetColumnNullable(_T("templates"), _T("apply_filter")));
-	CHK_EXEC(SetColumnNullable(_T("containers"), _T("auto_bind_filter")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("templates"), _T("apply_filter")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("containers"), _T("auto_bind_filter")));
 
 	CHK_EXEC(SetSchemaVersion(259));
 	return TRUE;
@@ -4280,10 +4331,10 @@ static BOOL H_UpgradeFromV253(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV252(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("templates"), _T("apply_filter")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("templates"), _T("apply_filter")));
 	CHK_EXEC(ConvertStrings(_T("templates"), _T("id"), _T("apply_filter")));
 
-	CHK_EXEC(SetColumnNullable(_T("containers"), _T("auto_bind_filter")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("containers"), _T("auto_bind_filter")));
 	CHK_EXEC(ConvertStrings(_T("containers"), _T("id"), _T("auto_bind_filter")));
 
 	static TCHAR batch[] =
@@ -4429,8 +4480,8 @@ static BOOL H_UpgradeFromV250(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SetColumnNullable(_T("thresholds"), _T("fire_value")));
-	CHK_EXEC(SetColumnNullable(_T("thresholds"), _T("rearm_value")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("thresholds"), _T("fire_value")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("thresholds"), _T("rearm_value")));
 	CHK_EXEC(ConvertStrings(_T("thresholds"), _T("threshold_id"), _T("fire_value")));
 	CHK_EXEC(ConvertStrings(_T("thresholds"), _T("threshold_id"), _T("rearm_value")));
 
@@ -4581,7 +4632,7 @@ static BOOL H_UpgradeFromV246(int currVersion, int newVersion)
 {
 	static TCHAR insertQuery[] = _T("INSERT INTO object_custom_attributes (object_id,attr_name,attr_value) VALUES (?,?,?)");
 
-	CHK_EXEC(SetColumnNullable(_T("object_custom_attributes"), _T("attr_value")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("object_custom_attributes"), _T("attr_value")));
 
 	// Convert strings in object_custom_attributes table
 	DB_RESULT hResult = SQLSelect(_T("SELECT object_id,attr_name,attr_value FROM object_custom_attributes"));
@@ -4667,10 +4718,10 @@ static BOOL H_UpgradeFromV245(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SetColumnNullable(_T("snmp_trap_pmap"), _T("description")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("snmp_trap_pmap"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_pmap"), _T("trap_id"), _T("parameter"), _T("description"), false));
 
-	CHK_EXEC(SetColumnNullable(_T("cluster_resources"), _T("resource_name")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("cluster_resources"), _T("resource_name")));
 	CHK_EXEC(ConvertStrings(_T("cluster_resources"), _T("cluster_id"), _T("resource_id"), _T("resource_name"), false));
 
 	CHK_EXEC(SetSchemaVersion(246));
@@ -4689,9 +4740,9 @@ static BOOL H_UpgradeFromV244(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SetColumnNullable(_T("actions"), _T("rcpt_addr")));
-	CHK_EXEC(SetColumnNullable(_T("actions"), _T("email_subject")));
-	CHK_EXEC(SetColumnNullable(_T("actions"), _T("action_data")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("actions"), _T("rcpt_addr")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("actions"), _T("email_subject")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("actions"), _T("action_data")));
 
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("rcpt_addr")));
 	CHK_EXEC(ConvertStrings(_T("actions"), _T("action_id"), _T("email_subject")));
@@ -5425,7 +5476,7 @@ static BOOL H_UpgradeFromV218(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV217(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("snmp_communities"), _T("community")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("snmp_communities"), _T("community")));
 	CHK_EXEC(ConvertStrings(_T("snmp_communities"), _T("id"), _T("community")));
 
 	CHK_EXEC(SetSchemaVersion(218));
@@ -5446,40 +5497,40 @@ static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
 
 	CHK_EXEC(SQLBatch(batch));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("community")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("community")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("community")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("usm_auth_password")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("usm_auth_password")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("usm_auth_password")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("usm_priv_password")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("usm_priv_password")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("usm_priv_password")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("snmp_oid")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("snmp_oid")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("snmp_oid")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("secret")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("secret")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("secret")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("agent_version")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("agent_version")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("agent_version")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("platform_name")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("platform_name")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("platform_name")));
 
-	CHK_EXEC(SetColumnNullable(_T("nodes"), _T("uname")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("nodes"), _T("uname")));
 	CHK_EXEC(ConvertStrings(_T("nodes"), _T("id"), _T("uname")));
 
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("name")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("items"), _T("name")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("name")));
 
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("description")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("items"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("description")));
 
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("transformation")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("items"), _T("transformation")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("transformation")));
 
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("instance")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("items"), _T("instance")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("instance")));
 
 	CHK_EXEC(SetSchemaVersion(217));
@@ -5491,13 +5542,13 @@ static BOOL H_UpgradeFromV216(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV215(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("ap_common"), _T("description")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("ap_common"), _T("description")));
 	CHK_EXEC(ConvertStrings(_T("ap_common"), _T("id"), _T("description")));
 
 	if (g_dbSyntax != DB_SYNTAX_SQLITE)
 		CHK_EXEC(SQLQuery(_T("ALTER TABLE ap_config_files DROP COLUMN file_name")));
 
-	CHK_EXEC(SetColumnNullable(_T("ap_config_files"), _T("file_content")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("ap_config_files"), _T("file_content")));
 	CHK_EXEC(ConvertStrings(_T("ap_config_files"), _T("policy_id"), _T("file_content")));
 
 	CHK_EXEC(SQLQuery(_T("ALTER TABLE object_properties ADD guid varchar(36)")));
@@ -5565,10 +5616,10 @@ static BOOL H_UpgradeFromV214(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("script_library"), _T("script_code")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("script_library"), _T("script_code")));
 	CHK_EXEC(ConvertStrings(_T("script_library"), _T("script_id"), _T("script_code")));
 
-	CHK_EXEC(SetColumnNullable(_T("raw_dci_values"), _T("raw_value")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("raw_dci_values"), _T("raw_value")));
 	CHK_EXEC(ConvertStrings(_T("raw_dci_values"), _T("item_id"), _T("raw_value")));
 
 	CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='CREATE TABLE idata_%d (item_id integer not null,idata_timestamp integer not null,idata_value varchar(255) null)' WHERE var_name='IDataTableCreationCommand'")));
@@ -5583,7 +5634,7 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
 
 			DWORD nodeId = DBGetFieldULong(hResult, i, 0);
 			_sntprintf(table, 32, _T("idata_%d"), nodeId);
-			CHK_EXEC(SetColumnNullable(table, _T("idata_value")));
+			CHK_EXEC(RemoveNotNullConstraint(table, _T("idata_value")));
 		}
 		DBFreeResult(hResult);
 	}
@@ -5635,8 +5686,8 @@ static BOOL H_UpgradeFromV213(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV212(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("custom_units_name")));
-	CHK_EXEC(SetColumnNullable(_T("items"), _T("perftab_settings")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("items"), _T("custom_units_name")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("items"), _T("perftab_settings")));
 
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("custom_units_name")));
 	CHK_EXEC(ConvertStrings(_T("items"), _T("item_id"), _T("perftab_settings")));
@@ -5651,9 +5702,9 @@ static BOOL H_UpgradeFromV212(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV211(int currVersion, int newVersion)
 {
-	CHK_EXEC(SetColumnNullable(_T("snmp_trap_cfg"), _T("snmp_oid")));
-	CHK_EXEC(SetColumnNullable(_T("snmp_trap_cfg"), _T("user_tag")));
-	CHK_EXEC(SetColumnNullable(_T("snmp_trap_cfg"), _T("description")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("snmp_trap_cfg"), _T("snmp_oid")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("snmp_trap_cfg"), _T("user_tag")));
+	CHK_EXEC(RemoveNotNullConstraint(_T("snmp_trap_cfg"), _T("description")));
 
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_cfg"), _T("trap_id"), _T("user_tag")));
 	CHK_EXEC(ConvertStrings(_T("snmp_trap_cfg"), _T("trap_id"), _T("description")));
@@ -10303,6 +10354,7 @@ static struct
    { 406, 407, H_UpgradeFromV406 },
    { 407, 408, H_UpgradeFromV407 },
    { 408, 409, H_UpgradeFromV408 },
+   { 409, 410, H_UpgradeFromV409 },
    { 0, 0, NULL }
 };
 

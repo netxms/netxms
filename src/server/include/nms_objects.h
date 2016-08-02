@@ -1373,6 +1373,9 @@ protected:
 	UINT32 m_chassisId;
 	INT64 m_syslogMessageCount;
 	INT64 m_snmpTrapCount;
+	TCHAR m_sshLogin[MAX_SSH_LOGIN_LEN];
+	TCHAR m_sshPassword[MAX_SSH_PASSWORD_LEN];
+	UINT32 m_sshProxy;
 
    void pollerLock() { MutexLock(m_hPollerMutex); }
    void pollerUnlock() { MutexUnlock(m_hPollerMutex); }
@@ -1500,6 +1503,9 @@ public:
    INT16 getRackPosition() const { return m_rackPosition; }
 	bool hasFileUpdateConnection() const { lockProperties(); bool result = (m_fileUpdateConn != NULL); unlockProperties(); return result; }
    UINT32 getIcmpProxy() const { return m_icmpProxy; }
+   const TCHAR *getSshLogin() const { return m_sshLogin; }
+   const TCHAR *getSshPassword() const { return m_sshPassword; }
+   UINT32 getSshProxy() const { return m_sshProxy; }
 
    bool isDown() { return (m_dwDynamicFlags & NDF_UNREACHABLE) ? true : false; }
 	time_t getDownTime() const { return m_downSince; }
@@ -1965,12 +1971,13 @@ protected:
    UINT32 m_agentProxy;
    UINT32 m_snmpProxy;
 	UINT32 m_icmpProxy;
+	UINT32 m_sshProxy;
 	InetAddressIndex *m_idxNodeByAddr;
 	InetAddressIndex *m_idxInterfaceByAddr;
 	InetAddressIndex *m_idxSubnetByAddr;
 
-   virtual void fillMessageInternal(NXCPMessage *pMsg);
-   virtual UINT32 modifyFromMessageInternal(NXCPMessage *pRequest);
+   virtual void fillMessageInternal(NXCPMessage *msg);
+   virtual UINT32 modifyFromMessageInternal(NXCPMessage *request);
 
 public:
    Zone();
@@ -1987,10 +1994,11 @@ public:
 
    virtual NXSL_Value *createNXSLObject();
 
-   UINT32 getZoneId() { return m_zoneId; }
-	UINT32 getAgentProxy() { return m_agentProxy; }
-	UINT32 getSnmpProxy() { return m_snmpProxy; }
-	UINT32 getIcmpProxy() { return m_icmpProxy; }
+   UINT32 getZoneId() const { return m_zoneId; }
+	UINT32 getAgentProxy() const { return m_agentProxy; }
+	UINT32 getSnmpProxy() const { return m_snmpProxy; }
+	UINT32 getIcmpProxy() const { return m_icmpProxy; }
+   UINT32 getSshProxy() const { return m_sshProxy; }
 
    void addSubnet(Subnet *pSubnet) { addChild(pSubnet); pSubnet->addParent(this); }
 

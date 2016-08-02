@@ -804,6 +804,7 @@ enum SessionState
 #define DS_WINPERF            5
 #define DS_SMCLP              6
 #define DS_SCRIPT             7
+#define DS_SSH                8
 
 /**
  * Item status

@@ -116,6 +116,9 @@ Node::Node() : DataCollectionTarget()
 	m_chassisId = 0;
 	m_syslogMessageCount = 0;
 	m_snmpTrapCount = 0;
+	m_sshLogin[0] = 0;
+	m_sshPassword[0] = 0;
+	m_sshProxy = 0;
 }
 
 /**
@@ -210,6 +213,9 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_chassisId = 0;
    m_syslogMessageCount = 0;
    m_snmpTrapCount = 0;
+   m_sshLogin[0] = 0;
+   m_sshPassword[0] = 0;
+   m_sshProxy = 0;
 }
 
 /**
@@ -284,7 +290,7 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
       _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,")
       _T("rack_id,rack_image,rack_position,rack_height,")
       _T("last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
-      _T("node_type,node_subtype FROM nodes WHERE id=?"));
+      _T("node_type,node_subtype,ssh_login,ssh_password,ssh_proxy FROM nodes WHERE id=?"));
 	if (hStmt == NULL)
 		return false;
 
@@ -371,6 +377,9 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_snmpTrapCount = DBGetFieldInt64(hResult, 0, 39);
    m_type = (NodeType)DBGetFieldLong(hResult, 0, 40);
    DBGetField(hResult, 0, 41, m_subType, MAX_NODE_SUBTYPE_LENGTH);
+   DBGetField(hResult, 0, 42, m_sshLogin, MAX_OBJECT_NAME);
+   DBGetField(hResult, 0, 43, m_sshPassword, MAX_PASSWORD);
+   m_sshProxy = DBGetFieldULong(hResult, 0, 44);
 
    DBFreeResult(hResult);
 	DBFreeStatement(hStmt);
@@ -467,7 +476,7 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 			_T("use_ifxtable=?,usm_auth_password=?,usm_priv_password=?,usm_methods=?,snmp_sys_name=?,bridge_base_addr=?,")
 			_T("runtime_flags=?,down_since=?,driver_name=?,rack_image=?,rack_position=?,rack_height=?,rack_id=?,boot_time=?,")
          _T("agent_cache_mode=?,snmp_sys_contact=?,snmp_sys_location=?,last_agent_comm_time=?,")
-         _T("syslog_msg_count=?,snmp_trap_count=?,node_type=?,node_subtype=? WHERE id=?"));
+         _T("syslog_msg_count=?,snmp_trap_count=?,node_type=?,node_subtype=?,ssh_login=?,ssh_password=?,ssh_proxy=? WHERE id=?"));
 	}
    else
 	{
@@ -477,8 +486,8 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
 		  _T("proxy_node,snmp_proxy,icmp_proxy,required_polls,use_ifxtable,usm_auth_password,usm_priv_password,usm_methods,")
 		  _T("snmp_sys_name,bridge_base_addr,runtime_flags,down_since,driver_name,rack_image,rack_position,rack_height,rack_id,boot_time,")
         _T("agent_cache_mode,snmp_sys_contact,snmp_sys_location,last_agent_comm_time,syslog_msg_count,snmp_trap_count,")
-        _T("node_type,node_subtype,id) ")
-		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+        _T("node_type,node_subtype,,ssh_login,ssh_password,ssh_proxy,id) ")
+		  _T("VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
 	}
 	if (hStmt == NULL)
 	{
@@ -539,7 +548,10 @@ BOOL Node::saveToDatabase(DB_HANDLE hdb)
    DBBind(hStmt, 40, DB_SQLTYPE_BIGINT, m_snmpTrapCount);
    DBBind(hStmt, 41, DB_SQLTYPE_INTEGER, (INT32)m_type);
    DBBind(hStmt, 42, DB_SQLTYPE_VARCHAR, m_subType, DB_BIND_STATIC);
-	DBBind(hStmt, 43, DB_SQLTYPE_INTEGER, m_id);
+   DBBind(hStmt, 43, DB_SQLTYPE_VARCHAR, m_sshLogin, DB_BIND_STATIC);
+   DBBind(hStmt, 44, DB_SQLTYPE_VARCHAR, m_sshPassword, DB_BIND_STATIC);
+   DBBind(hStmt, 45, DB_SQLTYPE_INTEGER, m_sshProxy);
+	DBBind(hStmt, 46, DB_SQLTYPE_INTEGER, m_id);
 
 	BOOL bResult = DBExecute(hStmt);
 	DBFreeStatement(hStmt);
@@ -4732,6 +4744,9 @@ void Node::fillMessageInternal(NXCPMessage *pMsg)
    pMsg->setField(VID_RACK_IMAGE, m_rackImage);
    pMsg->setField(VID_RACK_POSITION, m_rackPosition);
    pMsg->setField(VID_RACK_HEIGHT, m_rackHeight);
+   pMsg->setField(VID_SSH_PROXY, m_sshProxy);
+   pMsg->setField(VID_SSH_LOGIN, m_sshLogin);
+   pMsg->setField(VID_SSH_PASSWORD, m_sshPassword);
 }
 
 /**
@@ -4979,6 +4994,15 @@ UINT32 Node::modifyFromMessageInternal(NXCPMessage *pRequest)
       m_rackId = pRequest->getFieldAsUInt32(VID_CHASSIS_ID);
       updatePhysicalContainerBinding(OBJECT_CHASSIS, m_chassisId);
    }
+
+   if (pRequest->isFieldExist(VID_SSH_PROXY))
+      m_sshProxy = pRequest->getFieldAsUInt32(VID_SSH_PROXY);
+
+   if (pRequest->isFieldExist(VID_SSH_LOGIN))
+      pRequest->getFieldAsString(VID_SSH_LOGIN, m_sshLogin, MAX_SSH_LOGIN_LEN);
+
+   if (pRequest->isFieldExist(VID_SSH_PASSWORD))
+      pRequest->getFieldAsString(VID_SSH_PASSWORD, m_sshPassword, MAX_SSH_PASSWORD_LEN);
 
    return DataCollectionTarget::modifyFromMessageInternal(pRequest);
 }

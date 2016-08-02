@@ -68,8 +68,9 @@ public class DciLabelProvider implements ITableLabelProvider
 		originTexts.put(DataCollectionItem.INTERNAL, Messages.get().DciLabelProvider_SourceInternal);
 		originTexts.put(DataCollectionItem.PUSH, Messages.get().DciLabelProvider_SourcePush);
 		originTexts.put(DataCollectionItem.WINPERF, Messages.get().DciLabelProvider_SourceWinPerf);
-		originTexts.put(DataCollectionItem.ILO, Messages.get().DciLabelProvider_SourceILO);
+		originTexts.put(DataCollectionItem.SMCLP, Messages.get().DciLabelProvider_SourceILO);
       originTexts.put(DataCollectionItem.SCRIPT, Messages.get().DciLabelProvider_SourceScript);
+      originTexts.put(DataCollectionItem.SSH, Messages.get().DciLabelProvider_SourceSSH);
 		
 		statusTexts.put(DataCollectionItem.ACTIVE, Messages.get().DciLabelProvider_Active);
 		statusTexts.put(DataCollectionItem.DISABLED, Messages.get().DciLabelProvider_Disabled);
