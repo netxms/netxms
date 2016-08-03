@@ -1146,7 +1146,7 @@ void LIBNXDB_EXPORTABLE DBFreeStatement(DB_STATEMENT hStmt)
       hStmt->m_connection->m_preparedStatements->remove(hStmt);
    }
    hStmt->m_driver->m_fpDrvFreeStatement(hStmt->m_statement);
-   safe_free(hStmt->m_query);
+   free(hStmt->m_query);
 	free(hStmt);
 }
 

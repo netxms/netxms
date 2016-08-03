@@ -377,8 +377,8 @@ bool Node::loadFromDatabase(DB_HANDLE hdb, UINT32 dwId)
    m_snmpTrapCount = DBGetFieldInt64(hResult, 0, 39);
    m_type = (NodeType)DBGetFieldLong(hResult, 0, 40);
    DBGetField(hResult, 0, 41, m_subType, MAX_NODE_SUBTYPE_LENGTH);
-   DBGetField(hResult, 0, 42, m_sshLogin, MAX_OBJECT_NAME);
-   DBGetField(hResult, 0, 43, m_sshPassword, MAX_PASSWORD);
+   DBGetField(hResult, 0, 42, m_sshLogin, MAX_SSH_LOGIN_LEN);
+   DBGetField(hResult, 0, 43, m_sshPassword, MAX_SSH_PASSWORD_LEN);
    m_sshProxy = DBGetFieldULong(hResult, 0, 44);
 
    DBFreeResult(hResult);
