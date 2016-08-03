@@ -473,7 +473,6 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
          // Destroy item
 			DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d from object %d"), (int)dcObjectId, (int)m_id);
 			destroyItem(object, i);
-         m_isModified = true;
          success = true;
 			DbgPrintf(7, _T("Template::DeleteDCObject: DCO deleted from object %d"), (int)m_id);
          break;
@@ -482,6 +481,13 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
 
 	if (needLock)
 	   unlockDciAccess();
+
+	if (success)
+	{
+	   lockProperties();
+	   setModified(false);
+	   unlockProperties();
+	}
    return success;
 }
 
