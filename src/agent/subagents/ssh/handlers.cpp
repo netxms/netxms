@@ -48,10 +48,10 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
       return SYSINFO_RC_UNSUPPORTED;
 
    LONG rc = SYSINFO_RC_ERROR;
-   SSHSession ssh(addr, port);
-   if (ssh.connect(login, password))
+   SSHSession *ssh = AcquireSession(addr, port, login, password);
+   if (ssh != NULL)
    {
-      StringList *output = ssh.execute(command);
+      StringList *output = ssh->execute(command);
       if (output != NULL)
       {
          if (output->size() > 0)
@@ -61,7 +61,7 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
          }
          delete output;
       }
-      ssh.disconnect();
+      ReleaseSession(ssh);
    }
    return rc;
 }
@@ -92,17 +92,17 @@ LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, A
       return SYSINFO_RC_UNSUPPORTED;
 
    LONG rc = SYSINFO_RC_ERROR;
-   SSHSession ssh(addr, port);
-   if (ssh.connect(login, password))
+   SSHSession *ssh = AcquireSession(addr, port, login, password);
+   if (ssh != NULL)
    {
-      StringList *output = ssh.execute(command);
+      StringList *output = ssh->execute(command);
       if (output != NULL)
       {
          value->addAll(output);
          rc = SYSINFO_RC_SUCCESS;
          delete output;
       }
-      ssh.disconnect();
+      ReleaseSession(ssh);
    }
    return rc;
 }

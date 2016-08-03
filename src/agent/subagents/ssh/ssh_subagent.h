@@ -28,27 +28,54 @@
 #include <nms_agent.h>
 #include <libssh/libssh.h>
 
+#define MAX_SSH_SESSION_NAME_LEN (MAX_SSH_LOGIN_LEN + MAX_DNS_NAME + 16)
+
 /**
  * SSH session
  */
 class SSHSession
 {
 private:
+   INT32 m_id;
    InetAddress m_addr;
    unsigned int m_port;
+   TCHAR m_user[MAX_SSH_LOGIN_LEN];
    ssh_session m_session;
+   time_t m_lastAccess;
+   bool m_busy;
+   TCHAR m_name[MAX_SSH_SESSION_NAME_LEN];
 
 public:
-   SSHSession(const InetAddress& addr, UINT16 port);
+   SSHSession(const InetAddress& addr, UINT16 port, INT32 id = 0);
    ~SSHSession();
 
    bool connect(const TCHAR *user, const TCHAR *password);
    void disconnect();
+   bool isConnected() const { return (m_session != NULL) && ssh_is_connected(m_session); }
+
+   const TCHAR *getName() const { return m_name; }
+   time_t getLastAccessTime() const { return m_lastAccess; }
+   bool isBusy() const { return m_busy; }
+
+   bool match(const InetAddress& addr, UINT16 port, const TCHAR *user) const;
+
+   bool acquire();
+   void release();
+
    StringList *execute(const TCHAR *command);
 };
+
+/* Session pool */
+void InitializeSessionPool();
+void ShutdownSessionPool();
+SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *user, const TCHAR *password);
+void ReleaseSession(SSHSession *session);
 
 /* handlers */
 LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+
+/* globals */
+extern UINT32 g_sshSessionIdleTimeout;
 
 #endif

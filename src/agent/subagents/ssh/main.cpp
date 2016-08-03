@@ -21,22 +21,91 @@
 **/
 
 #include "ssh_subagent.h"
+#include <libssh/callbacks.h>
+
+/**
+ * Configuration options
+ */
+UINT32 g_sshSessionIdleTimeout = 300;
 
 /**
  * Configuration file template
  */
 static NX_CFG_TEMPLATE m_cfgTemplate[] =
 {
+   { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_sshSessionIdleTimeout },
 	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
+
+#if defined(_WIN32) || _USE_GNU_PTH
+
+/**
+ * Mutex creation callback
+ */
+static int cb_mutex_init(void **mutex)
+{
+   *mutex = MutexCreate();
+   return 0;
+}
+
+/**
+ * Mutex destruction callback
+ */
+static int cb_mutex_destroy(void **mutex)
+{
+   MutexDestroy(*((MUTEX *)mutex));
+   return 0;
+}
+
+/**
+ * Mutex lock callback
+ */
+static int cb_mutex_lock(void **mutex)
+{
+   MutexLock(*((MUTEX *)mutex));
+   return 0;
+}
+
+/**
+ * Mutex unlock callback
+ */
+static int cb_mutex_unlock(void **mutex)
+{
+   MutexUnlock(*((MUTEX *)mutex));
+   return 0;
+}
+
+/**
+ * Thread ID callback
+ */
+static unsigned long cb_thread_id()
+{
+   return (unsigned long)GetCurrentThreadId();
+}
+
+/**
+ * Custom callbacks for libssh threading support
+ */
+static struct ssh_threads_callbacks_struct s_threadCallbacks =
+   {
+      "netxms", cb_mutex_init, cb_mutex_destroy, cb_mutex_lock, cb_mutex_unlock, cb_thread_id
+   };
+
+#endif
 
 /**
  * Subagent initialization
  */
 static BOOL SubagentInit(Config *config)
 {
+#if !defined(_WIN32) && !_USE_GNU_PTH
+   ssh_threads_set_callbacks(ssh_threads_get_noop());
+#else
+   ssh_threads_set_callbacks(&s_threadCallbacks);
+#endif
    ssh_init();
    nxlog_debug(2, _T("SSH: using libssh version %hs"), ssh_version(0));
+   InitializeSessionPool();
 	return TRUE;
 }
 
@@ -45,6 +114,8 @@ static BOOL SubagentInit(Config *config)
  */
 static void SubagentShutdown()
 {
+   ShutdownSessionPool();
+   ssh_finalize();
 }
 
 /**

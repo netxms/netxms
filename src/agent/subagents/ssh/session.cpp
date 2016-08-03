@@ -17,7 +17,6 @@
 ** Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 **
 ** File: session.cpp
-**
 **/
 
 #include "ssh_subagent.h"
@@ -25,11 +24,16 @@
 /**
  * SSH session constructor
  */
-SSHSession::SSHSession(const InetAddress& addr, UINT16 port)
+SSHSession::SSHSession(const InetAddress& addr, UINT16 port, INT32 id)
 {
+   m_id = id;
    m_addr = addr;
    m_port = port;
    m_session = NULL;
+   m_lastAccess = 0;
+   m_user[0] = 0;
+   m_busy = false;
+   _sntprintf(m_name, MAX_SSH_SESSION_NAME_LEN, _T("nobody@%s:%d/%d"), (const TCHAR *)m_addr.toString(), m_port, m_id);
 }
 
 /**
@@ -38,6 +42,33 @@ SSHSession::SSHSession(const InetAddress& addr, UINT16 port)
 SSHSession::~SSHSession()
 {
    disconnect();
+}
+
+/**
+ * Check if session match for given target
+ */
+bool SSHSession::match(const InetAddress& addr, UINT16 port, const TCHAR *user) const
+{
+   return addr.equals(m_addr) && ((unsigned int)port == m_port) && !_tcscmp(m_user, user);
+}
+
+/**
+ * Acquire session
+ */
+bool SSHSession::acquire()
+{
+   if (m_busy || !isConnected())
+      return false;
+   m_busy = true;
+   return true;
+}
+
+/**
+ * Release session
+ */
+void SSHSession::release()
+{
+   m_busy = false;
 }
 
 /**
@@ -89,7 +120,13 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password)
       nxlog_debug(6, _T("SSH: connect to %s:%d failed"), (const TCHAR *)m_addr.toString(), m_port);
    }
 
-   if (!success)
+   if (success)
+   {
+      nx_strncpy(m_user, user, MAX_SSH_LOGIN_LEN);
+      _sntprintf(m_name, MAX_SSH_SESSION_NAME_LEN, _T("%s@%s:%d/%d"), m_user, (const TCHAR *)m_addr.toString(), m_port, m_id);
+      m_lastAccess = time(NULL);
+   }
+   else
    {
       if (ssh_is_connected(m_session))
          ssh_disconnect(m_session);
@@ -187,5 +224,6 @@ StringList *SSHSession::execute(const TCHAR *command)
       nxlog_debug(6, _T("SSH: cannot open channel on %s:%d"), (const TCHAR *)m_addr.toString(), m_port);
    }
    ssh_channel_free(channel);
+   m_lastAccess = time(NULL);
    return output;
 }
