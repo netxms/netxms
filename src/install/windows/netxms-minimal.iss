@@ -131,6 +131,8 @@ Source: "..\..\..\Release\portcheck.nsm"; DestDir: "{app}\bin"; Flags: ignorever
 Source: "..\..\..\Release\portcheck.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\sms.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\Release\sms.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
+Source: "..\..\..\Release\ssh.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\..\..\Release\ssh.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\ups.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 Source: "..\..\..\Release\ups.pdb"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server and pdb
 Source: "..\..\..\Release\winnt.nsm"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
@@ -218,6 +220,7 @@ Source: "..\..\..\Release\nxappget.exe"; DestDir: "{app}\bin"; Flags: ignorevers
 Source: "..\files\windows\x86\libeay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "..\files\windows\x86\ssleay32.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: base
 Source: "..\files\windows\x86\libcurl.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
+Source: "..\files\windows\x86\libssh.dll"; DestDir: "{app}\bin"; Flags: ignoreversion; Components: server
 ; Install-time files
 Source: "..\files\windows\x86\vcredist_x86.exe"; DestDir: "{app}\var"; DestName: "vcredist.exe"; Flags: ignoreversion deleteafterinstall; Components: base
 Source: "..\files\windows\x86\rm.exe"; DestDir: "{app}\var"; Flags: ignoreversion deleteafterinstall; Components: base
