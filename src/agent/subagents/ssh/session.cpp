@@ -88,8 +88,8 @@ bool SSHSession::connect(const TCHAR *user, const TCHAR *password)
    char hostname[64];
    ssh_options_set(m_session, SSH_OPTIONS_HOST, m_addr.toStringA(hostname));
    ssh_options_set(m_session, SSH_OPTIONS_PORT, &m_port);
-   long timeout = 2;
-   ssh_options_set(m_session, SSH_OPTIONS_TIMEOUT, &timeout);
+   long timeout = (long)g_sshConnectTimeout * (long)1000;   // convert milliseconds to microseconds
+   ssh_options_set(m_session, SSH_OPTIONS_TIMEOUT_USEC, &timeout);
 #ifdef UNICODE
    char mbuser[256];
    WideCharToMultiByte(CP_UTF8, 0, user, -1, mbuser, 256, NULL, NULL);

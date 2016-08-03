@@ -26,16 +26,8 @@
 /**
  * Configuration options
  */
+UINT32 g_sshConnectTimeout = 2000;
 UINT32 g_sshSessionIdleTimeout = 300;
-
-/**
- * Configuration file template
- */
-static NX_CFG_TEMPLATE m_cfgTemplate[] =
-{
-   { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_sshSessionIdleTimeout },
-	{ _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
-};
 
 #if defined(_WIN32) || _USE_GNU_PTH
 
@@ -94,10 +86,23 @@ static struct ssh_threads_callbacks_struct s_threadCallbacks =
 #endif
 
 /**
+ * Configuration file template
+ */
+static NX_CFG_TEMPLATE s_cfgTemplate[] =
+{
+   { _T("ConnectTimeout"), CT_LONG, 0, 0, 0, 0, &g_sshConnectTimeout },
+   { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_sshSessionIdleTimeout },
+   { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
+};
+
+/**
  * Subagent initialization
  */
 static BOOL SubagentInit(Config *config)
 {
+   if (!config->parseTemplate(_T("SSH"), s_cfgTemplate))
+      return FALSE;
+
 #if !defined(_WIN32) && !_USE_GNU_PTH
    ssh_threads_set_callbacks(ssh_threads_get_noop());
 #else

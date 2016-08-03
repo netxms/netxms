@@ -76,6 +76,7 @@ LONG H_SSHCommand(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCo
 LONG H_SSHCommandList(const TCHAR *param, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 
 /* globals */
+extern UINT32 g_sshConnectTimeout;
 extern UINT32 g_sshSessionIdleTimeout;
 
 #endif

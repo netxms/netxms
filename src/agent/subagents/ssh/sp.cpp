@@ -55,6 +55,7 @@ SSHSession *AcquireSession(const InetAddress& addr, UINT16 port, const TCHAR *us
       delete session;
       return NULL;
    }
+   nxlog_debug(7, _T("SSH: created new session %s"), session->getName());
 
    session->acquire();
    MutexLock(s_lock);
