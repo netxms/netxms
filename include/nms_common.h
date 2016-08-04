@@ -483,6 +483,19 @@ typedef int SOCKET;
 #include <wctype.h>
 #endif
 
+// Fix for wcs* functions visibility in Solaris 11
+#if defined(__sun) && (__cplusplus >= 199711L)
+#if HAVE_WCSDUP
+using std::wcsdup;
+#endif
+#if HAVE_WCSCASECMP
+using std::wcscasecmp;
+#endif
+#if HAVE_WCSNCASECMP
+using std::wcsncasecmp;
+#endif
+#endif
+
 #include <errno.h>
 
 #define FS_PATH_SEPARATOR       _T("/")
