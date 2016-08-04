@@ -7769,3 +7769,21 @@ const TCHAR *Node::typeName(NodeType type)
    static const TCHAR *names[] = { _T("Unknown"), _T("Physical"), _T("Virtual"), _T("Controller") };
    return ((type >= 0) && (type < sizeof(names) / sizeof(const TCHAR *))) ? names[type] : names[0];
 }
+
+/**
+ * Set node's chassis
+ */
+void Node::setChassis(UINT32 chassisId)
+{
+   lockProperties();
+   if (chassisId == m_chassisId)
+   {
+      unlockProperties();
+      return;
+   }
+
+   m_chassisId = chassisId;
+   unlockProperties();
+
+   updatePhysicalContainerBinding(OBJECT_CHASSIS, chassisId);
+}

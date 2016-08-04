@@ -1566,6 +1566,7 @@ public:
    void updateRoutingTable();
 	void checkSubnetBinding();
    AccessPointState getAccessPointState(AccessPoint *ap, SNMP_Transport *snmpTransport);
+   void setChassis(UINT32 chassisId);
 
    bool isReadyForStatusPoll();
    bool isReadyForConfigurationPoll();
