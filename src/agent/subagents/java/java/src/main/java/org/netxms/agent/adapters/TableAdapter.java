@@ -69,9 +69,4 @@ public abstract class TableAdapter extends AbstractAdapter implements TableParam
    {
       return columns;
    }
-
-   public void setColumns(TableColumn[] columns)
-   {
-      this.columns = columns;
-   }
 }
