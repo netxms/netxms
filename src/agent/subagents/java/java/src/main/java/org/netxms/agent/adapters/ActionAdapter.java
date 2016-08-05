@@ -24,7 +24,7 @@ import org.netxms.agent.Action;
 /**
  * Adapter for Action interface
  */
-public abstract class ActionAdapter implements Action
+public abstract class ActionAdapter extends AbstractAdapter implements Action
 {
    private String name;
    private String description;
