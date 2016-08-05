@@ -25,7 +25,7 @@ import org.netxms.agent.PushParameter;
 /**
  * Adapter for PushParameter interface
  */
-public class PushParameterAdapter implements PushParameter
+public class PushParameterAdapter extends AbstractAdapter implements PushParameter
 {
    private String name;
    private String description;

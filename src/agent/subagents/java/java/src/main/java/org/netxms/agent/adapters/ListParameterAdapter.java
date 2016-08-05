@@ -24,7 +24,7 @@ import org.netxms.agent.ListParameter;
 /**
  * Adapter for ListParameter interface
  */
-public abstract class ListParameterAdapter implements ListParameter
+public abstract class ListParameterAdapter extends AbstractAdapter implements ListParameter
 {
    private String name;
    private String description;
