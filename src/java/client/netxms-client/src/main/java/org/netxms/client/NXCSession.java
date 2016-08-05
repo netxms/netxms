@@ -4063,14 +4063,19 @@ public class NXCSession
             msg.setField(NXCPCodes.VID_DEVICE_ID, data.getDeviceId());
             break;
          case AbstractObject.OBJECT_NODE:
-            if (data.getPrimaryName() != null) msg.setField(NXCPCodes.VID_PRIMARY_NAME, data.getPrimaryName());
+            if (data.getPrimaryName() != null) 
+               msg.setField(NXCPCodes.VID_PRIMARY_NAME, data.getPrimaryName());
             msg.setField(NXCPCodes.VID_IP_ADDRESS, data.getIpAddress());
             msg.setFieldInt16(NXCPCodes.VID_AGENT_PORT, data.getAgentPort());
             msg.setFieldInt16(NXCPCodes.VID_SNMP_PORT, data.getSnmpPort());
             msg.setFieldInt32(NXCPCodes.VID_CREATION_FLAGS, data.getCreationFlags());
             msg.setFieldInt32(NXCPCodes.VID_AGENT_PROXY, (int)data.getAgentProxyId());
             msg.setFieldInt32(NXCPCodes.VID_SNMP_PROXY, (int)data.getSnmpProxyId());
+            msg.setFieldInt32(NXCPCodes.VID_ICMP_PROXY, (int)data.getIcmpProxyId());
+            msg.setFieldInt32(NXCPCodes.VID_SSH_PROXY, (int)data.getSshProxyId());
             msg.setFieldInt32(NXCPCodes.VID_CHASSIS_ID, (int)data.getChassisId());
+            msg.setField(NXCPCodes.VID_SSH_LOGIN, data.getSshLogin());
+            msg.setField(NXCPCodes.VID_SSH_PASSWORD, data.getSshPassword());
             break;
          case AbstractObject.OBJECT_NETWORKMAP:
             msg.setFieldInt16(NXCPCodes.VID_MAP_TYPE, data.getMapType());

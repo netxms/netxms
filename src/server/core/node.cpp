@@ -124,7 +124,7 @@ Node::Node() : DataCollectionTarget()
 /**
  * Constructor for new node object
  */
-Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone) : DataCollectionTarget()
+Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 icmpProxy, UINT32 sshProxy, UINT32 zoneId) : DataCollectionTarget()
 {
    addr.toString(m_primaryName);
    m_status = STATUS_UNKNOWN;
@@ -133,7 +133,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_ipAddress = addr;
    m_flags = dwFlags;
    m_dwDynamicFlags = 0;
-   m_zoneId = dwZone;
+   m_zoneId = zoneId;
    m_agentPort = AGENT_LISTEN_PORT;
    m_agentAuthMethod = AUTH_NONE;
    m_agentCacheMode = AGENT_CACHE_DEFAULT;
@@ -178,7 +178,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_pollerNode = 0;
    m_agentProxy = agentProxy;
 	m_snmpProxy = snmpProxy;
-   m_icmpProxy = 0;
+   m_icmpProxy = icmpProxy;
    memset(m_qwLastEvents, 0, sizeof(QWORD) * MAX_LAST_EVENTS);
    m_isHidden = true;
    m_pRoutingTable = NULL;
@@ -215,7 +215,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_snmpTrapCount = 0;
    m_sshLogin[0] = 0;
    m_sshPassword[0] = 0;
-   m_sshProxy = 0;
+   m_sshProxy = sshProxy;
 }
 
 /**
@@ -7786,4 +7786,18 @@ void Node::setChassis(UINT32 chassisId)
    unlockProperties();
 
    updatePhysicalContainerBinding(OBJECT_CHASSIS, chassisId);
+}
+
+/**
+ * Set SSH credentials for node
+ */
+void Node::setSshCredentials(const TCHAR *login, const TCHAR *password)
+{
+   lockProperties();
+   if (login != NULL)
+      nx_strncpy(m_sshLogin, login, MAX_SSH_LOGIN_LEN);
+   if (password != NULL)
+      nx_strncpy(m_sshPassword, password, MAX_SSH_PASSWORD_LEN);
+   setModified();
+   unlockProperties();
 }

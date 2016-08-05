@@ -52,6 +52,8 @@ public class CreateNodeDialog extends Dialog
 	private LabeledText hostNameField;
 	private Spinner agentPortField;
 	private Spinner snmpPortField;
+	private LabeledText sshLoginField;
+   private LabeledText sshPasswordField;
 	private Button checkUnmanaged;
 	private Button checkDisableAgent;
 	private Button checkDisableSNMP;
@@ -59,6 +61,8 @@ public class CreateNodeDialog extends Dialog
 	private Button checkCreateAnother;
 	private ObjectSelector agentProxySelector;
 	private ObjectSelector snmpProxySelector;
+   private ObjectSelector icmpProxySelector;
+   private ObjectSelector sshProxySelector;
 	private ObjectSelector zoneSelector;
 	
 	private String objectName;
@@ -66,9 +70,13 @@ public class CreateNodeDialog extends Dialog
 	private int creationFlags = 0;
 	private long agentProxy = 0;
 	private long snmpProxy = 0;
+   private long icmpProxy = 0;
+   private long sshProxy = 0;
 	private long zoneId = 0;
 	private int agentPort = 4700;
 	private int snmpPort = 161;
+	private String sshLogin = "";
+	private String sshPassword; 
 	private boolean showAgain = false;
 	
 	/**
@@ -83,10 +91,14 @@ public class CreateNodeDialog extends Dialog
          creationFlags = prev.creationFlags;
          agentProxy = prev.agentProxy;
          snmpProxy = prev.snmpProxy;
+         icmpProxy = prev.snmpProxy;
+         sshProxy = prev.snmpProxy;
 		   zoneId = prev.zoneId;
 		   agentPort = prev.agentPort;
 		   snmpPort = prev.snmpPort;
-		   showAgain = prev.showAgain;
+		   sshLogin = prev.sshLogin;
+		   sshPassword = prev.sshPassword;
+         showAgain = prev.showAgain;
 		}
 	}
 
@@ -114,6 +126,7 @@ public class CreateNodeDialog extends Dialog
 		layout.marginHeight = WidgetHelper.DIALOG_HEIGHT_MARGIN;
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		layout.numColumns = 2;
+		layout.makeColumnsEqualWidth = true;
 		dialogArea.setLayout(layout);
 		
 		objectNameField = new LabeledText(dialogArea, SWT.NONE);
@@ -152,6 +165,16 @@ public class CreateNodeDialog extends Dialog
 		snmpPortField = WidgetHelper.createLabeledSpinner(dialogArea, SWT.BORDER, Messages.get().CreateNodeDialog_SNMPPort, 1, 65535, WidgetHelper.DEFAULT_LAYOUT_DATA);
 		snmpPortField.setSelection(snmpPort);
 		
+		sshLoginField = new LabeledText(dialogArea, SWT.NONE);
+		sshLoginField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		sshLoginField.setLabel("SSH Login");
+		sshLoginField.setText(sshLogin);
+		
+      sshPasswordField = new LabeledText(dialogArea, SWT.NONE);
+      sshPasswordField.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+      sshPasswordField.setLabel("SSH Password");
+      sshPasswordField.setText(sshPassword);
+      
 		Group optionsGroup = new Group(dialogArea, SWT.NONE);
 		optionsGroup.setText(Messages.get().CreateNodeDialog_Options);
 		gd = new GridData();
@@ -184,7 +207,6 @@ public class CreateNodeDialog extends Dialog
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
 		agentProxySelector.setLayoutData(gd);
 		
 		snmpProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
@@ -194,9 +216,27 @@ public class CreateNodeDialog extends Dialog
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalSpan = 2;
 		snmpProxySelector.setLayoutData(gd);
 		
+      icmpProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      icmpProxySelector.setLabel("Proxy for ICMP");
+      icmpProxySelector.setObjectClass(Node.class);
+      icmpProxySelector.setObjectId(icmpProxy);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      icmpProxySelector.setLayoutData(gd);
+      
+      sshProxySelector = new ObjectSelector(dialogArea, SWT.NONE, true);
+      sshProxySelector.setLabel("Proxy for SSH");
+      sshProxySelector.setEmptySelectionName("<default>");
+      sshProxySelector.setObjectClass(Node.class);
+      sshProxySelector.setObjectId(sshProxy);
+      gd = new GridData();
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      sshProxySelector.setLayoutData(gd);
+      
 		if (session.isZoningEnabled())
 		{
 			zoneSelector = new ObjectSelector(dialogArea, SWT.NONE, false);
@@ -251,6 +291,9 @@ public class CreateNodeDialog extends Dialog
 		
 		agentPort = agentPortField.getSelection();
 		snmpPort = snmpPortField.getSelection();
+		
+		sshLogin = sshLoginField.getText().trim();
+		sshPassword = sshPasswordField.getText();
 		
 		agentProxy = agentProxySelector.getObjectId();
 		snmpProxy = snmpProxySelector.getObjectId();
@@ -309,6 +352,22 @@ public class CreateNodeDialog extends Dialog
 	}
 
 	/**
+    * @return the icmpProxy
+    */
+   public long getIcmpProxy()
+   {
+      return icmpProxy;
+   }
+
+   /**
+    * @return the sshProxy
+    */
+   public long getSshProxy()
+   {
+      return sshProxy;
+   }
+
+   /**
 	 * @return the zoneId
 	 */
 	public long getZoneId()
@@ -331,6 +390,22 @@ public class CreateNodeDialog extends Dialog
 	{
 		return snmpPort;
 	}
+
+   /**
+    * @return the sshLogin
+    */
+   public String getSshLogin()
+   {
+      return sshLogin;
+   }
+
+   /**
+    * @return the sshPassword
+    */
+   public String getSshPassword()
+   {
+      return sshPassword;
+   }
 
    /**
     * @return the showAgain

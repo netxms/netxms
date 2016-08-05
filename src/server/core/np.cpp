@@ -126,20 +126,25 @@ static NXSL_DiscoveryClass m_nxslDiscoveryClass;
  * Returns pointer to new node object on success or NULL on failure
  *
  * @param ipAddr IP address of new node
- * @param dwCreationFlags
+ * @param creationFlags node creation flags
  * @param agentPort port number of NetXMS agent
  * @param snmpPort port number of SNMP agent
- * @param pszName name for new node, can be NULL
- * @param dwProxyNode agent proxy node ID or 0 to use direct communications
- * @param dwSNMPProxy SNMP proxy node ID or 0 to use direct communications
- * @param pCluster pointer to parent cluster object or NULL
+ * @param name name for new node, can be NULL
+ * @param agentProxyId agent proxy node ID or 0 to use direct communications
+ * @param snmpProxyId SNMP proxy node ID or 0 to use direct communications
+ * @param icmpProxyId ICMP proxy node ID or 0 to use direct communications
+ * @param sshProxyId SSH proxy node ID or 0 to use default proxy
+ * @param sshLogin SSH login name
+ * @param sshPassword SSH password
+ * @param cluster pointer to parent cluster object or NULL
  * @param zoneId zone ID
  * @param doConfPoll if set to true, Node::configurationPoll will be called before exit
  * @param discoveredNode must be set to true if node being added automatically by discovery thread
  */
-Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreationFlags,
-                                    WORD agentPort, WORD snmpPort, const TCHAR *pszName, UINT32 dwProxyNode, UINT32 dwSNMPProxy,
-                                    Cluster *pCluster, UINT32 zoneId, bool doConfPoll, bool discoveredNode)
+Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFlags, UINT16 agentPort,
+                                    UINT16 snmpPort, const TCHAR *name, UINT32 agentProxyId, UINT32 snmpProxyId,
+                                    UINT32 icmpProxyId, UINT32 sshProxyId, const TCHAR *sshLogin, const TCHAR *sshPassword,
+                                    Cluster *cluster, UINT32 zoneId, bool doConfPoll, bool discoveredNode)
 {
    Node *pNode;
    TCHAR szIpAddr[64];
@@ -154,20 +159,21 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreation
       return NULL;
    }
 
-   if (dwCreationFlags & NXC_NCF_DISABLE_ICMP)
+   if (creationFlags & NXC_NCF_DISABLE_ICMP)
       dwFlags |= NF_DISABLE_ICMP;
-   if (dwCreationFlags & NXC_NCF_DISABLE_SNMP)
+   if (creationFlags & NXC_NCF_DISABLE_SNMP)
       dwFlags |= NF_DISABLE_SNMP;
-   if (dwCreationFlags & NXC_NCF_DISABLE_NXCP)
+   if (creationFlags & NXC_NCF_DISABLE_NXCP)
       dwFlags |= NF_DISABLE_NXCP;
-   pNode = new Node(ipAddr, dwFlags, dwProxyNode, dwSNMPProxy, zoneId);
+   pNode = new Node(ipAddr, dwFlags, agentProxyId, snmpProxyId, icmpProxyId, sshProxyId, zoneId);
 	if (agentPort != 0)
 		pNode->setAgentPort(agentPort);
 	if (snmpPort != 0)
 		pNode->setSnmpPort(snmpPort);
+	pNode->setSshCredentials(sshLogin, sshPassword);
+   if (name != NULL)
+      pNode->setName(name);
    NetObjInsert(pNode, true, false);
-   if (pszName != NULL)
-      pNode->setName(pszName);
 
 	// Use DNS name as primary name if required
 	if (discoveredNode && ConfigReadInt(_T("UseDNSNameForDiscoveredNodes"), 0))
@@ -185,12 +191,12 @@ Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreation
 	}
 
 	// Bind node to cluster before first configuration poll
-	if (pCluster != NULL)
+	if (cluster != NULL)
 	{
-		pCluster->applyToTarget(pNode);
+		cluster->applyToTarget(pNode);
 	}
 
-   if (dwCreationFlags & NXC_NCF_CREATE_UNMANAGED)
+   if (creationFlags & NXC_NCF_CREATE_UNMANAGED)
    {
       pNode->setMgmtStatus(FALSE);
       pNode->checkSubnetBinding();
@@ -674,7 +680,7 @@ THREAD_RESULT THREAD_CALL NodePoller(void *arg)
       if (pInfo->ignoreFilter || AcceptNewNode(pInfo->ipAddr, pInfo->zoneId, pInfo->bMacAddr))
 		{
          ObjectTransactionStart();
-         PollNewNode(pInfo->ipAddr, 0, 0, 0, NULL, 0, 0, NULL, pInfo->zoneId, true, true);
+         PollNewNode(pInfo->ipAddr, 0, 0, 0, NULL, 0, 0, 0, 0, NULL, NULL, NULL, pInfo->zoneId, true, true);
          ObjectTransactionEnd();
 		}
       free(pInfo);

@@ -4997,7 +4997,7 @@ void ClientSession::createObject(NXCPMessage *request)
 						   // Create new object
                      NetObj *object = NULL;
                      UINT32 nodeId;
-                     TCHAR deviceId[MAX_OBJECT_NAME];
+                     TCHAR deviceId[MAX_OBJECT_NAME], sshLogin[MAX_SSH_LOGIN_LEN], sshPassword[MAX_SSH_PASSWORD_LEN];
 						   switch(objectClass)
 						   {
                         case OBJECT_AGENTPOLICY_CONFIG:
@@ -5085,6 +5085,10 @@ void ClientSession::createObject(NXCPMessage *request)
 															   objectName,
 															   request->getFieldAsUInt32(VID_AGENT_PROXY),
 															   request->getFieldAsUInt32(VID_SNMP_PROXY),
+                                                request->getFieldAsUInt32(VID_ICMP_PROXY),
+                                                request->getFieldAsUInt32(VID_SSH_PROXY),
+                                                request->getFieldAsString(VID_SSH_LOGIN, sshLogin, MAX_SSH_LOGIN_LEN),
+                                                request->getFieldAsString(VID_SSH_PASSWORD, sshPassword, MAX_SSH_PASSWORD_LEN),
 															   (parent != NULL) ? ((parent->getObjectClass() == OBJECT_CLUSTER) ? (Cluster *)parent : NULL) : NULL,
 															   zoneId, false, false);
 								   if (object != NULL)

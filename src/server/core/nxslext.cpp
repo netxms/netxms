@@ -594,7 +594,7 @@ static int F_CreateNode(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL
 	const TCHAR *pname = argv[2]->getValueAsCString();
 	if (*pname == 0)
 		pname = argv[1]->getValueAsCString();
-   Node *node = PollNewNode(InetAddress::resolveHostName(pname), 0, 0, 0, argv[1]->getValueAsCString(), 0, 0, NULL, 0, true, false);
+   Node *node = PollNewNode(InetAddress::resolveHostName(pname), 0, 0, 0, argv[1]->getValueAsCString(), 0, 0, 0, 0, NULL, NULL, NULL, 0, true, false);
 	if (node != NULL)
 	{
 		node->setPrimaryName(pname);

@@ -77,7 +77,11 @@ public class CreateNode implements IObjectActionDelegate
          cd.setSnmpPort(dlg.getSnmpPort());
          cd.setAgentProxyId(dlg.getAgentProxy());
          cd.setSnmpProxyId(dlg.getSnmpProxy());
-         cd.setZoneId(dlg.getZoneId());   		
+         cd.setIcmpProxyId(dlg.getIcmpProxy());
+         cd.setSshProxyId(dlg.getSshProxy());
+         cd.setZoneId(dlg.getZoneId());
+         cd.setSshLogin(dlg.getSshLogin());
+         cd.setSshPassword(dlg.getSshPassword());
    		
    		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
    		new ConsoleJob(Messages.get().CreateNode_JobTitle, part, Activator.PLUGIN_ID, null) {

@@ -46,6 +46,8 @@ public class NXCObjectCreationData
 	private InetAddressEx ipAddress;
 	private long agentProxyId;
 	private long snmpProxyId;
+   private long icmpProxyId;
+   private long sshProxyId;
 	private int mapType;
 	private long seedObjectId;
 	private long zoneId;
@@ -68,6 +70,8 @@ public class NXCObjectCreationData
 	private int flags;
 	private long controllerId;
 	private long chassisId;
+	private String sshLogin;
+	private String sshPassword;
 	
 	/**
 	 * Constructor.
@@ -98,6 +102,8 @@ public class NXCObjectCreationData
 		creationFlags = 0;
 		agentProxyId = 0;
 		snmpProxyId = 0;
+		icmpProxyId = 0;
+		sshProxyId = 0;
 		mapType = 0;
 		seedObjectId = 0;
 		zoneId = 0;
@@ -115,6 +121,8 @@ public class NXCObjectCreationData
 		port = 0;
 		physicalPort = false;
 		createStatusDci = false;
+		sshLogin = "";
+		sshPassword = "";
 	}
 
 	/**
@@ -246,6 +254,38 @@ public class NXCObjectCreationData
 	}
 
 	/**
+    * @return the icmpProxyId
+    */
+   public long getIcmpProxyId()
+   {
+      return icmpProxyId;
+   }
+
+   /**
+    * @param icmpProxyId the icmpProxyId to set
+    */
+   public void setIcmpProxyId(long icmpProxyId)
+   {
+      this.icmpProxyId = icmpProxyId;
+   }
+
+   /**
+    * @return the sshProxyId
+    */
+   public long getSshProxyId()
+   {
+      return sshProxyId;
+   }
+
+   /**
+    * @param sshProxyId the sshProxyId to set
+    */
+   public void setSshProxyId(long sshProxyId)
+   {
+      this.sshProxyId = sshProxyId;
+   }
+
+   /**
 	 * @return the mapType
 	 */
 	public int getMapType()
@@ -643,5 +683,37 @@ public class NXCObjectCreationData
    public void setChassisId(long chassisId)
    {
       this.chassisId = chassisId;
+   }
+
+   /**
+    * @return the sshLogin
+    */
+   public String getSshLogin()
+   {
+      return sshLogin;
+   }
+
+   /**
+    * @param sshLogin the sshLogin to set
+    */
+   public void setSshLogin(String sshLogin)
+   {
+      this.sshLogin = sshLogin;
+   }
+
+   /**
+    * @return the sshPassword
+    */
+   public String getSshPassword()
+   {
+      return sshPassword;
+   }
+
+   /**
+    * @param sshPassword the sshPassword to set
+    */
+   public void setSshPassword(String sshPassword)
+   {
+      this.sshPassword = sshPassword;
    }
 }

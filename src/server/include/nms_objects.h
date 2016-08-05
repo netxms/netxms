@@ -1444,7 +1444,7 @@ protected:
 
 public:
    Node();
-   Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 dwZone);
+   Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 snmpProxy, UINT32 icmpProxy, UINT32 sshProxy, UINT32 zoneId);
    virtual ~Node();
 
    virtual int getObjectClass() const { return OBJECT_NODE; }
@@ -1516,8 +1516,9 @@ public:
    void deleteInterface(Interface *iface);
 
 	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }
-	void setAgentPort(WORD port) { m_agentPort = port; }
-	void setSnmpPort(WORD port) { m_snmpPort = port; }
+	void setAgentPort(UINT16 port) { m_agentPort = port; }
+	void setSnmpPort(UINT16 port) { m_snmpPort = port; }
+   void setSshCredentials(const TCHAR *login, const TCHAR *password);
    void changeIPAddress(const InetAddress& ipAddr);
 	void changeZone(UINT32 newZone);
 	void setFileUpdateConnection(AgentConnection *conn);

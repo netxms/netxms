@@ -974,9 +974,10 @@ void WatchdogNotify(UINT32 dwId);
 void WatchdogPrintStatus(CONSOLE_CTX pCtx);
 
 void CheckForMgmtNode();
-Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 dwCreationFlags, WORD agentPort,
-                                    WORD snmpPort, const TCHAR *pszName, UINT32 dwProxyNode, UINT32 dwSNMPProxy, Cluster *pCluster,
-						                  UINT32 zoneId, bool doConfPoll, bool discoveredNode);
+Node NXCORE_EXPORTABLE *PollNewNode(const InetAddress& ipAddr, UINT32 creationFlags, UINT16 agentPort,
+                                    UINT16 snmpPort, const TCHAR *name, UINT32 agentProxyId, UINT32 snmpProxyId,
+                                    UINT32 icmpProxyId, UINT32 sshProxyId, const TCHAR *sshLogin, const TCHAR *sshPassword,
+                                    Cluster *cluster, UINT32 zoneId, bool doConfPoll, bool discoveredNode);
 
 void NXCORE_EXPORTABLE EnumerateClientSessions(void (*pHandler)(ClientSession *, void *), void *pArg);
 void NXCORE_EXPORTABLE NotifyClientSessions(UINT32 dwCode, UINT32 dwData);
