@@ -1,32 +1,19 @@
 package org.netxms.agent.adapters;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import org.netxms.agent.SubAgent;
 
 abstract class AbstractAdapter {
 
-    @SuppressWarnings("WeakerAccess")
-    protected String extractFirstArgument(final String name) {
-        List<String> arguments = extractArguments(name);
-        if (arguments.size() > 0) {
-            return arguments.get(0);
-        }
-        return "";
+    protected String getArgument(String name, int index) {
+        return SubAgent.getParameterArg(name, index + 1);
     }
 
-    @SuppressWarnings("WeakerAccess")
-    protected List<String> extractArguments(final String name) {
-        int startIndex = name.indexOf("(");
-        int endIndex = name.lastIndexOf(")");
-        if (startIndex > 0 && endIndex > startIndex) {
-            String value = name.substring(startIndex + 1, endIndex);
-            ArrayList<String> arguments = new ArrayList<String>();
-            for (String argument : value.split(",")) {
-                arguments.add(argument.trim());
-            }
-            return arguments;
+    protected Integer getArgumentAsInt(String name, int index) {
+        String stringValue = SubAgent.getParameterArg(name, index + 1);
+        try {
+            return Integer.valueOf(stringValue);
+        } catch (NumberFormatException ignored) {
         }
-        return Collections.emptyList();
+        return 0;
     }
 }
