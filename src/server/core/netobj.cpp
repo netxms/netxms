@@ -1822,6 +1822,26 @@ NetObj *NetObj::findChildObject(const TCHAR *name, int typeFilter)
 }
 
 /**
+ * Find child node by IP address
+ */
+Node *NetObj::findChildNode(const InetAddress& addr)
+{
+   Node *node = NULL;
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
+   {
+      NetObj *curr = m_childList->get(i);
+      if ((curr->getObjectClass() == OBJECT_NODE) && addr.equals(((Node *)curr)->getIpAddress()))
+      {
+         node = (Node *)curr;
+         break;
+      }
+   }
+   unlockChildList();
+   return node;
+}
+
+/**
  * Called by client session handler to check if threshold summary should
  * be shown for this object. Default implementation always returns false.
  */

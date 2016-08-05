@@ -621,6 +621,7 @@ public:
 	ObjectArray<NetObj> *getFullChildList(bool eventSourceOnly, bool updateRefCount);
 
    NetObj *findChildObject(const TCHAR *name, int typeFilter);
+   Node *findChildNode(const InetAddress& addr);
 
    int getChildCount() { return m_childList->size(); }
    int getParentCount() { return m_parentList->size(); }
