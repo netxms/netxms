@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="NXMC" uid="org.netxms.nxmc" version="2.0.4" useFeatures="false" includeLaunchers="false">
+<product name="NXMC" uid="org.netxms.nxmc" version="2.1-M1" useFeatures="false" includeLaunchers="false">
    <plugins>
       <plugin id="com.ibm.icu"/>
-      <plugin id="com.ibm.icu.base"/>
       <plugin id="javax.xml"/>
       <plugin id="org.apache.commons.codec"/>
       <plugin id="org.apache.commons.fileupload"/>
@@ -152,8 +151,8 @@
       <plugin id="org.eclipse.osgi.services.nl_ru" fragment="true"/>
       <plugin id="org.eclipse.osgi.services.nl_zh" fragment="true"/>
       <plugin id="org.eclipse.osgi.services.nl_zh_TW" fragment="true"/>
-      <plugin id="org.eclipse.rap.addons.filedialog"/>
-      <plugin id="org.eclipse.rap.addons.fileupload"/>
+      <plugin id="org.eclipse.rap.filedialog"/>
+      <plugin id="org.eclipse.rap.fileupload"/>
       <plugin id="org.eclipse.rap.jface"/>
       <plugin id="org.eclipse.rap.jface.databinding"/>
       <plugin id="org.eclipse.rap.jface.databinding.nl_cs" fragment="true"/>
@@ -247,7 +246,6 @@
 
    <configurations>
       <plugin id="com.ibm.icu" autoStart="true" startLevel="0" />
-      <plugin id="com.ibm.icu.base" autoStart="true" startLevel="0" />
       <plugin id="javax.xml" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.codec" autoStart="true" startLevel="0" />
       <plugin id="org.apache.commons.fileupload" autoStart="true" startLevel="0" />
@@ -346,8 +344,8 @@
       <plugin id="org.eclipse.help" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.osgi.services" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.rap.addons.filedialog" autoStart="true" startLevel="0" />
-      <plugin id="org.eclipse.rap.addons.fileupload" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.filedialog" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.rap.fileupload" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.jface" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.jface.databinding" autoStart="true" startLevel="0" />
       <plugin id="org.eclipse.rap.rwt" autoStart="true" startLevel="0" />
@@ -398,7 +396,7 @@
 
    <warConfiguration webXml="/Core/WEB-INF/web.xml" launchIni="/Core/WEB-INF/launch.ini">
    <libraries>
-      <library path="org.eclipse.equinox.servletbridge_1.3.0.v20140430-1556.jar" fromTarget="true"/>
+      <library path="org.eclipse.equinox.servletbridge_1.3.200.v20160128-1435.jar" fromTarget="true"/>
    </libraries>
    </warConfiguration>
 </product>

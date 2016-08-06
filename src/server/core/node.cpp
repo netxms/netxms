@@ -1056,19 +1056,19 @@ bool Node::filterInterface(InterfaceInfo *info)
 /**
  * Create new interface - convenience wrapper
  */
-Interface *Node::createNewInterface(const InetAddress& ipAddr, BYTE *macAddr)
+Interface *Node::createNewInterface(const InetAddress& ipAddr, BYTE *macAddr, bool fakeInterface)
 {
    InterfaceInfo info(1);
    info.ipAddrList.add(ipAddr);
    if (macAddr != NULL)
       memcpy(info.macAddr, macAddr, MAC_ADDR_LENGTH);
-   return createNewInterface(&info, false);
+   return createNewInterface(&info, false, fakeInterface);
 }
 
 /**
  * Create new interface
  */
-Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
+Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated, bool fakeInterface)
 {
 	bool bSyntheticMask = false;
    TCHAR buffer[64];
@@ -1158,7 +1158,7 @@ Interface *Node::createNewInterface(InterfaceInfo *info, bool manuallyCreated)
    switch(defaultExpectedState)
    {
       case IF_DEFAULT_EXPECTED_STATE_AUTO:
-         pInterface->setExpectedState(IF_EXPECTED_STATE_AUTO);
+         pInterface->setExpectedState(fakeInterface ? IF_EXPECTED_STATE_UP : IF_EXPECTED_STATE_AUTO);
          break;
       case IF_DEFAULT_EXPECTED_STATE_IGNORE:
          pInterface->setExpectedState(IF_EXPECTED_STATE_IGNORE);
@@ -3179,7 +3179,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
             sendPollerMsg(rqid, POLLER_INFO _T("   Found new interface \"%s\"\r\n"), ifInfo->name);
             if (filterInterface(ifInfo))
             {
-               createNewInterface(ifInfo, false);
+               createNewInterface(ifInfo, false, false);
                hasChanges = true;
             }
             else
@@ -3246,7 +3246,7 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 						DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
                   InetAddress ifaceAddr = m_ipAddress;
                   ifaceAddr.setMaskBits(maskBits);
-                  createNewInterface(ifaceAddr, pMacAddr);
+                  createNewInterface(ifaceAddr, pMacAddr, true);
 					}
             }
 				else
@@ -3287,10 +3287,10 @@ bool Node::updateInterfaceConfiguration(UINT32 rqid, int maskBits)
 				DbgPrintf(5, _T("Node::updateInterfaceConfiguration(%s [%u]): got MAC for unknown interface: %s"), m_name, m_id, szMac);
             InetAddress ifaceAddr = m_ipAddress;
             ifaceAddr.setMaskBits(maskBits);
-         	createNewInterface(ifaceAddr, pMacAddr);
+         	createNewInterface(ifaceAddr, pMacAddr, true);
 			}
       }
-		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pflist == NULL, dwCount = %u"), m_name, m_id, dwCount);
+		DbgPrintf(6, _T("Node::updateInterfaceConfiguration(%s [%u]): pIfList == NULL, dwCount = %u"), m_name, m_id, dwCount);
    }
 
 	delete pIfList;

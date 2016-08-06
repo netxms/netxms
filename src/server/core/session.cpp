@@ -5048,7 +5048,7 @@ void ClientSession::createObject(NXCPMessage *request)
                               ifInfo.slot = request->getFieldAsUInt32(VID_IF_SLOT);
                               ifInfo.port = request->getFieldAsUInt32(VID_IF_PORT);
                               ifInfo.isPhysicalPort = request->getFieldAsBoolean(VID_IS_PHYS_PORT);
-                              object = ((Node *)parent)->createNewInterface(&ifInfo, true);
+                              object = ((Node *)parent)->createNewInterface(&ifInfo, true, false);
                            }
                            break;
                         case OBJECT_MOBILEDEVICE:

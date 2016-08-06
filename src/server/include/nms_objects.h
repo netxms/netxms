@@ -1512,8 +1512,8 @@ public:
 	time_t getDownTime() const { return m_downSince; }
 
    void addInterface(Interface *pInterface) { addChild(pInterface); pInterface->addParent(this); }
-   Interface *createNewInterface(InterfaceInfo *ifInfo, bool manuallyCreated);
-   Interface *createNewInterface(const InetAddress& ipAddr, BYTE *macAddr);
+   Interface *createNewInterface(InterfaceInfo *ifInfo, bool manuallyCreated, bool fakeInterface);
+   Interface *createNewInterface(const InetAddress& ipAddr, BYTE *macAddr, bool fakeInterface);
    void deleteInterface(Interface *iface);
 
 	void setPrimaryName(const TCHAR *name) { nx_strncpy(m_primaryName, name, MAX_DNS_NAME); }

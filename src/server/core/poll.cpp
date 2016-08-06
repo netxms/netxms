@@ -336,7 +336,7 @@ static void DiscoveryPoller(void *arg)
    DbgPrintf(4, _T("Starting discovery poll for node %s (%s) in zone %d"),
 	          node->getName(), (const TCHAR *)node->getIpAddress().toString(), (int)node->getZoneId());
 
-   // Retrieve and analize node's ARP cache
+   // Retrieve and analyze node's ARP cache
    ARP_CACHE *pArpCache = node->getArpCache();
    if (pArpCache != NULL)
    {
@@ -346,7 +346,7 @@ static void DiscoveryPoller(void *arg)
       DestroyArpCache(pArpCache);
    }
 
-	// Retrieve and analize node's routing table
+	// Retrieve and analyze node's routing table
    DbgPrintf(5, _T("Discovery poll for node %s (%s) - reading routing table"),
              node->getName(), (const TCHAR *)node->getIpAddress().toString());
 	ROUTING_TABLE *rt = node->getRoutingTable();
