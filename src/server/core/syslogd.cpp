@@ -268,8 +268,8 @@ static Node *FindNodeByHostname(const char *hostName)
       return NULL;
 
    Node *node = NULL;
-   UINT32 ipAddr = ntohl(ResolveHostNameA(hostName));
-	if ((ipAddr != INADDR_NONE) && (ipAddr != INADDR_ANY))
+   InetAddress ipAddr = InetAddress::resolveHostName(hostName);
+	if (ipAddr.isValidUnicast())
    {
       node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, ipAddr);
    }

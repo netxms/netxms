@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -136,7 +136,6 @@ static int GetSMTPResponse(SOCKET hSocket, char *pszBuffer, int *pnBufPos)
 static UINT32 SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 {
    SOCKET hSocket;
-   struct sockaddr_in sa;
    char szBuffer[SMTP_BUFFER_SIZE];
    int iResp, iState = STATE_INITIAL, nBufPos = 0;
    UINT32 dwRetCode;
@@ -145,23 +144,20 @@ static UINT32 SendMail(char *pszRcpt, char *pszSubject, char *pszText)
 	// get mail encoding from DB
 	ConfigReadStrA(_T("MailEncoding"), szEncoding, sizeof(szEncoding) / sizeof(TCHAR), "iso-8859-1");
 
-   // Fill in address structure
-   memset(&sa, 0, sizeof(sa));
-   sa.sin_family = AF_INET;
-   sa.sin_port = htons(m_wSmtpPort);
-
    // Resolve hostname
-	sa.sin_addr.s_addr = ResolveHostName(m_szSmtpServer);
-   if ((sa.sin_addr.s_addr == INADDR_ANY) || (sa.sin_addr.s_addr == INADDR_NONE))
+	InetAddress addr = InetAddress::resolveHostName(m_szSmtpServer);
+   if (!addr.isValidUnicast())
       return SMTP_ERR_BAD_SERVER_NAME;
 
    // Create socket
-   hSocket = socket(AF_INET, SOCK_STREAM, 0);
+   hSocket = socket(addr.getFamily(), SOCK_STREAM, 0);
    if (hSocket == INVALID_SOCKET)
       return SMTP_ERR_COMM_FAILURE;
 
    // Connect to server
-   if (connect(hSocket, (struct sockaddr *)&sa, sizeof(sa)) == 0)
+   SockAddrBuffer sa;
+   addr.fillSockAddr(&sa, m_wSmtpPort);
+   if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) == 0)
    {
       while((iState != STATE_FINISHED) && (iState != STATE_ERROR))
       {

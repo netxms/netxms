@@ -1,6 +1,6 @@
 /*
  ** Enhanced CheckSumm subagent
- ** Copyright (C) 2006 Alex Kirhenshtein
+ ** Copyright (C) 2006-2016 Raden Solutions
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -62,19 +62,15 @@ static unsigned char *GetHttpUrl(char *url, int *size)
 
 	*size = 0;
 
-	DWORD hostAddr = ResolveHostNameA(host);
-	if (hostAddr != INADDR_NONE)
+	InetAddress hostAddr = InetAddress::resolveHostName(host);
+	if (hostAddr.isValidUnicast())
 	{
-		SOCKET sd = socket(AF_INET, SOCK_STREAM, 0);
+		SOCKET sd = socket(hostAddr.getFamily(), SOCK_STREAM, 0);
 		if (sd != INVALID_SOCKET)
 		{
-			struct sockaddr_in sa;
-
-			sa.sin_family = AF_INET;
-			sa.sin_port = htons(port);
-			sa.sin_addr.s_addr = hostAddr;
-
-			if (connect(sd, (struct sockaddr*)&sa, sizeof(sa)) == 0)
+			SockAddrBuffer sa;
+			hostAddr.fillSockAddr(&sa, port);
+			if (ConnectEx(sd, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), 5000) == 0)
 			{
 				char req[1024];
 

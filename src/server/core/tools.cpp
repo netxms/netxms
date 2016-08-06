@@ -328,3 +328,36 @@ bool NXCORE_EXPORTABLE ExecuteQueryOnObject(DB_HANDLE hdb, UINT32 objectId, cons
    DBFreeStatement(hStmt);
    return success;
 }
+
+/**
+ * Resolve host name using zone if needed
+ */
+InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneId, const TCHAR *hostname)
+{
+   InetAddress ipAddr = InetAddress::parse(hostname);
+   if (!ipAddr.isValid() && IsZoningEnabled() && (zoneId != 0))
+   {
+      // resolve address through proxy agent
+      Zone *zone = FindZoneByGUID(zoneId);
+      if (zone != NULL)
+      {
+         Node *proxy = (Node *)FindObjectById(zone->getAgentProxy(), OBJECT_NODE);
+         if (proxy != NULL)
+         {
+            TCHAR query[256], buffer[128];
+            _sntprintf(query, 256, _T("Net.Resolver.AddressByName(%s)"), hostname);
+            if (proxy->getItemFromAgent(query, 128, buffer) == ERR_SUCCESS)
+            {
+               ipAddr = InetAddress::parse(buffer);
+            }
+         }
+      }
+   }
+
+   // Resolve address through local resolver
+   if (!ipAddr.isValid())
+   {
+      ipAddr = InetAddress::resolveHostName(hostname);
+   }
+   return ipAddr;
+}

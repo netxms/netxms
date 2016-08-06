@@ -77,7 +77,10 @@ SocketConnection::~SocketConnection()
  */
 bool SocketConnection::connectTCP(const TCHAR *hostName, WORD port, UINT32 timeout)
 {
-   return connectTCP(ntohl(ResolveHostName(hostName)), port, timeout);
+   InetAddress addr = InetAddress::resolveHostName(hostName);
+   if (!addr.isValidUnicast())
+      return false;
+   return connectTCP(addr, port, timeout);
 }
 
 /**
@@ -88,17 +91,14 @@ bool SocketConnection::connectTCP(const TCHAR *hostName, WORD port, UINT32 timeo
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
-bool SocketConnection::connectTCP(UINT32 ip, WORD port, UINT32 timeout)
+bool SocketConnection::connectTCP(const InetAddress& ip, WORD port, UINT32 timeout)
 {
-	m_socket = socket(AF_INET, SOCK_STREAM, 0);
+	m_socket = socket(ip.getFamily(), SOCK_STREAM, 0);
 	if (m_socket != INVALID_SOCKET)
 	{
-		struct sockaddr_in sa;
-		sa.sin_family = AF_INET;
-		sa.sin_port = htons(port);
-		sa.sin_addr.s_addr = htonl(ip);
-
-		if (ConnectEx(m_socket, (struct sockaddr*)&sa, sizeof(sa), (timeout != 0) ? timeout : 30000) < 0)
+		SockAddrBuffer sa;
+		ip.fillSockAddr(&sa, port);
+		if (ConnectEx(m_socket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), (timeout != 0) ? timeout : 30000) < 0)
 		{
 			closesocket(m_socket);
 			m_socket = INVALID_SOCKET;
@@ -227,7 +227,10 @@ bool SocketConnection::waitForText(const char *text, int timeout)
  */
 bool TelnetConnection::connect(const TCHAR *hostName, WORD port, UINT32 timeout)
 {
-   return connect(ntohl(ResolveHostName(hostName)), port, timeout);
+   InetAddress addr = InetAddress::resolveHostName(hostName);
+   if (!addr.isValidUnicast())
+      return false;
+   return connect(addr, port, timeout);
 }
 
 /**
@@ -238,7 +241,7 @@ bool TelnetConnection::connect(const TCHAR *hostName, WORD port, UINT32 timeout)
  * @param timeout connection timeout in milliseconds
  * @return true if connection attempt was successful
  */
-bool TelnetConnection::connect(UINT32 ip, WORD port, UINT32 timeout)
+bool TelnetConnection::connect(const InetAddress& ip, WORD port, UINT32 timeout)
 {
    bool ret = SocketConnection::connectTCP(ip, port, timeout);
 

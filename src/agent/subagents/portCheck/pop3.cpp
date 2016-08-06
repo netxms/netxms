@@ -29,7 +29,7 @@ LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 
 	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
    INT64 start = GetCurrentTimeMs();
-	int result = CheckPOP3(szHost, 0, 110, szUser, szPassword, dwTimeout);
+	int result = CheckPOP3(szHost, InetAddress::INVALID, 110, szUser, szPassword, dwTimeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -49,12 +49,12 @@ LONG H_CheckPOP3(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 /**
  * Check POP3 service
  */
-int CheckPOP3(char *szAddr, UINT32 dwAddr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
+int CheckPOP3(char *szAddr, const InetAddress& addr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
 {
 	int nRet = 0;
 	SOCKET nSd;
 
-	nSd = NetConnectTCP(szAddr, dwAddr, nPort, dwTimeout);
+	nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		char szBuff[512];

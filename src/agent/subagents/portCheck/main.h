@@ -23,18 +23,18 @@ enum
 #define SCF_NEGATIVE_TIME_ON_ERROR  0x0001
 
 LONG H_CheckPOP3(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-int CheckPOP3(char *, UINT32, short, char *, char *, UINT32);
+int CheckPOP3(char *, const InetAddress&, short, char *, char *, UINT32);
 LONG H_CheckSSH(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-int CheckSSH(char *, UINT32, short, char *, char *, UINT32);
+int CheckSSH(char *, const InetAddress&, short, char *, char *, UINT32);
 LONG H_CheckSMTP(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-int CheckSMTP(char *, UINT32, short, char *, UINT32);
+int CheckSMTP(char *, const InetAddress&, short, char *, UINT32);
 LONG H_CheckHTTP(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-int CheckHTTP(char *, UINT32, short, char *, char *, char *, UINT32);
-int CheckHTTPS(char *, UINT32, short, char *, char *, char *, UINT32);
+int CheckHTTP(char *, const InetAddress&, short, char *, char *, char *, UINT32);
+int CheckHTTPS(char *, const InetAddress&, short, char *, char *, char *, UINT32);
 LONG H_CheckCustom(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-int CheckCustom(char *, UINT32, short, UINT32);
+int CheckCustom(char *, const InetAddress&, short, UINT32);
 LONG H_CheckTelnet(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
-int CheckTelnet(char *, UINT32, short, char *, char *, UINT32);
+int CheckTelnet(char *, const InetAddress&, short, char *, char *, UINT32);
 
 extern char g_szDomainName[];
 extern char g_szFailedDir[];

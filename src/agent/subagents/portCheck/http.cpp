@@ -13,17 +13,17 @@
  * Save HTTP(s) responce to file for later investigation
  * (Should be enabled by setting "FailedDirectory" in config
  */
-static void SaveResponse(char *host, UINT32 ip, char *buffer)
+static void SaveResponse(char *host, const InetAddress& ip, char *buffer)
 {
    if (g_szFailedDir[0] == 0)
       return;
 
    time_t now = time(NULL);
    char fileName[2048];
-   char tmp[32];
+   char tmp[64];
    snprintf(fileName, 2048, "%s%s%s-%d",
          g_szFailedDir, FS_PATH_SEPARATOR_A,
-         host != NULL ? host : IpToStrA(ip, tmp),
+         host != NULL ? host : ip.toStringA(tmp),
          (int)now);
    FILE *f = fopen(fileName, "wb");
    if (f != NULL)
@@ -68,7 +68,9 @@ LONG H_CheckHTTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 
 	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
    INT64 start = GetCurrentTimeMs();
-   int result = (arg[1] == 'S') ? CheckHTTPS(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout) : CheckHTTP(szHost, 0, nPort, szURI, szHeader, szMatch, dwTimeout);
+   int result = (arg[1] == 'S') ?
+            CheckHTTPS(szHost, InetAddress::INVALID, nPort, szURI, szHeader, szMatch, dwTimeout) :
+            CheckHTTP(szHost, InetAddress::INVALID, nPort, szURI, szHeader, szMatch, dwTimeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -88,7 +90,7 @@ LONG H_CheckHTTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 /**
  * Check HTTP service
  */
-int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
+int CheckHTTP(char *szAddr, const InetAddress& addr, short nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
 {
 	int nBytes, nRet = 0;
 	SOCKET nSd;
@@ -104,7 +106,7 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHos
 		return PC_ERR_BAD_PARAMS;
 	}
 
-	nSd = NetConnectTCP(szAddr, dwAddr, nPort, dwTimeout);
+	nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		char szTmp[4096];
@@ -164,7 +166,7 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHos
 				}
             else
             {
-               SaveResponse(szAddr, dwAddr, buff);
+               SaveResponse(szAddr, addr, buff);
             }
 			}
 
@@ -184,7 +186,7 @@ int CheckHTTP(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHos
 /**
  * Check HTTPS service
  */
-int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
+int CheckHTTPS(char *szAddr, const InetAddress& addr, short nPort, char *szURI, char *szHost, char *szMatch, UINT32 dwTimeout)
 {
 #ifdef _WITH_ENCRYPTION
    if (szMatch[0] == 0)
@@ -224,8 +226,8 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
                }
                else
                {
-                  UINT32 addr = htonl(dwAddr);
-                  BIO_set_conn_ip(out, &addr);
+                  UINT32 addrV4 = htonl(addr.getAddressV4());
+                  BIO_set_conn_ip(out, &addrV4);
                }
                int intPort = nPort;
                BIO_set_conn_int_port(out, &intPort);
@@ -303,7 +305,7 @@ int CheckHTTPS(char *szAddr, UINT32 dwAddr, short nPort, char *szURI, char *szHo
                         }
                         else
                         {
-                           SaveResponse(szAddr, dwAddr, buffer);
+                           SaveResponse(szAddr, addr, buffer);
                            AgentWriteDebugLog(7, _T("PortCheck: content do not match"));
                         }
                      }

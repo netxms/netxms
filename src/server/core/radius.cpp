@@ -1,6 +1,6 @@
 /* 
  ** NetXMS - Network Management System
- ** Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Victor Kirhenshtein
+ ** Copyright (C) 2003-2016 Victor Kirhenshtein
  **
  ** RADIUS client
  ** This code is based on uRadiusLib (C) Gary Wallis, 2006.
@@ -576,7 +576,7 @@ static int rad_build_packet(AUTH_HDR *auth, int auth_len,
 // Receive result from server
 //
 
-static int result_recv(UINT32 host, WORD udp_port, char *buffer, int length, BYTE *vector, char *secretkey)
+static int result_recv(const InetAddress& host, WORD udp_port, char *buffer, int length, BYTE *vector, char *secretkey)
 {
 	AUTH_HDR *auth;
 	int totallen, secretlen;
@@ -605,9 +605,8 @@ static int result_recv(UINT32 host, WORD udp_port, char *buffer, int length, BYT
 		DbgPrintf(3, _T("RADIUS: Received invalid reply digest from server"));
 	}
 
-	IpToStr(ntohl(host), szHostName);
-	DbgPrintf(3, _T("RADIUS: Packet from host %s code=%d, id=%d, length=%d"),
-             szHostName, auth->code, auth->id, totallen);
+	host.toString(szHostName);
+	DbgPrintf(3, _T("RADIUS: Packet from host %s code=%d, id=%d, length=%d"), szHostName, auth->code, auth->id, totallen);
 	return (auth->code == PW_AUTHENTICATION_REJECT) ? 1 : 0;
 }
 
@@ -618,9 +617,6 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 {
 	AUTH_HDR *auth;
 	VALUE_PAIR *req, *vp;
-	UINT32 server_ip;
-	struct sockaddr saremote;
-	struct sockaddr_in *sin;
 	struct timeval		tv;
 	fd_set readfds;
 	socklen_t salen;
@@ -666,8 +662,8 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 	pairadd(&req, vp);
 
 	// Resolve hostname.
-	server_ip = ResolveHostName(serverName);
-	if ((server_ip == INADDR_NONE) || (server_ip == INADDR_ANY))
+	InetAddress serverAddr = InetAddress::resolveHostName(serverName);
+	if (!serverAddr.isValidUnicast())
 	{
 		DbgPrintf(3, _T("RADIUS: cannot resolve server name \"%s\""), serverName);
 		pairfree(req);
@@ -675,7 +671,7 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 	}
 
 	// Open a socket.
-	sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	sockfd = socket(serverAddr.getFamily(), SOCK_DGRAM, 0);
 	if (sockfd == INVALID_SOCKET)
 	{
 		DbgPrintf(3, _T("RADIUS: Cannot create socket"));
@@ -683,11 +679,8 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 		return 5;
 	}
 
-	sin = (struct sockaddr_in *)&saremote;
-	memset(sin, 0, sizeof (saremote));
-	sin->sin_family = AF_INET;
-	sin->sin_addr.s_addr = server_ip;
-	sin->sin_port = htons(port);
+	SockAddrBuffer sa;
+	serverAddr.fillSockAddr(&sa, port);
 
 	// Build final radius packet.
 	length = rad_build_packet(auth, sizeof(send_buffer),
@@ -702,7 +695,7 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 		{
 			DbgPrintf(3, _T("RADIUS: Re-sending request..."));
 		}
-		sendto(sockfd, (char *)auth, length, 0, &saremote, sizeof(struct sockaddr_in));
+		sendto(sockfd, (char *)auth, length, 0, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa));
 
 		FD_ZERO(&readfds);
 		FD_SET(sockfd, &readfds);
@@ -713,9 +706,11 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 			continue;
 		}
 
-		salen = sizeof(saremote);
-		result = recvfrom(sockfd, (char *)recv_buffer, sizeof(recv_buffer), 0, &saremote, &salen);
-		if (result >= 0)
+		SockAddrBuffer sarecv;
+		socklen_t salen = sizeof(sa);
+		result = recvfrom(sockfd, (char *)recv_buffer, sizeof(recv_buffer), 0, (struct sockaddr *)&sarecv, &salen);
+		InetAddress addrRecv = InetAddress::createFromSockaddr((struct sockaddr *)&sarecv);
+		if ((result >= 0) && addrRecv.equals(serverAddr) && (SA_PORT(&sarecv) == SA_PORT(&sa)))
 		{
 			break;
 		}
@@ -725,9 +720,7 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 
 	if (result > 0 && i < nRetries)
 	{
-		result = result_recv(sin->sin_addr.s_addr, sin->sin_port,
-				(char *)recv_buffer, result, vector,
-				szSecret);
+		result = result_recv(serverAddr, port, (char *)recv_buffer, result, vector, szSecret);
 	}
 	else
 	{

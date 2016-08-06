@@ -28,7 +28,6 @@ BOOL CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pRespo
 {
 	BOOL bHandled = TRUE;
 	WORD wType, wPort;
-	UINT32 dwAddress;
 	char szRequest[1024 * 10];
 	char szResponse[1024 * 10];
 	UINT32 nRet;
@@ -40,7 +39,7 @@ BOOL CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pRespo
 
 	wType = pRequest->getFieldAsUInt16(VID_SERVICE_TYPE);
 	wPort = pRequest->getFieldAsUInt16(VID_IP_PORT);
-	dwAddress = pRequest->getFieldAsUInt32(VID_IP_ADDRESS);
+	InetAddress addr = pRequest->getFieldAsInetAddress(VID_IP_ADDRESS);
 	pRequest->getFieldAsMBString(VID_SERVICE_REQUEST, szRequest, sizeof(szRequest));
 	pRequest->getFieldAsMBString(VID_SERVICE_RESPONSE, szResponse, sizeof(szResponse));
 
@@ -50,18 +49,18 @@ BOOL CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pRespo
 	{
 		case NETSRV_CUSTOM:
 			// unsupported for now
-			nRet = CheckCustom(NULL, dwAddress, wPort, 0);
+			nRet = CheckCustom(NULL, addr, wPort, 0);
 			pResponse->setField(VID_RCC, ERR_SUCCESS);
 			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_SSH:
-			nRet = CheckSSH(NULL, dwAddress, wPort, NULL, NULL, 0);
+			nRet = CheckSSH(NULL, addr, wPort, NULL, NULL, 0);
 
 			pResponse->setField(VID_RCC, ERR_SUCCESS);
 			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			break;
 		case NETSRV_TELNET:
-			nRet = CheckTelnet(NULL, dwAddress, wPort, NULL, NULL, 0);
+			nRet = CheckTelnet(NULL, addr, wPort, NULL, NULL, 0);
 
 			pResponse->setField(VID_RCC, ERR_SUCCESS);
 			pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
@@ -78,7 +77,7 @@ BOOL CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pRespo
 					*pPass = 0;
 					pPass++;
 
-					nRet = CheckPOP3(NULL, dwAddress, wPort, pUser, pPass, 0);
+					nRet = CheckPOP3(NULL, addr, wPort, pUser, pPass, 0);
 
 				}
 
@@ -91,7 +90,7 @@ BOOL CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pRespo
 
 			if (szRequest[0] != 0)
 			{
-				nRet = CheckSMTP(NULL, dwAddress, wPort, szRequest, 0);
+				nRet = CheckSMTP(NULL, addr, wPort, szRequest, 0);
 				pResponse->setField(VID_RCC, ERR_SUCCESS);
 				pResponse->setField(VID_SERVICE_STATUS, (UINT32)nRet);
 			}
@@ -119,11 +118,11 @@ BOOL CommandHandler(UINT32 dwCommand, NXCPMessage *pRequest, NXCPMessage *pRespo
 
                if (wType == NETSRV_HTTP)
                {
-                  nRet = CheckHTTP(NULL, dwAddress, wPort, pURI, pHost, szResponse, 0);
+                  nRet = CheckHTTP(NULL, addr, wPort, pURI, pHost, szResponse, 0);
                }
                else
                {
-                  nRet = CheckHTTPS(NULL, dwAddress, wPort, pURI, pHost, szResponse, 0);
+                  nRet = CheckHTTPS(NULL, addr, wPort, pURI, pHost, szResponse, 0);
                }
 				}
 

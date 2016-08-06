@@ -34,7 +34,6 @@ void UnregisterSession(UINT32 dwIndex);
 UINT32 DeployPolicy(CommSession *session, NXCPMessage *request);
 UINT32 UninstallPolicy(CommSession *session, NXCPMessage *request);
 UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg);
-void UpdatePolicyInventory();
 void ClearDataCollectionConfiguration();
 
 /**
@@ -109,6 +108,7 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
    m_controlServer = controlServer;
    m_proxyConnection = false;
    m_acceptTraps = false;
+   m_acceptData = false;
    m_acceptFileUpdates = false;
    m_ipv6Aware = false;
    m_bulkReconciliationSupported = false;

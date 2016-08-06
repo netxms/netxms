@@ -1283,7 +1283,7 @@ public:
 	virtual ~SocketConnection();
 
 	bool connectTCP(const TCHAR *hostName, WORD port, UINT32 timeout);
-	bool connectTCP(UINT32 ip, WORD port, UINT32 timeout);
+	bool connectTCP(const InetAddress& ip, WORD port, UINT32 timeout);
 	void disconnect();
 
 	bool canRead(UINT32 timeout);
@@ -1303,13 +1303,13 @@ class LIBNETXMS_EXPORTABLE TelnetConnection : public SocketConnection
 {
 protected:
 	bool connectTCP(const TCHAR *hostName, WORD port, UINT32 timeout);
-	bool connectTCP(UINT32 ip, WORD port, UINT32 timeout);
+	bool connectTCP(const InetAddress& ip, WORD port, UINT32 timeout);
 
 public:
 	static TelnetConnection *createConnection(const TCHAR *hostName, WORD port, UINT32 timeout);
 
    bool connect(const TCHAR *hostName, WORD port, UINT32 timeout);
-	bool connect(UINT32 ip, WORD port, UINT32 timeout);
+	bool connect(const InetAddress& ip, WORD port, UINT32 timeout);
 	virtual int read(char *pBuff, int nSize, UINT32 timeout = INFINITE);
 	int readLine(char *buffer, int size, UINT32 timeout = INFINITE);
 };
@@ -1527,14 +1527,6 @@ char LIBNETXMS_EXPORTABLE *Ip6ToStrA(const BYTE *addr, char *buffer);
 #define Ip6ToStrA Ip6ToStr
 #endif
 TCHAR LIBNETXMS_EXPORTABLE *SockaddrToStr(struct sockaddr *addr, TCHAR *buffer);
-
-UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *name);
-UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameW(const WCHAR *name);
-#ifdef UNICODE
-#define ResolveHostName ResolveHostNameW
-#else
-#define ResolveHostName ResolveHostNameA
-#endif
 
 void LIBNETXMS_EXPORTABLE *nx_memdup(const void *data, size_t size);
 void LIBNETXMS_EXPORTABLE nx_memswap(void *block1, void *block2, size_t size);

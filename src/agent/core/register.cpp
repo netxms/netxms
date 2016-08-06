@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,9 +37,7 @@ LONG H_PlatformName(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
  */
 BOOL RegisterOnServer(const TCHAR *pszServer)
 {
-   DWORD dwAddr;
    SOCKET hSocket;
-   struct sockaddr_in sa;
    BOOL bRet = FALSE;
    TCHAR szBuffer[MAX_RESULT_LENGTH];
    NXCPMessage msg, *pResponse;
@@ -48,22 +46,19 @@ BOOL RegisterOnServer(const TCHAR *pszServer)
    NXCPEncryptionContext *pDummyCtx = NULL;
    int nLen;
 
-   dwAddr = ResolveHostName(pszServer);
-   if (dwAddr == INADDR_NONE)
+   InetAddress addr = InetAddress::resolveHostName(pszServer);
+   if (!addr.isValidUnicast())
    {
 		nxlog_write(MSG_REGISTRATION_FAILED, EVENTLOG_WARNING_TYPE, "s", _T("Unable to resolve name of management server"));
       return FALSE;
    }
 
-   hSocket = socket(AF_INET, SOCK_STREAM, 0);
+   hSocket = socket(addr.getFamily(), SOCK_STREAM, 0);
    if (hSocket != INVALID_SOCKET)
    {
-      // Fill in address structure
-      memset(&sa, 0, sizeof(sa));
-      sa.sin_addr.s_addr = dwAddr;
-      sa.sin_family = AF_INET;
-      sa.sin_port = htons(4701);
-      if (connect(hSocket, (struct sockaddr *)&sa, sizeof(sa)) != -1)
+      SockAddrBuffer sa;
+      addr.fillSockAddr(&sa, 4701);
+      if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) != -1)
       {
          // Prepare request
          msg.setCode(CMD_REGISTER_AGENT);

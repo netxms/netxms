@@ -35,7 +35,7 @@ LONG H_CheckCustom(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 
 	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
    INT64 start = GetCurrentTimeMs();
-   int result = CheckCustom(szHost, 0, nPort, dwTimeout);
+   int result = CheckCustom(szHost, InetAddress::INVALID, nPort, dwTimeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -55,12 +55,12 @@ LONG H_CheckCustom(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractC
 /**
  * Check custom service
  */
-int CheckCustom(char *szAddr, UINT32 dwAddr, short nPort, UINT32 dwTimeout)
+int CheckCustom(char *szAddr, const InetAddress& addr, short nPort, UINT32 dwTimeout)
 {
 	int nRet;
 	SOCKET nSd;
 
-	nSd = NetConnectTCP(szAddr, dwAddr, nPort, dwTimeout);
+	nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		nRet = PC_ERR_NONE;

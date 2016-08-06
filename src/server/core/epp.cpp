@@ -150,6 +150,12 @@ EPRule::EPRule(DB_RESULT hResult, int row)
 	m_dwAlarmTimeoutEvent = DBGetFieldULong(hResult, row, 9);
 	m_dwSituationId = DBGetFieldULong(hResult, row, 10);
    DBGetField(hResult, row, 11, m_szSituationInstance, MAX_DB_STRING);
+   m_dwNumActions = 0;
+   m_pdwActionList = NULL;
+   m_dwNumEvents = 0;
+   m_pdwEventList = NULL;
+   m_dwNumSources = 0;
+   m_pdwSourceList = NULL;
 }
 
 /**

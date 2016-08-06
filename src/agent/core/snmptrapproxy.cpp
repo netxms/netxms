@@ -68,32 +68,28 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    SetSocketReuseFlag(hSocket);
 
    // Fill in local address structure
-   struct sockaddr_in addr;
-   memset(&addr, 0, sizeof(struct sockaddr_in));
-   addr.sin_family = AF_INET;
-
-   //rework
-   addr.sin_addr.s_addr = ResolveHostName(g_szSNMPTrapListenAddress);
+   struct sockaddr_in sa;
+   memset(&sa, 0, sizeof(sa));
    if (!_tcscmp(g_szSNMPTrapListenAddress, _T("*")))
-	{
-		addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	}
-	else
+   {
+      sa.sin_addr.s_addr = htonl(INADDR_ANY);
+   }
+   else
 	{
       InetAddress bindAddress = InetAddress::resolveHostName(g_szSNMPTrapListenAddress, AF_INET);
       if (bindAddress.isValid() && (bindAddress.getFamily() == AF_INET))
       {
-		   addr.sin_addr.s_addr = htonl(bindAddress.getAddressV4());
+		   sa.sin_addr.s_addr = htonl(bindAddress.getAddressV4());
       }
       else
       {
-   		addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+   		sa.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
       }
 	}
-   addr.sin_port = htons(g_dwSNMPTrapPort);
+   sa.sin_port = htons(g_dwSNMPTrapPort);
 
    // Bind socket
-   if (bind(hSocket, (struct sockaddr *)&addr, sizeof(struct sockaddr_in)) != 0)
+   if (bind(hSocket, (struct sockaddr *)&sa, sizeof(struct sockaddr_in)) != 0)
    {
       DebugPrintf(INVALID_INDEX, 1, _T("SNMPTrapReceiver: cannot bind socket (%s)"), _tcserror(errno));
       closesocket(hSocket);
@@ -102,7 +98,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 
    TCHAR ipAddrStr[64];
    DebugPrintf(INVALID_INDEX, 3, _T("SNMPTrapReceiver: listening on %s:%d"),
-      IpToStr(ntohl(addr.sin_addr.s_addr), ipAddrStr), (int)ntohs(addr.sin_port));
+      IpToStr(ntohl(sa.sin_addr.s_addr), ipAddrStr), (int)ntohs(sa.sin_port));
 
    SNMP_TrapProxyTransport *pTransport = new SNMP_TrapProxyTransport(hSocket);
    pTransport->enableEngineIdAutoupdate(true);
@@ -113,11 +109,11 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
    {
       BYTE *rawMessage = NULL;
       socklen_t nAddrLen = sizeof(struct sockaddr_in);
-      int iBytes = pTransport->readRawMessage(&rawMessage, 2000, (struct sockaddr *)&addr, &nAddrLen);
+      int iBytes = pTransport->readRawMessage(&rawMessage, 2000, (struct sockaddr *)&sa, &nAddrLen);
       if ((iBytes > 0) && (rawMessage != NULL))
       {
          UdpMessage *message = new UdpMessage();
-         message->ipAddr = ntohl(addr.sin_addr.s_addr);
+         message->ipAddr = ntohl(sa.sin_addr.s_addr);
          message->port = (short)g_dwSNMPTrapPort;
          message->lenght = iBytes;
          message->rawMessage = rawMessage;

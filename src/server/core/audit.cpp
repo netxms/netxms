@@ -26,7 +26,7 @@
  * Static data
  */
 static VolatileCounter m_recordId = 1;
-static UINT32 m_auditServerAddr = 0;
+static InetAddress m_auditServerAddr;
 static WORD m_auditServerPort;
 static int m_auditFacility;
 static int m_auditSeverity;
@@ -41,14 +41,13 @@ static void SendSyslogRecord(const TCHAR *text)
    static char month[12][5] = { "Jan ", "Feb ", "Mar ", "Apr ",
                                 "May ", "Jun ", "Jul ", "Aug ",
                                 "Sep ", "Oct ", "Nov ", "Dec " };
-	char message[1025];
-
-	if (m_auditServerAddr == 0)
+	if (!m_auditServerAddr.isValidUnicast())
 		return;
 
 	time_t ts = time(NULL);
 	struct tm *now = localtime(&ts);
 
+   char message[1025];
 #ifdef UNICODE
 	char *mbText = MBStringFromWideString(text);
 	snprintf(message, 1025, "<%d>%s %2d %02d:%02d:%02d %s %s %s", (m_auditFacility << 3) + m_auditSeverity, month[now->tm_mon],
@@ -60,16 +59,11 @@ static void SendSyslogRecord(const TCHAR *text)
 #endif
 	message[1024] = 0;
 
-   SOCKET hSocket = socket(AF_INET, SOCK_DGRAM, 0);
+   SOCKET hSocket = socket(m_auditServerAddr.getFamily(), SOCK_DGRAM, 0);
    if (hSocket != INVALID_SOCKET)
 	{
-		struct sockaddr_in addr;
-
-		memset(&addr, 0, sizeof(struct sockaddr_in));
-		addr.sin_family = AF_INET;
-		addr.sin_addr.s_addr = m_auditServerAddr;
-		addr.sin_port = m_auditServerPort;
-
+		SockAddrBuffer addr;
+		m_auditServerAddr.fillSockAddr(&addr, m_auditServerPort);
 		sendto(hSocket, message, (int)strlen(message), 0, (struct sockaddr *)&addr, sizeof(struct sockaddr_in));
 		shutdown(hSocket, SHUT_RDWR);
 		closesocket(hSocket);
@@ -97,8 +91,8 @@ void InitAuditLog()
 	ConfigReadStr(_T("ExternalAuditServer"), temp, 256, _T("none"));
 	if (_tcscmp(temp, _T("none")))
 	{
-		m_auditServerAddr = ResolveHostName(temp);
-		m_auditServerPort = htons((WORD)ConfigReadInt(_T("ExternalAuditPort"), 514));
+		m_auditServerAddr = InetAddress::resolveHostName(temp);
+		m_auditServerPort = (WORD)ConfigReadInt(_T("ExternalAuditPort"), 514);
 		m_auditFacility = ConfigReadInt(_T("ExternalAuditFacility"), 13);  // default is log audit facility
 		m_auditSeverity = ConfigReadInt(_T("ExternalAuditSeverity"), SYSLOG_SEVERITY_NOTICE);
 		ConfigReadStrA(_T("ExternalAuditTag"), m_auditTag, MAX_SYSLOG_TAG_LEN, "netxmsd-audit");
@@ -176,7 +170,7 @@ void NXCORE_EXPORTABLE WriteAuditLog2(const TCHAR *subsys, bool isSuccess, UINT3
 	msg.setField(VID_MESSAGE, (const TCHAR *)text);
 	EnumerateClientSessions(SendNewRecord, &msg);
 
-	if (m_auditServerAddr != 0)
+	if (m_auditServerAddr.isValidUnicast())
 	{
 		String extText;
 		TCHAR buffer[256];

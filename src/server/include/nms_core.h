@@ -991,6 +991,8 @@ void GetSysInfoStr(TCHAR *pszBuffer, int nMaxSize);
 InetAddress GetLocalIpAddr();
 TCHAR *GetLocalHostName(TCHAR *buffer, size_t bufSize);
 
+InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneId, const TCHAR *hostname);
+
 BOOL ExecCommand(TCHAR *pszCommand);
 BOOL SendMagicPacket(UINT32 dwIpAddr, BYTE *pbMacAddr, int iNumPackets);
 

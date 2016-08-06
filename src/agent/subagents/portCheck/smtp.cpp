@@ -25,7 +25,7 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 
 	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
    INT64 start = GetCurrentTimeMs();
-	int result = CheckSMTP(szHost, 0, 25, szTo, dwTimeout);
+	int result = CheckSMTP(szHost, InetAddress::INVALID, 25, szTo, dwTimeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -45,13 +45,13 @@ LONG H_CheckSMTP(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCom
 /**
  * Check SMTP service
  */
-int CheckSMTP(char *szAddr, UINT32 dwAddr, short nPort, char *szTo, UINT32 dwTimeout)
+int CheckSMTP(char *szAddr, const InetAddress& addr, short nPort, char *szTo, UINT32 dwTimeout)
 {
 	int nRet = 0;
 	SOCKET nSd;
 	int nErr = 0; 
 
-	nSd = NetConnectTCP(szAddr, dwAddr, nPort, dwTimeout);
+	nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		char szBuff[2048];

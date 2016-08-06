@@ -53,6 +53,11 @@ Serial::Serial()
 	m_nTimeout = 5000;
 	m_hPort = INVALID_HANDLE_VALUE;
 	m_pszPort = NULL;
+	m_nSpeed = 9600;
+	m_nDataBits = 8;
+	m_nParity = NOPARITY;
+	m_nStopBits = ONESTOPBIT;
+	m_nFlowControl = FLOW_NONE;
 #ifndef _WIN32
 	memset(&m_originalSettings, 0, sizeof(m_originalSettings));
 #endif

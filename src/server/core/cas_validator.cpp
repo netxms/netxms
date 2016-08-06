@@ -149,9 +149,10 @@ static int valid_cert(X509 *cert, const char *hostname)
  */
 static int cas_validate(const char *ticket, const char *service, char *outbuf, int outbuflen, char *proxies[])
 {
+   InetAddress a;
+   SockAddrBuffer sa;
    SOCKET s = INVALID_SOCKET;
    int err, b, ret, total;
-   struct sockaddr_in sa;
    SSL *ssl = NULL;
    X509 *s_cert = NULL;
    char buf[4096];
@@ -169,11 +170,13 @@ static int cas_validate(const char *ticket, const char *service, char *outbuf, i
       SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
    }
 
-   memset(&sa, 0, sizeof(sa));
-   sa.sin_family = AF_INET;
-   sa.sin_addr.s_addr = ResolveHostNameA(m_host);
-   sa.sin_port = htons(m_port);
-   if (connect(s, (struct sockaddr*) &sa, sizeof(sa)) == -1)
+   a = InetAddress::resolveHostName(m_host);
+   if (!a.isValidUnicast())
+   {
+      SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
+   }
+   a.fillSockAddr(&sa, m_port);
+   if (connect(s, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) == -1)
    {
       SET_RET_AND_GOTO_END(CAS_ERROR_CONN);
    }

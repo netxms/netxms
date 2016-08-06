@@ -25,26 +25,18 @@
 
 #include "net.h"
 
-SOCKET NetConnectTCP(const char *szHost, UINT32 dwAddr, unsigned short nPort, UINT32 dwTimeout)
+SOCKET NetConnectTCP(const char *szHost, const InetAddress& addr, unsigned short nPort, UINT32 dwTimeout)
 {
-	SOCKET nSocket;
+   InetAddress hostAddr = (szHost != NULL) ? InetAddress::resolveHostName(szHost) : addr;
+   if (!hostAddr.isValidUnicast())
+      return INVALID_SOCKET;
 
-	nSocket = socket(AF_INET, SOCK_STREAM, 0);
+	SOCKET nSocket = socket(hostAddr.getFamily(), SOCK_STREAM, 0);
 	if (nSocket != INVALID_SOCKET)
 	{
-		struct sockaddr_in sa;
-		sa.sin_family = AF_INET;
-		sa.sin_port = htons(nPort);
-		if (szHost != NULL)
-		{
-         sa.sin_addr.s_addr = ResolveHostNameA(szHost);
-		}
-		else
-		{
-			sa.sin_addr.s_addr = htonl(dwAddr);
-		}
-
-		if (ConnectEx(nSocket, (struct sockaddr*)&sa, sizeof(sa), (dwTimeout != 0) ? dwTimeout : m_dwDefaultTimeout) < 0)
+		SockAddrBuffer sa;
+		hostAddr.fillSockAddr(&sa, nPort);
+		if (ConnectEx(nSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), (dwTimeout != 0) ? dwTimeout : m_dwDefaultTimeout) < 0)
 		{
 			closesocket(nSocket);
 			nSocket = INVALID_SOCKET;

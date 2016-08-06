@@ -35,7 +35,7 @@ LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
 
 	UINT32 dwTimeout = _tcstoul(szTimeout, NULL, 0);
    INT64 start = GetCurrentTimeMs();
-	int result = CheckSSH(szHost, 0, nPort, NULL, NULL, dwTimeout);
+	int result = CheckSSH(szHost, InetAddress::INVALID, nPort, NULL, NULL, dwTimeout);
    if (*arg == 'R')
    {
       if (result == PC_ERR_NONE)
@@ -55,12 +55,12 @@ LONG H_CheckSSH(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractComm
 /**
  * Check SSH service
  */
-int CheckSSH(char *szAddr, UINT32 dwAddr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
+int CheckSSH(char *szAddr, const InetAddress& addr, short nPort, char *szUser, char *szPass, UINT32 dwTimeout)
 {
 	int nRet = 0;
 	SOCKET nSd;
 
-	nSd = NetConnectTCP(szAddr, dwAddr, nPort, dwTimeout);
+	nSd = NetConnectTCP(szAddr, addr, nPort, dwTimeout);
 	if (nSd != INVALID_SOCKET)
 	{
 		char szBuff[512];

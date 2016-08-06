@@ -1337,51 +1337,6 @@ SOCKET LIBNETXMS_EXPORTABLE ConnectToHost(const InetAddress& addr, UINT16 port, 
    return s;
 }
 
-/**
- * Resolve host name to IP address (UNICODE version)
- *
- * @param name host name or IP address
- * @return IP address in network byte order
- */
-UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameW(const WCHAR *name)
-{
-   char mbName[256];
-   WideCharToMultiByte(CP_ACP, WC_COMPOSITECHECK | WC_DEFAULTCHAR, name, -1, mbName, 256, NULL, NULL);
-   return ResolveHostNameA(mbName);
-}
-
-/**
- * Resolve host name to IP address (multibyte version)
- *
- * @param name host name or IP address
- * @return IP address in network byte order
- */
-UINT32 LIBNETXMS_EXPORTABLE ResolveHostNameA(const char *name)
-{
-   UINT32 addr = inet_addr(name);
-   if ((addr == INADDR_NONE) || (addr == INADDR_ANY))
-   {
-#if HAVE_GETHOSTBYNAME2_R
-      struct hostent h, *hs = NULL;
-      char buffer[1024];
-      int err;
-      gethostbyname2_r(name, AF_INET, &h, buffer, 1024, &hs, &err);
-#else
-      struct hostent *hs = gethostbyname(name);
-#endif
-      if (hs != NULL)
-      {
-         memcpy(&addr, hs->h_addr, sizeof(UINT32));
-      }
-      else
-      {
-         addr = INADDR_NONE;
-      }
-   }
-
-   return addr;
-}
-
 #ifndef VER_PLATFORM_WIN32_WINDOWS
 #define VER_PLATFORM_WIN32_WINDOWS 1
 #endif

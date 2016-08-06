@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -100,7 +100,7 @@ THREAD_RESULT THREAD_CALL MobileDeviceListener(void *arg)
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in));
    servAddr.sin_family = AF_INET;
-   servAddr.sin_addr.s_addr = !_tcscmp(g_szListenAddress, _T("*")) ? 0 : ResolveHostName(g_szListenAddress);
+   servAddr.sin_addr.s_addr = !_tcscmp(g_szListenAddress, _T("*")) ? 0 : htonl(InetAddress::resolveHostName(g_szListenAddress, AF_INET).getAddressV4());
    servAddr.sin_port = htons(wListenPort);
 
    // Bind socket
@@ -198,7 +198,8 @@ THREAD_RESULT THREAD_CALL MobileDeviceListenerIPv6(void *arg)
    // Fill in local address structure
    memset(&servAddr, 0, sizeof(struct sockaddr_in6));
    servAddr.sin6_family = AF_INET6;
-   //servAddr.sin6_addr.s6_addr = ResolveHostName(g_szListenAddress);
+   if (_tcscmp(g_szListenAddress, _T("*")))
+      memcpy(servAddr.sin6_addr.s6_addr, InetAddress::resolveHostName(g_szListenAddress, AF_INET6).getAddressV6(), 16);
    servAddr.sin6_port = htons(wListenPort);
 
    // Bind socket

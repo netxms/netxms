@@ -4933,7 +4933,7 @@ void ClientSession::createObject(NXCPMessage *request)
 		if (request->isFieldExist(VID_PRIMARY_NAME))
 		{
 			request->getFieldAsString(VID_PRIMARY_NAME, nodePrimaryName, MAX_DNS_NAME);
-         ipAddr = InetAddress::resolveHostName(nodePrimaryName);
+         ipAddr = ResolveHostName(zoneId, nodePrimaryName);
 		}
 		else
 		{
