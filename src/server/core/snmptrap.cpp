@@ -258,12 +258,11 @@ static void BroadcastNewTrap(ClientSession *pSession, void *pArg)
 /**
  * Process trap
  */
-void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine, bool isInformRq)
+void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int srcPort, SNMP_Transport *snmpTransport, SNMP_Engine *localEngine, bool isInformRq)
 {
    UINT32 dwBufPos, dwBufSize, dwMatchLen, dwMatchIdx;
    TCHAR *pszTrapArgs, szBuffer[4096];
    SNMP_Variable *pVar;
-   Node *pNode;
 	BOOL processed = FALSE;
    int iResult;
 
@@ -285,10 +284,10 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 	}
 
    // Match IP address to object
-   pNode = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, srcAddr);
+   Node *node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneId, srcAddr);
 
    // Write trap to log if required
-   if (m_bLogAllTraps || (pNode != NULL))
+   if (m_bLogAllTraps || (node != NULL))
    {
       NXCPMessage msg;
       TCHAR szQuery[8192], oidText[1024];
@@ -313,7 +312,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
                                 _T("ip_addr,object_id,trap_oid,trap_varlist) VALUES ")
                                 _T("(") INT64_FMT _T(",%d,'%s',%d,'%s',%s)"),
                  m_qnTrapId, dwTimeStamp, srcAddr.toString(szBuffer),
-                 (pNode != NULL) ? pNode->getId() : (UINT32)0, pdu->getTrapId()->toString(oidText, 1024),
+                 (node != NULL) ? node->getId() : (UINT32)0, pdu->getTrapId()->toString(oidText, 1024),
                  (const TCHAR *)DBPrepareString(g_dbDriver, pszTrapArgs));
       QueueSQLRequest(szQuery);
 
@@ -324,7 +323,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
       msg.setField(VID_TRAP_LOG_MSG_BASE, (QWORD)m_qnTrapId);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 1, dwTimeStamp);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 2, srcAddr);
-      msg.setField(VID_TRAP_LOG_MSG_BASE + 3, (pNode != NULL) ? pNode->getId() : (UINT32)0);
+      msg.setField(VID_TRAP_LOG_MSG_BASE + 3, (node != NULL) ? node->getId() : (UINT32)0);
       msg.setField(VID_TRAP_LOG_MSG_BASE + 4, pdu->getTrapId()->toString(oidText, 1024));
       msg.setField(VID_TRAP_LOG_MSG_BASE + 5, pszTrapArgs);
       EnumerateClientSessions(BroadcastNewTrap, &msg);
@@ -334,11 +333,11 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
    }
 
    // Process trap if it is coming from host registered in database
-   if (pNode != NULL)
+   if (node != NULL)
    {
-      DbgPrintf(4, _T("ProcessTrap: trap matched to node %s [%d]"), pNode->getName(), pNode->getId());
-      pNode->incSnmpTrapCount();
-      if ((pNode->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
+      DbgPrintf(4, _T("ProcessTrap: trap matched to node %s [%d]"), node->getName(), node->getId());
+      node->incSnmpTrapCount();
+      if ((node->getStatus() != STATUS_UNMANAGED) || (g_flags & AF_TRAPS_FROM_UNMANAGED_NODES))
       {
          UINT32 i;
 
@@ -349,7 +348,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
             {
                if (g_pModuleList[i].pfTrapHandler != NULL)
                {
-                  if (g_pModuleList[i].pfTrapHandler(pdu, pNode))
+                  if (g_pModuleList[i].pfTrapHandler(pdu, node))
 				      {
 					      processed = TRUE;
                      break;   // Trap was processed by the module
@@ -386,7 +385,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 
          if (dwMatchLen > 0)
          {
-            GenerateTrapEvent(pNode->getId(), dwMatchIdx, pdu, srcPort);
+            GenerateTrapEvent(node->getId(), dwMatchIdx, pdu, srcPort);
          }
          else     // Process unmatched traps
          {
@@ -411,7 +410,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 
                // Generate default event for unmatched traps
                const TCHAR *names[3] = { _T("oid"), NULL, _T("sourcePort") };
-               PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, pNode->getId(), "ssd", names,
+               PostEventWithNames(EVENT_SNMP_UNMATCHED_TRAP, node->getId(), "ssd", names,
                   pdu->getTrapId()->toString(oidText, 1024), pszTrapArgs, srcPort);
                free(pszTrapArgs);
             }
@@ -420,13 +419,13 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
       }
       else
       {
-         DbgPrintf(4, _T("ProcessTrap: Node %s [%d] is in UNMANAGED state, trap ignored"), pNode->getName(), pNode->getId());
+         DbgPrintf(4, _T("ProcessTrap: Node %s [%d] is in UNMANAGED state, trap ignored"), node->getName(), node->getId());
       }
    }
    else if (g_flags & AF_SNMP_TRAP_DISCOVERY)  // unknown node, discovery enabled
    {
       DbgPrintf(4, _T("ProcessTrap: trap not matched to node, adding new IP address %s for discovery"), srcAddr.toString(szBuffer));
-      Subnet *subnet = FindSubnetForNode(0, srcAddr);
+      Subnet *subnet = FindSubnetForNode(zoneId, srcAddr);
       if (subnet != NULL)
       {
          if (!subnet->getIpAddress().equals(srcAddr) && !srcAddr.isSubnetBroadcast(subnet->getIpAddress().getMaskBits()))
@@ -436,7 +435,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
             pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
             pInfo->ipAddr = srcAddr;
             pInfo->ipAddr.setMaskBits(subnet->getIpAddress().getMaskBits());
-				pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
+				pInfo->zoneId = zoneId;
 				pInfo->ignoreFilter = FALSE;
 				memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
             g_nodePollerQueue.put(pInfo);
@@ -448,7 +447,7 @@ void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Tr
 
          pInfo = (NEW_NODE *)malloc(sizeof(NEW_NODE));
          pInfo->ipAddr = srcAddr;
-			pInfo->zoneId = 0;	/* FIXME: add correct zone ID */
+			pInfo->zoneId = zoneId;
 			pInfo->ignoreFilter = FALSE;
 			memset(pInfo->bMacAddr, 0, MAC_ADDR_LENGTH);
          g_nodePollerQueue.put(pInfo);
@@ -668,7 +667,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *pArg)
 					   SNMP_SecurityContext *context = transport->getSecurityContext();
 					   context->setAuthoritativeEngine(localEngine);
 				   }
-               ProcessTrap(pdu, sourceAddr, ntohs(SA_PORT(&addr)), transport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
+               ProcessTrap(pdu, sourceAddr, 0, ntohs(SA_PORT(&addr)), transport, &localEngine, pdu->getCommand() == SNMP_INFORM_REQUEST);
 			   }
 			   else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))
 			   {

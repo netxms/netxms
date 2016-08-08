@@ -12,6 +12,7 @@
 - Agent data reconciliation block size and timeout can be configured
 - New agent parameters System.CPU.CurrentUsage and System.CPU.CurrentUsage(*)
 - SSH subagent (for collecting data and executing actions via SSH)
+- Zone ID can be set for agent in SNMP proxy mode
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu

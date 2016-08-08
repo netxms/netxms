@@ -1,6 +1,6 @@
 /*
 ** NetXMS multiplatform core agent
-** Copyright (C) 2003-2015 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -642,6 +642,7 @@ extern UINT32 g_dwSNMPTimeout;
 extern UINT32 g_dwSNMPTrapPort;
 extern UINT32 g_longRunningQueryThreshold;
 extern UINT16 g_sessionAgentPort;
+extern UINT32 g_zoneId;
 
 extern Config *g_config;
 

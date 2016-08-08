@@ -25,7 +25,7 @@
 /**
  * Externals
  */
-void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
+void ProcessTrap(SNMP_PDU *pdu, const InetAddress& srcAddr, UINT32 zoneId, int srcPort, SNMP_Transport *pTransport, SNMP_Engine *localEngine, bool isInformRq);
 
 /**
  * Destructor for extended agent connection class
@@ -351,7 +351,8 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
          UINT32 pduLenght = msg->getFieldAsUInt32(VID_PDU_SIZE);
          BYTE *pduBytes = (BYTE*)malloc(pduLenght);
          msg->getFieldAsBinary(VID_PDU, pduBytes, pduLenght);
-         Node *originNode = FindNodeByIP(0, originSenderIP);
+         UINT32 zoneId = IsZoningEnabled() ? msg->getFieldAsUInt32(VID_ZONE_ID) : 0;
+         Node *originNode = FindNodeByIP(zoneId, originSenderIP);
          if ((originNode != NULL) || ConfigReadInt(_T("LogAllSNMPTraps"), FALSE))
          {
             SNMP_PDU *pdu = new SNMP_PDU;
@@ -367,7 +368,7 @@ void AgentConnectionEx::onSnmpTrap(NXCPMessage *msg)
                      SNMP_SecurityContext *context = snmpTransport->getSecurityContext();
                      context->setAuthoritativeEngine(localEngine);
                   }
-                  ProcessTrap(pdu, originSenderIP, msg->getFieldAsUInt16(VID_PORT), snmpTransport, &localEngine, isInformRequest);
+                  ProcessTrap(pdu, originSenderIP, zoneId, msg->getFieldAsUInt16(VID_PORT), snmpTransport, &localEngine, isInformRequest);
                   delete snmpTransport;
                }
                else if ((pdu->getVersion() == SNMP_VERSION_3) && (pdu->getCommand() == SNMP_GET_REQUEST) && (pdu->getAuthoritativeEngine().getIdLen() == 0))

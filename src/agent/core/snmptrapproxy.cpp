@@ -155,6 +155,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapSender(void *pArg)
       msg->setField(VID_PORT, pdu->port);
       msg->setField(VID_PDU_SIZE, pdu->lenght);
       msg->setField(VID_PDU, pdu->rawMessage, pdu->lenght);
+      msg->setField(VID_ZONE_ID, g_zoneId);
 
       if (g_dwFlags & AF_SUBAGENT_LOADER)
       {

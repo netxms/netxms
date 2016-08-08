@@ -166,6 +166,7 @@ UINT32 g_longRunningQueryThreshold = 250;
 UINT32 g_dcReconciliationBlockSize = 1024;
 UINT32 g_dcReconciliationTimeout = 15000;
 UINT32 g_dcMaxCollectorPoolSize = 64;
+UINT32 g_zoneId = 0;
 #ifdef _WIN32
 UINT16 g_sessionAgentPort = 28180;
 #else
@@ -284,6 +285,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList, NULL },
    { _T("TimeOut"), CT_IGNORE, 0, 0, 0, 0, NULL, NULL },
    { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, s_processToWaitFor, NULL },
+   { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneId, NULL },
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL, NULL }
 };
 
