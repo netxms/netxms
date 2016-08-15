@@ -8,10 +8,6 @@ portcheck_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxm
 if USE_INTERNAL_LIBTRE
 portcheck_la_LIBADD += @top_srcdir@/src/libtre/libnxtre.la
 endif
-if USE_ENCRYPTION
-portcheck_la_LIBADD += -lssl
-endif
-
 
 EXTRA_DIST = main.h net.h portcheck.vcproj
 

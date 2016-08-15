@@ -4,10 +4,10 @@ libstrophe_la_SOURCES = auth.c conn.c ctx.c event.c handler.c hash.c jid.c \
                         stanza.c tls_openssl.c util.c
 libstrophe_la_CPPFLAGS = -I@top_srcdir@/include
 libstrophe_la_LDFLAGS = -version-info $(NETXMS_LIBRARY_VERSION)
-libstrophe_la_LIBADD = -lssl
+libstrophe_la_LIBADD =
 if USE_INTERNAL_EXPAT
 libstrophe_la_CPPFLAGS += -I@top_srcdir@/src/libexpat/libexpat
-libstrophe_la_LIBADD += ../libexpat/libexpat/libnxexpat.la -lssl
+libstrophe_la_LIBADD += ../libexpat/libexpat/libnxexpat.la
 endif
 
 EXTRA_DIST = \
