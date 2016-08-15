@@ -485,7 +485,7 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
 	if (success)
 	{
 	   lockProperties();
-	   setModified(false);
+	   setModified();
 	   unlockProperties();
 	}
    return success;
