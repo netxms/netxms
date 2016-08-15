@@ -59,7 +59,6 @@ BUILD_AGENT="no"
 BUILD_CLIENT="no"
 BUILD_STATIC_AGENT="no"
 BUILD_SDK="no"
-NEED_ZLIB="no"
 MODULES="libnetxms tools install"
 STATIC_SUBAGENT_LIST=""
 PROPOSED_STATIC_SUBAGENTS="default"
@@ -618,7 +617,6 @@ fi
 
 check_substr "$COMPONENTS" "snmp"
 if test $? = 0; then
-	NEED_ZLIB="yes"
 	MODULES="$MODULES snmp"
 fi
 
@@ -791,7 +789,6 @@ fi
 check_substr "$COMPONENTS" "client"
 if test $? = 0; then
 	BUILD_CLIENT="yes"
-	NEED_ZLIB="yes"
 	MODULES="$MODULES client"
 	CLIENT_COMPONENTS="$CLIENT_COMPONENTS nxalarm nxevent nxpush nxsms"
 fi
@@ -841,7 +838,6 @@ fi
 
 check_substr "$COMPONENTS" "raspberrypi"
 if test $? = 0; then
-	NEED_ZLIB="yes"
 	SUBAGENT_DIRS="$SUBAGENT_DIRS rpi"
 fi
 
@@ -1697,19 +1693,17 @@ if test $? = 0; then
 	fi
 fi
 
-if test "x$NEED_ZLIB" = "xyes"; then
-	if test "x$FORCE_INTERNAL_ZLIB" = "xyes"; then
-		HAVE_ZLIB=no
-	else
-		HAVE_ZLIB=yes
-		AC_CHECK_HEADER(zlib.h,,HAVE_ZLIB=no)
-		if test "x$HAVE_ZLIB" = "xyes"; then
-			AC_CHECK_LIB(z, deflate, [], [ HAVE_ZLIB=no ])
-		fi
+if test "x$FORCE_INTERNAL_ZLIB" = "xyes"; then
+	HAVE_ZLIB=no
+else
+	HAVE_ZLIB=yes
+	AC_CHECK_HEADER(zlib.h,,HAVE_ZLIB=no)
+	if test "x$HAVE_ZLIB" = "xyes"; then
+		AC_CHECK_LIB(z, deflate, [], [ HAVE_ZLIB=no ])
 	fi
-	if test "x$HAVE_ZLIB" = "xno"; then
-		MODULES="zlib $MODULES"
-	fi
+fi
+if test "x$HAVE_ZLIB" = "xno"; then
+	MODULES="zlib $MODULES"
 fi
 
 if test "x$FORCE_INTERNAL_EXPAT" = "xyes"; then
@@ -3034,7 +3028,7 @@ AM_CONDITIONAL([USE_INTERNAL_EXPAT], [test "x$HAVE_LIBEXPAT" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_LIBTRE], [test "x$HAVE_LIBTRE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_JANSSON], [test "x$HAVE_JANSSON" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_SQLITE], [test "x$HAVE_SQLITE" = "xno"])
-AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$NEED_ZLIB/$HAVE_ZLIB" = "yes/no"])
+AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$HAVE_ZLIB" = "no"])
 AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
 AM_CONDITIONAL([USE_ENCRYPTION], [test "x${HAVE_LIBCRYPTO}" = "xyes"])
@@ -3469,12 +3463,10 @@ if test $? = 0; then
 		echo "Use internal sqlite     : NO"
 	fi
 fi
-if test "x${NEED_ZLIB}" = "xyes"; then
-	if test "x${HAVE_ZLIB}" = "xno"; then
-		echo "Use internal zlib       : YES"
-	else
-		echo "Use internal zlib       : NO"
-	fi
+if test "x${HAVE_ZLIB}" = "xno"; then
+	echo "Use internal zlib       : YES"
+else
+	echo "Use internal zlib       : NO"
 fi
 if test "x${FORCE_32BIT_BUILD}" = "xyes"; then
 	echo "Force 32bit build       : YES"

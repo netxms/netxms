@@ -594,6 +594,41 @@ static void TestTable()
    AssertEquals(table->getNumRows(), 1);
    AssertEquals(table->getNumColumns(), 0);
    EndTest();
+
+   table->addColumn(_T("NAME"));
+   table->addColumn(_T("VALUE"));
+   table->addColumn(_T("DATA1"));
+   table->addColumn(_T("DATA2"));
+   table->addColumn(_T("DATA3"));
+   table->addColumn(_T("DATA4"));
+   for(int i = 0; i < 50; i++)
+   {
+      table->addRow();
+      TCHAR b[64];
+      _sntprintf(b, 64, _T("Process #%d"), i);
+      table->set(0, b);
+      table->set(1, i);
+      table->set(2, i * 100);
+      table->set(3, i * 100001);
+      table->set(4, _T("/some/long/path/on/file/system"));
+      table->set(5, _T("constant"));
+   }
+
+   StartTest(_T("Table: pack"));
+   INT64 start = GetCurrentTimeMs();
+   char *packedTable = table->createPackedXML();
+   AssertNotNull(packedTable);
+   EndTest(GetCurrentTimeMs() - start);
+
+   StartTest(_T("Table: unpack"));
+   start = GetCurrentTimeMs();
+   Table *table2 = Table::createFromPackedXML(packedTable);
+   free(packedTable);
+   AssertNotNull(table2);
+   AssertEquals(table2->getNumColumns(), table->getNumColumns());
+   AssertEquals(table2->getNumRows(), table->getNumRows());
+   AssertEquals(table2->getAsInt(10, 1), table->getAsInt(10, 1));
+   EndTest(GetCurrentTimeMs() - start);
 }
 
 /**

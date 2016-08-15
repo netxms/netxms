@@ -22,6 +22,10 @@
 
 #include "libnetxms.h"
 #include <expat.h>
+#include <zlib.h>
+
+#define DEFAULT_OBJECT_ID  (0)
+#define DEFAULT_STATUS     (-1)
 
 /**
  * Create empty table row
@@ -30,7 +34,7 @@ TableRow::TableRow(int columnCount)
 {
    m_cells = new ObjectArray<TableCell>(columnCount, 8, true);
    for(int i = 0; i < columnCount; i++)
-      m_cells->add(new TableCell);
+      m_cells->add(new TableCell());
    m_objectId = 0;
 }
 
@@ -81,6 +85,26 @@ Table::Table(Table *src) : RefCountObject()
    m_columns = new ObjectArray<TableColumnDefinition>(src->m_columns->size(), 8, true);
 	for(i = 0; i < src->m_columns->size(); i++)
       m_columns->add(new TableColumnDefinition(src->m_columns->get(i)));
+}
+
+/**
+ * Table destructor
+ */
+Table::~Table()
+{
+   destroy();
+   delete m_columns;
+   delete m_data;
+}
+
+/**
+ * Destroy table data
+ */
+void Table::destroy()
+{
+   m_columns->clear();
+   m_data->clear();
+   safe_free(m_title);
 }
 
 /**
@@ -175,7 +199,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
       if (ps->state == XML_STATE_DATA)
       {
          ps->table->addRow();
-         ps->table->setObjectId(ps->table->getNumRows() - 1, XMLGetAttrInt(attrs, "objectId", 0));
+         ps->table->setObjectId(ps->table->getNumRows() - 1, XMLGetAttrInt(attrs, "objectId", DEFAULT_OBJECT_ID));
          ps->column = 0;
 		   ps->state = XML_STATE_ROW;
       }
@@ -188,7 +212,7 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 	{
       if (ps->state == XML_STATE_ROW)
       {
-         ps->table->setStatus(ps->column, XMLGetAttrInt(attrs, "status", 0));
+         ps->table->setStatus(ps->column, XMLGetAttrInt(attrs, "status", DEFAULT_STATUS));
          ps->state = XML_STATE_CELL;
          ps->buffer->clear();
       }
@@ -286,6 +310,38 @@ Table *Table::createFromXML(const char *xml)
 }
 
 /**
+ * Create table from packed XML document
+ */
+Table *Table::createFromPackedXML(const char *packedXml)
+{
+   char *compressedXml = NULL;
+   size_t compressedSize = 0;
+   base64_decode_alloc(packedXml, strlen(packedXml), &compressedXml, &compressedSize);
+   if (compressedXml == NULL)
+      return NULL;
+
+   size_t xmlSize = (size_t)ntohl(*((UINT32 *)compressedXml));
+   char *xml = (char *)malloc(xmlSize + 1);
+   uLongf uncompSize = (uLongf)xmlSize;
+   if (uncompress((BYTE *)xml, &uncompSize, (BYTE *)&compressedXml[4], compressedSize - 4) != Z_OK)
+   {
+      free(xml);
+      return NULL;
+   }
+   xml[xmlSize] = 0;
+
+   Table *table = new Table();
+   if (table->parseXML(xml))
+   {
+      free(xml);
+      return table;
+   }
+   free(xml);
+   delete table;
+   return NULL;
+}
+
+/**
  * Create XML document from table
  */
 TCHAR *Table::createXML()
@@ -304,11 +360,26 @@ TCHAR *Table::createXML()
    xml.append(_T("<data>\r\n"));
    for(i = 0; i < m_data->size(); i++)
    {
-      xml.appendFormattedString(_T("<tr objectId=\"%d\">\r\n"), m_data->get(i)->getObjectId());
+      UINT32 objectId = m_data->get(i)->getObjectId();
+      if (objectId != DEFAULT_OBJECT_ID)
+         xml.appendFormattedString(_T("<tr objectId=\"%u\">\r\n"), objectId);
+      else
+         xml.append(_T("<tr>\r\n"));
       for(int j = 0; j < m_columns->size(); j++)
       {
-         xml.appendFormattedString(_T("<td status=\"%d\">%s</td>\r\n"), m_data->get(i)->getStatus(j),
-                                    (const TCHAR *)EscapeStringForXML2(m_data->get(i)->getValue(j), -1));
+         int status = m_data->get(i)->getStatus(j);
+         if (status != DEFAULT_STATUS)
+         {
+            xml.append(_T("<td status=\""));
+            xml.append(status);
+            xml.append(_T("\">"));
+         }
+         else
+         {
+            xml.append(_T("<td>"));
+         }
+         xml.append((const TCHAR *)EscapeStringForXML2(m_data->get(i)->getValue(j), -1));
+         xml.append(_T("</td>\r\n"));
       }
       xml.append(_T("</tr>\r\n"));
    }
@@ -318,23 +389,30 @@ TCHAR *Table::createXML()
 }
 
 /**
- * Table destructor
+ * Create packed XML document
  */
-Table::~Table()
+char *Table::createPackedXML()
 {
-	destroy();
-   delete m_columns;
-   delete m_data;
-}
-
-/**
- * Destroy table data
- */
-void Table::destroy()
-{
-   m_columns->clear();
-   m_data->clear();
-	safe_free(m_title);
+   TCHAR *xml = createXML();
+   if (xml == NULL)
+      return NULL;
+   char *utf8xml = UTF8StringFromTString(xml);
+   free(xml);
+   size_t len = strlen(utf8xml);
+   uLongf buflen = compressBound(len);
+   BYTE *buffer = (BYTE *)malloc(buflen + 4);
+   if (compress(&buffer[4], &buflen, (BYTE *)utf8xml, len) != Z_OK)
+   {
+      free(utf8xml);
+      free(buffer);
+      return NULL;
+   }
+   free(utf8xml);
+   char *encodedBuffer = NULL;
+   *((UINT32 *)buffer) = htonl((UINT32)len);
+   base64_encode_alloc((char *)buffer, buflen + 4, &encodedBuffer);
+   free(buffer);
+   return encodedBuffer;
 }
 
 /**
