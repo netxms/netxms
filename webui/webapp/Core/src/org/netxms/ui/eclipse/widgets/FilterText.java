@@ -51,6 +51,7 @@ public class FilterText extends Composite
 	private Composite buttonArea;
 	private List<Button> attrButtons = new ArrayList<Button>(4);
 	private Label closeButton;
+	private Label clearButton;
 	private Action closeAction = null;
 	private int delay = 300;
 	private Set<ModifyListener> modifyListeners = new HashSet<ModifyListener>();
@@ -64,7 +65,7 @@ public class FilterText extends Composite
 	{
 		super(parent, style);
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 4;
+		layout.numColumns = 5;
 		setLayout(layout);
 		
 		final Label label = new Label(this, SWT.NONE);
@@ -121,6 +122,39 @@ public class FilterText extends Composite
 		gd.heightHint = 1;
 		buttonArea.setLayoutData(gd);
 		
+		clearButton = new Label(this, SWT.NONE);
+		clearButton.setBackground(getBackground());
+		clearButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+		clearButton.setImage(SharedIcons.IMG_CLEAR);
+		clearButton.setToolTipText("Clear");
+		gd = new GridData();
+		gd.verticalAlignment = SWT.CENTER;
+		clearButton.setLayoutData(gd);
+		clearButton.addMouseListener(new MouseListener() {
+		   private boolean doAction = false;
+		   
+		   @Override
+		   public void mouseDoubleClick(MouseEvent e)
+		   {
+		      if (e.button ==1)
+		         doAction = false;
+		   }
+		   
+		   @Override
+		   public void mouseDown(MouseEvent e)
+		   {
+		      if (e.button == 1)
+		         doAction = true;
+		   }
+		   
+		   @Override
+		   public void mouseUp(MouseEvent e)
+		   {
+		      if ((e.button == 1) && doAction)
+		         clearFilter();
+		   }
+		});		
+		
 		closeButton = new Label(this, SWT.NONE);
 		closeButton.setBackground(getBackground());
 		closeButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
@@ -155,6 +189,12 @@ public class FilterText extends Composite
 			}
 		});
 	}
+	
+	private void clearFilter()
+   {
+	   if (text.getText().equals("") != true)
+	      text.setText("");
+   }
 	
 	/**
 	 * Close filter widget
