@@ -232,6 +232,7 @@ void LIBNETXMS_EXPORTABLE ThreadPoolDestroy(ThreadPool *p)
 
    ConditionSet(p->maintThreadStop);
    ThreadJoin(p->maintThread);
+   ConditionDestroy(p->maintThreadStop);
 
    WorkRequest rq;
    rq.func = NULL;
