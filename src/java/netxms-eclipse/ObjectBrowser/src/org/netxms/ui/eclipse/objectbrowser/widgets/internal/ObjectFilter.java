@@ -45,6 +45,7 @@ public class ObjectFilter extends ViewerFilter
 	private static final int NAME = 1;
 	private static final int COMMENTS = 2;
 	private static final int IP_ADDRESS = 3;
+	private static final int OBJECT_ID = 4;
 	
 	private String filterString = null;
 	private boolean hideUnmanaged = false;
@@ -109,6 +110,13 @@ public class ObjectFilter extends ViewerFilter
                return ((AccessPoint)object).getIpAddress().getHostAddress().startsWith(filterString);
             }
 			   return false;
+			case OBJECT_ID:
+			   if (object instanceof AbstractObject)
+			   {
+			      long objectID = ((AbstractObject)object).getObjectId();
+			      return String.valueOf(objectID).startsWith(filterString);
+			   }
+            return false;
 			case COMMENTS:
 				return object.getComments().toLowerCase().contains(filterString);
 		}
@@ -173,6 +181,11 @@ public class ObjectFilter extends ViewerFilter
 			{
 				mode = IP_ADDRESS;
 				this.filterString = filterString.substring(1);
+			}
+			else if (filterString.charAt(0) == '#')
+			{
+			   mode = OBJECT_ID;
+			   this.filterString = filterString.substring(1);
 			}
 			else
 			{
