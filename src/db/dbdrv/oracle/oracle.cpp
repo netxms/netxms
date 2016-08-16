@@ -493,6 +493,7 @@ static void BindNormal(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, 
 			break;
 		case DB_CTYPE_INT64:	// OCI prior to 11.2 cannot bind 64 bit integers
 		   sqlBuffer = malloc(sizeof(OCINumber));
+         stmt->buffers->set(pos - 1, sqlBuffer);
 		   OCINumberFromInt(stmt->handleError, buffer, sizeof(INT64), OCI_NUMBER_SIGNED, (OCINumber *)sqlBuffer);
          OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer, sizeof(OCINumber),
                       SQLT_VNU, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
@@ -501,6 +502,7 @@ static void BindNormal(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, 
 			break;
 		case DB_CTYPE_UINT64:	// OCI prior to 11.2 cannot bind 64 bit integers
          sqlBuffer = malloc(sizeof(OCINumber));
+         stmt->buffers->set(pos - 1, sqlBuffer);
          OCINumberFromInt(stmt->handleError, buffer, sizeof(INT64), OCI_NUMBER_UNSIGNED, (OCINumber *)sqlBuffer);
          OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer, sizeof(OCINumber),
                       SQLT_VNU, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
