@@ -103,6 +103,7 @@ public class LastValuesWidget extends Composite
 	private Action actionShowUnsupported;
 	private Action actionExportToCsv;
 	private Action actionCopyToClipboard;
+	private Action actionCopyDciName;
 	private List<OpenHandlerData> openHandlers = new ArrayList<OpenHandlerData>(0);
 	
 	/**
@@ -310,6 +311,14 @@ public class LastValuesWidget extends Composite
             copySelection();
          }
       };
+      
+      actionCopyDciName = new Action("Copy DCI Name", SharedIcons.COPY) {
+         @Override
+         public void run()
+         {
+            copySelectionDciName();
+         }
+      };
 	}
 	
 	/**
@@ -345,6 +354,7 @@ public class LastValuesWidget extends Composite
 		manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       manager.add(new Separator());
 		manager.add(actionCopyToClipboard);
+		manager.add(actionCopyDciName);
 		manager.add(actionExportToCsv);
 		manager.add(new Separator());
 		manager.add(new GroupMarker(GroupMarkers.MB_SECONDARY));
@@ -690,5 +700,25 @@ public class LastValuesWidget extends Composite
 	   if (selection.size() > 1)
 	      sb.append(nl);
 	   WidgetHelper.copyToClipboard(sb.toString());
+	}
+	
+	/**
+	 * Copy DCI name of selection
+	 */
+	private void copySelectionDciName()
+	{
+	   IStructuredSelection selection = (IStructuredSelection)dataViewer.getSelection();
+      if (selection.isEmpty())
+         return;
+      
+      StringBuilder dciName = new StringBuilder();
+      for(Object o : selection.toList())
+      {
+         if (dciName.length() > 0)
+            dciName.append(' ');
+         DciValue v = (DciValue)o;
+         dciName.append(v.getName());
+      }
+      WidgetHelper.copyToClipboard(dciName.toString());
 	}
 }
