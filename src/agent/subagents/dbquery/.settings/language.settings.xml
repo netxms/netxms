@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project>
-	<configuration id="cdt.managedbuild.toolchain.gnu.base.1504455139" name="Default">
+	<configuration id="cdt.managedbuild.toolchain.gnu.base.2117550996" name="Default">
 		<extension point="org.eclipse.cdt.core.LanguageSettingsProvider">
 			<provider class="org.eclipse.cdt.core.language.settings.providers.LanguageSettingsGenericProvider" id="org.eclipse.cdt.ui.UserLanguageSettingsProvider" name="CDT User Setting Entries" prefer-non-shared="true"/>
 			<provider-reference id="org.eclipse.cdt.core.ReferencedProjectsLanguageSettingsProvider" ref="shared-provider"/>
