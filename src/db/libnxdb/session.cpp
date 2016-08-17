@@ -939,6 +939,44 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
 }
 
 /**
+ * Get field's value from unbuffered SELECT result as UTF-8 string
+ */
+char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColumn, char *pBuffer, int iBufSize)
+{
+   /* FIXME: add appropriate call to DB drivers */
+   TCHAR *tmp = DBGetField(hResult, iColumn, NULL, 0);
+   if (tmp == NULL)
+      return NULL;
+
+   char *s;
+#ifdef UNICODE
+   if (pBuffer != NULL)
+   {
+      s = pBuffer;
+      WideCharToMultiByte(CP_UTF8, 0, tmp, -1, s, iBufSize, NULL, NULL);
+      s[iBufSize - 1] = 0;
+   }
+   else
+   {
+      s = UTF8StringFromWideString(tmp);
+   }
+#else
+   if (pBuffer != NULL)
+   {
+      s = pBuffer;
+      mb_to_utf8(tmp, -1, s, iBufSize);
+      s[iBufSize - 1] = 0;
+   }
+   else
+   {
+      s = UTF8StringFromMBString(tmp);
+   }
+#endif
+   free(tmp);
+   return s;
+}
+
+/**
  * Get field's value as unsigned long from unbuffered SELECT result
  */
 UINT32 LIBNXDB_EXPORTABLE DBGetFieldULong(DB_UNBUFFERED_RESULT hResult, int iColumn)

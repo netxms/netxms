@@ -4019,90 +4019,35 @@ void ClientSession::sendDCIThresholds(NXCPMessage *request)
 }
 
 /**
- * Prepare statement for reading data from idata table
+ * Prepare statement for reading data from idata/tdata table
  */
-static DB_STATEMENT PrepareIDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxRows, const TCHAR *condition)
+static DB_STATEMENT PrepareDataSelect(DB_HANDLE hdb, UINT32 nodeId, int dciType, UINT32 maxRows, const TCHAR *condition)
 {
 	TCHAR query[512];
 
+	const TCHAR *tablePrefix = (dciType == DCO_TYPE_ITEM) ? _T("idata") : _T("tdata");
 	switch(g_dbSyntax)
 	{
 		case DB_SYNTAX_MSSQL:
-			_sntprintf(query, 512, _T("SELECT TOP %d idata_timestamp,idata_value FROM idata_%d WHERE item_id=?%s ORDER BY idata_timestamp DESC"),
-			           (int)maxRows, (int)nodeId, condition);
+			_sntprintf(query, 512, _T("SELECT TOP %d %s_timestamp,%s_value FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC"),
+			           (int)maxRows, tablePrefix, tablePrefix, tablePrefix, (int)nodeId, condition, tablePrefix);
 			break;
 		case DB_SYNTAX_ORACLE:
-			_sntprintf(query, 512, _T("SELECT * FROM (SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=?%s ORDER BY idata_timestamp DESC) WHERE ROWNUM<=%d"),
-						  (int)nodeId, condition, (int)maxRows);
+			_sntprintf(query, 512, _T("SELECT * FROM (SELECT %s_timestamp,%s_value FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC) WHERE ROWNUM<=%d"),
+			           tablePrefix, tablePrefix, tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
 			break;
 		case DB_SYNTAX_MYSQL:
 		case DB_SYNTAX_PGSQL:
 		case DB_SYNTAX_SQLITE:
-			_sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=?%s ORDER BY idata_timestamp DESC LIMIT %d"),
-						  (int)nodeId, condition, (int)maxRows);
+			_sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC LIMIT %d"),
+			           tablePrefix, tablePrefix, tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
 			break;
 		case DB_SYNTAX_DB2:
-		   _sntprintf(query, 512, _T("SELECT idata_timestamp,idata_value FROM idata_%d WHERE item_id=?%s ORDER BY idata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
-		      (int)nodeId, condition, (int)maxRows);
+		   _sntprintf(query, 512, _T("SELECT %s_timestamp,%s_value FROM %s_%d WHERE item_id=?%s ORDER BY %s_timestamp DESC FETCH FIRST %d ROWS ONLY"),
+		              tablePrefix, tablePrefix, tablePrefix, (int)nodeId, condition, tablePrefix, (int)maxRows);
 		   break;
 		default:
-			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareIDataSelect"));
-			return NULL;	// Unsupported database
-	}
-	return DBPrepare(hdb, query);
-}
-
-/**
- * Prepare statement for reading data from tdata table
- */
-static DB_STATEMENT PrepareTDataSelect(DB_HANDLE hdb, UINT32 nodeId, UINT32 maxRows, const TCHAR *condition)
-{
-	TCHAR query[1024];
-
-	switch(g_dbSyntax)
-	{
-		case DB_SYNTAX_MSSQL:
-			_sntprintf(query, 1024,
-                    _T("SELECT TOP %d d.tdata_timestamp, r.value FROM tdata_%d d")
-                    _T("   INNER JOIN tdata_records_%d rec ON rec.record_id=d.record_id ")
-                    _T("   INNER JOIN tdata_rows_%d r ON r.row_id=rec.row_id ")
-                    _T("WHERE d.item_id=? AND rec.instance=? AND r.column_id=? %s ")
-                    _T("ORDER BY d.tdata_timestamp DESC"),
-			           (int)maxRows, (int)nodeId, (int)nodeId, (int)nodeId, condition);
-			break;
-		case DB_SYNTAX_ORACLE:
-			_sntprintf(query, 1024,
-                    _T("SELECT * FROM (")
-                    _T("   SELECT d.tdata_timestamp, r.value FROM tdata_%d d")
-                    _T("      INNER JOIN tdata_records_%d rec ON rec.record_id=d.record_id")
-                    _T("      INNER JOIN tdata_rows_%d r ON r.row_id=rec.row_id")
-                    _T("   WHERE d.item_id=? AND rec.instance=? AND r.column_id=? %s")
-                    _T("   ORDER BY d.tdata_timestamp DESC)")
-                    _T("WHERE ROWNUM<=%d"),
-			           (int)nodeId, (int)nodeId, (int)nodeId, condition, (int)maxRows);
-			break;
-		case DB_SYNTAX_MYSQL:
-		case DB_SYNTAX_PGSQL:
-		case DB_SYNTAX_SQLITE:
-			_sntprintf(query, 1024,
-                    _T("SELECT d.tdata_timestamp, r.value FROM tdata_%d d")
-                    _T("   INNER JOIN tdata_records_%d rec ON rec.record_id=d.record_id ")
-                    _T("   INNER JOIN tdata_rows_%d r ON r.row_id=rec.row_id ")
-                    _T("WHERE d.item_id=? AND rec.instance=? AND r.column_id=? %s ")
-                    _T("ORDER BY d.tdata_timestamp DESC LIMIT %d"),
-			           (int)nodeId, (int)nodeId, (int)nodeId, condition, (int)maxRows);
-			break;
-		case DB_SYNTAX_DB2:
-			_sntprintf(query, 1024,
-                    _T("SELECT d.tdata_timestamp, r.value FROM tdata_%d d")
-                    _T("   INNER JOIN tdata_records_%d rec ON rec.record_id=d.record_id ")
-                    _T("   INNER JOIN tdata_rows_%d r ON r.row_id=rec.row_id ")
-                    _T("WHERE d.item_id=? AND rec.instance=? AND r.column_id=? %s ")
-                    _T("ORDER BY d.tdata_timestamp DESC FETCH FIRST %d ROWS ONLY"),
-			           (int)nodeId, (int)nodeId, (int)nodeId, condition, (int)maxRows);
-			break;
-		default:
-			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareTDataSelect"));
+			DbgPrintf(1, _T(">>> INTERNAL ERROR: unsupported database in PrepareDataSelect"));
 			return NULL;	// Unsupported database
 	}
 	return DBPrepare(hdb, query);
@@ -4178,7 +4123,8 @@ bool ClientSession::getCollectedDataFromDB(NXCPMessage *request, NXCPMessage *re
             goto read_from_db;
          }
 
-         TCHAR *instance = request->getFieldAsString(VID_INSTANCE);
+         TCHAR instance[256];
+         request->getFieldAsString(VID_INSTANCE, instance, 256);
          int row = t->findRowByInstance(instance);
 
          switch(((DCTable *)dci)->getColumnDataType(dataColumn))
@@ -4278,38 +4224,24 @@ read_from_db:
 
 	TCHAR condition[256] = _T("");
 	if (timeFrom != 0)
-		_tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND d.tdata_timestamp>=?") : _T(" AND idata_timestamp>=?"));
+		_tcscpy(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp>=?") : _T(" AND idata_timestamp>=?"));
 	if (timeTo != 0)
-		_tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND d.tdata_timestamp<=?") : _T(" AND idata_timestamp<=?"));
+		_tcscat(condition, (dciType == DCO_TYPE_TABLE) ? _T(" AND tdata_timestamp<=?") : _T(" AND idata_timestamp<=?"));
 
 	bool success = false;
 	DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-	DB_STATEMENT hStmt;
-	switch(dciType)
-	{
-		case DCO_TYPE_ITEM:
-			hStmt = PrepareIDataSelect(hdb, dcTarget->getId(), maxRows, condition);
-			break;
-		case DCO_TYPE_TABLE:
-			hStmt = PrepareTDataSelect(hdb, dcTarget->getId(), maxRows, condition);
-			break;
-		default:
-			hStmt = NULL;
-			break;
-	}
-
+	DB_STATEMENT hStmt = PrepareDataSelect(hdb, dcTarget->getId(), dciType, maxRows, condition);
 	if (hStmt != NULL)
 	{
 		TCHAR dataColumn[MAX_COLUMN_NAME] = _T("");
+      TCHAR instance[256];
 
 		int pos = 1;
 		DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, dci->getId());
 		if (dciType == DCO_TYPE_TABLE)
 		{
 			request->getFieldAsString(VID_DATA_COLUMN, dataColumn, MAX_COLUMN_NAME);
-
-			DBBind(hStmt, pos++, DB_SQLTYPE_VARCHAR, request->getFieldAsString(VID_INSTANCE), DB_BIND_DYNAMIC);
-			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, DCTable::columnIdFromName(dataColumn));
+         request->getFieldAsString(VID_INSTANCE, instance, 256);
 		}
 		if (timeFrom != 0)
 			DBBind(hStmt, pos++, DB_SQLTYPE_INTEGER, timeFrom);
@@ -4363,33 +4295,81 @@ read_from_db:
             rows++;
 
 				pCurr->timeStamp = htonl(DBGetFieldULong(hResult, 0));
-				switch(dataType)
+				if (dciType == DCO_TYPE_ITEM)
 				{
-					case DCI_DT_INT:
-					case DCI_DT_UINT:
-						pCurr->value.int32 = htonl(DBGetFieldULong(hResult, 1));
-						break;
-					case DCI_DT_INT64:
-					case DCI_DT_UINT64:
-						pCurr->value.ext.v64.int64 = htonq(DBGetFieldUInt64(hResult, 1));
-						break;
-					case DCI_DT_FLOAT:
-						pCurr->value.ext.v64.real = htond(DBGetFieldDouble(hResult, 1));
-						break;
-					case DCI_DT_STRING:
+               switch(dataType)
+               {
+                  case DCI_DT_INT:
+                  case DCI_DT_UINT:
+                     pCurr->value.int32 = htonl(DBGetFieldULong(hResult, 1));
+                     break;
+                  case DCI_DT_INT64:
+                  case DCI_DT_UINT64:
+                     pCurr->value.ext.v64.int64 = htonq(DBGetFieldUInt64(hResult, 1));
+                     break;
+                  case DCI_DT_FLOAT:
+                     pCurr->value.ext.v64.real = htond(DBGetFieldDouble(hResult, 1));
+                     break;
+                  case DCI_DT_STRING:
 #ifdef UNICODE
 #ifdef UNICODE_UCS4
-						DBGetField(hResult, 1, szBuffer, MAX_DCI_STRING_VALUE);
-						ucs4_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
+                     DBGetField(hResult, 1, szBuffer, MAX_DCI_STRING_VALUE);
+                     ucs4_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #else
-						DBGetField(hResult, 1, pCurr->value.string, MAX_DCI_STRING_VALUE);
+                     DBGetField(hResult, 1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #endif
 #else
-						DBGetField(hResult, 1, szBuffer, MAX_DCI_STRING_VALUE);
-						mb_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
+                     DBGetField(hResult, 1, szBuffer, MAX_DCI_STRING_VALUE);
+                     mb_to_ucs2(szBuffer, -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
 #endif
-						SwapWideString(pCurr->value.string);
-						break;
+                     SwapWideString(pCurr->value.string);
+                     break;
+               }
+				}
+				else
+				{
+				   char *encodedTable = DBGetFieldUTF8(hResult, 1, NULL, 0);
+				   if (encodedTable != NULL)
+				   {
+				      Table *table = Table::createFromPackedXML(encodedTable);
+				      if (table != NULL)
+				      {
+				         int row = table->findRowByInstance(instance);
+				         int col = table->getColumnIndex(dataColumn);
+		               switch(dataType)
+		               {
+		                  case DCI_DT_INT:
+                           pCurr->value.int32 = htonl((UINT32)table->getAsInt(row, col));
+                           break;
+		                  case DCI_DT_UINT:
+		                     pCurr->value.int32 = htonl(table->getAsUInt(row, col));
+		                     break;
+		                  case DCI_DT_INT64:
+                           pCurr->value.ext.v64.int64 = htonq((UINT64)table->getAsInt64(row, col));
+                           break;
+		                  case DCI_DT_UINT64:
+		                     pCurr->value.ext.v64.int64 = htonq(table->getAsUInt64(row, col));
+		                     break;
+		                  case DCI_DT_FLOAT:
+		                     pCurr->value.ext.v64.real = htond(table->getAsDouble(row, col));
+		                     break;
+		                  case DCI_DT_STRING:
+#ifdef UNICODE
+#ifdef UNICODE_UCS4
+		                     ucs4_to_ucs2(CHECK_NULL_EX(table->getAsString(row, col)), -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
+#else
+		                     nx_strncpy(pCurr->value.string, CHECK_NULL_EX(table->getAsString(row, col)), MAX_DCI_STRING_VALUE);
+#endif
+#else
+		                     mb_to_ucs2(CHECK_NULL_EX(table->getAsString(row, col)), -1, pCurr->value.string, MAX_DCI_STRING_VALUE);
+#endif
+		                     SwapWideString(pCurr->value.string);
+		                     break;
+		               }
+				         delete table;
+				      }
+				      free(encodedTable);
+				   }
 				}
 				pCurr = (DCI_DATA_ROW *)(((char *)pCurr) + s_rowSize[dataType]);
 			}

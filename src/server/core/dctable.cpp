@@ -359,73 +359,16 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
 	   Table *data = (Table *)value;
 
 	   TCHAR query[256];
-	   _sntprintf(query, 256, _T("INSERT INTO tdata_%d (item_id,tdata_timestamp,record_id) VALUES (?,?,?)"), (int)nodeId);
+	   _sntprintf(query, 256, _T("INSERT INTO tdata_%d (item_id,tdata_timestamp,tdata_value) VALUES (?,?,?)"), (int)nodeId);
 	   DB_STATEMENT hStmt = DBPrepare(hdb, query);
 	   if (hStmt != NULL)
 	   {
 		   DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, tableId);
 		   DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (INT32)timestamp);
-		   DBBind(hStmt, 3, DB_SQLTYPE_BIGINT, recordId);
+		   DBBind(hStmt, 3, DB_SQLTYPE_TEXT, DB_CTYPE_UTF8_STRING, data->createPackedXML(), DB_BIND_DYNAMIC);
 	      success = DBExecute(hStmt);
 		   DBFreeStatement(hStmt);
 	   }
-
-      if (success)
-      {
-	      _sntprintf(query, 256, _T("INSERT INTO tdata_records_%d (record_id,row_id,instance) VALUES (?,?,?)"), (int)nodeId);
-	      DB_STATEMENT hStmt = DBPrepare(hdb, query);
-	      if (hStmt != NULL)
-	      {
-            DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, recordId);
-            for(int row = 0; row < data->getNumRows(); row++)
-            {
-               TCHAR instance[MAX_RESULT_LENGTH];
-               data->buildInstanceString(row, instance, MAX_RESULT_LENGTH);
-               DBBind(hStmt, 2, DB_SQLTYPE_BIGINT, recordId | (INT64)row);
-		         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, instance, DB_BIND_STATIC);
-	            success = DBExecute(hStmt);
-               if (!success)
-                  break;
-            }
-	         DBFreeStatement(hStmt);
-	      }
-      }
-
-      if (success)
-      {
-	      _sntprintf(query, 256, _T("INSERT INTO tdata_rows_%d (row_id,column_id,value) VALUES (?,?,?)"), (int)nodeId);
-	      DB_STATEMENT hStmt = DBPrepare(hdb, query);
-	      if (hStmt != NULL)
-	      {
-		      for(int col = 0; col < data->getNumColumns(); col++)
-		      {
-			      INT32 colId = columnIdFromName(data->getColumnName(col));
-			      if (colId == 0)
-				      continue;	// cannot get column ID
-
-			      for(int row = 0; row < data->getNumRows(); row++)
-			      {
-                  DBBind(hStmt, 1, DB_SQLTYPE_BIGINT, recordId | (INT64)row);
-				      DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, colId);
-                  const TCHAR *s = data->getAsString(row, col);
-                  if ((s == NULL) || (_tcslen(s) < MAX_DB_STRING))
-                  {
-				         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, s, DB_BIND_STATIC);
-                  }
-                  else
-                  {
-                     TCHAR *sp = (TCHAR *)nx_memdup(s, MAX_DB_STRING * sizeof(TCHAR));
-                     sp[MAX_DB_STRING - 1] = 0;
-				         DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, sp, DB_BIND_DYNAMIC);
-                  }
-				      success = DBExecute(hStmt);
-                  if (!success)
-                     break;
-			      }
-		      }
-	         DBFreeStatement(hStmt);
-         }
-      }
 
       if (success)
          DBCommit(hdb);
