@@ -264,6 +264,9 @@ AC_ARG_WITH(jdk,
 		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
 		LDFLAGS="$LDFLAGS -L${withval}/lib"
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		if test -d "${withval}/include/linux"; then
+			CPPFLAGS="$CPPFLAGS -I${withval}/include/linux"
+		fi
 		if test -d "${withval}/include/solaris"; then
 			CPPFLAGS="$CPPFLAGS -I${withval}/include/solaris"
 		fi
