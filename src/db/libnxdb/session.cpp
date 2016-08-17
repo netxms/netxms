@@ -1191,6 +1191,10 @@ void LIBNXDB_EXPORTABLE DBBind(DB_STATEMENT hStmt, int pos, int sqlType, int cTy
 		{
 			nxlog_debug(9, _T("{%p} bind at pos %d: \"%s\""), hStmt, pos, buffer);
 		}
+		else if (cType == DB_CTYPE_UTF8_STRING)
+      {
+         nxlog_debug(9, _T("{%p} bind at pos %d (UTF-8): \"%hs\""), hStmt, pos, buffer);
+      }
 		else
 		{
 			TCHAR text[64];

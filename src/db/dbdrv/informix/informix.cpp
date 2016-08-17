@@ -308,45 +308,67 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(INFORMIX_CONN *pConn, WCHAR *pwszQu
 	return result;
 }
 
-
-//
-// Bind parameter to statement
-//
-
+/**
+ * Bind parameter to statement
+ */
 extern "C" void EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE, SQL_LONGVARCHAR };
-	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE };
-	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
+	static SQLSMALLINT odbcCType[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE, SQL_C_WCHAR };
+	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double), 0 };
 
-	int length = (int)wcslen((WCHAR *)buffer) + 1;
+	int length = (cType == DB_CTYPE_STRING) ? (int)wcslen((WCHAR *)buffer) + 1 : 0;
 
 	SQLPOINTER sqlBuffer;
 	switch(allocType)
 	{
 		case DB_BIND_STATIC:
-			sqlBuffer = buffer;
+         if (cType == DB_CTYPE_UTF8_STRING)
+         {
+            sqlBuffer = WideStringFromUTF8String((char *)buffer);
+            statement->buffers->add(sqlBuffer);
+            length = strlen((char *)sqlBuffer) + 1;
+         }
+         else
+         {
+            sqlBuffer = buffer;
+         }
 			break;
 		case DB_BIND_DYNAMIC:
-			sqlBuffer = buffer;
+         if (cType == DB_CTYPE_UTF8_STRING)
+         {
+            sqlBuffer = WideStringFromUTF8String((char *)buffer);
+            free(buffer);
+            length = strlen((char *)sqlBuffer) + 1;
+         }
+         else
+         {
+            sqlBuffer = buffer;
+         }
 			statement->buffers->add(sqlBuffer);
 			break;
 		case DB_BIND_TRANSIENT:
-			sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
+         if (cType == DB_CTYPE_UTF8_STRING)
+         {
+            sqlBuffer = WideStringFromUTF8String((char *)buffer);
+            length = strlen((char *)sqlBuffer) + 1;
+         }
+         else
+         {
+            sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
+         }
 			statement->buffers->add(sqlBuffer);
 			break;
 		default:
 			return;	// Invalid call
 	}
 	SQLBindParameter(statement->handle, pos, SQL_PARAM_INPUT, odbcCType[cType], odbcSqlType[sqlType],
-	                 (cType == DB_CTYPE_STRING) ? length : 0, 0, sqlBuffer, 0, NULL);
+	                 ((cType == DB_CTYPE_STRING) || (cType == DB_CTYPE_UTF8_STRING)) ? length : 0, 0, sqlBuffer, 0, NULL);
 }
 
-
-//
-// Execute prepared statement
-//
-
+/**
+ * Execute prepared statement
+ */
 extern "C" DWORD EXPORT DrvExecute(INFORMIX_CONN *pConn, INFORMIX_STATEMENT *statement, WCHAR *errorText)
 {
 	DWORD dwResult;

@@ -225,6 +225,10 @@ extern "C" void EXPORT DrvBind(sqlite3_stmt *stmt, int pos, int sqlType, int cTy
 			}
 #endif
 			break;
+      case DB_CTYPE_UTF8_STRING:
+         sqlite3_bind_text(stmt, pos, (char *)buffer, strlen((char *)buffer),
+            (allocType == DB_BIND_STATIC) ? SQLITE_STATIC : ((allocType == DB_BIND_DYNAMIC) ? free : SQLITE_TRANSIENT));
+         break;
 		case DB_CTYPE_INT32:
 		case DB_CTYPE_UINT32:
 			sqlite3_bind_int(stmt, pos, *((int *)buffer));

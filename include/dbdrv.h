@@ -28,7 +28,7 @@
 /**
  * API version
  */
-#define DBDRV_API_VERSION           18
+#define DBDRV_API_VERSION           19
 
 
 //
@@ -90,18 +90,19 @@ typedef void * DBDRV_UNBUFFERED_RESULT;
 // C and SQL types for parameter binding
 //
 
-#define DB_CTYPE_STRING    0
-#define DB_CTYPE_INT32     1
-#define DB_CTYPE_UINT32    2
-#define DB_CTYPE_INT64     3
-#define DB_CTYPE_UINT64    4
-#define DB_CTYPE_DOUBLE    5
+#define DB_CTYPE_STRING       0
+#define DB_CTYPE_INT32        1
+#define DB_CTYPE_UINT32       2
+#define DB_CTYPE_INT64        3
+#define DB_CTYPE_UINT64       4
+#define DB_CTYPE_DOUBLE       5
+#define DB_CTYPE_UTF8_STRING  6
 
-#define DB_SQLTYPE_VARCHAR 0
-#define DB_SQLTYPE_INTEGER 1
-#define DB_SQLTYPE_BIGINT  2
-#define DB_SQLTYPE_DOUBLE  3
-#define DB_SQLTYPE_TEXT    4
+#define DB_SQLTYPE_VARCHAR    0
+#define DB_SQLTYPE_INTEGER    1
+#define DB_SQLTYPE_BIGINT     2
+#define DB_SQLTYPE_DOUBLE     3
+#define DB_SQLTYPE_TEXT       4
 
 /**
  * DBIsTableExist return codes

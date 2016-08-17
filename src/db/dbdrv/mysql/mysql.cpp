@@ -323,7 +323,7 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(MYSQL_CONN *pConn, WCHAR *pwszQuery
  */
 extern "C" void EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
-	static size_t bufferSize[] = { 0, sizeof(INT32), sizeof(UINT32), sizeof(INT64), sizeof(UINT64), sizeof(double) };
+	static size_t bufferSize[] = { 0, sizeof(INT32), sizeof(UINT32), sizeof(INT64), sizeof(UINT64), sizeof(double), 0 };
 
 	if ((pos < 1) || (pos > hStmt->paramCount))
 		return;
@@ -340,6 +340,15 @@ extern "C" void EXPORT DrvBind(MYSQL_STATEMENT *hStmt, int pos, int sqlType, int
 		b->length = &hStmt->lengthFields[pos - 1];
 		b->buffer_type = MYSQL_TYPE_STRING;
 	}
+	else if (cType == DB_CTYPE_UTF8_STRING)
+   {
+      b->buffer = (allocType == DB_BIND_DYNAMIC) ? buffer : strdup((char *)buffer);
+      hStmt->buffers->add(b->buffer);
+      b->buffer_length = (unsigned long)strlen((char *)b->buffer) + 1;
+      hStmt->lengthFields[pos - 1] = b->buffer_length - 1;
+      b->length = &hStmt->lengthFields[pos - 1];
+      b->buffer_type = MYSQL_TYPE_STRING;
+   }
 	else
 	{
 		switch(allocType)

@@ -338,11 +338,11 @@ extern "C" DBDRV_STATEMENT EXPORT DrvPrepare(ODBCDRV_CONN *pConn, NETXMS_WCHAR *
 extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, int cType, void *buffer, int allocType)
 {
 	static SQLSMALLINT odbcSqlType[] = { SQL_VARCHAR, SQL_INTEGER, SQL_BIGINT, SQL_DOUBLE, SQL_LONGVARCHAR };
-	static SQLSMALLINT odbcCTypeW[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE };
-	static SQLSMALLINT odbcCTypeA[] = { SQL_C_CHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE };
-	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double) };
+	static SQLSMALLINT odbcCTypeW[] = { SQL_C_WCHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE, SQL_C_WCHAR };
+	static SQLSMALLINT odbcCTypeA[] = { SQL_C_CHAR, SQL_C_SLONG, SQL_C_ULONG, SQL_C_SBIGINT, SQL_C_UBIGINT, SQL_C_DOUBLE, SQL_C_CHAR };
+	static DWORD bufferSize[] = { 0, sizeof(LONG), sizeof(DWORD), sizeof(INT64), sizeof(QWORD), sizeof(double), 0 };
 
-	int length = (int)wcslen((NETXMS_WCHAR *)buffer) + 1;
+	int length = (cType == DB_CTYPE_STRING) ? (int)wcslen((NETXMS_WCHAR *)buffer) + 1 : 0;
 
 	SQLPOINTER sqlBuffer;
 	switch(allocType)
@@ -351,13 +351,28 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 			if (m_useUnicode)
 			{
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-				sqlBuffer = buffer;
+            if (cType == DB_CTYPE_UTF8_STRING)
+            {
+               sqlBuffer = WideStringFromUTF8String((char *)buffer);
+               stmt->buffers->add(sqlBuffer);
+               length = (int)strlen((char *)sqlBuffer) + 1;
+            }
+            else
+            {
+               sqlBuffer = buffer;
+            }
 #else
 				if (cType == DB_CTYPE_STRING)
 				{
 					sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
 					stmt->buffers->add(sqlBuffer);
 				}
+				else if (cType == DB_CTYPE_UTF8_STRING)
+            {
+               sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
+               stmt->buffers->add(sqlBuffer);
+               length = (int)strlen((char *)sqlBuffer) + 1;
+            }
 				else
 				{
 					sqlBuffer = buffer;
@@ -371,6 +386,12 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 					sqlBuffer = MBStringFromWideString((NETXMS_WCHAR *)buffer);
 					stmt->buffers->add(sqlBuffer);
 				}
+				else if (cType == DB_CTYPE_UTF8_STRING)
+            {
+               sqlBuffer = MBStringFromUTF8String((char *)buffer);
+               stmt->buffers->add(sqlBuffer);
+               length = (int)strlen((char *)sqlBuffer) + 1;
+            }
 				else
 				{
 					sqlBuffer = buffer;
@@ -381,13 +402,28 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 			if (m_useUnicode)
 			{
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-				sqlBuffer = buffer;
+            if (cType == DB_CTYPE_UTF8_STRING)
+            {
+               sqlBuffer = WideStringFromUTF8String((char *)buffer);
+               free(buffer);
+               length = (int)strlen((char *)sqlBuffer) + 1;
+            }
+            else
+            {
+               sqlBuffer = buffer;
+            }
 #else
 				if (cType == DB_CTYPE_STRING)
 				{
 					sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
 					free(buffer);
 				}
+            else if (cType == DB_CTYPE_UTF8_STRING)
+            {
+               sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
+               free(buffer);
+               length = (int)strlen((char *)sqlBuffer) + 1;
+            }
 				else
 				{
 					sqlBuffer = buffer;
@@ -401,6 +437,12 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 					sqlBuffer = MBStringFromWideString((NETXMS_WCHAR *)buffer);
 					free(buffer);
 				}
+            else if (cType == DB_CTYPE_UTF8_STRING)
+            {
+               sqlBuffer = MBStringFromUTF8String((char *)buffer);
+               free(buffer);
+               length = (int)strlen((char *)sqlBuffer) + 1;
+            }
 				else
 				{
 					sqlBuffer = buffer;
@@ -412,12 +454,25 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 			if (m_useUnicode)
 			{
 #if defined(_WIN32) || defined(UNICODE_UCS2)
-				sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
+            if (cType == DB_CTYPE_UTF8_STRING)
+            {
+               sqlBuffer = WideStringFromUTF8String((char *)buffer);
+               length = (int)strlen((char *)sqlBuffer) + 1;
+            }
+            else
+            {
+               sqlBuffer = nx_memdup(buffer, (cType == DB_CTYPE_STRING) ? (DWORD)(length * sizeof(WCHAR)) : bufferSize[cType]);
+            }
 #else
 				if (cType == DB_CTYPE_STRING)
 				{
 					sqlBuffer = UCS2StringFromUCS4String((NETXMS_WCHAR *)buffer);
 				}
+            if (cType == DB_CTYPE_UTF8_STRING)
+            {
+               sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
+               length = (int)strlen((char *)sqlBuffer) + 1;
+            }
 				else
 				{
 					sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
@@ -430,6 +485,11 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 				{
 					sqlBuffer = MBStringFromWideString((NETXMS_WCHAR *)buffer);
 				}
+				else if (cType == DB_CTYPE_UTF8_STRING)
+            {
+               sqlBuffer = MBStringFromUTF8String((char *)buffer);
+               length = (int)strlen((char *)sqlBuffer) + 1;
+            }
 				else
 				{
 					sqlBuffer = nx_memdup(buffer, bufferSize[cType]);
@@ -441,7 +501,7 @@ extern "C" void EXPORT DrvBind(ODBCDRV_STATEMENT *stmt, int pos, int sqlType, in
 			return;	// Invalid call
 	}
 	SQLBindParameter(stmt->handle, pos, SQL_PARAM_INPUT, m_useUnicode ? odbcCTypeW[cType] : odbcCTypeA[cType], odbcSqlType[sqlType],
-	                 (cType == DB_CTYPE_STRING) ? length : 0, 0, sqlBuffer, 0, NULL);
+	                 ((cType == DB_CTYPE_STRING) || (cType == DB_CTYPE_UTF8_STRING)) ? length : 0, 0, sqlBuffer, 0, NULL);
 }
 
 /**

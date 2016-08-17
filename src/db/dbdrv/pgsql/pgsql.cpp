@@ -402,13 +402,24 @@ extern "C" void EXPORT DrvBind(PG_STATEMENT *hStmt, int pos, int sqlType, int cT
 	if (hStmt->pcount < pos)
 		hStmt->pcount = pos;
 
-	safe_free(hStmt->buffers[pos - 1]);
+	free(hStmt->buffers[pos - 1]);
 
 	switch(cType)
 	{
 		case DB_CTYPE_STRING:
 			hStmt->buffers[pos - 1] = UTF8StringFromWideString((WCHAR *)buffer);
 			break;
+      case DB_CTYPE_UTF8_STRING:
+         if (allocType == DB_BIND_DYNAMIC)
+         {
+            hStmt->buffers[pos - 1] = (char *)buffer;
+            buffer = NULL; // prevent deallocation
+         }
+         else
+         {
+            hStmt->buffers[pos - 1] = strdup((char *)buffer);
+         }
+         break;
 		case DB_CTYPE_INT32:
 			hStmt->buffers[pos - 1] = (char *)malloc(16);
 			sprintf(hStmt->buffers[pos - 1], "%d", *((int *)buffer));

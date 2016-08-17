@@ -491,6 +491,20 @@ static void BindNormal(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, 
 						    (sqlType == DB_SQLTYPE_TEXT) ? SQLT_LNG : SQLT_STR,
 						    NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
 			break;
+      case DB_CTYPE_UTF8_STRING:
+#if UNICODE_UCS4
+         sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
+#else
+         sqlBuffer = WideStringFromUTF8String((char *)buffer);
+#endif
+         stmt->buffers->set(pos - 1, sqlBuffer);
+         if (allocType == DB_BIND_DYNAMIC)
+            free(buffer);
+         OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
+                      ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR),
+                      (sqlType == DB_SQLTYPE_TEXT) ? SQLT_LNG : SQLT_STR,
+                      NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+         break;
 		case DB_CTYPE_INT64:	// OCI prior to 11.2 cannot bind 64 bit integers
 		   sqlBuffer = malloc(sizeof(OCINumber));
          stmt->buffers->set(pos - 1, sqlBuffer);
@@ -692,6 +706,16 @@ static void BindBatch(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, v
 #endif
          bind->set(sqlBuffer);
 			break;
+      case DB_CTYPE_UTF8_STRING:
+#if UNICODE_UCS4
+         sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
+#else
+         sqlBuffer = WideStringFromUTF8String((char *)buffer);
+#endif
+         if (allocType == DB_BIND_DYNAMIC)
+            free(buffer);
+         bind->set(sqlBuffer);
+         break;
 		case DB_CTYPE_INT64:	// OCI prior to 11.2 cannot bind 64 bit integers
 #ifdef UNICODE_UCS2
 			sqlBuffer = malloc(64 * sizeof(WCHAR));

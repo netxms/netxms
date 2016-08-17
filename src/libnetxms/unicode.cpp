@@ -790,6 +790,99 @@ size_t LIBNETXMS_EXPORTABLE ucs2_to_utf8(const UCS2CHAR *src, int srcLen, char *
 #endif
 }
 
+/**
+ * Convert UTF-8 to UCS-2 using stub (no actual conversion for character codes above 0x007F)
+ */
+static size_t utf8_to_ucs2_simple_copy(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+{
+   const char *psrc;
+   UCS2CHAR *pdst;
+   int pos, size;
+
+   size = (srcLen == -1) ? strlen(src) : srcLen;
+   if (size >= dstLen)
+      size = dstLen - 1;
+   for(psrc = src, pos = 0, pdst = dst; pos < size; pos++, psrc++, pdst++)
+      *pdst = (*psrc < 128) ? (char) (*psrc) : '?';
+   *pdst = 0;
+   return size;
+}
+
+#ifndef __DISABLE_ICONV
+
+/**
+ * Convert UCS-2 to UTF-8 using iconv
+ */
+static size_t utf8_to_ucs2_iconv(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+{
+   iconv_t cd;
+   const char *inbuf;
+   char *outbuf;
+   size_t count, inbytes, outbytes;
+
+   cd = IconvOpen(UCS2_CODEPAGE_NAME, "UTF-8");
+   if (cd == (iconv_t) (-1))
+   {
+      return utf8_to_ucs2_simple_copy(src, srcLen, dst, dstLen);
+   }
+
+   inbuf = (const char *)src;
+   inbytes = (srcLen == -1) ? strlen(src) + 1 : (size_t) srcLen;
+   outbuf = (char *)dst;
+   outbytes = (size_t)dstLen * sizeof(UCS2CHAR);
+   count = iconv(cd, (ICONV_CONST char **) &inbuf, &inbytes, &outbuf, &outbytes);
+   IconvClose(cd);
+
+   if (count == (size_t) - 1)
+   {
+      if (errno == EILSEQ)
+      {
+         count = (dstLen * sizeof(UCS2CHAR) - outbytes) / sizeof(UCS2CHAR);
+      }
+      else
+      {
+         count = 0;
+      }
+   }
+   else
+   {
+      count = (dstLen - outbytes) / sizeof(UCS2CHAR);
+   }
+   if ((srcLen == -1) && (outbytes >= sizeof(UCS2CHAR)))
+   {
+      *((UCS2CHAR *)outbuf) = 0;
+   }
+
+   return count;
+}
+
+#endif
+
+/**
+ * Convert UTF-8 to UCS-2
+ */
+size_t LIBNETXMS_EXPORTABLE utf8_to_ucs2(const char *src, int srcLen, UCS2CHAR *dst, int dstLen)
+{
+#if HAVE_ICONV && !defined(__DISABLE_ICONV)
+   return utf8_to_ucs2_iconv(src, srcLen, dst, dstLen);
+#else
+   return utf8_to_ucs2_simple_copy(src, srcLen, dst, dstLen);
+#endif
+}
+
+/**
+ * Convert UTF-8 to UCS-2 (dynamically allocated output string)
+ */
+UCS2CHAR LIBNETXMS_EXPORTABLE *UCS2StringFromUTF8String(const char *utf8String)
+{
+   if (utf8String == NULL)
+      return NULL;
+   int nLen = (int)strlen(utf8String) + 1;
+   UCS2CHAR *out = (UCS2CHAR *)malloc(nLen * sizeof(UCS2CHAR));
+   utf8_to_ucs2(utf8String, -1, out, nLen);
+   return out;
+}
+
 #endif	/* UNICODE_UCS4 */
 
 #ifdef _WIN32
