@@ -49,6 +49,7 @@ public class FilterText extends Composite
 {
 	private Text text;
 	private Composite buttonArea;
+	private Composite textArea;
 	private List<Button> attrButtons = new ArrayList<Button>(4);
 	private Label closeButton;
 	private Label clearButton;
@@ -57,15 +58,21 @@ public class FilterText extends Composite
 	private Set<ModifyListener> modifyListeners = new HashSet<ModifyListener>();
 	private ModifyEvent lastModifyEvent = null;
 	
+	public FilterText(Composite parent, int style)
+   {
+      this(parent, style, null);
+   }
+	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public FilterText(Composite parent, int style)
+	public FilterText(Composite parent, int style, String tooltip)
 	{
-		super(parent, style);
+		super(parent, style);		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 5;
+         
 		setLayout(layout);
 		
 		final Label label = new Label(this, SWT.NONE);
@@ -74,9 +81,27 @@ public class FilterText extends Composite
 		gd.verticalAlignment = SWT.CENTER;
 		label.setLayoutData(gd);
 		
-		text = new Text(this, SWT.BORDER);
+		textArea = new Composite(this, SWT.BORDER);
+		GridLayout textLayout = new GridLayout();
+		textLayout.numColumns = 2;
+		textLayout.marginBottom = 0;
+		textLayout.marginTop = 0;
+		textLayout.marginLeft = 0;
+      textLayout.marginRight = 0;
+      textArea.setLayout(textLayout);
+      gd = new GridData();
+      gd.verticalAlignment = SWT.CENTER;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      gd.verticalAlignment = SWT.CENTER;
+      textArea.setLayoutData(gd);
+		
+		text = new Text(textArea, SWT.NONE);
 		text.setTextLimit(64);
 		text.setMessage(Messages.get().FilterText_FilterIsEmpty);
+		if (tooltip != null) {
+		   text.setToolTipText(tooltip);
+		}
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -104,6 +129,19 @@ public class FilterText extends Composite
             }
          }
       });
+		
+		if (tooltip != null) {
+   		final Label icon = new Label(textArea, SWT.NONE);
+   		icon.setImage(SharedIcons.IMG_INFORMATION);
+         gd = new GridData();
+         gd.verticalAlignment = SWT.CENTER;
+         icon.setLayoutData(gd);
+         icon.setToolTipText(tooltip);
+         
+         icon.setBackground(text.getBackground());
+		}
+		
+		textArea.setBackground(text.getBackground());
 		
 		buttonArea = new Composite(this, SWT.NONE);
 		RowLayout buttonLayout = new RowLayout();
@@ -134,7 +172,7 @@ public class FilterText extends Composite
 		   @Override
 		   public void mouseDoubleClick(MouseEvent e)
 		   {
-		      if (e.button ==1)
+		      if (e.button == 1)
 		         doAction = false;
 		   }
 		   
