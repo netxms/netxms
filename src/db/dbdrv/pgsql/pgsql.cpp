@@ -1147,6 +1147,31 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(PG_UNBUFFERED_RESULT *result, int
 }
 
 /**
+ * Get field from current row in async query result as UTF-8 string
+ */
+extern "C" char EXPORT *DrvGetFieldUnbufferedUTF8(PG_UNBUFFERED_RESULT *result, int nColumn, char *pBuffer, int nBufSize)
+{
+   if ((result == NULL) || (result->fetchBuffer == NULL))
+      return NULL;
+
+   // validate column index
+   if (nColumn >= PQnfields(result->fetchBuffer))
+      return NULL;
+
+   if (PQfformat(result->fetchBuffer, nColumn) != 0)
+      return NULL;
+
+   char *value = PQgetvalue(result->fetchBuffer, result->currRow, nColumn);
+   if (value == NULL)
+      return NULL;
+
+   strncpy(pBuffer, value, nBufSize);
+   pBuffer[nBufSize - 1] = 0;
+
+   return pBuffer;
+}
+
+/**
  * Get column count in async query result
  */
 extern "C" int EXPORT DrvGetColumnCountUnbuffered(PG_UNBUFFERED_RESULT *result)

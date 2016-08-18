@@ -941,39 +941,46 @@ TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, 
 /**
  * Get field's value from unbuffered SELECT result as UTF-8 string
  */
-char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColumn, char *pBuffer, int iBufSize)
+char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColumn, char *buffer, int iBufSize)
 {
-   /* FIXME: add appropriate call to DB drivers */
-   TCHAR *tmp = DBGetField(hResult, iColumn, NULL, 0);
-   if (tmp == NULL)
-      return NULL;
+   if (hResult->m_driver->m_fpDrvGetFieldUTF8 != NULL)
+   {
+      if (buffer != NULL)
+      {
+         *buffer = 0;
+         return hResult->m_driver->m_fpDrvGetFieldUnbufferedUTF8(hResult->m_data, iColumn, buffer, iBufSize);
+      }
+      else
+      {
+         char *pszTemp;
+         LONG nLen = hResult->m_driver->m_fpDrvGetFieldLengthUnbuffered(hResult->m_data, iColumn);
+         if (nLen == -1)
+         {
+            pszTemp = NULL;
+         }
+         else
+         {
+            nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
+            pszTemp = (char *)malloc(nLen);
+            hResult->m_driver->m_fpDrvGetFieldUnbufferedUTF8(hResult->m_data, iColumn, pszTemp, nLen);
+         }
+         return pszTemp;
+      }
+   }
+   else
+   {
+      LONG nLen = hResult->m_driver->m_fpDrvGetFieldLengthUnbuffered(hResult->m_data, iColumn);
+      if (nLen == -1)
+         return NULL;
+      nLen = nLen * 2 + 1;  // increase buffer size because driver may return field length in characters
 
-   char *s;
-#ifdef UNICODE
-   if (pBuffer != NULL)
-   {
-      s = pBuffer;
-      WideCharToMultiByte(CP_UTF8, 0, tmp, -1, s, iBufSize, NULL, NULL);
-      s[iBufSize - 1] = 0;
+      WCHAR *wtemp = (WCHAR *)malloc(nLen * sizeof(WCHAR));
+      hResult->m_driver->m_fpDrvGetFieldUnbuffered(hResult->m_data, iColumn, wtemp, nLen);
+      char *value = (buffer != NULL) ? buffer : (char *)malloc(nLen);
+      WideCharToMultiByte(CP_UTF8, 0, wtemp, -1, value, (buffer != NULL) ? iBufSize : nLen, NULL, NULL);
+      free(wtemp);
+      return value;
    }
-   else
-   {
-      s = UTF8StringFromWideString(tmp);
-   }
-#else
-   if (pBuffer != NULL)
-   {
-      s = pBuffer;
-      mb_to_utf8(tmp, -1, s, iBufSize);
-      s[iBufSize - 1] = 0;
-   }
-   else
-   {
-      s = UTF8StringFromMBString(tmp);
-   }
-#endif
-   free(tmp);
-   return s;
 }
 
 /**

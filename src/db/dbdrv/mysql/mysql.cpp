@@ -1022,26 +1022,26 @@ extern "C" LONG EXPORT DrvGetFieldLengthUnbuffered(MYSQL_UNBUFFERED_RESULT *hRes
 }
 
 /**
- * Get field from current row in async query result
+ * Get field from current row in async query result - common implementation for wide char and UTF-8
  */
-extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn, WCHAR *pBuffer, int iBufSize)
+static void *GetFieldUnbufferedInternal(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn, void *pBuffer, int iBufSize, bool utf8)
 {
-	// Check if we have valid result handle
-	if (hResult == NULL)
-		return NULL;
-	
-	// Check if there are valid fetched row
-	if ((hResult->noMoreRows) || ((hResult->pCurrRow == NULL) && !hResult->isPreparedStatement))
-		return NULL;
-	
-	// Check if column number is valid
-	if ((iColumn < 0) || (iColumn >= hResult->numColumns))
-		return NULL;
-	
-	// Now get column data
-	WCHAR *value = NULL;
-	if (hResult->isPreparedStatement)
-	{
+   // Check if we have valid result handle
+   if (hResult == NULL)
+      return NULL;
+
+   // Check if there are valid fetched row
+   if ((hResult->noMoreRows) || ((hResult->pCurrRow == NULL) && !hResult->isPreparedStatement))
+      return NULL;
+
+   // Check if column number is valid
+   if ((iColumn < 0) || (iColumn >= hResult->numColumns))
+      return NULL;
+
+   // Now get column data
+   void *value = NULL;
+   if (hResult->isPreparedStatement)
+   {
       MYSQL_BIND b;
       unsigned long l = 0;
       my_bool isNull;
@@ -1062,30 +1062,72 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult,
          if (!isNull)
          {
             ((char *)b.buffer)[l] = 0;
-            MultiByteToWideChar(CP_UTF8, 0, (char *)b.buffer, -1, (WCHAR *)pBuffer, iBufSize);
-            ((WCHAR *)pBuffer)[iBufSize - 1] = 0;
+            if (utf8)
+            {
+               strncpy((char *)pBuffer, (char *)b.buffer, iBufSize);
+               ((char *)pBuffer)[iBufSize - 1] = 0;
+            }
+            else
+            {
+               MultiByteToWideChar(CP_UTF8, 0, (char *)b.buffer, -1, (WCHAR *)pBuffer, iBufSize);
+               ((WCHAR *)pBuffer)[iBufSize - 1] = 0;
+            }
          }
          else
          {
-            *((WCHAR *)pBuffer) = 0;
+            if (utf8)
+               *((char *)pBuffer) = 0;
+            else
+               *((WCHAR *)pBuffer) = 0;
          }
          value = pBuffer;
       }
 #if !HAVE_ALLOCA
       free(b.buffer);
 #endif
-	}
-	else
-	{
+   }
+   else
+   {
       int iLen = min((int)hResult->lengthFields[iColumn], iBufSize - 1);
       if (iLen > 0)
       {
-         MultiByteToWideChar(CP_UTF8, 0, hResult->pCurrRow[iColumn], iLen, pBuffer, iBufSize);
+         if (utf8)
+         {
+            memcpy(pBuffer, hResult->pCurrRow[iColumn], iLen);
+            ((char *)pBuffer)[iLen] = 0;
+         }
+         else
+         {
+            MultiByteToWideChar(CP_UTF8, 0, hResult->pCurrRow[iColumn], iLen, (WCHAR *)pBuffer, iBufSize);
+            ((WCHAR *)pBuffer)[iLen] = 0;
+         }
       }
-      pBuffer[iLen] = 0;
+      else
+      {
+         if (utf8)
+            *((char *)pBuffer) = 0;
+         else
+            *((WCHAR *)pBuffer) = 0;
+      }
       value = pBuffer;
-	}
-	return value;
+   }
+   return value;
+}
+
+/**
+ * Get field from current row in async query result
+ */
+extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn, WCHAR *pBuffer, int iBufSize)
+{
+	return (WCHAR *)GetFieldUnbufferedInternal(hResult, iColumn, pBuffer, iBufSize, false);
+}
+
+/**
+ * Get field from current row in async query result
+ */
+extern "C" char EXPORT *DrvGetFieldUnbufferedUTF8(MYSQL_UNBUFFERED_RESULT *hResult, int iColumn, char *pBuffer, int iBufSize)
+{
+   return (char *)GetFieldUnbufferedInternal(hResult, iColumn, pBuffer, iBufSize, true);
 }
 
 /**

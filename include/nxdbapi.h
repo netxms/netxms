@@ -185,7 +185,7 @@ bool LIBNXDB_EXPORTABLE DBGetColumnName(DB_UNBUFFERED_RESULT hResult, int column
 void LIBNXDB_EXPORTABLE DBFreeResult(DB_UNBUFFERED_RESULT hResult);
 
 TCHAR LIBNXDB_EXPORTABLE *DBGetField(DB_UNBUFFERED_RESULT hResult, int iColumn, TCHAR *pBuffer, int iBufSize);
-char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColumn, char *pBuffer, int iBufSize);
+char LIBNXDB_EXPORTABLE *DBGetFieldUTF8(DB_UNBUFFERED_RESULT hResult, int iColumn, char *buffer, int iBufSize);
 INT32 LIBNXDB_EXPORTABLE DBGetFieldLong(DB_UNBUFFERED_RESULT hResult, int iColumn);
 UINT32 LIBNXDB_EXPORTABLE DBGetFieldULong(DB_UNBUFFERED_RESULT hResult, int iColumn);
 INT64 LIBNXDB_EXPORTABLE DBGetFieldInt64(DB_UNBUFFERED_RESULT hResult, int iColumn);

@@ -701,6 +701,27 @@ extern "C" WCHAR EXPORT *DrvGetFieldUnbuffered(SQLITE_UNBUFFERED_RESULT *result,
 }
 
 /**
+ * Get field from current row in unbuffered query result as UTF-8 string
+ */
+extern "C" char EXPORT *DrvGetFieldUnbufferedUTF8(SQLITE_UNBUFFERED_RESULT *result, int iColumn, char *pBuffer, int iBufSize)
+{
+   char *pszData;
+   char *value = NULL;
+
+   if ((iColumn >= 0) && (iColumn < result->numColumns))
+   {
+      pszData = (char *)sqlite3_column_text(result->stmt, iColumn);
+      if (pszData != NULL)
+      {
+         strncpy(pBuffer, pszData, iBufSize);
+         pBuffer[iBufSize - 1] = 0;
+         value = pBuffer;
+      }
+   }
+   return value;
+}
+
+/**
  * Get column count in async query result
  */
 extern "C" int EXPORT DrvGetColumnCountUnbuffered(SQLITE_UNBUFFERED_RESULT *result)
