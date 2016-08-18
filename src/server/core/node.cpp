@@ -1202,7 +1202,7 @@ void Node::deleteInterface(Interface *iface)
          lockChildList(false);
          for(int j = 0; j < m_childList->size(); j++)
          {
-            NetObj *curr = m_childList->get(i);
+            NetObj *curr = m_childList->get(j);
             if ((curr->getObjectClass() == OBJECT_INTERFACE) && (curr != iface) &&
                 ((Interface *)curr)->getIpAddressList()->findSameSubnetAddress(*addr).isValid())
             {
