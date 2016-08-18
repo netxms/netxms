@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -235,21 +235,13 @@ static bool MigrateDataTables()
 
       if (!g_dataOnlyMigration)
       {
-         if (!CreateTDataTables(id))
+         if (!CreateTDataTable(id))
 			   break;	// Failed to create tdata tables
       }
 
       if (!g_skipDataMigration)
       {
 		   _sntprintf(buffer, 1024, _T("tdata_%d"), id);
-		   if (!MigrateTable(buffer))
-			   break;
-
-         _sntprintf(buffer, 1024, _T("tdata_records_%d"), id);
-		   if (!MigrateTable(buffer))
-			   break;
-
-         _sntprintf(buffer, 1024, _T("tdata_rows_%d"), id);
 		   if (!MigrateTable(buffer))
 			   break;
       }

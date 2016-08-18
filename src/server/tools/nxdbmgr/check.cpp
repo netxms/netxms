@@ -660,9 +660,9 @@ BOOL CreateTDataTable_preV281(DWORD nodeId)
 }
 
 /**
- * Create tdata_*_xx tables
+ * Create tdata_xx table
  */
-BOOL CreateTDataTables(DWORD nodeId)
+BOOL CreateTDataTable(DWORD nodeId)
 {
    TCHAR szQuery[256], szQueryTemplate[256];
    DWORD i;
@@ -756,19 +756,9 @@ static void CheckIData()
 }
 
 /**
- * Drop given data table
- */
-static BOOL DropDataTable(const TCHAR *table, DWORD id)
-{
-   TCHAR query[256];
-   _sntprintf(query, 256, _T("DROP TABLE %s_%d"), table, id);
-   return SQLQuery(query);
-}
-
-/**
  * Check if given data table exist
  */
-static BOOL IsDataTableExist(const TCHAR *format, DWORD id)
+BOOL IsDataTableExist(const TCHAR *format, DWORD id)
 {
    TCHAR table[256];
    _sntprintf(table, 256, format, id);
@@ -807,23 +797,12 @@ static void CheckDataTablesForClass(const TCHAR *className, const TCHAR *classDe
          }
 
          // TDATA
-         BOOL tdata = IsDataTableExist(_T("tdata_%d"), id);
-         BOOL tdataRecords = IsDataTableExist(_T("tdata_records_%d"), id);
-         BOOL tdataRows = IsDataTableExist(_T("tdata_rows_%d"), id);
-         if (!tdata || !tdataRecords || !tdataRows)
+         if (IsDataTableExist(_T("tdata_%d"), id))
          {
 				m_iNumErrors++;
 				if (GetYesNo(_T("\rData collection table (TDATA) for %s [%d] not found. Create? (Y/N) "), classDescr, id))
 				{
-               // Drop existing tables first
-               if (tdataRows)
-                  DropDataTable(_T("tdata_rows"), id);
-               if (tdataRecords)
-                  DropDataTable(_T("tdata_records"), id);
-               if (tdata)
-                  DropDataTable(_T("tdata"), id);
-
-					if (CreateTDataTables(id))
+					if (CreateTDataTable(id))
 						m_iNumFixes++;
 				}
          }
@@ -843,6 +822,7 @@ static void CheckDataTables()
    CheckDataTablesForClass(_T("clusters"), _T("cluster"));
    CheckDataTablesForClass(_T("mobile_devices"), _T("mobile device"));
    CheckDataTablesForClass(_T("access_points"), _T("access point"));
+   CheckDataTablesForClass(_T("chassis"), _T("chassis"));
 
 	EndStage();
 }

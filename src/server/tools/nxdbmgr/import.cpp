@@ -132,18 +132,10 @@ static BOOL ImportDataTables(sqlite3 *db)
 		if (!ImportTable(db, buffer))
 			break;
 
-      if (!CreateTDataTables(id))
+      if (!CreateTDataTable(id))
 			break;	// Failed to create tdata tables
 
 		_sntprintf(buffer, 1024, _T("tdata_%d"), id);
-		if (!ImportTable(db, buffer))
-			break;
-
-      _sntprintf(buffer, 1024, _T("tdata_records_%d"), id);
-		if (!ImportTable(db, buffer))
-			break;
-
-      _sntprintf(buffer, 1024, _T("tdata_rows_%d"), id);
 		if (!ImportTable(db, buffer))
 			break;
 	}

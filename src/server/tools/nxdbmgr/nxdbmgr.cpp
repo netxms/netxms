@@ -77,6 +77,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T(""), CT_END_OF_LIST, 0, 0, 0, 0, NULL }
 };
 static BOOL m_bForce = FALSE;
+static DB_DRIVER s_driver = NULL;
 
 /**
  * Show query if trace mode is ON
@@ -545,6 +546,20 @@ bool ValidateDatabase()
 }
 
 /**
+ * Open database connection
+ */
+DB_HANDLE ConnectToDatabase()
+{
+   TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
+   DB_HANDLE hdb = DBConnect(s_driver, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, s_dbSchema, errorText);
+   if (hdb == NULL)
+   {
+      _tprintf(_T("Unable to connect to database %s@%s as %s: %s\n"), s_dbName, s_dbServer, s_dbLogin, errorText);
+   }
+   return hdb;
+}
+
+/**
  * Startup
  */
 int main(int argc, char *argv[])
@@ -783,19 +798,18 @@ stop_search:
       return 3;
    }
 
-	DB_DRIVER driver = DBLoadDriver(s_dbDriver, s_dbDrvParams, false, NULL, NULL);
-	if (driver == NULL)
+	s_driver = DBLoadDriver(s_dbDriver, s_dbDrvParams, false, NULL, NULL);
+	if (s_driver == NULL)
    {
       _tprintf(_T("Unable to load and initialize database driver \"%s\"\n"), s_dbDriver);
       return 3;
    }
 
 	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
-   g_hCoreDB = DBConnect(driver, s_dbServer, s_dbName, s_dbLogin, s_dbPassword, s_dbSchema, errorText);
+   g_hCoreDB = ConnectToDatabase();
    if (g_hCoreDB == NULL)
    {
-		_tprintf(_T("Unable to connect to database %s@%s as %s: %s\n"), s_dbName, s_dbServer, s_dbLogin, errorText);
-      DBUnloadDriver(driver);
+      DBUnloadDriver(s_driver);
       return 4;
    }
 
@@ -811,7 +825,7 @@ stop_search:
 		{
          _tprintf(_T("Unable to determine database syntax\n"));
          DBDisconnect(g_hCoreDB);
-         DBUnloadDriver(driver);
+         DBUnloadDriver(s_driver);
          return 5;
       }
 
@@ -894,6 +908,6 @@ stop_search:
 
    // Shutdown
    DBDisconnect(g_hCoreDB);
-   DBUnloadDriver(driver);
+   DBUnloadDriver(s_driver);
    return 0;
 }

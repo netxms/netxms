@@ -1,7 +1,7 @@
 bin_PROGRAMS = nxdbmgr
 nxdbmgr_SOURCES = nxdbmgr.cpp check.cpp clear.cpp export.cpp import.cpp \
                   init.cpp migrate.cpp mm.cpp reindex.cpp resetadmin.cpp \
-                  tables.cpp unlock.cpp upgrade.cpp
+                  tables.cpp tdata_convert.cpp unlock.cpp upgrade.cpp
 nxdbmgr_CPPFLAGS=-I@top_srcdir@/include -I@top_srcdir@/src/server/include
 nxdbmgr_LDADD = ../../../libnetxms/libnetxms.la \
                 ../../../db/libnxdb/libnxdb.la \

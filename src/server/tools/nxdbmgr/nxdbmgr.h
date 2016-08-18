@@ -49,6 +49,7 @@
 // Functions
 //
 
+DB_HANDLE ConnectToDatabase();
 void CheckDatabase();
 void InitDatabase(const char *pszInitFile);
 bool ClearDatabase(bool preMigration);
@@ -79,8 +80,12 @@ DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault);
 bool CreateConfigParam(const TCHAR *name, const TCHAR *value, bool isVisible, bool needRestart, bool forceUpdate = false);
 bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate = false);
 
+BOOL IsDataTableExist(const TCHAR *format, DWORD id);
+
+bool RenameDatabaseTable(const TCHAR *oldName, const TCHAR *newName);
+
 BOOL CreateIDataTable(DWORD nodeId);
-BOOL CreateTDataTables(DWORD nodeId);
+BOOL CreateTDataTable(DWORD nodeId);
 BOOL CreateTDataTable_preV281(DWORD nodeId);
 
 void ResetAdmin();

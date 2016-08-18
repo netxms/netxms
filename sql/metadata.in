@@ -23,10 +23,10 @@ INSERT INTO metadata (var_name,var_value)
 	VALUES ('TDataTableCreationCommand_0','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,tdata_value ' CONCAT SQL_TEXT_TEXT CONCAT ' null)');
 #if defined(DB_MSSQL)
 INSERT INTO metadata (var_name,var_value)
-	VALUES ('TDataIndexCreationCommand_0','CREATE CLUSTERED INDEX idx_tdata_%d_id_timestamp ON tdata_%d(item_id,tdata_timestamp)');
+	VALUES ('TDataIndexCreationCommand_0','CREATE CLUSTERED INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)');
 #else
 INSERT INTO metadata (var_name,var_value)
-	VALUES ('TDataIndexCreationCommand_0','CREATE INDEX idx_tdata_%d_id_timestamp ON tdata_%d(item_id,tdata_timestamp)');
+	VALUES ('TDataIndexCreationCommand_0','CREATE INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)');
 #endif
 
 INSERT INTO metadata (var_name,var_value)

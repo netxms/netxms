@@ -27,6 +27,7 @@
  * Externals
  */
 BOOL MigrateMaps();
+bool ConvertTDataTables();
 
 /**
  * Pre-defined GUID mapping for GenerateGUID
@@ -172,6 +173,32 @@ static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
 
 	_sntprintf(query, 4096, _T("ALTER TABLE %s ADD PRIMARY KEY (%s)"), table, key);
 	return SQLQuery(query);
+}
+
+/**
+ * Rename table
+ */
+bool RenameDatabaseTable(const TCHAR *oldName, const TCHAR *newName)
+{
+   TCHAR query[1024];
+   switch(g_dbSyntax)
+   {
+      case DB_SYNTAX_DB2:
+      case DB_SYNTAX_INFORMIX:
+      case DB_SYNTAX_MYSQL:
+         _sntprintf(query, 1024, _T("RENAME TABLE %s TO %s"), oldName, newName);
+         break;
+      case DB_SYNTAX_ORACLE:
+      case DB_SYNTAX_PGSQL:
+         _sntprintf(query, 1024, _T("ALTER TABLE %s RENAME TO %s"), oldName, newName);
+         break;
+      case DB_SYNTAX_MSSQL:
+         _sntprintf(query, 1024, _T("EXEC sp_rename '%s','%s'"), oldName, newName);
+         break;
+      default:    // Unsupported DB engine
+         return false;
+   }
+   return SQLQuery(query);
 }
 
 /**
@@ -489,7 +516,7 @@ static BOOL RecreateTData(const TCHAR *className, bool multipleTables, bool inde
                }
             }
 
-            if (!CreateTDataTables(id))
+            if (!CreateTDataTable(id))
             {
                if (!g_bIgnoreErrors)
                {
@@ -706,6 +733,64 @@ static bool SetSchemaVersion(int version)
    TCHAR query[256];
    _sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='SchemaVersion'"), version);
    return SQLQuery(query);
+}
+
+/**
+ * Upgrade from V410 to V411
+ */
+static BOOL H_UpgradeFromV410(int currVersion, int newVersion)
+{
+   StringMap savedMetadata;
+   DB_RESULT hResult = SQLSelect(_T("SELECT var_name,var_value FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'"));
+   if (hResult != NULL)
+   {
+      int count = DBGetNumRows(hResult);
+      for(int i = 0; i < count; i++)
+      {
+         savedMetadata.setPreallocated(DBGetField(hResult, i, 0, NULL, 0), DBGetField(hResult, i, 1, NULL, 0));
+      }
+      DBFreeResult(hResult);
+   }
+   else if (!g_bIgnoreErrors)
+   {
+      return false;
+   }
+
+   static const TCHAR *batch =
+      _T("DELETE FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'\n")
+      _T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataTableCreationCommand_0','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,tdata_value $SQL:TEXT null)')\n")
+      _T("<END>");
+   CHK_EXEC(SQLBatch(batch));
+
+   if (g_dbSyntax == DB_SYNTAX_MSSQL)
+      CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','CREATE CLUSTERED INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)')")));
+   else
+      CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','CREATE INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)')")));
+
+   // table conversion will require multiple commits
+   DBCommit(g_hCoreDB);
+   if (!ConvertTDataTables())
+   {
+      if (!g_bIgnoreErrors)
+      {
+         // Restore metadata
+         SQLQuery(_T("DELETE FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'"));
+         StringList *keys = savedMetadata.keys();
+         for(int i = 0; i < keys->size(); i++)
+         {
+            TCHAR query[4096];
+            _sntprintf(query, 4096, _T("INSERT INTO metadata (var_name,var_value) VALUES (%s,%s)"),
+                       (const TCHAR *)DBPrepareString(g_hCoreDB, keys->get(i)),
+                       (const TCHAR *)DBPrepareString(g_hCoreDB, savedMetadata.get(keys->get(i))));
+            SQLQuery(query);
+         }
+         return false;
+      }
+   }
+
+   DBBegin(g_hCoreDB);
+   CHK_EXEC(SetSchemaVersion(411));
+   return TRUE;
 }
 
 /**
@@ -10355,6 +10440,7 @@ static struct
    { 407, 408, H_UpgradeFromV407 },
    { 408, 409, H_UpgradeFromV408 },
    { 409, 410, H_UpgradeFromV409 },
+   { 410, 411, H_UpgradeFromV410 },
    { 0, 0, NULL }
 };
 
