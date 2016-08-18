@@ -41,8 +41,13 @@ import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -71,9 +76,11 @@ import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.Messages;
 import org.netxms.ui.eclipse.snmp.shared.MibCache;
 import org.netxms.ui.eclipse.snmp.views.helpers.SnmpValueLabelProvider;
+import org.netxms.ui.eclipse.snmp.views.helpers.SnmpWalkFilter;
 import org.netxms.ui.eclipse.snmp.widgets.MibBrowser;
 import org.netxms.ui.eclipse.snmp.widgets.MibObjectDetails;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 
 /**
  * SNMP MIB explorer
@@ -100,6 +107,12 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private Action actionSetNode;
 	private Action actionSelect;
 	private Action actionExportToCsv;
+	private Action actionShowFilter;
+	
+	private Composite resultArea;
+	private FilterText filterText;
+	private SnmpWalkFilter filter;
+	private boolean filterEnabled = true;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
@@ -182,13 +195,44 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		
 		details = new MibObjectDetails(mibViewSplitter, SWT.BORDER, true, mibBrowser);
 		
-		// walk results
-		viewer = new TableViewer(splitter, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
+		// Create result area
+		resultArea = new Composite(splitter, SWT.BORDER);
+		FormLayout formLayout = new FormLayout();
+		resultArea.setLayout(formLayout);
+		// Create filter area
+		filterText = new FilterText(resultArea, SWT.BORDER);
+		filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+		filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+            actionShowFilter.setChecked(filterEnabled);
+         }
+      });
+		
+		// Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);;
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
+      
+      // walk results
+		viewer = new TableViewer(resultArea, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
 		viewer.getTable().setLinesVisible(true);
 		viewer.getTable().setHeaderVisible(true);
 		setupViewerColumns();
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SnmpValueLabelProvider());
+		filter = new SnmpWalkFilter();
+		viewer.addFilter(filter);
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e)
@@ -211,7 +255,15 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 				selectInTree();
 			}
 		});
-
+		
+		// Setup layout
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);;
+      fd.top = new FormAttachment(filterText, 0, SWT.BOTTOM);
+      fd.bottom = new FormAttachment(100, 0);
+      fd.right = new FormAttachment(100, 0);
+      viewer.getControl().setLayoutData(fd);
+		
 		splitter.setWeights(new int[] { 70, 30 });
 		
 		createActions();
@@ -220,6 +272,39 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		createResultsPopupMenu();
 	}
 	
+	/**
+	 * Enable or disable filter
+	 * @param enable New filter state
+	 */
+	public void enableFilter(boolean enable)
+	{
+	   filterEnabled = enable;
+	   filterText.setVisible(filterEnabled);
+	   FormData fd = (FormData)viewer.getTable().getLayoutData();
+	   fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
+	   resultArea.layout();
+	   if (enable)
+	   {
+	      filterText.setFocus();
+	   }
+	   else
+	   {
+	      filterText.setText("");
+	      onFilterModify();
+	   }
+	   
+	}
+	
+	/**
+    * Handler for filter modification
+    */
+   public void onFilterModify() 
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+   }
+   
 	/**
 	 * Create actions
 	 */
@@ -265,6 +350,17 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		actionSelect.setEnabled(false);
 
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
+		
+		actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
+		  @Override
+		  public void run()
+		  {
+		     enableFilter(!filterEnabled);
+		     actionShowFilter.setChecked(filterEnabled);
+		  }
+		};
+		actionShowFilter.setChecked(filterEnabled);
+		
 	}
 	
 	/**
@@ -301,6 +397,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	{
 		manager.add(actionSetNode);
 		manager.add(actionWalk);
+		manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}

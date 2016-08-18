@@ -155,8 +155,6 @@ public class ServerConfigurationEditor extends ViewPart
       fd.top = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       filterText.setLayoutData(fd);
-      
-      filterText.setCloseAction(actionShowFilter);
 		
 		final IDialogSettings settings = Activator.getDefault().getDialogSettings();
 		WidgetHelper.restoreTableViewerSettings(viewer, settings, "ServerConfigurationEditor"); //$NON-NLS-1$
@@ -174,6 +172,8 @@ public class ServerConfigurationEditor extends ViewPart
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
+		
+		filterText.setCloseAction(actionShowFilter);
 		
 		// Set initial focus to filter input line
       if (filterEnabled)
