@@ -38,7 +38,6 @@ import org.netxms.ui.eclipse.widgets.LabeledText;
 public class ImportDashboardDialog extends Dialog
 {
 	private String objectName;
-	private int index;
 	private File importFile;
 	private LabeledText textName;
 	private LocalFileSelector importFileSelector;
@@ -106,13 +105,6 @@ public class ImportDashboardDialog extends Dialog
 	{
 		objectName = textName.getText().trim();
 		importFile = importFileSelector.getFile();
-		if (objectName.isEmpty())
-		{
-		   objectName = importFile.getName();
-		   index = objectName.indexOf(".xml");
-		   objectName = objectName.substring(0, index);
-		   super.okPressed();
-		}
 		
 		if (importFile == null)
 		{

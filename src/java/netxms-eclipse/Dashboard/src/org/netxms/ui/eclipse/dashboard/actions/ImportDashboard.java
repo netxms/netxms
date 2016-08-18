@@ -75,6 +75,7 @@ public class ImportDashboard implements IObjectActionDelegate
 	private IWorkbenchWindow window;
 	private IWorkbenchPart part;
 	private long parentId = -1;
+	private String objectName;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IObjectActionDelegate#setActivePart(org.eclipse.jface.action.IAction, org.eclipse.ui.IWorkbenchPart)
@@ -156,10 +157,21 @@ public class ImportDashboard implements IObjectActionDelegate
 						dashboardElements.add(de);
 					}
 				}
+				//
+				root.normalize();
+				if (dlg.getObjectName().isEmpty())
+		      {
+		         if (dlg.getImportFile().getName().endsWith(".xml")) {
+		            int index = dlg.getImportFile().getName().indexOf(".xml");
+		            objectName = dlg.getImportFile().getName().substring(0, index);
+		         } else {
+		            objectName = dlg.getImportFile().getName();
+		         }
+		      }
 				
 				if (doIdMapping(display, session, dashboardElements, root))
 				{
-					NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_DASHBOARD, dlg.getObjectName(), parentId);
+					NXCObjectCreationData cd = new NXCObjectCreationData(AbstractObject.OBJECT_DASHBOARD, objectName, parentId);
 					final long objectId = session.createObject(cd);
 					
 					NXCObjectModificationData md = new NXCObjectModificationData(objectId);
