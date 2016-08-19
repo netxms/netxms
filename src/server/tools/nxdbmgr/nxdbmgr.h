@@ -80,7 +80,7 @@ DWORD ConfigReadULong(const TCHAR *pszVar, DWORD dwDefault);
 bool CreateConfigParam(const TCHAR *name, const TCHAR *value, bool isVisible, bool needRestart, bool forceUpdate = false);
 bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate = false);
 
-BOOL IsDataTableExist(const TCHAR *format, DWORD id);
+bool IsDataTableExist(const TCHAR *format, UINT32 id);
 
 bool RenameDatabaseTable(const TCHAR *oldName, const TCHAR *newName);
 

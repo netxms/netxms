@@ -758,7 +758,7 @@ static void CheckIData()
 /**
  * Check if given data table exist
  */
-BOOL IsDataTableExist(const TCHAR *format, DWORD id)
+bool IsDataTableExist(const TCHAR *format, UINT32 id)
 {
    TCHAR table[256];
    _sntprintf(table, 256, format, id);
@@ -797,7 +797,7 @@ static void CheckDataTablesForClass(const TCHAR *className, const TCHAR *classDe
          }
 
          // TDATA
-         if (IsDataTableExist(_T("tdata_%d"), id))
+         if (!IsDataTableExist(_T("tdata_%d"), id))
          {
 				m_iNumErrors++;
 				if (GetYesNo(_T("\rData collection table (TDATA) for %s [%d] not found. Create? (Y/N) "), classDescr, id))
