@@ -2699,7 +2699,11 @@ if test $? = 0; then
 	AC_CHECK_LIB(m, floor)
 	AC_CHECK_LIB(pq, PQconnectdb, [PGSQL_LIBS="-lpq"], [
 		if test "x$PLATFORM" = "xSunOS"; then
-			PGSQL_LDFLAGS="$PGSQL_LDFLAGS/sparcv9"
+			if test -d "$PGSQL_LD_RUN_PATH/sparcv9"; then
+				PGSQL_LDFLAGS="$PGSQL_LDFLAGS/sparcv9"
+			else
+				PGSQL_LDFLAGS="$PGSQL_LDFLAGS/64"
+			fi
 			LDFLAGS="$OLD_LDFLAGS $PGSQL_LDFLAGS"
 			if test "x$PGSQL_LD_RUN_PATH" != "x"; then
 				PGSQL_LD_RUN_PATH="$PGSQL_LD_RUN_PATH/sparcv9"
