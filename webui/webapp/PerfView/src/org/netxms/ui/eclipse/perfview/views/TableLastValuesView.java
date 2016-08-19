@@ -127,6 +127,7 @@ public class TableLastValuesView extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionExportAllToCsv);
+		manager.add(viewer.getActionUseMultipliers());
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}

@@ -18,6 +18,7 @@
  */
 package org.netxms.ui.eclipse.perfview.widgets.helpers;
 
+import java.text.NumberFormat;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ITableFontProvider;
 import org.eclipse.jface.viewers.ITableLabelProvider;
@@ -29,7 +30,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.TableColumnDefinition;
 import org.netxms.client.TableRow;
-import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 
 /**
  * Label provider for NetXMS table
@@ -37,7 +39,9 @@ import org.netxms.ui.eclipse.tools.WidgetHelper;
 public class TableLabelProvider extends LabelProvider implements ITableLabelProvider, ITableFontProvider
 {
 	private TableColumnDefinition[] columns = null;
+	private TableRow row;
 	private Font keyColumnFont;
+   private boolean useMultipliers;
 	
 	/**
 	 * 
@@ -82,12 +86,17 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		TableRow row = (TableRow)element;
+		row = (TableRow)element;
 		
-		if (columnIndex >= row.size())
+		if (columnIndex >= row.size()) {
 			return null;
+		}
+		else if (useMultipliers) {
+		 return getValueForFormat(columnIndex);
+		   
+		}
 		
-		return WidgetHelper.escapeText(row.get(columnIndex).getValue());
+		return row.get(columnIndex).getValue();
 	}
 
 	/* (non-Javadoc)
@@ -102,4 +111,105 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 			return keyColumnFont;
 		return null;
 	}
+	
+	public void useMultipliers(boolean useMultipliers)
+	{
+	   this.useMultipliers = useMultipliers;
+	}
+	
+	/**
+	 * @param columnIndex
+	 * @return value converted to multiplier form
+	 */
+	private String getValueForFormat(int columnIndex)
+   {
+      String value;
+      String suffix = null;
+      
+      try
+      {
+         switch(columns[columnIndex].getDataType())
+         {
+            case DataCollectionObject.DT_INT:
+            case DataCollectionObject.DT_UINT:
+            case DataCollectionItem.DT_INT64:
+            case DataCollectionItem.DT_UINT64:               
+               if (useMultipliers)
+               {
+                  long i = Long.parseLong(row.get(columnIndex).getValue());
+                  if ((i >= 10000000000000L) || (i <= -10000000000000L))
+                  {
+                     i = i / 1000000000000L;
+                     suffix = "T";
+                  }
+                  if ((i >= 10000000000L) || (i <= -10000000000L))
+                  {
+                     i = i / 1000000000L;
+                     suffix = "G";
+                  }
+                  if ((i >= 10000000) || (i <= -10000000))
+                  {
+                     i = i / 1000000;
+                     suffix = "M";
+                  }
+                  if ((i >= 10000) || (i <= -10000))
+                  {
+                     i = i / 1000;
+                     suffix = "K";
+                  }
+                  value = Long.toString(i);
+               }
+               else
+               {
+                  value = row.get(columnIndex).getValue();
+                  suffix = " ";
+               }
+               break;
+            case DataCollectionObject.DT_FLOAT:
+               if (useMultipliers)
+               {
+                  double d = Double.parseDouble(row.get(columnIndex).getValue());
+                  NumberFormat nf = NumberFormat.getNumberInstance();
+                  nf.setMaximumFractionDigits(2);
+                  if ((d >= 10000000000000.0) || (d <= -10000000000000.0))
+                  {
+                     d = d / 1000000000000.0;
+                     suffix = "T";
+                  }
+                  if ((d >= 10000000000.0) || (d <= -10000000000.0))
+                  {
+                     d = d / 1000000000.0;
+                     suffix = "G";
+                  }
+                  if ((d >= 10000000) || (d <= -10000000))
+                  {
+                     d = d / 1000000;
+                     suffix = "M";
+                  }
+                  if ((d >= 10000) || (d <= -10000))
+                  {
+                     d = d / 1000;
+                     suffix = "K";
+                  }
+                  value = Double.toString(d);
+               }
+               else
+               {
+                  value = row.get(columnIndex).getValue();
+               }
+               break;
+            default:
+               value = row.get(columnIndex).getValue();
+               break;
+         }
+      }     
+      catch(NumberFormatException e)
+      {
+         value = row.get(columnIndex).getValue();
+      }
+      
+      if (suffix != null)
+         return value + " " + suffix;
+      return value;
+   }
 }

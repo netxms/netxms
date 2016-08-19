@@ -86,6 +86,8 @@ public class TableValue extends Composite
    private Action actionShowLineChart;
    private Action actionShowBarChart;
    private Action actionShowPieChart;
+   private Action actionUseMultipliers;
+   private boolean useMultipliers = false;
 
    /**
     * @param parent
@@ -146,6 +148,14 @@ public class TableValue extends Composite
             showDataComparisonChart(DataComparisonChart.PIE_CHART);
          }
       };
+      
+      actionUseMultipliers = new Action("use multipliers", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            useMultipliers();
+         }
+      };
    }
 
    /**
@@ -186,6 +196,7 @@ public class TableValue extends Composite
       manager.add(actionShowPieChart);
       manager.add(new Separator());
       manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+      manager.add(actionUseMultipliers);
    }
 
    /**
@@ -307,7 +318,12 @@ public class TableValue extends Composite
          });
          viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
       }
-      ((TableLabelProvider)viewer.getLabelProvider()).setColumns(table.getColumns());
+      TableLabelProvider tlp = (TableLabelProvider)viewer.getLabelProvider();
+      
+      // Passes the useMultipliers flag
+      tlp.useMultipliers(useMultipliers);
+      
+      tlp.setColumns(table.getColumns());
       viewer.setInput(table);
       currentData = table;
    }
@@ -332,6 +348,22 @@ public class TableValue extends Composite
          }
       }
       return instance.toString();
+   }
+   
+   
+   /**
+    * Sets the useMultipliers flag
+    */
+   private void useMultipliers()
+   {
+      if (!useMultipliers) {
+         actionUseMultipliers.setChecked(true);
+         useMultipliers = true;
+      } else if (useMultipliers) {
+         actionUseMultipliers.setChecked(false);
+         useMultipliers = false;
+      }
+      updateViewer(currentData);
    }
 
    /**
@@ -467,5 +499,10 @@ public class TableValue extends Composite
    public SortableTableViewer getViewer()
    {
       return viewer;
+   }
+   
+   public Action getActionUseMultipliers()
+   {
+      return actionUseMultipliers;
    }
 }
