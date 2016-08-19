@@ -54,7 +54,7 @@ THREAD_RESULT THREAD_CALL ListenerThread(void *)
 	}
 	else
 	{
-		servAddr.sin_addr.s_addr = ResolveHostName(g_listenAddress);
+      servAddr.sin_addr.s_addr = InetAddress::resolveHostName(g_listenAddress, AF_INET).getAddressV4();
 		if (servAddr.sin_addr.s_addr == htonl(INADDR_NONE))
 			servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	}

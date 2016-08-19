@@ -375,7 +375,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
             statement->buffers->add(sqlBuffer);
-            length = (int)strlen(char *)sqlBuffer) + 1;
+            length = (int)strlen((char *)sqlBuffer) + 1;
          }
          else
          {
@@ -391,7 +391,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
          {
             sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
             statement->buffers->add(sqlBuffer);
-            length = (int)strlen(char *)sqlBuffer) + 1;
+            length = (int)strlen((char *)sqlBuffer) + 1;
          }
 			else
 			{
@@ -405,7 +405,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
             free(buffer);
-            length = (int)strlen(char *)sqlBuffer) + 1;
+            length = (int)strlen((char *)sqlBuffer) + 1;
          }
          else
          {
@@ -421,7 +421,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
          {
             sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
             free(buffer);
-            length = (int)strlen(char *)sqlBuffer) + 1;
+            length = (int)strlen((char *)sqlBuffer) + 1;
          }
 			else
 			{
@@ -435,7 +435,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
          if (cType == DB_CTYPE_UTF8_STRING)
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
-            length = (int)strlen(char *)sqlBuffer) + 1;
+            length = (int)strlen((char *)sqlBuffer) + 1;
          }
          else
          {
@@ -449,7 +449,7 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
 			else if (cType == DB_CTYPE_UTF8_STRING)
          {
             sqlBuffer = UCS2StringFromUTF8String((char *)buffer);
-            length = (int)strlen(char *)sqlBuffer) + 1;
+            length = (int)strlen((char *)sqlBuffer) + 1;
          }
 			else
 			{
@@ -465,11 +465,9 @@ extern "C" void EXPORT DrvBind(DB2DRV_STATEMENT *statement, int pos, int sqlType
 	                 ((cType == DB_CTYPE_STRING) || (cType == DB_CTYPE_UTF8_STRING)) ? length : 0, 0, sqlBuffer, 0, NULL);
 }
 
-
-//
-// Execute prepared statement
-//
-
+/**
+ * Execute prepared statement
+ */
 extern "C" DWORD EXPORT DrvExecute(DB2DRV_CONN *pConn, DB2DRV_STATEMENT *statement, NETXMS_WCHAR *errorText)
 {
 	DWORD dwResult;

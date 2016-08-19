@@ -72,18 +72,15 @@ THREAD_RESULT THREAD_CALL ProxySession::serverThreadStarter(void *arg)
 void ProxySession::clientThread()
 {
    DebugPrintf(7, _T("Client thread started, connecting to server"));
-   m_server = socket(AF_INET, SOCK_STREAM, 0);
-   if (m_server != INVALID_SOCKET)
+   InetAddress addr = InetAddress::resolveHostName(g_serverAddress);
+   if (addr.isValidUnicast())
    {
-      // Fill in address structure
-      struct sockaddr_in sa;
-      memset(&sa, 0, sizeof(sa));
-      sa.sin_addr.s_addr = ResolveHostName(g_serverAddress);
-      if ((sa.sin_addr.s_addr != INADDR_NONE) && (sa.sin_addr.s_addr != INADDR_ANY))
+      m_server = socket(addr.getFamily(), SOCK_STREAM, 0);
+      if (m_server != INVALID_SOCKET)
       {
-         sa.sin_family = AF_INET;
-         sa.sin_port = htons(g_serverPort);
-         if (connect(m_server, (struct sockaddr *)&sa, sizeof(sa)) != -1)
+         SockAddrBuffer sa;
+         addr.fillSockAddr(&sa, g_serverPort);
+         if (ConnectEx(m_server, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), 5000) != -1)
          {
             DebugPrintf(7, _T("Connected to server %s:%d"), g_serverAddress, (int)g_serverPort);
             THREAD serverThread = ThreadCreateEx(ProxySession::serverThreadStarter, 0, this);
@@ -94,8 +91,12 @@ void ProxySession::clientThread()
       }
       else
       {
-         DebugPrintf(4, _T("Cannot resolve server address %s"), g_serverAddress);
+         DebugPrintf(5, _T("Cannot create socket for server connection"));
       }
+   }
+   else
+   {
+      DebugPrintf(4, _T("Cannot resolve server address %s"), g_serverAddress);
    }
 
    shutdown(m_client, SHUT_RDWR);

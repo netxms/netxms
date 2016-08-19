@@ -378,6 +378,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tdata_convert.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\unlock.cpp"
 				>
 			</File>
