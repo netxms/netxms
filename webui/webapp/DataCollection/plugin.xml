@@ -83,7 +83,7 @@
          </action>
          <action
                class="org.netxms.ui.eclipse.datacollection.actions.ApplyTemplate"
-               enablesFor="1"
+               enablesFor="+"
                id="org.netxms.ui.eclipse.datacollection.popupActions.ApplyTemplate"
                label="%action.label.Apply"
                menubarPath="objectbinding"

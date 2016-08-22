@@ -18,9 +18,7 @@
  */
 package org.netxms.client.log;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.netxms.base.NXCPMessage;
@@ -31,47 +29,6 @@ import org.netxms.client.constants.ColumnFilterType;
  */
 public class ColumnFilter
 {
-   /**
-    * Column filter type
-    */
-	/*public enum Type
-   {
-      EQUALS(0),
-      RANGE(1),
-      SET(2),
-      LIKE(3),
-      LESS(4),
-      GREATER(5),
-      CHILDOF(6);
-      
-      private int value;
-      private static Map<Integer, Type> lookupTable = new HashMap<Integer, Type>();
-      
-      static
-      {
-         for(Type element : Type.values())
-         {
-            lookupTable.put(element.value, element);
-         }
-      }
-      
-      private Type(int value)
-      {
-         this.value = value;
-      }
-      
-      public int getValue()
-      {
-         return value;
-      }
-      
-      public static Type getByValue(int value)
-      {
-         final Type element = lookupTable.get(value);
-         return element;
-      }
-   }*/
-	
 	public static final int AND = 0;
 	public static final int OR = 1;
 	

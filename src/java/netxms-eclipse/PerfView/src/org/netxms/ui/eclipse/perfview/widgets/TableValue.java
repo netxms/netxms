@@ -30,6 +30,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerRow;
@@ -79,6 +80,7 @@ public class TableValue extends Composite
    private long dciId = 0;
    private String configId;
    private String objectName = null;
+   private String id;
    private Table currentData = null;
    private SortableTableViewer viewer;
    private CLabel errorLabel;
@@ -88,6 +90,7 @@ public class TableValue extends Composite
    private Action actionShowPieChart;
    private Action actionUseMultipliers;
    private boolean useMultipliers = false;
+   private TableLabelProvider tlp;
 
    /**
     * @param parent
@@ -109,15 +112,33 @@ public class TableValue extends Composite
       viewer.setLabelProvider(new TableLabelProvider());
       cellSelectionManager = new CellSelectionManager(viewer);
       
+      final IDialogSettings ds = Activator.getDefault().getDialogSettings();
+      tlp = (TableLabelProvider)viewer.getLabelProvider();
+      
       FormData fd = new FormData();
       fd.top = new FormAttachment(0, 0);
       fd.left = new FormAttachment(0, 0);
       fd.right = new FormAttachment(100, 0);
       fd.bottom = new FormAttachment(100, 0);
       viewer.getControl().setLayoutData(fd);
-
+      
       createActions();
       createPopupMenu();
+      
+      StringBuilder sb = new StringBuilder("TableLastValues."); //$NON-NLS-1$
+      sb.append(dciId);
+      if (configId != null)
+      {
+         sb.append('.');
+         sb.append(configId);
+      }
+      id = sb.toString();
+      
+      if (ds.get(id + ".useMultipliers") != null) {//$NON-NLS-1$
+         useMultipliers = ds.getBoolean(id + ".useMultipliers");
+      }
+      else
+         tlp.useMultipliers(useMultipliers);      
    }
 
    /**
@@ -293,6 +314,8 @@ public class TableValue extends Composite
     */
    private void updateViewer(final Table table)
    {
+      final IDialogSettings ds = Activator.getDefault().getDialogSettings();
+      
       if (!viewer.isInitialized())
       {
          final String[] names = table.getColumnDisplayNames();
@@ -300,14 +323,7 @@ public class TableValue extends Composite
          Arrays.fill(widths, 150);
          viewer.createColumns(names, widths, 0, SWT.UP);
          
-         StringBuilder sb = new StringBuilder("TableLastValues."); //$NON-NLS-1$
-         sb.append(dciId);
-         if (configId != null)
-         {
-            sb.append('.');
-            sb.append(configId);
-         }
-         final String id = sb.toString();
+         
          
          WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), id); //$NON-NLS-1$
          viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -315,15 +331,16 @@ public class TableValue extends Composite
             public void widgetDisposed(DisposeEvent e)
             {
                WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), id); //$NON-NLS-1$
+               ds.put(id + ".useMultipliers", tlp.areMultipliersUsed()); //$NON-NLS-1$
             }
          });
-         viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
+         viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));        
       }
-      TableLabelProvider tlp = (TableLabelProvider)viewer.getLabelProvider();
       
       // Passes the useMultipliers flag
       tlp.useMultipliers(useMultipliers);
       
+      actionUseMultipliers.setChecked(useMultipliers);
       tlp.setColumns(table.getColumns());
       viewer.setInput(table);
       currentData = table;
@@ -358,10 +375,8 @@ public class TableValue extends Composite
    private void useMultipliers()
    {
       if (!useMultipliers) {
-         actionUseMultipliers.setChecked(true);
          useMultipliers = true;
       } else if (useMultipliers) {
-         actionUseMultipliers.setChecked(false);
          useMultipliers = false;
       }
       updateViewer(currentData);

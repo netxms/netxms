@@ -117,6 +117,11 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	   this.useMultipliers = useMultipliers;
 	}
 	
+	public boolean areMultipliersUsed()
+	{
+	   return useMultipliers;
+	}
+	
 	/**
 	 * @param columnIndex
 	 * @return value converted to multiplier form
