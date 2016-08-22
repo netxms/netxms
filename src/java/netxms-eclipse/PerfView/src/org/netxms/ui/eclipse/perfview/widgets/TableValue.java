@@ -149,7 +149,7 @@ public class TableValue extends Composite
          }
       };
       
-      actionUseMultipliers = new Action("use multipliers", Action.AS_CHECK_BOX) {
+      actionUseMultipliers = new Action("Use &multipliers", Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
@@ -195,8 +195,9 @@ public class TableValue extends Composite
       manager.add(actionShowBarChart);
       manager.add(actionShowPieChart);
       manager.add(new Separator());
-      manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
       manager.add(actionUseMultipliers);
+      manager.add(new Separator());
+      manager.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
    }
 
    /**
@@ -288,7 +289,7 @@ public class TableValue extends Composite
    /**
     * Update viewer with fresh table data
     * 
-    * @param table tableviewer.refresh(true);
+    * @param table new table DCI data
     */
    private void updateViewer(final Table table)
    {
