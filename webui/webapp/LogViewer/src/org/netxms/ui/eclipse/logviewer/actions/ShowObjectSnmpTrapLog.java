@@ -29,6 +29,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.LogFilter;
 import org.netxms.client.log.OrderingColumn;
@@ -60,7 +61,7 @@ public class ShowObjectSnmpTrapLog extends AbstractHandler
       {
          if (!(o instanceof AbstractObject))
             continue;
-         cf.addSubFilter(new ColumnFilter((o instanceof AbstractNode) ? ColumnFilter.EQUALS : ColumnFilter.CHILDOF, ((AbstractObject)o).getObjectId()));
+         cf.addSubFilter(new ColumnFilter((o instanceof AbstractNode) ? ColumnFilterType.EQUALS : ColumnFilterType.CHILDOF, ((AbstractObject)o).getObjectId()));
       }
       
       try

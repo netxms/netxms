@@ -31,6 +31,7 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.log.ColumnFilter;
@@ -118,7 +119,7 @@ public class EventConditionEditor extends ConditionEditor
 			}
 		});
 
-      if ((initialFilter != null) && (initialFilter.getType() == ColumnFilter.EQUALS))
+      if ((initialFilter != null) && (initialFilter.getType() == ColumnFilterType.EQUALS))
       {
          setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
          eventCode = initialFilter.getNumericValue();
@@ -167,7 +168,7 @@ public class EventConditionEditor extends ConditionEditor
 	@Override
 	public ColumnFilter createFilter()
 	{
-		ColumnFilter filter = new ColumnFilter(ColumnFilter.EQUALS, eventCode);
+		ColumnFilter filter = new ColumnFilter(ColumnFilterType.EQUALS, eventCode);
 		filter.setNegated(getSelectedOperation() == 1);
 		return filter;
 	}

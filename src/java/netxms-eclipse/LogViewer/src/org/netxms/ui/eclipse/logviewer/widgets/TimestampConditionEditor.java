@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.logviewer.Messages;
 
@@ -142,10 +143,10 @@ public class TimestampConditionEditor extends ConditionEditor
 				filter = new ColumnFilter(timestamp, c.getTimeInMillis() / 1000);
 				break;
 			case 1:	// before
-				filter = new ColumnFilter(ColumnFilter.LESS, timestamp);
+				filter = new ColumnFilter(ColumnFilterType.LESS, timestamp);
 				break;
 			case 2:	// after
-				filter = new ColumnFilter(ColumnFilter.GREATER, timestamp);
+				filter = new ColumnFilter(ColumnFilterType.GREATER, timestamp);
 				break;
 			default:
 				filter = new ColumnFilter(timestamp, timestamp);

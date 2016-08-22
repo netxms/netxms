@@ -18,28 +18,64 @@
  */
 package org.netxms.client.log;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.ColumnFilterType;
 
 /**
  * Column filter
  */
 public class ColumnFilter
 {
-	public static final int EQUALS = 0;
-	public static final int RANGE = 1;
-	public static final int SET = 2;
-	public static final int LIKE = 3;
-	public static final int LESS = 4;
-	public static final int GREATER = 5;
-	public static final int CHILDOF = 6;
+   /**
+    * Column filter type
+    */
+	/*public enum Type
+   {
+      EQUALS(0),
+      RANGE(1),
+      SET(2),
+      LIKE(3),
+      LESS(4),
+      GREATER(5),
+      CHILDOF(6);
+      
+      private int value;
+      private static Map<Integer, Type> lookupTable = new HashMap<Integer, Type>();
+      
+      static
+      {
+         for(Type element : Type.values())
+         {
+            lookupTable.put(element.value, element);
+         }
+      }
+      
+      private Type(int value)
+      {
+         this.value = value;
+      }
+      
+      public int getValue()
+      {
+         return value;
+      }
+      
+      public static Type getByValue(int value)
+      {
+         final Type element = lookupTable.get(value);
+         return element;
+      }
+   }*/
 	
 	public static final int AND = 0;
 	public static final int OR = 1;
 	
-	private int type;
+	private ColumnFilterType type;
 	private long rangeFrom;
 	private long rangeTo;
 	private long numericValue;
@@ -53,7 +89,7 @@ public class ColumnFilter
 	 * 
 	 * @param value
 	 */
-	public ColumnFilter(int type, long value)
+	public ColumnFilter(ColumnFilterType type, long value)
 	{
 		this.type = type;
 		numericValue = value;
@@ -67,7 +103,7 @@ public class ColumnFilter
 	 */
 	public ColumnFilter(long rangeFrom, long rangeTo)
 	{
-		type = RANGE;
+		type = ColumnFilterType.RANGE;
 		this.rangeFrom = rangeFrom;
 		this.rangeTo = rangeTo;
 	}
@@ -79,7 +115,7 @@ public class ColumnFilter
 	 */
 	public ColumnFilter(String value)
 	{
-		type = LIKE;
+		type = ColumnFilterType.LIKE;
 		like = value;
 	}
 
@@ -88,7 +124,7 @@ public class ColumnFilter
 	 */
 	public ColumnFilter()
 	{
-		type = SET;
+		type = ColumnFilterType.SET;
 		set = new HashSet<ColumnFilter>();
 		operation = AND;
 	}
@@ -100,7 +136,7 @@ public class ColumnFilter
 	 */
 	public void addSubFilter(ColumnFilter filter)
 	{
-		if (type == SET)
+		if (type == ColumnFilterType.SET)
 			set.add(filter);
 	}
 	
@@ -114,7 +150,7 @@ public class ColumnFilter
 	int fillMessage(final NXCPMessage msg, final long baseId)
 	{
 		int varCount = 1;
-		msg.setFieldInt16(baseId, type);
+		msg.setFieldInt16(baseId, type.getValue());
 		switch(type)
 		{
 			case EQUALS:
@@ -235,7 +271,7 @@ public class ColumnFilter
 	/**
 	 * @return the type
 	 */
-	public int getType()
+	public ColumnFilterType getType()
 	{
 		return type;
 	}

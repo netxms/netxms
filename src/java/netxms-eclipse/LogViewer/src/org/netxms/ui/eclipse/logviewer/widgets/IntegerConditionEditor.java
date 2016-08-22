@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.logviewer.Messages;
 
@@ -93,21 +94,21 @@ public class IntegerConditionEditor extends ConditionEditor
 
       if (initialFilter != null)
       {
-         switch(initialFilter.getOperation())
+         switch(ColumnFilterType.getByValue(initialFilter.getOperation()))
          {
-            case ColumnFilter.EQUALS:
+            case EQUALS:
                setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
                value1.setText(Long.toString(initialFilter.getNumericValue()));
                break;
-            case ColumnFilter.GREATER:
+            case GREATER:
                setSelectedOperation(initialFilter.isNegated() ? 3 : 5);
                value1.setText(Long.toString(initialFilter.getNumericValue()));
                break;
-            case ColumnFilter.LESS:
+            case LESS:
                setSelectedOperation(initialFilter.isNegated() ? 4 : 2);
                value1.setText(Long.toString(initialFilter.getNumericValue()));
                break;
-            case ColumnFilter.RANGE:
+            case RANGE:
                setSelectedOperation(6);
                andLabel.setVisible(true);
                value2.setVisible(true);
@@ -156,22 +157,22 @@ public class IntegerConditionEditor extends ConditionEditor
 		switch(getSelectedOperation())
 		{
 			case 1:	// not equal
-				filter = new ColumnFilter(ColumnFilter.EQUALS, n1);
+				filter = new ColumnFilter(ColumnFilterType.EQUALS, n1);
 				filter.setNegated(true);
 				break;
 			case 2:	// less
-				filter = new ColumnFilter(ColumnFilter.LESS, n1);
+				filter = new ColumnFilter(ColumnFilterType.LESS, n1);
 				break;
 			case 3:	// less or equal
-				filter = new ColumnFilter(ColumnFilter.GREATER, n1);
+				filter = new ColumnFilter(ColumnFilterType.GREATER, n1);
 				filter.setNegated(true);
 				break;
 			case 4:	// greater or equal
-				filter = new ColumnFilter(ColumnFilter.LESS, n1);
+				filter = new ColumnFilter(ColumnFilterType.LESS, n1);
 				filter.setNegated(true);
 				break;
 			case 5:	// greater
-				filter = new ColumnFilter(ColumnFilter.GREATER, n1);
+				filter = new ColumnFilter(ColumnFilterType.GREATER, n1);
 				break;
 			case 6:	// between
 				long n2;
@@ -186,7 +187,7 @@ public class IntegerConditionEditor extends ConditionEditor
 				filter = new ColumnFilter(n1, n2);
 				break;
 			default:
-				filter = new ColumnFilter(ColumnFilter.EQUALS, n1);
+				filter = new ColumnFilter(ColumnFilterType.EQUALS, n1);
 				break;
 		}
 		return filter;

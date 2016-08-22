@@ -25,6 +25,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.events.Alarm;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.logviewer.Activator;
@@ -92,7 +93,7 @@ public class AlarmStateConditionEditor extends ConditionEditor
 		gd.grabExcessHorizontalSpace = true;
 		state.setLayoutData(gd);
 
-      if ((initialFilter != null) && (initialFilter.getType() == ColumnFilter.EQUALS))
+      if ((initialFilter != null) && (initialFilter.getType() == ColumnFilterType.EQUALS))
       {
          setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
          state.select((int)initialFilter.getNumericValue());
@@ -105,7 +106,7 @@ public class AlarmStateConditionEditor extends ConditionEditor
 	@Override
 	public ColumnFilter createFilter()
 	{
-		ColumnFilter filter = new ColumnFilter(ColumnFilter.EQUALS, state.getSelectionIndex());
+		ColumnFilter filter = new ColumnFilter(ColumnFilterType.EQUALS, state.getSelectionIndex());
 		filter.setNegated(getSelectedOperation() == 1);
 		return filter;
 	}

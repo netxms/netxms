@@ -31,6 +31,7 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.users.AbstractUserObject;
 import org.netxms.client.users.User;
@@ -148,7 +149,7 @@ public class UserConditionEditor extends ConditionEditor
 	@Override
 	public ColumnFilter createFilter()
 	{
-		ColumnFilter filter = new ColumnFilter(ColumnFilter.EQUALS, userId);
+		ColumnFilter filter = new ColumnFilter(ColumnFilterType.EQUALS, userId);
 		filter.setNegated(getSelectedOperation() == 1);
 		return filter;
 	}

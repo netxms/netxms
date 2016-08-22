@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
@@ -75,15 +76,15 @@ public class SeverityConditionEditor extends ConditionEditor
 		
 		if (initialFilter != null)
 		{
-		   switch(initialFilter.getOperation())
+		   switch(ColumnFilterType.getByValue(initialFilter.getOperation()))
 		   {
-		      case ColumnFilter.EQUALS:
+		      case EQUALS:
 		         setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
 		         break;
-		      case ColumnFilter.LESS:
+		      case LESS:
                setSelectedOperation(2);
                break;
-            case ColumnFilter.GREATER:
+            case GREATER:
                setSelectedOperation(3);
                break;
 		   }
@@ -100,16 +101,16 @@ public class SeverityConditionEditor extends ConditionEditor
 		switch(getSelectedOperation())
 		{
 			case 0:	// IS
-				return new ColumnFilter(ColumnFilter.EQUALS, severity.getSelectionIndex());
+				return new ColumnFilter(ColumnFilterType.EQUALS, severity.getSelectionIndex());
 			case 1:	// IS NOT
-				ColumnFilter filter = new ColumnFilter(ColumnFilter.EQUALS, severity.getSelectionIndex());
+				ColumnFilter filter = new ColumnFilter(ColumnFilterType.EQUALS, severity.getSelectionIndex());
 				filter.setNegated(true);
 				return filter;
 			case 2:	// BELOW
-				return new ColumnFilter(ColumnFilter.LESS, severity.getSelectionIndex());
+				return new ColumnFilter(ColumnFilterType.LESS, severity.getSelectionIndex());
 			case 3:	// ABOVE
-				return new ColumnFilter(ColumnFilter.GREATER, severity.getSelectionIndex());
+				return new ColumnFilter(ColumnFilterType.GREATER, severity.getSelectionIndex());
 		}
-		return new ColumnFilter(ColumnFilter.EQUALS, severity.getSelectionIndex());
+		return new ColumnFilter(ColumnFilterType.EQUALS, severity.getSelectionIndex());
 	}
 }

@@ -31,6 +31,7 @@ import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
+import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -118,13 +119,13 @@ public class ObjectConditionEditor extends ConditionEditor
 
       if (initialFilter != null)
       {
-         switch(initialFilter.getOperation())
+         switch(ColumnFilterType.getByValue(initialFilter.getOperation()))
          {
-            case ColumnFilter.EQUALS:
+            case EQUALS:
                setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
                objectId = initialFilter.getNumericValue();
                break;
-            case ColumnFilter.CHILDOF:
+            case CHILDOF:
                setSelectedOperation(initialFilter.isNegated() ? 3 : 2);
                objectId = initialFilter.getNumericValue();
                break;
@@ -178,7 +179,7 @@ public class ObjectConditionEditor extends ConditionEditor
 	public ColumnFilter createFilter()
 	{
 		int op = getSelectedOperation();
-		ColumnFilter filter = new ColumnFilter(((op == 2) || (op == 3)) ? ColumnFilter.CHILDOF : ColumnFilter.EQUALS, objectId);
+		ColumnFilter filter = new ColumnFilter(((op == 2) || (op == 3)) ? ColumnFilterType.CHILDOF : ColumnFilterType.EQUALS, objectId);
 		filter.setNegated((op == 1) || (op == 3));
 		return filter;
 	}

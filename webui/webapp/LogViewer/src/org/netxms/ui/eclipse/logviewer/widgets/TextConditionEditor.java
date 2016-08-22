@@ -23,6 +23,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.ui.eclipse.logviewer.Messages;
 
@@ -67,7 +68,7 @@ public class TextConditionEditor extends ConditionEditor
 		gd.grabExcessHorizontalSpace = true;
 		value.setLayoutData(gd);
 		
-      if ((initialFilter != null) && (initialFilter.getType() == ColumnFilter.LIKE))
+      if ((initialFilter != null) && (initialFilter.getType() == ColumnFilterType.LIKE))
       {
          setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
          value.setText(initialFilter.getLike());

@@ -246,7 +246,7 @@ public class ColumnFilterEditor extends DashboardComposite
       {
          for(ColumnFilter f : initialFilter.getSubFilters())
          {
-            f.setOperation(f.getType());
+            f.setOperation(f.getType().getValue());
             addCondition(f);
          }
       }
