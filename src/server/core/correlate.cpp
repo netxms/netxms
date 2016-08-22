@@ -75,17 +75,10 @@ static void C_SysNodeDown(Node *pNode, Event *pEvent)
 	if (IsZoningEnabled() && (pNode->getZoneId() != 0))
 	{
 		Zone *zone = (Zone *)g_idxZoneByGUID.get(pNode->getZoneId());
-		if ((zone != NULL) && ((zone->getAgentProxy() != 0) || (zone->getSnmpProxy() != 0) || (zone->getIcmpProxy() != 0)))
+		if ((zone != NULL) && (zone->getProxyNodeId() != 0))
 		{
-			bool allProxyDown = true;
-			if (zone->getAgentProxy() != 0)
-				allProxyDown = CheckAgentDown(pNode, pEvent, zone->getAgentProxy(), _T("agent proxy"));
-			if (allProxyDown && (zone->getSnmpProxy() != 0) && (zone->getSnmpProxy() != zone->getAgentProxy()))
-				allProxyDown = CheckAgentDown(pNode, pEvent, zone->getSnmpProxy(), _T("SNMP proxy"));
-			if (allProxyDown && (zone->getIcmpProxy() != 0) && (zone->getIcmpProxy() != zone->getAgentProxy()) && (zone->getIcmpProxy() != zone->getSnmpProxy()))
-				allProxyDown = CheckAgentDown(pNode, pEvent, zone->getSnmpProxy(), _T("ICMP proxy"));
-			if (allProxyDown)
-				return;
+		   if (CheckAgentDown(pNode, pEvent, zone->getProxyNodeId(), _T("zone proxy")))
+		      return;
 			pEvent->setRootId(0);
 		}
 	}

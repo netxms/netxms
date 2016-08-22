@@ -1971,10 +1971,7 @@ class Zone : public NetObj
 {
 protected:
    UINT32 m_zoneId;
-   UINT32 m_agentProxy;
-   UINT32 m_snmpProxy;
-	UINT32 m_icmpProxy;
-	UINT32 m_sshProxy;
+   UINT32 m_proxyNodeId;
 	InetAddressIndex *m_idxNodeByAddr;
 	InetAddressIndex *m_idxInterfaceByAddr;
 	InetAddressIndex *m_idxSubnetByAddr;
@@ -1998,10 +1995,7 @@ public:
    virtual NXSL_Value *createNXSLObject();
 
    UINT32 getZoneId() const { return m_zoneId; }
-	UINT32 getAgentProxy() const { return m_agentProxy; }
-	UINT32 getSnmpProxy() const { return m_snmpProxy; }
-	UINT32 getIcmpProxy() const { return m_icmpProxy; }
-   UINT32 getSshProxy() const { return m_sshProxy; }
+	UINT32 getProxyNodeId() const { return m_proxyNodeId; }
 
    void addSubnet(Subnet *pSubnet) { addChild(pSubnet); pSubnet->addParent(this); }
 

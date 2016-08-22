@@ -287,19 +287,14 @@ CREATE TABLE zones
 (
   id integer not null,    // Zone object ID
   zone_guid integer not null, // Globally unique ID for zone
-  agent_proxy integer not null,
-  snmp_proxy integer not null,
-  icmp_proxy integer not null,
-  ssh_proxy integer not null,
+  proxy_node integer not null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(zones, 'Zones')
 COMMENT_COLUMN(zones.id, 'Zone id from object_properties')
 COMMENT_COLUMN(zones.zone_guid, 'Zone GUID')
-COMMENT_COLUMN(zones.agent_proxy, 'Id of agent proxy for this zone')
-COMMENT_COLUMN(zones.snmp_proxy, 'Id of agent SNMP proxy for this zone')
-COMMENT_COLUMN(zones.icmp_proxy, 'Id of agent ICMP proxy for this zone')
+COMMENT_COLUMN(zones.proxy_node, 'ID of proxy node for this zone')
 
 /*
 ** Mobile device objects

@@ -28,10 +28,7 @@ import org.netxms.client.NXCSession;
 public class Zone extends GenericObject
 {
 	private long zoneId;
-	private long agentProxy;
-	private long snmpProxy;
-	private long icmpProxy;
-   private long sshProxy;
+	private long proxyNodeId;
 	
 	/**
 	 * Create zone object from NXCP message
@@ -43,10 +40,7 @@ public class Zone extends GenericObject
 	{
 		super(msg, session);
 		zoneId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_ID);
-		agentProxy = msg.getFieldAsInt64(NXCPCodes.VID_AGENT_PROXY);
-		snmpProxy = msg.getFieldAsInt64(NXCPCodes.VID_SNMP_PROXY);
-		icmpProxy = msg.getFieldAsInt64(NXCPCodes.VID_ICMP_PROXY);
-      sshProxy = msg.getFieldAsInt64(NXCPCodes.VID_SSH_PROXY);
+		proxyNodeId = msg.getFieldAsInt64(NXCPCodes.VID_ZONE_PROXY);
 	}
 
 	/* (non-Javadoc)
@@ -74,37 +68,13 @@ public class Zone extends GenericObject
 	{
 		return zoneId;
 	}
-
-	/**
-	 * @return the agentProxy
-	 */
-	public long getAgentProxy()
-	{
-		return agentProxy;
-	}
-
-	/**
-	 * @return the snmpProxy
-	 */
-	public long getSnmpProxy()
-	{
-		return snmpProxy;
-	}
-
-	/**
-	 * @return the icmpProxy
-	 */
-	public long getIcmpProxy()
-	{
-		return icmpProxy;
-	}
-
-	/**
-    * @return the sshProxy
+	
+   /**
+    * @return the proxyNodeId
     */
-   public long getSshProxy()
+   public long getProxyNodeId()
    {
-      return sshProxy;
+      return proxyNodeId;
    }
 
    /* (non-Javadoc)

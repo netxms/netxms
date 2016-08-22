@@ -287,9 +287,9 @@ static bool HostIsReachable(const InetAddress& ipAddr, UINT32 zoneId, bool fullC
 		Zone *zone = (Zone *)g_idxZoneByGUID.get(zoneId);
 		if (zone != NULL)
 		{
-			agentProxy = zone->getAgentProxy();
-			icmpProxy = zone->getIcmpProxy();
-			snmpProxy = zone->getSnmpProxy();
+			agentProxy = zone->getProxyNodeId();
+			icmpProxy = zone->getProxyNodeId();
+			snmpProxy = zone->getProxyNodeId();
 		}
 	}
 

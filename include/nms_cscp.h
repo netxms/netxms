@@ -1132,6 +1132,7 @@ typedef struct
 #define VID_SSH_LOGIN               ((UINT32)546)
 #define VID_SSH_PASSWORD            ((UINT32)547)
 #define VID_SSH_PROXY               ((UINT32)548)
+#define VID_ZONE_PROXY              ((UINT32)549)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

@@ -245,17 +245,14 @@ NXSL_Value *NXSL_ZoneClass::getAttr(NXSL_Object *object, const TCHAR *attr)
       return value;
 
    Zone *zone = (Zone *)object->getData();
-   if (!_tcscmp(attr, _T("agentProxy")))
+   if (!_tcscmp(attr, _T("proxyNode")))
    {
-      value = new NXSL_Value(zone->getAgentProxy());
+      Node *node = (Node *)FindObjectById(zone->getProxyNodeId(), OBJECT_NODE);
+      value = (node != NULL) ? new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, node)) : new NXSL_Value();
    }
-   else if (!_tcscmp(attr, _T("icmpProxy")))
+   else if (!_tcscmp(attr, _T("proxyNodeId")))
    {
-      value = new NXSL_Value(zone->getIcmpProxy());
-   }
-   else if (!_tcscmp(attr, _T("snmpProxy")))
-   {
-      value = new NXSL_Value(zone->getSnmpProxy());
+      value = new NXSL_Value(zone->getProxyNodeId());
    }
    else if (!_tcscmp(attr, _T("zoneId")))
    {

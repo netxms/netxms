@@ -13,6 +13,7 @@
 - New agent parameters System.CPU.CurrentUsage and System.CPU.CurrentUsage(*)
 - SSH subagent (for collecting data and executing actions via SSH)
 - Zone ID can be set for agent in SNMP proxy mode
+- Zones has common default proxy node for all protocols
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu

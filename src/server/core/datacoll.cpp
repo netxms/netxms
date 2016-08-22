@@ -110,8 +110,8 @@ static void *GetItemData(DataCollectionTarget *dcTarget, DCItem *pItem, TCHAR *p
                   if (IsZoningEnabled())
                   {
                      Zone *zone = (Zone *)FindZoneByGUID(((Node *)dcTarget)->getZoneId());
-                     if ((zone != NULL) && (zone->getSshProxy() != 0))
-                        proxyId = zone->getSshProxy();
+                     if ((zone != NULL) && (zone->getProxyNodeId() != 0))
+                        proxyId = zone->getProxyNodeId();
                      else
                         proxyId = g_dwMgmtNode;
                   }

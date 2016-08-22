@@ -29,6 +29,7 @@ import org.netxms.client.NXCObjectModificationData;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.Zone;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.api.ObjectSelectionFilterFactory;
 import org.netxms.ui.eclipse.objectbrowser.widgets.ObjectSelector;
 import org.netxms.ui.eclipse.objectmanager.Activator;
 import org.netxms.ui.eclipse.objectmanager.Messages;
@@ -41,9 +42,6 @@ public class ZoneCommunications extends PropertyPage
 {
 	private Zone zone;
 	private ObjectSelector agentProxy;
-	private ObjectSelector snmpProxy;
-	private ObjectSelector icmpProxy;
-   private ObjectSelector sshProxy;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.jface.preference.PreferencePage#createContents(org.eclipse.swt.widgets.Composite)
@@ -60,36 +58,13 @@ public class ZoneCommunications extends PropertyPage
 		dialogArea.setLayout(dialogLayout);
 
 		agentProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
-		agentProxy.setLabel(Messages.get().ZoneCommunications_DefaultAgentProxy);
-		agentProxy.setObjectId(zone.getAgentProxy());
+		agentProxy.setLabel(Messages.get().ZoneCommunications_DefaultProxy);
+      agentProxy.setClassFilter(ObjectSelectionFilterFactory.getInstance().createNodeSelectionFilter(false));
+		agentProxy.setObjectId(zone.getProxyNodeId());
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		agentProxy.setLayoutData(gd);
-		
-		snmpProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
-		snmpProxy.setLabel(Messages.get().ZoneCommunications_DefaultSNMPProxy);
-		snmpProxy.setObjectId(zone.getSnmpProxy());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		snmpProxy.setLayoutData(gd);
-		
-		icmpProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
-		icmpProxy.setLabel(Messages.get().ZoneCommunications_DefaultICMPProxy);
-		icmpProxy.setObjectId(zone.getIcmpProxy());
-		gd = new GridData();
-		gd.horizontalAlignment = SWT.FILL;
-		gd.grabExcessHorizontalSpace = true;
-		icmpProxy.setLayoutData(gd);
-		
-      sshProxy = new ObjectSelector(dialogArea, SWT.NONE, true);
-      sshProxy.setLabel(Messages.get().ZoneCommunications_DefaultSSHProxy);
-      sshProxy.setObjectId(zone.getSshProxy());
-      gd = new GridData();
-      gd.horizontalAlignment = SWT.FILL;
-      gd.grabExcessHorizontalSpace = true;
-      sshProxy.setLayoutData(gd);
       
 		return dialogArea;
 	}
@@ -105,10 +80,7 @@ public class ZoneCommunications extends PropertyPage
 			setValid(false);
 		
 		final NXCObjectModificationData md = new NXCObjectModificationData(zone.getObjectId());
-		md.setAgentProxy(agentProxy.getObjectId());
-		md.setSnmpProxy(snmpProxy.getObjectId());
-		md.setIcmpProxy(icmpProxy.getObjectId());
-      md.setSshProxy(sshProxy.getObjectId());
+		md.setZoneProxy(agentProxy.getObjectId());
 		
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
 		new ConsoleJob(String.format(Messages.get().ZoneCommunications_JobName, zone.getObjectName()), null, Activator.PLUGIN_ID, null) {
@@ -167,9 +139,6 @@ public class ZoneCommunications extends PropertyPage
 	protected void performDefaults()
 	{
 		super.performDefaults();
-		
 		agentProxy.setObjectId(0);
-		snmpProxy.setObjectId(0);
-		icmpProxy.setObjectId(0);
 	}
 }

@@ -450,7 +450,7 @@ void AccessPoint::statusPoll(ClientSession *session, UINT32 rqId, Queue *eventQu
 			Zone *zone = (Zone *)g_idxZoneByGUID.get(controller->getZoneId());
 			if (zone != NULL)
 			{
-				icmpProxy = zone->getIcmpProxy();
+				icmpProxy = zone->getProxyNodeId();
 			}
 		}
 
@@ -552,7 +552,7 @@ void AccessPoint::updatePingData()
       Zone *zone = (Zone *)g_idxZoneByGUID.get(pNode->getZoneId());
       if (zone != NULL)
       {
-         icmpProxy = zone->getIcmpProxy();
+         icmpProxy = zone->getProxyNodeId();
       }
    }
 

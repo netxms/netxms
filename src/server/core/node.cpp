@@ -1829,18 +1829,9 @@ bool Node::checkNetworkPath(UINT32 dwRqId)
 	if (IsZoningEnabled() && (m_zoneId != 0))
 	{
 		Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
-		if ((zone != NULL) && ((zone->getAgentProxy() != 0) || (zone->getSnmpProxy() != 0) || (zone->getIcmpProxy() != 0)))
-		{
-			bool allProxyDown = true;
-			if (zone->getIcmpProxy() != 0)
-				allProxyDown = checkNetworkPathElement(zone->getIcmpProxy(), _T("ICMP proxy"), true, dwRqId);
-			if (allProxyDown && (zone->getSnmpProxy() != 0) && (zone->getSnmpProxy() != zone->getIcmpProxy()))
-				allProxyDown = checkNetworkPathElement(zone->getSnmpProxy(), _T("SNMP proxy"), true, dwRqId);
-			if (allProxyDown && (zone->getAgentProxy() != 0) && (zone->getAgentProxy() != zone->getIcmpProxy()) && (zone->getAgentProxy() != zone->getSnmpProxy()))
-				allProxyDown = checkNetworkPathElement(zone->getAgentProxy(), _T("agent proxy"), true, dwRqId);
-			if (allProxyDown)
-				return true;
-		}
+		if ((zone != NULL) && (zone->getProxyNodeId() != 0) &&
+		    checkNetworkPathElement(zone->getProxyNodeId(), _T("zone proxy"), true, dwRqId))
+		   return true;
 	}
 
 	// Check directly connected switch
@@ -5749,7 +5740,7 @@ void Node::setAgentProxy(AgentConnection *pConn)
 		Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
 		if (zone != NULL)
 		{
-			proxyNode = zone->getAgentProxy();
+			proxyNode = zone->getProxyNodeId();
 		}
 	}
 
@@ -5850,7 +5841,7 @@ UINT32 Node::getEffectiveSnmpProxy() const
 		Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
 		if (zone != NULL)
 		{
-			snmpProxy = zone->getSnmpProxy();
+			snmpProxy = zone->getProxyNodeId();
 		}
 	}
    return snmpProxy;
@@ -7420,7 +7411,7 @@ void Node::updatePingData()
       Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
       if (zone != NULL)
       {
-         icmpProxy = zone->getIcmpProxy();
+         icmpProxy = zone->getProxyNodeId();
       }
    }
 

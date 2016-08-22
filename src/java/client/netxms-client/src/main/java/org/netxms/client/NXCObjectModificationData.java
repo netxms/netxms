@@ -114,6 +114,7 @@ public class NXCObjectModificationData
    public static final int SSH_PROXY          = 64;
    public static final int SSH_LOGIN          = 65;
    public static final int SSH_PASSWORD       = 66;
+   public static final int ZONE_PROXY         = 67;
 	
 	private Set<Integer> fieldSet;
 	private long objectId;
@@ -204,6 +205,7 @@ public class NXCObjectModificationData
 	private long sshProxy;
 	private String sshLogin;
 	private String sshPassword;
+	private long zoneProxy;
 	
 	/**
 	 * Constructor for creating modification data for given object
@@ -1679,5 +1681,22 @@ public class NXCObjectModificationData
    {
       this.sshPassword = sshPassword;
       fieldSet.add(SSH_PASSWORD);
+   }
+
+   /**
+    * @return the zoneProxy
+    */
+   public long getZoneProxy()
+   {
+      return zoneProxy;
+   }
+
+   /**
+    * @param zoneProxy the zoneProxy to set
+    */
+   public void setZoneProxy(long zoneProxy)
+   {
+      this.zoneProxy = zoneProxy;
+      fieldSet.add(ZONE_PROXY);
    }
 }

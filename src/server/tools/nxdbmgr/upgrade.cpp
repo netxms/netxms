@@ -736,6 +736,46 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V411 to V412
+ */
+static BOOL H_UpgradeFromV411(int currVersion, int newVersion)
+{
+   DB_RESULT hResult = SQLSelect(_T("SELECT id,zone_guid,agent_proxy,snmp_proxy,icmp_proxy,ssh_proxy FROM zones"));
+   if (hResult != NULL)
+   {
+      CHK_EXEC(SQLQuery(_T("DROP TABLE zones")));
+      CHK_EXEC(CreateTable(
+               _T("CREATE TABLE zones (")
+               _T("id integer not null,")
+               _T("zone_guid integer not null,")
+               _T("proxy_node integer not null,")
+               _T("PRIMARY KEY(id))")));
+      int count = DBGetNumRows(hResult);
+      if (count > 0)
+      {
+         TCHAR query[256];
+         for(int i = 0; i < count; i++)
+         {
+            UINT32 proxy = 0;
+            for(int j = 2; (j < 6) && (proxy == 0); j++)
+               proxy = DBGetFieldULong(hResult, i, j);
+            _sntprintf(query, 256, _T("INSERT INTO zones (id,zone_guid,proxy_node) VALUES (%d,%d,%d"),
+                       DBGetFieldLong(hResult, i, 0), DBGetFieldLong(hResult, i, 1), (int)proxy);
+            CHK_EXEC(SQLQuery(query));
+         }
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (g_bIgnoreErrors)
+         return false;
+   }
+   CHK_EXEC(SetSchemaVersion(412));
+   return TRUE;
+}
+
+/**
  * Upgrade from V410 to V411
  */
 static BOOL H_UpgradeFromV410(int currVersion, int newVersion)
@@ -10441,6 +10481,7 @@ static struct
    { 408, 409, H_UpgradeFromV408 },
    { 409, 410, H_UpgradeFromV409 },
    { 410, 411, H_UpgradeFromV410 },
+   { 411, 412, H_UpgradeFromV411 },
    { 0, 0, NULL }
 };
 

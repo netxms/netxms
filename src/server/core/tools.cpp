@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -341,7 +341,7 @@ InetAddress NXCORE_EXPORTABLE ResolveHostName(UINT32 zoneId, const TCHAR *hostna
       Zone *zone = FindZoneByGUID(zoneId);
       if (zone != NULL)
       {
-         Node *proxy = (Node *)FindObjectById(zone->getAgentProxy(), OBJECT_NODE);
+         Node *proxy = (Node *)FindObjectById(zone->getProxyNodeId(), OBJECT_NODE);
          if (proxy != NULL)
          {
             TCHAR query[256], buffer[128];

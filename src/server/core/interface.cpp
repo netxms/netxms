@@ -713,7 +713,7 @@ void Interface::updatePingData()
       Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
       if (zone != NULL)
       {
-         icmpProxy = zone->getIcmpProxy();
+         icmpProxy = zone->getProxyNodeId();
       }
    }
 
@@ -801,7 +801,7 @@ void Interface::icmpStatusPoll(UINT32 rqId, UINT32 nodeIcmpProxy, Cluster *clust
 		Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
 		if (zone != NULL)
 		{
-			icmpProxy = zone->getIcmpProxy();
+			icmpProxy = zone->getProxyNodeId();
 		}
 	}
 

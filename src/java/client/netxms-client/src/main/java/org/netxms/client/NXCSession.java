@@ -4637,7 +4637,12 @@ public class NXCSession
       {
          msg.setField(NXCPCodes.VID_SSH_PASSWORD, data.getSshPassword());
       }
-      
+
+      if (data.isFieldSet(NXCObjectModificationData.ZONE_PROXY))
+      {
+         msg.setFieldInt32(NXCPCodes.VID_ZONE_PROXY, (int)data.getZoneProxy());
+      }
+            
       modifyCustomObject(data, userData, msg);
 
       sendMessage(msg);
