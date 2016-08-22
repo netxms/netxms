@@ -14,6 +14,7 @@
 - SSH subagent (for collecting data and executing actions via SSH)
 - Zone ID can be set for agent in SNMP proxy mode
 - Zones has common default proxy node for all protocols
+- Zone's proxy node can be placed inside that zone
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu

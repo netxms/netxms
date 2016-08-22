@@ -5738,9 +5738,9 @@ void Node::setAgentProxy(AgentConnection *pConn)
 	if (IsZoningEnabled() && (proxyNode == 0) && (m_zoneId != 0))
 	{
 		Zone *zone = (Zone *)g_idxZoneByGUID.get(m_zoneId);
-		if (zone != NULL)
+		if ((zone != NULL) && (zone->getProxyNodeId() != m_id))
 		{
-			proxyNode = zone->getProxyNodeId();
+         proxyNode = zone->getProxyNodeId();
 		}
 	}
 
