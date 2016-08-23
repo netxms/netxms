@@ -154,7 +154,7 @@ public class GeneralInfo extends TableElement
             if (node.getBootTime() != null)
                addPair(Messages.get().GeneralInfo_BootTime, RegionalSettings.getDateTimeFormat().format(node.getBootTime()), false);
             if (node.hasAgent())
-               addPair(Messages.get().GeneralInfo_AgentStatus, (node.getFlags() & Node.NDF_AGENT_UNREACHABLE) != 0 ? Messages.get().GeneralInfo_Unreachable : Messages.get().GeneralInfo_Connected);
+               addPair(Messages.get().GeneralInfo_AgentStatus, (node.getRuntimeFlags() & Node.NDF_AGENT_UNREACHABLE) != 0 ? Messages.get().GeneralInfo_Unreachable : Messages.get().GeneralInfo_Connected);
             if (node.getLastAgentCommTime() != null)
                addPair(Messages.get().GeneralInfo_LastAgentContact, RegionalSettings.getDateTimeFormat().format(node.getLastAgentCommTime()), false);
             if (node.getRackId() != 0)
