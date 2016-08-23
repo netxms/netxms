@@ -57,7 +57,12 @@ NXCPMessage *AbstractMessageReceiver::getMessageFromBuffer(bool *protocolError)
    if (m_dataSize >= NXCP_HEADER_SIZE)
    {
       size_t msgSize = (size_t)ntohl(((NXCP_MESSAGE *)m_buffer)->size);
-      if (msgSize <= m_dataSize)
+      if ((msgSize < NXCP_HEADER_SIZE) || (msgSize % 8 != 0))
+      {
+         // impossible value in message size field, assuming garbage on input
+         *protocolError = true;
+      }
+      else if (msgSize <= m_dataSize)
       {
          if (ntohs(((NXCP_MESSAGE *)m_buffer)->code) == CMD_ENCRYPTED_MESSAGE)
          {
