@@ -781,19 +781,7 @@ static BOOL H_UpgradeFromV411(int currVersion, int newVersion)
 static BOOL H_UpgradeFromV410(int currVersion, int newVersion)
 {
    //check if tdata upgrade was already done, then just delete "TdataTableUpdated" metadata parameter
-   int count = 0;
-   DB_RESULT result = SQLSelect(_T("SELECT var_value FROM metadata WHERE var_name='TdataTableUpdated'"));
-   if (result != NULL)
-   {
-      int count = DBGetNumRows(result);
-      DBFreeResult(result);
-   }
-   else if (!g_bIgnoreErrors)
-   {
-      return false;
-   }
-
-   if(count == 0)
+   if (!MetaDataReadInt(_T("TdataTableUpdated"), 0))
    {
       StringMap savedMetadata;
       DB_RESULT hResult = SQLSelect(_T("SELECT var_name,var_value FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'"));
