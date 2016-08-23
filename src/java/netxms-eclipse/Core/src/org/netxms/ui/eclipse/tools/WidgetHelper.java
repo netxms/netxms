@@ -409,7 +409,7 @@ public class WidgetHelper
 			try
 			{
 				int w = settings.getInt(prefix + "." + i + ".width"); //$NON-NLS-1$ //$NON-NLS-2$
-				columns[i].setWidth(w);
+				columns[i].setWidth((w > 0) ? w : 50);
 			}
 			catch(NumberFormatException e)
 			{
