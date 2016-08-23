@@ -1,10 +1,24 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.widgets;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedList;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
@@ -43,15 +57,17 @@ import org.netxms.ui.eclipse.views.helpers.AbstractTraceViewFilter;
  */
 public abstract class AbstractTraceWidget extends Composite
 {
-	private static final int MAX_ELEMENTS = 1000;
+	private static final int MAX_ELEMENTS = 500;
 	
 	private IViewPart viewPart;
 	private FilterText filterText;
 	private TableViewer viewer;
-	private List<Object> data = new ArrayList<Object>(MAX_ELEMENTS);
+	private LinkedList<Object> data = new LinkedList<Object>();
 	private AbstractTraceViewFilter filter = null;
 	private boolean paused = false;
 	private boolean filterEnabled = false;
+   private long lastUpdated = 0;
+   private boolean updateScheduled = false;
 	private Action actionPause;
 	private Action actionShowFilter;
 	private Action actionCopy;
@@ -243,11 +259,31 @@ public abstract class AbstractTraceWidget extends Composite
 	protected void addElement(Object element)
 	{
 		if (data.size() == MAX_ELEMENTS)
-			data.remove(data.size() - 1);
+			data.removeLast();
 		
-		data.add(0, element);
+		data.addFirst(element);
 		if (!paused)
-			viewer.setInput(data.toArray());
+		{
+		   long now = System.currentTimeMillis();
+		   if (now - lastUpdated > 200)
+		   {
+		      viewer.setInput(data.toArray());
+		      lastUpdated = now;
+		   }
+		   else if (!updateScheduled)
+		   {
+		      updateScheduled = true;
+		      getDisplay().timerExec(200, new Runnable() {
+               @Override
+               public void run()
+               {
+                  viewer.setInput(data.toArray());
+                  lastUpdated = System.currentTimeMillis();
+                  updateScheduled = false;
+               }
+            });
+		   }
+		}
 	}
 	
 	/**
