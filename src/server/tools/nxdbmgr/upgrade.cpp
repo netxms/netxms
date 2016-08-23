@@ -780,55 +780,75 @@ static BOOL H_UpgradeFromV411(int currVersion, int newVersion)
  */
 static BOOL H_UpgradeFromV410(int currVersion, int newVersion)
 {
-   StringMap savedMetadata;
-   DB_RESULT hResult = SQLSelect(_T("SELECT var_name,var_value FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'"));
-   if (hResult != NULL)
+   //check if tdata upgrade was already done, then just delete "TdataTableUpdated" metadata parameter
+   int count = 0;
+   DB_RESULT result = SQLSelect(_T("SELECT var_value FROM metadata WHERE var_name='TdataTableUpdated'"));
+   if (result != NULL)
    {
-      int count = DBGetNumRows(hResult);
-      for(int i = 0; i < count; i++)
-      {
-         savedMetadata.setPreallocated(DBGetField(hResult, i, 0, NULL, 0), DBGetField(hResult, i, 1, NULL, 0));
-      }
-      DBFreeResult(hResult);
+      int count = DBGetNumRows(result);
+      DBFreeResult(result);
    }
    else if (!g_bIgnoreErrors)
    {
       return false;
    }
 
-   static const TCHAR *batch =
-      _T("DELETE FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'\n")
-      _T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataTableCreationCommand_0','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,tdata_value $SQL:TEXT null)')\n")
-      _T("<END>");
-   CHK_EXEC(SQLBatch(batch));
-
-   if (g_dbSyntax == DB_SYNTAX_MSSQL)
-      CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','CREATE CLUSTERED INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)')")));
-   else
-      CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','CREATE INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)')")));
-
-   // table conversion will require multiple commits
-   DBCommit(g_hCoreDB);
-   if (!ConvertTDataTables())
+   if(count == 0)
    {
-      if (!g_bIgnoreErrors)
+      StringMap savedMetadata;
+      DB_RESULT hResult = SQLSelect(_T("SELECT var_name,var_value FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'"));
+      if (hResult != NULL)
       {
-         // Restore metadata
-         SQLQuery(_T("DELETE FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'"));
-         StringList *keys = savedMetadata.keys();
-         for(int i = 0; i < keys->size(); i++)
+         int count = DBGetNumRows(hResult);
+         for(int i = 0; i < count; i++)
          {
-            TCHAR query[4096];
-            _sntprintf(query, 4096, _T("INSERT INTO metadata (var_name,var_value) VALUES (%s,%s)"),
-                       (const TCHAR *)DBPrepareString(g_hCoreDB, keys->get(i)),
-                       (const TCHAR *)DBPrepareString(g_hCoreDB, savedMetadata.get(keys->get(i))));
-            SQLQuery(query);
+            savedMetadata.setPreallocated(DBGetField(hResult, i, 0, NULL, 0), DBGetField(hResult, i, 1, NULL, 0));
          }
+         DBFreeResult(hResult);
+      }
+      else if (!g_bIgnoreErrors)
+      {
          return false;
       }
-   }
 
-   DBBegin(g_hCoreDB);
+      static const TCHAR *batch =
+         _T("DELETE FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'\n")
+         _T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataTableCreationCommand_0','CREATE TABLE tdata_%d (item_id integer not null,tdata_timestamp integer not null,tdata_value $SQL:TEXT null)')\n")
+         _T("<END>");
+      CHK_EXEC(SQLBatch(batch));
+
+      if (g_dbSyntax == DB_SYNTAX_MSSQL)
+         CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','CREATE CLUSTERED INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)')")));
+      else
+         CHK_EXEC(SQLQuery(_T("INSERT INTO metadata (var_name,var_value) VALUES ('TDataIndexCreationCommand_0','CREATE INDEX idx_tdata_%d ON tdata_%d(item_id,tdata_timestamp)')")));
+
+      // table conversion will require multiple commits
+      DBCommit(g_hCoreDB);
+      if (!ConvertTDataTables())
+      {
+         if (!g_bIgnoreErrors)
+         {
+            // Restore metadata
+            SQLQuery(_T("DELETE FROM metadata WHERE var_name LIKE 'TDataTableCreationCommand_%' OR var_name LIKE 'TDataIndexCreationCommand_%'"));
+            StringList *keys = savedMetadata.keys();
+            for(int i = 0; i < keys->size(); i++)
+            {
+               TCHAR query[4096];
+               _sntprintf(query, 4096, _T("INSERT INTO metadata (var_name,var_value) VALUES (%s,%s)"),
+                          (const TCHAR *)DBPrepareString(g_hCoreDB, keys->get(i)),
+                          (const TCHAR *)DBPrepareString(g_hCoreDB, savedMetadata.get(keys->get(i))));
+               SQLQuery(query);
+            }
+            return false;
+         }
+      }
+
+      DBBegin(g_hCoreDB);
+   }
+   else
+   {
+      CHK_EXEC(SQLQuery(_T("DELETE FROM metadata WHERE var_name='TdataTableUpdated'")));
+   }
    CHK_EXEC(SetSchemaVersion(411));
    return TRUE;
 }
