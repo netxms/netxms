@@ -57,8 +57,8 @@
 #elif defined(DB_MYSQL)
 
 #define DB_SYNTAX       'MYSQL'
-#define SQL_TEXT        text
-#define SQL_TEXT_TEXT   'text'
+#define SQL_TEXT        longtext
+#define SQL_TEXT_TEXT   'longtext'
 #define SQL_TEXT4K      text
 #define SQL_INT64       bigint
 #define SQL_INT64_TEXT  'bigint'

@@ -216,7 +216,10 @@ static bool ConvertTDataForClass(const TCHAR *className)
             {
                WriteToTerminalEx(_T("\b\b\b\b\x1b[31;1mfailed\x1b[0m\n"));
                success = false;
-               break;
+               if(g_bIgnoreErrors)
+                  continue;
+               else
+                  break;
             }
          }
          else

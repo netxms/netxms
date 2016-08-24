@@ -759,7 +759,7 @@ static BOOL H_UpgradeFromV411(int currVersion, int newVersion)
             UINT32 proxy = 0;
             for(int j = 2; (j < 6) && (proxy == 0); j++)
                proxy = DBGetFieldULong(hResult, i, j);
-            _sntprintf(query, 256, _T("INSERT INTO zones (id,zone_guid,proxy_node) VALUES (%d,%d,%d"),
+            _sntprintf(query, 256, _T("INSERT INTO zones (id,zone_guid,proxy_node) VALUES (%d,%d,%d)"),
                        DBGetFieldLong(hResult, i, 0), DBGetFieldLong(hResult, i, 1), (int)proxy);
             CHK_EXEC(SQLQuery(query));
          }

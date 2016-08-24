@@ -44,7 +44,7 @@ int g_dbSyntax;
 const TCHAR *g_pszTableSuffix = _T("");
 const TCHAR *g_pszSqlType[6][3] =
 {
-   { _T("text"), _T("text"), _T("bigint") },                 // MySQL
+   { _T("longtext"), _T("text"), _T("bigint") },             // MySQL
    { _T("text"), _T("varchar(4000)"), _T("bigint") },        // PostgreSQL
    { _T("text"), _T("varchar(4000)"), _T("bigint") },        // Microsoft SQL
    { _T("clob"), _T("varchar(4000)"), _T("number(20)") },    // Oracle
