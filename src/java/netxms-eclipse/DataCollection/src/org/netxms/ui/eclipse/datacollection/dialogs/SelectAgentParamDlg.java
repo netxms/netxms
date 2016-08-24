@@ -37,179 +37,218 @@ import org.netxms.client.AgentParameter;
 import org.netxms.client.AgentTable;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
- * Dialog for selecting parameters/tables provided by NetXMS agent
+ * Dialog for selecting parobjects.get(0ameters/tables provided by NetXMS agent
  */
 public class SelectAgentParamDlg extends AbstractSelectParamDlg
 {
-	private Button queryButton;
-	private Action actionQuery;
-	
-	/**
-	 * @param parentShell
-	 * @param nodeId
-	 */
-	public SelectAgentParamDlg(Shell parentShell, long nodeId, boolean selectTables)
-	{
-		super(parentShell, nodeId, selectTables);
-		
-		actionQuery = new Action(Messages.get().SelectAgentParamDlg_Query) {
-			@Override
-			public void run()
-			{
-				querySelectedParameter();
-			}
-		};
-	}
+   private Button queryButton;
+   private Action actionQuery;
+   private List<AbstractObject> objects;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
-	 */
-	@Override
-	protected void createButtonsForButtonBar(Composite parent)
-	{
-		if (!selectTables)
-		{
-			((GridLayout)parent.getLayout()).numColumns++;
-			
-			queryButton = new Button(parent, SWT.PUSH);
-			queryButton.setText(Messages.get().SelectAgentParamDlg_Query);
-			GridData gd = new GridData();
-			gd.horizontalAlignment = SWT.FILL;
-			gd.grabExcessHorizontalSpace = true;
-			queryButton.setLayoutData(gd);
-			queryButton.addSelectionListener(new SelectionListener() {
-				@Override
-				public void widgetSelected(SelectionEvent e)
-				{
-					querySelectedParameter();
-				}
-				
-				@Override
-				public void widgetDefaultSelected(SelectionEvent e)
-				{
-					widgetSelected(e);
-				}
-			});
-		}		
-		super.createButtonsForButtonBar(parent);
-	}
+   /**
+    * @param parentShell
+    * @param nodeId
+    */
+   public SelectAgentParamDlg(Shell parentShell, long nodeId, boolean selectTables)
+   {
+      super(parentShell, nodeId, selectTables);
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#fillContextMenu(org.eclipse.jface.action.IMenuManager)
-	 */
-	@Override
-	protected void fillContextMenu(IMenuManager manager)
-	{
-		super.fillContextMenu(manager);
-		if (!selectTables)
-			manager.add(actionQuery);
-	}
+      actionQuery = new Action(Messages.get().SelectAgentParamDlg_Query) {
+         @Override
+         public void run()
+         {
+            querySelectedParameter();
+         }
+      };
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#fillParameterList()
-	 */
-	@Override
-	protected void fillParameterList()
-	{
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(Messages.get().SelectAgentParamDlg_JobTitle + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().SelectAgentParamDlg_JobError;
-			}
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.eclipse.jface.dialogs.Dialog#createButtonsForButtonBar(org.eclipse.swt.widgets.Composite)
+    */
+   @Override
+   protected void createButtonsForButtonBar(Composite parent)
+   {
+      if (!selectTables)
+      {
+         ((GridLayout)parent.getLayout()).numColumns++;
 
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				if (selectTables)
-				{
-					final List<AgentTable> tables = session.getSupportedTables(object.getObjectId());
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							viewer.setInput(tables.toArray());
-						}
-					});
-				}
-				else
-				{
-					final List<AgentParameter> parameters = session.getSupportedParameters(object.getObjectId());
-					runInUIThread(new Runnable() {
-						@Override
-						public void run()
-						{
-							viewer.setInput(parameters.toArray());
-						}
-					});
-				}
-			}
-		}.start();
-	}
+         queryButton = new Button(parent, SWT.PUSH);
+         queryButton.setText(Messages.get().SelectAgentParamDlg_Query);
+         GridData gd = new GridData();
+         gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         queryButton.setLayoutData(gd);
+         queryButton.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               querySelectedParameter();
+            }
 
-	/**
-	 * Query current value of selected parameter
-	 */
-	protected void querySelectedParameter()
-	{
-		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		if (selection.size() != 1)
-			return;
-		
-		AgentParameter p = (AgentParameter)selection.getFirstElement();
-		String n;
-		if (p.getName().contains("(*)")) //$NON-NLS-1$
-		{
-			InputDialog dlg = new InputDialog(getShell(), Messages.get().SelectAgentParamDlg_InstanceTitle, Messages.get().SelectAgentParamDlg_InstanceMessage, "", null); //$NON-NLS-1$
-			if (dlg.open() != Window.OK)
-				return;
-			
-			n = p.getName().replace("(*)", "(" + dlg.getValue() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		}
-		else
-		{
-			n = p.getName();
-		}
-		
-		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		final String name = n;
-		new ConsoleJob(Messages.get().SelectAgentParamDlg_QueryJobTitle, null, Activator.PLUGIN_ID, null) {
-			@Override
-			protected void runInternal(IProgressMonitor monitor) throws Exception
-			{
-				final String value = session.queryParameter(object.getObjectId(), DataCollectionItem.AGENT, name);
-				runInUIThread(new Runnable() {
-					@Override
-					public void run()
-					{
-						MessageDialogHelper.openInformation(getShell(), Messages.get().SelectAgentParamDlg_CurrentValueTitle, 
-						      String.format(Messages.get().SelectAgentParamDlg_CurrentValue, value));
-					}
-				});
-			}
-			
-			@Override
-			protected String getErrorMessage()
-			{
-				return Messages.get().SelectAgentParamDlg_QueryError;
-			}
-		}.start();
-	}
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);
+            }
+         });
+      }
+      super.createButtonsForButtonBar(parent);
+   }
 
-	/* (non-Javadoc)
-	 * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#getConfigurationPrefix()
-	 */
-	@Override
-	protected String getConfigurationPrefix()
-	{
-		return selectTables ? "SelectAgentTableDlg" : "SelectAgentParamDlg"; //$NON-NLS-1$ //$NON-NLS-2$
-	}
+   /*
+    * (non-Javadoc)
+    * 
+    * @see
+    * org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#fillContextMenu(org.eclipse.jface.action.IMenuManager)
+    */
+   @Override
+   protected void fillContextMenu(IMenuManager manager)
+   {
+      super.fillContextMenu(manager);
+      if (!selectTables)
+         manager.add(actionQuery);
+   }
+
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#fillParameterList()
+    */
+   @Override
+   protected void fillParameterList()
+   {
+      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      new ConsoleJob(Messages.get().SelectAgentParamDlg_JobTitle + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().SelectAgentParamDlg_JobError;
+         }
+
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            if (selectTables)
+            {
+               final List<AgentTable> tables = session.getSupportedTables(object.getObjectId());
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     viewer.setInput(tables.toArray());
+                  }
+               });
+            }
+            else
+            {
+               final List<AgentParameter> parameters = session.getSupportedParameters(object.getObjectId());
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     viewer.setInput(parameters.toArray());
+                  }
+               });
+            }
+         }
+      }.start();
+   }
+
+   /**
+    * Query current value of selected parameter
+    */
+   protected void querySelectedParameter()
+   {
+      IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+      if (selection.size() != 1)
+         return;
+      
+      // Opens Object Selection Dialog if object is not chosen
+      if (object.getObjectClass() == object.OBJECT_TEMPLATE)
+      {
+         final ObjectSelectionDialog sDlg = new ObjectSelectionDialog(getShell(), null,
+               ObjectSelectionDialog.createNodeSelectionFilter(true));
+         if (sDlg.open() == Window.OK)
+         {
+            new ConsoleJob(Messages.get().ApplyTemplate_JobTitle, null, Activator.PLUGIN_ID, null) {
+
+               @Override
+               protected void runInternal(IProgressMonitor monitor) throws Exception
+               {
+                  objects = sDlg.getSelectedObjects();
+                  object = objects.get(0);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return Messages.get().ApplyTemplate_JobError;
+               }
+
+            }.start();
+         }
+      }
+
+      AgentParameter p = (AgentParameter)selection.getFirstElement();
+      String n;
+      if (p.getName().contains("(*)")) //$NON-NLS-1$
+      {
+         InputDialog dlg = new InputDialog(getShell(), Messages.get().SelectAgentParamDlg_InstanceTitle,
+               Messages.get().SelectAgentParamDlg_InstanceMessage, "", null); //$NON-NLS-1$
+         if (dlg.open() != Window.OK)
+            return;
+
+         n = p.getName().replace("(*)", "(" + dlg.getValue() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+      }
+      else
+      {
+         n = p.getName();
+      }
+
+      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      final String name = n;
+      new ConsoleJob(Messages.get().SelectAgentParamDlg_QueryJobTitle, null, Activator.PLUGIN_ID, null) {
+         @Override
+         protected void runInternal(IProgressMonitor monitor) throws Exception
+         {
+            final String value = session.queryParameter(object.getObjectId(), DataCollectionItem.AGENT, name);
+            runInUIThread(new Runnable() {
+               @Override
+               public void run()
+               {
+                  MessageDialogHelper.openInformation(getShell(), Messages.get().SelectAgentParamDlg_CurrentValueTitle,
+                        String.format(Messages.get().SelectAgentParamDlg_CurrentValue, value));
+               }
+            });
+         }
+
+         @Override
+         protected String getErrorMessage()
+         {
+            return Messages.get().SelectAgentParamDlg_QueryError;
+         }
+      }.start();
+   }
+
+   /*
+    * (non-Javadoc)
+    * 
+    * @see org.netxms.ui.eclipse.datacollection.dialogs.AbstractSelectParamDlg#getConfigurationPrefix()
+    */
+   @Override
+   protected String getConfigurationPrefix()
+   {
+      return selectTables ? "SelectAgentTableDlg" : "SelectAgentParamDlg"; //$NON-NLS-1$ //$NON-NLS-2$
+   }
 }

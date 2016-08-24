@@ -37,9 +37,11 @@ import org.netxms.client.AgentParameter;
 import org.netxms.client.AgentTable;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
+import org.netxms.ui.eclipse.objectbrowser.dialogs.ObjectSelectionDialog;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
@@ -50,6 +52,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 {
 	private Button queryButton;
 	private Action actionQuery;
+	private List<AbstractObject> objects;
 	
 	/**
 	 * @param parentShell
@@ -163,6 +166,32 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		if (selection.size() != 1)
 			return;
+		
+	// Opens Object Selection Dialog if object is not chosen
+      if (object.getObjectClass() == object.OBJECT_TEMPLATE)
+      {
+         final ObjectSelectionDialog sDlg = new ObjectSelectionDialog(getShell(), null,
+               ObjectSelectionDialog.createNodeSelectionFilter(true));
+         if (sDlg.open() == Window.OK)
+         {
+            new ConsoleJob(Messages.get().ApplyTemplate_JobTitle, null, Activator.PLUGIN_ID, null) {
+
+               @Override
+               protected void runInternal(IProgressMonitor monitor) throws Exception
+               {
+                  objects = sDlg.getSelectedObjects();
+                  object = objects.get(0);
+               }
+
+               @Override
+               protected String getErrorMessage()
+               {
+                  return Messages.get().ApplyTemplate_JobError;
+               }
+
+            }.start();
+         }
+      }
 		
 		AgentParameter p = (AgentParameter)selection.getFirstElement();
 		String n;
