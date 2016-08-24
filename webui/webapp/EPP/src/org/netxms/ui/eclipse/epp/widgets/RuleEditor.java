@@ -29,11 +29,21 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.PreferenceManager;
+import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DragSource;
+import org.eclipse.swt.dnd.DragSourceEvent;
+import org.eclipse.swt.dnd.DragSourceListener;
+import org.eclipse.swt.dnd.DropTarget;
+import org.eclipse.swt.dnd.DropTargetEvent;
+import org.eclipse.swt.dnd.DropTargetListener;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Color;
@@ -195,8 +205,30 @@ public class RuleEditor extends Composite
 		};
 		action.addButton(new DashboardElementButton(Messages.get().RuleEditor_EditActions, editor.getImageEdit(), editRuleAction));
 		action.setDoubleClickAction(editRuleAction);
-	}
-	
+		
+	   dragEnable();
+      dropEnable();
+   }
+
+   private void dragEnable()
+   {
+      DragSource source = new DragSource(headerLabel, DND.DROP_MOVE);
+      source.setTransfer(new Transfer[] { LocalSelectionTransfer.getTransfer() });
+
+      source.addDragListener(new RuleDragSourceListener(this));
+
+   }
+
+   private void dropEnable()
+   {
+      // enable each label to be a drop target
+      DropTarget target = new DropTarget(this, DND.DROP_MOVE);
+      target.setTransfer(new Transfer[] { LocalSelectionTransfer.getTransfer() });
+      // add a drop listener
+      target.addDropListener(new RuleDropTargetListener());
+
+   }
+   
 	/**
 	 * Create main area which contains condition and action elements
 	 */
@@ -1030,4 +1062,72 @@ public class RuleEditor extends Composite
 		expandButton.setBackground(color);
 		editButton.setBackground(color);
 	}
+	
+	/**
+    * DropTargetListener for Rule editor
+    *
+    */
+   private class RuleDropTargetListener implements DropTargetListener
+   {
+      public void dragEnter(DropTargetEvent event)
+      {
+      }
+
+      public void dragOver(DropTargetEvent event)
+      {
+      }
+
+      public void dragLeave(DropTargetEvent event)
+      {
+      }
+
+      public void dropAccept(DropTargetEvent event)
+      {
+      }
+
+      public void dragOperationChanged(DropTargetEvent event)
+      {
+      }
+
+      public void drop(DropTargetEvent event)
+      {
+         if (!(event.data instanceof IStructuredSelection))
+            return;
+         
+         Object object = ((IStructuredSelection)event.data).getFirstElement();
+         if (!(object instanceof RuleEditor))
+            return;
+         
+         RuleEditor.this.editor.moveRule((RuleEditor)object, RuleEditor.this);
+      }
+   }
+   
+   /**
+    * DragSourceListener for Rule editor
+    *
+    */
+   private class RuleDragSourceListener implements DragSourceListener
+   {
+      private RuleEditor editor;
+
+      public RuleDragSourceListener(RuleEditor editor)
+      {
+         this.editor = editor;
+      }
+
+      public void dragStart(DragSourceEvent event)
+      {
+         LocalSelectionTransfer.getTransfer().setSelection(new StructuredSelection(editor));
+      }
+
+      public void dragFinished(DragSourceEvent event)
+      {
+         // System.out.println("test2");
+      }
+
+      public void dragSetData(DragSourceEvent event)
+      {
+         event.data = LocalSelectionTransfer.getTransfer().getSelection();
+      }
+   }
 }

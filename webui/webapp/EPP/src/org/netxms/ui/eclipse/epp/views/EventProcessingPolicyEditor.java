@@ -20,6 +20,8 @@ package org.netxms.ui.eclipse.epp.views;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1062,6 +1064,34 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 		setModified(true);
 	}
 
+	/**
+    * Moves rules
+    * @param editor - rule to be moved
+    * @param anchor - where the rule is being moved
+    */
+   public void moveRule(RuleEditor editor, RuleEditor anchor)
+   {
+      editor.moveBelow(anchor);
+      
+      editor.setRuleNumber(anchor.getRuleNumber());
+      anchor.setRuleNumber(anchor.getRuleNumber()-1);
+      
+      
+      Collections.sort(ruleEditors, new Comparator<RuleEditor>() {
+         @Override
+         public int compare(RuleEditor t1, RuleEditor t2)
+         {
+            return t1.getRuleNumber()-t2.getRuleNumber();//Integer.compare(t1.getRuleNumber(), t2.getRuleNumber());
+         }
+      });
+      
+      for(int i = 0; i < ruleEditors.size(); i++)
+         ruleEditors.get(i).setRuleNumber(i + 1);
+      
+      updateEditorAreaLayout();
+      setModified(true);
+   }
+	
 	/**
 	 * Enable selected rules
 	 */
