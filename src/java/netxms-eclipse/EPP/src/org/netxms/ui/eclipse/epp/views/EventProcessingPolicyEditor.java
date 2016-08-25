@@ -20,8 +20,6 @@ package org.netxms.ui.eclipse.epp.views;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -103,7 +101,6 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
    private Set<RuleEditor> selection = new HashSet<RuleEditor>();
    private int lastSelectedRule = -1;
    private RuleClipboard clipboard = new RuleClipboard();
-   private RuleEditor editor;
 
    private Font normalFont;
    private Font boldFont;
@@ -519,7 +516,8 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       {
          if (isRuleVisible(rule))
          {
-            editor = new RuleEditor(dataArea, rule, ruleNumber++, this);
+            RuleEditor editor = new RuleEditor(dataArea, rule, ruleNumber++, this);
+            editor.setDragDetect(true);
             ruleEditors.add(editor);
             GridData gd = new GridData();
             gd.horizontalAlignment = SWT.FILL;
@@ -915,7 +913,9 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
     */
    public void setSelection(RuleEditor e)
    {
-      clearSelection();
+      if (!e.isDragged())
+         clearSelection();      
+      
       addToSelection(e, false);
    }
 
@@ -1098,31 +1098,40 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
       setModified(true);
    }
    
-   
    /**
-    * Moves rules
-    * @param editor - rule to be moved
-    * @param anchor - where the rule is being moved
+    * Moves rule selection
+    * 
+    * @param anchor - where the selection is being moved
     */
-   public void moveRule(RuleEditor editor, RuleEditor anchor)
+   public void moveSelection(RuleEditor anchor)
    {
-      editor.moveBelow(anchor);
-      
-      editor.setRuleNumber(anchor.getRuleNumber());
-      anchor.setRuleNumber(anchor.getRuleNumber()-1);
-      
-      
-      Collections.sort(ruleEditors, new Comparator<RuleEditor>() {
-         @Override
-         public int compare(RuleEditor t1, RuleEditor t2)
+      List<RuleEditor> movedRuleEditors = new ArrayList<RuleEditor>();
+      for(RuleEditor e : ruleEditors)
+      {
+         if (!selection.contains(e))
          {
-            return t1.getRuleNumber()-t2.getRuleNumber();//Integer.compare(t1.getRuleNumber(), t2.getRuleNumber());
+            movedRuleEditors.add(e);
+            if (e.equals(anchor))
+            {
+               RuleEditor curr = anchor;
+               for(RuleEditor s : selection)
+               {
+                  movedRuleEditors.add(s);
+                  s.moveBelow(curr);
+                  curr = s;
+               }
+            }
          }
-      });
-      
-      for(int i = 0; i < ruleEditors.size(); i++)
-         ruleEditors.get(i).setRuleNumber(i + 1);
-      
+      }
+
+      for(int i = 0; i < movedRuleEditors.size(); i++)
+         movedRuleEditors.get(i).setRuleNumber(i + 1);
+
+      ruleEditors = movedRuleEditors;
+
+      anchor.setDragged(false);
+      clearSelection();
+
       updateEditorAreaLayout();
       setModified(true);
    }

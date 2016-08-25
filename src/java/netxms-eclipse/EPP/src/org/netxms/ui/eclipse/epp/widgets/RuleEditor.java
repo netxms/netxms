@@ -107,6 +107,7 @@ public class RuleEditor extends Composite
    private Label editButton;
    private boolean modified = false;
    private boolean selected = false;
+   private boolean isDragged = false;
    private MouseListener ruleMouseListener;
 
    /**
@@ -142,6 +143,14 @@ public class RuleEditor extends Composite
          @Override
          public void mouseDown(MouseEvent e)
          {
+            if (dragDetect(e)) {
+               setDragged(true);
+            }
+         }
+
+         @Override
+         public void mouseUp(MouseEvent e)
+         {
             switch(e.button)
             {
                case 1:
@@ -152,11 +161,6 @@ public class RuleEditor extends Composite
                      RuleEditor.this.editor.setSelection(RuleEditor.this);
                   break;
             }
-         }
-
-         @Override
-         public void mouseUp(MouseEvent e)
-         {
          }
       };
 
@@ -210,16 +214,23 @@ public class RuleEditor extends Composite
       dragEnable();
       dropEnable();
    }
-
+   
+   /**
+    * Enables drag functionality of the rule
+    */
    private void dragEnable()
    {
+      // enable each label to be a drag target
       DragSource source = new DragSource(headerLabel, DND.DROP_MOVE);
       source.setTransfer(new Transfer[] { LocalSelectionTransfer.getTransfer() });
-
+      // add a drop listener
       source.addDragListener(new RuleDragSourceListener(this));
 
    }
 
+   /**
+    * Enables drop functionality of the rule
+    */
    private void dropEnable()
    {
       // enable each label to be a drop target
@@ -956,6 +967,16 @@ public class RuleEditor extends Composite
    {
       return rule;
    }
+   
+   public boolean isDragged()
+   {
+      return isDragged;
+   }
+   
+   public void setDragged(boolean isDragged)
+   {
+      this.isDragged = isDragged;
+   }
 
    /**
     * @return the modified
@@ -1086,26 +1107,27 @@ public class RuleEditor extends Composite
     */
    private class RuleDropTargetListener implements DropTargetListener
    {
+      @Override
       public void dragEnter(DropTargetEvent event)
       {
       }
-
+      @Override
       public void dragOver(DropTargetEvent event)
       {
       }
-
+      @Override
       public void dragLeave(DropTargetEvent event)
       {
       }
-
+      @Override
       public void dropAccept(DropTargetEvent event)
       {
       }
-
+      @Override
       public void dragOperationChanged(DropTargetEvent event)
       {
       }
-
+      @Override
       public void drop(DropTargetEvent event)
       {
          if (!(event.data instanceof IStructuredSelection))
@@ -1115,7 +1137,7 @@ public class RuleEditor extends Composite
          if (!(object instanceof RuleEditor))
             return;
          
-         RuleEditor.this.editor.moveRule((RuleEditor)object, RuleEditor.this);
+         RuleEditor.this.editor.moveSelection(RuleEditor.this);
       }
    }
    
@@ -1131,17 +1153,16 @@ public class RuleEditor extends Composite
       {
          this.editor = editor;
       }
-
+      @Override
       public void dragStart(DragSourceEvent event)
       {
          LocalSelectionTransfer.getTransfer().setSelection(new StructuredSelection(editor));
       }
-
+      @Override
       public void dragFinished(DragSourceEvent event)
       {
-         // System.out.println("test2");
       }
-
+      @Override
       public void dragSetData(DragSourceEvent event)
       {
          event.data = LocalSelectionTransfer.getTransfer().getSelection();
