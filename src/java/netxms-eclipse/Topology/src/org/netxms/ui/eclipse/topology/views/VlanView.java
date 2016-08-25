@@ -349,7 +349,7 @@ public class VlanView extends ViewPart
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final List<VlanInfo> vlans = session.getVlans(nodeId);
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run()
 					{

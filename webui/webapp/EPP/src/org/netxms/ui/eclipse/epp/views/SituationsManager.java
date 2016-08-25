@@ -425,7 +425,7 @@ public class SituationsManager extends ViewPart implements SessionListener
 		    (n.getCode() == SessionNotification.SITUATION_UPDATED) ||
 		    (n.getCode() == SessionNotification.SITUATION_DELETED))
 		{
-			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+		   situationTree.getControl().getDisplay().asyncExec(new Runnable() {
 				@Override
 				public void run()
 				{

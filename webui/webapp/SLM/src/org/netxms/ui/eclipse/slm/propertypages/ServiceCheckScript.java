@@ -122,7 +122,7 @@ public class ServiceCheckScript extends PropertyPage
 			{
 				if (isApply)
 				{
-					PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+					getDisplay().asyncExec(new Runnable() {
 						@Override
 						public void run()
 						{
