@@ -389,6 +389,7 @@ static THREAD_RESULT THREAD_CALL ClusterKeepaliveThread(void *arg)
       }
    }
 
+   free(rawMsg);
    ClusterDebug(1, _T("Cluster keepalive thread stopped"));
    return THREAD_OK;
 }
