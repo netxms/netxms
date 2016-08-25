@@ -437,7 +437,8 @@ public class LogParserEditor extends Composite
 	 */
 	private String buildParserXml()
 	{
-	   parser.setFile(labelFileName.getText());
+	   if(!isSyslogParser)
+	      parser.setFile(labelFileName.getText());
 	   parser.setProcessALL(checkProcessAll.getSelection());
 	   parser.setTrace(spinerTrace.getSelection());
 	   
