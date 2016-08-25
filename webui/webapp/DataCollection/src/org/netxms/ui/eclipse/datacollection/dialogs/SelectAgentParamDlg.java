@@ -38,6 +38,7 @@ import org.netxms.client.AgentTable;
 import org.netxms.client.NXCSession;
 import org.netxms.client.datacollection.DataCollectionItem;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.Template;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
@@ -169,7 +170,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 			return;
 		
 	// Opens Object Selection Dialog if object is not chosen
-		if (queryObject.getObjectClass() == object.OBJECT_TEMPLATE)
+		if (queryObject instanceof Template)
       {
          final ObjectSelectionDialog sDlg = new ObjectSelectionDialog(getShell(), null,
                ObjectSelectionDialog.createNodeSelectionFilter(false));
