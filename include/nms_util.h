@@ -1906,7 +1906,7 @@ void LIBNETXMS_EXPORTABLE nxlog_close(void);
 void LIBNETXMS_EXPORTABLE nxlog_write(DWORD msg, WORD wType, const char *format, ...);
 void LIBNETXMS_EXPORTABLE nxlog_debug(int level, const TCHAR *format, ...);
 void LIBNETXMS_EXPORTABLE nxlog_debug2(int level, const TCHAR *format, va_list args);
-bool LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, int maxLogSize, int historySize, const TCHAR *dailySuffix);
+bool LIBNETXMS_EXPORTABLE nxlog_set_rotation_policy(int rotationMode, UINT64 maxLogSize, int historySize, const TCHAR *dailySuffix);
 bool LIBNETXMS_EXPORTABLE nxlog_rotate();
 void LIBNETXMS_EXPORTABLE nxlog_set_debug_level(int level);
 int LIBNETXMS_EXPORTABLE nxlog_get_debug_level();

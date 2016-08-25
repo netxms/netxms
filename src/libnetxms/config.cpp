@@ -711,13 +711,15 @@ static UINT64 ParseSize(const TCHAR *s, UINT64 multiplier)
 {
    TCHAR *eptr;
    UINT64 value = _tcstoull(s, &eptr, 0);
-   if (*eptr == 'K')
+   while(*eptr == ' ')
+      eptr++;
+   if ((*eptr == 'K') || (*eptr == 'k'))
       return value * multiplier;
-   if (*eptr == 'M')
+   if ((*eptr == 'M') || (*eptr == 'm'))
       return value * multiplier * multiplier;
-   if (*eptr == 'G')
+   if ((*eptr == 'G') || (*eptr == 'g'))
       return value * multiplier * multiplier * multiplier;
-   if (*eptr == 'T')
+   if ((*eptr == 'T') || (*eptr == 't'))
       return value * multiplier * multiplier * multiplier * multiplier;
    return value;
 }
@@ -824,9 +826,19 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                *curr = 0;
                break;
             case CT_SIZE_BYTES:
+               if ((cfgTemplate[i].overrideIndicator != NULL) &&
+                   (*((INT32 *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
+               {
+                  break;   // this parameter was already initialized, and override from config is forbidden
+               }
                *((UINT64 *)cfgTemplate[i].buffer) = ParseSize(value, 1024);
                break;
             case CT_SIZE_UNITS:
+               if ((cfgTemplate[i].overrideIndicator != NULL) &&
+                   (*((INT32 *)cfgTemplate[i].overrideIndicator) != NXCONFIG_UNINITIALIZED_VALUE))
+               {
+                  break;   // this parameter was already initialized, and override from config is forbidden
+               }
                *((UINT64 *)cfgTemplate[i].buffer) = ParseSize(value, 1000);
                break;
             case CT_IGNORE:

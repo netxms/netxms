@@ -120,9 +120,9 @@ THREAD_RESULT THREAD_CALL ReportingServerConnector(void *);
  */
 TCHAR NXCORE_EXPORTABLE g_szConfigFile[MAX_PATH] = _T("{search}");
 TCHAR NXCORE_EXPORTABLE g_szLogFile[MAX_PATH] = DEFAULT_LOG_FILE;
-UINT32 g_dwLogRotationMode = NXLOG_ROTATION_BY_SIZE;
-UINT32 g_dwMaxLogSize = 16384 * 1024;
-UINT32 g_dwLogHistorySize = 4;
+UINT32 g_logRotationMode = NXLOG_ROTATION_BY_SIZE;
+UINT64 g_maxLogSize = 16384 * 1024;
+UINT32 g_logHistorySize = 4;
 TCHAR g_szDailyLogFileSuffix[64] = _T("");
 TCHAR NXCORE_EXPORTABLE g_szDumpDir[MAX_PATH] = DEFAULT_DUMP_DIR;
 char g_szCodePage[256] = ICONV_DEFAULT_CODEPAGE;
@@ -522,7 +522,7 @@ BOOL NXCORE_EXPORTABLE Initialize()
 
 	if (!(g_flags & AF_USE_SYSLOG))
 	{
-		if (!nxlog_set_rotation_policy((int)g_dwLogRotationMode, (int)g_dwMaxLogSize, (int)g_dwLogHistorySize, g_szDailyLogFileSuffix))
+		if (!nxlog_set_rotation_policy((int)g_logRotationMode, g_maxLogSize, (int)g_logHistorySize, g_szDailyLogFileSuffix))
 			if (!(g_flags & AF_DAEMON))
 				_tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
 	}

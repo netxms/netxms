@@ -207,7 +207,7 @@ static THREAD s_snmpTrapSenderThread = INVALID_THREAD_HANDLE;
 static THREAD s_masterAgentListenerThread = INVALID_THREAD_HANDLE;
 static TCHAR s_processToWaitFor[MAX_PATH] = _T("");
 static TCHAR s_dumpDir[MAX_PATH] = _T("C:\\");
-static UINT32 s_maxLogSize = 16384 * 1024;
+static UINT64 s_maxLogSize = 16384 * 1024;
 static UINT32 s_logHistorySize = 4;
 static UINT32 s_logRotationMode = NXLOG_ROTATION_BY_SIZE;
 static TCHAR s_dailyLogFileSuffix[64] = _T("");
@@ -269,7 +269,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("LogUnresolvedSymbols"), CT_BOOLEAN, 0, 0, AF_LOG_UNRESOLVED_SYMBOLS, 0, &g_dwFlags, NULL },
    { _T("LongRunningQueryThreshold"), CT_LONG, 0, 0, 0, 0, &g_longRunningQueryThreshold, NULL },
    { _T("MasterServers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszMasterServerList, NULL },
-   { _T("MaxLogSize"), CT_LONG, 0, 0, 0, 0, &s_maxLogSize, NULL },
+   { _T("MaxLogSize"), CT_SIZE_BYTES, 0, 0, 0, 0, &s_maxLogSize, NULL },
    { _T("MaxSessions"), CT_LONG, 0, 0, 0, 0, &g_dwMaxSessions, NULL },
    { _T("PlatformSuffix"), CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix, NULL },
    { _T("RequireAuthentication"), CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags, NULL },
@@ -718,7 +718,7 @@ BOOL Initialize()
    {
       if (!(g_dwFlags & AF_USE_SYSLOG))
       {
-         if (!nxlog_set_rotation_policy((int)s_logRotationMode, (int)s_maxLogSize, (int)s_logHistorySize, s_dailyLogFileSuffix))
+         if (!nxlog_set_rotation_policy((int)s_logRotationMode, s_maxLogSize, (int)s_logHistorySize, s_dailyLogFileSuffix))
             if (!(g_dwFlags & AF_DAEMON))
                _tprintf(_T("WARNING: cannot set log rotation policy; using default values\n"));
       }

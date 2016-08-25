@@ -1137,9 +1137,9 @@ private:
  */
 extern TCHAR NXCORE_EXPORTABLE g_szConfigFile[];
 extern TCHAR NXCORE_EXPORTABLE g_szLogFile[];
-extern UINT32 g_dwLogRotationMode;
-extern UINT32 g_dwMaxLogSize;
-extern UINT32 g_dwLogHistorySize;
+extern UINT32 g_logRotationMode;
+extern UINT64 g_maxLogSize;
+extern UINT32 g_logHistorySize;
 extern TCHAR g_szDailyLogFileSuffix[64];
 extern TCHAR NXCORE_EXPORTABLE g_szDumpDir[];
 extern TCHAR NXCORE_EXPORTABLE g_szListenAddress[];
