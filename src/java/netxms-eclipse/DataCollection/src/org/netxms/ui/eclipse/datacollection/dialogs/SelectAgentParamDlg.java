@@ -52,7 +52,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
 {
    private Button queryButton;
    private Action actionQuery;
-   private List<AbstractObject> objects;
+   private AbstractObject queryObject;
 
    /**
     * @param parentShell
@@ -61,6 +61,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
    public SelectAgentParamDlg(Shell parentShell, long nodeId, boolean selectTables)
    {
       super(parentShell, nodeId, selectTables);
+      queryObject = object;
 
       actionQuery = new Action(Messages.get().SelectAgentParamDlg_Query) {
          @Override
@@ -175,28 +176,15 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
          return;
       
       // Opens Object Selection Dialog if object is not chosen
-      if (object.getObjectClass() == object.OBJECT_TEMPLATE)
+      if (queryObject.getObjectClass() == object.OBJECT_TEMPLATE)
       {
          final ObjectSelectionDialog sDlg = new ObjectSelectionDialog(getShell(), null,
-               ObjectSelectionDialog.createNodeSelectionFilter(true));
+               ObjectSelectionDialog.createNodeSelectionFilter(false));
+         sDlg.enableMultiSelection(false);
+         
          if (sDlg.open() == Window.OK)
          {
-            new ConsoleJob(Messages.get().ApplyTemplate_JobTitle, null, Activator.PLUGIN_ID, null) {
-
-               @Override
-               protected void runInternal(IProgressMonitor monitor) throws Exception
-               {
-                  objects = sDlg.getSelectedObjects();
-                  object = objects.get(0);
-               }
-
-               @Override
-               protected String getErrorMessage()
-               {
-                  return Messages.get().ApplyTemplate_JobError;
-               }
-
-            }.start();
+            queryObject = sDlg.getSelectedObjects().get(0);
          }
       }
 
@@ -222,7 +210,7 @@ public class SelectAgentParamDlg extends AbstractSelectParamDlg
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final String value = session.queryParameter(object.getObjectId(), DataCollectionItem.AGENT, name);
+            final String value = session.queryParameter(queryObject.getObjectId(), DataCollectionItem.AGENT, name);
             runInUIThread(new Runnable() {
                @Override
                public void run()
