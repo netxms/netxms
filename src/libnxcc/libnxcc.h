@@ -80,7 +80,7 @@ enum ClusterNotificationCode
 void ClusterDisconnect();
 void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state);
 void ClusterSendMessage(ClusterNodeInfo *node, NXCPMessage *msg);
-void ClusterDirectNotify(ClusterNodeInfo *node, INT16 code);
+void ClusterDirectNotify(ClusterNodeInfo *node, NXCPMessage *msg);
 
 void PromoteClusterNode();
 

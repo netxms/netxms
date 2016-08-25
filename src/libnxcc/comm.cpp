@@ -475,21 +475,33 @@ void LIBNXCC_EXPORTABLE ClusterDirectNotify(UINT32 nodeId, INT16 code)
 {
    int index = FindClusterNode(nodeId);
    if (index != -1)
-      ClusterDirectNotify(&g_nxccNodes[index], code);
+   {
+      NXCPMessage msg;
+      msg.setCode(CMD_CLUSTER_NOTIFY);
+      msg.setField(VID_NOTIFICATION_CODE, code);
+      ClusterDirectNotify(&g_nxccNodes[index], &msg);
+   }
+}
+
+/**
+ * Direct notify
+ */
+void LIBNXCC_EXPORTABLE ClusterDirectNotify(UINT32 nodeId, NXCPMessage *msg)
+{
+   int index = FindClusterNode(nodeId);
+   if (index != -1)
+      ClusterDirectNotify(&g_nxccNodes[index], msg);
 }
 
 /**
  * Direct notify with just notification code
  */
-void ClusterDirectNotify(ClusterNodeInfo *node, INT16 code)
+void ClusterDirectNotify(ClusterNodeInfo *node, NXCPMessage *msg)
 {
-   NXCPMessage msg;
-   msg.setCode(CMD_CLUSTER_NOTIFY);
-   msg.setId((UINT32)InterlockedIncrement(&s_commandId));
-   msg.setField(VID_NOTIFICATION_CODE, code);
-   msg.setField(VID_NODE_ID, g_nxccNodeId);
-   msg.setField(VID_IS_MASTER, (INT16)(g_nxccMasterNode ? 1 : 0));
-   ClusterSendMessage(node, &msg);
+   msg->setId((UINT32)InterlockedIncrement(&s_commandId));
+   msg->setField(VID_NODE_ID, g_nxccNodeId);
+   msg->setField(VID_IS_MASTER, (INT16)(g_nxccMasterNode ? 1 : 0));
+   ClusterSendMessage(node, msg);
 }
 
 /**
@@ -583,7 +595,7 @@ UINT32 LIBNXCC_EXPORTABLE ClusterSendDirectCommand(UINT32 nodeId, NXCPMessage *m
    }
 
    UINT32 rcc = response->getFieldAsUInt32(VID_RCC);
-   if (rcc != 0)
+   if (rcc != NXCC_RCC_SUCCESS)
    {
       nxlog_debug(5, _T("ClusterDirectCommand: failed request to peer %d (rcc=%d, requestId=%d)"), nodeId, rcc, msg->getId());
    }

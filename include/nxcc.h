@@ -83,6 +83,7 @@ bool LIBNXCC_EXPORTABLE ClusterAllNodesConnected();
 void LIBNXCC_EXPORTABLE ClusterNotify(NXCPMessage *msg);
 void LIBNXCC_EXPORTABLE ClusterNotify(INT16 code);
 void LIBNXCC_EXPORTABLE ClusterDirectNotify(UINT32 nodeId, INT16 code);
+void LIBNXCC_EXPORTABLE ClusterDirectNotify(UINT32 nodeId, NXCPMessage *msg);
 int LIBNXCC_EXPORTABLE ClusterSendCommand(NXCPMessage *msg);
 UINT32 LIBNXCC_EXPORTABLE ClusterSendDirectCommand(UINT32 nodeId, NXCPMessage *msg);
 NXCPMessage LIBNXCC_EXPORTABLE *ClusterSendDirectCommandEx(UINT32 nodeId, NXCPMessage *msg);
