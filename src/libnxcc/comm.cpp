@@ -61,7 +61,7 @@ void SetJoinCondition()
 /**
  * Process cluster notification
  */
-static void ProcessClusterNotification(ClusterNodeInfo *node, ClusterNotificationCode code)
+static void ProcessClusterNotification(ClusterNodeInfo *node, int code)
 {
    ClusterDebug(4, _T("ProcessClusterNotification: code %d from node %d [%s]"), code, node->m_id, (const TCHAR *)node->m_addr->toString());
    switch(code)
@@ -74,6 +74,12 @@ static void ProcessClusterNotification(ClusterNodeInfo *node, ClusterNotificatio
          break;
       case CN_NODE_RUNNING:
          ChangeClusterNodeState(node, CLUSTER_NODE_UP);
+         break;
+      default:
+         if (code >= CN_CUSTOM)
+         {
+            g_nxccEventHandler->onNotification(code, node->m_id);
+         }
          break;
    }
 }
@@ -140,7 +146,7 @@ static THREAD_RESULT THREAD_CALL ClusterReceiverThread(void *arg)
          switch(msg->getCode())
          {
             case CMD_CLUSTER_NOTIFY:
-               ProcessClusterNotification(node, (ClusterNotificationCode)msg->getFieldAsInt16(VID_NOTIFICATION_CODE));
+               ProcessClusterNotification(node, msg->getFieldAsInt16(VID_NOTIFICATION_CODE));
                delete msg;
                break;
             case CMD_JOIN_CLUSTER:

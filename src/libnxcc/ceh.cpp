@@ -82,3 +82,10 @@ ClusterMessageProcessingResult ClusterEventHandler::onMessage(NXCPMessage *msg, 
 {
    return CLUSTER_MSG_IGNORED;
 }
+
+/**
+ * Incoming notification handler
+ */
+void ClusterEventHandler::onNotification(int code, UINT32 sourceNodeId)
+{
+}

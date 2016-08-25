@@ -124,6 +124,8 @@ void LIBNETXMS_EXPORTABLE __bswap_wstr(UCS2CHAR *pStr);
 #define CT_IGNORE       6
 #define CT_MB_STRING    7
 #define CT_BOOLEAN64    8
+#define CT_SIZE_BYTES   9   /* 64 bit integer, automatically converts K, M, G, T suffixes using 1024 as base) */
+#define CT_SIZE_UNITS   10  /* 64 bit integer, automatically converts K, M, G, T suffixes using 1000 as base) */
 
 /**
  * Uninitialized value for override indicator

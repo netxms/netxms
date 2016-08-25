@@ -28,6 +28,11 @@
 #define NXCC_RCC_INVALID_REQUEST 5
 
 /**
+ * Base value for custom notifications
+ */
+#define NXCC_CUSTOM_NOTIFICATION_BASE  1000
+
+/**
  * Cluster node states
  */
 enum ClusterNodeState
@@ -64,6 +69,7 @@ public:
    virtual void onSplitBrain();
    
    virtual ClusterMessageProcessingResult onMessage(NXCPMessage *msg, UINT32 sourceNodeId);
+   virtual void onNotification(int code, UINT32 sourceNodeId);
 };
 
 /**

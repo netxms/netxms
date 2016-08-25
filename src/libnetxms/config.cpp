@@ -705,6 +705,24 @@ void Config::error(const TCHAR *format, ...)
 }
 
 /**
+ * Parse size specification (with K, M, G, or T suffixes)
+ */
+static UINT64 ParseSize(const TCHAR *s, UINT64 multiplier)
+{
+   TCHAR *eptr;
+   UINT64 value = _tcstoull(s, &eptr, 0);
+   if (*eptr == 'K')
+      return value * multiplier;
+   if (*eptr == 'M')
+      return value * multiplier * multiplier;
+   if (*eptr == 'G')
+      return value * multiplier * multiplier * multiplier;
+   if (*eptr == 'T')
+      return value * multiplier * multiplier * multiplier * multiplier;
+   return value;
+}
+
+/**
  * Parse configuration template (emulation of old NxLoadConfig() API)
  */
 bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
@@ -804,6 +822,12 @@ bool Config::parseTemplate(const TCHAR *section, NX_CFG_TEMPLATE *cfgTemplate)
                   curr++;
                }
                *curr = 0;
+               break;
+            case CT_SIZE_BYTES:
+               *((UINT64 *)cfgTemplate[i].buffer) = ParseSize(value, 1024);
+               break;
+            case CT_SIZE_UNITS:
+               *((UINT64 *)cfgTemplate[i].buffer) = ParseSize(value, 1000);
                break;
             case CT_IGNORE:
                break;

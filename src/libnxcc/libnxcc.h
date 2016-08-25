@@ -69,7 +69,8 @@ enum ClusterJoinResponse
 enum ClusterNotificationCode
 {
    CN_NEW_MASTER = 1,
-   CN_NODE_RUNNING = 2
+   CN_NODE_RUNNING = 2,
+   CN_CUSTOM = NXCC_CUSTOM_NOTIFICATION_BASE
 };
 
 #define ClusterDebug nxlog_debug
