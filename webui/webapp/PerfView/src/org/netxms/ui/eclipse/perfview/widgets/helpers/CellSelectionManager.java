@@ -63,6 +63,10 @@ public class CellSelectionManager
 			{
 				setFocusCell(cell, (event.stateMask & SWT.CTRL) == 0);
 			}
+			else if ((event.stateMask & SWT.CTRL) != 0)
+         {
+            setFocusCell(cell, false);
+         }
 		}
 	}
 
@@ -228,9 +232,25 @@ public class CellSelectionManager
 			for(ViewerCell cell : selectedCells)
 				cellHighlighter.unmarkCell(cell);
 			selectedCells.clear();
+			if (focusCell != null)
+			{
+		      selectedCells.add(focusCell);
+		      cellHighlighter.markCell(focusCell);
+			}
 		}
-		selectedCells.add(focusCell);
-		cellHighlighter.markCell(focusCell);
+      else if (focusCell != null)
+      {
+         if (selectedCells.contains(focusCell))
+         {
+            selectedCells.remove(focusCell);
+            cellHighlighter.unmarkCell(focusCell);
+         }
+         else
+         {
+            selectedCells.add(focusCell);
+            cellHighlighter.markCell(focusCell);
+         }
+      }
 		
 		ViewerCell oldCell = this.focusCell;
 

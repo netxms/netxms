@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.perfview.widgets.helpers;
 
@@ -20,6 +35,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableItem;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -62,6 +78,10 @@ public class CellSelectionManager
 			if (!cell.equals(focusCell))
 			{
 				setFocusCell(cell, (event.stateMask & SWT.CTRL) == 0);
+			}
+			else if ((event.stateMask & SWT.CTRL) != 0)
+			{
+            setFocusCell(cell, false);
 			}
 		}
 	}
@@ -224,8 +244,47 @@ public class CellSelectionManager
 	void setFocusCell(ViewerCell focusCell, boolean clearSelection)
 	{
 		if (clearSelection)
+		{
 			selectedCells.clear();
-		selectedCells.add(focusCell);
+			viewer.getTable().deselectAll();
+			if (focusCell != null)
+			{
+            selectedCells.add(focusCell);
+            viewer.getTable().select(viewer.getTable().indexOf((TableItem)focusCell.getViewerRow().getItem()));
+			}
+		}
+		else if (focusCell != null)
+		{
+		   if (selectedCells.contains(focusCell))
+		   {
+		      selectedCells.remove(focusCell);
+		      ViewerRow row = focusCell.getViewerRow();
+		      boolean removeRowSelection = true;
+		      for(ViewerCell c : selectedCells)
+		      {
+		         if (row.equals(c.getViewerRow()))
+		         {
+		            // other cells selected in same row
+		            removeRowSelection = false;
+		            break;
+		         }
+		      }
+		      if (removeRowSelection)
+		      {
+		         viewer.getTable().deselect(viewer.getTable().indexOf((TableItem)row.getItem()));
+		      }
+		      else
+		      {
+		         // keep selection
+               viewer.getTable().select(viewer.getTable().indexOf((TableItem)row.getItem()));
+		      }
+		   }
+		   else
+		   {
+		      selectedCells.add(focusCell);
+	         viewer.getTable().select(viewer.getTable().indexOf((TableItem)focusCell.getViewerRow().getItem()));
+		   }
+		}
 		
 		ViewerCell oldCell = this.focusCell;
 
