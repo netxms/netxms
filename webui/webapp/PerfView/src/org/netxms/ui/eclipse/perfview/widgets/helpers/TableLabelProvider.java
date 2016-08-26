@@ -86,17 +86,13 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-		row = (TableRow)element;
-		
-		if (columnIndex >= row.size()) {
-			return null;
-		}
-		else if (useMultipliers) {
-		 return getValueForFormat(columnIndex);
-		   
-		}
-		
-		return row.get(columnIndex).getValue();
+      row = (TableRow)element;
+
+      if (columnIndex >= row.size())
+         return null;
+      if (useMultipliers)
+         return getValueForFormat(columnIndex);
+      return row.get(columnIndex).getValue();
 	}
 
 	/* (non-Javadoc)
