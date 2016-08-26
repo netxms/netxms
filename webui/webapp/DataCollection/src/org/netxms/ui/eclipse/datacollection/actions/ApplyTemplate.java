@@ -107,11 +107,6 @@ public class ApplyTemplate implements IObjectActionDelegate
    				action.setEnabled(true);
    				parentId.add(((AbstractObject)s).getObjectId());
    			}
-   			else
-   			{
-   				action.setEnabled(false);
-   				parentId.add((long)0);
-   			}
 			}
 		}
 		else
