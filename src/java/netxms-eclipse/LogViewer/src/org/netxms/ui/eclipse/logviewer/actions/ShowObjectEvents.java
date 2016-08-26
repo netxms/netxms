@@ -29,6 +29,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.netxms.client.constants.ColumnFilterSetOperation;
 import org.netxms.client.constants.ColumnFilterType;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.LogFilter;
@@ -56,7 +57,7 @@ public class ShowObjectEvents extends AbstractHandler
          return null;
       
       ColumnFilter cf = new ColumnFilter();
-      cf.setOperation(ColumnFilter.OR);
+      cf.setOperation(ColumnFilterSetOperation.OR);
       for(Object o : ((IStructuredSelection)selection).toList())
       {
          if (!(o instanceof AbstractObject))

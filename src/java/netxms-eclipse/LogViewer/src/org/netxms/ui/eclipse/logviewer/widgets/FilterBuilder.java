@@ -54,6 +54,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.forms.widgets.TableWrapData;
 import org.eclipse.ui.forms.widgets.TableWrapLayout;
+import org.netxms.client.constants.ColumnFilterSetOperation;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.Log;
 import org.netxms.client.log.LogColumn;
@@ -365,7 +366,7 @@ public class FilterBuilder extends Composite
    private void createColumnFilterEditor(final LogColumn column, final Control lastControl, ColumnFilter initialFilter)
    {
       final ColumnFilterEditor editor = new ColumnFilterEditor((Composite)condition.getClient(), 
-            toolkit, column, (initialFilter != null) ? initialFilter.getOperation() : 0, new Runnable() {
+            toolkit, column, (initialFilter != null) ? initialFilter.getOperation() : ColumnFilterSetOperation.AND, new Runnable() {
                @Override
                public void run()
                {

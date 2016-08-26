@@ -119,7 +119,7 @@ public class ObjectConditionEditor extends ConditionEditor
 
       if (initialFilter != null)
       {
-         switch(ColumnFilterType.getByValue(initialFilter.getOperation()))
+         switch(initialFilter.getType())
          {
             case EQUALS:
                setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
@@ -128,6 +128,8 @@ public class ObjectConditionEditor extends ConditionEditor
             case CHILDOF:
                setSelectedOperation(initialFilter.isNegated() ? 3 : 2);
                objectId = initialFilter.getNumericValue();
+               break;
+            default:
                break;
          }
          

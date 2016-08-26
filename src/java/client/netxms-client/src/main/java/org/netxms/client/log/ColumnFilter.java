@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.netxms.base.NXCPMessage;
+import org.netxms.client.constants.ColumnFilterSetOperation;
 import org.netxms.client.constants.ColumnFilterType;
 
 /**
@@ -29,16 +30,13 @@ import org.netxms.client.constants.ColumnFilterType;
  */
 public class ColumnFilter
 {
-	public static final int AND = 0;
-	public static final int OR = 1;
-	
 	private ColumnFilterType type;
 	private long rangeFrom;
 	private long rangeTo;
 	private long numericValue;
 	private String like;
 	private HashSet<ColumnFilter> set;
-	private int operation;	// Set operation: AND or OR
+	private ColumnFilterSetOperation operation;	// Set operation: AND or OR
 	private boolean negated = false;
 	
 	/**
@@ -83,7 +81,7 @@ public class ColumnFilter
 	{
 		type = ColumnFilterType.SET;
 		set = new HashSet<ColumnFilter>();
-		operation = AND;
+		operation = ColumnFilterSetOperation.AND;
 	}
 	
 	/**
@@ -104,46 +102,48 @@ public class ColumnFilter
 	 * @param baseId Base variable ID
 	 * @return Number of variables used
 	 */
-	int fillMessage(final NXCPMessage msg, final long baseId)
-	{
-		int varCount = 1;
-		msg.setFieldInt16(baseId, type.getValue());
-		switch(type)
-		{
-			case EQUALS:
-			case LESS:
-			case GREATER:
-			case CHILDOF:
-				msg.setFieldInt64(baseId + 1, numericValue);
-				msg.setFieldInt16(baseId + 2, negated ? 1 : 0);
-				varCount += 2;
-				break;
-			case RANGE:
-				msg.setFieldInt64(baseId + 1, rangeFrom);
-				msg.setFieldInt64(baseId + 2, rangeTo);
-				msg.setFieldInt16(baseId + 3, negated ? 1 : 0);
-				varCount += 3;
-				break;
-			case LIKE:
-				msg.setField(baseId + 1, like);
-				msg.setFieldInt16(baseId + 2, negated ? 1 : 0);
-				varCount += 2;
-				break;
-			case SET:
-				msg.setFieldInt16(baseId + 1, operation);
-				msg.setFieldInt16(baseId + 2, set.size());
-				varCount += 2;
-				long varId = baseId + 3;
-				for(final ColumnFilter f : set)
-				{
-					int count = f.fillMessage(msg, varId);
-					varId += count;
-					varCount += count;
-				}
-				break;
-		}
-		return varCount;
-	}
+   int fillMessage(final NXCPMessage msg, final long baseId)
+   {
+      int varCount = 1;
+      msg.setFieldInt16(baseId, type.getValue());
+      switch(type)
+      {
+         case EQUALS:
+         case LESS:
+         case GREATER:
+         case CHILDOF:
+            msg.setFieldInt64(baseId + 1, numericValue);
+            msg.setFieldInt16(baseId + 2, negated ? 1 : 0);
+            varCount += 2;
+            break;
+         case RANGE:
+            msg.setFieldInt64(baseId + 1, rangeFrom);
+            msg.setFieldInt64(baseId + 2, rangeTo);
+            msg.setFieldInt16(baseId + 3, negated ? 1 : 0);
+            varCount += 3;
+            break;
+         case LIKE:
+            msg.setField(baseId + 1, like);
+            msg.setFieldInt16(baseId + 2, negated ? 1 : 0);
+            varCount += 2;
+            break;
+         case SET:
+            msg.setFieldInt16(baseId + 1, operation.getValue());
+            msg.setFieldInt16(baseId + 2, set.size());
+            varCount += 2;
+            long varId = baseId + 3;
+            for(final ColumnFilter f : set)
+            {
+               int count = f.fillMessage(msg, varId);
+               varId += count;
+               varCount += count;
+            }
+            break;
+         default:
+            break;
+      }
+      return varCount;
+   }
 
 	/**
 	 * @return the rangeFrom
@@ -212,7 +212,7 @@ public class ColumnFilter
 	/**
 	 * @return the operation
 	 */
-	public int getOperation()
+	public ColumnFilterSetOperation getOperation()
 	{
 		return operation;
 	}
@@ -220,7 +220,7 @@ public class ColumnFilter
 	/**
 	 * @param operation the operation to set
 	 */
-	public void setOperation(int operation)
+	public void setOperation(ColumnFilterSetOperation operation)
 	{
 		this.operation = operation;
 	}

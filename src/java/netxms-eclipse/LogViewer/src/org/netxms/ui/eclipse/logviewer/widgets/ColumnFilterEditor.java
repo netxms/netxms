@@ -32,6 +32,7 @@ import org.eclipse.ui.forms.events.HyperlinkAdapter;
 import org.eclipse.ui.forms.events.HyperlinkEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
+import org.netxms.client.constants.ColumnFilterSetOperation;
 import org.netxms.client.log.ColumnFilter;
 import org.netxms.client.log.LogColumn;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
@@ -47,7 +48,7 @@ public class ColumnFilterEditor extends DashboardComposite
 	private LogColumn column;
 	private FilterBuilder filterBuilder;
 	private List<ConditionEditor> conditions = new ArrayList<ConditionEditor>();
-	private int booleanOperation = ColumnFilter.OR;
+	private ColumnFilterSetOperation booleanOperation = ColumnFilterSetOperation.OR;
 	
 	/**
 	 * @param parent
@@ -55,7 +56,7 @@ public class ColumnFilterEditor extends DashboardComposite
 	 * @param columnElement 
 	 * @param column 
 	 */
-	public ColumnFilterEditor(Composite parent, FormToolkit toolkit, LogColumn column, int operation, final Runnable deleteHandler)
+	public ColumnFilterEditor(Composite parent, FormToolkit toolkit, LogColumn column, ColumnFilterSetOperation operation, final Runnable deleteHandler)
 	{
 		super(parent, SWT.BORDER);
 		
@@ -97,12 +98,12 @@ public class ColumnFilterEditor extends DashboardComposite
 		buttons.setLayoutData(gd);
 
 		final Button radioAnd = toolkit.createButton(buttons, Messages.get().ColumnFilterEditor_AndCondition, SWT.RADIO);
-		radioAnd.setSelection(booleanOperation == ColumnFilter.AND);
+		radioAnd.setSelection(booleanOperation == ColumnFilterSetOperation.AND);
 		radioAnd.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				setBooleanOperation(ColumnFilter.AND);
+				setBooleanOperation(ColumnFilterSetOperation.AND);
 			}
 			
 			@Override
@@ -113,12 +114,12 @@ public class ColumnFilterEditor extends DashboardComposite
 		});
 		
 		final Button radioOr = toolkit.createButton(buttons, Messages.get().ColumnFilterEditor_OrCondition, SWT.RADIO);
-		radioOr.setSelection(booleanOperation == ColumnFilter.OR);
+		radioOr.setSelection(booleanOperation == ColumnFilterSetOperation.OR);
 		radioOr.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				setBooleanOperation(ColumnFilter.OR);
+				setBooleanOperation(ColumnFilterSetOperation.OR);
 			}
 			
 			@Override
@@ -153,10 +154,10 @@ public class ColumnFilterEditor extends DashboardComposite
 	/**
 	 * @param op
 	 */
-	private void setBooleanOperation(int op)
+	private void setBooleanOperation(ColumnFilterSetOperation op)
 	{
 		booleanOperation = op;
-		final String opName = (op == ColumnFilter.AND) ? Messages.get().ColumnFilterEditor_And : Messages.get().ColumnFilterEditor_Or;
+		final String opName = (op == ColumnFilterSetOperation.AND) ? Messages.get().ColumnFilterEditor_And : Messages.get().ColumnFilterEditor_Or;
 		for(int i = 1; i < conditions.size(); i++)
 		{
 			conditions.get(i).setLogicalOperation(opName);
@@ -186,7 +187,7 @@ public class ColumnFilterEditor extends DashboardComposite
 		ce.setLayoutData(gd);
 		conditions.add(ce);
 		if (conditions.size() > 1)
-			ce.setLogicalOperation((booleanOperation == ColumnFilter.AND) ? Messages.get().ColumnFilterEditor_And : Messages.get().ColumnFilterEditor_Or);
+			ce.setLogicalOperation((booleanOperation == ColumnFilterSetOperation.AND) ? Messages.get().ColumnFilterEditor_And : Messages.get().ColumnFilterEditor_Or);
 
 		filterBuilder.updateLayout();
 	}
@@ -246,7 +247,7 @@ public class ColumnFilterEditor extends DashboardComposite
       {
          for(ColumnFilter f : initialFilter.getSubFilters())
          {
-            f.setOperation(f.getType().getValue());
+            f.setOperation(f.getOperation());
             addCondition(f);
          }
       }

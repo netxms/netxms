@@ -75,20 +75,22 @@ public class SeverityConditionEditor extends ConditionEditor
 		severity.setLayoutData(gd);
 		
 		if (initialFilter != null)
-		{
-		   switch(ColumnFilterType.getByValue(initialFilter.getOperation()))
-		   {
-		      case EQUALS:
-		         setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
-		         break;
-		      case LESS:
+      {
+         switch(initialFilter.getType())
+         {
+            case EQUALS:
+               setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
+               break;
+            case LESS:
                setSelectedOperation(2);
                break;
             case GREATER:
                setSelectedOperation(3);
                break;
-		   }
-		   severity.select((int)initialFilter.getNumericValue());
+            default:
+               break;
+         }
+         severity.select((int)initialFilter.getNumericValue());
 		}
 	}
 

@@ -94,7 +94,7 @@ public class IntegerConditionEditor extends ConditionEditor
 
       if (initialFilter != null)
       {
-         switch(ColumnFilterType.getByValue(initialFilter.getOperation()))
+         switch(initialFilter.getType())
          {
             case EQUALS:
                setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
@@ -115,9 +115,11 @@ public class IntegerConditionEditor extends ConditionEditor
                value1.setText(Long.toString(initialFilter.getRangeFrom()));
                value2.setText(Long.toString(initialFilter.getRangeTo()));
                break;
+            default:
+               break;
          }
       }
-	}
+   }
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.logviewer.widgets.ConditionEditor#operationSelectionChanged(int)

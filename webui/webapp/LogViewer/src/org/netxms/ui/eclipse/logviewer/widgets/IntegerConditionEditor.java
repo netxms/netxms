@@ -94,7 +94,7 @@ public class IntegerConditionEditor extends ConditionEditor
 
       if (initialFilter != null)
       {
-         switch(ColumnFilterType.getByValue(initialFilter.getOperation()))
+         switch(initialFilter.getType())
          {
             case EQUALS:
                setSelectedOperation(initialFilter.isNegated() ? 1 : 0);
@@ -114,6 +114,8 @@ public class IntegerConditionEditor extends ConditionEditor
                value2.setVisible(true);
                value1.setText(Long.toString(initialFilter.getRangeFrom()));
                value2.setText(Long.toString(initialFilter.getRangeTo()));
+               break;
+            default:
                break;
          }
       }
