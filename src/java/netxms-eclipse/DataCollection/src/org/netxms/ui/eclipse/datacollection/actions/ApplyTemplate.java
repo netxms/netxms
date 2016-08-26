@@ -17,6 +17,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */package org.netxms.ui.eclipse.datacollection.actions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -44,7 +45,7 @@ public class ApplyTemplate implements IObjectActionDelegate
 {
 	private Shell shell;
 	private ViewPart viewPart;
-	private long[] parentId;
+	private List<Long> parentId = null;
 
 	/**
 	 * @see IObjectActionDelegate#setActivePart(IAction, IWorkbenchPart)
@@ -60,6 +61,9 @@ public class ApplyTemplate implements IObjectActionDelegate
 	 */
 	public void run(IAction action)
 	{
+	   if ((parentId == null) || (parentId.isEmpty()))
+	      return;
+	   
 		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, null, ObjectSelectionDialog.createNodeSelectionFilter(true));
 		if (dlg.open() == Window.OK)
 		{
@@ -79,8 +83,8 @@ public class ApplyTemplate implements IObjectActionDelegate
 					   if (parentId == null) {
                      session.applyTemplate(0, o.getObjectId());
 					   } else
-					   for (int i = 0; i < parentId.length; i++) {
-					      session.applyTemplate(parentId[i], o.getObjectId());
+					   for (Long l : parentId) {
+					      session.applyTemplate(l, o.getObjectId());
 					   }
 				}
 			}.start();
@@ -95,19 +99,18 @@ public class ApplyTemplate implements IObjectActionDelegate
 		if ((selection instanceof IStructuredSelection) &&
 			 (((IStructuredSelection)selection).size() != 0))
 		{
-			Object[] obj = ((IStructuredSelection)selection).toArray();
-			parentId = new long[obj.length];
-			
-			for (int i = 0; i < obj.length; i++) {
-   			if (obj[i] instanceof Template)
+		   parentId = new ArrayList<Long>();
+			for (Object s : ((IStructuredSelection)selection).toList()) 
+			{
+   			if (s instanceof Template)
    			{
    				action.setEnabled(true);
-   				parentId[i] = ((AbstractObject)obj[i]).getObjectId();
+   				parentId.add(((AbstractObject)s).getObjectId());
    			}
    			else
    			{
    				action.setEnabled(false);
-   				parentId[i] = 0;
+   				parentId.add((long)0);
    			}
 			}
 		}
