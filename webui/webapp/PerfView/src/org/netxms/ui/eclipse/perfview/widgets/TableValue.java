@@ -34,6 +34,7 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerRow;
+import org.eclipse.rap.rwt.RWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.DisposeEvent;
@@ -43,6 +44,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
@@ -105,6 +107,8 @@ public class TableValue extends Composite
       setLayout(new FormLayout());
 
       viewer = new SortableTableViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
+      viewer.getTable().setData(RWT.MARKUP_ENABLED, Boolean.TRUE);
+      viewer.getTable().setData(RWT.CUSTOM_VARIANT, "cellselect");
       viewer.setContentProvider(new TableContentProvider());
       labelProvider = new TableLabelProvider();
       viewer.setLabelProvider(labelProvider);
@@ -332,6 +336,11 @@ public class TableValue extends Composite
       
       labelProvider.setColumns(table.getColumns());
       viewer.setInput(table);
+      
+      // FIXME: workaround for Eclipse RAP bug #324721 (Items should inherit custom variants) 
+      for(TableItem i : viewer.getTable().getItems())
+         i.setData(RWT.CUSTOM_VARIANT, "cellselect");
+      
       currentData = table;
    }
 
