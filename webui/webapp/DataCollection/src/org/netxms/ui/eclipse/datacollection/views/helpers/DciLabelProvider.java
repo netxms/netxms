@@ -163,7 +163,7 @@ public class DciLabelProvider implements ITableLabelProvider
                }
    			   
 			   }
-			   if((dci instanceof DataCollectionTable))
+			   if ((dci instanceof DataCollectionTable))
 			   {
 			      List<TableThreshold> list = ((DataCollectionTable)dci).getThresholds();
                for(int i = 0; i < list.size(); i++)
@@ -178,9 +178,9 @@ public class DciLabelProvider implements ITableLabelProvider
 				if (dci.getTemplateId() == 0)
 					return null;
 				AbstractObject object = session.findObjectById(dci.getTemplateId());
-				if(object == null)
-				   return  Messages.get().DciLabelProvider_Unknown;
-				if(!(object instanceof Template))
+				if (object == null)
+				   return Messages.get().DciLabelProvider_Unknown;
+				if (!(object instanceof Template))
 				   return object.getObjectName();
 				Set<AbstractObject> parents = object.getAllParents(null);
 				StringBuilder sb = new StringBuilder();
