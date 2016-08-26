@@ -228,7 +228,16 @@ public class AccessControl extends PropertyPage
       
       checkInherit = new Button(dialogArea, SWT.CHECK);
       checkInherit.setText(Messages.get().AccessControl_InheritRights);
-      checkInherit.setSelection(object.isInheritAccessRights());
+      if (object.getParentCount() > 0)
+      {
+         checkInherit.setSelection(object.isInheritAccessRights());
+      }
+      else
+      {
+         // For objects without parent "inherit access rights" option is meaningless
+         checkInherit.setSelection(false);
+         checkInherit.setEnabled(false);
+      }
       
 		return dialogArea;
 	}
