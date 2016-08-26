@@ -1,6 +1,6 @@
 /*
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2015 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -641,18 +641,18 @@ stop_search:
 			   _tprintf(_T("NetXMS Database Manager Version ") NETXMS_VERSION_STRING _T(" Build ") NETXMS_VERSION_BUILD_STRING _T(" (") NETXMS_BUILD_TAG _T(")") IS_UNICODE_BUILD_STRING _T("\n\n"));
             _tprintf(_T("Usage: nxdbmgr [<options>] <command>\n")
                      _T("Valid commands are:\n")
-						   _T("   batch <file>       : Run SQL batch file\n")
-                     _T("   check              : Check database for errors\n")
-                     _T("   check-data-tables  : Check database for missing data tables\n")
-                     _T("   export <file>      : Export database to file\n")
-                     _T("   get <name>         : Get value of server configuration variable\n")
-                     _T("   import <file>      : Import database from file\n")
-                     _T("   init <file>        : Initialize database\n")
-				         _T("   migrate <source>   : Migrate database from given source\n")
-                     _T("   resetadmin         : Unlock user \"admin\" and reset password to default (\"netxms\")\n")
-                     _T("   set <name> <value> : Set value of server configuration variable\n")
-                     _T("   unlock             : Forced database unlock\n")
-                     _T("   upgrade            : Upgrade database to new version\n")
+						   _T("   batch <file>         : Run SQL batch file\n")
+                     _T("   check                : Check database for errors\n")
+                     _T("   check-data-tables    : Check database for missing data tables\n")
+                     _T("   export <file>        : Export database to file\n")
+                     _T("   get <name>           : Get value of server configuration variable\n")
+                     _T("   import <file>        : Import database from file\n")
+                     _T("   init <file>          : Initialize database\n")
+				         _T("   migrate <source>     : Migrate database from given source\n")
+                     _T("   reset-system-account : Unlock user \"system\" and reset it's password to default\n")
+                     _T("   set <name> <value>   : Set value of server configuration variable\n")
+                     _T("   unlock               : Forced database unlock\n")
+                     _T("   upgrade              : Upgrade database to new version\n")
                      _T("Valid options are:\n")
                      _T("   -c <config> : Use alternate configuration file. Default is %s\n")
                      _T("   -d          : Check collected data (may take very long time).\n")
@@ -760,7 +760,7 @@ stop_search:
        strcmp(argv[optind], "import") &&
        strcmp(argv[optind], "init") &&
        strcmp(argv[optind], "migrate") &&
-       strcmp(argv[optind], "resetadmin") &&
+       strcmp(argv[optind], "reset-system-account") &&
        strcmp(argv[optind], "set") &&
        strcmp(argv[optind], "unlock") &&
        strcmp(argv[optind], "upgrade"))
@@ -900,9 +900,9 @@ stop_search:
 			free(value);
 #endif
 		}
-      else if (!strcmp(argv[optind], "resetadmin"))
+      else if (!strcmp(argv[optind], "reset-system-account"))
       {
-         ResetAdmin();
+         ResetSystemAccount();
       }
    }
 

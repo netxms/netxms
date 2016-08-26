@@ -329,7 +329,7 @@ Call to if_nameindex() failed (%1)
 MessageId=
 SymbolicName=MSG_SUPERUSER_CREATED
 Language=English
-Superuser account created because it was not presented in database
+System account created because it was not presented in database
 .
 
 MessageId=

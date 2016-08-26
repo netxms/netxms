@@ -20,14 +20,13 @@
 
 #include "nxdbmgr.h"
 
-//
-// Reset password to default
-//
-
-void ResetAdmin()
+/**
+ * Reset "system" account password to default and unlock it
+ */
+void ResetSystemAccount()
 {
 	WriteToTerminal(_T("\n\n\x1b[1mWARNING!!!\x1b[0m\n"));
-	if (!GetYesNo(_T("This operation will unlock admin user and change it password to default (\"netxms\").\nAre you sure?")))
+	if (!GetYesNo(_T("This operation will unlock \"system\" user and change it's password to default (\"netxms\").\nAre you sure?")))
    {
 		return;
    }

@@ -1,6 +1,6 @@
 /* 
 ** nxdbmgr - NetXMS database manager
-** Copyright (C) 2004-2012 Victor Kirhenshtein
+** Copyright (C) 2004-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -162,9 +162,16 @@ void InitDatabase(const char *pszInitFile)
    if (!ExecSQLBatch(pszInitFile))
       goto init_failed;
 
-   // Generate GUID for user "admin"
+   // Generate GUID for user "system"
    _uuid_generate(guid);
    _sntprintf(szQuery, 256, _T("UPDATE users SET guid='%s' WHERE id=0"),
+              _uuid_to_string(guid, szGUID));
+   if (!SQLQuery(szQuery))
+      goto init_failed;
+
+   // Generate GUID for user "admin"
+   _uuid_generate(guid);
+   _sntprintf(szQuery, 256, _T("UPDATE users SET guid='%s' WHERE id=1"),
               _uuid_to_string(guid, szGUID));
    if (!SQLQuery(szQuery))
       goto init_failed;
@@ -172,6 +179,13 @@ void InitDatabase(const char *pszInitFile)
    // Generate GUID for "everyone" group
    _uuid_generate(guid);
    _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=%d"),
+              _uuid_to_string(guid, szGUID), GROUP_EVERYONE);
+   if (!SQLQuery(szQuery))
+      goto init_failed;
+
+   // Generate GUID for "Admins" group
+   _uuid_generate(guid);
+   _sntprintf(szQuery, 256, _T("UPDATE user_groups SET guid='%s' WHERE id=-2147483647"),
               _uuid_to_string(guid, szGUID), GROUP_EVERYONE);
    if (!SQLQuery(szQuery))
       goto init_failed;

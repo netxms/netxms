@@ -221,7 +221,7 @@ BOOL LoadUsers()
 
    DBFreeResult(hResult);
 
-   // Create superuser account if it doesn't exist
+   // Create system account if it doesn't exist
    if (!s_userDatabase.contains(0))
    {
 		User *user = new User();
@@ -403,7 +403,7 @@ result:
                if (user->getFlags() & UF_CHANGE_PASSWORD)
                {
                   DbgPrintf(4, _T("Password for user \"%s\" need to be changed"), user->getName());
-                  if (user->getId() != 0)	// Do not check grace logins for built-in admin user
+                  if (user->getId() != 0)	// Do not check grace logins for built-in system user
                   {
                      if (user->getGraceLogins() <= 0)
                      {
@@ -427,7 +427,7 @@ result:
                       (time(NULL) > user->getPasswordChangeTime() + passwordExpirationTime * 86400))
                   {
                      DbgPrintf(4, _T("Password for user \"%s\" has expired"), user->getName());
-                     if (user->getId() != 0)	// Do not check grace logins for built-in admin user
+                     if (user->getId() != 0)	// Do not check grace logins for built-in system user
                      {
                         if (user->getGraceLogins() <= 0)
                         {

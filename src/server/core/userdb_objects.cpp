@@ -421,16 +421,16 @@ User::User(DB_HANDLE hdb, DB_RESULT hResult, int row) : UserDatabaseObject(hdb, 
 }
 
 /**
- * Constructor for user object - create default superuser
+ * Constructor for user object - create default system user
  */
 User::User() : UserDatabaseObject()
 {
 	m_id = 0;
-	_tcscpy(m_name, _T("admin"));
+	_tcscpy(m_name, _T("system"));
 	m_flags = UF_MODIFIED | UF_CHANGE_PASSWORD;
 	m_systemRights = SYSTEM_ACCESS_FULL;
 	m_fullName[0] = 0;
-	_tcscpy(m_description, _T("Built-in system administrator account"));
+	_tcscpy(m_description, _T("Built-in system account"));
 	CalculatePasswordHash(_T("netxms"), PWD_HASH_SHA256, &m_password);
 	m_graceLogins = MAX_GRACE_LOGINS;
 	m_authMethod = AUTH_NETXMS_PASSWORD;
@@ -442,7 +442,6 @@ User::User() : UserDatabaseObject()
 	m_disabledUntil = 0;
 	m_lastLogin = 0;
    m_xmppId[0] = 0;
-
 }
 
 /**

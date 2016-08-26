@@ -174,6 +174,20 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('XMPPServer','localhost',1,1);
 
 /*
+** System user
+*/
+INSERT INTO users (id,name,password,system_access,flags,full_name,
+                   description,grace_logins,auth_method,guid,
+                   cert_mapping_method,cert_mapping_data,
+                   auth_failures,last_passwd_change,min_passwd_length,
+                   disabled_until,last_login)
+   VALUES (0,'system',
+           '3A445C0072CD69D9030CC6644020E5C4576051B1', /* Default password: netxms */
+           274877906943,12,'','Built-in system account',5,0,  /* Flags: change password + disabled */
+           '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0
+          );
+
+/*
 ** Default admin user
 */
 INSERT INTO users (id,name,password,system_access,flags,full_name,
@@ -181,42 +195,39 @@ INSERT INTO users (id,name,password,system_access,flags,full_name,
                    cert_mapping_method,cert_mapping_data,
                    auth_failures,last_passwd_change,min_passwd_length,
                    disabled_until,last_login)
-   VALUES (0,'admin',
-           '3A445C0072CD69D9030CC6644020E5C4576051B1', // Default password: netxms
-           65535,8,'','Built-in system administrator account',5,0,
+   VALUES (1,'admin',
+           '3A445C0072CD69D9030CC6644020E5C4576051B1', /* Default password: netxms */
+           0,8,'','Default administrator account',5,0,
            '00000000-0000-0000-0000-000000000000',0,'',0,0,0,0,0
           );
-
 
 /*
 ** Special "Everyone" user group
 */
-
 INSERT INTO user_groups (id,name,system_access,flags,description,guid)
    VALUES (-2147483648, 'Everyone', 16, 0, 'Built-in everyone group',
            '00000000-0000-0000-0000-000000000000'
           );
 
-
 /*
 ** Default "Admins" group
 */
-
 INSERT INTO user_groups (id,name,system_access,flags,description,guid)
-   VALUES (-2147483647, 'Admins', 65535, 0, 'Default administrative group',
+   VALUES (-2147483647, 'Admins', 274877906943, 0, 'Default administrative group',
            '00000000-0000-0000-0000-000000000000'
           );
 
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (1,-2147483647,2047);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (2,-2147483647,2047);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (3,-2147483647,2047);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (4,-2147483647,2047);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (5,-2147483647,2047);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (6,-2147483647,2047);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (7,-2147483647,2047);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (8,-2147483647,2047);
-INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,-2147483647,2047);
+INSERT INTO user_group_members (group_id,user_id) VALUES (-2147483647,1);
 
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (1,-2147483647,32767);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (2,-2147483647,32767);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (3,-2147483647,32767);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (4,-2147483647,32767);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (5,-2147483647,32767);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (6,-2147483647,32767);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (7,-2147483647,32767);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (8,-2147483647,32767);
+INSERT INTO acl (object_id,user_id,access_rights) VALUES (9,-2147483647,32767);
 
 /*
 ** Default event groups

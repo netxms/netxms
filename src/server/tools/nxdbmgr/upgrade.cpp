@@ -162,20 +162,6 @@ bool CreateConfigParam(const TCHAR *name, const TCHAR *value, bool isVisible, bo
 }
 
 /**
- * Set primary key constraint
- */
-static BOOL SetPrimaryKey(const TCHAR *table, const TCHAR *key)
-{
-	TCHAR query[4096];
-
-	if (g_dbSyntax == DB_SYNTAX_SQLITE)
-		return TRUE;	// SQLite does not support adding constraints
-
-	_sntprintf(query, 4096, _T("ALTER TABLE %s ADD PRIMARY KEY (%s)"), table, key);
-	return SQLQuery(query);
-}
-
-/**
  * Rename table
  */
 bool RenameDatabaseTable(const TCHAR *oldName, const TCHAR *newName)
@@ -736,6 +722,65 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V412 to V413
+ */
+static BOOL H_UpgradeFromV412(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE users SET name='system',description='Built-in system account',full_name='',flags=12 WHERE id=0")));
+
+   TCHAR password[128];
+   DB_RESULT hResult = SQLSelect(_T("SELECT password FROM users WHERE id=0"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         DBGetField(hResult, 0, 0, password, 128);
+      else
+         _tcscpy(password, _T("3A445C0072CD69D9030CC6644020E5C4576051B1")); // Use default password "netxms"
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return false;
+   }
+
+   UINT32 userId = 1;
+   hResult = SQLSelect(_T("SELECT max(id) FROM users"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         userId = DBGetFieldULong(hResult, 0, 0) + 1;
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return false;
+   }
+
+   uuid guid = uuid::generate();
+   TCHAR query[1024];
+   _sntprintf(query, 1024,
+     _T("INSERT INTO users (id,name,password,system_access,flags,full_name,")
+     _T("   description,grace_logins,auth_method,guid,")
+     _T("   cert_mapping_method,cert_mapping_data,")
+     _T("   auth_failures,last_passwd_change,min_passwd_length,")
+     _T("   disabled_until,last_login) VALUES (%d,'admin','%s',274877906943,0,")
+     _T("   '','Default administrator account',5,0,'%s',0,'',0,0,0,0,0)"),
+     userId, password, (const TCHAR *)guid.toString());
+   CHK_EXEC(SQLQuery(query));
+
+   for(int i = 1; i < 10; i++)
+   {
+      _sntprintf(query, 256, _T("INSERT INTO acl (object_id,user_id,access_rights) VALUES (%d,%d,32767)"), i, userId);
+      CHK_EXEC(SQLQuery(query));
+   }
+
+   CHK_EXEC(SetSchemaVersion(413));
+   return TRUE;
+}
+
+/**
  * Upgrade from V411 to V412
  */
 static BOOL H_UpgradeFromV411(int currVersion, int newVersion)
@@ -768,7 +813,7 @@ static BOOL H_UpgradeFromV411(int currVersion, int newVersion)
    }
    else
    {
-      if (g_bIgnoreErrors)
+      if (!g_bIgnoreErrors)
          return false;
    }
    CHK_EXEC(SetSchemaVersion(412));
@@ -10490,6 +10535,7 @@ static struct
    { 409, 410, H_UpgradeFromV409 },
    { 410, 411, H_UpgradeFromV410 },
    { 411, 412, H_UpgradeFromV411 },
+   { 412, 413, H_UpgradeFromV412 },
    { 0, 0, NULL }
 };
 
