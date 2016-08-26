@@ -39,7 +39,6 @@ import org.netxms.client.datacollection.DataCollectionObject;
 public class TableLabelProvider extends LabelProvider implements ITableLabelProvider, ITableFontProvider
 {
 	private TableColumnDefinition[] columns = null;
-	private TableRow row;
 	private Font keyColumnFont;
    private boolean useMultipliers = true;
 	
@@ -86,12 +85,12 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	@Override
 	public String getColumnText(Object element, int columnIndex)
 	{
-      row = (TableRow)element;
+      TableRow row = (TableRow)element;
 
       if (columnIndex >= row.size())
          return null;
       if (useMultipliers)
-         return getValueForFormat(columnIndex);
+         return getValueForFormat(row, columnIndex);
       return row.get(columnIndex).getValue();
 	}
 
@@ -128,7 +127,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	 * @param columnIndex
 	 * @return value converted to multiplier form
 	 */
-	private String getValueForFormat(int columnIndex)
+	private String getValueForFormat(TableRow row, int columnIndex)
    {
       String value;
       String suffix = null;
