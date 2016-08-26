@@ -80,40 +80,35 @@ public class TableValue extends Composite
    private long dciId = 0;
    private String configId;
    private String objectName = null;
-   private String id;
    private Table currentData = null;
    private SortableTableViewer viewer;
+   private TableLabelProvider labelProvider;
    private CLabel errorLabel;
    private CellSelectionManager cellSelectionManager;
    private Action actionShowLineChart;
    private Action actionShowBarChart;
    private Action actionShowPieChart;
    private Action actionUseMultipliers;
-   private boolean useMultipliers = false;
-   private TableLabelProvider tlp;
 
    /**
     * @param parent
     * @param style
     * @param viewPart
     */
-   public TableValue(Composite parent, int style, IViewPart viewPart, String configId)
+   public TableValue(Composite parent, int style, IViewPart viewPart, String configSubId)
    {
       super(parent, style);
 
       this.viewPart = viewPart;
-      this.configId = configId;
       session = (NXCSession)ConsoleSharedData.getSession();
 
       setLayout(new FormLayout());
 
       viewer = new SortableTableViewer(this, SWT.FULL_SELECTION | SWT.MULTI);
       viewer.setContentProvider(new TableContentProvider());
-      viewer.setLabelProvider(new TableLabelProvider());
+      labelProvider = new TableLabelProvider();
+      viewer.setLabelProvider(labelProvider);
       cellSelectionManager = new CellSelectionManager(viewer);
-      
-      final IDialogSettings ds = Activator.getDefault().getDialogSettings();
-      tlp = (TableLabelProvider)viewer.getLabelProvider();
       
       FormData fd = new FormData();
       fd.top = new FormAttachment(0, 0);
@@ -122,23 +117,21 @@ public class TableValue extends Composite
       fd.bottom = new FormAttachment(100, 0);
       viewer.getControl().setLayoutData(fd);
       
-      createActions();
-      createPopupMenu();
-      
       StringBuilder sb = new StringBuilder("TableLastValues."); //$NON-NLS-1$
       sb.append(dciId);
-      if (configId != null)
+      if (configSubId != null)
       {
          sb.append('.');
-         sb.append(configId);
+         sb.append(configSubId);
       }
-      id = sb.toString();
+      configId = sb.toString();
       
-      if (ds.get(id + ".useMultipliers") != null) {//$NON-NLS-1$
-         useMultipliers = ds.getBoolean(id + ".useMultipliers");
-      }
-      else
-         tlp.useMultipliers(useMultipliers);      
+      final IDialogSettings ds = Activator.getDefault().getDialogSettings();
+      if (ds.get(configId + ".useMultipliers") != null)
+         labelProvider.setUseMultipliers(ds.getBoolean(configId + ".useMultipliers"));
+
+      createActions();
+      createPopupMenu();
    }
 
    /**
@@ -174,9 +167,11 @@ public class TableValue extends Composite
          @Override
          public void run()
          {
-            useMultipliers();
+            labelProvider.setUseMultipliers(actionUseMultipliers.isChecked());
+            viewer.refresh(true);
          }
       };
+      actionUseMultipliers.setChecked(labelProvider.areMultipliersUsed());
    }
 
    /**
@@ -323,25 +318,19 @@ public class TableValue extends Composite
          Arrays.fill(widths, 150);
          viewer.createColumns(names, widths, 0, SWT.UP);
          
-         
-         
-         WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), id); //$NON-NLS-1$
+         WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configId); //$NON-NLS-1$
          viewer.getTable().addDisposeListener(new DisposeListener() {
             @Override
             public void widgetDisposed(DisposeEvent e)
             {
-               WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), id); //$NON-NLS-1$
-               ds.put(id + ".useMultipliers", tlp.areMultipliersUsed()); //$NON-NLS-1$
+               WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), configId); //$NON-NLS-1$
+               ds.put(configId + ".useMultipliers", labelProvider.areMultipliersUsed()); //$NON-NLS-1$
             }
          });
          viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));        
       }
       
-      // Passes the useMultipliers flag
-      tlp.useMultipliers(useMultipliers);
-      
-      actionUseMultipliers.setChecked(useMultipliers);
-      tlp.setColumns(table.getColumns());
+      labelProvider.setColumns(table.getColumns());
       viewer.setInput(table);
       currentData = table;
    }
@@ -368,20 +357,6 @@ public class TableValue extends Composite
       return instance.toString();
    }
    
-   
-   /**
-    * Sets the useMultipliers flag
-    */
-   private void useMultipliers()
-   {
-      if (!useMultipliers) {
-         useMultipliers = true;
-      } else if (useMultipliers) {
-         useMultipliers = false;
-      }
-      updateViewer(currentData);
-   }
-
    /**
     * Show line chart
     */

@@ -41,7 +41,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 	private TableColumnDefinition[] columns = null;
 	private TableRow row;
 	private Font keyColumnFont;
-   private boolean useMultipliers;
+   private boolean useMultipliers = true;
 	
 	/**
 	 * 
@@ -112,15 +112,21 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 		return null;
 	}
 	
-	public void useMultipliers(boolean useMultipliers)
+	/**
+	 * @param useMultipliers
+	 */
+	public void setUseMultipliers(boolean useMultipliers)
 	{
 	   this.useMultipliers = useMultipliers;
 	}
 	
+	/**
+	 * @return
+	 */
 	public boolean areMultipliersUsed()
-   {
-      return useMultipliers;
-   }
+	{
+	   return useMultipliers;
+	}
 	
 	/**
 	 * @param columnIndex
