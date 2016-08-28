@@ -5,8 +5,8 @@ nxagentd_SOURCES = messages.c actions.cpp appagent.cpp comm.cpp config.cpp \
                    exec.cpp extagent.cpp getparam.cpp localdb.cpp master.cpp \
                    nxagentd.cpp policy.cpp push.cpp register.cpp sa.cpp \
                    sd.cpp session.cpp snmpproxy.cpp snmptrapproxy.cpp \
-                   static_subagents.cpp subagent.cpp sysinfo.cpp tools.cpp \
-                   trap.cpp upgrade.cpp watchdog.cpp
+                   static_subagents.cpp subagent.cpp sysinfo.cpp syslog.cpp \
+		   tools.cpp trap.cpp upgrade.cpp watchdog.cpp
 if USE_INTERNAL_EXPAT
 nxagentd_LDADD = ../../appagent/libappagent.la ../libnxagent/libnxagent.la @top_srcdir@/src/db/libnxdb/libnxdb.la @top_srcdir@/src/libnetxms/libnetxms.la @top_srcdir@/src/snmp/libnxsnmp/libnxsnmp.la @top_srcdir@/src/libexpat/libexpat/libnxexpat.la @SUBAGENT_LIBS@
 else

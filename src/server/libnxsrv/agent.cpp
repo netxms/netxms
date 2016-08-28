@@ -350,6 +350,17 @@ void AgentConnection::receiverThread()
                   delete pMsg;
                }
 					break;
+            case CMD_SYSLOG_RECORDS:
+               if (g_agentConnectionThreadPool != NULL)
+               {
+                  incInternalRefCount();
+                  ThreadPoolExecute(g_agentConnectionThreadPool, this, &AgentConnection::onSyslogMessageCallback, pMsg);
+               }
+               else
+               {
+                  delete pMsg;
+               }
+               break;
 				case CMD_PUSH_DCI_DATA:
 				   if (g_agentConnectionThreadPool != NULL)
 				   {
@@ -999,7 +1010,7 @@ bool AgentConnection::sendRawMessage(NXCP_MESSAGE *pMsg)
 }
 
 /**
- * Callback for processing data push on separate thread
+ * Callback for processing incoming event on separate thread
  */
 void AgentConnection::onTrapCallback(NXCPMessage *msg)
 {
@@ -1013,6 +1024,24 @@ void AgentConnection::onTrapCallback(NXCPMessage *msg)
  * actual trap processing. Default implementation do nothing.
  */
 void AgentConnection::onTrap(NXCPMessage *pMsg)
+{
+}
+
+/**
+ * Callback for processing incoming syslog message on separate thread
+ */
+void AgentConnection::onSyslogMessageCallback(NXCPMessage *msg)
+{
+   onSyslogMessage(msg);
+   delete msg;
+   decInternalRefCount();
+}
+
+/**
+ * Syslog message handler. Should be overriden in derived classes to implement
+ * actual message processing. Default implementation do nothing.
+ */
+void AgentConnection::onSyslogMessage(NXCPMessage *pMsg)
 {
 }
 

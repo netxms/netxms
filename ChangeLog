@@ -15,13 +15,14 @@
 - Zone ID can be set for agent in SNMP proxy mode
 - Zones has common default proxy node for all protocols
 - Zone's proxy node can be placed inside that zone
+- Syslog proxy in agent
 - Built-in superuser account renamed to "system"
 - Default "admin" account now is ordinary member of "Admins" group without built-in privileges
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu
 	- Fixed glitches in table value view
-- Fixed issues: #92, #851, #906, #909, #942, #959, #992, #999, #1006, #1051, #1096, #1100, #1159, #1187, #1191, #1230, #1237, #1245, #1254, #1261, #1263, #1273, #1275
+- Fixed issues: #92, #568, #851, #906, #909, #942, #959, #992, #999, #1006, #1051, #1096, #1100, #1159, #1187, #1191, #1230, #1237, #1245, #1254, #1261, #1263, #1273, #1275
 
 
 *

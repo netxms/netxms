@@ -124,6 +124,7 @@
 #define AF_DISABLE_IPV6             0x00100000
 #define AF_ENABLE_SNMP_TRAP_PROXY   0x00200000
 #define AF_BACKGROUND_LOG_WRITER    0x00400000
+#define AF_ENABLE_SYSLOG_PROXY      0x00800000
 
 // Flags for component failures
 #define FAIL_OPEN_LOG               0x00000001
@@ -643,6 +644,7 @@ extern UINT32 g_dwSNMPTrapPort;
 extern UINT32 g_longRunningQueryThreshold;
 extern UINT16 g_sessionAgentPort;
 extern UINT32 g_zoneId;
+extern UINT16 g_syslogListenPort;
 
 extern Config *g_config;
 

@@ -830,8 +830,7 @@ retry_db_lock:
 		ThreadCreate(SNMPTrapReceiver, 0, NULL);
 
 	// Start built-in syslog daemon
-	if (ConfigReadInt(_T("EnableSyslogDaemon"), 0))
-	   StartSyslogServer();
+   StartSyslogServer();
 
 	// Start database _T("lazy") write thread
 	StartDBWriter();

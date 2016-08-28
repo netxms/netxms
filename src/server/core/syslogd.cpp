@@ -36,13 +36,25 @@ class QueuedSyslogMessage
 {
 public:
    InetAddress sourceAddr;
+   time_t timestamp;
+   UINT32 zoneId;
    char *message;
    int messageLength;
 
-   QueuedSyslogMessage(const InetAddress& addr, char *msg, int msgLen) : sourceAddr(addr)
+   QueuedSyslogMessage(const InetAddress& addr, const char *msg, int msgLen) : sourceAddr(addr)
    {
       message = (char *)nx_memdup(msg, msgLen + 1);
       messageLength = msgLen;
+      timestamp = time(NULL);
+      zoneId = 0;
+   }
+
+   QueuedSyslogMessage(const InetAddress& addr, time_t t, UINT32 zid, const char *msg, int msgLen) : sourceAddr(addr)
+   {
+      message = (char *)nx_memdup(msg, msgLen + 1);
+      messageLength = msgLen;
+      timestamp = t;
+      zoneId = zid;
    }
 
    ~QueuedSyslogMessage()
@@ -79,6 +91,8 @@ static LogParser *s_parser = NULL;
 static MUTEX s_parserLock = INVALID_MUTEX_HANDLE;
 static NodeMatchingPolicy s_nodeMatchingPolicy = SOURCE_IP_THEN_HOSTNAME;
 static THREAD s_receiverThread = INVALID_THREAD_HANDLE;
+static THREAD s_processingThread = INVALID_THREAD_HANDLE;
+static THREAD s_writerThread = INVALID_THREAD_HANDLE;
 static bool s_running = true;
 static bool s_alwaysUseServerTime = false;
 
@@ -176,7 +190,7 @@ static BOOL ParseTimeStamp(char **ppStart, int nMsgSize, int *pnPos, time_t *ptm
 /**
  * Parse syslog message
  */
-static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
+static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, time_t receiverTime, NX_SYSLOG_RECORD *pRec)
 {
    int i, nLen, nPos = 0;
    char *pCurr = psMsg;
@@ -219,7 +233,7 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
       // We still had to parse timestamp to get correct start position for MSG part
       if (s_alwaysUseServerTime)
       {
-         pRec->tmTimeStamp = time(NULL);
+         pRec->tmTimeStamp = receiverTime;
       }
 
       // Hostname
@@ -240,7 +254,7 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
    }
    else
    {
-      pRec->tmTimeStamp = time(NULL);
+      pRec->tmTimeStamp = receiverTime;
    }
 
    // Parse MSG part
@@ -262,7 +276,7 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
 /**
  * Find node by host name
  */
-static Node *FindNodeByHostname(const char *hostName)
+static Node *FindNodeByHostname(const char *hostName, UINT32 zoneId)
 {
    if (hostName[0] == 0)
       return NULL;
@@ -271,7 +285,7 @@ static Node *FindNodeByHostname(const char *hostName)
    InetAddress ipAddr = InetAddress::resolveHostName(hostName);
 	if (ipAddr.isValidUnicast())
    {
-      node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, ipAddr);
+      node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneId, ipAddr);
    }
 
    if (node == NULL)
@@ -292,24 +306,24 @@ static Node *FindNodeByHostname(const char *hostName)
  * Bind syslog message to NetXMS node object
  * sourceAddr is an IP address from which we receive message
  */
-static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr)
+static Node *BindMsgToNode(NX_SYSLOG_RECORD *pRec, const InetAddress& sourceAddr, UINT32 zoneId)
 {
    Node *node = NULL;
 
    if (s_nodeMatchingPolicy == SOURCE_IP_THEN_HOSTNAME)
    {
-      node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, sourceAddr);
+      node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneId, sourceAddr);
       if (node == NULL)
       {
-         node = FindNodeByHostname(pRec->szHostName);
+         node = FindNodeByHostname(pRec->szHostName, zoneId);
       }
    }
    else
    {
-      node = FindNodeByHostname(pRec->szHostName);
+      node = FindNodeByHostname(pRec->szHostName, zoneId);
       if (node == NULL)
       {
-         node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : 0, sourceAddr);
+         node = FindNodeByIP((g_flags & AF_TRAP_SOURCES_IN_ALL_ZONES) ? ALL_ZONES : zoneId, sourceAddr);
       }
    }
 
@@ -414,17 +428,17 @@ static THREAD_RESULT THREAD_CALL SyslogWriterThread(void *arg)
 /**
  * Process syslog message
  */
-static void ProcessSyslogMessage(char *psMsg, int nMsgLen, const InetAddress& sourceAddr)
+static void ProcessSyslogMessage(QueuedSyslogMessage *msg)
 {
    NX_SYSLOG_RECORD record;
 
-	DbgPrintf(6, _T("ProcessSyslogMessage: Raw syslog message to process:\n%hs"), psMsg);
-   if (ParseSyslogMessage(psMsg, nMsgLen, &record))
+	DbgPrintf(6, _T("ProcessSyslogMessage: Raw syslog message to process:\n%hs"), msg->message);
+   if (ParseSyslogMessage(msg->message, msg->messageLength, msg->timestamp, &record))
    {
       g_syslogMessagesReceived++;
 
       record.qwMsgId = s_msgId++;
-      Node *node = BindMsgToNode(&record, sourceAddr);
+      Node *node = BindMsgToNode(&record, msg->sourceAddr, msg->zoneId);
 
       g_syslogWriteQueue.put(nx_memdup(&record, sizeof(NX_SYSLOG_RECORD)));
 
@@ -433,7 +447,7 @@ static void ProcessSyslogMessage(char *psMsg, int nMsgLen, const InetAddress& so
 
 		TCHAR ipAddr[64];
 		DbgPrintf(6, _T("Syslog message: ipAddr=%s objectId=%d tag=\"%hs\" msg=\"%hs\""),
-		          sourceAddr.toString(ipAddr), record.dwSourceObject, record.szTag, record.szMessage);
+		          msg->sourceAddr.toString(ipAddr), record.dwSourceObject, record.szTag, record.szMessage);
 
 		MutexLock(s_parserLock);
 		if ((record.dwSourceObject != 0) && (s_parser != NULL) &&
@@ -470,7 +484,7 @@ static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
       if (msg == INVALID_POINTER_VALUE)
          break;
 
-      ProcessSyslogMessage(msg->message, msg->messageLength, msg->sourceAddr);
+      ProcessSyslogMessage(msg);
       delete msg;
    }
    return THREAD_OK;
@@ -482,6 +496,14 @@ static THREAD_RESULT THREAD_CALL SyslogProcessingThread(void *pArg)
 static void QueueSyslogMessage(char *msg, int msgLen, const InetAddress& sourceAddr)
 {
    g_syslogProcessingQueue.put(new QueuedSyslogMessage(sourceAddr, msg, msgLen));
+}
+
+/**
+ * Queue proxied syslog message for processing
+ */
+void QueueProxiedSyslogMessage(const InetAddress &addr, UINT32 zoneId, time_t timestamp, const char *msg, int msgLen)
+{
+   g_syslogProcessingQueue.put(new QueuedSyslogMessage(addr, timestamp, zoneId, msg, msgLen));
 }
 
 /**
@@ -703,17 +725,6 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
       nxlog_write(MSG_LISTENING_FOR_SYSLOG, EVENTLOG_INFORMATION_TYPE, "Hd", servAddr6.sin6_addr.s6_addr, port);
 #endif
 
-   SetLogParserTraceCallback(nxlog_debug2);
-   InitLogParserLibrary();
-
-	// Create message parser
-	s_parserLock = MutexCreate();
-	CreateParserFromConfig();
-
-   // Start processing thread
-   THREAD hProcessingThread = ThreadCreateEx(SyslogProcessingThread, 0, NULL);
-   THREAD hWriterThread = ThreadCreateEx(SyslogWriterThread, 0, NULL);
-
    DbgPrintf(1, _T("Syslog receiver thread started"));
 
    // Wait for packets
@@ -771,19 +782,55 @@ static THREAD_RESULT THREAD_CALL SyslogReceiver(void *pArg)
       }
    }
 
-   // Stop processing thread
-   g_syslogProcessingQueue.put(INVALID_POINTER_VALUE);
-   ThreadJoin(hProcessingThread);
+   if (hSocket != INVALID_SOCKET)
+      closesocket(hSocket);
+#ifdef WITH_IPV6
+   if (hSocket6 != INVALID_SOCKET)
+      closesocket(hSocket6);
+#endif
 
-   // Stop writer thread - it must be done after processing thread already finished
-   g_syslogWriteQueue.put(INVALID_POINTER_VALUE);
-   ThreadJoin(hWriterThread);
-
-	delete s_parser;
-   CleanupLogParserLibrary();
-
-   DbgPrintf(1, _T("Syslog receiver thread stopped"));
+   nxlog_debug(1, _T("Syslog receiver thread stopped"));
    return THREAD_OK;
+}
+
+/**
+ * Create NXCP message from NX_SYSLOG_RECORD structure
+ */
+void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec)
+{
+   UINT32 dwId = VID_SYSLOG_MSG_BASE;
+
+   pMsg->setField(VID_NUM_RECORDS, (UINT32)1);
+   pMsg->setField(dwId++, pRec->qwMsgId);
+   pMsg->setField(dwId++, (UINT32)pRec->tmTimeStamp);
+   pMsg->setField(dwId++, (WORD)pRec->nFacility);
+   pMsg->setField(dwId++, (WORD)pRec->nSeverity);
+   pMsg->setField(dwId++, pRec->dwSourceObject);
+   pMsg->setFieldFromMBString(dwId++, pRec->szHostName);
+   pMsg->setFieldFromMBString(dwId++, pRec->szTag);
+   pMsg->setFieldFromMBString(dwId++, pRec->szMessage);
+}
+
+/**
+ * Reinitialize parser on configuration change
+ */
+void ReinitializeSyslogParser()
+{
+   if (s_parserLock == INVALID_MUTEX_HANDLE)
+      return;  // Syslog daemon not initialized
+   CreateParserFromConfig();
+}
+
+/**
+ * Handler for syslog related configuration changes
+ */
+void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
+{
+   if (!_tcscmp(name, _T("SyslogIgnoreMessageTimestamp")))
+   {
+      s_alwaysUseServerTime = _tcstol(value, NULL, 0) ? true : false;
+      nxlog_debug(4, _T("Syslog: ignore message timestamp option set to %s"), s_alwaysUseServerTime ? _T("ON") : _T("OFF"));
+   }
 }
 
 /**
@@ -807,7 +854,19 @@ void StartSyslogServer()
    }
    DBConnectionPoolReleaseConnection(hdb);
 
-   s_receiverThread = ThreadCreateEx(SyslogReceiver, 0, NULL);
+   SetLogParserTraceCallback(nxlog_debug2);
+   InitLogParserLibrary();
+
+   // Create message parser
+   s_parserLock = MutexCreate();
+   CreateParserFromConfig();
+
+   // Start processing thread
+   s_processingThread = ThreadCreateEx(SyslogProcessingThread, 0, NULL);
+   s_writerThread = ThreadCreateEx(SyslogWriterThread, 0, NULL);
+
+   if (ConfigReadInt(_T("EnableSyslogReceiver"), 0))
+      s_receiverThread = ThreadCreateEx(SyslogReceiver, 0, NULL);
 }
 
 /**
@@ -817,44 +876,15 @@ void StopSyslogServer()
 {
    s_running = false;
    ThreadJoin(s_receiverThread);
-}
 
-/**
- * Create NXCP message from NX_SYSLOG_RECORD structure
- */
-void CreateMessageFromSyslogMsg(NXCPMessage *pMsg, NX_SYSLOG_RECORD *pRec)
-{
-   UINT32 dwId = VID_SYSLOG_MSG_BASE;
+   // Stop processing thread
+   g_syslogProcessingQueue.put(INVALID_POINTER_VALUE);
+   ThreadJoin(s_processingThread);
 
-   pMsg->setField(VID_NUM_RECORDS, (UINT32)1);
-   pMsg->setField(dwId++, pRec->qwMsgId);
-   pMsg->setField(dwId++, (UINT32)pRec->tmTimeStamp);
-   pMsg->setField(dwId++, (WORD)pRec->nFacility);
-   pMsg->setField(dwId++, (WORD)pRec->nSeverity);
-   pMsg->setField(dwId++, pRec->dwSourceObject);
-   pMsg->setFieldFromMBString(dwId++, pRec->szHostName);
-   pMsg->setFieldFromMBString(dwId++, pRec->szTag);
-	pMsg->setFieldFromMBString(dwId++, pRec->szMessage);
-}
+   // Stop writer thread - it must be done after processing thread already finished
+   g_syslogWriteQueue.put(INVALID_POINTER_VALUE);
+   ThreadJoin(s_writerThread);
 
-/**
- * Reinitialize parser on configuration change
- */
-void ReinitializeSyslogParser()
-{
-	if (s_parserLock == INVALID_MUTEX_HANDLE)
-		return;	// Syslog daemon not initialized
-	CreateParserFromConfig();
-}
-
-/**
- * Handler for syslog related configuration changes
- */
-void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
-{
-   if (!_tcscmp(name, _T("SyslogIgnoreMessageTimestamp")))
-   {
-      s_alwaysUseServerTime = _tcstol(value, NULL, 0) ? true : false;
-      nxlog_debug(4, _T("Syslog: ignore message timestamp option set to %s"), s_alwaysUseServerTime ? _T("ON") : _T("OFF"));
-   }
+   delete s_parser;
+   CleanupLogParserLibrary();
 }

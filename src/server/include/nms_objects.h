@@ -127,6 +127,7 @@ protected:
 
    virtual void printMsg(const TCHAR *format, ...);
    virtual void onTrap(NXCPMessage *msg);
+   virtual void onSyslogMessage(NXCPMessage *pMsg);
    virtual void onDataPush(NXCPMessage *msg);
    virtual void onFileMonitoringData(NXCPMessage *msg);
    virtual void onSnmpTrap(NXCPMessage *pMsg);
@@ -1343,9 +1344,10 @@ protected:
    AgentConnectionEx *m_agentConnection;
    AgentConnectionEx *m_snmpProxyConnection;
    SMCLP_Connection *m_smclpConnection;
-	QWORD m_lastAgentTrapId;	     // ID of last received agent trap
-   QWORD m_lastAgentPushRequestId; // ID of last received agent push request
+	UINT64 m_lastAgentTrapId;	     // ID of last received agent trap
+   UINT64 m_lastAgentPushRequestId; // ID of last received agent push request
    UINT32 m_lastSNMPTrapId;
+   UINT64 m_lastSyslogMessageId; // ID of last received syslog message
    UINT32 m_pollerNode;      // Node used for network service polling
    UINT32 m_agentProxy;      // Node used as proxy for agent connection
 	UINT32 m_snmpProxy;       // Node used as proxy for SNMP requests
@@ -1589,6 +1591,7 @@ public:
 
 	bool checkAgentTrapId(UINT64 id);
 	bool checkSNMPTrapId(UINT32 id);
+   bool checkSyslogMessageId(UINT64 id);
    bool checkAgentPushRequestId(UINT64 id);
 
    bool connectToSMCLP();

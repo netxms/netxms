@@ -63,9 +63,13 @@ THREAD_RESULT THREAD_CALL TrapSender(void *);
 THREAD_RESULT THREAD_CALL MasterAgentListener(void *arg);
 THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *);
 THREAD_RESULT THREAD_CALL SNMPTrapSender(void *);
+THREAD_RESULT THREAD_CALL SyslogReceiver(void *);
+THREAD_RESULT THREAD_CALL SyslogSender(void *);
 
 void ShutdownTrapSender();
 void ShutdownSNMPTrapSender();
+
+void ShutdownSyslogSender();
 
 void StartLocalDataCollector();
 void ShutdownLocalDataCollector();
@@ -167,6 +171,7 @@ UINT32 g_dcReconciliationBlockSize = 1024;
 UINT32 g_dcReconciliationTimeout = 15000;
 UINT32 g_dcMaxCollectorPoolSize = 64;
 UINT32 g_zoneId = 0;
+UINT16 g_syslogListenPort = 514;
 #ifdef _WIN32
 UINT16 g_sessionAgentPort = 28180;
 #else
@@ -204,6 +209,8 @@ static THREAD s_listenerThread = INVALID_THREAD_HANDLE;
 static THREAD s_eventSenderThread = INVALID_THREAD_HANDLE;
 static THREAD s_snmpTrapReceiverThread = INVALID_THREAD_HANDLE;
 static THREAD s_snmpTrapSenderThread = INVALID_THREAD_HANDLE;
+static THREAD s_syslogReceiverThread = INVALID_THREAD_HANDLE;
+static THREAD s_syslogSenderThread = INVALID_THREAD_HANDLE;
 static THREAD s_masterAgentListenerThread = INVALID_THREAD_HANDLE;
 static TCHAR s_processToWaitFor[MAX_PATH] = _T("");
 static TCHAR s_dumpDir[MAX_PATH] = _T("C:\\");
@@ -249,6 +256,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSNMPProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSNMPTrapProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SNMP_TRAP_PROXY, 0, &g_dwFlags, NULL },
+   { _T("EnableSyslogProxy"), CT_BOOLEAN, 0, 0, AF_ENABLE_SYSLOG_PROXY, 0, &g_dwFlags, NULL },
    { _T("EnableSubagentAutoload"), CT_BOOLEAN, 0, 0, AF_ENABLE_AUTOLOAD, 0, &g_dwFlags, NULL },
    { _T("EnableWatchdog"), CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags, NULL },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
@@ -283,6 +291,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("SNMPTrapPort"), CT_LONG, 0, 0, 0, 0, &g_dwSNMPTrapPort, NULL },
    { _T("StartupDelay"), CT_LONG, 0, 0, 0, 0, &g_dwStartupDelay, NULL },
    { _T("SubAgent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszSubagentList, NULL },
+   { _T("SyslogListenPort"), CT_WORD, 0, 0, 0, 0, &g_syslogListenPort, NULL },
    { _T("TimeOut"), CT_IGNORE, 0, 0, 0, 0, NULL, NULL },
    { _T("WaitForProcess"), CT_STRING, 0, 0, MAX_PATH, 0, s_processToWaitFor, NULL },
    { _T("ZoneId"), CT_LONG, 0, 0, 0, 0, &g_zoneId, NULL },
@@ -987,11 +996,16 @@ BOOL Initialize()
 
 	s_eventSenderThread = ThreadCreateEx(TrapSender, 0, NULL);
 
-	// Start trap proxy threads(recieve and send), if trap proxy is enabled
-	if(g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
+	if (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
 	{
       s_snmpTrapSenderThread = ThreadCreateEx(SNMPTrapSender, 0, NULL);
       s_snmpTrapReceiverThread = ThreadCreateEx(SNMPTrapReceiver, 0, NULL);
+   }
+
+   if (g_dwFlags & AF_ENABLE_SYSLOG_PROXY)
+   {
+      s_syslogSenderThread = ThreadCreateEx(SyslogSender, 0, NULL);
+      s_syslogReceiverThread = ThreadCreateEx(SyslogReceiver, 0, NULL);
    }
 
 	if (g_dwFlags & AF_SUBAGENT_LOADER)
@@ -1070,12 +1084,18 @@ void Shutdown()
 		ThreadJoin(s_listenerThread);
 	}
 	ThreadJoin(s_eventSenderThread);
-	if(g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
+	if (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)
 	{
       ShutdownSNMPTrapSender();
       ThreadJoin(s_snmpTrapReceiverThread);
       ThreadJoin(s_snmpTrapSenderThread);
 	}
+   if (g_dwFlags & AF_ENABLE_SYSLOG_PROXY)
+   {
+      ShutdownSyslogSender();
+      ThreadJoin(s_syslogReceiverThread);
+      ThreadJoin(s_syslogSenderThread);
+   }
 
 	DestroySessionList();
 	MsgWaitQueue::shutdown();

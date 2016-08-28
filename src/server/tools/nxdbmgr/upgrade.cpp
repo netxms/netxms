@@ -722,6 +722,16 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V413 to V414
+ */
+static BOOL H_UpgradeFromV413(int currVersion, int newVersion)
+{
+   CHK_EXEC(SQLQuery(_T("UPDATE config SET var_name='EnableSyslogReceiver' WHERE var_name='EnableSyslogDaemon'")));
+   CHK_EXEC(SetSchemaVersion(414));
+   return TRUE;
+}
+
+/**
  * Upgrade from V412 to V413
  */
 static BOOL H_UpgradeFromV412(int currVersion, int newVersion)
@@ -10536,6 +10546,7 @@ static struct
    { 410, 411, H_UpgradeFromV410 },
    { 411, 412, H_UpgradeFromV411 },
    { 412, 413, H_UpgradeFromV412 },
+   { 413, 414, H_UpgradeFromV413 },
    { 0, 0, NULL }
 };
 

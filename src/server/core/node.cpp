@@ -68,6 +68,7 @@ Node::Node() : DataCollectionTarget()
    m_smclpConnection = NULL;
 	m_lastAgentTrapId = 0;
 	m_lastSNMPTrapId = 0;
+	m_lastSyslogMessageId = 0;
    m_lastAgentPushRequestId = 0;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
@@ -164,6 +165,7 @@ Node::Node(const InetAddress& addr, UINT32 dwFlags, UINT32 agentProxy, UINT32 sn
    m_smclpConnection = NULL;
 	m_lastAgentTrapId = 0;
 	m_lastSNMPTrapId = 0;
+	m_lastSyslogMessageId = 0;
    m_lastAgentPushRequestId = 0;
    m_szAgentVersion[0] = 0;
    m_szPlatformName[0] = 0;
@@ -7195,14 +7197,27 @@ bool Node::checkAgentTrapId(UINT64 trapId)
 /**
  * Check and update last agent SNMP trap ID
  */
-bool Node::checkSNMPTrapId(UINT32 trapId)
+bool Node::checkSNMPTrapId(UINT32 id)
 {
 	lockProperties();
-	bool valid = (trapId > m_lastSNMPTrapId);
+	bool valid = (id > m_lastSNMPTrapId);
 	if (valid)
-		m_lastSNMPTrapId = trapId;
+		m_lastSNMPTrapId = id;
 	unlockProperties();
 	return valid;
+}
+
+/**
+ * Check and update last syslog message ID
+ */
+bool Node::checkSyslogMessageId(UINT64 id)
+{
+   lockProperties();
+   bool valid = (id > m_lastSyslogMessageId);
+   if (valid)
+      m_lastSyslogMessageId = id;
+   unlockProperties();
+   return valid;
 }
 
 /**

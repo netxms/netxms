@@ -34,7 +34,7 @@ public:
 };
 
 /**
- * Static data
+ * Sender queue
  */
 static Queue s_snmpTrapQueue;
 
