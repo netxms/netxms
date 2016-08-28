@@ -54,6 +54,30 @@ public:
 static Queue s_syslogSenderQueue;
 
 /**
+ * Counter for received messages
+ */
+static UINT64 s_receivedMessages = 0;
+
+/**
+ * Handler for syslog proxy information parameters
+ */
+LONG H_SyslogStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   switch(*arg)
+   {
+      case 'R':   // received messages
+         ret_uint64(value, s_receivedMessages);
+         break;
+      case 'Q':   // queue size
+         ret_int(value, s_syslogSenderQueue.size());
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Shutdown trap sender
  */
 void ShutdownSyslogSender()
@@ -291,6 +315,7 @@ THREAD_RESULT THREAD_CALL SyslogReceiver(void *)
          {
             syslogMessage[bytes] = 0;
             s_syslogSenderQueue.put(new SyslogRecord(InetAddress::createFromSockaddr((struct sockaddr *)&addr), syslogMessage, bytes));
+            s_receivedMessages++;
          }
          else
          {
