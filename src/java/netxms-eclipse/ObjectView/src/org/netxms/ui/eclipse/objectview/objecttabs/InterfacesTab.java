@@ -439,7 +439,7 @@ public class InterfacesTab extends ObjectTab
       IContextService contextService = (IContextService)getViewPart().getSite().getService(IContextService.class);
       if (contextService != null)
       {
-         contextService.activateContext("org.netxms.ui.eclipse.datacollection.context.LastValues"); //$NON-NLS-1$
+         contextService.activateContext("org.netxms.ui.eclipse.objectview.context.InterfacesTab"); //$NON-NLS-1$
       }
       refresh();
    }
