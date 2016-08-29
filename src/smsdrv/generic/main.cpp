@@ -32,6 +32,7 @@ static Serial s_serial;
 static const char *s_eosMarks[] = { "OK", "ERROR", NULL };
 static const char *s_eosMarksSend[] = { ">", "ERROR", NULL };
 static enum { OM_TEXT, OM_PDU } s_operationMode = OM_TEXT;
+static bool s_cmgsUseQuotes = true;
 
 /**
  * Read input to OK
@@ -95,7 +96,7 @@ static bool InitModem(Serial *serial)
 /**
  * Initialize driver
  *
- * pszInitArgs format: portname,speed,databits,parity,stopbits
+ * pszInitArgs format: portname,speed,databits,parity,stopbits,mode
  */
 extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 {
@@ -171,9 +172,18 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 							{
 								*p = 0; p++;
 								if (*p == _T('T'))
+                        {
 									s_operationMode = OM_TEXT;
+                        }
+								else if (*p == _T('N'))
+                        {
+									s_operationMode = OM_TEXT;
+                           s_cmgsUseQuotes = false;
+                        }
 								else if (*p == _T('P'))
+                        {
 									s_operationMode = OM_PDU;
+                        }
 							}
 						}
 					}
@@ -194,9 +204,10 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 			parityAsText = _T("NONE");
 			break;
 	}
-	nxlog_debug(2, _T("SMS init: port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d, pduMode=%s"),
+	nxlog_debug(2, _T("SMS init: port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d, pduMode=%s, numberInQuotes=%s"),
 	          portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1, 
-             (s_operationMode == OM_PDU) ? _T("true") : _T("false"));
+             (s_operationMode == OM_PDU) ? _T("true") : _T("false"),
+             s_cmgsUseQuotes ? _T("true") : _T("false"));
 	
 	if (s_serial.open(portName))
 	{
@@ -288,7 +299,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
          goto cleanup;
       if ((mark == NULL) || (*mark != '>'))
       {
-   	   nxlog_debug(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
+   	   nxlog_debug(5, _T("SMS: wrong response to AT+CMGS=%d (%hs)"), (int)strlen(pduBuffer) / 2 - 1, mark);
          goto cleanup;
       }
 
@@ -307,9 +318,15 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 	   char mbPhoneNumber[128];
 	   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszPhoneNumber, -1, mbPhoneNumber, 128, NULL, NULL);
 	   mbPhoneNumber[127] = 0;
-      snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", mbPhoneNumber);
+      if (s_cmgsUseQuotes)
+         snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", mbPhoneNumber);
+      else
+         snprintf(buffer, sizeof(buffer), "AT+CMGS=%s\r\n", mbPhoneNumber);
 #else
-      snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
+      if (s_cmgsUseQuotes)
+         snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
+      else
+         snprintf(buffer, sizeof(buffer), "AT+CMGS=%s\r\n", pszPhoneNumber);
 #endif
 	   s_serial.write(buffer, (int)strlen(buffer)); // set number
 
