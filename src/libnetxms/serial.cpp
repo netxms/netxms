@@ -58,6 +58,8 @@ Serial::Serial()
 	m_nParity = NOPARITY;
 	m_nStopBits = ONESTOPBIT;
 	m_nFlowControl = FLOW_NONE;
+   m_writeBlockSize = -1;
+   m_writeDelay = 100;
 #ifndef _WIN32
 	memset(&m_originalSettings, 0, sizeof(m_originalSettings));
 #endif
@@ -69,7 +71,7 @@ Serial::Serial()
 Serial::~Serial()
 {
 	close();
-	safe_free(m_pszPort);
+	free(m_pszPort);
 }
 
 /**
@@ -354,11 +356,24 @@ int Serial::read(char *pBuff, int nSize)
 		return -1;
 	
 #ifdef _WIN32
+   // Read one byte
 	DWORD nDone;
-	
-	if (ReadFile(m_hPort, pBuff, nSize, &nDone, NULL) != 0)
+	if (ReadFile(m_hPort, pBuff, 1, &nDone, NULL))
 	{
 		nRet = (int)nDone;
+
+      COMSTAT stat;
+      if (ClearCommError(m_hPort, NULL, &stat))
+      {
+         if (stat.cbInQue > 0)
+         {
+            // Read rest of buffered data
+         	if (ReadFile(m_hPort, &pBuff[1], min(stat.cbInQue, (DWORD)nSize - 1), &nDone, NULL))
+            {
+               nRet += (int)nDone;
+            }
+         }
+      }
 	}
 	else
 	{
@@ -417,7 +432,7 @@ int Serial::readAll(char *pBuff, int nSize)
 
 	offset = 0;
 
-	while (offset < nSize)
+	while(offset < nSize)
 	{
 		FD_ZERO(&rdfs);
 		FD_SET(m_hPort, &rdfs);
@@ -489,21 +504,21 @@ int Serial::readToMark(char *buffer, int size, const char **marks, char **occure
 /**
  * Write character(s) to port
  */
-bool Serial::write(const char *pBuff, int nSize)
+bool Serial::writeBlock(const char *data, int length)
 {
 	bool bRet = false;
 	
 	if (m_hPort == INVALID_HANDLE_VALUE)
 		return false;
 	
-   ThreadSleepMs(100);
+   ThreadSleepMs(m_writeDelay);
 
 #ifdef _WIN32
 	
 	DWORD nDone;
-	if (WriteFile(m_hPort, pBuff, nSize, &nDone, NULL) != 0)
+	if (WriteFile(m_hPort, data, length, &nDone, NULL) != 0)
 	{
-		if (nDone == (DWORD)nSize)
+		if (nDone == (DWORD)length)
 		{
 			bRet = true;
 		}
@@ -515,7 +530,7 @@ bool Serial::write(const char *pBuff, int nSize)
 	
 #else // UNIX
 	
-	if (::write(m_hPort, (char *)pBuff, nSize) == nSize)
+	if (::write(m_hPort, (char *)data, length) == length)
 	{
 		bRet = true;
 	}
@@ -527,6 +542,29 @@ bool Serial::write(const char *pBuff, int nSize)
 #endif // _WIN32
 	
 	return bRet;
+}
+
+/**
+ * Write character(s) to port
+ */
+bool Serial::write(const char *data, int length)
+{
+   if (m_writeBlockSize > 0)
+   {
+      int pos = 0;
+      while(pos < length)
+      {
+         int bs = min(m_writeBlockSize, length - pos);
+         if (!writeBlock(&data[pos], bs))
+            return false;
+         pos += bs;
+      }
+      return true;
+   }
+   else
+   {
+      return writeBlock(data, length);
+   }
 }
 
 /**
