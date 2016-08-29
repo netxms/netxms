@@ -466,6 +466,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\syslog.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\tools.cpp"
 				>
 			</File>

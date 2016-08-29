@@ -323,7 +323,7 @@ Table *Table::createFromPackedXML(const char *packedXml)
    size_t xmlSize = (size_t)ntohl(*((UINT32 *)compressedXml));
    char *xml = (char *)malloc(xmlSize + 1);
    uLongf uncompSize = (uLongf)xmlSize;
-   if (uncompress((BYTE *)xml, &uncompSize, (BYTE *)&compressedXml[4], compressedSize - 4) != Z_OK)
+   if (uncompress((BYTE *)xml, &uncompSize, (BYTE *)&compressedXml[4], (uLong)compressedSize - 4) != Z_OK)
    {
       free(xml);
       return NULL;
@@ -399,9 +399,9 @@ char *Table::createPackedXML()
    char *utf8xml = UTF8StringFromTString(xml);
    free(xml);
    size_t len = strlen(utf8xml);
-   uLongf buflen = compressBound(len);
+   uLongf buflen = compressBound((uLong)len);
    BYTE *buffer = (BYTE *)malloc(buflen + 4);
-   if (compress(&buffer[4], &buflen, (BYTE *)utf8xml, len) != Z_OK)
+   if (compress(&buffer[4], &buflen, (BYTE *)utf8xml, (uLong)len) != Z_OK)
    {
       free(utf8xml);
       free(buffer);

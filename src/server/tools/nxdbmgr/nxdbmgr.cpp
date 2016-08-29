@@ -805,7 +805,6 @@ stop_search:
       return 3;
    }
 
-	TCHAR errorText[DBDRV_MAX_ERROR_TEXT];
    g_hCoreDB = ConnectToDatabase();
    if (g_hCoreDB == NULL)
    {

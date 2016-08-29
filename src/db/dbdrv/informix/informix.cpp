@@ -327,7 +327,7 @@ extern "C" void EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlTy
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
             statement->buffers->add(sqlBuffer);
-            length = strlen((char *)sqlBuffer) + 1;
+            length = (int)strlen((char *)sqlBuffer) + 1;
          }
          else
          {
@@ -339,7 +339,7 @@ extern "C" void EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlTy
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
             free(buffer);
-            length = strlen((char *)sqlBuffer) + 1;
+            length = (int)strlen((char *)sqlBuffer) + 1;
          }
          else
          {
@@ -351,7 +351,7 @@ extern "C" void EXPORT DrvBind(INFORMIX_STATEMENT *statement, int pos, int sqlTy
          if (cType == DB_CTYPE_UTF8_STRING)
          {
             sqlBuffer = WideStringFromUTF8String((char *)buffer);
-            length = strlen((char *)sqlBuffer) + 1;
+            length = (int)strlen((char *)sqlBuffer) + 1;
          }
          else
          {

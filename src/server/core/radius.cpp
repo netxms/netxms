@@ -619,7 +619,6 @@ static int DoRadiusAuth(const char *cLogin, const char *cPasswd, bool useSeconda
 	VALUE_PAIR *req, *vp;
 	struct timeval		tv;
 	fd_set readfds;
-	socklen_t salen;
 	int port, result = 0, length, i;
 	int nRetries, nTimeout;
 	SOCKET sockfd;

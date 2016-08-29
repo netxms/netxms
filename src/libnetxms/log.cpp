@@ -330,7 +330,7 @@ static THREAD_RESULT THREAD_CALL BackgroundWriterThread(void *arg)
 	      {
 	         NX_STAT_STRUCT st;
 		      NX_FSTAT(fileno(m_logFileHandle), &st);
-		      if (st.st_size >= s_maxLogSize)
+		      if ((UINT64)st.st_size >= s_maxLogSize)
 			      RotateLog(FALSE);
 	      }
       }
@@ -501,7 +501,7 @@ static void WriteLogToFile(TCHAR *message, const WORD wType)
 	   {
 	      NX_STAT_STRUCT st;
 		   NX_FSTAT(fileno(m_logFileHandle), &st);
-		   if (st.st_size >= s_maxLogSize)
+		   if ((UINT64)st.st_size >= s_maxLogSize)
 			   RotateLog(FALSE);
 	   }
 
