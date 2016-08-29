@@ -176,7 +176,7 @@
             commandId="org.netxms.ui.eclipse.objectview.commands.show_filter"
             contextId="org.netxms.ui.eclipse.objectview.context.InterfacesTab"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence=" M1+F2">
+            sequence="M1+F2">
       </key>
    </extension>
    <extension
