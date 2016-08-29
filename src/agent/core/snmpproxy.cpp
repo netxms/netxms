@@ -28,6 +28,35 @@
 #define SNMP_BUFFER_SIZE		65536
 
 /**
+ * SNMP proxy stats
+ */
+static UINT64 s_serverRequests = 0;
+static UINT64 s_snmpRequests = 0;
+static UINT64 s_snmpResponses = 0;
+
+/**
+ * Handler for SNMP proxy information parameters
+ */
+LONG H_SNMPProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   switch(*arg)
+   {
+      case 'R':   // SNMP requests
+         ret_uint64(value, s_snmpRequests);
+         break;
+      case 'r':   // SNMP responses
+         ret_uint64(value, s_snmpResponses);
+         break;
+      case 'S':   // server requests
+         ret_uint64(value, s_serverRequests);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Read PDU from network
  */
 static BOOL ReadPDU(SOCKET hSocket, BYTE *pdu, UINT32 *pdwSize)
@@ -88,6 +117,7 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
    response.setCode(CMD_REQUEST_COMPLETED);
    response.setId(request->getId());
 
+   s_serverRequests++;
 	UINT32 dwSizeIn = request->getFieldAsUInt32(VID_PDU_SIZE);
 	if (dwSizeIn > 0)
 	{
@@ -112,9 +142,11 @@ void CommSession::proxySnmpRequest(NXCPMessage *request)
 						{
 							if (send(hSocket, (char *)pduIn, dwSizeIn, 0) == (int)dwSizeIn)
 							{
+							   s_snmpRequests++;
                         UINT32 dwSizeOut;
 								if (ReadPDU(hSocket, pduOut, &dwSizeOut))
 								{
+								   s_snmpResponses++;
 									response.setField(VID_PDU_SIZE, dwSizeOut);
 									response.setField(VID_PDU, pduOut, dwSizeOut);
 									break;
