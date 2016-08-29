@@ -38,6 +38,22 @@
             categoryId="org.netxms.ui.eclipse.console.category.views"
             id="org.netxms.ui.eclipse.objectview.commands.open_tabbed_object_view">
       </command>
+      <command
+            description="Toggle Filter"
+            id="org.netxms.ui.eclipse.objectview.commands.show_filter"
+            name="Toggle Filter">
+         <defaultHandler
+               class="org.netxms.ui.eclipse.objectview.actions.ToggleFilterHandler">
+            <parameter
+                  name="default"
+                  value="default">
+            </parameter>
+         </defaultHandler>
+         <state
+               class="org.eclipse.jface.commands.ToggleState"
+               id="org.netxms.ui.eclipse.objectview.commands.show_filter.state">
+         </state>
+      </command>
    </extension>
    
    <extension point = "org.eclipse.ui.actionSets">
@@ -153,6 +169,44 @@
                priorityLevel="workbench">
          </variable>
       </sourceProvider>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.objectview.commands.show_filter"
+            contextId="org.netxms.ui.eclipse.objectview.context.InterfacesTab"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence=" M1+F2">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.objectview.context.InterfacesTab"
+            name="Interfaces Tab">
+      </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:org.netxms.ui.eclipse.objectview.view.tabbed_object_view?after=additions">
+         <command
+               commandId="org.netxms.ui.eclipse.objectview.commands.show_filter"
+               label="Show &amp;filter"
+               style="toggle"
+               tooltip="Show Filter">
+            <visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="org.netxms.ui.eclipse.objectview.ActiveTab">
+                  <instanceof
+                        value="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab">
+                  </instanceof>
+               </with>
+            </visibleWhen>
+         </command>
+      </menuContribution>
    </extension>
 
 </plugin>
