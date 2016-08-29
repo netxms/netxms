@@ -19,6 +19,7 @@
 - Built-in superuser account renamed to "system"
 - Default "admin" account now is ordinary member of "Admins" group without built-in privileges
 - New agent metrics for self-monitoring:
+	Agent.Proxy.ActiveSessions, Agent.Proxy.ConnectionRequests, Agent.Proxy.IsEnabled,
 	Agent.SNMP.IsProxyEnabled, Agent.SNMP.IsTrapProxyEnabled, Agent.SNMP.Requests,
 	Agent.SNMP.Responses, Agent.SNMP.ServerRequests, Agent.SyslogProxy.IsEnabled,
 	Agent.SyslogProxy.ReceivedMessages, Agent.SyslogProxy.QueueSize
