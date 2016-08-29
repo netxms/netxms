@@ -230,7 +230,7 @@ LONG H_InterfaceList(const TCHAR *cmd, const TCHAR *arg, StringList *value, Abst
                   for(IP_ADAPTER_PREFIX *p = iface->FirstPrefix; p != NULL; p = p->Next)
                   {
                      InetAddress prefix = InetAddress::createFromSockaddr(p->Address.lpSockaddr);
-                     prefix.setMaskBits(p->Length);
+                     prefix.setMaskBits(p->PrefixLength);
                      if (prefix.contain(addr))
                      {
                         addr.setMaskBits(prefix.getMaskBits());
