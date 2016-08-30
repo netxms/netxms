@@ -40,7 +40,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
    private static final Color FOREGROUND_COLOR_LIGHT = new Color(Display.getCurrent(), 255, 255, 255);
    private static final Color[] FOREGROUND_COLORS =
       { null, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
-
+   
    private boolean useMultipliers = false;
    private int[] columnDataTypes = null;
 
@@ -65,11 +65,6 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 			return null;
 		
 		return getValue(row, columnIndex);
-	}
-	
-	public void setColumnDataTypes(int[] ColumnDataTypes)
-	{
-	   this.columnDataTypes = ColumnDataTypes;
 	}
 	
    /**
@@ -204,5 +199,13 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
    public void setUseMultipliers(boolean useMultipliers)
    {
       this.useMultipliers = useMultipliers;
+   }
+
+   /**
+    * @param columnDataTypes
+    */
+   public void setColumnDataTypes(int[] columnDataTypes)
+   {
+      this.columnDataTypes = columnDataTypes;
    }
 }

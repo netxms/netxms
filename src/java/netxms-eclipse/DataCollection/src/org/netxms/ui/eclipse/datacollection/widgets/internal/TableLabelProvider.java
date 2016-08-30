@@ -67,11 +67,6 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 		return getValue(row, columnIndex);
 	}
 	
-	public void setColumnDataTypes(int[] ColumnDataTypes)
-	{
-	   this.columnDataTypes = ColumnDataTypes;
-	}
-	
    /**
     * @param value
     * @return
@@ -204,5 +199,13 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
    public void setUseMultipliers(boolean useMultipliers)
    {
       this.useMultipliers = useMultipliers;
+   }
+
+   /**
+    * @param columnDataTypes
+    */
+   public void setColumnDataTypes(int[] columnDataTypes)
+   {
+      this.columnDataTypes = columnDataTypes;
    }
 }
