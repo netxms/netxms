@@ -13,8 +13,11 @@ import org.simpleframework.xml.core.Persister;
 @Root(name="objectToolFilter")
 public class ObjectToolFilter
 {
+   @Element(required=false, name="toolOS")
+   public String toolRemOS;
+   
    @Element(required=false)
-   public String toolOS;
+   public String toolLocOS;
    
    @Element(required=false)
    public String toolTemplate;
@@ -51,7 +54,8 @@ public class ObjectToolFilter
    
    public ObjectToolFilter()
    {
-      toolOS = "";
+      toolRemOS = "";
+      toolLocOS = "";
       toolTemplate = "";
       snmpOid = "";
    }

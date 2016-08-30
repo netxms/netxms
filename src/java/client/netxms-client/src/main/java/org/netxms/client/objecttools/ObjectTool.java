@@ -52,9 +52,10 @@ public class ObjectTool
 	public static final int GENERATES_OUTPUT          = 0x00000010;
 	public static final int DISABLED                  = 0x00000020;
 	public static final int SHOW_IN_COMMANDS          = 0x00000040;
-	public static final int REQUIRES_OS_MATCH         = 0x00000080;
+   public static final int REQUIRES_REMOTE_OS_MATCH  = 0x00000080;
    public static final int REQUIRES_TEMPLATE_MATCH   = 0x00000100;
 	public static final int SNMP_INDEXED_BY_VALUE     = 0x00010000;
+	public static final int REQUIRES_LOCAL_OS_MATCH   = 0x00020000;
 	
 	protected long id;
 	protected String name;
@@ -221,12 +222,12 @@ public class ObjectTool
 				return false;	// OID does not match
 		}
 		
-	   if ((flags & REQUIRES_OS_MATCH) != 0)
+	   if ((flags & REQUIRES_REMOTE_OS_MATCH) != 0)
       {
 	      boolean match = false;
-	      String[] substrings = filter.toolOS.split(",");
+	      String[] substrings = filter.toolLocOS.split(",");
 	      for(int i = 0; i < substrings.length; i++)
-	      {
+	      {;
 	         if (Pattern.matches(substrings[i], node.getPlatformName()))
 	         {
 	            match = true;
@@ -234,6 +235,21 @@ public class ObjectTool
 	      }
 	      if (!match)
 	         return false;  //Not correct type of OS
+      }
+	   
+	   if ((flags & REQUIRES_LOCAL_OS_MATCH) != 0)
+      {
+         boolean match = false;
+         String[] substrings = filter.toolLocOS.split(",");
+         for(int i = 0; i < substrings.length; i++)
+         {;
+            if (Pattern.matches(substrings[i], System.getProperty("os.name")))
+            {
+               match = true;
+            }
+         }
+         if (!match)
+            return false;  //Not correct type of OS
       }
 	    
 	   if ((flags & REQUIRES_TEMPLATE_MATCH) != 0)
@@ -412,11 +428,19 @@ public class ObjectTool
    }
 
    /**
-    * @return the toolOS
+    * @return the toolRemOS
     */
-   public String getToolOS()
+   public String getToolRemOS()
    {
-      return filter.toolOS;
+      return filter.toolRemOS;
+   }
+   
+   /**
+    * @return the toolLocOS
+    */
+   public String getToolLocOS()
+   {
+      return filter.toolLocOS;
    }
 
    /**
