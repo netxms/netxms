@@ -470,7 +470,7 @@ void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, c
 	{
       nx_strncpy(envelope->rcptAddr, pszRcpt, MAX_RCPT_ADDR_LEN);
       nx_strncpy(envelope->subject, pszSubject, MAX_EMAIL_SUBJECT_LEN);
-      envelope->text = strdup(text);
+      envelope->text = strdup(pszText);
 	}
 #endif
 	envelope->retryCount = ConfigReadInt(_T("SMTPRetryCount"), 1);
