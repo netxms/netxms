@@ -408,6 +408,7 @@
          point="org.netxms.ui.eclipse.objectview.tabs">
       <tab
             class="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues"
+            contextId="org.netxms.ui.eclipse.datacollection.context.LastValues"
             icon="icons/last_values.png"
             id="org.netxms.ui.eclipse.datacollection.objecttabs.LastValues"
             name="%tab.name.LastValues"

@@ -89,6 +89,7 @@
       </tab>
       <tab
             class="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab"
+            contextId="org.netxms.ui.eclipse.objectview.context.InterfacesTab"
             icon="icons/interface.png"
             id="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab"
             name="%tab.name.Interfaces"
