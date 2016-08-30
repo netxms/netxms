@@ -27,8 +27,9 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.netxms.client.TableCell;
 import org.netxms.client.TableRow;
+import org.netxms.client.datacollection.DataCollectionItem;
+import org.netxms.client.datacollection.DataCollectionObject;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
-import org.netxms.ui.eclipse.datacollection.Messages;
 
 /**
  * Label provider for NetXMS table
@@ -41,6 +42,7 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
       { null, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_DARK, FOREGROUND_COLOR_LIGHT, FOREGROUND_COLOR_LIGHT };
 
    private boolean useMultipliers = false;
+   private int[] columnDataTypes = null;
 
    /* (non-Javadoc)
 	 * @see org.eclipse.jface.viewers.ITableLabelProvider#getColumnImage(java.lang.Object, int)
@@ -62,67 +64,109 @@ public class TableLabelProvider extends LabelProvider implements ITableLabelProv
 		if (columnIndex >= row.size())
 			return null;
 		
-		return useMultipliers ? getValue(row.get(columnIndex).getValue()) : row.get(columnIndex).getValue();
+		return getValue(row, columnIndex);
+	}
+	
+	public void setColumnDataTypes(int[] ColumnDataTypes)
+	{
+	   this.columnDataTypes = ColumnDataTypes;
 	}
 	
    /**
     * @param value
     * @return
     */
-   private String getValue(String value)
+   private String getValue(TableRow row, int columnIndex)
    {
-      try
-      {
-         long i = Long.parseLong(value);
-         if ((i >= 10000000000000L) || (i <= -10000000000000L))
-         {
-            return Long.toString(i / 1000000000000L) + " T"; //$NON-NLS-1$
-         }
-         if ((i >= 10000000000L) || (i <= -10000000000L))
-         {
-            return Long.toString(i / 1000000000L) + Messages.get().LastValuesLabelProvider_Giga;
-         }
-         if ((i >= 10000000) || (i <= -10000000))
-         {
-            return Long.toString(i / 1000000) + Messages.get().LastValuesLabelProvider_Mega;
-         }
-         if ((i >= 10000) || (i <= -10000))
-         {
-            return Long.toString(i / 1000) + Messages.get().LastValuesLabelProvider_Kilo;
-         }
-      }
-      catch(NumberFormatException e)
-      {
-      }
+      String value;
+      String suffix = null;
       
       try
       {
-         double d = Double.parseDouble(value);
-         NumberFormat nf = NumberFormat.getNumberInstance();
-         nf.setMaximumFractionDigits(2);
-         if ((d >= 10000000000000.0) || (d <= -10000000000000.0))
+         switch(columnDataTypes[columnIndex])
          {
-            return nf.format(d / 1000000000000.0) + " T"; //$NON-NLS-1$
+            case DataCollectionObject.DT_INT:
+            case DataCollectionObject.DT_UINT:
+            case DataCollectionItem.DT_INT64:
+            case DataCollectionItem.DT_UINT64:               
+               if (useMultipliers)
+               {
+                  long i = Long.parseLong(row.get(columnIndex).getValue());
+                  if ((i >= 10000000000000L) || (i <= -10000000000000L))
+                  {
+                     i = i / 1000000000000L;
+                     suffix = "T";
+                  }
+                  if ((i >= 10000000000L) || (i <= -10000000000L))
+                  {
+                     i = i / 1000000000L;
+                     suffix = "G";
+                  }
+                  if ((i >= 10000000) || (i <= -10000000))
+                  {
+                     i = i / 1000000;
+                     suffix = "M";
+                  }
+                  if ((i >= 10000) || (i <= -10000))
+                  {
+                     i = i / 1000;
+                     suffix = "K";
+                  }
+                  value = Long.toString(i);
+               }
+               else
+               {
+                  value = row.get(columnIndex).getValue();
+                  suffix = " ";
+               }
+               break;
+            case DataCollectionObject.DT_FLOAT:
+               if (useMultipliers)
+               {
+                  double d = Double.parseDouble(row.get(columnIndex).getValue());
+                  NumberFormat nf = NumberFormat.getNumberInstance();
+                  nf.setMaximumFractionDigits(2);
+                  if ((d >= 10000000000000.0) || (d <= -10000000000000.0))
+                  {
+                     d = d / 1000000000000.0;
+                     suffix = "T";
+                  }
+                  if ((d >= 10000000000.0) || (d <= -10000000000.0))
+                  {
+                     d = d / 1000000000.0;
+                     suffix = "G";
+                  }
+                  if ((d >= 10000000) || (d <= -10000000))
+                  {
+                     d = d / 1000000;
+                     suffix = "M";
+                  }
+                  if ((d >= 10000) || (d <= -10000))
+                  {
+                     d = d / 1000;
+                     suffix = "K";
+                  }
+                  value = Double.toString(d);
+               }
+               else
+               {
+                  value = row.get(columnIndex).getValue();
+               }
+               break;
+            default:
+               value = row.get(columnIndex).getValue();
+               break;
          }
-         if ((d >= 10000000000.0) || (d <= -10000000000.0))
-         {
-            return nf.format(d / 1000000000.0) + Messages.get().LastValuesLabelProvider_Giga;
-         }
-         if ((d >= 10000000) || (d <= -10000000))
-         {
-            return nf.format(d / 1000000) + Messages.get().LastValuesLabelProvider_Mega;
-         }
-         if ((d >= 10000) || (d <= -10000))
-         {
-            return nf.format(d / 1000) + Messages.get().LastValuesLabelProvider_Kilo;
-         }
-      }
+      }     
       catch(NumberFormatException e)
       {
+         value = row.get(columnIndex).getValue();
       }
       
+      if (suffix != null)
+         return value + " " + suffix;
       return value;
-	}
+   }
 
    /* (non-Javadoc)
     * @see org.eclipse.jface.viewers.ITableColorProvider#getForeground(java.lang.Object, int)

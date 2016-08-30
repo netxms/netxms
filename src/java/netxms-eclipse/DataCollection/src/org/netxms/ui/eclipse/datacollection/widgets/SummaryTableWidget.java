@@ -317,6 +317,7 @@ public class SummaryTableWidget extends Composite
          });
          viewer.setComparator(new TableItemComparator(table.getColumnDataTypes()));
       }
+      labelProvider.setColumnDataTypes(table.getColumnDataTypes());
       viewer.setInput(table);
    }
 
