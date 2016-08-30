@@ -68,7 +68,8 @@ public class SubAgent
 
    /**
     * Private constructor. Will be invoked by native wrapper only.
-    * @param config
+    * 
+    * @param config agent configuration
     */
    private SubAgent(Config config)
    {
@@ -106,7 +107,9 @@ public class SubAgent
    }
 
    /**
-    * @return
+    * Get agent configuration object
+    * 
+    * @return agent configuration
     */
    protected Config getConfig()
    {
@@ -142,8 +145,8 @@ public class SubAgent
    /**
     * Wrapper for native writeLog call
     * 
-    * @param level
-    * @param message
+    * @param level log level
+    * @param message message text
     */
    public static void writeLog(LogLevel level, String message)
    {
@@ -153,9 +156,9 @@ public class SubAgent
    /**
     * Write exception's stack trace to debug log
     * 
-    * @param level
-    * @param prefix
-    * @param e
+    * @param level log level
+    * @param prefix message prefix
+    * @param e exception to log
     */
    public static void writeDebugLog(int level, String prefix, Throwable e)
    {
@@ -169,8 +172,8 @@ public class SubAgent
    /**
     * Initialize (to be called from native subagent)
     * 
-    * @param config
-    * @return
+    * @param config agent configuration
+    * @return true if initialization was successful
     */
    public boolean init(Config config)
    {
@@ -205,8 +208,8 @@ public class SubAgent
    /**
     * will be called from subagent native initialization
     * 
-    * @param path
-    * @return
+    * @param path path to plugin file
+    * @return true if plugin was loaded correctly
     */
    protected boolean loadPlugin(String path)
    {
@@ -256,10 +259,11 @@ public class SubAgent
    }
 
    /**
-    * @param classname
-    * @param config
-    * @return
-    * @throws Exception
+    * Create plugin with given class name.
+    * 
+    * @param classname plugin class name
+    * @param config agent configuration
+    * @return plugin object or null
     */
    protected Plugin[] createPluginWithClassname(String classname, Config config)
    {
@@ -279,10 +283,11 @@ public class SubAgent
    }
 
    /**
-    * @param jarFile
-    * @param config
-    * @return
-    * @throws Exception
+    * Create plugins from given jar file
+    * 
+    * @param jarFile jar file to load
+    * @param config agent configuration
+    * @return loaded plugins or null
     */
    protected Plugin[] createPluginWithJar(String jarFile, Config config)
    {
@@ -330,9 +335,9 @@ public class SubAgent
    /**
     * uses reflection to create an instance of Plugin
     * 
-    * @param pluginClass
-    * @param config
-    * @return
+    * @param pluginClass plugin class
+    * @param config agent configuration
+    * @return plugin object
     * @throws Exception
     */
    protected Plugin instantiatePlugin(Class<? extends Plugin> pluginClass, Config config) throws Exception
@@ -356,6 +361,7 @@ public class SubAgent
     * @param param
     * @param id
     * @return
+    * @throws Throwable
     */
    public String parameterHandler(final String param, final String id) throws Throwable
    {
@@ -382,6 +388,7 @@ public class SubAgent
     * @param param
     * @param id
     * @return
+    * @throws Throwable
     */
    public String[] listHandler(final String param, final String id) throws Throwable
    {
@@ -408,6 +415,7 @@ public class SubAgent
     * @param param
     * @param id
     * @return
+    * @throws Throwable
     */
    public String[][] tableHandler(final String param, final String id) throws Throwable
    {
@@ -432,18 +440,19 @@ public class SubAgent
    /**
     * to be called from native subagent
     * 
-    * @param param
-    * @param args
-    * @param id
+    * @param name action name
+    * @param args action arguments
+    * @param id action ID
+    * @return true if executed successfully
     */
-   public boolean actionHandler(final String param, final String[] args, final String id)
+   public boolean actionHandler(final String name, final String[] args, final String id)
    {
       try
       {
          Action action = actions.get(id);
          if (action != null)
          {
-            return action.execute(param, args);
+            return action.execute(name, args);
          }
       }
       catch(Throwable e)
@@ -546,9 +555,11 @@ public class SubAgent
    }
    
    /**
-    * @param plugin
-    * @param parameter
-    * @return
+    * Create contribution item ID.
+    * 
+    * @param plugin plugin object
+    * @param ci contribution item
+    * @return contribution item ID
     */
    private static String createContributionItemId(Plugin plugin, AgentContributionItem ci)
    {

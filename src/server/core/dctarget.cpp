@@ -351,27 +351,25 @@ void DataCollectionTarget::cleanDeletedTemplateItems(UINT32 dwTemplateId, UINT32
  */
 void DataCollectionTarget::unbindFromTemplate(UINT32 dwTemplateId, bool removeDCI)
 {
-   UINT32 i;
-
    if (removeDCI)
    {
       lockDciAccess(true);  // write lock
 
-		UINT32 *pdwDeleteList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
-		UINT32 dwNumDeleted = 0;
+		UINT32 *deleteList = (UINT32 *)malloc(sizeof(UINT32) * m_dcObjects->size());
+		int numDeleted = 0;
 
-      for(i = 0; i < (UINT32)m_dcObjects->size(); i++)
+		int i;
+      for(i = 0; i < m_dcObjects->size(); i++)
          if (m_dcObjects->get(i)->getTemplateId() == dwTemplateId)
          {
-            pdwDeleteList[dwNumDeleted++] = m_dcObjects->get(i)->getId();
+            deleteList[numDeleted++] = m_dcObjects->get(i)->getId();
          }
 
-		for(i = 0; i < dwNumDeleted; i++)
-			deleteDCObject(pdwDeleteList[i], false);
+		for(i = 0; i < numDeleted; i++)
+			deleteDCObject(deleteList[i], false);
 
       unlockDciAccess();
-
-		safe_free(pdwDeleteList);
+		free(deleteList);
    }
    else
    {
@@ -658,9 +656,17 @@ UINT32 DataCollectionTarget::getScriptItem(const TCHAR *param, size_t bufSize, T
       if (vm->run(&args))
       {
          NXSL_Value *value = vm->getResult();
-         const TCHAR *dciValue = value->getValueAsCString();
-         nx_strncpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
-         rc = DCE_SUCCESS;
+         if (value->isNull())
+         {
+            // NULL value is an error indicator
+            rc = DCE_COMM_ERROR;
+         }
+         else
+         {
+            const TCHAR *dciValue = value->getValueAsCString();
+            nx_strncpy(buffer, CHECK_NULL_EX(dciValue), bufSize);
+            rc = DCE_SUCCESS;
+         }
       }
       else
       {
@@ -717,6 +723,7 @@ UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **
       vm->setGlobalVariable(_T("$isCluster"), new NXSL_Value((getObjectClass() == OBJECT_CLUSTER) ? 1 : 0));
       if (vm->run(&args))
       {
+         rc = DCE_SUCCESS;
          NXSL_Value *value = vm->getResult();
          if (value->isArray())
          {
@@ -727,11 +734,14 @@ UINT32 DataCollectionTarget::getListFromScript(const TCHAR *param, StringList **
             *list = new StringList;
             (*list)->add(value->getValueAsCString());
          }
+         else if (value->isNull())
+         {
+            rc = DCE_COMM_ERROR;
+         }
          else
          {
             *list = new StringList;
          }
-         rc = DCE_SUCCESS;
       }
       else
       {

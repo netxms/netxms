@@ -32,9 +32,9 @@ public abstract class TableAdapter implements TableParameter
    private TableColumn[] columns;
 
    /**
-    * @param name
-    * @param description
-    * @param columns
+    * @param name table name
+    * @param description table description
+    * @param columns table columns
     */
    public TableAdapter(String name, String description, TableColumn[] columns)
    {

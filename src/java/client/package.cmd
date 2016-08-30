@@ -5,11 +5,11 @@ del /q /s /f netxms-client\target\*
 del /q /s /f mobile-agent\target\*
 
 cd netxms-base
-mvn clean install javadoc:jar
+mvn -Dmaven.test.skip=true clean install javadoc:jar
 cd ..
 
 cd netxms-client
-mvn clean install javadoc:jar
+mvn -Dmaven.test.skip=true clean install javadoc:jar
 cd ..
 
 cd mobile-agent

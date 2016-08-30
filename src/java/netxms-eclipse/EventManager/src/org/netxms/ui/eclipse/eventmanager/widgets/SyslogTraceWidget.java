@@ -162,7 +162,7 @@ public class SyslogTraceWidget extends AbstractTraceWidget implements SessionLis
 	{
 		if (n.getCode() == SessionNotification.NEW_SYSLOG_RECORD)
 		{
-			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+			getDisplay().asyncExec(new Runnable() {
 				@Override
 				public void run()
 				{

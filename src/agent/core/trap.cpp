@@ -133,6 +133,7 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, int iNumArgs, TCHAR **
  * pszFormat   - Parameter format string, each parameter represented by one character.
  *    The following format characters can be used:
  *        s - String
+ *        m - Multibyte (non-UNICODE) string
  *        d - Decimal integer
  *        x - Hex integer
  *        a - IP address
@@ -153,8 +154,13 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
       {
          case 's':
             ppArgList[i] = va_arg(args, TCHAR *);
-				if (ppArgList[i] == NULL)
-					ppArgList[i] = (TCHAR *)_T("");
+            break;
+         case 'm':
+#ifdef UNICODE
+            ppArgList[i] = WideStringFromMBString(va_arg(args, char *));
+#else
+            ppArgList[i] = va_arg(args, char *);
+#endif
             break;
          case 'd':
             ppArgList[i] = (TCHAR *)malloc(16 * sizeof(TCHAR));   //
@@ -188,7 +194,11 @@ void SendTrap(UINT32 dwEventCode, const TCHAR *eventName, const char *pszFormat,
    for(i = 0; i < iNumArgs; i++)
       if ((pszFormat[i] == 'd') || (pszFormat[i] == 'x') ||
           (pszFormat[i] == 'D') || (pszFormat[i] == 'X') ||
-          (pszFormat[i] == 'i') || (pszFormat[i] == 'a'))
+          (pszFormat[i] == 'i') || (pszFormat[i] == 'a')
+#ifdef UNICODE
+          || (pszFormat[i] == 'm')
+#endif
+         )
          free(ppArgList[i]);
 
 }

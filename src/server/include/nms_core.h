@@ -903,8 +903,9 @@ bool NXCORE_EXPORTABLE ConfigWriteCLOB(const TCHAR *var, const TCHAR *value, boo
 bool NXCORE_EXPORTABLE ConfigDelete(const TCHAR *name);
 
 bool NXCORE_EXPORTABLE MetaDataReadStr(const TCHAR *szVar, TCHAR *szBuffer, int iBufSize, const TCHAR *szDefault);
-INT32 NXCORE_EXPORTABLE MetaDataReadInt(const TCHAR *var, UINT32 defaultValue);
+INT32 NXCORE_EXPORTABLE MetaDataReadInt32(const TCHAR *var, INT32 defaultValue);
 bool NXCORE_EXPORTABLE MetaDataWriteStr(const TCHAR *varName, const TCHAR *value);
+bool NXCORE_EXPORTABLE MetaDataWriteInt32(const TCHAR *name, INT32 value);
 
 bool NXCORE_EXPORTABLE LoadConfig(int *debugLevel);
 
@@ -1167,6 +1168,6 @@ extern UINT64 g_otherWriteRequests;
 extern int NXCORE_EXPORTABLE g_dbSyntax;
 extern FileMonitoringList g_monitoringList;
 
-extern ThreadPool *g_mainThreadPool;
+extern ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool;
 
 #endif   /* _nms_core_h_ */

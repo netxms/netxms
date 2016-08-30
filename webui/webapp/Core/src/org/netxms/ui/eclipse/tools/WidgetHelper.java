@@ -146,7 +146,7 @@ public class WidgetHelper
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		group.setLayout(layout);
-
+		
 		if (layoutData != DEFAULT_LAYOUT_DATA)
 		{
 			group.setLayoutData(layoutData);
@@ -173,7 +173,7 @@ public class WidgetHelper
 		GridData gridData = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData.grabExcessHorizontalSpace = true;
-		combo.setLayoutData(gridData);		
+		combo.setLayoutData(gridData);
 		
 		if (toolkit != null)
 			toolkit.adapt(combo);
@@ -351,7 +351,7 @@ public class WidgetHelper
 			try
 			{
 				int w = settings.getInt(prefix + "." + i + ".width"); //$NON-NLS-1$ //$NON-NLS-2$
-				columns[i].setWidth(w);
+				columns[i].setWidth((w > 0) ? w : 50);
 			}
 			catch(NumberFormatException e)
 			{

@@ -152,7 +152,7 @@ UINT32 g_agentCommandTimeout = 4000;  // Default timeout for requests to agent
 UINT32 g_thresholdRepeatInterval = 0;	// Disabled by default
 int g_requiredPolls = 1;
 DB_DRIVER g_dbDriver = NULL;
-ThreadPool *g_mainThreadPool = NULL;
+ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool = NULL;
 INT16 g_defaultAgentCacheMode = AGENT_CACHE_OFF;
 
 /**

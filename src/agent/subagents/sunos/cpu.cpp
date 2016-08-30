@@ -186,10 +186,20 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
             iLimit = j + CPU_STATES;
             for(nSum = 0; j < iLimit; j++)
                nSum += pnCurrTimes[j] - pnLastTimes[j];
-            nSysSum += nSum;
-            nSysCurrIdle += pnCurrTimes[iIdleTime];
-            nSysLastIdle += pnLastTimes[iIdleTime];
-            pdwHistory[dwIndex++] = 1000 - ((pnCurrTimes[iIdleTime] - pnLastTimes[iIdleTime]) * 1000 / nSum);
+            if (nSum > 0)
+            {
+               nSysSum += nSum;
+               nSysCurrIdle += pnCurrTimes[iIdleTime];
+               nSysLastIdle += pnLastTimes[iIdleTime];
+               pdwHistory[dwIndex++] = 1000 - ((pnCurrTimes[iIdleTime] - pnLastTimes[iIdleTime]) * 1000 / nSum);
+            }
+            else
+            {
+               // sum for all states is 0
+               // this could indicate CPU spending all time in a state we are not aware of, or incorrect state data
+               // assume 100% utilization
+               pdwHistory[dwIndex++] = 1000;
+            }
          }
          else
          {
@@ -199,8 +209,17 @@ THREAD_RESULT THREAD_CALL CPUStatCollector(void *arg)
       }
 
       // Average utilization for last second for all CPUs
-      pdwHistory[dwIndex] = 
-         1000 - ((nSysCurrIdle - nSysLastIdle) * 1000 / nSysSum);
+      if (nSysSum > 0)
+      {
+         pdwHistory[dwIndex] = 1000 - ((nSysCurrIdle - nSysLastIdle) * 1000 / nSysSum);
+      }
+      else
+      {
+         // sum for all states for all CPUs is 0
+         // this could indicate CPU spending all time in a state we are not aware of, or incorrect state data
+         // assume 100% utilization
+         pdwHistory[dwIndex] = 1000;
+      }
 
       // Copy current times to last
       pnTemp = pnLastTimes;
@@ -272,17 +291,17 @@ LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
       switch(pArg[1])
       {
          case '0':
-            _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d00000"),
+            _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d"),
                   m_dwUsage[MAX_CPU_COUNT] / 10,
                   m_dwUsage[MAX_CPU_COUNT] % 10);
             break;
          case '1':
-            _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d00000"),
+            _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d"),
                   m_dwUsage5[MAX_CPU_COUNT] / 10,
                   m_dwUsage5[MAX_CPU_COUNT] % 10);
             break;
          case '2':
-            _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d00000"),
+            _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d"),
                   m_dwUsage15[MAX_CPU_COUNT] / 10,
                   m_dwUsage15[MAX_CPU_COUNT] % 10);
             break;
@@ -310,17 +329,17 @@ LONG H_CPUUsage(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, Abstrac
          switch(pArg[1])
          {
             case '0':
-               _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d00000"),
+               _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d"),
                      m_dwUsage[nCPU] / 10,
                      m_dwUsage[nCPU] % 10);
                break;
             case '1':
-               _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d00000"),
+               _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d"),
                      m_dwUsage5[nCPU] / 10,
                      m_dwUsage5[nCPU] % 10);
                break;
             case '2':
-               _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d00000"),
+               _sntprintf(pValue, MAX_RESULT_LENGTH, _T("%d.%d"),
                      m_dwUsage15[nCPU] / 10,
                      m_dwUsage15[nCPU] % 10);
                break;

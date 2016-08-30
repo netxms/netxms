@@ -651,20 +651,50 @@ LONG H_NetIfInfoFromIOCTL(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValu
    return nRet;
 }
 
+/**
+ * Extract 32 bit value from line
+ */
 static LONG ValueFromLine(char *pszLine, int nPos, TCHAR *pValue)
 {
    int i;
    char *eptr, szBuffer[256];
    const char *pszWord;
-   DWORD dwValue;
    LONG nRet = SYSINFO_RC_ERROR;
 
    for(i = 0, pszWord = pszLine; i <= nPos; i++)
       pszWord = ExtractWordA(pszWord, szBuffer);
-   dwValue = strtoul(szBuffer, &eptr, 0);
+
+   // On 64 bit systems interface counters are 64 bit
+#if SIZEOF_LONG > 4
+   UINT32 value = (UINT32)(strtoull(szBuffer, &eptr, 0) & _ULL(0xFFFFFFFF));
+#else
+   UINT32 value = strtoul(szBuffer, &eptr, 0);
+#endif
    if (*eptr == 0)
    {
-      ret_uint(pValue, dwValue);
+      ret_uint(pValue, value);
+      nRet = SYSINFO_RC_SUCCESS;
+   }
+   return nRet;
+}
+
+/**
+ * Extract 64 bit value from line
+ */
+static LONG ValueFromLine64(char *pszLine, int nPos, TCHAR *pValue)
+{
+   int i;
+   char *eptr, szBuffer[256];
+   const char *pszWord;
+   LONG nRet = SYSINFO_RC_ERROR;
+
+   for(i = 0, pszWord = pszLine; i <= nPos; i++)
+      pszWord = ExtractWordA(pszWord, szBuffer);
+
+   UINT64 value = strtoull(szBuffer, &eptr, 0);
+   if (*eptr == 0)
+   {
+      ret_uint64(pValue, value);
       nRet = SYSINFO_RC_SUCCESS;
    }
    return nRet;
@@ -744,20 +774,38 @@ LONG H_NetIfInfoFromProc(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue
             case IF_INFO_BYTES_IN:
                nRet = ValueFromLine(ptr, 0, pValue);
                break;
+            case IF_INFO_BYTES_IN_64:
+               nRet = ValueFromLine64(ptr, 0, pValue);
+               break;
             case IF_INFO_PACKETS_IN:
                nRet = ValueFromLine(ptr, 1, pValue);
                break;
-            case IF_INFO_IN_ERRORS:
+            case IF_INFO_PACKETS_IN_64:
+               nRet = ValueFromLine64(ptr, 1, pValue);
+               break;
+            case IF_INFO_ERRORS_IN:
                nRet = ValueFromLine(ptr, 2, pValue);
+               break;
+            case IF_INFO_ERRORS_IN_64:
+               nRet = ValueFromLine64(ptr, 2, pValue);
                break;
             case IF_INFO_BYTES_OUT:
                nRet = ValueFromLine(ptr, 8, pValue);
                break;
+            case IF_INFO_BYTES_OUT_64:
+               nRet = ValueFromLine64(ptr, 8, pValue);
+               break;
             case IF_INFO_PACKETS_OUT:
                nRet = ValueFromLine(ptr, 9, pValue);
                break;
-            case IF_INFO_OUT_ERRORS:
+            case IF_INFO_PACKETS_OUT_64:
+               nRet = ValueFromLine64(ptr, 9, pValue);
+               break;
+            case IF_INFO_ERRORS_OUT:
                nRet = ValueFromLine(ptr, 10, pValue);
+               break;
+            case IF_INFO_ERRORS_OUT_64:
+               nRet = ValueFromLine64(ptr, 10, pValue);
                break;
             default:
                nRet = SYSINFO_RC_UNSUPPORTED;

@@ -32,6 +32,17 @@ static Serial s_serial;
 static const char *s_eosMarks[] = { "OK", "ERROR", NULL };
 static const char *s_eosMarksSend[] = { ">", "ERROR", NULL };
 static enum { OM_TEXT, OM_PDU } s_operationMode = OM_TEXT;
+static bool s_cmgsUseQuotes = true;
+
+/**
+ * Normalize text buffer (remove non-printable characters)
+ */
+static void NormalizeText(char *text)
+{
+   for(int i = 0; text[i] != 0; i++)
+      if (text[i] < ' ')
+         text[i] = ' ';
+}
 
 /**
  * Read input to OK
@@ -49,6 +60,8 @@ static bool ReadToOK(Serial *serial, char *data = NULL)
          nxlog_debug(5, _T("SMS: ReadToOK: readToMark returned %d"), rc);
          return false;
       }
+      NormalizeText(buffer);
+      nxlog_debug(5, _T("SMS: ReadToOK buffer content: '%hs'"), buffer);
       if (mark != NULL) 
       {
          if (data != NULL)
@@ -95,7 +108,7 @@ static bool InitModem(Serial *serial)
 /**
  * Initialize driver
  *
- * pszInitArgs format: portname,speed,databits,parity,stopbits
+ * pszInitArgs format: portname,speed,databits,parity,stopbits,mode,blocksize,writedelay
  */
 extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 {
@@ -122,6 +135,8 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 	int dataBits = 8;
 	int parity = NOPARITY;
 	int stopBits = ONESTOPBIT;
+   int blockSize = 8;
+   int writeDelay = 100;
 	
 	if ((p = _tcschr(portName, _T(','))) != NULL)
 	{
@@ -171,9 +186,45 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 							{
 								*p = 0; p++;
 								if (*p == _T('T'))
+                        {
 									s_operationMode = OM_TEXT;
+                        }
 								else if (*p == _T('P'))
+                        {
 									s_operationMode = OM_PDU;
+                        }
+
+                        // Use quotes
+							   if ((p = _tcschr(p, _T(','))) != NULL)
+							   {
+								   *p = 0; p++;
+								   if (*p == _T('N'))
+                           {
+                              s_cmgsUseQuotes = false;
+                           }
+                           else
+                           {
+                              s_cmgsUseQuotes = true;
+                           }
+
+                           // block size
+							      if ((p = _tcschr(p, _T(','))) != NULL)
+							      {
+   								   *p = 0; p++;
+                              blockSize = _tcstol(p, NULL, 10);
+                              if ((blockSize < 1) || (blockSize > 256))
+                                 blockSize = 8;
+
+                              // write delay
+							         if ((p = _tcschr(p, _T(','))) != NULL)
+							         {
+   								      *p = 0; p++;
+                                 writeDelay = _tcstol(p, NULL, 10);
+                                 if ((writeDelay < 1) || (writeDelay > 10000))
+                                    writeDelay = 100;
+                              }
+                           }
+                        }
 							}
 						}
 					}
@@ -194,10 +245,14 @@ extern "C" bool EXPORT SMSDriverInit(const TCHAR *pszInitArgs, Config *config)
 			parityAsText = _T("NONE");
 			break;
 	}
-	nxlog_debug(2, _T("SMS init: port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d, pduMode=%s"),
+	nxlog_debug(2, _T("SMS init: port=\"%s\", speed=%d, data=%d, parity=%s, stop=%d, pduMode=%s, numberInQuotes=%s blockSize=%d writeDelay=%d"),
 	          portName, portSpeed, dataBits, parityAsText, stopBits == TWOSTOPBITS ? 2 : 1, 
-             (s_operationMode == OM_PDU) ? _T("true") : _T("false"));
+             (s_operationMode == OM_PDU) ? _T("true") : _T("false"),
+             s_cmgsUseQuotes ? _T("true") : _T("false"), blockSize, writeDelay);
 	
+   s_serial.setWriteBlockSize(blockSize);
+   s_serial.setWriteDelay(writeDelay);
+
 	if (s_serial.open(portName))
 	{
 		nxlog_debug(5, _T("SMS: port opened"));
@@ -288,12 +343,13 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
          goto cleanup;
       if ((mark == NULL) || (*mark != '>'))
       {
-   	   nxlog_debug(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
+         NormalizeText(buffer);
+   	   nxlog_debug(5, _T("SMS: wrong response to AT+CMGS=%d (%hs)"), (int)strlen(pduBuffer) / 2 - 1, mark);
          goto cleanup;
       }
 
       s_serial.write(pduBuffer, (int)strlen(pduBuffer)); // send PDU
-      s_serial.write("\x1A\r\n", 3); // send ^Z
+      s_serial.write("\x1A", 1); // send ^Z
    }
    else
    {
@@ -307,9 +363,15 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 	   char mbPhoneNumber[128];
 	   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszPhoneNumber, -1, mbPhoneNumber, 128, NULL, NULL);
 	   mbPhoneNumber[127] = 0;
-      snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", mbPhoneNumber);
+      if (s_cmgsUseQuotes)
+         snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", mbPhoneNumber);
+      else
+         snprintf(buffer, sizeof(buffer), "AT+CMGS=%s\r\n", mbPhoneNumber);
 #else
-      snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
+      if (s_cmgsUseQuotes)
+         snprintf(buffer, sizeof(buffer), "AT+CMGS=\"%s\"\r\n", pszPhoneNumber);
+      else
+         snprintf(buffer, sizeof(buffer), "AT+CMGS=%s\r\n", pszPhoneNumber);
 #endif
 	   s_serial.write(buffer, (int)strlen(buffer)); // set number
 
@@ -318,6 +380,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
          goto cleanup;
       if ((mark == NULL) || (*mark != '>'))
       {
+         NormalizeText(buffer);
    	   nxlog_debug(5, _T("SMS: wrong response to AT+CMGS=\"%hs\" (%hs)"), pszPhoneNumber, mark);
          goto cleanup;
       }
@@ -326,16 +389,16 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 	   char mbText[161];
 	   WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszText, -1, mbText, 161, NULL, NULL);
 	   mbText[160] = 0;
-      snprintf(buffer, sizeof(buffer), "%s\x1A\r\n", mbText);
+      snprintf(buffer, sizeof(buffer), "%s\x1A", mbText);
 #else
       if (strlen(pszText) <= 160)
       {
-         snprintf(buffer, sizeof(buffer), "%s\x1A\r\n", pszText);
+         snprintf(buffer, sizeof(buffer), "%s\x1A", pszText);
       }
       else
       {
          strncpy(buffer, pszText, 160);
-         strcpy(&buffer[160], "\x1A\r\n");
+         strcpy(&buffer[160], "\x1A");
       }
 #endif
 	   s_serial.write(buffer, (int)strlen(buffer)); // send text, end with ^Z
@@ -351,6 +414,7 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *pszPhoneNumber, const TCHAR *p
 cleanup:
    s_serial.setTimeout(2000);
    s_serial.close();
+   nxlog_debug(5, _T("SMS: serial port closed"));
 	return success;
 }
 

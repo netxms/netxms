@@ -112,11 +112,17 @@ enum
 #define IF_INFO_BYTES_IN         2
 #define IF_INFO_BYTES_OUT        3
 #define IF_INFO_DESCRIPTION      4
-#define IF_INFO_IN_ERRORS        5
-#define IF_INFO_OUT_ERRORS       6
+#define IF_INFO_ERRORS_IN        5
+#define IF_INFO_ERRORS_OUT       6
 #define IF_INFO_PACKETS_IN       7
 #define IF_INFO_PACKETS_OUT      8
 #define IF_INFO_SPEED            9
+#define IF_INFO_BYTES_IN_64      10
+#define IF_INFO_BYTES_OUT_64     11
+#define IF_INFO_ERRORS_IN_64     12
+#define IF_INFO_ERRORS_OUT_64    13
+#define IF_INFO_PACKETS_IN_64    14
+#define IF_INFO_PACKETS_OUT_64   15
 
 /**
  * Memory stats
@@ -198,6 +204,7 @@ LONG H_FileSystems(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCom
 LONG H_FileSystemType(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_MountPoints(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 
+LONG H_IoDevices(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_IoStats(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_IoStatsTotal(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);
 LONG H_DiskQueue(const TCHAR *, const TCHAR *, TCHAR *, AbstractCommSession *);

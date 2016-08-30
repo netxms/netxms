@@ -185,18 +185,33 @@ int LIBNXAPPC_EXPORTABLE nxappc_send_event(int code, const char *name, const cha
 int LIBNXAPPC_EXPORTABLE nxappc_send_data(void *data, int size)
 {
    char *msg;
+#ifdef _WIN32
+   int rc;
+   char buffer[4096];
+#endif
 
    if ((size < 0) || (size > 65532))
       return NXAPPC_FAIL;
 
    CHECK_CHANNEL;
 
+#ifdef _WIN32
+   msg = (size <= 4092) ? buffer : malloc(size + 4);
+#else
    msg = alloca(size + 4);
+#endif
    msg[0] = NXAPPC_CMD_SEND_DATA;
    msg[1] = 0; // reserved
    *((unsigned short *)&msg[2]) = (unsigned short)size;
    memcpy(&msg[4], data, size);
+#ifdef _WIN32
+   rc = (send_data(msg, size + 4) == size + 4) ? NXAPPC_SUCCESS : NXAPPC_FAIL;
+   if (msg != buffer)
+      free(msg);
+   return rc;
+#else
    return (send_data(msg, size + 4) == size + 4) ? NXAPPC_SUCCESS : NXAPPC_FAIL;
+#endif
 }
 
 /**

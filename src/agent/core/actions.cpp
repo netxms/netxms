@@ -157,11 +157,13 @@ public:
       m_cmdLine = _tcsdup(cmd);
       m_args = args;
       m_session = session;
+      m_session->incRefCount();
       m_requestId = requestId;
    }
 
    ~ActionExecutorData()
    {
+      m_session->decRefCount();
       free(m_cmdLine);
       delete m_args;
    }

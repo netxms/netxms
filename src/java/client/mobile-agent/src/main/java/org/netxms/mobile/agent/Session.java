@@ -271,10 +271,10 @@ public class Session
 	/**
 	 * Wait for message with specific code and id.
 	 * 
-	 * @param code
-	 * @param id
+	 * @param code message code
+	 * @param id message ID
 	 * @return Message object
-	 * @throws MobileAgentException
+    * @throws MobileAgentException if server returns an error or request was timed out
 	 */
 	public NXCPMessage waitForMessage(final int code, final long id) throws MobileAgentException
 	{
@@ -287,9 +287,9 @@ public class Session
 	/**
 	 * Wait for CMD_REQUEST_COMPLETED message with given id using default timeout
 	 * 
-	 * @param id
-	 * @return
-	 * @throws MobileAgentException
+	 * @param id message ID
+	 * @return received message
+    * @throws MobileAgentException if server returns an error or request was timed out
 	 */
 	public NXCPMessage waitForRCC(final long id) throws MobileAgentException
 	{
@@ -297,10 +297,12 @@ public class Session
 	}
 
 	/**
-	 * @param id
-	 * @param timeout
-	 * @return
-	 * @throws NXCException
+	 * Wait for request completion message.
+	 * 
+	 * @param id message ID
+	 * @param timeout timeout (milliseconds)
+	 * @return received message
+	 * @throws MobileAgentException if server returns an error or request was timed out
 	 */
 	public NXCPMessage waitForRCC(final long id, final int timeout) throws MobileAgentException
 	{
@@ -330,7 +332,7 @@ public class Session
 	 * @param command
 	 *           Command code
 	 * @throws IOException
-	 * @throws MobileAgentException
+    * @throws MobileAgentException if server returns an error or request was timed out
 	 */
 	protected void executeSimpleCommand(int command) throws IOException, MobileAgentException
 	{
@@ -344,7 +346,7 @@ public class Session
 	 * 
 	 * @throws IOException
 	 * @throws UnknownHostException
-	 * @throws MobileAgentException
+    * @throws MobileAgentException if server returns an error or request was timed out
 	 */
 	public void connect() throws IOException, UnknownHostException, MobileAgentException
 	{

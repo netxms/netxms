@@ -543,11 +543,11 @@ public class LineSeries extends Series implements ILineSeries
 			double yUpper = yAxis.getRange().upper;
 
 			int prevX = xAxis.getPixelCoordinate(xseries[0], xLower, xUpper);
-			int prevY = yAxis.getPixelCoordinate(yseries[0], yLower, yUpper);
+			int prevY = yAxis.getPixelCoordinate(inverted ? -yseries[0] : yseries[0], yLower, yUpper);
 			for(int i = 0; i < xseries.length - 1; i++)
 			{
 				int x = xAxis.getPixelCoordinate(xseries[i + 1], xLower, xUpper);
-				int y = yAxis.getPixelCoordinate(yseries[i + 1], yLower, yUpper);
+				int y = yAxis.getPixelCoordinate(inverted ? -yseries[i + 1] : yseries[i + 1], yLower, yUpper);
 				if (isHorizontal)
 				{
 					gc.drawLine(prevX, prevY, x, y);

@@ -41,8 +41,8 @@ public class TableThreshold
 	public TableThreshold()
 	{
 		id = 0;
-		activationEvent = 0;
-		deactivationEvent = 0;
+		activationEvent = 69;
+		deactivationEvent = 70;
 		conditions = new ArrayList<List<TableCondition>>(0);
 	}
 	

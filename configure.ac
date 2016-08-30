@@ -4,7 +4,7 @@
 # Configure script
 #
 
-AC_INIT([NetXMS], [2.0.4], [bugs@netxms.org])
+AC_INIT([NetXMS], [2.0.6], [bugs@netxms.org])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_HEADERS(config.h)
 AM_INIT_AUTOMAKE
@@ -264,6 +264,12 @@ AC_ARG_WITH(jdk,
 		LD_RUN_PATH="${withval}/lib${LD_RUN_PATH:+:}${LD_RUN_PATH}"   
 		LDFLAGS="$LDFLAGS -L${withval}/lib"
 		CPPFLAGS="$CPPFLAGS -I${withval}/include"
+		if test -d "${withval}/include/linux"; then
+			CPPFLAGS="$CPPFLAGS -I${withval}/include/linux"
+		fi
+		if test -d "${withval}/include/solaris"; then
+			CPPFLAGS="$CPPFLAGS -I${withval}/include/solaris"
+		fi
 	fi
 	COMPONENTS="$COMPONENTS java"
 fi ])
@@ -1100,6 +1106,8 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ 
 					LDFLAGS="-m32 $LDFLAGS"
+					LTINIT_CC="$CC -m32"
+					LTINIT_CXX="$CXX -m32"
 					AC_MSG_RESULT(yes) 
 				], 
 				[ 
@@ -1113,6 +1121,8 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ 
 					LDFLAGS="-m64 $LDFLAGS"
+					LTINIT_CC="$CC -m64"
+					LTINIT_CXX="$CXX -m64"
 					AC_MSG_RESULT(yes) 
 				], 
 				[ 
@@ -1131,6 +1141,8 @@ if test "x$ac_compiler_gnu" = "xyes" ; then
 			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ ]], [[ ]])],
 				[ 
 					LDFLAGS="-m32 $LDFLAGS"
+					LTINIT_CC="$CC -m32"
+					LTINIT_CXX="$CXX -m32"
 					AC_MSG_RESULT(yes) 
 				], 
 				[ 
@@ -1490,7 +1502,6 @@ if test "x$DISABLE_ENCRYPTION" != "xyes" ; then
 							 [HAVE_LIBCRYPTO="yes"], [AC_DEFINE(NETXMS_NO_DES,,[desc])])
 			if test "x$HAVE_LIBCRYPTO" = "xyes"; then
 				if test "x$BUILD_STATIC_AGENT" = "xyes"; then
-#					LIBS="$LIBS -Wl,-Bstatic -lcrypto -Wl,-Bdynamic"
 					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
 				else
 					LIBS="$LIBS -l$OPENSSL_LIBSSL -l$OPENSSL_LIBCRYPTO"
@@ -2969,7 +2980,7 @@ AM_CONDITIONAL([USE_INTERNAL_SQLITE], [test "x$HAVE_SQLITE" = "xno"])
 AM_CONDITIONAL([USE_INTERNAL_ZLIB], [test "$NEED_ZLIB/$HAVE_ZLIB" = "yes/no"])
 AM_CONDITIONAL([STATIC_BUILD], [test "x$STATIC_BUILD" = "xyes"])
 AM_CONDITIONAL([ALL_STATIC], [test "x$ALL_STATIC" = "xyes"])
-AM_CONDITIONAL([USE_ENCRYPTION], [test "x${ac_cv_lib_crypto_RSA_new}" = "xyes"])
+AM_CONDITIONAL([USE_ENCRYPTION], [test "x${HAVE_LIBCRYPTO}" = "xyes"])
 AM_CONDITIONAL([HPUX_HPPA], [test "x$HPUX_HPPA" = "xyes"])
 AM_CONDITIONAL([XMPP_SUPPORT], [test "x$XMPP_SUPPORT" = "xyes"])
 AM_CONDITIONAL([ZEROMQ_SUPPORT], [test "x$ZEROMQ_SUPPORT" = "xyes"])
@@ -3330,7 +3341,7 @@ if test "x${BUILD_SERVER}" = "xyes"; then
 else
 	echo "Build Server            : NO"
 fi
-if test "x${ac_cv_lib_crypto_RSA_new}" = "xyes"; then
+if test "x${HAVE_LIBCRYPTO}" = "xyes"; then
 	echo "Encryption enabled      : YES"
 else
 	echo "Encryption enabled      : NO"

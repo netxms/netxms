@@ -35,7 +35,7 @@
 /**
  * Constants
  */
-#define MAX_MSG_SIZE    8388608
+#define MAX_MSG_SIZE    268435456
 
 /**
  * Agent connection thread pool
@@ -1566,25 +1566,26 @@ UINT32 AgentConnection::getConfigFile(TCHAR **ppszConfig, UINT32 *pdwSize)
          dwResult = pResponse->getFieldAsUInt32(VID_RCC);
          if (dwResult == ERR_SUCCESS)
          {
-            *pdwSize = pResponse->getFieldAsBinary(VID_CONFIG_FILE, NULL, 0);
-            *ppszConfig = (TCHAR *)malloc((*pdwSize + 1) * sizeof(TCHAR));
-#ifdef UNICODE
-            pBuffer = (BYTE *)malloc(*pdwSize + 1);
-            pResponse->getFieldAsBinary(VID_CONFIG_FILE, pBuffer, *pdwSize);
-            MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (char *)pBuffer, *pdwSize, *ppszConfig, *pdwSize);
-            free(pBuffer);
-#else
-            pResponse->getFieldAsBinary(VID_CONFIG_FILE, (BYTE *)(*ppszConfig), *pdwSize);
-#endif
-            (*ppszConfig)[*pdwSize] = 0;
+            UINT32 size = pResponse->getFieldAsBinary(VID_CONFIG_FILE, NULL, 0);
+            BYTE *utf8Text = (BYTE *)malloc(size + 1);
+            pResponse->getFieldAsBinary(VID_CONFIG_FILE, (BYTE *)utf8Text, size);
 
             // We expect text file, so replace all non-printable characters with spaces
-            for(i = 0; i < *pdwSize; i++)
-               if (((*ppszConfig)[i] < _T(' ')) &&
-                   ((*ppszConfig)[i] != _T('\t')) &&
-                   ((*ppszConfig)[i] != _T('\r')) &&
-                   ((*ppszConfig)[i] != _T('\n')))
-                  (*ppszConfig)[i] = _T(' ');
+            for(i = 0; i < size; i++)
+               if ((utf8Text[i] < ' ') &&
+                   (utf8Text[i] != '\t') &&
+                   (utf8Text[i] != '\r') &&
+                   (utf8Text[i] != '\n'))
+                  utf8Text[i] = ' ';
+            utf8Text[size] = 0;
+
+#ifdef UNICODE
+            *ppszConfig = WideStringFromUTF8String((char *)utf8Text);
+#else
+            *ppszConfig = MBStringFromUTF8String((char *)utf8Text);
+#endif
+            free(utf8Text);
+            *pdwSize = (UINT32)_tcslen(*ppszConfig);
          }
          delete pResponse;
       }

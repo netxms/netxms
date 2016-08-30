@@ -51,13 +51,14 @@
 /**
  * Mail envelope structure
  */
-typedef struct
+struct MAIL_ENVELOPE
 {
-   char szRcptAddr[MAX_RCPT_ADDR_LEN];
-   char szSubject[MAX_EMAIL_SUBJECT_LEN];
-   char *pszText;
-   int nRetryCount;
-} MAIL_ENVELOPE;
+   char rcptAddr[MAX_RCPT_ADDR_LEN];
+   char subject[MAX_EMAIL_SUBJECT_LEN];
+   char *text;
+   char encoding[64];
+   int retryCount;
+};
 
 /**
  * Static data
@@ -133,17 +134,13 @@ static int GetSMTPResponse(SOCKET hSocket, char *pszBuffer, int *pnBufPos)
 /**
  * Send e-mail
  */
-static UINT32 SendMail(char *pszRcpt, char *pszSubject, char *pszText)
+static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *pszText, const char *encoding)
 {
    SOCKET hSocket;
    struct sockaddr_in sa;
    char szBuffer[SMTP_BUFFER_SIZE];
    int iResp, iState = STATE_INITIAL, nBufPos = 0;
    UINT32 dwRetCode;
-	char szEncoding[128];
-
-	// get mail encoding from DB
-	ConfigReadStrA(_T("MailEncoding"), szEncoding, sizeof(szEncoding) / sizeof(TCHAR), "iso-8859-1");
 
    // Fill in address structure
    memset(&sa, 0, sizeof(sa));
@@ -236,7 +233,7 @@ static UINT32 SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
                      // subject
                      bool encodeSubject = false;
-                     for(char *p = pszSubject; *p != 0; p++)
+                     for(const char *p = pszSubject; *p != 0; p++)
                         if (*p & 0x80)
                         {
                            encodeSubject = true;
@@ -248,7 +245,7 @@ static UINT32 SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                         base64_encode_alloc(pszSubject, strlen(pszSubject), &encodedSubject);
                         if (encodedSubject != NULL)
                         {
-                           snprintf(szBuffer, SMTP_BUFFER_SIZE, "Subject: =?%s?B?%s?=\r\n", szEncoding, encodedSubject);
+                           snprintf(szBuffer, SMTP_BUFFER_SIZE, "Subject: =?%s?B?%s?=\r\n", encoding, encodedSubject);
                            free(encodedSubject);
                         }
                         else
@@ -306,7 +303,7 @@ static UINT32 SendMail(char *pszRcpt, char *pszSubject, char *pszText)
                      // content-type
                      snprintf(szBuffer, SMTP_BUFFER_SIZE,
                                        "Content-Type: text/plain; charset=%s\r\n"
-                                       "Content-Transfer-Encoding: 8bit\r\n\r\n", szEncoding);
+                                       "Content-Transfer-Encoding: 8bit\r\n\r\n", encoding);
                      SendEx(hSocket, szBuffer, strlen(szBuffer), 0, NULL);
 
                      // Mail body
@@ -389,19 +386,19 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
       if (pEnvelope == INVALID_POINTER_VALUE)
          break;
 
-		DbgPrintf(6, _T("SMTP(%p): new envelope, rcpt=%hs"), pEnvelope, pEnvelope->szRcptAddr);
+		DbgPrintf(6, _T("SMTP(%p): new envelope, rcpt=%hs"), pEnvelope, pEnvelope->rcptAddr);
 
       ConfigReadStr(_T("SMTPServer"), m_szSmtpServer, MAX_PATH, _T("localhost"));
       ConfigReadStrA(_T("SMTPFromAddr"), m_szFromAddr, MAX_PATH, "netxms@localhost");
       ConfigReadStrA(_T("SMTPFromName"), m_szFromName, MAX_PATH, "NetXMS Server");
       m_wSmtpPort = (WORD)ConfigReadInt(_T("SMTPPort"), 25);
 
-      UINT32 dwResult = SendMail(pEnvelope->szRcptAddr, pEnvelope->szSubject, pEnvelope->pszText);
+      UINT32 dwResult = SendMail(pEnvelope->rcptAddr, pEnvelope->subject, pEnvelope->text, pEnvelope->encoding);
       if (dwResult != SMTP_ERR_SUCCESS)
 		{
-			pEnvelope->nRetryCount--;
-			DbgPrintf(6, _T("SMTP(%p): Failed to send e-mail, remaining retries: %d"), pEnvelope, pEnvelope->nRetryCount);
-			if (pEnvelope->nRetryCount > 0)
+			pEnvelope->retryCount--;
+			DbgPrintf(6, _T("SMTP(%p): Failed to send e-mail, remaining retries: %d"), pEnvelope, pEnvelope->retryCount);
+			if (pEnvelope->retryCount > 0)
 			{
 				// Try posting again
 				m_pMailerQueue->put(pEnvelope);
@@ -409,15 +406,15 @@ static THREAD_RESULT THREAD_CALL MailerThread(void *pArg)
 			else
 			{
 				PostEvent(EVENT_SMTP_FAILURE, g_dwMgmtNode, "dsmm", dwResult, 
-							 m_szErrorText[dwResult], pEnvelope->szRcptAddr, pEnvelope->szSubject);
-				free(pEnvelope->pszText);
+							 m_szErrorText[dwResult], pEnvelope->rcptAddr, pEnvelope->subject);
+				free(pEnvelope->text);
 				free(pEnvelope);
 			}
 		}
 		else
 		{
 			DbgPrintf(6, _T("SMTP(%p): mail sent successfully"), pEnvelope);
-			free(pEnvelope->pszText);
+			free(pEnvelope->text);
 			free(pEnvelope);
 		}
    }
@@ -450,20 +447,32 @@ void ShutdownMailer()
  */
 void NXCORE_EXPORTABLE PostMail(const TCHAR *pszRcpt, const TCHAR *pszSubject, const TCHAR *pszText)
 {
-   MAIL_ENVELOPE *pEnvelope;
+   MAIL_ENVELOPE *envelope = (MAIL_ENVELOPE *)malloc(sizeof(MAIL_ENVELOPE));
+   ConfigReadStrA(_T("MailEncoding"), envelope->encoding, 64, "utf8");
+   bool isUtf8 = (!stricmp(envelope->encoding, "utf-8") || !stricmp(envelope->encoding, "utf8"));
 
-   pEnvelope = (MAIL_ENVELOPE *)malloc(sizeof(MAIL_ENVELOPE));
 #ifdef UNICODE
-	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszRcpt, -1, pEnvelope->szRcptAddr, MAX_RCPT_ADDR_LEN, NULL, NULL);
-	pEnvelope->szRcptAddr[MAX_RCPT_ADDR_LEN - 1] = 0;
-	WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszSubject, -1, pEnvelope->szSubject, MAX_EMAIL_SUBJECT_LEN, NULL, NULL);
-	pEnvelope->szSubject[MAX_EMAIL_SUBJECT_LEN - 1] = 0;
-	pEnvelope->pszText = MBStringFromWideString(pszText);
+	WideCharToMultiByte(isUtf8 ? CP_UTF8 : CP_ACP, isUtf8 ? 0 : WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszRcpt, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN, NULL, NULL);
+	envelope->rcptAddr[MAX_RCPT_ADDR_LEN - 1] = 0;
+	WideCharToMultiByte(isUtf8 ? CP_UTF8 : CP_ACP, isUtf8 ? 0 : WC_DEFAULTCHAR | WC_COMPOSITECHECK, pszSubject, -1, envelope->subject, MAX_EMAIL_SUBJECT_LEN, NULL, NULL);
+	envelope->subject[MAX_EMAIL_SUBJECT_LEN - 1] = 0;
+	envelope->text = isUtf8 ? UTF8StringFromWideString(pszText) : MBStringFromWideString(pszText);
 #else
-   nx_strncpy(pEnvelope->szRcptAddr, pszRcpt, MAX_RCPT_ADDR_LEN);
-   nx_strncpy(pEnvelope->szSubject, pszSubject, MAX_EMAIL_SUBJECT_LEN);
-   pEnvelope->pszText = _tcsdup(pszText);
+	if (isUtf8)
+	{
+	   utf8_to_mb(pszRcpt, -1, envelope->rcptAddr, MAX_RCPT_ADDR_LEN);
+	   envelope->rcptAddr[MAX_RCPT_ADDR_LEN - 1] = 0;
+      utf8_to_mb(pszSubject, -1, envelope->subject, MAX_EMAIL_SUBJECT_LEN);
+      envelope->subject[MAX_EMAIL_SUBJECT_LEN - 1] = 0;
+	   envelope->text = UTF8StringFromMBString(pszText);
+	}
+	else
+	{
+      nx_strncpy(envelope->rcptAddr, pszRcpt, MAX_RCPT_ADDR_LEN);
+      nx_strncpy(envelope->subject, pszSubject, MAX_EMAIL_SUBJECT_LEN);
+      envelope->text = strdup(pszText);
+	}
 #endif
-	pEnvelope->nRetryCount = ConfigReadInt(_T("SMTPRetryCount"), 1);
-   m_pMailerQueue->put(pEnvelope);
+	envelope->retryCount = ConfigReadInt(_T("SMTPRetryCount"), 1);
+   m_pMailerQueue->put(envelope);
 }

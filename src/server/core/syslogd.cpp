@@ -212,27 +212,25 @@ static BOOL ParseSyslogMessage(char *psMsg, int nMsgLen, NX_SYSLOG_RECORD *pRec)
    {
       // Use server time if configured
       // We still had to parse timestamp to get correct start position for MSG part
-      if (!s_alwaysUseServerTime)
+      if (s_alwaysUseServerTime)
       {
-         // Hostname
-         for(i = 0; (*pCurr >= 33) && (*pCurr <= 126) && (i < MAX_SYSLOG_HOSTNAME_LEN - 1) && (nPos < nMsgLen); i++, nPos++, pCurr++)
-            pRec->szHostName[i] = *pCurr;
-         if ((nPos >= nMsgLen) || (*pCurr != ' '))
-         {
-            // Not a valid hostname, assuming to be a part of message
-            pCurr -= i;
-            nPos -= i;
-            pRec->szHostName[0] = 0;
-         }
-         else
-         {
-            pCurr++;
-            nPos++;
-         }
+         pRec->tmTimeStamp = time(NULL);
+      }
+
+      // Hostname
+      for(i = 0; (*pCurr >= 33) && (*pCurr <= 126) && (i < MAX_SYSLOG_HOSTNAME_LEN - 1) && (nPos < nMsgLen); i++, nPos++, pCurr++)
+         pRec->szHostName[i] = *pCurr;
+      if ((nPos >= nMsgLen) || (*pCurr != ' '))
+      {
+         // Not a valid hostname, assuming to be a part of message
+         pCurr -= i;
+         nPos -= i;
+         pRec->szHostName[0] = 0;
       }
       else
       {
-         pRec->tmTimeStamp = time(NULL);
+         pCurr++;
+         nPos++;
       }
    }
    else

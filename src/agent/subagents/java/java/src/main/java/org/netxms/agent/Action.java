@@ -26,10 +26,10 @@ public interface Action extends AgentContributionItem
    /**
     * Execute action
     * 
-    * @param action
-    * @param args
+    * @param action action name
+    * @param args action arguments
     * @return true on success
-    * @throws Exception
+    * @throws Exception can throw exception to indicate action execution error
     */
    public boolean execute(final String action, final String[] args) throws Exception;
 }

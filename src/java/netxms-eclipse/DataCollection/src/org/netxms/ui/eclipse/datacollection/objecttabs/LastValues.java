@@ -25,7 +25,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
-import org.eclipse.ui.contexts.IContextService;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Cluster;
 import org.netxms.client.objects.MobileDevice;
@@ -113,11 +112,6 @@ public class LastValues extends ObjectTab
 	public void selected()
 	{
 		super.selected();
-		IContextService contextService = (IContextService)getViewPart().getSite().getService(IContextService.class);
-		if (contextService != null)
-		{
-			contextService.activateContext("org.netxms.ui.eclipse.datacollection.context.LastValues"); //$NON-NLS-1$
-		}
 		refresh();
 	}
 }

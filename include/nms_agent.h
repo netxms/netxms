@@ -154,6 +154,27 @@
 #define DCIDESC_FS_TYPE                           _T("Type of file system {instance}")
 #define DCIDESC_FS_USED                           _T("Used space on file system {instance}")
 #define DCIDESC_FS_USEDPERC                       _T("Percentage of used space on file system {instance}")
+#define DCIDESC_LVM_LV_SIZE                       _T("Size of logical volume {instance}")
+#define DCIDESC_LVM_LV_STATUS                     _T("Status of logical volume {instance}")
+#define DCIDESC_LVM_PV_FREE                       _T("Free space on physical volume {instance}")
+#define DCIDESC_LVM_PV_FREEPERC                   _T("Percentage of free space on physical volume {instance}")
+#define DCIDESC_LVM_PV_RESYNC_PART                _T("Number of resynchronizing partitions on physical volume {instance}")
+#define DCIDESC_LVM_PV_STALE_PART                 _T("Number of stale partitions on physical volume {instance}")
+#define DCIDESC_LVM_PV_STATUS                     _T("Status of physical volume {instance}")
+#define DCIDESC_LVM_PV_TOTAL                      _T("Total size of physical volume {instance}")
+#define DCIDESC_LVM_PV_USED                       _T("Used space on physical volume {instance}")
+#define DCIDESC_LVM_PV_USEDPERC                   _T("Percentage of used space on physical volume {instance}")
+#define DCIDESC_LVM_VG_FREE                       _T("Free space in volume group {instance}")
+#define DCIDESC_LVM_VG_FREEPERC                   _T("Percentage of free space in volume group {instance}")
+#define DCIDESC_LVM_VG_LVOL_TOTAL                 _T("Number of logical volumes in volume group {instance}")
+#define DCIDESC_LVM_VG_PVOL_ACTIVE                _T("Number of active physical volumes in volume group {instance}")
+#define DCIDESC_LVM_VG_PVOL_TOTAL                 _T("Number of physical volumes in volume group {instance}")
+#define DCIDESC_LVM_VG_RESYNC_PART                _T("Number of resynchronizing partitions in volume group {instance}")
+#define DCIDESC_LVM_VG_STALE_PART                 _T("Number of stale partitions in volume group {instance}")
+#define DCIDESC_LVM_VG_STATUS                     _T("Status of volume group {instance}")
+#define DCIDESC_LVM_VG_TOTAL                      _T("Total size of volume group {instance}")
+#define DCIDESC_LVM_VG_USED                       _T("Used space in volume group {instance}")
+#define DCIDESC_LVM_VG_USEDPERC                   _T("Percentage of used space in volume group {instance}")
 #define DCIDESC_NET_INTERFACE_64BITCOUNTERS       _T("Is 64bit interface counters supported")
 #define DCIDESC_NET_INTERFACE_ADMINSTATUS         _T("Administrative status of interface {instance}")
 #define DCIDESC_NET_INTERFACE_BYTESIN             _T("Number of input bytes on interface {instance}")
@@ -227,9 +248,16 @@
 #define DCIDESC_AGENT_IS_SUBAGENT_LOADED          _T("Check if given subagent is loaded")
 #define DCIDESC_AGENT_LAST_TRAP_TIME              _T("Timestamp of last generated trap")
 #define DCIDESC_AGENT_PROCESSEDREQUESTS           _T("Number of requests processed by agent")
+#define DCIDESC_AGENT_PROXY_ACTIVESESSIONS        _T("Number of active proxy sessions")
+#define DCIDESC_AGENT_PROXY_CONNECTIONREQUESTS    _T("Number of proxy connection requests")
+#define DCIDESC_AGENT_PROXY_ISENABLED             _T("Check if agent proxy is enabled")
 #define DCIDESC_AGENT_REGISTRAR                   _T("Registrar server address set on agent startup")
 #define DCIDESC_AGENT_REJECTEDCONNECTIONS         _T("Number of connections rejected by agent")
 #define DCIDESC_AGENT_SENT_TRAPS                  _T("Number of traps successfully sent to server")
+#define DCIDESC_AGENT_SNMP_ISPROXYENABLED         _T("Check if SNMP proxy is enabled")
+#define DCIDESC_AGENT_SNMP_REQUESTS               _T("Number of SNMP requests sent")
+#define DCIDESC_AGENT_SNMP_RESPONSES              _T("Number of SNMP responses received")
+#define DCIDESC_AGENT_SNMP_SERVERREQUESTS         _T("Number of SNMP proxy requests received from server")
 #define DCIDESC_AGENT_SOURCEPACKAGESUPPORT        _T("Check if source packages are supported")
 #define DCIDESC_AGENT_SUPPORTEDCIPHERS            _T("List of ciphers supported by agent")
 #define DCIDESC_AGENT_THREADPOOL_ACTIVEREQUESTS   _T("Agent thread pool {instance}: active requests")
@@ -409,6 +437,9 @@
 #define DCTDESC_AGENT_SESSION_AGENTS              _T("Registered session agents")
 #define DCTDESC_AGENT_SUBAGENTS                   _T("Loaded subagents")
 #define DCTDESC_FILESYSTEM_VOLUMES                _T("File system volumes")
+#define DCTDESC_LVM_VOLUME_GROUPS                 _T("LVM volume groups")
+#define DCTDESC_LVM_LOGICAL_VOLUMES               _T("Logical volumes in volume group {instance}")
+#define DCTDESC_LVM_PHYSICAL_VOLUMES              _T("Physical volumes in volume group {instance}")
 #define DCTDESC_SYSTEM_INSTALLED_PRODUCTS         _T("Installed products")
 #define DCTDESC_SYSTEM_OPEN_FILES                 _T("Open files")
 #define DCTDESC_SYSTEM_PROCESSES                  _T("Processes")
@@ -580,12 +611,12 @@ inline void ret_uint(TCHAR *rbuf, UINT32 value)
 #endif
 }
 
-inline void ret_double(TCHAR *rbuf, double value)
+inline void ret_double(TCHAR *rbuf, double value, int digits = 6)
 {
 #if defined(_WIN32) && (_MSC_VER >= 1300)
-   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%f"), value);
+   _sntprintf_s(rbuf, MAX_RESULT_LENGTH, _TRUNCATE, _T("%1.*f"), digits, value);
 #else
-   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%f"), value);
+   _sntprintf(rbuf, MAX_RESULT_LENGTH, _T("%1.*f"), digits, value);
 #endif
 }
 

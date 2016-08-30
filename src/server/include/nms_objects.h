@@ -523,7 +523,7 @@ protected:
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *msg);
 
    void addLocationToHistory();
-   bool isLocationTableExists();
+   bool isLocationTableExists(DB_HANDLE hdb);
    bool createLocationHistoryTable(DB_HANDLE hdb);
 
 public:
@@ -824,6 +824,8 @@ public:
    virtual BOOL saveToDatabase(DB_HANDLE hdb);
    virtual bool deleteFromDatabase(DB_HANDLE hdb);
    virtual bool loadFromDatabase(DB_HANDLE hdb, UINT32 id);
+
+   virtual NXSL_Value *createNXSLObject();
 
    Node *getParentNode();
    UINT32 getParentNodeId();

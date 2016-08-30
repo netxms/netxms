@@ -150,7 +150,7 @@ public class DciListLabelProvider extends LabelProvider implements ITableLabelPr
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
 				final String[] names = session.resolveDciNames(dciList);
-				PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				getDisplay().asyncExec(new Runnable() {
 					@Override
 					public void run()
 					{

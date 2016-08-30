@@ -1,5 +1,20 @@
 /**
- * 
+ * NetXMS - open source network management system
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 package org.netxms.ui.eclipse.perfview.widgets.helpers;
 
@@ -28,6 +43,7 @@ public class CellSelectionHighlighter
 	{
 		this.viewer = viewer;
 		this.manager = manager;
+
 		viewer.getControl().addListener(SWT.PaintItem, new Listener() {
 			public void handleEvent(Event event)
 			{
@@ -37,21 +53,19 @@ public class CellSelectionHighlighter
 
 				if (cell.equals(focusCell))
 					markFocusedCell(event, cell);
+            event.gc.setForeground(cell.getControl().getDisplay().getSystemColor(CellSelectionHighlighter.this.manager.isCellSelected(cell) ? SWT.COLOR_LIST_SELECTION_TEXT : SWT.COLOR_LIST_FOREGROUND));
 				
 				event.detail &= ~SWT.FOCUSED;
 			}
 		});
-		
+
 		viewer.getControl().addListener(SWT.EraseItem, new Listener() {
 			@Override
 			public void handleEvent(Event event)
 			{
 				ViewerRow row = CellSelectionHighlighter.this.viewer.getViewerRowFromItem(event.item);
 				ViewerCell cell = row.getCell(event.index);
-
-				if (CellSelectionHighlighter.this.manager.isCellSelected(cell))
-					markSelectedCell(event, cell);
-
+				drawCellBackground(event, cell, CellSelectionHighlighter.this.manager.isCellSelected(cell));
 				event.detail &= ~(SWT.SELECTED | SWT.FOCUSED | SWT.HOT);
 			}
 		});
@@ -68,12 +82,12 @@ public class CellSelectionHighlighter
 	 * @param event
 	 * @param cell
 	 */
-	private void markSelectedCell(Event event, ViewerCell cell)
+	private void drawCellBackground(Event event, ViewerCell cell, boolean selected)
 	{
 		GC gc = event.gc;
 		Display display = cell.getControl().getDisplay();
-		gc.setBackground(display.getSystemColor(SWT.COLOR_LIST_SELECTION));
-		gc.setForeground(display.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
+		gc.setBackground(display.getSystemColor(selected ? SWT.COLOR_LIST_SELECTION : SWT.COLOR_LIST_BACKGROUND));
+		gc.setForeground(display.getSystemColor(selected ? SWT.COLOR_LIST_SELECTION_TEXT : SWT.COLOR_LIST_FOREGROUND));
 		gc.fillRectangle(cell.getBounds());
 	}
 

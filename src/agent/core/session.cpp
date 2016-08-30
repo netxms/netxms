@@ -47,6 +47,31 @@ void ClearDataCollectionConfiguration();
 ThreadPool *g_snmpProxyThreadPool = NULL;
 
 /**
+ * Agent proxy statistics
+ */
+static UINT64 s_proxyConnectionRequests = 0;
+static VolatileCounter s_activeProxySessions = 0;
+
+/**
+ * Handler for agent proxy stats parameters
+ */
+LONG H_AgentProxyStats(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session)
+{
+   switch(*arg)
+   {
+      case 'A':
+         ret_uint(value, (UINT32)s_activeProxySessions);
+         break;
+      case 'C':
+         ret_uint64(value, s_proxyConnectionRequests);
+         break;
+      default:
+         return SYSINFO_RC_UNSUPPORTED;
+   }
+   return SYSINFO_RC_SUCCESS;
+}
+
+/**
  * Client communication read thread
  */
 THREAD_RESULT THREAD_CALL CommSession::readThreadStarter(void *pArg)
@@ -126,6 +151,9 @@ CommSession::CommSession(SOCKET hSocket, const InetAddress &serverAddr, bool mas
  */
 CommSession::~CommSession()
 {
+   if (m_proxyConnection)
+      InterlockedDecrement(&s_activeProxySessions);
+
    shutdown(m_hSocket, SHUT_RDWR);
    closesocket(m_hSocket);
    if (m_hProxySocket != INVALID_SOCKET)
@@ -334,12 +362,14 @@ void CommSession::readThread()
                   delete msg;
                   break;
                case CMD_SETUP_PROXY_CONNECTION:
+                  s_proxyConnectionRequests++;
                   rcc = setupProxyConnection(msg);
                   // When proxy session established incoming messages will
                   // not be processed locally. Acknowledgment message sent
-                  // by SetupProxyConnection() in case of success.
+                  // by setupProxyConnection() in case of success.
                   if (rcc == ERR_SUCCESS)
                   {
+                     InterlockedIncrement(&s_activeProxySessions);
                      m_processingQueue->put(INVALID_POINTER_VALUE);
                   }
                   else
@@ -424,6 +454,11 @@ BOOL CommSession::sendRawMessage(NXCP_MESSAGE *pMsg, NXCPEncryptionContext *pCtx
    TCHAR szBuffer[128];
 
    DebugPrintf(m_dwIndex, 6, _T("Sending message %s (size %d)"), NXCPMessageCodeName(ntohs(pMsg->code), szBuffer), ntohl(pMsg->size));
+   if (nxlog_get_debug_level() >= 8)
+   {
+      String msgDump = NXCPMessage::dump(pMsg, NXCP_VERSION);
+      DebugPrintf(m_dwIndex, 8, _T("Outgoing message dump:\n%s"), (const TCHAR *)msgDump);
+   }
    if ((pCtx != NULL) && (pCtx != PROXY_ENCRYPTION_CTX))
    {
       NXCP_ENCRYPTED_MESSAGE *enMsg = pCtx->encryptMessage(pMsg);

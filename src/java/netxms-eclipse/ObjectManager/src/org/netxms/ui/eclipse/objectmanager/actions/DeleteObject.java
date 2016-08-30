@@ -61,7 +61,7 @@ public class DeleteObject extends AbstractHandler
       }
       boolean confirmed = MessageDialogHelper.openConfirm(window.getShell(), Messages.get().DeleteObject_ConfirmDelete, question);
       
-      if(confirmed)
+      if (confirmed)
       {
          final Object[] objects = ((IStructuredSelection)selection).toArray();
          final NXCSession session = (NXCSession)ConsoleSharedData.getSession();

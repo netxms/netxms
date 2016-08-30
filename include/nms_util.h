@@ -265,6 +265,8 @@ private:
 	int m_nStopBits;
 	int m_nParity;
 	int m_nFlowControl;
+   int m_writeBlockSize;
+   int m_writeDelay;
 
 #ifndef _WIN32
 	int m_hPort;
@@ -272,6 +274,8 @@ private:
 #else
 	HANDLE m_hPort;
 #endif
+
+   bool writeBlock(const char *data, int length);
 
 public:
 	Serial();
@@ -283,9 +287,11 @@ public:
 	int read(char *pBuff, int nSize); /* waits up to timeout and do single read */
 	int readAll(char *pBuff, int nSize); /* read until timeout or out of space */
    int readToMark(char *buff, int size, const char **marks, char **occurence);
-	bool write(const char *pBuff, int nSize);
+	bool write(const char *buffer, int length);
 	void flush();
 	bool set(int nSpeed, int nDataBits, int nParity, int nStopBits, int nFlowControl = FLOW_NONE);
+   void setWriteBlockSize(int bs) { m_writeBlockSize = bs; }
+   void setWriteDelay(int delay) { m_writeDelay = delay; }
 	bool restart();
 };
 
@@ -1993,6 +1999,8 @@ const char LIBNETXMS_EXPORTABLE *XMLGetAttr(const char **attrs, const char *name
 int LIBNETXMS_EXPORTABLE XMLGetAttrInt(const char **attrs, const char *name, int defVal);
 UINT32 LIBNETXMS_EXPORTABLE XMLGetAttrUINT32(const char **attrs, const char *name, UINT32 defVal);
 bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name, bool defVal);
+
+String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s);
 
 #if !defined(_WIN32) && !defined(_NETWARE) && defined(NMS_THREADS_H_INCLUDED)
 void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain);

@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.objectview.objecttabs;
 
+import org.eclipse.core.commands.Command;
+import org.eclipse.core.commands.State;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -29,9 +31,16 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.commands.ICommandService;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
@@ -42,7 +51,9 @@ import org.netxms.ui.eclipse.objectview.Activator;
 import org.netxms.ui.eclipse.objectview.Messages;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListComparator;
 import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfaceListLabelProvider;
+import org.netxms.ui.eclipse.objectview.objecttabs.helpers.InterfacesTabFilter;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -72,7 +83,7 @@ public class InterfacesTab extends ObjectTab
 	public static final int COLUMN_STATUS = 19;
 	public static final int COLUMN_8021X_PAE_STATE = 20;
 	public static final int COLUMN_8021X_BACKEND_STATE = 21;
-	
+
 	private SortableTableViewer viewer;
 	private InterfaceListLabelProvider labelProvider;
 	private Action actionCopyToClipboard;
@@ -82,6 +93,11 @@ public class InterfacesTab extends ObjectTab
 	private Action actionCopyPeerMacToClipboard;
 	private Action actionCopyPeerIpToClipboard;
 	private Action actionExportToCsv;
+	
+	private boolean filterEnabled = false;
+	private FilterText filterText;
+	private InterfacesTabFilter filter;
+   private Composite interfacesArea;
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -89,6 +105,48 @@ public class InterfacesTab extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
+      // Create interface area
+      interfacesArea = new Composite(parent, SWT.BORDER);
+      FormLayout formLayout = new FormLayout();
+      interfacesArea.setLayout(formLayout);
+      // Create filter
+      filterText = new FilterText(interfacesArea, SWT.BORDER);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+         }
+      });
+
+      Action action = new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+            ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
+            Command command = service.getCommand("org.netxms.ui.eclipse.objectview.commands.show_filter");
+            State state = command.getState("org.netxms.ui.eclipse.objectview.commands.show_filter.state");
+            state.setValue(false);
+            service.refreshElements(command.getId(), null);
+         }
+      };
+      setFilterCloseAction(action);
+
+      // Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
+	   
 		final String[] names = { 
 	      Messages.get().InterfacesTab_ColId, 
 	      Messages.get().InterfacesTab_ColName,
@@ -113,14 +171,17 @@ public class InterfacesTab extends ObjectTab
 	      Messages.get().InterfacesTab_Col8021xPAE, 
 	      Messages.get().InterfacesTab_Col8021xBackend 
 		};
+		
 		final int[] widths = { 60, 150, 150, 150, 70, 70, 70, 70, 90, 150, 100, 90, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
-		viewer = new SortableTableViewer(parent, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+		viewer = new SortableTableViewer(interfacesArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		labelProvider = new InterfaceListLabelProvider();
 		viewer.setLabelProvider(labelProvider);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setComparator(new InterfaceListComparator());
 		viewer.getTable().setHeaderVisible(true);
 		viewer.getTable().setLinesVisible(true);
+		filter = new InterfacesTabFilter();
+		viewer.addFilter(filter);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "InterfaceTable.V4"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
 			@Override
@@ -129,9 +190,63 @@ public class InterfacesTab extends ObjectTab
 				WidgetHelper.saveColumnSettings(viewer.getTable(), Activator.getDefault().getDialogSettings(), "InterfaceTable.V4"); //$NON-NLS-1$
 			}
 		});
-		createActions();
-		createPopupMenu();
-	}
+		
+      // Setup layout
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      ;
+      fd.top = new FormAttachment(filterText, 0, SWT.BOTTOM);
+      fd.bottom = new FormAttachment(100, 0);
+      fd.right = new FormAttachment(100, 0);
+      viewer.getControl().setLayoutData(fd);
+
+      createActions();
+      createPopupMenu();
+
+      // Set initial focus to filter input line
+      if (filterEnabled)
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
+   }
+
+   private void setFilterCloseAction(Action action)
+   {
+      filterText.setCloseAction(action);
+   }
+
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   public void enableFilter(boolean enable)
+   {
+      filterEnabled = enable;
+      filterText.setVisible(filterEnabled);
+      FormData fd = (FormData)viewer.getTable().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
+      interfacesArea.layout();
+      if (enable)
+      {
+         filterText.setFocus();
+      }
+      else
+      {
+         filterText.setText("");
+         onFilterModify();
+      }
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   public void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+   }
 	
 	/**
 	 * Create actions
@@ -312,4 +427,14 @@ public class InterfacesTab extends ObjectTab
 			WidgetHelper.copyToClipboard(sb.toString());
 		}
 	}
+	
+	/* (non-Javadoc)
+    * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#selected()
+    */
+   @Override
+   public void selected()
+   {
+      super.selected();
+      refresh();
+   }
 }

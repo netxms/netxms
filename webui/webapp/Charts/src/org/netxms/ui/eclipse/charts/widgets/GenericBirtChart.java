@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2010 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +18,8 @@
  */
 package org.netxms.ui.eclipse.charts.widgets;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -180,34 +179,20 @@ public abstract class GenericBirtChart extends GenericChart implements PaintList
 
 			try
 			{
-				File tmpFile = File.createTempFile("birt_" + hashCode(), "_" + clientArea.width + "_" + clientArea.height);
-
-				deviceRenderer.setProperty(IDeviceRenderer.FILE_IDENTIFIER, tmpFile);
+				ByteArrayOutputStream imgStream = new ByteArrayOutputStream(65536);
+				deviceRenderer.setProperty(IDeviceRenderer.FILE_IDENTIFIER, imgStream);
 				final Bounds bounds = BoundsImpl.create(0, 0, clientArea.width, clientArea.height);
 				bounds.scale(72.0 / deviceRenderer.getDisplayServer().getDpiResolution());
 
 				generatedChartState = generator.build(deviceRenderer.getDisplayServer(), chart, bounds, null, null, null);
 				generator.render(deviceRenderer, generatedChartState);
 
-				InputStream inputStream = null;
-				try
-				{
-					inputStream = new FileInputStream(tmpFile);
-					imgChart = new Image(getDisplay(), inputStream);
-					tmpFile.delete();
-				}
-				finally
-				{
-					if (inputStream != null)
-					{
-						inputStream.close();
-					}
-				}
+				ByteArrayInputStream inputStream = new ByteArrayInputStream(imgStream.toByteArray());
+				imgChart = new Image(getDisplay(), inputStream);
 			}
 			catch(Exception e)
 			{
-				/* TODO: add logging and/or user notification */
-				e.printStackTrace();
+			   Activator.logError("Exception during chart generation", e);
 			}
 			
 			fullRepaint = false;

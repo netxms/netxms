@@ -1,4 +1,23 @@
 *
+* 2.0.5
+*
+
+- Data collection script can return null to indicate data collection error
+- Added option to set type of each varbind in nxsnmpset
+- Fixed memory leak in PostgreSQL database driver
+- New attributes "source" and "sourceId" in NXSL class "Event"
+- New method toJson() in NXSL class "Event
+- LVM monitoring parameters on AIX
+- Added option to get normalized server thread pool load average
+- Fixed bug in self-monitoring termplates
+- Management console
+	- Fixed possible deadlock when executing server script
+	- Fixed area charts on dashboards
+	- "Interactive" option for line chart dashboard elements
+- Fixed issues: #1018, #1039, #1239, #1250, #1255
+
+
+*
 * 2.0.4
 *
 

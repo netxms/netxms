@@ -28,7 +28,7 @@ public class ExecActionTask extends AsyncTask<Object, Void, Exception>
 			if (((String)params[2]).equals("wakeup"))
 				((NXCSession)params[0]).wakeupNode((Long)params[1]);
 			else
-				((NXCSession)params[0]).executeAction((Long)params[1], (String)params[2]);
+				((NXCSession)params[0]).executeAction((Long)params[1], (String)params[2], null);
 		}
 		catch (Exception e)
 		{

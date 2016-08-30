@@ -32,9 +32,9 @@ public class PushParameterAdapter implements PushParameter
    private ParameterType type;
 
    /**
-    * @param name
-    * @param description
-    * @param type
+    * @param name parameter name
+    * @param description parameter description
+    * @param type parameter type
     */
    public PushParameterAdapter(String name, String description, ParameterType type)
    {

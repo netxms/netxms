@@ -114,7 +114,8 @@ COMMENT_COLUMN(users.disabled_until, '')
 COMMENT_COLUMN(users.last_login, '')
 COMMENT_COLUMN(users.password_history, '')
 COMMENT_COLUMN(users.xmpp_id, '')
-COMMENT_COLUMN(users.ldap_dn, '')
+COMMENT_COLUMN(users.ldap_dn, 'LDAP dn')
+COMMENT_COLUMN(users.ldap_unique_id, 'LDAP unique id if field set')
 
 /*
 ** User groups
@@ -129,18 +130,19 @@ CREATE TABLE user_groups
   flags integer not null,
   description varchar(255),
   ldap_dn SQL_TEXT null,
-  ldap_unique_id varchar(63) null,
+  ldap_unique_id varchar(64) null,
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
 COMMENT_TABLE(user_groups, 'System user groups')
-COMMENT_COLUMN(user_groups.id, '')
-COMMENT_COLUMN(user_groups.guid, '')
-COMMENT_COLUMN(user_groups.name, '')
-COMMENT_COLUMN(user_groups.system_access, '')
+COMMENT_COLUMN(user_groups.id, 'Group id')
+COMMENT_COLUMN(user_groups.guid, 'Group GUID')
+COMMENT_COLUMN(user_groups.name, 'Group name')
+COMMENT_COLUMN(user_groups.system_access, 'Bit-mask of system access rights')
 COMMENT_COLUMN(user_groups.flags, '')
-COMMENT_COLUMN(user_groups.description, '')
-COMMENT_COLUMN(user_groups.ldap_dn, '')
+COMMENT_COLUMN(user_groups.description, 'Description')
+COMMENT_COLUMN(user_groups.ldap_dn, 'LDAP dn')
+COMMENT_COLUMN(users.ldap_unique_id, 'LDAP unique id if field set')
 
 /*
 ** Users to groups mapping
@@ -154,8 +156,8 @@ CREATE TABLE user_group_members
 ) TABLE_TYPE;
 
 COMMENT_TABLE(user_group_members, 'Users and group relationships')
-COMMENT_COLUMN(user_group_members.group_id, '')
-COMMENT_COLUMN(user_group_members.user_id, '')
+COMMENT_COLUMN(user_group_members.group_id, 'Group id from user_groups table')
+COMMENT_COLUMN(user_group_members.user_id, 'User id from users table')
 
 /*
 ** User profiles
@@ -229,14 +231,14 @@ CREATE TABLE object_properties
   PRIMARY KEY(object_id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(object_properties, '')
-COMMENT_COLUMN(object_properties.object_id, '')
-COMMENT_COLUMN(object_properties.guid, '')
-COMMENT_COLUMN(object_properties.name, '')
-COMMENT_COLUMN(object_properties.status, '')
-COMMENT_COLUMN(object_properties.is_deleted, '')
-COMMENT_COLUMN(object_properties.is_system, '')
-COMMENT_COLUMN(object_properties.last_modified, '')
+COMMENT_TABLE(object_properties, 'Object properties of NetObj and everything that is inherited from it(Dashboard, Interface, Node...)')
+COMMENT_COLUMN(object_properties.object_id, 'Object id')
+COMMENT_COLUMN(object_properties.guid, 'Object GUID')
+COMMENT_COLUMN(object_properties.name, 'Object name')
+COMMENT_COLUMN(object_properties.status, 'Object status(Unknown, Normal, Warning, Minor ...)')
+COMMENT_COLUMN(object_properties.is_deleted, 'Flag that defines if this object is scheduled for deletion')
+COMMENT_COLUMN(object_properties.is_system, 'Flag that defines if this object is the system object(DashboardRoot, ServiceRoot...)')
+COMMENT_COLUMN(object_properties.last_modified, 'Timestamp when this object was last modified')
 COMMENT_COLUMN(object_properties.inherit_access_rights, '')
 COMMENT_COLUMN(object_properties.status_calc_alg, '')
 COMMENT_COLUMN(object_properties.status_prop_alg, '')
@@ -245,18 +247,18 @@ COMMENT_COLUMN(object_properties.status_shift, '')
 COMMENT_COLUMN(object_properties.status_translation, '')
 COMMENT_COLUMN(object_properties.status_single_threshold, '')
 COMMENT_COLUMN(object_properties.status_thresholds, '')
-COMMENT_COLUMN(object_properties.comments, '')
-COMMENT_COLUMN(object_properties.location_type, '')
-COMMENT_COLUMN(object_properties.latitude, '')
-COMMENT_COLUMN(object_properties.longitude, '')
-COMMENT_COLUMN(object_properties.location_accuracy, '')
-COMMENT_COLUMN(object_properties.location_timestamp, '')
+COMMENT_COLUMN(object_properties.comments, 'Comments')
+COMMENT_COLUMN(object_properties.location_type, 'Lacation type(Undefined, Manual, Automatic)')
+COMMENT_COLUMN(object_properties.latitude, 'Latitude value')
+COMMENT_COLUMN(object_properties.longitude, 'Longitude value')
+COMMENT_COLUMN(object_properties.location_accuracy, 'Received location accuracy')
+COMMENT_COLUMN(object_properties.location_timestamp, 'Last received location time')
 COMMENT_COLUMN(object_properties.image, '')
 COMMENT_COLUMN(object_properties.submap_id, '')
-COMMENT_COLUMN(object_properties.country, '')
-COMMENT_COLUMN(object_properties.city, '')
-COMMENT_COLUMN(object_properties.street_address, '')
-COMMENT_COLUMN(object_properties.postcode, '')
+COMMENT_COLUMN(object_properties.country, 'Object location country')
+COMMENT_COLUMN(object_properties.city, 'Object location city')
+COMMENT_COLUMN(object_properties.street_address, 'Object location address')
+COMMENT_COLUMN(object_properties.postcode, 'Object location postcode')
 COMMENT_COLUMN(object_properties.maint_mode, '')
 COMMENT_COLUMN(object_properties.maint_event_id, '')
 
@@ -273,10 +275,10 @@ CREATE TABLE object_custom_attributes
 
 CREATE INDEX idx_ocattr_oid ON object_custom_attributes(object_id);
 
-COMMENT_TABLE(object_custom_attributes, '')
-COMMENT_COLUMN(object_custom_attributes.object_id, '')
-COMMENT_COLUMN(object_custom_attributes.attr_name, '')
-COMMENT_COLUMN(object_custom_attributes.attr_value, '')
+COMMENT_TABLE(object_custom_attributes, 'Object custom attributes')
+COMMENT_COLUMN(object_custom_attributes.object_id, 'Object id from object_properties')
+COMMENT_COLUMN(object_custom_attributes.attr_name, 'Object attribute name')
+COMMENT_COLUMN(object_custom_attributes.attr_value, 'Object attribute value')
 
 /*
 ** Zone objects
@@ -291,12 +293,12 @@ CREATE TABLE zones
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(zones, '')
-COMMENT_COLUMN(zones.id, '')
-COMMENT_COLUMN(zones.zone_guid, '')
-COMMENT_COLUMN(zones.agent_proxy, '')
-COMMENT_COLUMN(zones.snmp_proxy, '')
-COMMENT_COLUMN(zones.icmp_proxy, '')
+COMMENT_TABLE(zones, 'Zones')
+COMMENT_COLUMN(zones.id, 'Zone id from object_properties')
+COMMENT_COLUMN(zones.zone_guid, 'Zone GUID')
+COMMENT_COLUMN(zones.agent_proxy, 'Id of agent proxy for this zone')
+COMMENT_COLUMN(zones.snmp_proxy, 'Id of agent SNMP proxy for this zone')
+COMMENT_COLUMN(zones.icmp_proxy, 'Id of agent ICMP proxy for this zone')
 
 /*
 ** Mobile device objects
@@ -315,16 +317,16 @@ CREATE TABLE mobile_devices
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(mobile_devices, '')
-COMMENT_COLUMN(mobile_devices.id, '')
-COMMENT_COLUMN(mobile_devices.device_id, '')
-COMMENT_COLUMN(mobile_devices.vendor, '')
-COMMENT_COLUMN(mobile_devices.model, '')
-COMMENT_COLUMN(mobile_devices.serial_number, '')
-COMMENT_COLUMN(mobile_devices.os_name, '')
-COMMENT_COLUMN(mobile_devices.os_version, '')
+COMMENT_TABLE(mobile_devices, 'Mobile devices from object_properties')
+COMMENT_COLUMN(mobile_devices.id, 'Mobile device id')
+COMMENT_COLUMN(mobile_devices.device_id, 'Device ID(IMEI or ESN)')
+COMMENT_COLUMN(mobile_devices.vendor, 'Device vendor')
+COMMENT_COLUMN(mobile_devices.model, 'Device model')
+COMMENT_COLUMN(mobile_devices.serial_number, 'Serial number')
+COMMENT_COLUMN(mobile_devices.os_name, 'Operating system name')
+COMMENT_COLUMN(mobile_devices.os_version, 'Operation system version')
 COMMENT_COLUMN(mobile_devices.user_id, '')
-COMMENT_COLUMN(mobile_devices.battery_level, '')
+COMMENT_COLUMN(mobile_devices.battery_level, 'Battery charge level')
 
 /*
 ** Access point objects
@@ -363,8 +365,8 @@ CREATE TABLE racks
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(racks, '')
-COMMENT_COLUMN(racks.id, '')
+COMMENT_TABLE(racks, 'Racks')
+COMMENT_COLUMN(racks.id, 'Rack id form object_properties')
 COMMENT_COLUMN(racks.height, '')
 COMMENT_COLUMN(racks.top_bottom_num, '')
 
@@ -415,8 +417,8 @@ CREATE TABLE nodes
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(nodes, '')
-COMMENT_COLUMN(nodes.id, '')
+COMMENT_TABLE(nodes, 'Nodes')
+COMMENT_COLUMN(nodes.id, 'Node id from object_properties')
 COMMENT_COLUMN(nodes.primary_name, '')
 COMMENT_COLUMN(nodes.primary_ip, '')
 COMMENT_COLUMN(nodes.node_flags, '')
@@ -468,10 +470,10 @@ CREATE TABLE clusters
   PRIMARY KEY(id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(clusters, '')
-COMMENT_COLUMN(clusters.id, '')
-COMMENT_COLUMN(clusters.cluster_type, '')
-COMMENT_COLUMN(clusters.zone_guid, '')
+COMMENT_TABLE(clusters, 'Clusters')
+COMMENT_COLUMN(clusters.id, 'Cluster id form object_properties')
+COMMENT_COLUMN(clusters.cluster_type, 'Cluster type')
+COMMENT_COLUMN(clusters.zone_guid, 'Zone GUID form zones table')
 
 /*
 ** Cluster members
@@ -484,9 +486,9 @@ CREATE TABLE cluster_members
   PRIMARY KEY(cluster_id,node_id)
 ) TABLE_TYPE;
 
-COMMENT_TABLE(cluster_members, '')
-COMMENT_COLUMN(cluster_members.cluster_id, '')
-COMMENT_COLUMN(cluster_members.node_id, '')
+COMMENT_TABLE(cluster_members, 'Cluster members')
+COMMENT_COLUMN(cluster_members.cluster_id, 'Cluster id from clusters table')
+COMMENT_COLUMN(cluster_members.node_id, 'Node id form nodes table')
 
 /*
 ** Cluster interconnect subnets

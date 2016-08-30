@@ -492,40 +492,22 @@ static void BindNormal(ORACLE_STATEMENT *stmt, int pos, int sqlType, int cType, 
 						    NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
 			break;
 		case DB_CTYPE_INT64:	// OCI prior to 11.2 cannot bind 64 bit integers
-#ifdef UNICODE_UCS2
-			sqlBuffer = malloc(64 * sizeof(WCHAR));
-			swprintf((WCHAR *)sqlBuffer, 64, INT64_FMTW, *((INT64 *)buffer));
-#else
-			{
-				char temp[64];
-				snprintf(temp, 64, INT64_FMTA, *((INT64 *)buffer));
-				sqlBuffer = UCS2StringFromMBString(temp);
-			}
-#endif
-		   stmt->buffers->set(pos - 1, sqlBuffer);
-		   OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
-						    ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
-						    SQLT_STR, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+		   sqlBuffer = malloc(sizeof(OCINumber));
+         stmt->buffers->set(pos - 1, sqlBuffer);
+		   OCINumberFromInt(stmt->handleError, buffer, sizeof(INT64), OCI_NUMBER_SIGNED, (OCINumber *)sqlBuffer);
+         OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer, sizeof(OCINumber),
+                      SQLT_VNU, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
 			if (allocType == DB_BIND_DYNAMIC)
 				free(buffer);
 			break;
 		case DB_CTYPE_UINT64:	// OCI prior to 11.2 cannot bind 64 bit integers
-#ifdef UNICODE_UCS2
-			sqlBuffer = malloc(64 * sizeof(WCHAR));
-			swprintf((WCHAR *)sqlBuffer, 64, UINT64_FMTW, *((QWORD *)buffer));
-#else
-			{
-				char temp[64];
-				snprintf(temp, 64, UINT64_FMTA, *((QWORD *)buffer));
-				sqlBuffer = UCS2StringFromMBString(temp);
-			}
-#endif
-		   stmt->buffers->set(pos - 1, sqlBuffer);
-		   OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer,
-						    ((sb4)ucs2_strlen((UCS2CHAR *)sqlBuffer) + 1) * sizeof(UCS2CHAR), 
-						    SQLT_STR, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
-			if (allocType == DB_BIND_DYNAMIC)
-				free(buffer);
+         sqlBuffer = malloc(sizeof(OCINumber));
+         stmt->buffers->set(pos - 1, sqlBuffer);
+         OCINumberFromInt(stmt->handleError, buffer, sizeof(INT64), OCI_NUMBER_UNSIGNED, (OCINumber *)sqlBuffer);
+         OCIBindByPos(stmt->handleStmt, &handleBind, stmt->handleError, pos, sqlBuffer, sizeof(OCINumber),
+                      SQLT_VNU, NULL, NULL, NULL, 0, NULL, OCI_DEFAULT);
+         if (allocType == DB_BIND_DYNAMIC)
+            free(buffer);
 			break;
 		default:
 		   switch(allocType)

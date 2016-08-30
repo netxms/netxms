@@ -465,11 +465,14 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
          if ((object->getType() == DCO_TYPE_ITEM) && (((DCItem *)object)->getInstanceDiscoveryMethod() != IDM_NONE))
          {
             deleteChildDCIs(dcObjectId);
+
+            // Index may be incorrect at this point
+            if (m_dcObjects->get(i) != object)
+               i = m_dcObjects->indexOf(object);
          }
          // Destroy item
 			DbgPrintf(7, _T("Template::DeleteDCObject: deleting DCObject %d from object %d"), (int)dcObjectId, (int)m_id);
 			destroyItem(object, i);
-         m_isModified = true;
          success = true;
 			DbgPrintf(7, _T("Template::DeleteDCObject: DCO deleted from object %d"), (int)m_id);
          break;
@@ -478,6 +481,13 @@ bool Template::deleteDCObject(UINT32 dcObjectId, bool needLock)
 
 	if (needLock)
 	   unlockDciAccess();
+
+	if (success)
+	{
+	   lockProperties();
+	   setModified();
+	   unlockProperties();
+	}
    return success;
 }
 
@@ -971,7 +981,7 @@ BOOL Template::applyToTarget(DataCollectionTarget *target)
  */
 void Template::queueUpdate()
 {
-   lockProperties();
+   LockChildList(FALSE);
    for(UINT32 i = 0; i < m_dwChildCount; i++)
       if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || (m_pChildList[i]->getObjectClass() == OBJECT_CLUSTER) || (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
       {
@@ -983,7 +993,7 @@ void Template::queueUpdate()
          pInfo->removeDCI = false;
          g_pTemplateUpdateQueue->put(pInfo);
       }
-   unlockProperties();
+   UnlockChildList();
 }
 
 /**
@@ -1155,12 +1165,13 @@ void Template::prepareForDeletion()
 {
 	if (getObjectClass() == OBJECT_TEMPLATE)
 	{
-		UINT32 i;
-
 		LockChildList(FALSE);
-		for(i = 0; i < m_dwChildCount; i++)
+		for(UINT32 i = 0; i < m_dwChildCount; i++)
 		{
-			if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
+			if ((m_pChildList[i]->getObjectClass() == OBJECT_NODE) || 
+             (m_pChildList[i]->getObjectClass() == OBJECT_CLUSTER) ||
+             (m_pChildList[i]->getObjectClass() == OBJECT_ACCESSPOINT) ||
+             (m_pChildList[i]->getObjectClass() == OBJECT_MOBILEDEVICE))
 				queueRemoveFromTarget(m_pChildList[i]->getId(), TRUE);
 		}
 		UnlockChildList();

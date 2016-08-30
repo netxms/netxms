@@ -179,7 +179,6 @@ void NetworkMap::calculateCompoundStatus(BOOL bForcedRecalc)
                      iCount++;
                   }
                }
-               UnlockChildList();
 
                // Step 2: check what severity rating is above threshold
                if (iCount > 0)

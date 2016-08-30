@@ -38,7 +38,8 @@ public class CellSelectionHighlighter
 		if (cell.getItem().getData(key) == null)
 		{
 			cell.getItem().setData(key, cell.getText());
-			cell.setText("<b><span style='color:rgb(255,201,14)'>" + cell.getText() + "</span></b>");
+			// FIXME: read colors from current theme
+			cell.setText("<span style='color:white;background-color: #00589f;'>" + cell.getText() + "</span>");
 		}
 	}
 	
@@ -47,7 +48,7 @@ public class CellSelectionHighlighter
 	 */
 	protected void unmarkCell(ViewerCell cell)
 	{
-		if (cell == null)
+		if ((cell == null) || cell.getItem().isDisposed())
 			return;
 		
 		final String key = "CELL#" + cell.getColumnIndex();

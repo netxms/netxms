@@ -23,7 +23,7 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('BlockInactiveUserAccounts','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('CapabilityExpirationTime','604800',1,0);  /* in seconds */
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('CaseInsensitiveLoginNames','0',1,1,'B','Enable/disable case insensitive login names');
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('CheckTrustedNodes','1',1,1);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart,data_type,description) VALUES ('CheckTrustedNodes','0',1,1,'B','Enable/disable trusted nodes check');
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ClientListenerPort','4701',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConditionPollingInterval','60',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('ConfigurationPollingInterval','3600',1,1);
@@ -102,12 +102,12 @@ INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapSyncInterval','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapSyncUser','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapSyncUserPassword','',1,0);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapUserClass','displayName',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapUserClass','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapUserDeleteAction','1',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LdapUserUniqueId','',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LockTimeout','60000',1,1);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('LogAllSNMPTraps','0',1,1);
-INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MailEncoding','iso-8859-1',1,0);
+INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MailEncoding','utf8',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MinPasswordLength','0',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MinViewRefreshInterval','1000',1,0);
 INSERT INTO config (var_name,var_value,is_visible,need_server_restart) VALUES ('MobileDeviceListenerPort','4747',1,1);

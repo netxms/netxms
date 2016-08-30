@@ -985,6 +985,22 @@ Table-Checkbox:checked:grayed:hover {
   background-image: url( theme/resources/button/check-grayed-hover.png );
 }
 
+/* Table with individual cell selection */
+Table-RowOverlay.cellselect:hover {
+  background-color: transparent;
+  color: inherit;
+}
+
+Table-RowOverlay.cellselect:selected {
+  background-color: transparent;
+  color: inherit;
+}
+
+Table-RowOverlay.cellselect:selected:unfocused {
+  background-color: transparent;
+  color: inherit;
+}
+
 /* Text default theme */
 
 Text {

@@ -28,15 +28,16 @@ public interface Parameter extends AgentContributionItem
    /**
     * Get parameter's type
     * 
-    * @return
+    * @return parameter's type
     */
    public ParameterType getType();
 
    /**
     * Get value
     * 
-    * @param param
-    * @return
+    * @param param parameter name
+    * @return value for requested parameter
+    * @throws Exception can throw exception to indicate data collection error
     */
    public String getValue(final String param) throws Exception;
 }
