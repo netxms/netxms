@@ -1,7 +1,7 @@
 /*
 ** NetXMS - Network Management System
 ** SNMP support library
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU Lesser General Public License as published by
@@ -132,9 +132,9 @@ retry_wait:
       {
          if (*response != NULL)
          {
-            if ((*response)->getRequestId() == request->getRequestId())
+            if (request->getVersion() == SNMP_VERSION_3)
             {
-               if (request->getVersion() == SNMP_VERSION_3)
+               if ((*response)->getMessageId() == request->getMessageId())
                {
                   // Cache authoritative engine ID
                   if ((m_authoritativeEngine == NULL) && ((*response)->getAuthoritativeEngine().getIdLen() != 0))
@@ -147,14 +147,14 @@ retry_wait:
                   if (((m_contextEngine == NULL) || (m_contextEngine->getIdLen() == 0)) && ((*response)->getContextEngineIdLength() != 0))
                   {
                      delete m_contextEngine;
-							m_contextEngine = new SNMP_Engine((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
-						}
+                     m_contextEngine = new SNMP_Engine((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
+                  }
 
-						if ((*response)->getCommand() == SNMP_REPORT)
-						{
-		               SNMP_Variable *var = (*response)->getVariable(0);
+                  if ((*response)->getCommand() == SNMP_REPORT)
+                  {
+                     SNMP_Variable *var = (*response)->getVariable(0);
+                     rc = SNMP_ERR_AGENT;
 							const TCHAR *oid = var->getName()->getValueAsText();
-							rc = SNMP_ERR_AGENT;
 							for(int i = 0; s_oidToErrorMap[i].oid != NULL; i++)
 							{
 								if (!_tcscmp(oid, s_oidToErrorMap[i].oid))
@@ -164,58 +164,75 @@ retry_wait:
 								}
 							}
 
-							// Engine ID discovery - if request contains empty engine ID,
-							// replace it with correct one and retry
-							if (rc == SNMP_ERR_ENGINE_ID)
-							{
-								bool canRetry = false;
+                     // Engine ID discovery - if request contains empty engine ID,
+                     // replace it with correct one and retry
+                     if (rc == SNMP_ERR_ENGINE_ID)
+                     {
+                        bool canRetry = false;
 
-								if (request->getContextEngineIdLength() == 0)
-								{
-								   // Use provided context engine ID if set in response
-								   // Use authoritative engine ID if response has no context engine id
-								   if ((*response)->getContextEngineIdLength() > 0)
-								      request->setContextEngineId((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
-								   else if ((*response)->getAuthoritativeEngine().getIdLen() != 0)
-								      request->setContextEngineId((*response)->getAuthoritativeEngine().getId(), (*response)->getAuthoritativeEngine().getIdLen());
-									canRetry = true;
-								}
-								if (m_securityContext->getAuthoritativeEngine().getIdLen() == 0)
-								{
-									m_securityContext->setAuthoritativeEngine((*response)->getAuthoritativeEngine());
-									canRetry = true;
-								}
-								if (canRetry)
-									goto retry;
-							}
-							else if (rc == SNMP_ERR_TIME_WINDOW)
-							{
-								// Update cached authoritative engine with new boots and time
-								if ((timeSyncRetries > 0) &&
-								    (((*response)->getAuthoritativeEngine().getBoots() != m_authoritativeEngine->getBoots()) ||
-								     ((*response)->getAuthoritativeEngine().getTime() != m_authoritativeEngine->getTime())))
-								{
-									m_authoritativeEngine->setBoots((*response)->getAuthoritativeEngine().getBoots());
-									m_authoritativeEngine->setTime((*response)->getAuthoritativeEngine().getTime());
-									m_securityContext->setAuthoritativeEngine(*m_authoritativeEngine);
-									timeSyncRetries--;
-									goto retry;
-								}
-							}
-						}
-						else if ((*response)->getCommand() != SNMP_RESPONSE)
-						{
-							rc = SNMP_ERR_BAD_RESPONSE;
-						}
-						break;
-					}
-				}
-				else
-				{
-					if ((*response)->getRequestId() == request->getRequestId())
-						break;
-				}
-            rc = SNMP_ERR_TIMEOUT;
+                        if (request->getContextEngineIdLength() == 0)
+                        {
+                           // Use provided context engine ID if set in response
+                           // Use authoritative engine ID if response has no context engine id
+                           if ((*response)->getContextEngineIdLength() > 0)
+                              request->setContextEngineId((*response)->getContextEngineId(), (*response)->getContextEngineIdLength());
+                           else if ((*response)->getAuthoritativeEngine().getIdLen() != 0)
+                              request->setContextEngineId((*response)->getAuthoritativeEngine().getId(), (*response)->getAuthoritativeEngine().getIdLen());
+                           canRetry = true;
+                        }
+                        if (m_securityContext->getAuthoritativeEngine().getIdLen() == 0)
+                        {
+                           m_securityContext->setAuthoritativeEngine((*response)->getAuthoritativeEngine());
+                           canRetry = true;
+                        }
+                        if (canRetry)
+                           goto retry;
+                     }
+                     else if (rc == SNMP_ERR_TIME_WINDOW)
+                     {
+                        // Update cached authoritative engine with new boots and time
+                        if ((timeSyncRetries > 0) &&
+                            (((*response)->getAuthoritativeEngine().getBoots() != m_authoritativeEngine->getBoots()) ||
+                             ((*response)->getAuthoritativeEngine().getTime() != m_authoritativeEngine->getTime())))
+                        {
+                           m_authoritativeEngine->setBoots((*response)->getAuthoritativeEngine().getBoots());
+                           m_authoritativeEngine->setTime((*response)->getAuthoritativeEngine().getTime());
+                           m_securityContext->setAuthoritativeEngine(*m_authoritativeEngine);
+                           timeSyncRetries--;
+                           goto retry;
+                        }
+                     }
+                  }
+                  else if ((*response)->getCommand() != SNMP_RESPONSE)
+                  {
+                     rc = SNMP_ERR_BAD_RESPONSE;
+                  }
+                  break;
+               }
+               else  // message ID do not match
+               {
+                  UINT32 elapsedTime = (UINT32)(GetCurrentTimeMs() - startTime);
+                  if (elapsedTime < remainingWaitTime)
+                  {
+                     remainingWaitTime -= elapsedTime;
+                     goto retry_wait;
+                  }
+                  rc = SNMP_ERR_TIMEOUT;
+               }
+            }
+            else  // not SNMPv3
+            {
+               if ((*response)->getRequestId() == request->getRequestId())
+                  break;
+
+               UINT32 elapsedTime = (UINT32)(GetCurrentTimeMs() - startTime);
+               if (elapsedTime < remainingWaitTime)
+               {
+                  remainingWaitTime -= elapsedTime;
+                  goto retry_wait;
+               }
+               rc = SNMP_ERR_TIMEOUT;
+            }
          }
          else
          {
