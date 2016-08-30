@@ -39,7 +39,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
-import org.eclipse.ui.contexts.IContextService;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
@@ -81,7 +80,7 @@ public class InterfacesTab extends ObjectTab
 	public static final int COLUMN_STATUS = 19;
 	public static final int COLUMN_8021X_PAE_STATE = 20;
 	public static final int COLUMN_8021X_BACKEND_STATE = 21;
-	
+
 	private SortableTableViewer viewer;
 	private InterfaceListLabelProvider labelProvider;
 	private Action actionExportToCsv;
@@ -163,6 +162,7 @@ public class InterfacesTab extends ObjectTab
 	      Messages.get().InterfacesTab_Col8021xPAE, 
 	      Messages.get().InterfacesTab_Col8021xBackend 
 		};
+		
 		final int[] widths = { 60, 150, 150, 150, 70, 70, 70, 70, 90, 150, 100, 90, 150, 100, 90, 80, 80, 80, 80, 80, 80, 80 };
 		viewer = new SortableTableViewer(interfacesArea, names, widths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		labelProvider = new InterfaceListLabelProvider();
@@ -338,11 +338,6 @@ public class InterfacesTab extends ObjectTab
    public void selected()
    {
       super.selected();
-      IContextService contextService = (IContextService)getViewPart().getSite().getService(IContextService.class);
-      if (contextService != null)
-      {
-         contextService.activateContext("org.netxms.ui.eclipse.objectview.context.InterfacesTab"); //$NON-NLS-1$
-      }
       refresh();
    }
 }

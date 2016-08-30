@@ -28,6 +28,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IPluginContribution;
+import org.eclipse.ui.contexts.IContextActivation;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.netxms.client.objects.AbstractObject;
@@ -49,6 +51,8 @@ public abstract class ObjectTab implements IPluginContribution
 	private int order;
 	private ImageDescriptor icon;
 	private Image tabImage;
+	private String contextId;
+   private IContextActivation context = null;
 
 	/**
 	 * Read configuration before widget creation
@@ -67,6 +71,8 @@ public abstract class ObjectTab implements IPluginContribution
 		name = ce.getAttribute("name"); //$NON-NLS-1$
 		if (name == null)
 			name = "<noname>"; //$NON-NLS-1$
+		
+		contextId = ce.getAttribute("contextId");
 		
 		try
 		{
@@ -121,8 +127,33 @@ public abstract class ObjectTab implements IPluginContribution
 		catch(RuntimeException e)
 		{
 		}
+
+		if ((contextId != null) && !contextId.isEmpty())
+		{
+         IContextService contextService = (IContextService)getViewPart().getSite().getService(IContextService.class);
+         if (contextService != null)
+         {
+            context = contextService.activateContext(contextId);
+         }
+		}
 	}
 	
+   /**
+    * Called by framework when tab is unselected.
+    */
+   public void unselected()
+   {
+      if (context == null)
+         return;
+      
+      IContextService contextService = (IContextService)getViewPart().getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.deactivateContext(context);
+         context = null;
+      }
+   }
+   
 	/**
 	 * Test if tab should be shown for given NetXMS object. Default implementation always returns true.
 	 * 

@@ -82,6 +82,7 @@ public class TabbedObjectView extends ViewPart
 	private CTabFolder tabFolder;
 	private Font headerFont;
 	private List<ObjectTab> tabs;
+	private ObjectTab activeTab = null;
 	private ISelectionService selectionService = null;
 	private ISelectionListener selectionListener = null;
 	private IntermediateSelectionProvider selectionProvider;
@@ -128,15 +129,7 @@ public class TabbedObjectView extends ViewPart
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				ObjectTab tab = null;
-				if (e.item != null)
-				{
-					tab = (ObjectTab)((CTabItem)e.item).getData(); 
-					tab.selected();
-					selectionProvider.setSelectionProviderDelegate(tab.getSelectionProvider());
-				}
-				if (sourceProvider != null)
-					sourceProvider.updateProperty(SourceProvider.ACTIVE_TAB, tab);
+				onTabSelectionChange((e.item != null) ? (ObjectTab)((CTabItem)e.item).getData() : null);
 			}
 
 			@Override
@@ -345,6 +338,8 @@ public class TabbedObjectView extends ViewPart
 				}
 				else
 				{
+				   if (tab == activeTab)
+				      tab.unselected();
 					tab.hide();
 					tab.changeObject(null);
 				}
@@ -356,8 +351,7 @@ public class TabbedObjectView extends ViewPart
 				{
 					tabFolder.setSelection(0);
 					ObjectTab tab = (ObjectTab)tabFolder.getItem(0).getData();
-					tab.selected();
-					selectionProvider.setSelectionProviderDelegate(tab.getSelectionProvider());
+					onTabSelectionChange(tab);
 				}
 				catch(IllegalArgumentException e)
 				{
@@ -443,11 +437,38 @@ public class TabbedObjectView extends ViewPart
 			if (tab.getLocalId().equals(tabId))
 			{
 				tabFolder.setSelection(i);
-				tab.selected();
-				selectionProvider.setSelectionProviderDelegate(tab.getSelectionProvider());
+				onTabSelectionChange(tab);
 				break;
 			}
 		}
+	}
+	
+	/**
+	 * Handler for tab selection change
+	 * 
+	 * @param tab new selection
+	 */
+	private void onTabSelectionChange(ObjectTab tab)
+	{
+	   if (activeTab == tab)
+	      return;
+	   
+	   if (activeTab != null)
+	      activeTab.unselected();
+
+	   if (tab != null)
+	   {
+         tab.selected();
+         selectionProvider.setSelectionProviderDelegate(tab.getSelectionProvider());
+	   }
+	   else
+	   {
+	      selectionProvider.setSelectionProviderDelegate(null);
+	   }
+	   
+	   activeTab = tab;
+      if (sourceProvider != null)
+         sourceProvider.updateProperty(SourceProvider.ACTIVE_TAB, tab);
 	}
 
 	/* (non-Javadoc)

@@ -42,6 +42,10 @@
             description="Toggle Filter"
             id="org.netxms.ui.eclipse.objectview.commands.show_filter"
             name="Toggle Filter">
+         <state
+               class="org.eclipse.jface.commands.ToggleState"
+               id="org.netxms.ui.eclipse.objectview.commands.show_filter.state">
+         </state>
          <defaultHandler
                class="org.netxms.ui.eclipse.objectview.actions.ToggleFilterHandler">
             <parameter
@@ -49,10 +53,6 @@
                   value="default">
             </parameter>
          </defaultHandler>
-         <state
-               class="org.eclipse.jface.commands.ToggleState"
-               id="org.netxms.ui.eclipse.objectview.commands.show_filter.state">
-         </state>
       </command>
    </extension>
    
@@ -89,6 +89,7 @@
       </tab>
       <tab
             class="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab"
+            contextId="org.netxms.ui.eclipse.objectview.context.InterfacesTab"
             icon="icons/interface.png"
             id="org.netxms.ui.eclipse.objectview.objecttabs.InterfacesTab"
             name="%tab.name.Interfaces"
@@ -183,7 +184,8 @@
          point="org.eclipse.ui.contexts">
       <context
             id="org.netxms.ui.eclipse.objectview.context.InterfacesTab"
-            name="Interfaces Tab">
+            name="Interfaces Tab"
+            parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
    <extension

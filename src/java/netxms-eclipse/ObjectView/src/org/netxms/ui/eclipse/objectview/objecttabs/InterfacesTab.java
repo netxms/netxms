@@ -41,7 +41,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
-import org.eclipse.ui.contexts.IContextService;
 import org.netxms.client.objects.AbstractNode;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.Interface;
@@ -436,11 +435,6 @@ public class InterfacesTab extends ObjectTab
    public void selected()
    {
       super.selected();
-      IContextService contextService = (IContextService)getViewPart().getSite().getService(IContextService.class);
-      if (contextService != null)
-      {
-         contextService.activateContext("org.netxms.ui.eclipse.objectview.context.InterfacesTab"); //$NON-NLS-1$
-      }
       refresh();
    }
 }
