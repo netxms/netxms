@@ -523,7 +523,7 @@ protected:
    virtual UINT32 modifyFromMessageInternal(NXCPMessage *msg);
 
    void addLocationToHistory();
-   bool isLocationTableExists();
+   bool isLocationTableExists(DB_HANDLE hdb);
    bool createLocationHistoryTable(DB_HANDLE hdb);
 
 public:
