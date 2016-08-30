@@ -188,6 +188,13 @@ bool NetObj::deleteFromDatabase(DB_HANDLE hdb)
       success = DeleteObjectAlarms(m_id, hdb);
    }
 
+   if (success && isLocationTableExists(hdb))
+   {
+      TCHAR query[256];
+      _sntprintf(query, 256, _T("DROP TABLE gps_history_%d"), m_id);
+      success = DBQuery(hdb, query);
+   }
+
    // Delete module data
    if (success && (m_moduleData != NULL))
    {
@@ -1898,7 +1905,7 @@ void NetObj::addLocationToHistory()
    UINT32 startTimestamp;
    bool isSamePlace;
    DB_RESULT hResult;
-   if (!isLocationTableExists())
+   if (!isLocationTableExists(hdb))
    {
       DbgPrintf(4, _T("NetObj::addLocationToHistory: Geolocation history table will be created for object %s [%d]"), m_name, m_id);
       if (!createLocationHistoryTable(hdb))
@@ -1989,17 +1996,15 @@ onFail:
 /**
  * Check if given data table exist
  */
-bool NetObj::isLocationTableExists()
+bool NetObj::isLocationTableExists(DB_HANDLE hdb)
 {
    TCHAR table[256];
    _sntprintf(table, 256, _T("gps_history_%d"), m_id);
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
    int rc = DBIsTableExist(hdb, table);
    if (rc == DBIsTableExist_Failure)
    {
       _tprintf(_T("WARNING: call to DBIsTableExist(\"%s\") failed\n"), table);
    }
-   DBConnectionPoolReleaseConnection(hdb);
    return rc != DBIsTableExist_NotFound;
 }
 
