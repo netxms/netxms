@@ -512,7 +512,15 @@ public class TableColumns extends PropertyPage
 			{
 				try
 				{
-					final org.netxms.client.Table table = session.queryAgentTable(dci.getNodeId(), name);
+				   final org.netxms.client.Table table;
+				   if (dci.getSourceNode() != 0)
+				   {
+				      table = session.queryAgentTable(dci.getSourceNode(), name);
+				   }
+				   else
+				   {
+				      table = session.queryAgentTable(dci.getNodeId(), name);
+				   }				      
 					runInUIThread(new Runnable() {
 						@Override
 						public void run()
