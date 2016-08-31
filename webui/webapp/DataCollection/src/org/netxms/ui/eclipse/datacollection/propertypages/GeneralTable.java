@@ -23,6 +23,8 @@ import java.util.Map;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -174,7 +176,6 @@ public class GeneralTable extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				selectParameter();
-				dci.setSourceNode(sourceNode.getObjectId());
 			}
       });
 
@@ -261,6 +262,13 @@ public class GeneralTable extends PropertyPage
       sourceNode.setObjectClass(Node.class);
       sourceNode.setObjectId(dci.getSourceNode());
       sourceNode.setEnabled(dci.getOrigin() != DataCollectionObject.PUSH);
+      sourceNode.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            editor.setSourceNode(sourceNode.getObjectId());
+         }
+      });
       
       fd = new FormData();
       fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
