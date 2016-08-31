@@ -52,10 +52,10 @@ public class ObjectTool
 	public static final int GENERATES_OUTPUT          = 0x00000010;
 	public static final int DISABLED                  = 0x00000020;
 	public static final int SHOW_IN_COMMANDS          = 0x00000040;
-   public static final int REQUIRES_REMOTE_OS_MATCH  = 0x00000080;
+   public static final int REQUIRES_NODE_OS_MATCH  = 0x00000080;
    public static final int REQUIRES_TEMPLATE_MATCH   = 0x00000100;
 	public static final int SNMP_INDEXED_BY_VALUE     = 0x00010000;
-	public static final int REQUIRES_LOCAL_OS_MATCH   = 0x00020000;
+	public static final int REQUIRES_WORKSTATION_OS_MATCH   = 0x00020000;
 	
 	protected long id;
 	protected String name;
@@ -222,10 +222,10 @@ public class ObjectTool
 				return false;	// OID does not match
 		}
 		
-	   if ((flags & REQUIRES_REMOTE_OS_MATCH) != 0)
+	   if ((flags & REQUIRES_NODE_OS_MATCH) != 0)
       {
 	      boolean match = false;
-	      String[] substrings = filter.toolLocOS.split(",");
+	      String[] substrings = filter.toolNodeOS.split(",");
 	      for(int i = 0; i < substrings.length; i++)
 	      {;
 	         if (Pattern.matches(substrings[i], node.getPlatformName()))
@@ -237,10 +237,10 @@ public class ObjectTool
 	         return false;  //Not correct type of OS
       }
 	   
-	   if ((flags & REQUIRES_LOCAL_OS_MATCH) != 0)
+	   if ((flags & REQUIRES_WORKSTATION_OS_MATCH) != 0)
       {
          boolean match = false;
-         String[] substrings = filter.toolLocOS.split(",");
+         String[] substrings = filter.toolWorkstationOS.split(",");
          for(int i = 0; i < substrings.length; i++)
          {;
             if (Pattern.matches(substrings[i], System.getProperty("os.name")))
@@ -430,17 +430,17 @@ public class ObjectTool
    /**
     * @return the toolRemOS
     */
-   public String getToolRemOS()
+   public String getToolNodeOS()
    {
-      return filter.toolRemOS;
+      return filter.toolNodeOS;
    }
    
    /**
     * @return the toolLocOS
     */
-   public String getToolLocOS()
+   public String getToolWorkstationOS()
    {
-      return filter.toolLocOS;
+      return filter.toolWorkstationOS;
    }
 
    /**

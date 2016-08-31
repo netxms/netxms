@@ -42,10 +42,12 @@ public class Filter extends PropertyPage
 	private Button checkAgent;
 	private Button checkSNMP;
 	private Button checkMatchOID;
-	private Button checkMatchOS;
+	private Button checkMatchNodeOS;
+	private Button checkMatchWorkstationOS;
 	private Button checkMatchTemplate;
 	private Text textOID;
-	private Text textOS;
+	private Text textNodeOS;
+	private Text textWorkstationOS;
 	private Text textTemplate;
 
 	/* (non-Javadoc)
@@ -110,16 +112,16 @@ public class Filter extends PropertyPage
 		textOID.setLayoutData(gd);
 		textOID.setEnabled(checkMatchOID.getSelection());
 		
-		checkMatchOS = new Button(dialogArea, SWT.CHECK);
-		checkMatchOS.setText(Messages.get().Filter_OSShouldMatch);
-		checkMatchOS.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_OS_MATCH) != 0);
-		checkMatchOS.addSelectionListener(new SelectionListener() {
+		checkMatchNodeOS = new Button(dialogArea, SWT.CHECK);
+		checkMatchNodeOS.setText(Messages.get().Filter_OSShouldMatch);
+		checkMatchNodeOS.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_NODE_OS_MATCH) != 0);
+		checkMatchNodeOS.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e)
 			{
-				textOS.setEnabled(checkMatchOS.getSelection());
-				if (checkMatchOS.getSelection())
-					textOS.setFocus();
+				textNodeOS.setEnabled(checkMatchNodeOS.getSelection());
+				if (checkMatchNodeOS.getSelection())
+					textNodeOS.setFocus();
 			}
 
 			@Override
@@ -129,14 +131,45 @@ public class Filter extends PropertyPage
 			}
 		});
 		
-		textOS = new Text(dialogArea, SWT.BORDER);
-		textOS.setText(objectTool.getToolOS());
+		textNodeOS = new Text(dialogArea, SWT.BORDER);
+		textNodeOS.setText(objectTool.getToolNodeOS());
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalIndent = 20;
-		textOS.setLayoutData(gd);
-		textOS.setEnabled(checkMatchOS.getSelection());
+		textNodeOS.setLayoutData(gd);
+		textNodeOS.setEnabled(checkMatchNodeOS.getSelection());
+		
+		if (objectTool.getType() == ObjectTool.TYPE_LOCAL_COMMAND)
+		{
+   		checkMatchWorkstationOS = new Button(dialogArea, SWT.CHECK);
+   		checkMatchWorkstationOS.setText("Workstation OS name should match this template(coma separated regular expression list)");
+   		checkMatchWorkstationOS.setSelection((objectTool.getFlags() & ObjectTool.REQUIRES_WORKSTATION_OS_MATCH) != 0);
+   		checkMatchWorkstationOS.addSelectionListener(new SelectionListener() {         
+            @Override
+            public void widgetSelected(SelectionEvent e)
+            {
+               textWorkstationOS.setEnabled(checkMatchWorkstationOS.getSelection());
+               if (checkMatchWorkstationOS.getSelection())
+                  textWorkstationOS.setFocus();            
+            }
+            
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e)
+            {
+               widgetSelected(e);            
+            }
+         });
+   		
+   		textWorkstationOS = new Text(dialogArea, SWT.BORDER);
+   		textWorkstationOS.setText(objectTool.getToolWorkstationOS());
+   		gd = new GridData();
+   		gd.horizontalAlignment = SWT.FILL;
+         gd.grabExcessHorizontalSpace = true;
+         gd.horizontalIndent = 20;
+         textWorkstationOS.setLayoutData(gd);
+         textWorkstationOS.setEnabled(checkMatchWorkstationOS.getSelection());
+		}
 		
 		checkMatchTemplate = new Button(dialogArea, SWT.CHECK);
 		checkMatchTemplate.setText(Messages.get().Filter_TemplateShouldMatch);
@@ -193,12 +226,20 @@ public class Filter extends PropertyPage
 		
 		objectTool.setSnmpOid(textOID.getText());		
 
-      if (checkMatchOS.getSelection())
-         objectTool.setFlags(objectTool.getFlags() | ObjectTool.REQUIRES_OS_MATCH);
+      if (checkMatchNodeOS.getSelection())
+         objectTool.setFlags(objectTool.getFlags() | ObjectTool.REQUIRES_NODE_OS_MATCH);
       else
-         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.REQUIRES_OS_MATCH);
+         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.REQUIRES_NODE_OS_MATCH);
       
-      objectTool.setToolOS(textOS.getText());
+      objectTool.setToolNodeOS(textNodeOS.getText());
+      
+      if ((checkMatchWorkstationOS != null) && checkMatchWorkstationOS.getSelection())
+         objectTool.setFlags(objectTool.getFlags() | ObjectTool.REQUIRES_WORKSTATION_OS_MATCH);
+      else
+         objectTool.setFlags(objectTool.getFlags() & ~ObjectTool.REQUIRES_WORKSTATION_OS_MATCH);
+      
+      if (textWorkstationOS != null)
+         objectTool.setToolWorkstationOS(textWorkstationOS.getText());
 
       if (checkMatchTemplate.getSelection())
          objectTool.setFlags(objectTool.getFlags() | ObjectTool.REQUIRES_TEMPLATE_MATCH);

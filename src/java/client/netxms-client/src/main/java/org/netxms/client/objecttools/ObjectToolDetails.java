@@ -290,20 +290,20 @@ public class ObjectToolDetails extends ObjectTool
    }
 
    /**
-    * @param toolRemOS  the comma separated list of OS name regexps
+    * @param toolNodeOS  the comma separated list of OS name regexps
     */
-   public void setToolRemOS(String toolRemOS)
+   public void setToolNodeOS(String toolNodeOS)
    {
-      filter.toolRemOS = toolRemOS;
+      filter.toolNodeOS = toolNodeOS;
       modified = true;
    }
    
    /**
-    * @param toolLocOS  the comma separated list of OS name regexps
+    * @param toolWorkstationOS  the comma separated list of OS name regexps
     */
-   public void setToolLocOS(String toolLocOS)
+   public void setToolWorkstationOS(String toolWorkstationOS)
    {
-      filter.toolLocOS = toolLocOS;
+      filter.toolWorkstationOS = toolWorkstationOS;
       modified = true;
    }
 
