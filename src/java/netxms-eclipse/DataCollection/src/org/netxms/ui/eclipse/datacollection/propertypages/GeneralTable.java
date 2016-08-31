@@ -174,7 +174,6 @@ public class GeneralTable extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				selectParameter();
-				dci.setSourceNode(sourceNode.getObjectId());
 			}
       });
 
@@ -449,6 +448,7 @@ public class GeneralTable extends PropertyPage
 	private void selectParameter()
 	{
 		Dialog dlg;
+		editor.setSourceNode(sourceNode.getObjectId());
 		switch(origin.getSelectionIndex())
 		{
 			case DataCollectionObject.AGENT:

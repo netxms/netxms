@@ -449,6 +449,7 @@ public class GeneralTable extends PropertyPage
 	private void selectParameter()
 	{
 		Dialog dlg;
+		editor.setSourceNode(sourceNode.getObjectId());
 		switch(origin.getSelectionIndex())
 		{
 			case DataCollectionObject.AGENT:
