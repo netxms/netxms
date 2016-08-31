@@ -37,6 +37,7 @@ import org.netxms.ui.eclipse.jobs.ConsoleJob;
 public class DataCollectionObjectEditor
 {
 	DataCollectionObject object;
+	private long sourceNode;
 	private Runnable timer;
 	private Set<DataCollectionObjectListener> listeners = new HashSet<DataCollectionObjectListener>(); 
 	private TableColumnDataProvider callback;
@@ -182,5 +183,21 @@ public class DataCollectionObjectEditor
    public void setCallback(TableColumnDataProvider callback)
    {
       this.callback = callback;
+   }
+   
+   /**
+    * Sets temporary source node ID
+    */
+   public void setSourceNode(long nodeId)
+   {
+      sourceNode = nodeId;
+   }
+   
+   /**
+    * @return temporary source node ID
+    */
+   public long getSourceNode()
+   {
+      return sourceNode;
    }
 }

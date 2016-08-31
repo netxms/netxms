@@ -513,9 +513,9 @@ public class TableColumns extends PropertyPage
 				try
 				{
 				   final org.netxms.client.Table table;
-				   if (dci.getSourceNode() != 0)
+				   if (editor.getSourceNode() != 0)
 				   {
-				      table = session.queryAgentTable(dci.getSourceNode(), name);
+				      table = session.queryAgentTable(editor.getSourceNode(), name);
 				   }
 				   else
 				   {
