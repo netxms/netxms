@@ -29,7 +29,7 @@ public class ConnectionTest extends AbstractSessionTest
    {
       final NXCSession session = connect();
 
-      assertEquals(0, session.getUserId());
+      assertEquals(TestConstants.USER_ID, session.getUserId());
       
       Thread.sleep(2000);
       session.disconnect();
@@ -39,7 +39,7 @@ public class ConnectionTest extends AbstractSessionTest
    {
       final NXCSession session = connect(true);
 
-      assertEquals(0, session.getUserId());
+      assertEquals(TestConstants.USER_ID, session.getUserId());
       
       Thread.sleep(2000);
       session.disconnect();

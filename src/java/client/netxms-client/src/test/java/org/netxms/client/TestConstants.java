@@ -36,6 +36,7 @@ public class TestConstants
    public static String ACTION = "netstat";
    public static int EVENT_CODE = 100000;
    public static int CONNECTION_POOL = 100;
+   public static int USER_ID = 1;
    //Reinitialize variables from properties file
    public static TestConstants testConstants = new TestConstants();
    
@@ -57,6 +58,7 @@ public class TestConstants
          ACTION = properties.getProperty("action", "echo");
          EVENT_CODE = Integer.parseInt(properties.getProperty("event.code", "29"));
          CONNECTION_POOL = Integer.parseInt(properties.getProperty("connection.pull", "100"));
+         USER_ID = Integer.parseInt(properties.getProperty("user.id", "1"));
       }
       catch (Exception e)
       {
