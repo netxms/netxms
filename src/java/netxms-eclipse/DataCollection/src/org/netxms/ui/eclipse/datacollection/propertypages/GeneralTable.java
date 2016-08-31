@@ -174,6 +174,7 @@ public class GeneralTable extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				selectParameter();
+				dci.setSourceNode(sourceNode.getObjectId());
 			}
       });
 
@@ -451,7 +452,10 @@ public class GeneralTable extends PropertyPage
 		switch(origin.getSelectionIndex())
 		{
 			case DataCollectionObject.AGENT:
-				dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), true);
+			   if (sourceNode.getObjectId() != 0)
+               dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), true);
+            else
+               dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), true);
 				break;
 			case DataCollectionObject.SNMP:
 			case DataCollectionObject.CHECKPOINT_SNMP:
@@ -464,7 +468,10 @@ public class GeneralTable extends PropertyPage
 				{
 					oid = null;
 				}
-				dlg = new SelectSnmpParamDlg(getShell(), oid, dci.getNodeId());
+				if (sourceNode.getObjectId() != 0)
+               dlg = new SelectSnmpParamDlg(getShell(), oid, sourceNode.getObjectId());
+            else
+               dlg = new SelectSnmpParamDlg(getShell(), oid, dci.getNodeId());
 				break;
 			default:
 				dlg = null;
