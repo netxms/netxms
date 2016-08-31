@@ -183,7 +183,7 @@ public class TableConditionsEditor extends Composite
 		}
 		
 		/**
-		 * Get consfigured conditions
+		 * Get configured conditions
 		 * 
 		 * @return
 		 */
@@ -265,7 +265,7 @@ public class TableConditionsEditor extends Composite
 			value = toolkit.createText(parent, ""); //$NON-NLS-1$
 			value.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 			
-			ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.NONE);
+			final ImageHyperlink link = toolkit.createImageHyperlink(parent, SWT.NONE);
 			link.setImage(SharedIcons.IMG_DELETE_OBJECT);
 			link.setToolTipText(Messages.get().TableConditionsEditor_DeleteCond);
 			link.addHyperlinkListener(new HyperlinkAdapter() {
@@ -273,6 +273,7 @@ public class TableConditionsEditor extends Composite
 				public void linkActivated(HyperlinkEvent e)
 				{
 					group.deleteCondition(ConditionEditor.this);
+					link.dispose();
 				}
 			});
 			link.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
