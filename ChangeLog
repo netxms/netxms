@@ -16,7 +16,7 @@
 	Agent.SNMP.Responses, Agent.SNMP.ServerRequests
 - Management console
 	- Fixed glitches in table value view
-- Fixed issues: #826, #851, #987, #1273, #1277, #1278, #1280
+- Fixed issues: #753, #826, #851, #987, #1273, #1277, #1278, #1280
 
 
 *
