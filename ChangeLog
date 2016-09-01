@@ -1,4 +1,25 @@
 *
+* 2.0.6
+*
+
+- Fixed incorrect interface network mask reported by agent on Windows XP and Windows Server 2003
+- Added option to turn off quotes in AT+CMGS command in generic SMS driver
+- Improved compatibility with different GSM modem types in generic SMS driver
+- Fixed SQL errors when saving LDAP users to database
+- Fixed excessive temporary files creation by web UI
+- Fixed build errors on Solaris 11
+- Fixed memory leak in Oracle DB driver
+- Fixed bug in SNMP transport causing false timeout errors
+- New agent metrics for self-monitoring:
+	Agent.Proxy.ActiveSessions, Agent.Proxy.ConnectionRequests, Agent.Proxy.IsEnabled,
+	Agent.SNMP.IsProxyEnabled, Agent.SNMP.IsTrapProxyEnabled, Agent.SNMP.Requests,
+	Agent.SNMP.Responses, Agent.SNMP.ServerRequests
+- Management console
+	- Fixed glitches in table value view
+- Fixed issues: #826, #851, #987, #1273, #1277, #1278, #1280
+
+
+*
 * 2.0.5
 *
 
