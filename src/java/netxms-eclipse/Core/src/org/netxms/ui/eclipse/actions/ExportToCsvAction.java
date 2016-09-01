@@ -111,6 +111,8 @@ public class ExportToCsvAction extends Action
 	public void run()
 	{
 		FileDialog dlg = new FileDialog(viewPart.getSite().getShell(), SWT.SAVE);
+		dlg.setFilterExtensions(new String[] { "*.csv", "*.*" });
+		dlg.setFilterNames(new String[] { "CSV files", "All files"});
 		final String fileName = dlg.open();
 		if (fileName == null)
 			return;
