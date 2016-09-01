@@ -4,9 +4,10 @@
 - New policy type: Log Parser
 - New server configuration parameter "JobRetryCount"
 - Chassis objects
+- Hypervisor monitoring subagent
 - In case of Policy deploy, Policy uninstall or File upload jobs fail they are scheduled for reinstallation(scheduled tasks)  "JobRetryCount" times. First time job is rescheduled in 10 minutes. Each next wait time is twice more than the previous time. 
 - If policy is known as installed on the node by the server and agent reposts that it is not installed it is being reinstalled.
-- Added configuration option to logparser to generate event only if regular expression have been matched exact count of the times in a predefined time period
+- Added configuration option to log parser to generate event only if regular expression have been matched exact count of the times in a predefined time period
 - New internal parameters: Server.ReceivedSNMPTraps, Server.ReceivedSyslogMessages, ReceivedSNMPTraps, ReceivedSyslogMessages
 - Max size of agent data collectiors pool can be configured
 - Agent data reconciliation block size and timeout can be configured
@@ -19,15 +20,32 @@
 - Built-in superuser account renamed to "system"
 - Default "admin" account now is ordinary member of "Admins" group without built-in privileges
 - New agent metrics for self-monitoring:
-	Agent.Proxy.ActiveSessions, Agent.Proxy.ConnectionRequests, Agent.Proxy.IsEnabled,
-	Agent.SNMP.IsProxyEnabled, Agent.SNMP.IsTrapProxyEnabled, Agent.SNMP.Requests,
-	Agent.SNMP.Responses, Agent.SNMP.ServerRequests, Agent.SyslogProxy.IsEnabled,
-	Agent.SyslogProxy.ReceivedMessages, Agent.SyslogProxy.QueueSize
+	Agent.SyslogProxy.IsEnabled, Agent.SyslogProxy.ReceivedMessages, Agent.SyslogProxy.QueueSize
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu
+- Fixed issues: #92, #568, #906, #909, #942, #959, #992, #999, #1006, #1051, #1096, #1100, #1159, #1187, #1191, #1230, #1237, #1245, #1246, #1249, #1254, #1261, #1263, #1275
+
+
+*
+* 2.0.6
+*
+
+- Fixed incorrect interface network mask reported by agent on Windows XP and Windows Server 2003
+- Added option to turn off quotes in AT+CMGS command in generic SMS driver
+- Improved compatibility with different GSM modem types in generic SMS driver
+- Fixed SQL errors when saving LDAP users to database
+- Fixed excessive temporary files creation by web UI
+- Fixed build errors on Solaris 11
+- Fixed memory leak in Oracle DB driver
+- Fixed bug in SNMP transport causing false timeout errors
+- New agent metrics for self-monitoring:
+	Agent.Proxy.ActiveSessions, Agent.Proxy.ConnectionRequests, Agent.Proxy.IsEnabled,
+	Agent.SNMP.IsProxyEnabled, Agent.SNMP.IsTrapProxyEnabled, Agent.SNMP.Requests,
+	Agent.SNMP.Responses, Agent.SNMP.ServerRequests
+- Management console
 	- Fixed glitches in table value view
-- Fixed issues: #92, #568, #826, #851, #906, #909, #942, #959, #987, #992, #999, #1006, #1051, #1096, #1100, #1159, #1187, #1191, #1230, #1237, #1245, #1246, #1249, #1254, #1261, #1263, #1273, #1275, #1277, #1278, #1280
+- Fixed issues: #826, #851, #987, #1273, #1277, #1278, #1280
 
 
 *
