@@ -65,6 +65,7 @@ import org.netxms.ui.eclipse.tools.MessageDialogHelper;
  */
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor implements KeyStoreRequestListener, KeyStoreEntryPasswordRequestListener
 {
+   private IDialogSettings settings;
    /**
     * @param configurer
     */
@@ -113,6 +114,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
    public void postWindowCreate()
    {
       IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
+      configurer.setTitle(configurer.getTitle() + " - [" + settings.get("Connect.Login") + "@" + settings.get("Connect.Server") + "]"); 
 
       NXCSession session = ConsoleSharedData.getSession();
       Activator activator = Activator.getDefault();
@@ -203,7 +205,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor im
     */
    private void doLogin(final Display display)
    {
-      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings = Activator.getDefault().getDialogSettings();
       boolean success = false;
       boolean autoConnect = false;
       boolean ignoreProtocolVersion = false;

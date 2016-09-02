@@ -89,6 +89,25 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	{
 		super.postWindowCreate();
 		
+		NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+		
+		// Changes the page title at runtime
+      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+      if (executor != null)
+      {
+         StringBuilder js = new StringBuilder();
+         js.append("document.title = "); //$NON-NLS-1$
+         js.append("\"");
+         js.append(Messages.get().ApplicationWorkbenchWindowAdvisor_AppTitle);
+         js.append(" - [");
+         js.append(session.getUserName());
+         js.append("@");
+         js.append(session.getServerAddress());
+         js.append("]");
+         js.append("\"");
+         executor.execute(js.toString());
+      }
+
 		BindingService service = (BindingService)getWindowConfigurer().getWindow().getWorkbench().getService(IBindingService.class);
 		BindingManager bindingManager = service.getBindingManager();
 		try
