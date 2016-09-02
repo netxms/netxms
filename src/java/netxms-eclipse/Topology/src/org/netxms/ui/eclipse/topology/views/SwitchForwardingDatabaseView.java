@@ -31,6 +31,11 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -49,6 +54,8 @@ import org.netxms.ui.eclipse.topology.Activator;
 import org.netxms.ui.eclipse.topology.Messages;
 import org.netxms.ui.eclipse.topology.views.helpers.FDBComparator;
 import org.netxms.ui.eclipse.topology.views.helpers.FDBLabelProvider;
+import org.netxms.ui.eclipse.topology.views.helpers.SwitchForwardingDatabaseFilter;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -71,6 +78,12 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	private Action actionRefresh;
 	private Action actionExportToCsv;
 	private Action actionExportAllToCsv;
+	private Action actionShowFilter;
+	
+	private Composite resultArea;
+	private FilterText filterText;
+	private SwitchForwardingDatabaseFilter filter;
+	private boolean filterEnabled = true;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -98,6 +111,36 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
+      // Create result area
+      resultArea = new Composite(parent, SWT.BORDER);
+      FormLayout formLayout = new FormLayout();
+      resultArea.setLayout(formLayout);
+      // Create filter area
+      filterText = new FilterText(resultArea, SWT.BORDER);
+      filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+            actionShowFilter.setChecked(filterEnabled);
+         }
+      });
+
+      // Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      ;
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
+	   
 		final String[] names = { 
 		      Messages.get().SwitchForwardingDatabaseView_ColMacAddr, 
 		      Messages.get().SwitchForwardingDatabaseView_ColPort, 
@@ -107,10 +150,12 @@ public class SwitchForwardingDatabaseView extends ViewPart
 		      Messages.get().SwitchForwardingDatabaseView_ColType
 		   };
 		final int[] widths = { 180, 100, 200, 100, 250, 110 };
-		viewer = new SortableTableViewer(parent, names, widths, COLUMN_MAC_ADDRESS, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
+		viewer = new SortableTableViewer(resultArea, names, widths, COLUMN_MAC_ADDRESS, SWT.DOWN, SWT.FULL_SELECTION | SWT.MULTI);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new FDBLabelProvider());
 		viewer.setComparator(new FDBComparator());
+		filter = new SwitchForwardingDatabaseFilter();
+		viewer.addFilter(filter);
 		
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "SwitchForwardingDatabase"); //$NON-NLS-1$
 		viewer.getTable().addDisposeListener(new DisposeListener() {
@@ -120,6 +165,14 @@ public class SwitchForwardingDatabaseView extends ViewPart
 				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "SwitchForwardingDatabase"); //$NON-NLS-1$
 			}
 		});
+		
+		// Setup layout
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);;
+      fd.top = new FormAttachment(filterText, 0, SWT.BOTTOM);
+      fd.bottom = new FormAttachment(100, 0);
+      fd.right = new FormAttachment(100, 0);
+      viewer.getControl().setLayoutData(fd);
 
 		createActions();
 		contributeToActionBars();
@@ -127,6 +180,41 @@ public class SwitchForwardingDatabaseView extends ViewPart
 		
 		refresh();
 	}
+	
+   /**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   public void enableFilter(boolean enable)
+   {
+      filterEnabled = enable;
+      filterText.setVisible(filterEnabled);
+      FormData fd = (FormData)viewer.getTable().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
+      resultArea.layout();
+      if (enable)
+      {
+         filterText.setFocus();
+      }
+      else
+      {
+         filterText.setText("");
+         onFilterModify();
+      }
+
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   public void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+   }
+
 	/**
 	 * Create actions
 	 */
@@ -142,6 +230,16 @@ public class SwitchForwardingDatabaseView extends ViewPart
 
 		actionExportToCsv = new ExportToCsvAction(this, viewer, true);
 		actionExportAllToCsv = new ExportToCsvAction(this, viewer, false);
+		
+		actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
+	        @Override
+	        public void run()
+	        {
+	           enableFilter(!filterEnabled);
+	           actionShowFilter.setChecked(filterEnabled);
+	        }
+	      };
+	      actionShowFilter.setChecked(filterEnabled);
 	}
 
 	/**
@@ -163,6 +261,7 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionExportAllToCsv);
+		manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}
@@ -231,7 +330,7 @@ public class SwitchForwardingDatabaseView extends ViewPart
          @Override
          protected void runInternal(IProgressMonitor monitor) throws Exception
          {
-            final List<FdbEntry> fdb = session.getSwitchForwardingDatabase(rootObject);
+            final List<FdbEntry> fdb = session.getSwitchForwardingDatabase(rootObject);               
             runInUIThread(new Runnable() {
                @Override
                public void run()
