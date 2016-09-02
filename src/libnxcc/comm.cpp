@@ -68,12 +68,16 @@ static void ProcessClusterNotification(ClusterNodeInfo *node, int code)
    {
       case CN_NEW_MASTER:
          ClusterDebug(3, _T("Node %d [%s] is new master"), node->m_id, (const TCHAR *)node->m_addr->toString());
+         MutexLock(node->m_mutex);
          node->m_master = true;
          ChangeClusterNodeState(node, CLUSTER_NODE_UP);
+         MutexUnlock(node->m_mutex);
          ConditionSet(s_joinCondition);
          break;
       case CN_NODE_RUNNING:
+         MutexLock(node->m_mutex);
          ChangeClusterNodeState(node, CLUSTER_NODE_UP);
+         MutexUnlock(node->m_mutex);
          break;
       default:
          if (code >= CN_CUSTOM)
@@ -209,6 +213,7 @@ static int FindClusterNode(UINT32 id)
 
 /**
  * Change cluster node state
+ * Mutex on ClusterNodeInfo structure should be locked by caller
  */
 void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state)
 {
@@ -219,6 +224,7 @@ void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state)
 
    node->m_state = state;
    ClusterDebug(1, _T("Cluster node %d [%s] changed state to %s"), node->m_id, (const TCHAR *)node->m_addr->toString(), stateNames[state]);
+   THREAD receiverThread;
    switch(state)
    {
       case CLUSTER_NODE_CONNECTED:
@@ -227,8 +233,12 @@ void ChangeClusterNodeState(ClusterNodeInfo *node, ClusterNodeState state)
             ThreadPoolExecute(g_nxccThreadPool, ClusterNodeJoin, node);
          break;
       case CLUSTER_NODE_DOWN:
-         ThreadJoin(node->m_receiverThread);
+         receiverThread = node->m_receiverThread;
          node->m_receiverThread = INVALID_THREAD_HANDLE;
+         MutexUnlock(node->m_mutex);
+         // Join receiver thread with node mutex unlocked to avoid deadlock
+         ThreadJoin(receiverThread);
+         MutexLock(node->m_mutex);
          g_nxccEventHandler->onNodeDisconnect(node->m_id);
          if (node->m_master)
          {
