@@ -336,6 +336,53 @@ public class HostSearchResults extends ViewPart
 			MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning, String.format(Messages.get().HostSearchResults_ShowError, e.getLocalizedMessage()));
 		}
 	}
+	
+   /**
+    * Show connection point information
+    * 
+    * @param cp[] connection point information
+    */
+   public static void showConnection(ConnectionPoint[] cps)
+   {
+      final Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+      int counter = 0;
+      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      try
+      {
+         Node host;
+         AbstractObject iface;
+
+         for (ConnectionPoint p : cps)
+         {
+            host = (Node)session.findObjectById(p.getLocalNodeId());
+            iface = session.findObjectById(p.getLocalInterfaceId());     
+            
+            if (!p.hasConnection())
+               counter++;
+            
+            if ((host != null) && (iface != null))
+            {
+
+            IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+            IViewPart part = page.showView(ID);
+            ((HostSearchResults)part).addResult(p);
+            }
+         }
+         if (counter > 0)
+         {
+            MessageDialogHelper
+            .openWarning(shell, Messages.get().HostSearchResults_Warning, Messages.get().HostSearchResults_NotFound + " for " + counter + " interfaces!");
+         }
+         
+      }
+      catch(Exception e)
+      {
+         MessageDialogHelper.openWarning(shell, Messages.get().HostSearchResults_Warning,
+               String.format(Messages.get().HostSearchResults_ShowError, e.getLocalizedMessage()));
+      }
+      
+   }
+      
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#dispose()

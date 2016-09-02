@@ -39,6 +39,7 @@ public class ConnectionPoint
 	private int interfaceIndex;
 	private ConnectionPointType type; 
 	private Object data;
+	private boolean hasConnection = true;
 	
 	/**
 	 * Create connection point information from NXCP message
@@ -56,6 +57,21 @@ public class ConnectionPoint
 		localIpAddress = msg.getFieldAsInetAddress(NXCPCodes.VID_IP_ADDRESS);
 		type = ConnectionPointType.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_CONNECTION_TYPE));
 	}
+	
+	
+	/**
+	 * Create unconnected connection point information
+	 * 
+	 * @param localNodeId
+	 * @param localInterfaceId
+	 * @param hasConnection
+	 */
+	public ConnectionPoint(long localNodeId, long localInterfaceId, boolean hasConnection)
+	{
+	   this.localNodeId = localNodeId;
+	   this.localInterfaceId = localInterfaceId;
+	   this.hasConnection = hasConnection;
+	}
 
 	/**
 	 * @return the nodeId
@@ -63,6 +79,14 @@ public class ConnectionPoint
 	public long getNodeId()
 	{
 		return nodeId;
+	}
+	
+	/** Set node ID
+	 * @param nodeId
+	 */
+	public void setNodeId(long nodeId)
+	{
+	   this.nodeId = nodeId;
 	}
 
 	/**
@@ -72,6 +96,14 @@ public class ConnectionPoint
 	{
 		return interfaceId;
 	}
+	
+	/** Set interface ID
+    * @param interfaceId
+    */
+	public void setInterfaceId(long interfaceId)
+	{
+	   this.interfaceId = interfaceId;
+	}
 
 	/**
 	 * @return the interfaceIndex
@@ -79,6 +111,14 @@ public class ConnectionPoint
 	public int getInterfaceIndex()
 	{
 		return interfaceIndex;
+	}
+	
+	/** Set interface insex
+    * @param interfaceIndex
+    */
+	public void setInterfaceIndex(int interfaceIndex)
+	{
+	   this.interfaceIndex = interfaceIndex;
 	}
 
 	/**
@@ -139,5 +179,15 @@ public class ConnectionPoint
    public ConnectionPointType getType()
    {
       return type;
+   }
+   
+   public boolean hasConnection()
+   {
+      return hasConnection;
+   }
+   
+   public void setConnection(boolean hasConnection)
+   {
+      this.hasConnection = hasConnection;
    }
 }

@@ -9,7 +9,7 @@
             objectClass="org.netxms.client.objects.Node">
          <action
                class="org.netxms.ui.eclipse.topology.actions.FindConnectionPoint"
-               enablesFor="1"
+               enablesFor="+"
                id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#Node"
                label="%action.label.FindSwitchPort"
                menubarPath="topology"
@@ -70,7 +70,7 @@
             objectClass="org.netxms.client.objects.Interface">
          <action
                class="org.netxms.ui.eclipse.topology.actions.FindConnectionPoint"
-               enablesFor="1"
+               enablesFor="+"
                id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#Interface"
                label="%action.label.FindSwitchPort"
                menubarPath="topology"
@@ -83,7 +83,7 @@
             objectClass="org.netxms.client.objects.AccessPoint">
          <action
                class="org.netxms.ui.eclipse.topology.actions.FindConnectionPoint"
-               enablesFor="1"
+               enablesFor="+"
                id="org.netxms.ui.eclipse.topology.popupActions.FindConnectionPoint#AccessPoint"
                label="%action.label.FindSwitchPort"
                menubarPath="topology"

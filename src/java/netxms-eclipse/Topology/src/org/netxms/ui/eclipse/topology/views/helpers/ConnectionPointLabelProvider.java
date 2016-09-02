@@ -96,7 +96,10 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 			case HostSearchResults.COLUMN_INTERFACE:
 				return getObjectName(cp.getLocalInterfaceId());
 			case HostSearchResults.COLUMN_MAC_ADDRESS:
-				return cp.getLocalMacAddress().toString();
+			   if (cp.getLocalMacAddress() == null)
+			      return "n/a";
+			   else
+			      return cp.getLocalMacAddress().toString();
 			case HostSearchResults.COLUMN_IP_ADDRESS:
 				InetAddress addr = cp.getLocalIpAddress();
 				if (addr != null)
@@ -107,10 +110,18 @@ public class ConnectionPointLabelProvider extends LabelProvider implements ITabl
 				InetAddress a = iface.getFirstUnicastAddress();
 				return (a != null) ? a.getHostAddress() : ""; //$NON-NLS-1$
 			case HostSearchResults.COLUMN_SWITCH:
-				return getObjectName(cp.getNodeId());
+			   if ((cp.getNodeId() == 0))
+			      return "n/a";
+			   else
+			      return getObjectName(cp.getNodeId());
 			case HostSearchResults.COLUMN_PORT:
-				return getObjectName(cp.getInterfaceId());
+			   if (cp.getInterfaceId() == 0)
+			      return "n/a";
+			   else
+			      return getObjectName(cp.getInterfaceId());
 			case HostSearchResults.COLUMN_TYPE:
+			   if (cp.getType() == null)
+               return "n/a";
 			   switch(cp.getType())
 			   {
 			      case DIRECT:

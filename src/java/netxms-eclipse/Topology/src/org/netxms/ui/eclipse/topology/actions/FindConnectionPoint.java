@@ -18,6 +18,8 @@
  */
 package org.netxms.ui.eclipse.topology.actions;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -43,7 +45,7 @@ import org.netxms.ui.eclipse.topology.views.HostSearchResults;
 public class FindConnectionPoint implements IObjectActionDelegate
 {
 	private IWorkbenchPart wbPart;
-	private long objectId;
+	private List<Long> objectId = null;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
@@ -51,17 +53,29 @@ public class FindConnectionPoint implements IObjectActionDelegate
 	@Override
 	public void run(IAction action)
 	{
+	   if ((objectId == null) || (objectId.isEmpty()))
+	      return;
+	   
 		final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
-		new ConsoleJob(String.format(Messages.get().FindConnectionPoint_JobTitle, objectId), wbPart, Activator.PLUGIN_ID, null) {
+		new ConsoleJob(Messages.get().FindConnectionPoint_JobTitle, wbPart, Activator.PLUGIN_ID, null) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				final ConnectionPoint cp = session.findConnectionPoint(objectId);
+			   final ConnectionPoint[] cps = new ConnectionPoint[objectId.size()];
+			   for (int i = 0; i < objectId.size(); i++)
+			   {
+			      cps[i] = session.findConnectionPoint(objectId.get(i));
+			      if (cps[i] == null)
+			         cps[i] = new ConnectionPoint(session.findObjectById(objectId.get(i)).getParentIdList()[0], objectId.get(i), false);
+			   }
 				runInUIThread(new Runnable() {
 					@Override
 					public void run()
 					{
-						HostSearchResults.showConnection(cp);
+					   if (cps.length == 1)
+					      HostSearchResults.showConnection(cps[0]);
+					   else
+					      HostSearchResults.showConnection(cps);
 					}
 				});
 			}
@@ -81,24 +95,22 @@ public class FindConnectionPoint implements IObjectActionDelegate
 	public void selectionChanged(IAction action, ISelection selection)
 	{
 		if ((selection instanceof IStructuredSelection) &&
-		    (((IStructuredSelection)selection).size() == 1))
+		    (((IStructuredSelection)selection).size() != 0))
 		{
-			Object obj = ((IStructuredSelection)selection).getFirstElement();
-			if ((obj instanceof Node) || (obj instanceof Interface) || (obj instanceof AccessPoint))
+		   objectId = new ArrayList<Long>();
+			for (Object s : ((IStructuredSelection)selection).toList())
 			{
-				action.setEnabled(true);
-				objectId = ((AbstractObject)obj).getObjectId();
-			}
-			else
-			{
-				action.setEnabled(false);
-				objectId = 0;
+			   if ((s instanceof Node) || (s instanceof Interface) || (s instanceof AccessPoint))
+			   {
+			      action.setEnabled(true);
+			      objectId.add(((AbstractObject)s).getObjectId());
+			   }
 			}
 		}
 		else
 		{
 			action.setEnabled(false);
-			objectId = 0;
+			objectId = null;
 		}
 	}
 
