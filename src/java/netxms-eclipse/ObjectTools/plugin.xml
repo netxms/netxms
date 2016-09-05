@@ -194,9 +194,10 @@
             id="org.netxms.ui.eclipse.objecttools.propertypages.Columns#4"
             name="%page.name.Columns">
          <enabledWhen>
-            <instanceof
-                  value="org.netxms.client.objecttools.ObjectTool">
-            </instanceof>
+            <test
+                  forcePluginActivation="true"
+                  property="org.netxms.ui.eclipse.objecttools.hasType">
+            </test>
          </enabledWhen>
       </page>
       <page
@@ -263,6 +264,16 @@
             class="org.netxms.ui.eclipse.objecttools.WakeupToolHandler"
             id="wakeup">
       </handler>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="org.netxms.ui.eclipse.objecttools.ObjectToolsPopertyTester"
+            id="org.netxms.ui.eclipse.objecttools.ObjectToolsPropertyTester"
+            namespace="org.netxms.ui.eclipse.objecttools"
+            properties="hasType"
+            type="org.netxms.client.objecttools.ObjectTool">
+      </propertyTester>
    </extension>
 
 </plugin>
