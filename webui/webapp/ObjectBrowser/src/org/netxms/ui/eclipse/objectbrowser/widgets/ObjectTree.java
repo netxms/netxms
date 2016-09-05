@@ -709,7 +709,7 @@ public class ObjectTree extends Composite
                      filter = ObjectSelectionDialog.createNetworkMapGroupsSelectionFilter();
                      break;
                   case POLICIES:
-                     filter = ObjectSelectionDialog.createPolicySelectionFilter();
+                     filter = ObjectSelectionDialog.createPolicyGroupSelectionFilter();
                      break;
                   default:
                      filter = null;

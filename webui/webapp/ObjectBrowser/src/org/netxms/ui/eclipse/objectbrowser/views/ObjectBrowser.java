@@ -731,7 +731,7 @@ public class ObjectBrowser extends ViewPart
 			   filter = ObjectSelectionDialog.createNetworkMapGroupsSelectionFilter();
 			   break;
 			case POLICIES:
-			   filter = ObjectSelectionDialog.createPolicySelectionFilter();
+			   filter = ObjectSelectionDialog.createPolicyGroupSelectionFilter();
 			   break;
 			default:
 				filter = null;

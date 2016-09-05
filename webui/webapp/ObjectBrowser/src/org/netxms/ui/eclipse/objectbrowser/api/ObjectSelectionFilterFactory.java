@@ -128,11 +128,27 @@ public class ObjectSelectionFilterFactory
     * 
     * @return Class filter for policies group selection
     */
-   public Set<Integer> createPolicySelectionFilter()
+   public Set<Integer> createPolicyGroupSelectionFilter()
    {
       HashSet<Integer> classFilter = new HashSet<Integer>(2);
       classFilter.add(AbstractObject.OBJECT_POLICYROOT);
       classFilter.add(AbstractObject.OBJECT_POLICYGROUP);      
+      return classFilter;
+   }
+   
+   /**
+    * Create filter for policies selection.
+    * 
+    * @return Class filter for policies selection
+    */
+   public Set<Integer> createPolicySelectionFilter()
+   {
+      HashSet<Integer> classFilter = new HashSet<Integer>(5);
+      classFilter.add(AbstractObject.OBJECT_POLICYROOT);
+      classFilter.add(AbstractObject.OBJECT_POLICYGROUP);
+      classFilter.add(AbstractObject.OBJECT_AGENTPOLICY);
+      classFilter.add(AbstractObject.OBJECT_AGENTPOLICY_CONFIG);
+      classFilter.add(AbstractObject.OBJECT_AGENTPOLICY_LOGPARSER);
       return classFilter;
    }
 	

@@ -613,6 +613,12 @@
                label="%action.label.CreateIface"
                menubarPath="CreateObjectSubmenu/additions">
          </action>
+         <action
+               class="org.netxms.ui.eclipse.objectmanager.actions.ApplyPolicy"
+               id="org.netxms.ui.eclipse.objectmanager.actions.ApplyPolicy"
+               label="Apply policy"
+               menubarPath="objectbinding">
+         </action>
       </objectContribution>
 
 

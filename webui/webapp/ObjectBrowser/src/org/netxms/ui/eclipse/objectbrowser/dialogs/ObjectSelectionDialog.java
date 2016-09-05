@@ -96,6 +96,16 @@ public class ObjectSelectionDialog extends Dialog
 	}
 	
 	/**
+    * Create filter for policy group selection.
+    * 
+    * @return Class filter for policy group selection
+    */
+   public static Set<Integer> createPolicyGroupSelectionFilter()
+   {
+      return ObjectSelectionFilterFactory.getInstance().createPolicyGroupSelectionFilter();
+   }
+   
+   /**
     * Create filter for policy selection.
     * 
     * @return Class filter for policy selection
