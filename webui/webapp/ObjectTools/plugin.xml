@@ -178,10 +178,14 @@
             id="org.netxms.ui.eclipse.objecttools.propertypages.Columns#4"
             name="%page.name.Columns">
          <enabledWhen>
-            <test
-                  forcePluginActivation="true"
-                  property="org.netxms.ui.eclipse.objecttools.hasType">
-            </test>
+            <and>
+               <instanceof
+                     value="org.netxms.client.objecttools.ObjectTool">
+               </instanceof>
+               <test
+                     property="org.netxms.ui.eclipse.objecttools.hasObjectToolsType">
+               </test>
+            </and>
          </enabledWhen>
       </page>
       <page
@@ -255,7 +259,7 @@
             class="org.netxms.ui.eclipse.objecttools.ObjectToolsPopertyTester"
             id="org.netxms.ui.eclipse.objecttools.ObjectToolsPropertyTester"
             namespace="org.netxms.ui.eclipse.objecttools"
-            properties="hasType"
+            properties="hasObjectToolsType"
             type="org.netxms.client.objecttools.ObjectTool">
       </propertyTester>
    </extension>

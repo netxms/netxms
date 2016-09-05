@@ -30,7 +30,7 @@ public class ObjectToolsPopertyTester extends PropertyTester
    @Override
    public boolean test(Object receiver, String property, Object[] args, Object expectedValue)
    {
-      if (!(receiver instanceof ObjectTool))
+      if (!(receiver instanceof ObjectTool) || !property.equals("hasObjectToolsType"))
          return false;
 
       ObjectTool objectTool = (ObjectTool)receiver;
