@@ -191,7 +191,7 @@ StringList *SSHSession::execute(const TCHAR *command)
                curr = eol + 1;
                eol = strchr(curr, '\n');
             }
-            offset = strlen(curr);
+            offset = (int)strlen(curr);
             if (offset > 0)
                memmove(buffer, curr, offset);
             nbytes = ssh_channel_read(channel, &buffer[offset], sizeof(buffer) - offset - 1, 0);

@@ -248,7 +248,7 @@ void CNxconfigApp::CreateAgentConfig()
       }
       _ftprintf(fp, _T("FileStore = %s\\var\n"), m_szInstallDir);
       _ftprintf(fp, _T("RequireAuthentication = no\n"));
-      _ftprintf(fp, _T("SubAgent = winperf.nsm\nSubAgent = portcheck.nsm\n"));
+      _ftprintf(fp, _T("SubAgent = winperf.nsm\nSubAgent = portcheck.nsm\nSubAgent = ping.nsm\nSubAgent = ssh.nsm\n"));
       fclose(fp);
    }
 }
