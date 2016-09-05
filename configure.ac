@@ -102,6 +102,7 @@ TUXEDO_LIBS=""
 TUXEDO_TPINIT=""
 MONGODB_LIBS=""
 VMGR_LIBS=""
+LIBVIRT_BASE=""
 DISABLE_IPV6="no"
 IPV6_SUPPORT="no"
 INSTALL_LIBPATH=""
@@ -308,12 +309,17 @@ AC_ARG_WITH(mongodb,
 fi ])
 
 AC_ARG_WITH(vmgr,
-[AS_HELP_STRING(--with-vmgr,build VirtualHost managmet subagent)],
+[AS_HELP_STRING(--with-vmgr,build VirtualHost management subagent)],
+[ if test "x$withval" != "xno" ; then
+	COMPONENTS="$COMPONENTS vmgr"
+fi ])
+
+AC_ARG_WITH(libvirt,
+[AS_HELP_STRING(--with-libvirt,provide libvirt location)],
 [ if test "x$withval" != "xno" ; then
 	if test "x$withval" != "x" && test "x$withval" != "xyes" ; then
-		VMGR_BASE="$withval"
+		LIBVIRT_BASE="$withval"
 	fi
-	COMPONENTS="$COMPONENTS vmgr"
 fi ])
 
 AC_ARG_WITH(sqlite,
@@ -2967,19 +2973,19 @@ if test $? = 0; then
 	OLD_LDFLAGS="$LDFLAGS"
 	OLD_LIBS="$LIBS"
 
-	if test "x$VMGR_BASE" != "x"; then
-		VMGR_CPPFLAGS="-I$VMGR_BASE/include/libvirt/"
-		VMGR_LDFLAGS="-L$VMGR_BASE/lib"
+	if test "x$LIBVIRT_BASE" != "x"; then
+		VMGR_CPPFLAGS="-I$LIBVIRT_BASE/include"
+		VMGR_LDFLAGS="-L$LIBVIRT_BASE/lib"
 		CPPFLAGS="$CPPFLAGS $VMGR_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $VMGR_LDFLAGS"
 	else
-        	VMGR_CPPFLAGS="-I/usr/include/libvirt/"
-		VMGR_LDFLAGS="-L/usr/lib"
+        	VMGR_CPPFLAGS=""
+		VMGR_LDFLAGS=""
 		CPPFLAGS="$CPPFLAGS $VMGR_CPPFLAGS"
 		LDFLAGS="$LDFLAGS $VMGR_LDFLAGS"
     	fi
 	
-	AC_CHECK_HEADER(libvirt.h,,AC_MSG_ERROR([*** Cannot find libvirt.h - check your libvirt installation ***]))
+	AC_CHECK_HEADER(libvirt/libvirt.h,,AC_MSG_ERROR([*** Cannot find libvirt.h - check your libvirt installation ***]))
 	AC_CHECK_LIB(virt, virConnectGetLibVersion, [ VMGR_LIBS="$VMGR_LIBS -lvirt" ])
 	LIBS="$LIBS $VMGR_LIBS"
 
@@ -3574,10 +3580,13 @@ if test "x${ZEROMQ_LDFLAGS}" != "x"; then
 fi
 
 if test "x${VMGR_CPPFLAGS}" != "x"; then
-       echo "Vmgr CPPFLAGS     : ${VMGR_CPPFLAGS}"
+	echo "Vmgr CPPFLAGS           : ${VMGR_CPPFLAGS}"
 fi
 if test "x${VMGR_LDFLAGS}" != "x"; then
-	echo "Vmgr LDFLAGS         : ${VMGR_LDFLAGS}"
+	echo "Vmgr LDFLAGS            : ${VMGR_LDFLAGS}"
+fi
+if test "x${VMGR_LIBS}" != "x"; then
+	echo "Vmgr LIBS               : ${VMGR_LIBS}"
 fi
 
 FLAGS_CPP="src/tools/nxdevcfg/flags.cpp"
