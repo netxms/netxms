@@ -24,7 +24,7 @@
 - Management console
 	- New editors for Agent Config Policy and Log Parser Policy. 
 	- DCI summary tables with empty menu path not shown in object context menu
-- Fixed issues: #92, #568, #723, #795, #906, #909, #942, #959, #992, #999, #1006, #1015, #1051, #1096, #1100, #1159, #1187, #1191, #1230, #1237, #1245, #1246, #1249, #1254, #1261, #1263, #1275, #1282
+- Fixed issues: #69, #92, #568, #723, #795, #906, #909, #942, #959, #992, #999, #1006, #1015, #1051, #1096, #1100, #1159, #1187, #1191, #1230, #1237, #1245, #1246, #1249, #1254, #1261, #1263, #1275, #1282
 
 
 *
