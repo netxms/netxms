@@ -231,6 +231,55 @@ LONG H_GetStringParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, A
 }
 
 /**
+ * Get VM info specific parameters
+ */
+LONG H_GetVMInfoAsParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session)
+{
+   TCHAR name[256], vm[256];
+
+	if (!AgentGetParameterArg(pszParam, 1, name, 256))
+		return SYSINFO_RC_UNSUPPORTED;
+
+	if (!AgentGetParameterArg(pszParam, 2, vm, 256))
+		return SYSINFO_RC_UNSUPPORTED;
+
+   HostConnections *conn = g_connectionList.get(name);
+   if(conn == NULL)
+      return SYSINFO_RC_NO_SUCH_INSTANCE;
+
+   char *resultValue = NULL;
+   LONG result = SYSINFO_RC_SUCCESS;
+   const virDomainInfo *info = conn->getDomainInfoAndLock(vm);
+   if(info != NULL)
+   {
+      switch(*pArg)
+      {
+         case 'U': //Memory.Used
+            ret_uint64(pValue, (UINT64)info->memory * 1024);
+            break;
+         case 'P': //Memory.UsedPrec
+            ret_uint(pValue, (UINT32)(info->memory/(float)info->maxMem)*100);
+            break;
+         case 'M': //Memory.Max
+            ret_uint64(pValue, (UINT64)info->maxMem * 1024);
+            break;
+         case 'C': //CPU.Time
+            ret_uint64(pValue, info->nrVirtCpu);
+            break;
+         default:
+            result = SYSINFO_RC_ERROR;
+      }
+   }
+   else
+   {
+      result = SYSINFO_RC_ERROR;
+   }
+   conn->unlockDomainInfo();
+
+   return result;
+}
+
+/**
  * Get domain(VM) list
  */
 LONG H_GetVMList(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session)
@@ -318,14 +367,15 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
    }
    value->set(4, os.getBuffer());
 
-   virDomainInfo info;
-   if(virDomainGetInfo(*vm, &info) == 0)
+   const virDomainInfo *info = conn->getDomainInfoAndLock(key, vm);
+   if(info != NULL)
    {
-      value->set(3, info.state < 8 ? vmStateMapping[info.state] :  _T("Unkonown"));
-      value->set(6, (UINT64)info.maxMem * 1024);
-      value->set(7, (UINT64)info.memory * 1024);
-      value->set(8, info.nrVirtCpu);
-      value->set(9, info.cpuTime);
+      value->set(3, info->state < 8 ? vmStateMapping[info->state] :  _T("Unkonown"));
+      value->set(6, (UINT64)info->memory * 1024);
+      value->set(7, (UINT64)info->maxMem * 1024);
+      value->set(8, (UINT32)(info->memory/(float)info->maxMem)*100);
+      value->set(9, info->nrVirtCpu);
+      value->set(10, info->cpuTime);
    }
    else
    {
@@ -334,7 +384,9 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
       value->set(7, 0);
       value->set(8, 0);
       value->set(9, 0);
+      value->set(10, 0);
    }
+   conn->unlockDomainInfo();
 
    int autostart;
    if(virDomainGetAutostart(*vm, &autostart) == 0)
@@ -347,26 +399,26 @@ EnumerationCallbackResult FillVMData(const TCHAR *key, const void *obj, void *us
    virDomainControlInfo cInfo;
    if(virDomainGetControlInfo(*vm, &cInfo,0) == 0)
    {
-      value->set(10, cInfo.state > 4 ? _T("Unknown") : vmOpStateMapping[cInfo.state]);
-      value->set(11, cInfo.details > 4 ? _T("Unknown") : vmOpStateDescMapping[cInfo.details]);
-      value->set(12, cInfo.stateTime);
+      value->set(11, cInfo.state > 4 ? _T("Unknown") : vmOpStateMapping[cInfo.state]);
+      value->set(12, cInfo.details > 4 ? _T("Unknown") : vmOpStateDescMapping[cInfo.details]);
+      value->set(13, cInfo.stateTime);
    }
    else
    {
-      value->set(10, _T("Unkonown"));
-      value->set(11, _T(""));
-      value->set(12, 0);
+      value->set(11, _T("Unkonown"));
+      value->set(12, _T(""));
+      value->set(13, 0);
    }
 
    INT64 seconds;
    UINT32 nsec;
    if(virDomainGetTime(*vm, &seconds, &nsec, 0) == 0)
-      value->set(13, seconds);
+      value->set(14, seconds);
    else
-      value->set(13, 0);
+      value->set(14, 0);
 
    int pers = virDomainIsPersistent(*vm);
-   value->set(14, pers == -1 ? _T("Unknown") : pers == 1 ? _T("Yes") : _T("No"));
+   value->set(15, pers == -1 ? _T("Unknown") : pers == 1 ? _T("Yes") : _T("No"));
 
    return _CONTINUE;
 }
@@ -393,8 +445,9 @@ LONG H_GetVMTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractComm
 	value->addColumn(_T("STATE"), DCI_DT_STRING, _T("State"));
 	value->addColumn(_T("OS"), DCI_DT_STRING, _T("OS"));
 	value->addColumn(_T("AUTOSTART"), DCI_DT_STRING, _T("Autostart scheduled"));
-	value->addColumn(_T("MAX_MEMORY"), DCI_DT_UINT64, _T("Maximum VM available memory"));
 	value->addColumn(_T("MEMORY"), DCI_DT_UINT64, _T("Memory currently used by VM"));
+	value->addColumn(_T("MAX_MEMORY"), DCI_DT_UINT64, _T("Maximum VM available memory"));
+	value->addColumn(_T("MEMORY_PREC"), DCI_DT_UINT64, _T("Percentage of memory currently used"));
 	value->addColumn(_T("VIRTUAL_CPU_COUNT"), DCI_DT_UINT, _T("CPU count available for VM"));
 	value->addColumn(_T("VIRTUAL_CPU_TIME"), DCI_DT_UINT64, _T("CPU time used for VM in nanoseconds"));
 	value->addColumn(_T("CONTROL_STATE"), DCI_DT_STRING, _T("VM control state"));

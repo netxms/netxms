@@ -191,7 +191,11 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("VMGR.Host.CPU.Frequency(*)"), H_GetUIntParam, _T("F"), DCI_DT_UINT, _T("Host CPU frequency") },
    { _T("VMGR.Host.ConnectionType(*)"), H_GetStringParam, _T("C"), DCI_DT_STRING, _T("Connection type") },
    { _T("VMGR.Host.LibraryVersion(*)"), H_GetUInt64Param, _T("L"), DCI_DT_UINT64, _T("Library version") },
-   { _T("VMGR.Host.ConnectionVersion(*)"), H_GetUInt64Param, _T("V"), DCI_DT_UINT64, _T("Connection version") }
+   { _T("VMGR.Host.ConnectionVersion(*)"), H_GetUInt64Param, _T("V"), DCI_DT_UINT64, _T("Connection version") },
+   { _T("VMGR.VM.Memory.Used(*)"), H_GetVMInfoAsParam, _T("U"), DCI_DT_UINT64, _T("Memory currently used by VM") },
+   { _T("VMGR.VM.Memory.UsedPrec(*)"), H_GetVMInfoAsParam, _T("P"), DCI_DT_UINT, _T("Percentage of currently memory usage by VM") },
+   { _T("VMGR.VM.Memory.Max(*)"), H_GetVMInfoAsParam, _T("M"), DCI_DT_UINT64, _T("Maximum VM available memory") },
+   { _T("VMGR.VM.CPU.Time(*)"), H_GetVMInfoAsParam, _T("C"), DCI_DT_UINT64, _T("Maximum VM available memory") }
 };
 
 /**
@@ -199,8 +203,8 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
  */
 static NETXMS_SUBAGENT_LIST s_lists[] =
 {
-	{ _T("VMGR.VMList"), H_GetHostList, NULL },
-	{ _T("VMGR.VMList"), H_GetVMList, NULL }
+	{ _T("VMGR.VMHost"), H_GetHostList, NULL },
+	{ _T("VMGR.VMList(*)"), H_GetVMList, NULL }
 };
 
 /**

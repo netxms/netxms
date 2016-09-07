@@ -24,7 +24,7 @@
  * Host connection constructor
  */
 HostConnections::HostConnections(const TCHAR *name, const char *url, const char *login, const char *password)
-                                 : m_vmXMLs(true),m_networkXMLs(true),m_storageInfo(true),m_domains(false),m_iface(false),
+                                 : m_vmInfo(true),m_vmXMLs(true),m_networkXMLs(true),m_storageInfo(true),m_domains(false),m_iface(false),
                                  m_networks(false),m_storages(false)
 {
    m_name = _tcsdup(name);
@@ -34,6 +34,7 @@ HostConnections::HostConnections(const TCHAR *name, const char *url, const char 
    m_vmXMLMutex = MutexCreate();
    m_networkXMLMutex = MutexCreate();
    m_storageInfoMutex = MutexCreate();
+   m_vmInfoMutex = MutexCreate();
 }
 
 /**
@@ -49,6 +50,7 @@ HostConnections::~HostConnections()
    MutexDestroy(m_vmXMLMutex);
    MutexDestroy(m_networkXMLMutex);
    MutexDestroy(m_storageInfoMutex);
+   MutexDestroy(m_vmInfoMutex);
 }
 
 /**
@@ -322,6 +324,55 @@ void HostConnections::unlockDomainDefenition()
    MutexUnlock(m_vmXMLMutex);
 }
 
+/**
+ * Returns domain information
+ */
+const virDomainInfo *HostConnections::getDomainInfoAndLock(const TCHAR *domainName, NXvirDomain *vm)
+{
+   MutexLock(m_vmInfoMutex);
+   Cashe<virDomainInfo> *infoChase = m_vmInfo.get(domainName);
+   if (infoChase == NULL || infoChase->shouldUpdate())
+   {
+      bool getDomain = vm == NULL;
+      if(getDomain)
+      {
+         const StringObjectMap<NXvirDomain> *vmMap = getDomainListAndLock();
+         vm = vmMap->get(domainName);
+      }
+      if(vm != NULL)
+      {
+         virDomainInfo *info = new virDomainInfo();
+         if(virDomainGetInfo(*vm, info) == 0)
+         {
+            if(infoChase == NULL)
+            {
+               infoChase = new Cashe<virDomainInfo>();
+               m_vmInfo.set(domainName, infoChase);
+            }
+            infoChase->update(info);
+         }
+      }
+      else
+      {
+         m_vmInfo.remove(domainName);
+         infoChase = NULL;
+      }
+
+      if(getDomain)
+         unlockDomainList();
+   }
+
+   return infoChase != NULL ? infoChase->getData() : NULL;
+}
+
+/**
+ * Unlocks domain control information
+ */
+void HostConnections::unlockDomainInfo()
+{
+   MutexUnlock(m_vmInfoMutex);
+}
+
 /**---------
  * Iface
  */
@@ -485,20 +536,9 @@ void HostConnections::unlockNetworkDefenition()
    MutexUnlock(m_networkXMLMutex);
 }
 
-
 /**---------
  * Storages
  */
-
- /*
-   virConnectNumOfStoragePools
-   virConnectNumOfDefinedStoragePools
-   virConnectListStoragePools
-   virConnectListDefinedStoragePools
-   virStoragePoolGetInfo - more info
-   virStoragePoolGetXMLDesc - more info
-   virStoragePoolLookupByName - get pointer
-   */
 
 /**
  * List volumes
@@ -602,3 +642,18 @@ void HostConnections::unlockStorageInfo()
    MutexUnlock(m_storageInfoMutex);
 }
 
+/**---------
+ * Volume
+ */
+
+/*
+   TODO: add option to get volumes for storage
+
+Valume:
+   virStoragePoolListVolumes - volume information
+   virStoragePoolNumOfVolumes - num of volumes
+   virStorageVolGetInfo
+   virStorageVolGetPath
+   virStorageVolGetXMLDesc
+   virStorageVolLookupByName
+*/

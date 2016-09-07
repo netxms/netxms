@@ -37,6 +37,7 @@ LONG H_GetFromCapabilities(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pVal
 LONG H_GetUIntParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_GetUInt64Param(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_GetStringParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_GetVMInfoAsParam(const TCHAR *pszParam, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 
 LONG H_GetVMTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_GetIfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
@@ -46,19 +47,6 @@ LONG H_GetVMInterfaceTable(const TCHAR *cmd, const TCHAR *arg, Table *value, Abs
 LONG H_GetVMVideoTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_GetNetworksTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
 LONG H_GetStoragesTable(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *session);
-
-/**
- * String map template for holding objects as values
-template <class T> class StringObjectMapC : public StringObjectMap<T>
-{
-private:
-   int ( *memFreeCallback)(T *obj);
-	static void destructorC(void *object) { memFreeCallback((T *)object); }
-
-public:
-	StringObjectMapC(bool objectOwner) : StringObjectMap<T>(objectOwner) { memFreeCallback = cb; StringMapBase::m_objectDestructor = destructorC; }
-};
-*/
 
 class NXvirDomain
 {
@@ -142,6 +130,8 @@ private:
    CasheAndLock<StringObjectMap<NXvirNetwork> > m_networks;
    CasheAndLock<StringObjectMap<NXvirStoragePool> > m_storages;
 
+   MUTEX m_vmInfoMutex;
+   StringObjectMap<Cashe<virDomainInfo> > m_vmInfo;
    MUTEX m_vmXMLMutex;
    StringObjectMap<Cashe<char> > m_vmXMLs;
    MUTEX m_networkXMLMutex;
@@ -166,6 +156,8 @@ public:
    void unlockDomainList();
    const char *getDomainDefenitionAndLock(const TCHAR *name, NXvirDomain *vm = NULL);
    void unlockDomainDefenition();
+   const virDomainInfo *getDomainInfoAndLock(const TCHAR *domainName, NXvirDomain *vm = NULL);
+   void unlockDomainInfo();
    //Iface
    const StringList *getIfaceListAndLock();
    void unlockIfaceList();
@@ -201,25 +193,7 @@ public:
    virInterfaceLookupByName, when fixed use virInterfaceIsActive, virInterfaceGetXMLDesc to find more information
 
 
-   Storage information:
-   virConnectNumOfStoragePools
-   virConnectNumOfDefinedStoragePools
-   virConnectListStoragePools
-   virConnectListDefinedStoragePools
-   virStoragePoolGetInfo - more info
-   virStoragePoolGetXMLDesc - more info
-   virStoragePoolLookupByName - get pointer
-   Valume:
-   virStoragePoolListVolumes - volume information
-   virStoragePoolNumOfVolumes - num of volumes
-   virStorageVolGetInfo
-   virStorageVolGetPath
-   virStorageVolGetXMLDesc
-   virStorageVolLookupByName
-
    Add callbacks that will generate nxevents on call(there are network and domain callbacks at least)
-
-   !!!!! Add free functions for object(vm, iface...) like: virStoragePoolFree
    ****/
 };
 
