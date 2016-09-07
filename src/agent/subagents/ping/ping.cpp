@@ -111,7 +111,7 @@ retry:
 		{
 			target->stdDevRTT = 0;
 		}
-		
+
 		dwElapsedTime = (UINT32)(GetCurrentTimeMs() - qwStartTime);
 		dwInterval = 60000 / m_dwPollsPerMinute;
 
@@ -226,12 +226,37 @@ static LONG H_TargetList(const TCHAR *pszParam, const TCHAR *pArg, StringList *v
 	for(int i = 0; i < s_targets.size(); i++)
 	{
       PING_TARGET *t = s_targets.get(i);
-      _sntprintf(szBuffer, MAX_DB_STRING + 128, _T("%s %u %u %u %u %s"), t->ipAddr.toString(szIpAddr),
-				     t->lastRTT, t->avgRTT, t->packetLoss, t->packetSize, t->name);
+      _sntprintf(szBuffer, MAX_DB_STRING + 128, _T("%s"), t->name);
 		value->add(szBuffer);
 	}
 
 	return SYSINFO_RC_SUCCESS;
+}
+
+/**
+ * Handler for configured target table
+ */
+static LONG H_TargetTable(const TCHAR *pszParam, const TCHAR *pArg, Table *value, AbstractCommSession *session)
+{
+    value->addColumn(_T("IP"), DCI_DT_STRING, _T("IP"), true);
+    value->addColumn(_T("LAST_RTT"), DCI_DT_UINT, _T("Last response time"));
+    value->addColumn(_T("AVERAGE_RTT"), DCI_DT_UINT, _T("Average response time"));
+    value->addColumn(_T("PACKET_LOSS"), DCI_DT_UINT, _T("Packet loss"));
+    value->addColumn(_T("PACKET_SIZE"), DCI_DT_UINT, _T("Packet size"));
+    value->addColumn(_T("NAME"), DCI_DT_STRING, _T("Name"));
+
+    for(int i = 0; i < s_targets.size(); i++)
+    {
+        value->addRow();
+        PING_TARGET *t = s_targets.get(i);
+        value->set(0, t->ipAddr.toString());
+        value->set(1, t->lastRTT);
+        value->set(2, t->avgRTT);
+        value->set(3, t->packetLoss);
+        value->set(4, t->packetSize);
+        value->set(5, t->name);
+    }
+    return SYSINFO_RC_SUCCESS;
 }
 
 /**
@@ -397,6 +422,11 @@ static NETXMS_SUBAGENT_LIST m_enums[] =
 	{ _T("Icmp.TargetList"), H_TargetList, NULL }
 };
 
+static NETXMS_SUBAGENT_TABLE m_table[] =
+{
+    { _T("Icmp.TargetTable"), H_TargetTable, NULL, _T("IP"), _T("ICMP ping") }
+};
+
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
@@ -406,7 +436,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 	m_parameters,
 	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
 	m_enums,
-	0, NULL,	// tables
+	sizeof(m_table) / sizeof(NETXMS_SUBAGENT_TABLE),
+	m_table,	// tables
    0, NULL,	// actions
 	0, NULL	// push parameters
 };
