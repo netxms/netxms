@@ -407,7 +407,7 @@ static BOOL SubagentInit(Config *config)
 }
 
 /**
- * Subagent information
+ * Parameters
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
 {
@@ -417,16 +417,26 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
  	{ _T("Icmp.PingStdDev(*)"), H_PollResult, _T("D"), DCI_DT_UINT, _T("Standard deviation for ICMP ping to {instance}") },
 	{ _T("Icmp.Ping(*)"), H_IcmpPing, NULL, DCI_DT_UINT, _T("ICMP ping response time for {instance}") }
 };
-static NETXMS_SUBAGENT_LIST m_enums[] =
+
+/**
+ * Lists
+ */
+static NETXMS_SUBAGENT_LIST m_lists[] =
 {
-	{ _T("Icmp.TargetList"), H_TargetList, NULL }
+	{ _T("Icmp.Targets"), H_TargetList, NULL }
 };
 
+/**
+ * Tables
+ */
 static NETXMS_SUBAGENT_TABLE m_table[] =
 {
-    { _T("Icmp.TargetTable"), H_TargetTable, NULL, _T("IP"), _T("ICMP ping") }
+    { _T("Icmp.Targets"), H_TargetTable, NULL, _T("IP"), _T("ICMP ping targets") }
 };
 
+/**
+ * Subagent information
+ */
 static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
@@ -434,8 +444,8 @@ static NETXMS_SUBAGENT_INFO m_info =
 	SubagentInit, SubagentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
-	sizeof(m_enums) / sizeof(NETXMS_SUBAGENT_LIST),
-	m_enums,
+	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),
+	m_lists,
 	sizeof(m_table) / sizeof(NETXMS_SUBAGENT_TABLE),
 	m_table,	// tables
    0, NULL,	// actions
@@ -461,24 +471,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 	if (dwReason == DLL_PROCESS_ATTACH)
 		DisableThreadLibraryCalls(hInstance);
 	return TRUE;
-}
-
-#endif
-
-/**
- * NetWare entry point
- * We use main() instead of _init() and _fini() to implement
- * automatic unload of the subagent after unload handler is called
- */
-#ifdef _NETWARE
-
-int main(int argc, char *argv[])
-{
-   m_hCondTerminate = ConditionCreate(TRUE);
-   ConditionWait(m_hCondTerminate, INFINITE);
-   ConditionDestroy(m_hCondTerminate);
-   sleep(1);
-   return 0;
 }
 
 #endif
