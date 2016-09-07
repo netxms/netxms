@@ -723,7 +723,7 @@ uuid NXCPMessage::getFieldAsGUID(UINT32 fieldId) const
 /**
  * Build protocol message ready to be send over the wire
  */
-NXCP_MESSAGE *NXCPMessage::createMessage()
+NXCP_MESSAGE *NXCPMessage::createMessage() const
 {
    // Calculate message size
    size_t size = NXCP_HEADER_SIZE;
