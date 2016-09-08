@@ -88,7 +88,7 @@ public class LastValuesWidget extends Composite
 	private final ViewPart viewPart;
 	private DataCollectionTarget dcTarget;
 	private NXCSession session;
-	private boolean filterEnabled = false;
+	private boolean filterEnabled = true;
 	private FilterText filterText;
 	private SortableTableViewer dataViewer;
 	private LastValuesLabelProvider labelProvider;

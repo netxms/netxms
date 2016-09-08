@@ -34,9 +34,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.ui.eclipse.eventmanager.Activator;
 import org.netxms.ui.eclipse.eventmanager.Messages;
@@ -45,6 +43,7 @@ import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateComparator;
 import org.netxms.ui.eclipse.eventmanager.views.helpers.EventTemplateLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -54,7 +53,7 @@ import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 public class EventSelectionDialog extends Dialog
 {
 	private boolean multiSelection;
-	private Text filterText;
+	private FilterText filterText;
 	private TableViewer eventList;
 	private EventTemplate selectedEvents[];
 	private EventListFilter filter;
@@ -103,9 +102,7 @@ public class EventSelectionDialog extends Dialog
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText(Messages.get().EventSelectionDialog_Filter);
-		
-		filterText = new Text(dialogArea, SWT.BORDER);
+		filterText = new FilterText(dialogArea, SWT.NONE, null, false);
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;

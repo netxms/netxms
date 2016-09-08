@@ -105,7 +105,7 @@ public class DataCollectionEditor extends ViewPart
 	public static final int COLUMN_THRESHOLD = 8;
 	public static final int COLUMN_TEMPLATE = 9;
 
-	private boolean filterEnabled = false;
+	private boolean filterEnabled = true;
 	private Composite content;
 	private FilterText filterText;
 	private SortableTableViewer viewer;
@@ -789,6 +789,7 @@ public class DataCollectionEditor extends ViewPart
 	private void convertToTemplate()
 	{
 		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createTemplateSelectionFilter());
+		dlg.showFilterToolTip(false);
 		if (dlg.open() != Window.OK)
 			return;
 		

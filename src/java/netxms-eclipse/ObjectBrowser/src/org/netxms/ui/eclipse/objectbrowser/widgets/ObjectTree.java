@@ -85,6 +85,7 @@ public class ObjectTree extends Composite
 	private boolean statusIndicatorEnabled = false;
 	private ObjectTreeViewer objectTree;
 	private FilterText filterText;
+	private String tooltip = null;
 	private ObjectFilter filter;
 	private Set<Long> checkedObjects = new HashSet<Long>(0);
 	private SessionListener sessionListener = null;
@@ -99,7 +100,7 @@ public class ObjectTree extends Composite
 	 * @param parent
 	 * @param style
 	 */
-	public ObjectTree(Composite parent, int style, int options, long[] rootObjects, Set<Integer> classFilter)
+	public ObjectTree(Composite parent, int style, int options, long[] rootObjects, Set<Integer> classFilter, boolean showFilterToolTip, boolean showFilterCloseButton)
 	{
 		super(parent, style);
 		
@@ -121,9 +122,10 @@ public class ObjectTree extends Composite
 
 		FormLayout formLayout = new FormLayout();
 		setLayout(formLayout);
-		String tooltip = " > - Search by IP \n # - Search by ID \n / - Search by comment";
+		if (showFilterToolTip)
+		   tooltip = " > - Search by IP \n # - Search by ID \n / - Search by comment";
 		// Create filter area
-		filterText = new FilterText(this, SWT.NONE, tooltip);
+		filterText = new FilterText(this, SWT.NONE, tooltip, showFilterCloseButton);
 		filterText.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e)

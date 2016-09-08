@@ -140,7 +140,7 @@ public class SelectDciDialog extends Dialog
 		{
 			splitter = new SashForm(dialogArea, SWT.HORIZONTAL);
 			
-			objectTree = new ObjectTree(splitter, SWT.BORDER, ObjectTree.NONE, null, ObjectSelectionDialog.createNodeSelectionFilter(true));
+			objectTree = new ObjectTree(splitter, SWT.BORDER, ObjectTree.NONE, null, ObjectSelectionDialog.createNodeSelectionFilter(true), true, false);
 			String text = settings.get("SelectDciDialog.Filter"); //$NON-NLS-1$
 			if (text != null)
 				objectTree.setFilter(text);

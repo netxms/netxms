@@ -42,7 +42,11 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -65,11 +69,13 @@ import org.netxms.ui.eclipse.objecttools.Messages;
 import org.netxms.ui.eclipse.objecttools.ObjectToolsAdapterFactory;
 import org.netxms.ui.eclipse.objecttools.dialogs.CreateNewToolDialog;
 import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsComparator;
+import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsFilter;
 import org.netxms.ui.eclipse.objecttools.views.helpers.ObjectToolsLabelProvider;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
 import org.netxms.ui.eclipse.objectbrowser.dialogs.CreateObjectDialog;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -97,6 +103,12 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	private Action actionDelete;
 	private Action actionDisable;
 	private Action actionEnable;
+	private Action actionShowFilter;
+	
+	private Composite objectToolsArea;
+	private FilterText filterText;
+	private ObjectToolsFilter filter;
+	private boolean filterEnabled = true;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -115,14 +127,38 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		{
 		}
 		
-		parent.setLayout(new FillLayout());
+		// Create interface area
+		objectToolsArea = new Composite(parent, SWT.BORDER);
+		FormLayout formLayout = new FormLayout();
+		objectToolsArea.setLayout(formLayout);
+		// Create filter
+		filterText = new FilterText(objectToolsArea, SWT.NONE);
+		filterText.addModifyListener(new ModifyListener() {
+		   @Override
+		   public void modifyText(ModifyEvent e)
+		   {
+		      onFilterModify();
+		   }
+		});
+		filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+            actionShowFilter.setChecked(filterEnabled);
+         }
+      });
 		
 		final String[] columnNames = { Messages.get().ObjectToolsEditor_ColId, Messages.get().ObjectToolsEditor_ColName, Messages.get().ObjectToolsEditor_ColType, Messages.get().ObjectToolsEditor_ColDescr };
 		final int[] columnWidths = { 90, 200, 100, 200 };
-		viewer = new SortableTableViewer(parent, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
+		viewer = new SortableTableViewer(objectToolsArea, columnNames, columnWidths, COLUMN_NAME, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI);
 		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), TABLE_CONFIG_PREFIX);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ObjectToolsLabelProvider());
+		
+		filter = new ObjectToolsFilter();
+		viewer.addFilter(filter);
+		
 		viewer.setComparator(new ObjectToolsComparator());
 		viewer.addSelectionChangedListener(new ISelectionChangedListener()
 		{
@@ -155,6 +191,20 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 			}
 		});
 		
+		// Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterText);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      viewer.getControl().setLayoutData(fd);
+
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
+		
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
@@ -163,6 +213,40 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		
 		refreshToolList();
 	}
+	
+	/**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   public void enableFilter(boolean enable)
+   {
+      filterEnabled = enable;
+      filterText.setVisible(filterEnabled);
+      FormData fd = (FormData)viewer.getTable().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
+      objectToolsArea.layout();
+      if (enable)
+      {
+         filterText.setFocus();
+      }
+      else
+      {
+         filterText.setText("");
+         onFilterModify();
+      }
+
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   public void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+   }
 	
 	 /**
 	 * @param selection
@@ -195,6 +279,16 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 */
 	private void createActions()
 	{
+	   actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            enableFilter(!filterEnabled);
+            actionShowFilter.setChecked(filterEnabled);
+         }
+       };
+       actionShowFilter.setChecked(filterEnabled);
+	   
 		actionRefresh = new RefreshAction() {
 			@Override
 			public void run()
@@ -293,6 +387,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		manager.add(actionDelete);
       manager.add(actionClone);
 		manager.add(actionEdit);
+		manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}

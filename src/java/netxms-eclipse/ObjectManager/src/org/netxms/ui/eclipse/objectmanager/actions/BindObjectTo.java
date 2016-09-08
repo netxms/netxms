@@ -67,6 +67,7 @@ public class BindObjectTo implements IObjectActionDelegate
 	public void run(IAction action)
 	{
 		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, null, ObjectSelectionDialog.createContainerSelectionFilter());
+		dlg.showFilterToolTip(false);
 		if (dlg.open() == Window.OK)
 		{
 			final NXCSession session = (NXCSession)ConsoleSharedData.getSession();

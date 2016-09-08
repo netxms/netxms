@@ -190,15 +190,8 @@ public class ObjectBrowser extends ViewPart
 		
 		// Read custom root objects
 		long[] rootObjects = null;
-		/*
-		Object value = ConsoleSharedData.getProperty("ObjectBrowser.rootObjects"); //$NON-NLS-1$
-		if ((value != null) && (value instanceof long[]))
-		{
-			rootObjects = (long[])value;
-		}
-		*/
 		
-		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, rootObjects, null);
+		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, rootObjects, null, true, true);
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);

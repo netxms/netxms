@@ -123,6 +123,7 @@ public class Dashboards extends PropertyPage
 			public void widgetSelected(SelectionEvent e)
 			{
 				ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, ObjectSelectionDialog.createDashboardSelectionFilter());
+				dlg.showFilterToolTip(false);
 				if (dlg.open() == Window.OK)
 				{
 					AbstractObject[] d = dlg.getSelectedObjects(Dashboard.class);

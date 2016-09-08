@@ -84,7 +84,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
    public static final int COLUMN_SIZE = 2;
    public static final int COLUMN_MODIFYED = 3;
 
-   private boolean filterEnabled = false;
+   private boolean filterEnabled = true;
    private Composite content;
    private ServerFile[] files;
    private ServerFileFilter filter;

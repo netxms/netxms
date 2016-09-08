@@ -81,7 +81,7 @@ public class ServerConfigurationEditor extends ViewPart
 	private SortableTableViewer viewer;
 	private NXCSession session;
 	private Map<String, ServerVariable> varList;
-	private boolean filterEnabled = false;
+	private boolean filterEnabled = true;
    private Composite content;
    private FilterText filterText;
    private ServerVariablesFilter filter;

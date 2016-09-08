@@ -120,7 +120,7 @@ public class SelectInstallTargetDialog extends Dialog
 			rootObjects = (long[])value;
 		}
 		
-		objectTree = new ObjectTree(dialogArea, SWT.BORDER, ObjectTree.CHECKBOXES, rootObjects, ObjectSelectionDialog.createNodeSelectionFilter(false));
+		objectTree = new ObjectTree(dialogArea, SWT.BORDER, ObjectTree.CHECKBOXES, rootObjects, ObjectSelectionDialog.createNodeSelectionFilter(false), true, false);
 		GridData gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;

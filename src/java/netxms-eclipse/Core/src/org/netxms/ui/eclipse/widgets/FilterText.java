@@ -60,14 +60,14 @@ public class FilterText extends Composite
 	
 	public FilterText(Composite parent, int style)
    {
-      this(parent, style, null);
+      this(parent, style, null, true);
    }
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public FilterText(Composite parent, int style, String tooltip)
+	public FilterText(Composite parent, int style, String tooltip, boolean showFilterCloseButton)
 	{
 		super(parent, style);		
 		GridLayout layout = new GridLayout();
@@ -99,9 +99,6 @@ public class FilterText extends Composite
 		text = new Text(textArea, SWT.NONE);
 		text.setTextLimit(64);
 		text.setMessage(Messages.get().FilterText_FilterIsEmpty);
-		if (tooltip != null) {
-		   text.setToolTipText(tooltip);
-		}
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
@@ -191,38 +188,41 @@ public class FilterText extends Composite
 		   }
 		});		
 		
-		closeButton = new Label(this, SWT.NONE);
-		closeButton.setBackground(getBackground());
-		closeButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-		closeButton.setImage(SharedIcons.IMG_CLOSE);
-		closeButton.setToolTipText(Messages.get().FilterText_CloseFilter);
-		gd = new GridData();
-		gd.verticalAlignment = SWT.CENTER;
-		closeButton.setLayoutData(gd);
-		closeButton.addMouseListener(new MouseListener() {
-			private boolean doAction = false;
-			
-			@Override
-			public void mouseDoubleClick(MouseEvent e)
-			{
-				if (e.button == 1)
-					doAction = false;
-			}
-
-			@Override
-			public void mouseDown(MouseEvent e)
-			{
-				if (e.button == 1)
-					doAction = true;
-			}
-
-			@Override
-			public void mouseUp(MouseEvent e)
-			{
-				if ((e.button == 1) && doAction)
-					closeFilter();
-			}
-		});
+		if (showFilterCloseButton)
+		{
+   		closeButton = new Label(this, SWT.NONE);
+   		closeButton.setBackground(getBackground());
+   		closeButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+   		closeButton.setImage(SharedIcons.IMG_CLOSE);
+   		closeButton.setToolTipText(Messages.get().FilterText_CloseFilter);
+   		gd = new GridData();
+   		gd.verticalAlignment = SWT.CENTER;
+   		closeButton.setLayoutData(gd);
+   		closeButton.addMouseListener(new MouseListener() {
+   			private boolean doAction = false;
+   			
+   			@Override
+   			public void mouseDoubleClick(MouseEvent e)
+   			{
+   				if (e.button == 1)
+   					doAction = false;
+   			}
+   
+   			@Override
+   			public void mouseDown(MouseEvent e)
+   			{
+   				if (e.button == 1)
+   					doAction = true;
+   			}
+   
+   			@Override
+   			public void mouseUp(MouseEvent e)
+   			{
+   				if ((e.button == 1) && doAction)
+   					closeFilter();
+   			}
+   		});
+		}
 	}
 	
 	private void clearFilter()

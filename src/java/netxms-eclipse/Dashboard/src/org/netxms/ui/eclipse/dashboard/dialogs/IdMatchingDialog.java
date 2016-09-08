@@ -69,6 +69,7 @@ public class IdMatchingDialog extends Dialog
 	private Map<Long, ObjectIdMatchingData> objects;
 	private Map<Long, DciIdMatchingData> dcis;
 	private Action actionMap;
+	private boolean showFilterToolTip;
 	
 	/**
 	 * @param parentShell
@@ -201,12 +202,15 @@ public class IdMatchingDialog extends Dialog
 			case AbstractObject.OBJECT_NODE:
          case AbstractObject.OBJECT_CLUSTER:
 				classFilter = ObjectSelectionDialog.createNodeSelectionFilter(false);
+				showFilterToolTip = true;
 				break;
 			case AbstractObject.OBJECT_CONTAINER:
 				classFilter = ObjectSelectionDialog.createContainerSelectionFilter();
+				showFilterToolTip = false;
 				break;
 			case AbstractObject.OBJECT_ZONE:
 				classFilter = ObjectSelectionDialog.createZoneSelectionFilter();
+				showFilterToolTip = true;
 				break;
 			case AbstractObject.OBJECT_DASHBOARD:
 				classFilter = new HashSet<Integer>(2);
@@ -218,6 +222,7 @@ public class IdMatchingDialog extends Dialog
 				break;
 		}
 		ObjectSelectionDialog dlg = new ObjectSelectionDialog(getShell(), null, classFilter);
+		dlg.showFilterToolTip(showFilterToolTip);
 		if (dlg.open() == Window.OK)
 		{
 			AbstractObject object = dlg.getSelectedObjects().get(0);

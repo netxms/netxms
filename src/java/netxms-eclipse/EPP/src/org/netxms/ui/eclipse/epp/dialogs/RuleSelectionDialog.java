@@ -37,9 +37,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 import org.netxms.client.NXCSession;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
@@ -51,6 +49,7 @@ import org.netxms.ui.eclipse.epp.dialogs.helpers.RuleListFilter;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 
 /**
  * Rule selection dialog
@@ -59,7 +58,7 @@ public class RuleSelectionDialog extends Dialog
 {
 	private List<EventProcessingPolicyRule> rulesCache;
 	private boolean multiSelection = true;
-	private Text filterText;
+	private FilterText filterText;
 	private TableViewer viewer;
 	private RuleListFilter filter;
 	private List<EventProcessingPolicyRule> selectedRules = new ArrayList<EventProcessingPolicyRule>();
@@ -109,9 +108,7 @@ public class RuleSelectionDialog extends Dialog
 		layout.numColumns = 2;
 		dialogArea.setLayout(layout);
 		
-		new Label(dialogArea, SWT.NONE).setText(Messages.get().ActionSelectionDialog_Filter);
-		
-		filterText = new Text(dialogArea, SWT.NONE);
+		filterText = new FilterText(dialogArea, SWT.NONE, null, false);
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;

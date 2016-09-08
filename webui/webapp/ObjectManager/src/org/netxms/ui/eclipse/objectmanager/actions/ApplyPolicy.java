@@ -52,6 +52,7 @@ public class ApplyPolicy implements IObjectActionDelegate
    public void run(IAction action)
    {
       final ObjectSelectionDialog dlg = new ObjectSelectionDialog(shell, null, ObjectSelectionDialog.createPolicySelectionFilter());
+      dlg.showFilterToolTip(false);
       
       if (dlg.open() == Window.OK)
       {

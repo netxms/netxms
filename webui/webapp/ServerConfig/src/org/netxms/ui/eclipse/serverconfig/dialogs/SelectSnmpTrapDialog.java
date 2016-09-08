@@ -23,6 +23,8 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -31,8 +33,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.netxms.client.snmp.SnmpTrap;
 import org.netxms.ui.eclipse.serverconfig.Messages;
 import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.SnmpTrapComparator;
+import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.SnmpTrapFilter;
 import org.netxms.ui.eclipse.serverconfig.dialogs.helpers.TrapListLabelProvider;
 import org.netxms.ui.eclipse.tools.WidgetHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -47,6 +51,9 @@ public class SelectSnmpTrapDialog extends Dialog
 	private List<SnmpTrap> trapList;
 	private SortableTableViewer viewer;
 	private List<SnmpTrap> selection;
+	
+	private FilterText filterText;
+	private SnmpTrapFilter filter;
 	
 	/**
 	 * @param parentShell
@@ -81,6 +88,12 @@ public class SelectSnmpTrapDialog extends Dialog
 		layout.marginWidth = WidgetHelper.DIALOG_WIDTH_MARGIN;
 		dialogArea.setLayout(layout);
 		
+		filterText = new FilterText(dialogArea, SWT.NONE, null, false);
+		GridData gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      filterText.setLayoutData(gd);
+      
 		final String[] names = { Messages.get().SelectSnmpTrapDialog_ColOID, Messages.get().SelectSnmpTrapDialog_ColEvent, Messages.get().SelectSnmpTrapDialog_ColDescription };
 		final int[] widths = { 350, 250, 400 };
 		viewer = new SortableTableViewer(dialogArea, names, widths, COLUMN_OID, SWT.UP, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
@@ -89,13 +102,25 @@ public class SelectSnmpTrapDialog extends Dialog
 		viewer.setComparator(new SnmpTrapComparator());
 		viewer.setInput(trapList.toArray());
 		
-		GridData gd = new GridData();
+		filter = new SnmpTrapFilter();
+		viewer.addFilter(filter);
+		
+		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.verticalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
 		gd.grabExcessVerticalSpace = true;
 		gd.heightHint = 450;
 		viewer.getControl().setLayoutData(gd);
+		
+		filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            filter.setFilterString(filterText.getText());
+            viewer.refresh();
+         }
+      });
 		
 		return dialogArea;
 	}

@@ -196,7 +196,7 @@ public class ObjectBrowser extends ViewPart
 			rootObjects = (long[])value;
 		}
 		
-		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, rootObjects, null);
+		objectTree = new ObjectTree(parent, SWT.NONE, ObjectTree.MULTI, rootObjects, null, true, true);
 		FormData fd = new FormData();
 		fd.left = new FormAttachment(0, 0);
 		fd.top = new FormAttachment(0, 0);

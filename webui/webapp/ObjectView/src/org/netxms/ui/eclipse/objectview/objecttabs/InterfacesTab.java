@@ -85,7 +85,7 @@ public class InterfacesTab extends ObjectTab
 	private InterfaceListLabelProvider labelProvider;
 	private Action actionExportToCsv;
 	
-	private boolean filterEnabled = false;
+	private boolean filterEnabled = true;
 	private FilterText filterText;
 	private InterfacesTabFilter filter;
    private Composite interfacesArea;
@@ -101,7 +101,7 @@ public class InterfacesTab extends ObjectTab
       FormLayout formLayout = new FormLayout();
       interfacesArea.setLayout(formLayout);
       // Create filter
-      filterText = new FilterText(interfacesArea, SWT.BORDER);
+      filterText = new FilterText(interfacesArea, SWT.NONE);
       filterText.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)

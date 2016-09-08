@@ -36,6 +36,11 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
@@ -51,10 +56,12 @@ import org.netxms.ui.eclipse.console.resources.SharedIcons;
 import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.views.helpers.SummaryTableComparator;
+import org.netxms.ui.eclipse.datacollection.views.helpers.SummaryTableFilter;
 import org.netxms.ui.eclipse.datacollection.views.helpers.SummaryTableLabelProvider;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
+import org.netxms.ui.eclipse.widgets.FilterText;
 import org.netxms.ui.eclipse.widgets.SortableTableViewer;
 
 /**
@@ -78,6 +85,12 @@ public class SummaryTableManager extends ViewPart
 	private Action actionCreate;
 	private Action actionEdit;
 	private Action actionDelete;
+	private Action actionShowFilter;
+	
+	private Composite tableArea;
+	private FilterText filterText;
+	private SummaryTableFilter filter;
+	private boolean filterEnabled = true;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -85,12 +98,37 @@ public class SummaryTableManager extends ViewPart
 	@Override
 	public void createPartControl(Composite parent)
 	{
+	   // Create interface area
+	   tableArea = new Composite(parent, SWT.BORDER);
+	   FormLayout formLayout = new FormLayout();
+	   tableArea.setLayout(formLayout);
+	   // Create filter
+	   filterText = new FilterText(tableArea, SWT.NONE);
+	   filterText.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            onFilterModify();
+         }
+      });
+      filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+            actionShowFilter.setChecked(filterEnabled);
+         }
+      });
+	   
 		final String[] names = { Messages.get().SummaryTableManager_ID, Messages.get().SummaryTableManager_MenuPath, Messages.get().SummaryTableManager_Title };
 		final int[] widths = { 90, 250, 200 };
-		viewer = new SortableTableViewer(parent, names, widths, COLUMN_MENU_PATH, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
+		viewer = new SortableTableViewer(tableArea, names, widths, COLUMN_MENU_PATH, SWT.UP, SortableTableViewer.DEFAULT_STYLE);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new SummaryTableLabelProvider());
 		viewer.setComparator(new SummaryTableComparator());
+		
+		filter = new SummaryTableFilter();
+		viewer.addFilter(filter);
 		
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -109,6 +147,20 @@ public class SummaryTableManager extends ViewPart
 				editSummaryTable();
 			}
 		});
+		
+		// Setup layout
+      FormData fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(filterText);
+      fd.right = new FormAttachment(100, 0);
+      fd.bottom = new FormAttachment(100, 0);
+      viewer.getControl().setLayoutData(fd);
+
+      fd = new FormData();
+      fd.left = new FormAttachment(0, 0);
+      fd.top = new FormAttachment(0, 0);
+      fd.right = new FormAttachment(100, 0);
+      filterText.setLayoutData(fd);
 
 		createActions();
 		contributeToActionBars();
@@ -146,6 +198,40 @@ public class SummaryTableManager extends ViewPart
 		};
 		session.addListener(listener);
 	}
+	
+	/**
+    * Enable or disable filter
+    * 
+    * @param enable New filter state
+    */
+   public void enableFilter(boolean enable)
+   {
+      filterEnabled = enable;
+      filterText.setVisible(filterEnabled);
+      FormData fd = (FormData)viewer.getTable().getLayoutData();
+      fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
+      tableArea.layout();
+      if (enable)
+      {
+         filterText.setFocus();
+      }
+      else
+      {
+         filterText.setText("");
+         onFilterModify();
+      }
+
+   }
+
+   /**
+    * Handler for filter modification
+    */
+   public void onFilterModify()
+   {
+      final String text = filterText.getText();
+      filter.setFilterString(text);
+      viewer.refresh(false);
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
@@ -191,6 +277,17 @@ public class SummaryTableManager extends ViewPart
 	 */
 	private void createActions()
 	{
+	   // create show filter action
+	   actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            enableFilter(!filterEnabled);
+            actionShowFilter.setChecked(filterEnabled);
+         }
+       };
+       actionShowFilter.setChecked(filterEnabled);
+       
 		// create refresh action
 		actionRefresh = new RefreshAction(this) {
 			@Override
@@ -248,6 +345,7 @@ public class SummaryTableManager extends ViewPart
 	private void fillLocalPullDown(IMenuManager manager)
 	{
 		manager.add(actionCreate);
+		manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
 	}

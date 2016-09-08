@@ -117,7 +117,7 @@ public class AgentFileManager extends ViewPart
    public static final int COLUMN_GROUP = 5;
    public static final int COLUMN_ACCESS_RIGHTS = 6;
 
-   private boolean filterEnabled = false;
+   private boolean filterEnabled = true;
    private Composite content;
    private AgentFile[] files;
    private AgentFileFilter filter;

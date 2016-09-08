@@ -52,6 +52,8 @@ public class ObjectSelectionDialog extends Dialog
 	private long[] selectedObjects;
 	private Set<Integer> classFilter;
 	private boolean multiSelection;
+	private boolean showFilterToolTip = true;
+	private boolean showFilterCloseButton = false;
 	List<Object> currentObject;
 
 	/**
@@ -252,7 +254,7 @@ public class ObjectSelectionDialog extends Dialog
 
 		dialogArea.setLayout(new FormLayout());
 
-		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, rootObjects, classFilter);
+		objectTree = new ObjectTree(dialogArea, SWT.NONE, multiSelection ? ObjectTree.MULTI : 0, rootObjects, classFilter, showFilterToolTip, showFilterCloseButton);
 		
 		String text = settings.get("SelectObject.Filter"); //$NON-NLS-1$
 		if (text != null)
@@ -382,5 +384,23 @@ public class ObjectSelectionDialog extends Dialog
 	public void enableMultiSelection(boolean enable)
 	{
 		this.multiSelection = enable;
+	}
+	
+	/**
+	 * Show or hide filter tooltip (Search by IP, etc..)
+	 * @param showFilterToolTip
+	 */
+	public void showFilterToolTip(boolean showFilterToolTip)
+	{
+	   this.showFilterToolTip = showFilterToolTip;
+	}
+	
+	/**
+    * Show or hide filter tooltip`s close button
+    * @param showFilterCloseButton
+    */
+	public void showFilterCloseButton(boolean showFilterCloseButton)
+	{
+	   this.showFilterCloseButton = showFilterCloseButton;
 	}
 }

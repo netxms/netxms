@@ -65,7 +65,7 @@ public abstract class AbstractTraceWidget extends Composite
 	private LinkedList<Object> data = new LinkedList<Object>();
 	private AbstractTraceViewFilter filter = null;
 	private boolean paused = false;
-	private boolean filterEnabled = false;
+	private boolean filterEnabled = true;
    private long lastUpdated = 0;
    private boolean updateScheduled = false;
 	private Action actionPause;
