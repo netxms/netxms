@@ -1085,6 +1085,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
                   movedRuleEditors.add(s);
                   s.moveBelow(curr);
                   curr = s;
+                  s.setDragged(false);
                }
             }
          }
@@ -1094,9 +1095,7 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
          movedRuleEditors.get(i).setRuleNumber(i + 1);
 
       ruleEditors = movedRuleEditors;
-
       anchor.setDragged(false);
-      clearSelection();
 
       updateEditorAreaLayout();
       setModified(true);
