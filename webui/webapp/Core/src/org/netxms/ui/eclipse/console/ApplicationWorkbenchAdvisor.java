@@ -140,26 +140,26 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 		final Properties properties = new AppPropertiesLoader().load();
 		
 		String password = "";
-		boolean autoLogin = (RWT.getRequest().getParameter("auto") != null); //$NON-NLS-1$
+		boolean autoLogin = (Application.getParameter("auto") != null); //$NON-NLS-1$
 		
-		String ssoTicket = RWT.getRequest().getParameter("ticket");
+		String ssoTicket = Application.getParameter("ticket");
 		if (ssoTicket != null) 
 		{
 			autoLogin = true;
-			String server = RWT.getRequest().getParameter("server"); //$NON-NLS-1$
+			String server = Application.getParameter("server"); //$NON-NLS-1$
 			if (server == null)
 				server = properties.getProperty("server", "127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
 			success = connectToServer(server, null, ssoTicket);
 		}
 		else if (autoLogin) 
 		{
-			String server = RWT.getRequest().getParameter("server"); //$NON-NLS-1$
+			String server = Application.getParameter("server"); //$NON-NLS-1$
 			if (server == null)
 				server = properties.getProperty("server", "127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
-			String login = RWT.getRequest().getParameter("login"); //$NON-NLS-1$
+			String login = Application.getParameter("login"); //$NON-NLS-1$
 			if (login == null)
 				login = "guest";
-			password = RWT.getRequest().getParameter("password"); //$NON-NLS-1$
+			password = Application.getParameter("password"); //$NON-NLS-1$
 			if (password == null)
 				password = "";
 			success = connectToServer(server, login, password);

@@ -148,7 +148,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	@Override
    public void postWindowOpen()
    {
-      String dashboardId = RWT.getRequest().getParameter("dashboard"); //$NON-NLS-1$
+      String dashboardId = Application.getParameter("dashboard"); //$NON-NLS-1$
       if (dashboardId != null)
          showDashboard(dashboardId);
    }

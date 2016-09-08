@@ -25,6 +25,7 @@ import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.ClientInfo;
+import org.eclipse.rap.rwt.client.service.StartupParameters;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -43,7 +44,7 @@ public class Application implements IApplication
 	 */
 	public Object start(IApplicationContext context) throws Exception
 	{
-		String lang = RWT.getRequest().getParameter("lang"); //$NON-NLS-1$
+		String lang = getParameter("lang"); //$NON-NLS-1$
 		if (lang != null)
 			RWT.setLocale(new Locale(lang));
 		
@@ -90,5 +91,17 @@ public class Application implements IApplication
 	public void stop()
 	{
 		// Do nothing
+	}
+	
+	/**
+	 * Get application's parameter (passed as part of URL)
+	 * 
+	 * @param name parameter's name
+	 * @return parameter's value or null if not found
+	 */
+	public static String getParameter(final String name)
+	{
+      StartupParameters sp = RWT.getClient().getService(StartupParameters.class);
+      return (sp != null) ? sp.getParameter(name) : null;
 	}
 }
