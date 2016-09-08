@@ -1985,6 +1985,12 @@ public class NXCSession
 
       isConnected = false;
       isDisconnected = true;
+      
+      listeners.clear();
+      consoleListeners.clear();
+      messageSubscriptions.clear();
+      receivedFiles.clear();
+      recievedUpdates.clear();
    }
 
    /**
@@ -6874,6 +6880,9 @@ public class NXCSession
     */
    public boolean checkConnection()
    {
+      if (!isConnected)
+         return false;
+      
       final NXCPMessage msg = newMessage(NXCPCodes.CMD_KEEPALIVE);
       try
       {
