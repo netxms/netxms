@@ -340,9 +340,9 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
    bool found = false;
    for (int i = 0; i < s_cronSchedules.size(); i++)
    {
-      if (s_cronSchedules.get(i)->getId() == id && s_oneTimeSchedules.get(i)->canAccess(owner, systemAccessRights))
+      if (s_cronSchedules.get(i)->getId() == id)
       {
-         if(!s_oneTimeSchedules.get(i)->canAccess(owner, systemAccessRights))
+         if(!s_cronSchedules.get(i)->canAccess(owner, systemAccessRights))
          {
             rcc = RCC_ACCESS_DENIED;
             break;
@@ -393,7 +393,7 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
 UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags)
 {
    DbgPrintf(7, _T("UpdateOneTimeAction: update one time schedule %d, %s, %d, %s"), id, task, nextExecutionTime, params);
-   bool found = true;
+   bool found = false;
    MutexLock(s_oneTimeScheduleLock);
    UINT32 rcc = RCC_SUCCESS;
    for (int i = 0; i < s_oneTimeSchedules.size(); i++)
@@ -420,9 +420,9 @@ UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutio
       MutexLock(s_cronScheduleLock);
       for (int i = 0; i < s_cronSchedules.size(); i++)
       {
-         if (s_cronSchedules.get(i)->getId() == id && s_oneTimeSchedules.get(i)->canAccess(owner, systemAccessRights))
+         if (s_cronSchedules.get(i)->getId() == id)
          {
-            if(!s_oneTimeSchedules.get(i)->canAccess(owner, systemAccessRights))
+            if(!s_cronSchedules.get(i)->canAccess(owner, systemAccessRights))
             {
                rcc = RCC_ACCESS_DENIED;
                break;
