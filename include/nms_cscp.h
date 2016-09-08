@@ -318,7 +318,7 @@ typedef struct
 #define CMD_CREATE_ACTION              0x0051
 #define CMD_DELETE_ACTION              0x0052
 #define CMD_ACTION_DATA                0x0053
-//UNUSED: #define CMD_GET_CONTAINER_CAT_LIST     0x0054
+#define CMD_SETUP_AGENT_TUNNEL         0x0054
 //UNUSED: #define CMD_CONTAINER_CAT_DATA         0x0055
 //UNUSED: #define CMD_DELETE_CONTAINER_CAT       0x0056
 //UNUSED: #define CMD_CREATE_CONTAINER_CAT       0x0057

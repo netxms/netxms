@@ -100,6 +100,8 @@
 #define MAX_PSUFFIX_LENGTH 32
 #define MAX_SERVERS        32
 #define MAX_ESA_USER_NAME  64
+#define MAX_AGENT_MSG_SIZE 4194304
+
 
 #define AF_DAEMON                   0x00000001
 #define AF_USE_SYSLOG               0x00000002

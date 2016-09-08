@@ -57,6 +57,7 @@
  * Constants
  */
 #define AGENT_LISTEN_PORT        4700
+#define AGENT_TUNNEL_PORT        4703
 #define AGENT_PROTOCOL_VERSION   2
 #define MAX_RESULT_LENGTH        256
 #define MAX_CMD_LEN              256

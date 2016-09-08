@@ -326,4 +326,10 @@ Language=English
 Data collection database schema upgrade failed
 .
 
+MessageId=
+SymbolicName=MSG_INVALID_TUNNEL_CONFIG
+Language=English
+Invalid server connection configuration record "%1"
+.
+
 ;#endif

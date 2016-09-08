@@ -65,6 +65,7 @@ THREAD_RESULT THREAD_CALL SNMPTrapReceiver(void *);
 THREAD_RESULT THREAD_CALL SNMPTrapSender(void *);
 THREAD_RESULT THREAD_CALL SyslogReceiver(void *);
 THREAD_RESULT THREAD_CALL SyslogSender(void *);
+THREAD_RESULT THREAD_CALL TunnelManager(void *);
 
 void ShutdownTrapSender();
 void ShutdownSNMPTrapSender();
@@ -84,6 +85,8 @@ void DestroySessionList();
 BOOL RegisterOnServer(const TCHAR *pszServer);
 
 void UpdatePolicyInventory();
+
+void ParseTunnelList(TCHAR *list);
 
 #if !defined(_WIN32)
 void InitStaticSubagents();
@@ -203,6 +206,7 @@ static TCHAR *m_pszShExtParamList = NULL;
 static TCHAR *m_pszParamProviderList = NULL;
 static TCHAR *m_pszExtSubagentList = NULL;
 static TCHAR *m_pszAppAgentList = NULL;
+static TCHAR *s_serverConnectionList = NULL;
 static UINT32 s_enabledCiphers = 0xFFFF;
 static THREAD s_sessionWatchdogThread = INVALID_THREAD_HANDLE;
 static THREAD s_listenerThread = INVALID_THREAD_HANDLE;
@@ -212,6 +216,7 @@ static THREAD s_snmpTrapSenderThread = INVALID_THREAD_HANDLE;
 static THREAD s_syslogReceiverThread = INVALID_THREAD_HANDLE;
 static THREAD s_syslogSenderThread = INVALID_THREAD_HANDLE;
 static THREAD s_masterAgentListenerThread = INVALID_THREAD_HANDLE;
+static THREAD s_tunnelManagerThread = INVALID_THREAD_HANDLE;
 static TCHAR s_processToWaitFor[MAX_PATH] = _T("");
 static TCHAR s_dumpDir[MAX_PATH] = _T("C:\\");
 static UINT64 s_maxLogSize = 16384 * 1024;
@@ -282,6 +287,7 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("PlatformSuffix"), CT_STRING, 0, 0, MAX_PSUFFIX_LENGTH, 0, g_szPlatformSuffix, NULL },
    { _T("RequireAuthentication"), CT_BOOLEAN, 0, 0, AF_REQUIRE_AUTH, 0, &g_dwFlags, NULL },
    { _T("RequireEncryption"), CT_BOOLEAN, 0, 0, AF_REQUIRE_ENCRYPTION, 0, &g_dwFlags, NULL },
+   { _T("ServerConnection"), CT_STRING_LIST, '\n', 0, 0, 0, &s_serverConnectionList, NULL },
    { _T("Servers"), CT_STRING_LIST, ',', 0, 0, 0, &m_pszServerList, NULL },
    { _T("SessionIdleTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwIdleTimeout, NULL },
    { _T("SessionAgentPort"), CT_WORD, 0, 0, 0, 0, &g_sessionAgentPort, NULL },
@@ -805,6 +811,10 @@ BOOL Initialize()
 		if (!InitParameterList())
 			return FALSE;
 
+		// Parse outgoing server connection (tunnel) list
+      if (s_serverConnectionList != NULL)
+         ParseTunnelList(s_serverConnectionList);
+
 		// Parse server lists
 		if (m_pszMasterServerList != NULL)
 			ParseServerList(m_pszMasterServerList, true, true);
@@ -1030,7 +1040,9 @@ BOOL Initialize()
       {
          RegisterOnServer(g_szRegistrar);
       }
-   }
+
+      s_tunnelManagerThread = ThreadCreateEx(TunnelManager, 0, NULL);
+	}
 
 #if defined(_WIN32)
    s_shutdownCondition = ConditionCreate(TRUE);
@@ -1082,6 +1094,7 @@ void Shutdown()
 		ShutdownTrapSender();
 		ThreadJoin(s_sessionWatchdogThread);
 		ThreadJoin(s_listenerThread);
+		ThreadJoin(s_tunnelManagerThread);
 	}
 	ThreadJoin(s_eventSenderThread);
 	if (g_dwFlags & AF_ENABLE_SNMP_TRAP_PROXY)

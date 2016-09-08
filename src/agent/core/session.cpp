@@ -37,11 +37,6 @@ UINT32 GetPolicyInventory(CommSession *session, NXCPMessage *msg);
 void ClearDataCollectionConfiguration();
 
 /**
- * Max message size
- */
-#define MAX_MSG_SIZE    4194304
-
-/**
  * SNMP proxy thread pool
  */
 ThreadPool *g_snmpProxyThreadPool = NULL;
@@ -206,7 +201,7 @@ void CommSession::disconnect()
  */
 void CommSession::readThread()
 {
-   SocketMessageReceiver receiver(m_hSocket, 4096, MAX_MSG_SIZE);
+   SocketMessageReceiver receiver(m_hSocket, 4096, MAX_AGENT_MSG_SIZE);
    while(true)
    {
       if (!m_proxyConnection)

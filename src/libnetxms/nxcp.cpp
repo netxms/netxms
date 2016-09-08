@@ -119,7 +119,7 @@ TCHAR LIBNETXMS_EXPORTABLE *NXCPMessageCodeName(WORD code, TCHAR *pszBuffer)
       _T("CMD_CREATE_ACTION"),
       _T("CMD_DELETE_ACTION"),
       _T("CMD_ACTION_DATA"),
-      _T("<unused>"),
+      _T("CMD_SETUP_AGENT_TUNNEL"),
       _T("<unused>"),
       _T("<unused>"),
       _T("<unused>"),
