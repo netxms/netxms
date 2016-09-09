@@ -31,6 +31,7 @@ public class CommonRCC
 	public static final int TIMEOUT = 4;
 	public static final int OUT_OF_STATE_REQUEST = 5;
 	public static final int DB_FAILURE = 6;
+	public static final int INVALID_OBJECT_ID = 7;
 	public static final int ALREADY_EXIST = 8;
 	public static final int COMM_FAILURE = 9;
 	public static final int SYSTEM_FAILURE = 10;

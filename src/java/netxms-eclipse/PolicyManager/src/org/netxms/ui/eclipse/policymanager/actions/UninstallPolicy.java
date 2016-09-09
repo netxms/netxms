@@ -22,12 +22,15 @@ import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
+import org.netxms.base.CommonRCC;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.AbstractObject;
@@ -80,8 +83,45 @@ public class UninstallPolicy implements IObjectActionDelegate
 					protected void runInternal(IProgressMonitor monitor) throws Exception
 					{
 						AbstractObject[] nodeList = dlg.getSelectedObjects(Node.class);
-							for(int i = 0; i < nodeList.length; i++)
-								session.uninstallAgentPolicy(policy.getObjectId(), nodeList[i].getObjectId());
+						StringBuilder sb = new StringBuilder();
+						for(int i = 0; i < nodeList.length; i++)
+						{
+   					   try
+                     {
+                        session.uninstallAgentPolicy(policy.getObjectId(), nodeList[i].getObjectId());
+                     }
+                     catch(NXCException e)
+                     {
+                        if(e.getErrorCode() == CommonRCC.INCOMPATIBLE_OPERATION || e.getErrorCode() == CommonRCC.INTERNAL_ERROR ||
+                              e.getErrorCode() == CommonRCC.ACCESS_DENIED || e.getErrorCode() == CommonRCC.INVALID_OBJECT_ID)
+                        {
+                           if(sb.length() == 0)
+                              sb.append("Could not apply policy to the node(s):\n");
+                           sb.append(nodeList[i].getObjectName());
+                           sb.append(" - ");
+                           sb.append(e.getLocalizedMessage());
+                           sb.append("\n");                          
+                        }
+                        else
+                        {
+                           throw(e);
+                        }
+                     }
+                  }
+						System.out.println(sb.toString());
+   
+                  if(sb.length() != 0)
+                  {
+                     final String error = sb.toString();
+                     runInUIThread(new Runnable() {
+                        
+                        @Override
+                        public void run()
+                        {
+                           MessageDialog.openError(shell, "Error", error);                           
+                        }
+                     });
+                  }
 					}
 	
 					@Override

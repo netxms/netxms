@@ -22,15 +22,18 @@ import java.util.HashSet;
 import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
+import org.netxms.base.CommonRCC;
+import org.netxms.client.NXCException;
 import org.netxms.client.NXCSession;
-import org.netxms.client.objects.AgentPolicy;
 import org.netxms.client.objects.AbstractObject;
+import org.netxms.client.objects.AgentPolicy;
 import org.netxms.ui.eclipse.jobs.ConsoleJob;
 import org.netxms.ui.eclipse.policymanager.Activator;
 import org.netxms.ui.eclipse.policymanager.Messages;
@@ -84,8 +87,44 @@ public class InstallPolicy implements IObjectActionDelegate
 						final AbstractObject[] nodeList =
 								(dlg.getInstallMode() == SelectInstallTargetDialog.INSTALL_ON_SELECTED) ?
 									dlg.getSelectedObjects() : policy.getChildsAsArray();
+						StringBuilder sb = new StringBuilder();
 						for(int i = 0; i < nodeList.length; i++)
-							session.deployAgentPolicy(policy.getObjectId(), nodeList[i].getObjectId());
+						{
+						   try
+						   {
+						      session.deployAgentPolicy(policy.getObjectId(), nodeList[i].getObjectId());
+						   }
+						   catch(NXCException e)
+						   {
+						      if(e.getErrorCode() == CommonRCC.INCOMPATIBLE_OPERATION || e.getErrorCode() == CommonRCC.INTERNAL_ERROR ||
+						            e.getErrorCode() == CommonRCC.ACCESS_DENIED || e.getErrorCode() == CommonRCC.INVALID_OBJECT_ID)
+						      {
+						         if(sb.length() == 0)
+						            sb.append("Could not apply policy to the node(s):\n");
+						         sb.append(nodeList[i].getObjectName());
+						         sb.append(" - ");
+						         sb.append(e.getLocalizedMessage());
+                           sb.append("\n");						         
+						      }
+						      else
+						      {
+						         throw(e);
+						      }
+						   }
+						}
+
+						if(sb.length() != 0)
+						{
+                     final String error = sb.toString();
+						   runInUIThread(new Runnable() {
+                        
+                        @Override
+                        public void run()
+                        {
+                           MessageDialog.openError(shell, "Error", error);                           
+                        }
+                     });
+						}
 					}
 	
 					@Override
