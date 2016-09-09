@@ -1991,6 +1991,9 @@ public class NXCSession
       messageSubscriptions.clear();
       receivedFiles.clear();
       recievedUpdates.clear();
+      objectList.clear();
+      eventTemplates.clear();
+      userDB.clear();
    }
 
    /**
