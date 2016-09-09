@@ -1101,6 +1101,7 @@ public class ExportFileBuilder extends ViewPart implements ISaveablePart
 	{
 		final ObjectSelectionDialog dlg = new ObjectSelectionDialog(getSite().getShell(), null, ObjectSelectionDialog.createTemplateSelectionFilter());
 		dlg.enableMultiSelection(true);
+		dlg.showFilterToolTip(false);
 		if (dlg.open() == Window.OK)
 		{
 			final Set<Long> idList = new HashSet<Long>();
