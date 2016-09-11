@@ -201,7 +201,7 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(char *pszHost, char *pszLogin,
 {
 	long iResult;
 	DB2DRV_CONN *pConn;
-   SQLHSTMT sqlStatement = NULL;
+   SQLHSTMT sqlStatement;
 
 	// Allocate our connection structure
 	pConn = (DB2DRV_CONN *)malloc(sizeof(DB2DRV_CONN));
@@ -614,7 +614,7 @@ static NETXMS_WCHAR *GetFieldData(SQLHSTMT sqlStatement, short column)
    {
       int len = ucs2_strlen(buffer);
       result = (NETXMS_WCHAR *)malloc((len + 1) * sizeof(NETXMS_WCHAR));
-      ucs2_to_ucs4(buffer, -1, pResult->values[i], len + 1);
+      ucs2_to_ucs4(buffer, -1, result, len + 1);
    }
    else if ((rc == SQL_SUCCESS_WITH_INFO) && (dataSize != SQL_NULL_DATA))
    {
