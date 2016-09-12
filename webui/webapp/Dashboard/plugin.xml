@@ -305,6 +305,36 @@
             </instanceof>
          </enabledWhen>
       </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.EventMonitor"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.EventMonitor#0"
+            name="Event Monitor">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.EventMonitorConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.SnmpTrapMonitor"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.SnmpTrapMonitor#0"
+            name="SNMP trap monitor">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.SnmpTrapMonitorConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.dashboard.propertypages.SyslogMonitor"
+            id="org.netxms.ui.eclipse.dashboard.propertypages.SyslogMonitor#0"
+            name="Syslog monitor">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.ui.eclipse.dashboard.widgets.internal.SyslogMonitorConfig">
+            </instanceof>
+         </enabledWhen>
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.adapters">

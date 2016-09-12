@@ -33,7 +33,7 @@ import org.netxms.ui.eclipse.snmp.views.SnmpTrapMonitor;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
 
 /**
- * Open syslog monitor view
+ * Open SNMP trap monitor view
  */
 public class OpenSnmpTrapMonitor implements IWorkbenchWindowActionDelegate
 {

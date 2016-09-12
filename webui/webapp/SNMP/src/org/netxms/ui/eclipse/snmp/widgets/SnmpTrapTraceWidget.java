@@ -117,4 +117,16 @@ public class SnmpTrapTraceWidget extends AbstractTraceWidget implements SessionL
 			});
 		}
 	}
+	
+	/**
+    *  sets root ID
+    * @param objectId
+    */
+   public void setRootObject(long objectId)
+   {
+      enableFilter(false);
+      if (objectId == 0)
+         return;
+      setFilter(session.findObjectById(objectId).getObjectName().toLowerCase());
+   }
 }

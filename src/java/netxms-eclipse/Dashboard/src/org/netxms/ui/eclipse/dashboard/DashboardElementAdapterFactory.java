@@ -26,6 +26,7 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.BarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.CustomWidgetConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DashboardElementConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.DciSummaryTableConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.EventMonitorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GaugeConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.EmbeddedDashboardConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.GeoMapConfig;
@@ -35,8 +36,10 @@ import org.netxms.ui.eclipse.dashboard.widgets.internal.NetworkMapConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.ObjectStatusChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.PieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.SeparatorConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.SnmpTrapMonitorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusIndicatorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.StatusMapConfig;
+import org.netxms.ui.eclipse.dashboard.widgets.internal.SyslogMonitorConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableBarChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TablePieChartConfig;
 import org.netxms.ui.eclipse.dashboard.widgets.internal.TableTubeChartConfig;
@@ -80,6 +83,12 @@ public class DashboardElementAdapterFactory implements IAdapterFactory
 			{
 				switch(element.getType())
 				{
+				   case DashboardElement.SYSLOG_MONITOR:
+				      return SyslogMonitorConfig.createFromXml(element.getData());
+				   case DashboardElement.SNMP_TRAP_MONITOR:
+				      return SnmpTrapMonitorConfig.createFromXml(element.getData());
+				   case DashboardElement.EVENT_MONITOR:
+				      return EventMonitorConfig.createFromXml(element.getData());
 					case DashboardElement.ALARM_VIEWER:
 						return AlarmViewerConfig.createFromXml(element.getData());
 					case DashboardElement.AVAILABLITY_CHART:

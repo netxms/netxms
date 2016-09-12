@@ -87,6 +87,9 @@ public class DashboardView extends ViewPart implements ISaveablePart
 	private Action actionAddAvailabilityChart;
 	private Action actionAddDashboard;
 	private Action actionAddStatusIndicator;
+	private Action actionAddEventMonitor;
+	private Action actionAddSnmpTrapMonitor;
+	private Action actionAddSyslogMonitor;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -227,6 +230,30 @@ public class DashboardView extends ViewPart implements ISaveablePart
 		actionEditMode.setImageDescriptor(SharedIcons.EDIT);
 		actionEditMode.setChecked(dbc.isEditMode());
 		
+		actionAddSyslogMonitor = new Action("Add s&yslog monitor") {
+		   @Override
+		   public void run()
+		   {
+		      dbc.addSyslogMonitor();
+		   }
+		};
+		
+		actionAddSnmpTrapMonitor = new Action("Add S&NMP trap monitor") {
+		   @Override
+		   public void run()
+		   {
+		      dbc.addSnmpTrapMonitor();
+		   }
+		};
+		
+		actionAddEventMonitor = new Action("Add &event monitor") {
+         @Override
+         public void run()
+         {
+            dbc.addEventMonitor();
+         }
+      };
+		
 		actionAddAlarmBrowser = new Action(Messages.get().DashboardView_AddAlarmBrowser) {
 			@Override
 			public void run()
@@ -324,6 +351,9 @@ public class DashboardView extends ViewPart implements ISaveablePart
    		manager.add(actionSave);
    		manager.add(new Separator());
    		manager.add(actionAddAlarmBrowser);
+   		manager.add(actionAddEventMonitor);
+   		manager.add(actionAddSnmpTrapMonitor);
+   		manager.add(actionAddSyslogMonitor);
    		manager.add(actionAddLabel);
    		manager.add(actionAddLineChart);
    		manager.add(actionAddBarChart);

@@ -47,6 +47,10 @@ public class DashboardElement
 	public static final int TABLE_VALUE = 19;
 	public static final int STATUS_MAP = 20;
    public static final int DCI_SUMMARY_TABLE = 21;
+   public static final int SYSLOG_MONITOR = 22;
+   public static final int SNMP_TRAP_MONITOR = 23;
+   public static final int EVENT_MONITOR = 24;
+   
 	
 	public static final int FILL = 0;
 	public static final int CENTER = 1;

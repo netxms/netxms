@@ -184,6 +184,15 @@ public class DashboardControl extends Composite
 		ElementWidget w;
 		switch(e.getType())
 		{
+		   case DashboardElement.SYSLOG_MONITOR:
+		      w = new SyslogMonitorElement(this, e, viewPart);
+		      break;
+		   case DashboardElement.SNMP_TRAP_MONITOR:
+		      w = new SnmpTrapMonitorElement(this, e, viewPart);
+		      break;
+		   case DashboardElement.EVENT_MONITOR:
+		      w = new EventMonitorElement(this, e, viewPart);
+		      break;
 			case DashboardElement.ALARM_VIEWER:
 				w = new AlarmViewerElement(this, e, viewPart);
 				break;
@@ -443,6 +452,24 @@ public class DashboardControl extends Composite
 		{
 			MessageDialogHelper.openError(getShell(), Messages.get().DashboardControl_InternalError, Messages.get().DashboardControl_InternalErrorText2);
 		}
+	}
+	
+	public void addSyslogMonitor()
+	{
+	   DashboardElement e = new DashboardElement(DashboardElement.SYSLOG_MONITOR, DEFAULT_OBJECT_REFERENCE_CONFIG);
+	   addElement(e);
+	}
+	
+	public void addSnmpTrapMonitor()
+	{
+	   DashboardElement e = new DashboardElement(DashboardElement.SNMP_TRAP_MONITOR, DEFAULT_OBJECT_REFERENCE_CONFIG);
+      addElement(e);
+	}
+	
+	public void addEventMonitor()
+	{
+	   DashboardElement e = new DashboardElement(DashboardElement.EVENT_MONITOR, DEFAULT_OBJECT_REFERENCE_CONFIG);
+	   addElement(e);
 	}
 	
 	/**

@@ -29,6 +29,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -467,6 +468,16 @@ public abstract class AbstractTraceWidget extends Composite
     * @return the viewer
     */
    public TableViewer getViewer()
+   {
+      return viewer;
+   }
+   
+   /**
+    * Get selection provider
+    * 
+    * @return
+    */
+   public ISelectionProvider getSelectionProvider()
    {
       return viewer;
    }

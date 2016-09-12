@@ -77,6 +77,9 @@ public class AddDashboardElementDlg extends Dialog
 		elementTypeSelector.add(Messages.get().AddDashboardElementDlg_TableValue);
 		elementTypeSelector.add(Messages.get().AddDashboardElementDlg_StatusMap);
       elementTypeSelector.add(Messages.get().AddDashboardElementDlg_DciSummaryTable);
+      elementTypeSelector.add("Syslog monitor");
+      elementTypeSelector.add("SNMP trap monitor");
+      elementTypeSelector.add("Event monitor");
 		elementTypeSelector.select(1);
 		
 		return dialogArea;

@@ -415,6 +415,9 @@ public class DashboardElements extends PropertyPage
 					config = DashboardControl.DEFAULT_LABEL_CONFIG;
 					break;
 				case DashboardElement.ALARM_VIEWER:
+				case DashboardElement.EVENT_MONITOR:
+				case DashboardElement.SYSLOG_MONITOR:
+				case DashboardElement.SNMP_TRAP_MONITOR:
 				case DashboardElement.STATUS_INDICATOR:
 				case DashboardElement.STATUS_MAP:
 				case DashboardElement.DASHBOARD:

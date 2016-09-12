@@ -187,4 +187,16 @@ public class EventTraceWidget extends AbstractTraceWidget implements SessionList
 	{
 		return actionShowIcons;
 	}
+	
+	/**
+    *  sets root ID
+    * @param objectId
+    */
+   public void setRootObject(long objectId)
+   {
+      enableFilter(false);
+      if (objectId == 0)
+         return;
+      setFilter(session.findObjectById(objectId).getObjectName().toLowerCase());
+   }
 }
