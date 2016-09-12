@@ -57,7 +57,7 @@ BOOL EF_ProcessMessage(ISCSession *session, NXCPMessage *request, NXCPMessage *r
 		if (id != 0)
 			object = FindObjectById(id);  // Object is specified explicitely
 		else
-			object = FindNodeByIP(0, request->getFieldAsUInt32(VID_IP_ADDRESS));	// Object is specified by IP address
+			object = FindNodeByIP(0, request->getFieldAsInetAddress(VID_IP_ADDRESS));	// Object is specified by IP address
 		
 		if (object != NULL)
 		{
