@@ -112,6 +112,8 @@ private:
 	int m_repeatCount;
    IntegerArray<time_t> *m_matchArray;
 	bool m_resetRepeat;
+	UINT32 m_checkCount;
+	UINT32 m_matchCount;
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
 	                   const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
@@ -127,7 +129,7 @@ public:
 	LogParserRule(LogParserRule *src, LogParser *parser);
 	~LogParserRule();
 
-	bool isValid() { return m_isValid; }
+	bool isValid() const { return m_isValid; }
 	bool match(const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
 	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level,
 	             const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
@@ -137,37 +139,40 @@ public:
 	void setContextAction(int action) { m_contextAction = action; }
 
 	void setInverted(bool flag) { m_isInverted = flag; }
-	BOOL isInverted() { return m_isInverted; }
+	BOOL isInverted() const { return m_isInverted; }
 
 	void setBreakFlag(bool flag) { m_breakOnMatch = flag; }
-	BOOL getBreakFlag() { return m_breakOnMatch; }
+	BOOL getBreakFlag() const { return m_breakOnMatch; }
 
-	const TCHAR *getContext() { return m_context; }
-	const TCHAR *getContextToChange() { return m_contextToChange; }
-	int getContextAction() { return m_contextAction; }
+	const TCHAR *getContext() const { return m_context; }
+	const TCHAR *getContextToChange() const { return m_contextToChange; }
+	int getContextAction() const { return m_contextAction; }
 
 	void setDescription(const TCHAR *descr) { safe_free(m_description); m_description = (descr != NULL) ? _tcsdup(descr) : NULL; }
-	const TCHAR *getDescription() { return CHECK_NULL_EX(m_description); }
+	const TCHAR *getDescription() const { return CHECK_NULL_EX(m_description); }
 
 	void setSource(const TCHAR *source) { safe_free(m_source); m_source = (source != NULL) ? _tcsdup(source) : NULL; }
-	const TCHAR *getSource() { return CHECK_NULL_EX(m_source); }
+	const TCHAR *getSource() const { return CHECK_NULL_EX(m_source); }
 
 	void setLevel(UINT32 level) { m_level = level; }
-	UINT32 getLevel() { return m_level; }
+	UINT32 getLevel() const { return m_level; }
 
 	void setIdRange(UINT32 start, UINT32 end) { m_idStart = start; m_idEnd = end; }
-	QWORD getIdRange() { return ((QWORD)m_idStart << 32) | (QWORD)m_idEnd; }
+	QWORD getIdRange() const { return ((QWORD)m_idStart << 32) | (QWORD)m_idEnd; }
 
    void setRepeatInterval(int repeatInterval) { m_repeatInterval = repeatInterval; }
-   int getRepeatInterval() { return m_repeatInterval; }
+   int getRepeatInterval() const { return m_repeatInterval; }
 
    void setRepeatCount(int repeatCount) { m_repeatCount = repeatCount; }
-   int getRepeatCount() { return m_repeatCount; }
+   int getRepeatCount() const { return m_repeatCount; }
 
    void setRepeatReset(bool resetRepeat) { m_resetRepeat = resetRepeat; }
-   bool isRepeatReset() { return m_resetRepeat; }
+   bool isRepeatReset() const { return m_resetRepeat; }
 
-	const TCHAR *getRegexpSource() { return CHECK_NULL(m_regexp); }
+	const TCHAR *getRegexpSource() const { return CHECK_NULL(m_regexp); }
+
+	UINT32 getCheckCount() const { return m_checkCount; }
+   UINT32 getMatchCount() const { return m_matchCount; }
 };
 
 /**

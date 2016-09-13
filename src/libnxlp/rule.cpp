@@ -54,6 +54,8 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *regexp, UINT32 even
 	m_repeatCount = repeatCount;
 	m_matchArray = new IntegerArray<time_t>();
 	m_resetRepeat = resetRepeat;
+	m_checkCount = 0;
+	m_matchCount = 0;
 }
 
 /**
@@ -91,6 +93,8 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
    {
       m_matchArray = new IntegerArray<time_t>();
    }
+   m_checkCount = src->m_checkCount;
+   m_matchCount = src->m_matchCount;
 }
 
 /**
@@ -116,6 +120,7 @@ LogParserRule::~LogParserRule()
 bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
 								          const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg)
 {
+   m_checkCount++;
    if (extMode)
    {
 	   if (m_source != NULL)
@@ -156,6 +161,7 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 			if ((cb != NULL) && ((m_eventCode != 0) || (m_eventName != NULL)))
 				cb(m_eventCode, m_eventName, line, source, eventId, level, 0, NULL, objectId, 
                ((m_repeatCount > 0) && (m_repeatInterval > 0)) ? m_matchArray->size() : 1, userArg);
+			m_matchCount++;
 			return true;
 		}
 	}
@@ -201,6 +207,8 @@ bool LogParserRule::matchInternal(bool extMode, const TCHAR *source, UINT32 even
 #if !HAVE_ALLOCA
             free(params);
 #endif
+
+            m_matchCount++;
 			}
 			return true;
 		}
