@@ -2367,7 +2367,7 @@ CREATE TABLE dci_summary_tables
 (
   id integer not null,
   guid varchar(36) not null,
-  menu_path varchar(255) not null,
+  menu_path varchar(255) null,
   title varchar(127) null,
   node_filter SQL_TEXT null,
   flags integer not null,

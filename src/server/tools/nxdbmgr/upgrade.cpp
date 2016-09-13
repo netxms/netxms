@@ -722,6 +722,16 @@ static bool SetSchemaVersion(int version)
 }
 
 /**
+ * Upgrade from V414 to V415
+ */
+static BOOL H_UpgradeFromV414(int currVersion, int newVersion)
+{
+   CHK_EXEC(RemoveNotNullConstraint(_T("dci_summary_tables"), _T("menu_path")));
+   CHK_EXEC(SetSchemaVersion(415));
+   return TRUE;
+}
+
+/**
  * Upgrade from V413 to V414
  */
 static BOOL H_UpgradeFromV413(int currVersion, int newVersion)
@@ -10547,6 +10557,7 @@ static struct
    { 411, 412, H_UpgradeFromV411 },
    { 412, 413, H_UpgradeFromV412 },
    { 413, 414, H_UpgradeFromV413 },
+   { 414, 415, H_UpgradeFromV414 },
    { 0, 0, NULL }
 };
 
