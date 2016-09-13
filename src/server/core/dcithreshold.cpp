@@ -739,29 +739,37 @@ BOOL Threshold::compare(Threshold *pThr)
 {
    BOOL bMatch;
 
-   switch(m_dataType)
+   if (m_function == F_SCRIPT)
    {
-      case DCI_DT_INT:
-         bMatch = ((INT32)pThr->m_value == (INT32)m_value);
-         break;
-      case DCI_DT_UINT:
-         bMatch = ((UINT32)pThr->m_value == (UINT32)m_value);
-         break;
-      case DCI_DT_INT64:
-         bMatch = ((INT64)pThr->m_value == (INT64)m_value);
-         break;
-      case DCI_DT_UINT64:
-         bMatch = ((UINT64)pThr->m_value == (UINT64)m_value);
-         break;
-      case DCI_DT_FLOAT:
-         bMatch = ((double)pThr->m_value == (double)m_value);
-         break;
-      case DCI_DT_STRING:
-         bMatch = !_tcscmp(pThr->m_value.getString(), m_value.getString());
-         break;
-      default:
-         bMatch = TRUE;
-         break;
+      // Threat value field as string for script thresholds
+      bMatch = !_tcscmp(pThr->m_value.getString(), m_value.getString());
+   }
+   else
+   {
+      switch(m_dataType)
+      {
+         case DCI_DT_INT:
+            bMatch = ((INT32)pThr->m_value == (INT32)m_value);
+            break;
+         case DCI_DT_UINT:
+            bMatch = ((UINT32)pThr->m_value == (UINT32)m_value);
+            break;
+         case DCI_DT_INT64:
+            bMatch = ((INT64)pThr->m_value == (INT64)m_value);
+            break;
+         case DCI_DT_UINT64:
+            bMatch = ((UINT64)pThr->m_value == (UINT64)m_value);
+            break;
+         case DCI_DT_FLOAT:
+            bMatch = ((double)pThr->m_value == (double)m_value);
+            break;
+         case DCI_DT_STRING:
+            bMatch = !_tcscmp(pThr->m_value.getString(), m_value.getString());
+            break;
+         default:
+            bMatch = TRUE;
+            break;
+      }
    }
    return bMatch &&
           (pThr->m_eventCode == m_eventCode) &&
