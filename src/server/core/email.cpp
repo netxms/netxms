@@ -154,7 +154,7 @@ static UINT32 SendMail(const char *pszRcpt, const char *pszSubject, const char *
    // Connect to server
    SockAddrBuffer sa;
    addr.fillSockAddr(&sa, m_wSmtpPort);
-   if (connect(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa)) == 0)
+   if (ConnectEx(hSocket, (struct sockaddr *)&sa, SA_LEN((struct sockaddr *)&sa), 3000) == 0)
    {
       while((iState != STATE_FINISHED) && (iState != STATE_ERROR))
       {
