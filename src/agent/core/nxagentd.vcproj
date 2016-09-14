@@ -478,6 +478,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\tunnel.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\upgrade.cpp"
 				>
 			</File>
