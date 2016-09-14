@@ -30,8 +30,8 @@ if USE_INTERNAL_LIBTRE
 libnetxms_la_LIBADD += ../libtre/libnxtre.la
 endif
 if USE_INTERNAL_ZLIB
-libnetxms_la_CPPFLAGS += -I../../zlib
-libnetxms_la_LIBADD += ../../zlib/libnxzlib.la
+libnetxms_la_CPPFLAGS += -I../zlib
+libnetxms_la_LIBADD += ../zlib/libnxzlib.la
 endif
 
 EXTRA_DIST = \
