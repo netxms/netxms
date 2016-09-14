@@ -1,6 +1,6 @@
 /*
 ** NetXMS Session Agent
-** Copyright (C) 2003-2014 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Victor Kirhenshtein
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -126,6 +126,11 @@ static void Login()
       }
       WTSFreeMemory(state);
    }
+   else
+   {
+      TCHAR buffer[1024];
+      _tprintf(_T("WTSQuerySessionInformation(WTSConnectState) failed (%s)\n"), GetSystemErrorText(GetLastError(), buffer, 1024));
+   }
 
    msg.setField(VID_SESSION_STATE, sessionState);
 
@@ -143,6 +148,12 @@ static void Login()
          msg.setField(VID_NAME, buffer);
       }
       WTSFreeMemory(sessionName);
+   }
+   else
+   {
+      TCHAR buffer[1024];
+      _tprintf(_T("WTSQuerySessionInformation(WTSWinStationName) failed (%s)\n"), GetSystemErrorText(GetLastError(), buffer, 1024));
+      msg.setField(VID_NAME, _T("Console")); // assume console if session name cannot be read
    }
 
    TCHAR userName[256];

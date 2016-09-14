@@ -632,7 +632,7 @@ void CommSession::processingThread()
 					{
                   TCHAR sessionName[256];
                   pMsg->getFieldAsString(VID_NAME, sessionName, 256);
-                  DebugPrintf(m_dwIndex, 6, _T("Take snapshot from session \"%s\""), sessionName);
+                  DebugPrintf(m_dwIndex, 6, _T("Take screenshot from session \"%s\""), sessionName);
                   SessionAgentConnector *conn = AcquireSessionAgentConnector(sessionName);
                   if (conn != NULL)
                   {
