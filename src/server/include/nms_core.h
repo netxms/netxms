@@ -617,7 +617,7 @@ private:
    void SendTrapLog(NXCPMessage *pRequest);
    void StartSnmpWalk(NXCPMessage *pRequest);
    void resolveDCINames(NXCPMessage *pRequest);
-   UINT32 resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR **ppszName);
+   UINT32 resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR *ppszName);
    void sendConfigForAgent(NXCPMessage *pRequest);
    void sendAgentCfgList(UINT32 dwRqId);
    void OpenAgentConfig(NXCPMessage *pRequest);

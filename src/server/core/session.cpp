@@ -24,7 +24,6 @@
 #include <netxms_mt.h>
 #include <nxtools.h>
 #include <nxstat.h>
-#include <stdio.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -8904,11 +8903,10 @@ void ClientSession::StartSnmpWalk(NXCPMessage *pRequest)
 /**
  * Resolve single DCI name
  */
-UINT32 ClientSession::resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR **ppszName)
+UINT32 ClientSession::resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR *ppszName)
 {
    DCObject *pItem;
    UINT32 dwResult;
-   TCHAR name[MAX_DB_STRING];
 
    NetObj *object = FindObjectById(dwNode);
    if (object != NULL)
@@ -8920,13 +8918,12 @@ UINT32 ClientSession::resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR **ppszN
 				pItem = ((Template *)object)->getDCObjectById(dwItem);
 				if (pItem != NULL)
 				{
-					*ppszName = (TCHAR *)pItem->getDescription();
+               _tcsncpy(ppszName, pItem->getDescription(), MAX_DB_STRING);
 					dwResult = RCC_SUCCESS;
 				}
 				else
 				{
-				    int n = swprintf(name, MAX_DB_STRING, L"[%d]", dwItem);
-				    *ppszName = (TCHAR *)name;
+               int n = _sntprintf(ppszName, MAX_DB_STRING, _T("[%d]"), dwItem);
 					dwResult = RCC_SUCCESS;
 				}
 			}
@@ -8953,7 +8950,6 @@ UINT32 ClientSession::resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR **ppszN
 void ClientSession::resolveDCINames(NXCPMessage *pRequest)
 {
    UINT32 i, dwId, dwNumDCI, *pdwNodeList, *pdwDCIList, dwResult = RCC_INVALID_ARGUMENT;
-   TCHAR *pszName;
    NXCPMessage msg;
 
    msg.setCode(CMD_REQUEST_COMPLETED);
@@ -8967,10 +8963,11 @@ void ClientSession::resolveDCINames(NXCPMessage *pRequest)
 
    for(i = 0, dwId = VID_DCI_LIST_BASE; i < dwNumDCI; i++)
    {
-      dwResult = resolveDCIName(pdwNodeList[i], pdwDCIList[i], &pszName);
+      TCHAR m_description[MAX_DB_STRING];
+      dwResult = resolveDCIName(pdwNodeList[i], pdwDCIList[i], m_description);
       if (dwResult != RCC_SUCCESS)
          break;
-      msg.setField(dwId++, pszName);
+      msg.setField(dwId++, m_description);
    }
 
    free(pdwNodeList);
