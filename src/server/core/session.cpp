@@ -8923,7 +8923,7 @@ UINT32 ClientSession::resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR *ppszNa
 				}
 				else
 				{
-               int n = _sntprintf(ppszName, MAX_DB_STRING, _T("[%d]"), dwItem);
+               _sntprintf(ppszName, MAX_DB_STRING, _T("[%d]"), dwItem);
 					dwResult = RCC_SUCCESS;
 				}
 			}
