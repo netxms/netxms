@@ -13,6 +13,7 @@ if test "x$PREFIX" = "x"; then
 fi
 
 rm -rf ./build/bin ./build/lib ./build/etc ./build/share
+mkdir -p build
 cp -r $PREFIX/bin ./build/
 cp -r $PREFIX/lib ./build/
 
