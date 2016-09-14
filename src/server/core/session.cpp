@@ -24,6 +24,7 @@
 #include <netxms_mt.h>
 #include <nxtools.h>
 #include <nxstat.h>
+#include <stdio.h>
 
 #ifdef _WIN32
 #include <psapi.h>
@@ -8907,6 +8908,7 @@ UINT32 ClientSession::resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR **ppszN
 {
    DCObject *pItem;
    UINT32 dwResult;
+   TCHAR name[MAX_DB_STRING];
 
    NetObj *object = FindObjectById(dwNode);
    if (object != NULL)
@@ -8923,7 +8925,9 @@ UINT32 ClientSession::resolveDCIName(UINT32 dwNode, UINT32 dwItem, TCHAR **ppszN
 				}
 				else
 				{
-					dwResult = RCC_INVALID_DCI_ID;
+				    int n = swprintf(name, MAX_DB_STRING, L"[%d]", dwItem);
+				    *ppszName = (TCHAR *)name;
+					dwResult = RCC_SUCCESS;
 				}
 			}
 			else
