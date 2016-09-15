@@ -266,9 +266,9 @@ static NX_CFG_TEMPLATE m_cfgTemplate[] =
    { _T("EnableWatchdog"), CT_BOOLEAN, 0, 0, AF_ENABLE_WATCHDOG, 0, &g_dwFlags, NULL },
    { _T("EncryptedSharedSecret"), CT_STRING, 0, 0, MAX_SECRET_LENGTH, 0, g_szSharedSecret, NULL },
    { _T("ExecTimeout"), CT_LONG, 0, 0, 0, 0, &g_dwExecTimeout, NULL },
+   { _T("ExternalList"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtListsList, NULL },
 	{ _T("ExternalMasterAgent"), CT_STRING, 0, 0, MAX_PATH, 0, g_masterAgent, NULL },
    { _T("ExternalParameter"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtParamList, NULL },
-   { _T("ExternalList"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtListsList, NULL },
    { _T("ExternalParameterShellExec"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszShExtParamList, NULL },
    { _T("ExternalParametersProvider"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszParamProviderList, NULL },
    { _T("ExternalSubagent"), CT_STRING_LIST, '\n', 0, 0, 0, &m_pszExtSubagentList, NULL },
@@ -750,6 +750,11 @@ BOOL Initialize()
 
    DebugPrintf(INVALID_INDEX, 1, _T("Data directory: %s"), g_szDataDirectory);
    CreateFolder(g_szDataDirectory);
+
+#ifndef _WIN32
+   nxlog_debug(2, _T("Effective user ID %d"), (int)geteuid());
+   nxlog_debug(2, _T("Effective group ID %d"), (int)getegid());
+#endif
 
    //Initialize log parser policy folder
    tail = g_szDataDirectory[_tcslen(g_szDataDirectory) - 1];
@@ -1555,17 +1560,6 @@ int main(int argc, char *argv[])
    }
 
 #if !defined(_WIN32)
-   if (gid > 0)
-   {
-      if (setgid(gid) != 0)
-         _tprintf(_T("setgid(%d) call failed (%s)\n"), gid, _tcserror(errno));
-   }
-   if (uid > 0)
-   {
-      if (setuid(uid) != 0)
-         _tprintf(_T("setuid(%d) call failed (%s)\n"), uid, _tcserror(errno));
-   }
-
 	if (!_tcscmp(g_szConfigFile, _T("{search}")))
 	{
       TCHAR path[MAX_PATH] = _T("");
@@ -1777,6 +1771,50 @@ int main(int argc, char *argv[])
                }
 					if (iExitCode == 0)
                {
+#ifndef _WIN32
+					   if (gid == 0)
+					   {
+					      const TCHAR *v = g_config->getValue(_T("/agent/GroupId"));
+					      if (v != NULL)
+					      {
+#ifdef UNICODE
+					         char vmb[64];
+					         WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, v, -1, vmb, 64, NULL, NULL);
+					         vmb[63] = 0;
+					         gid = GetGroupId(vmb);
+#else
+					         gid = GetGroupId(v);
+#endif
+					      }
+					   }
+                  if (uid == 0)
+                  {
+                     const TCHAR *v = g_config->getValue(_T("/agent/UserId"));
+                     if (v != NULL)
+                     {
+#ifdef UNICODE
+                        char vmb[64];
+                        WideCharToMultiByte(CP_ACP, WC_DEFAULTCHAR | WC_COMPOSITECHECK, v, -1, vmb, 64, NULL, NULL);
+                        vmb[63] = 0;
+                        uid = GetUserId(vmb);
+#else
+                        uid = GetUserId(v);
+#endif
+                     }
+                  }
+
+                  if (gid > 0)
+                  {
+                     if (setgid(gid) != 0)
+                        _tprintf(_T("setgid(%d) call failed (%s)\n"), gid, _tcserror(errno));
+                  }
+                  if (uid > 0)
+                  {
+                     if (setuid(uid) != 0)
+                        _tprintf(_T("setuid(%d) call failed (%s)\n"), uid, _tcserror(errno));
+                  }
+#endif
+
 						s_pid = getpid();
 						if (Initialize())
 						{

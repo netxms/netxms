@@ -51,10 +51,20 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 	private static final String[] configKeywords = { 
 		"Action",  //$NON-NLS-1$
 		"ActionShellExec",  //$NON-NLS-1$
+      "AppAgent",  //$NON-NLS-1$
+      "BackgroundLogWriter",  //$NON-NLS-1$
 		"CodePage",  //$NON-NLS-1$
 		"ConfigIncludeDir",  //$NON-NLS-1$
 		"ControlServers",  //$NON-NLS-1$
 		"CreateCrashDumps",  //$NON-NLS-1$
+      "DataCollectionThreadPoolSize",  //$NON-NLS-1$
+      "DataDirectory",  //$NON-NLS-1$
+      "DataReconciliationBlockSize",  //$NON-NLS-1$
+      "DataReconciliationTimeout",  //$NON-NLS-1$
+      "DailyLogFileSuffix",  //$NON-NLS-1$
+      "DebugLevel",  //$NON-NLS-1$
+      "DisableIPv4",  //$NON-NLS-1$
+      "DisableIPv6",  //$NON-NLS-1$
 		"DumpDirectory",  //$NON-NLS-1$
 		"EnableActions",  //$NON-NLS-1$
 		"EnabledCiphers", //$NON-NLS-1$
@@ -64,16 +74,19 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 		"EnableWatchdog", //$NON-NLS-1$
 		"ExecTimeout", //$NON-NLS-1$
       "ExternalList", //$NON-NLS-1$
+      "ExternalMasterAgent", //$NON-NLS-1$
 		"ExternalParameter", //$NON-NLS-1$
 		"ExternalParameterShellExec", //$NON-NLS-1$
-		"ExternalSubAgent", //$NON-NLS-1$
+      "ExternalSubAgent", //$NON-NLS-1$
 		"FileStore", //$NON-NLS-1$
+      "GroupId", //$NON-NLS-1$
 		"ListenAddress", //$NON-NLS-1$
 		"ListenPort", //$NON-NLS-1$
 		"LogFile", //$NON-NLS-1$
 		"LogHistorySize", //$NON-NLS-1$
 		"LogRotationMode",  //$NON-NLS-1$
 		"LogUnresolvedSymbols", //$NON-NLS-1$
+      "LongRunningQueryThreshold", //$NON-NLS-1$
 		"MasterServers", //$NON-NLS-1$
 		"MaxLogSize", //$NON-NLS-1$
 		"MaxSessions", //$NON-NLS-1$
@@ -84,9 +97,14 @@ public class AgentConfigSourceViewerConfiguration extends SourceViewerConfigurat
 		"SessionIdleTimeout", //$NON-NLS-1$
 		"SharedSecret", //$NON-NLS-1$
 		"SNMPTimeout", //$NON-NLS-1$
+      "SNMPTrapListenAddress", //$NON-NLS-1$
+      "SNMPTrapPort", //$NON-NLS-1$
 		"StartupDelay", //$NON-NLS-1$
 		"SubAgent", //$NON-NLS-1$
-		"WaitForProcess" //$NON-NLS-1$
+      "SyslogListenPort", //$NON-NLS-1$
+      "UserId", //$NON-NLS-1$
+		"WaitForProcess", //$NON-NLS-1$
+      "ZoneId" //$NON-NLS-1$
 	};
 	
 	private static final IRule[] codeRules = { 

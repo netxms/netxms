@@ -20,6 +20,7 @@
 - Built-in superuser account renamed to "system"
 - Default "admin" account now is ordinary member of "Admins" group without built-in privileges
 - New method "enableDiscoveryPolling" in NXSL class "Node"
+- Agent effective user and group can be set in configuration file
 - New agent metrics for self-monitoring:
 	Agent.SyslogProxy.IsEnabled, Agent.SyslogProxy.ReceivedMessages, Agent.SyslogProxy.QueueSize
 - Management console
