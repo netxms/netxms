@@ -106,7 +106,6 @@ public class DataCollectionEditor extends ViewPart
 	public static final int COLUMN_THRESHOLD = 8;
 	public static final int COLUMN_TEMPLATE = 9;
 
-	private boolean initShowFilter = true;
 	private Composite content;
 	private FilterText filterText;
 	private SortableTableViewer viewer;
@@ -140,8 +139,7 @@ public class DataCollectionEditor extends ViewPart
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
-		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      initShowFilter = safeCast(settings.get("DataCollectionEditor.showFilter"), settings.getBoolean("DataCollectionEditor.showFilter"), initShowFilter);
+		settings = Activator.getDefault().getDialogSettings();
 		object = ((obj != null) && ((obj instanceof DataCollectionTarget) || (obj instanceof Template))) ? obj : null;
 		setPartName(Messages.get().DataCollectionEditor_PartNamePrefix + ((object != null) ? object.getObjectName() : Messages.get().DataCollectionEditor_Error));
 	}
@@ -151,9 +149,10 @@ public class DataCollectionEditor extends ViewPart
     * @param defval
     * @return
     */
-	private static boolean safeCast(String s, boolean b, boolean defval)
+	private boolean getBooleanFromSettings(String name, boolean defval)
    {
-      return (s != null) ? b : defval;
+	   String v = settings.get(name);
+      return (v != null) ? Boolean.valueOf(v) : defval;
    }
 	
 	/* (non-Javadoc)
@@ -183,7 +182,7 @@ public class DataCollectionEditor extends ViewPart
 		viewer.setComparator(new DciComparator((DciLabelProvider)viewer.getLabelProvider()));
 		filter = new DciFilter();
 		viewer.addFilter(filter);
-		WidgetHelper.restoreTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "DataCollectionEditor"); //$NON-NLS-1$
+		WidgetHelper.restoreTableViewerSettings(viewer, settings, "DataCollectionEditor"); //$NON-NLS-1$
 		
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -226,7 +225,7 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			public void widgetDisposed(DisposeEvent e)
 			{
-				WidgetHelper.saveTableViewerSettings(viewer, Activator.getDefault().getDialogSettings(), "DataCollectionEditor"); //$NON-NLS-1$
+				WidgetHelper.saveTableViewerSettings(viewer, settings, "DataCollectionEditor"); //$NON-NLS-1$
 			}
 		});
 
@@ -248,7 +247,13 @@ public class DataCollectionEditor extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
-		filterText.setCloseAction(actionShowFilter);
+		filterText.setCloseAction(new Action() {
+         @Override
+         public void run()
+         {
+            enableFilter(false);
+         }
+      });
 
 		// Request server to open data collection configuration
 		new ConsoleJob(Messages.get().DataCollectionEditor_OpenJob_Title + object.getObjectName(), this, Activator.PLUGIN_ID, null) {
@@ -286,7 +291,7 @@ public class DataCollectionEditor extends ViewPart
 		}.start();
 		
 		// Set initial focus to filter input line
-		if (initShowFilter)
+		if (actionShowFilter.isChecked())
 			filterText.setFocus();
 		else
 			enableFilter(false);	// Will hide filter area correctly
@@ -498,12 +503,11 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			public void run()
 			{
-				enableFilter(!initShowFilter);
-				actionShowFilter.setChecked(initShowFilter);
+				enableFilter(actionShowFilter.isChecked());
 			}
       };
       actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
-      actionShowFilter.setChecked(initShowFilter);
+      actionShowFilter.setChecked(getBooleanFromSettings("DataCollectionEditor.showFilter", true));
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 		
@@ -550,8 +554,6 @@ public class DataCollectionEditor extends ViewPart
 	@Override
 	public void dispose()
 	{
-	   settings.put("DataCollectionEditor.showFilter", initShowFilter);
-	   
 		if (dciConfig != null)
 		{
 			new ConsoleJob(Messages.get().DataCollectionEditor_UnlockJob_Title + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
@@ -908,8 +910,7 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void enableFilter(boolean enable)
 	{
-		initShowFilter = enable;
-		filterText.setVisible(initShowFilter);
+		filterText.setVisible(enable);
 		FormData fd = (FormData)viewer.getTable().getLayoutData();
 		fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
 		content.layout();
@@ -922,6 +923,7 @@ public class DataCollectionEditor extends ViewPart
 			filterText.setText(""); //$NON-NLS-1$
 			onFilterModify();
 		}
+      settings.put("DataCollectionEditor.showFilter", enable);
 	}
 
 	/**
