@@ -234,12 +234,18 @@ extern "C" DBDRV_CONNECTION EXPORT DrvConnect(const char *host, const char *logi
                UCS2CHAR version[1024];
                if (OCIServerVersion(pConn->handleService, pConn->handleError, (OraText *)version, sizeof(version), OCI_HTYPE_SVCCTX) == OCI_SUCCESS)
                {
+#ifdef UNICODE
 #if UNICODE_UCS4
                   WCHAR *wver = UCS4StringFromUCS2String(version);
                   nxlog_debug(5, _T("ORACLE: connected to %s"), wver);
                   free(wver);
 #else
                   nxlog_debug(5, _T("ORACLE: connected to %s"), version);
+#endif
+#else
+                  char *mbver = MBStringFromUCS2String(version);
+                  nxlog_debug(5, _T("ORACLE: connected to %s"), mbver);
+                  free(mbver);
 #endif
                }
 				}
