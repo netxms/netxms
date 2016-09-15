@@ -1296,7 +1296,7 @@ static void InitiateExtSubagentShutdown()
 /**
  * Get user ID
  */
-static int GetUserId(char *name)
+static int GetUserId(const char *name)
 {
    char *eptr;
    int id = (int)strtol(name, &eptr, 10);
@@ -1320,7 +1320,7 @@ static int GetUserId(char *name)
 /**
  * Get group ID
  */
-static int GetGroupId(char *name)
+static int GetGroupId(const char *name)
 {
    char *eptr;
    int id = (int)strtol(name, &eptr, 10);
