@@ -24,6 +24,9 @@ PATH=/usr/sbin:/usr/bin:/sbin
 export PATH
 
 NETXMSD_ENABLED=1
+if [ -f /etc/rc.config.d/netxmsd ]; then
+    . /etc/rc.config.d/netxmsd
+fi
 
 # NOTE: If your script executes in run state 0 or state 1, then /usr might
 #	not be available.  Do not attempt to access commands or files in
