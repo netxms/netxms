@@ -21,13 +21,17 @@ package org.netxms.ui.eclipse.datacollection.objecttabs;
 import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.State;
 import org.eclipse.jface.action.Action;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
+import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab;
 import org.netxms.ui.eclipse.tools.VisibilityValidator;
 
@@ -37,6 +41,7 @@ import org.netxms.ui.eclipse.tools.VisibilityValidator;
 public class LastValues extends ObjectTab
 {
 	private LastValuesWidget dataView;
+	private boolean initShowFilter = true;
 	
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#createTabContent(org.eclipse.swt.widgets.Composite)
@@ -44,6 +49,9 @@ public class LastValues extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
+	   final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = safeCast(settings.get("LastValuesTab.showFilter"), settings.getBoolean("LastValuesTab.showFilter"), initShowFilter);
+	   
 		dataView = new LastValuesWidget(getViewPart(), parent, SWT.NONE, getObject(), "LastValuesTab", new VisibilityValidator() {  //$NON-NLS-1$
          @Override
          public boolean isVisible()
@@ -51,6 +59,17 @@ public class LastValues extends ObjectTab
             return isActive();
          }
       });
+		
+		dataView.addDisposeListener(new DisposeListener() {
+
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            settings.put("LastValuesTab.showFilter", dataView.isFilterEnabled());
+         }
+		   
+		});
+		
 		dataView.setAutoRefreshEnabled(true);
 		dataView.setFilterCloseAction(new Action() {
 			@Override
@@ -64,7 +83,19 @@ public class LastValues extends ObjectTab
 				service.refreshElements(command.getId(), null);
 			}
 		});
+		
+		dataView.enableFilter(initShowFilter);
 	}
+	
+	/**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
+   }
 
 	/* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.objectview.objecttabs.ObjectTab#objectChanged(org.netxms.client.objects.AbstractObject)

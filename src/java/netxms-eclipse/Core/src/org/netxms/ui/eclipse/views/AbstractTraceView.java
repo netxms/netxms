@@ -25,10 +25,12 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.ui.eclipse.console.Activator;
@@ -45,8 +47,10 @@ public abstract class AbstractTraceView extends ViewPart
 {
    protected NXCSession session = ConsoleSharedData.getSession();
    
-	private AbstractTraceWidget traceWidget;
+	protected AbstractTraceWidget traceWidget;
 	private Action actionClear;
+	protected Action actionShowFilter;
+	protected boolean initShowFilter = true;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -59,6 +63,9 @@ public abstract class AbstractTraceView extends ViewPart
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
+		
+		traceWidget.setFilterCloseAction(actionShowFilter);
+      traceWidget.enableFilter(initShowFilter);
 		
 		activateContext();
 	}
@@ -79,7 +86,7 @@ public abstract class AbstractTraceView extends ViewPart
 
 	/**
 	 * Activate context
-	 */
+	*/ 
 	protected void activateContext()
 	{
 		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
@@ -94,6 +101,8 @@ public abstract class AbstractTraceView extends ViewPart
 	 */
 	protected void createActions()
 	{
+	   final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+	   
 		actionClear = new Action(Messages.get().AbstractTraceView_Clear, SharedIcons.CLEAR_LOG) {
 			@Override
 			public void run()
@@ -101,6 +110,21 @@ public abstract class AbstractTraceView extends ViewPart
 				traceWidget.clear();
 			}
 		};
+		
+		actionShowFilter = new Action("Show &filter", Action.AS_CHECK_BOX) {
+         @Override
+         public void run()
+         {
+            traceWidget.enableFilter(!traceWidget.isFilterEnabled());
+            actionShowFilter.setChecked(traceWidget.isFilterEnabled());
+         }
+      };
+      actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
+      actionShowFilter.setChecked(initShowFilter);
+      actionShowFilter.setId("org.netxms.ui.eclipse.library.actions.showSnmpFilter");
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.show_filter");
+      final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
+      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
 	}
 	
 	/**
@@ -121,7 +145,7 @@ public abstract class AbstractTraceView extends ViewPart
 	 */
 	protected void fillLocalPullDown(IMenuManager manager)
 	{
-		manager.add(traceWidget.getActionShowFilter());
+		manager.add(actionShowFilter);
 		manager.add(new Separator());
 		manager.add(traceWidget.getActionPause());
 		manager.add(actionClear);

@@ -23,7 +23,10 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
@@ -39,6 +42,7 @@ import org.netxms.client.objects.AbstractObject;
 import org.netxms.client.objects.DataCollectionTarget;
 import org.netxms.ui.eclipse.actions.RefreshAction;
 import org.netxms.ui.eclipse.console.resources.SharedIcons;
+import org.netxms.ui.eclipse.datacollection.Activator;
 import org.netxms.ui.eclipse.datacollection.Messages;
 import org.netxms.ui.eclipse.datacollection.widgets.LastValuesWidget;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
@@ -57,6 +61,8 @@ public class LastValues extends ViewPart
 	private Action actionRefresh;
 	private Action actionAutoUpdate;
 	private Action actionShowFilter;
+	private boolean initShowFilter = true;
+	private IDialogSettings settings;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -66,18 +72,30 @@ public class LastValues extends ViewPart
 	{
 		super.init(site);
 		
+		settings = Activator.getDefault().getDialogSettings();
+		initShowFilter = safeCast(settings.get("LastValuesView"), settings.getBoolean("LastValuesView"), initShowFilter);
 		session = (NXCSession)ConsoleSharedData.getSession();
 		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
 		dcTarget = ((obj != null) && (obj instanceof DataCollectionTarget)) ? (DataCollectionTarget)obj : null;
 		setPartName(Messages.get().LastValues_PartNamePrefix + ((dcTarget != null) ? dcTarget.getObjectName() : Messages.get().LastValues_Error));
 	}
 
+	/**
+    * @param b
+    * @param defval
+    * @return
+    */
+	private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
+   }
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	public void createPartControl(Composite parent)
-	{
+	{	   
       FormLayout formLayout = new FormLayout();
 		parent.setLayout(formLayout);
 		
@@ -93,6 +111,15 @@ public class LastValues extends ViewPart
 		contributeToActionBars();
 		
 		dataView.setFilterCloseAction(actionShowFilter);
+		dataView.enableFilter(initShowFilter);
+		dataView.addDisposeListener(new DisposeListener() {
+
+         @Override
+         public void widgetDisposed(DisposeEvent e)
+         {
+            settings.put("LastValuesView", dataView.isFilterEnabled());            
+         }
+      });
 		
 		activateContext();
 	}
@@ -151,7 +178,7 @@ public class LastValues extends ViewPart
 			}
       };
       actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
-      actionShowFilter.setChecked(dataView.isFilterEnabled());
+      actionShowFilter.setChecked(initShowFilter);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 	}

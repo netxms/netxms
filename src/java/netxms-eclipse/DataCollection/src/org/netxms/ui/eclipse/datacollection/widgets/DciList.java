@@ -97,7 +97,7 @@ public class DciList extends Composite
       setLayout(formLayout);
       
       // Create filter area
-      filterText = new FilterText(this, SWT.NONE);
+      filterText = new FilterText(this, SWT.NONE, null, false);
       filterText.addModifyListener(new ModifyListener() {
          @Override
          public void modifyText(ModifyEvent e)

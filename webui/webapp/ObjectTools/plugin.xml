@@ -111,6 +111,11 @@
             id="org.netxms.ui.eclipse.objecttools.commands.clear_output"
             name="Clear output">
       </command>
+      <command
+            description="Toggle Filter"
+            id="org.netxms.ui.eclipse.objecttools.commands.showFilter"
+            name="Toggle Filter">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -202,8 +207,8 @@
    <extension
          point="org.eclipse.ui.contexts">
       <context
-            id="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
-            name="Abstract Command Results"
+            id="org.netxms.ui.eclipse.objecttools.context.ObjectTools"
+            name="Object Tools"
             parentId="org.eclipse.ui.contexts.window">
       </context>
    </extension>
@@ -211,33 +216,39 @@
          point="org.eclipse.ui.bindings">
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.copy"
-            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.ObjectTools"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+C">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.select_all"
-            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.ObjectTools"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+A">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.terminate_process"
-            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.ObjectTools"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="CTRL+BREAK">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.scroll_lock"
-            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.ObjectTools"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="PAUSE">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.objecttools.commands.clear_output"
-            contextId="org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"
+            contextId="org.netxms.ui.eclipse.objecttools.context.ObjectTools"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+L">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.objecttools.commands.showFilter"
+            contextId="org.netxms.ui.eclipse.objecttools.context.ObjectTools"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
       </key>
    </extension>
    <extension

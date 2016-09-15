@@ -19,7 +19,6 @@
 package org.netxms.ui.eclipse.widgets;
 
 import java.util.LinkedList;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -68,7 +67,6 @@ public abstract class AbstractTraceWidget extends Composite
    private long lastUpdated = 0;
    private boolean updateScheduled = false;
 	private Action actionPause;
-	private Action actionShowFilter;
 	private Action actionCopy;
 	
 	/**
@@ -90,14 +88,6 @@ public abstract class AbstractTraceWidget extends Composite
 			public void modifyText(ModifyEvent e)
 			{
 				onFilterModify();
-			}
-		});
-		filterText.setCloseAction(new Action() {
-			@Override
-			public void run()
-			{
-				enableFilter(false);
-				actionShowFilter.setChecked(false);
 			}
 		});
 		
@@ -160,19 +150,8 @@ public abstract class AbstractTraceWidget extends Composite
       actionPause.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.pause_trace"); //$NON-NLS-1$
 		final ActionHandler pauseHandler = new ActionHandler(actionPause);
 		handlerService.activateHandler(actionPause.getActionDefinitionId(), pauseHandler);
-		
-      actionShowFilter = new Action(Messages.get().AbstractTraceView_ShowFilter, Action.AS_CHECK_BOX) {
-			@Override
-			public void run()
-			{
-				enableFilter(actionShowFilter.isChecked());
-			}
-      };
-      actionShowFilter.setChecked(filterEnabled);
-      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.library.commands.show_trace_filter"); //$NON-NLS-1$
-		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 	}
-
+		
 	/**
 	 * Create viewer's popup menu
 	 */
@@ -336,7 +315,7 @@ public abstract class AbstractTraceWidget extends Composite
 	 * 
 	 * @param enable New filter state
 	 */
-	protected void enableFilter(boolean enable)
+	public void enableFilter(boolean enable)
 	{
 		filterEnabled = enable;
 		filterText.setVisible(filterEnabled);
@@ -349,6 +328,14 @@ public abstract class AbstractTraceWidget extends Composite
 			setFilter(""); //$NON-NLS-1$
 	}
 
+	/**
+    * @return the filterEnabled
+    */
+   public boolean isFilterEnabled()
+   {
+      return filterEnabled;
+   }
+	
 	/**
 	 * Set filter text
 	 * 
@@ -386,6 +373,17 @@ public abstract class AbstractTraceWidget extends Composite
 	}
 	
 	/**
+    * Set action to be executed when user press "Close" button in filter.
+    * Default implementation will hide filter area without notifying parent.
+    * 
+    * @param action
+    */
+   public void setFilterCloseAction(Action action)
+   {
+      filterText.setCloseAction(action);
+   }
+	
+	/**
 	 * @param runnable
 	 */
 	protected void runInUIThread(final Runnable runnable)
@@ -399,14 +397,6 @@ public abstract class AbstractTraceWidget extends Composite
 	public Action getActionPause()
 	{
 		return actionPause;
-	}
-
-	/**
-	 * @return the actionShowFilter
-	 */
-	public Action getActionShowFilter()
-	{
-		return actionShowFilter;
 	}
 
 	/**

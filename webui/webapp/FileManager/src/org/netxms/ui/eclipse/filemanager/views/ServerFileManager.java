@@ -29,6 +29,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -46,7 +47,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -84,7 +88,7 @@ public class ServerFileManager extends ViewPart implements SessionListener
    public static final int COLUMN_SIZE = 2;
    public static final int COLUMN_MODIFYED = 3;
 
-   private boolean filterEnabled = true;
+   private boolean initShowFilter = true;
    private Composite content;
    private ServerFile[] files;
    private ServerFileFilter filter;
@@ -96,6 +100,24 @@ public class ServerFileManager extends ViewPart implements SessionListener
    private Action actionDelete;
    private Action actionShowFilter;
 
+   @Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
+      IDialogSettings settings = Activator.getDefault().getDialogSettings(); 
+      initShowFilter = safeCast(settings.get("ServerFileManager.showFilter"), settings.getBoolean("ServerFileManager.showFilter"), initShowFilter);
+   }
+   
+   /**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
+   }
+   
    /*
     * (non-Javadoc)
     * 
@@ -116,13 +138,6 @@ public class ServerFileManager extends ViewPart implements SessionListener
          public void modifyText(ModifyEvent e)
          {
             onFilterModify();
-         }
-      });
-      filterText.setCloseAction(new Action() {
-         @Override
-         public void run()
-         {
-            enableFilter(false);
          }
       });
 
@@ -172,17 +187,30 @@ public class ServerFileManager extends ViewPart implements SessionListener
       createActions();
       contributeToActionBars();
       createPopupMenu();
+      activateContext();
       session.addListener(this);
 
       filterText.setCloseAction(actionShowFilter);
 
       // Set initial focus to filter input line
-      if (filterEnabled)
+      if (initShowFilter)
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
 
       refreshFileList();
+   }
+   
+   /**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.filemanager.context.FileManager"); //$NON-NLS-1$
+      }
    }
 
    /**
@@ -220,15 +248,14 @@ public class ServerFileManager extends ViewPart implements SessionListener
          @Override
          public void run()
          {
-            enableFilter(!filterEnabled);
-            actionShowFilter.setChecked(filterEnabled);
+            enableFilter(!initShowFilter);
+            actionShowFilter.setChecked(initShowFilter);
          }
       };
       actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
-      actionShowFilter.setChecked(filterEnabled);
-      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
-      final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
-      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
+      actionShowFilter.setChecked(initShowFilter);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.showFilter"); //$NON-NLS-1$
+      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
    }
 
    /**
@@ -455,6 +482,8 @@ public class ServerFileManager extends ViewPart implements SessionListener
    public void dispose()
    {
       session.removeListener(this);
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings.put("ServerFileManager.showFilter", initShowFilter);
       super.dispose();
    }
 
@@ -465,8 +494,8 @@ public class ServerFileManager extends ViewPart implements SessionListener
     */
    private void enableFilter(boolean enable)
    {
-      filterEnabled = enable;
-      filterText.setVisible(filterEnabled);
+      initShowFilter = enable;
+      filterText.setVisible(initShowFilter);
       FormData fd = (FormData)viewer.getTable().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
       content.layout();

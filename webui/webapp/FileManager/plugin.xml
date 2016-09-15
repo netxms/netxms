@@ -188,6 +188,11 @@
             id="org.netxms.ui.eclipse.filemanager.commands.find"
             name="Find">
       </command>
+      <command
+            description="Toggle Filter"
+            id="org.netxms.ui.eclipse.filemanager.commands.showFilter"
+            name="Toggle Filter">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -225,73 +230,73 @@
       </key>
       <key
             commandId="org.netxms.ui.eclipse.filemanager.commands.showFilter"
-            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.filemanager.commands.newFolder"
-            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+N">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.filemanager.commands.refreshFolder"
-            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F5">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.filemanager.commands.delete"
-            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="DEL">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.filemanager.commands.rename"
-            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+R">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.filemanager.commands.download"
-            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+D">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.filemanager.commands.uploadFile"
-            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+U">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.filemanager.commands.select_all"
-            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+A">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.filemanager.commands.copy"
-            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+C">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.filemanager.commands.clear_output"
-            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+L">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.filemanager.commands.scroll_lock"
-            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="PAUSE">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.filemanager.commands.find"
-            contextId="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
+            contextId="org.netxms.ui.eclipse.filemanager.context.FileManager"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F">
       </key>
@@ -299,12 +304,12 @@
    <extension
          point="org.eclipse.ui.contexts">
       <context
-            id="org.netxms.ui.eclipse.filemanager.context.AgentFileManager"
+            id="org.netxms.ui.eclipse.filemanager.context.FileManager"
             name="File Manager"
             parentId="org.eclipse.ui.contexts.window">
       </context>
       <context
-            id="org.netxms.ui.eclipse.filemanager.context.AgentFileViewer"
+            id="org.netxms.ui.eclipse.filemanager.context.FileManager"
             name="Agent File Viewer"
             parentId="org.eclipse.ui.contexts.window">
       </context>

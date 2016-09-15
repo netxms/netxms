@@ -28,6 +28,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -36,6 +38,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.FormAttachment;
@@ -44,6 +48,10 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
@@ -90,9 +98,28 @@ public class SummaryTableManager extends ViewPart
 	private Composite tableArea;
 	private FilterText filterText;
 	private SummaryTableFilter filter;
-	private boolean filterEnabled = true;
+	private boolean initShowFilter = true;
+   private IDialogSettings settings;
 	
-	/* (non-Javadoc)
+	@Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
+      settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = safeCast(settings.get("SummaryTableManager.showFilter"), settings.getBoolean("SummaryTableManager.showFilter"), initShowFilter);
+   }
+
+	/**
+    * @param b
+    * @param defval
+    * @return
+    */
+	private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
+   }
+   
+   /* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -111,13 +138,14 @@ public class SummaryTableManager extends ViewPart
             onFilterModify();
          }
       });
-      filterText.setCloseAction(new Action() {
+      filterText.addDisposeListener(new DisposeListener() {
+
          @Override
-         public void run()
+         public void widgetDisposed(DisposeEvent e)
          {
-            enableFilter(false);
-            actionShowFilter.setChecked(filterEnabled);
+            settings.put("SummaryTableManager.showFilter", initShowFilter);
          }
+         
       });
 	   
 		final String[] names = { Messages.get().SummaryTableManager_ID, Messages.get().SummaryTableManager_MenuPath, Messages.get().SummaryTableManager_Title };
@@ -165,7 +193,10 @@ public class SummaryTableManager extends ViewPart
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
-
+		
+		filterText.setCloseAction(actionShowFilter);
+		enableFilter(initShowFilter);
+		
 		refresh();
 		
 		listener = new SessionListener() {
@@ -197,7 +228,20 @@ public class SummaryTableManager extends ViewPart
 			}
 		};
 		session.addListener(listener);
+		activateContext();
 	}
+	
+	/**
+    * Activate context
+   */ 
+   protected void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.datacollection.context.LastValues"); //$NON-NLS-1$
+      }
+   }
 	
 	/**
     * Enable or disable filter
@@ -206,8 +250,8 @@ public class SummaryTableManager extends ViewPart
     */
    public void enableFilter(boolean enable)
    {
-      filterEnabled = enable;
-      filterText.setVisible(filterEnabled);
+      initShowFilter = enable;
+      filterText.setVisible(initShowFilter);
       FormData fd = (FormData)viewer.getTable().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
       tableArea.layout();
@@ -277,16 +321,20 @@ public class SummaryTableManager extends ViewPart
 	 */
 	private void createActions()
 	{
+     final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+
 	   // create show filter action
 	   actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
-            enableFilter(!filterEnabled);
-            actionShowFilter.setChecked(filterEnabled);
+            enableFilter(!initShowFilter);
+            actionShowFilter.setChecked(initShowFilter);
          }
        };
-       actionShowFilter.setChecked(filterEnabled);
+       actionShowFilter.setChecked(initShowFilter);
+       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
+       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
        
 		// create refresh action
 		actionRefresh = new RefreshAction(this) {

@@ -105,6 +105,11 @@
             id="org.netxms.ui.eclipse.topology.commands.find_ip_address"
             name="%command.name.FindIP">
       </command>
+      <command
+            description="Toggle Filter"
+            id="org.netxms.ui.eclipse.topology.commands.show_filter"
+            name="Toggle Filter">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -200,6 +205,12 @@
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+M2+F11">
       </key>
+      <key
+            commandId="org.netxms.ui.eclipse.topology.commands.show_filter"
+            contextId="org.netxms.ui.eclipse.topology.context.Topology"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
    </extension>
    <extension
          point="org.netxms.ui.eclipse.objectview.tabs">
@@ -217,6 +228,14 @@
             name="%tab.name.AddressMap"
             order="100">
       </tab>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.topology.context.Topology"
+            name="Topology"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
 
 </plugin>

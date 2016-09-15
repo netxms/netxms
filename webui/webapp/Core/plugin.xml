@@ -77,9 +77,9 @@
             name="%action.SendSMS">
       </command>
       <command
-            description="%command.ToggleTraceFilter"
-            id="org.netxms.ui.eclipse.library.commands.show_trace_filter"
-            name="%command.ToggleTraceFilter">
+            description="Toggle Filter"
+            id="org.netxms.ui.eclipse.library.commands.show_filter"
+            name="Toggle Filter">
       </command>
       <command
             description="%command.PauseTrace"
@@ -138,7 +138,7 @@
             sequence="M1+M3+S">
       </key>
       <key
-            commandId="org.netxms.ui.eclipse.library.commands.show_trace_filter"
+            commandId="org.netxms.ui.eclipse.library.commands.show_filter"
             contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+F2">

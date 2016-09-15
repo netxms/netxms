@@ -36,6 +36,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
@@ -147,12 +148,14 @@ public class ObjectBrowser extends ViewPart
 		{
 			initHideUnmanaged = safeCast(memento.getBoolean("ObjectBrowser.hideUnmanaged"), false); //$NON-NLS-1$
 			initHideTemplateChecks = safeCast(memento.getBoolean("ObjectBrowser.hideTemplateChecks"), false); //$NON-NLS-1$
-			initShowFilter = safeCast(memento.getBoolean("ObjectBrowser.showFilter"), true); //$NON-NLS-1$
 			initShowStatus = safeCast(memento.getBoolean("ObjectBrowser.showStatusIndicator"), false); //$NON-NLS-1$
 			initialObjectSelection = memento.getString("ObjectBrowser.selectedObject"); //$NON-NLS-1$
 		}
 		registerOpenHandlers();
 		registerActionValidators();
+		
+		IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		initShowFilter = safeCast(settings.get("ObjectBrowser.showFilter"), settings.getBoolean("ObjectBrowser.showFilter"), initShowFilter);
 	}
 
 	/**
@@ -164,6 +167,11 @@ public class ObjectBrowser extends ViewPart
 	{
 		return (b != null) ? b : defval;
 	}
+	
+	private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#saveState(org.eclipse.ui.IMemento)
@@ -174,7 +182,6 @@ public class ObjectBrowser extends ViewPart
 		super.saveState(memento);
 		memento.putBoolean("ObjectBrowser.hideUnmanaged", objectTree.isHideUnmanaged()); //$NON-NLS-1$
 		memento.putBoolean("ObjectBrowser.hideTemplateChecks", objectTree.isHideTemplateChecks()); //$NON-NLS-1$
-		memento.putBoolean("ObjectBrowser.showFilter", objectTree.isFilterEnabled()); //$NON-NLS-1$
 		memento.putBoolean("ObjectBrowser.showStatusIndicator", objectTree.isStatusIndicatorEnabled()); //$NON-NLS-1$
 		saveSelection(memento);
 	}
@@ -640,6 +647,8 @@ public class ObjectBrowser extends ViewPart
 	@Override
 	public void dispose()
 	{
+	   IDialogSettings settings = Activator.getDefault().getDialogSettings();
+	   settings.put("ObjectBrowser.showFilter", objectTree.isFilterEnabled());
 		super.dispose();
 	}
 	

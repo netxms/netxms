@@ -27,6 +27,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -42,6 +44,8 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.topology.FdbEntry;
@@ -83,7 +87,7 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	private Composite resultArea;
 	private FilterText filterText;
 	private SwitchForwardingDatabaseFilter filter;
-	private boolean filterEnabled = true;
+	private boolean initShowFilter = true;
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
@@ -103,7 +107,19 @@ public class SwitchForwardingDatabaseView extends ViewPart
 
 		session = (NXCSession)ConsoleSharedData.getSession();
 		setPartName(String.format(Messages.get().SwitchForwardingDatabaseView_Title, session.getObjectName(rootObject)));
+		IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = safeCast(settings.get("SwitchForwardingDatabase.showFilter"), settings.getBoolean("SwitchForwardingDatabase.showFilter"), initShowFilter);
 	}
+	
+	/**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
+   }
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
@@ -129,7 +145,7 @@ public class SwitchForwardingDatabaseView extends ViewPart
          public void run()
          {
             enableFilter(false);
-            actionShowFilter.setChecked(filterEnabled);
+            actionShowFilter.setChecked(initShowFilter);
          }
       });
 
@@ -178,8 +194,28 @@ public class SwitchForwardingDatabaseView extends ViewPart
 		contributeToActionBars();
 		createPopupMenu();
 		
+		// Set initial focus to filter input line
+      if (initShowFilter)
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
+      
+      activateContext();
+		
 		refresh();
 	}
+	
+	/**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.topology.context.Topology"); //$NON-NLS-1$
+      }
+   }
 	
    /**
     * Enable or disable filter
@@ -188,8 +224,8 @@ public class SwitchForwardingDatabaseView extends ViewPart
     */
    public void enableFilter(boolean enable)
    {
-      filterEnabled = enable;
-      filterText.setVisible(filterEnabled);
+      initShowFilter = enable;
+      filterText.setVisible(initShowFilter);
       FormData fd = (FormData)viewer.getTable().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
       resultArea.layout();
@@ -203,6 +239,14 @@ public class SwitchForwardingDatabaseView extends ViewPart
          onFilterModify();
       }
 
+   }
+
+   @Override
+   public void dispose()
+   {
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings.put("SwitchForwardingDatabase.showFilter", initShowFilter);
+      super.dispose();
    }
 
    /**
@@ -220,6 +264,8 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	 */
 	private void createActions()
 	{
+	   final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+	   
 		actionRefresh = new RefreshAction(this) {
 			@Override
 			public void run()
@@ -235,11 +281,13 @@ public class SwitchForwardingDatabaseView extends ViewPart
 	        @Override
 	        public void run()
 	        {
-	           enableFilter(!filterEnabled);
-	           actionShowFilter.setChecked(filterEnabled);
+	           enableFilter(!initShowFilter);
+	           actionShowFilter.setChecked(initShowFilter);
 	        }
 	      };
-	      actionShowFilter.setChecked(filterEnabled);
+	      actionShowFilter.setChecked(initShowFilter);
+	      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.topology.commands.show_filter"); //$NON-NLS-1$
+	      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 	}
 
 	/**

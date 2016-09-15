@@ -35,6 +35,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditor;
@@ -117,7 +118,7 @@ public class AgentFileManager extends ViewPart
    public static final int COLUMN_GROUP = 5;
    public static final int COLUMN_ACCESS_RIGHTS = 6;
 
-   private boolean filterEnabled = true;
+   private boolean initShowFilter = true;
    private Composite content;
    private AgentFile[] files;
    private AgentFileFilter filter;
@@ -148,10 +149,22 @@ public class AgentFileManager extends ViewPart
       super.init(site);
 
       session = (NXCSession)ConsoleSharedData.getSession();
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = safeCast(settings.get("AgentFileManager.showFilter"), settings.getBoolean("AgentFileManager.showFilter"), initShowFilter);
       objectId = Long.parseLong(site.getSecondaryId());
       setPartName(String.format(Messages.get().AgentFileManager_PartTitle, session.getObjectName(objectId)));
    }
 
+   /**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
+   }
+   
    /*
     * (non-Javadoc)
     * 
@@ -162,7 +175,7 @@ public class AgentFileManager extends ViewPart
    {
       content = new Composite(parent, SWT.NONE);
       content.setLayout(new FormLayout());
-
+      
       // Create filter area
       filterText = new FilterText(content, SWT.NONE);
       filterText.addModifyListener(new ModifyListener() {
@@ -170,13 +183,6 @@ public class AgentFileManager extends ViewPart
          public void modifyText(ModifyEvent e)
          {
             onFilterModify();
-         }
-      });
-      filterText.setCloseAction(new Action() {
-         @Override
-         public void run()
-         {
-            enableFilter(false);
          }
       });
       
@@ -245,12 +251,23 @@ public class AgentFileManager extends ViewPart
       filterText.setCloseAction(actionShowFilter);
 
       // Set initial focus to filter input line
-      if (filterEnabled)
+      if (initShowFilter)
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
 
       refreshFileList();
+   }
+   
+   /* (non-Javadoc)
+    * @see org.eclipse.ui.part.WorkbenchPart#dispose()
+    */
+   @Override
+   public void dispose()
+   {
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings.put("AgentFileManager.showFilter", initShowFilter);
+      super.dispose();
    }
 
    /**
@@ -261,7 +278,7 @@ public class AgentFileManager extends ViewPart
       IContextService contextService = (IContextService)getSite().getService(IContextService.class);
       if (contextService != null)
       {
-         contextService.activateContext("org.netxms.ui.eclipse.filemanager.context.AgentFileManager"); //$NON-NLS-1$
+         contextService.activateContext("org.netxms.ui.eclipse.filemanager.context.FileManager"); //$NON-NLS-1$
       }
    }
 
@@ -491,11 +508,11 @@ public class AgentFileManager extends ViewPart
          @Override
          public void run()
          {
-            enableFilter(!filterEnabled);
-            actionShowFilter.setChecked(filterEnabled);
+            enableFilter(!initShowFilter);
+            actionShowFilter.setChecked(initShowFilter);
          }
       };
-      actionShowFilter.setChecked(filterEnabled);
+      actionShowFilter.setChecked(initShowFilter);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.filemanager.commands.showFilter"); //$NON-NLS-1$
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 
@@ -1169,8 +1186,8 @@ public class AgentFileManager extends ViewPart
     */
    private void enableFilter(boolean enable)
    {
-      filterEnabled = enable;
-      filterText.setVisible(filterEnabled);
+      initShowFilter = enable;
+      filterText.setVisible(initShowFilter);
       FormData fd = (FormData)viewer.getTree().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
       content.layout();

@@ -29,6 +29,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -60,6 +62,8 @@ import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.ViewPart;
 import org.netxms.client.NXCSession;
 import org.netxms.client.objects.AbstractNode;
@@ -118,7 +122,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	private Composite resultArea;
 	private FilterText filterText;
 	private SnmpWalkFilter filter;
-	private boolean filterEnabled = true;
+	private boolean initShowFilter = true;
 	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite, org.eclipse.ui.IMemento)
@@ -136,17 +140,11 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 					currentNode = (AbstractNode)object;
 			}
 		}
-		super.init(site, memento);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.part.ViewPart#init(org.eclipse.ui.IViewSite)
-	 */
-	@Override
-	public void init(IViewSite site) throws PartInitException
-	{
-		super.init(site);
 		session = (NXCSession)ConsoleSharedData.getSession();
+		IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = safeCast(settings.get("MibExplorer.showFilter"), settings.getBoolean("MibExplorer.showFilter"), initShowFilter);
+		
+		super.init(site, memento);
 	}
 
 	/**
@@ -161,6 +159,15 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		return (i != null) ? i : defval;
 	}
 	
+	/**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
+   }
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
@@ -219,7 +226,7 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
          public void run()
          {
             enableFilter(false);
-            actionShowFilter.setChecked(filterEnabled);
+            actionShowFilter.setChecked(initShowFilter);
          }
       });
 		
@@ -276,7 +283,26 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		contributeToActionBars();
 		createTreePopupMenu();
 		createResultsPopupMenu();
+		activateContext();
+		
+		// Set initial focus to filter input line
+      if (initShowFilter)
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
 	}
+	
+	/**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.snmp.context.SNMP"); //$NON-NLS-1$
+      }
+   }
 	
 	/**
 	 * Enable or disable filter
@@ -284,8 +310,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	 */
 	public void enableFilter(boolean enable)
 	{
-	   filterEnabled = enable;
-	   filterText.setVisible(filterEnabled);
+	   initShowFilter = enable;
+	   filterText.setVisible(initShowFilter);
 	   FormData fd = (FormData)viewer.getTable().getLayoutData();
 	   fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
 	   resultArea.layout();
@@ -316,6 +342,8 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	 */
 	private void createActions()
 	{
+	   final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+
 		actionRefresh = new RefreshAction() {
 			@Override
 			public void run()
@@ -419,11 +447,13 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 		  @Override
 		  public void run()
 		  {
-		     enableFilter(!filterEnabled);
-		     actionShowFilter.setChecked(filterEnabled);
+		     enableFilter(!initShowFilter);
+		     actionShowFilter.setChecked(initShowFilter);
 		  }
 		};
-		actionShowFilter.setChecked(filterEnabled);
+		actionShowFilter.setChecked(initShowFilter);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.snmp.commands.showFilter"); //$NON-NLS-1$
+      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 		
 	}
 	
@@ -709,6 +739,9 @@ public class MibExplorer extends ViewPart implements SnmpWalkListener
 	public void dispose()
 	{
 		headerFont.dispose();
+		IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		settings.put("MibExplorer.showFilter", initShowFilter);
+		
 		super.dispose();
 	}
 }

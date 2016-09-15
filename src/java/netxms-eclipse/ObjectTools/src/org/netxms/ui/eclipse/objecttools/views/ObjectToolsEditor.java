@@ -32,6 +32,8 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -50,8 +52,12 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.dialogs.PropertyDialogAction;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.internal.dialogs.PropertyDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
@@ -108,9 +114,28 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	private Composite objectToolsArea;
 	private FilterText filterText;
 	private ObjectToolsFilter filter;
-	private boolean filterEnabled = true;
+	private boolean initShowFilter = true;
 
-	/* (non-Javadoc)
+	@Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
+      
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = safeCast(settings.get("ObjectTools.showFilter"), settings.getBoolean("ObjectTools.showFilter"), initShowFilter);
+   }
+	
+	/**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
+   }
+
+   /* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
@@ -145,7 +170,7 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
          public void run()
          {
             enableFilter(false);
-            actionShowFilter.setChecked(filterEnabled);
+            actionShowFilter.setChecked(initShowFilter);
          }
       });
 		
@@ -208,11 +233,30 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 		createActions();
 		contributeToActionBars();
 		createPopupMenu();
+		activateContext();
 		
 		session.addListener(this);
 		
+		// Set initial focus to filter input line
+      if (initShowFilter)
+         filterText.setFocus();
+      else
+         enableFilter(false); // Will hide filter area correctly
+		
 		refreshToolList();
 	}
+	
+	/**
+    * Activate context
+    */
+   private void activateContext()
+   {
+      IContextService contextService = (IContextService)getSite().getService(IContextService.class);
+      if (contextService != null)
+      {
+         contextService.activateContext("org.netxms.ui.eclipse.objecttools.context.ObjectTools"); //$NON-NLS-1$
+      }
+   }
 	
 	/**
     * Enable or disable filter
@@ -221,8 +265,8 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
     */
    public void enableFilter(boolean enable)
    {
-      filterEnabled = enable;
-      filterText.setVisible(filterEnabled);
+      initShowFilter = enable;
+      filterText.setVisible(initShowFilter);
       FormData fd = (FormData)viewer.getTable().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
       objectToolsArea.layout();
@@ -279,16 +323,20 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	 */
 	private void createActions()
 	{
-	   actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
+	   final IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+	   
+      actionShowFilter = new Action("Show filter", Action.AS_CHECK_BOX) {
          @Override
          public void run()
          {
-            enableFilter(!filterEnabled);
-            actionShowFilter.setChecked(filterEnabled);
+            enableFilter(!initShowFilter);
+            actionShowFilter.setChecked(initShowFilter);
          }
-       };
-       actionShowFilter.setChecked(filterEnabled);
-	   
+      };
+      actionShowFilter.setChecked(initShowFilter);
+      actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.objecttools.commands.showFilter"); //$NON-NLS-1$
+      handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
+
 		actionRefresh = new RefreshAction() {
 			@Override
 			public void run()
@@ -723,6 +771,8 @@ public class ObjectToolsEditor extends ViewPart implements SessionListener
 	{
 		session.removeListener(this);
 		ObjectToolsAdapterFactory.clearCache();
+		IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		settings.put("ObjectTools.showFilter", initShowFilter);
 		super.dispose();
 	}
 }

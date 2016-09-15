@@ -18,11 +18,13 @@
  */
 package org.netxms.ui.eclipse.snmp.views;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.snmp.Activator;
 import org.netxms.ui.eclipse.snmp.widgets.SnmpTrapTraceWidget;
 import org.netxms.ui.eclipse.views.AbstractTraceView;
 import org.netxms.ui.eclipse.widgets.AbstractTraceWidget;
@@ -42,6 +44,19 @@ public class SnmpTrapMonitor extends AbstractTraceView
    {
       super.init(site);
       subscribe(NXCSession.CHANNEL_SNMP_TRAPS);
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = safeCast(settings.get("SnmpTrapMonitor.showFilter"), settings.getBoolean("SnmpTrapMonitor.showFilter"), initShowFilter);
+   }
+   
+   /**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
    }
 
    /* (non-Javadoc)
@@ -51,6 +66,8 @@ public class SnmpTrapMonitor extends AbstractTraceView
 	public void dispose()
 	{
       unsubscribe(NXCSession.CHANNEL_SNMP_TRAPS);
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings.put("SnmpTrapMonitor.showFilter", traceWidget.isFilterEnabled());
 		super.dispose();
 	}
 

@@ -20,11 +20,13 @@ package org.netxms.ui.eclipse.eventmanager.views;
 
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.eventmanager.Activator;
 import org.netxms.ui.eclipse.eventmanager.widgets.EventTraceWidget;
 import org.netxms.ui.eclipse.views.AbstractTraceView;
 import org.netxms.ui.eclipse.widgets.AbstractTraceWidget;
@@ -44,6 +46,18 @@ public class EventMonitor extends AbstractTraceView
    {
       super.init(site);
       subscribe(NXCSession.CHANNEL_EVENTS);
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = safeCast(settings.get("EventMonitor.showFilter"), settings.getBoolean("EventMonitor.showFilter"), initShowFilter);
+   }
+
+   /**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
    }
 
    /* (non-Javadoc)
@@ -53,6 +67,8 @@ public class EventMonitor extends AbstractTraceView
    public void dispose()
    {
       unsubscribe(NXCSession.CHANNEL_EVENTS);
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings.put("EventMonitor.showFilter", traceWidget.isFilterEnabled());
       super.dispose();
    }
 

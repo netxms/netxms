@@ -20,11 +20,13 @@ package org.netxms.ui.eclipse.eventmanager.views;
 
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 import org.netxms.client.NXCSession;
+import org.netxms.ui.eclipse.eventmanager.Activator;
 import org.netxms.ui.eclipse.eventmanager.widgets.SyslogTraceWidget;
 import org.netxms.ui.eclipse.views.AbstractTraceView;
 import org.netxms.ui.eclipse.widgets.AbstractTraceWidget;
@@ -44,8 +46,21 @@ public class SyslogMonitor extends AbstractTraceView
    {
       super.init(site);
       subscribe(NXCSession.CHANNEL_SYSLOG);
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = safeCast(settings.get("SyslogMonitor.showFilter"), settings.getBoolean("SyslogMonitor.showFilter"), initShowFilter);
    }
-
+   
+   /**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
+   }
+   
    /* (non-Javadoc)
 	 * @see org.netxms.ui.eclipse.views.AbstractTraceView#createTraceWidget(org.eclipse.swt.widgets.Composite)
 	 */
@@ -74,6 +89,8 @@ public class SyslogMonitor extends AbstractTraceView
 	public void dispose()
 	{
       unsubscribe(NXCSession.CHANNEL_SYSLOG);
-		super.dispose();
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings.put("SyslogMonitor.showFilter", traceWidget.isFilterEnabled());
+      super.dispose();
 	}
 }

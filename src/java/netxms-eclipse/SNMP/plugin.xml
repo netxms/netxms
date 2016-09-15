@@ -60,6 +60,11 @@
             id="org.netxms.ui.eclipse.snmp.commands.open_snmp_configuration"
             name="Open SNMP Configuration">
       </command>
+      <command
+            description="Toggle Filter"
+            id="org.netxms.ui.eclipse.snmp.commands.showFilter"
+            name="Toggle Filter">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -136,6 +141,23 @@
       <loginlistener
             class="org.netxms.ui.eclipse.snmp.shared.MibCache">
       </loginlistener>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.snmp.context.SNMP"
+            name="SNMP"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.netxms.ui.eclipse.snmp.commands.showFilter"
+            contextId="org.netxms.ui.eclipse.snmp.context.SNMP"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
    </extension>
 
 </plugin>

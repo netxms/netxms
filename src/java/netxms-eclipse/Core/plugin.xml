@@ -145,11 +145,6 @@
             name="%action.SendSMS">
       </command>
       <command
-            description="%command.ToggleTraceFilter"
-            id="org.netxms.ui.eclipse.library.commands.show_trace_filter"
-            name="%command.ToggleTraceFilter">
-      </command>
-      <command
             description="%command.PauseTrace"
             id="org.netxms.ui.eclipse.library.commands.pause_trace"
             name="%command.PauseTrace">
@@ -182,6 +177,11 @@
             id="org.netxms.ui.eclipse.console.category.tools"
             name="%category.name.Tools">
       </category>
+      <command
+            description="Toggle Filter"
+            id="org.netxms.ui.eclipse.library.commands.show_filter"
+            name="Toggle Filter">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.actionSets">
@@ -209,12 +209,6 @@
             commandId="org.netxms.ui.eclipse.console.commands.send_sms"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M1+M3+S">
-      </key>
-      <key
-            commandId="org.netxms.ui.eclipse.library.commands.show_trace_filter"
-            contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
-            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
-            sequence="M1+F2">
       </key>
       <key
             commandId="org.netxms.ui.eclipse.library.commands.pause_trace"
@@ -257,6 +251,12 @@
             id="org.netxms.ui.eclipse.defaultKeyBinding"
             name="%scheme.name">
       </scheme>
+      <key
+            commandId="org.netxms.ui.eclipse.library.commands.show_filter"
+            contextId="org.netxms.ui.eclipse.library.context.AbstractTraceView"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.contexts">

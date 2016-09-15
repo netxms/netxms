@@ -28,6 +28,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -105,11 +106,12 @@ public class DataCollectionEditor extends ViewPart
 	public static final int COLUMN_THRESHOLD = 8;
 	public static final int COLUMN_TEMPLATE = 9;
 
-	private boolean filterEnabled = true;
+	private boolean initShowFilter = true;
 	private Composite content;
 	private FilterText filterText;
 	private SortableTableViewer viewer;
 	private NXCSession session;
+	private IDialogSettings settings;
 	private AbstractObject object;
 	private DataCollectionConfiguration dciConfig = null;
 	private DciFilter filter;
@@ -138,10 +140,22 @@ public class DataCollectionEditor extends ViewPart
 		
 		session = (NXCSession)ConsoleSharedData.getSession();
 		AbstractObject obj = session.findObjectById(Long.parseLong(site.getSecondaryId()));
+		IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = safeCast(settings.get("DataCollectionEditor.showFilter"), settings.getBoolean("DataCollectionEditor.showFilter"), initShowFilter);
 		object = ((obj != null) && ((obj instanceof DataCollectionTarget) || (obj instanceof Template))) ? obj : null;
 		setPartName(Messages.get().DataCollectionEditor_PartNamePrefix + ((object != null) ? object.getObjectName() : Messages.get().DataCollectionEditor_Error));
 	}
 
+	/**
+    * @param b
+    * @param defval
+    * @return
+    */
+	private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
+   }
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
@@ -272,7 +286,7 @@ public class DataCollectionEditor extends ViewPart
 		}.start();
 		
 		// Set initial focus to filter input line
-		if (filterEnabled)
+		if (initShowFilter)
 			filterText.setFocus();
 		else
 			enableFilter(false);	// Will hide filter area correctly
@@ -484,12 +498,12 @@ public class DataCollectionEditor extends ViewPart
 			@Override
 			public void run()
 			{
-				enableFilter(!filterEnabled);
-				actionShowFilter.setChecked(filterEnabled);
+				enableFilter(!initShowFilter);
+				actionShowFilter.setChecked(initShowFilter);
 			}
       };
       actionShowFilter.setImageDescriptor(SharedIcons.FILTER);
-      actionShowFilter.setChecked(filterEnabled);
+      actionShowFilter.setChecked(initShowFilter);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.datacollection.commands.show_dci_filter"); //$NON-NLS-1$
 		handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), new ActionHandler(actionShowFilter));
 		
@@ -536,6 +550,8 @@ public class DataCollectionEditor extends ViewPart
 	@Override
 	public void dispose()
 	{
+	   settings.put("DataCollectionEditor.showFilter", initShowFilter);
+	   
 		if (dciConfig != null)
 		{
 			new ConsoleJob(Messages.get().DataCollectionEditor_UnlockJob_Title + object.getObjectName(), null, Activator.PLUGIN_ID, null) {
@@ -892,8 +908,8 @@ public class DataCollectionEditor extends ViewPart
 	 */
 	private void enableFilter(boolean enable)
 	{
-		filterEnabled = enable;
-		filterText.setVisible(filterEnabled);
+		initShowFilter = enable;
+		filterText.setVisible(initShowFilter);
 		FormData fd = (FormData)viewer.getTable().getLayoutData();
 		fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
 		content.layout();

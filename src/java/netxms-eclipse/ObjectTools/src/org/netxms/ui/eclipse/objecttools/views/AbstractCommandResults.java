@@ -117,7 +117,7 @@ public abstract class AbstractCommandResults extends ViewPart
 		IContextService contextService = (IContextService)getSite().getService(IContextService.class);
 		if (contextService != null)
 		{
-			contextService.activateContext("org.netxms.ui.eclipse.objecttools.context.AbstractCommandResults"); //$NON-NLS-1$
+			contextService.activateContext("org.netxms.ui.eclipse.objecttools.context.ObjectTools"); //$NON-NLS-1$
 		}
 	}
 

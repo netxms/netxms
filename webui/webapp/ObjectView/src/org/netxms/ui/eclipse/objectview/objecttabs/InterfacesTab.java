@@ -25,6 +25,7 @@ import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.swt.SWT;
@@ -85,7 +86,7 @@ public class InterfacesTab extends ObjectTab
 	private InterfaceListLabelProvider labelProvider;
 	private Action actionExportToCsv;
 	
-	private boolean filterEnabled = true;
+	private boolean initShowFilter = true;
 	private FilterText filterText;
 	private InterfacesTabFilter filter;
    private Composite interfacesArea;
@@ -96,6 +97,8 @@ public class InterfacesTab extends ObjectTab
 	@Override
 	protected void createTabContent(Composite parent)
 	{
+	   final IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = safeCast(settings.get("InterfacesTab.showFilter"), settings.getBoolean("InterfacesTab.showFilter"), initShowFilter);
       // Create interface area
       interfacesArea = new Composite(parent, SWT.BORDER);
       FormLayout formLayout = new FormLayout();
@@ -109,12 +112,14 @@ public class InterfacesTab extends ObjectTab
             onFilterModify();
          }
       });
-      filterText.setCloseAction(new Action() {
+      filterText.addDisposeListener(new DisposeListener() {
+
          @Override
-         public void run()
+         public void widgetDisposed(DisposeEvent e)
          {
-            enableFilter(false);
+            settings.put("InterfacesTab.showFilter", initShowFilter);
          }
+         
       });
 
       Action action = new Action() {
@@ -195,10 +200,20 @@ public class InterfacesTab extends ObjectTab
       createPopupMenu();
 
       // Set initial focus to filter input line
-      if (filterEnabled)
+      if (initShowFilter)
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
+   }
+	
+	/**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
    }
 
    private void setFilterCloseAction(Action action)
@@ -213,8 +228,8 @@ public class InterfacesTab extends ObjectTab
     */
    public void enableFilter(boolean enable)
    {
-      filterEnabled = enable;
-      filterText.setVisible(filterEnabled);
+      initShowFilter = enable;
+      filterText.setVisible(initShowFilter);
       FormData fd = (FormData)viewer.getTable().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText, 0, SWT.BOTTOM) : new FormAttachment(0, 0);
       interfacesArea.layout();

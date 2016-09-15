@@ -31,6 +31,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.commands.ActionHandler;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IElementComparer;
@@ -49,6 +50,7 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
@@ -85,13 +87,33 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
 	
 	private TreeViewer viewer;
    private FilterText filterText;
-   private boolean filterEnabled = true;
+   private boolean initShowFilter = true;
 	private NXCSession session;
 	private RefreshAction actionRefresh;
 	private Action actionOpen; 
 	private Action actionProperties; 
 	private Action actionDelete;
-	private Action actionShowFilter;
+	
+	@Override
+   public void init(IViewSite site) throws PartInitException
+   {
+      super.init(site);
+      
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      initShowFilter = safeCast(settings.get("PredefinedGraphTree.showFilter"), settings.getBoolean("PredefinedGraphTree.showFilter"), initShowFilter);
+   }
+
+	/**
+    * @param b
+    * @param defval
+    * @return
+    */
+   private static boolean safeCast(String s, boolean b, boolean defval)
+   {
+      return (s != null) ? b : defval;
+   }
+	
+   private Action actionShowFilter;
    private GraphTreeFilter filter; 
 
 	/* (non-Javadoc)
@@ -204,19 +226,29 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
       session.addListener(this);
 
       // Set initial focus to filter input line
-      if (filterEnabled)
+      if (initShowFilter)
          filterText.setFocus();
       else
          enableFilter(false); // Will hide filter area correctly
 	}
 
+
+   @Override
+   public void dispose()
+   {
+      IDialogSettings settings = Activator.getDefault().getDialogSettings();
+      settings.put("PredefinedGraphTree.showFilter", initShowFilter);
+      super.dispose();
+   }
+
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
 	public void setFocus()
 	{
-	   if (filterEnabled)
+	   if (initShowFilter)
 	      filterText.setFocus();
 	   else
 	      viewer.getTree().setFocus();
@@ -276,12 +308,12 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
          @Override
          public void run()
          {
-            enableFilter(!filterEnabled);
-            actionShowFilter.setChecked(filterEnabled);
+            enableFilter(!initShowFilter);
+            actionShowFilter.setChecked(initShowFilter);
          }
       };
       actionShowFilter.setId("org.netxms.ui.eclipse.perfview.actions.showFilter"); //$NON-NLS-1$
-      actionShowFilter.setChecked(filterEnabled);
+      actionShowFilter.setChecked(initShowFilter);
       actionShowFilter.setActionDefinitionId("org.netxms.ui.eclipse.perfview.commands.show_graph_filter"); //$NON-NLS-1$
       final ActionHandler showFilterHandler = new ActionHandler(actionShowFilter);
       handlerService.activateHandler(actionShowFilter.getActionDefinitionId(), showFilterHandler);
@@ -605,8 +637,8 @@ public class PredefinedGraphTree extends ViewPart implements SessionListener
     */
    private void enableFilter(boolean enable)
    {
-      filterEnabled = enable;
-      filterText.setVisible(filterEnabled);
+      initShowFilter = enable;
+      filterText.setVisible(initShowFilter);
       FormData fd = (FormData)viewer.getTree().getLayoutData();
       fd.top = enable ? new FormAttachment(filterText) : new FormAttachment(0, 0);
       filterText.getParent().layout(true, true);
