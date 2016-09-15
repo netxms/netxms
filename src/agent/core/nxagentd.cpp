@@ -1344,6 +1344,36 @@ static int GetGroupId(char *name)
 #endif
 
 /**
+ * Update agent environment from config
+ */
+static void UpdateEnvironment()
+{
+   ObjectArray<ConfigEntry> *entrySet = g_config->getSubEntries(_T("/ENV"), _T("*"));
+   if (entrySet == NULL)
+      return;
+   for(int i = 0; i < entrySet->size(); i++)
+   {
+      ConfigEntry *e = entrySet->get(i);
+      size_t len = _tcslen(e->getName()) + _tcslen(e->getValue()) + 2;
+      char *env = (char *)malloc(len);
+      if (env != NULL)
+      {
+#ifdef UNICODE
+         char *mbName = MBStringFromWideString(e->getName());
+         char *mbValue = MBStringFromWideString(e->getValue());
+         snprintf(env, len, "%s=%s", mbName, mbValue);
+         free(mbName);
+         free(mbValue);
+#else
+         sprintf(env, "%s=%s", e->getName(), e->getValue());
+#endif
+         putenv(env);
+      }
+   }
+   delete entrySet;
+}
+
+/**
  * Application entry point
  */
 int main(int argc, char *argv[])
@@ -1814,6 +1844,8 @@ int main(int argc, char *argv[])
                         _tprintf(_T("setuid(%d) call failed (%s)\n"), uid, _tcserror(errno));
                   }
 #endif
+
+                  UpdateEnvironment();
 
 						s_pid = getpid();
 						if (Initialize())
