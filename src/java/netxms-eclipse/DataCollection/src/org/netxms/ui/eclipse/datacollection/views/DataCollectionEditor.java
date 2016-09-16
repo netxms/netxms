@@ -252,6 +252,7 @@ public class DataCollectionEditor extends ViewPart
          public void run()
          {
             enableFilter(false);
+            actionShowFilter.setChecked(false);
          }
       });
 
