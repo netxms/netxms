@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<formatVersion>4</formatVersion>
+	<description>Linux monitoring template</description>
+	<events>
+		<event id="100009">
+			<name>OS_HIGH_CPU_IOWAIT</name>
+			<guid>3653cf7e-88ff-4245-95a3-44b7d63e5fbe</guid>
+			<code>100009</code>
+			<severity>2</severity>
+			<flags>1</flags>
+			<message>High CPU I/O wait (%4%%)</message>
+			<description></description>
+		</event>
+		<event id="100010">
+			<name>OS_LOW_AVAILABLE_MEM</name>
+			<guid>3bf0d850-d820-4968-a263-04516909fe5a</guid>
+			<code>100010</code>
+			<severity>3</severity>
+			<flags>1</flags>
+			<message>Low avalable physical memory (%4%%)</message>
+			<description></description>
+		</event>
+	</events>
+	<templates>
+		<template id="151">
+			<guid>5a0abe02-448a-43cb-800c-5d7ac25b3131</guid>
+			<name>Linux</name>
+			<flags>1</flags>
+			<path>
+				<element id="1">Operating Systems</element>
+			</path>
+			<dataCollection>
+				<dci id="176">
+					<guid>6ac8d013-0f12-45a7-bd31-5d36c9a4236b</guid>
+					<name>System.IO.DiskQueue</name>
+					<description>I/O: average disk queue</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;8388736&lt;/color&gt;&#x0A;   &lt;title&gt;Disk Queue&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="181">
+					<guid>3febe585-f432-4750-825c-764b5706b634</guid>
+					<name>System.IO.DiskTime</name>
+					<description>I/O: percent of CPU time spent on I/O</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="185">
+					<guid>b8296d2f-9b04-4ae5-a6eb-6e065ba2f999</guid>
+					<name>System.CPU.Usage.System</name>
+					<description>CPU: usage (system)</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;false&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;1&lt;/type&gt;&#x0A;   &lt;color&gt;2763429&lt;/color&gt;&#x0A;   &lt;title&gt;CPU Usage - Detailed&lt;/title&gt;&#x0A;   &lt;name&gt;System&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;1&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="186">
+					<guid>fcbc2d2a-5991-420f-bd9e-6f5e22448e34</guid>
+					<name>System.CPU.Usage.User</name>
+					<description>CPU: usage (user)</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;false&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;1&lt;/type&gt;&#x0A;   &lt;color&gt;9498256&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;User&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;185&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;2&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="187">
+					<guid>ac9d0c02-756c-45b4-b88f-cb156bc6b5c5</guid>
+					<name>System.CPU.Usage.IoWait</name>
+					<description>CPU: usage (I/O wait)</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<thresholds>
+						<threshold id="1">
+							<function>0</function>
+							<condition>4</condition>
+							<value>50</value>
+							<activationEvent>OS_HIGH_CPU_IOWAIT</activationEvent>
+							<deactivationEvent>SYS_THRESHOLD_REARMED</deactivationEvent>
+							<sampleCount>3</sampleCount>
+							<repeatInterval>-1</repeatInterval>
+							<script></script>
+						</threshold>
+					</thresholds>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;false&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;16748574&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;I/O wait&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;185&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;3&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="188">
+					<guid>46b64804-8cfb-44ab-a5f1-b95bd3b55099</guid>
+					<name>System.CPU.Usage.Irq</name>
+					<description>CPU: usage (interrupts)</description>
+					<dataType>5</dataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;true&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;false&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;0&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;42495&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;Interrupts&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;185&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="193">
+					<guid>eec23c2a-5a75-4233-985f-2a0fbe5633fc</guid>
+					<name>System.Memory.Physical.AvailablePerc</name>
+					<description>System: available physical memory (%)</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<thresholds>
+						<threshold id="1">
+							<function>0</function>
+							<condition>0</condition>
+							<value>10</value>
+							<activationEvent>OS_LOW_AVAILABLE_MEM</activationEvent>
+							<deactivationEvent>SYS_THRESHOLD_REARMED</deactivationEvent>
+							<sampleCount>1</sampleCount>
+							<repeatInterval>-1</repeatInterval>
+							<script></script>
+						</threshold>
+					</thresholds>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="194">
+					<guid>00ec9f9e-637b-4e21-b22b-6ee8e33b72d4</guid>
+					<name>System.Memory.Physical.Available</name>
+					<description>System: available physical memory</description>
+					<dataType>3</dataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="195">
+					<guid>4f48be5e-a13d-4102-9d3c-3152fec54e2b</guid>
+					<name>System.Memory.Physical.CachedPerc</name>
+					<description>System: cache memory (%)</description>
+					<dataType>1</dataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+				<dci id="196">
+					<guid>21c24e05-23ee-475b-95fd-aa8db639a43b</guid>
+					<name>System.Memory.Physical.Cached</name>
+					<description>System: cache memory</description>
+					<dataType>3</dataType>
+					<samples>0</samples>
+					<origin>1</origin>
+					<interval>0</interval>
+					<retention>0</retention>
+					<instance></instance>
+					<systemTag></systemTag>
+					<delta>0</delta>
+					<flags>0</flags>
+					<snmpRawValueType>0</snmpRawValueType>
+					<snmpPort>0</snmpPort>
+					<instanceDiscoveryMethod>0</instanceDiscoveryMethod>
+					<transformation></transformation>
+					<perfTabSettings>&lt;config&gt;&#x0A;   &lt;enabled&gt;false&lt;/enabled&gt;&#x0A;   &lt;autoScale&gt;true&lt;/autoScale&gt;&#x0A;   &lt;logScaleEnabled&gt;false&lt;/logScaleEnabled&gt;&#x0A;   &lt;minYScaleValue&gt;1&lt;/minYScaleValue&gt;&#x0A;   &lt;maxYScaleValue&gt;100&lt;/maxYScaleValue&gt;&#x0A;   &lt;timeRange&gt;1&lt;/timeRange&gt;&#x0A;   &lt;timeUnits&gt;1&lt;/timeUnits&gt;&#x0A;   &lt;type&gt;0&lt;/type&gt;&#x0A;   &lt;color&gt;49152&lt;/color&gt;&#x0A;   &lt;title&gt;&lt;/title&gt;&#x0A;   &lt;name&gt;&lt;/name&gt;&#x0A;   &lt;showThresholds&gt;false&lt;/showThresholds&gt;&#x0A;   &lt;parentDciId&gt;0&lt;/parentDciId&gt;&#x0A;   &lt;order&gt;100&lt;/order&gt;&#x0A;&lt;/config&gt;</perfTabSettings>
+					<instanceDiscoveryData></instanceDiscoveryData>
+					<instanceFilter></instanceFilter>
+				</dci>
+			</dataCollection>
+			<filter>return $node-&gt;isAgent &amp;&amp; $node-&gt;platformName like &quot;Linux-*&quot;;</filter>
+		</template>
+	</templates>
+	<traps>
+	</traps>
+	<rules>
+	</rules>
+	<scripts>
+	</scripts>
+	<objectTools>
+	</objectTools>
+	<dciSummaryTables>
+	</dciSummaryTables>
+</configuration>
