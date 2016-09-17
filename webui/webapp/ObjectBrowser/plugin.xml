@@ -117,7 +117,7 @@
            class="org.netxms.ui.eclipse.objectbrowser.ObjectPropertyTester"
            id="org.netxms.ui.eclipse.objectbrowser.ObjectPropertyTester"
            namespace="org.netxms.ui.eclipse.objectbrowser"
-           properties="isAlarmsVisible"
+           properties="isAlarmsVisible,isCustomAttributePresented"
            type="org.netxms.client.objects.AbstractObject">
      </propertyTester>
   </extension>
@@ -128,8 +128,9 @@
            locationURI="popup:org.netxms.ui.eclipse.view.navigation.objectbrowser?before=objectmgmt">
         <command
               commandId="org.netxms.ui.eclipse.objectbrowser.commands.rename_object"
-              label="Rename"
-              style="push">
+              label="%command.Rename.name"
+              style="push"
+              tooltip="%command.Rename.tooltip">
         </command>
      </menuContribution>
   </extension>

@@ -38,6 +38,9 @@ public class ObjectPropertyTester extends PropertyTester
       if (property.equals("isAlarmsVisible")) //$NON-NLS-1$
          return ((AbstractObject)receiver).isAlarmsVisible();
       
+      if (property.equals("isCustomAttributePresented") && (args.length > 0)) //$NON-NLS-1$
+         return ((AbstractObject)receiver).getCustomAttributes().containsKey(args[0]);
+      
       return false;
    }
 }
