@@ -1,6 +1,6 @@
 /**
  * NetXMS - open source network management system
- * Copyright (C) 2003-2015 Victor Kirhenshtein
+ * Copyright (C) 2003-2016 Victor Kirhenshtein
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -112,23 +112,6 @@ public final class ObjectToolExecutor
     */
    public static void execute(final Set<NodeInfo> nodes, final ObjectTool tool)
    {
-      if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
-      {
-         String message = tool.getConfirmationText();
-         if (nodes.size() == 1)
-         {
-            NodeInfo node = nodes.iterator().next();
-            message = substituteMacros(message, node, new HashMap<String, String>(0));
-         }
-         else
-         {
-            message = substituteMacros(message, new NodeInfo(null, null), new HashMap<String, String>(0));
-         }
-         if (!MessageDialogHelper.openQuestion(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
-               Messages.get().ObjectToolsDynamicMenu_ConfirmExec, message))
-            return;
-      }
-      
       final Map<String, String> inputValues;
       final InputField[] fields = tool.getInputFields();
       if (fields.length > 0)
@@ -147,6 +130,23 @@ public final class ObjectToolExecutor
       else
       {
          inputValues = new HashMap<String, String>(0);
+      }
+      
+      if ((tool.getFlags() & ObjectTool.ASK_CONFIRMATION) != 0)
+      {
+         String message = tool.getConfirmationText();
+         if (nodes.size() == 1)
+         {
+            NodeInfo node = nodes.iterator().next();
+            message = substituteMacros(message, node, new HashMap<String, String>(0));
+         }
+         else
+         {
+            message = substituteMacros(message, new NodeInfo(null, null), new HashMap<String, String>(0));
+         }
+         if (!MessageDialogHelper.openQuestion(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), 
+               Messages.get().ObjectToolsDynamicMenu_ConfirmExec, message))
+            return;
       }
       
       // Check if password validation needed
@@ -278,7 +278,7 @@ public final class ObjectToolExecutor
          MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
       }
    }
-
+   
    /**
     * Split command line into tokens
     *  
@@ -361,7 +361,7 @@ public final class ObjectToolExecutor
       
       return args.toArray(new String[args.size()]);
    }
-   
+
    /**
     * @param node
     * @param tool
@@ -537,7 +537,7 @@ public final class ObjectToolExecutor
       final UrlLauncher launcher = RWT.getClient().getService(UrlLauncher.class);
       launcher.openURL(url);
    }
-
+   
    /**
     * Substitute macros in string
     * 
@@ -576,7 +576,7 @@ public final class ObjectToolExecutor
                   sb.append((node.object != null) ? node.object.getGuid().toString() : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
                   break;
                case 'i':
-                  sb.append((node.object != null) ? String.format("0x%08X", node.object.getObjectId()) : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
+                  sb.append((node.object != null) ? String.format("0x%08X", node.object.getObjectId()) : Messages.get().ObjectToolsDynamicMenu_MultipleNodes); //$NON-NLS-1$
                   break;
                case 'I':
                   sb.append((node.object != null) ? Long.toString(node.object.getObjectId()) : Messages.get().ObjectToolsDynamicMenu_MultipleNodes);
