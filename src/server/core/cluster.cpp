@@ -639,10 +639,9 @@ void Cluster::statusPoll(ClientSession *pSession, UINT32 dwRqId, PollerInfo *pol
 bool Cluster::isResourceOnNode(UINT32 dwResource, UINT32 dwNode)
 {
 	bool bRet = FALSE;
-	UINT32 i;
 
 	lockProperties();
-	for(i = 0; i < m_dwNumResources; i++)
+	for(UINT32 i = 0; i < m_dwNumResources; i++)
 	{
 		if (m_pResourceList[i].dwId == dwResource)
 		{
@@ -653,6 +652,26 @@ bool Cluster::isResourceOnNode(UINT32 dwResource, UINT32 dwNode)
 	}
 	unlockProperties();
 	return bRet;
+}
+
+/**
+ * Get node ID of resource owner
+ */
+UINT32 Cluster::getResourceOwnerInternal(UINT32 id, const TCHAR *name)
+{
+   UINT32 ownerId = 0;
+   lockProperties();
+   for(UINT32 i = 0; i < m_dwNumResources; i++)
+   {
+      if (((name != NULL) && !_tcsicmp(name, m_pResourceList[i].szName)) ||
+          (m_pResourceList[i].dwId == id))
+      {
+         ownerId = m_pResourceList[i].dwCurrOwner;
+         break;
+      }
+   }
+   unlockProperties();
+   return ownerId;
 }
 
 /**
@@ -789,4 +808,25 @@ void Cluster::onDataCollectionChange()
 NXSL_Value *Cluster::createNXSLObject()
 {
    return new NXSL_Value(new NXSL_Object(&g_nxslClusterClass, this));
+}
+
+/**
+ * Get cluster nodes as NXSL array
+ */
+NXSL_Array *Cluster::getNodesForNXSL()
+{
+   NXSL_Array *nodes = new NXSL_Array();
+   int index = 0;
+
+   lockChildList(false);
+   for(int i = 0; i < m_childList->size(); i++)
+   {
+      if (m_childList->get(i)->getObjectClass() == OBJECT_NODE)
+      {
+         nodes->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, m_childList->get(i))));
+      }
+   }
+   unlockChildList();
+
+   return nodes;
 }

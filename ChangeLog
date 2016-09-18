@@ -22,6 +22,7 @@
 - New method "enableDiscoveryPolling" in NXSL class "Node"
 - Agent effective user and group can be set in configuration file
 - Agent environment variables can be set in configuration file
+- Added method "getResourceOwner" and attribute "nodes" to NXSL "Cluster" class
 - New agent metrics for self-monitoring:
 	Agent.SyslogProxy.IsEnabled, Agent.SyslogProxy.ReceivedMessages, Agent.SyslogProxy.QueueSize
 - Management console

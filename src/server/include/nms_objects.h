@@ -1172,6 +1172,8 @@ protected:
 
    virtual void onDataCollectionChange();
 
+   UINT32 getResourceOwnerInternal(UINT32 id, const TCHAR *name);
+
 public:
 	Cluster();
    Cluster(const TCHAR *pszName, UINT32 zoneId);
@@ -1190,6 +1192,8 @@ public:
 	bool isSyncAddr(const InetAddress& addr);
 	bool isVirtualAddr(const InetAddress& addr);
 	bool isResourceOnNode(UINT32 dwResource, UINT32 dwNode);
+	UINT32 getResourceOwner(UINT32 resourceId) { return getResourceOwnerInternal(resourceId, NULL); }
+   UINT32 getResourceOwner(const TCHAR *resourceName) { return getResourceOwnerInternal(0, resourceName); }
    UINT32 getZoneId() { return m_zoneId; }
 
    void statusPoll(PollerInfo *poller);
@@ -1205,6 +1209,8 @@ public:
 
    UINT32 collectAggregatedData(DCItem *item, TCHAR *buffer);
    UINT32 collectAggregatedData(DCTable *table, Table **result);
+
+   NXSL_Array *getNodesForNXSL();
 };
 
 /**

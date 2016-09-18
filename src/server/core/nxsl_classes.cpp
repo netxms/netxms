@@ -836,7 +836,7 @@ NXSL_ChassisClass::NXSL_ChassisClass() : NXSL_NetObjClass()
 }
 
 /**
- * NXSL class "Cluster" attributes
+ * NXSL class "Chassis" attributes
  */
 NXSL_Value *NXSL_ChassisClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 {
@@ -893,11 +893,34 @@ NXSL_Value *NXSL_ChassisClass::getAttr(NXSL_Object *object, const TCHAR *attr)
 }
 
 /**
+ * Cluster::getResourceOwner() method
+ */
+NXSL_METHOD_DEFINITION(Cluster, getResourceOwner)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   UINT32 ownerId = ((Cluster *)object->getData())->getResourceOwner(argv[0]->getValueAsCString());
+   if (ownerId != 0)
+   {
+      NetObj *object = FindObjectById(ownerId);
+      *result = (object != NULL) ? object->createNXSLObject() : new NXSL_Value();
+   }
+   else
+   {
+      *result = new NXSL_Value();
+   }
+   return 0;
+}
+
+/**
  * NXSL class "Cluster" constructor
  */
 NXSL_ClusterClass::NXSL_ClusterClass() : NXSL_NetObjClass()
 {
    _tcscpy(m_name, _T("Cluster"));
+
+   NXSL_REGISTER_METHOD(Cluster, getResourceOwner, 1);
 }
 
 /**
@@ -910,7 +933,11 @@ NXSL_Value *NXSL_ClusterClass::getAttr(NXSL_Object *object, const TCHAR *attr)
       return value;
 
    Cluster *cluster = (Cluster *)object->getData();
-   if (!_tcscmp(attr, _T("zone")))
+   if (!_tcscmp(attr, _T("nodes")))
+   {
+      value = new NXSL_Value(cluster->getNodesForNXSL());
+   }
+   else if (!_tcscmp(attr, _T("zone")))
    {
       if (g_flags & AF_ENABLE_ZONING)
       {
