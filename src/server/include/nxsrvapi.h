@@ -548,7 +548,7 @@ public:
    UINT32 nop();
    UINT32 setServerCapabilities();
    UINT32 setServerId(UINT64 serverId);
-   UINT32 execAction(const TCHAR *pszAction, int argc, TCHAR **argv, bool withOutput = false, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
+   UINT32 execAction(const TCHAR *action, int argc, const TCHAR * const *argv, bool withOutput = false, void (* outputCallback)(ActionCallbackEvent, const TCHAR *, void *) = NULL, void *cbData = NULL);
    UINT32 uploadFile(const TCHAR *localFile, const TCHAR *destinationFile = NULL, void (* progressCallback)(INT64, void *) = NULL, void *cbArg = NULL, NXCPCompressionMethod compMethod = NXCP_COMPRESSION_NONE);
    UINT32 startUpgrade(const TCHAR *pszPkgName);
    UINT32 checkNetworkService(UINT32 *pdwStatus, const InetAddress& addr, int iServiceType, WORD wPort = 0,
