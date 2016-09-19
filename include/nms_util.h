@@ -2004,6 +2004,8 @@ bool LIBNETXMS_EXPORTABLE XMLGetAttrBoolean(const char **attrs, const char *name
 String LIBNETXMS_EXPORTABLE EscapeStringForJSON(const TCHAR *s);
 String LIBNETXMS_EXPORTABLE EscapeStringForAgent(const TCHAR *s);
 
+StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline);
+
 #if !defined(_WIN32) && !defined(_NETWARE) && defined(NMS_THREADS_H_INCLUDED)
 void LIBNETXMS_EXPORTABLE StartMainLoop(ThreadFunction pfSignalHandler, ThreadFunction pfMain);
 #endif

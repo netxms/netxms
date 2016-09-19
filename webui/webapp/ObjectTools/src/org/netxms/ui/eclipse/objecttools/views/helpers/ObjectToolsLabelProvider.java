@@ -40,10 +40,11 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		Messages.get().ObjectToolsLabelProvider_TypeURL,
 		Messages.get().ObjectToolsLabelProvider_TypeLocalCmd,
 		Messages.get().ObjectToolsLabelProvider_TypeServerCmd,
-		Messages.get().ObjectToolsLabelProvider_TypeDownloadFile
+		Messages.get().ObjectToolsLabelProvider_TypeDownloadFile,
+      Messages.get().ObjectToolsLabelProvider_TypeServerScript
 	};
 	
-	private Image[] toolTypeImages = new Image[toolTypes.length+1];
+	private Image[] toolTypeImages = new Image[toolTypes.length + 1];
 	
 	/**
 	 * The constructor
@@ -58,7 +59,8 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		toolTypeImages[5] = Activator.getImageDescriptor("icons/console.png").createImage(); //$NON-NLS-1$
 		toolTypeImages[6] = Activator.getImageDescriptor("icons/console.png").createImage(); //$NON-NLS-1$
 		toolTypeImages[7] = Activator.getImageDescriptor("icons/file_download.png").createImage(); //$NON-NLS-1$
-		toolTypeImages[8] = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
+      toolTypeImages[8] = Activator.getImageDescriptor("icons/script.png").createImage(); //$NON-NLS-1$
+		toolTypeImages[9] = Activator.getImageDescriptor("icons/stop.png").createImage(); //$NON-NLS-1$
 	}
 	
 	/* (non-Javadoc)
@@ -72,13 +74,13 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 
 		try
 		{
-		   if((((ObjectTool)element).getFlags() & ObjectTool.DISABLED)== 0)
+		   if ((((ObjectTool)element).getFlags() & ObjectTool.DISABLED) == 0)
 		   {
 		      return toolTypeImages[((ObjectTool)element).getType()];
 		   }
 		   else
 		   {
-		      return toolTypeImages[8];
+		      return toolTypeImages[toolTypeImages.length - 1];
 		   }
 		}
 		catch(ArrayIndexOutOfBoundsException e)
@@ -107,7 +109,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 				}
 				catch(ArrayIndexOutOfBoundsException e)
 				{
-					return "?unknown?"; //$NON-NLS-1$
+					return "<unknown>"; //$NON-NLS-1$
 				}
 			case ObjectToolsEditor.COLUMN_DESCRIPTION:
 				return tool.getDescription();
@@ -139,7 +141,7 @@ public class ObjectToolsLabelProvider extends LabelProvider implements ITableLab
 		}
 		catch(ArrayIndexOutOfBoundsException e)
 		{
-			return "?unknown?"; //$NON-NLS-1$
+			return "<unknown>"; //$NON-NLS-1$
 		}
 	}
 	

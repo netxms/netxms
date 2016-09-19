@@ -463,6 +463,7 @@ private:
    DECLARE_THREAD_STARTER(createObject)
    DECLARE_THREAD_STARTER(executeAction)
    DECLARE_THREAD_STARTER(executeScript)
+   DECLARE_THREAD_STARTER(executeLibraryScript)
    DECLARE_THREAD_STARTER(fileManagerControl)
    DECLARE_THREAD_STARTER(findIpAddress)
    DECLARE_THREAD_STARTER(findMacAddress)
@@ -715,6 +716,7 @@ private:
    void getLocationHistory(NXCPMessage *request);
    void getScreenshot(NXCPMessage *request);
 	void executeScript(NXCPMessage *request);
+   void executeLibraryScript(NXCPMessage *request);
    void compileScript(NXCPMessage *request);
 	void resyncAgentDciConfiguration(NXCPMessage *request);
    void cleanAgentDciConfiguration(NXCPMessage *request);

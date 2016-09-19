@@ -139,6 +139,10 @@ public class General extends PropertyPage
 				textData.setLabel(Messages.get().General_Command);
 				createOutputGroup(dialogArea);
 				break;
+         case ObjectTool.TYPE_SERVER_SCRIPT:
+            textData.setLabel(Messages.get().General_Script);
+            createOutputGroup(dialogArea);
+            break;
 			case ObjectTool.TYPE_ACTION:
 				textData.setLabel(Messages.get().General_AgentCommand);
 				createOutputGroup(dialogArea);
@@ -537,6 +541,7 @@ public class General extends PropertyPage
 		
 		if ((objectTool.getType() == ObjectTool.TYPE_LOCAL_COMMAND) ||
 		    (objectTool.getType() == ObjectTool.TYPE_SERVER_COMMAND) ||
+          (objectTool.getType() == ObjectTool.TYPE_SERVER_SCRIPT) ||
 		    (objectTool.getType() == ObjectTool.TYPE_ACTION))
 		{
 			if (checkOutput.getSelection())

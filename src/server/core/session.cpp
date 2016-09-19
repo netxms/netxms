@@ -154,6 +154,7 @@ DEFINE_THREAD_STARTER(clearDCIData)
 DEFINE_THREAD_STARTER(createObject)
 DEFINE_THREAD_STARTER(executeAction)
 DEFINE_THREAD_STARTER(executeScript)
+DEFINE_THREAD_STARTER(executeLibraryScript)
 DEFINE_THREAD_STARTER(fileManagerControl)
 DEFINE_THREAD_STARTER(findIpAddress)
 DEFINE_THREAD_STARTER(findMacAddress)
@@ -1272,6 +1273,9 @@ void ClientSession::processingThread()
 			case CMD_EXECUTE_SCRIPT:
             CALL_IN_NEW_THREAD(executeScript, pMsg);
 				break;
+         case CMD_EXECUTE_LIBRARY_SCRIPT:
+            CALL_IN_NEW_THREAD(executeLibraryScript, pMsg);
+            break;
 			case CMD_GET_JOB_LIST:
 				sendJobList(pMsg->getId());
 				break;
@@ -11186,6 +11190,195 @@ void ClientSession::executeScript(NXCPMessage *request)
       // Send response
       sendMessage(&msg);
    }
+}
+
+/**
+ * Library script execution data
+ */
+class LibraryScriptExecutionData
+{
+public:
+   NXSL_VM *vm;
+   ObjectArray<NXSL_Value> args;
+   TCHAR *name;
+
+   LibraryScriptExecutionData(NXSL_VM *_vm, StringList *_args) : args(16, 16, false)
+   {
+      vm = _vm;
+      for(int i = 1; i < _args->size(); i++)
+         args.add(new NXSL_Value(_args->get(i)));
+      name = _tcsdup(_args->get(0));
+   }
+   ~LibraryScriptExecutionData()
+   {
+      delete vm;
+      free(name);
+   }
+};
+
+/**
+ * Callback for executing library script on separate thread pool
+ */
+static void ExecuteLibraryScript(void *arg)
+{
+   LibraryScriptExecutionData *d = (LibraryScriptExecutionData *)arg;
+   nxlog_debug(6, _T("Starting background execution of library script %s"), d->name);
+   if (d->vm->run(&d->args))
+   {
+      nxlog_debug(6, _T("Background execution of library script %s completed"), d->name);
+   }
+   else
+   {
+      nxlog_debug(6, _T("Background execution of library script %s failed (%s)"), d->name, d->vm->getErrorText());
+   }
+   delete d;
+}
+
+/**
+ * Execute library script in object's context
+ */
+void ClientSession::executeLibraryScript(NXCPMessage *request)
+{
+   NXCPMessage msg;
+   bool success = false;
+   NXSL_VM *vm = NULL;
+   StringList *args = NULL;
+   bool withOutput = request->getFieldAsBoolean(VID_RECEIVE_OUTPUT);
+
+   // Prepare response message
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(request->getId());
+
+   // Get node id and check object class and access rights
+   NetObj *object = FindObjectById(request->getFieldAsUInt32(VID_OBJECT_ID));
+   if (object != NULL)
+   {
+      if ((object->getObjectClass() == OBJECT_NODE) ||
+          (object->getObjectClass() == OBJECT_CLUSTER) ||
+          (object->getObjectClass() == OBJECT_MOBILEDEVICE) ||
+          (object->getObjectClass() == OBJECT_CHASSIS) ||
+          (object->getObjectClass() == OBJECT_CONTAINER) ||
+          (object->getObjectClass() == OBJECT_ZONE) ||
+          (object->getObjectClass() == OBJECT_SUBNET))
+      {
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_CONTROL))
+         {
+            TCHAR *script = request->getFieldAsString(VID_SCRIPT);
+            if (script != NULL)
+            {
+               // Do macro expansion if target object is a node
+               if (object->getObjectClass() == OBJECT_NODE)
+               {
+                  StringMap *inputFields;
+                  int count = request->getFieldAsInt16(VID_NUM_FIELDS);
+                  if (count > 0)
+                  {
+                     inputFields = new StringMap();
+                     UINT32 fieldId = VID_FIELD_LIST_BASE;
+                     for(int i = 0; i < count; i++)
+                     {
+                        TCHAR *name = request->getFieldAsString(fieldId++);
+                        TCHAR *value = request->getFieldAsString(fieldId++);
+                        inputFields->setPreallocated(name, value);
+                     }
+                  }
+                  else
+                  {
+                     inputFields = NULL;
+                  }
+
+                  TCHAR *expScript = ((Node *)object)->expandText(script, inputFields, m_loginName);
+                  free(script);
+                  script = expScript;
+                  delete inputFields;
+               }
+
+               args = ParseCommandLine(script);
+               if (args->size() > 0)
+               {
+                  NXSL_Environment *env = withOutput ? new NXSL_ClientSessionEnv(this, &msg) : new NXSL_ServerEnv();
+                  vm = g_pScriptLibrary->createVM(args->get(0), env);
+                  if (vm != NULL)
+                  {
+                     vm->setGlobalVariable(_T("$object"), object->createNXSLObject());
+                     if(object->getObjectClass() == OBJECT_NODE)
+                     {
+                        vm->setGlobalVariable(_T("$node"), new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, object)));
+                     }
+                     msg.setField(VID_RCC, RCC_SUCCESS);
+                     sendMessage(&msg);
+                     success = true;
+                  }
+                  else
+                  {
+                     msg.setField(VID_RCC, RCC_INVALID_SCRIPT_NAME);
+                  }
+               }
+               else
+               {
+                  msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+               }
+            }
+            else
+            {
+               msg.setField(VID_RCC, RCC_INVALID_ARGUMENT);
+            }
+         }
+         else  // User doesn't have CONTROL rights on object
+         {
+            msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+         }
+      }
+      else     // Object is not a node
+      {
+         msg.setField(VID_RCC, RCC_INCOMPATIBLE_OPERATION);
+      }
+   }
+   else  // No object with given ID
+   {
+      msg.setField(VID_RCC, RCC_INVALID_OBJECT_ID);
+   }
+
+   // start execution
+   if (success)
+   {
+      if (withOutput)
+      {
+         ObjectArray<NXSL_Value> sargs(args->size() - 1, 1, false);
+         for(int i = 1; i < args->size(); i++)
+            sargs.add(new NXSL_Value(args->get(i)));
+         msg.setCode(CMD_EXECUTE_SCRIPT_UPDATE);
+         if (vm->run(&sargs))
+         {
+            TCHAR buffer[1024];
+            const TCHAR *value = vm->getResult()->getValueAsCString();
+            _sntprintf(buffer, 1024, _T("\n\n*** FINISHED ***\n\nResult: %s\n\n"), CHECK_NULL(value));
+            msg.setField(VID_MESSAGE, buffer);
+            msg.setField(VID_RCC, RCC_SUCCESS);
+            msg.setEndOfSequence();
+            sendMessage(&msg);
+         }
+         else
+         {
+            msg.setField(VID_ERROR_TEXT, vm->getErrorText());
+            msg.setField(VID_RCC, RCC_NXSL_EXECUTION_ERROR);
+            msg.setEndOfSequence();
+            sendMessage(&msg);
+         }
+         delete vm;
+      }
+      else
+      {
+         ThreadPoolExecute(g_mainThreadPool, ExecuteLibraryScript, new LibraryScriptExecutionData(vm, args));
+      }
+   }
+   else
+   {
+      // Send response
+      sendMessage(&msg);
+   }
+
+   delete args;
 }
 
 /**

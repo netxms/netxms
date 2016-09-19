@@ -44,18 +44,19 @@ public class ObjectTool
 	public static final int TYPE_LOCAL_COMMAND  = 5;
 	public static final int TYPE_SERVER_COMMAND = 6;
 	public static final int TYPE_FILE_DOWNLOAD  = 7;
+   public static final int TYPE_SERVER_SCRIPT  = 8;
 	
-	public static final int REQUIRES_SNMP             = 0x00000001;
-	public static final int REQUIRES_AGENT            = 0x00000002;
-	public static final int REQUIRES_OID_MATCH        = 0x00000004;
-	public static final int ASK_CONFIRMATION          = 0x00000008;
-	public static final int GENERATES_OUTPUT          = 0x00000010;
-	public static final int DISABLED                  = 0x00000020;
-	public static final int SHOW_IN_COMMANDS          = 0x00000040;
-   public static final int REQUIRES_NODE_OS_MATCH  = 0x00000080;
-   public static final int REQUIRES_TEMPLATE_MATCH   = 0x00000100;
-	public static final int SNMP_INDEXED_BY_VALUE     = 0x00010000;
-	public static final int REQUIRES_WORKSTATION_OS_MATCH   = 0x00020000;
+	public static final int REQUIRES_SNMP                 = 0x00000001;
+	public static final int REQUIRES_AGENT                = 0x00000002;
+	public static final int REQUIRES_OID_MATCH            = 0x00000004;
+	public static final int ASK_CONFIRMATION              = 0x00000008;
+	public static final int GENERATES_OUTPUT              = 0x00000010;
+	public static final int DISABLED                      = 0x00000020;
+	public static final int SHOW_IN_COMMANDS              = 0x00000040;
+   public static final int REQUIRES_NODE_OS_MATCH        = 0x00000080;
+   public static final int REQUIRES_TEMPLATE_MATCH       = 0x00000100;
+	public static final int SNMP_INDEXED_BY_VALUE         = 0x00010000;
+	public static final int REQUIRES_WORKSTATION_OS_MATCH = 0x00020000;
 	
 	protected long id;
 	protected String name;

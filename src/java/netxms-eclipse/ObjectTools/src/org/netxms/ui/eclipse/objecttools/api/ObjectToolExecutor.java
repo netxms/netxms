@@ -50,6 +50,7 @@ import org.netxms.ui.eclipse.objecttools.views.AgentActionResults;
 import org.netxms.ui.eclipse.objecttools.views.BrowserView;
 import org.netxms.ui.eclipse.objecttools.views.LocalCommandResults;
 import org.netxms.ui.eclipse.objecttools.views.ServerCommandResults;
+import org.netxms.ui.eclipse.objecttools.views.ServerScriptResults;
 import org.netxms.ui.eclipse.objecttools.views.TableToolResults;
 import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 import org.netxms.ui.eclipse.tools.MessageDialogHelper;
@@ -251,6 +252,9 @@ public final class ObjectToolExecutor
             break;
          case ObjectTool.TYPE_SERVER_COMMAND:
             executeServerCommand(node, tool, inputValues);
+            break;
+         case ObjectTool.TYPE_SERVER_SCRIPT:
+            executeServerScript(node, tool, inputValues);
             break;
          case ObjectTool.TYPE_TABLE_AGENT:
          case ObjectTool.TYPE_TABLE_SNMP:
@@ -459,6 +463,55 @@ public final class ObjectToolExecutor
          {
             ServerCommandResults view = (ServerCommandResults)window.getActivePage().showView(ServerCommandResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
             view.executeCommand(tool.getData(), inputValues);
+         }
+         catch(Exception e)
+         {
+            MessageDialogHelper.openError(window.getShell(), Messages.get().ObjectToolsDynamicMenu_Error, String.format(Messages.get().ObjectToolsDynamicMenu_ErrorOpeningView, e.getLocalizedMessage()));
+         }
+      }
+   }
+   
+   /**
+    * Execute server script
+    * 
+    * @param node
+    * @param tool
+    * @param inputValues 
+    */
+   private static void executeServerScript(final NodeInfo node, final ObjectTool tool, final Map<String, String> inputValues)
+   {
+      final NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      if ((tool.getFlags() & ObjectTool.GENERATES_OUTPUT) == 0)
+      {      
+         new ConsoleJob("Execute server script", null, Activator.PLUGIN_ID, null) {
+            @Override
+            protected void runInternal(IProgressMonitor monitor) throws Exception
+            {
+               session.executeLibraryScript(node.object.getObjectId(), tool.getData(), inputValues, null);
+               runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     MessageDialogHelper.openInformation(null, Messages.get().ObjectToolsDynamicMenu_Information, Messages.get().ObjectToolsDynamicMenu_ServerScriptExecuted);
+                  }
+               });
+            }
+            
+            @Override
+            protected String getErrorMessage()
+            {
+               return Messages.get().ObjectToolsDynamicMenu_ServerScriptExecError;
+            }
+         }.start();
+      }
+      else
+      {
+         final String secondaryId = Long.toString(node.object.getObjectId()) + "&" + Long.toString(tool.getId()); //$NON-NLS-1$
+         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+         try
+         {
+            ServerScriptResults view = (ServerScriptResults)window.getActivePage().showView(ServerScriptResults.ID, secondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+            view.executeScript(tool.getData(), inputValues);
          }
          catch(Exception e)
          {

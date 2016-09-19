@@ -2723,3 +2723,74 @@ String LIBNETXMS_EXPORTABLE EscapeStringForAgent(const TCHAR *s)
    }
    return out;
 }
+
+/**
+ * Parse command line into argumen list considering single and double quotes
+ */
+StringList LIBNETXMS_EXPORTABLE *ParseCommandLine(const TCHAR *cmdline)
+{
+   StringList *args = new StringList();
+
+   TCHAR *temp = _tcsdup(cmdline);
+   int state = 0;
+
+   TCHAR *curr = temp;
+   while(*curr == ' ')
+      curr++;
+
+   if (*curr != 0)
+   {
+      int len = (int)_tcslen(temp);
+      for(int i = (int)(curr - temp); i < len; i++)
+      {
+         switch(temp[i])
+         {
+            case ' ':
+               if (state == 0)
+               {
+                  temp[i] = 0;
+                  args->add(curr);
+                  while(temp[i + 1] == ' ')
+                     i++;
+                  curr = &temp[i + 1];
+               }
+               break;
+            case '"':
+               if (state == 2)
+                  break;   // within single quoted string
+               if (state == 0)
+               {
+                  state = 1;
+               }
+               else
+               {
+                  state = 0;
+               }
+               memmove(&temp[i], &temp[i + 1], (len - i) * sizeof(TCHAR));
+               i--;
+               break;
+            case '\'':
+               if (state == 1)
+                  break;   // within double quoted string
+               if (state == 0)
+               {
+                  state = 2;
+               }
+               else
+               {
+                  state = 0;
+               }
+               memmove(&temp[i], &temp[i + 1], (len - i) * sizeof(TCHAR));
+               i--;
+               break;
+            default:
+               break;
+         }
+      }
+
+      if (*curr != 0)
+         args->add(curr);
+   }
+   free(temp);
+   return args;
+}

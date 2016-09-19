@@ -23,6 +23,7 @@
 - Agent effective user and group can be set in configuration file
 - Agent environment variables can be set in configuration file
 - Added method "getResourceOwner" and attribute "nodes" to NXSL "Cluster" class
+- New object tool type "server script"
 - New agent metrics for self-monitoring:
 	Agent.SyslogProxy.IsEnabled, Agent.SyslogProxy.ReceivedMessages, Agent.SyslogProxy.QueueSize
 - Management console

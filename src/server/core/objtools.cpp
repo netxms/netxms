@@ -104,11 +104,9 @@ BOOL IsTableTool(UINT32 toolId)
    return bResult;
 }
 
-
 /**
  * Check if user has access to the tool
  */
-
 BOOL CheckObjectToolAccess(UINT32 toolId, UINT32 userId)
 {
    DB_RESULT hResult;

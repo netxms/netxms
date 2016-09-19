@@ -5386,62 +5386,111 @@ public class NXCSession
    }
    
    /**
+    * Process server script execution.
+    * 
+    * @param msg prepared request message
+    * @param listener script output listener or null if caller not interested in script output
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   private void processScriptExecution(NXCPMessage msg, final TextOutputListener listener) throws IOException, NXCException
+   {
+      MessageHandler handler = null;
+      if (listener != null)
+      {
+         handler = new MessageHandler() {
+            @Override
+            public boolean processMessage(NXCPMessage m)
+            {
+               if (m.getFieldAsInt32(NXCPCodes.VID_RCC) != RCC.SUCCESS)
+               {
+                  String errorMessage = m.getFieldAsString(NXCPCodes.VID_ERROR_TEXT);
+                  if ((errorMessage != null) && (listener != null))
+                  {
+                     listener.messageReceived(errorMessage + "\n\n");
+                  }
+               }
+               
+               String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
+               if ((text != null) && (listener != null))
+               {
+                  listener.messageReceived(text);
+               }
+               
+               if (m.isEndOfSequence())
+                  setComplete();
+               return true;
+            }
+         };
+         addMessageSubscription(NXCPCodes.CMD_EXECUTE_SCRIPT_UPDATE, msg.getMessageId(), handler);
+      }
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+      if (listener != null)
+      {
+         synchronized(handler)
+         {
+            if (!handler.isComplete())
+            {
+               try
+               {
+                  handler.wait();
+               }
+               catch(InterruptedException e)
+               {
+               }
+            }
+         }
+         if (handler.isTimeout())
+            throw new NXCException(RCC.TIMEOUT);
+      }
+   }
+   
+   /**
+    * Execute library script on object. Script name interpreted as command line with server-side macro substitution. Map inputValues
+    * can be used to pass data for %() macros.
+    * 
+    * @param nodeId node ID to execute script on
+    * @param script script name and parameters
+    * @param inputFields input values map for %() macro substitution (can be null)
+    * @param listener script output listener
+    * @throws IOException if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void executeLibraryScript(long nodeId, String script, Map<String, String> inputFields, final TextOutputListener listener) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_LIBRARY_SCRIPT);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
+      msg.setField(NXCPCodes.VID_SCRIPT, script);
+      msg.setField(NXCPCodes.VID_RECEIVE_OUTPUT, listener != null);
+      if (inputFields != null)
+      {
+         msg.setFieldInt16(NXCPCodes.VID_NUM_FIELDS, inputFields.size());
+         long fieldId = NXCPCodes.VID_FIELD_LIST_BASE;
+         for(Entry<String, String> e : inputFields.entrySet())
+         {
+            msg.setField(fieldId++, e.getKey());
+            msg.setField(fieldId++, e.getValue());
+         }
+      }
+      processScriptExecution(msg, listener);
+   }
+   
+   /**
     * Execute script.
     *
-    * @param nodeId     ID of the node object to test script on
-    * @param script     script source code
-    * @return test execution results
-    * @throws IOException  if socket I/O error occurs
+    * @param nodeId ID of the node object to test script on
+    * @param script script source code
+    * @param listener script output listener
+    * @throws IOException if socket I/O error occurs
     * @throws NXCException if NetXMS server returns an error or operation was timed out
     */
    public void executeScript(long nodeId, String script, final TextOutputListener listener) throws IOException, NXCException
    {
       NXCPMessage msg = newMessage(NXCPCodes.CMD_EXECUTE_SCRIPT);
-      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int) nodeId);
+      msg.setFieldInt32(NXCPCodes.VID_OBJECT_ID, (int)nodeId);
       msg.setField(NXCPCodes.VID_SCRIPT, script);
-
-      MessageHandler handler = new MessageHandler() {
-         @Override
-         public boolean processMessage(NXCPMessage m)
-         {
-            if (m.getFieldAsInt32(NXCPCodes.VID_RCC) != RCC.SUCCESS)
-            {
-               String errorMessage = m.getFieldAsString(NXCPCodes.VID_ERROR_TEXT);
-               if ((errorMessage != null) && (listener != null))
-               {
-                  listener.messageReceived(errorMessage + "\n\n");
-               }
-            }
-            
-            String text = m.getFieldAsString(NXCPCodes.VID_MESSAGE);
-            if ((text != null) && (listener != null))
-            {
-               listener.messageReceived(text);
-            }
-            
-            if (m.isEndOfSequence())
-               setComplete();
-            return true;
-         }
-      };
-      addMessageSubscription(NXCPCodes.CMD_EXECUTE_SCRIPT_UPDATE, msg.getMessageId(), handler);
-      sendMessage(msg);
-      waitForRCC(msg.getMessageId());
-      synchronized(handler)
-      {
-         if (!handler.isComplete())
-         {
-            try
-            {
-               handler.wait();
-            }
-            catch(InterruptedException e)
-            {
-            }
-         }
-      }
-      if (handler.isTimeout())
-         throw new NXCException(RCC.TIMEOUT);
+      processScriptExecution(msg, listener);
    }
 
    /**

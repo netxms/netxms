@@ -79,6 +79,7 @@ public class Messages extends NLS
    public static String General_RegExp;
    public static String General_RemoteFileName;
    public static String General_RequiresConfirmation;
+   public static String General_Script;
    public static String General_Select;
    public static String General_ShowInCommands;
    public static String General_ShowInCommandsTooltip;
@@ -124,6 +125,8 @@ public class Messages extends NLS
    public static String ObjectToolsDynamicMenu_MultipleNodes;
    public static String ObjectToolsDynamicMenu_ServerCmdExecError;
    public static String ObjectToolsDynamicMenu_ServerCommandExecuted;
+   public static String ObjectToolsDynamicMenu_ServerScriptExecError;
+   public static String ObjectToolsDynamicMenu_ServerScriptExecuted;
    public static String ObjectToolsDynamicMenu_ToolExecution;
    public static String ObjectToolsDynamicMenu_TopLevelLabel;
    public static String ObjectToolsEditor_AckToDisableObjectTool;
@@ -160,6 +163,7 @@ public class Messages extends NLS
    public static String ObjectToolsLabelProvider_TypeInternal;
    public static String ObjectToolsLabelProvider_TypeLocalCmd;
    public static String ObjectToolsLabelProvider_TypeServerCmd;
+   public static String ObjectToolsLabelProvider_TypeServerScript;
    public static String ObjectToolsLabelProvider_TypeSNMPList;
    public static String ObjectToolsLabelProvider_TypeURL;
    public static String OpenObjectToolsEditor_Error;
