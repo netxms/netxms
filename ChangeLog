@@ -20,6 +20,7 @@
 - Built-in superuser account renamed to "system"
 - Default "admin" account now is ordinary member of "Admins" group without built-in privileges
 - New method "enableDiscoveryPolling" in NXSL class "Node"
+- New NXSL function AgentExecuteAction
 - Agent effective user and group can be set in configuration file
 - Agent environment variables can be set in configuration file
 - Added method "getResourceOwner" and attribute "nodes" to NXSL "Cluster" class

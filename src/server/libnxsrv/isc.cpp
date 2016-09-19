@@ -86,6 +86,7 @@ ISC::ISC()
 	m_commandTimeout = 10000;	// 10 seconds
    m_mutexDataLock = MutexCreate();
 	m_socketLock = MutexCreate();
+	m_protocolVersion = NXCP_VERSION;
 }
 
 /**
@@ -105,6 +106,7 @@ ISC::ISC(const InetAddress& addr, WORD port)
 	m_commandTimeout = 10000;	// 10 seconds
    m_mutexDataLock = MutexCreate();
 	m_socketLock = MutexCreate();
+   m_protocolVersion = NXCP_VERSION;
 }
 
 /**
