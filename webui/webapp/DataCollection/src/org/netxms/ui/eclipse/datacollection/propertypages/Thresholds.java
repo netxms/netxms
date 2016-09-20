@@ -136,7 +136,7 @@ public class Thresholds extends PropertyPage
 
 		new Label(thresholdArea, SWT.NONE).setText(Messages.get().Thresholds_Thresholds);
 
-		thresholdList = new TableViewer(thresholdArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION);
+		thresholdList = new TableViewer(thresholdArea, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL);
 		gd = new GridData();
 		gd.horizontalAlignment = SWT.FILL;
 		gd.grabExcessHorizontalSpace = true;
