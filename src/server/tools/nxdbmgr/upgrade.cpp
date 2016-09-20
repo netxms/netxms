@@ -1609,6 +1609,7 @@ static BOOL H_UpgradeFromV383(int currVersion, int newVersion)
    static TCHAR batch[] =
       _T("ALTER TABLE graphs ADD flags integer\n")
       _T("ALTER TABLE graphs ADD filters $SQL:TEXT\n")
+      _T("UPDATE graphs SET flags=0\n")
       _T("<END>");
    CHK_EXEC(SQLBatch(batch));
    CHK_EXEC(SQLQuery(_T("UPDATE metadata SET var_value='384' WHERE var_name='SchemaVersion'")));
