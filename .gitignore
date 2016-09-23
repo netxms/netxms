@@ -239,3 +239,7 @@ target
 
 # HP-UX build
 /packages/hp-ux/build
+
+# IntelliJ IDEA
+*.iml
+.idea/*
