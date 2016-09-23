@@ -273,6 +273,8 @@ public class TabbedObjectView extends ViewPart
 	 */
 	private void onObjectUpdate(AbstractObject object)
 	{
+	   if (header.isDisposed())
+	      return;
 		header.setText(object.getObjectName());
 		for(final ObjectTab tab : tabs)
 		{
