@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.tomaskir</groupId>
+    <artifactId>netxms-subagent-bind9</artifactId>
+    <version>2.1-M1</version>
+
+    <properties>
+        <java.version>1.7</java.version>
+        <lombok.version>1.16.10</lombok.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.netxms</groupId>
+            <artifactId>netxms-agent</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>utf-8</encoding>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.5</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <NetXMS-Plugin-Classname>
+                                com.github.tomaskir.netxms.subagents.bind9.Bind9Plugin
+                            </NetXMS-Plugin-Classname>
+                        </manifestEntries>
+                    </archive>
+
+                    <finalName>bind9</finalName>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
