@@ -97,6 +97,7 @@ public class SubAgent
             catch(Throwable e)
             {
                writeLog(LogLevel.ERROR, "JAVA: Exception in loadPlugin: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+               writeDebugLog(6, "JAVA:   ", e);
             }
          }
       }
@@ -188,6 +189,7 @@ public class SubAgent
          catch(Throwable e)
          {
             writeDebugLog(2, "JAVA: exception in plugin " + entry.getKey() + " initialization handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+            writeDebugLog(6, "JAVA:   ", e);
          }
       }
       writeDebugLog(2, "JAVA: subagent initialization completed");
@@ -210,6 +212,7 @@ public class SubAgent
          catch(Throwable e)
          {
             writeDebugLog(2, "JAVA: exception in plugin " + entry.getKey() + " shutdown handler: " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+            writeDebugLog(6, "JAVA:   ", e);
          }
       }
       writeDebugLog(2, "JAVA: subagent shutdown completed");
@@ -288,6 +291,7 @@ public class SubAgent
       catch(Throwable e)
       {
          writeLog(LogLevel.WARNING, "Failed to load plugin " + classname + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         writeDebugLog(6, "JAVA:   ", e);
          return null;
       }
    }
@@ -320,6 +324,7 @@ public class SubAgent
       catch(Throwable e)
       {
          writeLog(LogLevel.WARNING, "Error processing jar file " + jarFile + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+         writeDebugLog(6, "JAVA:   ", e);
          return null;
       }
          
@@ -337,6 +342,7 @@ public class SubAgent
          catch(Throwable e)
          {
             writeLog(LogLevel.WARNING, "Failed to load plugin " + cn + " from jar file " + jarFile + ": " + e.getClass().getCanonicalName() + ": " + e.getMessage());
+            writeDebugLog(6, "JAVA:   ", e);
          }
       }
       return pluginList.toArray(new Plugin[pluginList.size()]);
