@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Display;
 import org.netxms.base.GeoLocation;
 import org.netxms.client.NXCSession;
 import org.netxms.client.SessionListener;
@@ -32,6 +33,7 @@ import org.netxms.client.SessionNotification;
 import org.netxms.client.objects.AbstractObject;
 import org.netxms.ui.eclipse.osm.tools.Area;
 import org.netxms.ui.eclipse.osm.tools.QuadTree;
+import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 
 /**
  * Cache for objects' geolocation information
@@ -43,8 +45,6 @@ public class GeoLocationCache implements SessionListener
 	public static final int BOTTOM_RIGHT = 2;
 	
 	private static final int TILE_SIZE = 256;
-	
-	private static GeoLocationCache instance = new GeoLocationCache();
 	
 	private Map<Long, AbstractObject> objects = new HashMap<Long, AbstractObject>();
 	private QuadTree<Long> locationTree = new QuadTree<Long>();
@@ -284,6 +284,18 @@ public class GeoLocationCache implements SessionListener
 	 */
 	public static GeoLocationCache getInstance()
 	{
-		return instance;
+	   return getInstance(Display.getCurrent());
 	}
+
+   /**
+    * @param display
+    * @return
+    */
+   public static GeoLocationCache getInstance(Display display)
+   {
+      GeoLocationCache instance = (GeoLocationCache)ConsoleSharedData.getProperty(display, "GeoLocationCache");
+      if (instance == null)
+         instance = new GeoLocationCache();
+      return instance;
+   }
 }
