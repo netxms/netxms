@@ -195,6 +195,17 @@ static bool CheckDatabaseStructure()
       return false;
    }
 
+   if (version < DB_SCHEMA_VERSION)
+   {
+      if (!UpgradeDatabase())
+      {
+         version = ReadMetadataAsInt(_T("SchemaVersion"));
+         nxlog_debug(1, _T("Local database schema version is %d and cannot be upgraded to %d"), version, DB_SCHEMA_VERSION);
+         nxlog_write(MSG_LOCAL_DB_CORRUPTED, NXLOG_ERROR, NULL);
+         return false;
+      }
+   }
+
    bool success = true;
    for(int i = 0; s_dbTables[i] != NULL; i++)
    {
@@ -244,7 +255,7 @@ bool OpenLocalDatabase()
       return false;
    }
 
-   if (!CheckDatabaseStructure() || !UpgradeDatabase())
+   if (!CheckDatabaseStructure())
    {
 	   g_failFlags |= FAIL_UPGRADE_DATABASE;
       DBDisconnect(s_db);
