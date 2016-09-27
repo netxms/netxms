@@ -79,7 +79,6 @@ public class Application implements IApplication
 		      RWT.getUISession().setAttribute(ConsoleSharedData.ATTRIBUTE_TIMEZONE, TimeZone.getTimeZone(tzList[0]));
 		   }
 		}
-		
 		SharedIcons.init(display);
 		WorkbenchAdvisor advisor = new ApplicationWorkbenchAdvisor();
 		return PlatformUI.createAndRunWorkbench(display, advisor);

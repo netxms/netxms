@@ -215,10 +215,10 @@ Event::Event(const EventTemplate *eventTemplate, UINT32 sourceId, UINT32 dciId, 
  */
 Event::~Event()
 {
-   safe_free(m_messageText);
-   safe_free(m_messageTemplate);
-	safe_free(m_userTag);
-	safe_free(m_customMessage);
+   free(m_messageText);
+   free(m_messageTemplate);
+	free(m_userTag);
+	free(m_customMessage);
 }
 
 /**

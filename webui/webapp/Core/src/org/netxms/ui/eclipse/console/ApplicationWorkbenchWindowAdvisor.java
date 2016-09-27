@@ -204,8 +204,11 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor
 	public void postWindowClose()
 	{
 		super.postWindowClose();
-      JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
-      if (executor != null)
-         executor.execute("location.reload(true);");
+      if (RWT.getUISession().getAttribute("NoPageReload") == null)
+      {
+         JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+         if (executor != null)
+            executor.execute("location.reload(true);");
+      }
 	}
 }

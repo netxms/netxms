@@ -27,6 +27,8 @@ import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.window.Window;
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
+import org.eclipse.rap.rwt.internal.service.UISessionImpl;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
@@ -46,6 +48,7 @@ import org.netxms.ui.eclipse.shared.ConsoleSharedData;
 /**
  * Workbench advisor for NetXMS console application
  */
+@SuppressWarnings("restriction")
 public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 {
    private static final String PERSPECTIVE_ID = "org.netxms.ui.eclipse.console.ManagementPerspective"; //$NON-NLS-1$
@@ -193,23 +196,33 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 				    (n.getCode() == SessionNotification.SERVER_SHUTDOWN) ||
 				    (n.getCode() == SessionNotification.SESSION_KILLED))
                {
-                  display.asyncExec(new Runnable() {
+                  display.syncExec(new Runnable() {
                      @Override
                      public void run()
                      {
-                    	String productName = BrandingManager.getInstance().getProductName();
-                        MessageDialog.openError(
-                              PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
-                              Messages.get().ApplicationWorkbenchAdvisor_CommunicationError,
-                              ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ? 
+                        RWT.getUISession().setAttribute("NoPageReload", Boolean.TRUE);
+                        PlatformUI.getWorkbench().close();
+                        
+                        String productName = BrandingManager.getInstance().getProductName();
+                        String msg =
+                              (n.getCode() == SessionNotification.CONNECTION_BROKEN) ? 
                             		  String.format(Messages.get().ApplicationWorkbenchAdvisor_ConnectionLostMessage, productName)
-                                      : ((n.getCode() == SessionNotification.CONNECTION_BROKEN) ?
+                                      : ((n.getCode() == SessionNotification.SESSION_KILLED) ?
                                         "Communication session was terminated by system administrator"
-                                    	: String.format(Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage, productName)))
-                                    + Messages.get().ApplicationWorkbenchAdvisor_OKToCloseMessage);
-                        PlatformUI.getWorkbench().getActiveWorkbenchWindow().close();
+                                    	: String.format(Messages.get().ApplicationWorkbenchAdvisor_ServerShutdownMessage, productName));
+                        
+                        JavaScriptExecutor executor = RWT.getClient().getService(JavaScriptExecutor.class);
+                        if (executor != null)
+                           executor.execute("document.body.innerHTML='" +
+                                 "<div style=\"position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: none; background-color: white;\">" + 
+                                 "<p style=\"margin-top: 30px; margin-left: 30px; color: #800000; font-family: \"Segoe UI\", Verdana, Arial, sans-serif; font-weight: bold; font-size: 2em;\">" + 
+                                 msg + 
+                                 "</p><br/>" + 
+                                 "<button style=\"margin-left: 30px\" onclick=\"location.reload(true)\">RELOAD</button>" + 
+                                 "</div>';");
                      }
                   });
+                  ((UISessionImpl)RWT.getUISession(display)).shutdown();
                }
             }
          });

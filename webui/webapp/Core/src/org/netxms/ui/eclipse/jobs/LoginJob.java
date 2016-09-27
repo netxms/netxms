@@ -36,6 +36,7 @@ import org.netxms.client.ProtocolVersion;
 import org.netxms.client.constants.AuthenticationType;
 import org.netxms.client.constants.RCC;
 import org.netxms.ui.eclipse.console.Activator;
+import org.netxms.ui.eclipse.console.KeepAliveTimer;
 import org.netxms.ui.eclipse.console.Messages;
 import org.netxms.ui.eclipse.console.SourceProvider;
 import org.netxms.ui.eclipse.console.api.ConsoleLoginListener;
@@ -159,10 +160,7 @@ public class LoginJob implements IRunnableWithProgress
          callLoginListeners(session);
          monitor.worked(5);
 
-         Runnable keepAliveTimer = new KeepAliveTimer();
-         final Thread thread = new Thread(null, keepAliveTimer, "KeepAliveTimer");
-         thread.setDaemon(true);
-         thread.start();
+         new KeepAliveTimer(session).start();
       }
       catch(Exception e)
       {
@@ -273,32 +271,5 @@ public class LoginJob implements IRunnableWithProgress
       this.certificate = certificate;
       this.signature = signature;
       authMethod = AuthenticationType.CERTIFICATE;
-   }
-
-   /**
-    * Keep-alive timer
-    */
-   private final class KeepAliveTimer implements Runnable
-   {
-      @Override
-      public void run()
-      {
-         while(true)
-         {
-            final NXCSession session = (NXCSession)RWT.getUISession(display).getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
-            if (session == null)
-               break;
-            try
-            {
-               Thread.sleep(1000 * 60); // send keep-alive every 60 seconds
-               if (!session.checkConnection())
-                  break;   // session broken, application will exit (handled by workbench advisor)
-            }
-            catch(Exception e)
-            {
-               Activator.logError("Exception in keep-alive thread", e);
-            }
-         }
-      }
    }
 }
