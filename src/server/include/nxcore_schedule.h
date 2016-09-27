@@ -109,7 +109,7 @@ public:
 
    bool checkFlag(UINT32 flag) { return (m_flags & flag) != 0; }
    bool isRunning() { return (m_flags & SCHEDULED_TASK_RUNNING) != 0; }
-   bool canAccess(UINT32 user, UINT64 systemAccess);
+   bool canAccess(UINT32 userId, UINT64 systemAccess);
 };
 
 /**
@@ -124,7 +124,7 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
 UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutionTime, const TCHAR *params, UINT32 owner, UINT32 objectId, UINT64 systemAccessRights, UINT32 flags);
 UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights);
 void GetSchedulerTaskHandlers(NXCPMessage *msg, UINT64 accessRights);
-void GetSheduledTasks(NXCPMessage *msg, UINT32 user, UINT64 systemRights);
+void GetSheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights);
 UINT32 UpdateScheduledTaskFromMsg(NXCPMessage *request, UINT32 owner, UINT64 systemAccessRights);
 UINT32 CreateScehduledTaskFromMsg(NXCPMessage *request, UINT32 owner, UINT64 systemAccessRights);
 
