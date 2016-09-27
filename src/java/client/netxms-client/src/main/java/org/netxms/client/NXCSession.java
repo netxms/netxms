@@ -649,6 +649,11 @@ public class NXCSession
                   resyncEventTemplates();
                }
                break;
+            case SessionNotification.SESSION_KILLED:
+            case SessionNotification.SERVER_SHUTDOWN:
+            case SessionNotification.CONNECTION_BROKEN:
+               backgroundDisconnect();
+               break;
          }
          
          sendNotification(new SessionNotification(code, data));
@@ -1905,12 +1910,31 @@ public class NXCSession
 
       Logger.info("NXCSession.connect", "succesfully logged in, userId=" + userId);
    }
+   
+   /**
+    * Disconect session in background
+    */
+   private void backgroundDisconnect()
+   {
+      Thread t = new Thread(new Runnable() {
+         @Override
+         public void run()
+         {
+            disconnect();
+         }
+      }, "NXCSession disconnect");
+      t.setDaemon(true);
+      t.start();
+   }
 
    /**
     * Disconnect from server.
     */
-   public void disconnect()
+   synchronized public void disconnect()
    {
+      if (isDisconnected)
+         return;
+      
       if (socket != null)
       {
          try
@@ -1929,6 +1953,7 @@ public class NXCSession
          catch(IOException e)
          {
          }
+         socket = null;
       }
       
       // cause notification processing thread to stop
@@ -1965,8 +1990,6 @@ public class NXCSession
          }
          housekeeperThread = null;
       }
-
-      socket = null;
 
       if (msgWaitQueue != null)
       {
