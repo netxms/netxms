@@ -272,7 +272,7 @@ void ScheduledTask::fillMessage(NXCPMessage *msg, UINT32 base)
 /**
  * Check if user can access this scheduled task
  */
-bool ScheduledTask::canAccess(UINT32 user, UINT64 systemAccess)
+bool ScheduledTask::canAccess(UINT32 userId, UINT64 systemAccess)
 {
    if (systemAccess & SYSTEM_ACCESS_ALL_SCHEDULED_TASKS)
       return true;
@@ -281,7 +281,7 @@ bool ScheduledTask::canAccess(UINT32 user, UINT64 systemAccess)
       return !checkFlag(SCHEDULED_TASK_SYSTEM);
 
    if (systemAccess & SYSTEM_ACCESS_OWN_SCHEDULED_TASKS)
-      return user == m_owner;
+      return userId == m_owner;
 
    return false;
 }
@@ -523,7 +523,7 @@ UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
 /**
  * Fills message with scheduled tasks list
  */
-void GetSheduledTasks(NXCPMessage *msg, UINT32 userRights, UINT64 systemRights)
+void GetSheduledTasks(NXCPMessage *msg, UINT32 userId, UINT64 systemRights)
 {
    int scheduleCount = 0;
    int base = VID_SCHEDULE_LIST_BASE;
@@ -531,11 +531,11 @@ void GetSheduledTasks(NXCPMessage *msg, UINT32 userRights, UINT64 systemRights)
    MutexLock(s_oneTimeScheduleLock);
    for(int i = 0; i < s_oneTimeSchedules.size(); i++)
    {
-      if(s_oneTimeSchedules.get(i)->canAccess(userRights, systemRights))
+      if (s_oneTimeSchedules.get(i)->canAccess(userId, systemRights))
       {
          s_oneTimeSchedules.get(i)->fillMessage(msg, base);
          scheduleCount++;
-         base+=10;
+         base += 10;
       }
    }
    MutexUnlock(s_oneTimeScheduleLock);
@@ -543,11 +543,11 @@ void GetSheduledTasks(NXCPMessage *msg, UINT32 userRights, UINT64 systemRights)
    MutexLock(s_cronScheduleLock);
    for(int i = 0; i < s_cronSchedules.size(); i++)
    {
-      if(s_oneTimeSchedules.get(i)->canAccess(userRights, systemRights))
+      if (s_cronSchedules.get(i)->canAccess(userId, systemRights))
       {
          s_cronSchedules.get(i)->fillMessage(msg, base);
          scheduleCount++;
-         base+=10;
+         base += 10;
       }
    }
    MutexUnlock(s_cronScheduleLock);
