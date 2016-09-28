@@ -479,7 +479,7 @@ ThresholdCheckResult Threshold::check(ItemValue &value, ItemValue **ppPrevValues
    }
 
 	// Check for number of consecutive matches
-	if ((m_function == F_LAST) || (m_function == F_SCRIPT))
+	if ((m_function == F_LAST) || (m_function == F_DIFF) || (m_function == F_SCRIPT))
 	{
 		if (bMatch)
 		{
