@@ -100,17 +100,18 @@ public class UploadFileToAgent implements IObjectActionDelegate
 				   }
 					for(int i = 0; i < nodeIdList.length; i++)
 					{
-					   if(dlg.isScheduled())
+					   if (dlg.isScheduled())
 					   {
 					      ScheduledTask task = dlg.getScheduledTask();
 					      String parameters = dlg.getServerFile().getName() + "," + remoteFileName; //$NON-NLS-1$
 					      task.setParameters(parameters);
 					      task.setObjectId(nodeIdList[i]);
-					      task.setFlags(ScheduledTask.INTERNAL);
 					      session.addSchedule(task);
 					   }
 					   else
+					   {
 					      session.uploadFileToAgent(nodeIdList[i], dlg.getServerFile().getName(), remoteFileName, dlg.isCreateJobOnHold());
+					   }
 					}
 				}
 			}.start();

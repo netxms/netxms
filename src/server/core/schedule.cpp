@@ -233,7 +233,7 @@ void ScheduledTask::run(SchedulerCallback *callback)
       MutexUnlock(s_oneTimeScheduleLock);
    }
 
-   if (checkFlag(SCHEDULED_TASK_SYSTEM))
+   if (oneTimeSchedule && checkFlag(SCHEDULED_TASK_SYSTEM))
       RemoveScheduledTask(m_id, 0, SYSTEM_ACCESS_FULL);
 }
 
@@ -342,7 +342,7 @@ UINT32 UpdateScheduledTask(int id, const TCHAR *task, const TCHAR *schedule, con
    {
       if (s_cronSchedules.get(i)->getId() == id)
       {
-         if(!s_cronSchedules.get(i)->canAccess(owner, systemAccessRights))
+         if (!s_cronSchedules.get(i)->canAccess(owner, systemAccessRights))
          {
             rcc = RCC_ACCESS_DENIED;
             break;
@@ -414,9 +414,9 @@ UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutio
    }
    MutexUnlock(s_oneTimeScheduleLock);
 
-   if(!found)
+   if (!found)
    {
-      //check in different que and if exists - remove from one and add to another
+      //check in different queue and if exists - remove from one and add to another
       MutexLock(s_cronScheduleLock);
       for (int i = 0; i < s_cronSchedules.size(); i++)
       {
@@ -589,7 +589,7 @@ UINT32 CreateScehduledTaskFromMsg(NXCPMessage *request, UINT32 owner, UINT64 sys
    int flags = request->getFieldAsInt32(VID_FLAGS);
    int objectId = request->getFieldAsInt32(VID_OBJECT_ID);
    UINT32 result;
-   if(request->isFieldExist(VID_SCHEDULE))
+   if (request->isFieldExist(VID_SCHEDULE))
    {
       schedule = request->getFieldAsString(VID_SCHEDULE);
       result = AddScheduledTask(taskId, schedule, params, owner, objectId, systemAccessRights, flags);
@@ -599,9 +599,9 @@ UINT32 CreateScehduledTaskFromMsg(NXCPMessage *request, UINT32 owner, UINT64 sys
       nextExecutionTime = request->getFieldAsTime(VID_EXECUTION_TIME);
       result = AddOneTimeScheduledTask(taskId, nextExecutionTime, params, owner, objectId, systemAccessRights, flags);
    }
-   safe_free(taskId);
-   safe_free(schedule);
-   safe_free(params);
+   free(taskId);
+   free(schedule);
+   free(params);
    return result;
 }
 
@@ -759,10 +759,10 @@ static THREAD_RESULT THREAD_CALL CronCheckThread(void *arg)
       for(int i = 0; i < s_cronSchedules.size(); i++)
       {
          ScheduledTask *sh = s_cronSchedules.get(i);
-         if(sh->checkFlag(SCHEDULED_TASK_DISABLED))
+         if (sh->checkFlag(SCHEDULED_TASK_DISABLED))
             continue;
          SchedulerCallback *callback = s_callbacks.get(sh->getTaskHandlerId());
-         if(callback == NULL)
+         if (callback == NULL)
          {
             DbgPrintf(3, _T("CronCheckThread: Cron execution function with taskId=\'%s\' not found"), sh->getTaskHandlerId());
             continue;

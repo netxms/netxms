@@ -18,9 +18,9 @@ public class ScheduledTask
    
    final static public int DISABLED = 1;
    final static public int EXECUTED = 2;
-   final static public int IN_PROGRES = 4;
-   final static public int INTERNAL = 8;
-   final static private String statusDescription[] = {"Disabled", "Completed", "Running"};
+   final static public int RUNNING = 4;
+   final static public int SYSTEM = 8;
+   final static private String statusDescription[] = { "Disabled", "Completed", "Running" };
    
    public ScheduledTask()
    {
@@ -222,11 +222,11 @@ public class ScheduledTask
    
    public String getStatus()
    {
-      if((flags & IN_PROGRES) > 0)
+      if ((flags & RUNNING) != 0)
          return statusDescription[2];
-      if((flags & EXECUTED) > 0)
+      if ((flags & EXECUTED) != 0)
          return statusDescription[1];
-      if((flags & DISABLED) > 0)
+      if ((flags & DISABLED) != 0)
          return statusDescription[0];
       return "";
    }
