@@ -6,7 +6,7 @@ vmgr_la_CPPFLAGS=-I@top_srcdir@/include @VMGR_CPPFLAGS@
 vmgr_la_LDFLAGS = -module -avoid-version -export-symbols ../subagent.sym @VMGR_LDFLAGS@
 vmgr_la_LIBADD = ../../libnxagent/libnxagent.la ../../../libnetxms/libnetxms.la @VMGR_LIBS@
 
-EXTRA_DIST = vmgr.vcproj vmgr.h
+EXTRA_DIST = vmgr.h
 
 if !STATIC_BUILD
 install-exec-hook:
