@@ -160,6 +160,7 @@ typedef void * HSNMPSESSION;
 #define IDG_MAPPING_TABLE     21
 #define IDG_DCI_SUMMARY_TABLE 22
 #define IDG_SCHEDULED_TASK    23
+#define IDG_ALARM_CATEGORY    24
 
 /**
  * Exit codes for console commands
@@ -525,6 +526,9 @@ private:
    void setPassword(NXCPMessage *request);
    void validatePassword(NXCPMessage *request);
    void lockUserDB(UINT32 dwRqId, BOOL bLock);
+   void sendCategories(UINT32 dwRqId);
+   void modifyAlarmCategory(NXCPMessage *pRequest);
+   void removeAlarmCategory(NXCPMessage *pRequest);
    void sendEventDB(UINT32 dwRqId);
    void modifyEventTemplate(NXCPMessage *pRequest);
    void deleteEventTemplate(NXCPMessage *pRequest);
@@ -1184,5 +1188,14 @@ extern int NXCORE_EXPORTABLE g_dbSyntax;
 extern FileMonitoringList g_monitoringList;
 
 extern ThreadPool NXCORE_EXPORTABLE *g_mainThreadPool;
+
+/**
+ * Alarm category functions
+ */
+void GetCategories(NXCPMessage *msg);
+UINT32 UpdateAlarmCategory(NXCPMessage *pRequest);
+UINT32 ModifyAlarmAcl(NXCPMessage *pRequest);
+UINT32 DeleteAlarmCategory(NXCPMessage *pRequest);
+
 
 #endif   /* _nms_core_h_ */

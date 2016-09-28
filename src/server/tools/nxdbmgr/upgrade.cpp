@@ -98,7 +98,7 @@ static bool CreateTable(const TCHAR *pszQuery)
 }
 
 /**
- * Check if cnfiguration variable exist
+ * Check if configuration variable exist
  */
 static bool IsConfigurationVariableExist(const TCHAR *name)
 {
@@ -115,7 +115,7 @@ static bool IsConfigurationVariableExist(const TCHAR *name)
 }
 
 /**
- * Create configuration parameter if it doesn't exist (unless bForceUpdate set to true)
+ * Create configuration parameter if it doesn`t exist (unless bForceUpdate set to true)
  */
 bool CreateConfigParam(const TCHAR *name, const TCHAR *value, const TCHAR *description, char dataType, bool isVisible, bool needRestart, bool isPublic, bool forceUpdate)
 {
@@ -719,6 +719,54 @@ static bool SetSchemaVersion(int version)
    TCHAR query[256];
    _sntprintf(query, 256, _T("UPDATE metadata SET var_value='%d' WHERE var_name='SchemaVersion'"), version);
    return SQLQuery(query);
+}
+
+/**
+*  Upgrade from V415 to V416
+*/
+static BOOL H_UpgradeFromV415(int currVersion, int newVersion)
+{
+   CHK_EXEC(CreateTable(
+            _T("CREATE TABLE alarm_categories (")
+            _T("id integer not null,")
+            _T("name varchar(63) null,")
+            _T("descr varchar(255) null,")
+            _T("PRIMARY KEY(id))")));
+   CHK_EXEC(CreateTable(
+            _T("CREATE TABLE alarm_category_acl (")
+            _T("category_id integer not null,")
+            _T("user_id integer not null,")
+            _T("PRIMARY KEY(category_id,user_id))")));
+   CHK_EXEC(CreateTable(
+            _T("CREATE TABLE alarm_category_map (")
+            _T("alarm_id integer not null,")
+            _T("category_id integer not null,")
+            _T("PRIMARY KEY(alarm_id,category_id))")));
+
+   CHK_EXEC(SQLQuery(
+			   _T("ALTER TABLE alarms ADD alarm_category_ids varchar(255)")));
+
+   // Add view all alarms system access to user group - Everyone
+   DB_RESULT hResult = SQLSelect(_T("SELECT system_access FROM user_groups WHERE name='Everyone'"));
+   if (hResult != NULL)
+   {
+      UINT64 sysAccess = DBGetFieldUInt64(hResult, 0, 0);
+      sysAccess = sysAccess | SYSTEM_ACCESS_VIEW_ALL_ALARMS;
+
+      TCHAR query[MAX_DB_STRING];
+      _sntprintf(query, MAX_DB_STRING, _T("UPDATE user_groups SET system_access=%ld WHERE name='Everyone'"), sysAccess);
+      CHK_EXEC(SQLQuery(query));
+
+   DBFreeResult(hResult);
+   }
+   else
+   {
+      if (!g_bIgnoreErrors)
+         return false;
+   }
+
+   CHK_EXEC(SetSchemaVersion(416));
+   return TRUE;
 }
 
 /**
@@ -10559,6 +10607,7 @@ static struct
    { 412, 413, H_UpgradeFromV412 },
    { 413, 414, H_UpgradeFromV413 },
    { 414, 415, H_UpgradeFromV414 },
+   { 415, 416, H_UpgradeFromV415 },
    { 0, 0, NULL }
 };
 

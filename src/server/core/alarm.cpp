@@ -55,7 +55,7 @@ static UINT32 GetCommentCount(DB_HANDLE hdb, UINT32 alarmId)
 /**
  * Create new alarm from event
  */
-Alarm::Alarm(Event *event, const TCHAR *message, const TCHAR *key, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout)
+Alarm::Alarm(Event *event, const TCHAR *message, const TCHAR *key, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList)
 {
    m_alarmId = CreateUniqueId(IDG_ALARM);
    m_sourceEventId = event->getId();
@@ -81,6 +81,7 @@ Alarm::Alarm(Event *event, const TCHAR *message, const TCHAR *key, int state, in
    m_relatedEvents->add(event->getId());
    nx_strncpy(m_message, message, MAX_EVENT_MSG_LENGTH);
    nx_strncpy(m_key, key, MAX_DB_STRING);
+   m_alarmCategoryList = new IntegerArray<UINT32>(alarmCategoryList);
 }
 
 /**
@@ -126,6 +127,10 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
       }
       DBFreeResult(eventResult);
    }
+
+   TCHAR categoryList[MAX_DB_STRING];
+   DBGetField(hResult, row, 20, categoryList, MAX_DB_STRING);
+   m_alarmCategoryList = new IntegerArray<UINT32>(categoryListToIntArray(categoryList));
 }
 
 /**
@@ -157,14 +162,13 @@ Alarm::Alarm(const Alarm *src, bool copyEvents)
    m_commentCount = src->m_commentCount;
    if (copyEvents && (src->m_relatedEvents != NULL))
    {
-      m_relatedEvents = new IntegerArray<UINT64>(src->m_relatedEvents->size(), 16);
-      for(int i = 0; i < src->m_relatedEvents->size(); i++)
-         m_relatedEvents->add(src->m_relatedEvents->get(i));
+      m_relatedEvents = new IntegerArray<UINT64>(src->m_relatedEvents);
    }
    else
    {
       m_relatedEvents = NULL;
    }
+   m_alarmCategoryList = new IntegerArray<UINT32>(src->m_alarmCategoryList);
 }
 
 /**
@@ -173,6 +177,7 @@ Alarm::Alarm(const Alarm *src, bool copyEvents)
 Alarm::~Alarm()
 {
    delete m_relatedEvents;
+   delete m_alarmCategoryList;
 }
 
 /**
@@ -219,6 +224,9 @@ static void NotifyClients(UINT32 code, const Alarm *alarm)
  */
 void Alarm::createInDatabase()
 {
+   TCHAR categoryList[MAX_DB_STRING];
+   categoryList[0] = 0;
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
@@ -226,7 +234,7 @@ void Alarm::createInDatabase()
               _T("source_object_id,source_event_code,message,original_severity,")
               _T("current_severity,alarm_key,alarm_state,ack_by,resolved_by,hd_state,")
               _T("hd_ref,repeat_count,term_by,timeout,timeout_event,source_event_id,")
-              _T("ack_timeout,dci_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
+              _T("ack_timeout,dci_id,alarm_category_ids) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_alarmId);
@@ -250,6 +258,13 @@ void Alarm::createInDatabase()
       DBBind(hStmt, 19, DB_SQLTYPE_BIGINT, m_sourceEventId);
       DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (UINT32)m_ackTimeout);
       DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_dciId);
+
+      if (m_alarmCategoryList != NULL)
+      {
+         categoryListToString(categoryList);
+      }
+      DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, categoryList, DB_BIND_STATIC);
+
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -262,6 +277,9 @@ void Alarm::createInDatabase()
  */
 void Alarm::updateInDatabase()
 {
+   TCHAR categoryList[MAX_DB_STRING];
+   categoryList[0] = 0;
+
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
 
    DB_STATEMENT hStmt = DBPrepare(hdb,
@@ -269,7 +287,7 @@ void Alarm::updateInDatabase()
             _T("last_change_time=?,current_severity=?,repeat_count=?,")
             _T("hd_state=?,hd_ref=?,timeout=?,timeout_event=?,")
             _T("message=?,resolved_by=?,ack_timeout=?,source_object_id=?,")
-            _T("dci_id=? WHERE alarm_id=?"));
+            _T("dci_id=?,alarm_category_ids=? WHERE alarm_id=?"));
    if (hStmt != NULL)
    {
       DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, (INT32)m_state);
@@ -287,7 +305,14 @@ void Alarm::updateInDatabase()
       DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (UINT32)m_ackTimeout);
       DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_sourceObject);
       DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dciId);
-      DBBind(hStmt, 16, DB_SQLTYPE_INTEGER, m_alarmId);
+
+      if (m_alarmCategoryList != NULL)
+      {
+         categoryListToString(categoryList);
+      }
+      DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, categoryList, DB_BIND_STATIC);
+
+      DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_alarmId);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
    }
@@ -447,7 +472,7 @@ static void FillAlarmEventsMessage(NXCPMessage *msg, UINT32 alarmId)
 /**
  * Update existing alarm from event
  */
-void Alarm::updateFromEvent(Event *event, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, const TCHAR *message)
+void Alarm::updateFromEvent(Event *event, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, const TCHAR *message, IntegerArray<UINT32> *alarmCategoryList)
 {
    m_repeatCount++;
    m_lastChangeTime = (UINT32)time(NULL);
@@ -460,6 +485,7 @@ void Alarm::updateFromEvent(Event *event, int state, int severity, UINT32 timeou
    m_timeoutEvent = timeoutEvent;
    m_ackTimeout = ackTimeout;
    nx_strncpy(m_message, message, MAX_EVENT_MSG_LENGTH);
+   m_alarmCategoryList = new IntegerArray<UINT32>(alarmCategoryList);
 
    NotifyClients(NX_NOTIFY_ALARM_CHANGED, this);
    updateInDatabase();
@@ -469,7 +495,7 @@ void Alarm::updateFromEvent(Event *event, int state, int severity, UINT32 timeou
  * Create new alarm
  */
 void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int severity, UINT32 timeout,
-									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout)
+									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList)
 {
    UINT32 alarmId = 0;
    bool newAlarm = true;
@@ -489,7 +515,7 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int
          Alarm *alarm = m_alarmList->get(i);
 			if (!_tcscmp(pszExpKey, alarm->getKey()))
          {
-			   alarm->updateFromEvent(event, state, severity, timeout, timeoutEvent, ackTimeout, pszExpMsg);
+			   alarm->updateFromEvent(event, state, severity, timeout, timeoutEvent, ackTimeout, pszExpMsg, alarmCategoryList);
             if (!alarm->isEventRelated(event->getId()))
             {
                alarmId = alarm->getAlarmId();		// needed for correct update of related events
@@ -508,7 +534,7 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int
    if (newAlarm)
    {
       // Create new alarm structure
-      Alarm *alarm = new Alarm(event, pszExpMsg, pszExpKey, state, severity, timeout, timeoutEvent, ackTimeout);
+      Alarm *alarm = new Alarm(event, pszExpMsg, pszExpKey, state, severity, timeout, timeoutEvent, ackTimeout, alarmCategoryList);
       alarmId = alarm->getAlarmId();
 
       // Add new alarm to active alarm list if needed
@@ -926,7 +952,7 @@ UINT32 OpenHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref)
 /**
  * Get helpdesk issue URL for given alarm
  */
-UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, TCHAR *url, size_t size)
+UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, UINT32 userId, TCHAR *url, size_t size, ClientSession *session)
 {
    UINT32 rcc = RCC_INVALID_ALARM_ID;
 
@@ -934,6 +960,11 @@ UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, TCHAR *url, size_t size)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       Alarm *alarm = m_alarmList->get(i);
+      if (alarm->checkCategoryAcl(userId, session))
+      {
+         rcc = RCC_ACCESS_DENIED;
+         break;
+      }
       if (alarm->getAlarmId() == alarmId)
       {
          if ((alarm->getHelpDeskState() != ALARM_HELPDESK_IGNORED) && (alarm->getHelpDeskRef()[0] != 0))
@@ -1131,7 +1162,7 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
       NetObj *pObject = FindObjectById(alarm->getSourceObject());
       if (pObject != NULL)
       {
-         if (pObject->checkAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS))
+         if (pObject->checkAccessRights(dwUserId, OBJECT_ACCESS_READ_ALARMS) && alarm->checkCategoryAcl(dwUserId, pSession))
          {
             alarm->fillMessage(&msg);
             pSession->sendMessage(&msg);
@@ -1150,7 +1181,7 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession)
  * Get alarm with given ID into NXCP message
  * Should return RCC that can be sent to client
  */
-UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, NXCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, UINT32 userId, NXCPMessage *msg, ClientSession *session)
 {
    UINT32 dwRet = RCC_INVALID_ALARM_ID;
 
@@ -1158,6 +1189,11 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, NXCPMessage *msg)
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       Alarm *alarm = m_alarmList->get(i);
+      if (alarm->checkCategoryAcl(userId, session))
+      {
+         dwRet = RCC_ACCESS_DENIED;
+         break;
+      }
       if (alarm->getAlarmId() == alarmId)
       {
 			alarm->fillMessage(msg);
@@ -1174,17 +1210,25 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, NXCPMessage *msg)
  * Get all related events for alarm with given ID into NXCP message
  * Should return RCC that can be sent to client
  */
-UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 alarmId, NXCPMessage *msg)
+UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 alarmId, UINT32 userId, NXCPMessage *msg, ClientSession *session)
 {
    UINT32 dwRet = RCC_INVALID_ALARM_ID;
 
    MutexLock(m_mutex);
    for(int i = 0; i < m_alarmList->size(); i++)
-      if (m_alarmList->get(i)->getAlarmId() == alarmId)
+   {
+      if (m_alarmList->get(i)->checkCategoryAcl(userId, session))
       {
-			dwRet = RCC_SUCCESS;
+         dwRet = RCC_ACCESS_DENIED;
          break;
       }
+      if (m_alarmList->get(i)->getAlarmId() == alarmId)
+      {
+         dwRet = RCC_SUCCESS;
+         break;
+      }
+   }
+
    MutexUnlock(m_mutex);
 
 	// we don't call FillAlarmEventsMessage from within loop
@@ -1674,7 +1718,7 @@ bool InitAlarmManager()
                            _T("alarm_key,creation_time,last_change_time,")
                            _T("hd_state,hd_ref,ack_by,repeat_count,")
                            _T("alarm_state,timeout,timeout_event,resolved_by,")
-                           _T("ack_timeout,dci_id FROM alarms WHERE alarm_state<>3"));
+                           _T("ack_timeout,dci_id,alarm_category_ids FROM alarms WHERE alarm_state<>3"));
    if (hResult == NULL)
       return false;
 
@@ -1703,4 +1747,82 @@ void ShutdownAlarmManager()
 	ThreadJoin(m_hWatchdogThread);
    MutexDestroy(m_mutex);
    delete m_alarmList;
+}
+
+/**
+ * Convert alarm category list to string
+ */
+void Alarm::categoryListToString(TCHAR *categoryList)
+{
+   TCHAR buffer[128];
+   if (m_alarmCategoryList != NULL)
+   {
+      for(int i = 0; i < m_alarmCategoryList->size(); i++)
+      {
+         _sntprintf(buffer, MAX_DB_STRING, _T("%d,"), m_alarmCategoryList->get(i));
+         if (buffer == NULL)
+         {
+            _tcscpy(categoryList, buffer);
+         }
+         else
+         {
+            _tcscat(categoryList, buffer);
+         }
+      }
+   }
+}
+
+/**
+ * Alarm category list to IntegerArray
+ */
+IntegerArray<UINT32> Alarm::categoryListToIntArray(TCHAR *categoryList)
+{
+   int length = sizeof(categoryList) / sizeof(TCHAR), i;
+   IntegerArray<UINT32> *result = new IntegerArray<UINT32>(length, 16);
+   TCHAR buffer[128], *eptr;
+
+   for(i = 0; i < length; i++)
+   {
+      if (categoryList[i] == ',')
+      {
+         result->add(_tcstol(buffer, &eptr, 0));
+      }
+      buffer[i] = categoryList[i];
+   }
+
+   return result;
+}
+
+/**
+ * Check alarm category acl
+ */
+bool Alarm::checkCategoryAcl(DWORD userId, ClientSession *session) const
+{
+   if (session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_ALL_ALARMS))
+   {
+      return true;
+   }
+
+   TCHAR szQuery[256];
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   _sntprintf(szQuery, 256, _T("SELECT category_id FROM alarm_category_acl WHERE user_id=%d"), userId);
+   DB_RESULT hResult = DBSelect(hdb, szQuery);
+
+   if (hResult == NULL)
+      return false;
+
+   UINT32 count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      if (DBGetFieldULong(hResult, i, 0) == m_alarmCategoryList->get(i))
+      {
+         DBFreeResult(hResult);
+         DBConnectionPoolReleaseConnection(hdb);
+         return true;
+      }
+   }
+   DBFreeResult(hResult);
+   DBConnectionPoolReleaseConnection(hdb);
+
+   return false;
 }

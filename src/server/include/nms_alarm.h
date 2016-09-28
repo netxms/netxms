@@ -52,9 +52,10 @@ private:
    TCHAR m_helpDeskRef[MAX_HELPDESK_REF_LEN];
    UINT32 m_commentCount;     // Number of comments added to alarm
    IntegerArray<UINT64> *m_relatedEvents;
+   IntegerArray<UINT32> *m_alarmCategoryList;
 
 public:
-   Alarm(Event *event, const TCHAR *message, const TCHAR *key, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout);
+   Alarm(Event *event, const TCHAR *message, const TCHAR *key, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList);
    Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row);
    Alarm(const Alarm *src, bool copyEvents);
    ~Alarm();
@@ -93,13 +94,16 @@ public:
    void addRelatedEvent(UINT64 eventId) { if (m_relatedEvents != NULL) m_relatedEvents->add(eventId); }
    bool isEventRelated(UINT64 eventId) const { return (m_relatedEvents != NULL) && m_relatedEvents->contains(eventId); }
 
-   void updateFromEvent(Event *event, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, const TCHAR *message);
+   void updateFromEvent(Event *event, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, const TCHAR *message, IntegerArray<UINT32> *alarmCategoryList);
    UINT32 acknowledge(ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
    void resolve(UINT32 userId, Event *event, bool terminate);
    UINT32 openHelpdeskIssue(ClientSession *session, TCHAR *hdref);
    void unlinkFromHelpdesk() { m_helpDeskState = ALARM_HELPDESK_IGNORED; m_helpDeskRef[0] = 0; }
    UINT32 updateAlarmComment(UINT32 commentId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk);
    UINT32 deleteComment(UINT32 commentId);
+   void categoryListToString(TCHAR *categoryList);
+   IntegerArray<UINT32> categoryListToIntArray(TCHAR *categoryList);
+   bool checkCategoryAcl(DWORD userId, ClientSession *session) const;
 };
 
 /**
@@ -112,16 +116,16 @@ void SendAlarmsToClient(UINT32 dwRqId, ClientSession *pSession);
 void DeleteAlarmNotes(DB_HANDLE hdb, UINT32 alarmId);
 void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId);
 
-UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, NXCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, UINT32 userId, NXCPMessage *msg, ClientSession *session);
 ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId);
-UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 dwAlarmId, NXCPMessage *msg);
+UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 dwAlarmId, UINT32 userId, NXCPMessage *msg, ClientSession *session);
 NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 dwAlarmId, bool alreadyLocked = false);
 NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(const TCHAR *hdref);
 int GetMostCriticalStatusForObject(UINT32 dwObjectId);
 void GetAlarmStats(NXCPMessage *pMsg);
 
 void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int severity, UINT32 timeout,
-									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout);
+									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList);
 UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
 UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
 UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 dwAlarmId, NXCPMessage *msg, ClientSession *session, bool terminate);
@@ -143,7 +147,7 @@ void LoadHelpDeskLink();
 UINT32 CreateHelpdeskIssue(const TCHAR *description, TCHAR *hdref);
 UINT32 OpenHelpdeskIssue(UINT32 alarmId, ClientSession *session, TCHAR *hdref);
 UINT32 AddHelpdeskIssueComment(const TCHAR *hdref, const TCHAR *text);
-UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, TCHAR *url, size_t size);
+UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, UINT32 userId, TCHAR *url, size_t size, ClientSession *session);
 UINT32 GetHelpdeskIssueUrl(const TCHAR *hdref, TCHAR *url, size_t size);
 UINT32 UnlinkHelpdeskIssueById(UINT32 dwAlarmId, ClientSession *session);
 UINT32 UnlinkHelpdeskIssueByHDRef(const TCHAR *hdref, ClientSession *session);

@@ -11,4 +11,5 @@ Require-Bundle: org.eclipse.rap.ui;bundle-version="2.3.2",
  org.eclipse.rap.filedialog;bundle-version="3.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.netxms.ui.eclipse.usermanager.dialogs
+Export-Package: org.netxms.ui.eclipse.usermanager.dialogs,
+ org.netxms.ui.eclipse.usermanager.views.helpers

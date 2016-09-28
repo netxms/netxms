@@ -60,6 +60,7 @@ import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.SessionListener;
 import org.netxms.client.SessionNotification;
+import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.EventProcessingPolicy;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
@@ -719,7 +720,17 @@ public class EventProcessingPolicyEditor extends ViewPart implements ISaveablePa
 	{
 		return actions.values();
 	}
-
+	
+   /**
+    * @return AlarmCategory
+    */
+   public AlarmCategory findAlarmCategoryById(Long id)
+   {
+      NXCSession session = (NXCSession)ConsoleSharedData.getSession();
+      
+      return session.findAlarmCategoryById(id);
+   }	
+	
 	/**
 	 * @return the normalFont
 	 */

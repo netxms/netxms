@@ -252,3 +252,10 @@ INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_1,EVENT_N
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_NODE_ADDED);
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_SUBNET_ADDED);
 INSERT INTO event_group_members (group_id,event_code) VALUES (ID_GROUP_2,EVENT_INTERFACE_ADDED);
+
+/*
+** Default alarm categories
+*/
+
+INSERT INTO alarm_categories (cat_id,cat_name,cat_descr)
+   VALUES (1,'Monitoring','Category used for monitoring');

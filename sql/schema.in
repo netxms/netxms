@@ -1414,6 +1414,7 @@ CREATE TABLE alarms
   timeout integer not null,
   timeout_event integer not null,
   ack_timeout integer not null,
+  alarm_category_ids varchar(255) null,
   PRIMARY KEY(alarm_id)
 ) TABLE_TYPE;
 
@@ -1439,6 +1440,7 @@ COMMENT_COLUMN(alarms.term_by, '')
 COMMENT_COLUMN(alarms.timeout, '')
 COMMENT_COLUMN(alarms.timeout_event, '')
 COMMENT_COLUMN(alarms.ack_timeout, '')
+COMMENT_COLUMN(alarms.alarm_category_ids, '')
 
 /*
 ** Alarm notes
@@ -1489,6 +1491,50 @@ COMMENT_COLUMN(alarm_events.severity, '')
 COMMENT_COLUMN(alarm_events.source_object_id, '')
 COMMENT_COLUMN(alarm_events.event_timestamp, '')
 COMMENT_COLUMN(alarm_events.message, '')
+
+/*
+** Alarm categories
+*/
+CREATE TABLE alarm_categories
+(
+  id integer not null,
+  name varchar(63) null,
+  descr varchar(255) null,
+  PRIMARY KEY(id)
+) TABLE_TYPE;
+
+COMMENT_TABLE (alarm_categories, 'Alarm categories')
+COMMENT_COLUMN(id, 'Category ID')
+COMMENT_COLUMN(name, 'Category name')
+COMMENT_COLUMN(descr, 'Category description')
+
+/*
+** Alarm category access control list
+*/
+CREATE TABLE alarm_category_acl
+(
+  category_id integer not null,
+  user_id integer not null,
+  PRIMARY KEY(category_id,user_id)
+) TABLE_TYPE;
+
+COMMENT_TABLE(alarm_category_acl, 'Alarm category-user correspondence')
+COMMENT_COLUMN(category_id, 'Category ID')
+COMMENT_COLUMN(user_id, 'User ID')
+
+/*
+** Alarm-category map
+*/
+CREATE TABLE alarm_category_map
+(
+  alarm_id integer not null,
+  category_id integer not null,
+  PRIMARY KEY(alarm_id,category_id)
+) TABLE_TYPE;
+
+COMMENT_TABLE(alarm_category_map, 'Alarm-category correspondence')
+COMMENT_COLUMN(alarm_id, 'Alarm ID')
+COMMENT_COLUMN(category_id, 'Category ID')
 
 /*
 ** SNMP trap configuration

@@ -64,6 +64,7 @@ public class SystemRights extends PropertyPage
 		
       addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_UNLINK_ISSUES, Messages.get().SystemRights_UnlinkTicket);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_ACTIONS, Messages.get().SystemRights_ConfigureActions);
+		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_ALL_ALARMS, "View all alarms");
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_EDIT_EVENT_DB, Messages.get().SystemRights_ConfigureEvents);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_VIEW_EVENT_DB, Messages.get().SystemRights_ViewEventConfig);
 		addCheckbox(dialogArea, UserAccessRights.SYSTEM_ACCESS_MANAGE_SITUATIONS, Messages.get().SystemRights_ConfigureSituations);

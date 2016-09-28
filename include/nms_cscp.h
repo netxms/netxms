@@ -569,7 +569,11 @@ typedef struct
 #define CMD_ADD_REPOSITORY             0x0150
 #define CMD_MODIFY_REPOSITORY          0x0151
 #define CMD_DELETE_REPOSITORY          0x0152
-#define CMD_ALARM_BULK_TERMINATE       0x0153
+#define CMD_LOAD_CATEGORY_DB           0x0153
+#define CMD_SET_CATEGORY_INFO          0x0154
+#define CMD_DELETE_CATEGORY            0x0155
+#define CMD_ALARM_CATEGORY_UPDATE      0x0156
+#define CMD_ALARM_BULK_TERMINATE       0x0157
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1140,6 +1144,11 @@ typedef struct
 #define VID_ACCESS_RIGHT_FAIL       ((UINT32)553)
 #define VID_OPEN_IN_HELPDESK        ((UINT32)554)
 #define VID_ID_CHECK_FAIL           ((UINT32)555)
+#define VID_CATEGORY_DESCRIPTION    ((UINT32)556)
+#define VID_ALARM_CATEGORY_ID       ((UINT32)557)
+#define VID_NUM_ALARM_CATEGORIES    ((UINT32)558)
+#define VID_ALARM_CATEGORY_ACL      ((UINT32)559)
+#define VID_NUM_ALARM_CATEGORY_ACL  ((UINT32)560)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)

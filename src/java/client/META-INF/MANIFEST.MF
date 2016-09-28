@@ -49,3 +49,4 @@ Export-Package: org.netxms.base,
 Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0"
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.netxms.client.plugin.Activator
+Import-Package: org.netxms.client.events

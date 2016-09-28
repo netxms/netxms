@@ -93,6 +93,7 @@ import org.netxms.client.datacollection.ThresholdViolationSummary;
 import org.netxms.client.datacollection.TransformationTestResult;
 import org.netxms.client.datacollection.WinPerfObject;
 import org.netxms.client.events.Alarm;
+import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.AlarmComment;
 import org.netxms.client.events.Event;
 import org.netxms.client.events.EventInfo;
@@ -310,6 +311,10 @@ public class NXCSession
    private Map<Long, EventTemplate> eventTemplates = new HashMap<Long, EventTemplate>();
    private boolean eventTemplatesNeedSync = false;
    
+   // Alarm categories
+   private Map<Long, AlarmCategory> alarmCategories = new HashMap<Long, AlarmCategory>();
+   private boolean alarmCategoriesNeedSync = false;
+   
    /**
     * Message subscription class
     */
@@ -520,6 +525,9 @@ public class NXCSession
                   case NXCPCodes.CMD_GRAPH_UPDATE:
                      GraphSettings graph = new GraphSettings(msg, NXCPCodes.VID_GRAPH_LIST_BASE);
                      sendNotification(new SessionNotification(SessionNotification.PREDEFINED_GRAPHS_CHANGED, graph.getId(), graph));
+                     break;
+                  case NXCPCodes.CMD_ALARM_CATEGORY_UPDATE:
+                     processAlarmCategoryConfigChange(msg);
                      break;
                   default:
                      // Check subscriptions
@@ -856,7 +864,7 @@ public class NXCSession
          }
          sendNotification(new SessionNotification(code, eventCode, et));
       }
-
+      
       /**
        * Process server notification on image library change
        *
@@ -868,6 +876,33 @@ public class NXCSession
          final int flags = msg.getFieldAsInt32(NXCPCodes.VID_FLAGS);
          sendNotification(new SessionNotification(SessionNotification.IMAGE_LIBRARY_CHANGED,
             flags == 0 ? SessionNotification.IMAGE_UPDATED : SessionNotification.IMAGE_DELETED, imageGuid));
+      }
+      
+      /**
+       * Process server notification on alarm category configuration change
+       *
+       * @param msg notification message
+       */
+      private void processAlarmCategoryConfigChange(final NXCPMessage msg)
+      {
+         int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE) + SessionNotification.NOTIFY_BASE;
+         long categoryId = msg.getFieldAsInt64(NXCPCodes.VID_CATEGORY_ID);
+         AlarmCategory ac = (code != SessionNotification.ALARM_CATEGORY_DELETED) ? new AlarmCategory(msg) : null;
+         if (alarmCategoriesNeedSync)
+         {
+            synchronized(alarmCategories)
+            {
+               if (code == SessionNotification.ALARM_CATEGORY_DELETED)
+               {
+                  alarmCategories.remove(categoryId);
+               }
+               else
+               {
+                  alarmCategories.put(categoryId, ac);
+               }
+            }
+         }
+         sendNotification(new SessionNotification(code, categoryId, ac));
       }
    }
 
@@ -2041,6 +2076,7 @@ public class NXCSession
       objectList.clear();
       eventTemplates.clear();
       userDB.clear();
+      alarmCategories.clear();
    }
 
    /**
@@ -5325,7 +5361,7 @@ public class NXCSession
    }
 
    /**
-    * Get read-only copy of ebent processing policy.
+    * Get read-only copy of event processing policy.
     *
     * @return Event processing policy
     * @throws IOException  if socket I/O error occurs
@@ -5615,6 +5651,121 @@ public class NXCSession
       return log;
    }
 
+   /**
+    * Get alarm categories from server
+    * 
+    * @return List of configured alarm categories
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public List<AlarmCategory> getAlarmCategories() throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_LOAD_CATEGORY_DB);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      ArrayList<AlarmCategory> list = new ArrayList<AlarmCategory>();
+      long baseId = NXCPCodes.VID_CATEGORY_LIST_BASE;
+      int records = response.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
+      int counter = response.getFieldAsInt32(NXCPCodes.VID_NUM_FIELDS);
+      for(int i = 0; i < records; i++, baseId+=counter)
+      {
+         list.add(new AlarmCategory(response, baseId));
+      }
+      return list;
+   }
+   
+   /**
+    * Add or update alarm category in DB
+    * 
+    * @param object alarm category
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void modifyAlarmCategory(AlarmCategory object, int fields) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_SET_CATEGORY_INFO);
+      msg.setFieldInt32(NXCPCodes.VID_FIELDS, fields);
+      object.fillMessage(msg);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Delete alarm category in DB
+    * @param id of alarm category
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   public void deleteAlarmCategory(long id) throws IOException, NXCException
+   {
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_DELETE_CATEGORY);
+      msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, (int)id);
+      sendMessage(msg);
+      waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Synchronize alarm category configuration. After call to this method
+    * session object will maintain internal list of configured alarm categories
+    * 
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    */
+   
+   public void syncAlarmCategories() throws IOException, NXCException
+   {
+      List<AlarmCategory> categories = getAlarmCategories();
+      synchronized(alarmCategories)
+      {
+         alarmCategories.clear();
+         for(AlarmCategory c : categories)
+         {
+            alarmCategories.put(c.getId(), c);
+         }
+         alarmCategoriesNeedSync = true;
+      }
+   }
+   
+   /**
+    * Find alarm category by id in alarm category database internally
+    * maintained by session object. You must call
+    * NXCSession.syncAlarmCategories() first to make local copy of event template
+    * database.
+    *
+    * @param code Event code
+    * @return Event template object or null if not found
+    */
+   public AlarmCategory findAlarmCategoryById(long id)
+   {
+      synchronized(alarmCategories)
+      {
+         return alarmCategories.get(id);
+      }
+   }
+   
+   /**
+    * Find multiple alarm categories by category id`s in alarm category database
+    * internally maintained by session object. You must call
+    * NXCSession.syncAlarmCategories() first to make local copy of alarm category
+    * database.
+    *
+    * @param ids List of alarm category id`s
+    * @return List of found alarm categories
+    */
+   public List<AlarmCategory> findMultipleAlarmCategories(List<Long> ids)
+   {
+      List<AlarmCategory> list = new ArrayList<AlarmCategory>();
+      synchronized(alarmCategories)
+      {
+         for(Long id : ids)
+         {
+            AlarmCategory e = alarmCategories.get(id);
+            if (e != null) list.add(e);
+         }
+      }
+      return list;
+   }
+   
    /**
     * Synchronize event templates configuration. After call to this method
     * session object will maintain internal list of configured event templates.

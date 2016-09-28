@@ -44,6 +44,8 @@ EPRule::EPRule(UINT32 id)
    m_pScript = NULL;
 	m_dwAlarmTimeout = 0;
 	m_dwAlarmTimeoutEvent = EVENT_ALARM_TIMEOUT;
+	m_alarmCategoryCount = 0;
+	m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
 	m_dwSituationId = 0;
 	m_szSituationInstance[0] = 0;
 }
@@ -84,6 +86,8 @@ EPRule::EPRule(ConfigEntry *config)
    m_iAlarmSeverity = config->getSubEntryValueAsInt(_T("alarmSeverity"));
 	m_dwAlarmTimeout = config->getSubEntryValueAsUInt(_T("alarmTimeout"));
 	m_dwAlarmTimeoutEvent = config->getSubEntryValueAsUInt(_T("alarmTimeout"), 0, EVENT_ALARM_TIMEOUT);
+	m_alarmCategoryCount = 0;
+	m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
    nx_strncpy(m_szAlarmKey, config->getSubEntryValue(_T("alarmKey"), 0, _T("")), MAX_DB_STRING);
    nx_strncpy(m_szAlarmMessage, config->getSubEntryValue(_T("alarmMessage"), 0, _T("")), MAX_DB_STRING);
 
@@ -148,6 +152,8 @@ EPRule::EPRule(DB_RESULT hResult, int row)
    }
 	m_dwAlarmTimeout = DBGetFieldULong(hResult, row, 8);
 	m_dwAlarmTimeoutEvent = DBGetFieldULong(hResult, row, 9);
+	m_alarmCategoryCount = 0;
+	m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
 	m_dwSituationId = DBGetFieldULong(hResult, row, 10);
    DBGetField(hResult, row, 11, m_szSituationInstance, MAX_DB_STRING);
    m_dwNumActions = 0;
@@ -188,6 +194,10 @@ EPRule::EPRule(NXCPMessage *msg)
    m_iAlarmSeverity = msg->getFieldAsUInt16(VID_ALARM_SEVERITY);
 	m_dwAlarmTimeout = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT);
 	m_dwAlarmTimeoutEvent = msg->getFieldAsUInt32(VID_ALARM_TIMEOUT_EVENT);
+
+   m_alarmCategoryCount = msg->getFieldAsUInt32(VID_NUM_ALARM_CATEGORIES);
+   m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
+   msg->getFieldAsInt32Array(VID_ALARM_CATEGORY_ID, m_alarmCategoryList);
 
 	m_dwSituationId = msg->getFieldAsUInt32(VID_SITUATION_ID);
    msg->getFieldAsString(VID_SITUATION_INSTANCE, m_szSituationInstance, MAX_DB_STRING);
@@ -230,6 +240,7 @@ EPRule::~EPRule()
    safe_free(m_pdwActionList);
    safe_free(m_pszComment);
    safe_free(m_pszScript);
+   delete m_alarmCategoryList;
    delete m_pScript;
 }
 
@@ -548,7 +559,7 @@ void EPRule::generateAlarm(Event *pEvent)
 	{
 		CreateNewAlarm(m_szAlarmMessage, m_szAlarmKey, ALARM_STATE_OUTSTANDING,
                      (m_iAlarmSeverity == SEVERITY_FROM_EVENT) ? pEvent->getSeverity() : m_iAlarmSeverity,
-                     m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent, 0);
+                     m_dwAlarmTimeout, m_dwAlarmTimeoutEvent, pEvent, 0, m_alarmCategoryList);
 	}
 }
 
@@ -629,6 +640,23 @@ bool EPRule::loadFromDB(DB_HANDLE hdb)
       bSuccess = false;
    }
 
+   // Load alarm categories
+   _sntprintf(szQuery, 256, _T("SELECT category_id FROM alarm_category_map WHERE alarm_id=%d"), m_id);
+   hResult = DBSelect(hdb, szQuery);
+   if (hResult != NULL)
+   {
+      count = DBGetNumRows(hResult);
+      for(i = 0; i < count; i++)
+      {
+         m_alarmCategoryList->add(DBGetFieldULong(hResult, i, 0));
+      }
+      DBFreeResult(hResult);
+   }
+   else
+   {
+      bSuccess = false;
+   }
+
    return bSuccess;
 }
 
@@ -651,6 +679,7 @@ void EPRule::saveToDB(DB_HANDLE hdb)
 {
 	UINT32 len = (UINT32)(_tcslen(CHECK_NULL(m_pszComment)) + _tcslen(CHECK_NULL(m_pszScript)) + 4096);
    TCHAR *pszQuery = (TCHAR *)malloc(len * sizeof(TCHAR));
+   DB_STATEMENT hStmt;
 
    // General attributes
    TCHAR guidText[128];
@@ -693,12 +722,28 @@ void EPRule::saveToDB(DB_HANDLE hdb)
 	// Situation attributes
    if (m_situationAttrList.size() > 0)
    {
-      DB_STATEMENT hStmt = DBPrepare(hdb, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (?,?,?,?)"));
+      hStmt = DBPrepare(hdb, _T("INSERT INTO policy_situation_attr_list (rule_id,situation_id,attr_name,attr_value) VALUES (?,?,?,?)"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
          DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_dwSituationId);
          m_situationAttrList.forEach(SaveSituationAttribute, hStmt);
+         DBFreeStatement(hStmt);
+      }
+   }
+
+   // Alarm categories
+   if (m_alarmCategoryList->size() > 0)
+   {
+      hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_map (alarm_id,category_id) VALUES (?,?)"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, m_id);
+         for (i = 0; i < m_alarmCategoryList->size(); i++)
+         {
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, m_alarmCategoryList->get(i));
+            DBExecute(hStmt);
+         }
          DBFreeStatement(hStmt);
       }
    }
@@ -719,6 +764,8 @@ void EPRule::createMessage(NXCPMessage *msg)
    msg->setField(VID_ALARM_MESSAGE, m_szAlarmMessage);
    msg->setField(VID_ALARM_TIMEOUT, m_dwAlarmTimeout);
    msg->setField(VID_ALARM_TIMEOUT_EVENT, m_dwAlarmTimeoutEvent);
+   msg->setField(VID_NUM_ALARM_CATEGORIES, m_alarmCategoryCount);
+   msg->setFieldFromInt32Array(VID_ALARM_CATEGORY_ID, m_alarmCategoryList);
    msg->setField(VID_COMMENTS, CHECK_NULL_EX(m_pszComment));
    msg->setField(VID_NUM_ACTIONS, m_dwNumActions);
    msg->setFieldFromInt32Array(VID_RULE_ACTIONS, m_dwNumActions, m_pdwActionList);
@@ -741,6 +788,19 @@ bool EPRule::isActionInUse(UINT32 dwActionId)
 
    for(i = 0; i < m_dwNumActions; i++)
       if (m_pdwActionList[i] == dwActionId)
+         return true;
+   return false;
+}
+
+/**
+ * Check if given category is used within rule
+ */
+bool EPRule::isCategoryInUse(UINT32 dwCategoryId)
+{
+   UINT32 i;
+
+   for(i = 0; i < m_alarmCategoryCount; i++)
+      if (m_alarmCategoryList->get(i) == dwCategoryId)
          return true;
    return false;
 }
@@ -825,6 +885,7 @@ void EventPolicy::saveToDB()
    DBQuery(hdb, _T("DELETE FROM policy_event_list"));
    DBQuery(hdb, _T("DELETE FROM policy_source_list"));
    DBQuery(hdb, _T("DELETE FROM policy_situation_attr_list"));
+   DBQuery(hdb, _T("DELETE FROM alarm_category_map"));
    for(i = 0; i < m_dwNumRules; i++)
       m_ppRuleList[i]->saveToDB(hdb);
    DBCommit(hdb);
@@ -902,6 +963,26 @@ bool EventPolicy::isActionInUse(UINT32 dwActionId)
 
    for(UINT32 i = 0; i < m_dwNumRules; i++)
       if (m_ppRuleList[i]->isActionInUse(dwActionId))
+      {
+         bResult = true;
+         break;
+      }
+
+   unlock();
+   return bResult;
+}
+
+/**
+ * Check if given category is used in policy
+ */
+bool EventPolicy::isCategoryInUse(UINT32 dwCategoryId)
+{
+   bool bResult = false;
+
+   readLock();
+
+   for(UINT32 i = 0; i < m_dwNumRules; i++)
+      if (m_ppRuleList[i]->isCategoryInUse(dwCategoryId))
       {
          bResult = true;
          break;

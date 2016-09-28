@@ -60,6 +60,7 @@ public class EventProcessingPolicyRule
 	private Severity alarmSeverity;
 	private int alarmTimeout;
 	private long alarmTimeoutEvent;
+	private List<Long>  alarmCategoryIds;
 	private List<Long> actions;
 	private long situationId;
 	private String situationInstance;
@@ -81,6 +82,7 @@ public class EventProcessingPolicyRule
 		alarmSeverity = Severity.UNKNOWN;
 		alarmTimeout = 0;
 		alarmTimeoutEvent = 43;
+		alarmCategoryIds = new ArrayList<Long>(0);
 		actions = new ArrayList<Long>(0);
 		situationId = 0;
 		situationInstance = "";
@@ -103,6 +105,7 @@ public class EventProcessingPolicyRule
 		alarmSeverity = src.alarmSeverity;
 		alarmTimeout = src.alarmTimeout;
 		alarmTimeoutEvent = src.alarmTimeoutEvent;
+		alarmCategoryIds = src.alarmCategoryIds;
 		actions = new ArrayList<Long>(src.actions);
 		situationId = src.situationId;
 		situationInstance = src.situationInstance;
@@ -127,6 +130,7 @@ public class EventProcessingPolicyRule
 		alarmSeverity = Severity.getByValue(msg.getFieldAsInt32(NXCPCodes.VID_ALARM_SEVERITY));
 		alarmTimeout = msg.getFieldAsInt32(NXCPCodes.VID_ALARM_TIMEOUT);
 		alarmTimeoutEvent = msg.getFieldAsInt64(NXCPCodes.VID_ALARM_TIMEOUT_EVENT);
+		alarmCategoryIds = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ALARM_CATEGORY_ID));
 		actions = Arrays.asList(msg.getFieldAsUInt32ArrayEx(NXCPCodes.VID_RULE_ACTIONS));
 		situationId = msg.getFieldAsInt64(NXCPCodes.VID_SITUATION_ID);
 		situationInstance = msg.getFieldAsString(NXCPCodes.VID_SITUATION_INSTANCE);
@@ -169,6 +173,9 @@ public class EventProcessingPolicyRule
 		msg.setFieldInt16(NXCPCodes.VID_ALARM_SEVERITY, alarmSeverity.getValue());
 		msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT, alarmTimeout);
 		msg.setFieldInt32(NXCPCodes.VID_ALARM_TIMEOUT_EVENT, (int)alarmTimeoutEvent);
+		
+		msg.setFieldInt32(NXCPCodes.VID_NUM_ALARM_CATEGORIES, alarmCategoryIds.size());
+		msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ID, alarmCategoryIds.toArray(new Long[alarmCategoryIds.size()]));
 
 		msg.setFieldInt32(NXCPCodes.VID_SITUATION_ID, (int)situationId);
 		msg.setField(NXCPCodes.VID_SITUATION_INSTANCE, situationInstance);
@@ -313,6 +320,35 @@ public class EventProcessingPolicyRule
 		this.alarmTimeoutEvent = alarmTimeoutEvent;
 	}
 
+	 /**
+    * @return alarmCategoryIds the alarm category ids
+    */
+   public List<Long> getAlarmCategories()
+   {
+      return alarmCategoryIds;
+   }
+	
+	/**
+	 * @param alarmCategoryIds the alarm category ids to set
+	 */
+	public void setAlarmCategories(List<Long> alarmCategoryIds)
+	{
+	   this.alarmCategoryIds = alarmCategoryIds;
+	}
+	
+	public void removeAlarmCategory(Long categoryId)
+	{
+	   for(int i = 0; i < alarmCategoryIds.size(); i++)
+	   {
+	      if (alarmCategoryIds.get(i) == categoryId)
+	      {
+	         alarmCategoryIds.remove(i);
+	         break;
+	      }
+	   }
+	      
+	}
+	
 	/**
 	 * @return the situationId
 	 */

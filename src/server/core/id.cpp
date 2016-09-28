@@ -25,7 +25,7 @@
 /**
  * Constants
  */
-#define NUMBER_OF_GROUPS   24
+#define NUMBER_OF_GROUPS   25
 
 /**
  * Static data
@@ -71,6 +71,7 @@ static const TCHAR *m_pszGroupNames[NUMBER_OF_GROUPS] =
 	_T("Mapping Tables"),
    _T("DCI Summary Tables"),
    _T("Scheduled Tasks")
+   _T("Alarm categories")
 };
 
 /**
@@ -461,6 +462,16 @@ BOOL InitIdTable()
    {
       if (DBGetNumRows(hResult) > 0)
          s_freeIdTable[IDG_SCHEDULED_TASK] = max(s_freeIdTable[IDG_SCHEDULED_TASK],
+                                                      DBGetFieldULong(hResult, 0, 0) + 1);
+      DBFreeResult(hResult);
+   }
+
+   // Get first available alarm category id
+   hResult = DBSelect(hdb, _T("SELECT max(id) FROM alarm_categories"));
+   if (hResult != NULL)
+   {
+      if (DBGetNumRows(hResult) > 0)
+         s_freeIdTable[IDG_ALARM_CATEGORY] = max(s_freeIdTable[IDG_ALARM_CATEGORY],
                                                       DBGetFieldULong(hResult, 0, 0) + 1);
       DBFreeResult(hResult);
    }

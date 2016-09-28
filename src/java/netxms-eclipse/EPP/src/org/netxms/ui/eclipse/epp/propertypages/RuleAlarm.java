@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.dialogs.PropertyPage;
 import org.netxms.client.constants.Severity;
 import org.netxms.client.events.EventProcessingPolicyRule;
+import org.netxms.ui.eclipse.alarmviewer.widgets.AlarmCategorySelector;
 import org.netxms.ui.eclipse.console.resources.StatusDisplayInfo;
 import org.netxms.ui.eclipse.epp.Messages;
 import org.netxms.ui.eclipse.epp.widgets.RuleEditor;
@@ -66,6 +67,7 @@ public class RuleAlarm extends PropertyPage
 	private LabeledText alarmKeyCreate;
 	private ImageCombo alarmSeverity;
 	private LabeledText alarmTimeout;
+	private AlarmCategorySelector alarmCategory;
 	private EventSelector timeoutEvent;
 	private LabeledText alarmKeyTerminate;
 	private Button checkTerminateWithRegexp;
@@ -243,6 +245,14 @@ public class RuleAlarm extends PropertyPage
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
 		timeoutEvent.setLayoutData(gd);
+      
+      alarmCategory = new AlarmCategorySelector(alarmCreationGroup, SWT.NONE);
+      alarmCategory.setLabel("Alarm category");
+      alarmCategory.setCategoryId(rule.getAlarmCategories());
+      gd = new GridData();
+      gd.grabExcessHorizontalSpace = true;
+      gd.horizontalAlignment = SWT.FILL;
+      alarmCategory.setLayoutData(gd);
 		
 		alarmTerminationGroup = new Composite(dialogArea, SWT.NONE);
 		gd = new GridData();
@@ -343,6 +353,7 @@ public class RuleAlarm extends PropertyPage
 				rule.setAlarmKey(alarmKeyCreate.getText());
 				rule.setAlarmSeverity(Severity.getByValue(alarmSeverity.getSelectionIndex()));
 				rule.setAlarmTimeoutEvent(timeoutEvent.getEventCode());
+				rule.setAlarmCategories(alarmCategory.getCategoryId());				
 				rule.setFlags(rule.getFlags() | EventProcessingPolicyRule.GENERATE_ALARM);
 				break;
 			case ALARM_RESOLVE:

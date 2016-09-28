@@ -15,3 +15,4 @@ Require-Bundle: org.eclipse.ui;bundle-version="3.8.2",
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.netxms.ui.eclipse.epp.dialogs
+Import-Package: org.netxms.ui.eclipse.alarmviewer.widgets

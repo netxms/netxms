@@ -824,6 +824,15 @@ void ClientSession::processingThread()
 			case CMD_CONFIG_SET_CLOB:
 				setConfigCLOB(pMsg);
 				break;
+         case CMD_LOAD_CATEGORY_DB:
+            sendCategories(pMsg->getId());
+            break;
+         case CMD_SET_CATEGORY_INFO:
+            modifyAlarmCategory(pMsg);
+            break;
+         case CMD_DELETE_CATEGORY:
+            removeAlarmCategory(pMsg);
+            break;
          case CMD_LOAD_EVENT_DB:
             sendEventDB(pMsg->getId());
             break;
@@ -2000,6 +2009,100 @@ void ClientSession::login(NXCPMessage *pRequest)
    else
    {
       msg.setField(VID_RCC, RCC_OUT_OF_STATE_REQUEST);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+ * Send alarm categories to client
+*/
+void ClientSession::sendCategories(UINT32 dwRqId)
+{
+   NXCPMessage msg;
+
+   // Prepare response message
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(dwRqId);
+
+   // Check access rights
+   if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
+   {
+      GetCategories(&msg);
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+   sendMessage(&msg);
+}
+
+/**
+* Update alarm category
+*/
+void ClientSession::modifyAlarmCategory(NXCPMessage *pRequest)
+{
+   NXCPMessage msg;
+   UINT32 dwCategoryId;
+
+   // Prepare reply message
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(pRequest->getId());
+
+   // Check access rights
+   if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
+   {
+      if (pRequest->getFieldAsUInt32(VID_FIELDS) & ALARM_MODIFY_CATEGORY)
+      {
+         msg.setField(VID_RCC, UpdateAlarmCategory(pRequest));
+      }
+      else if (pRequest->getFieldAsUInt32(VID_FIELDS) & ALARM_MODIFY_ACCESS_LIST)
+      {
+         msg.setField(VID_RCC, ModifyAlarmAcl(pRequest));
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_INVALID_REQUEST);
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
+   }
+
+   // Send response
+   sendMessage(&msg);
+}
+
+/**
+* Delete alarm category
+*/
+void ClientSession::removeAlarmCategory(NXCPMessage *pRequest)
+{
+   NXCPMessage msg;
+   UINT32 dwCategoryId;
+
+   // Prepare reply message
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(pRequest->getId());
+
+   // Check access rights
+   if (checkSysAccessRights(SYSTEM_ACCESS_EPP))
+   {
+      dwCategoryId = pRequest->getFieldAsInt32(VID_CATEGORY_ID);
+      if (!g_pEventPolicy->isCategoryInUse(dwCategoryId))
+      {
+         msg.setField(VID_RCC, DeleteAlarmCategory(pRequest));
+      }
+      else
+      {
+         msg.setField(VID_RCC, RCC_CATEGORY_IN_USE);
+      }
+   }
+   else
+   {
+      msg.setField(VID_RCC, RCC_ACCESS_DENIED);
    }
 
    // Send response
@@ -5471,7 +5574,7 @@ void ClientSession::onAlarmUpdate(UINT32 dwCode, const Alarm *alarm)
    {
       object = FindObjectById(alarm->getSourceObject());
       if (object != NULL)
-         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
+         if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS) && alarm->checkCategoryAcl(m_dwUserId, this))
          {
             pUpdate = (UPDATE_INFO *)malloc(sizeof(UPDATE_INFO));
             pUpdate->dwCategory = INFO_CAT_ALARM;
@@ -5511,7 +5614,7 @@ void ClientSession::getAlarm(NXCPMessage *request)
       // User should have "view alarm" right to the object
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-         msg.setField(VID_RCC, GetAlarm(alarmId, &msg));
+         msg.setField(VID_RCC, GetAlarm(alarmId, m_dwUserId, &msg, this));
       }
       else
       {
@@ -5550,7 +5653,7 @@ void ClientSession::getAlarmEvents(NXCPMessage *request)
 		// system-wide "view event log" access
       if ((m_dwSystemAccess & SYSTEM_ACCESS_VIEW_EVENT_LOG) && object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
-         msg.setField(VID_RCC, GetAlarmEvents(alarmId, &msg));
+         msg.setField(VID_RCC, GetAlarmEvents(alarmId, m_dwUserId, &msg, this));
       }
       else
       {
@@ -5798,7 +5901,7 @@ void ClientSession::getHelpdeskUrl(NXCPMessage *request)
       if (object->checkAccessRights(m_dwUserId, OBJECT_ACCESS_READ_ALARMS))
       {
          TCHAR url[MAX_PATH];
-         msg.setField(VID_RCC, GetHelpdeskIssueUrlFromAlarm(alarmId, url, MAX_PATH));
+         msg.setField(VID_RCC, GetHelpdeskIssueUrlFromAlarm(alarmId, m_dwUserId, url, MAX_PATH, this));
          msg.setField(VID_URL, url);
       }
       else

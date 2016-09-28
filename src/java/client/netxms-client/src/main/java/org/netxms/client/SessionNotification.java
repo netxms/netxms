@@ -75,6 +75,8 @@ public class SessionNotification
    public static final int SESSION_KILLED = 1027;
    public static final int PREDEFINED_GRAPHS_DELETED = 1028;
    public static final int SCHEDULE_UPDATE = 1029;
+   public static final int ALARM_CATEGORY_UPDATED = 1030;
+   public static final int ALARM_CATEGORY_DELETED = 1031;
 	
 	public static final int CUSTOM_MESSAGE = 2000;
    public static final int OBJECT_SYNC_COMPLETED = 2001;

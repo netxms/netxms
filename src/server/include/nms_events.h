@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** Copyright (C) 2003-2013 Victor Kirhenshtein
 **
@@ -102,7 +102,7 @@ public:
    time_t getTimeStamp() const { return m_timeStamp; }
 
    void setSeverity(int severity) { m_severity = severity; }
-   
+
    UINT64 getRootId() const { return m_rootId; }
    void setRootId(UINT64 id) { m_rootId = id; }
 
@@ -157,6 +157,8 @@ private:
    TCHAR m_szAlarmKey[MAX_DB_STRING];
 	UINT32 m_dwAlarmTimeout;
 	UINT32 m_dwAlarmTimeoutEvent;
+	UINT32 m_alarmCategoryCount;
+	IntegerArray<UINT32> *m_alarmCategoryList;
 
 	UINT32 m_dwSituationId;
 	TCHAR m_szSituationInstance[MAX_DB_STRING];
@@ -186,6 +188,7 @@ public:
    void createNXMPRecord(String &str);
 
    bool isActionInUse(UINT32 dwActionId);
+   bool isCategoryInUse(UINT32 dwCategoryId);
 };
 
 /**
@@ -215,8 +218,10 @@ public:
    void replacePolicy(UINT32 dwNumRules, EPRule **ppRuleList);
    void exportRule(String& str, const uuid& guid);
    void importRule(EPRule *rule);
+   void removeRuleCategory (UINT32 categoryId);
 
    bool isActionInUse(UINT32 dwActionId);
+   bool isCategoryInUse(UINT32 dwCategoryId);
 };
 
 /**

@@ -65,6 +65,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.netxms.client.NXCSession;
 import org.netxms.client.ServerAction;
 import org.netxms.client.constants.Severity;
+import org.netxms.client.events.AlarmCategory;
 import org.netxms.client.events.EventProcessingPolicyRule;
 import org.netxms.client.events.EventTemplate;
 import org.netxms.client.objects.AbstractObject;
@@ -721,6 +722,19 @@ public class RuleEditor extends Composite
 				if ((rule.getFlags() & EventProcessingPolicyRule.TERMINATE_BY_REGEXP) != 0)
 					createLabel(clientArea, 1, false, Messages.get().RuleEditor_UseRegexpForResolve, listener);
 			}
+			
+			if (rule.getAlarmCategories().size() > 0)
+         {
+            createLabel(clientArea, 1, false, rule.getAlarmCategories().size() == 1 ? "with category: " : "with categories: ", null);
+            for(Long id :rule.getAlarmCategories())
+            {
+               AlarmCategory category = editor.findAlarmCategoryById(id);
+               if (category != null)
+               {
+                  createLabel(clientArea, 2, false, category.getName(), null);
+               }
+            }
+         }
 		}
 		
 		/* situation */

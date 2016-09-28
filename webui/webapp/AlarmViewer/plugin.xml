@@ -34,6 +34,13 @@
             name="%view.AlarmDetails.name"
             restorable="false">
       </view>
+      <view
+            allowMultiple="false"
+            class="org.netxms.ui.eclipse.alarmviewer.views.AlarmCategoryConfigurator"
+            icon="icons/alarm_category.png"
+            id="org.netxms.ui.eclipse.alarmviewer.view.alarm_category_configurator"
+            name="Alarm Category Configurator">
+      </view>
    </extension>
 
    <extension
@@ -47,6 +54,17 @@
       <command
             id="org.netxms.ui.eclipse.alarmviewer.commands.alarms"
             name="%action.Alarms.label">
+      </command>
+      <command
+            categoryId="org.netxms.ui.eclipse.console.category.views"
+            description="Open Alarm Category Configurator"
+            id="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_category_configurator"
+            name="Alarm Category Configurator">
+      </command>
+      <command
+            description="Toggle Filter"
+            id="org.netxms.ui.eclipse.alarmviewer.commands.show_filter"
+            name="Toggle Filter">
       </command>
    </extension>
    
@@ -64,6 +82,20 @@
 			   definitionId="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_browser">
 		   </action>
 	   </actionSet>
+    <actionSet
+          id="org.netxms.ui.eclipse.action_set.alarm_category_configurator"
+          label="Alarm Category Configurator"
+          visible="true">
+       <action
+             class="org.netxms.ui.eclipse.alarmviewer.actions.OpenAlarmCategoryConfigurator"
+             definitionId="org.netxms.ui.eclipse.alarmviewer.commands.open_alarm_category_configurator"
+             icon="icons/alarm_category.png"
+             id="org.netxms.ui.eclipse.alarmviewer.actions.open_alarm_category_conf"
+             label="Alarm Category Configurator"
+             menubarPath="config/additions"
+             tooltip="Open Alarm Category Configurator">
+       </action>
+    </actionSet>
    </extension>
 
    <extension
@@ -78,6 +110,12 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
             sequence="M3+Shift+A">
+      </key>
+      <key
+            commandId="org.netxms.ui.eclipse.alarmviewer.commands.show_filter"
+            contextId="org.netxms.ui.eclipse.alarmviewer.context.AlarmCategoryConfigurator"
+            schemeId="org.netxms.ui.eclipse.defaultKeyBinding"
+            sequence="M1+F2">
       </key>
    </extension>
 
@@ -162,6 +200,37 @@
             </visibleWhen>
          </command>
       </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.netxms.ui.eclipse.alarmviewer.propertypages.General"
+            id="org.netxms.ui.eclipse.alarmviewer.propertypages.General#0"
+            name="General">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.events.AlarmCategory">
+            </instanceof>
+         </enabledWhen>
+      </page>
+      <page
+            class="org.netxms.ui.eclipse.alarmviewer.propertypages.AccessControl"
+            id="org.netxms.ui.eclipse.alarmviewer.propertypages.AccessControl#1"
+            name="Access Control">
+         <enabledWhen>
+            <instanceof
+                  value="org.netxms.client.events.AlarmCategory">
+            </instanceof>
+         </enabledWhen>
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            id="org.netxms.ui.eclipse.alarmviewer.context.AlarmCategoryConfigurator"
+            name="Alarm Category Configurator"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
    </extension>
 
 </plugin>
