@@ -64,7 +64,8 @@ private:
 	UINT32 m_id;
 	UINT32 m_userId;
 	TCHAR *m_type;
-	UINT32 m_remoteNode;
+	UINT32 m_nodeId;
+   Node *m_node;
 	TCHAR *m_description;
 	ServerJobStatus m_status;
 	int m_progress;
@@ -74,11 +75,10 @@ private:
 	time_t m_lastStatusChange;
 	int m_autoCancelDelay;	// Interval in seconds to cancel failed job automatically (0 = disabled)
 	time_t m_lastNotification;
-	NetObj *m_resolvedObject;
 	MUTEX m_notificationLock;
 	NXCPMessage m_notificationMessage;
 	bool m_blockNextJobsOnFailure;
-	bool m_isValid;
+	bool m_valid;
 
 	static THREAD_RESULT THREAD_CALL WorkerThreadStarter(void *);
 	static void sendNotification(ClientSession *session, void *arg);
@@ -99,12 +99,13 @@ protected:
 	void markProgress(int pctCompleted);
 	void setFailureMessage(const TCHAR *msg);
 	void setDescription(const TCHAR *description);
+   void invalidate() { m_valid = false; }
 
 	int getRetryDelay();
 
 public:
-	ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, UINT32 userId, bool createOnHold, int retryCount = -1);
-	ServerJob(const TCHAR* params, UINT32 node, UINT32 userId);
+	ServerJob(const TCHAR *type, const TCHAR *description, UINT32 nodeId, UINT32 userId, bool createOnHold, int retryCount = -1);
+	ServerJob(const TCHAR *params, UINT32 nodeId, UINT32 userId);
 	virtual ~ServerJob();
 
 	void start();
@@ -113,22 +114,22 @@ public:
 	bool unhold();
 
 	void setAutoCancelDelay(int delay) { m_autoCancelDelay = delay; }
-	int getAutoCancelDelay() { return m_autoCancelDelay; }
+	int getAutoCancelDelay() const { return m_autoCancelDelay; }
 
 	void setBlockNextJobsOnFailure(bool flag) { m_blockNextJobsOnFailure = flag; }
-	bool isBlockNextJobsOnFailure() { return m_blockNextJobsOnFailure; }
-	void setIsValid(bool valid) { m_isValid = valid; }
-	bool isValid() { return m_isValid; }
+	bool isBlockNextJobsOnFailure() const { return m_blockNextJobsOnFailure; }
+	bool isValid() const { return m_valid; }
 
-	UINT32 getId() { return m_id; }
-	UINT32 getUserId() { return m_userId; }
-	const TCHAR *getType() { return m_type; }
-	const TCHAR *getDescription() { return m_description; }
-	ServerJobStatus getStatus() { return m_status; }
-	int getProgress() { return m_progress; }
-	UINT32 getRemoteNode() { return m_remoteNode; }
-	const TCHAR *getFailureMessage() { return CHECK_NULL_EX(m_failureMessage); }
-	time_t getLastStatusChange() { return m_lastStatusChange; }
+	UINT32 getId() const { return m_id; }
+	UINT32 getUserId() const { return m_userId; }
+	const TCHAR *getType() const { return m_type; }
+	const TCHAR *getDescription() const { return m_description; }
+	ServerJobStatus getStatus() const { return m_status; }
+	int getProgress() const { return m_progress; }
+	UINT32 getNodeId() const { return m_nodeId; }
+   Node *getNode() const { return m_node; }
+	const TCHAR *getFailureMessage() const { return CHECK_NULL_EX(m_failureMessage); }
+	time_t getLastStatusChange() const { return m_lastStatusChange; }
 
 	void setOwningQueue(ServerJobQueue *queue);
 
@@ -180,33 +181,34 @@ UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, NXCPMessage *msg);
  */
 class FileUploadJob : public ServerJob
 {
-protected:
+private:
 	static int m_activeJobs;
 	static int m_maxActiveJobs;
 	static MUTEX m_sharedDataMutex;
 
-	Node *m_node;
 	TCHAR *m_localFile;
 	TCHAR *m_localFileFullPath;
 	TCHAR *m_remoteFile;
 	TCHAR *m_info;
 	INT64 m_fileSize;
 
+   void setLocalFileFullPath();
+
+   static void uploadCallback(INT64 size, void *arg);
+
+protected:
 	virtual ServerJobResult run();
 	virtual const TCHAR *getAdditionalInfo();
 	virtual const String serializeParameters();
-
-   static void uploadCallback(INT64 size, void *arg);
 
 public:
 	static void init();
 
 	FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, UINT32 userId, bool createOnHold);
-	FileUploadJob(TCHAR* params, UINT32 node, UINT32 userId);
+	FileUploadJob(const TCHAR *params, UINT32 nodeId, UINT32 userId);
 	virtual ~FileUploadJob();
 
 	virtual void rescheduleExecution();
-	void setLocalFileFullPath();
 };
 
 /**
@@ -246,21 +248,21 @@ public:
 class AgentPolicy;
 
 /**
- * Agent policy deployment job
+ * Agent policy install job
  */
-class PolicyDeploymentJob : public ServerJob
+class PolicyInstallJob : public ServerJob
 {
-protected:
-	Node *m_node;
-	AgentPolicy *m_policy;
+private:
+   AgentPolicy *m_policy;
 
+protected:
 	virtual ServerJobResult run();
 	virtual const String serializeParameters();
 
 public:
-	PolicyDeploymentJob(Node *node, AgentPolicy *policy, UINT32 userId);
-   PolicyDeploymentJob(const TCHAR* params, UINT32 node, UINT32 userId);
-	virtual ~PolicyDeploymentJob();
+	PolicyInstallJob(Node *node, AgentPolicy *policy, UINT32 userId);
+	PolicyInstallJob(const TCHAR *params, UINT32 nodeId, UINT32 userId);
+	virtual ~PolicyInstallJob();
 
 	virtual void rescheduleExecution();
 };
@@ -270,16 +272,16 @@ public:
  */
 class PolicyUninstallJob : public ServerJob
 {
-protected:
-	Node *m_node;
-	AgentPolicy *m_policy;
+private:
+   AgentPolicy *m_policy;
 
+protected:
 	virtual ServerJobResult run();
 	virtual const String serializeParameters();
 
 public:
 	PolicyUninstallJob(Node *node, AgentPolicy *policy, UINT32 userId);
-   PolicyUninstallJob(const TCHAR* params, UINT32 node, UINT32 userId);
+   PolicyUninstallJob(const TCHAR *params, UINT32 nodeId, UINT32 userId);
 	virtual ~PolicyUninstallJob();
 
 	virtual void rescheduleExecution();

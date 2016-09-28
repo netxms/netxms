@@ -1952,7 +1952,7 @@ void Node::checkAgentPolicyBinding(AgentConnection *conn)
 				}
 				if (j == ap->size())
             {
-               ServerJob *job = new PolicyDeploymentJob(this, (AgentPolicy *)m_parentList->get(i), 0); //TODO: change to system user
+               ServerJob *job = new PolicyInstallJob(this, (AgentPolicy *)m_parentList->get(i), 0);
 					if (AddJob(job))
 					{
                   DbgPrintf(5, _T("ConfPoll(%s): \"%s\" policy deploy scheduled for \"%s\" node"), m_name, m_parentList->get(i)->getName(), m_name );

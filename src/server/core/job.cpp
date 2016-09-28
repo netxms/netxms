@@ -28,11 +28,10 @@
  */
 void UnregisterJob(UINT32 jobId);
 
-
 /**
  * Constructor
  */
-ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, UINT32 userId, bool createOnHold, int retryCount)
+ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 nodeId, UINT32 userId, bool createOnHold, int retryCount)
 {
 	m_id = CreateUniqueId(IDG_JOB);
 	m_userId = userId;
@@ -41,8 +40,8 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, U
 	m_status = createOnHold ? JOB_ON_HOLD : JOB_PENDING;
 	m_lastStatusChange = time(NULL);
 	m_autoCancelDelay = 0;
-	m_remoteNode = node;
-	m_resolvedObject = FindObjectById(m_remoteNode);
+	m_nodeId = nodeId;
+	m_node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
 	m_progress = 0;
 	m_failureMessage = NULL;
 	m_owningQueue = NULL;
@@ -51,7 +50,10 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, U
 	m_notificationLock = MutexCreate();
 	m_blockNextJobsOnFailure = false;
 	m_retryCount = retryCount == -1 ? ConfigReadInt(_T("JobRetryCount"), 5) : retryCount;
-	m_isValid = (m_resolvedObject != NULL) && (m_resolvedObject->getObjectClass() == OBJECT_NODE);
+	m_valid = (m_node != NULL);
+
+   if (m_node != NULL)
+      m_node->incRefCount();
 
 	createHistoryRecord();
 }
@@ -59,7 +61,7 @@ ServerJob::ServerJob(const TCHAR *type, const TCHAR *description, UINT32 node, U
 /**
  * Constructor that creates class from serialized string
  */
-ServerJob::ServerJob(const TCHAR* params, UINT32 node, UINT32 userId)
+ServerJob::ServerJob(const TCHAR *params, UINT32 nodeId, UINT32 userId)
 {
 	m_id = CreateUniqueId(IDG_JOB);
 	m_userId = userId;
@@ -68,8 +70,8 @@ ServerJob::ServerJob(const TCHAR* params, UINT32 node, UINT32 userId)
 	m_description = _tcsdup(_T(""));
 	m_lastStatusChange = time(NULL);
 	m_autoCancelDelay = 0;
-	m_remoteNode = node;
-	m_resolvedObject = FindObjectById(m_remoteNode);
+   m_nodeId = nodeId;
+   m_node = (Node *)FindObjectById(m_nodeId, OBJECT_NODE);
 	m_progress = 0;
 	m_failureMessage = NULL;
 	m_owningQueue = NULL;
@@ -78,7 +80,10 @@ ServerJob::ServerJob(const TCHAR* params, UINT32 node, UINT32 userId)
 	m_notificationLock = MutexCreate();
 	m_blockNextJobsOnFailure = false;
 	m_retryCount = ConfigReadInt(_T("JobRetryCount"), 5);
-	m_isValid = (m_resolvedObject != NULL) && (m_resolvedObject->getObjectClass() == OBJECT_NODE);
+   m_valid = (m_node != NULL);
+
+   if (m_node != NULL)
+      m_node->incRefCount();
 
 	createHistoryRecord();
 }
@@ -92,12 +97,14 @@ ServerJob::~ServerJob()
 
 	ThreadJoin(m_workerThread);
 
-	safe_free(m_type);
-	safe_free(m_description);
-	safe_free(m_failureMessage);
+	free(m_type);
+	free(m_description);
+	free(m_failureMessage);
 	MutexDestroy(m_notificationLock);
-}
 
+   if (m_node != NULL)
+      m_node->decRefCount();
+}
 
 /**
  * Send notification to clients
@@ -105,7 +112,7 @@ ServerJob::~ServerJob()
 void ServerJob::sendNotification(ClientSession *session, void *arg)
 {
 	ServerJob *job = (ServerJob *)arg;
-	if (job->m_resolvedObject->checkAccessRights(session->getUserId(), OBJECT_ACCESS_READ))
+	if (job->m_node->checkAccessRights(session->getUserId(), OBJECT_ACCESS_READ))
 		session->postMessage(&job->m_notificationMessage);
 }
 
@@ -115,7 +122,7 @@ void ServerJob::sendNotification(ClientSession *session, void *arg)
  */
 void ServerJob::notifyClients(bool isStatusChange)
 {
-	if (m_resolvedObject == NULL)
+	if (m_node == NULL)
 		return;
 
 	time_t t = time(NULL);
@@ -282,7 +289,7 @@ bool ServerJob::onCancel()
  */
 void ServerJob::setFailureMessage(const TCHAR *msg)
 {
-	safe_free(m_failureMessage);
+	free(m_failureMessage);
 	m_failureMessage = (msg != NULL) ? _tcsdup(msg) : NULL;
 }
 
@@ -292,7 +299,7 @@ void ServerJob::setFailureMessage(const TCHAR *msg)
  */
 void ServerJob::setDescription(const TCHAR *description)
 {
-	safe_free(m_description);
+	free(m_description);
 	m_description = _tcsdup(description);
 }
 
@@ -305,7 +312,7 @@ void ServerJob::fillMessage(NXCPMessage *msg)
 	msg->setField(VID_JOB_ID, m_id);
 	msg->setField(VID_USER_ID, m_userId);
 	msg->setField(VID_JOB_TYPE, m_type);
-	msg->setField(VID_OBJECT_ID, m_remoteNode);
+	msg->setField(VID_OBJECT_ID, m_nodeId);
 	msg->setField(VID_DESCRIPTION, CHECK_NULL_EX(m_description));
 	msg->setField(VID_JOB_STATUS, (WORD)m_status);
 	msg->setField(VID_JOB_PROGRESS, (WORD)m_progress);
@@ -331,7 +338,7 @@ void ServerJob::createHistoryRecord()
 		DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, (UINT32)time(NULL));
 		DBBind(hStmt, 3, DB_SQLTYPE_VARCHAR, m_type, DB_BIND_STATIC);
 		DBBind(hStmt, 4, DB_SQLTYPE_VARCHAR, CHECK_NULL_EX(m_description), DB_BIND_STATIC);
-		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_remoteNode);
+		DBBind(hStmt, 5, DB_SQLTYPE_INTEGER, m_nodeId);
 		DBBind(hStmt, 6, DB_SQLTYPE_INTEGER, m_userId);
 		DBBind(hStmt, 7, DB_SQLTYPE_INTEGER, (LONG)m_status);
 		DBExecute(hStmt);

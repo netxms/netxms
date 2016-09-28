@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2011 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 
 #include "nxcore.h"
 
-
 /**
  * Job operation codes
  */
@@ -30,12 +29,10 @@
 #define HOLD_JOB			1
 #define UNHOLD_JOB		2
 
-
 /**
  * Static data
  */
 static ObjectIndex s_jobNodes;
-
 
 /**
  * Add job
@@ -43,18 +40,15 @@ static ObjectIndex s_jobNodes;
 bool NXCORE_EXPORTABLE AddJob(ServerJob *job)
 {
 	bool success = false;
-
-	NetObj *object = FindObjectById(job->getRemoteNode());
 	if (job->isValid())
 	{
-		ServerJobQueue *queue = ((Node *)object)->getJobQueue();
+		ServerJobQueue *queue = job->getNode()->getJobQueue();
 		queue->add(job);
-		s_jobNodes.put(job->getId(), object);
+		s_jobNodes.put(job->getId(), job->getNode());
 		success = true;
 	}
 	return success;
 }
-
 
 /**
  * Unregister job from job manager
@@ -64,9 +58,8 @@ void UnregisterJob(UINT32 jobId)
 	s_jobNodes.remove(jobId);
 }
 
-
 /**
- * Get job list
+ * Data for job enumeration callback
  */
 struct __job_callback_data
 {
@@ -75,6 +68,9 @@ struct __job_callback_data
 	UINT32 baseId;
 };
 
+/**
+ * Callback for job enumeration
+ */
 static void JobListCallback(NetObj *object, void *data)
 {
 	struct __job_callback_data *jcb = (struct __job_callback_data *)data;
@@ -82,6 +78,9 @@ static void JobListCallback(NetObj *object, void *data)
 	jcb->jobCount += queue->fillMessage(jcb->msg, &jcb->baseId);
 }
 
+/**
+ * Get list of all jobs
+ */
 void GetJobList(NXCPMessage *msg)
 {
 	struct __job_callback_data jcb;
@@ -92,7 +91,6 @@ void GetJobList(NXCPMessage *msg)
 	g_idxNodeById.forEach(JobListCallback, &jcb);
 	msg->setField(VID_JOB_COUNT, jcb.jobCount);
 }
-
 
 /**
  * Implementatoin for job status changing operations: cancel, hold, unhold
@@ -139,7 +137,6 @@ static UINT32 ChangeJobStatus(UINT32 userId, NXCPMessage *msg, int operation)
 	return rcc;
 }
 
-
 /**
  * Cancel job
  */
@@ -147,7 +144,6 @@ UINT32 NXCORE_EXPORTABLE CancelJob(UINT32 userId, NXCPMessage *msg)
 {
 	return ChangeJobStatus(userId, msg, CANCEL_JOB);
 }
-
 
 /**
  * Hold job
@@ -157,7 +153,6 @@ UINT32 NXCORE_EXPORTABLE HoldJob(UINT32 userId, NXCPMessage *msg)
 	return ChangeJobStatus(userId, msg, HOLD_JOB);
 }
 
-
 /**
  * Unhold job
  */
@@ -166,9 +161,8 @@ UINT32 NXCORE_EXPORTABLE UnholdJob(UINT32 userId, NXCPMessage *msg)
 	return ChangeJobStatus(userId, msg, UNHOLD_JOB);
 }
 
-
 /**
- * Job manager worker thread
+ * Cleanup job queue
  */
 static void CleanupJobQueue(NetObj *object, void *data)
 {
@@ -176,6 +170,9 @@ static void CleanupJobQueue(NetObj *object, void *data)
 	queue->cleanup();
 }
 
+/**
+ * Job manager worker thread
+ */
 THREAD_RESULT THREAD_CALL JobManagerThread(void *arg)
 {
 	DbgPrintf(2, _T("Job Manager worker thread started"));

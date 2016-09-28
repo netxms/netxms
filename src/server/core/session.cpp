@@ -11462,7 +11462,7 @@ void ClientSession::deployAgentPolicy(NXCPMessage *request, bool uninstallFlag)
 					if (uninstallFlag)
 						job = new PolicyUninstallJob((Node *)target, (AgentPolicy *)policy, m_dwUserId);
 					else
-						job = new PolicyDeploymentJob((Node *)target, (AgentPolicy *)policy, m_dwUserId);
+						job = new PolicyInstallJob((Node *)target, (AgentPolicy *)policy, m_dwUserId);
 					if (AddJob(job))
 					{
 						msg.setField(VID_RCC, RCC_SUCCESS);

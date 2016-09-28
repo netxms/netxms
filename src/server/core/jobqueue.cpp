@@ -1,6 +1,6 @@
 /* 
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2012 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@ void ServerJobQueue::add(ServerJob *job)
 	MutexUnlock(m_accessMutex);
 
 	DbgPrintf(4, _T("Job %d added to queue (node=%d, type=%s, description=\"%s\")"),
-	          job->getId(), job->getRemoteNode(), job->getType(), job->getDescription());
+	          job->getId(), job->getNodeId(), job->getType(), job->getDescription());
 
 	runNext();
 }
@@ -124,8 +124,8 @@ bool ServerJobQueue::cancel(UINT32 jobId)
 		{
 			if (m_jobList[i]->cancel())
 			{
-				DbgPrintf(4, _T("Job %d cancelled (node=%d, type=%s, description=\"%s\")"),
-							 m_jobList[i]->getId(), m_jobList[i]->getRemoteNode(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
+				nxlog_debug(4, _T("Job %d cancelled (node=%d, type=%s, description=\"%s\")"),
+							   m_jobList[i]->getId(), m_jobList[i]->getNodeId(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
 
 				if (m_jobList[i]->getStatus() != JOB_CANCEL_PENDING)
 				{
@@ -158,8 +158,8 @@ bool ServerJobQueue::hold(UINT32 jobId)
 		{
 			if (m_jobList[i]->hold())
 			{
-				DbgPrintf(4, _T("Job %d put on hold (node=%d, type=%s, description=\"%s\")"),
-							 m_jobList[i]->getId(), m_jobList[i]->getRemoteNode(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
+				nxlog_debug(4, _T("Job %d put on hold (node=%d, type=%s, description=\"%s\")"),
+							   m_jobList[i]->getId(), m_jobList[i]->getNodeId(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
 
 				success = true;
 			}
@@ -185,8 +185,8 @@ bool ServerJobQueue::unhold(UINT32 jobId)
 		{
 			if (m_jobList[i]->unhold())
 			{
-				DbgPrintf(4, _T("Job %d unhold (node=%d, type=%s, description=\"%s\")"),
-							 m_jobList[i]->getId(), m_jobList[i]->getRemoteNode(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
+				nxlog_debug(4, _T("Job %d unhold (node=%d, type=%s, description=\"%s\")"),
+							   m_jobList[i]->getId(), m_jobList[i]->getNodeId(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
 
 				success = true;
 			}
@@ -215,8 +215,8 @@ void ServerJobQueue::cleanup()
 			int delay = m_jobList[i]->getAutoCancelDelay();
 			if ((delay > 0) && (now - m_jobList[i]->getLastStatusChange() >= delay))
 			{
-				DbgPrintf(4, _T("Failed job %d deleted from queue (node=%d, type=%s, description=\"%s\")"),
-							 m_jobList[i]->getId(), m_jobList[i]->getRemoteNode(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
+				nxlog_debug(4, _T("Failed job %d deleted from queue (node=%d, type=%s, description=\"%s\")"),
+							   m_jobList[i]->getId(), m_jobList[i]->getNodeId(), m_jobList[i]->getType(), m_jobList[i]->getDescription());
 
 				// Delete and remove from list
 				m_jobList[i]->cancel();
@@ -265,7 +265,7 @@ UINT32 ServerJobQueue::fillMessage(NXCPMessage *msg, UINT32 *varIdBase)
 		msg->setField(id++, m_jobList[i]->getId());
 		msg->setField(id++, m_jobList[i]->getType());
 		msg->setField(id++, m_jobList[i]->getDescription());
-		msg->setField(id++, m_jobList[i]->getRemoteNode());
+		msg->setField(id++, m_jobList[i]->getNodeId());
 		msg->setField(id++, (WORD)m_jobList[i]->getStatus());
 		msg->setField(id++, (WORD)m_jobList[i]->getProgress());
 		msg->setField(id++, m_jobList[i]->getFailureMessage());

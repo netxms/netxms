@@ -1,6 +1,6 @@
 /*
 ** NetXMS - Network Management System
-** Copyright (C) 2003-2013 Victor Kirhenshtein
+** Copyright (C) 2003-2016 Raden Solutions
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ void ScheduleDeployPolicy(const ScheduledTaskParameters *params)
    {
       if (object->checkAccessRights(params->m_userId, OBJECT_ACCESS_CONTROL))
       {
-         ServerJob *job = new PolicyDeploymentJob(params->m_params, params->m_objectId, params->m_userId);
+         ServerJob *job = new PolicyInstallJob(params->m_params, params->m_objectId, params->m_userId);
          if (!AddJob(job))
          {
             delete job;
@@ -49,12 +49,10 @@ void ScheduleDeployPolicy(const ScheduledTaskParameters *params)
 /**
  * Constructor
  */
-PolicyDeploymentJob::PolicyDeploymentJob(Node *node, AgentPolicy *policy, UINT32 userId)
+PolicyInstallJob::PolicyInstallJob(Node *node, AgentPolicy *policy, UINT32 userId)
                     : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node->getId(), userId, false)
 {
-	m_node = node;
 	m_policy = policy;
-	node->incRefCount();
 	policy->incRefCount();
 
 	TCHAR buffer[1024];
@@ -62,45 +60,35 @@ PolicyDeploymentJob::PolicyDeploymentJob(Node *node, AgentPolicy *policy, UINT32
 	setDescription(buffer);
 }
 
-
 /**
  * Constructor
  */
-PolicyDeploymentJob::PolicyDeploymentJob(const TCHAR* params, UINT32 node, UINT32 userId)
-                    : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node, userId, false)
+PolicyInstallJob::PolicyInstallJob(const TCHAR *params, UINT32 nodeId, UINT32 userId)
+                    : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), nodeId, userId, false)
 {
    StringList paramList(params, _T(","));
-   if(paramList.size() < 1)
+   if (paramList.size() < 1)
    {
-      setIsValid(false);
+      m_policy = NULL;
+      invalidate();
       return;
    }
 
-	m_node = (Node *)FindObjectById(node, OBJECT_NODE);
 	NetObj *obj = FindObjectById(_tcstol(paramList.get(0), NULL, 0));
-	if(obj != NULL && (obj->getObjectClass() == OBJECT_AGENTPOLICY || obj->getObjectClass() == OBJECT_AGENTPOLICY_CONFIG
-      || obj->getObjectClass() == OBJECT_AGENTPOLICY_LOGPARSER))
+	if (obj != NULL && (obj->getObjectClass() == OBJECT_AGENTPOLICY || obj->getObjectClass() == OBJECT_AGENTPOLICY_CONFIG ||
+       obj->getObjectClass() == OBJECT_AGENTPOLICY_LOGPARSER))
 	{
       m_policy = (AgentPolicy *)obj;
-   }
-
-   if(m_node != NULL && m_policy != NULL)
-   {
-      m_node->incRefCount();
       m_policy->incRefCount();
    }
-   else
-   {
-      setIsValid(false);
-      return;
-   }
+	else
+	{
+	   m_policy = NULL;
+	   invalidate();
+	   return;
+	}
 
-   if(paramList.size() >= 2)
-   {
-      m_retryCount = _tcstol(paramList.get(1), NULL, 0);
-   }
-   else
-      m_retryCount = 0;
+   m_retryCount = (paramList.size() >= 2) ? _tcstol(paramList.get(1), NULL, 0) : 0;
 
    TCHAR buffer[1024];
    _sntprintf(buffer, 1024, _T("Deploy policy %s"), m_policy->getName());
@@ -110,35 +98,32 @@ PolicyDeploymentJob::PolicyDeploymentJob(const TCHAR* params, UINT32 node, UINT3
 /**
  * Destructor
  */
-PolicyDeploymentJob::~PolicyDeploymentJob()
+PolicyInstallJob::~PolicyInstallJob()
 {
-   if(isValid())
-   {
-      m_node->decRefCount();
+   if (m_policy != NULL)
       m_policy->decRefCount();
-   }
 }
 
 /**
  * Run job
  */
-ServerJobResult PolicyDeploymentJob::run()
+ServerJobResult PolicyInstallJob::run()
 {
-   ServerJobResult success = JOB_RESULT_FAILED;
+   ServerJobResult result = JOB_RESULT_FAILED;
 
    TCHAR jobName[1024];
    _sntprintf(jobName, 1024, _T("Deploy policy %s"), m_policy->getName());
 
    setDescription(jobName);
-   AgentConnectionEx *conn = m_node->createAgentConnection(true);
+   AgentConnectionEx *conn = getNode()->createAgentConnection(true);
    if (conn != NULL)
    {
       UINT32 rcc = conn->deployPolicy(m_policy);
       conn->decRefCount();
       if (rcc == ERR_SUCCESS)
       {
-         m_policy->linkNode(m_node);
-         success = JOB_RESULT_SUCCESS;
+         m_policy->linkNode(getNode());
+         result = JOB_RESULT_SUCCESS;
       }
       else
       {
@@ -150,20 +135,20 @@ ServerJobResult PolicyDeploymentJob::run()
       setFailureMessage(_T("Agent connection not available"));
    }
 
-   if(success == JOB_RESULT_FAILED && m_retryCount-- > 0)
+   if ((result == JOB_RESULT_FAILED) && (m_retryCount-- > 0))
    {
       TCHAR description[256];
-      _sntprintf(description, 256, _T("Policy deploy failed. Wainting %d minutes to restart job."), getRetryDelay() / 60);
+      _sntprintf(description, 256, _T("Policy installation failed. Waiting %d minutes to restart job."), getRetryDelay() / 60);
       setDescription(description);
-      success = JOB_RESULT_RESCHEDULE;
+      result = JOB_RESULT_RESCHEDULE;
    }
-	return success;
+	return result;
 }
 
 /**
  * Serializes job parameters into TCHAR line separated by ';'
  */
-const String PolicyDeploymentJob::serializeParameters()
+const String PolicyInstallJob::serializeParameters()
 {
    String params;
    params.append(m_policy->getId());
@@ -175,14 +160,13 @@ const String PolicyDeploymentJob::serializeParameters()
 /**
  * Schedules execution in 10 minutes
  */
-void PolicyDeploymentJob::rescheduleExecution()
+void PolicyInstallJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Deploy"), time(NULL) + getRetryDelay(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+   AddOneTimeScheduledTask(_T("Policy.Deploy"), time(NULL) + getRetryDelay(), serializeParameters(), 0, getNodeId(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
 }
 
-
 /**
- * Scheduled file upload
+ * Scheduled policy uninstall
  */
 void ScheduleUninstallPolicy(const ScheduledTaskParameters *params)
 {
@@ -211,9 +195,7 @@ void ScheduleUninstallPolicy(const ScheduledTaskParameters *params)
 PolicyUninstallJob::PolicyUninstallJob(Node *node, AgentPolicy *policy, UINT32 userId)
                    : ServerJob(_T("UNINSTALL_AGENT_POLICY"), _T("Uninstall agent policy"), node->getId(), userId, false)
 {
-	m_node = node;
 	m_policy = policy;
-	node->incRefCount();
 	policy->incRefCount();
 
 	TCHAR buffer[1024];
@@ -228,37 +210,28 @@ PolicyUninstallJob::PolicyUninstallJob(const TCHAR* params, UINT32 node, UINT32 
                     : ServerJob(_T("DEPLOY_AGENT_POLICY"), _T("Deploy agent policy"), node, userId, false)
 {
    StringList paramList(params, _T(","));
-   if(paramList.size() < 1)
+   if (paramList.size() < 1)
    {
-      setIsValid(false);
+      m_policy = NULL;
+      invalidate();
       return;
    }
 
-	m_node = (Node *)FindObjectById(node, OBJECT_NODE);
 	NetObj *obj = FindObjectById(_tcstol(paramList.get(0), NULL, 0));
 	if(obj != NULL && (obj->getObjectClass() == OBJECT_AGENTPOLICY || obj->getObjectClass() == OBJECT_AGENTPOLICY_CONFIG
       || obj->getObjectClass() == OBJECT_AGENTPOLICY_LOGPARSER))
 	{
       m_policy = (AgentPolicy *)obj;
-   }
-
-   if(m_node != NULL && m_policy != NULL)
-   {
-      m_node->incRefCount();
       m_policy->incRefCount();
    }
-   else
-   {
-      setIsValid(false);
+	else
+	{
+      m_policy = NULL;
+      invalidate();
       return;
-   }
+	}
 
-   if(paramList.size() >= 2)
-   {
-      m_retryCount = _tcstol(paramList.get(1), NULL, 0);
-   }
-   else
-      m_retryCount = 0;
+   m_retryCount = (paramList.size() >= 2) ? _tcstol(paramList.get(1), NULL, 0) : 0;
 
    TCHAR buffer[1024];
    _sntprintf(buffer, 1024, _T("Uninstall policy %s"), m_policy->getName());
@@ -270,11 +243,8 @@ PolicyUninstallJob::PolicyUninstallJob(const TCHAR* params, UINT32 node, UINT32 
  */
 PolicyUninstallJob::~PolicyUninstallJob()
 {
-   if(isValid())
-   {
-      m_node->decRefCount();
+   if (m_policy != NULL)
       m_policy->decRefCount();
-   }
 }
 
 /**
@@ -282,17 +252,17 @@ PolicyUninstallJob::~PolicyUninstallJob()
  */
 ServerJobResult PolicyUninstallJob::run()
 {
-	ServerJobResult success = JOB_RESULT_FAILED;
+	ServerJobResult result = JOB_RESULT_FAILED;
 
-	AgentConnectionEx *conn = m_node->createAgentConnection();
+	AgentConnectionEx *conn = getNode()->createAgentConnection();
 	if (conn != NULL)
 	{
 		UINT32 rcc = conn->uninstallPolicy(m_policy);
 		conn->decRefCount();
 		if (rcc == ERR_SUCCESS)
 		{
-			m_policy->unlinkNode(m_node);
-			success = JOB_RESULT_SUCCESS;
+			m_policy->unlinkNode(getNode());
+			result = JOB_RESULT_SUCCESS;
 		}
 		else
 		{
@@ -304,15 +274,15 @@ ServerJobResult PolicyUninstallJob::run()
 		setFailureMessage(_T("Agent connection not available"));
 	}
 
-   if(success == JOB_RESULT_FAILED && m_retryCount-- > 0)
+   if ((result == JOB_RESULT_FAILED) && (m_retryCount-- > 0))
    {
       TCHAR description[256];
-      _sntprintf(description, 256, _T("Policy uninstall failed. Wainting %d minutes to restart job."), getRetryDelay() / 60);
+      _sntprintf(description, 256, _T("Policy uninstall failed. Waiting %d minutes to restart job."), getRetryDelay() / 60);
       setDescription(description);
-      success = JOB_RESULT_RESCHEDULE;
+      result = JOB_RESULT_RESCHEDULE;
    }
 
-	return success;
+	return result;
 }
 
 /**
@@ -332,5 +302,5 @@ const String PolicyUninstallJob::serializeParameters()
  */
 void PolicyUninstallJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), 0, getNodeId(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
 }

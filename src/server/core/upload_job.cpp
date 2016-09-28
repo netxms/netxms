@@ -39,7 +39,6 @@ void ScheduledFileUpload(const ScheduledTaskParameters *params)
    {
       if (object->checkAccessRights(params->m_userId, OBJECT_ACCESS_CONTROL))
       {
-
          ServerJob *job = new FileUploadJob(params->m_params, params->m_objectId, params->m_userId);
          if (!AddJob(job))
          {
@@ -70,9 +69,6 @@ void FileUploadJob::init()
 FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *remoteFile, UINT32 userId, bool createOnHold)
               : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node->getId(), userId, createOnHold)
 {
-	m_node = node;
-	node->incRefCount();
-
 	TCHAR buffer[1024];
 	_sntprintf(buffer, 1024, _T("Upload file %s"), GetCleanFileName(localFile));
 	setDescription(buffer);
@@ -87,21 +83,32 @@ FileUploadJob::FileUploadJob(Node *node, const TCHAR *localFile, const TCHAR *re
 	m_fileSize = 0;
 }
 
-FileUploadJob::FileUploadJob(TCHAR* params, UINT32 node, UINT32 userId)
-              : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), node, userId, false)
+/**
+ * Create file upload job from scheduled task
+ */
+FileUploadJob::FileUploadJob(const TCHAR *params, UINT32 nodeId, UINT32 userId)
+              : ServerJob(_T("UPLOAD_FILE"), _T("Upload file to managed node"), nodeId, userId, false)
 {
-	m_node = (Node *)FindObjectById(node, OBJECT_NODE);
-	if(m_node != NULL)
-      m_node->incRefCount();
+   m_localFile = NULL;
+   m_localFileFullPath = NULL;
+   m_remoteFile = NULL;
+   m_info = NULL;
 
-   StringList fileList(params, _T(","));
-   if(fileList.size() < 2)
+   if (!isValid())
    {
-      setIsValid(false);
+      nxlog_debug(4, _T("FileUploadJob: base job object is invalid for (\"%s\", nodeId=%d, userId=%d)"), params, nodeId, userId);
       return;
    }
 
-   if(fileList.size() == 3)
+   StringList fileList(params, _T(","));
+   if (fileList.size() < 2)
+   {
+      nxlog_debug(4, _T("FileUploadJob: invalid job parameters \"%s\" (nodeId=%d, userId=%d)"), params, nodeId, userId);
+      invalidate();
+      return;
+   }
+
+   if (fileList.size() == 3)
       m_retryCount = _tcstol(fileList.get(2), NULL, 0);
 
 	TCHAR buffer[1024];
@@ -118,6 +125,20 @@ FileUploadJob::FileUploadJob(TCHAR* params, UINT32 node, UINT32 userId)
 	m_fileSize = 0;
 }
 
+/**
+ *  Destructor
+ */
+FileUploadJob::~FileUploadJob()
+{
+	free(m_localFile);
+	free(m_localFileFullPath);
+	free(m_remoteFile);
+	free(m_info);
+}
+
+/**
+ * Set full path for local file
+ */
 void FileUploadJob::setLocalFileFullPath()
 {
    int nLen;
@@ -130,18 +151,6 @@ void FileUploadJob::setLocalFileFullPath()
    nLen = (int)_tcslen(fullPath);
    nx_strncpy(&fullPath[nLen], GetCleanFileName(m_localFile), MAX_PATH - nLen);
    m_localFileFullPath = _tcsdup(fullPath);
-}
-
-/**
- *  Destructor
- */
-FileUploadJob::~FileUploadJob()
-{
-	m_node->decRefCount();
-	safe_free(m_localFile);
-	safe_free(m_localFileFullPath);
-	safe_free(m_remoteFile);
-	safe_free(m_info);
 }
 
 /**
@@ -164,7 +173,7 @@ ServerJobResult FileUploadJob::run()
 		ThreadSleep(5);
 	}
 
-	AgentConnectionEx *conn = m_node->createAgentConnection();
+	AgentConnectionEx *conn = getNode()->createAgentConnection();
 	if (conn != NULL)
 	{
 		m_fileSize = (INT64)FileSize(m_localFileFullPath);
@@ -237,5 +246,5 @@ const String FileUploadJob::serializeParameters()
  */
 void FileUploadJob::rescheduleExecution()
 {
-   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), 0, getRemoteNode(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
+   AddOneTimeScheduledTask(_T("Policy.Uninstall"), time(NULL) + getRetryDelay(), serializeParameters(), 0, getNodeId(), SYSTEM_ACCESS_FULL, SCHEDULED_TASK_SYSTEM);//TODO: change to correct user
 }
