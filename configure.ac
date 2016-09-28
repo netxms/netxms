@@ -582,7 +582,7 @@ AC_ARG_WITH(dist,
 [AS_HELP_STRING(--with-dist,for maintainers only)],
 	DB_DRIVERS=" mysql pgsql odbc mssql sqlite oracle db2 informix"
 	MODULES="appagent jansson libexpat libstrophe libtre zlib libnetxms install sqlite snmp libnxsl libnxmb libnxlp libnxcc db server smsdrv agent libnxmap client nxscript nxcproxy nxlptest tools"
-	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java ubntlw netsvc db2 tuxedo mongodb ssh vmgr"
+	SUBAGENT_DIRS="linux ds18x20 freebsd openbsd minix netbsd sunos aix ipso hpux odbcquery informix oracle lmsensors darwin rpi java bind9 ubntlw netsvc db2 tuxedo mongodb ssh vmgr"
 	AGENT_DIRS="libnxtux"
 	SMSDRV_DIRS="kannel nxagent slack text2reach websms"
    HDLINK_DIRS="jira"
@@ -852,7 +852,7 @@ fi
 
 check_substr "$COMPONENTS" "java"
 if test $? = 0; then
-	SUBAGENT_DIRS="$SUBAGENT_DIRS java ubntlw"
+	SUBAGENT_DIRS="$SUBAGENT_DIRS java bind9 ubntlw"
 fi
 
 check_substr "$COMPONENTS" "tuxedo"
@@ -3190,6 +3190,7 @@ AC_CONFIG_FILES([
 	src/agent/libnxtux/Makefile
 	src/agent/subagents/Makefile
 	src/agent/subagents/aix/Makefile
+	src/agent/subagents/bind9/Makefile
 	src/agent/subagents/darwin/Makefile
 	src/agent/subagents/db2/Makefile
 	src/agent/subagents/dbquery/Makefile
