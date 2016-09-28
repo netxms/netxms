@@ -25,6 +25,7 @@
 - Agent environment variables can be set in configuration file
 - Added method "getResourceOwner" and attribute "nodes" to NXSL "Cluster" class
 - New object tool type "server script"
+- Number of polls can be set for "diff" type thresholds 
 - New agent metrics for self-monitoring:
 	Agent.SyslogProxy.IsEnabled, Agent.SyslogProxy.ReceivedMessages, Agent.SyslogProxy.QueueSize
 - Management console
