@@ -136,8 +136,9 @@
             name="%command.name.ServerFileList">
       </command>
       <command
+            description="Toggle Filter"
             id="org.netxms.ui.eclipse.filemanager.commands.showFilter"
-            name="Show filter">
+            name="Toggle Filter">
       </command>
       <command
             id="org.netxms.ui.eclipse.filemanager.commands.refreshFolder"

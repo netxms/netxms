@@ -235,3 +235,6 @@ target
 *.jar
 *.war
 *.ear
+
+# HP-UX build
+/packages/hp-ux/build

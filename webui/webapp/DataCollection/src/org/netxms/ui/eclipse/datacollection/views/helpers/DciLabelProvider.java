@@ -141,15 +141,8 @@ public class DciLabelProvider implements ITableLabelProvider
                   Threshold tr = list.get(i);
                   int f = tr.getFunction();
                   StringBuilder text = new StringBuilder(ThresholdLabelProvider.FUNCTIONS[f]);
-                  if (f != Threshold.F_DIFF)
-                  {
-                     text.append(tr.getSampleCount());
-                     text.append(") "); //$NON-NLS-1$
-                  }
-                  else
-                  {
-                     text.append(' ');
-                  }
+                  text.append(tr.getSampleCount());
+                  text.append(") "); //$NON-NLS-1$
                   if (f != Threshold.F_SCRIPT)
                   {
                      text.append(ThresholdLabelProvider.OPERATIONS[tr.getOperation()]);
@@ -157,7 +150,7 @@ public class DciLabelProvider implements ITableLabelProvider
                      text.append(tr.getValue());
                   }
                   thresholds.append(text);
-                  if( i+1 != list.size() )
+                  if (i < list.size() - 1)
                      thresholds.append(", "); //$NON-NLS-1$
                }
    			   

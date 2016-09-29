@@ -299,6 +299,14 @@ NXSL_METHOD_DEFINITION(Node, enableConfigurationPolling)
 }
 
 /**
+ * enableDiscoveryPolling(enabled) method
+ */
+NXSL_METHOD_DEFINITION(Node, enableDiscoveryPolling)
+{
+   return ChangeFlagMethod(object, argv[0], result, NF_DISABLE_DISCOVERY_POLL);
+}
+
+/**
  * enableIcmp(enabled) method
  */
 NXSL_METHOD_DEFINITION(Node, enableIcmp)
@@ -339,6 +347,7 @@ NXSL_NodeClass::NXSL_NodeClass() : NXSL_NetObjClass()
 
    NXSL_REGISTER_METHOD(Node, enableAgent, 1);
    NXSL_REGISTER_METHOD(Node, enableConfigurationPolling, 1);
+   NXSL_REGISTER_METHOD(Node, enableDiscoveryPolling, 1);
    NXSL_REGISTER_METHOD(Node, enableIcmp, 1);
    NXSL_REGISTER_METHOD(Node, enableSnmp, 1);
    NXSL_REGISTER_METHOD(Node, enableStatusPolling, 1);

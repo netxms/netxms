@@ -480,10 +480,16 @@ public class General extends PropertyPage
 		switch(origin.getSelectionIndex())
 		{
 			case DataCollectionItem.INTERNAL:
-				dlg = new SelectInternalParamDlg(getShell(), dci.getNodeId());
+			   if (sourceNode.getObjectId() != 0)
+			      dlg = new SelectInternalParamDlg(getShell(), sourceNode.getObjectId());
+			   else
+			      dlg = new SelectInternalParamDlg(getShell(), dci.getNodeId());
 				break;
 			case DataCollectionItem.AGENT:
-				dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), false);
+			   if (sourceNode.getObjectId() != 0)
+			      dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), false);
+			   else
+			      dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), false);
 				break;
 			case DataCollectionItem.SNMP:
 			case DataCollectionItem.CHECKPOINT_SNMP:
@@ -496,10 +502,16 @@ public class General extends PropertyPage
 				{
 					oid = null;
 				}
-				dlg = new SelectSnmpParamDlg(getShell(), oid, dci.getNodeId());
+				if (sourceNode.getObjectId() != 0)
+				   dlg = new SelectSnmpParamDlg(getShell(), oid, sourceNode.getObjectId());
+				else
+				   dlg = new SelectSnmpParamDlg(getShell(), oid, dci.getNodeId());
 				break;
 			case DataCollectionItem.WINPERF:
-				dlg = new WinPerfCounterSelectionDialog(getShell(), dci.getNodeId());
+			   if (sourceNode.getObjectId() != 0)
+			      dlg = new WinPerfCounterSelectionDialog(getShell(), sourceNode.getObjectId());
+			   else
+			      dlg = new WinPerfCounterSelectionDialog(getShell(), dci.getNodeId());
 				break;
          case DataCollectionItem.SCRIPT:
             dlg = new SelectParameterScriptDialog(getShell());

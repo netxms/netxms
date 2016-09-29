@@ -23,6 +23,8 @@ import java.util.Map;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -260,6 +262,13 @@ public class GeneralTable extends PropertyPage
       sourceNode.setObjectClass(Node.class);
       sourceNode.setObjectId(dci.getSourceNode());
       sourceNode.setEnabled(dci.getOrigin() != DataCollectionObject.PUSH);
+      sourceNode.addModifyListener(new ModifyListener() {
+         @Override
+         public void modifyText(ModifyEvent e)
+         {
+            editor.setSourceNode(sourceNode.getObjectId());
+         }
+      });
       
       fd = new FormData();
       fd.top = new FormAttachment(origin.getParent(), WidgetHelper.OUTER_SPACING, SWT.BOTTOM);
@@ -448,10 +457,14 @@ public class GeneralTable extends PropertyPage
 	private void selectParameter()
 	{
 		Dialog dlg;
+		editor.setSourceNode(sourceNode.getObjectId());
 		switch(origin.getSelectionIndex())
 		{
 			case DataCollectionObject.AGENT:
-				dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), true);
+			   if (sourceNode.getObjectId() != 0)
+               dlg = new SelectAgentParamDlg(getShell(), sourceNode.getObjectId(), true);
+            else
+               dlg = new SelectAgentParamDlg(getShell(), dci.getNodeId(), true);
 				break;
 			case DataCollectionObject.SNMP:
 			case DataCollectionObject.CHECKPOINT_SNMP:
@@ -464,7 +477,10 @@ public class GeneralTable extends PropertyPage
 				{
 					oid = null;
 				}
-				dlg = new SelectSnmpParamDlg(getShell(), oid, dci.getNodeId());
+				if (sourceNode.getObjectId() != 0)
+               dlg = new SelectSnmpParamDlg(getShell(), oid, sourceNode.getObjectId());
+            else
+               dlg = new SelectSnmpParamDlg(getShell(), oid, dci.getNodeId());
 				break;
 			default:
 				dlg = null;

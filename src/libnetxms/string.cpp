@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
 ** Copyright (C) 2003-2016 Victor Kirhenshtein
@@ -367,7 +367,7 @@ void String::replace(const TCHAR *pszSrc, const TCHAR *pszDst)
    size_t lenSrc = _tcslen(pszSrc);
    size_t lenDst = _tcslen(pszDst);
 
-   for(size_t i = 0; (m_length > lenSrc) && (i <= m_length - lenSrc); i++)
+   for(size_t i = 0; (m_length >= lenSrc) && (i <= m_length - lenSrc); i++)
    {
       if (!memcmp(pszSrc, &m_buffer[i], lenSrc * sizeof(TCHAR)))
       {
