@@ -1030,6 +1030,7 @@ public:
    virtual UINT32 getEffectiveSourceNode(DCObject *dco);
 
    UINT32 getListFromScript(const TCHAR *param, StringList **list);
+   UINT32 getStringMapFromScript(const TCHAR *param, StringMap **map);
 
    UINT32 getTableLastValues(UINT32 dciId, NXCPMessage *msg);
 	UINT32 getThresholdSummary(NXCPMessage *msg, UINT32 baseId);

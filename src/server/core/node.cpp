@@ -3521,7 +3521,7 @@ StringMap *Node::getInstanceList(DCItem *dci)
 			node->getListFromAgent(dci->getInstanceDiscoveryData(), &instances);
 			break;
       case IDM_SCRIPT:
-         node->getListFromScript(dci->getInstanceDiscoveryData(), &instances);
+         node->getStringMapFromScript(dci->getInstanceDiscoveryData(), &instanceMap);
          break;
 		case IDM_SNMP_WALK_VALUES:
 		   node->getListFromSNMP(dci->getSnmpPort(), dci->getInstanceDiscoveryData(), &instances);

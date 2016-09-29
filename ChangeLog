@@ -26,6 +26,7 @@
 - Added method "getResourceOwner" and attribute "nodes" to NXSL "Cluster" class
 - New object tool type "server script"
 - Number of polls can be set for "diff" type thresholds 
+- Instance discovery scripts can return instances as map instance/instance name
 - New agent metrics for self-monitoring:
 	Agent.SyslogProxy.IsEnabled, Agent.SyslogProxy.ReceivedMessages, Agent.SyslogProxy.QueueSize
 - Management console
