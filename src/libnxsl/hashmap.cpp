@@ -85,3 +85,22 @@ NXSL_Value *NXSL_HashMap::getValues() const
    delete values;
    return new NXSL_Value(array);
 }
+
+/**
+ * Get hash map as string map
+ * Resulting string map is dynamically allocated and should be destroyed by caller
+ */
+StringMap *NXSL_HashMap::toStringMap() const
+{
+   StringMap *map = new StringMap();
+   StructArray<KeyValuePair> *values = m_values->toArray();
+   for(int i = 0; i < values->size(); i++)
+   {
+      KeyValuePair *p = values->get(i);
+      const TCHAR *s = ((NXSL_Value *)p->value)->getValueAsCString();
+      if (s != NULL)
+         map->set(p->key, s);
+   }
+   delete values;
+   return map;
+}

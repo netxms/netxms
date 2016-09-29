@@ -225,6 +225,8 @@ public:
    NXSL_Value *getKeys() const;
    NXSL_Value *getValues() const;
 
+   StringMap *toStringMap() const;
+
 	int size() const { return m_values->size(); }
 };
 
