@@ -4,7 +4,7 @@ pkglib_LTLIBRARIES = text2reach.la
 text2reach_la_SOURCES = main.cpp
 text2reach_la_CPPFLAGS=-I@top_srcdir@/include
 text2reach_la_LDFLAGS = -module -avoid-version
-text2reach_la_LIBADD = ../../libnetxms/libnetxms.la
+text2reach_la_LIBADD = ../../libnetxms/libnetxms.la -lcurl
 
 EXTRA_DIST = \
 	text2reach.vcproj
