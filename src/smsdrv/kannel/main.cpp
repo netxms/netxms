@@ -144,20 +144,22 @@ extern "C" bool EXPORT SMSDriverSend(const TCHAR *phoneNumber, const TCHAR *text
       memset(data, 0, sizeof(RequestData));
       curl_easy_setopt(curl, CURLOPT_WRITEDATA, data);
 
+      bool intlPrefix = (phoneNumber[0] == _T('+'));
 #ifdef UNICODE
-      char *mbphone = MBStringFromWideString(phoneNumber);
+      char *mbphone = MBStringFromWideString(intlPrefix ? &phoneNumber[1] : phoneNumber);
       char *mbmsg = MBStringFromWideString(text);
       char *phone = curl_easy_escape(curl, mbphone, 0);
       char *msg = curl_easy_escape(curl, mbmsg, 0);
       free(mbphone);
       free(mbmsg);
 #else
-      char *phone = curl_easy_escape(curl, phoneNumber, 0);
+      char *phone = curl_easy_escape(curl, intlPrefix ? &phoneNumber[1] : phoneNumber, 0);
       char *msg = curl_easy_escape(curl, text, 0);
 #endif
 
       char url[4096];
-      snprintf(url, 4096, "http://%s:%d/cgi-bin/sendsms?username=%s&password=%s&to=%s&text=%s", s_hostname, s_port, s_login, s_password, phone, msg);
+      snprintf(url, 4096, "http://%s:%d/cgi-bin/sendsms?username=%s&password=%s&to=%s%s&text=%s",
+               s_hostname, s_port, s_login, s_password, intlPrefix ? "00" : "", phone, msg);
       nxlog_debug(4, _T("Kannel: URL set to \"%hs\""), url);
 
       curl_free(phone);
