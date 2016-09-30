@@ -98,6 +98,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 	private IWorkbenchAction actionShowViewMenu;
 	private Action actionOpenProgressView;
 	private Action actionFullScreen;
+   private Action actionLangArabic;
 	private Action actionLangChinese;
    private Action actionLangCzech;
 	private Action actionLangEnglish;
@@ -247,6 +248,12 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
          }
       };
       
+      actionLangArabic = new Action("&Arabic", Activator.getImageDescriptor("icons/lang/ar.png")) { //$NON-NLS-1$ //$NON-NLS-2$
+         public void run()
+         {
+            setLanguage("ar"); //$NON-NLS-1$
+         }
+      };
 		actionLangChinese = new Action("C&hinese", Activator.getImageDescriptor("icons/lang/zh.png")) { //$NON-NLS-1$ //$NON-NLS-2$
 			public void run()
 			{
@@ -313,6 +320,7 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor
 		
 		// Language selection (intentionally left in English only)
 		final MenuManager langMenu = new MenuManager("&Language"); //$NON-NLS-1$
+      langMenu.add(actionLangArabic);
 		langMenu.add(actionLangChinese);
       langMenu.add(actionLangCzech);
 		langMenu.add(actionLangEnglish);
