@@ -76,7 +76,7 @@ public class TabbedObjectView extends ViewPart
 {
 	public static final String ID = "org.netxms.ui.eclipse.objectview.view.tabbed_object_view"; //$NON-NLS-1$
 	
-	private static final String[] HEADER_FONTS = { "Verdana", "DejaVu Sans", "Liberation Sans", "Arial" };
+	private static final String[] HEADER_FONTS = { "Verdana", "DejaVu Sans", "Liberation Sans", "Arial" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	
 	private CLabel header;
 	private CTabFolder tabFolder;

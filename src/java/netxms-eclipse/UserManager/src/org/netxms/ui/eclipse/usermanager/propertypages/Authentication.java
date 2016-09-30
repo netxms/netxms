@@ -99,7 +99,7 @@ public class Authentication extends PropertyPage
       checkFixedPassword.setSelection(object.isPasswordChangeForbidden());
 
       checkCloseSessions = new Button(groupFlags, SWT.CHECK);
-      checkCloseSessions.setText("&Close other sessions after login");
+      checkCloseSessions.setText(Messages.get().Authentication_CloseOtherSessions);
       checkCloseSessions.setSelection((object.getFlags() & User.CLOSE_OTHER_SESSIONS) != 0);
       
       Group groupMethod = new Group(dialogArea, SWT.NONE);

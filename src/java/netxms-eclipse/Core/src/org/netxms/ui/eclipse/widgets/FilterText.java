@@ -159,7 +159,7 @@ public class FilterText extends Composite
 		clearButton.setBackground(getBackground());
 		clearButton.setCursor(getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		clearButton.setImage(SharedIcons.IMG_CLEAR);
-		clearButton.setToolTipText("Clear");
+		clearButton.setToolTipText(Messages.get().FilterText_Clear);
 		gd = new GridData();
 		gd.verticalAlignment = SWT.CENTER;
 		clearButton.setLayoutData(gd);
@@ -227,8 +227,8 @@ public class FilterText extends Composite
 	
 	private void clearFilter()
    {
-	   if (text.getText().equals("") != true)
-	      text.setText("");
+	   if (text.getText().equals("") != true) //$NON-NLS-1$
+	      text.setText(""); //$NON-NLS-1$
    }
 	
 	/**

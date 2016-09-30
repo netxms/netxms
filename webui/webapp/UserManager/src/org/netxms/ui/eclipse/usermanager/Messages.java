@@ -17,6 +17,7 @@ public class Messages extends NLS
 	public String Authentication_CertificateOrPassword;
 	public String Authentication_CertificateOrRADIUS;
 	public String Authentication_CertMapping;
+   public String Authentication_CloseOtherSessions;
    public String Authentication_CommonName;
 	public String Authentication_JobError;
 	public String Authentication_JobTitle;

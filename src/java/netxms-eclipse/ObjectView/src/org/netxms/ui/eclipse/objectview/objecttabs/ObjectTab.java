@@ -72,7 +72,7 @@ public abstract class ObjectTab implements IPluginContribution
 		if (name == null)
 			name = "<noname>"; //$NON-NLS-1$
 		
-		contextId = ce.getAttribute("contextId");
+		contextId = ce.getAttribute("contextId"); //$NON-NLS-1$
 		
 		try
 		{

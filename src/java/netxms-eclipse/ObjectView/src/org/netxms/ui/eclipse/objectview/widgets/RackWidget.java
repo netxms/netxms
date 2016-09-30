@@ -72,7 +72,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
    private static final int OBJECT_TOOLTIP_X_MARGIN = 6;
    private static final int OBJECT_TOOLTIP_Y_MARGIN = 6;
    private static final int OBJECT_TOOLTIP_SPACING = 6;
-   private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" };
+   private static final String[] FONT_NAMES = { "Segoe UI", "Liberation Sans", "DejaVu Sans", "Verdana", "Arial" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
    
    private Rack rack;
    private Font[] labelFonts;
@@ -108,9 +108,9 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       for(int i = 0; i < labelFonts.length; i++)
          labelFonts[i] = new Font(getDisplay(), fontName, i + 6, SWT.NORMAL);
       
-      imageDefaultTop = Activator.getImageDescriptor("icons/rack-default-top.png").createImage();
-      imageDefaultMiddle = Activator.getImageDescriptor("icons/rack-default-middle.png").createImage();
-      imageDefaultBottom = Activator.getImageDescriptor("icons/rack-default-bottom.png").createImage();
+      imageDefaultTop = Activator.getImageDescriptor("icons/rack-default-top.png").createImage(); //$NON-NLS-1$
+      imageDefaultMiddle = Activator.getImageDescriptor("icons/rack-default-middle.png").createImage(); //$NON-NLS-1$
+      imageDefaultBottom = Activator.getImageDescriptor("icons/rack-default-bottom.png").createImage(); //$NON-NLS-1$
       
       addPaintListener(this);
       addMouseListener(this);
@@ -172,7 +172,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
 
       // Draw unit numbers
       int[] unitBaselines = new int[rack.getHeight() + 1];
-      gc.setFont(WidgetHelper.getBestFittingFont(gc, labelFonts, "00", UNIT_NUMBER_WIDTH, (int)unitHeight - 2));
+      gc.setFont(WidgetHelper.getBestFittingFont(gc, labelFonts, "00", UNIT_NUMBER_WIDTH, (int)unitHeight - 2)); //$NON-NLS-1$
       gc.setForeground(SharedColors.getColor(SharedColors.RACK_TEXT, getDisplay()));
       gc.setBackground(SharedColors.getColor(SharedColors.RACK_BACKGROUND, getDisplay()));
       gc.setLineWidth(1);
@@ -315,7 +315,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
          texts.add(((AbstractNode)tooltipObject).getPlatformName());
          String sd = ((AbstractNode)tooltipObject).getSystemDescription();
          if (sd.length() > 127)
-            sd = sd.substring(0, 127) + "...";
+            sd = sd.substring(0, 127) + "..."; //$NON-NLS-1$
          texts.add(sd);
          texts.add(((AbstractNode)tooltipObject).getSnmpSysName());
          texts.add(((AbstractNode)tooltipObject).getSnmpSysContact());
@@ -337,7 +337,7 @@ public class RackWidget extends Canvas implements PaintListener, DisposeListener
       {
          for(DciValue v : values)
          {
-            Point pt = gc.textExtent(v.getName() + "  " + v.getValue());
+            Point pt = gc.textExtent(v.getName() + "  " + v.getValue()); //$NON-NLS-1$
             if (width < pt.x)
                width = pt.x;
             height += pt.y;

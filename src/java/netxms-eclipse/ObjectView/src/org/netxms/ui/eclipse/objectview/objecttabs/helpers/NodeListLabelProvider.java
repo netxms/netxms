@@ -81,7 +81,7 @@ public class NodeListLabelProvider extends LabelProvider implements ITableLabelP
                           rack.isTopBottomNumbering() ? node.getRackPosition() + node.getRackHeight() - 1 : node.getRackPosition());
                }
             }
-            return "";
+            return ""; //$NON-NLS-1$
 		}
 		return null;
 	}

@@ -89,6 +89,7 @@ public class Messages extends NLS
    public static String GeneralInfo_BridgeBaseAddress;
    public static String GeneralInfo_Class;
    public static String GeneralInfo_Connected;
+   public static String GeneralInfo_Controller;
    public static String GeneralInfo_Description;
    public static String GeneralInfo_DeviceId;
    public static String GeneralInfo_Driver;
@@ -111,6 +112,7 @@ public class Messages extends NLS
    public static String GeneralInfo_MTU;
    public static String GeneralInfo_Never;
    public static String GeneralInfo_No;
+   public static String GeneralInfo_NodeType;
    public static String GeneralInfo_OperState;
    public static String GeneralInfo_OS;
    public static String GeneralInfo_OSVersion;

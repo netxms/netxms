@@ -29,7 +29,9 @@ public class Messages extends NLS
 	public static String ExportToCsvAction_ExportAllToCsv;
 	public static String ExportToCsvAction_SaveError;
 	public static String ExportToCsvAction_SaveTo;
-	public static String FilterText_CloseFilter;
+	public static String FilterText_Clear;
+
+   public static String FilterText_CloseFilter;
 	public static String FilterText_Filter;
 	public static String FilterText_FilterIsEmpty;
 	public static String NumericTextFieldValidator_ErrorMessage;

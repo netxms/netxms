@@ -107,7 +107,7 @@ public class InterfacesTab extends ObjectTab
 	protected void createTabContent(Composite parent)
 	{
 	   final IDialogSettings settings = Activator.getDefault().getDialogSettings();
-      initShowFilter = safeCast(settings.get("InterfacesTab.showFilter"), settings.getBoolean("InterfacesTab.showFilter"), initShowFilter);
+      initShowFilter = safeCast(settings.get("InterfacesTab.showFilter"), settings.getBoolean("InterfacesTab.showFilter"), initShowFilter); //$NON-NLS-1$ //$NON-NLS-2$
       // Create interface area
       interfacesArea = new Composite(parent, SWT.BORDER);
       FormLayout formLayout = new FormLayout();
@@ -126,7 +126,7 @@ public class InterfacesTab extends ObjectTab
          @Override
          public void widgetDisposed(DisposeEvent e)
          {
-            settings.put("InterfacesTab.showFilter", initShowFilter);
+            settings.put("InterfacesTab.showFilter", initShowFilter); //$NON-NLS-1$
          }
          
       });
@@ -137,8 +137,8 @@ public class InterfacesTab extends ObjectTab
          {
             enableFilter(false);
             ICommandService service = (ICommandService)PlatformUI.getWorkbench().getService(ICommandService.class);
-            Command command = service.getCommand("org.netxms.ui.eclipse.objectview.commands.show_filter");
-            State state = command.getState("org.netxms.ui.eclipse.objectview.commands.show_filter.state");
+            Command command = service.getCommand("org.netxms.ui.eclipse.objectview.commands.show_filter"); //$NON-NLS-1$
+            State state = command.getState("org.netxms.ui.eclipse.objectview.commands.show_filter.state"); //$NON-NLS-1$
             state.setValue(false);
             service.refreshElements(command.getId(), null);
          }
@@ -248,7 +248,7 @@ public class InterfacesTab extends ObjectTab
       }
       else
       {
-         filterText.setText("");
+         filterText.setText(""); //$NON-NLS-1$
          onFilterModify();
       }
    }

@@ -72,6 +72,9 @@ public class Messages extends NLS
    public static String ScreenshotView_CannotSaveImage;
    public static String ScreenshotView_CopyToClipboard;
    public static String ScreenshotView_Error;
+   public static String ScreenshotView_ErrorWithMsg;
+   public static String ScreenshotView_ErrorWithoutMsg;
+   public static String ScreenshotView_ErrorNoActiveSessions;
    public static String ScreenshotView_JobError;
    public static String ScreenshotView_JobTitle;
    public static String ScreenshotView_PartTitle;

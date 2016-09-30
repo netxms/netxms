@@ -198,15 +198,15 @@ public class ScreenshotView extends ViewPart
             {
                if (userSession == null)
                {
-                  Table sessions = session.queryAgentTable(nodeId, "Agent.SessionAgents");
+                  Table sessions = session.queryAgentTable(nodeId, "Agent.SessionAgents"); //$NON-NLS-1$
                   if ((sessions != null) && (sessions.getRowCount() > 0))
                   {
-                     int colIndexName = sessions.getColumnIndex("SESSION_NAME");
-                     int colIndexUser = sessions.getColumnIndex("USER_NAME");
+                     int colIndexName = sessions.getColumnIndex("SESSION_NAME"); //$NON-NLS-1$
+                     int colIndexUser = sessions.getColumnIndex("USER_NAME"); //$NON-NLS-1$
                      for(int i = 0; i < sessions.getRowCount(); i++)
                      {
                         String n = sessions.getCellValue(i, colIndexName);
-                        if ("Console".equalsIgnoreCase(n))
+                        if ("Console".equalsIgnoreCase(n)) //$NON-NLS-1$
                         {
                            userSession = n;
                            userName = sessions.getCellValue(i, colIndexUser);
@@ -234,7 +234,7 @@ public class ScreenshotView extends ViewPart
                            image.dispose();
                         
                         image = null;
-                        errorMessage = "ERROR (No active sessions or session agent is not running)";
+                        errorMessage = Messages.get().ScreenshotView_ErrorNoActiveSessions;
                         canvas.redraw();
                         
                         actionCopyToClipboard.setEnabled(false);
@@ -256,7 +256,7 @@ public class ScreenshotView extends ViewPart
                         image.dispose();
                      
                      image = new Image(getDisplay(), data);
-                     imageInfo = userName + "@" + userSession;
+                     imageInfo = userName + "@" + userSession; //$NON-NLS-1$
                      errorMessage = null;
                      canvas.redraw();
 
@@ -279,7 +279,7 @@ public class ScreenshotView extends ViewPart
                         image.dispose();
                      
                      image = null;
-                     errorMessage = (emsg != null) ? String.format("ERROR (%s)", emsg) : "ERROR";
+                     errorMessage = (emsg != null) ? String.format(Messages.get().ScreenshotView_ErrorWithMsg, emsg) : Messages.get().ScreenshotView_ErrorWithoutMsg;
                      canvas.redraw();
                      
                      actionCopyToClipboard.setEnabled(false);
