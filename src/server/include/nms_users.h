@@ -189,7 +189,7 @@ protected:
 	UINT64 m_systemRights;
 	UINT32 m_flags;
 	StringMap m_attributes;		// Custom attributes
-   TCHAR *m_userDn;
+   TCHAR *m_ldapDn;
    TCHAR *m_ldapId;
 
 	bool loadCustomAttributes(DB_HANDLE hdb);
@@ -214,7 +214,7 @@ public:
 	UINT64 getSystemRights() const { return m_systemRights; }
 	UINT32 getFlags() const { return m_flags; }
    TCHAR *getGuidAsText(TCHAR *buffer) const { return m_guid.toString(buffer); }
-   const TCHAR *getDn() const { return m_userDn; }
+   const TCHAR *getDn() const { return m_ldapDn; }
    const TCHAR *getLdapId() const { return m_ldapId; }
 
    bool isGroup() const { return (m_id & GROUP_FLAG) != 0; }

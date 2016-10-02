@@ -1134,6 +1134,8 @@ typedef struct
 #define VID_SSH_PROXY               ((UINT32)548)
 #define VID_ZONE_PROXY              ((UINT32)549)
 #define VID_MESSAGE_LENGTH          ((UINT32)550)
+#define VID_LDAP_DN                 ((UINT32)551)
+#define VID_LDAP_ID                 ((UINT32)552)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
