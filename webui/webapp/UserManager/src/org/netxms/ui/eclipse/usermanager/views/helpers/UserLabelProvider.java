@@ -68,14 +68,14 @@ public class UserLabelProvider extends DecoratingLabelProvider implements ITable
 		{
          case UserManagementView.COLUMN_AUTH_METHOD:
             if (!(element instanceof User))
-               return "";
+               return ""; //$NON-NLS-1$
             try
             {
                return AUTH_METHOD[((User)element).getAuthMethod()];
             }
             catch(ArrayIndexOutOfBoundsException e)
             {
-               return "Unknown";
+               return Messages.get().UserLabelProvider_Unknown;
             }
          case UserManagementView.COLUMN_DESCRIPTION:
             return ((AbstractUserObject)element).getDescription();
@@ -83,10 +83,12 @@ public class UserLabelProvider extends DecoratingLabelProvider implements ITable
             return (element instanceof User) ? ((User) element).getFullName() : null;
          case UserManagementView.COLUMN_GUID:
             return ((AbstractUserObject)element).getGuid().toString();
+         case UserManagementView.COLUMN_LDAP_DN:
+            return ((AbstractUserObject)element).getLdapDn();
 			case UserManagementView.COLUMN_NAME:
 				return ((AbstractUserObject)element).getName();
          case UserManagementView.COLUMN_SOURCE:
-            return ((((AbstractUserObject)element).getFlags() & AbstractUserObject.LDAP_USER) != 0) ? "LDAP" : "Local";
+            return ((((AbstractUserObject)element).getFlags() & AbstractUserObject.LDAP_USER) != 0) ? Messages.get().UserLabelProvider_LDAP : Messages.get().UserLabelProvider_Local;
 			case UserManagementView.COLUMN_TYPE:
 				return (element instanceof User) ? Messages.get().UserLabelProvider_User : Messages.get().UserLabelProvider_Group;
 		}

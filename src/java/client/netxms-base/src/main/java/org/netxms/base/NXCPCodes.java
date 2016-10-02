@@ -909,6 +909,16 @@ public class NXCPCodes
    public static final long VID_AUTH_TOKEN = 540;
    public static final long VID_REPOSITORY_ID = 541;
    public static final long VID_TOOLTIP_DCI_COUNT = 542;
+   public static final long VID_CONTROLLER_ID = 543;
+   public static final long VID_CHASSIS_ID = 544;
+   public static final long VID_NODE_SUBTYPE = 545;
+   public static final long VID_SSH_LOGIN = 546;
+   public static final long VID_SSH_PASSWORD = 547;
+   public static final long VID_SSH_PROXY = 548;
+   public static final long VID_ZONE_PROXY = 549;
+   public static final long VID_MESSAGE_LENGTH = 550;
+   public static final long VID_LDAP_DN = 551;
+   public static final long VID_LDAP_ID = 552;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;

@@ -77,6 +77,9 @@ public class UserComparator extends ViewerComparator
          case UserManagementView.COLUMN_GUID:
             result = ((AbstractUserObject)e1).getGuid().toString().compareTo(((AbstractUserObject)e2).getGuid().toString());
             break;
+         case UserManagementView.COLUMN_LDAP_DN:
+            result = ((AbstractUserObject)e1).getLdapDn().compareToIgnoreCase(((AbstractUserObject) e2).getLdapDn());
+            break;
 			case UserManagementView.COLUMN_NAME:
 				result = ((AbstractUserObject)e1).getName().compareToIgnoreCase(((AbstractUserObject) e2).getName());
 				break;

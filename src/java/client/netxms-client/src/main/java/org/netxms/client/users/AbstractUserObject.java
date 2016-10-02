@@ -66,6 +66,8 @@ public abstract class AbstractUserObject
 	protected long systemRights;
 	protected int flags;
 	protected String description;
+	protected String ldapDn;
+	protected String ldapId;
 	protected Map<String, String> customAttributes = new HashMap<String, String>(0);
 
 	/**
@@ -89,6 +91,8 @@ public abstract class AbstractUserObject
 		this.systemRights = src.systemRights;
 		this.flags = src.flags;
 		this.description = src.description;
+		this.ldapDn = src.ldapDn;
+		this.ldapId = src.ldapId;
 		this.customAttributes = new HashMap<String, String>(0);
 		Iterator<Entry<String, String>> it  = src.customAttributes.entrySet().iterator();
 		while(it.hasNext())
@@ -110,6 +114,8 @@ public abstract class AbstractUserObject
 		systemRights = msg.getFieldAsInt64(NXCPCodes.VID_USER_SYS_RIGHTS);
 		description = msg.getFieldAsString(NXCPCodes.VID_USER_DESCRIPTION);
 		guid = msg.getFieldAsUUID(NXCPCodes.VID_GUID);
+		ldapDn = msg.getFieldAsString(NXCPCodes.VID_LDAP_DN);
+      ldapId = msg.getFieldAsString(NXCPCodes.VID_LDAP_ID);
 		
 		int count = msg.getFieldAsInt32(NXCPCodes.VID_NUM_CUSTOM_ATTRIBUTES);
 		long varId = NXCPCodes.VID_CUSTOM_ATTRIBUTES_BASE;
@@ -192,6 +198,22 @@ public abstract class AbstractUserObject
 	}
 
 	/**
+    * @return the ldapDn
+    */
+   public String getLdapDn()
+   {
+      return ldapDn;
+   }
+
+   /**
+    * @return the ldapId
+    */
+   public String getLdapId()
+   {
+      return ldapId;
+   }
+
+   /**
 	 * @return the systemRights
 	 */
 	public long getSystemRights()

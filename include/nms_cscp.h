@@ -1123,6 +1123,16 @@ typedef struct
 #define VID_AUTH_TOKEN              ((UINT32)540)
 #define VID_REPOSITORY_ID           ((UINT32)541)
 #define VID_TOOLTIP_DCI_COUNT       ((UINT32)542)
+#define VID_CONTROLLER_ID           ((UINT32)543)
+#define VID_CHASSIS_ID              ((UINT32)544)
+#define VID_NODE_SUBTYPE            ((UINT32)545)
+#define VID_SSH_LOGIN               ((UINT32)546)
+#define VID_SSH_PASSWORD            ((UINT32)547)
+#define VID_SSH_PROXY               ((UINT32)548)
+#define VID_ZONE_PROXY              ((UINT32)549)
+#define VID_MESSAGE_LENGTH          ((UINT32)550)
+#define VID_LDAP_DN                 ((UINT32)551)
+#define VID_LDAP_ID                 ((UINT32)552)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
