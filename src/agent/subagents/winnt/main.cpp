@@ -31,6 +31,7 @@ LONG H_AgentDesktop(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCo
 LONG H_AppAddressSpace(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
 LONG H_ArpCache(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_ConnectedUsers(const TCHAR *pszCmd, const TCHAR *pArg, TCHAR *pValue, AbstractCommSession *session);
+LONG H_CPUUsage(const TCHAR *param, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_Desktops(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
 LONG H_HandleCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_InstalledProducts(const TCHAR *cmd, const TCHAR *arg, Table *value, AbstractCommSession *);
@@ -52,6 +53,9 @@ LONG H_ServiceTable(const TCHAR *pszCmd, const TCHAR *pArg, Table *value, Abstra
 LONG H_SysUpdateTime(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_ThreadCount(const TCHAR *cmd, const TCHAR *arg, TCHAR *value, AbstractCommSession *session);
 LONG H_WindowStations(const TCHAR *cmd, const TCHAR *arg, StringList *value, AbstractCommSession *session);
+
+void StartCPUStatCollector();
+void StopCPUStatCollector();
 
 /**
  * Optional imports
@@ -154,6 +158,23 @@ static LONG H_ChangeUserPassword(const TCHAR *action, StringList *args, const TC
 }
 
 /**
+ * Subagent initialization
+ */
+static BOOL SubAgentInit(Config *config)
+{
+   StartCPUStatCollector();
+   return true;
+}
+
+/**
+ * Called by master agent at unload
+ */
+static void SubAgentShutdown()
+{
+   StopCPUStatCollector();
+}
+
+/**
  * Supported parameters
  */
 static NETXMS_SUBAGENT_PARAM m_parameters[] =
@@ -198,7 +219,48 @@ static NETXMS_SUBAGENT_PARAM m_parameters[] =
 	{ _T("Process.WkSet(*)"), H_ProcInfo, (TCHAR *)PROCINFO_WKSET, DCI_DT_UINT64, DCIDESC_PROCESS_WKSET },
 	{ _T("System.AppAddressSpace"), H_AppAddressSpace, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_APPADDRESSSPACE },
 	{ _T("System.ConnectedUsers"), H_ConnectedUsers, NULL, DCI_DT_INT, DCIDESC_SYSTEM_CONNECTEDUSERS },
-	{ _T("System.HandleCount"), H_HandleCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_HANDLECOUNT },
+   
+   { _T("System.CPU.CurrentUsage"), H_CPUUsage, _T("T0U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR },
+   { _T("System.CPU.CurrentUsage.Idle"), H_CPUUsage, _T("T0I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR_IDLE },
+   { _T("System.CPU.CurrentUsage.System"), H_CPUUsage, _T("T0s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR_SYSTEM },
+   { _T("System.CPU.CurrentUsage.User"), H_CPUUsage, _T("T0u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR_USER },
+
+   { _T("System.CPU.CurrentUsage(*)"), H_CPUUsage, _T("C0U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR_EX },
+   { _T("System.CPU.CurrentUsage.Idle(*)"), H_CPUUsage, _T("C0I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR_IDLE_EX },
+   { _T("System.CPU.CurrentUsage.System(*)"), H_CPUUsage, _T("C0s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR_SYSTEM_EX },
+   { _T("System.CPU.CurrentUsage.User(*)"), H_CPUUsage, _T("C0u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGECURR_USER_EX },
+
+   { _T("System.CPU.Usage"), H_CPUUsage, _T("T1U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE },
+   { _T("System.CPU.Usage.Idle"), H_CPUUsage, _T("T1I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IDLE },
+   { _T("System.CPU.Usage.System"), H_CPUUsage, _T("T1s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_SYSTEM },
+   { _T("System.CPU.Usage.User"), H_CPUUsage, _T("T1u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_USER },
+	
+   { _T("System.CPU.Usage(*)"), H_CPUUsage, _T("C1U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_EX },
+   { _T("System.CPU.Usage.Idle(*)"), H_CPUUsage, _T("C1I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_IDLE_EX },
+   { _T("System.CPU.Usage.System(*)"), H_CPUUsage, _T("C1s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_SYSTEM_EX },
+   { _T("System.CPU.Usage.User(*)"), H_CPUUsage, _T("C1u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE_USER_EX },
+   
+   { _T("System.CPU.Usage5"), H_CPUUsage, _T("T2U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5 },
+   { _T("System.CPU.Usage5.Idle"), H_CPUUsage, _T("T2I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE },
+   { _T("System.CPU.Usage5.System"), H_CPUUsage, _T("T2s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM },
+   { _T("System.CPU.Usage5.User"), H_CPUUsage, _T("T2u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_USER },
+   
+   { _T("System.CPU.Usage5(*)"), H_CPUUsage, _T("C2U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_EX },
+   { _T("System.CPU.Usage.Idle(*)"), H_CPUUsage, _T("C2I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_IDLE_EX },
+   { _T("System.CPU.Usage.System(*)"), H_CPUUsage, _T("C2s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_SYSTEM_EX },
+   { _T("System.CPU.Usage.User(*)"), H_CPUUsage, _T("C2u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE5_USER_EX },
+   
+   { _T("System.CPU.Usage15"), H_CPUUsage, _T("T3U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15 },
+   { _T("System.CPU.Usage5.Idle"), H_CPUUsage, _T("T3I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IDLE },
+   { _T("System.CPU.Usage5.System"), H_CPUUsage, _T("T3s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_SYSTEM },
+   { _T("System.CPU.Usage5.User"), H_CPUUsage, _T("T3u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_USER },
+   
+   { _T("System.CPU.Usage15(*)"), H_CPUUsage, _T("C3U"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_EX },
+   { _T("System.CPU.Usage15.Idle(*)"), H_CPUUsage, _T("C3I"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_IDLE_EX },
+   { _T("System.CPU.Usage15.System(*)"), H_CPUUsage, _T("C3s"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_SYSTEM_EX },
+   { _T("System.CPU.Usage15.User(*)"), H_CPUUsage, _T("C3u"), DCI_DT_FLOAT, DCIDESC_SYSTEM_CPU_USAGE15_USER_EX },
+	
+   { _T("System.HandleCount"), H_HandleCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_HANDLECOUNT },
 	{ _T("System.ProcessCount"), H_ProcCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_PROCESSCOUNT },
 	{ _T("System.ServiceState(*)"), H_ServiceState, NULL, DCI_DT_INT, DCIDESC_SYSTEM_SERVICESTATE },
 	{ _T("System.ThreadCount"), H_ThreadCount, NULL, DCI_DT_UINT, DCIDESC_SYSTEM_THREADCOUNT },
@@ -250,7 +312,7 @@ static NETXMS_SUBAGENT_INFO m_info =
 {
 	NETXMS_SUBAGENT_INFO_MAGIC,
 	_T("WinNT"), NETXMS_VERSION_STRING,
-	NULL, NULL, NULL,
+	SubAgentInit, SubAgentShutdown, NULL,
 	sizeof(m_parameters) / sizeof(NETXMS_SUBAGENT_PARAM),
 	m_parameters,
 	sizeof(m_lists) / sizeof(NETXMS_SUBAGENT_LIST),

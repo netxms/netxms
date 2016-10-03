@@ -9,6 +9,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 EXTRA_DIST = \
+	cpu.cpp \
 	main.cpp \
 	net.cpp \
 	procinfo.cpp \
