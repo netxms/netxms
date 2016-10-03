@@ -1,4 +1,5 @@
 package com.rfelements.model.json.ligowave;
+
 /**
  * @author Pichanič Ján
  */
