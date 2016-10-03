@@ -1,9 +1,9 @@
-package com.rfelements.externalization;
+package com.rfelements.config;
 
 /**
  * @author Pichanič Ján
  */
-public class ExternalConstants {
+public class Settings {
 
     public static int CONNECTION_TIMEOUT;
 

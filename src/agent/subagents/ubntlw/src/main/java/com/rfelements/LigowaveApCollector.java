@@ -8,11 +8,11 @@ import org.netxms.agent.ParameterType;
 /**
  * @author Pichanič Ján
  */
-public class LigowaveAp extends AbstractCollector {
+public class LigowaveApCollector extends AbstractCollector {
 
-    public LigowaveAp(Config config) {
+    public LigowaveApCollector(Config config) {
         super(config, DeviceType.LIGOWAVE_AP);
-        super.basicPath = "/ligowave-ap/";
+        super.basePath = "/ligowave-ap/";
         super.protocol = Protocol.HTTP;
         super.config = config;
     }
@@ -20,11 +20,6 @@ public class LigowaveAp extends AbstractCollector {
     @Override
     public String getName() {
         return "ligowave-ap";
-    }
-
-    @Override
-    public String getVersion() {
-        return VERSION;
     }
 
     @Override

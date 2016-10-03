@@ -1,7 +1,6 @@
 package com.rfelements;
 
-import com.rfelements.exception.CollectorException;
-import com.rfelements.model.json.ligowave.Ligowave;
+import com.rfelements.model.json.ubiquiti.Ubiquiti;
 import org.netxms.agent.Config;
 import org.netxms.agent.Parameter;
 import org.netxms.agent.ParameterType;
@@ -9,28 +8,22 @@ import org.netxms.agent.ParameterType;
 /**
  * @author Pichanič Ján
  */
-public class LigowaveClient extends AbstractCollector {
+public class UbiquitiApCollector extends AbstractCollector {
 
-    public LigowaveClient(Config config) throws CollectorException {
-        super(config, DeviceType.LIGOWAVE_CLIENT);
-        super.protocol = Protocol.HTTP;
-        super.basicPath = "/ligowave-client/";
+    public UbiquitiApCollector(Config config) {
+        super(config, DeviceType.UBIQUITI_AP);
+        super.basePath = "/ubiquiti-ap/";
+        super.protocol = Protocol.HTTPS;
         super.config = config;
     }
 
     @Override
     public String getName() {
-        return "ligowave-client";
-    }
-
-    @Override
-    public String getVersion() {
-        return VERSION;
+        return "ubiquiti-ap";
     }
 
     @Override
     public void init(Config config) {
-        //		super.config = config;
     }
 
     @Override
@@ -44,12 +37,12 @@ public class LigowaveClient extends AbstractCollector {
 
             @Override
             public String getName() {
-                return "/ligowave-client/wireless/signal_chain0(*)";
+                return "/ubiquiti-ap/uptime(*)";
             }
 
             @Override
             public String getDescription() {
-                return "Wireless signal chain 0";
+                return "Device uptime";
             }
 
             @Override
@@ -59,21 +52,20 @@ public class LigowaveClient extends AbstractCollector {
 
             @Override
             public String getValue(String param) throws Exception {
-                Ligowave dlb;
-                dlb = getDlbObject(param);
-                Integer signal = dlb.getWirelessInformation().getPeers()[0].getSignal()[0];
-                return String.valueOf(signal);
+                Ubiquiti ubnt;
+                ubnt = getUbntObject(param);
+                return String.valueOf(ubnt.getHost().getUptime());
             }
         }, new Parameter() {
 
             @Override
             public String getName() {
-                return "/ligowave-client/wireless/signal_chain1(*)";
+                return "/ubiquiti-ap/wireless/airmax_capacity(*)";
             }
 
             @Override
             public String getDescription() {
-                return "Wireless signal chain 1";
+                return "Wireless airmax capacity";
             }
 
             @Override
@@ -83,16 +75,38 @@ public class LigowaveClient extends AbstractCollector {
 
             @Override
             public String getValue(String param) throws Exception {
-                Ligowave dlb;
-                dlb = getDlbObject(param);
-                Integer signal = dlb.getWirelessInformation().getPeers()[0].getSignal()[1];
-                return String.valueOf(signal);
+                Ubiquiti ubnt;
+                ubnt = getUbntObject(param);
+                return String.valueOf(ubnt.getWireless().getPolling().getCapacity());
             }
         }, new Parameter() {
 
             @Override
             public String getName() {
-                return "/ligowave-client/wireless/noise_floor(*)";
+                return "/ubiquiti-ap/wireless/airmax_quality(*)";
+            }
+
+            @Override
+            public String getDescription() {
+                return "Wireless airmax quality";
+            }
+
+            @Override
+            public ParameterType getType() {
+                return ParameterType.INT;
+            }
+
+            @Override
+            public String getValue(String param) throws Exception {
+                Ubiquiti ubnt;
+                ubnt = getUbntObject(param);
+                return String.valueOf(ubnt.getWireless().getPolling().getQuality());
+            }
+        }, new Parameter() {
+
+            @Override
+            public String getName() {
+                return "/ubiquiti-ap/wireless/noise_floor(*)";
             }
 
             @Override
@@ -107,21 +121,20 @@ public class LigowaveClient extends AbstractCollector {
 
             @Override
             public String getValue(String param) throws Exception {
-                Ligowave dlb;
-                dlb = getDlbObject(param);
-                Integer[] noise = dlb.getRemoteInformation()[0].getWireless().getNoise();
-                return String.valueOf(noise[0]);
+                Ubiquiti ubnt;
+                ubnt = getUbntObject(param);
+                return String.valueOf(ubnt.getWireless().getNoisef());
             }
         }, new Parameter() {
 
             @Override
             public String getName() {
-                return "/ligowave-client/wireless/rx_ccq_percent(*)";
+                return "/ubiquiti-ap/wireless/frequency(*)";
             }
 
             @Override
             public String getDescription() {
-                return "Wireless rx ccq percent";
+                return "Wireless frequency";
             }
 
             @Override
@@ -131,21 +144,22 @@ public class LigowaveClient extends AbstractCollector {
 
             @Override
             public String getValue(String param) throws Exception {
-                Ligowave dlb;
-                dlb = getDlbObject(param);
-                Integer rxCcq = dlb.getWirelessInformation().getPeers()[0].getRxCcqPercent();
-                return String.valueOf(rxCcq);
+                Ubiquiti ubnt;
+                ubnt = getUbntObject(param);
+                String frequency = ubnt.getWireless().getFrequency();
+                String[] split = frequency.split("\\s+");
+                return split[0].trim();
             }
         }, new Parameter() {
 
             @Override
             public String getName() {
-                return "/ligowave-client/wireless/rx_rate(*)";
+                return "/ubiquiti-ap/wireless/channel_width(*)";
             }
 
             @Override
             public String getDescription() {
-                return "Wireless rx rate";
+                return "Wireless channel width";
             }
 
             @Override
@@ -155,21 +169,20 @@ public class LigowaveClient extends AbstractCollector {
 
             @Override
             public String getValue(String param) throws Exception {
-                Ligowave dlb;
-                dlb = getDlbObject(param);
-                Integer rxRate = dlb.getWirelessInformation().getPeers()[0].getRxRate();
-                return String.valueOf(rxRate);
+                Ubiquiti ubnt;
+                ubnt = getUbntObject(param);
+                return String.valueOf(ubnt.getWireless().getChwidth());
             }
         }, new Parameter() {
 
             @Override
             public String getName() {
-                return "/ligowave-client/wireless/tx_ccq_percent(*)";
+                return "/ubiquiti-ap/wireless/transmit_ccq(*)";
             }
 
             @Override
             public String getDescription() {
-                return "Wireless tx ccq percent";
+                return "Wireless transmit ccq";
             }
 
             @Override
@@ -179,34 +192,9 @@ public class LigowaveClient extends AbstractCollector {
 
             @Override
             public String getValue(String param) throws Exception {
-                Ligowave dlb;
-                dlb = getDlbObject(param);
-                Integer rxCcq = dlb.getWirelessInformation().getPeers()[0].getTxCcqPercent();
-                return String.valueOf(rxCcq);
-            }
-        }, new Parameter() {
-
-            @Override
-            public String getName() {
-                return "/ligowave-client/wireless/tx_rate(*)";
-            }
-
-            @Override
-            public String getDescription() {
-                return "Wireless tx rate";
-            }
-
-            @Override
-            public ParameterType getType() {
-                return ParameterType.INT;
-            }
-
-            @Override
-            public String getValue(String param) throws Exception {
-                Ligowave dlb;
-                dlb = getDlbObject(param);
-                Integer txRate = dlb.getWirelessInformation().getPeers()[0].getTxRate();
-                return String.valueOf(txRate);
+                Ubiquiti ubnt;
+                ubnt = getUbntObject(param);
+                return String.valueOf(ubnt.getWireless().getCcq());
             }
         }};
     }

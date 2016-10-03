@@ -13,11 +13,11 @@ public class DataCollectorTest {
 
     private final String TEST_TEXT_4 = "/wifi/vap/something(\"1000.10000.10000.1000\")";
 
-    private LigowaveAp testingInstance;
+    private LigowaveApCollector testingInstance;
 
 //	@Before
 //	public void init() {
-//		this.testingInstance = new LigowaveAp(null);
+//		this.testingInstance = new LigowaveApCollector(null);
 //	}
 //
 //	@Test

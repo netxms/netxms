@@ -1,7 +1,7 @@
 package com.rfelements.workers;
 
 import com.rfelements.DeviceType;
-import com.rfelements.model.Access;
+import com.rfelements.model.DeviceCredentials;
 import org.netxms.agent.SubAgent;
 
 import java.util.HashMap;
@@ -30,24 +30,22 @@ public class WorkersProviderImpl implements WorkersProvider {
     }
 
     @Override
-    public void startNewWorker(Access access, DeviceType type) {
+    public void startNewWorker(DeviceCredentials deviceCredentials, DeviceType type) {
         if (!workers.containsKey(type)) {
-            SingleWorker worker = new SingleWorker(access, type);
+            SingleWorker worker = new SingleWorker(deviceCredentials, type);
             SubAgent.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
-                    " [" + this.getClass().getName() + "] Single worker created ! EntryPoint : " + type.toString() + "  URL : " + access.getProtocol()
-                    + access.getIp());
+                    " [" + this.getClass().getName() + "] Single worker created ! EntryPoint : " + type.toString() + "  URL : " + deviceCredentials.getUrl());
             HashMap<String, SingleWorker> hashMap = new HashMap<>();
-            hashMap.put(access.getIp(), worker);
+            hashMap.put(deviceCredentials.getIp(), worker);
             workers.put(type, hashMap);
             worker.start();
         } else {
             HashMap<String, SingleWorker> list = workers.get(type);
-            if (!list.containsKey(access.getIp())) {
-                SingleWorker worker = new SingleWorker(access, type);
+            if (!list.containsKey(deviceCredentials.getIp())) {
+                SingleWorker worker = new SingleWorker(deviceCredentials, type);
                 SubAgent.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
-                        " [" + this.getClass().getName() + "] Single worker created ! EntryPoint : " + type.toString() + "  URL : " + access
-                        .getProtocol() + access.getIp());
-                list.put(access.getIp(), worker);
+                        " [" + this.getClass().getName() + "] Single worker created ! EntryPoint : " + type.toString() + "  URL : " + deviceCredentials.getUrl());
+                list.put(deviceCredentials.getIp(), worker);
                 worker.start();
             }
         }

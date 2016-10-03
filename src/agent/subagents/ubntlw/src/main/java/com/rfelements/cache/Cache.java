@@ -1,6 +1,6 @@
 package com.rfelements.cache;
 
-import com.rfelements.model.Access;
+import com.rfelements.model.DeviceCredentials;
 
 /**
  * @author Pichanič Ján
@@ -9,9 +9,9 @@ public interface Cache {
 
     boolean containsAccess(String key);
 
-    Access getAccess(String key);
+    DeviceCredentials getAccess(String key);
 
-    Access putAccess(String key, Access access);
+    DeviceCredentials putAccess(String key, DeviceCredentials deviceCredentials);
 
     Object putJsonObject(String key, Object object);
 

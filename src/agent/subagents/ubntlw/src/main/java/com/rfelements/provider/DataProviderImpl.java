@@ -1,12 +1,13 @@
 package com.rfelements.provider;
 
 import com.rfelements.DeviceType;
+import com.rfelements.Protocol;
 import com.rfelements.cache.Cache;
 import com.rfelements.cache.CacheImpl;
 import com.rfelements.exception.CollectorException;
-import com.rfelements.externalization.ConfigReader;
-import com.rfelements.externalization.ConfigReaderImpl;
-import com.rfelements.model.Access;
+import com.rfelements.config.ConfigReader;
+import com.rfelements.config.ConfigReaderImpl;
+import com.rfelements.model.DeviceCredentials;
 import com.rfelements.model.json.ligowave.Ligowave;
 import com.rfelements.model.json.ubiquiti.Ubiquiti;
 import com.rfelements.workers.WorkersProvider;
@@ -49,15 +50,15 @@ public class DataProviderImpl implements DataProvider {
         if (this.config == null) {
             this.config = config;
             this.configReader.setConfig(config);
-            this.configReader.readExternalizatedVariables();
+            this.configReader.readSettings();
         }
     }
 
     @Override
-    public Ligowave getLigowaveObject(String protocol, String basicPath, String ip, DeviceType type) throws CollectorException {
-        Access access = configReader.getAccess(protocol, basicPath, ip);
-        this.workersProvider.startNewWorker(access, type);
-        Ligowave ligowave = (Ligowave) cache.getJsonObject(access.getIp());
+    public Ligowave getLigowaveObject(Protocol defaultProtocol, String basePath, String ip, DeviceType type) throws CollectorException {
+        DeviceCredentials deviceCredentials = configReader.getDeviceCredentials(defaultProtocol, basePath, ip);
+        this.workersProvider.startNewWorker(deviceCredentials, type);
+        Ligowave ligowave = (Ligowave) cache.getJsonObject(deviceCredentials.getIp());
         if (ligowave == null) {
             String message = "Value of ligowave JSON object in the cache, under key : " + ip + " , is NULL !";
             SubAgent.writeDebugLog(DEBUG_LEVEL, message);
@@ -67,10 +68,10 @@ public class DataProviderImpl implements DataProvider {
     }
 
     @Override
-    public Ubiquiti getUbiquitiObject(String protocol, String basicPath, String ip, DeviceType type) throws CollectorException {
-        Access access = configReader.getAccess(protocol, basicPath, ip);
-        this.workersProvider.startNewWorker(access, type);
-        Ubiquiti ubnt = (Ubiquiti) cache.getJsonObject(access.getIp());
+    public Ubiquiti getUbiquitiObject(Protocol defaultProtocol, String basePath, String ip, DeviceType type) throws CollectorException {
+        DeviceCredentials deviceCredentials = configReader.getDeviceCredentials(defaultProtocol, basePath, ip);
+        this.workersProvider.startNewWorker(deviceCredentials, type);
+        Ubiquiti ubnt = (Ubiquiti) cache.getJsonObject(deviceCredentials.getIp());
         if (ubnt == null) {
             String message = "Value of ubiquiti JSON object in the cache, under key : " + ip + " , is NULL !";
             SubAgent.writeDebugLog(DEBUG_LEVEL, message);

@@ -1,6 +1,6 @@
 package com.rfelements.cache;
 
-import com.rfelements.model.Access;
+import com.rfelements.model.DeviceCredentials;
 import org.netxms.agent.SubAgent;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,31 +30,31 @@ public class CacheImpl implements Cache {
     public boolean containsAccess(String key) {
         if (cache.containsKey(key)) {
             StorableItem store = (StorableItem) cache.get(key);
-            if (store.getAccess() != null)
+            if (store.getDeviceCredentials() != null)
                 return true;
         }
         return false;
     }
 
     @Override
-    public Access getAccess(String key) {
+    public DeviceCredentials getAccess(String key) {
         StorableItem store = (StorableItem) cache.get(key);
         if (store == null)
             return null;
-        return store.getAccess();
+        return store.getDeviceCredentials();
     }
 
     @Override
-    public Access putAccess(String key, Access access) {
+    public DeviceCredentials putAccess(String key, DeviceCredentials deviceCredentials) {
         if (!cache.containsKey(key)) {
             StorableItem store = new StorableItem();
-            store.setAccess(access);
+            store.setDeviceCredentials(deviceCredentials);
             cache.put(key, store);
         } else {
             StorableItem store = (StorableItem) cache.get(key);
-            store.setAccess(access);
+            store.setDeviceCredentials(deviceCredentials);
         }
-        return access;
+        return deviceCredentials;
     }
 
     @Override
@@ -107,16 +107,16 @@ public class CacheImpl implements Cache {
 
 class StorableItem {
 
-    private Access access;
+    private DeviceCredentials deviceCredentials;
 
     private Object jsonObject;
 
-    public Access getAccess() {
-        return access;
+    public DeviceCredentials getDeviceCredentials() {
+        return deviceCredentials;
     }
 
-    public void setAccess(Access access) {
-        this.access = access;
+    public void setDeviceCredentials(DeviceCredentials deviceCredentials) {
+        this.deviceCredentials = deviceCredentials;
     }
 
     public Object getJsonObject() {

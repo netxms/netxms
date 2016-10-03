@@ -83,7 +83,7 @@
                         <manifest>
                         </manifest>
                         <manifestEntries>
-                           <NetXMS-Plugin-Classname>com.rfelements.LigowaveAp;com.rfelements.LigowaveClient;com.rfelements.UbiquitiAp;com.rfelements.UbiquitiClient</NetXMS-Plugin-Classname>
+                           <NetXMS-Plugin-Classname>com.rfelements.LigowaveApCollector;com.rfelements.LigowaveClientCollector;com.rfelements.UbiquitiApCollector;com.rfelements.UbiquitiClientCollector</NetXMS-Plugin-Classname>
                         </manifestEntries>
                     </archive>
                     <descriptorRefs>

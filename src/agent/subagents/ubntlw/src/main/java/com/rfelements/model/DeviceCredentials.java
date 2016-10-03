@@ -1,11 +1,13 @@
 package com.rfelements.model;
 
+import com.rfelements.Protocol;
+
 /**
  * @author Pichanič Ján
  */
-public class Access {
+public class DeviceCredentials {
 
-    private String protocol;
+    private Protocol protocol;
 
     private String ip;
 
@@ -13,7 +15,7 @@ public class Access {
 
     private String password;
 
-    public Access(String protocol, String ip, String username, String password) {
+    public DeviceCredentials(Protocol protocol, String ip, String username, String password) {
         this.protocol = protocol;
         this.ip = ip;
         this.username = username;
@@ -44,11 +46,22 @@ public class Access {
         this.password = password;
     }
 
-    public String getProtocol() {
+    public Protocol getProtocol() {
         return protocol;
     }
 
-    public void setProtocol(String protocol) {
+    public void setProtocol(Protocol protocol) {
         this.protocol = protocol;
+    }
+
+    public String getUrl() {
+        switch (protocol) {
+            case HTTP:
+                return String.format("http://%s", ip);
+            case HTTPS:
+                return String.format("https://%s", ip);
+            default:
+                throw new RuntimeException("Invalid  protocol");
+        }
     }
 }

@@ -2,11 +2,11 @@ package com.rfelements.rest;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.rfelements.config.Settings;
 import com.rfelements.exception.CollectorException;
-import com.rfelements.externalization.ExternalConstants;
 import com.rfelements.gson.BooleanTypeAdapter;
 import com.rfelements.gson.StringTypeAdapter;
-import com.rfelements.model.Access;
+import com.rfelements.model.DeviceCredentials;
 import com.rfelements.model.json.ligowave.Ligowave;
 import com.rfelements.model.json.ubiquiti.Ubiquiti;
 import org.apache.http.HttpResponse;
@@ -51,9 +51,9 @@ public class Rest {
 
         SSLContextBuilder ctx = SSLContextBuilder.create();
         RequestConfig.Builder request = RequestConfig.custom();
-        request = request.setConnectTimeout(ExternalConstants.CONNECTION_TIMEOUT);
-        request = request.setConnectionRequestTimeout(ExternalConstants.REQUEST_TIMEOUT);
-        request = request.setSocketTimeout(ExternalConstants.SOCKET_TIMEOUT);
+        request = request.setConnectTimeout(Settings.CONNECTION_TIMEOUT);
+        request = request.setConnectionRequestTimeout(Settings.REQUEST_TIMEOUT);
+        request = request.setSocketTimeout(Settings.SOCKET_TIMEOUT);
 
         BasicCookieStore cs;
         if (cookiesStoreCache.get(ip) == null) {
@@ -82,15 +82,14 @@ public class Rest {
         return client;
     }
 
-    public static boolean loginUbiquiti(final Access access) throws CollectorException {
+    public static boolean loginUbiquiti(final DeviceCredentials deviceCredentials) throws CollectorException {
         SubAgent.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
-                " [" + Rest.class.getName() + "] [loginUbiquiti] Performing login against (ubiquiti) ip : " + access.getIp() + " , protocol : "
-                + access.getProtocol());
-        HttpClient client = initOrGetHttpClient(access.getIp());
+                " [" + Rest.class.getName() + "] [loginUbiquiti] Performing login against (ubiquiti) " + deviceCredentials.getUrl());
+        HttpClient client = initOrGetHttpClient(deviceCredentials.getIp());
 
-        HttpPost post = new HttpPost(access.getProtocol() + access.getIp() + "/login.cgi");
-        MultipartEntityBuilder builder = MultipartEntityBuilder.create().addTextBody("username", access.getUsername())
-                .addTextBody("password", access.getPassword());
+        HttpPost post = new HttpPost(deviceCredentials.getUrl() + "/login.cgi");
+        MultipartEntityBuilder builder = MultipartEntityBuilder.create().addTextBody("username", deviceCredentials.getUsername())
+                .addTextBody("password", deviceCredentials.getPassword());
         HttpResponse response = null;
         try {
             post.setEntity(builder.build());
@@ -99,11 +98,11 @@ public class Rest {
                 String responseStr = EntityUtils.toString(response.getEntity());
                 if (responseStr.contains("Invalid credentials.")) {
                     SubAgent.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
-                            " [" + Rest.class.getName() + "][loginUbiquiti] ip : " + access.getIp() + " , Failed to login. Invalid credentials");
+                            " [" + Rest.class.getName() + "][loginUbiquiti] ip : " + deviceCredentials.getIp() + " , Failed to login. Invalid credentials");
                     return false;
                 }
                 SubAgent.writeDebugLog(DEBUG_LEVEL_DETAILED,
-                        Thread.currentThread().getName() + " [" + Rest.class.getName() + "][loginUbiquiti][Ubiquiti] ip : " + access.getIp()
+                        Thread.currentThread().getName() + " [" + Rest.class.getName() + "][loginUbiquiti][Ubiquiti] ip : " + deviceCredentials.getIp()
                                 + " , Login has been successful !");
                 return true;
             }
@@ -118,18 +117,17 @@ public class Rest {
         return false;
     }
 
-    public static boolean loginLigowave(final Access access) throws CollectorException {
+    public static boolean loginLigowave(final DeviceCredentials deviceCredentials) throws CollectorException {
         SubAgent.writeDebugLog(DEBUG_LEVEL,
-                Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [loginLigowave] Performing login against (ligowave) ip : "
-                        + access.getIp() + " , protocol : " + access.getProtocol());
-        HttpClient client = initOrGetHttpClient(access.getIp());
+                Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [loginLigowave] Performing login against (ligowave): " + deviceCredentials.getUrl());
+        HttpClient client = initOrGetHttpClient(deviceCredentials.getIp());
 
-        HttpPost post = new HttpPost(access.getProtocol() + access.getIp() + "/cgi-bin/main.cgi/login");
+        HttpPost post = new HttpPost(deviceCredentials.getUrl() + "/cgi-bin/main.cgi/login");
         post.addHeader("Content-Type", "application/json");
         HttpResponse response = null;
         try {
             StringEntity entity = new StringEntity(
-                    "{\"username\":\"" + access.getUsername() + "\",\"password\":\"" + access.getPassword() + "\",\"language\":\"en_US\"}");
+                    "{\"username\":\"" + deviceCredentials.getUsername() + "\",\"password\":\"" + deviceCredentials.getPassword() + "\",\"language\":\"en_US\"}");
             entity.setContentType("application/json");
             entity.setContentEncoding("charset=utf-8");
             post.setEntity(entity);
@@ -138,8 +136,7 @@ public class Rest {
                 String responseStr = EntityUtils.toString(response.getEntity());
                 if (!responseStr.equals("{\"message\":\"Incorrect username or password\",\"status\":false}")) {
                     SubAgent.writeDebugLog(DEBUG_LEVEL, Thread.currentThread().getName() +
-                            " [" + Rest.class.getName() + "][loginLigowave] Login against : " + access.getProtocol() + access.getIp()
-                            + "/cgi-bin/main.cgi/login" + " has been successful");
+                            " [" + Rest.class.getName() + "][loginLigowave] Login against : " + deviceCredentials.getUrl() + "/cgi-bin/main.cgi/login" + " has been successful");
                     return true;
                 } else {
                     SubAgent.writeDebugLog(DEBUG_LEVEL_DETAILED, Thread.currentThread().getName() + " [" + Rest.class.getName()
@@ -158,12 +155,12 @@ public class Rest {
         return false;
     }
 
-    public static void getIndexSiteUbnt(Access access) throws CollectorException {
+    public static void getIndexSiteUbnt(DeviceCredentials deviceCredentials) throws CollectorException {
         SubAgent.writeDebugLog(DEBUG_LEVEL,
-                Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [getIndexSiteUbnt] ip : " + access.getIp()
-                        + " , Access to website to get cookies ... ");
-        HttpClient client = initOrGetHttpClient(access.getIp());
-        HttpGet get = new HttpGet(access.getProtocol() + access.getIp() + "/login.cgi");
+                Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [getIndexSiteUbnt] ip : " + deviceCredentials.getIp()
+                        + " , DeviceCredentials to website to get cookies ... ");
+        HttpClient client = initOrGetHttpClient(deviceCredentials.getIp());
+        HttpGet get = new HttpGet(deviceCredentials.getUrl() + "/login.cgi");
         HttpResponse response = null;
         try {
             response = client.execute(get);
@@ -189,34 +186,34 @@ public class Rest {
         }
     }
 
-    public static Ubiquiti updateUbiquitiJsonObject(Access access, int loginTries) throws CollectorException {
+    public static Ubiquiti updateUbiquitiJsonObject(DeviceCredentials deviceCredentials, int loginTries) throws CollectorException {
         SubAgent.writeDebugLog(DEBUG_LEVEL,
-                Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateUbiquitiJsonObject] ip : " + access.getIp()
+                Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateUbiquitiJsonObject] ip : " + deviceCredentials.getIp()
                         + " , Ubiquiti json object update started ...");
-        HttpClient client = initOrGetHttpClient(access.getIp());
+        HttpClient client = initOrGetHttpClient(deviceCredentials.getIp());
 
-        if (cookiesStoreCache.get(access.getIp()).getCookies().isEmpty()) {
-            getIndexSiteUbnt(access);
+        if (cookiesStoreCache.get(deviceCredentials.getIp()).getCookies().isEmpty()) {
+            getIndexSiteUbnt(deviceCredentials);
         }
 
-        HttpGet get = new HttpGet(access.getProtocol() + access.getIp() + "/status.cgi?_=" + new Date().getTime());
+        HttpGet get = new HttpGet(deviceCredentials.getUrl() + "/status.cgi?_=" + new Date().getTime());
         HttpResponse response = null;
         String responseStr = null;
         try {
             response = client.execute(get);
             SubAgent.writeDebugLog(DEBUG_LEVEL,
-                    Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateUbiquitiJsonObject] ip : " + access.getIp()
+                    Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateUbiquitiJsonObject] ip : " + deviceCredentials.getIp()
                             + " Update UBNT obj response code : " + response.getStatusLine().getStatusCode());
             responseStr = EntityUtils.toString(response.getEntity());
             if (!isJSONValid(responseStr)) {
-                //				getIndexSiteUbnt(access);
+                //				getIndexSiteUbnt(deviceCredentials);
                 if (loginTries <= 0)
                     return null;
-                loginUbiquiti(access);
-                return updateUbiquitiJsonObject(access, --loginTries);
+                loginUbiquiti(deviceCredentials);
+                return updateUbiquitiJsonObject(deviceCredentials, --loginTries);
             }
             SubAgent.writeDebugLog(DEBUG_LEVEL_DETAILED,
-                    Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateUbiquitiJsonObject] ip : " + access.getIp()
+                    Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateUbiquitiJsonObject] ip : " + deviceCredentials.getIp()
                             + " , response text : " + responseStr);
         } catch (IOException e) {
             SubAgent.writeLog(SubAgent.LogLevel.ERROR,
@@ -239,30 +236,30 @@ public class Rest {
         return ubnt;
     }
 
-    public static Ligowave updateLigowaveJsonObject(Access access, int loginTries) throws CollectorException {
+    public static Ligowave updateLigowaveJsonObject(DeviceCredentials deviceCredentials, int loginTries) throws CollectorException {
         SubAgent.writeDebugLog(DEBUG_LEVEL,
-                Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] ip : " + access.getIp()
+                Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] ip : " + deviceCredentials.getIp()
                         + " , Ligowave json object update started ...");
-        HttpClient client = initOrGetHttpClient(access.getIp());
+        HttpClient client = initOrGetHttpClient(deviceCredentials.getIp());
 
-        HttpGet get = new HttpGet(access.getProtocol() + access.getIp() + "/cgi-bin/main.cgi/status");
+        HttpGet get = new HttpGet(deviceCredentials.getUrl() + "/cgi-bin/main.cgi/status");
         HttpResponse response = null;
         String responseStr = null;
         try {
             response = client.execute(get);
             SubAgent.writeDebugLog(DEBUG_LEVEL,
-                    Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] ip : " + access.getIp()
+                    Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] ip : " + deviceCredentials.getIp()
                             + " Update ligowave obj response code : " + response.getStatusLine().getStatusCode());
             if (response.getStatusLine().getStatusCode() != 200) {
                 EntityUtils.consumeQuietly(response.getEntity());
                 if (loginTries <= 0)
                     return null;
-                loginLigowave(access);
-                return updateLigowaveJsonObject(access, --loginTries);
+                loginLigowave(deviceCredentials);
+                return updateLigowaveJsonObject(deviceCredentials, --loginTries);
             }
             responseStr = EntityUtils.toString(response.getEntity());
             SubAgent.writeDebugLog(DEBUG_LEVEL_DETAILED,
-                    Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] ip : " + access.getIp()
+                    Thread.currentThread().getName() + " [" + Rest.class.getName() + "] [updateLigowaveJsonObject] ip : " + deviceCredentials.getIp()
                             + " , response text : " + responseStr);
         } catch (IOException e) {
             SubAgent.writeLog(SubAgent.LogLevel.ERROR,

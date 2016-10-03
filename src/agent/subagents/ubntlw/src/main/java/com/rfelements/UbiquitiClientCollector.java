@@ -8,11 +8,11 @@ import org.netxms.agent.ParameterType;
 /**
  * @author Pichanič Ján
  */
-public class UbiquitiClient extends AbstractCollector {
+public class UbiquitiClientCollector extends AbstractCollector {
 
-    public UbiquitiClient(Config config) {
+    public UbiquitiClientCollector(Config config) {
         super(config, DeviceType.UBIQUITI_CLIENT);
-        super.basicPath = "/ubiquiti-client/";
+        super.basePath = "/ubiquiti-client/";
         super.protocol = Protocol.HTTPS;
         super.config = config;
     }
@@ -20,11 +20,6 @@ public class UbiquitiClient extends AbstractCollector {
     @Override
     public String getName() {
         return "ubiquiti-client";
-    }
-
-    @Override
-    public String getVersion() {
-        return VERSION;
     }
 
     @Override
