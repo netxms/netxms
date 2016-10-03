@@ -7,11 +7,11 @@ import com.rfelements.model.DeviceCredentials;
  */
 public interface Cache {
 
-    boolean containsAccess(String key);
+    boolean hasDeviceCredentials(String key);
 
-    DeviceCredentials getAccess(String key);
+    DeviceCredentials getDeviceCredentials(String key);
 
-    DeviceCredentials putAccess(String key, DeviceCredentials deviceCredentials);
+    DeviceCredentials putDeviceCredentials(String key, DeviceCredentials deviceCredentials);
 
     Object putJsonObject(String key, Object object);
 

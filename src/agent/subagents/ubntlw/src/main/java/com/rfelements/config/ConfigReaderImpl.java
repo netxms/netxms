@@ -4,8 +4,6 @@ import com.rfelements.Logger;
 import com.rfelements.Protocol;
 import com.rfelements.cache.Cache;
 import com.rfelements.cache.CacheImpl;
-import com.rfelements.config.ConfigReader;
-import com.rfelements.config.Settings;
 import com.rfelements.exception.CollectorException;
 import com.rfelements.model.DeviceCredentials;
 import org.netxms.agent.Config;
@@ -69,9 +67,19 @@ public class ConfigReaderImpl implements ConfigReader {
             log.e("[getDeviceCredentials] Config is NULL");
             throw new CollectorException("Config is NULL");
         }
-        String key = defaultProtocol + ip + basePath;
-        if (cache.containsAccess(key)) {
-            return cache.getAccess(key);
+        String key;
+        switch (defaultProtocol) {
+            case HTTP:
+                key = "http://";
+                break;
+            default:
+                key = "https://";
+                break;
+        }
+        key += ip + basePath;
+
+        if (cache.hasDeviceCredentials(key)) {
+            return cache.getDeviceCredentials(key);
         }
 
         String credentials = config.getValue(basePath + ip, "");
@@ -80,10 +88,30 @@ public class ConfigReaderImpl implements ConfigReader {
             throw new CollectorException("Device IP not found in config file");
         }
 
-        log.i("[getAccess] Accessing entry point " + defaultProtocol + ip + basePath + " , result : " + credentials + "");
+        DeviceCredentials deviceCredentials;
+        Protocol protocol = defaultProtocol;
+        log.i("[getDeviceCredentials] Accessing entry point " + defaultProtocol + ip + basePath + " , result : " + credentials + "");
         String[] split = credentials.split(":");
-        DeviceCredentials access = new DeviceCredentials(defaultProtocol, ip, split[0], split[1]);
-        cache.putAccess(key, access);
-        return access;
+        switch (split.length) {
+            case 3:
+                if ("http".equalsIgnoreCase(split[2])) {
+                    protocol = Protocol.HTTP;
+                } else if ("https".equalsIgnoreCase(split[2])) {
+                    protocol = Protocol.HTTPS;
+                }
+            case 2:
+                final String login = split[0];
+                final String password = split[1];
+
+                deviceCredentials = new DeviceCredentials(protocol, ip, login, password);
+                break;
+
+            default:
+                log.e("Invalid credentials in config file (login and password should be separated by ':')");
+                throw new CollectorException("Invalid credentials in config file (login and password should be separated by ':')");
+        }
+
+        cache.putDeviceCredentials(key, deviceCredentials);
+        return deviceCredentials;
     }
 }

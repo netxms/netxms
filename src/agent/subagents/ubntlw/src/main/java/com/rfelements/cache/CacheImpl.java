@@ -27,7 +27,7 @@ public class CacheImpl implements Cache {
     }
 
     @Override
-    public boolean containsAccess(String key) {
+    public boolean hasDeviceCredentials(String key) {
         if (cache.containsKey(key)) {
             StorableItem store = (StorableItem) cache.get(key);
             if (store.getDeviceCredentials() != null)
@@ -37,7 +37,7 @@ public class CacheImpl implements Cache {
     }
 
     @Override
-    public DeviceCredentials getAccess(String key) {
+    public DeviceCredentials getDeviceCredentials(String key) {
         StorableItem store = (StorableItem) cache.get(key);
         if (store == null)
             return null;
@@ -45,7 +45,7 @@ public class CacheImpl implements Cache {
     }
 
     @Override
-    public DeviceCredentials putAccess(String key, DeviceCredentials deviceCredentials) {
+    public DeviceCredentials putDeviceCredentials(String key, DeviceCredentials deviceCredentials) {
         if (!cache.containsKey(key)) {
             StorableItem store = new StorableItem();
             store.setDeviceCredentials(deviceCredentials);
