@@ -440,6 +440,49 @@ static int F_GetNodeInterfaces(int argc, NXSL_Value **argv, NXSL_Value **ppResul
 }
 
 /**
+ * Get all nodes
+ * Returns array of accessible node objects
+ * (empty array if trusted nodes check is on and current node not provided)
+ */
+static int F_GetAllNodes(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
+{
+   if (argc > 1)
+      return NXSL_ERR_INVALID_ARGUMENT_COUNT;
+
+   Node *node = NULL;
+   if (argc > 0)
+   {
+      if (!argv[0]->isObject())
+         return NXSL_ERR_NOT_OBJECT;
+
+      NXSL_Object *object = argv[0]->getValueAsObject();
+      if (_tcscmp(object->getClass()->getName(), g_nxslNodeClass.getName()))
+         return NXSL_ERR_BAD_CLASS;
+
+      node = (Node *)object->getData();
+   }
+
+   NXSL_Array *a = new NXSL_Array;
+   if (!(g_flags & AF_CHECK_TRUSTED_NODES) || (node != NULL))
+   {
+      ObjectArray<NetObj> *nodes = g_idxNodeById.getObjects(true);
+      int index = 0;
+      for(int i = 0; i < nodes->size(); i++)
+      {
+         Node *n = (Node *)nodes->get(i);
+         if ((node == NULL) || n->isTrustedNode(node->getId()))
+         {
+            a->set(index++, n->createNXSLObject());
+         }
+         n->decRefCount();
+      }
+      delete nodes;
+   }
+   *ppResult = new NXSL_Value(a);
+   return 0;
+}
+
+/**
  * Get event's named parameter
  * First argument: event object
  * Second argument: parameter's name
@@ -1461,6 +1504,7 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("CurrencyName"), F_CurrencyName, 1 },
 	{ _T("DeleteCustomAttribute"), F_DeleteCustomAttribute, 2 },
    { _T("EnterMaintenance"), F_EnterMaintenance, 1 },
+   { _T("GetAllNodes"), F_GetAllNodes, -1 },
    { _T("GetConfigurationVariable"), F_GetConfigurationVariable, -1 },
    { _T("GetCustomAttribute"), F_GetCustomAttribute, 2 },
    { _T("GetEventParameter"), F_GetEventParameter, 2 },

@@ -1720,19 +1720,7 @@ NXSL_Array *NetObj::getChildrenForNXSL()
 	lockChildList(false);
 	for(int i = 0; i < m_childList->size(); i++)
 	{
-	   NetObj *obj = m_childList->get(i);
-		if (obj->getObjectClass() == OBJECT_NODE)
-		{
-			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNodeClass, obj)));
-		}
-		else if (obj->getObjectClass() == OBJECT_INTERFACE)
-		{
-			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslInterfaceClass, obj)));
-		}
-		else
-		{
-			children->set(index++, new NXSL_Value(new NXSL_Object(&g_nxslNetObjClass, obj)));
-		}
+      children->set(index++, m_childList->get(i)->createNXSLObject());
 	}
 	unlockChildList();
 
