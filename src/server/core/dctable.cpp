@@ -354,8 +354,7 @@ bool DCTable::processNewValue(time_t timestamp, const void *value, bool *updateS
          return true;
       }
 
-      INT64 recordId = ((INT64)timestamp << 30) | (((INT64)tableId & 0xFFFF) << 14);
-      BOOL success = FALSE;
+      bool success = false;
 	   Table *data = (Table *)value;
 
 	   TCHAR query[256];

@@ -128,34 +128,34 @@ void InitLibvirt()
 static BOOL SubagentInit(Config *config)
 {
 	// Parse configuration
-	bool success = config->parseTemplate(_T("VMGR"), m_cfgTemplate);
-	if (success)
-	{
-		if (s_hostList != NULL)
-		{
-         TCHAR *item, *itemEnd;
-         for(item = s_hostList; *item != 0; item = itemEnd + 1)
-         {
-            itemEnd = _tcschr(item, _T('\n'));
-            if (itemEnd != NULL)
-               *itemEnd = 0;
-            StrStrip(item);
-            AddHostConfiguraiton(item, config);
-         }
-		}
+   if (!config->parseTemplate(_T("VMGR"), m_cfgTemplate))
+      return FALSE;
 
-		if(s_hostList == NULL || g_connectionList.size() == 0)
+   if (s_hostList != NULL)
+	{
+      TCHAR *item, *itemEnd;
+      for(item = itemEnd = s_hostList; (*item != 0) && (itemEnd != NULL); item = itemEnd + 1)
       {
-         AgentWriteLog(NXLOG_ERROR,
-               _T("VMGR: No connection URL found. Vmgr subagent will not be started."));
-         success = false;
+         itemEnd = _tcschr(item, _T('\n'));
+         if (itemEnd != NULL)
+            *itemEnd = 0;
+         StrStrip(item);
+         AddHostConfiguraiton(item, config);
       }
-	}
+   }
+
+   if (s_hostList == NULL || g_connectionList.size() == 0)
+   {
+      AgentWriteLog(NXLOG_ERROR, _T("VMGR: No connection URL found. Vmgr subagent will not be started."));
+      free(s_hostList);
+      return FALSE;
+   }
+
 	free(s_hostList);
 	InitLibvirt();
 
    AgentWriteDebugLog(2, _T("VMGR: subagent initialized"));
-   return success;
+   return TRUE;
 }
 
 /**
