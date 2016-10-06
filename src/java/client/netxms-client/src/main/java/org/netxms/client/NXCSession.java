@@ -986,6 +986,7 @@ public class NXCSession
                }
             }
          }
+         cachedListenerList = null;
       }
    }
 
