@@ -6738,7 +6738,7 @@ void Node::checkSubnetBinding()
       {
          InetAddress addr(m_ipAddress);
          addr.setMaskBits((addr.getFamily() == AF_INET) ? ConfigReadInt(_T("DefaultSubnetMaskIPv4"), 24) : ConfigReadInt(_T("DefaultSubnetMaskIPv6"), 64));
-		   pSubnet = createSubnet(addr, true);
+		   createSubnet(addr, true);
       }
    }
 
