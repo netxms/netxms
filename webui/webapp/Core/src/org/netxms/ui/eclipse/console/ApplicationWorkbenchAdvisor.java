@@ -189,6 +189,8 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 			final NXCSession session = (NXCSession)RWT.getUISession().getAttribute(ConsoleSharedData.ATTRIBUTE_SESSION);
          final Display display = Display.getCurrent();
          session.addListener(new SessionListener() {
+            private final Object MONITOR = new Object();
+            
             @Override
             public void notificationHandler(final SessionNotification n)
             {
@@ -196,7 +198,7 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
 				    (n.getCode() == SessionNotification.SERVER_SHUTDOWN) ||
 				    (n.getCode() == SessionNotification.SESSION_KILLED))
                {
-                  display.syncExec(new Runnable() {
+                  display.asyncExec(new Runnable() {
                      @Override
                      public void run()
                      {
@@ -220,8 +222,24 @@ public class ApplicationWorkbenchAdvisor extends WorkbenchAdvisor
                                  "</p><br/>" + 
                                  "<button style=\"margin-left: 30px\" onclick=\"location.reload(true)\">RELOAD</button>" + 
                                  "</div>';");
+                        
+                        synchronized(MONITOR)
+                        {
+                           MONITOR.notifyAll();
+                        }
                      }
                   });
+
+                  synchronized(MONITOR)
+                  {
+                     try
+                     {
+                        MONITOR.wait(5000);
+                     }
+                     catch(InterruptedException e)
+                     {
+                     }
+                  }
                   ((UISessionImpl)RWT.getUISession(display)).shutdown();
                }
             }
