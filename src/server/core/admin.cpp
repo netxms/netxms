@@ -159,6 +159,7 @@ THREAD_RESULT THREAD_CALL LocalAdminListener(void *pArg)
             errorCount = 0;
          }
          ThreadSleepMs(500);
+         continue;
       }
 
       errorCount = 0;     // Reset consecutive errors counter
