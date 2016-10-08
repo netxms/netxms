@@ -1,8 +1,10 @@
 #!/bin/sh
 
-export MAVEN_OPTS='-Xmx512m'
-
 set -e
+
+unset CDPATH cdpath
+
+export MAVEN_OPTS='-Xmx512m'
 
 cd netxms-base && mvn clean install javadoc:jar && cd ..
 cd netxms-client && mvn clean install javadoc:jar && cd ..
