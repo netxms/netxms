@@ -49,13 +49,13 @@ public final class Bind9Plugin extends Plugin {
                     "in 'bind9' section of Agent configuration");
         }
 
-        this.collector = Collector.builder()
-                .statsFile(Paths.get(statsFile))
-                .collectionInterval(collectionInterval)
-                .supportedParameters(supportedParameters)
-                .result(collectionResult)
-                .dataCollectionLock(dataCollectionLock)
-                .build();
+        this.collector = new Collector(
+                collectionInterval,
+                Paths.get(statsFile),
+                supportedParameters,
+                collectionResult,
+                dataCollectionLock
+        );
 
         this.collectionThread = new Thread(collector);
     }

@@ -10,16 +10,9 @@
 
     <properties>
         <java.version>1.7</java.version>
-        <lombok.version>1.16.10</lombok.version>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.netxms</groupId>
             <artifactId>netxms-agent</artifactId>

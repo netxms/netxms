@@ -1,7 +1,5 @@
 package com.github.tomaskir.netxms.subagents.bind9;
 
-import lombok.Getter;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,8 +15,12 @@ import java.util.List;
  */
 public final class Parameters {
 
-    @Getter
     private final List<String[]> list = new ArrayList<>();
+
+    // getter
+    public List<String[]> getList() {
+        return list;
+    }
 
     // constructor
     Parameters() {

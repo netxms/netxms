@@ -1,8 +1,5 @@
 package com.github.tomaskir.netxms.subagents.bind9.collection;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,11 +9,23 @@ import java.util.Map;
  */
 public final class CollectionResult {
 
-    @Getter
-    @Setter
     private boolean collectionError = true;
 
-    @Getter
     private final Map<String, String> result = new HashMap<>();
+
+    // getter
+    public boolean isCollectionError() {
+        return collectionError;
+    }
+
+    // setter
+    public void setCollectionError(boolean collectionError) {
+        this.collectionError = collectionError;
+    }
+
+    // getter
+    public Map<String, String> getResult() {
+        return result;
+    }
 
 }

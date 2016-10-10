@@ -2,7 +2,6 @@ package com.github.tomaskir.netxms.subagents.bind9.collection;
 
 import com.github.tomaskir.netxms.subagents.bind9.Parameters;
 import com.github.tomaskir.netxms.subagents.bind9.exceptions.StatsFileRemovalException;
-import lombok.Builder;
 import org.netxms.agent.SubAgent;
 
 import java.io.IOException;
@@ -29,7 +28,6 @@ public final class Collector implements Runnable {
     private boolean threadRunning = true;
 
     // constructor
-    @Builder
     public Collector(long collectionInterval, Path statsFile, Parameters supportedParameters,
                      CollectionResult result, ReadWriteLock dataCollectionLock) {
         this.collectionInterval = collectionInterval;
