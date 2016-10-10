@@ -195,7 +195,7 @@ static NETXMS_SUBAGENT_PARAM s_parameters[] =
    { _T("VMGR.VM.Memory.Used(*)"), H_GetVMInfoAsParam, _T("U"), DCI_DT_UINT64, _T("Memory currently used by VM") },
    { _T("VMGR.VM.Memory.UsedPrec(*)"), H_GetVMInfoAsParam, _T("P"), DCI_DT_UINT, _T("Percentage of currently memory usage by VM") },
    { _T("VMGR.VM.Memory.Max(*)"), H_GetVMInfoAsParam, _T("M"), DCI_DT_UINT64, _T("Maximum VM available memory") },
-   { _T("VMGR.VM.CPU.Time(*)"), H_GetVMInfoAsParam, _T("C"), DCI_DT_UINT64, _T("Maximum VM available memory") }
+   { _T("VMGR.VM.CPU.Time(*)"), H_GetVMInfoAsParam, _T("C"), DCI_DT_UINT64, _T("Maximum VM CPU time") }
 };
 
 /**
