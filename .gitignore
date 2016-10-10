@@ -119,6 +119,9 @@ target
 /src/agent/core/nxagentd
 /src/agent/core/static_subagents.cpp
 /src/agent/install/Output
+/src/agent/subagents/bind9/.classpath
+/src/agent/subagents/bind9/.project
+/src/agent/subagents/bind9/.settings
 /src/agent/subagents/java/java/.classpath
 /src/agent/subagents/java/java/.project
 /src/agent/subagents/java/java/.settings
