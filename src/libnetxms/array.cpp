@@ -1,4 +1,4 @@
-/* 
+/*
 ** NetXMS - Network Management System
 ** NetXMS Foundation Library
 ** Copyright (C) 2003-2012 Victor Kirhenshtein
@@ -69,6 +69,21 @@ Array::Array(void *data, int initial, int grow, size_t elementSize)
 	m_objectOwner = false;
 	m_objectDestructor = ObjectDestructor;
    m_storePointers = false;
+}
+
+/**
+ * Copy constructor
+ */
+Array::Array(const Array *src)
+{
+	m_size = src->m_size;
+	m_grow = src->m_grow;
+	m_allocated = src->m_allocated;
+   m_elementSize = src->m_elementSize;
+	m_data = (src->m_data != NULL) ? (void **)nx_memdup(src->m_data, m_elementSize * m_allocated) : NULL;
+	m_objectOwner = src->m_objectOwner;
+	m_objectDestructor = src->m_objectDestructor;
+   m_storePointers = src->m_storePointers;
 }
 
 /**

@@ -97,13 +97,22 @@ public class AlarmNotifier
          {
             if ((n.getCode() == SessionNotification.NEW_ALARM) || (n.getCode() == SessionNotification.ALARM_CHANGED))
             {
-               display.asyncExec(new Runnable() {
-                  @Override
-                  public void run()
+               processNewAlarm((Alarm)n.getObject());
+            }
+            else if ((n.getCode() == SessionNotification.ALARM_TERMINATED) || (n.getCode() == SessionNotification.ALARM_DELETED))
+            {               
+               @SuppressWarnings("unchecked")
+               List<Long> alarmIds = (List<Long>)n.getObject();
+               for(int i = 0; i < alarmIds.size(); i++)
+               {
+                  Integer state = alarmStates.get(alarmIds.get(i));
+                  if (state != null)
                   {
-                     processNewAlarm((Alarm)n.getObject());
+                     if (state == Alarm.STATE_OUTSTANDING)
+                        outstandingAlarms--;
+                     alarmStates.remove((alarmIds.get(i)));
                   }
-               });
+               }
             }
          }
       };

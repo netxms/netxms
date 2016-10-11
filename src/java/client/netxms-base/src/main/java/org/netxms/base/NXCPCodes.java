@@ -358,6 +358,7 @@ public class NXCPCodes
    public static final int CMD_ADD_REPOSITORY = 0x0150;
    public static final int CMD_MODIFY_REPOSITORY = 0x0151;
    public static final int CMD_DELETE_REPOSITORY = 0x0152;
+   public static final int CMD_ALARM_BULK_TERMINATE = 0x0153;
 
 	// CMD_RS_ - Reporting Server related codes
 	public static final int CMD_RS_LIST_REPORTS = 0x1100;
@@ -924,6 +925,9 @@ public class NXCPCodes
    public static final long VID_MESSAGE_LENGTH = 550;
    public static final long VID_LDAP_DN = 551;
    public static final long VID_LDAP_ID = 552;
+   public static final long VID_ACCESS_RIGHT_FAIL = 553;
+   public static final long VID_OPEN_IN_HELPDESK = 554;
+   public static final long VID_ID_CHECK_FAIL = 555;
 
 	public static final long VID_ACL_USER_BASE = 0x00001000L;
 	public static final long VID_ACL_USER_LAST = 0x00001FFFL;
@@ -1019,4 +1023,5 @@ public class NXCPCodes
    public static final long VID_SCHEDULE_LIST_BASE = 0x10000000L;
    public static final long VID_CALLBACK_BASE= 0x10000000L;
    public static final long VID_ZMQ_SUBSCRIPTION_BASE= 0x10000000L;
+   public static final long VID_ALARM_BULK_TERMINATE_BASE = 0x10000000L;
 }

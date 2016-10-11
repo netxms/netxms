@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -103,13 +104,18 @@ public class AlarmNotifier
                processNewAlarm((Alarm)n.getObject());
             }
             else if ((n.getCode() == SessionNotification.ALARM_TERMINATED) || (n.getCode() == SessionNotification.ALARM_DELETED))
-            {
-               Integer state = alarmStates.get(((Alarm)n.getObject()).getId());
-               if (state != null)
+            {               
+               @SuppressWarnings("unchecked")
+               List<Long> alarmIds = (List<Long>)n.getObject();
+               for(int i = 0; i < alarmIds.size(); i++)
                {
-                  if (state == Alarm.STATE_OUTSTANDING)
-                     outstandingAlarms--;
-                  alarmStates.remove(((Alarm)n.getObject()).getId());
+                  Integer state = alarmStates.get(alarmIds.get(i));
+                  if (state != null)
+                  {
+                     if (state == Alarm.STATE_OUTSTANDING)
+                        outstandingAlarms--;
+                     alarmStates.remove((alarmIds.get(i)));
+                  }
                }
             }
          }

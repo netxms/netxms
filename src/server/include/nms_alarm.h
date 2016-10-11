@@ -115,8 +115,8 @@ void DeleteAlarmEvents(DB_HANDLE hdb, UINT32 alarmId);
 UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 dwAlarmId, NXCPMessage *msg);
 ObjectArray<Alarm> NXCORE_EXPORTABLE *GetAlarms(UINT32 objectId);
 UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 dwAlarmId, NXCPMessage *msg);
-NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 dwAlarmId);
-NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(const TCHAR *hdref);  
+NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 dwAlarmId, bool alreadyLocked = false);
+NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(const TCHAR *hdref);
 int GetMostCriticalStatusForObject(UINT32 dwObjectId);
 void GetAlarmStats(NXCPMessage *pMsg);
 
@@ -124,7 +124,8 @@ void NXCORE_EXPORTABLE CreateNewAlarm(TCHAR *message, TCHAR *key, int state, int
 									           UINT32 timeoutEvent, Event *event, UINT32 ackTimeout);
 UINT32 NXCORE_EXPORTABLE AckAlarmById(UINT32 dwAlarmId, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
 UINT32 NXCORE_EXPORTABLE AckAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool sticky, UINT32 acknowledgmentActionTime);
-UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 dwAlarmId, ClientSession *session, bool terminate);
+UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 dwAlarmId, NXCPMessage *msg, ClientSession *session, bool terminate);
+UINT32 NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, NXCPMessage *msg, ClientSession *session, bool terminate);
 void NXCORE_EXPORTABLE ResolveAlarmByKey(const TCHAR *pszKey, bool useRegexp, bool terminate, Event *pEvent);
 UINT32 NXCORE_EXPORTABLE ResolveAlarmByHDRef(const TCHAR *hdref, ClientSession *session, bool terminate);
 void NXCORE_EXPORTABLE DeleteAlarm(UINT32 dwAlarmId, bool objectCleanup);

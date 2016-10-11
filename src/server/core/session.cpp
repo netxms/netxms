@@ -965,7 +965,7 @@ void ClientSession::processingThread()
             resolveAlarm(pMsg, false);
             break;
          case CMD_TERMINATE_ALARM:
-            resolveAlarm(pMsg, true);
+            terminateBulkAlarms(pMsg);
             break;
          case CMD_DELETE_ALARM:
             deleteAlarm(pMsg);
@@ -5625,6 +5625,24 @@ void ClientSession::acknowledgeAlarm(NXCPMessage *pRequest)
 }
 
 /**
+ * Terminate bulk alarms
+ */
+void ClientSession::terminateBulkAlarms(NXCPMessage *pRequest)
+{
+   NXCPMessage msg;
+
+   // Prepare response mesage
+   msg.setCode(CMD_REQUEST_COMPLETED);
+   msg.setId(pRequest->getId());
+
+   IntegerArray<UINT32> alarmIds;
+   pRequest->getFieldAsInt32Array(VID_ALARM_ID, &alarmIds);
+   msg.setField(VID_RCC, ResolveAlarmsById(&alarmIds, &msg, this, true));
+
+   sendMessage(&msg);
+}
+
+/**
  * Resolve/Terminate alarm
  */
 void ClientSession::resolveAlarm(NXCPMessage *pRequest, bool terminate)
@@ -5635,7 +5653,7 @@ void ClientSession::resolveAlarm(NXCPMessage *pRequest, bool terminate)
    msg.setCode(CMD_REQUEST_COMPLETED);
    msg.setId(pRequest->getId());
 
-   // Get alarm id and it's source object
+   // Get alarm id and its source object
    UINT32 alarmId;
    TCHAR hdref[MAX_HELPDESK_REF_LEN];
    NetObj *object;
@@ -5660,7 +5678,7 @@ void ClientSession::resolveAlarm(NXCPMessage *pRequest, bool terminate)
          msg.setField(VID_RCC,
             byHelpdeskRef ?
             ResolveAlarmByHDRef(hdref, this, terminate) :
-            ResolveAlarmById(alarmId, this, terminate));
+            ResolveAlarmById(alarmId, &msg, this, terminate));
       }
       else
       {

@@ -561,6 +561,7 @@ private:
    void getAlarm(NXCPMessage *request);
    void getAlarmEvents(NXCPMessage *request);
    void acknowledgeAlarm(NXCPMessage *request);
+   void terminateBulkAlarms(NXCPMessage *pRequest);
    void resolveAlarm(NXCPMessage *request, bool terminate);
    void deleteAlarm(NXCPMessage *request);
    void openHelpdeskIssue(NXCPMessage *request);

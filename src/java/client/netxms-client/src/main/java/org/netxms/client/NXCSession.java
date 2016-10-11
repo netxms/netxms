@@ -481,6 +481,9 @@ public class NXCSession
                   case NXCPCodes.CMD_ABORT_FILE_TRANSFER:
                      processFileTransferError(msg);
                      break;
+                  case NXCPCodes.CMD_ALARM_BULK_TERMINATE:
+                     processAlarmBulkTerminateNotification(msg);
+                     break;
                   case NXCPCodes.CMD_NOTIFY:
                      processNotificationMessage(msg, true);
                      break;
@@ -627,6 +630,26 @@ public class NXCSession
             SyslogRecord record = new SyslogRecord(msg, varId);
             sendNotification(new SessionNotification(SessionNotification.NEW_SYSLOG_RECORD, order, record));
          }
+      }
+      
+      
+      /**
+       * Process CMD_ALARM_BULK_TERMINATE termination message
+       * @param msg NXCP message
+       */
+      private void processAlarmBulkTerminateNotification(final NXCPMessage msg)
+      {
+         int code = msg.getFieldAsInt32(NXCPCodes.VID_NOTIFICATION_CODE);
+         code += SessionNotification.NOTIFY_BASE;
+         int numAlarms = msg.getFieldAsInt32(NXCPCodes.VID_NUM_RECORDS);
+         long base = NXCPCodes.VID_ALARM_BULK_TERMINATE_BASE;
+         List<Long> alarmIds = new ArrayList<Long>();
+         for(int i = 0; i < numAlarms; i++, base++)
+         {
+            alarmIds.add(msg.getFieldAsInt64(base));
+         }
+         
+         sendNotification(new SessionNotification(code, alarmIds));
       }
 
       /**
@@ -2891,6 +2914,44 @@ public class NXCSession
       msg.setFieldInt32(NXCPCodes.VID_ALARM_ID, (int) alarmId);
       sendMessage(msg);
       waitForRCC(msg.getMessageId());
+   }
+   
+   /**
+    * Terminate bulk alarms.
+    *
+    * @param alarmIds Identifier of alarms to be terminated.
+    * @throws IOException  if socket I/O error occurs
+    * @throws NXCException if NetXMS server returns an error or operation was timed out
+    * @return true if all alarms were terminated, false if some, or all, were not terminated
+    */
+   public boolean terminateBulkAlarms(final long[] alarmIds, List<Long> accessRightFail, List<Long> openInHelpdesk, List<Long> idCheckFail) throws IOException, NXCException
+   {
+      boolean result = true;
+      NXCPMessage msg = newMessage(NXCPCodes.CMD_TERMINATE_ALARM);
+      msg.setField(NXCPCodes.VID_ALARM_ID, alarmIds);
+      sendMessage(msg);
+      final NXCPMessage response = waitForRCC(msg.getMessageId());
+      
+      if (response.findField(NXCPCodes.VID_ACCESS_RIGHT_FAIL) != null)
+      {
+         for(Long id : response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ACCESS_RIGHT_FAIL))
+            accessRightFail.add(id);
+         result = false;
+      }
+      if (response.findField(NXCPCodes.VID_OPEN_IN_HELPDESK) != null)
+      {
+         for(Long id : response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_OPEN_IN_HELPDESK))
+            openInHelpdesk.add(id);
+         result = false;
+      }
+      if (response.findField(NXCPCodes.VID_ID_CHECK_FAIL) != null)
+      {
+         for(Long id : response.getFieldAsUInt32ArrayEx(NXCPCodes.VID_ID_CHECK_FAIL))
+            idCheckFail.add(id);
+         result = false;
+      }      
+      
+      return result;
    }
 
    /**

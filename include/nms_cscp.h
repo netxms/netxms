@@ -569,6 +569,7 @@ typedef struct
 #define CMD_ADD_REPOSITORY             0x0150
 #define CMD_MODIFY_REPOSITORY          0x0151
 #define CMD_DELETE_REPOSITORY          0x0152
+#define CMD_ALARM_BULK_TERMINATE       0x0153
 
 #define CMD_RS_LIST_REPORTS            0x1100
 #define CMD_RS_GET_REPORT              0x1101
@@ -1136,6 +1137,9 @@ typedef struct
 #define VID_MESSAGE_LENGTH          ((UINT32)550)
 #define VID_LDAP_DN                 ((UINT32)551)
 #define VID_LDAP_ID                 ((UINT32)552)
+#define VID_ACCESS_RIGHT_FAIL       ((UINT32)553)
+#define VID_OPEN_IN_HELPDESK        ((UINT32)554)
+#define VID_ID_CHECK_FAIL           ((UINT32)555)
 
 // Base variabe for single threshold in message
 #define VID_THRESHOLD_BASE          ((UINT32)0x00800000)
@@ -1333,6 +1337,8 @@ typedef struct
 #define VID_CALLBACK_BASE           ((UINT32)0x10000000)
 
 #define VID_ZMQ_SUBSCRIPTION_BASE   ((UINT32)0x10000000)
+
+#define VID_ALARM_BULK_TERMINATE_BASE ((UINT32)0x10000000)
 
 #ifdef __cplusplus
 

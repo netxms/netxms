@@ -414,6 +414,8 @@ protected:
 	void (*m_objectDestructor)(void *);
 
    Array(void *data, int initial, int grow, size_t elementSize);
+   Array(const Array *src);
+
    void *__getBuffer() const { return m_data; }
 
 public:
@@ -492,6 +494,7 @@ private:
 
 public:
 	IntegerArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; m_storePointers = (sizeof(T) == sizeof(void *)); }
+	IntegerArray(const IntegerArray<T> *src) : Array(src) { }
 	virtual ~IntegerArray() { }
 
    int add(T value) { return Array::add(m_storePointers ? CAST_TO_POINTER(value, void *) : &value); }
@@ -515,6 +518,7 @@ private:
 public:
 	StructArray(int initial = 0, int grow = 16) : Array(NULL, initial, grow, sizeof(T)) { m_objectDestructor = destructor; }
 	StructArray(T *data, int size) : Array(data, size, 16, sizeof(T)) { m_objectDestructor = destructor; }
+	StructArray(const StructArray<T> *src) : Array(src) { }
 	virtual ~StructArray() { }
 
 	int add(T *element) { return Array::add((void *)element); }

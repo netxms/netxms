@@ -69,6 +69,7 @@ import org.netxms.ui.eclipse.actions.ExportToCsvAction;
 import org.netxms.ui.eclipse.alarmviewer.Activator;
 import org.netxms.ui.eclipse.alarmviewer.Messages;
 import org.netxms.ui.eclipse.alarmviewer.dialogs.AcknowledgeCustomTimeDialog;
+import org.netxms.ui.eclipse.alarmviewer.dialogs.TerminateAlarmDialog;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmComments;
 import org.netxms.ui.eclipse.alarmviewer.views.AlarmDetails;
 import org.netxms.ui.eclipse.alarmviewer.widgets.helpers.AlarmAcknowledgeTimeFunctions;
@@ -239,7 +240,8 @@ public class AlarmList extends CompositeWithMessageBar
 
 		// Add client library listener
 		clientListener = new SessionListener() {
-			@Override
+			@SuppressWarnings("unchecked")
+         @Override
 			public void notificationHandler(SessionNotification n)
 			{
 				switch(n.getCode())
@@ -257,8 +259,11 @@ public class AlarmList extends CompositeWithMessageBar
 					case SessionNotification.ALARM_DELETED:
 						synchronized(alarmList)
 						{
-							alarmList.remove(((Alarm)n.getObject()).getId());
-                     filterAndLimit();
+						   for(Long id : (List<Long>)n.getObject())
+						   {
+						      alarmList.remove(id);
+						   }
+						   filterAndLimit();
 						}
                   refreshTimer.execute();
 						break;
@@ -929,25 +934,36 @@ public class AlarmList extends CompositeWithMessageBar
 	 */
 	private void terminateAlarms()
 	{
+	   final List<Long> accessRightFail = new ArrayList<Long>();
+	   final List<Long> openInHelpdesk = new ArrayList<Long>();
+	   final List<Long> idCheckFail = new ArrayList<Long>();
+	   
 		IStructuredSelection selection = (IStructuredSelection)alarmViewer.getSelection();
 		if (selection.size() == 0)
-			return;
+			return;		
 		
-		final Object[] alarms = selection.toArray();
+		Object[] alarms = selection.toArray();
+		final long[] alarmIds = new long[alarms.length];
+		for(int i = 0; i < alarms.length; i++)
+		   alarmIds[i] = ((Alarm)alarms[i]).getId();
 		new ConsoleJob(Messages.get().TerminateAlarm_JobTitle, viewPart, Activator.PLUGIN_ID, AlarmList.JOB_FAMILY) {
 			@Override
 			protected void runInternal(IProgressMonitor monitor) throws Exception
 			{
-				monitor.beginTask(Messages.get().TerminateAlarm_TaskName, alarms.length);
-				for(Object o : alarms)
+				if (!session.terminateBulkAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail))
 				{
-					if (monitor.isCanceled())
-						break;
-					if (o instanceof Alarm)
-						session.terminateAlarm(((Alarm)o).getId());
-					monitor.worked(1);
+				   runInUIThread(new Runnable() {
+                  @Override
+                  public void run()
+                  {
+                     TerminateAlarmDialog dlg = new TerminateAlarmDialog(viewPart.getSite().getShell(), accessRightFail, openInHelpdesk, idCheckFail);
+                     if (dlg.open() == Window.OK)
+                     {
+                        return;
+                     }
+                  }
+               });
 				}
-				monitor.done();
 			}
 			
 			@Override

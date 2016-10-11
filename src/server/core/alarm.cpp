@@ -194,6 +194,14 @@ static void SendAlarmNotification(ClientSession *session, void *arg)
 }
 
 /**
+ * Callback for client session enumeration
+ */
+static void SendBulkAlarmTerminateNotification(ClientSession *session, void *arg)
+{
+   session->sendMessage((NXCPMessage *)arg);
+}
+
+/**
  * Notify connected clients about changes
  */
 static void NotifyClients(UINT32 code, const Alarm *alarm)
@@ -634,7 +642,8 @@ void Alarm::resolve(UINT32 userId, Event *event, bool terminate)
    m_ackTimeout = 0;
    if (m_helpDeskState != ALARM_HELPDESK_IGNORED)
       m_helpDeskState = ALARM_HELPDESK_CLOSED;
-   NotifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, this);
+   if (!terminate)
+      NotifyClients(terminate ? NX_NOTIFY_ALARM_TERMINATED : NX_NOTIFY_ALARM_CHANGED, this);
    updateInDatabase();
 
    if (!terminate && (event != NULL) && (m_relatedEvents != NULL) && !m_relatedEvents->contains(event->getId()))
@@ -660,46 +669,105 @@ void Alarm::resolve(UINT32 userId, Event *event, bool terminate)
  * Resolve and possibly terminate alarm with given ID
  * Should return RCC which can be sent to client
  */
-UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 alarmId, ClientSession *session, bool terminate)
+UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 alarmId, NXCPMessage *msg, ClientSession *session, bool terminate)
 {
-   UINT32 dwObject, dwRet = RCC_INVALID_ALARM_ID;
+   IntegerArray<UINT32> list(1);
+   list.add(alarmId);
+   return ResolveAlarmsById(&list, msg, session, terminate);
+}
+
+/**
+ * Resolve and possibly terminate alarms with given ID
+ * Should return RCC which can be sent to client
+ */
+UINT32 NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, NXCPMessage *msg, ClientSession *session, bool terminate)
+{
+   UINT32 base = VID_ALARM_BULK_TERMINATE_BASE, dwObject, result = RCC_INVALID_ALARM_ID, n;
+   IntegerArray<UINT32> accessRightFail, idCheckFail, openInHelpdesk;
+   NXCPMessage notification;
 
    MutexLock(m_mutex);
-   for(int i = 0; i < m_alarmList->size(); i++)
+   for(int i = 0; i < alarmIds->size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
-      if (alarm->getAlarmId() == alarmId)
+      for(n = 0; n < m_alarmList->size(); n++)
       {
-         // If alarm is open in helpdesk, it cannot be terminated
-         if (alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN)
+         Alarm *alarm = m_alarmList->get(n);
+         NetObj *object = GetAlarmSourceObject(alarmIds->get(i), true);
+         if (alarm->getAlarmId() == alarmIds->get(i))
          {
-            dwObject = alarm->getSourceObject();
-            if (session != NULL)
+            // If alarm is open in helpdesk, it cannot be terminated
+            if (alarm->getHelpDeskState() != ALARM_HELPDESK_OPEN)
             {
-               WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), dwObject,
-                  _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-                  alarmId, alarm->getMessage(), GetObjectName(dwObject, _T("")));
-            }
+               dwObject = alarm->getSourceObject();
+               if (session != NULL)
+               {
+                  // If user does not have the required object access rights, the alarm cannot be terminated
+                  if(!object->checkAccessRights(session->getUserId(), OBJECT_ACCESS_TERM_ALARMS))
+                  {
+                     accessRightFail.add(alarmIds->get(i));
+                     continue;
+                  }
 
-            alarm->resolve((session != NULL) ? session->getUserId() : 0, NULL, terminate);
-				if (terminate)
-				{
-               m_alarmList->remove(i);
-				}
-            dwRet = RCC_SUCCESS;
+                  WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), dwObject,
+                     _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
+                     alarmIds->get(i), alarm->getMessage(), GetObjectName(dwObject, _T("")));
+               }
+
+               alarm->resolve((session != NULL) ? session->getUserId() : 0, NULL, terminate);
+               result = RCC_SUCCESS;
+               if (terminate)
+               {
+                  notification.setField(base, alarm->getAlarmId());
+                  base++;
+                  m_alarmList->remove(n);
+               }
+            }
+            else
+            {
+               openInHelpdesk.add(alarmIds->get(i));
+            }
+            break;
          }
-         else
-         {
-            dwRet = RCC_ALARM_OPEN_IN_HELPDESK;
-         }
-         break;
+      }
+      if (n++ == m_alarmList->size())
+      {
+         idCheckFail.add(alarmIds->get(i));
       }
    }
-   MutexUnlock(m_mutex);
 
-   if (dwRet == RCC_SUCCESS)
-      UpdateObjectStatus(dwObject);
-   return dwRet;
+   // if alarms are terminated, this session notification method is used
+   if (terminate)
+   {
+      notification.setCode(CMD_ALARM_BULK_TERMINATE);
+      notification.setField(VID_NOTIFICATION_CODE, NX_NOTIFY_ALARM_TERMINATED);
+
+      UINT32 numRecords = base - VID_ALARM_BULK_TERMINATE_BASE;
+
+      notification.setField(VID_NUM_RECORDS, numRecords);
+      EnumerateClientSessions(SendBulkAlarmTerminateNotification, &notification);
+      result = RCC_SUCCESS;
+      MutexUnlock(m_mutex);
+   }
+
+   // Add fields if there were alarms that could not be terminated
+   if (msg != NULL)
+   {
+      if (accessRightFail.size() > 0)
+      {
+         msg->setFieldFromInt32Array(VID_ACCESS_RIGHT_FAIL, &accessRightFail);
+      }
+      if (openInHelpdesk.size() > 0)
+      {
+         msg->setFieldFromInt32Array(VID_OPEN_IN_HELPDESK, &openInHelpdesk);
+      }
+      if (idCheckFail.size() > 0)
+      {
+         msg->setFieldFromInt32Array(VID_ID_CHECK_FAIL, &idCheckFail);
+      }
+   }
+
+   UpdateObjectStatus(dwObject);
+   return result;
 }
 
 /**
@@ -1130,11 +1198,12 @@ UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 alarmId, NXCPMessage *msg)
 /**
  * Get source object for given alarm id
  */
-NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 alarmId)
+NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 alarmId, bool alreadyLocked)
 {
    UINT32 dwObjectId = 0;
 
-   MutexLock(m_mutex);
+   if(!alreadyLocked)
+      MutexLock(m_mutex);
    for(int i = 0; i < m_alarmList->size(); i++)
    {
       Alarm *alarm = m_alarmList->get(i);
@@ -1144,7 +1213,9 @@ NetObj NXCORE_EXPORTABLE *GetAlarmSourceObject(UINT32 alarmId)
          break;
       }
    }
-   MutexUnlock(m_mutex);
+
+   if(!alreadyLocked)
+      MutexUnlock(m_mutex);
    return (dwObjectId != 0) ? FindObjectById(dwObjectId) : NULL;
 }
 
