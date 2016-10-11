@@ -91,6 +91,7 @@ class LIBNXLP_EXPORTABLE LogParserRule
 
 private:
 	LogParser *m_parser;
+	TCHAR *m_name;
 	regex_t m_preg;
 	UINT32 m_eventCode;
 	TCHAR *m_eventName;
@@ -112,8 +113,8 @@ private:
 	int m_repeatCount;
    IntegerArray<time_t> *m_matchArray;
 	bool m_resetRepeat;
-	UINT32 m_checkCount;
-	UINT32 m_matchCount;
+	int m_checkCount;
+	int m_matchCount;
 
 	bool matchInternal(bool extMode, const TCHAR *source, UINT32 eventId, UINT32 level,
 	                   const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
@@ -121,7 +122,7 @@ private:
    void expandMacros(const TCHAR *regexp, String &out);
 
 public:
-	LogParserRule(LogParser *parser,
+	LogParserRule(LogParser *parser, const TCHAR *name,
 	              const TCHAR *regexp, UINT32 eventCode = 0, const TCHAR *eventName = NULL,
 					  int numParams = 0, int repeatInterval = 0, int repeatCount = 0,
 					  bool resetRepeat = true, const TCHAR *source = NULL, UINT32 level = 0xFFFFFFFF,
@@ -129,7 +130,9 @@ public:
 	LogParserRule(LogParserRule *src, LogParser *parser);
 	~LogParserRule();
 
+	const TCHAR *getName() const { return m_name; }
 	bool isValid() const { return m_isValid; }
+
 	bool match(const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
 	bool matchEx(const TCHAR *source, UINT32 eventId, UINT32 level,
 	             const TCHAR *line, LogParserCallback cb, UINT32 objectId, void *userArg);
@@ -139,10 +142,10 @@ public:
 	void setContextAction(int action) { m_contextAction = action; }
 
 	void setInverted(bool flag) { m_isInverted = flag; }
-	BOOL isInverted() const { return m_isInverted; }
+	bool isInverted() const { return m_isInverted; }
 
 	void setBreakFlag(bool flag) { m_breakOnMatch = flag; }
-	BOOL getBreakFlag() const { return m_breakOnMatch; }
+	bool getBreakFlag() const { return m_breakOnMatch; }
 
 	const TCHAR *getContext() const { return m_context; }
 	const TCHAR *getContextToChange() const { return m_contextToChange; }
@@ -171,8 +174,8 @@ public:
 
 	const TCHAR *getRegexpSource() const { return CHECK_NULL(m_regexp); }
 
-	UINT32 getCheckCount() const { return m_checkCount; }
-   UINT32 getMatchCount() const { return m_matchCount; }
+	int getCheckCount() const { return m_checkCount; }
+   int getMatchCount() const { return m_matchCount; }
 };
 
 /**
@@ -217,6 +220,8 @@ private:
 
    time_t readLastProcessedRecordTimestamp();
 #endif
+
+   const LogParserRule *findRuleByName(const TCHAR *name) const;
 
 public:
 	LogParser();
@@ -270,6 +275,9 @@ public:
 	bool monitorEventLog(CONDITION stopCondition, const TCHAR *markerPrefix);
    void saveLastProcessedRecordTimestamp(time_t timestamp);
 #endif
+
+   int getRuleCheckCount(const TCHAR *ruleName) const { const LogParserRule *r = findRuleByName(ruleName); return (r != NULL) ? r->getCheckCount() : -1; }
+   int getRuleMatchCount(const TCHAR *ruleName) const { const LogParserRule *r = findRuleByName(ruleName); return (r != NULL) ? r->getMatchCount() : -1; }
 };
 
 /**

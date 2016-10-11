@@ -66,6 +66,7 @@ struct XML_PARSER_STATE
 	String source;
 	String context;
 	String description;
+	String ruleName;
 	int contextAction;
 	String ruleContext;
 	int numEventParams;
@@ -215,7 +216,7 @@ bool LogParser::addRule(LogParserRule *rule)
  */
 bool LogParser::addRule(const TCHAR *regexp, UINT32 eventCode, const TCHAR *eventName, int numParams, int repeatInterval, int repeatCount, bool resetRepeat)
 {
-	return addRule(new LogParserRule(this, regexp, eventCode, eventName, numParams, repeatInterval, repeatCount, resetRepeat));
+	return addRule(new LogParserRule(this, NULL, regexp, eventCode, eventName, numParams, repeatInterval, repeatCount, resetRepeat));
 }
 
 /**
@@ -454,12 +455,17 @@ static void StartElement(void *userData, const char *name, const char **attrs)
 		ps->source = NULL;
 		ps->level = NULL;
 #ifdef UNICODE
-		ps->ruleContext = L"";
+		ps->ruleContext.clear();
 		const char *context = XMLGetAttr(attrs, "context");
 		if (context != NULL)
 			ps->ruleContext.appendMBString(context, strlen(context), CP_UTF8);
+      ps->ruleName.clear();
+      const char *name = XMLGetAttr(attrs, "name");
+      if (name != NULL)
+         ps->ruleName.appendMBString(name, strlen(name), CP_UTF8);
 #else
 		ps->ruleContext = XMLGetAttr(attrs, "context");
+      ps->ruleName = XMLGetAttr(attrs, "name");
 #endif
 		ps->breakFlag = XMLGetAttrBoolean(attrs, "break", false);
 		ps->state = XML_STATE_RULE;
@@ -592,7 +598,7 @@ static void EndElement(void *userData, const char *name)
 
 		if (ps->regexp.isEmpty())
 			ps->regexp = _T(".*");
-		rule = new LogParserRule(ps->parser, (const TCHAR *)ps->regexp, eventCode, eventName, ps->numEventParams, ps->repeatInterval, ps->repeatCount, ps->resetRepeat);
+		rule = new LogParserRule(ps->parser, (const TCHAR *)ps->ruleName, (const TCHAR *)ps->regexp, eventCode, eventName, ps->numEventParams, ps->repeatInterval, ps->repeatCount, ps->resetRepeat);
 		if (!ps->ruleContext.isEmpty())
 			rule->setContext(ps->ruleContext);
 		if (!ps->context.isEmpty())
@@ -780,4 +786,17 @@ UINT32 LogParser::resolveEventName(const TCHAR *name, UINT32 defVal)
 	}
 
 	return defVal;
+}
+
+/**
+ * Find rule by name
+ */
+const LogParserRule *LogParser::findRuleByName(const TCHAR *name) const
+{
+   for(int i = 0; i < m_numRules; i++)
+   {
+      if (!_tcsicmp(m_rules[i]->getName(), name))
+         return m_rules[i];
+   }
+   return NULL;
 }

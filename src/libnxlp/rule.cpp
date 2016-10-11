@@ -26,13 +26,14 @@
 /**
  * Constructor
  */
-LogParserRule::LogParserRule(LogParser *parser, const TCHAR *regexp, UINT32 eventCode, const TCHAR *eventName,
+LogParserRule::LogParserRule(LogParser *parser, const TCHAR *name, const TCHAR *regexp, UINT32 eventCode, const TCHAR *eventName,
 									  int numParams, int repeatInterval, int repeatCount, bool resetRepeat, const TCHAR *source,
 									  UINT32 level, UINT32 idStart, UINT32 idEnd)
 {
 	String expandedRegexp;
 
 	m_parser = parser;
+	m_name = _tcsdup((name != NULL) ? name : _T(""));
 	expandMacros(regexp, expandedRegexp);
 	m_regexp = _tcsdup(expandedRegexp);
 	m_isValid = (_tregcomp(&m_preg, expandedRegexp, REG_EXTENDED | REG_ICASE) == 0);
@@ -64,6 +65,7 @@ LogParserRule::LogParserRule(LogParser *parser, const TCHAR *regexp, UINT32 even
 LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
 {
 	m_parser = parser;
+	m_name = _tcsdup_ex(src->m_name);
 	m_regexp = _tcsdup(src->m_regexp);
 	m_isValid = (_tregcomp(&m_preg, m_regexp, REG_EXTENDED | REG_ICASE) == 0);
 	m_eventCode = src->m_eventCode;
@@ -102,15 +104,16 @@ LogParserRule::LogParserRule(LogParserRule *src, LogParser *parser)
  */
 LogParserRule::~LogParserRule()
 {
+   free(m_name);
 	if (m_isValid)
 		regfree(&m_preg);
-	safe_free(m_pmatch);
-	safe_free(m_description);
-	safe_free(m_source);
-	safe_free(m_regexp);
-	safe_free(m_eventName);
-	safe_free(m_context);
-	safe_free(m_contextToChange);
+	free(m_pmatch);
+	free(m_description);
+	free(m_source);
+	free(m_regexp);
+	free(m_eventName);
+	free(m_context);
+	free(m_contextToChange);
 	delete m_matchArray;
 }
 
