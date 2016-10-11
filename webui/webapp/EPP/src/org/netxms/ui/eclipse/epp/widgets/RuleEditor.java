@@ -143,6 +143,8 @@ public class RuleEditor extends Composite
 			@Override
 			public void mouseDown(MouseEvent e)
 			{
+			   if (e.button == 3 && !selected)
+               RuleEditor.this.editor.setSelection(RuleEditor.this);
 			}
 
 			@Override

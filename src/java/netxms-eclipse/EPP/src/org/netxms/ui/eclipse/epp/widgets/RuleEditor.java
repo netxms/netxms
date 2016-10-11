@@ -146,6 +146,9 @@ public class RuleEditor extends Composite
             if (dragDetect(e)) {
                setDragged(true);
             }
+            
+            if (e.button == 3)
+               RuleEditor.this.editor.setSelection(RuleEditor.this);
          }
 
          @Override
