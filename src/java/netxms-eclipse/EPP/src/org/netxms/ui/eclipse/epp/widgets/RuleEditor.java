@@ -147,7 +147,7 @@ public class RuleEditor extends Composite
                setDragged(true);
             }
             
-            if (e.button == 3)
+            if (e.button == 3 && !selected)
                RuleEditor.this.editor.setSelection(RuleEditor.this);
          }
 
