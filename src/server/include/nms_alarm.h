@@ -54,6 +54,8 @@ private:
    IntegerArray<UINT64> *m_relatedEvents;
    IntegerArray<UINT32> *m_alarmCategoryList;
 
+   String categoryListToString();
+
 public:
    Alarm(Event *event, const TCHAR *message, const TCHAR *key, int state, int severity, UINT32 timeout, UINT32 timeoutEvent, UINT32 ackTimeout, IntegerArray<UINT32> *alarmCategoryList);
    Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row);
@@ -101,8 +103,7 @@ public:
    void unlinkFromHelpdesk() { m_helpDeskState = ALARM_HELPDESK_IGNORED; m_helpDeskRef[0] = 0; }
    UINT32 updateAlarmComment(UINT32 commentId, const TCHAR *text, UINT32 userId, bool syncWithHelpdesk);
    UINT32 deleteComment(UINT32 commentId);
-   void categoryListToString(TCHAR *categoryList);
-   IntegerArray<UINT32> categoryListToIntArray(TCHAR *categoryList);
+
    bool checkCategoryAcl(DWORD userId, ClientSession *session) const;
 };
 

@@ -130,7 +130,15 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
 
    TCHAR categoryList[MAX_DB_STRING];
    DBGetField(hResult, row, 20, categoryList, MAX_DB_STRING);
-   m_alarmCategoryList = new IntegerArray<UINT32>(categoryListToIntArray(categoryList));
+   m_alarmCategoryList = new IntegerArray<UINT32>(16, 16);
+
+   int count;
+   TCHAR **ids = SplitString(categoryList, _T(','), &count);
+   for(int i = 0; i < count; i++)
+   {
+      m_alarmCategoryList->add(_tcstoul(ids[i], NULL, 10));
+      free(ids);
+   }
 }
 
 /**
@@ -178,6 +186,55 @@ Alarm::~Alarm()
 {
    delete m_relatedEvents;
    delete m_alarmCategoryList;
+}
+
+/**
+ * Convert alarm category list to string
+ */
+String Alarm::categoryListToString()
+{
+   String buffer;
+   for(int i = 0; i < m_alarmCategoryList->size(); i++)
+   {
+      if (buffer.length() > 0)
+         buffer.append(_T(','));
+      buffer.append(m_alarmCategoryList->get(i));
+   }
+   return buffer;
+}
+
+/**
+ * Check alarm category acl
+ */
+bool Alarm::checkCategoryAcl(DWORD userId, ClientSession *session) const
+{
+   if (session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_ALL_ALARMS))
+   {
+      return true;
+   }
+
+   TCHAR szQuery[256];
+   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
+   _sntprintf(szQuery, 256, _T("SELECT category_id FROM alarm_category_acl WHERE user_id=%d"), userId);
+   DB_RESULT hResult = DBSelect(hdb, szQuery);
+
+   if (hResult == NULL)
+      return false;
+
+   UINT32 count = DBGetNumRows(hResult);
+   for(int i = 0; i < count; i++)
+   {
+      if (DBGetFieldULong(hResult, i, 0) == m_alarmCategoryList->get(i))
+      {
+         DBFreeResult(hResult);
+         DBConnectionPoolReleaseConnection(hdb);
+         return true;
+      }
+   }
+   DBFreeResult(hResult);
+   DBConnectionPoolReleaseConnection(hdb);
+
+   return false;
 }
 
 /**
@@ -258,12 +315,7 @@ void Alarm::createInDatabase()
       DBBind(hStmt, 19, DB_SQLTYPE_BIGINT, m_sourceEventId);
       DBBind(hStmt, 20, DB_SQLTYPE_INTEGER, (UINT32)m_ackTimeout);
       DBBind(hStmt, 21, DB_SQLTYPE_INTEGER, m_dciId);
-
-      if (m_alarmCategoryList != NULL)
-      {
-         categoryListToString(categoryList);
-      }
-      DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, categoryList, DB_BIND_STATIC);
+      DBBind(hStmt, 22, DB_SQLTYPE_VARCHAR, categoryListToString(), DB_BIND_TRANSIENT);
 
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -305,13 +357,7 @@ void Alarm::updateInDatabase()
       DBBind(hStmt, 13, DB_SQLTYPE_INTEGER, (UINT32)m_ackTimeout);
       DBBind(hStmt, 14, DB_SQLTYPE_INTEGER, m_sourceObject);
       DBBind(hStmt, 15, DB_SQLTYPE_INTEGER, m_dciId);
-
-      if (m_alarmCategoryList != NULL)
-      {
-         categoryListToString(categoryList);
-      }
-      DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, categoryList, DB_BIND_STATIC);
-
+      DBBind(hStmt, 16, DB_SQLTYPE_VARCHAR, categoryListToString(), DB_BIND_TRANSIENT);
       DBBind(hStmt, 17, DB_SQLTYPE_INTEGER, m_alarmId);
       DBExecute(hStmt);
       DBFreeStatement(hStmt);
@@ -708,13 +754,14 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmById(UINT32 alarmId, NXCPMessage *msg, Clie
  */
 UINT32 NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, NXCPMessage *msg, ClientSession *session, bool terminate)
 {
-   UINT32 base = VID_ALARM_BULK_TERMINATE_BASE, dwObject, result = RCC_INVALID_ALARM_ID, n;
+   UINT32 base = VID_ALARM_BULK_TERMINATE_BASE, dwObject, result = RCC_INVALID_ALARM_ID;
    IntegerArray<UINT32> accessRightFail, idCheckFail, openInHelpdesk;
    NXCPMessage notification;
 
    MutexLock(m_mutex);
    for(int i = 0; i < alarmIds->size(); i++)
    {
+      int n;
       for(n = 0; n < m_alarmList->size(); n++)
       {
          Alarm *alarm = m_alarmList->get(n);
@@ -728,7 +775,7 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, NXCPM
                if (session != NULL)
                {
                   // If user does not have the required object access rights, the alarm cannot be terminated
-                  if(!object->checkAccessRights(session->getUserId(), OBJECT_ACCESS_TERM_ALARMS))
+                  if (!object->checkAccessRights(session->getUserId(), terminate ? OBJECT_ACCESS_TERM_ALARMS : OBJECT_ACCESS_UPDATE_ALARMS))
                   {
                      accessRightFail.add(alarmIds->get(i));
                      continue;
@@ -736,7 +783,7 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, NXCPM
 
                   WriteAuditLog(AUDIT_OBJECTS, TRUE, session->getUserId(), session->getWorkstation(), session->getId(), dwObject,
                      _T("%s alarm %d (%s) on object %s"), terminate ? _T("Terminated") : _T("Resolved"),
-                     alarmIds->get(i), alarm->getMessage(), GetObjectName(dwObject, _T("")));
+                     alarm->getAlarmId(), alarm->getMessage(), GetObjectName(dwObject, _T("")));
                }
 
                alarm->resolve((session != NULL) ? session->getUserId() : 0, NULL, terminate);
@@ -746,6 +793,7 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, NXCPM
                   notification.setField(base, alarm->getAlarmId());
                   base++;
                   m_alarmList->remove(n);
+                  n--;
                }
             }
             else
@@ -755,7 +803,7 @@ UINT32 NXCORE_EXPORTABLE ResolveAlarmsById(IntegerArray<UINT32> *alarmIds, NXCPM
             break;
          }
       }
-      if (n++ == m_alarmList->size())
+      if (n == m_alarmList->size())
       {
          idCheckFail.add(alarmIds->get(i));
       }
@@ -1747,82 +1795,4 @@ void ShutdownAlarmManager()
 	ThreadJoin(m_hWatchdogThread);
    MutexDestroy(m_mutex);
    delete m_alarmList;
-}
-
-/**
- * Convert alarm category list to string
- */
-void Alarm::categoryListToString(TCHAR *categoryList)
-{
-   TCHAR buffer[128];
-   if (m_alarmCategoryList != NULL)
-   {
-      for(int i = 0; i < m_alarmCategoryList->size(); i++)
-      {
-         _sntprintf(buffer, MAX_DB_STRING, _T("%d,"), m_alarmCategoryList->get(i));
-         if (buffer == NULL)
-         {
-            _tcscpy(categoryList, buffer);
-         }
-         else
-         {
-            _tcscat(categoryList, buffer);
-         }
-      }
-   }
-}
-
-/**
- * Alarm category list to IntegerArray
- */
-IntegerArray<UINT32> Alarm::categoryListToIntArray(TCHAR *categoryList)
-{
-   int length = sizeof(categoryList) / sizeof(TCHAR), i;
-   IntegerArray<UINT32> *result = new IntegerArray<UINT32>(length, 16);
-   TCHAR buffer[128], *eptr;
-
-   for(i = 0; i < length; i++)
-   {
-      if (categoryList[i] == ',')
-      {
-         result->add(_tcstol(buffer, &eptr, 0));
-      }
-      buffer[i] = categoryList[i];
-   }
-
-   return result;
-}
-
-/**
- * Check alarm category acl
- */
-bool Alarm::checkCategoryAcl(DWORD userId, ClientSession *session) const
-{
-   if (session->checkSysAccessRights(SYSTEM_ACCESS_VIEW_ALL_ALARMS))
-   {
-      return true;
-   }
-
-   TCHAR szQuery[256];
-   DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   _sntprintf(szQuery, 256, _T("SELECT category_id FROM alarm_category_acl WHERE user_id=%d"), userId);
-   DB_RESULT hResult = DBSelect(hdb, szQuery);
-
-   if (hResult == NULL)
-      return false;
-
-   UINT32 count = DBGetNumRows(hResult);
-   for(int i = 0; i < count; i++)
-   {
-      if (DBGetFieldULong(hResult, i, 0) == m_alarmCategoryList->get(i))
-      {
-         DBFreeResult(hResult);
-         DBConnectionPoolReleaseConnection(hdb);
-         return true;
-      }
-   }
-   DBFreeResult(hResult);
-   DBConnectionPoolReleaseConnection(hdb);
-
-   return false;
 }
