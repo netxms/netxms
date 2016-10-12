@@ -198,31 +198,36 @@ UINT32 ModifyAlarmAcl(NXCPMessage *pRequest)
    pRequest->getFieldAsInt32Array(VID_ALARM_CATEGORY_ACL, dwUserId);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
-   if (hStmt != NULL)
+   if (DBBegin(hdb))
    {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
-      DBExecute(hStmt);
-      DBFreeStatement(hStmt);
-   }
-
-   hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_acl (category_id,user_id) VALUES (?,?)"));
-   if (hStmt != NULL)
-   {
-      DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
-      for (int i = 0; i < numAlarmCategoryAcl; i++)
+      DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
+      if (hStmt != NULL)
       {
-         DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dwUserId->get(i));
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
          DBExecute(hStmt);
+         DBFreeStatement(hStmt);
       }
-      DBFreeStatement(hStmt);
-      delete dwUserId;
 
-      result = RCC_SUCCESS;
-   }
-   else
-   {
-      result = RCC_DB_FAILURE;
+      hStmt = DBPrepare(hdb, _T("INSERT INTO alarm_category_acl (category_id,user_id) VALUES (?,?)"));
+      if (hStmt != NULL)
+      {
+         DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
+         for (int i = 0; i < numAlarmCategoryAcl; i++)
+         {
+            DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dwUserId->get(i));
+            DBExecute(hStmt);
+         }
+         DBCommit(hdb);
+
+         DBFreeStatement(hStmt);
+         delete dwUserId;
+         result = RCC_SUCCESS;
+      }
+      else
+      {
+         DBRollback(hdb);
+         result = RCC_DB_FAILURE;
+      }
    }
    DBConnectionPoolReleaseConnection(hdb);
 
@@ -258,17 +263,34 @@ UINT32 DeleteAlarmCategory(NXCPMessage *pRequest)
             nmsg.setField(VID_NOTIFICATION_CODE, (WORD)NX_NOTIFY_ALARM_CATEGORY_DELETE);
             nmsg.setField(VID_CATEGORY_ID, dwCategoryId);
             EnumerateClientSessions(SendAlarmCategoryDBChangeNotification, &nmsg);
+
+            DBFreeStatement(hStmt);
+            // If category delete was successful, delete its acl as well
+            hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
+            if (hStmt != NULL)
+            {
+                  DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
+                  if (DBExecute(hStmt))
+                  {
+                     result = RCC_SUCCESS;
+                  }
+                  else
+                  {
+                     result = RCC_DB_FAILURE;
+                  }
+                  DBFreeStatement(hStmt);
+            }
+            else
+            {
+               result = RCC_DB_FAILURE;
+            }
          }
          else
          {
             result = RCC_DB_FAILURE;
          }
-         DBFreeStatement(hStmt);
       }
-      else
-      {
-         result = RCC_DB_FAILURE;
-      }
+
    }
    else
    {
