@@ -1,6 +1,10 @@
 *
 * 2.1-M2
 *
+- Added alarm category functionality to manage which alarms are seen by what users
+	- EPP rules can be configured to generate categorised alarms
+	- Alarm categories can be created and configured in Alarm Category Configurator
+	- By default view_all_alarms acl added to Everyone group
 - Fixed issues: #1285
 
 *
