@@ -82,7 +82,6 @@ public class AlarmCategory
       msg.setFieldInt32(NXCPCodes.VID_CATEGORY_ID, (int)id);
       msg.setField(NXCPCodes.VID_CATEGORY_NAME, name);
       msg.setField(NXCPCodes.VID_CATEGORY_DESCRIPTION, description);
-      msg.setFieldInt32(NXCPCodes.VID_NUM_ALARM_CATEGORY_ACL, accessControl.length);
       msg.setField(NXCPCodes.VID_ALARM_CATEGORY_ACL, accessControl);
    }
 

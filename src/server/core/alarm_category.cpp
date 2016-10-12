@@ -192,7 +192,6 @@ UINT32 ModifyAlarmAcl(NXCPMessage *pRequest)
 {
    UINT32 result = 0;
    UINT32 dwCategoryId = pRequest->getFieldAsUInt32(VID_CATEGORY_ID);
-   UINT32 numAlarmCategoryAcl = pRequest->getFieldAsInt32(VID_NUM_ALARM_CATEGORY_ACL);
 
    IntegerArray<UINT32> *dwUserId = new IntegerArray<UINT32>(16, 16);
    pRequest->getFieldAsInt32Array(VID_ALARM_CATEGORY_ACL, dwUserId);
@@ -213,7 +212,7 @@ UINT32 ModifyAlarmAcl(NXCPMessage *pRequest)
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
-         for (int i = 0; i < numAlarmCategoryAcl; i++)
+         for (int i = 0; i < dwUserId->size(); i++)
          {
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dwUserId->get(i));
             success = DBExecute(hStmt);
