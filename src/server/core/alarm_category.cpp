@@ -198,13 +198,14 @@ UINT32 ModifyAlarmAcl(NXCPMessage *pRequest)
    pRequest->getFieldAsInt32Array(VID_ALARM_CATEGORY_ACL, dwUserId);
 
    DB_HANDLE hdb = DBConnectionPoolAcquireConnection();
-   if (DBBegin(hdb))
+   bool success = DBBegin(hdb);
+   if (success)
    {
       DB_STATEMENT hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_category_acl WHERE category_id=?"));
       if (hStmt != NULL)
       {
          DBBind(hStmt, 1, DB_SQLTYPE_INTEGER, dwCategoryId);
-         DBExecute(hStmt);
+         success = !DBExecute(hStmt);
          DBFreeStatement(hStmt);
       }
 
@@ -215,12 +216,24 @@ UINT32 ModifyAlarmAcl(NXCPMessage *pRequest)
          for (int i = 0; i < numAlarmCategoryAcl; i++)
          {
             DBBind(hStmt, 2, DB_SQLTYPE_INTEGER, dwUserId->get(i));
-            DBExecute(hStmt);
+            success = DBExecute(hStmt);
+            if (!success)
+            {
+               break;
+            }
          }
-         DBCommit(hdb);
 
          DBFreeStatement(hStmt);
          delete dwUserId;
+      }
+      else
+      {
+         result = RCC_DB_FAILURE;
+      }
+
+      if (success)
+      {
+         DBCommit(hdb);
          result = RCC_SUCCESS;
       }
       else
@@ -228,6 +241,10 @@ UINT32 ModifyAlarmAcl(NXCPMessage *pRequest)
          DBRollback(hdb);
          result = RCC_DB_FAILURE;
       }
+   }
+   else
+   {
+      result = RCC_DB_FAILURE;
    }
    DBConnectionPoolReleaseConnection(hdb);
 
@@ -248,7 +265,7 @@ UINT32 DeleteAlarmCategory(NXCPMessage *pRequest)
 
    // Prepare and execute SQL query
    DB_STATEMENT hStmt;
-   if (bCategoryExist)
+   if (bCategoryExist && DBBegin(hdb))
    {
       hStmt = DBPrepare(hdb, _T("DELETE FROM alarm_categories WHERE id=?"));
       if (hStmt != NULL)
@@ -273,10 +290,12 @@ UINT32 DeleteAlarmCategory(NXCPMessage *pRequest)
                   if (DBExecute(hStmt))
                   {
                      result = RCC_SUCCESS;
+                     DBCommit(hdb);
                   }
                   else
                   {
                      result = RCC_DB_FAILURE;
+                     DBRollback(hdb);
                   }
                   DBFreeStatement(hStmt);
             }
