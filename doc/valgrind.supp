@@ -1,0 +1,95 @@
+{
+	dlopen
+	Memcheck:Leak
+	fun:malloc
+	...
+	fun:_dl_init
+	fun:dl_open_worker
+}
+
+{
+	pthread_create
+	Memcheck:Leak
+	fun:calloc
+	fun:allocate_dtv
+	fun:_dl_allocate_tls
+	fun:allocate_stack
+}
+
+{
+	start_thread
+	Memcheck:Leak
+	fun:realloc
+	...
+	fun:start_thread
+	fun:clone
+}
+
+{
+	OpenSSL/condition
+	Memcheck:Cond
+	obj:*/libcrypto.so.1.0.0
+}
+
+{
+	OpenSSL/value8
+	Memcheck:Value8
+	obj:*/libcrypto.so.1.0.0
+}
+
+{
+	OpenSSL/value4
+	Memcheck:Value4
+	obj:*/libcrypto.so.1.0.0
+}
+
+{
+	uninit bytes in agent send message
+	Memcheck:Param
+	socketcall.sendto
+	fun:send
+	fun:_Z6SendExiPKvmiP14netxms_mutex_t
+	fun:_ZN11CommSession14sendRawMessageEP12NXCP_MESSAGEP21NXCPEncryptionContext
+}
+
+{
+	decryptMessage/jump
+	Memcheck:Cond
+	...
+	fun:_ZN21NXCPEncryptionContext14decryptMessageEP22NXCP_ENCRYPTED_MESSAGEPh
+	fun:_ZN23AbstractMessageReceiver20getMessageFromBufferEPb
+	fun:_ZN23AbstractMessageReceiver11readMessageEjP21MessageReceiverResult
+}
+
+{
+	decryptMessage/value8
+	Memcheck:Value8
+	...
+	fun:_ZN21NXCPEncryptionContext14decryptMessageEP22NXCP_ENCRYPTED_MESSAGEPh
+	fun:_ZN23AbstractMessageReceiver20getMessageFromBufferEPb
+	fun:_ZN23AbstractMessageReceiver11readMessageEjP21MessageReceiverResult
+}
+
+{
+	NXCPMessage/jump
+	Memcheck:Cond
+	fun:_ZN11NXCPMessageC1EP12NXCP_MESSAGEi
+	fun:_ZN23AbstractMessageReceiver20getMessageFromBufferEPb
+	fun:_ZN23AbstractMessageReceiver11readMessageEjP21MessageReceiverResult
+}
+
+{
+	iconv/jump
+	Memcheck:Cond
+	...
+	fun:__gconv
+	fun:iconv
+}
+
+{
+	iconv/value8
+	Memcheck:Value8
+	...
+	fun:__gconv
+	fun:iconv
+}

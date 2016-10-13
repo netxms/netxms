@@ -629,6 +629,9 @@ static void TestTable()
    AssertEquals(table2->getNumRows(), table->getNumRows());
    AssertEquals(table2->getAsInt(10, 1), table->getAsInt(10, 1));
    EndTest(GetCurrentTimeMs() - start);
+
+   delete table;
+   delete table2;
 }
 
 /**

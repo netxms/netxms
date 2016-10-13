@@ -326,9 +326,11 @@ Table *Table::createFromPackedXML(const char *packedXml)
    if (uncompress((BYTE *)xml, &uncompSize, (BYTE *)&compressedXml[4], (uLong)compressedSize - 4) != Z_OK)
    {
       free(xml);
+      free(compressedXml);
       return NULL;
    }
    xml[xmlSize] = 0;
+   free(compressedXml);
 
    Table *table = new Table();
    if (table->parseXML(xml))
