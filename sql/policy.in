@@ -74,19 +74,19 @@ INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_s
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
 	VALUES (17,'47fd5c32-b6c9-48b8-99fb-c389dde63bee',7944,'Generate alarm on threshold violation',
-		'%m',5,'DC_THRESHOLD_%i_%5','',0,EVENT_ALARM_TIMEOUT,0,'');
+		'%m',5,'DC_THRESHOLD_%i_%<dciId>','',0,EVENT_ALARM_TIMEOUT,0,'');
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
 	VALUES (18,'dcdd6f93-2f9e-4c3e-97cb-95b6847f13ce',7944,'Terminate threshold violation alarms',
-		'%m',6,'DC_THRESHOLD_%i_%3','',0,EVENT_ALARM_TIMEOUT,0,'');
+		'%m',6,'DC_THRESHOLD_%i_%<dciId>','',0,EVENT_ALARM_TIMEOUT,0,'');
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
 	VALUES (19,'d3acabe8-717d-4ceb-bb7f-498d5af898f2',7944,'Generate alarm on table threshold violation',
-		'%m',5,'DCTTHR_%i_%3_%5','',0,EVENT_ALARM_TIMEOUT,0,'');
+		'%m',5,'DCTTHR_%i_%<dciId>_%<instance>','',0,EVENT_ALARM_TIMEOUT,0,'');
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
 	VALUES (20,'8e26af4b-e478-44c9-9c12-0b049ccb6c3c',7944,'Terminate table threshold violation alarms',
-		'%m',6,'DCTTHR_%i_%3_%5','',0,EVENT_ALARM_TIMEOUT,0,'');
+		'%m',6,'DCTTHR_%i_%<dciId>_%<instance>','',0,EVENT_ALARM_TIMEOUT,0,'');
 
 INSERT INTO event_policy (rule_id,rule_guid,flags,comments,alarm_message,alarm_severity,alarm_key,script,alarm_timeout,alarm_timeout_event,situation_id,situation_instance)
 	VALUES (21,'ea1dee96-b42e-499c-a992-0b0f9e4874b9',7944,'Generate an alarm when one of the system threads hangs or stops unexpectedly',
