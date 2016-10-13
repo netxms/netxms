@@ -137,8 +137,9 @@ Alarm::Alarm(DB_HANDLE hdb, DB_RESULT hResult, int row)
    for(int i = 0; i < count; i++)
    {
       m_alarmCategoryList->add(_tcstoul(ids[i], NULL, 10));
-      free(ids);
+      free(ids[i]);
    }
+   free(ids);
 }
 
 /**

@@ -28,7 +28,7 @@
 static StringObjectMap<SchedulerCallback> s_callbacks(true);
 static ObjectArray<ScheduledTask> s_cronSchedules(5, 5, true);
 static ObjectArray<ScheduledTask> s_oneTimeSchedules(5, 5, true);
-static CONDITION s_cond = ConditionCreate(false);
+static CONDITION s_wakeupCondition = ConditionCreate(false);
 static MUTEX s_cronScheduleLock = MutexCreate();
 static MUTEX s_oneTimeScheduleLock = MutexCreate();
 
@@ -325,7 +325,7 @@ UINT32 AddOneTimeScheduledTask(const TCHAR *task, time_t nextExecutionTime, cons
    s_oneTimeSchedules.add(sh);
    s_oneTimeSchedules.sort(ScheduledTaskComparator);
    MutexUnlock(s_oneTimeScheduleLock);
-   ConditionSet(s_cond);
+   ConditionSet(s_wakeupCondition);
    return RCC_SUCCESS;
 }
 
@@ -445,7 +445,7 @@ UINT32 UpdateOneTimeScheduledTask(int id, const TCHAR *task, time_t nextExecutio
    }
 
    if(found)
-      ConditionSet(s_cond);
+      ConditionSet(s_wakeupCondition);
    return rcc;
 }
 
@@ -514,7 +514,7 @@ UINT32 RemoveScheduledTask(UINT32 id, UINT32 user, UINT64 systemRights)
 
    if (found)
    {
-      ConditionSet(s_cond);
+      ConditionSet(s_wakeupCondition);
       DeleteScheduledTaskFromDB(id);
    }
    return rcc;
@@ -643,7 +643,7 @@ static THREAD_RESULT THREAD_CALL OneTimeEventThread(void *arg)
    DbgPrintf(7, _T("OneTimeEventThread: started"));
    while(true)
    {
-      ConditionWait(s_cond, sleepTime);
+      ConditionWait(s_wakeupCondition, sleepTime);
       if(g_flags & AF_SHUTDOWN)
          break;
 
@@ -780,6 +780,12 @@ static THREAD_RESULT THREAD_CALL CronCheckThread(void *arg)
 }
 
 /**
+ * Scheduler thread handles
+ */
+static THREAD s_oneTimeEventThread = INVALID_THREAD_HANDLE;
+static THREAD s_cronSchedulerThread = INVALID_THREAD_HANDLE;
+
+/**
  * Initialize task scheduler - read all schedules form database and start threads for one time and crom schedules
  */
 void InitializeTaskScheduler()
@@ -809,9 +815,9 @@ void InitializeTaskScheduler()
    }
    DBConnectionPoolReleaseConnection(hdb);
    s_oneTimeSchedules.sort(ScheduledTaskComparator);
-   //start threads that will start cron and one time tasks threads
-   ThreadCreate(OneTimeEventThread, 0, NULL);
-   ThreadCreate(CronCheckThread, 0, NULL);
+
+   s_oneTimeEventThread = ThreadCreateEx(OneTimeEventThread, 0, NULL);
+   s_cronSchedulerThread = ThreadCreateEx(CronCheckThread, 0, NULL);
 }
 
 /**
@@ -819,9 +825,10 @@ void InitializeTaskScheduler()
  */
 void CloseTaskScheduler()
 {
-   ConditionSet(s_cond);
-   ConditionDestroy(s_cond);
-   s_cond = INVALID_CONDITION_HANDLE;
+   ConditionSet(s_wakeupCondition);
+   ThreadJoin(s_oneTimeEventThread);
+   ThreadJoin(s_cronSchedulerThread);
+   ConditionDestroy(s_wakeupCondition);
    ThreadPoolDestroy(g_schedulerThreadPool);
    MutexDestroy(s_cronScheduleLock);
    MutexDestroy(s_oneTimeScheduleLock);

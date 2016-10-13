@@ -52,6 +52,69 @@
 }
 
 {
+	OpenSSL/DH_new_method
+	Memcheck:Leak
+	fun:malloc
+	fun:CRYPTO_malloc
+	...
+	fun:DH_new_method
+}
+
+{
+	OpenSSL/OpenSSL_add_all_ciphers
+	Memcheck:Leak
+	fun:malloc
+	fun:CRYPTO_malloc
+	...
+	fun:OpenSSL_add_all_ciphers
+}
+
+{
+	OpenSSL/OpenSSL_add_all_digests
+	Memcheck:Leak
+	fun:malloc
+	fun:CRYPTO_malloc
+	...
+	fun:OpenSSL_add_all_digests
+}
+
+{
+	OpenSSL/OPENSSL_load_builtin_modules
+	Memcheck:Leak
+	fun:malloc
+	fun:CRYPTO_malloc
+	...
+	fun:OPENSSL_load_builtin_modules
+}
+
+{
+	OpenSSL/ENGINE_load_builtin_engines
+	Memcheck:Leak
+	fun:malloc
+	fun:CRYPTO_malloc
+	...
+	fun:ENGINE_load_builtin_engines
+}
+
+{
+	OpenSSL/CONF_modules_load_file
+	Memcheck:Leak
+	fun:malloc
+	fun:CRYPTO_malloc
+	...
+	fun:CONF_modules_load_file
+}
+
+{
+	OpenSSL/SSL_library_init
+	Memcheck:Leak
+	fun:malloc
+	fun:CRYPTO_malloc
+	...
+	fun:SSL_library_init
+}
+
+{
 	uninit bytes in agent send message
 	Memcheck:Param
 	socketcall.sendto
@@ -103,6 +166,12 @@
 }
 
 {
+	Oracle Client 12/Jump
+	Memcheck:Cond
+	obj:*/libclntsh.so.12.1
+}
+
+{
 	Oracle Client 12/Uninitialized 8
 	Memcheck:Value8
 	obj:*/libnnz12.so
@@ -120,4 +189,20 @@
 	Memcheck:Leak
 	fun:calloc
 	obj:*/libclntshcore.so.12.1
+}
+
+{
+	Static mutexes
+	Memcheck:Leak
+	fun:malloc
+	fun:MutexCreate
+	fun:__static_initialization_and_destruction_0
+}
+
+{
+	Static conditions
+	Memcheck:Leak
+	fun:malloc
+	fun:ConditionCreate
+	fun:__static_initialization_and_destruction_0
 }
