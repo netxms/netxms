@@ -8,6 +8,14 @@
 }
 
 {
+	dlclose
+	Memcheck:Leak
+	fun:calloc
+	fun:_dlerror_run
+	fun:dlclose
+}
+
+{
 	pthread_create
 	Memcheck:Leak
 	fun:calloc
@@ -92,4 +100,24 @@
 	...
 	fun:__gconv
 	fun:iconv
+}
+
+{
+	Oracle Client 12/Uninitialized 8
+	Memcheck:Value8
+	obj:*/libnnz12.so
+}
+
+{
+	Oracle Client 12/malloc
+	Memcheck:Leak
+	fun:malloc
+	obj:*/libclntshcore.so.12.1
+}
+
+{
+	Oracle Client 12/calloc
+	Memcheck:Leak
+	fun:calloc
+	obj:*/libclntshcore.so.12.1
 }
