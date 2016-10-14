@@ -63,6 +63,7 @@ public class LogParserRuleEditor extends DashboardComposite
 	private FormToolkit toolkit;
 	private LogParserRule rule;
 	private LogParserEditor editor;
+	private LabeledText name;
 	private LabeledText regexp;
 	private Button checkboxInvert;
    private Button checkboxReset;
@@ -105,6 +106,15 @@ public class LogParserRuleEditor extends DashboardComposite
 		gd.horizontalAlignment = SWT.RIGHT;
 		controlBar.setLayoutData(gd);
 		fillControlBar(controlBar);
+		
+		name = new LabeledText(this, SWT.NONE);
+		name.setLabel("Name");
+      gd = new GridData();
+      gd.horizontalSpan = 2;
+      gd.horizontalAlignment = SWT.FILL;
+      gd.grabExcessHorizontalSpace = true;
+      name.setLayoutData(gd);
+      name.setText((rule.getName() != null) ? rule.getName() : "");
 		
 		final CGroup condition = new CGroup(this, Messages.get().LogParserRuleEditor_Condition) {
 			@Override
@@ -559,6 +569,7 @@ public class LogParserRuleEditor extends DashboardComposite
 	 */
 	public void save()
 	{
+	   rule.setName(name.getText().trim());
 		rule.setMatch(new LogParserMatch(regexp.getText(), checkboxInvert.getSelection(), intOrNull(repeatCount.getText()), 
 		                                 Integer.parseInt(timeRange.getText()) *(timeUnits.getSelectionIndex() * 60), 
 		                                 checkboxReset.getSelection()));
@@ -611,6 +622,9 @@ public class LogParserRuleEditor extends DashboardComposite
 		}
 	}
 
+   /**
+    * @return
+    */
    public boolean isSyslogParser()
    {
       return editor.isSyslogParser();

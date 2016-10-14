@@ -834,6 +834,48 @@ void OnSyslogConfigurationChange(const TCHAR *name, const TCHAR *value)
 }
 
 /**
+ * Get syslog rule check count in NXSL
+ */
+int F_GetSyslogRuleCheckCount(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if (s_parserLock == INVALID_MUTEX_HANDLE)
+   {
+      // Syslog daemon not initialized
+      *result = new NXSL_Value(-1);
+      return 0;
+   }
+
+   MutexLock(s_parserLock);
+   *result = new NXSL_Value(s_parser->getRuleCheckCount(argv[0]->getValueAsCString()));
+   MutexUnlock(s_parserLock);
+   return 0;
+}
+
+/**
+ * Get syslog rule match count in NXSL
+ */
+int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isString())
+      return NXSL_ERR_NOT_STRING;
+
+   if (s_parserLock == INVALID_MUTEX_HANDLE)
+   {
+      // Syslog daemon not initialized
+      *result = new NXSL_Value(-1);
+      return 0;
+   }
+
+   MutexLock(s_parserLock);
+   *result = new NXSL_Value(s_parser->getRuleMatchCount(argv[0]->getValueAsCString()));
+   MutexUnlock(s_parserLock);
+   return 0;
+}
+
+/**
  * Start built-in syslog server
  */
 void StartSyslogServer()

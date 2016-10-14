@@ -5,7 +5,7 @@
 	- EPP rules can be configured to generate categorised alarms
 	- Alarm categories can be created and configured in Alarm Category Configurator
 	- By default view_all_alarms acl added to Everyone group
-- New NXSL function mktime
+- New NXSL functions: mktime, GetSyslogRuleCheckCount, GetSyslogRuleMatchCount
 - Fixed issues: #1285
 
 *

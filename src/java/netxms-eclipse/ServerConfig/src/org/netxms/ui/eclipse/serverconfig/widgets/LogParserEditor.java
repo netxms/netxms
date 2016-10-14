@@ -229,6 +229,9 @@ public class LogParserEditor extends Composite
 		form.reflow(true);
 	}
 	
+	/**
+	 * @param generalArea
+	 */
 	private void createGeneralArea(Composite generalArea)
    {
 	   GridLayout layout = new GridLayout();
@@ -236,7 +239,7 @@ public class LogParserEditor extends Composite
       layout.numColumns = 3;
       generalArea.setLayout(layout);
       
-      if(!isSyslogParser)
+      if (!isSyslogParser)
       {
          labelFileName = new LabeledText(generalArea, SWT.NONE);
          labelFileName.setLabel("Parsing file path");
@@ -437,13 +440,14 @@ public class LogParserEditor extends Composite
 	 */
 	private String buildParserXml()
 	{
-	   if(!isSyslogParser)
+	   if (!isSyslogParser)
 	      parser.setFile(labelFileName.getText());
 	   parser.setProcessALL(checkProcessAll.getSelection());
 	   parser.setTrace(spinerTrace.getSelection());
 	   
 		for(LogParserRule rule : parser.getRules())
 			rule.getEditor().save();
+		
 		try
 		{
 			return parser.createXml();

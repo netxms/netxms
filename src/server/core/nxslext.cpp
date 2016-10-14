@@ -35,6 +35,9 @@ int F_mapList(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_FindAlarmById(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_FindAlarmByKey(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 
+int F_GetSyslogRuleCheckCount(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+int F_GetSyslogRuleMatchCount(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
+
 /**
  * Get node's custom attribute
  * First argument is a node object, and second is an attribute name
@@ -1515,6 +1518,8 @@ static NXSL_ExtFunction m_nxslServerFunctions[] =
    { _T("GetNodeTemplates"), F_GetNodeTemplates, 1 },
    { _T("GetObjectChildren"), F_GetObjectChildren, 1 },
    { _T("GetObjectParents"), F_GetObjectParents, 1 },
+   { _T("GetSyslogRuleCheckCount"), F_GetSyslogRuleCheckCount, 1 },
+   { _T("GetSyslogRuleMatchCount"), F_GetSyslogRuleMatchCount, 1 },
 	{ _T("FindAlarmById"), F_FindAlarmById, 1 },
 	{ _T("FindAlarmByKey"), F_FindAlarmByKey, 1 },
 	{ _T("FindNodeObject"), F_FindNodeObject, 2 },

@@ -28,6 +28,9 @@ import org.simpleframework.xml.Root;
 @Root(name="rule", strict=false)
 public class LogParserRule
 {
+   @Attribute(required=false)
+   private String name = null;
+
 	@Attribute(required=false)
 	private String context = null;
 
@@ -71,6 +74,22 @@ public class LogParserRule
 	private LogParserRuleEditor editor;
 
 	/**
+    * @return the name
+    */
+   public String getName()
+   {
+      return name;
+   }
+
+   /**
+    * @param name the name to set
+    */
+   public void setName(String name)
+   {
+      this.name = name;
+   }
+
+   /**
 	 * @return the context
 	 */
 	public String getContext()
