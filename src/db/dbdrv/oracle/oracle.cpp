@@ -1044,7 +1044,7 @@ static ORACLE_RESULT *ProcessQueryResults(ORACLE_CONN *pConn, OCIStmt *handleStm
 		// Cleanup
 		for(int i = 0; i < pResult->nCols; i++)
       {
-			safe_free(pBuffers[i].pData);
+			free(pBuffers[i].pData);
          if (pBuffers[i].lobLocator != NULL)
          {
             OCIDescriptorFree(pBuffers[i].lobLocator, OCI_DTYPE_LOB);
