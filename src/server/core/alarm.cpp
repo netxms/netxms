@@ -1005,23 +1005,25 @@ UINT32 GetHelpdeskIssueUrlFromAlarm(UINT32 alarmId, UINT32 userId, TCHAR *url, s
    MutexLock(m_mutex);
    for(int i = 0; i < m_alarmList->size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
-      if (alarm->checkCategoryAcl(userId, session))
+      if (m_alarmList->get(i)->getAlarmId() == alarmId)
       {
-         rcc = RCC_ACCESS_DENIED;
-         break;
-      }
-      if (alarm->getAlarmId() == alarmId)
-      {
-         if ((alarm->getHelpDeskState() != ALARM_HELPDESK_IGNORED) && (alarm->getHelpDeskRef()[0] != 0))
+         if (m_alarmList->get(i)->checkCategoryAcl(userId, session))
          {
-            rcc = GetHelpdeskIssueUrl(alarm->getHelpDeskRef(), url, size);
+            if ((m_alarmList->get(i)->getHelpDeskState() != ALARM_HELPDESK_IGNORED) && (m_alarmList->get(i)->getHelpDeskRef()[0] != 0))
+            {
+               rcc = GetHelpdeskIssueUrl(m_alarmList->get(i)->getHelpDeskRef(), url, size);
+            }
+            else
+            {
+               rcc = RCC_OUT_OF_STATE_REQUEST;
+            }
+            break;
          }
          else
          {
-            rcc = RCC_OUT_OF_STATE_REQUEST;
+            rcc = RCC_ACCESS_DENIED;
+            break;
          }
-         break;
       }
    }
    MutexUnlock(m_mutex);
@@ -1234,17 +1236,18 @@ UINT32 NXCORE_EXPORTABLE GetAlarm(UINT32 alarmId, UINT32 userId, NXCPMessage *ms
    MutexLock(m_mutex);
    for(int i = 0; i < m_alarmList->size(); i++)
    {
-      Alarm *alarm = m_alarmList->get(i);
-      if (alarm->checkCategoryAcl(userId, session))
+      if (m_alarmList->get(i)->getAlarmId() == alarmId)
       {
-         dwRet = RCC_ACCESS_DENIED;
-         break;
-      }
-      if (alarm->getAlarmId() == alarmId)
-      {
-			alarm->fillMessage(msg);
-			dwRet = RCC_SUCCESS;
-         break;
+         if (m_alarmList->get(i)->checkCategoryAcl(userId, session))
+         {
+            dwRet = RCC_SUCCESS;
+            break;
+         }
+         else
+         {
+            dwRet = RCC_ACCESS_DENIED;
+            break;
+         }
       }
    }
    MutexUnlock(m_mutex);
@@ -1263,15 +1266,18 @@ UINT32 NXCORE_EXPORTABLE GetAlarmEvents(UINT32 alarmId, UINT32 userId, NXCPMessa
    MutexLock(m_mutex);
    for(int i = 0; i < m_alarmList->size(); i++)
    {
-      if (m_alarmList->get(i)->checkCategoryAcl(userId, session))
-      {
-         dwRet = RCC_ACCESS_DENIED;
-         break;
-      }
       if (m_alarmList->get(i)->getAlarmId() == alarmId)
       {
-         dwRet = RCC_SUCCESS;
-         break;
+         if (m_alarmList->get(i)->checkCategoryAcl(userId, session))
+         {
+            dwRet = RCC_SUCCESS;
+            break;
+         }
+         else
+         {
+            dwRet = RCC_ACCESS_DENIED;
+            break;
+         }
       }
    }
 

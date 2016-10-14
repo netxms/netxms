@@ -18,6 +18,7 @@
  */
 package org.netxms.client;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,21 +74,31 @@ public class AlarmTest extends AbstractSessionTest
 		HashMap<Long, Alarm> list = session.getAlarms();
 		if (list.size() > 0)
 		{
-			final Semaphore s = new Semaphore(0);
-			final Long alarmId = list.keySet().iterator().next();
+		   final List<Long> accessRightFail = new ArrayList<Long>();
+         final List<Long> openInHelpdesk = new ArrayList<Long>();
+         final List<Long> idCheckFail = new ArrayList<Long>();
+		   
+			final Semaphore s = new Semaphore(0);			
+			final long[] alarmIds = new long[2];
+			alarmIds[0] = list.keySet().iterator().next();
+			alarmIds[1] = 123456789; // Made up alarm ID to check if it is returned
 			final boolean[] success = new boolean[1];
 			success[0] = false;
 			session.addListener(new SessionListener() {
 				public void notificationHandler(SessionNotification n)
 				{
+				   @SuppressWarnings("unchecked")
+               List<Long> termAlarmIdss = (List<Long>)n.getObject();
+				   long termAlarmId = termAlarmIdss.get(0);
 					assertEquals(SessionNotification.ALARM_TERMINATED, n.getCode());
-					assertEquals(alarmId.longValue(), ((Alarm)n.getObject()).getId());
+					assertEquals(alarmIds[0], termAlarmId);
 					success[0] = true;
 					s.release();
 				}
 			});
 			session.subscribe(NXCSession.CHANNEL_ALARMS);
-			session.terminateAlarm(alarmId);
+			session.terminateBulkAlarms(alarmIds, accessRightFail, openInHelpdesk, idCheckFail);
+			assertTrue(alarmIds[1] == idCheckFail.get(0));
 			assertTrue(s.tryAcquire(3, TimeUnit.SECONDS));
 			assertEquals(true, success[0]);
 		}
