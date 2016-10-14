@@ -398,81 +398,76 @@ int F_SecondsToUptime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_V
    return 0;
 }
 
-
-//
-// Get current time
-//
-
+/**
+ * Get current time
+ */
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
    *ppResult = new NXSL_Value((UINT32)time(NULL));
    return 0;
 }
 
-
-//
-// NXSL "TIME" class
-//
-
+/**
+ * NXSL "TIME" class
+ */
 class NXSL_TimeClass : public NXSL_Class
 {
 public:
    NXSL_TimeClass();
 
-   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *pszAttr);
+   virtual NXSL_Value *getAttr(NXSL_Object *pObject, const TCHAR *attr);
+   virtual bool setAttr(NXSL_Object *object, const TCHAR *attr, NXSL_Value *value);
 	virtual void onObjectDelete(NXSL_Object *object);
 };
 
-
-//
-// Implementation of "TIME" class
-//
-
-NXSL_TimeClass::NXSL_TimeClass()
-               :NXSL_Class()
+/**
+ * "TIME" class constructor
+ */
+NXSL_TimeClass::NXSL_TimeClass() : NXSL_Class()
 {
    _tcscpy(m_name, _T("TIME"));
 }
 
-NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
+/**
+ * Get TIME class attribute
+ */
+NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const TCHAR *attr)
 {
-   struct tm *st;
    NXSL_Value *value;
-
-   st = (struct tm *)pObject->getData();
-   if (!_tcscmp(pszAttr, _T("sec")) || !_tcscmp(pszAttr, _T("tm_sec")))
+   struct tm *st = (struct tm *)pObject->getData();
+   if (!_tcscmp(attr, _T("sec")) || !_tcscmp(attr, _T("tm_sec")))
    {
       value = new NXSL_Value((LONG)st->tm_sec);
    }
-   else if (!_tcscmp(pszAttr, _T("min")) || !_tcscmp(pszAttr, _T("tm_min")))
+   else if (!_tcscmp(attr, _T("min")) || !_tcscmp(attr, _T("tm_min")))
    {
       value = new NXSL_Value((LONG)st->tm_min);
    }
-   else if (!_tcscmp(pszAttr, _T("hour")) || !_tcscmp(pszAttr, _T("tm_hour")))
+   else if (!_tcscmp(attr, _T("hour")) || !_tcscmp(attr, _T("tm_hour")))
    {
       value = new NXSL_Value((LONG)st->tm_hour);
    }
-   else if (!_tcscmp(pszAttr, _T("mday")) || !_tcscmp(pszAttr, _T("tm_mday")))
+   else if (!_tcscmp(attr, _T("mday")) || !_tcscmp(attr, _T("tm_mday")))
    {
       value = new NXSL_Value((LONG)st->tm_mday);
    }
-   else if (!_tcscmp(pszAttr, _T("mon")) || !_tcscmp(pszAttr, _T("tm_mon")))
+   else if (!_tcscmp(attr, _T("mon")) || !_tcscmp(attr, _T("tm_mon")))
    {
       value = new NXSL_Value((LONG)st->tm_mon);
    }
-   else if (!_tcscmp(pszAttr, _T("year")) || !_tcscmp(pszAttr, _T("tm_year")))
+   else if (!_tcscmp(attr, _T("year")) || !_tcscmp(attr, _T("tm_year")))
    {
       value = new NXSL_Value((LONG)(st->tm_year + 1900));
    }
-   else if (!_tcscmp(pszAttr, _T("yday")) || !_tcscmp(pszAttr, _T("tm_yday")))
+   else if (!_tcscmp(attr, _T("yday")) || !_tcscmp(attr, _T("tm_yday")))
    {
       value = new NXSL_Value((LONG)st->tm_yday);
    }
-   else if (!_tcscmp(pszAttr, _T("wday")) || !_tcscmp(pszAttr, _T("tm_wday")))
+   else if (!_tcscmp(attr, _T("wday")) || !_tcscmp(attr, _T("tm_wday")))
    {
       value = new NXSL_Value((LONG)st->tm_wday);
    }
-   else if (!_tcscmp(pszAttr, _T("isdst")) || !_tcscmp(pszAttr, _T("tm_isdst")))
+   else if (!_tcscmp(attr, _T("isdst")) || !_tcscmp(attr, _T("tm_isdst")))
    {
       value = new NXSL_Value((LONG)st->tm_isdst);
    }
@@ -483,23 +478,75 @@ NXSL_Value *NXSL_TimeClass::getAttr(NXSL_Object *pObject, const TCHAR *pszAttr)
    return value;
 }
 
-void NXSL_TimeClass::onObjectDelete(NXSL_Object *object)
+/**
+ * Set "TIME" class attribute
+ */
+bool NXSL_TimeClass::setAttr(NXSL_Object *object, const TCHAR *attr, NXSL_Value *value)
 {
-	safe_free(object->getData());
+   if (!value->isInteger())
+      return false;
+
+   bool success = true;
+   struct tm *st = (struct tm *)object->getData();
+   if (!_tcscmp(attr, _T("sec")) || !_tcscmp(attr, _T("tm_sec")))
+   {
+      st->tm_sec = value->getValueAsInt32();
+   }
+   else if (!_tcscmp(attr, _T("min")) || !_tcscmp(attr, _T("tm_min")))
+   {
+      st->tm_min = value->getValueAsInt32();
+   }
+   else if (!_tcscmp(attr, _T("hour")) || !_tcscmp(attr, _T("tm_hour")))
+   {
+      st->tm_hour = value->getValueAsInt32();
+   }
+   else if (!_tcscmp(attr, _T("mday")) || !_tcscmp(attr, _T("tm_mday")))
+   {
+      st->tm_mday = value->getValueAsInt32();
+   }
+   else if (!_tcscmp(attr, _T("mon")) || !_tcscmp(attr, _T("tm_mon")))
+   {
+      st->tm_mon = value->getValueAsInt32();
+   }
+   else if (!_tcscmp(attr, _T("year")) || !_tcscmp(attr, _T("tm_year")))
+   {
+      st->tm_year = value->getValueAsInt32() - 1900;
+   }
+   else if (!_tcscmp(attr, _T("yday")) || !_tcscmp(attr, _T("tm_yday")))
+   {
+      st->tm_yday = value->getValueAsInt32();
+   }
+   else if (!_tcscmp(attr, _T("wday")) || !_tcscmp(attr, _T("tm_wday")))
+   {
+      st->tm_wday = value->getValueAsInt32();
+   }
+   else if (!_tcscmp(attr, _T("isdst")) || !_tcscmp(attr, _T("tm_isdst")))
+   {
+      st->tm_isdst = value->getValueAsInt32();
+   }
+   else
+   {
+      success = false;  // Error
+   }
+   return success;
 }
 
+/**
+ * "TIME" class destructor
+ */
+void NXSL_TimeClass::onObjectDelete(NXSL_Object *object)
+{
+	free(object->getData());
+}
 
-//
-// NXSL "TIME" class object
-//
+/**
+ * NXSL "TIME" class object
+ */
+static NXSL_TimeClass s_nxslTimeClass;
 
-static NXSL_TimeClass m_nxslTimeClass;
-
-
-//
-// Return parsed local time
-//
-
+/**
+ * Return parsed local time
+ */
 int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	struct tm *p;
@@ -522,15 +569,13 @@ int F_localtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	}
 
 	p = localtime(&t);
-	*ppResult = new NXSL_Value(new NXSL_Object(&m_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
+	*ppResult = new NXSL_Value(new NXSL_Object(&s_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
 	return 0;
 }
 
-
-//
-// Return parsed UTC time
-//
-
+/**
+ * Return parsed UTC time
+ */
 int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	struct tm *p;
@@ -553,19 +598,42 @@ int F_gmtime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 	}
 
 	p = gmtime(&t);
-	*ppResult = new NXSL_Value(new NXSL_Object(&m_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
+	*ppResult = new NXSL_Value(new NXSL_Object(&s_nxslTimeClass, nx_memdup(p, sizeof(struct tm))));
 	return 0;
 }
 
+/**
+ * Create time from TIME class
+ */
+int F_mktime(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   if (!argv[0]->isObject())
+      return NXSL_ERR_NOT_OBJECT;
 
-//
-// Get substring of a string
-// Possible usage:
-//    substr(string, start) - all characters from position 'start'
-//    substr(string, start, n) - n characters from position 'start'
-//    substr(string, NULL, n) - first n characters
-//
+   if (_tcscmp(argv[0]->getValueAsObject()->getClass()->getName(), s_nxslTimeClass.getName()))
+      return NXSL_ERR_BAD_CLASS;
 
+   struct tm *st = (struct tm *)argv[0]->getValueAsObject()->getData();
+   *result = new NXSL_Value((INT64)mktime(st));
+   return 0;
+}
+
+/**
+ * Create empty TIME object
+ */
+int F_TIME(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm)
+{
+   *result = new NXSL_Value(new NXSL_Object(&s_nxslTimeClass, calloc(1, sizeof(struct tm))));
+   return 0;
+}
+
+/**
+ * Get substring of a string
+ * Possible usage:
+ *    substr(string, start) - all characters from position 'start'
+ *    substr(string, start, n) - n characters from position 'start'
+ *    substr(string, NULL, n) - first n characters
+ */
 int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm)
 {
 	int nStart, nCount;

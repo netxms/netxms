@@ -50,6 +50,7 @@ int F_ltrim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_max(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_md5(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_min(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_mktime(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_ord(int argc, NXSL_Value **argv, NXSL_Value **result, NXSL_VM *vm);
 int F_pow(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_random(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -65,6 +66,7 @@ int F_substr(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_sys(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_tcpConnector(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_time(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
+int F_TIME(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_trace(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_trim(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
 int F_typeof(int argc, NXSL_Value **argv, NXSL_Value **ppResult, NXSL_VM *vm);
@@ -112,6 +114,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
    { _T("max"), F_max, -1 },
    { _T("md5"), F_md5, 1 },
    { _T("min"), F_min, -1 },
+   { _T("mktime"), F_mktime, 1 },
    { _T("ord"), F_ord, 1 },
    { _T("pow"), F_pow, 2 },
    { _T("random"), F_random, 2 },
@@ -139,6 +142,7 @@ static NXSL_ExtFunction m_builtinFunctions[] =
 	{ _T("SecondsToUptime"), F_SecondsToUptime, 1 },
    { _T("SplitString"), F_SplitString, 2 },
 	{ _T("TCPConnector"), F_tcpConnector, 2 },
+   { _T("TIME"), F_TIME, 0 },
 	{ _T("UDPConnector"), F_udpConnector, 2 },
    { _T("WritePersistentStorage"), F_WritePersistentStorage, 2 }
 };

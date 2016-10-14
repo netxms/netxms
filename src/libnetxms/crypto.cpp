@@ -534,7 +534,7 @@ NXCPEncryptionContext::NXCPEncryptionContext()
  */
 NXCPEncryptionContext::~NXCPEncryptionContext()
 {
-   safe_free(m_sessionKey);
+   free(m_sessionKey);
 #ifdef _WITH_ENCRYPTION
    EVP_CIPHER_CTX_cleanup(&m_encryptor);
    EVP_CIPHER_CTX_cleanup(&m_decryptor);
